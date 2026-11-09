@@ -5280,6 +5280,14 @@ export function GenesisCalendar() {
       {activeCalendarMode === "sacred" ? <SingleLineTitle className="hero-day-title-primary" text={heroTitlePrimary}/> : <span className="hero-day-title-primary">{heroTitlePrimary}</span>}
       {heroTitleTranslation ? <span className="hero-day-title-translation" style={{ fontSize: dayTitleTranslationSize }}>{heroTitleTranslation}</span> : null}
     </h1>;
+    const heroSolarTimes = <TodaySolarTimes today={today} location={deviceLocation} deviceTimeZone={deviceTimeZone} approximate={solarLocationSource !== "selected-city"}
+      ready={solarLocationStatus === "ready"} language={language} timeFormat={activeTimeFormat} compact={!sacredFeaturesEnabled}/>;
+    const heroActions = <div className="hero-actions">
+      <button className="primary-button" type="button" onClick={openTodayInCalendar} aria-label={translateText("Открыть день в календаре", language)}>
+        Сегодня <span aria-hidden="true">↗</span>
+      </button>
+      {sacredFeaturesEnabled ? <span className="hero-date">{activeCalendarMode === "profane" ? formatCalendarDate(gregorian, "sacred") : formatGregorian(gregorian, true)}</span> : null}
+    </div>;
     return (
       <TodayBlocks order={todayOrder}>
         <TodayBlock id="hero">
@@ -5294,7 +5302,7 @@ export function GenesisCalendar() {
               ) : sacredFeaturesEnabled && solarEvent ? <span className="event-badge solar-event-badge"><b aria-hidden="true">{solarEvent.symbol}</b> {solarEvent.name}</span> : null}
             </div> : null}
             {sacredFeaturesEnabled && activeCalendarMode !== "profane" ? <p className="hero-month">{heroMonth}</p> : null}
-            {sacredFeaturesEnabled ? heroHeading : <div className="civil-date-heading">{heroHeading}<DeviceClock timeFormat={activeTimeFormat}/></div>}
+            {sacredFeaturesEnabled ? heroHeading : <div className="civil-summary-group"><div className="civil-date-heading">{heroHeading}<DeviceClock timeFormat={activeTimeFormat}/></div>{heroSolarTimes}</div>}
             {activeCalendarMode === "profane" ? sacredFeaturesEnabled ? (
               <div className="hero-description profane-hero-description">
                 <strong>{weekdayPatron.patronage}</strong>
@@ -5302,14 +5310,7 @@ export function GenesisCalendar() {
                 <span><b>{isEnglish ? "Body parts:" : "Части тела:"}</b> {weekdayPatron.bodyParts}</span>
               </div>
             ) : null : <p className="hero-description">{heroDescription}</p>}
-            <TodaySolarTimes today={today} location={deviceLocation} deviceTimeZone={deviceTimeZone} approximate={solarLocationSource !== "selected-city"}
-              ready={solarLocationStatus === "ready"} language={language} timeFormat={activeTimeFormat} compact={!sacredFeaturesEnabled}/>
-            <div className="hero-actions">
-              <button className="primary-button" type="button" onClick={openTodayInCalendar}>
-                Открыть день <span aria-hidden="true">↗</span>
-              </button>
-              {sacredFeaturesEnabled ? <span className="hero-date">{activeCalendarMode === "profane" ? formatCalendarDate(gregorian, "sacred") : formatGregorian(gregorian, true)}</span> : null}
-            </div>
+            {sacredFeaturesEnabled ? <>{heroSolarTimes}{heroActions}</> : null}
           </div>
           <div className="hero-day-clock">
           {sacredFeaturesEnabled && activeCalendarMode !== "profane" ? <div className="hero-number" aria-hidden="true">
@@ -5320,7 +5321,7 @@ export function GenesisCalendar() {
             )}
             <small>{activeCalendarMode === "lunar" ? lunarTriadCopy(language)[lunarPatronForDay(moon.day)].name : info.monthIndex === 12 ? "вне времени" : `${day.pyata} пята`}</small>
           </div> : null}
-          {sacredFeaturesEnabled?<DeviceClock timeFormat={activeTimeFormat}/>:<div className="hero-civil-clock-weather" data-time-format={activeTimeFormat}><div className="solar-weather-slot"><Suspense fallback={null}><SolarWeatherSummary ownerId={cloudUser?.uid??null} now={today} location={deviceLocation} source={solarLocationSource} language={language} deviceTimeZone={deviceTimeZone} timeFormat={activeTimeFormat} onChooseCity={() => { setAccountGuideUserId(null); setAccountSolarPlaceUserId(cloudUser?.uid ?? null); setAccountMenuOpen(false); setAccountOpen(true); }}/></Suspense></div></div>}
+          {sacredFeaturesEnabled?<DeviceClock timeFormat={activeTimeFormat}/>:<div className="hero-civil-clock-weather" data-time-format={activeTimeFormat}><div className="solar-weather-slot"><Suspense fallback={null}><SolarWeatherSummary ownerId={cloudUser?.uid??null} now={today} location={deviceLocation} source={solarLocationSource} language={language} deviceTimeZone={deviceTimeZone} timeFormat={activeTimeFormat} onChooseCity={() => { setAccountGuideUserId(null); setAccountSolarPlaceUserId(cloudUser?.uid ?? null); setAccountMenuOpen(false); setAccountOpen(true); }}/></Suspense></div>{heroActions}</div>}
           </div>
         </section>
 

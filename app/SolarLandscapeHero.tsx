@@ -1,4 +1,4 @@
-import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import {projectSolarPosition,solarLandscapeCrop,solarLandscapeState} from './solar-landscape';
 import type {AutomaticSolarLocation,DeviceLocation} from './solar-times';
 import type {WeatherSnapshotV1} from './weather-types';
@@ -6,6 +6,8 @@ import {useCivilWeather} from './use-civil-weather';
 import {SolarWeatherClouds,SolarWeatherEffects} from './SolarWeatherEffects';
 import './solar-landscape-hero.css';
 import nightStars from './solar-night-stars.json';
+import SolarWaterSurface from './SolarWaterSurface';
+import {solarWaterState} from './solar-water';
 export {SolarWeatherSummary} from './SolarWeatherSummary';
 
 /** The Today clock supplies the current instant and refreshes on focus/visibility. */
@@ -15,7 +17,10 @@ export default function SolarLandscapeHero({now,location,deviceTimeZone,source,b
   const loaded=useCivilWeather(ownerId,location,source);
   const [unavailableArt,setUnavailableArt]=useState<string|null>(null);
   const sceneNow=ownerId&&weather===undefined?new Date(Math.max(now.valueOf(),loaded.evaluatedAt)):now;
-  const scene=solarLandscapeState(sceneNow,location,deviceTimeZone,source,weather===undefined?loaded.weather:weather,unavailableArt);
+  const activeWeather=weather===undefined?loaded.weather:weather;
+  const scene=solarLandscapeState(sceneNow,location,deviceTimeZone,source,activeWeather,unavailableArt);
+  const sceneInstant=sceneNow.valueOf();
+  const water=useMemo(()=>solarWaterState(scene.artKey,activeWeather,sceneInstant,scene.plate?.horizonY),[scene.artKey,activeWeather,sceneInstant,scene.plate?.horizonY]);
   const url=scene.artPath?`${basePath.replace(/\/$/u,'')}/${scene.artPath}?v=${scene.assetRevision}`:null;
   const [failedArt,setFailedArt]=useState<string|null>(null);
   const layer=useRef<HTMLDivElement>(null);
@@ -77,6 +82,7 @@ export default function SolarLandscapeHero({now,location,deviceTimeZone,source,b
       {/* The authored alpha terrain occludes the sun; its sky is never baked in. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="solar-landscape-terrain" src={url!} alt="" draggable={false} decoding="async" onError={()=>{if(scene.snowCover)setUnavailableArt(scene.artPath);else setFailedArt(url);}}/>
+      {water?<SolarWaterSurface url={url!} water={water} displayWidth={crop?.width??0} paused={Boolean(ownerId&&!loaded.visible)}/>:null}
       <span className="solar-landscape-ground-light"/>
       <span className="solar-landscape-ground-shade"/>
     </>:null}

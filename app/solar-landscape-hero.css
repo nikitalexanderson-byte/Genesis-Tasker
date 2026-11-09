@@ -19,6 +19,7 @@
 .solar-landscape-sun { left:var(--solar-x); top:var(--solar-y); width:clamp(23px,3.4vw,38px); aspect-ratio:1; border-radius:50%; transform:translate(-50%,-50%);
   background:radial-gradient(circle,#fffbea 0 42%,#ffefbc 70%,#ffd186 100%); box-shadow:0 0 22px 8px rgb(255 226 170 / .45),0 0 65px 24px rgb(255 208 142 / .18); transition:opacity 8s ease-out; }
 .solar-landscape-terrain { position:absolute; left:var(--solar-terrain-x,0); top:var(--solar-terrain-y,0); display:block; width:var(--solar-terrain-width,100%); max-width:none; height:var(--solar-terrain-height,100%); object-fit:cover; object-position:50% var(--solar-horizon); filter:brightness(var(--solar-terrain-brightness)) saturate(var(--solar-terrain-saturation)); }
+.solar-landscape-water { position:absolute; left:var(--solar-terrain-x,0); top:var(--solar-terrain-y,0); width:var(--solar-terrain-width,100%); height:var(--solar-terrain-height,100%); max-width:none; pointer-events:none; filter:brightness(var(--solar-terrain-brightness)) saturate(var(--solar-terrain-saturation)); }
 .solar-landscape-ground-light,.solar-landscape-ground-shade { inset:0; -webkit-mask-image:var(--solar-terrain-url); mask-image:var(--solar-terrain-url);
   -webkit-mask-size:var(--solar-terrain-width,100%) var(--solar-terrain-height,100%); mask-size:var(--solar-terrain-width,100%) var(--solar-terrain-height,100%); -webkit-mask-position:var(--solar-terrain-x,0) var(--solar-terrain-y,0); mask-position:var(--solar-terrain-x,0) var(--solar-terrain-y,0); -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; }
 .solar-landscape-ground-light { opacity:var(--solar-light); background:radial-gradient(ellipse 110% 100% at var(--solar-x) var(--solar-y),#ffe2ae,transparent 85%); mix-blend-mode:screen; }
@@ -67,3 +68,35 @@ html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view 
 
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-actions > .primary-button { width:100%; min-width:0; max-width:220px; padding:10px; font-size:13px; }
 html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-sacred :is(.hero-day-title-primary,.hero-day-title-translation) { width:100%; max-width:100%; font-family:var(--font-ui); font-weight:650; letter-spacing:-.02em; line-height:1.1; }
+
+html[data-genesis-theme] .genesis-app .today-view .hero-card .civil-summary-group { display:contents; }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .civil-summary-group > :is(.civil-date-heading,.calendar-solar-control) { position:relative; z-index:2; }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather {
+  position:relative; z-index:2; display:flex; flex-direction:column; grid-column:2; grid-row:1 / span 2; align-self:start; justify-self:end;
+  box-sizing:border-box; width:max-content; max-width:100%; min-width:0; gap:8px;
+}
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather :is(.solar-weather-readings,.hero-actions) {
+  grid-column:auto; grid-row:auto; align-self:stretch; width:100%; max-width:none; min-width:0; margin:0;
+}
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather .hero-actions > .primary-button {
+  display:flex; flex-direction:row; align-items:center; width:100%; max-width:none; min-height:44px; justify-content:center;
+}
+@media(max-width:760px) {
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card.mode-profane {
+    grid-template-columns:minmax(0,1fr) fit-content(48%);
+  }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .civil-summary-group {
+    display:flex; flex-direction:column; justify-content:space-between; grid-column:1; grid-row:1; align-self:stretch;
+    box-sizing:border-box; width:fit-content; max-width:100%; min-width:0; gap:8px; padding:8px 10px; border-radius:10px;
+    background:color-mix(in srgb,var(--surface) 74%,transparent);
+  }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .civil-summary-group :is(.civil-date-heading,.calendar-solar-control) {
+    width:100%; max-width:100%; padding:0; border-radius:0; background:transparent;
+  }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .civil-summary-group .device-clock { text-align:start; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event { display:flex; flex-wrap:wrap; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event-label { overflow-wrap:normal; word-break:normal; hyphens:none; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event time { margin-inline-start:auto; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather { grid-row:1; align-self:stretch; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .solar-weather-readings { flex:1; }
+}
