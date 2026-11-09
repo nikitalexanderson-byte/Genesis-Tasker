@@ -26,7 +26,7 @@ export function CalendarMonthHeading({ title, icon, previousLabel, nextLabel, on
   }, [title]);
   return <div className="calendar-month-title-row">
     <button type="button" className="calendar-inline-arrow calendar-inline-previous" aria-label={previousLabel} onClick={onPrevious}><ExperimentalIcon name="chevron"/></button>
-    <div className="calendar-month-title"><span className="calendar-inline-symbol" aria-hidden="true">{icon}</span><h1 ref={titleRef}>{title}</h1></div>
+    <div className="calendar-month-title">{icon ? <span className="calendar-inline-symbol" aria-hidden="true">{icon}</span> : null}<h1 ref={titleRef}>{title}</h1></div>
     <button type="button" className="calendar-inline-arrow" aria-label={nextLabel} onClick={onNext}><ExperimentalIcon name="chevron"/></button>
   </div>;
 }

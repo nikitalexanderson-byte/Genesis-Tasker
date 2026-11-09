@@ -46,6 +46,11 @@ html[data-genesis-theme="standart"] .genesis-app .physis-hero::after {
   background: url('/physis-art/landscape-v2.webp') center / cover no-repeat; filter: url(#genesis-daylight-art);
 }
 html[data-genesis-theme="standart"] .genesis-app .physis-hero::before { z-index: 1; filter: url(#genesis-daylight-art); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .physis-hero::after {
+  z-index: 1; background: linear-gradient(105deg, color-mix(in srgb, var(--night) 84%, transparent), color-mix(in srgb, var(--night-2) 68%, transparent) 56%, color-mix(in srgb, var(--night) 44%, transparent)); filter: none;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .physis-hero { background-image: url('/physis-art/landscape-v2.webp'); background-size: cover; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .physis-hero::before { z-index: 0; filter: brightness(1.08); }
 html[data-genesis-theme="standart"] .genesis-app .physis-hero > * { z-index: 2; }
 html[data-genesis-theme="standart"] .genesis-app :is(.habits-hero, .theokyklos-hero)::after { border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app :is(.habits-hero h1, .theokyklos-hero h1, .physis-hero h1, .heroic-rank-copy h3) { color: var(--day-banner-ink); text-shadow: none; }

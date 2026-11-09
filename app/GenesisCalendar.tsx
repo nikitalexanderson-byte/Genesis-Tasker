@@ -5955,7 +5955,7 @@ export function GenesisCalendar() {
           <span className={mode === "lunar" ? "calendar-month-art" : "gregorian-season-art"} aria-hidden="true" />
           <div>
             {sacredFeaturesEnabled ? <span className="eyebrow">{monthEyebrow}</span> : null}
-            <CalendarMonthHeading title={monthTitle} icon={<CalendarModeIcon mode={mode} size={28}/>}
+            <CalendarMonthHeading title={monthTitle} icon={sacredFeaturesEnabled ? <CalendarModeIcon mode={mode} size={28}/> : null}
               previousLabel={mode === "profane" ? "Предыдущий календарный месяц" : "Предыдущий лунный месяц"}
               nextLabel={mode === "profane" ? "Следующий календарный месяц" : "Следующий лунный месяц"} onPrevious={() => moveMonth(-1)} onNext={() => moveMonth(1)}/>
             <p className="calendar-title">{monthSubtitle}</p>
