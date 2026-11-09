@@ -10,7 +10,7 @@ export function PaletteArtFilter() {
     <filter id="genesis-daylight-art" colorInterpolationFilters="sRGB">
       <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="daylight-monochrome" />
       <feFlood floodColor="var(--day-art-tint)" result="daylight-tone" />
-      <feBlend in="daylight-monochrome" in2="daylight-tone" mode="screen" result="daylight-art" />
+      <feBlend in="daylight-monochrome" in2="daylight-tone" mode="multiply" result="daylight-art" />
       <feComposite in="daylight-art" in2="SourceGraphic" operator="in" />
     </filter>
     <filter id="genesis-blue-silver-art" colorInterpolationFilters="sRGB">
