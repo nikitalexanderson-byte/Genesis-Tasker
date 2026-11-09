@@ -1,0 +1,314 @@
+{
+  "streakFreezeTransactions": [],
+  "habits": [{
+    "qualityScale": "none",
+    "emoji": "✨",
+    "color": "#bb8f4a",
+    "description": "",
+    "title": "Reading",
+    "measurement": {
+      "unit": "min",
+      "kind": "duration",
+      "quickAdd": 1000,
+      "target": 10000
+    },
+    "createdAt": "2026-10-16T22:52:14.814663300Z",
+    "sacredPracticeId": null,
+    "preferredTime": "",
+    "isKeyHabit": false,
+    "ritualId": "none",
+    "scoringMode": "binary",
+    "id": "timer-reading",
+    "updatedAt": "2026-10-16T22:52:14.814663300Z",
+    "reminder": {
+      "googleTaskId": null,
+      "allowDuringQuietHours": false,
+      "timing": "habit",
+      "googleEventId": null,
+      "time": "09:00",
+      "syncToGoogleTasks": false,
+      "showInGoogleCalendar": false,
+      "enabled": false,
+      "minutesBefore": 0
+    },
+    "syncState": "local",
+    "sourceTemplateId": null,
+    "active": true,
+    "ritualName": "",
+    "priority": 5,
+    "version": 1,
+    "ruleHistory": [],
+    "schedule": {
+      "recurrence": {
+        "mode": "classic",
+        "rangeStart": "2026-10-16",
+        "months": [],
+        "pattern": "daily",
+        "calendarContext": {
+          "gregorianYearStart": "january",
+          "timeZone": "UTC",
+          "version": 2
+        },
+        "invalidDayPolicy": "skip",
+        "days": [5],
+        "interval": 1,
+        "pyatas": [],
+        "enabled": true,
+        "rangeEnd": ""
+      },
+      "endDate": null,
+      "timezone": "UTC",
+      "startDate": "2026-10-16"
+    },
+    "createdDate": "2026-10-16",
+    "sacredSectorId": null,
+    "intervalSchedule": null
+  }],
+  "projects": [],
+  "rewardTransactions": [],
+  "achievementUnlocks": [],
+  "habitTimers": [
+    {
+      "owner": "device",
+      "at": "2026-10-16T23:50:00.000Z",
+      "action": "start",
+      "epoch": "",
+      "id": "session",
+      "sessionId": "session",
+      "habitId": "timer-reading",
+      "plan": {
+        "mode": "stopwatch",
+        "breakMinutes": 5,
+        "calendarMode": "profane",
+        "context": {
+          "gregorianYearStart": "january",
+          "timeZone": "UTC",
+          "version": 2
+        },
+        "timeZone": "UTC",
+        "habitTitle": "Reading",
+        "ruleId": "initial:timer-reading",
+        "workMinutes": 25
+      },
+      "parents": []
+    },
+    {
+      "owner": "device",
+      "at": "2026-10-17T00:10:00.000Z",
+      "allocations": [
+        {
+          "date": "2026-10-16",
+          "reason": "duration",
+          "workMs": 600000,
+          "ruleId": "initial:timer-reading",
+          "value": 10000
+        },
+        {
+          "date": "2026-10-17",
+          "reason": "duration",
+          "workMs": 600000,
+          "ruleId": "initial:timer-reading",
+          "value": 10000
+        }
+      ],
+      "action": "finish",
+      "epoch": "",
+      "id": "finish",
+      "sessionId": "session",
+      "habitId": "timer-reading",
+      "parents": ["session"]
+    },
+    {
+      "owner": "device",
+      "timeOnly": false,
+      "at": "2026-10-17T00:10:00.000Z",
+      "action": "save",
+      "epoch": "",
+      "id": "timer-saved:session",
+      "sessionId": "session",
+      "habitId": "timer-reading",
+      "parents": ["finish"]
+    }
+  ],
+  "sleepPlans": [],
+  "dailyGoalRecords": [],
+  "addictionEntries": [],
+  "userProgress": {
+    "hiddenHeroicPathRevealedAt": null,
+    "currentStreak": 0,
+    "currentRankId": null,
+    "lifetimeXp": 0,
+    "streakFreezeCount": 0,
+    "longestStreak": 0,
+    "rhythmScore": 0,
+    "streakGoalMode": "rhythm",
+    "laurelsBalance": 0,
+    "lastQualifiedDate": null,
+    "updatedAt": ""
+  },
+  "sleepEntries": [],
+  "syncMetadata": {
+    "schemaVersion": 1,
+    "tombstones": [],
+    "entities": {
+      "streakFreezeTransactions": {},
+      "habits": {"timer-reading": {
+        "version": 2,
+        "deviceId": "native-timer-vector",
+        "updatedAt": "2026-10-17T01:00:00Z"
+      }},
+      "habitCompletions": {
+        "habit-completion:timer-reading:2026-10-16": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        },
+        "habit-completion:timer-reading:2026-10-17": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        }
+      },
+      "dailyGoalRecords": {},
+      "quests": {},
+      "rewardTransactions": {},
+      "achievementUnlocks": {},
+      "habitMeasurements": {
+        "timer-value:session:2026-10-16": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        },
+        "timer-value:session:2026-10-17": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        }
+      },
+      "habitTimers": {
+        "timer-saved:session": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        },
+        "session": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        },
+        "finish": {
+          "version": 2,
+          "deviceId": "native-timer-vector",
+          "updatedAt": "2026-10-17T01:00:00Z"
+        }
+      }
+    },
+    "fields": {"habitSettings": {
+      "version": 2,
+      "deviceId": "native-timer-vector",
+      "updatedAt": "2026-10-17T01:00:00Z"
+    }}
+  },
+  "categories": [],
+  "habitMeasurements": [
+    {
+      "date": "2026-10-16",
+      "note": "",
+      "replaces": [],
+      "syncState": "local",
+      "historical": true,
+      "habitId": "timer-reading",
+      "source": "timer",
+      "version": 1,
+      "entryId": "timer-value:session:2026-10-16",
+      "createdAt": "2026-10-17T00:10:00.000Z",
+      "id": "timer-value:session:2026-10-16",
+      "ruleId": "initial:timer-reading",
+      "value": 10000,
+      "updatedAt": "2026-10-17T00:10:00.000Z"
+    },
+    {
+      "date": "2026-10-17",
+      "note": "",
+      "replaces": [],
+      "syncState": "local",
+      "historical": false,
+      "habitId": "timer-reading",
+      "source": "timer",
+      "version": 1,
+      "entryId": "timer-value:session:2026-10-17",
+      "createdAt": "2026-10-17T00:10:00.000Z",
+      "id": "timer-value:session:2026-10-17",
+      "ruleId": "initial:timer-reading",
+      "value": 10000,
+      "updatedAt": "2026-10-17T00:10:00.000Z"
+    }
+  ],
+  "habitSettings": {
+    "feedback": {
+      "questsEnabled": true,
+      "gamificationWidgets": true,
+      "haptics": false,
+      "animations": true,
+      "sound": false,
+      "achievementPopups": true
+    },
+    "nativeAppearance": {
+      "mode": "scheduled",
+      "lightAt": "07:00",
+      "darkAt": "21:00"
+    },
+    "enabled": true,
+    "notifications": {
+      "quietHoursStart": "22:00",
+      "tone": "calm",
+      "quietHoursEnd": "07:30",
+      "motivational": true,
+      "enabled": false,
+      "dailyGoalTime": "20:30"
+    }
+  },
+  "analyticsSnapshots": [],
+  "habitTimerEpoch": "",
+  "quests": [],
+  "taskLists": [],
+  "moodEntries": [],
+  "habitCompletions": [
+    {
+      "date": "2026-10-16",
+      "note": "",
+      "qualityValue": null,
+      "syncState": "local",
+      "habitId": "timer-reading",
+      "completed": true,
+      "version": 1,
+      "xpAwarded": 0,
+      "completedTimes": [],
+      "qualityConfirmedAt": null,
+      "createdAt": "2026-10-17T01:00:00.000Z",
+      "score": 10,
+      "id": "habit-completion:timer-reading:2026-10-16",
+      "updatedAt": "2026-10-17T01:00:00.000Z"
+    },
+    {
+      "date": "2026-10-17",
+      "note": "",
+      "qualityValue": null,
+      "syncState": "local",
+      "habitId": "timer-reading",
+      "completed": true,
+      "version": 1,
+      "xpAwarded": 10,
+      "completedTimes": [],
+      "qualityConfirmedAt": null,
+      "createdAt": "2026-10-17T01:00:00.000Z",
+      "score": 10,
+      "id": "habit-completion:timer-reading:2026-10-17",
+      "updatedAt": "2026-10-17T01:00:00.000Z"
+    }
+  ],
+  "trackerSchemaVersion": 16,
+  "addictionTrackers": [],
+  "hiddenDefaultTemplates": [],
+  "taskListLinks": []
+}

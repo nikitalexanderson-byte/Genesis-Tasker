@@ -1,0 +1,4135 @@
+[
+  {
+    "id": "PHY-0577",
+    "kind": "supplement",
+    "nameRu": "Чина",
+    "nameEn": "Lathyrus",
+    "aliases": [
+      "Lathyrus",
+      "Lathyrus cicera",
+      "Lathyrus clymenum",
+      "Lathyrus hirsutus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [],
+    "description": "Растительное сырьё (Lathyrus cicera). В статье описаны: семена.",
+    "uses": "Область применения требует уточнения по статье",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/lathyrus.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0578",
+    "kind": "supplement",
+    "nameRu": "Калофиллум волокнистолистный (таману)",
+    "nameEn": "Laurelwood",
+    "aliases": [
+      "Laurelwood",
+      "Calophyllum inophyllum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Инфекции и паразиты",
+      "Кожа и волосы",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Calophyllum inophyllum). Рассматривается в справочнике натуральных средств.",
+    "uses": "инфекции, раны и восстановление кожи, кожа, аллергические и астматические симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/laurelwood.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0579",
+    "kind": "supplement",
+    "nameRu": "Сантолина кипарисовидная",
+    "nameEn": "Lavender Cotton",
+    "aliases": [
+      "Lavender Cotton",
+      "Santolina chamaecyparissus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Репродуктивное здоровье",
+      "Инфекции и паразиты",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Santolina chamaecyparissus). В статье описаны: корни, кора.",
+    "uses": "пищеварение, менструальные симптомы, паразитарные заболевания, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/lavender_cotton.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0580",
+    "kind": "supplement",
+    "nameRu": "Эвкалипт лимонный",
+    "nameEn": "Lemon Eucalyptus",
+    "aliases": [
+      "Lemon Eucalyptus",
+      "Corymbia citriodora",
+      "Eucalyptus citriodora"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Кости и суставы",
+      "Исследования боли"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Corymbia citriodora). В статье описаны: листья.",
+    "uses": "кожа, суставы, боль",
+    "evidence": "В справочнике есть оценка эффекта для отдельных применений (кожа); не переносить на другие цели.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/lemon_eucalyptus.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0581",
+    "kind": "supplement",
+    "nameRu": "Чистяк весенний",
+    "nameEn": "Lesser Celandine",
+    "aliases": [
+      "Lesser Celandine",
+      "Ranunculus ficaria"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды",
+      "Кожа и волосы",
+      "Кости и суставы"
+    ],
+    "description": "Растительное сырьё (Ranunculus ficaria). Рассматривается в справочнике натуральных средств.",
+    "uses": "свёртывание крови, раны и восстановление кожи, суставы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения печени",
+    "sources": [
+      "https://www.rxlist.com/supplements/lesser_celandine.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0582",
+    "kind": "supplement",
+    "nameRu": "Кукольван (анамирта)",
+    "nameEn": "Levant Berry",
+    "aliases": [
+      "Levant Berry",
+      "Anamirta cocculus",
+      "Anamirta paniculata",
+      "Cocculus indicus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Зрение и слух",
+      "Нервная система и сон",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Anamirta cocculus). В статье описаны: семена, ягоды, плоды.",
+    "uses": "зрение, неврология, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма; седативные эффекты",
+    "sources": [
+      "https://www.rxlist.com/supplements/levant_berry.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0583",
+    "kind": "supplement",
+    "nameRu": "Печёночница",
+    "nameEn": "Liverwort",
+    "aliases": [
+      "Liverwort",
+      "Anemone acutiloba",
+      "Anemone americana",
+      "Anemone hepatica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Печень и желчевыделение",
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Anemone acutiloba). Рассматривается в справочнике натуральных средств.",
+    "uses": "печень, пищеварение, аппетит, желчевыделение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/liverwort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0584",
+    "kind": "supplement",
+    "nameRu": "Кампешевое дерево",
+    "nameEn": "Logwood",
+    "aliases": [
+      "Logwood",
+      "Haematoxylum campechianum",
+      "Haematoxylum lignum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Haematoxylum campechianum). Рассматривается в справочнике натуральных средств.",
+    "uses": "диарея, свёртывание крови",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/logwood.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0585",
+    "kind": "supplement",
+    "nameRu": "Вербейник обыкновенный",
+    "nameEn": "Loosestrife",
+    "aliases": [
+      "Loosestrife",
+      "Lysimachia vulgaris"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Питательные вещества",
+      "Кожа и волосы",
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Lysimachia vulgaris). Рассматривается в справочнике натуральных средств.",
+    "uses": "диарея, дефицит нутриентов, раны и восстановление кожи, свёртывание крови",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/loosestrife.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0586",
+    "kind": "supplement",
+    "nameRu": "Мытник",
+    "nameEn": "Lousewort",
+    "aliases": [
+      "Lousewort",
+      "Pedicularis bracteosa",
+      "Pedicularis canadensis",
+      "Pedicularis centranthera"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Pedicularis bracteosa). В статье описаны: листья.",
+    "uses": "сердечно-сосудистая система",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/lousewort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0587",
+    "kind": "food",
+    "nameRu": "Люффа (молодые плоды)",
+    "nameEn": "Luffa",
+    "aliases": [
+      "Luffa",
+      "Luffa acutangula",
+      "Luffa aegyptiaca",
+      "Luffa cylindrical"
+    ],
+    "family": "Овощи и зелень",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы",
+      "Исследования боли"
+    ],
+    "description": "Люффа (молодые плоды). В пищевом разделе обозначена съедобная часть и, где требуется, продукт после надлежащей подготовки. Экстракты и иное лекарственное сырьё рассматриваются отдельно.",
+    "uses": "аллергические и астматические симптомы, воспалительные процессы, дыхательные пути, боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/luffa.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0588",
+    "kind": "supplement",
+    "nameRu": "Катарантус розовый",
+    "nameEn": "Madagascar Periwinkle",
+    "aliases": [
+      "Madagascar Periwinkle",
+      "Ammocallis rosea",
+      "Catharanthus roseus",
+      "Lochnera rosea"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Обмен веществ",
+      "Онкологические исследования",
+      "Дыхательная система",
+      "Зрение и слух"
+    ],
+    "description": "Растительное сырьё (Ammocallis rosea). Рассматривается в справочнике натуральных средств.",
+    "uses": "обмен глюкозы, онкология: исследовательская область, дыхательные пути, зрение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения печени; свёртывание крови и антикоагулянты; глюкоза и сахароснижающие препараты",
+    "sources": [
+      "https://www.rxlist.com/supplements/madagascar_periwinkle.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0589",
+    "kind": "supplement",
+    "nameRu": "Адиантум",
+    "nameEn": "Maidenhair Fern",
+    "aliases": [
+      "Maidenhair Fern",
+      "Adiantum capillus-veneris",
+      "Adiantum pedatum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Репродуктивное здоровье",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Adiantum capillus-veneris). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути, менструальные симптомы, волосы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/maidenhair_fern.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0590",
+    "kind": "supplement",
+    "nameRu": "Юстиция сосудистая (адатода)",
+    "nameEn": "Malabar Nut",
+    "aliases": [
+      "Malabar Nut",
+      "Adhatoda vasica",
+      "Adhatoda zeylenica",
+      "Justicia adhatoda"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [],
+    "description": "Растительное сырьё (Adhatoda vasica). В статье описаны: листья.",
+    "uses": "Область применения требует уточнения по статье",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/malabar_nut.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0591",
+    "kind": "supplement",
+    "nameRu": "Брунфельсия одноцветковая (манака)",
+    "nameEn": "Manaca",
+    "aliases": [
+      "Manaca",
+      "Brunfelsia hopeana",
+      "Brunfelsia uniflora"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Brunfelsia hopeana). В статье описаны: корни.",
+    "uses": "суставы, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/manaca.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0592",
+    "kind": "supplement",
+    "nameRu": "Аралия высокая (маньчжурская)",
+    "nameEn": "Manchurian Thorn",
+    "aliases": [
+      "Manchurian Thorn",
+      "Aralia elata",
+      "Aralia mandshurica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Обмен веществ",
+      "Физическая работоспособность",
+      "Исследования боли",
+      "Нервная система и сон"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Aralia elata). В статье описаны: корни, кора.",
+    "uses": "масса тела, утомляемость, боль, настроение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения печени; глюкоза и сахароснижающие препараты",
+    "sources": [
+      "https://www.rxlist.com/supplements/manchurian_thorn.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0593",
+    "kind": "food",
+    "nameRu": "Манна ясеня (сахаристый экссудат)",
+    "nameEn": "Manna",
+    "aliases": [
+      "Manna",
+      "Fraxinus ornus"
+    ],
+    "family": "Кулинарные ингредиенты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Fraxinus ornus). Рассматривается в справочнике натуральных средств.",
+    "uses": "запор",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "свёртывание крови и антикоагулянты",
+    "sources": [
+      "https://www.rxlist.com/supplements/manna.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0594",
+    "kind": "supplement",
+    "nameRu": "Лиатрис колосистый",
+    "nameEn": "Marsh Blazing Star",
+    "aliases": [
+      "Marsh Blazing Star",
+      "Laciniaria spicata",
+      "Liatris callilepis",
+      "Liatris spicata"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Мочевыделительная система",
+      "Дыхательная система",
+      "Исследования боли",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растительное сырьё (Laciniaria spicata). В статье описаны: корни.",
+    "uses": "мочевыводящие пути, дыхательные пути, боль, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения печени; аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/marsh_blazing_star.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0595",
+    "kind": "supplement",
+    "nameRu": "Калужница болотная",
+    "nameEn": "Marsh Marigold",
+    "aliases": [
+      "Marsh Marigold",
+      "Caltha alba",
+      "Caltha palustris"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Репродуктивное здоровье",
+      "Дыхательная система",
+      "Печень и желчевыделение"
+    ],
+    "description": "Растительное сырьё (Caltha alba). Рассматривается в справочнике натуральных средств.",
+    "uses": "боль, менструальные симптомы, дыхательные пути, печень",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/marsh_marigold.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0596",
+    "kind": "supplement",
+    "nameRu": "Багульник болотный",
+    "nameEn": "Marsh Tea",
+    "aliases": [
+      "Marsh Tea",
+      "Ledum palustre",
+      "Rhododendron palustre"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Иммунные и воспалительные процессы",
+      "Кости и суставы",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Ledum palustre). Рассматривается в справочнике натуральных средств.",
+    "uses": "боль, воспалительные процессы, суставы, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения почек; седативные эффекты",
+    "sources": [
+      "https://www.rxlist.com/supplements/marsh_tea.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "Marsh Tea означает багульник болотный, токсичное лекарственное сырьё; слово tea не делает его пищевым чаем.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0597",
+    "kind": "supplement",
+    "nameRu": "Лилия кудреватая",
+    "nameEn": "Martagon",
+    "aliases": [
+      "Martagon",
+      "Lilium martagon"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Репродуктивное здоровье",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Lilium martagon). В статье описаны: листья, цветки, стебли.",
+    "uses": "дыхательные пути, менструальные симптомы, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/martagon.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0598",
+    "kind": "supplement",
+    "nameRu": "Борщевик крупный",
+    "nameEn": "Masterwort",
+    "aliases": [
+      "Masterwort",
+      "Heracleum lanatum",
+      "Heracleum maximum",
+      "Heracleum montanum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Heracleum lanatum). Рассматривается в справочнике натуральных средств.",
+    "uses": "пищеварение, диарея, воспалительные процессы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/masterwort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0599",
+    "kind": "supplement",
+    "nameRu": "Менцелия сердцелистная",
+    "nameEn": "Mentzelia",
+    "aliases": [
+      "Mentzelia",
+      "Mentzelia cordifolia"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Mentzelia cordifolia). В статье описаны: корни, стебли.",
+    "uses": "пищеварение, боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/mentzelia.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0600",
+    "kind": "supplement",
+    "nameRu": "Пролесник однолетний",
+    "nameEn": "Mercury Herb",
+    "aliases": [
+      "Mercury Herb",
+      "Mercurialis annua"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Иммунные и воспалительные процессы",
+      "Пищеварение",
+      "Дыхательная система"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Mercurialis annua). В статье описаны: корни, стебли.",
+    "uses": "воспалительные процессы, запор, дыхательные пути, пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения почек; аллергические реакции; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/mercury_herb.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0601",
+    "kind": "supplement",
+    "nameRu": "Ипомея орисабская (корень)",
+    "nameEn": "Mexican Scammony Root",
+    "aliases": [
+      "Mexican Scammony Root",
+      "Convolvulus orizabensis",
+      "Convolvulus superbus",
+      "Ipomoea orizabensis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Convolvulus orizabensis). В статье описаны: корни.",
+    "uses": "запор",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "свёртывание крови и антикоагулянты",
+    "sources": [
+      "https://www.rxlist.com/supplements/mexican_scammony_root.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0602",
+    "kind": "supplement",
+    "nameRu": "Волчеягодник обыкновенный",
+    "nameEn": "Mezereon",
+    "aliases": [
+      "Mezereon",
+      "Daphne mezereum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Полость рта",
+      "Кости и суставы",
+      "Кожа и волосы"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Daphne mezereum). В статье описаны: кора.",
+    "uses": "боль, полость рта, суставы, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/mezereon.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0603",
+    "kind": "supplement",
+    "nameRu": "Вербейник монетчатый",
+    "nameEn": "Moneywort",
+    "aliases": [
+      "Moneywort",
+      "Lysimachia nummularia",
+      "Lysimaque nummulaire"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Кожа и волосы",
+      "Инфекции и паразиты"
+    ],
+    "description": "Растительное сырьё (Lysimachia nummularia). Рассматривается в справочнике натуральных средств.",
+    "uses": "диарея, кожа, инфекции",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/moneywort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0604",
+    "kind": "supplement",
+    "nameRu": "Хвойник невадский (мормонский чай)",
+    "nameEn": "Mormon Tea",
+    "aliases": [
+      "Mormon Tea",
+      "Ephedra nevadensis",
+      "Ephedra viridis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Мочевыделительная система",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растительное сырьё (Ephedra nevadensis). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути, мочевыводящие пути, сексуальная функция",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения печени",
+    "sources": [
+      "https://www.rxlist.com/supplements/mormon_tea.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Мормонский чай — хвойник; исходный риск для печени сохранён. Обиходное название не является основанием считать это обычным пищевым напитком.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0605",
+    "kind": "supplement",
+    "nameRu": "Лён слабительный",
+    "nameEn": "Mountain Flax",
+    "aliases": [
+      "Mountain Flax",
+      "Linum catharticum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Linum catharticum). Рассматривается в справочнике натуральных средств.",
+    "uses": "тошнота",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/mountain_flax.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0606",
+    "kind": "supplement",
+    "nameRu": "Кальмия широколистная",
+    "nameEn": "Mountain Laurel",
+    "aliases": [
+      "Mountain Laurel",
+      "Kalmia latifolia"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Kalmia latifolia). В статье описаны: листья.",
+    "uses": "кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма",
+    "sources": [
+      "https://www.rxlist.com/supplements/mountain_laurel.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0607",
+    "kind": "supplement",
+    "nameRu": "Ястребиночка обыкновенная",
+    "nameEn": "Mouse Ear",
+    "aliases": [
+      "Mouse Ear",
+      "Hieracium pilosella",
+      "Pilosella officinarum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Пищеварение",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Hieracium pilosella). Рассматривается в справочнике натуральных средств.",
+    "uses": "аллергические и астматические симптомы, дыхательные пути, пищеварение, раны и восстановление кожи",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/mouse_ear.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0608",
+    "kind": "supplement",
+    "nameRu": "Мирция",
+    "nameEn": "Myrcia",
+    "aliases": [
+      "Myrcia",
+      "Myrcia multiflora",
+      "Myrcia salicifolia",
+      "Myrcia uniflora"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Обмен веществ",
+      "Пищеварение",
+      "Сердце и сосуды",
+      "Полость рта"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Myrcia multiflora). Рассматривается в справочнике натуральных средств.",
+    "uses": "обмен глюкозы, диарея, артериальное давление, полость рта",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/myrcia.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0609",
+    "kind": "supplement",
+    "nameRu": "Венерин башмачок (сырьё)",
+    "nameEn": "Nerve Root",
+    "aliases": [
+      "Nerve Root",
+      "Cypripedium calceolus",
+      "Cypripedium parviflorum",
+      "Cypripedium pubescens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Репродуктивное здоровье",
+      "Пищеварение",
+      "Нервная система и сон"
+    ],
+    "description": "Растительное сырьё (Cypripedium calceolus). В статье описаны: корни, корневища.",
+    "uses": "менструальные симптомы, диарея, стресс и тревожность",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/nerve_root.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0610",
+    "kind": "supplement",
+    "nameRu": "Краснокоренник американский (чай Нью-Джерси)",
+    "nameEn": "New Jersey Tea",
+    "aliases": [
+      "New Jersey Tea",
+      "Ceanothus americanus",
+      "Ceanothus intermedius"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Сердце и сосуды",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Ceanothus americanus). В статье описаны: корни, кора, листья.",
+    "uses": "дыхательные пути, свёртывание крови, лихорадка",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/new_jersey_tea.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Чай Нью-Джерси в данной карточке описывает корни, кору и листья краснокоренника. До разграничения форм оставлен растительным сырьём.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0611",
+    "kind": "supplement",
+    "nameRu": "Масло ниаули",
+    "nameEn": "Niauli Oil",
+    "aliases": [
+      "Niauli Oil",
+      "Melaleuca viridiflora"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Масло растительного происхождения (Melaleuca viridiflora). В статье описаны: листья.",
+    "uses": "дыхательные пути, воспалительные процессы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно. артериальное давление; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/niauli_oil.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0612",
+    "kind": "supplement",
+    "nameRu": "Клён Никко",
+    "nameEn": "Nikko Maple",
+    "aliases": [
+      "Nikko Maple",
+      "Acer nikoense"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Зрение и слух",
+      "Печень и желчевыделение"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Acer nikoense). В статье описаны: кора.",
+    "uses": "зрение, печень",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/nikko_maple.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0613",
+    "kind": "supplement",
+    "nameRu": "Зантоксилум американский",
+    "nameEn": "Northern Prickly Ash",
+    "aliases": [
+      "Northern Prickly Ash",
+      "Zanthoxylum americanum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Исследования боли",
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Zanthoxylum americanum). В статье описаны: кора, ягоды.",
+    "uses": "суставы, боль, кровообращение, артериальное давление",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/northern_prickly_ash.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0614",
+    "kind": "supplement",
+    "nameRu": "Бальзам псевдотсуги Мензиса",
+    "nameEn": "Oregon Fir Balsam",
+    "aliases": [
+      "Oregon Fir Balsam",
+      "Pseudotsuga douglasii",
+      "Pseudotsuga menziesii",
+      "Pseudotsuga mucronata"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Сердце и сосуды",
+      "Исследования боли",
+      "Онкологические исследования"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Pseudotsuga douglasii). Рассматривается в справочнике натуральных средств.",
+    "uses": "раны и восстановление кожи, сердечно-сосудистая система, боль, онкология: исследовательская область",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/oregon_fir_balsam.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0615",
+    "kind": "supplement",
+    "nameRu": "Магония падуболистная",
+    "nameEn": "Oregon Grape",
+    "aliases": [
+      "Oregon Grape",
+      "Berberis aquifolium",
+      "Berberis nervosa",
+      "Berberis repens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Пищеварение",
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Berberis aquifolium). В статье описаны: корни, стебли.",
+    "uses": "кожа, пищеварение, сердечно-сосудистая система",
+    "evidence": "В справочнике: возможный эффект для отдельных применений (кожа); не переносить на другие цели.",
+    "risks": "Данных о безопасности недостаточно. аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/oregon_grape.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0616",
+    "kind": "supplement",
+    "nameRu": "Плосковеточник восточный",
+    "nameEn": "Oriental Arborvitae",
+    "aliases": [
+      "Oriental Arborvitae",
+      "Platycladus orientalis",
+      "Retinispora juniperoides",
+      "Thuja orientalis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Кости и суставы",
+      "Нервная система и сон"
+    ],
+    "description": "Растительное сырьё (Platycladus orientalis). В статье описаны: семена.",
+    "uses": "боль, суставы, стресс и тревожность, сон",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения почек",
+    "sources": [
+      "https://www.rxlist.com/supplements/oriental_arborvitae.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0617",
+    "kind": "supplement",
+    "nameRu": "Фиалковый корень (ирис)",
+    "nameEn": "Orris",
+    "aliases": [
+      "Orris",
+      "Iris florentina",
+      "Iris germanica",
+      "Iris junonia"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Дыхательная система",
+      "Онкологические исследования",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Iris florentina). В статье описаны: корни.",
+    "uses": "кожа, дыхательные пути, онкология: исследовательская область, воспалительные процессы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/orris.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0618",
+    "kind": "supplement",
+    "nameRu": "Лигустикум Портера (оша)",
+    "nameEn": "Osha",
+    "aliases": [
+      "Osha",
+      "Ligusticum porteri"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Инфекции и паразиты",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Ligusticum porteri). В статье описаны: корни.",
+    "uses": "кожа, раны и восстановление кожи, инфекции, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/osha.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0619",
+    "kind": "food",
+    "nameRu": "Страусник обыкновенный (подготовленные молодые побеги)",
+    "nameEn": "Ostrich Fern",
+    "aliases": [
+      "Ostrich Fern",
+      "Matteuccia struthiopteris",
+      "Osmunda struthiopteris"
+    ],
+    "family": "Овощи и зелень",
+    "tags": [
+      "Кожа и волосы"
+    ],
+    "description": "Страусник обыкновенный (подготовленные молодые побеги). В пищевом разделе обозначена съедобная часть и, где требуется, продукт после надлежащей подготовки. Экстракты и иное лекарственное сырьё рассматриваются отдельно.",
+    "uses": "раны и восстановление кожи, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/ostrich_fern.htm",
+      "https://www.canada.ca/en/health-canada/services/food-safety-fruits-vegetables/fiddlehead-safety-tips.html"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая часть — правильно подготовленные молодые побеги идентифицированного страусника. Сырые побеги и другие виды папоротников не приравниваются к пищевому продукту.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0620",
+    "kind": "food",
+    "nameRu": "Монарда двойчатая (чай Освего)",
+    "nameEn": "Oswego Tea",
+    "aliases": [
+      "Oswego Tea",
+      "Monarda didyma"
+    ],
+    "family": "Чаи и напитки",
+    "tags": [
+      "Пищеварение",
+      "Репродуктивное здоровье",
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Монарда двойчатая (чай Освего). Чай, напиток или пищевое сырьё для его приготовления. Концентрированные экстракты и лекарственные дозы рассматриваются отдельно.",
+    "uses": "пищеварение, менструальные симптомы, дыхательные пути, лихорадка",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/oswego_tea.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0621",
+    "kind": "supplement",
+    "nameRu": "Нивяник обыкновенный",
+    "nameEn": "Ox-Eye Daisy",
+    "aliases": [
+      "Ox-Eye Daisy",
+      "Chrysanthemum leucanthemum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы",
+      "Полость рта",
+      "Печень и желчевыделение"
+    ],
+    "description": "Растительное сырьё (Chrysanthemum leucanthemum). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути, лихорадка, полость рта, печень",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/ox-eye_daisy.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0622",
+    "kind": "supplement",
+    "nameRu": "Софора японская",
+    "nameEn": "Pagoda Tree",
+    "aliases": [
+      "Pagoda Tree",
+      "Sophora japonica",
+      "Styphnolobium japonicum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Sophora japonica). В статье описаны: семена.",
+    "uses": "диарея",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pagoda_tree.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0623",
+    "kind": "supplement",
+    "nameRu": "Гейссоспермум (пао-перейра)",
+    "nameEn": "Pao Pereira",
+    "aliases": [
+      "Pao Pereira",
+      "Geissospermum laeve",
+      "Geissospermum vellosii"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Пищеварение",
+      "Иммунные и воспалительные процессы",
+      "Печень и желчевыделение"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Geissospermum laeve). В статье описаны: кора.",
+    "uses": "онкология: исследовательская область, запор, лихорадка, печень",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pao_pereira.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0624",
+    "kind": "supplement",
+    "nameRu": "Хондродендрон войлочный (парейра)",
+    "nameEn": "Pareira",
+    "aliases": [
+      "Pareira",
+      "Chondrodendron tomentosum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растительное сырьё (Chondrodendron tomentosum). В статье описаны: корни.",
+    "uses": "дыхательные пути, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pareira.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0625",
+    "kind": "supplement",
+    "nameRu": "Невзрачница полевая",
+    "nameEn": "Parsley Piert",
+    "aliases": [
+      "Parsley Piert",
+      "Alchemilla arvensis",
+      "Alchemilla occidentalis",
+      "Aphanes arvensis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Иммунные и воспалительные процессы",
+      "Мочевыделительная система",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Alchemilla arvensis). Рассматривается в справочнике натуральных средств.",
+    "uses": "лихорадка, мочевыводящие пути, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/parsley_piert.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0626",
+    "kind": "supplement",
+    "nameRu": "Баухиния вильчатая (пата-де-вака)",
+    "nameEn": "Pata De Vaca",
+    "aliases": [
+      "Pata De Vaca",
+      "Bauhinia forficata"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Обмен веществ"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Bauhinia forficata). В статье описаны: листья.",
+    "uses": "обмен глюкозы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "глюкоза и сахароснижающие препараты",
+    "sources": [
+      "https://www.rxlist.com/supplements/pata_de_vaca.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0627",
+    "kind": "supplement",
+    "nameRu": "Масло пачули",
+    "nameEn": "Patchouly Oil",
+    "aliases": [
+      "Patchouly Oil",
+      "Mentha cablin",
+      "Pogostemon cablin",
+      "Pogostemon heyneanus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Исследования боли",
+      "Пищеварение"
+    ],
+    "description": "Масло растительного происхождения (Mentha cablin). В статье описаны: листья.",
+    "uses": "дыхательные пути, боль, тошнота, диарея",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/patchouly_oil.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0628",
+    "kind": "supplement",
+    "nameRu": "Анациклус лекарственный",
+    "nameEn": "Pellitory",
+    "aliases": [
+      "Pellitory",
+      "Anacyclus pyrethrum",
+      "Anthemis pyrethrum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Пищеварение",
+      "Полость рта",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Anacyclus pyrethrum). В статье описаны: корни.",
+    "uses": "суставы, пищеварение, полость рта, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/pellitory.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0629",
+    "kind": "supplement",
+    "nameRu": "Постенница лекарственная",
+    "nameEn": "Pellitory-Of-The-Wall",
+    "aliases": [
+      "Pellitory-Of-The-Wall",
+      "Parietaria officinalis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Пищеварение",
+      "Мочевыделительная система",
+      "Инфекции и паразиты"
+    ],
+    "description": "Растительное сырьё (Parietaria officinalis). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути, запор, мочевыводящие пути, инфекции",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pellitory-of-the-wall.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0630",
+    "kind": "supplement",
+    "nameRu": "Мята болотная (пеннироял)",
+    "nameEn": "Pennyroyal",
+    "aliases": [
+      "Pennyroyal",
+      "Hedeoma pulegioides",
+      "Melissa pulegioides",
+      "Mentha pulegium"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Исследования боли",
+      "Дыхательная система",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Hedeoma pulegioides). В статье описаны: листья.",
+    "uses": "пищеварение, боль, дыхательные пути, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения печени; риск поражения почек; артериальное давление",
+    "sources": [
+      "https://www.rxlist.com/supplements/pennyroyal.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0631",
+    "kind": "supplement",
+    "nameRu": "Перуанский бальзам",
+    "nameEn": "Peru Balsam",
+    "aliases": [
+      "Peru Balsam",
+      "Myrospermum pereirae",
+      "Myroxylon pereirae",
+      "Toluifera pereirae"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Дыхательная система",
+      "Пищеварение",
+      "Инфекции и паразиты"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Myrospermum pereirae). В статье описаны: кора, стебли.",
+    "uses": "онкология: исследовательская область, дыхательные пути, пищеварение, паразитарные заболевания",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения почек; аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/peru_balsam.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0632",
+    "kind": "supplement",
+    "nameRu": "Горицвет весенний",
+    "nameEn": "Pheasant's Eye",
+    "aliases": [
+      "Pheasant's Eye",
+      "Adonis vernalis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды",
+      "Иммунные и воспалительные процессы",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Adonis vernalis). Рассматривается в справочнике натуральных средств.",
+    "uses": "сердечно-сосудистая система, лихорадка, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/pheasants_eye.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0633",
+    "kind": "supplement",
+    "nameRu": "Бархат амурский",
+    "nameEn": "Phellodendron",
+    "aliases": [
+      "Phellodendron",
+      "Phellodendron amurense"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Обмен веществ",
+      "Кожа и волосы",
+      "Пищеварение",
+      "Кости и суставы"
+    ],
+    "description": "Растительное сырьё (Phellodendron amurense). В статье описаны: кора.",
+    "uses": "масса тела, кожа, диарея, суставы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/phellodendron.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0634",
+    "kind": "supplement",
+    "nameRu": "Тимофеевка луговая",
+    "nameEn": "Phleum Pratense",
+    "aliases": [
+      "Phleum Pratense",
+      "Phleum pratense"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Phleum pratense). В статье описаны: пыльца.",
+    "uses": "аллергические и астматические симптомы, лихорадка",
+    "evidence": "В справочнике: возможный эффект для отдельных применений (аллергические и астматические симптомы, лихорадка); не переносить на другие цели.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/phleum_pratense.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0635",
+    "kind": "supplement",
+    "nameRu": "Пикрориза (катуки)",
+    "nameEn": "Picrorhiza",
+    "aliases": [
+      "Picrorhiza",
+      "Neopicrorhiza scrophulariiflora",
+      "Picrorhiza kurroia",
+      "Picrorhiza scrophulariiflora"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Дыхательная система",
+      "Печень и желчевыделение",
+      "Инфекции и паразиты"
+    ],
+    "description": "Растительное сырьё (Neopicrorhiza scrophulariiflora). В статье описаны: корни, корневища.",
+    "uses": "кожа, аллергические и астматические симптомы, печень, инфекции",
+    "evidence": "В справочнике: возможный эффект для отдельных применений (кожа); не переносить на другие цели. Для части целей указан отрицательный результат.",
+    "risks": "глюкоза и сахароснижающие препараты",
+    "sources": [
+      "https://www.rxlist.com/supplements/picrorhiza.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0636",
+    "kind": "supplement",
+    "nameRu": "Бедренец",
+    "nameEn": "Pimpinella",
+    "aliases": [
+      "Pimpinella",
+      "Pimpinella magna",
+      "Pimpinella major",
+      "Pimpinella saxifraga"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Инфекции и паразиты",
+      "Мочевыделительная система",
+      "Пищеварение"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Pimpinella magna). В статье описаны: корни.",
+    "uses": "дыхательные пути, инфекции, мочевыводящие пути, пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pimpinella.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0637",
+    "kind": "supplement",
+    "nameRu": "Пинеллия тройчатая",
+    "nameEn": "Pinellia Ternata",
+    "aliases": [
+      "Pinellia Ternata",
+      "Arisaema cochinchinense",
+      "Arum dracontium",
+      "Arum ternatum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Arisaema cochinchinense). Рассматривается в справочнике натуральных средств.",
+    "uses": "тошнота, дыхательные пути, воспалительные процессы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pinellia_ternata.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0638",
+    "kind": "supplement",
+    "nameRu": "Спигелия",
+    "nameEn": "Pink Root",
+    "aliases": [
+      "Pink Root",
+      "Lonicera marilandica",
+      "Spigelia anthelmia",
+      "Spigelia marilandica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Инфекции и паразиты"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Lonicera marilandica). В статье описаны: корни, луковицы.",
+    "uses": "пищеварение, паразитарные заболевания",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pink_root.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0639",
+    "kind": "supplement",
+    "nameRu": "Зимолюбка зонтичная",
+    "nameEn": "Pipsissewa",
+    "aliases": [
+      "Pipsissewa",
+      "Chimaphila corymbosa",
+      "Chimaphila umbellata"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Мочевыделительная система",
+      "Инфекции и паразиты",
+      "Дыхательная система",
+      "Нервная система и сон"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Chimaphila corymbosa). Рассматривается в справочнике натуральных средств.",
+    "uses": "мочевыводящие пути, инфекции, дыхательные пути, неврология",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pipsissewa.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0640",
+    "kind": "supplement",
+    "nameRu": "Саррацения пурпурная",
+    "nameEn": "Pitcher Plant",
+    "aliases": [
+      "Pitcher Plant",
+      "Sarracenia purpurea"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Мочевыделительная система",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Sarracenia purpurea). В статье описаны: корни, листья.",
+    "uses": "пищеварение, запор, мочевыводящие пути, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/pitcher_plant.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0641",
+    "kind": "supplement",
+    "nameRu": "Ваточник клубненосный",
+    "nameEn": "Pleurisy Root",
+    "aliases": [
+      "Pleurisy Root",
+      "Asclepias tuberosa"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы",
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Asclepias tuberosa). В статье описаны: корни.",
+    "uses": "дыхательные пути, воспалительные процессы, боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма",
+    "sources": [
+      "https://www.rxlist.com/supplements/pleurisy_root.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0642",
+    "kind": "supplement",
+    "nameRu": "Подофилл",
+    "nameEn": "Podophyllum",
+    "aliases": [
+      "Podophyllum",
+      "Podophyllum emodi",
+      "Podophyllum hexandrum",
+      "Podophyllum peltatum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Печень и желчевыделение",
+      "Онкологические исследования"
+    ],
+    "description": "Растительное сырьё (Podophyllum emodi). В статье описаны: корни, стебли.",
+    "uses": "волосы, печень, онкология: исследовательская область",
+    "evidence": "В справочнике есть оценка эффекта для отдельных применений; не переносить на другие цели.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. артериальное давление",
+    "sources": [
+      "https://www.rxlist.com/supplements/podophyllum.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0643",
+    "kind": "supplement",
+    "nameRu": "Пуансеттия",
+    "nameEn": "Poinsettia",
+    "aliases": [
+      "Poinsettia",
+      "Euphorbia poinsettia",
+      "Euphorbia pulcherrima",
+      "Poinsettia pulcherrima"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Иммунные и воспалительные процессы",
+      "Исследования боли",
+      "Инфекции и паразиты",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Euphorbia poinsettia). В статье описаны: целое растение.",
+    "uses": "лихорадка, боль, инфекции, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/poinsettia.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0644",
+    "kind": "supplement",
+    "nameRu": "Токсикодендрон (ядовитый плющ)",
+    "nameEn": "Poison Ivy",
+    "aliases": [
+      "Poison Ivy",
+      "Rhus radicans",
+      "Rhus toxicodendron",
+      "Toxicodendron pubescens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Rhus radicans). В статье описаны: листья.",
+    "uses": "боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/poison_ivy.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0645",
+    "kind": "supplement",
+    "nameRu": "Лютик ядовитый",
+    "nameEn": "Poisonous Buttercup",
+    "aliases": [
+      "Poisonous Buttercup",
+      "Ranunculus sceleratus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Ranunculus sceleratus). Рассматривается в справочнике натуральных средств.",
+    "uses": "кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/poisonous_buttercup.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0646",
+    "kind": "supplement",
+    "nameRu": "Лаконос американский",
+    "nameEn": "Pokeweed",
+    "aliases": [
+      "Pokeweed",
+      "Phytolacca americana",
+      "Phytolacca decandra",
+      "Pokeweed berry"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Исследования боли",
+      "Иммунные и воспалительные процессы",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Phytolacca americana). В статье описаны: корни, ягоды.",
+    "uses": "суставы, боль, воспалительные процессы, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. артериальное давление",
+    "sources": [
+      "https://www.rxlist.com/supplements/pokeweed.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0647",
+    "kind": "supplement",
+    "nameRu": "Лапчатка гусиная",
+    "nameEn": "Potentilla",
+    "aliases": [
+      "Potentilla",
+      "Argentina anserine",
+      "Potentilla anserina"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Репродуктивное здоровье",
+      "Исследования боли",
+      "Пищеварение",
+      "Полость рта"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Argentina anserine). В статье описаны: листья, цветки.",
+    "uses": "менструальные симптомы, боль, диарея, полость рта",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/potentilla.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0648",
+    "kind": "supplement",
+    "nameRu": "Сивец луговой",
+    "nameEn": "Premorse",
+    "aliases": [
+      "Premorse",
+      "Scabieuse succise",
+      "Scabiosa succisa"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Scabieuse succise). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/premorse.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0649",
+    "kind": "supplement",
+    "nameRu": "Прострел",
+    "nameEn": "Pulsatilla",
+    "aliases": [
+      "Pulsatilla",
+      "Anemone nigricans",
+      "Anemone pratensis",
+      "Anemone pulsatilla"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Нервная система и сон",
+      "Кожа и волосы",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Anemone nigricans). Рассматривается в справочнике натуральных средств.",
+    "uses": "боль, сон, кожа, аллергические и астматические симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/pulsatilla.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0650",
+    "kind": "supplement",
+    "nameRu": "Дербенник иволистный",
+    "nameEn": "Purple Loosestrife",
+    "aliases": [
+      "Purple Loosestrife",
+      "Lysimaque rouge",
+      "Lythrum salicaria"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Репродуктивное здоровье",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Lysimaque rouge). Рассматривается в справочнике натуральных средств.",
+    "uses": "диарея, пищеварение, менструальные симптомы, воспалительные процессы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/purple_loosestrife.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0651",
+    "kind": "supplement",
+    "nameRu": "Сыть круглая",
+    "nameEn": "Purple Nut Sedge",
+    "aliases": [
+      "Purple Nut Sedge",
+      "Cyperus rotundus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Полость рта",
+      "Нервная система и сон",
+      "Обмен веществ"
+    ],
+    "description": "Растительное сырьё (Cyperus rotundus). В статье описаны: надземная часть.",
+    "uses": "кожа, полость рта, настроение, обмен глюкозы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "свёртывание крови и антикоагулянты; глюкоза и сахароснижающие препараты; аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/purple_nut_sedge.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0652",
+    "kind": "supplement",
+    "nameRu": "Ромашка далматская (пиретрум)",
+    "nameEn": "Pyrethrum",
+    "aliases": [
+      "Pyrethrum",
+      "Chrysanthemum cinerariifolium",
+      "Pyrethrum cinerariifolium",
+      "Tanacetum cinerariifolium"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Нервная система и сон"
+    ],
+    "description": "Растительное сырьё (Chrysanthemum cinerariifolium). В статье описаны: цветки.",
+    "uses": "кожа, стресс и тревожность",
+    "evidence": "В справочнике есть оценка эффекта для отдельных применений; не переносить на другие цели. Для части целей указан отрицательный результат.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/pyrethrum.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0653",
+    "kind": "supplement",
+    "nameRu": "Квассия",
+    "nameEn": "Quassia",
+    "aliases": [
+      "Quassia",
+      "Picrasma excelsa",
+      "Quassia amara"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Picrasma excelsa). Рассматривается в справочнике натуральных средств.",
+    "uses": "аппетит, запор, лихорадка, пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/quassia.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0654",
+    "kind": "supplement",
+    "nameRu": "Квебрахо белый",
+    "nameEn": "Quebracho",
+    "aliases": [
+      "Quebracho",
+      "Aspidosperma quebracho-blanco"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Сердце и сосуды",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растительное сырьё (Aspidosperma quebracho-blanco). В статье описаны: кора.",
+    "uses": "аллергические и астматические симптомы, дыхательные пути, артериальное давление, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/quebracho.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0655",
+    "kind": "supplement",
+    "nameRu": "Стиллингия лесная",
+    "nameEn": "Queen's Delight",
+    "aliases": [
+      "Queen's Delight",
+      "Stillingia sylvatica",
+      "Stillingia tenuis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Печень и желчевыделение"
+    ],
+    "description": "Растительное сырьё (Stillingia sylvatica). В статье описаны: корни.",
+    "uses": "пищеварение, печень, желчевыделение, запор",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/queens_delight.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0656",
+    "kind": "supplement",
+    "nameRu": "Квиллайя мыльная",
+    "nameEn": "Quillaia",
+    "aliases": [
+      "Quillaia",
+      "Quillaja saponaria"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Quillaja saponaria). В статье описаны: кора.",
+    "uses": "дыхательные пути, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения печени; риск поражения почек; глюкоза и сахароснижающие препараты",
+    "sources": [
+      "https://www.rxlist.com/supplements/quillaia.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0657",
+    "kind": "supplement",
+    "nameRu": "Изодон краснеющий",
+    "nameEn": "Rabdosia Rubescens",
+    "aliases": [
+      "Rabdosia Rubescens",
+      "Isodon rubescens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Isodon rubescens). В статье описаны: целое растение.",
+    "uses": "онкология: исследовательская область, простата",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/rabdosia_rubescens.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0658",
+    "kind": "supplement",
+    "nameRu": "Клён красный",
+    "nameEn": "Red Maple",
+    "aliases": [
+      "Red Maple",
+      "Acer rubrum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Зрение и слух"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Acer rubrum). В статье описаны: кора.",
+    "uses": "зрение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/red_maple.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0659",
+    "kind": "supplement",
+    "nameRu": "Сандал красный",
+    "nameEn": "Red Sandalwood",
+    "aliases": [
+      "Red Sandalwood",
+      "Pterocarpus santalinus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Дыхательная система"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Pterocarpus santalinus). Рассматривается в справочнике натуральных средств.",
+    "uses": "пищеварение, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/red_sandalwood.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0660",
+    "kind": "supplement",
+    "nameRu": "Мыльнянка лекарственная",
+    "nameEn": "Red Soapwort",
+    "aliases": [
+      "Red Soapwort",
+      "Saponaria officinalis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Saponaria officinalis). В статье описаны: корни.",
+    "uses": "дыхательные пути, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/red_soapwort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0661",
+    "kind": "supplement",
+    "nameRu": "Кентрантус красный",
+    "nameEn": "Red-Spur Valerian",
+    "aliases": [
+      "Red-Spur Valerian",
+      "Centranthus ruber",
+      "Valeriana rubra"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [],
+    "description": "Растительное сырьё (Centranthus ruber). В статье описаны: корни.",
+    "uses": "Область применения требует уточнения по статье",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/red-spur_valerian.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0662",
+    "kind": "supplement",
+    "nameRu": "Тростник обыкновенный",
+    "nameEn": "Reed Herb",
+    "aliases": [
+      "Reed Herb",
+      "Arundo phragmites",
+      "Arundo vulgaris",
+      "Phragmites australis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Обмен веществ",
+      "Онкологические исследования",
+      "Кожа и волосы"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Arundo phragmites). В статье описаны: стебли.",
+    "uses": "пищеварение, обмен глюкозы, онкология: исследовательская область, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/reed_herb.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0663",
+    "kind": "supplement",
+    "nameRu": "Ратания",
+    "nameEn": "Rhatany",
+    "aliases": [
+      "Rhatany",
+      "Krameria argentea",
+      "Krameria iluca",
+      "Krameria lappacea"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Иммунные и воспалительные процессы",
+      "Исследования боли",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Krameria argentea). В статье описаны: корни.",
+    "uses": "пищеварение, воспалительные процессы, боль, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/rhatany.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0664",
+    "kind": "supplement",
+    "nameRu": "Ладанник",
+    "nameEn": "Rock Rose",
+    "aliases": [
+      "Rock Rose",
+      "Cistus creticus",
+      "Cistus lusitanicus",
+      "Cistus nummularius"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Нервная система и сон"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Cistus creticus). В статье описаны: цветки.",
+    "uses": "стресс и тревожность",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/rock_rose.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0665",
+    "kind": "supplement",
+    "nameRu": "Масло пеларгонии душистой",
+    "nameEn": "Rose Geranium Oil",
+    "aliases": [
+      "Rose Geranium Oil",
+      "Pelargonium graveolens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Кожа и волосы",
+      "Пищеварение",
+      "Обмен веществ"
+    ],
+    "description": "Масло растительного происхождения (Pelargonium graveolens). В статье описаны: листья, стебли.",
+    "uses": "боль, кожа, диарея, масса тела",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/rose_geranium_oil.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0666",
+    "kind": "supplement",
+    "nameRu": "Сильфия рассечённолистная",
+    "nameEn": "Rosinweed",
+    "aliases": [
+      "Rosinweed",
+      "Silphium laciniatum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Silphium laciniatum). В статье описаны: корни.",
+    "uses": "пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/rosinweed.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0667",
+    "kind": "supplement",
+    "nameRu": "Грыжник",
+    "nameEn": "Rupturewort",
+    "aliases": [
+      "Rupturewort",
+      "Herniaria glabra",
+      "Herniaria hirsuta"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Мочевыделительная система",
+      "Исследования боли",
+      "Кости и суставы",
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Herniaria glabra). Рассматривается в справочнике натуральных средств.",
+    "uses": "мочевыводящие пути, боль, суставы, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/rupturewort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0668",
+    "kind": "supplement",
+    "nameRu": "Рододендрон ржавый",
+    "nameEn": "Rusty-Leaved Rhododendron",
+    "aliases": [
+      "Rusty-Leaved Rhododendron",
+      "Rhododendron ferrugineum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды",
+      "Кости и суставы",
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Rhododendron ferrugineum). В статье описаны: листья.",
+    "uses": "кровообращение, суставы, боль, артериальное давление",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма; артериальное давление",
+    "sources": [
+      "https://www.rxlist.com/supplements/rusty-leaved_rhododendron.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0669",
+    "kind": "food",
+    "nameRu": "Критмум морской (пищевая зелень)",
+    "nameEn": "Samphire",
+    "aliases": [
+      "Samphire",
+      "Crithmum maritimum"
+    ],
+    "family": "Овощи и зелень",
+    "tags": [
+      "Питательные вещества"
+    ],
+    "description": "Критмум морской (пищевая зелень). В пищевом разделе обозначена съедобная часть и, где требуется, продукт после надлежащей подготовки. Экстракты и иное лекарственное сырьё рассматриваются отдельно.",
+    "uses": "дефицит нутриентов",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/samphire.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0670",
+    "kind": "supplement",
+    "nameRu": "Сангре-де-градо (латекс кротона)",
+    "nameEn": "Sangre De Grado",
+    "aliases": [
+      "Sangre De Grado",
+      "Croton lechleri"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Дыхательная система",
+      "Кожа и волосы",
+      "Онкологические исследования"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Croton lechleri). В статье описаны: кора.",
+    "uses": "диарея, аллергические и астматические симптомы, кожа, онкология: исследовательская область",
+    "evidence": "В справочнике: возможный эффект для отдельных применений (диарея); не переносить на другие цели.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sangre_de_grado.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0671",
+    "kind": "supplement",
+    "nameRu": "Подлесник европейский",
+    "nameEn": "Sanicle",
+    "aliases": [
+      "Sanicle",
+      "Sanicula europaea"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система"
+    ],
+    "description": "Растительное сырьё (Sanicula europaea). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sanicle.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0672",
+    "kind": "supplement",
+    "nameRu": "Верхушки можжевельника казацкого",
+    "nameEn": "Savin Tops",
+    "aliases": [
+      "Savin Tops",
+      "Juniperus sabina"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Juniperus sabina). В статье описаны: листья.",
+    "uses": "кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения почек; нарушения сердечного ритма; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/savin_tops.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0673",
+    "kind": "supplement",
+    "nameRu": "Очный цвет полевой",
+    "nameEn": "Scarlet Pimpernel",
+    "aliases": [
+      "Scarlet Pimpernel",
+      "Anagallis arvensis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Нервная система и сон",
+      "Печень и желчевыделение",
+      "Онкологические исследования",
+      "Мочевыделительная система"
+    ],
+    "description": "Растительное сырьё (Anagallis arvensis). Рассматривается в справочнике натуральных средств.",
+    "uses": "настроение, печень, онкология: исследовательская область, мочевыводящие пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/scarlet_pimpernel.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0674",
+    "kind": "supplement",
+    "nameRu": "Схизонепета",
+    "nameEn": "Schizonepeta",
+    "aliases": [
+      "Schizonepeta",
+      "Nepeta multifida",
+      "Schizonepeta multifida",
+      "Schizonepeta tenuifolia"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растительное сырьё (Nepeta multifida). Рассматривается в справочнике натуральных средств.",
+    "uses": "кожа, дыхательные пути, лихорадка, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/schizonepeta.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0675",
+    "kind": "supplement",
+    "nameRu": "Скополия карниолийская",
+    "nameEn": "Scopolia",
+    "aliases": [
+      "Scopolia",
+      "Scopolia carniolica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Нервная система и сон",
+      "Исследования боли",
+      "Печень и желчевыделение"
+    ],
+    "description": "Растительное сырьё (Scopolia carniolica). В статье описаны: корни, стебли.",
+    "uses": "дыхательные пути, стресс и тревожность, боль, печень",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма; артериальное давление; аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/scopolia.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0676",
+    "kind": "supplement",
+    "nameRu": "Ракитник венечный",
+    "nameEn": "Scotch Broom",
+    "aliases": [
+      "Scotch Broom",
+      "Cytisus scoparius",
+      "Genista andreana",
+      "Sarothamnus scoparius"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы",
+      "Сердце и сосуды",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растительное сырьё (Cytisus scoparius). В статье описаны: цветки.",
+    "uses": "дыхательные пути, воспалительные процессы, артериальное давление, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. артериальное давление",
+    "sources": [
+      "https://www.rxlist.com/supplements/scotch_broom.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0677",
+    "kind": "supplement",
+    "nameRu": "Татарник колючий",
+    "nameEn": "Scotch Thistle",
+    "aliases": [
+      "Scotch Thistle",
+      "Onopordum acanthium"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Onopordum acanthium). Рассматривается в справочнике натуральных средств.",
+    "uses": "сердечно-сосудистая система",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/scotch_thistle.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0678",
+    "kind": "food",
+    "nameRu": "Ложечница лекарственная (пищевая зелень)",
+    "nameEn": "Scurvy Grass",
+    "aliases": [
+      "Scurvy Grass",
+      "Cochlearia officinalis"
+    ],
+    "family": "Овощи и зелень",
+    "tags": [
+      "Питательные вещества",
+      "Кости и суставы",
+      "Пищеварение",
+      "Кожа и волосы"
+    ],
+    "description": "Ложечница лекарственная (пищевая зелень). В пищевом разделе обозначена съедобная часть и, где требуется, продукт после надлежащей подготовки. Экстракты и иное лекарственное сырьё рассматриваются отдельно.",
+    "uses": "дефицит нутриентов, суставы, пищеварение, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/scurvy_grass.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0679",
+    "kind": "supplement",
+    "nameRu": "Истод сенега",
+    "nameEn": "Senega",
+    "aliases": [
+      "Senega",
+      "Polygala japonica",
+      "Polygala senega",
+      "Polygala tenuifolia"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Polygala japonica). В статье описаны: корни.",
+    "uses": "аллергические и астматические симптомы, дыхательные пути, воспалительные процессы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/senega.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0680",
+    "kind": "supplement",
+    "nameRu": "Дурнишник сибирский",
+    "nameEn": "Siberian Cocklebur",
+    "aliases": [
+      "Siberian Cocklebur",
+      "Cadillo siberiano",
+      "Xanthium japonicum",
+      "Xanthium sibiricum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Пищеварение",
+      "Инфекции и паразиты",
+      "Кости и суставы"
+    ],
+    "description": "Растительное сырьё (Cadillo siberiano). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути, запор, инфекции, суставы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/siberian_cocklebur.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0681",
+    "kind": "supplement",
+    "nameRu": "Симаруба горькая",
+    "nameEn": "Simaruba",
+    "aliases": [
+      "Simaruba",
+      "Simaruba amara",
+      "Quassia simarouba"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Растительное сырьё (Simaruba amara). В статье описаны: кора.",
+    "uses": "диарея, лихорадка, пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/simaruba.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0682",
+    "kind": "food",
+    "nameRu": "Поручейник сахарный (корнеплод)",
+    "nameEn": "Skirret",
+    "aliases": [
+      "Skirret",
+      "Sium sisarum"
+    ],
+    "family": "Овощи и зелень",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Поручейник сахарный (корнеплод). В пищевом разделе обозначена съедобная часть и, где требуется, продукт после надлежащей подготовки. Экстракты и иное лекарственное сырьё рассматриваются отдельно.",
+    "uses": "пищеварение, аппетит",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/skirret.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0683",
+    "kind": "supplement",
+    "nameRu": "Симплокарпус вонючий",
+    "nameEn": "Skunk Cabbage",
+    "aliases": [
+      "Skunk Cabbage",
+      "Dracontium foetidum",
+      "Symplocarpus foetidus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Кости и суставы",
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Dracontium foetidum). В статье описаны: корни, стебли.",
+    "uses": "дыхательные пути, аллергические и астматические симптомы, суставы, боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/skunk_cabbage.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0684",
+    "kind": "supplement",
+    "nameRu": "Горец перечный (водяной перец)",
+    "nameEn": "Smartweed",
+    "aliases": [
+      "Smartweed",
+      "Polygonum hydropiper"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды",
+      "Пищеварение",
+      "Кожа и волосы"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Polygonum hydropiper). Рассматривается в справочнике натуральных средств.",
+    "uses": "свёртывание крови, диарея, раны и восстановление кожи",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/smartweed.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0685",
+    "kind": "supplement",
+    "nameRu": "Ольха мелкопильчатая",
+    "nameEn": "Smooth Alder",
+    "aliases": [
+      "Smooth Alder",
+      "Alnus serrulata"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Сердце и сосуды"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Alnus serrulata). В статье описаны: кора.",
+    "uses": "пищеварение, свёртывание крови",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/smooth_alder.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0686",
+    "kind": "supplement",
+    "nameRu": "Тысячелистник птармика",
+    "nameEn": "Sneezewort",
+    "aliases": [
+      "Sneezewort",
+      "Achillea ptarmica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Исследования боли",
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Achillea ptarmica). В статье описаны: корни.",
+    "uses": "суставы, боль, диарея, тошнота",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/sneezewort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0687",
+    "kind": "supplement",
+    "nameRu": "Зантоксилум булавовидный",
+    "nameEn": "Southern Prickly Ash",
+    "aliases": [
+      "Southern Prickly Ash",
+      "Zanthoxylum clava-herculis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Репродуктивное здоровье",
+      "Сердце и сосуды",
+      "Кости и суставы",
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Zanthoxylum clava-herculis). В статье описаны: кора, ягоды.",
+    "uses": "менструальные симптомы, кровообращение, суставы, боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/southern_prickly_ash.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0688",
+    "kind": "supplement",
+    "nameRu": "Дрок испанский",
+    "nameEn": "Spanish Broom",
+    "aliases": [
+      "Spanish Broom",
+      "Genista juncea",
+      "Spartium junceum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Дыхательная система"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Genista juncea). В статье описаны: цветки.",
+    "uses": "запор, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/spanish_broom.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0689",
+    "kind": "supplement",
+    "nameRu": "Масло испанской душицы",
+    "nameEn": "Spanish Origanum Oil",
+    "aliases": [
+      "Spanish Origanum Oil"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Инфекции и паразиты"
+    ],
+    "description": "Масло растительного происхождения. Рассматривается в справочнике натуральных средств.",
+    "uses": "раны и восстановление кожи, кожа, инфекции",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/spanish_origanum_oil.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0690",
+    "kind": "supplement",
+    "nameRu": "Стальник колючий",
+    "nameEn": "Spiny Restharrow",
+    "aliases": [
+      "Spiny Restharrow",
+      "Ononis spinosa"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Исследования боли",
+      "Мочевыделительная система",
+      "Инфекции и паразиты"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Ononis spinosa). В статье описаны: корни.",
+    "uses": "суставы, боль, мочевыводящие пути, инфекции",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/spiny_restharrow.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0691",
+    "kind": "supplement",
+    "nameRu": "Герань пятнистая",
+    "nameEn": "Spotted Geranium",
+    "aliases": [
+      "Spotted Geranium",
+      "Geranium maculatum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Полость рта",
+      "Кожа и волосы"
+    ],
+    "description": "Растительное сырьё (Geranium maculatum). В статье описаны: корни, целое растение, камедь.",
+    "uses": "диарея, пищеварение, полость рта, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/spotted_geranium.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0692",
+    "kind": "supplement",
+    "nameRu": "Митчелла ползучая",
+    "nameEn": "Squawvine",
+    "aliases": [
+      "Squawvine",
+      "Mitchella repens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Нервная система и сон",
+      "Пищеварение",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Mitchella repens). В статье описаны: листья, стебли.",
+    "uses": "стресс и тревожность, настроение, диарея, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно.",
+    "sources": [
+      "https://www.rxlist.com/supplements/squawvine.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0693",
+    "kind": "supplement",
+    "nameRu": "Морской лук",
+    "nameEn": "Squill",
+    "aliases": [
+      "Squill",
+      "Drimia indica",
+      "Drimia maritima",
+      "Scilla indica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды",
+      "Дыхательная система",
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Drimia indica). В статье описаны: луковицы.",
+    "uses": "сердечно-сосудистая система, дыхательные пути, аллергические и астматические симптомы, тошнота",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/squill.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0694",
+    "kind": "supplement",
+    "nameRu": "Птицемлечник зонтичный",
+    "nameEn": "Star Of Bethlehem",
+    "aliases": [
+      "Star Of Bethlehem",
+      "Ornithogalum umbellatum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Ornithogalum umbellatum). В статье описаны: луковицы.",
+    "uses": "сердечно-сосудистая система",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма",
+    "sources": [
+      "https://www.rxlist.com/supplements/star_of_bethlehem.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0695",
+    "kind": "supplement",
+    "nameRu": "Живокость стафизагрия",
+    "nameEn": "Stavesacre",
+    "aliases": [
+      "Stavesacre",
+      "Delphinium staphisagria"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Исследования боли"
+    ],
+    "description": "Растительное сырьё (Delphinium staphisagria). В статье описаны: семена.",
+    "uses": "кожа, боль",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/stavesacre.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0696",
+    "kind": "supplement",
+    "nameRu": "Стереоспермум",
+    "nameEn": "Stereospermum",
+    "aliases": [
+      "Stereospermum",
+      "Bignonia chelonoides",
+      "Bignonia suaveolens",
+      "Stereospermum chelonoides"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение",
+      "Исследования боли",
+      "Иммунные и воспалительные процессы"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Bignonia chelonoides). В статье описаны: кора.",
+    "uses": "тошнота, диарея, боль, лихорадка",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/stereospermum.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0697",
+    "kind": "supplement",
+    "nameRu": "Коллинсония канадская",
+    "nameEn": "Stone Root",
+    "aliases": [
+      "Stone Root",
+      "Collinsonia canadensis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Мочевыделительная система",
+      "Иммунные и воспалительные процессы",
+      "Исследования боли",
+      "Пищеварение"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Collinsonia canadensis). В статье описаны: корни, корневища.",
+    "uses": "мочевыводящие пути, воспалительные процессы, боль, пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/stone_root.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0698",
+    "kind": "supplement",
+    "nameRu": "Стиракс (смола ликвидамбара)",
+    "nameEn": "Storax",
+    "aliases": [
+      "Storax",
+      "Liquidambar macrophylla",
+      "Liquidambar orientalis",
+      "Liquidambar styraciflua"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Дыхательная система",
+      "Пищеварение",
+      "Нервная система и сон"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Liquidambar macrophylla). В статье описаны: кора, смола.",
+    "uses": "онкология: исследовательская область, дыхательные пути, диарея, неврология",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения почек",
+    "sources": [
+      "https://www.rxlist.com/supplements/storax.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0699",
+    "kind": "supplement",
+    "nameRu": "Строфант",
+    "nameEn": "Strophanthus",
+    "aliases": [
+      "Strophanthus",
+      "Roupellia grata",
+      "Strophanthus caudatus",
+      "Strophanthus divaricatus"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Сердце и сосуды"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Roupellia grata). В статье описаны: семена.",
+    "uses": "кровообращение, сердечно-сосудистая система, артериальное давление",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма",
+    "sources": [
+      "https://www.rxlist.com/supplements/strophanthus.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0700",
+    "kind": "supplement",
+    "nameRu": "Ферула сумбул",
+    "nameEn": "Sumbul",
+    "aliases": [
+      "Sumbul",
+      "Ferula sumbul"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Ferula sumbul). В статье описаны: корни, стебли.",
+    "uses": "аллергические и астматические симптомы, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sumbul.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0701",
+    "kind": "supplement",
+    "nameRu": "Росянка",
+    "nameEn": "Sundew",
+    "aliases": [
+      "Sundew",
+      "Drosera anglica",
+      "Drosera intermedia",
+      "Drosera longifolia"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Дыхательная система",
+      "Инфекции и паразиты",
+      "Онкологические исследования"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Drosera anglica). Рассматривается в справочнике натуральных средств.",
+    "uses": "дыхательные пути, аллергические и астматические симптомы, инфекции, онкология: исследовательская область",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sundew.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0702",
+    "kind": "supplement",
+    "nameRu": "Декалепис Гамильтона",
+    "nameEn": "Swallowroot",
+    "aliases": [
+      "Swallowroot",
+      "Decalepis hamiltonii"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Decalepis hamiltonii). В статье описаны: корни.",
+    "uses": "аппетит",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "свёртывание крови и антикоагулянты",
+    "sources": [
+      "https://www.rxlist.com/supplements/swallowroot.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0703",
+    "kind": "supplement",
+    "nameRu": "Ваточник мясо-красный",
+    "nameEn": "Swamp Milkweed",
+    "aliases": [
+      "Swamp Milkweed",
+      "Asclepias incarnata"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Пищеварение"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Asclepias incarnata). В статье описаны: корни, стебли.",
+    "uses": "пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. нарушения сердечного ритма",
+    "sources": [
+      "https://www.rxlist.com/supplements/swamp_milkweed.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0704",
+    "kind": "food",
+    "nameRu": "Миррис душистая",
+    "nameEn": "Sweet Cicely",
+    "aliases": [
+      "Sweet Cicely",
+      "Myrrhis odorata"
+    ],
+    "family": "Специи",
+    "tags": [
+      "Дыхательная система",
+      "Пищеварение",
+      "Мочевыделительная система",
+      "Кожа и волосы"
+    ],
+    "description": "Миррис душистая. Кулинарная пряность или ароматическая зелень. Исходные сведения о препаратах и экстрактах не распространяются автоматически на пищевые количества.",
+    "uses": "аллергические и астматические симптомы, пищеварение, мочевыводящие пути, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sweet_cicely.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0705",
+    "kind": "food",
+    "nameRu": "Восковница обыкновенная",
+    "nameEn": "Sweet Gale",
+    "aliases": [
+      "Sweet Gale",
+      "Myrica gale"
+    ],
+    "family": "Специи",
+    "tags": [
+      "Пищеварение",
+      "Инфекции и паразиты"
+    ],
+    "description": "Восковница обыкновенная. Кулинарная пряность или ароматическая зелень. Исходные сведения о препаратах и экстрактах не распространяются автоматически на пищевые количества.",
+    "uses": "пищеварение, паразитарные заболевания",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sweet_gale.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0706",
+    "kind": "supplement",
+    "nameRu": "Сумах ароматный",
+    "nameEn": "Sweet Sumach",
+    "aliases": [
+      "Sweet Sumach",
+      "Rhus aromatica",
+      "Rhus canadensis"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Мочевыделительная система",
+      "Сердце и сосуды"
+    ],
+    "description": "Растительное сырьё (Rhus aromatica). В статье описаны: корни, кора.",
+    "uses": "мочевыводящие пути, свёртывание крови",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/sweet_sumach.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0707",
+    "kind": "supplement",
+    "nameRu": "Душистый колосок",
+    "nameEn": "Sweet Vernal Grass",
+    "aliases": [
+      "Sweet Vernal Grass",
+      "Anthoxanthum odoratum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Исследования боли",
+      "Пищеварение",
+      "Мочевыделительная система"
+    ],
+    "description": "Растительное сырьё (Anthoxanthum odoratum). В статье описаны: целое растение.",
+    "uses": "боль, тошнота, мочевыводящие пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. свёртывание крови и антикоагулянты; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/sweet_vernal_grass.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0708",
+    "kind": "food",
+    "nameRu": "Подмаренник душистый",
+    "nameEn": "Sweet Woodruff",
+    "aliases": [
+      "Sweet Woodruff",
+      "Asperula odorata",
+      "Galium odoratum"
+    ],
+    "family": "Специи",
+    "tags": [
+      "Пищеварение",
+      "Печень и желчевыделение",
+      "Мочевыделительная система"
+    ],
+    "description": "Подмаренник душистый. Кулинарная пряность или ароматическая зелень. Исходные сведения о препаратах и экстрактах не распространяются автоматически на пищевые количества.",
+    "uses": "пищеварение, печень, желчевыделение, мочевыводящие пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Данных о безопасности недостаточно. риск поражения печени; свёртывание крови и антикоагулянты",
+    "sources": [
+      "https://www.rxlist.com/supplements/sweet_woodruff.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0709",
+    "kind": "food",
+    "nameRu": "Бархатцы",
+    "nameEn": "Tagetes",
+    "aliases": [
+      "Tagetes",
+      "Tagetes erecta",
+      "Tagetes glandulifera",
+      "Tagetes minuta"
+    ],
+    "family": "Специи",
+    "tags": [
+      "Пищеварение",
+      "Исследования боли",
+      "Инфекции и паразиты"
+    ],
+    "description": "Бархатцы. Кулинарная пряность или ароматическая зелень. Исходные сведения о препаратах и экстрактах не распространяются автоматически на пищевые количества.",
+    "uses": "аппетит, пищеварение, боль, паразитарные заболевания",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/tagetes.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "Пищевая классификация относится к кулинарной форме указанного продукта. Исходные риски, взаимодействия и доказательность сохранены; области изучения не являются обещаниями пользы.",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0710",
+    "kind": "supplement",
+    "nameRu": "Тамарикс двудомный",
+    "nameEn": "Tamarix Dioica",
+    "aliases": [
+      "Tamarix Dioica"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Печень и желчевыделение",
+      "Иммунные и воспалительные процессы",
+      "Мочевыделительная система"
+    ],
+    "description": "Сырьё древесного или кустарникового растения. Рассматривается в справочнике натуральных средств.",
+    "uses": "печень, лихорадка, мочевыводящие пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/tamarix_dioica.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0711",
+    "kind": "supplement",
+    "nameRu": "Крестовник Якова",
+    "nameEn": "Tansy Ragwort",
+    "aliases": [
+      "Tansy Ragwort",
+      "Senecio jacobaea"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Кожа и волосы",
+      "Пищеварение",
+      "Репродуктивное здоровье"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Senecio jacobaea). Рассматривается в справочнике натуральных средств.",
+    "uses": "онкология: исследовательская область, раны и восстановление кожи, запор, менструальные симптомы",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении. риск поражения печени; аллергические реакции; ограничения при беременности",
+    "sources": [
+      "https://www.rxlist.com/supplements/tansy_ragwort.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0712",
+    "kind": "supplement",
+    "nameRu": "Плевел опьяняющий",
+    "nameEn": "Taumelloolch",
+    "aliases": [
+      "Taumelloolch",
+      "Lolium temulentum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Кожа и волосы",
+      "Исследования боли",
+      "Пищеварение"
+    ],
+    "description": "Растительное сырьё (Lolium temulentum). В статье описаны: семена.",
+    "uses": "онкология: исследовательская область, кожа, боль, пищеварение",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/taumelloolch.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0713",
+    "kind": "supplement",
+    "nameRu": "Ворсянка",
+    "nameEn": "Teazle",
+    "aliases": [
+      "Teazle",
+      "Dipsacus fullonum",
+      "Dipsacus sylvestris"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кости и суставы",
+      "Кожа и волосы"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Dipsacus fullonum). В статье описаны: корни.",
+    "uses": "суставы, кожа, раны и восстановление кожи",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Проверить ограничения и лекарственные взаимодействия в первоисточнике.",
+    "sources": [
+      "https://www.rxlist.com/supplements/teazle.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0714",
+    "kind": "supplement",
+    "nameRu": "Толуанский бальзам",
+    "nameEn": "Tolu Balsam",
+    "aliases": [
+      "Tolu Balsam",
+      "Myroxylon balsamum",
+      "Toluifera balsamum"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Онкологические исследования",
+      "Дыхательная система",
+      "Кожа и волосы"
+    ],
+    "description": "Сырьё древесного или кустарникового растения (Myroxylon balsamum). Рассматривается в справочнике натуральных средств.",
+    "uses": "онкология: исследовательская область, дыхательные пути, кожа",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "аллергические реакции",
+    "sources": [
+      "https://www.rxlist.com/supplements/tolu_balsam.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0715",
+    "kind": "supplement",
+    "nameRu": "Эпигея ползучая",
+    "nameEn": "Trailing Arbutus",
+    "aliases": [
+      "Trailing Arbutus",
+      "Epigaea repens"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Мочевыделительная система",
+      "Дыхательная система"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Epigaea repens). Рассматривается в справочнике натуральных средств.",
+    "uses": "мочевыводящие пути, дыхательные пути",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "риск поражения печени",
+    "sources": [
+      "https://www.rxlist.com/supplements/trailing_arbutus.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": false,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  },
+  {
+    "id": "PHY-0716",
+    "kind": "supplement",
+    "nameRu": "Ломонос виноградолистный",
+    "nameEn": "Traveler's Joy",
+    "aliases": [
+      "Traveler's Joy",
+      "Clematis vitalba"
+    ],
+    "family": "Растения и экстракты",
+    "tags": [
+      "Кожа и волосы",
+      "Исследования боли",
+      "Полость рта"
+    ],
+    "description": "Растение, описанное в фитотерапевтическом справочнике (Clematis vitalba). В статье описаны: листья.",
+    "uses": "раны и восстановление кожи, кожа, боль, полость рта",
+    "evidence": "В справочнике: недостаточно данных для оценки эффективности. Традиционное применение не доказывает пользу.",
+    "risks": "Есть предупреждения о токсичности или небезопасном применении.",
+    "sources": [
+      "https://www.rxlist.com/supplements/travelers_joy.htm"
+    ],
+    "reviewedAt": "2026-11-01",
+    "verification": "Базовая карточка справочника",
+    "restricted": true,
+    "hidden": false,
+    "scopeNote": "",
+    "legacyId": ""
+  }
+]

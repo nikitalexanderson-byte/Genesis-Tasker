@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07171b" />
+    <meta name="application-name" content="Genesis Tasker" />
+    <meta name="author" content="nikitalexanderson" />
+    <link rel="canonical" href="https://genesiscalendar.com/" />
+    <meta name="description" content="GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks." />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%BASE_URL%icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.png" />
+    <title>Genesis Tasker</title>
+  </head>
+  <body>
+    <div id="root">
+      <main class="welcome-screen" aria-labelledby="fallback-title">
+        <div class="welcome-shell">
+          <section class="welcome-copy">
+            <p class="welcome-kicker">GENESIS · КАЛЕНДАРЬ И МЕНЕДЖЕР ПРОЕКТОВ</p>
+            <h1 id="fallback-title"><span>Genesis Tasker</span><em>Календарь задач и проектов</em></h1>
+            <p>
+              GENESIS помогает планировать личные и рабочие задачи, проекты, подпроекты,
+              повторения и напоминания, видеть план дня и отмечать выполненное.
+            </p>
+            <section class="google-data-purpose" aria-labelledby="fallback-google-purpose">
+              <h2 id="fallback-google-purpose">Как GENESIS использует Google Calendar и Google Tasks</h2>
+              <p>
+                Для входа используются только основные данные профиля Google. Синхронизация
+                подключается отдельно: GENESIS создаёт собственный календарь, а доступ к Google Tasks
+                использует для показа и двустороннего изменения списков и задач по вашему выбору.
+              </p>
+            </section>
+            <section class="google-data-purpose" aria-labelledby="fallback-service-owner">
+              <h2 id="fallback-service-owner">Сервис GENESIS и домен</h2>
+              <p>%GENESIS_SERVICE_IDENTITY%</p>
+              <p>Нейросетевой помощник GENESIS разбирает команды и готовит план задач. GENESIS не создаёт интимные изображения без согласия (AI NCII) и не использует Google API для этой цели.</p>
+            </section>
+            <nav class="welcome-top-links" aria-label="Правовая информация">
+              <a href="/privacy">Политика конфиденциальности</a>
+              <a href="/terms">Условия использования</a>
+              <a href="/support">Поддержка</a>
+            </nav>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+[versions]
+agp = "9.4.0"
+kotlin = "2.2.10"
+ksp = "2.3.12"
+compose = "2026.06.00"
+room = "2.8.5"
+lifecycle = "2.11.0"
+work = "2.11.2"
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+[libraries]
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }

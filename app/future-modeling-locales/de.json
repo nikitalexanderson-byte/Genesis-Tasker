@@ -1,0 +1,72 @@
+{
+  "title": "Methode zur Gestaltung der Zukunft",
+  "subtitle": "Von der symbolischen Diagnose zu Absicht und Handlung",
+  "intro": "ARCHE-GRAMMA / GNO-METER-BASILIA ist eine symbolische Methode des Ordens der Aurora. In dieser Form des Theokyklos nehmen die Götter den Platz der Stoicheia (στοιχεῖον) ein: Sie stehen für Elemente des Kosmos und mathematische Knoten, während Physis (φύσις) ein Strom wahrscheinlicher Ereignisse ist. Die Methode hilft, eine Absicht zu formulieren und eine Handlung zu wählen; die Zukunft bleibt ein wahrscheinlicher Ausgang und kein versprochenes Ergebnis.",
+  "sections": [
+    {
+      "title": "1. Diagnose: neun Bereiche",
+      "paragraphs": [
+        "Verwende ein Quadrat mit 3 × 3 Feldern als Karte der Situation. Bei der üblichen Theokyklos-Legung werden die neun Bereiche anhand der gezogenen Buchstaben-Stoicheia gelesen. In der Form des Ordens der Aurora sind dieselben neun Richtungen mit Göttern und den Zahlen ihrer Namen verbunden: Die symbolische Diagnose dient als Grundlage, um eine Schutzgottheit zu wählen, ein Organon zu bilden und bewusst zu handeln. Die Methode ergänzt die übliche Deutung der Legung.",
+        "Die aufrechte Position steht für Pneuma (πνεῦμα): Geist, Atem und einen verfügbaren Zufluss an Kraft. Die umgekehrte Position verweist auf Hysterema (ὑστέρημα): Mangel, Stillstand oder einen Bereich, der Aufmerksamkeit braucht. Beziehe die Symbole auf konkrete Umstände und unterscheide beobachtbare Tatsachen von deiner Deutung.",
+        "Halte fest, wo bereits Unterstützung besteht, wo das Handeln schwerfällt und welcher Bereich am engsten mit deiner Frage verbunden ist. Das ist der Ausgangspunkt für die Wahl eines Ziels."
+      ]
+    },
+    {
+      "title": "2. Ziel und Schutzgottheit wählen",
+      "paragraphs": [
+        "Formuliere ein klares Ziel: Was möchtest du verändern, welche Handlung liegt in deiner Hand und woran würdest du Fortschritt erkennen? Wähle dann eine der dreizehn Schutzgottheiten nach der Bedeutung des Ziels und nicht allein nach der Anziehungskraft einer Zahl.",
+        "Der Name der Schutzgottheit gibt das symbolische Thema vor; seine isopsephische Zahl wird zum Maß des Werkzeugworts. Formuliere für verschiedene Ziele getrennte Absichten, damit jede klar bleibt."
+      ]
+    },
+    {
+      "title": "3. Organon: das Werkzeugwort",
+      "paragraphs": [
+        "Ein Organon (ὄργανον) ist ein Werkzeugwort, das du selbst zusammensetzt. Wähle einen Klang, der zur Absicht passt: ρ vermittelt Bewegung, τ Festigung und λ Sanftheit. Innerhalb dieser Methode dienen sie als symbolische lautliche Orientierung.",
+        "Prüfe die Isopsephie: Die Summe der Zahlenwerte der griechischen Buchstaben des Organons muss genau der Zahl der gewählten Schutzgottheit entsprechen. Zum Beispiel ΑΚΜΗ: α + κ + μ + η = 1 + 20 + 40 + 8 = 69, dieselbe Zahl wie bei Athene. Verwende griechische Buchstaben und mische sie nicht mit ähnlich aussehenden lateinischen oder kyrillischen Zeichen.",
+        "Ein Palindrom oder eine kreisförmige Anordnung als Ouroboros (οὐροβόρος) schließt die Komposition symbolisch. Berechne die Summe nach jeder Umstellung oder Ergänzung erneut: Die Form der Komposition hebt die erforderliche zahlenmäßige Entsprechung nicht auf."
+      ]
+    },
+    {
+      "title": "4. Aktivierung: Form und Stimme",
+      "paragraphs": [
+        "Sphragis (σφραγίς), das Siegel, ist die körperliche Form des Schlüsselbuchstabens. Finde eine angenehme Geste, die dich an deine Absicht erinnert; Y kann etwa die Wahl eines Weges symbolisieren. Eine ruhige, gut ausführbare Bewegung ohne Anspannung genügt.",
+        "Ekphonesis (ἐκφώνησις) ist der stimmliche Teil: Sprich die sieben griechischen Vokale α, ε, η, ι, ο, υ, ω während eines angenehmen Ausatmens und anschließend das Organon. Dieses symbolische Konzentrationsritual verbindet Wort, Bild und Handlung.",
+        "Schließe die Aktivierung mit einem konkreten Schritt im gewählten Bereich ab: einem Gespräch, einer Entscheidung, dem Herstellen einer Sache, der Pflege eines Raums oder einer anderen Handlung, die du ausführen und beurteilen kannst."
+      ]
+    },
+    {
+      "title": "5. Beobachten und prüfen",
+      "paragraphs": [
+        "Notiere Ziel, gewählte Schutzgottheit, Organon und nächste Handlung. Lege im Voraus einen Beobachtungszeitraum und ein oder zwei Anzeichen für Fortschritt fest.",
+        "Kehre zum vereinbarten Zeitpunkt zu deiner Notiz zurück. Unterscheide deine Handlungen, äußere Umstände und symbolische Deutung. Wenn Fortschritt ausbleibt, passe Ziel oder Handlung anhand der Tatsachen an; die Legung selbst garantiert keinen gewünschten Verlauf der Ereignisse."
+      ]
+    }
+  ],
+  "close": "Schließen",
+  "sectors": [
+    { "id": "northwest", "title": "Nordwesten", "meaning": "Raum, Grenzen und Schutz." },
+    { "id": "north", "title": "Norden", "meaning": "Das Unterbewusste und tiefe emotionale Strömungen." },
+    { "id": "northeast", "title": "Nordosten", "meaning": "Gesetz, Maß und die übergeordnete Ordnung." },
+    { "id": "west", "title": "Westen", "meaning": "Sprache, Austausch, Information und Logos." },
+    { "id": "center", "title": "Mitte", "meaning": "Die geistige Achse und eine stabile innere Mitte." },
+    { "id": "east", "title": "Osten", "meaning": "Klarheit, Strategie und der Beginn der Bewegung." },
+    { "id": "southwest", "title": "Südwesten", "meaning": "Stoffliche Kreisläufe, Nahrung und die Umgestaltung der Form durch Arbeit." },
+    { "id": "south", "title": "Süden", "meaning": "Kampf, Wille, Disziplin und Handlung." },
+    { "id": "southeast", "title": "Südosten", "meaning": "Anziehung, Harmonie, Kreativität und Verwandlung." }
+  ],
+  "goals": [
+    { "deityId": "zeus", "goal": "Gesetz, Autorität und Ordnung schaffen; klare Regeln und Verantwortlichkeiten festlegen." },
+    { "deityId": "hera", "goal": "Einen unterstützenden Raum und eine förderliche Atmosphäre schaffen; die Umgebung und ihre Beziehungen ordnen." },
+    { "deityId": "poseidon", "goal": "Verborgene Strömungen und Gefühle erkennen; einen beständigen Umgang mit starken Emotionen finden." },
+    { "deityId": "demeter", "goal": "Wachstum, Nahrung und fruchtbare Kreisläufe unterstützen; die Anstrengung auf die Entwicklungsphase abstimmen." },
+    { "deityId": "athena", "goal": "Akme (ἀκμή), klares Verständnis und eine präzise Strategie erreichen; einen gut begründeten nächsten Schritt wählen." },
+    { "deityId": "apollo", "goal": "Reinigung und Klarheit schaffen; Wesentliches unterscheiden und ein stimmiges Gesamtbild entwickeln." },
+    { "deityId": "artemis", "goal": "Wertvolles bewahren und schützen; Grenzen setzen und Verletzliches behutsam unterstützen." },
+    { "deityId": "ares", "goal": "Den Impuls in Disziplin und Handlung lenken; ein konkretes Hindernis überwinden." },
+    { "deityId": "aphrodite", "goal": "Beziehungen, Anziehung und Harmonie entwickeln; eine Form gegenseitiger Annäherung finden." },
+    { "deityId": "hephaestus", "goal": "Handwerkliches Können stärken und Form schaffen; eine Idee durch Mühe und Geschick in etwas Funktionierendes verwandeln." },
+    { "deityId": "hermes", "goal": "Verhandeln, Informationen vermitteln und Austausch ermöglichen; eine verständliche Botschaft formulieren." },
+    { "deityId": "hestia", "goal": "Mitte, Zuhause und Beständigkeit stärken; einen tragenden Alltagsrhythmus schaffen." },
+    { "deityId": "dionysus", "goal": "Einen kreativen Durchbruch und Verwandlung ermöglichen; einen inneren Impuls in ein vollendetes Werk überführen." }
+  ]
+}

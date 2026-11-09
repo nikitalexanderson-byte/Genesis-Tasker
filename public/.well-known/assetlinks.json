@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ru.genesis.calendar",
+      "sha256_cert_fingerprints": [
+        "57:97:2E:3E:28:79:B7:E8:64:10:DE:D1:B6:E5:43:8E:56:62:FE:92:B4:F8:B5:2D:C6:7B:13:95:90:6E:EF:CA",
+        "1E:16:1D:36:F5:74:B0:56:0D:80:8C:7E:E9:5E:1A:BE:98:16:5B:33:85:33:6D:02:76:FB:38:1D:FD:90:1C:B8"
+      ]
+    }
+  }
+]

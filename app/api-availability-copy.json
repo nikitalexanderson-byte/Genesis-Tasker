@@ -1,0 +1,16 @@
+{
+  "ru": "Сервер временно не отвечает. Повторите попытку через несколько секунд.",
+  "en": "The server is temporarily unavailable. Try again in a few seconds.",
+  "de": "Der Server ist vorübergehend nicht erreichbar. Versuche es in einigen Sekunden erneut.",
+  "el": "Ο διακομιστής δεν είναι προσωρινά διαθέσιμος. Δοκιμάστε ξανά σε λίγα δευτερόλεπτα.",
+  "es": "El servidor no está disponible temporalmente. Inténtalo de nuevo en unos segundos.",
+  "fr": "Le serveur est temporairement indisponible. Réessayez dans quelques secondes.",
+  "it": "Il server non è temporaneamente disponibile. Riprova tra qualche secondo.",
+  "ja": "サーバーが一時的に応答していません。数秒後にもう一度お試しください。",
+  "pl": "Serwer jest chwilowo niedostępny. Spróbuj ponownie za kilka sekund.",
+  "pt": "O servidor está temporariamente indisponível. Tente novamente em alguns segundos.",
+  "sr": "Сервер је привремено недоступан. Покушајте поново за неколико секунди.",
+  "tr": "Sunucu geçici olarak yanıt vermiyor. Birkaç saniye sonra tekrar deneyin.",
+  "uk": "Сервер тимчасово не відповідає. Спробуйте ще раз за кілька секунд.",
+  "zh": "服务器暂时无响应，请几秒后重试。"
+}

@@ -1,0 +1,18 @@
+.stoicheion-alphabet-section.stoicheion-alphabet-disclosure { padding: 0; border-radius: 10px; scroll-margin-block-start: 16px; }
+.stoicheion-alphabet-disclosure > .year-details-button {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) 24px; align-items: center;
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 64px; margin: 0; padding: 14px 16px; list-style: none;
+  font: inherit; overflow-wrap: normal; word-break: normal; hyphens: none;
+}
+.stoicheion-alphabet-disclosure > summary::marker { content: ""; }
+.stoicheion-alphabet-disclosure > summary::-webkit-details-marker { display: none; }
+.stoicheion-alphabet-disclosure > summary strong { font-size: clamp(13px, 1.4vw, 16px); line-height: 1.4; letter-spacing: 0; text-transform: none; }
+.stoicheion-alphabet-disclosure[open] > summary > svg:last-child { transform: rotate(180deg); }
+.stoicheion-alphabet-disclosure > summary:hover > svg { transform: none; }
+.stoicheion-alphabet-disclosure[open] > summary:hover > svg:last-child { transform: rotate(180deg); }
+.stoicheion-alphabet-disclosure > summary:focus-visible { outline: 2px solid var(--ui-accent, var(--teal)); outline-offset: 3px; }
+.stoicheion-alphabet-content { padding: clamp(16px, 4vw, 36px); }
+.stoicheion-alphabet-content > header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+.stoicheion-alphabet-content > header > p { max-width: 500px; margin: 0; }
+@media (max-width: 767px) { .stoicheion-alphabet-content > header { align-items: flex-start; flex-direction: column; gap: 16px; } }
+@media (prefers-reduced-motion: reduce) { .stoicheion-alphabet-disclosure > summary .experimental-icon { transition: none; } }

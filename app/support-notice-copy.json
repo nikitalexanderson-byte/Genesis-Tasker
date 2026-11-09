@@ -1,0 +1,86 @@
+{
+  "ru": {
+    "title": "Поддержать развитие ГЕНЕЗИС",
+    "body": "Вы можете оставить чаевые на развитие проекта.",
+    "action": "Отправить донат",
+    "later": "Позже"
+  },
+  "en": {
+    "title": "Support GENESIS development",
+    "body": "You can leave a tip to support the project.",
+    "action": "Send a donation",
+    "later": "Later"
+  },
+  "el": {
+    "title": "Στηρίξτε την ανάπτυξη του GENESIS",
+    "body": "Μπορείτε να προσφέρετε ένα φιλοδώρημα για την ανάπτυξη του έργου.",
+    "action": "Αποστολή δωρεάς",
+    "later": "Αργότερα"
+  },
+  "de": {
+    "title": "GENESIS unterstützen",
+    "body": "Mit einem Trinkgeld können Sie die Weiterentwicklung unterstützen.",
+    "action": "Spenden",
+    "later": "Später"
+  },
+  "fr": {
+    "title": "Soutenir GENESIS",
+    "body": "Vous pouvez laisser un pourboire pour soutenir le projet.",
+    "action": "Faire un don",
+    "later": "Plus tard"
+  },
+  "es": {
+    "title": "Apoya el desarrollo de GENESIS",
+    "body": "Puedes dejar una propina para apoyar el proyecto.",
+    "action": "Enviar donación",
+    "later": "Más tarde"
+  },
+  "it": {
+    "title": "Sostieni GENESIS",
+    "body": "Puoi lasciare una mancia per sostenere lo sviluppo del progetto.",
+    "action": "Invia donazione",
+    "later": "Più tardi"
+  },
+  "pt": {
+    "title": "Apoie o GENESIS",
+    "body": "Você pode deixar uma gorjeta para apoiar o desenvolvimento do projeto.",
+    "action": "Enviar doação",
+    "later": "Mais tarde"
+  },
+  "pl": {
+    "title": "Wesprzyj rozwój GENESIS",
+    "body": "Możesz zostawić napiwek na rozwój projektu.",
+    "action": "Przekaż darowiznę",
+    "later": "Później"
+  },
+  "sr": {
+    "title": "Подржите развој ГЕНЕЗИСА",
+    "body": "Можете оставити напојницу за развој пројекта.",
+    "action": "Пошаљи донацију",
+    "later": "Касније"
+  },
+  "uk": {
+    "title": "Підтримати розвиток ГЕНЕЗИС",
+    "body": "Ви можете залишити чайові на розвиток проєкту.",
+    "action": "Надіслати донат",
+    "later": "Пізніше"
+  },
+  "zh": {
+    "title": "支持GENESIS开发",
+    "body": "您可以通过打赏支持项目发展。",
+    "action": "捐赠",
+    "later": "稍后"
+  },
+  "tr": {
+    "title": "GENESIS geliştirmesini destekleyin",
+    "body": "Projenin gelişimi için bahşiş bırakabilirsiniz.",
+    "action": "Bağış gönder",
+    "later": "Daha sonra"
+  },
+  "ja": {
+    "title": "GENESISの開発を支援",
+    "body": "チップでプロジェクトの開発を支援できます。",
+    "action": "寄付する",
+    "later": "後で"
+  }
+}

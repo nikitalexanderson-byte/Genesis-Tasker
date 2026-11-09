@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "defaultProvider": "met-norway",
+  "metNorway": {
+    "termsUrl": "https://api.met.no/doc/TermsOfService",
+    "termsVersion": "2026-11-05",
+    "termsAccepted": true,
+    "acceptedBy": "authorised-project-operator",
+    "operatorAcceptedOn": "2026-11-07",
+    "acceptanceSource": "Explicit human acceptance in the project conversation: Прочитал и принимаю — подключить MET Norway"
+  }
+}

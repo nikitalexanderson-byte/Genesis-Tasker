@@ -1,0 +1,266 @@
+/* GENESIS Universal UI: shared structure, theme-owned color and artwork. */
+/* Ordinary surfaces match the advice card even before theme hydration; Oracle's top blocks keep their shapes. */
+:root { --ui-surface-radius: 10px; }
+html[data-genesis-theme] {
+  --ui-radius: 12px;
+  --ui-control-height: 44px;
+  --ui-accent: #255b59;
+  --ui-on-accent: #fffdf8;
+  scrollbar-color: var(--ink-soft) var(--paper);
+}
+html[data-genesis-theme$="-dark"] { --ui-accent: #77c8b2; --ui-on-accent: #092725; }
+html[data-genesis-theme] ::selection { color: var(--ui-on-accent); background: var(--ui-accent); }
+html[data-genesis-theme] :is(input, textarea) { caret-color: var(--ui-accent); }
+
+html[data-genesis-theme] .genesis-app .workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 0;
+  padding: 28px;
+  margin: 0;
+  border: 0;
+  border-radius: 16px;
+  color: #f8f1df;
+  background: var(--night-2);
+  box-shadow: none;
+}
+html[data-genesis-theme] .workspace-header-main { display: flex; align-items: center; gap: 18px; min-width: 0; flex: 1; }
+html[data-genesis-theme] .workspace-header-copy { min-width: 0; }
+html[data-genesis-theme] .workspace-header h1 {
+  margin: 0 0 10px;
+  color: inherit;
+  font: 400 clamp(28px, 3vw, 42px)/1.15 Georgia, "Times New Roman", serif;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+html[data-genesis-theme] .workspace-header p { margin: 0; max-width: 65ch; color: var(--palette-muted, #c6d7d0); font-size: 14px; line-height: 1.6; }
+html[data-genesis-theme] .workspace-header .projects-hero-mark {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  border: 1px solid #8d815d;
+  border-radius: 12px;
+  background: #ffffff08;
+  color: #e4c78c;
+}
+html[data-genesis-theme] .workspace-header .projects-hero-mark svg { width: 44px; height: 44px; stroke: currentColor; stroke-width: 1.7; }
+html[data-genesis-theme] .workspace-header-summary { flex: 0 0 auto; min-width: 0; }
+html[data-genesis-theme] .workspace-header :is(.projects-summary, .all-tasks-summary) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
+  gap: 0;
+  min-width: 240px;
+  width: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-genesis-theme] .workspace-header :is(.projects-summary, .all-tasks-summary) > span {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-height: 64px;
+  padding: 8px;
+  border: 0;
+  color: var(--palette-muted, #c6d7d0);
+  font: 600 10px/1.4 Arial, sans-serif;
+  text-transform: uppercase;
+}
+html[data-genesis-theme] .workspace-header :is(.projects-summary, .all-tasks-summary) > span + span { border-inline-start: 1px solid #ffffff26; }
+html[data-genesis-theme] .workspace-header :is(.projects-summary, .all-tasks-summary) strong { color: #e4c78c; font: 400 28px/1.1 Georgia, serif; font-variant-numeric: tabular-nums; }
+
+html[data-genesis-theme] .genesis-app :is(.projects-view, .all-tasks-view, .shared-projects) { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+html[data-genesis-theme] .genesis-app :is(.tasks-area-switch, .shared-projects-switch, .task-scope-switch, .all-tasks-status-filter) {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  padding: 4px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: none;
+}
+html[data-genesis-theme] .genesis-app :is(.tasks-area-switch, .shared-projects-switch, .task-scope-switch, .all-tasks-status-filter) > button {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--ui-control-height);
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ink-soft);
+  background: transparent;
+  font: 700 14px/1.3 Arial, sans-serif;
+  white-space: normal;
+  cursor: pointer;
+}
+html[data-genesis-theme] .genesis-app :is(.tasks-area-switch, .shared-projects-switch, .task-scope-switch, .all-tasks-status-filter) > button:is([aria-current="page"], [aria-pressed="true"], .active) {
+  color: var(--ui-on-accent);
+  background: var(--ui-accent);
+}
+html[data-genesis-theme] .genesis-app .shared-projects-switch { margin-bottom: 20px; }
+html[data-genesis-theme] .genesis-app .all-tasks-toolbar { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; }
+html[data-genesis-theme] .genesis-app .tag-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  margin: 0;
+  padding: 4px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--surface);
+  box-shadow: none;
+}
+html[data-genesis-theme] .genesis-app .tag-search input { flex: 1; width: 100%; min-width: 0; min-height: 44px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--ink); font: 400 16px/1.4 Arial, sans-serif; box-shadow: none; }
+html[data-genesis-theme] .genesis-app .all-tasks-toolbar .tag-search { flex: 1 1 320px; width: auto; }
+html[data-genesis-theme] .genesis-app .tag-search input::placeholder { color: var(--ink-soft); opacity: 1; }
+html[data-genesis-theme] .genesis-app .tag-search:focus-within { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+html[data-genesis-theme] .genesis-app .tag-search input:focus-visible { outline: 0; }
+html[data-genesis-theme] .genesis-app .tag-search > button { min-width: 44px; min-height: 44px; }
+html[data-genesis-theme] .genesis-app .all-tasks-sync { margin: 0; font-size: 11px; color: var(--ink-soft); }
+
+html[data-genesis-theme] .genesis-app :is(.primary-button, .ghost-button, .task-create-button, .add-task-button, .task-list-add-draft) { min-height: var(--ui-control-height); border-radius: 10px; font-size: 14px; line-height: 1.35; font-weight: 700; cursor: pointer; }
+html[data-genesis-theme] .genesis-app :is(.primary-button, .add-task-button) { color: var(--ui-on-accent); background: var(--ui-accent); border: 0; box-shadow: none; }
+html[data-genesis-theme] .genesis-app :is(.primary-button, .ghost-button, .task-create-button, .add-task-button, .task-list-add-draft):disabled { cursor: not-allowed; opacity: .5; transform: none; }
+html[data-genesis-theme] .genesis-app :is(.task-actions, .all-task-actions, .project-actions, .category-actions, .task-list-column-actions) button { min-width: 44px; min-height: 44px; border-radius: 8px; }
+html[data-genesis-theme] .genesis-app .all-task-row { grid-template-columns: 44px minmax(0, 1fr) auto; padding: 16px; border-radius: var(--ui-radius); }
+html[data-genesis-theme] .genesis-app .all-task-row .task-check { width: 44px; height: 44px; margin: 0; }
+html[data-genesis-theme] .genesis-app .all-task-actions { display: flex; gap: 4px; }
+html[data-genesis-theme] .genesis-app .all-task-row strong { font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .all-task-meta { font-size: 12px; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app .all-task-meta :is(.all-task-category, .all-task-source) { font-size: 11px; }
+html[data-genesis-theme] .genesis-app .all-task-meta .all-task-category { color: var(--ink); background: color-mix(in srgb, var(--ui-accent) 12%, var(--surface)); border-inline-start: 3px solid var(--project-color); }
+html[data-genesis-theme] .genesis-app .all-task-priority { font-size: 12px; }
+html[data-genesis-theme] .genesis-app .project-row { grid-template-columns: minmax(0, 1fr) repeat(3, 44px); align-items: start; gap: 8px; }
+html[data-genesis-theme] .genesis-app .project-row:has(.project-transfer) { grid-template-columns: minmax(0, 1fr) repeat(4, 44px); }
+html[data-genesis-theme] .genesis-app .project-row > :is(.project-status, .project-edit, .project-transfer, .project-delete) { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: var(--ui-surface-radius); }
+html[data-genesis-theme] .genesis-app .project-open { min-height: 44px; }
+html[data-genesis-theme] .genesis-app .project-open strong { font-size: 16px; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .project-open :is(small, em, p) { color: var(--ink-soft); font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app :is(.task-lists-page, .shared-task-lists) { min-width: 0; }
+html[data-genesis-theme] .genesis-app .shared-task-lists > header { align-items: center; gap: 16px; }
+html[data-genesis-theme] .genesis-app .shared-task-lists > header h3 { margin: 0 0 8px; font: 400 24px/1.25 Georgia, serif; }
+html[data-genesis-theme] .genesis-app .shared-task-lists > header p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app :is(.all-tasks-create, .task-list-create) > summary { min-height: 44px; font-size: 14px; line-height: 1.4; }
+html[data-genesis-theme] .genesis-app .task-list-create-block > p { font-size: 14px; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app :is(.task-list-workspace, .shared-task-lists) > header h3 { font: 400 24px/1.25 Georgia, serif; }
+html[data-genesis-theme] .genesis-app .task-list-workspace > header p { font-size: 14px; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app :is(.task-list-new-form, .task-list-batch-form, .project-form) :is(input, select, textarea) { min-height: 44px; font-size: 16px; }
+html[data-genesis-theme] .genesis-app :is(.task-list-new-form, .task-list-batch-form, .project-form) label { font-size: 12px; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app :is(.shared-task-lists-actions, .shared-projects-toolbar) button { min-height: 44px; border-radius: 10px; font-size: 14px; }
+html[data-genesis-theme] :is(.main-nav, .mobile-nav) button > small { display: block; }
+html[data-genesis-theme] .settings-section-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+html[data-genesis-theme] .settings-section-nav button { flex: 1 1 140px; min-height: 48px; padding: 10px 12px; }
+html[data-genesis-theme] .appearance-menu-controls { padding: 0; }
+html[data-genesis-theme] .appearance-menu-subsection .appearance-menu-details { margin-top: 0; border: 0; padding: 0; background: transparent; }
+html[data-genesis-theme] .appearance-menu-subsection { display: block; }
+
+html[data-genesis-theme] .mobile-more-navigation {
+  position: fixed;
+  inset: auto max(12px, env(safe-area-inset-right)) calc(90px + env(safe-area-inset-bottom)) auto;
+  width: min(360px, calc(100vw - 24px));
+  max-height: calc(100dvh - 140px);
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 12px 36px color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 20%, transparent);
+}
+html[data-genesis-theme] .mobile-more-navigation nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+html[data-genesis-theme] .mobile-more-navigation button { display: flex; align-items: center; gap: 10px; min-height: 56px; min-width: 0; padding: 12px; border: 0; border-radius: 10px; color: var(--ink); background: var(--paper); font: 700 14px/1.3 Arial, sans-serif; text-align: left; cursor: pointer; }
+html[data-genesis-theme] .mobile-more-navigation button > span:last-child { overflow-wrap: anywhere; }
+html[data-genesis-theme] .mobile-more-navigation button[aria-current="page"] { color: var(--ui-on-accent); background: var(--ui-accent); }
+html[data-genesis-theme] .mobile-more-navigation::backdrop { background: transparent; }
+
+@media (hover: hover) {
+  html[data-genesis-theme] .genesis-app :is(.tasks-area-switch, .shared-projects-switch, .task-scope-switch, .all-tasks-status-filter) > button:hover:not([aria-current="page"]):not([aria-pressed="true"]):not(.active) { background: color-mix(in srgb, var(--ui-accent) 12%, var(--surface)); color: var(--ink); }
+  html[data-genesis-theme] .genesis-app .primary-button:not(:disabled):hover { filter: brightness(1.12); }
+  html[data-genesis-theme] .mobile-more-navigation button:hover { background: color-mix(in srgb, var(--ui-accent) 12%, var(--surface)); }
+}
+@media (max-width: 1199px) {
+  html[data-genesis-theme] .genesis-app { display: block; grid-template-columns: none; padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  html[data-genesis-theme] .genesis-app .app-sidebar { display: none; }
+  html[data-genesis-theme] .genesis-app .workspace { display: block; }
+  html[data-genesis-theme] .genesis-app .workspace.today-workspace { display: flex; }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"] {
+    position: fixed;
+    z-index: 80;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 4px;
+    right: max(10px, env(safe-area-inset-right));
+    left: max(10px, env(safe-area-inset-left));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-width: 0;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 8px 26px color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 14.902%, transparent);
+    backdrop-filter: none;
+  }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"] button { display: flex; flex: 1 1 0; flex-direction: column; align-items: center; justify-content: center; gap: 5px; width: auto; min-width: 0; min-height: 58px; padding: 6px 2px; border: 0; border-radius: 10px; background: transparent; color: var(--ink-soft); font-size: 11px; }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"] button > span { font-size: 20px; color: inherit; line-height: 1; }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"] button > svg { width: 20px; height: 20px; fill: currentColor; }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"] button > small { display: block; width: auto; font: 700 11px/1.2 Arial, sans-serif; color: inherit; white-space: normal; text-overflow: clip; overflow: visible; }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"] button.active { background: var(--ui-accent); color: var(--ui-on-accent); }
+  html[data-genesis-theme] .genesis-app .workspace-header { align-items: flex-start; flex-direction: column; gap: 20px; }
+  html[data-genesis-theme] .workspace-header-summary { width: 100%; }
+  html[data-genesis-theme] .workspace-header :is(.projects-summary, .all-tasks-summary) { width: 100%; min-width: 0; }
+  html[data-genesis-theme] .genesis-app .project-tree-workspace { grid-template-areas: "inbox" "tree"; grid-template-columns: minmax(0, 1fr); }
+  html[data-genesis-theme] .genesis-app .project-tree-workspace > .inbox-card { position: static; max-height: none; }
+  html[data-genesis-theme] .genesis-app .project-row,
+  html[data-genesis-theme] .genesis-app .project-row:has(.project-transfer) { grid-template-columns: minmax(0, 1fr) repeat(3, 44px); }
+  html[data-genesis-theme] .genesis-app .project-row > .project-open { grid-column: 1 / -1; grid-row: 1; }
+  html[data-genesis-theme] .genesis-app .project-row > .project-complete-action { grid-column: 1; grid-row: 2; justify-self: end; }
+  html[data-genesis-theme] .genesis-app .project-row > .project-edit { grid-column: 2; grid-row: 2; }
+  html[data-genesis-theme] .genesis-app .project-row > .project-transfer { grid-column: 3; grid-row: 2; }
+  html[data-genesis-theme] .genesis-app .project-row > .project-delete { grid-column: 4; grid-row: 2; }
+}
+@media (min-width: 1200px) {
+  html[data-genesis-theme] .genesis-app .main-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  html[data-genesis-theme] .genesis-app .main-nav button { display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 44px; padding: 10px 12px; }
+  html[data-genesis-theme] .genesis-app .main-nav button > span { flex: 0 0 22px; width: 22px; font-size: 20px; }
+  html[data-genesis-theme] .genesis-app .main-nav button > small { font: 600 14px/1.4 Arial, sans-serif; white-space: normal; text-align: left; }
+  html[data-genesis-theme] .genesis-app .mobile-nav[data-exp-ui="mobile-nav"],
+  html[data-genesis-theme] .mobile-more-navigation:popover-open { display: none; }
+}
+@media (max-width: 599px) {
+  html[data-genesis-theme] .genesis-app .content-column { padding: 12px; }
+  html[data-genesis-theme] .genesis-app .workspace-header { padding: 20px 16px; gap: 16px; border-radius: 14px; }
+  html[data-genesis-theme] .workspace-header-main { align-items: flex-start; gap: 12px; }
+  html[data-genesis-theme] .workspace-header .projects-hero-mark { width: 48px; height: 48px; flex-basis: 48px; }
+  html[data-genesis-theme] .workspace-header .projects-hero-mark svg { width: 34px; height: 34px; }
+  html[data-genesis-theme] .workspace-header h1 { font-size: 28px; margin-bottom: 8px; }
+  html[data-genesis-theme] .workspace-header p { font-size: 13px; line-height: 1.5; }
+  html[data-genesis-theme] .genesis-app :is(.tasks-area-switch, .shared-projects-switch, .task-scope-switch, .all-tasks-status-filter) { width: 100%; }
+  html[data-genesis-theme] .genesis-app :is(.tasks-area-switch, .shared-projects-switch, .task-scope-switch, .all-tasks-status-filter) > button { padding-inline: 10px; font-size: 13px; }
+  html[data-genesis-theme] .genesis-app .all-tasks-toolbar .tag-search { flex-basis: 100%; }
+  html[data-genesis-theme] .genesis-app .all-task-row { gap: 8px; padding: 12px; }
+  html[data-genesis-theme] .genesis-app .all-task-actions { grid-column: 2; flex-direction: row; justify-self: end; }
+  html[data-genesis-theme] .genesis-app .shared-task-lists > header { flex-direction: column; align-items: stretch; }
+  html[data-genesis-theme] .genesis-app :is(.task-form, .project-form, .editor-modal, .account-panel, .shared-projects-modal) :is(input, select, textarea) { font-size: 16px; }
+  html[data-genesis-theme] .settings-section-nav button { flex-basis: calc(50% - 8px); font-size: 13px; }
+}

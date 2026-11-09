@@ -1,0 +1,25 @@
+.backup-panel { display: grid; gap: 16px; min-width: 0; }
+.backup-panel h3, .backup-panel h4, .backup-panel p { margin: 0; }
+.backup-panel fieldset { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 16px 0; border: 0; border-top: 1px solid var(--line); }
+.backup-panel legend { padding: 0 8px 0 0; font-weight: 600; }
+.backup-panel label { display: grid; gap: 8px; min-width: 0; }
+.backup-panel textarea, .backup-panel select, .backup-panel input[type=file] { box-sizing: border-box; width: 100%; max-width: 100%; min-height: 44px; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
+.backup-panel textarea { resize: vertical; overflow-wrap: anywhere; }
+.backup-panel select { white-space: normal; }
+.backup-panel .backup-check { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; line-height: 1.5; padding: 4px 0; }
+.backup-panel .backup-check input { width: 20px; height: 20px; flex: 0 0 20px; margin-top: 2px; accent-color: var(--ui-accent, #255b59); }
+.backup-panel .backup-check span { min-width: 0; }
+.backup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.backup-panel button { min-height: 44px; border-radius: 10px; white-space: normal; }
+.backup-panel button:focus-visible, .backup-panel input:focus-visible, .backup-panel textarea:focus-visible, .backup-panel select:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.backup-panel button:disabled { cursor: default; opacity: .55; }
+.backup-dates { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 0; font-variant-numeric: tabular-nums; }
+.backup-dates dd { margin: 4px 0 0; }
+.backup-dates dt { font-size: .875em; }
+.backup-coverage, .backup-preview, .backup-notice { display: grid; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
+.backup-coverage ul { list-style: none; padding: 0; margin: 0; }
+.backup-cloud { font-size: .875em; }
+.backup-removals { margin: 8px 0 0; }
+.backup-removals > div { display: flex; justify-content: space-between; gap: 16px; }
+.backup-removals dd { margin: 0; font-variant-numeric: tabular-nums; }
+@media (max-width: 440px) { .backup-actions { display: grid; } .backup-panel select { font-size: 12px; } }

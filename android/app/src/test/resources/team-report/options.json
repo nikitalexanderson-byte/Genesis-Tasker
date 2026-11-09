@@ -1,0 +1,16 @@
+{
+  "filter": {
+    "projectIds": [
+      "633ce36e-583b-41fe-87b2-d92e78c3b410"
+    ]
+  },
+  "from": "2026-10-01",
+  "to": "2026-10-31",
+  "calendarMode": "sacred",
+  "calendarContext": {
+    "version": 2,
+    "timeZone": "America/New_York",
+    "gregorianYearStart": "march"
+  },
+  "cycleStartStatusIds": []
+}

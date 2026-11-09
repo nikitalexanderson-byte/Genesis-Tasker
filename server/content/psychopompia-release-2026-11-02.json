@@ -1,0 +1,3124 @@
+{
+  "version": 2,
+  "releasedAt": "2026-11-02",
+  "reviewedBy": "root-content-review",
+  "contentVersion": "psychopompia-2026-11-v2",
+  "sourceFile": "психопомпия.docx",
+  "sourceSha256": "c2b422f0ddbcfb312d2dca1620945b66b93601f7e10fdab83c48c2a7d2032462",
+  "locales": [
+    "ru",
+    "en",
+    "el",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pt",
+    "pl",
+    "sr",
+    "uk",
+    "zh",
+    "tr",
+    "ja"
+  ],
+  "scope": "Remaining 165 user-authored religious/philosophical materials reproduced without changing source spelling, punctuation, headings or paragraph boundaries. The original sixteen-item release stays immutable.",
+  "reviewScope": "Source fidelity and adult-access classification. Authorial medical, historical and metaphysical claims are reproduced, not certified as medical guidance or independently verified historical facts. Preparation flags were reviewed in their complete source context; illustrations use symbolic scenes without actual remains or graphic injury.",
+  "access": "All materials require explicit adult confirmation. Alcohol and general-intoxicant practices also require separate consent and a verified jurisdiction-specific age declaration. No adult material is eligible for device advice notifications.",
+  "translationMethod": "model-authored; source-bound full translations, not a claim of professional human translation review",
+  "items": [
+    {
+      "number": 17,
+      "id": "advice-c50d9fa256b0d7272aaf933f",
+      "sourceTextSha256": "c50d9fa256b0d7272aaf933fa1ed5514ba1ed3b5ee9e84db329dbe5ca485bd66",
+      "sourceBodySha256": "c50d9fa256b0d7272aaf933fa1ed5514ba1ed3b5ee9e84db329dbe5ca485bd66",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        27
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hermetic-rebirth",
+        "transgression-ecstasy",
+        "inner-work",
+        "adversarial-strategy"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 18,
+      "id": "advice-39568859a8bbcf145b398bbb",
+      "sourceTextSha256": "39568859a8bbcf145b398bbb0c13d0ce61ac8d6122ff2959dac6d5e92345a7d7",
+      "sourceBodySha256": "39568859a8bbcf145b398bbb0c13d0ce61ac8d6122ff2959dac6d5e92345a7d7",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        28
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hermetic-rebirth",
+        "transgression-ecstasy",
+        "inner-work",
+        "adversarial-strategy"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 19,
+      "id": "advice-b2c7cebad80e7cf32d7a3a61",
+      "sourceTextSha256": "7921f24126d576d7c9d46d79481c46ed334ef83c23a365c3f633ee20405e59e2",
+      "sourceBodySha256": "fb446ece2da2e93734623c971ef32ac1c8f0d16019293d8e8924731f8b7082c2",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        30,
+        31,
+        32
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 20,
+      "id": "advice-34c6bfb4c6d038e64db1182d",
+      "sourceTextSha256": "bccf203dc97b7dfbcb7f54c3f128146402c5dff388f70340b186a09bf91baf83",
+      "sourceBodySha256": "67ef8a59afe81520fbac512c299102714f9395f1955f1ac88661d520a12c87af",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        33,
+        34,
+        35
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 21,
+      "id": "advice-95f9bdf84d0f52221ec235d3",
+      "sourceTextSha256": "7e210327e7aa8f5008ea211e9146016092ce9eb5e711996524358add1b54ccdd",
+      "sourceBodySha256": "6dce809b3fe2b61f7fddb7a8d1ba4f6b973c7e4c53a6c843a2012f1bb27a3918",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        36,
+        37,
+        38
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 22,
+      "id": "advice-3ec367fa3128809911307ae6",
+      "sourceTextSha256": "e1d3a738b089833b2feff1aee0dc8c7f19d69d7760755732f6ec98fbb85972c0",
+      "sourceBodySha256": "2abd983f51ae7b919a30a5ab590dbc19b44b13fd274f56388a22eea6ee184591",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        39,
+        40,
+        41
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 23,
+      "id": "advice-fc622dae435d05c3bf4563ff",
+      "sourceTextSha256": "8871751476cc6d6eb9ec8498626aa8f0d55160b29967e0f4f1bd9491f143437e",
+      "sourceBodySha256": "662f01d52457765765a13eaeee5c5d1e303413e1567ef3f6b354519cd73866d9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        42,
+        43,
+        44
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 24,
+      "id": "advice-68fb837365f2ce174b5f4b8c",
+      "sourceTextSha256": "ec95fb6359772ab64d7e326486d1cf02eb61a473590ea2d501aa954726e2ed3d",
+      "sourceBodySha256": "f25dc5117a4b1845e07956a20c28de4ad5df21ae8c9a619b81c5156a97929159",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        45,
+        46,
+        47
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 25,
+      "id": "advice-9d256065b7cd2e90ae366f03",
+      "sourceTextSha256": "0c9bf8d2ad03b20a629b06992752c86485172b039cbd1c434348b05ee08fadd5",
+      "sourceBodySha256": "328a804f5cb90954b4ae7f8b3410ccb9d3bf2d30914eb7c02f6ab6efcdc104d8",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        48,
+        49,
+        50
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 26,
+      "id": "advice-e341715ebbdb0ddde67274d5",
+      "sourceTextSha256": "d36e31763d9a639c8ced41053861117d325803e7d550c82d9a57ce51d2d598ba",
+      "sourceBodySha256": "4dd11ce0a2e6859451a2750aded79144a19f6826eefbe42a2142fb4e17410ce3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        51,
+        52,
+        53
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 27,
+      "id": "advice-bed4a7938dfac7c259adc79b",
+      "sourceTextSha256": "e0210c41cafef2baa68314dd797671dcb0fb55e3c9163ada7b2d7ed9db8e0fb0",
+      "sourceBodySha256": "6e274e40b17b389cadbc1c6fc87a5089d5c91b32ea52ec35e4872e3fd4292a19",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        54,
+        55,
+        56
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 28,
+      "id": "advice-e58a9c30b95afe84b564b6f1",
+      "sourceTextSha256": "c5a5dc3d260f0748c34ee0f90bad0f5b0bd6cf34a0edac58bb18914e0c7ed687",
+      "sourceBodySha256": "52d0eb22769f3cfb23fdb2f41602dd0ac2b1495305b83c0b5d7320676a512cd7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        57,
+        58,
+        59
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 29,
+      "id": "advice-b8d89989cd1b60c0615b4d09",
+      "sourceTextSha256": "b8da7ace738a123640bae92224029225fb790cbee0363e16593501fbac76d55c",
+      "sourceBodySha256": "2d8c97cc9ddd0d8b62bcb9cd1b5a75da24be7dce38ae0266d8ca5b6a70fa4704",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        60,
+        61,
+        62
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 30,
+      "id": "advice-17c81587aed32a45801ab038",
+      "sourceTextSha256": "0f0fde395a6bb211f83118abbaa1ef78d2a184b5607db8c667abaa41fcd76413",
+      "sourceBodySha256": "9d211cd2cfd5ff37231858aebd103fe6e6b0104c63e91865d909f823c70be1d6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        63,
+        64,
+        65
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "adversarial-strategy",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "practical-manipulation"
+      ]
+    },
+    {
+      "number": 31,
+      "id": "advice-7b47ca70950256aaa2ff47c3",
+      "sourceTextSha256": "7b47ca70950256aaa2ff47c3b33c17aebc162ae56a307b9af38d7bbfcb9df9e9",
+      "sourceBodySha256": "7b47ca70950256aaa2ff47c3b33c17aebc162ae56a307b9af38d7bbfcb9df9e9",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        68
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 32,
+      "id": "advice-92fbc1abe18079cce6dbe027",
+      "sourceTextSha256": "92fbc1abe18079cce6dbe02754b7f1449f42e5380858d139b19b6b502e61d29e",
+      "sourceBodySha256": "92fbc1abe18079cce6dbe02754b7f1449f42e5380858d139b19b6b502e61d29e",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        70
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "inner-work",
+        "intoxication"
+      ],
+      "sourceContentFlags": [
+        "alcohol-reference"
+      ]
+    },
+    {
+      "number": 33,
+      "id": "advice-2cf4236c1c388ead603ff4af",
+      "sourceTextSha256": "2cf4236c1c388ead603ff4af1afbe89008723eee40de9169e79ceb1d33464cf5",
+      "sourceBodySha256": "2beba1d2e0bb072e45c11f617cf3491a662a300d065df89bc84973c90c4430b0",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        72
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 34,
+      "id": "advice-4bac7fd4203e5e7dd47d4f44",
+      "sourceTextSha256": "4bac7fd4203e5e7dd47d4f44fe4a8b2744135bfb457bae41e5b10ab97817a88f",
+      "sourceBodySha256": "ef245e0c9311dbd784678ecbaa467791bd77eb78c0b8aed65b15067460796a60",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        73
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 35,
+      "id": "advice-8dc6cbdf36927d9f17c6e0f9",
+      "sourceTextSha256": "8dc6cbdf36927d9f17c6e0f905c2754907ecef456187ec3e29641de3902ab6bb",
+      "sourceBodySha256": "286e3f047c532e6fa052d225d71c8d238b3fd64fd81528bc444f29bdb80e96b3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        74
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 36,
+      "id": "advice-9195f6ef8d66547c0a250abf",
+      "sourceTextSha256": "9195f6ef8d66547c0a250abf992dfd90f6a365ab1f2663a9bbdb25d8d19865e5",
+      "sourceBodySha256": "a2423c6d85841063b34e2da897175b5a4e69e8b16b83b9596031403ee279a39f",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        75
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 37,
+      "id": "advice-580520a3e15c4fb2438b0c27",
+      "sourceTextSha256": "580520a3e15c4fb2438b0c27372f2be5d2166e0fffcd91af70594afe36134415",
+      "sourceBodySha256": "784b6bcfd2f2eb04a025a3a843ee1359032f12f26cd2f70368ec61ba0c2db11d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        76
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 38,
+      "id": "advice-b7cf570fdc73357dc34a3bf8",
+      "sourceTextSha256": "b7cf570fdc73357dc34a3bf839652e9886702cbc026b06b0eb1de1b2bc4745fb",
+      "sourceBodySha256": "337be1babeeb4bd62e821ed02a25d56eab8fde6c5a1833c38efe883f3104ab72",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        77
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 39,
+      "id": "advice-2bd04ae18de7abc1b0511025",
+      "sourceTextSha256": "2bd04ae18de7abc1b0511025dba787cd4cc954148382b0eb1b791cd156624a60",
+      "sourceBodySha256": "5fed213368e7f6652201163437db4b92d6da160c58f1dfe86a7caa905de24117",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        78
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 40,
+      "id": "advice-fed9b4ccbab9a45063fb3cc2",
+      "sourceTextSha256": "fed9b4ccbab9a45063fb3cc2359cd606f9d73181f3b2dfdcb038e449224cd1e5",
+      "sourceBodySha256": "c3db8da9e93981497ce006676a19b59bbe176b98de33c2dd2a225838915255b2",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        79
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "sex-based-superiority"
+      ]
+    },
+    {
+      "number": 41,
+      "id": "advice-629e130f1e8ddca71bad5e26",
+      "sourceTextSha256": "629e130f1e8ddca71bad5e26c16bb3f1514fa2a33e737e5188de0e9226249a3d",
+      "sourceBodySha256": "f8da918f639a80f36e00d1f4768de233e818cf6c4144fc031c25612c45e35ad5",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        80
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "sex-based-superiority"
+      ]
+    },
+    {
+      "number": 42,
+      "id": "advice-e7b7e37b9073efbe8baf9966",
+      "sourceTextSha256": "e7b7e37b9073efbe8baf9966ded7a34e1fba000b567ca045086fcde2dfc76fe5",
+      "sourceBodySha256": "5ea747b311f622c8d3f3cce102270bb7c6381b887d4bb126470834f3fc764562",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        81
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "sex-based-superiority"
+      ]
+    },
+    {
+      "number": 43,
+      "id": "advice-6550e32bf1bc99a2e8d1c315",
+      "sourceTextSha256": "6550e32bf1bc99a2e8d1c315a9d7e185137eb1ad55c0069d6ca43649fbf2c26a",
+      "sourceBodySha256": "8503ede2a31d817dbc0eaa91d8cb9eeaa6c4856bb595b47fc4f5c0a7f29e63f1",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        82
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 44,
+      "id": "advice-9bfa6ea0f416f35cf012cc34",
+      "sourceTextSha256": "9bfa6ea0f416f35cf012cc346f5ea7a386b30576799e0ee8c925c07bd5b058bb",
+      "sourceBodySha256": "e760dbc89602952db67432dbf2da665785520647b4bee3032d9e8c5c93a78448",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        83
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 45,
+      "id": "advice-e5e2f4c0548e9cc6ff7ece46",
+      "sourceTextSha256": "e5e2f4c0548e9cc6ff7ece46ec04c414de302581918b97f885b13bc730420062",
+      "sourceBodySha256": "0a5841258612d42d684c8102b5eaa19b5cd402ea98bf2c14a2fbc41d95c191d3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        84
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 46,
+      "id": "advice-1fae9c272dddc9464ff14814",
+      "sourceTextSha256": "1fae9c272dddc9464ff14814861dfa5c881bde9623a0f7508ff96b6bd9cf14c8",
+      "sourceBodySha256": "10941a36a3d48589891de57533c0f43b6aa1c59d60b27c5c67257163c025abad",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        85
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "derogatory-gender-framing"
+      ]
+    },
+    {
+      "number": 47,
+      "id": "advice-6d4db67481a839e4b9b50b96",
+      "sourceTextSha256": "6d4db67481a839e4b9b50b96c85e382a924e63ddfeb8b276f8a9b39d642f2997",
+      "sourceBodySha256": "20aa28f0e3ab21451622b707fe873e16cf98d99130551b7fbcf1b39ce51ce155",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        86
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 48,
+      "id": "advice-a705bbf6eda1357a9480841f",
+      "sourceTextSha256": "a705bbf6eda1357a9480841f757ee16b3516b2cc3aceb235edc5a0efa4942948",
+      "sourceBodySha256": "f920b46b37794631aef5b710e2d6243d29ad004b2a6262a7fa1c63abdb5530a6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        87
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 49,
+      "id": "advice-28cd7ceb5818c0cb7fcbc978",
+      "sourceTextSha256": "28cd7ceb5818c0cb7fcbc978f81fd65b301c410281a9306ec0a0adc2dbd5aaef",
+      "sourceBodySha256": "7bc3eb7c35badc3e817c0ac5376aeced2bcbf99f59a4d15a64f5e8223de83d40",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        88
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 50,
+      "id": "advice-73d1f70e614db3d890f7a42f",
+      "sourceTextSha256": "73d1f70e614db3d890f7a42f8025dcd29119ccd2990adb772ccc978bf719fead",
+      "sourceBodySha256": "5636955a1b79e75a8e01b57e0e5c926edd2c913d50a48612a62061b4faba4fb9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        89
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 51,
+      "id": "advice-e53047760ce2ace30ad3e8aa",
+      "sourceTextSha256": "e53047760ce2ace30ad3e8aa265adb56db4a9a5dc4e424dce7fb8a768b37b4d8",
+      "sourceBodySha256": "5db3077b5b4337cf0cb8e32a8b0e29a58f1c09033afafb91dfe11caad249b0eb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        90
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 52,
+      "id": "advice-89866b37d410e3328e16128d",
+      "sourceTextSha256": "89866b37d410e3328e16128d53b3800e6fbc2922e8d9a398e5313cfbd20951ac",
+      "sourceBodySha256": "d609eb799d24319637680ecd285ee2359692f915eb88f8874974cf3ed561a6e7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        91
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 53,
+      "id": "advice-9b58d3e67c2154049a5de94e",
+      "sourceTextSha256": "9b58d3e67c2154049a5de94e8a7bd38739a91fcf54fb183f9d21e4af687fff0c",
+      "sourceBodySha256": "d511d7d328c4b275c182d96e91a5da834738df194127cb5c211b5b47c6903f2a",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        92
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 54,
+      "id": "advice-e9adc80f68ca2a1090d30a6e",
+      "sourceTextSha256": "e9adc80f68ca2a1090d30a6e1118695dcf18e623106172863ffb708211de01bc",
+      "sourceBodySha256": "207935554f91c13e401b4227196b13b57d98694fa5ff03fc59b92dfb4f64a3b5",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        93
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 55,
+      "id": "advice-fff3b56debec0eebdaf375df",
+      "sourceTextSha256": "fff3b56debec0eebdaf375df21debc9191f248b4aaee220f01920ce91efe1f21",
+      "sourceBodySha256": "fcdc1426336dba402cd9e20be3f2692255022a9fa56073b0645464c3c3ea926a",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        94
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "mental-health-claims"
+      ]
+    },
+    {
+      "number": 56,
+      "id": "advice-075ced5556cf16f684d6866c",
+      "sourceTextSha256": "075ced5556cf16f684d6866c99f8195aa7163f347ae0e8125e912eaf517fd5be",
+      "sourceBodySha256": "2dbf96a21547de6549fa83b8879982c5fa19fa2aa48ec483a3a40579d39d0985",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        95
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 57,
+      "id": "advice-467a63693a1a1c0ead882540",
+      "sourceTextSha256": "467a63693a1a1c0ead88254083fb3f7368eb9466c9af057ba56227e43444446c",
+      "sourceBodySha256": "5939df782ea6da7bd09e7fa87e2fc38355447909aec6235ba23b9140a07792f5",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        96
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "sensory-deprivation"
+      ]
+    },
+    {
+      "number": 58,
+      "id": "advice-fb1d951f80a0fcf1b8121a8f",
+      "sourceTextSha256": "fb1d951f80a0fcf1b8121a8f1bf7cd0e4620e51733c7705eb2374f7d8c820e37",
+      "sourceBodySha256": "6b4da9cd3b39663232bdf47cf6cc2a722136aa8fa5115363fdb456c131c5dc34",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        97
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "forceful-breathing"
+      ]
+    },
+    {
+      "number": 59,
+      "id": "advice-122c41add1825baa2bfdb005",
+      "sourceTextSha256": "122c41add1825baa2bfdb005985e56741b11cbd961b816a0ea741cd611905ca9",
+      "sourceBodySha256": "6f7e9de30b7d441252236bf11745664421ce1b5f42692347e5dbfc51b3067cb6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        98
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns",
+        "transgression-ecstasy",
+        "rhythm-harmony"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 60,
+      "id": "advice-a219295369e0ea031e7be7c2",
+      "sourceTextSha256": "a219295369e0ea031e7be7c20e431771fd9eac36ba35eb88509cad7223dffa7e",
+      "sourceBodySha256": "86a0ce6d590430dc3dd9c21a28bdb7f61192b12e1e3bad591bef1669113a2f19",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        99
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 61,
+      "id": "advice-f4cee94ca5fe499aca3b6179",
+      "sourceTextSha256": "f4cee94ca5fe499aca3b617951d52ff1026afa3b9e355492ddd4ca6bc49e1e7d",
+      "sourceBodySha256": "76e14ff507cd30b1542a60cf6b8235ae0ce083bcfb14a3749172ce32c1239f45",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        100
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "sensory-deprivation"
+      ]
+    },
+    {
+      "number": 62,
+      "id": "advice-72b2f8233111bf0609a622fe",
+      "sourceTextSha256": "72b2f8233111bf0609a622fe4e03ca0810d26644820f932117314a82ae8c0369",
+      "sourceBodySha256": "1874baa828c024bfae9f45f58fa820c9362fe0578fd9eb55bd24d3f99dbf53eb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        101
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 63,
+      "id": "advice-36dc34592c5e0399d83ffb36",
+      "sourceTextSha256": "36dc34592c5e0399d83ffb36dc16cda652733d67c200ede83142a117dfc9bf24",
+      "sourceBodySha256": "b8f8345ee21917f14c52b4f33f3bb5723d4b27a1c76f26f429147d3082fc0d09",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        102
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "hallucination-validation"
+      ]
+    },
+    {
+      "number": 64,
+      "id": "advice-93a601eee04d65ac5cc18aa7",
+      "sourceTextSha256": "93a601eee04d65ac5cc18aa709c066c7d7e522c693a848159b26fe3ae52b2542",
+      "sourceBodySha256": "5402398e4e90e6546487b75f684148e59d165da2f02ef5b16a2c197ac5a56bec",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        103
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "theurgy-hymns",
+        "inner-work",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 65,
+      "id": "advice-3e4675fa6ab447bd3590bc6d",
+      "sourceTextSha256": "3e4675fa6ab447bd3590bc6d8238880e33cb0c12b1c73439e2c64ede411f524b",
+      "sourceBodySha256": "774b5e62e705d869c2c79a70a7cd7d26f6543cf9a31bc36bd2eb909c859fed83",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        104
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "inner-work",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 66,
+      "id": "advice-7164e2c2671ef6ac0c798482",
+      "sourceTextSha256": "7164e2c2671ef6ac0c7984820d2f9e87becb91080b63b57e9076df6821d10320",
+      "sourceBodySha256": "8c9366517feff690971da0f1bd039945cb7aa5ee0bdfaf4ca3d4cd2ba2c2bc35",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        105
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "derogatory-gender-framing"
+      ]
+    },
+    {
+      "number": 67,
+      "id": "advice-908c42a87654b94670cd1eaf",
+      "sourceTextSha256": "908c42a87654b94670cd1eafb2b21099be0ea1fce498399370fc162b3a170718",
+      "sourceBodySha256": "cb43c98a05a4a96ced042a3bc397ffb558b468ba56b69f0115e4c0c8ba31cb9e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        106
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 68,
+      "id": "advice-a04857827a4e729d1b8c6e5a",
+      "sourceTextSha256": "a04857827a4e729d1b8c6e5a9c45563f71aa0b40e22583487ff743ac7fd6b8b8",
+      "sourceBodySha256": "5683037dba6a01e016fb78cd3bbabc552efefa7bdb823a8c764544f41e3b8958",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        107
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "inner-work",
+        "theurgy-hymns",
+        "muses"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 69,
+      "id": "advice-6b8ad2b65667f9fe13d29381",
+      "sourceTextSha256": "a747cbc3f71915b97923f258284b8e2f67ffb1222eef4f24c3b7e815427e2e61",
+      "sourceBodySha256": "a747cbc3f71915b97923f258284b8e2f67ffb1222eef4f24c3b7e815427e2e61",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        108,
+        109,
+        110,
+        111,
+        112
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 70,
+      "id": "advice-978bcde19ab52d0b3586a9b9",
+      "sourceTextSha256": "978bcde19ab52d0b3586a9b9eb8456947a412337fec6057aaf7da78a89f480bd",
+      "sourceBodySha256": "3cebb681dfdb9e22585294aafc6aa7bdcdc75d82fab85c5f7861d2eae0f0c38d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        113
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 71,
+      "id": "advice-1105588102e8ca3bcbc1cb5d",
+      "sourceTextSha256": "1105588102e8ca3bcbc1cb5dbe274ea44790fc129bdf8cba951bff3961b154f8",
+      "sourceBodySha256": "960935dfa8041ce8b52833de75a49f54d4ce667dad8037a5744792233cb10232",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        114
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 72,
+      "id": "advice-5f4673ea4e4459bc7a888ea9",
+      "sourceTextSha256": "5f4673ea4e4459bc7a888ea9806569dbe0d21461597c727b7a125d079f38f6fe",
+      "sourceBodySha256": "821d28438af4558425fb28da4120685e7e44f65dad8f118625cadbb075583764",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        115
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 73,
+      "id": "advice-f7bce249959e59d695febc3e",
+      "sourceTextSha256": "f7bce249959e59d695febc3ec79d62b124590afe54889e19363d54b2dc6c41ab",
+      "sourceBodySha256": "269762a2d75ff33c87f9a01cf07781b2d81c8f5d9aa3ded6b774c72c92396c46",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        116
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 74,
+      "id": "advice-9314fe23b6f37716e600bf2a",
+      "sourceTextSha256": "9314fe23b6f37716e600bf2aabcac86b7bdd2276bad6c915759b9138e074ebdc",
+      "sourceBodySha256": "a631eec732caa36502489848b7b60ec84b40a9965c3699ae633e57661d31a7f9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        117
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "mental-health-claims",
+        "discourages-treatment"
+      ]
+    },
+    {
+      "number": 75,
+      "id": "advice-eb38bfca7960adfe19de5ec0",
+      "sourceTextSha256": "eb38bfca7960adfe19de5ec0c4bbc1b8f3ec07b2182f5e00cad495d63f229164",
+      "sourceBodySha256": "23a5c8e4ae03a3beef01027c4f091b425c1cd0012969438f12d459bbd6ee4c40",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        118
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 76,
+      "id": "advice-cf33ec384e9b5f79683e9eab",
+      "sourceTextSha256": "cf33ec384e9b5f79683e9eab22193d47f97c3d58d3d60e232331a0c43184ed07",
+      "sourceBodySha256": "b4d97a83059de8e05518ec527dd7f5c9318e66c46bc8eb725ba4233825086df6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        119
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 77,
+      "id": "advice-508295dbf63a6f39896d8e5a",
+      "sourceTextSha256": "508295dbf63a6f39896d8e5a5972816aeda0026005f0e60acdf48586a70d022e",
+      "sourceBodySha256": "6d97968b3ca0e8361e2e4b8242e2f0fc24fe6c2455a083d6269414c902c9b96a",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        120
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "incubation-dream",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 78,
+      "id": "advice-da009e244bc80967ac6b5b2d",
+      "sourceTextSha256": "da009e244bc80967ac6b5b2d0ee942ece743e59f6b6c3014897ffcde80e796ea",
+      "sourceBodySha256": "27ef94b72f00506034d33c4127010fca1c006fbdcdc280ffe07becbb7885dfae",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        121
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "dissociation-framing"
+      ]
+    },
+    {
+      "number": 79,
+      "id": "advice-01e0ae3bb308885c03772f28",
+      "sourceTextSha256": "01e0ae3bb308885c03772f283f5c08e971c5af222e78d4ba1e5f0a6de5cdc1f9",
+      "sourceBodySha256": "d83828f6455085debbeb4e2122b7e8cde53e27a9a114d6042656d8ecd15981cc",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        122
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "dissociation-framing"
+      ]
+    },
+    {
+      "number": 80,
+      "id": "advice-adf0cb661c3c1ccd7dec269d",
+      "sourceTextSha256": "adf0cb661c3c1ccd7dec269df344f2f5a483e101bd9389a62bb9caacd367cfe3",
+      "sourceBodySha256": "0ed41228c450ef34094ff2a272831116fdbcaf9520148c57c514a4a00560cac6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        123
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "dissociation-framing"
+      ]
+    },
+    {
+      "number": 81,
+      "id": "advice-0144a67e0f49571feba70521",
+      "sourceTextSha256": "0144a67e0f49571feba705210e41316861b3ada7c6960640a080d69d24d2b521",
+      "sourceBodySha256": "7ec81801429699c1f20e9f04f058a7770aee8b340bc3d806073af54012bee82b",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        124
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "dissociation-framing"
+      ]
+    },
+    {
+      "number": 82,
+      "id": "advice-3c8c4798f9465567a7cfaffa",
+      "sourceTextSha256": "3c8c4798f9465567a7cfaffadcd9240f3c9fe0cb4d16b36068775d48a1d2a591",
+      "sourceBodySha256": "ab8223b584e67bedcc98f0f0b18812528d96e4071aea26fc38897edf487928a6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        125
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "derogatory-gender-framing"
+      ]
+    },
+    {
+      "number": 83,
+      "id": "advice-a37fe38ea99b13a54b332471",
+      "sourceTextSha256": "a37fe38ea99b13a54b332471c68645fa3359136d6f598ab19f7836aa09e5a211",
+      "sourceBodySha256": "dc81a5a9741713a20e4b522aeae82e4b54c9ac2545e0536ce1e8e01a93d9eb43",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        126
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 84,
+      "id": "advice-e924e4d94b44009f5484a95b",
+      "sourceTextSha256": "e924e4d94b44009f5484a95b99eb3cf467156bae2748918763199397e072eb42",
+      "sourceBodySha256": "f4479916b965cb624f9574821b94285118600552018f300a5d431f8fcaee038c",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        127
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 85,
+      "id": "advice-a06e6ec5bdd7e83161c9c26a",
+      "sourceTextSha256": "a06e6ec5bdd7e83161c9c26af56782b98756b41e1e67d0d0db80a4592c6b6d0c",
+      "sourceBodySha256": "5da00400dbd9b8ac567e55a016afe2fb3e74333a986f1e28e0e2aa1e088771ae",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        128
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "memory-lineage",
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 86,
+      "id": "advice-db7796d86294eee2acabf400",
+      "sourceTextSha256": "db7796d86294eee2acabf4009cf5f063b0be3b708c3923fb820d9acee7faee9e",
+      "sourceBodySha256": "bdc07f246f58583d3a5e0fc73093a867e54f5531208a3493e40232e5d4d4dcbb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        129
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 87,
+      "id": "advice-26eaa94144bc6e34ab395b54",
+      "sourceTextSha256": "26eaa94144bc6e34ab395b546cc725c5e6bf26846a1db93c9b2f79c42140412f",
+      "sourceBodySha256": "33a76e34bd60ade838acaa29884b8b4d51fb6d4ffb59db975afefb4aeded2800",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        130
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 88,
+      "id": "advice-efedeffaed4d7b449747f78a",
+      "sourceTextSha256": "efedeffaed4d7b449747f78a93e5a119aa96aaf737e85badfb0aacdc23cdadfa",
+      "sourceBodySha256": "9c4ca8176e986d940a2f59666a7f88a3a87ee804d17fa85359b9b2d1e7a4a11b",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        131
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 89,
+      "id": "advice-f9665ce169b5912700b3b6af",
+      "sourceTextSha256": "f9665ce169b5912700b3b6af90f6d28ec873bef2badf653819d594bf0df4e62f",
+      "sourceBodySha256": "1a4d4a27619052c7b562fb37730cb874cf557a85095385695c9ee951edd5e656",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        132
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 90,
+      "id": "advice-e6d6fa73073c012d22450262",
+      "sourceTextSha256": "e6d6fa73073c012d22450262803d2d81d8442519addf4b5483bc906c4ba7f1c4",
+      "sourceBodySha256": "b4a4d04a77e22b8e399e22859f6ae44572ce225baee7375b2856d890186aefac",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        133
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 91,
+      "id": "advice-fc7e73c427325de73a02264d",
+      "sourceTextSha256": "fc7e73c427325de73a02264db99b320097554e155698b7532afc370022dce594",
+      "sourceBodySha256": "ee9c4e24da2a53a732bc6afb69c032ade574fd32d1149abf91e80a9bfdce521d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        134
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 92,
+      "id": "advice-276077ad76281b8daaf04953",
+      "sourceTextSha256": "276077ad76281b8daaf04953636bd7683d2c32506fc33b5db8ada0b5e1357bac",
+      "sourceBodySha256": "4491876a7b6142924f844fe94d4ef3acaf5ef29388caabecc3dbf7521cb9f839",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        135
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 93,
+      "id": "advice-8063e28fbda6653f35c924e5",
+      "sourceTextSha256": "8063e28fbda6653f35c924e5261b96e60df5fdceeb35a195b83a3aab775c2c72",
+      "sourceBodySha256": "08fabac97f329d8b08f0a13fb23aa49b529e082cd3e2ea57612b5deef0c16105",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        136
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 94,
+      "id": "advice-a89975eb09fe9b9faa540d11",
+      "sourceTextSha256": "a89975eb09fe9b9faa540d11887d8cd2e1af00cd4db8fd4c0453c92328709cf4",
+      "sourceBodySha256": "d0cee16b268bff4834d05284454c931ca52c6b508fa416ea9965129e6451de9e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        137
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 95,
+      "id": "advice-34b3712be0a10ef9bdc47244",
+      "sourceTextSha256": "34b3712be0a10ef9bdc47244d566b74d9bbb7d1ea89e7f7f929a95e87ec3cdab",
+      "sourceBodySha256": "f1ef011eb30d1de56b767e61e9832e8a60efa1ee181d423db35bf64946c8de1e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        138
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work",
+        "rhythm-harmony"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 96,
+      "id": "advice-24e84f8a298b3cdeb26d2d67",
+      "sourceTextSha256": "24e84f8a298b3cdeb26d2d674f0259264b64ba712900cde53f03aeb2cc40a412",
+      "sourceBodySha256": "fc9ccdd474dcae396efc1b7f7265ddc9854e30149359eadd6f69fa0682c7a032",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        139
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 97,
+      "id": "advice-952d9e026745c6512e06f53d",
+      "sourceTextSha256": "952d9e026745c6512e06f53d64ecf78c0a45205c70e97aee85f58f98965a0a29",
+      "sourceBodySha256": "5a1ab91792329e34acc0e10e1f6af7bc67c4420325e6a2537e58228a88f645bc",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        140
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 98,
+      "id": "advice-93ab2304de88816722741cc0",
+      "sourceTextSha256": "93ab2304de88816722741cc0dfff76abdfac94f55567d012ff83fae46aba7a9e",
+      "sourceBodySha256": "799d58c3481c34815b5977b91633f2b052ccd79979806f78d6e344b013917e14",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        141
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "muses",
+        "memory-lineage",
+        "inner-work",
+        "rhythm-harmony"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 99,
+      "id": "advice-2a6f9c85e082253ca9d823d2",
+      "sourceTextSha256": "2a6f9c85e082253ca9d823d21dce2cb6b9cb725fe169323b9250e8d770fbfb7c",
+      "sourceBodySha256": "76a13a3214b9ad7876b6c65bc10f0f6b2f4a409688d8fafb052e246fb895b9f0",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        142
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 100,
+      "id": "advice-350d01cd7044d1d057883f35",
+      "sourceTextSha256": "350d01cd7044d1d057883f35a09ac5211a05d39c22153f96e1f4803e054925ba",
+      "sourceBodySha256": "c6ba69e283b4f509f5e57f153883e4546cf74538e395e985b23400c02be4a06e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        143
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 101,
+      "id": "advice-b4adf0109a01599083df4333",
+      "sourceTextSha256": "b4adf0109a01599083df433349255b3f29108ff1493560a45557745ecdfce3b7",
+      "sourceBodySha256": "c31f7204acce23a7776d5079ba21f7d6c27fa9cb6e36061e0bd770f946de9eb6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        144
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 102,
+      "id": "advice-7b84a9bb4a62f54cefe21ccb",
+      "sourceTextSha256": "7b84a9bb4a62f54cefe21ccb307e39c5ed0568f40abe50e856492448aed685b3",
+      "sourceBodySha256": "e101cd496d5a6bfda69863349f74f010e53071c54694b829d0fe5e48cb400b4d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        145
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 103,
+      "id": "advice-843c9dcb682f58167a49f2ca",
+      "sourceTextSha256": "843c9dcb682f58167a49f2ca702cc2ed8b54e8f7d8dd53f0b3789c2c788794c6",
+      "sourceBodySha256": "2264dfb4b50dd45540477a12a06dee2ef5a99c5f9087cb19e92e3fa3f093010d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        147
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "human-remains-use"
+      ]
+    },
+    {
+      "number": 104,
+      "id": "advice-bfd05af337cdcc784369481d",
+      "sourceTextSha256": "bfd05af337cdcc784369481db59243e24b95ca0e87bb2f6ce64ea959a3c11925",
+      "sourceBodySha256": "47bdd8c79237e3ea1dc93cc5cf7ced78711f8ba29ae782f025bea21e409207d2",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        148
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "corpse-contemplation"
+      ]
+    },
+    {
+      "number": 105,
+      "id": "advice-f5e6d68d119a8d381f3676b1",
+      "sourceTextSha256": "f5e6d68d119a8d381f3676b1f0383bddcf825e8f1b8a8e3a4b28f26d1f706942",
+      "sourceBodySha256": "29a716f3320b3fb2ebb6b37c5409a0262e222e105c9c9482f03d6de645fcfaa7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        149
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "grave-site-practice"
+      ]
+    },
+    {
+      "number": 106,
+      "id": "advice-59ff74d3953ae15cd41d573d",
+      "sourceTextSha256": "59ff74d3953ae15cd41d573d881c31a79e94e789ebb764c39b3b1d3f6e36b505",
+      "sourceBodySha256": "d1a271ebd81c15bc6f59fd99ac4d04a90c89e4275f773a4b04aa3ab56e1d5108",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        150
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "animal-remains-use"
+      ]
+    },
+    {
+      "number": 107,
+      "id": "advice-82e344e10e549849776cf36b",
+      "sourceTextSha256": "82e344e10e549849776cf36bcd68b3f92d5593d80996653048bf2c949eec4dc4",
+      "sourceBodySha256": "00dcd1828d275c70dd6da791586784850a247ff5bfb67ac3b8905f994ba7e375",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        151
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 108,
+      "id": "advice-ba0efea9b5967788dcef6834",
+      "sourceTextSha256": "ba0efea9b5967788dcef68346bb818b70b7e42fd2ec8eb96401a11618a9c42aa",
+      "sourceBodySha256": "38cd3e05227e5ea757b310132eafa226eed574244a00a4783b7e998bc22ffa42",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        152
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage",
+        "rhythm-harmony"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 109,
+      "id": "advice-e0e0db331f62008ad30d667c",
+      "sourceTextSha256": "e0e0db331f62008ad30d667c5f41d8d168cef784a4abfd19ee7de3096a3e6980",
+      "sourceBodySha256": "9ad4e862b6bed46d6a962d2180fa962769c0db281855fdc9a2e19ed857bc3816",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        153
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 110,
+      "id": "advice-964be9005379cbc30acdba29",
+      "sourceTextSha256": "964be9005379cbc30acdba290681b6f22f704b777931728989a7771db306759a",
+      "sourceBodySha256": "7f2ca2a056e52aeeae3b87308ace956d2db97577866d62a1aa076e8876340cb7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        154
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "mental-health-claims"
+      ]
+    },
+    {
+      "number": 111,
+      "id": "advice-490a8cfa1464041bf77f67a7",
+      "sourceTextSha256": "490a8cfa1464041bf77f67a71674c9f57f5ac7ce81233568e9f75e872e7f0d9e",
+      "sourceBodySha256": "02b2a0fff23e141071bc75b666df8dddb7c3f3c6ecf04e2e44677eca5ea666a3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        155
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "transgression-ecstasy",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 112,
+      "id": "advice-4bc687f07d23e3a39d772f3c",
+      "sourceTextSha256": "4bc687f07d23e3a39d772f3c7bee4b7a6846d98846e7f4f51c324e7e87380a64",
+      "sourceBodySha256": "ff1e8c8923b9693feb5e8eb03b3c36f60119f848cfabf3aea38426384ce0e6a9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        156
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "transgression-ecstasy",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 113,
+      "id": "advice-3376a81e6bf0f91e345725a2",
+      "sourceTextSha256": "3376a81e6bf0f91e345725a25da932c7e3c027a52539cc49fc967c792c64902a",
+      "sourceBodySha256": "93272d2b369c9bd77dcdd990ca515a2f38a70b3618d05b9d845b3b5f4e7d0574",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        157
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "transgression-ecstasy",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "dissociation-framing"
+      ]
+    },
+    {
+      "number": 114,
+      "id": "advice-c40d9bd9a9abbb19d87feabe",
+      "sourceTextSha256": "c40d9bd9a9abbb19d87feabe92455d2906b9d101938a4599546e61b059461ce3",
+      "sourceBodySha256": "bb81184a827f459b72391a52b2a3fdb2ec4416b9d88b1c750158426ec156a3a0",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        158
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "transgression-ecstasy",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 115,
+      "id": "advice-8de35723165d9a2f6af5dd16",
+      "sourceTextSha256": "8de35723165d9a2f6af5dd168b1aceace2623d0158ab030d9e60a9131b4195d4",
+      "sourceBodySha256": "fd5990454cb63a65a0ecec1a67bdc427008ee8ef49954e75998523674e56c704",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        159
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "rhythm-harmony",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 116,
+      "id": "advice-3d8920fb4f6f041097629768",
+      "sourceTextSha256": "3d8920fb4f6f041097629768c4bfec7feccf942781ec6a920d1a36deccda65f9",
+      "sourceBodySha256": "fbc6d2b187840050fa5565a126db91c445ae3138cb7105a71defa189c7880062",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        160
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 117,
+      "id": "advice-dd67e646bc25f0c5cb5846c4",
+      "sourceTextSha256": "dd67e646bc25f0c5cb5846c4a3e851782c950594099c5d093f8c1c313add13d9",
+      "sourceBodySha256": "b2ee659bd9f8b10c20e6dc571694aa14ef6714bfd1373668245ea24e562cd3b0",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        161
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 118,
+      "id": "advice-013779a613a0392c69752876",
+      "sourceTextSha256": "013779a613a0392c697528768a50b28c8a5d5aa503f177c1142ca65570f5e370",
+      "sourceBodySha256": "29430327b8ababd9b7f1455c30c7a6976c4ce39a0122c4c757b98eff5874da27",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        162
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 119,
+      "id": "advice-d8e2783906aeb67a8fcada3c",
+      "sourceTextSha256": "d8e2783906aeb67a8fcada3c9d8e7f3bb23375d6d01a0cd185c4016cfebb3be2",
+      "sourceBodySha256": "61a34be96dd22d3a5fbea079a3bd7e950626993028a9cd8dba28b6ec5b429f34",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        163
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work",
+        "intoxication"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 120,
+      "id": "advice-882a7f50857b9fc1b666a9c8",
+      "sourceTextSha256": "882a7f50857b9fc1b666a9c8a4c4dd6c784be7eca6703cd7b1e0aab3fb0eba83",
+      "sourceBodySha256": "736df9bcf9eb25ecb3362c9fa87b0140431b4bcee303bde8a23f234f4cb01a4d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        164
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "mania-medical-framing"
+      ]
+    },
+    {
+      "number": 121,
+      "id": "advice-c5a26587d929e96f9e3634cc",
+      "sourceTextSha256": "c5a26587d929e96f9e3634cccdf3079bd15bb1706e27d5ff773bece584c83071",
+      "sourceBodySha256": "56de95e86f8ebaaab95c9caf85cdd82ec1279c79cfb09ed766ee20b7457d033e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        165
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "dissociation-framing",
+        "mania-medical-framing"
+      ]
+    },
+    {
+      "number": 122,
+      "id": "advice-5f49dd0868f1c9d606bf4cd1",
+      "sourceTextSha256": "5f49dd0868f1c9d606bf4cd117fe3086bcd61dc92ebd5e91dd7fd016736030b7",
+      "sourceBodySha256": "19f5d4ca6c292f407358023931281f7a944ee538e22964ef295549f81b510dee",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        166
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 123,
+      "id": "advice-3dc6b60c1af50fb030edefb4",
+      "sourceTextSha256": "3dc6b60c1af50fb030edefb49c6d985b6be9cf76001c4a3dadbb5858c3cec4b6",
+      "sourceBodySha256": "f32cb3734f80d7997f74b809498bc638ed93fcc2d10c2ef937268d566d5ae7e4",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        167
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "mania-medical-framing"
+      ]
+    },
+    {
+      "number": 124,
+      "id": "advice-68729b872fa7e67f1bdae542",
+      "sourceTextSha256": "68729b872fa7e67f1bdae54261c509014c29cc6a7c74a2798e1b1660a081614e",
+      "sourceBodySha256": "1e7a1b5646662ac817f45effec50fe4cdeb0829013c2001073a58e21aa907ff9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        168
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "mania-medical-framing"
+      ]
+    },
+    {
+      "number": 125,
+      "id": "advice-a433c6890b319534837a706d",
+      "sourceTextSha256": "a433c6890b319534837a706d5f2a4f8f3a5ad4a1f6e6d01cd316f4e7ef07fecd",
+      "sourceBodySha256": "36609da94ed083ec8f4f8bd14b952664ebed6c97414a0407e6c0b5cfe7a209cb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        169
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work",
+        "intoxication"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 126,
+      "id": "advice-eff217d04436b89e4179446a",
+      "sourceTextSha256": "eff217d04436b89e4179446ad93c944732312389b46b7993c7ec8b4078b7e16d",
+      "sourceBodySha256": "d7c13546ab8d1a03dc81ccd0c6664a220e5efbef9f7c54ed17f46209907532cf",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        170
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "mania-medical-framing"
+      ]
+    },
+    {
+      "number": 127,
+      "id": "advice-427bf6035a6dc42ed0444070",
+      "sourceTextSha256": "427bf6035a6dc42ed04440702b4f79980ab7d5b05c0ce5f8d660fecd3f097153",
+      "sourceBodySha256": "3cb38f3975f33971634ce721bab4abef283d89d177b1dfba2498651969e6f3b8",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        171
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work",
+        "incubation-dream"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 128,
+      "id": "advice-e59d2e13f52687e97d1df089",
+      "sourceTextSha256": "e59d2e13f52687e97d1df08928f812b536a2bc8e5aa384232e36e1f7d187806f",
+      "sourceBodySha256": "f07e6e1c89505dbdb22ecc53f500a09b0f3a8ad5e03f95d1ea0c75af16d65ddb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        172
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "mental-health-claims"
+      ]
+    },
+    {
+      "number": 129,
+      "id": "advice-3bea44e09d6e2c0c05acda0e",
+      "sourceTextSha256": "3bea44e09d6e2c0c05acda0eb01785f902c5b9963821495dea6e624a17b8d0fa",
+      "sourceBodySha256": "7d12b4e4fe1777c86966409ef756f93b1eed11945e69207f319199ce03cceeda",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        173
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 130,
+      "id": "advice-3f8e422d9a0062bd2d455fc8",
+      "sourceTextSha256": "3f8e422d9a0062bd2d455fc8116e6dcbfa2b765d943165618a036ce7e54fab9d",
+      "sourceBodySha256": "07e813fe71c106bc4e59db70d9b8d5041458444ce06ae9e640aced6a61d7b3c1",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        174
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 131,
+      "id": "advice-822bce5022be1934e445e91c",
+      "sourceTextSha256": "822bce5022be1934e445e91c9c604ad0f2f34c6addb258d43264d128bc60e77f",
+      "sourceBodySha256": "d5dbd71380a992a9d468324ada0d0b0fedaadcbedda4d5f451175a978d0308c3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        175
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unspecified-intoxicant-practice"
+      ],
+      "classificationReason": "General intoxicant practice in the same source sequence as the wine practices; apply the alcohol jurisdiction gate conservatively."
+    },
+    {
+      "number": 132,
+      "id": "advice-dbf5b0a109dc5089410191f7",
+      "sourceTextSha256": "dbf5b0a109dc5089410191f7cb0a4d1bd8116a3dd8cb571567343f33111ff70c",
+      "sourceBodySha256": "da392e4a4e6c2e6626b5e50c7b0567fd9da8f9ef9ab0031186a96e5bf73be1c7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        176
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unspecified-intoxicant-practice",
+        "intoxication-hallucinations"
+      ],
+      "classificationReason": "General intoxicant practice in the same source sequence as the wine practices; apply the alcohol jurisdiction gate conservatively."
+    },
+    {
+      "number": 133,
+      "id": "advice-0667c3bcc0adfd69f14c5805",
+      "sourceTextSha256": "0667c3bcc0adfd69f14c5805e07b1e2159154f638ceddf45bf39da3264254c9b",
+      "sourceBodySha256": "b76558d85f51052c3242a1dd06efc33afd5c021f4cce76a075aea2132fe51c4f",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        177
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "derogatory-gender-framing",
+        "unspecified-intoxicant-practice"
+      ],
+      "classificationReason": "General intoxicant practice in the same source sequence as the wine practices; apply the alcohol jurisdiction gate conservatively."
+    },
+    {
+      "number": 134,
+      "id": "advice-161aa46318c8845d2c104746",
+      "sourceTextSha256": "161aa46318c8845d2c1047462c1ece7def8f03311e86df1f579dec954f3a846a",
+      "sourceBodySha256": "37ca8ae845de01d919e7fabe3605ec83c3b5ec796e1dfcb02ecdd85bb78becc2",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        178
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unspecified-intoxicant-practice",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 135,
+      "id": "advice-d97e40e4b7cd4ddb3eb0f146",
+      "sourceTextSha256": "d97e40e4b7cd4ddb3eb0f146b624c56ca4eb02b5c09dca9f5e415e29b430c801",
+      "sourceBodySha256": "f9b91ebfedb1b72bf92a7da49e1fe22a2f47f251212b58156877ff31ec304336",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        179
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 136,
+      "id": "advice-25b6008416d5ecdae5aa0abb",
+      "sourceTextSha256": "25b6008416d5ecdae5aa0abbca99d4238c59d5cc41d205589fce41466e3566d7",
+      "sourceBodySha256": "6f58dcace9062b00dfe40493e7f0ac37d923bb95f2575659227f59625694fbb7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        180
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 137,
+      "id": "advice-e98c14ce4a8c09b2b2b8d07c",
+      "sourceTextSha256": "e98c14ce4a8c09b2b2b8d07c3c9b438ec733464793212f2a7ecbcd7967b0430e",
+      "sourceBodySha256": "40ada482030028967ecb236243625889302a329aa89adf6cf99acbdd7151b2c9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        181
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns",
+        "hades-death"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "skull-drinking-imagery",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 138,
+      "id": "advice-6e90e33972d16ae34cd78a7d",
+      "sourceTextSha256": "6e90e33972d16ae34cd78a7df518639b9ecb5463c0c0cadeb300156f8406a72e",
+      "sourceBodySha256": "a5e9e70b74ad3508901a9203b5a0dfa58cb9b36153e18276c40d90f7cc01e6da",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        182
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 139,
+      "id": "advice-83f0dfd86bc0b8f593e64e73",
+      "sourceTextSha256": "83f0dfd86bc0b8f593e64e731da210558e1b84ef7dccee0982d79dc958529b91",
+      "sourceBodySha256": "b65f7a6975a469c8435a980c30c587cf563821b507b5850f45e12d2c8c62a8ad",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        183
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "unsupported-endocrine-claim",
+        "sex-body-stigmatization",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 140,
+      "id": "advice-a8f0ab084a403e1313f8c33c",
+      "sourceTextSha256": "a8f0ab084a403e1313f8c33cd57b671c8f5d371d0d76eb5d32fc3d7a329d4d37",
+      "sourceBodySha256": "5c8759e18b7ba815c90a2d5dbae4a6f34319bb835d607296806b140568edf5e1",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        184
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "unsupported-medical-claim",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 141,
+      "id": "advice-f2a778a94059d5245193138b",
+      "sourceTextSha256": "f2a778a94059d5245193138b7a9aad539347561d54b0304a2b3df66ee2cb7ff8",
+      "sourceBodySha256": "93da2237f8e05227977f06644190e1b463b060931f9e5a301efa6eac2f73034c",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        185
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns",
+        "hades-death"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "high-risk-alcohol-trance",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 142,
+      "id": "advice-586081509a22285d59ee2db0",
+      "sourceTextSha256": "586081509a22285d59ee2db093b867b462e515a2deca7642af7d91b60150b7b7",
+      "sourceBodySha256": "7c2bf324fb962b536978d71eb58834a45ee02ae0135e7b9c4435b3f9aa858b3c",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        186
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "memory-lineage",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 143,
+      "id": "advice-e158fdc0dcc3e15c336bd933",
+      "sourceTextSha256": "e158fdc0dcc3e15c336bd933bac2bfb4da0d83698804dabe5014b9697fd21232",
+      "sourceBodySha256": "e931d60439e920c9f5457f392365a3a2304d9778e0ca56c4430c9d1b0acda13c",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        187
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 144,
+      "id": "advice-478b074f14d03c7761af66fe",
+      "sourceTextSha256": "478b074f14d03c7761af66fe6c02a04e883847c816d72fe1eaba3d8cad068339",
+      "sourceBodySha256": "010a7958b50460260d76897275389743f3a5d1575311bcabe65babaeb72406a4",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        188
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "derogatory-gender-framing"
+      ]
+    },
+    {
+      "number": 145,
+      "id": "advice-53a21531e960665cbc2b19b4",
+      "sourceTextSha256": "53a21531e960665cbc2b19b488d2520e626bffa1edd33b69265c73ec19ca0e0c",
+      "sourceBodySha256": "284f302ce075b7ad873371ccb02cca3af25d885db42b13da0332270f9837ed4e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        189
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "physical-overexertion"
+      ]
+    },
+    {
+      "number": 146,
+      "id": "advice-c54c7fcb80f7c69b91da1a16",
+      "sourceTextSha256": "c54c7fcb80f7c69b91da1a16a658c043a3bca995c932ff7bc91b6a7fb2c96288",
+      "sourceBodySha256": "e7d4967ae28324031eaaea0cfd9711a60d2ed41d2b88984b6f4b2ced173300f1",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        190
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work",
+        "adversarial-strategy"
+      ],
+      "sourceContentFlags": [
+        "coercive-dominance-framing"
+      ]
+    },
+    {
+      "number": 147,
+      "id": "advice-24cd73ba08015a9f8b9cf82e",
+      "sourceTextSha256": "24cd73ba08015a9f8b9cf82e6f13f05dca4ef26f4e2a3ca254d1ae07bcc66eb1",
+      "sourceBodySha256": "24763d7df713aa5f60bc14b1a8f4a80683bd6a0a060d5ff5dc48a42f99a16441",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        191
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "rhythm-harmony",
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 148,
+      "id": "advice-8fd8300c1618b8bfdc638851",
+      "sourceTextSha256": "8fd8300c1618b8bfdc638851dfcfd841ba80488cd21df4d7a5581c55a9c74b37",
+      "sourceBodySha256": "2de305494a400d738c39787b85d0efa194f5308927274e664ba11805e25f50e0",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        192
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "rhythm-harmony",
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 149,
+      "id": "advice-5d75049e0d1e03e9a37ba587",
+      "sourceTextSha256": "5d75049e0d1e03e9a37ba587458b043d8e8ee99e2a76339679fed8486a6f5d59",
+      "sourceBodySha256": "fb2dad53db084c3683b55012e8f3d101440e82e2903ebeb29cee0cf0fe639a89",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        193
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "rhythm-harmony",
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 150,
+      "id": "advice-ba231a8c4fac93cda0a1696b",
+      "sourceTextSha256": "ba231a8c4fac93cda0a1696bb82dd1a35e6177b4d29048b7d0e3e55eef120c46",
+      "sourceBodySha256": "0357466cb9495c09b7c3a2d281c72e21191a32f040505f86215b6b6cf7832e2c",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        194
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "rhythm-harmony",
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 151,
+      "id": "advice-dccbaffa32ade489131c6c7a",
+      "sourceTextSha256": "dccbaffa32ade489131c6c7a1e89628ec77231e6d321f360d16cb6109ef85045",
+      "sourceBodySha256": "ff74120a5f07152191bf817aeed94b52d35e3a01c9aa6d59c9aba67b3a0b9d7e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        195
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 152,
+      "id": "advice-c77f1b457ffc5899caae2615",
+      "sourceTextSha256": "c77f1b457ffc5899caae2615f5439aae79f37b63c71813043b0a693e5b4ded35",
+      "sourceBodySha256": "0c8ec3f72b8de5d8e9a7cedca3bfcd4317a6cfa92c363383d279337ef4e9bdd4",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        196
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 153,
+      "id": "advice-fa81a92776101ff075d92724",
+      "sourceTextSha256": "fa81a92776101ff075d92724f7b70d058d105d43978a9151d4fa2ce5a1c92ade",
+      "sourceBodySha256": "8bf7a9d0945b0ed6b7c103f322eedc97d5d663a24309b6e74300175b7337c7eb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        197
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 154,
+      "id": "advice-ae31c953d81e548a3acf0780",
+      "sourceTextSha256": "ae31c953d81e548a3acf078005b8d7243872f06db1bd1ab531ca848859ab10d8",
+      "sourceBodySha256": "d2e0ecbdaecc0958ac35b29e4a7a997eb44370eeca39d01c0f2c1bd0bc5e595b",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        198
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 155,
+      "id": "advice-f2ad24264d94cd387e1601d8",
+      "sourceTextSha256": "f2ad24264d94cd387e1601d8e24a486ad5a7c560499bc7d13dca8b85bd92cc25",
+      "sourceBodySha256": "883bd9bf0c57b4985f940c2e147b4c4848ea2fab8080a86eb3417edfaa35d367",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        199
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 156,
+      "id": "advice-8c87b888b61f2d83b7161298",
+      "sourceTextSha256": "8c87b888b61f2d83b71612985163694d6dac2288b7a1821a794a88954d4e4ea9",
+      "sourceBodySha256": "78330411fda9d9944ae5bccadd9d2aeca7d6a33cbbfc1ff869e0c65a39ad75d4",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        200
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 157,
+      "id": "advice-0e82713bbc61c13afe9be0a0",
+      "sourceTextSha256": "0e82713bbc61c13afe9be0a072ad8129de09dacfd4a4c920fef0b5e8d4686127",
+      "sourceBodySha256": "3df182b2ad23ea4158891f0765e2a071ee855628c5040e8bf851c2a37d44707e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        201
+      ],
+      "containsAlcohol": true,
+      "subcategories": [
+        "intoxication",
+        "theurgy-hymns",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "practical-alcohol-use",
+        "alcohol"
+      ]
+    },
+    {
+      "number": 158,
+      "id": "advice-bf66479e6253975649207d46",
+      "sourceTextSha256": "bf66479e6253975649207d46262cb0af178330cb4cf6f776011a32b04482be5e",
+      "sourceBodySha256": "6f746e9025d5f900cee22409a8dea30da748e9c6386bf000e117f2cfd70e54b5",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        202
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 159,
+      "id": "advice-de02eee152ddd1fce0adffb9",
+      "sourceTextSha256": "de02eee152ddd1fce0adffb9534788a53897302131b1b92e573d9c1d26090035",
+      "sourceBodySha256": "29214873e8210f78ba27d72110757cae57150b57a8bd05ed97bba6c9b9a8caf9",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        203
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "transgression-ecstasy"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 160,
+      "id": "advice-59add530f4ea84498b074b85",
+      "sourceTextSha256": "59add530f4ea84498b074b85aef91b5d6b70025bae7ca211116b7eab9d6dddb0",
+      "sourceBodySha256": "4e773749f191f18069bbc1e7ecd51a0b59ddcd6d899fd98e1d0f87ec0640173e",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        204
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "theurgy-hymns"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 161,
+      "id": "advice-4b8da283ffffa771d906d927",
+      "sourceTextSha256": "4b8da283ffffa771d906d92740759b1af215089c29b328c223b933b20e2b6775",
+      "sourceBodySha256": "db1d01f0b4afea4c48124001a4e652c2b4ddb66c75af8c016bd1dd3391b73cbf",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        205
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 162,
+      "id": "advice-6c85c7d56f99bad5560bb727",
+      "sourceTextSha256": "6c85c7d56f99bad5560bb7275584adaa27c28d8f69a73743814f0b71140b7025",
+      "sourceBodySha256": "9e5a9c29aad5d429077fec56b38b8a8bf0a0c9c3ec597b910dc826ab3499bc4d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        206
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "inner-work",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 163,
+      "id": "advice-7c9b0e2720a464f12f7bc986",
+      "sourceTextSha256": "7c9b0e2720a464f12f7bc986e3d1a5629bd93ef2335993927ff485e8febb51e2",
+      "sourceBodySha256": "5549a0fb02b12c9f782b13d821bfffc0def3a38a59c9df75ce9e8bd037eee19d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        207
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 164,
+      "id": "advice-d6e24eca5f3ba9fe60e32711",
+      "sourceTextSha256": "d6e24eca5f3ba9fe60e327118c61c4a2e2116b3b1327b8fbd20f027b203f5554",
+      "sourceBodySha256": "5242d19e431d08aeec364c643f51e6f6de9497287a84f25cb31696a741272436",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        208
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 165,
+      "id": "advice-0f514f655fc864910a37c73e",
+      "sourceTextSha256": "0f514f655fc864910a37c73e6e9534d2c04533a805e9e23d704a686ad94b5755",
+      "sourceBodySha256": "b623c3d4119863a3d9908bdc10f6b4fce962d422b35f176172e87a706de87ee2",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        209
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "hades-death",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 166,
+      "id": "advice-02bdc4d829b72233fa0f0702",
+      "sourceTextSha256": "02bdc4d829b72233fa0f0702b0f49dd945ba9fb4ae72b56602080cb898660ef7",
+      "sourceBodySha256": "60680e4479ca28336a79cbcbfdcb112de54ab36fce63de43a983ca923856cce0",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        210
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "transgression-ecstasy",
+        "hades-death",
+        "hermetic-rebirth"
+      ],
+      "sourceContentFlags": [
+        "coercive-dominance-framing"
+      ]
+    },
+    {
+      "number": 167,
+      "id": "advice-ab2acc7b27a105b07511fbfc",
+      "sourceTextSha256": "ab2acc7b27a105b07511fbfc7f792c6150daf4a3c4e42656c7c3b0ddbc15ba25",
+      "sourceBodySha256": "a7b3aab9008d43ecfac99008cc183a53da267434ea7c7409c9ce8cfa039629aa",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        212
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 168,
+      "id": "advice-7bb8d2710a3bd5612ec8fa5e",
+      "sourceTextSha256": "7bb8d2710a3bd5612ec8fa5e9875ca30433152ea944eb79e61d601f102714b24",
+      "sourceBodySha256": "4b0a52d286b743e5ea5580535e5f951702d3a88a56adae2e984fea92e8d66b96",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        213
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 169,
+      "id": "advice-e7b1364cbed80af53cb96436",
+      "sourceTextSha256": "9799094d6377e0cc3436529a8702094174d835f4315842bd61c050cae063aba4",
+      "sourceBodySha256": "90d4edb71b2818a8c4f4cab6fcef33062fdcf96db225d0ab938bdc0d779172f7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        214
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "transgression-ecstasy"
+      ],
+      "sourceContentFlags": [
+        "physical-overexertion",
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 170,
+      "id": "advice-944d04e8e4d084ceb65cb6e9",
+      "sourceTextSha256": "944d04e8e4d084ceb65cb6e994c3bdb795185e1e0d12eee59f495e2b4dacd07e",
+      "sourceBodySha256": "a2f3f89f0f79f90905b9bb03d01f3eac3b21f451776dc37b1fafd8e975b1a22d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        215
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 171,
+      "id": "advice-a51ad2752e0e3768fb0e310e",
+      "sourceTextSha256": "a51ad2752e0e3768fb0e310e520922aa10ed3f950cb1f6ba1932e5ae911211d5",
+      "sourceBodySha256": "4cb389e06dbe4ca7575b31072d25394ba2e2bccc8b2057ab9f971ef90386f819",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        216
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "hades-death"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 172,
+      "id": "advice-3d05eb8136de1a1334d912b7",
+      "sourceTextSha256": "3d05eb8136de1a1334d912b7727333ed04c4d0af35c2d4140791c78cadc7910c",
+      "sourceBodySha256": "577e103e08dcafe2827db8a34e8be93b77fe83ba6a595f7aad440fa69176a8d3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        217
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "transgression-ecstasy",
+        "intoxication"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 173,
+      "id": "advice-31ca510510f6cc9016efa05e",
+      "sourceTextSha256": "31ca510510f6cc9016efa05ee57f32dad25e3add0a94f97782c22b8e2e21e1f8",
+      "sourceBodySha256": "22ec5bac13bdc9af2752629548359adfc2ac88c12c5f0a0453bbee300ffffed3",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        218
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 174,
+      "id": "advice-796e7dfc559f5d82682fc52f",
+      "sourceTextSha256": "796e7dfc559f5d82682fc52f5372b9040370dcbc274723daa0f1306693c024dc",
+      "sourceBodySha256": "9416e270c990624603f8c43258be2cfc008533d57b47ead3bd8e33d46aad73f1",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        219
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 175,
+      "id": "advice-a1ece471a866537d114a2941",
+      "sourceTextSha256": "a1ece471a866537d114a294168bda395fefa0649acdde1c0987b755903b95f5d",
+      "sourceBodySha256": "83e4f0c75db86db8c0450c54cea84858905bce586ac5f64b85696feae3993016",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        220
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "memory-lineage"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 176,
+      "id": "advice-ad523c7a915848b7b4effa5a",
+      "sourceTextSha256": "ad523c7a915848b7b4effa5a1bd725e91864bbf3358836abbc6ee8bd4d04716f",
+      "sourceBodySha256": "09d0e45a3c61f25a20ef975c5f335ec18e0f32779920ba4ac3c58c1a4a992205",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        221
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 177,
+      "id": "advice-8811f907dfc8cf80e0405a13",
+      "sourceTextSha256": "8811f907dfc8cf80e0405a13006ff291fc9103890275b38c912dbae0f937acbe",
+      "sourceBodySha256": "a86ce02da182325a88f32e74b4b64c55e5ae4aea2677ad238302ebdcdd3ce771",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        222
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "transgression-ecstasy"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 178,
+      "id": "advice-e114a859b0fe1be03f01ea5c",
+      "sourceTextSha256": "e114a859b0fe1be03f01ea5c2ba6e49a4a74c435306d1ae16e9879f454063118",
+      "sourceBodySha256": "0ffc1bc0d84fa09cc38b104b69ba6d79073d3d69b91e380a5fb95f177f7a6eeb",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        223
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 179,
+      "id": "advice-0022b989f6aca0d733d15f45",
+      "sourceTextSha256": "0022b989f6aca0d733d15f453cf02d81b2fa1f6d4c477ea138fb17f5ca9c8bd2",
+      "sourceBodySha256": "164468befb962ed6d9384c149c33a89c6c57a8eb6891bdea1c7eab2334fa6ee5",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        224
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": [
+        "unverified-historical-attribution"
+      ]
+    },
+    {
+      "number": 180,
+      "id": "advice-ea2399a4a61533ef2c4ba78d",
+      "sourceTextSha256": "6521ae143dea0e08cbc15faa60148e4ae1fc5938894f8def3893b217c0b36e2c",
+      "sourceBodySha256": "061b488965d92b128c064ce0b19730338f2110c916e840c7a126f947641601f6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". \n\n",
+      "sourceBlocks": [
+        225,
+        226
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "rhythm-harmony",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    },
+    {
+      "number": 181,
+      "id": "advice-a60ce90f4c02283ea44d9dc9",
+      "sourceTextSha256": "a60ce90f4c02283ea44d9dc991f7239b142463037d9ade944f8e41b24c5a0bf2",
+      "sourceBodySha256": "d650211164ef0731cd813645e27c252f6bd237984754a83eddeef0f7dbaa1764",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        227
+      ],
+      "containsAlcohol": false,
+      "subcategories": [
+        "theurgy-hymns",
+        "inner-work"
+      ],
+      "sourceContentFlags": []
+    }
+  ]
+}

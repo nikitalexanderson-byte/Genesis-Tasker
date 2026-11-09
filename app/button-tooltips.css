@@ -1,0 +1,21 @@
+/* All icon hints use this one surface, in either color scheme and any portal. */
+html[data-genesis-theme] :is(body, .genesis-app) .button-tooltip[role="tooltip"] {
+  position: fixed;
+  z-index: calc(var(--ui-layer-dialog, 1600) + 20);
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 16px));
+  margin: 0;
+  padding: 8px 12px;
+  border: var(--ui-popup-border-width, 2px) solid var(--ui-popup-border, var(--gold));
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 12px/1.5 var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}

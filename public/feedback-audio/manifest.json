@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "sampleRate": 24000,
+  "license": "Original GENESIS procedural compositions; no third-party recordings.",
+  "files": [
+    {
+      "file": "calm-completion.wav",
+      "seconds": 0.557,
+      "peak": 0.17365,
+      "rms": 0.04178,
+      "sha256": "6683ec8d12f7555c843cdf27f827fce36143bb8b84ddde7a7a580f1614eeb009"
+    },
+    {
+      "file": "calm-daily-goal.wav",
+      "seconds": 0.624,
+      "peak": 0.23364,
+      "rms": 0.05408,
+      "sha256": "6fda625bf5574dc4f061915f2286b2915a979e4641a4e03dad37199100e28506"
+    },
+    {
+      "file": "calm-perfect-day.wav",
+      "seconds": 0.691,
+      "peak": 0.25677,
+      "rms": 0.05913,
+      "sha256": "c10e85039f70d72e56ab9d8b539e972095ee11e4dae5f2df70b3cd05c71207bb"
+    },
+    {
+      "file": "calm-rank-up.wav",
+      "seconds": 0.758,
+      "peak": 0.27917,
+      "rms": 0.05937,
+      "sha256": "f21932770a0743e57a48d56cf4764532531f11d18cbc2b4b7b65b54fcff4662c"
+    },
+    {
+      "file": "calm-achievement.wav",
+      "seconds": 0.624,
+      "peak": 0.26901,
+      "rms": 0.05133,
+      "sha256": "9a36eb7856699d0da3656c5faa36d3d40ee8da2bc52780abfbc78a85ae65d4f9"
+    },
+    {
+      "file": "calm-quest.wav",
+      "seconds": 0.691,
+      "peak": 0.27884,
+      "rms": 0.05696,
+      "sha256": "bee1f2d82617767721de0a25c51e85eabbfd91fcb6c9ac0f8f2fa1a57593bb32"
+    },
+    {
+      "file": "epic-completion.wav",
+      "seconds": 0.622,
+      "peak": 0.20688,
+      "rms": 0.03373,
+      "sha256": "df495841bd22e5750f9ce8bb245d4d35067590b7a59af83ac4730eb078635ca1"
+    },
+    {
+      "file": "epic-daily-goal.wav",
+      "seconds": 0.694,
+      "peak": 0.2486,
+      "rms": 0.03989,
+      "sha256": "c1c90563e38a307c54794b9c1d26d3e50887551c5757607b085fe0ed133fedae"
+    },
+    {
+      "file": "epic-perfect-day.wav",
+      "seconds": 0.766,
+      "peak": 0.21289,
+      "rms": 0.04317,
+      "sha256": "d61871330677dbbe9401b75c86368d95309edb6702666a6e4089f9381ee7e7a5"
+    },
+    {
+      "file": "epic-rank-up.wav",
+      "seconds": 0.838,
+      "peak": 0.24554,
+      "rms": 0.04611,
+      "sha256": "7334f372b637be5c71f7cffc1a830b0e60b23f343945d37e82db4ea8f1c1c850"
+    },
+    {
+      "file": "epic-achievement.wav",
+      "seconds": 0.694,
+      "peak": 0.21204,
+      "rms": 0.038,
+      "sha256": "a34de5ed1e197a056b9ddcf8f95d19ce683ac326543055ee925b8eccf620db32"
+    },
+    {
+      "file": "epic-quest.wav",
+      "seconds": 0.766,
+      "peak": 0.26035,
+      "rms": 0.0441,
+      "sha256": "86f5f8789161985bc3c191e957b9ad855bfb0068bb42b4b8251013439bfb72dc"
+    },
+    {
+      "file": "futuristic-completion.wav",
+      "seconds": 0.525,
+      "peak": 0.19778,
+      "rms": 0.05533,
+      "sha256": "11f2ee532ea1530e7e5828d4fcbea8f3525f5840f4845d156d24231cc453a361"
+    },
+    {
+      "file": "futuristic-daily-goal.wav",
+      "seconds": 0.58,
+      "peak": 0.26712,
+      "rms": 0.05972,
+      "sha256": "4362f6d2bf1875d22bc4aaa79c8faae5f272a41f2e71cd16235256d0958f5a75"
+    },
+    {
+      "file": "futuristic-perfect-day.wav",
+      "seconds": 0.635,
+      "peak": 0.3674,
+      "rms": 0.07218,
+      "sha256": "60ba998015b917e61410cfc4bce9e35ce0c15b9e937ae16f05ea2149b1ee0240"
+    },
+    {
+      "file": "futuristic-rank-up.wav",
+      "seconds": 0.69,
+      "peak": 0.33972,
+      "rms": 0.07636,
+      "sha256": "9996aa6c7630c990b8f77dcb09e473870499955479908fa0969fc8ec41d45093"
+    },
+    {
+      "file": "futuristic-achievement.wav",
+      "seconds": 0.58,
+      "peak": 0.32883,
+      "rms": 0.07088,
+      "sha256": "8276d09be729919de22572158a7b6d64be1f7575de63779b964fa67c8a27d4aa"
+    },
+    {
+      "file": "futuristic-quest.wav",
+      "seconds": 0.635,
+      "peak": 0.3093,
+      "rms": 0.06167,
+      "sha256": "5891645cb3f8f42d8b177b3f44e886c09ad5208949f169083fd3d5142c13db9e"
+    }
+  ]
+}

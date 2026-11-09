@@ -1,0 +1,147 @@
+html[data-genesis-theme] .genesis-app .shared-label-badges { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; margin: 6px 0; }
+html[data-genesis-theme] .genesis-app .shared-label-badge { display: inline-block; max-width: 100%; border-radius: 5px; padding: 4px 8px; font: 600 12px/1.4 var(--font-body, Inter, sans-serif); overflow-wrap: anywhere; text-align: left; }
+html[data-genesis-theme] .genesis-app :is(.shared-label-picker, .shared-task-schedule, .shared-task-comments, .shared-activity) { min-width: 0; margin: 12px 0; padding: 16px; border: 1px solid var(--line); border-radius: var(--ui-surface-radius); background: var(--surface); color: var(--ink); }
+html[data-genesis-theme] .genesis-app :is(.shared-label-picker, .shared-activity) > summary { padding: 4px 0; cursor: pointer; font-weight: 600; }
+html[data-genesis-theme] .genesis-app :is(.shared-label-picker fieldset, .shared-dependency-picker) { display: grid; gap: 8px; max-height: 260px; overflow-y: auto; margin: 12px 0; padding: 0; border: 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-label-picker fieldset label, .shared-dependency-picker label) { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-label-picker, .shared-dependency-picker) input[type=checkbox] { flex: 0 0 22px; width: 22px; height: 22px; min-height: 22px; padding: 0; accent-color: var(--ink); }
+html[data-genesis-theme] .genesis-app .shared-label-manager-list { display: grid; gap: 10px; }
+html[data-genesis-theme] .genesis-app .shared-label-manager-list > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+html[data-genesis-theme] .genesis-app .shared-label-manager-list .shared-label-badges { flex: 1 1 160px; }
+html[data-genesis-theme] .genesis-app .shared-task-card-title { display: grid; align-items: start; gap: 8px; min-width: 0; }
+html[data-genesis-theme] .genesis-app input.shared-task-complete { width: 24px; height: 24px; min-height: 24px; margin: 10px 0 0; padding: 0; accent-color: var(--ink); cursor: pointer; }
+html[data-genesis-theme] .genesis-app .shared-task-card-title:has(input:checked) strong { text-decoration: line-through; }
+html[data-genesis-theme] .genesis-app .shared-task-date-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+html[data-genesis-theme] .genesis-app .shared-task-schedule legend { padding: 0 6px; font-weight: 600; }
+html[data-genesis-theme] .genesis-app .shared-task-schedule > .shared-projects-checkbox { margin: 12px 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-task-comments h3, .shared-task-comments p, .shared-activity p) { margin: 8px 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-comment-list, .shared-activity ol) { display: grid; gap: 12px; margin: 16px 0; padding: 0; list-style: none; }
+html[data-genesis-theme] .genesis-app :is(.shared-comment-list article, .shared-activity li) { padding: 12px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-comment-list article, .shared-activity li) > header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; padding: 0; border: 0; background: transparent; font: inherit; }
+html[data-genesis-theme] .genesis-app :is(.shared-comment-list, .shared-activity) time { font-size: 12px; color: var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .shared-comment-list p { white-space: pre-wrap; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-comment-list mark { color: var(--ink); background: color-mix(in srgb, var(--ink) 12%, var(--surface)); border-radius: 3px; padding: 1px 3px; }
+html[data-genesis-theme] .genesis-app .shared-mention-choices { display: grid; max-height: 240px; overflow-y: auto; gap: 4px; margin-top: 4px; border: 1px solid var(--line); border-radius: 8px; padding: 4px; }
+html[data-genesis-theme] .genesis-app .shared-mention-choices button { text-align: left; }
+html[data-genesis-theme] .genesis-app .shared-mention-choices button[aria-selected=true] { background: var(--ink); color: var(--surface); }
+html[data-genesis-theme] .genesis-app .shared-activity dl { display: grid; gap: 8px; margin: 8px 0 0; }
+html[data-genesis-theme] .genesis-app .shared-activity dl > div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; font-size: 13px; }
+html[data-genesis-theme] .genesis-app .shared-activity dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+html[data-genesis-theme] .genesis-app .shared-gantt { min-width: 0; --gantt-name-width: 180px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-tools { display: grid; gap: 12px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-tools > div { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-tools button { padding: 8px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-tools button[aria-pressed=true] { background: var(--ink); color: var(--surface); }
+html[data-genesis-theme] .genesis-app .shared-gantt-period { font-weight: 600; margin: 16px 0 4px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-help { color: var(--ink-soft); font-size: 13px; line-height: 1.5; margin: 4px 0 12px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-scroll { max-width: 100%; overflow: auto; max-height: 580px; border: 1px solid var(--line); border-radius: 10px; overscroll-behavior-x: contain; }
+html[data-genesis-theme] .genesis-app .shared-gantt-sheet { width: calc(var(--gantt-name-width) + var(--gantt-width)); min-width: 100%; }
+html[data-genesis-theme] .genesis-app :is(.shared-gantt-header, .shared-gantt-row) { display: grid; grid-template-columns: var(--gantt-name-width) var(--gantt-width); }
+html[data-genesis-theme] .genesis-app .shared-gantt-header { position: sticky; top: 0; z-index: 5; height: 52px; background: var(--surface); border-bottom: 1px solid var(--line); }
+html[data-genesis-theme] .genesis-app .shared-gantt-header > strong { position: sticky; left: 0; z-index: 6; display: flex; align-items: center; padding: 12px; background: var(--surface); border-right: 1px solid var(--line); }
+html[data-genesis-theme] .genesis-app .shared-gantt-header > div { position: relative; }
+html[data-genesis-theme] .genesis-app .shared-gantt-header :is(span, button.shared-gantt-tick) { position: absolute; display: flex; align-items: center; height: 100%; min-height: 0; padding: 4px 6px; border: 0; border-right: 1px solid var(--line); background: transparent; box-sizing: border-box; font-size: 11px; line-height: 1.3; overflow: hidden; white-space: nowrap; }
+html[data-genesis-theme] .genesis-app .shared-gantt-rows { position: relative; }
+html[data-genesis-theme] .genesis-app .shared-gantt-row { height: 56px; border-bottom: 1px solid var(--line); }
+html[data-genesis-theme] .genesis-app button.shared-gantt-name { position: sticky; left: 0; z-index: 3; min-width: 0; width: 100%; min-height: 0; padding: 8px 12px; border: 0; border-right: 1px solid var(--line); border-radius: 0; background: var(--surface); color: var(--ink); font: 600 13px/1.4 var(--font-body, Inter, sans-serif); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[data-genesis-theme] .genesis-app .shared-gantt-name-cell { position: sticky; left: 0; z-index: 3; display: flex; align-items: center; min-width: 0; border-right: 1px solid var(--line); background: var(--surface); }
+html[data-genesis-theme] .genesis-app .shared-gantt-name-cell .shared-gantt-name { position: static; flex: 1; width: auto; border-right: 0; }
+html[data-genesis-theme] .genesis-app .shared-gantt-return { flex: 0 0 44px; width: 44px; min-height: 44px; padding: 12px; border: 0; border-radius: 8px; color: var(--ui-accent); background: transparent; }
+html[data-genesis-theme] .genesis-app .shared-gantt-return > svg { width: 18px; height: 18px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-return:hover { background: var(--exp-accent-wash); }
+html[data-genesis-theme] .genesis-app .shared-gantt-track { position: relative; }
+html[data-genesis-theme] .genesis-app .shared-gantt-grid-line { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--line); pointer-events: none; }
+html[data-genesis-theme] .genesis-app .shared-gantt-create-cell { position: absolute; top: 0; bottom: 0; height: 100%; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: pointer; }
+html[data-genesis-theme] .genesis-app .shared-gantt-create-cell:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+html[data-genesis-theme] .genesis-app :is(.shared-gantt-create-cell, button.shared-gantt-tick):focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+html[data-genesis-theme] .genesis-app button.shared-gantt-tick { color: inherit; font-family: inherit; border-radius: 0; cursor: pointer; }
+html[data-genesis-theme] .genesis-app .shared-gantt-header.has-months { height: 76px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-header.has-months .shared-gantt-month { top: 0; height: 30px; border-bottom: 1px solid var(--line); font-weight: 600; white-space: nowrap; }
+html[data-genesis-theme] .genesis-app .shared-gantt-header.has-months .shared-gantt-tick { top: 30px; height: 46px; }
+html[data-genesis-theme] .genesis-app :is(.shared-workspace-current, .shared-workspace-all) { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: var(--ui-surface-radius); background: var(--surface); min-width: 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-workspace-current, .shared-workspace-all) > button { width: 100%; }
+html[data-genesis-theme] .genesis-app .shared-gantt-bar { position: absolute; top: 12px; height: 32px; border: 1px solid var(--bar-color); border-radius: 6px; color: var(--ink); background: color-mix(in srgb, var(--bar-color) 22%, var(--surface)); box-sizing: border-box; }
+html[data-genesis-theme] .genesis-app button.shared-gantt-open { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: inherit; color: inherit; background: transparent; text-align: left; overflow: hidden; box-sizing: border-box; }
+html[data-genesis-theme] .genesis-app .shared-gantt-open > span { display: block; padding: 4px 8px; }
+html[data-genesis-theme] .genesis-app button.shared-gantt-resize { position: absolute; top: -1px; width: 12px; height: 32px; min-width: 0; min-height: 0; padding: 0; border: 1px solid var(--bar-color); border-radius: 4px; background: var(--surface); color: var(--ink); cursor: ew-resize !important; touch-action: none; z-index: 2; }
+html[data-genesis-theme] .genesis-app .shared-gantt-resize::after { content: ""; position: absolute; inset: 8px 4px; background: currentColor; opacity: .7; }
+html[data-genesis-theme] .genesis-app .shared-gantt-resize.is-start { left: -6px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-resize.is-end { right: -6px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-bar.is-short .shared-gantt-resize.is-start { left: -12px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-bar.is-short .shared-gantt-resize.is-end { right: -12px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-resize:disabled { visibility: hidden; }
+html[data-genesis-theme] .genesis-app .shared-gantt-resize:hover { background: color-mix(in srgb, var(--bar-color) 22%, var(--surface)); }
+html[data-genesis-theme] .genesis-app .shared-gantt-bar.is-resizing { z-index: 2; outline: 1px dashed var(--ink); outline-offset: 3px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-bar span { white-space: nowrap; font-size: 12px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-bar.is-done span { text-decoration: line-through; }
+html[data-genesis-theme] .genesis-app .shared-gantt-dependencies { position: absolute; left: var(--gantt-name-width); top: 0; pointer-events: none; overflow: visible; }
+html[data-genesis-theme] .genesis-app .shared-gantt-dependencies path { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; }
+html[data-genesis-theme] .genesis-app .shared-gantt-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); pointer-events: none; }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled { min-width: 0; margin-top: 20px; padding: 16px; border: 1px solid var(--line); border-radius: var(--ui-surface-radius); background: var(--surface); }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0; border: 0; background: transparent; }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled h3 { margin: 0; font: 600 15px/1.4 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled > header span { font: 600 14px/1.4 var(--font-ui); font-variant-numeric: tabular-nums; }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled p { margin: 8px 0 0; font: 400 13px/1.5 var(--font-ui); color: var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled > div { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); gap: 8px; margin-top: 12px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-unscheduled button { min-width: 0; min-height: 44px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font: 500 14px/1.5 var(--font-ui); text-align: left; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  html[data-genesis-theme] .genesis-app .shared-task-date-pair { grid-template-columns: minmax(0, 1fr); }
+  html[data-genesis-theme] .genesis-app .shared-gantt { --gantt-name-width: 132px; }
+  html[data-genesis-theme] .genesis-app .shared-activity dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  html[data-genesis-theme] .genesis-app :is(.shared-label-picker, .shared-task-schedule, .shared-task-comments, .shared-activity) { padding: 12px; }
+}
+
+html[data-genesis-theme] .genesis-app .shared-gantt-drop-row > strong { position: sticky; left: 0; z-index: 3; background: var(--surface); display: flex; align-items: center; padding: 8px 12px; font: 500 12px/1.4 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-gantt-drop-preview { position: absolute; top: 12px; height: 32px; border: 1px dashed var(--ink); border-radius: 6px; background: color-mix(in srgb, var(--ink) 15%, var(--surface)); pointer-events: none; box-sizing: border-box; }
+html[data-genesis-theme] .genesis-app .shared-gantt-drop-label { font: 500 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-gantt :is(.shared-gantt-open, .shared-gantt-unscheduled button) { cursor: grab !important; }
+html[data-genesis-theme] .genesis-app .shared-gantt [data-dragging=true] { opacity: .6; cursor: grabbing !important; }
+
+html[data-genesis-theme] .genesis-app article.shared-space-card { overflow: hidden; padding: 0; gap: 0; grid-template-rows: 1fr auto; }
+html[data-genesis-theme] .genesis-app article.shared-space-card > button.shared-space-open { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 24px; align-items: start; align-content: start; gap: 12px; width: 100%; min-height: 144px; padding: 16px; border: 0; border-radius: 0; background: transparent; text-align: left; }
+html[data-genesis-theme] .genesis-app .shared-space-open > .shared-space-cover { position: absolute; inset: 0; display: block; width: 100%; height: 100%; margin: 0; object-fit: cover; pointer-events: none; }
+html[data-genesis-theme] .genesis-app .shared-space-open > .shared-space-caption { position: relative; z-index: 1; display: grid; gap: 8px; min-width: 0; color: var(--ink); }
+html[data-genesis-theme] .genesis-app .shared-space-caption .shared-space-description { font: 400 13px/1.5 var(--font-ui); overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-space-caption small { color: var(--ink-soft); font: 500 12px/1.4 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-space-card.has-cover .shared-space-caption { padding: 12px; border-radius: var(--ui-surface-radius); background: color-mix(in srgb, var(--palette-recessed, rgb(6 19 15)) 84%, transparent); color: #f0eee7; }
+html[data-genesis-theme] .genesis-app .shared-space-card.has-cover .shared-space-caption :is(strong,span,small) { color: inherit; }
+html[data-genesis-theme] .genesis-app .shared-space-open > svg { position: relative; z-index: 1; grid-row: 1; color: var(--ink); }
+html[data-genesis-theme] .genesis-app .shared-space-card.has-cover .shared-space-open > svg { color: #f0eee7; }
+html[data-genesis-theme] .genesis-app article.shared-space-card > button.shared-space-edit { align-self: end; justify-self: end; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; height: auto; margin: 12px 16px; padding: 10px 14px; }
+html[data-genesis-theme] .genesis-app .shared-space-cover-editor { min-width: 0; border: 1px solid var(--line); padding: 16px; border-radius: var(--ui-surface-radius); }
+html[data-genesis-theme] .genesis-app .shared-space-cover-editor legend { font: 600 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-cover-formats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+html[data-genesis-theme] .genesis-app .shared-cover-formats button { min-width: 0; min-height: 44px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: 500 12px/1.4 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-cover-formats button[aria-pressed=true] { background: var(--ink); color: var(--surface); }
+html[data-genesis-theme] .genesis-app button.shared-cover-crop { display: block; padding: 0; width: 100%; height: auto; max-height: 400px; aspect-ratio: var(--cover-ratio); overflow: hidden; border: 1px solid var(--line); border-radius: 10px; cursor: move; touch-action: none; }
+html[data-genesis-theme] .genesis-app .shared-cover-crop > img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+html[data-genesis-theme] .genesis-app :is(.shared-cover-position,.shared-cover-previews) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+html[data-genesis-theme] .genesis-app .shared-cover-previews { grid-template-columns: repeat(3,minmax(0,1fr)); margin: 16px 0; align-items: start; }
+html[data-genesis-theme] .genesis-app .shared-cover-previews figure { margin: 0; min-width: 0; }
+html[data-genesis-theme] .genesis-app .shared-cover-previews img { display: block; width: 100%; object-fit: cover; border-radius: 6px; aspect-ratio: 3 / 1; }
+html[data-genesis-theme] .genesis-app .shared-cover-previews .format-tablet img { aspect-ratio: 16 / 9; }
+html[data-genesis-theme] .genesis-app .shared-cover-previews .format-phone img { aspect-ratio: 4 / 3; }
+html[data-genesis-theme] .genesis-app .shared-cover-previews figcaption { color: var(--ink-soft); font: 400 12px/1.5 var(--font-ui); margin-top: 6px; }
+
+html[data-genesis-theme] .genesis-app button.shared-cover-crop { cursor: move !important; }
+
+html[data-genesis-theme] .genesis-app .shared-gantt-navigation > :is(.calendar-date-trigger, input[type=date]) { flex: 1 1 260px; width: auto; max-width: 420px; min-width: 0; min-height: 44px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-navigation .calendar-date-trigger > :is(span, small) { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+html[data-genesis-theme] .genesis-app .shared-gantt-tools { gap: 8px; }
+@media (max-width:760px) { html[data-genesis-theme] .genesis-app .shared-gantt-navigation > :is(.calendar-date-trigger, input[type=date]) { flex-basis: calc(100% - 100px); } }
+
+html[data-genesis-theme] .genesis-app .shared-gantt-completed .shared-gantt-completed-items { display:grid; gap:8px; }
+html[data-genesis-theme] .genesis-app .shared-gantt-completed .shared-gantt-completed-items > button { width:100%; min-width:0; margin:0; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--ui-surface-item); color:var(--ink); }
+html[data-genesis-theme] .genesis-app .shared-gantt-completed .shared-gantt-completed-items > button:is(:hover,:focus-visible) { border-color:var(--ui-accent); background:color-mix(in srgb,var(--ui-accent) 8%,var(--ui-surface-item)); }
+html[data-genesis-theme] .genesis-app .shared-gantt-completed .shared-gantt-completed-items > button:focus-visible { outline:2px solid var(--ui-accent); outline-offset:2px; }
+html[data-genesis-theme] .genesis-app .shared-task-batches-more { margin-block:12px; }
+html[data-genesis-theme] .genesis-app .shared-task-batches-more > summary { display:flex; align-items:center; gap:8px; min-height:44px; padding:8px; border-radius:var(--ui-radius); cursor:pointer; color:var(--ink); list-style:none; font:600 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-task-batches-more > summary::-webkit-details-marker { display:none; }
+html[data-genesis-theme] .genesis-app .shared-task-batches-more > summary::marker { content:""; }
+html[data-genesis-theme] .genesis-app .shared-task-batches-more > summary > svg { transition:transform 150ms ease-out; }
+html[data-genesis-theme] .genesis-app .shared-task-batches-more[open] > summary > svg { transform:rotate(90deg); }
+html[data-genesis-theme] .genesis-app .shared-task-batches-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+@media(max-width:767px) {
+  html[data-genesis-theme] .genesis-app .shared-gantt .shared-gantt-navigation .shared-gantt-actions { display:grid; grid-template-columns:repeat(var(--gantt-action-count,3),minmax(0,1fr)); flex:1 0 100%; width:100%; margin:0; gap:8px; }
+  html[data-genesis-theme] .genesis-app .shared-gantt .shared-gantt-actions > button { width:100%; height:44px; min-height:44px; margin:0; justify-content:center; }
+}

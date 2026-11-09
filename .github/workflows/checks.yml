@@ -1,0 +1,86 @@
+name: Source checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-and-api:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CI: 'true'
+      GENESIS_DEPLOY_ANDROID: 'false'
+      GENESIS_MINDMAPS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.19.0'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.19.0'
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint and types
+        run: |
+          pnpm lint
+          pnpm typecheck
+      - name: Translation, domain and render tests
+        run: pnpm test
+      - name: Build static web client
+        run: pnpm build:web
+      - name: Prepare local test runtimes
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli php-sqlite3 php-mbstring php-curl
+          pnpm exec playwright install --with-deps chromium
+      - name: Check PHP backend with isolated SQLite
+        run: node scripts/qa/backend-run.mjs --run-id=ci-backend --output=output/qa/ci-backend
+      - name: Check API access and compatibility
+        run: node scripts/qa/backend-api.mjs --run-id=ci-api --output=output/qa/ci-api
+      - name: Browser scenarios against loopback services
+        run: node scripts/qa/web-run.mjs --run-id=ci-web --output=output/qa/ci-web
+
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.19.0'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.19.0'
+      - name: Install locked dependencies for embedded web assets
+        run: pnpm install --frozen-lockfile
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Prepare Android SDK
+        run: sdkmanager 'platforms;android-37.2' 'build-tools;37.0.0'
+      - name: Test and build isolated debug app
+        working-directory: android
+        run: >-
+          bash ./gradlew :app:testDebugUnitTest :app:assembleDebug
+          -PgenesisUrl=https://localhost.invalid/
+          -Pkotlin.compiler.execution.strategy=in-process
+          '-Dorg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8'
+          --max-workers=2 --no-daemon --console=plain

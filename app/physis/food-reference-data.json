@@ -1,0 +1,1301 @@
+[
+  {
+    "id": "168626",
+    "fdcId": 168626,
+    "name": [
+      "Говяжья печень, тушёная",
+      "Beef liver, braised"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, витамин A в форме ретинола, B12, железо и медь.",
+      "Protein, preformed vitamin A, B12, iron and copper."
+    ],
+    "health": [
+      "B12 и железо необходимы для кроветворения; ретинол участвует в зрении.",
+      "B12 and iron support blood-cell formation; retinol supports vision."
+    ],
+    "limits": [
+      "Очень богата ретинолом: большие и частые порции не подходят при беременности. Избыток витамина A не полезен.",
+      "Very rich in retinol: large frequent portions are unsuitable in pregnancy. Excess vitamin A is not beneficial."
+    ],
+    "links": [
+      "https://ods.od.nih.gov/factsheets/VitaminA-HealthProfessional/"
+    ]
+  },
+  {
+    "id": "173424",
+    "fdcId": 173424,
+    "name": [
+      "Яйцо куриное, варёное вкрутую",
+      "Egg, whole, hard-boiled"
+    ],
+    "category": "Яйца",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Полноценный белок, холин, B12 и селен.",
+      "Complete protein, choline, B12 and selenium."
+    ],
+    "health": [
+      "Пищевой белок обеспечивает аминокислоты для обновления тканей и поддержания мышц.",
+      "Dietary protein supplies amino acids for tissue renewal and muscle maintenance."
+    ],
+    "limits": [
+      "Учитывайте аллергию; свойства зависят от размера порции и общего рациона.",
+      "Consider egg allergy; effects depend on portions and the overall diet."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "169722",
+    "fdcId": 169722,
+    "name": [
+      "Пшеничные отруби",
+      "Wheat bran"
+    ],
+    "category": "Злаки",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Нерастворимые волокна, магний и марганец.",
+      "Insoluble fiber, magnesium and manganese."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Содержат глютен. Количество клетчатки увеличивают постепенно, с достаточным питьём.",
+      "Contain gluten. Increase fiber gradually with adequate fluids."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "168462",
+    "fdcId": 168462,
+    "name": [
+      "Шпинат, сырой",
+      "Spinach, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Фолаты, витамин K, каротиноиды и клетчатка.",
+      "Folate, vitamin K, carotenoids and fiber."
+    ],
+    "health": [
+      "Фолаты участвуют в клеточном делении, витамин K — в синтезе белков свёртывания; важен рацион в целом.",
+      "Folate supports cell division and vitamin K supports coagulation proteins; the overall diet matters."
+    ],
+    "limits": [
+      "Оксалаты снижают доступность части кальция. При приёме варфарина важна стабильность витамина K.",
+      "Oxalates reduce availability of some calcium. Keep vitamin K intake consistent with warfarin."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "170187",
+    "fdcId": 170187,
+    "name": [
+      "Грецкие орехи",
+      "Walnuts"
+    ],
+    "category": "Орехи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Ненасыщенные жиры, растительная омега-3 ALA, белок и клетчатка.",
+      "Unsaturated fats, plant omega-3 ALA, protein and fiber."
+    ],
+    "health": [
+      "Может быть источником ненасыщенных жиров вместо части насыщенных жиров в рационе.",
+      "Can provide unsaturated fats in place of some dietary saturated fat."
+    ],
+    "limits": [
+      "Энергетически плотный продукт и аллерген. ALA не равнозначна готовым EPA и DHA.",
+      "Energy dense and allergenic. ALA is not equivalent to preformed EPA and DHA."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "170567",
+    "fdcId": 170567,
+    "name": [
+      "Миндаль",
+      "Almonds"
+    ],
+    "category": "Орехи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамин E, магний, клетчатка и ненасыщенные жиры.",
+      "Vitamin E, magnesium, fiber and unsaturated fats."
+    ],
+    "health": [
+      "Может быть источником ненасыщенных жиров вместо части насыщенных жиров в рационе.",
+      "Can provide unsaturated fats in place of some dietary saturated fat."
+    ],
+    "limits": [
+      "Учитывайте порцию и аллергию на орехи.",
+      "Consider portions and tree-nut allergy."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "170189",
+    "fdcId": 170189,
+    "name": [
+      "Тахини из обжаренного кунжута",
+      "Tahini from roasted sesame kernels"
+    ],
+    "category": "Орехи",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Ненасыщенные жиры, белок, медь и кальций; содержание зависит от обработки семян.",
+      "Unsaturated fats, protein, copper and calcium; amounts depend on seed processing."
+    ],
+    "health": [
+      "Может быть источником ненасыщенных жиров вместо части насыщенных жиров в рационе.",
+      "Can provide unsaturated fats in place of some dietary saturated fat."
+    ],
+    "limits": [
+      "Кунжут — аллерген. Это паста, а не чистое кунжутное масло; сравнивайте этикетку конкретного продукта.",
+      "Sesame is an allergen. This is a paste, not sesame oil; compare the actual product label."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "170379",
+    "fdcId": 170379,
+    "name": [
+      "Брокколи, сырая",
+      "Broccoli, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамины C и K, фолаты и клетчатка.",
+      "Vitamins C and K, folate and fiber."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Данные относятся к сырому продукту; приготовление меняет содержание воды и части витаминов.",
+      "Values describe raw broccoli; cooking changes water and some vitamins."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171705",
+    "fdcId": 171705,
+    "name": [
+      "Авокадо",
+      "Avocado"
+    ],
+    "category": "Фрукты",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Мононенасыщенные жиры, клетчатка, фолаты и калий.",
+      "Monounsaturated fat, fiber, folate and potassium."
+    ],
+    "health": [
+      "Может быть источником ненасыщенных жиров вместо части насыщенных жиров в рационе.",
+      "Can provide unsaturated fats in place of some dietary saturated fat."
+    ],
+    "limits": [
+      "Калорийность и калий учитывают в составе всего рациона; при ограничении калия нужна индивидуальная оценка.",
+      "Count energy and potassium within the whole diet; potassium restriction requires individual assessment."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "168998",
+    "fdcId": 168998,
+    "name": [
+      "Шиповник, сырые плоды",
+      "Rose hips, raw fruit"
+    ],
+    "category": "Фрукты",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамин C, каротиноиды и пищевые волокна.",
+      "Vitamin C, carotenoids and dietary fiber."
+    ],
+    "health": [
+      "Витамин C необходим для синтеза коллагена и усвоения негемового железа.",
+      "Vitamin C supports collagen synthesis and nonheme-iron absorption."
+    ],
+    "limits": [
+      "Числа относятся к плодам, не к настою или чаю. Заваривание и хранение меняют содержание витамина C.",
+      "Values describe fruit, not an infusion or tea. Brewing and storage change vitamin C content."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "169279",
+    "fdcId": 169279,
+    "name": [
+      "Квашеная капуста, консервированная",
+      "Sauerkraut, canned"
+    ],
+    "category": "Овощи",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Клетчатка, витамин C и натрий.",
+      "Fiber, vitamin C and sodium."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Много соли; живые культуры после пастеризации не гарантируются. Это не доказанный пробиотический препарат.",
+      "Often salty; live cultures are not guaranteed after pasteurization. It is not an established probiotic medicine."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171412",
+    "fdcId": 171412,
+    "name": [
+      "Кокосовое масло",
+      "Coconut oil"
+    ],
+    "category": "Масла и жиры",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Преимущественно насыщенные жиры; высокая энергетическая плотность.",
+      "Predominantly saturated fat with high energy density."
+    ],
+    "health": [
+      "Источник пищевой энергии; особого преимущества для сердца или снижения веса не установлено.",
+      "Provides dietary energy; a special advantage for heart health or weight loss is not established."
+    ],
+    "limits": [
+      "Не следует увеличивать насыщенные жиры ради статуса «суперфуда»; предпочтительна замена части на ненасыщенные.",
+      "Do not increase saturated fat because of a superfood label; replacing some with unsaturated fats is preferable."
+    ],
+    "links": [
+      "https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/fats/saturated-fats"
+    ]
+  },
+  {
+    "id": "171998",
+    "fdcId": 171998,
+    "name": [
+      "Лосось дикий, приготовленный",
+      "Wild salmon, cooked"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, B12, селен; содержание EPA, DHA и витамина D зависит от вида.",
+      "Protein, B12 and selenium; EPA, DHA and vitamin D vary by species."
+    ],
+    "health": [
+      "Рыба обеспечивает полноценный белок и может служить источником морских омега-3 в разнообразном рационе.",
+      "Fish supplies complete protein and can provide marine omega-3 fats in a varied diet."
+    ],
+    "limits": [
+      "Учитывайте вид рыбы, соль и размер порции; рекомендации по ртути особенно важны при беременности.",
+      "Consider species, salt and portion size; mercury guidance is particularly important during pregnancy."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171986",
+    "fdcId": 171986,
+    "name": [
+      "Тунец светлый в воде, без соли",
+      "Light tuna in water, no added salt"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, B12, селен; содержание EPA, DHA и витамина D зависит от вида.",
+      "Protein, B12 and selenium; EPA, DHA and vitamin D vary by species."
+    ],
+    "health": [
+      "Рыба обеспечивает полноценный белок и может служить источником морских омега-3 в разнообразном рационе.",
+      "Fish supplies complete protein and can provide marine omega-3 fats in a varied diet."
+    ],
+    "limits": [
+      "Учитывайте вид рыбы, соль и размер порции; рекомендации по ртути особенно важны при беременности.",
+      "Consider species, salt and portion size; mercury guidance is particularly important during pregnancy."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "175120",
+    "fdcId": 175120,
+    "name": [
+      "Скумбрия атлантическая, приготовленная",
+      "Atlantic mackerel, cooked"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, B12, селен; содержание EPA, DHA и витамина D зависит от вида.",
+      "Protein, B12 and selenium; EPA, DHA and vitamin D vary by species."
+    ],
+    "health": [
+      "Рыба обеспечивает полноценный белок и может служить источником морских омега-3 в разнообразном рационе.",
+      "Fish supplies complete protein and can provide marine omega-3 fats in a varied diet."
+    ],
+    "limits": [
+      "Учитывайте вид рыбы, соль и размер порции; рекомендации по ртути особенно важны при беременности.",
+      "Consider species, salt and portion size; mercury guidance is particularly important during pregnancy."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "174183",
+    "fdcId": 174183,
+    "name": [
+      "Анчоусы в масле, без заливки",
+      "Anchovies in oil, drained"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, B12, селен; содержание EPA, DHA и витамина D зависит от вида.",
+      "Protein, B12 and selenium; EPA, DHA and vitamin D vary by species."
+    ],
+    "health": [
+      "Рыба обеспечивает полноценный белок и может служить источником морских омега-3 в разнообразном рационе.",
+      "Fish supplies complete protein and can provide marine omega-3 fats in a varied diet."
+    ],
+    "limits": [
+      "Учитывайте вид рыбы, соль и размер порции; рекомендации по ртути особенно важны при беременности.",
+      "Consider species, salt and portion size; mercury guidance is particularly important during pregnancy."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "168421",
+    "fdcId": 168421,
+    "name": [
+      "Капуста кейл, сырая",
+      "Kale, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамины K и C, каротиноиды и клетчатка.",
+      "Vitamins K and C, carotenoids and fiber."
+    ],
+    "health": [
+      "Фолаты участвуют в клеточном делении, витамин K — в синтезе белков свёртывания; важен рацион в целом.",
+      "Folate supports cell division and vitamin K supports coagulation proteins; the overall diet matters."
+    ],
+    "limits": [
+      "При антагонистах витамина K важна стабильность количества зелени, а не самостоятельное полное исключение.",
+      "With vitamin K antagonists, consistent greens intake matters; do not independently exclude all greens."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "168634",
+    "fdcId": 168634,
+    "name": [
+      "Говядина, постный стейк, приготовленная",
+      "Beef top sirloin, lean, cooked"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Полноценный белок, B12, цинк и гемовое железо.",
+      "Complete protein, B12, zinc and heme iron."
+    ],
+    "health": [
+      "Пищевой белок обеспечивает аминокислоты для обновления тканей и поддержания мышц.",
+      "Dietary protein supplies amino acids for tissue renewal and muscle maintenance."
+    ],
+    "limits": [
+      "Выбор постного мяса снижает количество насыщенного жира; разнообразие источников белка важнее одного продукта.",
+      "Lean cuts reduce saturated fat; variety of protein sources matters more than any single food."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171980",
+    "fdcId": 171980,
+    "name": [
+      "Устрицы, приготовленные на пару",
+      "Oysters, cooked with moist heat"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, B12, цинк, железо и медь; профиль зависит от вида.",
+      "Protein, B12, zinc, iron and copper; the profile varies by species."
+    ],
+    "health": [
+      "Пищевой белок обеспечивает аминокислоты для обновления тканей и поддержания мышц.",
+      "Dietary protein supplies amino acids for tissue renewal and muscle maintenance."
+    ],
+    "limits": [
+      "Моллюски — аллерген. Выбраны приготовленные продукты; сырые несут дополнительный инфекционный риск.",
+      "Shellfish are allergens. These entries describe cooked foods; raw shellfish carry additional infection risk."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "174217",
+    "fdcId": 174217,
+    "name": [
+      "Мидии, приготовленные",
+      "Mussels, cooked"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Белок, B12, цинк, железо и медь; профиль зависит от вида.",
+      "Protein, B12, zinc, iron and copper; the profile varies by species."
+    ],
+    "health": [
+      "Пищевой белок обеспечивает аминокислоты для обновления тканей и поддержания мышц.",
+      "Dietary protein supplies amino acids for tissue renewal and muscle maintenance."
+    ],
+    "limits": [
+      "Моллюски — аллерген. Выбраны приготовленные продукты; сырые несут дополнительный инфекционный риск.",
+      "Shellfish are allergens. These entries describe cooked foods; raw shellfish carry additional infection risk."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171711",
+    "fdcId": 171711,
+    "name": [
+      "Голубика, сырая",
+      "Blueberries, raw"
+    ],
+    "category": "Фрукты",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Пищевые волокна и витамин C; точные значения приведены в составе.",
+      "Dietary fiber and vitamin C; see the composition for exact values."
+    ],
+    "health": [
+      "Цельные ягоды помогают разнообразить рацион и получать волокна; они не являются лечением заболеваний.",
+      "Whole berries add variety and fiber to the diet; they are not a disease treatment."
+    ],
+    "limits": [
+      "Свежие ягоды отличаются от сиропа, сока и подслащённого пюре.",
+      "Fresh berries differ from syrup, juice and sweetened puree."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "167762",
+    "fdcId": 167762,
+    "name": [
+      "Клубника, сырая",
+      "Strawberries, raw"
+    ],
+    "category": "Фрукты",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Пищевые волокна и витамин C; точные значения приведены в составе.",
+      "Dietary fiber and vitamin C; see the composition for exact values."
+    ],
+    "health": [
+      "Цельные ягоды помогают разнообразить рацион и получать волокна; они не являются лечением заболеваний.",
+      "Whole berries add variety and fiber to the diet; they are not a disease treatment."
+    ],
+    "limits": [
+      "Свежие ягоды отличаются от сиропа, сока и подслащённого пюре.",
+      "Fresh berries differ from syrup, juice and sweetened puree."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "167755",
+    "fdcId": 167755,
+    "name": [
+      "Малина, сырая",
+      "Raspberries, raw"
+    ],
+    "category": "Фрукты",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Пищевые волокна и витамин C; точные значения приведены в составе.",
+      "Dietary fiber and vitamin C; see the composition for exact values."
+    ],
+    "health": [
+      "Цельные ягоды помогают разнообразить рацион и получать волокна; они не являются лечением заболеваний.",
+      "Whole berries add variety and fiber to the diet; they are not a disease treatment."
+    ],
+    "limits": [
+      "Свежие ягоды отличаются от сиропа, сока и подслащённого пюре.",
+      "Fresh berries differ from syrup, juice and sweetened puree."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "172470",
+    "fdcId": 172470,
+    "name": [
+      "Арахисовая паста без соли",
+      "Peanut butter, without salt"
+    ],
+    "category": "Орехи",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Белок, витамин E и ненасыщенные жиры.",
+      "Protein, vitamin E and unsaturated fat."
+    ],
+    "health": [
+      "Может быть источником ненасыщенных жиров вместо части насыщенных жиров в рационе.",
+      "Can provide unsaturated fats in place of some dietary saturated fat."
+    ],
+    "limits": [
+      "Арахис — бобовое и сильный аллерген. Для пасты без сахара сверяйте состав: запись USDA не гарантирует состав любого бренда.",
+      "Peanuts are legumes and major allergens. Check ingredients for an unsweetened paste; this USDA entry does not guarantee every brand’s composition."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ],
+    "legume": true
+  },
+  {
+    "id": "170416",
+    "fdcId": 170416,
+    "name": [
+      "Петрушка, свежая",
+      "Parsley, fresh"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамин K, фолаты и витамин C; обычные порции зелени невелики.",
+      "Vitamin K, folate and vitamin C; typical herb portions are small."
+    ],
+    "health": [
+      "Фолаты участвуют в клеточном делении, витамин K — в синтезе белков свёртывания; важен рацион в целом.",
+      "Folate supports cell division and vitamin K supports coagulation proteins; the overall diet matters."
+    ],
+    "limits": [
+      "Не переносите состав 100 г на щепотку зелени. При варфарине учитывайте стабильность витамина K.",
+      "Do not equate 100 g values with a small garnish. Keep vitamin K intake consistent with warfarin."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "169387",
+    "fdcId": 169387,
+    "name": [
+      "Руккола, сырая",
+      "Arugula, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамин K, фолаты и витамин C; обычные порции зелени невелики.",
+      "Vitamin K, folate and vitamin C; typical herb portions are small."
+    ],
+    "health": [
+      "Фолаты участвуют в клеточном делении, витамин K — в синтезе белков свёртывания; важен рацион в целом.",
+      "Folate supports cell division and vitamin K supports coagulation proteins; the overall diet matters."
+    ],
+    "limits": [
+      "Не переносите состав 100 г на щепотку зелени. При варфарине учитывайте стабильность витамина K.",
+      "Do not equate 100 g values with a small garnish. Keep vitamin K intake consistent with warfarin."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "170005",
+    "fdcId": 170005,
+    "name": [
+      "Лук зелёный, сырой",
+      "Spring onions, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Витамин K, фолаты и витамин C; обычные порции зелени невелики.",
+      "Vitamin K, folate and vitamin C; typical herb portions are small."
+    ],
+    "health": [
+      "Фолаты участвуют в клеточном делении, витамин K — в синтезе белков свёртывания; важен рацион в целом.",
+      "Folate supports cell division and vitamin K supports coagulation proteins; the overall diet matters."
+    ],
+    "limits": [
+      "Не переносите состав 100 г на щепотку зелени. При варфарине учитывайте стабильность витамина K.",
+      "Do not equate 100 g values with a small garnish. Keep vitamin K intake consistent with warfarin."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "170000",
+    "fdcId": 170000,
+    "name": [
+      "Лук репчатый, сырой",
+      "Onions, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Углеводы, небольшие количества волокон и микронутриентов; порция имеет значение.",
+      "Carbohydrates, modest fiber and micronutrients; portion size matters."
+    ],
+    "health": [
+      "Придают вкус и разнообразие растительной части рациона. Кулинарная порция не равнозначна экстракту из исследований.",
+      "Add flavor and variety to plant foods. Culinary portions are not equivalent to extracts used in research."
+    ],
+    "limits": [
+      "Могут усиливать симптомы у чувствительных к FODMAP людей. Не являются заменой антибиотиков или лечению давления.",
+      "May aggravate symptoms in people sensitive to FODMAPs. They do not replace antibiotics or blood-pressure treatment."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "169230",
+    "fdcId": 169230,
+    "name": [
+      "Чеснок, сырой",
+      "Garlic, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Углеводы, небольшие количества волокон и микронутриентов; порция имеет значение.",
+      "Carbohydrates, modest fiber and micronutrients; portion size matters."
+    ],
+    "health": [
+      "Придают вкус и разнообразие растительной части рациона. Кулинарная порция не равнозначна экстракту из исследований.",
+      "Add flavor and variety to plant foods. Culinary portions are not equivalent to extracts used in research."
+    ],
+    "limits": [
+      "Могут усиливать симптомы у чувствительных к FODMAP людей. Не являются заменой антибиотиков или лечению давления.",
+      "May aggravate symptoms in people sensitive to FODMAPs. They do not replace antibiotics or blood-pressure treatment."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171304",
+    "fdcId": 171304,
+    "name": [
+      "Греческий йогурт, натуральный цельномолочный",
+      "Greek yogurt, plain, whole milk"
+    ],
+    "category": "Молочные продукты",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Белок, кальций и B12; жирность и сахар зависят от продукта.",
+      "Protein, calcium and B12; fat and sugar vary by product."
+    ],
+    "health": [
+      "Белок и кальций поддерживают мышцы и костную ткань при достаточном общем питании.",
+      "Protein and calcium support muscles and bones as part of adequate overall nutrition."
+    ],
+    "limits": [
+      "Учитывайте аллергию на молочный белок и переносимость лактозы. Живые культуры и пробиотический эффект не гарантируются названием.",
+      "Consider milk-protein allergy and lactose tolerance. The name does not guarantee live cultures or a probiotic effect."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "171284",
+    "fdcId": 171284,
+    "name": [
+      "Йогурт натуральный цельномолочный",
+      "Yogurt, plain, whole milk"
+    ],
+    "category": "Молочные продукты",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Белок, кальций, фосфор и B12.",
+      "Protein, calcium, phosphorus and B12."
+    ],
+    "health": [
+      "Белок и кальций поддерживают мышцы и костную ткань при достаточном общем питании.",
+      "Protein and calcium support muscles and bones as part of adequate overall nutrition."
+    ],
+    "limits": [
+      "Мацони и разные бренды могут отличаться; для точного учёта создайте продукт с этикетки.",
+      "Matsoni and individual brands can differ; create a label-based product for precise tracking."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "168422",
+    "fdcId": 168422,
+    "name": [
+      "Лисички, сырые",
+      "Chanterelle mushrooms, raw"
+    ],
+    "category": "Овощи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Волокна, калий и витамин D2 в изменчивых количествах.",
+      "Fiber, potassium and variable vitamin D2."
+    ],
+    "health": [
+      "Добавляют разнообразие к растительным продуктам; наличие нутриентов не доказывает лечебного действия гриба.",
+      "Add variety to plant foods; nutrient content does not establish a medicinal mushroom effect."
+    ],
+    "limits": [
+      "Состав относится к сырому сырью, а не блюду с маслом. Достоверная идентификация грибов обязательна.",
+      "Values describe raw mushrooms, not a butter-cooked dish. Correct mushroom identification is essential."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "168437",
+    "fdcId": 168437,
+    "name": [
+      "Шиитаке, приготовленные без соли",
+      "Shiitake mushrooms, cooked without salt"
+    ],
+    "category": "Овощи",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Пищевые волокна, медь и витамины группы B.",
+      "Dietary fiber, copper and B vitamins."
+    ],
+    "health": [
+      "Пищевой продукт, помогающий разнообразить рацион; не равнозначен концентрированным экстрактам.",
+      "A food that adds dietary variety; not equivalent to concentrated extracts."
+    ],
+    "limits": [
+      "Нет основания обещать лечение рака или универсальное усиление иммунитета от блюда с шиитаке.",
+      "A shiitake dish is not established as a cancer treatment or general immune booster."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "173412",
+    "fdcId": 173412,
+    "name": [
+      "Топлёное сливочное масло",
+      "Butter oil / clarified butter"
+    ],
+    "category": "Масла и жиры",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Концентрированный молочный жир, преимущественно насыщенный.",
+      "Concentrated dairy fat, predominantly saturated."
+    ],
+    "health": [
+      "Источник энергии и кулинарный ингредиент; особое преимущество гхи для здоровья не установлено.",
+      "Provides energy and serves as a cooking ingredient; a special health advantage of ghee is unproven."
+    ],
+    "limits": [
+      "Высокая энергетическая плотность; ограничивайте насыщенный жир в рамках всего рациона.",
+      "High energy density; manage saturated fat within the overall diet."
+    ],
+    "links": [
+      "https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/fats/saturated-fats"
+    ],
+    "aliases": [
+      "Гхи",
+      "Ghee"
+    ]
+  },
+  {
+    "id": "173430",
+    "fdcId": 173430,
+    "name": [
+      "Масло сливочное несолёное",
+      "Butter, unsalted"
+    ],
+    "category": "Масла и жиры",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Молочный жир и витамин A; много насыщенных жиров.",
+      "Dairy fat and vitamin A; high in saturated fat."
+    ],
+    "health": [
+      "Источник энергии; небольшая порция может быть частью рациона, но это не средство оздоровления.",
+      "Provides energy; a small portion can fit a diet, but it is not a health treatment."
+    ],
+    "limits": [
+      "При замене части насыщенного жира ненасыщенным липидный профиль обычно улучшается.",
+      "Replacing some saturated fat with unsaturated fat generally improves blood lipids."
+    ],
+    "links": [
+      "https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/fats/saturated-fats"
+    ]
+  },
+  {
+    "id": "169640",
+    "fdcId": 169640,
+    "name": [
+      "Мёд",
+      "Honey"
+    ],
+    "category": "Другое",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Преимущественно свободные сахара; небольшие количества микронутриентов.",
+      "Predominantly free sugars, with small micronutrient amounts."
+    ],
+    "health": [
+      "Подсластитель и источник энергии; не следует считать его значимым витаминным комплексом.",
+      "A sweetener and energy source; not a significant vitamin supplement."
+    ],
+    "limits": [
+      "Учитывайте свободные сахара. Детям младше года мёд не дают из-за риска младенческого ботулизма.",
+      "Count free sugars. Do not give honey to infants under one year because of infant-botulism risk."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ],
+    "aliases": [
+      "Мед натуральный",
+      "Honey"
+    ]
+  },
+  {
+    "id": "168191",
+    "fdcId": 168191,
+    "name": [
+      "Финики, сушёные",
+      "Dates, dried"
+    ],
+    "category": "Фрукты",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Углеводы, клетчатка и калий; сухофрукты концентрируют питательные вещества.",
+      "Carbohydrates, fiber and potassium; drying concentrates nutrients."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Высокая концентрация сахаров и энергии: порция отличается от свежих фруктов. Косточки абрикоса не включены.",
+      "Concentrated sugars and energy mean portions differ from fresh fruit. Apricot kernels are excluded."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "173941",
+    "fdcId": 173941,
+    "name": [
+      "Курага, сушёные абрикосы",
+      "Apricots, dried"
+    ],
+    "category": "Фрукты",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Углеводы, клетчатка и калий; сухофрукты концентрируют питательные вещества.",
+      "Carbohydrates, fiber and potassium; drying concentrates nutrients."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Высокая концентрация сахаров и энергии: порция отличается от свежих фруктов. Косточки абрикоса не включены.",
+      "Concentrated sugars and energy mean portions differ from fresh fruit. Apricot kernels are excluded."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ],
+    "aliases": [
+      "Сушёные абрикосы",
+      "Курага",
+      "Dried apricots"
+    ]
+  },
+  {
+    "id": "174665",
+    "fdcId": 174665,
+    "name": [
+      "Инжир, сушёный",
+      "Figs, dried"
+    ],
+    "category": "Фрукты",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Углеводы, клетчатка и калий; сухофрукты концентрируют питательные вещества.",
+      "Carbohydrates, fiber and potassium; drying concentrates nutrients."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Высокая концентрация сахаров и энергии: порция отличается от свежих фруктов. Косточки абрикоса не включены.",
+      "Concentrated sugars and energy mean portions differ from fresh fruit. Apricot kernels are excluded."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "brewers-yeast",
+    "fdcId": null,
+    "name": [
+      "Пивные дрожжи, пищевые неактивные",
+      "Inactive food-grade brewer’s yeast"
+    ],
+    "category": "Другое",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Могут содержать белок и витамины группы B. B12 нельзя считать присутствующим без данных об обогащении.",
+      "Can contain protein and B vitamins. B12 must not be assumed without fortification data."
+    ],
+    "health": [
+      "Пищевой белок обеспечивает аминокислоты для обновления тканей и поддержания мышц.",
+      "Dietary protein supplies amino acids for tissue renewal and muscle maintenance."
+    ],
+    "limits": [
+      "Состав существенно зависит от продукта; численные нутриенты нужно внести с его этикетки.",
+      "Composition varies substantially by product; enter numerical nutrients from its label."
+    ],
+    "links": [
+      "https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/"
+    ],
+    "manualId": 900001
+  },
+  {
+    "id": "cod-liver",
+    "fdcId": null,
+    "name": [
+      "Печень трески, консервированная",
+      "Cod liver, canned"
+    ],
+    "category": "Мясо и рыба",
+    "state": "cooked",
+    "top": true,
+    "properties": [
+      "Жиры, ретинол и витамин D; конкретный состав зависит от консервов и заливки.",
+      "Fat, retinol and vitamin D; exact composition depends on the canning product and packing medium."
+    ],
+    "health": [
+      "Витамины A и D выполняют необходимые физиологические функции, но их избыток не полезен.",
+      "Vitamins A and D have essential functions, but excess is not beneficial."
+    ],
+    "limits": [
+      "Это печень трески, не рыбий жир. Без этикетки количественный состав не подставляется. Ретинол особенно важен при беременности.",
+      "This is cod liver, not fish oil. No numerical composition is substituted without a label. Retinol requires particular care in pregnancy."
+    ],
+    "links": [
+      "https://ods.od.nih.gov/factsheets/VitaminA-HealthProfessional/"
+    ],
+    "manualId": 900002
+  },
+  {
+    "id": "goat-yogurt",
+    "fdcId": null,
+    "name": [
+      "Йогурт из козьего молока, натуральный",
+      "Plain goat-milk yogurt"
+    ],
+    "category": "Молочные продукты",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Белок и кальций; точные количества зависят от жирности и технологии.",
+      "Protein and calcium; exact amounts depend on fat content and processing."
+    ],
+    "health": [
+      "Белок и кальций поддерживают мышцы и костную ткань при достаточном общем питании.",
+      "Protein and calcium support muscles and bones as part of adequate overall nutrition."
+    ],
+    "limits": [
+      "Не считается автоматически лучше коровьего. Не является безопасной заменой при аллергии на молочный белок; состав берут с этикетки.",
+      "Not automatically better than cow-milk yogurt. Not a safe substitute for milk-protein allergy; use label data."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet",
+      "https://www.nhs.uk/live-well/eat-well/food-types/milk-and-dairy-nutrition/"
+    ],
+    "manualId": 900003
+  },
+  {
+    "id": "sheep-yogurt",
+    "fdcId": null,
+    "name": [
+      "Йогурт из овечьего молока, натуральный",
+      "Plain sheep-milk yogurt"
+    ],
+    "category": "Молочные продукты",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Молочный белок и кальций; жирность и энергетическая плотность изменчивы.",
+      "Dairy protein and calcium; fat and energy density vary."
+    ],
+    "health": [
+      "Белок и кальций поддерживают мышцы и костную ткань при достаточном общем питании.",
+      "Protein and calcium support muscles and bones as part of adequate overall nutrition."
+    ],
+    "limits": [
+      "Без этикетки не подставляется состав коровьего йогурта. Аллергия на молочный белок сохраняет значение.",
+      "Cow-milk yogurt values are not substituted without a label. Milk-protein allergy remains relevant."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet",
+      "https://www.nhs.uk/live-well/eat-well/food-types/milk-and-dairy-nutrition/"
+    ],
+    "manualId": 900004
+  },
+  {
+    "id": "psyllium-food",
+    "fdcId": null,
+    "name": [
+      "Псиллиум органический, пищевые волокна",
+      "Organic psyllium dietary fiber"
+    ],
+    "category": "Другое",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Преимущественно гелеобразующая растворимая клетчатка; энергетическую ценность и чистоту берут с упаковки.",
+      "Predominantly gel-forming soluble fiber; use package data for energy and purity."
+    ],
+    "health": [
+      "Пищевые волокна помогают поддерживать регулярный стул; продукт дополняет разнообразный рацион.",
+      "Dietary fiber supports regular bowel movements; this food contributes to a varied diet."
+    ],
+    "limits": [
+      "Употребление требует достаточной жидкости по инструкции. Не подходит при затруднении глотания; без этикетки количество клетчатки неизвестно. Для этой подборки выбирайте органическую сертификацию по упаковке; она сама по себе не доказывает дополнительную пользу для здоровья.",
+      "Use requires sufficient fluid according to the label. Unsuitable with swallowing difficulties; fiber quantity is unknown without a label. For this collection, check organic certification on the package; the label alone does not establish extra health benefits."
+    ],
+    "links": [
+      "https://www.niddk.nih.gov/health-information/digestive-diseases/constipation/treatment"
+    ],
+    "manualId": 900005,
+    "aliases": [
+      "Клетчатка",
+      "Псиллиум",
+      "Organic fiber"
+    ]
+  },
+  {
+    "id": "matsoni",
+    "manualId": 900006,
+    "fdcId": null,
+    "name": [
+      "Мацони натуральный, без сахара",
+      "Plain matsoni, no added sugar"
+    ],
+    "aliases": [
+      "Мацун",
+      "Matsoni",
+      "Matsun"
+    ],
+    "category": "Молочные продукты",
+    "state": "unknown",
+    "top": true,
+    "properties": [
+      "Кисломолочный продукт: молочный белок и кальций; жирность и точный состав зависят от молока и производителя.",
+      "A fermented dairy food supplying milk protein and calcium; fat and exact composition depend on milk and producer."
+    ],
+    "health": [
+      "Помогает получать белок и кальций в составе разнообразного рациона. Наличие живых культур зависит от продукта.",
+      "Can contribute protein and calcium within a varied diet. Live-culture content depends on the product."
+    ],
+    "limits": [
+      "Не подставляется состав греческого йогурта. Внесите КБЖУ с этикетки; учитывайте молочный белок, лактозу и добавленный сахар.",
+      "Greek-yogurt values are not substituted. Enter label macros; consider milk protein, lactose and added sugars."
+    ],
+    "links": [
+      "https://www.nhs.uk/live-well/eat-well/food-types/milk-and-dairy-nutrition/"
+    ]
+  },
+  {
+    "id": "uryuk",
+    "manualId": 900007,
+    "fdcId": null,
+    "name": [
+      "Урюк — сушёный абрикос с косточкой",
+      "Uryuk — dried whole apricot with stone"
+    ],
+    "aliases": [
+      "Урюк",
+      "Dried apricot with stone"
+    ],
+    "category": "Фрукты",
+    "state": "dry",
+    "top": true,
+    "properties": [
+      "Мякоть сушёного абрикоса содержит углеводы, пищевые волокна и калий. Взвешивайте съедобную часть без косточки.",
+      "Dried apricot flesh contains carbohydrates, dietary fiber and potassium. Weigh the edible flesh without the stone."
+    ],
+    "health": [
+      "Дополняет рацион фруктами и пищевыми волокнами; сушка увеличивает энергетическую плотность на грамм.",
+      "Adds fruit and fiber to the diet; drying increases energy density per gram."
+    ],
+    "limits": [
+      "Косточку не едят: её ядро может выделять цианид. КБЖУ возьмите с упаковки; значения для кураги автоматически не подставляются. Учитывайте порцию и сульфиты.",
+      "Do not eat the kernel: it can release cyanide. Use label macros; dried-apricot values are not substituted automatically. Consider portions and sulfites."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet",
+      "https://www.efsa.europa.eu/en/press/news/160427"
+    ]
+  },
+  {
+    "id": "peanut-butter-unsweetened",
+    "manualId": 900008,
+    "fdcId": null,
+    "name": [
+      "Арахисовая паста 100%, без добавленного сахара",
+      "100% peanut butter, no added sugar"
+    ],
+    "aliases": [
+      "Арахисовая паста без сахара",
+      "Арахисовое масло без сахара",
+      "Unsweetened peanut butter"
+    ],
+    "category": "Орехи",
+    "state": "unknown",
+    "top": true,
+    "legume": true,
+    "properties": [
+      "Белок, преимущественно ненасыщенные жиры, витамин E и ниацин. Натуральные сахара арахиса возможны и без добавленного сахара.",
+      "Protein, mainly unsaturated fats, vitamin E and niacin. Peanuts can contain natural sugars even with no added sugar."
+    ],
+    "health": [
+      "Помогает получать белок и ненасыщенные жиры; энергетически плотный продукт, поэтому количество важно для цели рациона.",
+      "Contributes protein and unsaturated fats; as an energy-dense food, portion size matters for dietary goals."
+    ],
+    "limits": [
+      "Проверяйте состав: 100% арахис, без добавленного сахара. Учитывайте аллергию. КБЖУ берите с этикетки: значения пасты без соли автоматически не подставляются.",
+      "Check ingredients: 100% peanuts, no added sugar. Consider allergy. Use label macros; unsalted peanut-butter values are not substituted automatically."
+    ],
+    "links": [
+      "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+    ]
+  },
+  {
+    "id": "apricot-kernels",
+    "manualId": 900009,
+    "fdcId": null,
+    "name": [
+      "Абрикосовые косточки — ядра",
+      "Apricot kernels"
+    ],
+    "aliases": [
+      "Ядра абрикосовых косточек",
+      "Абрикосовые ядра",
+      "Apricot seeds"
+    ],
+    "category": "Орехи",
+    "state": "raw",
+    "top": true,
+    "properties": [
+      "Ядра содержат жиры и белок, а также амигдалин. Количество амигдалина сильно различается; точный КБЖУ конкретного продукта здесь не подтверждён.",
+      "Kernels contain fat, protein and amygdalin. Amygdalin amounts vary greatly; exact macros for a particular product have not been verified here."
+    ],
+    "health": [
+      "Доказанная польза ядер для профилактики или лечения заболеваний не установлена. Амигдалин при расщеплении может высвобождать цианид.",
+      "A disease-prevention or treatment benefit has not been established. Amygdalin can release cyanide when broken down."
+    ],
+    "limits": [
+      "Возможна тяжёлая интоксикация цианидом. Горькие ядра особенно опасны; органическое происхождение не устраняет риск. Справочная запись не является рекомендацией употреблять ядра.",
+      "Severe cyanide poisoning is possible. Bitter kernels are especially hazardous; organic production does not remove the risk. This reference entry is not a recommendation to eat kernels."
+    ],
+    "links": [
+      "https://www.efsa.europa.eu/en/press/news/160427"
+    ]
+  }
+]

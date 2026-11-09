@@ -1,0 +1,163 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full current-main SHA with successful Source checks
+        required: true
+        type: string
+      expected_current_commit:
+        description: Full SHA currently served by production (prevents a stale deployment)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: genesis-production
+  cancel-in-progress: false
+
+jobs:
+  hostinger:
+    if: github.repository == 'nikitalexanderson-byte/Genesis-Tasker' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CI: 'true'
+      GENESIS_DEPLOY_TARGET: ${{ vars.GENESIS_DEPLOY_TARGET }}
+      GENESIS_DEPLOY_ANDROID: 'false'
+      GENESIS_MINDMAPS: 'true'
+      PRODUCTION_ORIGIN: https://genesiscalendar.com
+      DEPLOY_COMMIT: ${{ inputs.commit }}
+      EXPECTED_CURRENT_COMMIT: ${{ inputs.expected_current_commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.19.0'
+      - name: Require successful Source checks for this exact current-main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/deployment/source-checks.mjs
+      - name: Check incumbent production commit
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
+            "$PRODUCTION_ORIGIN/deploy-meta.json?preflight=$GITHUB_RUN_ID" \
+            | jq -e --arg expected "$EXPECTED_CURRENT_COMMIT" '.commit == $expected'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.19.0'
+      - name: Build the checked source with locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build:web
+      - name: Assemble public API, maintenance helpers and deployment metadata
+        env:
+          DEPLOY_RUN_ID: ${{ github.run_id }}
+        run: |
+          mkdir -p dist-web/public_html/api dist-web/ops
+          cp -a server/public/api/. dist-web/public_html/api/
+          cp ops/backup-runtime.php ops/retain-web-assets.php dist-web/ops/
+          jq -n --arg commit "$DEPLOY_COMMIT" --arg runId "$DEPLOY_RUN_ID" \
+            --arg repository "$GITHUB_REPOSITORY" --arg deployedAt "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            '{commit:$commit,runId:$runId,repository:$repository,deployedAt:$deployedAt}' \
+            > dist-web/public_html/deploy-meta.json
+      - name: Load pinned Hostinger SSH host key
+        run: |
+          install -m 600 ops/deploy-known-hosts "${{ runner.temp }}/genesis-deploy-known-hosts"
+          ssh-keygen -F '[82.198.232.224]:65002' -f "${{ runner.temp }}/genesis-deploy-known-hosts" >/dev/null
+      - name: Back up runtime state and record incumbent immutable assets
+        uses: easingthemes/ssh-deploy@2cc5b27bf3029d0455dd5e09fe02633904031447 # v6
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          REMOTE_HOST: 82.198.232.224
+          REMOTE_USER: u531952483
+          REMOTE_PORT: 65002
+          SSH_CMD_ARGS: "-o StrictHostKeyChecking=yes, -o UserKnownHostsFile=${{ runner.temp }}/genesis-deploy-known-hosts, -o GlobalKnownHostsFile=/dev/null, -o UpdateHostKeys=no"
+          SOURCE: "dist-web/ops/"
+          TARGET: "/home/u531952483/domains/genesiscalendar.com/ops/"
+          ARGS: "-rlztO --stats --delay-updates"
+          SCRIPT_BEFORE: |
+            set -eu
+            ROOT=/home/u531952483/domains/genesiscalendar.com
+            test "$(readlink -f "$ROOT")" = "$ROOT"
+            for relative in public_html server server/var ops backups; do
+              test ! -L "$ROOT/$relative"
+            done
+            test -d "$ROOT/public_html"
+            test -d "$ROOT/server/var"
+            test -f "$ROOT/server/config.php"
+            test ! -L "$ROOT/server/config.php"
+            test ! -L "$ROOT/public_html/deploy-meta.json"
+            php -r '$meta=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR); if(($meta["commit"]??null)!==$argv[2])exit(1);' \
+              "$ROOT/public_html/deploy-meta.json" '${{ inputs.expected_current_commit }}'
+          SCRIPT_BEFORE_REQUIRED: true
+          SCRIPT_AFTER: |
+            set -eu
+            ROOT=/home/u531952483/domains/genesiscalendar.com
+            php -l "$ROOT/ops/backup-runtime.php" >/dev/null
+            php -l "$ROOT/ops/retain-web-assets.php" >/dev/null
+            php "$ROOT/ops/backup-runtime.php" --server-root="$ROOT/server" --backup-root="$ROOT/backups" --retain=20
+            php "$ROOT/ops/retain-web-assets.php" --root="$ROOT"
+          SCRIPT_AFTER_REQUIRED: true
+      - name: Deploy private server code
+        uses: easingthemes/ssh-deploy@2cc5b27bf3029d0455dd5e09fe02633904031447 # v6
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          REMOTE_HOST: 82.198.232.224
+          REMOTE_USER: u531952483
+          REMOTE_PORT: 65002
+          SSH_CMD_ARGS: "-o StrictHostKeyChecking=yes, -o UserKnownHostsFile=${{ runner.temp }}/genesis-deploy-known-hosts, -o GlobalKnownHostsFile=/dev/null, -o UpdateHostKeys=no"
+          SOURCE: "server/"
+          TARGET: "/home/u531952483/domains/genesiscalendar.com/server/"
+          ARGS: "-rlztO --stats --delete-delay --delay-updates"
+          EXCLUDE: "config.php, config.example.php, var/, .git/"
+      - name: Stage immutable web assets
+        uses: easingthemes/ssh-deploy@2cc5b27bf3029d0455dd5e09fe02633904031447 # v6
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          REMOTE_HOST: 82.198.232.224
+          REMOTE_USER: u531952483
+          REMOTE_PORT: 65002
+          SSH_CMD_ARGS: "-o StrictHostKeyChecking=yes, -o UserKnownHostsFile=${{ runner.temp }}/genesis-deploy-known-hosts, -o GlobalKnownHostsFile=/dev/null, -o UpdateHostKeys=no"
+          SOURCE: "dist-web/public_html/assets/"
+          TARGET: "/home/u531952483/domains/genesiscalendar.com/public_html/assets/"
+          ARGS: "-rlztO --stats --delay-updates"
+      - name: Deploy public client and API router
+        uses: easingthemes/ssh-deploy@2cc5b27bf3029d0455dd5e09fe02633904031447 # v6
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          REMOTE_HOST: 82.198.232.224
+          REMOTE_USER: u531952483
+          REMOTE_PORT: 65002
+          SSH_CMD_ARGS: "-o StrictHostKeyChecking=yes, -o UserKnownHostsFile=${{ runner.temp }}/genesis-deploy-known-hosts, -o GlobalKnownHostsFile=/dev/null, -o UpdateHostKeys=no"
+          SOURCE: "dist-web/public_html/"
+          TARGET: "/home/u531952483/domains/genesiscalendar.com/public_html/"
+          # Compact rsync output avoids overflowing the action's SCRIPT_AFTER environment.
+          ARGS: "-rlztO --stats --delete-delay --delay-updates"
+          EXCLUDE: "assets/, downloads/, android-update.json"
+          SCRIPT_AFTER: |
+            set -eu
+            php /home/u531952483/domains/genesiscalendar.com/ops/retain-web-assets.php \
+              --root=/home/u531952483/domains/genesiscalendar.com --prune
+          SCRIPT_AFTER_REQUIRED: true
+      - name: Verify production health and deployed commit
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$PRODUCTION_ORIGIN/api/health?run=$GITHUB_RUN_ID" \
+              | jq -e '.ok == true' >/dev/null && \
+              curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$PRODUCTION_ORIGIN/deploy-meta.json?run=$GITHUB_RUN_ID" \
+              | jq -e --arg sha "$DEPLOY_COMMIT" --arg repo "$GITHUB_REPOSITORY" '.commit == $sha and .repository == $repo' >/dev/null; then
+              printf 'Verified production commit: %s\n' "$DEPLOY_COMMIT"
+              exit 0
+            fi
+            test "$attempt" -lt 6
+            sleep 5
+          done

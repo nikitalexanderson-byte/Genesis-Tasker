@@ -1,0 +1,63 @@
+{
+  "name": "genesis-sacred-calendar",
+  "version": "0.1.0",
+  "private": true,
+  "author": "nikitalexanderson",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "build:web": "vite build --config vite.web.config.ts && node scripts/verify-public-documents.mjs && node scripts/verify-ui-locale-chunks.mjs && node scripts/verify-offline-precache.mjs",
+    "start": "vinext start",
+    "test": "npm run i18n:audit && npm run build && node scripts/test.mjs",
+    "i18n:audit": "node scripts/audit-translations.mjs && node scripts/audit-multilingual-translations.mjs && node android/tools/export-web-i18n.mjs --check && node android/tools/audit-native-i18n.mjs && node android/tools/export-template-copy.mjs --check && node android/tools/export-notification-copy.mjs --check && node scripts/export-shared-notification-copy.mjs --check",
+    "qa:full": "node scripts/qa/check.mjs",
+    "test:advice": "node --experimental-strip-types --test tests/daily-advice.test.mjs",
+    "test:preservation": "node scripts/verify-theme-preservation.mjs",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "db:generate": "drizzle-kit generate",
+    "test:physis": "node --experimental-strip-types --test tests/physis-access.test.mjs tests/physis-account.test.mjs tests/physis-training.test.mjs tests/physis-nutrition.test.mjs tests/physis-personal-profile.test.mjs tests/physis-crypto.test.mjs tests/physis-store.test.mjs tests/physis-care.test.mjs tests/physis-exchange.test.mjs",
+    "test:backup": "node --experimental-strip-types --test tests/backup-format.test.mjs tests/backup-device.test.mjs",
+    "test:unit": "node scripts/test.mjs",
+    "typecheck": "tsc --noEmit --incremental false",
+    "benchmark": "node scripts/performance/measure.mjs",
+    "qa:serve": "node scripts/qa/serve.mjs"
+  },
+  "dependencies": {
+    "astronomy-engine": "2.1.19",
+    "drizzle-orm": "0.45.2",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@cloudflare/workers-types": "4.20260515.1",
+    "@eslint/js": "9.39.4",
+    "@next/eslint-plugin-next": "16.2.6",
+    "@tailwindcss/postcss": "4.2.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "fflate": "0.7.5",
+    "globals": "16.4.0",
+    "playwright": "1.58.2",
+    "react-server-dom-webpack": "19.2.6",
+    "tailwindcss": "4.2.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.59.3",
+    "vinext": "1.0.0-beta.2",
+    "vite": "8.0.13",
+    "wrangler": "4.92.0"
+  },
+  "type": "module"
+}

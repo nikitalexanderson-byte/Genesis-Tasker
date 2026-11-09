@@ -1,0 +1,19 @@
+.shared-task-lists { display: grid; gap: 1rem; }
+.shared-task-lists > header { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .8rem; }
+.shared-task-lists h3, .shared-task-lists p { margin: 0; }
+.shared-task-lists > header p { margin-top: .3rem; max-width: 42rem; }
+.shared-task-lists-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: .75rem; }
+.shared-task-lists-grid article { min-width: 0; padding: 1rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); }
+.shared-task-lists-grid small { display: block; margin-top: .3rem; overflow-wrap: anywhere; }
+.shared-task-lists-title { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.shared-task-lists-body { display: grid; gap: .5rem; margin-top: .8rem; padding-top: .7rem; border-top: 1px solid var(--line, #d4c9b0); }
+.shared-task-lists-body p { overflow-wrap: anywhere; }
+.shared-task-lists-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.shared-task-lists-actions button { min-height: 2.75rem; }
+.shared-task-lists-dialog { position: fixed; inset: 0; width: min(36rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: 1.25rem; overflow: auto; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); color: inherit; box-shadow: 0 1.25rem 3rem #0005; }
+.shared-task-lists-dialog::backdrop { background: color-mix(in srgb, var(--palette-recessed, rgb(16 27 27)) 76.078%, transparent); }
+.shared-task-lists-dialog header { display: flex; justify-content: space-between; align-items: start; gap: .75rem; margin-bottom: 1rem; }
+.shared-task-lists-dialog form { display: grid; gap: .85rem; }
+.shared-task-lists-dialog label { display: grid; gap: .25rem; }
+.shared-task-lists-dialog input, .shared-task-lists-dialog select { width: 100%; min-height: 2.75rem; }
+.shared-task-lists-message { padding: .75rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); }

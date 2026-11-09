@@ -1,0 +1,221 @@
+{
+  "trackerSchemaVersion": 16,
+  "userProgress": {
+    "lifetimeXp": 0,
+    "laurelsBalance": 0,
+    "currentRankId": null,
+    "hiddenHeroicPathRevealedAt": null,
+    "currentStreak": 0,
+    "longestStreak": 0,
+    "lastQualifiedDate": null,
+    "streakGoalMode": "rhythm",
+    "streakFreezeCount": 0,
+    "rhythmScore": 0,
+    "updatedAt": ""
+  },
+  "habits": [
+    {
+      "id": "web-measured-habit",
+      "createdAt": "2026-10-16T10:00:00.000Z",
+      "updatedAt": "2026-10-16T10:00:00.000Z",
+      "version": 2,
+      "syncState": "local",
+      "title": "Synthetic web duration",
+      "description": "",
+      "createdDate": "2026-10-16",
+      "emoji": "✨",
+      "priority": 5,
+      "isKeyHabit": false,
+      "ritualId": "none",
+      "ritualName": "",
+      "color": "#bb8f4a",
+      "active": true,
+      "sourceTemplateId": null,
+      "sacredPracticeId": null,
+      "sacredSectorId": null,
+      "preferredTime": "",
+      "schedule": {
+        "startDate": "2026-10-16",
+        "endDate": null,
+        "timezone": "Europe/Moscow",
+        "recurrence": {
+          "enabled": true,
+          "mode": "lunar",
+          "pattern": "lunar-days",
+          "days": [
+            7
+          ],
+          "interval": 1,
+          "rangeStart": "2026-10-16",
+          "rangeEnd": "",
+          "months": [],
+          "pyatas": [],
+          "calendarContext": {
+            "version": 2,
+            "timeZone": "Europe/Moscow",
+            "gregorianYearStart": "march"
+          },
+          "invalidDayPolicy": "skip"
+        }
+      },
+      "scoringMode": "binary",
+      "qualityScale": "none",
+      "reminder": {
+        "enabled": false,
+        "time": "09:00",
+        "timing": "habit",
+        "syncToGoogleTasks": false,
+        "showInGoogleCalendar": false,
+        "googleTaskId": null,
+        "googleEventId": null
+      },
+      "measurement": {
+        "kind": "duration",
+        "unit": "min",
+        "target": 90000,
+        "quickAdd": 15000
+      },
+      "ruleHistory": [
+        {
+          "id": "initial:web-measured-habit",
+          "effectiveDate": "2026-10-16",
+          "recordedAt": "1970-01-01T00:00:00.000Z",
+          "schedule": {
+            "startDate": "2026-10-16",
+            "endDate": null,
+            "timezone": "Europe/Moscow",
+            "recurrence": {
+              "enabled": true,
+              "mode": "lunar",
+              "pattern": "lunar-days",
+              "days": [
+                7
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-16",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "Europe/Moscow",
+                "gregorianYearStart": "march"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "measurement": {
+            "kind": "duration",
+            "unit": "min",
+            "target": 60000,
+            "quickAdd": 15000
+          }
+        },
+        {
+          "id": "rule:web-target-2",
+          "effectiveDate": "2026-10-17",
+          "recordedAt": "2026-10-16T10:00:00.000Z",
+          "schedule": {
+            "startDate": "2026-10-16",
+            "endDate": null,
+            "timezone": "Europe/Moscow",
+            "recurrence": {
+              "enabled": true,
+              "mode": "lunar",
+              "pattern": "lunar-days",
+              "days": [
+                7
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-16",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "Europe/Moscow",
+                "gregorianYearStart": "march"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "measurement": {
+            "kind": "duration",
+            "unit": "min",
+            "target": 90000,
+            "quickAdd": 15000
+          }
+        }
+      ]
+    }
+  ],
+  "habitCompletions": [],
+  "habitMeasurements": [
+    {
+      "id": "web-entry",
+      "createdAt": "2026-10-16T10:00:00.000Z",
+      "updatedAt": "2026-10-16T10:00:00.000Z",
+      "version": 1,
+      "syncState": "local",
+      "habitId": "web-measured-habit",
+      "date": "2026-10-16",
+      "entryId": "web-entry",
+      "ruleId": "initial:web-measured-habit",
+      "value": 30125,
+      "replaces": [],
+      "note": "",
+      "source": "manual",
+      "historical": false
+    }
+  ],
+  "sleepPlans": [],
+  "sleepEntries": [],
+  "moodEntries": [],
+  "addictionTrackers": [],
+  "addictionEntries": [],
+  "analyticsSnapshots": [],
+  "dailyGoalRecords": [],
+  "quests": [],
+  "achievementUnlocks": [],
+  "rewardTransactions": [],
+  "streakFreezeTransactions": [],
+  "habitSettings": {
+    "enabled": true,
+    "reportRange": "month",
+    "customRangeStart": "",
+    "customRangeEnd": "",
+    "collapsedSections": [],
+    "sectionOrder": [
+      "streak-resilience",
+      "daily-trackers",
+      "quests",
+      "streak-rewards",
+      "adaptive-suggestions",
+      "regular-habits",
+      "starter-habits",
+      "sleep-abstinence",
+      "achievements",
+      "statistics",
+      "sacred-habits"
+    ],
+    "dailyGoalModeChanges": [],
+    "plannedRestDays": [],
+    "notifications": {
+      "enabled": false,
+      "motivational": true,
+      "tone": "calm",
+      "dailyGoalTime": "20:30",
+      "quietHoursStart": "22:00",
+      "quietHoursEnd": "07:30"
+    },
+    "feedback": {
+      "animations": true,
+      "sound": false,
+      "haptics": false,
+      "achievementPopups": true,
+      "questsEnabled": true,
+      "gamificationWidgets": true
+    }
+  },
+  "hiddenDefaultTemplates": []
+}

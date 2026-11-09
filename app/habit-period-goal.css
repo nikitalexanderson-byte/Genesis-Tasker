@@ -1,0 +1,5 @@
+.habit-period-progress { grid-column: 1 / -1; display: grid; gap: 6px; min-width: 0; padding-block: 12px; border-block-start: 1px solid var(--line); }
+.habit-period-progress p, .habit-period-fields p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.habit-period-fields { min-width: 0; }
+.genesis-app .habit-period-fields input { font-size: 16px; }
+.genesis-app .habit-check-list > .measured-habit > .habit-period-progress { grid-row: auto; }

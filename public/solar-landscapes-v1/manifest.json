@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "entries": {
+    "arid/01.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6809
+    },
+    "arid/02.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6616
+    },
+    "arid/03.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6685
+    },
+    "arid/04.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6409
+    },
+    "arid/05.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4738
+    },
+    "arid/06.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4655
+    },
+    "arid/07.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5345
+    },
+    "arid/08.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4599
+    },
+    "arid/09.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5511
+    },
+    "arid/10.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.511
+    },
+    "arid/11.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5249
+    },
+    "arid/12.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5193
+    },
+    "boreal/01.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5552
+    },
+    "boreal/02.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5083
+    },
+    "boreal/03.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5028
+    },
+    "boreal/04.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4627
+    },
+    "boreal/05.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.511
+    },
+    "boreal/06.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4254
+    },
+    "boreal/07.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5456
+    },
+    "boreal/08.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4461
+    },
+    "boreal/09.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4751
+    },
+    "boreal/10.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4655
+    },
+    "boreal/11.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4641
+    },
+    "boreal/12.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.511
+    },
+    "mediterranean/01.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5718
+    },
+    "mediterranean/02.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6285
+    },
+    "mediterranean/03.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6215
+    },
+    "mediterranean/04.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6381
+    },
+    "mediterranean/05.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5456
+    },
+    "mediterranean/06.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5083
+    },
+    "mediterranean/07.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6174
+    },
+    "mediterranean/08.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5718
+    },
+    "mediterranean/09.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5649
+    },
+    "mediterranean/10.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.567
+    },
+    "mediterranean/11.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6202
+    },
+    "mediterranean/12.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6146
+    },
+    "southern/01.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4807
+    },
+    "southern/02.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5276
+    },
+    "southern/03.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5304
+    },
+    "southern/04.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5083
+    },
+    "southern/05.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5207
+    },
+    "southern/06.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5608
+    },
+    "southern/07.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.6257
+    },
+    "southern/08.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5207
+    },
+    "southern/09.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.558
+    },
+    "southern/10.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5704
+    },
+    "southern/11.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5249
+    },
+    "southern/12.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.518
+    },
+    "temperate/01.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4475
+    },
+    "temperate/02.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4061
+    },
+    "temperate/03.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4227
+    },
+    "temperate/04.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4862
+    },
+    "temperate/05.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5083
+    },
+    "temperate/06.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4406
+    },
+    "temperate/07.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4461
+    },
+    "temperate/08.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4959
+    },
+    "temperate/09.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4682
+    },
+    "temperate/10.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4517
+    },
+    "temperate/11.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.511
+    },
+    "temperate/12.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4724
+    },
+    "tropical/01.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4344
+    },
+    "tropical/02.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5801
+    },
+    "tropical/03.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4876
+    },
+    "tropical/04.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4986
+    },
+    "tropical/05.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5041
+    },
+    "tropical/06.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4157
+    },
+    "tropical/07.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4475
+    },
+    "tropical/08.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4434
+    },
+    "tropical/09.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4475
+    },
+    "tropical/10.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4144
+    },
+    "tropical/11.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4178
+    },
+    "tropical/12.webp": {
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5483
+    }
+  },
+  "snowCoverEntries": {
+    "boreal/01.webp": {
+      "path": "snow-cover/boreal/01.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5138
+    },
+    "boreal/02.webp": {
+      "path": "snow-cover/boreal/02.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.547
+    },
+    "boreal/03.webp": {
+      "path": "snow-cover/boreal/03.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5097
+    },
+    "boreal/04.webp": {
+      "path": "snow-cover/boreal/04.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4558
+    },
+    "boreal/11.webp": {
+      "path": "snow-cover/boreal/11.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5
+    },
+    "temperate/01.webp": {
+      "path": "snow-cover/temperate/01.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.5539
+    },
+    "temperate/02.webp": {
+      "path": "snow-cover/temperate/02.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4945
+    },
+    "temperate/03.webp": {
+      "path": "snow-cover/temperate/03.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4558
+    },
+    "temperate/12.webp": {
+      "path": "snow-cover/temperate/12.webp",
+      "width": 2172,
+      "height": 724,
+      "horizonY": 0.4751
+    }
+  },
+  "assetRevision": "b05bbe41097beb854f2969691224406bc0a0d5f13bff45da42c71e633303e85f"
+}

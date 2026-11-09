@@ -1,0 +1,15 @@
+/* Give full mood names room beside the shared faces; never split a word into letters. */
+html[data-genesis-theme] .genesis-app .mood-modal .mood-options.mood-options-faces {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+html[data-genesis-theme] .genesis-app .mood-modal .mood-options.mood-options-faces button small {
+  font-size: 12px;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+@media (max-width: 600px) {
+  html[data-genesis-theme] .genesis-app .mood-modal .mood-options.mood-options-faces {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

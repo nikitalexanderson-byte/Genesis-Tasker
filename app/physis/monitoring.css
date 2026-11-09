@@ -1,0 +1,26 @@
+.physis-metric-navigation { min-width: 0; }
+.physis-metric-navigation > .physis-measurement-nav { display: grid; grid-template-columns: minmax(0,1fr); gap: 6px; }
+.physis-metric-row { display: flex; justify-content: center; gap: 2px; }
+html[data-genesis-theme] .genesis-app .physis-measurement-nav .physis-metric-tab { flex: 0 0 calc((100% - (var(--metric-columns) - 1) * 2px) / var(--metric-columns)); width: auto; min-width: 44px; height: 44px; min-height: 44px; padding: 4px; font-size: 13px; white-space: nowrap; overflow-wrap: normal; }
+html[data-genesis-theme] .genesis-app .physis-metric-tab > svg { display: block; width: 22px; height: 22px; flex: 0 0 22px; }
+.physis-metric-tab > span { display: none; }
+html[data-genesis-theme] .genesis-app .physis-metric-navigation[data-labels=true] .physis-metric-tab > svg { display: none; }
+.physis-metric-navigation[data-labels=true] .physis-metric-tab > span { display: block; }
+.physis-custom-toolbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+.physis-custom-choice { display: flex; align-items: center; gap: 12px; flex: 1 1 280px; min-width: 0; }
+.physis-custom-choice > svg { width: 36px; height: 36px; flex: 0 0 36px; color: var(--ui-accent); }
+.physis-custom-choice > label { flex: 1; }
+.physis-metric-dialog { width: min(720px,calc(100vw - 24px)); }
+.physis-metric-dialog .physis-settings-heading { justify-content: space-between; }
+.physis-metric-dialog .physis-form { margin: 0; }
+.physis-metric-icons { margin: 0; }
+.physis-metric-icon-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(48px,1fr)); gap: 8px; }
+html[data-genesis-theme] .genesis-app .physis-metric-icon-grid > .icon-action-button { width: 100%; height: 52px; padding: 8px; }
+html[data-genesis-theme] .genesis-app .physis-metric-icon-grid svg { width: 32px; height: 32px; flex: 0 0 32px; }
+html[data-genesis-theme] .genesis-app .physis-metric-icon-grid button[aria-pressed=true] { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); }
+.physis-metric-license { border-top: 1px solid var(--line); }
+@media (max-width: 600px) {
+  .physis-metric-dialog .physis-settings-content { padding: 16px; }
+  .physis-custom-toolbar > .physis-actions { width: 100%; }
+  .physis-custom-toolbar > .physis-actions > button { flex: 1; }
+}

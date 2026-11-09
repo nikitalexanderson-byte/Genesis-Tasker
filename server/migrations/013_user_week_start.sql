@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN week_start TEXT NOT NULL DEFAULT 'sunday';

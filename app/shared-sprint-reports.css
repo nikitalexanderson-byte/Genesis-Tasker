@@ -1,0 +1,47 @@
+.shared-sprint-report { min-width:0; }
+.shared-sprint-report>summary { font:500 18px/1.5 var(--font-ui); }
+.sprint-report-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:24px 0; }
+.sprint-report-metrics>div { min-width:0; }
+.sprint-report-metrics dt,.sprint-scope-deltas dt { font:500 13px/1.5 var(--font-ui); overflow-wrap:anywhere; }
+.sprint-report-metrics dd,.sprint-scope-deltas dd { margin:8px 0 0; font-variant-numeric:tabular-nums; }
+.sprint-report-metrics dd small { display:block; margin-top:8px; color:var(--ink-soft); font:400 var(--type-caption)/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .sprint-report-metrics .report-metric { display:inline-flex; min-width:44px; min-height:44px; align-items:center; justify-content:center; margin:0; padding:8px 12px; color:var(--ink); font:500 20px/1.3 var(--font-ui); background:var(--surface); border:1px solid var(--line); border-radius:var(--ui-radius); }
+.sprint-scope-deltas { display:flex; flex-wrap:wrap; gap:16px 32px; margin:24px 0; padding-block:16px; border-block:1px solid var(--line); }
+.sprint-scope-deltas small { display:block; max-width:32ch; margin-top:8px; color:var(--ink-soft); font:400 var(--type-caption)/1.5 var(--font-ui); }
+.sprint-report-charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin-block:24px; }
+.sprint-flow-chart { min-width:0; margin:0; color:var(--teal); }
+.sprint-flow-chart-wide { grid-column:1/-1; }
+.sprint-flow-chart figcaption { margin-bottom:12px; color:var(--ink); font:500 14px/1.5 var(--font-ui); }
+.sprint-flow-chart>label { margin-bottom:12px; color:var(--ink); font:400 13px/1.5 var(--font-ui); }
+.sprint-flow-chart svg { display:block; width:100%; height:auto; overflow:visible; }
+.sprint-flow-chart svg text { fill:var(--ink-soft); font:400 12px/1.5 var(--font-ui); }
+.sprint-chart-grid { fill:none; stroke:var(--line); stroke-width:1; }
+.sprint-chart-line { fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round; }
+.sprint-chart-dates { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 16px; margin-top:8px; color:var(--ink-soft); font:400 var(--type-caption)/1.5 var(--font-ui); overflow-wrap:anywhere; }
+.sprint-chart-legend { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:12px; color:var(--ink); font:400 var(--type-caption)/1.5 var(--font-ui); }
+.sprint-chart-legend li { display:flex; align-items:center; gap:8px; min-width:0; overflow-wrap:anywhere; }
+.sprint-chart-legend li>span:first-child { flex:0 0 12px; width:12px; height:12px; border-radius:var(--ui-radius); }
+.sprint-report-coverage { padding-block:12px; border-block:1px solid var(--line); }
+.sprint-series-scroll { max-width:100%; overflow-x:auto; margin-block:16px; }
+.sprint-series-scroll table { width:100%; border-collapse:collapse; font:400 13px/1.5 var(--font-ui); font-variant-numeric:tabular-nums; }
+.sprint-series-scroll :is(th,td) { min-width:100px; padding:12px 8px; border-bottom:1px solid var(--line); text-align:start; vertical-align:top; }
+.sprint-series-scroll th { font-weight:500; }
+.sprint-series-scroll th small { display:block; margin-top:8px; font-weight:400; color:var(--ink-soft); }
+.sprint-report-sources>header { display:flex; justify-content:space-between; align-items:start; gap:16px; }
+.sprint-report-sources h3 { margin:0; }
+.sprint-report-sources li { padding-block:16px; border-top:1px solid var(--line); overflow-wrap:anywhere; }
+.sprint-report-sources li>header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px 16px; }
+.sprint-report-sources time { color:var(--ink-soft); font:400 var(--type-caption)/1.5 var(--font-ui); }
+.sprint-report-sources li>p { margin-block:8px; }
+html[data-genesis-theme] .genesis-app .sprint-source-task { display:inline; min-height:44px; padding:8px 0; text-align:start; color:var(--teal); background:transparent; border:0; font:500 15px/1.5 var(--font-ui); overflow-wrap:anywhere; white-space:normal; }
+.sprint-source-comparison { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:12px; }
+.sprint-source-comparison>div { min-width:0; }
+.sprint-source-comparison .shared-estimate-values { margin-block:8px; }
+@media(max-width:767px) {
+ .sprint-report-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+ .sprint-report-charts { grid-template-columns:minmax(0,1fr); gap:24px; }
+}
+@media(max-width:420px) {
+ .sprint-report-metrics,.sprint-source-comparison { grid-template-columns:minmax(0,1fr); }
+ .sprint-scope-deltas { display:grid; grid-template-columns:minmax(0,1fr); }
+}

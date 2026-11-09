@@ -1,0 +1,87 @@
+/* Dialogs and body portals share the existing Universal UI control tokens. */
+[data-dialog-header-source] { display: none !important; }
+[data-dialog-header-host] { position: sticky; top: 0; z-index: 20; flex-shrink: 0; grid-column: 1 / -1; background: var(--surface, var(--paper)); }
+.dialog-universal-header { position:relative; isolation:isolate; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 10px var(--dialog-header-inline, 0px); margin-bottom: 16px; border-bottom: 1px solid var(--line); background: var(--surface, var(--paper)); color: var(--ink); }
+.dialog-universal-header::before { content:''; position:absolute; z-index:-1; inset:calc(-1 * var(--dialog-edge-top,0px)) calc(-1 * var(--dialog-edge-right,0px)) 0 calc(-1 * var(--dialog-edge-left,0px)); background:var(--surface,var(--paper)); pointer-events:none; }
+.dialog-universal-title { min-width: 0; flex: 1; }
+.dialog-universal-title > h2 { margin: 0 !important; font: 500 24px/1.3 var(--font-heading); overflow-wrap: anywhere; }
+.dialog-universal-title > p { margin: 4px 0 0; color: var(--ink-soft); font: 400 14px/1.5 var(--font-ui); overflow-wrap: anywhere; }
+.dialog-universal-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+html[data-genesis-theme] .dialog-universal-actions > button,
+html[data-genesis-theme] .dialog-universal-actions .dialog-save-alternatives > button {
+  position: static; display: inline-grid; place-items: center; width: 44px; height: 44px; min-width: 44px; min-height: 44px; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--surface); transform: none;
+}
+.dialog-universal-actions .experimental-icon { width: 22px; height: 22px; flex: none; }
+html[data-genesis-theme] .dialog-universal-actions button:hover:not(:disabled) { background: var(--exp-hover, var(--paper)); border-color: var(--ui-accent); }
+html[data-genesis-theme] .dialog-universal-actions button:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+.dialog-universal-actions button:disabled { opacity: .55; cursor: default; }
+.dialog-save-alternatives { position: relative; }
+.dialog-save-menu { position: absolute; z-index: 21; inset-inline-end: 0; top: calc(100% + 8px); display: grid; gap: 6px; width: min(300px, calc(100vw - 48px)); padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: 0 8px 24px color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 18.824%, transparent); }
+.dialog-save-menu > button { display: flex; gap: 12px; align-items: center; min-height: 44px; padding: 8px 12px; text-align: start; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+@media (max-width: 600px) { .dialog-universal-header { gap: 8px; } .dialog-universal-title > h2 { font-size: 20px; } }
+html[data-genesis-theme] { --ui-layer-dialog: 1600; }
+html[data-genesis-theme] :is(.modal-backdrop, .stoicheion-letter-dialog) { z-index: var(--ui-layer-dialog); }
+html[data-genesis-theme] button.dialog-close-button,
+html[data-genesis-theme] .genesis-app button.dialog-close-button,
+html[data-genesis-theme] :is([role="dialog"], dialog) button.dialog-close-button,
+html[data-genesis-theme] .genesis-app :is([role="dialog"], dialog) button.dialog-close-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 var(--ui-control-height, 44px);
+  width: var(--ui-control-height, 44px);
+  height: var(--ui-control-height, 44px);
+  min-width: var(--ui-control-height, 44px);
+  min-height: var(--ui-control-height, 44px);
+  padding: 0;
+  margin: 0;
+  margin-inline-start: auto;
+  justify-self: end;
+  inset-inline-end: 16px;
+  inset-block-start: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius, 12px);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+  transform: none;
+}
+html[data-genesis-theme] button.dialog-close-button > .experimental-icon { width: 20px; height: 20px; flex: none; }
+html[data-genesis-theme] button.dialog-close-button:hover:not(:disabled) { background: var(--exp-hover, var(--paper)); border-color: var(--ui-accent); filter: none; transform: none; }
+html[data-genesis-theme] button.dialog-close-button:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+html[data-genesis-theme] button.dialog-close-button:disabled { opacity: .55; cursor: default; }
+html[data-genesis-theme] .sacred-sector-modal > header { padding-inline-end: 0; }
+html[data-genesis-theme] .sacred-sector-modal > header > div { min-width: 0; }
+html[data-genesis-theme] .sacred-sector-modal-actions .experimental-icon { width: 20px; height: 20px; flex: none; }
+
+html[data-genesis-theme] .stoicheion-sector-habits { display: grid; gap: 12px; min-width: 0; }
+html[data-genesis-theme] .stoicheion-sector-habits > h3 { margin: 0; font: 400 22px/1.3 var(--font-heading); color: inherit; }
+html[data-genesis-theme] .stoicheion-sector-habits > p { margin: 0; font: 400 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] button.stoicheion-practice-action {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) 20px; align-items: center; gap: 12px;
+  width: 100%; min-width: 0; min-height: var(--ui-control-height, 44px); padding: 16px;
+  border: 1px solid var(--line); border-radius: var(--ui-radius, 12px);
+  background: var(--surface); color: var(--ink); font: 400 16px/1.5 var(--font-ui); text-align: start; cursor: pointer;
+}
+html[data-genesis-theme] .stoicheion-practice-action > span:first-child { font-size: 24px; }
+html[data-genesis-theme] .stoicheion-practice-copy { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+html[data-genesis-theme] .stoicheion-practice-copy > strong { font-weight: 600; }
+html[data-genesis-theme] .stoicheion-practice-copy > span { color: var(--ink-soft); font-size: 14px; }
+html[data-genesis-theme] .stoicheion-practice-action > svg { width: 20px; height: 20px; }
+html[data-genesis-theme] .stoicheion-practice-action:hover:not(:disabled) { border-color: var(--ui-accent); background: var(--exp-hover, var(--paper)); }
+html[data-genesis-theme] .stoicheion-practice-action:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+html[data-genesis-theme] .stoicheion-practice-action:disabled { opacity: .55; cursor: default; }
+html[data-genesis-theme] .stoicheion-recommended-practices { margin-block: 24px; padding-block: 24px; border-block: 1px solid var(--line); }
+html[data-genesis-theme] .stoicheion-sector-practice > .secondary-button { justify-self: start; }
+html[data-genesis-theme] .stoicheion-sector-practice > .secondary-button .experimental-icon { width: 20px; height: 20px; flex: none; }
+
+[data-dialog-header-wrapper] { position: sticky; top: 0; z-index: 20; background: var(--surface, var(--paper)); }
+[data-dialog-header-wrapper] > [data-dialog-header-host] { flex: 1; min-width: 0; position: static; }
+[data-dialog-header-wrapper] .dialog-universal-header { margin: 0; border: 0; }
+.time-clock-picker-panel:has([data-dialog-header-host]) { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+/* The added dialog header must not squeeze the card into the old two-row grid. */
+.stoicheion-letter-dialog > article:has(> [data-dialog-header-host]) {
+  display: block; overflow-y: auto; overscroll-behavior-y: contain;
+}
+.stoicheion-letter-dialog > article:has(> [data-dialog-header-host]) > .stoicheion-letter-copy { overflow: visible; }

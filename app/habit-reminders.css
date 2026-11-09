@@ -1,0 +1,21 @@
+html[data-genesis-theme] .genesis-app .habit-background-settings { min-width:0; margin-block-start:24px; padding-block-start:20px; border-block-start:1px solid var(--line); color:var(--ink); }
+html[data-genesis-theme] .genesis-app .habit-background-settings h4 { margin:0 0 8px; font:500 18px/1.4 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .habit-background-settings p { max-width:72ch; margin:8px 0 12px; overflow-wrap:anywhere; font:400 14px/1.6 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .habit-reminder-buttons { display:flex; flex-wrap:wrap; gap:12px; margin:16px 0; }
+html[data-genesis-theme] .genesis-app .habit-reminder-buttons button { min-height:44px; max-width:100%; white-space:normal; }
+html[data-genesis-theme] .genesis-app .habit-reminder-frequency { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-block:20px 4px; }
+html[data-genesis-theme] .genesis-app .habit-reminder-frequency label { display:grid; min-width:0; gap:8px; color:var(--ink); font:400 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .habit-reminder-frequency select { min-width:0; width:100%; min-height:44px; font-size:16px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:8px 12px; accent-color:var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .habit-background-settings :is(button,select):focus-visible { outline:2px solid var(--ui-accent); outline-offset:3px; }
+html[data-genesis-theme] .genesis-app .habit-background-settings :disabled { opacity:.6; }
+html[data-genesis-theme] .genesis-app .habit-reminder-status { margin:12px 0; padding:16px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius: var(--ui-surface-radius); }
+html[data-genesis-theme] .genesis-app .habit-reminder-status p { margin:0 0 12px; }
+html[data-genesis-theme] .genesis-app .habit-reminder-input { margin-block:16px; max-width:640px; }
+html[data-genesis-theme] .genesis-app .habit-reminder-input h3 { margin:0 0 8px; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .habit-reminder-input input:not([type="range"]) { width:100%; min-width:0; min-height:44px; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:8px; padding:8px 12px; font-size:16px; }
+html[data-genesis-theme] .genesis-app .habit-reminder-quality { display:grid; gap:12px; margin-block:16px; }
+html[data-genesis-theme] .genesis-app .habit-reminder-quality label { display:grid; gap:12px; }
+html[data-genesis-theme] .genesis-app .habit-reminder-quality input { width:100%; accent-color:var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .habit-reminder-input :is(button,input):focus-visible { outline:2px solid var(--ui-accent); outline-offset:3px; }
+html[data-genesis-theme] .genesis-app [data-habit-reminder]:focus { outline:2px solid var(--ui-accent); outline-offset:4px; }
+@media(max-width:640px) { html[data-genesis-theme] .genesis-app .habit-reminder-frequency { grid-template-columns:minmax(0,1fr); } }

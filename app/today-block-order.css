@@ -1,0 +1,28 @@
+.today-block-slot { display: contents; }
+html[data-genesis-theme] .genesis-app .today-workspace .today-view > .today-block-slot > * { order: 0; }
+.today-order-dialog { width: min(620px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: 400 14px/1.5 var(--font-ui); }
+.today-order-dialog::backdrop { background: rgb(0 0 0 / .55); }
+.today-order-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.today-order-dialog h2 { margin: 0; color: var(--ink); font: 400 24px/1.3 var(--font-heading); }
+.today-order-dialog > p { margin: 0 0 16px; color: var(--ink-soft); }
+.today-order-dialog .today-order-fixed { display: flex; align-items: center; gap: 8px; padding-block: 12px; border-block: 1px solid var(--line); }
+.today-order-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.today-order-list > li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; min-width: 0; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.today-order-list > li.is-moving { opacity: .55; border-color: var(--gold); }
+.today-order-list > li > span { overflow-wrap: normal; word-break: normal; font-weight: 500; }
+.today-order-dialog :is(.today-order-grip, .today-order-arrows > button) { display: grid; place-items: center; min-width: 44px; width: 44px; min-height: 44px; padding: 10px; border: 0; border-radius: 10px; background: transparent; color: var(--ink); }
+.today-order-dialog .today-order-grip { cursor: grab; }
+.today-order-dialog .today-order-grip:active { cursor: grabbing; }
+.today-order-dialog :is(.today-order-grip, .today-order-arrows > button):hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.today-order-dialog button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.today-order-dialog .today-order-arrows { display: flex; gap: 0; }
+.today-order-dialog .today-order-arrows > button[aria-disabled="true"] { opacity: .35; cursor: default; }
+.today-order-dialog svg { width: 24px; height: 24px; flex: 0 0 24px; }
+.today-order-dialog > footer { display: flex; justify-content: flex-end; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 20px; }
+.today-order-dialog > footer button { min-height: 44px; }
+.today-order-dialog .today-order-reset { margin-inline-end: auto; }
+@media (max-width: 420px) {
+  .today-order-dialog { padding: 16px; }
+  .today-order-dialog h2 { font-size: 22px; }
+  .today-order-dialog .today-order-reset { flex-basis: 100%; margin: 0; }
+}

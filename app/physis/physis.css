@@ -1,0 +1,237 @@
+.physis { color: var(--ink); min-width: 0; display: grid; gap: 24px; padding-bottom: 32px; }
+.physis *, .physis *::before, .physis *::after { box-sizing: border-box; }
+.physis :is(h1,h2,h3,p) { overflow-wrap: anywhere; }
+.physis h1 { font: 400 clamp(30px,4vw,42px)/1.15 "Source Serif 4",Georgia,serif; margin: 0; }
+.physis h2 { font: 400 26px/1.3 "Source Serif 4",Georgia,serif; margin: 0 0 16px; }
+.physis h3 { font-size: 18px; margin: 0 0 12px; }
+.physis p { line-height: 1.6; margin: 8px 0 16px; max-width: 72ch; }
+.physis :is(button,input,select,textarea) { font: inherit; color: var(--ink); min-width: 0; max-width: 100%; }
+.physis :where(button,input:not([type=checkbox]):not([type=radio]),select) { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px 12px; }
+.physis button { cursor: pointer; line-height: 1.35; overflow-wrap: anywhere; }
+.physis button:hover:not(:disabled) { background: color-mix(in srgb,var(--ink) 7%,var(--surface)); }
+.physis button:disabled { opacity: .6; cursor: wait; }
+.physis :is(button,input,select,textarea,a,summary):focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+.physis textarea { width: 100%; min-height: 88px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 12px; resize: vertical; }
+.physis input[type=checkbox], .physis input[type=radio] { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--ui-accent); }
+.physis .physis-primary { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); font-weight: 600; }
+.physis .physis-primary:hover:not(:disabled) { background: color-mix(in srgb,var(--ui-accent) 88%,var(--ink)); }
+.physis .physis-danger { color: var(--danger, #a5543f); }
+.physis-header, .physis-row, .physis-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; min-width: 0; }
+.physis-header { justify-content: space-between; }
+.physis-row > *, .physis-actions > * { min-width: 0; }
+.physis-panel { padding: 24px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; min-width: 0; }
+.physis-panel .physis-panel { padding: 16px 0; border-width: 1px 0 0; background: transparent; border-radius: 0; }
+.physis .physis-nutrition-today { container-type:inline-size; }
+.physis-plan-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; align-items:end; gap:16px; }
+.physis-plan-field { display:grid; grid-template-rows:minmax(30px,auto) 44px; align-items:end; gap:6px; min-width:0; }
+.physis .physis-plan-field > label { margin:0; font-size:13px; line-height:1.3; }
+html[data-genesis-theme] .genesis-app .physis-plan-controls :is(.calendar-date-trigger,input[type=date],select,.physis-primary) { box-sizing:border-box; width:100%; min-width:0; height:44px; min-height:44px; margin:0; padding-block:6px; }
+.physis-plan-controls .calendar-date-trigger > :is(span,small) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:760px) {
+  .physis-plan-controls { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .physis .physis-plan-field > label { font-size:11px; }
+  html[data-genesis-theme] .genesis-app .physis-plan-controls :is(.calendar-date-trigger,input[type=date],select,.physis-primary) { padding-inline:4px; font-size:11px; line-height:1.25; }
+}
+html[data-genesis-theme] .genesis-app .physis-nutrition-today-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:8px 12px; margin:0; }
+.physis-nutrition-today-heading > div { display:contents; }
+.physis .physis-nutrition-today-heading h2 { grid-column:1; grid-row:1; margin:0; }
+.physis .physis-nutrition-today-heading p { grid-column:1 / -1; grid-row:2; margin:0; }
+.physis-nutrition-today-heading > button { grid-column:2; grid-row:1; justify-self:end; }
+@container (max-width:280px) {
+  html[data-genesis-theme] .genesis-app .physis .physis-nutrition-today-heading > button { font-size:12px; }
+}
+@container (max-width:240px) {
+  html[data-genesis-theme] .genesis-app .physis-nutrition-today-heading { grid-template-columns:minmax(0,1fr); }
+  .physis-nutrition-today-heading > button { grid-column:1; grid-row:3; justify-self:start; margin-top:4px; }
+}
+.physis-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 24px; min-width: 0; }
+.physis-form { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); gap: 16px; margin: 16px 0; }
+.physis-form > label, .physis-field { display: flex; flex-direction: column; align-items: stretch; gap: 7px; font-size: 14px; min-width: 0; }
+.physis-form > :is(h3,p,.physis-actions,.physis-wide), .physis-wide { grid-column: 1 / -1; }
+.physis label.physis-check { display: flex; flex-direction: row; align-items: center; min-height: 44px; gap: 10px; }
+.physis-muted { color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+.physis-status { font-size: 14px; line-height: 1.5; }
+.physis-warning { color: var(--ink); background: color-mix(in srgb,var(--ui-accent) 7%,var(--surface)); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; line-height: 1.6; }
+.physis [role=alert] { border-color: var(--danger, #a5543f); }
+.physis-empty { padding: 28px 0; color: var(--ink-soft); }
+.physis-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.physis .physis-tabs button[aria-pressed=true], .physis .physis-tabs button[aria-current=page], .physis .physis-tabs button[aria-selected=true] { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .physis-area-switch { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); width: 100%; margin: 0; }
+html[data-genesis-theme] .genesis-app .physis-area-switch > button { display: grid; grid-template-columns: 24px minmax(0,1fr); align-content: center; align-items: center; gap: 4px 8px; min-height: 72px; min-width: 0; padding: 12px; text-align: start; }
+.physis-area-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 24px; }
+.physis-area-icon > svg { display: block; width: 24px; height: 24px; }
+.physis-area-label { overflow-wrap: normal; word-break: normal; }
+.physis-area-subtitle { grid-column: 2; overflow-wrap: normal; word-break: normal; }
+html[data-genesis-theme] .genesis-app .physis-area-switch > button[aria-current=page] { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .physis-area-switch > button[aria-current=page] small { color: inherit; }
+html[data-genesis-theme] .genesis-app .physis-workspace-panel { display: block; }
+.physis-workspace-panel .physis-section-frame > .physis-page-content { margin-top: 20px; padding: 0; border: 0; background: transparent; }
+.physis-workspace-panel .physis-section-frame > .physis-subnav > button[aria-current=page]::after { display: none; }
+.physis-subnav { gap: 8px; }
+.physis-page-content { display: grid; gap: 24px; min-width: 0; }
+.physis-hero { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; aspect-ratio: 8 / 1; width: 100%; min-width: 0; min-height: 180px; gap: 16px; padding: 20px 28px; overflow: clip; border: 1px solid rgba(216,189,128,.3); border-radius: var(--ui-surface-radius); color: #f8f1df; background-color: var(--palette-recessed, #051618); background-image: linear-gradient(90deg,rgba(5,22,24,.82),rgba(5,22,24,.42) 40%,rgba(5,22,24,.08) 75%),url('/physis-art/landscape-v2.webp'); background-size: auto,cover; background-position: center; background-repeat: no-repeat; }
+.physis-hero::before { content: ''; position: absolute; inset: 0 3% 0 0; pointer-events: none; background: url('/physis-art/apollo-artemis-realistic.png') right bottom / auto 100% no-repeat; }
+.physis-hero::after { content: ''; position: absolute; inset: 11px; border: 1px solid rgba(216,189,128,.17); border-radius: 8px; pointer-events: none; }
+.physis-hero > * { position: relative; z-index: 1; }
+.physis-hero-copy { max-width: 45%; }
+html[data-genesis-theme] .genesis-app .physis-hero h1 { margin: 0 0 8px; color: #f8f1df; font: 500 36px/1.1 "Source Serif 4",Georgia,serif; letter-spacing: -.025em; }
+.physis-hero-copy > p { margin: 0; color: #c7d5ce; font-size: 14px; line-height: 1.7; }
+.physis-hero-actions { display: flex; align-items: center; gap: 12px; }
+html[data-genesis-theme] .genesis-app .physis-hero .physis-status { color: #c7d5ce; font: 400 13px/1.5 var(--font-ui); margin: 0; }
+html[data-genesis-theme] .genesis-app .physis-settings-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 10px; color: #e6cd91; background: var(--palette-recessed, #0b2424); border-color: rgba(216,189,128,.4); }
+html[data-genesis-theme] .genesis-app .physis-settings-button:hover { background: var(--palette-surface, #193a34); }
+.physis-settings-button:focus-visible { outline-color: currentColor; }
+.physis-settings-dialog { width: min(920px,calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
+.physis-settings-backdrop { padding: 12px; background: color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 70.196%, transparent); }
+body:has(.physis-settings-backdrop:not([hidden])) { overflow: hidden; }
+.physis-settings-heading { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 16px; padding: 20px 24px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.physis-settings-heading h2 { margin: 0; font-size: 24px; }
+.physis-settings-content { display: grid; gap: 20px; padding: 24px; min-width: 0; }
+.physis-table-wrap { max-width: 100%; overflow-x: auto; }
+.physis table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
+.physis :is(th,td) { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.physis th { font-weight: 600; }
+.physis-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.physis-list > li { padding: 18px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.physis-list > li:last-child { border-bottom: 0; }
+.physis-list .physis-actions { margin-top: 10px; }
+.physis summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+.physis .physis-lock { max-width: 620px; margin: 24px auto; width: 100%; }
+.physis .physis-lock .physis-form { grid-template-columns: minmax(0,1fr); }
+.physis-recovery { display: block; font-family: inherit; overflow-wrap: anywhere; padding: 16px; border: 1px solid var(--line); border-radius: 10px; user-select: all; font-size: 16px; }
+.physis-chart { width: 100%; height: 160px; overflow: visible; }
+.physis-chart polyline { fill: none; stroke: var(--ui-accent); stroke-width: 2.5; }
+.physis-chart circle { fill: var(--ui-accent); }
+.physis-monitoring-hint { max-width: 560px; padding: 20px; margin: 16px 0 24px auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: 0 8px 24px color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 9.412%, transparent); }
+.physis-monitoring-hint h3 { margin: 0 0 8px; }
+.physis-monitoring-hint p { margin: 0 0 12px; }
+.physis-monitoring-layout { display: grid; gap: 24px; min-width: 0; }
+.physis-measurement-nav { gap: 8px; }
+.physis-measurement-nav svg { width: 24px; height: 24px; }
+.physis-measurement-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.physis-measurement-heading h2 { margin-bottom: 8px; }
+.physis-measurement-heading p { margin: 0; }
+.physis-measurement-help { margin-top: 24px; border-top: 1px solid var(--line); }
+.physis-care-control { display: grid; gap: 24px; min-width: 0; }
+.physis-care-heading { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between; }
+.physis-care-heading h2 { margin-bottom: 8px; }
+.physis-care-heading p { margin: 0; }
+.physis-care-date-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 24px; }
+.physis-care-date-nav .icon-action-button { width: 44px; height: 44px; padding: 10px; }
+.physis-care-previous { transform: rotate(180deg); }
+.physis p.physis-care-date { font-family: "Source Serif 4",Georgia,serif; font-size: 22px; margin-block: 16px 0; }
+.physis-care-manual { margin-top: 16px; border-top: 1px solid var(--line); }
+.physis-care-onboarding { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+.physis-care-onboarding h3 { margin: 0 0 8px; }
+.physis-care-ledger { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.physis-care-ledger > :only-child { grid-column: 1 / -1; }
+.physis-care-section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.physis-care-section-title h3 { font: 400 24px/1.3 "Source Serif 4",Georgia,serif; margin: 0; }
+.physis-care-section-title > span { color: var(--ink-soft); font-size: 14px; font-variant-numeric: tabular-nums; }
+.physis-care-control .physis-empty { margin: 0; padding: 20px 0 0; font-size: 14px; }
+.physis-care-control .physis-list { margin-top: 16px; }
+.physis-care-help { color: var(--ink-soft); font-size: 14px; }
+.physis-care-editor { scroll-margin-top: 24px; }
+.physis-drug-catalog { display: grid; gap: 24px; min-width: 0; }
+.physis-drug-catalog > .physis-panel > .physis-field { margin-block: 20px; }
+.physis-drug-search { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:12px; margin-top:20px; }
+.physis-drug-search > .physis-field { margin:0; }
+.physis-search-input { position:relative; display:block; min-width:0; }
+html[data-genesis-theme] .genesis-app .physis .physis-drug-search .physis-field .physis-search-input > input[type=search] { width:100%; height:44px; padding-inline-end:44px; }
+.physis-search-input > svg { position:absolute; top:50%; right:12px; width:20px; height:20px; transform:translateY(-50%); color:var(--ink-soft); pointer-events:none; }
+.physis .physis-drug-search > .physis-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:330px; max-width:100%; gap:8px; margin:0; }
+.physis .physis-drug-search .physis-tabs > button { width:100%; height:44px; min-height:44px; padding:6px 8px; }
+@media (max-width:760px) {
+  .physis-drug-search { grid-template-columns:minmax(0,1fr); }
+  .physis .physis-drug-search > .physis-tabs { width:100%; }
+}
+.physis-drug-browser { display: grid; grid-template-columns: 240px minmax(0,1fr); align-items: start; gap: 24px; min-width: 0; }
+.physis-drug-group-list { list-style: none; margin: 0; padding: 0; }
+.physis-drug-group-list ul { padding-left: 12px; margin-left: 12px; border-left: 1px solid var(--line); }
+.physis-drug-groups > h3 { margin: 0 0 16px; }
+.physis-drug-groups button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; margin-bottom: 6px; }
+.physis-drug-groups small { font-size: 12px; font-variant-numeric: tabular-nums; }
+.physis-drug-groups button[aria-current=page] { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); }
+.physis-drug-results > h3 { margin: 0 0 16px; font: 400 24px/1.3 "Source Serif 4",Georgia,serif; }
+.physis .physis-session-action { position: sticky; bottom: 0; background: var(--surface); padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); z-index: 2; }
+.physis .physis-training-primary-actions { background: var(--surface); }
+.physis fieldset { min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.physis legend { padding-inline: 6px; }
+@media (max-width:600px) {
+  .physis { gap: 20px; }
+  html[data-genesis-theme] .genesis-app .physis-area-switch { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .physis-area-icon { display: flex; align-items: center; justify-content: center; }
+  .physis-area-icon > svg { width: 28px; height: 28px; }
+  .physis-area-label, .physis-area-subtitle { display: none; }
+  .physis-panel { padding: 16px; }
+  .physis-care-ledger { grid-template-columns: minmax(0,1fr); gap: 20px; }
+  .physis-drug-browser { grid-template-columns: minmax(0,1fr); gap: 20px; }
+  .physis-drug-groups > .physis-drug-group-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 4px; }
+  .physis-hero { aspect-ratio: auto; min-height: 280px; padding: 24px 20px; background-image: linear-gradient(180deg,rgba(5,22,24,.92),rgba(5,22,24,.4)),url('/physis-art/landscape-v2.webp'); }
+  .physis-hero::before { inset: 0; background-size: auto 60%; }
+  .physis-hero-actions { padding: 0; background: transparent; }
+  .physis-hero-copy { max-width: 100%; }
+  .physis-hero-copy > p { font-size: 13px; }
+  html[data-genesis-theme] .genesis-app .physis-area-switch > button { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 6px; }
+  .physis-settings-heading { padding: 16px; }
+  .physis-settings-heading h2 { font-size: 24px; }
+  .physis-settings-content { padding: 16px; }
+  .physis-settings-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
+  .physis-form { grid-template-columns: minmax(0,1fr); }
+  .physis-actions { gap: 8px; }
+  .physis-header { align-items: flex-start; }
+  html[data-genesis-theme] .genesis-app .physis :is(input,select,textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-motion:reduce) { .physis * { scroll-behavior: auto; transition: none; animation: none; } }
+
+/* The same opaque outline and connector used by the habits workspace. */
+.physis-section-frame { --physis-workspace-outline: color-mix(in srgb,var(--ui-accent) 45%,var(--paper)); min-width: 0; }
+.physis-section-frame > .physis-subnav { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0,1fr); gap: 8px; margin: 0; }
+.physis-section-frame > .physis-subnav > button { width: 100%; min-height: 48px; border-color: var(--physis-workspace-outline); }
+.physis-section-frame > .physis-page-content { margin-top: 24px; padding: 16px; border: 1px solid var(--physis-workspace-outline); border-radius: 10px; background: color-mix(in srgb,var(--ink) 2%,var(--paper)); }
+.physis-section-frame > .physis-page-content > .physis-panel:only-child, .physis-section-frame > .physis-page-content > .physis-training:only-child > .physis-panel:only-child { border: 0; padding: 8px; background: transparent; }
+.physis-control-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.physis-control-heading h2 { margin: 0; }
+html[data-genesis-theme] .genesis-app .physis-control-switch { display: inline-flex; width: auto; margin: 0 0 0 auto; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; }
+html[data-genesis-theme] .genesis-app .physis-control-switch > button { min-width: 110px; min-height: 44px; padding: 8px 12px; }
+html[data-genesis-theme] .genesis-app .physis-control-switch.physis-equal-switch { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0,1fr); width: min(100%,var(--physis-switch-width)); }
+html[data-genesis-theme] .genesis-app .physis-control-switch.physis-equal-switch > button { width: 100%; min-width: 0; height: 44px; padding: 4px 8px; font-size: 13px; }
+.physis-catalog-switch { --physis-switch-width: 380px; }
+.physis-plan-switch { --physis-switch-width: 300px; }
+.physis-control-view[hidden] { display: none; }
+.physis-training-control .calendar-date-trigger::after { content: none; }
+.physis-training-control .calendar-picker-backdrop { grid-template-columns: minmax(0,1fr); }
+.physis-training-control .calendar-picker { max-width: 100%; }
+.physis-training-control .calendar-picker h2 { margin-right: 44px; }
+.physis-training-control .calendar-picker-months { grid-template-columns: repeat(auto-fit,minmax(44px,1fr)); }
+html[data-genesis-theme] .genesis-app .physis-training-control .calendar-picker :is(.calendar-picker-months button.active,.sacred-picker-days button.selected,.lunar-picker-days button.selected) { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .physis-training-control .calendar-picker :is(.sacred-picker-days,.lunar-picker-days) button.selected :is(strong,span,small,time) { color: inherit; }
+.physis-food-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:16px; padding:16px; }
+.physis-food-heading h2 { margin-bottom: 8px; }
+.physis-food-heading p { margin: 0 0 8px; }
+.physis-food-heading .physis-food-intro > p:last-child { margin-bottom:0; }
+.physis .physis-heading-hint { display:inline-flex; align-items:center; padding:0; min-height:44px; border:0; background:transparent; color:inherit; font:inherit; letter-spacing:inherit; cursor:help; text-align:start; }
+.physis .physis-heading-hint:is(:hover,:focus-visible) { background:transparent; }
+.physis-food-heading .physis-muted { font-size: 13px; line-height: 1.5; margin-bottom: 0; }
+.physis-food-heading > .physis-actions { justify-content: flex-end; gap: 8px; }
+.physis-food-heading > [role=alert] { grid-column: 1 / -1; }
+.physis-save-toast { position: fixed; top: 24px; right: 24px; z-index: 1200; padding: 14px 20px; max-width: calc(100vw - 32px); border: 1px solid var(--ui-accent); border-radius: 10px; color: var(--ink); background: var(--surface); box-shadow: 0 8px 24px color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 18.824%, transparent); font-weight: 600; }
+@media (min-width: 761px) {
+  .physis-workspace-frame > .physis-area-switch > button[aria-current=page] { position: relative; overflow: visible; }
+  .physis-workspace-frame > .physis-area-switch > button[aria-current=page]::after { content: ''; position: absolute; top: 100%; left: 20%; right: 20%; height: 25px; border-inline: 1px solid var(--habit-workspace-outline); background: color-mix(in srgb,var(--ink) 2%,var(--paper)); pointer-events: none; }
+  .physis-section-frame > .physis-subnav > button[aria-current=page] { position: relative; z-index: 1; overflow: visible; }
+  .physis-section-frame > .physis-subnav > button[aria-current=page]::after { content: ''; position: absolute; top: 100%; left: 20%; right: 20%; height: 25px; border-inline: 1px solid var(--physis-workspace-outline); background: color-mix(in srgb,var(--ink) 2%,var(--paper)); pointer-events: none; }
+  .physis-exercise-heading { align-items: flex-start; justify-content: space-between; }
+  .physis-exercise-heading h2 { margin-bottom: 0; }
+}
+@media (max-width: 760px) {
+  .physis-section-frame[data-tabs="4"] > .physis-subnav { container-type: inline-size; grid-auto-flow: row; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
+  html[data-genesis-theme] .genesis-app .physis-section-frame[data-tabs="4"] > .physis-subnav > button { min-width: 0; font-size: clamp(8px, 3cqi, 13px); padding: 8px 2px; white-space: nowrap; }
+  .physis-section-frame > .physis-subnav > button { font-size: 13px; padding: 8px; }
+  .physis-section-frame > .physis-page-content { margin-top: 20px; padding: 8px; }
+  .physis-control-heading { align-items: flex-start; }
+  .physis-control-switch { flex-shrink: 0; }
+  .physis-food-heading { grid-template-columns: minmax(0,1fr); padding: 16px; }
+  .physis-food-heading > .physis-actions { justify-content: flex-start; }
+  .physis-save-toast { top: 16px; right: 16px; }
+}

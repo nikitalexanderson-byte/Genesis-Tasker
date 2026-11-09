@@ -1,0 +1,72 @@
+{
+  "ru": {
+    "login": "Войдите в аккаунт и откройте зашифрованное пространство, чтобы сохранить работу с методом.",
+    "content": "Новое интерактивное содержание пока доступно на русском языке.",
+    "loadError": "Не удалось открыть модуль. Закройте окно и попробуйте снова."
+  },
+  "en": {
+    "login": "Sign in and unlock your encrypted workspace to save your work with this method.",
+    "content": "The new interactive content is currently available in Russian.",
+    "loadError": "Unable to open the module. Close the window and try again."
+  },
+  "el": {
+    "login": "Συνδεθείτε και ανοίξτε τον κρυπτογραφημένο χώρο σας για να αποθηκεύσετε την εργασία με τη μέθοδο.",
+    "content": "Το νέο διαδραστικό περιεχόμενο είναι προς το παρόν διαθέσιμο στα ρωσικά.",
+    "loadError": "Δεν ήταν δυνατό το άνοιγμα της ενότητας. Κλείστε το παράθυρο και δοκιμάστε ξανά."
+  },
+  "de": {
+    "login": "Melden Sie sich an und öffnen Sie Ihren verschlüsselten Arbeitsbereich, um die Arbeit mit der Methode zu speichern.",
+    "content": "Die neuen interaktiven Inhalte sind derzeit auf Russisch verfügbar.",
+    "loadError": "Das Modul konnte nicht geöffnet werden. Schließen Sie das Fenster und versuchen Sie es erneut."
+  },
+  "fr": {
+    "login": "Connectez-vous et ouvrez votre espace chiffré pour enregistrer votre travail avec cette méthode.",
+    "content": "Le nouveau contenu interactif est actuellement disponible en russe.",
+    "loadError": "Impossible d’ouvrir le module. Fermez la fenêtre et réessayez."
+  },
+  "es": {
+    "login": "Inicia sesión y abre tu espacio cifrado para guardar tu trabajo con el método.",
+    "content": "El nuevo contenido interactivo está disponible actualmente en ruso.",
+    "loadError": "No se pudo abrir el módulo. Cierra la ventana e inténtalo de nuevo."
+  },
+  "it": {
+    "login": "Accedi e apri lo spazio cifrato per salvare il lavoro con il metodo.",
+    "content": "Il nuovo contenuto interattivo è attualmente disponibile in russo.",
+    "loadError": "Impossibile aprire il modulo. Chiudi la finestra e riprova."
+  },
+  "pt": {
+    "login": "Entre e abra seu espaço criptografado para salvar o trabalho com o método.",
+    "content": "O novo conteúdo interativo está disponível atualmente em russo.",
+    "loadError": "Não foi possível abrir o módulo. Feche a janela e tente novamente."
+  },
+  "pl": {
+    "login": "Zaloguj się i otwórz zaszyfrowany obszar, aby zapisać pracę z metodą.",
+    "content": "Nowe treści interaktywne są obecnie dostępne po rosyjsku.",
+    "loadError": "Nie można otworzyć modułu. Zamknij okno i spróbuj ponownie."
+  },
+  "sr": {
+    "login": "Пријавите се и отворите шифровани простор да сачувате рад са методом.",
+    "content": "Нови интерактивни садржај тренутно је доступан на руском.",
+    "loadError": "Модул није могуће отворити. Затворите прозор и покушајте поново."
+  },
+  "uk": {
+    "login": "Увійдіть в акаунт і відкрийте зашифрований простір, щоб зберегти роботу з методом.",
+    "content": "Новий інтерактивний вміст поки доступний російською мовою.",
+    "loadError": "Не вдалося відкрити модуль. Закрийте вікно й спробуйте ще раз."
+  },
+  "zh": {
+    "login": "请登录并解锁加密工作区，以保存使用此方法的进度。",
+    "content": "新的交互式内容目前提供俄语版本。",
+    "loadError": "无法打开模块。请关闭窗口后重试。"
+  },
+  "tr": {
+    "login": "Yöntemle çalışmanızı kaydetmek için oturum açın ve şifreli çalışma alanınızı açın.",
+    "content": "Yeni etkileşimli içerik şu anda Rusça olarak sunulmaktadır.",
+    "loadError": "Modül açılamadı. Pencereyi kapatıp yeniden deneyin."
+  },
+  "ja": {
+    "login": "このメソッドの作業を保存するには、ログインして暗号化ワークスペースを開いてください。",
+    "content": "新しい対話型コンテンツは現在ロシア語で利用できます。",
+    "loadError": "モジュールを開けません。ウィンドウを閉じて再試行してください。"
+  }
+}

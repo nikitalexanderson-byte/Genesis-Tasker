@@ -1,0 +1,100 @@
+{
+  "ru": {
+    "title": "Трёхлуние", "more": "Смыслы и античные источники",
+    "note": "В GENESIS декадам 1–10, 11–20 и 21–29/30 соответствуют Артемида, Селена и Геката. Это правило календаря GENESIS, основанное на античных образах: единого древнегреческого распределения трёх богинь по декадам источники не устанавливают. Селена олицетворяет Луну во всём её цикле; области богинь пересекаются.",
+    "artemis": { "name": "Артемида", "meaning": "Лук, горы и охрана живого. Артемида у Каллимаха хранит дикую природу, города и рожениц; в гомеровском гимне она — меткая лучница и предводительница танца. Первую декаду GENESIS связывает с её деятельной силой и защитой возникающей жизни." },
+    "selene": { "name": "Селена", "meaning": "Сияние, полнота видимого и мера времени. Гомеровский гимн XXXII описывает Селену на конной колеснице: в середине месяца её круг полон и свет особенно ярок. Это прямая античная опора для образа средней декады, а не образ материнского возраста." },
+    "hecate": { "name": "Геката", "meaning": "Факелы, перекрёстки и охрана порога. В гимне Деметре Геката помогает искать Персефону и становится её спутницей; Аристофан упоминает ежемесячные трапезы богине. Последняя декада GENESIS осмысляется через границу уходящего и нового месяца, без образа старости." }
+  },
+  "en": {
+    "title": "The three lunar goddesses", "more": "Meanings and ancient sources",
+    "note": "GENESIS associates days 1–10, 11–20 and 21–29/30 with Artemis, Selene and Hecate. This is a GENESIS calendar convention grounded in ancient imagery; the sources do not establish a universal Greek allocation of these goddesses to decades. Selene personifies the Moon throughout its cycle, and the goddesses’ domains overlap.",
+    "artemis": { "name": "Artemis", "meaning": "The bow, mountains and protection of living things. In Callimachus, Artemis protects wild nature, cities and women in childbirth; the Homeric hymn presents her as an archer and leader of the dance. GENESIS associates the first decade with her active, protective power." },
+    "selene": { "name": "Selene", "meaning": "Radiance, visible fullness and the measure of time. Homeric Hymn 32 depicts Selene driving her horses: at mid-month her orb is full and her light brightest. This directly supports the imagery of the middle decade, without assigning her a maternal life stage." },
+    "hecate": { "name": "Hecate", "meaning": "Torches, crossroads and the guarded threshold. In the Hymn to Demeter, Hecate helps seek Persephone and becomes her companion; Aristophanes mentions monthly meals offered to her. GENESIS relates the last decade to the boundary between the ending and coming month, without an image of old age." }
+  },
+  "el": {
+    "title": "Οι τρεις σεληνιακές θεές", "more": "Νοήματα και αρχαίες πηγές",
+    "note": "Στο GENESIS οι ημέρες 1–10, 11–20 και 21–29/30 συνδέονται με την Άρτεμη, τη Σελήνη και την Εκάτη. Πρόκειται για σύμβαση του GENESIS με αρχαία ερείσματα, όχι για καθολικό αρχαιοελληνικό κανόνα δεκάδων. Η Σελήνη προσωποποιεί ολόκληρο τον σεληνιακό κύκλο και οι θεϊκές αρμοδιότητες επικαλύπτονται.",
+    "artemis": { "name": "Άρτεμις", "meaning": "Τόξο, βουνά και προστασία της ζωής. Ο Καλλίμαχος συνδέει την Άρτεμη με την άγρια φύση, τις πόλεις και τον τοκετό· ο ομηρικός ύμνος με την τοξοβολία και τον χορό. Η πρώτη δεκάδα του GENESIS εκφράζει αυτή την ενεργή προστασία." },
+    "selene": { "name": "Σελήνη", "meaning": "Λάμψη, πληρότητα και μέτρο του χρόνου. Στον Ομηρικό Ύμνο 32 η Σελήνη οδηγεί τα άλογά της και λάμπει ολόκληρη στα μέσα του μήνα: αρχαίο έρεισμα της μεσαίας δεκάδας, χωρίς σχήμα μητρικής ηλικίας." },
+    "hecate": { "name": "Εκάτη", "meaning": "Δάδες, τρίοδοι και φύλαξη του ορίου. Στον Ύμνο στη Δήμητρα βοηθά στην αναζήτηση της Περσεφόνης και γίνεται συνοδός της· ο Αριστοφάνης αναφέρει μηνιαία δείπνα. Το GENESIS συνδέει την τελευταία δεκάδα με το όριο παλαιού και νέου μήνα, όχι με γήρας." }
+  },
+  "de": {
+    "title": "Die drei Mondgöttinnen", "more": "Bedeutung und antike Quellen",
+    "note": "GENESIS ordnet die Tage 1–10 Artemis, 11–20 Selene und 21–29/30 Hekate zu. Diese auf antiken Bildern beruhende Kalenderkonvention ist keine allgemein belegte griechische Dekadenregel. Selene verkörpert den gesamten Mondzyklus; die Zuständigkeiten überschneiden sich.",
+    "artemis": { "name": "Artemis", "meaning": "Bogen, Berge und Schutz des Lebendigen. Kallimachos verbindet Artemis mit Wildnis, Städten und Geburt; der homerische Hymnus mit Jagd und Tanz. GENESIS stellt die erste Dekade unter ihre tätige, schützende Kraft." },
+    "selene": { "name": "Selene", "meaning": "Strahlkraft, sichtbare Fülle und Zeitmaß. Im homerischen Hymnus 32 lenkt Selene ihre Pferde; zur Monatsmitte ist ihr Kreis voll und ihr Licht am hellsten. Darauf gründet das Bild der mittleren Dekade, ohne mütterliche Altersstufe." },
+    "hecate": { "name": "Hekate", "meaning": "Fackeln, Wegkreuzungen und geschützte Schwellen. Im Demeterhymnus hilft Hekate bei Persephones Suche; Aristophanes erwähnt monatliche Mahlzeiten. GENESIS verbindet die letzte Dekade mit der Grenze zwischen altem und neuem Monat, nicht mit Greisenalter." }
+  },
+  "fr": {
+    "title": "Les trois déesses lunaires", "more": "Sens et sources antiques",
+    "note": "GENESIS associe les jours 1–10 à Artémis, 11–20 à Séléné et 21–29/30 à Hécate. Cette convention fondée sur des images antiques n’est pas une règle grecque universellement attestée. Séléné personnifie tout le cycle lunaire ; les domaines des déesses se recoupent.",
+    "artemis": { "name": "Artémis", "meaning": "Arc, montagnes et protection du vivant. Chez Callimaque, Artémis protège la nature sauvage, les cités et les femmes en couches ; l’hymne homérique évoque le tir à l’arc et la danse. GENESIS relie la première décade à cette force protectrice et active." },
+    "selene": { "name": "Séléné", "meaning": "Rayonnement, plénitude visible et mesure du temps. Dans l’Hymne homérique 32, Séléné conduit ses chevaux ; au milieu du mois, son disque est plein et sa lumière maximale. Cette image fonde la décade médiane, sans âge maternel." },
+    "hecate": { "name": "Hécate", "meaning": "Torches, carrefours et garde du seuil. Dans l’Hymne à Déméter, Hécate aide à chercher Perséphone ; Aristophane évoque des repas mensuels. GENESIS relie la dernière décade au passage entre ancien et nouveau mois, sans figure de vieillesse." }
+  },
+  "es": {
+    "title": "Las tres diosas lunares", "more": "Significados y fuentes antiguas",
+    "note": "GENESIS asocia los días 1–10 con Artemisa, 11–20 con Selene y 21–29/30 con Hécate. Es una convención basada en imágenes antiguas, no una regla griega universal documentada. Selene personifica todo el ciclo lunar y los ámbitos de las diosas se superponen.",
+    "artemis": { "name": "Artemisa", "meaning": "Arco, montañas y protección de la vida. En Calímaco, Artemisa protege la naturaleza, las ciudades y a las parturientas; el himno homérico destaca el arco y la danza. GENESIS vincula la primera década con esa fuerza activa y protectora." },
+    "selene": { "name": "Selene", "meaning": "Resplandor, plenitud visible y medida del tiempo. En el Himno homérico 32, Selene guía sus caballos: a mediados de mes su disco está lleno y su luz brilla más. Esta imagen sustenta la década central, sin atribuirle una edad materna." },
+    "hecate": { "name": "Hécate", "meaning": "Antorchas, encrucijadas y custodia del umbral. En el Himno a Deméter, Hécate ayuda a buscar a Perséfone; Aristófanes menciona comidas mensuales. GENESIS relaciona la última década con el límite entre el mes que acaba y el nuevo, sin imagen de vejez." }
+  },
+  "it": {
+    "title": "Le tre dee lunari", "more": "Significati e fonti antiche",
+    "note": "GENESIS associa i giorni 1–10 ad Artemide, 11–20 a Selene e 21–29/30 a Ecate. È una convenzione fondata su immagini antiche, non una regola greca universale attestata. Selene personifica l’intero ciclo lunare; gli ambiti delle dee si sovrappongono.",
+    "artemis": { "name": "Artemide", "meaning": "Arco, montagne e tutela della vita. In Callimaco Artemide protegge natura, città e partorienti; l’inno omerico celebra arco e danza. GENESIS collega la prima decade a questa forza attiva e protettrice." },
+    "selene": { "name": "Selene", "meaning": "Splendore, pienezza visibile e misura del tempo. Nell’Inno omerico 32 Selene guida i cavalli: a metà mese il suo disco è pieno e la luce più intensa. È il fondamento antico della decade centrale, senza un’età materna." },
+    "hecate": { "name": "Ecate", "meaning": "Fiaccole, crocicchi e tutela della soglia. Nell’Inno a Demetra Ecate cerca Persefone; Aristofane cita offerte di pasti mensili. GENESIS lega l’ultima decade al confine tra mese vecchio e nuovo, senza immagini di vecchiaia." }
+  },
+  "pt": {
+    "title": "As três deusas lunares", "more": "Sentidos e fontes antigas",
+    "note": "GENESIS associa os dias 1–10 a Ártemis, 11–20 a Selene e 21–29/30 a Hécate. É uma convenção baseada em imagens antigas, não uma regra grega universal comprovada. Selene personifica todo o ciclo lunar; os domínios das deusas sobrepõem-se.",
+    "artemis": { "name": "Ártemis", "meaning": "Arco, montanhas e proteção da vida. Em Calímaco, Ártemis protege a natureza, as cidades e as parturientes; o hino homérico evoca o arco e a dança. GENESIS liga a primeira década a essa força ativa e protetora." },
+    "selene": { "name": "Selene", "meaning": "Brilho, plenitude visível e medida do tempo. No Hino homérico 32, Selene conduz os cavalos: a meio do mês o seu disco está cheio e a luz é máxima. É a base antiga da década central, sem uma fase de idade materna." },
+    "hecate": { "name": "Hécate", "meaning": "Tochas, encruzilhadas e guarda do limiar. No Hino a Deméter, Hécate ajuda a procurar Perséfone; Aristófanes menciona refeições mensais. GENESIS relaciona a última década com o limite entre o mês antigo e o novo, sem imagem de velhice." }
+  },
+  "pl": {
+    "title": "Trzy boginie Księżyca", "more": "Znaczenia i źródła antyczne",
+    "note": "GENESIS wiąże dni 1–10 z Artemidą, 11–20 z Selene, a 21–29/30 z Hekate. To konwencja oparta na antycznych obrazach, nie powszechnie poświadczona grecka reguła dekad. Selene uosabia cały cykl Księżyca; dziedziny bogiń nakładają się.",
+    "artemis": { "name": "Artemida", "meaning": "Łuk, góry i ochrona życia. U Kallimacha Artemida chroni przyrodę, miasta i rodzące; hymn homerycki mówi o łucznictwie i tańcu. GENESIS łączy pierwszą dekadę z tą aktywną ochroną." },
+    "selene": { "name": "Selene", "meaning": "Blask, widzialna pełnia i miara czasu. W Hymnie homeryckim 32 Selene prowadzi konie: w połowie miesiąca jej krąg jest pełny, a światło najjaśniejsze. To antyczna podstawa środkowej dekady, bez przypisywania wieku macierzyńskiego." },
+    "hecate": { "name": "Hekate", "meaning": "Pochodnie, rozdroża i strzeżony próg. W Hymnie do Demeter Hekate pomaga szukać Persefony; Arystofanes wspomina comiesięczne posiłki. GENESIS wiąże ostatnią dekadę z granicą starego i nowego miesiąca, bez obrazu starości." }
+  },
+  "sr": {
+    "title": "Три лунарне богиње", "more": "Значења и антички извори",
+    "note": "GENESIS повезује дане 1–10 са Артемидом, 11–20 са Селеном и 21–29/30 са Хекатом. То је правило GENESIS-а засновано на античким представама, а не опште потврђен грчки распоред декада. Селена оличава цео лунарни циклус; области богиња се преклапају.",
+    "artemis": { "name": "Артемида", "meaning": "Лук, планине и заштита живог. Код Калимаха Артемида штити природу, градове и породиље; хомерска химна истиче стреличарство и плес. GENESIS прву декаду повезује са том делатном заштитом." },
+    "selene": { "name": "Селена", "meaning": "Сјај, видљива пуноћа и мера времена. У Хомерској химни 32 Селена вози коње: средином месеца њен круг је пун, а светлост најјача. То је античка основа средње декаде, без приписивања мајчинског узраста." },
+    "hecate": { "name": "Хеката", "meaning": "Бакље, раскршћа и чување прага. У химни Деметри Хеката помаже да се нађе Персефона; Аристофан помиње месечне оброке. GENESIS последњу декаду везује за границу старог и новог месеца, без слике старости." }
+  },
+  "uk": {
+    "title": "Три місячні богині", "more": "Смисли й античні джерела",
+    "note": "GENESIS співвідносить дні 1–10 з Артемідою, 11–20 із Селеною, 21–29/30 із Гекатою. Це правило GENESIS на основі античних образів, а не загальний давньогрецький канон декад. Селена уособлює весь місячний цикл; сфери богинь перетинаються.",
+    "artemis": { "name": "Артеміда", "meaning": "Лук, гори й охорона живого. У Каллімаха Артеміда захищає природу, міста й породіль; гомерівський гімн змальовує її лучницею та провідницею танцю. Першу декаду GENESIS пов’язує з цією діяльною силою." },
+    "selene": { "name": "Селена", "meaning": "Сяйво, видима повнота й міра часу. У Гомерівському гімні 32 Селена веде коней: посеред місяця її коло повне, а світло найяскравіше. Це антична основа середньої декади, без материнської вікової ролі." },
+    "hecate": { "name": "Геката", "meaning": "Смолоскипи, роздоріжжя й охорона порога. У гімні Деметрі Геката допомагає шукати Персефону; Арістофан згадує щомісячні трапези. Остання декада GENESIS пов’язана з межею старого й нового місяця, без образу старості." }
+  },
+  "zh": {
+    "title": "三位月亮女神", "more": "含义与古代文献",
+    "note": "GENESIS 将第1–10日、第11–20日和第21–29/30日分别关联阿耳忒弥斯、塞勒涅和赫卡忒。这是借鉴古代意象的应用约定，并非有文献证明的普遍古希腊旬日规则。塞勒涅体现整个月亮周期，女神的领域也有重叠。",
+    "artemis": { "name": "阿耳忒弥斯", "meaning": "弓、山野与生命的守护。卡利马科斯描写她保护荒野、城邦和产妇；荷马颂歌突出射箭与舞蹈。GENESIS 以这种积极的守护力量关联上旬。" },
+    "selene": { "name": "塞勒涅", "meaning": "光辉、可见的圆满与时间尺度。《荷马颂歌》第32首写她驾驭马车，在月中圆满而最明亮。这是中旬意象的古代依据，与母亲这一年龄角色无关。" },
+    "hecate": { "name": "赫卡忒", "meaning": "火炬、岔路与门槛的守护。《得墨忒耳颂歌》中她帮助寻找珀耳塞福涅；阿里斯托芬提及每月献食。GENESIS 以上个月与下个月的边界关联下旬，不采用老妇意象。" }
+  },
+  "tr": {
+    "title": "Üç ay tanrıçası", "more": "Anlamlar ve antik kaynaklar",
+    "note": "GENESIS 1–10. günleri Artemis, 11–20. günleri Selene ve 21–29/30. günleri Hekate ile ilişkilendirir. Bu, antik imgelerden esinlenen bir GENESIS kuralıdır; belgelenmiş evrensel bir Yunan on günlük dönem kuralı değildir. Selene tüm Ay döngüsünü temsil eder; tanrıçaların alanları kesişir.",
+    "artemis": { "name": "Artemis", "meaning": "Yay, dağlar ve canlıların korunması. Kallimakhos’ta Artemis doğayı, şehirleri ve doğum yapanları korur; Homeros ilahisi okçuluğu ve dansı anlatır. GENESIS ilk on günü bu etkin koruyucu güçle ilişkilendirir." },
+    "selene": { "name": "Selene", "meaning": "Işıltı, görünür bütünlük ve zamanın ölçüsü. Homeros İlahisi 32’de Selene atlarını sürer; ay ortasında yuvarlağı dolu ve ışığı en parlaktır. Bu, orta dönemin antik dayanağıdır; annelik yaşını temsil etmez." },
+    "hecate": { "name": "Hekate", "meaning": "Meşaleler, kavşaklar ve eşiklerin korunması. Demeter İlahisi’nde Hekate Persephone’yi aramaya yardım eder; Aristophanes aylık yemek sunularını anar. GENESIS son dönemi eski ve yeni ayın sınırıyla ilişkilendirir, yaşlılıkla değil." }
+  },
+  "ja": {
+    "title": "三柱の月の女神", "more": "意味と古代の文献",
+    "note": "GENESIS は1–10日をアルテミス、11–20日をセレネ、21–29/30日をヘカテと結び付けます。これは古代のイメージに基づく本アプリの規則で、古代ギリシャ共通の十日区分として実証されたものではありません。セレネは月の周期全体を体現し、各女神の領域は重なります。",
+    "artemis": { "name": "アルテミス", "meaning": "弓、山々、生き物の守護。カリマコスは自然・都市・出産する女性の守護を、ホメロス風讃歌は弓術と舞踊を描きます。GENESIS は最初の十日間をこの活動的な守護の力に結び付けます。" },
+    "selene": { "name": "セレネ", "meaning": "輝き、目に見える満ち足りた姿、時の尺度。ホメロス風讃歌第32番では馬車を駆り、月の半ばに月輪が満ち最も明るく輝きます。これが中旬の古代的根拠であり、母という年齢段階ではありません。" },
+    "hecate": { "name": "ヘカテ", "meaning": "松明、三叉路、境界の守護。デメテル讃歌ではペルセポネの捜索を助け、アリストパネスは毎月の供食に言及します。GENESIS は最後の区分を古い月と新しい月の境目に結び付け、老女の姿は用いません。" }
+  }
+}

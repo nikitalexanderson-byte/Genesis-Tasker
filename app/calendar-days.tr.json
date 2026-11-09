@@ -1,0 +1,1466 @@
+[
+  {
+    "name": "Areios Ridzomatos (Areios kök saldıran)",
+    "description": "Hesiod Teogonisinde dünyanın kökleri gibi iradenin temellerinin atılması ve iç güçlerin uyanışı."
+  },
+  {
+    "name": "Areios Klidonios (Areios öfkeli)",
+    "description": "Homerik nehirlerin öfkesi gibi, engelleri yıkayan ilkel bir enerji akışı."
+  },
+  {
+    "name": "Areios Pnevmatikos (Areios ruhsallaştırma)",
+    "description": "Niyete şekil veren söz ve havada uçuşan ilk savaş çığlığı."
+  },
+  {
+    "name": "Areios Pirivrontos (Areios ateş gürleyen)",
+    "description": "Farkındalığın parıltısı ve ruhun zırhını oluşturan yaratıcı alevin sıcaklığı."
+  },
+  {
+    "name": "Areios Aiterios (Areios cennet gibi)",
+    "description": "Aklın saf ışığı, kişinin kendi ataletine karşı kazandığı ilk zaferi taçlandırıyor."
+  },
+  {
+    "name": "Areios Stenaros (Areios güçlü)",
+    "description": "Seçilen eylemde fiziksel sertlik ve yıkılmaz destek elde etmek."
+  },
+  {
+    "name": "Areios Gidrelatos (Areios akan çelik)",
+    "description": "Strateji esnekliği ve engellerden kaçınma, baskıyı sürdürme yeteneği."
+  },
+  {
+    "name": "Areios Glavkopis (Areios parlak gözlü)",
+    "description": "Düşüncenin parlaklığı ve Athena'in bilgeliği, sisin içinden nesnelerin özünü görmenizi sağlar."
+  },
+  {
+    "name": "Areios Flegeton (Areios yanan zihin)",
+    "description": "Fikirlerin yoğun bir şekilde yakılması ve şüphelerin acımasızca yok edilmesi."
+  },
+  {
+    "name": "Areios Epoptes (Areios düşünceli)",
+    "description": "Faaliyet alanında bir dinlenme noktası ve insanüstü bir bakış açısı bulmak."
+  },
+  {
+    "name": "Areios Enkespalos (Areios mızrak çalkalayıcı)",
+    "description": "Kuvvetin tam olarak uygulanması ve amaçlanan hedefe kesin darbenin anı."
+  },
+  {
+    "name": "Areios Katarsios (Areios temizlik)",
+    "description": "İçsel arınma yoluyla sıkı çalışmanın saf ustalığa dönüştürülmesi."
+  },
+  {
+    "name": "Areios Pteroforos (Areios kanatlı)",
+    "description": "Düşünce hareketin önünde olduğunda uygulama kolaylığı ve manevra hızı."
+  },
+  {
+    "name": "Areios Akamatos (Areios yorulmak bilmez)",
+    "description": "Eylemin sürekliliği ve tükenmez irade sıcaklığı, yorgunluğu bilmemek."
+  },
+  {
+    "name": "Areios Bazileios (Areios muhteşem)",
+    "description": "Kişinin hayatında düzenin kurulması ve organize ruhun zaferi."
+  },
+  {
+    "name": "Areios Erkeios (Areios çit)",
+    "description": "Kişisel sınırları güçlendirin ve alanınızı dış kaotik etkilerden koruyun."
+  },
+  {
+    "name": "Areios Kallinikos (Areios nazikçe muzaffer)",
+    "description": "Zorlukları dürüstçe aşmanın sevinci ve seçilen yola sadakat."
+  },
+  {
+    "name": "Areios Talaurkh (Areios dayanıklı)",
+    "description": "Koşulların her türlü baskısına dayanacak sabır ve dayanıklılık."
+  },
+  {
+    "name": "Areios Enialios (Areios çılgınca)",
+    "description": "Ayın son atışından önce tüm kaynakların maksimum konsantrasyonu."
+  },
+  {
+    "name": "Areios Isoteos (Areios tanrısal)",
+    "description": "İnsanın eylemlerinin ilahi ritmin parçası haline geldiği bir akış durumu."
+  },
+  {
+    "name": "Areios Polimetis (Areios çok yönlü)",
+    "description": "Hedeflere mümkün olan en kısa yoldan ulaşmak için kurnazlık ve strateji kullanmak."
+  },
+  {
+    "name": "Areios Melididzos (Areios tatlı dilli)",
+    "description": "İkna edici sözlerin gücü ve çıkarları uğruna mücadelede müzakere becerisi."
+  },
+  {
+    "name": "Areios Aiolos (Areios değiştirilebilir)",
+    "description": "İçsel özgürlük ve değişen dünya koşullarına anında uyum sağlama yeteneği."
+  },
+  {
+    "name": "Areios Daifron (Areios hararetle bilge)",
+    "description": "Sıcak bir kalp ile soğuk, hesapçı bir zihnin mükemmel birleşimi."
+  },
+  {
+    "name": "Areios Pankrates (Areios her şeye gücü yeten)",
+    "description": "İç kaynaklar üzerinde tam kontrol ve gücünüzün farkındalığı."
+  },
+  {
+    "name": "Areios Khtonii (Areios dünyevi)",
+    "description": "Maddi dünyada ay boyunca elde edilen sonuçların nihai konsolidasyonu."
+  },
+  {
+    "name": "Areios Polimnios (Areios yüksek su)",
+    "description": "Aktif aşamadan sonra derin deneyim birikimi ve iç huzuru bulma."
+  },
+  {
+    "name": "Areios Fizizoos (Areios hayat veren)",
+    "description": "Ayın disiplini ve ciddiyeti sayesinde yeni bir yaşam soluğu filizlendi."
+  },
+  {
+    "name": "Areios Pirifos (Areios ateşli)",
+    "description": "Farkındalığın ışığı, gidilen yolu aydınlatıyor ve yeni ufuklara işaret ediyor."
+  },
+  {
+    "name": "Areios Giperion (Areios yüksekte yürüyüş)",
+    "description": "Kişisel zaferin en yüksek noktası ve bir sonraki ayın enerjilerine geçiş."
+  },
+  {
+    "name": "Antesis Filomeides (Antesis gülümsemeyi seven)",
+    "description": "Maddenin uyumundan doğan bedensel çekiciliğin ve yaşam sevincinin tezahürü (Homer'deki Aphrodite'in Epitetüsü)."
+  },
+  {
+    "name": "Antesis Pontogeniya (Antesis denizdoğumu)",
+    "description": "Kıbrıs açıklarındaki sular gibi derinlerden yükselen duygusal dalgalanma ve duyguların yumuşaklığı."
+  },
+  {
+    "name": "Antesis Ligis (Antesis seslendirildi)",
+    "description": "Kolay nefes alma ve baharın ilk saf fısıltısı, havayı ilhamla dolduruyor."
+  },
+  {
+    "name": "Antesis Piriforos (Antesis ateşli)",
+    "description": "Bir yaratıcı heyecan ve aşkın sıcaklığı, fikri canlı bir çekiciliğe dönüştürüyor."
+  },
+  {
+    "name": "Antesis Panmata (Antesis tamamen ışıltılı)",
+    "description": "Her şeyi aydınlatan estetik ideal ile saf bilincin birliği."
+  },
+  {
+    "name": "Antesis Pankarpos (Antesis tamamen verimli)",
+    "description": "Filizlenmenin gücü ve toprağa kök salmış kendine güvenen malzeme bolluğu."
+  },
+  {
+    "name": "Antesis Kalliroos (Antesis mükemmel akım)",
+    "description": "İç akışın saflığı ve engellerle karşılaşmayan hareketlerin düzgünlüğü."
+  },
+  {
+    "name": "Antesis Ierofillos (Antesis kutsal yaprak)",
+    "description": "Doğanın kutsal nefesi ve uzaydaki yaşamın ince titreşimlerini duyma yeteneği."
+  },
+  {
+    "name": "Antesis Termos (Antesis sıcak)",
+    "description": "Olgunlaşmanın bereketli sıcaklığı ve insan ilişkilerindeki samimi sıcaklığın enerjisi."
+  },
+  {
+    "name": "Antesis Kharidotis (Antesis neşe veriyor)",
+    "description": "Ruhun cömertliği ve içsel zarafeti kazanma durumu."
+  },
+  {
+    "name": "Antesis Antefor (Antesis çiçeklenme)",
+    "description": "Fiziksel refahın zirvesi ve dünyanızı emeğin gerçek meyveleriyle süslemek."
+  },
+  {
+    "name": "Antesis Gidrelatos (Antesis nemlendirici)",
+    "description": "Hayat sularıyla doldurup derin köklerinizi besleyin."
+  },
+  {
+    "name": "Antesis Pnevmatoforos (Antesis ruhu taşıyan)",
+    "description": "Serbest rüzgarlar ve yeni fikirlerle gelen ince heyecan."
+  },
+  {
+    "name": "Antesis Khrizofaes (Antesis altın renginde parlıyor)",
+    "description": "Yaradılışın güneş ateşi, görünümü ve karizmayı dönüştürüyor."
+  },
+  {
+    "name": "Antesis Epiratos (Antesis çekici)",
+    "description": "Kişiliğin çekiciliği ve biçimin mükemmelliği, eter düzeyinde algılanabilir."
+  },
+  {
+    "name": "Antesis Poliantos (Antesis çok renkli)",
+    "description": "Yaratıcı ifadelerin çeşitliliği ve kaynak zenginliği burada ve şimdi mevcuttur."
+  },
+  {
+    "name": "Antesis Limenaios (Antesis kıyı)",
+    "description": "Duyguların net bir hedef farkındalığıyla buluştuğu, suya yakın dinlenme noktası."
+  },
+  {
+    "name": "Antesis Aurios (Antesis rüzgarlı)",
+    "description": "Alışılmışın dışında özgürlük ve arzu edilene doğru kolay, zahmetsiz hareketin keyfi."
+  },
+  {
+    "name": "Antesis Flegeton (Antesis ateşli)",
+    "description": "Her anı yaşamanın yoğunluğu ve işlerine olan yakıcı tutku."
+  },
+  {
+    "name": "Antesis Olimpios (Antesis Olimpiyat)",
+    "description": "Ruhun sıradan olana karşı yüce zaferi ve ilahi ölçüye ulaşılması."
+  },
+  {
+    "name": "Antesis Gestor (Antesis organizatör)",
+    "description": "Etrafınızdaki alanı güzellik ve işlevsellik için düzenliyoruz."
+  },
+  {
+    "name": "Antesis Pelagios (Antesis deniz)",
+    "description": "Empatinin derinliği ve duyuları besleyen sınırsız hayal gücü."
+  },
+  {
+    "name": "Antesis Psikhikos (Antesis duygulu)",
+    "description": "Dünyayla ince bağlantılar kurmak ve çevredeki insanların ritimleriyle uyum sağlamak."
+  },
+  {
+    "name": "Antesis Pirivrontos (Antesis ateş gürleyen)",
+    "description": "Arzunun yok edilemez gücü, gerçekliği ihtiyaçlarınıza uyacak şekilde değiştirebilir."
+  },
+  {
+    "name": "Antesis Uranios (Antesis cennet gibi)",
+    "description": "Evrensel bir yasa olarak güzelliğin daha yüksek entelektüel sevgisi ve farkındalığı."
+  },
+  {
+    "name": "Antesis Terpsikhoros (Antesis dansın tadını çıkarıyorum)",
+    "description": "Bedensel varlığın ve maddedeki planların ritmik somutlaşmasının kutlanması."
+  },
+  {
+    "name": "Antesis Mirion (Antesis kokulu)",
+    "description": "Etkinizi yaymak ve başkalarının ruhlarında iyi bir iz bırakmak."
+  },
+  {
+    "name": "Antesis Psitiros (Antesis fısıldayarak)",
+    "description": "Güzelliğin gizli anlamlarını anlamak ve doğru yolun sezgisel bilgisi."
+  },
+  {
+    "name": "Antesis Khrizostefanos (Antesis altın taçlı)",
+    "description": "Bahar çabalarının taçlandırılması ve ışıltılı bir sonuç elde edilmesi."
+  },
+  {
+    "name": "Antesis Teos (Antesis ilahi)",
+    "description": "Evrenin yaratıcı enerjisiyle tam birleşme ve yaz sıcağına geçiş."
+  },
+  {
+    "name": "Psitiros Khtonios (Psitiros dünyevi)",
+    "description": "Düşüncenin maddenin yoğunluğuna nüfuz etmesi ve Hesiod'deki dünyanın kökleri gibi toprak altındaki yaşamın sessiz fısıltısı."
+  },
+  {
+    "name": "Psitiros Gidrelatos (Psitiros nemlendirici)",
+    "description": "Konuşmanın akıcılığı ve dünyayı birbirine bağlayan Homeros nehirleri gibi ortak bir dil bulma yeteneği."
+  },
+  {
+    "name": "Psitiros Pnevmatikos (Psitiros ruhsallaştırma)",
+    "description": "Yaprakların hışırtısı ve havadan gelen vahiy ve önsezilerin ilk nefesi."
+  },
+  {
+    "name": "Psitiros Piripnoos (Psitiros ateş püskürten)",
+    "description": "Zeka kıvılcımı ve canlı ilginin sıcaklığı, dinleyicilerin kalplerini aydınlatıyor."
+  },
+  {
+    "name": "Psitiros Angelos (Psitiros haberci)",
+    "description": "Yüksek Benlikten net bir mesaj almak ve onu dünyaya aktarmaya istekli olmak."
+  },
+  {
+    "name": "Psitiros Godios (Psitiros yol)",
+    "description": "Girişimlerde başarı ve günlük olayların labirentinde doğru yönü bulma."
+  },
+  {
+    "name": "Psitiros Potamios (Psitiros nehir)",
+    "description": "Sürekli bilgi akışıyla değişimin kalıcılığı ve yenilenmenin keyfi."
+  },
+  {
+    "name": "Psitiros Ptinos (Psitiros kanatlı)",
+    "description": "Hareket hızı ve sınır ve engel tanımayan düşünce kolaylığı."
+  },
+  {
+    "name": "Psitiros Flogeros (Psitiros alevli)",
+    "description": "Güvensizliğin buzunu eritebilecek belagat ve ikna kabiliyeti."
+  },
+  {
+    "name": "Psitiros Diaktoros (Psitiros iletken)",
+    "description": "Karmaşık sistemlerde navigasyon ustalığı ve başkalarına liderlik etme yeteneği."
+  },
+  {
+    "name": "Psitiros Agreios (Psitiros vahşi)",
+    "description": "İlkel gücün tezahürü ve doğal içgüdülerinizin bir destek olarak farkındalığı."
+  },
+  {
+    "name": "Psitiros Krenaios (Psitiros tuşu)",
+    "description": "Kutsal kaynaklar gibi bilinçaltının derinliklerinden gelen sezginin saflığı."
+  },
+  {
+    "name": "Psitiros Siriktis (Psitiros boru)",
+    "description": "İçsel uyumu ve doğanın ritimleriyle uyumu bulmak."
+  },
+  {
+    "name": "Psitiros Termopnoos (Psitiros sıcak nefes alan)",
+    "description": "Her hareketi anlamla dolduran yaşam enerjisi ve yaşam sıcaklığı."
+  },
+  {
+    "name": "Psitiros Nomios (Psitiros pastoral)",
+    "description": "Doğa kanunlarını bilmek ve kaynaklarınızı bütüne uygun olarak yönetebilme becerisi."
+  },
+  {
+    "name": "Psitiros Kerdios (Psitiros karlı)",
+    "description": "Her türlü temastan yararlanma ve bağlantılar yoluyla fikirleri hayata geçirme yeteneği."
+  },
+  {
+    "name": "Psitiros Limenaios (Psitiros liman)",
+    "description": "Zamanı yavaşlatma ve deneyimi işleyecek güvenli bir yer bulma sanatı."
+  },
+  {
+    "name": "Psitiros Pteroforos (Psitiros kanatlı)",
+    "description": "Önemli haberler almak ve dış bağlantılar yoluyla ufukları genişletmek."
+  },
+  {
+    "name": "Psitiros Akamatos (Psitiros yorulmak bilmez)",
+    "description": "İşlerde canlılık ve yeniyi keşfetmeye sonsuz ilgi."
+  },
+  {
+    "name": "Psitiros Episkopos (Psitiros izliyorum)",
+    "description": "Gizli amaçları görme ve bilgi akışlarını kontrol etme yeteneği."
+  },
+  {
+    "name": "Psitiros Germaios (Psitiros sınır çizgisi)",
+    "description": "Farklı alanların kesişiminde izin verilenin sınırlarını belirlemek ve çıkarlarını korumak."
+  },
+  {
+    "name": "Psitiros Naustolos (Psitiros gemi kaptanı)",
+    "description": "Sosyal Etkileşimler Okyanusunda Duygularınızı Yönetmek"
+  },
+  {
+    "name": "Psitiros Anemios (Psitiros rüzgarlı)",
+    "description": "Kişinin etkisinin özgürce yayılması ve yeni bağlantılar kurmanın kolaylığı."
+  },
+  {
+    "name": "Psitiros Aiton (Psitiros kavurucu)",
+    "description": "Bilginin yoğunluğu ve öfkeli merak, her şeyin özünü açığa çıkarıyor."
+  },
+  {
+    "name": "Psitiros Psikhopompos (Psitiros ruh ustası)",
+    "description": "Kelimelerden derin anlamlara geçiş ve zekanın bilgeliğe dönüşmesi."
+  },
+  {
+    "name": "Psitiros Geokhos (Psitiros toprak egemeni)",
+    "description": "Kişinin mesajını maddi dünyada onaylamak ve gerçeklikle yankılanmak."
+  },
+  {
+    "name": "Psitiros Polifloisvos (Psitiros gürültülü)",
+    "description": "Kamuoyu tarafından tanınmanın gücü ve sözlerinizin her yerde yankılanan meyveleri."
+  },
+  {
+    "name": "Psitiros Aerios (Psitiros hava)",
+    "description": "Geçilen bahar yolunun anlaşılmasının ve gözden geçirilmesinin netliğinin doruklarına ulaşmak."
+  },
+  {
+    "name": "Psitiros Lampas (Psitiros işaret fişeği)",
+    "description": "Bilgi ışığının daha da iletilmesi ve tüm planların nihai olarak açıklığa kavuşturulması."
+  },
+  {
+    "name": "Psitiros Panteos (Psitiros tamamen ilahi)",
+    "description": "Yaza girmeden önce bireysel sesin evrenin korosuyla kaynaşması."
+  },
+  {
+    "name": "Aigle Khtoniya (Aigle dünyevi)",
+    "description": "Fiziksel dünyadaki güneş düzeninin ve maddeye nüfuz eden ışığın yoğunluğunun iddiası."
+  },
+  {
+    "name": "Aigle Pontiya (Aigle deniz)",
+    "description": "Kavurucu güneşin altında duyguların aynasında ve duyguların saflığında en yüksek gerçeğin yansıması."
+  },
+  {
+    "name": "Aigle Pnevmatika (Aigle ruhsallaştırma)",
+    "description": "Hava sakin ve parlak olduğunda düşüncenin şeffaflığı ve muhakemenin netliği."
+  },
+  {
+    "name": "Aigle Piriforos (Aigle ateşli)",
+    "description": "Güneş enerjisinin zirvesi ve gündönümünde gerçek doğanızı gerçekleştirmenin sıcaklığı."
+  },
+  {
+    "name": "Aigle Aiteriya (Aigle cennet gibi)",
+    "description": "Aklın saf eteri, şüpheyle engellenmemiş ve ilahi Logos'in zaferi."
+  },
+  {
+    "name": "Aigle Sterea (Aigle zor)",
+    "description": "Planların kristalleşmesi ve düşüncelere Delph graniti gibi yıkılmaz bir form verilmesi."
+  },
+  {
+    "name": "Aigle Katarsios (Aigle temizlik)",
+    "description": "Vicdanın doğrudan ışığıyla iç karanlıktan kurtuluş ve ruhun arınması."
+  },
+  {
+    "name": "Aigle Loksias (Aigle yayınlanıyor)",
+    "description": "Sezgi ve mantık yoluyla geleceğin gizli kalıplarını görme yeteneği."
+  },
+  {
+    "name": "Aigle Flogia (Aigle ateşli)",
+    "description": "Acımasız gerçeğin ateşinde yanılsamalar ve yanlış kavramlar yakılıyor."
+  },
+  {
+    "name": "Aigle Epoptes (Aigle düşünceli)",
+    "description": "Tarafsız bir gözlemci konumundan objektifliğe ve hayata bakış açısına ulaşmak."
+  },
+  {
+    "name": "Aigle Nomiya (Aigle yasal)",
+    "description": "Günlük yaşamı düzenleyen kişisel bir kurallar ve disiplin kodu oluşturmak."
+  },
+  {
+    "name": "Aigle Kalliroos (Aigle mükemmel akım)",
+    "description": "İrade ile hayatın kader yolunda aktığı koşullar arasındaki uyum."
+  },
+  {
+    "name": "Aigle Musagetis (Aigle müzik sürücüsü)",
+    "description": "İlham kaostan değil, katı düzen ve beceriden doğar."
+  },
+  {
+    "name": "Aigle Akamatos (Aigle yorulmak bilmez)",
+    "description": "İçten yanmanın sabitliği ve hiçbir gerileme bilmeyen yaratılışın eşit enerjisi."
+  },
+  {
+    "name": "Aigle Bazileios (Aigle muhteşem)",
+    "description": "Kişinin içsel durumunun hükümdarı olduğunun farkındalığı ve kendine güç verme iradesi."
+  },
+  {
+    "name": "Aigle Epikurios (Aigle yardım ediyor)",
+    "description": "Bedensel sağlığın teşviki ve ruh için fiziksel bedenin bakımı."
+  },
+  {
+    "name": "Aigle Delios (Aigle açık)",
+    "description": "Gölgelerden çıkmak, yeteneklerinizi açıkça göstermek ve dünyanın sizin erdemlerinizi takdir etmesini sağlamak."
+  },
+  {
+    "name": "Aigle Fevos (Aigle parlak)",
+    "description": "Niyetlerin nihai saflığı ve benzer düşünen insanları cezbeden karizmanın ışıltısı."
+  },
+  {
+    "name": "Aigle Pitios (Aigle Pythian)",
+    "description": "Zihnin iç canavarlarının (Pyphon) oklarını yenerek hedefe doğru vuruş yapın."
+  },
+  {
+    "name": "Aigle Giperioniya (Aigle ekstra yüksek)",
+    "description": "Kozmik döngüler ve aşkın huzurla bağlantı hissi."
+  },
+  {
+    "name": "Aigle Pagia (Aigle dayanıklı)",
+    "description": "Uzun vadeli stratejilerin hayata geçirilmesi ve kendinden emin bir durum."
+  },
+  {
+    "name": "Aigle Gigieya (Aigle şifa)",
+    "description": "Elementlerle temas yoluyla ve bütünlük kazanarak iyileşme."
+  },
+  {
+    "name": "Aigle Profitis (Aigle kehanet)",
+    "description": "Tahmin etme becerisi ve olaylar öncesinde harekete geçme yeteneği."
+  },
+  {
+    "name": "Aigle Aktis (Aigle parlak)",
+    "description": "Ana şeye odaklanın ve tüm ikincilleri kesin."
+  },
+  {
+    "name": "Aigle Pankratis (Aigle her şeye gücü yeten)",
+    "description": "Kaynaklarına ve bilinçli zeka gücüne tam sahip olma."
+  },
+  {
+    "name": "Aigle Geodaitis (Aigle araştırma)",
+    "description": "Ay boyunca elde edilenleri değerlendirin ve yolunuzun metriğinde değişiklikler yapın."
+  },
+  {
+    "name": "Aigle Limenis (Aigle liman)",
+    "description": "Aktif bir aşamadan sonra duyulan huzur ve derin bir dönüşüm dönemine hazırlık."
+  },
+  {
+    "name": "Aigle Aeriya (Aigle muhteşem)",
+    "description": "Durumun üzerinden uçup gitme hissi ve zor kararlar vermenin kolaylığı."
+  },
+  {
+    "name": "Aigle Geliu (Aigle güneşli)",
+    "description": "Başarının enerjisiyle tamamen birleşin ve başkaları için bir ışık kaynağı gibi hissedin."
+  },
+  {
+    "name": "Aigle Monas (Aigle tek)",
+    "description": "Hephaestus'in dövülmesi ısıya girmeden önce orijinal birleşim noktasına dönün."
+  },
+  {
+    "name": "Kauma Khtoniya (Kauma dünyevi)",
+    "description": "İradenin temellerini sağlam zemine kurmak ve gelecekteki başarılara malzeme hazırlamak."
+  },
+  {
+    "name": "Kauma Gidrelatos (Kauma sertleştirilmiş)",
+    "description": "Arzu ateşinin disiplin suyuyla çarpışmasıyla ilk dürtüleri serinletmek ve sağlamlık kazanmak."
+  },
+  {
+    "name": "Kauma Fisates (Kauma şişiriliyor)",
+    "description": "Demirci kürklerinin nefes enerjisi, alanı büyük bir işe başlama gücüyle dolduruyor."
+  },
+  {
+    "name": "Kauma Piripnoos (Kauma ateş püskürten)",
+    "description": "Çalışma ritmine girmek ve radikal değişikliklerin mümkün olduğu bir sıcaklığa ulaşmak."
+  },
+  {
+    "name": "Kauma Aiteriya (Kauma göksel)",
+    "description": "Çalışmanın yapıldığı ürünün (amacın) ideal imajına ilişkin bir vizyon."
+  },
+  {
+    "name": "Kauma Akmona (Kauma örs)",
+    "description": "Kaderin darbelerine karşı sebat ve seçilen zanaatta azim bulmak."
+  },
+  {
+    "name": "Kauma Katarsios (Kauma temizlik)",
+    "description": "Cürufun saf metalden ayrıştırılması ve stres yoluyla gereksiz alışkanlıklardan kurtulma."
+  },
+  {
+    "name": "Kauma Pnevmatikos (Kauma ruhsallaştırma)",
+    "description": "Monoton ama bilinçli çalışmanın getirdiği düşünce kolaylığı."
+  },
+  {
+    "name": "Kauma Flogia (Kauma alevli)",
+    "description": "İş duaya dönüştüğünde, kişinin işine karşı duyduğu yoğun tutku."
+  },
+  {
+    "name": "Kauma Epoptes (Kauma düşünceli)",
+    "description": "Eylemlerindeki gizli kusurları görme ve bunları zamanında düzeltme yeteneği."
+  },
+  {
+    "name": "Kauma Politekhnos (Kauma çok yetenekli)",
+    "description": "Birikmiş tüm becerilerin ve fikirlerin maddede fiziksel olarak hayata geçirildiği gün."
+  },
+  {
+    "name": "Kauma Potamios (Kauma nehir)",
+    "description": "Erimiş metalin akışkanlığı ve enerjiyi doğru yöne yönlendirme yeteneği."
+  },
+  {
+    "name": "Kauma Ptinos (Kauma kanatlı)",
+    "description": "Ustanın ilhamı, alet elin bir uzantısı haline gelip kaleye uçtuğunda."
+  },
+  {
+    "name": "Kauma Akamatos (Kauma yorulmak bilmez)",
+    "description": "En yüksek çalışma kapasitesi ve irade ısısı, en güçlü ısıda bile yorgunluğun farkında değil."
+  },
+  {
+    "name": "Kauma Bazileios (Kauma muhteşem)",
+    "description": "Yaratıcının madde üzerindeki gücü ve bilinçli yaratılışın zaferi."
+  },
+  {
+    "name": "Kauma Stereos (Kauma dayanıklı)",
+    "description": "Sonuçların güç açısından test edilmesi ve başarıların gerçekte pekiştirilmesi."
+  },
+  {
+    "name": "Kauma Krenaios (Kauma tuşu)",
+    "description": "Uzun vadeli projelerde yangını sürdürmek için iç güç kaynaklarının bulunması."
+  },
+  {
+    "name": "Kauma Aurios (Kauma rüzgarlı)",
+    "description": "Ustanın etkisinin serbestçe yayılması ve olağan süreçlere yeni bir bakış."
+  },
+  {
+    "name": "Kauma Gefaistios (Kauma Hephaestus)",
+    "description": "Yaradılışın ilahi kıvılcımına ve kişinin işinin kutsallaştırılmasına doğrudan başvuru."
+  },
+  {
+    "name": "Kauma Olimpios (Kauma Olimpiyat)",
+    "description": "Yapılan işin değerinin daha yüksek anlamlar konumundan tanınması."
+  },
+  {
+    "name": "Kauma Ergates (Kauma emek)",
+    "description": "Detaylara dalma ve toprağın disipliniyle elde edilen ince öğütme."
+  },
+  {
+    "name": "Kauma Limenaios (Kauma liman)",
+    "description": "Süreç üzerinde kontrolü sürdürürken zihni zamanında dinlendirme yeteneği."
+  },
+  {
+    "name": "Kauma Psitiros (Kauma hışırtı)",
+    "description": "Ne zaman kesin bir darbe indirileceğine ve ne zaman bekleneceğine dair sezgisel bir anlayış."
+  },
+  {
+    "name": "Kauma Lampas (Kauma işaret fişeği)",
+    "description": "Deneyim ışığı, başkalarının yolunu aydınlatan ve uygulamanın mükemmelliğine işaret eden."
+  },
+  {
+    "name": "Kauma Pankrates (Kauma her şeye gücü yeten)",
+    "description": "Tam güven ve dönüşümün ana aşamasının tamamlanması."
+  },
+  {
+    "name": "Kauma Ridzomatos (Kauma köklenme)",
+    "description": "Ayın sonuçlarını kesinleştirmek ve profesyonel alanınızda ağırlık kazanmak."
+  },
+  {
+    "name": "Kauma Klidonios (Kauma heyecan verici)",
+    "description": "Uzun süreli gerilimin ardından duygusal boşalma ve alışılmışın dışına çıkma."
+  },
+  {
+    "name": "Kauma Pnevma (Kauma ruh)",
+    "description": "Dolu dolu nefes alın ve sıkı, dürüst çalışmayla elde edilen özgürlüğün farkına varın."
+  },
+  {
+    "name": "Kauma Flegeton (Kauma ateşli)",
+    "description": "İşçiliğin, iş bittiğinde bile içi yanmaya devam eden sonsuz ateşi."
+  },
+  {
+    "name": "Kauma Telos (Kauma final)",
+    "description": "Ayın hedefine ulaşmak ve bir sonraki döngüde meyve hasadına geçmek."
+  },
+  {
+    "name": "Karpos Khtonios (Karpos dünyevi)",
+    "description": "Gerçek, somut bir dayanak bulmak ve yaz çabasının ilk fiziksel sonucu."
+  },
+  {
+    "name": "Karpos Gidrelatos (Karpos beslendi)",
+    "description": "Duygusal doyum ve çabanın besleyici meyve verdiğini görmenin sevinci."
+  },
+  {
+    "name": "Karpos Pnevmatikos (Karpos manevi)",
+    "description": "Meyvenin değerini anlamak ve süreçte kazanılan tecrübenin farkına varmak."
+  },
+  {
+    "name": "Karpos Pirivrontos (Karpos ateş gürleyen)",
+    "description": "Sıcak güneşin altında zirveye çıkan olgunlaşan enerji, niceliği niteliğe dönüştürür."
+  },
+  {
+    "name": "Karpos Aiterios (Karpos göksel)",
+    "description": "Meyvelerin en yüksek kutsanması ve tezahür eden merhamet için kozmosa şükran."
+  },
+  {
+    "name": "Karpos Gestiaios (Karpos yürek parçalayıcı)",
+    "description": "Evinizi ve iç merkezinizi güçlendirmek, güvenlik ve düzen alanı yaratmak."
+  },
+  {
+    "name": "Karpos Kalliroos (Karpos mükemmel akım)",
+    "description": "Ailede ve yakın ilişkilerde uyum, aidiyetin yumuşak enerjisi."
+  },
+  {
+    "name": "Karpos Psikhikos (Karpos duygulu)",
+    "description": "Duvarların koruması altında benzer düşünen insanlardan oluşan bir çevrede entelektüel huzur ve sessiz konuşma."
+  },
+  {
+    "name": "Karpos Flogeros (Karpos alevli)",
+    "description": "Evin içini ısıtan ama yakmayan ateşin sıcaklığı, sönmeyen canlılığın simgesidir."
+  },
+  {
+    "name": "Karpos Epoptes (Karpos düşünceli)",
+    "description": "Sahip olduklarına bilgece bir bakış ve yaratılan dünyaya karşı sorumluluk bilinci."
+  },
+  {
+    "name": "Karpos Polikarpos (Karpos çoklu)",
+    "description": "Gelecek için kaynakların maksimum düzeyde hayata geçirildiği ve biriktirildiği bir gün."
+  },
+  {
+    "name": "Karpos Limenaios (Karpos liman)",
+    "description": "Yük dolu bir limana giren bir gemi gibi bir güvenlik ve sessizlik durumu."
+  },
+  {
+    "name": "Karpos Pteroforos (Karpos kanatlı)",
+    "description": "Zenginlik özgürlüğü ve emeğinizin meyvelerini paylaşma fırsatı."
+  },
+  {
+    "name": "Karpos Akamatos (Karpos yorulmak bilmez)",
+    "description": "Baharda yeniden doğmak üzere kışa hazır olan tahılın içinde saklı yaşam gücü."
+  },
+  {
+    "name": "Karpos Bazileios (Karpos muhteşem)",
+    "description": "Kişinin kendi bölgesi üzerindeki gücün tamlığı ve kişinin kaderinin efendisinin zaferi."
+  },
+  {
+    "name": "Karpos Geokhos (Karpos egemen)",
+    "description": "Sınırların belirlenmesi ve faydaların adil dağılımı."
+  },
+  {
+    "name": "Karpos Potamios (Karpos nehir)",
+    "description": "Aşırılıktan kaynaklanan, etrafındaki her şeyi besleyen ve dünyayla bağları güçlendiren cömertlik."
+  },
+  {
+    "name": "Karpos Psitiros (Karpos hışırtı)",
+    "description": "Hasadın gölgesinde tecrübe ve bilginin yeni nesillere aktarılması."
+  },
+  {
+    "name": "Karpos Lampas (Karpos işaret fişeği)",
+    "description": "Elde edilenleri korumayı ve değerlerini korumayı amaçlayan aklın ışığı."
+  },
+  {
+    "name": "Karpos Olimpios (Karpos Olimpiyat)",
+    "description": "Bir lütuf ve doğanın ve tanrıların ebedi kanunlarına ait olma durumu."
+  },
+  {
+    "name": "Karpos Stenaros (Karpos güçlü)",
+    "description": "Tokluk ve özgüvenle kazanılan fiziksel dayanıklılık ve ruh gücü."
+  },
+  {
+    "name": "Karpos Krenaios (Karpos kaynak)",
+    "description": "Basilee'nizdeki gizli rezervleri ve dahili güç kaynaklarını keşfedin."
+  },
+  {
+    "name": "Karpos Aurios (Karpos rüzgarlı)",
+    "description": "Kendini aşmış olana veda etmenin ve sonbahardan önce alanı temizlemenin kolaylığı."
+  },
+  {
+    "name": "Karpos Aiton (Karpos kavurucu)",
+    "description": "Güneş enerjisinin emeğin sonuçlarında yoğunlaşması, altın tarlalarının altına dönüşmesi bilgeliği."
+  },
+  {
+    "name": "Karpos Episkopos (Karpos izliyorum)",
+    "description": "Tüm sistemlerin mevsimi değiştirip iç dünyaya gitmeye hazır olup olmadığının son kontrolü."
+  },
+  {
+    "name": "Karpos Ridzomatos (Karpos köklenme)",
+    "description": "Tüm yaz başarılarının hafıza ve maddedeki nihai konsolidasyonu."
+  },
+  {
+    "name": "Karpos Klidonios (Karpos endişeli)",
+    "description": "Değişikliklerin önsezisi ve sonbaharın derinliklerine inmeye yönelik duygusal hazırlık."
+  },
+  {
+    "name": "Karpos Pneuma (Karpos ruh)",
+    "description": "Tamlığın saf nefesi ve yaşanan yarı yılın bütünlüğünün farkındalığı."
+  },
+  {
+    "name": "Karpos Flegeton (Karpos ateşli)",
+    "description": "Yaz güneşinin veda sıcağı, meyvelerin uzun süre saklanmadan önce sertleşmesi."
+  },
+  {
+    "name": "Karpos Telos (Karpos son)",
+    "description": "Mutlak dolgunluk noktası ve Sonbahar enerjilerine geçiş, Dionysus ve solma."
+  },
+  {
+    "name": "Trige Khtoniya (Trige dünyevi)",
+    "description": "Yerin etine dokunmak ve olgun olanı toplamaya başlamak; ağır sepetler ve fiziksel ihsanlarla dolu bir gün."
+  },
+  {
+    "name": "Trige Gidrelatos (Trige nemlendirici)",
+    "description": "Meyvelerin nemini vermesiyle hayatın suyunun salınması ve varlığın akışkanlığının ilk neşesi."
+  },
+  {
+    "name": "Trige Pnevmatika (Trige maneviyat)",
+    "description": "Havadaki sarhoş edici değişim kokusu ve yaz endişelerinden özgürlüğün önsezisi."
+  },
+  {
+    "name": "Trige Piripnoos (Trige ateş püskürten)",
+    "description": "Fikrin mayalanmasının ve maddeyi enerjiye dönüştüren içsel dönüşümün sıcaklığı."
+  },
+  {
+    "name": "Trige Aiteriya (Trige cennet gibi)",
+    "description": "Dünyevi yüklerden kopma yoluyla ilahi deliliğin ve berraklığın ilk dokunuşu."
+  },
+  {
+    "name": "Trige Stenara (Trige güçlü)",
+    "description": "Doğanın kaçınılmaz solması karşısında ruhu güçlendirin; asmanın toprağa tutunma gücü."
+  },
+  {
+    "name": "Trige Klidonios (Trige öfkeli)",
+    "description": "Duyguların akışı ve duygularda boğulma korkusu olmadan hayatın akışına teslim olma isteği."
+  },
+  {
+    "name": "Trige Psitiros (Trige hışırtı)",
+    "description": "Boş bahçelerde rüzgarın gizli konuşmaları ve doğanın ritimlerine dair sezgisel bir anlayış."
+  },
+  {
+    "name": "Trige Akamatos (Trige yorulmak bilmez)",
+    "description": "Soğuğa rağmen devam eden hayatın aralıksız dansı; hareket sevinci."
+  },
+  {
+    "name": "Trige Bakkheios (Trige bakkal)",
+    "description": "Benliğin sınırlarının yok edilmesi yoluyla kutsal hazzın zirvesi ve her şeyle birliğin farkına varılması."
+  },
+  {
+    "name": "Trige Ridzomatos (Trige köklenme)",
+    "description": "Kişinin varlığının temellerine derin bir dalış ve geçici değil ebedi olanda bir dayanak arayışı."
+  },
+  {
+    "name": "Trige Katarsios (Trige temizlik)",
+    "description": "Deneyimin suçluluk duygusuyla ruhu yıkamak ve çok sıkı hale gelen maskeleri düşürmek."
+  },
+  {
+    "name": "Trige Pteroforos (Trige kanatlı)",
+    "description": "Özgürlüğün sarhoşluğuna ulaşmış ruhun hafifliği ve uyuyan bir dünya üzerinde düşüncenin uçuşu."
+  },
+  {
+    "name": "Trige Flogeros (Trige alevli)",
+    "description": "Egonun kalıntılarını yakan coşkunun ateşi ve gerçek varoluş tutkusunun sıcaklığı."
+  },
+  {
+    "name": "Trige Bazileios (Trige muhteşem)",
+    "description": "İçsel özgürlüğün efendisi ve ruhun madde üzerindeki egemenliği olarak Dionysus'in zaferi."
+  },
+  {
+    "name": "Trige Erkeios (Trige çit)",
+    "description": "Yılın alacakaranlığında iç kıvılcımı korumak için yeni sınırlar belirliyoruz."
+  },
+  {
+    "name": "Trige Potamios (Trige nehir)",
+    "description": "Zamanın geçişi, eski biçimlerin taşınması; Değişimin kaçınılmazlığının kabul edildiği gün."
+  },
+  {
+    "name": "Trige Aiola (Trige değiştirilebilir)",
+    "description": "Gölgelerin ve ışığın oyunu, gerçekliğin kırılganlığı ve gerçeği çeşitli biçimlerde bulma yeteneği."
+  },
+  {
+    "name": "Trige Akton (Trige kavurucu)",
+    "description": "Sonbahar kamp ateşinin son parlak alevi ve inişten önce iradenin yoğunlaşması."
+  },
+  {
+    "name": "Trige Epoptes (Trige düşünceli)",
+    "description": "Sıradanlığın perdesinden bir bakış ve sonbaharın sessizliğinde gizli anlamların anlaşılması."
+  },
+  {
+    "name": "Trige Terpsikhton (Trige dünyayı mutlu etmek)",
+    "description": "Meyveler için toprağa şükran ve bazı güçlerin dünyaya geri dönüşü ritüeli."
+  },
+  {
+    "name": "Trige Pelagios (Trige deniz)",
+    "description": "Bilinçaltı okyanusuna derin bir dalış ve gizli yüzlerinizle buluşma."
+  },
+  {
+    "name": "Trige Pteroenta (Trige tüylü)",
+    "description": "Günlerin geçme hızı ve anı burada ve şimdi yakalama yeteneği."
+  },
+  {
+    "name": "Trige Lampas (Trige işaret fişeği)",
+    "description": "Yaklaşan karanlıkta yolu aydınlatmak için içeride ışık yandı; sarhoşlukta netlik."
+  },
+  {
+    "name": "Trige Ierofantis (Trige kutsal olanı ortaya çıkarıyor)",
+    "description": "Kişinin kendi ruhunun sırlarına inisiyasyon ve her nefesin kutsallığının farkındalığı."
+  },
+  {
+    "name": "Trige Pandoker (Trige her şeyi kabul ediyorum)",
+    "description": "Hasatın sonuçlarının nihai olarak kabul edildiği ve doğal döngüden önce tevazu günü."
+  },
+  {
+    "name": "Trige Krenaios (Trige kaynak)",
+    "description": "Gücün kökenlerine dönmek ve aşağıya doğru uzun bir yolculuk için kendi içinde saf hakimiyeti aramak."
+  },
+  {
+    "name": "Trige Psitirismos (Trige fısıldayarak)",
+    "description": "Yaprakların son hışırtısı, giden döngünün bilgeliğini aktarıyor."
+  },
+  {
+    "name": "Trige Flegenton (Trige ateşle parlıyor)",
+    "description": "Toplanma dönemini tamamlayan ve sessizliğe yer hazırlayan temizleyici bir ateş."
+  },
+  {
+    "name": "Trige Telontika (Trige başlangıç sonu)",
+    "description": "Unutulma ayının sonu ve Hades'in Gizli Köklerine geçiş."
+  },
+  {
+    "name": "Katodos Khtonios (Katodos dünyevi)",
+    "description": "Alt dünyaya dokunmak ve şeylerin fiziksel sonluluğunun farkına varmak, yeni bilgeliğe yol açmak."
+  },
+  {
+    "name": "Katodos Klidonios (Katodos öfkeli)",
+    "description": "İnişin kaçınılmazlığının ve duyguların dışa doğru değil içe doğru akışının duygusal kabulü."
+  },
+  {
+    "name": "Katodos Pnevmatikos (Katodos manevi)",
+    "description": "Boş uzaydaki sezginin sessiz sesi, gerçek anlamları alüvyondan ayıran."
+  },
+  {
+    "name": "Katodos Piripnoos (Katodos ateş püskürten)",
+    "description": "Akşam karanlığında ruhun donmasını engelleyen iç sıcaklığı; maddenin derinliklerinde yanan ateş."
+  },
+  {
+    "name": "Katodos Aiterios (Katodos cennet gibi)",
+    "description": "Karanlıktaki farkındalığın ince ışığı, labirentin merkezindeki uyku noktası."
+  },
+  {
+    "name": "Katodos Stenaros (Katodos güçlü)",
+    "description": "Dış basınca karşı direnç ve yalnızlıktaki güç."
+  },
+  {
+    "name": "Katodos Gidrelatos (Katodos sıvı)",
+    "description": "Eski kırgınlıkları eritmek ve unutkanlığın sularındaki duygusal hafızayı arındırmak."
+  },
+  {
+    "name": "Katodos Psitiros (Katodos fısıldayarak)",
+    "description": "Ataların gölgeleriyle konuşmak ve rüyalar ve önseziler aracılığıyla yanıtlar almak."
+  },
+  {
+    "name": "Katodos Akamatos (Katodos yorulmak bilmez)",
+    "description": "Dünya tarafından görülemeyen ancak gelecekteki bir gücü şekillendiren içsel çalışmanın sürekliliği."
+  },
+  {
+    "name": "Katodos Epoptes (Katodos düşünceli)",
+    "description": "Uçuruma korkmadan bakmak ve uçurumun senin bir parçan olduğunu fark etmek."
+  },
+  {
+    "name": "Katodos Ridzomatos (Katodos köklenme)",
+    "description": "Varoluşun temellerine nüfuz etme ve dünyanın orijinal gücüyle temas kurma."
+  },
+  {
+    "name": "Katodos Katarsios (Katodos temizlik)",
+    "description": "Sahte egonun son terazisini atmak; yalnızlıkla elde edilen saflık."
+  },
+  {
+    "name": "Katodos Pteroforos (Katodos kanatlı)",
+    "description": "Artık başarının dış niteliklerine bağlı olmayan bir ruhun özgürlüğü."
+  },
+  {
+    "name": "Katodos Flegeton (Katodos alevli)",
+    "description": "Bir yeraltı nehrinin temizleyici alevi, korkuları kararlılığa dönüştürüyor."
+  },
+  {
+    "name": "Katodos Bazileios (Katodos muhteşem)",
+    "description": "Gölgelerinin efendisinin unvanı; görünmezlik aleminde iradenin zaferi."
+  },
+  {
+    "name": "Katodos Erkeios (Katodos çit)",
+    "description": "En karanlık gecede iç tapınağınızı kaostan ve dış etkilerden koruyun."
+  },
+  {
+    "name": "Katodos Potamios (Katodos nehir)",
+    "description": "Geçici olan her şeyi silip süpüren, geriye yalnızca ebedi olanı bırakan bir zaman akışını kabul etmek."
+  },
+  {
+    "name": "Katodos Psikhikos (Katodos duygulu)",
+    "description": "Birikmiş deneyim ve kişisel mitoloji anlayışının entelektüel sentezi."
+  },
+  {
+    "name": "Katodos Lampas (Katodos işaret fişeği)",
+    "description": "Kişisel örnek ve iradenin ışığı, kolektif karanlık zamanlarında başkalarının yolunu aydınlatıyor."
+  },
+  {
+    "name": "Katodos Isoteos (Katodos tanrısal)",
+    "description": "İnsanın derinliğinde sonsuzluğa eşit olduğu bir dinlenme hali."
+  },
+  {
+    "name": "Katodos Politekhnos (Katodos çok yetenekli)",
+    "description": "İçsel dönüşüm ustalığı ve kısıtlamalar altında yaratma yeteneği."
+  },
+  {
+    "name": "Katodos Krenaios (Katodos tuşu)",
+    "description": "Dış kaynaklar tükendiğinde kendi içinizde gizli enerji kaynakları bulmak."
+  },
+  {
+    "name": "Katodos Aurios (Katodos rüzgarlı)",
+    "description": "Dünyanın yoğunluğunu delip geçen düşünce tazeliği; gelecekteki filizlenmenin önsezisi."
+  },
+  {
+    "name": "Katodos Pirivrontos (Katodos ateş gürleyen)",
+    "description": "Zamanında yaşamla birlikte patlamaya hazır gizli potansiyelin gücü."
+  },
+  {
+    "name": "Katodos Pankrates (Katodos her şeye gücü yeten)",
+    "description": "En karanlık olanlar da dahil olmak üzere kişiliğinizin tüm parçalarının tam entegrasyonu."
+  },
+  {
+    "name": "Katodos Geokhos (Katodos egemen)",
+    "description": "İç hazinelerinin koruyucusu statüsündeki son konsolidasyon."
+  },
+  {
+    "name": "Katodos Pelagios (Katodos deniz)",
+    "description": "Avlanmaya çıkmadan önce kolektif bilinçdışı okyanusuna derin bir dalış."
+  },
+  {
+    "name": "Katodos Nomios (Katodos pastoral)",
+    "description": "İçgüdülerinizi yönlendirme ve iç doğanızı kontrol etme yeteneği."
+  },
+  {
+    "name": "Katodos Flegenton (Katodos ateşli)",
+    "description": "Kışın aktif evresine geçişten önceki son farkındalık parıltısı."
+  },
+  {
+    "name": "Katodos Telos (Katodos final)",
+    "description": "Sessizlik içinde kendini keşfetme ve gelecek ay yapılacak vahşi av için hazırlık döneminin sonu."
+  },
+  {
+    "name": "Agrotera Khtoniya (Agrotera dünyevi)",
+    "description": "Maddi dünyanın işaretlerini okuma ve kaderinizin yolunda sağlam bir şekilde durma yeteneği."
+  },
+  {
+    "name": "Agrotera Klidonios (Agrotera heyecan verici)",
+    "description": "Sezgisel duyu, suyun akması gibi, gerçek amacın nerede saklı olduğunu söyler."
+  },
+  {
+    "name": "Agrotera Pnevmatikos (Agrotera maneviyatlı)",
+    "description": "Nefesin saflığı ve düşüncenin tazeliği, serbest havada sürücünün önünde uçuyor."
+  },
+  {
+    "name": "Agrotera Piripnoos (Agrotera ateş püskürten)",
+    "description": "Zulmün sıcaklığı ve keşfedenin heyecanı, soğuk hava beklentisiyle kalbi ısıtıyor."
+  },
+  {
+    "name": "Agrotera Aiteriya (Agrotera göksel)",
+    "description": "Ruhun telaştan uzak olduğu, dağ zirvelerinin yüksekliğinden dünyaya tarafsız bir bakış."
+  },
+  {
+    "name": "Agrotera Stenara (Agrotera güçlü)",
+    "description": "Zor bir durum üzerinde kontrolü sürdürmek için gerekli olan fiziksel ve istemli güç."
+  },
+  {
+    "name": "Agrotera Gidrelatos (Agrotera sıvı)",
+    "description": "Engelleri aşma, baskıyı sürdürme ve hedeflenen hedefi gözden kaçırmama yeteneği."
+  },
+  {
+    "name": "Agrotera Psitiros (Agrotera hışırtı)",
+    "description": "Sessiz hareket etme ve ortamın en ufak titreşiminden bilgi elde etme sanatı."
+  },
+  {
+    "name": "Agrotera Akamatos (Agrotera yorulmak bilmez)",
+    "description": "Başkaları zorluklara göğüs gererken yoluna devam edebilen yalnız birinin dayanıklılığı."
+  },
+  {
+    "name": "Agrotera Epoptes (Agrotera düşünceli)",
+    "description": "Hedefe odaklanma anı, tüm dünyanın mutlak dikkat noktasında donması."
+  },
+  {
+    "name": "Agrotera Ridzomatos (Agrotera köklenme)",
+    "description": "Doğanın ilksel güçleriyle derin bir bağlantı ve onun vahşi, bozulmamış özünde bir dayanak noktası bulmak."
+  },
+  {
+    "name": "Agrotera Katarsios (Agrotera temizlik)",
+    "description": "Ruhu gerçeğin buzlu kaynaklarında yıkamak ve gereksiz ve çekici olan her şeyden kurtulmak."
+  },
+  {
+    "name": "Agrotera Pteroforos (Agrotera kanatlı)",
+    "description": "Karar verme hızı ve gerçeğin alanı aşma kolaylığı."
+  },
+  {
+    "name": "Agrotera Flegeton (Agrotera alevli)",
+    "description": "Şiddetli bağımsızlığın ateşi ve şüphe çalılıklarının içinden geçen ışık."
+  },
+  {
+    "name": "Agrotera Bazileios (Agrotera muhteşem)",
+    "description": "İçgüdülerinize hakim olun ve yaşamın vahşi doğasında egemenliğinizi savunun."
+  },
+  {
+    "name": "Agrotera Erkeios (Agrotera çit)",
+    "description": "Değerlerinizi korumak ve kimsenin davetsiz geçmeye cesaret edemeyeceği sınırlar koymak."
+  },
+  {
+    "name": "Agrotera Potamios (Agrotera nehir)",
+    "description": "Bir dağ deresinin denize akışına benzer şekilde, bir görevin finaline gitmenin esnekliği."
+  },
+  {
+    "name": "Agrotera Psikhikos (Agrotera duygulu)",
+    "description": "Kat edilen yolun entelektüel analizi ve deneyimin net bir strateji halinde kristalleştirilmesi."
+  },
+  {
+    "name": "Agrotera Lampas (Agrotera parlama)",
+    "description": "Ay avının ışığı, diğerlerinin yalnızca karanlığı gördüğü gizli olasılıkları aydınlatır."
+  },
+  {
+    "name": "Agrotera Isoteos (Agrotera tanrısal)",
+    "description": "Eylemin kusursuz ve kutsal hale geldiği mükemmel ustalık durumu."
+  },
+  {
+    "name": "Agrotera Politekhnos (Agrotera çok yetenekli)",
+    "description": "Zorlu ortamlarda hayatta kalmak ve gelişmek için birikmiş araçları kullanmak."
+  },
+  {
+    "name": "Agrotera Krenaios (Agrotera tuşu)",
+    "description": "Başkalarının görüşlerinden ve desteğinden bağımsız olarak kendi içinizde tükenmez kaynaklar bulmak."
+  },
+  {
+    "name": "Agrotera Aurios (Agrotera rüzgarlı)",
+    "description": "Bağlanmalardan özgürlük ve yeniyle tanışmak için her an ayrılma isteği."
+  },
+  {
+    "name": "Agrotera Pirivrontos (Agrotera ateş ve gök gürültüsü)",
+    "description": "Kararlı eylemin gücü, tek bir kesin hareketle kaderin manzarasını değiştirme."
+  },
+  {
+    "name": "Agrotera Pankrates (Agrotera her şeye gücü yeten)",
+    "description": "Hayatınız üzerinde tam kontrol hissetmek ve içinizdeki vahşiliği kabul etmek."
+  },
+  {
+    "name": "Agrotera Geokharis (Agrotera dünyayı mutlu etmek)",
+    "description": "Avın sonuçlarını temellendiriyor ve dünyaya kupalar ve deneyimler için teşekkür ediyoruz."
+  },
+  {
+    "name": "Agrotera Pelagios (Agrotera deniz)",
+    "description": "Kış fırtınalarıyla buluşmadan önce geçmiş aşamayı anlamanın derinliğine dalma."
+  },
+  {
+    "name": "Agrotera Nomios (Agrotera yasama)",
+    "description": "Edinilen bilginin düzenlenmesi ve vahşi gücün gelecekteki düzenin temeline dönüştürülmesi."
+  },
+  {
+    "name": "Agrotera Flegon (Agrotera alevli)",
+    "description": "Sonbaharın son parlak parıltısı, ruhu büyük sınırdan önce yumuşatacak."
+  },
+  {
+    "name": "Agrotera Telos (Agrotera final)",
+    "description": "Avcılıktan disipline geçiş noktası ve kış döngüsünün başlangıcı."
+  },
+  {
+    "name": "Peras Khtonios (Peras dünyevi)",
+    "description": "Sarsılmaz bir dayanıklılık bulmak ve taahhütlerinizin ağırlığını hayatın temeli olarak kabul etmek."
+  },
+  {
+    "name": "Peras Klidonios (Peras endişeli)",
+    "description": "Duygusal kısıtlama ve formu korumak uğruna iç fırtınaları sakinleştirme yeteneği."
+  },
+  {
+    "name": "Peras Pnevmatikos (Peras maneviyatlı)",
+    "description": "Kışın buzlu havasında gerçeğin tohumlarını yanılsama parçacıklarından ayıran düşüncenin soğuk berraklığı."
+  },
+  {
+    "name": "Peras Piripnoos (Peras ateş püskürten)",
+    "description": "Dünyanın merkezindeki ateş gibi katı bir yapı içinde yaşamı sürdüren gizli bir irade ısısı."
+  },
+  {
+    "name": "Peras Aiterios (Peras göksel)",
+    "description": "Kozmik düzenin ve onun evrenin büyük çizimindeki yerinin farkındalığı."
+  },
+  {
+    "name": "Peras Stenaros (Peras güçlü)",
+    "description": "Entropi direncinin gücü ve iç çekirdeğin zamanın testleri karşısında güçlenmesi."
+  },
+  {
+    "name": "Peras Gidrelatos (Peras sıvı)",
+    "description": "Yaşam döngülerini kabullenme bilgeliği ve belirlenmiş sınırlar içinde onları bozmadan akabilme yeteneği."
+  },
+  {
+    "name": "Peras Psitiros (Peras hışırtı)",
+    "description": "Varoluş yasalarının dokunulmazlığını hatırlatan tarihin fısıltısı ve ataların çağrısı."
+  },
+  {
+    "name": "Peras Akmatos (Peras yorulmak bilmez)",
+    "description": "Zamanın duraklama tanımayan sonsuz hareketi ve günlük küçük adımların disiplini."
+  },
+  {
+    "name": "Peras Epoptes (Peras düşünceli)",
+    "description": "Zamanın Efendisi'nin kat ettiği yol hakkındaki görüşü ve mevcut aşamanın tamamlandığının anlaşılması."
+  },
+  {
+    "name": "Peras Ridzomatos (Peras köklenme)",
+    "description": "Kişinin konumunda nihai sağlamlaşma ve sosyal ve manevi dünyada ağırlık kazanması."
+  },
+  {
+    "name": "Peras Katarsios (Peras temizlik)",
+    "description": "Ruhu sessizlikte yıkamak ve asıl şeye odaklanmayı engelleyen gereksiz bağlantılardan kurtulmak."
+  },
+  {
+    "name": "Peras Pteroforos (Peras kanatlı)",
+    "description": "Kesin ve çarpıcı hale gelen bir disiplin tarafından kısıtlanan düşünce hızı."
+  },
+  {
+    "name": "Peras Flegeton (Peras alevli)",
+    "description": "Şiddetli imtihan ateşi, zayıflıkları yakıp söndürür ve geriye yalnızca saf öz kalır."
+  },
+  {
+    "name": "Peras Bazileios (Peras muhteşem)",
+    "description": "Yapının zaferi ve en yüksek yasa olarak kişisel bir şeref kuralının oluşturulması."
+  },
+  {
+    "name": "Peras Erkeios (Peras çit)",
+    "description": "İşinizin ve ailenizin etrafına koruyucu bariyerler inşa ederek ruhunuzu güçlendirin."
+  },
+  {
+    "name": "Peras Potamios (Peras nehir)",
+    "description": "Zamanın ve bilinçli hareketin eşiğinden güvenilir bir kanal içerisinde yeni bir döngüye geçiş."
+  },
+  {
+    "name": "Peras Psikhikos (Peras duygulu)",
+    "description": "Anlamların envanteri ve özetleme, gelecekteki yolun net bir haritasını oluşturma."
+  },
+  {
+    "name": "Peras Lampas (Peras işaret fişeği)",
+    "description": "Kişisel sorumluluğun ışığı, izin verilenin sınırlarını ve mümkün olanın ufkunu aydınlatıyor."
+  },
+  {
+    "name": "Peras Isoteos (Peras tanrısal)",
+    "description": "Amacınıza sıkı sıkıya bağlı kalarak iç uyumu elde etmek."
+  },
+  {
+    "name": "Peras Politekhnos (Peras çok yetenekli)",
+    "description": "Maksimum verimliliği elde etmek için alanı ve zamanı organize etme ustalığı."
+  },
+  {
+    "name": "Peras Krenaios (Peras tuşu)",
+    "description": "En yoğun kısıtlamalarda derin dayanıklılık kaynakları bulmak."
+  },
+  {
+    "name": "Peras Aurios (Peras rüzgarlı)",
+    "description": "Buzları kıran, eski formlara yeni fikirler getiren taze bir değişim rüzgarı."
+  },
+  {
+    "name": "Peras Pirivrontos (Peras ateş gürleyen)",
+    "description": "Daha yüksek bir amaç için gereksiz engelleri yıkan ani farkındalığın gücü."
+  },
+  {
+    "name": "Peras Pankrates (Peras her şeye gücü yeten)",
+    "description": "Çerçevelerin ve kuralların gönüllü olarak kabul edilmesi yoluyla hayatınız üzerinde mutlak kontrol."
+  },
+  {
+    "name": "Peras Geokharis (Peras dünyevi)",
+    "description": "Ayın elde edilen tüm sonuçlarını elde etmenin ve temellendirmenin gücüne şükran."
+  },
+  {
+    "name": "Peras Pelagios (Peras deniz)",
+    "description": "Kış fırtınalarının kaosuyla yüzleşmeden önce sessizlik okyanusuna derinlemesine dalın."
+  },
+  {
+    "name": "Peras Nomios (Peras yasama)",
+    "description": "Kazanılan deneyime dayanarak kişinin kaderini yönetmeye yönelik yeni ilkelerin duyurulması."
+  },
+  {
+    "name": "Peras Flegon (Peras alevli)",
+    "description": "Yaklaşan unsurlar karşısında ruhu yumuşatan son disiplin kıvılcımı."
+  },
+  {
+    "name": "Peras Telos (Peras son)",
+    "description": "Ay Limitlerinin kapılarının kapanması ve Poseidon'in öfkesiyle yüzleşmeye hazır olma."
+  },
+  {
+    "name": "Lailaps Khtonios (Lailaps dünyevi)",
+    "description": "İdeal düzen ile gerçekliğin kaba kuvvetinin çatışması; istikrarın temelini test etmek için bir gün."
+  },
+  {
+    "name": "Lailaps Klidonios (Lailaps öfkeli)",
+    "description": "Duyguların ve dış koşulların baskısı, Poseidon'in kıyıya vuran surları gibi."
+  },
+  {
+    "name": "Lailaps Pnevmatikos (Lailaps manevi)",
+    "description": "Boreus'un buzlu nefesi, keskin ayılma ve soğuk mantıkla zihni temizliyor."
+  },
+  {
+    "name": "Lailaps Piripnoos (Lailaps ateş püskürten)",
+    "description": "Mücadelenin merkez üssünde ortaya çıkan sürtünme ve ısı; aşırı koşullarda hayatta kalma enerjisi."
+  },
+  {
+    "name": "Lailaps Aiterios (Lailaps göksel)",
+    "description": "Fırtınaya yukarıdan bakmak, her türlü kaosun daha yüksek bir ritmin parçası olduğunun farkına varmak."
+  },
+  {
+    "name": "Lailaps Stereos (Lailaps zor)",
+    "description": "İradenin baskı altında kristalleşmesi; karakterin elmas yoğunluğunu kazandığı gün."
+  },
+  {
+    "name": "Lailaps Pelagios (Lailaps deniz)",
+    "description": "Karmaşık görevlerin uçurumuna dalma ve belirsizlik koşullarında bilinci koruma yeteneği."
+  },
+  {
+    "name": "Lailaps Aiolos (Lailaps değiştirilebilir)",
+    "description": "Olayların girdabında manevra esnekliği ve düşmanın gücünü kendisine karşı kullanma yeteneği."
+  },
+  {
+    "name": "Lailaps Flegon (Lailaps kavurucu)",
+    "description": "Gerçeğin buz gibi yanması, tüm yalanları ortadan kaldıran, geriye yalnızca çıplak özü bırakan."
+  },
+  {
+    "name": "Lailaps Epoptes (Lailaps düşünceli)",
+    "description": "Bir kasırganın içinde bir dinlenme noktası bulmak; sakinlik ustalığı."
+  },
+  {
+    "name": "Lailaps Enosikhton (Lailaps dünyayı sarsacak)",
+    "description": "Harap olmuş ve güvenilmez hale gelmiş olanın yok edilmesi yoluyla büyük temizlik."
+  },
+  {
+    "name": "Lailaps Katarsios (Lailaps temizlik)",
+    "description": "Ruhu fırtınalı sularda yıkamak; kaos yoluyla gelecek bahara yer açmak."
+  },
+  {
+    "name": "Lailaps Tiellon (Lailaps girdap)",
+    "description": "Ortamın hızlı değişimi ve yeni, zorlu koşullara uyum sağlama hızı."
+  },
+  {
+    "name": "Lailaps Akamatos (Lailaps yorulmak bilmez)",
+    "description": "Elementlerin darbeleri altında sönmeyen, yaratılışın öfkesinin tükenmez bir kaynağı."
+  },
+  {
+    "name": "Lailaps Bazileios (Lailaps muhteşem)",
+    "description": "Korku unsuru üzerinde hakimiyet kurmak ve kaos içinde güç kazanmak."
+  },
+  {
+    "name": "Lailaps Erkeios (Lailaps çit)",
+    "description": "Kişisel sınırların son kontrolü; iç çekirdeğinizi bir fırtınada tamamen erimekten korur."
+  },
+  {
+    "name": "Lailaps Potamios (Lailaps nehir)",
+    "description": "Fırtınanın yıkıcı enerjisini projenizin yaratıcı kanalına kanalize etme yeteneği."
+  },
+  {
+    "name": "Lailaps Psikhikos (Lailaps duygulu)",
+    "description": "Stres tepkinizin derinlemesine analizi ve yeni bir davranış stratejisinin kristalizasyonu."
+  },
+  {
+    "name": "Lailaps Lampas (Lailaps işaret fişeği)",
+    "description": "Rüzgara rağmen ışık tutuluyor; umudun ve sarsılmaz niyetin sembolü."
+  },
+  {
+    "name": "Lailaps Isoteos (Lailaps tanrısal)",
+    "description": "Fırtınadan geçmiş bir kişinin zarar görmez hale geldiği bir dönüşüm durumu."
+  },
+  {
+    "name": "Lailaps Stenaros (Lailaps güçlü)",
+    "description": "Yenilenmiş, arınmış bir temel üzerinde fiziksel ve ruhsal iyileşme."
+  },
+  {
+    "name": "Lailaps Limenaios (Lailaps kıyı)",
+    "description": "Hasarı değerlendirmek ve güçleri yeniden toplamak için sessiz bir liman arayın."
+  },
+  {
+    "name": "Lailaps Psitiros (Lailaps fısıldayarak)",
+    "description": "Rüzgârın susturucu uğultusunda gerçeğin sesini duymak; finalin sezgisel bilgisi."
+  },
+  {
+    "name": "Lailaps Pirivrontos (Lailaps ateş gürleyen)",
+    "description": "Gökyüzünü temizleyen ve ferahlık getiren son gök gürültüsü."
+  },
+  {
+    "name": "Lailaps Episkopos (Lailaps izliyorum)",
+    "description": "Mücadeleden alınan dersleri kaydediyor ve Karanlığa dalmaya hazırlanıyor."
+  },
+  {
+    "name": "Lailaps Ridzomatos (Lailaps köklenme)",
+    "description": "Yenilenen toprakta derin köklenme; yeni, daha güçlü bir destek kazanıyor."
+  },
+  {
+    "name": "Lailaps Galenos (Lailaps dingin)",
+    "description": "Deneyimin kalıntı bir yankısı, derin bir yaşam anlayışına dönüşüyor."
+  },
+  {
+    "name": "Lailaps Pneuma (Lailaps ruh)",
+    "description": "En büyük direncin üstesinden gelinerek elde edilen şeffaflık ve bilinç saflığı."
+  },
+  {
+    "name": "Lailaps Flegenton (Lailaps ateşle parlıyor)",
+    "description": "Koşullara karşı kazanılan zafer ateşi, yılın son ayında ruhu yumuşattı."
+  },
+  {
+    "name": "Lailaps Telos (Lailaps son)",
+    "description": "Aktif mücadele döneminin sonu ve Zophos'in sessizliğine ve karanlığına geçiş."
+  },
+  {
+    "name": "Zofos Khtonios (Zofos dünyevi)",
+    "description": "Maddenin eylemsizliğine dalma; Doğan her şeyin dünyanın geri kalanına geçmesi gerektiğinin kabul edildiği gün."
+  },
+  {
+    "name": "Zofos Gidrelatos (Zofos sıvı)",
+    "description": "Lete Nehri gibi bilinçaltının karanlık sularında katı zihinsel yapıların çözülmesi."
+  },
+  {
+    "name": "Zofos Pnevmatikos (Zofos manevi)",
+    "description": "Boşluğun nefesi; düşüncelerin yatıştığı, saf mevcudiyete yer bırakan bir durum."
+  },
+  {
+    "name": "Zofos Piripnoos (Zofos ateş püskürten)",
+    "description": "Geçen yılın külleri altında yanan gizli yaşam kıvılcımı; dönüşümün kara ateşi."
+  },
+  {
+    "name": "Zofos Aiterios (Zofos cennet gibi)",
+    "description": "Karanlığın arkasına gizlenmiş, en yüksek düzenin sembolü olarak sonsuz yıldızlı gökyüzünün tefekkürü."
+  },
+  {
+    "name": "Zofos Stereos (Zofos zor)",
+    "description": "Boşlukta tutunacak bir yer bulmak; gerçek benliğin dışsal formlara bağlı olmadığını anlamak."
+  },
+  {
+    "name": "Zofos Klidonios (Zofos endişeli)",
+    "description": "Sezginin ince titreşimleri, karanlığı delip geçiyor; yaklaşan değişikliklerin bir önsezisi."
+  },
+  {
+    "name": "Zofos Psitiros (Zofos hışırtı)",
+    "description": "Hermes Psychopopus'un fısıltıları, alacakaranlıkta ruhu yeni anlamlara yönlendiriyor."
+  },
+  {
+    "name": "Zofos Akamatos (Zofos yorulmak bilmez)",
+    "description": "Ruhun deneyimi eritmek için yaptığı ebedi çalışma, tam bir dinlenme durumunda bile devam eder."
+  },
+  {
+    "name": "Zofos Epoptes (Zofos düşünceli)",
+    "description": "Zamana sonsuzluktan bir bakış; korkuların ve bağlılıkların yanıltıcı doğasının farkındalığı."
+  },
+  {
+    "name": "Zofos Ridzomatos (Zofos köklenme)",
+    "description": "Hiçliğin derinliklerine kök salmış, tüm yeni hayatın başladığı yer."
+  },
+  {
+    "name": "Zofos Katarsios (Zofos temizlik)",
+    "description": "Bilincin yıllık gürültü ve yaygara kalıntılarından nihai arınması."
+  },
+  {
+    "name": "Zofos Ptinos (Zofos kanatlı)",
+    "description": "Birikmiş geçmişin ağırlığından arınmış ruhun hafifliği."
+  },
+  {
+    "name": "Zofos Flegeton (Zofos alevli)",
+    "description": "Ruhun en karanlık köşelerini aydınlatan içsel farkındalığın ateşi."
+  },
+  {
+    "name": "Zofos Bazileios (Zofos muhteşem)",
+    "description": "Sessizliğe karşı güç; sessizlik alanında egemenlik iddiası."
+  },
+  {
+    "name": "Zofos Erkeios (Zofos çit)",
+    "description": "Dünya uyanmadan önce içinizdeki sırrı saklamak ve huzurunuzu korumak."
+  },
+  {
+    "name": "Zofos Potamios (Zofos nehir)",
+    "description": "Zamanın yavaş akışı, güçlerin bahar taşkınlığına zemin hazırlıyor."
+  },
+  {
+    "name": "Zofos Psikhikos (Zofos duygulu)",
+    "description": "Entelektüel alçakgönüllülük ve yeni bilgileri saf bir zihne kabul etme isteği."
+  },
+  {
+    "name": "Zofos Lampas (Zofos işaret fişeği)",
+    "description": "Karanlığın sonunun ve güneşin dönüşünün habercisi olan ilk ışık kıvılcımı."
+  },
+  {
+    "name": "Zofos Isoteos (Zofos tanrısal)",
+    "description": "İnsanın potansiyelinin tanrılarınkine eşit olduğu bir önceden varoluş durumu."
+  },
+  {
+    "name": "Zofos Politekhnos (Zofos çok yetenekli)",
+    "description": "Boşluğu yönetme ve hayal gücü alanında geleceğin görüntülerini yaratma ustalığı."
+  },
+  {
+    "name": "Zofos Krenaios (Zofos tuşu)",
+    "description": "Ruhun en karanlık kuyusunun derinliklerinde yaşamın ana kaynağını bulmak."
+  },
+  {
+    "name": "Zofos Aurios (Zofos rüzgarlı)",
+    "description": "Yenilenme kokusunu getiren bahar öncesi havanın ilk soluğu."
+  },
+  {
+    "name": "Zofos Pirivrontos (Zofos ateş gürleyen)",
+    "description": "Birikmiş sessizliğin gücü, yaratıcı bir patlamaya dönüşmeye hazır."
+  },
+  {
+    "name": "Zofos Pankrates (Zofos her şeye gücü yeten)",
+    "description": "Mutlak öz kontrol ve son geçişe hazır olma."
+  },
+  {
+    "name": "Zofos Geokharis (Zofos dünyayı seven)",
+    "description": "Dinlendiği ve tüm farkındalığı sessizlikte temellendirdiği için karanlığa minnettarım."
+  },
+  {
+    "name": "Zofos Pelagios (Zofos deniz)",
+    "description": "Form kazanmadan önce varoluş okyanusunda tamamen çözülme."
+  },
+  {
+    "name": "Zofos Nomios (Zofos pastoral)",
+    "description": "İç mentorluk; eski yasanın altına çizgi çeken vicdanın sesi."
+  },
+  {
+    "name": "Zofos Flegon (Zofos alevli)",
+    "description": "Yeni bir döngüye girmemesi gereken her şeyin yakıldığı, yılın temizleyici bir şenlik ateşi."
+  },
+  {
+    "name": "Zofos Telos (Zofos final)",
+    "description": "360 günlük yolculuğun büyük finali; mutlak sıfır noktası."
+  },
+  {
+    "name": "Apeiron Khaos (Apeiron sınırsız kaos)",
+    "description": "Birincil potansiyelin ziyafeti; her şeyin mümkün olduğu ve hiçbir şeyin önceden belirlenmediği bir gün."
+  },
+  {
+    "name": "Apeiron Nyuks (Apeiron sınırsız gece)",
+    "description": "Geleceğin tohumlarını içinde barındıran, her şeyin anası olan kutsal karanlığa saygı."
+  },
+  {
+    "name": "Apeiron Erebos (Apeiron sınırsız karanlık)",
+    "description": "Yeni Kozmos'un özünün şekillendiği yoğun bir boşluğa dalma."
+  },
+  {
+    "name": "Apeiron Tartaros (Apeiron sınırsız uçurum)",
+    "description": "Dünyanın dayandığı varlığın temel derinliklerinin farkındalığı."
+  },
+  {
+    "name": "Apeiron Eros (Apeiron sınırsız çekim)",
+    "description": "Kaosun Düzene dönüşmesine neden olan büyük çekim gücünün uyanışı."
+  },
+  {
+    "name": "Apeiron Fanes (Apeiron sınırsız parlaklık)",
+    "description": "İlk Doğan Işığın ortaya çıkışı; Yeni baharın başlamasına bir dakika kala."
+  }
+]

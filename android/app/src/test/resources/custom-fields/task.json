@@ -1,0 +1,24 @@
+{
+    "id": "307327cc-3d38-4ce1-a4e0-301edec3d0f0",
+    "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+    "title": "Задача с семью типами полей",
+    "revision": 1,
+    "priority": 1,
+    "parentTaskId": null,
+    "checklists": [],
+    "customFields": {
+        "1431ea03-288e-48f0-893f-47521cb09fb2": "2026-10-20",
+        "566b2e6d-42ed-487f-b0a3-61dbbb5bc320": "retired",
+        "91babb56-d9f0-40c4-8d24-bd3918bd5195": false,
+        "938e6886-4e2c-4e86-bc41-e81fc836a4ac": "Пользовательский текст 🌿",
+        "acbcfa97-a240-4640-82d5-5392193bb3e6": "Сохранённое архивное значение",
+        "d6adeabb-e773-467e-8d55-0b55129b2231": -12.5,
+        "fa53b7e4-0f5a-4f4d-92b1-d35838a15bb2": [
+            "first",
+            "retired"
+        ],
+        "fcb13e84-2f8f-4855-aebc-31a4c4de401f": "https:\/\/example.invalid\/overview"
+    },
+    "storyPoints": null,
+    "estimateHours": null
+}

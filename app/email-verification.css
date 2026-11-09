@@ -1,0 +1,19 @@
+.email-verification-notice {
+  position: relative; padding-inline-end:64px!important;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 16px; border: 1px solid var(--line); border-radius: 10px;
+  color: var(--ink); background: var(--surface);
+}
+.email-verification-notice > button {position:absolute;inset:8px 8px auto auto;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:10px;background:transparent;color:var(--ink);cursor:pointer;}
+.email-verification-copy { flex: 1 1 320px; min-width: 0; }
+.email-verification-copy p { margin: 6px 0; overflow-wrap: anywhere; }
+.email-verification-copy small { color: var(--muted); }
+.email-verification-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.email-verification-actions button {
+  min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px;
+  color: var(--ink); background: var(--surface); font: inherit; cursor: pointer;
+}
+.email-verification-actions button:first-child { border-color: var(--accent, #8c672b); }
+.email-verification-actions button:disabled { opacity: .65; cursor: default; }
+.email-verification-actions button:focus-visible { outline: 2px solid var(--accent, #8c672b); outline-offset: 3px; }
+.email-verification-result { flex-basis: 100%; margin: 0; }

@@ -1,0 +1,154 @@
+[
+    {
+        "id": "938e6886-4e2c-4e86-bc41-e81fc836a4ac",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "text",
+        "title": "Комментарий автора",
+        "options": [],
+        "position": 0,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+    },
+    {
+        "id": "d6adeabb-e773-467e-8d55-0b55129b2231",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "number",
+        "title": "Сложность",
+        "options": [],
+        "position": 1,
+        "required": true,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+    },
+    {
+        "id": "1431ea03-288e-48f0-893f-47521cb09fb2",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "date",
+        "title": "Дата проверки",
+        "options": [],
+        "position": 2,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+    },
+    {
+        "id": "566b2e6d-42ed-487f-b0a3-61dbbb5bc320",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "select",
+        "title": "Этап публикации",
+        "options": [
+            {
+                "id": "first",
+                "title": "Первый вариант",
+                "archived": false
+            },
+            {
+                "id": "second",
+                "title": "Второй вариант",
+                "archived": false
+            },
+            {
+                "id": "retired",
+                "title": "Архивный вариант",
+                "archived": true
+            }
+        ],
+        "position": 3,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 2
+    },
+    {
+        "id": "fa53b7e4-0f5a-4f4d-92b1-d35838a15bb2",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "multi",
+        "title": "Направления",
+        "options": [
+            {
+                "id": "first",
+                "title": "Первый вариант",
+                "archived": false
+            },
+            {
+                "id": "second",
+                "title": "Второй вариант",
+                "archived": false
+            },
+            {
+                "id": "retired",
+                "title": "Архивный вариант",
+                "archived": true
+            }
+        ],
+        "position": 4,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 2
+    },
+    {
+        "id": "91babb56-d9f0-40c4-8d24-bd3918bd5195",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "checkbox",
+        "title": "Согласование",
+        "options": [],
+        "position": 5,
+        "required": true,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+    },
+    {
+        "id": "fcb13e84-2f8f-4855-aebc-31a4c4de401f",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "url",
+        "title": "Материалы",
+        "options": [],
+        "position": 6,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+    },
+    {
+        "id": "acbcfa97-a240-4640-82d5-5392193bb3e6",
+        "spaceId": "7a192913-796d-4ecb-820b-e338294ee77f",
+        "projectId": "f4cb7247-3736-4bac-812e-0ae811b3d495",
+        "type": "text",
+        "title": "Старое поле",
+        "options": [],
+        "position": 7,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": true,
+        "predecessorId": null,
+        "revision": 2
+    }
+]

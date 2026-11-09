@@ -1,0 +1,14 @@
+.shared-task-series { min-width: 0; }
+.shared-task-series > p, .shared-series-status p { max-width: 70ch; overflow-wrap: anywhere; }
+.shared-task-series .shared-series-fields { display: grid; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.shared-series-fields legend { margin-block: 16px; font-weight: 700; }
+.shared-series-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.shared-task-series .shared-series-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.shared-series-status { padding-block: 8px; border-bottom: 1px solid var(--line); }
+.shared-series-history ol, .shared-series-exceptions ul { padding: 0; list-style: none; }
+.shared-series-history li, .shared-series-exceptions li { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-block: 8px; border-bottom: 1px solid var(--line); }
+.shared-series-history li span, .shared-series-exceptions li span { flex: 1 1 160px; overflow-wrap: anywhere; }
+.shared-task-series small { color: var(--ink-soft); overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-task-series :is(.recurrence-range label, .recurrence-range label > span, .recurrence-selection-hint, .recurrence-preview, .recurrence-builder p, .shared-series-fields > p, .shared-series-pair label) { color: var(--ink); }
+.shared-series-fields:disabled { opacity: .7; }
+@media (max-width: 600px) { .shared-series-pair { grid-template-columns: minmax(0, 1fr); } }

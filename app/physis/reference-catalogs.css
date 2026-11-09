@@ -1,0 +1,147 @@
+.physis-reference-library { display: grid; gap: 24px; min-width: 0; }
+.physis-reference-search { display: grid; gap: 8px; max-width: 560px; margin-block: 24px; }
+.physis-reference-entry { border-top: 1px solid var(--line); padding-block: 8px 20px; }
+.physis-reference-entry summary { display: flex; flex-direction: column; justify-content: center; gap: 8px; cursor: pointer; min-height: 60px; padding-block: 12px; }
+.physis-reference-entry summary span { color: var(--ink-soft); font-size: 13px; }
+.physis-reference-entry dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 32px; margin: 12px 0 24px; }
+.physis-reference-entry dt { font-weight: 600; margin-bottom: 8px; }
+.physis-reference-entry dd { margin: 0; line-height: 1.7; }
+.physis-reference-entry dd a { display: inline-block; color: var(--ui-accent); margin-inline-end: 12px; }
+.physis-reference-entry dd small { display: block; margin-top: 12px; color: var(--ink-soft); }
+.physis-food-reference { margin-block: 16px; padding-block: 16px; border-block: 1px solid var(--line); }
+.physis-food-reference h4 { margin: 0 0 8px; }
+.physis-food-reference p { margin: 0 0 12px; }
+.physis-food-reference a { color: var(--ui-accent); }
+.physis-food-collection-note { margin-block: 0 24px; }
+@media (max-width: 600px) { .physis-reference-entry dl { grid-template-columns: minmax(0,1fr); gap: 20px; } }
+
+.physis-catalog-browser { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; gap: 24px; min-width: 0; }
+.physis-catalog-browser > * { min-width: 0; }
+.physis-catalog-sidebar > h3 { margin: 0 0 16px; }
+.physis-catalog-sidebar .physis-catalog-filter-content,
+.physis-catalog-sidebar .physis-catalog-category-options { grid-template-columns: minmax(0,1fr); }
+.physis-catalog-sidebar .physis-catalog-filter-content { padding-bottom: 0; }
+.physis :is(.physis-catalog-sidebar,.physis-catalog-sidebar-mobile) .physis-catalog-filter-content > fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.physis-catalog-sidebar .physis-catalog-category-options { padding-inline: 0; }
+.physis-catalog-sidebar :is(label,legend) { font-size: 14px; }
+.physis .physis-catalog-all { min-height: 44px; text-align: start; }
+.physis .physis-catalog-all[aria-pressed=true] { color: var(--ui-accent); background: color-mix(in srgb,var(--ui-accent) 9%,transparent); }
+.physis-catalog-header-controls { display: grid; justify-items: end; gap: 12px; width: min(100%,420px); margin-inline-start: auto; }
+.physis .physis-catalog-personal-actions { justify-content: flex-end; flex-wrap: nowrap; gap: 8px; margin: 0 0 0 auto; align-self: end; }
+.physis .physis-catalog-personal-actions > button { min-height: 44px; }
+.physis-catalog-row-actions { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 16px; }
+html[data-genesis-theme] .genesis-app .physis .physis-catalog-add { display: grid; place-items: center; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0; border: 0; box-shadow: none; background: color-mix(in srgb,var(--ui-accent) 9%,transparent); color: var(--ui-accent); font-size: 24px; line-height: 1; }
+.physis .physis-catalog-add:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 2px; }
+.physis .physis-catalog-notice { margin: 0; color: var(--ui-accent); }
+.physis-drug-editor-dialog .physis-settings-heading { justify-content: space-between; }
+.physis-drug-editor-form { display: grid; gap: 24px; min-width: 0; margin: 0; }
+.physis .physis-drug-editor-group { min-width: 0; margin: 0; padding: 0; border: 0; }
+.physis-drug-editor-group > legend { max-width: 100%; margin-bottom: 12px; padding: 0; font-size: 14px; font-weight: 600; }
+.physis-drug-editor-group > p { margin: 12px 0; font-size: 13px; line-height: 1.6; }
+.physis-drug-editor-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; gap: 16px; }
+.physis-drug-editor-fields > * { min-width: 0; }
+.physis-drug-editor-wide { grid-column: 1/-1; }
+.physis-drug-editor-single { grid-template-columns: minmax(0,1fr); }
+.physis-drug-editor-nutrient { display: grid; grid-template-columns: minmax(0,2fr) repeat(2,minmax(0,1fr)) 44px; align-items: end; gap: 12px; margin-bottom: 16px; }
+.physis-drug-editor-form .physis-field { display: grid; gap: 8px; }
+.physis-drug-editor-form .physis-field > :is(input,select,textarea) { width: 100%; min-width: 0; box-sizing: border-box; }
+.physis-drug-editor-form .physis-field > :is(input,select) { height: 44px; padding-block: 8px; }
+.physis .physis-drug-editor-actions { justify-content: flex-end; padding-top: 20px; border-top: 1px solid var(--line); }
+.physis-personal-notes { white-space: pre-line; }
+@media (min-width: 901px) {
+  .physis-catalog-browser { grid-template-columns: 280px minmax(0,1fr); }
+  .physis-catalog-heading { align-items: start; }
+}
+@media (max-width: 600px) {
+  .physis-drug-editor-fields { grid-template-columns: minmax(0,1fr); }
+  .physis-drug-editor-nutrient { grid-template-columns: repeat(2,minmax(0,1fr)) 44px; }
+  .physis-drug-editor-nutrient > :first-child { grid-column: 1/-1; }
+  .physis-catalog-header-controls { width: 100%; }
+  .physis .physis-catalog-personal-actions { width: 100%; }
+  .physis .physis-catalog-personal-actions > .physis-primary { flex: 1; }
+  html[data-genesis-theme] .genesis-app .physis .physis-library-sections.physis-equal-switch > button { font-size: 12px; padding-inline: 4px; overflow-wrap: normal; word-break: normal; hyphens: none; }
+  .physis-catalog-browser .physis-catalog-row { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .physis-catalog-browser .physis-catalog-row-actions { flex-direction: row; justify-content: flex-end; padding: 0 0 12px; }
+  html[data-genesis-theme] .genesis-app .physis .physis-catalog-row summary strong { font-size: 13px; overflow-wrap: normal; word-break: normal; hyphens: none; }
+}
+.physis-reference-foods { margin-block: 20px; padding-block: 16px; border-block: 1px solid var(--line); }
+.physis-reference-foods table { width: 100%; table-layout: fixed; font-size: 13px; border-collapse: collapse; }
+.physis-reference-foods :is(th,td) { padding: 10px 6px; text-align: start; vertical-align: top; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.physis-reference-foods tr > :first-child { width: 46%; }
+.physis-reference-foods tr > :last-child { width: 25%; }
+.physis-reference-foods tbody th { font-weight: 400; }
+.physis-nutrient-terms > summary { cursor: pointer; min-height: 44px; padding-block: 12px; font-weight: 600; }
+.physis-nutrient-terms .physis-reference-entry > :is(p,h4) { margin-inline: 16px; }
+.physis-nutrient-term-sources { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; }
+.physis-mineral-overview { padding: 0 0 20px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+.physis-mineral-overview > summary { min-height: 44px; padding-block: 12px; font-weight: 600; cursor: pointer; }
+.physis-mineral-overview > label { display: grid; gap: 8px; max-width: 220px; margin-block: 20px; }
+.physis-mineral-reference { margin-block: 24px; }
+.physis-mineral-reference h4 { margin: 0 0 12px; }
+.physis-mineral-table { min-width: 0; }
+.physis-mineral-table table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.physis-mineral-table caption { text-align: start; padding-block: 8px; font-weight: 600; }
+.physis .physis-mineral-table :is(th,td) { padding: 10px 6px; text-align: start; vertical-align: top; overflow-wrap: anywhere; border-bottom: 1px solid var(--line); }
+.physis-mineral-table tbody th { font-weight: 500; }
+.physis-mineral-overview th:first-child { width: 40%; }
+.physis-mineral-overview th small { display: block; margin-top: 4px; color: var(--ink-soft); font-size: 11px; font-weight: 400; }
+.physis-mineral-reference .physis-nutrient-term-sources { padding-inline: 0; }
+@media (max-width: 600px) {
+  .physis .physis-mineral-table :is(th,td) { padding: 10px 4px; font-size: 12px; }
+  .physis .physis-mineral-table td { white-space: nowrap; }
+}
+
+.physis-catalog-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-block: 24px; }
+.physis-catalog-toolbar > label { display: grid; flex: 1 1 240px; gap: 8px; min-width: 0; }
+.physis-catalog-toolbar > .physis-catalog-sort { flex: 0 1 240px; }
+.physis-catalog-toolbar > button { flex: 0 1 auto; }
+.physis .physis-food-heading { display: flex; flex-wrap: wrap; }
+.physis-food-heading > .physis-food-intro { flex: 1 1 300px; min-width: 0; }
+.physis .physis-food-heading > .physis-actions { flex: 1 1 560px; justify-content: flex-start; }
+.physis-food-heading > [role=alert] { flex-basis: 100%; }
+.physis .physis-food-heading :is(h2,p) { overflow-wrap: normal; word-break: normal; }
+.physis .physis-nutrition .physis-nutrition-filters { grid-template-columns: repeat(auto-fit,minmax(min(100%,13rem),1fr)); }
+.physis-catalog-filters { border-block: 1px solid var(--line); min-width: 0; }
+.physis-catalog-filters > summary { cursor: pointer; min-height: 52px; padding: 14px 4px; font-weight: 600; }
+.physis-catalog-filter-content { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; padding-block: 8px 20px; }
+.physis-catalog-filter-content > label { display: grid; gap: 8px; min-width: 0; }
+.physis-catalog-filter-content > fieldset { grid-column: 1/-1; min-width: 0; border: 0; padding: 0; margin: 0; }
+.physis-catalog-filter-content legend { margin-block: 8px 12px; font-size: 14px; color: var(--ink-soft); }
+.physis-catalog-category-options { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 4px 20px; max-height: none; overflow: visible; padding: 4px; }
+.physis .physis-catalog-category-options > label { display: grid; grid-template-columns: 20px minmax(0,1fr) max-content; align-items: center; gap: 8px; min-height: 44px; min-width: 0; width: 100%; box-sizing: border-box; padding: 12px; cursor: pointer; }
+.physis-catalog-category-options span { min-width: 0; font-size: 13px; line-height: 1.5; }
+.physis-catalog-category-options small { justify-self: end; white-space: nowrap; color: var(--ink-soft); font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.physis .physis-catalog-selection { font-size: 14px; color: var(--ink-soft); max-width: none; margin: 0 0 20px; }
+.physis .physis-catalog-text-action { justify-self: start; border: 0; background: transparent; color: var(--ui-accent); padding-inline: 0; }
+.physis-catalog-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: start; gap: 12px; border-top: 1px solid var(--line); }
+.physis-catalog-row > .physis-reference-entry { min-width: 0; border: 0; }
+.physis-catalog-row > .physis-catalog-icon { margin-top: 16px; }
+html[data-genesis-theme] .genesis-app .physis .physis-catalog-row summary { display: grid; grid-template-columns: 18px minmax(0,1fr); justify-content: start; align-items: start; gap: 6px 10px; text-align: start; }
+html[data-genesis-theme] .genesis-app .physis .physis-catalog-row summary::before { grid-column: 1; grid-row: 1/3; }
+.physis-catalog-row summary > :is(strong,span) { grid-column: 2; }
+html[data-genesis-theme] .genesis-app .physis .physis-catalog-icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 10px; border: 0; background: transparent; box-shadow: none; color: var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .physis .physis-catalog-icon:hover { background: color-mix(in srgb,var(--ui-accent) 9%,transparent); color: var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .physis .physis-catalog-toggle[aria-pressed=true] { color: var(--ui-accent); background: color-mix(in srgb,var(--ui-accent) 12%,transparent); }
+.physis .physis-catalog-icon:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 2px; }
+.physis-catalog-details dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px 28px; margin: 16px 0 24px; }
+.physis-catalog-details dt { font-weight: 600; margin-bottom: 8px; }
+.physis-catalog-details dd { margin: 0; line-height: 1.7; white-space: pre-line; }
+.physis-catalog-details dd a { display: inline-block; color: var(--ui-accent); margin: 0 12px 8px 0; overflow-wrap: anywhere; }
+.physis-catalog-details dd small { display: block; margin-top: 8px; color: var(--ink-soft); }
+.physis-catalog-editor { width: min(900px,calc(100vw - 32px)); }
+.physis-catalog-editor fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.physis-catalog-editor legend { font-weight: 600; margin-bottom: 12px; }
+.physis-catalog-editor-tags { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px 16px; overflow: visible; padding: 4px; margin-bottom: 16px; }
+.physis .physis-catalog-editor-tags label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.physis-catalog-editor fieldset > label { display: grid; gap: 8px; }
+.physis :is(.physis-catalog-row,.physis-catalog-details,.physis-catalog-filters,.physis-catalog-editor,.physis-nutrition-catalog) :is(h2,h3,h4,p,span,label,button,dd) { overflow-wrap: normal; word-break: normal; hyphens: none; }
+.physis-catalog-editor input[type=checkbox], .physis-catalog-category-options input[type=checkbox] { width: 20px; height: 20px; min-height: 20px; flex: 0 0 20px; }
+@media (max-width: 600px) {
+  .physis-catalog-filter-content, .physis-catalog-details dl, .physis-catalog-editor-tags { grid-template-columns: minmax(0,1fr); }
+  .physis-catalog-toolbar { align-items: stretch; }
+  .physis-catalog-toolbar > .physis-catalog-sort { flex-basis: 100%; }
+  .physis-catalog-row { gap: 4px; }
+  .physis-catalog-row .physis-reference-entry summary { gap: 6px; }
+  .physis-catalog-editor { width: calc(100vw - 24px); }
+}
+html[data-genesis-theme] .genesis-app .physis .physis-reference-library .physis-library-sections { grid-auto-flow: row; grid-template-columns: minmax(0,1fr); width: 100%; margin: 0 0 16px; }

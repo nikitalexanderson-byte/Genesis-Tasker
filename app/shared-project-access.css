@@ -1,0 +1,30 @@
+.shared-project-access { min-width:0; margin-block:16px; border-block:1px solid var(--line); }
+.shared-team-member > .shared-project-access { grid-column:1/-1; }
+.shared-project-access summary { min-height:44px; padding-block:12px; cursor:pointer; font-weight:600; }
+.shared-project-access p { max-width:72ch; line-height:1.6; }
+.shared-project-access fieldset { min-width:0; margin:0; padding:0; border:0; }
+.shared-project-access :is(p,strong,small,label,li,h4) { overflow-wrap:anywhere; }
+.shared-project-access label { display:grid; gap:6px; min-width:0; }
+.shared-project-access .shared-project-access-check { display:flex; align-items:flex-start; gap:10px; padding-block:8px; }
+.shared-project-access-check input { flex:none; margin-top:4px; }
+.shared-project-access-rules { margin-block:16px; }
+.shared-project-access-rule { display:grid; grid-template-columns:minmax(0,1fr) minmax(160px,1fr); align-items:start; gap:12px 20px; padding-block:16px; border-bottom:1px solid var(--line); }
+.shared-project-access-rule small { display:block; margin-top:4px; }
+.shared-project-access-rule .shared-project-access-check { grid-column:1/-1; }
+.shared-project-access :is(input[type=search],select,button) { min-height:44px; }
+.shared-project-access select { width:100%; min-width:0; }
+.shared-project-access-preview { padding-block:20px; margin-top:16px; border-top:1px solid var(--line); }
+.shared-project-access-preview ul { padding:0; margin:16px 0; list-style:none; max-height:360px; overflow:auto; }
+.shared-project-access-preview li { display:grid; gap:6px; padding-block:12px; border-bottom:1px solid var(--line); }
+@media(max-width:600px) { .shared-project-access-rule { grid-template-columns:minmax(0,1fr); }.shared-project-access button { width:100%; } }
+.shared-project-access button.icon-action-button { width:44px; flex:none; }
+.shared-project-access .shared-project-access-check { min-height:44px; box-sizing:border-box; }
+.shared-project-access[open] > :not(summary) { margin-block:16px; }
+.shared-project-access[open] > p { margin-top:16px; margin-bottom:20px; }
+.shared-project-access fieldset { display:grid; gap:16px; }
+.shared-project-access fieldset > :is(p,button,label,.shared-project-access-rules) { margin-block:0; }
+.shared-project-access fieldset > button { justify-self:start; }
+.shared-project-access fieldset > .shared-project-access-check { align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:var(--ui-radius); }
+.shared-project-access fieldset > .shared-project-access-check input { margin:0; }
+.shared-project-access-preview { display:grid; gap:16px; }
+.shared-project-access-preview > :is(p,ul) { margin-block:0; }

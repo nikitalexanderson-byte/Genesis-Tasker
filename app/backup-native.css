@@ -1,0 +1,5 @@
+html,body,#root {margin:0;min-height:100%;background:var(--surface);color:var(--ink);}
+.backup-panel {padding:16px;max-width:900px;margin-inline:auto;}
+.backup-panel :is(button,select,summary) {min-height:48px;}
+.backup-panel :is(input,textarea,select) {font-size:16px;max-width:100%;}
+.backup-panel h3 {display:none;}

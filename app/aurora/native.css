@@ -1,0 +1,10 @@
+/* Percent sizing follows the measured WebView. Some embedded WebView versions
+   report a zero dynamic viewport during attach and retain a 0px dvh max-height. */
+html[data-aurora-native], html[data-aurora-native] body, html[data-aurora-native] #root { height:100%; margin:0; overflow:hidden; }
+html[data-aurora-native] { scroll-behavior:auto; }
+html[data-aurora-native] .aurora-backdrop { position:fixed; inset:0; height:var(--aurora-native-height,100vh); padding:0; display:block; background:var(--surface); }
+html[data-aurora-native] .aurora-dialog { box-sizing:border-box; width:100%; height:var(--aurora-native-height,100vh); max-height:none; min-height:0; padding:16px; border:0; border-radius:0; overflow:auto; }
+html[data-aurora-native] .aurora-header { display:none; }
+html[data-aurora-native] .aurora-dialog :is(button,select,summary) { min-height:48px; }
+html[data-aurora-native] .aurora-save { margin-block:0 16px; }
+html[data-aurora-native] :is(.aurora-method-sheet,.aurora-card-insight) { max-height:calc(var(--aurora-native-height,100vh) - 24px); }

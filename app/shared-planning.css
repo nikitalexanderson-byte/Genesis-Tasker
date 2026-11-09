@@ -1,0 +1,49 @@
+html[data-genesis-theme] .genesis-app .shared-planning-dialog { width:min(1080px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); padding:24px; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:var(--ui-radius); overflow:auto; }
+.shared-planning-dialog > header { display:flex; align-items:start; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.shared-planning-dialog h2 { margin:0; }
+.shared-planning-dialog header p { margin:8px 0 0; overflow-wrap:anywhere; }
+.shared-planning-dialog :is(input,select,textarea,button) { max-width:100%; min-width:0; }
+.shared-planning-dialog :is(button,input,select) { min-height:44px; }
+.shared-planning-dialog label { display:grid; gap:8px; min-width:0; }
+.shared-planning-dialog section,.shared-planning-dialog > details { border-top:1px solid var(--line); margin-top:24px; padding-top:16px; }
+.shared-planning-dialog summary { cursor:pointer; padding-block:8px; }
+.shared-planning-actions,.shared-planning-choice { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin-block:16px; }
+.shared-planning-choice > label { flex:1 1 240px; }
+.shared-planning-dialog :is(.shared-planning-choice,.shared-planning-actions) > label { margin-block:0; flex:1 1 240px; }
+.shared-planning-dialog :is(.shared-planning-choice,.shared-planning-actions) > button { flex-shrink:0; margin-block:0; }
+.shared-planning-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; }
+.shared-planning-form > .shared-planning-form-fields { display:contents; }
+.shared-planning-form > :is(.shared-planning-form-wide,fieldset,.shared-planning-actions) { grid-column:1/-1; }
+.shared-planning-form-fields > :is(.shared-planning-form-wide,fieldset,.shared-planning-actions) { grid-column:1/-1; }
+.shared-planning-period { display:flex; flex-wrap:wrap; gap:8px 16px; font-variant-numeric:tabular-nums; }
+.shared-planning-totals { display:flex; flex-wrap:wrap; gap:16px 32px; margin-block:24px; }
+.shared-planning-totals div { min-width:140px; }
+.shared-planning-totals dt { font-weight:600; }
+.shared-planning-totals dd { margin:8px 0 0; font-variant-numeric:tabular-nums; }
+.shared-planning-dialog ul { list-style:none; padding:0; margin:0; }
+.shared-planning-dialog .shared-planning-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 16px; padding-block:16px; border-top:1px solid var(--line); }
+.shared-planning-task-title { display:grid; align-content:start; gap:8px; text-align:start; color:var(--ink); background:transparent; border:0; padding:0; overflow-wrap:anywhere; }
+.shared-planning-task-title strong { font:500 15px/1.5 var(--font-ui); }
+.shared-planning-task-title small { color:var(--ink-soft); font:400 var(--type-caption)/1.5 var(--font-ui); }
+.shared-planning-row > form { grid-column:1/-1; }
+.shared-planning-row > button,.shared-planning-task-title { align-self:start; }
+.shared-planning-members { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.shared-planning-members :is(th,td) { text-align:start; padding:12px 8px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.shared-planning-members th { font-weight:600; }
+.shared-planning-error { padding-block:16px; color:var(--ink); }
+.shared-planning-error p { margin-top:0; }
+.shared-estimate-inputs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; margin:16px 0; padding:16px 0; border:0; border-top:1px solid var(--line); }
+.shared-estimate-inputs legend { padding-inline-end:12px; font-weight:600; }
+.shared-estimate-inputs label { display:grid; gap:8px; min-width:0; }
+.shared-estimate-inputs input { width:100%; min-width:0; min-height:44px; }
+.shared-estimate-inputs small { grid-column:1/-1; color:var(--ink-soft); line-height:1.5; }
+.shared-estimate-values { display:flex; flex-wrap:wrap; gap:12px 24px; margin-block:12px; font:400 var(--type-caption)/1.5 var(--font-ui); }
+.shared-estimate-values dt { color:var(--ink-soft); }
+.shared-estimate-values dd { margin:4px 0 0; font-variant-numeric:tabular-nums; }
+@media(max-width:600px) {
+ html[data-genesis-theme] .genesis-app .shared-planning-dialog { padding:16px; }
+ .shared-planning-form { grid-template-columns:minmax(0,1fr); }
+ .shared-planning-dialog .shared-planning-row { grid-template-columns:minmax(0,1fr); }
+ .shared-planning-members :is(th,td) { padding:12px 4px; font-size:var(--type-caption); }
+ .shared-planning-members th:first-child { width:40%; }
+}

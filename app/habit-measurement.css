@@ -1,0 +1,33 @@
+.habit-measurement-fields p { margin: 0; color: var(--ink-soft); line-height: 1.5; }
+.habit-measurement-control { display: grid; gap: 12px; min-width: 0; margin-top: 12px; font-variant-numeric: tabular-nums; }
+.genesis-app .habit-check-list > .measured-habit > .habit-check { grid-column:1; grid-row:1; }
+.genesis-app .habit-check-list > .measured-habit > .habit-check-copy { grid-column:2 / -2; grid-row:1; }
+.genesis-app .habit-check-list > .measured-habit > output { grid-column:-2 / -1; grid-row:1; }
+.genesis-app .habit-check-list > .measured-habit > .habit-measurement-control { grid-column:1 / -1; grid-row:2; }
+.genesis-app .habit-check-list > .measured-habit > :is(.habit-quality-control,.habit-quality-confirmed) { grid-column:1 / -1; grid-row:3; }
+.genesis-app .habit-measurement-control strong { overflow:visible; white-space:normal; }
+.habit-measurement-summary { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.habit-measurement-summary strong { color: var(--ink); overflow-wrap: anywhere; }
+.habit-measurement-summary > span { color: var(--ink-soft); font-size: 13px; }
+.habit-measurement-add { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.habit-measurement-add label { display: grid; flex: 1 1 100px; min-width: 0; gap: 4px; }
+.habit-measurement-add label > span { color: var(--ink-soft); font-size: 13px; }
+.genesis-app .habit-measurement-control :is(button, input) { min-height: 44px; border-radius: var(--ui-radius); }
+.genesis-app .habit-measurement-control button { padding:8px 12px; font-size:14px; line-height:1.4; white-space:normal; }
+.habit-measurement-control input { width: 100%; min-width: 0; font-size: 16px; }
+.habit-measurement-history { min-width: 0; }
+.habit-measurement-history > summary { padding-block: 10px; color: var(--ui-accent); cursor: pointer; }
+.habit-measurement-history ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.habit-measurement-history > ol > li { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 8px; }
+.habit-measurement-history li > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
+.habit-measurement-history time { color: var(--ink-soft); font-size: 12px; }
+.habit-measurement-history li span { overflow-wrap: anywhere; }
+.habit-measurement-entry-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.habit-measurement-history li details { color: var(--ink-soft); font-size: 13px; }
+.habit-measurement-history li details summary { padding-block: 8px; cursor: pointer; }
+.habit-measurement-history li details li { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.genesis-app .habit-measurement-control [role="alert"] { color: var(--danger, var(--ink)); }
+@media (max-width: 640px) {
+  .habit-measurement-add label { flex-basis: 100%; }
+  .habit-measurement-add > button { flex: 1 1 auto; }
+}

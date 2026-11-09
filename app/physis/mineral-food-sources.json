@@ -1,0 +1,1320 @@
+{
+  "calcium": {
+    "label": [
+      "Кальций",
+      "Calcium"
+    ],
+    "note": [
+      "Шпинат содержит кальций, но оксалаты заметно снижают его доступность. Состав рыбы с костями отличается от филе; таблица не означает одинаковое усвоение из всех продуктов.",
+      "Spinach contains calcium, but oxalates markedly reduce availability. Fish with bones differs from fillets; the table does not imply equal absorption from every food."
+    ],
+    "items": [
+      {
+        "food": [
+          "Йогурт натуральный цельномолочный",
+          "Yogurt, plain, whole milk"
+        ],
+        "amount": 121,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171284/nutrients",
+        "fdcId": 171284,
+        "nutrientId": 1087
+      },
+      {
+        "food": [
+          "Греческий йогурт, натуральный цельномолочный",
+          "Greek yogurt, plain, whole milk"
+        ],
+        "amount": 100,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171304/nutrients",
+        "fdcId": 171304,
+        "nutrientId": 1087
+      },
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 269,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1087
+      },
+      {
+        "food": [
+          "Тахини из обжаренного кунжута",
+          "Tahini from roasted sesame kernels"
+        ],
+        "amount": 426,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170189/nutrients",
+        "fdcId": 170189,
+        "nutrientId": 1087
+      },
+      {
+        "food": [
+          "Капуста кейл, сырая",
+          "Kale, raw"
+        ],
+        "amount": 254,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168421/nutrients",
+        "fdcId": 168421,
+        "nutrientId": 1087
+      },
+      {
+        "food": [
+          "Брокколи, сырая",
+          "Broccoli, raw"
+        ],
+        "amount": 47,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170379/nutrients",
+        "fdcId": 170379,
+        "nutrientId": 1087
+      }
+    ]
+  },
+  "phosphorus": {
+    "label": [
+      "Фосфор",
+      "Phosphorus"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 256,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1091
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 172,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1091
+      },
+      {
+        "food": [
+          "Говядина, постный стейк, приготовленная",
+          "Beef top sirloin, lean, cooked"
+        ],
+        "amount": 244,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168634/nutrients",
+        "fdcId": 168634,
+        "nutrientId": 1091
+      },
+      {
+        "food": [
+          "Йогурт натуральный цельномолочный",
+          "Yogurt, plain, whole milk"
+        ],
+        "amount": 95,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171284/nutrients",
+        "fdcId": 171284,
+        "nutrientId": 1091
+      },
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 481,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1091
+      },
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 497,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1091
+      }
+    ]
+  },
+  "magnesium": {
+    "label": [
+      "Магний",
+      "Magnesium"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Пшеничные отруби",
+          "Wheat bran"
+        ],
+        "amount": 611,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/169722/nutrients",
+        "fdcId": 169722,
+        "nutrientId": 1090
+      },
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 270,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1090
+      },
+      {
+        "food": [
+          "Тахини из обжаренного кунжута",
+          "Tahini from roasted sesame kernels"
+        ],
+        "amount": 95,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170189/nutrients",
+        "fdcId": 170189,
+        "nutrientId": 1090
+      },
+      {
+        "food": [
+          "Грецкие орехи",
+          "Walnuts"
+        ],
+        "amount": 158,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170187/nutrients",
+        "fdcId": 170187,
+        "nutrientId": 1090
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 79,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1090
+      },
+      {
+        "food": [
+          "Авокадо",
+          "Avocado"
+        ],
+        "amount": 29,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+        "fdcId": 171705,
+        "nutrientId": 1090
+      }
+    ]
+  },
+  "potassium": {
+    "label": [
+      "Калий",
+      "Potassium"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Курага, сушёные абрикосы",
+          "Apricots, dried"
+        ],
+        "amount": 1162,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173941/nutrients",
+        "fdcId": 173941,
+        "nutrientId": 1092
+      },
+      {
+        "food": [
+          "Авокадо",
+          "Avocado"
+        ],
+        "amount": 485,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+        "fdcId": 171705,
+        "nutrientId": 1092
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 558,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1092
+      },
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 628,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1092
+      },
+      {
+        "food": [
+          "Говядина, постный стейк, приготовленная",
+          "Beef top sirloin, lean, cooked"
+        ],
+        "amount": 393,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168634/nutrients",
+        "fdcId": 168634,
+        "nutrientId": 1092
+      },
+      {
+        "food": [
+          "Брокколи, сырая",
+          "Broccoli, raw"
+        ],
+        "amount": 316,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170379/nutrients",
+        "fdcId": 170379,
+        "nutrientId": 1092
+      }
+    ]
+  },
+  "sodium": {
+    "label": [
+      "Натрий",
+      "Sodium"
+    ],
+    "note": [
+      "В солёных и переработанных продуктах количество сильно зависит от рецепта. Сверяйте этикетку; 100 г здесь — база сравнения, а не рекомендуемая порция.",
+      "Amounts in salted and processed foods depend strongly on the recipe. Check labels; 100 g is a comparison basis, not a recommended serving."
+    ],
+    "items": [
+      {
+        "food": [
+          "Обычная поваренная соль (NaCl), расчёт",
+          "Ordinary table salt (NaCl), calculated"
+        ],
+        "portion": [
+          "1 г соли",
+          "1 g salt"
+        ],
+        "amount": 400,
+        "unit": "mg",
+        "approximate": true,
+        "source": "https://www.nationalacademies.org/read/10925/chapter/8"
+      },
+      {
+        "food": [
+          "Анчоусы в масле, без заливки",
+          "Anchovies in oil, drained"
+        ],
+        "amount": 3668,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/174183/nutrients",
+        "fdcId": 174183,
+        "nutrientId": 1093
+      },
+      {
+        "food": [
+          "Квашеная капуста, консервированная",
+          "Sauerkraut, canned"
+        ],
+        "amount": 661,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/169279/nutrients",
+        "fdcId": 169279,
+        "nutrientId": 1093
+      },
+      {
+        "food": [
+          "Йогурт натуральный цельномолочный",
+          "Yogurt, plain, whole milk"
+        ],
+        "amount": 46,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171284/nutrients",
+        "fdcId": 171284,
+        "nutrientId": 1093
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 124,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1093
+      }
+    ]
+  },
+  "iron": {
+    "label": [
+      "Железо",
+      "Iron"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 6.54,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1089
+      },
+      {
+        "food": [
+          "Устрицы, приготовленные на пару",
+          "Oysters, cooked with moist heat"
+        ],
+        "amount": 9.21,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171980/nutrients",
+        "fdcId": 171980,
+        "nutrientId": 1089
+      },
+      {
+        "food": [
+          "Мидии, приготовленные",
+          "Mussels, cooked"
+        ],
+        "amount": 6.72,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/174217/nutrients",
+        "fdcId": 174217,
+        "nutrientId": 1089
+      },
+      {
+        "food": [
+          "Говядина, постный стейк, приготовленная",
+          "Beef top sirloin, lean, cooked"
+        ],
+        "amount": 1.96,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168634/nutrients",
+        "fdcId": 168634,
+        "nutrientId": 1089
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 2.71,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1089
+      },
+      {
+        "food": [
+          "Тахини из обжаренного кунжута",
+          "Tahini from roasted sesame kernels"
+        ],
+        "amount": 8.95,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170189/nutrients",
+        "fdcId": 170189,
+        "nutrientId": 1089
+      }
+    ]
+  },
+  "zinc": {
+    "label": [
+      "Цинк",
+      "Zinc"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Устрицы, приготовленные на пару",
+          "Oysters, cooked with moist heat"
+        ],
+        "amount": 78.6,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171980/nutrients",
+        "fdcId": 171980,
+        "nutrientId": 1095
+      },
+      {
+        "food": [
+          "Говядина, постный стейк, приготовленная",
+          "Beef top sirloin, lean, cooked"
+        ],
+        "amount": 5.71,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168634/nutrients",
+        "fdcId": 168634,
+        "nutrientId": 1095
+      },
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 5.3,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1095
+      },
+      {
+        "food": [
+          "Тахини из обжаренного кунжута",
+          "Tahini from roasted sesame kernels"
+        ],
+        "amount": 4.62,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170189/nutrients",
+        "fdcId": 170189,
+        "nutrientId": 1095
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 1.05,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1095
+      },
+      {
+        "food": [
+          "Мидии, приготовленные",
+          "Mussels, cooked"
+        ],
+        "amount": 2.67,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/174217/nutrients",
+        "fdcId": 174217,
+        "nutrientId": 1095
+      }
+    ]
+  },
+  "copper": {
+    "label": [
+      "Медь",
+      "Copper"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 14.283,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1098
+      },
+      {
+        "food": [
+          "Устрицы, приготовленные на пару",
+          "Oysters, cooked with moist heat"
+        ],
+        "amount": 5.707,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171980/nutrients",
+        "fdcId": 171980,
+        "nutrientId": 1098
+      },
+      {
+        "food": [
+          "Тахини из обжаренного кунжута",
+          "Tahini from roasted sesame kernels"
+        ],
+        "amount": 1.61,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170189/nutrients",
+        "fdcId": 170189,
+        "nutrientId": 1098
+      },
+      {
+        "food": [
+          "Грецкие орехи",
+          "Walnuts"
+        ],
+        "amount": 1.586,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170187/nutrients",
+        "fdcId": 170187,
+        "nutrientId": 1098
+      },
+      {
+        "food": [
+          "Шиитаке, приготовленные без соли",
+          "Shiitake mushrooms, cooked without salt"
+        ],
+        "amount": 0.896,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168437/nutrients",
+        "fdcId": 168437,
+        "nutrientId": 1098
+      },
+      {
+        "food": [
+          "Авокадо",
+          "Avocado"
+        ],
+        "amount": 0.19,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+        "fdcId": 171705,
+        "nutrientId": 1098
+      }
+    ]
+  },
+  "manganese": {
+    "label": [
+      "Марганец",
+      "Manganese"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Пшеничные отруби",
+          "Wheat bran"
+        ],
+        "amount": 11.5,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/169722/nutrients",
+        "fdcId": 169722,
+        "nutrientId": 1101
+      },
+      {
+        "food": [
+          "Грецкие орехи",
+          "Walnuts"
+        ],
+        "amount": 3.414,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170187/nutrients",
+        "fdcId": 170187,
+        "nutrientId": 1101
+      },
+      {
+        "food": [
+          "Тахини из обжаренного кунжута",
+          "Tahini from roasted sesame kernels"
+        ],
+        "amount": 1.456,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170189/nutrients",
+        "fdcId": 170189,
+        "nutrientId": 1101
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 0.897,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1101
+      },
+      {
+        "food": [
+          "Шиитаке, приготовленные без соли",
+          "Shiitake mushrooms, cooked without salt"
+        ],
+        "amount": 0.204,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168437/nutrients",
+        "fdcId": 168437,
+        "nutrientId": 1101
+      },
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 2.179,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1101
+      }
+    ]
+  },
+  "selenium": {
+    "label": [
+      "Селен",
+      "Selenium"
+    ],
+    "note": [
+      "Бразильские орехи могут содержать много селена, но концентрация сильно колеблется. Не рассчитывайте точную суточную дозу по количеству орехов.",
+      "Brazil nuts can contain substantial selenium, but concentrations vary greatly. Do not calculate an exact daily dose from the number of nuts."
+    ],
+    "items": [
+      {
+        "food": [
+          "Тунец светлый в воде, без соли",
+          "Light tuna in water, no added salt"
+        ],
+        "amount": 80.4,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171986/nutrients",
+        "fdcId": 171986,
+        "nutrientId": 1103
+      },
+      {
+        "food": [
+          "Скумбрия атлантическая, приготовленная",
+          "Atlantic mackerel, cooked"
+        ],
+        "amount": 51.6,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/175120/nutrients",
+        "fdcId": 175120,
+        "nutrientId": 1103
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 30.8,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1103
+      },
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 36.1,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1103
+      },
+      {
+        "food": [
+          "Мидии, приготовленные",
+          "Mussels, cooked"
+        ],
+        "amount": 89.6,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/174217/nutrients",
+        "fdcId": 174217,
+        "nutrientId": 1103
+      },
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 46.8,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1103
+      }
+    ]
+  },
+  "iodine": {
+    "label": [
+      "Йод",
+      "Iodine"
+    ],
+    "note": [
+      "Примеры NIH ODS для указанных порций и продуктов. Содержание йода в водорослях, молочных продуктах и рыбе изменчиво; значения не заменяют анализ конкретного продукта.",
+      "NIH ODS examples for the stated portions and foods. Iodine in seaweed, dairy and fish is variable; these values do not replace analysis of a specific product."
+    ],
+    "items": [
+      {
+        "food": [
+          "Треска, запечённая",
+          "Cod, baked"
+        ],
+        "portion": [
+          "85 г (3 унции)",
+          "85 g (3 oz)"
+        ],
+        "amount": 146,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Iodine-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Нори, сушёные хлопья",
+          "Nori, dried flakes"
+        ],
+        "portion": [
+          "5 г (2 ст. ложки)",
+          "5 g (2 tbsp)"
+        ],
+        "amount": 116,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Iodine-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Устрицы, приготовленные",
+          "Oysters, cooked"
+        ],
+        "portion": [
+          "85 г (3 унции)",
+          "85 g (3 oz)"
+        ],
+        "amount": 93,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Iodine-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Греческий йогурт, натуральный обезжиренный",
+          "Greek yogurt, plain, nonfat"
+        ],
+        "portion": [
+          "¾ чашки (порция NIH)",
+          "¾ cup (NIH serving)"
+        ],
+        "amount": 87,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Iodine-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Яйцо, варёное вкрутую",
+          "Egg, hard-boiled"
+        ],
+        "portion": [
+          "1 крупное",
+          "1 large"
+        ],
+        "amount": 31,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Iodine-HealthProfessional/"
+      }
+    ]
+  },
+  "chromium": {
+    "label": [
+      "Хром (III)",
+      "Chromium (III)"
+    ],
+    "note": [
+      "Количество хрома зависит от почвы и обработки; измерения чувствительны к загрязнению образцов. Это приблизительные ориентиры NIH ODS, а не точная доза каждого продукта.",
+      "Chromium varies with soil and processing; measurements are sensitive to sample contamination. These are approximate NIH ODS examples, not exact amounts in every product."
+    ],
+    "items": [
+      {
+        "food": [
+          "Пивные дрожжи",
+          "Brewer’s yeast"
+        ],
+        "portion": [
+          "1 ст. ложка",
+          "1 tbsp"
+        ],
+        "amount": 3.3,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Chromium-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Говядина",
+          "Beef"
+        ],
+        "portion": [
+          "85 г (3 унции)",
+          "85 g (3 oz)"
+        ],
+        "amount": 2,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Chromium-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Томатный сок",
+          "Tomato juice"
+        ],
+        "portion": [
+          "1 чашка (порция NIH)",
+          "1 cup (NIH serving)"
+        ],
+        "amount": 1.5,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Chromium-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Яблоко с кожурой",
+          "Apple with peel"
+        ],
+        "portion": [
+          "1 среднее",
+          "1 medium"
+        ],
+        "amount": 1.4,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Chromium-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Банан",
+          "Banana"
+        ],
+        "portion": [
+          "1 средний",
+          "1 medium"
+        ],
+        "amount": 1,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Chromium-HealthProfessional/"
+      }
+    ]
+  },
+  "fluoride": {
+    "label": [
+      "Фторид",
+      "Fluoride"
+    ],
+    "note": [
+      "Количество в воде, напитках и приготовленных продуктах зависит от воды. Диапазон для чая приведён в NIH ODS; это не рекомендация увеличивать его потребление.",
+      "Amounts in water, drinks and cooked foods depend on water. The tea range is from NIH ODS; it is not advice to increase consumption."
+    ],
+    "items": [
+      {
+        "food": [
+          "Чёрный чай, заваренный",
+          "Black tea, brewed"
+        ],
+        "portion": [
+          "1 чашка (порция NIH)",
+          "1 cup (NIH serving)"
+        ],
+        "amount": 0.07,
+        "unit": "mg",
+        "source": "https://ods.od.nih.gov/factsheets/Fluoride-HealthProfessional/",
+        "amountMax": 1.5
+      },
+      {
+        "food": [
+          "Креветки, консервированные",
+          "Shrimp, canned"
+        ],
+        "portion": [
+          "85 г (3 унции)",
+          "85 g (3 oz)"
+        ],
+        "amount": 0.17,
+        "unit": "mg",
+        "source": "https://ods.od.nih.gov/factsheets/Fluoride-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Изюм",
+          "Raisins"
+        ],
+        "portion": [
+          "¼ чашки (порция NIH)",
+          "¼ cup (NIH serving)"
+        ],
+        "amount": 0.08,
+        "unit": "mg",
+        "source": "https://ods.od.nih.gov/factsheets/Fluoride-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Рис, приготовленный",
+          "Rice, cooked"
+        ],
+        "portion": [
+          "½ чашки (порция NIH)",
+          "½ cup (NIH serving)"
+        ],
+        "amount": 0.04,
+        "unit": "mg",
+        "source": "https://ods.od.nih.gov/factsheets/Fluoride-HealthProfessional/"
+      }
+    ]
+  },
+  "molybdenum": {
+    "label": [
+      "Молибден",
+      "Molybdenum"
+    ],
+    "note": [
+      "Данных о пищевом молибдене немного; количество зависит от почвы. Порции сохранены из таблицы NIH ODS, без неподтверждённого пересчёта в 100 г.",
+      "Food molybdenum data are limited and amounts depend on soil. NIH ODS servings are preserved without unsupported conversion to 100 g."
+    ],
+    "items": [
+      {
+        "food": [
+          "Вигна (коровий горох), варёная",
+          "Black-eyed peas, boiled"
+        ],
+        "portion": [
+          "½ чашки (порция NIH)",
+          "½ cup (NIH serving)"
+        ],
+        "amount": 288,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Говяжья печень, жареная",
+          "Beef liver, pan-fried"
+        ],
+        "portion": [
+          "85 г (3 унции)",
+          "85 g (3 oz)"
+        ],
+        "amount": 104,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Лимская фасоль, варёная",
+          "Lima beans, boiled"
+        ],
+        "portion": [
+          "½ чашки (порция NIH)",
+          "½ cup (NIH serving)"
+        ],
+        "amount": 104,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Йогурт, натуральный нежирный",
+          "Yogurt, plain, low-fat"
+        ],
+        "portion": [
+          "1 чашка (порция NIH)",
+          "1 cup (NIH serving)"
+        ],
+        "amount": 26,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Картофель, запечённый с кожурой",
+          "Potato, baked with skin"
+        ],
+        "portion": [
+          "1 средний",
+          "1 medium"
+        ],
+        "amount": 16,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Шпинат, варёный",
+          "Spinach, boiled"
+        ],
+        "portion": [
+          "½ чашки (порция NIH)",
+          "½ cup (NIH serving)"
+        ],
+        "amount": 8,
+        "unit": "mcg",
+        "source": "https://ods.od.nih.gov/factsheets/Molybdenum-HealthProfessional/"
+      }
+    ]
+  },
+  "chloride": {
+    "label": [
+      "Хлорид",
+      "Chloride"
+    ],
+    "note": [
+      "Расчёт приблизительный: около 60% массы NaCl — хлорид. Не применяется к заменителям соли с другим составом. Для других продуктов надёжных количеств в используемой базе нет; они не подменены нулями.",
+      "Approximate calculation: about 60% of NaCl weight is chloride. Not applicable to differently formulated salt substitutes. Reliable amounts for other foods are unavailable in the dataset used; missing values are not replaced with zero."
+    ],
+    "items": [
+      {
+        "food": [
+          "Обычная поваренная соль (NaCl), расчёт",
+          "Ordinary table salt (NaCl), calculated"
+        ],
+        "portion": [
+          "1 г соли",
+          "1 g salt"
+        ],
+        "amount": 600,
+        "unit": "mg",
+        "approximate": true,
+        "source": "https://www.nationalacademies.org/read/10925/chapter/8"
+      }
+    ]
+  }
+}

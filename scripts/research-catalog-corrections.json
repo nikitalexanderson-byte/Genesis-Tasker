@@ -1,0 +1,101 @@
+{
+  "PHY-0772": {
+    "restricted": true,
+    "status": "Австралия: исключён для новых listed medicines (TGA, 17.09.2026).",
+    "sources": [
+      "https://www.tga.gov.au/news/news-articles/andrographis-removed-listed-medicines-framework-because-allergy-risk"
+    ],
+    "scopeNote": "Австралия: с 17.09.2026 TGA исключила андрографис из ингредиентов для новых listed medicines из-за риска анафилаксии; существующие продукты рассматриваются отдельно. Это не всемирный запрет."
+  },
+  "PHY-0953": {
+    "status": "FDA не одобряет медицинское применение; правовой статус зависит от страны и состава.",
+    "sources": [
+      "https://www.govinfo.gov/content/pkg/FR-2026-10-14/html/2026-20943.htm"
+    ],
+    "scopeNote": "Нет одобренного FDA медицинского применения. Правила для листа кратома и продуктов с повышенным содержанием 7-гидроксимитрагинина различаются. Публикация DEA от 14.10.2026 — уведомление о намерении с возможным приказом не ранее 13.11.2026; она не вводит сама по себе окончательный запрет всего кратома."
+  },
+  "PHY-0553": {
+    "hidden": true
+  },
+  "PHY-0577": {
+    "hidden": true
+  },
+  "PHY-0753": {
+    "hidden": true
+  },
+  "PHY-1112": {
+    "hidden": true
+  },
+  "PHY-1188": {
+    "hidden": true
+  },
+  "PHY-0274": {
+    "restricted": true
+  },
+  "PHY-0207": {
+    "restricted": true
+  },
+  "PHY-0339": {
+    "restricted": true
+  },
+  "PHY-0776": {
+    "restricted": true
+  },
+  "PHY-0908": {
+    "restricted": true
+  },
+  "PHY-1025": {
+    "restricted": true
+  },
+  "PHY-1060": {
+    "restricted": true
+  },
+  "PHY-1121": {
+    "restricted": true
+  },
+  "PHY-1127": {
+    "restricted": true
+  },
+  "PHY-1139": {
+    "restricted": true
+  },
+  "PHY-1141": {
+    "restricted": true
+  },
+  "PHY-1185": {
+    "restricted": true
+  },
+  "PHY-0361": {
+    "restricted": true
+  },
+  "PHY-0407": {
+    "restricted": true
+  },
+  "PHY-0411": {
+    "restricted": true
+  },
+  "PHY-0456": {
+    "restricted": true
+  },
+  "PHY-0501": {
+    "restricted": true
+  },
+  "PHY-0572": {
+    "restricted": true
+  },
+  "PHY-0581": {
+    "restricted": true
+  },
+  "PHY-0591": {
+    "restricted": true
+  },
+  "PHY-0634": {
+    "restricted": true
+  },
+  "PHY-0735": {
+    "restricted": true
+  },
+  "PHY-0743": {
+    "restricted": true
+  }
+}

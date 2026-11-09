@@ -1,0 +1,1081 @@
+[
+  {
+    "id": "binary",
+    "now": "2026-10-17T12:00:00.000Z",
+    "workspace": {
+      "trackerSchemaVersion": 16,
+      "userProgress": {
+        "lifetimeXp": 0,
+        "laurelsBalance": 0,
+        "currentRankId": null,
+        "hiddenHeroicPathRevealedAt": null,
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "lastQualifiedDate": null,
+        "streakGoalMode": "rhythm",
+        "streakFreezeCount": 0,
+        "rhythmScore": 0,
+        "updatedAt": ""
+      },
+      "habits": [
+        {
+          "id": "habit-history-binary",
+          "createdAt": "2026-10-01T00:00:00.000Z",
+          "updatedAt": "2026-10-01T00:00:00.000Z",
+          "version": 1,
+          "syncState": "local",
+          "title": "PRIVATE synthetic history",
+          "description": "",
+          "createdDate": "2026-10-01",
+          "emoji": "✨",
+          "priority": 5,
+          "isKeyHabit": false,
+          "ritualId": "none",
+          "ritualName": "",
+          "color": "#bb8f4a",
+          "active": true,
+          "sourceTemplateId": null,
+          "sacredPracticeId": null,
+          "sacredSectorId": null,
+          "preferredTime": "",
+          "schedule": {
+            "startDate": "2026-10-01",
+            "endDate": null,
+            "timezone": "UTC",
+            "recurrence": {
+              "enabled": true,
+              "mode": "classic",
+              "pattern": "daily",
+              "days": [
+                4
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-01",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "UTC",
+                "gregorianYearStart": "january"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "scoringMode": "binary",
+          "qualityScale": "none",
+          "reminder": {
+            "enabled": false,
+            "time": "09:00",
+            "timing": "habit",
+            "syncToGoogleTasks": false,
+            "showInGoogleCalendar": false,
+            "googleTaskId": null,
+            "googleEventId": null
+          }
+        }
+      ],
+      "habitCompletions": [],
+      "habitMeasurements": [],
+      "habitTimers": [],
+      "habitHistory": [],
+      "habitTimerEpoch": "",
+      "sleepPlans": [],
+      "sleepEntries": [],
+      "moodEntries": [],
+      "addictionTrackers": [],
+      "addictionEntries": [],
+      "analyticsSnapshots": [],
+      "dailyGoalRecords": [],
+      "quests": [],
+      "achievementUnlocks": [],
+      "rewardTransactions": [],
+      "streakFreezeTransactions": [],
+      "habitSettings": {
+        "enabled": true,
+        "reportRange": "month",
+        "customRangeStart": "",
+        "customRangeEnd": "",
+        "collapsedSections": [],
+        "sectionOrder": [
+          "streak-resilience",
+          "daily-trackers",
+          "quests",
+          "streak-rewards",
+          "adaptive-suggestions",
+          "regular-habits",
+          "starter-habits",
+          "sleep-abstinence",
+          "achievements",
+          "statistics",
+          "sacred-habits"
+        ],
+        "dailyGoalModeChanges": [],
+        "plannedRestDays": [],
+        "notifications": {
+          "enabled": false,
+          "motivational": true,
+          "tone": "calm",
+          "dailyGoalTime": "20:30",
+          "quietHoursStart": "22:00",
+          "quietHoursEnd": "07:30"
+        },
+        "feedback": {
+          "animations": true,
+          "sound": false,
+          "haptics": false,
+          "achievementPopups": true,
+          "questsEnabled": true,
+          "gamificationWidgets": true
+        }
+      },
+      "hiddenDefaultTemplates": []
+    },
+    "commands": [
+      {
+        "id": "binary-0",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-binary",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-binary",
+        "heads": [],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 0"
+        }
+      },
+      {
+        "id": "binary-1",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-binary",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-binary",
+        "heads": [
+          "binary-0"
+        ],
+        "value": {
+          "completed": false,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 1"
+        }
+      },
+      {
+        "id": "binary-2",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-binary",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-binary",
+        "heads": [
+          "binary-1"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 2"
+        }
+      }
+    ],
+    "expected": {
+      "completion": {
+        "id": "habit-completion:habit-history-binary:2026-10-16",
+        "createdAt": "2026-10-17T12:00:00.000Z",
+        "updatedAt": "2026-10-17T12:00:00.000Z",
+        "version": 3,
+        "syncState": "local",
+        "habitId": "habit-history-binary",
+        "date": "2026-10-16",
+        "completed": true,
+        "qualityValue": null,
+        "note": "history 2",
+        "qualityConfirmedAt": null,
+        "completedTimes": [],
+        "score": 10,
+        "xpAwarded": 0
+      },
+      "historyIds": [
+        "binary-0",
+        "binary-1",
+        "binary-2"
+      ],
+      "measurementCount": 0,
+      "economyCompletionCount": 0,
+      "economyMeasurementCount": 0
+    }
+  },
+  {
+    "id": "credited-quality",
+    "now": "2026-10-17T12:00:00.000Z",
+    "workspace": {
+      "trackerSchemaVersion": 16,
+      "userProgress": {
+        "lifetimeXp": 0,
+        "laurelsBalance": 0,
+        "currentRankId": null,
+        "hiddenHeroicPathRevealedAt": null,
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "lastQualifiedDate": null,
+        "streakGoalMode": "rhythm",
+        "streakFreezeCount": 0,
+        "rhythmScore": 0,
+        "updatedAt": ""
+      },
+      "habits": [
+        {
+          "id": "habit-history-credited-quality",
+          "createdAt": "2026-10-01T00:00:00.000Z",
+          "updatedAt": "2026-10-01T00:00:00.000Z",
+          "version": 1,
+          "syncState": "local",
+          "title": "PRIVATE synthetic history",
+          "description": "",
+          "createdDate": "2026-10-01",
+          "emoji": "✨",
+          "priority": 5,
+          "isKeyHabit": false,
+          "ritualId": "none",
+          "ritualName": "",
+          "color": "#bb8f4a",
+          "active": true,
+          "sourceTemplateId": null,
+          "sacredPracticeId": null,
+          "sacredSectorId": null,
+          "preferredTime": "",
+          "schedule": {
+            "startDate": "2026-10-01",
+            "endDate": null,
+            "timezone": "UTC",
+            "recurrence": {
+              "enabled": true,
+              "mode": "classic",
+              "pattern": "daily",
+              "days": [
+                4
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-01",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "UTC",
+                "gregorianYearStart": "january"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "scoringMode": "quality-ten",
+          "qualityScale": "ten",
+          "reminder": {
+            "enabled": false,
+            "time": "09:00",
+            "timing": "habit",
+            "syncToGoogleTasks": false,
+            "showInGoogleCalendar": false,
+            "googleTaskId": null,
+            "googleEventId": null
+          }
+        }
+      ],
+      "habitCompletions": [
+        {
+          "id": "credited-original",
+          "habitId": "habit-history-credited-quality",
+          "date": "2026-10-16",
+          "completed": true,
+          "qualityValue": 10,
+          "qualityConfirmedAt": "2026-10-16T10:00:00.000Z",
+          "score": 10,
+          "xpAwarded": 10,
+          "note": "original",
+          "completedTimes": [],
+          "version": 1,
+          "syncState": "local",
+          "createdAt": "2026-10-16T10:00:00.000Z",
+          "updatedAt": "2026-10-16T10:00:00.000Z"
+        }
+      ],
+      "habitMeasurements": [],
+      "habitTimers": [],
+      "habitHistory": [],
+      "habitTimerEpoch": "",
+      "sleepPlans": [],
+      "sleepEntries": [],
+      "moodEntries": [],
+      "addictionTrackers": [],
+      "addictionEntries": [],
+      "analyticsSnapshots": [],
+      "dailyGoalRecords": [],
+      "quests": [],
+      "achievementUnlocks": [],
+      "rewardTransactions": [],
+      "streakFreezeTransactions": [],
+      "habitSettings": {
+        "enabled": true,
+        "reportRange": "month",
+        "customRangeStart": "",
+        "customRangeEnd": "",
+        "collapsedSections": [],
+        "sectionOrder": [
+          "streak-resilience",
+          "daily-trackers",
+          "quests",
+          "streak-rewards",
+          "adaptive-suggestions",
+          "regular-habits",
+          "starter-habits",
+          "sleep-abstinence",
+          "achievements",
+          "statistics",
+          "sacred-habits"
+        ],
+        "dailyGoalModeChanges": [],
+        "plannedRestDays": [],
+        "notifications": {
+          "enabled": false,
+          "motivational": true,
+          "tone": "calm",
+          "dailyGoalTime": "20:30",
+          "quietHoursStart": "22:00",
+          "quietHoursEnd": "07:30"
+        },
+        "feedback": {
+          "animations": true,
+          "sound": false,
+          "haptics": false,
+          "achievementPopups": true,
+          "questsEnabled": true,
+          "gamificationWidgets": true
+        }
+      },
+      "hiddenDefaultTemplates": []
+    },
+    "commands": [
+      {
+        "id": "credited-quality-0",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-credited-quality",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-credited-quality",
+        "heads": [],
+        "value": {
+          "completed": false,
+          "completedTimes": [],
+          "qualityValue": 8,
+          "qualityConfirmedAt": "2026-10-17T12:00:00.000Z",
+          "note": "history 0"
+        }
+      },
+      {
+        "id": "credited-quality-1",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-credited-quality",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-credited-quality",
+        "heads": [
+          "credited-quality-0"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": 3,
+          "qualityConfirmedAt": "2026-10-17T12:00:00.000Z",
+          "note": "history 1"
+        }
+      }
+    ],
+    "expected": {
+      "completion": {
+        "id": "credited-original",
+        "habitId": "habit-history-credited-quality",
+        "date": "2026-10-16",
+        "completed": true,
+        "qualityValue": 3,
+        "qualityConfirmedAt": "2026-10-17T12:00:00.000Z",
+        "score": 3,
+        "xpAwarded": 10,
+        "note": "history 1",
+        "completedTimes": [],
+        "version": 2,
+        "syncState": "local",
+        "createdAt": "2026-10-16T10:00:00.000Z",
+        "updatedAt": "2026-10-17T12:00:00.000Z"
+      },
+      "historyIds": [
+        "credited-quality-0",
+        "credited-quality-1"
+      ],
+      "measurementCount": 0,
+      "economyCompletionCount": 1,
+      "economyMeasurementCount": 0
+    }
+  },
+  {
+    "id": "quantity",
+    "now": "2026-10-17T12:00:00.000Z",
+    "workspace": {
+      "trackerSchemaVersion": 16,
+      "userProgress": {
+        "lifetimeXp": 0,
+        "laurelsBalance": 0,
+        "currentRankId": null,
+        "hiddenHeroicPathRevealedAt": null,
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "lastQualifiedDate": null,
+        "streakGoalMode": "rhythm",
+        "streakFreezeCount": 0,
+        "rhythmScore": 0,
+        "updatedAt": ""
+      },
+      "habits": [
+        {
+          "id": "habit-history-quantity",
+          "createdAt": "2026-10-01T00:00:00.000Z",
+          "updatedAt": "2026-10-01T00:00:00.000Z",
+          "version": 1,
+          "syncState": "local",
+          "title": "PRIVATE synthetic history",
+          "description": "",
+          "createdDate": "2026-10-01",
+          "emoji": "✨",
+          "priority": 5,
+          "isKeyHabit": false,
+          "ritualId": "none",
+          "ritualName": "",
+          "color": "#bb8f4a",
+          "active": true,
+          "sourceTemplateId": null,
+          "sacredPracticeId": null,
+          "sacredSectorId": null,
+          "preferredTime": "",
+          "schedule": {
+            "startDate": "2026-10-01",
+            "endDate": null,
+            "timezone": "UTC",
+            "recurrence": {
+              "enabled": true,
+              "mode": "classic",
+              "pattern": "daily",
+              "days": [
+                4
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-01",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "UTC",
+                "gregorianYearStart": "january"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "scoringMode": "binary",
+          "qualityScale": "none",
+          "reminder": {
+            "enabled": false,
+            "time": "09:00",
+            "timing": "habit",
+            "syncToGoogleTasks": false,
+            "showInGoogleCalendar": false,
+            "googleTaskId": null,
+            "googleEventId": null
+          },
+          "measurement": {
+            "kind": "quantity",
+            "unit": "pages",
+            "target": 2000,
+            "quickAdd": 1000
+          }
+        }
+      ],
+      "habitCompletions": [],
+      "habitMeasurements": [],
+      "habitTimers": [],
+      "habitHistory": [],
+      "habitTimerEpoch": "",
+      "sleepPlans": [],
+      "sleepEntries": [],
+      "moodEntries": [],
+      "addictionTrackers": [],
+      "addictionEntries": [],
+      "analyticsSnapshots": [],
+      "dailyGoalRecords": [],
+      "quests": [],
+      "achievementUnlocks": [],
+      "rewardTransactions": [],
+      "streakFreezeTransactions": [],
+      "habitSettings": {
+        "enabled": true,
+        "reportRange": "month",
+        "customRangeStart": "",
+        "customRangeEnd": "",
+        "collapsedSections": [],
+        "sectionOrder": [
+          "streak-resilience",
+          "daily-trackers",
+          "quests",
+          "streak-rewards",
+          "adaptive-suggestions",
+          "regular-habits",
+          "starter-habits",
+          "sleep-abstinence",
+          "achievements",
+          "statistics",
+          "sacred-habits"
+        ],
+        "dailyGoalModeChanges": [],
+        "plannedRestDays": [],
+        "notifications": {
+          "enabled": false,
+          "motivational": true,
+          "tone": "calm",
+          "dailyGoalTime": "20:30",
+          "quietHoursStart": "22:00",
+          "quietHoursEnd": "07:30"
+        },
+        "feedback": {
+          "animations": true,
+          "sound": false,
+          "haptics": false,
+          "achievementPopups": true,
+          "questsEnabled": true,
+          "gamificationWidgets": true
+        }
+      },
+      "hiddenDefaultTemplates": []
+    },
+    "commands": [
+      {
+        "id": "quantity-0",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-quantity",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-quantity",
+        "heads": [],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 0"
+        },
+        "measurement": {
+          "value": 2000,
+          "note": "measurement 0"
+        }
+      },
+      {
+        "id": "quantity-1",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-quantity",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-quantity",
+        "heads": [
+          "quantity-0"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 1"
+        },
+        "measurement": {
+          "value": 500,
+          "note": "measurement 1",
+          "entryId": "quantity-0:value",
+          "replaces": [
+            "quantity-0:value"
+          ]
+        }
+      },
+      {
+        "id": "quantity-2",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-quantity",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-quantity",
+        "heads": [
+          "quantity-1"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 2"
+        },
+        "measurement": {
+          "value": null,
+          "note": "measurement 2",
+          "entryId": "quantity-0:value",
+          "replaces": [
+            "quantity-1:value"
+          ]
+        }
+      },
+      {
+        "id": "quantity-3",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-quantity",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-quantity",
+        "heads": [
+          "quantity-2"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 3"
+        },
+        "measurement": {
+          "value": 2000,
+          "note": "measurement 3",
+          "entryId": "quantity-0:value",
+          "replaces": [
+            "quantity-2:value"
+          ]
+        }
+      }
+    ],
+    "expected": {
+      "completion": {
+        "id": "habit-completion:habit-history-quantity:2026-10-16",
+        "createdAt": "2026-10-17T12:00:00.000Z",
+        "updatedAt": "2026-10-17T12:00:00.000Z",
+        "version": 4,
+        "syncState": "local",
+        "habitId": "habit-history-quantity",
+        "date": "2026-10-16",
+        "completed": true,
+        "qualityValue": null,
+        "note": "history 3",
+        "qualityConfirmedAt": null,
+        "completedTimes": [],
+        "score": 10,
+        "xpAwarded": 0
+      },
+      "historyIds": [
+        "quantity-0",
+        "quantity-1",
+        "quantity-2",
+        "quantity-3"
+      ],
+      "measurementCount": 4,
+      "economyCompletionCount": 0,
+      "economyMeasurementCount": 0
+    }
+  },
+  {
+    "id": "interval",
+    "now": "2026-10-17T12:00:00.000Z",
+    "workspace": {
+      "trackerSchemaVersion": 16,
+      "userProgress": {
+        "lifetimeXp": 0,
+        "laurelsBalance": 0,
+        "currentRankId": null,
+        "hiddenHeroicPathRevealedAt": null,
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "lastQualifiedDate": null,
+        "streakGoalMode": "rhythm",
+        "streakFreezeCount": 0,
+        "rhythmScore": 0,
+        "updatedAt": ""
+      },
+      "habits": [
+        {
+          "id": "habit-history-interval",
+          "createdAt": "2026-10-01T00:00:00.000Z",
+          "updatedAt": "2026-10-01T00:00:00.000Z",
+          "version": 1,
+          "syncState": "local",
+          "title": "PRIVATE synthetic history",
+          "description": "",
+          "createdDate": "2026-10-01",
+          "emoji": "✨",
+          "priority": 5,
+          "isKeyHabit": false,
+          "ritualId": "none",
+          "ritualName": "",
+          "color": "#bb8f4a",
+          "active": true,
+          "sourceTemplateId": null,
+          "sacredPracticeId": null,
+          "sacredSectorId": null,
+          "preferredTime": "",
+          "schedule": {
+            "startDate": "2026-10-01",
+            "endDate": null,
+            "timezone": "UTC",
+            "recurrence": {
+              "enabled": true,
+              "mode": "classic",
+              "pattern": "daily",
+              "days": [
+                4
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-01",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "UTC",
+                "gregorianYearStart": "january"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "scoringMode": "binary",
+          "qualityScale": "none",
+          "reminder": {
+            "enabled": false,
+            "time": "09:00",
+            "timing": "habit",
+            "syncToGoogleTasks": false,
+            "showInGoogleCalendar": false,
+            "googleTaskId": null,
+            "googleEventId": null
+          },
+          "intervalSchedule": {
+            "intervalMinutes": 30,
+            "startTime": "09:00",
+            "endTime": "09:30",
+            "completionMode": "each"
+          }
+        }
+      ],
+      "habitCompletions": [],
+      "habitMeasurements": [],
+      "habitTimers": [],
+      "habitHistory": [],
+      "habitTimerEpoch": "",
+      "sleepPlans": [],
+      "sleepEntries": [],
+      "moodEntries": [],
+      "addictionTrackers": [],
+      "addictionEntries": [],
+      "analyticsSnapshots": [],
+      "dailyGoalRecords": [],
+      "quests": [],
+      "achievementUnlocks": [],
+      "rewardTransactions": [],
+      "streakFreezeTransactions": [],
+      "habitSettings": {
+        "enabled": true,
+        "reportRange": "month",
+        "customRangeStart": "",
+        "customRangeEnd": "",
+        "collapsedSections": [],
+        "sectionOrder": [
+          "streak-resilience",
+          "daily-trackers",
+          "quests",
+          "streak-rewards",
+          "adaptive-suggestions",
+          "regular-habits",
+          "starter-habits",
+          "sleep-abstinence",
+          "achievements",
+          "statistics",
+          "sacred-habits"
+        ],
+        "dailyGoalModeChanges": [],
+        "plannedRestDays": [],
+        "notifications": {
+          "enabled": false,
+          "motivational": true,
+          "tone": "calm",
+          "dailyGoalTime": "20:30",
+          "quietHoursStart": "22:00",
+          "quietHoursEnd": "07:30"
+        },
+        "feedback": {
+          "animations": true,
+          "sound": false,
+          "haptics": false,
+          "achievementPopups": true,
+          "questsEnabled": true,
+          "gamificationWidgets": true
+        }
+      },
+      "hiddenDefaultTemplates": []
+    },
+    "commands": [
+      {
+        "id": "interval-0",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-interval",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-interval",
+        "heads": [],
+        "value": {
+          "completed": false,
+          "completedTimes": [
+            "09:00"
+          ],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 0"
+        }
+      },
+      {
+        "id": "interval-1",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-interval",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-interval",
+        "heads": [
+          "interval-0"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [
+            "09:00",
+            "09:30"
+          ],
+          "qualityValue": null,
+          "qualityConfirmedAt": null,
+          "note": "history 1"
+        }
+      }
+    ],
+    "expected": {
+      "completion": {
+        "id": "habit-completion:habit-history-interval:2026-10-16",
+        "createdAt": "2026-10-17T12:00:00.000Z",
+        "updatedAt": "2026-10-17T12:00:00.000Z",
+        "version": 2,
+        "syncState": "local",
+        "habitId": "habit-history-interval",
+        "date": "2026-10-16",
+        "completed": true,
+        "qualityValue": null,
+        "note": "history 1",
+        "qualityConfirmedAt": null,
+        "completedTimes": [
+          "09:00",
+          "09:30"
+        ],
+        "score": 10,
+        "xpAwarded": 0
+      },
+      "historyIds": [
+        "interval-0",
+        "interval-1"
+      ],
+      "measurementCount": 0,
+      "economyCompletionCount": 0,
+      "economyMeasurementCount": 0
+    }
+  },
+  {
+    "id": "quality",
+    "now": "2026-10-17T12:00:00.000Z",
+    "workspace": {
+      "trackerSchemaVersion": 16,
+      "userProgress": {
+        "lifetimeXp": 0,
+        "laurelsBalance": 0,
+        "currentRankId": null,
+        "hiddenHeroicPathRevealedAt": null,
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "lastQualifiedDate": null,
+        "streakGoalMode": "rhythm",
+        "streakFreezeCount": 0,
+        "rhythmScore": 0,
+        "updatedAt": ""
+      },
+      "habits": [
+        {
+          "id": "habit-history-quality",
+          "createdAt": "2026-10-01T00:00:00.000Z",
+          "updatedAt": "2026-10-01T00:00:00.000Z",
+          "version": 1,
+          "syncState": "local",
+          "title": "PRIVATE synthetic history",
+          "description": "",
+          "createdDate": "2026-10-01",
+          "emoji": "✨",
+          "priority": 5,
+          "isKeyHabit": false,
+          "ritualId": "none",
+          "ritualName": "",
+          "color": "#bb8f4a",
+          "active": true,
+          "sourceTemplateId": null,
+          "sacredPracticeId": null,
+          "sacredSectorId": null,
+          "preferredTime": "",
+          "schedule": {
+            "startDate": "2026-10-01",
+            "endDate": null,
+            "timezone": "UTC",
+            "recurrence": {
+              "enabled": true,
+              "mode": "classic",
+              "pattern": "daily",
+              "days": [
+                4
+              ],
+              "interval": 1,
+              "rangeStart": "2026-10-01",
+              "rangeEnd": "",
+              "months": [],
+              "pyatas": [],
+              "calendarContext": {
+                "version": 2,
+                "timeZone": "UTC",
+                "gregorianYearStart": "january"
+              },
+              "invalidDayPolicy": "skip"
+            }
+          },
+          "scoringMode": "quality-ten",
+          "qualityScale": "ten",
+          "reminder": {
+            "enabled": false,
+            "time": "09:00",
+            "timing": "habit",
+            "syncToGoogleTasks": false,
+            "showInGoogleCalendar": false,
+            "googleTaskId": null,
+            "googleEventId": null
+          }
+        }
+      ],
+      "habitCompletions": [],
+      "habitMeasurements": [],
+      "habitTimers": [],
+      "habitHistory": [],
+      "habitTimerEpoch": "",
+      "sleepPlans": [],
+      "sleepEntries": [],
+      "moodEntries": [],
+      "addictionTrackers": [],
+      "addictionEntries": [],
+      "analyticsSnapshots": [],
+      "dailyGoalRecords": [],
+      "quests": [],
+      "achievementUnlocks": [],
+      "rewardTransactions": [],
+      "streakFreezeTransactions": [],
+      "habitSettings": {
+        "enabled": true,
+        "reportRange": "month",
+        "customRangeStart": "",
+        "customRangeEnd": "",
+        "collapsedSections": [],
+        "sectionOrder": [
+          "streak-resilience",
+          "daily-trackers",
+          "quests",
+          "streak-rewards",
+          "adaptive-suggestions",
+          "regular-habits",
+          "starter-habits",
+          "sleep-abstinence",
+          "achievements",
+          "statistics",
+          "sacred-habits"
+        ],
+        "dailyGoalModeChanges": [],
+        "plannedRestDays": [],
+        "notifications": {
+          "enabled": false,
+          "motivational": true,
+          "tone": "calm",
+          "dailyGoalTime": "20:30",
+          "quietHoursStart": "22:00",
+          "quietHoursEnd": "07:30"
+        },
+        "feedback": {
+          "animations": true,
+          "sound": false,
+          "haptics": false,
+          "achievementPopups": true,
+          "questsEnabled": true,
+          "gamificationWidgets": true
+        }
+      },
+      "hiddenDefaultTemplates": []
+    },
+    "commands": [
+      {
+        "id": "quality-0",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-quality",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-quality",
+        "heads": [],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": 8,
+          "qualityConfirmedAt": "2026-10-17T12:00:00.000Z",
+          "note": "history 0"
+        }
+      },
+      {
+        "id": "quality-1",
+        "at": "2026-10-17T12:00:00.000Z",
+        "habitId": "habit-history-quality",
+        "date": "2026-10-16",
+        "ruleId": "initial:habit-history-quality",
+        "heads": [
+          "quality-0"
+        ],
+        "value": {
+          "completed": true,
+          "completedTimes": [],
+          "qualityValue": 3,
+          "qualityConfirmedAt": "2026-10-17T12:00:00.000Z",
+          "note": "history 1"
+        }
+      }
+    ],
+    "expected": {
+      "completion": {
+        "id": "habit-completion:habit-history-quality:2026-10-16",
+        "createdAt": "2026-10-17T12:00:00.000Z",
+        "updatedAt": "2026-10-17T12:00:00.000Z",
+        "version": 2,
+        "syncState": "local",
+        "habitId": "habit-history-quality",
+        "date": "2026-10-16",
+        "completed": true,
+        "qualityValue": 3,
+        "note": "history 1",
+        "qualityConfirmedAt": "2026-10-17T12:00:00.000Z",
+        "completedTimes": [],
+        "score": 3,
+        "xpAwarded": 0
+      },
+      "historyIds": [
+        "quality-0",
+        "quality-1"
+      ],
+      "measurementCount": 0,
+      "economyCompletionCount": 0,
+      "economyMeasurementCount": 0
+    }
+  }
+]

@@ -1,0 +1,5 @@
+Contact: mailto:nikitalexanderson@gmail.com
+Canonical: https://genesiscalendar.com/.well-known/security.txt
+Policy: https://genesiscalendar.com/privacy
+Preferred-Languages: ru, en
+Expires: 2027-09-07T00:00:00Z

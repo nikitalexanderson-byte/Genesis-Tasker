@@ -1,0 +1,5 @@
+100 selected Lucide icons, lucide-static 1.55.0.
+Source: https://lucide.dev/ and https://cdn.jsdelivr.net/npm/lucide-static@1.55.0/icons/
+License: ISC (see LICENSE.txt).
+PNG conversion: 192 x 192, transparent background, white strokes. GENESIS uses their alpha masks to match its light/dark theme and card colors.
+No runtime icon library is installed. SVG paths in app/mindmap-icon-vectors.json preserve icons in standalone SVG/PDF exports.

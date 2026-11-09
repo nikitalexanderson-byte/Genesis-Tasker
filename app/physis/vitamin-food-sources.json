@@ -1,0 +1,1290 @@
+{
+  "thiamin": {
+    "label": [
+      "B1 — тиамин",
+      "B1 — thiamin"
+    ],
+    "note": [
+      "Яйца содержат B1, но не являются особенно богатым источником. В дрожжах состав зависит от продукта и обогащения; проверяйте этикетку.",
+      "Eggs contain B1 but are not especially rich sources. Yeast content depends on the product and fortification; check the label."
+    ],
+    "items": [
+      {
+        "food": [
+          "Пшеничные отруби",
+          "Wheat bran"
+        ],
+        "amount": 0.523,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/169722/nutrients",
+        "fdcId": 169722,
+        "nutrientId": 1165
+      },
+      {
+        "food": [
+          "Грецкие орехи",
+          "Walnuts"
+        ],
+        "amount": 0.341,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170187/nutrients",
+        "fdcId": 170187,
+        "nutrientId": 1165
+      },
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 0.205,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1165
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 0.066,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1165
+      }
+    ]
+  },
+  "riboflavin": {
+    "label": [
+      "B2 — рибофлавин",
+      "B2 — riboflavin"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 3.425,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1166
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 0.513,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1166
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 0.189,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1166
+      },
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 1.138,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1166
+      },
+      {
+        "food": [
+          "Греческий йогурт, натуральный цельномолочный",
+          "Greek yogurt, plain, whole milk"
+        ],
+        "amount": 0.278,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171304/nutrients",
+        "fdcId": 171304,
+        "nutrientId": 1166
+      }
+    ]
+  },
+  "niacin": {
+    "label": [
+      "B3 / PP — ниацин",
+      "B3 / PP — niacin"
+    ],
+    "note": [
+      "Указан ниацин в пище, без пересчёта триптофана в ниациновые эквиваленты. Никотиновая кислота — одна из форм B3.",
+      "Food niacin is shown without converting tryptophan to niacin equivalents. Nicotinic acid is one form of B3."
+    ],
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 17.525,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1167
+      },
+      {
+        "food": [
+          "Тунец светлый в воде, без соли",
+          "Light tuna in water, no added salt"
+        ],
+        "amount": 13.28,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171986/nutrients",
+        "fdcId": 171986,
+        "nutrientId": 1167
+      },
+      {
+        "food": [
+          "Арахисовая паста без соли",
+          "Peanut butter, without salt"
+        ],
+        "amount": 13.112,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/172470/nutrients",
+        "fdcId": 172470,
+        "nutrientId": 1167
+      },
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 10.077,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1167
+      }
+    ]
+  },
+  "pantothenate": {
+    "label": [
+      "B5 — пантотеновая кислота",
+      "B5 — pantothenic acid"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 7.11,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1170
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 1.398,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1170
+      },
+      {
+        "food": [
+          "Шиитаке, приготовленные без соли",
+          "Shiitake mushrooms, cooked without salt"
+        ],
+        "amount": 3.594,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168437/nutrients",
+        "fdcId": 168437,
+        "nutrientId": 1170
+      },
+      {
+        "food": [
+          "Говядина, постный стейк, приготовленная",
+          "Beef top sirloin, lean, cooked"
+        ],
+        "amount": 0.601,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168634/nutrients",
+        "fdcId": 168634,
+        "nutrientId": 1170
+      },
+      {
+        "food": [
+          "Авокадо",
+          "Avocado"
+        ],
+        "amount": 1.389,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+        "fdcId": 171705,
+        "nutrientId": 1170
+      }
+    ]
+  },
+  "vitamin-b6": {
+    "label": [
+      "B6 — суммарный витамин",
+      "B6 — total vitamin"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 1.017,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Тунец светлый в воде, без соли",
+          "Light tuna in water, no added salt"
+        ],
+        "amount": 0.35,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171986/nutrients",
+        "fdcId": 171986,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 0.944,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Грецкие орехи",
+          "Walnuts"
+        ],
+        "amount": 0.537,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170187/nutrients",
+        "fdcId": 170187,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Банан",
+          "Banana"
+        ],
+        "amount": 0.4,
+        "unit": "mg",
+        "portion": [
+          "1 средний плод",
+          "1 medium fruit"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminB6-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Картофель, варёный",
+          "Potatoes, boiled"
+        ],
+        "amount": 0.4,
+        "unit": "mg",
+        "portion": [
+          "1 чашка",
+          "1 cup"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminB6-HealthProfessional/"
+      }
+    ]
+  },
+  "folate": {
+    "label": [
+      "B9 — пищевые фолаты",
+      "B9 — food folate"
+    ],
+    "note": [
+      "Это суммарные пищевые фолаты, не количество синтетической фолиевой кислоты и не расчёт DFE.",
+      "These are total food folates, not synthetic folic acid amounts or a DFE calculation."
+    ],
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 253,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1177
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 194,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1177
+      },
+      {
+        "food": [
+          "Капуста кейл, сырая",
+          "Kale, raw"
+        ],
+        "amount": 62,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168421/nutrients",
+        "fdcId": 168421,
+        "nutrientId": 1177
+      },
+      {
+        "food": [
+          "Шиитаке, приготовленные без соли",
+          "Shiitake mushrooms, cooked without salt"
+        ],
+        "amount": 21,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168437/nutrients",
+        "fdcId": 168437,
+        "nutrientId": 1177
+      },
+      {
+        "food": [
+          "Авокадо",
+          "Avocado"
+        ],
+        "amount": 81,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+        "fdcId": 171705,
+        "nutrientId": 1177
+      }
+    ]
+  },
+  "vitamin-b12": {
+    "label": [
+      "B12 — кобаламины",
+      "B12 — cobalamins"
+    ],
+    "note": [
+      "Природные пищевые формы не равны этикеточной массе цианокобаламина. Убедительных данных, что метилкобаламин лучше для всех, нет. Необогащённые дрожжи не считаются надёжным источником B12.",
+      "Natural food forms are not label amounts of cyanocobalamin. Methylcobalamin is not established as universally superior. Unfortified yeast is not a reliable B12 source."
+    ],
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 70.58,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1178
+      },
+      {
+        "food": [
+          "Устрицы, приготовленные на пару",
+          "Oysters, cooked with moist heat"
+        ],
+        "amount": 17.5,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171980/nutrients",
+        "fdcId": 171980,
+        "nutrientId": 1178
+      },
+      {
+        "food": [
+          "Мидии, приготовленные",
+          "Mussels, cooked"
+        ],
+        "amount": 24,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/174217/nutrients",
+        "fdcId": 174217,
+        "nutrientId": 1178
+      },
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 3.05,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1178
+      },
+      {
+        "food": [
+          "Тунец светлый в воде, без соли",
+          "Light tuna in water, no added salt"
+        ],
+        "amount": 2.99,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171986/nutrients",
+        "fdcId": 171986,
+        "nutrientId": 1178
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 1.11,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1178
+      }
+    ]
+  },
+  "vitamin-c": {
+    "label": [
+      "C — аскорбиновая кислота",
+      "C — ascorbic acid"
+    ],
+    "note": null,
+    "items": [
+      {
+        "food": [
+          "Шиповник, сырые плоды",
+          "Rose hips, raw fruit"
+        ],
+        "amount": 426,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168998/nutrients",
+        "fdcId": 168998,
+        "nutrientId": 1162
+      },
+      {
+        "food": [
+          "Петрушка, свежая",
+          "Parsley, fresh"
+        ],
+        "amount": 133,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170416/nutrients",
+        "fdcId": 170416,
+        "nutrientId": 1162
+      },
+      {
+        "food": [
+          "Брокколи, сырая",
+          "Broccoli, raw"
+        ],
+        "amount": 89.2,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170379/nutrients",
+        "fdcId": 170379,
+        "nutrientId": 1162
+      },
+      {
+        "food": [
+          "Квашеная капуста, консервированная",
+          "Sauerkraut, canned"
+        ],
+        "amount": 14.7,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/169279/nutrients",
+        "fdcId": 169279,
+        "nutrientId": 1162
+      },
+      {
+        "food": [
+          "Киви",
+          "Kiwifruit"
+        ],
+        "amount": 64,
+        "unit": "mg",
+        "portion": [
+          "1 средний плод",
+          "1 medium fruit"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminC-HealthProfessional/"
+      }
+    ]
+  },
+  "vitamin-a": {
+    "label": [
+      "A — ретиноловые эквиваленты",
+      "A — retinol activity equivalents"
+    ],
+    "note": [
+      "RAE учитывает ретинол и активность провитаминных каротиноидов. Шпинат содержит каротиноиды, а не готовый ретинол.",
+      "RAE accounts for retinol and provitamin carotenoid activity. Spinach supplies carotenoids rather than preformed retinol."
+    ],
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 9442,
+        "unit": "mcg RAE",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1106
+      },
+      {
+        "food": [
+          "Масло сливочное несолёное",
+          "Butter, unsalted"
+        ],
+        "amount": 684,
+        "unit": "mcg RAE",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173430/nutrients",
+        "fdcId": 173430,
+        "nutrientId": 1106
+      },
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 149,
+        "unit": "mcg RAE",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1106
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 469,
+        "unit": "mcg RAE",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1106
+      }
+    ]
+  },
+  "vitamin-d": {
+    "label": [
+      "D — сумма D2 и D3",
+      "D — total D2 and D3"
+    ],
+    "note": [
+      "Показано общее содержание D2 + D3; оно не всегда равно количеству только холекальциферола. Для печени трески используйте этикетку конкретной банки.",
+      "Total D2 + D3 is shown; this is not always identical to cholecalciferol alone. Use the specific can label for cod liver."
+    ],
+    "items": [
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 2.2,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1114
+      },
+      {
+        "food": [
+          "Нерка, приготовленная",
+          "Sockeye salmon, cooked"
+        ],
+        "amount": 14.2,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Тунец светлый, консервы в воде, без заливки",
+          "Light tuna, canned in water, drained"
+        ],
+        "amount": 1,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Форель радужная, выращенная, приготовленная",
+          "Farmed rainbow trout, cooked"
+        ],
+        "amount": 16.2,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
+      }
+    ]
+  },
+  "vitamin-e": {
+    "label": [
+      "E — альфа-токоферол",
+      "E — alpha-tocopherol"
+    ],
+    "note": [
+      "Показан альфа-токоферол; бета- и гамма-токоферолы не складываются с ним как одинаковые витаминные эквиваленты.",
+      "Alpha-tocopherol is shown; beta- and gamma-tocopherols are not summed as equivalent vitamin activity."
+    ],
+    "items": [
+      {
+        "food": [
+          "Миндаль",
+          "Almonds"
+        ],
+        "amount": 25.63,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170567/nutrients",
+        "fdcId": 170567,
+        "nutrientId": 1109
+      },
+      {
+        "food": [
+          "Арахисовая паста без соли",
+          "Peanut butter, without salt"
+        ],
+        "amount": 9.1,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/172470/nutrients",
+        "fdcId": 172470,
+        "nutrientId": 1109
+      },
+      {
+        "food": [
+          "Шпинат, сырой",
+          "Spinach, raw"
+        ],
+        "amount": 2.03,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1109
+      },
+      {
+        "food": [
+          "Авокадо",
+          "Avocado"
+        ],
+        "amount": 2.07,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171705/nutrients",
+        "fdcId": 171705,
+        "nutrientId": 1109
+      }
+    ]
+  },
+  "vitamin-k": {
+    "label": [
+      "K1 и K2 — форма указана у продукта",
+      "K1 and K2 — form stated for each food"
+    ],
+    "note": [
+      "K1 и K2 — формы одного витамина. Данные K1 не заменяют измерения K2. Содержание менахинонов в сырах зависит от культуры и технологии.",
+      "K1 and K2 are forms of one vitamin. K1 values do not substitute for K2 measurements. Cheese menaquinone content depends on cultures and processing."
+    ],
+    "items": [
+      {
+        "food": [
+          "K1: Шпинат, сырой",
+          "K1: Spinach, raw"
+        ],
+        "amount": 482.9,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168462/nutrients",
+        "fdcId": 168462,
+        "nutrientId": 1185
+      },
+      {
+        "food": [
+          "K1: Капуста кейл, сырая",
+          "K1: Kale, raw"
+        ],
+        "amount": 389.6,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168421/nutrients",
+        "fdcId": 168421,
+        "nutrientId": 1185
+      },
+      {
+        "food": [
+          "K1: Руккола, сырая",
+          "K1: Arugula, raw"
+        ],
+        "amount": 108.6,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/169387/nutrients",
+        "fdcId": 169387,
+        "nutrientId": 1185
+      },
+      {
+        "food": [
+          "K1: Лук зелёный, сырой",
+          "K1: Spring onions, raw"
+        ],
+        "amount": 207,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170005/nutrients",
+        "fdcId": 170005,
+        "nutrientId": 1185
+      },
+      {
+        "food": [
+          "K1: Петрушка, свежая",
+          "K1: Parsley, fresh"
+        ],
+        "amount": 1640,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170416/nutrients",
+        "fdcId": 170416,
+        "nutrientId": 1185
+      },
+      {
+        "food": [
+          "K1: Брокколи, сырая",
+          "K1: Broccoli, raw"
+        ],
+        "amount": 101.6,
+        "unit": "mcg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170379/nutrients",
+        "fdcId": 170379,
+        "nutrientId": 1185
+      },
+      {
+        "food": [
+          "K2 / MK-4: куриная грудка, гриль",
+          "K2 / MK-4: chicken breast, rotisserie"
+        ],
+        "amount": 13,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+      },
+      {
+        "food": [
+          "K2 / MK-4: чеддер",
+          "K2 / MK-4: cheddar"
+        ],
+        "amount": 4,
+        "unit": "mcg",
+        "portion": [
+          "1½ унции ≈ 43 г",
+          "1½ oz ≈ 43 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+      },
+      {
+        "food": [
+          "K2 / MK-4: яйцо, вкрутую",
+          "K2 / MK-4: hard-boiled egg"
+        ],
+        "amount": 4,
+        "unit": "mcg",
+        "portion": [
+          "1 крупное яйцо",
+          "1 large egg"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+      }
+    ]
+  },
+  "choline-bitartrate": {
+    "label": [
+      "Холин — пищевой нутриент (B4)",
+      "Choline — dietary nutrient (B4)"
+    ],
+    "note": [
+      "Холин — необходимый витаминоподобный нутриент, а не отдельный признанный витамин B4. Числа относятся к холину, не к массе битартрата.",
+      "Choline is an essential vitamin-like nutrient, not a separately recognized vitamin B4. Amounts refer to choline, not bitartrate mass."
+    ],
+    "items": [
+      {
+        "food": [
+          "Яйцо куриное, варёное вкрутую",
+          "Egg, whole, hard-boiled"
+        ],
+        "amount": 293.8,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/173424/nutrients",
+        "fdcId": 173424,
+        "nutrientId": 1180
+      },
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 426,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1180
+      },
+      {
+        "food": [
+          "Арахисовая паста без соли",
+          "Peanut butter, without salt"
+        ],
+        "amount": 63,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/172470/nutrients",
+        "fdcId": 172470,
+        "nutrientId": 1180
+      },
+      {
+        "food": [
+          "Шиитаке, приготовленные без соли",
+          "Shiitake mushrooms, cooked without salt"
+        ],
+        "amount": 36.8,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168437/nutrients",
+        "fdcId": 168437,
+        "nutrientId": 1180
+      }
+    ]
+  },
+  "biotin": {
+    "label": [
+      "B7 — биотин",
+      "B7 — biotin"
+    ],
+    "note": [
+      "Данные NIH ODS приведены на указанную порцию. В USDA биотин для большинства продуктов не указан; неизвестное не означает ноль.",
+      "NIH ODS amounts refer to the stated serving. USDA lacks biotin values for most foods; unknown does not mean zero."
+    ],
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, приготовленная",
+          "Beef liver, cooked"
+        ],
+        "amount": 30.8,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/Biotin-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Яйцо, приготовленное",
+          "Egg, cooked"
+        ],
+        "amount": 10,
+        "unit": "mcg",
+        "portion": [
+          "1 целое яйцо",
+          "1 whole egg"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/Biotin-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Горбуша, консервы в воде",
+          "Pink salmon, canned in water"
+        ],
+        "amount": 5,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/Biotin-HealthProfessional/"
+      },
+      {
+        "food": [
+          "Миндаль, обжаренный",
+          "Almonds, roasted"
+        ],
+        "amount": 1.5,
+        "unit": "mcg",
+        "portion": [
+          "¼ чашки",
+          "¼ cup"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/Biotin-HealthProfessional/"
+      }
+    ]
+  },
+  "pyridoxal-5-phosphate": {
+    "label": [
+      "B6 — суммарный витамин",
+      "B6 — total vitamin"
+    ],
+    "note": [
+      "В продуктах показан суммарный B6, а не отдельно P-5-P. Значения нельзя считать массой добавки P-5-P.",
+      "Food values show total B6, not isolated P-5-P. They are not P-5-P supplement amounts."
+    ],
+    "items": [
+      {
+        "food": [
+          "Говяжья печень, тушёная",
+          "Beef liver, braised"
+        ],
+        "amount": 1.017,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/168626/nutrients",
+        "fdcId": 168626,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Тунец светлый в воде, без соли",
+          "Light tuna in water, no added salt"
+        ],
+        "amount": 0.35,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171986/nutrients",
+        "fdcId": 171986,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Лосось дикий, приготовленный",
+          "Wild salmon, cooked"
+        ],
+        "amount": 0.944,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/171998/nutrients",
+        "fdcId": 171998,
+        "nutrientId": 1175
+      },
+      {
+        "food": [
+          "Грецкие орехи",
+          "Walnuts"
+        ],
+        "amount": 0.537,
+        "unit": "mg",
+        "portion": [
+          "100 г съедобной части",
+          "100 g edible portion"
+        ],
+        "source": "https://fdc.nal.usda.gov/food-details/170187/nutrients",
+        "fdcId": 170187,
+        "nutrientId": 1175
+      }
+    ]
+  },
+  "vitamin-k2": {
+    "label": [
+      "K2 — менахиноны, форма указана у продукта",
+      "K2 — menaquinones, form stated for each food"
+    ],
+    "note": [
+      "K1 и K2 — формы одного витамина. Данные K1 не заменяют измерения K2. Содержание менахинонов в сырах зависит от культуры и технологии.",
+      "K1 and K2 are forms of one vitamin. K1 values do not substitute for K2 measurements. Cheese menaquinone content depends on cultures and processing."
+    ],
+    "items": [
+      {
+        "food": [
+          "K2 / MK-4: куриная грудка, гриль",
+          "K2 / MK-4: chicken breast, rotisserie"
+        ],
+        "amount": 13,
+        "unit": "mcg",
+        "portion": [
+          "3 унции ≈ 85 г",
+          "3 oz ≈ 85 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+      },
+      {
+        "food": [
+          "K2 / MK-4: чеддер",
+          "K2 / MK-4: cheddar"
+        ],
+        "amount": 4,
+        "unit": "mcg",
+        "portion": [
+          "1½ унции ≈ 43 г",
+          "1½ oz ≈ 43 g"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+      },
+      {
+        "food": [
+          "K2 / MK-4: яйцо, вкрутую",
+          "K2 / MK-4: hard-boiled egg"
+        ],
+        "amount": 4,
+        "unit": "mcg",
+        "portion": [
+          "1 крупное яйцо",
+          "1 large egg"
+        ],
+        "source": "https://ods.od.nih.gov/factsheets/VitaminK-HealthProfessional/"
+      }
+    ]
+  }
+}

@@ -1,0 +1,727 @@
+{
+  "count": 72,
+  "delivery": "WebP quality 84; no crop, recolor or composition changes",
+  "nativeAssets": "Existing regional season JPG files retained",
+  "entries": [
+    {
+      "region": "temperate",
+      "month": 1,
+      "file": "gregorian-months-v1/temperate/01.webp",
+      "bytes": 355828,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "33f2029e4a676d39a9b006d544dea63162e5df648080ad7e79120ce21919070f",
+      "sourceSha256": "5bb27969f7739888ab16823e1a2c0892cbedcbe209a651f7dbb7c85bf7ad6972"
+    },
+    {
+      "region": "temperate",
+      "month": 2,
+      "file": "gregorian-months-v1/temperate/02.webp",
+      "bytes": 268552,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "fae4607a97e3fcc43524d2522abab6cff211c90c8c79248f3cb75515608a0c89",
+      "sourceSha256": "080c3fe8486841f6744860b8bc895c19f46a8d3b808ba5624cb56a017e499c9e"
+    },
+    {
+      "region": "temperate",
+      "month": 3,
+      "file": "gregorian-months-v1/temperate/03.webp",
+      "bytes": 383384,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c2cb2214bc554cce8704de293199e60d471edcd7349bdef655f994f22eac5559",
+      "sourceSha256": "20ccadbe8ee0086160323b4083270bad1847d81ec86863f2873697d828828f04"
+    },
+    {
+      "region": "temperate",
+      "month": 4,
+      "file": "gregorian-months-v1/temperate/04.webp",
+      "bytes": 456494,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bf7297a4af5dd4f01ab4a1f7ae4f86cce0ff4356e88127a08414cc613598d226",
+      "sourceSha256": "4a945094ec04caa330de359bdfd0064d6c2ecfb324d6bce1777d9a750547a2fd"
+    },
+    {
+      "region": "temperate",
+      "month": 5,
+      "file": "gregorian-months-v1/temperate/05.webp",
+      "bytes": 382952,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "8f137b63a760143b3bd8f7c19371be34261cdd1e6242a89c469beb6b7be7e4a8",
+      "sourceSha256": "8e6eb81b014c270f9ce5a4b562038cf52501a284c55fab341e89407573f8833a"
+    },
+    {
+      "region": "temperate",
+      "month": 6,
+      "file": "gregorian-months-v1/temperate/06.webp",
+      "bytes": 434566,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "974724f173fe116005351057bc4e4038a70d6f25040b39e990c88f84035f07dd",
+      "sourceSha256": "c3d6bd9b177f8cf9f6cfe07f1c9eb572ed88266b311ab668099f09b8a32c5bfe"
+    },
+    {
+      "region": "temperate",
+      "month": 7,
+      "file": "gregorian-months-v1/temperate/07.webp",
+      "bytes": 420234,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c38582511ea153c8342cc99f52a95e7fa543e5136f429c80a9862a4ead08cd3d",
+      "sourceSha256": "e36336c1771036912c48705f3bbe0a30b01303a01d937e38a1d5d68ab38d7d80"
+    },
+    {
+      "region": "temperate",
+      "month": 8,
+      "file": "gregorian-months-v1/temperate/08.webp",
+      "bytes": 376420,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "26db1700d895ec092363170f809607d22223e1729e72fabfc0e46ef2cc8b3c63",
+      "sourceSha256": "890f3e242cc6f009a08594b1d629759e6086ff72d3a4a90d50d907eb1fe361c6"
+    },
+    {
+      "region": "temperate",
+      "month": 9,
+      "file": "gregorian-months-v1/temperate/09.webp",
+      "bytes": 340978,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "966cf1a9eda8b036ba156578811d43ce5dda648ccd800606bef32156c1a1feb7",
+      "sourceSha256": "1cd4b08c93ab9e692efb6311a8f55cd1e96fba1f5c0bf4c97041954a67d6fff2"
+    },
+    {
+      "region": "temperate",
+      "month": 10,
+      "file": "gregorian-months-v1/temperate/10.webp",
+      "bytes": 341662,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "6d4cdec962b74a8c2435bb6df8ac56975a63803814c89f0650d4fa8cbeebe75f",
+      "sourceSha256": "662aa6aaf6927615ab2babd146bd8bc5123dcab57aff1a74f3def562f78453a3"
+    },
+    {
+      "region": "temperate",
+      "month": 11,
+      "file": "gregorian-months-v1/temperate/11.webp",
+      "bytes": 345012,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "5d55eac69680f4664fd7937fdd49f386b1492ad2168191a079d221dd434430e9",
+      "sourceSha256": "c93e19584a970c97c084fc47521177c26284fc80f6ca524f6065799810161096"
+    },
+    {
+      "region": "temperate",
+      "month": 12,
+      "file": "gregorian-months-v1/temperate/12.webp",
+      "bytes": 334618,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "dd776010cf0b3c9bf36eb683aea72a2701c77cf1b1f00dbed8fbb1dc7a34c879",
+      "sourceSha256": "16bbc5eb0648e8dcdc6f57d5b083af23998228953881b0d5abe902a8ab8186a4"
+    },
+    {
+      "region": "boreal",
+      "month": 1,
+      "file": "gregorian-months-v1/boreal/01.webp",
+      "bytes": 268384,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "dcb4e4cdc000789fc4ee7c441c5a3af3897cee687779b47847e9dd973945803e",
+      "sourceSha256": "ead67d74262fa775d287bc7587c3f18cb4cf8ab6336f02e3b2dd2af66afb0540"
+    },
+    {
+      "region": "boreal",
+      "month": 2,
+      "file": "gregorian-months-v1/boreal/02.webp",
+      "bytes": 285382,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "a31b07449c048e54cb5b05d4a1b9dab8fdb0ec32ff38e32bfbc6f92ed590d941",
+      "sourceSha256": "a10a3421d571268fb0b82e6de8837494605d3127ce246edd07b804207e2ad65d"
+    },
+    {
+      "region": "boreal",
+      "month": 3,
+      "file": "gregorian-months-v1/boreal/03.webp",
+      "bytes": 249640,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0bb0722635c62f9dc369bb5a44f0dca934aadb791424ba103f9faf4e35fad566",
+      "sourceSha256": "d5e56be6fe3244b95af08822b1d6b52c4ed647a4a1c07fdc4efa6a449bdee12f"
+    },
+    {
+      "region": "boreal",
+      "month": 4,
+      "file": "gregorian-months-v1/boreal/04.webp",
+      "bytes": 385796,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "41f05292aae34adeaa623f6c81849d0c711cc7c6cbf32fe49232cf83096ca640",
+      "sourceSha256": "49b62580a6a6201c88c3d3617e067ecf4368e7d132cf5c77b3ea105539a2721a"
+    },
+    {
+      "region": "boreal",
+      "month": 5,
+      "file": "gregorian-months-v1/boreal/05.webp",
+      "bytes": 456410,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "e28566faecbd74f82cc5c5b2d6890b34a04a415c3f123314e94544c386541167",
+      "sourceSha256": "f0dcfd5cc90e17438e475c9930d323648f90bdc31f15612874734cd5146bb2d1"
+    },
+    {
+      "region": "boreal",
+      "month": 6,
+      "file": "gregorian-months-v1/boreal/06.webp",
+      "bytes": 444804,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "77b53c40835eff6ab7f4af251fb31706ab7f10dcabd0c1afe5af64a566a69f9a",
+      "sourceSha256": "265f4b7e2c8cdc592dc0e9c17d2588b531c8f4b7e0ea4a59ad628162048272ef"
+    },
+    {
+      "region": "boreal",
+      "month": 7,
+      "file": "gregorian-months-v1/boreal/07.webp",
+      "bytes": 385734,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "fb804f5bcc32be10c39feccd5aa37df10c3c3e99abb6ce6a5d72659282497c2d",
+      "sourceSha256": "a90f3d5f812ea3f9623b78b1c09726a99940d2bf0b481602022ff546ee963abb"
+    },
+    {
+      "region": "boreal",
+      "month": 8,
+      "file": "gregorian-months-v1/boreal/08.webp",
+      "bytes": 324842,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "81d3d3a36aacc4dc86a825550b0322c3d35278ad1f772e6c7a565fc5252e01a6",
+      "sourceSha256": "040d14e18457a4875f3ca302c1a1addad3b6ba3050788b64292aedfb07aa6a41"
+    },
+    {
+      "region": "boreal",
+      "month": 9,
+      "file": "gregorian-months-v1/boreal/09.webp",
+      "bytes": 346324,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "90d0b91347786a3397602cb97072db8053684ee22112fb40a9da770e1caaff5e",
+      "sourceSha256": "15ef40364ee62718af3dc3fcf1044cf1d19e09ae327d514b488978259165dd77"
+    },
+    {
+      "region": "boreal",
+      "month": 10,
+      "file": "gregorian-months-v1/boreal/10.webp",
+      "bytes": 357312,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "75d1a2a5480e5391addae176bc93f94614dc23770e358685de718bfb871e9498",
+      "sourceSha256": "cbc40efac88a10c0d1626f13454c3f84ad9517754c9f6125fa08fb8a57dcb7a3"
+    },
+    {
+      "region": "boreal",
+      "month": 11,
+      "file": "gregorian-months-v1/boreal/11.webp",
+      "bytes": 257964,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "80b1bd5216da11efae554054dbbb5845e0c18ce8c87ef84fe4c2b8782990da4e",
+      "sourceSha256": "786b273b952a9c8d0b3b18d8d26954e17f28819daf267e35b7b78860649f924e"
+    },
+    {
+      "region": "boreal",
+      "month": 12,
+      "file": "gregorian-months-v1/boreal/12.webp",
+      "bytes": 235692,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "d3fa8cfb754bdf3fe8de610d6fb86dcd5f9a32ae0ea6e80d7195f9a7f2e109da",
+      "sourceSha256": "eb5b799a419b3dfedb329c3578639f1c785d0c49afa33610022c47deb5f16356"
+    },
+    {
+      "region": "mediterranean",
+      "month": 1,
+      "file": "gregorian-months-v1/mediterranean/01.webp",
+      "bytes": 376438,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c3f87bfd91890dee3b0643f1a26e7de5e099e5eff3b787be874609e06fc8155c",
+      "sourceSha256": "e17ddcbdd6c278da7bc43fd0d382c251eaa00b3aa6c6b25cf3e8c3387d428e1f"
+    },
+    {
+      "region": "mediterranean",
+      "month": 2,
+      "file": "gregorian-months-v1/mediterranean/02.webp",
+      "bytes": 376608,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "aeb77e05b8125b34ddef5b06a0b45e644890e74d6b9165333739974635c2b9c1",
+      "sourceSha256": "9e4082d9edd1d83b988f3e5f385297718b09acf37cf73b3abdf75cb4f7d81a6b"
+    },
+    {
+      "region": "mediterranean",
+      "month": 3,
+      "file": "gregorian-months-v1/mediterranean/03.webp",
+      "bytes": 409020,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "f2d85a91386b3502174a77f730e74dde0b394bf1dc8b452c5c8c4d26a51229c9",
+      "sourceSha256": "f7c0e6a664a63f19fdc4dd8b6006c27ef1cac82158483b4bddb0c323a3fe4e01"
+    },
+    {
+      "region": "mediterranean",
+      "month": 4,
+      "file": "gregorian-months-v1/mediterranean/04.webp",
+      "bytes": 327368,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "4fd391488dfa423be7a88f87142a6b8650798b874df56c0f1292959a088f954f",
+      "sourceSha256": "4a63a4c64e0b03e6ff8a190aff44b09f25e4e40f6934422b8dcd470d72a02f4c"
+    },
+    {
+      "region": "mediterranean",
+      "month": 5,
+      "file": "gregorian-months-v1/mediterranean/05.webp",
+      "bytes": 377002,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "3918eae4bf67d22036cced5fbd9b000cdd33fdaa28e7be98ef2fcad63be42ac5",
+      "sourceSha256": "5e0ab2bf897258cad18d0f4366fc32cf85eff83171190a7b5dccf02ffdc3b5bd"
+    },
+    {
+      "region": "mediterranean",
+      "month": 6,
+      "file": "gregorian-months-v1/mediterranean/06.webp",
+      "bytes": 413906,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "3d8e71bf82047093a671c3422e8a8980b468d05ba61d97e18ec3fdaf0898e0f3",
+      "sourceSha256": "123a35d5c3eb9d15fa642ae41be89e68b5b954a4da1c6097dea08fda696a343d"
+    },
+    {
+      "region": "mediterranean",
+      "month": 7,
+      "file": "gregorian-months-v1/mediterranean/07.webp",
+      "bytes": 402162,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "cd00110e85efb2c6e7720f228b3f0840cb03923dd7e4db90c3d82f2f30cfc4b9",
+      "sourceSha256": "2f1447fdc9409fa08df19c49f76f023ab7e675d03ab952b70969e620f7c8ab5b"
+    },
+    {
+      "region": "mediterranean",
+      "month": 8,
+      "file": "gregorian-months-v1/mediterranean/08.webp",
+      "bytes": 332226,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "09f1e2aa097a254c78275f7419dc9d46ac52ae055bcf61291150e1879d666ee8",
+      "sourceSha256": "f90d170448d2a5bb8324f0d45becbb4383743309b272a3466d4991b040e2f351"
+    },
+    {
+      "region": "mediterranean",
+      "month": 9,
+      "file": "gregorian-months-v1/mediterranean/09.webp",
+      "bytes": 381414,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "d6cdb1f43e38125be48ccdd3b48a9d0c52e2b78e6a03dbcb34351944321370b1",
+      "sourceSha256": "acb88551770a47718690d96587d0b0fb434509ea6f9832751b108f85aff42786"
+    },
+    {
+      "region": "mediterranean",
+      "month": 10,
+      "file": "gregorian-months-v1/mediterranean/10.webp",
+      "bytes": 314200,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bd955ef765360a0ebdad46647a1acfdec02c393129d0c89da5b7d209ca9e1eac",
+      "sourceSha256": "8bb98058d6d1b860b14a88c61780264341a7e2db4e38b41866c05bdeb9f3dae0"
+    },
+    {
+      "region": "mediterranean",
+      "month": 11,
+      "file": "gregorian-months-v1/mediterranean/11.webp",
+      "bytes": 403788,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "95e541ff362075702d8b8ac3ab660ceeb38350b7d69b32ec29ab14b7e089c036",
+      "sourceSha256": "bb788310da0c3e5c205b8edd0008839849221240f5dbe849d3ca96d62936ccaa"
+    },
+    {
+      "region": "mediterranean",
+      "month": 12,
+      "file": "gregorian-months-v1/mediterranean/12.webp",
+      "bytes": 353362,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "9600651301074f0bb762ea078c7e532b00c89918163b6391457bec4b82ec4349",
+      "sourceSha256": "4ee8942facde39b2d381fc3488418de5f449801717f8287387c7e8ff7dbf5a69"
+    },
+    {
+      "region": "arid",
+      "month": 1,
+      "file": "gregorian-months-v1/arid/01.webp",
+      "bytes": 246690,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "95debb7ad832f1c852bdae108c0343e549337e20458275932f1753954e79850d",
+      "sourceSha256": "d55a13d99d7789849af90279ad6831cd570672301faa2987f30278cfc835586a"
+    },
+    {
+      "region": "arid",
+      "month": 2,
+      "file": "gregorian-months-v1/arid/02.webp",
+      "bytes": 261844,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c990f3969b3000165fb8a91c733dbe69352f5910644c98e22d68cde18651cf6f",
+      "sourceSha256": "22a1340477ed8ab3939c679b40315000b6f090ec672e512b85b512afe1310a5c"
+    },
+    {
+      "region": "arid",
+      "month": 3,
+      "file": "gregorian-months-v1/arid/03.webp",
+      "bytes": 303182,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "4f1690aa5c144bc64a48cc97c592f6521dc7c95329f2c7f30d64aeafb115e86a",
+      "sourceSha256": "dccb06df1b18bb4def954a7cb940de2761fae8c5c0aa13b01f8813543daed4a5"
+    },
+    {
+      "region": "arid",
+      "month": 4,
+      "file": "gregorian-months-v1/arid/04.webp",
+      "bytes": 316558,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "9a3f5741153de831028ef0c062663a012e02e9853efbb1f5dc07b02f24b43f5f",
+      "sourceSha256": "8de0eed3c4a2d9d92eb1c954acd3249032ac9a2ebc52b8694db2d8d9bd18c33e"
+    },
+    {
+      "region": "arid",
+      "month": 5,
+      "file": "gregorian-months-v1/arid/05.webp",
+      "bytes": 205956,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "fbd5e5e3395f46a11424d8950de53c0c1371e10af4c8ac2071fabfbe2e6017ab",
+      "sourceSha256": "93ff01642b9800dd982b786a7816b36966d339e328261c5be3d6e0a9dcd135cc"
+    },
+    {
+      "region": "arid",
+      "month": 6,
+      "file": "gregorian-months-v1/arid/06.webp",
+      "bytes": 227602,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "33475fd23fa3b2b802323a77a2faf013debed4ef5c03d398d21789789106880d",
+      "sourceSha256": "b0e02f2b3983eb0ad70fbba0a49ebcbd1347951e65d9c71532bf5f1b45f0243f"
+    },
+    {
+      "region": "arid",
+      "month": 7,
+      "file": "gregorian-months-v1/arid/07.webp",
+      "bytes": 171950,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "7ac5068357f7952e70d9d924b80f21d47e74c76b72b5b6946a9fae0733582661",
+      "sourceSha256": "52685f74a5d10fe3c22cfe5db93ceca638e1c047c52196199fea759b45f18c5a"
+    },
+    {
+      "region": "arid",
+      "month": 8,
+      "file": "gregorian-months-v1/arid/08.webp",
+      "bytes": 371862,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "9916a3b3913026a9bc6ae1e4fc8a9a698857a4768c768b80cabee402649bb459",
+      "sourceSha256": "ba018e198c2cf57f6a653d4fd6effe579360b61ffba2a37f9feccf453f6a14f5"
+    },
+    {
+      "region": "arid",
+      "month": 9,
+      "file": "gregorian-months-v1/arid/09.webp",
+      "bytes": 313070,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "83170433d6dd37002865828932b9dd79571c82093ae5c853a6253540bdc7ab1f",
+      "sourceSha256": "d95d6e03d7d162dd0a99fc9d108e800e2f1534ab15be2b418089363fe42b30ce"
+    },
+    {
+      "region": "arid",
+      "month": 10,
+      "file": "gregorian-months-v1/arid/10.webp",
+      "bytes": 301030,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "a1646f0ba5af998477192170801eee4f00c810e9ac4c4534d76b2bf4540b35ab",
+      "sourceSha256": "f476d48672e84f3b89f1a5c71d6efb45e4232466022798e5e1a7532171b71823"
+    },
+    {
+      "region": "arid",
+      "month": 11,
+      "file": "gregorian-months-v1/arid/11.webp",
+      "bytes": 286880,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "b2fa89b5b8ea5a5f7bf0ab033e4073f17c103d082140e0ede4547f07c02cacda",
+      "sourceSha256": "78036a632a137522cf67c3f4c9711079a4c4c83d718d5bc60daa93e2ffc36f32"
+    },
+    {
+      "region": "arid",
+      "month": 12,
+      "file": "gregorian-months-v1/arid/12.webp",
+      "bytes": 310996,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "ca3fddd27c35c199782c5728b8137e3de342a6078bff4b6aecdf4ee8fe5541eb",
+      "sourceSha256": "c35f4aa24fdf27d28d02542cb279dcb60782ae9d1299bad2a3b9e8bd77f5672a"
+    },
+    {
+      "region": "tropical",
+      "month": 1,
+      "file": "gregorian-months-v1/tropical/01.webp",
+      "bytes": 335112,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "cdc69963f0e0e27f71ea6b4b372eae5b49dd17648453c4be8c059f7fd8feb9ec",
+      "sourceSha256": "01e9d6ebca5046d8082559a70418057df45d327265819e16aac78618cda48fb8"
+    },
+    {
+      "region": "tropical",
+      "month": 2,
+      "file": "gregorian-months-v1/tropical/02.webp",
+      "bytes": 338154,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "694edfadb44ef482af44ec609ff21efdb55213c4a75765834bdcc78ab37a7cae",
+      "sourceSha256": "3c9c1c2f3da7f01cde5ead4f0397a339c75489d39ed59ae69242c57fcabf472a"
+    },
+    {
+      "region": "tropical",
+      "month": 3,
+      "file": "gregorian-months-v1/tropical/03.webp",
+      "bytes": 368488,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "43d770ebe2c4fab8f6e32f62e90bb05ba4a35d7ed77d279677685a84be5d43b5",
+      "sourceSha256": "28a0defa361acb5567f5f4b7b871cd1e8381692da92400667a3b459a46815b98"
+    },
+    {
+      "region": "tropical",
+      "month": 4,
+      "file": "gregorian-months-v1/tropical/04.webp",
+      "bytes": 252918,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "486922d5faee311d4d234d906972d2d461a971a42edeb3803665df8c5b3ac6df",
+      "sourceSha256": "b023ed6958e7fd6ffef63af584e26e77f01adafb22c61144d3ab47ee3b585a8e"
+    },
+    {
+      "region": "tropical",
+      "month": 5,
+      "file": "gregorian-months-v1/tropical/05.webp",
+      "bytes": 344564,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "085c658fcbe4ba1b221e059b20599c413173a86c983c01b9ccfef0466ae5b7c6",
+      "sourceSha256": "e4efe63f33db49b9eb39c27193bae3d2814be8733dfd6ef8840d436793e39bb9"
+    },
+    {
+      "region": "tropical",
+      "month": 6,
+      "file": "gregorian-months-v1/tropical/06.webp",
+      "bytes": 362634,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "6b088a95759687f2ae67bc29826c4caeaf155c7a4d9d19eac027d3c0e1c1a75e",
+      "sourceSha256": "3b426a864bc5b88efcb533b18d84de2905e4b5bf7b782f3de219f6bda0d5acd5"
+    },
+    {
+      "region": "tropical",
+      "month": 7,
+      "file": "gregorian-months-v1/tropical/07.webp",
+      "bytes": 375292,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "2757387442651844dbc590450978607fa69e724c42498266f130071703dddee1",
+      "sourceSha256": "1f9ccab6911851d19abe491091d345ab1af7c7dd00465f3862d460c14bc1a6a8"
+    },
+    {
+      "region": "tropical",
+      "month": 8,
+      "file": "gregorian-months-v1/tropical/08.webp",
+      "bytes": 321736,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "84db88bb342bd842cc3fe0cf2e6d153b326c68b3973f25f635241cbc5c04ad11",
+      "sourceSha256": "fb1bc79ae92ebaa5c8326d761564f0a50b8ab6584481bb081feb59dca2f64d5f"
+    },
+    {
+      "region": "tropical",
+      "month": 9,
+      "file": "gregorian-months-v1/tropical/09.webp",
+      "bytes": 341542,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "9d0cd4063412821f162b38f8fdbc99133b0fdba67d4560e1a8734fed3b16dd5a",
+      "sourceSha256": "a2dbbafbf21ffcef483efffae42edeb56f4d93ec8e31c75f21f07b7de4e1cff4"
+    },
+    {
+      "region": "tropical",
+      "month": 10,
+      "file": "gregorian-months-v1/tropical/10.webp",
+      "bytes": 461622,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "aff072b6f3966bc999eb722b55909b1b433cd03e7ca12490f9e64d3c841ee957",
+      "sourceSha256": "98da3f66263b58001fe0a5bc8664dc751a59ad9b89d7fa546743876b34879c52"
+    },
+    {
+      "region": "tropical",
+      "month": 11,
+      "file": "gregorian-months-v1/tropical/11.webp",
+      "bytes": 383280,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "77e387d2094a388fd386953a6ab9f36dd52a2d602c7f1bfb62f09197240d8a51",
+      "sourceSha256": "33352740fbd1f9af59df663592b0cec378813459831f73f4a879fd38e95101ed"
+    },
+    {
+      "region": "tropical",
+      "month": 12,
+      "file": "gregorian-months-v1/tropical/12.webp",
+      "bytes": 341176,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "6d434c3f70c112eb32fcbf24564539c120f87b736d400064f2a2fc830e52780c",
+      "sourceSha256": "5418bebb9b1242625a99a64ec56f4efc43a4e3f79259977d9f84502ecd962b8a"
+    },
+    {
+      "region": "southern",
+      "month": 1,
+      "file": "gregorian-months-v1/southern/01.webp",
+      "bytes": 322288,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "1009b880f39471aa5da08804381e35875296e5e34ff2267eddd74ab8145706f4",
+      "sourceSha256": "608d869f0e434729ae8ab15ba02de60916faf60863c300cd52661b14c1d58442"
+    },
+    {
+      "region": "southern",
+      "month": 2,
+      "file": "gregorian-months-v1/southern/02.webp",
+      "bytes": 388724,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "ed0f920e7915fccb140112f11e8aa661631e6fbf336a2cd6e55f49f7b8d3c12a",
+      "sourceSha256": "f6d41ecf514a791f4e24ad8b7ce1641106142758283902d62b9802b3c313d675"
+    },
+    {
+      "region": "southern",
+      "month": 3,
+      "file": "gregorian-months-v1/southern/03.webp",
+      "bytes": 369560,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bf86fb460a641a4802c41b1c98e831a5c0e4ec1e607a6991f329a9e592ecc744",
+      "sourceSha256": "9fe1aedb5cb6a1f5e73cb21517f234262015333eae7e7b4b09cdb63a6d08c1a9"
+    },
+    {
+      "region": "southern",
+      "month": 4,
+      "file": "gregorian-months-v1/southern/04.webp",
+      "bytes": 390386,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "54e77850f50db21b58839407cad9aee1c0de8a74b8f5ce7a8c9ec5957e0f9348",
+      "sourceSha256": "a2637ad81fa1313b2c9e11d6c44f961160e1d0058c2414e67ab07f01bb66d7c7"
+    },
+    {
+      "region": "southern",
+      "month": 5,
+      "file": "gregorian-months-v1/southern/05.webp",
+      "bytes": 373174,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "2ab19fef10525c62bdec30e686d5283b692cb15be2d9557b0ef20dcfe98a2a5d",
+      "sourceSha256": "ecce1cb0a6fe60a3eb59541f88f2822b85e81511910176411d9d58ffd1904a01"
+    },
+    {
+      "region": "southern",
+      "month": 6,
+      "file": "gregorian-months-v1/southern/06.webp",
+      "bytes": 272238,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "8fcfd48311fb87871e256d19cac0fcfbb3a343540eed823e583af6b2844db190",
+      "sourceSha256": "181688c63242d5d87c1fed84655550c51af5da4a614b97811812979e1bd052b1"
+    },
+    {
+      "region": "southern",
+      "month": 7,
+      "file": "gregorian-months-v1/southern/07.webp",
+      "bytes": 294354,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "a51c57e93f115bbfbb11791c8419d1e51d070e079256718e15b351b3f23375d6",
+      "sourceSha256": "596b820d94fead27fe93411f3e9835399fa004de4a937fcf127a6cca5849e26e"
+    },
+    {
+      "region": "southern",
+      "month": 8,
+      "file": "gregorian-months-v1/southern/08.webp",
+      "bytes": 317820,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "7d72f0c08bf09e4d54be7128f509b51ddb4ca7821d9bdd9f29b7b0f256afa4f2",
+      "sourceSha256": "ef113637f2c27927485d86853346661708c24938e9f9f0ee4707f2d31d35c871"
+    },
+    {
+      "region": "southern",
+      "month": 9,
+      "file": "gregorian-months-v1/southern/09.webp",
+      "bytes": 352392,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "f0ced57e7b981f9deb2414feea017ce8b3a87ee66b553bf519a2a12b39799d35",
+      "sourceSha256": "a62febf0bce92133f3ee9ef9cde7a35102b6f61f6ee0e48b5e118cbfd7710ed1"
+    },
+    {
+      "region": "southern",
+      "month": 10,
+      "file": "gregorian-months-v1/southern/10.webp",
+      "bytes": 423750,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "320509a8778ac9bf44ab70286742432d8d4fd5bd83c550ac8b65d90599ef3f7d",
+      "sourceSha256": "7adffd31cd3c630b38b8eb10171e1a6a58e240eee7c488ae4d346d08a725965d"
+    },
+    {
+      "region": "southern",
+      "month": 11,
+      "file": "gregorian-months-v1/southern/11.webp",
+      "bytes": 397722,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "754c1ec11d7a91e06d3ffec794b9246cf3c123cbe77360b7f3d1f7253473610a",
+      "sourceSha256": "487e5e2f8623eab3b591fc422263c82ba0d77ab29828b14efce95697fc261bb6"
+    },
+    {
+      "region": "southern",
+      "month": 12,
+      "file": "gregorian-months-v1/southern/12.webp",
+      "bytes": 364930,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "f134cee087498e9909604776f06af614279a8e51dff3354de4b07c34c4eda2ab",
+      "sourceSha256": "0f7488f3cc78f9e49ef4fadac32f5d0e169013bf5e4cbd68225f73733ef451ce"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+html[data-genesis-theme] .genesis-app .icon-action-button {
+  display:inline-flex;
+  flex:0 0 44px;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  min-width:44px;
+  height:44px;
+  min-height:44px;
+  margin:0;
+  padding:10px;
+}
+
+/* A visible label needs its own content width; only icon-only actions are square. */
+html[data-genesis-theme] .genesis-app .icon-action-button:where(.icon-label-choice) {
+  flex:0 1 auto;
+  gap:8px;
+  width:auto;
+  min-width:44px;
+  max-width:100%;
+  height:auto;
+  padding:10px 12px;
+  white-space:normal;
+  text-align:start;
+}
+html[data-genesis-theme] .genesis-app .icon-action-button.icon-label-choice > svg {
+  flex:0 0 20px;
+  width:20px;
+  height:20px;
+}
+html[data-genesis-theme] .genesis-app .icon-action-button.icon-label-choice > .icon-choice-label {
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}

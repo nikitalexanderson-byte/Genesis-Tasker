@@ -1,0 +1,10 @@
+import { chromium } from './browser.mjs';
+import { readFileSync } from 'node:fs';
+const browser = await chromium.launch({headless:false,channel:'chrome'});
+const context = await browser.newContext({storageState:'output/browser-state.json',viewport:null});
+const page = await context.newPage();
+const result = JSON.parse(readFileSync('output/mindmaps-e2e-result.json','utf8'));
+if (!result.mapUrl.startsWith('http://127.0.0.1:4319/')) throw new Error('Only the isolated loopback fixture is allowed.');
+await page.goto(result.mapUrl);
+console.log('Local pilot opened in Chrome. Fixture data only; no live Google connection.');
+await new Promise(resolve => browser.on('disconnected',resolve));

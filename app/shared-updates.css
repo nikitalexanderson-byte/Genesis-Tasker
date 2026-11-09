@@ -1,0 +1,46 @@
+html[data-genesis-theme] .genesis-app .shared-workspace-summary { display: grid; min-width: 0; gap: 12px; }
+html[data-genesis-theme] .genesis-app .shared-summary-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; gap: 8px 0; }
+html[data-genesis-theme] .genesis-app .shared-summary-counts > span { min-width: 0; }
+html[data-genesis-theme] .genesis-app .shared-summary-counts > span:nth-child(3n + 1) { border-left: 0; }
+html[data-genesis-theme] .genesis-app .shared-updates-open { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid #ffffff40; border-radius: var(--ui-radius); background: transparent; color: #f4f0e5; font: 500 14px/1.4 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-updates-open strong { color: #e4c78c; font-variant-numeric: tabular-nums; }
+html[data-genesis-theme] .genesis-app .shared-summary-retry { color: #f4f0e5; background: transparent; border: 0; text-decoration: underline; }
+html[data-genesis-theme] .genesis-app .workspace-header .shared-updates-dialog { color: var(--ink); }
+html[data-genesis-theme] .genesis-app .workspace-header .shared-updates-dialog :is(p, small, time, h2) { color: var(--ink); }
+html[data-genesis-theme] .genesis-app .shared-updates-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+html[data-genesis-theme] .genesis-app .shared-updates-close { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 8px; flex-shrink: 0; }
+html[data-genesis-theme] .genesis-app .shared-updates-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0; }
+html[data-genesis-theme] .genesis-app .shared-updates-counts { margin: 12px 0; font: 400 13px/1.6 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-updates-list { list-style: none; padding: 0; margin: 16px 0; }
+html[data-genesis-theme] .genesis-app .shared-updates-list > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; border-bottom: 1px solid var(--line); padding: 8px 0; }
+html[data-genesis-theme] .genesis-app .shared-updates-list > li[data-unread] { background: var(--exp-accent-wash); }
+html[data-genesis-theme] .genesis-app .shared-update-open { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 0; background: transparent; text-align: left; color: var(--ink); min-width: 0; width: 100%; }
+html[data-genesis-theme] .genesis-app .shared-update-open > span { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-update-open > span > strong { font: 600 15px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-update-read { width: 44px; min-height: 44px; align-self: center; padding: 8px; }
+html[data-genesis-theme] .genesis-app .shared-comment-notices { position: fixed; right: 24px; bottom: 24px; z-index: 700; display: grid; gap: 12px; width: min(360px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; }
+html[data-genesis-theme] .genesis-app .shared-comment-notices > article { position: relative; padding: 16px; background: var(--surface); color: var(--ink); border: 1px solid var(--palette-outline, #214c3d); border-radius: var(--ui-surface-radius); }
+html[data-genesis-theme] .genesis-app .shared-comment-notice-open { display: grid; gap: 12px; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; font: 400 14px/1.5 var(--font-ui); overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-comment-notice-open:is(:hover,:focus-visible) { background: var(--exp-accent-wash); color: var(--ink); }
+html[data-genesis-theme] .genesis-app .shared-comment-notice-heading { display: flex; align-items: center; gap: 8px; padding-right: 44px; min-height: 44px; }
+html[data-genesis-theme] .genesis-app .shared-comment-notice-action { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .shared-comment-notice-dismiss { position: absolute; top: 16px; right: 16px; display: grid; place-items: center; width: 44px; min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--ink); }
+html[data-genesis-theme="standart-dark"] .genesis-app .shared-comment-notices > article { border-color: #c6a66c; }
+html[data-genesis-theme] .genesis-app .shared-comment-notices header { display: flex; align-items: center; gap: 8px; }
+html[data-genesis-theme] .genesis-app .shared-comment-notices header > button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 8px; margin-left: auto; background: transparent; border: 0; }
+html[data-genesis-theme] .genesis-app .shared-comment-notices p { margin: 8px 0 12px; font: 400 14px/1.5 var(--font-ui); overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-comment-preview { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+html[data-genesis-theme] .genesis-app .shared-task-image-input { display: grid; gap: 8px; padding-block: 12px; }
+html[data-genesis-theme] .genesis-app .shared-image-choose { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: 500 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .shared-image-choose input { flex-basis: 100%; max-width: 100%; }
+html[data-genesis-theme] .genesis-app :is(.shared-task-image, .shared-task-image-preview) { display: grid; gap: 12px; margin: 12px 0; min-width: 0; }
+html[data-genesis-theme] .genesis-app :is(.shared-task-image, .shared-task-image-preview) img { display: block; width: auto; max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 12px; }
+html[data-genesis-theme] .genesis-app .shared-task-image-preview > button { display: flex; align-items: center; justify-content: center; gap: 8px; justify-self: start; min-height: 44px; }
+html[data-genesis-theme] .genesis-app .shared-task-image figcaption { color: var(--ink-soft); font: 400 12px/1.5 var(--font-ui); }
+@media (max-width: 1040px) { html[data-genesis-theme] .genesis-app .shared-comment-notices { display: none; } }
+@media (max-width: 760px) {
+  html[data-genesis-theme] .genesis-app .shared-workspace-summary { width: 100%; }
+  html[data-genesis-theme] .genesis-app .workspace-header:has(.shared-workspace-summary) { flex-wrap: wrap; }
+  html[data-genesis-theme] .genesis-app .workspace-header:has(.shared-workspace-summary) .workspace-header-summary { min-width: 0; width: 100%; flex: 0 1 100%; margin-inline-start: 0; }
+  html[data-genesis-theme] .genesis-app .workspace-header .shared-summary-counts { min-width: 0; }
+}

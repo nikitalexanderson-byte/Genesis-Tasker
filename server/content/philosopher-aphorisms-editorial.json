@@ -1,0 +1,1350 @@
+{
+  "schemaVersion": 1,
+  "translationVersion": "philosophers-2026-11-v1",
+  "corrections": [
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "pl",
+      "sourceBody": "(Niezniszczalność moralna osoby cnotliwej) Dobroczyńcy nie może spotkać żadne zło: przeciwieństwa nie mogą się ze sobą łączyć.\nSeneka",
+      "body": "Nieszczęścia mogą sprawić dobremu człowiekowi ból, lecz nie mogą uczynić go złym: zło moralne nie da się pogodzić z cnotą.\nSeneka",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved.",
+      "style": "contextual-paraphrase"
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "ru",
+      "sourceBody": "(Нравственная неуязвимость добродетельного человека) Ведь никакое зло не может постигнуть доброго человека: противоположности не могут соединиться.\nСенека",
+      "body": "Беды могут причинить доброму человеку боль, но не могут сделать его дурным: нравственное зло не уживается с добродетелью.\nСенека",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "en",
+      "sourceBody": "(The virtuous person's moral invulnerability) Why, no evil can befall a good man: contraries cannot combine.\nSeneca",
+      "body": "Hardship can hurt a good person, but it cannot make them bad: moral evil cannot coexist with virtue.\nSeneca",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "el",
+      "sourceBody": "(Ο ενάρετος άνθρωπος δεν μπορεί να υποστεί ηθική βλάβη) Γιατί, κανένα κακό δεν μπορεί να πλήξει έναν καλό άνθρωπο: τα αντίθετα δεν μπορούν να συνδυαστούν.\nΣενέκας",
+      "body": "Οι συμφορές μπορούν να πληγώσουν έναν καλό άνθρωπο, αλλά δεν μπορούν να τον κάνουν κακό: το ηθικό κακό δεν συμβιβάζεται με την αρετή.\nΣενέκας",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "de",
+      "sourceBody": "(Die moralische Unverwundbarkeit des tugendhaften Menschen) Denn kein Übel kann einem guten Menschen widerfahren: Gegensätze können sich nicht vereinen.\nSeneca",
+      "body": "Unglück kann einem guten Menschen Schmerzen zufügen, ihn aber nicht schlecht machen: moralisches Übel verträgt sich nicht mit Tugend.\nSeneca",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "fr",
+      "sourceBody": "(L'invulnérabilité morale de la personne vertueuse) En effet, aucun mal ne peut atteindre un homme bon : les contraires ne peuvent s'unir.\nSénèque",
+      "body": "Les épreuves peuvent faire souffrir une personne bonne, mais elles ne peuvent la rendre mauvaise : le mal moral ne peut cohabiter avec la vertu.\nSénèque",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "es",
+      "sourceBody": "(La invulnerabilidad moral de la persona virtuosa) Por tanto, ningún mal puede sobrevenirle a un hombre bueno: los contrarios no pueden combinarse.\nSéneca",
+      "body": "Las desgracias pueden hacer sufrir a una persona buena, pero no pueden volverla mala: el mal moral no puede convivir con la virtud.\nSéneca",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "it",
+      "sourceBody": "(L'invulnerabilità morale della persona virtuosa) Ebbene, nessun male può colpire un uomo buono: i contrari non possono unirsi.\nSeneca",
+      "body": "Le avversità possono far soffrire una persona buona, ma non possono renderla cattiva: il male morale non può convivere con la virtù.\nSeneca",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "pt",
+      "sourceBody": "(A invulnerabilidade moral da pessoa virtuosa) Ora, nenhum mal pode atingir um homem bom: os contrários não podem se combinar.\nSêneca",
+      "body": "As adversidades podem fazer uma pessoa boa sofrer, mas não podem torná-la má: o mal moral não pode conviver com a virtude.\nSêneca",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "sr",
+      "sourceBody": "(Морална нерањивост врлинске особе) Зашто, никакво зло не може задесити доброг човека: супротности се не могу спојити.\nСенека",
+      "body": "Невоље могу нанети бол добром човеку, али га не могу учинити злим: морално зло не може се помирити с врлином.\nСенека",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "uk",
+      "sourceBody": "(Моральна невразливість доброчесної людини) Ніщо зло не може спіткати добру людину: протилежності не можуть поєднуватися.\nСенека",
+      "body": "Негаразди можуть завдати добрій людині болю, але не можуть зробити її злою: моральне зло не уживається з доброчесністю.\nСенека",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "zh",
+      "sourceBody": "(有德之人的道德免疫力) 因为，任何邪恶都不会降临到善良的人身上：相反的事物无法结合。\n塞涅卡",
+      "body": "苦难可以让善良的人感到痛苦，却不能把他变成恶人，因为道德上的恶与美德无法相容。\n塞涅卡",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "tr",
+      "sourceBody": "(Erdemli insanın ahlaki dokunulmazlığı) Çünkü iyi bir insana hiçbir kötülük gelmez: zıtlıklar birleşemez.\nSeneca",
+      "body": "Felaketler iyi bir insana acı verebilir, ama onu kötü yapamaz; çünkü ahlaki kötülük erdemle bir arada bulunamaz.\nSeneca",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "seneca_0510_02",
+      "language": "ja",
+      "sourceBody": "(徳のある人の道徳的無敵性) なぜなら、善人には災いは降りかからないからだ。相反するものは結びつかない。\nセネカ",
+      "body": "災難は善い人を苦しめても、悪人に変えることはできない。道徳的な悪と徳は、ともに成り立たないからだ。\nセネカ",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "ru",
+      "sourceBody": "(О сотрудничестве и человеческой общности) Поэтому действовать друг против друга противоречит природе; а действовать друг против друга — значит раздражаться и отворачиваться.\nМарк Аврелий",
+      "body": "Мы созданы для сотрудничества. Раздражаясь на людей и отворачиваясь от них, мы идём против собственной природы.\nМарк Аврелий",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "en",
+      "sourceBody": "(On cooperation and human community) To act against one another, then, is contrary to nature; and it is acting against one another to be vexed and to turn away.\nMarcus Aurelius",
+      "body": "We are made to work together. When we resent other people and turn away from them, we act against our own nature.\nMarcus Aurelius",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "el",
+      "sourceBody": "(Σχετικά με τη συνεργασία και την ανθρώπινη κοινότητα) Το να ενεργούμε ο ένας εναντίον του άλλου, λοιπόν, είναι αντίθετο με τη φύση. Και είναι να ενεργούμε ο ένας εναντίον του άλλου να ενοχλούμαστε και να αποστρέφουμε την προσοχή μας.\nΜάρκος Αυρήλιος",
+      "body": "Είμαστε φτιαγμένοι για να συνεργαζόμαστε. Όταν αγανακτούμε με τους άλλους και τους γυρίζουμε την πλάτη, ενεργούμε ενάντια στη φύση μας.\nΜάρκος Αυρήλιος",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "de",
+      "sourceBody": "(Über Kooperation und menschliche Gemeinschaft) Sich gegeneinander zu verhalten, widerspricht der Natur; und es bedeutet, sich zu ärgern und sich voneinander abzuwenden.\nMarc Aurel",
+      "body": "Wir sind dazu geschaffen, zusammenzuarbeiten. Wenn wir über andere Menschen zürnen und uns von ihnen abwenden, handeln wir gegen unsere eigene Natur.\nMarc Aurel",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "fr",
+      "sourceBody": "(De la coopération et de la communauté humaine) Agir les uns contre les autres est donc contraire à la nature ; et s'irriter et se détourner les uns des autres, c'est agir les uns contre les autres.\nMarc Aurèle",
+      "body": "Nous sommes faits pour coopérer. En nous irritant contre les autres et en nous détournant d’eux, nous agissons contre notre propre nature.\nMarc Aurèle",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "es",
+      "sourceBody": "(Sobre la cooperación y la comunidad humana) Actuar en contra de los demás es, pues, contrario a la naturaleza; y actuar en contra de los demás es irritarse y apartarse.\nMarco Aurelio",
+      "body": "Estamos hechos para colaborar. Cuando nos irritamos con los demás y les damos la espalda, actuamos contra nuestra propia naturaleza.\nMarco Aurelio",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "it",
+      "sourceBody": "(Sulla cooperazione e la comunità umana) Agire gli uni contro gli altri è dunque contrario alla natura; e irritarsi e voltare le spalle significa agire gli uni contro gli altri.\nMarco Aurelio",
+      "body": "Siamo fatti per collaborare. Quando ci irritiamo con gli altri e voltiamo loro le spalle, agiamo contro la nostra stessa natura.\nMarco Aurelio",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "pt",
+      "sourceBody": "(Sobre cooperação e comunidade humana) Agir uns contra os outros, portanto, é contrário à natureza; e agir uns contra os outros é se irritar e se afastar.\nMarco Aurélio",
+      "body": "Somos feitos para cooperar. Quando nos irritamos com os outros e lhes viramos as costas, agimos contra a nossa própria natureza.\nMarco Aurélio",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "pl",
+      "sourceBody": "(O współpracy i wspólnocie ludzkiej) Działanie przeciwko sobie nawzajem jest zatem sprzeczne z naturą; a działaniem przeciwko sobie jest irytacja i odwracanie się.\nMarek Aureliusz",
+      "body": "Jesteśmy stworzeni do współpracy. Gdy złościmy się na innych i odwracamy się od nich, działamy wbrew własnej naturze.\nMarek Aureliusz",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "sr",
+      "sourceBody": "(О сарадњи и људској заједници) Деловати једни против других, дакле, супротно је природи; а деловати једни против других значи бити узнемирен и окретати се.\nМарко Аурелије",
+      "body": "Створени смо да сарађујемо. Када се љутимо на друге и окрећемо им леђа, поступамо против сопствене природе.\nМарко Аурелије",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "uk",
+      "sourceBody": "(Про співпрацю та людську спільноту) Отже, діяти один проти одного суперечить природі; і діяти один проти одного — це дратуватися та відвертати себе.\nМарк Аврелій",
+      "body": "Ми створені для співпраці. Дратуючись на інших і відвертаючись від них, ми йдемо проти власної природи.\nМарк Аврелій",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "zh",
+      "sourceBody": "(关于合作与人类社会) 彼此对抗，乃是违背自然之道；彼此恼怒、背弃，亦是彼此对抗。\n马可·奥勒留",
+      "body": "人天生应当彼此合作。对别人心怀怨愤、背过身去，就是违背自己的本性。\n马可·奥勒留",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "tr",
+      "sourceBody": "(İşbirliği ve insan topluluğu üzerine) Birbirinize karşı hareket etmek, doğaya aykırıdır; ve öfkelenmek ve yüz çevirmek de birbirinize karşı hareket etmektir.\nMarcus Aurelius",
+      "body": "Birlikte çalışmak için yaratıldık. Başkalarına öfkelenip sırtımızı döndüğümüzde kendi doğamıza aykırı davranırız.\nMarcus Aurelius",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "marcus_0000_05",
+      "language": "ja",
+      "sourceBody": "(協力と人間社会について) 互いに敵対することは、自然の摂理に反する。そして、苛立ち、背を向け合うことも、互いに敵対する行為である。\nマルクス・アウレリウス",
+      "body": "私たちは協力するために生まれてきた。他人に腹を立て、背を向けるとき、私たちは自分の本性に逆らっている。\nマルクス・アウレリウス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "ru",
+      "sourceBody": "(О правильном обращении с мысленными представлениями) Итак, как и подобало, боги отдали в нашу власть лишь то, что лучше и выше всего, — правильное использование представлений; всё остальное они в нашу власть не отдали.\nЭпиктет",
+      "body": "Боги отдали нам во власть самое важное — умение правильно обращаться со своими впечатлениями и суждениями. Власти над всем остальным они нам не дали.\nЭпиктет",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "en",
+      "sourceBody": "(On correctly handling impressions in the mind) As then it was fit to be so, that which is best of all and supreme over all is the only thing which the gods have placed in our power, the right use of appearances; but all other things they have not placed in our power.\nEpictetus",
+      "body": "The gods put the most important thing in our hands: the right use of our impressions and judgments. They did not give us control over everything else.\nEpictetus",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "el",
+      "sourceBody": "(Σχετικά με τον σωστό χειρισμό των εντυπώσεων στο μυαλό) Έτσι λοιπόν, όπως ήταν πρέπον, οι θεοί έθεσαν στην εξουσία μας μόνο ό,τι είναι καλύτερο και ανώτερο από όλα: την ορθή χρήση των νοητικών παραστάσεων· όλα τα υπόλοιπα δεν τα έθεσαν στην εξουσία μας.\nΕπίκτητος",
+      "body": "Οι θεοί έθεσαν στην εξουσία μας το σημαντικότερο: τη σωστή χρήση των εντυπώσεων και των κρίσεών μας. Δεν μας έδωσαν εξουσία πάνω σε όλα τα υπόλοιπα.\nΕπίκτητος",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "de",
+      "sourceBody": "(Über den richtigen Umgang mit Eindrücken im Geist) Wie es angemessen war, haben die Götter allein das Beste und Höchste in unsere Macht gestellt: den rechten Umgang mit Vorstellungen; alles andere haben sie nicht in unsere Macht gestellt.\nEpiktet",
+      "body": "Die Götter haben das Wichtigste in unsere Hand gelegt: den richtigen Umgang mit unseren Eindrücken und Urteilen. Über alles andere haben sie uns keine Macht gegeben.\nEpiktet",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "fr",
+      "sourceBody": "(Comment bien gérer les impressions mentales) Comme il convenait alors qu'il en soit ainsi, ce qui est le meilleur et le suprême est la seule chose que les dieux ont placée en notre pouvoir : le bon usage des représentations ; mais ils n'ont pas placé les autres choses en notre pouvoir.\nÉpictète",
+      "body": "Les dieux ont placé l’essentiel entre nos mains : le bon usage de nos impressions et de nos jugements. Ils ne nous ont pas donné le pouvoir sur tout le reste.\nÉpictète",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "es",
+      "sourceBody": "(Sobre el manejo correcto de las impresiones en la mente) Como entonces era apropiado que así fuera, lo mejor de todo y supremo sobre todo es lo único que los dioses han puesto en nuestro poder: el uso correcto de las representaciones; pero todo lo demás no lo han puesto en nuestro poder.\nEpicteto",
+      "body": "Los dioses pusieron en nuestras manos lo más importante: el uso correcto de nuestras impresiones y juicios. No nos dieron poder sobre todo lo demás.\nEpicteto",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "it",
+      "sourceBody": "(Come gestire correttamente le impressioni nella mente) Come allora era giusto che fosse, ciò che è migliore di tutti e supremo su tutti è l'unica cosa che gli dèi hanno posto in nostro potere: il giusto uso delle rappresentazioni; ma tutte le altre cose non le hanno poste in nostro potere.\nEpitteto",
+      "body": "Gli dèi hanno messo nelle nostre mani la cosa più importante: il giusto uso delle nostre impressioni e dei nostri giudizi. Non ci hanno dato potere su tutto il resto.\nEpitteto",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "pt",
+      "sourceBody": "(Sobre como lidar corretamente com as impressões na mente) Como era conveniente que assim fosse, o que há de melhor e mais elevado é a única coisa que os deuses puseram em nosso poder: o uso correto das representações; todas as outras coisas eles não puseram em nosso poder.\nEpicteto",
+      "body": "Os deuses colocaram nas nossas mãos o mais importante: o uso correto das nossas impressões e dos nossos juízos. Não nos deram poder sobre tudo o resto.\nEpicteto",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "pl",
+      "sourceBody": "(O właściwym postępowaniu z wrażeniami w umyśle) Jak zatem należało, jedyną rzeczą, którą bogowie poddali naszej władzy, jest to, co najlepsze i najwyższe: właściwe posługiwanie się wyobrażeniami. Żadnej innej rzeczy nie poddali naszej władzy.\nEpiktet",
+      "body": "Bogowie oddali w naszą władzę to, co najważniejsze: właściwe korzystanie z naszych wrażeń i sądów. Nie dali nam władzy nad wszystkim innym.\nEpiktet",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "sr",
+      "sourceBody": "(О правилном руковању утисцима у уму) Стога, као што и доликује, богови су у нашу моћ ставили једино оно што је најбоље и највише од свега — правилну употребу представа; све остало нису ставили у нашу моћ.\nЕпиктет",
+      "body": "Богови су нам дали власт над најважнијим: над правилном употребом сопствених утисака и судова. Над свим осталим нису нам дали власт.\nЕпиктет",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "uk",
+      "sourceBody": "(Про правильне поводження з враженнями у розумі) Отже, як і належало, боги віддали в нашу владу лише те, що найкраще й найвище за все, — правильне використання уявлень; усе інше вони в нашу владу не віддали.\nЕпіктет",
+      "body": "Боги дали нам владу над найважливішим — умінням правильно користуватися власними враженнями й судженнями. Влади над усім іншим вони нам не дали.\nЕпіктет",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "zh",
+      "sourceBody": "(论如何正确处理心中的印象) 事情理当如此：诸神置于我们掌控之中的，唯有最美好、最崇高的事——正确运用表象；其余一切，诸神都未置于我们的掌控之中。\n爱比克泰德",
+      "body": "诸神把最重要的能力交给了我们：正确运用自己的印象与判断。除此之外的一切，并不都由我们掌控。\n爱比克泰德",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "tr",
+      "sourceBody": "(Zihindeki izlenimleri doğru şekilde ele almak üzerine) Öyle olması gerektiği için, tanrıların denetimimize bıraktığı tek şey, her şeyin en iyisi ve en üstünü olan izlenimlerin doğru kullanımıdır; diğer hiçbir şeyi denetimimize bırakmamışlardır.\nEpiktetos",
+      "body": "Tanrılar en önemli şeyi bize bıraktı: izlenimlerimizi ve yargılarımızı doğru kullanmayı. Geri kalan her şey üzerinde bize güç vermediler.\nEpiktetos",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epictetus_1165_01",
+      "language": "ja",
+      "sourceBody": "(心の中の印象を正しく扱うことについて) 当然そうあるべきこととして、神々が私たちの力に委ねたのは、最も優れ、すべてに勝るただ一つのもの、すなわち表象を正しく用いることだけである。他のすべては、私たちの力に委ねられていない。\nエピクテトス",
+      "body": "神々が私たちに委ねたのは、最も大切なことだ。それは、自分の印象や判断を正しく用いること。それ以外のすべてを支配する力まで与えられたわけではない。\nエピクテトス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "ru",
+      "sourceBody": "(Об удовольствии, ошибочно принимаемом за благо) Многие люди, кажется, обмануты по причине удовольствия, потому что, хотя оно и не является настоящим благом, оно внушает их умам мысль о добре, поэтому они выбирают приятное как благо и избегают боли как зла.\nАристотель",
+      "body": "Удовольствие легко принять за благо. Поэтому мы нередко выбираем приятное и избегаем боли, не разобравшись, что действительно хорошо.\nАристотель",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "en",
+      "sourceBody": "(On pleasure mistaken for goodness) The multitude of men seem to be deceived by reason of pleasure, because though it is not really a good it impresses their minds with the notion of goodness, so they choose what is pleasant as good and avoid pain as an evil.\nAristotle",
+      "body": "Pleasure is easily mistaken for goodness. That is why we often choose what feels pleasant and avoid pain without asking what is truly good.\nAristotle",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "el",
+      "sourceBody": "(Για την απόλαυση που εκλαμβάνεται λανθασμένα ως αγαθό) Το πλήθος των ανθρώπων φαίνεται να εξαπατάται λόγω της ηδονής, επειδή αν και δεν είναι πραγματικά καλό, εντυπώνει στο μυαλό τους την έννοια της καλοσύνης, έτσι επιλέγουν αυτό που είναι ευχάριστο ως καλό και αποφεύγουν τον πόνο ως κακό.\nΑριστοτέλης",
+      "body": "Η ευχαρίστηση εύκολα περνιέται για αγαθό. Γι’ αυτό συχνά διαλέγουμε το ευχάριστο και αποφεύγουμε τον πόνο χωρίς να εξετάζουμε τι είναι πραγματικά καλό.\nΑριστοτέλης",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "de",
+      "sourceBody": "(Über Lust, die fälschlich für das Gute gehalten wird) Die meisten Menschen scheinen sich vom Vergnügen täuschen zu lassen, denn obwohl es in Wirklichkeit kein Gut ist, prägt es ihnen den Eindruck von Güte ein, sodass sie das Angenehme als gut und den Schmerz als Übel wählen.\nAristoteles",
+      "body": "Lust wird leicht mit dem Guten verwechselt. Deshalb wählen wir oft das Angenehme und meiden Schmerz, ohne zu prüfen, was wirklich gut ist.\nAristoteles",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "fr",
+      "sourceBody": "(Du plaisir pris à tort pour le bien) La multitude des hommes semble être trompée par le plaisir, car, bien qu'il ne soit pas véritablement un bien, il imprègne leur esprit de la notion de bonté, si bien qu'ils choisissent ce qui est agréable comme bien et évitent la douleur comme un mal.\nAristote",
+      "body": "On prend facilement le plaisir pour le bien. C’est pourquoi nous choisissons souvent l’agréable et fuyons la douleur sans examiner ce qui est vraiment bon.\nAristote",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "es",
+      "sourceBody": "(Sobre el placer confundido con el bien) La multitud parece estar engañada por el placer, porque aunque no sea realmente un bien, les inculca la idea de bondad, de modo que eligen lo placentero como bueno y evitan el dolor como malo.\nAristóteles",
+      "body": "Es fácil confundir el placer con el bien. Por eso a menudo elegimos lo agradable y evitamos el dolor sin examinar qué es realmente bueno.\nAristóteles",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "it",
+      "sourceBody": "(Sul piacere scambiato erroneamente per il bene) La maggior parte degli uomini sembra essere ingannata dal piacere, perché, sebbene non sia un bene in sé, imprime nelle loro menti l'idea di bontà, così scelgono ciò che è piacevole come bene ed evitano il dolore come male.\nAristotele",
+      "body": "È facile scambiare il piacere per il bene. Per questo spesso scegliamo ciò che è piacevole ed evitiamo il dolore senza esaminare che cosa sia davvero buono.\nAristotele",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "pt",
+      "sourceBody": "(Sobre o prazer tomado erroneamente pelo bem) A multidão de homens parece ser enganada pelo prazer, pois, embora não seja realmente um bem, impressiona suas mentes com a noção de bondade, de modo que escolhem o que é agradável como bom e evitam a dor como um mal.\nAristóteles",
+      "body": "É fácil confundir o prazer com o bem. Por isso, muitas vezes escolhemos o agradável e evitamos a dor sem examinar o que é realmente bom.\nAristóteles",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "pl",
+      "sourceBody": "(O przyjemności mylonej z dobrem) Mnóstwo ludzi zdaje się być zwiedzionych przez przyjemność, ponieważ choć nie jest ona w rzeczywistości dobrem, to jednak utrwala w ich umysłach pojęcie dobra, dlatego wybierają to, co przyjemne, jako dobro, a unikają bólu jako zła.\nArystoteles",
+      "body": "Łatwo pomylić przyjemność z dobrem. Dlatego często wybieramy to, co miłe, i unikamy bólu, nie zastanawiając się, co jest naprawdę dobre.\nArystoteles",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "sr",
+      "sourceBody": "(О задовољству које се погрешно сматра добром) Чини се да је мноштво људи преварено задовољством, јер иако оно није заиста добро, оно импресионира њихове умове појмом доброте, па бирају оно што је пријатно као добро и избегавају бол као зло.\nАристотел",
+      "body": "Лако је помешати задовољство с добром. Зато често бирамо пријатно и избегавамо бол, не испитујући шта је заиста добро.\nАристотел",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "uk",
+      "sourceBody": "(Про задоволення, яке плутають з благом) Безліч людей, здається, обманюються через задоволення, бо хоча воно насправді не є благом, воно вселяє в їхні розуми поняття добра, тому вони обирають приємне як добро та уникають болю як зла.\nАрістотель",
+      "body": "Задоволення легко сплутати з благом. Тому ми нерідко вибираємо приємне й уникаємо болю, не з’ясувавши, що насправді добре.\nАрістотель",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "zh",
+      "sourceBody": "(论被误认为善的快乐) 许多人似乎被享乐所蒙蔽，因为享乐虽非真正的善，却在他们的心中留下了善的印象，于是他们把愉悦当作善，把痛苦当作恶来逃避。\n亚里士多德",
+      "body": "人很容易把快乐误当成善。因此，我们常常只选择愉快、逃避痛苦，却没有弄清什么才真正是好的。\n亚里士多德",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "tr",
+      "sourceBody": "(Hazın yanlışlıkla iyi sayılması üzerine) İnsanların büyük çoğunluğu zevk nedeniyle aldatılmış gibi görünüyor, çünkü gerçekte iyi olmasa da zihinlerine iyilik fikrini aşılıyor, bu yüzden hoş olanı iyi olarak seçiyorlar ve acıdan kötülük olarak kaçınıyorlar.\nAristoteles",
+      "body": "Hazzı iyilikle karıştırmak kolaydır. Bu yüzden çoğu zaman neyin gerçekten iyi olduğunu düşünmeden hoş olanı seçer, acıdan kaçarız.\nAristoteles",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "aristotle_0268_00",
+      "language": "ja",
+      "sourceBody": "(快楽を善と誤解することについて) 多くの人々は快楽によって欺かれているようです。快楽は真の善ではないにもかかわらず、人々の心に善の概念を植え付けるため、快いものを善として選び、苦痛を悪として避けるのです。\nアリストテレス",
+      "body": "快楽は善と取り違えやすい。だから私たちは、本当に善いものを確かめる前に、心地よいものを選び、苦痛を避けてしまう。\nアリストテレス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "ru",
+      "sourceBody": "(О кратком обзоре, объединяющем знания о природе) Короче говоря, подлинный синтез, охватывающий весь круг явлений Вселенной, должен в нескольких словах обобщить все частные факты, которые были изучены ранее.\nЭпикур",
+      "body": "Чтобы видеть природу как целое, нужно уметь кратко связать между собой отдельные факты, которые ты уже изучил.\nЭпикур",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "en",
+      "sourceBody": "(On a concise overview unifying knowledge of nature) In short, a veritable synthesis, comprising the entire circle of the phænomena of the universe, ought to be able to resume in itself, and in a few words, all the particular facts which have been previously studied.\nEpicurus",
+      "body": "To understand nature as a whole, learn to bring the individual facts you have studied together in a clear, concise account.\nEpicurus",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "el",
+      "sourceBody": "(Σε μια συνοπτική επισκόπηση που ενοποιεί τη γνώση της φύσης) Εν ολίγοις, μια πραγματική σύνθεση, που περιλαμβάνει ολόκληρο τον κύκλο των φαινομένων του σύμπαντος, θα πρέπει να είναι σε θέση να συνοψίσει από μόνη της, και με λίγα λόγια, όλα τα συγκεκριμένα γεγονότα που έχουν μελετηθεί προηγουμένως.\nΕπίκουρος",
+      "body": "Για να κατανοήσεις τη φύση ως σύνολο, μάθε να συνδέεις με σαφήνεια και συντομία τα επιμέρους γεγονότα που έχεις ήδη μελετήσει.\nΕπίκουρος",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "de",
+      "sourceBody": "(Über einen knappen Überblick, der das Wissen über die Natur zusammenfasst) Kurz gesagt, eine wahre Synthese, die den gesamten Kreis der Phänomene des Universums umfasst, sollte in sich und in wenigen Worten alle zuvor untersuchten Einzelfakten zusammenfassen können.\nEpikur",
+      "body": "Wer die Natur als Ganzes verstehen will, muss die bereits untersuchten Einzeltatsachen klar und knapp miteinander verbinden können.\nEpikur",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "fr",
+      "sourceBody": "(Sur une vue d'ensemble concise unifiant la connaissance de la nature) En résumé, une véritable synthèse, embrassant le cycle complet des phénomènes de l'univers, devrait pouvoir résumer en elle-même, et en quelques mots, tous les faits particuliers précédemment étudiés.\nÉpicure",
+      "body": "Pour comprendre la nature dans son ensemble, apprends à relier clairement et brièvement les faits particuliers que tu as déjà étudiés.\nÉpicure",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "es",
+      "sourceBody": "(Sobre una visión general concisa que unifica el conocimiento de la naturaleza) En resumen, una síntesis auténtica, que abarque todo el espectro de los fenómenos del universo, debería poder resumir en pocas palabras todos los hechos particulares previamente estudiados.\nEpicuro",
+      "body": "Para comprender la naturaleza como un todo, aprende a relacionar con claridad y brevedad los hechos particulares que ya has estudiado.\nEpicuro",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "it",
+      "sourceBody": "(Su una panoramica concisa che unifica la conoscenza della natura) In breve, una vera e propria sintesi, che comprenda l'intero ciclo dei fenomeni dell'universo, dovrebbe essere in grado di riassumere in sé, e in poche parole, tutti i fatti particolari che sono stati precedentemente studiati.\nEpicuro",
+      "body": "Per comprendere la natura nel suo insieme, impara a collegare con chiarezza e brevità i singoli fatti che hai già studiato.\nEpicuro",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "pt",
+      "sourceBody": "(Sobre uma visão geral concisa que unifica o conhecimento da natureza) Em suma, uma verdadeira síntese, abrangendo todo o círculo dos fenômenos do universo, deveria ser capaz de resumir em si mesma, e em poucas palavras, todos os fatos particulares que foram previamente estudados.\nEpicuro",
+      "body": "Para compreender a natureza como um todo, aprende a relacionar de forma clara e breve os factos particulares que já estudaste.\nEpicuro",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "pl",
+      "sourceBody": "(O zwięzłym przeglądzie ujednolicającym wiedzę o naturze) Krótko mówiąc, prawdziwa synteza, obejmująca cały krąg zjawisk wszechświata, powinna być w stanie podsumować w sobie i w kilku słowach wszystkie szczegółowe fakty, które zostały wcześniej zbadane.\nEpikur",
+      "body": "Aby zrozumieć przyrodę jako całość, naucz się jasno i zwięźle łączyć poszczególne fakty, które już zbadałeś.\nEpikur",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "sr",
+      "sourceBody": "(О сажетом прегледу који обједињује знање о природи) Укратко, права синтеза, која обухвата цео круг феномена универзума, требало би да буде у стању да сажети у себи, и укратко, све појединачне чињенице које су претходно проучаване.\nЕпикур",
+      "body": "Да би разумео природу као целину, научи да јасно и сажето повежеш појединачне чињенице које си већ проучио.\nЕпикур",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "uk",
+      "sourceBody": "(Про стислий огляд, що об'єднує знання про природу) Коротше кажучи, справжній синтез, що охоплює все коло явищ Всесвіту, повинен бути здатним підсумувати в собі, і кількома словами, всі окремі факти, які були раніше вивчені.\nЕпікур",
+      "body": "Щоб бачити природу як ціле, навчися стисло й зрозуміло пов’язувати окремі факти, які ти вже вивчив.\nЕпікур",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "zh",
+      "sourceBody": "(论对自然界统一知识的简明概述) 简而言之，一个真正意义上的综合，涵盖宇宙万物，应当能够用简洁的语言概括所有先前研究过的具体事实。\n伊壁鸠鲁",
+      "body": "要理解整个自然，就要学会把已经研究过的零散事实，清楚而简要地联系起来。\n伊壁鸠鲁",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "tr",
+      "sourceBody": "(Doğa bilgisini birleştiren özlü bir genel bakış üzerine) Özetle, evrenin tüm olgularını kapsayan gerçek bir sentez, daha önce incelenmiş olan tüm özel gerçekleri kendi içinde ve birkaç kelimeyle özetleyebilmelidir.\nEpikuros",
+      "body": "Doğayı bir bütün olarak anlamak istiyorsan, daha önce incelediğin tek tek olguları açık ve özlü biçimde birbirine bağlamayı öğren.\nEpikuros",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "epicurus_herodotus_1663_03x03",
+      "language": "ja",
+      "sourceBody": "(自然に関する知識を統一する簡潔な概観について) 要するに、宇宙のあらゆる現象を網羅する真の総合とは、これまで研究されてきたあらゆる個々の事実を、簡潔な言葉で要約できるものでなければならない。\nエピクロス",
+      "body": "自然を一つの全体として理解するには、すでに調べた個々の事実を、明確に、簡潔につなぎ合わせることを学ばなければならない。\nエピクロス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "ru",
+      "sourceBody": "(Страх смерти и пределы знания) Ибо страх смерти — это всего лишь притворство мудрости, а не истинная мудрость, являющаяся притворством знания неизвестного; и никто не знает, не является ли смерть, которую люди в своем страхе считают величайшим злом, величайшим благом.\nСократ",
+      "body": "Бояться смерти как величайшего зла — значит считать себя знающим то, чего никто не знает: мы ведь не знаем, что она принесёт.\nСократ",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "en",
+      "sourceBody": "(Fear of death and the limits of knowledge) For the fear of death is indeed the pretence of wisdom, and not real wisdom, being a pretence of knowing the unknown; and no one knows whether death, which men in their fear apprehend to be the greatest evil, may not be the greatest good.\nSocrates",
+      "body": "To fear death as the greatest evil is to claim knowledge no one possesses: we do not know what death will bring.\nSocrates",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "el",
+      "sourceBody": "(Ο φόβος του θανάτου και τα όρια της γνώσης) Διότι ο φόβος του θανάτου είναι πράγματι η πρόφαση της σοφίας, και όχι η πραγματική σοφία, που είναι μια πρόφαση της γνώσης του αγνώστου· και κανείς δεν ξέρει αν ο θάνατος, τον οποίο οι άνθρωποι μέσα στον φόβο τους θεωρούν το μεγαλύτερο κακό, μπορεί να μην είναι το μεγαλύτερο αγαθό.\nΣωκράτης",
+      "body": "Το να φοβάσαι τον θάνατο ως το μεγαλύτερο κακό σημαίνει ότι θεωρείς πως γνωρίζεις κάτι που κανείς δεν ξέρει: δεν γνωρίζουμε τι θα φέρει ο θάνατος.\nΣωκράτης",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "de",
+      "sourceBody": "(Die Angst vor dem Tod und die Grenzen des Wissens) Denn die Furcht vor dem Tod ist in Wahrheit nur ein Schein von Weisheit, keine wahre Weisheit, sondern ein Vorwand, das Unbekannte zu kennen; und niemand weiß, ob der Tod, den die Menschen in ihrer Furcht für das größte Übel halten, nicht das größte Gut sein mag.\nSokrates",
+      "body": "Den Tod als das größte Übel zu fürchten heißt, ein Wissen zu beanspruchen, das niemand besitzt: Wir wissen nicht, was der Tod bringen wird.\nSokrates",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "fr",
+      "sourceBody": "(La peur de la mort et les limites de la connaissance) Car la crainte de la mort n'est qu'une illusion de sagesse, et non la véritable sagesse ; elle feint de connaître l'inconnu. Nul ne sait si la mort, que les hommes appréhendent comme le plus grand des maux, ne serait pas en réalité le plus grand des bienfaits.\nSocrate",
+      "body": "Craindre la mort comme le plus grand des maux, c’est prétendre savoir ce que personne ne sait : nous ignorons ce qu’elle nous apportera.\nSocrate",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "es",
+      "sourceBody": "(El miedo a la muerte y los límites del conocimiento) Pues el temor a la muerte es, en verdad, una pretensión de sabiduría, y no de verdadera sabiduría, pues es una pretensión de conocer lo desconocido; y nadie sabe si la muerte, que los hombres, temerosos, perciben como el mayor mal, no será, en realidad, el mayor bien.\nSócrates",
+      "body": "Temer a la muerte como el mayor de los males es creer que sabemos lo que nadie sabe: ignoramos qué nos traerá.\nSócrates",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "it",
+      "sourceBody": "(La paura della morte e i limiti della conoscenza) Infatti, la paura della morte è una finzione di saggezza, non di vera saggezza, bensì una finzione di conoscenza dell'ignoto; e nessuno sa se la morte, che gli uomini nella loro paura percepiscono come il male più grande, non possa essere il bene più grande.\nSocrate",
+      "body": "Temere la morte come il peggiore dei mali significa credere di sapere ciò che nessuno sa: non sappiamo che cosa ci porterà.\nSocrate",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "pt",
+      "sourceBody": "(Medo da morte e os limites do conhecimento) Pois o medo da morte é, na verdade, uma pretensão de sabedoria, e não sabedoria verdadeira, sendo uma pretensão de conhecer o desconhecido; e ninguém sabe se a morte, que os homens, em seu temor, consideram o maior mal, não pode ser o maior bem.\nSócrates",
+      "body": "Temer a morte como o maior dos males é julgar que sabemos o que ninguém sabe: não sabemos o que ela nos trará.\nSócrates",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "pl",
+      "sourceBody": "(Strach przed śmiercią i ograniczeniami wiedzy) Albowiem strach przed śmiercią jest w istocie udawaniem mądrości, a nie prawdziwą mądrością, będąc udawaniem znajomości nieznanego; i nikt nie wie, czy śmierć, którą ludzie w strachu postrzegają jako największe zło, nie okaże się największym dobrem.\nSokrates",
+      "body": "Bać się śmierci jak największego zła to przypisywać sobie wiedzę, której nikt nie posiada: nie wiemy, co śmierć przyniesie.\nSokrates",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "sr",
+      "sourceBody": "(Страх од смрти и границе знања) Јер страх од смрти је заиста претварање мудрости, а не права мудрост, будући претварање познавања непознатог; и нико не зна да ли је смрт, коју људи у свом страху сматрају највећим злом, можда и највеће добро.\nСократ",
+      "body": "Бојати се смрти као највећег зла значи сматрати да знамо оно што нико не зна: не знамо шта ће нам смрт донети.\nСократ",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "uk",
+      "sourceBody": "(Страх смерті та межі знань) Бо страх смерті — це справді удавана мудрість, а не справжня мудрість, будучи удаваною пізнанням невідомого; і ніхто не знає, чи смерть, яку люди у своєму страху вважають найбільшим злом, не є найбільшим добром.\nСократ",
+      "body": "Боятися смерті як найбільшого зла — означає вважати себе знавцем того, чого ніхто не знає: ми ж не знаємо, що вона принесе.\nСократ",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "zh",
+      "sourceBody": "(对死亡的恐惧和知识的局限性) 因为对死亡的恐惧实际上是假装智慧，而非真正的智慧，它假装了解未知；没有人知道，人们恐惧的死亡，或许正是最大的善。\n苏格拉底",
+      "body": "把死亡当成最大的恶而恐惧，就是自以为知道无人知晓的事：我们并不知道死亡会带来什么。\n苏格拉底",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "tr",
+      "sourceBody": "(Ölüm korkusu ve bilginin sınırları) Çünkü ölüm korkusu, gerçek bilgelik değil, bilgelik taklididir; bilinmeyeni bilme taklididir; ve insanların korkuyla en büyük kötülük olarak algıladıkları ölümün, en büyük iyilik olup olmadığını kimse bilemez.\nSokrates",
+      "body": "Ölümden en büyük kötülükmüş gibi korkmak, kimsenin bilmediğini bildiğini sanmaktır; çünkü ölümün ne getireceğini bilmiyoruz.\nSokrates",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "socrates_2172_01",
+      "language": "ja",
+      "sourceBody": "(死への恐怖と知識の限界) 死への恐怖は、実は知恵のふりであり、真の知恵ではない。それは未知なるものを知っているというふりであり、人々が恐れるあまり最大の悪と考える死が、実は最大の善である可能性も否定できないからである。\nソクラテス",
+      "body": "死を最大の悪として恐れるのは、誰も知らないことを知っていると思い込むことだ。死が何をもたらすか、私たちは知らない。\nソクラテス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "ru",
+      "sourceBody": "(Забота о душе и иерархия благ) И из всех человеческих достояний душа по природе наиболее склонна избегать зла и искать и находить высшее благо; которое, найдя, человек должен поселиться в нем до конца своей жизни.\nПлатон",
+      "body": "Душа стремится уйти от зла и найти высшее благо. Найдя его, человек должен оставаться верен ему до конца жизни.\nПлатон",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "en",
+      "sourceBody": "(Care of the soul and the order of goods) And of all human possessions, the soul is by nature most inclined to avoid the evil, and track out and find the chief good; which when a man has found, he should take up his abode with it during the remainder of his life.\nPlato",
+      "body": "The soul seeks to turn away from evil and find the highest good. Once we find that good, we should remain faithful to it for the rest of our lives.\nPlato",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "el",
+      "sourceBody": "(Φροντίδα της ψυχής και τάξη των αγαθών) Και από όλα τα ανθρώπινα υπάρχοντα, η ψυχή είναι εκ φύσεως πιο επιρρεπής στο να αποφεύγει το κακό και να αναζητά και να βρίσκει το κύριο καλό. Όταν ένας άνθρωπος το βρει, θα πρέπει να εγκατασταθεί σε αυτό για το υπόλοιπο της ζωής του.\nΠλάτων",
+      "body": "Η ψυχή επιδιώκει να απομακρυνθεί από το κακό και να βρει το ύψιστο αγαθό. Όταν το βρει κανείς, οφείλει να μείνει πιστός σε αυτό για όλη του τη ζωή.\nΠλάτων",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "de",
+      "sourceBody": "(Seelenpflege und Ordnung der Güter) Von allen menschlichen Gütern ist die Seele von Natur aus am ehesten darauf ausgerichtet, das Böse zu meiden und das höchste Gut zu ergründen und zu finden; hat ein Mensch dieses gefunden, sollte er sich ihm für den Rest seines Lebens widmen.\nPlaton",
+      "body": "Die Seele strebt danach, das Böse zu meiden und das höchste Gut zu finden. Wer es gefunden hat, sollte ihm für den Rest seines Lebens treu bleiben.\nPlaton",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "fr",
+      "sourceBody": "(Le soin de l'âme et l'ordre des biens) De tous les biens humains, l'âme est par nature la plus encline à fuir le mal et à rechercher le bien suprême ; un homme, une fois trouvé, devrait y demeurer jusqu'à la fin de ses jours.\nPlaton",
+      "body": "L’âme cherche à s’éloigner du mal et à trouver le bien suprême. Quand on l’a trouvé, il faut lui rester fidèle jusqu’à la fin de sa vie.\nPlaton",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "es",
+      "sourceBody": "(Cuidado del alma y orden de los bienes) De todas las posesiones humanas, el alma es, por naturaleza, la que más tiende a evitar el mal y a buscar y encontrar el bien supremo; una vez hallado, el hombre debería morar con él durante el resto de su vida.\nPlatón",
+      "body": "El alma busca alejarse del mal y encontrar el bien supremo. Quien lo encuentra debe permanecer fiel a él durante el resto de su vida.\nPlatón",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "it",
+      "sourceBody": "(Cura dell'anima e ordine dei beni) E di tutti i beni umani, l'anima è per natura la più incline ad evitare il male, a ricercare e trovare il sommo bene; e una volta trovato, l'uomo dovrebbe dimorarvi per il resto della sua vita.\nPlatone",
+      "body": "L’anima cerca di allontanarsi dal male e trovare il bene supremo. Una volta trovato, bisogna restargli fedeli per il resto della vita.\nPlatone",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "pt",
+      "sourceBody": "(Cuidado da alma e ordem dos bens) E de todos os bens humanos, a alma é, por natureza, a mais inclinada a evitar o mal e a buscar e encontrar o bem supremo; e, uma vez encontrado, o homem deve ali fixar residência pelo resto da vida.\nPlatão",
+      "body": "A alma procura afastar-se do mal e encontrar o bem supremo. Quem o encontra deve permanecer-lhe fiel até ao fim da vida.\nPlatão",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "pl",
+      "sourceBody": "(Troska o duszę i porządek dóbr) A ze wszystkich ludzkich dóbr dusza z natury jest najbardziej skłonna do unikania zła i tropienia i znajdowania najwyższego dobra; gdy człowiek je znajdzie, powinien w nim zamieszkać na resztę życia.\nPlaton",
+      "body": "Dusza dąży do odwrócenia się od zła i odnalezienia najwyższego dobra. Kto je odnajdzie, powinien pozostać mu wierny do końca życia.\nPlaton",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "sr",
+      "sourceBody": "(Брига о души и редослед добара) И од свих људских поседа, душа је по природи најсклонија да избегава зло, а да тражи и проналази главно добро; које човек, када га пронађе, треба да се настани код њега до краја живота.\nПлатон",
+      "body": "Душа тежи да се удаљи од зла и пронађе највише добро. Ко га пронађе, треба да му остане веран до краја живота.\nПлатон",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "uk",
+      "sourceBody": "(Турбота про душу та ієрархія благ) І з усіх людських надбань душа за своєю природою найбільш схильна уникати зла та шукати й знаходити головне добро; коли людина його знайшла, вона повинна оселитися з ним до кінця свого життя.\nПлатон",
+      "body": "Душа прагне відійти від зла й знайти найвище благо. Знайшовши його, людина має залишатися вірною йому до кінця життя.\nПлатон",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "zh",
+      "sourceBody": "(灵魂的修养与善的层次) 在所有人类的财富中，灵魂的本性最倾向于避开邪恶，探寻并找到至善；一旦找到，人便应终生依附于它。\n柏拉图",
+      "body": "灵魂渴望远离恶，寻找至善。人一旦找到了至善，就应当终身忠于它。\n柏拉图",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "tr",
+      "sourceBody": "(Ruhun eğitimi ve iyilerin değer sırası) Ve tüm insan varlıkları arasında, ruh doğası gereği kötülükten kaçınmaya ve en büyük iyiliği arayıp bulmaya en yatkın olanıdır; bir insan bunu bulduğunda, hayatının geri kalanında onunla birlikte yaşamalıdır.\nPlaton",
+      "body": "Ruh kötülükten uzaklaşmayı ve en yüce iyiyi bulmayı ister. İnsan onu bulduğunda hayatının sonuna kadar ona bağlı kalmalıdır.\nPlaton",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plato_3264_01",
+      "language": "ja",
+      "sourceBody": "(魂への配慮と善の序列) 人間のあらゆる所有物の中で、魂は本質的に悪を避け、最高の善を探し求めようとする傾向が最も強いものです。そして、人が最高の善を見出したならば、残りの人生をそれと共に過ごすべきなのです。\nプラトン",
+      "body": "魂は悪を離れ、最高の善を見いだそうとする。その善を見つけたなら、生涯それに忠実であるべきだ。\nプラトン",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "ru",
+      "sourceBody": "(Логос — общий разумный порядок мира) Мудро слушать не меня, а Моё Слово, и исповедовать, что всё едино.\nГераклит",
+      "body": "Прислушайся к общему порядку мира, а не к моему авторитету, и поймёшь: всё составляет единое целое.\nГераклит",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "en",
+      "sourceBody": "(Logos: the shared rational order of the world) It is wise to hearken, not to me, but to my Word, and to confess that all things are one.\nHeraclitus",
+      "body": "Listen to the common order of the world rather than to my authority, and you will understand that all things form one whole.\nHeraclitus",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "el",
+      "sourceBody": "(Λόγος: η κοινή ορθολογική τάξη του κόσμου) Είναι σοφό να ακούτε, όχι εμένα, αλλά τον Λόγο μου, και να ομολογείτε ότι όλα τα πράγματα είναι ένα.\nΗράκλειτος",
+      "body": "Άκου την κοινή τάξη του κόσμου και όχι το δικό μου κύρος, και θα καταλάβεις ότι όλα αποτελούν ένα ενιαίο σύνολο.\nΗράκλειτος",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "de",
+      "sourceBody": "(Logos: die gemeinsame rationale Ordnung der Welt) Es ist weise, nicht mir, sondern meinem Wort zu gehorchen und zu bekennen, dass alles eins ist.\nHeraklit",
+      "body": "Höre auf die gemeinsame Ordnung der Welt statt auf meine Autorität, und du wirst erkennen, dass alles ein Ganzes bildet.\nHeraklit",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "fr",
+      "sourceBody": "(Logos : l'ordre rationnel partagé du monde) Il est sage d'écouter, non pas moi, mais ma Parole, et de reconnaître que toutes choses sont une.\nHéraclite",
+      "body": "Écoute l’ordre commun du monde plutôt que mon autorité, et tu comprendras que toutes choses forment un seul tout.\nHéraclite",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "es",
+      "sourceBody": "(Logos: el orden racional compartido del mundo) Es sabio escuchar, no a mí, sino a mi Palabra, y confesar que todas las cosas son una.\nHeráclito",
+      "body": "Escucha el orden común del mundo, no mi autoridad, y comprenderás que todas las cosas forman un solo conjunto.\nHeráclito",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "it",
+      "sourceBody": "(Logos: l'ordine razionale condiviso del mondo) È saggio ascoltare non me, ma la mia Parola, e riconoscere che tutte le cose sono una.\nEraclito",
+      "body": "Ascolta l’ordine comune del mondo, anziché la mia autorità, e comprenderai che tutte le cose formano un unico insieme.\nEraclito",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "pt",
+      "sourceBody": "(Logos: a ordem racional compartilhada do mundo) É sábio dar ouvidos, não a mim, mas à minha Palavra, e confessar que todas as coisas são uma.\nHeráclito",
+      "body": "Escuta a ordem comum do mundo, em vez da minha autoridade, e compreenderás que todas as coisas formam um só todo.\nHeráclito",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "pl",
+      "sourceBody": "(Logos: wspólny, racjonalny porządek świata) Mądrze jest słuchać nie mnie, lecz mojego Słowa i wyznawać, że wszystko jest jednym.\nHeraklit",
+      "body": "Wsłuchaj się we wspólny porządek świata, a nie w mój autorytet, a zrozumiesz, że wszystko tworzy jedną całość.\nHeraklit",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "sr",
+      "sourceBody": "(Логос: заједнички рационални поредак света) Мудро је слушати, не мене, већ моју Реч, и признати да су све ствари једно.\nХераклит",
+      "body": "Ослушни заједнички поредак света, а не мој ауторитет, и схватићеш да све чини једну целину.\nХераклит",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "uk",
+      "sourceBody": "(Логос: спільний раціональний порядок світу) Мудро слухати не мене, а моє Слово, і визнавати, що все єдине.\nГеракліт",
+      "body": "Прислухайся до спільного порядку світу, а не до мого авторитету, і зрозумієш: усе становить єдине ціле.\nГеракліт",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "zh",
+      "sourceBody": "(逻各斯：世界共同遵循的理性秩序) 明智的做法是聆听我的话语，而不是我，并承认万物归一。\n赫拉克利特",
+      "body": "不要听从我的个人权威，而要聆听世界共同的秩序，你就会明白：万物构成一个整体。\n赫拉克利特",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "tr",
+      "sourceBody": "(Logos: dünyanın paylaşılan rasyonel düzeni) Bana değil, Sözüme kulak vermek ve her şeyin bir olduğunu itiraf etmek akıllıcadır.\nHerakleitos",
+      "body": "Benim otoritemi değil, dünyanın ortak düzenini dinle; her şeyin tek bir bütün oluşturduğunu anlayacaksın.\nHerakleitos",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "heraclitus-bywater-1",
+      "language": "ja",
+      "sourceBody": "(ロゴス：世界に共通する理性的な秩序) 私ではなく、私の言葉に耳を傾け、万物は一つであると告白することが賢明です。\nヘラクレイトス",
+      "body": "私の権威ではなく、世界に共通する秩序に耳を傾けなさい。そうすれば、万物が一つの全体をなすと分かるだろう。\nヘラクレイトス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "ru",
+      "sourceBody": "(Почитание богов по установленному религиозному обычаю) Прежде всего поклоняйтесь Бессмертным Богам, как они установлены и предписаны Законом.\nПифагорейская традиция",
+      "body": "Начинай с почитания бессмертных богов и соблюдай установленные для них священные обычаи.\nПифагорейская традиция",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "en",
+      "sourceBody": "(Honouring the gods according to established religious custom) First worship the Immortal Gods, as they are established and ordained by the Law.\nPythagorean tradition",
+      "body": "Begin by honouring the immortal gods and observing the sacred customs established for their worship.\nPythagorean tradition",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "el",
+      "sourceBody": "(Τιμή των θεών σύμφωνα με τα καθιερωμένα θρησκευτικά έθιμα) Πρώτα λατρέψτε τους Αθάνατους Θεούς, όπως έχουν καθιερωθεί και οριστεί από τον Νόμο.\nΠυθαγόρεια παράδοση",
+      "body": "Άρχισε τιμώντας τους αθάνατους θεούς και τηρώντας τα καθιερωμένα ιερά έθιμα της λατρείας τους.\nΠυθαγόρεια παράδοση",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "de",
+      "sourceBody": "(Die Verehrung der Götter nach etabliertem religiösem Brauch) Verehrt zuerst die Unsterblichen Götter, wie sie vom Gesetz eingesetzt und bestimmt sind.\nPythagoreische Tradition",
+      "body": "Beginne damit, die unsterblichen Götter zu ehren und die für ihre Verehrung geltenden heiligen Bräuche zu befolgen.\nPythagoreische Tradition",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "fr",
+      "sourceBody": "(Honorer les dieux selon la coutume religieuse établie) Vénérez d'abord les Dieux Immortels, tels qu'ils sont établis et ordonnés par la Loi.\nTradition pythagoricienne",
+      "body": "Commence par honorer les dieux immortels et respecter les coutumes sacrées établies pour leur culte.\nTradition pythagoricienne",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "es",
+      "sourceBody": "(Honrar a los dioses según la costumbre religiosa establecida) Primero, adora a los Dioses Inmortales, tal como están establecidos y ordenados por la Ley.\nTradición pitagórica",
+      "body": "Empieza por honrar a los dioses inmortales y respetar las costumbres sagradas establecidas para su culto.\nTradición pitagórica",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "it",
+      "sourceBody": "(Onorare gli dei secondo la consuetudine religiosa consolidata) Adora prima gli Dei Immortali, così come sono stabiliti e ordinati dalla Legge.\nTradizione pitagorica",
+      "body": "Comincia onorando gli dèi immortali e osservando le consuetudini sacre stabilite per il loro culto.\nTradizione pitagorica",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "pt",
+      "sourceBody": "(Honrando os deuses de acordo com o costume religioso estabelecido) Primeiramente, adore os Deuses Imortais, conforme estabelecido e ordenado pela Lei.\nTradição pitagórica",
+      "body": "Começa por honrar os deuses imortais e respeitar os costumes sagrados estabelecidos para o seu culto.\nTradição pitagórica",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "pl",
+      "sourceBody": "(Oddawanie czci bogom zgodnie z ustalonym zwyczajem religijnym) Najpierw czcij Nieśmiertelnych Bogów, tak jak są ustanowieni i ustanowieni przez Prawo.\nTradycja pitagorejska",
+      "body": "Zacznij od oddawania czci nieśmiertelnym bogom i przestrzegania świętych obyczajów ustanowionych dla ich kultu.\nTradycja pitagorejska",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "sr",
+      "sourceBody": "(Поштовање богова према устаљеном верском обичају) Прво се клањајте Бесмртним Боговима, како су установљени и прописани Законом.\nПитагорејска традиција",
+      "body": "Почни поштовањем бесмртних богова и придржавај се светих обичаја установљених за њихов култ.\nПитагорејска традиција",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "uk",
+      "sourceBody": "(Шанування богів згідно з усталеним релігійним звичаєм) Спочатку поклоняйся Безсмертним Богам, як вони встановлені та призначені Законом.\nПіфагорійська традиція",
+      "body": "Починай із шанування безсмертних богів і дотримуйся встановлених для їхнього вшанування священних звичаїв.\nПіфагорійська традиція",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "zh",
+      "sourceBody": "(根据既定的宗教习俗敬奉神灵) 首先，敬拜不朽的神祇，正如律法所设立和规定的。\n毕达哥拉斯学派传统",
+      "body": "先敬奉不朽的诸神，并遵守为祭祀他们而确立的神圣习俗。\n毕达哥拉斯学派传统",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "tr",
+      "sourceBody": "(Yerleşik dini geleneğe göre tanrıları onurlandırmak) Öncelikle, Kanun tarafından kurulmuş ve emredilmiş olan Ölümsüz Tanrılara tapın.\nPisagor geleneği",
+      "body": "Önce ölümsüz tanrıları onurlandır ve onların ibadeti için yerleşmiş kutsal geleneklere uy.\nPisagor geleneği",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "pythagorean-golden-01-01",
+      "language": "ja",
+      "sourceBody": "(確立された宗教的慣習に従って神々を敬うこと) まず、法によって定められ、任命された不死の神々を崇拝せよ。\nピタゴラス派の伝承",
+      "body": "まず不死なる神々を敬い、その崇拝のために定められた神聖な習わしを守りなさい。\nピタゴラス派の伝承",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "ru",
+      "sourceBody": "(Забота о душе и иерархия благ) Совершенство души исправит порочность тела; но сила тела без разумения не делает душу лучше.\nДемокрит (приписывается)",
+      "body": "Совершенство души помогает исправлять пороки тела, а физическая сила без разума не делает душу лучше.\nДемокрит (приписывается)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "en",
+      "sourceBody": "(Care of the soul and the order of goods) The perfection of the soul will correct the depravity of the body; but the strength of the body without reasoning does not render the soul better.\nDemocritus (attributed)",
+      "body": "Excellence of soul can correct the body's faults, but physical strength without reason does not make the soul better.\nDemocritus (attributed)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "el",
+      "sourceBody": "(Φροντίδα της ψυχής και τάξη των αγαθών) Η τελειότητα της ψυχής θα διορθώσει την εξαχρείωση του σώματος. Αλλά η δύναμη του σώματος χωρίς συλλογισμό δεν κάνει την ψυχή καλύτερη.\nΔημόκριτος (αποδίδεται)",
+      "body": "Η αρετή της ψυχής μπορεί να διορθώσει τα ελαττώματα του σώματος, αλλά η σωματική δύναμη χωρίς λογική δεν κάνει την ψυχή καλύτερη.\nΔημόκριτος (αποδίδεται)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "de",
+      "sourceBody": "(Seelenpflege und Ordnung der Güter) Die Vollkommenheit der Seele heilt die Verdorbenheit des Körpers; aber die Stärke des Körpers ohne Vernunft macht die Seele nicht besser.\nDemokrit (zugeschrieben)",
+      "body": "Eine vortreffliche Seele kann die Fehler des Körpers bessern, doch körperliche Stärke ohne Vernunft macht die Seele nicht besser.\nDemokrit (zugeschrieben)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "fr",
+      "sourceBody": "(Le soin de l'âme et l'ordre des biens) La perfection de l'âme corrigera la dépravation du corps ; mais la force du corps sans raison ne rend pas l'âme meilleure.\nDémocrite (attribué)",
+      "body": "L’excellence de l’âme peut corriger les défauts du corps, mais la force physique sans raison ne rend pas l’âme meilleure.\nDémocrite (attribué)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "es",
+      "sourceBody": "(Cuidado del alma y orden de los bienes) La perfección del alma corrige la depravación del cuerpo; pero la fuerza del cuerpo sin razonamiento no mejora el alma.\nDemócrito (atribuido)",
+      "body": "La excelencia del alma puede corregir los defectos del cuerpo, pero la fuerza física sin razón no mejora el alma.\nDemócrito (atribuido)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "it",
+      "sourceBody": "(Cura dell'anima e ordine dei beni) La perfezione dell'anima correggerà la depravazione del corpo; ma la forza del corpo senza ragione non migliora l'anima.\nDemocrito (attribuito)",
+      "body": "L’eccellenza dell’anima può correggere i difetti del corpo, ma la forza fisica senza ragione non rende migliore l’anima.\nDemocrito (attribuito)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "pt",
+      "sourceBody": "(Cuidado da alma e ordem dos bens) A perfeição da alma corrigirá a depravação do corpo; mas a força do corpo sem raciocínio não torna a alma melhor.\nDemócrito (atribuído)",
+      "body": "A excelência da alma pode corrigir os defeitos do corpo, mas a força física sem razão não torna a alma melhor.\nDemócrito (atribuído)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "pl",
+      "sourceBody": "(Troska o duszę i porządek dóbr) Doskonałość duszy naprawi zepsucie ciała; lecz siła ciała bez rozumu nie czyni duszy lepszą.\nDemokryt (przypisywane)",
+      "body": "Doskonałość duszy może naprawić wady ciała, ale siła fizyczna bez rozumu nie czyni duszy lepszą.\nDemokryt (przypisywane)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "sr",
+      "sourceBody": "(Брига о души и редослед добара) Савршенство душе ће исправити изопаченост тела; али снага тела без расуђивања не чини душу бољом.\nДемокрит (приписује се)",
+      "body": "Врсност душе може исправити мане тела, али телесна снага без разума не чини душу бољом.\nДемокрит (приписује се)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "uk",
+      "sourceBody": "(Турбота про душу та ієрархія благ) Вдосконалення душі виправить зіпсованість тіла; але сила тіла без міркування не робить душу кращою.\nДемокріт (приписується)",
+      "body": "Досконалість душі допомагає виправляти вади тіла, а фізична сила без розуму не робить душу кращою.\nДемокріт (приписується)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "zh",
+      "sourceBody": "(灵魂的修养与善的层次) 灵魂的完善能够纠正肉体的堕落；但缺乏理性的肉体力量并不能使灵魂得到提升。\n德谟克利特（相传）",
+      "body": "灵魂的完善能纠正身体的缺陷，但只有强健的体魄而没有理性，并不能让灵魂变得更好。\n德谟克利特（相传）",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "tr",
+      "sourceBody": "(Ruhun eğitimi ve iyilerin değer sırası) Ruhun mükemmelliği bedenin yozlaşmasını düzeltecektir; fakat akıl yürütmeden bedenin gücü ruhu daha iyi hale getirmez.\nDemokritos (atfedilir)",
+      "body": "Ruhun yetkinliği bedenin kusurlarını düzeltebilir; ama akıl olmadan fiziksel güç ruhu daha iyi yapmaz.\nDemokritos (atfedilir)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "democritus-democrates-002",
+      "language": "ja",
+      "sourceBody": "(魂への配慮と善の序列) 魂の完成は肉体の堕落を正しますが、理性を伴わない肉体の力は魂をより良くするものではありません。\nデモクリトス（帰属未確定）",
+      "body": "魂の優れたあり方は身体の欠点を正せる。だが、理性を伴わない身体の強さだけでは、魂はより善くならない。\nデモクリトス（帰属未確定）",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "ru",
+      "sourceBody": "(Обучение, опыт и мудрое наставничество) И когда он пришел в Афины, он примкнул к Антистену; но, отбиваясь от него, потому что тот никого не пускал, он наконец силой прорвался к нему своим упорством. И однажды, когда он поднял на него палку, он подставил под нее голову и сказал: «Бей, ибо ты не найдешь палки достаточно твердой, чтобы прогнать меня, пока ты будешь говорить».\nДиоген Синопский (приписывается)",
+      "body": "Когда Антисфен замахнулся на Диогена палкой, тот ответил: «Бей: пока ты продолжаешь говорить, тебе не найти палки, которая меня прогонит».\nДиоген Синопский (приписывается)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "en",
+      "sourceBody": "(Learning, experience, and wise guidance) And when he came to Athens he attached himself to Antisthenes; but as he repelled him, because he admitted no one; he at last forced his way to him by his pertinacity. And once, when he raised his stick at him, he put his head under it, and said, “Strike, for you will not find any stick hard enough to drive me away as long as you continue to speak.”\nDiogenes of Sinope (attributed)",
+      "body": "When Antisthenes raised a stick against Diogenes, Diogenes replied: ‘Strike: as long as you keep speaking, you will never find a stick that can drive me away.’\nDiogenes of Sinope (attributed)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "el",
+      "sourceBody": "(Μάθηση, εμπειρία και σοφή καθοδήγηση) Και όταν ήρθε στην Αθήνα, προσκολλήθηκε στον Αντισθένη. Αλλά καθώς τον απέκρουσε, επειδή δεν δεχόταν κανέναν, τελικά τον πλησίασε με την επιμονή του. Και κάποτε, όταν σήκωσε το ραβδί του εναντίον του, έβαλε το κεφάλι του από κάτω και είπε: «Χτύπα, γιατί δεν θα βρεις κανένα ραβδί αρκετά σκληρό για να με διώξει όσο συνεχίζεις να μιλάς».\nΔιογένης ο Σινωπεύς (αποδίδεται)",
+      "body": "Όταν ο Αντισθένης σήκωσε το ραβδί εναντίον του Διογένη, εκείνος απάντησε: «Χτύπα: όσο συνεχίζεις να μιλάς, δεν θα βρεις ραβδί που να με διώξει».\nΔιογένης ο Σινωπεύς (αποδίδεται)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "de",
+      "sourceBody": "(Lernen, Erfahrung und weise Führung) Und als er nach Athen kam, schloss er sich Antisthenes an; doch da dieser ihn abwies, weil er niemanden aufnahm, erzwang er sich schließlich durch seine Hartnäckigkeit den Weg zu ihm. Und als er einmal seinen Stock gegen ihn erhob, legte er seinen Kopf darunter und sprach: „Schlag zu! Du wirst keinen Stock finden, der hart genug ist, mich zu vertreiben, solange du redest.“\nDiogenes von Sinope (zugeschrieben)",
+      "body": "Als Antisthenes den Stock gegen Diogenes erhob, antwortete dieser: »Schlag zu: Solange du weiterredest, wirst du keinen Stock finden, der mich vertreibt.«\nDiogenes von Sinope (zugeschrieben)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "fr",
+      "sourceBody": "(Apprentissage, expérience et conseils avisés) Arrivé à Athènes, il s’attacha à Antisthène ; mais celui-ci le repoussa, car il n’acceptait personne ; il finit par l’atteindre par son obstination. Un jour, alors qu’il levait son bâton vers lui, il mit sa tête dessous et dit : « Frappe, car tu ne trouveras aucun bâton assez dur pour me chasser tant que tu parleras. »\nDiogène de Sinope (attribué)",
+      "body": "Quand Antisthène leva son bâton contre Diogène, celui-ci répondit : « Frappe : tant que tu continueras à parler, tu ne trouveras pas de bâton capable de me chasser. »\nDiogène de Sinope (attribué)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "es",
+      "sourceBody": "(Aprendizaje, experiencia y orientación sabia) Y cuando llegó a Atenas, se unió a Antístenes; pero como este lo rechazaba, pues no admitía a nadie, finalmente se abrió paso hasta él con su pertinacia. Y una vez, cuando Antístenes alzó su bastón hacia él, Antístenes puso la cabeza debajo y dijo: «Golpea, porque no encontrarás ningún bastón lo suficientemente duro como para ahuyentarme mientras sigas hablando».\nDiógenes de Sinope (atribuido)",
+      "body": "Cuando Antístenes levantó el bastón contra Diógenes, este respondió: «Golpea: mientras sigas hablando, no encontrarás un bastón capaz de echarme».\nDiógenes de Sinope (atribuido)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "it",
+      "sourceBody": "(Apprendimento, esperienza e saggia guida) Giunto ad Atene, Antistene si legò a lui; ma questi lo respinse, perché non ammetteva nessuno, ma alla fine riuscì a raggiungerlo con la sua tenacia. Una volta, quando Antistene alzò il bastone contro di lui, vi mise la testa sotto e disse: «Colpiscimi, perché non troverai bastone abbastanza duro da scacciarmi finché continuerai a parlare».\nDiogene di Sinope (attribuito)",
+      "body": "Quando Antistene alzò il bastone contro Diogene, questi rispose: «Colpisci: finché continuerai a parlare, non troverai un bastone capace di scacciarmi».\nDiogene di Sinope (attribuito)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "pt",
+      "sourceBody": "(Aprendizado, experiência e orientação sábia) E quando chegou a Atenas, aproximou-se de Antístenes; mas como este o repeliu, por não admitir ninguém, Antístenes acabou por lhe impor a sua vontade, graças à sua persistência. E certa vez, quando Antístenes lhe ergueu o bastão, este colocou a cabeça debaixo dele e disse: \"Bata, pois não encontrará bastão suficientemente forte para me afastar enquanto continuar a falar.\"\nDiógenes de Sinope (atribuído)",
+      "body": "Quando Antístenes levantou o bastão contra Diógenes, este respondeu: «Bate: enquanto continuares a falar, não encontrarás um bastão capaz de me expulsar».\nDiógenes de Sinope (atribuído)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "pl",
+      "sourceBody": "(Nauka, doświadczenie i mądre przewodnictwo) A gdy przybył do Aten, przyłączył się do Antystenesa; ale ponieważ odtrącił go, bo nikogo nie wpuszczał, w końcu swoją uporczywością zmusił się do niego. A pewnego razu, gdy uniósł na niego kij, wsunął pod niego głowę i rzekł: „Uderz, bo nie znajdziesz kija wystarczająco twardego, by mnie przepędzić, dopóki będziesz mówił dalej”.\nDiogenes z Synopy (przypisywane)",
+      "body": "Gdy Antystenes podniósł kij na Diogenesa, ten odparł: «Bij: dopóki będziesz mówił, nie znajdziesz kija, który mnie przepędzi».\nDiogenes z Synopy (przypisywane)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "sr",
+      "sourceBody": "(Учење, искуство и мудро вођство) И када је дошао у Атину, придружио се Антистену; али пошто га је овај одбијао, јер никога није примао, коначно му се пробио својом упорношћу. И једном, када је подигао штап на њега, он је ставио главу под њега и рекао: „Удри, јер нећеш наћи ниједан штап довољно јак да ме отера све док будеш говорио.“\nДиоген из Синопе (приписује се)",
+      "body": "Када је Антистен подигао штап на Диогена, овај је одговорио: «Удри: док год говориш, нећеш наћи штап који ће ме отерати».\nДиоген из Синопе (приписује се)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "uk",
+      "sourceBody": "(Навчання, досвід та мудре керівництво) І коли він прибув до Афін, він приєднався до Антисфена; але оскільки той відштовхнув його, бо нікого не впускав, то нарешті пробився до нього своєю наполегливістю. І одного разу, коли той підняв на нього палицю, він підсунув під неї голову і сказав: «Бий, бо ти не знайдеш жодної палиці достатньо сильної, щоб прогнати мене, поки ти продовжуватимеш говорити».\nДіоген Синопський (приписується)",
+      "body": "Коли Антисфен замахнувся на Діогена палицею, той відповів: «Бий: доки ти продовжуєш говорити, тобі не знайти палиці, яка мене прожене».\nДіоген Синопський (приписується)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "zh",
+      "sourceBody": "(学习、经验和明智的指导) 他来到雅典后，便投靠安提斯泰尼；但安提斯泰尼拒绝了他，因为他不接纳任何人；最终，他凭借着坚韧不拔的精神，成功接近了安提斯泰尼。有一次，安提斯泰尼举起棍子要打他，他便把头埋在棍子下面，说道：“打吧，只要你继续说下去，你就找不到足够坚硬的棍子来赶走我。”\n锡诺普的第欧根尼（相传）",
+      "body": "安提斯泰尼举起棍子要打第欧根尼时，他回答：你打吧，只要你还继续讲下去，就找不到能把我赶走的棍子。\n锡诺普的第欧根尼（相传）",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "tr",
+      "sourceBody": "(Öğrenme, deneyim ve bilgece rehberlik) Ve Atina'ya geldiğinde Antisthenes'e bağlandı; ama Antisthenes onu geri çevirdi, çünkü kimseyi kabul etmiyordu; sonunda azmiyle ona zorla yaklaştı. Ve bir keresinde, ona sopasını kaldırdığında, başını altına soktu ve dedi ki: \"Vur, çünkü sen konuşmaya devam ettiğin sürece beni uzaklaştıracak kadar sert bir sopa bulamayacaksın.\"\nSinoplu Diyojen (atfedilir)",
+      "body": "Antisthenes sopasını Diogenes’e kaldırınca Diogenes şöyle dedi: Vur; sen konuşmayı sürdürdükçe beni uzaklaştırabilecek bir sopa bulamayacaksın.\nSinoplu Diyojen (atfedilir)",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "diogenes-yonge-p01-01",
+      "language": "ja",
+      "sourceBody": "(学び、経験、そして賢明な指導) そして、アテネに着いた彼はアンティステネスに仕えようとしたが、アンティステネスは誰をも受け入れようとしなかったため、彼を拒絶した。しかし、彼は粘り強さでついにアンティステネスに近づいた。ある時、彼が杖を振り上げた時、彼はその下に頭を突っ込み、「打ってみろ。お前が喋り続ける限り、どんなに強い杖でも私を追い払うことはできないだろう」と言った。\nシノペのディオゲネス（帰属未確定）",
+      "body": "アンティステネスがディオゲネスに杖を振り上げると、彼は答えた。「打つがいい。あなたが話し続けるかぎり、私を追い払える杖など見つからない」。\nシノペのディオゲネス（帰属未確定）",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "ru",
+      "sourceBody": "(О рассудительности в выборе действий) Более того, мудрость и благоразумие, которые делают людей добрыми в отношении удовольствий, мы называем самообладанием и трезвостью, а в опасностях и трудностях — выносливостью и стойкостью, а в отношениях между людьми и в общественной жизни — справедливостью и правосудием.\nПлутарх",
+      "body": "Одна и та же рассудительность в удовольствиях становится самообладанием, в трудностях — стойкостью, а в отношениях с людьми — справедливостью.\nПлутарх",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "en",
+      "sourceBody": "(On practical wisdom in choosing actions) Nay more, we call the wisdom and prudence that makes people good in regard to pleasure self-control and sobriety, and in dangers and hardships endurance and fortitude, and in dealings between man and man and in public life equity and justice.\nPlutarch",
+      "body": "The same sound judgment becomes self-control in pleasure, endurance in hardship, and justice in our dealings with others.\nPlutarch",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "el",
+      "sourceBody": "(Σχετικά με την πρακτική σοφία στην επιλογή ενεργειών) Επιπλέον, ονομάζουμε τη σοφία και τη σύνεση που κάνει τους ανθρώπους καλούς όσον αφορά την ηδονή αυτοκυριαρχία και σωφροσύνη, και στους κινδύνους και στις κακουχίες υπομονή και καρτερία, και στις σχέσεις μεταξύ ανθρώπων και στη δημόσια ζωή ισότητα και δικαιοσύνη.\nΠλούταρχος",
+      "body": "Η ίδια φρόνηση γίνεται αυτοκυριαρχία στις απολαύσεις, καρτερία στις δυσκολίες και δικαιοσύνη στις σχέσεις μας με τους άλλους.\nΠλούταρχος",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "de",
+      "sourceBody": "(Über praktische Weisheit bei der Wahl von Handlungen) Mehr noch, wir nennen die Weisheit und Klugheit, die den Menschen im Hinblick auf Vergnügen gut macht, Selbstbeherrschung und Mäßigung, in Gefahren und Nöten Ausdauer und Tapferkeit und im Umgang mit anderen Menschen sowie im öffentlichen Leben Billigkeit und Gerechtigkeit.\nPlutarch",
+      "body": "Dieselbe Besonnenheit wird im Genuss zur Selbstbeherrschung, in Schwierigkeiten zur Standhaftigkeit und im Umgang mit anderen zur Gerechtigkeit.\nPlutarch",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "fr",
+      "sourceBody": "(Sur la sagesse pratique dans le choix des actions) Bien plus, nous appelons sagesse et prudence ce qui rend les hommes vertueux en matière de plaisir, maîtrise de soi et sobriété ; face aux dangers et aux épreuves, endurance et courage ; et dans les relations entre hommes et dans la vie publique, équité et justice.\nPlutarque",
+      "body": "La même sagesse pratique devient maîtrise de soi dans les plaisirs, endurance dans les épreuves et justice dans nos rapports avec les autres.\nPlutarque",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "es",
+      "sourceBody": "(Sobre la sabiduría práctica al elegir acciones) Más aún, llamamos a la sabiduría y prudencia que hacen buenas a las personas en cuanto al placer autocontrol y sobriedad, en los peligros y las dificultades resistencia y fortaleza, y en las relaciones entre los hombres y en la vida pública equidad y justicia.\nPlutarco",
+      "body": "La misma prudencia se convierte en dominio de uno mismo ante el placer, en firmeza ante las dificultades y en justicia en el trato con los demás.\nPlutarco",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "it",
+      "sourceBody": "(Sulla saggezza pratica nella scelta delle azioni) Anzi, chiamiamo saggezza e prudenza ciò che rende le persone buone nei piaceri autocontrollo e sobrietà, nei pericoli e nelle difficoltà resistenza e fortezza, nei rapporti tra uomini e nella vita pubblica equità e giustizia.\nPlutarco",
+      "body": "La stessa prudenza diventa autocontrollo nei piaceri, fermezza nelle difficoltà e giustizia nei rapporti con gli altri.\nPlutarco",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "pt",
+      "sourceBody": "(Sobre a sabedoria prática na escolha de ações) Aliás, chamamos a sabedoria e a prudência que tornam as pessoas boas em relação ao prazer de autocontrole e sobriedade, e em relação aos perigos e dificuldades de resistência e fortaleza, e em suas relações interpessoais e na vida pública de equidade e justiça.\nPlutarco",
+      "body": "A mesma prudência torna-se autodomínio nos prazeres, firmeza nas dificuldades e justiça nas relações com os outros.\nPlutarco",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "pl",
+      "sourceBody": "(O praktycznej mądrości w wyborze działań) Co więcej, mądrość i roztropność, które czynią ludzi dobrymi w stosunku do przyjemności, nazywamy samokontrolą i trzeźwością, a w niebezpieczeństwach i trudnościach – wytrwałością i hartem ducha, a w stosunkach międzyludzkich i w życiu publicznym – równością i sprawiedliwością.\nPlutarch",
+      "body": "Ta sama roztropność staje się opanowaniem wobec przyjemności, wytrwałością w trudnościach i sprawiedliwością w stosunkach z innymi.\nPlutarch",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "sr",
+      "sourceBody": "(О практичној мудрости у избору поступака) Штавише, мудрост и разборитост које људе чине добрим у погледу задовољства називамо уздржаношћу и трезвеношћу, а у опасностима и тешкоћама истрајношћу и храброшћу, а у односима између људи и у јавном животу равноправношћу и правдом.\nПлутарх",
+      "body": "Иста разборитост постаје самоконтрола у задовољствима, истрајност у тешкоћама и праведност у односима с другима.\nПлутарх",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "uk",
+      "sourceBody": "(Про практичну мудрість у виборі дій) Більше того, ми називаємо мудрість і розсудливість, які роблять людей добрими щодо задоволення, самовладанням і тверезістю, а в небезпеках і труднощах — витривалістю і мужністю, а в стосунках між людьми та в суспільному житті — справедливістю та справедливістю.\nПлутарх",
+      "body": "Та сама розсудливість у задоволеннях стає самовладанням, у труднощах — стійкістю, а у взаєминах із людьми — справедливістю.\nПлутарх",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "zh",
+      "sourceBody": "(关于选择行动的实用智慧) 不仅如此，我们称使人在享乐方面表现良好的智慧和审慎为自制和节制，在危险和困境中表现良好的智慧和审慎为忍耐和坚韧，在人际交往和公共生活中表现良好的智慧和审慎为公平和正义。\n普鲁塔克",
+      "body": "同一种明智，在享乐面前表现为自制，在困境中表现为坚忍，在与人相处时则表现为公正。\n普鲁塔克",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "tr",
+      "sourceBody": "(Eylemleri seçmede pratik bilgelik üzerine) Hatta biz, insanları zevk konusunda iyi kılan bilgelik ve basireti, özdenetim ve ölçülülük; tehlike ve zorluklarda dayanıklılık ve metanet; insanlar arası ilişkilerde ve kamusal hayatta eşitlik ve adalet olarak adlandırırız.\nPlutarkhos",
+      "body": "Aynı sağduyu haz karşısında özdenetime, güçlükler karşısında dayanıklılığa, insanlarla ilişkilerde ise adalete dönüşür.\nPlutarkhos",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    },
+    {
+      "sourceId": "plutarch_1634_02",
+      "language": "ja",
+      "sourceBody": "(行動を選択する際の実際的な知恵について) さらに言えば、快楽に関して人を善くする知恵と分別を、自制心と節制と呼び、危険や苦難に関して人を忍耐と不屈の精神と呼び、人と人との関わりや公共生活において人を善くする知恵と分別を、公平と正義と呼ぶ。\nプルタルコス",
+      "body": "同じ思慮深さが、快楽に向き合うときは自制に、困難の中では忍耐に、人との関わりでは正義になる。\nプルタルコス",
+      "style": "contextual-paraphrase",
+      "reason": "User-requested complete contextual paraphrase based on the recorded source; author attribution and source identity preserved."
+    }
+  ]
+}

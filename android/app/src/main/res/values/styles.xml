@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Genesis.Launcher.Base" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">@color/genesis_night</item>
+        <item name="android:statusBarColor">@color/genesis_night</item>
+        <item name="android:navigationBarColor">@color/genesis_night</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="Theme.Genesis.Launcher" parent="Theme.Genesis.Launcher.Base" />
+</resources>

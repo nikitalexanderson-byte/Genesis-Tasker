@@ -1,0 +1,804 @@
+{
+  "fonts": [
+    {
+      "family": "inter",
+      "source": "https://raw.githubusercontent.com/google/fonts/e7db6ca603fd4862010383ff17ffd6cc4ffac1c0/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+      "revision": "e7db6ca603fd4862010383ff17ffd6cc4ffac1c0",
+      "target": "inter.ttf",
+      "bytes": 876576,
+      "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "modified": false
+    },
+    {
+      "family": "sourceserif4",
+      "source": "https://raw.githubusercontent.com/google/fonts/e7db6ca603fd4862010383ff17ffd6cc4ffac1c0/ofl/sourceserif4/SourceSerif4%5Bopsz%2Cwght%5D.ttf",
+      "revision": "e7db6ca603fd4862010383ff17ffd6cc4ffac1c0",
+      "target": "source_serif_4.ttf",
+      "bytes": 1209508,
+      "sha256": "97b2d4da6e3cb494b5a1e66ae176914d852ccabef49e0c02c0df25f3e39aca0b",
+      "modified": false
+    }
+  ],
+  "icons": [
+    {
+      "name": "menu",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/menu.svg",
+      "sourceSha256": "3e3092b465149d003381a210467fe4e9f9c2b135d5d4c638d84489b6cd848d68",
+      "target": "lucide_menu.xml",
+      "targetSha256": "a1b000c3831769232a5e1e33027ec6bc2c1163f03156416b550412e6b952075f",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "x",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/x.svg",
+      "sourceSha256": "a611112e8946480120e5e96f1d849651df76fa502f6190e293defaf6c4f56b07",
+      "target": "lucide_x.xml",
+      "targetSha256": "e6004698813f46b910964f148a68800b12571881e97c2c2bbd039482eaf18a95",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "chevron-left",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/chevron-left.svg",
+      "sourceSha256": "6e7478a72752c404c2ff077dfb768a84b718255d7bf9ea547de9b080114592ee",
+      "target": "lucide_chevron_left.xml",
+      "targetSha256": "d11b35484192e985e5f8494bb861f8576f56f83236db070ef2411be486ede4d0",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "chevron-right",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/chevron-right.svg",
+      "sourceSha256": "2af3089fa09497d5725172b172196d193cbe8205bf70ad6f9078ce4773285001",
+      "target": "lucide_chevron_right.xml",
+      "targetSha256": "4242b14344938e9ccf671ebcfa2b5b89316020ffdac5212165e88bf75eed792c",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "chevron-down",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/chevron-down.svg",
+      "sourceSha256": "763bbc7f305bad8b852b5ae5feadfc08858acf97f19a5897aa8f1fe636abed45",
+      "target": "lucide_chevron_down.xml",
+      "targetSha256": "db90c416264367153dbcc4844a339babe92c997155f0d3c6429640a0f5265af5",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "chevron-up",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/chevron-up.svg",
+      "sourceSha256": "f64f6c239f92db91d133cc922d1ee1f2cd77ec3eed7dec001a9001b838dbe5aa",
+      "target": "lucide_chevron_up.xml",
+      "targetSha256": "23ca6736ac3408f111057f0b5dca749caa66a741b333d0c9caf1e145e718cf72",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "ellipsis",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/ellipsis.svg",
+      "sourceSha256": "97c6135170637b2ef189bb40a506c897db3e1bdc5b8326a7c03309e5bca97e8d",
+      "target": "lucide_ellipsis.xml",
+      "targetSha256": "08f0b6307c75cc6f03ea0700a4cda62b6a7a6dcc5739d941df130b609f2c52b9",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "search",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/search.svg",
+      "sourceSha256": "e0d89f53155655032f5c07fd8da930800b62b69a778d1dd76b388b9b78bf1d3f",
+      "target": "lucide_search.xml",
+      "targetSha256": "e8c0f43a03423e07f40c9a89ded3cae8900ae6ddecb2758d4aa782032ddba4c8",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "sliders-horizontal",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/sliders-horizontal.svg",
+      "sourceSha256": "d2b52bb681ecad5c0710c4bba8684fd7be8dfe1d2bf3c10e865dff242cf3775f",
+      "target": "lucide_sliders_horizontal.xml",
+      "targetSha256": "47787c03100e0e51e1b48567b5a2d34c122963ebcdfae8caa23416d85c1f1909",
+      "paths": 9,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "arrow-up-down",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/arrow-up-down.svg",
+      "sourceSha256": "5b1b5584051349362010178e0922249c26d6a9a3bb38fcc14a75f1a51783fb5e",
+      "target": "lucide_arrow_up_down.xml",
+      "targetSha256": "644022b859c33674dd5dbe9ffe5dd346d7c4e38d1b10fa15cae4d29ea8000318",
+      "paths": 4,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "refresh-cw",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/refresh-cw.svg",
+      "sourceSha256": "801cc03b84a654de114a2707c9b1c6aa9a3b732c4ffc9e5df0f63f02e1ba0105",
+      "target": "lucide_refresh_cw.xml",
+      "targetSha256": "f9a9c957906a8753add0fbcf1a52316c202e58044c10adc19e2e06ba2d58f24c",
+      "paths": 4,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "plus",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/plus.svg",
+      "sourceSha256": "dfcf07b39b0f4c0b422595ae488fb08c468ef4782f6ef37d0deceaadfb2a5693",
+      "target": "lucide_plus.xml",
+      "targetSha256": "6e48a6ffd9b0c4831e18b094841b77b13a697f9b775c64559b2d5c5c4458a1bd",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "minus",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/minus.svg",
+      "sourceSha256": "98fa3350421dfd2011b2f109d20de6069c963b1f668c24fe675878b8a4c86532",
+      "target": "lucide_minus.xml",
+      "targetSha256": "1076e4ee84a4bd9f77a2384ee438f550a9708221d85306dc7dfec5de27667310",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "pencil",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/pencil.svg",
+      "sourceSha256": "ad01ac9a96ecb8e35b54a505756072e9d297d6ed51dbebbd74d6605bfcc9c770",
+      "target": "lucide_pencil.xml",
+      "targetSha256": "19aa01592d834a24dab30acc8b3824d128ff3f00cd3c8997c673b75f117327ad",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "trash-2",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/trash-2.svg",
+      "sourceSha256": "0367c1f1ea8be2af6dcd38e79c944dc2667ad725488fb9e2d4d1d8826d7b418f",
+      "target": "lucide_trash_2.xml",
+      "targetSha256": "c2028b260825cced7be8cb6ca7aa63c0cd96314c45132f4309749aad1fd6b2c8",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "folder",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/folder.svg",
+      "sourceSha256": "1045124391eac75014d2983b0e8b782dd681afa9c8615cc2eeefe4e774c24abd",
+      "target": "lucide_folder.xml",
+      "targetSha256": "bce3266ae8729fb63c74af2175f652e244bdae488bd875aec984e1d269fbc54c",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "folder-plus",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/folder-plus.svg",
+      "sourceSha256": "505f3640db66753e72c58b3c018904b810c775fa36d10089d7184e2162cf2489",
+      "target": "lucide_folder_plus.xml",
+      "targetSha256": "2de00dd41654975ca557ab8065181d2ac73f2f5c33567c7f151b8b86055ab592",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "list-checks",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/list-checks.svg",
+      "sourceSha256": "6d63ec59374a72d8723f7423ae121818b7b6d83f3e9b99f0d323c4c06ce2f08c",
+      "target": "lucide_list_checks.xml",
+      "targetSha256": "8a8f2c0d53adf51b19085a45f7bff33b2bcd97e2da8c3a2e22254f54f62c3888",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "list",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/list.svg",
+      "sourceSha256": "8c57a520002147ace4c2e3127def471f29af0abb7113acdccb1284e4286ebaae",
+      "target": "lucide_list.xml",
+      "targetSha256": "98b09fc700d20f67e0721f708784e778ca337c31e50ead258a745d66f363fef6",
+      "paths": 6,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "layout-dashboard",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/layout-dashboard.svg",
+      "sourceSha256": "b02f45800b01e728a5f1a0c9eb2a7f7a12fef43917f2f5bda41259779e95b364",
+      "target": "lucide_layout_dashboard.xml",
+      "targetSha256": "8c7dc4258780267ed05d14b8c3dd6a3fd0a7f7114b3137a1b6570649cc196220",
+      "paths": 4,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "calendar-days",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/calendar-days.svg",
+      "sourceSha256": "258c64f36ddd27af41245df5ee97486a3068ac41142f1877065efc541d2b1e37",
+      "target": "lucide_calendar_days.xml",
+      "targetSha256": "f2874dc00058d51e13145df7e52e43befcb391baf280205ad157315dbaa1c80e",
+      "paths": 10,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "calendar-range",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/calendar-range.svg",
+      "sourceSha256": "61d8f04c32d824267113c5044564aad074bbece0fc3425ba228bedc27a56474a",
+      "target": "lucide_calendar_range.xml",
+      "targetSha256": "f51d5d8c0fc28678ca12c99e3d99b7fe63e40bbc6efad5159b03fc40bc291099",
+      "paths": 8,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "sun",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/sun.svg",
+      "sourceSha256": "19d684776d546b673d45fc54b7dee7b22f18e0b2e673612220727e90f46fb4cf",
+      "target": "lucide_sun.xml",
+      "targetSha256": "eb2f44d53f680c2382f659ffaeba1429fa210c5a08d7766f42238798e1387faf",
+      "paths": 9,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "moon",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/moon.svg",
+      "sourceSha256": "3002badbef72a8f85358b3fe844ccac9c6e9638cc8088fb197426e8aeee6e0a9",
+      "target": "lucide_moon.xml",
+      "targetSha256": "1e1e5c0c7f68dcee71b237e91626eb07d10ace62df4fbd3c997bdbca11a584c2",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "sparkles",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/sparkles.svg",
+      "sourceSha256": "5ff7dc6557dbe5068a18feb080df81e090eb0a495fa1a05e3abd8179ba53c52d",
+      "target": "lucide_sparkles.xml",
+      "targetSha256": "c08d7a61284ed0b0e22fc7932e83f4823aa113d63f2d79bac14c1e6346ca1321",
+      "paths": 4,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "settings",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/settings.svg",
+      "sourceSha256": "f2235dfd6c69bdad1acd08554ba19557becefa526b21ae4cfabf8fe7bbc48796",
+      "target": "lucide_settings.xml",
+      "targetSha256": "0bb8ea5daba48d00ac05fbd54c278101fd7193510137dd3fe162f34c710ab777",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "user-round",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/user-round.svg",
+      "sourceSha256": "b3f1fe08a81b799a16bcbcf344b48412d2c3a9e609368f1782827ec832bf10e2",
+      "target": "lucide_user_round.xml",
+      "targetSha256": "e70dee5c2370f0492f45c70431c7fd1ccde3aaf5897077b1ca3a64c635d8a040",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "bell",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/bell.svg",
+      "sourceSha256": "01f419f823d3332da275a17fc7fcac7997597a0f533c9c81678ef5ee5b7bc341",
+      "target": "lucide_bell.xml",
+      "targetSha256": "a33c3d18f14590e7e727ab420af6fb0f9ca3bf5df3933069f4695445f2800761",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "globe",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/globe.svg",
+      "sourceSha256": "994924c198fe332f0de7eb5953610c6bce145b93db86c97d7183ce170a6038cc",
+      "target": "lucide_globe.xml",
+      "targetSha256": "15efb524dcc143295fee24a3f81a9619ed23d8958e725d8dd01fe2b7854e6276",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "external-link",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/external-link.svg",
+      "sourceSha256": "20ae73316402f4629ac1c69576014e2f3956f3ca6e14effeab868d4b5a8cc2ef",
+      "target": "lucide_external_link.xml",
+      "targetSha256": "240eaf79475f6042ce214c4026657d90aeb8572c4d2e79079ec6f159a69ff6a9",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "heart-pulse",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/heart-pulse.svg",
+      "sourceSha256": "1a4bd72f240fc6e3bc45d1ba7c69eb50f4d82183a0fff02082145d1a958f4cfd",
+      "target": "lucide_heart_pulse.xml",
+      "targetSha256": "8b96d2f3aa141c168e04453ff660d1b2fbc01968481945dc3751327b9a0b3ebf",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "network",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/network.svg",
+      "sourceSha256": "4f2d416762604ac95e05546c074635bfaa24346680fc9d938f6849da2ce92f17",
+      "target": "lucide_network.xml",
+      "targetSha256": "c407234e91600656626c4948116e1811ce0089dd039e0cd859a5d061c0e1895b",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "check",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/check.svg",
+      "sourceSha256": "cf5d8f45a017604917c0d74ed9c49c6926b0df780c4c9ad3ad85fb7a392bf746",
+      "target": "lucide_check.xml",
+      "targetSha256": "eaa8cea9b0cd3000dd1529d7ced32fb4b83331721dedcd5a81509a95e3e48f78",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "check-check",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/check-check.svg",
+      "sourceSha256": "331c917a19d031c2df22d3d9632d6597b31c0634b268c979fe9ae3f3389b9863",
+      "target": "lucide_check_check.xml",
+      "targetSha256": "a4f6297913bc35b3dad3fb429ce433e7777c3fb09b23894866cd1940852b6eab",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "mic",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/mic.svg",
+      "sourceSha256": "d2dd73d9963810d00d43abed6a6b70f98ce1e61d33a41896166834e77f8778f0",
+      "target": "lucide_mic.xml",
+      "targetSha256": "9b09deaef4c66a8312f5006f0e0b4616dd93718d26ee53705dd9ae8d5027d487",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "download",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/download.svg",
+      "sourceSha256": "bc9a77e3390e5c8b3e79f9dcc955f950b608d76877d58b920ed2bb8dac4488a3",
+      "target": "lucide_download.xml",
+      "targetSha256": "0c763dbbb6d7fec29fb342f3724d040c741315bf0123f3f5dcb623e58342ce70",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "upload",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/upload.svg",
+      "sourceSha256": "70bde4bb3a234d0aec4339ae3bfea8a9648b04d792d188fdc66fb4ddda138f9e",
+      "target": "lucide_upload.xml",
+      "targetSha256": "cca6488b88966180aec55be9fddc89c33182bf9f12ca9b1d6b86784c24adbab7",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "archive",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/archive.svg",
+      "sourceSha256": "65c0d065da17490a8bed02c76dc794154fd81fa4c56999c6b5d4125e56facec6",
+      "target": "lucide_archive.xml",
+      "targetSha256": "bd3341604bc71401296d17a7d45b9a5c6671e21d184c8c119d47fd754da16479",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "archive-restore",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/archive-restore.svg",
+      "sourceSha256": "41b0afdcc3a60c2c54d6a4680a65c26f73fa3eba8073830dc90cda5c715ea499",
+      "target": "lucide_archive_restore.xml",
+      "targetSha256": "7ef964d97ef71b4d59532dc225907caf807d47d35b40f188155b72e5163a614d",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "history",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/history.svg",
+      "sourceSha256": "15a0aa9c5c97acef0295b80e9d6a7d1d34f1e82f85c9f2866fc78187bce4d0d8",
+      "target": "lucide_history.xml",
+      "targetSha256": "f44ae7824c22cfd0ff7468cbfa688fa6e61fdf22310ce36617a84037de8acc4a",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "eye",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/eye.svg",
+      "sourceSha256": "3eb607cfbd394442f231a2a377d5e149a41846cc7fe48e711e8141141b68d791",
+      "target": "lucide_eye.xml",
+      "targetSha256": "f788000f9c8847d87955c3ac7f68b0a4d9f16910471050a0b725f9c3f98d96cb",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "eye-off",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/eye-off.svg",
+      "sourceSha256": "5e65f7fa6771e4190159fb442a108d8e5cf7af73f066d607379777c825ea23c2",
+      "target": "lucide_eye_off.xml",
+      "targetSha256": "7ab7bc0376e003acadc540c8b2d8b7df3880ae01b99c20746b2a34d942198c3e",
+      "paths": 4,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "move",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/move.svg",
+      "sourceSha256": "bfe79340be0603c23a770c73f1eb921cb89ebdb924d5f0ba1a32c044e1a049f7",
+      "target": "lucide_move.xml",
+      "targetSha256": "e6bc64250796f4ccad6d49d97c02220bb39fc218e7c1fdc6c12a3932ea0f7040",
+      "paths": 6,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "arrow-up",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/arrow-up.svg",
+      "sourceSha256": "f76f6cc5e50fe25865dbf403a816016b1cf8d4de1bb4e230ff5b541b69bcde34",
+      "target": "lucide_arrow_up.xml",
+      "targetSha256": "9b2f393b6590d9df5d8387483c4b395fae9b0696575180a441da6c2e96adee70",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "arrow-down",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/arrow-down.svg",
+      "sourceSha256": "e4aef5810b8e5e1304c735f2af5c6f7c4cdebad1e00b4b2ebbf2e1bdfea17528",
+      "target": "lucide_arrow_down.xml",
+      "targetSha256": "51f4cceffb167d1e45af784266eca4bb9024c49ea289b47b9370a3ed3d078f54",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "undo-2",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/undo-2.svg",
+      "sourceSha256": "e16d552ee4fca9fae9e23c967d8672532be8869fe308a7fc109ce607450c8f3b",
+      "target": "lucide_undo_2.xml",
+      "targetSha256": "b22ada6964f1417b156e316d6e8250a51d557dd1cdbe6ce4e3c3571a971b77f3",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "chart-no-axes-column",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/chart-no-axes-column.svg",
+      "sourceSha256": "9f7837f180409eb813fc0b99aca9f26c139ce49078115193e872ed0a98281b35",
+      "target": "lucide_chart_no_axes_column.xml",
+      "targetSha256": "f04d004e8bbedccec3e35a5be952bd4db136058f9edeee2d0dc7d59a2166a6f9",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "inbox",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/inbox.svg",
+      "sourceSha256": "311abdf01ec9fe0ecd9b2a021d544b3ae2c208c0481c283837f682d836073e52",
+      "target": "lucide_inbox.xml",
+      "targetSha256": "a957e23b9d63d8c751145c921bda66f6ad050fb6b968de3fd14935e1274ef6e5",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "copy",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/copy.svg",
+      "sourceSha256": "0e68d3e49db956dfe42e8dfac1d8596081ee0a6fc5480fc6318d231bb07616d9",
+      "target": "lucide_copy.xml",
+      "targetSha256": "3d4f948c93cc8185b1b85268d64320248238ca80ecf7ed0d70dd5162b15837e6",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "git-branch",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/git-branch.svg",
+      "sourceSha256": "2c81fc736815fb13d645bd8a9b49aa0ddf06c6ef5a31dc099a78ca8a215b8dae",
+      "target": "lucide_git_branch.xml",
+      "targetSha256": "b0ca2665d723fb6d41557643bdbeec3d93dcb78215750743b42f4dd82471d503",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "link",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/link.svg",
+      "sourceSha256": "b9b459f896caf86a0713c034957857e47c61f37262365d0114c9870997bfe114",
+      "target": "lucide_link.xml",
+      "targetSha256": "ed3438bc882487bbfed384addc7e7f3f68e0c2858c0869715cabd2d1b429b3ea",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "play",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/play.svg",
+      "sourceSha256": "b18a8512edbdefc1eb4005bd95a94c5f4d68d9fc3528214437701df4f6514d08",
+      "target": "lucide_play.xml",
+      "targetSha256": "b2a2204a353a851ca90f1acf913dccf0bc1cf2c10c77f6ba7d35d91350e79581",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "pause",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/pause.svg",
+      "sourceSha256": "d318ce2717e5094811b3b59fb340f66813e59714d1d2968adeeef099a1c890c5",
+      "target": "lucide_pause.xml",
+      "targetSha256": "5007ab30c32e56a33ded06ec359be30cee8130bd27555c34e2a4bca362dca642",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "timer",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/timer.svg",
+      "sourceSha256": "706c74414d251d9faabb039ce9205bbb0e8c4b61181db439e4514672c895b58d",
+      "target": "lucide_timer.xml",
+      "targetSha256": "5a19fabb1efcff65054edb2f829d58efb05a049dfe903ea1c2269cedf2d1b0a1",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "wand-sparkles",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/wand-sparkles.svg",
+      "sourceSha256": "beebc10f935b32f5d5e8f76f94c8b3a00601c1920f953fdd86e06d6b8fd4f0f5",
+      "target": "lucide_wand_sparkles.xml",
+      "targetSha256": "cf289ee9b747423891d90e2a9045a170218fbf630f34e6a6b287dc19bb0c082a",
+      "paths": 8,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "alarm-clock",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/alarm-clock.svg",
+      "sourceSha256": "a86be94902abb0bc018ec39ac65e9635f42eb6af5544f40994fd0ee18ba50e2c",
+      "target": "lucide_alarm_clock.xml",
+      "targetSha256": "9b4a0d895bd0438d6fbf3a3d2805ecce13b7c28c3bdd42434eca04f744d34161",
+      "paths": 6,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "shield-check",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/shield-check.svg",
+      "sourceSha256": "999d49aefa7f0cab77de2853e167feb3d6b6424b4bd30a3090513c71813fd7fe",
+      "target": "lucide_shield_check.xml",
+      "targetSha256": "cd651445f5b0682805d934ddb9ba2df84b3e7d73aeaa7b684c30893065f84ab6",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "book-open",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/book-open.svg",
+      "sourceSha256": "369a07ee7ab13c9cc464f70aada0c28462a4778dcbd6676044f3d3753d7dc6b6",
+      "target": "lucide_book_open.xml",
+      "targetSha256": "fc1b6e796d68a3de0b8cb41578a185370e7eda33467ab1e0343844eeeb89813d",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "log-out",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/log-out.svg",
+      "sourceSha256": "db1bc9f72f1bf537718991c9ab03bf8d913c4e67a820335d4f992cc97d18b65a",
+      "target": "lucide_log_out.xml",
+      "targetSha256": "63e01a76a7c04cdbdefc6c54f613a4a52a9e422ea2997b2a7cb6ef932e531f45",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "chart-no-axes-gantt",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/chart-no-axes-gantt.svg",
+      "sourceSha256": "0e4e998520e62fbe8396eef3080f8f702fc02e99092ab8de5ca480a467e8e89b",
+      "target": "lucide_chart_no_axes_gantt.xml",
+      "targetSha256": "bdc63ccba0f56029b3ae1faeab0c8718e13fe70ad15247322f135883853bc874",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "layout-template",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/layout-template.svg",
+      "sourceSha256": "19eaea7ca0eee62dfb67dc0745d410ff64983c6d01fc619bca583e374e7138b3",
+      "target": "lucide_layout_template.xml",
+      "targetSha256": "8faf0bb30c784cf99ccb99c173048c9307dd8d4392b802b3d42ab8f51075ea8e",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "list-tree",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/list-tree.svg",
+      "sourceSha256": "a97d3c8b2fb2aa8d92a37c1e4ed4462c4970e9b84bec4ff1221b8b969fffa0eb",
+      "target": "lucide_list_tree.xml",
+      "targetSha256": "c1b1872a21faba56b1cb0f0784b119de79b9bea743822de80ba05d8d71f59e50",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "palette",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/palette.svg",
+      "sourceSha256": "4f972f5fb3efa271960da26ecd9b258bcb89e83b290bbe3758bef44afaafc0df",
+      "target": "lucide_palette.xml",
+      "targetSha256": "b6c59a7895d643ab79b8b3640704b2aa3d416653fb15bf60ebbf7473c332f7cd",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "users-round",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/users-round.svg",
+      "sourceSha256": "7b16e9beee68c3508034758a34006c038a461907370438a495e176cc5d7332a1",
+      "target": "lucide_users_round.xml",
+      "targetSha256": "d956857985afea7a57a52c3a9fc335ed5dc08d97cbbc30a17dd3b13d770b626d",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "pin",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/pin.svg",
+      "sourceSha256": "a3857df963b2a34a7bfd83feab7c60d10fb6401b07eee757fe2140d789626f32",
+      "target": "lucide_pin.xml",
+      "targetSha256": "a1935f649996cc6e1a66853fc61dab34f6386cb7bd8aa573731776551b92fed5",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "star",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/star.svg",
+      "sourceSha256": "29d57a6721d440f84328f183f684fd54bd5ec49f8aa8b45a2902974c30770361",
+      "target": "lucide_star.xml",
+      "targetSha256": "9b62dfdf3b7077744c7eecc1221a1e16417cd4cfda3a776badc2fc9005f5aea4",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "thumbs-down",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/thumbs-down.svg",
+      "sourceSha256": "ac991c2f379f64e21fcd78bb201409a88bb855fe3c487dc2e69e005ed6df1fbe",
+      "target": "lucide_thumbs_down.xml",
+      "targetSha256": "582739eb4c14bd9306e37971fb30e0d379ea8d6c85268594608467e62cffcb0f",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "message-circle",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/message-circle.svg",
+      "sourceSha256": "e9a21846ffdb0c1a2b0d5937bee04909abcfc08917e3895b71763562574817eb",
+      "target": "lucide_message_circle.xml",
+      "targetSha256": "a2d5786b5226394f0a6980f15d55c6a7ffec14a3b4ff790883cb470d2a7016b6",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "paperclip",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/paperclip.svg",
+      "sourceSha256": "116ebd20f9ccf3ac6a810e12d227a15c7b423ef93e7ed92ad244219c9e5d759f",
+      "target": "lucide_paperclip.xml",
+      "targetSha256": "bd7761640fe426959951c2340f56fc3dd342ab500b4e0db61471ecd458fadbda",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "send",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/send.svg",
+      "sourceSha256": "850ed5c3de2130276b206e56aac7567ed1cd4ae46420639fd084bde02206b1e0",
+      "target": "lucide_send.xml",
+      "targetSha256": "2a68c039e5c6913402589653658261c4c7e984b4d2edac2df75c897cb580835a",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "key-round",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/key-round.svg",
+      "sourceSha256": "85e5db61869ee5c78f52ea1fbf75df75322ba7c67b785468c6554a4bf37e17cd",
+      "target": "lucide_key_round.xml",
+      "targetSha256": "9a6a05b0088e2560ff6c2fb1fe9b4c67851a876806307a1894353f79a43062b3",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "lock-keyhole",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/lock-keyhole.svg",
+      "sourceSha256": "075588fa9dd4cf8f4465aa74a767533273c40ab257dade6623676474709a6577",
+      "target": "lucide_lock_keyhole.xml",
+      "targetSha256": "e7cf4197382b2adfa341418f9e3d6eef8f65b9526c42219986fd9c34d82178f6",
+      "paths": 3,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "thumbs-up",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/thumbs-up.svg",
+      "sourceSha256": "9416a9e30695f631fb54e30486e49ebb1d405ebddc6c6d025aace7b4c8b032c0",
+      "target": "lucide_thumbs_up.xml",
+      "targetSha256": "6bc28154bd2335192538b02a79d583b3c50559197d2fec63cc25063adef76238",
+      "paths": 2,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "bookmark",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/bookmark.svg",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.61.0/icons/bookmark.svg",
+      "sourceSha256": "8510eb96685f6ffa5617eca76f359a4d3ab851d3d6fd14b3c50d7c1fcd1b6186",
+      "target": "lucide_bookmark.xml",
+      "targetSha256": "bd0024ac3d10b9751ec482cbaa0c8f44dd262f3ba5504006dde91d370cff58ac",
+      "paths": 1,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "file-json",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/file-json.svg",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.61.0/icons/file-json.svg",
+      "sourceSha256": "6a27ab5aa7f7960053588d374423bd56e4edc57039345f8c59bf1ee332f1379e",
+      "target": "lucide_file_json.xml",
+      "targetSha256": "1415317e73457615bf8c6243a9ae3a3ecdf90a8c04cf6421e08fb9bd10588a4f",
+      "paths": 4,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "file-text",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/file-text.svg",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.61.0/icons/file-text.svg",
+      "sourceSha256": "0f68908abe19543be363a403a4239f288236840ede01eec2af65830c3ba7f22c",
+      "target": "lucide_file_text.xml",
+      "targetSha256": "eb2cf7d9df3402a10ef6fff7077493317e6a0a9ed659a178a1ebdb659bc4be5e",
+      "paths": 5,
+      "strokeWidth": "2"
+    },
+    {
+      "name": "file-plus-2",
+      "package": "lucide-static@1.61.0",
+      "source": "package/icons/file-plus-2.svg",
+      "sourceUrl": "https://unpkg.com/lucide-static@1.61.0/icons/file-plus-2.svg",
+      "sourceSha256": "95e53eaa0c482dc6d97e4ddab08694c6bd25b15d6387bafe141cd374ca0d15fa",
+      "target": "lucide_file_plus_2.xml",
+      "targetSha256": "54ac5708ff4abad7da7cdea70493fc96a871150260744f8ac10eca54e1fd4820",
+      "paths": 2,
+      "strokeWidth": "2"
+    }
+  ],
+  "lucidePackage": {
+    "version": "1.61.0",
+    "url": "https://registry.npmjs.org/lucide-static/-/lucide-static-1.61.0.tgz",
+    "sha256": "62773cd2ee411ad2e37c1973d1e4c4b49f9a6c57da6b5d5d0abca08756ba75f1",
+    "license": "package/LICENSE"
+  }
+}

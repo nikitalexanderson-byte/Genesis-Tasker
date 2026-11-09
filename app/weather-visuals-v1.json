@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "cloud": { "groundDimming": 0.24, "opacity": 0.76, "transmissionPower": 1.4 },
+  "wind": { "visibleFromMps": 3, "strongFromMps": 10, "pixelsPerMps": 6, "maxDriftPixels": 140 },
+  "precipitation": {
+    "rainLightBelowMmH": 0.5, "rainHeavyFromMmH": 7.5,
+    "snowLightBelowMmH": 0.3, "snowHeavyFromMmH": 2,
+    "particles": { "light": 18, "moderate": 36, "heavy": 60 },
+    "rainSeconds": 0.85, "snowSeconds": 6, "hailSeconds": 1.2
+  },
+  "fog": { "visibleBelowM": 1000, "maxOpacity": 0.48 },
+  "motion": { "cloudSeconds": 60, "windSeconds": 7, "stormSeconds": 18, "stormGlowOpacity": 0.08 }
+}

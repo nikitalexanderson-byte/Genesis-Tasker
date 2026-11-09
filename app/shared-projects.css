@@ -1,0 +1,86 @@
+.shared-projects { display: grid; gap: 1rem; min-width: 0; }
+.shared-projects-hero { display: flex; align-items: center; gap: 1.25rem; min-width: 0; padding: 1.5rem; border-radius: var(--ui-surface-radius); border: 1px solid rgba(216,189,128,.22); color: #eee6d8; background: radial-gradient(circle at 82% 14%,rgba(210,175,102,.16),transparent 28%),linear-gradient(135deg,var(--palette-recessed, #0b2428),var(--palette-recessed, #07171b)); }
+.shared-projects-hero h1 { margin: .15rem 0 .4rem; overflow-wrap: anywhere; }
+.shared-projects-hero > div { min-width: 0; }
+.shared-projects-hero p { margin: 0; max-width: 65ch; color: var(--palette-muted, #c8d9d4); }
+.shared-projects-current-title { display: block; margin-bottom: .35rem; color: #dfc17e; overflow-wrap: anywhere; }
+.shared-projects-privacy, .shared-projects-message { margin: 0; padding: .75rem 1rem; border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); border: 1px solid var(--line, #d4c9b0); }
+.shared-projects-read-error { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.shared-projects-read-error > span { min-width: 0; overflow-wrap: anywhere; }
+.shared-projects-read-error > button { flex: 0 0 auto; }
+.shared-projects-toolbar, .shared-projects-create-task, .shared-projects-invite-accept, .shared-projects-invite form, .shared-projects-create form { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
+.shared-projects label { display: grid; gap: .25rem; min-width: 0; flex: 1 1 11rem; }
+.shared-projects input, .shared-projects select, .shared-projects textarea { width: 100%; max-width: 100%; min-height: 2.75rem; box-sizing: border-box; }
+.shared-projects button { min-height: 2.75rem; }
+.shared-projects :is(input, select, textarea) { border: 1px solid #a9b6a9; border-radius: .65rem; background: var(--surface, #fffdf7); color: inherit; padding: .55rem .75rem; }
+.shared-projects input[type="color"] { min-width: 4rem; padding: .25rem; }
+.shared-projects :is(form > button, .shared-projects-close) { border: 1px solid var(--palette-outline, #255b59); border-radius: .7rem; background: var(--palette-raised, #255b59); color: #fffdf8; padding: .55rem 1rem; font-weight: 700; }
+.shared-projects button:disabled { opacity: .55; cursor: not-allowed; }
+.shared-projects :is(button, input, select, textarea, summary):focus-visible { outline: 3px solid #a77738; outline-offset: 2px; }
+.shared-projects-create, .shared-projects-invite, .shared-projects-detail { padding: 1rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); }
+.shared-projects-create summary, .shared-projects-invite summary { cursor: pointer; font-weight: 700; padding: .25rem; }
+.shared-projects-create form, .shared-projects-invite form { margin-top: .75rem; }
+.shared-projects-members { display: grid; gap: .5rem; margin-top: .75rem; }
+.shared-projects-member { display: flex; align-items: end; flex-wrap: wrap; gap: .7rem; padding: .6rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); }
+.shared-projects-member > span:first-child { flex: 1 1 12rem; overflow-wrap: anywhere; }
+.shared-projects-member label { flex: 0 1 11rem; }
+.shared-projects-member button { border: 1px solid #9a5449; border-radius: .65rem; background: transparent; color: inherit; padding: .5rem .8rem; }
+.shared-projects-status-settings { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; padding: .65rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); }
+.shared-projects-status-settings form { display: flex; flex: 1 1 15rem; align-items: end; gap: .5rem; }
+.shared-projects-status-settings > label { flex: 1 1 10rem; }
+.shared-projects-status-settings > button { border: 1px solid #9a5449; border-radius: .65rem; background: transparent; color: inherit; padding: .5rem .8rem; }
+.shared-projects-checkbox { display: flex !important; flex: 0 1 auto !important; align-items: center; gap: .4rem; }
+.shared-projects-checkbox input { width: 1.2rem; min-height: 1.2rem; }
+.shared-projects-create-task, .shared-projects-invite-accept { padding: 1rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); }
+.shared-projects-meta { display: flex; flex-wrap: wrap; gap: .5rem; }
+.shared-projects-meta span { padding: .35rem .7rem; border-radius: 2rem; background: var(--surface, #fffdf7); border: 1px solid var(--line, #d4c9b0); }
+.shared-projects-board-hint { margin: 0; font-size: .9rem; opacity: .75; }
+.shared-projects-board { display: flex; align-items: flex-start; gap: .8rem; overflow-x: auto; padding-bottom: .5rem; scroll-snap-type: x proximity; }
+.shared-projects-board .shared-projects-column { flex: 0 0 min(19rem, 82vw); scroll-snap-align: start; }
+.shared-projects-list { display: grid; gap: .75rem; }
+.shared-projects-column { min-width: 0; padding: .8rem; border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); border: 1px solid var(--line, #d4c9b0); }
+.shared-projects-column h2 { display: flex; justify-content: space-between; gap: 1rem; margin: 0 0 .65rem; font-size: 1.1rem; }
+.shared-projects-task { display: grid; gap: .45rem; padding: .65rem; margin-top: .5rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); }
+.shared-projects-task-open { display: grid; gap: .2rem; text-align: left; border: 0; background: transparent; padding: .2rem; overflow-wrap: anywhere; }
+.shared-projects-task-open small { opacity: .7; }
+.shared-projects-category-tag { display: inline-flex; align-items: center; gap: .4rem; }
+.shared-projects-category-tag i { width: .7rem; height: .7rem; border-radius: 50%; border: 1px solid currentColor; }
+.shared-projects-task label { font-size: .82rem; }
+.shared-projects-detail { position: relative; }
+.shared-projects-detail h2 { margin-top: 0; padding-right: 2.5rem; overflow-wrap: anywhere; }
+.shared-projects-close { position: absolute; top: .4rem; right: .4rem; min-width: 2.75rem; }
+.shared-projects-detail form { display: grid; gap: .5rem; margin-top: .75rem; }
+.shared-projects-view-switch { display: flex; flex-wrap: wrap; gap: .4rem; }
+.shared-projects-view-switch button { border: 1px solid var(--line, #d4c9b0); border-radius: .7rem; background: var(--surface, #fffdf7); color: inherit; padding: .5rem .8rem; }
+.shared-projects-view-switch button[aria-pressed="true"] { border-color: var(--palette-outline, #255b59); box-shadow: inset 0 0 0 1px var(--palette-raised, #255b59); font-weight: 700; }
+.shared-projects-calendar { min-width: 0; padding: 1rem; border: 1px solid var(--line, #d4c9b0); border-radius: var(--ui-surface-radius); background: var(--surface, #fffdf7); }
+.shared-projects-calendar-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.shared-projects-calendar-head h2 { margin: 0; text-align: center; font-size: 1.2rem; text-transform: capitalize; }
+.shared-projects-calendar-head button { min-width: 2.75rem; border: 1px solid var(--line, #d4c9b0); border-radius: .6rem; background: transparent; color: inherit; }
+.shared-projects-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; margin-top: .8rem; }
+.shared-projects-calendar-weekday { text-align: center; font-size: .8rem; font-weight: 700; opacity: .75; }
+.shared-projects-calendar-cycles { display: grid; gap: 16px; margin-top: 20px; }
+.shared-projects-calendar-elements, .shared-projects-cycle-days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.shared-projects-calendar-elements { text-align: center; font-size: 12px; color: var(--ink-soft); }
+.shared-projects-calendar-cycle { min-width: 0; }
+.shared-projects-calendar-cycle > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 8px; }
+.shared-projects-calendar-cycle > header strong { font-size: 14px; }
+.shared-projects-calendar-cycle > header span { color: var(--ink-soft); font-size: 12px; }
+.shared-projects-calendar-date time { color: var(--ink-soft); font-size: 11px; line-height: 1.3; overflow-wrap: anywhere; }
+@media (min-width: 900px) { .shared-projects-calendar-cycles.mode-lunar .shared-projects-cycle-days { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
+.shared-projects .shared-projects-calendar-date { display: grid; align-content: start; justify-items: start; gap: .15rem; min-width: 0; min-height: 4rem; border: 1px solid var(--line, #d4c9b0); border-radius: .5rem; background: transparent; color: inherit; padding: .35rem; text-align: left; }
+.shared-projects-calendar-date[data-outside] { opacity: .55; }
+.shared-projects-calendar-date[aria-current="date"] { border-color: var(--palette-outline, #255b59); box-shadow: inset 0 0 0 1px var(--palette-raised, #255b59); }
+.shared-projects-calendar-date small { display: grid; place-items: center; min-width: 1.25rem; height: 1.25rem; border-radius: 1rem; background: var(--palette-raised, #255b59); color: white; font-size: .7rem; }
+.shared-projects-calendar-agenda, .shared-projects-calendar-undated { display: grid; gap: .4rem; margin-top: 1rem; border-top: 1px solid var(--line, #d4c9b0); padding-top: .8rem; }
+.shared-projects-calendar-agenda h3 { margin: 0; font-size: 1rem; text-transform: capitalize; }
+.shared-projects-calendar-agenda p { margin: .25rem 0; }
+.shared-projects-calendar-agenda button, .shared-projects-calendar-undated button { display: flex; justify-content: space-between; gap: .5rem; align-items: center; border: 1px solid var(--line, #d4c9b0); border-radius: .5rem; background: transparent; color: inherit; padding: .5rem .65rem; text-align: left; overflow-wrap: anywhere; }
+.shared-projects-calendar-agenda button span { font-size: .8rem; opacity: .75; }
+.shared-projects-calendar-undated summary { cursor: pointer; font-weight: 700; }
+@media (max-width: 600px) { .shared-projects-hero { align-items: flex-start; gap: .75rem; padding: 1rem; } .shared-projects-hero h1 { font-size: 1.5rem; } .shared-projects-calendar { padding: .6rem; } .shared-projects .shared-projects-calendar-date { min-height: 3rem; padding: .2rem; font-size: .82rem; } }
+
+.shared-project-chaos { display:grid; gap:12px; min-width:0; padding:16px; border-radius:var(--ui-radius); }
+.shared-project-chaos > header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.shared-project-chaos h2 { margin:0; font:500 22px/1.3 var(--font-heading); }
+.shared-project-chaos > p { margin:0; color:var(--ink-soft); }

@@ -1,0 +1,23 @@
+/* Task-list rows use the same text scale as task rows, in every placement. */
+html[data-genesis-theme] .genesis-app .task-list-entry-open {
+  display:grid; align-content:start; gap:4px; min-width:0; width:100%; min-height:44px;
+  padding:0; border:0; background:transparent; color:var(--ink); text-align:start;
+}
+html[data-genesis-theme] .genesis-app .task-list-entry-title,
+html[data-genesis-theme] .genesis-app button.task-list-entry-title {
+  display:block; min-width:0; margin:0; padding:0; color:var(--ink);
+  font:500 15px/1.5 var(--font-ui); letter-spacing:normal; text-transform:none; overflow-wrap:anywhere;
+}
+html[data-genesis-theme] .genesis-app .task-list-entry-meta {
+  display:block; min-width:0; margin:0; color:var(--ink-soft);
+  font:400 var(--type-caption)/1.5 var(--font-ui); letter-spacing:normal; text-transform:none; overflow-wrap:anywhere;
+}
+html[data-genesis-theme] .genesis-app :is(.inbox-list-item,.project-assigned-list) {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; padding:12px;
+}
+html[data-genesis-theme] .genesis-app :is(.inbox-list-item,.project-assigned-list) > .task-list-column-actions { display:flex; flex-wrap:wrap; align-items:start; gap:4px; margin:0; }
+html[data-genesis-theme] .genesis-app :is(.inbox-list-item,.project-assigned-list) > .task-list-column-actions > button {
+  display:grid; place-items:center; width:44px; height:44px; min-width:44px; min-height:44px; padding:10px; margin:0;
+  border:1px solid var(--line); border-radius:var(--ui-radius); color:var(--ink); background:transparent;
+}
+html[data-genesis-theme] .genesis-app .task-list-entry-open:focus-visible { outline:2px solid var(--ui-accent); outline-offset:4px; border-radius:var(--ui-radius); }

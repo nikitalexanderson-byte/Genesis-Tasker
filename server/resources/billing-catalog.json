@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-11-03-fixed-usd-prices",
+  "checkoutEnabled": false,
+  "yookassaCheckoutEnabled": true,
+  "creditCheckoutEnabled": false,
+  "periodMonths": [
+    1,
+    12
+  ],
+  "currency": "RUB",
+  "prices": {
+    "standart": {
+      "1": 33300,
+      "12": 333000
+    },
+    "premium": {
+      "1": 55500,
+      "12": 555000
+    },
+    "business": {
+      "1": 77700,
+      "12": 777000
+    }
+  },
+  "purchasablePlans": [
+    "standart",
+    "premium",
+    "business"
+  ],
+  "lifetimeOffer": {
+    "id": "premium4life:0",
+    "plan": "premium4life",
+    "amountMinor": 1290000,
+    "currency": "RUB",
+    "seats": 12
+  },
+  "providers": [
+    {
+      "id": "google-play",
+      "name": "Google Play",
+      "clients": [
+        "android-play"
+      ]
+    },
+    {
+      "id": "lemon-squeezy",
+      "name": "Lemon Squeezy",
+      "clients": [
+        "web",
+        "android"
+      ]
+    },
+    {
+      "id": "yookassa",
+      "name": "ЮKassa",
+      "clients": [
+        "web",
+        "android"
+      ]
+    }
+  ],
+  "foreignPricing": {
+    "provider": "lemon-squeezy",
+    "currency": "USD",
+    "pricingModel": "fixed",
+    "prices": {
+      "standart": {
+        "1": 400,
+        "12": 4000
+      },
+      "premium": {
+        "1": 700,
+        "12": 7000
+      },
+      "business": {
+        "1": 1000,
+        "12": 10000
+      }
+    },
+    "lifetimeAmountMinor": 16000
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "ru": {"by":"Сортировать по", "original":"Исходный порядок", "ascending":"По возрастанию", "descending":"По убыванию"},
+  "en": {"by":"Sort by", "original":"Original order", "ascending":"Ascending", "descending":"Descending"},
+  "el": {"by":"Ταξινόμηση κατά", "original":"Αρχική σειρά", "ascending":"Αύξουσα σειρά", "descending":"Φθίνουσα σειρά"},
+  "de": {"by":"Sortieren nach", "original":"Ursprüngliche Reihenfolge", "ascending":"Aufsteigend", "descending":"Absteigend"},
+  "fr": {"by":"Trier par", "original":"Ordre initial", "ascending":"Croissant", "descending":"Décroissant"},
+  "es": {"by":"Ordenar por", "original":"Orden original", "ascending":"Ascendente", "descending":"Descendente"},
+  "it": {"by":"Ordina per", "original":"Ordine originale", "ascending":"Crescente", "descending":"Decrescente"},
+  "pt": {"by":"Ordenar por", "original":"Ordem original", "ascending":"Crescente", "descending":"Decrescente"},
+  "pl": {"by":"Sortuj według", "original":"Kolejność pierwotna", "ascending":"Rosnąco", "descending":"Malejąco"},
+  "sr": {"by":"Сортирај по", "original":"Почетни редослед", "ascending":"Растуће", "descending":"Опадајуће"},
+  "uk": {"by":"Сортувати за", "original":"Початковий порядок", "ascending":"За зростанням", "descending":"За спаданням"},
+  "zh": {"by":"排序依据", "original":"原始顺序", "ascending":"升序", "descending":"降序"},
+  "tr": {"by":"Sıralama ölçütü", "original":"İlk sıra", "ascending":"Artan", "descending":"Azalan"},
+  "ja": {"by":"並べ替え", "original":"元の順序", "ascending":"昇順", "descending":"降順"}
+}

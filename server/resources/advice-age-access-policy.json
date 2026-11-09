@@ -1,0 +1,645 @@
+{
+  "version": 1,
+  "policyVersion": "2026-11-01",
+  "reviewedAt": "2026-11-01",
+  "minimumAdultAge": 18,
+  "corpusEnabled": true,
+  "unknownJurisdiction": "deny-alcohol",
+  "notifications": "exclude-all-adult-psychopompia-alcohol",
+  "scope": "Conservative app content-access thresholds. Purchase/consumption statutes inform these rules; these are not statements that the same age is mandated for reading online content. No under-18 exception is used. Self-declaration only; no DOB or identity document. Coverage is deliberately incomplete.",
+  "subcategories": [
+    {
+      "id": "inner-work"
+    },
+    {
+      "id": "transgression-ecstasy"
+    },
+    {
+      "id": "theurgy-hymns"
+    },
+    {
+      "id": "muses"
+    },
+    {
+      "id": "intoxication"
+    },
+    {
+      "id": "hades-death"
+    },
+    {
+      "id": "hermetic-rebirth"
+    },
+    {
+      "id": "memory-lineage"
+    },
+    {
+      "id": "incubation-dream"
+    },
+    {
+      "id": "adversarial-strategy"
+    },
+    {
+      "id": "rhythm-harmony"
+    }
+  ],
+  "jurisdictions": {
+    "RU": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-da173b0e2751",
+        "age-1e7253ca72cd"
+      ]
+    },
+    "GB": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-281eaea103d4"
+      ]
+    },
+    "US": {
+      "status": "verified",
+      "minimumAge": 21,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-d7ad72588126"
+      ]
+    },
+    "GR": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-915371751b0d",
+        "age-960378c3a749"
+      ]
+    },
+    "DE": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-cbec43675cf6"
+      ]
+    },
+    "FR": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-4e30615a3a64"
+      ]
+    },
+    "ES": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-4e68bb946375"
+      ]
+    },
+    "IT": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-e679a5465a49"
+      ]
+    },
+    "PT": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-d8a0fdfc8215"
+      ]
+    },
+    "PL": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-b4bde4a70348"
+      ]
+    },
+    "RS": {
+      "status": "unverified",
+      "minimumAge": null,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-b6a2ffad4521"
+      ]
+    },
+    "UA": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-1dd0eb5693fc"
+      ]
+    },
+    "CN": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-714d44f00386"
+      ]
+    },
+    "TR": {
+      "status": "verified",
+      "minimumAge": 18,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-2a35f1655555"
+      ]
+    },
+    "JP": {
+      "status": "verified",
+      "minimumAge": 20,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-f411f91cc7df"
+      ]
+    },
+    "KR": {
+      "status": "verified",
+      "minimumAge": 19,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-69fe7f9c6f3e"
+      ]
+    },
+    "TH": {
+      "status": "verified",
+      "minimumAge": 20,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-4d063d86383f"
+      ]
+    },
+    "KW": {
+      "status": "blocked",
+      "minimumAge": null,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-c3e54402705c"
+      ]
+    },
+    "IR": {
+      "status": "blocked",
+      "minimumAge": null,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-5f9c4c78bd92"
+      ]
+    },
+    "SA": {
+      "status": "blocked",
+      "minimumAge": null,
+      "reviewedAt": "2026-11-01",
+      "sourceIds": [
+        "age-129bbffb567e"
+      ]
+    },
+    "CA": {
+      "status": "subdivision-required",
+      "subdivisions": {
+        "CA-AB": {
+          "status": "verified",
+          "minimumAge": 18,
+          "reviewedAt": "2026-11-01",
+          "name": "Alberta",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-BC": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "British Columbia",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-MB": {
+          "status": "verified",
+          "minimumAge": 18,
+          "reviewedAt": "2026-11-01",
+          "name": "Manitoba",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-NB": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "New Brunswick",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-NL": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Newfoundland and Labrador",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-NS": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Nova Scotia",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-NT": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Northwest Territories",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-NU": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Nunavut",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-ON": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Ontario",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-PE": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Prince Edward Island",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-QC": {
+          "status": "verified",
+          "minimumAge": 18,
+          "reviewedAt": "2026-11-01",
+          "name": "Quebec",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-SK": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Saskatchewan",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        },
+        "CA-YT": {
+          "status": "verified",
+          "minimumAge": 19,
+          "reviewedAt": "2026-11-01",
+          "name": "Yukon",
+          "sourceIds": [
+            "age-f88c0dfda764",
+            "age-0d06c33ffa82"
+          ]
+        }
+      }
+    },
+    "IN": {
+      "status": "subdivision-required",
+      "subdivisions": {
+        "IN-DL": {
+          "status": "verified",
+          "minimumAge": 25,
+          "reviewedAt": "2026-11-01",
+          "name": "Delhi",
+          "sourceIds": [
+            "age-e0ee9f0a977e",
+            "age-31118902be6c"
+          ]
+        },
+        "IN-BR": {
+          "status": "blocked",
+          "minimumAge": null,
+          "reviewedAt": "2026-11-01",
+          "name": "Bihar",
+          "sourceIds": [
+            "age-215f1dd957b1"
+          ]
+        }
+      }
+    },
+    "ID": {
+      "status": "subdivision-required",
+      "coverage": "Only explicitly listed provinces verified in this review; others deny alcohol.",
+      "subdivisions": {
+        "ID-AC": {
+          "status": "blocked",
+          "minimumAge": null,
+          "reviewedAt": "2026-11-01",
+          "name": "Aceh",
+          "sourceIds": [
+            "age-167bc3029869"
+          ]
+        },
+        "ID-BA": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Bali",
+          "sourceIds": [
+            "age-167bc3029869"
+          ]
+        },
+        "ID-JK": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Jakarta",
+          "sourceIds": [
+            "age-167bc3029869"
+          ]
+        }
+      }
+    },
+    "AE": {
+      "status": "subdivision-required",
+      "subdivisions": {
+        "AE-AZ": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Abu Dhabi",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        },
+        "AE-DU": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Dubai",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        },
+        "AE-AJ": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Ajman",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        },
+        "AE-FU": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Fujairah",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        },
+        "AE-RK": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Ras Al Khaimah",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        },
+        "AE-UQ": {
+          "status": "verified",
+          "minimumAge": 21,
+          "reviewedAt": "2026-11-01",
+          "name": "Umm Al Quwain",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        },
+        "AE-SH": {
+          "status": "blocked",
+          "minimumAge": null,
+          "reviewedAt": "2026-11-01",
+          "name": "Sharjah",
+          "sourceIds": [
+            "age-816c9a6ab247"
+          ]
+        }
+      }
+    }
+  },
+  "sources": {
+    "age-da173b0e2751": {
+      "url": "https://www.04.rospotrebnadzor.ru/index.php/consumer-information/faq/10007-27112018.html",
+      "publisher": "www.04.rospotrebnadzor.ru",
+      "reviewedAt": "2026-11-01",
+      "summary": "Retail sale to minors prohibited; app adult floor18."
+    },
+    "age-1e7253ca72cd": {
+      "url": "https://epp.genproc.gov.ru/ru/proc_72/activity/legal-education/explain/e1326654/",
+      "publisher": "epp.genproc.gov.ru",
+      "reviewedAt": "2026-11-01",
+      "summary": "Prosecutor explanation explicitly refers to the18-year buyer threshold."
+    },
+    "age-281eaea103d4": {
+      "url": "https://www.gov.uk/alcohol-young-people-law",
+      "publisher": "www.gov.uk",
+      "reviewedAt": "2026-11-01",
+      "summary": "Purchase under18 prohibited; accompanied-meal exceptions do not lower app floor."
+    },
+    "age-d7ad72588126": {
+      "url": "https://www.cdc.gov/alcohol/underage-drinking/minimum-legal-drinking-age.html",
+      "publisher": "www.cdc.gov",
+      "reviewedAt": "2026-11-01",
+      "summary": "CDC purchase-age21 summary; app applies21 without family/religious/territorial exceptions."
+    },
+    "age-915371751b0d": {
+      "url": "https://www.moh.gov.gr/articles/ministry/grafeio-typoy/press-releases/13491-pshfisthke-to-nomosxedio-toy-ypoyrgeioy-ygeias-me-titlo-laquo-prostasia-twn-anhlikwn-apo-proionta-kapnoy-kai-alkool-raquo",
+      "publisher": "www.moh.gov.gr",
+      "reviewedAt": "2026-11-01",
+      "summary": "2025 minors-protection law; app adult floor18."
+    },
+    "age-960378c3a749": {
+      "url": "https://penteli.gov.gr/afstiri-systasi-pros-ola-ta-katastimata-gia-tin-apagorefsi-polisis-alkool-se-anilikous/",
+      "publisher": "penteli.gov.gr",
+      "reviewedAt": "2026-11-01",
+      "summary": "Municipal government explicitly states under18 prohibition under Law5216/2025."
+    },
+    "age-cbec43675cf6": {
+      "url": "https://www.gesetze-im-internet.de/juschg/__9.html",
+      "publisher": "www.gesetze-im-internet.de",
+      "reviewedAt": "2026-11-01",
+      "summary": "Wine/beer16 and spirits18; app applies conservative18 to all alcohol content."
+    },
+    "age-4e30615a3a64": {
+      "url": "https://www.drogues.gouv.fr/lessentiel-sur-les-jeunes-et-lalcool",
+      "publisher": "www.drogues.gouv.fr",
+      "reviewedAt": "2026-11-01",
+      "summary": "Government public-health summary: no sale or public offering to under18."
+    },
+    "age-4e68bb946375": {
+      "url": "https://www.sanidad.gob.es/areas/promocionPrevencion/alcohol/documentosTecnicos/stopAlcoholmenores/docs/iniciativaVentayDispensacionAlcoholMenoresEdad.pdf",
+      "publisher": "www.sanidad.gob.es",
+      "reviewedAt": "2026-11-01",
+      "summary": "Health Ministry: all autonomous communities/cities prohibit sale/supply to under18."
+    },
+    "age-e679a5465a49": {
+      "url": "https://www.salute.gov.it/new/it/tema/alcol/giovani-e-alcol/",
+      "publisher": "www.salute.gov.it",
+      "reviewedAt": "2026-11-01",
+      "summary": "Health Ministry: Law189/2012 prohibits sale/service to under18."
+    },
+    "age-d8a0fdfc8215": {
+      "url": "https://www.gov.pt/guias/fiscalizacao-de-atividades-economicas",
+      "publisher": "www.gov.pt",
+      "reviewedAt": "2026-11-01",
+      "summary": "2013 regime amended2015 prohibits availability/sale to minors under18."
+    },
+    "age-b4bde4a70348": {
+      "url": "https://api.sejm.gov.pl/eli/acts/DU/2023/2151/text.html",
+      "publisher": "api.sejm.gov.pl",
+      "reviewedAt": "2026-11-01",
+      "summary": "Article15 prohibits sale/service to under18."
+    },
+    "age-b6a2ffad4521": {
+      "url": "https://pravno-informacioni-sistem.rs/eli/rep/sgrs/skupstina/zakon/2026/35/1/reg",
+      "publisher": "pravno-informacioni-sistem.rs",
+      "reviewedAt": "2026-11-01",
+      "summary": "2026 law listed by government, but current article text is JavaScript-only in this review; archived2014 text is insufficient for verification."
+    },
+    "age-1dd0eb5693fc": {
+      "url": "https://ck.tax.gov.ua/media-ark/news-ark/1033665.html",
+      "publisher": "ck.tax.gov.ua",
+      "reviewedAt": "2026-11-01",
+      "summary": "Tax authority explains Law3817 restrictions: no sale to under18."
+    },
+    "age-714d44f00386": {
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/bgt/art/2023/art_54358c05e57642ab895176413f7cd4d7.html",
+      "publisher": "www.samr.gov.cn",
+      "reviewedAt": "2026-11-01",
+      "summary": "Mainland minors-protection law articles2/59: under18 minors; no alcohol sales. Hong Kong/Macao/Taiwan not claimed."
+    },
+    "age-2a35f1655555": {
+      "url": "https://resmigazete.gov.tr/eskiler/2013/06/20130611-1.htm",
+      "publisher": "resmigazete.gov.tr",
+      "reviewedAt": "2026-11-01",
+      "summary": "Law6487 amends4250: no sale/presentation to people under18."
+    },
+    "age-f411f91cc7df": {
+      "url": "https://www.nta.go.jp/taxes/sake/hyoji/kijun/gaiyo/04.htm",
+      "publisher": "www.nta.go.jp",
+      "reviewedAt": "2026-11-01",
+      "summary": "National Tax Agency: sale must be refused unless age20+ confirmed; majority18 does not change alcohol20."
+    },
+    "age-69fe7f9c6f3e": {
+      "url": "https://www.law.go.kr/LSW/cgmExpcInfoP.do?cgmExpcDatSeq=386062&ofiClsCd=350118",
+      "publisher": "www.law.go.kr",
+      "reviewedAt": "2026-11-01",
+      "summary": "Youth Act exempts January1 in the year turning19; app conservatively requires completed19 without DOB."
+    },
+    "age-4d063d86383f": {
+      "url": "https://qa.thailand.go.th/useful-information-detail/alcohol-sales-and-consumption-rules-updated-in-thailand",
+      "publisher": "qa.thailand.go.th",
+      "reviewedAt": "2026-11-01",
+      "summary": "Government travel portal states purchase/drinking age20."
+    },
+    "age-c3e54402705c": {
+      "url": "https://www.gov.uk/foreign-travel-advice/kuwait/safety-and-security",
+      "publisher": "www.gov.uk",
+      "reviewedAt": "2026-11-01",
+      "summary": "Government travel advice: alcohol illegal. App blocks alcohol content."
+    },
+    "age-5f9c4c78bd92": {
+      "url": "https://www.gov.uk/foreign-travel-advice/iran/safety-and-security",
+      "publisher": "www.gov.uk",
+      "reviewedAt": "2026-11-01",
+      "summary": "Government travel advice: import/sale/manufacture/drinking prohibited. App does not implement exceptions."
+    },
+    "age-129bbffb567e": {
+      "url": "https://www.gov.uk/foreign-travel-advice/saudi-arabia/safety-and-security",
+      "publisher": "www.gov.uk",
+      "reviewedAt": "2026-11-01",
+      "summary": "Government travel advice restricts alcohol; app blocks, without implementing narrow licensed/diplomatic exceptions."
+    },
+    "age-f88c0dfda764": {
+      "url": "https://www.cbsa-asfc.gc.ca/travel-voyage/pdt-pdt-eng.html",
+      "publisher": "www.cbsa-asfc.gc.ca",
+      "reviewedAt": "2026-11-01",
+      "summary": "CBSA province/territory age summary. App uses the declared province/territory."
+    },
+    "age-0d06c33ffa82": {
+      "url": "https://www150.statcan.gc.ca/n1/daily-quotidien/260305/dq260305b-eng.htm",
+      "publisher": "www150.statcan.gc.ca",
+      "reviewedAt": "2026-11-01",
+      "summary": "Statistics Canada2026: legal drinking age19 except Alberta/Manitoba/Quebec18."
+    },
+    "age-e0ee9f0a977e": {
+      "url": "https://excise.delhi.gov.in/excise/licences",
+      "publisher": "excise.delhi.gov.in",
+      "reviewedAt": "2026-11-01",
+      "summary": "Delhi Excise licence conditions: service to25+; app conservatively uses25 for all alcohol content."
+    },
+    "age-31118902be6c": {
+      "url": "https://excise.delhi.gov.in/sites/default/files/generic_multiple_files/delhi_excise_rules_2010_0.pdf",
+      "publisher": "excise.delhi.gov.in",
+      "reviewedAt": "2026-11-01",
+      "summary": "Delhi Excise Rules: retail possession limits apply to individuals not below25."
+    },
+    "age-215f1dd957b1": {
+      "url": "https://state.bihar.gov.in/excise/CitizenHome.html",
+      "publisher": "state.bihar.gov.in",
+      "reviewedAt": "2026-11-01",
+      "summary": "State Excise: complete prohibition declared2016; app implements no permits/exceptions."
+    },
+    "age-167bc3029869": {
+      "url": "https://www.smartraveller.gov.au/destinations/asia/indonesia",
+      "publisher": "www.smartraveller.gov.au",
+      "reviewedAt": "2026-11-01",
+      "summary": "Australian government travel advice: alcohol illegal in Aceh; app blocks. Government travel advice:21 outside Aceh; Bali explicitly declared. Government travel advice:21 outside Aceh; Jakarta explicitly declared."
+    },
+    "age-816c9a6ab247": {
+      "url": "https://www.gov.uk/foreign-travel-advice/united-arab-emirates/safety-and-security",
+      "publisher": "www.gov.uk",
+      "reviewedAt": "2026-11-01",
+      "summary": "Government travel advice:21 except Sharjah alcohol prohibition; app implements no personal exceptions."
+    }
+  }
+}

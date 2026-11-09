@@ -1,0 +1,181 @@
+{
+  "trackerSchemaVersion": 16,
+  "userProgress": {
+    "lifetimeXp": 0,
+    "laurelsBalance": 0,
+    "currentRankId": null,
+    "hiddenHeroicPathRevealedAt": null,
+    "currentStreak": 0,
+    "longestStreak": 0,
+    "lastQualifiedDate": null,
+    "streakGoalMode": "rhythm",
+    "streakFreezeCount": 0,
+    "rhythmScore": 0,
+    "updatedAt": ""
+  },
+  "habits": [
+    {
+      "id": "web-lifecycle-habit",
+      "createdAt": "2026-10-17T23:22:58.744Z",
+      "updatedAt": "2026-10-17T23:22:58.744Z",
+      "version": 1,
+      "syncState": "local",
+      "title": "Совместимость lifecycle",
+      "description": "",
+      "createdDate": "2026-10-10",
+      "emoji": "✨",
+      "priority": 5,
+      "isKeyHabit": false,
+      "ritualId": "none",
+      "ritualName": "",
+      "color": "#bb8f4a",
+      "active": false,
+      "sourceTemplateId": null,
+      "sacredPracticeId": null,
+      "sacredSectorId": null,
+      "preferredTime": "",
+      "schedule": {
+        "startDate": "2026-10-10",
+        "endDate": null,
+        "timezone": "UTC",
+        "recurrence": {
+          "enabled": true,
+          "mode": "classic",
+          "pattern": "daily",
+          "days": [
+            6
+          ],
+          "interval": 1,
+          "rangeStart": "2026-10-10",
+          "rangeEnd": "",
+          "months": [],
+          "pyatas": [],
+          "calendarContext": {
+            "version": 2,
+            "timeZone": "Europe/Moscow",
+            "gregorianYearStart": "january"
+          },
+          "invalidDayPolicy": "skip"
+        }
+      },
+      "scoringMode": "binary",
+      "qualityScale": "none",
+      "reminder": {
+        "enabled": false,
+        "time": "09:00",
+        "timing": "habit",
+        "syncToGoogleTasks": false,
+        "showInGoogleCalendar": false,
+        "googleTaskId": null,
+        "googleEventId": null
+      },
+      "lifecycleHistory": [
+        {
+          "id": "web-event-0",
+          "habitId": "web-lifecycle-habit",
+          "at": "2026-10-11T12:00:00.000Z",
+          "date": "2026-10-11",
+          "action": "pause",
+          "status": "paused",
+          "replaces": [],
+          "baselineActive": true
+        },
+        {
+          "id": "web-event-1",
+          "habitId": "web-lifecycle-habit",
+          "at": "2026-10-12T12:00:00.000Z",
+          "date": "2026-10-12",
+          "action": "resume",
+          "status": "active",
+          "replaces": [
+            "web-event-0"
+          ],
+          "baselineActive": true
+        },
+        {
+          "id": "web-event-2",
+          "habitId": "web-lifecycle-habit",
+          "at": "2026-10-13T12:00:00.000Z",
+          "date": "2026-10-13",
+          "action": "archive",
+          "status": "archived",
+          "replaces": [
+            "web-event-1"
+          ],
+          "baselineActive": true
+        },
+        {
+          "id": "web-event-3",
+          "habitId": "web-lifecycle-habit",
+          "at": "2026-10-14T12:00:00.000Z",
+          "date": "2026-10-14",
+          "action": "restore",
+          "status": "paused",
+          "replaces": [
+            "web-event-2"
+          ],
+          "baselineActive": true
+        }
+      ]
+    }
+  ],
+  "habitCompletions": [],
+  "habitMeasurements": [],
+  "habitTimers": [],
+  "habitHistory": [],
+  "habitTimerEpoch": "",
+  "sleepPlans": [],
+  "sleepEntries": [],
+  "moodEntries": [],
+  "addictionTrackers": [],
+  "addictionEntries": [],
+  "analyticsSnapshots": [],
+  "dailyGoalRecords": [],
+  "quests": [],
+  "achievementUnlocks": [],
+  "rewardTransactions": [],
+  "streakFreezeTransactions": [],
+  "habitSettings": {
+    "enabled": true,
+    "reportRange": "month",
+    "customRangeStart": "",
+    "customRangeEnd": "",
+    "collapsedSections": [],
+    "sectionOrder": [
+      "streak-resilience",
+      "daily-trackers",
+      "quests",
+      "streak-rewards",
+      "adaptive-suggestions",
+      "regular-habits",
+      "starter-habits",
+      "sleep-abstinence",
+      "achievements",
+      "statistics",
+      "sacred-habits"
+    ],
+    "dailyGoalModeChanges": [],
+    "plannedRestDays": [],
+    "notifications": {
+      "enabled": false,
+      "motivational": true,
+      "tone": "calm",
+      "dailyGoalTime": "20:30",
+      "quietHoursStart": "22:00",
+      "quietHoursEnd": "07:30"
+    },
+    "feedback": {
+      "animations": true,
+      "sound": false,
+      "haptics": false,
+      "achievementPopups": true,
+      "questsEnabled": true,
+      "gamificationWidgets": true
+    }
+  },
+  "hiddenDefaultTemplates": [],
+  "projects": [],
+  "categories": [],
+  "taskLists": [],
+  "taskListLinks": []
+}

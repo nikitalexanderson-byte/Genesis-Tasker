@@ -1,0 +1,42 @@
+/* Gregorian months share one surface; regional month art stays a quiet backdrop. */
+html[data-genesis-theme] .genesis-app .calendar-mode-year-month.mode-profane {
+  background: var(--surface); grid-template-rows: auto auto auto 1fr auto;
+}
+html[data-genesis-theme] .genesis-app .calendar-mode-year-month.mode-profane .year-month-footer { align-self: end; }
+html[data-genesis-theme] .genesis-app .calendar-mode-year-month.mode-profane::before {
+  background-image: var(--month-art); background-position: center; opacity: .24;
+  -webkit-mask-image: none; mask-image: none; pointer-events: none; transform: none;
+}
+html[data-genesis-theme$="-dark"] .genesis-app .calendar-mode-year-month.mode-profane { background: #0e1013; }
+html[data-genesis-theme$="-dark"] .genesis-app .calendar-mode-year-month.mode-profane::before {
+  background-image: linear-gradient(rgb(6 8 10 / .84), rgb(6 8 10 / .84)), var(--month-art); opacity: 1;
+}
+html[data-genesis-theme$="-dark"] .genesis-app .year-month.calendar-mode-year-month.mode-profane {
+  --year-day-base: #2b3832;
+  --year-day-mask-strength: 22%;
+  --year-day-hover-strength: 30%;
+}
+html[data-genesis-theme$="-dark"] .genesis-app .year-month.calendar-mode-year-month.mode-profane .mini-day[data-weekday="1"] {
+  --year-day-mask-strength: 27%;
+  --year-day-hover-strength: 27%;
+}
+html[data-genesis-theme] .genesis-app .calendar-mode-year-month.mode-profane::after { background: none; }
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header { background-image: none; }
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header::before { display: none; }
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header > .gregorian-season-art {
+  position: absolute; z-index: 0; inset: 0; width: 100%; pointer-events: none;
+  background: var(--month-art) center / cover no-repeat; opacity: .14;
+}
+html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane .calendar-mode-header > .gregorian-season-art { opacity:.269; }
+/* Text backing belongs to the mobile web layout only. Desktop keeps the open artwork. */
+@media (max-width: 760px) {
+  html[data-genesis-theme="standart"] .genesis-app .calendar-view > .calendar-header > div:not(.month-switcher) {
+    padding:16px; border-radius:var(--ui-surface-radius,10px); background:rgb(255 255 255 / .15);
+  }
+}
+@media (min-width: 1024px) {
+  html[data-genesis-theme] .genesis-app:not([data-sacred-features="false"]) .hero-card {
+    min-height: 0; align-items: flex-start;
+  }
+  html[data-genesis-theme] .genesis-app:not([data-sacred-features="false"]) .hero-card .hero-copy { padding-block: 32px; }
+}

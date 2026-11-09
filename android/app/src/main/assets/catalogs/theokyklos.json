@@ -1,0 +1,1728 @@
+{
+  "schemaVersion": 1,
+  "segments": [
+    {
+      "id": "north",
+      "group": "single",
+      "angle": -90,
+      "symbol": "ΑΘ",
+      "short": {
+        "ru": "С",
+        "en": "N"
+      },
+      "title": {
+        "ru": "Север · Суверенный Разум",
+        "en": "North · Sovereign Mind"
+      },
+      "patrons": {
+        "ru": "Афина",
+        "en": "Athena"
+      },
+      "essence": {
+        "ru": "Суверенный разум и непробиваемая стратегия.",
+        "en": "Sovereign intelligence and impenetrable strategy."
+      },
+      "description": {
+        "ru": "Великая Богиня-Девственница. Вектор чистой, холодной стратегии, безупречного действия и триумфа сознания, не зависящего ни от чьей чужой воли.",
+        "en": "The great virgin goddess. A vector of pure, cool strategy, flawless action, and the triumph of a consciousness that depends on no external will."
+      },
+      "words": [
+        {
+          "greek": "Μῆτις",
+          "pronunciation": {
+            "ru": "Ме-тис",
+            "en": "Me-tis"
+          },
+          "meaning": {
+            "ru": "Разум.",
+            "en": "Intelligence."
+          }
+        },
+        {
+          "greek": "Σοφά",
+          "pronunciation": {
+            "ru": "Со-фа",
+            "en": "So-pha"
+          },
+          "meaning": {
+            "ru": "Мудрая.",
+            "en": "The Wise One."
+          }
+        },
+        {
+          "greek": "Πρόνοια",
+          "pronunciation": {
+            "ru": "Про-ной-а",
+            "en": "Pro-noi-a"
+          },
+          "meaning": {
+            "ru": "Высшее предвидение.",
+            "en": "Higher foresight."
+          }
+        },
+        {
+          "greek": "Κραταιά",
+          "pronunciation": {
+            "ru": "Кра-тай-а",
+            "en": "Kra-tai-a"
+          },
+          "meaning": {
+            "ru": "Несокрушимая мощь.",
+            "en": "Unbreakable might."
+          }
+        }
+      ],
+      "art": "theokyklos-art/north-athena.webp",
+      "symbolArt": "theokyklos-symbols/north-athena.png",
+      "color": "#d9c37a"
+    },
+    {
+      "id": "northeast",
+      "group": "single",
+      "angle": -45,
+      "symbol": "ΑΡ",
+      "short": {
+        "ru": "СВ",
+        "en": "NE"
+      },
+      "title": {
+        "ru": "Северо-Восток · Дикая Природа",
+        "en": "Northeast · Wild Nature"
+      },
+      "patrons": {
+        "ru": "Артемида",
+        "en": "Artemis"
+      },
+      "essence": {
+        "ru": "Тотальная независимость и дикая граница пространства.",
+        "en": "Total independence and the wild boundary of space."
+      },
+      "description": {
+        "ru": "Богиня-Девственница. Вектор абсолютной независимости, чистых инстинктов и жёсткой защиты сакральных границ практика от любого внешнего посягательства.",
+        "en": "The virgin goddess. A vector of absolute independence, pure instinct, and fierce protection of the practitioner's sacred boundaries from every intrusion."
+      },
+      "words": [
+        {
+          "greek": "Ἁγνή",
+          "pronunciation": {
+            "ru": "Аг-не",
+            "en": "Hag-ne"
+          },
+          "meaning": {
+            "ru": "Чистая.",
+            "en": "The Pure One."
+          }
+        },
+        {
+          "greek": "Ἄγρια",
+          "pronunciation": {
+            "ru": "А-гри-а",
+            "en": "A-gri-a"
+          },
+          "meaning": {
+            "ru": "Дикая.",
+            "en": "The Wild One."
+          }
+        },
+        {
+          "greek": "Παρθένος",
+          "pronunciation": {
+            "ru": "Пар-те-нос",
+            "en": "Par-the-nos"
+          },
+          "meaning": {
+            "ru": "Неприкосновенная.",
+            "en": "The Untouched One."
+          }
+        },
+        {
+          "greek": "Ἀγροτέρα",
+          "pronunciation": {
+            "ru": "А-гро-те-ра",
+            "en": "A-gro-te-ra"
+          },
+          "meaning": {
+            "ru": "Свирепая охотница.",
+            "en": "The fierce huntress."
+          }
+        }
+      ],
+      "art": "theokyklos-art/northeast-artemis.webp",
+      "symbolArt": "theokyklos-symbols/northeast-artemis.png",
+      "color": "#a8d7cf"
+    },
+    {
+      "id": "east",
+      "group": "paired",
+      "angle": 0,
+      "symbol": "☿",
+      "short": {
+        "ru": "В",
+        "en": "E"
+      },
+      "title": {
+        "ru": "Восток · Рассвет и Интеллект",
+        "en": "East · Dawn and Intellect"
+      },
+      "patrons": {
+        "ru": "Гермес и Пейто",
+        "en": "Hermes and Peitho"
+      },
+      "essence": {
+        "ru": "Рассвет интеллекта и магия абсолютного убеждения.",
+        "en": "The dawn of intellect and the magic of absolute persuasion."
+      },
+      "description": {
+        "ru": "Чистый пронзающий интеллект. Олимпиец Гермес — бог магии и путей, Пейто — богиня убеждения. Вместе они радостно и легко заставляют реальность подчиняться воле практика.",
+        "en": "Pure, piercing intellect. Olympian Hermes is the god of magic and paths; Peitho is the goddess of persuasion. Together they joyfully and effortlessly bring reality into alignment with the practitioner's will."
+      },
+      "words": [
+        {
+          "greek": "Λόγος",
+          "pronunciation": {
+            "ru": "Ло-гос",
+            "en": "Lo-gos"
+          },
+          "meaning": {
+            "ru": "Высший смысл.",
+            "en": "Higher meaning."
+          }
+        },
+        {
+          "greek": "Φωνή",
+          "pronunciation": {
+            "ru": "Фо-не",
+            "en": "Pho-ne"
+          },
+          "meaning": {
+            "ru": "Голос власти.",
+            "en": "Voice of authority."
+          }
+        },
+        {
+          "greek": "Ἔννοια",
+          "pronunciation": {
+            "ru": "Эн-ной-а",
+            "en": "En-noi-a"
+          },
+          "meaning": {
+            "ru": "Чёткий замысел.",
+            "en": "Clear intention."
+          }
+        },
+        {
+          "greek": "Ὁμόνοια",
+          "pronunciation": {
+            "ru": "О-мо-ной-а",
+            "en": "Ho-mo-noi-a"
+          },
+          "meaning": {
+            "ru": "Единомыслие и согласие.",
+            "en": "Unity of mind and accord."
+          }
+        }
+      ],
+      "art": "theokyklos-art/east-hermes-peitho.webp",
+      "symbolArt": "theokyklos-symbols/east-hermes-peitho.png",
+      "color": "#e8c16d"
+    },
+    {
+      "id": "southeast",
+      "group": "paired",
+      "angle": 45,
+      "symbol": "⚒",
+      "short": {
+        "ru": "ЮВ",
+        "en": "SE"
+      },
+      "title": {
+        "ru": "Юго-Восток · Кузня Силы",
+        "en": "Southeast · Forge of Power"
+      },
+      "patrons": {
+        "ru": "Гефест и Аглая",
+        "en": "Hephaestus and Aglaea"
+      },
+      "essence": {
+        "ru": "Алхимия творения и чистое сияние результата.",
+        "en": "The alchemy of creation and the pure radiance of the result."
+      },
+      "description": {
+        "ru": "Самый светлый брак по Гесиоду. Олимпиец Гефест и Харита Сияния Аглая. Вектор, где грубая материя перековывается в божественное великолепие и совершенство.",
+        "en": "The brightest marriage in Hesiod: Olympian Hephaestus and Aglaea, the Charis of Radiance. A vector in which raw matter is reforged into divine splendor and perfection."
+      },
+      "words": [
+        {
+          "greek": "Αἴγλη",
+          "pronunciation": {
+            "ru": "Ай-гле",
+            "en": "Ai-gle"
+          },
+          "meaning": {
+            "ru": "Великолепие.",
+            "en": "Splendor."
+          }
+        },
+        {
+          "greek": "Τέχνη",
+          "pronunciation": {
+            "ru": "Тех-не",
+            "en": "Tech-ne"
+          },
+          "meaning": {
+            "ru": "Мастерство.",
+            "en": "Mastery."
+          }
+        },
+        {
+          "greek": "Πυρφόρος",
+          "pronunciation": {
+            "ru": "Пюр-фо-рос",
+            "en": "Pyr-pho-ros"
+          },
+          "meaning": {
+            "ru": "Огненосный.",
+            "en": "Fire-bearing."
+          }
+        },
+        {
+          "greek": "Φαίδιμος",
+          "pronunciation": {
+            "ru": "Фай-ди-мос",
+            "en": "Phai-di-mos"
+          },
+          "meaning": {
+            "ru": "Блистательный.",
+            "en": "Radiant."
+          }
+        }
+      ],
+      "art": "theokyklos-art/southeast-hephaestus-aglaea.webp",
+      "symbolArt": "theokyklos-symbols/southeast-hephaestus-aglaea.png",
+      "color": "#e09a62"
+    },
+    {
+      "id": "south",
+      "group": "paired",
+      "angle": 90,
+      "symbol": "♂♀",
+      "short": {
+        "ru": "Ю",
+        "en": "S"
+      },
+      "title": {
+        "ru": "Юг · Победоносная Энергия",
+        "en": "South · Victorious Energy"
+      },
+      "patrons": {
+        "ru": "Арес и Афродита",
+        "en": "Ares and Aphrodite"
+      },
+      "essence": {
+        "ru": "Победоносный натиск, питаемый жаждой жизни.",
+        "en": "A victorious surge nourished by the thirst for life."
+      },
+      "description": {
+        "ru": "Идеальный баланс. Арес даёт кинетическую энергию прорыва, Афродита наполняет её любовью к жизни. Итог — абсолютная космическая Гармония.",
+        "en": "Perfect balance. Ares gives the kinetic energy of breakthrough; Aphrodite fills it with love of life. The result is absolute cosmic Harmony."
+      },
+      "words": [
+        {
+          "greek": "Πάθος",
+          "pronunciation": {
+            "ru": "Па-тос",
+            "en": "Pa-thos"
+          },
+          "meaning": {
+            "ru": "Всепоглощающая страсть.",
+            "en": "All-consuming passion."
+          }
+        },
+        {
+          "greek": "Ὁρμή",
+          "pronunciation": {
+            "ru": "Ор-ме",
+            "en": "Hor-me"
+          },
+          "meaning": {
+            "ru": "Стремительный натиск.",
+            "en": "Swift drive."
+          }
+        },
+        {
+          "greek": "Ἁρμονία",
+          "pronunciation": {
+            "ru": "Хар-мо-ни-а",
+            "en": "Har-mo-ni-a"
+          },
+          "meaning": {
+            "ru": "Космическая гармония.",
+            "en": "Cosmic harmony."
+          }
+        },
+        {
+          "greek": "Νικηφόρος",
+          "pronunciation": {
+            "ru": "Ни-ке-фо-рос",
+            "en": "Ni-ke-pho-ros"
+          },
+          "meaning": {
+            "ru": "Победоносный.",
+            "en": "Victory-bearing."
+          }
+        }
+      ],
+      "art": "theokyklos-art/south-ares-aphrodite.webp",
+      "symbolArt": "theokyklos-symbols/south-ares-aphrodite.png",
+      "color": "#d97a68"
+    },
+    {
+      "id": "southwest",
+      "group": "single",
+      "angle": 135,
+      "symbol": "ΔΗ",
+      "short": {
+        "ru": "ЮЗ",
+        "en": "SW"
+      },
+      "title": {
+        "ru": "Юго-Запад · Сила Земли и Труд",
+        "en": "Southwest · Earth and Labor"
+      },
+      "patrons": {
+        "ru": "Деметра",
+        "en": "Demeter"
+      },
+      "essence": {
+        "ru": "Сила земли, колоссальный труд и изобилие.",
+        "en": "The strength of the earth, immense labor, and abundance."
+      },
+      "description": {
+        "ru": "Вектор колоссальной, материнской мощи самой Земли. Упорный, тяжёлый труд, изобилие и защита плодов своих сверхусилий.",
+        "en": "A vector of the immense maternal power of Earth herself: steadfast, demanding labor, abundance, and protection of the fruits of extraordinary effort."
+      },
+      "words": [
+        {
+          "greek": "Καρπός",
+          "pronunciation": {
+            "ru": "Кар-пос",
+            "en": "Kar-pos"
+          },
+          "meaning": {
+            "ru": "Плод усилий.",
+            "en": "Fruit of effort."
+          }
+        },
+        {
+          "greek": "Τροφός",
+          "pronunciation": {
+            "ru": "Тро-фос",
+            "en": "Tro-phos"
+          },
+          "meaning": {
+            "ru": "Питающая опора.",
+            "en": "Nourishing support."
+          }
+        },
+        {
+          "greek": "Δέσποινα",
+          "pronunciation": {
+            "ru": "Дес-пой-на",
+            "en": "Des-poi-na"
+          },
+          "meaning": {
+            "ru": "Владычица.",
+            "en": "The Mistress."
+          }
+        },
+        {
+          "greek": "Εὐκαρπία",
+          "pronunciation": {
+            "ru": "Эв-кар-пи-а",
+            "en": "Eu-kar-pi-a"
+          },
+          "meaning": {
+            "ru": "Богатое плодородие.",
+            "en": "Rich fertility."
+          }
+        }
+      ],
+      "art": "theokyklos-art/southwest-demeter.webp",
+      "symbolArt": "theokyklos-symbols/southwest-demeter.png",
+      "color": "#c9ad65"
+    },
+    {
+      "id": "west",
+      "group": "paired",
+      "angle": 180,
+      "symbol": "♆",
+      "short": {
+        "ru": "З",
+        "en": "W"
+      },
+      "title": {
+        "ru": "Запад · Воды Психики",
+        "en": "West · Waters of the Psyche"
+      },
+      "patrons": {
+        "ru": "Посейдон и Амфитрита",
+        "en": "Poseidon and Amphitrite"
+      },
+      "essence": {
+        "ru": "Управление трансом и глубокими водами подсознания.",
+        "en": "Command of trance and the deep waters of the subconscious."
+      },
+      "description": {
+        "ru": "Светлый миф о любви. Олимпиец Посейдон разрушает преграды приливной волной транса, а его царица Амфитрита позволяет уверенно управлять самыми глубокими водами психики.",
+        "en": "A luminous myth of love. Olympian Poseidon breaks barriers with the tidal wave of trance, while his queen Amphitrite grants confident command of the psyche's deepest waters."
+      },
+      "words": [
+        {
+          "greek": "Βυθός",
+          "pronunciation": {
+            "ru": "Бю-тос",
+            "en": "By-thos"
+          },
+          "meaning": {
+            "ru": "Бездонная глубина.",
+            "en": "Bottomless depth."
+          }
+        },
+        {
+          "greek": "Ροή",
+          "pronunciation": {
+            "ru": "Ро-э",
+            "en": "Ro-e"
+          },
+          "meaning": {
+            "ru": "Непрерывный поток.",
+            "en": "Unbroken flow."
+          }
+        },
+        {
+          "greek": "Γαλήνη",
+          "pronunciation": {
+            "ru": "Га-ле-не",
+            "en": "Ga-le-ne"
+          },
+          "meaning": {
+            "ru": "Абсолютный штиль.",
+            "en": "Absolute calm."
+          }
+        },
+        {
+          "greek": "Ἀσφάλειος",
+          "pronunciation": {
+            "ru": "Ас-фа-лей-ос",
+            "en": "As-pha-lei-os"
+          },
+          "meaning": {
+            "ru": "Дарующий непоколебимость.",
+            "en": "Giver of steadfastness."
+          }
+        }
+      ],
+      "art": "theokyklos-art/west-poseidon-amphitrite.webp",
+      "symbolArt": "theokyklos-symbols/west-poseidon-amphitrite.png",
+      "color": "#73b9c1"
+    },
+    {
+      "id": "northwest",
+      "group": "single",
+      "angle": 225,
+      "symbol": "☉",
+      "short": {
+        "ru": "СЗ",
+        "en": "NW"
+      },
+      "title": {
+        "ru": "Северо-Запад · Свет и Прозрение",
+        "en": "Northwest · Light and Insight"
+      },
+      "patrons": {
+        "ru": "Аполлон",
+        "en": "Apollo"
+      },
+      "essence": {
+        "ru": "Ясный свет прозрения и беспощадная логика.",
+        "en": "The clear light of insight and relentless logic."
+      },
+      "description": {
+        "ru": "Одиночный вектор солнечной логики, пророческого видения и высшего искусства. Свет, который безжалостно выжигает любую тьму невежества.",
+        "en": "A solitary vector of solar logic, prophetic vision, and the highest art: light that relentlessly burns away every darkness of ignorance."
+      },
+      "words": [
+        {
+          "greek": "Φάος",
+          "pronunciation": {
+            "ru": "Фа-ос",
+            "en": "Pha-os"
+          },
+          "meaning": {
+            "ru": "Свет истины.",
+            "en": "Light of truth."
+          }
+        },
+        {
+          "greek": "Μάντις",
+          "pronunciation": {
+            "ru": "Ман-тис",
+            "en": "Man-tis"
+          },
+          "meaning": {
+            "ru": "Провидец.",
+            "en": "Seer."
+          }
+        },
+        {
+          "greek": "Λύκειος",
+          "pronunciation": {
+            "ru": "Лю-кей-ос",
+            "en": "Ly-kei-os"
+          },
+          "meaning": {
+            "ru": "Светозарный.",
+            "en": "The Radiant One."
+          }
+        },
+        {
+          "greek": "Καθάρσιος",
+          "pronunciation": {
+            "ru": "Ка-тар-си-ос",
+            "en": "Ka-thar-si-os"
+          },
+          "meaning": {
+            "ru": "Очиститель пространства.",
+            "en": "Purifier of space."
+          }
+        }
+      ],
+      "art": "theokyklos-art/northwest-apollo.webp",
+      "symbolArt": "theokyklos-symbols/northwest-apollo.png",
+      "color": "#f0c55f"
+    },
+    {
+      "id": "zenith",
+      "group": "axis",
+      "symbol": "♃",
+      "short": {
+        "ru": "ЗЕНИТ",
+        "en": "ZENITH"
+      },
+      "title": {
+        "ru": "Зенит · Вертикаль Власти",
+        "en": "Zenith · Axis of Authority"
+      },
+      "patrons": {
+        "ru": "Зевс и Гера",
+        "en": "Zeus and Hera"
+      },
+      "essence": {
+        "ru": "Высший закон и незыблемый порядок.",
+        "en": "Higher law and immutable order."
+      },
+      "description": {
+        "ru": "Позитивная манифестация Высшего космического закона, абсолютного порядка и незыблемого триумфа духа.",
+        "en": "The positive manifestation of the highest cosmic law, absolute order, and the immutable triumph of spirit."
+      },
+      "words": [
+        {
+          "greek": "Κράτος",
+          "pronunciation": {
+            "ru": "Кра-тос",
+            "en": "Kra-tos"
+          },
+          "meaning": {
+            "ru": "Неоспоримая власть.",
+            "en": "Unquestioned authority."
+          }
+        },
+        {
+          "greek": "Τάξις",
+          "pronunciation": {
+            "ru": "Так-сис",
+            "en": "Tak-sis"
+          },
+          "meaning": {
+            "ru": "Божественный строй.",
+            "en": "Divine order."
+          }
+        },
+        {
+          "greek": "Ὕψιστος",
+          "pronunciation": {
+            "ru": "Хюп-сис-тос",
+            "en": "Hyp-sis-tos"
+          },
+          "meaning": {
+            "ru": "Высочайший.",
+            "en": "The Highest."
+          }
+        },
+        {
+          "greek": "Βασιλεία",
+          "pronunciation": {
+            "ru": "Ба-си-лей-а",
+            "en": "Ba-si-lei-a"
+          },
+          "meaning": {
+            "ru": "Абсолютное царствование.",
+            "en": "Absolute sovereignty."
+          }
+        }
+      ],
+      "art": "theokyklos-art/zenith-zeus-hera.webp",
+      "symbolArt": "theokyklos-symbols/zenith-zeus-hera.png",
+      "color": "#f2d57f"
+    },
+    {
+      "id": "nadir",
+      "group": "axis",
+      "symbol": "Π",
+      "short": {
+        "ru": "НАДИР",
+        "en": "NADIR"
+      },
+      "title": {
+        "ru": "Надир · Глубины",
+        "en": "Nadir · The Depths"
+      },
+      "patrons": {
+        "ru": "Аид и Персефона",
+        "en": "Hades and Persephone"
+      },
+      "essence": {
+        "ru": "Хтоническая мудрость и скрытый потенциал.",
+        "en": "Chthonic wisdom and hidden potential."
+      },
+      "description": {
+        "ru": "Скрытая мудрость подсознания. Гармоничные Владыки. Трансформация, где бережное отмирание старого даёт силу прорастать новым семенам.",
+        "en": "The hidden wisdom of the subconscious. Harmonious sovereigns. A transformation in which the gentle passing of the old gives new seeds the strength to grow."
+      },
+      "words": [
+        {
+          "greek": "Πλοῦτος",
+          "pronunciation": {
+            "ru": "Плу-тос",
+            "en": "Plou-tos"
+          },
+          "meaning": {
+            "ru": "Богатство глубин.",
+            "en": "Wealth of the depths."
+          }
+        },
+        {
+          "greek": "Βάθος",
+          "pronunciation": {
+            "ru": "Ба-тос",
+            "en": "Ba-thos"
+          },
+          "meaning": {
+            "ru": "Абсолютная бездна.",
+            "en": "Absolute abyss."
+          }
+        },
+        {
+          "greek": "Χθόνιος",
+          "pronunciation": {
+            "ru": "Хто-ни-ос",
+            "en": "Chtho-ni-os"
+          },
+          "meaning": {
+            "ru": "Глубинный подземный.",
+            "en": "Deep and subterranean."
+          }
+        },
+        {
+          "greek": "Ἀθέατος",
+          "pronunciation": {
+            "ru": "А-те-а-тос",
+            "en": "A-the-a-tos"
+          },
+          "meaning": {
+            "ru": "Невидимый глазу.",
+            "en": "Invisible to the eye."
+          }
+        }
+      ],
+      "art": "theokyklos-art/nadir-hades-persephone.webp",
+      "symbolArt": "theokyklos-symbols/nadir-hades-persephone.png",
+      "color": "#9a8dc2"
+    },
+    {
+      "id": "hearth",
+      "group": "core",
+      "symbol": "Ἑ",
+      "short": {
+        "ru": "ОЧАГ",
+        "en": "HEARTH"
+      },
+      "title": {
+        "ru": "Внутреннее Кольцо · Очаг",
+        "en": "Inner Ring · Hearth"
+      },
+      "patrons": {
+        "ru": "Гестия",
+        "en": "Hestia"
+      },
+      "essence": {
+        "ru": "Сакральный покой и несокрушимость.",
+        "en": "Sacred stillness and inviolability."
+      },
+      "description": {
+        "ru": "Старейшая Богиня-Девственница не занимает отдельный луч: она обволакивает сам Центр. Гестия хранит сакральный огонь Теокиклоса, гарантируя незыблемый покой пространства перед слиянием с Осью Абсолюта.",
+        "en": "The eldest virgin goddess occupies no separate ray; she surrounds the Center itself. Hestia guards the sacred fire of the Theokyklos, ensuring the inviolate stillness of the space before union with the Axis of the Absolute."
+      },
+      "words": [
+        {
+          "greek": "Ἕδρα",
+          "pronunciation": {
+            "ru": "Э-дра",
+            "en": "He-dra"
+          },
+          "meaning": {
+            "ru": "Твёрдое основание.",
+            "en": "Firm foundation."
+          }
+        },
+        {
+          "greek": "Κέντρον",
+          "pronunciation": {
+            "ru": "Кен-трон",
+            "en": "Ken-tron"
+          },
+          "meaning": {
+            "ru": "Центр оси.",
+            "en": "Center of the axis."
+          }
+        },
+        {
+          "greek": "Αἰώνια",
+          "pronunciation": {
+            "ru": "Ай-о-ни-а",
+            "en": "Ai-o-ni-a"
+          },
+          "meaning": {
+            "ru": "Вечная, непрерывная.",
+            "en": "Eternal and unbroken."
+          }
+        },
+        {
+          "greek": "Πρυτανεῖον",
+          "pronunciation": {
+            "ru": "Прю-та-ней-он",
+            "en": "Pry-ta-nei-on"
+          },
+          "meaning": {
+            "ru": "Священный первоочаг.",
+            "en": "The sacred primal hearth."
+          }
+        }
+      ],
+      "art": "theokyklos-art/hearth-hestia.webp",
+      "symbolArt": "theokyklos-symbols/hearth-hestia.png",
+      "color": "#ec9464"
+    },
+    {
+      "id": "center",
+      "group": "core",
+      "symbol": "ΔΑ",
+      "short": {
+        "ru": "ЦЕНТР",
+        "en": "CENTER"
+      },
+      "title": {
+        "ru": "Точка Абсолюта",
+        "en": "Point of the Absolute"
+      },
+      "patrons": {
+        "ru": "Дионис и Ариадна",
+        "en": "Dionysus and Ariadne"
+      },
+      "essence": {
+        "ru": "Экстатическое растворение и обретение истинной воли.",
+        "en": "Ecstatic dissolution and the discovery of true will."
+      },
+      "description": {
+        "ru": "Их миф — это триумф над смертью. Дионис спасает Ариадну и дарует ей бессмертие. Он — центрирующий владыка, разрушающий иллюзии ума. Она — Хозяйка Лабиринта, указывающая путь истинной воли. Ядро и точка абсолютной сборки.",
+        "en": "Their myth is a triumph over death. Dionysus rescues Ariadne and grants her immortality. He is the centering lord who shatters the illusions of the mind. She is the Mistress of the Labyrinth who reveals the path of true will. Together they are the core and point of absolute integration."
+      },
+      "words": [
+        {
+          "greek": "Λύσις",
+          "pronunciation": {
+            "ru": "Лю-сис",
+            "en": "Ly-sis"
+          },
+          "meaning": {
+            "ru": "Освобождение от оков.",
+            "en": "Release from bonds."
+          }
+        },
+        {
+          "greek": "Μίξις",
+          "pronunciation": {
+            "ru": "Мик-сис",
+            "en": "Mix-is"
+          },
+          "meaning": {
+            "ru": "Тотальное слияние.",
+            "en": "Total union."
+          }
+        },
+        {
+          "greek": "Ἔκστασις",
+          "pronunciation": {
+            "ru": "Эк-ста-сис",
+            "en": "Ek-sta-sis"
+          },
+          "meaning": {
+            "ru": "Выход за пределы ума.",
+            "en": "Passage beyond the mind."
+          }
+        },
+        {
+          "greek": "Μυστήριον",
+          "pronunciation": {
+            "ru": "Мюс-те-ри-он",
+            "en": "Mys-te-ri-on"
+          },
+          "meaning": {
+            "ru": "Сакральная тайна.",
+            "en": "Sacred mystery."
+          }
+        }
+      ],
+      "art": "theokyklos-art/center-dionysus-ariadne.webp",
+      "symbolArt": "theokyklos-symbols/center-dionysus-ariadne.png",
+      "color": "#d6b36a"
+    },
+    {
+      "id": "entrance",
+      "group": "threshold",
+      "symbol": "ΑΙΘ",
+      "short": {
+        "ru": "ВХОД",
+        "en": "ENTRY"
+      },
+      "title": {
+        "ru": "Вход · Врата Света",
+        "en": "Entry · Gate of Light"
+      },
+      "patrons": {
+        "ru": "Эфир и Гемера",
+        "en": "Aether and Hemera"
+      },
+      "essence": {
+        "ru": "Кристаллизация пространства перед работой.",
+        "en": "Crystallization of the space before the work begins."
+      },
+      "description": {
+        "ru": "Бог горнего света и богиня ясного дня. Они сканируют входящего, выжигают весь профанный шум высшим светом и даруют ясный допуск в сакральное пространство.",
+        "en": "The god of the upper light and the goddess of bright day. They examine the entrant, burn away profane noise with the highest light, and grant clear passage into sacred space."
+      },
+      "words": [
+        {
+          "greek": "Αὐγή",
+          "pronunciation": {
+            "ru": "Ав-ге",
+            "en": "Au-ge"
+          },
+          "meaning": {
+            "ru": "Рассветный луч.",
+            "en": "Ray of dawn."
+          }
+        },
+        {
+          "greek": "Αἰθήρ",
+          "pronunciation": {
+            "ru": "Э-тир",
+            "en": "Ai-ther"
+          },
+          "meaning": {
+            "ru": "Высший свет.",
+            "en": "The highest light."
+          }
+        },
+        {
+          "greek": "Φωσφόρος",
+          "pronunciation": {
+            "ru": "Фос-фо-рос",
+            "en": "Phos-pho-ros"
+          },
+          "meaning": {
+            "ru": "Светоносный огонь.",
+            "en": "Light-bearing fire."
+          }
+        },
+        {
+          "greek": "Κάθαρσις",
+          "pronunciation": {
+            "ru": "Ка-тар-сис",
+            "en": "Ka-thar-sis"
+          },
+          "meaning": {
+            "ru": "Тотальное очищение.",
+            "en": "Total purification."
+          }
+        }
+      ],
+      "art": "theokyklos-art/entrance-aether-hemera.webp",
+      "symbolArt": "theokyklos-symbols/entrance-aether-hemera.png",
+      "color": "#87c8ae"
+    },
+    {
+      "id": "exit",
+      "group": "threshold",
+      "symbol": "ΕΡΩ",
+      "short": {
+        "ru": "ВЫХОД",
+        "en": "EXIT"
+      },
+      "title": {
+        "ru": "Выход · Печать Души",
+        "en": "Exit · Seal of the Soul"
+      },
+      "patrons": {
+        "ru": "Эрос и Психея",
+        "en": "Eros and Psyche"
+      },
+      "essence": {
+        "ru": "Интеграция опыта в вечную суть.",
+        "en": "Integration of experience into the eternal essence."
+      },
+      "description": {
+        "ru": "Бог любви и Богиня души. Их миф — абсолютный позитив и победа над любыми испытаниями. При выходе они бережно запечатывают полученный опыт, делая его частью бессмертной души, и возвращают практика в мир полностью обновлённым.",
+        "en": "The god of love and the goddess of the soul. Their myth is wholly affirmative: a victory over every trial. At the exit they gently seal the experience, make it part of the immortal soul, and return the practitioner to the world completely renewed."
+      },
+      "words": [
+        {
+          "greek": "Σφραγίς",
+          "pronunciation": {
+            "ru": "Сфра-гис",
+            "en": "Sphra-gis"
+          },
+          "meaning": {
+            "ru": "Несокрушимая печать.",
+            "en": "Unbreakable seal."
+          }
+        },
+        {
+          "greek": "Ψυχή",
+          "pronunciation": {
+            "ru": "Псю-хе",
+            "en": "Psy-che"
+          },
+          "meaning": {
+            "ru": "Бессмертная душа.",
+            "en": "Immortal soul."
+          }
+        },
+        {
+          "greek": "Ἀθάνατος",
+          "pronunciation": {
+            "ru": "А-та-на-тос",
+            "en": "A-tha-na-tos"
+          },
+          "meaning": {
+            "ru": "Неуязвимый тлену.",
+            "en": "Impervious to decay."
+          }
+        },
+        {
+          "greek": "Οὐράνιος",
+          "pronunciation": {
+            "ru": "У-ра-ни-ос",
+            "en": "Ou-ra-ni-os"
+          },
+          "meaning": {
+            "ru": "Возвышенный небесный.",
+            "en": "Exalted and celestial."
+          }
+        }
+      ],
+      "art": "theokyklos-art/exit-eros-psyche.webp",
+      "symbolArt": "theokyklos-symbols/exit-eros-psyche.png",
+      "color": "#d2a0c2"
+    }
+  ],
+  "practices": [
+    {
+      "id": "athena-three-intentions",
+      "sectorId": "north",
+      "emoji": "🦉",
+      "title": {
+        "ru": "Три намерения Афины",
+        "en": "Athena's three intentions"
+      },
+      "description": {
+        "ru": "Записать три главных дела и первым выбрать самое важное.",
+        "en": "Write down three essential tasks and begin with the most important."
+      },
+      "myth": {
+        "ru": "Афина рождается из мысли Зевса уже вооружённой: ясный замысел предшествует точному действию.",
+        "en": "Athena is born fully armed from Zeus's thought: clear intention precedes precise action."
+      },
+      "suggestedTime": "08:00",
+      "priority": 8,
+      "color": "#497d9c"
+    },
+    {
+      "id": "athena-evening-counsel",
+      "sectorId": "north",
+      "emoji": "🏛️",
+      "title": {
+        "ru": "Вечерний совет Афины",
+        "en": "Athena's evening counsel"
+      },
+      "description": {
+        "ru": "Вечером коротко записать одно удачное решение и один урок дня.",
+        "en": "At night, briefly record one sound decision and one lesson from the day."
+      },
+      "myth": {
+        "ru": "Как покровительница полиса, Афина превращает опыт в рассудительность и общее благо.",
+        "en": "As guardian of the polis, Athena turns experience into judgment and common good."
+      },
+      "suggestedTime": "21:00",
+      "priority": 6,
+      "color": "#5b89a5"
+    },
+    {
+      "id": "artemis-wild-walk",
+      "sectorId": "northeast",
+      "emoji": "🌿",
+      "title": {
+        "ru": "Тропа Артемиды",
+        "en": "Artemis's path"
+      },
+      "description": {
+        "ru": "Гулять не менее 20 минут без телефона, замечая тело, воздух и живую природу.",
+        "en": "Walk for at least 20 phone-free minutes, noticing body, air, and living nature."
+      },
+      "myth": {
+        "ru": "Артемида хранит дикую природу и свободу движения вне городского шума.",
+        "en": "Artemis protects wild nature and freedom of movement beyond the city's noise."
+      },
+      "suggestedTime": "18:00",
+      "priority": 7,
+      "color": "#487f4b"
+    },
+    {
+      "id": "artemis-boundary",
+      "sectorId": "northeast",
+      "emoji": "🏹",
+      "title": {
+        "ru": "Граница Артемиды",
+        "en": "Artemis's boundary"
+      },
+      "description": {
+        "ru": "Осознанно отказаться от одного лишнего требования или отвлечения.",
+        "en": "Consciously decline one unnecessary demand or distraction."
+      },
+      "myth": {
+        "ru": "Независимая богиня сохраняет неприкосновенным своё пространство и выбранный путь.",
+        "en": "The independent goddess keeps her space and chosen path inviolate."
+      },
+      "suggestedTime": "12:00",
+      "priority": 7,
+      "color": "#5d9360"
+    },
+    {
+      "id": "hermes-clear-message",
+      "sectorId": "east",
+      "emoji": "🪽",
+      "title": {
+        "ru": "Ясное послание Гермеса",
+        "en": "Hermes's clear message"
+      },
+      "description": {
+        "ru": "Отправить одно давно откладываемое короткое и ясное сообщение.",
+        "en": "Send one brief, clear message you have been postponing."
+      },
+      "myth": {
+        "ru": "Гермес свободно пересекает границы миров и доставляет слово точно адресату.",
+        "en": "Hermes crosses the boundaries of worlds and delivers the word to its true recipient."
+      },
+      "suggestedTime": "10:00",
+      "priority": 6,
+      "color": "#b48825"
+    },
+    {
+      "id": "peitho-listening",
+      "sectorId": "east",
+      "emoji": "👂",
+      "title": {
+        "ru": "Слушание Пейто",
+        "en": "Peitho's listening"
+      },
+      "description": {
+        "ru": "В одном разговоре сначала задать вопрос и дослушать ответ без перебивания.",
+        "en": "In one conversation, ask a question first and hear the answer without interrupting."
+      },
+      "myth": {
+        "ru": "Пейто олицетворяет убеждение без принуждения: влияние начинается с внимания к другому.",
+        "en": "Peitho embodies persuasion without force: influence begins with attention to another."
+      },
+      "suggestedTime": "14:00",
+      "priority": 6,
+      "color": "#c39a35"
+    },
+    {
+      "id": "hephaestus-small-repair",
+      "sectorId": "southeast",
+      "emoji": "🔨",
+      "title": {
+        "ru": "Малая починка Гефеста",
+        "en": "Hephaestus's small repair"
+      },
+      "description": {
+        "ru": "Починить, улучшить или довести до порядка одну бытовую вещь.",
+        "en": "Repair, improve, or put one household object in working order."
+      },
+      "myth": {
+        "ru": "Гефест превращает огонь и несовершенство материи в полезную форму.",
+        "en": "Hephaestus turns fire and imperfect matter into useful form."
+      },
+      "suggestedTime": "19:00",
+      "priority": 7,
+      "color": "#bd6828"
+    },
+    {
+      "id": "aglaea-beautiful-workspace",
+      "sectorId": "southeast",
+      "emoji": "✨",
+      "title": {
+        "ru": "Мастерская Аглаи",
+        "en": "Aglaea's workshop"
+      },
+      "description": {
+        "ru": "Десять минут приводить рабочую поверхность в чистый и красивый вид.",
+        "en": "Spend ten minutes making the work surface clean and beautiful."
+      },
+      "myth": {
+        "ru": "Аглая соединяет сияние Харит с мастерством Гефеста: польза завершается красотой.",
+        "en": "Aglaea joins the radiance of the Charites to Hephaestus's craft: utility is completed by beauty."
+      },
+      "suggestedTime": "17:30",
+      "priority": 5,
+      "color": "#cf7b3d"
+    },
+    {
+      "id": "ares-deliberate-movement",
+      "sectorId": "south",
+      "emoji": "🛡️",
+      "title": {
+        "ru": "Движение Ареса",
+        "en": "Ares's movement"
+      },
+      "description": {
+        "ru": "Не менее 20 минут двигаться с усилием: тренировка, быстрая ходьба или растяжка.",
+        "en": "Move with effort for at least 20 minutes: training, brisk walking, or mobility work."
+      },
+      "myth": {
+        "ru": "Сила Ареса становится добродетелью, когда получает меру, направление и дисциплину.",
+        "en": "Ares's force becomes a virtue when it receives measure, direction, and discipline."
+      },
+      "suggestedTime": "18:30",
+      "priority": 8,
+      "color": "#a93f39"
+    },
+    {
+      "id": "aphrodite-care",
+      "sectorId": "south",
+      "emoji": "🌹",
+      "title": {
+        "ru": "Забота Афродиты",
+        "en": "Aphrodite's care"
+      },
+      "description": {
+        "ru": "Совершить один внимательный жест ухода за телом, одеждой или близким человеком.",
+        "en": "Make one attentive gesture of care for your body, clothing, or someone close."
+      },
+      "myth": {
+        "ru": "Афродита пробуждает притяжение через внимание к красоте, телесности и связи.",
+        "en": "Aphrodite awakens attraction through attention to beauty, embodiment, and connection."
+      },
+      "suggestedTime": "20:00",
+      "priority": 6,
+      "color": "#bd5a55"
+    },
+    {
+      "id": "demeter-nourishing-meal",
+      "sectorId": "southwest",
+      "emoji": "🌾",
+      "title": {
+        "ru": "Трапеза Деметры",
+        "en": "Demeter's meal"
+      },
+      "description": {
+        "ru": "Приготовить или выбрать одну полноценную трапезу и съесть её без спешки.",
+        "en": "Prepare or choose one nourishing meal and eat it without rushing."
+      },
+      "myth": {
+        "ru": "Дар Деметры — возделанное зерно: ежедневная пища становится продолжением заботы о земле.",
+        "en": "Demeter's gift is cultivated grain: daily food continues the care given to the earth."
+      },
+      "suggestedTime": "13:00",
+      "priority": 8,
+      "color": "#8b6533"
+    },
+    {
+      "id": "demeter-living-care",
+      "sectorId": "southwest",
+      "emoji": "🪴",
+      "title": {
+        "ru": "Живой сад Деметры",
+        "en": "Demeter's living garden"
+      },
+      "description": {
+        "ru": "Полить растение, пополнить запас продуктов или убрать одну зону кухни.",
+        "en": "Water a plant, replenish food stores, or clean one part of the kitchen."
+      },
+      "myth": {
+        "ru": "Цикл Деметры учит поддерживать жизнь малыми повторяющимися действиями.",
+        "en": "Demeter's cycle teaches that life is sustained by small repeated acts."
+      },
+      "suggestedTime": "19:30",
+      "priority": 5,
+      "color": "#9c7843"
+    },
+    {
+      "id": "poseidon-water-pause",
+      "sectorId": "west",
+      "emoji": "🌊",
+      "title": {
+        "ru": "Водная пауза Посейдона",
+        "en": "Poseidon's water pause"
+      },
+      "description": {
+        "ru": "Выпить стакан воды и сделать десять спокойных вдохов перед реакцией на напряжение.",
+        "en": "Drink a glass of water and take ten calm breaths before reacting to tension."
+      },
+      "myth": {
+        "ru": "Посейдон поднимает и усмиряет море: пауза возвращает власть над внутренней волной.",
+        "en": "Poseidon raises and calms the sea: a pause restores command over the inner wave."
+      },
+      "suggestedTime": "15:00",
+      "priority": 7,
+      "color": "#347a96"
+    },
+    {
+      "id": "amphitrite-emotion-log",
+      "sectorId": "west",
+      "emoji": "🐚",
+      "title": {
+        "ru": "Раковина Амфитриты",
+        "en": "Amphitrite's shell"
+      },
+      "description": {
+        "ru": "Пять минут записывать главное чувство дня и потребность, стоящую за ним.",
+        "en": "Spend five minutes recording the day's main feeling and the need beneath it."
+      },
+      "myth": {
+        "ru": "Амфитрита придаёт морской глубине царственный порядок и способность вместить бурю.",
+        "en": "Amphitrite gives sovereign order to the sea's depth and the capacity to contain a storm."
+      },
+      "suggestedTime": "21:30",
+      "priority": 6,
+      "color": "#4c8da5"
+    },
+    {
+      "id": "apollo-morning-light",
+      "sectorId": "northwest",
+      "emoji": "☀️",
+      "title": {
+        "ru": "Свет Аполлона",
+        "en": "Apollo's light"
+      },
+      "description": {
+        "ru": "Провести не менее десяти минут при дневном свете в первой половине дня.",
+        "en": "Spend at least ten minutes in daylight during the first half of the day."
+      },
+      "myth": {
+        "ru": "Аполлон открывает меру и ясность светом, который делает формы различимыми.",
+        "en": "Apollo reveals measure and clarity through light that makes forms distinct."
+      },
+      "suggestedTime": "09:00",
+      "priority": 8,
+      "color": "#aa841d"
+    },
+    {
+      "id": "apollo-harmonic-study",
+      "sectorId": "northwest",
+      "emoji": "🎵",
+      "title": {
+        "ru": "Гармония Аполлона",
+        "en": "Apollo's harmony"
+      },
+      "description": {
+        "ru": "Пятнадцать минут читать, учиться или внимательно слушать музыку без многозадачности.",
+        "en": "Read, study, or listen closely to music for fifteen minutes without multitasking."
+      },
+      "myth": {
+        "ru": "Лира Аполлона согласует разные струны в один строй — так внимание собирает разум.",
+        "en": "Apollo's lyre tunes different strings into one mode, as attention gathers the mind."
+      },
+      "suggestedTime": "11:00",
+      "priority": 6,
+      "color": "#b89737"
+    },
+    {
+      "id": "ariadne-thread-journal",
+      "sectorId": "center",
+      "emoji": "🧵",
+      "title": {
+        "ru": "Нить Ариадны",
+        "en": "Ariadne's thread"
+      },
+      "description": {
+        "ru": "Записать одной строкой, что сегодня возвращает вас к себе и своему пути.",
+        "en": "Write one line about what returns you to yourself and your path today."
+      },
+      "myth": {
+        "ru": "Нить Ариадны выводит из лабиринта: короткая запись удерживает связь с центром.",
+        "en": "Ariadne's thread leads out of the labyrinth: a brief note preserves the link to the center."
+      },
+      "suggestedTime": "21:00",
+      "priority": 7,
+      "color": "#9b393b"
+    },
+    {
+      "id": "dionysus-living-gesture",
+      "sectorId": "center",
+      "emoji": "🍇",
+      "title": {
+        "ru": "Живой жест Диониса",
+        "en": "Dionysus's living gesture"
+      },
+      "description": {
+        "ru": "Десять минут свободно танцевать, петь, рисовать или благодарить за прожитый день.",
+        "en": "Spend ten minutes freely dancing, singing, drawing, or giving thanks for the lived day."
+      },
+      "myth": {
+        "ru": "Дионис возвращает целостность через экстаз — выход из застывшей роли к живому переживанию.",
+        "en": "Dionysus restores wholeness through ecstasy: stepping beyond a fixed role into living experience."
+      },
+      "suggestedTime": "20:30",
+      "priority": 6,
+      "color": "#ad4c50"
+    },
+    {
+      "id": "zeus-sovereign-rule",
+      "sectorId": "zenith",
+      "emoji": "⚡",
+      "title": {
+        "ru": "Закон Зевса",
+        "en": "Zeus's sovereign rule"
+      },
+      "description": {
+        "ru": "Утром выбрать одно главное правило дня и вечером проверить, было ли оно соблюдено.",
+        "en": "Choose one governing rule for the day each morning and review it in the evening."
+      },
+      "myth": {
+        "ru": "Зевс удерживает космический порядок не множеством приказов, а силой ясного и обязательного закона.",
+        "en": "Zeus sustains cosmic order not through countless commands, but through one clear and binding law."
+      },
+      "suggestedTime": "08:30",
+      "priority": 9,
+      "color": "#8b75bd"
+    },
+    {
+      "id": "hera-kept-covenant",
+      "sectorId": "zenith",
+      "emoji": "👑",
+      "title": {
+        "ru": "Союз Геры",
+        "en": "Hera's covenant"
+      },
+      "description": {
+        "ru": "Выполнить одно данное обещание или бережно восстановить один нарушенный договор.",
+        "en": "Keep one promise you have made or carefully repair one neglected agreement."
+      },
+      "myth": {
+        "ru": "Гера охраняет достоинство союза: порядок становится живым, когда слово поддержано поступком.",
+        "en": "Hera guards the dignity of covenant: order becomes living when a promise is upheld by action."
+      },
+      "suggestedTime": "18:00",
+      "priority": 8,
+      "color": "#7566a6"
+    },
+    {
+      "id": "persephone-new-seed",
+      "sectorId": "nadir",
+      "emoji": "🌱",
+      "title": {
+        "ru": "Возвращение Персефоны",
+        "en": "Persephone’s Return"
+      },
+      "previousTitles": [
+        "Семя Персефоны",
+        "Persephone's seed",
+        "Σπόρος του Περσεφόνη",
+        "Persephone-Seed",
+        "graine de Persephone",
+        "semilla de Persephone",
+        "seme di Persephone",
+        "semente do Persephone",
+        "Materiał siewny Persephone",
+        "Персефона",
+        "насіння Персефона",
+        "Persephone的种子",
+        "Persephone'nin tohumu",
+        "Persephone のシード"
+      ],
+      "description": {
+        "ru": "Освободить место от одной отжившей вещи, записи или обязательства и назвать, чему теперь можно прорасти.",
+        "en": "Release one outgrown object, note, or obligation and name what may grow in its place."
+      },
+      "myth": {
+        "ru": "Персефона возвращается из глубины с новым циклом жизни: завершение становится почвой для роста.",
+        "en": "Persephone returns from the depths with a new cycle of life: an ending becomes soil for growth."
+      },
+      "suggestedTime": "19:00",
+      "priority": 7,
+      "color": "#66547f"
+    },
+    {
+      "id": "hades-hidden-treasure",
+      "sectorId": "nadir",
+      "emoji": "🗝️",
+      "title": {
+        "ru": "Сокровище Аида",
+        "en": "Hades's hidden treasure"
+      },
+      "description": {
+        "ru": "Десять минут спокойно разбирать финансы, запасы или скрытую незавершённую задачу.",
+        "en": "Spend ten quiet minutes reviewing finances, reserves, or a hidden unfinished task."
+      },
+      "myth": {
+        "ru": "Имя Плутон напоминает: глубина хранит богатство, которое открывается внимательному и бесстрашному взгляду.",
+        "en": "The name Plouton recalls that the depths hold wealth revealed by an attentive and fearless gaze."
+      },
+      "suggestedTime": "20:00",
+      "priority": 8,
+      "color": "#54456d"
+    },
+    {
+      "id": "hestia-tended-hearth",
+      "sectorId": "hearth",
+      "emoji": "🔥",
+      "title": {
+        "ru": "Огонь Гестии",
+        "en": "Hestia's tended flame"
+      },
+      "description": {
+        "ru": "Привести в порядок одну центральную точку дома: стол, кровать, кухонную поверхность или место отдыха.",
+        "en": "Restore one central place at home: a table, bed, kitchen surface, or resting corner."
+      },
+      "myth": {
+        "ru": "Неподвижный огонь Гестии делает дом священным через малое, постоянное поддержание очага.",
+        "en": "Hestia's unmoving flame makes the home sacred through small, steady acts of tending."
+      },
+      "suggestedTime": "19:30",
+      "priority": 8,
+      "color": "#bf633f"
+    },
+    {
+      "id": "hestia-five-quiet-minutes",
+      "sectorId": "hearth",
+      "emoji": "🕯️",
+      "title": {
+        "ru": "Тишина очага",
+        "en": "Stillness of the hearth"
+      },
+      "description": {
+        "ru": "Провести пять минут без экрана и разговоров, спокойно дыша и возвращая внимание в дом и тело.",
+        "en": "Spend five screen-free, silent minutes breathing calmly and returning attention to home and body."
+      },
+      "myth": {
+        "ru": "Гестия остаётся в центре, пока боги странствуют: её тишина удерживает целостность пространства.",
+        "en": "Hestia remains at the center while the gods wander; her stillness preserves the wholeness of the space."
+      },
+      "suggestedTime": "21:30",
+      "priority": 6,
+      "color": "#a95339"
+    },
+    {
+      "id": "aether-clear-threshold",
+      "sectorId": "entrance",
+      "emoji": "🌬️",
+      "title": {
+        "ru": "Порог Эфира",
+        "en": "Aether's clear threshold"
+      },
+      "description": {
+        "ru": "Перед первой важной работой проветрить пространство, расправить плечи и сделать три осознанных вдоха.",
+        "en": "Before the first important task, air the room, open your posture, and take three deliberate breaths."
+      },
+      "myth": {
+        "ru": "Эфир — чистый верхний воздух: ясный вход отделяет намеренную работу от повседневного шума.",
+        "en": "Aether is the pure upper air: a clear entrance separates intentional work from everyday noise."
+      },
+      "suggestedTime": "08:00",
+      "priority": 7,
+      "color": "#6f9db5"
+    },
+    {
+      "id": "hemera-first-light",
+      "sectorId": "entrance",
+      "emoji": "🌅",
+      "title": {
+        "ru": "Первый свет Гемеры",
+        "en": "Hemera's first light"
+      },
+      "description": {
+        "ru": "Первые десять минут дня провести при естественном свете, не открывая уведомления.",
+        "en": "Spend the first ten minutes of the day in natural light without opening notifications."
+      },
+      "myth": {
+        "ru": "Гемера выводит ясный день из ночи: свет получает первенство прежде, чем чужие голоса займут внимание.",
+        "en": "Hemera brings bright day out of night: light receives priority before other voices claim attention."
+      },
+      "suggestedTime": "07:30",
+      "priority": 8,
+      "color": "#8aacc0"
+    },
+    {
+      "id": "psyche-evening-seal",
+      "sectorId": "exit",
+      "emoji": "🦋",
+      "title": {
+        "ru": "Печать Психеи",
+        "en": "Psyche's evening seal"
+      },
+      "description": {
+        "ru": "В конце дня записать одной строкой главный полученный опыт и закрыть незавершённые вкладки.",
+        "en": "At day's end, record the main lesson in one line and close unfinished browser tabs."
+      },
+      "myth": {
+        "ru": "Психея проходит испытания и сохраняет их смысл в душе: завершённый опыт становится внутренней опорой.",
+        "en": "Psyche passes through trials and preserves their meaning in the soul: completed experience becomes inner support."
+      },
+      "suggestedTime": "22:00",
+      "priority": 7,
+      "color": "#9c668d"
+    },
+    {
+      "id": "eros-grateful-return",
+      "sectorId": "exit",
+      "emoji": "💞",
+      "title": {
+        "ru": "Благодарность Эроса",
+        "en": "Eros's grateful return"
+      },
+      "description": {
+        "ru": "Выразить одному человеку искреннюю благодарность или отметить связь, которая поддержала вас сегодня.",
+        "en": "Offer sincere thanks to one person or acknowledge a bond that supported you today."
+      },
+      "myth": {
+        "ru": "Эрос возвращает Психею к жизни через связь: день завершается не разрывом, а признанием любви и поддержки.",
+        "en": "Eros restores Psyche through connection: the day ends not in severance, but in recognition of love and support."
+      },
+      "suggestedTime": "20:30",
+      "priority": 6,
+      "color": "#ad6b83"
+    }
+  ],
+  "stoicheionGuidance": [
+    {
+      "sectorId": "north",
+      "upright": {
+        "ru": "Сила Афины проявлена: превратите ясную мысль в один выполнимый замысел.",
+        "en": "Athena's power is present: turn clear thought into one executable intention."
+      },
+      "reversed": {
+        "ru": "Мудрость заслонена шумом: остановитесь, отделите факт от страха и выберите один следующий шаг.",
+        "en": "Wisdom is obscured by noise: pause, separate fact from fear, and choose one next step."
+      }
+    },
+    {
+      "sectorId": "northeast",
+      "upright": {
+        "ru": "Артемида поддерживает самостоятельность: сохраните пространство для тела, природы и личных границ.",
+        "en": "Artemis supports self-reliance: protect space for your body, nature, and personal boundaries."
+      },
+      "reversed": {
+        "ru": "Инстинкт потерял направление: вернитесь к телу и восстановите одну нарушенную границу.",
+        "en": "Instinct has lost direction: return to the body and restore one crossed boundary."
+      }
+    },
+    {
+      "sectorId": "east",
+      "upright": {
+        "ru": "Гермес и Пейто открывают путь слову: назовите намерение и передайте его ясно.",
+        "en": "Hermes and Peitho open the way for speech: name your intention and communicate it clearly."
+      },
+      "reversed": {
+        "ru": "Слова рассеивают силу: сократите послание до правды, которую можно подтвердить действием.",
+        "en": "Words are scattering power: reduce the message to a truth you can support with action."
+      }
+    },
+    {
+      "sectorId": "southeast",
+      "upright": {
+        "ru": "Гефест и Аглая благословляют ремесло: улучшите одну вещь точным и красивым движением.",
+        "en": "Hephaestus and Aglaea bless craft: improve one thing through a precise and beautiful action."
+      },
+      "reversed": {
+        "ru": "Огонь мастерской расходуется впустую: очистите рабочее место и завершите малую починку.",
+        "en": "The workshop fire is being wasted: clear the work surface and finish one small repair."
+      }
+    },
+    {
+      "sectorId": "south",
+      "upright": {
+        "ru": "Арес и Афродита соединяют волю и притяжение: направьте энергию в тело и заботливое действие.",
+        "en": "Ares and Aphrodite unite will and attraction: direct energy into the body and a caring act."
+      },
+      "reversed": {
+        "ru": "Напор стал конфликтом или усталостью: верните меру через движение без борьбы и бережный уход.",
+        "en": "Drive has become conflict or fatigue: restore proportion through non-combative movement and gentle care."
+      }
+    },
+    {
+      "sectorId": "southwest",
+      "upright": {
+        "ru": "Деметра напоминает о плодородии повторения: накормите тело или позаботьтесь о живом.",
+        "en": "Demeter recalls the fertility of repetition: nourish the body or tend something living."
+      },
+      "reversed": {
+        "ru": "Почва истощена: сначала восстановите запас еды, воды или домашнего порядка.",
+        "en": "The soil is depleted: first restore food, water, or order in the home."
+      }
+    },
+    {
+      "sectorId": "west",
+      "upright": {
+        "ru": "Посейдон и Амфитрита дают глубину: признайте чувство и позвольте ему пройти, не управляя вами.",
+        "en": "Poseidon and Amphitrite bring depth: acknowledge a feeling and let it pass without steering you."
+      },
+      "reversed": {
+        "ru": "Внутреннее море неспокойно: верните текучесть водой, дыханием и короткой записью чувства.",
+        "en": "The inner sea is unsettled: restore flow with water, breath, and a brief written feeling."
+      }
+    },
+    {
+      "sectorId": "northwest",
+      "upright": {
+        "ru": "Аполлон освещает меру: вынесите главное на свет и настройте день по ясному ритму.",
+        "en": "Apollo illuminates measure: bring what matters into the light and tune the day to a clear rhythm."
+      },
+      "reversed": {
+        "ru": "Ясность превратилась в жёсткость: верните гармонию через свет, музыку или спокойное чтение.",
+        "en": "Clarity has hardened into rigidity: restore harmony through light, music, or quiet reading."
+      }
+    },
+    {
+      "sectorId": "center",
+      "upright": {
+        "ru": "Дионис и Ариадна удерживают живую нить целого: отметьте жизнь творчеством и благодарностью.",
+        "en": "Dionysus and Ariadne hold the living thread of the whole: affirm life through creativity and gratitude."
+      },
+      "reversed": {
+        "ru": "Нить центра потеряна: остановитесь, назовите своё состояние и сделайте одно свободное творческое действие.",
+        "en": "The thread to the center is lost: pause, name your state, and make one free creative gesture."
+      }
+    }
+  ]
+}

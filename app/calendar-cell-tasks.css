@@ -1,0 +1,153 @@
+.calendar-cell-tasks { display:none; }
+@media (min-width:1100px) {
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .calendar-cell-tasks {
+    position:relative; z-index:3; display:grid; align-content:start; gap:4px; width:100%; min-width:0; margin-top:8px; padding-bottom:24px;
+  }
+}
+  .calendar-cell-tasks ul { display:grid; gap:4px; width:100%; min-width:0; padding:0; margin:0; list-style:none; }
+  .calendar-cell-tasks li { min-width:0; }
+  html[data-genesis-theme] .genesis-app .calendar-cell-task {
+    display:flex; align-items:center; gap:6px; width:100%; min-width:0; min-height:28px; padding:4px 6px;
+    border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--ui-accent) 8%,var(--surface));
+    color:var(--ink); font:500 12px/1.4 var(--font-ui); text-align:start;
+  }
+  .calendar-cell-task > [data-no-translate] { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .calendar-cell-task-kind { flex:0 0 6px; width:6px; height:6px; border-radius:50%; background:var(--ui-accent); }
+  .calendar-cell-task[data-shared="true"] .calendar-cell-task-kind { background:var(--shared-task-color,#7350a2); }
+  html[data-genesis-theme] .genesis-app .calendar-cell-task:hover { background:var(--ui-accent); color:var(--ui-on-accent); }
+  html[data-genesis-theme] .genesis-app .calendar-cell-tasks-more {
+    position:absolute; inset-inline-end:0; bottom:0; display:grid; place-items:center; width:32px; height:24px; padding:2px 6px;
+    border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink);
+  }
+  .calendar-cell-tasks-more svg { width:20px; height:20px; }
+  html[data-genesis-theme] .genesis-app .calendar-cell-tasks-more:hover { background:var(--ui-accent); color:var(--ui-on-accent); }
+  html[data-genesis-theme] .genesis-app :is(.calendar-cell-task,.calendar-cell-tasks-more):focus-visible { outline:2px solid var(--ui-accent); outline-offset:2px; }
+/* Project calendars keep task buttons available in every calendar and viewport. */
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks {
+  position:absolute; z-index:1; display:block; top:38px; bottom:6px; inset-inline:6px; width:auto; min-width:0; margin:0; padding:0 0 24px;
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks ul { gap:3px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li { position:relative; height:24px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-task {
+  position:absolute; inset:0; min-height:24px; height:24px; padding:2px 5px; gap:4px; font:500 12px/18px var(--font-ui);
+  background:var(--surface); border-color:color-mix(in srgb,var(--shared-task-color) 30%,var(--surface));
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-task > [data-no-translate] {
+  display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks-more { z-index:4; width:32px; min-width:32px; height:24px; min-height:24px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:nth-child(1) { --task-rise:32px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:nth-child(2) { --task-rise:59px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:nth-child(3) { --task-rise:86px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:focus-within { z-index:3; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:focus-within .calendar-cell-task {
+  top:calc(-1 * var(--task-rise)); height:auto; background:var(--ui-accent); color:var(--ui-on-accent);
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:focus-within .calendar-cell-task > [data-no-translate] { white-space:normal; overflow-wrap:anywhere; }
+@media (hover:hover) {
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:hover { z-index:3; }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:hover .calendar-cell-task {
+    top:calc(-1 * var(--task-rise)); height:auto; background:var(--ui-accent); color:var(--ui-on-accent);
+  }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar .calendar-cell-tasks li:hover .calendar-cell-task > [data-no-translate] { white-space:normal; overflow-wrap:anywhere; }
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll { width:100%; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; padding:2px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll:focus-visible { outline:2px solid var(--ui-accent); outline-offset:2px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll > .shared-projects-calendar-grid { min-width:1080px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll > .shared-projects-calendar-cycles { min-width:780px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .shared-projects-calendar-date {
+  display:block; position:relative; width:100%; height:auto; min-height:0; aspect-ratio:1; align-self:start; padding:0; isolation:isolate;
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar button.shared-projects-calendar-date-open {
+  position:absolute; top:6px; inset-inline:6px; display:flex; align-items:center; gap:6px; width:calc(100% - 12px); min-width:0; min-height:28px; height:28px; padding:0;
+  border:0; border-radius:6px; background:transparent; color:inherit; font:inherit; text-align:start;
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-date-open time { min-width:0; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-date-open:focus-visible { outline:2px solid var(--ui-accent); outline-offset:2px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .shared-calendar-task-count { position:absolute; bottom:6px; inset-inline-start:6px; inset-inline-end:auto; width:max-content; min-width:24px; height:20px; padding-inline:5px; aspect-ratio:auto; border-radius:999px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .shared-calendar-day-number {
+  display:grid; place-items:center; flex:0 0 28px; width:28px; height:28px; min-height:28px; max-width:none; margin:0; padding:0; border-radius:50%;
+  background:var(--paper); color:var(--ink); font:600 12px/1 var(--font-ui); letter-spacing:normal;
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar .shared-calendar-day-number.shared-calendar-today-pill { background:var(--ui-accent); color:var(--ui-on-accent); }
+.genesis-app .shared-calendar-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
+.genesis-app .shared-calendar-toolbar > .shared-task-page-controls { flex: 1 1 180px; margin: 0; }
+.genesis-app .shared-calendar-scale { display: flex; justify-content: flex-end; gap: 6px; margin-inline-start: auto; }
+html[data-genesis-theme] .genesis-app .shared-calendar-scale > button { width: 44px; min-width: 44px; height: 44px; padding: 8px; border-radius: var(--ui-radius); }
+html[data-genesis-theme] .genesis-app .shared-calendar-scale > button[aria-pressed="true"] { color: var(--ui-on-accent); background: var(--ui-accent); border-color: var(--ui-accent); }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll { container-type: inline-size; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll > .shared-projects-calendar-grid {
+  min-width: calc(1080px * var(--calendar-scale, 1)); width: calc(max(100cqw, 1080px) * var(--calendar-scale, 1)); margin-inline: auto;
+}
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .shared-projects-calendar-date-open { top: 4px; inset-inline: 4px; width: calc(100% - 8px); height: 24px; min-height: 24px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .shared-calendar-day-number { flex-basis: 20px; width: 20px; height: 20px; min-height: 20px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .calendar-cell-tasks { top: 34px; bottom: 3px; inset-inline: 3px; padding-bottom: 0; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .calendar-cell-tasks :is(li, .calendar-cell-task) { height: 24px; min-height: 24px; font-size: 11px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .calendar-cell-tasks-more { top: -31px; bottom: auto; width: 24px; min-width: 24px; height: 24px; min-height: 24px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .shared-calendar-task-count { display: none; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.25"] .shared-projects-calendar-date-open { inset: 0; width: 100%; height: 100%; min-height: 24px; padding: 2px; align-items: start; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.25"] .shared-calendar-day-number { flex-basis: 18px; width: 18px; height: 18px; min-height: 18px; font-size: 11px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.25"] .shared-calendar-task-count { pointer-events: none; bottom: 2px; inset-inline-start: auto; inset-inline-end: 2px; min-width: 14px; height: 14px; padding-inline: 2px; font-size: 10px; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.25"] .shared-projects-calendar-date-open time { display: none; }
+html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] > .shared-projects-calendar-cycles { min-width: calc(780px * var(--calendar-scale)); width: calc(max(100cqw, 780px) * var(--calendar-scale)); }
+@media (min-width:900px) {
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll > .shared-projects-calendar-cycles.mode-lunar { min-width:1560px; }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] > .shared-projects-calendar-cycles.mode-lunar { min-width: calc(1560px * var(--calendar-scale)); width: calc(max(100cqw, 1560px) * var(--calendar-scale)); }
+}
+/* The quarter overview owns three complete periods, including their task range. */
+html[data-genesis-theme] .genesis-app .shared-calendar-months { display: grid; gap: 24px 16px; grid-template-columns: minmax(0, 1fr); }
+.genesis-app .shared-calendar-month { min-width: 0; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month > h3 { margin: 16px 0 8px; color: var(--ink); font: 500 16px/1.4 var(--font-ui); overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month :is(.shared-projects-calendar-grid, .shared-projects-calendar-cycles) { width: 100%; min-width: 0; margin-top: 8px; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-grid { gap: 4px; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-weekday { font-size: 10px; padding-block: 4px; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-date { min-height: 24px; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-cycle-days { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-elements { font-size: 10px; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-cycle > header { gap: 4px; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-cycle > header strong { font-size: 12px; }
+html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-projects-calendar-cycle > header span { font-size: 11px; }
+@container (min-width: 660px) {
+  html[data-genesis-theme] .genesis-app .shared-calendar-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-calendar-day-number { flex-basis: 16px; width: 16px; height: 16px; min-height: 16px; font-size: 10px; }
+  html[data-genesis-theme] .genesis-app .shared-calendar-month .shared-calendar-task-count { height: 12px; min-width: 12px; font-size: 9px; padding-inline: 1px; bottom: 1px; inset-inline-end: 1px; }
+}
+@media (min-width: 1100px) {
+  /* Spread the columns only: height stays at the former half-scale geometry. */
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] > :is(.shared-projects-calendar-grid, .shared-projects-calendar-cycles, .shared-projects-calendar-cycles.mode-lunar) { width: 100%; min-width: 0; }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .shared-projects-calendar-date { aspect-ratio: auto; height: max(64px, calc((max(100cqw, 1080px) * .5 - 36px) / 7)); }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .mode-sacred .shared-projects-calendar-date { height: max(64px, calc((max(100cqw, 780px) * .5 - 24px) / 5)); }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .mode-lunar .shared-projects-cycle-days { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  html[data-genesis-theme] .genesis-app .shared-projects-calendar-scroll[data-calendar-scale="0.5"] .mode-lunar .shared-projects-calendar-date { height: max(64px, calc((max(100cqw, 1560px) * .5 - 54px) / 10)); }
+}
+html[data-genesis-theme] .genesis-app .calendar-day-tasks-dialog {
+  width:min(1040px,calc(100vw - 40px)); max-width:none; max-height:calc(100dvh - 48px); margin:auto; padding:24px;
+  border:1px solid var(--line); border-radius:var(--ui-radius, 10px); background:var(--surface); color:var(--ink); overflow:hidden;
+}
+.calendar-day-tasks-dialog[open] { display:flex; flex-direction:column; }
+.calendar-day-tasks-dialog::backdrop { background:rgb(0 0 0 / .5); }
+.calendar-day-tasks-dialog > header { display:flex; flex:none; align-items:start; justify-content:space-between; gap:24px; margin-bottom:24px; }
+.calendar-day-tasks-dialog h2 { margin:0; font:400 28px/1.25 var(--font-display,var(--font-ui)); }
+.calendar-day-tasks-dialog h2 > span { display:block; margin-top:8px; color:var(--ink-soft); font:400 15px/1.5 var(--font-ui); }
+.calendar-day-task-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:32px; flex:1 1 auto; min-height:0; max-height:min(640px,calc(100dvh - 180px)); overflow:hidden; }
+.calendar-day-task-columns > section { min-width:0; min-height:0; overflow:auto; overscroll-behavior:contain; }
+.calendar-day-task-columns > section + section { padding-inline-start:32px; border-inline-start:1px solid var(--line); }
+.calendar-day-task-columns h3 { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin:0 0 16px; font:600 16px/1.5 var(--font-ui); }
+.calendar-day-task-columns h3 > span { color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+.calendar-day-task-columns ul { margin:0; padding:0; list-style:none; }
+.calendar-day-task-columns li + li { border-top:1px solid var(--line); }
+html[data-genesis-theme] .genesis-app .calendar-day-task-row {
+  display:grid; gap:4px; width:100%; min-height:60px; padding:12px 8px; border:0; border-radius:var(--ui-radius, 10px);
+  background:transparent; color:var(--ink); font:400 15px/1.5 var(--font-ui); text-align:start; overflow-wrap:anywhere;
+}
+.calendar-day-task-row strong { font-weight:500; }
+.calendar-day-task-row small { color:var(--ink-soft); font-size:12px; }
+html[data-genesis-theme] .genesis-app .calendar-day-task-row:hover { background:var(--paper); }
+.calendar-day-task-row:focus-visible { outline:2px solid var(--ui-accent); outline-offset:-2px; }
+.calendar-day-task-columns .shared-task-page-controls { margin-top:16px; }
+@media (max-width:760px) {
+  html[data-genesis-theme] .genesis-app .calendar-day-tasks-dialog { width:calc(100vw - 24px); max-height:calc(100dvh - 24px); padding:20px; }
+  .calendar-day-task-columns { display:block; overflow:auto; }
+  .calendar-day-task-columns > section { overflow:visible; }
+  .calendar-day-task-columns > section + section { margin-top:24px; padding-inline-start:0; padding-top:24px; border-inline-start:0; border-top:1px solid var(--line); }
+}

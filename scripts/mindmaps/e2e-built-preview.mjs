@@ -1,0 +1,16 @@
+import {chromium} from './browser.mjs';import {readFileSync,writeFileSync} from 'node:fs';import assert from 'node:assert/strict';
+const state=JSON.parse(readFileSync('output/browser-state.json'));state.origins=state.origins.map(o=>({...o,origin:o.origin.replace(':4319',':4323')}));
+const result=JSON.parse(readFileSync('output/mindmaps-e2e-result.json'));const b=await chromium.launch({headless:true,channel:'chrome'});const c=await b.newContext({storageState:state});const p=await c.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
+await p.goto('http://127.0.0.1:4323/#projects');await p.getByRole('button',{name:'Майндмепы',exact:true}).waitFor();await p.goto(result.mapUrl.replace(':4319',':4323'));await p.getByRole('button',{name:'Структура',exact:true}).click();await p.locator('.mindmap-row').filter({hasText:'Собрать повестку и материалы'}).waitFor();await p.getByRole('button',{name:'Карта',exact:true}).click();await p.locator('.mindmap-graph-node').first().waitFor();assert.deepEqual(errors,[]);
+const undated=JSON.parse(readFileSync('output/mindmaps-undated-result.json'));
+const undatedState=JSON.parse(readFileSync('output/undated-state.json'));undatedState.origins=undatedState.origins.map(o=>({...o,origin:o.origin.replace(':4319',':4323')}));
+await c.close();const uc=await b.newContext({storageState:undatedState,viewport:{width:390,height:960}});const up=await uc.newPage();up.on('pageerror',e=>errors.push(e.message));
+await up.goto(undated.mapUrl.replace(':4319',':4323'));await up.getByRole('button',{name:'Структура',exact:true}).click();
+await up.getByRole('button',{name:'Изменить узел: Выбрать следующий шаг',exact:true}).click();
+assert.equal(await up.getByRole('button',{name:'Открыть в календаре'}).isDisabled(),true);
+await up.getByRole('button',{name:'Открыть карточку задачи',exact:true}).click();const dialog=up.getByRole('dialog',{name:'Задача и её контекст'});
+assert.equal(await dialog.getByRole('checkbox',{name:'Без даты',exact:true}).isChecked(),true);
+await dialog.getByRole('button',{name:'Сохранить задачу',exact:true}).click();await dialog.waitFor({state:'hidden'});
+const task=await up.evaluate(id=>JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('genesis-calendar-v2:')))).tasks.find(t=>t.id===id),undated.taskId);
+assert.equal(task.dueDate,'');assert.equal(task.endDate,'');assert.equal(task.done,true);assert.deepEqual(errors,[]);
+writeFileSync('output/mindmaps-built-preview-result.json',JSON.stringify({passed:['actual build:web output boots','personal entry','encrypted map loads through real local API','structure and lazy canvas chunks load','undated source opens in ordinary editor after restart','ordinary save preserves empty dates and completion'],pageErrors:errors},null,2));console.log('PASS compiled web output on isolated preview, undated task editor and lazy canvas, no page errors');await b.close();

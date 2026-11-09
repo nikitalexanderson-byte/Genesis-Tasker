@@ -1,0 +1,16 @@
+{
+  "ru": { "title": "Энциклопедия 24 букв", "expanded": "Развёрнуто", "collapsed": "Свёрнуто" },
+  "en": { "title": "Encyclopedia of 24 letters", "expanded": "Expanded", "collapsed": "Collapsed" },
+  "el": { "title": "Εγκυκλοπαίδεια 24 γραμμάτων", "expanded": "Ανοιχτή", "collapsed": "Κλειστή" },
+  "de": { "title": "Enzyklopädie der 24 Buchstaben", "expanded": "Ausgeklappt", "collapsed": "Eingeklappt" },
+  "fr": { "title": "Encyclopédie des 24 lettres", "expanded": "Dépliée", "collapsed": "Repliée" },
+  "es": { "title": "Enciclopedia de las 24 letras", "expanded": "Expandida", "collapsed": "Contraída" },
+  "it": { "title": "Enciclopedia delle 24 lettere", "expanded": "Aperta", "collapsed": "Chiusa" },
+  "pt": { "title": "Enciclopédia das 24 letras", "expanded": "Expandida", "collapsed": "Recolhida" },
+  "pl": { "title": "Encyklopedia 24 liter", "expanded": "Rozwinięta", "collapsed": "Zwinięta" },
+  "sr": { "title": "Енциклопедија 24 слова", "expanded": "Проширено", "collapsed": "Скупљено" },
+  "uk": { "title": "Енциклопедія 24 літер", "expanded": "Розгорнуто", "collapsed": "Згорнуто" },
+  "zh": { "title": "24个字母百科", "expanded": "已展开", "collapsed": "已收起" },
+  "tr": { "title": "24 harf ansiklopedisi", "expanded": "Genişletildi", "collapsed": "Daraltıldı" },
+  "ja": { "title": "24文字の百科事典", "expanded": "展開中", "collapsed": "折りたたみ中" }
+}

@@ -1,0 +1,16 @@
+{
+  "ru":{"help":"Удерживайте и перетаскивайте. Первый вид открывается по умолчанию. Клавиатура: Alt + ←/→.","first":"Вид по умолчанию: {view}.","changed":"Порядок изменился. Повторите перетаскивание."},
+  "en":{"help":"Hold and drag. The first view opens by default. Keyboard: Alt + ←/→.","first":"Default view: {view}.","changed":"The order changed. Drag again."},
+  "el":{"help":"Κρατήστε πατημένο και σύρετε. Η πρώτη προβολή ανοίγει από προεπιλογή. Πληκτρολόγιο: Alt + ←/→.","first":"Προεπιλεγμένη προβολή: {view}.","changed":"Η σειρά άλλαξε. Σύρετε ξανά."},
+  "de":{"help":"Gedrückt halten und ziehen. Die erste Ansicht wird standardmäßig geöffnet. Tastatur: Alt + ←/→.","first":"Standardansicht: {view}.","changed":"Die Reihenfolge wurde geändert. Erneut ziehen."},
+  "fr":{"help":"Maintenez et faites glisser. La première vue s’ouvre par défaut. Clavier : Alt + ←/→.","first":"Vue par défaut : {view}.","changed":"L’ordre a changé. Faites glisser à nouveau."},
+  "es":{"help":"Mantén pulsado y arrastra. La primera vista se abre por defecto. Teclado: Alt + ←/→.","first":"Vista predeterminada: {view}.","changed":"El orden ha cambiado. Vuelve a arrastrar."},
+  "it":{"help":"Tieni premuto e trascina. La prima vista si apre per impostazione predefinita. Tastiera: Alt + ←/→.","first":"Vista predefinita: {view}.","changed":"L’ordine è cambiato. Trascina di nuovo."},
+  "pt":{"help":"Mantenha premido e arraste. A primeira vista abre por padrão. Teclado: Alt + ←/→.","first":"Vista padrão: {view}.","changed":"A ordem mudou. Arraste novamente."},
+  "pl":{"help":"Przytrzymaj i przeciągnij. Pierwszy widok otwiera się domyślnie. Klawiatura: Alt + ←/→.","first":"Widok domyślny: {view}.","changed":"Kolejność się zmieniła. Przeciągnij ponownie."},
+  "sr":{"help":"Задржите и превуците. Први приказ се отвара подразумевано. Тастатура: Alt + ←/→.","first":"Подразумевани приказ: {view}.","changed":"Редослед је промењен. Превуците поново."},
+  "uk":{"help":"Утримуйте й перетягуйте. Перший вигляд відкривається за замовчуванням. Клавіатура: Alt + ←/→.","first":"Вигляд за замовчуванням: {view}.","changed":"Порядок змінився. Перетягніть ще раз."},
+  "zh":{"help":"按住并拖动。默认打开第一个视图。键盘：Alt + ←/→。","first":"默认视图：{view}。","changed":"顺序已更改，请重新拖动。"},
+  "tr":{"help":"Basılı tutup sürükleyin. İlk görünüm varsayılan olarak açılır. Klavye: Alt + ←/→.","first":"Varsayılan görünüm: {view}.","changed":"Sıralama değişti. Tekrar sürükleyin."},
+  "ja":{"help":"長押ししてドラッグします。最初の表示が既定で開きます。キーボード：Alt + ←/→。","first":"既定の表示：{view}。","changed":"順序が変更されました。もう一度ドラッグしてください。"}
+}

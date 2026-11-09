@@ -1,0 +1,5 @@
+.daily-advice-count { display: grid; gap: 8px; margin-block: 12px; }
+.daily-advice-count select {
+  width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--line);
+  border-radius: 10px; color: var(--ink); background: var(--surface);
+}

@@ -1,0 +1,16 @@
+html[data-genesis-theme] .genesis-app .habit-library article > .habit-library-actions {
+  display: grid;
+  grid-template-columns: repeat(var(--habit-action-count, 4), 44px);
+  justify-content: end;
+  gap: 6px;
+}
+html[data-genesis-theme] .genesis-app .habit-library-actions > .icon-action-button {
+  width: 100%; min-width: 0; height: 44px; padding: 10px;
+}
+html[data-genesis-theme] .genesis-app .habit-library-actions > .icon-action-button[aria-pressed="true"] {
+  background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-on-accent);
+}
+html[data-genesis-theme] .genesis-app .habit-library-actions > .icon-action-button[aria-pressed="true"] [data-icon="star"] { fill: currentColor; }
+@media (max-width: 767px) {
+  html[data-genesis-theme] .genesis-app .habit-library article > .habit-library-actions { grid-template-columns: repeat(var(--habit-action-count, 4), minmax(44px, 1fr)); }
+}

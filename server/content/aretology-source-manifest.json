@@ -1,0 +1,1162 @@
+{
+  "version": 1,
+  "sourceDocument": "Аретология.docx",
+  "sourceDocumentSha256": "1d6db7e6e94f135cca852f628e2cc9c5002a76f9d82b94d871821c14c1f54f51",
+  "authorRevisions": [
+    19,
+    26,
+    60,
+    65,
+    70,
+    97,
+    98,
+    99,
+    100
+  ],
+  "entries": [
+    {
+      "number": 1,
+      "id": "advice-aee756174fc56d5b4bb77a7b",
+      "title": "Практика \"Тонического Натяжения\"",
+      "status": "published",
+      "textSha256": "aee756174fc56d5b4bb77a7bd95a5ec18fbd2c8cd4a95aa474eb1632f26f9dc3"
+    },
+    {
+      "number": 2,
+      "id": "advice-09a4cfd232530a860a5760f4",
+      "title": "Практика Прямодействия",
+      "status": "published",
+      "textSha256": "09a4cfd232530a860a5760f46066b7ca84ca66ebd3877e3d07f6d7004d5991a7"
+    },
+    {
+      "number": 3,
+      "id": "advice-1e46c64517663795a43ffdbf",
+      "title": "Практика биологического суверенитета",
+      "status": "published",
+      "textSha256": "1e46c64517663795a43ffdbfb59e13509f8f53d732f7ebf03c9bd0c05e92a3d5"
+    },
+    {
+      "number": 4,
+      "id": "advice-36310a5a1b01ba00690e67b5",
+      "title": "Практика \"Умного восприятия\"",
+      "status": "published",
+      "textSha256": "36310a5a1b01ba00690e67b5f4717b5b97aac02f801e35a6d0db526ed2562dc0"
+    },
+    {
+      "number": 5,
+      "id": "advice-ade42e368979a941675f26a8",
+      "title": "Практика “Радикальное отсечение”",
+      "status": "published",
+      "textSha256": "ade42e368979a941675f26a8216d3833564655faad45a78fee2a4b7f25acc641"
+    },
+    {
+      "number": 6,
+      "id": "advice-a2d62edd19bb94c12ff74706",
+      "title": "Практика “Образца”",
+      "status": "published",
+      "textSha256": "a2d62edd19bb94c12ff74706e1f9f2ade510acaaa8a25cc164cc727c14b29482"
+    },
+    {
+      "number": 7,
+      "id": "advice-487344609d1a1c643ab41659",
+      "title": "Практика “Шлифовки”",
+      "status": "published",
+      "textSha256": "487344609d1a1c643ab4165920cfdd9e204d4ee33d0ba1e845788522da1ba4a1"
+    },
+    {
+      "number": 8,
+      "id": "advice-075d39003d14c122a08c07c8",
+      "title": "Практика “Огонь как инструмент отделения”",
+      "status": "published",
+      "textSha256": "075d39003d14c122a08c07c8083accab4aac2db856b03ee3cda835da913425cc"
+    },
+    {
+      "number": 9,
+      "id": "advice-4ff9dc63db9b2cdc7f66ac03",
+      "title": "Практика\"Тонической тренировки\"",
+      "status": "published",
+      "textSha256": "4ff9dc63db9b2cdc7f66ac031b214b9942e20b04f26bc0567ea755828e57117b"
+    },
+    {
+      "number": 10,
+      "id": "advice-b25d7d88a92c9c3431800179",
+      "title": "Алхимия Пота и Огня",
+      "status": "published",
+      "textSha256": "b25d7d88a92c9c34318001790f77d49098088ddb47fab9830e154f3cdcd95d89"
+    },
+    {
+      "number": 11,
+      "id": "advice-f1357aa9520e1313a20c48ed",
+      "title": "Практика \"Легких Инструментов\"",
+      "status": "published",
+      "textSha256": "f1357aa9520e1313a20c48ed2391e851772d2597239094653a3dba48d61db7d7"
+    },
+    {
+      "number": 12,
+      "id": "advice-1ecff8d70e2b62aa8eb17afe",
+      "title": "Восстановление \"Геометрического Равенства\"",
+      "status": "published",
+      "textSha256": "1ecff8d70e2b62aa8eb17afe10c9d44103d4857483a3245fe791f9215e44ae88"
+    },
+    {
+      "number": 13,
+      "id": "advice-78849418df1fba1066af70ff",
+      "title": "Практика Образа и Огня",
+      "status": "published",
+      "textSha256": "78849418df1fba1066af70ff6ca4586a437b6159e1e1bcd9f619b22e3828d145"
+    },
+    {
+      "number": 14,
+      "id": "advice-ffd9df147d012df264b1067f",
+      "title": "Тонус как гарантия формы",
+      "status": "published",
+      "textSha256": "ffd9df147d012df264b1067f063710f45205e8a74b6b393b1536f841fed09528"
+    },
+    {
+      "number": 15,
+      "id": "advice-d7406e2385823fe6909f6a9d",
+      "title": "Практика превращений",
+      "status": "published",
+      "textSha256": "d7406e2385823fe6909f6a9dd612ed621c460a62497d5711407674dc53365156"
+    },
+    {
+      "number": 16,
+      "id": "advice-fd0695cfe08f5a3684253f68",
+      "title": "Герметизация через движение",
+      "status": "published",
+      "textSha256": "fd0695cfe08f5a3684253f68a3c7242ae27e4eacd9801c218eebd8493e025b50"
+    },
+    {
+      "number": 17,
+      "id": "advice-315c6e5457342a447b3281f2",
+      "title": "Практика \"Натяжения и Рывка\"",
+      "status": "published",
+      "textSha256": "315c6e5457342a447b3281f2483c956f9b04442b7b1c4a93374732a9096834c0"
+    },
+    {
+      "number": 18,
+      "id": "advice-a20ec66460a315e345fa5705",
+      "title": "Алхимия Труда и Катарсиса",
+      "status": "published",
+      "textSha256": "a20ec66460a315e345fa570567757350fa9878a945735839280da60c689635de"
+    },
+    {
+      "number": 19,
+      "id": "advice-02a3541b8f05a40b4240dc6c",
+      "title": "Точность Прямодействия",
+      "status": "published",
+      "textSha256": "3afda4dca95bb62d7516d641210f5c1af5ea9209fbbf86ea023659585052a915"
+    },
+    {
+      "number": 20,
+      "id": "advice-436810538a13896c55ba0b2e",
+      "title": "Инкубация Ярости Логоса",
+      "status": "published",
+      "textSha256": "436810538a13896c55ba0b2e5f69fde4c2de3a0013941c559e662388ff79fba8"
+    },
+    {
+      "number": 21,
+      "id": "advice-4ec5c7ea4fc79dc78265b9ce",
+      "title": "Практика Меры (Metron)",
+      "status": "published",
+      "textSha256": "4ec5c7ea4fc79dc78265b9ce15213966b23b45015cfce5c5cefd3bab63091063"
+    },
+    {
+      "number": 22,
+      "id": "advice-bd87b695bd6ec248bd51c551",
+      "title": "Практика \"Умного Сна\"",
+      "status": "published",
+      "textSha256": "bd87b695bd6ec248bd51c551b0398b644cfaa3dc59e868d730a889a5606f1afa"
+    },
+    {
+      "number": 23,
+      "id": "advice-ff030546589c8db6c693cbd8",
+      "title": "Алхимия суперкомпенсации",
+      "status": "published",
+      "textSha256": "ff030546589c8db6c693cbd8e4a2bad65036db636fee69d98b139feb8fcf694b"
+    },
+    {
+      "number": 24,
+      "id": "advice-7a575d00362c582a04d38756",
+      "title": "Контроль \"Испепеляющей Ярости\"",
+      "status": "published",
+      "textSha256": "7a575d00362c582a04d38756cea4da10a67dd79ced2a49251cfbb1cb9e56ce26"
+    },
+    {
+      "number": 25,
+      "id": "advice-3d89c47665a60c90160c9bb8",
+      "title": "Практика Дистанции",
+      "status": "published",
+      "textSha256": "3d89c47665a60c90160c9bb83d1a77a81195d1f7c4ec8e03619946faabf360f3"
+    },
+    {
+      "number": 26,
+      "id": "advice-a981fcbe698a094088afcbd5",
+      "title": "Юстировка через Усилие",
+      "status": "published",
+      "textSha256": "8949139247611afb3d48e5524ad7b72f986fb578e756cdf038a6c2076d629f2e"
+    },
+    {
+      "number": 27,
+      "id": "advice-c360221049f6ef232297e13f",
+      "title": "Контроль Реакции",
+      "status": "published",
+      "textSha256": "c360221049f6ef232297e13f0807def41e2c5a56a5599afe5c2474b7dc305747"
+    },
+    {
+      "number": 28,
+      "id": "advice-6ef7435e4c50f4476f15f907",
+      "title": "Инкубация Силы в Кризисе",
+      "status": "published",
+      "textSha256": "6ef7435e4c50f4476f15f907592e3a999f004a8db43f4ba0ee67bf638f52c9fa"
+    },
+    {
+      "number": 29,
+      "id": "advice-d4d2838ef14abd9c682f90d1",
+      "title": "Инсталляция \"Божественных Характеров\"",
+      "status": "published",
+      "textSha256": "d4d2838ef14abd9c682f90d12a80cb6fab265d20250700225e9e012a5017c862"
+    },
+    {
+      "number": 30,
+      "id": "advice-2d828794f95da9f36c6f7737",
+      "title": "Алхимия \"Огненной Оболочки\"",
+      "status": "published",
+      "textSha256": "2d828794f95da9f36c6f773793f048e8a0df13e599c8a720929ed49ad60fc22a"
+    },
+    {
+      "number": 31,
+      "id": "advice-7d403eda2a4c9874cce2ed62",
+      "title": "Практика \"Умного Восприятия\"",
+      "status": "published",
+      "textSha256": "7d403eda2a4c9874cce2ed626f8b3807da1f649b262fd95a7de71c3949b3ef80"
+    },
+    {
+      "number": 32,
+      "id": "advice-bd833b9c27e4468726110c5b",
+      "title": "Практика \"Снятия Оков\"",
+      "status": "published",
+      "textSha256": "bd833b9c27e4468726110c5b95936d093ccbd35eab102853dd6ac005d5e69fc1"
+    },
+    {
+      "number": 33,
+      "id": "advice-2a2e8e4d5ca8f367b085d903",
+      "title": "Практика Физического Тонуса",
+      "status": "published",
+      "textSha256": "2a2e8e4d5ca8f367b085d90332b4238ca9a56dd6a853f22948514cf6207c1b8e"
+    },
+    {
+      "number": 34,
+      "id": "advice-ac9432131758b6d18cdead79",
+      "title": "Интеллектуальное Натяжение",
+      "status": "published",
+      "textSha256": "ac9432131758b6d18cdead794faba98e3c2bde4c228563ff7486dfb81bb06ba0"
+    },
+    {
+      "number": 35,
+      "id": "advice-fa57b17bd56ae624bbe168fa",
+      "title": "Контроль \"Сырой Материи\"",
+      "status": "published",
+      "textSha256": "fa57b17bd56ae624bbe168fa037f5edc49c9eafce18f6367927133380a65ac2a"
+    },
+    {
+      "number": 36,
+      "id": "advice-cb99f21af94934f7cb3dc90a",
+      "title": "Практика Прямого Луча",
+      "status": "published",
+      "textSha256": "cb99f21af94934f7cb3dc90aab75c1e915db374ac35945bda6e36e16e1defb10"
+    },
+    {
+      "number": 37,
+      "id": "advice-87c99ed220e37f2f7c57d5d8",
+      "title": "Немейский лев",
+      "status": "published",
+      "textSha256": "87c99ed220e37f2f7c57d5d84de402a8bbd9e12233984c9e2be201ca68b73acf"
+    },
+    {
+      "number": 38,
+      "id": "advice-2c3b3aed7854a9ec531d4671",
+      "title": "Лернейская гидра",
+      "status": "published",
+      "textSha256": "2c3b3aed7854a9ec531d4671ab6e2af67dc06cb22edbaef400d6a297f6fda84b"
+    },
+    {
+      "number": 39,
+      "id": "advice-fe3986daee7e3952d1169c29",
+      "title": "Керинейская лань",
+      "status": "published",
+      "textSha256": "fe3986daee7e3952d1169c29f6e1a0d8492c59cd1e9005747cbd9fbc3977b6ed"
+    },
+    {
+      "number": 40,
+      "id": "advice-1aa65ca3ce4196aa6eab3349",
+      "title": "Эриманфский вепрь",
+      "status": "published",
+      "textSha256": "1aa65ca3ce4196aa6eab334909ef5d2c1c6b99ab43399a83f8e3b01b7ef1c704"
+    },
+    {
+      "number": 41,
+      "id": "advice-1af108d0f1a05ef6904bdf68",
+      "title": "Авгиевы конюшни",
+      "status": "published",
+      "textSha256": "1af108d0f1a05ef6904bdf68e863ccfe7be1ce5306cb5117d8aae9d94c3ed5a0"
+    },
+    {
+      "number": 42,
+      "id": "advice-a3d3e1e8bdc7a2528b2d61d7",
+      "title": "Стимфалийские птицы",
+      "status": "published",
+      "textSha256": "a3d3e1e8bdc7a2528b2d61d7b16be1d3e01af3e73d50d871297e12cd81e276a1"
+    },
+    {
+      "number": 43,
+      "id": "advice-d31c3d75412c709d183eeac3",
+      "title": "Критский бык",
+      "status": "published",
+      "textSha256": "d31c3d75412c709d183eeac3b19520c4d2b668bb3f05eb6d3885c51b155119c0"
+    },
+    {
+      "number": 44,
+      "id": "advice-66da140656eede9f0dd51bef",
+      "title": "Кони Диомеда",
+      "status": "published",
+      "textSha256": "66da140656eede9f0dd51bef8296ad31b3493bfa697e57cb34caa30de45c2680"
+    },
+    {
+      "number": 45,
+      "id": "advice-9c561df92d052659cf13e51b",
+      "title": "Пояс Ипполиты",
+      "status": "published",
+      "textSha256": "9c561df92d052659cf13e51ba7371caf63c900b32a3d5998b7e5c19f947c5771"
+    },
+    {
+      "number": 46,
+      "id": "advice-842cd20f143d6f1aa864c1db",
+      "title": "Коровы Гериона",
+      "status": "published",
+      "textSha256": "842cd20f143d6f1aa864c1dbaadb16143b98fea7aaff956c32aed4f9173aa445"
+    },
+    {
+      "number": 47,
+      "id": "advice-ef49e33ab55dc801c8bb4f2b",
+      "title": "Яблоки Гесперид",
+      "status": "published",
+      "textSha256": "ef49e33ab55dc801c8bb4f2bf1689acf42648869ea43b58076ddd9dfb72b05d9"
+    },
+    {
+      "number": 48,
+      "id": "advice-bc9d4269b73f56cabf11f3b8",
+      "title": "Цербер",
+      "status": "published",
+      "textSha256": "bc9d4269b73f56cabf11f3b8fe6ced36e27eee4c10bfc2ac7b9e8adef1cc04aa"
+    },
+    {
+      "number": 49,
+      "id": "advice-5e98e05e333d66f1739f04db",
+      "title": "Практика \"Солнечного белка\"",
+      "status": "published",
+      "textSha256": "5e98e05e333d66f1739f04db624dbe45a545028fa016c9f2a9a1582895c1b263"
+    },
+    {
+      "number": 50,
+      "id": "advice-107b78348ddee79fc61f1f5d",
+      "title": "Алхимия Соединительной Ткани (Коллаген)",
+      "status": "published",
+      "textSha256": "107b78348ddee79fc61f1f5dff9f3279ed7071a92798b032fbad872bac03d066"
+    },
+    {
+      "number": 51,
+      "id": "advice-1505d901d6f3c6f68d98db13",
+      "title": "Запрет Хтонической Пищи (Бобы)",
+      "status": "published",
+      "textSha256": "1505d901d6f3c6f68d98db13643cdf605025e07b7b89c666972e6515f9a8871b"
+    },
+    {
+      "number": 52,
+      "id": "advice-b0675e56c7af3227b3222e4a",
+      "title": "Табу на \"Рыночные Яды\" (Фастфуд и масла)",
+      "status": "published",
+      "textSha256": "b0675e56c7af3227b3222e4a1b50cf8dee6c51ec51c89e72da603750debacf73"
+    },
+    {
+      "number": 53,
+      "id": "advice-27037a3385a6ad8448a906f9",
+      "title": "Практика Инструментальной Чистоты",
+      "status": "published",
+      "textSha256": "27037a3385a6ad8448a906f9e6ebb80a12981370ad9b577ce3af8bfd491f2faf"
+    },
+    {
+      "number": 54,
+      "id": "advice-41383168c267254a6d13e96b",
+      "title": "Алхимия \"Сухого\" и \"Влажного\"",
+      "status": "published",
+      "textSha256": "41383168c267254a6d13e96ba97a53105f588d37cceced8647e75119dece6829"
+    },
+    {
+      "number": 55,
+      "id": "advice-e7233b834ad040aabad0f452",
+      "title": "Практика осознанного употребления еды",
+      "status": "published",
+      "textSha256": "e7233b834ad040aabad0f452c0e5fcf51d6e2bc610379aba208a96d373e657a2"
+    },
+    {
+      "number": 56,
+      "id": "advice-45deb865c4cf3899838d4fef",
+      "title": "Контроль \"Биологического Сладострастия\"",
+      "status": "published",
+      "textSha256": "45deb865c4cf3899838d4fef3852b64fc839998837c3b8247b1c213d127803f2"
+    },
+    {
+      "number": 57,
+      "id": "advice-b2f6d88297a4c964a7e6ae65",
+      "title": "Практика Временной Аскезы",
+      "status": "published",
+      "textSha256": "b2f6d88297a4c964a7e6ae658a8f3357da7757f432238eaa64023725cbfcab6e"
+    },
+    {
+      "number": 58,
+      "id": "advice-38339b25c3a453c4f8bb7549",
+      "title": "Практика Лунных Циклов",
+      "status": "published",
+      "textSha256": "38339b25c3a453c4f8bb75496b02200cf56ebb3ac59a47e661f1d4a98bbdb1aa"
+    },
+    {
+      "number": 59,
+      "id": "advice-0d5505d779d857b931c37336",
+      "title": "Практика \"Легкого Ума\"",
+      "status": "published",
+      "textSha256": "0d5505d779d857b931c37336f4fab19ffa6599aef7e9a7a998c3cf2bc37990e6"
+    },
+    {
+      "number": 60,
+      "id": "advice-4fa1bff2f6285af9eea7d97c",
+      "title": "Контроль Пищевого Автоматизма",
+      "status": "published",
+      "textSha256": "b6558f3da4b431184012cf3dafa4727b48b9859cc63350dce708b859663af06b"
+    },
+    {
+      "number": 61,
+      "id": "advice-3801de4ebf4cede400673202",
+      "title": "Практика Лунных Ритмов",
+      "status": "published",
+      "textSha256": "3801de4ebf4cede40067320248b2dd80bb29d2bbb870871856ec6cf30c3b1efb"
+    },
+    {
+      "number": 62,
+      "id": "advice-c4b43049952c949a1b907c07",
+      "title": "Практика Временного Вегетарианства",
+      "status": "published",
+      "textSha256": "c4b43049952c949a1b907c0781716ac1b71962fdd8efab4a793f45bd5357983b"
+    },
+    {
+      "number": 63,
+      "id": "advice-2bf2980826cec0a42bf58e05",
+      "title": "Практика Голода",
+      "status": "published",
+      "textSha256": "2bf2980826cec0a42bf58e059a677b27cb9b3ae3c515621eeaf3681832b1e280"
+    },
+    {
+      "number": 64,
+      "id": "advice-3120f538548cfa9956639845",
+      "title": "Контроль Биологического Шума",
+      "status": "published",
+      "textSha256": "3120f538548cfa9956639845957a0806beaf7a233694be457bd5c87f9609a11e"
+    },
+    {
+      "number": 65,
+      "id": "advice-f76bd6cde85231279d4498c7",
+      "title": "Практика \"Умного Голода\"",
+      "status": "published",
+      "textSha256": "8f9ac703d01ced312bdbb2282085bbd091ba57011d7a097fb481bd3d300b5b6a"
+    },
+    {
+      "number": 66,
+      "id": "advice-485c049bd52ee8a65e8aa9ab",
+      "title": "Уничтожение \"Рыночных Призраков\"",
+      "status": "published",
+      "textSha256": "485c049bd52ee8a65e8aa9ab7176c531db982c97fa7c914cce588d646b39c512"
+    },
+    {
+      "number": 67,
+      "id": "advice-de7063f750348f233f8068ed",
+      "title": "Практика \"Сухого Сосуда\"",
+      "status": "published",
+      "textSha256": "de7063f750348f233f8068ed13c49259d05dfb95e6e51b21e2f49b33fd8df6bf"
+    },
+    {
+      "number": 68,
+      "id": "advice-25c70cde18c993c418da2bf7",
+      "title": "Практика Контроля Потребления",
+      "status": "published",
+      "textSha256": "25c70cde18c993c418da2bf7be078f35676a27193d6777aa1c8b55103cd340b2"
+    },
+    {
+      "number": 69,
+      "id": "advice-b2edc693c8fed0a66b9274b3",
+      "title": "Практика Лунного Календаря",
+      "status": "published",
+      "textSha256": "b2edc693c8fed0a66b9274b39fa0244d5a5af312e2307a5b2d8122cd8c6529e7"
+    },
+    {
+      "number": 70,
+      "id": "advice-ee04ba56f658caa669792477",
+      "title": "Практика \"Чистой Воды\"",
+      "status": "published",
+      "textSha256": "35c7ce32e6961ce86a880ce9d7d3794e7b2efdbad61ae7b54cb036085aa144ef"
+    },
+    {
+      "number": 71,
+      "id": "advice-5f7889c74e7f1fe4f624dec6",
+      "title": "Практика Интеллектуального Безмолвия",
+      "status": "published",
+      "textSha256": "5f7889c74e7f1fe4f624dec66b6e89c908704f6af54d4383e8f3f9f11fb71a3d"
+    },
+    {
+      "number": 72,
+      "id": "advice-fe0f86e475bc9350744f1095",
+      "title": "Воля и внутренний центр во время поста",
+      "status": "published",
+      "textSha256": "6663a0ece036403fb7a45a71fc055496d226ff8c649726ec7a560c1d5be65de0",
+      "sourceTitle": "Практика \"Очага Гестии\"",
+      "sourceTextSha256": "fe0f86e475bc9350744f109515b85a759870477931597f299edc41f2a47a78e9",
+      "titleCorrection": {
+        "date": "2026-10-24",
+        "reason": "The post concerns will, the inner centre and fasting; its title must not identify it as a practice about Hestia's hearth."
+      }
+    },
+    {
+      "number": 73,
+      "id": "advice-ca4c5fb65e5aa1b0aa8f6aa5",
+      "title": "Пищевая практика \"Солнечного Огня\"",
+      "status": "published",
+      "textSha256": "ca4c5fb65e5aa1b0aa8f6aa599b7707af9e352cb5e93c0bdca2b7fc8a47064f7"
+    },
+    {
+      "number": 74,
+      "id": "advice-59f71dc119868791d7995a87",
+      "title": "Практика Биологического Суверенитета",
+      "status": "published",
+      "textSha256": "59f71dc119868791d7995a87cd66f587a6867a13a2a0aad528a09fe683541611"
+    },
+    {
+      "number": 75,
+      "id": "advice-d2a9f2d913958acff536b938",
+      "title": "Контроль \"Рыночной Грязи\"",
+      "status": "published",
+      "textSha256": "718216dbb6cf3298b22a2501743be828c979f9efadbdb634abb22e3effac4994"
+    },
+    {
+      "number": 76,
+      "id": "advice-8855f9d74afae9b390d2a457",
+      "title": "Практика \"Умного Восстановления\"",
+      "status": "published",
+      "textSha256": "8855f9d74afae9b390d2a45770b65d84cb7f7bdd79cffd8610d20816f2239d08"
+    },
+    {
+      "number": 77,
+      "id": "advice-e6e1d4d4d2f64911987512c5",
+      "title": "Устранение \"Внутренней Горячки\"",
+      "status": "published",
+      "textSha256": "e6e1d4d4d2f64911987512c585e9baceefc8770d1af154536bd4ebd1a848bdf8"
+    },
+    {
+      "number": 78,
+      "id": "advice-ffcaa2cd986fcdc481b15b4a",
+      "title": "Устранение \"Мутного Пара\"",
+      "status": "published",
+      "textSha256": "ffcaa2cd986fcdc481b15b4a1413437117a992ca82ce25019d9bd9b4aad18919"
+    },
+    {
+      "number": 79,
+      "id": "advice-3793b025d70d543465030139",
+      "title": "Обнажение \"Невзрачности Вещей\"",
+      "status": "published",
+      "textSha256": "3793b025d70d543465030139d4675f760b76f54b30c70cdfd00cbf7422bbdad7"
+    },
+    {
+      "number": 80,
+      "id": "advice-3a29cc3011cd842aff546a93",
+      "title": "Защита \"Стенок Сосуда\"",
+      "status": "published",
+      "textSha256": "3a29cc3011cd842aff546a932e88cdc3a3960325dab3bc27aebba8057b81c396"
+    },
+    {
+      "number": 81,
+      "id": "advice-4d05586de84db0e4eb7937e1",
+      "title": "Практика Избирательного Контакта",
+      "status": "published",
+      "textSha256": "4d05586de84db0e4eb7937e1a68c87a98724f2b0b33de83827ca883e483de83d"
+    },
+    {
+      "number": 82,
+      "id": "advice-f56b23a6faa768f626489f8c",
+      "title": "Контроль Хтонических Субстанций",
+      "status": "published",
+      "textSha256": "f56b23a6faa768f626489f8ca62a470011d928c941dcecace9aceb3d0a0c0143"
+    },
+    {
+      "number": 83,
+      "id": "advice-15abbe6ec1ca0b05a5033309",
+      "title": "Устранение \"Двенадцати Мучителей\"",
+      "status": "published",
+      "textSha256": "15abbe6ec1ca0b05a503330997893f62f3e4ee714d8f3acb23322e5237961f81"
+    },
+    {
+      "number": 84,
+      "id": "advice-7bc023dd53cc1f9c38975d09",
+      "title": "Практика \"Закрытия Входов\"",
+      "status": "published",
+      "textSha256": "7bc023dd53cc1f9c38975d09aeb9d9d1447ff20ca9a59a8f52edc3c68d46c0c9"
+    },
+    {
+      "number": 85,
+      "id": "advice-e10b06f25f492e0eb5f934fd",
+      "title": "Фиксация Центра Трапезы",
+      "status": "published",
+      "textSha256": "e10b06f25f492e0eb5f934fd4bccb3a128927b734d9dc7d790dc26a879c43646"
+    },
+    {
+      "number": 86,
+      "id": "advice-04140f9591f5dc9cab4f4634",
+      "title": "Практика Пищевого Внимания (Залог Возлияния)",
+      "status": "published",
+      "textSha256": "04140f9591f5dc9cab4f463408d74da045440a3715e10df06c033d0ec48e38cb"
+    },
+    {
+      "number": 87,
+      "id": "advice-9cf5caf429f740fc9e0bb42c",
+      "title": "Посуда для трапезы (Завет Гесиода)",
+      "status": "published",
+      "textSha256": "e0dbdc09ba3194e51aa3e18bbc7d5a727499664eff0ec315f0de16a2939d6eb8",
+      "sourceTitle": "Контроль Сосудов (Завет Гесиода)",
+      "sourceTextSha256": "9cf5caf429f740fc9e0bb42ce4e9e74e197ec8bd383e36b7842dc0d2bc218fa8",
+      "titleCorrection": {
+        "date": "2026-10-24",
+        "reason": "Specify tableware for a meal, distinguishing this post from washing vessels and the metaphor of bodily vessels."
+      }
+    },
+    {
+      "number": 88,
+      "id": "advice-1685be1edf25158ab763997f",
+      "title": "Практика \"Сухого\" Преобразования",
+      "status": "published",
+      "textSha256": "1685be1edf25158ab763997f501501133e5b30312e701a25b5c103815a38cdb7"
+    },
+    {
+      "number": 89,
+      "id": "advice-8dbfa029299cde928b93245c",
+      "title": "Практика \"Сухой Души\"",
+      "status": "published",
+      "textSha256": "8dbfa029299cde928b93245cefd20f1fa47a728b0153e2a9dd160014e9f5c98f"
+    },
+    {
+      "number": 90,
+      "id": "advice-e948723197c15fb7311426a9",
+      "title": "Контроль \"Мутных Испарений\"",
+      "status": "published",
+      "textSha256": "e948723197c15fb7311426a9cd0efeb626f0a2d0b5ef54c1a4c9c85f3cdef146"
+    },
+    {
+      "number": 91,
+      "id": "advice-ec48644a18e4edab338f9ecd",
+      "title": "Практика \"Световидного\" Питания",
+      "status": "published",
+      "textSha256": "ec48644a18e4edab338f9ecdb075fd8a57385548aa2165b18e0264bb407d4b57"
+    },
+    {
+      "number": 92,
+      "id": "advice-58ec966b68f6fe827e02841c",
+      "title": "Практика \"Герметизации Крови\"",
+      "status": "published",
+      "textSha256": "58ec966b68f6fe827e02841cb5eddb5f8a5ca2dfecfdf80986e01da122059df0"
+    },
+    {
+      "number": 93,
+      "id": "advice-532812f1bba96c78316cf278",
+      "title": "Практика \"Белой Крови\" (Молоко и Пневма)",
+      "status": "published",
+      "textSha256": "532812f1bba96c78316cf27857c1125845475dcf2b638349ac4e814cb1390ca1"
+    },
+    {
+      "number": 94,
+      "id": "advice-ce678677ca541855aa3e53bb",
+      "title": "Практика \"Солнечного Концентрата\" (Топленое Масло)",
+      "status": "published",
+      "textSha256": "ce678677ca541855aa3e53bb05eb354ed12968fb5264243707e558c1f587e6ff"
+    },
+    {
+      "number": 95,
+      "id": "advice-c57dc7b5cbaebc9e436ddb6f",
+      "title": "Практика \"Быстрого Меноса\" (Свежие Фрукты)",
+      "status": "published",
+      "textSha256": "c57dc7b5cbaebc9e436ddb6f3b95e3301d8f85f529798b40498af94ebef11144"
+    },
+    {
+      "number": 96,
+      "id": "advice-4e148a8a0590180e7bc26e5e",
+      "title": "Контроль \"Ржавчины Разума\" (Сиропы и Соя)",
+      "status": "published",
+      "textSha256": "4e148a8a0590180e7bc26e5e7693602a902170bc95fc28fea41b8d7bc0b7eb12"
+    },
+    {
+      "number": 97,
+      "id": "advice-b26231fd11e1c6c1172f8440",
+      "title": "Практика \"Чистого Кристалла\"",
+      "status": "published",
+      "textSha256": "f823f344fb912f5912e2342c2cfcb29dc06f7a989d37fb9a6b3bbf4f43ae4ce6"
+    },
+    {
+      "number": 98,
+      "id": "advice-268fe6cae8a210cb0b181b1e",
+      "title": "Инкубация Интеллектуального Меноса",
+      "status": "published",
+      "textSha256": "fb9c7162d8ee6eb57945df4d4dbbfbccbf0900fd926afce7396b4f0f24af22be"
+    },
+    {
+      "number": 99,
+      "id": "advice-5d1fe6aac20fbcc3b88c4dec",
+      "title": "Практика Пневматического Питания",
+      "status": "published",
+      "textSha256": "2506411857a98544f781cfdc8e97e04bd7e014999e3cda8480d2b01ef73a32b0"
+    },
+    {
+      "number": 100,
+      "id": "advice-b6724e2aa3869613950ca22f",
+      "title": "Контроль Биологической Жалости",
+      "status": "published",
+      "textSha256": "69153d363cdd7bf862d393fc01aa14ef584c395e57323fe54bab378a888a9c38"
+    },
+    {
+      "number": 101,
+      "id": "advice-0140fe780ca2ccc2ed4852d5",
+      "title": "Устранение \"Психического Рабства\"",
+      "status": "published",
+      "textSha256": "0140fe780ca2ccc2ed4852d5ce0df4694a27a3be0b9bbbb18dfc365d24bcdedf"
+    },
+    {
+      "number": 102,
+      "id": "advice-b834fae0179a55f7ed44d355",
+      "title": "Контроль Входящих Представлений",
+      "status": "published",
+      "textSha256": "b834fae0179a55f7ed44d35584317da6114daf71d831749bb1a733701f6283a4"
+    },
+    {
+      "number": 103,
+      "id": "advice-e066d326daaba07425d7dea1",
+      "title": "Практика Прямодействия вместо животной реакции",
+      "status": "published",
+      "textSha256": "e066d326daaba07425d7dea1781a04e533ecaba2e5241ecda919503da6ded83e"
+    },
+    {
+      "number": 104,
+      "id": "advice-b81b286c8294656032329c9c",
+      "title": "Практика \"Внутреннего Уединения\"",
+      "status": "published",
+      "textSha256": "b81b286c8294656032329c9c52d19f240177f0a5972fd4edf8fb8e3ad9fac19a"
+    },
+    {
+      "number": 105,
+      "id": "advice-e4411f4906693e69a78b9416",
+      "title": "Практика Иллюзии Обладания",
+      "status": "published",
+      "textSha256": "e4411f4906693e69a78b94160f978d0d5625c18430d729c4259b4256f0643d97"
+    },
+    {
+      "number": 106,
+      "id": "advice-120d3f1be19fb857f1e215f2",
+      "title": "Свобода выбора при внешних ограничениях",
+      "status": "published",
+      "textSha256": "bbaeb3ad1fff6130daad63db93a8c2dd0766afcbaf6f32a0872355284bfcaa5c",
+      "sourceTitle": "Практика Внешних Зависимостей",
+      "sourceTextSha256": "120d3f1be19fb857f1e215f25dd40ea39d9412990d19323b112b8355e9b75229",
+      "titleCorrection": {
+        "date": "2026-10-24",
+        "reason": "The body describes freedom of judgement amid external constraints, not practising dependence. Other locale titles already express that subject."
+      }
+    },
+    {
+      "number": 107,
+      "id": "advice-144969ca15e993823913adf8",
+      "title": "Практика Внутреннего Суверенитета",
+      "status": "published",
+      "textSha256": "144969ca15e993823913adf804c51701fb901b6d682179bc427ff89a1897efb1"
+    },
+    {
+      "number": 108,
+      "id": "advice-d05a45f27a8d509f9616c590",
+      "title": "Практика \"Возврата Залогов\"",
+      "status": "published",
+      "textSha256": "d05a45f27a8d509f9616c590e97741285ffba4075e736c595201a760ba20bc91"
+    },
+    {
+      "number": 109,
+      "id": "advice-42da2dfb3361988e02f9ef65",
+      "title": "Устранение \"Внутренней Рыхлости\"",
+      "status": "published",
+      "textSha256": "42da2dfb3361988e02f9ef658eca3893648c93f4da9557d8126239ec3c713cf4"
+    },
+    {
+      "number": 110,
+      "id": "advice-b6784c060b8dd40f316fbc46",
+      "title": "Контроль \"Эмоционального Дребезжания\"",
+      "status": "published",
+      "textSha256": "b6784c060b8dd40f316fbc4621387f27679bcbc179755bb4094a94d4a82e176f"
+    },
+    {
+      "number": 111,
+      "id": "advice-5546486027ae931c0f24a753",
+      "title": "Практика Интеллектуальной Плотности",
+      "status": "published",
+      "textSha256": "5546486027ae931c0f24a7535a4b3cb095e12b3fa05ff5015cd9ca35f5db30ee"
+    },
+    {
+      "number": 112,
+      "id": "advice-e0147c8cd9dc012f6ca4f0e7",
+      "title": "Практика \"Культивации Воли\"",
+      "status": "published",
+      "textSha256": "e0147c8cd9dc012f6ca4f0e73e2779a4374469f86677f34ef5b34b7d0c5be840"
+    },
+    {
+      "number": 113,
+      "id": "advice-6a0335a2d6f1f67ce33c35e8",
+      "title": "Устранение \"Эмоциональной Реактивности\"",
+      "status": "published",
+      "textSha256": "6a0335a2d6f1f67ce33c35e8c0e512faf3d6e88e3a44d6d0f95dbc4c811de266"
+    },
+    {
+      "number": 114,
+      "id": "advice-3bfcdf0affb19146e65bae0c",
+      "title": "Контроль \"Психических Миазмов\"",
+      "status": "published",
+      "textSha256": "3bfcdf0affb19146e65bae0cb675afaf85f0c6a8a9d9d5010c817a67d328cdf8"
+    },
+    {
+      "number": 115,
+      "id": "advice-9fe51cb429795aaf3fff848b",
+      "title": "Практика Интеллектуальной Тишины",
+      "status": "published",
+      "textSha256": "9fe51cb429795aaf3fff848be4de6f97a045d5a5c63390f4916830f2e8ca997c"
+    },
+    {
+      "number": 116,
+      "id": "advice-7e26ec88c2664f49331092b9",
+      "title": "Практика \"Внутренней Твердыни\"",
+      "status": "published",
+      "textSha256": "7e26ec88c2664f49331092b95cc10a3152b666a56f1fd311112883ca261bee65"
+    },
+    {
+      "number": 117,
+      "id": "advice-2782f4421702aeb921ea573b",
+      "title": "Практика Вечернего Безмолвия",
+      "status": "published",
+      "textSha256": "2782f4421702aeb921ea573b688cf9c773df255760cf6067f050a9e0f0fd1e86"
+    },
+    {
+      "number": 118,
+      "id": "advice-3103c9a4f3e1e4989855f8aa",
+      "title": "Утренняя Юстировка Намерения",
+      "status": "published",
+      "textSha256": "3103c9a4f3e1e4989855f8aab326ee8255f07736fc40d293c1a3a0129f9bb73c"
+    },
+    {
+      "number": 119,
+      "id": "advice-2fe1898a4e97eefe02ab3ba6",
+      "title": "Контроль \"Случайных Представлений\"",
+      "status": "published",
+      "textSha256": "2fe1898a4e97eefe02ab3ba65fadcb4373b6e973c179629e07897c495f271dec"
+    },
+    {
+      "number": 120,
+      "id": "advice-75aa66328221eec059d90bcd",
+      "title": "Взвешивание \"Словесной Жертвы\"",
+      "status": "published",
+      "textSha256": "75aa66328221eec059d90bcd9678483b7b156c73dd297267d99426ed0a520ef9"
+    },
+    {
+      "number": 121,
+      "id": "advice-8701927adb0d085fc3ecb4db",
+      "title": "Устранение \"Психического Попрошайничества\"",
+      "status": "published",
+      "textSha256": "8701927adb0d085fc3ecb4dbc4782c403fe4c32feedbb64da3eaef4a051c2920"
+    },
+    {
+      "number": 122,
+      "id": "advice-4de9d280406ad6b41a0b8423",
+      "title": "Утверждение Внутреннего Ресурса",
+      "status": "published",
+      "textSha256": "4de9d280406ad6b41a0b842344679f8ba3ec50ae594de421c3334f7476cd7740"
+    },
+    {
+      "number": 123,
+      "id": "advice-69b4707d02492b150ec8a0b2",
+      "title": "Ликвидация \"Ложных Опор\"",
+      "status": "published",
+      "textSha256": "69b4707d02492b150ec8a0b2b653a8c59eae3b269048ac42c23936c33263fe37"
+    },
+    {
+      "number": 124,
+      "id": "advice-d0bfe3d542fa95e203379645",
+      "title": "Практика \"Внутреннего Безмолвия\"",
+      "status": "published",
+      "textSha256": "d0bfe3d542fa95e203379645c8f3939aec8903eb9ed5fd9356514114d139a758"
+    },
+    {
+      "number": 125,
+      "id": "advice-1d94133cd6a7cf9df9983745",
+      "title": "Устранение \"Аддитивной Логики\"",
+      "status": "published",
+      "textSha256": "1d94133cd6a7cf9df9983745eeb6cc00a0fe94778502f6669b1879fa67d2bba6"
+    },
+    {
+      "number": 126,
+      "id": "advice-2d8c93e190a01671439929c7",
+      "title": "Практика Внутреннего Резца",
+      "status": "published",
+      "textSha256": "2d8c93e190a01671439929c7072f5575e54892f01d6fd21d507f46a62a5b2a49"
+    },
+    {
+      "number": 127,
+      "id": "advice-46bf1db6c18345efebdd4d91",
+      "title": "Сбрасывание Социальных \"Одежд\"",
+      "status": "published",
+      "textSha256": "46bf1db6c18345efebdd4d9114e564d54342e4ddb109c9b190f43c4299b6ef27"
+    },
+    {
+      "number": 128,
+      "id": "advice-cdc160db8afb207234638d90",
+      "title": "Практика \"Внутреннего Сияния\"",
+      "status": "published",
+      "textSha256": "cdc160db8afb207234638d909625f155764a2f70acd73513e08dd892a12114ff"
+    },
+    {
+      "number": 129,
+      "id": "advice-56599edfcb89a3f5216a8b9c",
+      "title": "Одежда Из Белого Льна (Пифагорейский Протокол)",
+      "status": "published",
+      "textSha256": "56599edfcb89a3f5216a8b9c3a70ec7c2e62ca8e8b521861b392cff36062ae32"
+    },
+    {
+      "number": 130,
+      "id": "advice-4668df3a502438c27a83fad9",
+      "title": "Устранение \"Рыночной Маскировки\"",
+      "status": "published",
+      "textSha256": "4668df3a502438c27a83fad910454273e9b9e7c6b7278804d2a61189aa0239d7"
+    },
+    {
+      "number": 131,
+      "id": "advice-c505c4915bd4a47f94cfcdf2",
+      "title": "Алхимия Прямой Осанки",
+      "status": "published",
+      "textSha256": "c505c4915bd4a47f94cfcdf2ac9994db64aa50a67fdaa329c708e18c2c2c9447"
+    },
+    {
+      "number": 132,
+      "id": "advice-4cfdec64e8616adb5bbad44d",
+      "title": "Практика \"Обнажения Сути\"",
+      "status": "published",
+      "textSha256": "4cfdec64e8616adb5bbad44d18aafbc6094820e1eecdd013f579345d2fd5db35"
+    },
+    {
+      "number": 133,
+      "id": "advice-806eb843fc15d6000a3774df",
+      "title": "Практика осознанного \"Рыночного Камуфляжа\"",
+      "status": "published",
+      "textSha256": "806eb843fc15d6000a3774dfd9662eac7b1fc2d5de60aecc03e260d137a78269"
+    },
+    {
+      "number": 134,
+      "id": "advice-3ae3e82ce39917301dd056f9",
+      "title": "Контроль \"Профанного Взора\"",
+      "status": "published",
+      "textSha256": "3ae3e82ce39917301dd056f9eae93b5678e2a1d3b1edbb8df369a032d448ff0a"
+    },
+    {
+      "number": 135,
+      "id": "advice-70c6af8dc238d416048f743b",
+      "title": "Устранение \"Тщеславного Сияния\"",
+      "status": "published",
+      "textSha256": "70c6af8dc238d416048f743b9e2b5005160d88688e0590bb7ff27c16776c1bab"
+    },
+    {
+      "number": 136,
+      "id": "advice-5d7176555bd2db194e4ef36d",
+      "title": "Практика \"Закрытия Входов\"",
+      "status": "published",
+      "textSha256": "5d7176555bd2db194e4ef36d8509a323d0a65eaf15819ca08238ba0ec2d03fb7"
+    },
+    {
+      "number": 137,
+      "id": "advice-7b3885d7e076a84ae33b6886",
+      "title": "Утверждение Вертикальной Оси",
+      "status": "published",
+      "textSha256": "7b3885d7e076a84ae33b6886b67d0a64ed6a6047c2ee01d5d5e81ac70c9e6bbb"
+    },
+    {
+      "number": 138,
+      "id": "advice-47fd65d975c3f78f9a3aad01",
+      "title": "Алхимия Тонического Натяжения",
+      "status": "published",
+      "textSha256": "47fd65d975c3f78f9a3aad01c89c11cd326601095d83970660a37be7723b934c"
+    },
+    {
+      "number": 139,
+      "id": "advice-723b1b54bd88bf08eca41d19",
+      "title": "Контроль \"Биологического Сползания\"",
+      "status": "published",
+      "textSha256": "723b1b54bd88bf08eca41d19d926d18872129532331b39e140f7ddf7f6f5cd21"
+    },
+    {
+      "number": 140,
+      "id": "advice-59451f6c82f198ca4fca85a9",
+      "title": "Практика \"Внутреннего Выпрямления\"",
+      "status": "published",
+      "textSha256": "59451f6c82f198ca4fca85a9675e18dd7d2a85dedc927ee39b0a864b1a6c23fa"
+    },
+    {
+      "number": 141,
+      "id": "advice-464a82c59cc2b724ab875359",
+      "title": "Практика Порогового Катарсиса",
+      "status": "published",
+      "textSha256": "464a82c59cc2b724ab8753599923ed82606c8eccc2868b2c51d01bcb7e14ba42"
+    },
+    {
+      "number": 142,
+      "id": "advice-55912c88ba843b38f67517b5",
+      "title": "Практика \"Соленого Омовения\"",
+      "status": "published",
+      "textSha256": "55912c88ba843b38f67517b50d6587fd8f6610e04277bfa3db2cfd19c7cf2f27"
+    },
+    {
+      "number": 143,
+      "id": "advice-f9bf465bd5d37ad8fe0e41f0",
+      "title": "Устранение \"Тяжести Становления\"",
+      "status": "published",
+      "textSha256": "f9bf465bd5d37ad8fe0e41f0df5be6f9b30f3d3891cd89aad813bd8a3e049e31"
+    },
+    {
+      "number": 144,
+      "id": "advice-3a0b96ed19225e780c08685d",
+      "title": "Сосуды и места для омовения (Принцип Гесиода)",
+      "status": "published",
+      "textSha256": "d69130ebefbb6f24add8cf0c826bbc2078bf57573f2c29e82f0d5679b42c497a",
+      "sourceTitle": "Контроль Сосудов (Принцип Гесиода)",
+      "sourceTextSha256": "3a0b96ed19225e780c08685dc58871433c00b095d82297ab589ccf38c443ae97",
+      "titleCorrection": {
+        "date": "2026-10-24",
+        "reason": "Specify vessels and places for ablution, separating this post from tableware advice and the bodily-vessel metaphor."
+      }
+    },
+    {
+      "number": 145,
+      "id": "advice-f36ac824c0db617b8357a364",
+      "title": "Цензура Священного Изображения",
+      "status": "published",
+      "textSha256": "f36ac824c0db617b8357a364a343a414af5ca1f3e241d2d503405f21ae604502"
+    },
+    {
+      "number": 146,
+      "id": "advice-55aa0d4c2c01cd2ecc58000b",
+      "title": "Практика \"Благородной Материи\"",
+      "status": "published",
+      "textSha256": "55aa0d4c2c01cd2ecc58000b7418fc5247a2cc9a223664f97facff772f2ca959"
+    },
+    {
+      "number": 147,
+      "id": "advice-35478a301ed7d9c37671dc7d",
+      "title": "Алхимия Геометрического Порядка",
+      "status": "published",
+      "textSha256": "35478a301ed7d9c37671dc7d137a57a1381f3671424074be4ea44ccb57f2e990"
+    },
+    {
+      "number": 148,
+      "id": "advice-3ef9d9a7db56d8cbff95893c",
+      "title": "Практика \"Герметизации Инструмента\"",
+      "status": "published",
+      "textSha256": "3ef9d9a7db56d8cbff95893cc0a684013f2ee30f40950cb12acaf94f19e1d630"
+    },
+    {
+      "number": 149,
+      "id": "advice-7cd1d77ee9802c1b82fe2d76",
+      "title": "Практика Избирательной Эпифании",
+      "status": "published",
+      "textSha256": "7cd1d77ee9802c1b82fe2d76a54c2ea83263a1b59d66aec7633372032d4f4608"
+    },
+    {
+      "number": 150,
+      "id": "advice-f48eb16b4ee725a85d324fb7",
+      "title": "Контроль Хтонической Энтропии",
+      "status": "published",
+      "textSha256": "f48eb16b4ee725a85d324fb75bddb3b9f32d635f03f1adc69a39303ebb2fa75f"
+    },
+    {
+      "number": 151,
+      "id": "advice-d3f28f7c67b54619d98a0a26",
+      "title": "Алхимия Бизнес-Доминирования",
+      "status": "published",
+      "textSha256": "d3f28f7c67b54619d98a0a269e69668ecbeb8132d818e57f1dc6a626c3516e92"
+    },
+    {
+      "number": 152,
+      "id": "advice-813f1e630a523d6dba85c22a",
+      "title": "Практика \"Солнечного Протокола\"",
+      "status": "published",
+      "textSha256": "813f1e630a523d6dba85c22a7cc6771d686269729cfe48b408f549745fc356cf"
+    },
+    {
+      "number": 153,
+      "id": "advice-b88b1731b5a80bfc04c9e8db",
+      "title": "Практика \"Маски Монарха\"",
+      "status": "published",
+      "textSha256": "b88b1731b5a80bfc04c9e8db247e05cf4c25f470bd049d3b2bcdd2f702d8f62f"
+    },
+    {
+      "number": 154,
+      "id": "advice-c42cab62177f634d64699c8f",
+      "title": "Контроль \"Визуального Дребезжания\"",
+      "status": "published",
+      "textSha256": "c42cab62177f634d64699c8f5a6c13cd6ca38b0707f324b84237e64e83273f78"
+    },
+    {
+      "number": 155,
+      "id": "advice-f5ea8374fe9d2a603e448715",
+      "title": "Алхимия \"Герметичного Взора\"",
+      "status": "published",
+      "textSha256": "f5ea8374fe9d2a603e448715cbb7af2268f0fb895075c1f21e2b9fb8739f4d90"
+    },
+    {
+      "number": 156,
+      "id": "advice-8c5752f290c0d2b6bbad25f9",
+      "title": "Практика \"Зеркальной Ревизии\"",
+      "status": "published",
+      "textSha256": "8c5752f290c0d2b6bbad25f9de0564260d170e77dbdd8ff67505fca56b05b6e0"
+    },
+    {
+      "number": 157,
+      "id": "advice-6c74bf7ae978aac5d7816373",
+      "title": "Практика Внутреннего Резца",
+      "status": "published",
+      "textSha256": "6c74bf7ae978aac5d781637309c3058dceb1df808e3142af8230213f06dee109"
+    },
+    {
+      "number": 158,
+      "id": "advice-a981b861e4f5ba0e4d21faaa",
+      "title": "Алхимия Твердой Структуры",
+      "status": "published",
+      "textSha256": "a981b861e4f5ba0e4d21faaad89e019306c40c0c8384cb1289dbaee04dda09d5"
+    },
+    {
+      "number": 159,
+      "id": "advice-050340fad67e84e37cba76bf",
+      "title": "Контроль \"Землистой Ржавчины\"",
+      "status": "published",
+      "textSha256": "050340fad67e84e37cba76bf9bb48980aa9bb624b582928b27196238d06db8b1"
+    },
+    {
+      "number": 160,
+      "id": "advice-96bfa01d6150e8b5b579d884",
+      "title": "Практика \"Позирования перед Вечностью\"",
+      "status": "published",
+      "textSha256": "96bfa01d6150e8b5b579d884d9b47cfda85b653e0a48ecc04445153b351b4162"
+    }
+  ]
+}

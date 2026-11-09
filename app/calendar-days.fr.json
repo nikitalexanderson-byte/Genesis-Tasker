@@ -1,0 +1,1466 @@
+[
+  {
+    "name": "Areios Ridzomatos (Areios qui enracine)",
+    "description": "La pose des fondements de la volonté et l'éveil des forces intérieures comme les racines du monde dans la Théogonie de Hesiod."
+  },
+  {
+    "name": "Areios Klidonios (Areios enragé)",
+    "description": "Un flux d'énergie primordiale emportant les barrières, comme la fureur des rivières homériques."
+  },
+  {
+    "name": "Areios Pnevmatikos (Areios spiritualisant)",
+    "description": "Le mot donnant forme à l'intention et le premier cri de bataille volant dans les airs."
+  },
+  {
+    "name": "Areios Pirivrontos (Areios tonnerre de feu)",
+    "description": "L'éclair de conscience et la chaleur de la flamme créatrice forgeant l'armure de l'esprit."
+  },
+  {
+    "name": "Areios Aiterios (Areios céleste)",
+    "description": "La pure lumière de la raison, couronnant la première victoire sur sa propre inertie."
+  },
+  {
+    "name": "Areios Stenaros (Areios puissant)",
+    "description": "Obtenir une dureté physique et un soutien indestructible dans l'action choisie."
+  },
+  {
+    "name": "Areios Gidrelatos (Areios acier coulant)",
+    "description": "Flexibilité de la stratégie et capacité à éviter les obstacles, en maintenant la pression."
+  },
+  {
+    "name": "Areios Glavkopis (Areios aux yeux brillants)",
+    "description": "L'éclat de la pensée et la sagesse de Athena, vous permettant de voir l'essence des choses à travers le brouillard."
+  },
+  {
+    "name": "Areios Flegeton (Areios esprit flamboyant)",
+    "description": "Brûlure intense des idées et destruction impitoyable des doutes."
+  },
+  {
+    "name": "Areios Epoptes (Areios contemplatif)",
+    "description": "Retrouver un point de repos et une vision surhumaine sur le domaine de son activité."
+  },
+  {
+    "name": "Areios Enkespalos (Areios secoueur de lance)",
+    "description": "L'application exacte de la force et le moment du coup décisif sur la cible visée."
+  },
+  {
+    "name": "Areios Katarsios (Areios nettoyage)",
+    "description": "Transformation du travail acharné en pure maîtrise grâce à la purification intérieure."
+  },
+  {
+    "name": "Areios Pteroforos (Areios ailé)",
+    "description": "Facilité d'exécution et rapidité de manœuvre lorsque la pensée est en avance sur le mouvement."
+  },
+  {
+    "name": "Areios Akamatos (Areios infatigable)",
+    "description": "Continuité de l'action et chaleur inépuisable de la volonté, ne connaissant pas la fatigue."
+  },
+  {
+    "name": "Areios Bazileios (Areios royal)",
+    "description": "L’établissement de l’ordre dans la vie et le triomphe de l’esprit organisé."
+  },
+  {
+    "name": "Areios Erkeios (Areios clôture)",
+    "description": "Renforcez vos limites personnelles et protégez votre espace des influences chaotiques externes."
+  },
+  {
+    "name": "Areios Kallinikos (Areios gentiment victorieux)",
+    "description": "La joie de surmonter honnêtement les difficultés et la fidélité au chemin choisi."
+  },
+  {
+    "name": "Areios Talaurkh (Areios résistant)",
+    "description": "Patience et endurance pour résister à toute pression des circonstances."
+  },
+  {
+    "name": "Areios Enialios (Areios frénétique)",
+    "description": "La concentration maximale de toutes les ressources avant le dernier lancer du mois."
+  },
+  {
+    "name": "Areios Isoteos (Areios divin)",
+    "description": "Un état de flux dans lequel les actions de l'homme deviennent participantes du rythme divin."
+  },
+  {
+    "name": "Areios Polimetis (Areios à plusieurs égards)",
+    "description": "Utiliser la ruse et la stratégie pour atteindre les objectifs le plus rapidement possible."
+  },
+  {
+    "name": "Areios Melididzos (Areios langue de miel)",
+    "description": "Le pouvoir des mots persuasifs et l'habileté des négociations dans la lutte pour leurs intérêts."
+  },
+  {
+    "name": "Areios Aiolos (Areios modifiable)",
+    "description": "Liberté interne et capacité de s'adapter instantanément aux conditions mondiales changeantes."
+  },
+  {
+    "name": "Areios Daifron (Areios ardemment sage)",
+    "description": "La combinaison parfaite d’un cœur chaud et d’un esprit froid et calculateur."
+  },
+  {
+    "name": "Areios Pankrates (Areios tout-puissant)",
+    "description": "Contrôle total sur les ressources internes et conscience de votre pouvoir."
+  },
+  {
+    "name": "Areios Khtonii (Areios terrestre)",
+    "description": "La consolidation définitive des résultats obtenus au cours du mois dans le monde matériel."
+  },
+  {
+    "name": "Areios Polimnios (Areios marée haute)",
+    "description": "Accumulation d’une expérience profonde et retrouver la tranquillité d’esprit après la phase active."
+  },
+  {
+    "name": "Areios Fizizoos (Areios donneur de vie)",
+    "description": "Un souffle de nouvelle vie a germé à travers la discipline et la sévérité du mois."
+  },
+  {
+    "name": "Areios Pirifos (Areios fougueux)",
+    "description": "Lumière de conscience, éclairant le chemin parcouru et pointant vers de nouveaux horizons."
+  },
+  {
+    "name": "Areios Giperion (Areios marche en hauteur)",
+    "description": "Le point culminant du triomphe personnel et de la transition vers les énergies du mois suivant."
+  },
+  {
+    "name": "Antesis Filomeides (Antesis qui aime le sourire)",
+    "description": "Manifestation du charme corporel et de la joie de vivre née de l'harmonie de la matière (Épithète de Aphrodite en Homer)."
+  },
+  {
+    "name": "Antesis Pontogeniya (Antesis né de la mer)",
+    "description": "L'élan émotionnel et la douceur des sentiments qui montent des profondeurs, comme les eaux au large des côtes de Chypre."
+  },
+  {
+    "name": "Antesis Ligis (Antesis exprimé)",
+    "description": "Respiration facile et premier pur murmure du printemps, remplissant l'air d'inspiration."
+  },
+  {
+    "name": "Antesis Piriforos (Antesis fougueux)",
+    "description": "Un éclair d'excitation créative et la chaleur de l'amour, transformant l'idée en une attraction vivante."
+  },
+  {
+    "name": "Antesis Panmata (Antesis tout rayonnant)",
+    "description": "L'unité de l'idéal esthétique et de la conscience pure qui illumine toutes choses."
+  },
+  {
+    "name": "Antesis Pankarpos (Antesis entièrement fertile)",
+    "description": "Pouvoir de germination et abondance matérielle confiante enracinée dans le sol."
+  },
+  {
+    "name": "Antesis Kalliroos (Antesis excellent courant)",
+    "description": "Pureté du flux interne et douceur des mouvements qui ne rencontrent pas d'obstacles."
+  },
+  {
+    "name": "Antesis Ierofillos (Antesis feuille sacrée)",
+    "description": "Le souffle sacré de la nature et la capacité d'entendre les vibrations subtiles de la vie dans l'espace."
+  },
+  {
+    "name": "Antesis Termos (Antesis chaud)",
+    "description": "La chaleur fertile de la maturation et l'énergie de la chaleur sincère dans les relations humaines."
+  },
+  {
+    "name": "Antesis Kharidotis (Antesis donner de la joie)",
+    "description": "Un état de générosité d'esprit et l'acquisition de la grâce intérieure."
+  },
+  {
+    "name": "Antesis Antefor (Antesis floraison)",
+    "description": "Le sommet de la prospérité physique et la décoration de votre monde avec de vrais fruits du travail."
+  },
+  {
+    "name": "Antesis Gidrelatos (Antesis hydratant)",
+    "description": "Remplir de jus de vie et nourrir vos racines profondes."
+  },
+  {
+    "name": "Antesis Pnevmatoforos (Antesis porteur d'esprit)",
+    "description": "L'excitation subtile qui accompagne le vent libre et les nouvelles idées."
+  },
+  {
+    "name": "Antesis Khrizofaes (Antesis doré brillant)",
+    "description": "Le feu solaire de la création, transformant l'apparence et le charisme."
+  },
+  {
+    "name": "Antesis Epiratos (Antesis attrayant)",
+    "description": "Magnétisme de la personnalité et perfection de la forme, perceptibles au niveau de l'éther."
+  },
+  {
+    "name": "Antesis Poliantos (Antesis multicolore)",
+    "description": "La variété des expressions créatives et la richesse des ressources disponibles ici et maintenant."
+  },
+  {
+    "name": "Antesis Limenaios (Antesis côtière)",
+    "description": "Le point de repos près de l'eau, où les sentiments rencontrent une conscience claire des objectifs."
+  },
+  {
+    "name": "Antesis Aurios (Antesis venteux)",
+    "description": "Liberté des conventions et joie de se déplacer facilement et sans effort vers ce que l'on souhaite."
+  },
+  {
+    "name": "Antesis Flegeton (Antesis fougueux)",
+    "description": "L'intensité de vivre chaque instant et la passion brûlante pour leur travail."
+  },
+  {
+    "name": "Antesis Olimpios (Antesis Olympique)",
+    "description": "Le triomphe sublime de l'esprit sur l'ordinaire et l'atteinte de la mesure divine."
+  },
+  {
+    "name": "Antesis Gestor (Antesis organisateur)",
+    "description": "Ordonner l’espace autour de vous pour la beauté et la fonctionnalité."
+  },
+  {
+    "name": "Antesis Pelagios (Antesis marin)",
+    "description": "La profondeur de l'empathie et l'imagination sans limites qui nourrissent les sens."
+  },
+  {
+    "name": "Antesis Psikhikos (Antesis émouvant)",
+    "description": "Établir des connexions subtiles avec le monde et une consonance avec les rythmes des gens qui l'entourent."
+  },
+  {
+    "name": "Antesis Pirivrontos (Antesis tonnerre de feu)",
+    "description": "Le pouvoir indestructible du désir, capable de changer la réalité selon vos besoins."
+  },
+  {
+    "name": "Antesis Uranios (Antesis céleste)",
+    "description": "Amour intellectuel supérieur et conscience de la beauté en tant que loi universelle."
+  },
+  {
+    "name": "Antesis Terpsikhoros (Antesis profiter de la danse)",
+    "description": "Célébration de l'être corporel et incarnation rythmique des projets dans la matière."
+  },
+  {
+    "name": "Antesis Mirion (Antesis parfumé)",
+    "description": "Répandre votre influence et laisser une bonne marque dans l'âme des autres."
+  },
+  {
+    "name": "Antesis Psitiros (Antesis chuchotant)",
+    "description": "Comprendre les significations secrètes de la beauté et la connaissance intuitive du bon chemin."
+  },
+  {
+    "name": "Antesis Khrizostefanos (Antesis couronné d'or)",
+    "description": "Couronnement des efforts printaniers et obtention d'un résultat radieux."
+  },
+  {
+    "name": "Antesis Teos (Antesis divin)",
+    "description": "Fusion complète avec l'énergie créatrice du cosmos et transition vers la chaleur estivale."
+  },
+  {
+    "name": "Psitiros Khtonios (Psitiros terrestre)",
+    "description": "La pénétration de la pensée dans la densité de la matière et le murmure silencieux de la vie sous le sol, comme les racines du monde en Hesiod."
+  },
+  {
+    "name": "Psitiros Gidrelatos (Psitiros hydratant)",
+    "description": "La fluidité de la parole et la capacité de trouver un langage commun, comme les fleuves homériques qui relient la terre."
+  },
+  {
+    "name": "Psitiros Pnevmatikos (Psitiros spiritualiser)",
+    "description": "Le bruissement des feuilles et le premier souffle de révélation, venant de l'air et des prémonitions."
+  },
+  {
+    "name": "Psitiros Piripnoos (Psitiros cracheur de feu)",
+    "description": "L'étincelle d'esprit et la chaleur d'un vif intérêt, éclairant le cœur des auditeurs."
+  },
+  {
+    "name": "Psitiros Angelos (Psitiros messager)",
+    "description": "Recevoir un message clair du Soi Supérieur et être prêt à le transmettre au monde."
+  },
+  {
+    "name": "Psitiros Godios (Psitiros route)",
+    "description": "Réussir dans les entreprises et trouver la bonne direction dans le labyrinthe des affaires quotidiennes."
+  },
+  {
+    "name": "Psitiros Potamios (Psitiros rivière)",
+    "description": "La permanence du changement et la joie du renouveau grâce au flux continu d'informations."
+  },
+  {
+    "name": "Psitiros Ptinos (Psitiros ailé)",
+    "description": "La vitesse du mouvement et la facilité de pensée qui ne connaît ni frontières ni barrières."
+  },
+  {
+    "name": "Psitiros Flogeros (Psitiros enflammé)",
+    "description": "L'éloquence et la force de persuasion qui peuvent faire fondre la glace de la méfiance."
+  },
+  {
+    "name": "Psitiros Diaktoros (Psitiros conducteur)",
+    "description": "Maîtrise de la navigation dans des systèmes complexes et capacité à diriger les autres."
+  },
+  {
+    "name": "Psitiros Agreios (Psitiros sauvage\nTouche)",
+    "description": "Manifestation du pouvoir primordial et conscience de vos instincts naturels comme support."
+  },
+  {
+    "name": "Psitiros Krenaios (Psitiros clé)",
+    "description": "La pureté de l'intuition venue des profondeurs du subconscient, comme des sources sacrées."
+  },
+  {
+    "name": "Psitiros Siriktis (Psitiros tuyau)",
+    "description": "Retrouver l'harmonie intérieure et l'harmonie avec les rythmes de la nature."
+  },
+  {
+    "name": "Psitiros Termopnoos (Psitiros respiration chaude)",
+    "description": "L'énergie vitale et la chaleur de la vie qui donnent du sens à chaque mouvement."
+  },
+  {
+    "name": "Psitiros Nomios (Psitiros pastorale)",
+    "description": "Connaissance des lois de la nature et capacité à gérer vos ressources en conformité avec l'ensemble."
+  },
+  {
+    "name": "Psitiros Kerdios (Psitiros rentable)",
+    "description": "La capacité de bénéficier de tout contact et de matérialiser des idées à travers des connexions."
+  },
+  {
+    "name": "Psitiros Limenaios (Psitiros port)",
+    "description": "L'art de ralentir le temps et de trouver un endroit sûr pour vivre l'expérience."
+  },
+  {
+    "name": "Psitiros Pteroforos (Psitiros ailé)",
+    "description": "Recevoir des nouvelles importantes et élargir ses horizons grâce à des contacts externes."
+  },
+  {
+    "name": "Psitiros Akamatos (Psitiros infatigable)",
+    "description": "Une vigueur d'esprit dans les affaires et un intérêt sans fin pour l'exploration du nouveau."
+  },
+  {
+    "name": "Psitiros Episkopos (Psitiros je regarde)",
+    "description": "La capacité de voir les motivations cachées et de contrôler les flux d'informations."
+  },
+  {
+    "name": "Psitiros Germaios (Psitiros limite)",
+    "description": "Déterminer les limites de ce qui est permis et protéger leurs intérêts à l'intersection de différentes sphères."
+  },
+  {
+    "name": "Psitiros Naustolos (Psitiros capitaine du navire)",
+    "description": "Gérer vos émotions dans l'océan des interactions sociales"
+  },
+  {
+    "name": "Psitiros Anemios (Psitiros venteux)",
+    "description": "La libre diffusion de son influence et la facilité d’établir de nouvelles connexions."
+  },
+  {
+    "name": "Psitiros Aiton (Psitiros brûlant)",
+    "description": "Intensité du savoir et curiosité furieuse, révélant l'essence des choses."
+  },
+  {
+    "name": "Psitiros Psikhopompos (Psitiros maître de l'âme)",
+    "description": "La transition des mots aux significations profondes et la transformation de l'intelligence en sagesse."
+  },
+  {
+    "name": "Psitiros Geokhos (Psitiros souverain foncier)",
+    "description": "Affirmer son message dans le monde matériel et entrer en résonance avec la réalité."
+  },
+  {
+    "name": "Psitiros Polifloisvos (Psitiros bruyant)",
+    "description": "Le pouvoir de la reconnaissance publique et les fruits de vos paroles qui résonnent partout."
+  },
+  {
+    "name": "Psitiros Aerios (Psitiros air)",
+    "description": "Atteindre les sommets de la compréhension et de la clarté de la révision du chemin du ressort parcouru."
+  },
+  {
+    "name": "Psitiros Lampas (Psitiros fusée éclairante)",
+    "description": "La transmission plus approfondie de la lumière de la connaissance et la clarification finale de tous les plans."
+  },
+  {
+    "name": "Psitiros Panteos (Psitiros tout divin)",
+    "description": "La fusion de la voix individuelle avec le chœur de l'univers avant d'entrer dans l'été."
+  },
+  {
+    "name": "Aigle Khtoniya (Aigle terrestre)",
+    "description": "L'affirmation de l'ordre solaire dans le monde physique et la densité de lumière imprégnant la matière."
+  },
+  {
+    "name": "Aigle Pontiya (Aigle marin)",
+    "description": "Reflet de la plus haute vérité dans le miroir des émotions et de la pureté des sentiments sous le soleil brûlant."
+  },
+  {
+    "name": "Aigle Pnevmatika (Aigle spiritualisant)",
+    "description": "Transparence de pensée et clarté de jugement lorsque l’air est calme et lumineux."
+  },
+  {
+    "name": "Aigle Piriforos (Aigle fougueux)",
+    "description": "Le pic de l'énergie solaire et la chaleur de la réalisation de votre vraie nature au solstice."
+  },
+  {
+    "name": "Aigle Aiteriya (Aigle céleste)",
+    "description": "L'éther pur de la raison, dégagé de tout doute, et le triomphe du divin Logos."
+  },
+  {
+    "name": "Aigle Sterea (Aigle dur)",
+    "description": "Cristallisation des plans et donnant aux pensées une forme indestructible comme le granit de Delph."
+  },
+  {
+    "name": "Aigle Katarsios (Aigle nettoyage)",
+    "description": "Délivrance des ténèbres intérieures par la lumière directe de la conscience et la purification de l'âme."
+  },
+  {
+    "name": "Aigle Loksias (Aigle diffusion)",
+    "description": "La capacité de voir les modèles cachés du futur grâce à l'intuition et à la logique."
+  },
+  {
+    "name": "Aigle Flogia (Aigle fougueux)",
+    "description": "Illusions brûlantes et faux concepts dans le feu de la vérité impitoyable."
+  },
+  {
+    "name": "Aigle Epoptes (Aigle contemplatif)",
+    "description": "Atteindre l'objectivité et une vision de votre vie à partir de la position d'un observateur impartial."
+  },
+  {
+    "name": "Aigle Nomiya (Aigle légal)",
+    "description": "Établir un code personnel de règles et de discipline qui organise la vie quotidienne."
+  },
+  {
+    "name": "Aigle Kalliroos (Aigle courant parfait)",
+    "description": "Harmonie entre la volonté et les circonstances où la vie s'écoule sur le chemin du destin."
+  },
+  {
+    "name": "Aigle Musagetis (Aigle pilote de musique)",
+    "description": "Inspiration née d'un ordre et d'une compétence stricts, pas du chaos."
+  },
+  {
+    "name": "Aigle Akamatos (Aigle infatigable)",
+    "description": "La constance de la combustion interne et l'énergie uniforme de la création, qui ne connaît aucun ralentissement."
+  },
+  {
+    "name": "Aigle Bazileios (Aigle royal)",
+    "description": "Conscience de soi en tant que souverain de son état intérieur et volonté de se prendre en charge."
+  },
+  {
+    "name": "Aigle Epikurios (Aigle aidant)",
+    "description": "Promotion de la santé corporelle et soin du vaisseau physique pour l'esprit."
+  },
+  {
+    "name": "Aigle Delios (Aigle explicite)",
+    "description": "Sortir de l'ombre, montrer ouvertement vos talents et la reconnaissance mondiale de vos mérites."
+  },
+  {
+    "name": "Aigle Fevos (Aigle rayonnant)",
+    "description": "La pureté ultime des intentions et l'éclat du charisme qui attire les personnes partageant les mêmes idées."
+  },
+  {
+    "name": "Aigle Pitios (Aigle Pythien)",
+    "description": "Frappe précise sur la cible, vainquant les flèches des monstres intérieurs (Pyphon) de l'esprit."
+  },
+  {
+    "name": "Aigle Giperioniya (Aigle très élevé)",
+    "description": "Un sentiment de connexion avec les cycles cosmiques et la paix transcendantale."
+  },
+  {
+    "name": "Aigle Pagia (Aigle résistant)",
+    "description": "Matérialisation de stratégies à long terme et situation confiante."
+  },
+  {
+    "name": "Aigle Gigieya (Aigle guérison)",
+    "description": "Récupération par le contact avec les éléments et gain d'intégrité."
+  },
+  {
+    "name": "Aigle Profitis (Aigle prophétique)",
+    "description": "La compétence de prévision et la capacité d'agir avant les événements."
+  },
+  {
+    "name": "Aigle Aktis (Aigle rayonnant)",
+    "description": "Concentrez-vous sur le principal et coupez tout le secondaire."
+  },
+  {
+    "name": "Aigle Pankratis (Aigle tout-puissant)",
+    "description": "Pleine possession de leurs ressources et du pouvoir conscient de l'intelligence."
+  },
+  {
+    "name": "Aigle Geodaitis (Aigle enquête)",
+    "description": "Évaluez les acquis du mois et apportez des modifications à la métrique de votre chemin."
+  },
+  {
+    "name": "Aigle Limenis (Aigle port)",
+    "description": "Paix de sentiment après une phase active et préparation à une période de transformation profonde."
+  },
+  {
+    "name": "Aigle Aeriya (Aigle sublime)",
+    "description": "La sensation de survoler la situation et la facilité de prendre des décisions difficiles."
+  },
+  {
+    "name": "Aigle Geliu (Aigle ensoleillé)",
+    "description": "Fusionnez complètement avec l'énergie du succès et sentez-vous comme une source de lumière pour les autres."
+  },
+  {
+    "name": "Aigle Monas (Aigle célibataire)",
+    "description": "Retournez au point d'assemblage d'origine avant que la forge de Hephaestus n'entre dans la chaleur."
+  },
+  {
+    "name": "Kauma Khtoniya (Kauma terrestre)",
+    "description": "Établir les fondations de la volonté sur des bases solides et préparer le matériel pour les réalisations futures."
+  },
+  {
+    "name": "Kauma Gidrelatos (Kauma durci)",
+    "description": "Refroidir les premières impulsions et gagner en fermeté grâce à la collision du feu du désir avec l'eau de la discipline."
+  },
+  {
+    "name": "Kauma Fisates (Kauma gonfler)",
+    "description": "L'énergie respiratoire des fourrures de forgeron, remplissant l'espace du pouvoir nécessaire pour démarrer une grande entreprise."
+  },
+  {
+    "name": "Kauma Piripnoos (Kauma cracheur de feu)",
+    "description": "Entrer dans le rythme de travail et atteindre une température à laquelle des changements radicaux sont possibles."
+  },
+  {
+    "name": "Kauma Aiteriya (Kauma céleste)",
+    "description": "Une vision de l'image idéale du produit (objectif) pour lequel le travail est effectué."
+  },
+  {
+    "name": "Kauma Akmona (Kauma enclume)",
+    "description": "Trouver la fermeté face aux coups du sort et la persévérance dans le métier choisi."
+  },
+  {
+    "name": "Kauma Katarsios (Kauma nettoyage)",
+    "description": "Séparation des scories du métal pur et élimination des habitudes inutiles par le stress."
+  },
+  {
+    "name": "Kauma Pnevmatikos (Kauma spiritualisant)",
+    "description": "La facilité de réflexion qui survient lors d'un travail monotone mais conscient."
+  },
+  {
+    "name": "Kauma Flogia (Kauma enflammé)",
+    "description": "Brûlure intense de passion pour son travail, quand le travail devient prière."
+  },
+  {
+    "name": "Kauma Epoptes (Kauma contemplatif)",
+    "description": "La capacité de voir les défauts cachés dans leurs actions et de les corriger à temps."
+  },
+  {
+    "name": "Kauma Politekhnos (Kauma polyvalent)",
+    "description": "Journée d'application de toutes les compétences accumulées et d'incarnation physique des idées dans la matière."
+  },
+  {
+    "name": "Kauma Potamios (Kauma rivière)",
+    "description": "La fluidité du métal en fusion et la capacité de diriger l'énergie dans la bonne direction."
+  },
+  {
+    "name": "Kauma Ptinos (Kauma ailé)",
+    "description": "Inspiration du maître, quand l'outil devient une extension de la main et vole vers le but."
+  },
+  {
+    "name": "Kauma Akamatos (Kauma infatigable)",
+    "description": "Capacité de travail maximale et chaleur de la volonté, ne connaissant pas la fatigue même dans la chaleur la plus forte."
+  },
+  {
+    "name": "Kauma Bazileios (Kauma royal)",
+    "description": "Le pouvoir du Créateur sur la matière et le triomphe de la création consciente."
+  },
+  {
+    "name": "Kauma Stereos (Kauma résistant\nTouche)",
+    "description": "Tester la force des résultats et consolider les succès dans la réalité."
+  },
+  {
+    "name": "Kauma Krenaios (Kauma clé)",
+    "description": "Trouver des sources d'énergie internes pour entretenir le feu dans les projets à long terme."
+  },
+  {
+    "name": "Kauma Aurios (Kauma venteux)",
+    "description": "Libération de l'influence du maître et regard neuf sur les processus habituels."
+  },
+  {
+    "name": "Kauma Gefaistios (Kauma Héphaïstos)",
+    "description": "Appel direct à l’étincelle divine de la création et à la sacralisation de son œuvre."
+  },
+  {
+    "name": "Kauma Olimpios (Kauma Olympique)",
+    "description": "Reconnaissance de la valeur du travail effectué à partir de la position de significations supérieures."
+  },
+  {
+    "name": "Kauma Ergates (Kauma travail)",
+    "description": "Immersion dans le détail et broyage fin obtenu grâce à la discipline de la terre."
+  },
+  {
+    "name": "Kauma Limenaios (Kauma port)",
+    "description": "La capacité de reposer l'esprit à temps, tout en gardant le contrôle sur le processus."
+  },
+  {
+    "name": "Kauma Psitiros (Kauma bruissement)",
+    "description": "Une compréhension intuitive du moment où porter un coup décisif et du moment où attendre."
+  },
+  {
+    "name": "Kauma Lampas (Kauma fusée éclairante)",
+    "description": "Lumière de l'expérience, éclairant le chemin des autres et pointant vers la perfection de l'exécution."
+  },
+  {
+    "name": "Kauma Pankrates (Kauma tout-puissant)",
+    "description": "Pleine confiance et achèvement de la phase principale de transformation."
+  },
+  {
+    "name": "Kauma Ridzomatos (Kauma enracinement)",
+    "description": "Finaliser les résultats du mois et prendre du poids dans votre domaine professionnel."
+  },
+  {
+    "name": "Kauma Klidonios (Kauma excitant)",
+    "description": "Décharge émotionnelle après une longue tension et un dépassement de l'habituel."
+  },
+  {
+    "name": "Kauma Pnevma (Kauma esprit)",
+    "description": "Respirez pleinement et réalisez la liberté obtenue grâce à un travail dur et honnête."
+  },
+  {
+    "name": "Kauma Flegeton (Kauma fougueux)",
+    "description": "La flamme éternelle de l'artisanat qui continue de brûler à l'intérieur même lorsque le travail est terminé."
+  },
+  {
+    "name": "Kauma Telos (Kauma finale)",
+    "description": "Atteindre l'objectif du mois et passer à la récolte des fruits au cycle suivant."
+  },
+  {
+    "name": "Karpos Khtonios (Karpos terrestre)",
+    "description": "Retrouver un point d'ancrage réel et tangible et le premier résultat physique de l'effort estival."
+  },
+  {
+    "name": "Karpos Gidrelatos (Karpos nourri)",
+    "description": "L'épanouissement émotionnel et la joie de voir un effort porter des fruits nourrissants."
+  },
+  {
+    "name": "Karpos Pnevmatikos (Karpos spirituel)",
+    "description": "Comprendre la valeur du fruit et reconnaître l'expérience acquise tout au long du processus."
+  },
+  {
+    "name": "Karpos Pirivrontos (Karpos tonnerre de feu)",
+    "description": "L'énergie de maturation culminant sous le soleil brûlant convertit la quantité en qualité."
+  },
+  {
+    "name": "Karpos Aiterios (Karpos céleste)",
+    "description": "La plus haute sanctification des fruits et gratitude envers le cosmos pour la miséricorde manifestée."
+  },
+  {
+    "name": "Karpos Gestiaios (Karpos déchirant)",
+    "description": "Renforcer votre maison et votre centre intérieur, en créant un espace de sécurité et d'ordre."
+  },
+  {
+    "name": "Karpos Kalliroos (Karpos courant parfait)",
+    "description": "Harmonie familiale et relationnelle, douce énergie d'appartenance."
+  },
+  {
+    "name": "Karpos Psikhikos (Karpos émouvant)",
+    "description": "Paix intellectuelle et conversation tranquille dans un cercle de personnes partageant les mêmes idées sous la protection des murs."
+  },
+  {
+    "name": "Karpos Flogeros (Karpos enflammé)",
+    "description": "La chaleur du feu de la maison, qui réchauffe mais ne brûle pas, est un symbole de vitalité inextinguible."
+  },
+  {
+    "name": "Karpos Epoptes (Karpos contemplatif)",
+    "description": "Un regard sage sur leurs possessions et une conscience de la responsabilité envers le monde créé."
+  },
+  {
+    "name": "Karpos Polikarpos (Karpos plusieurs)",
+    "description": "Une journée de matérialisation maximale et d’accumulation de ressources pour l’avenir."
+  },
+  {
+    "name": "Karpos Limenaios (Karpos port)",
+    "description": "Un état de sécurité et de silence, comme un navire entrant dans un port rempli de marchandises."
+  },
+  {
+    "name": "Karpos Pteroforos (Karpos ailé)",
+    "description": "La liberté de la richesse et la possibilité de partager les fruits de votre travail."
+  },
+  {
+    "name": "Karpos Akamatos (Karpos infatigable)",
+    "description": "Le pouvoir de la vie, ancré dans le grain, prêt à hiverner pour ressusciter au printemps."
+  },
+  {
+    "name": "Karpos Bazileios (Karpos royal)",
+    "description": "La plénitude du pouvoir sur son territoire et le triomphe du maître de son destin."
+  },
+  {
+    "name": "Karpos Geokhos (Karpos souverain)",
+    "description": "Établir des limites et une répartition équitable des avantages."
+  },
+  {
+    "name": "Karpos Potamios (Karpos rivière)",
+    "description": "La générosité qui naît des excès, nourrit tout autour et renforce les liens avec le monde."
+  },
+  {
+    "name": "Karpos Psitiros (Karpos bruissement)",
+    "description": "Transfert d'expérience et de connaissances aux nouvelles générations à l'ombre des récoltes."
+  },
+  {
+    "name": "Karpos Lampas (Karpos fusée éclairante)",
+    "description": "La lumière de la raison, visant à préserver ce qui a été réalisé et à protéger ses valeurs."
+  },
+  {
+    "name": "Karpos Olimpios (Karpos Olympique)",
+    "description": "Un état de grâce et appartenant aux lois éternelles de la nature et des dieux."
+  },
+  {
+    "name": "Karpos Stenaros (Karpos puissant)",
+    "description": "Endurance physique et force d'esprit, acquises grâce à la satiété et à la confiance."
+  },
+  {
+    "name": "Karpos Krenaios (Karpos source)",
+    "description": "Découvrez les réserves cachées et les sources d'énergie internes de votre Basilee."
+  },
+  {
+    "name": "Karpos Aurios (Karpos venteux)",
+    "description": "La facilité de dire au revoir à ce qui a survécu et de libérer l'espace avant l'automne."
+  },
+  {
+    "name": "Karpos Aiton (Karpos brûlant)",
+    "description": "La concentration de l'énergie solaire dans les résultats du travail, la transformation des champs d'or en sagesse d'or."
+  },
+  {
+    "name": "Karpos Episkopos (Karpos je regarde)",
+    "description": "La vérification finale de l'état de préparation de tous les systèmes pour changer de saison et partir pour le monde intérieur."
+  },
+  {
+    "name": "Karpos Ridzomatos (Karpos enracinement)",
+    "description": "La consolidation finale de toutes les réalisations estivales en matière de mémoire et de matière."
+  },
+  {
+    "name": "Karpos Klidonios (Karpos inquiet)",
+    "description": "Prémonition de changements et préparation émotionnelle à descendre dans les profondeurs de l'automne."
+  },
+  {
+    "name": "Karpos Pneuma (Karpos esprit)",
+    "description": "Pure respiration de complétude et de conscience de l'intégrité du semestre vécu."
+  },
+  {
+    "name": "Karpos Flegeton (Karpos fougueux)",
+    "description": "La chaleur d'adieu du soleil d'été, tempérant les fruits avant un long stockage."
+  },
+  {
+    "name": "Karpos Telos (Karpos finale)",
+    "description": "Le point de plénitude absolue et la transition vers les énergies de l'Automne, Dionysus et du flétrissement."
+  },
+  {
+    "name": "Trige Khtoniya (Trige terrestre)",
+    "description": "Contact avec la chair de la terre et début de la cueillette de ce qui est mûr ; une journée de paniers lourds et de don physique."
+  },
+  {
+    "name": "Trige Gidrelatos (Trige hydratant)",
+    "description": "La libération du jus de vie et la première joie de la fluidité de l'être, lorsque les fruits dégagent leur humidité."
+  },
+  {
+    "name": "Trige Pnevmatika (Trige spiritualisant)",
+    "description": "L'arôme enivrant du changement dans l'air et la prémonition d'être libéré des soucis de l'été."
+  },
+  {
+    "name": "Trige Piripnoos (Trige cracheur de feu)",
+    "description": "La chaleur de la fermentation de l'idée et de la transformation intérieure qui transforme la matière en énergie."
+  },
+  {
+    "name": "Trige Aiteriya (Trige céleste)",
+    "description": "La première touche de folie et de clarté divines à travers le détachement des fardeaux terrestres."
+  },
+  {
+    "name": "Trige Stenara (Trige puissant)",
+    "description": "Renforcer l'esprit face au dépérissement inévitable de la nature ; la force de la vigne qui adhère au sol."
+  },
+  {
+    "name": "Trige Klidonios (Trige enragé)",
+    "description": "Une montée d'émotions et une volonté de céder au flux de la vie sans craindre de se noyer dans les sentiments."
+  },
+  {
+    "name": "Trige Psitiros (Trige bruissement)",
+    "description": "Conversations secrètes du vent dans des jardins vides et compréhension intuitive des rythmes de la nature."
+  },
+  {
+    "name": "Trige Akamatos (Trige infatigable)",
+    "description": "La danse incessante de la vie qui continue malgré le froid ; la joie du mouvement."
+  },
+  {
+    "name": "Trige Bakkheios (Trige bacchanale)",
+    "description": "Le sommet du délice sacré et la réalisation de l'unité avec toutes choses à travers la destruction des frontières du Soi."
+  },
+  {
+    "name": "Trige Ridzomatos (Trige enracinement)",
+    "description": "Une plongée profonde dans les fondements de son être et une recherche d’un point d’ancrage dans ce qui est éternel et non temporaire."
+  },
+  {
+    "name": "Trige Katarsios (Trige nettoyage)",
+    "description": "Laver l'âme dans la culpabilité de l'expérience et laisser tomber les masques devenus trop serrés."
+  },
+  {
+    "name": "Trige Pteroforos (Trige ailé)",
+    "description": "La légèreté de l'esprit, qui a atteint l'ivresse de la liberté, et l'envolée de la pensée sur un monde endormi."
+  },
+  {
+    "name": "Trige Flogeros (Trige enflammé)",
+    "description": "Le feu de l'extase brûlant les restes de l'ego et la chaleur de la véritable passion pour l'être."
+  },
+  {
+    "name": "Trige Bazileios (Trige royal)",
+    "description": "Le triomphe de Dionysus en tant que maître de la liberté intérieure et de la souveraineté de l'esprit sur la matière."
+  },
+  {
+    "name": "Trige Erkeios (Trige clôture)",
+    "description": "Fixer de nouvelles limites pour préserver l'étincelle interne au crépuscule à venir de l'année."
+  },
+  {
+    "name": "Trige Potamios (Trige rivière)",
+    "description": "Le passage du temps, emportant les anciennes formes ; le jour de l’acceptation de l’inévitabilité du changement."
+  },
+  {
+    "name": "Trige Aiola (Trige modifiable)",
+    "description": "Le jeu d'ombres et de lumière, la fragilité de la réalité et la capacité de trouver la vérité sous diverses formes."
+  },
+  {
+    "name": "Trige Akton (Trige brûlant)",
+    "description": "La dernière lueur brillante du feu de camp d'automne et la concentration de la volonté avant la descente."
+  },
+  {
+    "name": "Trige Epoptes (Trige contemplatif)",
+    "description": "Un regard à travers le voile de l'ordinaire et la compréhension des significations cachées dans le silence de l'automne."
+  },
+  {
+    "name": "Trige Terpsikhton (Trige rendre la terre heureuse)",
+    "description": "Gratitude envers le sol pour les fruits et le retour rituel de certaines forces au monde."
+  },
+  {
+    "name": "Trige Pelagios (Trige mer)",
+    "description": "Une plongée profonde dans l'océan du subconscient et une rencontre avec vos faces cachées."
+  },
+  {
+    "name": "Trige Pteroenta (Trige à plumes)",
+    "description": "La vitesse des jours qui passent et la capacité de capturer l'instant présent ici et maintenant."
+  },
+  {
+    "name": "Trige Lampas (Trige fusée éclairante)",
+    "description": "Lumière allumée à l'intérieur pour éclairer le chemin dans l'obscurité à venir ; clarté dans l'ivresse."
+  },
+  {
+    "name": "Trige Ierofantis (Trige révélant le sacré)",
+    "description": "Initiation aux secrets de sa propre âme et conscience du caractère sacré de chaque respiration."
+  },
+  {
+    "name": "Trige Pandoker (Trige acceptant tout)",
+    "description": "Le jour de l'acceptation définitive des résultats de la récolte et de l'humilité avant le cycle naturel."
+  },
+  {
+    "name": "Trige Krenaios (Trige source)",
+    "description": "Revenir aux origines du pouvoir et rechercher la pure domination en soi pour un long voyage vers le bas."
+  },
+  {
+    "name": "Trige Psitirismos (Trige chuchotant)",
+    "description": "Le dernier bruissement des feuilles, exprimant la sagesse du cycle sortant."
+  },
+  {
+    "name": "Trige Flegenton (Trige flamboyant de feu)",
+    "description": "Un feu purificateur qui complète la période de rassemblement et prépare une place au silence."
+  },
+  {
+    "name": "Trige Telontika (Trige lancement de la fin)",
+    "description": "La fin du mois de l'oubli et la transition vers les Racines Cachées de Hades."
+  },
+  {
+    "name": "Katodos Khtonios (Katodos terrestre)",
+    "description": "Toucher le monde inférieur et prendre conscience de la finitude physique des choses, donnant naissance à une nouvelle sagesse."
+  },
+  {
+    "name": "Katodos Klidonios (Katodos enragé)",
+    "description": "Acceptation émotionnelle de l’inévitabilité de la descente et du flux de sentiments allant vers l’intérieur plutôt que vers l’extérieur."
+  },
+  {
+    "name": "Katodos Pnevmatikos (Katodos spirituel)",
+    "description": "La voix calme de l'intuition dans l'espace vide, séparant les vraies significations des alluvions."
+  },
+  {
+    "name": "Katodos Piripnoos (Katodos cracheur de feu)",
+    "description": "La chaleur intérieure qui empêche l'âme de geler au crépuscule ; le feu qui brûle au plus profond de la matière."
+  },
+  {
+    "name": "Katodos Aiterios (Katodos céleste)",
+    "description": "La lumière subtile de la conscience dans l'obscurité, le point de dormance au centre du labyrinthe."
+  },
+  {
+    "name": "Katodos Stenaros (Katodos puissant)",
+    "description": "Résistance à la pression extérieure et force dans la solitude."
+  },
+  {
+    "name": "Katodos Gidrelatos (Katodos fluide)",
+    "description": "Dissoudre les vieux ressentiments et purifier la mémoire émotionnelle dans les eaux de l'oubli."
+  },
+  {
+    "name": "Katodos Psitiros (Katodos chuchotant)",
+    "description": "Conversation avec les ombres des ancêtres et obtention de réponses à travers les rêves et les prémonitions."
+  },
+  {
+    "name": "Katodos Akamatos (Katodos infatigable)",
+    "description": "La continuité d'un travail intérieur qui n'est pas visible au monde, mais qui forge une force future."
+  },
+  {
+    "name": "Katodos Epoptes (Katodos contemplatif)",
+    "description": "Regarder l’abîme sans crainte et réaliser que l’abîme fait partie de vous."
+  },
+  {
+    "name": "Katodos Ridzomatos (Katodos enracinement)",
+    "description": "Pénétration dans les fondements mêmes de l'être et contact avec la puissance originelle de la terre."
+  },
+  {
+    "name": "Katodos Katarsios (Katodos nettoyage)",
+    "description": "Se débarrasser de la dernière écaille du faux ego ; pureté obtenue grâce à la solitude."
+  },
+  {
+    "name": "Katodos Pteroforos (Katodos ailé)",
+    "description": "La liberté d'une âme qui n'est plus liée aux attributs extérieurs du succès."
+  },
+  {
+    "name": "Katodos Flegeton (Katodos enflammé)",
+    "description": "La flamme purificatrice d’une rivière souterraine, transformant les peurs en détermination."
+  },
+  {
+    "name": "Katodos Bazileios (Katodos royal)",
+    "description": "Le titre de maître de ses ombres ; le triomphe de la volonté dans le royaume de l'invisible."
+  },
+  {
+    "name": "Katodos Erkeios (Katodos clôture)",
+    "description": "Protégez votre temple intérieur du chaos et des influences extérieures pendant la nuit la plus sombre."
+  },
+  {
+    "name": "Katodos Potamios (Katodos rivière)",
+    "description": "Accepter un flux de temps qui efface tout ce qui est transitoire, ne laissant que l'éternel."
+  },
+  {
+    "name": "Katodos Psikhikos (Katodos émouvant)",
+    "description": "Synthèse intellectuelle de l'expérience accumulée et de la compréhension de la mythologie personnelle."
+  },
+  {
+    "name": "Katodos Lampas (Katodos fusée éclairante)",
+    "description": "La lumière de l'exemple personnel et de la volonté, éclairant le chemin des autres dans les moments d'obscurité collective."
+  },
+  {
+    "name": "Katodos Isoteos (Katodos divin)",
+    "description": "Un état de repos dans lequel une personne devient égale à l'éternité dans sa profondeur."
+  },
+  {
+    "name": "Katodos Politekhnos (Katodos polyvalent\nTouche)",
+    "description": "Maîtrise de la transformation interne et capacité à créer sous contraintes."
+  },
+  {
+    "name": "Katodos Krenaios (Katodos clé)",
+    "description": "Trouver des sources secrètes d'énergie en vous lorsque les sources externes s'épuisent."
+  },
+  {
+    "name": "Katodos Aurios (Katodos venteux)",
+    "description": "La fraîcheur de la pensée perçant la densité de la terre ; la prémonition d’une germination future."
+  },
+  {
+    "name": "Katodos Pirivrontos (Katodos tonnerre de feu)",
+    "description": "Le pouvoir du potentiel caché, prêt à exploser avec la vie en son temps."
+  },
+  {
+    "name": "Katodos Pankrates (Katodos tout-puissant)",
+    "description": "Intégration complète de toutes les parties de votre personnalité, y compris les plus sombres."
+  },
+  {
+    "name": "Katodos Geokhos (Katodos souverain)",
+    "description": "La consolidation finale du statut de gardien de leurs trésors intérieurs."
+  },
+  {
+    "name": "Katodos Pelagios (Katodos marin)",
+    "description": "Une plongée profonde dans l'océan de l'inconscient collectif avant de partir à la chasse."
+  },
+  {
+    "name": "Katodos Nomios (Katodos pastorale)",
+    "description": "La capacité de diriger vos instincts et de contrôler votre nature intérieure."
+  },
+  {
+    "name": "Katodos Flegenton (Katodos fougueux)",
+    "description": "Le dernier éclair de conscience avant le passage à la phase active de l'hiver."
+  },
+  {
+    "name": "Katodos Telos (Katodos finale)",
+    "description": "La fin d'une période de découverte de soi en silence et de préparation pour la chasse sauvage du mois prochain."
+  },
+  {
+    "name": "Agrotera Khtoniya (Agrotera terrestre)",
+    "description": "La capacité de lire les signes du monde matériel et de se tenir fermement sur le chemin de votre destin."
+  },
+  {
+    "name": "Agrotera Klidonios (Agrotera excitant)",
+    "description": "Sens intuitif, comme l'écoulement de l'eau, indiquant où se cache le véritable objectif."
+  },
+  {
+    "name": "Agrotera Pnevmatikos (Agrotera spiritualisé)",
+    "description": "La pureté du souffle et la fraîcheur de la pensée volent devant le cavalier dans l'air libre."
+  },
+  {
+    "name": "Agrotera Piripnoos (Agrotera cracheur de feu)",
+    "description": "La chaleur de la persécution et l'excitation du découvreur, réchauffant le cœur en prévision du froid."
+  },
+  {
+    "name": "Agrotera Aiteriya (Agrotera céleste)",
+    "description": "Une vision impartiale du monde depuis les hauteurs des sommets des montagnes, où l'esprit est libre de toute agitation."
+  },
+  {
+    "name": "Agrotera Stenara (Agrotera puissant)",
+    "description": "La puissance physique et volontaire nécessaire pour garder le contrôle sur une situation difficile."
+  },
+  {
+    "name": "Agrotera Gidrelatos (Agrotera fluide)",
+    "description": "Capacité à contourner les obstacles, en maintenant la pression et en ne perdant pas de vue la cible visée."
+  },
+  {
+    "name": "Agrotera Psitiros (Agrotera bruissement)",
+    "description": "L'art du mouvement silencieux et d'obtenir des informations à partir des moindres vibrations de l'environnement."
+  },
+  {
+    "name": "Agrotera Akamatos (Agrotera infatigable)",
+    "description": "L'endurance d'un solitaire qui est capable de continuer le chemin lorsque d'autres se retirent face aux difficultés."
+  },
+  {
+    "name": "Agrotera Epoptes (Agrotera contemplatif)",
+    "description": "Le moment de fixation sur le but, où le monde entier se fige au point d'attention absolue."
+  },
+  {
+    "name": "Agrotera Ridzomatos (Agrotera enracinement)",
+    "description": "Une connexion profonde avec les forces primordiales de la nature et un ancrage dans son essence sauvage et non déformée."
+  },
+  {
+    "name": "Agrotera Katarsios (Agrotera nettoyage)",
+    "description": "Laver l'esprit dans les sources glacées de la vérité et se débarrasser de tout ce qui est superflu et séduisant."
+  },
+  {
+    "name": "Agrotera Pteroforos (Agrotera ailé)",
+    "description": "La rapidité de la prise de décision et la facilité avec laquelle la vraie volonté transcende l'espace."
+  },
+  {
+    "name": "Agrotera Flegeton (Agrotera enflammé)",
+    "description": "Le feu d'une indépendance farouche et la lumière qui mène à travers un fourré de doute."
+  },
+  {
+    "name": "Agrotera Bazileios (Agrotera royal)",
+    "description": "Contrôlez vos instincts et affirmez votre souveraineté dans le désert de la vie."
+  },
+  {
+    "name": "Agrotera Erkeios (Agrotera clôture)",
+    "description": "Protéger vos valeurs et fixer des limites que personne n'ose franchir sans invitation."
+  },
+  {
+    "name": "Agrotera Potamios (Agrotera rivière)",
+    "description": "L'inflexibilité du passage à la fin d'une tâche, semblable au flux d'un ruisseau de montagne vers la mer."
+  },
+  {
+    "name": "Agrotera Psikhikos (Agrotera émouvant)",
+    "description": "Analyse intellectuelle du chemin parcouru et cristallisation de l'expérience en une stratégie claire."
+  },
+  {
+    "name": "Agrotera Lampas (Agrotera fusée éclairante)",
+    "description": "La lumière de la lune chasse, illuminant les possibilités cachées là où d'autres ne voient que l'obscurité."
+  },
+  {
+    "name": "Agrotera Isoteos (Agrotera divin)",
+    "description": "Un état de maîtrise parfaite où l'action devient impeccable et sacrée."
+  },
+  {
+    "name": "Agrotera Politekhnos (Agrotera polyvalent\nTouche)",
+    "description": "Utiliser les outils accumulés pour survivre et prospérer dans des environnements difficiles."
+  },
+  {
+    "name": "Agrotera Krenaios (Agrotera clé)",
+    "description": "Trouver des ressources inépuisables en soi, indépendamment des opinions et du soutien des autres."
+  },
+  {
+    "name": "Agrotera Aurios (Agrotera venteux)",
+    "description": "Libération des attachements et volonté de rompre à tout moment pour rencontrer le nouveau."
+  },
+  {
+    "name": "Agrotera Pirivrontos (Agrotera feu et tonnerre)",
+    "description": "Le pouvoir d'une action décisive, changeant le paysage du destin en un seul geste précis."
+  },
+  {
+    "name": "Agrotera Pankrates (Agrotera tout-puissant)",
+    "description": "Ressentir un contrôle total sur votre vie et reconnaître votre nature sauvage intérieure."
+  },
+  {
+    "name": "Agrotera Geokharis (Agrotera rendre la terre heureuse)",
+    "description": "Fonder les résultats de la chasse et remercier le monde pour les trophées et l'expérience."
+  },
+  {
+    "name": "Agrotera Pelagios (Agrotera mer)",
+    "description": "Immersion dans la compréhension approfondie de l'étape passée avant la rencontre avec les tempêtes hivernales."
+  },
+  {
+    "name": "Agrotera Nomios (Agrotera législative)",
+    "description": "L'ordonnancement des connaissances acquises et la transformation du pouvoir sauvage en base de l'ordre futur."
+  },
+  {
+    "name": "Agrotera Flegon (Agrotera enflammé)",
+    "description": "Le dernier éclair lumineux de l’automne tempérera l’esprit avant la grande limite."
+  },
+  {
+    "name": "Agrotera Telos (Agrotera finale)",
+    "description": "Le point de transition de la chasse à la discipline et le début du cycle hivernal."
+  },
+  {
+    "name": "Peras Khtonios (Peras terrestre)",
+    "description": "Retrouver une résilience inébranlable et accepter le poids de ses engagements comme fondement de la vie."
+  },
+  {
+    "name": "Peras Klidonios (Peras inquiet)",
+    "description": "Retenue émotionnelle et capacité à calmer les tempêtes internes dans le but de maintenir la forme."
+  },
+  {
+    "name": "Peras Pnevmatikos (Peras spiritualisé)",
+    "description": "La froide clarté de la pensée séparant les graines de la vérité de la paille de l'illusion dans l'air glacial de l'hiver."
+  },
+  {
+    "name": "Peras Piripnoos (Peras cracheur de feu)",
+    "description": "Une chaleur cachée de volonté qui soutient la vie dans une structure rigide, comme le feu au centre de la terre."
+  },
+  {
+    "name": "Peras Aiterios (Peras céleste)",
+    "description": "Conscience de l'ordre cosmique et de sa place dans le grand dessin de l'univers."
+  },
+  {
+    "name": "Peras Stenaros (Peras puissant)",
+    "description": "La force de la résistance à l'entropie et le renforcement du noyau interne face aux épreuves du temps."
+  },
+  {
+    "name": "Peras Gidrelatos (Peras fluide)",
+    "description": "La sagesse d'accepter les cycles de la vie et la capacité de circuler dans les limites établies sans les briser."
+  },
+  {
+    "name": "Peras Psitiros (Peras bruissement)",
+    "description": "Un murmure de l'histoire et l'appel des ancêtres, rappelant l'inviolabilité des lois de l'existence."
+  },
+  {
+    "name": "Peras Akmatos (Peras infatigable)",
+    "description": "Le mouvement éternel du temps, qui ne connaît pas de pauses, et la discipline des petits pas quotidiens."
+  },
+  {
+    "name": "Peras Epoptes (Peras contemplatif)",
+    "description": "Le regard du Seigneur du Temps sur le chemin parcouru et la réalisation de l'achèvement de l'étape en cours."
+  },
+  {
+    "name": "Peras Ridzomatos (Peras enracinement)",
+    "description": "Consolidation définitive de sa position et prise de poids dans le monde social et spirituel."
+  },
+  {
+    "name": "Peras Katarsios (Peras nettoyage)",
+    "description": "Laver l'esprit en silence et se débarrasser des connexions inutiles qui empêchent la concentration sur l'essentiel."
+  },
+  {
+    "name": "Peras Pteroforos (Peras ailé)",
+    "description": "La vitesse de la pensée, contrainte par une discipline qui devient précise et percutante."
+  },
+  {
+    "name": "Peras Flegeton (Peras enflammé)",
+    "description": "Le feu d’une épreuve sévère, brûlant les faiblesses et ne laissant que l’essence pure."
+  },
+  {
+    "name": "Peras Bazileios (Peras royal)",
+    "description": "Le triomphe de la structure et l'établissement d'un code d'honneur personnel comme loi suprême."
+  },
+  {
+    "name": "Peras Erkeios (Peras clôture)",
+    "description": "Construisez des barrières de protection autour de votre entreprise et de votre famille, renforçant ainsi votre esprit."
+  },
+  {
+    "name": "Peras Potamios (Peras rivière)",
+    "description": "Transition à travers le seuil du temps et du mouvement conscient vers un nouveau cycle au sein d'un canal fiable."
+  },
+  {
+    "name": "Peras Psikhikos (Peras émouvant)",
+    "description": "Inventaire des significations et synthèse, créant une carte claire du chemin futur."
+  },
+  {
+    "name": "Peras Lampas (Peras fusée éclairante)",
+    "description": "La lumière de la responsabilité personnelle, éclairant les limites de ce qui est permis et les horizons de ce qui est possible."
+  },
+  {
+    "name": "Peras Isoteos (Peras divin)",
+    "description": "Pour atteindre l’harmonie intérieure grâce au strict respect de votre objectif."
+  },
+  {
+    "name": "Peras Politekhnos (Peras polyvalent\nTouche)",
+    "description": "Maîtrise de l'organisation de l'espace et du temps pour atteindre une efficacité maximale."
+  },
+  {
+    "name": "Peras Krenaios (Peras clé)",
+    "description": "Trouver des ressources d'endurance profondes dans la matière la plus dense de contraintes."
+  },
+  {
+    "name": "Peras Aurios (Peras venteux)",
+    "description": "Un vent nouveau de changement, brisant la glace, apportant de nouvelles idées pour des formes anciennes."
+  },
+  {
+    "name": "Peras Pirivrontos (Peras tonnerre de feu)",
+    "description": "Le pouvoir d'une prise de conscience soudaine qui brise les barrières inutiles pour un objectif plus élevé."
+  },
+  {
+    "name": "Peras Pankrates (Peras tout-puissant)",
+    "description": "Contrôle absolu sur votre vie grâce à l'acceptation volontaire des cadres et des règles."
+  },
+  {
+    "name": "Peras Geokharis (Peras terreux)",
+    "description": "Gratitude pour la force d'être et d'ancrer tous les résultats obtenus au cours du mois."
+  },
+  {
+    "name": "Peras Pelagios (Peras marin)",
+    "description": "Plongez profondément dans un océan de silence avant d'affronter le chaos des tempêtes hivernales."
+  },
+  {
+    "name": "Peras Nomios (Peras législatif)",
+    "description": "Proclamation de nouveaux principes pour gérer son destin basés sur l’expérience acquise."
+  },
+  {
+    "name": "Peras Flegon (Peras enflammé)",
+    "description": "L'étincelle finale de la discipline, tempérant l'esprit face aux éléments imminents."
+  },
+  {
+    "name": "Peras Telos (Peras finale)",
+    "description": "La fermeture des portes du mois Limites et la préparation à affronter la fureur des Poseidon."
+  },
+  {
+    "name": "Lailaps Khtonios (Lailaps terrestre)",
+    "description": "Le choc de l'ordre idéal avec la force brute de la réalité ; une journée pour tester la stabilité des fondations."
+  },
+  {
+    "name": "Lailaps Klidonios (Lailaps enragé)",
+    "description": "La pression des émotions et des circonstances extérieures, comme les remparts de Poseidon, frappant le rivage."
+  },
+  {
+    "name": "Lailaps Pnevmatikos (Lailaps spirituel)",
+    "description": "Le souffle glacial de Boreus, éclaircissant l'esprit grâce à une logique froide et sobre."
+  },
+  {
+    "name": "Lailaps Piripnoos (Lailaps cracheur de feu)",
+    "description": "Friction et chaleur apparaissant à l’épicentre de la lutte ; l'énergie de survie dans des conditions extrêmes."
+  },
+  {
+    "name": "Lailaps Aiterios (Lailaps céleste)",
+    "description": "Regardant la tempête d'en haut, réalisant que tout chaos fait partie d'un rythme supérieur."
+  },
+  {
+    "name": "Lailaps Stereos (Lailaps dur)",
+    "description": "La cristallisation de la volonté sous pression ; le jour où le caractère acquiert la densité d'un diamant."
+  },
+  {
+    "name": "Lailaps Pelagios (Lailaps marin)",
+    "description": "Immersion dans l'abîme des tâches complexes et capacité à maintenir la conscience dans des conditions d'incertitude."
+  },
+  {
+    "name": "Lailaps Aiolos (Lailaps modifiable)",
+    "description": "Flexibilité de manœuvre dans le tourbillon des événements et capacité à utiliser la puissance de l'ennemi contre lui-même."
+  },
+  {
+    "name": "Lailaps Flegon (Lailaps brûlant)",
+    "description": "Une brûlure glaciale de la vérité qui enlève tout mensonge, ne laissant que l'essence nue."
+  },
+  {
+    "name": "Lailaps Epoptes (Lailaps contemplatif)",
+    "description": "Trouver un point de repos à l'intérieur d'un cyclone ; maîtrise de l'équanimité."
+  },
+  {
+    "name": "Lailaps Enosikhton (Lailaps secoueur de terre)",
+    "description": "Grand nettoyage par la destruction de ce qui est devenu vétuste et peu fiable."
+  },
+  {
+    "name": "Lailaps Katarsios (Lailaps nettoyage)",
+    "description": "Laver l'esprit dans les eaux tumultueuses ; faire place au printemps futur à travers le chaos."
+  },
+  {
+    "name": "Lailaps Tiellon (Lailaps vortex)",
+    "description": "Changement de décor rapide et rapidité d'adaptation à des conditions nouvelles et difficiles."
+  },
+  {
+    "name": "Lailaps Akamatos (Lailaps infatigable)",
+    "description": "Une ressource inépuisable de la fureur de la création, qui ne s'éteint pas sous les coups des éléments."
+  },
+  {
+    "name": "Lailaps Bazileios (Lailaps royal)",
+    "description": "Pour affirmer sa domination sur l’élément de peur et gagner du pouvoir dans le chaos."
+  },
+  {
+    "name": "Lailaps Erkeios (Lailaps clôture)",
+    "description": "Une vérification finale des limites personnelles ; protégeant votre noyau intérieur de la dissolution complète dans une tempête."
+  },
+  {
+    "name": "Lailaps Potamios (Lailaps rivière)",
+    "description": "La capacité de canaliser l'énergie destructrice de la tempête vers le canal créatif de votre projet."
+  },
+  {
+    "name": "Lailaps Psikhikos (Lailaps émouvant)",
+    "description": "Une analyse approfondie de votre réponse au stress et la cristallisation d'une nouvelle stratégie comportementale."
+  },
+  {
+    "name": "Lailaps Lampas (Lailaps fusée éclairante)",
+    "description": "Lumière tenue malgré le vent ; un symbole d’espoir et d’intention inflexible."
+  },
+  {
+    "name": "Lailaps Isoteos (Lailaps divin)",
+    "description": "Un état de transformation dans lequel une personne qui a traversé une tempête devient invulnérable."
+  },
+  {
+    "name": "Lailaps Stenaros (Lailaps puissant)",
+    "description": "Récupération physique et spirituelle sur des bases renouvelées et purifiées."
+  },
+  {
+    "name": "Lailaps Limenaios (Lailaps côtière)",
+    "description": "Recherchez un port tranquille pour évaluer les dégâts et regrouper les forces."
+  },
+  {
+    "name": "Lailaps Psitiros (Lailaps chuchotant)",
+    "description": "Entendre la voix de la vérité dans le bourdonnement apaisant du vent ; connaissance intuitive du final."
+  },
+  {
+    "name": "Lailaps Pirivrontos (Lailaps tonnerre de feu)",
+    "description": "Le dernier coup de tonnerre, éclaircissant le ciel et apportant du soulagement."
+  },
+  {
+    "name": "Lailaps Episkopos (Lailaps je regarde)",
+    "description": "Enregistrer les leçons tirées de la lutte et se préparer à plonger dans les Ténèbres."
+  },
+  {
+    "name": "Lailaps Ridzomatos (Lailaps enracinement)",
+    "description": "Enracinement profond dans un sol renouvelé ; obtenir un nouveau support, plus puissant."
+  },
+  {
+    "name": "Lailaps Galenos (Lailaps serein)",
+    "description": "Un écho résiduel de l'expérience, se transformant en une compréhension profonde de la vie."
+  },
+  {
+    "name": "Lailaps Pneuma (Lailaps esprit)",
+    "description": "Transparence et pureté de conscience obtenues en surmontant la plus grande résistance."
+  },
+  {
+    "name": "Lailaps Flegenton (Lailaps flamboyant de feu)",
+    "description": "Le feu du triomphe sur les circonstances a tempéré l'esprit pour le dernier mois de l'année."
+  },
+  {
+    "name": "Lailaps Telos (Lailaps finale)",
+    "description": "La fin de la période de lutte active et la transition vers le silence et les ténèbres de Zophos."
+  },
+  {
+    "name": "Zofos Khtonios (Zofos terrestre)",
+    "description": "L'immersion dans l'inertie de la matière ; le jour de la reconnaissance que tout ce qui est né doit passer dans le reste de la terre."
+  },
+  {
+    "name": "Zofos Gidrelatos (Zofos fluide)",
+    "description": "Dissolution des structures mentales rigides dans les eaux sombres du subconscient, comme la rivière Lete."
+  },
+  {
+    "name": "Zofos Pnevmatikos (Zofos spirituel)",
+    "description": "Le souffle du vide ; un état où les pensées s'apaisent, laissant place à la pure présence."
+  },
+  {
+    "name": "Zofos Piripnoos (Zofos cracheur de feu)",
+    "description": "L'étincelle cachée de la vie, qui couve sous les cendres de l'année qui passe ; le feu noir de la transformation."
+  },
+  {
+    "name": "Zofos Aiterios (Zofos céleste)",
+    "description": "Contemplation du ciel étoilé infini comme symbole du plus haut ordre, caché derrière les ténèbres."
+  },
+  {
+    "name": "Zofos Stereos (Zofos dur)",
+    "description": "Trouver un pied dans le vide ; comprendre que le vrai soi ne dépend pas de formes extérieures."
+  },
+  {
+    "name": "Zofos Klidonios (Zofos inquiet)",
+    "description": "Vibrations subtiles de l'intuition, traversant les ténèbres ; une prémonition des changements à venir."
+  },
+  {
+    "name": "Zofos Psitiros (Zofos bruissement)",
+    "description": "Murmures de Hermes Psychopopus, conduisant l'âme à travers le crépuscule vers de nouvelles significations."
+  },
+  {
+    "name": "Zofos Akamatos (Zofos infatigable)",
+    "description": "Le travail éternel de l'esprit pour fondre l'expérience, qui se poursuit même dans un état de repos complet."
+  },
+  {
+    "name": "Zofos Epoptes (Zofos contemplatif)",
+    "description": "Une vision de l'éternité sur le temporel ; une prise de conscience de la nature illusoire des peurs et des attachements."
+  },
+  {
+    "name": "Zofos Ridzomatos (Zofos enracinement)",
+    "description": "Profondément enraciné dans le néant, là où commence toute nouvelle vie."
+  },
+  {
+    "name": "Zofos Katarsios (Zofos nettoyage)",
+    "description": "La purification finale de la conscience des restes du bruit et de l'agitation annuels."
+  },
+  {
+    "name": "Zofos Ptinos (Zofos ailé)",
+    "description": "La légèreté de l'esprit libéré du poids du passé accumulé."
+  },
+  {
+    "name": "Zofos Flegeton (Zofos enflammé)",
+    "description": "Le feu de la conscience intérieure illuminant les coins les plus sombres de l'âme."
+  },
+  {
+    "name": "Zofos Bazileios (Zofos royal)",
+    "description": "Pouvoir sur le silence ; affirmer la souveraineté dans l’espace du silence."
+  },
+  {
+    "name": "Zofos Erkeios (Zofos clôture)",
+    "description": "Garder votre secret intérieur et protéger votre paix avant que le monde ne s'éveille."
+  },
+  {
+    "name": "Zofos Potamios (Zofos rivière)",
+    "description": "Le lent écoulement du temps, préparant le terrain pour le déversement printanier des forces."
+  },
+  {
+    "name": "Zofos Psikhikos (Zofos émouvant)",
+    "description": "Humilité intellectuelle et volonté d'accepter de nouvelles informations dans un esprit pur."
+  },
+  {
+    "name": "Zofos Lampas (Zofos fusée éclairante)",
+    "description": "La première étincelle de lumière préfigurant la fin des ténèbres et le retour du soleil."
+  },
+  {
+    "name": "Zofos Isoteos (Zofos divin)",
+    "description": "Un état de préexistence où le potentiel de l'homme est égal à celui des dieux."
+  },
+  {
+    "name": "Zofos Politekhnos (Zofos polyvalent\nTouche)",
+    "description": "Maîtrise de la gestion du vide et de la création d'images du futur dans l'espace de l'imagination."
+  },
+  {
+    "name": "Zofos Krenaios (Zofos clé)",
+    "description": "Trouver la source primaire de la vie au plus profond du puits le plus sombre de l'âme."
+  },
+  {
+    "name": "Zofos Aurios (Zofos venteux)",
+    "description": "Le premier souffle d'air pré-printemps, apportant l'odeur du renouveau."
+  },
+  {
+    "name": "Zofos Pirivrontos (Zofos tonnerre de feu)",
+    "description": "Le pouvoir du silence accumulé, prêt à se transformer en une explosion créatrice."
+  },
+  {
+    "name": "Zofos Pankrates (Zofos tout-puissant)",
+    "description": "Maîtrise de soi absolue et préparation à la transition finale."
+  },
+  {
+    "name": "Zofos Geokharis (Zofos amoureux de la terre)",
+    "description": "Gratitude envers les ténèbres pour avoir reposé et ancré toute la conscience trouvée dans le silence."
+  },
+  {
+    "name": "Zofos Pelagios (Zofos marin)",
+    "description": "Dissolution complète dans l'océan de l'être avant de reprendre forme."
+  },
+  {
+    "name": "Zofos Nomios (Zofos pastorale)",
+    "description": "Mentorat intérieur ; la voix de la conscience qui tire un trait sur l'ancienne loi."
+  },
+  {
+    "name": "Zofos Flegon (Zofos enflammé)",
+    "description": "Un feu de joie purificateur de l'année, dans lequel tout ce qui ne devrait pas entrer dans un nouveau cycle est brûlé."
+  },
+  {
+    "name": "Zofos Telos (Zofos finale)",
+    "description": "La grande finale du voyage de 360 jours ; le point du zéro absolu."
+  },
+  {
+    "name": "Apeiron Khaos (Apeiron chaos sans limites)",
+    "description": "Un festin de potentiel primaire ; un jour où tout est possible et où rien n’est prédéterminé."
+  },
+  {
+    "name": "Apeiron Nyuks (Apeiron nuit illimitée)",
+    "description": "Révérence pour les ténèbres sacrées, la mère de toutes choses, qui porte en elle les germes du futur."
+  },
+  {
+    "name": "Apeiron Erebos (Apeiron obscurité sans limites)",
+    "description": "Immersion dans un vide dense où se forge l'essence du nouveau Cosmos."
+  },
+  {
+    "name": "Apeiron Tartaros (Apeiron abîme sans limites)",
+    "description": "Conscience des profondeurs fondamentales de l'être sur lesquelles repose le monde."
+  },
+  {
+    "name": "Apeiron Eros (Apeiron attraction illimitée)",
+    "description": "L’éveil de la grande force d’attraction qui transforme le Chaos en Ordre."
+  },
+  {
+    "name": "Apeiron Fanes (Apeiron éclat sans limites)",
+    "description": "L'apparition de la Lumière Premier-Né ; un instant avant le début du nouveau printemps."
+  }
+]

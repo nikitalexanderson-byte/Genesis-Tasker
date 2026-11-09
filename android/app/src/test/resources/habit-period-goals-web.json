@@ -1,0 +1,202 @@
+{
+  "trackerSchemaVersion": 16,
+  "userProgress": {
+    "lifetimeXp": 0,
+    "laurelsBalance": 0,
+    "currentRankId": null,
+    "hiddenHeroicPathRevealedAt": null,
+    "currentStreak": 0,
+    "longestStreak": 0,
+    "lastQualifiedDate": null,
+    "streakGoalMode": "rhythm",
+    "streakFreezeCount": 0,
+    "rhythmScore": 0,
+    "updatedAt": ""
+  },
+  "habits": [
+    {
+      "id": "web-period-entries",
+      "createdAt": "2026-10-16T08:36:44.714Z",
+      "updatedAt": "2026-10-16T08:36:44.714Z",
+      "version": 1,
+      "syncState": "local",
+      "title": "Synthetic weekly goal",
+      "description": "",
+      "createdDate": "2026-05-04",
+      "emoji": "✨",
+      "priority": 5,
+      "isKeyHabit": false,
+      "ritualId": "none",
+      "ritualName": "",
+      "color": "#bb8f4a",
+      "active": true,
+      "sourceTemplateId": null,
+      "sacredPracticeId": null,
+      "sacredSectorId": null,
+      "preferredTime": "",
+      "schedule": {
+        "startDate": "2026-05-04",
+        "endDate": null,
+        "timezone": "Europe/Moscow",
+        "recurrence": {
+          "enabled": true,
+          "mode": "classic",
+          "pattern": "daily",
+          "days": [
+            1
+          ],
+          "interval": 1,
+          "rangeStart": "2026-05-04",
+          "rangeEnd": "",
+          "months": [],
+          "pyatas": [],
+          "calendarContext": {
+            "version": 2,
+            "timeZone": "Europe/Moscow",
+            "gregorianYearStart": "january"
+          },
+          "invalidDayPolicy": "skip"
+        }
+      },
+      "scoringMode": "binary",
+      "qualityScale": "none",
+      "reminder": {
+        "enabled": false,
+        "time": "09:00",
+        "timing": "habit",
+        "syncToGoogleTasks": false,
+        "showInGoogleCalendar": false,
+        "googleTaskId": null,
+        "googleEventId": null
+      },
+      "periodGoal": {
+        "version": 1,
+        "period": "week",
+        "metric": "entries",
+        "target": 3,
+        "calendar": "profane",
+        "context": {
+          "version": 2,
+          "timeZone": "Europe/Moscow",
+          "gregorianYearStart": "january"
+        }
+      }
+    }
+  ],
+  "habitCompletions": [
+    {
+      "id": "habit-completion:web-period-entries:2026-05-04",
+      "createdAt": "2026-10-16T08:36:44.715Z",
+      "updatedAt": "2026-10-16T08:36:44.717Z",
+      "version": 4,
+      "syncState": "pending",
+      "habitId": "web-period-entries",
+      "date": "2026-05-04",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": ""
+    }
+  ],
+  "habitMeasurements": [
+    {
+      "id": "web-period-0",
+      "createdAt": "2026-10-16T08:36:44.715Z",
+      "updatedAt": "2026-10-16T08:36:44.715Z",
+      "version": 1,
+      "syncState": "local",
+      "habitId": "web-period-entries",
+      "date": "2026-05-04",
+      "entryId": "web-period-0",
+      "ruleId": "initial:web-period-entries",
+      "value": 1000,
+      "replaces": [],
+      "note": "",
+      "source": "manual",
+      "historical": false
+    },
+    {
+      "id": "web-period-1",
+      "createdAt": "2026-10-16T08:36:44.716Z",
+      "updatedAt": "2026-10-16T08:36:44.716Z",
+      "version": 1,
+      "syncState": "local",
+      "habitId": "web-period-entries",
+      "date": "2026-05-04",
+      "entryId": "web-period-1",
+      "ruleId": "initial:web-period-entries",
+      "value": 1000,
+      "replaces": [],
+      "note": "",
+      "source": "manual",
+      "historical": false
+    },
+    {
+      "id": "web-period-2",
+      "createdAt": "2026-10-16T08:36:44.717Z",
+      "updatedAt": "2026-10-16T08:36:44.717Z",
+      "version": 1,
+      "syncState": "local",
+      "habitId": "web-period-entries",
+      "date": "2026-05-04",
+      "entryId": "web-period-2",
+      "ruleId": "initial:web-period-entries",
+      "value": 1000,
+      "replaces": [],
+      "note": "",
+      "source": "manual",
+      "historical": false
+    }
+  ],
+  "sleepPlans": [],
+  "sleepEntries": [],
+  "moodEntries": [],
+  "addictionTrackers": [],
+  "addictionEntries": [],
+  "analyticsSnapshots": [],
+  "dailyGoalRecords": [],
+  "quests": [],
+  "achievementUnlocks": [],
+  "rewardTransactions": [],
+  "streakFreezeTransactions": [],
+  "habitSettings": {
+    "enabled": true,
+    "reportRange": "month",
+    "customRangeStart": "",
+    "customRangeEnd": "",
+    "collapsedSections": [],
+    "sectionOrder": [
+      "streak-resilience",
+      "daily-trackers",
+      "quests",
+      "streak-rewards",
+      "adaptive-suggestions",
+      "regular-habits",
+      "starter-habits",
+      "sleep-abstinence",
+      "achievements",
+      "statistics",
+      "sacred-habits"
+    ],
+    "dailyGoalModeChanges": [],
+    "plannedRestDays": [],
+    "notifications": {
+      "enabled": false,
+      "motivational": true,
+      "tone": "calm",
+      "dailyGoalTime": "20:30",
+      "quietHoursStart": "22:00",
+      "quietHoursEnd": "07:30"
+    },
+    "feedback": {
+      "animations": true,
+      "sound": false,
+      "haptics": false,
+      "achievementPopups": true,
+      "questsEnabled": true,
+      "gamificationWidgets": true
+    }
+  },
+  "hiddenDefaultTemplates": []
+}

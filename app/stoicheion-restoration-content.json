@@ -1,0 +1,849 @@
+{
+  "framework": {
+    "title": { "ru": "Девять карт и полный круг", "en": "Nine cards and the full circle" },
+    "formula": "14 = (8 + 1) + (3 + 2)",
+    "body": { "ru": "Восемь направлений и центр задают девять полей расклада. Их смысл остаётся исходным. Теокиклос добавляет три опоры — зенит, надир и очаг — и два порога: вход и выход. Эти пять узлов помогают выбрать способ действия. Числовой корень связывает отдельную формулу практики с пифменом расклада, а десять выполнений складываются в тетрактис: 1 + 2 + 3 + 4. Согласно представлениям Ордена Авроры, эта структура опирается на античные числовые образы.", "en": "Eight directions and the center define the spread's nine fields. Their original meanings remain the starting point. The Theokyklos adds three supports — zenith, nadir, and hearth — and two thresholds: entrance and exit. These five nodes help choose a way to act. The digital root connects a separate practice equation with the spread's pythmen, while ten completions form the tetractys: 1 + 2 + 3 + 4. According to the views of the Order of Aurora, this structure uses ancient numerical imagery." }
+  },
+  "auxiliaries": [
+    {
+      "id": "entrance",
+      "word": "Αὐγή",
+      "title": { "ru": "Вход · Эфир и Гемера", "en": "Entrance · Aether and Hemera" },
+      "purpose": { "ru": "Прояснить намерение перед началом: убрать одно отвлечение и назвать предмет работы. Подготовка завершается первым действием.", "en": "Clarify the intention before beginning: remove one distraction and name the subject of the work. Preparation ends with the first action." },
+      "practiceId": "aether-clear-threshold"
+    },
+    {
+      "id": "zenith",
+      "word": "Τάξις",
+      "title": { "ru": "Зенит · Зевс и Гера", "en": "Zenith · Zeus and Hera" },
+      "purpose": { "ru": "Придать работе исполнимое правило и согласовать обязательство. Правило служит жизни; его меру можно пересмотреть по опыту.", "en": "Give the work a feasible rule and agree on a commitment. The rule serves life; experience can justify adjusting its measure." },
+      "practiceId": "zeus-sovereign-rule"
+    },
+    {
+      "id": "nadir",
+      "word": "Βάθος",
+      "title": { "ru": "Надир · Аид и Персефона", "en": "Nadir · Hades and Persephone" },
+      "purpose": { "ru": "Признать завершение, рассмотреть скрытый запас сил и освободить место для следующего шага. Отпускать можно постепенно, сохраняя ценное.", "en": "Acknowledge an ending, examine hidden reserves, and make room for the next step. Letting go can be gradual while preserving what matters." },
+      "practiceId": "persephone-new-seed"
+    },
+    {
+      "id": "hearth",
+      "word": "Ἕδρα",
+      "title": { "ru": "Очаг · Гестия", "en": "Hearth · Hestia" },
+      "purpose": { "ru": "Создать устойчивые условия: одно место, посильный объём и спокойное возвращение к практике. Покой поддерживает последующее действие.", "en": "Create stable conditions: one place, a manageable effort, and a calm return to practice. Stillness supports the action that follows." },
+      "practiceId": "hestia-tended-hearth"
+    },
+    {
+      "id": "exit",
+      "word": "Σφραγίς",
+      "title": { "ru": "Выход · Эрос и Психея", "en": "Exit · Eros and Psyche" },
+      "purpose": { "ru": "Закрепить прожитое: назвать результат, выразить благодарность и выбрать, что продолжить в повседневности. Оценка опирается на опыт и поступки.", "en": "Integrate the experience: name the result, express gratitude, and choose what to continue in daily life. Evaluation rests on experience and actions." },
+      "practiceId": "psyche-evening-seal"
+    }
+  ],
+  "sectors": [
+    {
+      "id": "north",
+      "title": { "ru": "Север · Ужас и познание", "en": "North · Terror and understanding" },
+      "field": { "ru": "Мир ужаса или глубокого познания. Способность вкушать опыт и переваривать сложные ситуации.", "en": "The realm of terror or deep understanding. The ability to take in experience and digest difficult situations." },
+      "ambivalence": { "ru": "Афина расширяет смысл Севера: страшное может парализовать, а может стать предметом осторожного исследования. Мудрость задаёт дистанцию, с которой сложный опыт становится различимым.", "en": "Athena expands the North: what is frightening can paralyze or become the subject of careful inquiry. Wisdom establishes a distance from which difficult experience becomes discernible." },
+      "myth": {
+        "title": { "ru": "Афина, Персей и отражение Медузы", "en": "Athena, Perseus, and Medusa's reflection" },
+        "body": { "ru": "У Псевдо-Аполлодора Афина направляет руку Персея, пока он смотрит на отражение Горгоны в медном щите. Согласно представлениям Ордена Авроры: исследовать пугающее через проверяемое представление и выбранную дистанцию, сохраняя способность действовать.", "en": "In Pseudo-Apollodorus, Athena guides Perseus's hand while he looks at the Gorgon's reflection in a bronze shield. According to the views of the Order of Aurora: examine what frightens you through a verifiable representation and a chosen distance, preserving the ability to act." },
+        "source": "Pseudo-Apollodorus · Bibliotheca 2.4.2",
+        "url": "https://www.theoi.com/Text/Apollodorus2.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Страх перед сложной темой мешает узнать необходимое; неизвестность заполняется догадками.", "en": "Fear of a difficult subject prevents necessary learning; conjecture fills the unknown." },
+          "quality": { "ru": "Мужество различать и узнавать постепенно", "en": "The courage to discern and learn gradually" },
+          "intention": { "ru": "Я подхожу к трудному опыту через один проверяемый факт.", "en": "I approach difficult experience through one verifiable fact." },
+          "action": { "ru": "Запишите один тревожащий вопрос. Найдите один надёжный источник или задайте вопрос компетентному человеку; отдельно отметьте факт и свою догадку.", "en": "Write down one troubling question. Find one reliable source or ask a knowledgeable person; record the fact separately from your conjecture." },
+          "practice": { "ru": "Созерцая образ щита Афины, назовите, что именно вы готовы рассмотреть сегодня. Завершите созерцание проверкой выбранного факта.", "en": "Contemplate Athena's shield and name exactly what you are ready to examine today. End the contemplation by checking the chosen fact." },
+          "supportId": "entrance",
+          "practiceId": "athena-three-intentions"
+        },
+        "excess": {
+          "risk": { "ru": "Бесконечное исследование угроз и тяжёлых впечатлений перегружает внимание и откладывает решение.", "en": "Endless investigation of threats and difficult impressions overloads attention and postpones a decision." },
+          "quality": { "ru": "Мера познания и усвоение опыта", "en": "Measured inquiry and assimilation of experience" },
+          "intention": { "ru": "Я узнаю достаточно для следующего шага и даю опыту уложиться.", "en": "I learn enough for the next step and allow the experience to settle." },
+          "action": { "ru": "Ограничьте сегодняшнее изучение одной темы выбранным временем. Затем закройте источники, запишите один вывод и один посильный следующий шаг.", "en": "Set a time limit for studying one subject today. Then close the sources and write down one conclusion and one manageable next step." },
+          "practice": { "ru": "Проведите несколько спокойных минут у подготовленного места. Мысленно опустите щит: перечислите уже узнанное и то, что может подождать.", "en": "Spend a few calm minutes in a prepared place. Mentally lower the shield: name what you have already learned and what can wait." },
+          "supportId": "hearth",
+          "practiceId": "athena-evening-counsel"
+        },
+        "conflict": {
+          "risk": { "ru": "Знание подсказывает одно, а пугающий образ ситуации требует противоположного; решение застревает между ними.", "en": "Available knowledge suggests one course while a frightening image of the situation demands the opposite; the decision becomes stuck between them." },
+          "quality": { "ru": "Рассудительность при неполном знании", "en": "Judgment under incomplete knowledge" },
+          "intention": { "ru": "Я учитываю страх и принимаю решение по ясным основаниям.", "en": "I acknowledge fear and decide on clear grounds." },
+          "action": { "ru": "Разделите запись на «известно», «предполагаю» и «нужно проверить». Уточните один решающий пункт и назначьте момент пересмотра решения.", "en": "Divide a note into 'known', 'assumed', and 'to check'. Clarify one decisive point and choose when to review the decision." },
+          "practice": { "ru": "Представьте Афину рядом с пугающим образом. Сформулируйте одно правило исследования: какие сведения позволят вам сделать следующий шаг.", "en": "Imagine Athena beside the frightening image. Formulate one rule of inquiry: what evidence would let you take the next step." },
+          "supportId": "zenith",
+          "practiceId": "athena-evening-counsel"
+        }
+      }
+    },
+    {
+      "id": "northeast",
+      "title": { "ru": "Северо-восток · Завершение и новое", "en": "Northeast · Endings and renewal" },
+      "field": { "ru": "Мир завершения, смерти старого и рождения нового. Интуитивное чутьё и материальные ценности.", "en": "The realm of endings, the passing of the old, and the birth of the new. Intuitive discernment and material values." },
+      "ambivalence": { "ru": "Артемида охраняет живое на пороге перемен. Отсечение освобождает путь, но поспешность может лишить ценного; чутьё требует проверки того, что стоит сохранить.", "en": "Artemis guards the living at the threshold of change. Cutting away can clear a path, but haste can destroy what matters; intuition needs a check on what deserves preservation." },
+      "myth": {
+        "title": { "ru": "Артемида сохраняет жизнь Ифигении", "en": "Artemis preserves Iphigenia's life" },
+        "body": { "ru": "В версии Псевдо-Аполлодора Артемида уносит Ифигению от жертвенника и оставляет вместо неё лань. Согласно представлениям Ордена Авроры: переход не требует уничтожать всё прежнее; завершайте отжившее, сохраняя жизнь, достоинство и действительно ценные опоры.", "en": "In Pseudo-Apollodorus's version, Artemis carries Iphigenia away from the altar and substitutes a deer. According to the views of the Order of Aurora: a transition does not require destroying everything that came before; end what is outgrown while preserving life, dignity, and genuinely valuable supports." },
+        "source": "Pseudo-Apollodorus · Epitome 3.22",
+        "url": "https://www.theoi.com/Text/ApollodorusE.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Привязанность к исчерпанному делу, вещи или роли занимает место, нужное новому этапу.", "en": "Attachment to an exhausted task, object, or role occupies the space needed for a new stage." },
+          "quality": { "ru": "Бережное завершение", "en": "Careful completion" },
+          "intention": { "ru": "Я завершаю отжившее и сохраняю то, что ещё питает жизнь.", "en": "I complete what is outgrown and preserve what still nourishes life." },
+          "action": { "ru": "Выберите одно явно отжившее обязательство или предмет. Завершите его посильным способом и запишите, какое время, место или ресурс освободился.", "en": "Choose one clearly outgrown commitment or object. Bring it to a manageable close and record what time, space, or resource was released." },
+          "practice": { "ru": "Вспомните спасение Ифигении и назовите отдельно то, что завершается, и то ценное, что вы переносите дальше. Сделайте один шаг завершения.", "en": "Recall Iphigenia's rescue and name separately what is ending and what valuable thing you carry forward. Take one step toward completion." },
+          "supportId": "nadir",
+          "practiceId": "artemis-boundary"
+        },
+        "excess": {
+          "risk": { "ru": "Желание начать заново побуждает резко обрывать связи или отказываться от нужных материальных опор.", "en": "The desire to start afresh prompts abrupt breaks in relationships or the abandonment of necessary material supports." },
+          "quality": { "ru": "Сохранение живого в переменах", "en": "Preserving what is alive through change" },
+          "intention": { "ru": "Я различаю освобождение и утрату того, что мне дорого.", "en": "I distinguish liberation from the loss of what I cherish." },
+          "action": { "ru": "Перед необязательным необратимым отказом сделайте паузу. Назовите одну ценность и одну практическую опору, которые должны пережить перемену; начните с обратимого шага.", "en": "Pause before an optional irreversible break. Name one value and one practical support that should survive the change; begin with a reversible step." },
+          "practice": { "ru": "На спокойной прогулке обратите внимание, как новое растёт рядом с сохранившимся. Назовите одну границу, которая защитит ценное во время перехода.", "en": "On a quiet walk, notice how new growth lives beside what has endured. Name one boundary that will protect what matters during the transition." },
+          "supportId": "hearth",
+          "practiceId": "artemis-wild-walk"
+        },
+        "conflict": {
+          "risk": { "ru": "Чутьё зовёт к перемене, а привычная безопасность и материальные ценности удерживают на месте.", "en": "Intuition calls for change while familiar security and material values hold you in place." },
+          "quality": { "ru": "Самостоятельный выбор с сохранением опор", "en": "Independent choice that preserves support" },
+          "intention": { "ru": "Я проверяю новый путь, уважая свои границы и ресурсы.", "en": "I test a new path while respecting my boundaries and resources." },
+          "action": { "ru": "Определите, чем вы готовы рискнуть в небольшом обратимом опыте, а что требуется сохранить. Запишите предел затрат и срок оценки нового шага.", "en": "Decide what you can risk in a small reversible experiment and what must be preserved. Record a limit on resources and a time to evaluate the new step." },
+          "practice": { "ru": "Обратитесь к образу Артемиды как хранительницы порога. Сформулируйте одно правило, охраняющее вашу самостоятельность в предстоящей перемене.", "en": "Contemplate Artemis as guardian of the threshold. Formulate one rule that protects your independence in the coming change." },
+          "supportId": "zenith",
+          "practiceId": "artemis-boundary"
+        }
+      }
+    },
+    {
+      "id": "east",
+      "title": { "ru": "Восток · Замысел и слово", "en": "East · Intention and speech" },
+      "field": { "ru": "Мир магии, созидания и интеллекта. Здесь, подобно восходящему Солнцу, зарождаются идеи и планы.", "en": "The realm of magic, creation, and intellect. Ideas and plans arise here like the rising Sun." },
+      "ambivalence": { "ru": "Гермес и Пейто раскрывают силу замысла и убеждения. Слово способно соединять людей и создавать форму, а способно запутывать и подменять согласие давлением.", "en": "Hermes and Peitho reveal the power of intention and persuasion. Speech can connect people and create form, or confuse and replace agreement with pressure." },
+      "myth": {
+        "title": { "ru": "Лира Гермеса и примирение с Аполлоном", "en": "Hermes's lyre and reconciliation with Apollo" },
+        "body": { "ru": "В гимне к Гермесу спор из-за похищенных коров переходит в обмен дарами: Гермес передаёт Аполлону лиру, и боги устанавливают отношения дружбы. Согласно представлениям Ордена Авроры: изобретательность обретает меру через ясный обмен, услышанную сторону другого и договорённость.", "en": "In the Hymn to Hermes, the dispute over stolen cattle develops into an exchange of gifts: Hermes gives Apollo the lyre and the gods establish friendship. According to the views of the Order of Aurora: ingenuity finds its measure through a clear exchange, hearing the other side, and an agreement." },
+        "source": "Homeric Hymn 4 · To Hermes 418–573",
+        "url": "https://www.theoi.com/Text/HomericHymns2.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Идея остаётся невысказанной или настолько туманной, что её трудно начать и передать другому.", "en": "An idea remains unspoken or so vague that it is difficult to begin or communicate." },
+          "quality": { "ru": "Ясный созидающий замысел", "en": "A clear creative intention" },
+          "intention": { "ru": "Я придаю одной идее понятную форму.", "en": "I give one idea an intelligible form." },
+          "action": { "ru": "Опишите одну идею тремя предложениями: что предлагаете, зачем это нужно и какой первый шаг возможен. Передайте её подходящему человеку или сохраните как план работы.", "en": "Describe one idea in three sentences: what you propose, why it matters, and what first step is possible. Share it with an appropriate person or save it as a working plan." },
+          "practice": { "ru": "Вспомните Гермеса, превращающего находку в звучащую лиру. Произнесите свой замысел вслух обычным голосом и уберите слова, за которыми пока нет ясного смысла.", "en": "Recall Hermes turning a discovery into a sounding lyre. Say your intention aloud in an ordinary voice and remove words whose meaning is still unclear." },
+          "supportId": "entrance",
+          "practiceId": "hermes-clear-message"
+        },
+        "excess": {
+          "risk": { "ru": "Множество идей, обещаний или убедительных слов заслоняет действительную цель и свободу другого человека.", "en": "Too many ideas, promises, or persuasive words obscure the real purpose and the other person's freedom." },
+          "quality": { "ru": "Убеждение через внимание и согласие", "en": "Persuasion through attention and consent" },
+          "intention": { "ru": "Я даю другому место ответить и сохраняю ясность слова.", "en": "I give the other person room to respond and keep my speech clear." },
+          "action": { "ru": "В одном важном разговоре сначала задайте вопрос и дослушайте ответ. Перескажите услышанное, проверьте понимание и только затем сформулируйте одну просьбу.", "en": "In one important conversation, ask a question first and hear the answer. Restate what you heard, check your understanding, and only then make one request." },
+          "practice": { "ru": "Созерцайте Пейто как образ убеждения, оставляющего свободу выбора. Перед разговором выдержите короткую тишину; после оцените, удалось ли действительно услышать ответ.", "en": "Contemplate Peitho as an image of persuasion that leaves freedom of choice. Keep a brief silence before the conversation; afterwards assess whether you truly heard the response." },
+          "supportId": "hearth",
+          "practiceId": "peitho-listening"
+        },
+        "conflict": {
+          "risk": { "ru": "Разные версии замысла и противоречивые обещания мешают совместному действию.", "en": "Different versions of an intention and contradictory promises obstruct shared action." },
+          "quality": { "ru": "Согласованность слова и обязательства", "en": "Consistency between speech and commitment" },
+          "intention": { "ru": "Моё слово становится понятной и посильной договорённостью.", "en": "My word becomes an understandable and feasible agreement." },
+          "action": { "ru": "Уточните одну существующую договорённость: кто, что и к какому сроку делает. Открыто исправьте обещание, которое невозможно выполнить, и подтвердите согласие сторон.", "en": "Clarify one existing agreement: who does what and by when. Openly amend any promise that cannot be kept and confirm the parties' agreement." },
+          "practice": { "ru": "Вспомните обмен Гермеса и Аполлона. Назовите, что каждая сторона действительно отдаёт и получает, затем запишите итог одним ясным предложением.", "en": "Recall the exchange between Hermes and Apollo. Name what each side actually gives and receives, then record the outcome in one clear sentence." },
+          "supportId": "zenith",
+          "practiceId": "hermes-clear-message"
+        }
+      }
+    },
+    {
+      "id": "southeast",
+      "title": { "ru": "Юго-восток · Первичная сила и форма", "en": "Southeast · Primal force and form" },
+      "field": { "ru": "Мир дикой природы и проявления Эго. Инстинкты, первичные импульсы и необузданная сила.", "en": "The realm of wild nature and the expression of the Ego. Instincts, primal impulses, and untamed force." },
+      "ambivalence": { "ru": "Гефест и Аглая раскрывают дальнейший путь первичной силы: огонь может разрушать, а может питать мастерство. Эго получает достойное выражение в полезной и красивой форме результата.", "en": "Hephaestus and Aglaea reveal a further path for primal force: fire can destroy or sustain craft. The Ego finds worthy expression in a useful and beautiful result." },
+      "myth": {
+        "title": { "ru": "Кузня Гефеста и щит Ахилла", "en": "Hephaestus's forge and Achilles's shield" },
+        "body": { "ru": "В XVIII песне «Илиады» Гефест создаёт щит Ахилла: на металле возникают земля, небо, города, труд и хоровод. Согласно представлениям Ордена Авроры: придать сильному импульсу форму через выбранный материал, последовательность и завершение малого изделия.", "en": "In Iliad 18, Hephaestus makes Achilles's shield: earth, sky, cities, labor, and a dance appear in metal. According to the views of the Order of Aurora: give a strong impulse form through a chosen material, a sequence, and the completion of a small piece of work." },
+        "source": "Homer · Iliad 18.468–608",
+        "url": "https://www.theoi.com/Text/HomerIliad18.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Импульс подавляется сомнением в себе; энергия не доходит до простого созидательного действия.", "en": "Self-doubt suppresses the impulse; energy never reaches a simple creative action." },
+          "quality": { "ru": "Смелость воплощения", "en": "The courage to make something tangible" },
+          "intention": { "ru": "Я даю своей силе небольшую полезную форму.", "en": "I give my strength a small useful form." },
+          "action": { "ru": "Подготовьте одно рабочее место и завершите доступную небольшую починку или улучшение знакомым безопасным способом. Назовите получившийся результат.", "en": "Prepare one workspace and complete a small accessible repair or improvement using a familiar safe method. Name the result you made." },
+          "practice": { "ru": "Вспомните кузню Гефеста. Выберите один материал, один инструмент и один результат; спокойно начните с первого движения.", "en": "Recall Hephaestus's forge. Choose one material, one tool, and one result; calmly begin with the first movement." },
+          "supportId": "hearth",
+          "practiceId": "hephaestus-small-repair"
+        },
+        "excess": {
+          "risk": { "ru": "Вспышка импульса и желание самоутвердиться побуждают ломать, спорить или начинать больше, чем можно завершить.", "en": "A surge of impulse and the wish to assert yourself prompt breaking things, arguing, or starting more than you can finish." },
+          "quality": { "ru": "Управляемый огонь и точность", "en": "Governed fire and precision" },
+          "intention": { "ru": "Я сохраняю силу и выбираю для неё точное применение.", "en": "I preserve my strength and choose a precise use for it." },
+          "action": { "ru": "Перед ответом или новым начинанием сделайте паузу. Уберите одну рабочую поверхность и закончите одно небольшое улучшение, ограничившись заранее выбранным объёмом.", "en": "Pause before replying or starting something new. Clear one work surface and finish one small improvement, keeping to a scope chosen in advance." },
+          "practice": { "ru": "Созерцайте горн, в котором огонь удерживается формой. Определите предел сегодняшней работы и завершите её вниманием Аглаи к чистоте и красоте результата.", "en": "Contemplate a forge whose fire is held within a form. Define the limit of today's work and finish it with Aglaea's attention to the clarity and beauty of the result." },
+          "supportId": "hearth",
+          "practiceId": "aglaea-beautiful-workspace"
+        },
+        "conflict": {
+          "risk": { "ru": "Желание доказать свою значимость расходится с тем, что действительно полезно создать.", "en": "The desire to prove your importance diverges from what would actually be useful to create." },
+          "quality": { "ru": "Самовыражение через мастерство", "en": "Self-expression through craft" },
+          "intention": { "ru": "Моё достоинство проявляется в качестве законченной работы.", "en": "My dignity is expressed in the quality of completed work." },
+          "action": { "ru": "Выберите одно улучшение по реальной потребности. Заранее определите, как выглядит достаточный результат, выполните его и оцените пользу отдельно от похвалы.", "en": "Choose one improvement that answers a real need. Define an adequate result in advance, complete it, and assess its usefulness separately from praise." },
+          "practice": { "ru": "Вспомните щит, на котором различным силам нашлось место в одном изделии. Соедините своё желание выразиться с одним проверяемым признаком пользы.", "en": "Recall the shield on which different forces found a place within one crafted object. Join your desire for expression to one verifiable sign of usefulness." },
+          "supportId": "zenith",
+          "practiceId": "hephaestus-small-repair"
+        }
+      }
+    },
+    {
+      "id": "south",
+      "title": { "ru": "Юг · Действие и дисциплина", "en": "South · Action and discipline" },
+      "field": { "ru": "Мир войны, активной деятельности и логического ума. Дисциплина, борьба и прямое действие.", "en": "The realm of war, active endeavor, and logical thought. Discipline, struggle, and direct action." },
+      "ambivalence": { "ru": "Арес и Афродита соединяют напор с ценностью живого. Сила защищает достойную цель, когда имеет меру; без неё борьба начинает разрушать то, ради чего велась.", "en": "Ares and Aphrodite join drive with the value of life. Strength protects a worthy aim when measured; without measure, struggle starts destroying what it was meant to serve." },
+      "myth": {
+        "title": { "ru": "Гармония — дочь Ареса и Афродиты", "en": "Harmonia, daughter of Ares and Aphrodite" },
+        "body": { "ru": "В «Теогонии» Гесиод называет среди детей Ареса и Афродиты Страх, Ужас и Гармонию. Согласно представлениям Ордена Авроры: у соединения силы и желания несколько исходов; дисциплина выбирает поступки, которые сохраняют связь и достоинство.", "en": "In the Theogony, Hesiod names Fear, Terror, and Harmonia among the children of Ares and Aphrodite. According to the views of the Order of Aurora: strength joined with desire has several possible outcomes; discipline chooses actions that preserve connection and dignity." },
+        "source": "Hesiod · Theogony 933–937",
+        "url": "https://www.theoi.com/Text/HesiodTheogony.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Решение принято, но действие откладывается; избегание усилия ослабляет дисциплину.", "en": "A decision has been made, but action is postponed; avoiding effort weakens discipline." },
+          "quality": { "ru": "Посильная решительность", "en": "Manageable resolve" },
+          "intention": { "ru": "Я подтверждаю решение одним выполнимым усилием.", "en": "I confirm my decision with one achievable effort." },
+          "action": { "ru": "Назначьте начало и посильный объём знакомого движения или тренировки. Начните в выбранный момент, выполните намеченное и отметьте соблюдение собственного решения.", "en": "Choose a start time and a manageable amount of familiar movement or exercise. Begin at that time, complete the plan, and acknowledge keeping your own decision." },
+          "practice": { "ru": "Назовите цель, которой служит ваша сила. В образе Ареса увидьте готовность действовать, в образе Афродиты — ценность жизни, задающую меру усилия.", "en": "Name the aim your strength is meant to serve. See readiness to act in Ares and the value of life that measures the effort in Aphrodite." },
+          "supportId": "zenith",
+          "practiceId": "ares-deliberate-movement"
+        },
+        "excess": {
+          "risk": { "ru": "Любое препятствие превращается в противника; напор истощает тело и обостряет отношения.", "en": "Every obstacle becomes an opponent; relentless pressure exhausts the body and strains relationships." },
+          "quality": { "ru": "Сила, сохраняющая достоинство", "en": "Strength that preserves dignity" },
+          "intention": { "ru": "Я направляю силу на защиту ценного и соблюдаю меру.", "en": "I direct strength toward protecting what matters and respect proportion." },
+          "action": { "ru": "Перед спором сделайте один жест заботы о теле и короткую паузу. Затем назовите свою границу спокойной фразой и предложите один конкретный следующий шаг без угроз.", "en": "Before an argument, make one gesture of bodily care and pause briefly. Then state your boundary calmly and propose one concrete next step without threats." },
+          "practice": { "ru": "Вспомните, что в родословной этой пары рядом со Страхом стоит Гармония. Спросите себя, какое действие сегодня усилит связь и сохранит вашу границу одновременно.", "en": "Recall that Harmonia stands beside Fear in this pair's genealogy. Ask which action today could strengthen connection while preserving your boundary." },
+          "supportId": "hearth",
+          "practiceId": "aphrodite-care"
+        },
+        "conflict": {
+          "risk": { "ru": "Стремление победить расходится с тем, ради чего вы действуете; забота и дисциплина воспринимаются как несовместимые.", "en": "The wish to win diverges from the purpose of your action; care and discipline seem incompatible." },
+          "quality": { "ru": "Согласование усилия и ценности", "en": "Alignment of effort and value" },
+          "intention": { "ru": "Моя дисциплина поддерживает жизнь, которую я выбираю.", "en": "My discipline supports the life I choose." },
+          "action": { "ru": "Соедините одно запланированное усилие с восстановлением: определите достаточный объём действия и следующий за ним жест заботы. Вечером проверьте обе части.", "en": "Pair one planned effort with recovery: define sufficient action and the act of care that follows. Review both parts in the evening." },
+          "practice": { "ru": "Созерцайте имя Гармонии как связь силы и любви к жизни. Запишите, чему послужило усилие, и что позволит повторить его без истощения.", "en": "Contemplate Harmonia's name as the bond between strength and love of life. Record what the effort served and what would let you repeat it without depletion." },
+          "supportId": "exit",
+          "practiceId": "aphrodite-care"
+        }
+      }
+    },
+    {
+      "id": "southwest",
+      "title": { "ru": "Юго-запад · Ярость и преобразование", "en": "Southwest · Fury and transformation" },
+      "field": { "ru": "Мир ярости, скрытых возможностей и трансформации через страдание. Сектор преодоления препятствий.", "en": "The realm of fury, hidden possibilities, and transformation through suffering. The sector of overcoming obstacles." },
+      "ambivalence": { "ru": "Деметра способна питать землю и удерживать её плодородие. Гнев утраты показывает, что дорого; преобразование начинается с возвращения заботы и поддержки жизни без требования немедленно перестать скорбеть.", "en": "Demeter can nourish the earth and withhold its fertility. The anger of loss reveals what matters; transformation begins by restoring care and sustaining life without demanding an immediate end to grief." },
+      "myth": {
+        "title": { "ru": "Гнев Деметры и возвращение плодородия", "en": "Demeter's anger and the return of fertility" },
+        "body": { "ru": "В гимне к Деметре скорбящая богиня скрывает семена и останавливает рост. После возвращения Персефоны и достигнутого соглашения земля снова приносит плоды. Согласно представлениям Ордена Авроры: признать утрату, искать поддержку и восстанавливать условия жизни малыми действиями.", "en": "In the Hymn to Demeter, the grieving goddess hides the seed and halts growth. After Persephone's return and an agreement, the earth bears fruit again. According to the views of the Order of Aurora: acknowledge loss, seek support, and restore the conditions of life through small actions." },
+        "source": "Homeric Hymn 2 · To Demeter 305–333, 470–489",
+        "url": "https://www.theoi.com/Text/HomericHymns1.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "После трудности или утраты не остаётся сил на питание и повседневную заботу; почва для восстановления беднеет.", "en": "After difficulty or loss, little energy remains for nourishment and daily care; the ground for recovery becomes poorer." },
+          "quality": { "ru": "Возвращение питающей опоры", "en": "Restoring nourishing support" },
+          "intention": { "ru": "Я позволяю жизни получать необходимую заботу и в трудный день.", "en": "I let life receive necessary care even on a difficult day." },
+          "action": { "ru": "Организуйте одну посильную трапезу или попросите о конкретной помощи с ней. Отметьте, какое небольшое препятствие к заботе удалось убрать.", "en": "Arrange one manageable meal or ask for specific help with it. Note which small obstacle to care you were able to remove." },
+          "practice": { "ru": "Вспомните землю, ожидающую возвращения плодородия. Назовите пережитую трудность без принуждения к благодарности и посвятите один простой жест поддержанию жизни.", "en": "Recall the earth awaiting the return of fertility. Name the difficulty without forcing gratitude and dedicate one simple gesture to sustaining life." },
+          "supportId": "hearth",
+          "practiceId": "demeter-nourishing-meal"
+        },
+        "excess": {
+          "risk": { "ru": "Ярость из-за препятствия расходует оставшиеся силы и лишает заботы то, что продолжает жить рядом.", "en": "Fury at an obstacle consumes remaining strength and withdraws care from what is still alive nearby." },
+          "quality": { "ru": "Гнев, преобразованный в защиту живого", "en": "Anger transformed into protection of life" },
+          "intention": { "ru": "Я признаю свой гнев и сохраняю плодородие своего пространства.", "en": "I acknowledge my anger and preserve the fertility of my surroundings." },
+          "action": { "ru": "Отложите ответ из ярости. Выберите одно ограниченное действие заботы: полить растение, пополнить продукты или очистить часть кухни; затем отдельно сформулируйте требование к самой проблеме.", "en": "Postpone a furious response. Choose one bounded act of care: water a plant, replenish food, or clear part of the kitchen; then separately state what you need regarding the actual problem." },
+          "practice": { "ru": "Вспомните, как гнев Деметры охватил плодородие земли. Назовите то, что не должно становиться заложником вашей боли, и направьте туда один жест заботы.", "en": "Recall how Demeter's anger reached the earth's fertility. Name what should not become hostage to your pain and direct one act of care toward it." },
+          "supportId": "nadir",
+          "practiceId": "demeter-living-care"
+        },
+        "conflict": {
+          "risk": { "ru": "Желание преодолеть страдание превращается в чрезмерный труд; необходимость восстановить силы воспринимается как отказ от цели.", "en": "The desire to overcome suffering becomes excessive labor; restoring strength feels like abandoning the aim." },
+          "quality": { "ru": "Плодотворное усилие и восстановление", "en": "Fruitful effort and renewal" },
+          "intention": { "ru": "Я выращиваю результат, сохраняя почву для следующего дня.", "en": "I cultivate a result while preserving the soil for tomorrow." },
+          "action": { "ru": "Сократите одну истощающую задачу до достаточного объёма. Освободившееся время отдайте еде, запасам или заботе о живом; вечером отметьте, что действительно поддержало силы.", "en": "Reduce one exhausting task to a sufficient scope. Use the released time for food, supplies, or care for something living; in the evening record what actually sustained your strength." },
+          "practice": { "ru": "Созерцайте чередование труда и восстановления как сезонный ритм. Назовите сегодняшнюю меру усилия и один признак того, что вы сохранили свои ресурсы.", "en": "Contemplate the alternation of labor and renewal as a seasonal rhythm. Name today's measure of effort and one sign that you preserved your resources." },
+          "supportId": "exit",
+          "practiceId": "demeter-living-care"
+        }
+      }
+    },
+    {
+      "id": "west",
+      "title": { "ru": "Запад · Морок и глубокое видение", "en": "West · Illusion and deep vision" },
+      "field": { "ru": "Мир опьянения, иллюзий и глубокого видения. Зависимости и способность видеть истину сквозь морок.", "en": "The realm of intoxication, illusion, and deep vision. Dependencies and the ability to see truth through the haze." },
+      "ambivalence": { "ru": "Море Посейдона и Амфитриты раскрывает глубину переживания. Волна может унести суждение, а внимательное различение чувства, образа и факта помогает находить направление среди её движения.", "en": "The sea of Poseidon and Amphitrite opens the depths of experience. A wave can carry judgment away, while attending to the difference between feeling, image, and fact helps find direction within its movement." },
+      "myth": {
+        "title": { "ru": "Одиссей в буре Посейдона", "en": "Odysseus in Poseidon's storm" },
+        "body": { "ru": "В V песне «Одиссеи» Посейдон поднимает бурю; Одиссей принимает помощь Ино, а Афина сдерживает ветры. Согласно представлениям Ордена Авроры: среди сильных переживаний различать состояние моря и доступную опору, принимать помощь и выбирать следующий выполнимый шаг.", "en": "In Odyssey 5, Poseidon raises a storm; Odysseus accepts Ino's help, and Athena restrains the winds. According to the views of the Order of Aurora: amid strong experiences, distinguish the state of the sea from the support available, accept help, and choose the next feasible step." },
+        "source": "Homer · Odyssey 5.282–387",
+        "url": "https://www.theoi.com/Text/HomerOdyssey5.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Привычное отвлечение заглушает переживание; трудно понять, что вы чувствуете и чего вам недостаёт.", "en": "Habitual distraction muffles experience; it is difficult to understand what you feel and what you need." },
+          "quality": { "ru": "Внимание к глубине без потери ясности", "en": "Attention to depth without losing clarity" },
+          "intention": { "ru": "Я замечаю своё чувство и различаю его содержание.", "en": "I notice my feeling and discern its content." },
+          "action": { "ru": "Сделайте короткую паузу без привычного отвлечения. Запишите одно чувство, событие, с которым оно связано, и одну потребность; выберите посильный ответ на неё.", "en": "Take a brief pause without your usual distraction. Record one feeling, the event associated with it, and one need; choose a manageable response to that need." },
+          "practice": { "ru": "Созерцайте морскую глубину как пространство, в котором можно заметить отдельную волну. Назовите её чувство обычным словом и вернитесь к текущему окружению.", "en": "Contemplate the sea's depth as a space in which one wave can be noticed. Name its feeling in an ordinary word, then return attention to your surroundings." },
+          "supportId": "entrance",
+          "practiceId": "amphitrite-emotion-log"
+        },
+        "excess": {
+          "risk": { "ru": "Сильное переживание или захватывающий образ кажется доказательством и побуждает реагировать немедленно.", "en": "A strong feeling or compelling image seems like proof and prompts an immediate reaction." },
+          "quality": { "ru": "Вместимость и спокойное различение", "en": "Containment and calm discernment" },
+          "intention": { "ru": "Я даю волне пройти и выбираю ответ после прояснения.", "en": "I let the wave pass and choose a response after clarification." },
+          "action": { "ru": "Поставьте необязательный срочный ответ на паузу. Выпейте воды, спокойно подышите в обычном ритме и запишите один проверяемый факт перед решением.", "en": "Pause a nonessential urgent response. Drink some water, breathe calmly at your ordinary rhythm, and write down one verifiable fact before deciding." },
+          "practice": { "ru": "Вспомните Одиссея, ищущего опору в буре. Назовите три вещи, которые сейчас видите вокруг, затем один доступный безопасный следующий шаг.", "en": "Recall Odysseus seeking support in the storm. Name three things you can see around you, then one available safe next step." },
+          "supportId": "hearth",
+          "practiceId": "poseidon-water-pause"
+        },
+        "conflict": {
+          "risk": { "ru": "Привлекательное объяснение расходится с наблюдаемым; трудно отделить глубокое понимание от желаемого образа.", "en": "An attractive explanation conflicts with observation; it is difficult to separate deep understanding from a wished-for image." },
+          "quality": { "ru": "Проницательность, проверенная опытом", "en": "Insight tested through experience" },
+          "intention": { "ru": "Я уважаю внутренний образ и проверяю выводы в жизни.", "en": "I respect an inner image and test its conclusions in life." },
+          "action": { "ru": "Запишите отдельно впечатление, наблюдаемый факт и вопрос для проверки. Проверьте один вывод доступным способом и вечером отметьте, что подтвердилось, а что изменилось.", "en": "Record the impression, the observed fact, and a question to check separately. Test one conclusion by an available method and note in the evening what was confirmed and what changed." },
+          "practice": { "ru": "Представьте возвращение из морской глубины на берег. Сохраните один образ в дневнике и сформулируйте один вывод, которому требуется проверка поступком.", "en": "Imagine returning from the sea's depths to shore. Preserve one image in your journal and state one conclusion that needs to be tested through action." },
+          "supportId": "exit",
+          "practiceId": "amphitrite-emotion-log"
+        }
+      }
+    },
+    {
+      "id": "northwest",
+      "title": { "ru": "Северо-запад · Граница и переход", "en": "Northwest · Boundary and passage" },
+      "field": { "ru": "Мир границ, переходов и рискованных действий. Скрытые угрозы или внезапные прорывы.", "en": "The realm of boundaries, transitions, and risky actions. Hidden threats or sudden breakthroughs." },
+      "ambivalence": { "ru": "Аполлон освещает порог: переход может стать прорывом или необдуманным риском. Ясность включает признание неизвестного, условия остановки и уважение к границам.", "en": "Apollo illuminates the threshold: a passage can become a breakthrough or an unconsidered risk. Clarity includes acknowledging the unknown, stop conditions, and respect for boundaries." },
+      "myth": {
+        "title": { "ru": "Аполлон направляет Ореста к суду Афины", "en": "Apollo directs Orestes to Athena's court" },
+        "body": { "ru": "В «Эвменидах» Аполлон направляет преследуемого Ореста в Афины, где спор рассматривается судом. Согласно представлениям Ордена Авроры: выход из опасного перехода требует ясной процедуры и рассмотрения разных сторон; одна уверенность в своей правоте не завершает конфликт.", "en": "In the Eumenides, Apollo directs the pursued Orestes to Athens, where the dispute is heard by a court. According to the views of the Order of Aurora: a way through a dangerous transition requires a clear procedure and hearing different sides; certainty in one's own rightness alone does not settle a conflict." },
+        "source": "Aeschylus · Eumenides 64–84, 470–489, 681–710",
+        "url": "https://www.theoi.com/Text/AeschylusEumenides.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Порог кажется непроходимым: страх неизвестного удерживает даже от небольшого обратимого шага.", "en": "The threshold seems impassable: fear of the unknown prevents even a small reversible step." },
+          "quality": { "ru": "Подготовленная смелость перехода", "en": "Prepared courage for a transition" },
+          "intention": { "ru": "Я освещаю порог и выбираю посильный пробный шаг.", "en": "I illuminate the threshold and choose a manageable trial step." },
+          "action": { "ru": "Выберите один отложенный переход. Узнайте его первое условие, определите обратимый пробный шаг и признак, при котором следует остановиться.", "en": "Choose one postponed transition. Learn its first requirement, define a reversible trial step, and name a sign that would mean stopping." },
+          "practice": { "ru": "При дневном свете спокойно опишите порог: что находится по эту сторону, что известно о другой и какая опора доступна на первом шаге.", "en": "In daylight, calmly describe the threshold: what is on this side, what is known about the other, and what support is available for the first step." },
+          "supportId": "entrance",
+          "practiceId": "apollo-morning-light"
+        },
+        "excess": {
+          "risk": { "ru": "Обещание внезапного прорыва затмевает скрытые угрозы; граница пересекается без проверки условий.", "en": "The promise of a sudden breakthrough obscures hidden threats; a boundary is crossed without checking the conditions." },
+          "quality": { "ru": "Осмотрительность и мера риска", "en": "Prudence and measured risk" },
+          "intention": { "ru": "Я проверяю условия прежде, чем пересечь важную границу.", "en": "I check the conditions before crossing an important boundary." },
+          "action": { "ru": "Перед необязательным необратимым решением проверьте условия и последствия по надёжному источнику. Запишите предел допустимых затрат и при необходимости запросите компетентное мнение.", "en": "Before an optional irreversible decision, check its conditions and consequences against a reliable source. Record a limit on acceptable costs and seek an informed opinion when needed." },
+          "practice": { "ru": "Вспомните суд, к которому Аполлон направляет Ореста. Дайте слово доводу против своего плана и сформулируйте одно обязательное условие перехода.", "en": "Recall the court to which Apollo directs Orestes. Give a hearing to an argument against your plan and formulate one necessary condition for proceeding." },
+          "supportId": "zenith",
+          "practiceId": "apollo-harmonic-study"
+        },
+        "conflict": {
+          "risk": { "ru": "Одни признаки обещают возможность, другие указывают на угрозу; решение колеблется между поспешностью и запретом любого риска.", "en": "Some signs promise opportunity while others suggest danger; the decision swings between haste and forbidding every risk." },
+          "quality": { "ru": "Ясное суждение на пороге", "en": "Clear judgment at the threshold" },
+          "intention": { "ru": "Я различаю обещание, риск и условия своего выбора.", "en": "I distinguish the promise, the risk, and the conditions of my choice." },
+          "action": { "ru": "Запишите три критерия решения: ожидаемая польза, допустимая цена и условие остановки. Выберите ограниченную проверку и дату, когда оцените её результат.", "en": "Write three decision criteria: expected benefit, acceptable cost, and a stop condition. Choose a bounded test and a date to evaluate its result." },
+          "practice": { "ru": "Как струны лиры, рассмотрите по очереди доводы за и против, затем запишите общее правило решения. После пробного шага сохраните один вывод для следующего перехода.", "en": "Like the strings of a lyre, consider arguments for and against in turn, then write a governing decision rule. After the trial step, preserve one lesson for the next transition." },
+          "supportId": "exit",
+          "practiceId": "apollo-harmonic-study"
+        }
+      }
+    },
+    {
+      "id": "center",
+      "title": { "ru": "Центр · Целостность и духовный путь", "en": "Center · Wholeness and the spiritual path" },
+      "field": { "ru": "Духовность, координация всех сфер и связь с вечностью. Точка сборки всей ситуации.", "en": "Spirituality, the coordination of all spheres, and connection with eternity. The integrating point of the whole situation." },
+      "ambivalence": { "ru": "Дионис и Ариадна соединяют освобождение с сохранением пути. Выход из застывшей роли может оживить целое, а утрата всякой связи — рассеять его; нить смысла проверяется повседневными поступками.", "en": "Dionysus and Ariadne join liberation with continuity of the path. Leaving a fixed role can enliven the whole, while losing every connection can scatter it; the thread of meaning is tested in daily actions." },
+      "myth": {
+        "title": { "ru": "Дионис, Ариадна и продолжение пути", "en": "Dionysus, Ariadne, and the continuation of the path" },
+        "body": { "ru": "У Гесиода Дионис берёт Ариадну в жёны, а Зевс делает её бессмертной и нестареющей. Согласно представлениям Ордена Авроры: опыт перемены может получить место в более долгом пути; духовное переживание раскрывается через верность выбранной ценности и живую связь с миром.", "en": "In Hesiod, Dionysus takes Ariadne as his wife, and Zeus makes her immortal and ageless. According to the views of the Order of Aurora: an experience of change can find a place within a longer path; spiritual experience unfolds through fidelity to a chosen value and a living connection with the world." },
+        "source": "Hesiod · Theogony 947–949",
+        "url": "https://www.theoi.com/Text/HesiodTheogony.html"
+      },
+      "needs": {
+        "deficit": {
+          "risk": { "ru": "Дела разных сфер распадаются на несвязанные обязанности; теряется ощущение собственного пути и смысла.", "en": "Tasks from different spheres fall into unrelated duties; the sense of a personal path and meaning is lost." },
+          "quality": { "ru": "Живая связь частей с целым", "en": "A living connection between the parts and the whole" },
+          "intention": { "ru": "Я нахожу одну ценность, которая связывает мои сегодняшние действия.", "en": "I find one value that connects today's actions." },
+          "action": { "ru": "Назовите одну важную ценность и выберите сегодняшнее дело, через которое она проявится. После выполнения запишите одной строкой, как этот поступок связан с вашим путём.", "en": "Name one important value and choose a task today through which it can be expressed. After completing it, write one line about how the action connects with your path." },
+          "practice": { "ru": "В спокойном месте представьте нить, соединяющую разные части дня. Удерживая одну выбранную ценность, назовите ближайший поступок, который даст ей форму.", "en": "In a quiet place, imagine a thread connecting the different parts of the day. Hold one chosen value in mind and name the next action that will give it form." },
+          "supportId": "hearth",
+          "practiceId": "ariadne-thread-journal"
+        },
+        "excess": {
+          "risk": { "ru": "Поиск особого состояния или всеобъемлющего объяснения отрывает духовную жизнь от простых обязательств.", "en": "The pursuit of an exceptional state or an all-encompassing explanation disconnects spiritual life from simple commitments." },
+          "quality": { "ru": "Воплощённый духовный смысл", "en": "Embodied spiritual meaning" },
+          "intention": { "ru": "Я переношу смысл пережитого в один обычный поступок.", "en": "I carry the meaning of experience into one ordinary action." },
+          "action": { "ru": "Сведите одно духовное понимание к действию, которое можно выполнить сегодня: поддержать человека, закончить обещанное или позаботиться о доме. Запишите фактический результат.", "en": "Translate one spiritual insight into an action you can complete today: support someone, keep a promise, or care for your home. Record the actual result." },
+          "practice": { "ru": "Вспомните, что продолжение пути требует возвращения в мир. Завершите созерцание именем конкретного поступка, затем выполните его прежде нового поиска впечатлений.", "en": "Recall that continuing a path requires returning to the world. End contemplation by naming a concrete action, then complete it before seeking a new experience." },
+          "supportId": "exit",
+          "practiceId": "ariadne-thread-journal"
+        },
+        "conflict": {
+          "risk": { "ru": "Разные роли и ценности тянут в противоположные стороны; верность себе кажется несовместимой с обязательствами.", "en": "Different roles and values pull in opposite directions; fidelity to yourself seems incompatible with commitments." },
+          "quality": { "ru": "Целостность, допускающая различия", "en": "Wholeness that allows differences" },
+          "intention": { "ru": "Я согласую обязательства с живым смыслом своего пути.", "en": "I align commitments with the living meaning of my path." },
+          "action": { "ru": "Назовите три значимые роли и одно общее для них качество. Выберите поступок, который его выражает, а затем выделите посильное время для свободного творчества.", "en": "Name three important roles and one quality they share. Choose an action that expresses it, then set aside a manageable time for free creativity." },
+          "practice": { "ru": "Созерцайте Диониса и Ариадну как освобождение, сохраняющее связь. Сформулируйте одно правило верности своей ценности и выразите его коротким рисунком, движением или записью.", "en": "Contemplate Dionysus and Ariadne as liberation that preserves connection. Formulate one rule of fidelity to your value and express it through a brief drawing, movement, or note." },
+          "supportId": "zenith",
+          "practiceId": "dionysus-living-gesture"
+        }
+      }
+    }
+  ],
+  "letterFoci": {
+    "alpha": {
+      "risk": { "ru": "Рассеивание внимания и начало без опоры", "en": "Scattered attention and a beginning without support" },
+      "quality": { "ru": "Единство намерения и ясное начало", "en": "Unity of intention and a clear beginning" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите один желаемый результат выбранного дела и выполните самый небольшой шаг, с которого он действительно начинается.", "en": "Name one desired result for the chosen task and take the smallest step that genuinely begins it." },
+          "practice": { "ru": "Созерцайте Альфу как точку начала; соберите внимание в одном коротком намерении и сразу придайте ему действие.", "en": "Contemplate Alpha as a point of beginning; gather attention into one brief intention and immediately give it an action." }
+        },
+        "excess": {
+          "action": { "ru": "Отложите новые начинания до завершения одного уже начатого этапа. Оставьте на сегодня одну главную цель.", "en": "Postpone new beginnings until one stage already under way is complete. Keep one main aim for today." },
+          "practice": { "ru": "Представьте расходящиеся лучи, возвращающиеся к одному истоку; назовите, какому начинанию сейчас достаточно вашего внимания.", "en": "Imagine spreading rays returning to one source; name the beginning that deserves your attention now." }
+        },
+        "conflict": {
+          "action": { "ru": "Сравните два конкурирующих намерения с одной главной ценностью. Выберите первый шаг, которому можете следовать без внутреннего двойного обещания.", "en": "Compare two competing intentions against one main value. Choose a first step you can follow without making an inwardly divided promise." },
+          "practice": { "ru": "Созерцая Альфу, закончите фразу «В основании моего решения лежит…» и проверьте, согласуется ли с ней выбранный поступок.", "en": "While contemplating Alpha, complete the phrase 'My decision rests on…' and check whether the chosen action agrees with it." }
+        }
+      }
+    },
+    "beta": {
+      "risk": { "ru": "Двойственность намерений и затруднение согласования", "en": "Divided intentions and difficulty reaching agreement" },
+      "quality": { "ru": "Согласованность, сотрудничество и управление импульсами", "en": "Accord, cooperation, and direction of impulses" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "В выбранном деле назовите, какая именно поддержка нужна, и попросите о ней прямо. Отдельно определите свою часть ответственности.", "en": "Name exactly what support the chosen task needs and ask for it directly. Define your own share of responsibility separately." },
+          "practice": { "ru": "Созерцайте две части Беты как возможность сотрудничества; назовите, что можете предложить вы и что готовы принять от другого.", "en": "Contemplate Beta's two parts as a possibility of cooperation; name what you can offer and what you are ready to receive." }
+        },
+        "excess": {
+          "action": { "ru": "Пересмотрите одно согласие, данное только ради одобрения. Уточните посильный вклад, сохраняя уважение к себе и другому.", "en": "Review one agreement given only to gain approval. Clarify a manageable contribution while respecting yourself and the other person." },
+          "practice": { "ru": "Представьте две стороны Беты различимыми и связанными; сформулируйте границу, которая сохраняет сотрудничество без растворения в чужой воле.", "en": "Imagine Beta's two sides as distinct and connected; state a boundary that preserves cooperation without dissolving into another's will." }
+        },
+        "conflict": {
+          "action": { "ru": "Назовите два противоречащих обещания или побуждения. Уточните, что можно согласовать, и честно пересмотрите то, что невозможно выполнить одновременно.", "en": "Name two contradictory promises or impulses. Clarify what can be reconciled and honestly revise what cannot be fulfilled together." },
+          "practice": { "ru": "Созерцая Бету как мост между намерением и поступком, произнесите одну договорённость, которую готовы подтвердить действием.", "en": "Contemplate Beta as a bridge between intention and action; state one agreement you are ready to uphold through action." }
+        }
+      }
+    },
+    "gamma": {
+      "risk": { "ru": "Инерция, застой и застревание в материальных трудностях", "en": "Inertia, stagnation, and becoming stuck in material difficulties" },
+      "quality": { "ru": "Воплощение замысла и устойчивая последовательность", "en": "Making an intention tangible through a stable sequence" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Разделите выбранное дело на начало, середину и завершение. Сделайте первый шаг и оставьте видимый след результата.", "en": "Divide the chosen task into beginning, middle, and completion. Take the first step and leave a visible trace of the result." },
+          "practice": { "ru": "Осмыслите триаду начала, середины и конца; созерцая Гамму, назовите текущую ступень и ближайшее движение.", "en": "Reflect on the triad of beginning, middle, and end; contemplating Gamma, name the current stage and the next movement." }
+        },
+        "excess": {
+          "action": { "ru": "Уберите одну лишнюю подробность или тяжёлое условие, которое удерживает дело в неподвижности. Завершите достаточную простую версию.", "en": "Remove one unnecessary detail or burdensome condition that keeps the task motionless. Complete a sufficient simple version." },
+          "practice": { "ru": "Представьте устойчивое основание, на котором остаётся место движению; назовите, какую тяжесть уже можно не нести.", "en": "Imagine a stable foundation that still allows movement; name a weight you no longer need to carry." }
+        },
+        "conflict": {
+          "action": { "ru": "Для двух конкурирующих планов укажите осязаемый результат. Выберите один небольшой образец, который позволит сравнить замысел с действительностью.", "en": "Specify a tangible result for two competing plans. Choose one small sample that lets you compare intention with reality." },
+          "practice": { "ru": "Созерцайте Гамму как переход от мысли к форме; свяжите одним предложением замысел, действие и ожидаемый результат.", "en": "Contemplate Gamma as a passage from thought to form; link intention, action, and expected result in one sentence." }
+        }
+      }
+    },
+    "delta": {
+      "risk": { "ru": "Непрочный фундамент или структура, ограничивающая движение", "en": "A weak foundation or a structure that restricts movement" },
+      "quality": { "ru": "Надёжная опора и структура, открывающая возможность", "en": "Reliable support and a structure that opens possibilities" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Проверьте четыре опоры выбранного дела: цель, доступные ресурсы, границы и следующий шаг. Восстановите одну недостающую опору.", "en": "Check four supports of the chosen task: aim, available resources, boundaries, and next step. Restore one missing support." },
+          "practice": { "ru": "Созерцайте Дельту как прочное основание и дверь; назовите, какая опора позволит открыть ближайшую возможность.", "en": "Contemplate Delta as a firm foundation and a door; name the support that will let you open the next possibility." }
+        },
+        "excess": {
+          "action": { "ru": "Найдите одно правило, которое стало препятствием. Сохраните его полезную цель, но упростите способ выполнения до посильного.", "en": "Find one rule that has become an obstacle. Preserve its useful purpose while simplifying its execution to something manageable." },
+          "practice": { "ru": "Представьте дверь в устойчивой стене; сформулируйте, как порядок может поддержать свободу следующего шага.", "en": "Imagine a door in a stable wall; state how order can support freedom in the next step." }
+        },
+        "conflict": {
+          "action": { "ru": "Отделите то, что должно оставаться устойчивым, от того, что можно изменить. Испытайте один новый способ, сохранив необходимую опору.", "en": "Separate what must remain stable from what can change. Try one new method while preserving necessary support." },
+          "practice": { "ru": "Созерцая Дельту, назовите фундамент и открывающуюся дверь как две части одного решения.", "en": "While contemplating Delta, name the foundation and the opening door as two parts of one decision." }
+        }
+      }
+    },
+    "epsilon": {
+      "risk": { "ru": "Утрата справедливой меры и смысла повседневных дел", "en": "Loss of fair measure and meaning in daily tasks" },
+      "quality": { "ru": "Справедливость, внутреннее равновесие и осмысленность", "en": "Fairness, inner balance, and meaningful purpose" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите одну свою потребность, которую вы не учли в выбранном деле. Добавьте к плану посильный шаг, восстанавливающий справедливую меру.", "en": "Name one of your needs that the chosen task has overlooked. Add a manageable step that restores fair measure." },
+          "practice": { "ru": "Созерцайте Эпсилон как напоминание о справедливости; назовите право на внимание и для себя, и для другой стороны.", "en": "Contemplate Epsilon as a reminder of fairness; acknowledge that both you and the other side deserve attention." }
+        },
+        "excess": {
+          "action": { "ru": "Пересмотрите одно требование идеальной справедливости, которое мешает действовать. Выберите достаточное исправление конкретного перекоса вместо бесконечного подсчёта обид.", "en": "Review one demand for perfect fairness that prevents action. Choose a sufficient repair to a specific imbalance instead of endlessly tallying grievances." },
+          "practice": { "ru": "Созерцая Эпсилон, отделите желание наказать от желания восстановить меру и назовите действие восстановления.", "en": "While contemplating Epsilon, distinguish the desire to punish from the wish to restore proportion and name a restorative action." }
+        },
+        "conflict": {
+          "action": { "ru": "Запишите две потребности, которые столкнулись в выбранном деле. Предложите распределение усилий, учитывающее реальные возможности обеих сторон.", "en": "Write down two needs that collide in the chosen task. Propose an allocation of effort that reflects both sides' actual capacities." },
+          "practice": { "ru": "Представьте весы, на которых учитывается потребность, а не только одинаковость; сформулируйте свой критерий справедливого решения.", "en": "Imagine scales that account for need rather than sameness alone; state your criterion for a fair decision." }
+        }
+      }
+    },
+    "zeta": {
+      "risk": { "ru": "Застой побуждения или хаотичная растрата сил", "en": "Stagnant motivation or a chaotic waste of effort" },
+      "quality": { "ru": "Живое побуждение и направленная творческая активность", "en": "Living motivation and directed creative activity" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Найдите в выбранном деле один живой интерес. Выделите короткое время, чтобы выразить его в доступном действии без требования большого результата.", "en": "Find one living interest within the chosen task. Set aside a short time to express it in an accessible action without demanding a large result." },
+          "practice": { "ru": "Созерцайте Дзету как пробуждение жизненного движения; вспомните, что привлекает вас в деле, и назовите первый отклик.", "en": "Contemplate Zeta as the awakening of living movement; recall what draws you to the task and name your first response." }
+        },
+        "excess": {
+          "action": { "ru": "Оставьте одно направление активности и закончите небольшой результат в нём. Прекратите лишние переключения до выбранного момента остановки.", "en": "Keep one direction of activity and complete a small result within it. Stop unnecessary switching until the chosen stopping point." },
+          "practice": { "ru": "Представьте поток, получивший русло; назовите, куда вы направляете побуждение и где сегодня его предел.", "en": "Imagine a stream given a channel; name where you direct your motivation and where its limit lies today." }
+        },
+        "conflict": {
+          "action": { "ru": "Соедините необходимую часть дела с интересным вам способом выполнения. Проверьте этот способ на одном небольшом отрезке работы.", "en": "Join a necessary part of the task with a method that interests you. Test that method on one small segment of the work." },
+          "practice": { "ru": "Созерцая Дзету, спросите, где живое желание может поддержать обязательство, и выразите ответ одним посильным действием.", "en": "While contemplating Zeta, ask where living desire could support a commitment and express the answer in one manageable action." }
+        }
+      }
+    },
+    "eta": {
+      "risk": { "ru": "Инерция привычной формы и изоляция от поддержки", "en": "The inertia of a familiar form and isolation from support" },
+      "quality": { "ru": "Плодотворная устойчивость и способность усваивать опыт", "en": "Fruitful stability and the capacity to assimilate experience" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите доступную материальную опору и человека или сообщество, к которому можно обратиться. Используйте одну из этих опор для следующего шага.", "en": "Name an available material support and a person or community you can approach. Use one of these supports for the next step." },
+          "practice": { "ru": "Созерцайте Эту как устойчивое вместилище опыта; вспомните полученную поддержку и назовите, что готовы принять сегодня.", "en": "Contemplate Eta as a stable vessel for experience; recall support you have received and name what you are ready to accept today." }
+        },
+        "excess": {
+          "action": { "ru": "Найдите запас, вещь или привычный способ, который хранится без пользы. Примените один ресурс по назначению либо освободите от него место бережным способом.", "en": "Find a reserve, object, or familiar method that is being kept without use. Put one resource to work or release its space carefully." },
+          "practice": { "ru": "Представьте плодородную почву, которая поддерживает рост, а не удерживает семя навсегда; назовите, чему пора получить развитие.", "en": "Imagine fertile soil that supports growth rather than holding the seed forever; name what is ready to develop." }
+        },
+        "conflict": {
+          "action": { "ru": "Уточните условия нужной вам поддержки. Согласуйте, что вы принимаете от других и какое решение оставляете за собой.", "en": "Clarify the conditions of the support you need. Agree on what you accept from others and which decision remains your own." },
+          "practice": { "ru": "Созерцая Эту, соедините благодарность за опору с правом на собственный рост; выразите обе части одной фразой.", "en": "While contemplating Eta, join gratitude for support with the right to grow independently; express both in one sentence." }
+        }
+      }
+    },
+    "theta": {
+      "risk": { "ru": "Страх перемен и распад связей из-за нарушения порядка", "en": "Fear of change and weakening connections through disrupted order" },
+      "quality": { "ru": "Завершение цикла и включённость в более широкий порядок", "en": "Completing a cycle and belonging to a wider order" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Определите, какой этап выбранного дела сейчас завершается. Закройте один незавершённый пункт и запишите, к какому следующему этапу он ведёт.", "en": "Identify which stage of the chosen task is ending now. Close one unfinished item and record the next stage it leads to." },
+          "practice": { "ru": "Созерцайте круг Тэты и его центр; поместите сегодняшний шаг в более широкий цикл и назовите его место.", "en": "Contemplate Theta's circle and center; place today's step within a wider cycle and name its place." }
+        },
+        "excess": {
+          "action": { "ru": "Проверьте одно устаревшее правило, которого держитесь из страха перемен. Измените его конкретную часть, сохранив полезный порядок.", "en": "Examine one outdated rule you keep from fear of change. Adjust a specific part while preserving useful order." },
+          "practice": { "ru": "Представьте круг, внутри которого возможно новое движение; назовите различие между верностью смыслу и удерживанием старой формы.", "en": "Imagine a circle that allows new movement within it; name the difference between fidelity to meaning and clinging to an old form." }
+        },
+        "conflict": {
+          "action": { "ru": "Запишите, что из прежнего этапа следует завершить, а что перенести дальше. Обозначьте один ясный переходный шаг между ними.", "en": "Record what from the previous stage should end and what should carry forward. Define one clear transitional step between them." },
+          "practice": { "ru": "Созерцая Тэту, назовите завершение и продолжение как части одного порядка, затем выберите знак фактического окончания этапа.", "en": "While contemplating Theta, name ending and continuation as parts of one order, then choose a sign that the stage has actually ended." }
+        }
+      }
+    },
+    "iota": {
+      "risk": { "ru": "Мелочность, раздробленность и утрата общего направления", "en": "Pettiness, fragmentation, and loss of overall direction" },
+      "quality": { "ru": "Внутренний стержень и ясность существенного", "en": "Inner resolve and clarity about what is essential" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Сведите смысл выбранного дела к одной честной фразе. Укажите одно действие, которым сможете подтвердить её сегодня.", "en": "Reduce the meaning of the chosen task to one honest sentence. Name one action that can uphold it today." },
+          "practice": { "ru": "Созерцайте простую вертикаль Йоты; отпустите второстепенные пояснения и назовите то, на чём готовы стоять.", "en": "Contemplate Iota's simple vertical line; release secondary explanations and name what you are ready to stand for." }
+        },
+        "excess": {
+          "action": { "ru": "Уберите одну мелкую проверку или придирку, не влияющую на смысл результата. Проверьте главное и разрешите делу продвинуться.", "en": "Remove one minor check or criticism that does not affect the result's meaning. Check what matters and allow the task to move forward." },
+          "practice": { "ru": "Представьте, как множество пометок уступает место одной ясной линии; отличите существенное от желания всё контролировать.", "en": "Imagine many annotations giving way to one clear line; distinguish what is essential from the wish to control everything." }
+        },
+        "conflict": {
+          "action": { "ru": "Сравните внутреннюю причину действия с желанием выглядеть убедительно. Выберите поступок, который остаётся верным вам и без внешнего одобрения.", "en": "Compare your inner reason for acting with the wish to appear convincing. Choose an action that remains true to you even without external approval." },
+          "practice": { "ru": "Созерцая Йоту, закончите фразу «Даже без зрителей я выбираю…» и назовите конкретное подтверждение этого выбора.", "en": "While contemplating Iota, complete 'Even without an audience, I choose…' and name a concrete way to uphold that choice." }
+        }
+      }
+    },
+    "kappa": {
+      "risk": { "ru": "Упущенный момент, беспорядок или чрезмерно жёсткий контроль", "en": "A missed moment, disorder, or excessively rigid control" },
+      "quality": { "ru": "Своевременность, исполнимые правила и личная дисциплина", "en": "Timeliness, feasible rules, and personal discipline" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назначьте выбранному делу конкретное окно начала и посильную длительность. Подготовьте нужное заранее и начните в этот момент.", "en": "Give the chosen task a specific start window and a manageable duration. Prepare what you need beforehand and begin at that time." },
+          "practice": { "ru": "Созерцайте Каппу как владение доступным моментом; назовите время и действие, которые действительно находятся в вашей власти.", "en": "Contemplate Kappa as stewardship of the available moment; name the time and action that are genuinely within your control." }
+        },
+        "excess": {
+          "action": { "ru": "Смягчите одно чрезмерно строгое требование к сроку или объёму. Оставьте выполнимое правило, которое поддерживает регулярность без принуждения.", "en": "Relax one excessively strict demand on timing or volume. Keep a feasible rule that supports regularity without coercion." },
+          "practice": { "ru": "Представьте правило как опору для шага; назовите границу между дисциплиной и давлением в сегодняшнем деле.", "en": "Imagine a rule as support for a step; name the boundary between discipline and pressure in today's task." }
+        },
+        "conflict": {
+          "action": { "ru": "При столкновении сроков выберите реальный приоритет и пересогласуйте одно обязательство заранее. Запишите новое время и ответственного за следующий шаг.", "en": "When deadlines collide, choose the real priority and renegotiate one commitment in advance. Record the new time and who is responsible for the next step." },
+          "practice": { "ru": "Созерцая Каппу, различите своё управление временем и чужие ожидания; сформулируйте один честный срок.", "en": "While contemplating Kappa, distinguish your stewardship of time from others' expectations; formulate one honest deadline." }
+        }
+      }
+    },
+    "lambda": {
+      "risk": { "ru": "Застревание и жёсткость там, где требуется гибкость", "en": "Becoming stuck and remaining rigid where flexibility is needed" },
+      "quality": { "ru": "Уместная гибкость и гармоничная пропорция", "en": "Appropriate flexibility and harmonious proportion" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Найдите один альтернативный способ выполнить застрявшую часть дела. Испытайте его в малом объёме, сохранив исходную полезную цель.", "en": "Find one alternative method for a stuck part of the task. Try it on a small scale while preserving the original useful aim." },
+          "practice": { "ru": "Созерцайте Лямбду как гибкий переход; назовите способ, который можно изменить, и смысл, который стоит сохранить.", "en": "Contemplate Lambda as a flexible passage; name a method that can change and a meaning worth preserving." }
+        },
+        "excess": {
+          "action": { "ru": "Среди уступок и постоянных изменений сохраните одну необходимую границу. Завершите достаточный вариант, прежде чем снова приспосабливать его.", "en": "Amid concessions and constant revisions, preserve one necessary boundary. Finish an adequate version before adapting it again." },
+          "practice": { "ru": "Представьте гибкость, опирающуюся на устойчивую точку; назовите, где приспособление перестаёт служить выбранной цели.", "en": "Imagine flexibility supported by a stable point; name where adaptation stops serving the chosen aim." }
+        },
+        "conflict": {
+          "action": { "ru": "Разделите требование к результату и привычный способ его получить. Согласуйте новую пропорцию усилий, меняя способ там, где цель остаётся общей.", "en": "Separate the required result from the familiar way of obtaining it. Agree on a new proportion of effort, changing the method where the aim remains shared." },
+          "practice": { "ru": "Созерцая Лямбду, представьте движение между двумя крайностями и сформулируйте уместную меру именно для сегодняшних условий.", "en": "While contemplating Lambda, imagine movement between two extremes and state the appropriate measure for today's actual conditions." }
+        }
+      }
+    },
+    "mu": {
+      "risk": { "ru": "Перегрузка делами, чувствами или чужим влиянием", "en": "Overload from tasks, feelings, or other people's influence" },
+      "quality": { "ru": "Устойчивая форма и упорядоченное обращение с ресурсами", "en": "Stable form and orderly stewardship of resources" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Перечислите доступные время, материалы и помощь для выбранного дела. Используйте один уже имеющийся ресурс, прежде чем искать новые.", "en": "List the time, materials, and help available for the chosen task. Use one resource already at hand before seeking new ones." },
+          "practice": { "ru": "Созерцайте Мю как вместилище накопленного; назовите, что уже наполняет вашу опору и может получить применение.", "en": "Contemplate Mu as a vessel for what has accumulated; name what already fills your support and can be put to use." }
+        },
+        "excess": {
+          "action": { "ru": "Сократите объём входящих задач до вместимого. Отложите или передайте один пункт и закончите выбранную часть, прежде чем принимать следующую.", "en": "Reduce incoming tasks to what you can hold. Defer or delegate one item and complete the chosen part before accepting the next." },
+          "practice": { "ru": "Представьте берег, удерживающий воду; назовите достаточную вместимость сегодняшнего дня и то, чему следует подождать.", "en": "Imagine a bank containing water; name today's sufficient capacity and what should wait." }
+        },
+        "conflict": {
+          "action": { "ru": "Разделите собственные ресурсы и ожидания окружающих. Назначьте посильный вклад в общее дело и сохраните необходимый запас.", "en": "Separate your resources from others' expectations. Set a manageable contribution to the shared task and preserve a necessary reserve." },
+          "practice": { "ru": "Созерцая Мю, различите общий поток и собственную форму; назовите, чем готовы делиться без потери опоры.", "en": "While contemplating Mu, distinguish the shared stream from your own form; name what you can share without losing support." }
+        }
+      }
+    },
+    "nu": {
+      "risk": { "ru": "Колебания, утрата ориентиров и опора на непроверенные убеждения", "en": "Wavering, loss of bearings, and reliance on unexamined beliefs" },
+      "quality": { "ru": "Внутренняя опора и верность обдуманным принципам", "en": "Inner support and fidelity to considered principles" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите принцип, на который хотите опереться в выбранном деле. Вспомните один реальный случай, когда он помог, и примените его в ближайшем решении.", "en": "Name a principle you want to rely on in the chosen task. Recall one real occasion when it helped and apply it to the next decision." },
+          "practice": { "ru": "Созерцайте Ню как скрытое основание; вспомните опыт, на который можете опереться без необходимости доказывать свою ценность.", "en": "Contemplate Nu as a hidden foundation; recall experience you can rely on without needing to prove your worth." }
+        },
+        "excess": {
+          "action": { "ru": "Проверьте одно убеждение, которое защищаете от любых вопросов. Сопоставьте его с наблюдаемым фактом и уточните формулировку, если она слишком категорична.", "en": "Examine one belief you protect from all questioning. Compare it with an observed fact and refine its wording if it is too absolute." },
+          "practice": { "ru": "Представьте прочный корень, способный получать новое питание; отделите верность принципу от запрета чему-либо учиться.", "en": "Imagine a strong root able to receive new nourishment; distinguish fidelity to a principle from refusing to learn." }
+        },
+        "conflict": {
+          "action": { "ru": "Отделите собственное основание решения от чужих ожиданий. Назовите, что готовы обсудить, и какую личную границу сохраняете.", "en": "Separate your own grounds for the decision from others' expectations. Name what you are willing to discuss and which personal boundary you preserve." },
+          "practice": { "ru": "Созерцая Ню, назовите внутреннюю правду обычными словами; проверьте, допускает ли она честный разговор без отказа от себя.", "en": "While contemplating Nu, name your inner truth in ordinary words; check whether it allows an honest conversation without abandoning yourself." }
+        }
+      }
+    },
+    "xi": {
+      "risk": { "ru": "Неравновесие и хрупкие связи из-за недостатка гибкости", "en": "Imbalance and fragile connections caused by insufficient flexibility" },
+      "quality": { "ru": "Справедливая мера и согласование взаимных интересов", "en": "Fair measure and alignment of mutual interests" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Уточните, кому и чего недостаёт в выбранном деле. Перераспределите один ресурс или часть усилия туда, где это восстановит устойчивость.", "en": "Clarify who or what lacks something in the chosen task. Redirect one resource or part of the effort where it will restore stability." },
+          "practice": { "ru": "Созерцайте Кси как образ согласованных уровней; назовите недостающую опору, без которой целое теряет равновесие.", "en": "Contemplate Xi as an image of coordinated levels; name the missing support without which the whole loses balance." }
+        },
+        "excess": {
+          "action": { "ru": "Проверьте, не подменяете ли справедливость одинаковым распределением. Учтите реальную потребность и предел возможностей, изменив одну пропорцию.", "en": "Check whether you are substituting identical allocation for fairness. Account for actual need and capacity by adjusting one proportion." },
+          "practice": { "ru": "Представьте равновесие живой системы, в которой части различаются; назовите меру, подходящую каждой стороне именно сейчас.", "en": "Imagine the balance of a living system whose parts differ; name the measure appropriate to each side right now." }
+        },
+        "conflict": {
+          "action": { "ru": "В спорном распределении назовите свой вклад, потребность и предел. Уточните те же три пункта у другой стороны и предложите проверяемое соглашение.", "en": "In a disputed allocation, state your contribution, need, and limit. Clarify the same three points with the other side and propose an agreement that can be reviewed." },
+          "practice": { "ru": "Созерцая Кси, мысленно дайте место обоим интересам и сформулируйте одну связь, которую стоит сохранить при изменении условий.", "en": "While contemplating Xi, mentally make room for both interests and state one connection worth preserving as conditions change." }
+        }
+      }
+    },
+    "omicron": {
+      "risk": { "ru": "Суетливый круг повторений и нарушение ритма", "en": "A restless loop of repetition and a disrupted rhythm" },
+      "quality": { "ru": "Целостный цикл, устойчивый ритм и личные границы", "en": "A complete cycle, steady rhythm, and personal boundaries" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Свяжите выбранное действие с одним повторяющимся событием дня. Задайте небольшой объём и ясный признак его завершения.", "en": "Attach the chosen action to one recurring event in the day. Set a small scope and a clear sign of completion." },
+          "practice": { "ru": "Созерцайте круг Омикрона как последовательность начала, действия и завершения; назовите место, в которое сможете спокойно вернуться.", "en": "Contemplate Omicron's circle as a sequence of beginning, action, and completion; name a place to which you can calmly return." }
+        },
+        "excess": {
+          "action": { "ru": "Найдите повторение, которое создаёт суету без продвижения. Прервите одну лишнюю проверку или переделку и отметьте достаточный результат.", "en": "Find a repetition that creates bustle without progress. Stop one unnecessary check or revision and acknowledge a sufficient result." },
+          "practice": { "ru": "Представьте различие между завершённым кругом и бесконечным кружением; назовите точку, в которой сегодняшнее действие уже исполнено.", "en": "Imagine the difference between a completed circle and endless circling; name the point at which today's action is already fulfilled." }
+        },
+        "conflict": {
+          "action": { "ru": "Защитите одно небольшое окно для выбранного ритма и заранее определите исключение для действительно важного обстоятельства. Обозначьте время возвращения.", "en": "Protect one small window for your chosen rhythm and define an exception for something genuinely important. Specify when you will return." },
+          "practice": { "ru": "Созерцая Омикрон, назовите границу, которая сохраняет ваш цикл и допускает осмысленный выход с последующим возвращением.", "en": "While contemplating Omicron, name a boundary that preserves your cycle while allowing a deliberate departure and return." }
+        }
+      }
+    },
+    "pi": {
+      "risk": { "ru": "Разрушительный напор или уклонение от ответственности", "en": "Destructive pressure or avoidance of responsibility" },
+      "quality": { "ru": "Решительность, ответственная воля и дисциплина", "en": "Resolve, responsible will, and discipline" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Возьмите одно посильное обязательство в выбранном деле. Укажите, что и когда сделаете, и выполните это без ожидания внешнего побуждения.", "en": "Take on one manageable commitment in the chosen task. State what you will do and when, then complete it without waiting for an external push." },
+          "practice": { "ru": "Созерцайте Пи как соединение опоры и воли; произнесите одно решение, ответственность за которое готовы принять.", "en": "Contemplate Pi as the joining of support and will; state one decision for which you are ready to take responsibility." }
+        },
+        "excess": {
+          "action": { "ru": "Замените одно давление на ясную просьбу или посильное правило. Оставьте другому свободу ответа, а себе — ответственность за собственное действие.", "en": "Replace one instance of pressure with a clear request or a manageable rule. Leave the other person free to respond and retain responsibility for your own action." },
+          "practice": { "ru": "Представьте огонь, дающий тепло в удерживающем его очаге; назовите предел, в котором ваша решительность остаётся созидательной.", "en": "Imagine fire giving warmth within a containing hearth; name the limit within which your resolve remains constructive." }
+        },
+        "conflict": {
+          "action": { "ru": "Разделите то, чем вы действительно управляете, и то, что относится к решениям других. Выполните свою часть и явно согласуйте зависимый шаг.", "en": "Separate what you genuinely control from what belongs to others' decisions. Complete your part and explicitly agree on the dependent step." },
+          "practice": { "ru": "Созерцая Пи, различите волю, контроль и ответственность; свяжите решение только с тем поступком, который можете совершить сами.", "en": "While contemplating Pi, distinguish will, control, and responsibility; connect the decision only to an action you can take yourself." }
+        }
+      }
+    },
+    "rho": {
+      "risk": { "ru": "Беспорядочное движение, вспышки гнева или остановка действия", "en": "Aimless activity, bursts of anger, or halted action" },
+      "quality": { "ru": "Направленный импульс и подвижная сила", "en": "A directed impulse and adaptable strength" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Выберите ближайшее практическое препятствие и сделайте двухминутный шаг к его устранению. После шага решите, продолжать ли в том же направлении.", "en": "Choose the nearest practical obstacle and take a two-minute step toward removing it. Afterwards decide whether to continue in that direction." },
+          "practice": { "ru": "Созерцайте Ро как начало направленного движения; назовите ближайшую достижимую точку вместо всего далёкого пути.", "en": "Contemplate Rho as the beginning of directed movement; name the nearest reachable point rather than the whole distant path." }
+        },
+        "excess": {
+          "action": { "ru": "Прекратите одновременное продвижение по нескольким мелким задачам. Выберите один результат и дойдите до него, прежде чем снова переключаться.", "en": "Stop advancing several minor tasks at once. Choose one result and reach it before switching again." },
+          "practice": { "ru": "Представьте стрелу с выбранным направлением; назовите цель и одну лишнюю трату движения, от которой сейчас отказываетесь.", "en": "Imagine an arrow with a chosen direction; name its target and one wasteful movement you release now." }
+        },
+        "conflict": {
+          "action": { "ru": "При двух противоположных побуждениях выберите проверяемое направление на короткий срок. Приложите усилие к одному шагу и оцените продвижение до смены курса.", "en": "When two impulses oppose each other, choose a testable direction for a short period. Put effort into one step and assess progress before changing course." },
+          "practice": { "ru": "Созерцая Ро, различите движение от раздражения и движение к цели; назовите признак, по которому узнаете продвижение.", "en": "While contemplating Rho, distinguish movement driven by irritation from movement toward an aim; name how you will recognize progress." }
+        }
+      }
+    },
+    "sigma": {
+      "risk": { "ru": "Срыв внутреннего ритма и действие из подавленного страха", "en": "A disrupted inner rhythm and action driven by suppressed fear" },
+      "quality": { "ru": "Внутренняя собранность и осмысленное управление побуждениями", "en": "Inner composure and deliberate direction of impulses" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Перед выбранным действием назовите своё побуждение и результат, к которому хотите прийти. Сделайте один шаг, связывающий их без спешки.", "en": "Before the chosen action, name your impulse and the result you want to reach. Take one unhurried step that connects them." },
+          "practice": { "ru": "Созерцайте Сигму как собранную внутреннюю силу; спокойно назовите своё состояние и действие, которому готовы дать ход.", "en": "Contemplate Sigma as gathered inner strength; calmly name your state and the action you are ready to set in motion." }
+        },
+        "excess": {
+          "action": { "ru": "Перед резкой реакцией запишите, чего вы опасаетесь, и отделите это от наблюдаемого факта. Выберите ограниченный ответ, который не усиливает саму угрозу.", "en": "Before a sharp reaction, record what you fear and separate it from the observed fact. Choose a bounded response that does not amplify the threat itself." },
+          "practice": { "ru": "Представьте внутренний огонь в устойчивой чаше; признайте сильное побуждение и назовите предел его выражения в поступке.", "en": "Imagine an inner fire in a steady vessel; acknowledge the strong impulse and name a limit on its expression in action." }
+        },
+        "conflict": {
+          "action": { "ru": "Назовите желание и опасение, действующие одновременно. Найдите один шаг, который проверит желание и учтёт конкретное основание опасения.", "en": "Name a desire and a concern operating together. Find one step that tests the desire while accounting for the concern's concrete basis." },
+          "practice": { "ru": "Созерцая Сигму, дайте имя обоим побуждениям без борьбы с собой; сформулируйте общий бережный способ действия.", "en": "While contemplating Sigma, name both impulses without fighting yourself; formulate one considerate way to act." }
+        }
+      }
+    },
+    "tau": {
+      "risk": { "ru": "Обязательства становятся бременем и сталкивают долг с желанием", "en": "Commitments become a burden and set duty against desire" },
+      "quality": { "ru": "Надёжная опора и стойкость в избранных принципах", "en": "Reliable support and steadfastness in chosen principles" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Укрепите одну опору выбранного дела: подготовьте материалы, уточните помощь или освободите нужное время. После этого выполните обещанный небольшой шаг.", "en": "Strengthen one support for the chosen task: prepare materials, clarify available help, or free the necessary time. Then complete the small step you promised." },
+          "practice": { "ru": "Созерцайте Тау как опору, принимающую нагрузку; назовите, на что можете положиться и какое обязательство посильно сегодня.", "en": "Contemplate Tau as a support that bears a load; name what you can rely on and which commitment is manageable today." }
+        },
+        "excess": {
+          "action": { "ru": "Выделите одно обязательство, ставшее чрезмерным бременем. Уменьшите объём или пересогласуйте его, сохранив честно обозначенный необходимый минимум.", "en": "Identify one commitment that has become an excessive burden. Reduce or renegotiate it while preserving an honestly stated necessary minimum." },
+          "practice": { "ru": "Представьте опору с допустимой нагрузкой; назовите, что укрепляет вашу стойкость и что лишь прибавляет тяжесть.", "en": "Imagine a support with a reasonable load; name what strengthens your steadfastness and what merely adds weight." }
+        },
+        "conflict": {
+          "action": { "ru": "Сопоставьте долг и собственную потребность в выбранном деле. Согласуйте минимальное исполнение обязательства и отдельный посильный шаг для своей потребности.", "en": "Compare duty with your own need in the chosen task. Arrange a minimum fulfillment of the commitment and a separate manageable step for your need." },
+          "practice": { "ru": "Созерцая Тау, соедините верность слову с уважением к живому человеку, который его исполняет; назовите меру обеих частей.", "en": "While contemplating Tau, join fidelity to your word with respect for the living person fulfilling it; name a measure for both." }
+        }
+      }
+    },
+    "upsilon": {
+      "risk": { "ru": "Выбор в пользу соблазнительного образа вопреки своим ценностям", "en": "Choosing an enticing image against one's own values" },
+      "quality": { "ru": "Осознанный выбор и верность нравственному ориентиру", "en": "Deliberate choice and fidelity to an ethical compass" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите два доступных пути и одну важную для вас ценность. Выберите небольшой поступок, который поддерживает эту ценность, и объясните себе его причину.", "en": "Name two available paths and one value important to you. Choose a small action that supports that value and explain your reason to yourself." },
+          "practice": { "ru": "Созерцайте развилку Ипсилона; представьте ближайшее последствие каждого пути и назовите тот, за который готовы отвечать.", "en": "Contemplate Upsilon's fork; imagine the nearest consequence of each path and name the one for which you are ready to answer." }
+        },
+        "excess": {
+          "action": { "ru": "Уберите один необязательный соблазняющий вариант, из-за которого постоянно меняете решение. Следуйте заранее выбранному посильному правилу до его ближайшей проверки.", "en": "Remove one optional tempting alternative that repeatedly changes your decision. Follow a manageable rule chosen in advance until its next review." },
+          "practice": { "ru": "Представьте развилку без обязанности пройти все дороги; назовите возможность, от которой сознательно отказываетесь ради выбранного пути.", "en": "Imagine a fork without an obligation to walk every road; name an opportunity you deliberately release for the sake of your chosen path." }
+        },
+        "conflict": {
+          "action": { "ru": "Если обе возможности имеют цену, запишите её для каждой без самообвинения. Определите ценностный приоритет и первый обратимый шаг в его сторону.", "en": "If both options carry a cost, record it for each without self-blame. Define your value priority and the first reversible step toward it." },
+          "practice": { "ru": "Созерцая Ипсилон, отличите собственную совесть от страха чужой оценки; сформулируйте основание своего выбора.", "en": "While contemplating Upsilon, distinguish your conscience from fear of others' judgment; formulate the grounds of your choice." }
+        }
+      }
+    },
+    "phi": {
+      "risk": { "ru": "Утрата вдохновения и красивые слова, скрывающие неясность", "en": "Loss of inspiration and elegant words that conceal confusion" },
+      "quality": { "ru": "Ясное видение и правдивое выражение смысла", "en": "Clear vision and truthful expression of meaning" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите один подлинный смысл выбранного дела простыми словами. Подтвердите его фактом или небольшим действием, которое можно заметить.", "en": "Name one genuine meaning of the chosen task in plain words. Support it with a fact or a small observable action." },
+          "practice": { "ru": "Созерцайте Фи как свет, проходящий через форму; произнесите обычным голосом одну фразу, которую считаете правдивой.", "en": "Contemplate Phi as light passing through form; say one sentence you consider truthful in an ordinary voice." }
+        },
+        "excess": {
+          "action": { "ru": "Перепишите одно красивое, но неясное объяснение без украшений и превосходных степеней. Оставьте то, что можете обосновать и выполнить.", "en": "Rewrite one elegant but unclear explanation without embellishment or superlatives. Keep what you can substantiate and carry out." },
+          "practice": { "ru": "Представьте свет без ослепляющего блеска; назовите, что останется от вашего послания, если убрать желание впечатлить.", "en": "Imagine light without dazzling glare; name what remains of your message when the wish to impress is removed." }
+        },
+        "conflict": {
+          "action": { "ru": "Найдите одно расхождение между сказанным и сделанным. Исправьте его конкретным поступком либо честным уточнением слов.", "en": "Find one discrepancy between what was said and what was done. Repair it through a concrete action or an honest clarification of your words." },
+          "practice": { "ru": "Созерцая Фи, сопоставьте внутренний смысл и слышимое слово; выберите формулировку, за которой сможет последовать действие.", "en": "While contemplating Phi, compare inner meaning with the spoken word; choose a formulation that can be followed by action." }
+        }
+      }
+    },
+    "chi": {
+      "risk": { "ru": "Несогласованные пути, сроки и обязательства", "en": "Uncoordinated paths, timings, and commitments" },
+      "quality": { "ru": "Соединение разных задач в согласованный план", "en": "Joining different tasks into a coherent plan" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Соедините две разрозненные части выбранного дела одним планом. Укажите порядок шагов и что должно быть готово до начала второго.", "en": "Join two disconnected parts of the chosen task in one plan. State the sequence and what must be ready before the second part begins." },
+          "practice": { "ru": "Созерцайте пересечение линий Хи как место согласования; назовите связь, которая превратит отдельные действия в общий путь.", "en": "Contemplate Chi's crossing lines as a place of coordination; name the connection that will turn separate actions into a shared path." }
+        },
+        "excess": {
+          "action": { "ru": "Уберите одну лишнюю зависимость, из-за которой дело нельзя начать без множества условий. Оставьте необходимую связь и выполните независимый шаг.", "en": "Remove one unnecessary dependency that prevents the task from starting without numerous conditions. Keep the essential connection and take an independent step." },
+          "practice": { "ru": "Представьте ясный перекрёсток вместо спутанного узла; назовите одну связь, которую можно ослабить без утраты цели.", "en": "Imagine a clear crossroads instead of a tangled knot; name one connection that can be loosened without losing the aim." }
+        },
+        "conflict": {
+          "action": { "ru": "Определите, где два пути спорят за одно время или ресурс. Разведите их по последовательным шагам либо пересогласуйте один срок до начала работы.", "en": "Identify where two paths compete for the same time or resource. Arrange them as sequential steps or renegotiate one deadline before starting." },
+          "practice": { "ru": "Созерцая Хи, дайте обоим направлениям место в одном плане; назовите точку, где потребуется осознанный выбор очередности.", "en": "While contemplating Chi, give both directions a place in one plan; name the point where their order must be deliberately chosen." }
+        }
+      }
+    },
+    "psi": {
+      "risk": { "ru": "Утрата смысла и разлад между внутренним намерением и выражением", "en": "Loss of meaning and discord between inner intention and expression" },
+      "quality": { "ru": "Целостность внутренней жизни и внимательность к мотивам", "en": "Wholeness of inner life and attention to motives" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Назовите, почему выбранное дело лично значимо для вас. Выразите эту причину одним маленьким поступком, вместо ожидания особого состояния.", "en": "Name why the chosen task matters personally to you. Express that reason in one small action rather than waiting for a special state." },
+          "practice": { "ru": "Созерцайте Пси как открытую чашу; назовите своё намерение, чувство и ближайший поступок как части одного переживания.", "en": "Contemplate Psi as an open cup; name your intention, feeling, and next action as parts of one experience." }
+        },
+        "excess": {
+          "action": { "ru": "Ограничьте время внутреннего анализа и выберите один обычный внешний шаг. После него запишите наблюдение, не требуя окончательного объяснения себя.", "en": "Limit the time spent on inner analysis and choose one ordinary outward step. Afterwards record an observation without demanding a final explanation of yourself." },
+          "practice": { "ru": "Представьте чашу, которая принимает опыт и позволяет ему войти в жизнь; переведите внимание с самопроверки на окружающее пространство.", "en": "Imagine a cup that receives experience and lets it enter life; shift attention from self-examination to your surroundings." }
+        },
+        "conflict": {
+          "action": { "ru": "Сопоставьте то, чего хотите внутренне, с тем, что сейчас выражаете поступком. Измените один посильный элемент, чтобы намерение стало понятнее в действии.", "en": "Compare what you inwardly want with what your action currently expresses. Change one manageable element so that the intention becomes clearer in action." },
+          "practice": { "ru": "Созерцая Пси, спокойно дайте место разным мотивам; назовите тот, которому сегодня готовы следовать осознанно.", "en": "While contemplating Psi, calmly allow room for different motives; name the one you are ready to follow deliberately today." }
+        }
+      }
+    },
+    "omega": {
+      "risk": { "ru": "Страх завершения и удерживание исчерпанного цикла", "en": "Fear of completion and holding on to an exhausted cycle" },
+      "quality": { "ru": "Принятие результата, завершение и творческий покой", "en": "Acceptance of the result, completion, and creative rest" },
+      "needs": {
+        "deficit": {
+          "action": { "ru": "Определите достаточный признак завершения выбранного дела. Доведите до него один этап, отметьте результат и разрешите себе посильный отдых.", "en": "Define a sufficient sign of completion for the chosen task. Bring one stage to that point, acknowledge the result, and allow yourself manageable rest." },
+          "practice": { "ru": "Созерцайте Омегу как завершённый свод; соберите в одну короткую запись, что сделано, чему научились и что можно отпустить.", "en": "Contemplate Omega as a completed arch; gather into one brief note what is done, what you learned, and what you can release." }
+        },
+        "excess": {
+          "action": { "ru": "Проверьте, не назвали ли вы завершённым то, где остался необходимый шаг. Закройте этот конкретный остаток, сохраняя границу от новых необязательных переделок.", "en": "Check whether you have called something complete while a necessary step remains. Close that specific remainder while keeping a boundary against new optional revisions." },
+          "practice": { "ru": "Представьте полный круг с ясно видимым последним соединением; отличите творческий покой от желания преждевременно уйти из дела.", "en": "Imagine a whole circle with its last connection clearly visible; distinguish creative rest from the wish to leave a task prematurely." }
+        },
+        "conflict": {
+          "action": { "ru": "Сохраните один полезный вывод из прошлого этапа и откажитесь от одной его исчерпанной задачи. Назовите, что переносите дальше, не возобновляя весь прежний круг.", "en": "Keep one useful lesson from the previous stage and release one exhausted task from it. Name what you carry forward without restarting the entire old cycle." },
+          "practice": { "ru": "Созерцая Омегу, соедините благодарность за пройденное с разрешением завершить; сформулируйте одну фразу прощания с прежним этапом.", "en": "While contemplating Omega, join gratitude for what has passed with permission to finish; formulate one farewell to the previous stage." }
+        }
+      }
+    }
+  }
+}

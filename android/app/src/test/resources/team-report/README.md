@@ -1,0 +1,3 @@
+Synthetic PHP contract snapshot captured on20 October2026 from the loopback improvements fixture. The editor uses an example.invalid identity; the source tree contains131 generated tasks, of which121 belong to the selected root. Source pages contain100 and21 tasks. Report tokens and cursors have been replaced with inert markers. No Google session, cookie, CSRF or credentials are stored here.
+
+The options deliberately use the solar calendar label with civil ISO boundaries, America/New_York and a March Gregorian year start. Story point zeroes remain estimated; missing hour values have a separate count. These files are also instrumentation test assets and are never included in the production app.

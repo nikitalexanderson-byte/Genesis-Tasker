@@ -1,0 +1,120 @@
+/* One workspace selector in the header; project actions retain their own row. */
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first {
+  display:block; min-width:0;
+}
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first > .shared-project-toolbar-group {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px 8px;
+  width:100%; min-width:0; margin:0; padding:0; border:0;
+}
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-toolbar-label { grid-column:1/-1; grid-row:1; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > select { grid-column:1; grid-row:2; width:100%; min-width:0; margin:0; height:44px; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-actions { display:flex; flex-wrap:wrap; gap:8px; grid-column:2; grid-row:2; min-width:0; }
+html[data-genesis-theme] .genesis-app .shared-project-toolbar-actions > button { display:inline-flex; align-items:center; justify-content:center; flex:0 0 44px; min-width:44px; width:44px; height:44px; padding:10px; margin:0; }
+html[data-genesis-theme] .genesis-app .shared-project-toolbar-actions > .shared-create-first-project { flex-basis:auto; width:auto; padding:10px 12px; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:not(:has(>select)) > .shared-project-toolbar-actions { grid-column:1/-1; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > .shared-mindmaps-open {
+  grid-column:1/-1; grid-row:2; order:0; width:max-content; min-width:0; height:44px;
+  padding:6px 16px 6px 12px; margin:0; background:var(--map-fill); color:var(--map-color);
+}
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:has(>.shared-mindmaps-open) > :is(select,.shared-project-toolbar-actions) { grid-row:3; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > .shared-task-view-controls { grid-column:1/-1; grid-row:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; width:100%; margin:0; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-workspace-search { flex:1 1 200px; width:100%; min-width:0; margin:0; }
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .task-order-choice { flex:1 1 160px; min-width:0; }
+
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header:has(.shared-workspace-summary) :is(.workspace-header-summary,.shared-workspace-summary) { display:contents; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header {
+  --shared-workspace-tool-size:44px;
+  --shared-workspace-tool-gap:8px;
+  --shared-workspace-tools-width:calc(var(--shared-workspace-tool-count) * (var(--shared-workspace-tool-size) + var(--shared-workspace-tool-gap)) - var(--shared-workspace-tool-gap));
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-identity {
+  display:grid; gap:8px; width:min(100%,var(--shared-workspace-tools-width)); min-width:0; max-width:100%; padding:12px;
+  border:1px solid #ffffff20; border-radius:12px; background:#00000020;
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-name-row { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; min-width:0; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header select.shared-space-picker {
+  flex:1 1 0; min-width:0; width:100%; max-width:100%; min-height:44px; margin:0; padding:8px 32px 8px 10px;
+  border:1px solid #ffffff40; border-radius:8px; background-color:transparent; color:inherit; font:600 16px/1.4 var(--font-ui); text-overflow:ellipsis;
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-picker option { color:var(--ink); background:var(--surface); }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-trigger {
+  display:grid; gap:8px; width:100%; min-width:0; min-height:44px; padding:0; margin:0;
+  border:0; border-radius:4px; background:transparent; color:inherit; font:inherit; text-align:start;
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-row { display:flex; flex-wrap:nowrap; align-items:baseline; gap:8px; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-value { flex:0 1 auto; min-width:0; font:500 14px/1.5 var(--font-ui); overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-leader { display:block; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-header-actions { min-width:0; align-self:center; color:inherit; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-workspace-tools { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:var(--shared-workspace-tool-gap); width:min(100%,var(--shared-workspace-tools-width)); padding:0; min-width:0; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-workspace-tools > button { width:var(--shared-workspace-tool-size); height:var(--shared-workspace-tool-size); min-width:var(--shared-workspace-tool-size); min-height:var(--shared-workspace-tool-size); padding:10px; margin:0; background:transparent; color:inherit; border:1px solid #ffffff40; }
+/* Wrapped controls and their summary share whole button columns on narrow screens. */
+@supports (width:round(down,100%,1px)) {
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-identity {
+    width:min(var(--shared-workspace-tools-width),calc(round(down,calc(100% + var(--shared-workspace-tool-gap)),calc(var(--shared-workspace-tool-size) + var(--shared-workspace-tool-gap))) - var(--shared-workspace-tool-gap)));
+  }
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-workspace-tools > button:hover { background:#ffffff14; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-trigger:hover { background:#ffffff0a; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header :is(.shared-workspace-tools > button,.shared-space-picker,.shared-space-info-trigger):focus-visible { outline:2px solid #e4c78c; outline-offset:3px; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-updates-open { min-height:52px; width:100%; margin:0; align-self:stretch; }
+@media(min-width:1100px) {
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header:has(.shared-workspace-summary) { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,320px); align-items:start; gap:20px 32px; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header:has(.shared-workspace-summary) > .workspace-header-main { grid-column:1; grid-row:1; min-width:0; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-summary-counts { grid-column:2; grid-row:1; align-self:center; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-header-actions { grid-column:1; grid-row:2; padding-inline-start:56px; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-updates-open { grid-column:2; grid-row:2; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-summary-retry { grid-column:2; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first > .shared-project-toolbar-group { grid-template-columns:minmax(140px,1fr) auto minmax(200px,1.2fr); gap:12px; width:100%; flex:1 1 auto; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:has(>.shared-mindmaps-open) { grid-template-columns:auto minmax(140px,1fr) auto minmax(200px,1.2fr); }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:has(>.shared-mindmaps-open) > select { grid-column:2; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > .shared-mindmaps-open { grid-column:1; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > .shared-project-toolbar-actions { grid-column:-3/-2; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > .shared-task-view-controls { grid-column:-2/-1; width:auto; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > :is(select,.shared-mindmaps-open,.shared-project-toolbar-actions,.shared-task-view-controls),
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:has(>.shared-mindmaps-open) > :is(select,.shared-project-toolbar-actions) { grid-row:2; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:not(:has(>select)) { grid-template-columns:auto minmax(200px,1fr); }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:not(:has(>select)):has(>.shared-mindmaps-open) { grid-template-columns:auto auto minmax(200px,1fr); }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:not(:has(>select)) > .shared-project-toolbar-actions { grid-column:1; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:not(:has(>select)):has(>.shared-mindmaps-open) > .shared-project-toolbar-actions { grid-column:2; }
+}
+@media(max-width:1099px) {
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header:has(.shared-workspace-summary) .workspace-header-context { display:block; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-header-actions { grid-column:1/-1; grid-row:3; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-updates-open { grid-column:1/-1; grid-row:4; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-summary-counts { grid-column:1/-1; grid-row:5; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-summary-retry { grid-column:1/-1; grid-row:6; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-mobile-expanded="false"] .workspace-header-context > p,
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-mobile-expanded="false"] .shared-summary-counts { display:none; }
+}
+
+@media(max-width:767px) {
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first > .shared-project-toolbar-group:has(>.shared-mindmaps-open) { grid-template-columns:minmax(0,1fr) auto; gap:12px 6px; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:has(>.shared-mindmaps-open) > .shared-mindmaps-open { grid-column:1; grid-row:2; width:100%; padding-inline:8px; gap:6px; font-size:13px; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-mindmaps-open > span { min-width:0; white-space:normal; line-height:1.1; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:has(>.shared-mindmaps-open) > .shared-project-toolbar-actions { grid-column:2; grid-row:2; flex-wrap:nowrap; gap:4px; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group > select { grid-column:1/-1; grid-row:3; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar.shared-toolbar-projects-first .shared-project-toolbar-group:not(:has(>.shared-mindmaps-open)) > .shared-project-toolbar-actions { grid-column:1/-1; grid-row:2; }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar .shared-project-toolbar-actions > .shared-create-project { background:var(--ui-accent); color:var(--ui-on-accent); border-color:var(--ui-accent); }
+  html[data-genesis-theme] .genesis-app .shared-workspace-toolbar .shared-project-toolbar-actions > .shared-create-first-project { font-size:0; gap:0; flex-basis:44px; width:44px; padding:10px; }
+  html[data-genesis-theme] .genesis-app .shared-project-task-panel-heading { align-items:center; gap:12px; }
+  html[data-genesis-theme] .genesis-app .shared-project-task-panel-heading > h3 { align-self:center; }
+  html[data-genesis-theme] .genesis-app .shared-project-task-panel-heading > .shared-projects-create-actions { flex:0 0 44px; margin-inline-start:auto; }
+  html[data-genesis-theme] .genesis-app .shared-project-task-panel-heading > .shared-task-query-bar[data-active-view=gantt] { display:none; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-mobile-expanded=false] :is(.workspace-header-context,.shared-header-actions,.shared-updates-open,.shared-summary-counts,.shared-summary-retry) { display:none; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-identity { width:100%; max-width:none; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-workspace-tools { display:grid; grid-template-columns:repeat(var(--shared-workspace-tool-count),minmax(0,1fr)); width:100%; gap:4px; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-workspace-tools > button { width:100%; min-width:44px; height:44px; }
+}
+
+/* Narrow screens keep project actions below the heading. */
+html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context { grid-template-columns:minmax(0,1fr); }
+html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-project-heading { grid-column:1; grid-row:1; }
+html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-context-actions { grid-column:1; grid-row:2; flex-wrap:wrap; min-width:0; max-width:100%; justify-self:start; justify-content:flex-start; }
+html[data-genesis-theme] .genesis-app .shared-projects .shared-context-actions > .icon-action-button { flex:0 0 44px; width:44px; min-width:44px; height:44px; padding:10px; }
+html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-project-details { grid-column:1; grid-row:3; }
+@media(min-width:1024px) {
+  html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context { grid-template-columns:minmax(0,1fr) auto; }
+  html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-project-heading { align-self:center; }
+  html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-context-actions { grid-column:2; grid-row:1; flex-wrap:nowrap; justify-self:end; align-self:center; }
+  html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-project-details { grid-column:1/-1; grid-row:2; }
+}

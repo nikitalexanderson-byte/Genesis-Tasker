@@ -1,0 +1,142 @@
+{
+  "ru": {
+    "title": "Источники",
+    "aurora": "Советы Ордена Авроры",
+    "philosophers": "Афоризмы философов",
+    "pending": "Сборник готовится. Афоризмы появятся после добавления текстов.",
+    "hint": "От 1 до 3 афоризмов в сутки, по умолчанию — 1. Они дополняют советы Ордена Авроры (до 6 в сутки). Смена источников не обнуляет использованные показы; выбор и счётчики общие для сайта и приложения.",
+    "ready": "2 602 афоризма · 12 авторов",
+    "common": "Общие настройки",
+    "dailyCount": "Афоризмов в сутки"
+  },
+  "en": {
+    "title": "Collections",
+    "aurora": "Advice from the Order of Aurora",
+    "philosophers": "Philosophers’ aphorisms",
+    "pending": "The collection is being prepared. Aphorisms will appear once texts are added.",
+    "hint": "Choose 1–3 aphorisms per day; the default is 1. They are additional to the Order of Aurora’s advice (up to 6 per day). Switching collections does not reset used views; the website and app share your settings and counts.",
+    "ready": "2,602 aphorisms · 12 authors",
+    "common": "General settings",
+    "dailyCount": "Aphorisms per day"
+  },
+  "el": {
+    "title": "Συλλογές",
+    "aurora": "Συμβουλές του Τάγματος της Αυγής",
+    "philosophers": "Αφορισμοί φιλοσόφων",
+    "pending": "Η συλλογή ετοιμάζεται. Οι αφορισμοί θα εμφανιστούν όταν προστεθούν τα κείμενα.",
+    "hint": "Επιλέξτε 1–3 αφορισμούς την ημέρα· η προεπιλογή είναι 1. Προστίθενται στις συμβουλές του Τάγματος της Αυγής (έως 6 την ημέρα). Η αλλαγή συλλογής δεν μηδενίζει τις προβολές· οι ρυθμίσεις και οι μετρητές είναι κοινοί στον ιστότοπο και στην εφαρμογή.",
+    "ready": "2.602 αφορισμοί · 12 συγγραφείς",
+    "common": "Γενικές ρυθμίσεις",
+    "dailyCount": "Αφορισμοί την ημέρα"
+  },
+  "de": {
+    "title": "Sammlungen",
+    "aurora": "Ratschläge des Ordens der Aurora",
+    "philosophers": "Aphorismen von Philosophen",
+    "pending": "Die Sammlung wird vorbereitet. Aphorismen erscheinen, sobald die Texte hinzugefügt wurden.",
+    "hint": "1–3 Aphorismen pro Tag, standardmäßig 1. Sie ergänzen die Ratschläge des Ordens der Aurora (bis zu 6 pro Tag). Ein Sammlungswechsel setzt verbrauchte Aufrufe nicht zurück; Website und App teilen Einstellungen und Zähler.",
+    "ready": "2.602 Aphorismen · 12 Autoren",
+    "common": "Allgemeine Einstellungen",
+    "dailyCount": "Aphorismen pro Tag"
+  },
+  "fr": {
+    "title": "Recueils",
+    "aurora": "Conseils de l’Ordre de l’Aurore",
+    "philosophers": "Aphorismes de philosophes",
+    "pending": "Le recueil est en préparation. Les aphorismes apparaîtront après l’ajout des textes.",
+    "hint": "De 1 à 3 aphorismes par jour, 1 par défaut. Ils s’ajoutent aux conseils de l’Ordre de l’Aurore (jusqu’à 6 par jour). Changer de collection ne remet pas les compteurs à zéro ; le site et l’application partagent les réglages et les compteurs.",
+    "ready": "2 602 aphorismes · 12 auteurs",
+    "common": "Paramètres généraux",
+    "dailyCount": "Aphorismes par jour"
+  },
+  "es": {
+    "title": "Colecciones",
+    "aurora": "Consejos de la Orden de la Aurora",
+    "philosophers": "Aforismos de filósofos",
+    "pending": "La colección está en preparación. Los aforismos aparecerán cuando se añadan los textos.",
+    "hint": "De 1 a 3 aforismos al día; por defecto, 1. Se añaden a los consejos de la Orden de Aurora (hasta 6 al día). Cambiar de colección no reinicia las visualizaciones; el sitio y la aplicación comparten ajustes y contadores.",
+    "ready": "2.602 aforismos · 12 autores",
+    "common": "Ajustes generales",
+    "dailyCount": "Aforismos al día"
+  },
+  "it": {
+    "title": "Raccolte",
+    "aurora": "Consigli dell’Ordine dell’Aurora",
+    "philosophers": "Aforismi dei filosofi",
+    "pending": "La raccolta è in preparazione. Gli aforismi appariranno dopo l’aggiunta dei testi.",
+    "hint": "Da 1 a 3 aforismi al giorno, 1 per impostazione predefinita. Si aggiungono ai consigli dell’Ordine dell’Aurora (fino a 6 al giorno). Cambiare raccolta non azzera le visualizzazioni; sito e app condividono impostazioni e contatori.",
+    "ready": "2.602 aforismi · 12 autori",
+    "common": "Impostazioni generali",
+    "dailyCount": "Aforismi al giorno"
+  },
+  "pt": {
+    "title": "Coleções",
+    "aurora": "Conselhos da Ordem da Aurora",
+    "philosophers": "Aforismos de filósofos",
+    "pending": "A coleção está a ser preparada. Os aforismos aparecerão após a adição dos textos.",
+    "hint": "De 1 a 3 aforismos por dia; o padrão é 1. São adicionais aos conselhos da Ordem da Aurora (até 6 por dia). Mudar de coleção não reinicia as visualizações; o site e o aplicativo compartilham configurações e contadores.",
+    "ready": "2.602 aforismos · 12 autores",
+    "common": "Configurações gerais",
+    "dailyCount": "Aforismos por dia"
+  },
+  "pl": {
+    "title": "Zbiory",
+    "aurora": "Rady Zakonu Aurory",
+    "philosophers": "Aforyzmy filozofów",
+    "pending": "Zbiór jest przygotowywany. Aforyzmy pojawią się po dodaniu tekstów.",
+    "hint": "Od 1 do 3 aforyzmów dziennie, domyślnie 1. Są dodatkiem do porad Zakonu Aurory (do 6 dziennie). Zmiana zbioru nie zeruje wykorzystanych wyświetleń; witryna i aplikacja mają wspólne ustawienia i liczniki.",
+    "ready": "2602 aforyzmy · 12 autorów",
+    "common": "Ustawienia ogólne",
+    "dailyCount": "Aforyzmy dziennie"
+  },
+  "sr": {
+    "title": "Збирке",
+    "aurora": "Савети Реда Ауроре",
+    "philosophers": "Афоризми филозофа",
+    "pending": "Збирка се припрема. Афоризми ће се појавити након додавања текстова.",
+    "hint": "Од 1 до 3 афоризма дневно, подразумевано 1. Приказују се додатно уз савете Реда Ауроре (до 6 дневно). Промена збирке не поништава искоришћене приказе; сајт и апликација деле подешавања и бројаче.",
+    "ready": "2.602 афоризма · 12 аутора",
+    "common": "Општа подешавања",
+    "dailyCount": "Афоризама дневно"
+  },
+  "uk": {
+    "title": "Джерела",
+    "aurora": "Поради Ордену Аврори",
+    "philosophers": "Афоризми філософів",
+    "pending": "Збірка готується. Афоризми з’являться після додавання текстів.",
+    "hint": "Від 1 до 3 афоризмів на добу, за замовчуванням — 1. Вони доповнюють поради Ордену Аврори (до 6 на добу). Зміна джерел не обнуляє використані покази; вибір і лічильники спільні для сайту та застосунку.",
+    "ready": "2 602 афоризми · 12 авторів",
+    "common": "Загальні налаштування",
+    "dailyCount": "Афоризмів на добу"
+  },
+  "zh": {
+    "title": "内容集",
+    "aurora": "曙光骑士团的建议",
+    "philosophers": "哲学家格言",
+    "pending": "格言集正在准备中，添加文本后即可显示。",
+    "hint": "每天可选1至3条格言，默认为1条，额外显示在奥罗拉教团的每日建议（最多6条）之外。切换来源不会重置已用次数；网站和应用共享设置与计数。",
+    "ready": "2,602 条格言 · 12 位作者",
+    "common": "通用设置",
+    "dailyCount": "每日格言数量"
+  },
+  "tr": {
+    "title": "Koleksiyonlar",
+    "aurora": "Aurora Tarikatı’nın öğütleri",
+    "philosophers": "Filozofların aforizmaları",
+    "pending": "Koleksiyon hazırlanıyor. Metinler eklendiğinde aforizmalar görünecek.",
+    "hint": "Günde 1–3 özdeyiş seçin; varsayılan 1’dir. Aurora Tarikatı’nın tavsiyelerine (günde en fazla 6) ek olarak gösterilirler. Koleksiyon değiştirmek kullanılan gösterimleri sıfırlamaz; site ve uygulama ayarları ve sayaçları paylaşır.",
+    "ready": "2.602 aforizma · 12 yazar",
+    "common": "Genel ayarlar",
+    "dailyCount": "Günlük özdeyiş sayısı"
+  },
+  "ja": {
+    "title": "コレクション",
+    "aurora": "アウロラ教団の助言",
+    "philosophers": "哲学者のアフォリズム",
+    "pending": "コレクションを準備中です。文章の追加後にアフォリズムが表示されます。",
+    "hint": "箴言は1日1～3件、標準は1件です。オーロラ騎士団の助言（1日最大6件）に追加して表示されます。コレクションを切り替えても閲覧回数はリセットされず、設定と回数はサイトとアプリで共有されます。",
+    "ready": "2,602の格言 · 12人の著者",
+    "common": "共通設定",
+    "dailyCount": "1日あたりの箴言数"
+  }
+}

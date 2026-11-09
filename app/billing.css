@@ -1,0 +1,188 @@
+.billing-panel{display:grid;gap:12px;min-width:0}.billing-panel h3,.billing-panel p{margin:0}.billing-panel fieldset{margin:0;padding:0;border:0;min-width:0}.billing-panel legend{font-weight:650;margin-bottom:8px}.billing-plan-options,.billing-period-options{display:flex;flex-wrap:wrap;gap:8px}.billing-panel label{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 10px;border-radius:10px;cursor:pointer}.billing-panel label:has(input:checked){background:var(--surface-hover,rgba(139,128,94,.13))}.billing-panel label:has(input:disabled){cursor:default;opacity:.65}.billing-panel input{accent-color:var(--accent,#847043);flex-shrink:0}.billing-method-options label span{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.billing-panel small{font-size:.85em}.billing-limits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin:0;padding-left:20px}.billing-lifetime{display:grid;gap:8px}.billing-panel button{min-height:44px}.billing-panel :focus-visible{outline:2px solid var(--accent,#847043);outline-offset:3px}@media(max-width:480px){.billing-limits{grid-template-columns:1fr}.billing-panel label{padding-inline:6px}}
+.billing-comparison-dialog { box-sizing:border-box; width:min(840px,calc(100vw - 24px)); max-height:94dvh; margin:auto; padding:20px; overflow:auto; background:var(--surface); color:var(--ink); border:1px solid var(--gold); border-radius:10px; }
+.billing-comparison-dialog[open] { display:grid; gap:16px; }
+.billing-comparison-dialog::backdrop { background:rgb(0 0 0 / .5); }
+.billing-comparison-dialog > header { display:flex; align-items:center; gap:12px; }
+.billing-comparison-dialog h2 { flex:1; margin:0; font:400 24px/1.3 var(--font-heading); }
+
+/* The upgrade accent is local: ordinary app surfaces keep STANDART colors. */
+html[data-genesis-theme] .genesis-app .upgrade-open-button {
+  --upgrade-pointer-x:50%; --upgrade-pointer-y:50%;
+  position:relative; isolation:isolate; display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  min-width:44px; min-height:48px; max-width:100%; margin:0; padding:12px 16px; overflow:hidden;
+  border:1px solid #b594e3; border-radius:var(--ui-radius,10px); background:var(--palette-raised, #573285); color:#fff5ff;
+  font:600 13px/1.4 var(--font-ui); text-align:start; white-space:normal; overflow-wrap:normal; word-break:normal; cursor:pointer;
+  box-shadow:0 6px 20px color-mix(in srgb, var(--palette-surface, rgb(62 22 91)) 21.961%, transparent); transition:background-color 180ms ease-out,border-color 180ms ease-out;
+}
+.upgrade-open-button::before { content:""; position:absolute; z-index:-1; inset:0; background:radial-gradient(circle at var(--upgrade-pointer-x) var(--upgrade-pointer-y),#b67dfb66,transparent 72%); pointer-events:none; }
+.upgrade-open-button .upgrade-spark { flex:0 0 28px; width:28px; height:28px; color:#e5c9ff; }
+.upgrade-spark-glowing { animation:upgrade-star-glow 3.2s ease-in-out infinite; }
+@keyframes upgrade-star-glow { 0%,100% { opacity:.76; filter:drop-shadow(0 0 2px #d7b8ff88); } 50% { opacity:1; filter:drop-shadow(0 0 5px #e5c9ffcc); } }
+.account-plan-upgrade { margin-block:10px 0; justify-self:start; max-width:100%; }
+html[data-genesis-theme] .genesis-app .upgrade-open-button:hover { background-color:#694197; border-color:#dac2ff; }
+html[data-genesis-theme] .genesis-app .upgrade-open-button:focus-visible { outline:2px solid #b695f2; outline-offset:3px; }
+.feature-access-upgrade { margin-block:12px; }
+.sidebar-upgrade { margin-top:auto; padding-top:24px; min-width:0; }
+.sidebar-upgrade + .sidebar-foot { margin-top:0; }
+html[data-genesis-theme] .genesis-app .upgrade-sidebar-button { width:100%; display:grid; grid-template-columns:28px minmax(0,1fr); justify-content:start; padding:12px 10px; font-size:12px; }
+html[data-genesis-theme] .genesis-app[data-sidebar-compact="true"] .upgrade-sidebar-button { grid-template-columns:28px; justify-content:center; padding-inline:6px; }
+.genesis-app[data-sidebar-compact="true"] .upgrade-sidebar-button > span { display:none; }
+@media(min-width:600px) and (max-width:1199px) {
+  html[data-genesis-theme] .genesis-app .upgrade-sidebar-button { grid-template-columns:28px; justify-content:center; padding-inline:6px; }
+  .upgrade-sidebar-button > span { display:none; }
+}
+
+html[data-genesis-theme] .genesis-app .upgrade-dialog {
+  --paper:#1a1028; --surface:#241434; --ink:#faf4ff; --ink-soft:#d1c1e2; --line:#76578b66; --exp-hover:#342044;
+  --gold:#d2b1ff; --ui-accent:#c6a2ff; --ui-on-accent:#211132; --ui-popup-border:#a37acd; --ui-scrollbar-thumb:#b592e7; --ui-scrollbar-hover:#dcc3ff;
+  width:min(1020px,calc(100vw - 24px)); min-height:0; max-height:var(--ui-dialog-height,94dvh); margin:auto; padding:24px;
+  background:var(--paper); color:var(--ink); border-radius:var(--ui-surface-radius,10px); overflow:auto; overscroll-behavior:contain;
+  box-shadow:0 24px 72px #08020c66; font:400 14px/1.6 var(--font-ui); overflow-wrap:normal; word-break:normal;
+}
+.upgrade-dialog::backdrop { background:color-mix(in srgb, var(--palette-recessed, rgb(12 5 19)) 76%, transparent); }
+.upgrade-dialog[open] { display:block; }
+.upgrade-dialog > header { margin-bottom:16px; }
+.upgrade-dialog h2 [data-dialog-subtitle] { display:block; margin-top:6px; font:400 14px/1.6 var(--font-ui); color:var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .upgrade-dialog :is(h3,p,dl,ul) { margin:0; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog :is(p,label,small) { font-size:14px; line-height:1.6; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog h3 { font-size:22px; line-height:1.35; }
+.upgrade-dialog .dialog-universal-header { background:var(--paper); }
+html[data-genesis-theme] .genesis-app dialog.upgrade-dialog button.dialog-close-button { background:var(--surface); color:var(--ink); border-color:var(--ui-popup-border); }
+html[data-genesis-theme] .genesis-app dialog.upgrade-dialog button.dialog-close-button:hover:not(:disabled) { background:var(--exp-hover); color:var(--ink); border-color:var(--gold); }
+html[data-genesis-theme] .genesis-app dialog.upgrade-dialog button.dialog-close-button > .experimental-icon { color:inherit; }
+.upgrade-dialog > .upgrade-current-plan { color:var(--ink-soft); margin:0 0 20px; }
+.upgrade-current-plan strong { color:var(--ink); font-weight:600; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-access-reason { margin-bottom:20px; color:#e5ccff; max-width:72ch; }
+.upgrade-dialog fieldset { min-width:0; margin:0; padding:0; border:0; }
+.upgrade-dialog legend { padding:0; color:var(--ink-soft); font-weight:500; }
+.upgrade-period-options { display:flex; flex-wrap:wrap; gap:8px; }
+.upgrade-period-options legend { margin-bottom:8px; }
+.upgrade-period-options label { position:relative; display:grid; place-items:center; min-width:96px; min-height:44px; padding:8px 16px; border:1px solid var(--line); border-radius:10px; background:var(--palette-recessed, #2e1b40); color:var(--ink-soft); cursor:pointer; }
+.upgrade-period-options label:has(input:checked) { color:#fff7ff; border-color:#bb8ff4; background:#5e318e; }
+.upgrade-period-options input,.upgrade-plan-option > input { position:absolute; z-index:1; inset:0; width:100%; height:100%; margin:0; padding:0; opacity:0; cursor:pointer; }
+.upgrade-period-options span,.upgrade-plan-option > :not(input) { pointer-events:none; }
+.upgrade-period-options label:has(input:focus-visible),.upgrade-plan-option:has(input:focus-visible) { outline:2px solid #e0c4ff; outline-offset:3px; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-plan-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin-block:20px 28px; }
+.upgrade-plan-grid > legend { margin-bottom:10px; }
+.upgrade-plan-option { position:relative; display:grid; gap:2px; align-content:start; min-width:0; min-height:112px; padding:14px 12px; border:1px solid #baa1d64d; border-radius:10px; color:#fff8ff; cursor:pointer; transition:border-color 180ms ease-out; }
+.upgrade-plan-free { background:var(--palette-surface, #35273f); }.upgrade-plan-standart { background:#63318d; }.upgrade-plan-premium { background:var(--palette-raised, #71376f); }.upgrade-plan-business { background:#3e3f8c; }.upgrade-plan-premium4life { background:var(--palette-raised, #67417c); }
+.upgrade-plan-option.is-selected { border-color:#ead6ff; outline:2px solid #b684ee; outline-offset:2px; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-plan-name { font-size:14px; font-weight:650; line-height:1.4; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-plan-price { font:600 clamp(22px,2.1vw,28px)/1.4 var(--font-ui); white-space:nowrap; font-variant-numeric:tabular-nums; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-plan-option small { font-size:12px; line-height:1.4; color:#eadbf5; }
+.upgrade-plan-details { min-width:0; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-quota-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-block:20px 12px; padding-block:16px; border-block:1px solid var(--line); }
+.upgrade-quota-grid > div { min-width:0; display:flex; flex-direction:column; gap:4px; }
+.upgrade-quota-grid dt { color:var(--ink-soft); font-size:12px; }
+.upgrade-quota-grid dd { margin:0; font-size:22px; font-weight:600; line-height:1.3; font-variant-numeric:tabular-nums; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-lifetime-note { display:grid; gap:8px; margin-top:12px; color:#e8d3fb; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-feature-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 24px; padding:0; list-style:none; }
+.upgrade-feature-list li { display:flex; align-items:flex-start; min-width:0; gap:10px; line-height:1.5; }
+.upgrade-feature-list li > .experimental-icon { flex:0 0 20px; width:20px; height:20px; margin-top:1px; color:#d7b8ff; }
+.upgrade-feature-list li[data-included="false"] { color:#b2a2c1; }
+.upgrade-feature-list li[data-included="false"] > .experimental-icon { color:#ff8a94; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-policy-note { margin-top:16px; color:var(--ink-soft); font-size:12px; line-height:1.6; max-width:75ch; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-checkout { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
+.upgrade-provider-options { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px!important; }
+.upgrade-provider-options label { display:flex; flex:1 1 180px; align-items:center; gap:10px; min-width:0; min-height:60px; padding:10px 12px; background:var(--palette-recessed, #2b1a3c); border:1px solid var(--line); border-radius:10px; cursor:pointer; }
+.upgrade-provider-options label > input { width:18px; height:18px; margin:0; padding:0; flex:0 0 18px; accent-color:#b991ef; }
+.upgrade-provider-options label > span { display:grid; gap:2px; }
+.upgrade-provider-options label:has(input:checked):not([aria-disabled="true"]) { border-color:#bd93ed; background:var(--palette-surface, #47265e); }
+.upgrade-provider-options label[aria-disabled="true"] { cursor:default; color:#bfaecc; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-provider-options small { color:#bfaecc; font-size:12px; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-payment-status { color:var(--ink-soft); margin-top:16px; max-width:75ch; }
+.upgrade-payment-status:has(> button) { display:grid; justify-items:start; gap:12px; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-credit { display:grid; gap:8px; margin-top:20px; }
+.upgrade-credit > div { display:flex; justify-content:space-between; gap:16px; }
+.upgrade-credit dt { color:var(--ink-soft); }.upgrade-credit dd { margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.upgrade-credit > div:last-child { padding-top:8px; border-top:1px solid var(--line); font-weight:650; }
+.upgrade-credit > div:last-child dt { color:var(--ink); }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-quote-hint { margin-top:8px; font-size:12px; color:var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-checkout-button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:52px; margin-top:16px; padding:12px 16px; border:1px solid #c1a1f0; border-radius:10px; color:#20112e; background:#c1a1f0; font:600 14px/1.4 var(--font-ui); cursor:pointer; }
+.upgrade-checkout-button > span { flex:1; text-align:start; }.upgrade-checkout-button > strong { white-space:nowrap; font-variant-numeric:tabular-nums; }.upgrade-checkout-button > svg { flex:0 0 20px; width:20px; height:20px; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-checkout-button:disabled { background:var(--palette-surface, #493459); border-color:#6c4c80; color:#d4c0e1; opacity:1; cursor:default; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-quote-error { display:grid; justify-items:start; gap:8px; margin-top:16px; color:#f1c8e5; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-inline-action { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); background:var(--palette-surface, #342044); font:inherit; cursor:pointer; }
+.upgrade-inline-action > svg { width:20px; height:20px; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog :is(button,input):focus-visible { outline-color:#dec2ff; }
+html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-free-selected { margin-top:24px; padding-top:20px; border-top:1px solid var(--line); color:var(--ink-soft); }
+@media(max-width:900px) { html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-plan-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:600px) {
+  html[data-genesis-theme] .genesis-app .upgrade-dialog { padding:16px; }
+  html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-plan-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .upgrade-plan-premium4life { grid-column:1/-1; grid-template-columns:minmax(0,1fr) auto; align-items:center; min-height:76px; }
+  .upgrade-plan-premium4life .upgrade-plan-name { grid-column:1; }.upgrade-plan-premium4life .upgrade-plan-price { grid-column:2; grid-row:1/3; }.upgrade-plan-premium4life small { grid-column:1; }
+  html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-quota-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 12px; }
+  html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-feature-list { grid-template-columns:minmax(0,1fr); gap:10px; }
+  .upgrade-provider-options label { flex-basis:100%; }
+}
+@media(prefers-reduced-motion:reduce) { .upgrade-open-button,.upgrade-plan-option { transition:none!important; }.upgrade-open-button::before { background:none; }.upgrade-spark-glowing { animation:none; opacity:1; filter:drop-shadow(0 0 3px #d7b8ff88); } }
+@media(forced-colors:active) { .upgrade-open-button,.upgrade-dialog,.upgrade-plan-option { forced-color-adjust:auto; }.upgrade-plan-option.is-selected { outline:2px solid Highlight; }.upgrade-open-button::before { display:none; } }
+/* Payment location only changes ordering; controls stay aligned on narrow screens. */
+.payment-return-dialog .payment-return-status { max-width:70ch; font-weight:600; }
+html[data-genesis-theme] .genesis-app .payment-return-dialog .payment-return-amount { display:flex; flex-wrap:wrap; gap:8px 24px; margin-block:20px; font-size:20px; font-variant-numeric:tabular-nums; }
+html[data-genesis-theme] .genesis-app .payment-return-dialog .payment-return-order { margin-block:20px; }
+.payment-return-order dt { color:var(--ink-soft); }
+.payment-return-order dd { margin:4px 0 0; overflow-wrap:anywhere; user-select:all; font-variant-numeric:tabular-nums; }
+html[data-genesis-theme] .genesis-app .payment-return-dialog .payment-return-help { max-width:70ch; margin-block:16px; color:var(--ink-soft); }
+.payment-return-dialog .upgrade-inline-action { margin-top:20px; }
+.payment-return-dialog .upgrade-inline-action:disabled { opacity:.65; cursor:default; }
+.upgrade-fx-note { margin-block:10px; font-size:.85rem; line-height:1.45; color:#ded1ed; }
+
+/* Account summary and its plan action share a row while their content fits. */
+html[data-genesis-theme] .genesis-app .account-panel .account-profile-details {
+  display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-profile-summary {
+  flex:1 1 8ch; display:grid; gap:4px; min-width:0;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-profile-summary > .account-email {
+  margin:0; overflow-wrap:anywhere;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade {
+  flex:0 1 auto; max-width:100%; margin-block:0; margin-inline-start:auto;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button {
+  min-height:48px; padding:10px 12px; gap:8px; border-color:#d7b56b;
+  background:var(--palette-raised, #573285); color:#fff2ce; font-weight:600;
+  box-shadow:0 5px 18px #713ca84d,0 0 16px #bd85ed40;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button::before {
+  background:radial-gradient(circle at var(--upgrade-pointer-x) var(--upgrade-pointer-y),#dfb7ff55,transparent 72%);
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-spark {
+  flex-basis:24px; width:24px; height:24px; color:#f2d38b;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button:hover {
+  background-color:#694197; border-color:#f2d38b;
+}
+html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button:focus-visible {
+  outline:2px solid #f2d38b; outline-offset:2px;
+  box-shadow:0 0 0 5px var(--palette-raised, #65368a),0 5px 18px #713ca84d;
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button::before { background:none; }
+}
+@media(forced-colors:active) {
+  html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button { border-color:ButtonText; }
+  html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button:focus-visible { outline-color:Highlight; }
+}
+
+/* Trial notices use the existing STANDART surfaces and accessible controls. */
+.billing-trial-status,.billing-trial-offer,.billing-trial-confirm {
+  display:grid; gap:10px; min-width:0; padding:14px; border:1px solid var(--line);
+  border-radius:10px; background:var(--surface); color:var(--ink); overflow-wrap:anywhere;
+}
+.billing-trial-status p,.billing-trial-offer p,.billing-trial-confirm p { margin:0; }
+.billing-trial-heading,.billing-trial-offer h3,.billing-trial-confirm h3 { margin:0; font-weight:650; }
+.billing-trial-note,.billing-trial-checking { color:var(--ink-soft); font-size:.9em; }
+.billing-trial-actions { display:flex; flex-wrap:wrap; gap:8px; min-width:0; }
+.billing-trial-actions button,.billing-trial-offer button { min-height:44px; min-width:44px; max-width:100%; white-space:normal; }
+.billing-trial-confirm :focus-visible,.billing-trial-status :focus-visible,.billing-trial-offer :focus-visible { outline:2px solid var(--accent,var(--gold)); outline-offset:3px; }
+.account-panel > .billing-trial-status { margin-block:12px; }
+.billing-trial-status.is-compact { padding:10px 12px; }
+.billing-trial-error { color:var(--ink); margin:0; }
+@media(max-width:480px) {
+  .billing-trial-actions { flex-direction:column; align-items:stretch; }
+  .billing-trial-actions button { width:100%; }
+}

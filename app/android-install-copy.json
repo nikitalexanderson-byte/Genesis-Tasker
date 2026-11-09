@@ -1,0 +1,114 @@
+{
+  "ru": {
+    "title": "GENESIS для Android",
+    "download": "Скачать для Android",
+    "help": "Как установить",
+    "open": "Откройте скачанный APK и следуйте подсказкам Android.",
+    "allow": "Если потребуется, разрешите установку из этого браузера в настройках Android.",
+    "update": "Текущий нативный GENESIS обновляется поверх приложения с сохранением данных. Не удаляйте приложение и не очищайте его данные."
+  },
+  "en": {
+    "title": "GENESIS for Android",
+    "download": "Download for Android",
+    "help": "How to install",
+    "open": "Open the downloaded APK and follow the Android prompts.",
+    "allow": "If asked, allow installation from this browser in Android settings.",
+    "update": "The current native GENESIS app updates in place, keeping your data. Do not uninstall the app or clear its data."
+  },
+  "el": {
+    "title": "GENESIS για Android",
+    "download": "Λήψη για Android",
+    "help": "Τρόπος εγκατάστασης",
+    "open": "Ανοίξτε το APK που κατεβάσατε και ακολουθήστε τις οδηγίες του Android.",
+    "allow": "Αν ζητηθεί, επιτρέψτε την εγκατάσταση από αυτό το πρόγραμμα περιήγησης στις ρυθμίσεις Android.",
+    "update": "Η τρέχουσα εγγενής εφαρμογή GENESIS ενημερώνεται διατηρώντας τα δεδομένα σας. Μην απεγκαταστήσετε την εφαρμογή και μην διαγράψετε τα δεδομένα της."
+  },
+  "de": {
+    "title": "GENESIS für Android",
+    "download": "Für Android herunterladen",
+    "help": "Installation",
+    "open": "Öffnen Sie die heruntergeladene APK und folgen Sie den Anweisungen von Android.",
+    "allow": "Erlauben Sie bei Bedarf die Installation aus diesem Browser in den Android-Einstellungen.",
+    "update": "Die aktuelle native GENESIS-App wird unter Beibehaltung Ihrer Daten aktualisiert. Deinstallieren Sie die App nicht und löschen Sie keine App-Daten."
+  },
+  "fr": {
+    "title": "GENESIS pour Android",
+    "download": "Télécharger pour Android",
+    "help": "Comment installer",
+    "open": "Ouvrez l’APK téléchargé et suivez les instructions d’Android.",
+    "allow": "Si nécessaire, autorisez l’installation depuis ce navigateur dans les paramètres Android.",
+    "update": "L’application native GENESIS actuelle se met à jour en conservant vos données. Ne désinstallez pas l’application et n’effacez pas ses données."
+  },
+  "es": {
+    "title": "GENESIS para Android",
+    "download": "Descargar para Android",
+    "help": "Cómo instalar",
+    "open": "Abre el APK descargado y sigue las instrucciones de Android.",
+    "allow": "Si se solicita, permite la instalación desde este navegador en los ajustes de Android.",
+    "update": "La aplicación nativa GENESIS actual se actualiza conservando tus datos. No desinstales la aplicación ni borres sus datos."
+  },
+  "it": {
+    "title": "GENESIS per Android",
+    "download": "Scarica per Android",
+    "help": "Come installare",
+    "open": "Apri l’APK scaricato e segui le istruzioni di Android.",
+    "allow": "Se richiesto, consenti l’installazione da questo browser nelle impostazioni Android.",
+    "update": "L’attuale app nativa GENESIS si aggiorna conservando i tuoi dati. Non disinstallare l’app e non cancellarne i dati."
+  },
+  "pt": {
+    "title": "GENESIS para Android",
+    "download": "Transferir para Android",
+    "help": "Como instalar",
+    "open": "Abra o APK transferido e siga as instruções do Android.",
+    "allow": "Se necessário, permita a instalação a partir deste navegador nas definições do Android.",
+    "update": "A aplicação nativa GENESIS atual é atualizada mantendo os seus dados. Não desinstale a aplicação nem apague os seus dados."
+  },
+  "pl": {
+    "title": "GENESIS na Androida",
+    "download": "Pobierz na Androida",
+    "help": "Jak zainstalować",
+    "open": "Otwórz pobrany plik APK i postępuj zgodnie ze wskazówkami Androida.",
+    "allow": "W razie potrzeby zezwól na instalację z tej przeglądarki w ustawieniach Androida.",
+    "update": "Obecna natywna aplikacja GENESIS aktualizuje się z zachowaniem danych. Nie odinstalowuj aplikacji ani nie usuwaj jej danych."
+  },
+  "sr": {
+    "title": "GENESIS за Android",
+    "download": "Преузми за Android",
+    "help": "Како инсталирати",
+    "open": "Отворите преузети APK и пратите упутства Android-а.",
+    "allow": "Ако је потребно, дозволите инсталацију из овог прегледача у подешавањима Android-а.",
+    "update": "Тренутна изворна апликација GENESIS ажурира се уз очување података. Немојте деинсталирати апликацију нити брисати њене податке."
+  },
+  "uk": {
+    "title": "GENESIS для Android",
+    "download": "Завантажити для Android",
+    "help": "Як установити",
+    "open": "Відкрийте завантажений APK і дотримуйтеся підказок Android.",
+    "allow": "За потреби дозвольте встановлення з цього браузера в налаштуваннях Android.",
+    "update": "Поточний нативний GENESIS оновлюється поверх застосунку зі збереженням даних. Не видаляйте застосунок і не очищайте його дані."
+  },
+  "zh": {
+    "title": "Android 版 GENESIS",
+    "download": "下载 Android 版",
+    "help": "如何安装",
+    "open": "打开下载的 APK，然后按照 Android 提示操作。",
+    "allow": "如有提示，请在 Android 设置中允许从此浏览器安装应用。",
+    "update": "当前的 GENESIS 原生应用可直接更新并保留数据。请勿卸载应用或清除应用数据。"
+  },
+  "tr": {
+    "title": "Android için GENESIS",
+    "download": "Android için indir",
+    "help": "Nasıl yüklenir",
+    "open": "İndirilen APK dosyasını açın ve Android yönergelerini izleyin.",
+    "allow": "İstenirse Android ayarlarından bu tarayıcıdan uygulama yüklenmesine izin verin.",
+    "update": "Mevcut yerel GENESIS uygulaması verilerinizi koruyarak güncellenir. Uygulamayı kaldırmayın veya uygulama verilerini silmeyin."
+  },
+  "ja": {
+    "title": "Android 版 GENESIS",
+    "download": "Android 版をダウンロード",
+    "help": "インストール方法",
+    "open": "ダウンロードした APK を開き、Android の案内に従ってください。",
+    "allow": "必要に応じて Android の設定で、このブラウザからのインストールを許可してください。",
+    "update": "現在の GENESIS ネイティブアプリはデータを保持したまま更新できます。アプリをアンインストールしたり、データを消去したりしないでください。"
+  }
+}

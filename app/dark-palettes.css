@@ -1,0 +1,168 @@
+/* Account palette overrides only color roles. Artwork and semantic hues are retained. */
+/* The same saved palette has a composed daylight scheme; switching mode preserves it. */
+html[data-genesis-theme="standart"][data-genesis-palette="burgundy"] {
+  --paper: #f4e9ec; --paper-deep: #ead8df; --surface: #fff9fb; --white: #fff9fb;
+  --ink: #35212a; --ink-soft: #735560; --line: #9b6c7a45;
+  --teal: #8b344f; --gold: #89364f; --gold-light: #edd1db;
+  --night: #210f19; --night-2: #341b29; --exp-sidebar-text: #efd7e0;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] {
+  --palette-art-tint: #669cd3;
+  --paper: #e9eff7; --paper-deep: #dbe5f2; --surface: #f9fbff; --white: #f9fbff;
+  --ink: #182b43; --ink-soft: #50657e; --line: #6682a345;
+  --teal: #2d5889; --gold: #385c88; --gold-light: #c7d9ee;
+  --night: #0a1b34; --night-2: #132c4a; --exp-sidebar-text: #d2e2f5;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="violet"] {
+  --paper: #efeaf5; --paper-deep: #e3d9ee; --surface: #fcf9ff; --white: #fcf9ff;
+  --ink: #30223e; --ink-soft: #6b577e; --line: #8a709f45;
+  --teal: #6a4684; --gold: #70518b; --gold-light: #deceec;
+  --night: #1b0d2c; --night-2: #2d1942; --exp-sidebar-text: #e5d6f3;
+}
+html[data-genesis-theme="standart"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) {
+  --ui-accent: var(--teal); --ui-on-accent: var(--surface);
+  accent-color: var(--teal);
+}
+html[data-genesis-theme="standart"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) ::selection {
+  color: var(--surface); background: var(--teal);
+}
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) {
+  --ui-accent:var(--gold); --ui-on-accent:var(--dark-on-accent);
+  --palette-recessed: var(--night);
+  --palette-surface: var(--surface);
+  --palette-raised: var(--white);
+  --palette-control: var(--dark-control);
+  --palette-soft-surface: color-mix(in srgb, var(--gold) 14%, var(--surface));
+  --palette-accent: var(--gold);
+  --palette-on-accent: var(--dark-on-accent);
+  --palette-reversed: color-mix(in srgb, var(--dark-danger-surface) 75%, var(--surface));
+  --palette-muted: var(--ink-soft);
+  --palette-outline: var(--ink-soft);
+}
+html[data-genesis-theme="standart-dark"][data-genesis-palette="burgundy"] {
+  --palette-art-tint: #ad5878;
+  --palette-reversed: #3a0b18; --palette-reversed-border: #a44a60;
+  --paper: #170a0e; --paper-deep: #200f15; --surface: #2b151d; --white: #3b1d29;
+  --night: #0e0508; --night-2: #250e19; --ink: #f9edf0; --ink-soft: #d0b1bc;
+  --line: #b77e9345; --gold: #f2b4be; --gold-light: #f2b4be; --teal: #e8a2b4;
+  --dark-control: #381b28; --dark-on-accent: #280a16; --ui-on-accent: #280a16;
+  --dark-info: #c5c5f3; --dark-info-surface: #28233d; --exp-sidebar-text: #e2bdc9;
+  --dark-danger: #ffb5a4; --dark-danger-surface: #4b2022; --palette-base: #2b151d;
+}
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] {
+  --palette-art-tint: #669cd3;
+  --palette-reversed: #662b35; --palette-reversed-border: #c7737d;
+  --paper: #080f1f; --paper-deep: #0c182a; --surface: #13233a; --white: #1b304d;
+  --night: #040a17; --night-2: #0a1b34; --ink: #edf3fc; --ink-soft: #b1c1da;
+  --line: #7d9fc34d; --gold: #a8ceff; --gold-light: #a8ceff; --teal: #a5c9ea;
+  --dark-control: #1b2e4a; --dark-on-accent: #091b36; --ui-on-accent: #091b36;
+  --dark-info: #acdcf7; --dark-info-surface: #12344b; --exp-sidebar-text: #bed3ef;
+  --dark-danger: #f4b6b7; --dark-danger-surface: #3d2537; --palette-base: #13233a;
+}
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] {
+  --palette-art-tint: #9e69cb;
+  --palette-reversed: #682d3f; --palette-reversed-border: #ce798c;
+  --paper: #10091b; --paper-deep: #180f27; --surface: #241735; --white: #322145;
+  --night: #090411; --night-2: #1b0d2c; --ink: #f4edfc; --ink-soft: #c5b5d6;
+  --line: #b095ca45; --gold: #d8bbf5; --gold-light: #d8bbf5; --teal: #c4b0e3;
+  --dark-control: #302143; --dark-on-accent: #210e36; --ui-on-accent: #210e36;
+  --dark-info: #b8cef3; --dark-info-surface: #232b48; --exp-sidebar-text: #d4bfea;
+  --dark-danger: #f7b0c3; --dark-danger-surface: #46263d; --palette-base: #241735;
+}
+.dark-palette-setting { display: grid; gap: 8px; margin-top: 16px; }
+/* Daylight controls and reading surfaces use the same hue as the selected palette. */
+html[data-genesis-theme="standart"] .genesis-app {
+  --day-reading: color-mix(in srgb, var(--teal) 16%, var(--surface));
+  --day-raised: color-mix(in srgb, var(--teal) 9%, var(--surface));
+}
+html[data-genesis-theme="standart"] .genesis-app :is(.theme-mode-toggle, .today-order-toggle) {
+  color:var(--teal); background:var(--day-reading); border-color:var(--line);
+}
+html[data-genesis-theme="standart"] .genesis-app .hero-card:is(.mode-sacred,.mode-lunar) .hero-copy {
+  color:var(--ink); background:color-mix(in srgb,var(--day-reading) 72%,transparent); border-radius:10px;
+}
+html[data-genesis-theme="standart"] .genesis-app .hero-card:is(.mode-sacred,.mode-lunar) :is(.hero-copy h1,.hero-description,.hero-date) { color:var(--ink); text-shadow:none; }
+html[data-genesis-theme="standart"] .genesis-app .hero-card:is(.mode-sacred,.mode-lunar) :is(.eyebrow,.hero-month,.event-badge) { color:var(--teal); }
+html[data-genesis-theme="standart"] .genesis-app :is(.today-tasks-panel,.habit-daily-panel,.year-description-card,.achievement-panel,.streak-reward-ladder,.adaptive-habit-panel) {
+  color:var(--ink); background:var(--day-raised); border-color:var(--line); box-shadow:none;
+}
+html[data-genesis-theme="standart"] .genesis-app .year-description-card :is(p,dd) { color:var(--ink-soft); }
+html[data-genesis-theme="standart"] .genesis-app .year-description-card :is(.eyebrow,dt) { color:var(--teal); }
+html[data-genesis-theme="standart"] .genesis-app .year-description-card dl > div { background:var(--surface); border-color:var(--line); }
+html[data-genesis-theme="standart"] .genesis-app :is(.year-details-button,.habits-hero-actions .hero-path-open) {
+  color:var(--surface); background:var(--teal); border-color:var(--teal); box-shadow:none;
+}
+html[data-genesis-theme="standart"] .genesis-app .year-details-button :is(span,strong,small,svg) { color:inherit; }
+html[data-genesis-theme="standart"] .genesis-app :is(.heroic-rank-card,.hero-path-panel) {
+  --palette-recessed:var(--day-reading); --palette-surface:var(--day-raised); --palette-muted:var(--ink-soft);
+  color:var(--ink); background:var(--day-reading); border-color:var(--line); box-shadow:none;
+}
+html[data-genesis-theme="standart"] .genesis-app :is(.heroic-rank-copy p,.heroic-rank-copy small,.hero-path-header p,.hero-path-rank-copy small,.hero-path-checkpoint small,.hero-path-mist-gate small) { color:var(--ink-soft); }
+html[data-genesis-theme="standart"] .genesis-app :is(.heroic-rank-copy > span,.hero-path-summary span,.hero-path-rank-copy span,.hero-path-rank-copy em,.hero-path-checkpoint span,.hero-path-mist-gate > span,.streak-reward-ladder > header > strong,.streak-reward-track article em) { color:var(--teal); }
+html[data-genesis-theme="standart"] .genesis-app :is(.hero-path-summary,.hero-path-rank,.hero-path-rank.reached,.hero-path-checkpoint,.hero-path-checkpoint.unlocked,.hero-path-checkpoint.claimed,.streak-reward-track article,.streak-reward-track article.achieved) {
+  color:var(--ink); background:var(--surface); border-color:var(--line);
+}
+html[data-genesis-theme="standart"] .genesis-app .hero-path-rank { opacity:1; }
+html[data-genesis-theme="standart"] .genesis-app .hero-path-rank.current { border-color:var(--teal); box-shadow:0 0 0 1px var(--teal); }
+html[data-genesis-theme="standart"] .genesis-app :is(.hero-path-panel::before,.hero-path-header,.hero-path-rank::after) { border-color:var(--line); }
+html[data-genesis-theme="standart"] .genesis-app :is(.hero-path-progress,.heroic-rank-copy > div) { background:var(--paper-deep); }
+html[data-genesis-theme="standart"] .genesis-app :is(.hero-path-progress i,.heroic-rank-copy > div i,.hero-path-line,.hero-path-rank::after) { background:var(--teal); box-shadow:none; }
+html[data-genesis-theme="standart"] .genesis-app :is(.hero-path-checkpoint button,.streak-reward-track article.achieved > span) { color:var(--surface); background:var(--teal); border-color:var(--teal); }
+html[data-genesis-theme="standart"] .genesis-app .hero-path-checkpoint button:disabled { color:var(--ink-soft); background:var(--paper-deep); }
+html[data-genesis-theme="standart"] .genesis-app .hero-path-panel .modal-close { color:var(--ink); background:var(--surface); border-color:var(--line); }
+.palette-art-filter { position:absolute; pointer-events:none; overflow:hidden; }
+.hero-palette-art { display:none; }
+/* Authored Gregorian and time palettes retain their original color fallbacks. */
+html[data-genesis-theme="standart-dark"] :is(.hero-card.mode-profane, .device-clock, .day-rhythm-panel) {
+  --palette-recessed:initial; --palette-surface:initial; --palette-raised:initial; --palette-control:initial;
+  --palette-soft-surface:initial; --palette-accent:initial; --palette-on-accent:initial; --palette-muted:initial; --palette-outline:initial;
+}
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) .hero-card:is(.mode-sacred, .mode-lunar) > .hero-palette-art {
+  display:block; position:absolute; inset:0; z-index:-2; pointer-events:none;
+  border-radius:inherit; background:inherit; filter:url(#genesis-palette-art);
+}
+/* Tint only the Habits backdrop; rank art, gold details and controls keep their colors. */
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) .genesis-app .habits-hero::before {
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  border-radius:inherit; background:inherit; filter:url(#genesis-palette-art);
+}
+/* The blue palette pairs its painted shadows with silver highlights. */
+html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .habits-hero::before {
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  border-radius:inherit; background:inherit; filter:url(#genesis-blue-silver-art);
+}
+/* Tint the artwork backing, keeping weekday colors and task indicators intact. */
+html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .calendar-mode-year-month.mode-profane { background:var(--surface); }
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app .calendar-mode-year-month.mode-profane::before {
+  background-image:linear-gradient(rgb(10 27 52 / .8),rgb(10 27 52 / .8)),var(--month-art);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-mode-year-month.mode-profane::before {
+  background-image:linear-gradient(rgb(45 88 137 / .18),rgb(45 88 137 / .18)),var(--month-art);
+}
+html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .year-month.calendar-mode-year-month.mode-profane { --year-day-base:var(--surface); }
+html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .year-month:not(.mode-profane)::before { filter:url(#genesis-palette-art); }
+html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .calendar-view.mode-profane .calendar-mode-header > .gregorian-season-art {
+  background-color:var(--palette-art-tint); background-blend-mode:color;
+}
+html[data-genesis-theme] .genesis-app .genesis-page-footer > a {
+  background:linear-gradient(115deg, var(--gold-light), color-mix(in srgb, var(--gold-light) 82%, var(--surface)));
+  border-color:var(--gold); color:var(--ink); min-height:64px;
+}
+html[data-genesis-theme$="-dark"] .genesis-app .genesis-page-footer > a { color:var(--dark-on-accent); }
+html[data-genesis-theme] .genesis-app .genesis-page-footer > a :is(strong, small, span) { color:inherit; }
+html[data-genesis-theme] .genesis-app .genesis-page-footer > a > span:first-child { background:rgb(255 255 255 / .18); }
+html[data-genesis-theme] .genesis-app .genesis-page-footer > a:hover { filter:brightness(1.08); }
+.dark-palette-setting select { min-height: 44px; width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; color: var(--ink); background: var(--surface); }
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) { scrollbar-color: var(--ink-soft) var(--paper-deep); }
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) ::selection { color:var(--dark-on-accent); background:var(--gold); }
+/* Keep blue information, red warnings and warm emphasis distinct within each palette. */
+html[data-genesis-theme="standart-dark"]:not([data-genesis-palette="green"]) :is(.daily-advice-info, .account-oauth-note) { background-color: color-mix(in srgb, var(--dark-info-surface) 70%, var(--surface)); }
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis-app .upgrade-open-button,
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button {
+  color: #2b1906; background: linear-gradient(115deg, #e2b855, #ffe9a5 55%, #d8a53f);
+  border-color: #ffe8a0; box-shadow: 0 0 18px #e7b74a55, inset 0 1px #fff5cc;
+}
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis-app .upgrade-open-button:hover,
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button:hover { box-shadow: 0 0 25px #e7b74a80, inset 0 1px #fff5cc; }
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button::before { background:radial-gradient(circle at var(--upgrade-pointer-x) var(--upgrade-pointer-y),#ffe9a566,transparent 72%); }
+html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .upgrade-open-button svg { color: #593506; }

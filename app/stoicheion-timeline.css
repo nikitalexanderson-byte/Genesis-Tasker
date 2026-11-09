@@ -1,0 +1,41 @@
+.stoicheion-timeline-section { display: grid; gap: 18px; color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 10px; }
+.stoicheion-timeline-section > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 16px; }
+.stoicheion-timeline-section > header > div { min-width: 0; flex: 1 1 auto; }
+.stoicheion-timeline-reroll { flex: 0 1 auto; margin-inline-start: auto; min-height: 44px; max-width: 100%; }
+.stoicheion-timeline-actions { display:contents; }
+.stoicheion-timeline-actions[data-restricted="true"] { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; gap:12px; }
+.stoicheion-timeline-actions > .feature-access-upgrade { display:flex; margin:0; min-width:0; }
+html[data-genesis-theme] .genesis-app .stoicheion-timeline-actions[data-restricted="true"] :is(.upgrade-open-button,.stoicheion-timeline-begin,.stoicheion-timeline-help) { display:flex; align-items:center; justify-content:center; width:100%; min-width:0; min-height:56px; height:100%; margin:0; padding:12px 16px; border-radius:10px; font:600 14px/1.4 var(--font-ui); text-align:center; }
+.stoicheion-timeline-help { min-height: 44px; width: 100%; padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--teal) 9%, var(--surface)); color: var(--ink); cursor: pointer; font: 600 14px/1.4 var(--font-ui, sans-serif); overflow-wrap: normal; word-break: normal; hyphens: none; }
+.stoicheion-timeline-help-backdrop { position: fixed; z-index: 1060; inset: 0; display: grid; place-items: center; padding: 20px; background: #0009; }
+.stoicheion-timeline-help-dialog { width: min(640px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; overscroll-behavior: contain; padding: clamp(18px, 4vw, 32px); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.stoicheion-timeline-help-dialog header { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 12px; align-items: start; }
+.stoicheion-timeline-help-dialog h2 { margin: 0; font: 400 clamp(23px, 4vw, 30px)/1.3 var(--font-heading, Georgia, serif); }
+.stoicheion-timeline-help-dialog p { margin-block: 16px 0; font: 400 14px/1.65 var(--font-ui, sans-serif); }
+.stoicheion-timeline-help-dialog :is(h2, p) { overflow-wrap: normal; word-break: normal; hyphens: none; }
+.stoicheion-timeline-help-dialog button { width: 44px; min-height: 44px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 10px; }
+.stoicheion-timeline-section > header p { color: var(--ink-soft); }
+.stoicheion-timeline-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(6px, 2vw, 18px); }
+.stoicheion-timeline-card { container-type: inline-size; display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-width: 0; padding: clamp(6px, 1.5vw, 16px); border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--ink) 3%, var(--surface)); color: var(--ink); cursor: pointer; text-align: center; }
+.stoicheion-timeline-card > strong { font-size: clamp(10px, 11cqw, 16px); }
+.stoicheion-timeline-card > b, .stoicheion-timeline-card > span:not(.stoicheion-card-visual) { font-size: clamp(9px, 10cqw, 14px); }
+.stoicheion-timeline-card > .stoicheion-card-visual { align-self: center; }
+.stoicheion-timeline-card :is(strong, b, span) { overflow-wrap: normal; word-break: normal; hyphens: none; }
+.stoicheion-timeline-card:hover { border-color: currentColor; }
+.stoicheion-timeline-card.is-unopened { justify-content: flex-start; }
+.stoicheion-timeline-card:disabled { cursor: default; }
+.stoicheion-timeline-card.is-unopened > .stoicheion-card-back { width: min(196px, 100%); min-width: 0; padding: clamp(6px, 2vw, 18px); margin-inline: auto; aspect-ratio: .68; pointer-events: none; box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--palette-recessed, #071d21) 72%, transparent); }
+.stoicheion-timeline-card .stoicheion-card-back > span { width: min(100%, 100px); }
+.stoicheion-timeline-card .stoicheion-card-back::before { inset: 12%; }
+.stoicheion-timeline-card.is-unopened:disabled > .stoicheion-card-back { opacity: .65; }
+.stoicheion-timeline-card > b { min-height: 2.8em; display: grid; align-items: center; }
+.stoicheion-timeline-card:focus-visible, .stoicheion-timeline-help:focus-visible, .stoicheion-timeline-help-dialog button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.stoicheion-timeline-begin { justify-self: start; min-height: 44px; }
+html[data-genesis-theme] .genesis-app .stoicheion-nine-preview > .stoicheion-preview-start { position:absolute; z-index:3; top:50%; left:50%; transform:translate(-50%,-50%); width:min(230px,76%); min-height:48px; padding:12px 16px; border-radius:10px; font:600 14px/1.4 var(--font-ui); white-space:normal; }
+html[data-genesis-theme] .genesis-app .stoicheion-nine-preview > .stoicheion-preview-start:hover { transform:translate(-50%,-50%); }
+@media (max-width: 760px) { .stoicheion-timeline-actions[data-restricted="true"] { grid-template-columns:minmax(0,1fr); grid-auto-rows:1fr; } }
+@media (max-width: 620px) {
+  .stoicheion-nine-section.stoicheion-timeline-section { padding: 18px 12px; }
+  .stoicheion-timeline-reroll { width: 44px; min-width: 44px; height: 44px; padding: 8px; }
+  .stoicheion-timeline-reroll > span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}

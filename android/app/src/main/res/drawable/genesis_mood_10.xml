@@ -1,0 +1,7 @@
+<!-- Generated from app/mood-faces.json; node scripts/export-mood-faces.mjs -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="64dp" android:viewportWidth="64" android:viewportHeight="64">
+  <path android:pathData="M32 4 A28 28 0 1 1 32 60 A28 28 0 1 1 32 4 Z" android:fillColor="#f4bf68" android:strokeColor="#493638" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+  <path android:pathData="M22 18 L24 24 L30 24 L25 28 L27 34 L22 30 L17 34 L19 28 L14 24 L20 24 Z M42 18 L44 24 L50 24 L45 28 L47 34 L42 30 L37 34 L39 28 L34 24 L40 24 Z" android:fillColor="#8054a0" android:strokeColor="#8054a0" android:strokeWidth="1.5" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+  <path android:pathData="M22 40 Q32 54 42 40 Z" android:fillColor="#493638" android:strokeColor="#493638" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+  <path android:pathData="M27 44 L37 44" android:fillColor="#00000000" android:strokeColor="#fff9ec" android:strokeWidth="2.5" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+</vector>

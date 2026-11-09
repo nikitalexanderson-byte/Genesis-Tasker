@@ -1,0 +1,9 @@
+html[data-genesis-theme] .genesis-app .sacred-practice-restore { min-width:0; max-width:100%; }
+html[data-genesis-theme] .genesis-app .sacred-practice-restore button {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px;
+  padding:10px 12px; font:500 14px/1.4 var(--font-ui); white-space:normal;
+}
+html[data-genesis-theme] .genesis-app .sacred-practice-restore-confirm { margin-top:12px; max-width:48ch; }
+html[data-genesis-theme] .genesis-app .sacred-practice-restore-confirm p { color:var(--ink-soft); font:400 14px/1.55 var(--font-ui); margin:0 0 12px; }
+html[data-genesis-theme] .genesis-app .sacred-practice-restore-confirm > div { display:flex; flex-wrap:wrap; gap:8px; }
+html[data-genesis-theme] .genesis-app .theokyklos-practice-restore { grid-column:1 / -1; grid-row:3; }

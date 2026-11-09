@@ -1,0 +1,23 @@
+.shared-task-review { display:flex; flex-wrap:wrap; align-items:center; gap:8px; grid-column:1 / -1; }
+.shared-review-badge { padding:4px 8px; border:1px solid var(--line); border-radius:6px; color:var(--ink); background:var(--surface); font:500 12px/1.5 var(--font-ui); }
+.shared-task-review fieldset,.shared-review-settings fieldset { min-width:0; padding:12px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); }
+.shared-task-review fieldset { flex:1 0 100%; }
+.shared-task-review fieldset label,.shared-review-settings fieldset label { display:flex; gap:8px; align-items:center; margin-block:8px; }
+.shared-review-settings select { width:100%; min-width:0; }
+.shared-review-settings fieldset > div { margin-block:16px; }
+.shared-review-settings fieldset > div > label { display:grid; }
+.shared-trash-item { padding-block:16px; border-top:1px solid var(--line); }
+.shared-trash-item > div { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+.shared-trash-item input { max-width:120px; }
+.shared-trash-dialog { max-height:calc(100dvh - 32px); overflow:auto; }
+.shared-archive-toolbar { display:flex; align-items:end; gap:12px; }
+.shared-archive-toolbar > label { display:grid; flex:1; min-width:0; gap:6px; }
+.shared-archive-toolbar input { box-sizing:border-box; height:44px; min-height:44px; margin:0; }
+html[data-genesis-theme] .genesis-app .shared-trash-dialog .shared-trash-icon-action { border:0; background:transparent; color:var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .shared-trash-dialog .shared-trash-purge { color:var(--terracotta); }
+html[data-genesis-theme] .genesis-app .shared-trash-dialog .shared-trash-icon-action:hover:not(:disabled) { background:color-mix(in srgb,var(--ink) 7%,transparent); }
+html[data-genesis-theme] .genesis-app .shared-trash-dialog .shared-trash-icon-action:focus-visible { outline:2px solid var(--ui-accent); outline-offset:3px; }
+
+.shared-trash-confirmation { margin:auto; max-height:calc(100dvh - 32px); overflow:auto; }
+.shared-trash-confirmation::backdrop { background:rgb(0 0 0 / .55); }
+.shared-trash-dialog .danger-button, .shared-trash-confirmation .danger-button { color: var(--ui-on-accent); }

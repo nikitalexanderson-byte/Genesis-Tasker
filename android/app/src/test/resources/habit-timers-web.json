@@ -1,0 +1,488 @@
+{
+  "schema": 1,
+  "cases": [
+    {
+      "name": "midnight-pause",
+      "operations": [
+        {
+          "epoch": "",
+          "id": "session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "start",
+          "parents": [],
+          "at": "2026-10-16T20:50:00.000Z",
+          "plan": {
+            "mode": "stopwatch",
+            "workMinutes": 25,
+            "breakMinutes": 5,
+            "timeZone": "Europe/Moscow",
+            "calendarMode": "profane",
+            "context": {
+              "version": 2,
+              "timeZone": "Europe/Moscow",
+              "gregorianYearStart": "march"
+            },
+            "habitTitle": "Reading",
+            "ruleId": "rule"
+          }
+        },
+        {
+          "epoch": "",
+          "id": "pause",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "pause",
+          "parents": [
+            "session"
+          ],
+          "at": "2026-10-16T21:20:00.000Z"
+        },
+        {
+          "epoch": "",
+          "id": "resume",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "resume",
+          "parents": [
+            "pause"
+          ],
+          "at": "2026-10-16T21:30:00.000Z"
+        },
+        {
+          "epoch": "",
+          "id": "finish",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "finish",
+          "parents": [
+            "resume"
+          ],
+          "at": "2026-10-16T21:50:00.000Z",
+          "allocations": [
+            {
+              "date": "2026-10-16",
+              "workMs": 600000,
+              "value": 10000,
+              "ruleId": "rule",
+              "reason": "duration"
+            },
+            {
+              "date": "2026-10-17",
+              "workMs": 2400000,
+              "value": 40000,
+              "ruleId": "rule",
+              "reason": "duration"
+            }
+          ]
+        },
+        {
+          "epoch": "",
+          "id": "timer-saved:session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "save",
+          "parents": [
+            "finish"
+          ],
+          "at": "2026-10-16T21:50:00.000Z",
+          "timeOnly": false
+        }
+      ],
+      "expected": {
+        "status": "saved",
+        "workMs": 3000000,
+        "breakMs": 0,
+        "days": [
+          {
+            "date": "2026-10-16",
+            "workMs": 600000,
+            "value": 10000
+          },
+          {
+            "date": "2026-10-17",
+            "workMs": 2400000,
+            "value": 40000
+          }
+        ]
+      }
+    },
+    {
+      "name": "pomodoro-midnight",
+      "operations": [
+        {
+          "epoch": "",
+          "id": "session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "start",
+          "parents": [],
+          "at": "2026-10-16T20:35:00.000Z",
+          "plan": {
+            "mode": "pomodoro",
+            "workMinutes": 25,
+            "breakMinutes": 5,
+            "timeZone": "Europe/Moscow",
+            "calendarMode": "profane",
+            "context": {
+              "version": 2,
+              "timeZone": "Europe/Moscow",
+              "gregorianYearStart": "march"
+            },
+            "habitTitle": "Reading",
+            "ruleId": "rule"
+          }
+        },
+        {
+          "epoch": "",
+          "id": "pause",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "pause",
+          "parents": [
+            "session"
+          ],
+          "at": "2026-10-16T21:02:00.000Z"
+        },
+        {
+          "epoch": "",
+          "id": "resume",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "resume",
+          "parents": [
+            "pause"
+          ],
+          "at": "2026-10-16T21:12:00.000Z"
+        },
+        {
+          "epoch": "",
+          "id": "finish",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "finish",
+          "parents": [
+            "resume"
+          ],
+          "at": "2026-10-16T21:20:00.000Z",
+          "allocations": [
+            {
+              "date": "2026-10-16",
+              "workMs": 1500000,
+              "value": 25000,
+              "ruleId": "rule",
+              "reason": "duration"
+            },
+            {
+              "date": "2026-10-17",
+              "workMs": 300000,
+              "value": 5000,
+              "ruleId": "rule",
+              "reason": "duration"
+            }
+          ]
+        },
+        {
+          "epoch": "",
+          "id": "timer-saved:session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "save",
+          "parents": [
+            "finish"
+          ],
+          "at": "2026-10-16T21:20:00.000Z",
+          "timeOnly": false
+        }
+      ],
+      "expected": {
+        "status": "saved",
+        "workMs": 1800000,
+        "breakMs": 300000,
+        "days": [
+          {
+            "date": "2026-10-16",
+            "workMs": 1500000,
+            "value": 25000
+          },
+          {
+            "date": "2026-10-17",
+            "workMs": 300000,
+            "value": 5000
+          }
+        ]
+      }
+    },
+    {
+      "name": "dst-overlap",
+      "operations": [
+        {
+          "epoch": "",
+          "id": "session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "start",
+          "parents": [],
+          "at": "2026-10-25T00:30:00.000Z",
+          "plan": {
+            "mode": "stopwatch",
+            "workMinutes": 25,
+            "breakMinutes": 5,
+            "timeZone": "Europe/Berlin",
+            "calendarMode": "profane",
+            "context": {
+              "version": 2,
+              "timeZone": "Europe/Berlin",
+              "gregorianYearStart": "march"
+            },
+            "habitTitle": "Reading",
+            "ruleId": "rule"
+          }
+        },
+        {
+          "epoch": "",
+          "id": "finish",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "finish",
+          "parents": [
+            "session"
+          ],
+          "at": "2026-10-25T02:30:00.000Z",
+          "allocations": [
+            {
+              "date": "2026-10-25",
+              "workMs": 7200000,
+              "value": 120000,
+              "ruleId": "rule",
+              "reason": "duration"
+            }
+          ]
+        },
+        {
+          "epoch": "",
+          "id": "timer-saved:session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "save",
+          "parents": [
+            "finish"
+          ],
+          "at": "2026-10-25T02:30:00.000Z",
+          "timeOnly": false
+        }
+      ],
+      "expected": {
+        "status": "saved",
+        "workMs": 7200000,
+        "breakMs": 0,
+        "days": [
+          {
+            "date": "2026-10-25",
+            "workMs": 7200000,
+            "value": 120000
+          }
+        ]
+      }
+    },
+    {
+      "name": "dst-short-day",
+      "operations": [
+        {
+          "epoch": "",
+          "id": "session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "start",
+          "parents": [],
+          "at": "2026-03-28T22:30:00.000Z",
+          "plan": {
+            "mode": "stopwatch",
+            "workMinutes": 25,
+            "breakMinutes": 5,
+            "timeZone": "Europe/Berlin",
+            "calendarMode": "profane",
+            "context": {
+              "version": 2,
+              "timeZone": "Europe/Berlin",
+              "gregorianYearStart": "march"
+            },
+            "habitTitle": "Reading",
+            "ruleId": "rule"
+          }
+        },
+        {
+          "epoch": "",
+          "id": "finish",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "finish",
+          "parents": [
+            "session"
+          ],
+          "at": "2026-03-29T22:30:00.000Z",
+          "allocations": [
+            {
+              "date": "2026-03-28",
+              "workMs": 1800000,
+              "value": 30000,
+              "ruleId": "rule",
+              "reason": "duration"
+            },
+            {
+              "date": "2026-03-29",
+              "workMs": 82800000,
+              "value": 1380000,
+              "ruleId": "rule",
+              "reason": "duration"
+            },
+            {
+              "date": "2026-03-30",
+              "workMs": 1800000,
+              "value": 30000,
+              "ruleId": "rule",
+              "reason": "duration"
+            }
+          ]
+        },
+        {
+          "epoch": "",
+          "id": "timer-saved:session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "save",
+          "parents": [
+            "finish"
+          ],
+          "at": "2026-03-29T22:30:00.000Z",
+          "timeOnly": false
+        }
+      ],
+      "expected": {
+        "status": "saved",
+        "workMs": 86400000,
+        "breakMs": 0,
+        "days": [
+          {
+            "date": "2026-03-28",
+            "workMs": 1800000,
+            "value": 30000
+          },
+          {
+            "date": "2026-03-29",
+            "workMs": 82800000,
+            "value": 1380000
+          },
+          {
+            "date": "2026-03-30",
+            "workMs": 1800000,
+            "value": 30000
+          }
+        ]
+      }
+    },
+    {
+      "name": "carry-precision",
+      "operations": [
+        {
+          "epoch": "",
+          "id": "session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "start",
+          "parents": [],
+          "at": "2026-10-16T23:59:59.960Z",
+          "plan": {
+            "mode": "stopwatch",
+            "workMinutes": 25,
+            "breakMinutes": 5,
+            "timeZone": "UTC",
+            "calendarMode": "profane",
+            "context": {
+              "version": 2,
+              "timeZone": "UTC",
+              "gregorianYearStart": "march"
+            },
+            "habitTitle": "Reading",
+            "ruleId": "rule"
+          }
+        },
+        {
+          "epoch": "",
+          "id": "finish",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "finish",
+          "parents": [
+            "session"
+          ],
+          "at": "2026-10-17T00:00:00.040Z",
+          "allocations": [
+            {
+              "date": "2026-10-16",
+              "workMs": 40,
+              "value": 0,
+              "ruleId": "rule",
+              "reason": "duration"
+            },
+            {
+              "date": "2026-10-17",
+              "workMs": 40,
+              "value": 1,
+              "ruleId": "rule",
+              "reason": "duration"
+            }
+          ]
+        },
+        {
+          "epoch": "",
+          "id": "timer-saved:session",
+          "sessionId": "session",
+          "habitId": "reading",
+          "owner": "device",
+          "action": "save",
+          "parents": [
+            "finish"
+          ],
+          "at": "2026-10-17T00:00:00.040Z",
+          "timeOnly": false
+        }
+      ],
+      "expected": {
+        "status": "saved",
+        "workMs": 80,
+        "breakMs": 0,
+        "days": [
+          {
+            "date": "2026-10-16",
+            "workMs": 40,
+            "value": 0
+          },
+          {
+            "date": "2026-10-17",
+            "workMs": 40,
+            "value": 1
+          }
+        ]
+      }
+    }
+  ]
+}

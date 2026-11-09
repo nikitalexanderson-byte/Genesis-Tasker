@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "projection": { "horizontalAmplitude": 0.44, "skyTop": 0.08 },
+  "terrain": { "nightBrightness": 0.56, "dayBrightness": 1.04, "nightSaturation": 0.72, "daySaturation": 1, "directionalShade": 0.35, "directionalLight": 0.26 },
+  "skyStops": [
+    { "altitude": -18, "top": "#040b1c", "bottom": "#17233c" },
+    { "altitude": -12, "top": "#0d1e3b", "bottom": "#394560" },
+    { "altitude": -6, "top": "#364466", "bottom": "#b17772" },
+    { "altitude": 0, "top": "#5b7392", "bottom": "#efb27a" },
+    { "altitude": 12, "top": "#6a9fbd", "bottom": "#dce3d7" },
+    { "altitude": 35, "top": "#3c91bd", "bottom": "#d7eaf0" },
+    { "altitude": 80, "top": "#2e83b5", "bottom": "#d1e8ef" }
+  ]
+}

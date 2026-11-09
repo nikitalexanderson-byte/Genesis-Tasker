@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 768" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="34" y1="20" x2="478" y2="748" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f0d999"/>
+      <stop offset="0.48" stop-color="#ad8240"/>
+      <stop offset="1" stop-color="#e3c783"/>
+    </linearGradient>
+    <pattern id="linked-key-h" x="58" y="28" width="44" height="26" patternUnits="userSpaceOnUse">
+      <path d="M0 20H11V5H33V20H22V13H11V24H44V20" stroke="#dec47f" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    </pattern>
+    <pattern id="linked-key-h-bottom" x="58" y="714" width="44" height="26" patternUnits="userSpaceOnUse">
+      <path d="M0 6H11V21H33V6H22V13H11V2H44V6" stroke="#dec47f" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    </pattern>
+    <pattern id="linked-key-v-left" x="28" y="58" width="26" height="44" patternUnits="userSpaceOnUse">
+      <path d="M6 0V11H21V33H6V22H13V11H2V44H6" stroke="#dec47f" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    </pattern>
+    <pattern id="linked-key-v-right" x="458" y="58" width="26" height="44" patternUnits="userSpaceOnUse">
+      <path d="M20 0V11H5V33H20V22H13V11H24V44H20" stroke="#dec47f" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    </pattern>
+  </defs>
+  <rect x="7" y="7" width="498" height="754" rx="24" stroke="#031114" stroke-opacity=".94" stroke-width="14"/>
+  <rect x="8" y="8" width="496" height="752" rx="23" stroke="url(#gold)" stroke-width="3"/>
+  <rect x="18" y="18" width="476" height="732" rx="17" stroke="#e0c682" stroke-opacity=".72" stroke-width="1.5"/>
+  <rect x="24" y="24" width="464" height="720" rx="13" stroke="#06191c" stroke-opacity=".9" stroke-width="8"/>
+  <path d="M41 41H471V727H41Z" stroke="#06191c" stroke-opacity=".72" stroke-width="26" stroke-linejoin="miter"/>
+  <rect x="58" y="28" width="396" height="26" fill="url(#linked-key-h)"/>
+  <rect x="58" y="714" width="396" height="26" fill="url(#linked-key-h-bottom)"/>
+  <rect x="28" y="58" width="26" height="660" fill="url(#linked-key-v-left)"/>
+  <rect x="458" y="58" width="26" height="660" fill="url(#linked-key-v-right)"/>
+  <path d="M58 48H34V58M454 48H478V58M34 718V720H58M478 718V720H454" stroke="#dec47f" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter" opacity=".84"/>
+</svg>

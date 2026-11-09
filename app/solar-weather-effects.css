@@ -1,0 +1,33 @@
+.solar-weather-clouds,.solar-weather-effects { position:absolute; inset:0; overflow:hidden; pointer-events:none; border-radius:inherit; }
+.solar-weather-clouds { --weather-cloud-duration:60s; }
+.solar-weather-clouds > i { position:absolute; top:-12%; width:75%; height:58%; border-radius:50%; background:rgb(var(--weather-cloud-ink,172 183 194) / .88); filter:blur(20px); animation:solar-cloud-drift var(--weather-cloud-duration) linear infinite alternate; }
+.solar-weather-clouds > i:nth-child(1) { left:-18%; }
+.solar-weather-clouds > i:nth-child(2) { top:1%; left:22%; width:86%; height:46%; animation-delay:-23s; }
+.solar-weather-clouds > i:nth-child(3) { top:-18%; left:68%; animation-delay:-41s; }
+.solar-weather-effects > span { position:absolute; pointer-events:none; }
+.solar-weather-fog { inset:20% -15% -10%; opacity:var(--weather-fog); background:linear-gradient(transparent,rgb(185 197 203 / .75) 40%,rgb(204 211 214 / .8) 65%,transparent); filter:blur(12px); animation:solar-fog-drift 35s ease-in-out infinite alternate; }
+.solar-weather-storm-glow { inset:0; opacity:0; background:radial-gradient(ellipse at 60% 0,#dce7f5,transparent 75%); animation:solar-storm-glow var(--weather-storm-duration) linear infinite; }
+.solar-weather-particle { position:absolute; top:-15%; left:var(--particle-x); width:var(--particle-size); height:100%; animation:solar-precipitation-fall var(--particle-duration) linear var(--particle-delay) infinite; }
+.solar-weather-particle::after { content:""; position:absolute; width:var(--particle-size); height:var(--particle-length); border-radius:50%; opacity:var(--particle-opacity); filter:blur(var(--particle-blur)); background:linear-gradient(transparent,rgb(223 237 247 / .82) 75%,rgb(245 250 255 / .9)); transform:rotate(var(--particle-angle)); }
+.solar-weather-particle.snow::after { height:var(--particle-size); border-radius:50%; background:radial-gradient(circle at 40% 35%,#fff 15%,#e6f1f8 55%,transparent 80%); animation:solar-snow-sway calc(var(--particle-duration) * .6) ease-in-out infinite alternate; }
+.solar-weather-particle.hail::after { height:var(--particle-size); border-radius:45%; background:radial-gradient(circle at 35% 30%,#fff,#a7c6d8); }
+.solar-weather-effects[data-weather-precipitation="drizzle"] .solar-weather-particle::after { opacity:calc(var(--particle-opacity) * .7); }
+.solar-weather-effects[data-weather-blizzard="true"] .solar-weather-particle::after { width:calc(var(--particle-size) * 1.7); opacity:.8; }
+.solar-weather-wind { inset:0; opacity:.12; }
+.solar-weather-wind.strong { opacity:.22; }
+.solar-weather-wind > i { position:absolute; left:-45%; top:34%; width:38%; height:18%; border-radius:50%; filter:blur(9px); background:radial-gradient(ellipse,rgb(210 225 231 / .48),transparent 68%); animation:solar-wind-streak var(--weather-wind-duration) ease-in-out infinite; }
+.solar-weather-wind > i:nth-child(2) { top:52%; animation-delay:-3s; }
+.solar-weather-wind > i:nth-child(3) { top:72%; animation-delay:-5s; }
+.solar-weather-paused * { animation-play-state:paused !important; }
+@keyframes solar-cloud-drift { to { transform:translate3d(var(--weather-cloud-drift,12%),3%,0); } }
+@keyframes solar-fog-drift { to { transform:translate3d(5%,3%,0); } }
+@keyframes solar-storm-glow { 0%,48%,76%,100% { opacity:0; } 60% { opacity:var(--weather-storm-glow); } }
+@keyframes solar-precipitation-fall { to { transform:translate3d(var(--weather-drift),120%,0); } }
+@keyframes solar-snow-sway { to { transform:translate3d(var(--particle-sway),0,0); } }
+@keyframes solar-wind-streak { 0% { transform:translate3d(0,3%,0) scaleY(.6); opacity:0; } 25%,65% { opacity:1; } 100% { transform:translate3d(430%,-12%,0) scaleY(1.15); opacity:0; } }
+@media(max-width:600px) { .solar-weather-particle:nth-of-type(n+41) { display:none; } }
+@media(prefers-reduced-motion:reduce) {
+  .solar-weather-clouds *,.solar-weather-effects * { animation:none !important; transition:none !important; }
+  .solar-weather-particle { transform:translateY(var(--particle-y)); }
+  .solar-weather-storm-glow { display:none; }
+}

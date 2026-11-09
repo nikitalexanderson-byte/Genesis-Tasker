@@ -1,0 +1,16 @@
+{
+  "ru": {"light":"Включить светлую тему","dark":"Включить тёмную тему"},
+  "en": {"light":"Switch to light theme","dark":"Switch to dark theme"},
+  "el": {"light":"Ενεργοποίηση φωτεινού θέματος","dark":"Ενεργοποίηση σκοτεινού θέματος"},
+  "de": {"light":"Zum hellen Design wechseln","dark":"Zum dunklen Design wechseln"},
+  "fr": {"light":"Passer au thème clair","dark":"Passer au thème sombre"},
+  "es": {"light":"Cambiar al tema claro","dark":"Cambiar al tema oscuro"},
+  "it": {"light":"Passa al tema chiaro","dark":"Passa al tema scuro"},
+  "pt": {"light":"Mudar para o tema claro","dark":"Mudar para o tema escuro"},
+  "pl": {"light":"Włącz jasny motyw","dark":"Włącz ciemny motyw"},
+  "sr": {"light":"Укључи светлу тему","dark":"Укључи тамну тему"},
+  "uk": {"light":"Увімкнути світлу тему","dark":"Увімкнути темну тему"},
+  "zh": {"light":"切换至浅色主题","dark":"切换至深色主题"},
+  "tr": {"light":"Açık temaya geç","dark":"Koyu temaya geç"},
+  "ja": {"light":"ライトテーマに切り替え","dark":"ダークテーマに切り替え"}
+}

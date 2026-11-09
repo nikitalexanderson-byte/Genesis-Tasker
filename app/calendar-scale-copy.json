@@ -1,0 +1,86 @@
+{
+  "ru": {
+    "group": "Масштаб календаря",
+    "full": "Обычный масштаб · 100%",
+    "half": "Вдвое компактнее · 50%",
+    "quarter": "Обзор трёх месяцев · 25%"
+  },
+  "en": {
+    "group": "Calendar size",
+    "full": "Normal size · 100%",
+    "half": "Half size · 50%",
+    "quarter": "Three-month overview · 25%"
+  },
+  "el": {
+    "group": "Μέγεθος ημερολογίου",
+    "full": "Κανονικό μέγεθος · 100%",
+    "half": "Μισό μέγεθος · 50%",
+    "quarter": "Επισκόπηση τριών μηνών · 25%"
+  },
+  "de": {
+    "group": "Kalendergröße",
+    "full": "Normale Größe · 100%",
+    "half": "Halbe Größe · 50%",
+    "quarter": "Dreimonatsübersicht · 25%"
+  },
+  "fr": {
+    "group": "Taille du calendrier",
+    "full": "Taille normale · 100%",
+    "half": "Demi-taille · 50%",
+    "quarter": "Vue sur trois mois · 25%"
+  },
+  "es": {
+    "group": "Tamaño del calendario",
+    "full": "Tamaño normal · 100%",
+    "half": "Mitad de tamaño · 50%",
+    "quarter": "Vista de tres meses · 25%"
+  },
+  "it": {
+    "group": "Dimensione del calendario",
+    "full": "Dimensione normale · 100%",
+    "half": "Metà dimensione · 50%",
+    "quarter": "Panoramica di tre mesi · 25%"
+  },
+  "pt": {
+    "group": "Tamanho do calendário",
+    "full": "Tamanho normal · 100%",
+    "half": "Metade do tamanho · 50%",
+    "quarter": "Visão de três meses · 25%"
+  },
+  "pl": {
+    "group": "Rozmiar kalendarza",
+    "full": "Zwykły rozmiar · 100%",
+    "half": "Połowa rozmiaru · 50%",
+    "quarter": "Przegląd trzech miesięcy · 25%"
+  },
+  "sr": {
+    "group": "Величина календара",
+    "full": "Уобичајена величина · 100%",
+    "half": "Пола величине · 50%",
+    "quarter": "Преглед три месеца · 25%"
+  },
+  "uk": {
+    "group": "Масштаб календаря",
+    "full": "Звичайний масштаб · 100%",
+    "half": "Удвічі компактніше · 50%",
+    "quarter": "Огляд трьох місяців · 25%"
+  },
+  "zh": {
+    "group": "日历大小",
+    "full": "正常大小 · 100%",
+    "half": "缩小一半 · 50%",
+    "quarter": "三个月概览 · 25%"
+  },
+  "tr": {
+    "group": "Takvim boyutu",
+    "full": "Normal boyut · 100%",
+    "half": "Yarı boyut · 50%",
+    "quarter": "Üç aylık görünüm · 25%"
+  },
+  "ja": {
+    "group": "カレンダーの大きさ",
+    "full": "通常サイズ · 100%",
+    "half": "半分のサイズ · 50%",
+    "quarter": "3か月の一覧 · 25%"
+  }
+}

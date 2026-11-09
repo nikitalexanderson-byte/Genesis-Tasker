@@ -1,0 +1,114 @@
+{
+  "ru": {
+    "title": "Таймер",
+    "enabled": "Таймер для привычки",
+    "modes": "Доступные таймеры",
+    "duration": "Учитывать время в прогрессе",
+    "timeOnly": "Только учёт времени",
+    "hint": "Рабочее время добавляется только к цели с измерением длительности. Перерывы Pomodoro не учитываются."
+  },
+  "en": {
+    "title": "Timer",
+    "enabled": "Timer for this habit",
+    "modes": "Available timers",
+    "duration": "Count time towards progress",
+    "timeOnly": "Record time only",
+    "hint": "Work time is added only to a duration goal. Pomodoro breaks do not count."
+  },
+  "el": {
+    "title": "Χρονόμετρο",
+    "enabled": "Χρονόμετρο για αυτή τη συνήθεια",
+    "modes": "Διαθέσιμα χρονόμετρα",
+    "duration": "Προσμέτρηση χρόνου στην πρόοδο",
+    "timeOnly": "Μόνο καταγραφή χρόνου",
+    "hint": "Ο χρόνος εργασίας προστίθεται μόνο σε στόχο διάρκειας. Τα διαλείμματα Pomodoro δεν προσμετρώνται."
+  },
+  "de": {
+    "title": "Timer",
+    "enabled": "Timer für diese Gewohnheit",
+    "modes": "Verfügbare Timer",
+    "duration": "Zeit zum Fortschritt zählen",
+    "timeOnly": "Nur Zeit erfassen",
+    "hint": "Arbeitszeit wird nur zu einem Dauerziel addiert. Pomodoro-Pausen zählen nicht."
+  },
+  "fr": {
+    "title": "Minuteur",
+    "enabled": "Minuteur pour cette habitude",
+    "modes": "Minuteurs disponibles",
+    "duration": "Compter le temps dans la progression",
+    "timeOnly": "Enregistrer le temps uniquement",
+    "hint": "Le temps de travail est ajouté uniquement à un objectif de durée. Les pauses Pomodoro ne comptent pas."
+  },
+  "es": {
+    "title": "Temporizador",
+    "enabled": "Temporizador para este hábito",
+    "modes": "Temporizadores disponibles",
+    "duration": "Contar el tiempo para el progreso",
+    "timeOnly": "Registrar solo el tiempo",
+    "hint": "El tiempo de trabajo se suma solo a una meta de duración. Las pausas Pomodoro no cuentan."
+  },
+  "it": {
+    "title": "Timer",
+    "enabled": "Timer per questa abitudine",
+    "modes": "Timer disponibili",
+    "duration": "Conteggiare il tempo nei progressi",
+    "timeOnly": "Registrare solo il tempo",
+    "hint": "Il tempo di lavoro viene aggiunto solo a un obiettivo di durata. Le pause Pomodoro non contano."
+  },
+  "pt": {
+    "title": "Temporizador",
+    "enabled": "Temporizador para este hábito",
+    "modes": "Temporizadores disponíveis",
+    "duration": "Contar o tempo no progresso",
+    "timeOnly": "Registrar apenas o tempo",
+    "hint": "O tempo de trabalho é adicionado apenas a uma meta de duração. As pausas Pomodoro não contam."
+  },
+  "pl": {
+    "title": "Minutnik",
+    "enabled": "Minutnik dla tego nawyku",
+    "modes": "Dostępne minutniki",
+    "duration": "Wliczaj czas do postępu",
+    "timeOnly": "Tylko zapisuj czas",
+    "hint": "Czas pracy jest dodawany tylko do celu mierzonego czasem. Przerwy Pomodoro nie są wliczane."
+  },
+  "sr": {
+    "title": "Тајмер",
+    "enabled": "Тајмер за ову навику",
+    "modes": "Доступни тајмери",
+    "duration": "Урачунај време у напредак",
+    "timeOnly": "Само бележи време",
+    "hint": "Радно време се додаје само циљу који се мери трајањем. Pomodoro паузе се не рачунају."
+  },
+  "uk": {
+    "title": "Таймер",
+    "enabled": "Таймер для цієї звички",
+    "modes": "Доступні таймери",
+    "duration": "Враховувати час у прогресі",
+    "timeOnly": "Лише облік часу",
+    "hint": "Робочий час додається лише до цілі з вимірюванням тривалості. Перерви Pomodoro не враховуються."
+  },
+  "zh": {
+    "title": "计时器",
+    "enabled": "此习惯的计时器",
+    "modes": "可用计时器",
+    "duration": "将时间计入进度",
+    "timeOnly": "仅记录时间",
+    "hint": "工作时间仅计入时长目标。Pomodoro 休息时间不计入。"
+  },
+  "tr": {
+    "title": "Zamanlayıcı",
+    "enabled": "Bu alışkanlık için zamanlayıcı",
+    "modes": "Kullanılabilir zamanlayıcılar",
+    "duration": "Süreyi ilerlemeye ekle",
+    "timeOnly": "Yalnızca süreyi kaydet",
+    "hint": "Çalışma süresi yalnızca süre hedeflerine eklenir. Pomodoro molaları sayılmaz."
+  },
+  "ja": {
+    "title": "タイマー",
+    "enabled": "この習慣のタイマー",
+    "modes": "利用可能なタイマー",
+    "duration": "時間を進捗に加算",
+    "timeOnly": "時間の記録のみ",
+    "hint": "作業時間は時間目標にのみ加算されます。Pomodoro の休憩時間は含まれません。"
+  }
+}

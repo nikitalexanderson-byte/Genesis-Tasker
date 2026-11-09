@@ -1,0 +1,10 @@
+.shared-automations-dialog .automation-rule-row { border-top:1px solid var(--line); margin-block:24px; padding-block:16px; }
+.shared-automations-dialog .automation-rule-row .template-actions { margin-bottom:0; }
+.shared-automations-dialog .automation-editor > section { margin-top:32px; border-top:1px solid var(--line); padding-top:16px; }
+.shared-automations-dialog .automation-history ol { list-style:none; padding:0; }
+.shared-automations-dialog .automation-history li { padding-block:20px; border-bottom:1px solid var(--line); }
+.shared-automations-dialog .automation-history time,.shared-automations-dialog .automation-result { font-variant-numeric:tabular-nums; }
+.shared-automations-dialog .automation-result { display:flex; flex-wrap:wrap; gap:24px; }
+.shared-automations-dialog .automation-result dd { margin:8px 0; font-weight:600; }
+.shared-automations-dialog .automation-history p { margin-block:8px; }
+.shared-automations-dialog .automation-calendar { margin-block:24px; }

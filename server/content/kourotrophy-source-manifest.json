@@ -1,0 +1,809 @@
+{
+  "version": 1,
+  "source": "куротрофия.docx",
+  "sourceSha256": "b4a97ef8f67fd5b5e9814873380fa8a5a70f37ddebdf5a5dd8af8ec844c4e1bc",
+  "extraction": "Word paragraphs and embedded blank-line breaks; first period-space separates heading and body; wording unchanged.",
+  "entries": [
+    {
+      "number": 1,
+      "sourceParagraph": 1,
+      "sourceSegment": 1,
+      "id": "advice-52c1f58cad367c877272891f",
+      "title": "Ежедневный аудит \"составленного\"",
+      "status": "published",
+      "textSha256": "f06d3a81a351d3809e745a78602cc6592b700244f9b222ccdaf8f6ca622c5ede"
+    },
+    {
+      "number": 2,
+      "sourceParagraph": 1,
+      "sourceSegment": 2,
+      "id": "advice-04edd16ee42c1d45e2fb6021",
+      "title": "Практика интеллектуальной сухости",
+      "status": "published",
+      "textSha256": "b8ec50247d9d45ce35499b741568fb62fe3c26829f7d7d05b8ab13e390433ced"
+    },
+    {
+      "number": 3,
+      "sourceParagraph": 1,
+      "sourceSegment": 3,
+      "id": "advice-e533bbd5a9296a4939844b13",
+      "title": "Сортировка входящих впечатлений",
+      "status": "published",
+      "textSha256": "449136858fe7a6001e48ba922f1c130cd57d1d804cd47a0c68a47f81ec59e601"
+    },
+    {
+      "number": 4,
+      "sourceParagraph": 1,
+      "sourceSegment": 4,
+      "id": "advice-6f4da839c6f1237af8a46994",
+      "title": "Властное присутствие",
+      "status": "published",
+      "textSha256": "4c90d8723f79c6e6e8c4df6b353a41c7941a716d9b14ba30a678515f84cb85dc"
+    },
+    {
+      "number": 5,
+      "sourceParagraph": 3,
+      "sourceSegment": 1,
+      "id": "advice-23286876a26ea651886bb04a",
+      "title": "Фильтрация социального субстрата",
+      "status": "published",
+      "textSha256": "ec3a4dcdba32885e918743789b65513b80ce21f5717b2f46a5b3fdfa37089d94"
+    },
+    {
+      "number": 6,
+      "sourceParagraph": 3,
+      "sourceSegment": 2,
+      "id": "advice-4b799cd69fb1181640dd6e26",
+      "title": "Дисциплина иерархического чина",
+      "status": "published",
+      "textSha256": "a60a46778dc9611fb8202940e1de22d1dcb2b1ec4cf18b08968bedf994a2eab1"
+    },
+    {
+      "number": 7,
+      "sourceParagraph": 3,
+      "sourceSegment": 3,
+      "id": "advice-c29969d990412827e3062dce",
+      "title": "Практика прямодеяния",
+      "status": "published",
+      "textSha256": "4fd6b27503668c96d0b84be55e68ff67d74a345f0b3dea0899b43b26d030a689"
+    },
+    {
+      "number": 8,
+      "sourceParagraph": 3,
+      "sourceSegment": 4,
+      "id": "advice-9612ba50abb77ec416298147",
+      "title": "Закалка ведущего начала",
+      "status": "published",
+      "textSha256": "527bec33f8ed33d30eec3fe035caa64a0419ce93bababc92fe86435948448114"
+    },
+    {
+      "number": 9,
+      "sourceParagraph": 7,
+      "sourceSegment": 1,
+      "id": "advice-6cba4208194bfae27356cba1",
+      "title": "Разрыв визуального гипноза",
+      "status": "published",
+      "textSha256": "c0bb32ce79fc740c143d27244d3d13c81b34b6db1a1c54b8363f78247c2621f8"
+    },
+    {
+      "number": 10,
+      "sourceParagraph": 7,
+      "sourceSegment": 2,
+      "id": "advice-82210d3fca7f4ec8795e0bbf",
+      "title": "Дистанция от чувственного шума",
+      "status": "published",
+      "textSha256": "3842c2fa3810f131c0ac0c7184292c72d199454a2f0ee6b675bcd2c6ec7c745f"
+    },
+    {
+      "number": 11,
+      "sourceParagraph": 7,
+      "sourceSegment": 3,
+      "id": "advice-8a3ba2056e90ef1f0df5ae50",
+      "title": "Закалка через абстрактные формы в воспитании наследников",
+      "status": "published",
+      "textSha256": "0d736c23f508bc59e7536f2322ea98f60fb55bb10f60182f52ee15faf01bfdf3"
+    },
+    {
+      "number": 12,
+      "sourceParagraph": 7,
+      "sourceSegment": 4,
+      "id": "advice-1bc48fc469c13b621f7961ad",
+      "title": "Фиксация на источнике света в воспитании потомков",
+      "status": "published",
+      "textSha256": "4d403586a8cab21b322eb660a7733bfc5627ffaed62236add6cc497850afef80"
+    },
+    {
+      "number": 13,
+      "sourceParagraph": 9,
+      "sourceSegment": 1,
+      "id": "advice-bdf4299ecafce6bf9f4e9f92",
+      "title": "Метод интеллектуальной провокации",
+      "status": "published",
+      "textSha256": "605ed870d03860422e9579f7e9c4a3cc76ddbf11fd8b79156949b7fcee05e6a1"
+    },
+    {
+      "number": 14,
+      "sourceParagraph": 9,
+      "sourceSegment": 2,
+      "id": "advice-4e895c316247a2957441f475",
+      "title": "Защита созревающего Логоса",
+      "status": "published",
+      "textSha256": "03cf2f4ae05220e6b95cdd8069c374dc9a0f32d7a2281610c73b3a25620767b3"
+    },
+    {
+      "number": 15,
+      "sourceParagraph": 9,
+      "sourceSegment": 3,
+      "id": "advice-61827b67e32ba65e2f112b78",
+      "title": "Настройка внутренней гармонии",
+      "status": "published",
+      "textSha256": "03a59348f132f84ca81a953ac3a55d0e774cd73d848fade9cbf43f5b885bb927"
+    },
+    {
+      "number": 16,
+      "sourceParagraph": 9,
+      "sourceSegment": 4,
+      "id": "advice-fb791a13713d8ca10a6177bf",
+      "title": "Практика преемственности",
+      "status": "published",
+      "textSha256": "f7b759eb086e7dda38f25645ecc599ef4e4bf578bfcb72ac1480073451071090"
+    },
+    {
+      "number": 17,
+      "sourceParagraph": 11,
+      "sourceSegment": 1,
+      "id": "advice-a40e7181bd8d33bae002efef",
+      "title": "Инвентаризация внутреннего руководства",
+      "status": "published",
+      "textSha256": "fe08f4a6c0a14ee0cd0563a24036dc62880bd8537fee64c66dfe1a35275ebfe7"
+    },
+    {
+      "number": 18,
+      "sourceParagraph": 11,
+      "sourceSegment": 2,
+      "id": "advice-f10247d920e9e21602807d5e",
+      "title": "Установление интеллектуального ценза",
+      "status": "published",
+      "textSha256": "0ef32144e92d72838e9abc5c6bf7ce6cae65d570f2a4c13713ffcf7308b453de"
+    },
+    {
+      "number": 19,
+      "sourceParagraph": 11,
+      "sourceSegment": 3,
+      "id": "advice-2ccc847ee55791818c7053bd",
+      "title": "Ритуал идентификации с Высшим",
+      "status": "published",
+      "textSha256": "a26974491be9e1d93c5ddaf75ca19337b6950acc99cc9b7bd28e590ce7b70964"
+    },
+    {
+      "number": 20,
+      "sourceParagraph": 11,
+      "sourceSegment": 4,
+      "id": "advice-60f61f033fbf1692f833ac3e",
+      "title": "Охрана родового достоинства",
+      "status": "published",
+      "textSha256": "27aaad082e94a8de415c760eab0783f98ee0af7781920b356b47ed7f887087a4"
+    },
+    {
+      "number": 21,
+      "sourceParagraph": 12,
+      "sourceSegment": 1,
+      "id": "advice-c6aa565e0ee4d3b37d2deb41",
+      "title": "Воспитание интеллектуальной плотности",
+      "status": "published",
+      "textSha256": "bf2c709fdcb43446f356d7ce3935425e95ef0407cc98b0c874bf3be8acb5a7bb"
+    },
+    {
+      "number": 22,
+      "sourceParagraph": 12,
+      "sourceSegment": 2,
+      "id": "advice-87edde2a9dd80cba3496fd05",
+      "title": "Практика \"солнцевидного взора\"",
+      "status": "published",
+      "textSha256": "c3c6c74b2bf60e67bae469cc1c0184dc79ed6dc43d783f6c482bd7159796604c"
+    },
+    {
+      "number": 23,
+      "sourceParagraph": 12,
+      "sourceSegment": 3,
+      "id": "advice-4c235a3da46c731c6878c133",
+      "title": "Устранение дискурсивного шума",
+      "status": "published",
+      "textSha256": "4f0e0f6dc32131f2f1b84ec3fbbf50441e796bd38aa68abf9575c3688913aa40"
+    },
+    {
+      "number": 24,
+      "sourceParagraph": 12,
+      "sourceSegment": 4,
+      "id": "advice-8218972d1e055cb938f4f8cd",
+      "title": "Герметизация умного огня",
+      "status": "published",
+      "textSha256": "0fb359233a96eb2f90e3954e8784205a44682076de19ffc20b9160d64b7dce1e"
+    },
+    {
+      "number": 25,
+      "sourceParagraph": 14,
+      "sourceSegment": 1,
+      "id": "advice-2b20f37abee9bf8785a21a21",
+      "title": "Практика волевого отступления",
+      "status": "published",
+      "textSha256": "f95f9d9bf4b03b2263f3fea47cad02ced8aa5ae2a7f1aed3217f01f10d2fa0d9"
+    },
+    {
+      "number": 26,
+      "sourceParagraph": 14,
+      "sourceSegment": 2,
+      "id": "advice-328d8bced2a2eb605004ded6",
+      "title": "Утверждение в режиме \"Прямого Видения\"",
+      "status": "published",
+      "textSha256": "7aeff319d3e497bf332e0af01969046222a86c8eb242c923f13db0695ef004ef"
+    },
+    {
+      "number": 27,
+      "sourceParagraph": 14,
+      "sourceSegment": 3,
+      "id": "advice-e82e943d29e3f5d3733c1f4f",
+      "title": "Устранение посредников между Я и Истоком",
+      "status": "published",
+      "textSha256": "35fca8375a65eba189dfc2af184065ab22147f204ff34b92879970ec84fc9fed"
+    },
+    {
+      "number": 28,
+      "sourceParagraph": 14,
+      "sourceSegment": 4,
+      "id": "advice-349f97bbef92fd8c74a0f144",
+      "title": "Практика интронизации Разума",
+      "status": "published",
+      "textSha256": "dbc48444935c41800f91c336fa9b38d62f02ada352afda974f3143bb65c642d0"
+    },
+    {
+      "number": 29,
+      "sourceParagraph": 16,
+      "sourceSegment": 1,
+      "id": "advice-ec71f0c6f7a9b21cc5ec2fab",
+      "title": "Признание онтологического ранга",
+      "status": "published",
+      "textSha256": "ff45927e9c4caeeaddd406d527d152d4dbf16bae247e1b22dd1998e89f25a08a"
+    },
+    {
+      "number": 30,
+      "sourceParagraph": 16,
+      "sourceSegment": 2,
+      "id": "advice-aec0f7b61678b682bfd1c8c6",
+      "title": "Практика \"совместного присутствия\"",
+      "status": "published",
+      "textSha256": "27ceb5f7666c64de948fa1ff95915991e74c0ef60ac6605a6c124a52dfbd4274"
+    },
+    {
+      "number": 31,
+      "sourceParagraph": 16,
+      "sourceSegment": 3,
+      "id": "advice-9adcda79c053c4c92ebf6436",
+      "title": "Священность крови",
+      "status": "published",
+      "textSha256": "5b5cf7563047241cc2bbdcf4685f1dcc8c83fc8d668b692573e2f1e7c6fd37e1"
+    },
+    {
+      "number": 32,
+      "sourceParagraph": 16,
+      "sourceSegment": 4,
+      "id": "advice-a2d54dfa6c1673e4989cf44d",
+      "title": "Герметизация родового Адитона",
+      "status": "published",
+      "textSha256": "92a201872751c81edeabdb720e3f43f5cdf6bae2870db35c59c987f7f0c862a2"
+    },
+    {
+      "number": 33,
+      "sourceParagraph": 18,
+      "sourceSegment": 1,
+      "id": "advice-0b7546d71f5a9d893854689e",
+      "title": "Волевое утверждение вертикали",
+      "status": "published",
+      "textSha256": "77ff88f93ce78bca647698c696f29a40ab3a88efb659de90d63b1dc3b6d1b091"
+    },
+    {
+      "number": 34,
+      "sourceParagraph": 18,
+      "sourceSegment": 2,
+      "id": "advice-1328c7d51a734f6874a7daf7",
+      "title": "Культ старшинства и преемника",
+      "status": "published",
+      "textSha256": "2c27a5f0968c599764904b7acc06b3bb6cd0e286488741ce02f10e3ebc9c5d89"
+    },
+    {
+      "number": 35,
+      "sourceParagraph": 19,
+      "sourceSegment": 2,
+      "id": "advice-5931cf83e9da191fd3dec2ae",
+      "title": "Герметичность мужского союза",
+      "status": "published",
+      "textSha256": "d0c7ab02a3280e850a7b47e790b3d55a2dcc5ae95a573ea0b78a5e995cf13f49"
+    },
+    {
+      "number": 36,
+      "sourceParagraph": 19,
+      "sourceSegment": 3,
+      "id": "advice-45c9fda97b324e9c41d0178a",
+      "title": "Защита чистоты Логоса",
+      "status": "published",
+      "textSha256": "09d3ccebb34c0a1b12d0db4cec403877fcc9e281d2c754ec84214478a5a61d12"
+    },
+    {
+      "number": 37,
+      "sourceParagraph": 21,
+      "sourceSegment": 1,
+      "id": "advice-4baab2c73462580e8a662eef",
+      "title": "Принятие весовой доли",
+      "status": "published",
+      "textSha256": "c35cc7b9919139684219b64a7f86f57476ef6c9372c14eea8ad3b3bce530f045"
+    },
+    {
+      "number": 38,
+      "sourceParagraph": 21,
+      "sourceSegment": 2,
+      "id": "advice-e9df40b2375e1dab6f198484",
+      "title": "Защита семенного Логоса",
+      "status": "published",
+      "textSha256": "59f4cc9271fbdb6e788e276b865e69ac8401c76313683183fff8a2e21957b9d2"
+    },
+    {
+      "number": 39,
+      "sourceParagraph": 21,
+      "sourceSegment": 3,
+      "id": "advice-2c3c1a6547bd3b778acf2fca",
+      "title": "Соблюдение иерархического тонуса",
+      "status": "published",
+      "textSha256": "f5f65a26c756bea54a664c9c0937424ecb1f42167fdf2ae56e917c13708f8e26"
+    },
+    {
+      "number": 40,
+      "sourceParagraph": 21,
+      "sourceSegment": 4,
+      "id": "advice-0f4754e73a2bc889f6a51c08",
+      "title": "Практика функционального следа",
+      "status": "published",
+      "textSha256": "b9d492b2dad853b3a5681f2c521cea30afac783a0abe8932509ea23d81593195"
+    },
+    {
+      "number": 41,
+      "sourceParagraph": 23,
+      "sourceSegment": 1,
+      "id": "advice-c2249b116f3dc8353a18425a",
+      "title": "Учреждение точки нуменального контакта",
+      "status": "published",
+      "textSha256": "57c6b47599e4c67b3464d7444642c0c284572861d29169447005d5c3aab6fca1"
+    },
+    {
+      "number": 42,
+      "sourceParagraph": 23,
+      "sourceSegment": 2,
+      "id": "advice-e520a8254d13231fac0a32aa",
+      "title": "Жертвоприношение успеха",
+      "status": "published",
+      "textSha256": "62cd8c8d70f7bc30436a42be42a0b50120c68e7e6de85232d1f8480a54483097"
+    },
+    {
+      "number": 43,
+      "sourceParagraph": 23,
+      "sourceSegment": 3,
+      "id": "advice-a71779148699efe6843201ac",
+      "title": "Интеллектуальная гигиена наследия",
+      "status": "published",
+      "textSha256": "e233d830925b62b44f64e5fe9a19c325d3a1ad509c580ac80a679034f64325cb"
+    },
+    {
+      "number": 44,
+      "sourceParagraph": 23,
+      "sourceSegment": 4,
+      "id": "advice-f74bf317dda167d17e121a5f",
+      "title": "Ритуал властного безмолвия",
+      "status": "published",
+      "textSha256": "f272c0be2b360e00d8291f8398c4424432a625f624b1f3ad393b16493b5ec728"
+    },
+    {
+      "number": 45,
+      "sourceParagraph": 25,
+      "sourceSegment": 1,
+      "id": "advice-6805acbbd8c0c8d47adc4baf",
+      "title": "Биологическая дисциплина кода",
+      "status": "published",
+      "textSha256": "2b2fa99e7f3967997dda0425a88be9b418766855ad6279417c8f5029ca3158eb"
+    },
+    {
+      "number": 46,
+      "sourceParagraph": 25,
+      "sourceSegment": 2,
+      "id": "advice-db217ff98d66dbbd718c236a",
+      "title": "Фиксация отцовского приоритета",
+      "status": "published",
+      "textSha256": "75276e1e31ccda4b5c67c0414b67c9bcd609b8b1174dabe06160563abd976ee9"
+    },
+    {
+      "number": 47,
+      "sourceParagraph": 25,
+      "sourceSegment": 3,
+      "id": "advice-29cc740b668b5282deaa6b7f",
+      "title": "Защита генетического герметизма",
+      "status": "published",
+      "textSha256": "464d11dbbb001dc85ab72318476ba7937d77bfa123b0c63af198a8c20d386803"
+    },
+    {
+      "number": 48,
+      "sourceParagraph": 25,
+      "sourceSegment": 4,
+      "id": "advice-d155ab3f6d3638245e045899",
+      "title": "Практика пробуждения памяти",
+      "status": "published",
+      "textSha256": "913e64a76377844056f6691d14c2e85ff8c6c2a284ee37f13278ce8cbadfd69e"
+    },
+    {
+      "number": 49,
+      "sourceParagraph": 26,
+      "sourceSegment": 1,
+      "id": "advice-769bfb7b1892f12466e37bfb",
+      "title": "Онтологическая фиксация границ",
+      "status": "published",
+      "textSha256": "20574808f092179a5733b56be4608e51db7d47912c95d40e0c6b9fbc274709f9"
+    },
+    {
+      "number": 50,
+      "sourceParagraph": 26,
+      "sourceSegment": 2,
+      "id": "advice-0699f513270f61ae203ee30a",
+      "title": "Защита семенного Логоса в капитале",
+      "status": "published",
+      "textSha256": "485c9c224c0082d0030cdfdfef04369f11af20244e51d4f14749a1ca40030886"
+    },
+    {
+      "number": 51,
+      "sourceParagraph": 26,
+      "sourceSegment": 3,
+      "id": "advice-234b82f1be51d53662c37829",
+      "title": "Практика прямого владения",
+      "status": "published",
+      "textSha256": "a775060bc6b425bf7a439699070b0957a6e59bc6309fa54350814e3d52d4af27"
+    },
+    {
+      "number": 52,
+      "sourceParagraph": 29,
+      "sourceSegment": 2,
+      "id": "advice-de853cf14ab47cefb5eefeff",
+      "title": "Герметизация родового наследия",
+      "status": "published",
+      "textSha256": "0f2d7db0124e65937abff4256b0fd76986eb1799209e29d2147048baae2b300c"
+    },
+    {
+      "number": 53,
+      "sourceParagraph": 31,
+      "sourceSegment": 1,
+      "id": "advice-367abe876e012f721f643e97",
+      "title": "Ликвидация рабского словаря",
+      "status": "published",
+      "textSha256": "f5fa2096ebbc0d9bf87c77b14ca121167b03667813e2fa7ead58dca04f802171"
+    },
+    {
+      "number": 54,
+      "sourceParagraph": 31,
+      "sourceSegment": 2,
+      "id": "advice-edfcfb168a9188e092f270bb",
+      "title": "Защита интеллектуального герметизма",
+      "status": "published",
+      "textSha256": "7e1772a62c3d88f5b1e4cd28fe965a6be6a87b1421ee925c341cb1703839dede"
+    },
+    {
+      "number": 55,
+      "sourceParagraph": 31,
+      "sourceSegment": 3,
+      "id": "advice-dc0455c5758e5716335eadce",
+      "title": "Практика прямого сродства",
+      "status": "published",
+      "textSha256": "928065186c6616705484643eb0ddedf766874934eb6b6e36be5ecb1139b8c0b5"
+    },
+    {
+      "number": 56,
+      "sourceParagraph": 31,
+      "sourceSegment": 4,
+      "id": "advice-f99f0ba50515ce47ed039931",
+      "title": "Практика волевого возврата",
+      "status": "published",
+      "textSha256": "8d2b2529ee74b011909ed42ffe5be50797120c696cf824675eabb1575e23a0ee"
+    },
+    {
+      "number": 57,
+      "sourceParagraph": 33,
+      "sourceSegment": 1,
+      "id": "advice-9bd1a5993ffbfe4cfd09989d",
+      "title": "Установление интеллектуального периметра",
+      "status": "published",
+      "textSha256": "6a653fc727b3da00a078022a8bd0e953c0e890e6c4fd216b7664b0b49a2e319f"
+    },
+    {
+      "number": 58,
+      "sourceParagraph": 33,
+      "sourceSegment": 2,
+      "id": "advice-d9ccb945fc920f202153b6fd",
+      "title": "Защита семенного Логоса",
+      "status": "published",
+      "textSha256": "9fa9b999565236159b462081a0a140340ec167a72372ff14010c3704a6ba77bc"
+    },
+    {
+      "number": 59,
+      "sourceParagraph": 33,
+      "sourceSegment": 3,
+      "id": "advice-5c30a1fc5db84877fdbecec3",
+      "title": "Практика функциональной тишины",
+      "status": "published",
+      "textSha256": "cca4e69722f58e5285112b62a7d1d808dc9a6bb1cba4d47cd577a897e1f8b182"
+    },
+    {
+      "number": 60,
+      "sourceParagraph": 33,
+      "sourceSegment": 4,
+      "id": "advice-b1376f47fc653e5dbecc2fe9",
+      "title": "Практика властного присутствия",
+      "status": "published",
+      "textSha256": "d8463ebfffdf4643a9901f409712f817b016108e86b9bc92b0f738a1868f1b9c"
+    },
+    {
+      "number": 61,
+      "sourceParagraph": 34,
+      "sourceSegment": 1,
+      "id": "advice-ad47b2892b5757fa9f43b5a2",
+      "title": "Восстановление семейного престола",
+      "status": "published",
+      "textSha256": "3774a0375ff56683df9762c58c7f1576636ea339db77fe6ad48c33e4944831b3"
+    },
+    {
+      "number": 62,
+      "sourceParagraph": 34,
+      "sourceSegment": 2,
+      "id": "advice-6cd6d09f813fbc7a8ccf86f4",
+      "title": "Обязательство женской преданности",
+      "status": "published",
+      "textSha256": "8bde5c9ea8b6561ef2613a09eab2420cc9a36b10514a08aa25288c709dbc9725"
+    },
+    {
+      "number": 63,
+      "sourceParagraph": 34,
+      "sourceSegment": 3,
+      "id": "advice-64546682d2d1a7b94def03e9",
+      "title": "Искоренение рабских привычек \"длинного дома\"",
+      "status": "published",
+      "textSha256": "6e1699859bf26d377404d8c572b8ebe0be1784134716c2a47cc4df9e0e046050"
+    },
+    {
+      "number": 64,
+      "sourceParagraph": 34,
+      "sourceSegment": 4,
+      "id": "advice-49fac7ea3a64888e89c4497d",
+      "title": "Практика властного прямодеяния",
+      "status": "published",
+      "textSha256": "b761a579f596882ecb54d27f59bc71bd9cd10b56d0adf63f4badfcfe1e5dfdfd"
+    },
+    {
+      "number": 65,
+      "sourceParagraph": 36,
+      "sourceSegment": 1,
+      "id": "advice-340eaabe6bbeb080e6279d1d",
+      "title": "Установление информационной границы",
+      "status": "published",
+      "textSha256": "c1b62ce4e1a5390113fa25f25d53055440cd92bb3ebd97cbf16a3e15784ed557"
+    },
+    {
+      "number": 66,
+      "sourceParagraph": 36,
+      "sourceSegment": 2,
+      "id": "advice-2c07f1850553ca95f1299ac2",
+      "title": "Обязательство женского служения",
+      "status": "published",
+      "textSha256": "d05edba098d18edc90810eb3e6b5cdd35ee3a2924041c4731166c3a1e0b3de98"
+    },
+    {
+      "number": 67,
+      "sourceParagraph": 36,
+      "sourceSegment": 3,
+      "id": "advice-358ca22646c2ea512722d15e",
+      "title": "Устранение рабских программ",
+      "status": "published",
+      "textSha256": "f8a1ecab8b6abc1afbdcedc90e13a48c66b8a824af7888f8c0f61e4265479c0c"
+    },
+    {
+      "number": 68,
+      "sourceParagraph": 36,
+      "sourceSegment": 4,
+      "id": "advice-36ee43894142784ab90eec1c",
+      "title": "Практика властного подтверждения",
+      "status": "published",
+      "textSha256": "117108ef906a729eb67a2ff7edb2a4993be73ee13cfdec2aac48b8308710a1cf"
+    },
+    {
+      "number": 69,
+      "sourceParagraph": 38,
+      "sourceSegment": 1,
+      "id": "advice-90e84da58f5f7dd15c93f510",
+      "title": "Создание информационной крепости",
+      "status": "published",
+      "textSha256": "c82478049c78ec6a598de2c2f503555679dc43d64b09357ca1df2eeda179f644"
+    },
+    {
+      "number": 70,
+      "sourceParagraph": 38,
+      "sourceSegment": 2,
+      "id": "advice-a3858119dc4d4cf57e21fa8c",
+      "title": "Обязательство женской верности",
+      "status": "published",
+      "textSha256": "edbee4ddbd8eaa69d39568a6a031afafc29d117bb00164517ff669524ed31ab4"
+    },
+    {
+      "number": 71,
+      "sourceParagraph": 38,
+      "sourceSegment": 3,
+      "id": "advice-4f30480b822ce86b9b49a994",
+      "title": "Правило многоженства и верности",
+      "status": "published",
+      "textSha256": "c08f3d713742020c61ea7bb69b4c568ddf55eba0bcd74959f2bb94bdfad60908"
+    },
+    {
+      "number": 72,
+      "sourceParagraph": 38,
+      "sourceSegment": 4,
+      "id": "advice-e174dc1e138310ba77e25ea6",
+      "title": "Устранение вирусных программ",
+      "status": "published",
+      "textSha256": "ce2344b6c4320ceeea3918d6b7612450b2af77a12ed92e1ce5b5da0adf6cc7d7"
+    },
+    {
+      "number": 73,
+      "sourceParagraph": 38,
+      "sourceSegment": 5,
+      "id": "advice-16c25bc91bbc3ab95c85fa0d",
+      "title": "Практика властного подтверждения",
+      "status": "published",
+      "textSha256": "23209f65d2df6ad6217544a4dfafdddf43ccaf2d6feb048f6121efccf0aa5c8d"
+    },
+    {
+      "number": 74,
+      "sourceParagraph": 40,
+      "sourceSegment": 1,
+      "id": "advice-d6bdb65e57ffbbe6fdf51fa4",
+      "title": "Смысловая замкнутость рода",
+      "status": "published",
+      "textSha256": "310d94f0efa8c2ba4922148134e79dc68ae3b32062db412297ddc859c349cf3e"
+    },
+    {
+      "number": 75,
+      "sourceParagraph": 40,
+      "sourceSegment": 2,
+      "id": "advice-c37f06a73cf8506f16604736",
+      "title": "Создание внутрисемейного кода",
+      "status": "published",
+      "textSha256": "3045cb1741efe5432f1a50128b67769027b4860539480d032bb701c80860de79"
+    },
+    {
+      "number": 76,
+      "sourceParagraph": 40,
+      "sourceSegment": 3,
+      "id": "advice-ea0555fa442fdbf8adbcc4aa",
+      "title": "Охрана детского Адитона",
+      "status": "published",
+      "textSha256": "ba5d61ff32b0c122205752fcd74b5f340f75754bd6faf3ac146caddc5dad48e7"
+    },
+    {
+      "number": 77,
+      "sourceParagraph": 40,
+      "sourceSegment": 4,
+      "id": "advice-e49b724d043e1efcbe0cf94f",
+      "title": "Практика властной тишины",
+      "status": "published",
+      "textSha256": "41198c77d0633e956827b2004c3f339b9bfec279c0beb580dddd0b5ae75e21e8"
+    },
+    {
+      "number": 78,
+      "sourceParagraph": 42,
+      "sourceSegment": 1,
+      "id": "advice-7e575f5d03b12ed5135f3c3e",
+      "title": "Волевая фиксация автаркии",
+      "status": "published",
+      "textSha256": "3b3d378cb79044cb7029655e5ad87d694cf6c94cd4de4e053a7be89d02d1b600"
+    },
+    {
+      "number": 79,
+      "sourceParagraph": 42,
+      "sourceSegment": 2,
+      "id": "advice-282f9eeea3fadc7bf46e0d3b",
+      "title": "Капитал как семенной разум",
+      "status": "published",
+      "textSha256": "00ff4045dbfb81c14a1dde64ff798bab95bd910e92cf4fe76fabd60d6a06573c"
+    },
+    {
+      "number": 80,
+      "sourceParagraph": 42,
+      "sourceSegment": 3,
+      "id": "advice-8c383d0e0bb8e1a6a4608ab0",
+      "title": "Литургия ресурсного господства",
+      "status": "published",
+      "textSha256": "ff8c150052cefaecc913adabb80ebb7dcdf7c5eb1d522f775a3c363158e49ea3"
+    },
+    {
+      "number": 81,
+      "sourceParagraph": 42,
+      "sourceSegment": 4,
+      "id": "advice-8edd8d5a517187eaf66411eb",
+      "title": "Герметизация активов",
+      "status": "published",
+      "textSha256": "93978e5a140082a7b87807979b5f312ec37a4611f0b2db8cb93fde9cd7d759a2"
+    },
+    {
+      "number": 82,
+      "sourceParagraph": 44,
+      "sourceSegment": 1,
+      "id": "advice-e4736921fa6b36c6c5c9a8dc",
+      "title": "Ревизия родового баланса",
+      "status": "published",
+      "textSha256": "660f3de3dd428f23e65ab556aeb8a919516f070a0c18d117d1df35b07fa5d8cd"
+    },
+    {
+      "number": 83,
+      "sourceParagraph": 44,
+      "sourceSegment": 2,
+      "id": "advice-8388c043114557baa4375cc8",
+      "title": "Монархический контроль",
+      "status": "published",
+      "textSha256": "84130db53b5402dd7bc0f13ea9e0790516b8195a3ba4333c1c24b60baf2057cb"
+    },
+    {
+      "number": 84,
+      "sourceParagraph": 44,
+      "sourceSegment": 3,
+      "id": "advice-5c79730051c83c3f7df1c1ba",
+      "title": "Устранение матриархальных миазмов",
+      "status": "published",
+      "textSha256": "4b5f9824a2d4701466b50b9a29f1db576127627a7e2aa40150ec209983ccf161"
+    },
+    {
+      "number": 85,
+      "sourceParagraph": 44,
+      "sourceSegment": 4,
+      "id": "advice-d89c05399c15df344248413e",
+      "title": "Практика передачи чистого Логоса",
+      "status": "published",
+      "textSha256": "5fa473bfb863303636c2f555cb409650a14bcba08b80afa16aaf563aac6a2679"
+    },
+    {
+      "number": 86,
+      "sourceParagraph": 46,
+      "sourceSegment": 1,
+      "id": "advice-b8613fb82dfd6e6fbe49f397",
+      "title": "Идентификация родовых символов",
+      "status": "published",
+      "textSha256": "491e2e3aa1d4d0e5189f93eb2fba15329bd79019f2ec84c13f28f7939df98e91"
+    },
+    {
+      "number": 87,
+      "sourceParagraph": 46,
+      "sourceSegment": 2,
+      "id": "advice-d993bebf77a30cd5d291d534",
+      "title": "Практика делегированной власти",
+      "status": "published",
+      "textSha256": "7c44fcd2f244840c9f779fbdbdd9ed4de83b26045c07be56907cc9e7f4da4902"
+    },
+    {
+      "number": 88,
+      "sourceParagraph": 46,
+      "sourceSegment": 3,
+      "id": "advice-ab338dd87c8f3803553b1484",
+      "title": "Очищение \"ведущего начала\" преемника",
+      "status": "published",
+      "textSha256": "336602b406b0521ef88726acc52171f97d5b4782c2eb07e3b06e92a7e4bc2c2c"
+    },
+    {
+      "number": 89,
+      "sourceParagraph": 46,
+      "sourceSegment": 4,
+      "id": "advice-fc85fcea09b465bf575c2419",
+      "title": "Практика волевого возврата к Истоку",
+      "status": "published",
+      "textSha256": "dab887b45ae873edbb31956ce6c4bd1662844b3db6a4e72ccea6dfaaf947fb9f"
+    }
+  ]
+}

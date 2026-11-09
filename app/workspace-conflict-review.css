@@ -1,0 +1,33 @@
+.workspace-conflict-backdrop { z-index: 910; padding: 20px; }
+.workspace-conflict-dialog { display: flex; flex-direction: column; width: min(820px, 100%); max-height: calc(100dvh - 40px); min-width: 0; padding: 24px; gap: 20px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--ui-radius, 12px); font-size: 16px; }
+.workspace-conflict-dialog header { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+.workspace-conflict-dialog h2 { margin: 0; font-size: clamp(24px, 4vw, 30px); line-height: 1.2; text-wrap: balance; }
+.workspace-conflict-dialog > p { margin: 0; line-height: 1.55; }
+.workspace-conflict-dialog .dialog-close-button { position: static; flex-shrink: 0; }
+.workspace-conflict-fields { display: grid; gap: 24px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--ink-soft) var(--surface); padding: 3px; }
+.workspace-conflict-fields fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.workspace-conflict-fields legend { width: 100%; padding: 0 0 10px; overflow-wrap: anywhere; }
+.workspace-conflict-fields legend strong { display: block; font-size: 17px; }
+.workspace-conflict-fields legend span { display: block; padding-top: 4px; font-size: 14px; color: var(--ink-soft); }
+.workspace-conflict-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.workspace-conflict-options label { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--ui-surface-radius); cursor: pointer; }
+.workspace-conflict-options label.selected { border-color: var(--ui-accent); background: color-mix(in srgb, var(--ui-accent) 7%, var(--surface)); }
+.workspace-conflict-options label > span { display: flex; align-items: center; min-height: 44px; gap: 10px; }
+.workspace-conflict-options input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--ui-accent); }
+.workspace-conflict-options pre { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app .workspace-conflict-dialog :is(#workspace-conflict-intro, .workspace-conflict-options pre) { font-size: 16px; line-height: 1.5; }
+.workspace-conflict-dialog footer { display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+.workspace-conflict-dialog footer small { color: var(--ink-soft); font-size: 14px; }
+.workspace-conflict-dialog footer > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.workspace-conflict-dialog footer button { min-height: 44px; min-width: 44px; padding: 10px 14px; border-radius: 10px; font: inherit; cursor: pointer; }
+.workspace-conflict-dialog .workspace-conflict-refresh { padding: 10px; margin-inline-end: auto; }
+.workspace-conflict-refresh svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.workspace-conflict-dialog :is(button, input):focus-visible, .workspace-conflict-options label:has(input:focus-visible) { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+.workspace-conflict-dialog button:disabled { opacity: .55; cursor: default; }
+.workspace-conflict-error { color: var(--ink); padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--ui-surface-radius); }
+.workspace-conflict-pending { position: fixed; z-index: 200; inset-inline-end: 20px; bottom: calc(84px + env(safe-area-inset-bottom)); max-width: calc(100% - 40px); min-height: 44px; padding: 10px 16px; color: var(--ui-on-accent); background: var(--ui-accent); border: 0; border-radius: var(--ui-surface-radius); font: inherit; cursor: pointer; }
+@media (max-width: 600px) {
+  .workspace-conflict-backdrop { padding: 10px; }
+  .workspace-conflict-dialog { padding: 16px; max-height: calc(100dvh - 20px); gap: 16px; }
+  .workspace-conflict-options { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}

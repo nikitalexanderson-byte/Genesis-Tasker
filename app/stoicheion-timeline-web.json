@@ -1,0 +1,101 @@
+{
+  "ru": {
+    "openCard": "Открыть карту",
+    "waiting": "Сначала откройте предыдущую карту",
+    "motionHint": "Водите мышью по экрану или несколько раз проведите пальцем. Откроется выбранная карта; затем выберите следующую.",
+    "weeklyRule": "Девять и три карты — раз в неделю, с понедельника по воскресенье.",
+    "testingRule": "Тестовый доступ владельца: ограничения раскладов и оплата метода отключены."
+  },
+  "en": {
+    "openCard": "Reveal card",
+    "motion": "Move to reveal a card",
+    "waiting": "Reveal the previous card first",
+    "motionHint": "Move the mouse around the screen or swipe several times. The selected card will be revealed; then choose the next one.",
+    "weeklyRule": "Nine-card and three-card spreads are available once per week, Monday through Sunday.",
+    "testingRule": "Owner testing access: spread limits and method payment are disabled."
+  },
+  "el": {
+    "openCard": "Αποκάλυψη κάρτας",
+    "waiting": "Αποκαλύψτε πρώτα την προηγούμενη κάρτα",
+    "motionHint": "Κινήστε το ποντίκι στην οθόνη ή σύρετε το δάχτυλο αρκετές φορές. Θα αποκαλυφθεί η επιλεγμένη κάρτα· έπειτα επιλέξτε την επόμενη.",
+    "weeklyRule": "Τα ανοίγματα εννέα και τριών καρτών είναι διαθέσιμα μία φορά την εβδομάδα, από Δευτέρα έως Κυριακή.",
+    "testingRule": "Δοκιμαστική πρόσβαση ιδιοκτήτη: χωρίς όρια ανοιγμάτων ή πληρωμή της μεθόδου."
+  },
+  "de": {
+    "openCard": "Karte aufdecken",
+    "waiting": "Zuerst die vorherige Karte aufdecken",
+    "motionHint": "Bewegen Sie die Maus über den Bildschirm oder wischen Sie mehrmals. Die gewählte Karte wird aufgedeckt; wählen Sie danach die nächste.",
+    "weeklyRule": "Neun- und Drei-Karten-Legungen sind einmal pro Woche von Montag bis Sonntag verfügbar.",
+    "testingRule": "Testzugang des Inhabers: keine Legungsgrenzen und keine Zahlung für die Methode."
+  },
+  "fr": {
+    "openCard": "Révéler la carte",
+    "waiting": "Révélez d’abord la carte précédente",
+    "motionHint": "Déplacez la souris sur l’écran ou faites glisser le doigt plusieurs fois. La carte choisie sera révélée ; choisissez ensuite la suivante.",
+    "weeklyRule": "Les tirages de neuf et de trois cartes sont disponibles une fois par semaine, du lundi au dimanche.",
+    "testingRule": "Accès de test du propriétaire : sans limites de tirages ni paiement de la méthode."
+  },
+  "es": {
+    "openCard": "Revelar carta",
+    "waiting": "Revela primero la carta anterior",
+    "motionHint": "Mueve el ratón por la pantalla o desliza el dedo varias veces. Se revelará la carta elegida; después selecciona la siguiente.",
+    "weeklyRule": "Las tiradas de nueve y de tres cartas están disponibles una vez por semana, de lunes a domingo.",
+    "testingRule": "Acceso de prueba del propietario: sin límites de tiradas ni pago del método."
+  },
+  "it": {
+    "openCard": "Scopri la carta",
+    "waiting": "Scopri prima la carta precedente",
+    "motionHint": "Muovi il mouse sullo schermo o scorri più volte con il dito. Si rivelerà la carta scelta; poi seleziona la successiva.",
+    "weeklyRule": "Le stese di nove e tre carte sono disponibili una volta alla settimana, da lunedì a domenica.",
+    "testingRule": "Accesso di prova del proprietario: senza limiti alle stese né pagamento del metodo."
+  },
+  "pt": {
+    "openCard": "Revelar carta",
+    "waiting": "Revele primeiro a carta anterior",
+    "motionHint": "Mova o rato pelo ecrã ou deslize o dedo várias vezes. A carta escolhida será revelada; depois selecione a seguinte.",
+    "weeklyRule": "As tiragens de nove e três cartas estão disponíveis uma vez por semana, de segunda-feira a domingo.",
+    "testingRule": "Acesso de teste do proprietário: sem limites de tiragens nem pagamento do método."
+  },
+  "pl": {
+    "openCard": "Odkryj kartę",
+    "waiting": "Najpierw odkryj poprzednią kartę",
+    "motionHint": "Poruszaj myszą po ekranie lub przesuń palcem kilka razy. Wybrana karta zostanie odkryta; potem wybierz następną.",
+    "weeklyRule": "Rozkłady z dziewięciu i trzech kart są dostępne raz w tygodniu, od poniedziałku do niedzieli.",
+    "testingRule": "Dostęp testowy właściciela: bez limitów rozkładów i opłat za metodę."
+  },
+  "sr": {
+    "openCard": "Откриј карту",
+    "waiting": "Прво откријте претходну карту",
+    "motionHint": "Померајте миша по екрану или превуците прстом неколико пута. Изабрана карта ће се открити; затим изаберите следећу.",
+    "weeklyRule": "Распореди са девет и три карте доступни су једном недељно, од понедељка до недеље.",
+    "testingRule": "Пробни приступ власника: без ограничења распореда и плаћања методе."
+  },
+  "uk": {
+    "openCard": "Відкрити карту",
+    "waiting": "Спочатку відкрийте попередню карту",
+    "motionHint": "Рухайте мишею по екрану або кілька разів проведіть пальцем. Відкриється вибрана карта; потім виберіть наступну.",
+    "weeklyRule": "Розклади з дев’яти та трьох карт доступні раз на тиждень, з понеділка до неділі.",
+    "testingRule": "Тестовий доступ власника: без обмежень розкладів та оплати методу."
+  },
+  "zh": {
+    "openCard": "翻开卡牌",
+    "waiting": "请先翻开上一张卡牌",
+    "motionHint": "在屏幕上移动鼠标或用手指滑动数次。所选卡牌翻开后，再选择下一张。",
+    "weeklyRule": "九张和三张卡牌的牌阵每周可各抽取一次，周期为周一至周日。",
+    "testingRule": "所有者测试权限：不限制抽牌次数，方法免费。"
+  },
+  "tr": {
+    "openCard": "Kartı aç",
+    "waiting": "Önce önceki kartı açın",
+    "motionHint": "Fareyi ekranda gezdirin veya parmağınızı birkaç kez kaydırın. Seçilen kart açılınca sonraki kartı seçin.",
+    "weeklyRule": "Dokuz ve üç kartlık açılımlar pazartesiden pazara haftada bir kez yapılabilir.",
+    "testingRule": "Sahip test erişimi: açılım sınırları ve yöntem ödemesi uygulanmaz."
+  },
+  "ja": {
+    "openCard": "カードを開く",
+    "waiting": "先に前のカードを開いてください",
+    "motionHint": "画面上でマウスを動かすか、指で数回なぞってください。選んだカードが開いたら、次のカードを選んでください。",
+    "weeklyRule": "9枚と3枚の展開は、それぞれ月曜日から日曜日までの週に1回利用できます。",
+    "testingRule": "所有者のテストアクセスでは、展開回数の制限もメソッドの料金もありません。"
+  }
+}

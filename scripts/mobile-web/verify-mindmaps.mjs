@@ -1,0 +1,29 @@
+import assert from 'node:assert/strict';
+import {writeFileSync} from 'node:fs';
+import {chromium} from '../mindmaps/browser.mjs';
+const browser=await chromium.launch({headless:true,channel:'chrome'});const results=[];
+try{for(const width of [360,390,430])for(const theme of ['standart','standart-dark']){
+ const context=await browser.newContext({storageState:'output/browser-state.json',viewport:{width,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();page.setDefaultTimeout(12000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const saved=()=>page.locator('.mindmap-save-state').filter({hasText:'Синхронизировано с сервером'}).waitFor();
+ const title=`Мобильная карта ${width} ${theme} ${Date.now()}`;const nodeTitle='Собрать идеи и подготовить повестку следующей встречи команды';
+ try{
+ await page.goto('http://127.0.0.1:4340/?affairs=personal#projects');await page.getByRole('button',{name:'Личные',exact:true}).click();await page.getByRole('button',{name:'Майндмепы',exact:true}).click();await page.getByRole('button',{name:'Создать карту',exact:true}).waitFor();await page.evaluate(t=>document.documentElement.dataset.genesisTheme=t,theme);
+ await page.getByRole('button',{name:'Создать карту',exact:true}).click();let dialog=page.getByRole('dialog',{name:'Новая карта'});await dialog.getByRole('textbox',{name:'Название карты',exact:true}).fill(title);await dialog.getByRole('button',{name:'Создать карту',exact:true}).click();await saved();
+ const mapUrl=page.url();assert.equal(await page.getByRole('button',{name:'Структура',exact:true}).getAttribute('aria-pressed'),'true');
+ await page.getByRole('button',{name:'Добавить мысль',exact:true}).click();dialog=page.getByRole('dialog',{name:'Редактор узла'});await dialog.getByRole('textbox',{name:'Название мысли',exact:true}).fill(nodeTitle);await dialog.getByRole('textbox',{name:'Пояснение · только в карте',exact:true}).fill('Пояснение остаётся только в карте.');await dialog.getByRole('button',{name:'Закрыть окно карты',exact:true}).click();await saved();
+ await page.locator('.mindmap-row').filter({hasText:nodeTitle}).click();await dialog.waitFor();
+ await dialog.getByRole('button',{name:'Добавить дочернюю мысль',exact:true}).click();await dialog.getByRole('textbox',{name:'Название мысли',exact:true}).fill('Вопросы для обсуждения');
+ await dialog.getByRole('combobox',{name:'Переместить в ветку',exact:true}).selectOption({label:title});await dialog.getByRole('button',{name:'Переместить узел',exact:true}).click();await dialog.getByRole('button',{name:'Закрыть окно карты',exact:true}).click();await saved();
+ await page.getByRole('textbox',{name:'Найти узел',exact:true}).fill(nodeTitle);await page.locator('.mindmap-search-results button').click();await dialog.waitFor();
+ await dialog.getByRole('button',{name:'Создать задачу из мысли',exact:true}).click();const taskForm=page.locator('.task-composer-modal');await taskForm.getByRole('button',{name:'Добавить задачу',exact:true}).click();await saved();
+ await page.locator('.mindmap-row').filter({hasText:nodeTitle}).click();dialog=page.getByRole('dialog',{name:'Редактор узла'});await dialog.getByRole('button',{name:'Открыть карточку задачи',exact:true}).click();const editor=page.getByRole('dialog',{name:'Задача и её контекст'});await editor.getByRole('textbox',{name:'Название',exact:true}).fill(nodeTitle+' — готово');await editor.getByRole('button',{name:'Сохранить задачу',exact:true}).click();
+ await page.locator('.mindmap-row').filter({hasText:nodeTitle+' — готово'}).waitFor();await page.reload();await page.locator('.mindmap-row').filter({hasText:nodeTitle+' — готово'}).waitFor();
+ await page.locator('.mindmap-row').filter({hasText:nodeTitle+' — готово'}).click();dialog=page.getByRole('dialog',{name:'Редактор узла'});await dialog.getByRole('button',{name:'Выполнить задачу',exact:true}).click();await page.getByText('Связанные задачи: 1 из 1',{exact:true}).waitFor();
+ await page.goBack();await dialog.waitFor({state:'hidden'});assert.equal(page.url(),mapUrl);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`output/playwright/mobile-web/mindmap-functional-${theme}-${width}.png`,fullPage:true});
+ await page.getByRole('button',{name:'Карта',exact:true}).click();await page.locator('.mindmap-canvas').waitFor();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ await page.getByRole('button',{name:'Все майндмепы',exact:true}).click();await page.getByRole('textbox',{name:'Поиск карт',exact:true}).fill(title);await page.getByRole('combobox',{name:'Контекст проекта',exact:true}).selectOption('p-pilot');await page.getByText('Ничего не найдено. Измените запрос.',{exact:true}).waitFor();
+ await page.getByRole('combobox',{name:'Контекст проекта',exact:true}).selectOption('');await page.locator('.mindmap-catalog-open').filter({hasText:title}).waitFor();
+ assert.deepEqual(errors,[]);results.push({width,theme,passed:['create encrypted map','mobile outline default','tap opens editor','edit long title and note','add child','explicit move without drag','node search','convert thought to real task','edit through personal task form','reload persistence','complete linked task','browser Back closes editor','canvas has no page overflow','filtered empty state'],errors});console.log('PASS maps',width,theme);
+ }catch(e){await page.screenshot({path:`output/playwright/mobile-web/maps-failure-${width}-${theme}.png`});writeFileSync('output/playwright/mobile-web/maps-failure-dom.txt',await page.locator('body').ariaSnapshot());throw e;}finally{await context.close();}
+}writeFileSync('output/playwright/mobile-web/mindmaps-functional-results.json',JSON.stringify(results,null,2));}finally{await browser.close();}

@@ -1,0 +1,56 @@
+{
+  "brewers-yeast": {
+    "brand": "NOW Foods · Brewer’s Yeast Powder",
+    "source": "https://www.nowfoods.com/products/supplements/brewers-yeast-powder",
+    "basisGrams": 16,
+    "values": {"energy":60,"fat":0.5,"saturatedFat":0,"protein":7,"carbohydrate":7,"fiber":5,"sugar":0,"sodium":10,"vitaminD":0,"calcium":46,"iron":2,"potassium":291}
+  },
+  "cod-liver": {
+    "brand": "iCAN · Icelandic cod liver in its own oil",
+    "source": "https://www.rohlik.cz/en-CZ/1474335-ican-icelandic-cod-liver-in-its-own-oil",
+    "basisGrams": 100,
+    "values": {"energy":587,"fat":64,"saturatedFat":9.8,"protein":4.81,"carbohydrate":0.9,"sugar":0}
+  },
+  "goat-yogurt": {
+    "brand": "St Helen’s Farm · Natural Goats Milk Yogurt",
+    "source": "https://www.waitrose.com/ecom/products/st-helens-farm-goats-milk-natural-yogurt/018006-8730-8731",
+    "basisGrams": 100,
+    "values": {"energy":105,"fat":7.3,"saturatedFat":5,"protein":5.5,"carbohydrate":4.3,"sugar":3.2,"calcium":240}
+  },
+  "sheep-yogurt": {
+    "brand": "Migros Aus der Region · Sheep’s Milk Yoghurt, Plain",
+    "source": "https://www.migros.ch/en/product/205041800100",
+    "basisGrams": 100,
+    "values": {"energy":97,"fat":6.3,"saturatedFat":3.8,"protein":5.4,"carbohydrate":4.6,"sugar":4.6,"fiber":0}
+  },
+  "psyllium-food": {
+    "brand": "NOW Foods · Psyllium Husks Whole, Organic",
+    "source": "https://www.nowfoods.com/products/supplements/psyllium-husks-whole-organic",
+    "basisGrams": 10,
+    "values": {"energy":35,"fat":0,"protein":0,"carbohydrate":8,"fiber":7,"sodium":10,"iron":1.7,"potassium":100}
+  },
+  "matsoni": {
+    "brand": "Заполярный пищевой комбинат · Мацони 3,2%",
+    "source": "https://xn--g1ago.xn--p1ai/babushkina-burenka/maconi/maconi-3.2.html",
+    "basisGrams": 100,
+    "values": {"energy":56,"fat":3.2,"protein":3,"carbohydrate":3.8}
+  },
+  "uryuk": {
+    "brand": "Щелкунчик · Урюк, сушёный абрикос с косточкой",
+    "source": "https://pahklid.ee/ru/%D1%83%D1%80%D1%8E%D0%BA-%D1%81%D1%83%D1%88%D1%91%D0%BD%D1%8B%D0%B9-%D0%B0%D0%B1%D1%80%D0%B8%D0%BA%D0%BE%D1%81-%D1%81-%D0%BA%D0%BE%D1%81%D1%82%D0%BE%D1%87%D0%BA%D0%BE%D0%B9-%D0%BB%D0%B8%D0%BC/",
+    "basisGrams": 100,
+    "values": {"energy":227,"protein":5.2,"carbohydrate":51,"sugar":43}
+  },
+  "peanut-butter-unsweetened": {
+    "brand": "Meridian · Smooth Peanut Butter, 100% peanuts",
+    "source": "https://www.tesco.com/shop/en-GB/products/301638252",
+    "basisGrams": 100,
+    "values": {"energy":606,"fat":47,"saturatedFat":6.3,"protein":26,"carbohydrate":16,"sugar":5.3,"fiber":8.1}
+  },
+  "apricot-kernels": {
+    "brand": "Just Natural · Sweet Organic Apricot Kernels",
+    "source": "https://www.justnatural.co.uk/collections/all-products/products/sweet-organic-apricot-kernels-200g-1",
+    "basisGrams": 100,
+    "values": {"energy":612,"fat":50.7,"saturatedFat":4.3,"protein":25,"carbohydrate":13.4,"sugar":0.3,"fiber":0.8}
+  }
+}

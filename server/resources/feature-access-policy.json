@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "revision": "3.1.8-dreams-palettes",
+  "enforcementEnabled": true,
+  "disabledFeatures": [
+    "assistant"
+  ],
+  "limits": {
+    "free": {
+      "personal-projects": 5,
+      "habits": 5,
+      "mindmaps": 1,
+      "diary": 100
+    },
+    "standart": {
+      "personal-projects": 20,
+      "habits": 10,
+      "mindmaps": 5,
+      "diary": 365
+    },
+    "premium": {
+      "personal-projects": 100,
+      "habits": 20,
+      "mindmaps": 100,
+      "diary": 1000
+    },
+    "business": {
+      "personal-projects": 100,
+      "habits": 20,
+      "mindmaps": 100,
+      "diary": 3000,
+      "shared-projects": 100,
+      "shared-mindmaps": 100
+    }
+  },
+  "adviceDailyLimit": {
+    "free": 1,
+    "standart": null,
+    "premium": null,
+    "business": null
+  },
+  "features": {
+    "physis": [
+      "premium4life"
+    ],
+    "calendar": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "tasks": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "habits": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "trackers": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "habit-timer": [
+      "standart",
+      "premium",
+      "business"
+    ],
+    "diary": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "mindmaps": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "stoicheion": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "stoicheion-timeline": [
+      "standart",
+      "premium",
+      "business"
+    ],
+    "stoicheion-spread": [
+      "premium",
+      "business"
+    ],
+    "stoicheion-restoration": [
+      "premium",
+      "business"
+    ],
+    "future-modeling": [
+      "premium",
+      "business"
+    ],
+    "stoicheion-letters": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "theokyklos": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "theokyklos-olympians": [
+      "standart",
+      "premium",
+      "business"
+    ],
+    "advice-settings": [
+      "standart",
+      "premium",
+      "business"
+    ],
+    "shared-projects": [
+      "business"
+    ],
+    "messenger": [
+      "business"
+    ],
+    "automations": [
+      "business"
+    ],
+    "calendar-sync": [
+      "free",
+      "standart",
+      "premium",
+      "business"
+    ],
+    "assistant": [],
+    "data-export": [
+      "standart",
+      "premium",
+      "business"
+    ],
+    "dream-journal": [
+      "standart",
+      "premium",
+      "business"
+    ],
+    "dream-voice": [
+      "premium",
+      "business"
+    ],
+    "dark-palettes": [
+      "premium",
+      "business"
+    ]
+  }
+}

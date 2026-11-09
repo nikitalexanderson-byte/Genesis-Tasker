@@ -1,0 +1,867 @@
+{
+  "asOf": "2026-10-20T02:33:47Z",
+  "period": {
+    "from": "2026-10-01",
+    "to": "2026-10-31",
+    "calendarMode": "sacred",
+    "calendarContext": {
+      "version": 2,
+      "timeZone": "America/New_York",
+      "gregorianYearStart": "march"
+    }
+  },
+  "filter": {
+    "projectIds": [
+      "633ce36e-583b-41fe-87b2-d92e78c3b410"
+    ]
+  },
+  "summary": {
+    "all": {
+      "key": "all",
+      "count": 121
+    },
+    "open": {
+      "key": "open",
+      "count": 121
+    },
+    "completed": {
+      "key": "completed",
+      "count": 0
+    },
+    "overdue": {
+      "key": "overdue",
+      "count": 0
+    },
+    "unassigned": {
+      "key": "unassigned",
+      "count": 121
+    }
+  },
+  "members": [
+    {
+      "id": "unassigned",
+      "title": null,
+      "all": {
+        "key": "member:unassigned",
+        "count": 121
+      },
+      "open": {
+        "key": "member-open:unassigned",
+        "count": 121
+      },
+      "completed": {
+        "key": "member-completed:unassigned",
+        "count": 0
+      }
+    }
+  ],
+  "stages": [],
+  "ages": [
+    {
+      "id": "week",
+      "tasks": {
+        "key": "age:week",
+        "count": 121
+      }
+    },
+    {
+      "id": "month",
+      "tasks": {
+        "key": "age:month",
+        "count": 0
+      }
+    },
+    {
+      "id": "quarter",
+      "tasks": {
+        "key": "age:quarter",
+        "count": 0
+      }
+    },
+    {
+      "id": "older",
+      "tasks": {
+        "key": "age:older",
+        "count": 0
+      }
+    },
+    {
+      "id": "unknown",
+      "tasks": {
+        "key": "age:unknown",
+        "count": 0
+      }
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-10-01",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-01:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-01:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-01:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-01:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-02",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-02:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-02:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-02:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-02:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-03",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-03:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-03:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-03:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-03:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-04",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-04:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-04:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-04:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-04:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-05",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-05:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-05:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-05:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-05:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-06",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-06:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-06:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-06:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-06:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-07",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-07:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-07:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-07:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-07:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-08",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-08:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-08:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-08:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-08:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-09",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-09:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-09:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-09:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-09:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-10",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-10:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-10:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-10:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-10:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-11",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-11:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-11:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-11:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-11:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-12",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-12:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-12:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-12:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-12:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-13",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-13:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-13:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-13:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-13:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-14",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-14:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-14:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-14:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-14:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-15",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-15:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-15:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-15:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-15:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-16",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-16:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-16:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-16:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-16:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-17",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-17:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-17:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-17:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-17:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-18",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-18:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-18:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-18:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-18:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "coverage": "unknown",
+      "created": {
+        "key": "day:2026-10-19:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-19:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-19:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-19:unknown",
+        "count": 121
+      }
+    },
+    {
+      "date": "2026-10-20",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-20:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-20:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-20:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-20:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-21",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-21:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-21:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-21:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-21:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-22",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-22:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-22:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-22:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-22:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-23",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-23:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-23:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-23:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-23:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-24",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-24:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-24:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-24:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-24:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-25",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-25:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-25:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-25:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-25:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-26",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-26:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-26:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-26:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-26:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-27",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-27:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-27:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-27:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-27:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-28:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-28:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-28:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-28:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-29",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-29:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-29:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-29:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-29:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-30",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-30:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-30:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-30:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-30:unknown",
+        "count": 0
+      }
+    },
+    {
+      "date": "2026-10-31",
+      "coverage": "future",
+      "created": {
+        "key": "day:2026-10-31:created",
+        "count": 0
+      },
+      "completed": {
+        "key": "day:2026-10-31:completed",
+        "count": 0
+      },
+      "reopened": {
+        "key": "day:2026-10-31:reopened",
+        "count": 0
+      },
+      "unknown": {
+        "key": "day:2026-10-31:unknown",
+        "count": 0
+      }
+    }
+  ],
+  "cycle": {
+    "meanSeconds": null,
+    "medianSeconds": null,
+    "eligible": 0,
+    "known": {
+      "key": "cycle:known",
+      "count": 0
+    },
+    "unknown": {
+      "key": "cycle:unknown",
+      "count": 0
+    }
+  },
+  "unknown": {
+    "key": "history:unknown",
+    "count": 121
+  },
+  "catalog": {
+    "projects": [
+      {
+        "id": "633ce36e-583b-41fe-87b2-d92e78c3b410",
+        "spaceId": "c097d86e-d4c0-4fcc-9f9e-c8e35497c212",
+        "title": "Проверка экспорта 🌙"
+      }
+    ],
+    "statuses": [
+      {
+        "id": "07ab86be-3096-4b78-b958-d4893c45f172",
+        "projectId": "633ce36e-583b-41fe-87b2-d92e78c3b410",
+        "title": "Открыто",
+        "isDone": false,
+        "revision": 1
+      },
+      {
+        "id": "13e006f0-f513-4081-8fab-eeceddf6a7d4",
+        "projectId": "633ce36e-583b-41fe-87b2-d92e78c3b410",
+        "title": "Готово",
+        "isDone": true,
+        "revision": 1
+      }
+    ],
+    "members": [
+      {
+        "id": "f1775706-9903-466b-a5d0-97e6e716dd8f",
+        "title": "GENESIS Test editor"
+      }
+    ],
+    "customFieldDefinitions": [
+      {
+        "id": "50d69542-c789-473b-ac51-20ab9b5ed538",
+        "spaceId": "c097d86e-d4c0-4fcc-9f9e-c8e35497c212",
+        "projectId": "633ce36e-583b-41fe-87b2-d92e78c3b410",
+        "type": "number",
+        "title": "Измерение",
+        "options": [],
+        "position": 0,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+      },
+      {
+        "id": "9caf7564-631c-4299-a208-4c1d05049454",
+        "spaceId": "c097d86e-d4c0-4fcc-9f9e-c8e35497c212",
+        "projectId": "633ce36e-583b-41fe-87b2-d92e78c3b410",
+        "type": "checkbox",
+        "title": "Проверка",
+        "options": [],
+        "position": 0,
+        "required": false,
+        "showCard": true,
+        "showList": true,
+        "archived": false,
+        "predecessorId": null,
+        "revision": 1
+      }
+    ]
+  },
+  "estimates": {
+    "available": true,
+    "unestimated": 0,
+    "points": null,
+    "hours": null,
+    "projects": [
+      {
+        "projectId": "633ce36e-583b-41fe-87b2-d92e78c3b410",
+        "all": {
+          "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:all",
+          "count": 121
+        },
+        "points": {
+          "value": 120,
+          "estimated": {
+            "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:points:known",
+            "count": 121
+          },
+          "unestimated": {
+            "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:points:missing",
+            "count": 0
+          }
+        },
+        "hours": {
+          "value": 90,
+          "estimated": {
+            "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:hours:known",
+            "count": 60
+          },
+          "unestimated": {
+            "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:hours:missing",
+            "count": 61
+          }
+        },
+        "members": [
+          {
+            "id": "unassigned",
+            "all": {
+              "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:member:unassigned:all",
+              "count": 121
+            },
+            "points": {
+              "value": 120,
+              "estimated": {
+                "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:member:unassigned:points:known",
+                "count": 121
+              },
+              "unestimated": {
+                "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:member:unassigned:points:missing",
+                "count": 0
+              }
+            },
+            "hours": {
+              "value": 90,
+              "estimated": {
+                "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:member:unassigned:hours:known",
+                "count": 60
+              },
+              "unestimated": {
+                "key": "estimate:633ce36e-583b-41fe-87b2-d92e78c3b410:member:unassigned:hours:missing",
+                "count": 61
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "token": "synthetic-report-token"
+}

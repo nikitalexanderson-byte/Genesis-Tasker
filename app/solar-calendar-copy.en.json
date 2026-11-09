@@ -1,0 +1,19 @@
+{
+  "Круг GENESIS": "GENESIS circle",
+  "Интерактивная модель календаря": "Interactive calendar model",
+  "Закрыть модель календаря": "Close calendar model",
+  "Весь круг": "Whole circle",
+  "Отдалить": "Zoom out",
+  "Масштаб": "Scale",
+  "Приблизить": "Zoom in",
+  "Интерактивный круг календаря": "Interactive calendar circle",
+  "Не удалось загрузить календарь.": "The calendar could not load.",
+  "Открываем круг…": "Loading the circle…",
+  "Нажмите на месяц, пяту или день, чтобы приблизить. Перетаскивайте круг; меняйте масштаб колёсиком или двумя пальцами.": "Select a month, pentad or day to explore. Drag to move; use the wheel or pinch to zoom.",
+  "Навигация по кругу": "Calendar navigation",
+  "Выберите пяту": "Choose a pentad",
+  "Год в одном круге": "A year in one circle",
+  "12 месяцев, 72 пяты и 360 дней. В центре — Апейрон, вне обычного счёта.": "12 months, 72 pentads and 360 days. Apeiron lies at the centre, outside the regular count.",
+  "В выбранном году этот неявный день не входит в календарный счёт.": "This unmanifest day is not part of the selected year.",
+  "Открыть день в календаре": "Open day in calendar"
+}

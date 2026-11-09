@@ -1,0 +1,480 @@
+/* Both account themes share color roles. Layout and artwork stay with their own theme. */
+html[data-genesis-theme$="-dark"] {
+  color-scheme: dark;
+  --paper: #0d171b;
+  --paper-deep: #101e22;
+  --surface: #172429;
+  --white: #213238;
+  --ink: #f0eee7;
+  --ink-soft: #b5c5c3;
+  --line: #405457;
+  --gold: #e4c78c;
+  --gold-light: #e4c78c;
+  --teal: #77c8b2;
+  --terracotta: #ed9b8a;
+  --shadow: 0 16px 42px #0005;
+  --dark-control: #203137;
+  --dark-on-accent: #092725;
+  --dark-danger: #f4a297;
+  --dark-danger-surface: #442d30;
+  --dark-info: #9ccded;
+  --dark-info-surface: #213b48;
+  scrollbar-color: #718c87 #101e22;
+}
+
+html[data-genesis-theme$="-dark"] ::selection { color: #07171b; background: #e4c78c; }
+html[data-genesis-theme$="-dark"] :focus-visible { outline-color: var(--gold); }
+html[data-genesis-theme$="-dark"] :is(input, textarea) { caret-color: var(--gold); }
+html[data-genesis-theme$="-dark"] :is(input, textarea)::placeholder { color: var(--ink-soft); opacity: 1; }
+
+/* Canvas and ordinary surfaces. Do not target image layers or authored astronomical diagrams. */
+html[data-genesis-theme$="-dark"] :is(.app-stage, .workspace, .content-column) {
+  background: var(--paper);
+  color: var(--ink);
+}
+html[data-genesis-theme$="-dark"] :is(
+  .topbar, .account-chip, .account-menu, .account-panel, .account-preferences,
+  .meaning-panel, .meaning-card, .five-day-strip, .selected-day-card,
+  .planner-panel, .task-item, .task-list-manager, .daily-plan-card,
+  .today-create-panel, .today-tasks-panel, .today-task-list > article,
+  .task-list-create, .task-list-column, .task-list-column-items > article,
+  .all-tasks-create, .all-task-row, .plan-manager-grid > section,
+  .category-strip article, .quick-category-form, .tag-search, .tag-search-results,
+  .project-tree-main, .project-tree-workspace > .inbox-card, .project-tree-panel .project-row,
+  .project-tree-panel .project-form, .project-tree-panel .task-empty,
+  .project-tree-panel .project-assigned-task, .project-tree-panel .project-assigned-list,
+  .project-tree-panel .inbox-card-items > article,
+  .editor-modal, .calendar-picker, .time-clock-picker, .reminder-menu, .dependency-picker,
+  .calendar-task-popover, .day-details-modal, .day-details-tasks, .day-details-task-list > article,
+  .workspace-recovery-dialog, .deferred-view-loading, .view-error-state,
+  .habit-daily-panel, .habit-library, .habit-statistics, .habit-template-library,
+  .habit-template-grid > article, .habit-editor, .habit-editor-section,
+  .habit-emoji-catalog, .habit-template-quick-settings article, .habit-template-advanced,
+  .tracker-module-card, .sleep-daily-card, .addiction-daily-card,
+  .habit-emoji-field, .habit-ritual-fields,
+  .habit-check-list > article, .habit-personal-records, .habit-weekly-grid > article,
+  .habit-stat-cards > article, .habit-rhythm-index, .laurel-ledger,
+  .achievement-panel, .achievement-grid > article, .streak-resilience > article,
+  .streak-reward-ladder, .adaptive-habit-panel, .habit-range-toolbar,
+  .theokyklos-details, .theokyklos-sacred-practices article, .sacred-practice-grid > article
+) {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+html[data-genesis-theme$="-dark"] :is(
+  .task-form, .project-form, .task-list-create-block, .task-list-manager,
+  .task-list-batch-form, .editor-modal, .account-panel, .calendar-picker,
+  .category-edit-form, .quick-category-form, .habit-editor, .habit-ritual-fields,
+  .custom-reminder-relative, .custom-reminder-absolute, .recurrence-builder
+) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea) {
+  color: var(--ink);
+  background-color: var(--dark-control);
+  border-color: var(--palette-outline, #718c87);
+}
+
+html[data-genesis-theme$="-dark"] :is(
+  .ghost-button, .ux-action-button, .calendar-date-trigger, .time-clock-picker-trigger,
+  .calendar-picker-controls button, .calendar-picker-months button,
+  .sacred-picker-days button, .lunar-picker-days button,
+  .reminder-select-trigger, .reminder-add-button, .language-choice button,
+  .habit-emoji-presets button, .habit-emoji-expand,
+  .time-format-choice button, .calendar-mode-segment, .task-list-column-actions button,
+  .category-actions button, .category-edit-form button,
+  .recurrence-preset-row button, .recurrence-month-grid button, .recurrence-day-grid button,
+  .recurrence-pattern-toggle button, .habit-range-toolbar button, .mood-options button
+) {
+  color: var(--ink);
+  background: var(--dark-control);
+  border-color: #718c87;
+}
+html[data-genesis-theme$="-dark"] :is(
+  .language-choice button.active, .time-format-choice button.active,
+  .calendar-mode-segment button.active, .recurrence-pattern-toggle button.active,
+  .recurrence-month-grid button.active, .recurrence-day-grid button.active,
+  .calendar-picker-months button.active, .sacred-picker-days button.selected,
+  .lunar-picker-days button.selected, .mood-options button.selected,
+  .habit-range-toolbar button.active
+) {
+  color: var(--dark-on-accent);
+  background: var(--teal);
+  border-color: var(--teal);
+}
+html[data-genesis-theme$="-dark"] :is(.primary-button, .account-sync-upgrade button, [data-exp-ui="button"][data-exp-variant="primary"]) {
+  color: var(--dark-on-accent);
+  background-color: var(--teal);
+  border-color: var(--teal);
+}
+html[data-genesis-theme$="-dark"] :is(.primary-button, [data-exp-ui="button"][data-exp-variant="primary"]):hover {
+  background-color: var(--palette-soft-surface, #9fdec9);
+  color: var(--dark-on-accent);
+}
+
+html[data-genesis-theme$="-dark"] :is(
+  .recurrence-builder, .recurrence-builder.enabled, .recurrence-range, .recurrence-interval,
+  .recurrence-pattern-explainer, .recurrence-summary, .recurrence-inherited-mode,
+  .recurrence-footer > label, .recurrence-footer > p, .task-priority-control,
+  .task-series-scope label, .custom-reminder-relative, .custom-reminder-absolute,
+  .dependency-picker-empty, .task-empty, .all-tasks-sync,
+  .project-tree-panel .project-drop-field, .workspace-recovery-field > div,
+  .google-account-list article, .multi-account-benefits,
+  .day-details-moon, .day-details-sun, .day-details-sun dl > div,
+  .daily-goal-settings, .habit-weekly-change, .habit-notification-tone,
+  .streak-reward-track article, .adaptive-habit-panel article
+) {
+  color: var(--ink);
+  background: var(--dark-control);
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] :is(
+  .account-menu-theme > span strong, .account-chip > .account-menu > button,
+  .recurrence-builder b, .reminder-chip, .reminder-chip > button,
+  .task-priority-label, .dependency-picker-empty,
+  .meaning-label, .account-open, .account-open strong,
+  .habit-rhythm-gauge, .habit-mastery-ring, .habit-weekly-grid,
+  .habit-template-icon, .habit-emoji-field
+) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] :is(.account-menu-signout, .delete-button, .task-overdue-badge) {
+  color: var(--dark-danger);
+}
+
+/* Calendars keep weekday and month hues, using subdued fills and readable foregrounds. */
+html[data-genesis-theme$="-dark"] .month-calendar { background: var(--surface); border-color: var(--line); }
+html[data-genesis-theme$="-dark"] .calendar-day {
+  color: var(--ink);
+  background: var(--dark-control);
+  border-color: var(--line);
+}
+/* Gregorian months keep the approved muted dark cells in either surrounding scheme. */
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:not(.selected, .today, .solar-day) {
+  background: var(--weekday-wash, #293b3b);
+  color: #f0eee7;
+  box-shadow: none;
+}
+html[data-genesis-theme] .genesis-app {
+  --gregorian-weekday-0: #403925;
+  --gregorian-weekday-1: #303c45;
+  --gregorian-weekday-2: #453132;
+  --gregorian-weekday-3: #273e37;
+  --gregorian-weekday-4: #293e51;
+  --gregorian-weekday-5: #3d3247;
+  --gregorian-weekday-6: #303c36;
+}
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-0 { --weekday-wash: var(--gregorian-weekday-0); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-1 { --weekday-wash: var(--gregorian-weekday-1); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-2 { --weekday-wash: var(--gregorian-weekday-2); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-3 { --weekday-wash: var(--gregorian-weekday-3); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-4 { --weekday-wash: var(--gregorian-weekday-4); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-5 { --weekday-wash: var(--gregorian-weekday-5); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.weekday-6 { --weekday-wash: var(--gregorian-weekday-6); }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:not(.selected, .today, .solar-day) :is(.calendar-mode-primary > strong, .profane-weekday-patron > strong) { color: #f0eee7; }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:not(.selected, .today, .solar-day) :is(.calendar-mode-primary > small, .calendar-cross-date, .calendar-sun-times, .adjacent-month-label) { color: #b5c5c3; }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:not(.selected, .today, .solar-day) :is(.calendar-cross-date b, .calendar-cross-date svg) { color: #b5c5c3; }
+html[data-genesis-theme] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:not(.selected, .today, .solar-day) .calendar-sun-times i { color: #d8bd80; }
+html[data-genesis-theme$="-dark"] .calendar-day :is(
+  .calendar-gregorian, .calendar-gregorian b, .calendar-weekday, .calendar-moon,
+  .calendar-cross-date, .calendar-sun-times, .profane-weekday-patron,
+  .profane-weekday-guidance, .calendar-day-task-preview, small, .adjacent-month-label
+) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] .calendar-day :is(.calendar-day-number, .profane-day-number, strong) { color: var(--ink); }
+html[data-genesis-theme$="-dark"] .calendar-day.adjacent-month { opacity: .65; }
+html[data-genesis-theme$="-dark"] .calendar-mode-calendar .calendar-day :is(.calendar-cross-date b, .profane-weekday-patron > strong b) {
+  color: color-mix(in srgb, var(--month-accent) 25%, var(--ink));
+}
+html[data-genesis-theme$="-dark"] .calendar-mode-calendar .calendar-day.solar-day:not(.selected, .today) {
+  color: var(--ink);
+  background: #403724;
+  border-color: var(--gold);
+}
+html[data-genesis-theme$="-dark"] .calendar-mode-calendar .calendar-day:is(.selected, .today),
+html[data-genesis-theme$="-dark"] .calendar-day.selected {
+  background: #315d59;
+  color: var(--ink);
+  border-color: var(--gold);
+}
+html[data-genesis-theme$="-dark"] :is(.calendar-solar-mark, .calendar-day .calendar-solar-mark *, .solar-year-strip *) { color: var(--gold); }
+html[data-genesis-theme$="-dark"] .solar-year-strip button { background: var(--palette-surface, #302e24); color: var(--gold); border-color: #9a8353; }
+html[data-genesis-theme$="-dark"] :is(.solar-selected-day, .solar-selected-day .selected-day-symbol) { color: var(--gold); background: var(--palette-surface, #302e24); }
+html[data-genesis-theme$="-dark"] :is(.pyata-row-label, .pyata-row-description, .strip-day) {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--month-accent, var(--palette-soft-surface, #77c8b2)) 15%, var(--surface));
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] :is(.pyata-row-label, .pyata-row-description) :is(strong, small, p, b) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] .year-month {
+  background: color-mix(in srgb, var(--month-accent) 16%, var(--surface));
+  color: var(--ink);
+}
+html[data-genesis-theme$="-dark"] .year-month::after {
+  background: linear-gradient(100deg, color-mix(in srgb, var(--palette-recessed, rgb(23 36 41)) 94.902%, transparent) 0 28%, color-mix(in srgb, var(--palette-recessed, rgb(23 36 41)) 72.157%, transparent) 64%, color-mix(in srgb, var(--palette-recessed, rgb(23 36 41)) 40%, transparent));
+}
+html[data-genesis-theme$="-dark"] .year-month :is(h2, h3) { color: var(--ink); }
+html[data-genesis-theme$="-dark"] .year-month :is(.mini-weekday, .mini-pyata-label, .year-month-meta, .month-number, .year-month-title, .month-day-count) {
+  color: color-mix(in srgb, var(--month-accent) 30%, #f0eee7);
+}
+html[data-genesis-theme$="-dark"] :is(.mini-day, .mini-pyata-label b, .year-open-button) {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--month-accent) 18%, var(--surface));
+  border-color: color-mix(in srgb, var(--month-accent) 55%, var(--line));
+}
+html[data-genesis-theme$="-dark"] :is(.mini-day:hover, .mini-day:focus-visible, .year-open-button:hover) { background: #315d59; color: var(--ink); }
+html[data-genesis-theme$="-dark"] .mini-day.solar { background: var(--gold); color: #38290e; }
+html[data-genesis-theme$="-dark"] .mini-day.today { background: #315d59; color: var(--ink); border-color: var(--gold); }
+html[data-genesis-theme$="-dark"] :is(.calendar-mode-calendar, .calendar-picker) :is(.selected, .today) { border-color: var(--gold); }
+html[data-genesis-theme$="-dark"] :is(.calendar-day-task-count, .mini-day-task-count) { background: #ad3f4b; color: #fff; border-color: var(--surface); }
+html[data-genesis-theme$="-dark"] :is(.calendar-day-task-count, .mini-day-task-count)[data-task-status="completed"] { background: #287a57; color: #fff; }
+
+/* The navigation remains a dark landmark, with legible secondary copy in both variants. */
+html[data-genesis-theme$="-dark"] :is(.sidebar-foot, .brand-mark small) { color: var(--palette-muted, #b5c5c3); }
+html[data-genesis-theme$="-dark"] .account-chip > .account-menu > button:hover { background-color: var(--dark-control); }
+
+html[data-genesis-theme$="-dark"] :is(.key-habit-switch) { background: var(--palette-surface, #403724) !important; color: var(--ink); }
+html[data-genesis-theme$="-dark"] :is(.habit-rhythm-gauge, .habit-mastery-ring, .daily-goal-ring)::before { background: var(--surface); }
+html[data-genesis-theme$="-dark"] :is(.habit-check-list > article.done, .achievement-grid > article.unlocked, .streak-reward-track article.achieved) {
+  background: var(--palette-surface, #243b34);
+  color: var(--ink);
+}
+
+html[data-genesis-theme$="-dark"] :is(.topbar-kicker, .eyebrow, .account-open small,
+  .task-form label > span, .project-form label > span, .task-form-field > span,
+  .recurrence-switch-row small, .inbox-card > p, .year-month > small,
+  .year-month-meta em, .civil-mini-weekday, .year-month-top > i) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] :is(.task-form-section, .deferred-habit-loading,
+  .all-tasks-status-filter, .reminder-chip) { background: var(--surface); color: var(--ink); }
+html[data-genesis-theme$="-dark"] .reminder-chip button { background: var(--dark-control); color: var(--ink); }
+html[data-genesis-theme$="-dark"] .all-tasks-status-filter button { color: var(--ink-soft); background: transparent; }
+html[data-genesis-theme$="-dark"] .all-tasks-status-filter button.active { color: var(--palette-on-accent, #092725); background: var(--teal); }
+html[data-genesis-theme$="-dark"] .today-workspace .experimental-workspace-tabs > button[aria-selected="true"] strong { color: var(--palette-accent, #092725); }
+
+/* Populated habit and project states use the same foreground roles as empty panels. */
+html[data-genesis-theme$="-dark"] :is(.habit-ritual-group > header em,
+  .habit-check-list output, .habit-library article button) { color: var(--teal); }
+html[data-genesis-theme$="-dark"] :is(.year-month-meta i, .streak-resilience p,
+  .hestia-spark-inventory strong, .comeback-progress strong) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] .streak-resilience h2 { color: var(--ink); }
+html[data-genesis-theme$="-dark"] :is(.streak-resilience small, .streak-resilience em,
+  .heroic-rank-copy > span, .laurel-ledger > header > strong, .laurel-ledger .neutral,
+  .streak-reward-ladder > header > strong, .streak-reward-track article em) { color: var(--gold); }
+html[data-genesis-theme$="-dark"] :is(.habit-library article button.danger, .laurel-ledger .debit) { color: var(--dark-danger); }
+html[data-genesis-theme$="-dark"] .project-row.completed .project-status { color: var(--dark-on-accent); }
+html[data-genesis-theme$="-dark"] :is(.habit-template-grid small, .habit-record-metrics small,
+  .habit-ranking-list > article > span) { color: color-mix(in srgb, var(--habit-color, var(--palette-muted, #77c8b2)) 25%, var(--ink)); }
+html[data-genesis-theme$="-dark"] .mood-distribution i span { color: #fff7e8; }
+html[data-genesis-theme$="-dark"] .achievement-grid > article small { color: var(--gold); }
+html[data-genesis-theme$="-dark"] :is(.recurrence-range legend, .recurrence-range > small,
+  .recurrence-locked-start > span, .recurrence-day-field > span,
+  .recurrence-field-heading > span, .recurrence-selection-hint,
+  .recurrence-interval > span, .recurrence-summary > span, .recurrence-sync-note) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] .habit-scoring-lock-note { color: var(--gold); }
+
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .habit-collapsible-toggle,
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .habit-collapsible-block.collapsed .habit-collapsible-toggle {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--palette-surface, #23363b);
+  box-shadow: 0 8px 22px #0003;
+}
+
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .habit-collapsible-toggle:hover {
+  border-color: var(--teal);
+  background: var(--palette-surface, #2d4448);
+  box-shadow: 0 11px 26px #0005;
+}
+
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .habit-collapsible-toggle:focus-visible {
+  outline-color: var(--gold);
+}
+
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .habit-collapsible-toolbar .disclosure-chevron {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--palette-raised, #30484a);
+}
+html[data-genesis-theme$="-dark"] :is(.hestia-spark-inventory i:not(.filled),
+  .comeback-progress i:not(.done), .hestia-spark-icon, .comeback-mark,
+  .laurel-ledger > div > div, .laurel-ledger code) {
+  background: var(--dark-control); border-color: var(--line); color: var(--ink-soft);
+}
+
+/* Day details and suggested practices need their own dark surfaces in both themes. */
+html[data-genesis-theme$="-dark"] .profane-day-guidance {
+  color: var(--ink);
+  background: radial-gradient(circle at 5% 0%, var(--guidance-wash), transparent 42%), var(--surface);
+  border-color: color-mix(in srgb, var(--guidance-accent) 38%, var(--line));
+}
+html[data-genesis-theme$="-dark"] .profane-day-guidance :is(.eyebrow, header small, dt) {
+  color: var(--gold);
+}
+html[data-genesis-theme$="-dark"] .profane-day-guidance :is(h3, dd, dd strong) {
+  color: var(--ink);
+}
+html[data-genesis-theme$="-dark"] .profane-day-guidance > p,
+html[data-genesis-theme$="-dark"] .profane-day-guidance dd small {
+  color: var(--ink-soft);
+}
+html[data-genesis-theme$="-dark"] .profane-day-guidance > dl > div {
+  background: var(--dark-control);
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] .profane-day-guidance-symbol {
+  color: var(--gold);
+  background: var(--dark-control);
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] .sacred-practice-grid > article {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--line);
+  border-top-color: var(--habit-color);
+}
+html[data-genesis-theme$="-dark"] .sacred-practice-grid :is(h3, article > p, blockquote) {
+  color: var(--ink);
+}
+html[data-genesis-theme$="-dark"] .sacred-practice-grid :is(article > header small, article > header em) {
+  color: var(--gold);
+}
+html[data-genesis-theme$="-dark"] .sacred-practice-grid blockquote {
+  background: var(--dark-control);
+}
+html[data-genesis-theme$="-dark"] .sacred-practice-grid footer small {
+  color: var(--ink-soft);
+}
+html[data-genesis-theme$="-dark"] .spring-year-suggestion {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--gold);
+}
+html[data-genesis-theme$="-dark"] .spring-year-action {
+  color: var(--dark-on-accent);
+  background: var(--teal);
+}
+html[data-genesis-theme$="-dark"] .spring-year-dismiss {
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .mood-tracker {
+  background: var(--palette-surface, #1c3034);
+  border-color: var(--palette-outline, #496663);
+}
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .mood-summary-action {
+  color: #f4f2e9;
+  background: var(--palette-raised, #2d5954);
+  border-color: var(--palette-outline, #5b8d83);
+}
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .mood-summary:hover .mood-summary-action {
+  color: #fffdf8;
+  background: var(--palette-raised, #396c64);
+}
+
+html[data-genesis-theme$="-dark"] .day-details-modal .modal-close,
+html[data-genesis-theme$="-dark"] .theokyklos-details-close {
+  color: var(--ink);
+  background: var(--dark-control);
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] .day-details-modal .modal-close:is(:hover,:focus-visible),
+html[data-genesis-theme$="-dark"] .theokyklos-details-close:is(:hover,:focus-visible) {
+  color: #fffdf8;
+  background: var(--palette-raised, #31514f);
+  border-color: var(--teal);
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+html[data-genesis-theme$="-dark"] .theokyklos-details {
+  --detail-contrast: color-mix(in srgb, var(--detail-accent) 48%, #e8e9dc);
+}
+html[data-genesis-theme$="-dark"] .theokyklos-details :is(.eyebrow, header strong, .theokyklos-essence,
+  .theokyklos-incantation li > span, .theokyklos-sacred-practices article small) { color: var(--detail-contrast); }
+html[data-genesis-theme$="-dark"] .theokyklos-details :is(.theokyklos-description,
+  .theokyklos-incantation > p, .theokyklos-incantation li small,
+  .theokyklos-sacred-practices > p, .theokyklos-sacred-practices article p,
+  .theokyklos-sacred-practices article blockquote) { color: var(--ink-soft); }
+html[data-genesis-theme$="-dark"] .theokyklos-incantation li,
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices article {
+  color: var(--ink);
+  background: var(--dark-control);
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] .theokyklos-incantation li strong,
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices article strong { color: var(--ink); }
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices article > span {
+  background: var(--surface);
+  border-color: var(--line);
+}
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices > header button {
+  color: #f6f2e8;
+  background: var(--palette-raised, #305b54);
+  border-color: var(--palette-outline, #6da99b);
+}
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices > header button:hover {
+  color: #fffdf8;
+  background: var(--palette-raised, #3c7065);
+}
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices > header button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices :is(article > button, .theokyklos-practice-actions button):not(.completed, .disable) {
+  color: #f6f2e8;
+  background: #305b54;
+  border: 1px solid #6da99b;
+}
+html[data-genesis-theme$="-dark"] .theokyklos-practice-actions button.completed {
+  color: #c9eadc;
+  background: #24423d;
+  border-color: #56796f;
+}
+html[data-genesis-theme$="-dark"] .theokyklos-practice-actions button.disable {
+  color: #e5c3b4;
+  background: var(--palette-surface, #392f30);
+  border-color: #846662;
+}
+html[data-genesis-theme$="-dark"] .theokyklos-sacred-practices :is(article > button, .theokyklos-practice-actions button):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) {
+  --st-create-bg: #1d3835;
+  --st-create-border: var(--palette-outline, #649b86);
+  --st-record-bg: #1a2a2e;
+  --st-record-border: var(--palette-outline, #496166);
+  --st-info-bg: #23323a;
+  --st-info-border: var(--palette-outline, #59717a);
+}
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) :is(.project-tree-panel .project-form, .today-create-panel, .all-tasks-create, .task-list-create, .quick-category-form) {
+  color: var(--ink);
+  background: var(--st-create-bg);
+  border-color: var(--st-create-border);
+}
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) :is(.project-tree-panel .project-row, .project-tree-panel .project-assigned-task,
+  .project-tree-panel .project-assigned-list, .project-tree-panel .inbox-card-items > article,
+  .all-task-row, .today-task-list > article, .task-list-column-items > article) {
+  color: var(--ink);
+  background: var(--st-record-bg);
+  border-color: var(--st-record-border);
+}
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) :is(.project-tree-panel .project-drop-field, .task-empty,
+  .daily-plan-card, .meaning-card, .project-tree-workspace > .inbox-card) {
+  color: var(--ink);
+  background: var(--st-info-bg);
+  border-color: var(--st-info-border);
+}
+html:is([data-genesis-theme="standart-dark"], [data-genesis-theme="experimental-dark"]) .primary-button:disabled {
+  color: #d3dfd8;
+  background: var(--palette-raised, #38504b);
+  border: 1px solid var(--palette-outline, #58766c);
+  opacity: 1;
+}
+/* Explicit correction: account controls follow the selected dark palette. */
+html[data-genesis-theme$="-dark"] .settings-section-nav button { color:var(--ink-soft); background:var(--dark-control); border-color:var(--line); }
+html[data-genesis-theme$="-dark"] .settings-section-nav button.active { color:var(--dark-on-accent); background:var(--teal); border-color:var(--teal); box-shadow:none; }
+html[data-genesis-theme$="-dark"] .settings-links-panel a { color:var(--ink); background:var(--dark-control); border-color:var(--line); }
+html[data-genesis-theme$="-dark"] .account-panel :is(.solar-settings-preview,.moon-reminder-choices button) { background:var(--dark-control); color:var(--ink); border-color:var(--line); }
+html[data-genesis-theme$="-dark"] .account-panel .moon-reminder-choices button[aria-pressed="true"] { background:var(--teal); color:var(--dark-on-accent); }
+html[data-genesis-theme$="-dark"] .tag-search-results > div > button { background:var(--dark-control); color:var(--ink); border-color:var(--line); }
+html[data-genesis-theme$="-dark"] .tag-search-results > div > button :is(strong,small,span) { color:inherit; }
+html[data-genesis-theme$="-dark"] .tag-search-results > div > button small { color:var(--ink-soft); }

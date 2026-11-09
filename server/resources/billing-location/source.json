@@ -1,0 +1,19 @@
+{
+  "retrievedAt": "2026-11-01",
+  "purpose": "Payment method ordering only; never eligibility or sanctions enforcement",
+  "accuracy": "Country of allocation is an estimate and may differ from actual location, particularly with VPN, roaming and proxies",
+  "sources": {
+    "ru-ipv4.zone": {
+      "url": "https://www.ipdeny.com/ipblocks/data/aggregated/ru-aggregated.zone",
+      "sha256": "a115697bb8cacf10c211c59848448862c05411a62b21e343e8fb3fab0cb0a645"
+    },
+    "ru-ipv6.zone": {
+      "url": "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/ru-aggregated.zone",
+      "sha256": "07218a4308d99ea4a32a9b5f07c7038ae732de8751379a40a26054060901684e"
+    },
+    "Copyrights.txt": {
+      "url": "https://www.ipdeny.com/ipblocks/data/aggregated/Copyrights.txt",
+      "sha256": "9d1805a677cdfa9982ecb4318f11a7aefd7d43f54a025663fb34c3d974a45f08"
+    }
+  }
+}

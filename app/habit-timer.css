@@ -1,0 +1,40 @@
+.habit-timer-panel { display:grid; gap:16px; min-width:0; padding:16px; margin-block:16px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); color:var(--ink); }
+.habit-timer-panel > header,.habit-timer-session-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
+.habit-timer-panel h3 { display:flex; align-items:center; gap:8px; margin:0; font:600 18px/1.4 var(--font-ui); }
+.habit-timer-panel h4 { margin:0; font:600 15px/1.4 var(--font-ui); }
+.habit-timer-panel svg,.habit-timer-launch svg { width:22px; height:22px; flex-shrink:0; }
+.genesis-app .habit-timer-launch { display:inline-flex; gap:6px; align-items:center; width:max-content; min-height:44px; margin-top:8px; padding:8px 12px; font-size:14px; line-height:1.4; }
+.habit-check-main,.habit-check-timing { display:contents; }
+.habit-priority-desktop { display:none; }
+@media (min-width:1041px) {
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-copy.has-timing { grid-template-columns:minmax(0,1fr) auto; column-gap:16px; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-copy.has-timing > .habit-check-main { display:grid; align-content:start; gap:4px; min-width:0; grid-column:1; grid-row:1; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing { display:flex; flex-direction:column; align-items:flex-end; justify-self:end; align-self:start; grid-column:2; grid-row:1; gap:4px; max-width:36ch; min-width:0; text-align:end; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing .habit-timer-launch { margin:0; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-copy.has-timing .habit-check-heading > em { display:none; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing > .habit-priority-desktop { display:block; align-self:flex-end; text-align:end; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing small { overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-copy.has-timing > details { grid-column:1 / -1; }
+}
+.habit-timer-start,.habit-timer-session,.habit-timer-review { display:grid; gap:12px; min-width:0; }
+.habit-timer-session { border-top:1px solid var(--line); padding-top:16px; }
+.habit-timer-panel :is(p,small,time) { margin:0; color:var(--ink-soft); line-height:1.5; }
+.habit-timer-panel :is(p,strong,small,time) { overflow-wrap:anywhere; }
+.habit-timer-config,.habit-timer-actions,.habit-timer-totals { display:flex; flex-wrap:wrap; align-items:end; gap:8px 12px; }
+.habit-timer-config label,.habit-timer-totals > div { display:grid; gap:4px; min-width:0; }
+.habit-timer-config label { flex:1 1 130px; }
+.habit-timer-config label span,.habit-timer-totals span { color:var(--ink-soft); font-size:13px; }
+.genesis-app .habit-timer-panel :is(button,input) { min-height:44px; border-radius:var(--ui-radius); }
+.genesis-app .habit-timer-panel button { padding:8px 12px; font-size:14px; line-height:1.4; white-space:normal; }
+.habit-timer-panel input { width:100%; min-width:0; font-size:16px; }
+.habit-timer-panel .segmented-control { display:flex; flex-wrap:wrap; gap:4px; }
+.habit-timer-panel .segmented-control [aria-pressed="true"] { color:var(--paper); background:var(--ink); }
+.habit-timer-totals { align-items:baseline; gap:12px 24px; font-variant-numeric:tabular-nums; }
+.habit-timer-clock { font-size:30px; font-weight:600; line-height:1.25; }
+.habit-timer-review ul,.habit-timer-history ol { display:grid; gap:12px; padding:0; margin:0; list-style:none; }
+.habit-timer-review li,.habit-timer-history li { display:grid; gap:4px; padding-block:8px; border-bottom:1px solid var(--line); }
+.habit-timer-review li > div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 12px; }
+.habit-timer-history summary { padding-block:10px; cursor:pointer; color:var(--ui-accent); }
+.habit-timer-panel [role="alert"] { display:grid; gap:8px; }
+.habit-timer-panel [role="alert"] p { color:var(--danger,var(--ink)); }
+@media(max-width:640px) { .habit-timer-panel { padding:12px; } .habit-timer-config > .segmented-control { flex-basis:100%; } }

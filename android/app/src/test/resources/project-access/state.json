@@ -1,0 +1,146 @@
+{
+    "spaceId": "a9f79f0e-b5d2-4860-8279-acdaca0fe355",
+    "userId": "9c58ff20-d9c9-4a03-801c-ec4389813a77",
+    "memberRole": "member",
+    "allProjects": true,
+    "restricted": false,
+    "revision": 1,
+    "fingerprint": "d14263b20cf4a74a0994830d6a5efa1a827ba60067439729119c1b1792bd2c3e",
+    "projects": [
+        {
+            "id": "0e50248b-7bcc-4338-9f37-a42e4cf9b8a9",
+            "title": "Проект с длинным названием для проверки адаптивного интерфейса и удобного чтения",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 1,
+            "inTrash": 0
+        },
+        {
+            "id": "20ba2dcd-025f-463e-9388-398fa0c4c8ef",
+            "title": "Хаос-бокс",
+            "parentId": null,
+            "isInbox": 1,
+            "archivedAt": null,
+            "revision": 1,
+            "role": null,
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "5714f294-efd3-4111-a2fb-6b033fa5d455",
+            "title": "Архив публикаций",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "669d0740-f94f-4853-b207-50051b6bce77",
+            "title": "Подпроект с отдельным исключением",
+            "parentId": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "9c611e28-79b2-488e-8df0-536fa74b5fc7",
+            "title": "Планы команды",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "b4831519-9e15-4e7f-831c-cfec31a6b38a",
+            "title": "Обзор и согласование",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+            "title": "Основной проект",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "fa1cf596-0150-4a18-8d75-2f65b5dd201e",
+            "title": "Контроль качества",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        }
+    ],
+    "grants": [
+        {
+            "projectId": "0e50248b-7bcc-4338-9f37-a42e4cf9b8a9",
+            "role": "member",
+            "includeDescendants": false
+        },
+        {
+            "projectId": "5714f294-efd3-4111-a2fb-6b033fa5d455",
+            "role": "member",
+            "includeDescendants": false
+        },
+        {
+            "projectId": "669d0740-f94f-4853-b207-50051b6bce77",
+            "role": "member",
+            "includeDescendants": false
+        },
+        {
+            "projectId": "9c611e28-79b2-488e-8df0-536fa74b5fc7",
+            "role": "member",
+            "includeDescendants": false
+        },
+        {
+            "projectId": "b4831519-9e15-4e7f-831c-cfec31a6b38a",
+            "role": "member",
+            "includeDescendants": false
+        },
+        {
+            "projectId": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+            "role": "member",
+            "includeDescendants": false
+        },
+        {
+            "projectId": "fa1cf596-0150-4a18-8d75-2f65b5dd201e",
+            "role": "member",
+            "includeDescendants": false
+        }
+    ],
+    "spacePermissions": {
+        "createProjects": true,
+        "editTasks": true,
+        "organizeTasks": false,
+        "comment": true,
+        "manageProjects": false,
+        "inviteMembers": false
+    },
+    "permissionsOverride": null,
+    "canOrganizeTasks": false
+}

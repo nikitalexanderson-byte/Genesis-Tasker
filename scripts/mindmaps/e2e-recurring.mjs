@@ -1,0 +1,27 @@
+import {writeFileSync} from 'node:fs';import assert from 'node:assert/strict';
+import {chromium} from './browser.mjs';
+const b=await chromium.launch({headless:true,channel:'chrome'});const c=await b.newContext({storageState:'output/browser-state.json',viewport:{width:1440,height:1000}});const p=await c.newPage();
+const saved=()=>p.locator('.mindmap-save-state').filter({hasText:'Синхронизировано с сервером'}).waitFor();
+await p.goto('http://127.0.0.1:4319/#projects');await p.getByRole('button',{name:'Майндмепы',exact:true}).waitFor();
+await p.evaluate(()=>{
+ const key=Object.keys(localStorage).find(k=>k.startsWith('genesis-calendar-v2:'));const s=JSON.parse(localStorage.getItem(key));const base=s.tasks[0];
+ const series={...base,id:'recurrence-pilot-ui',title:'Повторяющаяся проверка',done:false,dueDate:'2026-10-12',recurrence:'daily',recurrenceMode:'classic',recurrencePattern:'daily',recurrenceInterval:1,recurrenceDays:[1],recurrenceStartDate:'2026-10-12',recurrenceEndDate:'2026-10-16',recurrenceExcludedDates:[],recurrenceSeriesId:null,googleLinks:{},googleReadOnly:false,dependsOnIds:[]};
+ s.tasks.push(series,{...base,id:'readonly-ui',title:'Только просмотр Google',googleReadOnly:true,done:false});localStorage.setItem(key,JSON.stringify(s));
+});await p.reload();await p.getByRole('button',{name:'Майндмепы',exact:true}).click();await p.getByRole('button',{name:'Создать карту',exact:true}).click();let d=p.getByRole('dialog');
+await d.getByRole('textbox',{name:'Название карты',exact:true}).fill('Экземпляр повторения');await d.getByRole('button',{name:'Создать карту',exact:true}).click();await saved();const mapUrl=p.url();
+await p.locator('.mindmap-toolbar').getByRole('button',{name:'Добавить из дел',exact:true}).click();await p.getByRole('textbox',{name:'Поиск личных дел'}).fill('Повторяющаяся проверка');await p.locator('.mindmap-picker button').click();await p.getByRole('combobox',{name:'День повторения'}).selectOption('2026-10-13');await p.getByRole('button',{name:'Привязать этот день'}).click();await saved();
+await p.getByRole('button',{name:'Открыть карточку задачи'}).click();d=p.getByRole('dialog');
+assert.equal(await d.getByRole('radio',{name:/Только этот день/}).isChecked(),true);
+await d.getByRole('textbox',{name:'Название',exact:true}).fill('Перенесён только один день');
+await d.getByLabel('Начало',{exact:true}).fill('2026-10-20');await d.getByLabel('Срок выполнения',{exact:true}).fill('2026-10-22');await d.getByRole('button',{name:'Сохранить задачу',exact:true}).click();await d.waitFor({state:'hidden'});
+await p.locator('.mindmap-inspector').getByRole('heading',{name:'Перенесён только один день'}).waitFor();
+assert.ok((await p.locator('.mindmap-inspector').innerText()).includes('2026-10-20 — 2026-10-22'));
+const tasks=()=>p.evaluate(()=>JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k=>k.startsWith('genesis-calendar-v2:')))).tasks);
+await p.getByRole('button',{name:'Выполнить задачу',exact:true}).click();await p.getByText('Связанные задачи: 1 из 1',{exact:true}).waitFor();
+const all=await tasks();const root=all.find(t=>t.id==='recurrence-pilot-ui');const exception=all.find(t=>t.recurrenceSeriesId===root.id);
+assert.equal(root.done,false);assert.ok(root.recurrenceExcludedDates.includes('2026-10-13'));assert.equal(exception.recurrenceOriginalDate,'2026-10-13');assert.equal(exception.dueDate,'2026-10-20');assert.equal(exception.done,true);
+await p.locator('.mindmap-toolbar').getByRole('button',{name:'Добавить из дел',exact:true}).click();await p.getByRole('textbox',{name:'Поиск личных дел'}).fill('Только просмотр Google');await p.locator('.mindmap-picker button').click();await saved();
+assert.equal(await p.locator('.mindmap-inspector').getByRole('button',{name:'Выполнить задачу',exact:true}).count(),0);assert.equal(await p.locator('.mindmap-inspector').getByRole('button',{name:'Открыть карточку задачи'}).count(),0);
+await c.storageState({path:'output/recurring-state.json'});await c.close();
+const c2=await b.newContext({storageState:'output/recurring-state.json'});const p2=await c2.newPage();await p2.goto(mapUrl);await p2.getByText('Связанные задачи: 1 из 2',{exact:true}).waitFor();
+writeFileSync('output/mindmaps-recurring-result.json',JSON.stringify({passed:['real ordinary recurrence editor defaults to selected day','title/date change detaches only that occurrence','map reference survives date move','complete only selected exception','read-only source has no editing/completion controls','restart retains progress and exception'],mapUrl},null,2));console.log('PASS recurring date move, completion isolation, read-only UI and restart (local fixtures; no live Google)');await b.close();

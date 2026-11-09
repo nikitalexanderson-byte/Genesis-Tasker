@@ -1,0 +1,3 @@
+The 56 starter records are generated directly by the existing PHP template normalizer and starter catalog in all 14 supported languages. The rich manifest is a labeled synthetic graph normalized by the same PHP code; it covers nested projects, checklist links, dependencies, approvals, seven field types, archived options, relative dates and independent zero/null estimates.
+
+Regenerate from the repository root with `php android/tools/export-template-corpus.php`. The exporter performs no database or session access. Service tests use a deterministic in-memory transport; they verify durable command behavior and do not claim real HTTPS or Google acceptance.

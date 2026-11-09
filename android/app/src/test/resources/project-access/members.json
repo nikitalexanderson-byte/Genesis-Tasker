@@ -1,0 +1,19 @@
+{
+    "space": {
+        "id": "a9f79f0e-b5d2-4860-8279-acdaca0fe355",
+        "title": "Проверка проектного доступа",
+        "role": "owner"
+    },
+    "members": [
+        {
+            "userId": "9c58ff20-d9c9-4a03-801c-ec4389813a77",
+            "displayName": "GENESIS Test viewer",
+            "role": "member"
+        },
+        {
+            "userId": "f1775706-9903-466b-a5d0-97e6e716dd8f",
+            "displayName": "GENESIS Test editor",
+            "role": "owner"
+        }
+    ]
+}

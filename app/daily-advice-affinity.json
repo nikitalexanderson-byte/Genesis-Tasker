@@ -1,0 +1,8 @@
+{
+  "aretology": {"templates":["morning-water","morning-mobility","walk"],"sectors":["north","northeast"],"words":["трениров","дисциплин","спорт","разминк","вынослив","бег","отжиман","exercise","workout","training","fitness","discipline","running"]},
+  "hermetica": {"templates":["daily-plan","reading","focus-session"],"sectors":["east","southeast"],"words":["чтен","читать","учить","обучен","интеллект","работ","бизнес","коммуникац","переговор","язык","reading","study","learn","focus","business","work","communicat"]},
+  "kourotrophy": {"templates":[],"sectors":["south"],"words":["воспитан","детям","детей","ребен","ребён","родител","наслед","преемствен","семейн","семья","children","parent","family","heritage","legacy","mentor"]},
+  "hestiology": {"templates":["ten-minute-reset","screen-free-bedtime"],"sectors":["hearth","southwest"],"words":["уборк","порядок","порядк","готовить","готовк","домашн","рутин","быт","clean","tidy","house","home","cooking","routine"]},
+  "aphrodisia": {"templates":[],"sectors":["west"],"words":["эстетик","красот","эрос","близост","партнер","партнёр","искусств","любов","свидан","aesthetic","beauty","eros","intimacy","partner","art","love"]},
+  "psychopompia": {"templates":["meditation","evening-review"],"sectors":["northwest","nadir"],"words":["интроспекц","рефлекс","самонаблюден","дневник","внутрен","кризис","тенев","тенью","медитац","introspect","reflect","journal","shadow","crisis","meditat"]}
+}

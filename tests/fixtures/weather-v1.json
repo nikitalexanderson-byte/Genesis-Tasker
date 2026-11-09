@@ -1,0 +1,8 @@
+{
+  "schemaVersion":1,"status":"fresh","reason":null,
+  "provider":{"id":"met-norway","name":"MET Norway","attributionUrl":"https://www.met.no/","licenseUrl":"https://creativecommons.org/licenses/by/4.0/","dataKind":"forecast"},
+  "location":{"latitude":55.7558,"longitude":37.6173,"approximate":true},
+  "issuedAt":"2026-11-06T12:00:00Z","observedAt":null,"validAt":"2026-11-06T12:00:00Z","validUntil":"2026-11-06T13:00:00Z",
+  "fetchedAt":"2026-11-06T12:30:00Z","expiresAt":"2026-11-06T13:00:00Z","retryAt":"2026-11-06T13:00:00Z",
+  "current":{"temperatureC":6.2,"apparentTemperatureC":null,"humidityPercent":80,"pressureMslHpa":1008,"windSpeedMps":6,"windDirectionDeg":225,"windGustMps":10,"cloudCoverPercent":95,"precipitation1hMm":2.5,"rain1hMm":null,"snowWaterEquivalent1hMm":null,"precipitationRateMmH":2.5,"snowDepthCm":null,"visibilityM":null,"condition":"rain","phenomena":["rain"],"precipitationKind":"rain","intensity":"light","providerCode":"lightrain_day","thunderstorm":false,"storm":null,"blizzard":null}
+}

@@ -1,0 +1,8 @@
+app/curated-translations.en.json text eol=lf
+*.sh text eol=lf
+android/gradlew text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+server/resources/shared-notification-copy.json text eol=lf
+server/resources/billing-location/*.zone text eol=lf
+server/resources/billing-location/Copyrights.txt text eol=lf

@@ -1,0 +1,1518 @@
+{
+  "version": 1,
+  "source": "герметика.docx",
+  "sourceSha256": "d22ce396728544bf9494f63c48e308eede096938eb5863903bddc0411ef57d96",
+  "extraction": "Word paragraphs and embedded blank-line breaks; first period-space separates headings, except source posts 29–31 which use a newline. Original wording and separators retained.",
+  "entries": [
+    {
+      "number": 1,
+      "sourceParagraph": 1,
+      "sourceSegment": 1,
+      "id": "advice-fb1f404a983df92cac8a60de",
+      "title": "Устранение \"Психического Демократизма\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7d42bd6793deb410414529024a446cef0c7a3875ed872f674d9e9edc81ddbbf6"
+    },
+    {
+      "number": 2,
+      "sourceParagraph": 1,
+      "sourceSegment": 2,
+      "id": "advice-ae3f7402cde821bcc7d2f53a",
+      "title": "Запрет \"Информационного Плебса\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "cc6a1036572466f88b614982cce331c2526309aed363ae19137858f03bf4b289"
+    },
+    {
+      "number": 3,
+      "sourceParagraph": 1,
+      "sourceSegment": 3,
+      "id": "advice-c5f18947a5184570b7af38f6",
+      "title": "Технология \"Интеллектуального Отчуждения\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a39eafc28ec15017b39eff0c65e5b0d619ea581c4d48e74fc89b2cc52d23736c"
+    },
+    {
+      "number": 4,
+      "sourceParagraph": 1,
+      "sourceSegment": 4,
+      "id": "advice-2d86dcd75636010cc0d5c5d6",
+      "title": "Практика \"Закрытого Свода\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e3f204c683df21aea7126a5cf7c5102039ab4586fe57b5d5fe820afdea7cc265"
+    },
+    {
+      "number": 5,
+      "sourceParagraph": 1,
+      "sourceSegment": 5,
+      "id": "advice-c202ad8d6c47f20b4921ad91",
+      "title": "Утверждение Интеллектуальной Сухости",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ad75244ea1963f28262d925a7651dc8ab177974894f66952c3a25001977c825a"
+    },
+    {
+      "number": 6,
+      "sourceParagraph": 1,
+      "sourceSegment": 6,
+      "id": "advice-a80f875aca352b3da0273dad",
+      "title": "Запрет \"Чувственных Галлюцинаций\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "dd7b0084a81c235989d5c06aff0832b6141b3f7ed47bf906397a86e0a7b2064b"
+    },
+    {
+      "number": 7,
+      "sourceParagraph": 1,
+      "sourceSegment": 7,
+      "id": "advice-686f1de3b877950bb7c69b4c",
+      "title": "Технология \"Информационного Голода\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b8eb7a42d66b7ca6f91141b219db01a35afcbe67e4020f3f9a60007f0da666ad"
+    },
+    {
+      "number": 8,
+      "sourceParagraph": 1,
+      "sourceSegment": 8,
+      "id": "advice-eb9ebc4b44f8fca6351441aa",
+      "title": "Практика \"Взвешивания Смыслов\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b35a94f3df3817408c906c6e5fd74ebf3b87fe411537d61bf565c4c7019f3718"
+    },
+    {
+      "number": 9,
+      "sourceParagraph": 1,
+      "sourceSegment": 9,
+      "id": "advice-446bef06bddea0cf68e64915",
+      "title": "Устранение \"Информационной Демократии\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1079924effa7fb84dd2de6fef77af974037faf4eb362c2a89cbc0979a39b1778"
+    },
+    {
+      "number": 10,
+      "sourceParagraph": 1,
+      "sourceSegment": 10,
+      "id": "advice-d50c547eacd838f666bab55c",
+      "title": "Утверждение Собственной Оценки",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e11a3a2d1407d3ef9072662234d702dc97584d70ac23b9b35112f19655d4a0d2"
+    },
+    {
+      "number": 11,
+      "sourceParagraph": 1,
+      "sourceSegment": 11,
+      "id": "advice-74dc7e44b7c09baade75edd8",
+      "title": "Запрет \"Чужих Ведущих\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "bc2ffbfade17a5758f2343365b792da9293f5ccac59320ee5474fd7a499bc3df"
+    },
+    {
+      "number": 12,
+      "sourceParagraph": 1,
+      "sourceSegment": 12,
+      "id": "advice-2148365f2af811f99c8e2113",
+      "title": "Практика \"Внутреннего Акрополя\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "d34a987386d5f0f6c7f4a13e8d92716ca6082e437fe79ba54e7e2ced9bd7a9e7"
+    },
+    {
+      "number": 13,
+      "sourceParagraph": 1,
+      "sourceSegment": 13,
+      "id": "advice-3100cc83680cc50d8899c772",
+      "title": "Устранение \"Аддитивной Иллюзии\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "35929cb51a4b98eb3e90ca27811f61cd2be378cd9cb344513f7e7893a7a02c83"
+    },
+    {
+      "number": 14,
+      "sourceParagraph": 1,
+      "sourceSegment": 14,
+      "id": "advice-8264e5182a3ecf340ac5e636",
+      "title": "Запрет \"Когнитивных Наслоений\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "835e1c8050b017c7ad6bf6c7a2e2cb5522c55921fe003e23f3b42fc7c6135896"
+    },
+    {
+      "number": 15,
+      "sourceParagraph": 1,
+      "sourceSegment": 15,
+      "id": "advice-14ea52164ffd755fcf12f9f1",
+      "title": "Утверждение Интеллектуальной Наготы",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "6f0bcd700ff7328ce217a254beda2a6736f9d518fa66f5d29018f54a867173b9"
+    },
+    {
+      "number": 16,
+      "sourceParagraph": 1,
+      "sourceSegment": 16,
+      "id": "advice-7895b4a70a144f893f5834be",
+      "title": "Практика \"Возвращения к Центру\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "95813b54a6de46ab0cf3696afc4a0b61dbc159375036b42544e21fcb221f32e7"
+    },
+    {
+      "number": 17,
+      "sourceParagraph": 1,
+      "sourceSegment": 17,
+      "id": "advice-e8a40857eb2d374f4fcd8964",
+      "title": "Устранение \"Понятийной Диффузии\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "476680f0e1000101405d6710c5686a720472e4e916dba00344f932d58ff242f2"
+    },
+    {
+      "number": 18,
+      "sourceParagraph": 1,
+      "sourceSegment": 18,
+      "id": "advice-aacd2147001096fa0d45bcac",
+      "title": "Утверждение Интеллектуальной Иерархии",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a7237d83b2ce27405a66e25bc0ae1805d069405c9ba8c5252ab6d71793ef6dab"
+    },
+    {
+      "number": 19,
+      "sourceParagraph": 1,
+      "sourceSegment": 19,
+      "id": "advice-a69214068f5e85ee6c2c52e6",
+      "title": "Запрет \"Информационных Софизмов\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8ce6bd08849df27493a196612ffd1d51c755116dc0abae1cf1c7f24b6cccc621"
+    },
+    {
+      "number": 20,
+      "sourceParagraph": 1,
+      "sourceSegment": 20,
+      "id": "advice-4660a44a774adb05b95fecde",
+      "title": "Практика \"Сущностного Видения\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "606ba7b25fefb5fbee3f9088fdc937ae9153635be2e374fcdec8bb5cbfbdafe0"
+    },
+    {
+      "number": 21,
+      "sourceParagraph": 1,
+      "sourceSegment": 21,
+      "id": "advice-4c4ad6a7d63d4efd4745ac88",
+      "title": "Диалектика как Сепаратор, а не Смеситель",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "483ee99b91628ffc690fb60af3682cc2a3a946669039585e43ed6b4f6afc5cce"
+    },
+    {
+      "number": 22,
+      "sourceParagraph": 1,
+      "sourceSegment": 22,
+      "id": "advice-b8c64d095d7ab052571b8f42",
+      "title": "Маркетинг как \"Пещера Призраков\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "dd27705d24c604b8507291315b77d3c88a929f7b3529f4068754e36ad4393c03"
+    },
+    {
+      "number": 23,
+      "sourceParagraph": 1,
+      "sourceSegment": 23,
+      "id": "advice-a28c44c57fff46c56e8eecfd",
+      "title": "Коммунизм как Секулярный Опиум",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a7f1755b54d794ee1ce99c5936f35ec518ea899ca442463713abc5cec01463bc"
+    },
+    {
+      "number": 24,
+      "sourceParagraph": 1,
+      "sourceSegment": 24,
+      "id": "advice-fd82010a4927d73f51c5d8b6",
+      "title": "Устранение \"Диалектического Опьянения\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "f14a7557596cbf54722bd78b83d87e38f3195918f97649261b360e2b4be9db6f"
+    },
+    {
+      "number": 25,
+      "sourceParagraph": 1,
+      "sourceSegment": 25,
+      "id": "advice-27a0fdcb29fc3e594a4775b9",
+      "title": "Устранение \"Вербальной Течи\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "66f40687f3f7f5b156be28d0139e9e7759c571edb458730a3c227fd9558d15b6"
+    },
+    {
+      "number": 26,
+      "sourceParagraph": 1,
+      "sourceSegment": 26,
+      "id": "advice-ce4a1780364edc451aa5c9c8",
+      "title": "Запрет Понимания",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "bef66e95a9b90444b24b4f5f7930ef9f896ce6750afa1a010c30aed11780781b"
+    },
+    {
+      "number": 27,
+      "sourceParagraph": 1,
+      "sourceSegment": 27,
+      "id": "advice-c41bb7eeb987e9fbfcae49d4",
+      "title": "Технология \"Стратегического Безмолвия\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b01bd0c2d4572817296c6392e4bfcd0d77a675d8b20769d3e98305c9f63f69c7"
+    },
+    {
+      "number": 28,
+      "sourceParagraph": 1,
+      "sourceSegment": 28,
+      "id": "advice-eef329101fb90783394e4173",
+      "title": "Практика \"Инкубации Смысла\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8118f6f0e2d7f1657ce6011467d1660e974b5d4ba3e3d162c225fcf143b4716d"
+    },
+    {
+      "number": 29,
+      "sourceParagraph": 1,
+      "sourceSegment": 29,
+      "id": "advice-464e0f6cef328655038ebc7c",
+      "title": "Метод \"Управляемого кризиса\" (Проблема - Реакция - Решение)",
+      "headingSeparator": "\n",
+      "status": "published",
+      "textSha256": "2e375b464a129dc0f6967143654e49edcf79ec0ec4e4ba825cc26b99d3383cbe"
+    },
+    {
+      "number": 30,
+      "sourceParagraph": 1,
+      "sourceSegment": 30,
+      "id": "advice-4dd36fd519cd968fc933ae51",
+      "title": "Коммодификация бунта (Марксистский метод)",
+      "headingSeparator": "\n",
+      "status": "published",
+      "textSha256": "94309d3710c7c53d7d661d1a53106f54827561489c0df29d122d78103068092b"
+    },
+    {
+      "number": 31,
+      "sourceParagraph": 2,
+      "sourceSegment": 1,
+      "id": "advice-88f294201466e778604ef295",
+      "title": "Конструирование \"Нового человека\"",
+      "headingSeparator": "\n",
+      "status": "published",
+      "textSha256": "f19a18ad76eb53573f0854eba610f0182caa3416564e0033747064bb68e9391e"
+    },
+    {
+      "number": 32,
+      "sourceParagraph": 3,
+      "sourceSegment": 1,
+      "id": "advice-0db19dcaab8d23c94d0681cd",
+      "title": "Утверждение \"Очерченного Настоящего\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "78b7eebe9a2e6a64ac9cd1df45bced6770a7470894b7b56844bb5094cf61fb34"
+    },
+    {
+      "number": 33,
+      "sourceParagraph": 3,
+      "sourceSegment": 2,
+      "id": "advice-96808e7133ba6629aa7ee5f6",
+      "title": "Практика \"Закрытого Адитона\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "4a448da6744909b80fac73d6d653f5f6967823c33c4f35a2a8b7fa88ef0a70a9"
+    },
+    {
+      "number": 34,
+      "sourceParagraph": 3,
+      "sourceSegment": 3,
+      "id": "advice-f70ed97a82bbd5aa6b906d27",
+      "title": "Запрет \"Реактивного Дребезжания\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "2a7bd7ef1ccdef964192ce265612e2ee57c16a11d344fd25064cca7d73f049b9"
+    },
+    {
+      "number": 35,
+      "sourceParagraph": 3,
+      "sourceSegment": 4,
+      "id": "advice-4448636067e9335bb526406c",
+      "title": "Технология \"Онтологического Веса\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "4fe767adb1b9dda234a58473c2bca18b7f3764a426df9936789ba9999cebb9d5"
+    },
+    {
+      "number": 36,
+      "sourceParagraph": 3,
+      "sourceSegment": 5,
+      "id": "advice-33c7789aa239a0241f5bc21d",
+      "title": "Утверждение Космогонического Архетипа",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a28c490d2e0773b8082b02f1de20e6c9634f6a4cee4573674979123457e6440c"
+    },
+    {
+      "number": 37,
+      "sourceParagraph": 3,
+      "sourceSegment": 6,
+      "id": "advice-5e142ffa6bc24dfc4fa750f8",
+      "title": "Алхимия \"Беструдного\" Управления",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b2c3bdd29391e60504ba9f034dcdd0494e7c21148f9a19097c3ece7261b354db"
+    },
+    {
+      "number": 38,
+      "sourceParagraph": 3,
+      "sourceSegment": 7,
+      "id": "advice-6724f718ac6411d0ff4c8392",
+      "title": "Запрет Рыночной Энтропии",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "304435fa99c1d72002a520945b4bfd7aecfdcb07040e55bb8d3ac0332240e4bd"
+    },
+    {
+      "number": 39,
+      "sourceParagraph": 3,
+      "sourceSegment": 8,
+      "id": "advice-bdce19571bf60ae8fb500676",
+      "title": "Практика Освящения Структуры",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ca0fe5830dcc62e86c841862b973e981a4792c5301ac41e645592f99a2065e28"
+    },
+    {
+      "number": 40,
+      "sourceParagraph": 3,
+      "sourceSegment": 9,
+      "id": "advice-b6ff00b7f857dd7f378e4bd4",
+      "title": "Утверждение Директивного Логоса",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ec2ad14938c1ef6f258a5c824169da08843688dbec35be37159dc0d0591cc5b2"
+    },
+    {
+      "number": 41,
+      "sourceParagraph": 3,
+      "sourceSegment": 10,
+      "id": "advice-772388c424b0597d9f617e36",
+      "title": "Алхимия \"Царственного Ткачества\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7616bc90eab60b5e04e8e5950c1b1e41899821d4ae39447301365302148e254d"
+    },
+    {
+      "number": 42,
+      "sourceParagraph": 3,
+      "sourceSegment": 11,
+      "id": "advice-a56a76e93aabcce5c41424a7",
+      "title": "Онтологическая Дистанция Власти",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "52c7b1c445b088643ca238f3e890cb3090ca486d78269bbad5a13a75bd6ed2ef"
+    },
+    {
+      "number": 43,
+      "sourceParagraph": 3,
+      "sourceSegment": 12,
+      "id": "advice-f417a0783ee7bbd2ee2f6392",
+      "title": "Практика \"Самодвижущихся Треножников\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "d1d012400e99a4d907b1eadf804d623ac687ff1d4947fc12ec1c4ee6f7092bc8"
+    },
+    {
+      "number": 44,
+      "sourceParagraph": 3,
+      "sourceSegment": 13,
+      "id": "advice-71a3f50ba3bd7ab394b928b7",
+      "title": "Утверждение Пропорционального Распределения",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "02846dab6a90f804d24f16a7ef4484f4579fee13eef4033b3dd137a67286c013"
+    },
+    {
+      "number": 45,
+      "sourceParagraph": 3,
+      "sourceSegment": 14,
+      "id": "advice-92892ee5f1999250731619ca",
+      "title": "Алхимия \"Квадратной\" Стабильности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b3bc0bc0c76138308a2d5e64495d1383cebb1afdcb17dbdc13b04ac902ca945c"
+    },
+    {
+      "number": 46,
+      "sourceParagraph": 3,
+      "sourceSegment": 15,
+      "id": "advice-d87a49a7f04007396ff5419c",
+      "title": "Запрет Системных \"Миазмов\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a4fb3472c9a5c2e3968024b80ad24935e997438a39a5918705b4c0d65315cab7"
+    },
+    {
+      "number": 47,
+      "sourceParagraph": 3,
+      "sourceSegment": 16,
+      "id": "advice-d13be75161d922b1f05e15f3",
+      "title": "Практика Соподчинения Частей",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "424f50ae401dc8683eac119ec3c04ec4f97b21e51ee7bf042f2444afcce2aa67"
+    },
+    {
+      "number": 48,
+      "sourceParagraph": 3,
+      "sourceSegment": 17,
+      "id": "advice-1f840458c072bc1c49d1a153",
+      "title": "Утверждение Интерпретации",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8445f518e43592fce0871a8b716df5370bab08966780d1e02003a1d0a62b98ad"
+    },
+    {
+      "number": 49,
+      "sourceParagraph": 3,
+      "sourceSegment": 18,
+      "id": "advice-d9f1f5c1c1889ee09635946c",
+      "title": "Запрет \"Демократического Дребезжания\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "85a78b5a7ee5a8d06070c7a3d5ea60aec963056b1aa5fcee96dc1fd9294da8af"
+    },
+    {
+      "number": 50,
+      "sourceParagraph": 3,
+      "sourceSegment": 19,
+      "id": "advice-f4b58ebe357ac73945c60f60",
+      "title": "Алхимия Стратегической Дистанции",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7a5cf8cddf7c529408b47fe1023dfc11820c0ce32db219a0143d06d9c6a87719"
+    },
+    {
+      "number": 51,
+      "sourceParagraph": 3,
+      "sourceSegment": 20,
+      "id": "advice-795ef7c16a6cc99721be17df",
+      "title": "Практика \"Тонической Неподвижности\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "d2d32265df0ebade4b33ffd5039a039f8b9988d35f725018e58ed2093cf846d5"
+    },
+    {
+      "number": 52,
+      "sourceParagraph": 3,
+      "sourceSegment": 21,
+      "id": "advice-6a4beb9914964fc5b5322c25",
+      "title": "Утверждение Номинации",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "12bfaf5e79e9f26bd039747c202ada0204e052078e521957ad678621aca5cb08"
+    },
+    {
+      "number": 53,
+      "sourceParagraph": 3,
+      "sourceSegment": 22,
+      "id": "advice-e58cb29fe7ea51704f85d59d",
+      "title": "Алхимия Операционного Ритма",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ba37ec97ce072d113bf9eb9201c77b0bdc80a83b4f00aefee06d8d01d5c52059"
+    },
+    {
+      "number": 54,
+      "sourceParagraph": 3,
+      "sourceSegment": 23,
+      "id": "advice-b9260e6bbe7de540d6105164",
+      "title": "Запрет \"Пустого Звона\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "41c921553088f5d4d2499174a907352498fad4723407a7fe94745faaca40c060"
+    },
+    {
+      "number": 55,
+      "sourceParagraph": 3,
+      "sourceSegment": 24,
+      "id": "advice-586a58007b1c155600d08731",
+      "title": "Практика Слоговой Сборки",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "3c65f0cb42087e34cd3036b6107e9dd90ab6fae0fd39c11af349a57239cc2daf"
+    },
+    {
+      "number": 56,
+      "sourceParagraph": 3,
+      "sourceSegment": 25,
+      "id": "advice-3fec8a89edf69f15edbd4f39",
+      "title": "Утверждение Делегирования",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "586be48a9a9a3b026f02ab7638351154a3e157c6f84299bb5944c69c5d0bc996"
+    },
+    {
+      "number": 57,
+      "sourceParagraph": 4,
+      "sourceSegment": 1,
+      "id": "advice-d88678ecdb7fff62a8aa1c78",
+      "title": "Запрет \"Демонического Дребезжания\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e2eb4d751db61e15e560e2693a4c0e320faf600f19aea12c82b4d7adaa904efa"
+    },
+    {
+      "number": 58,
+      "sourceParagraph": 4,
+      "sourceSegment": 2,
+      "id": "advice-9ce421388dd3b629e7c1a6c2",
+      "title": "Алхимия \"Символического Приказа\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1f55abc24b2da8b87949090a57c1d6df7bb7caa9360d7474a71c20016b37aadd"
+    },
+    {
+      "number": 59,
+      "sourceParagraph": 4,
+      "sourceSegment": 3,
+      "id": "advice-1618d5d697232b70b0d3b5ea",
+      "title": "Практика \"Тонического Надзора\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "d0b6f991ce27bd1ad757ec5065b2b27839555c59755f496e32b9f25d70e94612"
+    },
+    {
+      "number": 60,
+      "sourceParagraph": 4,
+      "sourceSegment": 4,
+      "id": "advice-e46435ed901ec5d418e05397",
+      "title": "Закон Замкнутого Цикла",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "2ff15c97da0d0e2a51dbf247e32b60ca5b892d03ee3bd03d6d7e028ddbc8b042"
+    },
+    {
+      "number": 61,
+      "sourceParagraph": 4,
+      "sourceSegment": 5,
+      "id": "advice-49d7e55986c040dcf58154e2",
+      "title": "Запрет Внешней Валидации",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e31638f07f55096d40450b05f64fc6fb6bea521f741cd7203f7ea65f4d453123"
+    },
+    {
+      "number": 62,
+      "sourceParagraph": 4,
+      "sourceSegment": 6,
+      "id": "advice-a3a2042741b72a6cf100ed89",
+      "title": "Алхимия Внутреннего Капитала",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "bc56cbdbcb0797a4efaf38216d4d83a2388138d28d00ea72505bcc323552203d"
+    },
+    {
+      "number": 63,
+      "sourceParagraph": 4,
+      "sourceSegment": 7,
+      "id": "advice-c1bd732415ddd7755c73f553",
+      "title": "Практика Центростремительного Развития",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "0f959f5694f549d7747ec746dd465062cb018f84d8d766b4bda4f84952345414"
+    },
+    {
+      "number": 64,
+      "sourceParagraph": 4,
+      "sourceSegment": 8,
+      "id": "advice-e5ef14c505bff203480ebbf7",
+      "title": "Утверждение Избыточности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e8ef239d10e5dfd9aa04d6015860d477a7842826c8638bea50a953d0981a089f"
+    },
+    {
+      "number": 65,
+      "sourceParagraph": 4,
+      "sourceSegment": 9,
+      "id": "advice-2b132ed9b72f611208c4bb68",
+      "title": "Запрет Сознания Нужды",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b73e4d349dc9760d5a5f8477ace07a0d3c188b24258f03f352163a07deb47a5f"
+    },
+    {
+      "number": 66,
+      "sourceParagraph": 4,
+      "sourceSegment": 10,
+      "id": "advice-801a3e1b6931e544b1ca01ff",
+      "title": "Алхимия \"Беструдного\" Приумножения",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "df4fa918f270e17ce1e0128d773a2c315eef6eaa3de7862f0d9256b5e035e3d5"
+    },
+    {
+      "number": 67,
+      "sourceParagraph": 4,
+      "sourceSegment": 11,
+      "id": "advice-52811e8840af9d2406bcbbec",
+      "title": "Практика \"Взвешивания Словес\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b25b49b977374608a6d909cab53be484d6f8d933a3e8c45d4030f37edb50617b"
+    },
+    {
+      "number": 68,
+      "sourceParagraph": 4,
+      "sourceSegment": 12,
+      "id": "advice-d432f26d39a67262d3c2e2c7",
+      "title": "Утверждение Монетарной Чистоты",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "298c9e9748ec5622e758f151692ccf32024e896823e63140e89142875689cb99"
+    },
+    {
+      "number": 69,
+      "sourceParagraph": 4,
+      "sourceSegment": 13,
+      "id": "advice-831ecf05464cc0a64bd19c75",
+      "title": "Алхимия Ценообразования",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1a523adceb5387261f2b23cb3a062f0ebb6bf3a1d2057998e04f74f4cbffeb73"
+    },
+    {
+      "number": 70,
+      "sourceParagraph": 4,
+      "sourceSegment": 14,
+      "id": "advice-e13d78c8fedf9eb0563b7448",
+      "title": "Запрет Расчетного Хаоса",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "57cc285305bd9d1bb2cf2cc60a9e7713913dc3db4f33d5009d73457338172f2e"
+    },
+    {
+      "number": 71,
+      "sourceParagraph": 4,
+      "sourceSegment": 15,
+      "id": "advice-5abcad0d26c094bf0cafcd72",
+      "title": "Практика Транзакционного Присутствия",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1cc5d982a9e3ec7bb2348d5dfea1f269136ebd7c68f09e1889c3c58c6f2b448c"
+    },
+    {
+      "number": 72,
+      "sourceParagraph": 4,
+      "sourceSegment": 16,
+      "id": "advice-fd3b18be537ab4774fa25199",
+      "title": "Утверждение Сущностной Цены",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "0289ebf4a3399da983ea7ffa930185ecfb65fc1e689616d7446facbf6b296f67"
+    },
+    {
+      "number": 73,
+      "sourceParagraph": 4,
+      "sourceSegment": 17,
+      "id": "advice-b4cc6ec865532e13a1079647",
+      "title": "Запрет \"Арифметической Иллюзии\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "9fe63dcb955c7532401c111e9ecfd707ef8a7b45a106c0a4037c5ed629112766"
+    },
+    {
+      "number": 74,
+      "sourceParagraph": 4,
+      "sourceSegment": 18,
+      "id": "advice-0c0ee820077657f7c039f77e",
+      "title": "Алхимия Транзакционного Присутствия",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e1608d9f40ad8988399bf6c53807106ab0cad7c2e39dc4d65276d181131ebbd5"
+    },
+    {
+      "number": 75,
+      "sourceParagraph": 4,
+      "sourceSegment": 19,
+      "id": "advice-9e2e0aa894fe55c1a46dd728",
+      "title": "Практика Ревизии \"Весов Дике\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "191856b435cdeb2ae4bb51a7fdc8790cfdd2a7785087bf4980144a09b066189f"
+    },
+    {
+      "number": 76,
+      "sourceParagraph": 4,
+      "sourceSegment": 20,
+      "id": "advice-2ea1a36015133921ba0f38f0",
+      "title": "Устранение \"Энергетического Паразитизма\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ba847774260642e307d03aefb7e983541d34aeb0c96f9371a83b764ac42e5881"
+    },
+    {
+      "number": 77,
+      "sourceParagraph": 4,
+      "sourceSegment": 21,
+      "id": "advice-a155a1be8b2e3316cc8c9cec",
+      "title": "Запрет \"Долговой Миазмы\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8aa40e51a3fbfac8130f6b13f5e92e36172324d08782e5adeaa3575bf3cdc84c"
+    },
+    {
+      "number": 78,
+      "sourceParagraph": 4,
+      "sourceSegment": 22,
+      "id": "advice-b155d48606da2b0d2c035160",
+      "title": "Практика \"Выкупа Души\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "f57e831b7e068af0cf25a52187199bcb25ee270a88db4931b78a5e1f58306573"
+    },
+    {
+      "number": 79,
+      "sourceParagraph": 4,
+      "sourceSegment": 23,
+      "id": "advice-4329172d982b9ef789cc6971",
+      "title": "Утверждение Самодостаточности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "60adc67a8e1752a7effb77b1fd1d491876b2adde0b9c03e2fd255c6927ee3b6c"
+    },
+    {
+      "number": 80,
+      "sourceParagraph": 4,
+      "sourceSegment": 24,
+      "id": "advice-4ddc1d345ec0ab3709ff57de",
+      "title": "Утверждение Потенциального Действия",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "86d9ea826a0674fcc5433cd5770f12751723a11d44be409b8ee6b43881456c90"
+    },
+    {
+      "number": 81,
+      "sourceParagraph": 4,
+      "sourceSegment": 25,
+      "id": "advice-3d9095fe7fa04db8b4fb162a",
+      "title": "Запрет Рыночной Текучести",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7475e2e8fd3d6bdc637285f88d297b81fa0bd3e5ddc193e3466cf39ab25c6164"
+    },
+    {
+      "number": 82,
+      "sourceParagraph": 4,
+      "sourceSegment": 26,
+      "id": "advice-ddf5ad61fa88d3c41de42f07",
+      "title": "Алхимия \"Беструдного\" Масштабирования",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "19ac374a413c7f27a62b85e9915f1b7d0f2a00850c17550b3822acfb3a6502a1"
+    },
+    {
+      "number": 83,
+      "sourceParagraph": 4,
+      "sourceSegment": 27,
+      "id": "advice-cf193525831cc177376e1683",
+      "title": "Практика \"Неподвижного Двигателя\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "f95327c32ceb2633c40969beb9580659db7624d54074b2dc917413001f86b25e"
+    },
+    {
+      "number": 84,
+      "sourceParagraph": 4,
+      "sourceSegment": 28,
+      "id": "advice-6ae7b3f76a805b99ff3a0bd3",
+      "title": "Устранение \"Арифметической Жадности\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b3d2836e0f479d1762f55dbdc72d1381a0ae16faa3238be4c82c5707a0472bc2"
+    },
+    {
+      "number": 85,
+      "sourceParagraph": 4,
+      "sourceSegment": 29,
+      "id": "advice-5514a0893c611909894cc84f",
+      "title": "Запрет \"Текучих Активов\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "2e7473044b9589711a5f7df043a2be4e8e7592323c7153d33dbae15b6f8fb662"
+    },
+    {
+      "number": 86,
+      "sourceParagraph": 4,
+      "sourceSegment": 30,
+      "id": "advice-182cbd127de01a32623af5b8",
+      "title": "Утверждение Структурной Плотности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "10fb8ab440d76ded6a7a18e9b5121d8fc766d19f26cf27d4eb23c070499d3d01"
+    },
+    {
+      "number": 87,
+      "sourceParagraph": 4,
+      "sourceSegment": 31,
+      "id": "advice-91db18c2da86506bdd1e00a6",
+      "title": "Практика \"Очерчивания Настоящего\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "aba1f94a1c91bedce5cca52e95b2083e5dad989a55614c6319f15f51e36646d6"
+    },
+    {
+      "number": 88,
+      "sourceParagraph": 4,
+      "sourceSegment": 32,
+      "id": "advice-dfc72953f7e5a22ac098343a",
+      "title": "Утверждение Внутреннего Ресурса",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "67043f1ff66f9122e9653c7575b1111a84cca4dec687097ecc1f9ccf92159aea"
+    },
+    {
+      "number": 89,
+      "sourceParagraph": 4,
+      "sourceSegment": 33,
+      "id": "advice-e89c6c135cf73b5fc1d34e9c",
+      "title": "Запрет Экстенсивного Роста",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a9740963f4c74d95f0e82b9492137dd92a7af66a3f93a3f0eda2b2fab5566212"
+    },
+    {
+      "number": 90,
+      "sourceParagraph": 4,
+      "sourceSegment": 34,
+      "id": "advice-2486abf9394408fd6646f4ad",
+      "title": "Алхимия Ресурсной Изоляции",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "3e1ed8e76fc6792a1c920d2ace054edf571ce0e3a161b846ebdd04549d7924b4"
+    },
+    {
+      "number": 91,
+      "sourceParagraph": 5,
+      "sourceSegment": 1,
+      "id": "advice-cdc827a9a86bcd8640eee940",
+      "title": "Практика \"Светлого Лика Суверена\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "45b42cd758707f0f80be4c0259a717d351e9c747227f04edf24bd8eaca1fd826"
+    },
+    {
+      "number": 92,
+      "sourceParagraph": 5,
+      "sourceSegment": 2,
+      "id": "advice-b1eee93bc1e56b5085b22796",
+      "title": "Утверждение Онтологического Ранга",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "12ebb337ebc89befff48c082ee1e18d03a9abbe1befa6aa9bf44c393c0bc65f7"
+    },
+    {
+      "number": 93,
+      "sourceParagraph": 5,
+      "sourceSegment": 3,
+      "id": "advice-3a3e842568a94f489e26a9ec",
+      "title": "Алхимия Преемственности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "49e976f4195d8211507c167ea90c38d7d58c0721bd8ab20bcfe25f0070e15314"
+    },
+    {
+      "number": 94,
+      "sourceParagraph": 5,
+      "sourceSegment": 4,
+      "id": "advice-bd712459b8c9d82c41e4ef5f",
+      "title": "Запрет Интеллектуальной Автономии",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8c26409609748db030ebf546710e3def845b1e32ac496b5e940bdd60269a7380"
+    },
+    {
+      "number": 95,
+      "sourceParagraph": 6,
+      "sourceSegment": 1,
+      "id": "advice-038d3e1afe5ea03bf005bce6",
+      "title": "Практика \"Звеньевой Сборки\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8685696e9f4c3275baa45ab7a057a8f2b623831ef1e443b2ef2bfb1e0ab87c4b"
+    },
+    {
+      "number": 96,
+      "sourceParagraph": 6,
+      "sourceSegment": 2,
+      "id": "advice-fdf64823f79d6729f0e616be",
+      "title": "Утверждение Онтологического Аудита",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "372377b237e8d9b8aa9c2429d790d0816e56c6e89e7876d7f893ae2277d03e79"
+    },
+    {
+      "number": 97,
+      "sourceParagraph": 6,
+      "sourceSegment": 3,
+      "id": "advice-1b5b3f1f4b248d23163bbf2b",
+      "title": "Алхимия \"Стратегического Пренебрежения\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "9452e57f87a423aa85623c554d8fbea18210bd4c4e5494d9eb290ad89c98ef49"
+    },
+    {
+      "number": 98,
+      "sourceParagraph": 6,
+      "sourceSegment": 4,
+      "id": "advice-6ff00d36a617173b68f50728",
+      "title": "Запрет Реактивного Многословия",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ead4d156cc6be59cc7fce04917fcdcf9587b25fd69f7090e9b87fcb13bc0a07c"
+    },
+    {
+      "number": 99,
+      "sourceParagraph": 6,
+      "sourceSegment": 5,
+      "id": "advice-36a976b79739d3563d8ac8c4",
+      "title": "Практика \"Онтологических Похорон\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "46761aa48e00d95503f7e02fb1512e5227651852bc23fc745934285e216eeb17"
+    },
+    {
+      "number": 100,
+      "sourceParagraph": 6,
+      "sourceSegment": 6,
+      "id": "advice-03bcb3c929bb48cb2ef89756",
+      "title": "Запрет \"Вербальной Течи\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "81f026e1f3dd4566710d9ac0a362fe83b1e18cd61ccc6e7e0ef21b9eb6b27fce"
+    },
+    {
+      "number": 101,
+      "sourceParagraph": 6,
+      "sourceSegment": 7,
+      "id": "advice-908fc46bcf541c1a4032db10",
+      "title": "Иерархический Фильтр Тишины",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e3cdecb50e9f590109948e105f0cf6d008aa964244dc57af2186e935684650b7"
+    },
+    {
+      "number": 102,
+      "sourceParagraph": 6,
+      "sourceSegment": 8,
+      "id": "advice-91c0f7a473c54def4f0d0447",
+      "title": "Технология \"Безмолвного Словопроизводства\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1a030529d74d5501a6bfe0516ea4ccb0d94030a25a1b90b2151440910855cd68"
+    },
+    {
+      "number": 103,
+      "sourceParagraph": 6,
+      "sourceSegment": 9,
+      "id": "advice-fde6b3c4927052798f2e242e",
+      "title": "Практика \"Тонического Сокращения\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e9a060523f661b4689da9d372c5455d2ea431b08f60ae545b02a6bd27e18ed9d"
+    },
+    {
+      "number": 104,
+      "sourceParagraph": 6,
+      "sourceSegment": 10,
+      "id": "advice-c72aa4cd0dbaf409fcf7c674",
+      "title": "Утверждение Вопрошающего Нуса",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "9fd4de3686c8b54b58fe0a554eb08502f3d478b2788226231de047f0c76096d6"
+    },
+    {
+      "number": 105,
+      "sourceParagraph": 6,
+      "sourceSegment": 11,
+      "id": "advice-7de8a1e00097eac64b0639cd",
+      "title": "Алхимия \"Стратегического Припоминания\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "6d240361adba47d804f973bdef47e8d2ce268c52a2f649a518a57db91ab3dcb8"
+    },
+    {
+      "number": 106,
+      "sourceParagraph": 6,
+      "sourceSegment": 12,
+      "id": "advice-1b824a1db370d46b45ff09de",
+      "title": "Запрет \"Чужеродных Вливаний\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "60521287291bbe38c85a1b86deff7b0b898de31033c062a7817493a7ca322122"
+    },
+    {
+      "number": 107,
+      "sourceParagraph": 6,
+      "sourceSegment": 13,
+      "id": "advice-16c276de61de7beda85d6a80",
+      "title": "Практика \"Интеллектуальных Родов\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "c261c664c6d0bc0206db792c790f41e5f6b159d936f57b5a3575914595ccdcde"
+    },
+    {
+      "number": 108,
+      "sourceParagraph": 6,
+      "sourceSegment": 14,
+      "id": "advice-c32994ce2447c29c849fd25d",
+      "title": "Утверждение Архитектонического Ума",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "d38426f95be02793e5d4e2a86f379324d0d3c890dcf5fe640c2521090b0239a4"
+    },
+    {
+      "number": 109,
+      "sourceParagraph": 6,
+      "sourceSegment": 15,
+      "id": "advice-e1e70f74887c2c74b9b11b55",
+      "title": "Алхимия \"Царственного Ткачества\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "0cd46cbecfc0830261729ab06e0eccdacd9661a40d7efc19d72c52eab1595c78"
+    },
+    {
+      "number": 110,
+      "sourceParagraph": 6,
+      "sourceSegment": 16,
+      "id": "advice-74dfca278e427771aa93b364",
+      "title": "Онтологический Статус Суверена",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "cc15e66be535d9855e1d52f3e54d12b86e7b542a9516ae008ff7ce270cf92c98"
+    },
+    {
+      "number": 111,
+      "sourceParagraph": 6,
+      "sourceSegment": 17,
+      "id": "advice-b376ab80b680ffad05cc93f5",
+      "title": "Практика \"Божественной Дистанции\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "640aee7aa8319db6ae68eb5694a5bf60f229e0141e918ba5f39af93fa79aa63e"
+    },
+    {
+      "number": 112,
+      "sourceParagraph": 6,
+      "sourceSegment": 18,
+      "id": "advice-8ee5d06d303a4b9d2a0fac16",
+      "title": "Утверждение Онтологического Резонанса",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "6f70235e98363eda96ae27f192a140bb7dec38df4b1f405cf1622fd87c43dc9b"
+    },
+    {
+      "number": 113,
+      "sourceParagraph": 6,
+      "sourceSegment": 19,
+      "id": "advice-43b93d9e8cee3ea3ea61cf93",
+      "title": "Алхимия \"Беструдногo\" Ваяния Себя",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "eef8afe9abc83ba4dd74e1a666e9e54b18f2da6bd980dab4517ce1c897733512"
+    },
+    {
+      "number": 114,
+      "sourceParagraph": 6,
+      "sourceSegment": 20,
+      "id": "advice-a3793bc5fed44f8de628e89c",
+      "title": "Синхронизация \"Космического Танца\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "d85f5c1d39e8d62b69038d77f952717e4c97acd21a798c1bbdd10984a2d3909b"
+    },
+    {
+      "number": 115,
+      "sourceParagraph": 6,
+      "sourceSegment": 21,
+      "id": "advice-e2abbfbc3115169d6b271a93",
+      "title": "Запрет Софистической Иллюзии",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "0dc864e7d7a60703bda956f922d6cb22bed211dbaba654c24aff94007ff0a25b"
+    },
+    {
+      "number": 116,
+      "sourceParagraph": 8,
+      "sourceSegment": 1,
+      "id": "advice-28e7517988ccad719854b82d",
+      "title": "Коммерческий Фильтр (Внешний Круг)",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "bf8f6b33c855d38bbb4caf0ff3ed8f813413f9006e0be8f442b1412d5bb7846a"
+    },
+    {
+      "number": 117,
+      "sourceParagraph": 8,
+      "sourceSegment": 2,
+      "id": "advice-21e0454bc1665bd1a0cc0738",
+      "title": "Обмен в Служении (Рабочий Круг)",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b673a5adf96830e253bca66430b789dc06278eaabd6be50e7de01af8b7305cea"
+    },
+    {
+      "number": 118,
+      "sourceParagraph": 8,
+      "sourceSegment": 3,
+      "id": "advice-0ed7e8feb78158b4c7f2e717",
+      "title": "Практика Обмена (Внутренний Круг)",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "9fff9da92cb3f6bd9e6fcf24b45dff2d5fb259d24209c33c756953aa4d133459"
+    },
+    {
+      "number": 119,
+      "sourceParagraph": 9,
+      "sourceSegment": 1,
+      "id": "advice-9832cca6b9c4358d2ef3cf69",
+      "title": "Запрет Интеллектуального \"Милосердия\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "683cb2ef9945f35fe62c3ae105929087ff38df38ab4eb8db06ab0269693a53fc"
+    },
+    {
+      "number": 120,
+      "sourceParagraph": 9,
+      "sourceSegment": 2,
+      "id": "advice-8a103954b3331bd4663845fc",
+      "title": "Утверждение Смысловой Плотности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "9a0faa15160ba275d6a9c23aac8d453b33578641ee2e84386683e84486f1d616"
+    },
+    {
+      "number": 121,
+      "sourceParagraph": 9,
+      "sourceSegment": 3,
+      "id": "advice-56f9d2aa213c9e61032c5368",
+      "title": "Алхимия \"Живого Изваяния\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "27be35c4338d62f0ad96b000b71d95c2b7778a731f3ce11a873b08920aa299a3"
+    },
+    {
+      "number": 122,
+      "sourceParagraph": 9,
+      "sourceSegment": 4,
+      "id": "advice-c5a30dbed3bfeda364bb7115",
+      "title": "Запрет Профанической \"Болтовни\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ed178928df72b391cb49ee0cc48ca9c785bd8c564a8e0f3bd9d9237904b89d6a"
+    },
+    {
+      "number": 123,
+      "sourceParagraph": 9,
+      "sourceSegment": 5,
+      "id": "advice-09c33f3f6aa06c5bb5c34d04",
+      "title": "Практика Герметического Перевода",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e23dd20664c48d77ea93f1cece74700c0fc2dc6fbec40e875153d9e70fb48ca7"
+    },
+    {
+      "number": 124,
+      "sourceParagraph": 9,
+      "sourceSegment": 6,
+      "id": "advice-59318b3296fe45ed6ec2af23",
+      "title": "Утверждение Внутреннего Цензора",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "674e0db8228b92c9890e24ed9851f3af4358c09b9d34100ee9b4ed2d2c236b2e"
+    },
+    {
+      "number": 125,
+      "sourceParagraph": 9,
+      "sourceSegment": 7,
+      "id": "advice-7d605a8d02b868e03a9ea480",
+      "title": "Алхимия Смысловой Плотности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1e323a33d2b7d0630323ff424f0f945d1626c9e18eff77d42562fbaedb798456"
+    },
+    {
+      "number": 126,
+      "sourceParagraph": 9,
+      "sourceSegment": 8,
+      "id": "advice-dbe471aca43c7ec6c3efc0e6",
+      "title": "Запрет \"Алогического Дребезжания\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "6fd1b82fd6361db5b111f39b40c97d4062462058ce1e64683c3d597ba35bafc5"
+    },
+    {
+      "number": 127,
+      "sourceParagraph": 9,
+      "sourceSegment": 9,
+      "id": "advice-0f58dbce6b33cc39a893cd0f",
+      "title": "Практика Онтологического Эха",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "49dc9b87fba997251713d71fbd09be0a2bf7c979f4db5e014fcfefae91f481db"
+    },
+    {
+      "number": 128,
+      "sourceParagraph": 9,
+      "sourceSegment": 10,
+      "id": "advice-62df45c58ad187f94c33dd12",
+      "title": "Утверждение Смыслового Различения",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "8b941f84648376de97373daf7bf5f6f7cbb853eed802cd4af4d4cf1ec803f0bc"
+    },
+    {
+      "number": 129,
+      "sourceParagraph": 9,
+      "sourceSegment": 11,
+      "id": "advice-efe9281cdb22f0630f93c357",
+      "title": "Алхимия \"Полей Истины\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "861b3cb2e0afd1cc0d0b15efa52b5b2f3b705069727c2148358c22d4dd8916e6"
+    },
+    {
+      "number": 130,
+      "sourceParagraph": 9,
+      "sourceSegment": 12,
+      "id": "advice-d65284ed399b1d2b54f0c433",
+      "title": "Запрет Софистического Призрака",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "c527a96e7e4411df6d041513936a2e7259162cca9afe7aa146e616db6f3c8826"
+    },
+    {
+      "number": 131,
+      "sourceParagraph": 9,
+      "sourceSegment": 13,
+      "id": "advice-45dddb676bae9b3e619f66e1",
+      "title": "Практика \"Интуитивного Схватывания\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "c26deb0741de9ee743edebd7c76b911f4d8cd12f6ab7eb766604fcdc20862c6a"
+    },
+    {
+      "number": 132,
+      "sourceParagraph": 9,
+      "sourceSegment": 14,
+      "id": "advice-7b1d7c01f81449ede29e1917",
+      "title": "Утверждение \"Геометрической Необходимости\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "0893847ff77f3127c03c3bb4308fc6c6fd4bbcb556d4e198b058f76d9993094a"
+    },
+    {
+      "number": 133,
+      "sourceParagraph": 9,
+      "sourceSegment": 15,
+      "id": "advice-81967635bf5a635d76da1cec",
+      "title": "Алхимия Смыслового \"Тонирования\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7775ed0df37178b0557661977a527aa3ae0801ae707fd35e7bebdd5089adb279"
+    },
+    {
+      "number": 134,
+      "sourceParagraph": 10,
+      "sourceSegment": 2,
+      "id": "advice-2ccbd0af077d1fafd7e3c693",
+      "title": "Запрет Софистического Мусора",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b7756cca9ea2352755404d7a080db1fe951c1d99693dcaf70dc68f8736898061"
+    },
+    {
+      "number": 135,
+      "sourceParagraph": 10,
+      "sourceSegment": 3,
+      "id": "advice-bdc68701a47935dfd22443af",
+      "title": "Практика \"Взламывания Забвения\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1a816de987d3a4cf7238f9df277f61ffda73595004c637e781892c1b35ef5e7c"
+    },
+    {
+      "number": 136,
+      "sourceParagraph": 10,
+      "sourceSegment": 4,
+      "id": "advice-24c1b7194df38ad85ecb20b7",
+      "title": "Утверждение Информационного Поста",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "3aadef0a46cd66fd230f837955bb2fa46ab7e6607cf37b39aca061e5ed3abf74"
+    },
+    {
+      "number": 137,
+      "sourceParagraph": 10,
+      "sourceSegment": 5,
+      "id": "advice-05d064d92b1eebc0587a618d",
+      "title": "Алхимия Созидательного Вакуума",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b1238f00227878ebbfafd3c18b5339d02b1c5a728a89f9f31ee83a4b64097532"
+    },
+    {
+      "number": 138,
+      "sourceParagraph": 10,
+      "sourceSegment": 6,
+      "id": "advice-e543da6bcc4bfb68ad8557ec",
+      "title": "Запрет Вербальной Слабости",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7a645bc170b352dbb2b66505d18e7a57574c3935ddf98fc95003f55924da7b31"
+    },
+    {
+      "number": 139,
+      "sourceParagraph": 10,
+      "sourceSegment": 7,
+      "id": "advice-f1becb30e9cb21aa640ae254",
+      "title": "Практика \"Неподвижного Присутствия\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "027f031a349a07d6acf6381710431a6018c90add8e880b07fac232b06dc14d9f"
+    },
+    {
+      "number": 140,
+      "sourceParagraph": 10,
+      "sourceSegment": 8,
+      "id": "advice-da9371f8d2db53e939fadc69",
+      "title": "Утверждение Пространственного Ранга",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "cf8d6b6501e1274aa9dc8d94f7cac5344599badfa4a6cf7ec2b37c69c58b3da5"
+    },
+    {
+      "number": 141,
+      "sourceParagraph": 10,
+      "sourceSegment": 9,
+      "id": "advice-2e97d8ba7cf308808b98484a",
+      "title": "Алхимия \"Наполняющего\" Приема",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "aadd5568aa116e282d2c668eab7ac8aa1aaecd55e355025151b2f95f04c4263a"
+    },
+    {
+      "number": 142,
+      "sourceParagraph": 11,
+      "sourceSegment": 1,
+      "id": "advice-98ee1db21baf4652b7cbba73",
+      "title": "Запрет \"Чужеродных Вкраплений\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "54d1df681958aeaf3da2588fc1079771d319a44fa55a1c835dac32a0baed6d45"
+    },
+    {
+      "number": 143,
+      "sourceParagraph": 11,
+      "sourceSegment": 2,
+      "id": "advice-cc483ab326db43f565ff3788",
+      "title": "Практика Ресурсного Излучения",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "7b0b32ea206087682ac99f3523733554b6c1e9fbeb9be66a04c32898ee43d921"
+    },
+    {
+      "number": 144,
+      "sourceParagraph": 11,
+      "sourceSegment": 3,
+      "id": "advice-e4a09ed9d6bd9ca915a4a818",
+      "title": "Утверждение Священного Порога",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "ecc222c8b8a8e7a2cd140af6a761c71e816f3c53621bc8bd0e6600e80d68160b"
+    },
+    {
+      "number": 145,
+      "sourceParagraph": 11,
+      "sourceSegment": 4,
+      "id": "advice-8b6af9b7e0bdc983aeb53082",
+      "title": "Алхимия Клановой Солидарности",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "1ef801a9d53812efe2eab7788c09b165299c73d82d323687f940183fc7c9c1c3"
+    },
+    {
+      "number": 146,
+      "sourceParagraph": 11,
+      "sourceSegment": 5,
+      "id": "advice-24d6fff21ccd041263cd317b",
+      "title": "Запрет Культурного Смешения",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "163902d1e4c59447ed545d7fb37ac49be17a3ef16d4f025dc4cbb55bc828277b"
+    },
+    {
+      "number": 147,
+      "sourceParagraph": 11,
+      "sourceSegment": 6,
+      "id": "advice-08c6a6464f0265c99e992b09",
+      "title": "Практика Радикального Отсечения",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "11add67065f927f16d91fefdcbb845f2182d5d6d0a9d9dec8b9c6926563040af"
+    },
+    {
+      "number": 148,
+      "sourceParagraph": 11,
+      "sourceSegment": 7,
+      "id": "advice-c00507f19f153890d1b52749",
+      "title": "Утверждение Бескомпромиссной Правды",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "e4e03eaa02fefaf4f8582703ce142b61544c461c04b7b4569f7ef0c11b84b1f5"
+    },
+    {
+      "number": 149,
+      "sourceParagraph": 11,
+      "sourceSegment": 8,
+      "id": "advice-c3bba7c7c09ba23987792208",
+      "title": "Запрет \"Вербального Мусора\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "b693eabb3740c2e7315a3c63fe2eb5ee810b439f5e8da3d9aea4b21301b49b2d"
+    },
+    {
+      "number": 150,
+      "sourceParagraph": 11,
+      "sourceSegment": 9,
+      "id": "advice-5f239c9cef0de2d349c694bb",
+      "title": "Алхимия \"Действующего Глагола\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "2c133f8bf2cf27eb4ca2cf67796b532c99bcb0dfc04f9cd37164b569231d647e"
+    },
+    {
+      "number": 151,
+      "sourceParagraph": 14,
+      "sourceSegment": 2,
+      "id": "advice-44767e7dbab90fe668c46963",
+      "title": "Практика \"Взвешивания Обязательств\"",
+      "headingSeparator": ". ",
+      "status": "published",
+      "textSha256": "a8be458080453cd99a92b40c80095e9a2f698ed7f70be147704c5df9e822bb19"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+.physis-access-notice { max-width: 44rem; padding: clamp(16px, 4vw, 28px); margin: 24px auto; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.physis-access-notice h1 { margin: 0 0 16px; font: 400 clamp(28px, 4vw, 36px)/1.2 "Source Serif 4", Georgia, serif; }
+.physis-access-notice p { line-height: 1.6; overflow-wrap: anywhere; }
+.physis-access-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.physis-access-actions button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--ui-accent); border-radius: 10px; font: inherit; line-height: 1.4; cursor: pointer; color: var(--ui-on-accent); background: var(--ui-accent); }
+.physis-access-actions button.secondary-button { background: var(--surface); color: var(--ink); border-color: var(--line); }
+.physis-access-actions button:hover:not(:disabled) { filter: brightness(.94); }
+.physis-access-actions button:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+.physis-access-actions button:disabled { opacity: .6; cursor: wait; }

@@ -1,0 +1,113 @@
+Options -Indexes
+AddDefaultCharset UTF-8
+AddType application/vnd.android.package-archive .apk
+
+RewriteEngine On
+# Keep the session cookie and Google callback on the same canonical origin.
+RewriteCond %{HTTP_HOST} ^www\.genesiscalendar\.com$ [NC]
+RewriteRule ^ https://genesiscalendar.com%{REQUEST_URI} [R=302,L,NE]
+# Merge this redirect only after Google branding and Android sign-in/sync are confirmed.
+# Keep the old API, update downloads and existing static files for installed clients.
+RewriteCond %{HTTP_HOST} ^(?:www\.)?genesiscalendar\.ru$ [NC]
+RewriteRule ^legacy-home\.php$ https://genesiscalendar.com/ [R=302,L,NE]
+RewriteCond %{HTTP_HOST} ^(?:www\.)?genesiscalendar\.ru$ [NC]
+RewriteRule ^sw\.js$ relocated-sw.js [L]
+RewriteCond %{HTTP_HOST} ^(?:www\.)?genesiscalendar\.ru$ [NC]
+RewriteCond %{REQUEST_URI} !^/(?:api(?:/|$)|downloads/|android-update\.json$|deploy-meta\.json$|\.well-known/) [NC]
+RewriteCond %{REQUEST_FILENAME} !-f [OR]
+RewriteCond %{REQUEST_URI} \.html$ [NC]
+RewriteRule ^ https://genesiscalendar.com%{REQUEST_URI} [R=302,L,NE]
+RewriteRule ^api(?:/|$) - [L]
+# A missing immutable module is a real 404, never the SPA HTML document.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^assets/ - [R=404,L]
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(privacy|terms|support|delete-account)$ $1.html [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.html [L]
+
+<IfModule mod_headers.c>
+  Header always set Cache-Control "no-store" "expr=%{REQUEST_STATUS} == 302"
+  Header always set Cache-Control "no-store" "expr=%{REQUEST_STATUS} == 404"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(self), on-device-speech-recognition=(self), geolocation=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://get.geojs.io https://geocoding-api.open-meteo.com https://speller.yandex.net; font-src 'self' data:; manifest-src 'self'; worker-src 'self'"
+</IfModule>
+
+<FilesMatch "\.(?:js|css|png|ico|webp|svg|woff2)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=604800, immutable"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^(?:sw|relocated-sw|precache-manifest)\.js$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^manifest(?:\.[a-z]{2})?\.webmanifest$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^(?:index\.html|legacy-home\.php|legacy-relocation-notice\.(?:css|js)|deploy-meta\.json)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^(?:privacy|terms|support|delete-account)\.html$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^android-update\.json$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^GENESIS-Android-1\.2\.2\.apk$">
+  ForceType application/vnd.android.package-archive
+  <IfModule mod_headers.c>
+    Header set Content-Disposition "attachment; filename=GENESIS-Android-1.2.2.apk"
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^GENESIS-Android-Native-2\.0\.0\.apk$">
+  ForceType application/vnd.android.package-archive
+  <IfModule mod_headers.c>
+    Header set Content-Disposition "attachment; filename=GENESIS-Android-Native-2.0.0.apk"
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^GENESIS-Android-Native-2\.1\.1\.apk$">
+  ForceType application/vnd.android.package-archive
+  <IfModule mod_headers.c>
+    Header set Content-Disposition "attachment; filename=GENESIS-Android-Native-2.1.1.apk"
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "^GENESIS-Android-Native-2\.2\.9\.apk$">
+  ForceType application/vnd.android.package-archive
+  <IfModule mod_headers.c>
+    Header set Content-Disposition "attachment; filename=GENESIS-Android-Native-2.2.9.apk"
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </IfModule>
+</FilesMatch>

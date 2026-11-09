@@ -1,0 +1,98 @@
+.olympian-isopsephy {
+  min-width: 0;
+  margin-top: 8px;
+  color: var(--ink);
+  font-family: var(--font-ui, sans-serif);
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.olympian-isopsephy > .olympian-disclosure {
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  grid-template-columns: 32px minmax(0, 1fr) 24px;
+  padding: 14px 16px;
+  list-style: none;
+}
+.olympian-disclosure::-webkit-details-marker { display: none; }
+.olympian-disclosure strong { font-size: clamp(13px, 1.4vw, 16px); text-transform: none; letter-spacing: 0; line-height: 1.4; }
+.olympian-disclosure small { font-size: 12px; line-height: 1.5; }
+html[data-genesis-theme] .genesis-app .olympian-disclosure small { color: inherit; opacity: 1; }
+.olympian-disclosure > svg { transition: transform 160ms ease; }
+.olympian-isopsephy[open] > .olympian-disclosure > svg { transform: rotate(180deg); }
+.olympian-disclosure:hover > svg { transform: none; }
+.olympian-isopsephy[open] > .olympian-disclosure:hover > svg { transform: rotate(180deg); }
+
+.olympian-body { display: grid; gap: 20px; margin-top: 20px; }
+.olympian-intro { display: grid; justify-items: start; gap: 8px; }
+.olympian-intro > p { max-width: 74ch; margin: 0; color: var(--ink-soft); line-height: 1.65; }
+.olympian-stoicheion-link {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  color: var(--ui-accent, var(--teal)); font-weight: 600; text-decoration: underline; text-underline-offset: 4px;
+}
+.olympian-stoicheion-link svg { width: 18px; height: 18px; }
+.olympian-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.olympian-grid > li { display: flex; min-width: 0; }
+.olympian-grid > .olympian-wide { grid-column: 1 / -1; }
+.olympian-tile {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; min-width: 0;
+  min-height: 144px; padding: 14px; color: var(--ink); text-align: left;
+  border: 1px solid var(--line); border-radius: var(--ui-radius, 10px); background: var(--surface);
+  font: inherit; cursor: pointer; overflow-wrap: normal; word-break: normal; hyphens: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.olympian-tile:hover { border-color: var(--gold); background: var(--exp-hover, var(--paper)); }
+.olympian-tile-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: var(--gold); }
+.olympian-symbol { display: block; flex: none; width: 56px; height: 56px; object-fit: contain; }
+.olympian-number { font: 500 24px/1.2 var(--font-heading, Georgia, serif); font-variant-numeric: tabular-nums; }
+.olympian-tile > strong { font-size: clamp(14px, 1.5vw, 17px); font-weight: 600; line-height: 1.35; }
+.olympian-summary { color: var(--ink-soft); font-size: clamp(12px, 1.2vw, 14px); line-height: 1.5; }
+.olympian-isopsephy :is(button, a, summary):focus-visible { outline: 3px solid var(--ui-accent, var(--teal)); outline-offset: 3px; }
+
+.olympian-backdrop {
+  position: fixed; inset: 0; z-index: 780; display: grid; place-items: center;
+  padding: 20px; background: color-mix(in srgb, var(--palette-recessed, rgb(2 12 9)) 68%, transparent);
+  font-family: var(--font-ui, sans-serif);
+}
+.olympian-modal {
+  width: min(100%, 560px); max-height: calc(100dvh - 40px); overflow-y: auto;
+  padding: clamp(18px, 4vw, 28px); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--ui-radius, 10px);
+  scrollbar-color: var(--ink-soft) var(--surface);
+  overflow-wrap: normal; word-break: normal; hyphens: none;
+}
+.olympian-catalog-modal { width: min(100%, 900px); }
+.olympian-catalog-heading { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: start; gap: 12px; }
+.olympian-catalog-heading h2 { margin: 0; font: 500 clamp(20px, 4vw, 28px)/1.3 var(--font-heading, Georgia, serif); }
+.olympian-catalog-heading .dialog-close-button { position: static; width: 44px; height: 44px; }
+.olympian-modal-heading { display: grid; grid-template-columns: 40px minmax(0, 1fr) 44px; align-items: start; gap: 12px; }
+.olympian-modal-heading > .olympian-symbol { width: 40px; height: 40px; margin-top: 3px; color: var(--gold); }
+.olympian-modal-heading h2 { margin: 0; font: 500 clamp(24px, 4vw, 32px)/1.2 var(--font-heading, Georgia, serif); }
+.olympian-modal-heading h2 > span { display: inline-block; margin-left: 6px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.olympian-greek { margin: 6px 0 0; color: var(--ink-soft); font-size: 15px; line-height: 1.4; }
+.olympian-modal-heading .dialog-close-button { position: static; width: 44px; height: 44px; color: var(--ink-soft); background: transparent; border: 0; }
+.olympian-modal-summary { margin: 20px 0 0; font-weight: 600; line-height: 1.5; }
+.olympian-calculation { margin-top: 20px; padding-block: 16px; border-block: 1px solid var(--line); }
+.olympian-calculation > span { color: var(--ink-soft); font-size: 13px; }
+.olympian-equation { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 8px 0; font-size: 18px; font-variant-numeric: tabular-nums; line-height: 1.6; }
+.olympian-equation > :is(span, strong) { white-space: nowrap; }
+.olympian-equation > strong { color: var(--ui-accent, var(--teal)); }
+.olympian-root { margin: 4px 0 0; color: var(--ink-soft); font-size: 13px; }
+.olympian-calculation-note { margin: 12px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
+.olympian-detail { margin: 20px 0 0; font-size: 14px; line-height: 1.7; }
+.olympian-modal :is(button, a):focus-visible { outline: 3px solid var(--ui-accent, var(--teal)); outline-offset: 3px; }
+
+@media (min-width: 640px) { .olympian-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1040px) { .olympian-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 380px) {
+  .olympian-tile { padding: 12px; }
+  .olympian-backdrop { padding: 12px; }
+  .olympian-modal { max-height: calc(100dvh - 24px); padding: 16px; }
+  .olympian-modal-heading { grid-template-columns: 32px minmax(0, 1fr) 44px; gap: 8px; }
+  .olympian-modal-heading > .olympian-symbol { width: 32px; height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .olympian-disclosure, .olympian-disclosure::before, .olympian-disclosure svg, .olympian-tile { transition: none; }
+}

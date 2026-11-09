@@ -1,0 +1,92 @@
+{
+  "calm": {
+    "habit": {
+      "el": "Αφιερώστε λίγο χρόνο στο {subject}. Ξεκινήστε με τον δικό σας ρυθμό.",
+      "de": "Nimm dir einen Moment für {subject}. Fang in deinem eigenen Tempo an.",
+      "fr": "Prenez un moment pour {subject}. Commencez à votre rythme.",
+      "es": "Dedica un momento a {subject}. Empieza a tu ritmo.",
+      "it": "Dedica un momento a {subject}. Inizia con i tuoi tempi.",
+      "pt": "Reserve um momento para {subject}. Comece ao seu ritmo.",
+      "pl": "Poświęć chwilę na {subject}. Zacznij we własnym tempie.",
+      "sr": "Одвојите тренутак за {subject}. Почните својим темпом.",
+      "uk": "Приділіть трохи часу для {subject}. Почніть у власному темпі.",
+      "zh": "留一点时间给{subject}。按照自己的节奏开始。",
+      "tr": "{subject} için biraz zaman ayırın. Kendi hızınızda başlayın.",
+      "ja": "{subject}に少し時間を取りましょう。自分のペースで始めてください。"
+    },
+    "goal": {
+      "el": "Απομένουν {count} μικρά βήματα για τον σημερινό σας στόχο.",
+      "de": "Bis zu deinem heutigen Ziel fehlen noch {count} kleine Schritte.",
+      "fr": "Il reste {count} petites étapes pour atteindre votre objectif du jour.",
+      "es": "Quedan {count} pequeños pasos para tu objetivo de hoy.",
+      "it": "Mancano {count} piccoli passi al tuo obiettivo di oggi.",
+      "pt": "Faltam {count} pequenos passos para a sua meta de hoje.",
+      "pl": "Do dzisiejszego celu pozostało {count} małych kroków.",
+      "sr": "До данашњег циља остало је још {count} малих корака.",
+      "uk": "До сьогоднішньої мети залишилося {count} невеликих кроків.",
+      "zh": "距离今天的目标还差{count}个小步骤。",
+      "tr": "Bugünkü hedefinize {count} küçük adım kaldı.",
+      "ja": "今日の目標まで、あと{count}歩です。"
+    }
+  },
+  "heroic": {
+    "habit": {
+      "el": "Το επόμενο βήμα σας είναι το {subject}. Ξεκινήστε τώρα.",
+      "de": "Dein nächster Schritt ist {subject}. Fang jetzt an.",
+      "fr": "Votre prochaine étape est {subject}. Lancez-vous maintenant.",
+      "es": "Tu próximo paso es {subject}. Empieza ahora.",
+      "it": "Il tuo prossimo passo è {subject}. Inizia ora.",
+      "pt": "O seu próximo passo é {subject}. Comece agora.",
+      "pl": "Twój następny krok to {subject}. Zacznij teraz.",
+      "sr": "Ваш следећи корак је {subject}. Почните сада.",
+      "uk": "Ваш наступний крок — {subject}. Почніть зараз.",
+      "zh": "下一步是{subject}。现在就开始吧。",
+      "tr": "Bir sonraki adımınız {subject}. Şimdi başlayın.",
+      "ja": "次の一歩は{subject}です。今、始めましょう。"
+    },
+    "goal": {
+      "el": "Απομένουν {count} βήματα για τον σημερινό στόχο. Συνεχίστε.",
+      "de": "Noch {count} Schritte bis zum heutigen Ziel. Bleib dran.",
+      "fr": "Encore {count} étapes avant l'objectif du jour. Continuez.",
+      "es": "Faltan {count} pasos para la meta de hoy. Sigue adelante.",
+      "it": "Mancano {count} passi all'obiettivo di oggi. Continua così.",
+      "pt": "Faltam {count} passos para a meta de hoje. Continue.",
+      "pl": "Do dzisiejszego celu zostało {count} kroków. Działaj dalej.",
+      "sr": "До данашњег циља остало је {count} корака. Наставите.",
+      "uk": "До сьогоднішньої мети залишилося {count} кроків. Рухайтеся далі.",
+      "zh": "距离今天的目标还有{count}步。继续前进。",
+      "tr": "Bugünkü hedefe {count} adım kaldı. Devam edin.",
+      "ja": "今日の目標まで、あと{count}歩。進み続けましょう。"
+    }
+  },
+  "ironic": {
+    "habit": {
+      "el": "Το {subject} σας περιμένει ακόμη. Ξεκινάμε;",
+      "de": "{subject} wartet immer noch. Wollen wir anfangen?",
+      "fr": "{subject} vous attend toujours. On s'y met ?",
+      "es": "{subject} sigue esperando. ¿Empezamos?",
+      "it": "{subject} ti sta ancora aspettando. Cominciamo?",
+      "pt": "{subject} ainda está à sua espera. Vamos começar?",
+      "pl": "{subject} nadal czeka. Zaczynamy?",
+      "sr": "{subject} још чека. Да почнемо?",
+      "uk": "{subject} досі чекає. Почнемо?",
+      "zh": "{subject}还在等你。开始吗？",
+      "tr": "{subject} hâlâ bekliyor. Başlayalım mı?",
+      "ja": "{subject}がまだ待っています。始めますか？"
+    },
+    "goal": {
+      "el": "Ο στόχος δεν θα ολοκληρωθεί μόνος του. Απομένουν {count} βήματα.",
+      "de": "Das Ziel erledigt sich nicht von allein. Noch {count} Schritte.",
+      "fr": "L'objectif ne se réalise pas tout seul. Encore {count} étapes.",
+      "es": "La meta no se cumple sola. Quedan {count} pasos.",
+      "it": "L'obiettivo non si raggiunge da solo. Mancano {count} passi.",
+      "pt": "A meta não se cumpre sozinha. Faltam {count} passos.",
+      "pl": "Cel sam się nie osiągnie. Zostało {count} kroków.",
+      "sr": "Циљ се неће остварити сам. Остало је {count} корака.",
+      "uk": "Мета сама себе не досягне. Залишилося {count} кроків.",
+      "zh": "目标不会自己完成。还差{count}步。",
+      "tr": "Hedef kendiliğinden tamamlanmaz. {count} adım kaldı.",
+      "ja": "目標はひとりでに達成されません。あと{count}歩です。"
+    }
+  }
+}

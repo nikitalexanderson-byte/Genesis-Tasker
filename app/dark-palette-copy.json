@@ -1,0 +1,156 @@
+{
+  "ru": {
+    "label": "Цветовая палитра",
+    "green": "Лесная · исходная",
+    "burgundy": "Рубиновая",
+    "blue": "Ночная",
+    "violet": "Пурпурная",
+    "premium": "Дополнительные палитры доступны с Premium.",
+    "error": "Не удалось сохранить палитру. Повторите попытку.",
+    "description": "Четыре палитры для светлого и тёмного режима с мягкими фонами и чёткими акцентами.",
+    "blueLight": "Небесная"
+  },
+  "en": {
+    "label": "Color palette",
+    "green": "Forest · default",
+    "burgundy": "Ruby",
+    "blue": "Night sky",
+    "violet": "Purple",
+    "premium": "Additional palettes are available with Premium.",
+    "error": "Could not save the palette. Try again.",
+    "description": "Four palettes for light and dark mode, with soft backgrounds and clear accents.",
+    "blueLight": "Sky"
+  },
+  "el": {
+    "label": "Χρωματική παλέτα",
+    "green": "Δασική · προεπιλογή",
+    "burgundy": "Ρουμπινί",
+    "blue": "Νυχτερινός ουρανός",
+    "violet": "Πορφυρή",
+    "premium": "Πρόσθετες παλέτες με Premium.",
+    "error": "Η αποθήκευση απέτυχε. Δοκιμάστε ξανά.",
+    "description": "Τέσσερις παλέτες για φωτεινή και σκοτεινή λειτουργία, με απαλά φόντα και ευδιάκριτους τόνους.",
+    "blueLight": "Ουράνια"
+  },
+  "de": {
+    "label": "Farbpalette",
+    "green": "Wald · Standard",
+    "burgundy": "Rubin",
+    "blue": "Nachthimmel",
+    "violet": "Purpur",
+    "premium": "Weitere Paletten ab Premium.",
+    "error": "Palette konnte nicht gespeichert werden. Erneut versuchen.",
+    "description": "Vier Paletten für den hellen und dunklen Modus mit sanften Hintergründen und klaren Akzenten.",
+    "blueLight": "Himmel"
+  },
+  "fr": {
+    "label": "Palette de couleurs",
+    "green": "Forêt · par défaut",
+    "burgundy": "Rubis",
+    "blue": "Ciel nocturne",
+    "violet": "Pourpre",
+    "premium": "Palettes supplémentaires avec Premium.",
+    "error": "Échec de l’enregistrement. Réessayez.",
+    "description": "Quatre palettes pour les modes clair et sombre, avec des fonds doux et des accents nets.",
+    "blueLight": "Céleste"
+  },
+  "es": {
+    "label": "Paleta de colores",
+    "green": "Bosque · predeterminada",
+    "burgundy": "Rubí",
+    "blue": "Cielo nocturno",
+    "violet": "Púrpura",
+    "premium": "Paletas adicionales con Premium.",
+    "error": "No se pudo guardar. Inténtalo de nuevo.",
+    "description": "Cuatro paletas para los modos claro y oscuro, con fondos suaves y acentos definidos.",
+    "blueLight": "Celeste"
+  },
+  "it": {
+    "label": "Palette di colori",
+    "green": "Foresta · predefinita",
+    "burgundy": "Rubino",
+    "blue": "Cielo notturno",
+    "violet": "Porpora",
+    "premium": "Altre palette con Premium.",
+    "error": "Salvataggio non riuscito. Riprova.",
+    "description": "Quattro palette per le modalità chiara e scura, con sfondi delicati e accenti nitidi.",
+    "blueLight": "Celeste"
+  },
+  "pt": {
+    "label": "Paleta de cores",
+    "green": "Floresta · padrão",
+    "burgundy": "Rubi",
+    "blue": "Céu noturno",
+    "violet": "Púrpura",
+    "premium": "Paletas adicionais com Premium.",
+    "error": "Não foi possível salvar. Tente novamente.",
+    "description": "Quatro paletas para os modos claro e escuro, com fundos suaves e destaques nítidos.",
+    "blueLight": "Celeste"
+  },
+  "pl": {
+    "label": "Paleta kolorów",
+    "green": "Leśna · domyślna",
+    "burgundy": "Rubinowa",
+    "blue": "Nocne niebo",
+    "violet": "Purpurowa",
+    "premium": "Dodatkowe palety od Premium.",
+    "error": "Nie udało się zapisać. Spróbuj ponownie.",
+    "description": "Cztery palety dla trybu jasnego i ciemnego, z łagodnymi tłami i wyraźnymi akcentami.",
+    "blueLight": "Niebiańska"
+  },
+  "sr": {
+    "label": "Палета боја",
+    "green": "Шумска · подразумевана",
+    "burgundy": "Рубинска",
+    "blue": "Ноћно небо",
+    "violet": "Пурпурна",
+    "premium": "Додатне палете уз Premium.",
+    "error": "Чување није успело. Покушајте поново.",
+    "description": "Четири палете за светли и тамни режим, са благим позадинама и јасним акцентима.",
+    "blueLight": "Небеска"
+  },
+  "uk": {
+    "label": "Колірна палітра",
+    "green": "Лісова · початкова",
+    "burgundy": "Рубінова",
+    "blue": "Нічне небо",
+    "violet": "Пурпурова",
+    "premium": "Додаткові палітри з Premium.",
+    "error": "Не вдалося зберегти. Спробуйте ще раз.",
+    "description": "Чотири палітри для світлого й темного режиму з м’якими фонами та виразними акцентами.",
+    "blueLight": "Небесна"
+  },
+  "zh": {
+    "label": "配色方案",
+    "green": "森林 · 默认",
+    "burgundy": "红宝石",
+    "blue": "夜空",
+    "violet": "紫色",
+    "premium": "Premium 可使用更多配色。",
+    "error": "无法保存配色，请重试。",
+    "description": "四种适用于浅色与深色模式的配色，背景柔和，重点清晰。",
+    "blueLight": "天空"
+  },
+  "tr": {
+    "label": "Renk paleti",
+    "green": "Orman · varsayılan",
+    "burgundy": "Yakut",
+    "blue": "Gece gökyüzü",
+    "violet": "Mor",
+    "premium": "Ek paletler Premium ile kullanılabilir.",
+    "error": "Palet kaydedilemedi. Tekrar deneyin.",
+    "description": "Açık ve koyu mod için yumuşak arka planlar ve belirgin vurgular sunan dört palet.",
+    "blueLight": "Gökyüzü"
+  },
+  "ja": {
+    "label": "カラーパレット",
+    "green": "森林 · 標準",
+    "burgundy": "ルビー",
+    "blue": "夜空",
+    "violet": "パープル",
+    "premium": "追加パレットはPremiumで利用できます。",
+    "error": "保存できませんでした。もう一度お試しください。",
+    "description": "明るいモードと暗いモードに対応する4つの配色。柔らかな背景と明確なアクセントを使います。",
+    "blueLight": "空"
+  }
+}

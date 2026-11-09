@@ -1,0 +1,48 @@
+import type { StoicheionLetter } from "./stoicheion-data";
+
+export type StoicheionCardArt = {
+  body: string;
+  bodyGreek: string;
+  invocation: string;
+  accent: string;
+  accentRgb: string;
+};
+
+export const STOICHEION_CARD_ART: Record<string, StoicheionCardArt> = {
+  alpha: { body: "Голова", bodyGreek: "κεφαλή", invocation: "Ἀκραμμαχαμαρι", accent: "#d26a39", accentRgb: "210 106 57" },
+  beta: { body: "Шея", bodyGreek: "τράχηλος", invocation: "Βουλομεντορεβ", accent: "#7ea58e", accentRgb: "126 165 142" },
+  gamma: { body: "Плечи и руки", bodyGreek: "ὦμοι καὶ χεῖρες", invocation: "Γενιομουθιγ", accent: "#a66f48", accentRgb: "166 111 72" },
+  delta: { body: "Грудь", bodyGreek: "Στήθη", invocation: "ΔΗΜΟΓΕΝΗΔ", accent: "#3b9884", accentRgb: "59 152 132" },
+  epsilon: { body: "Диафрагма", bodyGreek: "Διάφραγμα", invocation: "ΕΝΚΥΚΛΙΕ", accent: "#58a7bc", accentRgb: "88 167 188" },
+  zeta: { body: "Спина", bodyGreek: "Νῶτον", invocation: "ΖΗΝΟΒΙΩΘΙΖ", accent: "#3aa48b", accentRgb: "58 164 139" },
+  eta: { body: "Живот", bodyGreek: "Κοιλία", invocation: "ΗΣΚΩΘΩΡΗ", accent: "#72518c", accentRgb: "114 81 140" },
+  theta: { body: "Бёдра", bodyGreek: "Μηροί", invocation: "ΘΩΘΟΥΘΩΘ", accent: "#3c71bd", accentRgb: "60 113 189" },
+  iota: { body: "Колени", bodyGreek: "Γόνατα", invocation: "ΙΑΕΟΥΩΙ", accent: "#8066b3", accentRgb: "128 102 179" },
+  kappa: { body: "Голени", bodyGreek: "Κνῆμαι", invocation: "ΚΟΡΚΟΟΥΝΟΩΚ", accent: "#58718d", accentRgb: "88 113 141" },
+  lambda: { body: "Лодыжки", bodyGreek: "Σφυρά", invocation: "ΛΟΥΛΟΕΝΕΛ", accent: "#478ba0", accentRgb: "71 139 160" },
+  mu: { body: "Стопы", bodyGreek: "Πόδες", invocation: "ΜΟΡΟΘΟΗΠΝΑΜ", accent: "#2c8195", accentRgb: "44 129 149" },
+  nu: { body: "Стопы", bodyGreek: "Πόδες", invocation: "ΝΕΡΞΙΑΡΞΙΝ", accent: "#3e8588", accentRgb: "62 133 136" },
+  xi: { body: "Лодыжки", bodyGreek: "Σφυρά", invocation: "ΞΟΝΟΦΟΙΝΑΞ", accent: "#4b8ead", accentRgb: "75 142 173" },
+  omicron: { body: "Ноги", bodyGreek: "Κνῆμαι", invocation: "ΟΡΝΕΟΦΑΟ", accent: "#b24b35", accentRgb: "178 75 53" },
+  pi: { body: "Колени", bodyGreek: "Γόνατα", invocation: "ΠΥΡΟΒΑΡΥΠ", accent: "#c44b39", accentRgb: "196 75 57" },
+  rho: { body: "Бёдра", bodyGreek: "Μηροί", invocation: "ΡΕΡΟΥΤΟΗΡ", accent: "#ce533b", accentRgb: "206 83 59" },
+  sigma: { body: "Живот", bodyGreek: "Κοιλία", invocation: "ΣΩΤΗΡ", accent: "#7d4d91", accentRgb: "125 77 145" },
+  tau: { body: "Спина", bodyGreek: "Νῶτον", invocation: "ΤΑΥΡΟΠΟΛΙΤ", accent: "#466f96", accentRgb: "70 111 150" },
+  upsilon: { body: "Диафрагма", bodyGreek: "Διάφραγμα", invocation: "ΥΠΕΦΕΝΟΥΡΥ", accent: "#64afbf", accentRgb: "100 175 191" },
+  phi: { body: "Грудь", bodyGreek: "Στῆθος", invocation: "ΦΙΜΕΜΑΜΕΦ", accent: "#9a76c2", accentRgb: "154 118 194" },
+  chi: { body: "Плечи и руки", bodyGreek: "ὦμοι καὶ χεῖρες", invocation: "ΧΕΝΝΕΟΦΕΟΧ", accent: "#c8663c", accentRgb: "200 102 60" },
+  psi: { body: "Шея", bodyGreek: "Τράχηλος", invocation: "ΨΥΧΟΜΠΟΙΑΨ", accent: "#7358a8", accentRgb: "115 88 168" },
+  omega: { body: "Голова", bodyGreek: "Κεφαλή", invocation: "ΩΡΙΩΝ", accent: "#526aa4", accentRgb: "82 106 164" },
+};
+
+const FALLBACK_ART: StoicheionCardArt = {
+  body: "Тело истины",
+  bodyGreek: "σῶμα ἀληθείας",
+  invocation: "στοιχεῖον",
+  accent: "#dfc47f",
+  accentRgb: "223 196 127",
+};
+
+export function getStoicheionCardArt(letter: StoicheionLetter) {
+  return STOICHEION_CARD_ART[letter.id] ?? FALLBACK_ART;
+}

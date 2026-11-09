@@ -1,0 +1,72 @@
+{
+  "title": "Metoda modelowania przyszłości",
+  "subtitle": "Od symbolicznej diagnozy do intencji i działania",
+  "intro": "ARCHE-GRAMMA / GNO-METER-BASILIA to symboliczna metoda Zakonu Aurory. W tej formie Theokyklosu bogowie zajmują miejsce Stoicheia (στοιχεῖον): przedstawiają elementy kosmosu i węzły matematyczne, a Physis (φύσις) jest strumieniem prawdopodobnych zdarzeń. Metoda pomaga sformułować intencję i wybrać działanie; przyszłość pozostaje prawdopodobnym wynikiem, a nie obiecanym rezultatem.",
+  "sections": [
+    {
+      "title": "1. Diagnoza: dziewięć obszarów",
+      "paragraphs": [
+        "Użyj kwadratu 3 × 3 jako mapy sytuacji. W zwykłym rozkładzie Theokyklosu dziewięć sektorów odczytuje się poprzez wylosowane litery-Stoicheia. W formie Zakonu Aurory te same dziewięć kierunków wiąże się z bogami i liczbami ich imion: symboliczna diagnoza staje się podstawą wyboru patrona, ułożenia organonu i świadomego działania. Metoda uzupełnia zwykłą interpretację rozkładu.",
+        "Pozycja prosta oznacza Pneumę (πνεῦμα), ducha, oddech i dostępny dopływ sił. Pozycja odwrócona wskazuje na Hysteremę (ὑστέρημα), niedobór, zastój lub obszar wymagający uwagi. Odnieś symbole do konkretnych okoliczności, oddzielając obserwowalne fakty od własnej interpretacji.",
+        "Zanotuj, gdzie istnieje już oparcie, gdzie działanie jest utrudnione i który obszar najmocniej wiąże się z twoim pytaniem. To punkt wyjścia do wyboru celu."
+      ]
+    },
+    {
+      "title": "2. Wybór celu i bóstwa opiekuńczego",
+      "paragraphs": [
+        "Sformułuj jeden jasny cel: co chcesz zmienić, jakie działanie zależy od ciebie i po czym rozpoznasz postęp. Następnie wybierz jedno z trzynastu bóstw opiekuńczych zgodnie ze znaczeniem celu, a nie wyłącznie z atrakcyjnością liczby.",
+        "Imię bóstwa wyznacza temat symboliczny, a jego liczba izopseficzna staje się miarą słowa-narzędzia. Dla różnych celów przygotuj osobne sformułowania, aby każda intencja pozostała jasna."
+      ]
+    },
+    {
+      "title": "3. Organon: słowo-narzędzie",
+      "paragraphs": [
+        "Organon (ὄργανον) to słowo-narzędzie, które samodzielnie tworzysz. Wybierz brzmienie zgodne z intencją: ρ wyraża ruch, τ utrwalenie, a λ łagodność. W ramach tej metody są to symboliczne wskazówki fonetyczne.",
+        "Sprawdź izopsefię: suma wartości liczbowych greckich liter organonu musi być dokładnie równa liczbie wybranego bóstwa. Na przykład ΑΚΜΗ: α + κ + μ + η = 1 + 20 + 40 + 8 = 69, tyle samo co Atena. Używaj greckich liter, nie mieszając ich z podobnymi znakami łacińskimi ani cyrylicą.",
+        "Palindrom lub zapis w kręgu w formie uroborosa (οὐροβόρος) symbolicznie zamyka kompozycję. Po przestawieniu lub dodaniu liter ponownie oblicz sumę: forma kompozycji nie znosi wymogu zgodności liczbowej."
+      ]
+    },
+    {
+      "title": "4. Aktywacja: forma i głos",
+      "paragraphs": [
+        "Sphragis (σφραγίς), czyli pieczęć, jest cielesną formą kluczowej litery. Znajdź wygodny gest przypominający o intencji; na przykład Y może symbolizować wybór drogi. Wystarczy spokojny, możliwy do wykonania ruch bez napięcia.",
+        "Ekphonesis (ἐκφώνησις) to etap głosowy: wypowiedz siedem greckich samogłosek α, ε, η, ι, ο, υ, ω na jednym swobodnym wydechu, a następnie organon. To symboliczny rytuał skupienia łączący słowo, obraz i działanie.",
+        "Zakończ aktywację konkretnym krokiem w wybranej dziedzinie: rozmową, decyzją, stworzeniem rzeczy, zadbaniem o przestrzeń lub innym działaniem, które możesz wykonać i ocenić."
+      ]
+    },
+    {
+      "title": "5. Obserwacja i ocena",
+      "paragraphs": [
+        "Zapisz cel, wybrane bóstwo, organon i najbliższe działanie. Z góry określ okres obserwacji oraz jeden lub dwa przejawy postępu.",
+        "Wróć do zapisu w ustalonym terminie. Oddziel własne działania, zewnętrzne okoliczności i symboliczną interpretację. Jeśli nie ma postępu, doprecyzuj cel lub działanie na podstawie faktów; sam rozkład nie gwarantuje pożądanego biegu wydarzeń."
+      ]
+    }
+  ],
+  "close": "Zamknij",
+  "sectors": [
+    { "id": "northwest", "title": "Północny zachód", "meaning": "Przestrzeń, granice i ochrona." },
+    { "id": "north", "title": "Północ", "meaning": "Podświadomość i głębokie nurty emocjonalne." },
+    { "id": "northeast", "title": "Północny wschód", "meaning": "Prawo, miara i ogólny porządek." },
+    { "id": "west", "title": "Zachód", "meaning": "Mowa, wymiana, informacja i logos." },
+    { "id": "center", "title": "Centrum", "meaning": "Oś duchowa i stabilne wewnętrzne centrum." },
+    { "id": "east", "title": "Wschód", "meaning": "Jasność, strategia i początek ruchu." },
+    { "id": "southwest", "title": "Południowy zachód", "meaning": "Cykle materii, odżywianie i przekształcanie formy poprzez pracę." },
+    { "id": "south", "title": "Południe", "meaning": "Walka, wola, dyscyplina i działanie." },
+    { "id": "southeast", "title": "Południowy wschód", "meaning": "Przyciąganie, harmonia, twórczość i przemiana." }
+  ],
+  "goals": [
+    { "deityId": "zeus", "goal": "Ustanowić prawo, władzę i porządek; określić jasne zasady oraz odpowiedzialność." },
+    { "deityId": "hera", "goal": "Stworzyć wspierającą przestrzeń i atmosferę; uporządkować otoczenie oraz panujące w nim relacje." },
+    { "deityId": "poseidon", "goal": "Rozpoznać ukryte nurty i emocje; znaleźć stabilny sposób radzenia sobie z silnymi uczuciami." },
+    { "deityId": "demeter", "goal": "Wspierać wzrost, odżywianie i owocne cykle; dostosować wysiłek do etapu dojrzewania." },
+    { "deityId": "athena", "goal": "Osiągnąć akme (ἀκμή), jasne zrozumienie i precyzyjną strategię; wybrać dobrze uzasadniony następny krok." },
+    { "deityId": "apollo", "goal": "Wnieść oczyszczenie i jasność; oddzielić to, co istotne, i zbudować spójny obraz." },
+    { "deityId": "artemis", "goal": "Zachować i chronić to, co cenne; wyznaczyć granice i troskliwie wspierać to, co podatne na zranienie." },
+    { "deityId": "ares", "goal": "Skierować impuls ku dyscyplinie i działaniu; pokonać konkretną przeszkodę." },
+    { "deityId": "aphrodite", "goal": "Rozwijać relacje, przyciąganie i harmonię; znaleźć formę wzajemnego zbliżenia." },
+    { "deityId": "hephaestus", "goal": "Doskonalić rzemiosło i nadawać formę; dzięki pracy i umiejętnościom przekształcić pomysł w coś działającego." },
+    { "deityId": "hermes", "goal": "Prowadzić negocjacje, przekazywać informacje i usprawniać wymianę; sformułować zrozumiałą wiadomość." },
+    { "deityId": "hestia", "goal": "Wzmocnić centrum, dom i stabilność; stworzyć wspierający rytm codzienności." },
+    { "deityId": "dionysus", "goal": "Otworzyć twórczy przełom i przemianę; przekształcić wewnętrzny impuls w ukończone dzieło." }
+  ]
+}

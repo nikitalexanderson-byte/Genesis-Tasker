@@ -1,0 +1,122 @@
+{
+  "alpha": {
+    "paragraphs": 5,
+    "upright": 2,
+    "reversed": 3
+  },
+  "beta": {
+    "paragraphs": 8,
+    "upright": 3,
+    "reversed": 4
+  },
+  "gamma": {
+    "paragraphs": 5,
+    "upright": 2,
+    "reversed": 3
+  },
+  "delta": {
+    "paragraphs": 5,
+    "upright": 2,
+    "reversed": 3
+  },
+  "epsilon": {
+    "paragraphs": 8,
+    "upright": 3,
+    "reversed": 4
+  },
+  "zeta": {
+    "paragraphs": 12,
+    "upright": 7,
+    "reversed": 8
+  },
+  "eta": {
+    "paragraphs": 12,
+    "upright": 7,
+    "reversed": 8
+  },
+  "theta": {
+    "paragraphs": 12,
+    "upright": 6,
+    "reversed": 7
+  },
+  "iota": {
+    "paragraphs": 13,
+    "upright": 7,
+    "reversed": 8
+  },
+  "kappa": {
+    "paragraphs": 13,
+    "upright": 7,
+    "reversed": 8
+  },
+  "lambda": {
+    "paragraphs": 13,
+    "upright": 7,
+    "reversed": 8
+  },
+  "mu": {
+    "paragraphs": 13,
+    "upright": 7,
+    "reversed": 8
+  },
+  "nu": {
+    "paragraphs": 11,
+    "upright": 6,
+    "reversed": 7
+  },
+  "xi": {
+    "paragraphs": 12,
+    "upright": 6,
+    "reversed": 7
+  },
+  "omicron": {
+    "paragraphs": 12,
+    "upright": 6,
+    "reversed": 7
+  },
+  "pi": {
+    "paragraphs": 12,
+    "upright": 7,
+    "reversed": 8
+  },
+  "rho": {
+    "paragraphs": 12,
+    "upright": 6,
+    "reversed": 7
+  },
+  "sigma": {
+    "paragraphs": 12,
+    "upright": 6,
+    "reversed": 7
+  },
+  "tau": {
+    "paragraphs": 12,
+    "upright": 7,
+    "reversed": 8
+  },
+  "upsilon": {
+    "paragraphs": 13,
+    "upright": 7,
+    "reversed": 8
+  },
+  "phi": {
+    "paragraphs": 14,
+    "upright": 8,
+    "reversed": 9
+  },
+  "chi": {
+    "paragraphs": 9,
+    "upright": 4,
+    "reversed": 5
+  },
+  "psi": {
+    "paragraphs": 14,
+    "upright": 8,
+    "reversed": 9
+  },
+  "omega": {
+    "paragraphs": 12,
+    "upright": 7,
+    "reversed": 8
+  }
+}

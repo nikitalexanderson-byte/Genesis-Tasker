@@ -1,0 +1,297 @@
+{
+    "fingerprint": "d14263b20cf4a74a0994830d6a5efa1a827ba60067439729119c1b1792bd2c3e",
+    "revision": 1,
+    "desired": {
+        "allProjects": false,
+        "grants": [
+            {
+                "projectId": "669d0740-f94f-4853-b207-50051b6bce77",
+                "role": "none",
+                "includeDescendants": false
+            },
+            {
+                "projectId": "b4831519-9e15-4e7f-831c-cfec31a6b38a",
+                "role": "viewer",
+                "includeDescendants": false
+            },
+            {
+                "projectId": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+                "role": "member",
+                "includeDescendants": true
+            }
+        ]
+    },
+    "changes": [
+        {
+            "projectId": "0e50248b-7bcc-4338-9f37-a42e4cf9b8a9",
+            "title": "Проект с длинным названием для проверки адаптивного интерфейса и удобного чтения",
+            "from": "member",
+            "to": null,
+            "clearedAssignments": 1,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": false,
+                "createProjects": false,
+                "editTasks": false,
+                "organizeTasks": false,
+                "comment": false,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        },
+        {
+            "projectId": "5714f294-efd3-4111-a2fb-6b033fa5d455",
+            "title": "Архив публикаций",
+            "from": "member",
+            "to": null,
+            "clearedAssignments": 0,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": false,
+                "createProjects": false,
+                "editTasks": false,
+                "organizeTasks": false,
+                "comment": false,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        },
+        {
+            "projectId": "669d0740-f94f-4853-b207-50051b6bce77",
+            "title": "Подпроект с отдельным исключением",
+            "from": "member",
+            "to": null,
+            "clearedAssignments": 0,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": false,
+                "createProjects": false,
+                "editTasks": false,
+                "organizeTasks": false,
+                "comment": false,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        },
+        {
+            "projectId": "9c611e28-79b2-488e-8df0-536fa74b5fc7",
+            "title": "Планы команды",
+            "from": "member",
+            "to": null,
+            "clearedAssignments": 0,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": false,
+                "createProjects": false,
+                "editTasks": false,
+                "organizeTasks": false,
+                "comment": false,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        },
+        {
+            "projectId": "b4831519-9e15-4e7f-831c-cfec31a6b38a",
+            "title": "Обзор и согласование",
+            "from": "member",
+            "to": "viewer",
+            "clearedAssignments": 0,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": true,
+                "createProjects": false,
+                "editTasks": false,
+                "organizeTasks": false,
+                "comment": false,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        },
+        {
+            "projectId": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+            "title": "Основной проект",
+            "from": "member",
+            "to": "member",
+            "clearedAssignments": 0,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": true,
+                "createProjects": false,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        },
+        {
+            "projectId": "fa1cf596-0150-4a18-8d75-2f65b5dd201e",
+            "title": "Контроль качества",
+            "from": "member",
+            "to": null,
+            "clearedAssignments": 0,
+            "beforePermissions": {
+                "read": true,
+                "createProjects": true,
+                "editTasks": true,
+                "organizeTasks": false,
+                "comment": true,
+                "manageProjects": false,
+                "inviteMembers": false
+            },
+            "afterPermissions": {
+                "read": false,
+                "createProjects": false,
+                "editTasks": false,
+                "organizeTasks": false,
+                "comment": false,
+                "manageProjects": false,
+                "inviteMembers": false
+            }
+        }
+    ],
+    "blockers": [],
+    "effectiveRoles": {
+        "669d0740-f94f-4853-b207-50051b6bce77": null,
+        "b4831519-9e15-4e7f-831c-cfec31a6b38a": "viewer",
+        "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e": "member"
+    },
+    "projects": [
+        {
+            "id": "0e50248b-7bcc-4338-9f37-a42e4cf9b8a9",
+            "title": "Проект с длинным названием для проверки адаптивного интерфейса и удобного чтения",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 1,
+            "inTrash": 0
+        },
+        {
+            "id": "20ba2dcd-025f-463e-9388-398fa0c4c8ef",
+            "title": "Хаос-бокс",
+            "parentId": null,
+            "isInbox": 1,
+            "archivedAt": null,
+            "revision": 1,
+            "role": null,
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "5714f294-efd3-4111-a2fb-6b033fa5d455",
+            "title": "Архив публикаций",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "669d0740-f94f-4853-b207-50051b6bce77",
+            "title": "Подпроект с отдельным исключением",
+            "parentId": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "9c611e28-79b2-488e-8df0-536fa74b5fc7",
+            "title": "Планы команды",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "b4831519-9e15-4e7f-831c-cfec31a6b38a",
+            "title": "Обзор и согласование",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "e71ddb81-f0e7-4fb5-8ed2-3f9d9ebf7c9e",
+            "title": "Основной проект",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        },
+        {
+            "id": "fa1cf596-0150-4a18-8d75-2f65b5dd201e",
+            "title": "Контроль качества",
+            "parentId": null,
+            "isInbox": 0,
+            "archivedAt": null,
+            "revision": 1,
+            "role": "member",
+            "assignedTaskCount": 0,
+            "inTrash": 0
+        }
+    ]
+}

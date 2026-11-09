@@ -1,0 +1,563 @@
+{
+  "version": 1,
+  "horizonY": 0.64,
+  "cases": [
+    {
+      "id": "moscow-winter-night",
+      "instant": "2026-11-06T00:00:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -39.013712047,
+        "azimuthDeg": 55.371708257,
+        "minAltitudeDeg": -50.022889908,
+        "maxAltitudeDeg": 18.465510092,
+        "sunVisible": false,
+        "phase": "night",
+        "polarState": "none",
+        "sunX": 0.137943415,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "moscow-astronomical-dawn",
+      "instant": "2026-11-06T02:40:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -17.699175487,
+        "azimuthDeg": 92.263172601,
+        "minAltitudeDeg": -50.056473667,
+        "maxAltitudeDeg": 18.431926333,
+        "sunVisible": false,
+        "phase": "astronomical-twilight",
+        "polarState": "none",
+        "sunX": 0.060343207,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "moscow-nautical-dawn",
+      "instant": "2026-11-06T03:40:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -9.373881266,
+        "azimuthDeg": 104.39810053,
+        "minAltitudeDeg": -50.069053684,
+        "maxAltitudeDeg": 18.419346316,
+        "sunVisible": false,
+        "phase": "nautical-twilight",
+        "polarState": "none",
+        "sunX": 0.073819782,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "moscow-civil-dawn",
+      "instant": "2026-11-06T04:20:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -4.046656752,
+        "azimuthDeg": 112.466382287,
+        "minAltitudeDeg": -50.077436145,
+        "maxAltitudeDeg": 18.410963855,
+        "sunVisible": false,
+        "phase": "civil-twilight",
+        "polarState": "none",
+        "sunX": 0.09339428,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "moscow-winter-morning",
+      "instant": "2026-11-06T06:00:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": 7.689146592,
+        "azimuthDeg": 133.489397361,
+        "minAltitudeDeg": -50.098377523,
+        "maxAltitudeDeg": 18.390022477,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.183649488,
+        "sunY": 0.565072861
+      }
+    },
+    {
+      "id": "moscow-winter-noon",
+      "instant": "2026-11-06T09:00:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": 18.295974114,
+        "azimuthDeg": 176.588597234,
+        "minAltitudeDeg": -50.13601871,
+        "maxAltitudeDeg": 18.35238129,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.475141359,
+        "sunY": 0.464201583
+      }
+    },
+    {
+      "id": "moscow-winter-evening",
+      "instant": "2026-11-06T12:00:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": 10.22837693,
+        "azimuthDeg": 220.476798181,
+        "minAltitudeDeg": -50.173591189,
+        "maxAltitudeDeg": 18.314808811,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.78108247,
+        "sunY": 0.540559589
+      }
+    },
+    {
+      "id": "moscow-civil-dusk",
+      "instant": "2026-11-06T13:50:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -1.974167272,
+        "azimuthDeg": 244.019735267,
+        "minAltitudeDeg": -50.196518232,
+        "maxAltitudeDeg": 18.291881768,
+        "sunVisible": false,
+        "phase": "civil-twilight",
+        "polarState": "none",
+        "sunX": 0.895535795,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "moscow-nautical-dusk",
+      "instant": "2026-11-06T14:30:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -7.19710727,
+        "azimuthDeg": 252.119540184,
+        "minAltitudeDeg": -50.204848946,
+        "maxAltitudeDeg": 18.283551054,
+        "sunVisible": false,
+        "phase": "nautical-twilight",
+        "polarState": "none",
+        "sunX": 0.918747635,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "moscow-astronomical-dusk",
+      "instant": "2026-11-06T15:20:00Z",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "expected": {
+        "altitudeDeg": -14.054278813,
+        "azimuthDeg": 262.165667722,
+        "minAltitudeDeg": -50.21525754,
+        "maxAltitudeDeg": 18.27314246,
+        "sunVisible": false,
+        "phase": "astronomical-twilight",
+        "polarState": "none",
+        "sunX": 0.93589319,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "sydney-summer-noon",
+      "instant": "2026-12-21T01:00:00Z",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "expected": {
+        "altitudeDeg": 74.380180154,
+        "azimuthDeg": 51.546324579,
+        "minAltitudeDeg": -32.697917696,
+        "maxAltitudeDeg": 79.564482304,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.592776213,
+        "sunY": 0.100681089
+      }
+    },
+    {
+      "id": "sydney-summer-night",
+      "instant": "2026-12-21T13:00:00Z",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "expected": {
+        "altitudeDeg": -31.303485079,
+        "azimuthDeg": 194.353507712,
+        "minAltitudeDeg": -32.693881061,
+        "maxAltitudeDeg": 79.568518939,
+        "sunVisible": false,
+        "phase": "night",
+        "polarState": "none",
+        "sunX": 0.390922304,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "singapore-equinox-day",
+      "instant": "2026-03-20T04:00:00Z",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "expected": {
+        "altitudeDeg": 71.730653626,
+        "azimuthDeg": 95.227975296,
+        "minAltitudeDeg": -89.000236372,
+        "maxAltitudeDeg": 88.295563628,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.362640635,
+        "sunY": 0.108227735
+      }
+    },
+    {
+      "id": "quito-equinox-day",
+      "instant": "2026-03-20T16:00:00Z",
+      "latitude": -0.1807,
+      "longitude": -78.4678,
+      "expected": {
+        "altitudeDeg": 69.558361158,
+        "azimuthDeg": 89.958124821,
+        "minAltitudeDeg": -89.664604019,
+        "maxAltitudeDeg": 89.973995981,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.653671328,
+        "sunY": 0.115264083
+      }
+    },
+    {
+      "id": "tromso-midnight-sun",
+      "instant": "2026-06-21T22:00:00Z",
+      "latitude": 69.6492,
+      "longitude": 18.9553,
+      "expected": {
+        "altitudeDeg": 3.460671304,
+        "azimuthDeg": 349.380658193,
+        "minAltitudeDeg": 3.088868346,
+        "maxAltitudeDeg": 43.790468346,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "polar-day",
+        "sunX": 0.580936729,
+        "sunY": 0.606196501
+      }
+    },
+    {
+      "id": "tromso-polar-night",
+      "instant": "2026-12-21T10:00:00Z",
+      "latitude": 69.6492,
+      "longitude": 18.9553,
+      "expected": {
+        "altitudeDeg": -3.397364323,
+        "azimuthDeg": 170.278590153,
+        "minAltitudeDeg": -43.787293598,
+        "maxAltitudeDeg": -3.085693598,
+        "sunVisible": false,
+        "phase": "civil-twilight",
+        "polarState": "polar-night",
+        "sunX": 0.425702613,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "north-pole-summer",
+      "instant": "2026-06-21T12:00:00Z",
+      "latitude": 90,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": 23.439345486,
+        "azimuthDeg": 179.501633014,
+        "minAltitudeDeg": 23.439345486,
+        "maxAltitudeDeg": 23.439345486,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "polar-day",
+        "sunX": 0.496488673,
+        "sunY": 0.417244305
+      }
+    },
+    {
+      "id": "north-pole-winter",
+      "instant": "2026-12-21T12:00:00Z",
+      "latitude": 90,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": -23.437057443,
+        "azimuthDeg": 180.447990917,
+        "minAltitudeDeg": -23.437057443,
+        "maxAltitudeDeg": -23.437057443,
+        "sunVisible": false,
+        "phase": "night",
+        "polarState": "polar-night",
+        "sunX": 0.503440288,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "south-pole-summer",
+      "instant": "2026-12-21T12:00:00Z",
+      "latitude": -90,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": 23.437057443,
+        "azimuthDeg": 359.552009083,
+        "minAltitudeDeg": 23.437057443,
+        "maxAltitudeDeg": 23.437057443,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "polar-day",
+        "sunX": 0.496843544,
+        "sunY": 0.417264823
+      }
+    },
+    {
+      "id": "south-pole-winter",
+      "instant": "2026-06-21T12:00:00Z",
+      "latitude": -90,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": -23.439345486,
+        "azimuthDeg": 0.498366986,
+        "minAltitudeDeg": -23.439345486,
+        "maxAltitudeDeg": -23.439345486,
+        "sunVisible": false,
+        "phase": "night",
+        "polarState": "polar-night",
+        "sunX": 0.503827135,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "equator-noon",
+      "instant": "2026-03-20T12:00:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": 88.001560436,
+        "azimuthDeg": 96.338031349,
+        "minAltitudeDeg": -89.779428347,
+        "maxAltitudeDeg": 89.779428347,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.48474998,
+        "sunY": 0.080340605
+      }
+    },
+    {
+      "id": "equator-night",
+      "instant": "2026-03-20T00:00:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": -87.934130301,
+        "azimuthDeg": 258.317580321,
+        "minAltitudeDeg": -89.581775519,
+        "maxAltitudeDeg": 89.581775519,
+        "sunVisible": false,
+        "phase": "night",
+        "polarState": "none",
+        "sunX": 0.930885394,
+        "sunY": 0.64
+      }
+    },
+    {
+      "id": "dateline-east",
+      "instant": "2026-11-30T23:59:00Z",
+      "latitude": -21.1394,
+      "longitude": -175.2049,
+      "expected": {
+        "altitudeDeg": 83.191576124,
+        "azimuthDeg": 263.986992551,
+        "minAltitudeDeg": -47.164840028,
+        "maxAltitudeDeg": 89.443640028,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.448125007,
+        "sunY": 0.08394907
+      }
+    },
+    {
+      "id": "dateline-west",
+      "instant": "2026-12-01T00:01:00Z",
+      "latitude": 21.3069,
+      "longitude": -157.8583,
+      "expected": {
+        "altitudeDeg": 40.492099109,
+        "azimuthDeg": 211.263656237,
+        "minAltitudeDeg": -89.610917575,
+        "maxAltitudeDeg": 46.997117575,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.673659062,
+        "sunY": 0.276367817
+      }
+    },
+    {
+      "id": "equator-near-zenith-east",
+      "instant": "2026-03-20T12:06:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": 89.467035029,
+        "azimuthDeg": 114.253368259,
+        "minAltitudeDeg": -89.781075297,
+        "maxAltitudeDeg": 89.781075297,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.496268423,
+        "sunY": 0.080024227
+      }
+    },
+    {
+      "id": "equator-near-zenith-transit",
+      "instant": "2026-03-20T12:08:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": 89.781164651,
+        "azimuthDeg": 183.714131877,
+        "minAltitudeDeg": -89.781624279,
+        "maxAltitudeDeg": 89.781624279,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.500108862,
+        "sunY": 0.080004085
+      }
+    },
+    {
+      "id": "equator-near-zenith-west",
+      "instant": "2026-03-20T12:10:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "expected": {
+        "altitudeDeg": 89.441493439,
+        "azimuthDeg": 247.044152053,
+        "minAltitudeDeg": -89.782173262,
+        "maxAltitudeDeg": 89.782173262,
+        "sunVisible": true,
+        "phase": "day",
+        "polarState": "none",
+        "sunX": 0.503949294,
+        "sunY": 0.080026605
+      }
+    }
+  ],
+  "artCases": [
+    {
+      "id": "moscow-november",
+      "monthIndex": 10,
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "timeZone": "Europe/Moscow",
+      "expectedArtKey": "temperate/11.webp"
+    },
+    {
+      "id": "helsinki-november",
+      "monthIndex": 10,
+      "latitude": 60.1699,
+      "longitude": 24.9384,
+      "timeZone": "Europe/Helsinki",
+      "expectedArtKey": "boreal/11.webp"
+    },
+    {
+      "id": "rome-november",
+      "monthIndex": 10,
+      "latitude": 41.9028,
+      "longitude": 12.4964,
+      "timeZone": "Europe/Rome",
+      "expectedArtKey": "mediterranean/11.webp"
+    },
+    {
+      "id": "cairo-november",
+      "monthIndex": 10,
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timeZone": "Africa/Cairo",
+      "expectedArtKey": "arid/11.webp"
+    },
+    {
+      "id": "singapore-november",
+      "monthIndex": 10,
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "timeZone": "Asia/Singapore",
+      "expectedArtKey": "tropical/11.webp"
+    },
+    {
+      "id": "sydney-november",
+      "monthIndex": 10,
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timeZone": "Australia/Sydney",
+      "expectedArtKey": "southern/11.webp"
+    },
+    {
+      "id": "perth-november",
+      "monthIndex": 10,
+      "latitude": -31.9523,
+      "longitude": 115.8613,
+      "timeZone": "Australia/Perth",
+      "expectedArtKey": "mediterranean/05.webp"
+    },
+    {
+      "id": "alice-springs-november",
+      "monthIndex": 10,
+      "latitude": -23.698,
+      "longitude": 133.8807,
+      "timeZone": "Australia/Alice_Springs",
+      "expectedArtKey": "arid/05.webp"
+    },
+    {
+      "id": "sao-paulo-november",
+      "monthIndex": 10,
+      "latitude": -23.5505,
+      "longitude": -46.6333,
+      "timeZone": "America/Sao_Paulo",
+      "expectedArtKey": "tropical/05.webp"
+    },
+    {
+      "id": "moscow-january",
+      "monthIndex": 0,
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "timeZone": "Europe/Moscow",
+      "expectedArtKey": "temperate/01.webp"
+    },
+    {
+      "id": "sydney-january",
+      "monthIndex": 0,
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timeZone": "Australia/Sydney",
+      "expectedArtKey": "southern/01.webp"
+    },
+    {
+      "id": "perth-january",
+      "monthIndex": 0,
+      "latitude": -31.9523,
+      "longitude": 115.8613,
+      "timeZone": "Australia/Perth",
+      "expectedArtKey": "mediterranean/07.webp"
+    }
+  ]
+}

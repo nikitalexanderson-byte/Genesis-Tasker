@@ -1,0 +1,2 @@
+export const HEALTH_ICON_NAMES = ["gauge", "droplet", "weight", "ruler", "heart-pulse", "moon", "smile", "bone", "footprints", "glass-water", "activity", "wind", "thermometer", "sliders-horizontal", "dumbbell", "bike", "person-standing", "watch", "bed-double", "brain", "heart", "eye", "ear", "pill", "syringe", "cigarette-off", "apple", "leaf", "stethoscope", "flame"] as const;
+export type HealthIconName = typeof HEALTH_ICON_NAMES[number];

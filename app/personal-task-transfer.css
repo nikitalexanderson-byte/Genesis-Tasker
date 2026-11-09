@@ -1,0 +1,13 @@
+.personal-task-transfer :is(button, select, input):focus-visible { outline: 2px solid var(--palette-outline, #2d6c68); outline-offset: 2px; }
+.personal-task-transfer { max-width: 620px; }
+.personal-task-transfer-preview { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: var(--ui-surface-radius); background: var(--surface); }
+.personal-task-transfer-preview p { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.personal-task-transfer .transfer-destination-path { margin: 4px 0 16px; color: var(--ink-soft); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.personal-task-transfer-preview label { display: flex; align-items: flex-start; gap: 8px; overflow-wrap: anywhere; }
+.personal-task-transfer-preview input[type="checkbox"] { width: auto; margin-top: 3px; flex: none; }
+.personal-task-transfer-preview label span { white-space: pre-wrap; }
+.personal-task-transfer-limit { font-size: 12px; line-height: 1.5; }
+.personal-task-transfer .editor-actions { flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .personal-task-transfer .editor-actions button { min-height: 44px; }
+}

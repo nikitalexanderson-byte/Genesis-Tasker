@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "releasedAt": "2026-11-01",
+  "reviewedBy": "root-content-review",
+  "contentVersion": "psychopompia-2026-11-v1",
+  "sourceFile": "психопомпия.docx",
+  "sourceSha256": "c2b422f0ddbcfb312d2dca1620945b66b93601f7e10fdab83c48c2a7d2032462",
+  "locales": [
+    "ru",
+    "en",
+    "el",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pt",
+    "pl",
+    "sr",
+    "uk",
+    "zh",
+    "tr",
+    "ja"
+  ],
+  "scope": "First sixteen religious/philosophical reflections, read in full. No alcohol practices or medical-treatment directions. Original wording, including authorial spelling and metaphors, is preserved. Unreleased source items are not included.",
+  "translationMethod": "model-authored; source-bound full translations, not a claim of professional human translation review",
+  "items": [
+    {
+      "number": 1,
+      "id": "advice-d3935e8481da84fcca2fdce8",
+      "sourceTextSha256": "d3935e8481da84fcca2fdce8289c32136b137c6625ebcd64d3fe0842f57ca2ca",
+      "sourceBodySha256": "4b4b08b7ff5467011381079d7b23f1485e72ff42308c426e8f4971f693b28fa7",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        1
+      ]
+    },
+    {
+      "number": 2,
+      "id": "advice-1dfe6125128653bb0ac078fc",
+      "sourceTextSha256": "1dfe6125128653bb0ac078fc1ef322c1b84a11037cc3d2e79d0cba3bcd371112",
+      "sourceBodySha256": "47a85f541ea83f411c187f28b9c405a36151080c637cb27d0fa3c680904f7728",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        2
+      ]
+    },
+    {
+      "number": 3,
+      "id": "advice-d208e70cbfefef4b8f82000b",
+      "sourceTextSha256": "d208e70cbfefef4b8f82000b2a5e774d86ca28d919d7324e238bac7bf1bf6364",
+      "sourceBodySha256": "10ba745112ab052f45f0f49ab1343399eec3f526b587d92a29e89be25c5a0350",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        3
+      ]
+    },
+    {
+      "number": 4,
+      "id": "advice-484b69a6c9bde531c7d00684",
+      "sourceTextSha256": "484b69a6c9bde531c7d006842d1bd4de1ad62851af6b9a247ccd34b2b35274ba",
+      "sourceBodySha256": "1f4ae6b26ad33e8d6e4d865b27621f31259d72c394705e2d0a4d5cdc065ac971",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        4
+      ]
+    },
+    {
+      "number": 5,
+      "id": "advice-68aa2c20279ac762f7d12c39",
+      "sourceTextSha256": "68aa2c20279ac762f7d12c39232c71d5e13dd6b7ad5dc6300660bd42e783af6d",
+      "sourceBodySha256": "2d27618c627446632839844fee66807e1364d18781792ac0f397466467434da5",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        5
+      ]
+    },
+    {
+      "number": 6,
+      "id": "advice-d40bf9ab2b08e4e5bb392555",
+      "sourceTextSha256": "d40bf9ab2b08e4e5bb39255521bc9907c0d886981aa993e0a7bd18bf9dd85230",
+      "sourceBodySha256": "508665ecc4b5040c172b0a19127a432bbb751150c5a12fd4b0ff17ad79af3922",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        6
+      ]
+    },
+    {
+      "number": 7,
+      "id": "advice-706f7c9116c776cd523c8b72",
+      "sourceTextSha256": "706f7c9116c776cd523c8b72ead8184bad43a536e5dfaddded753a85b5c68afe",
+      "sourceBodySha256": "a6593385eea94b91258bb690eec1b3f836a1def13f8956546900127906a6b0f6",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        7
+      ]
+    },
+    {
+      "number": 8,
+      "id": "advice-5df0fa8eec482863542d7a37",
+      "sourceTextSha256": "5df0fa8eec482863542d7a378ce5d2f2f3a7e5a0cecbf373335e2f5bfa37c842",
+      "sourceBodySha256": "88703b5b383ee5cab2f5f7d273dcb0704d648654b1be8035921b8c1972d69455",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        8
+      ]
+    },
+    {
+      "number": 9,
+      "id": "advice-ea5c6c1423852faa1a65a414",
+      "sourceTextSha256": "ba74b4763fee5bb41c89e9289495c57ad1133821382b7a32295869d0a7a78ff2",
+      "sourceBodySha256": "ba74b4763fee5bb41c89e9289495c57ad1133821382b7a32295869d0a7a78ff2",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "number": 10,
+      "id": "advice-425ad0d884a6787d9a06df09",
+      "sourceTextSha256": "e1a872ac4046a9c5e19b0278005b267e3b79488dd8f1a03ca153a80ad6842892",
+      "sourceBodySha256": "e1a872ac4046a9c5e19b0278005b267e3b79488dd8f1a03ca153a80ad6842892",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        14,
+        15,
+        16
+      ]
+    },
+    {
+      "number": 11,
+      "id": "advice-e12c0073749d2f5fc3106add",
+      "sourceTextSha256": "e12c0073749d2f5fc3106add20a4790c49dc1ffe2a434fe141c9cdbf98ea4c3b",
+      "sourceBodySha256": "e12c0073749d2f5fc3106add20a4790c49dc1ffe2a434fe141c9cdbf98ea4c3b",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        19
+      ]
+    },
+    {
+      "number": 12,
+      "id": "advice-e580ef8931f551852a064f7f",
+      "sourceTextSha256": "e580ef8931f551852a064f7ff98865c989d2e2152140f1086adce1747e198793",
+      "sourceBodySha256": "e580ef8931f551852a064f7ff98865c989d2e2152140f1086adce1747e198793",
+      "displayOriginalHeading": false,
+      "headingSeparator": "",
+      "sourceBlocks": [
+        20
+      ]
+    },
+    {
+      "number": 13,
+      "id": "advice-62a07c3c0973596b84286c91",
+      "sourceTextSha256": "62a07c3c0973596b84286c91823dfe61dca6b77a756ce1cf652b2a37c18917dd",
+      "sourceBodySha256": "96a494eb3847388d5730e60daffc172d6b2293130adff967bfb931957e4e002d",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        22
+      ]
+    },
+    {
+      "number": 14,
+      "id": "advice-e6f128242d565a3daa2f5f37",
+      "sourceTextSha256": "e6f128242d565a3daa2f5f372f1251018261fc9bd04b82a393017e9cdb9f79de",
+      "sourceBodySha256": "dafd6631824ba52c61e23c8efd521036c6e6000d5fb3778c59ab5e1674e14355",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        23
+      ]
+    },
+    {
+      "number": 15,
+      "id": "advice-d6b9ef74d7b0a84a4c9eb7a3",
+      "sourceTextSha256": "d6b9ef74d7b0a84a4c9eb7a3a0610802a10f0f4462ff40ed67d5687631e92f87",
+      "sourceBodySha256": "e88517d65132e6a91046339c5a9e20b3bc893699d84afc674d1233dde8e16a5b",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        24
+      ]
+    },
+    {
+      "number": 16,
+      "id": "advice-8b5a4d7bcdf628cff36f6f35",
+      "sourceTextSha256": "8b5a4d7bcdf628cff36f6f35190f9c3d4fd26c766436f8be78d3aebf575ec056",
+      "sourceBodySha256": "e9a36718fae46b7ec81f092b272744e95b844dfef577eadc77434a0961c4fb79",
+      "displayOriginalHeading": true,
+      "headingSeparator": ". ",
+      "sourceBlocks": [
+        25
+      ]
+    }
+  ]
+}

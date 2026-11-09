@@ -1,0 +1,11 @@
+.habit-rule-history { min-width: 0; }
+.habit-rule-history p { margin: 0; line-height: 1.5; color: var(--ink-soft); overflow-wrap: anywhere; }
+.habit-rule-history details > summary { cursor: pointer; color: var(--ui-accent); padding-block: 10px; }
+.habit-rule-history ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.habit-rule-history li { display: grid; gap: 8px; padding-block-start: 12px; border-top: 1px solid var(--line); }
+.habit-rule-history li > strong { color: var(--ink); }
+.habit-rule-definition { display: grid; gap: 4px; font-variant-numeric: tabular-nums; }
+.habit-rule-history button { min-height: 44px; white-space: normal; justify-self: start; }
+.habit-rule-notice { padding: 12px; border: 1px solid var(--line); border-radius: var(--ui-radius); display: grid; gap: 8px; }
+.habit-rule-notice p { margin: 0; color: var(--ink-soft); line-height: 1.5; }
+.habit-rule-notice > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }

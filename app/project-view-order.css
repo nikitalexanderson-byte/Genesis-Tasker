@@ -1,0 +1,20 @@
+html[data-genesis-theme] .genesis-app .reorderable-project-views > button { touch-action: pan-y; cursor: grab; user-select: none; -webkit-touch-callout: none; }
+html[data-genesis-theme] .genesis-app .reorderable-project-views[data-reordering] > button { cursor: grabbing; }
+html[data-genesis-theme] .genesis-app .reorderable-project-views > button[data-view-pressing] { outline: 2px solid var(--ui-accent); outline-offset: -3px; }
+html[data-genesis-theme] .genesis-app .shared-projects-planning .reorderable-project-views > button[data-view-dragging] {
+  color: var(--ink-soft); background: var(--surface); border: 1px dashed var(--ui-accent);
+  box-shadow: none; opacity: .55;
+}
+html[data-genesis-theme] .project-view-drag-preview {
+  position: fixed; top: 0; left: 0; z-index: 10000; box-sizing: border-box; pointer-events: none;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  border-radius: 8px; color: var(--ui-on-accent); background: var(--ui-accent);
+  font-family: var(--font-ui); font-weight: 600; line-height: 1.4; white-space: nowrap;
+  box-shadow: 0 12px 24px #0004; user-select: none; will-change: transform;
+  transition: opacity 120ms ease-out;
+}
+html[data-genesis-theme] .project-view-drag-preview[data-drop-valid="false"] { opacity: .55; }
+@media(prefers-reduced-motion: reduce) {
+  html[data-genesis-theme] .project-view-drag-preview { transition: none; }
+}
+html[data-genesis-theme] .genesis-app .project-view-order-help { margin: 8px 0 0; color: var(--ink-soft); font: 400 12px/1.5 var(--font-ui); }

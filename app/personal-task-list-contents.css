@@ -1,0 +1,50 @@
+.personal-list-contents { min-width:0; margin-block-start:24px; }
+html[data-genesis-theme] .genesis-app dialog.entity-preview-modal { width:min(1000px,calc(100vw - 32px)); }
+.personal-list-contents>header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-block-end:16px; }
+.personal-list-contents h3 { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px; margin:0; }
+.personal-list-contents h3 small { color:var(--ink-muted); font:400 12px/1.5 var(--font-ui); }
+.personal-list-contents>header>button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; margin:0; }
+.personal-list-task-rows { display:grid; gap:8px; padding:0; margin:0; list-style:none; }
+.personal-list-task-rows>li { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); }
+.personal-list-task-body { min-width:0; }
+html[data-genesis-theme] .genesis-app .personal-list-task-body .task-preview-open { width:100%; white-space:normal; overflow-wrap:anywhere; font:500 15px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .personal-list-task-body>small { display:block; margin-block-start:4px; color:var(--ink-muted); font:400 12px/1.5 var(--font-ui); overflow-wrap:anywhere; }
+.personal-list-task-rows>li.done .task-preview-open { text-decoration:line-through; }
+.personal-list-task-rows .task-check { display:grid; place-items:center; min-width:44px; width:44px; height:44px; min-height:44px; margin:0; padding:8px; }
+.personal-list-task-rows .task-check svg { width:20px; height:20px; }
+.personal-list-task-rows .icon-button { width:44px; height:44px; min-width:44px; min-height:44px; margin:0; padding:10px; }
+/* Personal details, list contents and discussion share one grouping rhythm. */
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal>header { align-items:flex-start; padding-block-end:16px; margin-block-end:24px; border-bottom:1px solid var(--line); }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal>header h2 { min-width:0; padding:0; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal>header .icon-button { flex-shrink:0; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-preview-columns { grid-template-columns:minmax(0,3fr) minmax(0,2fr); align-items:start; gap:24px; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .personal-preview-main { display:grid; align-content:start; gap:16px; min-width:0; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal :is(.entity-information,.personal-list-contents,.shared-task-comments) { min-width:0; margin:0; padding:20px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); background:var(--surface); }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-information>header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal :is(.entity-information h3,.shared-task-comments>h3) { margin:0; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-information>header>button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; margin:0; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .personal-preview-description>p { margin:16px 0 0; font:400 14px/1.6 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-information dl { grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:8px 16px; margin:16px 0 0; font:400 14px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .personal-list-task-rows>li { padding:12px 0; border:0; border-top:1px solid var(--line); border-radius:0; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .personal-list-task-rows>li:last-child { padding-block-end:0; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .personal-list-contents>p { margin:0; padding-block-start:16px; border-top:1px solid var(--line); }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments>h3 { margin-block-end:16px; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments textarea { min-height:112px; resize:vertical; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments article { padding-block:12px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments article>header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments time { color:var(--ink-muted); font:400 12px/1.5 var(--font-ui); }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments article>p { margin:8px 0 0; white-space:pre-wrap; }
+html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .shared-task-comments article+form { margin-block-start:16px; }
+@media(max-width:959px) {
+ html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-preview-columns { grid-template-columns:minmax(0,1fr); gap:16px; }
+}
+@media(max-width:420px) {
+ .personal-list-task-rows>li { grid-template-columns:44px minmax(0,1fr) 44px; gap:8px; padding:8px; }
+ .personal-list-contents>header>button { width:100%; }
+ html[data-genesis-theme] .genesis-app .personal-entity-preview-modal :is(.entity-information,.personal-list-contents,.shared-task-comments) { padding:16px; }
+ html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-information>header>button { width:100%; }
+ html[data-genesis-theme] .genesis-app .personal-entity-preview-modal .entity-information dl { grid-template-columns:minmax(0,1fr); gap:4px; }
+}
+@media(max-width:767px) {
+ html[data-genesis-theme] .genesis-app dialog.entity-preview-modal { width:100%; }
+}

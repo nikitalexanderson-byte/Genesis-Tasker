@@ -1,0 +1,7 @@
+{
+  "type":"Feature",
+  "properties":{
+    "meta":{"updated_at":"2026-11-06T12:00:00Z","units":{"air_temperature":"celsius","relative_humidity":"%","air_pressure_at_sea_level":"hPa","wind_speed":"m/s","wind_speed_of_gust":"m/s","wind_from_direction":"degrees","cloud_area_fraction":"%","precipitation_amount":"mm"}},
+    "timeseries":[{"time":"2026-11-06T12:00:00Z","data":{"instant":{"details":{"air_temperature":6.2,"relative_humidity":80,"air_pressure_at_sea_level":1008,"wind_speed":6,"wind_speed_of_gust":10,"wind_from_direction":225,"cloud_area_fraction":95}},"next_1_hours":{"summary":{"symbol_code":"lightrain_day"},"details":{"precipitation_amount":2.5}}}}]
+  }
+}

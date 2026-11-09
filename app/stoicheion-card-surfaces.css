@@ -1,0 +1,20 @@
+html[data-genesis-theme] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed {
+  background:#f1d8d2;
+  color:var(--ink);
+  border-color:color-mix(in srgb,#a5543f 45%,var(--line));
+}
+html[data-genesis-theme$="-dark"] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed {
+  background:var(--palette-reversed, #38201f);
+  border-color:var(--palette-reversed-border, color-mix(in srgb,#a5543f 45%,var(--line)));
+}
+html[data-genesis-theme] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed > :is(strong,small,em,b) {
+  color:inherit;
+}
+/* The nine-card spread sits on a dark surface in both desktop web schemes. */
+@media (min-width: 1024px) {
+  html[data-genesis-theme="standart"] .genesis-app .stoicheion-nine-section .stoicheion-sector.is-reversed {
+    background: var(--palette-reversed, #38201f);
+    color: #f0eee7;
+    border-color: #a5543f;
+  }
+}

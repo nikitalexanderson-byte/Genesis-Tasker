@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_stage">First native milestone</string>
+    <string name="native_title">Genesis Tasker</string>
+    <string name="native_status">This foundation screen runs on Kotlin and Jetpack Compose.</string>
+    <string name="browser_error_message">GENESIS could not open. Update or enable a browser and try again.</string>
+    <string name="browser_retry">Open website</string>
+</resources>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сакральный Календарь</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Глобальные конфиги от среды
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sacral-cal-app';
+        
+        // Инициализация
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db_fs = getFirestore(app);
+
+        window.firebaseApp = { auth, db_fs, appId, doc, setDoc, onSnapshot };
+    </script>
+
+    <style>
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #ffffff);
+            --tg-text: var(--tg-theme-text-color, #000000);
+            --tg-hint: var(--tg-theme-hint-color, #999999);
+            --tg-link: var(--tg-theme-link-color, #2481cc);
+            --tg-button: var(--tg-theme-button-color, #2481cc);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-secondary: var(--tg-theme-secondary-bg-color, #efeff4);
+        }
+
+        body {
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .tab-btn {
+            color: var(--tg-hint);
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: var(--tg-button);
+            border-bottom: 2px solid var(--tg-button);
+            font-weight: bold;
+        }
+
+        .day-cell {
+            min-height: 95px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background-color: var(--tg-secondary);
+            cursor: pointer;
+            position: relative;
+            padding: 6px;
+            border: 1px solid transparent;
+        }
+        
+        .day-cell.today { 
+            border: 2px solid #ff3b30; 
+            background-color: rgba(255, 59, 48, 0.08); 
+        }
+        
+        .day-cell.has-tasks::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 7px;
+            height: 7px;
+            background: #ff3b30;
+            border-radius: 50%;
+        }
+
+        .bg-full-moon { background-color: rgba(192, 132, 252, 0.4) !important; }
+        .bg-new-moon { background-color: rgba(125, 211, 252, 0.4) !important; }
+        .bg-solar-active { 
+            background-color: rgba(254, 240, 138, 0.7) !important; 
+            color: #92400e !important; 
+        } 
+        .border-solar { 
+            border-color: rgba(245, 158, 11, 0.5) !important; 
+            border-width: 2px; 
+        }
+
+        .macro-row { display: flex; align-items: center; margin-bottom: 8px; }
+        .macro-label { width: 85px; font-size: 11px; font-weight: 800; color: var(--tg-hint); flex-shrink: 0; }
+        .macro-day { 
+            width: 48px; 
+            height: 48px; 
+            margin: 2px; 
+            border-radius: 8px; 
+            background: var(--tg-secondary); 
+            font-size: 10px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+            flex-shrink: 0;
+            border: 1px solid transparent;
+        }
+        .macro-day.today { border: 2.5px solid #ff3b30 !important; background-color: rgba(255, 59, 48, 0.12); }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--tg-hint); }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; }
+
+        .month-title { font-size: 2.2rem; line-height: 1; font-weight: 900; letter-spacing: -0.05em; }
+        .month-subtitle { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
+        .month-desc { font-size: 0.8rem; font-style: italic; opacity: 0.7; line-height: 1.3; }
+        
+        .pyata-badge { font-size: 0.65rem; font-weight: 800; background: var(--tg-button); color: white; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
+        .day-name { font-size: 1.15rem; font-weight: 900; line-height: 1.2; }
+        .day-desc { font-size: 0.9rem; line-height: 1.4; opacity: 0.9; }
+
+        .task-card { background: var(--tg-bg); border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .tag-pill { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; background: var(--tg-secondary); color: var(--tg-hint); font-weight: bold; }
+        .project-label { font-size: 0.65rem; color: var(--tg-button); font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px; }
+        
+        #loading-overlay { position: fixed; inset: 0; background: var(--tg-bg); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.3s; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <div id="loading-overlay">
+        <div class="text-4xl animate-pulse mb-4">✨</div>
+        <p class="text-xs font-black uppercase tracking-widest opacity-30">Синхронизация...</p>
+    </div>
+
+    <!-- Header -->
+    <div class="px-4 py-3 flex justify-between items-center bg-[var(--tg-bg)] border-b border-gray-100">
+        <h1 class="text-sm font-black tracking-widest opacity-50 uppercase">Sacral Calendar</h1>
+        <div id="tg-user-photo" class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-100"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex px-4 pt-2 bg-[var(--tg-secondary)] sticky top-0 z-10 shadow-sm">
+        <button onclick="switchTab('today')" id="tab-today" class="tab-btn active flex-1 pb-3 text-xs uppercase tracking-widest">Сегодня</button>
+        <button onclick="switchTab('months')" id="tab-months" class="tab-btn flex-1 pb-3 text-xs uppercase tracking-widest">Месяцы</button>
+        <button onclick="switchTab('grid')" id="tab-grid" class="tab-btn flex-1 pb-3 text-xs uppercase tracking-widest">Обзор</button>
+    </div>
+
+    <div class="flex-1 p-4 pb-28 overflow-y-auto">
+        <!-- View: Today -->
+        <div id="view-today" class="space-y-6">
+            <div class="p-8 rounded-[2.5rem] bg-[var(--tg-secondary)] text-center shadow-sm border border-gray-100 relative overflow-hidden">
+                <div id="today-event-badge" class="absolute top-4 right-4 text-[9px] font-black bg-orange-500 text-white px-3 py-1 rounded-full hidden">СОБЫТИЕ</div>
+                <p id="today-season" class="month-subtitle mb-1 text-blue-500">СЕЗОН</p>
+                <h2 id="today-month-name" class="month-title mb-1">...</h2>
+                <p id="today-month-type" class="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-wider">...</p>
+                <p id="today-month-desc" class="month-desc mb-6 px-4 text-center">...</p>
+                <div class="flex justify-center gap-10 mb-8">
+                    <div class="text-center">
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Пята</p>
+                        <p id="today-pyata-num" class="text-5xl font-black">1</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">День</p>
+                        <p id="today-day-num" class="text-5xl font-black text-blue-600">I</p>
+                    </div>
+                </div>
+                <div id="today-info-stack" class="space-y-2 mb-8">
+                    <div id="today-pyata-title" class="pyata-badge inline-block">...</div>
+                    <h3 id="today-day-title" class="day-name pt-2">...</h3>
+                    <p id="today-day-desc" class="day-desc px-2">...</p>
+                    <div class="flex flex-col gap-1 pt-3 opacity-60">
+                         <div id="today-element" class="text-[10px] font-black uppercase tracking-tighter">...</div>
+                         <div id="today-pythagorean" class="text-[10px] font-bold italic">...</div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="bg-white px-4 py-2 rounded-2xl border border-gray-100 text-xs font-black text-gray-700 shadow-sm">
+                        <span id="date-greg">--.--.-- (---)</span>
+                    </div>
+                    <div class="bg-blue-600 text-white px-5 py-2.5 rounded-2xl shadow-lg text-xs font-bold text-center">
+                        <span id="date-lunar">-- Луна --</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="openModalForToday()" class="w-full py-5 bg-[var(--tg-button)] text-[var(--tg-button-text)] rounded-[2rem] font-black text-lg shadow-xl active:scale-95 transition-all">
+                ЗАДАЧИ НА СЕГОДНЯ
+            </button>
+        </div>
+
+        <!-- View: Months -->
+        <div id="view-months" class="hidden space-y-8">
+            <div id="months-list"></div>
+        </div>
+
+        <!-- View: Grid -->
+        <div id="view-grid" class="hidden">
+            <div class="p-5 rounded-[2rem] bg-[var(--tg-secondary)] overflow-x-auto shadow-inner">
+                <div id="macro-grid" class="min-w-max pb-6"></div>
+                <div class="mt-4 pt-6 border-t border-gray-200/50 space-y-3">
+                    <div class="legend-item"><div class="legend-color" style="background-color: rgba(254, 240, 138, 0.9); border: 1px solid orange;"></div><span>Солнцестояние / Равноденствие</span></div>
+                    <div class="legend-item"><div class="legend-color bg-[rgba(125,211,252,0.8)]"></div><span>Новолуние (Артемида)</span></div>
+                    <div class="legend-item"><div class="legend-color bg-[rgba(192,132,252,0.8)]"></div><span>Полнолуние (Селена)</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end">
+        <div class="bg-[var(--tg-bg)] w-full rounded-t-[3rem] p-8 h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="w-16 h-1.5 bg-gray-300 rounded-full mx-auto mb-6" onclick="closeModal()"></div>
+            
+            <div id="modal-content-area" class="flex-1 overflow-y-auto mb-6 pr-2">
+                <div id="m-header" class="mb-4">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p id="m-subtitle" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"></p>
+                            <h3 id="m-title" class="text-2xl font-black leading-tight text-[var(--tg-text)]">...</h3>
+                        </div>
+                        <button onclick="closeModal()" class="w-10 h-10 bg-[var(--tg-secondary)] rounded-full flex items-center justify-center font-bold">✕</button>
+                    </div>
+                </div>
+                
+                <div id="m-description-block" class="mb-6 p-5 bg-[var(--tg-secondary)] rounded-3xl space-y-4">
+                    <p id="m-day-desc" class="day-desc"></p>
+                    <div class="pt-2 border-t border-gray-200/50 space-y-1">
+                        <p id="m-extra-pyata" class="text-[10px] font-black text-blue-500 uppercase"></p>
+                        <p id="m-extra-element" class="text-[10px] font-black text-gray-500 uppercase"></p>
+                        <p id="m-extra-pythagorean" class="text-[10px] font-bold italic opacity-60"></p>
+                    </div>
+                </div>
+
+                <div id="task-list" class="space-y-4 mb-10"></div>
+            </div>
+
+            <!-- Task Input Form -->
+            <div class="border-t pt-6 space-y-3 pb-4">
+                <div class="flex gap-2">
+                    <input type="text" id="t-input" placeholder="Что нужно сделать?" class="flex-1 bg-[var(--tg-secondary)] border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500">
+                    <input type="time" id="t-time" class="bg-[var(--tg-secondary)] border-none rounded-2xl px-3 py-4 text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex gap-2">
+                    <select id="t-project" class="flex-1 bg-[var(--tg-secondary)] border-none rounded-2xl px-4 py-3 text-[10px] font-black uppercase appearance-none" onchange="checkNewProject(this)">
+                        <option value="">Без проекта</option>
+                        <option value="NEW">+ НОВЫЙ ПРОЕКТ</option>
+                    </select>
+                    <input type="text" id="t-tags" placeholder="Теги (через запятую)" class="flex-1 bg-[var(--tg-secondary)] border-none rounded-2xl px-5 py-3 text-[10px] font-bold focus:ring-2 focus:ring-blue-500">
+                    <button onclick="addTask()" class="bg-blue-600 text-white w-14 h-14 rounded-2xl font-black text-xl shadow-lg">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Глобальные конфиги от среды
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sacral-cal-app';
+        
+        // Инициализация
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+
+        // Telegram WebApp
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : { 
+            expand: () => {}, 
+            HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {}, selectionChanged: () => {} },
+            initDataUnsafe: {}
+        };
+        tg.expand();
+
+        // Сакральные данные (без изменений)
+        const MONTHS = [
+            { n: 'Арейос', t: 'МЕСЯЦ ВОИНСТВЕННОГО РАЗУМА', d: 'Этот месяц посвящен энергии прорыва, отделению формы от хаоса и инициации воли.', s: 'ВЕСНА', c: '#84cc16' },
+            { n: 'Антесис', t: 'МЕСЯЦ ЦВЕТЕНИЯ ДУШИ', d: 'Месяц раскрытия потенциала, прорастания сквозь материальные преграды и красоты становления.', s: 'ВЕСНА', c: '#84cc16' },
+            { n: 'Пситирос', t: 'МЕСЯЦ ШЕПОТА ГЕИ', d: 'Время созерцания и установления глубокой связи с живой природой, месяц слушания тишины.', s: 'ВЕСНА', c: '#84cc16' },
+            { n: 'Айгле', t: 'МЕСЯЦ СОЛНЕЧНОГО СИЯНИЯ', d: 'Месяц триумфа света, ясности сознания и пика жизненной силы.', s: 'ЛЕТО', c: '#eab308' },
+            { n: 'Каума', t: 'МЕСЯЦ ПЫЛАЮЩЕГО СЕРДЦА', d: 'Время очищения через страсть и интенсивность, период высшей активности.', s: 'ЛЕТО', c: '#eab308' },
+            { n: 'Карпос', t: 'МЕСЯЦ СПЕЛЫХ ПЛОДОВ', d: 'Период завершения циклов, материализации усилий и благодарности за урожай.', s: 'ЛЕТО', c: '#eab308' },
+            { n: 'Триге', t: 'МЕСЯЦ СВЯЩЕННОЙ ЖАТВЫ', d: 'Месяц подведения итогов, разделения зерен и плевел, время мудрого отбора.', s: 'ОСЕНЬ', c: '#f97316' },
+            { n: 'Катодос', t: 'МЕСЯЦ ТАИНСТВЕННОГО СПУСКА', d: 'Время обращения к внутреннему, погружение в глубины подсознания.', s: 'ОСЕНЬ', c: '#f97316' },
+            { n: 'Агротера', t: 'МЕСЯЦ ДИКОЙ ОХОТЫ', d: 'Месяц очищения тени, встречи со своими инстинктами и первозданной силой.', s: 'ОСЕНЬ', c: '#f97316' },
+            { n: 'Перас', t: 'МЕСЯЦ ПРЕДЕЛА', d: 'Время тишины и подготовки к великому переходу через порог тьмы.', s: 'ЗИМА', c: '#0ea5e9' },
+            { n: 'Лайлапс', t: 'МЕСЯЦ ВЕЛИКОГО ПРЕОБРАЖЕНИЯ', d: 'Месяц бури, разрушающей старые структуры ради рождения нового духа.', s: 'ЗИМА', c: '#0ea5e9' },
+            { n: 'Зофос', t: 'МЕСЯЦ ТЕМНОГО ГОРИЗОНТА', d: 'Время растворения в первозданной ночи перед новым рассветом.', s: 'ЗИМА', c: '#0ea5e9' },
+            { n: 'Апейрон', t: 'СВЯТКИ — БЕЗГРАНИЧНОЕ', d: 'Эти 6 дней стоят вне времени. Это пространство Протогеносов — Первозданных Богов, существовавших до начала мира.', s: 'СВЯТКИ', c: '#8b5cf6' }
+        ];
+
+        const PYATA_TITLES = ["Инициация", "Стабилизация", "Экспансия", "Консолидация", "Трансформация", "Интеграция"];
+        const ELEMENTS = ["Земля (Опора, Тело)", "Вода (Эмоции, Поток)", "Воздух (Интеллект, Связь)", "Огонь (Воля, Действие)", "Эфир (Дух, Синтез)"];
+        const PYATA_PHASES = ["Посев (Установка цели)", "Прорастание (Первые шаги)", "Кульминация (Максимальное усилие)", "Испытание (Сопротивление)", "Плоды (Результат)", "Переход (Завершение)"];
+        const PYTHAGOREAN = ["I. Монада. Удержание. Стабильность.", "II. Диада. Разделение. Выбор.", "III. Триада. Одухотворение.", "IIII. Тетрада. Справедливость.", "V. Пентада. Синтез."];
+
+        const DAILY_DATA = {
+            "0-1": { n: "Арейос Ридзоматос (Укореняющий)", d: "Закладка фундамента воли и пробуждение внутренних сил, подобных корням мира." },
+            "0-2": { n: "Арейос Климакотос (Стремящийся)", d: "Первый шаг по лестнице становления; преодоление инерции." },
+            "12-1": { n: "Апейрон Хаос (Безграничный Хаос)", d: "Праздник первичного потенциала; день, когда всё возможно." },
+            "12-2": { n: "Апейрон Нюкс (Безграничная Ночь)", d: "Почитание священной тьмы, матери всех миров." },
+            "12-3": { n: "Апейрон Эребос (Безграничный Мрак)", d: "Погружение в бездну, где рождается свет." },
+            "12-4": { n: "Апейрон Гея (Безграничная Земля)", d: "Материализация первоосновы." },
+            "12-5": { n: "Апейрон Тартарос (Безграничная Бездна)", d: "Концентрация силы в ядре бытия." },
+            "12-6": { n: "Апейрон Эрос (Безграничная Любовь)", d: "Сила притяжения, связывающая мир воедино." }
+        };
+
+        const ROMAN = ["I", "II", "III", "IIII", "V"];
+        const WEEKDAYS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+        const SOLAR_EVENTS = { "0-1": "Весеннее Равноденствие", "3-4": "Летнее Солнцестояние", "6-8": "Осеннее Равноденствие", "9-8": "Зимнее Солнцестояние" };
+
+        // Состояние приложения
+        let db = { tasks: {}, projects: [], tags: [] };
+        let currentUser = null;
+        let curM = 0, curD = 1;
+
+        // Firebase Auth & Sync
+        const initializeFirebaseApp = async () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            try {
+                // 1. Auth first
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        // 2. Start Sync after auth
+                        syncData(user.uid);
+                    }
+                });
+
+            } catch (err) {
+                console.error("Firebase Auth Error:", err);
+                loadingOverlay.innerHTML = "<p class='text-red-500 font-bold'>Ошибка подключения</p>";
+            }
+        };
+
+        const syncData = (uid) => {
+            const userDocRef = doc(firestore, 'artifacts', appId, 'users', uid, 'storage', 'main');
+            
+            // Listen for real-time updates
+            onSnapshot(userDocRef, (snap) => {
+                if (snap.exists()) {
+                    db = snap.data();
+                    // Ensure structure
+                    if (!db.tasks) db.tasks = {};
+                    if (!db.projects) db.projects = [];
+                    if (!db.tags) db.tags = [];
+                } else {
+                    // Initial state if no cloud data
+                    db = { tasks: {}, projects: [], tags: [] };
+                }
+                
+                // Refresh UI
+                renderToday(); 
+                renderMonths(); 
+                renderGrid();
+                
+                // Hide loader
+                document.getElementById('loading-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 300);
+            }, (err) => {
+                console.error("Firestore Sync Error:", err);
+            });
+        };
+
+        const saveToCloud = async () => {
+            if (!currentUser) return;
+            try {
+                const userDocRef = doc(firestore, 'artifacts', appId, 'users', currentUser.uid, 'storage', 'main');
+                await setDoc(userDocRef, db);
+            } catch (err) {
+                console.error("Cloud Save Error:", err);
+            }
+        };
+
+        // UI Logic
+        const getStart = () => {
+            let n = new Date(), y = n.getFullYear(), s = new Date(y, 2, 20);
+            return n < s ? new Date(y-1, 2, 20) : s;
+        };
+
+        const getGreg = (m, d) => {
+            let s = getStart();
+            s.setDate(s.getDate() + (m * 30) + (d - 1));
+            return s;
+        };
+
+        const getInfo = (date) => {
+            let start = getStart();
+            let diff = Math.floor((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 864e5);
+            let m = Math.floor(diff / 30), d = (diff % 30) + 1;
+            if (diff >= 360) { m = 12; d = diff - 360 + 1; }
+            return { m, d };
+        };
+
+        const getLun = (date) => {
+            const cycle = 29.53;
+            const diff = (date - new Date(Date.UTC(2024, 0, 11, 11, 57))) / 864e5;
+            let age = Math.floor(diff % cycle);
+            if (age < 0) age += cycle;
+            let icon = age < 2 ? '🌑' : age < 14 ? '🌒' : age < 17 ? '🌕' : '🌖';
+            let epithet = age < 10 ? "Артемида (растущая)" : age < 20 ? "Селена (полнота)" : "Геката (уходящая)";
+            let status = (age >= 14 && age <= 16) ? "Полная луна" : (age < 2 || age > 28) ? "Новая луна" : "";
+            return { d: age + 1, i: icon, ep: epithet, st: status };
+        };
+
+        function formatDate(date) {
+            return `${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getFullYear()).slice(-2)} (${WEEKDAYS[date.getDay()]})`;
+        }
+
+        function getDayContent(m, d) {
+            let key = `${m}-${d}`;
+            return DAILY_DATA[key] || { n: `День ${d}`, d: "Энергия дня требует внимания и осознанности." };
+        }
+
+        window.renderToday = () => {
+            try {
+                let i = getInfo(new Date()), m = MONTHS[i.m], g = getGreg(i.m, i.d), l = getLun(g), dData = getDayContent(i.m, i.d);
+                let evKey = i.m + '-' + i.d;
+                
+                document.getElementById('today-month-name').textContent = m.n.toUpperCase();
+                document.getElementById('today-month-type').textContent = m.t;
+                document.getElementById('today-month-desc').textContent = m.d;
+                document.getElementById('today-season').textContent = m.s;
+                
+                let pyataIdx = Math.ceil(i.d / 5) - 1;
+                document.getElementById('today-pyata-num').textContent = i.m == 12 ? 1 : pyataIdx + 1;
+                document.getElementById('today-day-num').textContent = i.m == 12 ? i.d : ROMAN[(i.d - 1) % 5];
+                
+                if (i.m === 12) {
+                    document.getElementById('today-pyata-title').textContent = "Вне Времени";
+                    document.getElementById('today-element').textContent = "Чистый Эфир";
+                    document.getElementById('today-pythagorean').textContent = "";
+                } else {
+                    document.getElementById('today-pyata-title').textContent = `Пята ${pyataIdx+1}: ${PYATA_TITLES[pyataIdx]} — ${PYATA_PHASES[pyataIdx]}`;
+                    let eIdx = (i.d - 1) % 5;
+                    document.getElementById('today-element').textContent = ELEMENTS[eIdx];
+                    document.getElementById('today-pythagorean').textContent = "Пифагорейский смысл: " + PYTHAGOREAN[eIdx];
+                }
+                
+                document.getElementById('today-day-title').textContent = dData.n;
+                document.getElementById('today-day-desc').textContent = dData.d;
+                document.getElementById('date-greg').textContent = formatDate(g);
+                document.getElementById('date-lunar').textContent = `${l.d} день ${l.i} ${l.ep} ${l.st ? '— ' + l.st : ''}`;
+                
+                const badge = document.getElementById('today-event-badge');
+                if (SOLAR_EVENTS[evKey]) { badge.textContent = SOLAR_EVENTS[evKey].toUpperCase(); badge.classList.remove('hidden'); }
+                else { badge.classList.add('hidden'); }
+            } catch (e) { console.error("Error in renderToday:", e); }
+        };
+
+        window.createDay = (m, d, size) => {
+            let g = getGreg(m, d), l = getLun(g), k = m + '-' + d, i = getInfo(new Date());
+            let el = document.createElement('div');
+            el.className = size == 'L' ? 'day-cell' : 'macro-day';
+            let isToday = (m == i.m && d == i.d);
+            if (isToday) el.classList.add('today');
+            if (db.tasks && db.tasks[k]) el.classList.add('has-tasks');
+            if (l.d >= 14 && l.d <= 16) el.classList.add('bg-full-moon');
+            if (l.d < 2 || l.d > 28) el.classList.add('bg-new-moon');
+            if (SOLAR_EVENTS[k]) el.classList.add('bg-solar-active', 'border-solar');
+            
+            if (size == 'L') {
+                let roman = m == 12 ? d : ROMAN[(d - 1) % 5];
+                el.innerHTML = `
+                    <span class="text-[7px] absolute top-1 left-2 opacity-50 font-bold">${formatDate(g).split(' ')[0]}</span>
+                    <div class="flex flex-col items-center">
+                        <span class="font-black text-xl leading-none">${roman}</span>
+                        ${isToday ? '<span class="text-[8px] font-black text-red-500 mt-1">СЕГОДНЯ</span>' : ''}
+                    </div>
+                    <div class="absolute bottom-1 right-2 flex flex-col items-end opacity-70">
+                        <span class="text-[8px] leading-tight">${l.d}${l.i}</span>
+                        <span class="text-[6px] font-bold uppercase leading-none" style="font-size: 5px">${l.ep.split(' ')[0]}</span>
+                    </div>
+                `;
+            } else {
+                el.innerHTML = `<span class="font-black">${m == 12 ? d : ROMAN[(d-1)%5]}</span><span class="text-[6px] opacity-40">${g.getDate()}.${g.getMonth()+1}</span>`;
+            }
+            el.onclick = () => openModal(m, d);
+            return el;
+        };
+
+        window.renderMonths = () => {
+            let c = document.getElementById('months-list'); c.innerHTML = '';
+            for(let m = 0; m < 13; m++) {
+                let div = document.createElement('div');
+                div.className = "bg-[var(--tg-secondary)] p-6 rounded-[2.5rem] mb-8 shadow-sm";
+                div.innerHTML = `<h3 class="text-center font-black text-2xl mb-1 uppercase tracking-tighter" style="color:${MONTHS[m].c}">${MONTHS[m].n}</h3>
+                                 <p class="text-[8px] text-center font-bold opacity-40 mb-4 uppercase tracking-widest">${MONTHS[m].t}</p>
+                                 <div class="grid grid-cols-5 gap-3"></div>`;
+                let g = div.querySelector('.grid');
+                for(let d = 1; d <= (m == 12 ? 6 : 30); d++) g.appendChild(window.createDay(m, d, 'L'));
+                c.appendChild(div);
+            }
+        };
+
+        window.renderGrid = () => {
+            let c = document.getElementById('macro-grid'); c.innerHTML = '';
+            for(let m = 0; m < 13; m++) {
+                let r = document.createElement('div'); r.className = "macro-row";
+                r.innerHTML = `<div class="macro-label" style="color:${MONTHS[m].c}">${MONTHS[m].n}</div><div class="flex"></div>`;
+                let dBox = r.querySelector('.flex');
+                for(let d = 1; d <= (m == 12 ? 6 : 30); d++) dBox.appendChild(window.createDay(m, d, 'S'));
+                c.appendChild(r);
+            }
+        };
+
+        window.openModal = (m, d) => {
+            curM = m; curD = d;
+            let k = m + '-' + d, g = getGreg(m, d), l = getLun(g), dData = getDayContent(m, d);
+            
+            document.getElementById('m-title').textContent = dData.n;
+            document.getElementById('m-subtitle').textContent = formatDate(g);
+            document.getElementById('m-day-desc').textContent = dData.d;
+            
+            let extraPyata = "", extraElement = "", extraPyth = "";
+            if (m === 12) { extraPyata = "Апейрон — Безграничное (вне времени)"; extraElement = "Чистый Эфир"; }
+            else {
+                let pIdx = Math.ceil(d/5)-1;
+                extraPyata = `Пята ${pIdx+1}: ${PYATA_TITLES[pIdx]} — ${PYATA_PHASES[pIdx]}`;
+                let eIdx = (d-1)%5; extraElement = ELEMENTS[eIdx]; extraPyth = "Пифагорейский смысл: " + PYTHAGOREAN[eIdx];
+            }
+            
+            let lunarInfo = `${l.d} день ${l.i} ${l.ep}${l.st ? ' (' + l.st + ')' : ''}`;
+            document.getElementById('m-extra-pyata').textContent = extraPyata;
+            document.getElementById('m-extra-element').innerHTML = `${extraElement}<br>${lunarInfo}`;
+            document.getElementById('m-extra-pythagorean').textContent = extraPyth;
+            
+            window.updateProjectSelect();
+            window.renderTaskList();
+            document.getElementById('modal').classList.remove('hidden');
+            tg.HapticFeedback.impactOccurred('medium');
+        };
+
+        window.openModalForToday = () => { 
+            let i = getInfo(new Date()); 
+            window.openModal(i.m, i.d); 
+        };
+
+        window.updateProjectSelect = () => {
+            const select = document.getElementById('t-project');
+            if (!select) return;
+            select.innerHTML = '<option value="">Без проекта</option><option value="NEW">+ НОВЫЙ ПРОЕКТ</option>';
+            (db.projects || []).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p; opt.textContent = p;
+                select.appendChild(opt);
+            });
+        };
+
+        window.checkNewProject = (select) => {
+            if (select.value === "NEW") {
+                const newProj = prompt("Введите название нового проекта:");
+                if (newProj && newProj.trim()) {
+                    const name = newProj.trim();
+                    if (!db.projects.includes(name)) {
+                        db.projects.push(name);
+                        saveToCloud();
+                    }
+                    window.updateProjectSelect();
+                    select.value = name;
+                } else {
+                    select.value = "";
+                }
+            }
+        };
+
+        window.closeModal = () => { 
+            document.getElementById('modal').classList.add('hidden'); 
+            window.renderMonths(); 
+            window.renderGrid(); 
+        };
+
+        window.renderTaskList = () => {
+            let k = curM + '-' + curD, list = document.getElementById('task-list');
+            const tasks = db.tasks[k] || [];
+            list.innerHTML = tasks.map((t, i) => `
+                <div class="task-card p-5 rounded-3xl space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            ${t.project ? `<span class="project-label">${t.project}</span>` : ''}
+                            <div class="flex items-center gap-2">
+                                ${t.time ? `<span class="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md">${t.time}</span>` : ''}
+                                <span class="font-bold text-sm text-[var(--tg-text)]">${t.title}</span>
+                            </div>
+                        </div>
+                        <button onclick="delTask(${i})" class="text-red-500 opacity-30 p-2">✕</button>
+                    </div>
+                    ${t.tags && t.tags.length > 0 ? `
+                        <div class="flex flex-wrap gap-1 pt-1">
+                            ${t.tags.map(tag => `<span class="tag-pill">#${tag}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('') || '<div class="text-center py-10 opacity-20"><p class="font-black text-4xl">∅</p><p class="text-[10px] uppercase mt-2">Планов нет</p></div>';
+        };
+
+        window.addTask = () => {
+            let title = document.getElementById('t-input').value;
+            let time = document.getElementById('t-time').value;
+            let project = document.getElementById('t-project').value;
+            let tagsRaw = document.getElementById('t-tags').value;
+            
+            if(!title || !title.trim()) return;
+
+            const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(t => t) : [];
+            
+            let k = curM + '-' + curD;
+            if(!db.tasks[k]) db.tasks[k] = [];
+            db.tasks[k].push({ title: title.trim(), time, project, tags });
+            
+            saveToCloud();
+            
+            document.getElementById('t-input').value = '';
+            document.getElementById('t-time').value = '';
+            document.getElementById('t-tags').value = '';
+            
+            window.renderTaskList();
+            tg.HapticFeedback.notificationOccurred('success');
+        };
+
+        window.delTask = (i) => {
+            let k = curM + '-' + curD;
+            if (db.tasks[k]) {
+                db.tasks[k].splice(i, 1);
+                if(!db.tasks[k].length) delete db.tasks[k];
+                saveToCloud();
+                window.renderTaskList();
+            }
+        };
+
+        window.switchTab = (t) => {
+            ['today', 'months', 'grid'].forEach(v => {
+                document.getElementById('view-' + v).classList.toggle('hidden', v !== t);
+                document.getElementById('tab-' + v).classList.toggle('active', v === t);
+            });
+            tg.HapticFeedback.selectionChanged();
+        };
+
+        // Run Init
+        initializeFirebaseApp();
+    </script>
+</body>
+</html>

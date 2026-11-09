@@ -1,0 +1,170 @@
+[
+  {
+    "id": "alpha",
+    "symbol": "Α",
+    "name": "Альфа",
+    "value": 1,
+    "pythmen": 1
+  },
+  {
+    "id": "beta",
+    "symbol": "Β",
+    "name": "Бета",
+    "value": 2,
+    "pythmen": 2
+  },
+  {
+    "id": "gamma",
+    "symbol": "Γ",
+    "name": "Гамма",
+    "value": 3,
+    "pythmen": 3
+  },
+  {
+    "id": "delta",
+    "symbol": "Δ",
+    "name": "Дельта",
+    "value": 4,
+    "pythmen": 4
+  },
+  {
+    "id": "epsilon",
+    "symbol": "Ε",
+    "name": "Эпсилон",
+    "value": 5,
+    "pythmen": 5
+  },
+  {
+    "id": "zeta",
+    "symbol": "Ζ",
+    "name": "Дзета",
+    "value": 7,
+    "pythmen": 7
+  },
+  {
+    "id": "eta",
+    "symbol": "Η",
+    "name": "Эта",
+    "value": 8,
+    "pythmen": 8
+  },
+  {
+    "id": "theta",
+    "symbol": "Θ",
+    "name": "Тэта",
+    "value": 9,
+    "pythmen": 9
+  },
+  {
+    "id": "iota",
+    "symbol": "Ι",
+    "name": "Йота",
+    "value": 10,
+    "pythmen": 1
+  },
+  {
+    "id": "kappa",
+    "symbol": "Κ",
+    "name": "Каппа",
+    "value": 20,
+    "pythmen": 2
+  },
+  {
+    "id": "lambda",
+    "symbol": "Λ",
+    "name": "Лямбда",
+    "value": 30,
+    "pythmen": 3
+  },
+  {
+    "id": "mu",
+    "symbol": "Μ",
+    "name": "Мю",
+    "value": 40,
+    "pythmen": 4
+  },
+  {
+    "id": "nu",
+    "symbol": "Ν",
+    "name": "Ню",
+    "value": 50,
+    "pythmen": 5
+  },
+  {
+    "id": "xi",
+    "symbol": "Ξ",
+    "name": "Кси",
+    "value": 60,
+    "pythmen": 6
+  },
+  {
+    "id": "omicron",
+    "symbol": "Ο",
+    "name": "Омикрон",
+    "value": 70,
+    "pythmen": 7
+  },
+  {
+    "id": "pi",
+    "symbol": "Π",
+    "name": "Пи",
+    "value": 80,
+    "pythmen": 8
+  },
+  {
+    "id": "rho",
+    "symbol": "Ρ",
+    "name": "Ро",
+    "value": 100,
+    "pythmen": 1
+  },
+  {
+    "id": "sigma",
+    "symbol": "Σ",
+    "name": "Сигма",
+    "value": 200,
+    "pythmen": 2
+  },
+  {
+    "id": "tau",
+    "symbol": "Τ",
+    "name": "Тау",
+    "value": 300,
+    "pythmen": 3
+  },
+  {
+    "id": "upsilon",
+    "symbol": "Υ",
+    "name": "Ипсилон",
+    "value": 400,
+    "pythmen": 4
+  },
+  {
+    "id": "phi",
+    "symbol": "Φ",
+    "name": "Фи",
+    "value": 500,
+    "pythmen": 5
+  },
+  {
+    "id": "chi",
+    "symbol": "Χ",
+    "name": "Хи",
+    "value": 600,
+    "pythmen": 6
+  },
+  {
+    "id": "psi",
+    "symbol": "Ψ",
+    "name": "Пси",
+    "value": 700,
+    "pythmen": 7
+  },
+  {
+    "id": "omega",
+    "symbol": "Ω",
+    "name": "Омега",
+    "value": 800,
+    "pythmen": 8
+  }
+]

@@ -1,0 +1,28 @@
+.admin-users-table th { padding: 0 10px; }
+.admin-users-table .admin-sort-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; min-height: 44px;
+  padding: 10px 5px; border: 0; background: transparent; color: inherit; text-align: start;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer;
+}
+.admin-users-table .admin-sort-header > span:last-child { flex: none; font-size: 16px; }
+.admin-users-table th[aria-sort]:not([aria-sort="none"]) { color: var(--ink); }
+.admin-users-table .admin-sort-header:hover { background: var(--surface-soft); }
+.admin-users-table .admin-sort-header:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+.admin-user-sort-controls { display: none; }
+@media (max-width: 760px) {
+  .admin-user-sort-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-block: 12px; }
+  .admin-user-sort-controls label { display: grid; gap: 6px; flex: 1 1 180px; min-width: 0; }
+  .admin-user-sort-controls :is(select, button) { min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; }
+  .admin-user-sort-controls select { width: 100%; }
+  .admin-user-sort-controls button { min-width: 44px; font-size: 20px; }
+}
+.admin-elite-plus { display: inline-block; width: fit-content; margin-block-start: 4px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: color-mix(in srgb, var(--gold) 14%, transparent); font-size: 12px; font-weight: 700; }
+.admin-forecast-privileges { display: grid; gap: 16px; max-width: 760px; }
+.admin-forecast-privileges label { display: grid; gap: 6px; min-width: 0; }
+.admin-forecast-privileges :is(input,select,button) { min-height: 44px; max-width: 100%; }
+.admin-forecast-grant { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.admin-forecast-grant label { flex: 1 1 280px; }
+.admin-forecast-members { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.admin-forecast-members li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px; border-block-end: 1px solid var(--line); }
+.admin-forecast-members li > span { min-width: 0; display: grid; gap: 4px; }
+.admin-forecast-members small { color: var(--ink-soft); overflow-wrap: anywhere; }

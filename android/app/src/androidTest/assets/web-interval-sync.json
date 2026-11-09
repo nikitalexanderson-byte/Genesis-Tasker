@@ -1,0 +1,613 @@
+{
+  "projects": [],
+  "categories": [],
+  "taskListLinks": [],
+  "taskLists": [],
+  "trackerSchemaVersion": 16,
+  "userProgress": {
+    "lifetimeXp": 100,
+    "laurelsBalance": 0,
+    "currentRankId": "cyclops",
+    "hiddenHeroicPathRevealedAt": null,
+    "currentStreak": 0,
+    "longestStreak": 0,
+    "lastQualifiedDate": null,
+    "streakGoalMode": "rhythm",
+    "streakFreezeCount": 0,
+    "rhythmScore": 0,
+    "updatedAt": "2026-10-19T18:08:58.148Z"
+  },
+  "habits": [
+    {
+      "id": "synthetic-interval-1",
+      "createdAt": "2026-10-12T08:00:00.000Z",
+      "updatedAt": "2026-10-12T08:00:00.000Z",
+      "version": 1,
+      "syncState": "local",
+      "title": "Synthetic interval 1",
+      "description": "",
+      "createdDate": "2026-10-12",
+      "emoji": "✨",
+      "priority": 5,
+      "isKeyHabit": false,
+      "ritualId": "none",
+      "ritualName": "",
+      "color": "#bb8f4a",
+      "active": true,
+      "sourceTemplateId": null,
+      "sacredPracticeId": null,
+      "sacredSectorId": null,
+      "preferredTime": "",
+      "intervalSchedule": {
+        "intervalMinutes": 90,
+        "startTime": "11:00",
+        "endTime": "22:00",
+        "completionMode": "each"
+      },
+      "measurement": null,
+      "periodGoal": null,
+      "ruleHistory": [],
+      "schedule": {
+        "startDate": "2026-10-12",
+        "endDate": null,
+        "timezone": "Europe/Moscow",
+        "recurrence": {
+          "enabled": true,
+          "mode": "classic",
+          "pattern": "daily",
+          "days": [
+            1
+          ],
+          "interval": 1,
+          "rangeStart": "2026-10-12",
+          "rangeEnd": "",
+          "months": [],
+          "pyatas": [],
+          "calendarContext": {
+            "version": 2,
+            "timeZone": "Europe/Moscow",
+            "gregorianYearStart": "january"
+          },
+          "invalidDayPolicy": "skip"
+        }
+      },
+      "scoringMode": "binary",
+      "qualityScale": "none",
+      "reminder": {
+        "enabled": false,
+        "time": "09:00",
+        "timing": "habit",
+        "minutesBefore": 0,
+        "allowDuringQuietHours": false,
+        "syncToGoogleTasks": false,
+        "showInGoogleCalendar": false,
+        "googleTaskId": null,
+        "googleEventId": null
+      }
+    },
+    {
+      "id": "synthetic-interval-2",
+      "createdAt": "2026-10-12T08:00:00.000Z",
+      "updatedAt": "2026-10-12T08:00:00.000Z",
+      "version": 1,
+      "syncState": "local",
+      "title": "Synthetic interval 2",
+      "description": "",
+      "createdDate": "2026-10-12",
+      "emoji": "✨",
+      "priority": 5,
+      "isKeyHabit": false,
+      "ritualId": "none",
+      "ritualName": "",
+      "color": "#bb8f4a",
+      "active": true,
+      "sourceTemplateId": null,
+      "sacredPracticeId": null,
+      "sacredSectorId": null,
+      "preferredTime": "",
+      "intervalSchedule": {
+        "intervalMinutes": 60,
+        "startTime": "12:00",
+        "endTime": "18:00",
+        "completionMode": "each"
+      },
+      "measurement": null,
+      "periodGoal": null,
+      "ruleHistory": [],
+      "schedule": {
+        "startDate": "2026-10-12",
+        "endDate": null,
+        "timezone": "Europe/Moscow",
+        "recurrence": {
+          "enabled": true,
+          "mode": "classic",
+          "pattern": "daily",
+          "days": [
+            1
+          ],
+          "interval": 1,
+          "rangeStart": "2026-10-12",
+          "rangeEnd": "",
+          "months": [],
+          "pyatas": [],
+          "calendarContext": {
+            "version": 2,
+            "timeZone": "Europe/Moscow",
+            "gregorianYearStart": "january"
+          },
+          "invalidDayPolicy": "skip"
+        }
+      },
+      "scoringMode": "binary",
+      "qualityScale": "none",
+      "reminder": {
+        "enabled": false,
+        "time": "09:00",
+        "timing": "habit",
+        "minutesBefore": 0,
+        "allowDuringQuietHours": false,
+        "syncToGoogleTasks": false,
+        "showInGoogleCalendar": false,
+        "googleTaskId": null,
+        "googleEventId": null
+      }
+    }
+  ],
+  "habitCompletions": [
+    {
+      "id": "habit-completion-1792433338146-t71f0y2",
+      "createdAt": "2026-10-19T18:08:58.146Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-1",
+      "date": "2026-10-14",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "11:00",
+        "12:30",
+        "14:00",
+        "15:30",
+        "17:00",
+        "18:30",
+        "20:00",
+        "21:30"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-vnkduez",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-2",
+      "date": "2026-10-14",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-uhpxk7l",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-1",
+      "date": "2026-10-15",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "11:00",
+        "12:30",
+        "14:00",
+        "15:30",
+        "17:00",
+        "18:30",
+        "20:00",
+        "21:30"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-h0rxk91",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-2",
+      "date": "2026-10-15",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-pq9xs5m",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-1",
+      "date": "2026-10-16",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "11:00",
+        "12:30",
+        "14:00",
+        "15:30",
+        "17:00",
+        "18:30",
+        "20:00",
+        "21:30"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-0tgx8gu",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-2",
+      "date": "2026-10-16",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-wmck8u6",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-1",
+      "date": "2026-10-17",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "11:00",
+        "12:30",
+        "14:00",
+        "15:30",
+        "17:00",
+        "18:30",
+        "20:00",
+        "21:30"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-7lxl6j5",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-2",
+      "date": "2026-10-17",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-0ecmxx8",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-1",
+      "date": "2026-10-18",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "11:00",
+        "12:30",
+        "14:00",
+        "15:30",
+        "17:00",
+        "18:30",
+        "20:00",
+        "21:30"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338147-isfavz7",
+      "createdAt": "2026-10-19T18:08:58.147Z",
+      "updatedAt": "2026-10-19T18:08:58.147Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-2",
+      "date": "2026-10-18",
+      "completed": true,
+      "qualityValue": null,
+      "score": 10,
+      "xpAwarded": 10,
+      "note": "",
+      "completedTimes": [
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00"
+      ]
+    },
+    {
+      "id": "habit-completion-1792433338148-w7j6eco",
+      "createdAt": "2026-10-19T18:08:58.148Z",
+      "updatedAt": "2026-10-19T18:08:58.148Z",
+      "version": 2,
+      "syncState": "pending",
+      "habitId": "synthetic-interval-1",
+      "date": "2026-10-19",
+      "completed": false,
+      "qualityValue": null,
+      "score": 0,
+      "xpAwarded": 0,
+      "note": "",
+      "completedTimes": [
+        "11:00"
+      ]
+    }
+  ],
+  "habitMeasurements": [],
+  "habitTimers": [],
+  "habitHistory": [],
+  "habitTimerEpoch": "",
+  "sleepPlans": [],
+  "sleepEntries": [],
+  "moodEntries": [],
+  "addictionTrackers": [],
+  "addictionEntries": [],
+  "analyticsSnapshots": [],
+  "dailyGoalRecords": [
+    {
+      "date": "2026-10-12",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.138Z"
+    },
+    {
+      "date": "2026-10-13",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.138Z"
+    },
+    {
+      "date": "2026-10-14",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.139Z"
+    },
+    {
+      "date": "2026-10-15",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.139Z"
+    },
+    {
+      "date": "2026-10-16",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.140Z"
+    },
+    {
+      "date": "2026-10-17",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.140Z"
+    },
+    {
+      "date": "2026-10-18",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "missed",
+      "updatedAt": "2026-10-19T18:08:58.140Z"
+    },
+    {
+      "date": "2026-10-19",
+      "mode": "rhythm",
+      "timezone": "Europe/Moscow",
+      "scheduledCount": 2,
+      "completedCount": 0,
+      "targetCount": 2,
+      "status": "open",
+      "updatedAt": "2026-10-19T18:08:58.140Z"
+    }
+  ],
+  "quests": [
+    {
+      "id": "quest:epic:2026-10-01",
+      "createdAt": "2026-10-19T18:08:58.141Z",
+      "updatedAt": "2026-10-19T18:08:58.148Z",
+      "version": 2,
+      "syncState": "pending",
+      "cadence": "epic",
+      "kind": "epic-completions",
+      "habitId": null,
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-31",
+      "target": 26,
+      "progress": 10,
+      "rewardLaurels": 80,
+      "completedAt": null
+    },
+    {
+      "id": "quest:daily:2026-10-19",
+      "createdAt": "2026-10-19T18:08:58.141Z",
+      "updatedAt": "2026-10-19T18:08:58.141Z",
+      "version": 1,
+      "syncState": "local",
+      "cadence": "daily",
+      "kind": "daily-goal",
+      "habitId": null,
+      "startDate": "2026-10-19",
+      "endDate": "2026-10-19",
+      "target": 1,
+      "progress": 0,
+      "rewardLaurels": 3,
+      "completedAt": null
+    },
+    {
+      "id": "quest:weekly:2026-10-19",
+      "createdAt": "2026-10-19T18:08:58.141Z",
+      "updatedAt": "2026-10-19T18:08:58.141Z",
+      "version": 1,
+      "syncState": "local",
+      "cadence": "weekly",
+      "kind": "habit-completions",
+      "habitId": "synthetic-interval-1",
+      "startDate": "2026-10-19",
+      "endDate": "2026-10-25",
+      "target": 5,
+      "progress": 0,
+      "rewardLaurels": 25,
+      "completedAt": null
+    }
+  ],
+  "achievementUnlocks": [
+    {
+      "id": "achievement:first-step",
+      "userId": "self",
+      "achievementId": "first-step",
+      "unlockedAt": "2026-10-19T18:08:58.148Z",
+      "createdAt": "2026-10-19T18:08:58.148Z",
+      "updatedAt": "2026-10-19T18:08:58.148Z",
+      "version": 1,
+      "syncState": "local"
+    }
+  ],
+  "rewardTransactions": [],
+  "streakFreezeTransactions": [],
+  "habitSettings": {
+    "enabled": true,
+    "reportRange": "month",
+    "customRangeStart": "",
+    "customRangeEnd": "",
+    "collapsedSections": [],
+    "sectionOrder": [
+      "streak-resilience",
+      "daily-trackers",
+      "quests",
+      "streak-rewards",
+      "adaptive-suggestions",
+      "regular-habits",
+      "starter-habits",
+      "sleep-abstinence",
+      "achievements",
+      "statistics",
+      "sacred-habits"
+    ],
+    "dailyGoalModeChanges": [],
+    "plannedRestDays": [],
+    "notifications": {
+      "enabled": false,
+      "motivational": true,
+      "tone": "calm",
+      "dailyGoalTime": "20:30",
+      "quietHoursStart": "22:00",
+      "quietHoursEnd": "07:30"
+    },
+    "feedback": {
+      "animations": true,
+      "sound": false,
+      "haptics": false,
+      "achievementPopups": true,
+      "questsEnabled": true,
+      "gamificationWidgets": true
+    },
+    "nativeAppearance": {
+      "mode": "light",
+      "lightAt": "07:00",
+      "darkAt": "21:00"
+    }
+  },
+  "hiddenDefaultTemplates": [],
+  "unknownWebSection": {
+    "keep": true
+  }
+}

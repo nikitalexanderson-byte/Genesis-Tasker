@@ -1,0 +1,502 @@
+[
+  {
+    "id": "lightbulb",
+    "group": "ideas",
+    "index": 0
+  },
+  {
+    "id": "brain",
+    "group": "ideas",
+    "index": 1
+  },
+  {
+    "id": "sparkles",
+    "group": "ideas",
+    "index": 2
+  },
+  {
+    "id": "target",
+    "group": "ideas",
+    "index": 3
+  },
+  {
+    "id": "flag",
+    "group": "ideas",
+    "index": 4
+  },
+  {
+    "id": "compass",
+    "group": "ideas",
+    "index": 5
+  },
+  {
+    "id": "focus",
+    "group": "ideas",
+    "index": 6
+  },
+  {
+    "id": "search",
+    "group": "ideas",
+    "index": 7
+  },
+  {
+    "id": "puzzle",
+    "group": "ideas",
+    "index": 8
+  },
+  {
+    "id": "wand-sparkles",
+    "group": "ideas",
+    "index": 9
+  },
+  {
+    "id": "briefcase-business",
+    "group": "work",
+    "index": 10
+  },
+  {
+    "id": "folder",
+    "group": "work",
+    "index": 11
+  },
+  {
+    "id": "file-text",
+    "group": "work",
+    "index": 12
+  },
+  {
+    "id": "clipboard-list",
+    "group": "work",
+    "index": 13
+  },
+  {
+    "id": "list-checks",
+    "group": "work",
+    "index": 14
+  },
+  {
+    "id": "chart-column-increasing",
+    "group": "work",
+    "index": 15
+  },
+  {
+    "id": "presentation",
+    "group": "work",
+    "index": 16
+  },
+  {
+    "id": "building-2",
+    "group": "work",
+    "index": 17
+  },
+  {
+    "id": "workflow",
+    "group": "work",
+    "index": 18
+  },
+  {
+    "id": "network",
+    "group": "work",
+    "index": 19
+  },
+  {
+    "id": "users",
+    "group": "people",
+    "index": 20
+  },
+  {
+    "id": "user-round",
+    "group": "people",
+    "index": 21
+  },
+  {
+    "id": "handshake",
+    "group": "people",
+    "index": 22
+  },
+  {
+    "id": "messages-square",
+    "group": "people",
+    "index": 23
+  },
+  {
+    "id": "message-circle",
+    "group": "people",
+    "index": 24
+  },
+  {
+    "id": "mail",
+    "group": "people",
+    "index": 25
+  },
+  {
+    "id": "phone",
+    "group": "people",
+    "index": 26
+  },
+  {
+    "id": "megaphone",
+    "group": "people",
+    "index": 27
+  },
+  {
+    "id": "heart-handshake",
+    "group": "people",
+    "index": 28
+  },
+  {
+    "id": "contact",
+    "group": "people",
+    "index": 29
+  },
+  {
+    "id": "book-open",
+    "group": "study",
+    "index": 30
+  },
+  {
+    "id": "graduation-cap",
+    "group": "study",
+    "index": 31
+  },
+  {
+    "id": "library-big",
+    "group": "study",
+    "index": 32
+  },
+  {
+    "id": "notebook-pen",
+    "group": "study",
+    "index": 33
+  },
+  {
+    "id": "pencil",
+    "group": "study",
+    "index": 34
+  },
+  {
+    "id": "pen-tool",
+    "group": "study",
+    "index": 35
+  },
+  {
+    "id": "languages",
+    "group": "study",
+    "index": 36
+  },
+  {
+    "id": "calculator",
+    "group": "study",
+    "index": 37
+  },
+  {
+    "id": "atom",
+    "group": "study",
+    "index": 38
+  },
+  {
+    "id": "microscope",
+    "group": "study",
+    "index": 39
+  },
+  {
+    "id": "heart-pulse",
+    "group": "health",
+    "index": 40
+  },
+  {
+    "id": "activity",
+    "group": "health",
+    "index": 41
+  },
+  {
+    "id": "dumbbell",
+    "group": "health",
+    "index": 42
+  },
+  {
+    "id": "bike",
+    "group": "health",
+    "index": 43
+  },
+  {
+    "id": "apple",
+    "group": "health",
+    "index": 44
+  },
+  {
+    "id": "cup-soda",
+    "group": "health",
+    "index": 45
+  },
+  {
+    "id": "pill",
+    "group": "health",
+    "index": 46
+  },
+  {
+    "id": "stethoscope",
+    "group": "health",
+    "index": 47
+  },
+  {
+    "id": "brain-circuit",
+    "group": "health",
+    "index": 48
+  },
+  {
+    "id": "person-standing",
+    "group": "health",
+    "index": 49
+  },
+  {
+    "id": "calendar-days",
+    "group": "time",
+    "index": 50
+  },
+  {
+    "id": "clock-3",
+    "group": "time",
+    "index": 51
+  },
+  {
+    "id": "alarm-clock",
+    "group": "time",
+    "index": 52
+  },
+  {
+    "id": "timer",
+    "group": "time",
+    "index": 53
+  },
+  {
+    "id": "hourglass",
+    "group": "time",
+    "index": 54
+  },
+  {
+    "id": "repeat-2",
+    "group": "time",
+    "index": 55
+  },
+  {
+    "id": "circle-check",
+    "group": "time",
+    "index": 56
+  },
+  {
+    "id": "milestone",
+    "group": "time",
+    "index": 57
+  },
+  {
+    "id": "route",
+    "group": "time",
+    "index": 58
+  },
+  {
+    "id": "calendar-check",
+    "group": "time",
+    "index": 59
+  },
+  {
+    "id": "wallet",
+    "group": "resources",
+    "index": 60
+  },
+  {
+    "id": "coins",
+    "group": "resources",
+    "index": 61
+  },
+  {
+    "id": "credit-card",
+    "group": "resources",
+    "index": 62
+  },
+  {
+    "id": "piggy-bank",
+    "group": "resources",
+    "index": 63
+  },
+  {
+    "id": "database",
+    "group": "resources",
+    "index": 64
+  },
+  {
+    "id": "server",
+    "group": "resources",
+    "index": 65
+  },
+  {
+    "id": "cloud",
+    "group": "resources",
+    "index": 66
+  },
+  {
+    "id": "box",
+    "group": "resources",
+    "index": 67
+  },
+  {
+    "id": "package",
+    "group": "resources",
+    "index": 68
+  },
+  {
+    "id": "archive",
+    "group": "resources",
+    "index": 69
+  },
+  {
+    "id": "palette",
+    "group": "creative",
+    "index": 70
+  },
+  {
+    "id": "paintbrush",
+    "group": "creative",
+    "index": 71
+  },
+  {
+    "id": "music",
+    "group": "creative",
+    "index": 72
+  },
+  {
+    "id": "headphones",
+    "group": "creative",
+    "index": 73
+  },
+  {
+    "id": "camera",
+    "group": "creative",
+    "index": 74
+  },
+  {
+    "id": "image",
+    "group": "creative",
+    "index": 75
+  },
+  {
+    "id": "video",
+    "group": "creative",
+    "index": 76
+  },
+  {
+    "id": "clapperboard",
+    "group": "creative",
+    "index": 77
+  },
+  {
+    "id": "mic-vocal",
+    "group": "creative",
+    "index": 78
+  },
+  {
+    "id": "shapes",
+    "group": "creative",
+    "index": 79
+  },
+  {
+    "id": "earth",
+    "group": "world",
+    "index": 80
+  },
+  {
+    "id": "map",
+    "group": "world",
+    "index": 81
+  },
+  {
+    "id": "map-pin",
+    "group": "world",
+    "index": 82
+  },
+  {
+    "id": "plane",
+    "group": "world",
+    "index": 83
+  },
+  {
+    "id": "car",
+    "group": "world",
+    "index": 84
+  },
+  {
+    "id": "train-front",
+    "group": "world",
+    "index": 85
+  },
+  {
+    "id": "ship",
+    "group": "world",
+    "index": 86
+  },
+  {
+    "id": "mountain",
+    "group": "world",
+    "index": 87
+  },
+  {
+    "id": "tree-pine",
+    "group": "world",
+    "index": 88
+  },
+  {
+    "id": "sprout",
+    "group": "world",
+    "index": 89
+  },
+  {
+    "id": "star",
+    "group": "symbols",
+    "index": 90
+  },
+  {
+    "id": "moon",
+    "group": "symbols",
+    "index": 91
+  },
+  {
+    "id": "sun",
+    "group": "symbols",
+    "index": 92
+  },
+  {
+    "id": "flame",
+    "group": "symbols",
+    "index": 93
+  },
+  {
+    "id": "gem",
+    "group": "symbols",
+    "index": 94
+  },
+  {
+    "id": "trophy",
+    "group": "symbols",
+    "index": 95
+  },
+  {
+    "id": "shield-check",
+    "group": "symbols",
+    "index": 96
+  },
+  {
+    "id": "lock-keyhole",
+    "group": "symbols",
+    "index": 97
+  },
+  {
+    "id": "key-round",
+    "group": "symbols",
+    "index": 98
+  },
+  {
+    "id": "link-2",
+    "group": "symbols",
+    "index": 99
+  }
+]

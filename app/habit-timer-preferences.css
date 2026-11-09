@@ -1,0 +1,10 @@
+.habit-timer-preferences { display:grid; gap:12px; margin-block:20px; padding:16px 0; border:0; border-block:1px solid var(--line); min-width:0; }
+.habit-timer-preferences legend { font-weight:600; }
+.habit-timer-preferences fieldset { display:flex; flex-wrap:wrap; gap:8px 16px; border:0; padding:0; margin:0; }
+.habit-timer-preferences label { display:flex; align-items:center; gap:8px; min-height:44px; min-width:0; }
+.genesis-app .habit-timer-preferences .habit-switch { grid-template-columns:42px minmax(0,1fr); }
+.habit-timer-preferences input[type="number"] { width:100%; min-width:0; box-sizing:border-box; }
+.habit-timer-preferences p { margin:0; color:var(--ink-soft); font-size:13px; line-height:1.6; }
+.habit-timer-preference-intervals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.habit-timer-preference-intervals label { display:grid; align-content:start; }
+.habit-timer-preferences input[type="checkbox"],.habit-timer-preferences input[type="radio"] { width:18px; height:18px; flex:0 0 18px; accent-color:var(--teal); }

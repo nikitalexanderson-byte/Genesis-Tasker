@@ -1,0 +1,59 @@
+<!doctype html><html lang="ru"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>
+html,body{margin:0;width:100vw;height:100vh;overflow:hidden;background:var(--paper);touch-action:none}
+body{--paper:__PAPER__;--solar-model-paper:var(--paper);--ink:__INK__;--ink-soft:__MUTED__;--gold:__GOLD__}
+svg{position:absolute;inset:0;display:block;width:100vw;height:100vh;user-select:none;-webkit-user-select:none;touch-action:none}
+[data-kind]{cursor:pointer}
+[data-kind]:focus{outline:none}
+/* Selection belongs to sector geometry. Never inherit a stroke into text or outlined glyph paths. */
+[data-kind].selected > :is(path,circle,rect,polygon,ellipse),
+[data-kind]:focus-visible > :is(path,circle,rect,polygon,ellipse){stroke:var(--gold);stroke-width:2;vector-effect:non-scaling-stroke}
+</style><body>__SVG__<script>
+(() => {
+ const svg=document.querySelector('svg'), pointers=new Map();
+ const size=()=>{svg.style.setProperty('width',window.innerWidth+'px','important');svg.style.setProperty('height',window.innerHeight+'px','important');};
+ window.addEventListener('resize',size);size();requestAnimationFrame(size);
+ let camera={x:2500,y:2500,size:5200}, previous=null, moved=false, down=null;
+ const limit=s=>Math.max(180,Math.min(5600,s));
+ const render=()=>svg.setAttribute('viewBox',[camera.x-camera.size/2,camera.y-camera.size/2,camera.size,camera.size].join(' '));
+ const distance=p=>Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+ const center=p=>({x:p.reduce((n,q)=>n+q.x,0)/p.length,y:p.reduce((n,q)=>n+q.y,0)/p.length});
+ const focus=node=>{ const b=node.getBBox();camera={x:b.x+b.width/2,y:b.y+b.height/2,size:limit(Math.max(b.width,b.height)*1.2)};render(); };
+ const select=node=>{
+   const month=Number(node.dataset.month),day=Number(node.dataset.day||node.dataset.first||1);
+   if(!Number.isInteger(month)||month<1||month>13)return;
+   document.querySelectorAll('.selected').forEach(n=>n.classList.remove('selected'));node.classList.add('selected');
+   focus(node);location.href='https://genesis-model.invalid/select?month='+month+'&day='+day;
+ };
+ svg.querySelectorAll('[data-kind]').forEach(node=>{
+   node.setAttribute('tabindex','0');node.setAttribute('role','button');
+   node.setAttribute('aria-label',(node.dataset.kind==='month'?'Месяц ':node.dataset.kind==='pentad'?'Пята месяца ':'День месяца ')+node.dataset.month+' '+(node.dataset.day||node.dataset.first||''));
+   node.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();select(node);}});
+ });
+ svg.addEventListener('pointerdown',e=>{
+   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});previous=[...pointers.values()];
+   if(pointers.size===1){moved=false;down={x:e.clientX,y:e.clientY,node:e.target.closest('[data-kind]')};}
+   if(pointers.size>1)moved=true;svg.setPointerCapture(e.pointerId);
+ });
+ svg.addEventListener('pointermove',e=>{
+   if(!pointers.has(e.pointerId))return;
+   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const now=[...pointers.values()];
+   if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)moved=true;
+   if(previous&&previous.length===now.length){
+     const a=center(previous),b=center(now),scale=camera.size/Math.min(svg.clientWidth,svg.clientHeight);
+     camera.x-=(b.x-a.x)*scale;camera.y-=(b.y-a.y)*scale;
+     if(now.length===2){const ratio=distance(previous)/Math.max(1,distance(now));camera.size=limit(camera.size*ratio);}
+     render();
+   }previous=now;
+ });
+ const release=e=>{
+   if(e.type==='pointerup'&&pointers.size===1&&!moved&&down?.node)select(down.node);
+   pointers.delete(e.pointerId);previous=pointers.size?[...pointers.values()]:null;
+ };
+ svg.addEventListener('pointerup',release);svg.addEventListener('pointercancel',release);
+ window.genesisModel={zoom:factor=>{camera.size=limit(camera.size*factor);render();},
+   fit:()=>{camera={x:2500,y:2500,size:5200};render();},
+   month:index=>{const n=svg.querySelector('[data-kind="month"][data-month="'+index+'"]');if(n)select(n);}};
+ render();
+})();
+</script></body></html>

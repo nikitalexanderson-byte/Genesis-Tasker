@@ -1,0 +1,334 @@
+{
+    "schemaVersion": 1,
+    "kind": "project",
+    "calendarMode": "sacred",
+    "calendarContext": {
+        "version": 2,
+        "timeZone": "Europe/Berlin",
+        "gregorianYearStart": "march"
+    },
+    "projects": [
+        {
+            "key": "root",
+            "parentKey": null,
+            "title": "Synthetic source",
+            "description": "Portable content",
+            "layout": "board",
+            "kind": "project",
+            "statuses": [
+                {
+                    "key": "root:open",
+                    "title": "Open",
+                    "isDone": false,
+                    "color": "#2d6c68",
+                    "taskTitleLines": 0,
+                    "visibleTaskCount": 0
+                },
+                {
+                    "key": "root:done",
+                    "title": "Done",
+                    "isDone": true,
+                    "color": "#2d6c68",
+                    "taskTitleLines": 2,
+                    "visibleTaskCount": 5
+                }
+            ],
+            "categories": [
+                {
+                    "key": "category:first",
+                    "title": "Category",
+                    "color": "#abcdef"
+                }
+            ],
+            "boardStatusKey": null,
+            "labelKeys": [
+                "label:first"
+            ],
+            "tags": [
+                "synthetic"
+            ]
+        },
+        {
+            "key": "nested",
+            "parentKey": "root",
+            "title": "Nested list",
+            "description": "",
+            "layout": "list",
+            "kind": "task-list",
+            "statuses": [
+                {
+                    "key": "nested:open",
+                    "title": "Open",
+                    "isDone": false,
+                    "color": "#2d6c68",
+                    "taskTitleLines": 0,
+                    "visibleTaskCount": 0
+                },
+                {
+                    "key": "nested:done",
+                    "title": "Done",
+                    "isDone": true,
+                    "color": "#2d6c68",
+                    "taskTitleLines": 2,
+                    "visibleTaskCount": 5
+                }
+            ],
+            "categories": [],
+            "boardStatusKey": "root:open",
+            "labelKeys": [],
+            "tags": []
+        }
+    ],
+    "labels": [
+        {
+            "key": "label:first",
+            "title": "Label",
+            "color": "#abcdef"
+        }
+    ],
+    "fields": [
+        {
+            "key": "field:text",
+            "projectKey": "root",
+            "title": "Synthetic text",
+            "type": "text",
+            "options": [],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 0
+        },
+        {
+            "key": "field:number",
+            "projectKey": null,
+            "title": "Synthetic number",
+            "type": "number",
+            "options": [],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 1
+        },
+        {
+            "key": "field:date",
+            "projectKey": "root",
+            "title": "Synthetic date",
+            "type": "date",
+            "options": [],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 2
+        },
+        {
+            "key": "field:checkbox",
+            "projectKey": null,
+            "title": "Synthetic checkbox",
+            "type": "checkbox",
+            "options": [],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 3
+        },
+        {
+            "key": "field:url",
+            "projectKey": "root",
+            "title": "Synthetic url",
+            "type": "url",
+            "options": [],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 4
+        },
+        {
+            "key": "field:select",
+            "projectKey": null,
+            "title": "Synthetic select",
+            "type": "select",
+            "options": [
+                {
+                    "id": "option:first",
+                    "title": "First",
+                    "archived": false
+                },
+                {
+                    "id": "option:old",
+                    "title": "Old",
+                    "archived": true
+                }
+            ],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 5
+        },
+        {
+            "key": "field:multi",
+            "projectKey": "root",
+            "title": "Synthetic multi",
+            "type": "multi",
+            "options": [
+                {
+                    "id": "option:first",
+                    "title": "First",
+                    "archived": false
+                },
+                {
+                    "id": "option:old",
+                    "title": "Old",
+                    "archived": true
+                }
+            ],
+            "required": false,
+            "showCard": true,
+            "showList": true,
+            "position": 6
+        }
+    ],
+    "tasks": [
+        {
+            "key": "task:parent",
+            "projectKey": "root",
+            "parentKey": null,
+            "title": "Synthetic parent",
+            "description": "Кириллица 🌿",
+            "entryType": "task",
+            "statusKey": "root:open",
+            "categoryKey": "category:first",
+            "priority": 3,
+            "tags": [
+                "portable"
+            ],
+            "assigneeId": "synthetic:owner",
+            "approvalRequired": true,
+            "approverIds": [
+                "synthetic:reviewer"
+            ],
+            "labelKeys": [
+                "label:first"
+            ],
+            "dependsOnKeys": [],
+            "due": {
+                "amount": 1,
+                "unit": "month"
+            },
+            "start": {
+                "amount": -1,
+                "unit": "day"
+            },
+            "startTime": "09:00",
+            "endTime": "10:30",
+            "checklists": [
+                {
+                    "key": "list:first",
+                    "title": "Checklist",
+                    "items": [
+                        {
+                            "key": "item:first",
+                            "title": "Linked child",
+                            "assigneeId": "synthetic:owner",
+                            "due": {
+                                "amount": 0,
+                                "unit": "day"
+                            },
+                            "linkedTaskKey": "task:child"
+                        }
+                    ]
+                }
+            ],
+            "customValues": {
+                "field:text": "Own text",
+                "field:number": 0,
+                "field:date": "2026-10-20",
+                "field:checkbox": false,
+                "field:url": "https://example.invalid/reference",
+                "field:select": "option:old",
+                "field:multi": [
+                    "option:first",
+                    "option:old"
+                ]
+            },
+            "storyPoints": 0,
+            "estimateHours": 1.25
+        },
+        {
+            "key": "task:child",
+            "projectKey": "root",
+            "parentKey": "task:parent",
+            "title": "Child",
+            "description": "",
+            "entryType": "task",
+            "statusKey": "root:done",
+            "categoryKey": null,
+            "priority": 0,
+            "tags": [],
+            "assigneeId": null,
+            "approvalRequired": false,
+            "approverIds": [],
+            "labelKeys": [],
+            "dependsOnKeys": [
+                "task:leaf"
+            ],
+            "due": null,
+            "start": null,
+            "startTime": null,
+            "endTime": null,
+            "checklists": [],
+            "customValues": {},
+            "storyPoints": null,
+            "estimateHours": 0
+        },
+        {
+            "key": "task:leaf",
+            "projectKey": "root",
+            "parentKey": null,
+            "title": "Dependency",
+            "description": "",
+            "entryType": "task",
+            "statusKey": "root:open",
+            "categoryKey": null,
+            "priority": 0,
+            "tags": [],
+            "assigneeId": null,
+            "approvalRequired": false,
+            "approverIds": [],
+            "labelKeys": [],
+            "dependsOnKeys": [],
+            "due": null,
+            "start": null,
+            "startTime": null,
+            "endTime": null,
+            "checklists": [],
+            "customValues": {},
+            "storyPoints": null,
+            "estimateHours": null
+        },
+        {
+            "key": "task:nested",
+            "projectKey": "nested",
+            "parentKey": null,
+            "title": "Nested task",
+            "description": "",
+            "entryType": "task",
+            "statusKey": "nested:open",
+            "categoryKey": null,
+            "priority": 0,
+            "tags": [],
+            "assigneeId": null,
+            "approvalRequired": false,
+            "approverIds": [],
+            "labelKeys": [],
+            "dependsOnKeys": [],
+            "due": null,
+            "start": null,
+            "startTime": null,
+            "endTime": null,
+            "checklists": [],
+            "customValues": {},
+            "storyPoints": null,
+            "estimateHours": null
+        }
+    ]
+}

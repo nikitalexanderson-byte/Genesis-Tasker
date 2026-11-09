@@ -1,0 +1,21 @@
+.habit-lifecycle-library .habit-lifecycle-filters { display:flex; flex-wrap:wrap; gap:8px; margin-block:16px; }
+.habit-lifecycle-library .habit-lifecycle-filters button { display:flex; align-items:center; gap:8px; min-height:44px; padding:8px 14px; border:1px solid var(--line); border-radius:12px; color:var(--ink); background:var(--surface); }
+.habit-lifecycle-library .habit-lifecycle-filters button[aria-pressed="true"] { background:var(--ui-accent); color:var(--ui-on-accent, #fff); }
+.habit-lifecycle-library .habit-lifecycle-filters span { font-variant-numeric:tabular-nums; }
+.habit-lifecycle-library .habit-lifecycle-rows > article { min-width:0; }
+.habit-lifecycle-library .habit-lifecycle-rows strong { overflow-wrap:anywhere; }
+.habit-lifecycle-library .habit-library-actions button { min-height:44px; }
+.habit-lifecycle-library .habit-lifecycle-message:empty { display:none; }
+.habit-lifecycle-filter-mobile { display:none; }
+.habit-lifecycle-library .habit-lifecycle-conflict { flex-basis:100%; }
+.habit-lifecycle-confirm { width:min(100% - 32px, 540px); max-height:calc(100dvh - 48px); overflow:auto; }
+.habit-lifecycle-confirm footer { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:12px; }
+.habit-lifecycle-confirm footer button { min-height:44px; }
+@media(max-width:600px) { .habit-lifecycle-library .habit-lifecycle-rows > article { grid-template-columns:4px minmax(0,1fr); }
+  .habit-lifecycle-library .habit-lifecycle-filters { display:none; }
+  .habit-lifecycle-filter-mobile { display:grid; gap:8px; margin-block:16px; }
+  .habit-lifecycle-filter-mobile select { width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:var(--ui-radius-control,10px); color:var(--ink); background:var(--surface); font:inherit; }
+  .habit-lifecycle-library .habit-library-actions { grid-column:2; width:100%; }
+}
+.habit-lifecycle-library .habit-lifecycle-rows > article.paused { opacity:1; }
+@media(min-width:1024px) { html[data-genesis-theme] .genesis-app .habit-lifecycle-library article > .habit-library-actions { grid-column:3; grid-row:1; } }

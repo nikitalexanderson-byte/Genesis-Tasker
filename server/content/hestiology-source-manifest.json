@@ -1,0 +1,1229 @@
+{
+  "version": 1,
+  "source": "Гестиология.docx",
+  "sourceSha256": "e1031cb2f1e2c1b10ffa6c87d741d06bb27d12aa80fccd6cd98cb4760b13c713",
+  "entries": [
+    {
+      "number": 1,
+      "sourceParagraph": 1,
+      "id": "advice-30ad888cfe73d9c6e0730060",
+      "title": "Онтологический аудит пространства",
+      "status": "published",
+      "textSha256": "0065963aeef60dbad25380799aa6a5355a998932fb82e5cf10b125284bbc8c78"
+    },
+    {
+      "number": 2,
+      "sourceParagraph": 1,
+      "id": "advice-990dc29ca27b3d9d2fe1aa85",
+      "title": "Hegemonikon как Внутренняя Гестия",
+      "status": "published",
+      "textSha256": "00e5bd397b5177bf028221f8c8d96ea80966409ba4cc07fc2976dbf890eb4f98"
+    },
+    {
+      "number": 3,
+      "sourceParagraph": 1,
+      "id": "advice-2674627a018990a80f80301d",
+      "title": "Практика Присутствия",
+      "status": "published",
+      "textSha256": "debc74a24484147a45c682fc4c42842e08ef7b255dc7b07b3caa6da9dc0070f2"
+    },
+    {
+      "number": 4,
+      "sourceParagraph": 1,
+      "id": "advice-f7795bf23e6176f787d23a91",
+      "title": "Премиальный минимализм как аскеза",
+      "status": "published",
+      "textSha256": "2669189994c4a0c585c42cc26ac9f3571d0098f1fd9757a05018f01c2628b2ef"
+    },
+    {
+      "number": 5,
+      "sourceParagraph": 2,
+      "id": "advice-7b7c6af3a90fb6d3849ea2e2",
+      "title": "Информационный ценз",
+      "status": "published",
+      "textSha256": "c6e00271cd92e68c89d1e3da4248cc8dbd2820c922b3ccc66840688694c3d5f9"
+    },
+    {
+      "number": 6,
+      "sourceParagraph": 2,
+      "id": "advice-4843bd6a996457a12c2b123c",
+      "title": "Метод интеллектуального отсечения",
+      "status": "published",
+      "textSha256": "7b933cd44ab958d7779b7920baaa58149da6be08d9e29bc561df566c06f49bd1"
+    },
+    {
+      "number": 7,
+      "sourceParagraph": 2,
+      "id": "advice-772cff00ad31cc6882cedc26",
+      "title": "Практика входа",
+      "status": "published",
+      "textSha256": "91fe567b5f327b587c8f9010f03ecdc248d784a9dcfe440a7b026a33ec260d66"
+    },
+    {
+      "number": 8,
+      "sourceParagraph": 2,
+      "id": "advice-ea2ea2d4f65ac84ee7e39083",
+      "title": "Система защиты",
+      "status": "published",
+      "textSha256": "2982e9d57ee4c4c9e0c9a3ea094c1f9ea5474a1582740e0d407887a0a5af934e"
+    },
+    {
+      "number": 9,
+      "sourceParagraph": 3,
+      "id": "advice-1b4e16848a6bf842452c0924",
+      "title": "Интеллектуальная гигиена",
+      "status": "published",
+      "textSha256": "9127473d15a84cc6aadc9f2e66972fd470671df54c91e92ec800dcd1d3b8a413"
+    },
+    {
+      "number": 10,
+      "sourceParagraph": 3,
+      "id": "advice-f1cf7bc6632e898e35fca264",
+      "title": "Аудит представлений",
+      "status": "published",
+      "textSha256": "2395960cb47cf5ad072cff65b4e32c45f3f77185fbfac77aa766e2960bbfdd08"
+    },
+    {
+      "number": 11,
+      "sourceParagraph": 3,
+      "id": "advice-17eeac3f97d8b8f7fa0068ad",
+      "title": "Ваяние собственной статуи",
+      "status": "published",
+      "textSha256": "4b2c3ce21c0cb932776e1bb2e39deeee13c4881e26b0dc384ba421f63e36706f"
+    },
+    {
+      "number": 12,
+      "sourceParagraph": 4,
+      "id": "advice-ed9603398fc36dbe575333f7",
+      "title": "Тишина как капитал",
+      "status": "published",
+      "textSha256": "9b85c38f8d1c232ae16f3b889db9ef8db5128e25f7792e8a54020f7366358fe6"
+    },
+    {
+      "number": 13,
+      "sourceParagraph": 5,
+      "id": "advice-18d09027c8ee24f2721581b5",
+      "title": "Селекция по эйдетическому соответствию",
+      "status": "published",
+      "textSha256": "25d3be57efca617080e394d1b8e9f5dda8eb37c563e944ead07ff7a51c3c566e"
+    },
+    {
+      "number": 14,
+      "sourceParagraph": 5,
+      "id": "advice-107700981e882c3061b77eb1",
+      "title": "Артефакт как щит и якорь",
+      "status": "published",
+      "textSha256": "ad66116f6671b5178cf0c0b4129d258ab85a6934e300884bee79d9be09afd412"
+    },
+    {
+      "number": 15,
+      "sourceParagraph": 5,
+      "id": "advice-bc242bca60161f25dc645720",
+      "title": "Практика качества",
+      "status": "published",
+      "textSha256": "a11ade4098b8bbb4839bb49c4a555e96565c42594b739d7e3d8c0f095b953ac5"
+    },
+    {
+      "number": 16,
+      "sourceParagraph": 5,
+      "id": "advice-6cf8d76f4f7a96b5bb5e1c10",
+      "title": "Анимация пространства",
+      "status": "published",
+      "textSha256": "691b40bd9b06afdc65c5685e9c7d1a9edf8d25a6d023ec29d4e69901c18dd238"
+    },
+    {
+      "number": 17,
+      "sourceParagraph": 6,
+      "id": "advice-f468a65c749479bb04617ccf",
+      "title": "Идентификация иерархического кода",
+      "status": "published",
+      "textSha256": "4be001692610083bbb3ea8ddf6d895253ebb1423b863bc2a27ed14a838809f3a"
+    },
+    {
+      "number": 18,
+      "sourceParagraph": 6,
+      "id": "advice-9218681287d7ef4192c3b164",
+      "title": "Тоническое напряжение звена",
+      "status": "published",
+      "textSha256": "5c23e4f0d0abf0ef1955223dd0c0ccff503144ba9faab8aeadbdb106dc84e353"
+    },
+    {
+      "number": 19,
+      "sourceParagraph": 6,
+      "id": "advice-e681567dbd159160ed92129d",
+      "title": "Очищение проводника",
+      "status": "published",
+      "textSha256": "b7d4274a4034ce44854a1e14c0134abcd8e9a63bb7272ab11207674ee33f4771"
+    },
+    {
+      "number": 20,
+      "sourceParagraph": 6,
+      "id": "advice-c31a6a9c705f61b39d081dd6",
+      "title": "Контроль окружения",
+      "status": "published",
+      "textSha256": "5989afbf6ff49464ba2ed4159b3b4cf658d8b1360f82a7032dce606b87ed45e1"
+    },
+    {
+      "number": 21,
+      "sourceParagraph": 7,
+      "id": "advice-89111110c12ce66fa8102f8f",
+      "title": "Изгнание онтологического мусора",
+      "status": "published",
+      "textSha256": "b6c37bf5ba0e40b0b665889e793d8c4d8194673bea3275e0ac8228904ab2e462"
+    },
+    {
+      "number": 22,
+      "sourceParagraph": 7,
+      "id": "advice-c3e2038dfa209a160d974db7",
+      "title": "Геометрическое равенство",
+      "status": "published",
+      "textSha256": "55d474094f85c06ace600a63f9aebdb1364c5f84aa39364b4d750f4f1be4b8cd"
+    },
+    {
+      "number": 23,
+      "sourceParagraph": 7,
+      "id": "advice-76703348accc84981ff00547",
+      "title": "Практика очищения",
+      "status": "published",
+      "textSha256": "e5307034ffc937466356ba0dcfdb4bf6bcb83e3e3f0a7e068023cc34440ff262"
+    },
+    {
+      "number": 24,
+      "sourceParagraph": 7,
+      "id": "advice-feffd761cf78249e9e8785e4",
+      "title": "Фиксация границ",
+      "status": "published",
+      "textSha256": "21169e0000112f0815aaf51afc82d7a9bdad0f8a57ea9c2e702219f99ca0460f"
+    },
+    {
+      "number": 25,
+      "sourceParagraph": 8,
+      "id": "advice-1bf671afe8f87f0e4f4954df",
+      "title": "Практика интеллектуального обнажения",
+      "status": "published",
+      "textSha256": "ddbaec01fe83317614d0f49e1e5c65db8640306f2abd5f30f46c0d9ed3d451a7"
+    },
+    {
+      "number": 26,
+      "sourceParagraph": 8,
+      "id": "advice-efdcc4d647ec1b332ce3b806",
+      "title": "Практика тишины",
+      "status": "published",
+      "textSha256": "ddf4e10dd303093d670e0cfe5ed11bbbe5a7276038563eb85f370babac709306"
+    },
+    {
+      "number": 27,
+      "sourceParagraph": 8,
+      "id": "advice-c91af2589a8793f0b1826c15",
+      "title": "Космизация через концентрацию",
+      "status": "published",
+      "textSha256": "4d3cbeb895a0ec2bb1baab89e105438bb6a399857bcc35a8f0cc0fa6dee73b61"
+    },
+    {
+      "number": 28,
+      "sourceParagraph": 8,
+      "id": "advice-5fef7c824aacbef64a5df690",
+      "title": "Защита \"южного входа\"",
+      "status": "published",
+      "textSha256": "c09c622dee8aa45182abb8a18fbb6345419973d28b042b69e002e17396f5e8f7"
+    },
+    {
+      "number": 29,
+      "sourceParagraph": 9,
+      "id": "advice-26e2cc90d91341a38e9060e6",
+      "title": "Демиургия личных границ",
+      "status": "published",
+      "textSha256": "7378696a2a63b27cbf14d367067e89b4df8d07bd81ae2a9f5a9c5db874bc2353"
+    },
+    {
+      "number": 30,
+      "sourceParagraph": 9,
+      "id": "advice-3cc6cbfd08bee08472ebfdcd",
+      "title": "Изгнание бардака из разума",
+      "status": "published",
+      "textSha256": "87baad0898928b10bcf8ed17e9552e20d3e978036752440b5317af16603d5998"
+    },
+    {
+      "number": 31,
+      "sourceParagraph": 9,
+      "id": "advice-7214843129993df06f9aa137",
+      "title": "Практика системности",
+      "status": "published",
+      "textSha256": "77e9aec28e2e8fc6997a1f1c3560fe0cc6c5aab295d18b91b383585c966d3e5c"
+    },
+    {
+      "number": 32,
+      "sourceParagraph": 9,
+      "id": "advice-fad5e5d2df7d38dd2279ad69",
+      "title": "Власть над Необходимостью",
+      "status": "published",
+      "textSha256": "55aa4faaff255e905b87cbe05b89ccb2882f1bfa4d5d124fce5b2ed73611bbe9"
+    },
+    {
+      "number": 33,
+      "sourceParagraph": 10,
+      "id": "advice-3b54e453bd8320ccddd31f94",
+      "title": "Устранение \"онтологического мусора\"",
+      "status": "published",
+      "textSha256": "536275d60dcffe1ea9848dbe7d5e12c721944d3bce81c05698adfab3ad9643ff"
+    },
+    {
+      "number": 34,
+      "sourceParagraph": 10,
+      "id": "advice-021738f6606e5b53684104f4",
+      "title": "Интеллектуальный фильтр и ценз",
+      "status": "published",
+      "textSha256": "1414bb09119b6eb9e02362b7f754b43f378fd0ea1fe0acd5f0c84401532e520c"
+    },
+    {
+      "number": 35,
+      "sourceParagraph": 10,
+      "id": "advice-697a71d924770a533b364aab",
+      "title": "Аудит внутренних представлений",
+      "status": "published",
+      "textSha256": "cfdaf152efab74c7aa7d8a7e132f2ed5082af7940b6d9d41b75df583eb591cc7"
+    },
+    {
+      "number": 36,
+      "sourceParagraph": 10,
+      "id": "advice-02b30f8d671748853ac13152",
+      "title": "Дисциплина \"золотого сечения\"",
+      "status": "published",
+      "textSha256": "623606c41d78056fb4f4bd374b7c7ce65c93675434a552ba78c531611a59ccff"
+    },
+    {
+      "number": 37,
+      "sourceParagraph": 11,
+      "id": "advice-4eba3605732cf5003ca80051",
+      "title": "Онтологическая иерархия предметов",
+      "status": "published",
+      "textSha256": "f568ee93e7bf97145b03d3b79d8fc4d62a6f59b838e4a47039d7b51a922bba25"
+    },
+    {
+      "number": 38,
+      "sourceParagraph": 11,
+      "id": "advice-9587bd926df84d12241d14df",
+      "title": "Справедливость в делах и бизнесе",
+      "status": "published",
+      "textSha256": "74e102dd5601f6c4749f63d1111051ceb577534f83a185c044bc157b78af6b64"
+    },
+    {
+      "number": 39,
+      "sourceParagraph": 11,
+      "id": "advice-fdb18f1eda738b3a1f2b3de4",
+      "title": "Геометрия социальных связей",
+      "status": "published",
+      "textSha256": "c517a81ff93c59c3a2dbeb7e5acb454d157f6bfd506c42edfdab1962085a608a"
+    },
+    {
+      "number": 40,
+      "sourceParagraph": 11,
+      "id": "advice-2739b38e50c79d9982dcfe8b",
+      "title": "Мера как щит",
+      "status": "published",
+      "textSha256": "38332709280fc9a8d31a764de65ffa70743160366290d1fd487c2de76b65979b"
+    },
+    {
+      "number": 41,
+      "sourceParagraph": 12,
+      "id": "advice-584c49b6a797da99222cad49",
+      "title": "Технология стратегической пригонки",
+      "status": "published",
+      "textSha256": "206e8643677fc12dfb439b5cd9aeaf94292fa89a0d9455ddbdcd37e8a5da7c35"
+    },
+    {
+      "number": 42,
+      "sourceParagraph": 12,
+      "id": "advice-1d88bb8c9c7af29a4f30b1fa",
+      "title": "Симфония бизнес-структур",
+      "status": "published",
+      "textSha256": "121c64995c907f47664980a63180bad9637940bbc8c473fe3929e6461a5ed605"
+    },
+    {
+      "number": 43,
+      "sourceParagraph": 12,
+      "id": "advice-2e0a9859cb9bce95e7be3f80",
+      "title": "Интеграция противоположностей",
+      "status": "published",
+      "textSha256": "400bd8a4665c7148487437017d103b4088198dcc0f5785bd0cb02628ccc97e8d"
+    },
+    {
+      "number": 44,
+      "sourceParagraph": 12,
+      "id": "advice-000d0a7bbe609187b4aa9373",
+      "title": "Практика личной настройки",
+      "status": "published",
+      "textSha256": "d657b74979b0f66afbe2fb470fbb8ac44df75b55f940d28177fa1ba46b46ff28"
+    },
+    {
+      "number": 45,
+      "sourceParagraph": 13,
+      "id": "advice-fc16b0c68584542412911eda",
+      "title": "Эстетическая селекция",
+      "status": "published",
+      "textSha256": "8eebf15553c1a35a78328ea2b1180512e186a11014820d69232f4d32cc232158"
+    },
+    {
+      "number": 46,
+      "sourceParagraph": 13,
+      "id": "advice-a9660d181bfbc8ac3001718d",
+      "title": "Функциональная чистота",
+      "status": "published",
+      "textSha256": "a84116ac7ad217655488e0e5aa6d570860b148e3166d8d5a917d071f7860c23d"
+    },
+    {
+      "number": 47,
+      "sourceParagraph": 13,
+      "id": "advice-3ddf1cc0f7ed951a194bad99",
+      "title": "Контроль качества",
+      "status": "published",
+      "textSha256": "1bd34eb55abbed2b4597cddfc6e6378d2ef29e64a19a575c174d27c82c033124"
+    },
+    {
+      "number": 48,
+      "sourceParagraph": 13,
+      "id": "advice-73c224edc6493396118ec73f",
+      "title": "Анимация внимания",
+      "status": "published",
+      "textSha256": "d8ac5f83881cb663665c881b466e786a87aa4e2b8b6ed887e2660a649538cd02"
+    },
+    {
+      "number": 49,
+      "sourceParagraph": 14,
+      "id": "advice-d7136a08590a2c5012c6c83b",
+      "title": "Утверждение волевого натяжения",
+      "status": "published",
+      "textSha256": "e051896bd09a982f1da2fcef773df32f6c5b1ff85d6eb634c60bdc939549cfc7"
+    },
+    {
+      "number": 50,
+      "sourceParagraph": 15,
+      "id": "advice-23d860bf4ac8f38c01e0472b",
+      "title": "Центрирование через Hegemonikon",
+      "status": "published",
+      "textSha256": "874f98af8863f29b5d079e9a649943f96f9e42bb44a67e77e00851bcdc725854"
+    },
+    {
+      "number": 51,
+      "sourceParagraph": 15,
+      "id": "advice-2ffc9a1a79d4f8a96f853217",
+      "title": "Информационный и атмосферный ценз",
+      "status": "published",
+      "textSha256": "c07df3721c219623bcc05fdeb31db502e07df1af068f21d4f1aabb156330ece0"
+    },
+    {
+      "number": 52,
+      "sourceParagraph": 15,
+      "id": "advice-733df68bc8830b220e86bd09",
+      "title": "Дисциплина космических ритмов",
+      "status": "published",
+      "textSha256": "d7c7aec3a930a41ca33528809f3a52e5ca0d10b9e69c3647eb42224aedbfc195"
+    },
+    {
+      "number": 53,
+      "sourceParagraph": 16,
+      "id": "advice-194c0b5004ba6eb30ae6a535",
+      "title": "Ликвидация \"серых зон\"",
+      "status": "published",
+      "textSha256": "40460a37941ae9f673070ba364744105d2bbd9bc8dde408fe691b74093795228"
+    },
+    {
+      "number": 54,
+      "sourceParagraph": 16,
+      "id": "advice-ac03e35759cd11c6ea7fe880",
+      "title": "Интеллектуальная сегрегация",
+      "status": "published",
+      "textSha256": "fc91182727b0ae0ce78c8abe08c86659e50c8c8e989e0272656f3f5378ee9596"
+    },
+    {
+      "number": 55,
+      "sourceParagraph": 16,
+      "id": "advice-d10d9d510294de2ab6e24e1f",
+      "title": "Аскеза точности",
+      "status": "published",
+      "textSha256": "dfda837b30dfaee324cad7d2c04ed4615e6a39094225991d5c0a206d4fa1a6d4"
+    },
+    {
+      "number": 56,
+      "sourceParagraph": 16,
+      "id": "advice-2f05839be0c034f719b871b7",
+      "title": "Власть над \"большим и меньшим\"",
+      "status": "published",
+      "textSha256": "bfefbc4eaf536e510db4e3a3c0fd600adbb235034b94ae4541ec1a328dda58df"
+    },
+    {
+      "number": 57,
+      "sourceParagraph": 17,
+      "id": "advice-b8fafb3d877864d33ea8e015",
+      "title": "Практика утренней тишины",
+      "status": "published",
+      "textSha256": "5ef7287cd1a44d7a6a9c5689d9c1da9134973dea1604ff51078337519c466ba5"
+    },
+    {
+      "number": 58,
+      "sourceParagraph": 17,
+      "id": "advice-d91e533a3e31c97d6dcb62d8",
+      "title": "Практика планирования",
+      "status": "published",
+      "textSha256": "74eccecd3c2e9e08cd46d530b39bd89ee70cc2a309235128a8e1ab6f00ecd851"
+    },
+    {
+      "number": 59,
+      "sourceParagraph": 18,
+      "id": "advice-c44af55c56414acf8e6d5be6",
+      "title": "Возжигание интеллектуального тоноса",
+      "status": "published",
+      "textSha256": "9c4ef927eec7f9704e5b252d7a60659d211641adfa8f312d10afd10e1da71184"
+    },
+    {
+      "number": 60,
+      "sourceParagraph": 18,
+      "id": "advice-11eda441c19b9b5505e021f9",
+      "title": "Физический катарсис как метафора",
+      "status": "published",
+      "textSha256": "92f9be9a452bfef951099612ae00108721d2248b646400576392ccc250aa8cd1"
+    },
+    {
+      "number": 61,
+      "sourceParagraph": 19,
+      "id": "advice-136af05cdba86c1736dff32b",
+      "title": "Практика интеллектуальной прозрачности",
+      "status": "published",
+      "textSha256": "c434b3e60e5063e8ae6007216fd295f837fb0f490a23944daae164ca195d6387"
+    },
+    {
+      "number": 62,
+      "sourceParagraph": 19,
+      "id": "advice-c747e2f6e9a5d7c3539fc807",
+      "title": "Практика чистого источника",
+      "status": "published",
+      "textSha256": "c89d2a29fb552162b5b2a3b4440e3c6d3c48cac3874b4441e88227ef899cb32f"
+    },
+    {
+      "number": 63,
+      "sourceParagraph": 19,
+      "id": "advice-1ccb446733c49cd385c8224e",
+      "title": "Ношение чистых белых одежд",
+      "status": "published",
+      "textSha256": "52b26f860d81dbab63eb98c3fdb3942dc987eb9d6e53e9ba5108c9365b5949ef"
+    },
+    {
+      "number": 64,
+      "sourceParagraph": 19,
+      "id": "advice-d04b24955b1f2eaecbd53745",
+      "title": "Экстренный катарсис при соприкосновении с Хаосом",
+      "status": "published",
+      "textSha256": "9269dc406080e0903cc1bcf41c6aa371273d26bbb2ae6f412ccb0990c7660e6c"
+    },
+    {
+      "number": 65,
+      "sourceParagraph": 20,
+      "id": "advice-d202cb6285ddb05e9efff034",
+      "title": "Акт демиургической вертикали",
+      "status": "published",
+      "textSha256": "0ce4e5c1093f4f20a8ba910fc4b97a4ae8b9425fd4c6fe8974caf448cdbb7bc1"
+    },
+    {
+      "number": 66,
+      "sourceParagraph": 20,
+      "id": "advice-8382bf1c8e690b8d168a99a7",
+      "title": "Солярная юстировка",
+      "status": "published",
+      "textSha256": "ed38deb48f5ea2f4c2125a245f73638da5da17c450c78504ad6bce9ceb31260d"
+    },
+    {
+      "number": 67,
+      "sourceParagraph": 20,
+      "id": "advice-b04503ab5e7b0fd80bf5d04e",
+      "title": "Практика прямодействия",
+      "status": "published",
+      "textSha256": "60ba8f6d35c1025f6b35eb7efc3c235135137d4789c429d40311982a08ce7012"
+    },
+    {
+      "number": 68,
+      "sourceParagraph": 20,
+      "id": "advice-ef196687f32ae622f9b8c7b6",
+      "title": "Статическая аскеза",
+      "status": "published",
+      "textSha256": "2c478e71054666ba0e543b8469b5e44cb92ed34dc684fffe8ca5616e1f3ab16e"
+    },
+    {
+      "number": 69,
+      "sourceParagraph": 21,
+      "id": "advice-bd2145a7601e6fd72a4fca01",
+      "title": "Трехступенчатая ревизия",
+      "status": "published",
+      "textSha256": "15c3973908d864be40273a235d4fe4a7c3604006f5ec08dd08095c64de066728"
+    },
+    {
+      "number": 70,
+      "sourceParagraph": 21,
+      "id": "advice-19a087d35fdd7d8580be20ab",
+      "title": "Метод интеллектуального сброса",
+      "status": "published",
+      "textSha256": "c19ef17fd6a6e708d5a9aa2948b12cfc386421a7f71d1b49a3e6ebf58ce4a9bd"
+    },
+    {
+      "number": 71,
+      "sourceParagraph": 21,
+      "id": "advice-474ec0914d47902d4174a797",
+      "title": "Литургия закрытия пазов",
+      "status": "published",
+      "textSha256": "9e24e07dad4436246148b692427fe486de6e54372cf29980b11d232abc3fa0e2"
+    },
+    {
+      "number": 72,
+      "sourceParagraph": 21,
+      "id": "advice-79ef9b5d3bad4e4bb274720c",
+      "title": "Подготовка к мини-смерти",
+      "status": "published",
+      "textSha256": "28188f8be4ca6c4951a014fdecd2e2fe643f57543b134f7d978f4b9581642177"
+    },
+    {
+      "number": 73,
+      "sourceParagraph": 22,
+      "id": "advice-b759da27acf5ffdcb121ab96",
+      "title": "Технология \"сеяния\" Логоса",
+      "status": "published",
+      "textSha256": "8b2261d67983c36e9c45f929e5aec73b45a5be1e260a1ff29d55b080bfac6c0e"
+    },
+    {
+      "number": 74,
+      "sourceParagraph": 23,
+      "id": "advice-e869a2fc976c7cb3d80c6dfb",
+      "title": "Интеллектуальная герметизация",
+      "status": "published",
+      "textSha256": "a889861a306f07870d5136ab7e9d744b1239a038929c6202068c5e53b30107ae"
+    },
+    {
+      "number": 75,
+      "sourceParagraph": 23,
+      "id": "advice-c6d1e1d20a8e23d523c3a0a0",
+      "title": "Аудит \"ночного разума\"",
+      "status": "published",
+      "textSha256": "58523767c27e465608b7f2144b5421138df87a5fc995973a51da2f101a171531"
+    },
+    {
+      "number": 76,
+      "sourceParagraph": 23,
+      "id": "advice-f8a91705e498c84a6aeaa2c3",
+      "title": "Инкубация как метод власти",
+      "status": "published",
+      "textSha256": "56081ff9959707a4d58ce131ddf8ccf875cdb4d0ab001aa1e4d0741e914e7b50"
+    },
+    {
+      "number": 77,
+      "sourceParagraph": 24,
+      "id": "advice-934119fd02f642e8cb73f1f2",
+      "title": "Практика физического затвора",
+      "status": "published",
+      "textSha256": "e0e9ff9521575095e399d01dafc91ad4272d1d43857b5dcd11bd2665acf17491"
+    },
+    {
+      "number": 78,
+      "sourceParagraph": 24,
+      "id": "advice-a2c6f0e494ecc78386592cae",
+      "title": "Практика информационной тишины",
+      "status": "published",
+      "textSha256": "3cf5f718f734fd450eafc385df4458a2fd41b94353abdeb492dd100fa4a26c90"
+    },
+    {
+      "number": 79,
+      "sourceParagraph": 24,
+      "id": "advice-ae4cc16a2b2f6b00d213fe49",
+      "title": "Практика чистого ужина",
+      "status": "published",
+      "textSha256": "14d801acda21b9979a66e93328ffe2bb1b6c0eb1cb7493af245f7b15a411e954"
+    },
+    {
+      "number": 80,
+      "sourceParagraph": 24,
+      "id": "advice-37de9c90d83fcbed12fdff78",
+      "title": "Фиксация внутренней Гестии",
+      "status": "published",
+      "textSha256": "5a2851585bed6f8bd85a47b40fbbd99572f6f21062a41fbc7284ef36c80f25a7"
+    },
+    {
+      "number": 81,
+      "sourceParagraph": 25,
+      "id": "advice-b6bae31239f8687fabd53843",
+      "title": "Практика подготовки",
+      "status": "published",
+      "textSha256": "5ca8e4cadb7fe1ae91333f02a3eb682b4b303fb9c82829ef5efad7af4fa9ce06"
+    },
+    {
+      "number": 82,
+      "sourceParagraph": 25,
+      "id": "advice-5629a0c4491ba24c78075bf7",
+      "title": "Интеллектуальная бдительность",
+      "status": "published",
+      "textSha256": "1830236abaebfde5f23c8de6de1a423e0ae5ceb1dbe88b03a44b7e22b2897d57"
+    },
+    {
+      "number": 83,
+      "sourceParagraph": 25,
+      "id": "advice-65e10421bd9cdb163afe8455",
+      "title": "Технология разрыва уровней",
+      "status": "published",
+      "textSha256": "f4a9f52313394c96efb056d0386cfc99a28590bfa6e22c4b15f8c360928daffe"
+    },
+    {
+      "number": 84,
+      "sourceParagraph": 25,
+      "id": "advice-dddea9f8cc42f605423e3d2e",
+      "title": "Инкубация силы в тишине",
+      "status": "published",
+      "textSha256": "3e0a50f861df1517adfae4c04b4279011bba5da57b18d4a0156b425dde8dba13"
+    },
+    {
+      "number": 85,
+      "sourceParagraph": 26,
+      "id": "advice-62ba0ba6732fc1cc9de1019b",
+      "title": "Аудит онтологической плотности",
+      "status": "published",
+      "textSha256": "ca871328a1679b5d77fccb5b6fbb57e62afc0479a6bd0f0241507896f9b003e9"
+    },
+    {
+      "number": 86,
+      "sourceParagraph": 26,
+      "id": "advice-530b3f5a6337faa9d636628c",
+      "title": "Вещь как стратегический якорь",
+      "status": "published",
+      "textSha256": "d86ac15de78566130c37d4d55cca1d09d7161680e40fa106da3694f6ae76fdbc"
+    },
+    {
+      "number": 87,
+      "sourceParagraph": 26,
+      "id": "advice-19dc08d090eb549e7eb17e0a",
+      "title": "Выбор честных материалов",
+      "status": "published",
+      "textSha256": "b666ddbf3d986789168e8f32677d714c99fcc17af61e450c12eedab00de01a40"
+    },
+    {
+      "number": 88,
+      "sourceParagraph": 26,
+      "id": "advice-e0f3042ca24236e863e13631",
+      "title": "Анимация через внимание",
+      "status": "published",
+      "textSha256": "d65c771adf8ce67781a7ae38162d1aaf7652628edf8798ca7606a2cc3fd60583"
+    },
+    {
+      "number": 89,
+      "sourceParagraph": 27,
+      "id": "advice-b08e80444232b487359b322b",
+      "title": "Идентификация подписи",
+      "status": "published",
+      "textSha256": "83f62ed8bc3ee4cdb72ae2244f90cd5e244b8f54e70bea278dbf0464df1e2b32"
+    },
+    {
+      "number": 90,
+      "sourceParagraph": 27,
+      "id": "advice-977f733211601f4036dca8d1",
+      "title": "Инсталляция имен-качеств",
+      "status": "published",
+      "textSha256": "91392aee84cf3e0c5a26116425654bb98feb432eec6ad6bc07414c7046e0110f"
+    },
+    {
+      "number": 91,
+      "sourceParagraph": 27,
+      "id": "advice-1b47849e8f3d54a583de7909",
+      "title": "Симпатическая связь",
+      "status": "published",
+      "textSha256": "a0c8416b343ce7029475ad6c44db79eb9d574ae22d6812942dc27775a00ab3be"
+    },
+    {
+      "number": 92,
+      "sourceParagraph": 27,
+      "id": "advice-006973d3908cf2f5ab41f68f",
+      "title": "Герметизация через артефакты",
+      "status": "published",
+      "textSha256": "0153c9cac2fe653ec3e449b0c5bdfb9746140c81b57124e9d6d2576005b119bc"
+    },
+    {
+      "number": 93,
+      "sourceParagraph": 28,
+      "id": "advice-127565778852bccf4acfc70e",
+      "title": "Трансформация интерьера в теургическую среду",
+      "status": "published",
+      "textSha256": "62863249a901f4d893609f1bc38b46a888ca7ae543a52df3063d644579d551ff"
+    },
+    {
+      "number": 94,
+      "sourceParagraph": 28,
+      "id": "advice-b42467209b407e1127ae2cb6",
+      "title": "Работа со звуковыми кодами",
+      "status": "published",
+      "textSha256": "fdc9ac54d7f1d7cd99327033eda94228a9beb2186d1a43e61db2e9fed38c04db"
+    },
+    {
+      "number": 95,
+      "sourceParagraph": 28,
+      "id": "advice-e0ee92519e4a9203e1051848",
+      "title": "Инкубация даймонических сил",
+      "status": "published",
+      "textSha256": "052f489e4963e88b32576d6fc94971205ac01e6b5d38016c4507b50f8e4d0822"
+    },
+    {
+      "number": 96,
+      "sourceParagraph": 28,
+      "id": "advice-fccb8f61479ae3de49bb256d",
+      "title": "Практика присутствия через артефакты",
+      "status": "published",
+      "textSha256": "56a57fa402834a7fc1e9378d2299c2db30cb12a957c218892b6c5cc78093b88a"
+    },
+    {
+      "number": 97,
+      "sourceParagraph": 29,
+      "id": "advice-f011fb637da247e9a91089b2",
+      "title": "Ликвидация \"чужого Логоса\"",
+      "status": "published",
+      "textSha256": "3e52aa5c10025760f0180c8d113fec9e97d77b4fd3e8d4a55cd87d2411b074e6"
+    },
+    {
+      "number": 98,
+      "sourceParagraph": 30,
+      "id": "advice-d7234b1bf780db70cbafa6e3",
+      "title": "Стихийный сброс",
+      "status": "published",
+      "textSha256": "8e6deb5ed61e289fb811c5301657dc9efa5854133545ef7053559bd93eabc15e"
+    },
+    {
+      "number": 99,
+      "sourceParagraph": 30,
+      "id": "advice-5952c3d71ec5bbd55d65194f",
+      "title": "Интеллектуальная герметизация предметов",
+      "status": "published",
+      "textSha256": "cd563e2aa1efeb1bded131c3dc80e8a997338a48802fa76cb4d12dbcbf555b46"
+    },
+    {
+      "number": 100,
+      "sourceParagraph": 30,
+      "id": "advice-6202948ffd53878782c80876",
+      "title": "Ношение белых одежд для очищения священного предмета",
+      "status": "published",
+      "textSha256": "5951acdd89344563bb0a414985fcc0ef417134061483a3e73c475e6c67505ebb"
+    },
+    {
+      "number": 101,
+      "sourceParagraph": 31,
+      "id": "advice-646230c61e7db5ee6645d072",
+      "title": "Испепеление \"чужих хитонов\"",
+      "status": "published",
+      "textSha256": "93e947662da184ce1cdffb85be86d21b3352ba229535635d23b14fd5b7af805d"
+    },
+    {
+      "number": 102,
+      "sourceParagraph": 31,
+      "id": "advice-6a9f3b497ae748910e815138",
+      "title": "Алхимический принцип активного Духа",
+      "status": "published",
+      "textSha256": "15be1a1d9484e7dc64a3489fa364336a401af9b12a841b50e3bc1e23f35a5865"
+    },
+    {
+      "number": 103,
+      "sourceParagraph": 31,
+      "id": "advice-c394b761b4665d56f96ae995",
+      "title": "Синтема волевого натяжения",
+      "status": "published",
+      "textSha256": "624d3756d439e4eaf94d9058e63090845be4617769bca5a62503ea95f776e1f0"
+    },
+    {
+      "number": 104,
+      "sourceParagraph": 31,
+      "id": "advice-70ae62255fccd2c81f26c681",
+      "title": "Практика бесстрастия",
+      "status": "published",
+      "textSha256": "e761e28adf0869babfb8d6c68d0550c23c9f39300503cfb9df2a8c7a2e5ff6c8"
+    },
+    {
+      "number": 105,
+      "sourceParagraph": 32,
+      "id": "advice-21bf5bc1ee2d4d9904fdec0b",
+      "title": "Главенство подлинных текстур",
+      "status": "published",
+      "textSha256": "bbb05664c7420a63c777ef87837d0b62c7d479b5a8b6d1e2c22f9494561cd6cd"
+    },
+    {
+      "number": 106,
+      "sourceParagraph": 32,
+      "id": "advice-97426203c0b8884967afa421",
+      "title": "Алхимия металлического тоноса",
+      "status": "published",
+      "textSha256": "ee6d1caa374efd77ba21215d4ffaed62c04f717f6a732a9b279b6a666c2802fe"
+    },
+    {
+      "number": 107,
+      "sourceParagraph": 33,
+      "id": "advice-4d5669443f11faeb116795bb",
+      "title": "Практика светового сценария",
+      "status": "published",
+      "textSha256": "824d84b0eaec86d5bdc55781b975aa44fbf87a2c2fb1950f246fe032e3f56041"
+    },
+    {
+      "number": 108,
+      "sourceParagraph": 33,
+      "id": "advice-3d2ef6c9b41072472b75f423",
+      "title": "Очищение от \"землистой ржавчины\"",
+      "status": "published",
+      "textSha256": "d1679605abf98ea9d10a8b869bf028c29b0f17c3be2c83d9f94a9d3b55ea8404"
+    },
+    {
+      "number": 109,
+      "sourceParagraph": 34,
+      "id": "advice-f0fa8ee508fc2acc637b0feb",
+      "title": "Кольцо как \"Онтологический Якорь\"",
+      "status": "published",
+      "textSha256": "b4f41ce8259a07d1e6627935fb496be80ebdc6c5dd5772b66437b72adde18bd5"
+    },
+    {
+      "number": 110,
+      "sourceParagraph": 34,
+      "id": "advice-a8bff4efeba4870bf0c77c31",
+      "title": "Практика \"запечатывания\" дел",
+      "status": "published",
+      "textSha256": "44f0e756c7416b40a4387c464e95badbcd8349742691498e437136d0b3783aeb"
+    },
+    {
+      "number": 111,
+      "sourceParagraph": 34,
+      "id": "advice-66c61857f89a9bd615e84aa5",
+      "title": "Символический ценз",
+      "status": "published",
+      "textSha256": "38f8c082aeb35160e88b3cb975ac52e2ea76fcf6f2b9809f7fa18d712950bfb6"
+    },
+    {
+      "number": 112,
+      "sourceParagraph": 34,
+      "id": "advice-b361a171285bb7e41bed2471",
+      "title": "Герметизация личного пространства",
+      "status": "published",
+      "textSha256": "3b5d15caab09dccc3c8189a095d845dde3bc92598620ae77da707f94b2edec39"
+    },
+    {
+      "number": 113,
+      "sourceParagraph": 35,
+      "id": "advice-8765067626753e08371310a2",
+      "title": "Практика натуральной структуры",
+      "status": "published",
+      "textSha256": "6ce66d861c2fd0e4a54471ec343cb3a794da9b999efda6a61771fd0ed21293af"
+    },
+    {
+      "number": 114,
+      "sourceParagraph": 35,
+      "id": "advice-8770a1e5d4fd85c589668cb5",
+      "title": "Ношение белого и чистого",
+      "status": "published",
+      "textSha256": "28763a32b2b9b559c2538744173c9633c4ec77cca8069f5a3a476afa1ce65c45"
+    },
+    {
+      "number": 115,
+      "sourceParagraph": 35,
+      "id": "advice-44d498a581cf47f59f25a35f",
+      "title": "Рассмотрение в наготе",
+      "status": "published",
+      "textSha256": "b178be8e3662ed8a23cd0c8328732b12a163e49c3d885ff7a2a4caf41a42e2b1"
+    },
+    {
+      "number": 116,
+      "sourceParagraph": 36,
+      "id": "advice-fc2a8e2e62eff5cbcd46a13f",
+      "title": "Практика \"совлечения ролей\"",
+      "status": "published",
+      "textSha256": "5381f01a323de1a551a78c513a090bcf72a3a94a1f282e6caa16a695a9c0cb74"
+    },
+    {
+      "number": 117,
+      "sourceParagraph": 37,
+      "id": "advice-97dfdc08a303fa263beecb01",
+      "title": "Доминация белого цвета как онтологическая гигиена",
+      "status": "published",
+      "textSha256": "2973ec2147d8f4d5dae63b1aa5f8ace5c176f81e5358e42fbcf266bb93c81841"
+    },
+    {
+      "number": 118,
+      "sourceParagraph": 37,
+      "id": "advice-aa50575722cec62d6f09aa6d",
+      "title": "Стратегическое использование Солярных цветов в одежде",
+      "status": "published",
+      "textSha256": "1d2ab0cab3b8ee64b2eb72a7116aaeecbbf85913a8856a228ec47e721a71882e"
+    },
+    {
+      "number": 119,
+      "sourceParagraph": 37,
+      "id": "advice-43fa7f62feeea051f803e907",
+      "title": "Контроль и сохранение в темной одежде",
+      "status": "published",
+      "textSha256": "59cbef52834e2f5106ece98d234bf4b5c257881d04115338449a8fc9a55c4647"
+    },
+    {
+      "number": 120,
+      "sourceParagraph": 37,
+      "id": "advice-fc17753a0401fe33c137e0a3",
+      "title": "Хроматическая симпатия",
+      "status": "published",
+      "textSha256": "02bdeb80196bef3b2f35e913b8c9261313ace83c95dbcd139d7169b185d89b2c"
+    },
+    {
+      "number": 121,
+      "sourceParagraph": 38,
+      "id": "advice-94f77554384f7047d76fd66a",
+      "title": "Устранение \"рабских оков\"",
+      "status": "published",
+      "textSha256": "c3ac7f67931cc1bc4bdc498647d90f92d4c6e1b83e070aac6433f34ae2a9c753"
+    },
+    {
+      "number": 122,
+      "sourceParagraph": 38,
+      "id": "advice-bc36fe6ff915502223acb6d1",
+      "title": "Гигиена пневматических каналов",
+      "status": "published",
+      "textSha256": "81a118186e077351c30e628dd658b496eb9bfc12fc28761bfed73c69866d4655"
+    },
+    {
+      "number": 123,
+      "sourceParagraph": 38,
+      "id": "advice-b2322ab6742e51ac2c28f984",
+      "title": "Практика естественного ритма",
+      "status": "published",
+      "textSha256": "cf9fd5c30e26abe2e17a6708be3ede1b529837b9e0f941818cbf72cba954fbb7"
+    },
+    {
+      "number": 124,
+      "sourceParagraph": 38,
+      "id": "advice-1fe1203ed467c0c4e7e90b87",
+      "title": "Контроль материалов и кроя",
+      "status": "published",
+      "textSha256": "b42a19e300300185e6e0c5fad5deb0dcc103dfce0e64f08e16e5011288154171"
+    },
+    {
+      "number": 125,
+      "sourceParagraph": 39,
+      "id": "advice-2c2abd1a94de1c5da7b85d84",
+      "title": "Внимание к материалам и происхождению обуви",
+      "status": "published",
+      "textSha256": "a54e5c49009247c8fb53062a75ee0e684a639562e3372e79e68fc6d750ba0c3a"
+    },
+    {
+      "number": 126,
+      "sourceParagraph": 39,
+      "id": "advice-6c5981eeaf62e199d70d2d4e",
+      "title": "Ритуал \"правой ноги\"",
+      "status": "published",
+      "textSha256": "1247d50efaa11dfd50a70d351b9d26ea7ff889815aeb87532146f4f507bd6973"
+    },
+    {
+      "number": 127,
+      "sourceParagraph": 39,
+      "id": "advice-1a5626ce3a23858a2a6c330c",
+      "title": "Практика \"снятия плесниц\"",
+      "status": "published",
+      "textSha256": "badad5d8b7084c0e824125cd9d5e7f95d9bf37f69a16ad926c069199ce424aa3"
+    },
+    {
+      "number": 128,
+      "sourceParagraph": 39,
+      "id": "advice-c59ad9983bfc61094ecec469",
+      "title": "Уход за обувью как практика прямодействия",
+      "status": "published",
+      "textSha256": "2b47540e116a26b35357687f3235d90219ace3cfe945f66535f838f4902265fc",
+      "sourceTitle": "Артефакт как инструмент власти",
+      "sourceTextSha256": "2614f864b89fc63cbe679834231fbfeeb3c951ccc629022d31113509e0bdd2dc",
+      "titleCorrection": {
+        "date": "2026-10-24",
+        "reason": "The complete post concerns footwear and its care; name that subject instead of the generic artefact heading used by other advice."
+      }
+    },
+    {
+      "number": 129,
+      "sourceParagraph": 40,
+      "id": "advice-bffb41d11bdefa03051f1aa8",
+      "title": "Технология Жезла: Утверждение Намерения",
+      "status": "published",
+      "textSha256": "63a9c9893ea9bf7613a3922759b058c2283560a4ec3f80e73c012017086490f1"
+    },
+    {
+      "number": 130,
+      "sourceParagraph": 40,
+      "id": "advice-179da3f91b53ecf3d1e569b9",
+      "title": "Технология Сосуда: Гигиена Емкости",
+      "status": "published",
+      "textSha256": "a648e96133fcdc9fab58522230b44f8b107dc9d57cb056e3db46ef9c5919dc55"
+    },
+    {
+      "number": 131,
+      "sourceParagraph": 40,
+      "id": "advice-bd2b7bde64b3b226d5a9a50d",
+      "title": "Технология Весов: Онтологический Аудит",
+      "status": "published",
+      "textSha256": "dce8a6c921458498bc1fcdf43362702171c12d58ce92ff8a46ed19e592085e12"
+    },
+    {
+      "number": 132,
+      "sourceParagraph": 40,
+      "id": "advice-e58ab830236fa5da5417c99e",
+      "title": "Практика Прямодействия",
+      "status": "published",
+      "textSha256": "ec60a1b2e93530cabd1ce51ea7b6fd9e24adf0583bafb24a9b1fcc50c365903c"
+    },
+    {
+      "number": 133,
+      "sourceParagraph": 42,
+      "id": "advice-001c50f6f6beff8b1e7e5902",
+      "title": "Суверенитет пространства и Фиксация Центра",
+      "status": "published",
+      "textSha256": "42abca647582318d8d0aef047b02567dec7e7a40644f5ba481a4c4bbd6c306d4"
+    },
+    {
+      "number": 134,
+      "sourceParagraph": 42,
+      "id": "advice-0d7a7b800768a925f546f0de",
+      "title": "Утренняя Практика: Технология Самосборки",
+      "status": "published",
+      "textSha256": "f9a1a1fe807d7bf99324aafa4cedbc2a4b0e0da88f306d4e5dab2dfdbde63eb4"
+    },
+    {
+      "number": 135,
+      "sourceParagraph": 42,
+      "id": "advice-b540b6eee961289b132e8d28",
+      "title": "Гигиена Формы и Проводимости",
+      "status": "published",
+      "textSha256": "52f5ee71792e83e9b8d90b58fad1d3a9c63b29bd1d434dec1334c29a5bd6ed6c"
+    },
+    {
+      "number": 136,
+      "sourceParagraph": 42,
+      "id": "advice-5ddbb30ae03f7ed8b7eb1fb5",
+      "title": "Вечернее Закрытие Врат и Инкубация",
+      "status": "published",
+      "textSha256": "ff9677ab83c7c28609908c6b814d555441ddbeb380f97e7c45c53f9175eaf373"
+    },
+    {
+      "number": 137,
+      "sourceParagraph": 44,
+      "id": "advice-5b59b7277c67ed7058c3738d",
+      "title": "Ругань как эхо акосмии",
+      "status": "published",
+      "textSha256": "8d4ad2a19d91a69d4a9ff85d49a64731188801083d95868fba92c2d4c7e46c58"
+    },
+    {
+      "number": 138,
+      "sourceParagraph": 44,
+      "id": "advice-da02f5a83e4623704716b2b7",
+      "title": "Онтологическая идентичность",
+      "status": "published",
+      "textSha256": "414273d1d92aae57246787650ce667e1e53ebbb4ed335893394f9ea2aa8e2a79"
+    },
+    {
+      "number": 139,
+      "sourceParagraph": 45,
+      "id": "advice-1aab8cf5421c26ffcf2798df",
+      "title": "Практика соразмерности",
+      "status": "published",
+      "textSha256": "fbd59d4e027bcf07bd21f94a3882fff9050fd1dc22a0304386ab923abd893b63"
+    },
+    {
+      "number": 140,
+      "sourceParagraph": 45,
+      "id": "advice-edfb07b636f9a4a9a157b5f8",
+      "title": "Доминация структуры",
+      "status": "published",
+      "textSha256": "6e2b55303df65d802dcc29f78a6478a4da6b8ac09ab9d95a9bc2ab551f58b5d5"
+    },
+    {
+      "number": 141,
+      "sourceParagraph": 46,
+      "id": "advice-df9bdc65a376f37441f6b9e4",
+      "title": "Практика \"Чистого листа\"",
+      "status": "published",
+      "textSha256": "9d4522a24c08488271f7629e0bc00f6e1ef1e65ba1dc3228f5000692503f7c9c"
+    },
+    {
+      "number": 142,
+      "sourceParagraph": 46,
+      "id": "advice-829da32a61365025dea77de3",
+      "title": "Закон онтологической сегрегации",
+      "status": "published",
+      "textSha256": "868964827bd9eec697bc815c67fd499139d0a7e7539199637e120b81e6c908a7"
+    },
+    {
+      "number": 143,
+      "sourceParagraph": 46,
+      "id": "advice-2aeeea6a7ec236f3b513a87f",
+      "title": "Практика фиксации Центра",
+      "status": "published",
+      "textSha256": "5a2059084e138f9e6c0f75e2448da8df204a7392b35a2c3fde05ff8751a22890"
+    },
+    {
+      "number": 144,
+      "sourceParagraph": 46,
+      "id": "advice-c7935ccdbc879bce5c7e3b21",
+      "title": "Контроль информационного и вещного входа",
+      "status": "published",
+      "textSha256": "8c1b68634f9559fced733d91e441e699981e711300d25353fcfe28ff581341e9"
+    },
+    {
+      "number": 145,
+      "sourceParagraph": 47,
+      "id": "advice-d49546f8e8a069d68858820c",
+      "title": "Доминация Места (Topos)",
+      "status": "published",
+      "textSha256": "ae91748a24d3ba6d43cef0cc2eee6176360ec642741ce4f17cfa9dbbd8e10553"
+    },
+    {
+      "number": 146,
+      "sourceParagraph": 47,
+      "id": "advice-88cfcd26105b405ef66c5e6f",
+      "title": "Устранение \"Онтологического мусора\"",
+      "status": "published",
+      "textSha256": "db61c1f59dab7d6e01cb5ce3bfa0bf240a31526e69443e848528b544803aec6e"
+    },
+    {
+      "number": 147,
+      "sourceParagraph": 47,
+      "id": "advice-1ca05394522289e60e22bdf0",
+      "title": "Чистота как \"Шлифовка Эйдоса\"",
+      "status": "published",
+      "textSha256": "75927b4acb2748e5f187226a8ae57c7510a16088eca2cfa924bb98f85d83fe53"
+    },
+    {
+      "number": 148,
+      "sourceParagraph": 47,
+      "id": "advice-2940b95a74d53617eb89638c",
+      "title": "Контроль \"Беспредельного\"",
+      "status": "published",
+      "textSha256": "a7bfb3a9e41ddaf14d18e01c76951206dba8051b81f618486dfe6d0bfb2174ab"
+    },
+    {
+      "number": 149,
+      "sourceParagraph": 48,
+      "id": "advice-2f772852fce06914a42e7496",
+      "title": "Доминация Неподвижного Центра",
+      "status": "published",
+      "textSha256": "3b1421c0f6d570542b7dc76314d809544b467e932a58b602e1c6e975e970c072"
+    },
+    {
+      "number": 150,
+      "sourceParagraph": 48,
+      "id": "advice-be0ed6a5d105b32d4809130e",
+      "title": "Устранение \"Рыночных Миазмов\"",
+      "status": "published",
+      "textSha256": "3d97305c62853af3928cc6c18a3a22c8c8eb6f39679c2ee2a9d3c18dfc81e383"
+    },
+    {
+      "number": 151,
+      "sourceParagraph": 48,
+      "id": "advice-6ba2a4c6158b844249200ef2",
+      "title": "Связь \"Дом - Голова - Дело\"",
+      "status": "published",
+      "textSha256": "b7771ea266f7b4b9e00fd9c0e5fd54ca08c86c51f5d1c72b47c60b0a6ad211e3"
+    },
+    {
+      "number": 152,
+      "sourceParagraph": 48,
+      "id": "advice-a3457cb27946343eb6498279",
+      "title": "Инкубация стратегических решений",
+      "status": "published",
+      "textSha256": "6f1e516890a8252421fac86a7ce78cca90f80c7320aaf31dc2e32f03a6c9acef"
+    }
+  ]
+}
