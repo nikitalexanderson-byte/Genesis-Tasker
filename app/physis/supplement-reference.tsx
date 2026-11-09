@@ -18,14 +18,14 @@ export function SupplementReferenceLibrary({ language, onAdd, addedIds, adding, 
   return <div className="physis-reference-library">
     <section className="physis-panel"><header className="physis-control-heading"><h2>{en?'Substance library':'Справочник веществ'}</h2>{controls}</header>
       <p>{en?'Browse ingredients by type and areas studied. Categories describe research or traditional uses; they do not establish treatment benefits.':'Ищите вещества по составу и областям изучения. Категории отражают исследования или традиционное применение, а не обещают лечебный эффект.'}</p>
-      <div className="physis-catalog-toolbar"><label className="physis-catalog-sort">{en?'Sort':'Сортировка'}<select value={sort} onChange={e=>{setSort(e.target.value);reset();}}><option value="name">{en?'Name: A–Z':'По названию: А–Я'}</option><option value="reverse">{en?'Name: Z–A':'По названию: Я–А'}</option><option value="recent">{en?'Recently checked':'По дате проверки'}</option></select></label><label>{en?'Search substances':'Поиск веществ'}<input type="search" value={query} onChange={e=>{setQuery(e.target.value);reset();}}/></label>
+      <div className="physis-catalog-toolbar"><label className="physis-catalog-sort">{en?'Sort':'Сортировка'}<select value={sort} onChange={e=>{setSort(e.target.value);reset();}}><option value="name">{en?'Name: A–Z':'По названию: А–Я'}</option><option value="reverse">{en?'Name: Z–A':'По названию: Я–А'}</option><option value="recent">{en?'Recently checked':'По дате проверки'}</option></select></label>
         {catalog?.canEdit&&<button type="button" className="physis-primary" onClick={()=>setEditing({...newCatalogItem(kind),revision:0})}>{en?'Add shared entry':'Добавить в справочник'}</button>}
       </div><CatalogConnection catalog={catalog} en={en}/>
     </section>
     {addError&&<p role="alert" className="physis-warning">{addError}</p>}
     {addNotice&&<p role="status" className="physis-catalog-notice">{addNotice}</p>}
     <div className="physis-catalog-browser">
-    <CatalogCategoryFilter sidebar sectionSwitch={<CatalogKindSwitch value={kind} onChange={value=>{setKind(value);setCategories([]);setQuery('');reset();}} en={en}/>} options={categoryOptions(entries)} selected={categories} onChange={value=>{setCategories(value);reset();}} mode={mode} onMode={value=>{setMode(value);reset();}} en={en}/>
+    <CatalogCategoryFilter sidebar contentSearch={{value:query,onChange:value=>{setQuery(value);reset();},label:en?'Search substances':'Поиск веществ'}} sectionSwitch={<CatalogKindSwitch value={kind} onChange={value=>{setKind(value);setCategories([]);setQuery('');reset();}} en={en}/>} options={categoryOptions(entries)} selected={categories} onChange={value=>{setCategories(value);reset();}} mode={mode} onMode={value=>{setMode(value);reset();}} en={en}/>
     <section className="physis-panel physis-reference-results" ref={results} tabIndex={-1} aria-label={en?'Substance results':'Результаты поиска веществ'}>
       <header className="physis-control-heading"><h3>{categories.length?categories.join(' · '):(en?'All substances':'Все вещества')}</h3><p className="physis-muted" role="status">{en?'Entries':'Карточек'}: {shown.length}</p></header>
       {!shown.length&&<p className="physis-empty">{en?'No matches. Change the search or categories.':'Ничего не найдено. Измените запрос или выбранные категории.'}</p>}

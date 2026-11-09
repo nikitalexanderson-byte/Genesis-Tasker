@@ -65,15 +65,16 @@ internal fun solarTimeLabels(date: LocalDate, location: SolarLocation, calendar:
 internal fun SunriseSunsetLine(date: LocalDate, location: SolarLocation, calendar: GenesisCalendar,
     accent: Color = MaterialTheme.colorScheme.primary,
     textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    preserveInk: Boolean = false,
     modifier: Modifier = Modifier) {
     val labels = solarTimeLabels(date, location, calendar)
     FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (labels == null) Text("☀ Полярный день или ночь", style = MaterialTheme.typography.labelMedium,
-            color = textColor)
+            color = textColor, adjustInk = !preserveInk)
         else {
-            Text("↗ Восход ${labels.first}", style = MaterialTheme.typography.labelMedium, color = accent)
-            Text("↘ Закат ${labels.second}", style = MaterialTheme.typography.labelMedium, color = textColor)
+            Text("↗ Восход ${labels.first}", style = MaterialTheme.typography.labelMedium, color = accent, adjustInk = !preserveInk)
+            Text("↘ Закат ${labels.second}", style = MaterialTheme.typography.labelMedium, color = textColor, adjustInk = !preserveInk)
         }
     }
 }

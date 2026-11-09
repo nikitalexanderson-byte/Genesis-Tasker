@@ -812,14 +812,14 @@ private fun HabitEditor(existing: Habit?, busy: Boolean, error: String?, inputCa
             if(end.isNotEmpty()) AuthorDatePicker(end,formCalendarMode,minDate=LocalDate.parse(start)) { if(!busy) end=it }
             }
             EditorSection("Повторение") {
-            if(mode==CalendarMode.PROFANE) Row(Modifier.horizontalScroll(rememberScrollState())) {
+            if(mode==CalendarMode.PROFANE) Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 listOf("daily" to "Ежедневно","weekdays" to "Дни недели","monthly" to "Ежемесячно","yearly" to "Ежегодно").forEach { (pattern,label) ->
                     FilterChip(config.pattern==pattern,{config=config.copy(pattern=pattern)},enabled=!busy,label={Text(label)})
                 }
             }
             if(mode==CalendarMode.SACRED) {
                 Text("Повторение по сакральному календарю")
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     listOf("daily" to "Ежедневно", "pyata-days" to "Дни пяты",
                         "parity" to "Чётная/нечётная", "monthly" to "Ежемесячно",
                         "yearly" to "Ежегодно").forEach { (cadence,label) ->
@@ -851,7 +851,7 @@ private fun HabitEditor(existing: Habit?, busy: Boolean, error: String?, inputCa
             }
             if(mode==CalendarMode.LUNAR) {
                 Text("Повторение по лунному календарю")
-                Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     listOf("daily" to "Ежедневно", "lunar-days" to "Дни месяца",
                         "lunar-decades" to "Декады", "lunar-decade-days" to "Дни декады",
                         "lunar-phases" to "Новолуние / полнолуние", "lunar-yearly" to "Ежегодно").forEach { (cadence,label) ->

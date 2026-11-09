@@ -21,7 +21,7 @@ import org.junit.Test
 import ru.genesis.calendar.data.*
 import ru.genesis.calendar.domain.*
 import ru.genesis.calendar.domain.habits.*
-import ru.genesis.calendar.ui.completedTaskInk
+import androidx.compose.ui.graphics.Color
 
 /** Real interactions in the debug workspace; never changes a signed-in account. */
 class MobilePolishTest {
@@ -138,7 +138,8 @@ class MobilePolishTest {
             if (compose.onAllNodesWithTag("app-theme-Evening").fetchSemanticsNodes().isNotEmpty()) {
                 assertTrue("Completed title must remain readable in the evening theme",
                     completedColor.luminance() > .35f)
-            } else assertEquals(completedTaskInk, completedColor)
+            } else assertTrue("Completed title must remain readable on the light surface",
+                (Color(0xffecebe7).luminance() + .05f) / (completedColor.luminance() + .05f) >= 4.5f)
             capture("completed-task")
             checkbox.performClick()
             compose.waitUntil(10_000) { runBlocking { app.repository.get(taskId)?.done == false } }

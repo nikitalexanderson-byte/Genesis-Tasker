@@ -3,10 +3,12 @@ package ru.genesis.calendar.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -30,6 +32,7 @@ internal val LocalWeatherDisplayUnits = staticCompositionLocalOf { WeatherDispla
 @Composable internal fun WeatherDisplaySettings(units: WeatherDisplayUnits,
     onTemperature: (String) -> Unit, onPressure: (String) -> Unit) {
     val copy = rememberWeatherCopy()
+    val uri = LocalUriHandler.current
     SettingsPreferenceCard(copy.getString("displayTitle"), Modifier.layoutId(FULL_WIDTH_SETTINGS_SECTION)
         .testTag("appearance-weather-settings")) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -50,6 +53,22 @@ internal val LocalWeatherDisplayUnits = staticCompositionLocalOf { WeatherDispla
             } else Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 temperature(Modifier.fillMaxWidth(), false)
                 pressure(Modifier.fillMaxWidth(), false)
+            }
+        }
+        HorizontalDivider()
+        Column(Modifier.fillMaxWidth().testTag("weather-attribution-settings"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(
+                WeatherProviderV1("met-norway", "MET Norway", "https://www.met.no/", "https://creativecommons.org/licenses/by/4.0/", "forecast"),
+                WeatherProviderV1("open-meteo", "Open-Meteo", "https://open-meteo.com/", "https://open-meteo.com/en/terms", "forecast")
+            ).forEach { provider ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton({ uri.openUri(provider.attributionUrl) }, Modifier.weight(1f).heightIn(min = 48.dp)) {
+                        Text(copy.getString("source") + ": " + provider.name, translate = false)
+                    }
+                    TextButton({ uri.openUri(provider.licenseUrl) }, Modifier.heightIn(min = 48.dp)) {
+                        Text(copy.getString("license"), translate = false)
+                    }
+                }
             }
         }
     }

@@ -322,3 +322,5 @@ dialog.aurora-card-insight::backdrop { background:#0009; }
  .aurora-workspace-tools { gap:6px; }
  .aurora-workspace-tools .aurora-sheet-trigger { padding-inline:10px; font-size:12px; }
 }
+.aurora-dialog.aurora-empty { --ui-dialog-width:680px; width:min(680px,100%); }
+.aurora-dialog .aurora-new-pass { width:100%; }

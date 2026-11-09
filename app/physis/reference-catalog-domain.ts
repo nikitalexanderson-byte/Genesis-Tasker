@@ -3,6 +3,9 @@ import pharmacology from './pharmacology-seed.ts';
 import proteins from './protein-catalog-data.json';
 import { SUBSTANCE_RESEARCH } from './substance-research.ts';
 import { SUPPLEMENT_REFERENCES, type SupplementReference } from './supplement-reference-data.ts';
+import { MINERAL_PROFILES } from './mineral-reference-data.ts';
+import { NUTRIENT_TERMS } from './nutrient-terminology.ts';
+import { NUTRIENT_FOOD_SOURCES } from './nutrient-food-sources-data.ts';
 import { blankFood, type Food } from './nutrition-domain.ts';
 import type { Drug } from './care-domain.ts';
 import { editPhysisRecord, newPhysisRecord, type PhysisRecord } from './types.ts';
@@ -73,8 +76,29 @@ export function catalogItem(view: CatalogView): CatalogItem {
   const entry: Partial<CatalogView> = {...view}; delete entry.revision; return entry as CatalogItem;
 }
 export function catalogCategories(entry: Pick<CatalogItem, 'family' | 'tags'>): string[] { return [...new Set([entry.family,...entry.tags])]; }
+// These sections are rendered alongside the editable entry, in either language.
+// Build their documents once; administrator edits to the main fields stay live.
+const supplementSectionText = new Map<string, string>();
+function addSectionText(id: string, values: (string | number | null | undefined)[]) {
+  supplementSectionText.set(id, (supplementSectionText.get(id) ?? '') + ' ' +
+    catalogText(values.filter(value => value !== null && value !== undefined).join(' ')));
+}
+for (const term of NUTRIENT_TERMS) addSectionText(term.id, [...term.food, ...term.quantity]);
+for (const profile of MINERAL_PROFILES) addSectionText(profile.id, [
+  ...profile.name, profile.kind, profile.unit, ...profile.note, ...profile.absorption,
+  ...profile.supplementation, ...profile.interactions, ...profile.combinations, ...profile.sources,
+  ...profile.intakes.flatMap(row => [row.minAge, row.maxAge, row.male, row.female])
+]);
+for (const [id, profile] of Object.entries(NUTRIENT_FOOD_SOURCES)) addSectionText(id, [
+  ...profile.label, ...(profile.note ?? []), ...profile.items.flatMap(item => [
+    ...item.food, ...item.portion, item.amount, item.amountMax, item.unit, item.source
+  ])
+]);
 export function matchesCatalog(entry: CatalogItem, query: string, selected: string[], mode: 'any' | 'all' = 'any'): boolean {
-  const haystack = catalogText([entry.nameRu,entry.nameEn,...entry.aliases,entry.description].join(' '));
+  const haystack = catalogText([entry.nameRu, entry.nameEn, ...entry.aliases, entry.family, ...entry.tags,
+    entry.description, entry.uses, entry.evidence, entry.scopeNote, entry.risks, entry.status,
+    entry.mechanism, entry.contraindications, entry.interactions, entry.verification, ...entry.sources].filter(Boolean).join(' ')) +
+    ' ' + (supplementSectionText.get(entry.legacyId) ?? '');
   const words = catalogText(query.trim()).split(/\s+/).filter(Boolean);
   const categories = catalogCategories(entry);
   return words.every(word=>haystack.includes(word)) && (!selected.length || (mode==='all' ? selected.every(value=>categories.includes(value)) : selected.some(value=>categories.includes(value))));

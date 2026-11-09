@@ -10,7 +10,7 @@ import '../dark-palettes.css';
 import '../universal-ui.css';
 import './native.css';
 type Boot={ownerId:string;language:string;client:'android'|'android-play';source:Parameters<typeof snapshotFromSavedDraw>[0]|null;dark:boolean;palette:string;colors:Record<string,string>};
-type NativeBridge={postMessage:(message:string)=>void;getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void;removeItem:(key:string)=>void};
+type NativeBridge={postMessage:(message:string)=>void;getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void;removeItem:(key:string)=>void;contentSize?:(height:number,width:number)=>void};
 declare global{interface Window{GenesisAuroraBridge:NativeBridge;GenesisAuroraRuntime:{init:(payload:string)=>void;resolve:(id:string,payload:string)=>void;requestClose:()=>void;theme:(payload:string)=>void}}}
 const decode=(payload:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload),c=>c.charCodeAt(0))));
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
@@ -32,6 +32,17 @@ window.GenesisAuroraRuntime={
    if(height>0)document.documentElement.style.setProperty('--aurora-native-height',`${Math.floor(height)}px`);
   };
   fitViewport();window.addEventListener('resize',fitViewport);window.visualViewport?.addEventListener('resize',fitViewport);
+  let measuredDialog: HTMLElement | null = null;
+  const reportContentSize=()=>{
+   if(measuredDialog)window.GenesisAuroraBridge.contentSize?.(Math.ceil(measuredDialog.scrollHeight),document.documentElement.clientWidth);
+  };
+  const sizeObserver=new ResizeObserver(reportContentSize);
+  const watchContent=()=>{
+   const dialog=document.querySelector<HTMLElement>('.aurora-dialog');
+   if(dialog!==measuredDialog){sizeObserver.disconnect();measuredDialog=dialog;if(dialog)sizeObserver.observe(dialog);}
+   reportContentSize();
+  };
+  new MutationObserver(watchContent).observe(document.getElementById('root')!,{subtree:true,childList:true,characterData:true});
   const access:AuroraAccess={check(){},request:<T,>(path:string,init:RequestInit={})=>rpc<T>('request',{path,method:init.method??'GET',body:init.body?JSON.parse(String(init.body)):null}),
    seal:(value,scope)=>rpc<Sealed>('seal',{value,scope}),open:<T,>(value:Sealed,scope:string)=>rpc<T>('open',{value,scope})};
   const repo=new AuroraRepository(boot.ownerId,{getItem:key=>window.GenesisAuroraBridge.getItem(key)||null,setItem:(key,value)=>window.GenesisAuroraBridge.setItem(key,value),removeItem:key=>window.GenesisAuroraBridge.removeItem(key)},access);

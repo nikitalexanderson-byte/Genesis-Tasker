@@ -36,7 +36,7 @@ private fun standardDialogProperties(value: DialogProperties) = DialogProperties
     BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding(), contentAlignment = Alignment.Center) {
         DialogBackdrop(onDismissRequest, Modifier.matchParentSize())
         val boundedHeight = maxHeight * .94f
-        androidx.compose.material3.Surface(Modifier.widthIn(max = maxWidth).fillMaxWidth().padding(12.dp)
+        androidx.compose.material3.Surface(Modifier.widthIn(max = maxWidth).fillMaxWidth().padding(6.dp)
             .then(if (fillHeight) Modifier.height(boundedHeight) else Modifier.heightIn(max = boundedHeight))
             .testTag("genesis-modal-surface"), shape = AffairsLayout.shape,
             color = MaterialTheme.colorScheme.surface.copy(alpha = 1f), shadowElevation = 12.dp) {
@@ -111,10 +111,10 @@ private fun standardDialogProperties(value: DialogProperties) = DialogProperties
         // The body grows to its content, capped by the available window. Header and
         // actions stay outside the caller's scrolling content in short and long forms.
         GenesisModalFrame({ if (properties.dismissOnClickOutside) onDismissRequest() }, maxWidth = maxWidth) {
-            Column(modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(modifier.fillMaxWidth().padding(AffairsLayout.gutter),
+                verticalArrangement = Arrangement.spacedBy(AffairsLayout.sectionGap)) {
                 androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides titleContentColor) { framedTitle() }
-                Column(Modifier.weight(1f, fill = false).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f, fill = false).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (icon != null) androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides iconContentColor) { icon() }
                     Box(Modifier.weight(1f, fill = false).fillMaxWidth(), contentAlignment = Alignment.TopStart) {
                         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides textContentColor) { text?.invoke() }

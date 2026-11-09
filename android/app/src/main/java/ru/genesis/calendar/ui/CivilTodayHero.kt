@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
@@ -333,11 +334,11 @@ internal fun CivilTodayHero(location: SolarLocation, calendar: GenesisCalendar, 
         Column(Modifier.fillMaxWidth()) {
             androidx.compose.material3.Surface(Modifier.fillMaxWidth(), shape = AffairsLayout.shape,
                 color = Color.Transparent,
-                contentColor = MaterialTheme.colorScheme.onSurface) {
-                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val ink = MaterialTheme.colorScheme.onSurface
+                contentColor = if (altitude < 0f) Color(0xfff9f2e2) else Color(0xff102b2c)) {
+                Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val ink = LocalContentColor.current
                     CivilTodayWeather(weather, clockNow, onChooseCity, solar = {
-                        SunriseSunsetLine(today, location, calendar, accent = ink, textColor = ink)
+                        SunriseSunsetLine(today, location, calendar, accent = ink, textColor = ink, preserveInk = true)
                         val source = location.placeName?.takeIf(String::isNotBlank)
                             ?: location.timeZoneId ?: calendar.zoneId.id
                         Text((if (location.approximate) "≈ " else "") + source,

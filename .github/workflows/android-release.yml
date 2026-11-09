@@ -1,0 +1,129 @@
+name: Android release
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full current-main SHA with successful Source checks
+        required: true
+        type: string
+      expected_current_commit:
+        description: Full incumbent website SHA for the release preflight
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: genesis-android-release-${{ inputs.commit }}
+  cancel-in-progress: false
+
+jobs:
+  signed-artifacts:
+    if: github.repository == 'nikitalexanderson-byte/Genesis-Tasker' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CI: 'true'
+      GENESIS_DEPLOY_TARGET: ${{ vars.GENESIS_DEPLOY_TARGET }}
+      GENESIS_DEPLOY_ANDROID: 'false'
+      DEPLOY_COMMIT: ${{ inputs.commit }}
+      EXPECTED_CURRENT_COMMIT: ${{ inputs.expected_current_commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.19.0'
+      - name: Require successful Source checks for this exact current-main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/deployment/source-checks.mjs
+      - name: Check incumbent website and release version
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
+            "https://genesiscalendar.com/deploy-meta.json?release=$GITHUB_RUN_ID" \
+            | jq -e --arg expected "$EXPECTED_CURRENT_COMMIT" '.commit == $expected'
+          grep -Eq 'versionCode = 140$' android/app/build.gradle.kts
+          grep -Fq 'versionName = "3.2.8"' android/app/build.gradle.kts
+          grep -Fq 'buildConfigField("boolean", "TRIAL_BUILD", "false")' android/app/build.gradle.kts
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.19.0'
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Build with the existing Android release identity
+        env:
+          SIGNING_KEYSTORE_B64: ${{ secrets.GENESIS_ANDROID_RELEASE_KEYSTORE_B64 }}
+          GENESIS_ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.GENESIS_ANDROID_RELEASE_STORE_PASSWORD }}
+          GENESIS_ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.GENESIS_ANDROID_RELEASE_KEY_ALIAS }}
+          GENESIS_ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.GENESIS_ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$SIGNING_KEYSTORE_B64"
+          test -n "$GENESIS_ANDROID_SIGNING_STORE_PASSWORD"
+          test -n "$GENESIS_ANDROID_SIGNING_KEY_ALIAS"
+          test -n "$GENESIS_ANDROID_SIGNING_KEY_PASSWORD"
+          sdkmanager 'platforms;android-37.2' 'build-tools;37.0.0'
+          export GENESIS_ANDROID_SIGNING_STORE="$RUNNER_TEMP/genesis-release.jks"
+          trap 'rm -f -- "$GENESIS_ANDROID_SIGNING_STORE"' EXIT
+          printf '%s' "$SIGNING_KEYSTORE_B64" | base64 --decode > "$GENESIS_ANDROID_SIGNING_STORE"
+          export GENESIS_YANDEX_CLIENT_ID=''
+          cd android
+          bash ./gradlew :app:testDebugUnitTest :app:lintRelease :app:lintPlay \
+            :app:assembleRelease :app:assemblePlay :app:bundlePlay \
+            --no-daemon --console=plain --max-workers=1 \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            '-Dorg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8' \
+            '-Pandroid.builder.sdkDownload=false'
+      - name: Verify certificates, package, version and Play permissions
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifact
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          AAB=android/app/build/outputs/bundle/play/app-play.aab
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --verbose --print-certs "$APK" \
+            > release-artifact/signing-certificate.txt
+          grep -qi 'certificate SHA-256 digest: 1e161d36f574b0560d808c7ee95e1abe98165b3385336d0276fb381dfd901cb8' \
+            release-artifact/signing-certificate.txt
+          "$ANDROID_HOME/build-tools/37.0.0/zipalign" -c -P 16 4 "$APK"
+          "$ANDROID_HOME/build-tools/37.0.0/aapt" dump badging "$APK" > release-artifact/apk-metadata.txt
+          grep -Fq "package: name='ru.genesis.calendar' versionCode='140' versionName='3.2.8'" release-artifact/apk-metadata.txt
+          ! grep -q '^application-debuggable' release-artifact/apk-metadata.txt
+          jarsigner -verify "$AAB" | grep -q 'jar verified'
+          keytool -printcert -jarfile "$AAB" > release-artifact/play-signing-certificate.txt
+          grep -qi '1E:16:1D:36:F5:74:B0:56:0D:80:8C:7E:E9:5E:1A:BE:98:16:5B:33:85:33:6D:02:76:FB:38:1D:FD:90:1C:B8' \
+            release-artifact/play-signing-certificate.txt
+          MANIFEST=android/app/build/intermediates/merged_manifest/play/processPlayMainManifest/AndroidManifest.xml
+          test -s "$MANIFEST"
+          ! grep -q 'android.permission.REQUEST_INSTALL_PACKAGES' "$MANIFEST"
+          ! grep -q 'android:debuggable="true"' "$MANIFEST"
+          cp "$MANIFEST" release-artifact/play-manifest.xml
+          cp "$APK" release-artifact/GENESIS-Android-Native-3.2.8.apk
+          cp android/app/build/outputs/apk/play/app-play.apk release-artifact/GENESIS-Android-Play-3.2.8.apk
+          cp "$AAB" release-artifact/GENESIS-Android-Play-3.2.8.aab
+          for variant in release play; do
+            cp "android/app/build/outputs/mapping/$variant/mapping.txt" "release-artifact/mapping-$variant.txt"
+          done
+          jq -n --arg commit "$GITHUB_SHA" --arg repository "$GITHUB_REPOSITORY" \
+            '{commit:$commit,repository:$repository,versionName:"3.2.8",versionCode:140}' > release-artifact/source.json
+          (cd release-artifact && sha256sum GENESIS-Android-* > SHA256SUMS)
+      - name: Save immutable release artifacts for acceptance
+        uses: actions/upload-artifact@v6
+        with:
+          name: genesis-android-3.2.8-140-${{ github.sha }}
+          path: release-artifact/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

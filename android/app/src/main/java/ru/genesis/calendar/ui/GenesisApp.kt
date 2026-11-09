@@ -1007,7 +1007,7 @@ private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>
     val hasShared = (sharedReader?.pageState?.value?.optInt("total") ?: 0) > 0
     Card(Modifier.fillMaxWidth().testTag("today-tasks-section"), shape = AffairsLayout.shape,
         colors = CardDefaults.cardColors(containerColor = if (LocalEveningTheme.current) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.primaryContainer)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy((10f / 1.5f).dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Surface(Modifier.size(40.dp), shape = AffairsLayout.controlShape,
@@ -1062,7 +1062,7 @@ private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>
 internal fun TodayHabitTrackerBlock(content: @Composable ColumnScope.() -> Unit) {
     Surface(Modifier.fillMaxWidth().testTag("today-habit-tracker-block"), shape = AffairsLayout.shape,
         color = if (LocalEveningTheme.current) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.secondaryContainer) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+        Column(Modifier.padding(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy((10f / 1.5f).dp), content = content)
     }
 }
 
@@ -1158,7 +1158,7 @@ internal fun DayHeader(date: LocalDate, mode: CalendarMode, explicitSeasonZone: 
                 shape = AffairsLayout.shape, border = BorderStroke(1.dp, Color(0x80dfc17e)),
                 color = if (lightHero) Color.Transparent else Color.Black.copy(alpha = .48f),
                 contentColor = if (lightHero) MaterialTheme.colorScheme.onSurface else Color.White) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(AffairsLayout.gap)) {
                         TodayHeroGroup("today-hero-context") {
                             if (mode == CalendarMode.LUNAR) {
                                 // Only the day/date reserve room for the moon; month context gets the full width.
@@ -1259,7 +1259,7 @@ private fun TodayHeroGroup(tag: String, content: @Composable ColumnScope.() -> U
         contentColor = if (LocalEveningTheme.current) Color.White else MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, if (LocalEveningTheme.current) Color(0xffffe7ae).copy(alpha = .18f)
             else MaterialTheme.colorScheme.outlineVariant.copy(alpha=.6f))) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
+        Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp), content = content)
     }
 }
 

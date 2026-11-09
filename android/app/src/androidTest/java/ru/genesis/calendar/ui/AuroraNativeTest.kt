@@ -23,6 +23,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import ru.genesis.calendar.GenesisApplication
+import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.PagerTestActivity
 import ru.genesis.calendar.captureNativeWindow
 import ru.genesis.calendar.auth.AuthFailure
@@ -84,6 +85,36 @@ class AuroraNativeTest{
         });compose.waitUntil(10000){ready.get()}
     }
     private fun capture(label:String){captureNativeWindow(File(compose.activity.getExternalFilesDir(null),"aurora-${if(dark)"dark" else "light"}-${args.getString("genesisFontScale","1")}-$label.png"))}
+    @Test fun emptyWindowFitsContentAndExpandsForAnActivePass() {
+        val app=compose.activity.application as GenesisApplication
+        check(BuildConfig.DEBUG && app.packageName.endsWith(".qa328.debug"))
+        val gateway=AuroraSyntheticGateway()
+        runBlocking{for(kind in listOf("aurora-cache","aurora-pending","aurora-account-key"))app.database.dao().deleteDocument(app.workspaceScope,kind)}
+        var active by mutableStateOf(false)
+        compose.setContent {
+            val density=LocalDensity.current
+            CompositionLocalProvider(LocalGenesisLanguage provides "ru", LocalEveningTheme provides dark,
+                LocalDensity provides Density(density.density,1.3f)) {
+                MaterialTheme(colorScheme=if(dark)evening else standart,typography=GenesisTypography,shapes=GenesisShapes) {
+                    key(active) { NativeAuroraDialog("aurora-synthetic-resize",if(active)source() else null,{}, {},gateway) }
+                }
+            }
+        }
+        compose.waitUntil(30000){runCatching{domString("String(!!document.querySelector('.aurora-empty'))")=="true"}.getOrDefault(false)}
+        visualFrame()
+        val empty=compose.onNodeWithTag("aurora-native-dialog").getUnclippedBoundsInRoot()
+        assertEquals("The empty action fills the content width","true",domString("String(Math.abs(document.querySelector('.aurora-new-pass').getBoundingClientRect().width-(document.querySelector('.aurora-dialog').clientWidth-16))<2)"))
+        assertEquals("The empty dialog has no unused viewport height","true",domString("String(Math.abs(document.querySelector('.aurora-dialog').scrollHeight-innerHeight)<3)"))
+        capture("empty-content-sized")
+        compose.runOnIdle { active=true }
+        compose.waitUntil(30000){runCatching{body().contains("Выберите карты для работы")}.getOrDefault(false)}
+        visualFrame()
+        val expanded=compose.onNodeWithTag("aurora-native-dialog").getUnclippedBoundsInRoot()
+        assertTrue("The active pass expands the dialog: $empty / $expanded",expanded.bottom-expanded.top>empty.bottom-empty.top)
+        assertEquals("The active pass scrolls inside the bounded viewport","true",domString("String(document.querySelector('.aurora-dialog').scrollHeight>innerHeight)"))
+        assertEquals("The footer remains inside the viewport","true",domString("String(document.querySelector('.aurora-footer').getBoundingClientRect().bottom<=innerHeight+1)"))
+        capture("expanded-bounded")
+    }
     @Test fun localBundleKeepsActualDrawAndEncryptedProgressOnCloseAndOfflineReopen(){
         val app=compose.activity.application as GenesisApplication
         val gateway=AuroraSyntheticGateway()

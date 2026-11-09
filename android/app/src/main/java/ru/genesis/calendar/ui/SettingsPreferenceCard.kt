@@ -19,7 +19,7 @@ internal fun SettingsPreferenceCard(title: String, modifier: Modifier = Modifier
     Card(modifier.fillMaxWidth(), shape = AffairsLayout.shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             eyebrow?.let { Text(it, style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary) }
             Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineSmall)

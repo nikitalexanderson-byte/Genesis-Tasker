@@ -24,3 +24,6 @@ html[data-genesis-theme] .genesis-app .physis-metric-icon-grid button[aria-press
   .physis-custom-toolbar > .physis-actions { width: 100%; }
   .physis-custom-toolbar > .physis-actions > button { flex: 1; }
 }
+.physis-monitoring-backdrop { z-index:1100; }
+.physis-monitoring-dialog { --ui-dialog-width:520px; --ui-dialog-height:calc(100dvh - 32px); width:min(520px,calc(100vw - 32px)); height:auto; min-height:0; overflow:auto; padding:20px; }
+.physis-monitoring-dialog .physis-actions > button { flex:1; min-height:44px; }

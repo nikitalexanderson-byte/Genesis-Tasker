@@ -66,8 +66,8 @@ import ru.genesis.calendar.auth.rebaseNotificationSettings
                 Switch(checked=settings.getJSONObject("emailTypes").optBoolean(key),enabled=!busy,onCheckedChange={value->update { it.getJSONObject("emailTypes").put(key,value) }},modifier=Modifier.testTag("email-type-$key"))
             } }
             val frequencies=listOf(Triple("immediate","Сразу","Immediately"),Triple("hourly","Раз в час","Hourly"),Triple("daily","Ежедневная сводка","Daily"))
-            Box{
-                OutlinedButton(onClick={frequencyMenu=true},enabled=!busy){Text((if(en)"Frequency: " else "Частота отправки: ")+frequencies.first { it.first==settings.optString("frequency") }.let { if(en)it.third else it.second })}
+            Box(Modifier.fillMaxWidth()){
+                OutlinedButton(onClick={frequencyMenu=true},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text((if(en)"Frequency: " else "Частота отправки: ")+frequencies.first { it.first==settings.optString("frequency") }.let { if(en)it.third else it.second })}
                 DropdownMenu(expanded=frequencyMenu,onDismissRequest={frequencyMenu=false}){frequencies.forEach { (value,ru,english)->DropdownMenuItem(text={Text(if(en)english else ru)},onClick={update { it.put("frequency",value) };frequencyMenu=false}) }}
             }
             if(settings.optString("frequency")=="daily"){
@@ -93,7 +93,7 @@ import ru.genesis.calendar.auth.rebaseNotificationSettings
                 busy=true;error=false
                 try{val saved=controller.saveNotificationSettings(settings,data!!.getInt("revision"));data=saved;draft=JSONObject(saved.getJSONObject("settings").toString())}
                 catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=true}finally{busy=false}
-            }},enabled=!busy&&settings.toString()!=data?.optJSONObject("settings")?.toString(),modifier=Modifier.heightIn(min=48.dp).testTag("email-settings-save")){Text(if(en)"Save" else "Сохранить")}
+            }},enabled=!busy&&settings.toString()!=data?.optJSONObject("settings")?.toString(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("email-settings-save")){Text(if(en)"Save" else "Сохранить")}
             if(error){
                 Text(if(en)"Could not save the settings. Reload and try again." else "Не удалось сохранить настройки. Обновите их и повторите попытку.",color=MaterialTheme.colorScheme.error)
                 AffairsIconButton(if(en)"Reload settings" else "Обновить настройки",AffairsAction.REFRESH,{version++},enabled=!busy)

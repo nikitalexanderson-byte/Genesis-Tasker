@@ -36,7 +36,7 @@ class WeatherDisplay326Test {
     private val now = Instant.parse("2026-11-06T12:30:00Z")
 
     @Test fun permanentReadingsAndSavedUnitsFitBothModesWithLargeText() {
-        check(BuildConfig.DEBUG && app.packageName.endsWith(".qa326.debug"))
+        check(BuildConfig.DEBUG && listOf(".qa326.debug", ".qa328.debug").any(app.packageName::endsWith))
         val store = LocalPreferences(app, "qa-weather-326")
         val display = compose.activity.resources.displayMetrics
         val widths = if (compose.activity.resources.configuration.smallestScreenWidthDp >= 600)

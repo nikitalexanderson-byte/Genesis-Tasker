@@ -30,9 +30,9 @@ import androidx.compose.ui.unit.dp
 
 /** Native extension of STANDART: Material roles come from the existing green/paper/gold themes. */
 internal object AffairsLayout {
-    val gutter = 16.dp
-    val gap = 8.dp
-    val sectionGap = 16.dp
+    val gutter = 8.dp
+    val gap = (8f / 1.5f).dp
+    val sectionGap = (16f / 1.5f).dp
     val touchTarget = 48.dp
     val formMaxWidth = 720.dp
     val shape = RoundedCornerShape(10.dp)

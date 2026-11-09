@@ -206,7 +206,7 @@ internal fun RerollAction(draw: StoicheionDraw, now: Long, busy: Boolean, label:
         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("stoicheion-reroll-${draw.kind}")) {
         Text(if(draw.unlimited) label else "$label · ${countdown(draw.remainingSeconds(now))}")
     } else if (draw.canReroll(now)) OutlinedButton(onClick = onClick, enabled = !busy,
-        modifier = Modifier.testTag("stoicheion-reroll-${draw.kind}")) {
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("stoicheion-reroll-${draw.kind}")) {
         Text(if(draw.unlimited) label else "$label · ${countdown(draw.remainingSeconds(now))}")
     } else Text(if (draw.attempts == 2) "Переброс на сегодня использован"
         else if(draw.kind=="daily") "Выбор закреплён до завтра" else "Расклад сохранён до следующей недели", style = MaterialTheme.typography.bodySmall)

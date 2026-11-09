@@ -16,16 +16,18 @@ export function CatalogKindSwitch({ value, onChange, en }: { value:'supplement'|
   return <nav className="shared-projects-switch physis-control-switch physis-equal-switch physis-library-sections" aria-label={en?'Substance type':'Тип вещества'}>{(['supplement','medicine'] as const).map(kind=><button key={kind} type="button" aria-pressed={value===kind} onClick={()=>onChange(kind)}>{kind==='medicine'?(en?'Pharmacology':'Фармакология'):(en?'Supplements':'БАДы')}</button>)}</nav>;
 }
 
-export function CatalogCategoryFilter({ options, selected, onChange, mode, onMode, en, label, showMode = true, sidebar = false, sectionSwitch }: {
+export function CatalogCategoryFilter({ options, selected, onChange, mode, onMode, en, label, showMode = true, sidebar = false, sectionSwitch, contentSearch }: {
   options: {name:string;count:number}[]; selected:string[]; onChange:(value:string[])=>void;
   mode:'any'|'all';onMode:(mode:'any'|'all')=>void;en:boolean;label?:string;showMode?:boolean;sidebar?:boolean;sectionSwitch?:ReactNode;
+  contentSearch?: { value: string; onChange: (value: string) => void; label: string };
 }) {
   const [search,setSearch]=useState('');
   const desktop=useSyncExternalStore(subscribeCategoryLayout,desktopCategoriesSnapshot,serverCategoriesSnapshot);
   const title=label??(en?'Categories':'Категории');
+  const searchControl=contentSearch&&<label>{contentSearch.label}<input type="search" value={contentSearch.value} onChange={event=>contentSearch.onChange(event.target.value)}/></label>;
   const contents=<><div className={`physis-catalog-filter-content${showMode?'':' physis-catalog-filter-types'}`}>
       {sidebar&&<button type="button" className="physis-catalog-all" aria-pressed={!selected.length} onClick={()=>{onChange([]);setSearch('');}}>{en?'All categories':'Все категории'}</button>}
-      <label>{en?'Find a category':'Найти категорию'}<input type="search" value={search} onChange={e=>setSearch(e.target.value)} /></label>
+      {!contentSearch&&<label>{en?'Find a category':'Найти категорию'}<input type="search" value={search} onChange={e=>setSearch(e.target.value)} /></label>}
       {showMode&&<label>{en?'Match':'Показывать совпадения'}<select value={mode} onChange={e=>onMode(e.target.value as 'any'|'all')}><option value="any">{en?'Any selected category':'Хотя бы одна категория'}</option><option value="all">{en?'All selected categories':'Все выбранные категории'}</option></select></label>}
       <fieldset><legend>{en?'Select one or more':'Выберите одну или несколько'}</legend><div className="physis-catalog-category-options">{options.filter(option=>catalogText(option.name).includes(catalogText(search))).map(option=><label key={option.name}><input type="checkbox" checked={selected.includes(option.name)} onChange={()=>onChange(selected.includes(option.name)?selected.filter(value=>value!==option.name):[...selected,option.name])}/><span>{option.name}</span><small>{option.count}</small></label>)}</div></fieldset>
       {selected.length>0&&<button type="button" className="physis-catalog-text-action" onClick={()=>onChange([])}>{en?'Clear categories':'Сбросить категории'}</button>}
@@ -33,7 +35,7 @@ export function CatalogCategoryFilter({ options, selected, onChange, mode, onMod
     {selected.length>0&&<p className="physis-catalog-selection">{selected.join(' · ')}</p>}
   </>;
   const filters=<details className="physis-catalog-filters"><summary>{title} · {selected.length ? (en?'selected: ':'выбрано: ')+selected.length : (en?'all':'все')}</summary>{contents}</details>;
-  return sidebar ? desktop ? <aside className="physis-panel physis-catalog-sidebar" aria-label={title}><h3>{title}</h3>{sectionSwitch}{contents}</aside> : <div className="physis-catalog-sidebar-mobile">{sectionSwitch}{filters}</div> : filters;
+  return sidebar ? desktop ? <aside className="physis-panel physis-catalog-sidebar" aria-label={title}><h3>{title}</h3>{sectionSwitch}{searchControl}{contents}</aside> : <div className="physis-catalog-sidebar-mobile">{sectionSwitch}{searchControl}{filters}</div> : <>{searchControl}{filters}</>;
 }
 export function categoryOptions(entries: Pick<CatalogItem,'family'|'tags'>[]) {
   const counts=new Map<string,number>();for(const entry of entries)for(const category of catalogCategories(entry))counts.set(category,(counts.get(category)??0)+1);

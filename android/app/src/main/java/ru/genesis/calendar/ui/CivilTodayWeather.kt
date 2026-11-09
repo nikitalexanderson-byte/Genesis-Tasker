@@ -7,12 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.genesis.calendar.domain.*
@@ -23,7 +23,8 @@ import java.util.Locale
 
 /** Confine the reading shade to the text so the landscape remains visible between groups. */
 @Composable internal fun Modifier.civilReadingArea(): Modifier =
-    background((if(LocalEveningTheme.current) MaterialTheme.colorScheme.surface.copy(alpha=.74f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha=.70f)), AffairsLayout.controlShape).padding(6.dp)
+    background(if (LocalContentColor.current.luminance() > .5f) Color.Black.copy(alpha = .08f)
+        else Color.White.copy(alpha = .16f), AffairsLayout.controlShape).padding(3.dp)
 
 /** All readings remain visible in the right column, beside the date and clock. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -31,9 +32,9 @@ import java.util.Locale
 internal fun CivilTodayWeather(state: CivilWeatherState, now: Instant, onChooseCity: () -> Unit = {},
     solar: @Composable () -> Unit = {}, header: @Composable () -> Unit) {
     if (!state.enabled) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.fillMaxWidth().civilReadingArea()) { header() }
-            Column(Modifier.fillMaxWidth().civilReadingArea()) { solar() }
+        Column(Modifier.fillMaxWidth().civilReadingArea(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            header()
+            solar()
         }
         return
     }
@@ -47,11 +48,13 @@ internal fun CivilTodayWeather(state: CivilWeatherState, now: Instant, onChooseC
     val number = remember(locale) { NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 1; isGroupingUsed = false } }
     val degrees = remember(locale) { NumberFormat.getNumberInstance(locale).apply {
         maximumFractionDigits = 0; isGroupingUsed = false; roundingMode = RoundingMode.HALF_UP } }
-    val uriHandler = LocalUriHandler.current
     Column(Modifier.fillMaxWidth().testTag("civil-weather-summary"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopStart) {
-                Column(Modifier.fillMaxSize().civilReadingArea(), verticalArrangement = Arrangement.spacedBy(6.dp)) { header() }
+                Column(Modifier.fillMaxSize().civilReadingArea(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    header()
+                    solar()
+                }
             }
             if (current == null || weather == null) {
                 val key = when {
@@ -110,21 +113,6 @@ internal fun CivilTodayWeather(state: CivilWeatherState, now: Instant, onChooseC
                 }
                 }
             }
-        }
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f).fillMaxHeight().civilReadingArea(), verticalArrangement = Arrangement.spacedBy(6.dp)) { solar() }
-            if (current != null && weather != null) Column(Modifier.weight(1f).fillMaxHeight().civilReadingArea().testTag("civil-weather-attribution")) {
-                TextButton({ uriHandler.openUri(weather.provider.attributionUrl) }, Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp)) {
-                    Text(copy.getString("source") + ": " + weather.provider.name, color = ink,
-                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Normal, translate = false, adjustInk = false)
-                }
-                TextButton({ uriHandler.openUri(weather.provider.licenseUrl) }, Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp)) {
-                    Text(copy.getString("license"), color = ink,
-                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Normal, translate = false, adjustInk = false)
-                }
-            } else Spacer(Modifier.weight(1f))
         }
     }
 }

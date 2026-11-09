@@ -58,6 +58,35 @@ test('shared catalog preserves detailed references and supports any/all category
   for(const id of ids)assert.match(id,/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 });
 
+test('substance search finds card text and aliases independently of category headings',()=>{
+  const {mergeCatalog,matchesCatalog,catalogCategories}=calendarModule('app/physis/reference-catalog-domain.ts');
+  const entries=mergeCatalog([]),magnesium=entries.find(row=>row.legacyId==='magnesium');
+  assert.ok(magnesium);
+  assert.ok(matchesCatalog(magnesium,'MAGNESIUM',[]));
+  for(const field of ['uses','evidence','scopeNote','risks','status','mechanism','contraindications','interactions']) {
+    const card={...magnesium,[field]:'Особая проверка совместимости: жёлтый маркер'};
+    assert.ok(matchesCatalog(card,'ЖЕЛТЫЙ совместимости',[]),field);
+    assert.equal(matchesCatalog(card,'жёлтый отсутствует',[]),false,field);
+    assert.equal(matchesCatalog(card,'жёлтый',['Несуществующая категория']),false,field);
+  }
+  const revised={...magnesium,interactions:'Уникальное взаимодействие'};
+  assert.ok(matchesCatalog(revised,'уникальное взаимодействие',catalogCategories(magnesium),'all'));
+  assert.equal(matchesCatalog({...revised,interactions:''},'уникальное взаимодействие',[]),false);
+});
+
+test('substance search includes the displayed mineral, terminology and food sections in both languages',()=>{
+  const {mergeCatalog,matchesCatalog}=calendarModule('app/physis/reference-catalog-domain.ts');
+  const entries=mergeCatalog([]);
+  const magnesium=entries.find(row=>row.legacyId==='magnesium');
+  const calcium=entries.find(row=>row.legacyId==='calcium');
+  const carnitine=entries.find(row=>row.legacyId==='carnitine');
+  for(const query of ['ХЕЛАТ','chelate']) assert.ok(matchesCatalog(magnesium,query,[]),query);
+  for(const query of ['йогурт цельномолочный','YOGURT whole milk']) assert.ok(matchesCatalog(calcium,query,[]),query);
+  for(const query of ['авокадо','Avocado','42–122']) assert.ok(matchesCatalog(carnitine,query,[]),query);
+  assert.equal(matchesCatalog({...magnesium,legacyId:''},'chelate',[]),false);
+  assert.equal(matchesCatalog({...magnesium,legacyId:'missing-section'},'chelate',[]),false);
+});
+
 test('shared entries stay valid when copied into bounded personal food and supplement records',()=>{
   const {CATALOG_SEED,catalogDrug,catalogFood}=calendarModule('app/physis/reference-catalog-domain.ts');
   const {validDrug}=calendarModule('app/physis/care-domain.ts');

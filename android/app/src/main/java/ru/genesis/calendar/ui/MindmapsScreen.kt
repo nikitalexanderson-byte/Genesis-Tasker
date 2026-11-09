@@ -382,8 +382,8 @@ internal fun NativeMindmapCanvas(map:MindmapDocument,rows:List<Pair<MindmapNode,
         horizontal.scrollTo(target.x.roundToInt().coerceAtLeast(0));vertical.scrollTo(target.y.roundToInt().coerceAtLeast(0))
     } }
     val contentWidth=(located.maxOfOrNull {it.second.x} ?: 0f)+300;val contentHeight=(located.maxOfOrNull {it.second.y} ?: 0f)+180
-    val line=mapColor(map.appearance?.optString("lineColor"),MaterialTheme.colorScheme.secondary)
-    val background=androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface,MaterialTheme.colorScheme.primary,.09f)
+    val line=mapColor(map.appearance?.optString("lineColor"),if (LocalEveningTheme.current) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant)
+    val background=if (LocalEveningTheme.current) androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface,MaterialTheme.colorScheme.primary,.09f) else Color.White
     val scaleState=genesisTranslate("Масштаб")
     val zoomIn=genesisTranslate("Увеличить масштаб");val zoomOut=genesisTranslate("Уменьшить масштаб")
     CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
@@ -435,7 +435,7 @@ internal fun NativeMindmapCanvas(map:MindmapDocument,rows:List<Pair<MindmapNode,
                 }
                 located.forEach { (n,point)->
                     val currentPoint by rememberUpdatedState(point);val currentView by rememberUpdatedState(view)
-                    val fill=mapColor(n.style?.optString("fill"),MaterialTheme.colorScheme.surface)
+                    val fill=mapColor(n.style?.optString("fill"),if (LocalEveningTheme.current) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerHigh)
                     val ink=if(n.style?.has("fill")==true)if(fill.luminance()>.179f)Color.Black else Color.White else MaterialTheme.colorScheme.onSurface
                     CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
                     Surface(onClick={val from=connecting;if(from!=null){connecting=null;if(from!=n.id&&!readOnly)onLink(from,n.id)}else onSelect(n.id)},shape=MaterialTheme.shapes.medium,color=fill,contentColor=ink,border=selectedControlBorder(connecting==n.id,

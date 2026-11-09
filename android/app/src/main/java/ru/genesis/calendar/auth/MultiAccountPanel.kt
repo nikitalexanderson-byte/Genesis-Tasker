@@ -1,6 +1,7 @@
 package ru.genesis.calendar.auth
 
 import ru.genesis.calendar.ui.AlertDialog
+import ru.genesis.calendar.ui.AffairsLayout
 
 import android.content.Intent
 import android.graphics.Color as AndroidColor
@@ -56,9 +57,11 @@ internal fun MultiAccountPanel(state: AuthPanelState, controller: AuthController
         style = MaterialTheme.typography.bodySmall)
     OutlinedButton(onClick = {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${AUTH_ORIGIN}/?account_link=1#settings")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    }, modifier = Modifier.fillMaxWidth().testTag("linked-account-open-site")) { Text("Открыть подключение на сайте") }
+    }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("linked-account-open-site"),
+        shape = AffairsLayout.controlShape) { Text("Открыть подключение на сайте") }
     OutlinedButton(onClick = controller::checkSession, enabled = !state.busy,
-        modifier = Modifier.fillMaxWidth().testTag("linked-account-refresh")) { Text("Обновить аккаунты") }
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("linked-account-refresh"),
+        shape = AffairsLayout.controlShape) { Text("Обновить аккаунты") }
 
     if (settings.multiAccountEnabled && settings.accounts.size > 1) {
         HorizontalDivider()

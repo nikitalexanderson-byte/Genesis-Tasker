@@ -19,7 +19,7 @@ internal fun EditorSection(title: String, modifier: Modifier = Modifier,
     Surface(modifier.fillMaxWidth(), shape = AffairsLayout.shape,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(AffairsLayout.gap)) {
             Text(title, style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary)
             content()

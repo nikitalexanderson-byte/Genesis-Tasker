@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { useDialogAccessibility } from '../use-dialog-accessibility';
+import { DialogCloseButton } from '../DialogCloseButton';
 import { momentCivilDate, todayCivilDate, addCivilDays } from '../calendar-context';
 import { formatCalendarDateValue } from '../calendar-data';
 import { METRICS, convertGlucose, measurementUnits, type Measurement } from './care-domain';
@@ -30,9 +32,36 @@ const metricDescriptions: Record<Measurement['type'], string> = {
   custom: 'Свой показатель с названием, единицей и личной шкалой.',
 };
 const metricName = (type: string) => METRICS.find(([key]) => key === type)?.[1] ?? type;
+
+function MonitoringHint({ modal, text, onClose, onDisable }: {
+  modal: boolean; text: (value: string) => string; onClose: () => void; onDisable: () => void;
+}) {
+  const titleId = useId();
+  const dialog = useDialogAccessibility<HTMLElement>(onClose, modal);
+  const title = text('Больше показателей');
+  const content = <><p>{text('В настройках Фюзиса можно включить давление, сахар и другие показатели. История сохраняется и после отключения.')}</p>
+    <div className="physis-actions"><button type="button" onClick={onClose}>{text('Понятно')}</button>
+      <button type="button" onClick={onDisable}>{text('Больше не показывать')}</button></div></>;
+  if (!modal) return <aside className="physis-monitoring-hint" role="status"><h3>{title}</h3>{content}</aside>;
+  return <div className="modal-backdrop physis-monitoring-backdrop">
+    <section ref={dialog} className="modal physis-monitoring-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+      <header className="physis-control-heading"><h2 id={titleId}>{title}</h2><DialogCloseButton aria-label={text('Закрыть')} onClick={onClose}/></header>
+      {content}
+    </section>
+  </div>;
+}
+
 export function PhysisMeasurements({ store, settings, context, language, hintOwner, onDisableHints }: PhysisFeatureProps & { hintOwner?: string; onDisableHints?: () => void }) {
   const text = (value: string) => translateText(value, language as Language);
   const [hintOpen, setHintOpen] = useState(false);
+  const [desktopHint, setDesktopHint] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 901px)');
+    const update = () => setDesktopHint(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   useEffect(() => {
     if (!hintOwner || settings.monitoringHints === false) return;
     try {
@@ -44,7 +73,8 @@ export function PhysisMeasurements({ store, settings, context, language, hintOwn
       }
     } catch { /* Storage unavailable: the optional hint stays closed. */ }
   }, [hintOwner, settings.monitoringHints]);
-  const hint = hintOpen && settings.monitoringHints !== false ? <aside className="physis-monitoring-hint" role="status"><h3>Больше показателей</h3><p>В настройках Фюзиса можно включить давление, сахар и другие показатели. История сохраняется и после отключения.</p><div className="physis-actions"><button type="button" onClick={() => setHintOpen(false)}>Понятно</button><button type="button" onClick={() => { setHintOpen(false); onDisableHints?.(); }}>Больше не показывать</button></div></aside> : null;
+  const hint = hintOpen && settings.monitoringHints !== false ? <MonitoringHint modal={desktopHint} text={text}
+    onClose={() => setHintOpen(false)} onDisable={() => { setHintOpen(false); onDisableHints?.(); }}/> : null;
   const [selectedType, setType] = useState<Measurement['type']>((settings.enabledMetrics[0] as Measurement['type']) ?? 'weight');
   const type = settings.enabledMetrics.includes(selectedType) ? selectedType : (settings.enabledMetrics[0] as Measurement['type']) ?? 'weight';
   const [contextFilter, setContextFilter] = useState(''); const [period, setPeriod] = useState('30');

@@ -52,7 +52,7 @@ class Calendar324NavigationTest {
         captureNativeWindow(File(context.getExternalFilesDir(null), "calendar324-$name.png"))
     }
 
-    @Test fun allFourteenLanguagesKeepCompleteCopyEqualHeroHeightsAndLowerCornerArrowsAtFont130() {
+    @Test fun allFourteenLanguagesKeepCompleteCopyAndContentSizedHeroesWithLowerCornerArrowsAtFont130() {
         var language by mutableStateOf("ru")
         var mode by mutableStateOf(CalendarMode.PROFANE)
         var date by mutableStateOf(LocalDate.of(2026, 10, 4))
@@ -97,10 +97,7 @@ class Calendar324NavigationTest {
                     .put("mode", choice.wireValue).put("heightDp", heights.last()))
                 if (locale in listOf("ru", "en") && sample.monthValue == 10) capture("hero-$locale-${choice.wireValue}-font130")
             }
-            // Dp bounds are rounded to physical pixels. Fractional-density
-            // devices can differ by one pixel even with the same logical size.
-            val pixelDp = 1f / context.resources.displayMetrics.density
-            assertTrue("$locale/$sample: three calendars have the same height: $heights", heights.max() - heights.min() <= pixelDp + .02f)
+            assertTrue("$locale/$sample: each calendar keeps its controls visible: $heights", heights.all { it >= 48f })
         }
         File(context.getExternalFilesDir(null), "calendar324-hero14-font130.json").writeText(checks.toString(2))
     }

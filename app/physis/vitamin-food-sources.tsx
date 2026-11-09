@@ -1,10 +1,5 @@
-import raw from './vitamin-food-sources.json';
-import minerals from './mineral-food-sources.json';
-
-export type VitaminFoodSource = { food: string[]; amount: number; amountMax?: number; approximate?: boolean; unit: string; portion: string[]; source: string; fdcId?: number; nutrientId?: number };
-export type VitaminFoodProfile = { label: string[]; note: string[] | null; items: VitaminFoodSource[] };
-export const VITAMIN_FOOD_SOURCES = raw as Record<string, VitaminFoodProfile>;
-export const NUTRIENT_FOOD_SOURCES = { ...VITAMIN_FOOD_SOURCES, ...minerals } as Record<string, VitaminFoodProfile>;
+import { NUTRIENT_FOOD_SOURCES } from './nutrient-food-sources-data';
+export { VITAMIN_FOOD_SOURCES, NUTRIENT_FOOD_SOURCES, type VitaminFoodSource, type VitaminFoodProfile } from './nutrient-food-sources-data';
 export function NutrientFoodSources({ id, en }: { id: string; en: boolean }) {
   const profile = NUTRIENT_FOOD_SOURCES[id]; if (!profile) return null;
   const at = en ? 1 : 0;

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -63,8 +64,13 @@ internal object AuroraWebOrigin {
 private class AuroraJavascriptBridge(private val store: AuroraNativeStore, private val gateway: AuroraGateway,
     private val scope: CoroutineScope, private val deliver: (String,JSONObject)->Unit,
     private val onTask: (AuroraTaskDraft)->Unit, private val onCheckout: (String)->Unit,
-    private val onSpeak: (String)->Unit, private val onClose: ()->Unit) {
+    private val onSpeak: (String)->Unit, private val onClose: ()->Unit,
+    private val onContentSize: (Int,Int)->Unit) {
     @Volatile private var active=true
+    @JavascriptInterface fun contentSize(height: Int, width: Int) {
+        if (!active || height !in 1..100000 || width !in 1..8192) return
+        scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width) }
+    }
     private fun check(){check(active){"AURORA_VIEW_CLOSED"};gateway.check()}
     @JavascriptInterface fun getItem(key:String):String?=runBlocking(Dispatchers.IO){check();store.getItem(key).also{check()}}
     @JavascriptInterface fun setItem(key:String,value:String)=runBlocking(Dispatchers.IO){check();store.setItem(key,value);check()}
@@ -131,13 +137,19 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
         .put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android").put("source",source?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}
     var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)}
+    val density = LocalDensity.current.density
+    var contentHeight by remember { mutableStateOf(160.dp) }
+    var headerHeight by remember { mutableStateOf(80.dp) }
     val speech=remember(context){TextToSpeech(context){}}
     DisposableEffect(speech){onDispose{speech.stop();speech.shutdown()}}
     fun close(){val view=web;if(ready&&view!=null)view.evaluateJavascript("window.GenesisAuroraRuntime.requestClose()",null) else onClose()}
     Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false)){
-        Surface(Modifier.fillMaxSize().safeDrawingPadding().imePadding(),color=scheme.surface){
-            Column(Modifier.fillMaxSize().testTag("aurora-native-dialog")){
-                Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Surface(Modifier.fillMaxWidth(),color=scheme.surface){
+          BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val viewportHeight = contentHeight.coerceIn(48.dp, (maxHeight - headerHeight - 8.dp).coerceAtLeast(48.dp))
+            Column(Modifier.fillMaxWidth().testTag("aurora-native-dialog")){
+                Box(Modifier.fillMaxWidth().onSizeChanged { headerHeight = (it.height / density).dp }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)) {
                     EditorDialogHeader("Метод моделирования будущего","aurora-native-close"){close()}
                 }
                 if(failed)UntranslatedText(entryCopy.getString("loadError"),Modifier.padding(16.dp),color=scheme.error)
@@ -150,7 +162,8 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                     settings.textZoom=(textScale*100).toInt().coerceIn(80,250)
                     val bridge=AuroraJavascriptBridge(store,gateway,scope,{id,response->
                         if(url==AuroraWebOrigin.ENTRY)evaluateJavascript("window.GenesisAuroraRuntime.resolve('$id','${encoded(response)}')",null)
-                    },onTask,{url->ctx.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))},{text->speech.language=Locale.forLanguageTag("ru-RU");speech.speak(text,TextToSpeech.QUEUE_FLUSH,null,"aurora")},onClose)
+                    },onTask,{url->ctx.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))},{text->speech.language=Locale.forLanguageTag("ru-RU");speech.speak(text,TextToSpeech.QUEUE_FLUSH,null,"aurora")},onClose,
+                        { height, width -> if (this.width > 0) contentHeight = (height.toFloat() * this.width / width / density).dp })
                     tag=bridge;addJavascriptInterface(bridge,"GenesisAuroraBridge")
                     webViewClient=object:WebViewClient(){
                         override fun shouldOverrideUrlLoading(view:WebView,request:WebResourceRequest)=true
@@ -168,11 +181,12 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                     }
                     loadUrl(AuroraWebOrigin.ENTRY)
                 }},update={view->if(ready)view.evaluateJavascript("window.GenesisAuroraRuntime.theme('${encoded(theme)}')",null)},
-                    modifier=Modifier.weight(1f).fillMaxWidth().testTag("aurora-native-webview"),onRelease={view->
+                    modifier=Modifier.fillMaxWidth().height(viewportHeight).testTag("aurora-native-webview"),onRelease={view->
                         (view.tag as? AuroraJavascriptBridge)?.stop();view.removeJavascriptInterface("GenesisAuroraBridge");view.stopLoading();view.destroy();web=null
                     })
                 if(!ready&&!failed)LinearProgressIndicator(Modifier.fillMaxWidth())
             }
+          }
         }
     }
 }

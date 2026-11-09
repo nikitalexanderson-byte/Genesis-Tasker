@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -131,10 +132,15 @@ internal fun <T : Any> CalendarPeriodPager(period: T, previousPeriod: T?, nextPe
 }
 
 @Composable
-internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> Unit) {
+internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> Unit, title: String? = null) {
     Row(Modifier.fillMaxWidth().testTag("calendar-month-navigation"),
         horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         PeriodArrow(-1, "month", onPrevious, artwork = true)
+        if (title != null) Box(Modifier.weight(1f).padding(horizontal = 4.dp).testTag("month-description-name")) {
+            Text(title, Modifier.fillMaxWidth().testTag("calendar-month-period").semantics { heading() },
+                textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge,
+                translate = false)
+        }
         PeriodArrow(1, "month", onNext, artwork = true)
     }
 }

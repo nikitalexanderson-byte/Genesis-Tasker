@@ -23,16 +23,16 @@ import androidx.compose.ui.unit.dp
 @Composable internal fun TodayWorkspace(header: @Composable () -> Unit,
     rhythm: @Composable () -> Unit, tasks: @Composable () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        if (maxWidth >= 840.dp) Row(Modifier.fillMaxSize().padding(16.dp).testTag("today-two-pane"),
-            horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        if (maxWidth >= 840.dp) Row(Modifier.fillMaxSize().padding(AffairsLayout.gutter).testTag("today-two-pane"),
+            horizontalArrangement = Arrangement.spacedBy((20f / 1.5f).dp)) {
             Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)) { header(); rhythm() }
+                verticalArrangement = Arrangement.spacedBy(8.dp)) { header(); rhythm() }
             Column(Modifier.weight(1.15f).fillMaxHeight().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)) { tasks() }
+                verticalArrangement = Arrangement.spacedBy(8.dp)) { tasks() }
         } else LazyColumn(Modifier.fillMaxSize().testTag("today-list"),
-            contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            contentPadding = PaddingValues(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { header() }
-            item { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { tasks() } }
+            item { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { tasks() } }
             item { rhythm() }
         }
     }
@@ -43,9 +43,9 @@ import androidx.compose.ui.unit.dp
     content: @Composable (T) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val columns = if (maxWidth >= 760.dp) 2 else 1
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items.chunked(columns).forEach { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { item -> key(itemKey(item)) { Box(Modifier.weight(1f)) { content(item) } } }
                     if (row.size < columns) Spacer(Modifier.weight(1f))
                 }
@@ -61,8 +61,8 @@ import androidx.compose.ui.unit.dp
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 840.dp && !sequential) AdaptiveSettingsSections(scrollState, content)
         else Column(Modifier.fillMaxSize().verticalScroll(scrollState)
-            .padding(16.dp).testTag("settings-page-sections"),
-            verticalArrangement = Arrangement.spacedBy(14.dp)) { content() }
+            .padding(AffairsLayout.gutter).testTag("settings-page-sections"),
+            verticalArrangement = Arrangement.spacedBy((14f / 1.5f).dp)) { content() }
     }
 }
 
@@ -72,8 +72,8 @@ internal const val FULL_WIDTH_SETTINGS_SECTION = "genesis-settings-full-width"
 @Composable internal fun AdaptiveSettingsSections(scrollState: ScrollState = rememberScrollState(),
     content: @Composable () -> Unit) {
     Layout(content = content, modifier = Modifier.fillMaxSize()
-        .verticalScroll(scrollState).padding(16.dp)) { children, constraints ->
-        val gap = 14.dp.roundToPx()
+        .verticalScroll(scrollState).padding(AffairsLayout.gutter)) { children, constraints ->
+        val gap = (14f / 1.5f).dp.roundToPx()
         val columns = if (constraints.maxWidth >= 840.dp.roundToPx()) 2 else 1
         val width = constraints.maxWidth
         val cellWidth = (width - gap * (columns - 1)) / columns

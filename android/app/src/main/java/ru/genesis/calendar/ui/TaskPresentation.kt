@@ -22,8 +22,10 @@ import java.time.Instant
 import kotlinx.coroutines.delay
 import androidx.compose.ui.unit.dp
 
-internal val completedTaskSurface = Color(0xffecebe7)
-internal val completedTaskInk = Color(0xff626967)
+internal val completedTaskSurface: Color
+    @Composable get() = if (LocalEveningTheme.current) MaterialTheme.colorScheme.surfaceContainerHigh else Color(0xffecebe7)
+internal val completedTaskInk: Color
+    @Composable get() = if (LocalEveningTheme.current) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xff626967)
 
 @Composable
 internal fun TaskTitle(task: LocalTask, modifier: Modifier = Modifier,

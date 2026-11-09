@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
     Surface(modifier.fillMaxWidth(), shape = AffairsLayout.shape,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(4.dp), verticalArrangement = Arrangement.spacedBy(AffairsLayout.gap)) {
             Text(title, titleModifier, style = MaterialTheme.typography.titleMedium)
             content()
         }
@@ -33,11 +33,12 @@ import androidx.compose.ui.unit.dp
         color = if (completed) completedTaskSurface else if (LocalEveningTheme.current)
             MaterialTheme.colorScheme.surfaceContainerLowest else Color(0xfff7f1e5),
         contentColor = if (completed) completedTaskInk else MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(1.dp, if (completed) Color(0xffc8ccc6) else Color(0x44b28a4a))) {
-        Row(Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        border = BorderStroke(1.dp, if (completed && LocalEveningTheme.current) MaterialTheme.colorScheme.outlineVariant
+            else if (completed) Color(0xffc8ccc6) else Color(0x44b28a4a))) {
+        Row(Modifier.fillMaxWidth().padding(3.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = completed, onCheckedChange = onComplete?.let { complete -> { _: Boolean -> complete() } },
                 modifier = Modifier.size(48.dp), colors = CheckboxDefaults.colors(checkedColor = completedTaskInk))
-            Column(Modifier.weight(1f).padding(8.dp).heightIn(min = 48.dp),
+            Column(Modifier.weight(1f).padding(4.dp).heightIn(min = 48.dp),
                 verticalArrangement = Arrangement.spacedBy(3.dp), content = content)
         }
     }
