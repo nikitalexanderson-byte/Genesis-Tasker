@@ -7,7 +7,8 @@ import './dialog-controls.css';
 
 const dialogs = 'dialog[open], [role="dialog"], [role="alertdialog"]';
 type Control = HTMLButtonElement | HTMLInputElement;
-type Entry = { root: HTMLElement; host: HTMLElement; title: string; subtitle: string; close: HTMLButtonElement; sources: Control[]; disabled: boolean[]; saveLabel: string; closeLabel: string; alternativesLabel: string };
+type HeaderGroup = { source: HTMLElement; label: string; controls: { source: HTMLButtonElement; label: string; pressed: boolean | undefined; disabled: boolean }[] };
+type Entry = { root: HTMLElement; host: HTMLElement; title: string; subtitle: string; close: HTMLButtonElement; sources: Control[]; disabled: boolean[]; desktopGroup?: HeaderGroup; saveLabel: string; closeLabel: string; alternativesLabel: string };
 const label = (button: Control) => (button.getAttribute('aria-label') || (button instanceof HTMLInputElement ? button.value : button.textContent) || '').trim();
 const normalized = (value: string) => value.toLocaleLowerCase().replace(/[.…!]+$/g, '').trim();
 const saveWords = [...new Set(LANGUAGES.map(language => normalized(translateText('Сохранить', language))))];
@@ -62,6 +63,7 @@ function Header({ entry }: { entry: Entry }) {
     <div className="dialog-universal-actions">
       {primary.length > 0 && <button type="button" className="dialog-save-button" data-no-translate aria-label={entry.saveLabel} data-tooltip={entry.saveLabel} disabled={primary.some(disabled)} onClick={() => save(primary)}><ExperimentalIcon name="save" /></button>}
       {alternatives.length > 0 && <div className="dialog-save-alternatives"><button type="button" className="dialog-save-button" data-no-translate aria-label={entry.alternativesLabel} data-tooltip={entry.alternativesLabel} aria-expanded={more} aria-haspopup="menu" onClick={() => setMore(value => !value)}><svg className="experimental-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>{more && <div className="dialog-save-menu" role="menu">{alternatives.map((button, index) => <button key={index} role="menuitem" type="button" disabled={disabled(button)} onClick={() => save([button])}><ExperimentalIcon name="save" /><span>{label(button)}</span></button>)}</div>}</div>}
+      {entry.desktopGroup && <div className="task-scope-switch dialog-header-desktop-extra" role="group" aria-label={entry.desktopGroup.label} data-no-translate>{entry.desktopGroup.controls.map((control, index) => <button type="button" key={index} aria-pressed={control.pressed} disabled={control.disabled} onClick={() => { if (control.source.isConnected && !disabled(control.source)) control.source.click(); }}>{control.label}</button>)}</div>}
       <button type="button" className="dialog-close-button" data-no-translate aria-label={entry.closeLabel} data-tooltip={entry.closeLabel} disabled={disabled(entry.close)} onClick={() => entry.close.click()}><ExperimentalIcon name="close" /></button>
     </div>
   </header>;
@@ -109,23 +111,26 @@ export function DialogHeaderActions() {
         item.host.style.setProperty('--dialog-header-inline', parseFloat(style.paddingInlineStart) < 1 ? '20px' : '0px');
         const sources = [...content.querySelectorAll<Control>('button,input[type="submit"]')].filter(button => available(button, root) && (isSave(button) || item!.saves.has(button) && (disabled(button) || /^[.…]+$/.test(label(button)))));
         item.saves = new Set(sources);
+        const group = [...content.querySelectorAll<HTMLElement>('[data-dialog-header-desktop]')].find(element => own(element, root) && !element.closest('[data-dialog-header-host]'));
+        const desktopGroup = group ? { source: group, label: group.getAttribute('aria-label') ?? '', controls: [...group.querySelectorAll<HTMLButtonElement>('button')].map(button => ({ source: button, label: label(button), pressed: button.hasAttribute('aria-pressed') ? button.getAttribute('aria-pressed') === 'true' : undefined, disabled: disabled(button) })) } : undefined;
         const marked = new Set<HTMLElement>([...(title ? [title] : []), close, ...sources]);
         const oldHeader = title?.closest('header');
         if (oldHeader && !item.wrapper && [...oldHeader.children].every(child => child === title || child === close)) marked.add(oldHeader);
         for (const previous of item.marked) if (!marked.has(previous)) previous.removeAttribute('data-dialog-header-source');
         for (const element of marked) if (!element.hasAttribute('data-dialog-header-source')) element.setAttribute('data-dialog-header-source', 'true');
         item.marked = marked;
-        next.push({ root, host: item.host, title: titleText, subtitle, close, sources, disabled: [disabled(close), ...sources.map(disabled)], saveLabel: translateText('Сохранить'), closeLabel: translateText('Закрыть'), alternativesLabel: translateText('Дополнительные действия') });
+        next.push({ root, host: item.host, title: titleText, subtitle, close, sources, disabled: [disabled(close), ...sources.map(disabled)], desktopGroup, saveLabel: translateText('Сохранить'), closeLabel: translateText('Закрыть'), alternativesLabel: translateText('Дополнительные действия') });
       }
       for (const root of managed.keys()) if (!active.has(root)) clear(root);
       setEntries(current => current.length === next.length && current.every((entry, index) => {
         const other = next[index];
-        return entry.root === other.root && entry.title === other.title && entry.subtitle === other.subtitle && entry.close === other.close && entry.saveLabel === other.saveLabel && entry.closeLabel === other.closeLabel && entry.alternativesLabel === other.alternativesLabel && entry.sources.length === other.sources.length && entry.sources.every((source, position) => source === other.sources[position]) && entry.disabled.every((disabled, position) => disabled === other.disabled[position]);
+        const sameGroup = entry.desktopGroup?.source === other.desktopGroup?.source && entry.desktopGroup?.label === other.desktopGroup?.label && entry.desktopGroup?.controls.length === other.desktopGroup?.controls.length && (entry.desktopGroup?.controls.every((control, position) => { const otherControl = other.desktopGroup?.controls[position]; return control.source === otherControl?.source && control.label === otherControl.label && control.pressed === otherControl.pressed && control.disabled === otherControl.disabled; }) ?? true);
+        return sameGroup && entry.root === other.root && entry.title === other.title && entry.subtitle === other.subtitle && entry.close === other.close && entry.saveLabel === other.saveLabel && entry.closeLabel === other.closeLabel && entry.alternativesLabel === other.alternativesLabel && entry.sources.length === other.sources.length && entry.sources.every((source, position) => source === other.sources[position]) && entry.disabled.every((disabled, position) => disabled === other.disabled[position]);
       }) ? current : next);
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(scan); };
     const observer = new MutationObserver(schedule);
-    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['open', 'hidden', 'disabled', 'aria-disabled', 'aria-busy', 'aria-hidden', 'class', 'data-settings-active', 'data-dialog-header'] });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['open', 'hidden', 'disabled', 'aria-disabled', 'aria-busy', 'aria-hidden', 'aria-pressed', 'class', 'data-settings-active', 'data-dialog-header', 'data-dialog-header-desktop'] });
     document.addEventListener('input', schedule); document.addEventListener('change', schedule); document.addEventListener('click', schedule); window.addEventListener('resize', schedule);
     schedule();
     return () => { observer.disconnect(); cancelAnimationFrame(frame); document.removeEventListener('input', schedule); document.removeEventListener('change', schedule); document.removeEventListener('click', schedule); window.removeEventListener('resize', schedule); for (const root of managed.keys()) clear(root); };

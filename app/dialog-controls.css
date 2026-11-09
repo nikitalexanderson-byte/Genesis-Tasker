@@ -7,6 +7,13 @@
 .dialog-universal-title > h2 { margin: 0 !important; font: 500 24px/1.3 var(--font-heading); overflow-wrap: anywhere; }
 .dialog-universal-title > p { margin: 4px 0 0; color: var(--ink-soft); font: 400 14px/1.5 var(--font-ui); overflow-wrap: anywhere; }
 .dialog-universal-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+html[data-genesis-theme] .genesis-app .dialog-universal-actions > .dialog-header-desktop-extra { display: none; }
+@media (min-width: 761px) {
+  html[data-genesis-theme] .genesis-app .dialog-universal-actions > .dialog-header-desktop-extra { display: flex; flex-wrap: nowrap; width: auto; margin: 0; }
+  html[data-genesis-theme] .genesis-app .dialog-universal-actions > .dialog-header-desktop-extra > button { flex: 0 0 auto; min-height: 44px; white-space: nowrap; }
+  .task-composer-modal:has(> [data-dialog-header-host] .dialog-header-desktop-extra) > [data-dialog-header-desktop] { display: none; }
+  .task-composer-modal .dialog-universal-title > h2 { overflow-wrap: normal; }
+}
 html[data-genesis-theme] .dialog-universal-actions > button,
 html[data-genesis-theme] .dialog-universal-actions .dialog-save-alternatives > button {
   position: static; display: inline-grid; place-items: center; width: 44px; height: 44px; min-width: 44px; min-height: 44px; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--surface); transform: none;

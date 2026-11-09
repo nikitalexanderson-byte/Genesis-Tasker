@@ -22,6 +22,11 @@ html[data-genesis-theme="standart"] .genesis-app .projects-header.year-header .y
   color: var(--day-banner-ink); background: color-mix(in srgb, var(--day-banner-ink) 10%, transparent); border-color: color-mix(in srgb, var(--day-banner-ink) 30%, transparent);
 }
 html[data-genesis-theme="standart"] .genesis-app :is(.workspace-header, .projects-header) button:is(:hover, :focus-visible) { background: color-mix(in srgb, var(--day-banner-ink) 20%, transparent); outline-color: var(--day-banner-ink); }
+html[data-genesis-theme="standart"] .genesis-app .mindmap-header .mindmap-header-modes > button { color: var(--day-banner-ink); background: color-mix(in srgb, var(--day-banner) 84%, var(--teal)); border-color: color-mix(in srgb, var(--day-banner-ink) 60%, var(--day-banner)); }
+html[data-genesis-theme="standart"] .genesis-app .mindmap-header .mindmap-header-modes > button[aria-pressed="true"] { color: var(--day-banner); background: var(--day-banner-accent); border-color: var(--day-banner-accent); }
+html[data-genesis-theme="standart"] .genesis-app .mindmap-header .mindmap-header-modes > button:hover { color: var(--day-banner-ink); background: color-mix(in srgb, var(--day-banner) 72%, var(--teal)); }
+html[data-genesis-theme="standart"] .genesis-app .mindmap-header .mindmap-header-modes > button[aria-pressed="true"]:hover { color: var(--day-banner); background: color-mix(in srgb, var(--day-banner-ink) 88%, var(--teal)); }
+html[data-genesis-theme="standart"] .genesis-app .mindmap-header .mindmap-header-modes > button:focus-visible { outline: 3px solid var(--day-banner-ink); outline-offset: 3px; }
 html[data-genesis-theme="standart"] .genesis-app .projects-header.year-header .year-switcher strong { color: var(--day-banner-ink); }
 html[data-genesis-theme="standart"] .genesis-app .workspace-header .shared-space-identity { color: var(--day-banner-ink); }
 

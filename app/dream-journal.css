@@ -1,6 +1,6 @@
 .dream-journal { grid-column: 1 / -1; }
 .dream-journal.tracker-module-card { min-height:0; align-self:start; }
-html[data-genesis-theme="standart"] .genesis-app .dream-journal.tracker-module-card { width:100%; min-width:0; box-sizing:border-box; justify-self:stretch; }
+html[data-genesis-theme] .genesis-app .dream-journal.tracker-module-card { width:100%; min-width:0; box-sizing:border-box; justify-self:stretch; }
 .dream-journal > header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .dream-journal label, .dream-editor label { display:grid; gap:6px; }
 .dream-journal label { max-width:280px; }

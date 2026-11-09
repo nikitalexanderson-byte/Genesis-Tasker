@@ -29,7 +29,8 @@ html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view 
   isolation:isolate; min-height:0; padding:16px; gap:12px; background:var(--surface); color:var(--ink);
 }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card::before { content:none; }
-html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card :is(.civil-date-heading,.calendar-solar-control,.solar-weather-readings) { box-sizing:border-box; width:fit-content; max-width:100%; min-width:0; align-self:start; padding:8px 10px; border-radius:10px; background:color-mix(in srgb,var(--surface) 74%,transparent); }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card :is(.civil-date-heading,.calendar-solar-control,.solar-weather-readings) { box-sizing:border-box; width:fit-content; max-width:100%; min-width:0; align-self:start; padding:8px 10px; border-radius:10px; background:color-mix(in srgb,var(--surface) var(--solar-reading-opacity,74%),transparent); }
+html[data-genesis-theme="standart"] .genesis-app[data-sacred-features="false"] .today-view .hero-card { --solar-reading-opacity:59%; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card::after { display:none; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card > .hero-palette-art { display:none; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card :is(.hero-copy,.hero-day-clock) { color:var(--ink); }
@@ -88,7 +89,7 @@ html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view 
   html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .civil-summary-group {
     display:flex; flex-direction:column; justify-content:space-between; grid-column:1; grid-row:1; align-self:stretch;
     box-sizing:border-box; width:fit-content; max-width:100%; min-width:0; gap:8px; padding:8px 10px; border-radius:10px;
-    background:color-mix(in srgb,var(--surface) 74%,transparent);
+    background:color-mix(in srgb,var(--surface) var(--solar-reading-opacity,74%),transparent);
   }
   html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .civil-summary-group :is(.civil-date-heading,.calendar-solar-control) {
     width:100%; max-width:100%; padding:0; border-radius:0; background:transparent;

@@ -7502,7 +7502,7 @@ export function GenesisCalendar() {
             <DialogCloseButton type="button" className="modal-close" onClick={() => setTaskComposer(null)} aria-label="Закрыть" />
             </header>
             {mindmapConversion ? <p className="mindmap-conversion-notice">Создаётся одна настоящая задача GENESIS. На карте останется ссылка; пояснение карты не переносится. {cloudUser?.calendarConnected ? "Внешняя синхронизация — по выбранным ниже настройкам." : "Google-синхронизация не подключена: задача сохранится на этом устройстве."}</p> : null}
-            {taskComposer === "today" && sharedProjectsAvailable ? <div className="task-scope-switch" role="group" aria-label="Доступ к делу">
+            {taskComposer === "today" && sharedProjectsAvailable ? <div className="task-scope-switch" data-dialog-header-desktop role="group" aria-label="Доступ к делу">
               {(["personal", "shared"] as const).map((scope) => <button type="button" key={scope} aria-pressed={taskScope === scope} onClick={() => chooseTaskScope(scope)}>{scope === "personal" ? "Личное" : "Общее"}</button>)}
             </div> : null}
             <div className="task-composer-tabs" role="tablist" tabIndex={-1} aria-label="Тип дела" onKeyDown={(event) => {
