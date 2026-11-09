@@ -172,10 +172,17 @@ partnerCheck(genesisPartnerTotals($db, $b)['payments'] === 0, 'Cancelled/unpaid 
 $foreign = partnerOrder('client-b', 1000, $now - 100, 0, 'google-play');
 $db->beginTransaction(); genesisPartnerObserveReceipt($db, $foreign, partnerReceipt($foreign, $now - 90), $now); $db->commit();
 partnerCheck(genesisPartnerTotals($db, $b)['payments'] === 0, 'Unsupported Play revenue was silently counted');
+$zeroOrder = [...$first, 'amount_minor' => 0]; $zeroCount = (int)$db->query('SELECT COUNT(*) FROM partner_payments')->fetchColumn();
+$db->beginTransaction(); genesisPartnerObserveReceipt($db, $zeroOrder, partnerReceipt($zeroOrder, $now - 90), $now); $db->commit();
+partnerCheck((int)$db->query('SELECT COUNT(*) FROM partner_payments')->fetchColumn() === $zeroCount, 'A payment without new cash earned commission or interrupted settlement');
 foreach ([0 => 0, 1 => 1, 3 => 2, 111 => 56, -1 => -1, -3 => -2, -111 => -56] as $base => $expected)
     partnerCheck(genesisPartnerHalf($base) === $expected, 'Signed half-up rounding differs');
 $state = genesisPartnerRow($db, $a);
+$pendingBeforePause = genesisPartnerCapture($db, $codeA, null);
 genesisPartnerUpdate('owner', $a, partnerRequest(['expectedRevision' => (int)$state['revision'], 'acceptsInvitations' => false, 'panelEnabled' => false, 'reason' => 'Pause separate permissions']));
+partnerCheck(genesisPartnerInvite($db, genesisPartnerInviteHash($pendingBeforePause['token'])) === null, 'Paused invitations still promised a new signup attribution');
+$validReplacement = genesisPartnerCapture($db, $codeB, $pendingBeforePause['token']);
+partnerCheck($validReplacement['label'] === 'Second' && !$validReplacement['preserved'], 'An inactive pending invitation blocked the next valid invitation');
 partnerReject('PARTNER_CODE_UNAVAILABLE', fn() => genesisPartnerCapture($db, $codeA, null));
 partnerReject('PARTNER_ACCESS_DENIED', fn() => genesisPartnerDashboard('a', []));
 $continuation = partnerOrder('client', 10000, $now - 80);

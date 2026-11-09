@@ -10,7 +10,7 @@ function genesisPartnerInvite(PDO $db, ?string $hash, ?int $now = null): ?array
 {
     if (!$hash) return null;
     $q = $db->prepare('SELECT i.*,p.code,p.label,p.user_id,p.accepts_invitations FROM partner_invites i JOIN partners p ON p.id=i.partner_id
-        WHERE i.token_hash=? AND i.consumed_at IS NULL AND i.expires_at>?');
+        WHERE i.token_hash=? AND i.consumed_at IS NULL AND i.expires_at>? AND p.accepts_invitations=1 AND p.user_id IS NOT NULL');
     $q->execute([$hash, gmdate('Y-m-d\TH:i:s\Z', $now ?? time())]);
     return $q->fetch() ?: null;
 }

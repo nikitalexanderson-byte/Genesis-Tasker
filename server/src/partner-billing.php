@@ -20,7 +20,7 @@ function genesisPartnerCalculation(PDO $db, array $payment, string $kind, ?int $
 function genesisPartnerObserveReceipt(PDO $db, array $order, GenesisVerifiedBillingReceipt $receipt, int $now): void
 {
     if (!genesisPartnersEnabled() || $receipt->provider !== 'yookassa' || $receipt->currency !== 'RUB'
-        || !in_array($receipt->state, ['paid', 'refunded'], true)) return;
+        || $receipt->amountMinor === 0 || !in_array($receipt->state, ['paid', 'refunded'], true)) return;
     if (!$db->inTransaction()) throw new LogicException('PARTNER_RECEIPT_TRANSACTION_REQUIRED');
     if (($order['provider'] ?? null) !== 'yookassa' || $order['id'] !== $receipt->orderId
         || (int)$order['amount_minor'] !== $receipt->amountMinor || $order['currency'] !== $receipt->currency
