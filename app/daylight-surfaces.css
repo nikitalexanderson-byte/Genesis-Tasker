@@ -76,8 +76,13 @@ html[data-genesis-theme="standart"] .genesis-app .calendar-view > .calendar-head
 html[data-genesis-theme="standart"] .genesis-app :is(.today-tasks-panel, .habit-daily-panel) { background: var(--day-section); border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app .today-task-group { background: var(--day-group); border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app .today-task-list > article:not(.done):not(:has(.task-overdue-badge)) { background: var(--surface); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-task-list > article.done { opacity: 1; background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-task-list > article.done .today-task-open { color: var(--ink-soft); }
 html[data-genesis-theme="standart"] .genesis-app :is(.habit-empty-state, .mood-tracker, .habit-check-list > article:not(.done)) { background: var(--surface); border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app :is(.habit-empty-icon, .mood-summary-action) { color: var(--teal); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-view .meaning-panel { color: var(--ink); background: var(--day-section); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-view .meaning-card { color: var(--ink); background: var(--surface); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-view .meaning-card :is(.meaning-label, strong, p) { color: var(--ink); }
 html[data-genesis-theme="standart"] .genesis-app .dream-journal.tracker-module-card .dream-journal-actions button { color: var(--ink); background: var(--day-section); border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app .dream-journal.tracker-module-card .dream-journal-actions button:is(:hover, :focus-visible) { background: var(--day-group); outline-color: var(--teal); }
 
