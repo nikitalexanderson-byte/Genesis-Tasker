@@ -2168,7 +2168,8 @@ fun Text(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspe
         else if (style.color != Color.Unspecified) style.color else LocalContentColor.current }
     val resolvedStyle = style.merge(color = ink, fontSize = fontSize, fontStyle = fontStyle, fontWeight = fontWeight,
         fontFamily = fontFamily, letterSpacing = letterSpacing, textDecoration = textDecoration,
-        textAlign = textAlign ?: TextAlign.Unspecified, lineHeight = lineHeight).copy(hyphens = Hyphens.None)
+        textAlign = textAlign ?: TextAlign.Unspecified, lineHeight = lineHeight).copy(
+            hyphens = Hyphens.None, shadow = style.shadow ?: LocalArtworkTextShadow.current)
     val preferred = resolvedStyle.fontSize.takeIf { it != TextUnit.Unspecified } ?: 14.sp
     val fitting = autoSize ?: remember(preferred, maxLines) { WholeWordTextAutoSize(preferred, maxLines == 1) }
     val audit = LocalGenesisTextLayoutAudit.current

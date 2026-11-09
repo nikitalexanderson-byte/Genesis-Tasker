@@ -274,7 +274,7 @@
     "Лю-сис": "Ly-sis",
     "Освобождение от оков.": "Liberazione dai vincoli.",
     "Мик-сис": "Mix-is",
-    "Тотальное слияние.": "Total union.",
+    "Тотальное слияние.": "Unione totale.",
     "Эк-ста-сис": "Ek-sta-sis",
     "Выход за пределы ума.": "Passaggio oltre la mente.",
     "Мюс-те-ри-он": "Mys-te-ri-on",
@@ -285,7 +285,7 @@
     "Кристаллизация пространства перед работой.": "Cristallizzazione dello spazio prima dell'inizio dell'opera.",
     "Бог горнего света и богиня ясного дня. Они сканируют входящего, выжигают весь профанный шум высшим светом и даруют ясный допуск в сакральное пространство.": "Il dio della luce superiore e la dea del giorno luminoso. Esaminano il partecipante, bruciano i rumori profani con la luce più elevata e garantiscono un chiaro passaggio nello spazio sacro.",
     "Ав-ге": "Au-ge",
-    "Рассветный луч.": "Ray of dawn.",
+    "Рассветный луч.": "Raggio dell’alba.",
     "Э-тир": "Ai-ther",
     "Высший свет.": "La luce più alta.",
     "Фос-фо-рос": "Phos-pho-ros",
@@ -513,7 +513,7 @@
       "invocation": "IAEOYOI"
     },
     "kappa": {
-      "body": "Shins",
+      "body": "Tibie",
       "bodyGreek": "Knemai",
       "invocation": "KORKOOYNOOK"
     },

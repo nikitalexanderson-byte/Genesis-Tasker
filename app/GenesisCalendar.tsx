@@ -232,7 +232,7 @@ import {
   normalizeCalendarDateNote,
 } from "./calendar-data";
 import { gregorianMonthNumber, gregorianWeekdayOffset } from "./calendar-layout";
-import { gregorianMonthArt } from "./gregorian-season-art";
+import { gregorianMonthArt, gregorianMonthPanoramaArt } from "./gregorian-season-art";
 import "./gregorian-season-art.css";
 import {
   type AutomaticSolarLocation,
@@ -5947,6 +5947,7 @@ export function GenesisCalendar() {
         style={{
           "--month-accent": mode === "lunar" ? lunarMonthColor(lunarDefinition.index) : "var(--ui-accent)",
           "--month-art": `url("${mode === "lunar" ? lunarMonthArtUrl(lunarDefinition.index) : `${APP_BASE}/${gregorianMonthArt(selectedDate.getMonth(), seasonLocation)}`}")`,
+          "--month-panorama": mode === "profane" ? `url("${APP_BASE}/${gregorianMonthPanoramaArt(selectedDate.getMonth(), seasonLocation)}")` : undefined,
         } as CSSProperties}
       >
         <header className="calendar-header calendar-mode-header">

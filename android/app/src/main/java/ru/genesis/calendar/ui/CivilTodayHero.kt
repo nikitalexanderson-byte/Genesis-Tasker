@@ -10,6 +10,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.*
@@ -331,10 +332,15 @@ internal fun CivilTodayHero(location: SolarLocation, calendar: GenesisCalendar, 
             }
         }
         CivilWeatherOverlay(weatherEffects, weatherPolicy, plate.horizonY, daylight, Modifier.matchParentSize())
+        if (!LocalEveningTheme.current) Box(Modifier.matchParentSize()
+            .background(Color.Black.copy(alpha = .05f)).testTag("civil-today-photo-shade"))
         Column(Modifier.fillMaxWidth()) {
             androidx.compose.material3.Surface(Modifier.fillMaxWidth(), shape = AffairsLayout.shape,
                 color = Color.Transparent,
-                contentColor = if (altitude < 0f) Color(0xfff9f2e2) else Color(0xff102b2c)) {
+                contentColor = if (!LocalEveningTheme.current) Color.White
+                    else if (altitude < 0f) Color(0xfff9f2e2) else Color(0xff102b2c)) {
+                CompositionLocalProvider(LocalArtworkTextShadow provides
+                    if (!LocalEveningTheme.current) artworkTextShadow() else null) {
                 Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     val ink = LocalContentColor.current
                     CivilTodayWeather(weather, clockNow, onChooseCity, solar = {
@@ -359,6 +365,7 @@ internal fun CivilTodayHero(location: SolarLocation, calendar: GenesisCalendar, 
                             Modifier.testTag("today-civil-clock"), style = MaterialTheme.typography.titleLarge,
                             color = ink, adjustInk = false, translate = false)
                     }
+                }
                 }
             }
         }

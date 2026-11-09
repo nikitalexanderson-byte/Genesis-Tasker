@@ -491,11 +491,9 @@ private fun CalendarMonthContent(calendar: GenesisCalendar, range: CalendarRange
 }
 
 @Composable internal fun CalendarHeroContrast(modifier: Modifier = Modifier, paletteToned: Boolean = true) {
+    if (!LocalEveningTheme.current) return
     val darkBase = if (paletteToned) MaterialTheme.colorScheme.background else Color(0xff040e10)
-    Box(modifier.background(if (!LocalEveningTheme.current) Brush.verticalGradient(
-        0f to MaterialTheme.colorScheme.surface.copy(alpha = .68f * .85f),
-        1f to MaterialTheme.colorScheme.surface.copy(alpha = .78f * .85f))
-        else Brush.verticalGradient(
+    Box(modifier.background(Brush.verticalGradient(
             // Increase the image's visible contribution by 15% only in the evening scheme.
             0f to darkBase.copy(alpha = 1f - (1f - 0xb3 / 255f) * 1.15f),
             1f to darkBase.copy(alpha = 1f - (1f - 0xd6 / 255f) * 1.15f))))
@@ -1111,9 +1109,9 @@ private fun ExperimentalSelectedDayCard(calendar: GenesisCalendar, date: LocalDa
         CalendarMode.SACRED -> day.description
     }
     val lightHero = !LocalEveningTheme.current
-    val heroInk = if (!lightHero && mode == CalendarMode.PROFANE) Color(0xfff9f2e2) else MaterialTheme.colorScheme.onSurface
-    val heroSecondary = if (lightHero) MaterialTheme.colorScheme.onSurface else if (mode == CalendarMode.PROFANE) Color(0xffeee6d7) else MaterialTheme.colorScheme.onSurfaceVariant
-    val heroAccent = if (!lightHero && mode == CalendarMode.PROFANE) Color(0xffdfc17e) else MaterialTheme.colorScheme.primary
+    val heroInk = if (lightHero) Color.White else if (mode == CalendarMode.PROFANE) Color(0xfff9f2e2) else MaterialTheme.colorScheme.onSurface
+    val heroSecondary = if (lightHero) Color.White else if (mode == CalendarMode.PROFANE) Color(0xffeee6d7) else MaterialTheme.colorScheme.onSurfaceVariant
+    val heroAccent = if (lightHero) Color.White else if (mode == CalendarMode.PROFANE) Color(0xffdfc17e) else MaterialTheme.colorScheme.primary
     Card(Modifier.fillMaxWidth().testTag("calendar-selected-day"), shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.dp, Color(0x66dfc17e)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
@@ -1124,6 +1122,9 @@ private fun ExperimentalSelectedDayCard(calendar: GenesisCalendar, date: LocalDa
                 OriginalImage(heroPath, heroTitle, Modifier.matchParentSize().testTag("calendar-weekday-art"),
                     lightThemeBrightness=1f)
                 CalendarHeroContrast(Modifier.matchParentSize(), mode != CalendarMode.PROFANE)
+                CompositionLocalProvider(
+                    LocalArtworkTextShadow provides if (lightHero) artworkTextShadow() else null,
+                    LocalPreserveCalendarColors provides (lightHero || LocalPreserveCalendarColors.current)) {
                 Column((if (contentSized) Modifier.fillMaxWidth() else Modifier.fillMaxSize()).padding(if (contentSized) 8.dp else 16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(modeTitle, style = MaterialTheme.typography.labelMedium, color = heroAccent, maxLines = 1)
@@ -1154,6 +1155,7 @@ private fun ExperimentalSelectedDayCard(calendar: GenesisCalendar, date: LocalDa
                         Text(event, Modifier.heightIn(max = 30.dp), style=MaterialTheme.typography.labelMedium.copy(lineHeight = 1.15.em),
                             color=heroAccent, maxLines = 2, autoSize = CalendarHeroTextAutoSize(MaterialTheme.typography.labelMedium.fontSize))
                     }
+                }
                 }
             }
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

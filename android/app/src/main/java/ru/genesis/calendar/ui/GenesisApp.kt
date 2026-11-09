@@ -1153,6 +1153,7 @@ internal fun DayHeader(date: LocalDate, mode: CalendarMode, explicitSeasonZone: 
             Box(Modifier.matchParentSize().background(
                 if (lightHero) Color.Transparent else Color.Black.copy(alpha = .16f)))
             CompositionLocalProvider(LocalPreserveCalendarColors provides true,
+                LocalTodayHeroLightAlpha provides if (lightHero && mode == CalendarMode.PROFANE) .80f else .70f,
                 LocalTodayHeroTint provides MaterialTheme.colorScheme.primaryContainer.copy(alpha=if(mode==CalendarMode.PROFANE).15f else .10f)) {
             androidx.compose.material3.Surface(Modifier.fillMaxWidth().testTag("today-hero-copy"),
                 shape = AffairsLayout.shape, border = BorderStroke(1.dp, Color(0x80dfc17e)),
@@ -1880,9 +1881,6 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Общие дела",style=MaterialTheme.typography.titleSmall)
-                    Text(if(accountSettings?.sharedProjectsLifetimeAccess==true)
-                        "Пожизненный бесплатный открытый доступ к функциям «Общие дела»."
-                        else "Открыто всем аккаунтам GENESIS на время тестирования.",style=MaterialTheme.typography.bodySmall)
                 }
                 Switch(checked=sharedProjectsEnabled,
                     enabled=accountSettings?.sharedProjectsEligible==true && accountSettings.featureAccess.allows("shared-projects"),

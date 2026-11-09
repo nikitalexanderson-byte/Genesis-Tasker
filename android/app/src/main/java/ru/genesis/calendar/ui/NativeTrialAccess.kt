@@ -19,9 +19,8 @@ import ru.genesis.calendar.auth.TrialAccess
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-@Composable internal fun rememberTrialCopy(): JSONObject {
+@Composable internal fun rememberTrialCopy(language: String = LocalGenesisLanguage.current): JSONObject {
     val context = LocalContext.current
-    val language = LocalGenesisLanguage.current
     return remember(context, language) {
         context.assets.open("originals/i18n/billing-trial-copy.json").bufferedReader(Charsets.UTF_8).use {
             val root = JSONObject(it.readText())

@@ -68,6 +68,44 @@ class NativeTrialAccess317Test {
         File(context.getExternalFilesDir(null), "trial317-$name.json").writeText(value.toString(2))
     }
 
+    @Test fun explicitComparisonLanguageLoadsTrialCopyBeforeTheModalProvider() {
+        var language by mutableStateOf("ru")
+        val offer = metadata("unavailable", null)
+        val access = paid().copy(trial = offer)
+        val catalog = JSONObject(context.assets.open("originals/i18n/billing-trial-copy.json")
+            .bufferedReader(Charsets.UTF_8).use { it.readText() })
+        compose.setContent {
+            // App-level comparisons receive a locale before their content provides it.
+            val copy = rememberTrialCopy(language)
+            Frame(false, access, language) {
+                NativeTrialPanel(access, offer, copy, false, null, {}, {})
+            }
+        }
+        for (locale in listOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")) {
+            compose.runOnIdle { language = locale }
+            val expected = catalog.getJSONObject(locale)
+            compose.onNodeWithText(expected.getString("trialTitle")).assertExists()
+            compose.onNodeWithText(expected.getString("noCharge")).assertExists()
+            compose.onNodeWithTag("trial-unavailable").assertTextEquals(expected.getString("unavailable"))
+            val shared = if (locale == "ru") null else JSONObject(context.assets.open(
+                "originals/i18n/ui-translations/$locale.json").bufferedReader(Charsets.UTF_8).use { it.readText() })
+            for (source in listOf(
+                "Создать событие", "Создать встречу", "Цвет привычки",
+                "Аккаунт, зашифрованное пространство, привычки, задачи и связанные серверные данные будут удалены без возможности восстановления.",
+                "Сообщения и прикреплённые файлы будут удалены без возможности восстановления.",
+                "Несохранённая правка и выбранные файлы будут удалены из черновика. Отправленное сообщение сохранится.",
+                "Выбранные файлы и отметки удаления будут убраны из черновика. Прикреплённые файлы задачи сохранятся.",
+                "Настройки серии действуют на ещё не созданные задачи. Изменения этой задачи относятся только к этому повтору.",
+                "До 5 файлов, суммарно до 10 МБ. Изображения, PDF и офисные документы. Файлы доступны участникам задачи.",
+                "Связанная практика переместится в корзину привычек. История выполнения сохранится; цикл можно восстановить вместе с практикой.",
+                "Команда, запись, названия проектов и списков и адреса подключённых аккаунтов будут отправлены в Google Gemini после нажатия «Подготовить план»."
+            )) {
+                assertEquals("$locale: actual native lookup for $source", shared?.getString(source) ?: source,
+                    translateGenesisText(context, source, locale))
+            }
+        }
+    }
+
     @Test fun threeChoicesNeedConfirmationAndCancelNeverConsumesTheChoice() {
         val calls = mutableListOf<String>()
         val offer = metadata("available", null, listOf("standart", "premium", "business"))

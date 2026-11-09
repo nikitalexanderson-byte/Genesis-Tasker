@@ -334,7 +334,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     var serverNotice by remember { mutableStateOf<String?>(null) }
     var trialBusy by remember(userId) { mutableStateOf(false) }
     var trialError by remember(userId) { mutableStateOf<String?>(null) }
-    val trialCopy = rememberTrialCopy()
+    val trialCopy = rememberTrialCopy(language)
     var observedOrderId by rememberSaveable(userId) { mutableStateOf<String?>(null) }
     var observedOrder by remember(userId) { mutableStateOf<JSONObject?>(null) }
     var orderRefresh by remember { mutableIntStateOf(0) }

@@ -75,11 +75,10 @@ internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDa
         fields = copy.fields.map { field -> field.copy(text = genesisTranslate(field.text)) }) }
     val copy = copies.first { it.mode == mode }
     val headingStyle = MaterialTheme.typography.titleLarge.copy(lineHeight = 1.1.em, hyphens = Hyphens.None)
-    val todayStyle = MaterialTheme.typography.labelMedium.copy(hyphens = Hyphens.None)
-    val todayLabel = genesisTranslate("Сегодня")
     val civil = !LocalSacredFeaturesEnabled.current
+    val lightHero = !LocalEveningTheme.current
     val paletteToned = mode != CalendarMode.PROFANE
-    val ink = if (!LocalEveningTheme.current || paletteToned) MaterialTheme.colorScheme.onSurface else Color(0xfff9f2e2)
+    val ink = if (lightHero) Color.White else if (paletteToned) MaterialTheme.colorScheme.onSurface else Color(0xfff9f2e2)
     val tag = if (mode == CalendarMode.SACRED) "sacred-month-hero" else "calendar-month-description"
     Surface(Modifier.fillMaxWidth().testTag(tag), shape = AffairsLayout.shape,
         color = if (mode == CalendarMode.PROFANE) MaterialTheme.colorScheme.primaryContainer
@@ -88,17 +87,13 @@ internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDa
                 OriginalImage(copy.image, genesisTranslate("Иллюстрация месяца") + " ${copy.title}",
                     Modifier.matchParentSize().testTag(copy.artTag), darkThemeBrightness = .82f, lightThemeBrightness = 1f)
                 CalendarHeroContrast(Modifier.matchParentSize(), paletteToned)
-                CompositionLocalProvider(LocalContentColor provides ink) {
+                CompositionLocalProvider(LocalContentColor provides ink,
+                    LocalPreserveCalendarColors provides (lightHero || LocalPreserveCalendarColors.current),
+                    LocalArtworkTextShadow provides if (lightHero) artworkTextShadow() else null) {
                     Column(Modifier.fillMaxWidth().then(if (civil) Modifier.heightIn(min = 112.dp) else Modifier).padding(6.dp),
-                        verticalArrangement = if (civil) Arrangement.Center else Arrangement.spacedBy(6.dp)) {
+                        verticalArrangement = if (civil) Arrangement.Bottom else Arrangement.spacedBy(6.dp)) {
                         if (civil) {
-                            if (offerToday) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                                Button(onToday, Modifier.heightIn(min = 48.dp).testTag("calendar-month-today"),
-                                    contentPadding = PaddingValues(horizontal = 10.dp), shape = AffairsLayout.controlShape) {
-                                    Text(todayLabel, maxLines = 1, style = todayStyle, translate = false)
-                                }
-                            }
-                            CalendarMonthHeroNavigation(onPrevious, onNext, copy.title)
+                            CalendarMonthHeroNavigation(onPrevious, onNext, copy.title, offerToday, onToday)
                         } else {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
@@ -107,20 +102,14 @@ internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDa
                                     Text(copy.title, Modifier.testTag("calendar-month-period").semantics { heading() },
                                         style = headingStyle, translate = false)
                                 }
-                                if (offerToday) Button(onToday, Modifier.heightIn(min = 48.dp).testTag("calendar-month-today"),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
-                                    contentPadding = PaddingValues(horizontal = 10.dp), shape = AffairsLayout.controlShape) {
-                                    Text(todayLabel, maxLines = 1, style = todayStyle, translate = false)
-                                }
                             }
                             copy.fields.forEach { field ->
                                 Text(field.text, field.tag?.let { Modifier.testTag(it) } ?: Modifier,
                                     style = monthCopyStyle(field.role, mode), translate = false,
-                                    color = if (field.accent) MaterialTheme.colorScheme.primary else ink)
+                                    color = if (field.accent && !lightHero) MaterialTheme.colorScheme.primary else ink)
                             }
                         }
-                        CalendarMonthHeroNavigation(onPrevious, onNext)
+                        CalendarMonthHeroNavigation(onPrevious, onNext, offerToday = offerToday, onToday = onToday)
                         }
                     }
                 }

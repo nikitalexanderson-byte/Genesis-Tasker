@@ -58,6 +58,7 @@ internal fun HabitPersonalizationFields(emoji: String, color: String, isKeyHabit
     var emojiPickerOpen by rememberSaveable { mutableStateOf(false) }
     var emojiCategory by rememberSaveable { mutableStateOf("smileys-emotion") }
     var visibleEmojiCount by rememberSaveable { mutableIntStateOf(120) }
+    var colorPickerOpen by rememberSaveable { mutableStateOf(false) }
     Text("Эмодзи привычки", style = MaterialTheme.typography.titleSmall)
     Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -117,9 +118,24 @@ internal fun HabitPersonalizationFields(emoji: String, color: String, isKeyHabit
             }
         }
     }
-    OutlinedTextField(color, onColor, enabled = enabled, singleLine = true,
-        label = { Text("Свой цвет · #RRGGBB") }, isError = normalizedHabitColor(color) == null,
-        modifier = Modifier.fillMaxWidth().testTag("habit-custom-color"))
+    Surface(onClick = { colorPickerOpen = true }, enabled = enabled,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("habit-custom-color"),
+        shape = AffairsLayout.controlShape, border = androidx.compose.foundation.BorderStroke(
+            1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
+                androidx.compose.material3.Surface(Modifier.size(32.dp), shape = AffairsLayout.controlShape,
+                    color = Color(android.graphics.Color.parseColor(normalizedHabitColor(color) ?: habitColors.first()))) {}
+            }
+            Text("Свой цвет", Modifier.weight(1f))
+            GenesisLucideIcon("palette")
+        }
+    }
+    if (colorPickerOpen) GenesisColorPicker("Цвет привычки", normalizedHabitColor(color) ?: habitColors.first(),
+        onDismiss = { colorPickerOpen = false },
+        onColor = { chosen -> chosen?.let(onColor); colorPickerOpen = false },
+        allowThemeColor = false, previewLabel = "Привычка", tagPrefix = "habit")
     Row(verticalAlignment = Alignment.CenterVertically) {
         Switch(isKeyHabit, onKeyHabit, enabled = enabled, modifier = Modifier.testTag("habit-key-role"))
         Text("Главная привычка", Modifier.padding(start = 8.dp))

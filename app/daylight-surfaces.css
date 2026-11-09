@@ -68,19 +68,21 @@ html[data-genesis-theme="standart-dark"] .genesis-app .calendar-view.mode-profan
 html[data-genesis-theme="standart-dark"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .month-switcher { grid-column: 1; grid-row: 2; align-self: start; justify-self: start; }
 html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header :is(h1, p, .eyebrow, .month-switcher span) { color: var(--ink) !important; }
 html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header .month-switcher button { color: var(--ink); background: var(--paper); border-color: var(--line); }
-/* The complete landscape is a background; its dimensions never enlarge the header. */
+/* Panoramas fill the header without contributing to its content-driven height. */
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px;
   min-height: 0; padding: 20px; color: var(--day-banner-ink); background: var(--night); border-color: var(--day-outline); box-shadow: none;
 }
 html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .gregorian-season-art {
   position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; aspect-ratio: auto;
-  background: var(--month-art) right center / contain no-repeat; background-color: transparent; background-blend-mode: normal; opacity: .34;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--night) 76%, transparent), color-mix(in srgb, var(--night) 66%, transparent) 42%, color-mix(in srgb, var(--night) 46%, transparent)), var(--month-panorama);
+  background-position: center; background-size: cover; background-repeat: no-repeat; background-color: transparent; background-blend-mode: normal; opacity: 1;
 }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > div:not(.month-switcher) { min-width: 0; padding: 0; background: transparent; }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .month-switcher { align-self: center; }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header :is(h1, p, .eyebrow, .month-switcher span) { color: var(--day-banner-ink) !important; }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header .month-switcher button { color: var(--day-banner-ink); background: color-mix(in srgb, var(--night) 80%, var(--day-banner-ink)); border-color: color-mix(in srgb, var(--day-banner-ink) 30%, transparent); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header .month-switcher > span { background: var(--night); }
 html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane { background: var(--day-section); border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane::before { opacity: .2; }
 html[data-genesis-theme="standart"] .genesis-app .year-month.calendar-mode-year-month.mode-profane { --year-day-base: var(--surface); --year-day-mask-strength: 32%; --year-day-hover-strength: 40%; }
@@ -121,4 +123,10 @@ html[data-genesis-theme="standart"] .genesis-app .dream-journal.tracker-module-c
 }
 @media (max-width: 767px) {
   html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header { grid-template-columns: minmax(0, 1fr); padding: 12px; gap: 12px; }
+}
+@media (max-width: 1199px) {
+  html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .gregorian-season-art {
+    background-image: linear-gradient(color-mix(in srgb, var(--night) 66%, transparent), color-mix(in srgb, var(--night) 66%, transparent)), var(--month-art);
+    background-position: center 65%;
+  }
 }

@@ -55,16 +55,16 @@ jobs:
             | jq -e --arg sha "$DEPLOY_COMMIT" --arg repo "$GITHUB_REPOSITORY" \
               '.head_sha == $sha and .head_branch == "main" and .head_repository.full_name == $repo and .path == ".github/workflows/android-release.yml" and .event == "workflow_dispatch" and .status == "completed" and .conclusion == "success"'
           gh run download "$ARTIFACT_RUN_ID" --repo "$GITHUB_REPOSITORY" \
-            --name "genesis-android-3.2.8-140-$DEPLOY_COMMIT" --dir android-artifact
+            --name "genesis-android-3.2.9-141-$DEPLOY_COMMIT" --dir android-artifact
           jq -e --arg sha "$DEPLOY_COMMIT" --arg repo "$GITHUB_REPOSITORY" \
-            '.commit == $sha and .repository == $repo and .versionCode == 140 and .versionName == "3.2.8"' android-artifact/source.json
+            '.commit == $sha and .repository == $repo and .versionCode == 141 and .versionName == "3.2.9"' android-artifact/source.json
           (cd android-artifact && sha256sum --check SHA256SUMS)
           mkdir -p dist-android/downloads
-          cp android-artifact/GENESIS-Android-Native-3.2.8.apk dist-android/downloads/
-          APK_SHA="$(sha256sum dist-android/downloads/GENESIS-Android-Native-3.2.8.apk | cut -d' ' -f1)"
+          cp android-artifact/GENESIS-Android-Native-3.2.9.apk dist-android/downloads/
+          APK_SHA="$(sha256sum dist-android/downloads/GENESIS-Android-Native-3.2.9.apk | cut -d' ' -f1)"
           printf 'apk_sha=%s\n' "$APK_SHA" >> "$GITHUB_OUTPUT"
           jq -n --arg sha "$APK_SHA" \
-            '{versionCode:140,versionName:"3.2.8",minimumSupportedVersionCode:76,minimumSupportedVersionName:"2.7.0",sha256:$sha}' \
+            '{versionCode:141,versionName:"3.2.9",minimumSupportedVersionCode:76,minimumSupportedVersionName:"2.7.0",sha256:$sha}' \
             > dist-android/android-update.json
           chmod 644 dist-android/android-update.json dist-android/downloads/*.apk
       - name: Load the pinned Hostinger host key
@@ -89,10 +89,10 @@ jobs:
             for relative in public_html public_html/downloads public_html/deploy-meta.json public_html/android-update.json backups; do
               test ! -L "$ROOT/$relative"
             done
-            test ! -L "$ROOT/public_html/downloads/GENESIS-Android-Native-3.2.8.apk"
+            test ! -L "$ROOT/public_html/downloads/GENESIS-Android-Native-3.2.9.apk"
             php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);if(($m["commit"]??null)!==$argv[2])exit(1);' \
               "$ROOT/public_html/deploy-meta.json" '${{ inputs.commit }}'
-            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>140||($c===140&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
+            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>141||($c===141&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
               "$ROOT/public_html/android-update.json" '${{ steps.stage.outputs.apk_sha }}'
             BACKUP="$ROOT/backups/android-manifest-${{ github.run_id }}"
             test ! -e "$BACKUP"
@@ -114,24 +114,24 @@ jobs:
             set -eu
             ROOT=/home/u531952483/domains/genesiscalendar.com
             test "$(readlink -f "$ROOT")" = "$ROOT"
-            for relative in public_html public_html/downloads public_html/deploy-meta.json public_html/android-update.json public_html/downloads/GENESIS-Android-Native-3.2.8.apk; do
+            for relative in public_html public_html/downloads public_html/deploy-meta.json public_html/android-update.json public_html/downloads/GENESIS-Android-Native-3.2.9.apk; do
               test ! -L "$ROOT/$relative"
             done
             php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);if(($m["commit"]??null)!==$argv[2])exit(1);' \
               "$ROOT/public_html/deploy-meta.json" '${{ inputs.commit }}'
-            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>140||($c===140&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
+            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>141||($c===141&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
               "$ROOT/public_html/android-update.json" '${{ steps.stage.outputs.apk_sha }}'
-            test "$(sha256sum "$ROOT/public_html/downloads/GENESIS-Android-Native-3.2.8.apk" | cut -d' ' -f1)" = '${{ steps.stage.outputs.apk_sha }}'
+            test "$(sha256sum "$ROOT/public_html/downloads/GENESIS-Android-Native-3.2.9.apk" | cut -d' ' -f1)" = '${{ steps.stage.outputs.apk_sha }}'
           SCRIPT_BEFORE_REQUIRED: true
       - name: Verify the public manifest, APK bytes and download redirect
         run: |
           set -euo pipefail
-          EXPECTED="$(sha256sum android-artifact/GENESIS-Android-Native-3.2.8.apk | cut -d' ' -f1)"
+          EXPECTED="$(sha256sum android-artifact/GENESIS-Android-Native-3.2.9.apk | cut -d' ' -f1)"
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/android-update.json?run=$GITHUB_RUN_ID" \
-            | jq -e --arg sha "$EXPECTED" '.versionCode == 140 and .versionName == "3.2.8" and .sha256 == $sha'
+            | jq -e --arg sha "$EXPECTED" '.versionCode == 141 and .versionName == "3.2.9" and .sha256 == $sha'
           curl -fsS --max-time 120 -H 'Cache-Control: no-cache' \
-            "https://genesiscalendar.com/downloads/GENESIS-Android-Native-3.2.8.apk?run=$GITHUB_RUN_ID" -o published.apk
+            "https://genesiscalendar.com/downloads/GENESIS-Android-Native-3.2.9.apk?run=$GITHUB_RUN_ID" -o published.apk
           test "$(sha256sum published.apk | cut -d' ' -f1)" = "$EXPECTED"
           curl -fsSI --max-time 30 https://genesiscalendar.com/api/android/download \
-            | tr -d '\r' | grep -Eqi '^location: /downloads/GENESIS-Android-Native-3\.2\.8\.apk$'
+            | tr -d '\r' | grep -Eqi '^location: /downloads/GENESIS-Android-Native-3\.2\.9\.apk$'

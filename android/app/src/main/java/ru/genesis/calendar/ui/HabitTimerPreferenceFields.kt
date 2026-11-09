@@ -37,15 +37,19 @@ import ru.genesis.calendar.domain.habits.HabitTimerPreferences
         }
         if (enabled) {
             UntranslatedText(copy.getString("modes"), style = MaterialTheme.typography.labelLarge)
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("stopwatch" to "Секундомер", "pomodoro" to "Pomodoro").forEach { (mode, label) ->
                 val checked = mode in preferences.modes
                 val canChange = canEdit && (!checked || preferences.modes.size > 1)
-                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("habit-timer-allow-$mode")
+                Row(Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp).testTag("habit-timer-allow-$mode")
                     .toggleable(checked, enabled = canChange, role = Role.Checkbox) { value ->
                         onChange(preferences.copy(modes = listOf("stopwatch", "pomodoro").filter { if (it == mode) value else it in preferences.modes }))
                     }, verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked, null, enabled = canChange); Text(label)
+                    Checkbox(checked, null, enabled = canChange, modifier = Modifier.size(48.dp))
+                    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
                 }
+            }
             }
             if ("pomodoro" in preferences.modes) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(work, { work = it.take(3); it.toIntOrNull()?.takeIf { n -> n in 1..180 }?.let { n -> onChange(preferences.copy(workMinutes = n)) } },

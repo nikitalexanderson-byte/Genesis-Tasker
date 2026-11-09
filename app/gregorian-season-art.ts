@@ -35,3 +35,8 @@ export function gregorianMonthArt(monthIndex: number, location: SeasonLocation):
   const month = ((monthIndex + (southern && region !== "southern" ? 6 : 0)) % 12 + 12) % 12;
   return `gregorian-months-v1/${region}/${String(month + 1).padStart(2, "0")}.webp`;
 }
+
+/** Panoramic web headers keep the same regional and hemispheric month selection. */
+export function gregorianMonthPanoramaArt(monthIndex: number, location: SeasonLocation): string {
+  return gregorianMonthArt(monthIndex, location).replace("gregorian-months-v1/", "gregorian-panoramas-v2/");
+}

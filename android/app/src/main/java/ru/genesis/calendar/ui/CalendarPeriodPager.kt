@@ -132,14 +132,27 @@ internal fun <T : Any> CalendarPeriodPager(period: T, previousPeriod: T?, nextPe
 }
 
 @Composable
-internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> Unit, title: String? = null) {
+internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> Unit, title: String? = null,
+    offerToday: Boolean = false, onToday: () -> Unit = {}) {
     Row(Modifier.fillMaxWidth().testTag("calendar-month-navigation"),
-        horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        PeriodArrow(-1, "month", onPrevious, artwork = true)
+        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+        // The matching empty slot keeps the period centered when the return action appears.
+        if (title != null) Row(Modifier.width(104.dp)) {
+            PeriodArrow(-1, "month", onPrevious, artwork = true)
+        } else {
+            PeriodArrow(-1, "month", onPrevious, artwork = true)
+        }
         if (title != null) Box(Modifier.weight(1f).padding(horizontal = 4.dp).testTag("month-description-name")) {
             Text(title, Modifier.fillMaxWidth().testTag("calendar-month-period").semantics { heading() },
                 textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge,
                 translate = false)
+        } else Spacer(Modifier.weight(1f))
+        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            if (offerToday) IconButton(onToday, Modifier.size(48.dp)
+                .clip(AffairsLayout.controlShape).background(MaterialTheme.colorScheme.surface.copy(alpha = .92f))
+                .testTag("calendar-month-today").genesisDescription("Сегодня")) {
+                GenesisLucideIcon("undo-2", Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+            }
         }
         PeriodArrow(1, "month", onNext, artwork = true)
     }

@@ -75,7 +75,6 @@ class Calendar324NavigationTest {
                 val previous = compose.onNodeWithTag("calendar-month-previous").getUnclippedBoundsInRoot()
                 val next = compose.onNodeWithTag("calendar-month-next").getUnclippedBoundsInRoot()
                 val today = compose.onNodeWithTag("calendar-month-today").getUnclippedBoundsInRoot()
-                val title = compose.onNodeWithTag("calendar-month-period").getUnclippedBoundsInRoot()
                 val label = "$locale/$sample/${choice.wireValue}"
                 heights += (hero.bottom - hero.top).value
                 assertTrue("$label: lower left arrow stays inside artwork", previous.left >= hero.left && previous.bottom <= hero.bottom &&
@@ -85,10 +84,12 @@ class Calendar324NavigationTest {
                 for (arrow in listOf(previous, next)) {
                     assertTrue("$label: arrow has 48dp touch target: $arrow", arrow.right - arrow.left >= 47.5.dp && arrow.bottom - arrow.top >= 47.5.dp)
                 }
-                assertTrue("$label: Today shares the upper title row", today.left >= title.right && today.top < previous.top &&
-                    today.top - hero.top <= 13.dp)
+                assertTrue("$label: Today stays beside the lower right arrow",
+                    today.right <= next.left && kotlin.math.abs((today.bottom - next.bottom).value) <= 1f &&
+                        today.right - today.left >= 47.5.dp && today.bottom - today.top >= 47.5.dp)
                 compose.runOnIdle {
-                    assertTrue("$label: actual text layouts were observed", layouts.size >= 4)
+                    val minimumCopyLayouts = if (choice == CalendarMode.LUNAR) 3 else 4
+                    assertTrue("$label: actual title and description layouts were observed", layouts.size >= minimumCopyLayouts)
                     layouts.forEach { (text, result) ->
                         assertFalse("$label: complete text must fit: $text", result.hasVisualOverflow || result.splitsWord())
                     }

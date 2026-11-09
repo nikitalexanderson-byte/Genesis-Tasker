@@ -23,8 +23,9 @@ import java.util.Locale
 
 /** Confine the reading shade to the text so the landscape remains visible between groups. */
 @Composable internal fun Modifier.civilReadingArea(): Modifier =
-    background(if (LocalContentColor.current.luminance() > .5f) Color.Black.copy(alpha = .08f)
-        else Color.White.copy(alpha = .16f), AffairsLayout.controlShape).padding(3.dp)
+    (if (!LocalEveningTheme.current) this else
+        background(if (LocalContentColor.current.luminance() > .5f) Color.Black.copy(alpha = .08f)
+            else Color.White.copy(alpha = .16f), AffairsLayout.controlShape)).padding(3.dp)
 
 /** All readings remain visible in the right column, beside the date and clock. */
 @OptIn(ExperimentalLayoutApi::class)
