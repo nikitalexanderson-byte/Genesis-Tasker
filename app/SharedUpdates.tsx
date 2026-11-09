@@ -1,12 +1,13 @@
 "use client";
 import { DialogCloseButton } from "./DialogCloseButton";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { loadSharedInbox, loadSharedOverview, type SharedOverview, type SharedNotification } from "./cloud-sync";
+import { loadSharedInbox, type SharedNotification } from "./cloud-sync";
 import { useSharedUpdates } from "./SharedUpdatesProvider";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import "./shared-updates.css";
 import { SharedInvitationNotices } from "./SharedInvitationNotices";
 import { sharedUnreadCount } from "./shared-unread-count";
+import { messengerText } from "./messenger-copy";
 
 export type SharedTaskDestination = { spaceId: string; projectId: string; taskId?: string; taskAction?: "locate" | "comments"; commentId?: string };
 export const notificationDestination = (item: SharedNotification): SharedTaskDestination => ({
@@ -14,19 +15,8 @@ export const notificationDestination = (item: SharedNotification): SharedTaskDes
   ...(item.action === "comment.created" ? { taskAction: "comments", ...(item.commentId ? { commentId: item.commentId } : {}) } : {}),
 });
 
-export function SharedWorkspaceSummary({ userId, english, spaceId, workspaceActions, onOpen }: { userId: string; english: boolean; spaceId?: string; workspaceActions?: ReactNode; onOpen: (place: SharedTaskDestination) => void }) {
+export function SharedWorkspaceSummary({ userId, english, language, workspaceActions, onOpen }: { userId: string; english: boolean; language: string; workspaceActions?: (messagesButton: ReactNode) => ReactNode; onOpen: (place: SharedTaskDestination) => void }) {
   const { overview, error, refresh, markRead } = useSharedUpdates();
-  const [scoped, setScoped] = useState<{spaceId: string; value: SharedOverview | null; error: boolean} | null>(null);
-  useEffect(() => {
-    if (!spaceId) return;
-    const controller = new AbortController();
-    void loadSharedOverview(controller.signal, spaceId).then(value => {
-      if (!controller.signal.aborted) setScoped({spaceId, value, error: false});
-    }).catch(() => { if (!controller.signal.aborted) setScoped({spaceId, value: null, error: true}); });
-    return () => controller.abort();
-  }, [spaceId, overview]);
-  const totals = spaceId ? scoped?.spaceId === spaceId ? scoped.value : null : overview;
-  const summaryError = error || Boolean(spaceId && scoped?.spaceId === spaceId && scoped.error);
   const [open, setOpen] = useState(false); const [unread, setUnread] = useState(true);
   const [items, setItems] = useState<SharedNotification[]>([]); const [cursor, setCursor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false); const [failed, setFailed] = useState(false); const [reload, setReload] = useState(0);
@@ -60,21 +50,17 @@ export function SharedWorkspaceSummary({ userId, english, spaceId, workspaceActi
     try { await markRead(ids, all); setReload(value => value + 1);
     } catch { setFailed(true); } finally { setBusy(false); }
   };
-  const metrics = [
-    [totals?.projects, english ? "projects" : "проектов"], [totals?.rootProjects, english ? "main" : "основных"],
-    [totals?.subprojects, english ? "subprojects" : "подпроектов"], [totals?.tasks, english ? "tasks" : "задач"],
-    [totals?.openTasks, english ? "current" : "текущих"], [totals?.completedTasks, english ? "completed" : "завершённых"],
-  ];
   const newCount = sharedUnreadCount(overview);
+  const messagesLabel = messengerText('title', language);
+  const messagesButton = <button type="button" className="shared-updates-open secondary-button"
+    title={messagesLabel} aria-label={`${messagesLabel}: ${newCount}`} aria-haspopup="dialog" onClick={() => setOpen(true)}>
+    <ExperimentalIcon name="mail" /><strong className="shared-updates-badge" aria-hidden="true">{newCount > 99 ? "99+" : newCount}</strong>
+  </button>;
   return <div className="shared-workspace-summary">
-    <div className="projects-summary shared-summary-counts" aria-label={english ? "Shared affairs summary" : "Сводка общих дел"}>
-      {metrics.map(([value, label]) => <span key={String(label)}><strong>{value ?? "…"}</strong>{label}</span>)}
+    <div className="shared-header-actions" role="group" aria-label={english ? "Workspace controls" : "Управление пространством"}>
+      {workspaceActions ? workspaceActions(messagesButton) : messagesButton}
     </div>
-    {workspaceActions ? <div className="shared-header-actions" role="group" aria-label={english ? "Workspace controls" : "Управление пространством"}>{workspaceActions}</div> : null}
-    <button type="button" className="shared-updates-open" onClick={() => setOpen(true)}>
-      <ExperimentalIcon name="mail" />{english ? "Updates" : "Новое"}<strong>{newCount}</strong>
-    </button>
-    {summaryError ? <button type="button" className="shared-summary-retry" onClick={refresh}>{english ? "Refresh summary" : "Обновить сводку"}</button> : null}
+    {error ? <button type="button" className="shared-summary-retry" onClick={refresh}>{english ? "Refresh summary" : "Обновить сводку"}</button> : null}
     <dialog className="shared-projects-modal shared-updates-dialog" ref={dialog} onCancel={() => setOpen(false)}
       aria-labelledby="shared-updates-title">
       <header><h2 id="shared-updates-title">{english ? "New in shared affairs" : "Новое в общих делах"}</h2>

@@ -5340,10 +5340,9 @@ export function GenesisCalendar() {
           <header>
             <div>
               <span className="eyebrow">{isEnglish ? "The shape of today" : "План сегодняшнего дня"}</span>
-              <h2 id="today-tasks-title">{isEnglish ? "Today's tasks" : "Задачи на сегодня"}</h2>
+              <h2 id="today-tasks-title">{isEnglish ? "Today's tasks" : "Задачи на сегодня"} — <span className="today-tasks-title-count">{todayTasks.filter((task) => task.done).length}/{todayTasks.length}</span></h2>
             </div>
             <div>
-              <strong>{todayTasks.filter((task) => task.done).length} / {todayTasks.length}</strong>
               {showToday("quickCreate") ? <button type="button" className="primary-button" onClick={() => openTaskComposer("today")}>{experimentalThemeActive ? <ExperimentalIcon name="plus" /> : null}{isEnglish ? "Create task" : "Создать задачу"}</button> : null}
               <button type="button" className="secondary-button" onClick={() => navigateTo("projects")}>{isEnglish ? "Go to affairs" : "Перейти к делам"}</button>
             </div>
@@ -5902,7 +5901,7 @@ export function GenesisCalendar() {
           ? `Lunar year ${selectedLunarYear.sacredYear}–${selectedLunarYear.sacredYear + 1} · month ${lunarDefinition.roman} of ${selectedLunarYear.monthCount}`
           : `Лунный год ${selectedLunarYear.sacredYear}–${selectedLunarYear.sacredYear + 1} · ${lunarDefinition.roman} месяц из ${selectedLunarYear.monthCount}`);
     const monthSubtitle = mode === "profane"
-      ? `${profaneMonthName(selectedDate)} · ${dates.length} дней`
+      ? sacredFeaturesEnabled ? `${profaneMonthName(selectedDate)} · ${dates.length} дней` : `${dates.length} дней`
       : `${lunarDefinition.title} · ${formatDateRange(firstDate, lastDate)}`;
     const monthDescription = mode === "profane"
       ? activeWeekStart === "monday"

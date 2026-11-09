@@ -93,8 +93,9 @@ html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header :is(h1, p, .eyebrow, .month-switcher span) { color: var(--day-banner-ink) !important; }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header .month-switcher button { color: var(--day-banner-ink); background: color-mix(in srgb, var(--night) 80%, var(--day-banner-ink)); border-color: color-mix(in srgb, var(--day-banner-ink) 30%, transparent); }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header .month-switcher > span { background: var(--night); }
-html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane { background: var(--day-section); border-color: var(--day-outline); }
-html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane::before { opacity: .2; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .calendar-mode-year-month.mode-profane { --year-month-surface: var(--day-section); background: color-mix(in srgb, var(--teal) 15%, var(--year-month-surface)); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-mode-year-month.mode-profane { --year-month-surface: var(--surface); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane::before { opacity: .2; filter: brightness(.85) saturate(.75); }
 html[data-genesis-theme="standart"] .genesis-app .year-month.calendar-mode-year-month.mode-profane { --year-day-base: var(--surface); --year-day-mask-strength: 32%; --year-day-hover-strength: 40%; }
 html[data-genesis-theme="standart"] .genesis-app .civil-mini-calendar.mode-profane .mini-day[data-weekday] { border-color: color-mix(in srgb, var(--year-day-mask) 60%, var(--ink-soft)); }
 html[data-genesis-theme="standart"] .genesis-app .civil-mini-calendar.mode-profane .mini-day[data-weekday].solar { border-color: #987025; }

@@ -1313,7 +1313,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
       }}><option value="">{translateText("Выберите пространство",language as import('./i18n').Language)}</option>
         {spaces.map(space => <option key={space.id} value={space.id} data-no-translate>{space.title}</option>)}
       </select>;
-  const spaceActions = <div className="shared-workspace-tools">
+  const spaceActions = (messagesButton: ReactNode) => <div className="shared-workspace-tools">
       <button type="button" className="secondary-button" title={translateText("Сохранённые представления")} aria-label={translateText("Сохранённые представления")} aria-haspopup="dialog" onClick={()=>setSavedViewsOpen(true)}><ExperimentalIcon name="list"/></button>
       {["owner", "admin"].includes(selectedSpace?.role ?? "") ? <button type="button" className="secondary-button" title={english ? "Workspace settings" : "Настройки пространства"} aria-label={english ? "Workspace settings" : "Настройки пространства"}
         onClick={() => { setEditingSpaceId(spaceId); setCreateModal("space-settings"); }}><ExperimentalIcon name="gear" /></button> : null}
@@ -1323,6 +1323,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
       <button type="button" className="secondary-button" title={english ? "All workspaces" : "Все пространства"} aria-label={english ? "All workspaces" : "Все пространства"}
         onClick={() => { setSpaceId(""); setProjectId(""); setSnapshot(null); closeTask(); }}><ExperimentalIcon name="spaces" /></button>
       <button type="button" className="secondary-button" disabled={!sharedProjectQuotaAvailable(ownedProjectQuota)} title={english ? "Create workspace" : "Создать пространство"} aria-label={english ? "Create workspace" : "Создать пространство"} onClick={() => {if(sharedProjectQuotaAvailable(ownedProjectQuota))setCreateModal("space");}}><ExperimentalIcon name="space-plus" /></button>
+      {messagesButton}
       </div>;
   const taskProjectChoice = taskEditing && selectedTask && taskSnapshot && !selectedTask.archivedAt && taskSnapshot.project.canOrganizeTasks ?
     <label>{english ? "Project" : "Проект"}<select value={taskSnapshot.project.id} disabled={busy}
@@ -1336,7 +1337,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
     </button>
   </div> : null;
   return <div className="shared-projects" data-exp-layout="view" style={{
-    "--shared-workspace-tool-count": 3 + Number(["owner", "admin"].includes(selectedSpace?.role ?? "")) + Number(canManageLabels) + Number(Boolean(spaceId)),
+    "--shared-workspace-tool-count": 4 + Number(["owner", "admin"].includes(selectedSpace?.role ?? "")) + Number(canManageLabels) + Number(Boolean(spaceId)),
   } as CSSProperties}>
     <WorkspaceHeader title={english ? "Affairs · shared" : "Дела · общие"}
       overviewLabel={english ? "Workspace overview" : "Обзор пространства"}
@@ -1347,7 +1348,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
       mark={<ProjectsHeroMark shared />} description={english
         ? "Plan together while keeping personal tasks, habits and calendars private."
         : "Планируйте вместе. Личные задачи, привычки и календарь остаются вашими."}>
-      <SharedWorkspaceSummary userId={userId} english={english} spaceId={spaceId || undefined} workspaceActions={selectedSpace ? spaceActions : undefined} onOpen={place => {
+      <SharedWorkspaceSummary userId={userId} english={english} language={language} workspaceActions={selectedSpace ? spaceActions : undefined} onOpen={place => {
         void refreshSpaces();
         recordSharedPlace(userId, { ...place, taskId: place.taskId || "", view: null });
         window.dispatchEvent(new Event("genesis:shared-route"));

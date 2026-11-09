@@ -82,6 +82,10 @@ html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view 
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather .hero-actions > .primary-button {
   display:flex; flex-direction:row; align-items:center; width:100%; max-width:none; min-height:44px; justify-content:center;
 }
+@media(min-width:1100px) {
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather { align-self:stretch; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather .hero-actions { margin-block-start:auto; }
+}
 @media(max-width:760px) {
   html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card.mode-profane {
     grid-template-columns:minmax(0,1fr) fit-content(48%);
