@@ -9,6 +9,7 @@ import "./experimental-theme.css";
 import "./layout-refinements.css";
 import "./popup-surfaces.css";
 import "./dark-palettes.css";
+import "./daylight-surfaces.css";
 import { AppUrlCleaner } from "./AppUrlCleaner";
 import { ButtonTooltips } from "./ButtonTooltips";
 import { DialogDismissal } from "./DialogDismissal";

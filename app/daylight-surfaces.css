@@ -1,0 +1,88 @@
+/* Daylight surfaces share the saved palette without recoloring weekday meanings. */
+html[data-genesis-theme="standart"] .genesis-app {
+  --day-art-tint: color-mix(in srgb, var(--teal) 45%, var(--paper));
+  --day-section: color-mix(in srgb, var(--teal) 20%, var(--surface));
+  --day-group: color-mix(in srgb, var(--teal) 9%, var(--surface));
+  --day-outline: color-mix(in srgb, var(--teal) 36%, var(--surface));
+}
+
+html[data-genesis-theme="standart"] .genesis-app :is(.workspace-header, .projects-header) {
+  color: var(--ink); background: var(--day-section); border-color: var(--day-outline); box-shadow: none;
+}
+html[data-genesis-theme="standart"] .genesis-app :is(.workspace-header, .projects-header) :is(h1, p, .eyebrow, .workspace-title-secondary, .workspace-title-secondary em, .projects-summary > span, .all-tasks-summary > span) { color: var(--ink); }
+html[data-genesis-theme="standart"] .genesis-app :is(.workspace-header, .projects-header) :is(.projects-hero-mark, .projects-summary strong, .all-tasks-summary strong) { color: var(--teal); }
+html[data-genesis-theme="standart"] .genesis-app .workspace-header :is(.projects-summary, .all-tasks-summary) > span + span { border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .projects-header.year-header .year-switcher { color: var(--ink); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .projects-header.year-header .year-switcher :is(strong, button) { color: var(--ink); }
+html[data-genesis-theme="standart"] .genesis-app .projects-header.year-header .year-switcher button { background: var(--surface); border-color: var(--day-outline); }
+
+/* Only painted layers receive the daylight treatment; text, icons and controls stay crisp. */
+html[data-genesis-theme="standart"] .genesis-app :is(.habits-hero, .heroic-rank-card, .theokyklos-hero, .physis-hero) {
+  color: var(--ink); background: var(--day-section); border-color: var(--day-outline); box-shadow: none;
+}
+html[data-genesis-theme="standart"] .genesis-app .habits-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit;
+  background: url('/habit-ranks/heroic-ranks.webp') center / cover no-repeat; filter: url(#genesis-daylight-art);
+}
+html[data-genesis-theme="standart"] .genesis-app .heroic-rank-art { opacity: 1; background: url('/habit-ranks/heroic-ranks.webp') center / cover no-repeat; filter: url(#genesis-daylight-art); }
+html[data-genesis-theme="standart"] .genesis-app .section-hero-art { background-image: var(--oracle-backdrop); filter: url(#genesis-daylight-art); }
+html[data-genesis-theme="standart"] .genesis-app .section-hero-art::after { background: none; }
+html[data-genesis-theme="standart"] .genesis-app .physis-hero { background-image: none; }
+html[data-genesis-theme="standart"] .genesis-app .physis-hero::after {
+  background: url('/physis-art/landscape-v2.webp') center / cover no-repeat; filter: url(#genesis-daylight-art);
+}
+html[data-genesis-theme="standart"] .genesis-app .physis-hero::before { z-index: 1; filter: url(#genesis-daylight-art); }
+html[data-genesis-theme="standart"] .genesis-app .physis-hero > * { z-index: 2; }
+html[data-genesis-theme="standart"] .genesis-app :is(.habits-hero, .theokyklos-hero)::after { border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app :is(.habits-hero h1, .habits-hero p, .theokyklos-hero h1, .theokyklos-hero .eyebrow, .theokyklos-hero-copy > p, .physis-hero h1, .physis-hero-copy > p, .physis-hero .physis-status, .heroic-rank-copy h3, .heroic-rank-copy p, .heroic-rank-copy small, .heroic-rank-copy > span) { color: var(--ink); text-shadow: none; }
+html[data-genesis-theme="standart"] .genesis-app .habits-hero-status > :is(article, div) { color: var(--ink); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .habits-hero-status :is(small, em, strong) { color: var(--ink); }
+html[data-genesis-theme="standart"] .genesis-app .habits-hero-status :is(.habit-metric-sigil, .rank-sigil) { background: var(--teal); border-radius: 50%; }
+html[data-genesis-theme="standart"] .genesis-app .physis-hero .physis-settings-button { color: var(--teal); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .physis-hero .physis-settings-button:hover { background: var(--surface); }
+html[data-genesis-theme="standart"] .genesis-app .heroic-rank-copy > div { background: var(--day-outline); }
+
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) .genesis-app .heroic-rank-art { filter: url(#genesis-palette-art); }
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app .heroic-rank-art { filter: url(#genesis-blue-silver-art); }
+
+/* Keep the Gregorian illustration in its own frame instead of cropping a photo into a strip. */
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 36%); grid-template-rows: auto auto;
+  column-gap: 24px; row-gap: 12px; min-height: 0; padding: 20px; color: var(--ink); background: var(--surface); box-shadow: none;
+}
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .gregorian-season-art {
+  position: relative; grid-column: 2; grid-row: 1 / -1; align-self: center; inset: auto; width: 100%; aspect-ratio: 3 / 2;
+  opacity: 1; background: var(--month-art) center / contain no-repeat; border-radius: var(--ui-surface-radius, 10px);
+}
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > div:not(.month-switcher) { grid-column: 1; grid-row: 1; align-self: end; padding: 0; background: transparent; }
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .month-switcher { grid-column: 1; grid-row: 2; align-self: start; justify-self: start; }
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header :is(h1, p, .eyebrow, .month-switcher span) { color: var(--ink) !important; }
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane .calendar-mode-header .month-switcher button { color: var(--ink); background: var(--paper); border-color: var(--line); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-profane > .calendar-mode-header { background: var(--day-section); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane { background: var(--day-section); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-profane::before { opacity: .2; }
+html[data-genesis-theme="standart"] .genesis-app .year-month.calendar-mode-year-month.mode-profane { --year-day-base: var(--surface); --year-day-mask-strength: 32%; --year-day-hover-strength: 40%; }
+html[data-genesis-theme="standart"] .genesis-app .civil-mini-calendar.mode-profane .mini-day[data-weekday] { border-color: color-mix(in srgb, var(--year-day-mask) 60%, var(--ink-soft)); }
+html[data-genesis-theme="standart"] .genesis-app .civil-mini-calendar.mode-profane .mini-day[data-weekday].solar { border-color: #987025; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header { color: var(--ink); background: var(--day-section); border-color: var(--day-outline); box-shadow: none; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header :is(h1, p, .eyebrow, .month-switcher span) { color: var(--ink) !important; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header .month-switcher button { color: var(--ink); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art { opacity: 1; filter: url(#genesis-daylight-art); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art::after { background: none; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view > .calendar-header .calendar-inline-arrow { color: var(--ink); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view > .calendar-header .calendar-inline-arrow:is(:hover, :focus-visible) { background: var(--surface); outline-color: var(--teal); }
+
+/* A stronger outer tint, a quiet group and a clear row expose the existing hierarchy. */
+html[data-genesis-theme="standart"] .genesis-app :is(.today-tasks-panel, .habit-daily-panel) { background: var(--day-section); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-task-group { background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .today-task-list > article:not(.done):not(:has(.task-overdue-badge)) { background: var(--surface); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app :is(.habit-empty-state, .mood-tracker, .habit-check-list > article:not(.done)) { background: var(--surface); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app :is(.habit-empty-icon, .mood-summary-action) { color: var(--teal); background: var(--day-group); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .dream-journal.tracker-module-card .dream-journal-actions button { color: var(--ink); background: var(--day-section); border-color: var(--day-outline); }
+html[data-genesis-theme="standart"] .genesis-app .dream-journal.tracker-module-card .dream-journal-actions button:is(:hover, :focus-visible) { background: var(--day-group); outline-color: var(--teal); }
+
+@media (max-width: 760px) {
+  html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header { grid-template-columns: minmax(0, 1fr); padding: 12px; gap: 12px; }
+  html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .gregorian-season-art { grid-column: 1; grid-row: 2; }
+  html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-mode-header > .month-switcher { grid-row: 3; }
+}

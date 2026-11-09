@@ -28,8 +28,8 @@ export default function SolarLandscapeHero({now,location,deviceTimeZone,source,b
     const observer=new ResizeObserver(measure);observer.observe(element);
     return ()=>observer.disconnect();
   },[]);
-  // Panoramic cards share their height equally between the sky and terrain.
-  const horizonY = viewport.height > 0 && viewport.width >= viewport.height * 3 ? 0.5 : scene.horizonY;
+  // Keep the authored horizon centered as the content and viewport change.
+  const horizonY = 0.5;
   const sun=projectSolarPosition(scene.position,scene.observer.latitude,horizonY);
   const crop=scene.plate&&viewport.width>0&&viewport.height>0?solarLandscapeCrop(scene.plate,viewport.width,viewport.height,horizonY):null;
   const previous=useRef<{instant:number;observer:string}|null>(null);

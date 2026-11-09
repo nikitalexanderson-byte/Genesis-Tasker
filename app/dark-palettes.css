@@ -127,7 +127,7 @@ html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [
   border-radius:inherit; background:inherit; filter:url(#genesis-palette-art);
 }
 /* The blue palette pairs its painted shadows with silver highlights. */
-html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .habits-hero::before {
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app .habits-hero::before {
   content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
   border-radius:inherit; background:inherit; filter:url(#genesis-blue-silver-art);
 }
@@ -167,14 +167,14 @@ html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis
 html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button::before { background:radial-gradient(circle at var(--upgrade-pointer-x) var(--upgrade-pointer-y),#ffe9a566,transparent 72%); }
 html[data-genesis-theme="standart-dark"][data-genesis-palette="violet"] .upgrade-open-button svg { color: #593506; }
 @media (min-width: 901px) {
-  html[data-genesis-theme^="standart"] .genesis-app .habits-hero::before {
+  html[data-genesis-theme="standart-dark"] .genesis-app .habits-hero::before {
     content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
     border-radius:inherit; background:inherit; filter:brightness(.8) saturate(.68);
   }
   html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) .genesis-app .habits-hero::before {
     filter:url(#genesis-palette-art) brightness(.8) saturate(.68);
   }
-  html[data-genesis-theme^="standart"][data-genesis-palette="blue"] .genesis-app .habits-hero::before {
+  html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app .habits-hero::before {
     filter:url(#genesis-blue-silver-art) brightness(.8) saturate(.68);
   }
 }

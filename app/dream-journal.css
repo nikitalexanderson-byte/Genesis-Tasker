@@ -1,7 +1,5 @@
 .dream-journal { grid-column: 1 / -1; }
-@media (max-width:767px) {
-  .dream-journal.tracker-module-card { min-height:0; }
-}
+.dream-journal.tracker-module-card { min-height:0; align-self:start; }
 .dream-journal > header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .dream-journal label, .dream-editor label { display:grid; gap:6px; }
 .dream-journal label { max-width:280px; }

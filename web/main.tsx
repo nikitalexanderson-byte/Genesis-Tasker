@@ -14,6 +14,7 @@ import "../app/experimental-theme.css";
 import "../app/layout-refinements.css";
 import "../app/popup-surfaces.css";
 import "../app/dark-palettes.css";
+import "../app/daylight-surfaces.css";
 
 const APP_BASE = (process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim() || "").replace(/\/$/, "");
 
