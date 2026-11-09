@@ -11,6 +11,7 @@ require_once __DIR__.'/support-notices.php';
 require_once __DIR__.'/plan-guidance.php';
 require_once __DIR__.'/google-login-security.php';
 require_once __DIR__.'/account-retention.php';
+require_once __DIR__.'/partners.php';
 
 const GENESIS_ADMIN_EMAIL = 'nikitalexanderson@gmail.com';
 
@@ -364,6 +365,8 @@ function genesisUserForClient(array $user): array
         'adviceCollectionsReady' => array_values(array_unique(array_column(genesisAdviceCatalog(),'collection'))),
         'adviceAvailableCategories' => genesisAdviceAvailableCategories(),
         'isAdmin' => genesisIsAdminUser($user) && genesisSessionOwnsGoogleAccount($user),
+        'partnerProgramEnabled' => genesisPartnersEnabled(),
+        'partnerAccess' => genesisPartnerAccess((string)$user['id']),
         'sharedProjectsEligible' => genesisSharedEligible($user),
         'sharedProjectsLifetimeAccess' => genesisSharedTester($user),
         'sharedProjectsEnabled' => genesisSharedEligible($user) && !empty($user['shared_projects_enabled']),
@@ -464,7 +467,7 @@ function genesisTouchUser(string $userId, bool $login = false): void
     ]);
 }
 
-function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoogleTokens = true, bool $websiteRegistrationEmail = false): array
+function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoogleTokens = true, bool $websiteRegistrationEmail = false, ?string $partnerInvitation = null): array
 {
     $email = mb_strtolower(trim((string)($profile['email'] ?? '')));
     $googleSub = trim((string)($profile['sub'] ?? ''));
@@ -573,6 +576,7 @@ function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoo
             $db->prepare("INSERT INTO users (id, google_sub, email, display_name, avatar_url, access_token_enc, refresh_token_enc, token_expires_at, granted_scopes, workspace_key_enc, workspace_key_mode, calendar_mode, task_calendar_mode, week_start, login_count, last_login_at, last_seen_at, created_at, updated_at) VALUES (:id, :sub, :email, :display_name, :avatar_url, :access_token_enc, :refresh_token_enc, :token_expires_at, :granted_scopes, :workspace_key_enc, :workspace_key_mode, 'profane', 'profane', 'monday', 1, :last_login_at, :last_seen_at, :created_at, :updated_at)")->execute($values);
             genesisEmailQueueRegistration($id,true);
             $db->prepare('UPDATE users SET calendar_exploration_pending = 1 WHERE id = ?')->execute([$id]);
+            genesisPartnerBindRegistration($db, $id, $partnerInvitation);
             if($owns)$db->commit();
         }catch(Throwable $error){if($owns&&$db->inTransaction())$db->rollBack();throw $error;}
     }

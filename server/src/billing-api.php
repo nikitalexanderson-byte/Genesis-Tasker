@@ -188,7 +188,10 @@ function genesisBillingWebhook(string $provider, string $raw, string $signature,
             // Metadata in the incoming body is untrusted. This metadata came from authenticated GET.
             $q=genesisDb()->prepare("SELECT * FROM billing_orders WHERE id=? AND provider='yookassa'");
             $q->execute([$verified['metadata']['genesis_order_id']??'']);$order=$q->fetch();
-            if(!$order)return; // Unrelated legacy merchant payment: acknowledge without touching GENESIS.
+            if(!$order){
+                genesisPartnerAcceptRetainedYooPayment(genesisDb(), $verified, $config, time());
+                return; // Unrelated merchant payments remain untouched.
+            }
         }
         $order=genesisBillingYooBind(genesisDb(),$verified,$order,$config,time());
         if((int)$order['upgrade_credit_minor']>0){

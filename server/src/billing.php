@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/subscription-identity.php';
 require_once __DIR__.'/billing-upgrades.php';
 require_once __DIR__.'/billing-settlement.php';
+require_once __DIR__.'/partners.php';
 
 const GENESIS_BILLING_PROVIDERS = ['google-play', 'lemon-squeezy', 'yookassa'];
 const GENESIS_BILLING_PLANS = ['standart', 'premium', 'business'];
@@ -216,6 +217,7 @@ function genesisBillingApplyReceipt(PDO $db, GenesisVerifiedBillingReceipt $rece
         $observed=new GenesisVerifiedBillingReceipt($receipt->provider,$receipt->reference,$receipt->orderId,$state,$receipt->amountMinor,
             $receipt->currency,$receipt->productId,$receipt->confirmedAt,$receipt->evidenceHash,$receipt->validUntil,$refundedAmount);
         genesisBillingSettlementObserve($db,$order,$observed,$existing?:null,$now);
+        genesisPartnerObserveReceipt($db, $order, $observed, $now);
         if ($order['plan'] === 'premium4life' && $state === 'paid' && !genesisBillingSettlementBlocked(genesisBillingSettlement($db,$order['id']))) {
             $seat = $db->prepare('SELECT seat FROM billing_lifetime_seats WHERE order_id=? AND owner_hash=?'); $seat->execute([$order['id'],$ownerHash]);
             if ($seat->fetchColumn() === false) throw new DomainException('BILLING_LIFETIME_RESERVATION_REQUIRED');

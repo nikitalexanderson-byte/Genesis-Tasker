@@ -1,0 +1,36 @@
+import { partnerApi } from './cloud-sync';
+export { partnerMinor, partnerDecimal } from './partner-money';
+
+export type Partner = { id: string; label: string; code: string; link: string; acceptsInvitations: boolean; panelEnabled: boolean;
+  accountAvailable: boolean; revision: number; shareBps: number };
+export type PartnerTotals = { visits: number; registrations: number; assignedClients: number; payingClients: number; payments: number;
+  receivedMinor: number; refundedMinor: number; preliminaryShareMinor: number; unknownPreliminaryCount: number; confirmedShareMinor: number;
+  paidMinor: number; confirmedBalanceMinor: number; heldMinor: number; pendingAdjustmentMinor: number; payableMinor: number; currency: 'RUB' };
+export type PartnerCalculationState = 'preliminary' | 'confirmed';
+export type PartnerPayment = { id: string; clientAlias: string; plan: string; periodMonths: number; amountMinor: number; refundedMinor: number;
+  feeMinor: number | null; taxMinor: number | null; baseMinor: number | null; shareMinor: number | null; state: PartnerCalculationState;
+  kind: string; revision: number; confirmedAt: string; calculatedAt: string; shareBps: number; currency: 'RUB' };
+export type PartnerHistory = { id: string; paymentId: string; clientAlias: string; plan: string; paymentConfirmedAt: string; kind: string; state: PartnerCalculationState; revision: number;
+  feeMinor: number | null; taxMinor: number | null; refundedMinor: number; baseMinor: number | null; shareMinor: number | null;
+  reason: string; systemReason: boolean; createdAt: string };
+export type PartnerPayout = { id: string; paidOn: string; amountMinor: number; correctedMinor: number; note: string; createdAt: string;
+  corrections: { id: string; deltaMinor: number; reason: string; createdAt: string }[] };
+export type PartnerDashboard = { partner: Partner; totals: PartnerTotals; payments: PartnerPayment[]; history: PartnerHistory[];
+  clients: { id: string; alias: string; boundAt: string; endedAt: string | null; accountDeleted: boolean; payments: number; lastPaymentAt: string | null }[];
+  payouts: PartnerPayout[]; audit: { id: string; action: string; reason: string; createdAt: string }[]; page: { offset: number; limit: number; paymentTotal: number; hasMore: boolean }; supportedProviders: ['yookassa'] };
+export type PartnerList = { partners: (Partner & { totals: PartnerTotals })[]; settings: { revision: number; confirmed: boolean;
+  invitationDays: number; retentionDays: number | null; shareBps: number }; approvedEmails: string[] };
+export type PartnerTarget = { id: string; email: string; displayName: string };
+export type PartnerClientTarget = PartnerTarget & { binding: { id: string; partnerId: string; label: string } | null };
+export type PartnerFilters = { from: string; to: string; offset: number };
+export const loadPartners = (signal?: AbortSignal) => partnerApi<PartnerList>('/admin/partners', { signal });
+export const loadPartnerDashboard = (filters: PartnerFilters, adminId?: string, signal?: AbortSignal) => {
+  const query = new URLSearchParams({ from: filters.from, to: filters.to, offset: String(filters.offset) });
+  return partnerApi<PartnerDashboard>(adminId ? `/admin/partners/${encodeURIComponent(adminId)}?${query}` : `/partners/me?${query}`, { signal });
+};
+export const lookupPartner = (email: string) => partnerApi<{ user: PartnerTarget }>('/admin/partners/lookup', { method: 'POST', body: JSON.stringify({ email }) });
+export const lookupPartnerClient = (email: string) => partnerApi<{ user: PartnerClientTarget }>('/admin/partners/clients/lookup', { method: 'POST', body: JSON.stringify({ email }) });
+export const mutatePartner = (path: string, input: Record<string, unknown>) => partnerApi<Record<string, unknown>>(`/admin/partners${path}`, { method: 'POST', body: JSON.stringify(input) });
+export type PartnerInvitationStatus = { enabled: boolean; invitationDays: number | null; invitation: { label: string; expiresAt: string } | null };
+export const loadPartnerInvitation = (signal?: AbortSignal) => partnerApi<PartnerInvitationStatus>('/partners/invitation', { signal });
+export const capturePartnerInvitation = (code: string) => partnerApi<{ invitation: { label: string; expiresAt: string }; preserved: boolean }>('/partners/invitation', { method: 'POST', body: JSON.stringify({ code }) });

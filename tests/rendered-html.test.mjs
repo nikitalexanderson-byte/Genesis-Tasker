@@ -3144,8 +3144,9 @@ test("keeps the requested calendar and privacy features wired", async () => {
   assert.match(styles, /\.today-workspace \.day-rhythm-panel \{ order: 2; \}/);
   assert.match(calendar, /Сегодня \{isNewMoonDay \? "новолуние" : "полнолуние"\}/);
   assert.match(calendar, /SOLAR_EVENT_COPY/);
-  assert.match(calendar, /Академия Генезис/);
-  assert.match(calendar, /t\.me\/genesisbasilea/);
+  assert.match(calendar, /genesisTelegramLabel\(language\)/);
+  assert.match(calendar, /href=\{GENESIS_TELEGRAM\}/);
+  assert.match(await readFile(new URL('../app/site-links.ts', import.meta.url), 'utf8'), /https:\/\/t\.me\/genesiscalendar/);
   assert.match(calendar, /<DonationLink language=\{language\} authenticated=\{Boolean\(cloudUser\)\}/);
   const donationLink = await readFile(new URL("../app/DonationLink.tsx", import.meta.url), "utf8");
   assert.match(donationLink, /href=\{SUPPORT_TIPS_URL\}/);

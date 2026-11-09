@@ -6,6 +6,20 @@ const english = { ...JSON.parse(await readFile(new URL("../app/ui-translations/e
 const refinementCopy = JSON.parse(await readFile(new URL("../app/ui-refinement-copy.json", import.meta.url), "utf8"));
 Object.assign(english, refinementCopy.en);
 const missing = [];
+const partnerCopy = JSON.parse(await readFile(new URL('../app/partner-copy.json', import.meta.url), 'utf8'));
+const siteLinks = JSON.parse(await readFile(new URL('../app/site-links.json', import.meta.url), 'utf8'));
+const partnerLanguages = ['ru','en',...languages];
+for (const [key, values] of Object.entries(partnerCopy)) {
+  if (!Array.isArray(values) || values.length !== partnerLanguages.length) { missing.push('partner locale count: '+key); continue; }
+  for (const [index, language] of partnerLanguages.entries()) {
+    const value=values[index];
+    if(typeof value!=='string'||!value.trim()||!['ru','sr','uk'].includes(language)&&/[А-Яа-яЁё]/u.test(value)) missing.push(language+': invalid partner '+key);
+    const variables=text=>[...String(text).matchAll(/\{(\w+)\}/g)].map(match=>match[1]).sort().join(',');
+    if(variables(value)!==variables(values[0])) missing.push(language+': partner placeholders changed '+key);
+  }
+}
+for (const language of partnerLanguages) if(typeof siteLinks[language]!=='string'||!siteLinks[language].trim()
+  ||!['ru','sr','uk'].includes(language)&&/[А-Яа-яЁё]/u.test(siteLinks[language])) missing.push(language+': invalid official Telegram label');
 // Official Russian identity and tax-app name remain verbatim in translated legal notices.
 // Only these two exact notices receive this token-level allowance; their remaining text is still audited.
 const releaseLegal = JSON.parse(await readFile(new URL("../app/release-318-legal-copy.json", import.meta.url), "utf8"));

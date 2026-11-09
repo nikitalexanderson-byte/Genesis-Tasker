@@ -186,6 +186,8 @@ export type GenesisUser = {
   adviceCollectionsReady?: string[];
   adviceAvailableCategories?: import("./daily-advice").AdviceCategory[];
   isAdmin: boolean;
+  partnerProgramEnabled?: boolean;
+  partnerAccess?: { panelEnabled: boolean } | null;
   sharedProjectsEligible?: boolean;
   sharedProjectsLifetimeAccess?: boolean;
   sharedProjectsEnabled?: boolean;
@@ -891,7 +893,7 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
     && /^\/(?:workspace|tasks|mindmaps|diary|stoicheion-workspace|aurora-workspace|physis|recovered-tasks)(?:\/|$)/.test(path))
     throw new Error('BACKUP_RECONCILIATION_REQUIRED');
   const trialCheckpoint = beginTrialTransport();
-  if ((localSessionEnded || privateDeviceAccessBlocked()) && !["/session", "/auth/providers"].includes(path) && !/^\/account-recovery\/(?:status|request|complete)$/.test(path)) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
+  if ((localSessionEnded || privateDeviceAccessBlocked()) && !["/session", "/auth/providers", "/partners/invitation"].includes(path) && !/^\/account-recovery\/(?:status|request|complete)$/.test(path)) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
   const generation = sessionGeneration;
   if (!API_BASE) throw new Error("Сервер GENESIS ещё не подключён");
   const { signal: callerSignal, ...requestInit } = init;
@@ -3362,4 +3364,10 @@ export function createBillingOrder(offerId:string,provider:import('./billing').B
 export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,expectedRevision:number) {
   return api<{userId:string;subscriptionPlan:SubscriptionPlan;subscriptionRevision:number}>(`/admin/users/${encodeURIComponent(userId)}/reset-access`,
     {method:'POST',body:JSON.stringify({expectedPlan,expectedRevision})});
+}
+
+export async function partnerApi<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (!/^\/(?:partners\/|admin\/partners(?:\/|\?|$))/.test(path)) throw new Error('PARTNER_PATH_INVALID');
+  if (path === '/partners/invitation' && init.method === 'POST' && !csrfToken) await loadGenesisSession(init.signal ?? undefined);
+  return api<T>(path, init);
 }

@@ -1,4 +1,6 @@
 "use client";
+import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
+import { partnerText } from './partner-copy';
 
 import {DreamJournalSettings} from './DreamJournalSettings';
 import { DonationLink } from "./DonationLink";
@@ -81,6 +83,7 @@ const TODAY_SETTINGS = [
 ] as const;
 
 type AccountPanelProps = {
+  onOpenPartners?: () => void;
   onOpenPhysis?: () => void;
   user: GenesisUser;
   guideSharedProjects?: boolean;
@@ -146,7 +149,7 @@ function createHabitResetChallenge(): HabitResetChallenge {
   };
 }
 
-export function AccountPanel({ user, onOpenPhysis, guideSharedProjects = false, guideSolarPlace = false, onClose, onSignOut, onReconnectGoogle, onConnectAdditionalGoogle, onLanguageChange, onUserChange, themeState, onThemeChange, habitTrackingEnabled, onHabitTrackingChange, habitNotificationSettings, notificationPermission, onHabitNotificationSettingsChange, habitFeedbackSettings, onHabitFeedbackSettingsChange, onRequestHabitNotifications, hiddenHabitTemplateCount, onRestoreHabitTemplates, onResetHabitTracking, onExportCalendar, calendarExportAvailable, categories }: AccountPanelProps) {
+export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedProjects = false, guideSolarPlace = false, onClose, onSignOut, onReconnectGoogle, onConnectAdditionalGoogle, onLanguageChange, onUserChange, themeState, onThemeChange, habitTrackingEnabled, onHabitTrackingChange, habitNotificationSettings, notificationPermission, onHabitNotificationSettingsChange, habitFeedbackSettings, onHabitFeedbackSettingsChange, onRequestHabitNotifications, hiddenHabitTemplateCount, onRestoreHabitTemplates, onResetHabitTracking, onExportCalendar, calendarExportAvailable, categories }: AccountPanelProps) {
   const [sharedNotificationSettingsOpen,setSharedNotificationSettingsOpen]=useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -584,10 +587,11 @@ export function AccountPanel({ user, onOpenPhysis, guideSharedProjects = false, 
         <div className="settings-section-hero" data-settings-hero={settingsTab}>
           <span className="settings-section-hero-icon"><SettingsSectionIcon section={settingsTab} /></span>
           <div><h3>{user.language === "en" ? "Settings" : "Настройки"} - {user.language === "en" ? selectedSettings.en : selectedSettings.ru}</h3>
-            <p>{user.language === "en" ? selectedSettings.descriptionEn : selectedSettings.descriptionRu}</p></div>
+            <p>{settingsTab === 'links' ? `Telegram · ${translateText('Поддержка', user.language)}` : user.language === "en" ? selectedSettings.descriptionEn : selectedSettings.descriptionRu}</p></div>
         </div>
 
         {settingsTab==='account'?<BillingPanel user={user}/>:null}
+        {settingsTab === 'account' && onOpenPartners ? <section className="account-preferences" data-no-translate><h3>{partnerText('partner', user.language)}</h3><button type="button" onClick={onOpenPartners}>{partnerText('open', user.language)}</button></section> : null}
         {settingsTab==='backups'?<BackupPanel key={`backups:${user.uid}`} user={user}/>:null}
         {settingsTab==='account'&&user.authProvider==='google'?<GoogleIdentityPanel key={`identities:${user.uid}`} user={user}/>:null}
         <div className="account-security-grid" data-settings-group="account">
@@ -1132,7 +1136,7 @@ export function AccountPanel({ user, onOpenPhysis, guideSharedProjects = false, 
 
         <section className="account-preferences settings-links-panel" data-settings-group="links">
           <DonationLink className="settings-donation-link" language={user.language}>{release319Copy[user.language].donation}</DonationLink>
-          <a href="https://t.me/genesisbasilea" target="_blank" rel="noreferrer">{user.language === "en" ? "GENESIS Academy" : "Академия Генезис"}</a>
+          <a href={GENESIS_TELEGRAM} target="_blank" rel="noreferrer" data-no-translate>{genesisTelegramLabel(user.language)}</a>
           <a href="/support">{user.language === "en" ? "Support" : "Поддержка"}</a>
           <a href="/privacy">{user.language === "en" ? "Privacy policy" : "Политика конфиденциальности"}</a>
           <a href="/terms">{user.language === "en" ? "Terms of service" : "Пользовательское соглашение"}</a>

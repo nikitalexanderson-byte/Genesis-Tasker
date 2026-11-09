@@ -1,7 +1,9 @@
 "use client";
 import { DialogCloseButton } from "./DialogCloseButton";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from "react";
+import { partnerText } from './partner-copy';
+const AdminPartnersPanel = lazy(() => import('./PartnerPage').then(module => ({ default: module.AdminPartnersPanel })));
 import { deleteAdminUser, type AdminStats, type AdminUserStats, loadAdminStats } from "./cloud-sync";
 import { runtimeLocale, getRuntimeLanguage, translateText } from "./i18n";
 import { sortAdminUsers, defaultAdminSortDirection, type AdminUserSort, type AdminUserSortKey } from "./admin-user-sort";
@@ -73,15 +75,15 @@ const featureNames: Record<string, [string, string]> = {
   "calendar.lunar": ["Лунный календарь", "Lunar calendar"],
 };
 
-type AdminSection = "analytics" | "ads" | "actions";
+type AdminSection = "analytics" | "ads" | "actions" | "partners";
 
 function adminSectionFromHash(): AdminSection {
   if (typeof window === "undefined") return "analytics";
   const section = window.location.hash.replace(/^#\/?/, "").split(/[?&]/, 1)[0].split("/")[1];
-  return section === "ads" || section === "actions" ? section : "analytics";
+  return section === "ads" || section === "actions" || section === 'partners' ? section : "analytics";
 }
 
-export function AdminPanel() {
+export function AdminPanel({ partnersEnabled = false }: { partnersEnabled?: boolean }) {
   const isEnglish = runtimeLocale().startsWith("en");
   const copy = isEnglish ? {
     loadError: "Could not load statistics.", deleteError: "Could not delete the user.", loading: "Loading anonymized statistics…",
@@ -203,8 +205,10 @@ export function AdminPanel() {
         <button type="button" className="secondary-button" aria-current={section === "analytics" ? "page" : undefined} onClick={() => openSection("analytics")}>{isEnglish ? "Analytics" : "Аналитика"}</button>
         <button type="button" className="secondary-button" aria-current={section === "ads" ? "page" : undefined} onClick={() => openSection("ads")}>{isEnglish ? "Advertising" : "Реклама"}</button>
         <button type="button" className="secondary-button" aria-current={section === "actions" ? "page" : undefined} onClick={() => openSection("actions")}>{isEnglish ? "Actions" : "Действия"}</button>
+        {partnersEnabled && <button type="button" className="secondary-button" data-no-translate aria-current={section === 'partners' ? 'page' : undefined} onClick={() => openSection('partners')}>{partnerText('partners', getRuntimeLanguage())}</button>}
       </nav>
       {section === "ads" ? <AdminAdsPanel /> : null}
+      {section === 'partners' && partnersEnabled ? <Suspense fallback={<p>{partnerText('loading', getRuntimeLanguage())}</p>}><AdminPartnersPanel language={getRuntimeLanguage()} /></Suspense> : null}
       {stats && section === "analytics" ? <>
         <div className="admin-totals">
           <article><strong>{stats.totals.users}</strong><span>{copy.users}</span></article>

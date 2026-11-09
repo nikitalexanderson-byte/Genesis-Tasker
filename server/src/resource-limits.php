@@ -19,6 +19,7 @@ function genesisBeginWriteTransaction(PDO $db): void
 
 function genesisJsonBodyLimit(string $path): int
 {
+    if (str_starts_with($path, 'partners/') || str_starts_with($path, 'admin/partners')) return 8192;
     if ($path === 'weather/v1/current') return 1024;
     if (str_starts_with($path, 'account/plan-guidance/')) return 1024;
     if ($path === 'backup/v1/preview') return 17 * 1024 * 1024;

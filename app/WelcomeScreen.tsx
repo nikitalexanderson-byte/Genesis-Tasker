@@ -6,6 +6,8 @@ import { AccountRecoveryPanel } from './AccountSecurityPanels';
 import { LANGUAGES, LANGUAGE_LABELS, translateText, type Language } from "./i18n";
 import { SERVICE_IDENTITY } from "./public-service";
 import { AndroidDownload } from "./AndroidDownload";
+import { useState } from 'react';
+import { PartnerInvitation } from './PartnerInvitation';
 
 type WelcomeScreenProps = {
   nativeAndroidApkUrl: string | null;
@@ -31,6 +33,7 @@ const WELCOME_TITLES: Partial<Record<Language, string>> = {
 };
 
 export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle }: WelcomeScreenProps) {
+  const [invitationBusy, setInvitationBusy] = useState(false);
   const languageColumns = [7, 6, 5, 4, 3, 2, 1].find((count) => LANGUAGES.length % count === 0) ?? 1;
   const copy = language === "en" ? {
     home: "GENESIS — home",
@@ -158,7 +161,8 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
             </div>
           </div>
 
-          <button className="google-login-primary" type="button" onClick={onGoogle} disabled={busy} aria-label={copy.googleLabel}>
+          <PartnerInvitation language={language} onBusyChange={setInvitationBusy} />
+          <button className="google-login-primary" type="button" onClick={onGoogle} disabled={busy || invitationBusy} aria-label={copy.googleLabel}>
             <img src={`${APP_BASE}/google-signin-light-pill.svg`} alt="" aria-hidden="true" data-genesis-preserve="google-signin-pill" />
           </button>
           {nativeAndroidApkUrl ? <AndroidDownload href={nativeAndroidApkUrl} language={language} /> : null}

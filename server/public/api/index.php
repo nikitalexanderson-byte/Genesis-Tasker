@@ -50,6 +50,7 @@ require $serverRoot . '/src/shared-google.php';
 require $serverRoot . '/src/physis.php';
 require $serverRoot . '/src/backups.php';
 require $serverRoot . '/src/weather.php';
+require $serverRoot . '/src/partner-api.php';
 
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
@@ -261,6 +262,9 @@ try {
         }
     }
     genesisEnforceApiBudget($method, $path, genesisCurrentUserId());
+    if (($segments[0] ?? '') === 'partners' || (($segments[0] ?? '') === 'admin' && ($segments[1] ?? '') === 'partners')) {
+        genesisPartnerRoute($method, $segments);
+    }
     if ($path === 'weather/v1/current') {
         if ($method !== 'POST') genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);
         $owner=genesisSharedRequestUserId($method);
@@ -680,6 +684,7 @@ try {
             'issued_at' => time(),
             'nonce' => $nonce,
             'security_epoch' => isset($requestUser)?(int)$requestUser['security_epoch']:null,
+            'partner_invitation' => genesisPartnerOAuthInvitation($purpose),
         ];
         header('Cache-Control: no-store');
         header('Location: ' . genesisGoogleAuthUrl(
@@ -706,10 +711,12 @@ try {
         $returnTo = genesisSafeReturnTo((string)($request['return_to'] ?? '/'));
         $googleError = trim((string)($_GET['error'] ?? ''));
         if ($googleError !== '') {
+            genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
             genesisOAuthRedirect($returnTo, $googleError === 'access_denied' ? 'access_denied' : 'oauth_failed');
         }
         $code = (string)($_GET['code'] ?? '');
         if ($code === '') {
+            genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
             genesisOAuthRedirect($returnTo, 'oauth_failed');
         }
 
@@ -777,14 +784,16 @@ try {
                     }
                 }
             } else {
-                $user = genesisUpsertGoogleUser($profile, $tokens, false, true);
+                $user = genesisUpsertGoogleUser($profile, $tokens, false, true, $request['partner_invitation'] ?? null);
                 genesisEstablishGoogleSession($user, (string)$profile['sub'], $profile, 'web');
                 session_regenerate_id(true);
             }
         } catch (Throwable $oauthError) {
+            genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
             genesisLogError('Google OAuth callback failed.', $oauthError);
             genesisOAuthRedirect($returnTo, 'oauth_failed');
         }
+        genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
         genesisOAuthRedirect($returnTo);
     }
 

@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 return [
+    // Private owner-assigned program. Configure exact existing-account emails only after review.
+    'partners' => ['enabled' => false, 'allowed_emails' => []],
     // Public MET terms v2026-11-05 acceptance: authorised operator, 2026-11-07.
     // Defaults come from resources/weather-provider-policy.json; see docs/PROJECT_OVERVIEW.md.
     // No public Open-Meteo free endpoint is used.

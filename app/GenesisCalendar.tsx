@@ -1,5 +1,6 @@
 "use client";
 import release319Copy from "./release-319-copy.json";
+import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
 import { PaletteArtFilter } from "./PaletteArtFilter";
 import { featureAllowed, featureLimit, featureQuotaAllows, requireQuotaGrowth, requireFeature } from './feature-access';
 import {FeatureAccessContext} from './FeatureAccessContext';
@@ -306,6 +307,7 @@ const PersonalTaskTransfer = lazy(() => import("./PersonalTaskTransfer").then((m
 const PersonalProjectTransfer = lazy(() => import("./PersonalProjectTransfer").then((module) => ({ default: module.PersonalProjectTransfer })));
 const WelcomeScreen = lazy(() => import("./WelcomeScreen").then((module) => ({ default: module.WelcomeScreen })));
 const AdminPanel = lazy(() => import("./AdminPanel").then((module) => ({ default: module.AdminPanel })));
+const PartnerPage = lazy(() => import('./PartnerPage').then(module => ({ default: module.PartnerPage })));
 const GeminiAssistant = lazy(() => import("./GeminiAssistant").then((module) => ({ default: module.GeminiAssistant })));
 const HabitDailyPanel = lazy(() => import("./HabitTracker").then((module) => ({ default: module.HabitDailyPanel })));
 const HabitTrackerPage = lazy(() => import("./HabitTracker").then((module) => ({ default: module.HabitTrackerPage })));
@@ -316,7 +318,7 @@ const TheokyklosView = lazy(() => import("./TheokyklosView").then((module) => ({
 const WEB_THEME_AVAILABLE = true;
 
 
-type ViewName = "today" | "calendar" | "projects" | "year" | "all-tasks" | "habits" | "stoicheion" | "theokyklos" | "admin" | "physis";
+type ViewName = "today" | "calendar" | "projects" | "year" | "all-tasks" | "habits" | "stoicheion" | "theokyklos" | "admin" | "physis" | "partners";
 
 const WebVoiceControl = lazy(() => import("./WebVoiceControl").then((module) => ({ default: module.WebVoiceControl })));
 
@@ -604,7 +606,7 @@ const SOLAR_EVENT_COPY: Record<NonNullable<ReturnType<typeof getSolarEvent>>["id
   },
 };
 
-const VIEW_NAMES = new Set<ViewName>(["today", "calendar", "projects", "year", "all-tasks", "habits", "stoicheion", "theokyklos", "admin", "physis"]);
+const VIEW_NAMES = new Set<ViewName>(["today", "calendar", "projects", "year", "all-tasks", "habits", "stoicheion", "theokyklos", "admin", "physis", "partners"]);
 const HABIT_REMINDER_LOOKAHEAD_DAYS = 20_000;
 
 function nextHabitReminderDate(habit: Habit, fromDate: string, calendarMode: CalendarMode) {
@@ -618,8 +620,8 @@ function nextHabitReminderDate(habit: Habit, fromDate: string, calendarMode: Cal
 
 function viewFromHash(): ViewName {
   if (typeof window === "undefined") return "today";
-  const candidate = window.location.hash.replace(/^#\/?/, "").split(/[?&]/, 1)[0] as ViewName | "admin/actions" | "admin/ads" | "admin/forecasts";
-  if (candidate === "admin/actions" || candidate === "admin/ads" || candidate === "admin/forecasts") return "admin";
+  const candidate = window.location.hash.replace(/^#\/?/, "").split(/[?&]/, 1)[0] as ViewName | "admin/actions" | "admin/ads" | "admin/forecasts" | "admin/partners";
+  if (candidate === "admin/actions" || candidate === "admin/ads" || candidate === "admin/forecasts" || candidate === 'admin/partners') return "admin";
   if (candidate === "all-tasks" || (candidate as string) === "tasks") return "projects";
   return VIEW_NAMES.has(candidate) ? candidate : "today";
 }
@@ -4449,7 +4451,7 @@ export function GenesisCalendar() {
   const executeWebVoiceCommand = async (command: string): Promise<string> => {
     const { runWebVoiceCommand } = await import("./web-voice-executor");
     return runWebVoiceCommand(command, {
-      language, calendarMode: activeTaskCalendarMode, currentView: view === "physis" ? "today" : view,
+      language, calendarMode: activeTaskCalendarMode, currentView: view === "physis" || view === 'partners' ? "today" : view,
       today: todayDateValue, timeZone: deviceTimeZone,
       persistentWorkspace: Boolean(cloudUser) || !isGoogleSyncConfigured,
       divinationDisabled: Boolean(cloudUser?.stoicheionDivinationDisabled),
@@ -7264,12 +7266,13 @@ export function GenesisCalendar() {
                   />
                 </Suspense>
               ) : null}
-              {view === "admin" && cloudUser?.isAdmin ? <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening administration…" : "Открываем панель администратора…"} />}><AdminPanel /></Suspense> : null}
+              {view === "admin" && cloudUser?.isAdmin ? <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening administration…" : "Открываем панель администратора…"} />}><AdminPanel partnersEnabled={cloudUser.partnerProgramEnabled} /></Suspense> : null}
+              {view === 'partners' && cloudUser?.partnerAccess?.panelEnabled ? <Suspense fallback={<DeferredViewFallback label={language === 'en' ? 'Loading…' : 'Загрузка…'} />}><PartnerPage language={language} onBack={() => navigateTo('today')} /></Suspense> : null}
             </ViewErrorBoundary>
             <footer className="genesis-page-footer" aria-label="Ссылки проекта" data-exp-layout="safe-footer">
-              <a href="https://t.me/genesisbasilea" target="_blank" rel="noreferrer">
+              <a href={GENESIS_TELEGRAM} target="_blank" rel="noreferrer" data-no-translate>
                 <span aria-hidden="true">✦</span>
-                <span><strong>Академия Генезис</strong><small>Открыть Telegram</small></span>
+                <span><strong>{genesisTelegramLabel(language)}</strong><small>Telegram</small></span>
               </a>
               <DonationLink language={language} authenticated={Boolean(cloudUser)}>
                 <span aria-hidden="true">♡</span>
@@ -7845,6 +7848,7 @@ export function GenesisCalendar() {
             key={cloudUser.uid}
             user={cloudUser}
             onOpenPhysis={physisAccess.showEntry ? () => { setAccountOpen(false); setPhysisSettingsRequest(value => value + 1); navigateTo("physis"); } : undefined}
+            onOpenPartners={cloudUser.partnerAccess?.panelEnabled ? () => { setAccountOpen(false); navigateTo('partners'); } : undefined}
             guideSharedProjects={accountGuideUserId === cloudUser.uid}
             guideSolarPlace={accountSolarPlaceUserId === cloudUser.uid}
             onExportCalendar={exportCalendar}
