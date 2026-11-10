@@ -25,10 +25,10 @@ const PrivateNotices = lazy(() => import("./SharedSpaceCollaboration").then(modu
 const Messenger = lazy(() => import("./Messenger"));
 const emptyActivity: NoticeActivity = { count: 0, tokens: [], title: "" };
 type Props = { userId: string; guidanceUser?:GenesisUser|null; language: Language; mode:CalendarMode; appBase: string; sharedEnabled: boolean; invitationsEnabled: boolean; messengerEnabled?: boolean;
-  layout: AccountLayout; onLayoutChange: (patch: Partial<AccountLayout>) => void; headerTarget: HTMLElement | null; sharedHeaderTarget: HTMLElement | null;
+  layout: AccountLayout; onLayoutChange: (patch: Partial<AccountLayout>) => void; headerTarget: HTMLElement | null;
   onOpen: (destination: SharedTaskDestination) => void; onAccepted: (destination: SharedInvitationDestination) => void };
 
-export default function NotificationDock({ userId, guidanceUser=null, language, mode, appBase, sharedEnabled, invitationsEnabled, messengerEnabled=true, layout, onLayoutChange, headerTarget, sharedHeaderTarget, onOpen, onAccepted }: Props) {
+export default function NotificationDock({ userId, guidanceUser=null, language, mode, appBase, sharedEnabled, invitationsEnabled, messengerEnabled=true, layout, onLayoutChange, headerTarget, onOpen, onAccepted }: Props) {
   const { notifications, overview, nextCursor, loadingMore, moreError, error, refresh, loadMore, markRead,markUnread,unreadOnly,setUnreadOnly,loading } = useSharedUpdates();
   const { notes, dismiss } = useReminderNotices(appBase);
   const [privateActivity, setPrivateActivity] = useState(emptyActivity), [invitationActivity, setInvitationActivity] = useState(emptyActivity);
@@ -43,35 +43,6 @@ export default function NotificationDock({ userId, guidanceUser=null, language, 
   const openMessages=useCallback(()=>{if(messengerEnabled){setPane('messages');setOpen(true);setPreview(null);}},[messengerEnabled]);
   const activePane=messengerEnabled?pane:'updates';
   const root = useRef<HTMLElement>(null), toggle = useRef<HTMLButtonElement>(null), panel = useRef<HTMLDivElement>(null), toast = useRef<HTMLDivElement>(null);
-  const toggleHadFocus = useRef(false);
-  const [portalHost] = useState(() => {
-    if (typeof document === 'undefined') return null;
-    const host = document.createElement('div');
-    host.className = 'notification-portal-host';
-    return host;
-  });
-  const [compactHeader, setCompactHeader] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 1099px)').matches);
-  const activeHeaderTarget = compactHeader ? headerTarget : sharedHeaderTarget ?? headerTarget;
-  useEffect(() => {
-    const media = window.matchMedia('(max-width: 1099px)');
-    const update = () => setCompactHeader(media.matches);
-    update(); media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
-  useLayoutEffect(() => {
-    if (!portalHost || !activeHeaderTarget) return;
-    const focused = document.activeElement === toggle.current || (document.activeElement === document.body && toggleHadFocus.current);
-    activeHeaderTarget.appendChild(portalHost);
-    if (focused) toggle.current?.focus({ preventScroll: true });
-  }, [portalHost, activeHeaderTarget]);
-  useEffect(() => {
-    const clearOnPointer = (event: globalThis.PointerEvent) => { if (!toggle.current?.contains(event.target as Node)) toggleHadFocus.current = false; };
-    const clearOnBlur = () => { toggleHadFocus.current = false; };
-    document.addEventListener('pointerdown', clearOnPointer, true);
-    window.addEventListener('blur', clearOnBlur);
-    return () => { document.removeEventListener('pointerdown', clearOnPointer, true); window.removeEventListener('blur', clearOnBlur); };
-  }, []);
-  useEffect(() => () => { portalHost?.remove(); }, [portalHost]);
   const seen = useRef(new Set<string>());
   const openDestination=useRef(onOpen),actionController=useRef<AbortController|null>(null),alive=useRef(false);
   const drag = useRef<{ pointerId: number; startX: number; startY: number; origin: DockPosition; moved: boolean; end?: DockPosition } | null>(null);
@@ -197,7 +168,7 @@ export default function NotificationDock({ userId, guidanceUser=null, language, 
     try { if(unread)await markUnread([id]);else await markRead([id]); } catch { setReadFailed(true); } finally { setBusy(""); }
   };
   const openItem=async(id:string)=>{if(busy)return;const abort=new AbortController();actionController.current=abort;setBusy(id);setReadFailed(false);try{const destination=await resolveSharedNotification(id,abort.signal);if(!alive.current||abort.signal.aborted||privateDeviceAccessBlocked())return;collapse();openDestination.current(destination);if(!destination.taskId)await markRead([id]);}catch{if(alive.current&&!abort.signal.aborted)setReadFailed(true);}finally{if(alive.current)setBusy("");}};
-  const anchor = activeHeaderTarget?.getBoundingClientRect();
+  const anchor = headerTarget?.getBoundingClientRect();
   const emptyInbox=activePane==='updates'&&!loading&&!count&&!notifications.length&&!error&&!readFailed;
   const dimensions=clampDockSize(mobile?{width:360,height:emptyInbox?280:560}:panelSize,bounds);
   const anchored=anchor?clampDockPosition({x:anchor.right-dimensions.width,y:anchor.bottom+8},bounds,dimensions.width,dimensions.height):dockHome(bounds,dimensions.width,dimensions.height);
@@ -206,13 +177,12 @@ export default function NotificationDock({ userId, guidanceUser=null, language, 
   const dragProps = { onPointerDown: startDrag, onPointerMove: moveDrag, onPointerUp: endDrag, onPointerCancel: endDrag, onKeyDown: moveWithKeyboard };
   const toggleButton = <button ref={toggle} type="button" className="notification-dock-toggle is-pinned icon-button ux-action-button" aria-expanded={expanded} aria-controls="notification-dock-panel" aria-label={`${t("Уведомления и сообщения")}: ${new Intl.NumberFormat(language).format(count)}`}
     data-tooltip={t("Уведомления и сообщения")}
-    onFocus={() => { toggleHadFocus.current = true; }} onBlur={event => { if (event.relatedTarget) toggleHadFocus.current = false; }}
     onClick={() => { if(expanded)collapse();else show(); }}>
     <ExperimentalIcon name="mail" />{count>0?<span className="notification-dock-count" aria-hidden="true">{count > 99 ? "99+" : new Intl.NumberFormat(language).format(count)}</span>:null}
   </button>;
 
   return <>
-    {portalHost ? createPortal(toggleButton,portalHost) : null}
+    {headerTarget ? createPortal(toggleButton,headerTarget) : null}
     <aside ref={root} className="notification-dock" data-expanded={expanded} data-pane={activePane} hidden={!expanded} aria-label={t("Уведомления и сообщения")}
       style={{ left: place.x, top: place.y, width:dimensions?.width, height:dimensions?.height, maxWidth: bounds.right - bounds.left, maxHeight:expanded?dimensions?.height:bounds.bottom-bounds.top }}>
       <div ref={panel} id="notification-dock-panel" className="notification-dock-panel" hidden={!expanded} tabIndex={-1}>

@@ -139,7 +139,6 @@ function watchSharedRead(operation: (signal: AbortSignal) => Promise<unknown>, s
 import type { SharedInvitationDestination } from "./SharedInvitationNotices";
 
 type Props = { userId: string; language: string; writeEnabled: boolean; enabledCalendars: CalendarMode[]; experimentalTheme?: boolean; timeFormat?: TimeFormat;
-  notificationHeaderRef?: (element: HTMLDivElement | null) => void;
   projectViewOrder: ProjectView[] | null; onProjectViewOrder: (views: ProjectView[]) => void;
   calendarScale: CalendarScale; onCalendarScale: (scale: CalendarScale) => void;
   inboxWidth: number; onInboxWidth: (width: number) => void; inboxPosition: InboxPosition; inboxHidden: boolean; inboxCompact: boolean; onInboxPosition: (position: InboxPosition) => void; onInboxHidden: (hidden: boolean) => void; onInboxCompact: (compact: boolean) => void;
@@ -156,7 +155,7 @@ function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale, notificationHeaderRef }: Props) {
+export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale }: Props) {
   const english = language === "en";
   const sacredFeaturesEnabled = useSacredFeaturesEnabled();
   const tasksCompact = inboxCompact;
@@ -1325,7 +1324,6 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
         onClick={() => { setSpaceId(""); setProjectId(""); setSnapshot(null); closeTask(); }}><ExperimentalIcon name="spaces" /></button>
       <button type="button" className="secondary-button" disabled={!sharedProjectQuotaAvailable(ownedProjectQuota)} title={english ? "Create workspace" : "Создать пространство"} aria-label={english ? "Create workspace" : "Создать пространство"} onClick={() => {if(sharedProjectQuotaAvailable(ownedProjectQuota))setCreateModal("space");}}><ExperimentalIcon name="space-plus" /></button>
       {updatesButton}
-      <div className="notification-header-slot shared-notification-header-slot" ref={notificationHeaderRef}/>
       </div>;
   const taskProjectChoice = taskEditing && selectedTask && taskSnapshot && !selectedTask.archivedAt && taskSnapshot.project.canOrganizeTasks ?
     <label>{english ? "Project" : "Проект"}<select value={taskSnapshot.project.id} disabled={busy}
@@ -1342,7 +1340,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
     "--shared-workspace-tool-count": 3 + Number(["owner", "admin"].includes(selectedSpace?.role ?? "")) + Number(canManageLabels) + Number(Boolean(spaceId)),
   } as CSSProperties}>
     <WorkspaceHeader title={english ? "Affairs · shared" : "Дела · общие"}
-      compact actions={selectedSpace ? undefined : <div className="notification-header-slot shared-notification-header-slot" ref={notificationHeaderRef}/>}
+      compact
       context={selectedSpace ? <SharedWorkspaceIdentity key={spaceId} title={selectedSpace.title} selector={spacePicker}
         owner={selectedSpace?.ownerName ?? visibleInbox?.members.filter(member => member.spaceRole === "owner").map(member => member.displayName).join(", ") ?? ""}
         members={selectedSpace?.memberCount ?? visibleInbox?.members.length}

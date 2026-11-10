@@ -3,8 +3,7 @@ html[data-genesis-theme] .genesis-app .notification-dock[data-expanded="true"] {
 html[data-genesis-theme] .genesis-app .notification-dock [hidden], html[data-genesis-theme] .genesis-app .notification-dock[hidden] { display:none; }
 html[data-genesis-theme] .genesis-app .notification-dock-toggle { position:relative; display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid var(--ui-accent); border-radius:10px; background:var(--surface); color:var(--ui-accent); touch-action:manipulation; cursor:pointer; }
 .notification-header-slot { display:none; }
-.notification-portal-host { display:contents; }
-.notification-header-slot:has(.notification-dock-toggle:not([hidden])) { display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+.notification-header-slot:has(>button:not([hidden])) { display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
 html[data-genesis-theme] .genesis-app .notification-header-slot .notification-dock-toggle[hidden] { display:none; }
 html[data-genesis-theme] .genesis-app .notification-dock-toggle.is-pinned { position:relative; width:44px; height:44px; min-width:44px; min-height:44px; padding:0; border-color:var(--exp-border); color:var(--ink); }
 html[data-genesis-theme] .genesis-app .notification-dock-count { position:absolute; top:-6px; right:-6px; min-width:22px; padding:1px 5px; border-radius:8px; background:var(--ui-accent); color:var(--surface); font:600 12px/1.6 var(--font-ui); font-variant-numeric:tabular-nums; }

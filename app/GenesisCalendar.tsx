@@ -1360,7 +1360,6 @@ export function GenesisCalendar() {
   const [syncError, setSyncError] = useState("");
   const [workspaceRecoveryKey, setWorkspaceRecoveryKey] = useState<string | null>(null);
   const [notificationHeaderTarget, setNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
-  const [sharedNotificationHeaderTarget, setSharedNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
   const loadLocalWorkspace = (key: string) => {
     try { return readStoredState(key); }
     catch { setWorkspaceRecoveryKey(key); return null; }
@@ -7026,7 +7025,7 @@ export function GenesisCalendar() {
       {cloudUser?<Suspense fallback={null}><PlanGuidanceHost key={cloudUser.uid} user={cloudUser} section={view}/></Suspense>:null}
       {iosInstallOpen ? <Suspense fallback={null}><IosInstallPrompt language={language} onClose={() => setIosInstallOpen(false)} /></Suspense> : null}
       <Suspense fallback={null}><NotificationDock key={cloudUser?.uid ?? "guest"} userId={cloudUser?.uid ?? ""} guidanceUser={cloudUser} language={language} mode={activeCalendarMode} appBase={APP_BASE}
-        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={notificationHeaderTarget} sharedHeaderTarget={sharedNotificationHeaderTarget}
+        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={notificationHeaderTarget}
         sharedEnabled={sharedProjectsReadable} invitationsEnabled={featureAllowed(cloudUser?.featureAccess,'shared-projects') && Boolean(cloudUser?.sharedProjectsEligible)} messengerEnabled={featureAllowed(cloudUser?.featureAccess,'messenger')}
         onOpen={place => { setProjectsArea("shared"); navigateTo("projects", false, place); }} onAccepted={destination => {
         const uid=cloudUser?.uid; if(!uid)return;
@@ -7158,7 +7157,6 @@ export function GenesisCalendar() {
                 </div>
                 {!sharedProjectsVisible || activeProjectsArea === "personal" ? renderProjects() : <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening shared projects…" : "Открываем общие проекты…"} />}>
                   <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive}
-                    notificationHeaderRef={setSharedNotificationHeaderTarget}
                     writeEnabled={sharedProjectsAvailable}
                     projectViewOrder={accountLayout.sharedProjectViewOrder} onProjectViewOrder={sharedProjectViewOrder => saveLayout({ sharedProjectViewOrder })}
                     calendarScale={accountLayout.sharedCalendarScale} onCalendarScale={sharedCalendarScale => saveLayout({ sharedCalendarScale })}

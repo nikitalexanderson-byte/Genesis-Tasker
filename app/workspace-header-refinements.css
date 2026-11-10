@@ -116,7 +116,7 @@ html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-summary-retry { grid-column:1/-1; grid-row:4; }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-notification-header-slot { grid-column:4; grid-row:1; justify-self:end; align-self:start; }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open {
-  display:inline-flex; grid-column:3; grid-row:1; justify-self:end; align-self:start;
+  display:inline-flex; grid-column:4; grid-row:1; justify-self:end; align-self:start;
   position:relative; width:44px; height:44px; min-height:44px; margin:0; padding:10px; font-size:0;
 }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open svg { flex-shrink:0; width:20px; height:20px; }
@@ -129,7 +129,7 @@ html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-space-identity { width:100%; max-width:none; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-header-actions { grid-column:1 / 3; grid-row:2; align-self:start; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools { width:auto; flex-wrap:nowrap; }
-  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open { grid-column:4; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open { grid-column:5; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-notification-header-slot { grid-column:5; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-summary-retry { grid-row:3; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact]:has(.shared-header-actions) {

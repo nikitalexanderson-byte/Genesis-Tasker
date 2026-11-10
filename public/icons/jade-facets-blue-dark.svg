@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Genesis Calendar — Нефрит, Грани, круг</title>
+  <circle cx="512" cy="512" r="512" id="background" fill="#132B4A" />
+  <g id="emblem" transform="translate(512 512)">
+    <circle id="outer-ring" r="389" fill="none" stroke="#C8B385" stroke-width="26" />
+    <g id="solar-rays" fill="#F1D9A4">
+      <path id="ray-000" transform="rotate(0) translate(0 6.79429) scale(1.35 1.0225922)" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Q -4.6 -176.8 -7.3 -183.5 L -27.5 -231.8 Q -30 -240 -27.1 -250.4 Z" />
+      <path id="ray-045" transform="rotate(45) translate(0 7.14789) scale(1.41 1.0211268)" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Q -4.2 -177.4 -6.4 -183.7 L -18.8 -219.9 Q -21 -225 -18.8 -232.1 Z" />
+      <path id="ray-090" transform="rotate(90) translate(0 6.79429) scale(1.35 1.0225922)" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Q -4.6 -176.8 -7.3 -183.5 L -27.5 -231.8 Q -30 -240 -27.1 -250.4 Z" />
+      <path id="ray-135" transform="rotate(135) translate(0 7.14789) scale(1.41 1.0211268)" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Q -4.2 -177.4 -6.4 -183.7 L -18.8 -219.9 Q -21 -225 -18.8 -232.1 Z" />
+      <path id="ray-180" transform="rotate(180) translate(0 6.79429) scale(1.35 1.0225922)" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Q -4.6 -176.8 -7.3 -183.5 L -27.5 -231.8 Q -30 -240 -27.1 -250.4 Z" />
+      <path id="ray-225" transform="rotate(225) translate(0 7.14789) scale(1.41 1.0211268)" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Q -4.2 -177.4 -6.4 -183.7 L -18.8 -219.9 Q -21 -225 -18.8 -232.1 Z" />
+      <path id="ray-270" transform="rotate(270) translate(0 6.79429) scale(1.35 1.0225922)" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Q -4.6 -176.8 -7.3 -183.5 L -27.5 -231.8 Q -30 -240 -27.1 -250.4 Z" />
+      <path id="ray-315" transform="rotate(315) translate(0 7.14789) scale(1.41 1.0211268)" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Q -4.2 -177.4 -6.4 -183.7 L -18.8 -219.9 Q -21 -225 -18.8 -232.1 Z" />
+      <path id="facet-000" transform="rotate(0) translate(0 6.79429) scale(1.35 1.0225922)" fill="#C8B385" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Z" />
+      <path id="facet-045" transform="rotate(45) translate(0 7.14789) scale(1.41 1.0211268)" fill="#C8B385" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Z" />
+      <path id="facet-090" transform="rotate(90) translate(0 6.79429) scale(1.35 1.0225922)" fill="#C8B385" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Z" />
+      <path id="facet-135" transform="rotate(135) translate(0 7.14789) scale(1.41 1.0211268) scale(-1 1)" fill="#C8B385" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Z" />
+      <path id="facet-180" transform="rotate(180) translate(0 6.79429) scale(1.35 1.0225922) scale(-1 1)" fill="#C8B385" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Z" />
+      <path id="facet-225" transform="rotate(225) translate(0 7.14789) scale(1.41 1.0211268) scale(-1 1)" fill="#C8B385" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Z" />
+      <path id="facet-270" transform="rotate(270) translate(0 6.79429) scale(1.35 1.0225922) scale(-1 1)" fill="#C8B385" d="M 0 -345 L 27.1 -250.4 Q 30 -240 27.5 -231.8 L 7.3 -183.5 Q 4.6 -176.8 0 -176.8 Z" />
+      <path id="facet-315" transform="rotate(315) translate(0 7.14789) scale(1.41 1.0211268)" fill="#C8B385" d="M 0 -291 L 18.8 -232.1 Q 21 -225 18.8 -219.9 L 6.4 -183.7 Q 4.2 -177.4 0 -177.4 Z" />
+    </g>
+    <circle id="solar-disc" r="154" fill="#F1D9A4" />
+  </g>
+</svg>

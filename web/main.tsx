@@ -5,6 +5,8 @@ import { AppUrlCleaner } from "../app/AppUrlCleaner";
 import { ButtonTooltips } from "../app/ButtonTooltips";
 import { DialogDismissal } from "../app/DialogDismissal";
 import { DialogHeaderActions } from "../app/DialogHeaderActions";
+import { installWebBrandIcon } from "./web-brand-icon";
+import "./visual-refinements.css";
 import "../app/globals.css";
 import "../app/dark-theme.css";
 import "../app/tablet-layout.css";
@@ -19,6 +21,7 @@ import "../app/green-classic-surfaces.css";
 import "../app/lunar-hero-web.css";
 
 const APP_BASE = (process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim() || "").replace(/\/$/, "");
+installWebBrandIcon(APP_BASE);
 
 function registerProductionServiceWorker() {
   const isLocalPreview = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);

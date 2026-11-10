@@ -1,0 +1,13 @@
+/* Website-only: native application artwork and installed-app icons remain untouched. */
+html[data-genesis-theme] .genesis-app .brand-mark > .brand-icon {
+  background-image: var(--genesis-web-brand-icon) !important;
+}
+
+/* Both personal and shared mindmaps use the same web heading. */
+html[data-genesis-theme] .genesis-app .mindmap-header .mindmap-hero-mark { display:none; }
+
+/* A reversed daily card uses the same deep red in daylight, with rounded backing. */
+html[data-genesis-theme] .genesis-app .stoicheion-daily-result .stoicheion-revealed-card.is-reversed { border-radius:10px; }
+html[data-genesis-theme="standart"] .genesis-app .stoicheion-daily-result .stoicheion-revealed-card.is-reversed {
+  background:#662b35; border-color:#c7737d; color:#f0eee7;
+}

@@ -371,7 +371,8 @@ const THEOKYKLOS_SYMBOL_ART = [
   "./theokyklos-symbols/olympian-dionysus-v313.png",
   "./theokyklos-symbols/olympian-kronos-v324.png",
 ];
-const CORE = ["./", "./manifest.webmanifest", "./manifest.en.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./genesis-hero.png", ...MONTH_ART, ...LUNAR_MONTH_ART, ...WEEKDAY_ART, ...ACHIEVEMENT_ART, ...HABIT_REWARD_ART, ...HERO_RANK_BANNER_ART, ...PHYSIS_EXERCISE_ART, ...CALENDAR_ART, ...HERO_PATH_ART, ...THEOKYKLOS_ART, ...THEOKYKLOS_SYMBOL_ART]
+const WEB_BRAND_ICONS = ["green", "blue", "burgundy", "violet"].flatMap(palette => ["light", "dark"].map(mode => `./icons/jade-facets-${palette}-${mode}.svg`));
+const CORE = ["./", "./manifest.webmanifest", "./manifest.en.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", ...WEB_BRAND_ICONS, "./genesis-hero.png", ...MONTH_ART, ...LUNAR_MONTH_ART, ...WEEKDAY_ART, ...ACHIEVEMENT_ART, ...HABIT_REWARD_ART, ...HERO_RANK_BANNER_ART, ...PHYSIS_EXERCISE_ART, ...CALENDAR_ART, ...HERO_PATH_ART, ...THEOKYKLOS_ART, ...THEOKYKLOS_SYMBOL_ART]
   .map((path) => new URL(path, SCOPE).href);
 const REQUIRED_SHELL = [...new Set([...CORE, ...PRECACHE.map((path) => new URL(path, SCOPE).href)])];
 
