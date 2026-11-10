@@ -80,7 +80,10 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       await snapshot(`release317-map-settings-${width}-${scheme}`);
       records.push({screen:'map-settings',width,scheme,rect,controls:geometry});
       await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
-      await page.waitForFunction(()=>document.activeElement?.matches('.mindmap-settings-toggle'),{},{timeout:2000});
+      await page.waitForFunction(()=>document.activeElement?.matches('.mindmap-settings-toggle'),{},{timeout:2000}).catch(async error=>{
+        const focus=await trigger.evaluate(node=>({triggerConnected:node.isConnected,activeTag:document.activeElement?.tagName,activeClass:document.activeElement?.className,activeLabel:document.activeElement?.getAttribute('aria-label')}));
+        throw new Error(`Escape focus restoration: ${JSON.stringify(focus)}; ${error.message}`);
+      });
       assert(await trigger.evaluate(node=>node===document.activeElement),'Escape returns focus to settings trigger');
       if(width===1440&&scheme==='light'){
         await page.reload();await trigger.waitFor();await trigger.click();
