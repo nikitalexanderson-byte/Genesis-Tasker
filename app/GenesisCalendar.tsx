@@ -93,7 +93,8 @@ import { uiVisibility, viewIsVisible, visibleCalendarMode, visibleCalendarModes 
 import {TodayBlocks, TodayBlock} from './TodayBlocks';
 const TodayBlockOrderButton = lazy(() => import('./TodayBlockOrderDialog').then(module => ({default: module.TodayBlockOrderButton})));
 const TodayBlockOrderDialog = lazy(() => import('./TodayBlockOrderDialog').then(module => ({default: module.TodayBlockOrderDialog})));
-import {availableTodayBlockStorage, effectiveTodayBlockOrder, readTodayBlockOrder, storeTodayBlockOrder, type TodayBlockId} from './today-block-order';
+import {availableTodayBlockStorage, effectiveTodayBlockOrder, readTodayBlockOrder, readTodayHalfBlocks, storeTodayBlockOrder, storeTodayHalfBlocks, type TodayBlockId} from './today-block-order';
+import {DisplayCalendarChoice} from './DisplayCalendarChoice';
 import { SacredFeaturesContext } from "./sacred-features";
 import { useSidebarCollapse } from "./use-sidebar-collapse";
 import { useAccountLayout } from "./use-account-layout";
@@ -1211,21 +1212,6 @@ function DayRhythmPanel({ timeFormat }: { timeFormat: TimeFormat }) {
   );
 }
 
-function DisplayCalendarChoice({ label, className, enabledCalendars, mode, language, onChange }: {
-  label: string; className: string; enabledCalendars: CalendarMode[]; mode: CalendarMode;
-  language: string; onChange: (mode: CalendarMode) => Promise<void>;
-}) {
-  if (enabledCalendars.length < 2) return null;
-  return <div className={`display-calendar-choice ${className}`} role="group" aria-label={label}>
-    {(["profane", "sacred", "lunar"] as CalendarMode[]).filter((item) => enabledCalendars.includes(item)).map((item) => {
-      const name = item === "profane" ? (language === "en" ? "Gregorian" : "Григорианский")
-        : item === "sacred" ? (language === "en" ? "Sacred" : "Сакральный") : (language === "en" ? "Lunar" : "Лунный");
-      return <button type="button" className="secondary-button" key={item} aria-pressed={mode === item}
-        aria-label={name} title={name} onClick={() => void onChange(item)}><CalendarModeIcon mode={item} /><span>{name}</span></button>;
-    })}
-  </div>;
-}
-
 export function GenesisCalendar() {
   const mobileLayout = useMobileLayout();
   const compactHeader = useCompactHeader();
@@ -1782,11 +1768,16 @@ export function GenesisCalendar() {
   }
   const [guestTodayOrder, setGuestTodayOrder] = useState<TodayBlockId[]>(() => readTodayBlockOrder(availableTodayBlockStorage(typeof window === 'undefined' ? null : window), 'guest'));
   const todayOrder = effectiveTodayBlockOrder(cloudUser ? accountLayout.todayBlockOrder : guestTodayOrder);
-  const saveTodayOrder = (order: TodayBlockId[], failureMessage: string) => {
-    if (cloudUser) saveLayout({todayBlockOrder: order});
+  const [guestTodayHalves, setGuestTodayHalves] = useState<TodayBlockId[]>(() => readTodayHalfBlocks(availableTodayBlockStorage(typeof window === 'undefined' ? null : window), 'guest'));
+  const todayHalves = cloudUser ? accountLayout.todayHalfBlocks : guestTodayHalves;
+  const saveTodayOrder = (order: TodayBlockId[], failureMessage: string, halfBlocks: TodayBlockId[]) => {
+    if (cloudUser) saveLayout({todayBlockOrder: order, todayHalfBlocks: halfBlocks});
     else {
       setGuestTodayOrder([...order]);
-      if (!storeTodayBlockOrder(availableTodayBlockStorage(window), 'guest', order)) announce(failureMessage);
+      setGuestTodayHalves([...halfBlocks]);
+      const storage = availableTodayBlockStorage(window);
+      const savedOrder = storeTodayBlockOrder(storage, 'guest', order), savedHalves = storeTodayHalfBlocks(storage, 'guest', halfBlocks);
+      if (!savedOrder || !savedHalves) announce(failureMessage);
     }
   };
   const saveSidebarWidth = useCallback((sidebarWidth: number) => saveLayout({ sidebarWidth }), [saveLayout]);
@@ -5214,7 +5205,8 @@ export function GenesisCalendar() {
   };
 
   const renderDisplayCalendarChoice = (label: string, className = "") => (
-    <DisplayCalendarChoice label={label} className={className} enabledCalendars={visibility.enabledCalendars}
+    <DisplayCalendarChoice key={cloudUser?.uid ?? 'guest'} label={label} className={className} enabledCalendars={visibility.enabledCalendars}
+      order={accountLayout.displayCalendarOrder} onReorder={order => saveLayout({displayCalendarOrder: order})}
       mode={activeCalendarMode} language={language} onChange={changeDisplayCalendar} />
   );
 
@@ -5291,9 +5283,9 @@ export function GenesisCalendar() {
       {sacredFeaturesEnabled ? <span className="hero-date">{activeCalendarMode === "profane" ? formatCalendarDate(gregorian, "sacred") : formatGregorian(gregorian, true)}</span> : null}
     </div>;
     return (
-      <TodayBlocks order={todayOrder}>
+      <TodayBlocks order={todayOrder} halfBlocks={todayHalves}>
         <TodayBlock id="hero">
-        <section className={`hero-card mode-${activeCalendarMode}${activeCalendarMode === "profane" ? ` weekday-${gregorian.getDay()}` : ""}`} style={activeCalendarMode === "lunar" ? {"--lunar-day-art":`url("${APP_BASE}/${lunarPatronArt(moon.day)}")`} as CSSProperties : undefined} aria-labelledby="today-title" data-genesis-preserve="today-hero-art">
+        <section className={`hero-card mode-${activeCalendarMode}${activeCalendarMode === "profane" ? ` weekday-${gregorian.getDay()}` : ""}`} style={activeCalendarMode === "lunar" ? {"--lunar-day-art":`url("${APP_BASE}/${lunarPatronArt(moon.day)}")`, "--genesis-hero-image":`url("${APP_BASE}/${lunarPatronArt(moon.day)}")`, "--genesis-hero-fallback":"none"} as CSSProperties : undefined} data-lunar-patron={activeCalendarMode === "lunar" ? lunarPatronForDay(moon.day) : undefined} aria-labelledby="today-title" data-genesis-preserve="today-hero-art">
           {!sacredFeaturesEnabled?<Suspense fallback={null}><SolarLandscapeHero now={today} location={deviceLocation} deviceTimeZone={deviceTimeZone} source={solarLocationSource} basePath={APP_BASE} ownerId={cloudUser?.uid??null}/></Suspense>:null}
           <span className="hero-palette-art" aria-hidden="true" />
           <div className="hero-copy">
@@ -7017,7 +7009,7 @@ export function GenesisCalendar() {
     >
       <PaletteArtFilter />
       {view === 'today' && todayOrderEditor.owner === todayOrderOwner && todayOrderEditor.view === view && todayOrderEditor.open ? <Suspense fallback={null}><TodayBlockOrderDialog key={todayOrderOwner}
-        order={todayOrder} language={language} onSave={saveTodayOrder} onClose={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: false})}/></Suspense> : null}
+        order={todayOrder} halfBlocks={todayHalves} language={language} onSave={saveTodayOrder} onClose={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: false})}/></Suspense> : null}
       {experimentalProjectFormOpen ? <div className="modal-backdrop experimental-project-composer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExperimentalProjectFormOpen(false); }}>{renderProjectCreateForm()}</div> : null}
       <ActionNotice message={layoutError || (view === "projects" && activeProjectsArea === "shared" ? "" : notice)}/>
       <UpgradeAccessUI user={cloudUser} onUserChange={user=>{if(cloudUserRef.current?.uid!==user.uid)return;setCloudUser(user);if(!privateDeviceAccessBlocked())localStorage.setItem(LAST_USER_KEY,JSON.stringify(user));}}/>

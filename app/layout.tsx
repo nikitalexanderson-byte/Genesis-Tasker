@@ -10,6 +10,8 @@ import "./layout-refinements.css";
 import "./popup-surfaces.css";
 import "./dark-palettes.css";
 import "./daylight-surfaces.css";
+import "./green-classic-surfaces.css";
+import "./lunar-hero-web.css";
 import { AppUrlCleaner } from "./AppUrlCleaner";
 import { ButtonTooltips } from "./ButtonTooltips";
 import { DialogDismissal } from "./DialogDismissal";

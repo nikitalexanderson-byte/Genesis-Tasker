@@ -1,0 +1,87 @@
+/* Classical artwork and green/gold reading surfaces in the green daylight scheme. */
+html[data-genesis-theme="standart"][data-genesis-palette="green"] :is(.year-description-card, .sacred-year-details-modal, .hero-path-panel, .heroic-rank-card, .aurora-dialog, .stoicheion-timeline-section, .stoicheion-timeline-help-dialog, .restoration, .restoration-dialog, .stoicheion-letter-dialog) {
+  --paper: #0b2427; --paper-deep: #081c1f; --surface: #123337; --white: #1c4141;
+  --ink: #f5efdf; --ink-soft: #c4d5ce; --line: #d8bd804d;
+  --teal: #87c3ab; --gold: #e2c886; --gold-light: #f0dda5;
+  --ui-accent: #e2c886; --ui-on-accent: #102a29; --exp-hover: #224641;
+  --palette-recessed: #071d21; --palette-surface: #103134; --palette-raised: #1c4141;
+  --palette-muted: #c4d5ce; --palette-accent: #e2c886; --palette-on-accent: #102a29;
+  --palette-reversed: #382622; --palette-reversed-border: #b87d66;
+  color: var(--ink); border-color: var(--line); color-scheme: dark;
+}
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-description-card {
+  background: radial-gradient(circle at 84% 18%, #d2af662e, transparent 31%), linear-gradient(135deg, #103134, #07171b 72%);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-description-card :is(h2, p, dd) { color: var(--ink); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-description-card :is(.eyebrow, dt) { color: var(--gold); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-description-card dl > div { background: #ffffff0e; border-color: #d8bd802e; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-details-button {
+  color: #102a29; background: linear-gradient(135deg, #f0dda5, #c99a47); border-color: #fff1bfa6;
+  min-height: 64px; width: min(100%, 380px); min-width: min(280px, 100%); padding: 14px 18px;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-details-button :is(strong, small, svg) { color: inherit; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-details-button > span:first-child { color: #f7e8bc; background: #173d3b; }
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .habits-hero {
+  background: linear-gradient(105deg, #051618eb, #0d2a29c7 56%, #2a231896), url('/habit-ranks/heroic-ranks.webp') center / cover;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .habits-hero::before { content: none; filter: none; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .heroic-rank-art { filter: none; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .heroic-rank-card { background: #103134; }
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .section-hero-art {
+  background-image: linear-gradient(90deg, #051618c7, #05161870 40%, #05161814 75%), var(--oracle-backdrop); filter: none;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .section-hero-art::after { background: var(--section-hero-shade); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .physis-hero {
+  background-image: linear-gradient(90deg, #051618d1, #0516186b 40%, #05161814 75%), url('/physis-art/landscape-v2.webp');
+  background-size: auto, cover; background-position: center;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .physis-hero::before { filter: none; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .physis-hero::after { background: none; filter: none; }
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--month-accent) 24%, #103134), #07171b 76%); border-color: #d8bd804d;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .calendar-view.mode-lunar > .calendar-header { background: linear-gradient(120deg, #24465b, #0a1d2b 76%); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art { filter: saturate(.92) contrast(1.04); opacity: .9; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art::after { background: linear-gradient(90deg, #07171b99, transparent 58%); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header .calendar-inline-arrow { color: #f0dda5; background: #0b272be6; border-color: #d8bd8059; }
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar {
+  --ink: #edf5fc; --ink-soft: #c6d9e7; --surface: #193748;
+  color: var(--ink); background: linear-gradient(145deg, #244b62, #102a3b); border-color: #759bb8;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar::before { background-image: var(--month-art); opacity: .25; filter: none; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar::after { background: linear-gradient(90deg, #102a3b70, #102a3b1a); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar :is(.year-month-top, small, .year-month-footer, .mini-day-number) { color: var(--ink-soft); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar .mini-day:not(.today, .solar) { color: #edf5fc; background: #153347cc; border-color: #92b9d34d; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar .mini-day:is(.today, .solar) :is(.mini-day-number, .mini-day-moon-phase) { color: #102a3b; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .year-month.mode-lunar .year-open-button { color: #edf5fc; background: #264a60; border-color: #92b9d380; }
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .hero-path-panel {
+  background: radial-gradient(circle at 50% 0, #b78b422e, transparent 34%), linear-gradient(165deg, #061c1e, #0b2928 45%, #171d1b);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .hero-path-summary { background: linear-gradient(120deg, color-mix(in srgb, var(--rank-color) 14%, transparent), #0000002e); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app :is(.hero-path-rank, .hero-path-rank.reached) { background: #ffffff09; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .hero-path-rank.current { background: #b78b421f; border-color: #e2c886; box-shadow: inset 0 0 0 1px #e2c886; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app :is(.hero-path-checkpoint, .hero-path-checkpoint.unlocked, .hero-path-checkpoint.claimed) { background: #0b2222; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app :is(.hero-path-summary span, .hero-path-rank-copy span, .hero-path-rank-copy em, .hero-path-checkpoint span, .hero-path-mist-gate > span) { color: #e2c886; }
+
+html[data-genesis-theme="standart"][data-genesis-palette="green"] :is(.aurora-dialog, .stoicheion-timeline-section, .stoicheion-timeline-help-dialog, .restoration, .restoration-dialog) { background: #0b2529; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .stoicheion-timeline-card { color: var(--ink); background: #15383a; border-color: #d8bd8059; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] :is(.stoicheion-sector, .stoicheion-revealed-card, .stoicheion-timeline-card).is-reversed { color: #f5efdf; background: #382622; border-color: #b87d66; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .stoicheion-letter-copy .stoicheion-reading-body :is(p, li) { color: #f5efdf; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .stoicheion-letter-dialog { grid-template-columns: minmax(0, 1fr); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .stoicheion-letter-dialog > article { box-sizing: border-box; max-width: 100%; min-width: 0; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] :is(.hero-path-panel, .aurora-dialog, .sacred-year-details-modal, .restoration-dialog, .stoicheion-letter-dialog) .dialog-universal-header { color: #f5efdf; background: #123337; }
+
+/* Keep all three lunar patrons, adding a little shade behind their reading copy. */
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .hero-card.mode-lunar { background-image: linear-gradient(90deg, #04101438, #0410140d), var(--lunar-day-art); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .hero-card.mode-lunar .hero-copy { color: #f5f7fb; background: linear-gradient(90deg, #04101466, #04101426 80%, transparent); }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .hero-card.mode-lunar :is(.hero-copy h1, .hero-description, .hero-date, .hero-month, .eyebrow) { color: #f5f7fb; text-shadow: 0 2px 4px #000b; }
+
+@media (max-width: 1024px) {
+  html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .section-hero-art { background-image: linear-gradient(180deg, #051618e6, #05161866 60%, #05161814), var(--oracle-backdrop); }
+}

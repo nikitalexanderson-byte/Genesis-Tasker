@@ -1,6 +1,20 @@
 export const TODAY_BLOCK_IDS = ["advice", "dream", "ads", "rhythm", "tasks", "habits", "events", "details"] as const;
 export type TodayBlockId = (typeof TODAY_BLOCK_IDS)[number];
 
+export function todayHalfBlocks(value: unknown): TodayBlockId[] {
+  return Array.isArray(value) ? TODAY_BLOCK_IDS.filter(id => value.includes(id)) : [];
+}
+
+export function readTodayHalfBlocks(storage: Pick<Storage, 'getItem'> | null, owner: string): TodayBlockId[] {
+  try { return todayHalfBlocks(JSON.parse(storage?.getItem(`genesis-today-halves:v1:${encodeURIComponent(owner || 'guest')}`) ?? 'null')); }
+  catch { return []; }
+}
+export function storeTodayHalfBlocks(storage: Pick<Storage, 'setItem'> | null, owner: string, value: readonly TodayBlockId[]): boolean {
+  if (!storage) return false;
+  try { storage.setItem(`genesis-today-halves:v1:${encodeURIComponent(owner || 'guest')}`, JSON.stringify(todayHalfBlocks(value))); return true; }
+  catch { return false; }
+}
+
 /** Missing blocks are appended, so stored preferences survive a future addition.
  * The fixed hero is never part of a movable order. */
 export function todayBlockOrder(value: unknown): TodayBlockId[] | null {

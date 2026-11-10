@@ -2,7 +2,7 @@
 import {useEffect, useRef, useState, type DragEvent} from 'react';
 import {DialogCloseButton} from './DialogCloseButton';
 import {ExperimentalIcon} from './ExperimentalIcon';
-import {effectiveTodayBlockOrder, moveTodayBlock, TODAY_BLOCK_IDS, type TodayBlockId} from './today-block-order';
+import {effectiveTodayBlockOrder, moveTodayBlock, todayHalfBlocks, TODAY_BLOCK_IDS, type TodayBlockId} from './today-block-order';
 import copy from './today-block-order-copy.json';
 import './today-block-order.css';
 
@@ -16,11 +16,12 @@ export function TodayBlockOrderButton({language, onClick}: {language: string; on
     data-tooltip={c.title} aria-haspopup="dialog" onClick={onClick}><ExperimentalIcon name="settings"/></button>;
 }
 
-export function TodayBlockOrderDialog({order, language, onSave, onClose}: {
-  order: readonly TodayBlockId[] | null; language: string; onSave: (order: TodayBlockId[], failureMessage: string) => void; onClose: () => void;
+export function TodayBlockOrderDialog({order, halfBlocks = [], language, onSave, onClose}: {
+  order: readonly TodayBlockId[] | null; halfBlocks?: readonly TodayBlockId[]; language: string; onSave: (order: TodayBlockId[], failureMessage: string, halfBlocks: TodayBlockId[]) => void; onClose: () => void;
 }) {
   const c = orderCopy(language);
   const [draft, setDraft] = useState(() => effectiveTodayBlockOrder(order));
+  const [halves, setHalves] = useState(() => todayHalfBlocks(halfBlocks));
   const [moving, setMoving] = useState<TodayBlockId | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const dialog = useRef<HTMLDialogElement>(null), drag = useRef<TodayBlockId | null>(null);
@@ -41,6 +42,7 @@ export function TodayBlockOrderDialog({order, language, onSave, onClose}: {
     onCancel={event => { event.preventDefault(); onClose(); }}>
     <header><h2 id="today-order-title">{c.title}</h2><DialogCloseButton aria-label={c.cancel} onClick={onClose}/></header>
     <p id="today-order-hint">{c.hint}</p>
+    <p className="today-order-width-hint">{c.widthHint}</p>
     <p className="today-order-fixed"><ExperimentalIcon name="lock"/>{c.fixed}</p>
     <ol className="today-order-list">
       {draft.map((id, index) => <li key={id} data-order-block={id} className={moving === id ? 'is-moving' : ''}
@@ -53,6 +55,10 @@ export function TodayBlockOrderDialog({order, language, onSave, onClose}: {
             if (target) { event.preventDefault(); move(id, target); }
           }}><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
         <span>{c[id]}</span>
+        <div className="today-order-width" role="group" aria-label={`${c.width}: ${c[id]}`}>
+          <button type="button" aria-label={c.full} aria-pressed={!halves.includes(id)} onClick={() => setHalves(current => current.filter(block => block !== id))}>100%</button>
+          <button type="button" aria-label={c.half} aria-pressed={halves.includes(id)} onClick={() => setHalves(current => todayHalfBlocks([...current, id]))}>50%</button>
+        </div>
         <div className="today-order-arrows">
           <button type="button" aria-label={`${c.up}: ${c[id]}`} title={c.up} aria-disabled={index === 0}
             onClick={() => { if (index > 0) move(id, draft[index - 1]); }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
@@ -62,8 +68,8 @@ export function TodayBlockOrderDialog({order, language, onSave, onClose}: {
       </li>)}
     </ol>
     <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
-    <footer><button type="button" className="secondary-button today-order-reset" onClick={() => setDraft([...TODAY_BLOCK_IDS])}>{c.reset}</button>
+    <footer><button type="button" className="secondary-button today-order-reset" onClick={() => { setDraft([...TODAY_BLOCK_IDS]); setHalves([]); }}>{c.reset}</button>
       <button type="button" className="secondary-button" onClick={onClose}>{c.cancel}</button>
-      <button type="button" className="primary-button" onClick={() => { onSave([...draft], c.saveFailure); onClose(); }}>{c.save}</button></footer>
+      <button type="button" className="primary-button" onClick={() => { onSave([...draft], c.saveFailure, halves); onClose(); }}>{c.save}</button></footer>
   </dialog>;
 }

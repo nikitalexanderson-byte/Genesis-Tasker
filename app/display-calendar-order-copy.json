@@ -1,0 +1,114 @@
+{
+  "ru": {
+    "profane": "Григорианский",
+    "sacred": "Сакральный",
+    "lunar": "Лунный",
+    "help": "Нажмите для переключения. Удерживайте и перетащите, чтобы изменить порядок. С клавиатуры: Alt + стрелка влево или вправо. Escape отменяет перенос.",
+    "first": "Первый календарь: {calendar}.",
+    "changed": "Порядок изменился в другом окне. Повторите перенос."
+  },
+  "en": {
+    "profane": "Gregorian",
+    "sacred": "Sacred",
+    "lunar": "Lunar",
+    "help": "Click to switch. Hold and drag to reorder. With a keyboard, use Alt + Left or Right arrow. Escape cancels the drag.",
+    "first": "First calendar: {calendar}.",
+    "changed": "The order changed in another window. Please drag again."
+  },
+  "el": {
+    "profane": "Γρηγοριανό",
+    "sacred": "Ιερό",
+    "lunar": "Σεληνιακό",
+    "help": "Πατήστε για αλλαγή. Κρατήστε πατημένο και σύρετε για αλλαγή σειράς. Με πληκτρολόγιο: Alt + αριστερό ή δεξί βέλος. Το Escape ακυρώνει τη μετακίνηση.",
+    "first": "Πρώτο ημερολόγιο: {calendar}.",
+    "changed": "Η σειρά άλλαξε σε άλλο παράθυρο. Σύρετε ξανά."
+  },
+  "de": {
+    "profane": "Gregorianisch",
+    "sacred": "Sakral",
+    "lunar": "Lunar",
+    "help": "Zum Wechseln anklicken. Gedrückt halten und ziehen, um die Reihenfolge zu ändern. Tastatur: Alt + Pfeil links oder rechts. Escape bricht das Verschieben ab.",
+    "first": "Erster Kalender: {calendar}.",
+    "changed": "Die Reihenfolge wurde in einem anderen Fenster geändert. Bitte erneut ziehen."
+  },
+  "fr": {
+    "profane": "Grégorien",
+    "sacred": "Sacré",
+    "lunar": "Lunaire",
+    "help": "Cliquez pour changer. Maintenez puis faites glisser pour réordonner. Au clavier : Alt + flèche gauche ou droite. Échap annule le déplacement.",
+    "first": "Premier calendrier : {calendar}.",
+    "changed": "L’ordre a changé dans une autre fenêtre. Recommencez le déplacement."
+  },
+  "es": {
+    "profane": "Gregoriano",
+    "sacred": "Sagrado",
+    "lunar": "Lunar",
+    "help": "Pulsa para cambiar. Mantén pulsado y arrastra para reordenar. Con el teclado: Alt + flecha izquierda o derecha. Escape cancela el movimiento.",
+    "first": "Primer calendario: {calendar}.",
+    "changed": "El orden cambió en otra ventana. Vuelve a arrastrar."
+  },
+  "it": {
+    "profane": "Gregoriano",
+    "sacred": "Sacro",
+    "lunar": "Lunare",
+    "help": "Fai clic per cambiare. Tieni premuto e trascina per riordinare. Con la tastiera: Alt + freccia sinistra o destra. Esc annulla lo spostamento.",
+    "first": "Primo calendario: {calendar}.",
+    "changed": "L’ordine è cambiato in un’altra finestra. Trascina di nuovo."
+  },
+  "pt": {
+    "profane": "Gregoriano",
+    "sacred": "Sagrado",
+    "lunar": "Lunar",
+    "help": "Clique para mudar. Mantenha premido e arraste para reordenar. No teclado: Alt + seta para a esquerda ou direita. Escape cancela o movimento.",
+    "first": "Primeiro calendário: {calendar}.",
+    "changed": "A ordem mudou noutra janela. Arraste novamente."
+  },
+  "pl": {
+    "profane": "Gregoriański",
+    "sacred": "Sakralny",
+    "lunar": "Księżycowy",
+    "help": "Kliknij, aby przełączyć. Przytrzymaj i przeciągnij, aby zmienić kolejność. Na klawiaturze: Alt + strzałka w lewo lub w prawo. Escape anuluje przenoszenie.",
+    "first": "Pierwszy kalendarz: {calendar}.",
+    "changed": "Kolejność zmieniła się w innym oknie. Przeciągnij ponownie."
+  },
+  "sr": {
+    "profane": "Грегоријански",
+    "sacred": "Сакрални",
+    "lunar": "Лунарни",
+    "help": "Кликните за промену. Задржите и превуците да промените редослед. Тастатуром: Alt + стрелица улево или удесно. Escape отказује премештање.",
+    "first": "Први календар: {calendar}.",
+    "changed": "Редослед је промењен у другом прозору. Превуците поново."
+  },
+  "uk": {
+    "profane": "Григоріанський",
+    "sacred": "Сакральний",
+    "lunar": "Місячний",
+    "help": "Натисніть для перемикання. Утримуйте та перетягніть, щоб змінити порядок. З клавіатури: Alt + стрілка ліворуч або праворуч. Escape скасовує переміщення.",
+    "first": "Перший календар: {calendar}.",
+    "changed": "Порядок змінився в іншому вікні. Повторіть перетягування."
+  },
+  "zh": {
+    "profane": "公历",
+    "sacred": "神圣历",
+    "lunar": "阴历",
+    "help": "点击切换。按住并拖动可调整顺序。键盘操作：Alt + 向左或向右箭头。Escape 可取消拖动。",
+    "first": "首个日历：{calendar}。",
+    "changed": "顺序已在其他窗口中更改，请重新拖动。"
+  },
+  "tr": {
+    "profane": "Miladi",
+    "sacred": "Kutsal",
+    "lunar": "Ay",
+    "help": "Değiştirmek için tıklayın. Sıralamak için basılı tutup sürükleyin. Klavyede: Alt + Sol veya Sağ ok. Escape taşımayı iptal eder.",
+    "first": "İlk takvim: {calendar}.",
+    "changed": "Sıra başka bir pencerede değişti. Yeniden sürükleyin."
+  },
+  "ja": {
+    "profane": "グレゴリオ暦",
+    "sacred": "神聖暦",
+    "lunar": "太陰暦",
+    "help": "クリックで切り替えます。長押ししてドラッグすると並べ替えられます。キーボード：Alt + 左右の矢印キー。Escape で移動を取り消します。",
+    "first": "先頭の暦：{calendar}。",
+    "changed": "別のウィンドウで順序が変更されました。もう一度ドラッグしてください。"
+  }
+}

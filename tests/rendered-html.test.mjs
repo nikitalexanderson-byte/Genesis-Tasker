@@ -2431,7 +2431,7 @@ test("Experimental applies one design system across ordinary views and adds safe
     readFile(new URL("../app/experimental-theme.css", import.meta.url), "utf8"),
   ]);
 
-  assert.match(calendar, /<TodayBlocks order=\{todayOrder\}>/);
+  assert.match(calendar, /<TodayBlocks\b[^>]*order=\{todayOrder\}[^>]*>/);
   assert.match(await readFile(new URL("../app/TodayBlocks.tsx", import.meta.url), "utf8"), /className="today-view" data-exp-layout="view"/);
   assert.match(calendar, /className="projects-view" data-exp-layout="view"/);
   assert.match(calendar, /task-composer-modal/);

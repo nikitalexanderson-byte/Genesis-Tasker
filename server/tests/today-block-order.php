@@ -27,5 +27,23 @@ $expanded=genesisUpdateAccountPreferences($user['id'],['uiLayout'=>['todayBlockO
 todayOrderCheck(genesisUiVisibility($expanded['ui_visibility_json'])['todayBlockOrder']===['tasks','advice','dream','ads','rhythm','habits','events','details'],'Missing/future blocks were hidden instead of appended');
 $reset=genesisUpdateAccountPreferences($user['id'],['uiLayout'=>['todayBlockOrder'=>null]]);
 todayOrderCheck(genesisUiVisibility($reset['ui_visibility_json'])['todayBlockOrder']===null,'Default order could not be restored');
+$before=genesisFindUser($user['id']);
+$layout=genesisUpdateAccountPreferences($user['id'],['uiLayout'=>['todayHalfBlocks'=>['tasks','dream'],'displayCalendarOrder'=>['lunar','sacred','profane']]]);
+$prefs=genesisUiVisibility($layout['ui_visibility_json']);
+todayOrderCheck($prefs['todayHalfBlocks']===['dream','tasks']&&$prefs['displayCalendarOrder']===['lunar','sacred','profane'],'Desktop widths or display priority did not persist');
+todayOrderCheck($layout['calendar_mode']===$before['calendar_mode']&&$layout['task_calendar_mode']===$before['task_calendar_mode'],'Reordering unexpectedly selected a display or task calendar');
+genesisUpdateAccountPreferences($user['id'],['uiVisibility'=>['hiddenTodayBlocks'=>['tasks'],'enabledCalendars'=>['profane']]]);
+$after=genesisUiVisibility(genesisFindUser($user['id'])['ui_visibility_json']);
+todayOrderCheck($after['todayHalfBlocks']===$prefs['todayHalfBlocks']&&$after['displayCalendarOrder']===$prefs['displayCalendarOrder'],'Older client erased web layout preferences');
+$otherPrefs=genesisUiVisibility(genesisFindUser($other['id'])['ui_visibility_json']);
+todayOrderCheck($otherPrefs['todayHalfBlocks']===[]&&$otherPrefs['displayCalendarOrder']===['profane','sacred','lunar'],'Website layout leaked across accounts');
+foreach(['todayHalfBlocks'=>[['hero'],['tasks','tasks'],['tasks'=>true],['tasks',false]],'displayCalendarOrder'=>[[],['sacred'],['profane','profane','lunar'],['profane','lunar','unknown']]] as $field=>$invalids){
+    foreach($invalids as $invalid){
+        try{genesisUpdateAccountPreferences($user['id'],['uiLayout'=>[$field=>$invalid]]);throw new LogicException('Invalid website layout accepted');}
+        catch(InvalidArgumentException $error){todayOrderCheck(in_array($error->getMessage(),['INVALID_TODAY_BLOCK_WIDTH','INVALID_DISPLAY_CALENDAR_ORDER'],true),'Wrong website-layout error');}
+    }
+}
+$defaultLayout=genesisUpdateAccountPreferences($user['id'],['uiLayout'=>['todayHalfBlocks'=>[],'displayCalendarOrder'=>['profane','sacred','lunar']]]);
+todayOrderCheck(genesisUiVisibility($defaultLayout['ui_visibility_json'])['todayHalfBlocks']===[],'Full width defaults could not be restored');
 todayOrderCheck(!genesisDb()->query('PRAGMA foreign_key_check')->fetch(),'Order preferences broke foreign keys');
 echo "Today block order: validated account JSON, pinned hero, partial-order expansion, independent accounts, rejected writes, old-client preservation and reset passed.\n";

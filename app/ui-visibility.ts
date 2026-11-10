@@ -1,7 +1,8 @@
 import type { CalendarMode } from "./calendar-data";
 import { projectViewOrder, type ProjectView } from "./project-view-order.ts";
 import { calendarScaleValue, type CalendarScale } from "./calendar-scale.ts";
-import { todayBlockOrder, type TodayBlockId } from './today-block-order.ts';
+import { todayBlockOrder, todayHalfBlocks, type TodayBlockId } from './today-block-order.ts';
+import { displayCalendarOrder } from './display-calendar-order.ts';
 
 export type InboxPosition = "top" | "right" | "left" | "bottom";
 export type AccountLayout = {
@@ -25,6 +26,8 @@ export type AccountLayout = {
   sharedProjectViewOrder: ProjectView[] | null;
   sharedCalendarScale: CalendarScale;
   todayBlockOrder: TodayBlockId[] | null;
+  todayHalfBlocks: TodayBlockId[];
+  displayCalendarOrder: CalendarMode[];
 };
 export const DEFAULT_ACCOUNT_LAYOUT: AccountLayout = {
   sidebarWidth: 240, personalInboxPosition: "right", personalInboxHidden: false, personalInboxCompact: false,
@@ -37,6 +40,8 @@ export const DEFAULT_ACCOUNT_LAYOUT: AccountLayout = {
   sharedProjectViewOrder: null,
   sharedCalendarScale: 1,
   todayBlockOrder: null,
+  todayHalfBlocks: [],
+  displayCalendarOrder: ['profane', 'sacred', 'lunar'],
 };
 export function accountLayout(value?: Partial<AccountLayout> | null): AccountLayout {
   const position = (input?: InboxPosition): InboxPosition => input && ["top", "right", "left", "bottom"].includes(input) ? input : "right";
@@ -59,6 +64,8 @@ export function accountLayout(value?: Partial<AccountLayout> | null): AccountLay
     sharedProjectViewOrder: projectViewOrder(value?.sharedProjectViewOrder),
     sharedCalendarScale: calendarScaleValue(value?.sharedCalendarScale),
     todayBlockOrder: todayBlockOrder(value?.todayBlockOrder),
+    todayHalfBlocks: todayHalfBlocks(value?.todayHalfBlocks),
+    displayCalendarOrder: displayCalendarOrder(value?.displayCalendarOrder),
   };
 }
 

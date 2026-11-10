@@ -1,0 +1,28 @@
+/* Shade the lunar artwork without dimming text, the live clock or controls. */
+html[data-genesis-theme="standart-dark"] .genesis-app .today-view .hero-card.mode-lunar > .hero-palette-art {
+  display: block; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  border-radius: inherit; background: inherit; filter: brightness(.6);
+}
+html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) .genesis-app .today-view .hero-card.mode-lunar > .hero-palette-art { filter: url(#genesis-palette-art) brightness(.6); }
+
+@media (max-width: 760px) {
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] {
+    display: grid; grid-template-columns: minmax(104px, 1fr) minmax(0, 1fr); align-content: start; gap: 16px 12px;
+    padding: 16px; background-size: cover; background-position: right center;
+  }
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-day-clock { display: contents; }
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-number {
+    position: static; grid-column: 1; grid-row: 1; justify-self: start; display: flex; flex-direction: column; align-items: center;
+    width: 104px; min-height: 0; max-width: 100%; margin: 0;
+  }
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .device-clock {
+    position: static; grid-column: 2; grid-row: 1; justify-self: end; align-self: start; box-sizing: border-box;
+    width: 100%; max-width: 220px; min-width: 0; margin: 0; padding: 10px;
+  }
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-copy {
+    grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent; border-radius: 0;
+  }
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .lunar-event-badge { display: none; }
+  html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-copy { background: linear-gradient(90deg, #06111540, transparent); }
+  html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] { background-image: linear-gradient(180deg, #06111533, #061115ad 38%, #061115d9), var(--lunar-day-art); }
+}
