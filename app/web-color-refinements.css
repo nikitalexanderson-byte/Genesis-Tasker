@@ -21,10 +21,10 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .stoicheion-let
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .stoicheion-letter-dialog .stoicheion-letter-copy :is(p,li) { color:var(--ink-soft); }
 
-/* Keep the original multicolor Oracle artwork, including the mobile composition. */
+/* Match the night-blue Oracle artwork while retaining its warm highlights. */
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art {
   --palette-recessed:#040a17;
-  background-image:linear-gradient(90deg,#040a17c7,#040a1770 40%,#040a1714 75%),var(--oracle-backdrop); filter:none;
+  background-image:linear-gradient(90deg,#040a17c7,#040a1770 40%,#040a1714 75%),var(--oracle-backdrop); filter:url(#genesis-palette-art);
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art::after { background:var(--section-hero-shade); }
 @media(max-width:767px) {
@@ -67,14 +67,29 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .c
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-view :is(.calendar-mode-day,.calendar-day):is(.selected,.today) :is(.calendar-mode-primary,.calendar-mode-primary > small,.calendar-cross-date,.calendar-gregorian,.calendar-weekday) { color:#edf3fc; }
 
-/* Preserve the complete monthly artwork with only a 10% pale veil on blue daylight year cards. */
+/* Blue daylight year cards keep complete artwork under the requested translucent veil. */
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month::before {
-  background-image:linear-gradient(rgb(249 251 255 / .1),rgb(249 251 255 / .1)),var(--month-art);
+  background-image:linear-gradient(var(--year-month-veil,rgb(255 255 255 / .4)),var(--year-month-veil,rgb(255 255 255 / .4))),var(--month-art);
   background-size:cover; background-position:center; opacity:1; filter:none; -webkit-mask-image:none; mask-image:none;
 }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-lunar { --year-month-veil:rgb(255 255 255 / .3); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-profane { --year-month-veil:rgb(48 93 145 / .5); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-profane::before { background-image:linear-gradient(var(--year-month-veil),var(--year-month-veil)),var(--month-art); }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month::after { background:none; }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month > :is(strong,small),
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month .year-month-meta {
-  width:fit-content; max-width:100%; padding:4px 8px; border-radius:6px; color:#edf3fc; background:rgb(8 24 44 / .88);
+  max-width:100%; padding:0; border:0; border-radius:0; color:#10243a; background:transparent; box-shadow:none; text-shadow:none;
 }
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month .year-month-meta :is(em,i) { color:#d3e2f5; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month .year-month-meta :is(em,i) { color:#10243a; }
+
+/* Keep animated blue-and-gold medallions distinct from the daylight status cards. */
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .habits-hero .habits-hero-status :is(.habit-metric-sigil,.rank-sigil) { background:#0a2548; border-radius:50%; }
+html[data-genesis-theme="standart"] .genesis-app .habit-metric-sigil { color:#f7d986; }
+html[data-genesis-theme="standart"] .genesis-app .metric-sigil-halo { fill:#102e53; stroke:#f2cf78; }
+html[data-genesis-theme="standart"] .genesis-app .metric-sigil-laurel-branches { fill:#e6bd65; stroke:#ffe6a8; }
+html[data-genesis-theme="standart"] .genesis-app .metric-sigil-staff path { stroke:#ffe09a; }
+html[data-genesis-theme="standart"] .genesis-app .rank-sigil[data-rank-sigil="unranked"] { color:#efd07b; }
+html[data-genesis-theme="standart"] .genesis-app .rank-sigil[data-rank-sigil="unranked"] .rank-sigil-halo { fill:#102e53; stroke:#e7c575; }
+html[data-genesis-theme="standart"] .genesis-app .rank-sigil-motif { stroke:#ffe6a8; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .future-modeling-trigger.year-details-button > span:first-child { color:#ffe5a0; background:#102640; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .future-modeling-trigger.year-details-button > span:first-child > svg { color:inherit; fill:none; stroke:currentColor; }

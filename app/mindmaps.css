@@ -24,6 +24,7 @@ html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-toolbar { margin-bloc
 .mindmap-node-search input:focus::placeholder { color: transparent; }
 .mindmap-save-state { font-size: 13px; color: var(--ink-soft); padding: 12px 0; max-width: 240px; }
 .mindmap-catalog { display: grid; gap: 16px; }
+.mindmaps > .shared-space-collaboration { margin-block-start:16px; }
 .mindmap-catalog article { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 24px; min-height: 128px; padding: 20px; border: 1px solid var(--exp-border); border-radius: var(--ui-surface-radius); background: var(--surface); }
 .mindmap-catalog article:last-child { border-bottom: 1px solid var(--exp-border); }
 .mindmap-catalog .mindmap-icon-action[aria-pressed="true"] { color: var(--surface); border-color: var(--ui-accent); background: var(--ui-accent); }
@@ -354,8 +355,8 @@ html[data-genesis-theme] .genesis-app .mindmap-settings-actions > .icon-action-b
 @media (max-width:1099px) {
   html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto auto auto; gap:16px 12px; }
   html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) > .mindmap-header-main { grid-column:1 / -1; grid-row:1; }
-  html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) > .mindmap-overview-toggle { grid-column:1; grid-row:2; width:100%; justify-self:stretch; align-self:stretch; height:auto; }
-  html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) > .mindmap-back-link { grid-column:2; grid-row:2; width:100%; justify-self:stretch; align-self:stretch; height:auto; }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) > .mindmap-back-link { grid-column:1; grid-row:2; width:100%; justify-self:stretch; align-self:stretch; height:auto; }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) > .mindmap-overview-toggle { grid-column:2; grid-row:2; width:100%; justify-self:stretch; align-self:stretch; height:auto; }
   html[data-genesis-theme] .genesis-app .mindmap-header[data-mobile-overview]:not(:has(.mindmap-save-state)) > .mindmap-catalog-statistics { grid-column:1 / -1; grid-row:3; }
 }
 html[data-genesis-theme] .genesis-app .mindmap-header > .mindmap-header-modes { display:flex; gap:8px; grid-column:1; grid-row:2; justify-self:start; align-self:end; }
@@ -373,3 +374,30 @@ html[data-genesis-theme] .genesis-app .mindmap-header-modes > button:focus-visib
 }
 html[data-genesis-theme] .genesis-app .mindmap-dialog .mindmap-actions { align-items:stretch; }
 html[data-genesis-theme] .genesis-app .mindmap-dialog .mindmap-actions > button { display:inline-flex; align-items:center; justify-content:center; height:auto; min-height:44px; border-radius:var(--ui-radius); }
+
+/* The editor keeps navigation at the title and editing actions together. */
+html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header[data-map-open="true"] {
+  position:relative; grid-template-columns:minmax(0,1fr) auto; padding-inline-start:84px; align-items:center;
+}
+html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header[data-map-open="true"] > .mindmap-header-main { grid-column:1; grid-row:1; }
+html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header[data-map-open="true"] > .mindmap-save-state { grid-column:2; grid-row:1; }
+html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header > .mindmap-editor-back {
+  position:absolute; inset-inline-start:24px; top:50%; transform:translateY(-50%); display:grid; place-items:center;
+  width:48px; height:48px; min-width:48px; min-height:48px; margin:0; padding:10px; color:inherit;
+  border:1px solid color-mix(in srgb,currentColor 40%,transparent); background:color-mix(in srgb,currentColor 7%,transparent);
+}
+html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .icon-action-button { flex:0 0 48px; width:48px; min-width:44px; height:48px; min-height:48px; padding:10px; }
+@media(max-width:1099px) {
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header[data-map-open="true"] { grid-template-columns:minmax(0,1fr); padding-inline-start:76px; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header > .mindmap-editor-back { inset-inline-start:16px; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header[data-map-open="true"] > .mindmap-save-state { grid-column:1; grid-row:2; justify-self:start; text-align:start; max-width:none; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .icon-action-button { width:100%; min-width:44px; grid-row:1; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .mindmap-view-toggle { grid-column:1; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > :is(.mindmap-add-thought,.mindmap-add-affair) { width:100%; height:48px; min-height:48px; margin:0; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .mindmap-add-thought { grid-column:2; grid-row:1; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .mindmap-add-affair { grid-column:3; grid-row:1; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .mindmap-history-actions { grid-column:4 / span 2; grid-row:1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+  html[data-genesis-theme] .genesis-app .mindmaps .mindmap-history-actions > button { width:100%; min-width:44px; height:48px; min-height:48px; }
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-primary-toolbar > .mindmap-settings-toggle { grid-column:6; }
+}

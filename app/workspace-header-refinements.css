@@ -121,6 +121,18 @@ html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-
 }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open svg { flex-shrink:0; width:20px; height:20px; }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open strong { position:absolute; inset-block-start:1px; inset-inline-end:3px; font-size:11px; line-height:1.2; }
+@media(min-width:1100px) {
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact]:has(.shared-workspace-summary) {
+    grid-template-columns:32px minmax(0,1fr) minmax(280px,360px) 44px 44px; gap:12px 8px;
+  }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .workspace-header-context { grid-column:3; grid-row:1; align-self:center; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-space-identity { width:100%; max-width:none; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-header-actions { grid-row:2; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools { width:auto; flex-wrap:nowrap; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open { grid-column:4; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-notification-header-slot { grid-column:5; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-summary-retry { grid-row:3; }
+}
 
 /* The diary back arrow is centered within the complete desktop heading. */
 html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading > .workspace-header-main { align-self:stretch; }

@@ -29,7 +29,8 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       await button.waitFor();await page.mouse.move(0,0);
       const row=await account.locator('.account-profile-details').boundingBox(),rect=await button.boundingBox();assert(row&&rect);
       assert(rect.width>=44&&rect.height>=48,'Account action target');
-      near(rect.x+rect.width,row.x+row.width,'Account action aligns to the right');
+      if(width<768){const plan=await account.locator('.account-plan').boundingBox();assert(plan);near(rect.x,plan.x,'Mobile account action aligns below the current plan');assert(rect.y>=plan.y+plan.height+8,'Mobile account action follows the plan line');}
+      else near(rect.x+rect.width,row.x+row.width,'Desktop account action aligns to the right');
       const style=await button.evaluate(node=>{const s=getComputedStyle(node);return{background:s.backgroundColor,color:s.color,border:s.borderColor,borderWidth:s.borderWidth,boxShadow:s.boxShadow};});
       assert.equal(style.background,'rgb(87, 50, 133)');assert.equal(style.border,'rgb(215, 181, 107)');assert.notEqual(style.boxShadow,'none');
       const overflow=await page.evaluate(()=>({viewport:innerWidth,page:document.documentElement.scrollWidth}));assert(overflow.page<=overflow.viewport+1,'Account must not overflow horizontally');
@@ -46,10 +47,15 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       assert(new URL(originalMapUrl).searchParams.has('mindmap'),'Saved map prerequisite');
       await visit(originalMapUrl);await page.setViewportSize({width,height:1000});await theme(page,scheme);
       await page.locator('.mindmap-save-state[data-save-state="synced"]').waitFor({state:'attached'});
-      const controls=page.locator('.mindmap-header-modes'),buttons=controls.getByRole('button');assert.equal(await buttons.count(),3);
+      const controls=page.locator('.mindmaps'),buttons=controls.locator('.mindmap-editor-back,.mindmap-view-toggle,.mindmap-settings-toggle');assert.equal(await buttons.count(),3);
       const geometry=await buttons.evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return{label:node.getAttribute('aria-label'),x:r.x,y:r.y,width:r.width,height:r.height,background:s.backgroundColor,color:s.color};}));
-      if(width<1100)assert.equal(geometry[0].label,'Все майндмепы','Mobile back action stays first');
-      for(const rect of geometry){assert(rect.width>=48&&rect.height>=48,'Header control touch target');near(rect.y,geometry[0].y,'Header controls share one row');}
+      assert.equal(geometry[0].label,'Все майндмепы','Back action precedes the map title');
+      for(const rect of geometry)assert(rect.width>=44&&rect.height>=44,'Map control touch target');
+      const header=await page.locator('.mindmap-header').boundingBox();near(geometry[0].y+geometry[0].height/2,header.y+header.height/2,'Back action is centered in the header');
+      const actions=await page.locator('.mindmap-primary-toolbar').evaluate(el=>[...el.querySelectorAll('.mindmap-view-toggle,.mindmap-add-thought,.mindmap-add-affair,.mindmap-history-actions > button,.mindmap-settings-toggle')].map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};}));
+      assert.equal(actions.length,6);for(const action of actions)assert(action.width>=44&&action.height>=44,'Editing action touch target');
+      if(width<1100){for(const action of actions)near(action.y,actions[0].y,'Mobile editing actions share one row');assert(actions.every((action,index)=>!index||action.x>actions[index-1].x),'Mode first, settings after redo');}
+      else {const search=await page.locator('.mindmap-primary-toolbar .mindmap-node-search').boundingBox();assert(actions[5].x>=search.x+search.width,'Desktop settings follow search');}
       assert.notEqual(geometry[0].background,'rgba(0, 0, 0, 0)','Visible control background');
       const view=controls.locator('.mindmap-view-toggle');
       if(await view.getAttribute('aria-label')==='Карта')await view.click();
@@ -74,7 +80,7 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       await snapshot(`release317-map-settings-${width}-${scheme}`);
       records.push({screen:'map-settings',width,scheme,rect,controls:geometry});
       await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
-      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      await page.waitForFunction(()=>document.activeElement?.matches('.mindmap-settings-toggle'),{},{timeout:2000});
       assert(await trigger.evaluate(node=>node===document.activeElement),'Escape returns focus to settings trigger');
       if(width===1440&&scheme==='light'){
         await page.reload();await trigger.waitFor();await trigger.click();

@@ -6,6 +6,8 @@
 }
 .stoicheion-alphabet-disclosure > summary::marker { content: ""; }
 .stoicheion-alphabet-disclosure > summary::-webkit-details-marker { display: none; }
+html[data-genesis-theme][data-genesis-palette] .genesis-app .stoicheion-alphabet-disclosure > summary.year-details-button > span:first-child { display:grid; place-items:center; background:transparent; color:inherit; border-radius:0; }
+.stoicheion-alphabet-disclosure > summary.year-details-button > span:first-child > svg { display:block; width:24px; height:24px; color:inherit; fill:none; stroke:currentColor; }
 .stoicheion-alphabet-disclosure > summary strong { font-size: clamp(13px, 1.4vw, 16px); line-height: 1.4; letter-spacing: 0; text-transform: none; }
 .stoicheion-alphabet-disclosure[open] > summary > svg:last-child { transform: rotate(180deg); }
 .stoicheion-alphabet-disclosure > summary:hover > svg { transform: none; }

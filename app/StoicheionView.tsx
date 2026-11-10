@@ -994,7 +994,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
                 behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
             });
           }}>
-          <summary className="year-details-button" data-testid="stoicheion-alphabet-toggle"><span><ExperimentalIcon name="stoicheion"/></span><span><strong data-no-translate>{alphabetCopy[language].title}</strong></span><ExperimentalIcon name="chevron-down"/></summary>
+          <summary className="year-details-button" data-testid="stoicheion-alphabet-toggle"><span><ExperimentalIcon name="book-open"/></span><span><strong data-no-translate>{alphabetCopy[language].title}</strong></span><ExperimentalIcon name="chevron-down"/></summary>
           <div className="stoicheion-alphabet-content">
           <header>
             <div>
