@@ -150,8 +150,8 @@ export function HeroPathPanel({ workspace, language, onClaimCheckpoint, onReveal
   };
 
   return (
-    <div className="modal-backdrop hero-path-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section ref={dialogRef} className="hero-path-panel" role="dialog" aria-modal="true" aria-labelledby="hero-path-title" tabIndex={-1}>
+    <div className="modal-backdrop hero-path-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section ref={dialogRef} className="hero-path-panel" role="dialog" data-dialog-header="none" aria-modal="true" aria-labelledby="hero-path-title" tabIndex={-1}>
         <header className="hero-path-header">
           <div><span className="eyebrow">{isEnglish ? "Lifetime progress" : "Пожизненный прогресс"}</span><h2 id="hero-path-title">{isEnglish ? "Path of the Hero" : "Путь Героя"}</h2><p>{isEnglish ? "Every point records a real completion. XP is never spent and ranks are never lost." : "Каждый балл сохраняет реальное выполнение. XP не тратится, а достигнутые ранги не теряются."}</p></div>
           <DialogCloseButton type="button" className="modal-close" onClick={onClose} aria-label={isEnglish ? "Close" : "Закрыть"} />
@@ -170,6 +170,7 @@ export function HeroPathPanel({ workspace, language, onClaimCheckpoint, onReveal
           <header><span className="eyebrow">{isEnglish ? "Beyond the gate" : "За вратами"}</span><h3>{isEnglish ? "The second path" : "Второй путь"}</h3><p>{isEnglish ? "The mist has lifted. Every new mark still comes only from real, completed actions." : "Туман рассеялся. Каждая новая отметка по-прежнему рождается только из реальных выполненных действий."}</p></header>
           <RankPathMap ranks={HIDDEN_HEROIC_RANKS} stepOffset={FOUNDATIONAL_HEROIC_RANKS.length} hidden currentRankId={rank.id === "unranked" ? null : rank.id} total={total} workspace={workspace} language={language} onClaimCheckpoint={onClaimCheckpoint} />
         </section> : null}
+        <footer className="hero-path-footer"><button type="button" className="secondary-button" onClick={onClose}>{isEnglish ? "Close" : "Закрыть"}</button></footer>
       </section>
     </div>
   );

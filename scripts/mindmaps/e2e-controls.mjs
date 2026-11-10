@@ -8,7 +8,7 @@ for(const timezoneId of ['Europe/Moscow','America/Los_Angeles']){
   for(const timeFormat of ['24h','12h']){
    await preference(timeFormat);await p.reload();await p.getByRole('button',{name:'Добавить мысль',exact:true}).click();await p.getByRole('dialog').getByRole('textbox',{name:'Название мысли',exact:true}).fill('Проверка календарных контролов');await p.getByRole('dialog').getByRole('button',{name:'Создать задачу из мысли'}).click();
    const form=p.locator('form[aria-label="Создание задачи"]');await form.waitFor();
-   const displayMode=await p.locator('.topbar-calendar-choice button[aria-pressed="true"]').allTextContents();assert.equal(displayMode.length,1);
+   const displayMode=await p.locator('.calendar-mode-cycle').getAttribute('data-calendar-mode');assert.ok(['sacred','lunar','profane'].includes(displayMode));
    for(const mode of ['Сакральный','Лунный','Григорианский']){
     await form.getByRole('group',{name:'Календарь записи',exact:true}).getByRole('button',{name:mode,exact:true}).click();
     if(mode==='Григорианский'){assert.equal(await form.locator('[id$="-task-end-date"]').getAttribute('type'),'date');}
@@ -16,7 +16,7 @@ for(const timezoneId of ['Europe/Moscow','America/Los_Angeles']){
      await form.locator('[id$="-task-end-date"]').click();const picker=p.getByRole('dialog',{name:mode==='Сакральный'?'Выбор сакральной даты':'Выбор лунной даты',exact:true});await picker.waitFor();
      await picker.locator(mode==='Сакральный'?'.sacred-picker-days button:not(:disabled)':'.lunar-picker-days button:not(:disabled)').first().click();
     }
-    assert.deepEqual(await p.locator('.topbar-calendar-choice button[aria-pressed="true"]').allTextContents(),displayMode);
+    assert.equal(await p.locator('.calendar-mode-cycle').getAttribute('data-calendar-mode'),displayMode);
     checks.push({timezoneId,timeFormat,inputCalendar:mode});
    }
    await form.getByText('Подробности и настройки',{exact:true}).click();await form.locator('[id$="-new-task-time-hour"]').click();const clock=p.getByRole('dialog',{name:'Выбор времени',exact:true});await clock.waitFor();assert.equal(await clock.getByRole('button',{name:'PM',exact:true}).count(),timeFormat==='12h'?1:0);if(timeFormat==='12h')await clock.getByRole('button',{name:'PM',exact:true}).click();await clock.getByRole('button',{name:'Готово',exact:true}).click();await p.keyboard.press('Escape');await form.waitFor({state:'hidden'});

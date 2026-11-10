@@ -99,11 +99,20 @@ html[data-genesis-theme="standart"] .genesis-app .calendar-mode-year-month.mode-
 html[data-genesis-theme="standart"] .genesis-app .year-month.calendar-mode-year-month.mode-profane { --year-day-base: var(--surface); --year-day-mask-strength: 32%; --year-day-hover-strength: 40%; }
 html[data-genesis-theme="standart"] .genesis-app .civil-mini-calendar.mode-profane .mini-day[data-weekday] { border-color: color-mix(in srgb, var(--year-day-mask) 60%, var(--ink-soft)); }
 html[data-genesis-theme="standart"] .genesis-app .civil-mini-calendar.mode-profane .mini-day[data-weekday].solar { border-color: #987025; }
-html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header { color: var(--day-banner-ink); background: var(--day-banner); border-color: var(--day-outline); box-shadow: none; }
-html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header :is(h1, p, .eyebrow, .month-switcher span) { color: var(--day-banner-ink) !important; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header {
+  --palette-recessed:var(--calendar-night-surface,var(--night));
+  color:#f2eee4; background-color:var(--palette-recessed);
+  background-image:linear-gradient(105deg,color-mix(in srgb,var(--month-accent) 46%,var(--palette-recessed) 88%) 0%,color-mix(in srgb,var(--palette-recessed) 98%,transparent) 52%,color-mix(in srgb,var(--palette-recessed) 88%,transparent) 100%);
+  border-color:var(--day-outline); box-shadow:none;
+}
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header h1 { color:#f2eee4 !important; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header p:not(.calendar-title) { color:var(--calendar-night-muted,#b5c5c3) !important; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header :is(.calendar-title,.month-switcher span) { color:#cdb27a !important; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header .eyebrow { color:color-mix(in srgb,var(--month-accent) 72%,#fff) !important; }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header .month-switcher button { color: var(--day-banner-ink); background: color-mix(in srgb, var(--day-banner-ink) 10%, transparent); border-color: color-mix(in srgb, var(--day-banner-ink) 30%, transparent); }
-html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art { opacity: 1; filter: url(#genesis-daylight-art); }
-html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art::after { background: none; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art { opacity:.78; filter:saturate(.92) contrast(1.04); }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view.mode-lunar > .calendar-header > .calendar-month-art { opacity:.28; }
+html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > .calendar-month-art::after { background:linear-gradient(90deg,color-mix(in srgb,var(--palette-recessed) 72%,transparent),transparent 58%); }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view > .calendar-header .calendar-inline-arrow { color: var(--ink); background: var(--day-group); border-color: var(--day-outline); }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view > .calendar-header .calendar-inline-arrow:is(:hover, :focus-visible) { background: var(--surface); outline-color: var(--teal); }
 html[data-genesis-theme="standart"] .genesis-app .calendar-view:not(.mode-profane) > .calendar-header > div:not(.month-switcher) { background: transparent; }

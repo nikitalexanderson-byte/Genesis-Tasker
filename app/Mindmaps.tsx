@@ -387,13 +387,14 @@ export default function Mindmaps(props: Props) {
   </div> : null;
 
   const nodeSearch = <label className="mindmap-search mindmap-node-search"><input aria-label="Найти узел" value={search} onChange={e => setSearch(e.target.value)} placeholder="Найти узел" /><ExperimentalIcon name="search" /></label>;
+  const mapBackAction = <IconActionButton label={translateText("Все майндмепы")} icon="map-back" onClick={goCatalog}/>;
   return <section className="mindmaps" aria-label={props.spaceId ? "Общие майндмепы" : "Личные майндмепы"}>
     <header className="workspace-header mindmap-header" data-exp-ui="panel" data-mobile-overview={overviewOpen} data-map-open={Boolean(map)}><div className="workspace-header-main mindmap-header-main"><span className="projects-hero-mark mindmap-hero-mark" aria-hidden="true"><ExperimentalIcon name="map-mode" /></span><div className="workspace-header-copy"><h1>{map ? <>Майндмеп<span className="workspace-title-secondary"> · <em className="mindmap-map-title" data-no-translate>{map.title}</em></span></> : "Майндмепы"}</h1><p data-no-translate={Boolean(map?.description)}>{map ? map.description || (progress!.total ? `Связанные задачи: ${progress!.done} ${translateText("из")} ${progress!.total}` : translateText("Пока только идеи")) : "Связывайте идеи, проекты и задачи."}</p></div></div>
       {map ? <span role="status" className="mindmap-save-state" data-save-state={status}>{status === "synced" ? null : statuses[status]}</span> : null}
       {map ? <div className="mindmap-view-modes mindmap-header-modes" role="group" aria-label={translateText("Представление карты")}>
-        <IconActionButton label={translateText("Карта")} icon="map-mode" aria-pressed={view.mode === "map"} onClick={() => changeView({ ...view, mode: "map" })}/>
-        <IconActionButton label={translateText("Структура")} icon="outline-mode" aria-pressed={view.mode === "structure"} onClick={() => changeView({ ...view, mode: "structure" })}/>
-        <IconActionButton label={translateText("Все майндмепы")} icon="map-back" onClick={goCatalog}/>
+        {isMobile ? mapBackAction : null}
+        <IconActionButton className="mindmap-view-toggle" label={translateText(view.mode === "map" ? "Структура" : "Карта")} icon={view.mode === "map" ? "map-mode" : "outline-mode"} onClick={() => changeView({ ...view, mode: view.mode === "map" ? "structure" : "map" })}/>
+        {!isMobile ? mapBackAction : null}
         <IconActionButton label={translateText("Настройка карты")} icon="gear" aria-haspopup="dialog" onClick={() => setDialog("settings")}/>
       </div> : null}
       {!map ? <div id="mindmap-catalog-summary" className="projects-summary mindmap-catalog-statistics" aria-live="polite">
@@ -402,7 +403,7 @@ export default function Mindmaps(props: Props) {
         <span><strong>{loading ? "—" : <>{catalogStats.done} {translateText("из")} {catalogStats.total}</>}</strong>Связанные задачи:</span>
       </div> : null}
       {!map ? <button type="button" className="mindmap-overview-toggle" aria-expanded={overviewOpen} aria-controls="mindmap-catalog-summary" onClick={()=>setOverviewOpen(value=>!value)}><ExperimentalIcon name="chevron"/>Обзор</button> : null}
-      {!map ? <button type="button" className="mindmap-back-link" onClick={props.onClose}><ExperimentalIcon name="map-back"/>{props.spaceId ? "К общим делам" : "К личным делам"}</button> : null}
+      {!map ? <button type="button" className="mindmap-back-link" aria-label={translateText(props.spaceId ? "К общим делам" : "К личным делам")} title={translateText(props.spaceId ? "К общим делам" : "К личным делам")} onClick={props.onClose}><ExperimentalIcon name="map-back"/><span>{props.spaceId ? "К общим делам" : "К личным делам"}</span></button> : null}
     </header>
     {error && !dialog ? <div role="alert" className="mindmap-error"><p>{error}</p>{map ? <div className="mindmap-actions"><button type="button" disabled={props.readOnly} onClick={() => { setError(""); void (record?.pending && record.draftKey ? repository.retry(record, onStatus) : repository.save(map, onStatus)).catch(fail); }}>Повторить сохранение</button><button type="button" disabled={props.readOnly} onClick={() => { void repository.forkDraft(map, onStatus).then(copy => { setError(""); return open({ document: copy, revision: 1, updatedAt: "" }); }).catch(fail); }}>Сохранить отдельный вариант</button><button type="button" onClick={goCatalog}>Показать серверную версию</button></div> : <button type="button" onClick={() => void refresh()}>Повторить загрузку</button>}</div> : null}
     {map && record?.pending && !error ? <div className="mindmap-recovery"><p>Открыт защищённый черновик с устройства.</p><button type="button" disabled={props.readOnly} onClick={() => { void repository.retry(record, onStatus).then(() => setRecord(r => r ? { ...r, pending: false } : r)).catch(fail); }}>Отправить сохранённый черновик</button></div> : null}

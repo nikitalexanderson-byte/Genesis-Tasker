@@ -1,9 +1,14 @@
 .solar-weather-clouds,.solar-weather-effects { position:absolute; inset:0; overflow:hidden; pointer-events:none; border-radius:inherit; }
-.solar-weather-clouds { --weather-cloud-duration:60s; }
-.solar-weather-clouds > i { position:absolute; top:-12%; width:75%; height:58%; border-radius:50%; background:rgb(var(--weather-cloud-ink,172 183 194) / .88); filter:blur(20px); animation:solar-cloud-drift var(--weather-cloud-duration) linear infinite alternate; }
-.solar-weather-clouds > i:nth-child(1) { left:-18%; }
-.solar-weather-clouds > i:nth-child(2) { top:1%; left:22%; width:86%; height:46%; animation-delay:-23s; }
-.solar-weather-clouds > i:nth-child(3) { top:-18%; left:68%; animation-delay:-41s; }
+.solar-weather-clouds { --weather-cloud-duration:80s; --cloud-tone:1; inset:0 0 auto; height:var(--solar-horizon,50%); }
+.solar-weather-clouds.overcast { --cloud-tone:.7; }
+.solar-weather-clouds.storm { --cloud-tone:.46; }
+.solar-weather-clouds > i { position:absolute; top:2%; width:55%; aspect-ratio:3/1; background:url('/weather-art-v1/cloud-bank.webp') center/contain no-repeat;
+  filter:grayscale(1) brightness(calc(var(--weather-cloud-brightness,1) * var(--cloud-tone)));
+  animation:solar-cloud-drift var(--weather-cloud-duration) linear infinite alternate; }
+.solar-weather-clouds:not(.solar-weather-paused) > i { will-change:transform; }
+.solar-weather-clouds > i:nth-child(1) { left:-15%; }
+.solar-weather-clouds > i:nth-child(2) { top:20%; left:25%; width:62%; animation-delay:-37s; animation-duration:calc(var(--weather-cloud-duration) * 1.3); }
+.solar-weather-clouds > i:nth-child(3) { top:-20%; left:70%; width:48%; animation-delay:-61s; }
 .solar-weather-effects > span { position:absolute; pointer-events:none; }
 .solar-weather-fog { inset:20% -15% -10%; opacity:var(--weather-fog); background:linear-gradient(transparent,rgb(185 197 203 / .75) 40%,rgb(204 211 214 / .8) 65%,transparent); filter:blur(12px); animation:solar-fog-drift 35s ease-in-out infinite alternate; }
 .solar-weather-storm-glow { inset:0; opacity:0; background:radial-gradient(ellipse at 60% 0,#dce7f5,transparent 75%); animation:solar-storm-glow var(--weather-storm-duration) linear infinite; }
@@ -25,7 +30,11 @@
 @keyframes solar-precipitation-fall { to { transform:translate3d(var(--weather-drift),120%,0); } }
 @keyframes solar-snow-sway { to { transform:translate3d(var(--particle-sway),0,0); } }
 @keyframes solar-wind-streak { 0% { transform:translate3d(0,3%,0) scaleY(.6); opacity:0; } 25%,65% { opacity:1; } 100% { transform:translate3d(430%,-12%,0) scaleY(1.15); opacity:0; } }
-@media(max-width:600px) { .solar-weather-particle:nth-of-type(n+41) { display:none; } }
+@media(max-width:600px) {
+  .solar-weather-particle:nth-of-type(n+29),.solar-weather-clouds > i:nth-child(3) { display:none; }
+  .solar-weather-clouds > i { width:95%; }
+  .solar-weather-clouds > i:nth-child(2) { left:48%; width:90%; }
+}
 @media(prefers-reduced-motion:reduce) {
   .solar-weather-clouds *,.solar-weather-effects * { animation:none !important; transition:none !important; }
   .solar-weather-particle { transform:translateY(var(--particle-y)); }

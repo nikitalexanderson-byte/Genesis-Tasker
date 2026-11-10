@@ -22,6 +22,7 @@ export function solarWaterState(artKey:string,weather:WeatherSnapshotV1|null,now
   const strength=clamp(wind/18);
   const surface:WaterSurface={top,bottom,points:region.shore.map(([x,y])=>[x,top+(bottom-top)*y]),rocks:region.rocks};
   return {surface,phase:frozen?'ice' as const:visual.windStrong?'waves' as const:'ripple' as const,
+    rain:frozen||!['drizzle','rain','sleet','freezing-rain','hail'].includes(visual.precipitation)?0:visual.intensity==='heavy'?1:visual.intensity==='moderate'?.65:.3,
     amplitude:frozen?0:0.35+3.2*strength**1.35,speed:frozen?0:0.28+strength*1.3,
     frost:frozen?Math.min(0.9,0.68+Math.abs(temperature!)*0.018):0};
 }

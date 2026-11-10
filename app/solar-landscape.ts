@@ -1,7 +1,7 @@
 import manifest from '../public/solar-landscapes-v1/manifest.json';
 import palette from './solar-landscape-palette.json';
 import {gregorianMonthArt} from './gregorian-season-art';
-import {getSolarPosition,getTimezoneFallbackLocation,type DeviceLocation,type AutomaticSolarLocation,type SolarPosition} from './solar-times';
+import {getDeviceDaySolarTimes,getSolarPosition,getTimezoneFallbackLocation,type DeviceLocation,type AutomaticSolarLocation,type SolarPosition} from './solar-times';
 import {weatherVisualState} from './weather-visuals';
 import type {WeatherSnapshotV1} from './weather-types';
 
@@ -66,10 +66,18 @@ export function solarLandscapeState(now:Date,location:DeviceLocation|null,device
   const useCover=Boolean(visuals.snowCover&&validPlate(candidate)&&validPlate(coverCandidate)&&/^snow-cover\/[a-z]+\/\d{2}\.webp$/u.test(coverCandidate.path)&&coverPath!==unavailableArt);
   const plate=useCover?coverCandidate:validPlate(candidate)?candidate:null;
   const horizonY=plate?.horizonY??0.64,position=getSolarPosition(now,observer),sun=projectSolarPosition(position,observer.latitude,horizonY);
+  const events=getDeviceDaySolarTimes(now,observer,zone),instant=now.valueOf();
+  const sunVisible=events.sunrise&&events.sunset
+    ? events.sunrise<events.sunset
+      ? instant>=events.sunrise.valueOf()&&instant<events.sunset.valueOf()
+      : instant>=events.sunrise.valueOf()||instant<events.sunset.valueOf()
+    : position.altitudeDeg>-0.833;
   const daylight=smooth(-12,8,position.altitudeDeg),directLight=smooth(0,30,position.altitudeDeg);
   const warmth=smooth(-12,-2,position.altitudeDeg)*(1-smooth(8,28,position.altitudeDeg));
   const side=(sun.x-0.5)/palette.projection.horizontalAmplitude;
   return {monthIndex,artKey,artPath:useCover?coverPath:plate?`solar-landscapes-v1/${artKey}`:null,assetRevision:manifest.assetRevision,snowCover:useCover,weather:visuals,plate,horizonY,position,sun,observer,
+    // Use the same apparent rise/set times as the visible Today panel.
+    sunrise:events.sunrise,sunset:events.sunset,sunVisible,sunOpacity:sunVisible?0.4+0.6*visuals.sunTransmission:0,
     approximate:locationSource!=='selected-city',locationSource,
     sky:skyColors(position.altitudeDeg),daylight,directLight,warmth:warmth*(1-visuals.cloudCover*0.7),night:(1-smooth(-18,-6,position.altitudeDeg))*(1-visuals.cloudCover),
     terrainBrightness:mix(palette.terrain.nightBrightness,palette.terrain.dayBrightness,daylight)*(1-visuals.groundDimming*daylight),

@@ -48,3 +48,13 @@ test('every retained region/month has bounded water coordinates and horizon-awar
   assert(snowy.surface.top>normal.surface.top);assert.equal(snowy.phase,'ice');
   assert.equal(solarWaterState('../unrelated.webp',weather(),now),null);
 });
+
+test('rain impacts follow fresh liquid precipitation and stop on ice or expired weather',()=>{
+  const sample=weather(6,4);
+  Object.assign(sample.current,{precipitationKind:'rain',precipitationRateMmH:3,intensity:'moderate'});
+  const rain=solarWaterState('temperate/01.webp',sample,now);
+  assert.ok(rain.rain>0);
+  assert.equal(solarWaterState('temperate/01.webp',{...sample,status:'stale'},now).rain,0);
+  assert.equal(solarWaterState('temperate/01.webp',{...sample,current:{...sample.current,temperatureC:-8}},now).rain,0);
+  assert.equal(solarWaterState('temperate/01.webp',{...sample,current:{...sample.current,precipitationKind:'snow'}},now).rain,0);
+});

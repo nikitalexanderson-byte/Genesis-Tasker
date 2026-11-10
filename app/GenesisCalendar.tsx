@@ -15,6 +15,9 @@ const DreamJournalToday = lazy(() => import('./DreamJournal').then(module => ({d
 const SolarLandscapeHero = lazy(() => import('./SolarLandscapeHero'));
 const SolarWeatherSummary = lazy(() => import('./SolarLandscapeHero').then(module=>({default:module.SolarWeatherSummary})));
 import './solar-landscape-hero.css';
+import './workspace-header-refinements.css';
+import './web-color-refinements.css';
+import { todayYearProgress } from './today-year-progress';
 import { DialogCloseButton } from "./DialogCloseButton";
 import { useMobileLayout, useCompactHeader } from "./use-mobile-layout";
 import { useHeaderControlSize } from "./use-header-control-size";
@@ -166,6 +169,8 @@ import { CalendarDatePicker } from "./CalendarDatePicker";
 import { RecordDateTimeRow } from "./RecordDateTimeRow";
 import { TaskReminderPicker } from "./TaskReminderPicker";
 import { CalendarModeIcon } from "./CalendarModeIcon";
+import { CalendarModeCycleButton } from "./CalendarModeCycleButton";
+import lunarYearOverviewCopy from './lunar-year-overview-copy.json';
 import { MoonPhaseIcon } from "./MoonPhaseIcon";
 import { SingleLineTitle } from "./SingleLineTitle";
 import { lunarPatronArt, lunarPatronForDay, lunarTriadCopy } from "./lunar-triad";
@@ -1355,6 +1360,7 @@ export function GenesisCalendar() {
   const [syncError, setSyncError] = useState("");
   const [workspaceRecoveryKey, setWorkspaceRecoveryKey] = useState<string | null>(null);
   const [notificationHeaderTarget, setNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
+  const [sharedNotificationHeaderTarget, setSharedNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
   const loadLocalWorkspace = (key: string) => {
     try { return readStoredState(key); }
     catch { setWorkspaceRecoveryKey(key); return null; }
@@ -5296,7 +5302,7 @@ export function GenesisCalendar() {
               ) : sacredFeaturesEnabled && solarEvent ? <span className="event-badge solar-event-badge"><b aria-hidden="true">{solarEvent.symbol}</b> {solarEvent.name}</span> : null}
             </div> : null}
             {sacredFeaturesEnabled && activeCalendarMode !== "profane" ? <p className="hero-month">{heroMonth}</p> : null}
-            {sacredFeaturesEnabled ? heroHeading : <div className="civil-summary-group"><div className="civil-date-heading">{heroHeading}<DeviceClock timeFormat={activeTimeFormat}/></div>{heroSolarTimes}</div>}
+            {sacredFeaturesEnabled ? heroHeading : <div className="civil-summary-group"><div className="civil-date-heading">{heroHeading}<p className="today-year-progress" data-no-translate>{todayYearProgress(gregorianDayOfYear, gregorianYearLength, language)}</p><DeviceClock timeFormat={activeTimeFormat}/></div>{heroSolarTimes}</div>}
             {activeCalendarMode === "profane" ? sacredFeaturesEnabled ? (
               <div className="hero-description profane-hero-description">
                 <strong>{weekdayPatron.patronage}</strong>
@@ -5432,7 +5438,7 @@ export function GenesisCalendar() {
           </section>
         ) : null}</TodayBlock>
 
-        <TodayBlock id="details"><div className={`today-lower-grid mode-${activeCalendarMode}`} hidden={!showToday("details")}>
+        <TodayBlock id="details">{sacredFeaturesEnabled ? <div className={`today-lower-grid mode-${activeCalendarMode}`} hidden={!showToday("details")}>
           <section className={`meaning-panel today-mode-panel mode-${activeCalendarMode}`} aria-labelledby="rhythm-title">
             <div className="section-heading compact-heading">
               <div>
@@ -5514,7 +5520,7 @@ export function GenesisCalendar() {
             </div>
           </section>
 
-        </div></TodayBlock>
+        </div> : null}</TodayBlock>
 
       </TodayBlocks>
     );
@@ -6813,7 +6819,7 @@ export function GenesisCalendar() {
             );
           })}
           <article
-            className={`year-description-card calendar-mode-description${mode === "profane" ? " profane-year-full-width" : yearMonths.length === 13 ? " lunar-year-has-intercalary" : " lunar-year-full-width"}`}
+            className={`year-description-card calendar-mode-description${mode === "profane" ? " profane-year-full-width" : ` lunar-year-overview ${yearMonths.length === 13 ? "lunar-year-has-intercalary" : "lunar-year-full-width"}`}`}
             aria-labelledby="calendar-mode-year-description"
           >
             {mode === "profane" ? (
@@ -6821,6 +6827,7 @@ export function GenesisCalendar() {
                 <img src="/calendar-art/saturn-cronus.webp" alt="Кронос с косой и золотой сигиллой Сатурна" width="640" height="960" loading="lazy" decoding="async" />
               </figure>
             ) : null}
+            {mode === "lunar" ? <figure className="lunar-year-triad-art" aria-hidden="true"><img src={`${APP_BASE}/calendar-art/lunar-goddesses-v1.webp`} alt="" width="1000" height="1000" loading="lazy" decoding="async" /></figure> : null}
             <span className="eyebrow">{CALENDAR_MODE_META[mode].label}</span>
             <h2 id="calendar-mode-year-description">{mode === "profane" ? "Григорианский календарь" : "Лунный год"}</h2>
             <p data-no-translate>{mode === "profane" ? translateText(yearDescription, language) : yearDescription}</p>
@@ -6833,10 +6840,10 @@ export function GenesisCalendar() {
             {mode === "lunar" ? (
               <>
                 <p>В системе GENESIS это магический «женский» год: его внутренняя ткань определяется не месяцами и неделями солнечного года, а ростом, полнотой и исходом Луны. Весеннее равноденствие служит только ежегодной точкой настройки; условия для практик рождаются внутри самих лунных месяцев и потому не привязаны к григорианскому делению года.</p>
-                <p>Это современная символическая система GENESIS, а не реконструкция единого древнегреческого календаря. Её античная опора — образ Селены как небесного знака для людей и полнота Луны в середине месяца в Гомеровом гимне; греческие лунно-солнечные календари действительно удерживали месяцы рядом с сезонами при помощи вставочного месяца.</p>
+                <p data-no-translate>{lunarYearOverviewCopy[language].context}</p>
                 <div className="year-description-actions"><button type="button" className="year-details-button" onClick={() => setLunarYearDetailsOpen(true)}>
                   <span className="year-details-button-icon" aria-hidden="true"><CalendarModeIcon mode="lunar"/></span>
-                  <span><strong>{translateText('Подробнее',language)}</strong><small data-no-translate>{lunarTriadCopy(language).title}</small></span>
+                  <span><strong data-no-translate>{lunarYearOverviewCopy[language].more}</strong></span>
                 </button></div>
               </>
             ) : <p>Клик по дню открывает задачи, сакральное значение, фазу Луны, точное время рассвета и заката для региона устройства.</p>}
@@ -6879,6 +6886,8 @@ export function GenesisCalendar() {
 
   const renderTopbarActions = () => (
     <div className="topbar-actions">
+            {sacredFeaturesEnabled ? <CalendarModeCycleButton mode={activeCalendarMode} enabledCalendars={visibility.enabledCalendars}
+              order={accountLayout.displayCalendarOrder} language={language} onChange={changeDisplayCalendar}/> : null}
             {cloudUser ? <ThemeModeToggle state={themeState} language={language} onChange={changeGenesisTheme} /> : null}
             {cloudUser ? (
               <div className={`account-chip${accountIdentityExpanded ? " is-expanded" : " is-compact"}`} ref={accountMenuRef}>
@@ -7017,7 +7026,7 @@ export function GenesisCalendar() {
       {cloudUser?<Suspense fallback={null}><PlanGuidanceHost key={cloudUser.uid} user={cloudUser} section={view}/></Suspense>:null}
       {iosInstallOpen ? <Suspense fallback={null}><IosInstallPrompt language={language} onClose={() => setIosInstallOpen(false)} /></Suspense> : null}
       <Suspense fallback={null}><NotificationDock key={cloudUser?.uid ?? "guest"} userId={cloudUser?.uid ?? ""} guidanceUser={cloudUser} language={language} mode={activeCalendarMode} appBase={APP_BASE}
-        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={notificationHeaderTarget}
+        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={sharedNotificationHeaderTarget ?? notificationHeaderTarget}
         sharedEnabled={sharedProjectsReadable} invitationsEnabled={featureAllowed(cloudUser?.featureAccess,'shared-projects') && Boolean(cloudUser?.sharedProjectsEligible)} messengerEnabled={featureAllowed(cloudUser?.featureAccess,'messenger')}
         onOpen={place => { setProjectsArea("shared"); navigateTo("projects", false, place); }} onAccepted={destination => {
         const uid=cloudUser?.uid; if(!uid)return;
@@ -7090,11 +7099,9 @@ export function GenesisCalendar() {
             <img src={`${APP_BASE}/icons/icon-round-v2.png`} alt="" aria-hidden="true" data-genesis-preserve="web-header-logo" />
             <strong data-no-translate>Genesis Tasker</strong>
           </button>
-          {compactHeader && experimentalThemeActive ? renderDisplayCalendarChoice(language === "en" ? "Display calendar" : "Календарь отображения", "topbar-calendar-choice") : null}
           {compactHeader ? renderTopbarActions() : null}
         </header>
         <header className="topbar" data-exp-ui="topbar">
-          {!compactHeader && experimentalThemeActive ? renderDisplayCalendarChoice(language === "en" ? "Display calendar" : "Календарь отображения", "topbar-calendar-choice") : null}
           {!compactHeader ? renderTopbarActions() : null}
         </header>
 
@@ -7151,6 +7158,7 @@ export function GenesisCalendar() {
                 </div>
                 {!sharedProjectsVisible || activeProjectsArea === "personal" ? renderProjects() : <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening shared projects…" : "Открываем общие проекты…"} />}>
                   <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive}
+                    notificationHeaderRef={setSharedNotificationHeaderTarget}
                     writeEnabled={sharedProjectsAvailable}
                     projectViewOrder={accountLayout.sharedProjectViewOrder} onProjectViewOrder={sharedProjectViewOrder => saveLayout({ sharedProjectViewOrder })}
                     calendarScale={accountLayout.sharedCalendarScale} onCalendarScale={sharedCalendarScale => saveLayout({ sharedCalendarScale })}

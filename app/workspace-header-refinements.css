@@ -1,0 +1,144 @@
+/* The civil Today counter belongs beside the date, independently of detail visibility. */
+html[data-genesis-theme] .genesis-app .civil-date-heading .today-year-progress {
+  margin:6px 0 0; color:var(--ink-soft); font:500 clamp(11px,1.2vw,14px)/1.5 var(--font-ui);
+  overflow-wrap:normal; word-break:normal; hyphens:none;
+}
+html[data-genesis-theme] .genesis-app .hero-path-panel .hero-path-header { position:relative; background:transparent; }
+html[data-genesis-theme] .genesis-app .hero-path-panel .hero-path-header h2 { font:600 clamp(24px,3vw,36px)/1.25 var(--font-ui); letter-spacing:0; }
+html[data-genesis-theme] .genesis-app .hero-path-panel .hero-path-header .modal-close { position:static; flex:0 0 44px; }
+html[data-genesis-theme] .genesis-app .hero-path-panel .hero-path-footer { display:flex; justify-content:flex-end; margin-top:28px; }
+html[data-genesis-theme] .genesis-app .hero-path-panel .hero-path-footer > button { min-width:144px; min-height:44px; }
+
+/* Time-zone and device-time labels use the same readable UI type. */
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card.mode-profane .device-clock :is(.device-clock-zone,.device-clock-label) {
+  color:var(--ink); font:500 clamp(12px,1.2vw,14px)/1.5 var(--font-ui);
+  letter-spacing:0; text-transform:none; white-space:normal; overflow-wrap:normal; word-break:normal;
+}
+
+/* Gregorian month panoramas share the compact daylight composition in both themes. */
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-header.calendar-mode-header {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto; align-items:center;
+  min-height:0; padding:20px; gap:16px;
+}
+html[data-genesis-theme][data-genesis-palette] .genesis-app .calendar-view.mode-profane > .calendar-header.calendar-mode-header > .gregorian-season-art {
+  position:absolute; z-index:0; inset:0; width:100%; height:100%; aspect-ratio:auto; border-radius:inherit;
+  grid-column:auto; grid-row:auto;
+  background:linear-gradient(90deg,rgb(0 0 0 / .62),rgb(0 0 0 / .35) 65%,rgb(0 0 0 / .18)),var(--month-panorama);
+  background-position:center; background-size:cover; background-repeat:no-repeat;
+  background-blend-mode:normal; filter:none; opacity:1;
+}
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-header.calendar-mode-header > div:not(.month-switcher) {
+  grid-column:1; grid-row:1; min-width:0; align-self:center; padding:0; background:transparent;
+}
+html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-header.calendar-mode-header > .month-switcher {
+  grid-column:2; grid-row:1; align-self:center; justify-self:end;
+}
+@media(max-width:767px) {
+  html[data-genesis-theme] .genesis-app .calendar-view.mode-profane > .calendar-header.calendar-mode-header {
+    grid-template-columns:minmax(0,1fr); padding:16px;
+  }
+}
+
+.calendar-mode-cycle-glyph { display:grid; place-items:center; animation:calendar-cycle-enter 420ms cubic-bezier(.16,1,.3,1); }
+.calendar-mode-cycle-glyph > svg { width:24px; height:24px; }
+@keyframes calendar-cycle-enter {
+  0% { transform:rotate(-100deg) scale(.45); opacity:.2; }
+  65% { transform:rotate(8deg) scale(1.08); opacity:1; }
+  100% { transform:rotate(0) scale(1); opacity:1; }
+}
+@media(prefers-reduced-motion:reduce) { .calendar-mode-cycle-glyph { animation:none; } }
+
+/* Lunar-year content and its four metrics share the left column; the triad fills the right. */
+html[data-genesis-theme] .genesis-app .year-description-card.lunar-year-overview {
+  display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); grid-template-rows:repeat(7,auto);
+  align-items:start; column-gap:28px;
+}
+html[data-genesis-theme] .genesis-app .lunar-year-overview > :not(.lunar-year-triad-art) { grid-column:1; min-width:0; }
+html[data-genesis-theme] .genesis-app .lunar-year-overview > dl { grid-template-columns:repeat(4,minmax(0,1fr)); width:100%; }
+html[data-genesis-theme] .genesis-app .lunar-year-overview .year-details-button { width:100%; max-width:none; min-width:0; min-height:56px; }
+html[data-genesis-theme] .genesis-app .lunar-year-overview .year-details-button strong { text-transform:none; letter-spacing:0; font-size:16px; }
+html[data-genesis-theme] .genesis-app .lunar-year-triad-art { grid-column:2; grid-row:1/-1; align-self:center; margin:0; min-width:0; }
+html[data-genesis-theme] .genesis-app .lunar-year-triad-art > img { display:block; width:100%; height:auto; max-height:500px; object-fit:contain; }
+@media(max-width:760px) {
+  html[data-genesis-theme] .genesis-app .year-description-card.lunar-year-overview { grid-template-columns:minmax(0,1fr); grid-template-rows:none; gap:0; }
+  html[data-genesis-theme] .genesis-app .lunar-year-overview > dl { gap:6px; }
+  html[data-genesis-theme] .genesis-app .lunar-year-overview > dl > div { min-width:0; padding:10px 5px; }
+  html[data-genesis-theme] .genesis-app .lunar-year-overview > dl dd { font-size:10px; overflow-wrap:normal; word-break:normal; hyphens:none; }
+  html[data-genesis-theme] .genesis-app .lunar-year-triad-art { grid-column:1; grid-row:8; margin-top:20px; }
+  html[data-genesis-theme] .genesis-app .lunar-year-triad-art > img { max-height:340px; }
+}
+
+@media(max-width:760px) {
+  html[data-genesis-theme] .genesis-app .calendar-view.mode-lunar .calendar-header .calendar-title {
+    width:100%; max-width:none; font-size:clamp(9px,2.5vw,12px); letter-spacing:.025em;
+    white-space:nowrap; overflow-wrap:normal; word-break:normal; hyphens:none;
+  }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .calendar-mode-year.mode-profane > .year-header {
+    min-height:0; padding:16px; gap:12px;
+  }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .calendar-mode-year.mode-profane > .year-header h1 { display:none; }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .calendar-mode-year.mode-profane > .year-header .year-switcher {
+    box-sizing:border-box; display:grid; grid-template-columns:44px minmax(0,1fr) 44px;
+    width:100%; min-width:0; padding:0; gap:8px; border:0; background:transparent;
+  }
+  html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .calendar-mode-year.mode-profane > .year-header .year-switcher strong {
+    min-width:0; margin:0; text-align:center; white-space:nowrap;
+  }
+  html[data-genesis-theme] .genesis-app .habit-template-library > header > .habit-suggestions-toggle,
+  html[data-genesis-theme] .genesis-app .habit-template-grid footer > .primary-button { width:100%; justify-content:center; min-height:44px; }
+  html[data-genesis-theme] .genesis-app .hero-path-panel { padding-top:12px; }
+  html[data-genesis-theme] .genesis-app .hero-path-panel .hero-path-footer > button { width:100%; }
+}
+
+/* All four mobile editing actions share one centered row, including tablets. */
+@media(min-width:761px) and (max-width:1099px) {
+  .mindmap-primary-toolbar { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .mindmap-primary-toolbar > :is(.mindmap-add-thought,.mindmap-add-affair) { grid-row:1; min-width:0; }
+  .mindmap-primary-toolbar > :is(.mindmap-add-thought,.mindmap-add-affair) > span { display:none; }
+  .mindmap-primary-toolbar > .mindmap-history-actions { grid-column:3/span 2; grid-row:1; }
+  .mindmaps .mindmap-history-actions > button { flex:1; }
+  .mindmap-primary-toolbar > .mindmap-all-map { grid-column:1/-1; }
+}
+
+/* Shared workspaces have a fixed compact header with both communication actions. */
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact]:has(.shared-workspace-summary) {
+  display:grid; grid-template-columns:32px minmax(0,1fr) 44px 44px; align-items:center;
+  gap:12px 8px; min-height:0; padding:16px;
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] :is(.workspace-header-main,.workspace-header-copy,.workspace-header-summary,.shared-workspace-summary) { display:contents; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .projects-hero-mark { grid-column:1; grid-row:1; width:32px; height:32px; margin:0; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .projects-hero-mark svg { width:32px; height:32px; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] h1 { grid-column:2; grid-row:1; margin:0; min-width:0; font-size:clamp(20px,2.7vw,32px); line-height:1.25; overflow-wrap:normal; word-break:normal; hyphens:none; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .workspace-header-context { display:block; grid-column:1/-1; grid-row:2; min-width:0; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] :is(.workspace-header-context > p,.shared-summary-counts) { display:none; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .workspace-header-context:not(:has(.shared-space-identity)) { display:none; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-header-actions { display:block; grid-column:1/-1; grid-row:3; padding:0; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-summary-retry { grid-column:1/-1; grid-row:4; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-notification-header-slot { grid-column:4; grid-row:1; justify-self:end; align-self:start; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open {
+  display:inline-flex; grid-column:3; grid-row:1; justify-self:end; align-self:start;
+  position:relative; width:44px; height:44px; min-height:44px; margin:0; padding:10px; font-size:0;
+}
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open svg { flex-shrink:0; width:20px; height:20px; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open strong { position:absolute; inset-block-start:1px; inset-inline-end:3px; font-size:11px; line-height:1.2; }
+
+/* The diary back arrow is centered within the complete desktop heading. */
+html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading > .workspace-header-main { align-self:stretch; }
+html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading > .workspace-header-main > .diary-back { align-self:center; }
+@media(max-width:760px) {
+  html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading { grid-template-rows:auto auto; }
+  html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading > .workspace-header-main { grid-row:1; }
+  html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading .diary-privacy { grid-row:2; justify-self:start; width:100%; max-width:none; text-align:start; }
+}
+
+/* Only the desktop mindmap catalog changes; its mobile disclosure stays intact. */
+@media(min-width:1100px) {
+  html[data-genesis-theme] .genesis-app .mindmaps > .mindmap-header[data-map-open="false"] {
+    grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:12px; min-height:0; padding-block:16px;
+  }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-map-open="false"] .mindmap-header-main { grid-column:2; grid-row:1; }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-map-open="false"] h1 { font-size:clamp(24px,2.8vw,40px); overflow-wrap:normal; word-break:normal; hyphens:none; }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-map-open="false"] .mindmap-catalog-statistics { grid-column:3; grid-row:1; margin:0; }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-map-open="false"] .mindmap-back-link { grid-column:1; grid-row:1; align-self:center; width:44px; min-width:44px; height:44px; padding:8px; }
+  html[data-genesis-theme] .genesis-app .mindmap-header[data-map-open="false"] .mindmap-back-link > span { display:none; }
+}

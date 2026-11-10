@@ -1,0 +1,77 @@
+/* Month identity keeps its night composition while the surrounding page stays light. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] { --calendar-night-surface:#040a17; --calendar-night-muted:#b1c1da; }
+html[data-genesis-theme="standart"][data-genesis-palette="burgundy"] { --calendar-night-surface:#0e0508; --calendar-night-muted:#d0b1bc; }
+html[data-genesis-theme="standart"][data-genesis-palette="violet"] { --calendar-night-surface:#090411; --calendar-night-muted:#c5b5d6; }
+
+/* The requested night-blue reading surfaces are limited to the blue daylight palette. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] :is(.hero-path-panel[role="dialog"],.stoicheion-section-view,.stoicheion-letter-dialog,.sacred-year-details-modal,.year-description-card.profane-year-full-width) {
+  color-scheme:dark;
+  --paper:#080f1f; --paper-deep:#0c182a; --surface:#13233a; --white:#1b304d;
+  --ink:#edf3fc; --ink-soft:#b1c1da; --line:#7d9fc34d; --gold:#a8ceff; --gold-light:#a8ceff; --teal:#a5c9ea;
+  --ui-accent:#a8ceff; --ui-on-accent:#091b36; --exp-hover:#1b304d;
+  --palette-recessed:#040a17; --palette-surface:#13233a; --palette-raised:#1b304d; --palette-control:#1b2e4a;
+  --palette-muted:#b1c1da; --palette-accent:#a8ceff; --palette-on-accent:#091b36;
+  --day-reading:#040a17; --day-raised:#13233a; color:var(--ink);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .hero-path-panel[role="dialog"] {
+  background:linear-gradient(165deg,#040a17,#13233a 45%,#040a17);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .stoicheion-letter-dialog > article {
+  color:var(--ink); background:linear-gradient(145deg,#13233a,#080f1f 70%);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .stoicheion-letter-dialog .stoicheion-letter-copy :is(p,li) { color:var(--ink-soft); }
+
+/* Keep the original multicolor Oracle artwork, including the mobile composition. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art {
+  --palette-recessed:#040a17;
+  background-image:linear-gradient(90deg,#040a17c7,#040a1770 40%,#040a1714 75%),var(--oracle-backdrop); filter:none;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art::after { background:var(--section-hero-shade); }
+@media(max-width:767px) {
+  html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art {
+    background-image:linear-gradient(180deg,#040a17e6,#040a1766 60%,#040a1714),var(--oracle-backdrop);
+  }
+}
+
+/* The light blue canvas leaves the authored mandala, its symbols and interactions intact. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala-card {
+  color:var(--ink); background:linear-gradient(145deg,#f9fbff,#e4eefb); border-color:var(--line);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala-heading :is(h2,p) { color:var(--ink); }
+
+/* All four administrator sections stay on the same row. */
+html[data-genesis-theme] .genesis-app .admin-section-tabs { grid-template-columns:repeat(4,minmax(0,1fr)); }
+@media(max-width:767px) {
+  html[data-genesis-theme] .genesis-app .admin-section-tabs > button { min-width:0; padding-inline:4px; font-size:clamp(11px,3.1vw,14px); white-space:nowrap; }
+}
+
+/* Green daylight artwork uses the same lunar shade; rank art has the requested 50% shade. */
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .today-view .hero-card.mode-lunar > .hero-palette-art {
+  display:block; position:absolute; inset:0; z-index:-2; pointer-events:none; border-radius:inherit; background:inherit; filter:brightness(.6);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .heroic-rank-card .heroic-rank-art { filter:brightness(.5); }
+
+/* Blue daylight lunar blocks and selection states never inherit the green fallback. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .lunar-decade {
+  background:linear-gradient(135deg,#234265,#102039); border-color:#6585ab;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .lunar-decade > header small { color:#b1c1da; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-mode-calendar.mode-lunar .calendar-mode-day {
+  --palette-muted:#50657e; background:#e1eaf6; color:#182b43; border-color:#b6cbe3;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-view :is(.calendar-mode-day,.calendar-day):is(.selected,.today) {
+  --palette-muted:#d3e2f5; background:#305d91; border-color:#91b9ea; color:#f5f9ff;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-view :is(.calendar-mode-day,.calendar-day):is(.selected,.today) :is(.calendar-mode-primary,.calendar-mode-primary > small,.calendar-cross-date,.calendar-gregorian,.calendar-weekday) { color:#edf3fc; }
+
+/* Preserve the complete monthly artwork with only a 10% pale veil on blue daylight year cards. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month::before {
+  background-image:linear-gradient(rgb(249 251 255 / .1),rgb(249 251 255 / .1)),var(--month-art);
+  background-size:cover; background-position:center; opacity:1; filter:none; -webkit-mask-image:none; mask-image:none;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month::after { background:none; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month > :is(strong,small),
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month .year-month-meta {
+  width:fit-content; max-width:100%; padding:4px 8px; border-radius:6px; color:#edf3fc; background:rgb(8 24 44 / .88);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month .year-month-meta :is(em,i) { color:#d3e2f5; }

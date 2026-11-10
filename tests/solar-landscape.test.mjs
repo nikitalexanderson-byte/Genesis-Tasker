@@ -165,3 +165,38 @@ test('invalid astronomy, crop and projection inputs fail before creating non-fin
   assert.throws(()=>landscape.solarLandscapeCrop({width:1536,height:1024,horizonY:0.64},0,300),RangeError);
   assert.throws(()=>landscape.solarLandscapeCrop({width:1536,height:1024,horizonY:Infinity},390,300),RangeError);
 });
+
+test('the visible sun follows the displayed local rise/set interval, including a remote city and polar days',()=>{
+  for(const [observer,zone] of [
+    [{latitude:55.7558,longitude:37.6173},'Europe/Moscow'],
+    [{latitude:-33.8688,longitude:151.2093},'Australia/Sydney'],
+    [{latitude:21.3069,longitude:-157.8583},'Europe/Moscow'],
+  ]) {
+    const now=new Date('2026-11-10T11:19:00Z');
+    const events=solar.getDeviceDaySolarTimes(now,observer,zone);
+    assert.ok(events.sunrise&&events.sunset);
+    for(const [instant,visible] of [[events.sunrise.valueOf()-1,false],[events.sunrise.valueOf(),true],[events.sunset.valueOf()-1,true],[events.sunset.valueOf(),false]]) {
+      const scene=landscape.solarLandscapeState(new Date(instant),observer,zone,'selected-city');
+      assert.equal(scene.sunVisible,visible,`${zone} ${new Date(instant).toISOString()}`);
+      assert.equal(scene.sunOpacity>0,visible);
+    }
+  }
+  const polar={latitude:69.6492,longitude:18.9553};
+  assert.equal(landscape.solarLandscapeState(new Date('2026-06-21T23:00:00Z'),polar,'Europe/Oslo','selected-city').sunVisible,true);
+  assert.equal(landscape.solarLandscapeState(new Date('2026-12-21T11:00:00Z'),polar,'Europe/Oslo','selected-city').sunVisible,false);
+});
+
+test('refreshing or expiring overcast weather cannot hide or move the daytime solar disk',()=>{
+  const now=new Date('2026-11-10T11:19:00Z'),observer={latitude:55.7558,longitude:37.6173};
+  const sample=JSON.parse(readFileSync(new URL('./fixtures/weather-v1.json',import.meta.url),'utf8'));
+  Object.assign(sample,{validAt:'2026-11-10T11:00:00Z',validUntil:'2026-11-10T12:00:00Z',expiresAt:'2026-11-10T12:00:00Z'});
+  Object.assign(sample.current,{condition:'cloudy',cloudCoverPercent:100,precipitationKind:'none',intensity:'none'});
+  const cloudy=landscape.solarLandscapeState(now,observer,'Europe/Moscow','selected-city',sample);
+  const expired=landscape.solarLandscapeState(now,observer,'Europe/Moscow','selected-city',{...sample,status:'stale'});
+  assert.equal(cloudy.sunVisible,true);
+  assert.ok(cloudy.sunOpacity>=0.4);
+  assert.equal(cloudy.lightOpacity,0);
+  assert.ok(expired.sunOpacity>cloudy.sunOpacity);
+  assert.deepEqual(cloudy.sun,expired.sun);
+  assert.deepEqual(cloudy.position,expired.position);
+});
