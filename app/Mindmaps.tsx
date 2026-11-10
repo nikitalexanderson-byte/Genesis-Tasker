@@ -1,6 +1,6 @@
 "use client";
 import { DialogCloseButton } from "./DialogCloseButton";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { GenesisProject, GenesisTask } from "./cloud-sync";
 import { GenesisApiError, LOCAL_SESSION_ENDED_EVENT } from "./cloud-sync";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
@@ -390,6 +390,7 @@ export default function Mindmaps(props: Props) {
   const mapBackAction = <IconActionButton className="mindmap-editor-back" label={translateText("Все майндмепы")} icon="map-back" onClick={goCatalog}/>;
   const mapViewAction = <IconActionButton className="mindmap-view-toggle" label={translateText(view.mode === "map" ? "Структура" : "Карта")} icon={view.mode === "map" ? "map-mode" : "outline-mode"} onClick={() => changeView({ ...view, mode: view.mode === "map" ? "structure" : "map" })}/>;
   const mapSettingsAction = <IconActionButton className="mindmap-settings-toggle" label={translateText("Настройка карты")} icon="gear" aria-haspopup="dialog" onClick={() => setDialog("settings")}/>;
+  const mapAllAction = view.focus ? <button type="button" className="mindmap-all-map" onClick={() => changeView({ ...view, focus: null })}>Вся карта</button> : null;
   return <section className="mindmaps" aria-label={props.spaceId ? "Общие майндмепы" : "Личные майндмепы"}>
     <header className="workspace-header mindmap-header" data-exp-ui="panel" data-mobile-overview={overviewOpen} data-map-open={Boolean(map)}>{map ? mapBackAction : null}<div className="workspace-header-main mindmap-header-main"><span className="projects-hero-mark mindmap-hero-mark" aria-hidden="true"><ExperimentalIcon name="map-mode" /></span><div className="workspace-header-copy"><h1>{map ? <>Майндмеп<span className="workspace-title-secondary"> · <em className="mindmap-map-title" data-no-translate>{map.title}</em></span></> : "Майндмепы"}</h1><p data-no-translate={Boolean(map?.description)}>{map ? map.description || (progress!.total ? `Связанные задачи: ${progress!.done} ${translateText("из")} ${progress!.total}` : translateText("Пока только идеи")) : "Связывайте идеи, проекты и задачи."}</p></div></div>
       {map ? <span role="status" className="mindmap-save-state" data-save-state={status}>{status === "synced" ? null : statuses[status]}</span> : null}
@@ -430,9 +431,13 @@ export default function Mindmaps(props: Props) {
           <ExperimentalIcon name="redo"/>
         </button>
       </div>
-        {isMobile ? mapSettingsAction : null}
-        {view.focus ? <button type="button" className="mindmap-all-map" onClick={() => changeView({ ...view, focus: null })}>Вся карта</button> : null}
-        {!isMobile ? <>{nodeSearch}{mapSettingsAction}</> : null}
+        {/* Keep the opener in the same React parent when an open dialog crosses a breakpoint. */}
+        <Fragment key="mindmap-search-settings">
+          {!isMobile ? mapAllAction : null}
+          {!isMobile ? nodeSearch : null}
+          {mapSettingsAction}
+        </Fragment>
+        {isMobile ? mapAllAction : null}
       </div>
       {isMobile ? <div className="mindmap-canvas-search">{nodeSearch}</div> : null}
       {search ? <div className="mindmap-search-results" aria-label="Найденные узлы">{!map.nodes.some(n => `${titleFor(n)} ${n.note} ${(n.tags ?? []).join(" ")}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())) ? <p>Ничего не найдено. Измените запрос.</p> : null}{map.nodes.filter(n => `${titleFor(n)} ${n.note} ${(n.tags ?? []).join(" ")}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())).map(n => <button type="button" key={n.id} onClick={() => { setSelected(n.id); changeView({ ...view, focus: n.id, collapsed: view.collapsed.filter(id => id !== n.id) }); setSearch(""); if (isMobile) setDialog("node"); }}>{titleFor(n)} · Показать ветку</button>)}</div> : null}
