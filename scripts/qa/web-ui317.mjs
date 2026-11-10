@@ -64,7 +64,7 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       await view.click();await page.locator('.mindmap-canvas').waitFor({state:'hidden'});
       await page.locator('.mindmap-structure').waitFor();
       assert.equal(await view.getAttribute('aria-label'),'Карта');
-      const trigger=controls.getByRole('button',{name:'Настройка карты',exact:true});await trigger.click();
+      const trigger=controls.getByRole('button',{name:'Настройка карты',exact:true}),opener=await trigger.elementHandle();assert(opener);await trigger.click();
       const dialog=page.getByRole('dialog',{name:'Настройка карты',exact:true});await dialog.waitFor();assert.equal(await dialog.getAttribute('aria-modal'),'true');
       const rect=await center(page,dialog);
       assert.equal(await page.locator('.mindmap-settings-panel').count(),1);assert(await dialog.getByRole('textbox',{name:'Название карты',exact:true}).isEditable());
@@ -79,9 +79,18 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       }
       await snapshot(`release317-map-settings-${width}-${scheme}`);
       records.push({screen:'map-settings',width,scheme,rect,controls:geometry});
+      if(width>=1100){
+        await page.setViewportSize({width:768,height:1000});await page.locator('.mindmap-canvas-search').waitFor();
+        await page.setViewportSize({width,height:1000});await page.locator('.mindmap-canvas-search').waitFor({state:'hidden'});
+        assert(await opener.evaluate(node=>node.isConnected),'Settings opener survives a responsive layout change');
+      }
       await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
-      await page.waitForFunction(()=>document.activeElement?.matches('.mindmap-settings-toggle'),{},{timeout:2000});
+      await page.waitForFunction(()=>document.activeElement?.matches('.mindmap-settings-toggle'),{},{timeout:2000}).catch(async error=>{
+        const focus=await trigger.evaluate(node=>({triggerConnected:node.isConnected,activeTag:document.activeElement?.tagName,activeClass:document.activeElement?.className,activeLabel:document.activeElement?.getAttribute('aria-label')}));
+        throw new Error(`Escape focus restoration: ${JSON.stringify(focus)}; ${error.message}`);
+      });
       assert(await trigger.evaluate(node=>node===document.activeElement),'Escape returns focus to settings trigger');
+      assert(await opener.evaluate(node=>node===document.activeElement),'Focus returns to the original settings button');await opener.dispose();
       if(width===1440&&scheme==='light'){
         await page.reload();await trigger.waitFor();await trigger.click();
         assert.equal(await page.getByRole('dialog',{name:'Настройка карты',exact:true}).getByRole('textbox',{name:'Описание',exact:true}).inputValue(),`QA settings 3.1.7 ${tier}`);

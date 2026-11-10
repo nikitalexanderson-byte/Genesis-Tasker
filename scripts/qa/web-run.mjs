@@ -14,7 +14,7 @@ import { waitForQaBackend } from './backend-ready.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = Object.fromEntries(process.argv.slice(2).map(argument => { const [key, ...parts] = argument.replace(/^--/, '').split('='); return [key, parts.join('=')]; }));
 const suite = args.suite ?? 'full';
-if (!['full', 'followup317', 'trial317', 'history317', 'retention', 'header'].includes(suite)) throw new Error('Unknown web QA suite');
+if (!['full', 'followup317', 'trial317', 'history317', 'retention', 'header', 'dialog-focus'].includes(suite)) throw new Error('Unknown web QA suite');
 const id = args['run-id'] ?? `web-${Date.now()}-${randomBytes(3).toString('hex')}`;
 if (!/^[a-zA-Z0-9-]{6,80}$/.test(id)) throw new Error('Invalid run ID');
 const output = path.resolve(root, args.output ?? `output/playwright/full-qa/${id}`);
@@ -50,7 +50,7 @@ try {
   server = await startWebServer({ port, apiPort });
   startupGate = await runSharedStartup({ baseURL: origin, output });
   const exitCode = await new Promise((resolve, reject) => {
-    const script = {full: 'scripts/qa/web-full.mjs', followup317: 'scripts/qa/web-followup317.mjs', trial317: 'scripts/qa/web-trial-only317.mjs', history317: 'scripts/qa/web-hidden-map-history317.mjs', retention: 'scripts/qa/web-retention.mjs', header: 'scripts/qa/web-header-startup.mjs'}[suite];
+    const script = {full: 'scripts/qa/web-full.mjs', followup317: 'scripts/qa/web-followup317.mjs', trial317: 'scripts/qa/web-trial-only317.mjs', history317: 'scripts/qa/web-hidden-map-history317.mjs', retention: 'scripts/qa/web-retention.mjs', header: 'scripts/qa/web-header-startup.mjs', 'dialog-focus': 'scripts/qa/web-dialog-focus.mjs'}[suite];
     const child = spawn(process.execPath, [script], { cwd: root, windowsHide: true, env: { ...process.env, GENESIS_QA_WEB_ORIGIN: origin, GENESIS_QA_WEB_OUTPUT: output, GENESIS_QA_BACKEND_RUNTIME: runtime, GENESIS_QA_PHP: php, GENESIS_QA_PHASE: 'isolated', ...(args.focus ? { GENESIS_QA_FOLLOWUP_SCOPE: args.focus } : {}), ...(args.tiers ? { GENESIS_QA_TIERS: args.tiers } : {}) }, stdio: ['ignore', 'pipe', 'pipe'] });
     const log = createWriteStream(path.join(output, 'web.log'));
     child.stdout.on('data', data => { log.write(data); process.stdout.write(data); });

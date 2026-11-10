@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 const FOCUSABLE_SELECTOR = [
   "button:not([disabled])",
@@ -30,7 +30,8 @@ export function useDialogAccessibility<T extends HTMLElement>(onClose: () => voi
     closeRef.current = onClose;
   }, [onClose]);
 
-  useEffect(() => {
+  // Remember the opener before another layout effect or early input can focus the dialog.
+  useLayoutEffect(() => {
     if (!active) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
