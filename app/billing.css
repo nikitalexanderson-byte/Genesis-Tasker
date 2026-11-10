@@ -142,6 +142,14 @@ html[data-genesis-theme] .genesis-app .account-panel .account-profile-summary > 
 html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade {
   flex:0 1 auto; max-width:100%; margin-block:0; margin-inline-start:auto;
 }
+@media(max-width:767px) {
+  html[data-genesis-theme] .genesis-app .account-panel .account-profile-details {
+    display:grid; grid-template-columns:minmax(0,1fr); align-items:start; justify-items:start;
+  }
+  html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade {
+    margin-inline-start:0;
+  }
+}
 html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgrade-open-button {
   min-height:48px; padding:10px 12px; gap:8px; border-color:#d7b56b;
   background:var(--palette-raised, #573285); color:#fff2ce; font-weight:600;
