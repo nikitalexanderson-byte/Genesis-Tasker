@@ -1,0 +1,128 @@
+{
+  "ru": {
+    "download": "Скачать историю снов",
+    "savedAt": "Копия сохранена",
+    "timeZone": "Часовой пояс",
+    "createdAt": "Создано",
+    "updatedAt": "Обновлено",
+    "localOnly": "Сохранено на устройстве",
+    "error": "Не удалось создать файл. Повторите попытку."
+  },
+  "en": {
+    "download": "Download dream history",
+    "savedAt": "Copy saved on",
+    "timeZone": "Time zone",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "localOnly": "Saved on this device",
+    "error": "Could not create the file. Please try again."
+  },
+  "el": {
+    "download": "Λήψη ιστορικού ονείρων",
+    "savedAt": "Το αντίγραφο αποθηκεύτηκε στις",
+    "timeZone": "Ζώνη ώρας",
+    "createdAt": "Δημιουργήθηκε",
+    "updatedAt": "Ενημερώθηκε",
+    "localOnly": "Αποθηκευμένο σε αυτή τη συσκευή",
+    "error": "Δεν ήταν δυνατή η δημιουργία του αρχείου. Δοκιμάστε ξανά."
+  },
+  "de": {
+    "download": "Traumverlauf herunterladen",
+    "savedAt": "Kopie gespeichert am",
+    "timeZone": "Zeitzone",
+    "createdAt": "Erstellt",
+    "updatedAt": "Aktualisiert",
+    "localOnly": "Auf diesem Gerät gespeichert",
+    "error": "Die Datei konnte nicht erstellt werden. Bitte erneut versuchen."
+  },
+  "fr": {
+    "download": "Télécharger l’historique des rêves",
+    "savedAt": "Copie enregistrée le",
+    "timeZone": "Fuseau horaire",
+    "createdAt": "Création",
+    "updatedAt": "Mise à jour",
+    "localOnly": "Enregistré sur cet appareil",
+    "error": "Impossible de créer le fichier. Veuillez réessayer."
+  },
+  "es": {
+    "download": "Descargar el historial de sueños",
+    "savedAt": "Copia guardada el",
+    "timeZone": "Zona horaria",
+    "createdAt": "Creación",
+    "updatedAt": "Actualización",
+    "localOnly": "Guardado en este dispositivo",
+    "error": "No se pudo crear el archivo. Inténtalo de nuevo."
+  },
+  "it": {
+    "download": "Scarica la cronologia dei sogni",
+    "savedAt": "Copia salvata il",
+    "timeZone": "Fuso orario",
+    "createdAt": "Creazione",
+    "updatedAt": "Aggiornamento",
+    "localOnly": "Salvato su questo dispositivo",
+    "error": "Impossibile creare il file. Riprova."
+  },
+  "pt": {
+    "download": "Transferir o histórico de sonhos",
+    "savedAt": "Cópia guardada em",
+    "timeZone": "Fuso horário",
+    "createdAt": "Criação",
+    "updatedAt": "Atualização",
+    "localOnly": "Guardado neste dispositivo",
+    "error": "Não foi possível criar o ficheiro. Tente novamente."
+  },
+  "pl": {
+    "download": "Pobierz historię snów",
+    "savedAt": "Kopia zapisana",
+    "timeZone": "Strefa czasowa",
+    "createdAt": "Utworzono",
+    "updatedAt": "Zaktualizowano",
+    "localOnly": "Zapisano na tym urządzeniu",
+    "error": "Nie udało się utworzyć pliku. Spróbuj ponownie."
+  },
+  "sr": {
+    "download": "Преузми историју снова",
+    "savedAt": "Копија сачувана",
+    "timeZone": "Временска зона",
+    "createdAt": "Направљено",
+    "updatedAt": "Ажурирано",
+    "localOnly": "Сачувано на овом уређају",
+    "error": "Није могуће направити датотеку. Покушајте поново."
+  },
+  "uk": {
+    "download": "Завантажити історію снів",
+    "savedAt": "Копію збережено",
+    "timeZone": "Часовий пояс",
+    "createdAt": "Створено",
+    "updatedAt": "Оновлено",
+    "localOnly": "Збережено на цьому пристрої",
+    "error": "Не вдалося створити файл. Спробуйте ще раз."
+  },
+  "zh": {
+    "download": "下载梦境历史记录",
+    "savedAt": "副本保存时间",
+    "timeZone": "时区",
+    "createdAt": "创建时间",
+    "updatedAt": "更新时间",
+    "localOnly": "已保存在此设备上",
+    "error": "无法创建文件。请重试。"
+  },
+  "tr": {
+    "download": "Rüya geçmişini indir",
+    "savedAt": "Kopyanın kaydedildiği tarih",
+    "timeZone": "Saat dilimi",
+    "createdAt": "Oluşturulma",
+    "updatedAt": "Güncellenme",
+    "localOnly": "Bu cihaza kaydedildi",
+    "error": "Dosya oluşturulamadı. Lütfen yeniden deneyin."
+  },
+  "ja": {
+    "download": "夢の履歴をダウンロード",
+    "savedAt": "コピーの保存日時",
+    "timeZone": "タイムゾーン",
+    "createdAt": "作成日時",
+    "updatedAt": "更新日時",
+    "localOnly": "この端末に保存済み",
+    "error": "ファイルを作成できませんでした。もう一度お試しください。"
+  }
+}

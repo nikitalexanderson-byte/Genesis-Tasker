@@ -9,6 +9,7 @@ import { featureAllowed } from "./feature-access";
 import { requestUpgrade } from "./upgrade-events";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
 import { DialogCloseButton } from "./DialogCloseButton";
+import { IconActionButton } from "./IconActionButton";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import copy from "./dream-journal-copy.json";
 import {compactDreamDate} from './dream-journal-date';
@@ -23,6 +24,8 @@ import { DreamDictation, type DreamRecognitionConstructor } from './dream-dictat
 import { appendDictation, dictationLocale, formatDictation } from './dictation-text';
 import { correctDictationSpelling, supportedSpellingLanguage } from './dictation-spelling';
 import dictationCopy from './dictation-copy.json';
+import exportCopy from './dream-export-copy.json';
+import { buildDreamHistoryHtml, dreamExportAllowed, dreamExportRecords } from './dream-export';
 export function DreamJournalToday({user, date, language, plans, entries}: {user: GenesisUser; date: string; language: Language; plans: readonly SleepPlan[]; entries: readonly SleepEntry[]}) {
   const diary=useDiary(); const [now,setNow]=useState(()=>Date.now());
   useEffect(()=>{const timer=window.setInterval(()=>setNow(Date.now()),30000);return()=>window.clearInterval(timer);},[]);
@@ -35,17 +38,33 @@ export function DreamJournal({ user, date, language, compact=false, wakeSource=n
   const [editing,setEditing]=useState<{record?:DiaryRecord; key:string}|null>(null);
   const [selected,setSelected]=useState(date);
   const [filter,setFilter]=useState('all'), [query,setQuery]=useState(''), [historyOpen,setHistoryOpen]=useState(false);
+  const [exportError,setExportError]=useState(false);
+  const exportAllowed=Boolean(user&&dreamExportAllowed(user.featureAccess));
   const dreams=uniqueDreams(diary.records), stats=dreams;
   const otherDrafts=diary.records.filter(row=>row.note.dream&&row.draftKey&&!dreams.some(dream=>dream.draftKey===row.draftKey));
   const records=dreams.filter(row=>(filter!=='day'||row.note.dream!.day===selected)&&(filter!=='favorites'||row.note.reaction==='favorite')&&
     (filter!=='lucid'||row.note.dream!.lucid)&&dreamMatches(row.note,query))
     .toSorted((a,b)=>b.note.dream!.day.localeCompare(a.note.dream!.day)||b.note.updatedAt.localeCompare(a.note.updatedAt));
   const open=()=>{ if (!user || !featureAllowed(user.featureAccess,"dream-journal",undefined,true)) { requestUpgrade({feature:"dream-journal",reason:"feature"}); return; } setEditing({key:crypto.randomUUID()}); };
+  const download=()=>{
+    if(!user||!dreamExportAllowed(user.featureAccess)||diary.loading||diary.error||diary.busy)return;
+    setExportError(false);
+    try{
+      const savedAt=new Date().toISOString();
+      const content=buildDreamHistoryHtml(diary.records,language,savedAt);
+      const url=URL.createObjectURL(new Blob([content],{type:'text/html;charset=utf-8'}));
+      const link=document.createElement('a');link.href=url;link.download=`GENESIS-dreams-${savedAt.slice(0,10)}.html`;
+      try{document.body.append(link);link.click();}finally{link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    }catch{setExportError(true);}
+  };
   if(!uiVisibility(user?.uiVisibility).dreamJournalEnabled)return null;
   return <section className="dream-journal tracker-module-card" aria-label={text.title}>
     <header><h2>{text.title}</h2></header><div className="dream-journal-actions"><button type="button" className="primary-button" onClick={open} disabled={!user || diary.loading}><ExperimentalIcon name="plus"/>{text.record}</button><button type="button" className="secondary-button" onClick={()=>setHistoryOpen(true)}><ExperimentalIcon name="history"/>{text.history}</button></div>
     {compact&&wakeSource?<p className="dream-wake-source">{wakeSource==='actual'?text.actualWake:text.plannedWake}</p>:null}
-    {historyOpen?<DreamHistoryDialog title={text.history} closeLabel={common.closeDraft} onClose={()=>setHistoryOpen(false)}>
+    {historyOpen?<DreamHistoryDialog title={text.history} closeLabel={common.closeDraft} onClose={()=>setHistoryOpen(false)}
+      downloadLabel={exportCopy[language].download} onDownload={exportAllowed?download:undefined}
+      downloadDisabled={diary.loading||diary.error||diary.busy||!dreamExportRecords(diary.records).length}>
+      {exportError?<p role="alert">{exportCopy[language].error}</p>:null}
       <div className="dream-filters" aria-label={text.title}>{(['all','day','favorites','lucid'] as const).map(value=><button type="button" key={value} aria-pressed={filter===value} onClick={()=>setFilter(value)} aria-label={value==='day'?text.dayOnly:text[value]} title={value==='day'?text.dayOnly:text[value]}><ExperimentalIcon name={{all:'history',day:'calendar',favorites:'star',lucid:'moon'}[value]}/></button>)}</div>
       {filter==='day'?<label><span>{text.date}</span><input type="date" value={selected} onChange={event=>setSelected(event.target.value)}/></label>:null}
       <label className="dream-search"><span>{text.search}</span><input type="search" value={query} maxLength={200} onChange={event=>setQuery(event.target.value)}/></label>
@@ -63,11 +82,14 @@ export function DreamJournal({ user, date, language, compact=false, wakeSource=n
     {editing&&user?<DreamEditor key={editing.key} user={user} record={editing.record} date={new Date().toLocaleDateString("en-CA")} dateEditable={!compact||Boolean(editing.record)} language={language} onSaved={day=>{if(!compact)setSelected(day);setEditing(null);}} onClose={()=>setEditing(null)}/>:null}
   </section>;
 }
-function DreamHistoryDialog({title,closeLabel,onClose,children}:{title:string;closeLabel:string;onClose:()=>void;children:React.ReactNode}){
+function DreamHistoryDialog({title,closeLabel,onClose,children,downloadLabel,onDownload,downloadDisabled}:{title:string;closeLabel:string;onClose:()=>void;children:React.ReactNode;downloadLabel:string;onDownload?:()=>void;downloadDisabled:boolean}){
  const native=useRef<HTMLDialogElement>(null),focus=useDialogAccessibility<HTMLDialogElement>(onClose);
  useEffect(()=>{native.current?.showModal();},[]);
- return <dialog className="dream-history" ref={element=>{native.current=element;focus(element);}} aria-labelledby="dream-history-title" onCancel={event=>{event.preventDefault();onClose();}}>
-  <header><h2 id="dream-history-title">{title}</h2><DialogCloseButton aria-label={closeLabel} onClick={onClose}/></header>{children}
+ return <dialog className="dream-history" data-dialog-header="none" ref={element=>{native.current=element;focus(element);}} aria-labelledby="dream-history-title" onCancel={event=>{event.preventDefault();onClose();}}>
+  <header className="dialog-universal-header"><div className="dialog-universal-title"><h2 id="dream-history-title">{title}</h2></div><div className="dialog-universal-actions">
+    {onDownload?<IconActionButton icon="download" label={downloadLabel} disabled={downloadDisabled} onClick={onDownload}/>:null}
+    <DialogCloseButton aria-label={closeLabel} onClick={onClose}/>
+  </div></header>{children}
  </dialog>;
 }
 function DreamEditor({user,record,date,language,onSaved,onClose,dateEditable=true}:{user:GenesisUser;record?:DiaryRecord;date:string;dateEditable?:boolean;language:Language;onSaved:(day:string)=>void;onClose:()=>void}) {

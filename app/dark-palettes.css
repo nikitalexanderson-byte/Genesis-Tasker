@@ -153,6 +153,12 @@ html[data-genesis-theme] .genesis-app .genesis-page-footer > a :is(strong, small
 html[data-genesis-theme] .genesis-app .genesis-page-footer > a > span:first-child { background:rgb(255 255 255 / .18); }
 html[data-genesis-theme] .genesis-app .genesis-page-footer > a:hover { filter:brightness(1.08); }
 .dark-palette-setting select { min-height: 44px; width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; color: var(--ink); background: var(--surface); }
+/* Lunar selection in the blue night palette presses into the same navy surface. */
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app :is(.calendar-mode-calendar.mode-lunar .calendar-day, .civil-mini-calendar.mode-lunar .mini-day):is(.selected, .today, :hover, :focus-visible) {
+  color: var(--ink); background: #0c1e35; border-color: var(--gold);
+}
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app :is(.calendar-mode-calendar.mode-lunar .calendar-day, .civil-mini-calendar.mode-lunar .mini-day):active { background: #07162a; }
+html[data-genesis-theme="standart-dark"][data-genesis-palette="blue"] .genesis-app .calendar-mode-calendar.mode-lunar .calendar-day:is(.selected, .today, :hover, :focus-visible) :is(.calendar-mode-primary, .calendar-cross-date, .calendar-cross-date b, .calendar-moon, .calendar-sun-times, .mini-day-number) { color: var(--ink); }
 html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) { scrollbar-color: var(--ink-soft) var(--paper-deep); }
 html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) ::selection { color:var(--dark-on-accent); background:var(--gold); }
 /* Keep blue information, red warnings and warm emphasis distinct within each palette. */
