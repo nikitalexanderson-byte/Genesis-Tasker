@@ -88,14 +88,16 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .y
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month:is(.mode-profane,.mode-lunar) :is(.year-month-top i,.year-month-top b,.civil-mini-weekday,.year-month-meta,.year-month-meta em,.year-month-meta i,.year-open-button,.year-open-button span,.year-open-button i) { color:#fff; }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month:is(.mode-profane,.mode-lunar) .year-open-button { background:rgb(16 36 58 / .72); border-color:rgb(255 255 255 / .3); }
 
-/* Keep animated blue-and-gold medallions distinct from the daylight status cards. */
-html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .habits-hero .habits-hero-status :is(.habit-metric-sigil,.rank-sigil) { background:#0a2548; border-radius:50%; }
+/* Daylight medallions retain the forest field in the green palette. */
+html[data-genesis-theme="standart"] { --daylight-sigil-surface:#0a2548; --daylight-sigil-field:#102e53; }
+html[data-genesis-theme="standart"][data-genesis-palette="green"] { --daylight-sigil-surface:#0d2a29; --daylight-sigil-field:#103134; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .habits-hero .habits-hero-status :is(.habit-metric-sigil,.rank-sigil) { background:var(--daylight-sigil-surface); border-radius:50%; }
 html[data-genesis-theme="standart"] .genesis-app .habit-metric-sigil { color:#f7d986; }
-html[data-genesis-theme="standart"] .genesis-app .metric-sigil-halo { fill:#102e53; stroke:#f2cf78; }
+html[data-genesis-theme="standart"] .genesis-app .metric-sigil-halo { fill:var(--daylight-sigil-field); stroke:#f2cf78; }
 html[data-genesis-theme="standart"] .genesis-app .metric-sigil-laurel-branches { fill:#e6bd65; stroke:#ffe6a8; }
 html[data-genesis-theme="standart"] .genesis-app .metric-sigil-staff path { stroke:#ffe09a; }
 html[data-genesis-theme="standart"] .genesis-app .rank-sigil[data-rank-sigil="unranked"] { color:#efd07b; }
-html[data-genesis-theme="standart"] .genesis-app .rank-sigil[data-rank-sigil="unranked"] .rank-sigil-halo { fill:#102e53; stroke:#e7c575; }
+html[data-genesis-theme="standart"] .genesis-app .rank-sigil[data-rank-sigil="unranked"] .rank-sigil-halo { fill:var(--daylight-sigil-field); stroke:#e7c575; }
 html[data-genesis-theme="standart"] .genesis-app .rank-sigil-motif { stroke:#ffe6a8; }
 html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .future-modeling-trigger.year-details-button > span:first-child { color:#ffe5a0; background:#102640; }
 html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .future-modeling-trigger.year-details-button > span:first-child > svg { color:inherit; fill:none; stroke:currentColor; }
