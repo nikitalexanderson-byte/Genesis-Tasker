@@ -40,19 +40,10 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24.19.0'
-      - name: Verify the exact current-main commit for this requested one-time web deployment
+      - name: Require successful Source checks for this exact current-main commit
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REPOSITORY" = 'nikitalexanderson-byte/Genesis-Tasker'
-          test "$GITHUB_REF" = 'refs/heads/main'
-          [[ "$DEPLOY_COMMIT" =~ ^[a-f0-9]{40}$ ]]
-          [[ "$EXPECTED_CURRENT_COMMIT" =~ ^[a-f0-9]{40}$ ]]
-          test "$(git rev-parse HEAD)" = "$DEPLOY_COMMIT"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$DEPLOY_COMMIT"
-          test "$GENESIS_DEPLOY_TARGET" = hostinger
-          test "$GENESIS_DEPLOY_ANDROID" = false
+        run: node scripts/deployment/source-checks.mjs
       - name: Check incumbent production commit
         run: |
           set -euo pipefail
