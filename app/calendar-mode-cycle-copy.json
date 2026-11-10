@@ -1,0 +1,16 @@
+{
+  "ru":"Сменить календарь: {current} → {next}",
+  "en":"Switch calendar: {current} → {next}",
+  "el":"Αλλαγή ημερολογίου: {current} → {next}",
+  "de":"Kalender wechseln: {current} → {next}",
+  "fr":"Changer de calendrier : {current} → {next}",
+  "es":"Cambiar de calendario: {current} → {next}",
+  "it":"Cambia calendario: {current} → {next}",
+  "pt":"Mudar calendário: {current} → {next}",
+  "pl":"Zmień kalendarz: {current} → {next}",
+  "sr":"Промени календар: {current} → {next}",
+  "uk":"Змінити календар: {current} → {next}",
+  "zh":"切换日历：{current} → {next}",
+  "tr":"Takvimi değiştir: {current} → {next}",
+  "ja":"カレンダーを切り替える：{current} → {next}"
+}

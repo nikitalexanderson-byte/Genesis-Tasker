@@ -307,7 +307,7 @@ html[data-genesis-theme] .genesis-app .mindmap-header .mindmap-back-link { grid-
   .mindmap-canvas-search .mindmap-node-search { min-width: 0; }
 }
 @media (max-width: 760px) {
-  .mindmap-primary-toolbar { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; }
+  .mindmap-primary-toolbar { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
   .mindmap-primary-toolbar > .mindmap-view-modes { grid-column: 1 / -1; }
   .mindmap-primary-toolbar > :is(.mindmap-add-thought,.mindmap-add-affair,.mindmap-more-toggle) { grid-row: 1; height: 56px; min-height: 56px; min-width: 0; margin: 0; padding: 6px; font: 600 13px/1.3 var(--font-ui); }
   .mindmap-primary-toolbar > .mindmap-add-thought { grid-column: 1; }

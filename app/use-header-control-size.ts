@@ -30,8 +30,8 @@ export function useHeaderControlSize(enabled: boolean) {
       const brand = header.querySelector<HTMLElement>(":scope > button");
       const calendars = header.querySelector<HTMLElement>(".topbar-calendar-choice");
       const actions = header.querySelector<HTMLElement>(".topbar-actions");
-      if (!brand || !calendars || !actions) return;
-      const calendarCount = [...calendars.querySelectorAll(":scope > button")].filter(visible).length;
+      if (!brand || !actions) return;
+      const calendarCount = calendars ? [...calendars.querySelectorAll(":scope > button")].filter(visible).length : 0;
       // Lazy controls occupy their final slot before their button mounts.
       const actionCount = [...actions.querySelectorAll("button, a, .notification-header-slot:empty, [data-header-control-placeholder]")].filter(visible).length;
       const count = calendarCount + actionCount;
@@ -39,8 +39,8 @@ export function useHeaderControlSize(enabled: boolean) {
       const style = getComputedStyle(header);
       const available = header.getBoundingClientRect().width - number(style.paddingLeft) - number(style.paddingRight)
         - number(style.borderLeftWidth) - number(style.borderRightWidth);
-      const overhead = number(style.columnGap) * 2
-        + groupOverhead(calendars, calendarCount) + groupOverhead(actions, actionCount);
+      const overhead = number(style.columnGap) * (calendars ? 2 : 1)
+        + (calendars ? groupOverhead(calendars, calendarCount) : 0) + groupOverhead(actions, actionCount);
       delete header.dataset.headerStacked;
       if (brand.getBoundingClientRect().width + overhead + count * 44 > available) header.dataset.headerStacked = "true";
       const size = Math.floor(Math.min(44, Math.max(24, (available - brand.getBoundingClientRect().width - overhead) / count)) * 100) / 100;

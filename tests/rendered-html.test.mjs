@@ -2912,7 +2912,10 @@ test("keeps the requested calendar and privacy features wired", async () => {
   assert.match(i18n, /первого точного новолуния после весеннего равноденствия/);
   assert.match(calendar, /"Лунный год"/);
   assert.doesNotMatch(calendar, /Магический женский год Луны/);
-  assert.match(calendar, /современная символическая система GENESIS/);
+  assert.match(calendar, /lunarYearOverviewCopy\[language\]\.context/);
+  const lunarOverview = JSON.parse(await readFile(new URL('../app/lunar-year-overview-copy.json', import.meta.url), 'utf8'));
+  assert.match(lunarOverview.ru.context, /символическая система Ордена Авроры/);
+  assert.match(lunarOverview.ru.context, /первое новолуние после весеннего равноденствия/);
   assert.doesNotMatch(calendar, /calendar-source-links|Гомеров гимн XXXII к Селене/);
   assert.match(calendar, /mode === "profane" && date\.getDay\(\) === 6/);
   assert.match(calendar, /PROFANE_WEEKDAY_PATRONS/);

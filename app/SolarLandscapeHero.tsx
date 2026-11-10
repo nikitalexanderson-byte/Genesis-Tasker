@@ -8,19 +8,27 @@ import './solar-landscape-hero.css';
 import nightStars from './solar-night-stars.json';
 import SolarWaterSurface from './SolarWaterSurface';
 import {solarWaterState} from './solar-water';
+import {useSolarSceneClock} from './use-solar-scene-clock';
 export {SolarWeatherSummary} from './SolarWeatherSummary';
+
+function useSolarWater(artKey:string,weather:WeatherSnapshotV1|null,instant:number,horizon:number|undefined) {
+  return useMemo(()=>solarWaterState(artKey,weather,instant,horizon),[artKey,weather,instant,horizon]);
+}
 
 /** The Today clock supplies the current instant and refreshes on focus/visibility. */
 export default function SolarLandscapeHero({now,location,deviceTimeZone,source,basePath='',ownerId=null,weather}:{
   now:Date;location:DeviceLocation|null;deviceTimeZone:string;source:AutomaticSolarLocation['source']|null;basePath?:string;ownerId?:string|null;weather?:WeatherSnapshotV1|null;
 }) {
   const loaded=useCivilWeather(ownerId,location,source);
+  const [visible,setVisible]=useState(true);
+  const clock=useSolarSceneClock(now.valueOf(),location,deviceTimeZone,visible);
   const [unavailableArt,setUnavailableArt]=useState<string|null>(null);
-  const sceneNow=ownerId&&weather===undefined?new Date(Math.max(now.valueOf(),loaded.evaluatedAt)):now;
+  const sceneNow=new Date(Math.max(now.valueOf(),clock,ownerId&&weather===undefined?loaded.evaluatedAt:0));
   const activeWeather=weather===undefined?loaded.weather:weather;
   const scene=solarLandscapeState(sceneNow,location,deviceTimeZone,source,activeWeather,unavailableArt);
   const sceneInstant=sceneNow.valueOf();
-  const water=useMemo(()=>solarWaterState(scene.artKey,activeWeather,sceneInstant,scene.plate?.horizonY),[scene.artKey,activeWeather,sceneInstant,scene.plate?.horizonY]);
+  const artKey=scene.artKey,plateHorizon=scene.plate?.horizonY;
+  const water=useSolarWater(artKey,activeWeather,sceneInstant,plateHorizon);
   const url=scene.artPath?`${basePath.replace(/\/$/u,'')}/${scene.artPath}?v=${scene.assetRevision}`:null;
   const [failedArt,setFailedArt]=useState<string|null>(null);
   const layer=useRef<HTMLDivElement>(null);
@@ -32,6 +40,14 @@ export default function SolarLandscapeHero({now,location,deviceTimeZone,source,b
     measure();
     const observer=new ResizeObserver(measure);observer.observe(element);
     return ()=>observer.disconnect();
+  },[]);
+  useEffect(()=>{
+    const element=layer.current;if(!element)return;
+    let inView=true;
+    const sync=()=>setVisible(inView&&document.visibilityState==='visible');
+    const observer=new IntersectionObserver(entries=>{inView=entries[0]?.isIntersecting??false;sync();});
+    observer.observe(element);document.addEventListener('visibilitychange',sync);sync();
+    return()=>{observer.disconnect();document.removeEventListener('visibilitychange',sync);};
   },[]);
   // Keep the authored horizon centered as the content and viewport change.
   const horizonY = 0.5;
@@ -64,7 +80,7 @@ export default function SolarLandscapeHero({now,location,deviceTimeZone,source,b
     '--solar-terrain-brightness':scene.terrainBrightness,'--solar-terrain-saturation':scene.terrainSaturation,
     '--solar-shade-left':scene.shadeLeft,'--solar-shade-right':scene.shadeRight,'--solar-light':scene.lightOpacity,
     '--solar-warmth':scene.warmth,'--solar-night':scene.night,
-    '--weather-cloud-ink':scene.daylight>0.5?'172 183 194':'39 48 67',
+    '--weather-cloud-brightness':0.24+scene.daylight*0.76,
   } as CSSProperties;
   return <div ref={layer} className="solar-landscape-hero" aria-hidden="true" data-solar-phase={scene.position.phase}
     data-solar-polar={scene.position.polarState} data-solar-approximate={scene.approximate} data-solar-art={scene.artKey} data-solar-snow-cover={scene.snowCover} style={style}>
@@ -76,17 +92,17 @@ export default function SolarLandscapeHero({now,location,deviceTimeZone,source,b
       </g>)}
     </svg>
     <span className="solar-landscape-haze"/>
-    {scene.position.sunVisible?<span className="solar-landscape-sun" style={{opacity:scene.weather.sunTransmission}}/>:null}
-    <SolarWeatherClouds weather={scene.weather} paused={Boolean(ownerId&&!loaded.visible)}/>
+    <SolarWeatherClouds weather={scene.weather} paused={!visible}/>
+    {scene.sunVisible?<span className="solar-landscape-sun" style={{opacity:scene.sunOpacity,filter:scene.weather.cloudCover>.75?'blur(1px)':'none'}}/>:null}
     {hasArt?<>
       {/* The authored alpha terrain occludes the sun; its sky is never baked in. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="solar-landscape-terrain" src={url!} alt="" draggable={false} decoding="async" onError={()=>{if(scene.snowCover)setUnavailableArt(scene.artPath);else setFailedArt(url);}}/>
-      {water?<SolarWaterSurface url={url!} water={water} displayWidth={crop?.width??0} paused={Boolean(ownerId&&!loaded.visible)}/>:null}
+      {water?<SolarWaterSurface url={url!} water={water} displayWidth={crop?.width??0} paused={!visible}/>:null}
       <span className="solar-landscape-ground-light"/>
       <span className="solar-landscape-ground-shade"/>
     </>:null}
-    <SolarWeatherEffects weather={scene.weather} paused={Boolean(ownerId&&!loaded.visible)}/>
+    <SolarWeatherEffects weather={scene.weather} paused={!visible}/>
     <span className="solar-landscape-reading-shade"/>
   </div>;
 }
