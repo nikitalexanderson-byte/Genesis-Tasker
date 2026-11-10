@@ -57,9 +57,10 @@ export function SharedWorkspaceSummary({ userId, english, language, workspaceAct
     <ExperimentalIcon name="mail" /><strong className="shared-updates-badge" aria-hidden="true">{newCount > 99 ? "99+" : newCount}</strong>
   </button>;
   return <div className="shared-workspace-summary">
-    <div className="shared-header-actions" role="group" aria-label={english ? "Workspace controls" : "Управление пространством"}>
-      {workspaceActions ? workspaceActions(messagesButton) : messagesButton}
-    </div>
+    {workspaceActions ? <div className="shared-header-actions" role="group" aria-label={english ? "Workspace controls" : "Управление пространством"}>
+      {workspaceActions(null)}
+    </div> : null}
+    {messagesButton}
     {error ? <button type="button" className="shared-summary-retry" onClick={refresh}>{english ? "Refresh summary" : "Обновить сводку"}</button> : null}
     <dialog className="shared-projects-modal shared-updates-dialog" ref={dialog} onCancel={() => setOpen(false)}
       aria-labelledby="shared-updates-title">

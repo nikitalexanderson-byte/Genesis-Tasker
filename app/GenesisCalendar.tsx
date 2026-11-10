@@ -15,6 +15,8 @@ const DreamJournalToday = lazy(() => import('./DreamJournal').then(module => ({d
 const SolarLandscapeHero = lazy(() => import('./SolarLandscapeHero'));
 const SolarWeatherSummary = lazy(() => import('./SolarLandscapeHero').then(module=>({default:module.SolarWeatherSummary})));
 import './solar-landscape-hero.css';
+import './workspace-header-refinements.css';
+import { todayYearProgress } from './today-year-progress';
 import { DialogCloseButton } from "./DialogCloseButton";
 import { useMobileLayout, useCompactHeader } from "./use-mobile-layout";
 import { useHeaderControlSize } from "./use-header-control-size";
@@ -1355,6 +1357,7 @@ export function GenesisCalendar() {
   const [syncError, setSyncError] = useState("");
   const [workspaceRecoveryKey, setWorkspaceRecoveryKey] = useState<string | null>(null);
   const [notificationHeaderTarget, setNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
+  const [sharedNotificationHeaderTarget, setSharedNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
   const loadLocalWorkspace = (key: string) => {
     try { return readStoredState(key); }
     catch { setWorkspaceRecoveryKey(key); return null; }
@@ -5296,7 +5299,7 @@ export function GenesisCalendar() {
               ) : sacredFeaturesEnabled && solarEvent ? <span className="event-badge solar-event-badge"><b aria-hidden="true">{solarEvent.symbol}</b> {solarEvent.name}</span> : null}
             </div> : null}
             {sacredFeaturesEnabled && activeCalendarMode !== "profane" ? <p className="hero-month">{heroMonth}</p> : null}
-            {sacredFeaturesEnabled ? heroHeading : <div className="civil-summary-group"><div className="civil-date-heading">{heroHeading}<DeviceClock timeFormat={activeTimeFormat}/></div>{heroSolarTimes}</div>}
+            {sacredFeaturesEnabled ? heroHeading : <div className="civil-summary-group"><div className="civil-date-heading">{heroHeading}<p className="today-year-progress" data-no-translate>{todayYearProgress(gregorianDayOfYear, gregorianYearLength, language)}</p><DeviceClock timeFormat={activeTimeFormat}/></div>{heroSolarTimes}</div>}
             {activeCalendarMode === "profane" ? sacredFeaturesEnabled ? (
               <div className="hero-description profane-hero-description">
                 <strong>{weekdayPatron.patronage}</strong>
@@ -5432,7 +5435,7 @@ export function GenesisCalendar() {
           </section>
         ) : null}</TodayBlock>
 
-        <TodayBlock id="details"><div className={`today-lower-grid mode-${activeCalendarMode}`} hidden={!showToday("details")}>
+        <TodayBlock id="details">{sacredFeaturesEnabled ? <div className={`today-lower-grid mode-${activeCalendarMode}`} hidden={!showToday("details")}>
           <section className={`meaning-panel today-mode-panel mode-${activeCalendarMode}`} aria-labelledby="rhythm-title">
             <div className="section-heading compact-heading">
               <div>
@@ -5514,7 +5517,7 @@ export function GenesisCalendar() {
             </div>
           </section>
 
-        </div></TodayBlock>
+        </div> : null}</TodayBlock>
 
       </TodayBlocks>
     );
@@ -7017,7 +7020,7 @@ export function GenesisCalendar() {
       {cloudUser?<Suspense fallback={null}><PlanGuidanceHost key={cloudUser.uid} user={cloudUser} section={view}/></Suspense>:null}
       {iosInstallOpen ? <Suspense fallback={null}><IosInstallPrompt language={language} onClose={() => setIosInstallOpen(false)} /></Suspense> : null}
       <Suspense fallback={null}><NotificationDock key={cloudUser?.uid ?? "guest"} userId={cloudUser?.uid ?? ""} guidanceUser={cloudUser} language={language} mode={activeCalendarMode} appBase={APP_BASE}
-        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={notificationHeaderTarget}
+        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={sharedNotificationHeaderTarget ?? notificationHeaderTarget}
         sharedEnabled={sharedProjectsReadable} invitationsEnabled={featureAllowed(cloudUser?.featureAccess,'shared-projects') && Boolean(cloudUser?.sharedProjectsEligible)} messengerEnabled={featureAllowed(cloudUser?.featureAccess,'messenger')}
         onOpen={place => { setProjectsArea("shared"); navigateTo("projects", false, place); }} onAccepted={destination => {
         const uid=cloudUser?.uid; if(!uid)return;
@@ -7151,6 +7154,7 @@ export function GenesisCalendar() {
                 </div>
                 {!sharedProjectsVisible || activeProjectsArea === "personal" ? renderProjects() : <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening shared projects…" : "Открываем общие проекты…"} />}>
                   <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive}
+                    notificationHeaderRef={setSharedNotificationHeaderTarget}
                     writeEnabled={sharedProjectsAvailable}
                     projectViewOrder={accountLayout.sharedProjectViewOrder} onProjectViewOrder={sharedProjectViewOrder => saveLayout({ sharedProjectViewOrder })}
                     calendarScale={accountLayout.sharedCalendarScale} onCalendarScale={sharedCalendarScale => saveLayout({ sharedCalendarScale })}

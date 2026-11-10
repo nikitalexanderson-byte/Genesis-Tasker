@@ -1,0 +1,16 @@
+{
+  "ru": "{day} из {total} дней года",
+  "en": "Day {day} of {total}",
+  "el": "Ημέρα {day} από {total}",
+  "de": "Tag {day} von {total}",
+  "fr": "Jour {day} sur {total}",
+  "es": "Día {day} de {total}",
+  "it": "Giorno {day} di {total}",
+  "pt": "Dia {day} de {total}",
+  "pl": "{day}. dzień z {total}",
+  "sr": "{day}. од {total} дана у години",
+  "uk": "{day} із {total} днів року",
+  "zh": "一年 {total} 天中的第 {day} 天",
+  "tr": "Yılın {total} gününün {day}. günü",
+  "ja": "全{total}日中{day}日目"
+}
