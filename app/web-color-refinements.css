@@ -4,7 +4,7 @@ html[data-genesis-theme="standart"][data-genesis-palette="burgundy"] { --calenda
 html[data-genesis-theme="standart"][data-genesis-palette="violet"] { --calendar-night-surface:#090411; --calendar-night-muted:#c5b5d6; }
 
 /* The requested night-blue reading surfaces are limited to the blue daylight palette. */
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] :is(.hero-path-panel[role="dialog"],.stoicheion-section-view,.stoicheion-letter-dialog,.sacred-year-details-modal,.year-description-card.profane-year-full-width) {
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] :is(.hero-path-panel[role="dialog"],.stoicheion-section-view,.stoicheion-letter-dialog,.theokyklos-mandala-card,.sacred-year-details-modal,.year-description-card.profane-year-full-width) {
   color-scheme:dark;
   --paper:#080f1f; --paper-deep:#0c182a; --surface:#13233a; --white:#1b304d;
   --ink:#edf3fc; --ink-soft:#b1c1da; --line:#7d9fc34d; --gold:#a8ceff; --gold-light:#a8ceff; --teal:#a5c9ea;
@@ -33,14 +33,11 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :i
   }
 }
 
-/* The light blue canvas leaves the authored mandala, its symbols and interactions intact. */
+/* The mandala shares the night-blue reading surface of Stoicheion. */
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala-card {
-  color:var(--ink); background:linear-gradient(145deg,#f9fbff,#e4eefb); border-color:var(--line);
+  color:var(--ink); background:linear-gradient(145deg,var(--palette-surface),var(--palette-recessed) 68%); border-color:var(--line);
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala-heading :is(h2,p) { color:var(--ink); }
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala :is(.theokyklos-segment-direction,.theokyklos-segment-name,.theokyklos-ring-label,.theokyklos-ring-patron,.theokyklos-center-label,.theokyklos-center-caption) { fill:#10243a; }
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala .direction-segment:is(:hover,:focus-visible,.is-selected) :is(.theokyklos-segment-direction,.theokyklos-segment-name),
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala .center-segment:is(:hover,:focus-visible,.is-selected) :is(.theokyklos-center-label,.theokyklos-center-caption) { fill:#f4f7fc; }
 
 /* All four administrator sections stay on the same row. */
 html[data-genesis-theme] .genesis-app .admin-section-tabs { grid-template-columns:repeat(4,minmax(0,1fr)); }
@@ -66,14 +63,20 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .c
   --palette-muted:#d3e2f5; background:#305d91; border-color:#91b9ea; color:#f5f9ff;
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-view :is(.calendar-mode-day,.calendar-day):is(.selected,.today) :is(.calendar-mode-primary,.calendar-mode-primary > small,.calendar-cross-date,.calendar-gregorian,.calendar-weekday) { color:#edf3fc; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .month-calendar:not(.calendar-mode-calendar) .calendar-day:is(.selected,.today) {
+  --ink:#f5f9ff; --ink-soft:#d3e2f5;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .month-calendar:not(.calendar-mode-calendar) .calendar-day:is(.selected,.today) > :is(strong,small,.calendar-gregorian,.calendar-moon,.calendar-sun-times),
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .month-calendar:not(.calendar-mode-calendar) .calendar-day:is(.selected,.today) :is(.calendar-gregorian b,.calendar-gregorian span,.calendar-sun-times span) { color:#edf3fc; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .month-calendar:not(.calendar-mode-calendar) .calendar-day:is(.selected,.today) .calendar-sun-times i { color:#ffe0a0; }
 
 /* Blue daylight year cards keep complete artwork under the requested translucent veil. */
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month::before {
-  background-image:linear-gradient(var(--year-month-veil,rgb(255 255 255 / .4)),var(--year-month-veil,rgb(255 255 255 / .4))),var(--month-art);
+  background-image:linear-gradient(var(--year-month-veil,rgb(255 255 255 / .5)),var(--year-month-veil,rgb(255 255 255 / .5))),var(--month-art);
   background-size:cover; background-position:center; opacity:1; filter:none; -webkit-mask-image:none; mask-image:none;
 }
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-lunar { --year-month-veil:rgb(255 255 255 / .3); }
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-profane { --year-month-veil:rgb(48 93 145 / .5); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-lunar { --year-month-veil:rgb(16 36 58 / .6); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-profane { --year-month-veil:rgb(48 93 145 / .55); }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-profane::before { background-image:linear-gradient(var(--year-month-veil),var(--year-month-veil)),var(--month-art); }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month::after { background:none; }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month > :is(strong,small),
@@ -81,6 +84,9 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .y
   max-width:100%; padding:0; border:0; border-radius:0; color:#10243a; background:transparent; box-shadow:none; text-shadow:none;
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month .year-month-meta :is(em,i) { color:#10243a; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month:is(.mode-profane,.mode-lunar) > :is(strong,small,.year-month-top),
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month:is(.mode-profane,.mode-lunar) :is(.year-month-top i,.year-month-top b,.civil-mini-weekday,.year-month-meta,.year-month-meta em,.year-month-meta i,.year-open-button,.year-open-button span,.year-open-button i) { color:#fff; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month:is(.mode-profane,.mode-lunar) .year-open-button { background:rgb(16 36 58 / .72); border-color:rgb(255 255 255 / .3); }
 
 /* Keep animated blue-and-gold medallions distinct from the daylight status cards. */
 html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .habits-hero .habits-hero-status :is(.habit-metric-sigil,.rank-sigil) { background:#0a2548; border-radius:50%; }

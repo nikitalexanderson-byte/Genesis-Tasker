@@ -132,6 +132,19 @@ html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-updates-open { grid-column:4; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-notification-header-slot { grid-column:5; }
   html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-summary-retry { grid-row:3; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact]:has(.shared-header-actions) {
+    grid-template-columns:32px minmax(0,1fr) minmax(280px,360px);
+  }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools > .shared-notification-header-slot { flex:0 0 44px; align-self:center; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools .notification-dock-toggle { color:inherit; background:transparent; border-color:#ffffff40; }
+}
+@media(max-width:1099px) {
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact]:has(.shared-header-actions) { position:relative; grid-template-rows:44px auto auto; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools > :is(.shared-updates-open,.shared-notification-header-slot) {
+    position:absolute; grid-area:auto; inset-block-start:16px; width:44px; height:44px; margin:0;
+  }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools > .shared-updates-open { inset-inline-end:68px; }
+  html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header[data-compact] .shared-workspace-tools > .shared-notification-header-slot { inset-inline-end:16px; }
 }
 
 /* The diary back arrow is centered within the complete desktop heading. */
