@@ -11,6 +11,7 @@ import { verifySharedInbox } from './web-shared-inbox.mjs';
 import { sanitizeTraceFile } from './trace-sanitize.mjs';
 import { verifyTrialWeb317 } from './web-trials317.mjs';
 import { runHeaderStartup } from './web-header-startup.mjs';
+import { chooseDisplayCalendar } from './display-calendar-control.mjs';
 
 const baseURL = process.env.GENESIS_QA_WEB_ORIGIN ?? 'http://127.0.0.1:4380';
 if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL)) throw new Error('Only isolated loopback web origin is allowed');
@@ -64,6 +65,7 @@ try {
         await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
       }
       save(); console.log(`${results.at(-1).status} ${tier} ${id}`);
+      if (results.at(-1).error) console.error(results.at(-1).error);
     };
     try {
       await check('session', async () => {
@@ -323,7 +325,7 @@ try {
         await snapshot('task-delete-reload');
       });
       await check('today-date-independent', async () => {
-        await page.getByRole('button', { name: 'Григорианский', exact: true }).click();
+        await chooseDisplayCalendar(page, 'profane');
         await page.getByRole('button', { name: 'Сегодня', exact: true }).first().click();
         const actualDate = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
         assert.equal(await page.locator('.hero-day-title-translation').innerText(), actualDate);
@@ -378,11 +380,11 @@ try {
         } finally { await second.close(); }
         await snapshot('oracle-daily-draw-persistence');
       });
-      for (const [mode, name] of [['profane', 'Григорианский'], ['sacred', 'Сакральный'], ['lunar', 'Лунный']]) {
+      for (const mode of ['profane', 'sacred', 'lunar']) {
         await check(`calendar-${mode}`, async () => {
           await page.getByRole('button', { name: 'Календарь', exact: true }).first().click();
-          await page.getByRole('button', { name, exact: true }).click();
-          assert.equal(await page.getByRole('button', { name, exact: true }).getAttribute('aria-pressed'), 'true');
+          await chooseDisplayCalendar(page, mode);
+          assert.equal(await page.locator('.calendar-mode-cycle').getAttribute('data-calendar-mode'), mode);
           const month = page.getByRole('tabpanel', { name: 'Месяц', exact: true });
           await month.waitFor();
           assert((await month.getByRole('button').count()) > 20, 'The selected calendar has no selectable days');

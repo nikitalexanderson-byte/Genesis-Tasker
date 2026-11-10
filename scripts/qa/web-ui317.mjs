@@ -46,12 +46,18 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       assert(new URL(originalMapUrl).searchParams.has('mindmap'),'Saved map prerequisite');
       await visit(originalMapUrl);await page.setViewportSize({width,height:1000});await theme(page,scheme);
       await page.locator('.mindmap-save-state[data-save-state="synced"]').waitFor({state:'attached'});
-      const controls=page.locator('.mindmap-header-modes'),buttons=controls.getByRole('button');assert.equal(await buttons.count(),4);
+      const controls=page.locator('.mindmap-header-modes'),buttons=controls.getByRole('button');assert.equal(await buttons.count(),3);
       const geometry=await buttons.evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return{label:node.getAttribute('aria-label'),x:r.x,y:r.y,width:r.width,height:r.height,background:s.backgroundColor,color:s.color};}));
-      for(const rect of geometry){assert(rect.width>=48&&rect.height>=48,'Header control touch target');near(rect.y,geometry[0].y,'Four header controls share one row');}
+      if(width<1100)assert.equal(geometry[0].label,'Все майндмепы','Mobile back action stays first');
+      for(const rect of geometry){assert(rect.width>=48&&rect.height>=48,'Header control touch target');near(rect.y,geometry[0].y,'Header controls share one row');}
       assert.notEqual(geometry[0].background,'rgba(0, 0, 0, 0)','Visible control background');
-      await controls.getByRole('button',{name:'Карта',exact:true}).click();assert.equal(await controls.getByRole('button',{name:'Карта',exact:true}).getAttribute('aria-pressed'),'true');
-      await controls.getByRole('button',{name:'Структура',exact:true}).click();assert.equal(await controls.getByRole('button',{name:'Структура',exact:true}).getAttribute('aria-pressed'),'true');
+      const view=controls.locator('.mindmap-view-toggle');
+      if(await view.getAttribute('aria-label')==='Карта')await view.click();
+      await page.locator('.mindmap-canvas').waitFor();
+      assert.equal(await view.getAttribute('aria-label'),'Структура');
+      await view.click();await page.locator('.mindmap-canvas').waitFor({state:'hidden'});
+      await page.locator('.mindmap-structure').waitFor();
+      assert.equal(await view.getAttribute('aria-label'),'Карта');
       const trigger=controls.getByRole('button',{name:'Настройка карты',exact:true});await trigger.click();
       const dialog=page.getByRole('dialog',{name:'Настройка карты',exact:true});await dialog.waitFor();assert.equal(await dialog.getAttribute('aria-modal'),'true');
       const rect=await center(page,dialog);
