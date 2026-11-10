@@ -98,7 +98,7 @@ export default function DiaryPage({ language, onClose }: { language: string; onC
   };
   return <section className="diary-page" aria-label={text.title} data-no-translate>
     <header className="workspace-header diary-heading" data-exp-ui="panel">
-      <div className="workspace-header-main"><button type="button" className="diary-back" aria-label={tab === 'board' ? text.back : text.title} title={tab === 'board' ? text.back : text.title} onClick={() => tab === 'board' ? onClose() : setTab('board')}><ExperimentalIcon name="map-back"/></button><span className="projects-hero-mark" aria-hidden="true"><DiaryMark/></span><div className="workspace-header-copy"><h1>{text.title}</h1><p>{tab === 'favorites' ? text.favorites : tab === 'archive' ? text.archive : text.description}</p></div></div>
+      <div className="workspace-header-main"><button type="button" className="diary-back" aria-label={tab === 'board' ? text.back : text.title} title={tab === 'board' ? text.back : text.title} onClick={() => tab === 'board' ? onClose() : setTab('board')}><ExperimentalIcon name="map-back"/></button><div className="workspace-header-copy"><h1>{text.title}</h1><p>{tab === 'favorites' ? text.favorites : tab === 'archive' ? text.archive : text.description}</p></div></div>
       <p className="diary-privacy"><ExperimentalIcon name="lock"/>{text.private}</p>
     </header>
     <div className="diary-categories" role="group" aria-label={text.categories}>

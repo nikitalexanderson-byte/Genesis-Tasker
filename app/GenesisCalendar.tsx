@@ -7026,7 +7026,7 @@ export function GenesisCalendar() {
       {cloudUser?<Suspense fallback={null}><PlanGuidanceHost key={cloudUser.uid} user={cloudUser} section={view}/></Suspense>:null}
       {iosInstallOpen ? <Suspense fallback={null}><IosInstallPrompt language={language} onClose={() => setIosInstallOpen(false)} /></Suspense> : null}
       <Suspense fallback={null}><NotificationDock key={cloudUser?.uid ?? "guest"} userId={cloudUser?.uid ?? ""} guidanceUser={cloudUser} language={language} mode={activeCalendarMode} appBase={APP_BASE}
-        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={sharedNotificationHeaderTarget ?? notificationHeaderTarget}
+        layout={accountLayout} onLayoutChange={saveLayout} headerTarget={notificationHeaderTarget} sharedHeaderTarget={sharedNotificationHeaderTarget}
         sharedEnabled={sharedProjectsReadable} invitationsEnabled={featureAllowed(cloudUser?.featureAccess,'shared-projects') && Boolean(cloudUser?.sharedProjectsEligible)} messengerEnabled={featureAllowed(cloudUser?.featureAccess,'messenger')}
         onOpen={place => { setProjectsArea("shared"); navigateTo("projects", false, place); }} onAccepted={destination => {
         const uid=cloudUser?.uid; if(!uid)return;

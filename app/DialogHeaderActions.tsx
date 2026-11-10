@@ -42,6 +42,31 @@ function primarySources(sources: Control[]) {
 function Header({ entry }: { entry: Entry }) {
   const lock = useRef(false); const [more, setMore] = useState(false);
   const header = useRef<HTMLElement>(null);
+  const title = useRef<HTMLHeadingElement>(null);
+  useLayoutEffect(() => {
+    const heading = title.current;
+    const container = heading?.parentElement;
+    if (!heading || !container) return;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const fit = () => {
+      heading.style.removeProperty('font-size');
+      heading.removeAttribute('tabindex');
+      const style = getComputedStyle(heading);
+      const base = parseFloat(style.fontSize);
+      if (!context || !container.clientWidth || !base) return;
+      context.font = `${style.fontStyle} ${style.fontWeight} ${base}px ${style.fontFamily}`;
+      const words = entry.title.split(/\s+/u);
+      const longest = Math.max(0, ...words.map(word => context.measureText(word).width));
+      const size = longest > container.clientWidth ? Math.max(12, Math.min(base, base * (container.clientWidth - 2) / longest)) : base;
+      heading.style.fontSize = `${size}px`;
+      if (longest * size / base > container.clientWidth) heading.tabIndex = 0;
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [entry.title]);
   useLayoutEffect(() => {
     const active = document.activeElement;
     if (active === entry.close || entry.sources.includes(active as Control)) header.current?.querySelector<HTMLButtonElement>(active === entry.close ? '.dialog-close-button' : '.dialog-save-button')?.focus({ preventScroll: true });
@@ -59,7 +84,7 @@ function Header({ entry }: { entry: Entry }) {
     finally { requestAnimationFrame(() => { lock.current = false; }); }
   };
   return <header ref={header} className="dialog-universal-header">
-    <div className="dialog-universal-title"><h2>{entry.title}</h2>{entry.subtitle && <p>{entry.subtitle}</p>}</div>
+    <div className="dialog-universal-title"><h2 ref={title}>{entry.title}</h2>{entry.subtitle && <p>{entry.subtitle}</p>}</div>
     <div className="dialog-universal-actions">
       {primary.length > 0 && <button type="button" className="dialog-save-button" data-no-translate aria-label={entry.saveLabel} data-tooltip={entry.saveLabel} disabled={primary.some(disabled)} onClick={() => save(primary)}><ExperimentalIcon name="save" /></button>}
       {alternatives.length > 0 && <div className="dialog-save-alternatives"><button type="button" className="dialog-save-button" data-no-translate aria-label={entry.alternativesLabel} data-tooltip={entry.alternativesLabel} aria-expanded={more} aria-haspopup="menu" onClick={() => setMore(value => !value)}><svg className="experimental-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>{more && <div className="dialog-save-menu" role="menu">{alternatives.map((button, index) => <button key={index} role="menuitem" type="button" disabled={disabled(button)} onClick={() => save([button])}><ExperimentalIcon name="save" /><span>{label(button)}</span></button>)}</div>}</div>}

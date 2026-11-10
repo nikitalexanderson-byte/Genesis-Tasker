@@ -23,13 +23,19 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .stoicheion-let
 
 /* Match the night-blue Oracle artwork while retaining its warm highlights. */
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art {
-  --palette-recessed:#040a17;
-  background-image:linear-gradient(90deg,#040a17c7,#040a1770 40%,#040a1714 75%),var(--oracle-backdrop); filter:url(#genesis-palette-art);
+  --palette-recessed:#040a17; --palette-surface:#13233a;
+  --section-hero-shade:linear-gradient(105deg,rgb(4 10 23 / .83922),rgb(19 35 58 / .67843) 56%,rgb(4 10 23 / .52157));
+  background-image:linear-gradient(90deg,#040a17c7,#040a1770 40%,#040a1714 75%),var(--oracle-backdrop); filter:none;
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art::after { background:var(--section-hero-shade); }
-@media(max-width:767px) {
+@media(max-width:1023px) {
   html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art {
     background-image:linear-gradient(180deg,#040a17e6,#040a1766 60%,#040a1714),var(--oracle-backdrop);
+  }
+}
+@media(max-width:600px) {
+  html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app :is(.stoicheion-intro,.theokyklos-view > .theokyklos-hero) .section-hero-art {
+    --section-hero-shade:linear-gradient(180deg,rgb(4 10 23 / .85098),rgb(19 35 58 / .72157) 55%,rgb(19 35 58 / .56078));
   }
 }
 

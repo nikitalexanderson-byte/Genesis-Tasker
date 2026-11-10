@@ -19,11 +19,10 @@ html[data-genesis-theme] .genesis-app .personal-notebook-launches > .diary-launc
 .diary-page button:disabled, .diary-editor button:disabled { opacity:.55; cursor:default; }
 .diary-page svg, .diary-editor svg { width:20px; height:20px; flex:0 0 20px; }
 html[data-genesis-theme] .genesis-app .diary-page .workspace-header.diary-heading { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:16px 24px; margin-bottom:24px; }
-html[data-genesis-theme] .genesis-app .diary-heading > .workspace-header-main { display:grid; grid-template-columns:44px 28px minmax(0,1fr); align-items:center; column-gap:12px; grid-column:1; grid-row:1 / 3; min-width:0; }
+html[data-genesis-theme] .genesis-app .diary-heading > .workspace-header-main { display:grid; grid-template-columns:44px minmax(0,1fr); align-items:center; column-gap:12px; grid-column:1; grid-row:1 / 3; min-width:0; }
 html[data-genesis-theme] .genesis-app .diary-heading > .workspace-header-main > .diary-back { grid-column:1; grid-row:1; align-self:start; }
-html[data-genesis-theme] .genesis-app .diary-heading > .workspace-header-main > .projects-hero-mark { grid-column:2; grid-row:1; align-self:start; margin-top:6px; }
-html[data-genesis-theme] .genesis-app .diary-heading > .workspace-header-main > .workspace-header-copy { grid-column:3; grid-row:1; min-width:0; }
-.diary-heading h1 { overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .diary-heading > .workspace-header-main > .workspace-header-copy { grid-column:2; grid-row:1; min-width:0; }
+.diary-heading h1 { overflow-wrap:normal; word-break:normal; hyphens:none; }
 html[data-genesis-theme] .genesis-app .diary-heading .diary-privacy { display:flex; grid-column:2; grid-row:1; justify-self:end; gap:8px; max-width:32ch; margin:0; color:#d0ded5; font-size:12px; line-height:1.6; text-align:right; }
 html[data-genesis-theme] .genesis-app .diary-heading .diary-back { display:inline-flex; flex:0 0 44px; align-self:center; align-items:center; justify-content:center; width:44px; min-height:44px; padding:8px; border:1px solid currentColor; border-radius:10px; background:transparent; color:inherit; }
 html[data-genesis-theme] .genesis-app .diary-heading .diary-back:is(:hover,:focus-visible) { border-color:currentColor; background:#d0ded526; }
