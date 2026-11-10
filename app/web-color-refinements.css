@@ -38,6 +38,9 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .t
   color:var(--ink); background:linear-gradient(145deg,#f9fbff,#e4eefb); border-color:var(--line);
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala-heading :is(h2,p) { color:var(--ink); }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala :is(.theokyklos-segment-direction,.theokyklos-segment-name,.theokyklos-ring-label,.theokyklos-ring-patron,.theokyklos-center-label,.theokyklos-center-caption) { fill:#10243a; }
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala .direction-segment:is(:hover,:focus-visible,.is-selected) :is(.theokyklos-segment-direction,.theokyklos-segment-name),
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .theokyklos-mandala .center-segment:is(:hover,:focus-visible,.is-selected) :is(.theokyklos-center-label,.theokyklos-center-caption) { fill:#f4f7fc; }
 
 /* All four administrator sections stay on the same row. */
 html[data-genesis-theme] .genesis-app .admin-section-tabs { grid-template-columns:repeat(4,minmax(0,1fr)); }
