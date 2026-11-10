@@ -8,6 +8,7 @@ export function ExperimentalIcon({ name, className = "" }: { name: string; class
     {name === "moon" ? <path d="M19.79 15.5A8 8 0 0 1 8.5 4.21 8 8 0 1 0 19.79 15.5Z"/> : null}
     {name === "future-modeling" ? <><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M5 17V9a4 4 0 0 1 4-4h8M9 5a4 4 0 0 1 4 4v6a4 4 0 0 0 4 4"/></> : null}
     {name === "info" ? <><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></> : null}
+    {name === "book-open" ? <><path d="M12 5C8 2 4 3 2 4v15c3-1 6-1 10 2 4-3 7-3 10-2V4c-2-1-6-2-10 1Zm0 0v16"/></> : null}
     {name === "theme-contrast" ? <><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 4h5a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-5Z" fill="currentColor" stroke="none"/><path d="M12 4v16"/></> : null}
     {name === "sunrise" || name === "sunset" ? <><path d="M3 19h18M5 15H3m18 0h-2M7 9 5.5 7.5M17 9l1.5-1.5M7 15a5 5 0 0 1 10 0"/><path d={name === "sunrise" ? "M12 10V2m-3 3 3-3 3 3" : "M12 2v8m-3-3 3 3 3-3"}/></> : null}
     {name.startsWith("calendar-scale-") ? <><rect x="3" y="3" width="18" height="18" rx="2" opacity={name === "calendar-scale-full" ? 1 : .35}/>{name === "calendar-scale-full" ? <path d="M3 9h18M9 9v12M15 9v12M3 15h18"/> : <rect x={name === "calendar-scale-half" ? 6 : 9} y={name === "calendar-scale-half" ? 6 : 9} width={name === "calendar-scale-half" ? 12 : 6} height={name === "calendar-scale-half" ? 12 : 6} rx="1" fill="currentColor"/>}</> : null}
@@ -88,6 +89,7 @@ export function ExperimentalIcon({ name, className = "" }: { name: string; class
     {name === "image" ? <><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></> : null}
     {name === "attach" ? <path d="m21 11-8.5 8.5a6 6 0 0 1-8.5-8.5L12 3a4 4 0 0 1 5.7 5.7l-8 8a2 2 0 0 1-2.8-2.8l7.5-7.5"/> : null}
     {name === "file" ? <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Zm0 0v6h6M8 13h8m-8 4h6"/></> : null}
+    {name === "bell" ? <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></> : null}
     {name === "mail" ? <><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7L22 6"/></> : null}
     {name === "comment" ? <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/> : null}
     {name === "check" ? <path d="m5 12 4 4L19 6"/> : null}

@@ -5,7 +5,7 @@ import './solar-weather-effects.css';
 
 type Visuals=ReturnType<typeof weatherVisualState>;
 export function SolarWeatherClouds({weather,paused}:{weather:Visuals;paused:boolean}) {
-  return weather.cloudCover>0?<div className={`solar-weather-clouds${weather.storm?' storm':weather.cloudCover>.75?' overcast':''}${paused?' solar-weather-paused':''}`} style={{opacity:weather.cloudCover*policy.cloud.opacity,'--weather-cloud-duration':`${Math.max(40,110/(1+weather.windSpeed*.08))}s`,'--weather-cloud-drift':weather.drift<0?'-26%':'26%'} as CSSProperties}>
+  return weather.cloudCover>0?<div className={`solar-weather-clouds${weather.storm?' storm':weather.cloudCover>.75?' overcast':''}${paused?' solar-weather-paused':''}`} style={{opacity:weather.cloudCover*policy.cloud.opacity,'--weather-cloud-duration':`${Math.max(40,110/(1+weather.windSpeed*.08))}s`} as CSSProperties}>
     <i/><i/><i/>
   </div>:null;
 }

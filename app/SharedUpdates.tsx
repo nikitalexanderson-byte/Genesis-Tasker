@@ -7,7 +7,7 @@ import { ExperimentalIcon } from "./ExperimentalIcon";
 import "./shared-updates.css";
 import { SharedInvitationNotices } from "./SharedInvitationNotices";
 import { sharedUnreadCount } from "./shared-unread-count";
-import { messengerText } from "./messenger-copy";
+import { translateText, type Language } from "./i18n";
 
 export type SharedTaskDestination = { spaceId: string; projectId: string; taskId?: string; taskAction?: "locate" | "comments"; commentId?: string };
 export const notificationDestination = (item: SharedNotification): SharedTaskDestination => ({
@@ -51,10 +51,10 @@ export function SharedWorkspaceSummary({ userId, english, language, workspaceAct
     } catch { setFailed(true); } finally { setBusy(false); }
   };
   const newCount = sharedUnreadCount(overview);
-  const messagesLabel = messengerText('title', language);
+  const messagesLabel = translateText("Уведомления", language as Language);
   const messagesButton = <button type="button" className="shared-updates-open secondary-button"
     title={messagesLabel} aria-label={`${messagesLabel}: ${newCount}`} aria-haspopup="dialog" onClick={() => setOpen(true)}>
-    <ExperimentalIcon name="mail" /><strong className="shared-updates-badge" aria-hidden="true">{newCount > 99 ? "99+" : newCount}</strong>
+    <ExperimentalIcon name="bell" /><strong className="shared-updates-badge" aria-hidden="true">{newCount > 99 ? "99+" : newCount}</strong>
   </button>;
   return <div className="shared-workspace-summary">
     {workspaceActions ? <div className="shared-header-actions" role="group" aria-label={english ? "Workspace controls" : "Управление пространством"}>

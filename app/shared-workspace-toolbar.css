@@ -123,6 +123,11 @@ html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context 
 html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-context-actions { grid-column:1; grid-row:2; flex-wrap:wrap; min-width:0; max-width:100%; justify-self:start; justify-content:flex-start; }
 html[data-genesis-theme] .genesis-app .shared-projects .shared-context-actions > .icon-action-button { flex:0 0 44px; width:44px; min-width:44px; height:44px; padding:10px; }
 html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-project-details { grid-column:1; grid-row:3; }
+@media(max-width:767px) {
+  html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-context-actions {
+    flex-wrap:nowrap; justify-content:space-between; gap:0; width:calc(100% + 16px); max-width:356px; margin-inline:-8px;
+  }
+}
 @media(min-width:1024px) {
   html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context { grid-template-columns:minmax(0,1fr) auto; }
   html[data-genesis-theme] .genesis-app .shared-projects .shared-projects-context > .shared-project-heading { align-self:center; }
