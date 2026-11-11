@@ -101,6 +101,13 @@ html[data-genesis-theme] .genesis-app .restoration .restoration-progress { margi
 .restoration-history > div { display: grid; gap: 12px; padding: 12px 0; }
 .restoration-history button { justify-content: flex-start; text-align: start; }
 .restoration-history button > span { display: grid; gap: 4px; }
+.restoration-draft-entry { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:start; gap:10px; min-width:0; }
+.restoration-draft-entry > .restoration-draft-open { display:flex; width:100%; min-width:0; align-items:center; gap:12px; }
+.restoration-draft-open > span { flex:1; min-width:0; overflow-wrap:normal; word-break:normal; }
+.restoration-draft-entry > .restoration-draft-delete { display:grid; place-items:center; width:44px; height:44px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); }
+.restoration-draft-confirm { grid-column:1 / -1; padding:16px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; }
+.restoration-draft-confirm h4 { margin:0 0 8px; }
+.restoration-draft-confirm-actions { display:flex; flex-wrap:wrap; gap:10px; }
 @media (max-width:760px) {
   .restoration-results > .restoration-heading { flex-direction:column; gap:12px; }
   .restoration-results .restoration-heading > .restoration-heading-actions { flex:0 0 auto; width:100%; }

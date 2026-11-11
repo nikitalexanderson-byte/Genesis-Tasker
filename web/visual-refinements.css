@@ -11,3 +11,35 @@ html[data-genesis-theme] .genesis-app .stoicheion-daily-result .stoicheion-revea
 html[data-genesis-theme="standart"] .genesis-app .stoicheion-daily-result .stoicheion-revealed-card.is-reversed {
   background:#662b35; border-color:#c7737d; color:#f0eee7;
 }
+
+/* The two calendar systems keep distinct veils in the light sky palette. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view:not(.calendar-mode-year) .year-month::before {
+  --year-month-veil:rgb(255 255 255 / .6);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .year-view .year-month.mode-lunar::before {
+  background-image:linear-gradient(rgb(0 0 0 / .3),rgb(0 0 0 / .3)),linear-gradient(var(--year-month-veil),var(--year-month-veil)),var(--month-art);
+}
+
+/* Daylight sky uses a dark blue calendar surface. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .calendar-mode-calendar.mode-profane {
+  background:linear-gradient(145deg,#061328,#102944 56%,#081b32);
+}
+/* The highlighted Gregorian day remains recognisably its weekday's colour. */
+html[data-genesis-theme][data-genesis-palette="blue"] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:is(.selected,.today) {
+  --ink:#fff; --ink-soft:#edf3fc; --palette-muted:#edf3fc;
+  background:color-mix(in srgb,var(--weekday-wash,#303c45) 80%,#fff);
+  border-color:color-mix(in srgb,var(--weekday-wash,#303c45) 35%,#fff); color:#fff;
+}
+html[data-genesis-theme][data-genesis-palette="blue"] .genesis-app .calendar-mode-calendar.mode-profane .calendar-day.mode-profane:is(.selected,.today) :is(.calendar-mode-primary,.calendar-mode-primary > strong,.calendar-mode-primary > small,.profane-weekday-patron,.profane-weekday-patron strong,.calendar-cross-date,.calendar-cross-date b,.calendar-cross-date svg,.calendar-sun-times,.calendar-sun-times span) { color:#fff; }
+
+/* Lift the landscape framing of the daylight sky Physis header. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .physis-hero { background-position:center 80%; }
+
+/* Readable controls inside the navy restoration surface in sky daylight. */
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .restoration-results > .restoration-history > summary {
+  color:#edf3fc; background:#1b304d; border-color:#6585ab;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .restoration-results .restoration-draft-entry > button {
+  color:#edf3fc; background:#1b304d; border-color:#6585ab;
+}
+html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .restoration-results .restoration-draft-entry > button small { color:#d2dff0; }

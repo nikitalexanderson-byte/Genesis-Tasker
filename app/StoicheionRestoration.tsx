@@ -61,10 +61,17 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
   const [cloudError, setCloudError] = useState("");
   const [archiveDeleteKey, setArchiveDeleteKey] = useState<string | null>(null);
   const [archiveDeleting, setArchiveDeleting] = useState(false);
+  const [draftDeleteKey, setDraftDeleteKey] = useState<string | null>(null);
+  const [draftDeleting, setDraftDeleting] = useState(false);
+  const [draftDeleteError, setDraftDeleteError] = useState("");
+  const draftCancel = useRef<HTMLButtonElement>(null);
+  const draftTrigger = useRef<HTMLButtonElement | null>(null);
   const archiveCancel = useRef<HTMLButtonElement>(null);
   const archiveTrigger = useRef<HTMLButtonElement | null>(null);
   useEffect(() => { if (archiveDeleteKey) archiveCancel.current?.focus(); }, [archiveDeleteKey]);
+  useEffect(() => { if (draftDeleteKey) draftCancel.current?.focus(); }, [draftDeleteKey]);
   function cancelArchiveDelete() { if (archiveDeleting) return; setArchiveDeleteKey(null); archiveTrigger.current?.focus(); }
+  function cancelDraftDelete() { if (draftDeleting) return; setDraftDeleteKey(null); draftTrigger.current?.focus(); }
 
   useEffect(() => {
     if (!userId) return;
@@ -133,6 +140,19 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
   const unfinished = [...new Set([...records.keys(), ...Object.keys(memory)])].map(key => memory[key] ?? records.get(key)!.value)
     .filter(draft => !reversedSectors(draft).every(id => snapshots.some(snapshot => snapshot.sectorId === id && snapshotMatchesSource(snapshot, draft))));
 
+  async function deleteDraft(key: string) {
+    setDraftDeleting(true); setDraftDeleteError("");
+    try {
+      const rows = new Map([...journal.rows, ...Object.values(staged)].sort((a,b) => a.at.localeCompare(b.at)).map(row => [row.id, row]));
+      for (const row of rows.values()) if (restorationSourceKey(row.value) === key) await journal.remove(row);
+      setMemory(previous => Object.fromEntries(Object.entries(previous).filter(([source]) => source !== key)));
+      setStaged(previous => Object.fromEntries(Object.entries(previous).filter(([,row]) => restorationSourceKey(row.value) !== key)));
+      await refresh(); setDraftDeleteKey(null); setNotice(t.draftDeleted);
+      requestAnimationFrame(() => window.document.getElementById("stoicheion-restoration")?.focus());
+    } catch { setDraftDeleteError(t.draftDeleteError); }
+    finally { setDraftDeleting(false); }
+  }
+
   return <>
     <section id="stoicheion-restoration" className="restoration restoration-results" aria-labelledby="restoration-title" tabIndex={-1} data-no-translate>
       <header className="restoration-heading"><div><h2 id="restoration-title">{t.title}</h2><p>{cycles.length ? t.resultsIntro : t.intro}</p></div>
@@ -142,6 +162,7 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
         </div></header>
       {currentSource && cards.every(card => !card.reversed) ? <p>{t.allUpright}</p> : null}
       {notice ? <p role="status">{notice}</p> : null}
+      {draftDeleteError ? <p className="restoration-error" role="alert">{draftDeleteError}</p> : null}
       {cloudError ? <div role="alert"><p className="restoration-error">{cloudError}</p><button type="button" className="secondary-button" onClick={() => void repository?.load().then(value => { setDocument(value); setCloudReady(true); setCloudError(""); }).catch(() => setCloudError(repository?.conflict ? t.archiveConflict : t.archiveError))}>{t.retryDraft}</button>{repository?.conflict ? <button type="button" className="secondary-button" onClick={() => void repository.keepPending().then(value => { setDocument(value); setCloudReady(true); setCloudError(""); }).catch(() => setCloudError(t.archiveError))}>{t.keepVersion}</button> : null}</div> : null}
       {activeGroups.map(group => <section className="restoration-saved-group" key={group.key} aria-label={`${t.strategy} · ${group.works[0].snapshot.sourceDate}`}>
         <header><h3>{t.strategy}</h3><span>{group.works[0].snapshot.sourceDate} · {t.cards}: {group.works.length}</span></header>
@@ -171,9 +192,22 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
           </div>
         </section> : null}
       </div>)}</details> : null}
-      {unfinished.length ? <details className="restoration-history"><summary>{t.drafts} · {unfinished.length}</summary><div>{unfinished.map(draft => <button type="button" className="secondary-button" key={restorationSourceKey(draft)} onClick={() => activateSource(draft)}>
-        <ExperimentalIcon name="stoicheion" /><span>{draft.sourceDate}<small>{t.cardsReady}: {restorationPreparedCount(draft, snapshots)} {t.countOf} {reversedSectors(draft).length}</small></span><ExperimentalIcon name="chevron" />
-      </button>)}</div></details> : null}
+      {unfinished.length ? <details className="restoration-history"><summary>{t.drafts} · {unfinished.length}</summary><div>{unfinished.map(draft => {
+        const key = restorationSourceKey(draft);
+        return <div className="restoration-draft-entry" key={key}>
+          <button type="button" className="secondary-button restoration-draft-open" disabled={draftDeleting} onClick={() => activateSource(draft)}>
+            <ExperimentalIcon name="stoicheion" /><span>{draft.sourceDate}<small>{t.cardsReady}: {restorationPreparedCount(draft, snapshots)} {t.countOf} {reversedSectors(draft).length}</small></span><ExperimentalIcon name="chevron" />
+          </button>
+          <button type="button" className="restoration-draft-delete" aria-label={`${t.deleteDraft}: ${draft.sourceDate}`} title={t.deleteDraft} disabled={draftDeleting || !hydrated || !journal.ready}
+            onClick={event => { draftTrigger.current = event.currentTarget; setDraftDeleteError(""); setDraftDeleteKey(key); }}><ExperimentalIcon name="delete" /></button>
+          {draftDeleteKey === key ? <section className="restoration-draft-confirm" role="group" aria-label={t.deleteDraftTitle}>
+            <h4>{t.deleteDraftTitle}</h4><p>{t.deleteDraftHelp}</p><div className="restoration-draft-confirm-actions">
+              <button type="button" className="secondary-button" ref={draftCancel} disabled={draftDeleting} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); cancelDraftDelete(); } }} onClick={cancelDraftDelete}>{t.archiveDeleteCancel}</button>
+              <button type="button" className="secondary-button restoration-delete-button" disabled={draftDeleting} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); cancelDraftDelete(); } }} onClick={() => void deleteDraft(key)}>{t.deleteDraft}</button>
+            </div>
+          </section> : null}
+        </div>;
+      })}</div></details> : null}
       {!workspace.habitSettings.enabled ? <p className="restoration-note">{t.disabled}</p> : null}
     </section>
     {editingKey && memory[editingKey] ? <RestorationStrategyDialog key={`${userId}:${editingKey}`} userId={userId} open={open} draft={memory[editingKey]} recovered={recovered}

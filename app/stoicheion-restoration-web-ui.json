@@ -62,7 +62,12 @@
     "archiveDeleteTitle": "Удалить этот расклад из архива?",
     "archiveDeleteHelp": "Удалятся решения, выполнения и итоговые заметки выбранного расклада. Связанные привычки и их статистика сохранятся. Это действие нельзя отменить.",
     "archiveDeleteCancel": "Отмена",
-    "archiveDeleted": "Работа удалена из архива."
+    "archiveDeleted": "Работа удалена из архива.",
+    "deleteDraft": "Удалить черновик",
+    "deleteDraftTitle": "Удалить начатую стратегию?",
+    "deleteDraftHelp": "Будет удалён только черновик на этом устройстве. Сохранённые стратегии и связанные привычки останутся без изменений.",
+    "draftDeleted": "Начатая стратегия удалена.",
+    "draftDeleteError": "Не удалось удалить черновик. Обновите данные и повторите попытку."
   },
   "en": {
     "resume": "Continue restoration",
@@ -127,7 +132,12 @@
     "archiveDeleteTitle": "Delete this archived spread?",
     "archiveDeleteHelp": "The decisions, completions and final notes for this spread will be removed. Linked habits and their statistics will be preserved. This cannot be undone.",
     "archiveDeleteCancel": "Cancel",
-    "archiveDeleted": "The work was deleted from the archive."
+    "archiveDeleted": "The work was deleted from the archive.",
+    "deleteDraft": "Delete draft",
+    "deleteDraftTitle": "Delete this started strategy?",
+    "deleteDraftHelp": "Only the draft on this device will be deleted. Saved strategies and linked habits will remain unchanged.",
+    "draftDeleted": "Started strategy deleted.",
+    "draftDeleteError": "Could not delete the draft. Refresh the data and try again."
   },
   "el": {
     "resume": "Συνέχεια αποκατάστασης",
@@ -192,7 +202,12 @@
     "archiveDeleteTitle": "Να διαγραφεί αυτό το αρχειοθετημένο άνοιγμα;",
     "archiveDeleteHelp": "Οι αποφάσεις, οι ολοκληρώσεις και οι τελικές σημειώσεις του ανοίγματος θα διαγραφούν. Οι συνδεδεμένες συνήθειες και τα στατιστικά τους θα διατηρηθούν. Η ενέργεια δεν αναιρείται.",
     "archiveDeleteCancel": "Ακύρωση",
-    "archiveDeleted": "Η εργασία διαγράφηκε από το αρχείο."
+    "archiveDeleted": "Η εργασία διαγράφηκε από το αρχείο.",
+    "deleteDraft": "Διαγραφή πρόχειρου",
+    "deleteDraftTitle": "Να διαγραφεί η στρατηγική σε εξέλιξη;",
+    "deleteDraftHelp": "Θα διαγραφεί μόνο το πρόχειρο σε αυτή τη συσκευή. Οι αποθηκευμένες στρατηγικές και οι συνδεδεμένες συνήθειες θα παραμείνουν αμετάβλητες.",
+    "draftDeleted": "Η στρατηγική σε εξέλιξη διαγράφηκε.",
+    "draftDeleteError": "Δεν ήταν δυνατή η διαγραφή του πρόχειρου. Ανανεώστε τα δεδομένα και δοκιμάστε ξανά."
   },
   "de": {
     "resume": "Ausgleich fortsetzen",
@@ -257,7 +272,12 @@
     "archiveDeleteTitle": "Diese archivierte Legung löschen?",
     "archiveDeleteHelp": "Die Entscheidungen, Ausführungen und Abschlussnotizen dieser Legung werden entfernt. Verknüpfte Gewohnheiten und ihre Statistiken bleiben erhalten. Dies kann nicht rückgängig gemacht werden.",
     "archiveDeleteCancel": "Abbrechen",
-    "archiveDeleted": "Die Arbeit wurde aus dem Archiv gelöscht."
+    "archiveDeleted": "Die Arbeit wurde aus dem Archiv gelöscht.",
+    "deleteDraft": "Entwurf löschen",
+    "deleteDraftTitle": "Begonnene Strategie löschen?",
+    "deleteDraftHelp": "Nur der Entwurf auf diesem Gerät wird gelöscht. Gespeicherte Strategien und verknüpfte Gewohnheiten bleiben unverändert.",
+    "draftDeleted": "Begonnene Strategie gelöscht.",
+    "draftDeleteError": "Der Entwurf konnte nicht gelöscht werden. Aktualisiere die Daten und versuche es erneut."
   },
   "fr": {
     "resume": "Poursuivre le rééquilibrage",
@@ -322,7 +342,12 @@
     "archiveDeleteTitle": "Supprimer ce tirage archivé ?",
     "archiveDeleteHelp": "Les décisions, réalisations et notes finales de ce tirage seront supprimées. Les habitudes liées et leurs statistiques seront conservées. Cette action est irréversible.",
     "archiveDeleteCancel": "Annuler",
-    "archiveDeleted": "Le travail a été supprimé des archives."
+    "archiveDeleted": "Le travail a été supprimé des archives.",
+    "deleteDraft": "Supprimer le brouillon",
+    "deleteDraftTitle": "Supprimer cette stratégie commencée ?",
+    "deleteDraftHelp": "Seul le brouillon sur cet appareil sera supprimé. Les stratégies enregistrées et les habitudes liées resteront inchangées.",
+    "draftDeleted": "Stratégie commencée supprimée.",
+    "draftDeleteError": "Impossible de supprimer le brouillon. Actualisez les données et réessayez."
   },
   "es": {
     "resume": "Continuar el restablecimiento",
@@ -387,7 +412,12 @@
     "archiveDeleteTitle": "¿Eliminar esta tirada archivada?",
     "archiveDeleteHelp": "Se eliminarán las decisiones, las realizaciones y las notas finales de esta tirada. Se conservarán los hábitos vinculados y sus estadísticas. Esta acción no se puede deshacer.",
     "archiveDeleteCancel": "Cancelar",
-    "archiveDeleted": "El trabajo se eliminó del archivo."
+    "archiveDeleted": "El trabajo se eliminó del archivo.",
+    "deleteDraft": "Eliminar borrador",
+    "deleteDraftTitle": "¿Eliminar esta estrategia iniciada?",
+    "deleteDraftHelp": "Solo se eliminará el borrador de este dispositivo. Las estrategias guardadas y los hábitos vinculados permanecerán sin cambios.",
+    "draftDeleted": "Estrategia iniciada eliminada.",
+    "draftDeleteError": "No se pudo eliminar el borrador. Actualiza los datos y vuelve a intentarlo."
   },
   "it": {
     "resume": "Continua il riequilibrio",
@@ -452,7 +482,12 @@
     "archiveDeleteTitle": "Eliminare questa stesa archiviata?",
     "archiveDeleteHelp": "Le decisioni, i completamenti e le note finali di questa stesa saranno eliminati. Le abitudini collegate e le loro statistiche saranno conservate. Questa azione è irreversibile.",
     "archiveDeleteCancel": "Annulla",
-    "archiveDeleted": "Il lavoro è stato eliminato dall’archivio."
+    "archiveDeleted": "Il lavoro è stato eliminato dall’archivio.",
+    "deleteDraft": "Elimina bozza",
+    "deleteDraftTitle": "Eliminare questa strategia iniziata?",
+    "deleteDraftHelp": "Verrà eliminata solo la bozza su questo dispositivo. Le strategie salvate e le abitudini collegate rimarranno invariate.",
+    "draftDeleted": "Strategia iniziata eliminata.",
+    "draftDeleteError": "Impossibile eliminare la bozza. Aggiorna i dati e riprova."
   },
   "pt": {
     "resume": "Continuar o reequilíbrio",
@@ -517,7 +552,12 @@
     "archiveDeleteTitle": "Eliminar esta tiragem arquivada?",
     "archiveDeleteHelp": "As decisões, realizações e notas finais desta tiragem serão eliminadas. Os hábitos associados e as respetivas estatísticas serão preservados. Esta ação é irreversível.",
     "archiveDeleteCancel": "Cancelar",
-    "archiveDeleted": "O trabalho foi eliminado do arquivo."
+    "archiveDeleted": "O trabalho foi eliminado do arquivo.",
+    "deleteDraft": "Eliminar rascunho",
+    "deleteDraftTitle": "Eliminar esta estratégia iniciada?",
+    "deleteDraftHelp": "Apenas o rascunho neste dispositivo será eliminado. As estratégias guardadas e os hábitos associados permanecerão inalterados.",
+    "draftDeleted": "Estratégia iniciada eliminada.",
+    "draftDeleteError": "Não foi possível eliminar o rascunho. Atualize os dados e tente novamente."
   },
   "pl": {
     "resume": "Kontynuuj przywracanie równowagi",
@@ -582,7 +622,12 @@
     "archiveDeleteTitle": "Usunąć ten zarchiwizowany rozkład?",
     "archiveDeleteHelp": "Decyzje, wykonania i końcowe notatki tego rozkładu zostaną usunięte. Powiązane nawyki i ich statystyki pozostaną zachowane. Tej czynności nie można cofnąć.",
     "archiveDeleteCancel": "Anuluj",
-    "archiveDeleted": "Praca została usunięta z archiwum."
+    "archiveDeleted": "Praca została usunięta z archiwum.",
+    "deleteDraft": "Usuń szkic",
+    "deleteDraftTitle": "Usunąć rozpoczętą strategię?",
+    "deleteDraftHelp": "Usunięty zostanie tylko szkic na tym urządzeniu. Zapisane strategie i powiązane nawyki pozostaną bez zmian.",
+    "draftDeleted": "Rozpoczęta strategia została usunięta.",
+    "draftDeleteError": "Nie udało się usunąć szkicu. Odśwież dane i spróbuj ponownie."
   },
   "sr": {
     "resume": "Настави обнављање равнотеже",
@@ -647,7 +692,12 @@
     "archiveDeleteTitle": "Обрисати овај распоред из архиве?",
     "archiveDeleteHelp": "Одлуке, извршења и завршне белешке овог распореда биће обрисани. Повезане навике и њихова статистика остају сачуване. Ова радња се не може поништити.",
     "archiveDeleteCancel": "Откажи",
-    "archiveDeleted": "Рад је обрисан из архиве."
+    "archiveDeleted": "Рад је обрисан из архиве.",
+    "deleteDraft": "Обриши нацрт",
+    "deleteDraftTitle": "Обрисати започету стратегију?",
+    "deleteDraftHelp": "Биће обрисан само нацрт на овом уређају. Сачуване стратегије и повезане навике остају непромењене.",
+    "draftDeleted": "Започета стратегија је обрисана.",
+    "draftDeleteError": "Није могуће обрисати нацрт. Освежите податке и покушајте поново."
   },
   "uk": {
     "resume": "Продовжити відновлення",
@@ -712,7 +762,12 @@
     "archiveDeleteTitle": "Видалити цей розклад з архіву?",
     "archiveDeleteHelp": "Рішення, виконання та підсумкові нотатки цього розкладу буде видалено. Пов’язані звички та їхня статистика збережуться. Цю дію неможливо скасувати.",
     "archiveDeleteCancel": "Скасувати",
-    "archiveDeleted": "Роботу видалено з архіву."
+    "archiveDeleted": "Роботу видалено з архіву.",
+    "deleteDraft": "Видалити чернетку",
+    "deleteDraftTitle": "Видалити розпочату стратегію?",
+    "deleteDraftHelp": "Буде видалено лише чернетку на цьому пристрої. Збережені стратегії та пов’язані звички залишаться без змін.",
+    "draftDeleted": "Розпочату стратегію видалено.",
+    "draftDeleteError": "Не вдалося видалити чернетку. Оновіть дані й повторіть спробу."
   },
   "zh": {
     "resume": "继续调和",
@@ -777,7 +832,12 @@
     "archiveDeleteTitle": "删除此归档牌阵？",
     "archiveDeleteHelp": "此牌阵的决定、完成记录和总结笔记将被删除。关联的习惯及其统计数据将保留。此操作无法撤销。",
     "archiveDeleteCancel": "取消",
-    "archiveDeleted": "已从归档中删除此项工作。"
+    "archiveDeleted": "已从归档中删除此项工作。",
+    "deleteDraft": "删除草稿",
+    "deleteDraftTitle": "删除这项已开始的策略？",
+    "deleteDraftHelp": "只会删除此设备上的草稿。已保存的策略和关联习惯不会改变。",
+    "draftDeleted": "已删除开始的策略。",
+    "draftDeleteError": "无法删除草稿。请刷新数据后重试。"
   },
   "tr": {
     "resume": "Dengelemeye devam et",
@@ -842,7 +902,12 @@
     "archiveDeleteTitle": "Arşivlenmiş bu açılım silinsin mi?",
     "archiveDeleteHelp": "Bu açılımın kararları, tamamlanma kayıtları ve sonuç notları silinecek. Bağlı alışkanlıklar ve istatistikleri korunacak. Bu işlem geri alınamaz.",
     "archiveDeleteCancel": "İptal",
-    "archiveDeleted": "Çalışma arşivden silindi."
+    "archiveDeleted": "Çalışma arşivden silindi.",
+    "deleteDraft": "Taslağı sil",
+    "deleteDraftTitle": "Başlatılan strateji silinsin mi?",
+    "deleteDraftHelp": "Yalnızca bu cihazdaki taslak silinir. Kaydedilmiş stratejiler ve bağlantılı alışkanlıklar değişmez.",
+    "draftDeleted": "Başlatılan strateji silindi.",
+    "draftDeleteError": "Taslak silinemedi. Verileri yenileyip tekrar deneyin."
   },
   "ja": {
     "resume": "調和の準備を続ける",
@@ -907,6 +972,11 @@
     "archiveDeleteTitle": "この保存済みの展開を削除しますか？",
     "archiveDeleteHelp": "この展開の決定、実行記録、最後のメモが削除されます。関連する習慣と統計は残ります。この操作は取り消せません。",
     "archiveDeleteCancel": "キャンセル",
-    "archiveDeleted": "アーカイブからワークを削除しました。"
+    "archiveDeleted": "アーカイブからワークを削除しました。",
+    "deleteDraft": "下書きを削除",
+    "deleteDraftTitle": "開始した戦略を削除しますか？",
+    "deleteDraftHelp": "この端末の下書きだけが削除されます。保存済みの戦略と関連する習慣は変更されません。",
+    "draftDeleted": "開始した戦略を削除しました。",
+    "draftDeleteError": "下書きを削除できませんでした。データを更新してから再試行してください。"
   }
 }
