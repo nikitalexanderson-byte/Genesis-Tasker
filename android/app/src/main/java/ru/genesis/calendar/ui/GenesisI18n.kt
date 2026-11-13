@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 val LocalGenesisLanguage = compositionLocalOf { "ru" }
 
 private val nativeCopy = mapOf(
+    "Скрыть блок" to "Hide block", "Показать блок" to "Show block",
     "Показывать предложение после синхронизации и плашку в боковой панели." to "Show a prompt after synchronization and a notice in the side menu.",
     "Солнечный календарь" to "Solar calendar",
     "Требуется вход" to "Sign in required",

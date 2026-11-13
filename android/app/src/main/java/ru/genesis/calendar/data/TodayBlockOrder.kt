@@ -12,3 +12,11 @@ fun moveTodayBlock(order: List<String>, source: String, target: String): List<St
     val destination = normalized.indexOf(target)
     return normalized.toMutableList().apply { remove(source); add(destination, source) }
 }
+
+/** A version prefix distinguishes an explicit show-all choice from inherited account defaults. */
+fun todayHiddenBlockIds(saved: String, inherited: Set<String>): Set<String> =
+    if (!saved.startsWith("v1:")) inherited else saved.removePrefix("v1:").split(',')
+        .filter { it in defaultTodayBlockOrder || it == "quickCreate" }.toSet()
+
+fun encodeTodayHiddenBlocks(hidden: Set<String>): String = "v1:" +
+    (defaultTodayBlockOrder + "quickCreate").filter { it in hidden }.joinToString(",")
