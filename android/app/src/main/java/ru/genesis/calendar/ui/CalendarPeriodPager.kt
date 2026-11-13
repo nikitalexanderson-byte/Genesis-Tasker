@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -131,6 +132,11 @@ internal fun <T : Any> CalendarPeriodPager(period: T, previousPeriod: T?, nextPe
     }
 }
 
+/** Artwork stays visible: no fill at night, 80% transparent fill in daylight. */
+@Composable
+internal fun calendarArtworkControlBackground(): Color = if (LocalEveningTheme.current) Color.Transparent
+    else MaterialTheme.colorScheme.surface.copy(alpha = .20f)
+
 @Composable
 internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> Unit, title: String? = null,
     offerToday: Boolean = false, onToday: () -> Unit = {}) {
@@ -149,7 +155,7 @@ internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> U
         } else Spacer(Modifier.weight(1f))
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             if (offerToday) IconButton(onToday, Modifier.size(48.dp)
-                .clip(AffairsLayout.controlShape).background(MaterialTheme.colorScheme.surface.copy(alpha = .92f))
+                .clip(AffairsLayout.controlShape).background(calendarArtworkControlBackground())
                 .testTag("calendar-month-today").genesisDescription("Сегодня")) {
                 GenesisLucideIcon("undo-2", Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
             }
@@ -183,7 +189,7 @@ private fun PeriodArrow(direction: Int, period: String, onClick: () -> Unit, art
     val shift by animateFloatAsState(if (pressed) direction * 3f else 0f, spring(stiffness = Spring.StiffnessLow), label = "arrow-press")
     val ink = MaterialTheme.colorScheme.primary
     val background = if (artwork) Modifier.clip(AffairsLayout.controlShape)
-        .background(MaterialTheme.colorScheme.surface.copy(alpha = .92f)) else Modifier
+        .background(calendarArtworkControlBackground()) else Modifier
     IconButton(onClick, Modifier.size(48.dp).then(background).testTag("calendar-$period-${if (direction < 0) "previous" else "next"}")
         .semantics { contentDescription = label }, interactionSource = interaction) {
         GenesisLucideIcon(if (direction < 0) "chevron-left" else "chevron-right",

@@ -724,7 +724,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
     patron: WeekdayPatronMark? = null, adjacent: Boolean = false,
     onTaskBadgeClick: (LocalDate) -> Unit = {},
     completedTaskCount: Int = 0) {
-    val palette = patron
+    val palette = if (LocalEveningTheme.current) patron else patron?.daylightCell(date)
     val civil = !LocalSacredFeaturesEnabled.current
     val patron = patron.takeIf { LocalSacredFeaturesEnabled.current }
     val crossDate = crossDate.takeIf { LocalSacredFeaturesEnabled.current }

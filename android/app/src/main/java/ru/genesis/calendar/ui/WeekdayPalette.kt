@@ -2,6 +2,7 @@ package ru.genesis.calendar.ui
 
 import androidx.compose.ui.graphics.Color
 import java.time.LocalDate
+import java.time.DayOfWeek
 
 /** Sunday-first, matching the Gregorian calendar and its patron symbols on the website. */
 internal data class WeekdayPatronMark(
@@ -33,6 +34,21 @@ private val weekdayPatronMarks = listOf(
 
 internal fun weekdayPatronMark(date: LocalDate): WeekdayPatronMark =
     weekdayPatronMarks[date.dayOfWeek.value % 7]
+
+/** Balanced daylight washes and selections; night keeps its authored patron colors. */
+internal fun WeekdayPatronMark.daylightCell(date: LocalDate): WeekdayPatronMark {
+    val (wash, selection) = when (date.dayOfWeek) {
+        DayOfWeek.SUNDAY -> Color(0xfff6edcf) to Color(0xffbe963c)
+        DayOfWeek.MONDAY -> Color(0xffeef0f2) to Color(0xff9fa7b0)
+        DayOfWeek.TUESDAY -> Color(0xfff6eae5) to Color(0xffc47b6c)
+        DayOfWeek.WEDNESDAY -> Color(0xffe8f1ea) to Color(0xff6fa582)
+        DayOfWeek.THURSDAY -> Color(0xffe8eff6) to Color(0xff6e99c2)
+        DayOfWeek.FRIDAY -> Color(0xfff0eaf4) to Color(0xffa483bd)
+        DayOfWeek.SATURDAY -> Color(0xffe6e8eb) to Color(0xff656c75)
+    }
+    return copy(wash = wash, selectedBackground = selection,
+        selectedForeground = if (date.dayOfWeek == DayOfWeek.SATURDAY) Color(0xfff5f6f7) else Color(0xff132426))
+}
 
 /** Warm/cool hues stay recognisable without using bright day-mode backgrounds at night. */
 internal fun weekdayEveningWash(date: LocalDate): Color = listOf(
