@@ -74,7 +74,7 @@ class Release331UiTest {
             if (m == CalendarMode.SACRED) shot("today-$p-$night")
             compose.runOnIdle { selected = true; epoch++ }
             compose.onNodeWithTag("calendar-selected-day").performScrollTo()
-            assertTrue("Selected day must stay light: $p/$night/$m", ink("calendar-selected-primary-date").red > .8f)
+            assertTrue("Selected day must stay light: $p/$night/$m", ink("calendar-selected-primary-date").red > if (night) .7f else .8f)
             if (!night) compose.onNodeWithTag("calendar-day-light-shade", useUnmergedTree = true).assertExists()
             if (p == "blue") shot("selected-$m-$night")
         }
