@@ -732,6 +732,12 @@ try {
     // Exercise the new owner-scoped namespaces for both the deleted account and
     // an unrelated survivor; do not weaken the full-table deletion guard.
     foreach ([$userId, $survivorId] as $noticeOwner) {
+        $db->prepare('INSERT INTO stoicheion_timeline_sessions (user_id,period_key,source_day_key,seed_value,revision,created_at,updated_at) VALUES (?,?,?,?,1,?,?)')
+            ->execute([$noticeOwner,'2026-09-14','2026-09-18',42,$now,$now]);
+        foreach ([0,1,2] as $position) {
+            $db->prepare('INSERT INTO stoicheion_timeline_card_windows (user_id,period_key,position,first_revealed_at,rerolled_at) VALUES (?,?,?,?,?)')
+                ->execute([$noticeOwner,'2026-09-14',$position,$now,$position===1?$now:null]);
+        }
         $db->prepare('INSERT INTO aurora_workspaces (user_id,revision,iv,ciphertext,payload_hash,updated_at) VALUES (?,1,?,?,?,?)')
             ->execute([$noticeOwner,base64_encode(random_bytes(12)),base64_encode(random_bytes(32)),hash('sha256','synthetic-deletion-'.$noticeOwner),$now]);
         $db->prepare('INSERT INTO email_registration_lifecycle (user_id,email,enrolled_at,deadline_at) VALUES (?,?,?,?)')
