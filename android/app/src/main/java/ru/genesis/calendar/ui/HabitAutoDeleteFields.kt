@@ -25,7 +25,7 @@ import ru.genesis.calendar.domain.habits.HabitAutoDeletePolicy
     var count by remember { mutableStateOf(draft.count.toString()) }
     val valid=count.toIntOrNull()?.let { it in 1..365 } == true && count.all(Char::isDigit)
     LaunchedEffect(value != null,valid) { onValidity(value == null || valid) }
-    AffairsDisclosure(copy.getString("title")) {
+    Column(Modifier.fillMaxWidth().testTag("habit-auto-delete-settings"), verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("habit-auto-delete-enabled")
             .toggleable(value != null,enabled=enabled,role=Role.Switch) { checked -> onChange(if(checked) draft else null) },
             verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {

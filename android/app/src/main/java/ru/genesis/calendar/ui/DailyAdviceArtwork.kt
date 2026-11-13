@@ -7,7 +7,7 @@ import java.io.File
 
 /** Public illustrations only. Keep a bounded private cache across rotations and theme changes. */
 internal object DailyAdviceArtwork {
-    private const val budget = 8L * 1024 * 1024
+    private const val budget = 48L * 1024 * 1024
     @Synchronized fun load(context: Context, path: String): Bitmap? {
         require(Regex("/advice-art/[a-z0-9-]+/advice-[a-f0-9]{24}\\.webp").matches(path))
         val directory = File(context.cacheDir, "daily-advice-art")

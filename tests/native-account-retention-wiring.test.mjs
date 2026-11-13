@@ -67,8 +67,8 @@ test('native donation controls request a checkout on click and notifications onl
   assert.match(app, /substringBefore\('#'\) == "donation"[\s\S]*?menuSwipeState\.settings = "links"/);
 });
 
-test('the prepared native version is 3.2.9 with monotonically increasing code 141', async () => {
+test('the prepared native version is 3.3.1 with monotonically increasing code 143', async () => {
   const gradle = await source('build.gradle.kts');
-  assert.match(gradle, /versionCode = 141/);
-  assert.match(gradle, /versionName = "3\.2\.9"/);
+  assert.match(gradle, /versionCode = 143/);
+  assert.match(gradle, /versionName = "3\.3\.1"/);
 });

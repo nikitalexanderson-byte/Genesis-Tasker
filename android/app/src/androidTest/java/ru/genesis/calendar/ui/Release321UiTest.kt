@@ -9,8 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
@@ -56,6 +55,25 @@ class Release321UiTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
     private val args get()=InstrumentationRegistry.getArguments()
     private fun capture(name:String){captureNativeWindow(File(compose.activity.getExternalFilesDir(null),"release321-$name.png"))}
+    @Test fun emptyDreamHistoryWrapsContentInBothSchemes331() {
+        val repository=DiaryRepository("synthetic-empty-dream-331",DreamQaGateway(),DreamQaStore(),DreamQaCipher())
+        runBlocking { repository.refresh() }
+        var night by mutableStateOf(false)
+        compose.setContent { CompositionLocalProvider(LocalGenesisLanguage provides "ru", LocalEveningTheme provides night) {
+            MaterialTheme(colorScheme=if(night) evening else standart, typography=GenesisTypography) {
+                Surface(Modifier.fillMaxSize().safeDrawingPadding()) { DreamJournal(repository,LocalDate.now(),CalendarMode.PROFANE) }
+            }
+        } }
+        compose.onNodeWithTag("dream-history").performClick()
+        for (dark in listOf(false,true)) {
+            compose.runOnIdle { night=dark }
+            val dialog=compose.onNodeWithTag("dream-history-dialog").getUnclippedBoundsInRoot()
+            val rootHeight=with(compose.activity.resources.displayMetrics) { heightPixels / density }
+            assertTrue("An empty history must not fill the screen",dialog.height.value < rootHeight * .65f)
+            capture("empty-331-$dark")
+        }
+    }
+
     @Test fun editedDreamUsesOneIdentityForListFiltersAndStatsWhileOtherDraftsStayRecoverable(){
         check(BuildConfig.DEBUG&&compose.activity.packageName.let{it.endsWith(".aurora321.debug")||it.endsWith(".aurora323.debug")})
         val repository=DiaryRepository("synthetic-dream-versions",DreamQaGateway(),DreamQaStore(),DreamQaCipher())

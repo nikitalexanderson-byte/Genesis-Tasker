@@ -9,9 +9,8 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 
 internal val LocalTodayHeroTint=staticCompositionLocalOf{Color.Transparent}
-internal val LocalTodayHeroLightAlpha=staticCompositionLocalOf{.70f}
 @Composable internal fun todayHeroBlockBackground(darkAlpha:Float=.30f):Color{
-    val base=if(LocalEveningTheme.current)Color.Black.copy(alpha=darkAlpha) else MaterialTheme.colorScheme.primaryContainer.copy(alpha=LocalTodayHeroLightAlpha.current)
+    val base=Color.Black.copy(alpha=darkAlpha)
     return LocalTodayHeroTint.current.compositeOver(base)
 }
 /** Selection stays visible in every palette, including the filled state. */

@@ -26,9 +26,17 @@ import ru.genesis.calendar.domain.habits.HeroProgress
 import ru.genesis.calendar.domain.habits.HeroRankCatalog
 import ru.genesis.calendar.domain.habits.HeroicRank
 
-private val heroNight = Color(0xff082e2f)
-private val heroPanel = Color(0xff102f2b)
-private val heroPanelReached = Color(0xff183a32)
+internal data class HeroPathColors(val background: Color, val panel: Color, val reached: Color, val current: Color)
+internal fun heroPathColors(palette: String): HeroPathColors = when (palette) {
+    "blue" -> HeroPathColors(Color(0xff08182e), Color(0xff10243f), Color(0xff193552), Color(0xff112840))
+    "burgundy" -> HeroPathColors(Color(0xff260b15), Color(0xff351420), Color(0xff492030), Color(0xff351420))
+    "violet" -> HeroPathColors(Color(0xff1c102c), Color(0xff2c193d), Color(0xff3d2851), Color(0xff2c193d))
+    else -> HeroPathColors(Color(0xff082e2f), Color(0xff102f2b), Color(0xff183a32), Color(0xff112a27))
+}
+@Composable internal fun heroPathColors() = heroPathColors(LocalDarkPalette.current)
+private val heroNight: Color @Composable get() = heroPathColors().background
+private val heroPanel: Color @Composable get() = heroPathColors().panel
+private val heroPanelReached: Color @Composable get() = heroPathColors().reached
 private val heroGold = Color(0xffdfc17e)
 private val heroIvory = Color(0xfffff5df)
 private val heroMuted = Color(0xffa9bdb5)
@@ -54,6 +62,8 @@ private val amphoraPaintings = listOf(
 @Composable
 internal fun HeroRankTree(workspace: LocalHabitWorkspace, busy: Boolean,
     onClaimAmphora: (String) -> Unit, onRevealHiddenPath: () -> Unit) {
+    CompositionLocalProvider(LocalPreserveCalendarColors provides true,
+        LocalContentColor provides heroIvory) {
     val progress = workspace.progress
     val current = HeroProgress.rankForProgress(progress)
     val next = HeroProgress.nextRankForProgress(progress)
@@ -77,7 +87,7 @@ internal fun HeroRankTree(workspace: LocalHabitWorkspace, busy: Boolean,
         }
         if (!HeroProgress.hiddenUnlocked(progress.lifetimeXp)) {
             Surface(Modifier.fillMaxWidth().padding(start = 24.dp, top = 8.dp, bottom = 8.dp),
-                color = Color(0xff0b2827), shape = RoundedCornerShape(18.dp),
+                color = heroPathColors().panel, shape = RoundedCornerShape(18.dp),
                 border = BorderStroke(1.dp, heroGold.copy(alpha = .35f))) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("Путь продолжается…", style = MaterialTheme.typography.titleMedium,
@@ -104,6 +114,7 @@ internal fun HeroRankTree(workspace: LocalHabitWorkspace, busy: Boolean,
     }
     selected?.let { rank -> RankDialog(rank, progress.lifetimeXp) { selected = null } }
 }
+}
 
 @Composable
 private fun CurrentRankPanel(current: HeroicRank, next: HeroicRank?, xp: Int) {
@@ -111,7 +122,7 @@ private fun CurrentRankPanel(current: HeroicRank, next: HeroicRank?, xp: Int) {
     val lower = current.threshold
     val upper = next?.threshold ?: maxOf(lower + 1, xp)
     val progress = if (next == null) 1f else ((xp - lower).toFloat() / (upper - lower).coerceAtLeast(1)).coerceIn(0f, 1f)
-    Surface(Modifier.fillMaxWidth().testTag("hero-current-rank"), color = Color(0xff112a27),
+    Surface(Modifier.fillMaxWidth().testTag("hero-current-rank"), color = heroPathColors().current,
         shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, heroGold.copy(alpha = .38f))) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)) {

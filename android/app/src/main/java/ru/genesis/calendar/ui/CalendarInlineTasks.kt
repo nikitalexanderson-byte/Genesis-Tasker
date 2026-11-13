@@ -44,7 +44,7 @@ internal fun calendarModeLabel(mode: CalendarMode): String = when(mode) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Button(onClick = onCreate, modifier = Modifier.heightIn(min = 48.dp)
-                .testTag("calendar-create-task")) { Text("Создать задачу") }
+                .testTag("calendar-create-task")) { Text("Создать") }
         }
         if(tasks.isEmpty()) Text("На этот день задач нет.",style=MaterialTheme.typography.bodySmall)
         tasks.forEach { task ->

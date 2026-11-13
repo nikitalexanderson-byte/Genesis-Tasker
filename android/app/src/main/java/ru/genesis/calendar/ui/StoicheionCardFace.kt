@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +32,8 @@ import kotlin.math.min
 /** Native layers matching StoicheionCardFace on the site: painting, Greek-key frame, title, sigil, body and invocation. */
 @Composable
 internal fun StoicheionCardFace(letter: StoicheionLetter, modifier: Modifier = Modifier) {
+    // The painting is always dark, including inside a light app palette.
+    CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
     BoxWithConstraints(modifier.aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp))
         .background(Color(0xff06191c)).testTag("stoicheion-face-${letter.id}")) {
         val width = maxWidth
@@ -68,7 +71,7 @@ internal fun StoicheionCardFace(letter: StoicheionLetter, modifier: Modifier = M
             Text(letter.body.uppercase(), color = Color(0xfff5e6c3), fontFamily = GenesisHeadingFont,
                 fontWeight = FontWeight.SemiBold, fontSize = max(8f, min(14f, width.value * .057f)).sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-            Text(letter.bodyGreek, color = letter.accent, fontFamily = GenesisHeadingFont,
+            Text(letter.bodyGreek, color = Color(0xfff4dda0), fontFamily = GenesisHeadingFont,
                 fontSize = max(8f, min(12f, width.value * .05f)).sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
             Text(letter.invocation, color = Color(0xffc7bca4), fontFamily = GenesisHeadingFont,
@@ -76,6 +79,7 @@ internal fun StoicheionCardFace(letter: StoicheionLetter, modifier: Modifier = M
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
         }
     }
+}
 }
 
 /** Same 512×768 border geometry and Greek-key rhythm as public/stoicheion-cards/frame-greek-key.svg. */

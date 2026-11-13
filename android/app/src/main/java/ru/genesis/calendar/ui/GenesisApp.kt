@@ -1135,8 +1135,7 @@ internal fun DayHeader(date: LocalDate, mode: CalendarMode, explicitSeasonZone: 
         todayHeroCopy(date, if (sacredFeaturesEnabled) mode else CalendarMode.PROFANE, calendar, language)
     }
     val civilDate = date.format(DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag(language)))
-    val lightHero = !LocalEveningTheme.current
-    val heroSecondary = if (lightHero) MaterialTheme.colorScheme.onSurface.copy(alpha = .90f) else Color(0xfffff8e9)
+    val heroSecondary = Color(0xfffff8e9)
     val moon = if (sacredFeaturesEnabled && mode == CalendarMode.LUNAR) remember(date) { calendar.moonInfo(date) } else null
     Card(Modifier.fillMaxWidth().testTag("today-hero"), shape = AffairsLayout.shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -1151,14 +1150,13 @@ internal fun DayHeader(date: LocalDate, mode: CalendarMode, explicitSeasonZone: 
                 artworkTint = todayHeroArtworkTint(mode, LocalEveningTheme.current, LocalDarkPalette.current),
                 alignment = if (mode == CalendarMode.LUNAR) Alignment.CenterEnd else Alignment.Center)
             Box(Modifier.matchParentSize().background(
-                if (lightHero) Color.Transparent else Color.Black.copy(alpha = .16f)))
+                Color.Black.copy(alpha = .16f)))
             CompositionLocalProvider(LocalPreserveCalendarColors provides true,
-                LocalTodayHeroLightAlpha provides if (lightHero && mode == CalendarMode.PROFANE) .80f else .70f,
                 LocalTodayHeroTint provides MaterialTheme.colorScheme.primaryContainer.copy(alpha=if(mode==CalendarMode.PROFANE).15f else .10f)) {
             androidx.compose.material3.Surface(Modifier.fillMaxWidth().testTag("today-hero-copy"),
                 shape = AffairsLayout.shape, border = BorderStroke(1.dp, Color(0x80dfc17e)),
-                color = if (lightHero) Color.Transparent else Color.Black.copy(alpha = .48f),
-                contentColor = if (lightHero) MaterialTheme.colorScheme.onSurface else Color.White) {
+                color = Color.Black.copy(alpha = .48f),
+                contentColor = Color.White) {
                     Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(AffairsLayout.gap)) {
                         TodayHeroGroup("today-hero-context") {
                             if (mode == CalendarMode.LUNAR) {
@@ -1171,12 +1169,14 @@ internal fun DayHeader(date: LocalDate, mode: CalendarMode, explicitSeasonZone: 
                                             style = MaterialTheme.typography.bodyMedium)
                                     }
                                     moon?.let {
-                                        Column(Modifier.width(96.dp).testTag("today-lunar-phase"), horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Box(Modifier.size(80.dp).testTag("today-lunar-phase"), contentAlignment = Alignment.Center) {
                                             MoonPhaseIcon(it.phaseStep, Modifier.testTag("today-lunar-disc"), size = 80.dp)
                                             Text(lunarTriadCopyForDay(it.day).getString("name"),
-                                                Modifier.testTag("today-lunar-epithet"), style = MaterialTheme.typography.labelLarge,
-                                                color = heroSecondary, translate = false, maxLines = 1)
+                                                Modifier.width(66.dp).testTag("today-lunar-epithet"),
+                                                style = MaterialTheme.typography.labelLarge.copy(
+                                                    shadow = androidx.compose.ui.graphics.Shadow(Color.Black, androidx.compose.ui.geometry.Offset(0f, 1f), 3f)),
+                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                                color = Color(0xfffff8e9), adjustInk = false, translate = false, maxLines = 1)
                                         }
                                     }
                                 }
@@ -1257,9 +1257,8 @@ internal fun DayHeader(date: LocalDate, mode: CalendarMode, explicitSeasonZone: 
 private fun TodayHeroGroup(tag: String, content: @Composable ColumnScope.() -> Unit) {
     androidx.compose.material3.Surface(Modifier.fillMaxWidth().testTag(tag), shape = AffairsLayout.shape,
         color = todayHeroBlockBackground(),
-        contentColor = if (LocalEveningTheme.current) Color.White else MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(1.dp, if (LocalEveningTheme.current) Color(0xffffe7ae).copy(alpha = .18f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha=.6f))) {
+        contentColor = Color.White,
+        border = BorderStroke(1.dp, Color(0xffffe7ae).copy(alpha = .18f))) {
         Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp), content = content)
     }
 }
@@ -1924,7 +1923,7 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
             }
         }
         "links" -> {
-        SettingsSection("↗", "Ссылки GENESIS", "Академия, поддержка и веб-версия",
+        SettingsSection("↗", "Ссылки GENESIS", "Telegram, поддержка и веб-версия",
             Color(0xfffff5df)) {
             ru.genesis.calendar.auth.GenesisLinksPanel()
         }

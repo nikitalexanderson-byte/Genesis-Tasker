@@ -277,7 +277,7 @@ fun GenesisLinksPanel() {
             Text(copy.getString("donation"), textAlign = androidx.compose.ui.text.style.TextAlign.Center, translate = false)
         }
         listOf(
-            Triple("Академия Генезис · Telegram", "https://t.me/genesisbasilea", "account-link-telegram"),
+            Triple("GENESIS · Telegram", "https://t.me/genesiscalendar", "account-link-telegram"),
             Triple("Веб-версия GENESIS", "${AUTH_ORIGIN}/", "account-link-web"),
         ).forEach { (label, url, tag) ->
             val open: () -> Unit = {

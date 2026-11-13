@@ -318,7 +318,8 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                             val chosen=reading.reversed==reversed
                             Surface(Modifier.fillMaxWidth().testTag(if(reversed)"stoicheion-reading-reversed"else"stoicheion-reading-upright"),
                                 shape=MaterialTheme.shapes.medium,
-                                color=if(chosen)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                                color=if(reversed && !LocalEveningTheme.current)MaterialTheme.colorScheme.errorContainer
+                                    else if(chosen)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
                                 border=if(chosen)BorderStroke(2.dp,MaterialTheme.colorScheme.primary)else null) {
                                 Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                                     Text(if(reversed)"Перевёрнутое положение"else"Парадное положение",style=MaterialTheme.typography.titleSmall)

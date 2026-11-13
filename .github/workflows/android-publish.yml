@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       commit:
-        description: Full checked current-main SHA already served by the website
+        description: Full checked current-main Android source SHA
+        required: true
+        type: string
+      expected_current_commit:
+        description: Full incumbent website SHA; Android publication does not deploy web or API
         required: true
         type: string
       artifact_run_id:
@@ -29,7 +33,7 @@ jobs:
       GENESIS_DEPLOY_TARGET: ${{ vars.GENESIS_DEPLOY_TARGET }}
       GENESIS_DEPLOY_ANDROID: 'false'
       DEPLOY_COMMIT: ${{ inputs.commit }}
-      EXPECTED_CURRENT_COMMIT: ${{ inputs.commit }}
+      EXPECTED_CURRENT_COMMIT: ${{ inputs.expected_current_commit }}
       ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -39,13 +43,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24.19.0'
-      - name: Require current-main Source checks and the deployed website commit
+      - name: Require Android Source checks and the unchanged incumbent website
         run: |
           set -euo pipefail
           node scripts/deployment/source-checks.mjs
+          [[ "$EXPECTED_CURRENT_COMMIT" =~ ^[0-9a-f]{40}$ ]]
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/deploy-meta.json?android=$GITHUB_RUN_ID" \
-            | jq -e --arg sha "$DEPLOY_COMMIT" '.commit == $sha'
+            | jq -e --arg sha "$EXPECTED_CURRENT_COMMIT" '.commit == $sha'
       - name: Verify artifact provenance and stage the APK
         id: stage
         run: |
@@ -55,16 +60,16 @@ jobs:
             | jq -e --arg sha "$DEPLOY_COMMIT" --arg repo "$GITHUB_REPOSITORY" \
               '.head_sha == $sha and .head_branch == "main" and .head_repository.full_name == $repo and .path == ".github/workflows/android-release.yml" and .event == "workflow_dispatch" and .status == "completed" and .conclusion == "success"'
           gh run download "$ARTIFACT_RUN_ID" --repo "$GITHUB_REPOSITORY" \
-            --name "genesis-android-3.2.9-141-$DEPLOY_COMMIT" --dir android-artifact
+            --name "genesis-android-3.3.1-143-$DEPLOY_COMMIT" --dir android-artifact
           jq -e --arg sha "$DEPLOY_COMMIT" --arg repo "$GITHUB_REPOSITORY" \
-            '.commit == $sha and .repository == $repo and .versionCode == 141 and .versionName == "3.2.9"' android-artifact/source.json
+            '.commit == $sha and .repository == $repo and .versionCode == 143 and .versionName == "3.3.1"' android-artifact/source.json
           (cd android-artifact && sha256sum --check SHA256SUMS)
           mkdir -p dist-android/downloads
-          cp android-artifact/GENESIS-Android-Native-3.2.9.apk dist-android/downloads/
-          APK_SHA="$(sha256sum dist-android/downloads/GENESIS-Android-Native-3.2.9.apk | cut -d' ' -f1)"
+          cp android-artifact/GENESIS-Android-Native-3.3.1.apk dist-android/downloads/
+          APK_SHA="$(sha256sum dist-android/downloads/GENESIS-Android-Native-3.3.1.apk | cut -d' ' -f1)"
           printf 'apk_sha=%s\n' "$APK_SHA" >> "$GITHUB_OUTPUT"
           jq -n --arg sha "$APK_SHA" \
-            '{versionCode:141,versionName:"3.2.9",minimumSupportedVersionCode:76,minimumSupportedVersionName:"2.7.0",sha256:$sha}' \
+            '{versionCode:143,versionName:"3.3.1",minimumSupportedVersionCode:76,minimumSupportedVersionName:"2.7.0",sha256:$sha}' \
             > dist-android/android-update.json
           chmod 644 dist-android/android-update.json dist-android/downloads/*.apk
       - name: Load the pinned Hostinger host key
@@ -89,10 +94,10 @@ jobs:
             for relative in public_html public_html/downloads public_html/deploy-meta.json public_html/android-update.json backups; do
               test ! -L "$ROOT/$relative"
             done
-            test ! -L "$ROOT/public_html/downloads/GENESIS-Android-Native-3.2.9.apk"
+            test ! -L "$ROOT/public_html/downloads/GENESIS-Android-Native-3.3.1.apk"
             php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);if(($m["commit"]??null)!==$argv[2])exit(1);' \
-              "$ROOT/public_html/deploy-meta.json" '${{ inputs.commit }}'
-            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>141||($c===141&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
+              "$ROOT/public_html/deploy-meta.json" '${{ inputs.expected_current_commit }}'
+            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>143||($c===143&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
               "$ROOT/public_html/android-update.json" '${{ steps.stage.outputs.apk_sha }}'
             BACKUP="$ROOT/backups/android-manifest-${{ github.run_id }}"
             test ! -e "$BACKUP"
@@ -114,24 +119,27 @@ jobs:
             set -eu
             ROOT=/home/u531952483/domains/genesiscalendar.com
             test "$(readlink -f "$ROOT")" = "$ROOT"
-            for relative in public_html public_html/downloads public_html/deploy-meta.json public_html/android-update.json public_html/downloads/GENESIS-Android-Native-3.2.9.apk; do
+            for relative in public_html public_html/downloads public_html/deploy-meta.json public_html/android-update.json public_html/downloads/GENESIS-Android-Native-3.3.1.apk; do
               test ! -L "$ROOT/$relative"
             done
             php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);if(($m["commit"]??null)!==$argv[2])exit(1);' \
-              "$ROOT/public_html/deploy-meta.json" '${{ inputs.commit }}'
-            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>141||($c===141&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
+              "$ROOT/public_html/deploy-meta.json" '${{ inputs.expected_current_commit }}'
+            php -r '$m=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$c=$m["versionCode"]??0;if($c>143||($c===143&&($m["sha256"]??null)!==$argv[2]))exit(1);' \
               "$ROOT/public_html/android-update.json" '${{ steps.stage.outputs.apk_sha }}'
-            test "$(sha256sum "$ROOT/public_html/downloads/GENESIS-Android-Native-3.2.9.apk" | cut -d' ' -f1)" = '${{ steps.stage.outputs.apk_sha }}'
+            test "$(sha256sum "$ROOT/public_html/downloads/GENESIS-Android-Native-3.3.1.apk" | cut -d' ' -f1)" = '${{ steps.stage.outputs.apk_sha }}'
           SCRIPT_BEFORE_REQUIRED: true
       - name: Verify the public manifest, APK bytes and download redirect
         run: |
           set -euo pipefail
-          EXPECTED="$(sha256sum android-artifact/GENESIS-Android-Native-3.2.9.apk | cut -d' ' -f1)"
+          EXPECTED="$(sha256sum android-artifact/GENESIS-Android-Native-3.3.1.apk | cut -d' ' -f1)"
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/android-update.json?run=$GITHUB_RUN_ID" \
-            | jq -e --arg sha "$EXPECTED" '.versionCode == 141 and .versionName == "3.2.9" and .sha256 == $sha'
+            | jq -e --arg sha "$EXPECTED" '.versionCode == 143 and .versionName == "3.3.1" and .sha256 == $sha'
           curl -fsS --max-time 120 -H 'Cache-Control: no-cache' \
-            "https://genesiscalendar.com/downloads/GENESIS-Android-Native-3.2.9.apk?run=$GITHUB_RUN_ID" -o published.apk
+            "https://genesiscalendar.com/downloads/GENESIS-Android-Native-3.3.1.apk?run=$GITHUB_RUN_ID" -o published.apk
           test "$(sha256sum published.apk | cut -d' ' -f1)" = "$EXPECTED"
           curl -fsSI --max-time 30 https://genesiscalendar.com/api/android/download \
-            | tr -d '\r' | grep -Eqi '^location: /downloads/GENESIS-Android-Native-3\.2\.9\.apk$'
+            | tr -d '\r' | grep -Eqi '^location: /downloads/GENESIS-Android-Native-3\.3\.1\.apk$'
+          curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
+            "https://genesiscalendar.com/deploy-meta.json?android-after=$GITHUB_RUN_ID" \
+            | jq -e --arg sha "$EXPECTED_CURRENT_COMMIT" '.commit == $sha'

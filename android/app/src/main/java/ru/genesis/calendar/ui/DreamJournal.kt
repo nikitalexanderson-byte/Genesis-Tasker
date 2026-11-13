@@ -101,10 +101,10 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
         }
     }
     if(history) Dialog(onDismissRequest={history=false},properties=DialogProperties(usePlatformDefaultWidth=false)) {
-        Surface(Modifier.fillMaxWidth().fillMaxHeight(.9f).testTag("dream-history-dialog"),shape=AffairsLayout.shape) {
+        Surface(Modifier.fillMaxWidth().testTag("dream-history-dialog"),shape=AffairsLayout.shape) {
             Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 GenesisDialogHeader(onClose={history=false}){Text(text.getString("history"),style=MaterialTheme.typography.titleLarge)}
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.weight(1f, fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                         listOf(Triple("all","all","history"),Triple("day","dayOnly","calendar-days"),Triple("favorites","favorites","star"),Triple("lucid","lucid","moon")).forEach{(value,label,icon)->
                             IconToggleButton(filter==value,{filter=value},Modifier.weight(1f).heightIn(min=48.dp).testTag("dream-filter-"+value)

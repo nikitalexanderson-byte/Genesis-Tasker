@@ -53,7 +53,7 @@ internal data class StoicheionSelection(val letter: StoicheionLetter, val revers
 
 private fun orientation(reversed: Boolean) = if (reversed) "Перевёрнутое положение" else "Парадное положение"
 @Composable internal fun stoicheionCardSurface(reversed: Boolean, upright: Color = MaterialTheme.colorScheme.surface): Color =
-    if (!reversed) upright else if (LocalEveningTheme.current) stoicheionDarkReversedColor(LocalDarkPalette.current) else Color(0xfff1d8d2)
+    if (!reversed) upright else if (LocalEveningTheme.current) stoicheionDarkReversedColor(LocalDarkPalette.current) else MaterialTheme.colorScheme.errorContainer
 private fun countdown(seconds: Int) = "%02d:%02d".format(seconds / 60, seconds % 60)
 
 @Composable
