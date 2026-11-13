@@ -269,9 +269,8 @@ internal fun WorkspaceHeaderButton(description: String, tag: String, enabled: Bo
     androidx.compose.material3.Surface(onClick = onClick, enabled = enabled,
         modifier = Modifier.size(48.dp).testTag(tag).semantics { contentDescription = localizedDescription },
         shape = AffairsLayout.controlShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .55f))) {
+        color = MaterialTheme.colorScheme.primaryContainer.let { it.copy(alpha = it.alpha * .5f) },
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer) {
         Box(contentAlignment = Alignment.Center) { content() }
     }
 }

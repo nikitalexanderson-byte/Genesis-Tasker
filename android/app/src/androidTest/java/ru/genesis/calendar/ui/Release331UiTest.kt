@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -229,6 +230,13 @@ class Release331UiTest {
     }
 
     @Test fun eyesAndSettingsSharePersistedVisibilityAndHiddenBlocksCanBeRestored() {
+        val labels = org.json.JSONObject(context.assets.open("native-3-translations.json").bufferedReader().use { it.readText() })
+        for (language in listOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")) {
+            for (action in listOf("Скрыть блок", "Показать блок")) {
+                assertEquals("$language/$action", labels.getJSONObject(language).getString(action),
+                    translateGenesisText(context, action, language))
+            }
+        }
         val accountScope = "qa331-visibility-${UUID.randomUUID()}"
         val store = LocalPreferences(context, accountScope)
         var settings by mutableStateOf(false); var editing by mutableStateOf(true)
@@ -265,6 +273,8 @@ class Release331UiTest {
             compose.onNodeWithTag("today-visibility-habits").performClick()
             compose.waitUntil(10000) { "habits" in savedHidden }
             compose.runOnIdle { editing = false; epoch++ }
+            compose.waitForIdle()
+            compose.waitUntil(10000) { savedHidden == setOf("tasks", "habits") }
             compose.onNodeWithTag("visibility-header").assertIsDisplayed()
             compose.onNodeWithTag("today-block-tasks").assertDoesNotExist()
             compose.onNodeWithTag("today-block-habits").assertDoesNotExist()
@@ -277,6 +287,44 @@ class Release331UiTest {
             compose.waitUntil(10000) { "tasks" !in savedHidden }
             compose.onNodeWithTag("today-visibility-habits").performClick()
             compose.waitUntil(10000) { savedHidden.isEmpty() }
+        }
+    }
+
+    @Test fun headerButtonsOnlyFadeTheirBackgroundAndLoseTheirOutline() {
+        var palette by mutableStateOf("blue"); var dark by mutableStateOf(false)
+        var container = Color.White; var surface = Color.White; var ink = Color.Black; var calendarInk = Color.Black
+        compose.setContent { Frame(palette = palette, dark = dark) {
+            container = MaterialTheme.colorScheme.primaryContainer
+            surface = MaterialTheme.colorScheme.surface
+            ink = MaterialTheme.colorScheme.onPrimaryContainer
+            calendarInk = if (dark) MaterialTheme.colorScheme.primary else ink
+            Row(Modifier.fillMaxWidth().background(surface)) {
+                Text("Сегодня", Modifier.weight(1f))
+                WorkspaceHeaderButton("Порядок блоков", "header-background-test", onClick = {}) { GenesisLucideIcon("arrow-up-down") }
+                CalendarModeSwitcher(CalendarMode.PROFANE, {}, size = 48.dp, headerControl = true)
+            }
+        } }
+        for (p in palettes) for (night in listOf(false, true)) {
+            compose.runOnIdle { palette = p; dark = night }
+            compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
+            val expected = container.copy(alpha = container.alpha * .5f).compositeOver(surface)
+            for (tag in listOf("header-background-test", "calendar-mode-icon-profane")) {
+                val pixels = compose.onNodeWithTag(tag).captureToImage().toPixelMap()
+                // A one-pixel sample in the middle of the former outline must be the fill.
+                val edge = pixels[1, pixels.height / 2]
+                assertEquals("$p/$night/$tag red", expected.red, edge.red, .015f)
+                assertEquals("$p/$night/$tag green", expected.green, edge.green, .015f)
+                assertEquals("$p/$night/$tag blue", expected.blue, edge.blue, .015f)
+                val icon = if (tag == "header-background-test") ink else calendarInk
+                var foundOpaqueInk = false
+                for (x in pixels.width / 4 until pixels.width * 3 / 4) for (y in pixels.height / 4 until pixels.height * 3 / 4) {
+                    val pixel = pixels[x, y]
+                    if (kotlin.math.abs(pixel.red - icon.red) < .015f && kotlin.math.abs(pixel.green - icon.green) < .015f &&
+                        kotlin.math.abs(pixel.blue - icon.blue) < .015f) foundOpaqueInk = true
+                }
+                assertTrue("Icons must keep their original ink: $p/$night/$tag", foundOpaqueInk)
+            }
+            shot("header-$p-$night")
         }
     }
 }
