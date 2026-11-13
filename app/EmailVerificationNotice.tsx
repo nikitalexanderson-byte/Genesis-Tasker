@@ -71,7 +71,6 @@ export function EmailVerificationNotice({ user, onChange }: { user: GenesisUser;
   }
   if (!status?.required||dismissedUntil>clock||status.dismissedUntil&&Date.parse(status.dismissedUntil)>clock) return null;
   return <section className="email-verification-notice" aria-labelledby={titleId} data-testid="email-verification-notice" data-no-translate>
-    <DialogCloseButton onClick={dismiss} aria-label={text.dismiss}/>
     <div className="email-verification-copy">
       <strong id={titleId}>{text.title}</strong>
       <p>{text.description.replace("{email}", user.email ?? "")}</p>
@@ -83,6 +82,7 @@ export function EmailVerificationNotice({ user, onChange }: { user: GenesisUser;
         {cooldown > 0 ? text.wait.replace("{seconds}", String(cooldown)) : text[status.hasRequest ? "resend" : "send"]}
       </button>
       <button type="button" disabled={busy} onClick={() => void request.current()}>{text.check}</button>
+      <DialogCloseButton onClick={dismiss} aria-label={text.dismiss}/>
     </div>
     {message ? <p className="email-verification-result" role="status">{text[message]}</p> : null}
   </section>;

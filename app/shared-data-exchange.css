@@ -6,7 +6,7 @@
 .data-preview,.data-undo { border-top:1px solid var(--line); margin-top:32px; padding-top:12px; }
 .data-issues ul { padding-inline-start:24px; line-height:1.6; }
 .data-issues li { margin-block:12px; }
-.data-issues small { display:block; color:var(--muted); overflow-wrap:anywhere; }
+.data-issues small { display:block; color:var(--muted); overflow-wrap:normal; }
 .data-history { padding:0; list-style:none; }
 .data-history > li { border-bottom:1px solid var(--line); padding-block:16px; }
 .shared-data-dialog input[type=file] { padding-block:10px; }

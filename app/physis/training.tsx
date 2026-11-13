@@ -5,6 +5,7 @@ import { IconActionButton } from '../IconActionButton';
 import { ExperimentalIcon } from '../ExperimentalIcon';
 import { CalendarDatePicker } from '../CalendarDatePicker';
 import { DialogCloseButton } from '../DialogCloseButton';
+import { translateText, type Language } from '../i18n';
 import { useDialogAccessibility } from '../use-dialog-accessibility';
 import { trainingCalendarLayout } from './training-calendar-layout';
 import { TimeClockPicker } from '../TimeClockPicker';
@@ -266,7 +267,9 @@ function ExerciseCatalog(props: PhysisFeatureProps) {
   const [query, setQuery] = useState(''); const [muscle, setMuscle] = useState(''); const [movement, setMovement] = useState(''); const [equipment, setEquipment] = useState(''); const [environment, setEnvironment] = useState(''); const [favorite, setFavorite] = useState(false);
   const [editing, setEditing] = useState<PhysisRecord<ExerciseDefinition> | null>(null);
   const choices = choicesFor(props);
-  const visible = choices.filter(ex => `${ex.data.name} ${ex.data.nameEn} ${ex.data.aliases.join(' ')}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()) && (!muscle || ex.data.muscles === muscle) && (!movement || ex.data.movement === movement) && (!equipment || ex.data.equipment === equipment) && (!environment || ex.data.environment === environment) && (!favorite || ex.data.favorite));
+  const visible = choices.filter(ex => [ex.data.name, ex.data.nameEn,
+    ex.personal ? '' : translateText(ex.data.name, props.language as Language), ...ex.data.aliases].join(' ').toLocaleLowerCase(props.language).includes(query.trim().toLocaleLowerCase(props.language))
+    && (!muscle || ex.data.muscles === muscle) && (!movement || ex.data.movement === movement) && (!equipment || ex.data.equipment === equipment) && (!environment || ex.data.environment === environment) && (!favorite || ex.data.favorite));
   const create = (choice?: ExerciseChoice) => setEditing(newPhysisRecord('exercise', choice ? { ...clone(choice.data), catalogId: undefined, name: `${choice.data.name} — ${tr(en, 'копия', 'copy')}` } : { name: '', nameEn: '', aliases: [], muscles: '', movement: '', equipment: '', environment: '', technique: '', mistakes: '', variants: '', source: tr(en, 'Личная запись', 'Personal entry'), metric: 'strength', weightMode: 'total', unilateral: false, favorite: false, notes: '' }));
   const toggleFavorite = (choice: ExerciseChoice) => action.run(async () => { const existing = physisRecords<ExerciseDefinition>(props.store, 'exercise').find(r => r.id === choice.id || r.data.catalogId === choice.id); await props.store.save(existing ? editPhysisRecord(existing, { ...existing.data, favorite: !existing.data.favorite }) : newPhysisRecord('exercise', { ...choice.data, favorite: !choice.data.favorite })); });
   return <section className="physis-panel"><div className="physis-row physis-exercise-heading"><h2>{tr(en, 'Справочник упражнений', 'Exercise library')}</h2><button type="button" className="physis-primary" onClick={() => create()}>{tr(en, 'Своё упражнение', 'New exercise')}</button></div><p className="physis-muted">{tr(en, 'Откройте упражнение, чтобы увидеть движение, работающие мышцы и разбор техники. Личные записи и избранное зашифрованы.', 'Open an exercise to see the movement, working muscles and technique. Personal entries and favorites are encrypted.')}</p><ErrorMessage error={action.error} />

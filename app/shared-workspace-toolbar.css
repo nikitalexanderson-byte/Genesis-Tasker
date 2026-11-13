@@ -42,7 +42,7 @@ html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shar
   border:0; border-radius:4px; background:transparent; color:inherit; font:inherit; text-align:start;
 }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-row { display:flex; flex-wrap:nowrap; align-items:baseline; gap:8px; }
-html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-value { flex:0 1 auto; min-width:0; font:500 14px/1.5 var(--font-ui); overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-value { flex:0 1 auto; min-width:0; font:500 14px/1.5 var(--font-ui); overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-space-info-leader { display:block; }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-header-actions { min-width:0; align-self:center; color:inherit; }
 html[data-genesis-theme] .genesis-app .shared-projects > .workspace-header .shared-workspace-tools { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:var(--shared-workspace-tool-gap); width:min(100%,var(--shared-workspace-tools-width)); padding:0; min-width:0; }

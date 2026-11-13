@@ -25,4 +25,4 @@
 .admin-forecast-members { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .admin-forecast-members li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px; border-block-end: 1px solid var(--line); }
 .admin-forecast-members li > span { min-width: 0; display: grid; gap: 4px; }
-.admin-forecast-members small { color: var(--ink-soft); overflow-wrap: anywhere; }
+.admin-forecast-members small { color: var(--ink-soft); overflow-wrap: normal; }

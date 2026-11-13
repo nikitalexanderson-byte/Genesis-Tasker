@@ -1617,6 +1617,15 @@ try {
             : genesisRecordAdvice($userId, $payload, $path === 'advice/dismiss'));
     }
 
+    if ($path === 'stoicheion/timeline/cards' && in_array($method, ['GET', 'POST'], true)) {
+        $userId = genesisRequireUserId();
+        header('Cache-Control: no-store');
+        genesisRequireFeature($userId, 'stoicheion-timeline');
+        if ($method === 'GET') genesisJson(genesisLoadTimelineCards($userId));
+        genesisRequireCsrf();
+        genesisJson(genesisChangeTimelineCard($userId, genesisReadJson()));
+    }
+
     if ($method === 'GET' && $path === 'stoicheion/draws') {
         genesisJson(genesisStoicheionDraws(genesisRequireUserId()));
     }
@@ -1626,7 +1635,14 @@ try {
         genesisRequireCsrf();
         $payload = genesisReadJson();
         $kind = trim((string)($payload['kind'] ?? ''));
-        if ($kind === 'timeline') genesisRequireFeature($userId,'stoicheion-timeline');
+        if ($kind === 'timeline') {
+            genesisRequireFeature($userId,'stoicheion-timeline');
+            // Web clients must use server-owned per-card windows even before the
+            // first reveal. The established native channel retains its old reader.
+            if (($_SESSION['auth_identity']['channel'] ?? 'unknown') !== 'native') {
+                throw new DomainException('TIMELINE_CARD_PROTOCOL_REQUIRED');
+            }
+        }
         if ($kind === 'spread') genesisRequireFeature($userId,'stoicheion-spread');
         $seed = filter_var($payload['seed'] ?? null, FILTER_VALIDATE_INT);
         if ($seed === false) {

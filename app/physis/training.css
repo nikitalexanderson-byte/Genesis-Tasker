@@ -48,7 +48,7 @@
 .physis .physis-training button, .physis .physis-training-session button { min-width: 44px; }
 .physis-training :is(input, select, textarea), .physis-training-session :is(input, select, textarea) { max-width: 100%; min-width: 0; }
 .physis-training h4, .physis-training-session h3 { margin-top: 1rem; margin-bottom: .65rem; }
-.physis-training :is(label, p, th), .physis-training-session :is(label, p, h3) { overflow-wrap: anywhere; }
+.physis-training :is(label, p, th), .physis-training-session :is(label, p, h3) { overflow-wrap: normal; }
 .physis-training small { display: block; font-weight: 400; }
 .physis-training-set { padding: 1rem 0; border-bottom: 1px solid var(--ui-border, #a9a18e); }
 .physis-training-set.is-complete > .physis-row strong { color: var(--ui-accent, var(--palette-accent, #21634d)); }
@@ -88,7 +88,7 @@
 .physis-training-order { display: inline-flex; flex-wrap: nowrap; }
 .physis-training-order button { min-width: 44px; padding-inline: .6rem; }
 .physis-training-schedule-preview { max-height: 24rem; overflow-y: auto; padding-inline-start: 1.5rem; }
-.physis-training-schedule-preview li { padding-block: .3rem; overflow-wrap: anywhere; }
+.physis-training-schedule-preview li { padding-block: .3rem; overflow-wrap: normal; }
 .physis-training-progress { padding-block: 1rem; }
 .physis-training-progress p { margin-block: .4rem; }
 .physis-training-month-layout { display: grid; gap: 8px; margin-block: 16px; min-width: 0; }

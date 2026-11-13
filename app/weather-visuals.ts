@@ -4,6 +4,9 @@ import type {WeatherSnapshotV1,WeatherPrecipitationKind} from './weather-types';
 const clamp=(value:number,min=0,max=1)=>Math.min(max,Math.max(min,value));
 const metric=(value:unknown):number|null=>typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;
 export const weatherTimestamp=(value:string|null|undefined)=>value?Date.parse(value):NaN;
+export function cloudDriftDuration(windSpeedMps:number):number {
+  return 240/(1+Math.min(100,Math.max(0,Number.isFinite(windSpeedMps)?windSpeedMps:0))*.3);
+}
 
 export function weatherFreshUntil(weather:WeatherSnapshotV1|null):number {
   if(!weather||weather.schemaVersion!==1||weather.status!=='fresh'||!weather.current)return NaN;
@@ -40,6 +43,7 @@ export function weatherVisualState(weather:WeatherSnapshotV1|null,now:number) {
   return {fresh,precipitation,intensity,particles,cloudCover,sunTransmission:1-cloudCover**policy.cloud.transmissionPower,
     groundDimming:cloudCover*policy.cloud.groundDimming,fogOpacity:fog*policy.fog.maxOpacity,
     windVisible:wind>=policy.wind.visibleFromMps,windStrong:wind>=policy.wind.strongFromMps,windSpeed,windGust:gust,drift,
+    cloudDurationSeconds:cloudDriftDuration(windSpeed),cloudMoving:fresh&&windSpeed>0,
     storm:Boolean(current?.storm||current?.thunderstorm),thunderstorm:current?.thunderstorm===true,
     blizzard:current?.blizzard===true&&snow,
     snowCover:fresh&&(metric(current?.snowDepthCm)??0)>0};

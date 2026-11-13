@@ -2,8 +2,8 @@
 .physis-nutrition :is(input,select,textarea,button) { max-width: 100%; min-height: 44px; font: inherit; }
 .physis-nutrition :is(input,select,textarea) { width: 100%; min-width: 0; box-sizing: border-box; }
 .physis-nutrition label { display: grid; gap: .4rem; min-width: 0; }
-.physis-nutrition p { max-width: 72ch; overflow-wrap: anywhere; }
-.physis-nutrition :is(h2,h3,h4) { overflow-wrap: anywhere; }
+.physis-nutrition p { max-width: 72ch; overflow-wrap: normal; }
+.physis-nutrition :is(h2,h3,h4) { overflow-wrap: normal; }
 .physis-nutrition :is(button,a,input,select,textarea,summary):focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
 .physis-nutrition details { margin-block: .75rem; }
 .physis-nutrition summary { padding-block: .65rem; cursor: pointer; min-height: 44px; box-sizing: border-box; }
@@ -92,7 +92,7 @@ html[data-genesis-theme] .genesis-app .physis .physis-food-detail-tabs button[ar
 .physis .physis-food-pagination button { width: 100%; min-height: 48px; padding: 8px; overflow-wrap: normal; word-break: normal; }
 .physis-food-pagination button:disabled { cursor: default; }
 .physis-nutrition-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.physis-nutrition-table :is(td,th) { padding: .6rem .3rem; text-align: left; overflow-wrap: anywhere; }
+.physis-nutrition-table :is(td,th) { padding: .6rem .3rem; text-align: left; overflow-wrap: normal; }
 .physis-nutrition-table th { font-weight: 600; }
 .physis-nutrition-table td small { display: block; font-size: .8em; }
 .physis-nutrition-warning { font-size: .92em; }

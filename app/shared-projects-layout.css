@@ -10,11 +10,11 @@
   border-radius: var(--ui-surface-radius);
   background: var(--surface, #fffdf7);
 }
-.shared-projects-pending p { margin: .35rem 0 0; overflow-wrap: anywhere; }
+.shared-projects-pending p { margin: .35rem 0 0; overflow-wrap: normal; }
 .shared-projects-pending-item + .shared-projects-pending-item { border-top: 1px solid var(--line, #d4c9b0); margin-top: .5rem; padding-top: .5rem; }
 .shared-projects-pending details { margin-top: .4rem; }
 .shared-projects-pending summary { cursor: pointer; }
-.shared-projects-pending pre { max-height: 12rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shared-projects-pending pre { max-height: 12rem; overflow: auto; white-space: pre-wrap; overflow-wrap: normal; }
 
 .shared-projects .shared-projects-open-modal {
   width: 100%;
@@ -161,7 +161,7 @@ html[data-genesis-theme="experimental-dark"] .shared-projects-inbox-card {
 }
 .shared-projects .shared-projects-inbox-toggle { font-weight: 700; }
 .shared-projects-inbox-items { display: grid; gap: .4rem; max-height: 23rem; overflow-y: auto; }
-.shared-projects-inbox-items > button { display: grid; gap: .15rem; min-width: 0; overflow-wrap: anywhere; }
+.shared-projects-inbox-items > button { display: grid; gap: .15rem; min-width: 0; overflow-wrap: normal; }
 .shared-projects-inbox-items > button small { font-size: .72rem; }
 .shared-projects .shared-projects-inbox-create { border-style: dashed; }
 
@@ -224,7 +224,7 @@ html[data-genesis-theme="experimental-dark"] .shared-projects-inbox-card {
   font: inherit;
   font-size: .86rem;
   font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   cursor: pointer;
 }
 
@@ -290,7 +290,7 @@ html[data-genesis-theme="experimental-dark"] .shared-projects-inbox-card {
   margin: 0;
   font-size: clamp(1.4rem, 2vw, 1.9rem);
   line-height: 1.22;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 
 .shared-projects-context p {
@@ -465,7 +465,7 @@ html[data-genesis-theme="experimental-dark"] .shared-projects-inbox-card {
 
 .shared-projects-task > small {
   grid-column: 1;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 
 .shared-projects-detail {

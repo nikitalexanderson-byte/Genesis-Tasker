@@ -6,11 +6,11 @@ html[data-genesis-theme] .genesis-app .task-list-entry-open {
 html[data-genesis-theme] .genesis-app .task-list-entry-title,
 html[data-genesis-theme] .genesis-app button.task-list-entry-title {
   display:block; min-width:0; margin:0; padding:0; color:var(--ink);
-  font:500 15px/1.5 var(--font-ui); letter-spacing:normal; text-transform:none; overflow-wrap:anywhere;
+  font:500 15px/1.5 var(--font-ui); letter-spacing:normal; text-transform:none; overflow-wrap:normal;
 }
 html[data-genesis-theme] .genesis-app .task-list-entry-meta {
   display:block; min-width:0; margin:0; color:var(--ink-soft);
-  font:400 var(--type-caption)/1.5 var(--font-ui); letter-spacing:normal; text-transform:none; overflow-wrap:anywhere;
+  font:400 var(--type-caption)/1.5 var(--font-ui); letter-spacing:normal; text-transform:none; overflow-wrap:normal;
 }
 html[data-genesis-theme] .genesis-app :is(.inbox-list-item,.project-assigned-list) {
   display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; padding:12px;

@@ -30,6 +30,6 @@ html[data-genesis-theme] .genesis-app .icon-action-button.icon-label-choice > sv
 }
 html[data-genesis-theme] .genesis-app .icon-action-button.icon-label-choice > .icon-choice-label {
   min-width:0;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
   word-break:normal;
 }

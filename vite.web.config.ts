@@ -179,7 +179,8 @@ export default defineConfig({
             { name: "affairs-copy", test: /app[\\/]native-affairs-translations\.json$/, priority: 46 },
             { name: "physis-monitoring", test: /app[\\/]physis[\\/](?:measurements\.tsx|metric-navigation\.tsx|metric-definition-dialog\.tsx|custom-metric-domain\.ts|health-icons\.tsx|health-icon-data\.json|health-icon-names\.ts)$/, maxSize: 280_000, priority: 14 },
             { name: "physis-food-seed", test: /app[\\/]physis[\\/]nutrition-seed\.json$/, priority: 46 },
-            { name: "physis-reference-data", test: /app[\\/]physis[\\/](?:exercise-library-data\.ts|exercise-expansion-data\.ts|exercise-media-data\.json|food-reference-data\.json|supplement-reference-data\.ts)$/, priority: 46 },
+            { name: "physis-exercise-copy", test: /app[\\/]physis[\\/]exercise-face-pull-copy\.json$/, priority: 48 },
+            { name: "physis-reference-data", test: /app[\\/]physis[\\/](?:exercise-library-data\.ts|exercise-expansion-data\.ts|exercise-upper-body-data\.ts|exercise-media-data\.json|food-reference-data\.json|supplement-reference-data\.ts)$/, priority: 46 },
             { name: "physis-reference-catalog", test: /app[\\/]physis[\\/]reference-catalog-(?:domain\.ts|controls\.tsx|store\.ts)$/, maxSize: 280_000, priority: 14 },
             { name: "physis-care", test: /app[\\/]physis[\\/](?:care|supplement-reference)\.tsx$/, maxSize: 280_000, priority: 14 },
             // The growing web-only pilot dictionary must not inflate locale-core.

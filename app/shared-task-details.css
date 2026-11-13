@@ -15,7 +15,7 @@ html[data-genesis-theme] .genesis-app .shared-task-modal .shared-task-provenance
 .shared-parent-reference { display: grid; gap: 8px; }
 .shared-detail-caption { color: var(--ink-soft); font-size: var(--type-caption); }
 .shared-task-details-editor .shared-parent-link { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; text-align: start; }
-.shared-parent-link > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.shared-parent-link > span { flex: 1; min-width: 0; overflow-wrap: normal; }
 .shared-parent-link > svg { flex-shrink: 0; }
 .shared-task-details-editor .shared-detail-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .shared-task-details-editor .shared-detail-actions button { min-width: var(--ui-control-height); }
@@ -26,9 +26,9 @@ html[data-genesis-theme] .genesis-app .shared-task-modal .shared-task-provenance
 .shared-task-details-editor .shared-checklist-item-main { display: grid; grid-template-columns: var(--ui-control-height) minmax(0, 1fr); align-items: center; gap: 8px; }
 .shared-task-details-editor .shared-checklist-toggle { display: grid; place-items: center; min-height: var(--ui-control-height); margin: 0; }
 .shared-task-details-editor .shared-checklist-toggle input { width: 20px; height: 20px; margin: 0; }
-.shared-task-details-editor summary { min-height: var(--ui-control-height); align-content: center; cursor: pointer; overflow-wrap: anywhere; }
+.shared-task-details-editor summary { min-height: var(--ui-control-height); align-content: center; cursor: pointer; overflow-wrap: normal; }
 .shared-task-details-editor :is(input,select,button) { max-width: 100%; }
-.shared-checklist-item-main > span { overflow-wrap: anywhere; }
+.shared-checklist-item-main > span { overflow-wrap: normal; }
 .shared-checklist-items details { margin-top: 8px; }
 .shared-checklist-items details > :not(summary) { margin-block: 12px; }
 .shared-checklist-item-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); align-items: start; gap: 12px; }
@@ -36,10 +36,10 @@ html[data-genesis-theme] .genesis-app .shared-task-modal .shared-task-provenance
 .shared-checklist-item-fields .shared-projects-date-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
 .shared-checklist-item-fields .shared-projects-date-field > span { grid-column: 1 / -1; }
 .shared-relation-results { max-height: 240px; overflow-y: auto; display: grid; gap: 8px; }
-.shared-relation-results button { text-align: start; overflow-wrap: anywhere; }
+.shared-relation-results button { text-align: start; overflow-wrap: normal; }
 .shared-child-list { padding: 0; list-style: none; display: grid; gap: 8px; }
 .shared-child-list button { width: 100%; display: grid; gap: 4px; text-align: start; }
-.shared-child-list strong { overflow-wrap: anywhere; }
+.shared-child-list strong { overflow-wrap: normal; }
 .shared-child-create { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; margin-block: 16px; }
 .shared-child-create > label { flex: 1 1 180px; min-width: 0; }
 .shared-detail-help { color: var(--ink-soft); }
@@ -51,7 +51,7 @@ html[data-genesis-theme] .genesis-app .shared-task-modal .shared-task-provenance
 .shared-task-readonly-metadata { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; margin-block: 16px; }
 .shared-task-readonly-metadata > div { min-width: 0; }
 .shared-task-readonly-metadata dt { color: var(--ink-soft); font-size: var(--type-caption); margin-bottom: 4px; }
-.shared-task-readonly-metadata dd { margin: 0; overflow-wrap: anywhere; }
+.shared-task-readonly-metadata dd { margin: 0; overflow-wrap: normal; }
 .shared-task-readonly-metadata dd button { display: block; text-align: start; }
 @media (max-width: 600px) {
   .shared-task-details-editor .shared-checklist-heading { grid-template-columns: minmax(0, 1fr); }

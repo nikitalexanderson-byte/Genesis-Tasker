@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      website_only:
+        description: Check website and API without building Android
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -53,6 +58,7 @@ jobs:
         run: node scripts/qa/web-run.mjs --run-id=ci-web --output=output/qa/ci-web
 
   android:
+    if: inputs.website_only != true
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:

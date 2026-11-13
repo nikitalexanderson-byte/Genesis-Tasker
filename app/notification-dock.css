@@ -13,31 +13,31 @@ html[data-genesis-theme] .genesis-app .notification-dock-header-actions { displa
 html[data-genesis-theme] .genesis-app .notification-dock-header { cursor:grab; touch-action:none; user-select:none; }
 html[data-genesis-theme] .genesis-app .notification-dock-header:active { cursor:grabbing; }
 html[data-genesis-theme] .genesis-app .notification-dock-header:focus-visible { outline:2px solid var(--ui-accent); outline-offset:-5px; }
-html[data-genesis-theme] .genesis-app .notification-dock-panel h2 { flex:1 1 120px; min-width:0; margin:0; color:var(--ink); font:500 20px/1.3 var(--font-ui); white-space:normal; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-dock-panel h2 { flex:1 1 120px; min-width:0; margin:0; color:var(--ink); font:500 20px/1.3 var(--font-ui); white-space:normal; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-drag-handle { display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; padding:8px; border:1px solid var(--line); border-radius:10px; color:var(--ink-soft); background:transparent; cursor:pointer; }
 html[data-genesis-theme] .genesis-app .notification-resize-handle { display:grid; place-items:center; align-self:flex-end; flex:0 0 44px; width:44px; height:44px; min-height:44px; padding:8px; margin:4px 8px 8px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--ui-accent); cursor:nwse-resize; touch-action:none; }
 html[data-genesis-theme] .genesis-app .notification-dock-list { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:0 12px 12px; }
 html[data-genesis-theme] .genesis-app .notification-updates > article { display:flex; align-items:flex-start; min-width:0; gap:8px; padding:16px 0; border-bottom:1px solid var(--line); }
-html[data-genesis-theme] .genesis-app .notification-item-open { display:grid; flex:1; min-width:0; width:100%; gap:6px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ink); font:inherit; text-align:left; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-item-open { display:grid; flex:1; min-width:0; width:100%; gap:6px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ink); font:inherit; text-align:left; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-item-heading { display:flex; align-items:center; gap:8px; color:var(--ink-soft); font-size:13px; }
 html[data-genesis-theme] .genesis-app .notification-dock-list :is(small,time) { color:var(--ink-soft); font:400 12px/1.5 var(--font-ui); }
-html[data-genesis-theme] .genesis-app .notification-comment-body { white-space:pre-wrap; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-comment-body { white-space:pre-wrap; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-read { display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; padding:8px; color:var(--ui-accent); border:1px solid var(--line); border-radius: var(--ui-surface-radius); background:transparent; }
-html[data-genesis-theme] .genesis-app .notification-reminder > div { min-width:0; flex:1; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-reminder > div { min-width:0; flex:1; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-reminder p { margin:6px 0; color:var(--ink); }
 html[data-genesis-theme] .genesis-app .notification-load-more { width:100%; margin:12px 0; }
 html[data-genesis-theme] .genesis-app .notification-inbox-filter { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
 html[data-genesis-theme] .genesis-app .notification-inbox-filter > button { min-height:44px; flex:1; white-space:normal; }
 html[data-genesis-theme] .genesis-app .notification-inbox-filter > button[aria-pressed="true"] { color:var(--surface); background:var(--ui-accent); border-color:var(--ui-accent); font-weight:600; }
 html[data-genesis-theme] .genesis-app .notification-link-error { position:fixed; z-index:740; top:12px; right:12px; display:flex; align-items:flex-start; gap:12px; width:min(340px,calc(100vw - 24px)); padding:16px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); background:var(--surface); color:var(--ink); font:400 14px/1.5 var(--font-ui); }
-html[data-genesis-theme] .genesis-app .notification-link-error p { flex:1; min-width:0; margin:0; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-link-error p { flex:1; min-width:0; margin:0; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-private-items .shared-private-notice { margin:0; padding:16px 0; border:0; border-bottom:1px solid var(--line); border-radius:0; background:transparent; color:var(--ink); }
 html[data-genesis-theme] .genesis-app .notification-private-items .shared-private-invitation-notice { padding:16px 0; border:0; border-bottom:1px solid var(--line); border-radius:0; }
 html[data-genesis-theme] .genesis-app .notification-dock-list .shared-persistent-invitations { margin:0; }
 html[data-genesis-theme] .genesis-app .notification-dock-list .shared-invitation-notice { padding:16px 0; border:0; border-bottom:1px solid var(--line); border-radius:0; }
 html[data-genesis-theme] .genesis-app .notification-dock-list .shared-invitation-notice h2 { font:600 14px/1.5 var(--font-ui); }
 html[data-genesis-theme] .genesis-app .notification-preview { position:fixed; z-index:730; right:16px; bottom:84px; display:flex; align-items:flex-start; gap:12px; width:min(340px,calc(100vw - 32px)); padding:16px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); background:var(--surface); color:var(--ink); font:400 14px/1.5 var(--font-ui); }
-html[data-genesis-theme] .genesis-app .notification-preview > div { flex:1; min-width:0; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-preview > div { flex:1; min-width:0; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-preview p { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin:4px 0 8px; }
 html[data-genesis-theme] .genesis-app .notification-preview > div > button { min-height:44px; padding:8px 0; background:transparent; color:var(--ui-accent); border:0; text-decoration:underline; text-underline-offset:3px; font:inherit; }
 html[data-genesis-theme] .genesis-app :is(.notification-item-open,.notification-drag-handle,.notification-read):hover { background:var(--exp-accent-wash); }
@@ -57,17 +57,17 @@ html[data-genesis-theme] .genesis-app .notification-contact-list { display:grid;
 html[data-genesis-theme] .genesis-app .notification-contact-list > li { min-width:0; }
 html[data-genesis-theme] .genesis-app .notification-contact { display:flex; align-items:center; gap:12px; width:100%; min-width:0; min-height:56px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); background:var(--surface); font:inherit; text-align:start; }
 html[data-genesis-theme] .genesis-app .notification-contact:hover { background:var(--exp-accent-wash); }
-html[data-genesis-theme] .genesis-app .notification-contact-copy { display:grid; gap:3px; min-width:0; flex:1; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-contact-copy { display:grid; gap:3px; min-width:0; flex:1; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-contact-copy strong { font-weight:600; }
 html[data-genesis-theme] .genesis-app .notification-contact > .experimental-icon { width:20px; height:20px; flex:0 0 20px; color:var(--ui-accent); }
 html[data-genesis-theme] .genesis-app .notification-contact-count { min-width:22px; padding:1px 6px; border-radius:6px; background:var(--ui-accent); color:var(--surface); text-align:center; font-size:12px; font-variant-numeric:tabular-nums; }
-html[data-genesis-theme] .genesis-app .notification-contacts-empty p { margin:0; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .notification-contacts-empty p { margin:0; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .notification-contacts-empty p + p { margin-top:8px; color:var(--ink-soft); }
 html[data-genesis-theme] .genesis-app .notification-conversations:has(.shared-private-embedded) { height:100%; }
 html[data-genesis-theme] .genesis-app .shared-private-embedded { display:flex; flex-direction:column; gap:8px; min-width:0; min-height:340px; height:100%; box-sizing:border-box; padding-top:12px; }
 html[data-genesis-theme] .genesis-app .shared-private-embedded > header { display:flex; align-items:center; flex:0 0 auto; gap:12px; padding:0; cursor:default; touch-action:auto; user-select:auto; }
-html[data-genesis-theme] .genesis-app .shared-private-embedded > header > h2 { flex:1; min-width:0; font-size:16px; overflow-wrap:anywhere; }
-html[data-genesis-theme] .genesis-app .shared-private-embedded :is(p,form,label,details) { min-width:0; margin:0; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .shared-private-embedded > header > h2 { flex:1; min-width:0; font-size:16px; overflow-wrap:normal; }
+html[data-genesis-theme] .genesis-app .shared-private-embedded :is(p,form,label,details) { min-width:0; margin:0; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .shared-private-embedded .shared-private-encryption-note { color:var(--ink-soft); font-size:12px; }
 html[data-genesis-theme] .genesis-app .shared-private-embedded .shared-private-messages { flex:1 1 0; align-content:start; margin:0; min-height:72px; max-height:none; }
 html[data-genesis-theme] .genesis-app .shared-private-embedded :is(input,textarea) { box-sizing:border-box; width:100%; min-width:0; max-width:100%; min-height:44px; padding:8px; border:1px solid var(--line); border-radius:10px; color:var(--ink); background:var(--surface); font:inherit; }

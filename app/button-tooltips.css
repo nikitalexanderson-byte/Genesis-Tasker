@@ -16,6 +16,6 @@ html[data-genesis-theme] :is(body, .genesis-app) .button-tooltip[role="tooltip"]
   text-transform: none;
   text-align: center;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   pointer-events: none;
 }

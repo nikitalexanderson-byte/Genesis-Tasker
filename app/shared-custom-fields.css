@@ -6,13 +6,13 @@
 .shared-custom-field-values { display:grid; gap:16px; margin-block:24px; }
 .shared-custom-field-values div { min-width:0; }
 .shared-custom-field-values dt { font-weight:600; }
-.shared-custom-field-values dd { margin:6px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.shared-custom-field-values dd { margin:6px 0 0; white-space:pre-wrap; overflow-wrap:normal; }
 .shared-custom-field-list { margin:8px 0; font-size:.85rem; }
 .shared-custom-field-list div { display:flex; gap:8px; flex-wrap:wrap; }
-.shared-custom-field-list dd { margin:0; overflow-wrap:anywhere; }
+.shared-custom-field-list dd { margin:0; overflow-wrap:normal; }
 .shared-custom-field-manager { min-width:0; margin-block:24px; container:field-manager / inline-size; }
 .shared-custom-field-manager summary { font-weight:600; cursor:pointer; padding-block:12px; min-height:44px; }
-.shared-custom-field-manager :is(p,label,button,summary,strong) { overflow-wrap:anywhere; }
+.shared-custom-field-manager :is(p,label,button,summary,strong) { overflow-wrap:normal; }
 .shared-custom-field-manager ul { padding:0; list-style:none; }
 .shared-custom-field-manager li { border-bottom:1px solid var(--line); padding-block:12px; }
 .shared-custom-field-workspace { display:grid; gap:32px; margin-top:16px; }
@@ -74,10 +74,10 @@ html[data-genesis-theme] .genesis-app .shared-projects-modal .shared-custom-fiel
  html[data-genesis-theme] .genesis-app .shared-projects-modal:has(.shared-custom-field-manager[open]) { width:min(1120px,calc(100vw - 48px)); }
 }
 .shared-custom-field-filter-panel { container:field-filter / inline-size; min-width:0; margin-block:20px; }
-.shared-custom-field-filter-panel > summary { min-height:44px; padding-block:12px; cursor:pointer; font-weight:600; overflow-wrap:anywhere; }
+.shared-custom-field-filter-panel > summary { min-height:44px; padding-block:12px; cursor:pointer; font-weight:600; overflow-wrap:normal; }
 .shared-custom-field-filter-panel > ul { list-style:none; margin:0; padding:0; }
 .shared-custom-field-filter-panel > ul > li { border-block-end:1px solid var(--line); padding-block:12px; }
-.shared-custom-field-filter-panel li > span { min-width:0; overflow-wrap:anywhere; }
+.shared-custom-field-filter-panel li > span { min-width:0; overflow-wrap:normal; }
 .shared-custom-field-filter-panel .icon-action-button { flex:none; width:44px; height:44px; padding:0; }
 .shared-custom-field-filter { margin-block:20px; }
 .shared-custom-field-filter > fieldset { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; border:0; padding:0; margin:0; min-width:0; width:100%; }
@@ -94,5 +94,5 @@ html[data-genesis-theme] .genesis-app .shared-projects-modal .shared-custom-fiel
 .shared-custom-field-options-disclosure > summary { min-height:44px; padding-block:12px; }
 .shared-custom-field-option-navigation > span { font-variant-numeric:tabular-nums; }
 .shared-custom-field-reviewed-options ul { display:grid; gap:8px; margin:12px 0; padding-inline-start:20px; }
-.shared-custom-field-reviewed-options li { overflow-wrap:anywhere; }
+.shared-custom-field-reviewed-options li { overflow-wrap:normal; }
 .shared-custom-field-reviewed-options li small { margin-inline-start:12px; color:var(--ink-soft); }

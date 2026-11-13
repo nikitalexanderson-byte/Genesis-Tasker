@@ -42,14 +42,14 @@ html[data-genesis-theme] .genesis-app .restoration-heading-actions > button { wi
 .restoration .restoration-resources > button > span { display: grid; gap: 6px; min-width: 0; }
 html[data-genesis-theme] .genesis-app .restoration small { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .restoration-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border-bottom: 1px solid var(--line); gap: 8px; margin: 16px 0 28px; }
-.restoration-steps button { border: 0; background: transparent; color: var(--ink-soft); padding: 12px 2px; display: flex; gap: 8px; align-items: center; justify-content: center; overflow-wrap: anywhere; }
+.restoration-steps button { border: 0; background: transparent; color: var(--ink-soft); padding: 12px 2px; display: flex; gap: 8px; align-items: center; justify-content: center; overflow-wrap: normal; }
 .restoration-steps button span { border: 1px solid var(--line); border-radius: 50%; width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 25px; font-variant-numeric: tabular-nums; }
 .restoration-steps button[aria-current="step"] { color: var(--ink); box-shadow: inset 0 -2px var(--restoration-accent); font-weight: 600; }
 .restoration-steps button[aria-current="step"] span { color: var(--restoration-accent); border-color: currentColor; }
 .restoration-columns { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(210px,1fr); gap: clamp(24px,3vw,40px); align-items: start; }
 .restoration-main { min-width: 0; }
 .restoration-main > :is(h3,h4):first-child { margin-top: 0; }
-.restoration a { color: var(--restoration-accent); text-underline-offset: 4px; overflow-wrap: anywhere; }
+.restoration a { color: var(--restoration-accent); text-underline-offset: 4px; overflow-wrap: normal; }
 .restoration-main > a { display: inline-flex; gap: 8px; align-items: center; }
 .restoration-needs { display: flex; flex-wrap: wrap; gap: 10px; }
 .restoration-needs > p { width: 100%; flex-basis: 100%; }
@@ -65,10 +65,10 @@ html[data-genesis-theme] .genesis-app .restoration .restoration-note { font-size
 html[data-genesis-theme] .genesis-app .restoration .restoration-formula { font: 400 23px/1.4 var(--font-heading,Georgia,serif) !important; color: var(--restoration-accent); }
 .restoration dl { margin: 20px 0; }
 .restoration dl > div { display: flex; gap: 16px; justify-content: space-between; border-bottom: 1px solid var(--line); padding: 12px 0; }
-.restoration dt { color: var(--ink-soft); font-size: 13px; overflow-wrap: anywhere; }
+.restoration dt { color: var(--ink-soft); font-size: 13px; overflow-wrap: normal; }
 .restoration dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
 html[data-genesis-theme] .genesis-app .restoration .restoration-key { display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; }
-html[data-genesis-theme] .genesis-app .restoration .restoration-result { color: var(--ink); font-size: 18px; line-height: 1.6; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+html[data-genesis-theme] .genesis-app .restoration .restoration-result { color: var(--ink); font-size: 18px; line-height: 1.6; overflow-wrap: normal; font-variant-numeric: tabular-nums; }
 .restoration-field { display: grid; gap: 8px; margin: 28px 0 16px; }
 .restoration :is(textarea,select) { width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; caret-color: var(--ui-accent); }
 .restoration textarea { resize: vertical; min-height: 104px; }
@@ -94,7 +94,7 @@ html[data-genesis-theme] .genesis-app .restoration .restoration-progress { margi
 .restoration summary { cursor: pointer; padding: 12px 0; min-height: 44px; }
 .restoration-source { margin-top: 24px; padding-block: 8px; border-block: 1px solid var(--line); }
 .restoration-final-note { margin-top: 24px; padding-block: 8px; border-block: 1px solid var(--line); }
-.restoration-final-note p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.restoration-final-note p { white-space: pre-wrap; overflow-wrap: normal; }
 .restoration-delete { margin-top: 24px; }
 .restoration-delete summary, .restoration .restoration-delete-button { color: var(--danger, #a5543f); }
 .restoration-history { border-top: 1px solid var(--line); margin-top: 24px; }
@@ -162,7 +162,7 @@ html[data-genesis-theme] .genesis-app .stoicheion-isopsephy > .stoicheion-spread
   container: stoicheion-spread-actions / inline-size;
 }
 html[data-genesis-theme] .genesis-app .stoicheion-isopsephy > .stoicheion-spread-actions > button { width: 100%; }
-html[data-genesis-theme] .genesis-app .stoicheion-spread-actions > button > span { overflow-wrap: anywhere; text-wrap: balance; }
+html[data-genesis-theme] .genesis-app .stoicheion-spread-actions > button > span { overflow-wrap: normal; text-wrap: balance; }
 html[data-genesis-theme] .genesis-app .stoicheion-daily-result { grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 24px; }
 html[data-genesis-theme] .genesis-app .stoicheion-daily-result > .stoicheion-revealed-card { justify-self: center; }
 html[data-genesis-theme] .genesis-app .stoicheion-result-actions > button { flex: 1 1 180px; }

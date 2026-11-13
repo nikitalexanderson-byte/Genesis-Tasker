@@ -79,6 +79,19 @@ test('fog, storm and blizzard require their own confirmed fields',()=>{
   sample.current.precipitationRateMmH=0;assert.equal(visuals.weatherVisualState(sample,instant).blizzard,false);
 });
 
+test('cloud motion follows fresh sustained wind and pauses for calm, missing or stale readings',()=>{
+  const sample=clone();sample.current.windSpeedMps=0;
+  assert.equal(visuals.weatherVisualState(sample,instant).cloudMoving,false);
+  const durations=[1,5,12,25].map(speed=>{
+    sample.current.windSpeedMps=speed;const state=visuals.weatherVisualState(sample,instant);
+    assert.equal(state.cloudMoving,true);return state.cloudDurationSeconds;
+  });
+  assert.ok(durations.every((value,index)=>index===0||value<durations[index-1]));
+  sample.current.windSpeedMps=null;assert.equal(visuals.weatherVisualState(sample,instant).cloudMoving,false);
+  sample.current.windSpeedMps=12;sample.status='stale';assert.equal(visuals.weatherVisualState(sample,instant).cloudMoving,false);
+  for(const value of [NaN,Infinity,-1,1000])assert.ok(Number.isFinite(visuals.cloudDriftDuration(value))&&visuals.cloudDriftDuration(value)>0);
+});
+
 test('malformed responses cannot enter the scene cache',()=>{
   for(const mutate of [s=>{s.provider=null;},s=>{s.provider.dataKind='live';},s=>{s.current.cloudCoverPercent=NaN;},s=>{s.current.precipitationKind='tornado';},s=>{s.location.latitude=91;},s=>{s.validAt='bad';}]) {
     const sample=clone();mutate(sample);assert.equal(isWeatherSnapshotV1(sample),false);

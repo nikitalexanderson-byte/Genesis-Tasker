@@ -4,7 +4,7 @@
 .backup-panel legend { padding: 0 8px 0 0; font-weight: 600; }
 .backup-panel label { display: grid; gap: 8px; min-width: 0; }
 .backup-panel textarea, .backup-panel select, .backup-panel input[type=file] { box-sizing: border-box; width: 100%; max-width: 100%; min-height: 44px; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
-.backup-panel textarea { resize: vertical; overflow-wrap: anywhere; }
+.backup-panel textarea { resize: vertical; overflow-wrap: normal; }
 .backup-panel select { white-space: normal; }
 .backup-panel .backup-check { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; line-height: 1.5; padding: 4px 0; }
 .backup-panel .backup-check input { width: 20px; height: 20px; flex: 0 0 20px; margin-top: 2px; accent-color: var(--ui-accent, #255b59); }

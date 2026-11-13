@@ -405,6 +405,23 @@ export type StoicheionDrawRecord = {
   unlimited?: boolean;
 };
 
+export type StoicheionTimelineWindow = {
+  position: number;
+  firstRevealedAt: string;
+  rerollDeadline: string;
+  remainingSeconds: number;
+  canReroll: boolean;
+  rerolled: boolean;
+};
+export type StoicheionTimelineRecord = {
+  dayKey: string;
+  periodKey: string;
+  seed: number;
+  revision: number;
+  firstDrawAt: string;
+  cards: StoicheionTimelineWindow[];
+};
+
 export type WorkspaceEnvelope = {
   ciphertext: string;
   iv: string;
@@ -3364,6 +3381,16 @@ export function createBillingOrder(offerId:string,provider:import('./billing').B
 export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,expectedRevision:number) {
   return api<{userId:string;subscriptionPlan:SubscriptionPlan;subscriptionRevision:number}>(`/admin/users/${encodeURIComponent(userId)}/reset-access`,
     {method:'POST',body:JSON.stringify({expectedPlan,expectedRevision})});
+}
+
+export async function loadStoicheionTimelineCards() {
+  return api<{timeline:StoicheionTimelineRecord|null;serverNow:string}>("/stoicheion/timeline/cards", {cache:"no-store"});
+}
+
+export async function changeStoicheionTimelineCard(position:number, action:"reveal"|"reroll", revision:number) {
+  return api<{timeline:StoicheionTimelineRecord;serverNow:string}>("/stoicheion/timeline/cards", {
+    method:"POST", cache:"no-store", body:JSON.stringify({position,action,revision}),
+  });
 }
 
 export async function partnerApi<T>(path: string, init: RequestInit = {}): Promise<T> {

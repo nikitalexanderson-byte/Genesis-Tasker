@@ -1,6 +1,17 @@
 import copy from "./stoicheion-timeline.json";
 import web from "./stoicheion-timeline-web.json";
-import type { StoicheionDrawRecord } from "./cloud-sync";
+import type { StoicheionDrawRecord, StoicheionTimelineRecord } from "./cloud-sync";
+
+export type ClientTimelineRecord = Omit<StoicheionTimelineRecord,"cards"> & {
+  cards:(StoicheionTimelineRecord["cards"][number] & {localDeadline:number})[];
+};
+/** A display-only monotonic countdown; every permission is checked again by the server. */
+export function receiveTimeline(record:StoicheionTimelineRecord, receivedAt:number, requestDuration=0):ClientTimelineRecord {
+  return {...record,cards:record.cards.map(card=>({...card,localDeadline:receivedAt+Math.max(0,card.remainingSeconds*1000-requestDuration)}))};
+}
+export function timelineCardSeconds(card:ClientTimelineRecord["cards"][number]|undefined, clock:number):number {
+  return card?.canReroll?Math.max(0,Math.ceil((card.localDeadline-clock)/1000)):0;
+}
 
 const localizedCopy = Object.fromEntries(Object.keys(copy).map(key => [key, { ...copy[key as keyof typeof copy], ...web[key as keyof typeof web] }])) as { [K in keyof typeof copy]: typeof copy[K] & typeof web[K] };
 export function stoicheionTimelineCopy(language: string) {

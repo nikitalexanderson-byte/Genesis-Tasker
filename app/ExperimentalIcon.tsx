@@ -15,6 +15,10 @@ export function ExperimentalIcon({ name, className = "" }: { name: string; class
     {name === "projects" ? <><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><path d="M8 10v4m4-4v2m4-2v6"/></> : null}
     {name === "habits" ? <><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4M5 21h14"/></> : null}
     {name === "calendar" ? <><path d="M8 2v4m8-4v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></> : null}
+    {name === "section-month" ? <><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 2v4m10-4v4M3 9h18M7 13h2m3 0h2m3 0h.01M7 17h2m3 0h2"/></> : null}
+    {name === "section-year" ? <><rect x="3" y="2" width="18" height="20" rx="3"/><path d="M7 6h1m3 0h1m3 0h1M7 10h1m3 0h1m3 0h1M7 14h1m3 0h1m3 0h1M7 18h1m3 0h1m3 0h1"/></> : null}
+    {name === "section-stoicheion" ? <><path d="m5 18-2-12 4-.7"/><rect x="8" y="3" width="13" height="18" rx="2"/><path d="m11 15 3.5-8L18 15m-5.8-2.5h4.6M12 18h5"/></> : null}
+    {name === "section-theokyklos" ? <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6m0 6v6M3 12h6m6 0h6M5.64 5.64l4.24 4.24m4.24 4.24 4.24 4.24M5.64 18.36l4.24-4.24m4.24-4.24 4.24-4.24"/></> : null}
     {name === "meeting" ? <><path d="M8 2v4m8-4v4M3 9h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><circle cx="12" cy="13" r="2"/><path d="M8 20v-1a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v1"/></> : null}
     {name === "event" ? <><path d="M8 2v4m8-4v4M3 9h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="m12 11 1.4 2.8 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4Z"/></> : null}
     {name === "birthday" ? <><path d="M8 3v3m4-4v4m4-3v3M5 12h14M4 12v9h16v-9M3 21h18"/><path d="M5 12V9h14v3M4 15c2 2 4 2 6 0 1.3-1.3 2.7-1.3 4 0 2 2 4 2 6 0"/></> : null}

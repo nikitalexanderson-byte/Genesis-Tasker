@@ -28,6 +28,9 @@ html[data-genesis-theme] .genesis-app .calendar-explore-notice p { margin: 12px 
 html[data-genesis-theme] .genesis-app .calendar-explore-close { flex: 0 0 44px; min-width: 44px; min-height: 44px; }
 html[data-genesis-theme] .genesis-app .calendar-explore-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 20px; }
 html[data-genesis-theme] .genesis-app .calendar-explore-options > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-content: start; gap: 10px; }
+@media (min-width: 761px) {
+  html[data-genesis-theme] .genesis-app .calendar-explore-options > div { grid-row: span 2; grid-template-rows: subgrid; }
+}
 html[data-genesis-theme] .genesis-app .calendar-explore-options > div > svg { color: var(--ui-accent); margin-top: 2px; }
 html[data-genesis-theme] .genesis-app .calendar-explore-options p { margin: 0; }
 html[data-genesis-theme] .genesis-app .calendar-explore-options button {
@@ -49,7 +52,7 @@ html[data-genesis-theme] .genesis-app .calendar-current-month { min-width: 0; ma
 html[data-genesis-theme] .genesis-app .calendar-current-month svg { width: 20px; height: 20px; flex: 0 0 20px; }
 html[data-genesis-theme] .genesis-app .hero-copy .calendar-solar-control { display: grid; gap: 6px; margin-block: 16px; min-width: 0; }
 html[data-genesis-theme] .genesis-app .hero-copy .calendar-today-solar { flex-wrap: wrap; justify-content: flex-start; width: fit-content; max-width: 100%; }
-html[data-genesis-theme] .genesis-app .hero-copy .calendar-solar-control > small { color: var(--palette-muted, #b7c9bf); font: 400 11px/1.5 var(--font-ui); overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .hero-copy .calendar-solar-control > small { color: var(--palette-muted, #b7c9bf); font: 400 11px/1.5 var(--font-ui); overflow-wrap: normal; }
 .genesis-app .calendar-solar-events { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 .genesis-app .calendar-solar-event { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .genesis-app .calendar-solar-event > svg { flex: 0 0 18px; width: 18px; height: 18px; }
@@ -64,6 +67,13 @@ html[data-genesis-theme] .genesis-app .ios-install-dialog li + li { margin-top: 
 html[data-genesis-theme] .genesis-app .ios-install-dialog ol { padding-inline-start: 24px; margin: 20px 0 0; }
 html[data-genesis-theme] .genesis-app .weekday-tinted-calendar .shared-projects-calendar-date[data-weekday] {
   background: color-mix(in srgb, var(--year-day-mask) var(--year-day-mask-strength), var(--year-day-base));
+}
+/* Every project-calendar scale shares one daylight hue; date states retain their outlines. */
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .shared-projects-calendar .shared-projects-calendar-date {
+  background:color-mix(in srgb,var(--teal) 12%,#fff); color:var(--ink);
+}
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .weekday-tinted-calendar .shared-projects-calendar-date:is([data-weekday],[data-weekend],[data-solar],[data-has-tasks],[data-selected],[aria-current="date"]) {
+  background:color-mix(in srgb,var(--teal) 12%,#fff);
 }
 html[data-genesis-theme$="-dark"] .genesis-app .weekday-tinted-calendar [data-weekday="0"] { --shared-weekday-fill: var(--gregorian-weekday-0); }
 html[data-genesis-theme$="-dark"] .genesis-app .weekday-tinted-calendar [data-weekday="1"] { --shared-weekday-fill: var(--gregorian-weekday-1); }

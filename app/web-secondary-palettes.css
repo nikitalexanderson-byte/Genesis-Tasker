@@ -1,0 +1,26 @@
+/* Complete ruby and purple reading surfaces independently of the accepted blue/green schemes. */
+html[data-genesis-theme="standart"][data-genesis-palette="burgundy"] { --palette-art-tint:#ad5878; }
+html[data-genesis-theme="standart"][data-genesis-palette="violet"] { --palette-art-tint:#9e69cb; }
+html[data-genesis-theme="standart"][data-genesis-palette="burgundy"] .genesis-app :is(.stoicheion-view,.theokyklos-view,.hero-path-panel,.stoicheion-letter-dialog,.theokyklos-mandala-card,.sacred-year-details-modal,.year-description-card.profane-year-full-width) {
+  color-scheme:dark;
+  --paper:#170a0e; --paper-deep:#200f15; --surface:#2b151d; --white:#3b1d29;
+  --ink:#f9edf0; --ink-soft:#d0b1bc; --line:#b77e9345; --gold:#f2b4be; --gold-light:#f2b4be; --teal:#e8a2b4;
+  --ui-accent:#f2b4be; --ui-on-accent:#280a16; --exp-hover:#3b1d29;
+  --palette-recessed:#0e0508; --palette-surface:#2b151d; --palette-raised:#3b1d29; --palette-control:#381b28;
+  --palette-muted:#d0b1bc; --palette-accent:#f2b4be; --palette-on-accent:#280a16;
+  --day-reading:#0e0508; --day-raised:#2b151d; color:var(--ink);
+}
+html[data-genesis-theme="standart"][data-genesis-palette="violet"] .genesis-app :is(.stoicheion-view,.theokyklos-view,.hero-path-panel,.stoicheion-letter-dialog,.theokyklos-mandala-card,.sacred-year-details-modal,.year-description-card.profane-year-full-width) {
+  color-scheme:dark;
+  --paper:#10091b; --paper-deep:#180f27; --surface:#241735; --white:#322145;
+  --ink:#f4edfc; --ink-soft:#c5b5d6; --line:#b095ca45; --gold:#d8bbf5; --gold-light:#d8bbf5; --teal:#c4b0e3;
+  --ui-accent:#d8bbf5; --ui-on-accent:#210e36; --exp-hover:#322145;
+  --palette-recessed:#090411; --palette-surface:#241735; --palette-raised:#322145; --palette-control:#302143;
+  --palette-muted:#c5b5d6; --palette-accent:#d8bbf5; --palette-on-accent:#210e36;
+  --day-reading:#090411; --day-raised:#241735; color:var(--ink);
+}
+html[data-genesis-theme="standart"]:is([data-genesis-palette="burgundy"],[data-genesis-palette="violet"]) .genesis-app :is(.hero-path-panel[role="dialog"],.stoicheion-letter-dialog > article,.theokyklos-mandala-card) {
+  color:var(--ink); background:linear-gradient(145deg,var(--palette-surface),var(--palette-recessed) 70%); border-color:var(--line);
+}
+html[data-genesis-theme="standart"]:is([data-genesis-palette="burgundy"],[data-genesis-palette="violet"]) .genesis-app .stoicheion-letter-dialog .stoicheion-letter-copy :is(p,li) { color:var(--ink-soft); }
+html[data-genesis-theme="standart"]:is([data-genesis-palette="burgundy"],[data-genesis-palette="violet"]) .genesis-app .theokyklos-mandala-heading :is(h2,p) { color:var(--ink); }

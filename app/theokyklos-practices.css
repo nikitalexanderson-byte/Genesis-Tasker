@@ -21,7 +21,7 @@ html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices article {
 }
 html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices article > span { grid-area:symbol; }
 html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices .theokyklos-practice-copy { grid-area:copy; min-width:0; gap:6px; }
-html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices article :is(p,blockquote) { margin:0; font-size:14px; line-height:1.55; overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices article :is(p,blockquote) { margin:0; font-size:14px; line-height:1.55; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices article strong { font:600 18px/1.35 var(--font-heading); color:var(--ink); }
 html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices article small { color:var(--ink-soft); font:500 12px/1.4 var(--font-ui); letter-spacing:normal; text-transform:none; }
 html[data-genesis-theme] .genesis-app .theokyklos-sacred-practices .theokyklos-practice-notice {

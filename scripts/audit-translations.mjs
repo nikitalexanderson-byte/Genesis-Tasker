@@ -72,7 +72,13 @@ const [catalogText, curatedText, i18nText] = await Promise.all([
 ]);
 const trialCopy = JSON.parse(await readFile(path.join(APP_DIR, "billing-trial-copy.json"), "utf8"));
 const trialPrivacy = Object.fromEntries(['privacyTitle','privacyNotice','updatedAt'].map(key => [trialCopy.ru[key], trialCopy.en[key]]));
+const facePullCopy = JSON.parse(await readFile(path.join(APP_DIR, 'physis/exercise-face-pull-copy.json'), 'utf8'));
+const facePullEnglish = Object.fromEntries([
+  ...['name','purpose','mistakes','trapezius'].map(key => [facePullCopy.ru[key], facePullCopy.en[key]]),
+  ...facePullCopy.ru.steps.map((source,index) => [source,facePullCopy.en.steps[index]]),
+]);
 const translations = {
+  ...facePullEnglish,
   ...JSON.parse(await readFile(path.join(APP_DIR, "backup-copy.en.json"), "utf8")),
   ...trialPrivacy,
   // Web-only Physis ships RU/EN; this catalog is not exported to the native client.

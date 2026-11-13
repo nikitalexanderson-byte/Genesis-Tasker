@@ -388,8 +388,8 @@ try {
           const month = page.getByRole('tabpanel', { name: 'Месяц', exact: true });
           await month.waitFor();
           assert((await month.getByRole('button').count()) > 20, 'The selected calendar has no selectable days');
-          await page.getByRole('tab', { name: 'Круг года', exact: true }).click();
-          await page.getByRole('tabpanel', { name: 'Круг года', exact: true }).waitFor();
+          await page.getByRole('tab', { name: 'Год', exact: true }).click();
+          await page.getByRole('tabpanel', { name: 'Год', exact: true }).waitFor();
           assert((await page.locator('.year-month').count()) >= 12);
           await snapshot(`calendar-${mode}`);
           await page.getByRole('tab', { name: 'Месяц', exact: true }).click();

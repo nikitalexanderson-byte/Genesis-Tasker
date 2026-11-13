@@ -3,7 +3,7 @@
 .habit-lifecycle-library .habit-lifecycle-filters button[aria-pressed="true"] { background:var(--ui-accent); color:var(--ui-on-accent, #fff); }
 .habit-lifecycle-library .habit-lifecycle-filters span { font-variant-numeric:tabular-nums; }
 .habit-lifecycle-library .habit-lifecycle-rows > article { min-width:0; }
-.habit-lifecycle-library .habit-lifecycle-rows strong { overflow-wrap:anywhere; }
+.habit-lifecycle-library .habit-lifecycle-rows strong { overflow-wrap:normal; }
 .habit-lifecycle-library .habit-library-actions button { min-height:44px; }
 .habit-lifecycle-library .habit-lifecycle-message:empty { display:none; }
 .habit-lifecycle-filter-mobile { display:none; }

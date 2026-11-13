@@ -109,7 +109,14 @@ try {
     const assistant=await request(tier,'assistant/status');record(tier,'assistant.globally-disabled',403,codeOf(assistant),assistant.status===403);
     const physis=await request(tier,'physis/v1/access');record(tier,'physis.lifetime-gate',tier==='premium4life'?200:403,codeOf(physis),physis.status===(tier==='premium4life'?200:403));
     for(const [kind,allowed] of [['timeline',tier!=='free'],['spread',['premium','business','premium4life'].includes(tier)]]){
-      const draw=await request(tier,'stoicheion/draws','POST',{kind,seed:20261103});record(tier,`oracle.${kind}-create`,allowed?200:403,codeOf(draw),draw.status===(allowed?200:403));
+      const draw=kind==='timeline'
+        ? await request(tier,'stoicheion/timeline/cards','POST',{position:0,action:'reveal',revision:0})
+        : await request(tier,'stoicheion/draws','POST',{kind,seed:20261103});
+      record(tier,`oracle.${kind}-create`,allowed?200:403,codeOf(draw),draw.status===(allowed?200:403));
+      if(kind==='timeline'&&allowed){
+        const legacy=await request(tier,'stoicheion/draws','POST',{kind,seed:20261103});
+        record(tier,'oracle.timeline-legacy-web-rejected',409,codeOf(legacy),legacy.status===409&&legacy.data.error==='TIMELINE_CARD_PROTOCOL_REQUIRED');
+      }
     }
     const catalog=await request(tier,'billing/catalog?client=web');
     const prices={'standart:1':33300,'standart:12':333000,'premium:1':55500,'premium:12':555000,'business:1':77700,'business:12':777000,'premium4life:0':1290000};
