@@ -11,6 +11,14 @@ on:
         description: Full SHA currently served by production (prevents a stale deployment)
         required: true
         type: string
+      restore_web_only:
+        description: Restore only a previously deployed website; preserve API and Android downloads
+        type: boolean
+        default: false
+      restore_run_id:
+        description: Successful Deploy run whose unchanged website is being restored
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -41,9 +49,31 @@ jobs:
         with:
           node-version: '24.19.0'
       - name: Require successful Source checks for this exact current-main commit
+        if: inputs.restore_web_only != true
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/deployment/source-checks.mjs
+      - name: Verify unchanged source from a successful website deployment
+        if: inputs.restore_web_only == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESTORE_RUN_ID: ${{ inputs.restore_run_id }}
+        run: |
+          set -euo pipefail
+          test "$GENESIS_DEPLOY_TARGET" = hostinger
+          test "$GENESIS_DEPLOY_ANDROID" = false
+          test "$DEPLOY_COMMIT" = "$(git rev-parse HEAD)"
+          test "$DEPLOY_COMMIT" = "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          [[ "$RESTORE_RUN_ID" =~ ^[0-9]+$ ]]
+          RESTORE_SHA="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESTORE_RUN_ID" \
+            --jq 'select(.conclusion == "success" and .status == "completed" and .head_branch == "main" and .event == "workflow_dispatch" and .path == ".github/workflows/deploy.yml" and .head_repository.full_name == "nikitalexanderson-byte/Genesis-Tasker") | .head_sha')"
+          [[ "$RESTORE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          git fetch --no-tags origin "$RESTORE_SHA"
+          git diff --exit-code "$RESTORE_SHA" "$DEPLOY_COMMIT" -- . \
+            ':(exclude).github/workflows/deploy.yml' ':(exclude)docs/web-restore-2026-11-13.md'
+          curl -fsS --max-time 30 "$PRODUCTION_ORIGIN/android-update.json?before=$GITHUB_RUN_ID" \
+            > "$RUNNER_TEMP/android-update-before.json"
+          printf 'Restoring unchanged website from successful Deploy %s, commit %s\n' "$RESTORE_RUN_ID" "$RESTORE_SHA"
       - name: Check incumbent production commit
         run: |
           set -euo pipefail
@@ -61,8 +91,11 @@ jobs:
         env:
           DEPLOY_RUN_ID: ${{ github.run_id }}
         run: |
-          mkdir -p dist-web/public_html/api dist-web/ops
-          cp -a server/public/api/. dist-web/public_html/api/
+          mkdir -p dist-web/ops
+          if [ '${{ inputs.restore_web_only }}' != true ]; then
+            mkdir -p dist-web/public_html/api
+            cp -a server/public/api/. dist-web/public_html/api/
+          fi
           cp ops/backup-runtime.php ops/retain-web-assets.php dist-web/ops/
           jq -n --arg commit "$DEPLOY_COMMIT" --arg runId "$DEPLOY_RUN_ID" \
             --arg repository "$GITHUB_REPOSITORY" --arg deployedAt "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
@@ -107,6 +140,7 @@ jobs:
             php "$ROOT/ops/retain-web-assets.php" --root="$ROOT"
           SCRIPT_AFTER_REQUIRED: true
       - name: Deploy private server code
+        if: inputs.restore_web_only != true
         uses: easingthemes/ssh-deploy@2cc5b27bf3029d0455dd5e09fe02633904031447 # v6
         with:
           SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
@@ -140,7 +174,7 @@ jobs:
           SOURCE: "dist-web/public_html/"
           TARGET: "/home/u531952483/domains/genesiscalendar.com/public_html/"
           # Compact rsync output avoids overflowing the action's SCRIPT_AFTER environment.
-          ARGS: "-rlztO --stats --delete-delay --delay-updates"
+          ARGS: ${{ inputs.restore_web_only && '-rlztO --stats --delete-delay --delay-updates --exclude=/api/ --exclude=/.htaccess --exclude=/legacy-home.php' || '-rlztO --stats --delete-delay --delay-updates' }}
           EXCLUDE: "assets/, downloads/, android-update.json"
           SCRIPT_AFTER: |
             set -eu
@@ -161,3 +195,10 @@ jobs:
             test "$attempt" -lt 6
             sleep 5
           done
+      - name: Verify Android update metadata was preserved
+        if: inputs.restore_web_only == true
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 30 "$PRODUCTION_ORIGIN/android-update.json?after=$GITHUB_RUN_ID" \
+            > "$RUNNER_TEMP/android-update-after.json"
+          cmp "$RUNNER_TEMP/android-update-before.json" "$RUNNER_TEMP/android-update-after.json"
