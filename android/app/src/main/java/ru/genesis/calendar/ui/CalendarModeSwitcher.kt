@@ -60,7 +60,7 @@ internal fun nextAvailableCalendarMode(mode: CalendarMode, enabled: Set<Calendar
 @Composable
 internal fun CalendarModeSwitcher(mode: CalendarMode, onNext: () -> Unit,
     modifier: Modifier = Modifier, size: Dp = 54.dp,
-    interactive: Boolean = true, animationTrigger: Int = 0) {
+    interactive: Boolean = true, animationTrigger: Int = 0, headerControl: Boolean = false) {
     if (!LocalSacredFeaturesEnabled.current) return
     val scope = rememberCoroutineScope()
     val click = remember { Animatable(0f) }
@@ -94,8 +94,9 @@ internal fun CalendarModeSwitcher(mode: CalendarMode, onNext: () -> Unit,
             if (ValueAnimator.areAnimatorsEnabled()) click.animateTo(1f, tween(240))
         }
     } else iconModifier,
-        shape = RoundedCornerShape(10.dp), color = controlBackground,
-        border = BorderStroke(1.dp, gold.copy(alpha = .55f))) {
+        shape = RoundedCornerShape(10.dp),
+        color = if (headerControl) controlBackground.copy(alpha = controlBackground.alpha * .5f) else controlBackground,
+        border = if (headerControl) null else BorderStroke(1.dp, gold.copy(alpha = .55f))) {
         Canvas(Modifier.padding(7.dp)) {
             val center = Offset(this.size.width / 2f, this.size.height / 2f)
             val radius = this.size.minDimension * .34f

@@ -571,7 +571,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         CalendarModeSwitcher(prefs.display, {
                             changeDisplayCalendar(nextAvailableCalendarMode(prefs.display,
                                 CalendarMode.entries.filter { it.wireValue in uiVisibility.visibleCalendars }.toSet()))
-                        }, size = 48.dp, interactive = uiVisibility.visibleCalendars.size > 1)
+                        }, size = 48.dp, interactive = uiVisibility.visibleCalendars.size > 1, headerControl = true)
                     }
                 }, footerActions = {
                     TodayThemeButton(eveningTheme, !themeSwitchBusy, plainIcon = true) {
