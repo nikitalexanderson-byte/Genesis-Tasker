@@ -48,8 +48,8 @@ jobs:
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/deploy-meta.json?release=$GITHUB_RUN_ID" \
             | jq -e --arg expected "$EXPECTED_CURRENT_COMMIT" '.commit == $expected'
-          grep -Eq 'versionCode = 141$' android/app/build.gradle.kts
-          grep -Fq 'versionName = "3.2.9"' android/app/build.gradle.kts
+          grep -Eq 'versionCode = 143$' android/app/build.gradle.kts
+          grep -Fq 'versionName = "3.3.1"' android/app/build.gradle.kts
           grep -Fq 'buildConfigField("boolean", "TRIAL_BUILD", "false")' android/app/build.gradle.kts
       - uses: pnpm/action-setup@v6
         with:
@@ -99,7 +99,7 @@ jobs:
             release-artifact/signing-certificate.txt
           "$ANDROID_HOME/build-tools/37.0.0/zipalign" -c -P 16 4 "$APK"
           "$ANDROID_HOME/build-tools/37.0.0/aapt" dump badging "$APK" > release-artifact/apk-metadata.txt
-          grep -Fq "package: name='ru.genesis.calendar' versionCode='141' versionName='3.2.9'" release-artifact/apk-metadata.txt
+          grep -Fq "package: name='ru.genesis.calendar' versionCode='143' versionName='3.3.1'" release-artifact/apk-metadata.txt
           ! grep -q '^application-debuggable' release-artifact/apk-metadata.txt
           jarsigner -verify "$AAB" | grep -q 'jar verified'
           keytool -printcert -jarfile "$AAB" > release-artifact/play-signing-certificate.txt
@@ -110,19 +110,19 @@ jobs:
           ! grep -q 'android.permission.REQUEST_INSTALL_PACKAGES' "$MANIFEST"
           ! grep -q 'android:debuggable="true"' "$MANIFEST"
           cp "$MANIFEST" release-artifact/play-manifest.xml
-          cp "$APK" release-artifact/GENESIS-Android-Native-3.2.9.apk
-          cp android/app/build/outputs/apk/play/app-play.apk release-artifact/GENESIS-Android-Play-3.2.9.apk
-          cp "$AAB" release-artifact/GENESIS-Android-Play-3.2.9.aab
+          cp "$APK" release-artifact/GENESIS-Android-Native-3.3.1.apk
+          cp android/app/build/outputs/apk/play/app-play.apk release-artifact/GENESIS-Android-Play-3.3.1.apk
+          cp "$AAB" release-artifact/GENESIS-Android-Play-3.3.1.aab
           for variant in release play; do
             cp "android/app/build/outputs/mapping/$variant/mapping.txt" "release-artifact/mapping-$variant.txt"
           done
           jq -n --arg commit "$GITHUB_SHA" --arg repository "$GITHUB_REPOSITORY" \
-            '{commit:$commit,repository:$repository,versionName:"3.2.9",versionCode:141}' > release-artifact/source.json
+            '{commit:$commit,repository:$repository,versionName:"3.3.1",versionCode:143}' > release-artifact/source.json
           (cd release-artifact && sha256sum GENESIS-Android-* > SHA256SUMS)
       - name: Save immutable release artifacts for acceptance
         uses: actions/upload-artifact@v6
         with:
-          name: genesis-android-3.2.9-141-${{ github.sha }}
+          name: genesis-android-3.3.1-143-${{ github.sha }}
           path: release-artifact/
           if-no-files-found: error
           compression-level: 0

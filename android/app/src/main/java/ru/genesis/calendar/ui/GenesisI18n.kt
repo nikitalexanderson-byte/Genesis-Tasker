@@ -1774,7 +1774,8 @@ private val nativeCopy = mapOf(
     "Google Calendar и Tasks" to "Google Calendar and Tasks",
     "Разрешения и фоновая синхронизация" to "Permissions and background sync",
     "Связанные аккаунты и правила отправки задач" to "Linked accounts and task routing rules",
-    "Академия, поддержка и веб-версия" to "Academy, support, and web version",
+    "Telegram, поддержка и веб-версия" to "Telegram, support and web version",
+    "Ничего не найдено" to "No results found",
     // Habit settings shared with the website.
     "Не удалось сохранить настройки привычек." to "Could not save habit settings.",
     "ЕЖЕДНЕВНАЯ ПРАКТИКА" to "DAILY PRACTICE", "Трекинг привычек" to "Habit tracking",

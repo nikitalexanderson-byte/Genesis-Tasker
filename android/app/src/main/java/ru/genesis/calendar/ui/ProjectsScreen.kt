@@ -950,7 +950,7 @@ private fun CategoryEditor(existing: GenesisCategory?, position: Int, revision: 
 }
 
 @Composable
-private fun ProjectEditor(structure: WorkspaceStructure, existing: GenesisProject?, error: String?,
+internal fun ProjectEditor(structure: WorkspaceStructure, existing: GenesisProject?, error: String?,
     initialTitle: String = "",
     onDismiss: () -> Unit, onSave: (GenesisProject, Long) -> Unit) {
     val expectedRevision = remember(existing?.id) { structure.revision }
@@ -976,9 +976,9 @@ private fun ProjectEditor(structure: WorkspaceStructure, existing: GenesisProjec
     }
     Dialog(onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxWidth().widthIn(max = 720.dp).padding(12.dp),
+        Surface(Modifier.fillMaxWidth().widthIn(max = 720.dp),
             shape = AffairsLayout.shape) {
-            Column(Modifier.fillMaxWidth().padding(16.dp).imePadding()) {
+            Column(Modifier.fillMaxWidth().padding(6.dp).imePadding().testTag("project-editor-content")) {
                 EditorDialogHeader(if (existing == null) "Новый проект" else "Изменить проект",
                     "close-project-editor", onDismiss)
               Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),

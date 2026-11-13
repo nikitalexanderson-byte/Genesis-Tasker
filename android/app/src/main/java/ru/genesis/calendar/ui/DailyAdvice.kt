@@ -18,6 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInWindow
@@ -70,6 +73,9 @@ import kotlin.math.min
     if (!preferences.enabled) return
     key(userId, day, language, preferences) {
         val context = LocalContext.current
+        val cache = remember(context, userId, language, preferences) {
+            DailyAdviceCache(context, userId, language, preferences.toJson().toString())
+        }
         val copy = adviceCopy(language)
         val diaryState = diary?.state?.collectAsStateWithLifecycle()?.value
         LaunchedEffect(diary) { if (diary != null) {
@@ -83,7 +89,7 @@ import kotlin.math.min
         DisposableEffect(lifecycle) {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
-                    Lifecycle.Event.ON_RESUME -> { resumed = true; attempt++ }
+                    Lifecycle.Event.ON_RESUME -> resumed = true
                     Lifecycle.Event.ON_PAUSE -> resumed = false
                     else -> Unit
                 }
@@ -97,16 +103,7 @@ import kotlin.math.min
         var changing by remember { mutableStateOf(false) }
         var signals by remember { mutableStateOf(JSONObject()) }
         var serial by remember { mutableIntStateOf(0) }
-        fun timeKey(): String {
-            val now = LocalDateTime.now()
-            val period = if (now.hour < 5 || now.hour >= 18) "evening" else if (now.hour < 12) "morning" else "day"
-            return "${now.toLocalDate()}:$period:${java.time.ZoneId.systemDefault()}"
-        }
-        var clockBand by remember { mutableStateOf(timeKey()) }
-        LaunchedEffect(resumed) {
-            if (resumed) { clockBand = timeKey(); while (true) { delay(60_000); clockBand = timeKey() } }
-        }
-        LaunchedEffect(gateway, habits, tasks, attempt, resumed, reloadToken, clockBand, changing) {
+        LaunchedEffect(gateway, attempt, resumed, changing) {
             if (!resumed || changing) return@LaunchedEffect
             loading = true
             val request = ++serial
@@ -121,10 +118,13 @@ import kotlin.math.min
                             runCatching { JSONObject(task.sourceFieldsJson).optString("entryType", "task") }.getOrDefault("task")) })
                 }
                 signals = contextSignals
-                val result = DailyAdviceProtocol.parse(gateway.today(contextSignals))
+                val result = DailyAdviceProtocol.parse(cache.today(day) { gateway.today(contextSignals) })
                 // The service owns the daily publication boundary; it can differ from the device's date.
                 check(result.advice == null || result.advice.language == language)
                 if (request == serial) { response = result; failed = false }
+                withContext(Dispatchers.IO) { result.history.mapNotNull { it.image }.distinct().forEach {
+                    DailyAdviceArtwork.load(context, it)
+                } }
             } catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { failed = true }
             finally { loading = false }
@@ -156,7 +156,7 @@ import kotlin.math.min
             LaunchedEffect(card.id, visible, resumed, attempt, activePage) {
                 if (!visible || !resumed || !activePage || recorded) return@LaunchedEffect
                 for (retry in 0..2) {
-                    try { gateway.record(card.id, card.day); recorded = true; break }
+                    try { cache.recordOnce(day, card.id) { gateway.record(card.id, card.day) }; recorded = true; break }
                     catch (cancel: CancellationException) { throw cancel }
                     catch (_: Exception) { if (retry < 2) delay(1000L shl retry) }
                 }
@@ -212,8 +212,10 @@ import kotlin.math.min
                     val request = ++serial
                     scope.launch {
                         try {
-                            val result = DailyAdviceProtocol.parse(gateway.next(signals, latest.id, latest.day))
+                            val raw = gateway.next(signals, latest.id, latest.day)
+                            val result = DailyAdviceProtocol.parse(raw)
                             check(result.advice == null || result.advice.language == language)
+                            cache.save(day, raw)
                             if (request == serial) response = result
                         } catch (cancel: CancellationException) { throw cancel }
                         catch (_: Exception) { if (request == serial) nextError = true }
@@ -226,6 +228,7 @@ import kotlin.math.min
                     scope.launch {
                         try {
                             gateway.record(card.id, card.day, true)
+                            cache.dismiss(day, card.id)
                             response = response?.let { current -> current.copy(
                                 advice = current.advice?.let { if (it.id == card.id) it.copy(dismissed = true) else it },
                                 history = current.history.map { if (it.id == card.id) it.copy(dismissed = true) else it }) }
@@ -249,7 +252,9 @@ import kotlin.math.min
     reaction: String? = null, reactionBusy: Boolean = false, reactionError: Boolean = false,
     onReaction: ((String) -> Unit)? = null, onOpenDiary: (() -> Unit)? = null,
     showReactions: Boolean = true, showDismiss: Boolean = true, authorizeShare: (suspend () -> DailyAdvice)? = null, onDismiss: () -> Unit) {
-    val surface = MaterialTheme.colorScheme.surface
+    val blue = LocalDarkPalette.current == "blue"
+    val surface = if (blue && !LocalEveningTheme.current) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val visibility = if (blue) 1.04f else 1f
     val philosophy = remember(card.body, card.sources, card.collection) {
         if (card.collection == "philosophers") philosopherQuoteParts(card.body, card.sources.firstOrNull()?.author.orEmpty()) else null
     }
@@ -263,12 +268,13 @@ import kotlin.math.min
         Box {
             if (bitmap != null) Box(Modifier.matchParentSize()) {
                 Image(bitmap.asImageBitmap(), null, Modifier.fillMaxSize().testTag("daily-advice-art"),
-                    contentScale = ContentScale.Crop)
+                    contentScale = ContentScale.Crop, colorFilter = if (blue) ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
+                        .86f,0f,0f,0f,0f, 0f,.96f,0f,0f,0f, 0f,0f,1.08f,0f,0f, 0f,0f,0f,1f,0f))) else null)
                 Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
-                    0f to surface.copy(alpha = if (LocalEveningTheme.current) .80f else .624f),
-                    .40f to surface.copy(alpha = if (LocalEveningTheme.current) .76f else .608f),
-                    .70f to surface.copy(alpha = if (LocalEveningTheme.current) .72f else .576f),
-                    1f to surface.copy(alpha = if (LocalEveningTheme.current) .64f else .56f))))
+                    0f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .80f else .624f) * visibility),
+                    .40f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .76f else .608f) * visibility),
+                    .70f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .72f else .576f) * visibility),
+                    1f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .64f else .56f) * visibility))))
             }
             Column(Modifier.padding(vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {

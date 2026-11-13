@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalContext
@@ -138,14 +139,21 @@ internal fun CivilWeatherOverlay(effects: CivilWeatherEffects, policy: CivilWeat
         fun fraction(value: Float): Float = value - kotlin.math.floor(value)
         val drift = effects.drift.dp.toPx()
         if (skyOnly && effects.cloudCover > 0f) clipRect(bottom = size.height * horizonY) {
-            val cloudColor = Color(0xff142331).copy(alpha = effects.cloudCover * policy.cloudOpacity * (1f - daylight * .28f))
+            val cloudColor = lerp(Color(0xff17263c), Color(0xffd4dee8), daylight)
+                .copy(alpha = effects.cloudCover * policy.cloudOpacity)
             repeat(5) { index ->
-                val x = (fraction(index * .271f + elapsed / policy.cloudSeconds) * 1.8f - .4f) * size.width
+                val travel = fraction(index * .271f + elapsed / policy.cloudSeconds)
+                val x = ((if (effects.drift < 0) 1f - travel else travel) * 1.8f - .4f) * size.width
                 val y = (.02f + index % 3 * .105f) * size.height
-                drawOval(Brush.radialGradient(listOf(cloudColor, cloudColor.copy(alpha = 0f)),
-                    center = Offset(x, y), radius = size.width * .48f),
-                    topLeft = Offset(x - size.width * .5f, y - size.height * .13f),
-                    size = Size(size.width, size.height * .3f))
+                // Overlapping soft volumes give the clouds depth without obscuring the terrain.
+                repeat(3) { lobe ->
+                    val center = Offset(x + (lobe - 1) * size.width * .13f, y + (lobe % 2) * size.height * .035f)
+                    drawOval(Brush.radialGradient(listOf(cloudColor.copy(alpha = cloudColor.alpha * .72f),
+                        cloudColor.copy(alpha = cloudColor.alpha * .3f), Color.Transparent),
+                        center = center, radius = size.width * .29f),
+                        topLeft = Offset(center.x - size.width * .3f, center.y - size.height * .085f),
+                        size = Size(size.width * .6f, size.height * .19f))
+                }
             }
         }
         if (skyOnly) return@Canvas

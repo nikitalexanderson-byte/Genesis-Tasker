@@ -60,9 +60,10 @@ fun HabitArtGallery(workspace: LocalHabitWorkspace, today: LocalDate, busy: Bool
     var rankOpen by remember { mutableStateOf(false) }
     var streakOpen by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
         Card(Modifier.fillMaxWidth().testTag("hero-rank-path"),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xff082e2f)),
+            colors = CardDefaults.cardColors(containerColor = heroPathColors().background),
             border = BorderStroke(1.dp, Color(0x66dfc17e))) {
             Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -81,6 +82,7 @@ fun HabitArtGallery(workspace: LocalHabitWorkspace, today: LocalDate, busy: Bool
                     modifier = Modifier.testTag("all-hero-ranks"))
                 if (rankOpen) HeroRankTree(workspace, busy, onClaimAmphora, onRevealHiddenPath)
             }
+        }
         }
         Card(Modifier.fillMaxWidth().testTag("streak-reward-ladder"),
             shape = RoundedCornerShape(20.dp),

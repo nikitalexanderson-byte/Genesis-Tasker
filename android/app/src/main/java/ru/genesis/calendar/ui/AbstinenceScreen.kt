@@ -219,7 +219,11 @@ private fun AbstinenceTrackerEditor(tracker: AddictionTracker, busy: Boolean, er
                     startDate = runCatching { LocalDate.parse(recurrence.rangeStart) }.getOrDefault(schedule.startDate),
                     endDate = if (forever) null else runCatching { LocalDate.parse(recurrence.rangeEnd) }.getOrNull() ?: schedule.endDate)
             }
-            OutlinedTextField(zone, { zone = it }, label = { Text("Часовой пояс") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+            TimeZonePicker(zone, !busy) { selected ->
+                zone = selected
+                schedule = schedule.copy(timezone = selected, recurrence = schedule.recurrence.copy(
+                    calendarContext = schedule.recurrence.calendarContext?.copy(timeZone = selected)))
+            }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

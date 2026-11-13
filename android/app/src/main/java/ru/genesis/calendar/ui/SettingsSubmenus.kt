@@ -54,7 +54,7 @@ internal val settingsSections = listOf(
     SettingsSectionDestination("account", "Аккаунт GENESIS", "GENESIS account", GenesisPageIcon.SETTINGS_ACCOUNT,
         "Вход и синхронизация", "Sign in and synchronization"),
     SettingsSectionDestination("links", "Ссылки", "Links", GenesisPageIcon.SETTINGS_LINKS,
-        "Академия, поддержка и веб-версия", "Academy, support and web version")
+        "Telegram, поддержка и веб-версия", "Telegram, support and web version")
 )
 
 @Composable

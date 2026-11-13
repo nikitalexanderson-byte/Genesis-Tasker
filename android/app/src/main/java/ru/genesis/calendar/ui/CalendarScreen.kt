@@ -491,7 +491,10 @@ private fun CalendarMonthContent(calendar: GenesisCalendar, range: CalendarRange
 }
 
 @Composable internal fun CalendarHeroContrast(modifier: Modifier = Modifier, paletteToned: Boolean = true) {
-    if (!LocalEveningTheme.current) return
+    if (!LocalEveningTheme.current) {
+        Box(modifier.background(Color.Black.copy(alpha = .30f)).testTag("calendar-day-light-shade"))
+        return
+    }
     val darkBase = if (paletteToned) MaterialTheme.colorScheme.background else Color(0xff040e10)
     Box(modifier.background(Brush.verticalGradient(
             // Increase the image's visible contribution by 15% only in the evening scheme.
@@ -738,7 +741,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
         if (palette != null && !LocalEveningTheme.current) Color(0xff132426) else MaterialTheme.colorScheme.onSurface
     CompositionLocalProvider(LocalPreserveCalendarColors provides (palette != null)) {
     Surface(onClick = { onChoose(date) }, enabled = !adjacent,
-        modifier = modifier.then(if (civil) Modifier.heightIn(min = 48.dp).aspectRatio(1f)
+        modifier = modifier.then(if (civil) Modifier.aspectRatio(1f)
             else Modifier.heightIn(min = if (crossDate != null) 72.dp else 60.dp))
         .then(if (adjacent) Modifier.alpha(0.42f) else Modifier)
         .semantics { contentDescription = dayDescription; this.selected = selected }
@@ -769,7 +772,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(if (adjacent) date.month.getDisplayName(TextStyle.SHORT_STANDALONE, locale)
                             else sublabel ?: date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
-                            fontSize = 10.sp, lineHeight = 14.sp, maxLines = 1, color = foreground)
+                            fontSize = 10.sp, lineHeight = if (civil) 10.sp else 14.sp, maxLines = 1, color = foreground)
                         solar?.let { Text(it.symbol, fontSize = 8.sp, lineHeight = 14.sp, maxLines = 1, color = foreground) }
                     }
                     patron?.let { Text(it.symbol, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1,
@@ -1066,9 +1069,7 @@ private fun ExperimentalSelectedDayCard(calendar: GenesisCalendar, date: LocalDa
         Card(Modifier.fillMaxWidth().testTag("calendar-selected-day"), shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(date.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", locale))
-                    .replaceFirstChar { it.titlecase(locale) }, style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.testTag("calendar-selected-primary-date"))
+                CalendarCivilDate(date, locale)
             }
         }
         return
@@ -1494,10 +1495,10 @@ private fun CalendarYearMonthCard(calendar: GenesisCalendar, start: LocalDate, m
         sacred + lunar + (1..12).map { CalendarMode.PROFANE to LocalDate.of(geometryYear, it, 1) }
     }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val artWidth = if (civil) 64.dp else 76.dp
-        val artHeight = if (civil) 80.dp else 112.dp
+        val artWidth = if (civil) 48.dp else 76.dp
+        val artHeight = if (civil) 56.dp else 112.dp
         val textWidth = with(density) { (maxWidth - artWidth - 91.dp).coerceAtLeast(64.dp).roundToPx() }
-        val tileHeight = if (civil) 92.dp else remember(textWidth, year, type, density.fontScale, locale, seasonRegionZone, noteLanguage) {
+        val tileHeight = if (civil) 76.dp else remember(textWidth, year, type, density.fontScale, locale, seasonRegionZone, noteLanguage) {
             fun translate(value: String) = translateGenesisText(noteContext, value, noteLanguage)
             fun height(text: String, style: ComposeTextStyle, lines: Int = Int.MAX_VALUE): Int =
                 measurer.measure(AnnotatedString(text), style, maxLines = lines,
@@ -1540,12 +1541,12 @@ private fun CalendarYearMonthCard(calendar: GenesisCalendar, start: LocalDate, m
                         style = type.labelSmall, modifier = Modifier.testTag("gregorian-year-month-number-${start.monthValue}"))
                     if (mode != CalendarMode.PROFANE) Text(label(if (mode == CalendarMode.SACRED) sacredIndex else ordinal - 1),
                         color = gold, style = type.labelSmall)
-                    Text(name, color = mainInk, style = type.titleLarge)
+                    Text(name, color = mainInk, style = if (civil) type.titleMedium else type.titleLarge)
                     if (mode == CalendarMode.PROFANE) {
                         if (!civil) UntranslatedText(genesisTranslate(gregorianMonthOrigin(start.monthValue)), color = detailInk,
                             style = type.bodySmall.copy(lineBreak = androidx.compose.ui.text.style.LineBreak.Heading), maxLines = 2,
                             autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 12.sp))
-                        Text(gregorianMonthNature(start.monthValue, seasonRegionZone), color = detailInk, style = type.bodySmall)
+                        if (!civil) Text(gregorianMonthNature(start.monthValue, seasonRegionZone), color = detailInk, style = type.bodySmall)
                     }
                     if (title.isNotBlank()) Text(title, color = detailInk, style = type.bodySmall)
                     if (mode != CalendarMode.PROFANE) Text(yearTileRange(range, locale), color = mainInk, style = type.labelMedium,

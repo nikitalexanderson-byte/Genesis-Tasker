@@ -16,7 +16,7 @@ import java.time.LocalDate
 /** A shared sunrise/sunset group in each Today calendar mode, with no clock or date navigation. */
 @Composable
 internal fun TodaySolarTimes(date: LocalDate, location: SolarLocation, calendar: GenesisCalendar) {
-    val ink = if (LocalEveningTheme.current) Color(0xfffff8e9) else MaterialTheme.colorScheme.onSurface
+    val ink = Color(0xfffff8e9)
     Surface(Modifier.fillMaxWidth().testTag("today-solar-times"), shape = AffairsLayout.shape,
         color = todayHeroBlockBackground(.26f), contentColor = ink,
         border = BorderStroke(1.dp, Color(0x66dfc17e))) {

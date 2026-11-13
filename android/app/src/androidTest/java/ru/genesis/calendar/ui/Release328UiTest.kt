@@ -36,7 +36,7 @@ class Release328UiTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Before fun isolatedPackageOnly() {
-        check(BuildConfig.DEBUG && context.packageName.endsWith(".qa328.debug"))
+        check(BuildConfig.DEBUG && listOf(".qa328.debug", ".qa330.debug").any(context.packageName::endsWith))
     }
 
     @Composable private fun Frame(width: Int, night: Boolean, palette: String = "blue", content: @Composable () -> Unit) {

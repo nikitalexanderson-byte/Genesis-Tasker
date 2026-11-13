@@ -61,7 +61,7 @@ internal data class TodayBlock(val id: String, val title: String, val content: @
         WorkspaceDragHost(Modifier.fillMaxSize().onGloballyPositioned { viewport = it.boundsInRoot() }) {
             LazyVerticalGrid(columns = GridCells.Fixed(if (wide) 2 else 1), state = state,
                 modifier = Modifier.fillMaxSize().testTag(if (wide) "today-two-pane" else "today-list"),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item(key = "today-fixed-header", span = { GridItemSpan(maxLineSpan) }) {
                     header()
