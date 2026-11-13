@@ -679,5 +679,12 @@
     "split": 500,
     "width": 1536,
     "height": 1024
+  },
+  "cable-face-pull": {
+    "src": "/physis-art/exercises/cable-face-pull-human-v1.webp",
+    "poster": "/physis-art/exercises/cable-face-pull-poster-human-v1.webp",
+    "split": 512,
+    "width": 1536,
+    "height": 1024
   }
 }

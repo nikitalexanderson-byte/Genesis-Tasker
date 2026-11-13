@@ -66,7 +66,7 @@ html[data-genesis-theme] .genesis-app .physis .physis-catalog-add { display: gri
 }
 .physis-reference-foods { margin-block: 20px; padding-block: 16px; border-block: 1px solid var(--line); }
 .physis-reference-foods table { width: 100%; table-layout: fixed; font-size: 13px; border-collapse: collapse; }
-.physis-reference-foods :is(th,td) { padding: 10px 6px; text-align: start; vertical-align: top; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.physis-reference-foods :is(th,td) { padding: 10px 6px; text-align: start; vertical-align: top; border-bottom: 1px solid var(--line); overflow-wrap: normal; }
 .physis-reference-foods tr > :first-child { width: 46%; }
 .physis-reference-foods tr > :last-child { width: 25%; }
 .physis-reference-foods tbody th { font-weight: 400; }
@@ -81,7 +81,7 @@ html[data-genesis-theme] .genesis-app .physis .physis-catalog-add { display: gri
 .physis-mineral-table { min-width: 0; }
 .physis-mineral-table table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
 .physis-mineral-table caption { text-align: start; padding-block: 8px; font-weight: 600; }
-.physis .physis-mineral-table :is(th,td) { padding: 10px 6px; text-align: start; vertical-align: top; overflow-wrap: anywhere; border-bottom: 1px solid var(--line); }
+.physis .physis-mineral-table :is(th,td) { padding: 10px 6px; text-align: start; vertical-align: top; overflow-wrap: normal; border-bottom: 1px solid var(--line); }
 .physis-mineral-table tbody th { font-weight: 500; }
 .physis-mineral-overview th:first-child { width: 40%; }
 .physis-mineral-overview th small { display: block; margin-top: 4px; color: var(--ink-soft); font-size: 11px; font-weight: 400; }
@@ -126,7 +126,7 @@ html[data-genesis-theme] .genesis-app .physis .physis-catalog-toggle[aria-presse
 .physis-catalog-details dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px 28px; margin: 16px 0 24px; }
 .physis-catalog-details dt { font-weight: 600; margin-bottom: 8px; }
 .physis-catalog-details dd { margin: 0; line-height: 1.7; white-space: pre-line; }
-.physis-catalog-details dd a { display: inline-block; color: var(--ui-accent); margin: 0 12px 8px 0; overflow-wrap: anywhere; }
+.physis-catalog-details dd a { display: inline-block; color: var(--ui-accent); margin: 0 12px 8px 0; overflow-wrap: normal; }
 .physis-catalog-details dd small { display: block; margin-top: 8px; color: var(--ink-soft); }
 .physis-catalog-editor { width: min(900px,calc(100vw - 32px)); }
 .physis-catalog-editor fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }

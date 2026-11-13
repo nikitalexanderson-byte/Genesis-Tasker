@@ -46,9 +46,9 @@ html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view 
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-events { display:grid; min-width:0; gap:6px; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event { display:grid; grid-template-columns:16px minmax(0,1fr) auto; min-width:0; gap:4px; align-items:center; white-space:normal; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event > svg { width:16px; height:16px; }
-html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event-label { overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event-label { overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-event time { white-space:nowrap; font-variant-numeric:tabular-nums; }
-html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-control > small { width:fit-content; max-width:100%; margin-top:6px; padding:0; background:transparent; color:var(--ink-soft); overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .calendar-solar-control > small { width:fit-content; max-width:100%; margin-top:6px; padding:0; background:transparent; color:var(--ink-soft); overflow-wrap:normal; }
 /* The complete weather column stays beside the date at every viewport width. */
 html[data-genesis-theme] .genesis-app .hero-card :is(.solar-weather-readings,.solar-weather-attribution,.solar-weather-status,.solar-weather-city-button) { position:relative; z-index:2; }
 html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card.mode-profane { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; min-height:0; }
@@ -105,3 +105,11 @@ html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view 
   html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card .hero-civil-clock-weather { grid-row:1; align-self:start; width:100%; }
   html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app[data-sacred-features="false"] .today-view .hero-card { --solar-reading-opacity:44%; }
 }
+
+/* Dim only the landscape after sunset; keep the civil readings directly on the image. */
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card:has(> .solar-landscape-hero[data-solar-phase]:not([data-solar-phase="day"])) {
+  --ink:#fff; --ink-soft:#fff; text-shadow:0 1px 3px rgb(0 0 0 / .85),0 2px 6px rgb(0 0 0 / .6);
+}
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card > .solar-landscape-hero[data-solar-phase]:not([data-solar-phase="day"]) { filter:brightness(.93); }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card:has(> .solar-landscape-hero[data-solar-phase]:not([data-solar-phase="day"])) :is(.civil-summary-group,.civil-date-heading,.calendar-solar-control,.solar-weather-readings) { background:transparent; }
+html[data-genesis-theme] .genesis-app[data-sacred-features="false"] .today-view .hero-card:has(> .solar-landscape-hero[data-solar-phase]:not([data-solar-phase="day"])) .civil-date-heading h1 { text-shadow:inherit; }

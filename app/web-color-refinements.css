@@ -107,3 +107,29 @@ html[data-genesis-theme="standart"] .genesis-app .rank-sigil[data-rank-sigil="un
 html[data-genesis-theme="standart"] .genesis-app .rank-sigil-motif { stroke:#ffe6a8; }
 html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .future-modeling-trigger.year-details-button > span:first-child { color:#ffe5a0; background:#102640; }
 html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .future-modeling-trigger.year-details-button > span:first-child > svg { color:inherit; fill:none; stroke:currentColor; }
+
+/* Lunar grids use airy, palette-tinted surfaces only in daylight schemes. */
+html[data-genesis-theme="standart"][data-genesis-palette] {
+  --lunar-grid-surface:color-mix(in srgb,var(--teal) 5%,#fff);
+  --lunar-day-surface:color-mix(in srgb,var(--teal) 12%,#fff);
+  --lunar-day-hover:color-mix(in srgb,var(--teal) 19%,#fff);
+  --lunar-day-selected:color-mix(in srgb,var(--teal) 26%,#fff);
+  --lunar-grid-outline:color-mix(in srgb,var(--teal) 28%,#fff);
+  --lunar-grid-ink:var(--ink); --lunar-grid-muted:var(--ink-soft); --lunar-grid-accent:var(--teal);
+}
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app :is(.lunar-decade,.year-view .year-month.mode-lunar) {
+  --ink:var(--lunar-grid-ink); --ink-soft:var(--lunar-grid-muted); --surface:var(--lunar-grid-surface);
+  --palette-muted:var(--lunar-grid-muted); --palette-accent:var(--lunar-grid-accent);
+  color:var(--ink); background:var(--lunar-grid-surface); border-color:var(--lunar-grid-outline);
+}
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .year-view .year-month.mode-lunar::before { background-image:var(--month-art); opacity:.1; filter:none; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .year-view .year-month.mode-lunar::after { background:none; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app :is(.lunar-decade > header,.year-view .year-month.mode-lunar) :is(strong,small,.year-month-top,.year-month-top i,.year-month-top b,.year-month-meta,.year-month-meta em,.year-month-meta i,.mini-day-number) { color:var(--lunar-grid-ink); text-shadow:none; }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .lunar-decade > header > span { color:var(--lunar-grid-accent); border-color:var(--lunar-grid-outline); }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app :is(.calendar-mode-calendar.mode-lunar .calendar-mode-day,.year-view .year-month.mode-lunar .civil-mini-calendar.mode-lunar .mini-day,.year-view .year-month.mode-lunar .year-open-button) {
+  --palette-muted:var(--lunar-grid-muted); color:var(--lunar-grid-ink); background:var(--lunar-day-surface); border-color:var(--lunar-grid-outline);
+}
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app :is(.calendar-mode-calendar.mode-lunar .calendar-mode-day,.year-view .year-month.mode-lunar .civil-mini-calendar.mode-lunar .mini-day,.year-view .year-month.mode-lunar .year-open-button):is(:hover,:focus-visible,:focus-within) { background:var(--lunar-day-hover); border-color:var(--lunar-grid-accent); }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app :is(.calendar-mode-calendar.mode-lunar .calendar-mode-day,.year-view .year-month.mode-lunar .civil-mini-calendar.mode-lunar .mini-day):is(.today,.selected) { background:var(--lunar-day-selected); border-color:var(--lunar-grid-accent); box-shadow:inset 0 0 0 1px var(--lunar-grid-accent); }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .calendar-mode-calendar.mode-lunar .calendar-mode-day :is(.calendar-mode-primary,.calendar-mode-primary > strong,.calendar-mode-primary > small,.calendar-cross-date,.calendar-cross-date b,.calendar-moon,.calendar-sun-times) { color:var(--lunar-grid-ink); }
+html[data-genesis-theme="standart"][data-genesis-palette] .genesis-app .year-view .year-month.mode-lunar :is(.year-open-button span,.year-open-button i,.mini-day-number) { color:var(--lunar-grid-ink); }

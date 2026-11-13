@@ -71,7 +71,7 @@ html[data-genesis-theme] button.stoicheion-practice-action {
   background: var(--surface); color: var(--ink); font: 400 16px/1.5 var(--font-ui); text-align: start; cursor: pointer;
 }
 html[data-genesis-theme] .stoicheion-practice-action > span:first-child { font-size: 24px; }
-html[data-genesis-theme] .stoicheion-practice-copy { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+html[data-genesis-theme] .stoicheion-practice-copy { display: grid; gap: 6px; min-width: 0; overflow-wrap: normal; }
 html[data-genesis-theme] .stoicheion-practice-copy > strong { font-weight: 600; }
 html[data-genesis-theme] .stoicheion-practice-copy > span { color: var(--ink-soft); font-size: 14px; }
 html[data-genesis-theme] .stoicheion-practice-action > svg { width: 20px; height: 20px; }

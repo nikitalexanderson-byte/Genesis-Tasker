@@ -13,13 +13,13 @@
   html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing .habit-timer-launch { margin:0; }
   html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-copy.has-timing .habit-check-heading > em { display:none; }
   html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing > .habit-priority-desktop { display:block; align-self:flex-end; text-align:end; }
-  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing small { overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+  html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-timing small { overflow-wrap:normal; font-variant-numeric:tabular-nums; }
   html[data-genesis-theme] .genesis-app .habit-daily-panel .habit-check-copy.has-timing > details { grid-column:1 / -1; }
 }
 .habit-timer-start,.habit-timer-session,.habit-timer-review { display:grid; gap:12px; min-width:0; }
 .habit-timer-session { border-top:1px solid var(--line); padding-top:16px; }
 .habit-timer-panel :is(p,small,time) { margin:0; color:var(--ink-soft); line-height:1.5; }
-.habit-timer-panel :is(p,strong,small,time) { overflow-wrap:anywhere; }
+.habit-timer-panel :is(p,strong,small,time) { overflow-wrap:normal; }
 .habit-timer-config,.habit-timer-actions,.habit-timer-totals { display:flex; flex-wrap:wrap; align-items:end; gap:8px 12px; }
 .habit-timer-config label,.habit-timer-totals > div { display:grid; gap:4px; min-width:0; }
 .habit-timer-config label { flex:1 1 130px; }

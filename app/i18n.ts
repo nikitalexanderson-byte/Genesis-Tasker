@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import englishTranslations from "./translations.en.json";
 import backupEnglish from './backup-copy.en.json';
 import physisEnglish from "./physis/copy.en.json";
+import facePullCopy from "./physis/exercise-face-pull-copy.json";
 import solarModelEnglish from "./solar-calendar-copy.en.json";
 import refinementCopy from "./ui-refinement-copy.json";
 import affairsTranslations from "./native-affairs-translations.json";
@@ -963,6 +964,10 @@ for (const language of Object.keys(rawCatalogs) as Exclude<Language, "ru">[]) {
   for (const [source, translated] of Object.entries(physisEnglish)) {
     if (!(source in rawCatalogs[language])) rawCatalogs[language][source] = translated;
   }
+  for (const field of ["name", "purpose", "mistakes", "trapezius"] as const) {
+    rawCatalogs[language][facePullCopy.ru[field]] = facePullCopy[language][field];
+  }
+  facePullCopy.ru.steps.forEach((source, index) => { rawCatalogs[language][source] = facePullCopy[language].steps[index]; });
   for (const [source, translated] of Object.entries(solarModelEnglish)) {
     if (!(source in rawCatalogs[language])) rawCatalogs[language][source] = translated;
   }

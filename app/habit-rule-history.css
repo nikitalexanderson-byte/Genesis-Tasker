@@ -1,5 +1,5 @@
 .habit-rule-history { min-width: 0; }
-.habit-rule-history p { margin: 0; line-height: 1.5; color: var(--ink-soft); overflow-wrap: anywhere; }
+.habit-rule-history p { margin: 0; line-height: 1.5; color: var(--ink-soft); overflow-wrap: normal; }
 .habit-rule-history details > summary { cursor: pointer; color: var(--ui-accent); padding-block: 10px; }
 .habit-rule-history ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
 .habit-rule-history li { display: grid; gap: 8px; padding-block-start: 12px; border-top: 1px solid var(--line); }

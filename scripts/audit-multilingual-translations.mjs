@@ -5,6 +5,12 @@ const english = { ...JSON.parse(await readFile(new URL("../app/ui-translations/e
   ...JSON.parse(await readFile(new URL("../app/curated-translations.en.json", import.meta.url), "utf8")) };
 const refinementCopy = JSON.parse(await readFile(new URL("../app/ui-refinement-copy.json", import.meta.url), "utf8"));
 Object.assign(english, refinementCopy.en);
+const facePullCopy = JSON.parse(await readFile(new URL('../app/physis/exercise-face-pull-copy.json', import.meta.url), 'utf8'));
+const facePullDictionary = language => Object.fromEntries([
+  ...['name','purpose','mistakes','trapezius'].map(key => [facePullCopy.ru[key], facePullCopy[language][key]]),
+  ...facePullCopy.ru.steps.map((source,index) => [source,facePullCopy[language].steps[index]]),
+]);
+Object.assign(english,facePullDictionary('en'));
 const missing = [];
 const partnerCopy = JSON.parse(await readFile(new URL('../app/partner-copy.json', import.meta.url), 'utf8'));
 const siteLinks = JSON.parse(await readFile(new URL('../app/site-links.json', import.meta.url), 'utf8'));
@@ -137,6 +143,7 @@ for (const language of languages) {
     JSON.parse(await readFile(new URL(`../app/translations.${name}.json`, import.meta.url), "utf8")))));
   Object.assign(catalog, JSON.parse(await readFile(new URL(`../app/ui-translations/${language}.json`, import.meta.url), "utf8")), fieldRecoveryCopy[language], refinementCopy[language]);
   Object.assign(catalog, habitReportCopy[language]);
+  Object.assign(catalog,facePullDictionary(language));
   Object.assign(catalog,JSON.parse(await readFile(new URL(`../app/shared-work-translations/${language}.json`,import.meta.url),"utf8")));
   const affairs = JSON.parse(await readFile(new URL("../app/native-affairs-translations.json", import.meta.url), "utf8"))[language];
   const englishUi = { ...JSON.parse(await readFile(new URL("../app/ui-translations/en.json", import.meta.url), "utf8")), ...refinementCopy.en };

@@ -123,7 +123,7 @@ html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-free-selected { m
 html[data-genesis-theme] .genesis-app .payment-return-dialog .payment-return-amount { display:flex; flex-wrap:wrap; gap:8px 24px; margin-block:20px; font-size:20px; font-variant-numeric:tabular-nums; }
 html[data-genesis-theme] .genesis-app .payment-return-dialog .payment-return-order { margin-block:20px; }
 .payment-return-order dt { color:var(--ink-soft); }
-.payment-return-order dd { margin:4px 0 0; overflow-wrap:anywhere; user-select:all; font-variant-numeric:tabular-nums; }
+.payment-return-order dd { margin:4px 0 0; overflow-wrap:normal; user-select:all; font-variant-numeric:tabular-nums; }
 html[data-genesis-theme] .genesis-app .payment-return-dialog .payment-return-help { max-width:70ch; margin-block:16px; color:var(--ink-soft); }
 .payment-return-dialog .upgrade-inline-action { margin-top:20px; }
 .payment-return-dialog .upgrade-inline-action:disabled { opacity:.65; cursor:default; }
@@ -137,7 +137,7 @@ html[data-genesis-theme] .genesis-app .account-panel .account-profile-summary {
   flex:1 1 8ch; display:grid; gap:4px; min-width:0;
 }
 html[data-genesis-theme] .genesis-app .account-panel .account-profile-summary > .account-email {
-  margin:0; overflow-wrap:anywhere;
+  margin:0; overflow-wrap:normal;
 }
 html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade {
   flex:0 1 auto; max-width:100%; margin-block:0; margin-inline-start:auto;
@@ -179,7 +179,7 @@ html[data-genesis-theme] .genesis-app .account-panel .account-plan-upgrade .upgr
 /* Trial notices use the existing STANDART surfaces and accessible controls. */
 .billing-trial-status,.billing-trial-offer,.billing-trial-confirm {
   display:grid; gap:10px; min-width:0; padding:14px; border:1px solid var(--line);
-  border-radius:10px; background:var(--surface); color:var(--ink); overflow-wrap:anywhere;
+  border-radius:10px; background:var(--surface); color:var(--ink); overflow-wrap:normal;
 }
 .billing-trial-status p,.billing-trial-offer p,.billing-trial-confirm p { margin:0; }
 .billing-trial-heading,.billing-trial-offer h3,.billing-trial-confirm h3 { margin:0; font-weight:650; }

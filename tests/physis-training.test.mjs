@@ -490,7 +490,16 @@ test('progress uses actual work, separates sides and conventions, and computes r
 test('expanded movement library preserves historical exercise identity and supplies valid human atlases', () => {
   const guides = calendarModule('app/physis/exercise-library-data.ts').EXERCISE_GUIDES;
   const media = JSON.parse(readFileSync(new URL('../app/physis/exercise-media-data.json', import.meta.url), 'utf8'));
-  assert.equal(guides.length, 97);
+  assert.ok(guides.length >= 98);
+  const facePull = guides.find(guide => guide.id === 'cable-face-pull');
+  const facePullCopy = JSON.parse(readFileSync(new URL('../app/physis/exercise-face-pull-copy.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(facePullCopy).sort(), ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].sort());
+  assert.deepEqual(facePull.steps, facePullCopy.ru.steps);
+  assert.deepEqual(facePull.stepsEn, facePullCopy.en.steps);
+  for (const localized of Object.values(facePullCopy)) {
+    assert.equal(localized.steps.length, facePull.steps.length);
+    for (const text of [localized.name, localized.purpose, ...localized.steps, localized.mistakes, localized.trapezius]) assert.ok(text.trim());
+  }
   assert.equal(new Set(guides.map(guide => guide.id)).size, guides.length);
   for (const guide of guides) {
     assert.equal(guide.steps.length, 3);

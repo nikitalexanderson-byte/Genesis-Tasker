@@ -5,7 +5,7 @@ html[data-genesis-theme] .genesis-app .habit-data-export > summary { display:fle
 .habit-data-export > summary .disclosure-chevron { margin-inline-start:auto; }
 .habit-data-export[open] > summary .disclosure-chevron { transform:rotate(180deg); }
 .habit-data-export > div { padding-bottom:16px; }
-.habit-data-export p { max-width:72ch; margin:0 0 16px; overflow-wrap:anywhere; }
+.habit-data-export p { max-width:72ch; margin:0 0 16px; overflow-wrap:normal; }
 .habit-data-actions { display:flex; flex-wrap:wrap; gap:12px; }
 html[data-genesis-theme] .genesis-app .habit-data-actions button { display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; min-width:0; max-width:100%; padding:10px 16px; font:500 14px/1.5 var(--font-ui); color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:var(--ui-radius); white-space:normal; text-align:start; }
 .habit-data-actions svg { flex:0 0 20px; width:20px; height:20px; }
@@ -16,11 +16,11 @@ html[data-genesis-theme] .genesis-app .habit-data-restore .habit-data-actions > 
 .habit-data-restore h3 { margin:0 0 12px; font:600 18px/1.4 var(--font-ui); }
 .habit-backup-file { display:grid; gap:8px; max-width:100%; margin-bottom:16px; }
 .habit-backup-picker { display:flex; align-items:center; gap:12px; min-width:0; }
-.habit-backup-picker > span { min-width:0; overflow-wrap:anywhere; }
+.habit-backup-picker > span { min-width:0; overflow-wrap:normal; }
 .habit-backup-file input { max-width:100%; min-width:0; min-height:44px; color:var(--ink); }
 .habit-backup-file input::file-selector-button { min-height:44px; margin-inline-end:12px; padding:8px 12px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:var(--ui-radius); font:inherit; cursor:pointer; }
 .habit-restore-rows { padding:0; margin:16px 0 24px; list-style:none; }
-.habit-restore-rows li { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding-block:16px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.habit-restore-rows li { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding-block:16px; border-bottom:1px solid var(--line); overflow-wrap:normal; }
 .habit-restore-rows strong { flex:1 1 180px; min-width:0; }
 .habit-restore-rows label { display:grid; gap:6px; min-width:0; width:100%; }
 .habit-restore-comparison { width:100%; }

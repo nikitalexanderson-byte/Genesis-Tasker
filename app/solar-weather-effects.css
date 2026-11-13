@@ -1,14 +1,14 @@
 .solar-weather-clouds,.solar-weather-effects { position:absolute; inset:0; overflow:hidden; pointer-events:none; border-radius:inherit; }
-.solar-weather-clouds { --weather-cloud-duration:80s; --cloud-tone:1; inset:0 0 auto; height:var(--solar-horizon,50%); container-type:inline-size; }
+.solar-weather-clouds { --weather-cloud-duration:80s; --cloud-tone:1; inset:0; height:100%; container-type:inline-size; }
 .solar-weather-clouds.overcast { --cloud-tone:.7; }
 .solar-weather-clouds.storm { --cloud-tone:.46; }
-.solar-weather-clouds > i { position:absolute; left:0; top:2%; width:55%; aspect-ratio:3/1; background:url('/weather-art-v1/cloud-bank.webp') center/contain no-repeat;
+.solar-weather-clouds > i { position:absolute; left:0; top:calc(var(--solar-horizon,50%) * .02); width:55%; aspect-ratio:3/1; background:url('/weather-art-v1/cloud-bank.webp') center/contain no-repeat;
   filter:grayscale(1) brightness(calc(var(--weather-cloud-brightness,1) * var(--cloud-tone)));
   transform:translate3d(var(--weather-cloud-resting-x,-15cqw),0,0);
   animation:solar-cloud-drift var(--weather-cloud-duration) linear infinite; animation-delay:calc(var(--weather-cloud-duration) * -.25); }
 .solar-weather-clouds:not(.solar-weather-paused) > i { will-change:transform; }
-.solar-weather-clouds > i:nth-child(2) { --weather-cloud-resting-x:25cqw; top:20%; width:62%; animation-delay:calc(var(--weather-cloud-duration) * -.73); animation-duration:calc(var(--weather-cloud-duration) * 1.3); }
-.solar-weather-clouds > i:nth-child(3) { --weather-cloud-resting-x:70cqw; top:-20%; width:48%; animation-delay:calc(var(--weather-cloud-duration) * -.8); }
+.solar-weather-clouds > i:nth-child(2) { --weather-cloud-resting-x:25cqw; top:calc(var(--solar-horizon,50%) * .2); width:62%; animation-delay:calc(var(--weather-cloud-duration) * -.73); animation-duration:calc(var(--weather-cloud-duration) * 1.3); }
+.solar-weather-clouds > i:nth-child(3) { --weather-cloud-resting-x:70cqw; top:calc(var(--solar-horizon,50%) * -.2); width:48%; animation-delay:calc(var(--weather-cloud-duration) * -.8); }
 .solar-weather-effects > span { position:absolute; pointer-events:none; }
 .solar-weather-fog { inset:20% -15% -10%; opacity:var(--weather-fog); background:linear-gradient(transparent,rgb(185 197 203 / .75) 40%,rgb(204 211 214 / .8) 65%,transparent); filter:blur(12px); animation:solar-fog-drift 35s ease-in-out infinite alternate; }
 .solar-weather-storm-glow { inset:0; opacity:0; background:radial-gradient(ellipse at 60% 0,#dce7f5,transparent 75%); animation:solar-storm-glow var(--weather-storm-duration) linear infinite; }

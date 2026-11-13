@@ -5,7 +5,7 @@
 .report-estimate-values > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:8px 16px; }
 .report-estimate-values dd { margin:0; }
 .report-estimate-project { border-top:1px solid var(--line); margin-top:24px; padding-top:8px; }
-.report-estimate-project :is(h4,h5) { overflow-wrap:anywhere; }
+.report-estimate-project :is(h4,h5) { overflow-wrap:normal; }
 .shared-reports-dialog dd { margin:8px 0 0; font-variant-numeric:tabular-nums; }
 .report-summary dd { font-size:1.5rem; }
 .shared-reports-dialog .report-metric { border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); min-width:52px; padding:8px 12px; font:inherit; text-decoration:underline; text-underline-offset:4px; font-variant-numeric:tabular-nums; }
@@ -13,7 +13,7 @@
 .report-table-wrap { overflow-x:auto; scrollbar-color:var(--muted) var(--paper); }
 .report-table-wrap:focus-visible { outline:2px solid var(--ui-accent); outline-offset:4px; border-radius:10px; }
 .shared-reports-dialog table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; text-align:start; }
-.shared-reports-dialog :is(th,td) { padding:12px; border-bottom:1px solid var(--line); text-align:start; overflow-wrap:anywhere; }
+.shared-reports-dialog :is(th,td) { padding:12px; border-bottom:1px solid var(--line); text-align:start; overflow-wrap:normal; }
 .shared-reports-dialog thead th { vertical-align:bottom; }
 .shared-reports-dialog tbody th { font-weight:400; }
 .shared-reports-dialog small { display:block; margin-top:6px; color:var(--muted); }

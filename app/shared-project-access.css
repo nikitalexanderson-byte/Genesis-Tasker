@@ -3,7 +3,7 @@
 .shared-project-access summary { min-height:44px; padding-block:12px; cursor:pointer; font-weight:600; }
 .shared-project-access p { max-width:72ch; line-height:1.6; }
 .shared-project-access fieldset { min-width:0; margin:0; padding:0; border:0; }
-.shared-project-access :is(p,strong,small,label,li,h4) { overflow-wrap:anywhere; }
+.shared-project-access :is(p,strong,small,label,li,h4) { overflow-wrap:normal; }
 .shared-project-access label { display:grid; gap:6px; min-width:0; }
 .shared-project-access .shared-project-access-check { display:flex; align-items:flex-start; gap:10px; padding-block:8px; }
 .shared-project-access-check input { flex:none; margin-top:4px; }

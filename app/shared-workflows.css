@@ -1,22 +1,22 @@
 .shared-workflow { margin-block-start:24px; padding-block-start:16px; border-top:1px solid var(--line); min-width:0; }
 .shared-workflow>summary { font-weight:600; }
-.shared-workflow p { line-height:1.6; overflow-wrap:anywhere; }
+.shared-workflow p { line-height:1.6; overflow-wrap:normal; }
 .shared-workflow form>fieldset { border:0; margin:0; padding:0; min-width:0; }
 .shared-workflow form>fieldset>legend { padding:0; margin-block-end:16px; font-weight:600; }
 .shared-workflow-statuses { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:16px; }
 .shared-workflow-status { min-width:0; padding:16px; border:1px solid var(--line); border-radius: var(--ui-surface-radius); }
-.shared-workflow-status>summary { overflow-wrap:anywhere; }
+.shared-workflow-status>summary { overflow-wrap:normal; }
 .shared-workflow-status>label { margin-block:16px; }
 .shared-workflow-checks { display:flex; flex-wrap:wrap; gap:8px 16px; min-width:0; margin:16px 0 0; padding:0; border:0; }
 .shared-workflow-checks legend { padding:0; margin-block-end:8px; }
-.shared-planning-dialog .shared-workflow :is(.shared-workflow-checks label,.shared-workflow-edge legend label) { display:flex; align-items:center; gap:8px; min-height:44px; margin:0; overflow-wrap:anywhere; }
+.shared-planning-dialog .shared-workflow :is(.shared-workflow-checks label,.shared-workflow-edge legend label) { display:flex; align-items:center; gap:8px; min-height:44px; margin:0; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app .shared-workflow input[type=checkbox] { flex:0 0 20px; width:20px; height:20px; min-height:20px; padding:0; margin:0; accent-color:var(--ink); }
 .shared-workflow-transitions { margin-block-start:24px; border-top:1px solid var(--line); padding-block-start:16px; }
 .shared-workflow-edge { min-width:0; margin:16px 0 0; padding:8px 0 16px; border:0; border-bottom:1px solid var(--line); }
 .shared-workflow-edge>.shared-workflow-checks { margin-block-start:8px; }
 .shared-workflow-counts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 24px; }
 .shared-workflow-counts>div { min-width:0; }
-.shared-workflow-counts dd { margin:4px 0 0; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.shared-workflow-counts dd { margin:4px 0 0; overflow-wrap:normal; font-variant-numeric:tabular-nums; }
 .shared-workflow-history { margin-block-start:24px; }
 .shared-workflow-device { margin-block:16px; min-width:0; }
 .shared-workflow-device ul { padding:0; list-style:none; }
@@ -24,7 +24,7 @@ html[data-genesis-theme] .genesis-app .shared-workflow input[type=checkbox] { fl
 .shared-workflow-device li>div { min-width:0; }
 .shared-workflow-device small { display:block; color:var(--ink-soft); margin-block-start:8px; }
 .shared-workflow-device :is([data-planning-device-draft],[data-planning-task-device-draft],[data-workflow-device-draft]) { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:8px 16px; }
-.shared-workflow-device :is([data-planning-device-draft],[data-planning-task-device-draft],[data-workflow-device-draft]) > time { overflow-wrap:anywhere; }
+.shared-workflow-device :is([data-planning-device-draft],[data-planning-task-device-draft],[data-workflow-device-draft]) > time { overflow-wrap:normal; }
 .shared-workflow-device :is([data-planning-device-draft],[data-planning-task-device-draft],[data-workflow-device-draft]) > small { grid-column:1/-1; margin-block-start:0; }
 .shared-workflow-device .shared-work-draft-actions { flex-wrap:nowrap; align-items:center; gap:8px; margin:0; }
 html[data-genesis-theme] .genesis-app .shared-workflow .shared-workflow-status { margin:0; padding:16px; border:1px solid var(--line); }

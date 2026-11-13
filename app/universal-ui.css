@@ -34,7 +34,7 @@ html[data-genesis-theme] .workspace-header h1 {
   font: 400 clamp(28px, 3vw, 42px)/1.15 Georgia, "Times New Roman", serif;
   letter-spacing: -.02em;
   text-wrap: balance;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 html[data-genesis-theme] .workspace-header p { margin: 0; max-width: 65ch; color: var(--palette-muted, #c6d7d0); font-size: 14px; line-height: 1.6; }
 html[data-genesis-theme] .workspace-header .projects-hero-mark {
@@ -143,7 +143,7 @@ html[data-genesis-theme] .genesis-app :is(.task-actions, .all-task-actions, .pro
 html[data-genesis-theme] .genesis-app .all-task-row { grid-template-columns: 44px minmax(0, 1fr) auto; padding: 16px; border-radius: var(--ui-radius); }
 html[data-genesis-theme] .genesis-app .all-task-row .task-check { width: 44px; height: 44px; margin: 0; }
 html[data-genesis-theme] .genesis-app .all-task-actions { display: flex; gap: 4px; }
-html[data-genesis-theme] .genesis-app .all-task-row strong { font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .all-task-row strong { font-size: 16px; line-height: 1.4; overflow-wrap: normal; }
 html[data-genesis-theme] .genesis-app .all-task-meta { font-size: 12px; line-height: 1.5; }
 html[data-genesis-theme] .genesis-app .all-task-meta :is(.all-task-category, .all-task-source) { font-size: 11px; }
 html[data-genesis-theme] .genesis-app .all-task-meta .all-task-category { color: var(--ink); background: color-mix(in srgb, var(--ui-accent) 12%, var(--surface)); border-inline-start: 3px solid var(--project-color); }
@@ -152,8 +152,8 @@ html[data-genesis-theme] .genesis-app .project-row { grid-template-columns: minm
 html[data-genesis-theme] .genesis-app .project-row:has(.project-transfer) { grid-template-columns: minmax(0, 1fr) repeat(4, 44px); }
 html[data-genesis-theme] .genesis-app .project-row > :is(.project-status, .project-edit, .project-transfer, .project-delete) { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: var(--ui-surface-radius); }
 html[data-genesis-theme] .genesis-app .project-open { min-height: 44px; }
-html[data-genesis-theme] .genesis-app .project-open strong { font-size: 16px; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
-html[data-genesis-theme] .genesis-app .project-open :is(small, em, p) { color: var(--ink-soft); font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+html[data-genesis-theme] .genesis-app .project-open strong { font-size: 16px; line-height: 1.4; white-space: normal; overflow-wrap: normal; }
+html[data-genesis-theme] .genesis-app .project-open :is(small, em, p) { color: var(--ink-soft); font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: normal; }
 html[data-genesis-theme] .genesis-app :is(.task-lists-page, .shared-task-lists) { min-width: 0; }
 html[data-genesis-theme] .genesis-app .shared-task-lists > header { align-items: center; gap: 16px; }
 html[data-genesis-theme] .genesis-app .shared-task-lists > header h3 { margin: 0 0 8px; font: 400 24px/1.25 Georgia, serif; }
@@ -188,7 +188,7 @@ html[data-genesis-theme] .mobile-more-navigation {
 }
 html[data-genesis-theme] .mobile-more-navigation nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 html[data-genesis-theme] .mobile-more-navigation button { display: flex; align-items: center; gap: 10px; min-height: 56px; min-width: 0; padding: 12px; border: 0; border-radius: 10px; color: var(--ink); background: var(--paper); font: 700 14px/1.3 Arial, sans-serif; text-align: left; cursor: pointer; }
-html[data-genesis-theme] .mobile-more-navigation button > span:last-child { overflow-wrap: anywhere; }
+html[data-genesis-theme] .mobile-more-navigation button > span:last-child { overflow-wrap: normal; }
 html[data-genesis-theme] .mobile-more-navigation button[aria-current="page"] { color: var(--ui-on-accent); background: var(--ui-accent); }
 html[data-genesis-theme] .mobile-more-navigation::backdrop { background: transparent; }
 

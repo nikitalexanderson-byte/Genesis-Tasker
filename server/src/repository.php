@@ -12,6 +12,7 @@ require_once __DIR__.'/plan-guidance.php';
 require_once __DIR__.'/google-login-security.php';
 require_once __DIR__.'/account-retention.php';
 require_once __DIR__.'/partners.php';
+require_once __DIR__.'/stoicheion-timeline-cards.php';
 
 const GENESIS_ADMIN_EMAIL = 'nikitalexanderson@gmail.com';
 
@@ -1242,6 +1243,9 @@ function genesisStoicheionDraws(string $userId): array
         $q=genesisDb()->prepare("SELECT * FROM $table WHERE user_id=? AND draw_kind=? AND day_key>=? AND day_key<=? ORDER BY day_key DESC,first_draw_at DESC LIMIT 1");
         $q->execute([$userId,$kind,genesisStoicheionPeriodStart($dayKey,$kind,$unlimited),$dayKey]);
         if($row=$q->fetch())$draws[$kind]=genesisStoicheionDrawForClient($row,$unlimited);
+        if($kind==='timeline'&&isset($draws[$kind])&&genesisTimelineSession($userId)) {
+            $draws[$kind]['canReroll']=false;$draws[$kind]['unlimited']=false;
+        }
     }
     return ['dayKey'=>$dayKey,'draws'=>$draws,'testingAccess'=>$unlimited,'weeklyStart'=>genesisStoicheionPeriodStart($dayKey,'spread')];
 }
@@ -1269,6 +1273,7 @@ function genesisSaveStoicheionDraw(string $userId, string $kind, int $seed): arr
     $periodStart=genesisStoicheionPeriodStart($dayKey,$kind,$unlimited);
     $db->exec('BEGIN IMMEDIATE');
     try {
+        if ($kind === 'timeline' && genesisTimelineSession($userId)) throw new DomainException('TIMELINE_CARD_PROTOCOL_REQUIRED');
         $statement = $db->prepare("SELECT * FROM $drawTable WHERE user_id = :user_id AND day_key >= :period_start AND day_key <= :day_key AND draw_kind = :draw_kind ORDER BY day_key DESC,first_draw_at DESC LIMIT 1");
         $statement->execute(['user_id' => $userId, 'period_start' => $periodStart, 'day_key' => $dayKey, 'draw_kind' => $kind]);
         $existing = $statement->fetch();
@@ -1570,6 +1575,8 @@ function genesisAccountDataLocations(): array
         'android_client_reports' => 'user_id',
         'stoicheion_draws' => 'user_id',
         'stoicheion_timeline_draws' => 'user_id',
+        'stoicheion_timeline_card_windows' => 'user_id',
+        'stoicheion_timeline_sessions' => 'user_id',
         'aurora_workspaces' => 'user_id',
         'email_registration_lifecycle' => 'user_id',
         'email_verification_dismissals' => 'user_id',

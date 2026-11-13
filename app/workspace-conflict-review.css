@@ -6,7 +6,7 @@
 .workspace-conflict-dialog .dialog-close-button { position: static; flex-shrink: 0; }
 .workspace-conflict-fields { display: grid; gap: 24px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--ink-soft) var(--surface); padding: 3px; }
 .workspace-conflict-fields fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-.workspace-conflict-fields legend { width: 100%; padding: 0 0 10px; overflow-wrap: anywhere; }
+.workspace-conflict-fields legend { width: 100%; padding: 0 0 10px; overflow-wrap: normal; }
 .workspace-conflict-fields legend strong { display: block; font-size: 17px; }
 .workspace-conflict-fields legend span { display: block; padding-top: 4px; font-size: 14px; color: var(--ink-soft); }
 .workspace-conflict-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -14,7 +14,7 @@
 .workspace-conflict-options label.selected { border-color: var(--ui-accent); background: color-mix(in srgb, var(--ui-accent) 7%, var(--surface)); }
 .workspace-conflict-options label > span { display: flex; align-items: center; min-height: 44px; gap: 10px; }
 .workspace-conflict-options input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--ui-accent); }
-.workspace-conflict-options pre { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.5; }
+.workspace-conflict-options pre { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: normal; font: inherit; line-height: 1.5; }
 html[data-genesis-theme] .genesis-app .workspace-conflict-dialog :is(#workspace-conflict-intro, .workspace-conflict-options pre) { font-size: 16px; line-height: 1.5; }
 .workspace-conflict-dialog footer { display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
 .workspace-conflict-dialog footer small { color: var(--ink-soft); font-size: 14px; }

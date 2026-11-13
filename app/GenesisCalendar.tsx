@@ -17,10 +17,13 @@ const SolarWeatherSummary = lazy(() => import('./SolarLandscapeHero').then(modul
 import './solar-landscape-hero.css';
 import './workspace-header-refinements.css';
 import './web-color-refinements.css';
+import './web-secondary-palettes.css';
 import { todayYearProgress } from './today-year-progress';
 import { DialogCloseButton } from "./DialogCloseButton";
 import { useMobileLayout, useCompactHeader } from "./use-mobile-layout";
 import { useHeaderControlSize } from "./use-header-control-size";
+import { HeaderSectionSwitch } from "./HeaderSectionSwitch";
+import { effectiveBillingPlan } from "./billing";
 import {orderPersonalTasks,taskListOrders,unreadPersonalCommentIds,type TaskListOrder} from "./task-list-order";
 import {usePersonalTaskDisplay} from "./use-personal-task-display";
 import {MindmapLaunchButton} from "./MindmapLaunchButton";
@@ -6883,6 +6886,25 @@ export function GenesisCalendar() {
   const pendingDeletionTask = tasks.find((task) => task.id === pendingTaskDeletion?.taskId);
   const pendingDeletionHasSeries = pendingDeletionTask ? taskHasSeries(pendingDeletionTask) : false;
 
+  const renderHeaderSectionSwitch = () => {
+    if (view === "calendar" || view === "year") return <HeaderSectionSwitch label={translateText("Календарь", language)} panelId="calendar-period-panel"
+      sections={[
+        ...(viewIsVisible("calendar", visibility) ? [{id: "calendar-month-tab", label: translateText("Месяц", language), icon: "section-month", active: view === "calendar", onSelect: () => navigateTo("calendar")}] : []),
+        ...(viewIsVisible("year", visibility) ? [{id: "calendar-year-tab", label: translateText("Год", language), icon: "section-year", active: view === "year", onSelect: () => navigateTo("year")}] : []),
+      ]} />;
+    if (view === "projects" && sharedProjectsVisible && personalProjectsVisible
+      && ["business", "premium4life", "elite_plus"].includes(effectiveBillingPlan(cloudUser?.featureAccess))
+      && featureAllowed(cloudUser?.featureAccess, "shared-projects", undefined, true)) return <HeaderSectionSwitch label={translateText("Дела", language)} sections={[
+        {id: "projects-personal-section", label: translateText("Личные", language), icon: "lock", active: activeProjectsArea === "personal", onSelect: () => setProjectsArea("personal")},
+        {id: "projects-shared-section", label: translateText("Общие", language), icon: "team", active: activeProjectsArea === "shared", onSelect: () => setProjectsArea("shared")},
+      ]} />;
+    if (sacredFeaturesEnabled && (view === "stoicheion" || view === "theokyklos")) return <HeaderSectionSwitch label={translateText("Оракул", language)} sections={[
+      ...(viewIsVisible("stoicheion", visibility) ? [{id: "stoicheion-section", label: translateText("Стойхейон", language), icon: "section-stoicheion", active: view === "stoicheion", onSelect: () => navigateTo("stoicheion")}] : []),
+      ...(viewIsVisible("theokyklos", visibility) ? [{id: "theokyklos-section", label: translateText("Теокиклос", language), icon: "section-theokyklos", active: view === "theokyklos", onSelect: () => navigateTo("theokyklos")}] : []),
+    ]} />;
+    return null;
+  };
+
   const renderTopbarActions = () => (
     <div className="topbar-actions">
             {sacredFeaturesEnabled ? <CalendarModeCycleButton mode={activeCalendarMode} enabledCalendars={visibility.enabledCalendars}
@@ -7098,10 +7120,10 @@ export function GenesisCalendar() {
             <img src={`${APP_BASE}/icons/icon-round-v2.png`} alt="" aria-hidden="true" data-genesis-preserve="web-header-logo" />
             <strong data-no-translate>Genesis Tasker</strong>
           </button>
-          {compactHeader ? renderTopbarActions() : null}
+          {compactHeader ? <>{renderHeaderSectionSwitch()}{renderTopbarActions()}</> : null}
         </header>
         <header className="topbar" data-exp-ui="topbar">
-          {!compactHeader ? renderTopbarActions() : null}
+          {!compactHeader ? <>{renderHeaderSectionSwitch()}{renderTopbarActions()}</> : null}
         </header>
 
         <div className={`workspace workspace-full${view === "today" ? " today-workspace" : ""}`} id="main-content" data-exp-layout="content">
@@ -7128,33 +7150,13 @@ export function GenesisCalendar() {
                 {cloudUser && sacredFeaturesEnabled ? <Suspense fallback={null}><CalendarExploreNotice key={cloudUser.uid}
                   userId={cloudUser.uid} pending={cloudUser.calendarExplorationPending === true} language={language}
                   calendars={visibility.enabledCalendars} onSelect={mode => void changeDisplayCalendar(mode)} onAcknowledged={acknowledgeCalendarExploration} /></Suspense> : null}
-                <div className="view-calendar-toolbar">
-                <div className="shared-projects-switch calendar-area-switch" role="tablist" tabIndex={-1} aria-label={language === "en" ? "Calendar views" : "Виды календаря"}
-                  onKeyDown={(event) => {
-                    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-                    const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-                    if (!tabs.length) return;
-                    const index = tabs.indexOf(document.activeElement as HTMLButtonElement);
-                    const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === "ArrowLeft" ? tabs.length - 1 : 1)) % tabs.length;
-                    event.preventDefault(); tabs[next].click(); tabs[next].focus();
-                  }}>
-                  {viewIsVisible("calendar", visibility) ? <button id="calendar-month-tab" type="button" role="tab" aria-selected={view === "calendar"} aria-controls="calendar-period-panel" tabIndex={view === "calendar" ? 0 : -1} aria-current={view === "calendar" ? "page" : undefined} onClick={() => navigateTo("calendar")}>{language === "en" ? "Month" : "Месяц"}</button> : null}
-                  {viewIsVisible("year", visibility) ? <button id="calendar-year-tab" type="button" role="tab" aria-selected={view === "year"} aria-controls="calendar-period-panel" tabIndex={view === "year" ? 0 : -1} aria-current={view === "year" ? "page" : undefined} onClick={() => navigateTo("year")}>{language === "en" ? "Year Wheel" : "Круг года"}</button> : null}
-                </div>
-                {!experimentalThemeActive ? renderDisplayCalendarChoice(language === "en" ? "Display calendar" : "Календарь отображения") : null}
-                </div>
+                {!experimentalThemeActive ? <div className="view-calendar-toolbar">{renderDisplayCalendarChoice(language === "en" ? "Display calendar" : "Календарь отображения")}</div> : null}
                 <section id="calendar-period-panel" role="tabpanel" aria-labelledby={view === "year" ? "calendar-year-tab" : "calendar-month-tab"}>
                   {view === "calendar" ? renderCalendar() : renderYear()}
                 </section>
               </> : null}
               {view === "projects" && (sharedProjectsVisible || personalProjectsVisible) ? <>
-                <div className="view-calendar-toolbar">
-                {sharedProjectsVisible && personalProjectsVisible ? <nav className="shared-projects-switch affairs-area-switch" aria-label={language === "en" ? "Project sections" : "Разделы дел"}>
-                  <button type="button" aria-current={activeProjectsArea === "personal" ? "page" : undefined} onClick={() => setProjectsArea("personal")}><ExperimentalIcon name="lock" />{language === "en" ? "Personal" : "Личные"}</button>
-                  <button type="button" aria-current={activeProjectsArea === "shared" ? "page" : undefined} onClick={() => setProjectsArea("shared")}><ExperimentalIcon name="team" />{language === "en" ? "Shared" : "Общие"}</button>
-                </nav> : null}
-                {!experimentalThemeActive ? renderDisplayCalendarChoice(language === "en" ? "Project date display" : "Отображение дат в проектах") : null}
-                </div>
+                {!experimentalThemeActive ? <div className="view-calendar-toolbar">{renderDisplayCalendarChoice(language === "en" ? "Project date display" : "Отображение дат в проектах")}</div> : null}
                 {!sharedProjectsVisible || activeProjectsArea === "personal" ? renderProjects() : <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening shared projects…" : "Открываем общие проекты…"} />}>
                   <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive}
                     writeEnabled={sharedProjectsAvailable}
@@ -7213,10 +7215,6 @@ export function GenesisCalendar() {
                   />
                 </Suspense>
               ) : null}
-              {sacredFeaturesEnabled && (view === "stoicheion" || view === "theokyklos") ? <nav className="shared-projects-switch sacred-area-switch" aria-label={language === "en" ? "Sacred sections" : "Разделы сакрального"}>
-                {viewIsVisible("stoicheion", visibility) ? <button type="button" aria-current={view === "stoicheion" ? "page" : undefined} onClick={() => navigateTo("stoicheion")}>Стойхейон</button> : null}
-                {viewIsVisible("theokyklos", visibility) ? <button type="button" aria-current={view === "theokyklos" ? "page" : undefined} onClick={() => navigateTo("theokyklos")}>Теокиклос</button> : null}
-              </nav> : null}
               {sacredFeaturesEnabled && view === "stoicheion" ? (
                 <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening Stoicheion…" : "Открываем Стойхейон…"} />}>
                   <StoicheionView

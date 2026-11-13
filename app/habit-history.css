@@ -1,6 +1,6 @@
 .habit-history-panel{margin-block:24px;color:var(--ink);border-top:1px solid var(--line);padding-block:20px}
 .habit-history-panel>summary{font:600 20px var(--font-ui);cursor:pointer;padding-block:8px}
-.habit-history-panel p{max-width:72ch;line-height:1.6;overflow-wrap:anywhere}
+.habit-history-panel p{max-width:72ch;line-height:1.6;overflow-wrap:normal}
 .habit-history-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;margin-block:16px}
 .habit-history-form{display:grid;gap:16px;margin-top:24px;min-width:0}
 .habit-history-form h3,.habit-history-form p{margin:0}
@@ -18,4 +18,4 @@
 .habit-history-preview h4{font:600 18px var(--font-ui);margin:0}
 .habit-history-audit>summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
 .habit-history-audit ol{padding-inline-start:24px;display:grid;gap:16px}
-.habit-history-audit li{overflow-wrap:anywhere}.habit-history-audit time{display:block;color:var(--muted);margin-bottom:4px}
+.habit-history-audit li{overflow-wrap:normal}.habit-history-audit time{display:block;color:var(--muted);margin-bottom:4px}

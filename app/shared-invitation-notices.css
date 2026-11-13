@@ -4,8 +4,8 @@ html[data-genesis-theme] .genesis-app .shared-invitation-notice > header { displ
 html[data-genesis-theme] .genesis-app .shared-invitation-notice h2 { flex: 1; margin: 0; font: 600 15px/1.4 var(--font-ui); }
 html[data-genesis-theme] .genesis-app .shared-invitation-close { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; margin: -8px -8px 0 0; padding: 8px; color: var(--ink); border: 0; background: transparent; border-radius: 8px; }
 html[data-genesis-theme] .genesis-app .shared-invitation-close svg { width: 20px; height: 20px; }
-html[data-genesis-theme] .genesis-app .shared-invitation-title { display: block; overflow-wrap: anywhere; font-size: 17px; }
-html[data-genesis-theme] .genesis-app .shared-invitation-notice p { margin: 8px 0 12px; overflow-wrap: anywhere; font-size: 14px; color: var(--ink-soft); }
+html[data-genesis-theme] .genesis-app .shared-invitation-title { display: block; overflow-wrap: normal; font-size: 17px; }
+html[data-genesis-theme] .genesis-app .shared-invitation-notice p { margin: 8px 0 12px; overflow-wrap: normal; font-size: 14px; color: var(--ink-soft); }
 html[data-genesis-theme] .genesis-app .shared-invitation-notice button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (max-width: 760px) {
   html[data-genesis-theme] .genesis-app .shared-invitation-notices { left: 12px; bottom: calc(100px + env(safe-area-inset-bottom)); width: calc(100vw - 24px); max-height: 55dvh; }

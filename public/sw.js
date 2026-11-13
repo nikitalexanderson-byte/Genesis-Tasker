@@ -66,6 +66,8 @@ const HABIT_REWARD_ART = [
 ];
 const PHYSIS_EXERCISE_ART = [
   "./physis-art/exercises/nordic-curl-human-v2.webp",
+  "./physis-art/exercises/cable-face-pull-human-v1.webp",
+  "./physis-art/exercises/cable-face-pull-poster-human-v1.webp",
   "./physis-art/exercises/nordic-curl-poster-human-v2.webp",
   "./physis-art/exercises/sissy-machine-squat-human-v2.webp",
   "./physis-art/exercises/sissy-machine-squat-poster-human-v2.webp",

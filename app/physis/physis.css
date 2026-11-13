@@ -1,13 +1,13 @@
 .physis { color: var(--ink); min-width: 0; display: grid; gap: 24px; padding-bottom: 32px; }
 .physis *, .physis *::before, .physis *::after { box-sizing: border-box; }
-.physis :is(h1,h2,h3,p) { overflow-wrap: anywhere; }
+.physis :is(h1,h2,h3,p) { overflow-wrap: normal; }
 .physis h1 { font: 400 clamp(30px,4vw,42px)/1.15 "Source Serif 4",Georgia,serif; margin: 0; }
 .physis h2 { font: 400 26px/1.3 "Source Serif 4",Georgia,serif; margin: 0 0 16px; }
 .physis h3 { font-size: 18px; margin: 0 0 12px; }
 .physis p { line-height: 1.6; margin: 8px 0 16px; max-width: 72ch; }
 .physis :is(button,input,select,textarea) { font: inherit; color: var(--ink); min-width: 0; max-width: 100%; }
 .physis :where(button,input:not([type=checkbox]):not([type=radio]),select) { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px 12px; }
-.physis button { cursor: pointer; line-height: 1.35; overflow-wrap: anywhere; }
+.physis button { cursor: pointer; line-height: 1.35; overflow-wrap: normal; }
 .physis button:hover:not(:disabled) { background: color-mix(in srgb,var(--ink) 7%,var(--surface)); }
 .physis button:disabled { opacity: .6; cursor: wait; }
 .physis :is(button,input,select,textarea,a,summary):focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
@@ -89,7 +89,7 @@ body:has(.physis-settings-backdrop:not([hidden])) { overflow: hidden; }
 .physis-settings-content { display: grid; gap: 20px; padding: 24px; min-width: 0; }
 .physis-table-wrap { max-width: 100%; overflow-x: auto; }
 .physis table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
-.physis :is(th,td) { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.physis :is(th,td) { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); overflow-wrap: normal; }
 .physis th { font-weight: 600; }
 .physis-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
 .physis-list > li { padding: 18px 0; border-bottom: 1px solid var(--line); min-width: 0; }
@@ -98,7 +98,7 @@ body:has(.physis-settings-backdrop:not([hidden])) { overflow: hidden; }
 .physis summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
 .physis .physis-lock { max-width: 620px; margin: 24px auto; width: 100%; }
 .physis .physis-lock .physis-form { grid-template-columns: minmax(0,1fr); }
-.physis-recovery { display: block; font-family: inherit; overflow-wrap: anywhere; padding: 16px; border: 1px solid var(--line); border-radius: 10px; user-select: all; font-size: 16px; }
+.physis-recovery { display: block; font-family: inherit; overflow-wrap: normal; padding: 16px; border: 1px solid var(--line); border-radius: 10px; user-select: all; font-size: 16px; }
 .physis-chart { width: 100%; height: 160px; overflow: visible; }
 .physis-chart polyline { fill: none; stroke: var(--ui-accent); stroke-width: 2.5; }
 .physis-chart circle { fill: var(--ui-accent); }

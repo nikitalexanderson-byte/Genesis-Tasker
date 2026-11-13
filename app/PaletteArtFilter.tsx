@@ -7,6 +7,12 @@ export function PaletteArtFilter() {
       <feComposite in="palette-tone" in2="green-mask" operator="in" result="green-tone" />
       <feBlend in="green-tone" in2="SourceGraphic" mode="color" />
     </filter>
+    {Object.entries({blue:"#669cd3",burgundy:"#ad5878",violet:"#a984ce"}).map(([palette,tint]) => <filter key={palette} id={`genesis-physis-${palette}-art`} colorInterpolationFilters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="matrix" result="scenery-mask" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -10 10 0 0 0.35" />
+      <feFlood floodColor={tint} result="scenery-tone" />
+      <feComposite in="scenery-tone" in2="scenery-mask" operator="in" result="colored-scenery" />
+      <feBlend in="colored-scenery" in2="SourceGraphic" mode="color" />
+    </filter>)}
     <filter id="genesis-daylight-art" colorInterpolationFilters="sRGB">
       <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="daylight-monochrome" />
       <feFlood floodColor="var(--day-art-tint)" result="daylight-tone" />

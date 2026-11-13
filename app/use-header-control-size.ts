@@ -28,7 +28,7 @@ export function useHeaderControlSize(enabled: boolean) {
       frame = 0;
       if (disposed) return;
       const brand = header.querySelector<HTMLElement>(":scope > button");
-      const calendars = header.querySelector<HTMLElement>(".topbar-calendar-choice");
+      const calendars = header.querySelector<HTMLElement>(".header-section-switch, .topbar-calendar-choice");
       const actions = header.querySelector<HTMLElement>(".topbar-actions");
       if (!brand || !actions) return;
       const calendarCount = calendars ? [...calendars.querySelectorAll(":scope > button")].filter(visible).length : 0;

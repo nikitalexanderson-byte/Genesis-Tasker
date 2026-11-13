@@ -4,6 +4,14 @@
 .physis .physis-exercise-card-open:hover { transform: translateY(-2px); background: var(--surface); }
 .physis-exercise-poster { position: relative; display: grid; place-items: center; flex: 0 0 auto; width: 100%; aspect-ratio: 16 / 9; background: var(--palette-recessed, #10251d); color: #e4c78c; overflow: hidden; }
 .physis-exercise-poster > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* Recolor green scenery with the existing filter, preserving skin and red muscle markings. */
+html[data-genesis-palette="blue"] .physis { --physis-art-filter:url(#genesis-physis-blue-art); --physis-art-surface:#10243a; }
+html[data-genesis-palette="burgundy"] .physis { --physis-art-filter:url(#genesis-physis-burgundy-art); --physis-art-surface:#2b1520; }
+html[data-genesis-palette="violet"] .physis { --physis-art-filter:url(#genesis-physis-violet-art); --physis-art-surface:#24182f; }
+html[data-genesis-palette]:not([data-genesis-palette="green"]) .physis :is(.physis-exercise-poster,.physis-demo-stage) {
+  background:var(--physis-art-surface);
+}
+html[data-genesis-palette]:not([data-genesis-palette="green"]) .physis :is(.physis-exercise-poster > img,.physis-demo-stage figure > svg) { filter:var(--physis-art-filter); }
 .physis-exercise-poster[data-model=male] > img { clip-path: inset(0 50% 0 0); transform: translateX(25%); }
 .physis-exercise-poster[data-model=female] > img { clip-path: inset(0 0 0 50%); transform: translateX(-25%); }
 .physis-exercise-poster > svg { width: 48px; height: 48px; }
@@ -17,7 +25,7 @@
 .physis-demo-dialog { width: min(1080px,100%); max-width: none; max-height: calc(100dvh - 48px); padding: 0; overflow: auto; overscroll-behavior: contain; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 body:has(.physis-demo-backdrop) { overflow: hidden; }
 .physis-demo-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 24px 16px; }
-.physis-demo-heading h2 { margin: 0 0 8px; font: 400 28px/1.2 "Source Serif 4",Georgia,serif; overflow-wrap: anywhere; }
+.physis-demo-heading h2 { margin: 0 0 8px; font: 400 28px/1.2 "Source Serif 4",Georgia,serif; overflow-wrap: normal; }
 .physis-demo-heading p { margin: 0; }
 .physis-demo-heading .dialog-close-button { flex-shrink: 0; }
 .physis-demo-content { padding: 0 24px 24px; }

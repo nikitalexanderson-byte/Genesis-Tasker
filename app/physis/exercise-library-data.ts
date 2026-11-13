@@ -1,4 +1,5 @@
 import { EXPANDED_EXERCISE_GUIDES } from './exercise-expansion-data.ts';
+import { UPPER_BODY_EXERCISE_GUIDES } from './exercise-upper-body-data.ts';
 
 export type ExerciseGuide = {
   id: string; name: string; nameEn: string; muscles: string; movement: string;
@@ -6,7 +7,7 @@ export type ExerciseGuide = {
   primary: string[]; steps: string[]; stepsEn: string[]; mistakes: string; mistakesEn: string;
   metric: 'strength' | 'time' | 'distance'; unilateral: boolean;
   aliases?: string[]; benchAngleDegrees?: number;
-  purpose?: string; purposeEn?: string;
+  purpose?: string; purposeEn?: string; sources?: string[];
 };
 export const EXERCISE_GUIDES: ExerciseGuide[] = [
   {
@@ -881,5 +882,6 @@ export const EXERCISE_GUIDES: ExerciseGuide[] = [
     "metric": "strength",
     "unilateral": true
   },
-  ...EXPANDED_EXERCISE_GUIDES
+  ...EXPANDED_EXERCISE_GUIDES,
+  ...UPPER_BODY_EXERCISE_GUIDES
 ];

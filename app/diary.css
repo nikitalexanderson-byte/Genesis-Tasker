@@ -59,8 +59,8 @@ html[data-genesis-theme] .genesis-app .diary-note { position:relative; isolation
 .diary-note-meta > span { display:flex; align-items:center; gap:5px; }
 .diary-note-meta svg { width:14px; height:14px; flex-basis:14px; }
 html[data-genesis-theme] .genesis-app .diary-note-open { display:block; width:100%; padding:16px 0; min-height:150px; border:0; background:transparent; color:var(--note-ink); text-align:left; }
-html[data-genesis-theme] .genesis-app .diary-note h2 { margin:0 0 12px; color:var(--note-ink); font:400 24px/1.2 var(--font-heading); overflow-wrap:anywhere; }
-html[data-genesis-theme] .genesis-app .diary-note-open p { display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; margin:0; white-space:pre-wrap; color:var(--note-ink); font:400 14px/1.7 var(--font-ui); overflow-wrap:anywhere; }
+html[data-genesis-theme] .genesis-app .diary-note h2 { margin:0 0 12px; color:var(--note-ink); font:400 24px/1.2 var(--font-heading); overflow-wrap:normal; }
+html[data-genesis-theme] .genesis-app .diary-note-open p { display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; margin:0; white-space:pre-wrap; color:var(--note-ink); font:400 14px/1.7 var(--font-ui); overflow-wrap:normal; }
 .diary-note footer { display:flex; justify-content:flex-end; align-items:center; gap:4px; border-top:1px solid color-mix(in srgb,var(--note-ink) 12%,transparent); padding-top:6px; }
 html[data-genesis-theme] .genesis-app .diary-note footer button { display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; border-radius:10px; color:var(--note-soft); background:transparent; }
 .diary-note footer button:hover { background:color-mix(in srgb,var(--note-ink) 8%,transparent); }
@@ -86,7 +86,7 @@ html[data-genesis-theme] .genesis-app .diary-note footer button { display:grid; 
 .diary-drafts { margin:16px 0 24px; padding:12px 0; border-block:1px solid var(--line); }
 .diary-drafts summary { display:flex; align-items:center; color:var(--ink-soft); }
 .diary-drafts > div { display:flex; gap:8px; align-items:center; margin-top:8px; }
-.diary-drafts button { padding:8px 12px; max-width:100%; overflow-wrap:anywhere; }
+.diary-drafts button { padding:8px 12px; max-width:100%; overflow-wrap:normal; }
 .diary-archive-heading { margin:24px 0; }
 .diary-archive-heading h2 { margin:0; font:400 26px/1.25 var(--font-heading); }
 .diary-archive-heading p { margin-top:8px; color:var(--ink-soft); }
@@ -115,7 +115,7 @@ html[data-genesis-theme] .genesis-app .diary-editor textarea { min-height:230px 
 .diary-color-options input { accent-color:var(--teal); }
 .diary-advice-source { color:var(--ink-soft); font-size:13px; }
 .diary-advice-source summary { min-height:44px; cursor:pointer; }
-.diary-advice-source p { white-space:pre-wrap; overflow-wrap:anywhere; }
+.diary-advice-source p { white-space:pre-wrap; overflow-wrap:normal; }
 html[data-genesis-theme] .genesis-app :is(.diary-note-open, .diary-advice-source) .daily-advice-context { font-weight:600; }
 html[data-genesis-theme] .genesis-app :is(.diary-note-open, .diary-advice-source) .daily-advice-author { margin-top:12px; text-align:end; }
 .diary-save-state { margin:0; color:var(--ink-soft); font-size:12px; }

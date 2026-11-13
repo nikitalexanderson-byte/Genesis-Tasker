@@ -24,7 +24,7 @@ html[data-genesis-theme] .genesis-app .dream-editor label:not(.dream-check) > :i
 .dream-editor footer button { flex:1; min-height:44px; }
 .dream-editor-privacy, .dream-editor small { color:var(--ink-soft); }
 .dream-spelling-settings { display:grid; gap:6px; min-width:0; }
-.dream-spelling-settings small { overflow-wrap:anywhere; }
+.dream-spelling-settings small { overflow-wrap:normal; }
 
 .dream-date-fields { display:grid; gap:12px; margin:0; padding:0; border:0; min-width:0; }
 .dream-date-fields select { min-height:44px; width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); font:inherit; }

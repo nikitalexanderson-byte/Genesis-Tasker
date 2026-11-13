@@ -1,19 +1,23 @@
 .email-verification-notice {
-  position: relative; padding-inline-end:64px!important;
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
   padding: 16px; border: 1px solid var(--line); border-radius: 10px;
   color: var(--ink); background: var(--surface);
 }
-.email-verification-notice > button {position:absolute;inset:8px 8px auto auto;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:10px;background:transparent;color:var(--ink);cursor:pointer;}
 .email-verification-copy { flex: 1 1 320px; min-width: 0; }
-.email-verification-copy p { margin: 6px 0; overflow-wrap: anywhere; }
+.email-verification-copy p { margin: 6px 0; overflow-wrap: normal; }
 .email-verification-copy small { color: var(--muted); }
-.email-verification-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.email-verification-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 44px; align-items: stretch; flex: 0 1 460px; min-width: 0; max-width: 100%; gap: 8px; }
 .email-verification-actions button {
-  min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px;
+  min-width: 44px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px;
   color: var(--ink); background: var(--surface); font: inherit; cursor: pointer;
+  overflow-wrap: normal; word-break: normal; hyphens: none;
 }
+html[data-genesis-theme] .genesis-app .email-verification-actions > .dialog-close-button { position: static; align-self: stretch; width: 44px; height: auto; margin: 0; }
 .email-verification-actions button:first-child { border-color: var(--accent, #8c672b); }
 .email-verification-actions button:disabled { opacity: .65; cursor: default; }
 .email-verification-actions button:focus-visible { outline: 2px solid var(--accent, #8c672b); outline-offset: 3px; }
 .email-verification-result { flex-basis: 100%; margin: 0; }
+@media (max-width: 600px) {
+  .email-verification-actions { gap: 6px; }
+  .email-verification-actions > button:not(.dialog-close-button) { padding-inline: 6px; font-size: clamp(11px, 3vw, 14px); }
+}
