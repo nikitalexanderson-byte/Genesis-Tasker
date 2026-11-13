@@ -44,6 +44,10 @@ export async function verifySharedRetention({context, page, tier, output,
     const entry={path:url.pathname,method:response.request().method(),status:response.status()};
     requests.push(entry);if(response.status()>=400)failures.push(entry);
   };
+  // Stop the previously paid screen and drain its responses before observing
+  // the new readonly session; its in-flight writes predate the downgrade.
+  await page.goto('about:blank');
+  await page.waitForLoadState('networkidle');
   page.on('response',observe);
   try {
     control(true);

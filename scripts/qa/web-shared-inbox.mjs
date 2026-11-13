@@ -21,7 +21,9 @@ function expectedResponse(page,predicate,options) {
 let dragSequence=0;
 async function mouseDrag(page,source,target,{after=false,cancel=false}={}) {
   await page.evaluate(()=>document.fonts.ready);
-  await source.scrollIntoViewIfNeeded();
+  // Keep the gesture away from viewport-edge autoscroll. Otherwise the row
+  // under a self-drop can change between the hit check and pointer release.
+  await source.evaluate(element=>element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
   let from,to,previous,stable=0;
   for(let attempt=0;attempt<30;attempt++) {
     [from,to]=await Promise.all([source.boundingBox(),target.boundingBox()]);
@@ -34,7 +36,22 @@ async function mouseDrag(page,source,target,{after=false,cancel=false}={}) {
   }
   assert(stable>=2,'Drag endpoints did not settle before the gesture');
   const start={x:from.x+Math.min(from.width/2,60),y:from.y+Math.min(from.height/2,22)};
-  let end={x:to.x+Math.min(to.width/2,70),y:to.y+(after?to.height-6:Math.min(to.height/4,20))};
+  const visibleDropPoint=()=>target.evaluate((element,after)=>{
+    const rect=element.getBoundingClientRect();
+    const xs=[Math.min(rect.width/2,70),rect.width/2,rect.width*.25,rect.width*.75];
+    const visibleTop=Math.max(0,-rect.y),visibleBottom=Math.min(rect.height,innerHeight-rect.y);
+    const ys=after?[rect.height-6,rect.height*.75,rect.height*.6]:[Math.min(rect.height/4,20),rect.height*.4,rect.height*.25,
+      visibleTop+(visibleBottom-visibleTop)*.25,visibleTop+(visibleBottom-visibleTop)*.4];
+    for(const dy of ys)for(const dx of xs){
+      const x=rect.x+dx,y=rect.y+dy;
+      if(x<0||y<0||x>=innerWidth||y>=innerHeight)continue;
+      const hit=document.elementFromPoint(x,y);
+      if(hit&&(hit===element||element.contains(hit)))return{x,y};
+    }
+    return null;
+  },after);
+  let end=await visibleDropPoint();
+  assert(end,'Drag destination must expose an unobstructed point');
   assert(start.y>=0&&end.y>=0&&Math.max(start.y,end.y)<page.viewportSize().height,'Functional fixture must keep both drag endpoints visible');
   const hitsTarget=()=>target.evaluate((element,point)=>{const hit=document.elementFromPoint(point.x,point.y);return Boolean(hit&&(hit===element||element.contains(hit)));},end);
   const evidence={from,to,start,end,beforeHit:await hitsTarget(),steps:[]};
@@ -46,9 +63,10 @@ async function mouseDrag(page,source,target,{after=false,cancel=false}={}) {
     // intended DOM target instead of releasing over a different view switch.
     for(let attempt=0;!await hitsTarget()&&attempt<3;attempt++) {
       to=await target.boundingBox();assert(to,'Drag destination disappeared');
-      end={x:to.x+Math.min(to.width/2,70),y:to.y+(after?to.height-6:Math.min(to.height/4,20))};
+      const point=await visibleDropPoint();assert(point,'Drag destination became obstructed');end=point;
       assert(end.y>=0&&end.y<page.viewportSize().height,'Drag destination left the visible fixture');
       evidence.steps.push({to,end});await page.mouse.move(end.x,end.y,{steps:8});
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     }
     evidence.beforeReleaseHit=await hitsTarget();
     assert(evidence.beforeReleaseHit,'Gesture must end over the requested DOM destination');
