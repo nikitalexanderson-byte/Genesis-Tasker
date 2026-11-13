@@ -152,7 +152,7 @@ internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDa
                     if (offerToday) androidx.compose.material3.Surface(onClick = onToday,
                         modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).size(48.dp).testTag("calendar-month-today")
                             .genesisDescription("Сегодня"), shape = AffairsLayout.controlShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = .92f), contentColor = MaterialTheme.colorScheme.primary) {
+                        color = calendarArtworkControlBackground(), contentColor = MaterialTheme.colorScheme.primary) {
                         Box(contentAlignment = Alignment.Center) { GenesisLucideIcon("undo-2") }
                     }
                 }

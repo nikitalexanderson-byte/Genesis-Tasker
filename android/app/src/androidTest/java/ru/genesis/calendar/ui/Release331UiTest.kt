@@ -1,6 +1,7 @@
 package ru.genesis.calendar.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
@@ -141,5 +144,75 @@ class Release331UiTest {
         assertEquals(.70f, pixel.red, .015f)
         assertEquals(pixel.red, pixel.green, .001f)
         assertEquals(pixel.green, pixel.blue, .001f)
+    }
+
+    @Test fun artworkButtonsHaveTheRequestedOpacityAndStillNavigate() {
+        var palette by mutableStateOf("blue"); var dark by mutableStateOf(false)
+        var previous = 0; var next = 0; var today = 0
+        var surface = Color.White
+        compose.setContent { Frame(palette = palette, dark = dark) {
+            surface = MaterialTheme.colorScheme.surface
+            Box(Modifier.fillMaxWidth().background(Color.Black)) {
+                CalendarMonthHeroNavigation({ previous++ }, { next++ }, offerToday = true, onToday = { today++ })
+            }
+        } }
+        for (p in palettes) for (night in listOf(false, true)) {
+            compose.runOnIdle { palette = p; dark = night }
+            val expected = if (night) Color.Black else surface.copy(alpha = .20f).compositeOver(Color.Black)
+            for (action in listOf("previous", "next", "today")) {
+                val node = compose.onNodeWithTag("calendar-month-$action")
+                val bounds = node.getUnclippedBoundsInRoot()
+                assertEquals(48f, bounds.width.value, 1f)
+                assertEquals(48f, bounds.height.value, 1f)
+                val pixels = node.captureToImage().toPixelMap()
+                val pixel = pixels[pixels.width / 5, pixels.height / 5]
+                assertEquals("$p/$night/$action red", expected.red, pixel.red, .015f)
+                assertEquals("$p/$night/$action green", expected.green, pixel.green, .015f)
+                assertEquals("$p/$night/$action blue", expected.blue, pixel.blue, .015f)
+                node.performClick()
+            }
+        }
+        assertEquals(8, previous); assertEquals(8, next); assertEquals(8, today)
+    }
+
+    @Test fun weekdaySelectionsKeepGoldSilverAndGrayInEveryLightPalette() {
+        val sunday = LocalDate.of(2027, 1, 3)
+        var palette by mutableStateOf("blue"); var dark by mutableStateOf(false)
+        var selected by mutableStateOf(sunday.minusDays(1))
+        compose.setContent { Frame(palette = palette, dark = dark, sacred = false) {
+            Row(Modifier.fillMaxWidth().padding(4.dp), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                repeat(7) { offset ->
+                    val day = sunday.plusDays(offset.toLong())
+                    CalendarDay(GenesisCalendar(), day, day.dayOfMonth, null, day.dayOfWeek.name,
+                        selected == day, { selected = it }, Modifier.weight(1f), null, null, 0, null,
+                        patron = weekdayPatronMark(day))
+                }
+            }
+        } }
+        fun fill(day: LocalDate): Color {
+            val pixels = compose.onNodeWithTag("calendar-day-$day").captureToImage().toPixelMap()
+            return pixels[pixels.width / 2, pixels.height * 4 / 5]
+        }
+        val daylightSelections = listOf(0xffbe963c, 0xff9fa7b0, 0xffc47b6c, 0xff6fa582,
+            0xff6e99c2, 0xffa483bd, 0xff656c75).map { Color(it) }
+        for (p in palettes) for (night in listOf(false, true)) {
+            compose.runOnIdle { palette = p; dark = night; selected = sunday.minusDays(1) }
+            val mondayWash = fill(sunday.plusDays(1)); val saturdayWash = fill(sunday.plusDays(6))
+            if (!night) {
+                assertTrue(saturdayWash.luminance() < mondayWash.luminance())
+                val washes = (0..6).map { fill(sunday.plusDays(it.toLong())).luminance() }
+                assertTrue("Balanced ordinary days: $p", washes.max() - washes.min() < .08f)
+            }
+            for (offset in 0..6) {
+                val day = sunday.plusDays(offset.toLong())
+                compose.onNodeWithTag("calendar-day-$day").performClick().assertIsSelected()
+                val expected = if (night) weekdayPatronMark(day).selectedBackground else daylightSelections[offset]
+                val pixel = fill(day)
+                assertEquals("$p/$night/$day red", expected.red, pixel.red, .015f)
+                assertEquals("$p/$night/$day green", expected.green, pixel.green, .015f)
+                assertEquals("$p/$night/$day blue", expected.blue, pixel.blue, .015f)
+                if (offset in listOf(0,1,6)) shot("weekday-$offset-$p-$night")
+            }
+        }
     }
 }
