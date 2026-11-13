@@ -30,6 +30,14 @@ import ru.genesis.calendar.domain.GenesisCalendar
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import ru.genesis.calendar.data.LocalPreferences
+import ru.genesis.calendar.data.UiPreferences
+import ru.genesis.calendar.data.todayHiddenBlockIds
+import ru.genesis.calendar.data.encodeTodayHiddenBlocks
+import java.util.UUID
 
 /** Render the shipped components with synthetic data, without a production account. */
 class Release331UiTest {
@@ -158,6 +166,7 @@ class Release331UiTest {
         } }
         for (p in palettes) for (night in listOf(false, true)) {
             compose.runOnIdle { palette = p; dark = night }
+            compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
             val expected = if (night) Color.Black else surface.copy(alpha = .20f).compositeOver(Color.Black)
             for (action in listOf("previous", "next", "today")) {
                 val node = compose.onNodeWithTag("calendar-month-$action")
@@ -170,6 +179,7 @@ class Release331UiTest {
                 assertEquals("$p/$night/$action green", expected.green, pixel.green, .015f)
                 assertEquals("$p/$night/$action blue", expected.blue, pixel.blue, .015f)
                 node.performClick()
+                compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
             }
         }
         assertEquals(8, previous); assertEquals(8, next); assertEquals(8, today)
@@ -197,6 +207,7 @@ class Release331UiTest {
             0xff6e99c2, 0xffa483bd, 0xff656c75).map { Color(it) }
         for (p in palettes) for (night in listOf(false, true)) {
             compose.runOnIdle { palette = p; dark = night; selected = sunday.minusDays(1) }
+            compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
             val mondayWash = fill(sunday.plusDays(1)); val saturdayWash = fill(sunday.plusDays(6))
             if (!night) {
                 assertTrue(saturdayWash.luminance() < mondayWash.luminance())
@@ -206,6 +217,7 @@ class Release331UiTest {
             for (offset in 0..6) {
                 val day = sunday.plusDays(offset.toLong())
                 compose.onNodeWithTag("calendar-day-$day").performClick().assertIsSelected()
+                compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
                 val expected = if (night) weekdayPatronMark(day).selectedBackground else daylightSelections[offset]
                 val pixel = fill(day)
                 assertEquals("$p/$night/$day red", expected.red, pixel.red, .015f)
@@ -213,6 +225,58 @@ class Release331UiTest {
                 assertEquals("$p/$night/$day blue", expected.blue, pixel.blue, .015f)
                 if (offset in listOf(0,1,6)) shot("weekday-$offset-$p-$night")
             }
+        }
+    }
+
+    @Test fun eyesAndSettingsSharePersistedVisibilityAndHiddenBlocksCanBeRestored() {
+        val accountScope = "qa331-visibility-${UUID.randomUUID()}"
+        val store = LocalPreferences(context, accountScope)
+        var settings by mutableStateOf(false); var editing by mutableStateOf(true)
+        var epoch by mutableIntStateOf(0); var savedHidden: Set<String> = emptySet()
+        var dark by mutableStateOf(false)
+        compose.setContent { key(epoch) {
+            val prefs by store.values.collectAsState(initial = UiPreferences())
+            val hidden = todayHiddenBlockIds(prefs.todayHiddenBlocks, emptySet())
+            savedHidden = hidden
+            val scope = rememberCoroutineScope()
+            val save: (Set<String>) -> Unit = { next -> scope.launch {
+                store.set("todayHiddenBlocks", encodeTodayHiddenBlocks(next))
+            }; Unit }
+            Frame(dark = dark) {
+                if (settings) Column { TodayBlockVisibilitySettings(hidden, save) }
+                else SortableTodayWorkspace("", listOf(
+                    TodayBlock("tasks", "Задачи дня") { Text("Synthetic tasks", Modifier.testTag("visibility-tasks-content")) },
+                    TodayBlock("habits", "Трекер привычек") { Text("Synthetic habits", Modifier.testTag("visibility-habits-content")) }),
+                    {}, editing, hidden, save) { Text("Today header", Modifier.testTag("visibility-header")) }
+            }
+        } }
+        for (night in listOf(false, true)) {
+            compose.runOnIdle { dark = night; settings = false; editing = true }
+            compose.onNodeWithTag("today-visibility-tasks").performClick()
+            compose.waitUntil(10000) { "tasks" in savedHidden }
+            compose.onNodeWithTag("visibility-tasks-content").assertDoesNotExist()
+            compose.runOnIdle { settings = true }
+            compose.onNodeWithTag("today-visibility-tasks").assertIsOff().performClick()
+            compose.waitUntil(10000) { "tasks" !in savedHidden }
+            compose.runOnIdle { settings = false }
+            compose.onNodeWithTag("visibility-tasks-content").assertIsDisplayed()
+            compose.onNodeWithTag("today-visibility-tasks").performClick()
+            compose.waitUntil(10000) { "tasks" in savedHidden }
+            compose.onNodeWithTag("today-visibility-habits").performClick()
+            compose.waitUntil(10000) { "habits" in savedHidden }
+            compose.runOnIdle { editing = false; epoch++ }
+            compose.onNodeWithTag("visibility-header").assertIsDisplayed()
+            compose.onNodeWithTag("today-block-tasks").assertDoesNotExist()
+            compose.onNodeWithTag("today-block-habits").assertDoesNotExist()
+            val reloaded = runBlocking { LocalPreferences(context, accountScope).values.first() }
+            assertEquals(setOf("tasks", "habits"), todayHiddenBlockIds(reloaded.todayHiddenBlocks, emptySet()))
+            assertEquals("", runBlocking { LocalPreferences(context, "$accountScope-other").values.first() }.todayHiddenBlocks)
+            compose.runOnIdle { editing = true }
+            shot("hidden-blocks-$night")
+            compose.onNodeWithTag("today-visibility-tasks").performClick()
+            compose.waitUntil(10000) { "tasks" !in savedHidden }
+            compose.onNodeWithTag("today-visibility-habits").performClick()
+            compose.waitUntil(10000) { savedHidden.isEmpty() }
         }
     }
 }

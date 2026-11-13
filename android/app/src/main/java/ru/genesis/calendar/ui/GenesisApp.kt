@@ -384,7 +384,9 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     var pendingUiVisibility by remember(authState.user?.uid) {
         mutableStateOf<ru.genesis.calendar.auth.UiVisibility?>(null)
     }
-    val uiVisibility = pendingUiVisibility ?: serverUiVisibility
+    val accountUiVisibility = pendingUiVisibility ?: serverUiVisibility
+    val uiVisibility = accountUiVisibility.copy(hiddenTodayBlocks =
+        ru.genesis.calendar.data.todayHiddenBlockIds(prefs.todayHiddenBlocks, accountUiVisibility.hiddenTodayBlocks))
     LaunchedEffect(authState.busy, serverUiVisibility, pendingUiVisibility) {
         if (!authState.busy && pendingUiVisibility != null &&
             serverUiVisibility == pendingUiVisibility) pendingUiVisibility = null
@@ -752,8 +754,14 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         adminGateway = nativeAdminGateway,
                         onOpenAssistant = if ((authState.accountSettings?.featureAccess ?: ru.genesis.calendar.auth.FeatureAccess()).allows("assistant") && (serverAssistantAvailable || hasAssistantPlan)) ({ serverAssistantOpen = true }) else null,
                         onSetVisibility = { next ->
-                            pendingUiVisibility = next
-                            authController.updateUiVisibility(next)
+                            if (next.hiddenTodayBlocks != uiVisibility.hiddenTodayBlocks) scope.launch {
+                                prefsStore.set("todayHiddenBlocks", ru.genesis.calendar.data.encodeTodayHiddenBlocks(next.hiddenTodayBlocks))
+                            }
+                            val shared = next.copy(hiddenTodayBlocks = accountUiVisibility.hiddenTodayBlocks)
+                            if (shared != accountUiVisibility) {
+                                pendingUiVisibility = shared
+                                authController.updateUiVisibility(shared)
+                            }
                         },
                         onSet = { name, value ->
                             if (name == "sharedProjectsEnabled") pendingSharedProjectsToggle = value == "true"
@@ -816,6 +824,10 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         periodSwipeEnabled=!portraitMenuSwipe,
                         hiddenSubmenus=uiVisibility.hiddenSubmenus)
                     else -> SortableTodayWorkspace(savedOrder = prefs.todayBlockOrder, editing = editingTodayBlocks,
+                        hiddenBlocks = uiVisibility.hiddenTodayBlocks,
+                        onHiddenBlocks = { hidden -> scope.launch {
+                            prefsStore.set("todayHiddenBlocks", ru.genesis.calendar.data.encodeTodayHiddenBlocks(hidden))
+                        } },
                         onOrder = { order -> scope.launch { prefsStore.set("todayBlockOrder", order.joinToString(",")) } },
                         header = {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -830,7 +842,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                                     }
                             }
                     }, blocks = buildList {
-                            if (uiVisibility.sacredFeaturesEnabled && "rhythm" !in uiVisibility.hiddenTodayBlocks)
+                            if (uiVisibility.sacredFeaturesEnabled)
                                 add(TodayBlock("rhythm", "Сакральное время") { DayRhythmPanel(prefs.use24) })
                             if (!testWorkspace && activeAdviceRequest == null && authState.ready && !authState.requiresSignIn) {
                                 authState.user?.uid?.let { uid ->
@@ -851,8 +863,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                                     TodayAdPanel(authController, authState.user?.uid, prefs.language)
                                 })
                             }
-                            if (uiVisibility.sacredFeaturesEnabled && prefs.display == CalendarMode.SACRED &&
-                                "details" !in uiVisibility.hiddenTodayBlocks) {
+                            if (uiVisibility.sacredFeaturesEnabled && prefs.display == CalendarMode.SACRED) {
                                 add(TodayBlock("details", "О дне") {
                                 Box(Modifier.fillMaxWidth().testTag("today-day-details")) {
                                     DayKnowledgePanel(LocalDate.parse(todayPageDate), prefs.display)
@@ -863,7 +874,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         val shown = tasks.filter { TaskOccurrences.occursOn(it, todayDate) }
                             val missed=if (prefs.showMissedTasksToday)
                                 missedTasksForToday(tasks,todayDate) else emptyList()
-                            if ("tasks" !in uiVisibility.hiddenTodayBlocks) add(TodayBlock("tasks", "Задачи дня") {
+                            add(TodayBlock("tasks", "Задачи дня") {
                                 TodayTasksPanel(shown, missed, todayPageDate, prefs.use24, structure,
                                 onCreate = { selected=todayPageDate;creating=true;editId=null;newTaskProjectId=null;newTaskListId=null },
                                 onComplete = model::complete,
@@ -877,7 +888,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                                     menuSwipeState.projectArea="shared"; tab="Проекты"; menuSwipeState.personalView="projects"
                                 })
                             })
-                            if ("habits" !in uiVisibility.hiddenTodayBlocks) add(TodayBlock("habits", "Трекер привычек") { TodayHabitTrackerBlock {
+                            add(TodayBlock("habits", "Трекер привычек") { TodayHabitTrackerBlock {
                                 if (habitTrackingEnabled) TodayHabitsContent(app, todayDate, habitWorkspace,
                                     onOpenHabits = { tab = "Привычки" }, showTopDivider = false)
                                 TodayTrackersContent(app, todayDate, prefs)
@@ -2153,20 +2164,9 @@ private fun MenuVisibilitySettings(prefs: UiPreferences,
                         modifier = Modifier.testTag("submenu-visibility-$id"))
                 }
             }
-            Text(if (prefs.language == "en") "Today" else "Экран «Сегодня»", style = MaterialTheme.typography.titleSmall)
-            listOf("Ритм дня" to "rhythm", "Быстрое создание" to "quickCreate",
-                "Задачи дня" to "tasks", "Трекер привычек" to "habits", "Подробности дня" to "details")
-                .forEach { (label, id) ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(genesisTranslate(label), Modifier.weight(1f))
-                        Switch(checked = id !in visibility.hiddenTodayBlocks,
-                            enabled = accountSettings != null,
-                            onCheckedChange = { checked -> onSetVisibility(visibility.copy(
-                                hiddenTodayBlocks = if (checked) visibility.hiddenTodayBlocks - id
-                                    else visibility.hiddenTodayBlocks + id)) },
-                            modifier = Modifier.testTag("today-visibility-$id"))
-                    }
-                }
+            TodayBlockVisibilitySettings(visibility.hiddenTodayBlocks) { hidden ->
+                onSetVisibility(visibility.copy(hiddenTodayBlocks = hidden))
+            }
             Text(if (prefs.language == "en") "Available calendars" else "Доступные календари",
                 style = MaterialTheme.typography.titleSmall)
             listOf(CalendarMode.PROFANE to "Григорианский", CalendarMode.SACRED to "Сакральный",

@@ -23,7 +23,8 @@ data class UiPreferences(val display: CalendarMode = CalendarMode.PROFANE,
     val settingsMenuLabels: Boolean = false, val updateRemindersEnabled: Boolean = true,
     val menuThreadsEnabled: Boolean = false,
     val settingsSubmenuEnabled: Boolean = true, val theme: String? = null, val darkPalette: String = "green",
-    val todayBlockOrder: String = "", val weatherTemperatureUnit: String = "celsius", val weatherPressureUnit: String = "hpa")
+    val todayBlockOrder: String = "", val weatherTemperatureUnit: String = "celsius", val weatherPressureUnit: String = "hpa",
+    val todayHiddenBlocks: String = "")
 class LocalPreferences(private val context: Context, private val scope: String) {
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
     internal suspend fun backupRaw(): JSONObject {
@@ -72,7 +73,8 @@ class LocalPreferences(private val context: Context, private val scope: String) 
             it[key("darkPalette")]?.takeIf { value -> value in setOf("green", "burgundy", "blue", "violet") } ?: "green",
             it[key("todayBlockOrder")] ?: "",
             it[key("weatherTemperatureUnit")]?.takeIf { value -> value in setOf("celsius", "fahrenheit") } ?: "celsius",
-            it[key("weatherPressureUnit")]?.takeIf { value -> value in setOf("hpa", "mmhg") } ?: "hpa")
+            it[key("weatherPressureUnit")]?.takeIf { value -> value in setOf("hpa", "mmhg") } ?: "hpa",
+            it[key("todayHiddenBlocks")] ?: "")
     }
     suspend fun set(name: String, value: String) { context.genesisPreferences.edit { mutation.check();it[key(name)] = value } }
     suspend fun initializeNewAccount() {

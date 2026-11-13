@@ -27,8 +27,11 @@ internal data class TodayBlock(val id: String, val title: String, val content: @
 
 /** Stable keys preserve drafts and card state while a viewport-owned gesture moves blocks. */
 @Composable internal fun SortableTodayWorkspace(savedOrder: String, blocks: List<TodayBlock>,
-    onOrder: (List<String>) -> Unit, editing: Boolean = false, header: @Composable () -> Unit) {
+    onOrder: (List<String>) -> Unit, editing: Boolean = false,
+    hiddenBlocks: Set<String> = emptySet(), onHiddenBlocks: (Set<String>) -> Unit = {},
+    header: @Composable () -> Unit) {
     var order by remember(savedOrder) { mutableStateOf(normalizeTodayBlockOrder(savedOrder)) }
+    var hidden by remember(hiddenBlocks) { mutableStateOf(hiddenBlocks) }
     var dragging by remember { mutableStateOf<String?>(null) }
     var originalOrder by remember { mutableStateOf(order) }
     var pointer by remember { mutableStateOf(Offset.Zero) }
@@ -37,6 +40,7 @@ internal data class TodayBlock(val id: String, val title: String, val content: @
     val bounds = remember { mutableMapOf<String, Rect>() }
     val state = rememberLazyGridState()
     val visible = order.mapNotNull { id -> blocks.find { it.id == id } }
+        .filter { editing || it.id !in hidden }
     fun moveAtPointer() {
         val source = dragging ?: return
         val target = visible.firstOrNull { it.id != source && bounds[it.id]?.contains(pointer) == true }?.id
@@ -74,6 +78,16 @@ internal data class TodayBlock(val id: String, val title: String, val content: @
                         if (editing) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             val translatedTitle=genesisTranslate(block.title)
                             Text(block.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                            val isHidden = block.id in hidden
+                            val visibilityLabel = genesisTranslate(if (isHidden) "Показать блок" else "Скрыть блок")
+                            IconButton(onClick = {
+                                hidden = if (isHidden) hidden - block.id else hidden + block.id
+                                onHiddenBlocks(hidden)
+                            }, enabled = dragging == null,
+                                modifier = Modifier.size(48.dp).testTag("today-visibility-${block.id}")
+                                    .semantics { contentDescription = "$visibilityLabel: $translatedTitle" }) {
+                                GenesisLucideIcon(if (isHidden) "eye-off" else "eye", Modifier.size(20.dp))
+                            }
                             val index = visible.indexOfFirst { it.id == block.id }
                             listOf(-1 to "arrow-up", 1 to "arrow-down").forEach { (step, icon) ->
                                 val label = genesisTranslate(if (step < 0) "Переместить выше" else "Переместить ниже")
@@ -108,7 +122,7 @@ internal data class TodayBlock(val id: String, val title: String, val content: @
                                 }
                             }
                         }
-                        block.content()
+                        if (block.id !in hidden) block.content()
                     }
                 }
             }

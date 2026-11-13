@@ -15,4 +15,12 @@ class TodayBlockOrderTest {
         assertEquals(defaultTodayBlockOrder, moveTodayBlock(up, "advice", "rhythm"))
         assertEquals(defaultTodayBlockOrder, moveTodayBlock(defaultTodayBlockOrder, "header", "tasks"))
     }
+
+    @Test fun explicitMobileVisibilityPreservesShowAllAndRejectsUnknownBlocks() {
+        val inherited = setOf("tasks", "quickCreate")
+        assertEquals(inherited, todayHiddenBlockIds("", inherited))
+        assertEquals(emptySet<String>(), todayHiddenBlockIds(encodeTodayHiddenBlocks(emptySet()), inherited))
+        assertEquals(setOf("dream", "tasks"), todayHiddenBlockIds(encodeTodayHiddenBlocks(setOf("dream", "tasks", "obsolete")), inherited))
+        assertEquals(setOf("quickCreate"), todayHiddenBlockIds(encodeTodayHiddenBlocks(setOf("quickCreate")), emptySet()))
+    }
 }
