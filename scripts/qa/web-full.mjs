@@ -259,13 +259,19 @@ try {
       });
       await check('mindmap-edit-second-client', async () => {
         await page.getByRole('button', { name: 'Настройка карты', exact: true }).click();
+        const savedDescription = page.waitForResponse(response =>
+          new URL(response.url()).pathname.startsWith('/api/mindmaps/') &&
+          response.request().method() === 'PUT' && response.ok());
         await page.getByRole('textbox', { name: 'Описание', exact: true }).fill('Карта синтетического теста — сохранённое описание 🌱.');
         await page.getByRole('textbox', { name: 'Название карты', exact: true }).click();
+        await savedDescription;
         await page.locator('.mindmap-save-state[data-save-state="synced"]').waitFor({ state: 'attached' });
         const second = await newContext(tier);
         try {
           const other = await second.newPage(); await other.goto(page.url());
-          await other.getByText('Карта синтетического теста — сохранённое описание 🌱.', { exact: true }).waitFor();
+          await other.getByRole('button', { name: 'Настройка карты', exact: true }).click();
+          assert.equal(await other.getByRole('textbox', { name: 'Описание', exact: true }).inputValue(),
+            'Карта синтетического теста — сохранённое описание 🌱.');
           await other.screenshot({ path: `${output}/${tier}-mindmap-edit-second-client.png`, fullPage: true });
         } finally { await second.close(); }
         await snapshot('mindmap-edit-second-client');

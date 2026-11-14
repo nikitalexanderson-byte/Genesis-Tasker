@@ -41,8 +41,8 @@ class Release329UiTest {
     private val languages = listOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
 
     @Before fun isolatedPackageOnly() {
-        check(BuildConfig.DEBUG && context.packageName.endsWith(".qa328.debug")) {
-            "Release329UiTest requires the isolated .qa328.debug application."
+        check(BuildConfig.DEBUG && listOf(".qa328.debug", ".qa330.debug").any(context.packageName::endsWith)) {
+            "Release329UiTest requires an isolated QA application."
         }
     }
 

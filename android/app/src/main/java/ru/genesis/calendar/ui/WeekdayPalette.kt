@@ -1,6 +1,7 @@
 package ru.genesis.calendar.ui
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import java.time.LocalDate
 import java.time.DayOfWeek
 
@@ -35,7 +36,7 @@ private val weekdayPatronMarks = listOf(
 internal fun weekdayPatronMark(date: LocalDate): WeekdayPatronMark =
     weekdayPatronMarks[date.dayOfWeek.value % 7]
 
-/** Balanced daylight washes and selections; night keeps its authored patron colors. */
+/** The same weekday hues are shared by all light palettes. */
 internal fun WeekdayPatronMark.daylightCell(date: LocalDate): WeekdayPatronMark {
     val (wash, selection) = when (date.dayOfWeek) {
         DayOfWeek.SUNDAY -> Color(0xfff6edcf) to Color(0xffbe963c)
@@ -50,8 +51,12 @@ internal fun WeekdayPatronMark.daylightCell(date: LocalDate): WeekdayPatronMark 
         selectedForeground = if (date.dayOfWeek == DayOfWeek.SATURDAY) Color(0xfff5f6f7) else Color(0xff132426))
 }
 
-/** Warm/cool hues stay recognisable without using bright day-mode backgrounds at night. */
-internal fun weekdayEveningWash(date: LocalDate): Color = listOf(
-    Color(0xff4b4026), Color(0xff3b4844), Color(0xff50342f), Color(0xff2e4b39),
-    Color(0xff2e445b), Color(0xff473652), Color(0xff2e3d36),
-)[date.dayOfWeek.value % 7]
+/** Darken the approved daylight colors, keeping Monday silver and Saturday neutral gray. */
+internal fun WeekdayPatronMark.eveningCell(date: LocalDate): WeekdayPatronMark {
+    val daylight = daylightCell(date)
+    return daylight.copy(
+        wash = Color.Black.copy(alpha = .68f).compositeOver(daylight.wash),
+        selectedBackground = Color.Black.copy(alpha = .35f).compositeOver(daylight.selectedBackground),
+        selectedForeground = Color(0xfff5f6f7),
+        accent = Color.White.copy(alpha = .22f).compositeOver(daylight.selectedBackground))
+}

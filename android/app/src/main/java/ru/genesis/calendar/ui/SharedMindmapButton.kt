@@ -35,19 +35,25 @@ import androidx.compose.ui.unit.dp
                 contentColor = ink),
             modifier = Modifier.size(width = LocalAffairsControlWidth.current, height = 48.dp).testTag("shared-mindmaps-open")
                 .semantics { contentDescription = label }) {
-            // A central idea with radiating branches, distinct from the board hierarchy icon.
-            Canvas(Modifier.size(26.dp)) {
-                val hub = Offset(size.width * .5f, size.height * .5f)
-                val stroke = 1.8.dp.toPx()
-                val nodes = listOf(Offset(-.34f, -.3f), Offset(.34f, -.3f), Offset(-.34f, .3f), Offset(.34f, .3f))
-                nodes.forEach { offset ->
-                    val node = hub + Offset(offset.x * size.width, offset.y * size.height) * spread
-                    drawLine(ink, hub, node, strokeWidth = stroke, cap = StrokeCap.Round)
-                    drawCircle(ink, 2.4.dp.toPx(), node)
-                }
-                drawCircle(paper, 4.dp.toPx(), hub)
-                drawCircle(ink, 4.dp.toPx(), hub, style = Stroke(stroke))
-            }
+            MindmapBranchesIcon(ink = ink, paper = paper, spread = spread)
         }
+    }
+}
+
+/** One central idea with the same radiating branches in personal and shared affairs. */
+@Composable internal fun MindmapBranchesIcon(modifier: Modifier = Modifier.size(26.dp),
+    ink: androidx.compose.ui.graphics.Color = LocalContentColor.current,
+    paper: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer, spread: Float = 1f) {
+    Canvas(modifier) {
+        val hub = Offset(size.width * .5f, size.height * .5f)
+        val stroke = 1.8.dp.toPx()
+        val nodes = listOf(Offset(-.34f, -.3f), Offset(.34f, -.3f), Offset(-.34f, .3f), Offset(.34f, .3f))
+        nodes.forEach { offset ->
+            val node = hub + Offset(offset.x * size.width, offset.y * size.height) * spread
+            drawLine(ink, hub, node, strokeWidth = stroke, cap = StrokeCap.Round)
+            drawCircle(ink, 2.4.dp.toPx(), node)
+        }
+        drawCircle(paper, 4.dp.toPx(), hub)
+        drawCircle(ink, 4.dp.toPx(), hub, style = Stroke(stroke))
     }
 }

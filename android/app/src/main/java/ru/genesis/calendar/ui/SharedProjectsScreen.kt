@@ -86,15 +86,17 @@ private fun sharedStatusLabel(title: String, en: Boolean): String = if (!en) tit
 @Composable
 internal fun SharedProjectsScreen(controller: SharedWorkspaceGateway, language: String,
     destination: SharedInvitationDestination? = null, preferences: UiPreferences = UiPreferences(),
-    onPrivateMessages: ((String) -> Unit)? = null, onProjectChat: ((String) -> Unit)? = null) {
+    onPrivateMessages: ((String) -> Unit)? = null, onProjectChat: ((String) -> Unit)? = null,
+    teamActivity: (@Composable () -> Unit)? = null) {
     // Keep Compose's optional-argument mask out of the large workspace method.
     // R8 9.4.14 emits an invalid >255 register reference for that mask in release DEX.
-    SharedProjectsContent(controller, language, destination, preferences, onPrivateMessages, onProjectChat)
+    SharedProjectsContent(controller, language, destination, preferences, onPrivateMessages, onProjectChat, teamActivity)
 }
 
 @Composable
 private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: String,
-    destination: SharedInvitationDestination?, preferences: UiPreferences, onPrivateMessages: ((String) -> Unit)?, onProjectChat: ((String) -> Unit)?) {
+    destination: SharedInvitationDestination?, preferences: UiPreferences, onPrivateMessages: ((String) -> Unit)?,
+    onProjectChat: ((String) -> Unit)?, teamActivity: (@Composable () -> Unit)?) {
     val en = language == "en"
     val canExchangeData = LocalFeatureAccess.current.allows("data-export")
     val scope = rememberCoroutineScope()
@@ -836,6 +838,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (modal) {
                     "join" -> {
+                        teamActivity?.invoke()
                         if (loadingInvitations) AffairsLoading()
                         else if (invitations.isEmpty()) Text(if (en) "No invitations yet." else "Приглашений пока нет.")
                         invitations.forEach { invitation ->

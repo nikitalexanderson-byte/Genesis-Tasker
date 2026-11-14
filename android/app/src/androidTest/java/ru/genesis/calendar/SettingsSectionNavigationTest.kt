@@ -45,7 +45,7 @@ class SettingsSectionNavigationTest {
             assertTrue("Icon button is too narrow", first.width >= minTarget)
             assertTrue("Icon button height should match the main menu", kotlin.math.abs(first.height - primary.height) <=
                 2 * app.resources.displayMetrics.density)
-            val iconBounds = listOf("appearance", "habits", "reminders", "shared", "region", "account", "links")
+            val iconBounds = listOf("appearance", "habits", "reminders", "region", "account", "links")
                 .map { compose.onNodeWithTag("settings-submenu-$it").assertIsDisplayed().fetchSemanticsNode().boundsInRoot }
             assertEquals("Settings icons must stay in one row", 1, iconBounds.map { it.top }.distinct().size)
             compose.onNodeWithTag("settings-submenu-links").performClick()
@@ -61,7 +61,7 @@ class SettingsSectionNavigationTest {
         }
     }
 
-    @Test fun sevenSettingsPagesFollowOneAnotherWithoutLeavingSettings() {
+    @Test fun sixSettingsPagesFollowOneAnotherWithoutLeavingSettings() {
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
         val preferences = LocalPreferences(app, app.workspaceScope)
         val original = runBlocking { preferences.values.first() }
@@ -76,7 +76,7 @@ class SettingsSectionNavigationTest {
             val fixedHeader = compose.onNodeWithTag("app-header")
                 .fetchSemanticsNode().boundsInRoot
             val sections = listOf("appearance" to "Оформление", "habits" to "привычек",
-                "reminders" to "Напоминания", "shared" to "Общие дела", "region" to "Регион",
+                "reminders" to "Напоминания", "region" to "Регион",
                 "account" to "Аккаунт GENESIS", "links" to "Ссылки")
             sections.forEachIndexed { index, (id, title) ->
                 // The shipped workspace changes settings pages through the drawer;
@@ -93,6 +93,7 @@ class SettingsSectionNavigationTest {
                     kotlin.math.abs(currentHeader.top - fixedHeader.top) < app.resources.displayMetrics.density)
                 compose.onNodeWithTag("workspace-menu").performClick()
                 compose.waitUntil(5_000) { compose.onNodeWithTag("workspace-drawer").isDisplayed() }
+                compose.onNodeWithTag("drawer-Настройки-shared").assertDoesNotExist()
                 compose.onNodeWithTag("drawer-Настройки-$id").performScrollTo().assertIsSelected()
                 compose.onNodeWithTag("drawer-close").performScrollTo().performClick()
                 compose.waitUntil(5_000) { !compose.onNodeWithTag("workspace-drawer").isDisplayed() }
@@ -103,7 +104,7 @@ class SettingsSectionNavigationTest {
                         content.top - header.bottom < 40 * app.resources.displayMetrics.density)
                     compose.onNodeWithTag("genesis-page-header").assertDoesNotExist()
                     assertTrue(UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-                        .takeScreenshot(File(app.getExternalFilesDir(null), "settings-shared-2.6.3.png")))
+                        .takeScreenshot(File(app.getExternalFilesDir(null), "settings-region-3.3.1.png")))
                 }
             }
             compose.openWorkspacePage("Настройки", "appearance")

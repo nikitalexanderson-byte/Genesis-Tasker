@@ -1,5 +1,6 @@
 package ru.genesis.calendar.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -278,8 +279,12 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
     fun listProjectId(list: GoogleTaskList): String? = if(optimisticListLinks.containsKey(list.id)) optimisticListLinks[list.id] else structure.taskListLinks
         .firstOrNull { it.taskListId == list.id }?.projectId
         ?.takeIf { id -> structure.projects.any { it.id == id } }
-    val inboxLists = knownLists.filter { listProjectId(it) == null }
-    val tasksByProject = remember(orderedTasks, structure) { orderedTasks.groupBy { personalTaskProjectId(it, structure) } }
+    val categoryTasks = remember(orderedTasks, structure, knownLists, selectedCategory) {
+        searchPersonalAffairs(orderedTasks, structure, knownLists, "", selectedCategory)
+    }
+    val inboxLists = knownLists.filter { listProjectId(it) == null &&
+        (selectedCategory == null || categoryTasks.any { task -> task.belongsToList(it) }) }
+    val tasksByProject = remember(categoryTasks, structure) { categoryTasks.groupBy { personalTaskProjectId(it, structure) } }
     val inbox = tasksByProject[null].orEmpty().filterNot { task -> inboxLists.any { task.belongsToList(it) } }
     val searchResults = remember(orderedTasks, structure, knownLists, searchQuery, selectedCategory) {
         if (searchQuery.isBlank()) emptyList()
@@ -401,7 +406,7 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
             onStart = { point ->
                 pickup = TaskPickup("list-${list.id}", list.title, listProjectId(list), point, list)
             }, onMove = onDrag, onFinish = onRelease) {
-        PersonalTaskListCard(list, orderedTasks.filter { it.belongsToList(list) &&
+        PersonalTaskListCard(list, categoryTasks.filter { it.belongsToList(list) &&
             personalTaskProjectId(it, structure) == listProjectId(list) }, structure, use24,
             onCreateListTask, onCompleteTask, onOpenTask, onUpdateList, onDeleteList,
             initialExpanded = openedListId == list.id,
@@ -415,6 +420,9 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
     }
 
     val headerActions: @Composable () -> Unit = {
+                    WorkspaceHeaderButton("Майндмепы", "personal-mindmaps", onClick = { onMindmaps(null) }) {
+                        MindmapBranchesIcon()
+                    }
                     Box {
                         WorkspaceHeaderButton(genesisTranslate("Создать или открыть"), "personal-actions",
                             onClick = { createActionsOpen = true }) { GenesisLucideIcon("plus") }
@@ -460,9 +468,7 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
     }
     }
     val categoriesContent: @Composable () -> Unit = {
-            Card(Modifier.fillMaxWidth().testTag("life-categories-card"), shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+            Column(Modifier.fillMaxWidth().testTag("life-categories-card")) {
                 Column {
                     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 10.dp, top = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -471,26 +477,26 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
                             verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text("Категории жизни", style = MaterialTheme.typography.titleMedium)
                         }
-                        TextButton(onClick = { categoriesExpanded = !categoriesExpanded },
-                            modifier = Modifier.heightIn(min = 48.dp).testTag("manage-categories")) {
-                            Text(if (categoriesExpanded) "Свернуть" else "Управлять")
-                        }
+                        AffairsIconButton("Добавить категорию", AffairsAction.ADD, {
+                            editingCategory = null; categoryEditor = true; error = null
+                        }, Modifier.testTag("create-category"))
+                        AffairsIconButton("Закрыть", AffairsAction.CLOSE, {
+                            categoryFiltersOpen = false; categoriesExpanded = false
+                        }, Modifier.testTag("personal-categories-close"))
                     }
                     ConnectedSubmenu(listOf(SubmenuItem("all", "Все")) +
                         structure.categories.sortedBy { it.position }.map {
                             SubmenuItem(it.id, it.name, categoryAccent(it.color), "category-filter-${it.id}")
                         }, selectedCategory ?: "all",
-                        { selectCategory(it.takeUnless { id -> id == "all" }) },
+                        { selectCategory(it.takeUnless { id -> id == "all" }); categoryFiltersOpen = false; categoriesExpanded = false },
                         Modifier.testTag("life-category-filters"), connectToParent = false)
+                    TextButton(onClick = { categoriesExpanded = !categoriesExpanded },
+                        modifier = Modifier.heightIn(min = 48.dp).testTag("manage-categories")) {
+                        Text(if (categoriesExpanded) "Свернуть" else "Управлять")
+                    }
                     if (categoriesExpanded) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = {
-                                editingCategory = null; categoryEditor = true; error = null
-                            }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                                .testTag("create-category")) {
-                                Text("Добавить категорию")
-                            }
                             structure.categories.sortedBy { it.position }.forEach { category ->
                                 Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
                                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -526,14 +532,6 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
         item(key = "personal-controls") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!headerInShell) AffairsPageHeader("Личные дела", projectSummary, contextIsUserContent = true) { headerActions() }
-                Button(onClick = { onMindmaps(null) }, Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                    .testTag("personal-mindmaps"), shape = AffairsLayout.shape,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                    AffairsActionIcon(AffairsAction.MINDMAP)
-                    Spacer(Modifier.width(10.dp))
-                    Text("Майндмепы", style = MaterialTheme.typography.titleMedium)
-                }
                 if (inboxLayout.hidden) OutlinedButton(onClick = { setInboxLayout(inboxLayout.copy(hidden = false)) },
                     modifier = Modifier.fillMaxWidth().testTag("personal-show-inbox")) {
                     AffairsActionIcon(AffairsAction.VIEW)
@@ -666,15 +664,20 @@ internal fun ProjectsScreen(app: GenesisApplication, tasks: List<LocalTask>, exp
         moveAnnouncement?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.testTag("project-move-announcement")) } }
     }
-    WorkspaceSearchDock(searchQuery, { searchQuery = it }, "Поиск задач", "personal-task-search",
-        Modifier.align(Alignment.BottomCenter).onGloballyPositioned { searchDockHeight = it.size.height }, below = {
-            if (categoryFiltersOpen || categoriesExpanded) categoriesContent()
+    BackHandler(categoryFiltersOpen || categoriesExpanded) {
+        categoryFiltersOpen = false; categoriesExpanded = false
+    }
+    val dockModifier = Modifier.align(Alignment.BottomCenter).onGloballyPositioned { searchDockHeight = it.size.height }
+    if (categoryFiltersOpen || categoriesExpanded) {
+        WorkspacePopupDock("personal-category-dock", dockModifier) { categoriesContent() }
+    } else WorkspaceSearchDock(searchQuery, { searchQuery = it }, "Поиск задач", "personal-task-search",
+        dockModifier, leading = {
+            WorkspaceDockButton("Категории жизни", "sliders-horizontal", "personal-category-filters", selectedCategory != null) {
+                categoryFiltersOpen = true
+            }
         }, controls = {
             TaskListSortChoice(taskSort, setTaskSort, Modifier, compact = true, iconOnly = true)
-            AffairsIconButton("Категории жизни", AffairsAction.FILTER,
-                { categoryFiltersOpen = !categoryFiltersOpen }, Modifier.testTag("personal-category-filters"),
-                selected = categoryFiltersOpen || selectedCategory != null)
-        }, active = selectedCategory != null)
+        })
     pickup?.let { held ->
         ProjectDropOverlay(held, experimental, workspaceBounds)
     }

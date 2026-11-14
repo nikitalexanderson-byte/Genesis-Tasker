@@ -383,7 +383,7 @@ internal fun NativeMindmapCanvas(map:MindmapDocument,rows:List<Pair<MindmapNode,
     } }
     val contentWidth=(located.maxOfOrNull {it.second.x} ?: 0f)+300;val contentHeight=(located.maxOfOrNull {it.second.y} ?: 0f)+180
     val line=mapColor(map.appearance?.optString("lineColor"),if (LocalEveningTheme.current) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant)
-    val background=if (LocalEveningTheme.current) androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface,MaterialTheme.colorScheme.primary,.09f) else Color.White
+    val background=if (LocalEveningTheme.current) androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface,MaterialTheme.colorScheme.primary,.09f) else androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.background, Color.Black, .15f)
     val scaleState=genesisTranslate("Масштаб")
     val zoomIn=genesisTranslate("Увеличить масштаб");val zoomOut=genesisTranslate("Уменьшить масштаб")
     CompositionLocalProvider(LocalPreserveCalendarColors provides true) {

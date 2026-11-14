@@ -8,6 +8,29 @@ import org.junit.Test
 import java.io.File
 
 class AndroidUpdatePromptTest {
+    @Test fun everyOlderInstallationTargetsTheOneLatestFullReleaseWithoutIntermediateVersions() {
+        val hash = "c".repeat(64)
+        val latest = """{"versionCode":143,"versionName":"3.3.1","sha256":"$hash","minimumSupportedVersionCode":76}"""
+        for (installed in 1..142) {
+            val offered = requireNotNull(newerAndroidRelease(latest, installed))
+            assertEquals("Installed code $installed must jump straight to latest",143,offered.versionCode)
+            assertEquals("3.3.1",offered.versionName)
+        }
+        assertNull(newerAndroidRelease(latest,143))
+        assertNull(newerAndroidRelease(latest,144))
+    }
+
+    @Test fun aDialogOrDownloadedApkIsSupersededWhenANewerReleaseIsPublished() {
+        val old = AndroidRelease(142,"3.3.0","a".repeat(64))
+        val latest = AndroidRelease(143,"3.3.1","b".repeat(64))
+        assertEquals(latest,latestAndroidRelease(old,latest))
+        assertEquals(latest,latestAndroidRelease(latest,latest))
+        assertNull(latestAndroidRelease(old,null))
+        assertTrue(runCatching {latestAndroidRelease(latest,old)}.isFailure)
+        assertTrue(runCatching {latestAndroidRelease(latest,latest.copy(sha256="c".repeat(64)))}.isFailure)
+        assertTrue(runCatching {latestAndroidRelease(latest,latest.copy(versionName="3.3.2"))}.isFailure)
+    }
+
     @Test fun requiresThe273UpdateFor272Installations() {
         val hash = "a".repeat(64)
         val body = """{"versionCode":79,"versionName":"2.7.3","sha256":"$hash","minimumSupportedVersionCode":79}"""

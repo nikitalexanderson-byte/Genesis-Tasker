@@ -45,7 +45,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /** Real Application/repositories, private paths only. No onCreate, AuthController, workers or login. */
-private class Project313Context(base: Context, token: String) : ContextWrapper(base) {
+internal class Project313Context(base: Context, token: String) : ContextWrapper(base) {
     val databaseName = "qa313-projects-$token-genesis.db"
     val preferencePrefix = "qa313-projects-$token-"
     val preferenceNames: MutableSet<String> = ConcurrentHashMap.newKeySet()

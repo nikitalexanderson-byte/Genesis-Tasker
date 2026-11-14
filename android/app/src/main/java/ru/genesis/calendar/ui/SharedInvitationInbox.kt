@@ -2,25 +2,12 @@ package ru.genesis.calendar.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -29,102 +16,52 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import ru.genesis.calendar.auth.AuthController
 
+/** Team history lives with workspace invitations, alongside the shared work itself. */
 @Composable
-internal fun SharedInvitationInbox(controller: AuthController, language: String, sharedEnabled: Boolean) {
+internal fun SharedTeamActivity(controller: AuthController, language: String) {
     val en = language == "en"
-    val scope = rememberCoroutineScope()
-    var invitations by remember { mutableStateOf(emptyList<JSONObject>()) }
-    var notifications by remember { mutableStateOf(emptyList<JSONObject>()) }
-    var pendingId by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf("") }
-
-    LaunchedEffect(controller, sharedEnabled) {
-        while (isActive) {
-            try {
-                val array = controller.sharedInvitations().getJSONArray("invitations")
-                invitations = (0 until array.length()).map { array.getJSONObject(it) }
-                if (sharedEnabled) {
-                    val team = controller.sharedNotifications().getJSONArray("notifications")
-                    notifications = (0 until team.length()).map { team.getJSONObject(it) }
-                } else notifications = emptyList()
-            } catch (error: Exception) { if (error is kotlinx.coroutines.CancellationException) throw error;
-                message = error.message ?: if (en) "Could not load invitations." else "Не удалось загрузить приглашения."
-            }
-            delay(30_000)
-        }
-    }
-
-    HorizontalDivider()
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(if (en) "Invitations" else "Приглашения", style = MaterialTheme.typography.titleSmall)
-        Text(if (en) "Shared workspaces and projects" else "Общие пространства и проекты",
-            style = MaterialTheme.typography.bodySmall)
-        if (invitations.isEmpty()) Text(if (en) "You have no pending invitations." else "Новых приглашений нет.")
-        invitations.forEach { invitation ->
-            val id = invitation.optString("id")
-            Surface(Modifier.fillMaxWidth().testTag("shared-invitation-$id"),
-                shape = MaterialTheme.shapes.medium, tonalElevation = 2.dp) {
-                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(if (en)
-                        "${invitation.optString("inviterName")} invites you to workspace «${invitation.optString("spaceTitle")}», project «${invitation.optString("projectTitle")}`."
-                    else
-                        "Вас ${invitation.optString("inviterName")} приглашает присоединиться к пространству «${invitation.optString("spaceTitle")}», проекту «${invitation.optString("projectTitle")}».")
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = {
-                            scope.launch {
-                                pendingId = id; message = ""
-                                try {
-                                    controller.acceptSharedInvitation(id)
-                                    invitations = invitations.filterNot { it.optString("id") == id }
-                                    controller.refresh()
-                                    message = if (en) "Invitation accepted." else "Приглашение принято."
-                                } catch (error: Exception) { if (error is kotlinx.coroutines.CancellationException) throw error; message = error.message ?: "Ошибка сервера" }
-                                finally { pendingId = "" }
-                            }
-                        }, enabled = pendingId.isEmpty(), modifier = Modifier.testTag("shared-invitation-accept-$id")) {
-                            Text(if (en) "Accept" else "Принять")
-                        }
-                        OutlinedButton(onClick = {
-                            scope.launch {
-                                pendingId = id; message = ""
-                                try {
-                                    controller.rejectSharedInvitation(id)
-                                    invitations = invitations.filterNot { it.optString("id") == id }
-                                    message = if (en) "Invitation declined." else "Приглашение отклонено."
-                                } catch (error: Exception) { if (error is kotlinx.coroutines.CancellationException) throw error; message = error.message ?: "Ошибка сервера" }
-                                finally { pendingId = "" }
-                            }
-                        }, enabled = pendingId.isEmpty(), modifier = Modifier.testTag("shared-invitation-decline-$id")) {
-                            Text(if (en) "Decline" else "Отклонить")
-                        }
-                    }
-                }
-            }
-        }
-        if (message.isNotEmpty()) Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-    if (sharedEnabled) {
-    HorizontalDivider()
     AffairsDisclosure(if (en) "Team updates · history" else "События команды · история",
         Modifier.testTag("shared-team-history")) {
+        val scope = rememberCoroutineScope()
+        var notifications by remember(controller) { mutableStateOf(emptyList<JSONObject>()) }
+        var pending by remember { mutableStateOf(false) }
+        var loaded by remember { mutableStateOf(false) }
+        var message by remember { mutableStateOf("") }
+        LaunchedEffect(controller) {
+            while (isActive) {
+                try {
+                    val team = controller.sharedNotifications().getJSONArray("notifications")
+                    notifications = (0 until team.length()).map { team.getJSONObject(it) }
+                    message = ""
+                } catch (error: Exception) {
+                    if (error is kotlinx.coroutines.CancellationException) throw error
+                    message = error.message ?: "Ошибка сервера"
+                } finally { loaded = true }
+                delay(30_000)
+            }
+        }
         Text(if (en) "Changes in shared projects" else "Изменения в общих проектах",
             style = MaterialTheme.typography.bodySmall)
-        if (notifications.isEmpty()) Text(if (en) "No team updates yet." else "Новых событий команды пока нет.")
+        if (!loaded) AffairsLoading()
+        else if (notifications.isEmpty() && message.isEmpty())
+            Text(if (en) "No team updates yet." else "Новых событий команды пока нет.")
+        if (message.isNotEmpty()) Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (notifications.any { it.optInt("isRead") == 0 }) {
             OutlinedButton(onClick = { scope.launch {
                 val ids = notifications.filter { it.optInt("isRead") == 0 }.map { it.optString("id") }
-                pendingId = "team-read"
+                pending = true
                 try {
                     controller.readSharedNotifications(ids)
                     notifications = notifications.map { row -> JSONObject(row.toString()).put("isRead", 1) }
-                } catch (error: Exception) { if (error is kotlinx.coroutines.CancellationException) throw error; message = error.message ?: "Ошибка сервера" }
-                finally { pendingId = "" }
-            } }, enabled = pendingId.isEmpty()) {
+                } catch (error: Exception) {
+                    if (error is kotlinx.coroutines.CancellationException) throw error
+                    message = error.message ?: "Ошибка сервера"
+                } finally { pending = false }
+            } }, enabled = !pending) {
                 Text(if (en) "Mark all as read" else "Отметить всё прочитанным")
             }
         }
         TeamEventRows(notifications, en)
-    }
     }
 }
 

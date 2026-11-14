@@ -47,8 +47,6 @@ internal val settingsSections = listOf(
         "Трекинг, уведомления и отклик на выполнение", "Tracking, notifications and completion feedback"),
     SettingsSectionDestination("reminders", "Напоминания", "Reminders", GenesisPageIcon.SETTINGS_REMINDERS,
         "Лунные и системные напоминания", "Lunar and system reminders"),
-    SettingsSectionDestination("shared", "Общие дела", "Shared affairs", GenesisPageIcon.SETTINGS_SHARED,
-        "Доступ, приглашения и события команды", "Access, invitations and team activity"),
     SettingsSectionDestination("region", "Регион", "Region", GenesisPageIcon.SETTINGS_REGION,
         "Регион и место для восхода и заката", "Region and sunrise and sunset location"),
     SettingsSectionDestination("account", "Аккаунт GENESIS", "GENESIS account", GenesisPageIcon.SETTINGS_ACCOUNT,
@@ -75,7 +73,7 @@ internal fun SettingsSubmenu(selectedId: String, language: String, showLabels: B
             .padding(horizontal = 5.dp, vertical = 4.dp) else Modifier)
         .testTag("settings-submenu")) {
         if (!showLabels) {
-            // Seven fixed icons fit in one row from 360 dp upward. Below that width,
+            // Six fixed icons fit in one row from 360 dp upward. Below that width,
             // remove gutters before reducing the targets so the menu never scrolls.
             val narrow = maxWidth < 360.dp
             Row(Modifier.fillMaxWidth().height(52.dp).padding(
