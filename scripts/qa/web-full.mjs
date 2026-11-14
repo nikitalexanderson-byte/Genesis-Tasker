@@ -408,7 +408,7 @@ try {
           assert.equal(await physis.count(), 0, 'An ineligible plan exposes the Physis navigation');
         } else {
           await physis.click();
-          await page.getByRole('heading', { name: 'Фюзис', exact: true }).waitFor();
+          await page.getByRole('heading', { name: 'Фюзис - Тренировки', exact: true }).waitFor();
           await page.getByRole('button', { name: 'Пустое занятие', exact: true }).click();
           const journal = page.getByRole('region', { name: 'Журнал тренировки', exact: true });
           const note = `QA ${stamp} сохранённая тренировка 🌱`;
