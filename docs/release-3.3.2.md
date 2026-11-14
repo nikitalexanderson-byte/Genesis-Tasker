@@ -79,6 +79,8 @@
   `output/qa/android332-phone/final-ui.log`.
 - Samsung: `OK (4 tests)` для карточек, форм, палитр, всех восьми иконок
   и серверного состояния трёх карт: `output/qa/android332-samsung/native-ui.log`.
+  Ещё `OK (2 tests)` для прозрачных кнопок и цветов дней:
+  `output/qa/android332-samsung/controls-colors.log`.
   Снимки: `output/qa/android332-samsung/captures/`.
 - Полный `pnpm run i18n:audit` успешен: английский, 12 дополнительных
   каталогов, нативные каталоги и общие шаблоны/уведомления.
