@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { CalendarMode } from "./calendar-data";
 import { getRuntimeLanguage } from "./i18n";
 import { habitLifecycleState } from "./habit-lifecycle";
@@ -21,6 +22,8 @@ import { PERSONAL_DOCUMENT_READY_EVENT } from "./cloud-sync";
 import { completeRestorationWork, deleteRestorationWork, deleteArchivedRestorationWorks, reflectRestorationWork, restorationExpired, restorationWorks, linkedRestorationHabit, type RestorationWork, type RestorationWorkspace, type RestorationDocument } from "./stoicheion-restoration-work";
 import { StoicheionActionButton } from "./StoicheionActionButton";
 import { ExperimentalIcon } from "./ExperimentalIcon";
+import { DialogCloseButton } from "./DialogCloseButton";
+import { useDialogAccessibility } from "./use-dialog-accessibility";
 import "./stoicheion-restoration.css";
 
 export type RestorationPrimaryState = "preparing" | "begin" | "resume" | "view";
@@ -45,6 +48,7 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
 }, ref) {
   const language = getRuntimeLanguage();
   const t = restorationCopy(language);
+  const web = typeof window !== "undefined" && window.document.documentElement.dataset.genesisWeb === "true";
   const local = (value: {ru: string; en: string}) => restorationLocal(value, language);
   const currentSource: RestorationSource | null = cards.length === 9 && sourceSeed !== null ? { cards, sourceDate, sourceSeed } : null;
   const journal = useSharedWorkDrafts(userId || "anonymous", RESTORATION_DRAFT_SCOPE, "stoicheion-restoration", true, validateRestorationStrategy);
@@ -69,7 +73,7 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
   const archiveCancel = useRef<HTMLButtonElement>(null);
   const archiveTrigger = useRef<HTMLButtonElement | null>(null);
   useEffect(() => { if (archiveDeleteKey) archiveCancel.current?.focus(); }, [archiveDeleteKey]);
-  useEffect(() => { if (draftDeleteKey) draftCancel.current?.focus(); }, [draftDeleteKey]);
+  useEffect(() => { if (draftDeleteKey && !web) draftCancel.current?.focus(); }, [draftDeleteKey, web]);
   function cancelArchiveDelete() { if (archiveDeleting) return; setArchiveDeleteKey(null); archiveTrigger.current?.focus(); }
   function cancelDraftDelete() { if (draftDeleting) return; setDraftDeleteKey(null); draftTrigger.current?.focus(); }
 
@@ -162,7 +166,7 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
         </div></header>
       {currentSource && cards.every(card => !card.reversed) ? <p>{t.allUpright}</p> : null}
       {notice ? <p role="status">{notice}</p> : null}
-      {draftDeleteError ? <p className="restoration-error" role="alert">{draftDeleteError}</p> : null}
+      {draftDeleteError && (!web || !draftDeleteKey) ? <p className="restoration-error" role="alert">{draftDeleteError}</p> : null}
       {cloudError ? <div role="alert"><p className="restoration-error">{cloudError}</p><button type="button" className="secondary-button" onClick={() => void repository?.load().then(value => { setDocument(value); setCloudReady(true); setCloudError(""); }).catch(() => setCloudError(repository?.conflict ? t.archiveConflict : t.archiveError))}>{t.retryDraft}</button>{repository?.conflict ? <button type="button" className="secondary-button" onClick={() => void repository.keepPending().then(value => { setDocument(value); setCloudReady(true); setCloudError(""); }).catch(() => setCloudError(t.archiveError))}>{t.keepVersion}</button> : null}</div> : null}
       {activeGroups.map(group => <section className="restoration-saved-group" key={group.key} aria-label={`${t.strategy} · ${group.works[0].snapshot.sourceDate}`}>
         <header><h3>{t.strategy}</h3><span>{group.works[0].snapshot.sourceDate} · {t.cards}: {group.works.length}</span></header>
@@ -200,7 +204,7 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
           </button>
           <button type="button" className="restoration-draft-delete" aria-label={`${t.deleteDraft}: ${draft.sourceDate}`} title={t.deleteDraft} disabled={draftDeleting || !hydrated || !journal.ready}
             onClick={event => { draftTrigger.current = event.currentTarget; setDraftDeleteError(""); setDraftDeleteKey(key); }}><ExperimentalIcon name="delete" /></button>
-          {draftDeleteKey === key ? <section className="restoration-draft-confirm" role="group" aria-label={t.deleteDraftTitle}>
+          {!web && draftDeleteKey === key ? <section className="restoration-draft-confirm" role="group" aria-label={t.deleteDraftTitle}>
             <h4>{t.deleteDraftTitle}</h4><p>{t.deleteDraftHelp}</p><div className="restoration-draft-confirm-actions">
               <button type="button" className="secondary-button" ref={draftCancel} disabled={draftDeleting} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); cancelDraftDelete(); } }} onClick={cancelDraftDelete}>{t.archiveDeleteCancel}</button>
               <button type="button" className="secondary-button restoration-delete-button" disabled={draftDeleting} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); cancelDraftDelete(); } }} onClick={() => void deleteDraft(key)}>{t.deleteDraft}</button>
@@ -210,6 +214,7 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
       })}</div></details> : null}
       {!workspace.habitSettings.enabled ? <p className="restoration-note">{t.disabled}</p> : null}
     </section>
+    {web && draftDeleteKey ? <RestorationDraftDeleteDialog title={t.deleteDraftTitle} description={t.deleteDraftHelp} cancel={t.archiveDeleteCancel} confirm={t.deleteDraft} closeLabel={t.close} error={draftDeleteError} busy={draftDeleting} onClose={cancelDraftDelete} onConfirm={() => void deleteDraft(draftDeleteKey)} /> : null}
     {editingKey && memory[editingKey] ? <RestorationStrategyDialog key={`${userId}:${editingKey}`} userId={userId} open={open} draft={memory[editingKey]} recovered={recovered}
       workspace={workspace} calendarMode={calendarMode} today={today} onChange={onChange} onClose={() => setOpen(false)}
       onDeleted={async () => { for (const row of new Map([...journal.rows, ...Object.values(staged)].sort((a,b) => a.at.localeCompare(b.at)).map(row => [row.id, row])).values()) if (restorationSourceKey(row.value) === editingKey) await journal.remove(row); setOpen(false); setEditingKey(null); setMemory(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => key !== editingKey))); setStaged(previous => Object.fromEntries(Object.entries(previous).filter(([,row]) => restorationSourceKey(row.value) !== editingKey))); setNotice(t.deleted); await refresh(); }}
@@ -221,6 +226,21 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
       }} /> : null}
   </>;
 });
+
+function RestorationDraftDeleteDialog({ title, description, cancel, confirm, closeLabel, error, busy, onClose, onConfirm }: {
+  title: string; description: string; cancel: string; confirm: string; closeLabel: string; error: string; busy: boolean;
+  onClose: () => void; onConfirm: () => void;
+}) {
+  const ref = useDialogAccessibility<HTMLElement>(() => { if (!busy) onClose(); });
+  return createPortal(<div className="genesis-app restoration-portal" data-no-translate>
+    <div className="modal-backdrop"><section ref={ref} className="editor-modal restoration-draft-modal" role="dialog" aria-modal="true" aria-labelledby="restoration-draft-delete-title" aria-describedby="restoration-draft-delete-description" tabIndex={-1} data-exp-ui="dialog">
+      <header><h2 id="restoration-draft-delete-title">{title}</h2><DialogCloseButton aria-label={closeLabel} disabled={busy} onClick={onClose} /></header>
+      <p id="restoration-draft-delete-description">{description}</p>
+      {error ? <p className="restoration-draft-modal-error" role="alert">{error}</p> : null}
+      <footer className="editor-actions"><button type="button" className="secondary-button" data-dialog-initial-focus disabled={busy} onClick={onClose}>{cancel}</button><button type="button" className="danger-button" disabled={busy} onClick={onConfirm}>{confirm}</button></footer>
+    </section></div>
+  </div>, window.document.body);
+}
 
 function RestorationCycle({ work, workspace, calendarMode, today, onChange }: {work: RestorationWork; workspace: RestorationWorkspace; calendarMode: CalendarMode; today: string; onChange: (next: RestorationWorkspace) => void | Promise<void>}) {
   const language = getRuntimeLanguage();
