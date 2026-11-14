@@ -7198,7 +7198,7 @@ export function GenesisCalendar() {
                     categoriesView={accountLayout.sharedCategoriesView} onCategoriesView={sharedCategoriesView => saveLayout({ sharedCategoriesView })}
                     onInboxPosition={sharedInboxPosition => saveLayout({ sharedInboxPosition })} onInboxHidden={sharedInboxHidden => saveLayout({ sharedInboxHidden })}
                     destination={invitationDestination?.userId===cloudUser?.uid ? invitationDestination ?? undefined : undefined}
-                    timeFormat={activeTimeFormat}
+                    timeFormat={activeTimeFormat} weekStart={webHabitHeader ? activeWeekStart : "monday"}
                     enabledCalendars={visibility.enabledCalendars} calendarMode={activeCalendarMode}
                     taskCalendarMode={activeTaskCalendarMode} onCalendarModeChange={changeDisplayCalendar} />
                 </Suspense>}

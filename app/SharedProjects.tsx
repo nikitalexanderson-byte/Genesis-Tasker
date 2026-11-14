@@ -138,7 +138,7 @@ function watchSharedRead(operation: (signal: AbortSignal) => Promise<unknown>, s
 }
 import type { SharedInvitationDestination } from "./SharedInvitationNotices";
 
-type Props = { userId: string; language: string; writeEnabled: boolean; enabledCalendars: CalendarMode[]; experimentalTheme?: boolean; timeFormat?: TimeFormat;
+type Props = { userId: string; language: string; writeEnabled: boolean; enabledCalendars: CalendarMode[]; experimentalTheme?: boolean; timeFormat?: TimeFormat; weekStart?: 'sunday' | 'monday';
   projectViewOrder: ProjectView[] | null; onProjectViewOrder: (views: ProjectView[]) => void;
   calendarScale: CalendarScale; onCalendarScale: (scale: CalendarScale) => void;
   inboxWidth: number; onInboxWidth: (width: number) => void; inboxPosition: InboxPosition; inboxHidden: boolean; inboxCompact: boolean; onInboxPosition: (position: InboxPosition) => void; onInboxHidden: (hidden: boolean) => void; onInboxCompact: (compact: boolean) => void;
@@ -155,7 +155,7 @@ function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale }: Props) {
+export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", weekStart = 'monday', destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale }: Props) {
   const english = language === "en";
   const sacredFeaturesEnabled = useSacredFeaturesEnabled();
   const tasksCompact = inboxCompact;
@@ -1253,10 +1253,15 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
     </div>;
   };
   const renderCalendarPeriod = (period: ReturnType<typeof sharedCalendarPeriod>) => {
-    const offset = (period.dates[0].getDay() + 6) % 7;
+    const firstWeekday = weekStart === 'sunday' ? 0 : 1;
+    const offset = (period.dates[0].getDay() - firstWeekday + 7) % 7;
     const calendarDays = [...Array.from({ length: offset }, () => null), ...period.dates];
     return calendarMode === "profane" ? <div className="shared-projects-calendar-grid">
-          {(english ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]).map((day, index) => <span key={day} className="shared-projects-calendar-weekday" data-weekend={index === 5 ? "saturday" : index === 6 ? "sunday" : undefined}>{day}</span>)}
+          {Array.from({ length: 7 }, (_, index) => {
+            const weekday = (index + firstWeekday) % 7;
+            const day = (english ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] : ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"])[weekday];
+            return <span key={day} className="shared-projects-calendar-weekday" data-weekend={weekday === 6 ? "saturday" : weekday === 0 ? "sunday" : undefined}>{day}</span>;
+          })}
           {calendarDays.map((date, index) => {
             if (!date) return <span key={`space-${index}`} aria-hidden="true" />;
             return renderCalendarDate(date);

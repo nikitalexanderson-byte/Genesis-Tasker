@@ -22,6 +22,7 @@ import "../app/lunar-hero-web.css";
 import "./section-heading.css";
 import "./habit-header.css";
 import "./celestial-colors.css";
+import "./header-brand.css";
 
 const APP_BASE = (process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim() || "").replace(/\/$/, "");
 document.documentElement.dataset.genesisWeb = "true";
@@ -54,3 +55,5 @@ createRoot(root).render(
     <GenesisCalendar />
   </StrictMode>,
 );
+
+import './project-calendar-contrast.css';

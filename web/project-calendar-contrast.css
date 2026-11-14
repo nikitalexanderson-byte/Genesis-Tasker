@@ -1,0 +1,5 @@
+/* Improve separation of project calendar days in the green light palette at every scale. */
+html[data-genesis-web="true"][data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .shared-projects-calendar .shared-projects-calendar-date,
+html[data-genesis-web="true"][data-genesis-theme="standart"][data-genesis-palette="green"] .genesis-app .weekday-tinted-calendar .shared-projects-calendar-date:is([data-weekday],[data-weekend],[data-solar],[data-has-tasks],[data-selected],[aria-current="date"]) {
+  background: #b4d0c4;
+}

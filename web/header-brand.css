@@ -1,0 +1,19 @@
+/* Use the palette-aware website mark throughout the compact header. */
+html[data-genesis-web="true"] .genesis-app .app-brand-header > button > img { content: var(--genesis-web-brand-icon); }
+
+@media (max-width: 1399.98px) {
+  html[data-genesis-web="true"] .genesis-app .app-brand-header[data-compact-header] > button { margin-inline-end: 0; }
+  html[data-genesis-web="true"] .genesis-app .app-brand-header[data-compact-header] .topbar-actions { margin-inline-start: auto; }
+  /* The existing header measurement marks layouts where the full name will not fit. */
+  html[data-genesis-web="true"] .genesis-app .app-brand-header[data-header-stacked] > button {
+    flex: 0 0 44px; width: 44px; min-width: 44px; min-height: 44px; flex-direction: row; justify-content: center;
+  }
+  html[data-genesis-web="true"] .genesis-app .app-brand-header[data-header-stacked] > button > strong { display: none; }
+}
+@media (max-width: 599px) {
+  /* Section controls use the space on phones; retain the full name on simpler headers. */
+  html[data-genesis-web="true"] .genesis-app .app-brand-header:has(.header-section-switch) > button {
+    flex: 0 0 44px; width: 44px; min-width: 44px; min-height: 44px; justify-content: center;
+  }
+  html[data-genesis-web="true"] .genesis-app .app-brand-header:has(.header-section-switch) > button > strong { display: none; }
+}
