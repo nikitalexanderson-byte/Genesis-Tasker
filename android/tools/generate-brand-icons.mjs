@@ -32,7 +32,7 @@ for (const palette of ['green', 'blue', 'burgundy', 'violet']) for (const mode o
   const emblem = `<path android:fillColor="#00000000" android:strokeColor="${ring}" android:strokeWidth="26" android:pathData="${circle(389)}"/>\n${paths}\n<path android:fillColor="${rays}" android:pathData="${circle(154)}"/>`;
   const vector = (launcher, mono = false) => {
     let body = emblem;
-    if (mono) body = body.replace(/android:(fillColor|strokeColor)="(#[^\"]+)"/g, (all, key, value) => value === '#00000000' ? all : `android:${key}="#FFFFFFFF"`);
+    if (mono) body = body.replace(/android:(fillColor|strokeColor)="(#[^"]+)"/g, (all, key, value) => value === '#00000000' ? all : `android:${key}="#FFFFFFFF"`);
     const viewport = launcher ? 1536 : 1024, center = viewport / 2;
     const bg = !launcher && !mono ? `<path android:fillColor="${background}" android:pathData="M0,512 A512,512 0,1 0,1024,512 A512,512 0,1 0,0,512 Z"/>` : '';
     return `<?xml version="1.0" encoding="utf-8"?>\n<!-- Generated from public/icons/jade-facets-${palette}-${mode}.svg. -->\n<vector ${ns} android:width="${launcher ? 108 : 48}dp" android:height="${launcher ? 108 : 48}dp" android:viewportWidth="${viewport}" android:viewportHeight="${viewport}">${bg}<group android:translateX="${center}" android:translateY="${center}">${body}</group></vector>`;
