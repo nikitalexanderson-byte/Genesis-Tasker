@@ -133,7 +133,7 @@ export function CalendarDatePicker({ id, value, mode: savedMode, calculationCont
                     const date = getGregorianDate(sacredYear, sacredMonth, day.day, calculationContext);
                     const dateValue = inputDate(date);
                     return (
-                      <button type="button" disabled={!allowed(dateValue, min, max)} className={dateValue === value ? "selected" : ""} onClick={() => choose(date)} key={day.id}>
+                      <button type="button" disabled={!allowed(dateValue, min, max)} className={dateValue === value ? "selected" : ""} onClick={(event) => { if (document.documentElement.dataset.genesisWeb === "true") event.preventDefault(); choose(date); }} key={day.id}>
                         <small>Пята {day.pyata || "Ω"}</small><strong>{day.day}</strong><span>{day.name.split("(")[0].trim()}</span>
                         <time dateTime={dateValue}>{formatCompactGregorian(date)}</time>
                       </button>
@@ -157,7 +157,7 @@ export function CalendarDatePicker({ id, value, mode: savedMode, calculationCont
                     const moon = getMoon(date, calculationContext);
                     const lunar = getLunarDate(date, calculationContext);
                     return (
-                      <button type="button" disabled={!allowed(dateValue, min, max)} className={dateValue === value ? "selected" : ""} onClick={() => choose(date)} key={dateValue}>
+                      <button type="button" disabled={!allowed(dateValue, min, max)} className={dateValue === value ? "selected" : ""} onClick={(event) => { if (document.documentElement.dataset.genesisWeb === "true") event.preventDefault(); choose(date); }} key={dateValue}>
                         <MoonPhaseIcon phaseStep={moon.phaseStep} size={24} /><strong>{moon.day}</strong><span>{lunar.isThreshold ? "Рубеж" : lunar.decade.name}</span><small>{moon.phase} · {moon.illumination}%</small>
                       </button>
                     );
