@@ -1233,6 +1233,8 @@ export function GenesisCalendar() {
   const [requestedTheokyklosSector, setRequestedTheokyklosSector] = useState<SacredPracticeSectorId | null>(null);
   const clearRequestedTheokyklosSector = useCallback(() => setRequestedTheokyklosSector(null), []);
   const [requestedStoicheionCard, setRequestedStoicheionCard] = useState<string | null>(null);
+  const [requestedOlympianId, setRequestedOlympianId] = useState<string | null>(null);
+  const [olympianReturn, setOlympianReturn] = useState<{ id: string; name: string } | null>(null);
   const [requestedStoicheionDraw, setRequestedStoicheionDraw] = useState<"daily" | "spread" | null>(null);
   const [sacredYear, setSacredYear] = useState(initial.sacredYear);
   const [monthIndex, setMonthIndex] = useState(initial.monthIndex);
@@ -7247,7 +7249,9 @@ export function GenesisCalendar() {
               ) : null}
               {sacredFeaturesEnabled && view === "stoicheion" ? (
                 <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening Stoicheion…" : "Открываем Стойхейон…"} />}>
+                  {olympianReturn ? <button type="button" className="olympian-return" onClick={() => { setRequestedOlympianId(olympianReturn.id); setOlympianReturn(null); navigateTo("theokyklos"); }}><ExperimentalIcon name="chevron-left" /><span>{olympianReturn.name}</span></button> : null}
                   <StoicheionView
+                    returnToOlympian={olympianReturn ? { label: olympianReturn.name, onReturn: () => { setRequestedOlympianId(olympianReturn.id); setOlympianReturn(null); navigateTo("theokyklos"); } } : undefined}
                     key={cloudUser?.stoicheionDivinationDisabled ? "divination-disabled" : "divination-enabled"}
                     workspace={habitWorkspace}
                     calendarMode={activeTaskCalendarMode}
@@ -7287,7 +7291,9 @@ export function GenesisCalendar() {
                     onSelectedSectorClosed={clearRequestedTheokyklosSector}
                     onChange={updateHabitWorkspace}
                     onOpenHabits={() => navigateTo("habits")}
-                    onOpenStoicheion={() => navigateTo("stoicheion")}
+                    initialOlympianId={requestedOlympianId}
+                    onInitialOlympianOpened={() => setRequestedOlympianId(null)}
+                    onOpenStoicheion={(cardId, returnTo) => { setRequestedStoicheionCard(cardId ?? null); setOlympianReturn(returnTo ?? null); navigateTo("stoicheion"); }}
                   />
                 </Suspense>
               ) : null}

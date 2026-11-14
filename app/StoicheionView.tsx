@@ -312,6 +312,7 @@ function LetterDetails({
   position,
   timeline,
   onClose,
+  returnToOlympian,
   onOpenTheokyklosSector,
   onChooseSacredPractice,
   startedPracticeIds = [],
@@ -324,6 +325,7 @@ function LetterDetails({
   position: SpreadPosition | null;
   timeline?: StoicheionTimePosition;
   onClose: () => void;
+  returnToOlympian?: { label: string; onReturn: () => void };
   onOpenTheokyklosSector?: (sectorId: StoicheionPracticeSectorId) => void;
   onChooseSacredPractice?: (practiceId: string) => void | Promise<void>;
   startedPracticeIds?: string[];
@@ -416,6 +418,7 @@ function LetterDetails({
     >
       <article>
         <DialogCloseButton type="button" className="stoicheion-dialog-close" onClick={onClose} aria-label="Закрыть описание буквы" />
+        {returnToOlympian ? <button type="button" className="olympian-return olympian-letter-return" data-no-translate onClick={returnToOlympian.onReturn}><ExperimentalIcon name="chevron-left" /><span>{returnToOlympian.label}</span></button> : null}
         <header>
           <StoicheionCardFace letter={letter} reversed={Boolean(reversed)} variant="dialog" />
           <div>
@@ -460,6 +463,7 @@ function LetterDetails({
 }
 
 type StoicheionViewProps = {
+  returnToOlympian?: { label: string; onReturn: () => void };
   onModelingTask?: (value: AuroraTaskRequest) => void;
   userId?: string;
   workspace?: HabitWorkspace;
@@ -477,7 +481,7 @@ type StoicheionViewProps = {
   onVoiceDrawHandled?: () => void;
 };
 
-export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSector,
+export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSector, returnToOlympian,
   onModelingTask,
   onChooseSacredPractice, sacredPracticesEnabled = true,
   workspace, calendarMode = "sacred", todayDate, userId = "", onWorkspaceChange, onOpenHabits,
@@ -1115,6 +1119,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
           position={selectedReading.position}
           timeline={selectedReading.timeline}
           onClose={() => setSelectedReading(null)}
+          returnToOlympian={returnToOlympian}
           onOpenTheokyklosSector={onOpenTheokyklosSector}
           onStartRestoration={restorationAllowed && workspace && onWorkspaceChange ? startRestoration : undefined}
           restorationAction={restorationPrimary}

@@ -1,0 +1,1204 @@
+{
+  "version": 1,
+  "deities": {
+    "zeus": {
+      "sectorId": "zenith",
+      "relatedIds": [
+        "hera",
+        "poseidon",
+        "hestia"
+      ],
+      "sourceIds": [
+        "S1",
+        "S4",
+        "S10"
+      ],
+      "variants": [
+        {
+          "greek": "ΔΙΟΣ",
+          "label": "deity.zeus.variant.0"
+        },
+        {
+          "greek": "ΔΙΑ",
+          "label": "deity.zeus.variant.1"
+        },
+        {
+          "greek": "ΖΗΝΑ",
+          "label": "deity.zeus.variant.2"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΘΕΟΣ",
+          "meaning": "deity.zeus.word.0.meaning",
+          "note": "deity.zeus.word.0.note",
+          "relation": "caseMatch",
+          "reference": "ΔΙΟΣ"
+        },
+        {
+          "greek": "ΖΩΗ",
+          "meaning": "deity.zeus.word.1.meaning",
+          "note": "deity.zeus.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΝΟΜΟΣ",
+          "meaning": "deity.zeus.word.2.meaning",
+          "note": "deity.zeus.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΤΑΞΙΣ",
+          "meaning": "deity.zeus.word.3.meaning",
+          "note": "deity.zeus.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.zeus.situation.0.title",
+          "body": "deity.zeus.situation.0.body"
+        },
+        {
+          "title": "deity.zeus.situation.1.title",
+          "body": "deity.zeus.situation.1.body"
+        },
+        {
+          "title": "deity.zeus.situation.2.title",
+          "body": "deity.zeus.situation.2.body"
+        }
+      ],
+      "ancient": "deity.zeus.ancient",
+      "sacred": "deity.zeus.sacred",
+      "formula": "deity.zeus.formula",
+      "meaning": "deity.zeus.meaning",
+      "bridge": "deity.zeus.bridge",
+      "limits": "deity.zeus.limits"
+    },
+    "hera": {
+      "sectorId": "zenith",
+      "relatedIds": [
+        "zeus",
+        "artemis",
+        "hestia"
+      ],
+      "sourceIds": [
+        "S1",
+        "S3",
+        "S7"
+      ],
+      "variants": [
+        {
+          "greek": "ΗΡΑΣ",
+          "label": "deity.hera.variant.0"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΑΗΡ",
+          "meaning": "deity.hera.word.0.meaning",
+          "note": "deity.hera.word.0.note",
+          "relation": "exact"
+        },
+        {
+          "greek": "ΓΑΜΟΣ",
+          "meaning": "deity.hera.word.1.meaning",
+          "note": "deity.hera.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΠΙΣΤΙΣ",
+          "meaning": "deity.hera.word.2.meaning",
+          "note": "deity.hera.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΑΡΜΟΝΙΑ",
+          "meaning": "deity.hera.word.3.meaning",
+          "note": "deity.hera.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.hera.situation.0.title",
+          "body": "deity.hera.situation.0.body"
+        },
+        {
+          "title": "deity.hera.situation.1.title",
+          "body": "deity.hera.situation.1.body"
+        },
+        {
+          "title": "deity.hera.situation.2.title",
+          "body": "deity.hera.situation.2.body"
+        }
+      ],
+      "ancient": "deity.hera.ancient",
+      "sacred": "deity.hera.sacred",
+      "formula": "deity.hera.formula",
+      "meaning": "deity.hera.meaning",
+      "bridge": "deity.hera.bridge",
+      "limits": "deity.hera.limits"
+    },
+    "poseidon": {
+      "sectorId": "west",
+      "relatedIds": [
+        "apollo",
+        "demeter"
+      ],
+      "sourceIds": [
+        "S4",
+        "S7",
+        "S1"
+      ],
+      "variants": [
+        {
+          "greek": "ΠΟΣΕΙΔΩΝΟΣ",
+          "label": "deity.poseidon.variant.0"
+        },
+        {
+          "greek": "ΠΟΣΕΙΔΑΩΝ",
+          "label": "deity.poseidon.variant.1"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΠΟΝΤΟΣ",
+          "meaning": "deity.poseidon.word.0.meaning",
+          "note": "deity.poseidon.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΡΟΗ",
+          "meaning": "deity.poseidon.word.1.meaning",
+          "note": "deity.poseidon.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΓΑΛΗΝΗ",
+          "meaning": "deity.poseidon.word.2.meaning",
+          "note": "deity.poseidon.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΒΑΘΟΣ",
+          "meaning": "deity.poseidon.word.3.meaning",
+          "note": "deity.poseidon.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.poseidon.situation.0.title",
+          "body": "deity.poseidon.situation.0.body"
+        },
+        {
+          "title": "deity.poseidon.situation.1.title",
+          "body": "deity.poseidon.situation.1.body"
+        },
+        {
+          "title": "deity.poseidon.situation.2.title",
+          "body": "deity.poseidon.situation.2.body"
+        }
+      ],
+      "ancient": "deity.poseidon.ancient",
+      "sacred": "deity.poseidon.sacred",
+      "formula": "deity.poseidon.formula",
+      "meaning": "deity.poseidon.meaning",
+      "bridge": "deity.poseidon.bridge",
+      "limits": "deity.poseidon.limits"
+    },
+    "demeter": {
+      "sectorId": "southwest",
+      "relatedIds": [
+        "hestia",
+        "zeus"
+      ],
+      "sourceIds": [
+        "S6",
+        "S1",
+        "S5"
+      ],
+      "variants": [
+        {
+          "greek": "ΔΗΜΗΤΡΟΣ",
+          "label": "deity.demeter.variant.0"
+        },
+        {
+          "greek": "ΔΗΩ",
+          "label": "deity.demeter.variant.1"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΓΗ",
+          "meaning": "deity.demeter.word.0.meaning",
+          "note": "deity.demeter.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΜΗΤΗΡ",
+          "meaning": "deity.demeter.word.1.meaning",
+          "note": "deity.demeter.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΣΙΤΟΣ",
+          "meaning": "deity.demeter.word.2.meaning",
+          "note": "deity.demeter.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΚΑΡΠΟΣ",
+          "meaning": "deity.demeter.word.3.meaning",
+          "note": "deity.demeter.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.demeter.situation.0.title",
+          "body": "deity.demeter.situation.0.body"
+        },
+        {
+          "title": "deity.demeter.situation.1.title",
+          "body": "deity.demeter.situation.1.body"
+        },
+        {
+          "title": "deity.demeter.situation.2.title",
+          "body": "deity.demeter.situation.2.body"
+        }
+      ],
+      "ancient": "deity.demeter.ancient",
+      "sacred": "deity.demeter.sacred",
+      "formula": "deity.demeter.formula",
+      "meaning": "deity.demeter.meaning",
+      "bridge": "deity.demeter.bridge",
+      "limits": "deity.demeter.limits"
+    },
+    "athena": {
+      "sectorId": "north",
+      "relatedIds": [
+        "hephaestus",
+        "artemis"
+      ],
+      "sourceIds": [
+        "S1",
+        "S3",
+        "S7"
+      ],
+      "variants": [
+        {
+          "greek": "ΑΘΗΝΗ",
+          "label": "deity.athena.variant.0"
+        },
+        {
+          "greek": "ΑΘΗΝΑΙΑ",
+          "label": "deity.athena.variant.1"
+        },
+        {
+          "greek": "ΠΑΛΛΑΣ",
+          "label": "deity.athena.variant.2"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΑΚΜΗ",
+          "meaning": "deity.athena.word.0.meaning",
+          "note": "deity.athena.word.0.note",
+          "relation": "exact"
+        },
+        {
+          "greek": "ΝΟΥΣ",
+          "meaning": "deity.athena.word.1.meaning",
+          "note": "deity.athena.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΣΟΦΙΑ",
+          "meaning": "deity.athena.word.2.meaning",
+          "note": "deity.athena.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΜΗΤΙΣ",
+          "meaning": "deity.athena.word.3.meaning",
+          "note": "deity.athena.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.athena.situation.0.title",
+          "body": "deity.athena.situation.0.body"
+        },
+        {
+          "title": "deity.athena.situation.1.title",
+          "body": "deity.athena.situation.1.body"
+        },
+        {
+          "title": "deity.athena.situation.2.title",
+          "body": "deity.athena.situation.2.body"
+        }
+      ],
+      "ancient": "deity.athena.ancient",
+      "sacred": "deity.athena.sacred",
+      "formula": "deity.athena.formula",
+      "meaning": "deity.athena.meaning",
+      "bridge": "deity.athena.bridge",
+      "limits": "deity.athena.limits"
+    },
+    "apollo": {
+      "sectorId": "northwest",
+      "relatedIds": [
+        "artemis",
+        "dionysus"
+      ],
+      "sourceIds": [
+        "S1",
+        "S2",
+        "S5",
+        "S11"
+      ],
+      "variants": [
+        {
+          "greek": "ΑΠΟΛΛΩΝΟΣ",
+          "label": "deity.apollo.variant.0"
+        },
+        {
+          "greek": "ΦΟΙΒΟΣ",
+          "label": "deity.apollo.variant.1"
+        },
+        {
+          "greek": "ΠΑΙΑΝ",
+          "label": "deity.apollo.variant.2"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΜΕΤΡΟΝ",
+          "meaning": "deity.apollo.word.0.meaning",
+          "note": "deity.apollo.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΛΥΡΑ",
+          "meaning": "deity.apollo.word.1.meaning",
+          "note": "deity.apollo.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΦΑΟΣ",
+          "meaning": "deity.apollo.word.2.meaning",
+          "note": "deity.apollo.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΜΑΝΤΙΣ",
+          "meaning": "deity.apollo.word.3.meaning",
+          "note": "deity.apollo.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.apollo.situation.0.title",
+          "body": "deity.apollo.situation.0.body"
+        },
+        {
+          "title": "deity.apollo.situation.1.title",
+          "body": "deity.apollo.situation.1.body"
+        },
+        {
+          "title": "deity.apollo.situation.2.title",
+          "body": "deity.apollo.situation.2.body"
+        }
+      ],
+      "ancient": "deity.apollo.ancient",
+      "sacred": "deity.apollo.sacred",
+      "formula": "deity.apollo.formula",
+      "meaning": "deity.apollo.meaning",
+      "bridge": "deity.apollo.bridge",
+      "limits": "deity.apollo.limits"
+    },
+    "artemis": {
+      "sectorId": "northeast",
+      "relatedIds": [
+        "apollo",
+        "athena",
+        "hestia"
+      ],
+      "sourceIds": [
+        "S1",
+        "S7"
+      ],
+      "variants": [
+        {
+          "greek": "ΑΡΤΕΜΙΔΟΣ",
+          "label": "deity.artemis.variant.0"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΑΡΤΕΜΗΣ",
+          "meaning": "deity.artemis.word.0.meaning",
+          "note": "deity.artemis.word.0.note",
+          "relation": "sound"
+        },
+        {
+          "greek": "ΑΓΝΗ",
+          "meaning": "deity.artemis.word.1.meaning",
+          "note": "deity.artemis.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΦΥΣΙΣ",
+          "meaning": "deity.artemis.word.2.meaning",
+          "note": "deity.artemis.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΟΡΙΟΝ",
+          "meaning": "deity.artemis.word.3.meaning",
+          "note": "deity.artemis.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.artemis.situation.0.title",
+          "body": "deity.artemis.situation.0.body"
+        },
+        {
+          "title": "deity.artemis.situation.1.title",
+          "body": "deity.artemis.situation.1.body"
+        },
+        {
+          "title": "deity.artemis.situation.2.title",
+          "body": "deity.artemis.situation.2.body"
+        }
+      ],
+      "ancient": "deity.artemis.ancient",
+      "sacred": "deity.artemis.sacred",
+      "formula": "deity.artemis.formula",
+      "meaning": "deity.artemis.meaning",
+      "bridge": "deity.artemis.bridge",
+      "limits": "deity.artemis.limits"
+    },
+    "ares": {
+      "sectorId": "south",
+      "relatedIds": [
+        "aphrodite",
+        "athena"
+      ],
+      "sourceIds": [
+        "S7",
+        "S8",
+        "S1"
+      ],
+      "variants": [
+        {
+          "greek": "ΑΡΕΩΣ",
+          "label": "deity.ares.variant.0"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΘΥΜΟΣ",
+          "meaning": "deity.ares.word.0.meaning",
+          "note": "deity.ares.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΑΝΔΡΕΙΑ",
+          "meaning": "deity.ares.word.1.meaning",
+          "note": "deity.ares.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΠΟΛΕΜΟΣ",
+          "meaning": "deity.ares.word.2.meaning",
+          "note": "deity.ares.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΙΡΗΝΗ",
+          "meaning": "deity.ares.word.3.meaning",
+          "note": "deity.ares.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.ares.situation.0.title",
+          "body": "deity.ares.situation.0.body"
+        },
+        {
+          "title": "deity.ares.situation.1.title",
+          "body": "deity.ares.situation.1.body"
+        },
+        {
+          "title": "deity.ares.situation.2.title",
+          "body": "deity.ares.situation.2.body"
+        }
+      ],
+      "ancient": "deity.ares.ancient",
+      "sacred": "deity.ares.sacred",
+      "formula": "deity.ares.formula",
+      "meaning": "deity.ares.meaning",
+      "bridge": "deity.ares.bridge",
+      "limits": "deity.ares.limits"
+    },
+    "aphrodite": {
+      "sectorId": "south",
+      "relatedIds": [
+        "ares",
+        "hera"
+      ],
+      "sourceIds": [
+        "S9",
+        "S12",
+        "S3",
+        "S7"
+      ],
+      "variants": [
+        {
+          "greek": "ΑΦΡΟΔΙΤΗΣ",
+          "label": "deity.aphrodite.variant.0"
+        },
+        {
+          "greek": "ΚΥΠΡΙΣ",
+          "label": "deity.aphrodite.variant.1"
+        },
+        {
+          "greek": "ΟΥΡΑΝΙΑ",
+          "label": "deity.aphrodite.variant.2"
+        },
+        {
+          "greek": "ΠΑΝΔΗΜΟΣ",
+          "label": "deity.aphrodite.variant.3"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΑΦΡΟΣ",
+          "meaning": "deity.aphrodite.word.0.meaning",
+          "note": "deity.aphrodite.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΡΩΣ",
+          "meaning": "deity.aphrodite.word.1.meaning",
+          "note": "deity.aphrodite.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΦΙΛΙΑ",
+          "meaning": "deity.aphrodite.word.2.meaning",
+          "note": "deity.aphrodite.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΑΡΜΟΝΙΑ",
+          "meaning": "deity.aphrodite.word.3.meaning",
+          "note": "deity.aphrodite.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.aphrodite.situation.0.title",
+          "body": "deity.aphrodite.situation.0.body"
+        },
+        {
+          "title": "deity.aphrodite.situation.1.title",
+          "body": "deity.aphrodite.situation.1.body"
+        },
+        {
+          "title": "deity.aphrodite.situation.2.title",
+          "body": "deity.aphrodite.situation.2.body"
+        }
+      ],
+      "ancient": "deity.aphrodite.ancient",
+      "sacred": "deity.aphrodite.sacred",
+      "formula": "deity.aphrodite.formula",
+      "meaning": "deity.aphrodite.meaning",
+      "bridge": "deity.aphrodite.bridge",
+      "limits": "deity.aphrodite.limits"
+    },
+    "hephaestus": {
+      "sectorId": "southeast",
+      "relatedIds": [
+        "athena",
+        "hestia"
+      ],
+      "sourceIds": [
+        "S7",
+        "S9",
+        "S8",
+        "S1"
+      ],
+      "variants": [
+        {
+          "greek": "ΗΦΑΙΣΤΟΥ",
+          "label": "deity.hephaestus.variant.0"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΤΕΧΝΗ",
+          "meaning": "deity.hephaestus.word.0.meaning",
+          "note": "deity.hephaestus.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΠΥΡ",
+          "meaning": "deity.hephaestus.word.1.meaning",
+          "note": "deity.hephaestus.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΡΓΟΝ",
+          "meaning": "deity.hephaestus.word.2.meaning",
+          "note": "deity.hephaestus.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΜΟΡΦΗ",
+          "meaning": "deity.hephaestus.word.3.meaning",
+          "note": "deity.hephaestus.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.hephaestus.situation.0.title",
+          "body": "deity.hephaestus.situation.0.body"
+        },
+        {
+          "title": "deity.hephaestus.situation.1.title",
+          "body": "deity.hephaestus.situation.1.body"
+        },
+        {
+          "title": "deity.hephaestus.situation.2.title",
+          "body": "deity.hephaestus.situation.2.body"
+        }
+      ],
+      "ancient": "deity.hephaestus.ancient",
+      "sacred": "deity.hephaestus.sacred",
+      "formula": "deity.hephaestus.formula",
+      "meaning": "deity.hephaestus.meaning",
+      "bridge": "deity.hephaestus.bridge",
+      "limits": "deity.hephaestus.limits"
+    },
+    "hermes": {
+      "sectorId": "east",
+      "relatedIds": [
+        "hestia",
+        "hephaestus"
+      ],
+      "sourceIds": [
+        "S1",
+        "S7"
+      ],
+      "variants": [
+        {
+          "greek": "ΕΡΜΟΥ",
+          "label": "deity.hermes.variant.0"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΛΟΓΟΣ",
+          "meaning": "deity.hermes.word.0.meaning",
+          "note": "deity.hermes.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΡΜΗΝΕΙΑ",
+          "meaning": "deity.hermes.word.1.meaning",
+          "note": "deity.hermes.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΟΔΟΣ",
+          "meaning": "deity.hermes.word.2.meaning",
+          "note": "deity.hermes.word.2.note",
+          "relation": "rootMatch"
+        },
+        {
+          "greek": "ΠΕΙΘΩ",
+          "meaning": "deity.hermes.word.3.meaning",
+          "note": "deity.hermes.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.hermes.situation.0.title",
+          "body": "deity.hermes.situation.0.body"
+        },
+        {
+          "title": "deity.hermes.situation.1.title",
+          "body": "deity.hermes.situation.1.body"
+        },
+        {
+          "title": "deity.hermes.situation.2.title",
+          "body": "deity.hermes.situation.2.body"
+        }
+      ],
+      "ancient": "deity.hermes.ancient",
+      "sacred": "deity.hermes.sacred",
+      "formula": "deity.hermes.formula",
+      "meaning": "deity.hermes.meaning",
+      "bridge": "deity.hermes.bridge",
+      "limits": "deity.hermes.limits"
+    },
+    "hestia": {
+      "sectorId": "hearth",
+      "relatedIds": [
+        "hermes",
+        "dionysus"
+      ],
+      "sourceIds": [
+        "S7",
+        "S10",
+        "S1"
+      ],
+      "variants": [
+        {
+          "greek": "ΕΣΤΙΑΣ",
+          "label": "deity.hestia.variant.0"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΟΥΣΙΑ",
+          "meaning": "deity.hestia.word.0.meaning",
+          "note": "deity.hestia.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΣΣΙΑ",
+          "meaning": "deity.hestia.word.1.meaning",
+          "note": "deity.hestia.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΔΡΑ",
+          "meaning": "deity.hestia.word.2.meaning",
+          "note": "deity.hestia.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΟΙΚΟΣ",
+          "meaning": "deity.hestia.word.3.meaning",
+          "note": "deity.hestia.word.3.note",
+          "relation": "meaning"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.hestia.situation.0.title",
+          "body": "deity.hestia.situation.0.body"
+        },
+        {
+          "title": "deity.hestia.situation.1.title",
+          "body": "deity.hestia.situation.1.body"
+        },
+        {
+          "title": "deity.hestia.situation.2.title",
+          "body": "deity.hestia.situation.2.body"
+        }
+      ],
+      "ancient": "deity.hestia.ancient",
+      "sacred": "deity.hestia.sacred",
+      "formula": "deity.hestia.formula",
+      "meaning": "deity.hestia.meaning",
+      "bridge": "deity.hestia.bridge",
+      "limits": "deity.hestia.limits"
+    },
+    "dionysus": {
+      "sectorId": "center",
+      "relatedIds": [
+        "apollo",
+        "hestia"
+      ],
+      "sourceIds": [
+        "S7",
+        "S9",
+        "S2",
+        "S1"
+      ],
+      "variants": [
+        {
+          "greek": "ΔΙΟΝΥΣΟΥ",
+          "label": "deity.dionysus.variant.0"
+        },
+        {
+          "greek": "ΒΑΚΧΟΣ",
+          "label": "deity.dionysus.variant.1"
+        }
+      ],
+      "words": [
+        {
+          "greek": "ΟΙΝΟΣ",
+          "meaning": "deity.dionysus.word.0.meaning",
+          "note": "deity.dionysus.word.0.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΕΚΣΤΑΣΙΣ",
+          "meaning": "deity.dionysus.word.1.meaning",
+          "note": "deity.dionysus.word.1.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΑΡΙΑΔΝΗ",
+          "meaning": "deity.dionysus.word.2.meaning",
+          "note": "deity.dionysus.word.2.note",
+          "relation": "meaning"
+        },
+        {
+          "greek": "ΖΩΗ",
+          "meaning": "deity.dionysus.word.3.meaning",
+          "note": "deity.dionysus.word.3.note",
+          "relation": "rootMatch"
+        }
+      ],
+      "situations": [
+        {
+          "title": "deity.dionysus.situation.0.title",
+          "body": "deity.dionysus.situation.0.body"
+        },
+        {
+          "title": "deity.dionysus.situation.1.title",
+          "body": "deity.dionysus.situation.1.body"
+        },
+        {
+          "title": "deity.dionysus.situation.2.title",
+          "body": "deity.dionysus.situation.2.body"
+        }
+      ],
+      "ancient": "deity.dionysus.ancient",
+      "sacred": "deity.dionysus.sacred",
+      "formula": "deity.dionysus.formula",
+      "meaning": "deity.dionysus.meaning",
+      "bridge": "deity.dionysus.bridge",
+      "limits": "deity.dionysus.limits"
+    }
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "url": "https://classics.mit.edu/Plato/cratylus.html",
+      "author": "source.S1.author",
+      "work": "source.S1.work",
+      "passage": "source.S1.passage"
+    },
+    {
+      "id": "S2",
+      "url": "https://penelope.uchicago.edu/misctracts/plutarche.html",
+      "author": "source.S2.author",
+      "work": "source.S2.work",
+      "passage": "source.S2.passage"
+    },
+    {
+      "id": "S3",
+      "url": "https://ancientlibrary.net/iamblichus-theology-of-arithmetic/2/",
+      "author": "source.S3.author",
+      "work": "source.S3.work",
+      "passage": "source.S3.passage"
+    },
+    {
+      "id": "S4",
+      "url": "https://classics.mit.edu/Homer/iliad.15.xv.html",
+      "author": "source.S4.author",
+      "work": "source.S4.work",
+      "passage": "source.S4.passage"
+    },
+    {
+      "id": "S5",
+      "url": "https://www.gutenberg.org/files/348/348-h/348-h.htm",
+      "author": "source.S5.author",
+      "work": "source.S5.work",
+      "passage": "source.S5.passage"
+    },
+    {
+      "id": "S6",
+      "url": "https://www.gutenberg.org/files/348/348-h/348-h.htm",
+      "author": "source.S6.author",
+      "work": "source.S6.work",
+      "passage": "source.S6.passage"
+    },
+    {
+      "id": "S7",
+      "url": "https://www.gutenberg.org/files/348/348-h/348-h.htm",
+      "author": "source.S7.author",
+      "work": "source.S7.work",
+      "passage": "source.S7.passage"
+    },
+    {
+      "id": "S8",
+      "url": "https://beta.perseus.tufts.edu/urn%3Acts%3AgreekLit%3Atlg0012.tlg002.butlernagy2020-eng2/book%3A8/",
+      "author": "source.S8.author",
+      "work": "source.S8.work",
+      "passage": "source.S8.passage"
+    },
+    {
+      "id": "S9",
+      "url": "https://www.gutenberg.org/files/348/348-h/348-h.htm",
+      "author": "source.S9.author",
+      "work": "source.S9.work",
+      "passage": "source.S9.passage"
+    },
+    {
+      "id": "S10",
+      "url": "https://classics.mit.edu/Plato/phaedrus.html",
+      "author": "source.S10.author",
+      "work": "source.S10.work",
+      "passage": "source.S10.passage"
+    },
+    {
+      "id": "S11",
+      "url": "https://classics.mit.edu/Plato/timaeus.html",
+      "author": "source.S11.author",
+      "work": "source.S11.work",
+      "passage": "source.S11.passage"
+    },
+    {
+      "id": "S12",
+      "url": "https://jtauber.github.io/plato-texts/symposium.html",
+      "author": "source.S12.author",
+      "work": "source.S12.work",
+      "passage": "source.S12.passage"
+    },
+    {
+      "id": "S13",
+      "url": "https://www.claymath.org/library/historical/euclid/files/elem.9.36.html",
+      "author": "source.S13.author",
+      "work": "source.S13.work",
+      "passage": "source.S13.passage"
+    },
+    {
+      "id": "S14",
+      "url": "https://www.newadvent.org/fathers/050104.htm",
+      "author": "source.S14.author",
+      "work": "source.S14.work",
+      "passage": "source.S14.passage"
+    },
+    {
+      "id": "S15",
+      "url": "https://lexundria.com/suet_nero/39/r",
+      "author": "source.S15.author",
+      "work": "source.S15.work",
+      "passage": "source.S15.passage"
+    },
+    {
+      "id": "S16",
+      "url": "https://ancientlibrary.net/iamblichus-theology-of-arithmetic/",
+      "author": "source.S16.author",
+      "work": "source.S16.work",
+      "passage": "source.S16.passage"
+    }
+  ],
+  "sectors": [
+    {
+      "id": "north",
+      "title": "sector.north.title",
+      "patrons": "sector.north.patrons",
+      "names": [
+        "ΑΘΗΝΑ"
+      ]
+    },
+    {
+      "id": "northeast",
+      "title": "sector.northeast.title",
+      "patrons": "sector.northeast.patrons",
+      "names": [
+        "ΑΡΤΕΜΙΣ"
+      ]
+    },
+    {
+      "id": "east",
+      "title": "sector.east.title",
+      "patrons": "sector.east.patrons",
+      "names": [
+        "ΕΡΜΗΣ",
+        "ΠΕΙΘΩ"
+      ]
+    },
+    {
+      "id": "southeast",
+      "title": "sector.southeast.title",
+      "patrons": "sector.southeast.patrons",
+      "names": [
+        "ΗΦΑΙΣΤΟΣ",
+        "ΑΓΛΑΙΑ"
+      ]
+    },
+    {
+      "id": "south",
+      "title": "sector.south.title",
+      "patrons": "sector.south.patrons",
+      "names": [
+        "ΑΡΗΣ",
+        "ΑΦΡΟΔΙΤΗ"
+      ]
+    },
+    {
+      "id": "southwest",
+      "title": "sector.southwest.title",
+      "patrons": "sector.southwest.patrons",
+      "names": [
+        "ΔΗΜΗΤΗΡ"
+      ]
+    },
+    {
+      "id": "west",
+      "title": "sector.west.title",
+      "patrons": "sector.west.patrons",
+      "names": [
+        "ΠΟΣΕΙΔΩΝ",
+        "ΑΜΦΙΤΡΙΤΗ"
+      ]
+    },
+    {
+      "id": "northwest",
+      "title": "sector.northwest.title",
+      "patrons": "sector.northwest.patrons",
+      "names": [
+        "ΑΠΟΛΛΩΝ"
+      ]
+    },
+    {
+      "id": "zenith",
+      "title": "sector.zenith.title",
+      "patrons": "sector.zenith.patrons",
+      "names": [
+        "ΖΕΥΣ",
+        "ΗΡΑ"
+      ]
+    },
+    {
+      "id": "nadir",
+      "title": "sector.nadir.title",
+      "patrons": "sector.nadir.patrons",
+      "names": [
+        "ΑΙΔΗΣ",
+        "ΠΕΡΣΕΦΟΝΗ"
+      ]
+    },
+    {
+      "id": "hearth",
+      "title": "sector.hearth.title",
+      "patrons": "sector.hearth.patrons",
+      "names": [
+        "ΕΣΤΙΑ"
+      ]
+    },
+    {
+      "id": "center",
+      "title": "sector.center.title",
+      "patrons": "sector.center.patrons",
+      "names": [
+        "ΔΙΟΝΥΣΟΣ",
+        "ΑΡΙΑΔΝΗ"
+      ]
+    },
+    {
+      "id": "entrance",
+      "title": "sector.entrance.title",
+      "patrons": "sector.entrance.patrons",
+      "names": [
+        "ΑΙΘΗΡ",
+        "ΗΜΕΡΑ"
+      ]
+    },
+    {
+      "id": "exit",
+      "title": "sector.exit.title",
+      "patrons": "sector.exit.patrons",
+      "names": [
+        "ΕΡΩΣ",
+        "ΨΥΧΗ"
+      ]
+    }
+  ],
+  "numbers": [
+    {
+      "value": 1,
+      "body": "number.1",
+      "sourceIds": [
+        "S2",
+        "S16"
+      ]
+    },
+    {
+      "value": 2,
+      "body": "number.2",
+      "sourceIds": [
+        "S16"
+      ]
+    },
+    {
+      "value": 3,
+      "body": "number.3",
+      "sourceIds": [
+        "S4"
+      ]
+    },
+    {
+      "value": 4,
+      "body": "number.4",
+      "sourceIds": [
+        "S7",
+        "S16"
+      ]
+    },
+    {
+      "value": 5,
+      "body": "number.5",
+      "sourceIds": [
+        "S16",
+        "S2"
+      ]
+    },
+    {
+      "value": 6,
+      "body": "number.6",
+      "sourceIds": [
+        "S13"
+      ]
+    },
+    {
+      "value": 7,
+      "body": "number.7",
+      "sourceIds": [
+        "S3",
+        "S5",
+        "S7"
+      ]
+    },
+    {
+      "value": 8,
+      "body": "number.8",
+      "sourceIds": []
+    },
+    {
+      "value": 9,
+      "body": "number.9",
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "value": 10,
+      "body": "number.10",
+      "sourceIds": [
+        "S16",
+        "S3"
+      ]
+    }
+  ]
+}

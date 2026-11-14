@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Language } from "./i18n";
 import { DialogCloseButton } from "./DialogCloseButton";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
-import { restorationRoot } from "./stoicheion-restoration-math";
+import { greekIsopsephy, restorationRoot } from "./stoicheion-restoration-math";
+import { translateText } from "./i18n";
+import { OLYMPIAN_KNOWLEDGE, normalizeOlympianSearch, useOlympianCopy, type KnowledgeCopy } from "./olympian-knowledge";
+import { OlympianGuide, OlympianKnowledge, type OlympianNavigation } from "./OlympianKnowledge";
+import type { TheokyklosSegmentId } from "./theokyklos-data";
 import content from "./olympian-isopsephy.json";
 import "./olympian-isopsephy.css";
 
@@ -24,11 +28,23 @@ function OlympianSymbol({ deity, className = "" }: { deity: OlympianDeity; class
     src={`/theokyklos-symbols/olympian-${deity.id}-v313.png`} alt="" aria-hidden="true" decoding="async" />;
 }
 
-export function OlympianIsopsephyContent({ language, onSelect, onOpenStoicheion }: {
-  language: Language; onSelect: (deity: OlympianDeity) => void; onOpenStoicheion?: () => void;
-}) {
+export function OlympianIsopsephyContent({ language, onSelect, onOpenStoicheion, onOpenSector, search }: {
+  language: Language; onSelect: (deity: OlympianDeity) => void;
+  search?: { id: string; query: string; onChange: (value: string) => void; copy: KnowledgeCopy };
+} & OlympianNavigation) {
   const lang = locale(language);
   const copy = content.locales[lang];
+  const knowledgeCopy = search?.copy;
+  const query = search?.query ?? "";
+  const needle = normalizeOlympianSearch(query);
+  const visibleDeities = deities.filter(deity => {
+    const words = OLYMPIAN_KNOWLEDGE.deities[deity.id].words;
+    return !needle || normalizeOlympianSearch([
+      deity.name[lang], deity.greek, deity.number, deity.summary[lang],
+      ...words.flatMap(word => [word.greek, greekIsopsephy(word.greek), knowledgeCopy?.[word.meaning] ?? ""]),
+      ...OLYMPIAN_KNOWLEDGE.deities[deity.id].variants.flatMap(variant => [variant.greek, greekIsopsephy(variant.greek)]),
+    ].join(" ")).includes(needle);
+  });
   return <div className="olympian-body" lang={lang} data-no-translate>
     <div className="olympian-intro">
       <p>{copy.intro}</p>
@@ -39,8 +55,12 @@ export function OlympianIsopsephyContent({ language, onSelect, onOpenStoicheion 
         }
       }}>{copy.link}<ExperimentalIcon name="open" /></a>
     </div>
+    {knowledgeCopy && search ? <>
+      <div className="olympian-search"><label className="sr-only" htmlFor={search.id}>{knowledgeCopy.search}</label><ExperimentalIcon name="search" /><input type="search" id={search.id} value={query} placeholder={knowledgeCopy.searchHint} onChange={event => search.onChange(event.target.value)} />{query ? <button type="button" aria-label={knowledgeCopy.clear} onClick={() => search.onChange("")}><ExperimentalIcon name="close" /></button> : null}</div>
+      <OlympianGuide copy={knowledgeCopy} onOpenSector={onOpenSector} />
+    </> : null}
     <ul className="olympian-grid">
-      {deities.map(deity => <li key={deity.id} className={deity.id === "dionysus" ? "olympian-wide" : undefined}>
+      {visibleDeities.map(deity => <li key={deity.id} className={deity.id === "dionysus" ? "olympian-wide" : undefined}>
         <button type="button" className="olympian-tile" data-olympian={deity.id} data-dialog-save="false"
           aria-haspopup="dialog" onClick={() => onSelect(deity)}>
           <span className="olympian-tile-heading" aria-hidden="true">
@@ -52,17 +72,28 @@ export function OlympianIsopsephyContent({ language, onSelect, onOpenStoicheion 
         </button>
       </li>)}
     </ul>
+    {visibleDeities.length === 0 && knowledgeCopy ? <p className="olympian-empty" role="status">{knowledgeCopy.empty}</p> : null}
   </div>;
 }
 
-export function OlympianIsopsephyDialog({ deity, language, onClose }: {
+function OlympianCatalog(props: Parameters<typeof OlympianIsopsephyContent>[0]) {
+  const { copy } = useOlympianCopy(locale(props.language));
+  const [query, setQuery] = useState("");
+  const id = useId();
+  return <OlympianIsopsephyContent {...props} search={copy ? { id, query, onChange: setQuery, copy } : undefined} />;
+}
+
+export function OlympianIsopsephyDialog({ deity, language, onClose, onBack, onSelect, onOpenStoicheion, onOpenSector }: {
   deity: OlympianDeity; language: Language; onClose: () => void;
-}) {
+  onBack?: () => void; onSelect?: (deity: OlympianDeity) => void;
+} & OlympianNavigation) {
   const lang = locale(language);
   const copy = content.locales[lang];
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useDialogAccessibility<HTMLElement>(onClose);
+  const { copy: knowledgeCopy, error, retry } = useOlympianCopy(lang);
+  const index = deities.findIndex(candidate => candidate.id === deity.id);
   const sum = deity.calculatedNumber ?? deity.number;
   const equation = `${deity.summands.join(" + ")} = ${sum}`;
   useEffect(() => {
@@ -71,18 +102,22 @@ export function OlympianIsopsephyDialog({ deity, language, onClose }: {
     return () => { document.body.style.overflow = previous; };
   }, []);
   const dialog = <div className="modal-backdrop olympian-backdrop" role="presentation" lang={lang} data-no-translate>
-    <section ref={dialogRef} className="olympian-modal" role="dialog" aria-modal="true"
+    <section ref={dialogRef} className="olympian-modal olympian-reading-modal" role="dialog" aria-modal="true" data-dialog-header="none"
       aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1}>
+      <div className="olympian-reading-toolbar">
+        {onBack ? <button type="button" className="olympian-text-action" onClick={onBack}><ExperimentalIcon name="chevron-left" />{knowledgeCopy?.back ?? content.locales[lang].title}</button> : <span />}
+        <DialogCloseButton onClick={onClose} aria-label={`${copy.close}: ${deity.name[lang]}`} />
+      </div>
       <header className="olympian-modal-heading">
         <OlympianSymbol deity={deity} />
         <div>
           <h2 id={titleId}>{deity.name[lang]} <span>{deity.number}</span></h2>
           <p className="olympian-greek" lang="el">{deity.greek}</p>
         </div>
-        <DialogCloseButton onClick={onClose} aria-label={`${copy.close}: ${deity.name[lang]}`} />
       </header>
       <p id={descriptionId} className="olympian-modal-summary">{deity.summary[lang]}</p>
-      <div className="olympian-calculation">
+      <p className="olympian-detail">{deity.detail[lang]}</p>
+      {knowledgeCopy ? <OlympianKnowledge key={deity.id} deity={deity} deities={deities} language={lang} copy={knowledgeCopy} onSelect={onSelect} onOpenStoicheion={onOpenStoicheion} onOpenSector={onOpenSector} /> : <><div className="olympian-calculation">
         <span>{copy.formula}</span>
         <p className="olympian-equation" role="math" aria-label={equation}>
           {deity.summands.map((value, index) => <span aria-hidden="true" key={index}>{index > 0 ? "+ " : ""}{value}</span>)}
@@ -90,21 +125,41 @@ export function OlympianIsopsephyDialog({ deity, language, onClose }: {
         </p>
         <p className="olympian-root">{copy.root}: {restorationRoot(sum)}</p>
         {deity.calculationNote ? <p className="olympian-calculation-note">{deity.calculationNote[lang]}</p> : null}
-      </div>
-      <p className="olympian-detail">{deity.detail[lang]}</p>
+      </div><p role="status">{error ? translateText("Не удалось загрузить данные", lang) : translateText("Загрузка…", lang)}</p>{error ? <button type="button" className="olympian-text-action" onClick={retry}>{translateText("Повторить", lang)}</button> : null}</>}
+      {knowledgeCopy && onSelect ? <nav className="olympian-deity-navigation" aria-label={copy.title}>
+        <button type="button" onClick={() => onSelect(deities[(index + deities.length - 1) % deities.length])}><ExperimentalIcon name="chevron-left" /><span><small>{knowledgeCopy.previous}</small>{deities[(index + deities.length - 1) % deities.length].name[lang]}</span></button>
+        <button type="button" onClick={() => onSelect(deities[(index + 1) % deities.length])}><span><small>{knowledgeCopy.next}</small>{deities[(index + 1) % deities.length].name[lang]}</span><ExperimentalIcon name="chevron" /></button>
+      </nav> : null}
     </section>
   </div>;
   return typeof document === "undefined" ? dialog : createPortal(dialog, document.body);
 }
 
-export function OlympianIsopsephy({ language, onOpenStoicheion }: { language: Language; onOpenStoicheion?: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<OlympianDeity | null>(null);
+export function OlympianIsopsephy({ language, onOpenStoicheion, onOpenSector, initialDeityId, onInitialDeityOpened }: {
+  language: Language; onOpenStoicheion?: OlympianNavigation["onOpenStoicheion"];
+  onOpenSector?: (sectorId: TheokyklosSegmentId, returnTo: () => void) => void;
+  initialDeityId?: string | null; onInitialDeityOpened?: () => void;
+}) {
+  const initialDeity = deities.find(deity => deity.id === initialDeityId) ?? null;
+  const [open, setOpen] = useState(Boolean(initialDeity));
+  const [selected, setSelected] = useState<OlympianDeity | null>(initialDeity);
   const lang = locale(language);
   const copy = content.locales[lang];
   const titleId = useId();
-  const close = () => { setOpen(false); setSelected(null); };
-  const catalogRef = useDialogAccessibility<HTMLElement>(close, open);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const close = () => {
+    setOpen(false); setSelected(null);
+    window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+  };
+  useEffect(() => { if (initialDeityId) onInitialDeityOpened?.(); }, [initialDeityId, onInitialDeityOpened]);
+  const openSector = onOpenSector ? (sectorId: TheokyklosSegmentId) => {
+    const returnDeity = selected;
+    close();
+    onOpenSector(sectorId, () => { setSelected(returnDeity); setOpen(true); });
+  } : undefined;
+  // The inert catalogue must not enter the dialog stack when a reading opens
+  // directly after returning from a letter or a sector.
+  const catalogRef = useDialogAccessibility<HTMLElement>(close, open && !selected);
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -118,17 +173,18 @@ export function OlympianIsopsephy({ language, onOpenStoicheion }: { language: La
         <h2 id={titleId}>{copy.title}</h2>
         <DialogCloseButton onClick={close} aria-label={copy.close} />
       </header>
-      <OlympianIsopsephyContent language={language} onSelect={setSelected}
+      <OlympianCatalog language={language} onSelect={setSelected} onOpenSector={openSector}
         onOpenStoicheion={onOpenStoicheion ? () => { close(); onOpenStoicheion(); } : undefined} />
     </section>
   </div> : null;
   return <div className="olympian-isopsephy" lang={lang} data-no-translate>
-    <button type="button" className="year-details-button olympian-disclosure" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+    <button ref={triggerRef} type="button" className="year-details-button olympian-disclosure" aria-haspopup="dialog" onClick={() => setOpen(true)}>
       <span><ExperimentalIcon name="theokyklos" /></span>
       <span><strong>{copy.title}</strong><small>{copy.subtitle}</small></span>
       <ExperimentalIcon name="open" />
     </button>
     {typeof document === "undefined" ? catalog : createPortal(catalog, document.body)}
-    {selected ? <OlympianIsopsephyDialog deity={selected} language={language} onClose={() => setSelected(null)} /> : null}
+    {selected ? <OlympianIsopsephyDialog key={selected.id} deity={selected} language={language} onClose={close} onBack={() => setSelected(null)} onSelect={setSelected} onOpenSector={openSector}
+      onOpenStoicheion={onOpenStoicheion ? (cardId, returnTo) => { close(); onOpenStoicheion(cardId, returnTo); } : undefined} /> : null}
   </div>;
 }
