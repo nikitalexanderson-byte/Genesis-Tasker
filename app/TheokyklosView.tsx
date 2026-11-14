@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import {
   THEOKYKLOS_DIRECTION_IDS,
   THEOKYKLOS_SEGMENTS,
@@ -73,12 +73,15 @@ type TheokyklosViewProps = {
   onSelectedSectorClosed?: () => void;
   onChange: (workspace: HabitWorkspace) => void;
   onOpenHabits?: () => void;
-  onOpenStoicheion?: () => void;
+  onOpenStoicheion?: (cardId?: string, returnTo?: { id: string; name: string }) => void;
+  initialOlympianId?: string | null;
+  onInitialOlympianOpened?: () => void;
   allowOlympians?: boolean;
 };
 
-export function TheokyklosView({ language, workspace, date, calendarMode, initialSectorId = null, onSelectedSectorClosed, onChange, onOpenHabits, onOpenStoicheion,allowOlympians=true }: TheokyklosViewProps) {
+export function TheokyklosView({ language, workspace, date, calendarMode, initialSectorId = null, onSelectedSectorClosed, onChange, onOpenHabits, onOpenStoicheion,allowOlympians=true, initialOlympianId, onInitialOlympianOpened }: TheokyklosViewProps) {
   const [selectedId, setSelectedId] = useState<TheokyklosSegmentId | null>(initialSectorId);
+  const returnToOlympian = useRef<(() => void) | null>(null);
   const segmentsById = useMemo(() => new Map(THEOKYKLOS_SEGMENTS.map((segment) => [segment.id, segment])), []);
   const directions = THEOKYKLOS_DIRECTION_IDS.map((id) => segmentsById.get(id)).filter((segment): segment is TheokyklosSegment => Boolean(segment));
   const selected = selectedId ? segmentsById.get(selectedId) ?? null : null;
@@ -86,6 +89,9 @@ export function TheokyklosView({ language, workspace, date, calendarMode, initia
   const closeSelected = () => {
     setSelectedId(null);
     onSelectedSectorClosed?.();
+    const restore = returnToOlympian.current;
+    returnToOlympian.current = null;
+    restore?.();
   };
   const selectSegment = (id: TheokyklosSegmentId) => {
     setSelectedId(id);
@@ -277,7 +283,8 @@ export function TheokyklosView({ language, workspace, date, calendarMode, initia
         {selected ? <TheokyklosDetailsDialog segment={selected} language={language} workspace={workspace} date={date} calendarMode={calendarMode} onChange={onChange} onClose={closeSelected} onOpenHabits={onOpenHabits} /> : null}
       </div>
 
-      {allowOlympians?<OlympianIsopsephy language={language} onOpenStoicheion={onOpenStoicheion} />:null}
+      {allowOlympians?<OlympianIsopsephy language={language} onOpenStoicheion={onOpenStoicheion} initialDeityId={initialOlympianId} onInitialDeityOpened={onInitialOlympianOpened}
+        onOpenSector={(sectorId, restore) => { returnToOlympian.current = restore; setSelectedId(sectorId); }} />:null}
     </section>
   );
 }
