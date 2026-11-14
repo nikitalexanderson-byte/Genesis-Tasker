@@ -7,7 +7,7 @@ import './backup.css';
 import {useBackupCopy} from './use-backup-copy';
 type Stage={stageId:string;digest:string;counts:Record<string,number>;expiresIn:number};
 type Status={enabled:boolean;noticeVersion:string;generation:number;driveEnabled:false;serverSigningConfigured:boolean};
-const names={workspace:['Дела, проекты, привычки и прогресс','Tasks, projects, habits and progress'],mindmaps:['Карты мыслей','Mind maps'],diary:['Дневник и сны','Diary and dreams'],stoicheion:['Практики','Practices'],aurora:['Аврора','Aurora'],physis:['Фюзис','Physis'],'shared-drafts':['Общие дела','Shared affairs']} as const;
+const names={workspace:['Дела, проекты, привычки и прогресс','Tasks, projects, habits and progress'],mindmaps:['Карты мыслей','Mind maps'],diary:['Дневник и сны','Diary and dreams'],stoicheion:['Практики','Practices'],aurora:['Гно Метэр Басилея','Gno Meter Basileia'],physis:['Фюзис','Physis'],'shared-drafts':['Общие дела','Shared affairs']} as const;
 const webDownload=(content:string,id:string)=>{
   const url=URL.createObjectURL(new Blob([content],{type:'application/octet-stream'}));
   const link=document.createElement('a');link.href=url;link.download=`genesis-${id}.genesisbackup`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);

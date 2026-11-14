@@ -1,5 +1,6 @@
 "use client";
 import availability from './availability.json';
+import {gnoTitle} from './gno-copy';
 import type { OptionalTemporalTriadSnapshot } from './types';
 import RU from './texts.ru.json';
 import A from './adaptive-copy.ru.json';
@@ -83,7 +84,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
     const cancelDelete=useRef<HTMLButtonElement|null>(null);
     useEffect(()=>{if(deleteId)cancelDelete.current?.focus();},[deleteId]);
     const documentRef = useRef<AuroraDocument | null>(null), timer = useRef<ReturnType<typeof setTimeout> | null>(null), alive = useRef(true), heading = useRef<HTMLHeadingElement | null>(null);
-    const visibleSessions = document?.sessions.filter(s => !lockSource || primary && s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay) ?? [];
+    const visibleSessions = document?.sessions.filter(s => !s.gno && (!lockSource || primary && s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay)) ?? [];
     const session = visibleSessions.find(s => s.id === activeId) ?? null;
     const observation = session?.observationDraft ?? { occurred: 'unknown', conditions: 'unknown', occurredAt: '', conditionAt: '', anchorAt: '', complete: false, contradictory: false, description: '' };
     const { ritualDone = false, actionDone = false, withoutRitual = false } = session?.completionDraft ?? {};
@@ -155,7 +156,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
             if (!alive.current)
                 return;
             if (temporal) validateTemporalTriad(temporal);
-            const candidates = loaded.sessions.filter(s => !lockSource || primary && s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay);
+            const candidates = loaded.sessions.filter(s => !s.gno && (!lockSource || primary && s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay));
             const existing = candidates.find(s=>s.id===loaded.activeSessionId) ?? candidates.filter(s => !s.completedAt && (!primary || s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay)).at(-1) ?? candidates.at(-1);
             const changedTemporal = lockSource && temporal && existing && existing.triad?.sourceSeed !== temporal.sourceSeed;
             const frozenResult = changedTemporal && existing.forecasts.length > 0;
@@ -442,7 +443,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
       {locale.failed?<button type="button" className="secondary-button" onClick={locale.retry}>{translateText('Повторить загрузку',locale.language)}</button>:null}
     </section></div>;
     return <div className="modal-backdrop aurora-backdrop"><section className={`aurora-dialog${!session ? ' aurora-empty' : ''}`} key={locale.language} role="dialog" aria-modal="true" aria-labelledby="aurora-title" ref={element=>{dialogElement.current=element;dialog(element);}} tabIndex={-1} lang={locale.language} data-no-translate>
-  <header className="aurora-header"><div><h2 id="aurora-title">{RU.text0080}</h2><p>{RU.text0081}</p></div><DialogCloseButton data-dialog-save="false" onClick={() => void close()} aria-label={RU.text0082}/></header>
+  <header className="aurora-header"><div><h2 id="aurora-title" data-no-translate>{host.client==='web'?gnoTitle(host.language):RU.text0080}</h2><p>{RU.text0081}</p></div><DialogCloseButton data-dialog-save="false" onClick={() => void close()} aria-label={RU.text0082}/></header>
     <div className="aurora-save" role="status" aria-live="polite">{saveState}</div>
   {conflict ? <div className="aurora-error" role="alert"><h3>{RU.text0083}</h3><p>{RU.text0084}</p>
    {conflict.sessionIds.map(id => { const local = conflict.local.sessions.find(s => s.id === id), remote = conflict.remote.sessions.find(s => s.id === id); return <MethodSheet key={id} title={<><span data-no-translate={Boolean(local?.goalText || remote?.goalText)}>{local?.goalText || remote?.goalText || RU.text0085}</span></>}>{[[RU.text0086, local], [RU.text0087, remote]].map(([label, row]) => { const s = row as AuroraSession | undefined; return <div key={String(label)}><h4>{String(label)}</h4><p data-no-translate>{s?.goalText}</p><p data-no-translate>{s?.intake.event_description}</p><p data-no-translate>{s?.observationNote}</p><small>{s ? new Date(s.updatedAt).toLocaleString(locale.language) : RU.text0088}</small><ul>{s?.answers.map(a => <li key={a.id} data-no-translate>{a.detail || a.choiceId}</li>)}</ul></div>; })}</MethodSheet>; })}
