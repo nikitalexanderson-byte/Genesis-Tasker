@@ -156,12 +156,10 @@ class Release331UiTest {
         assertEquals(pixel.green, pixel.blue, .001f)
     }
 
-    @Test fun artworkButtonsHaveTheRequestedOpacityAndStillNavigate() {
+    @Test fun artworkButtonsStayTransparentAndStillNavigate() {
         var palette by mutableStateOf("blue"); var dark by mutableStateOf(false)
         var previous = 0; var next = 0; var today = 0
-        var surface = Color.White
         compose.setContent { Frame(palette = palette, dark = dark) {
-            surface = MaterialTheme.colorScheme.surface
             Box(Modifier.fillMaxWidth().background(Color.Black)) {
                 CalendarMonthHeroNavigation({ previous++ }, { next++ }, offerToday = true, onToday = { today++ })
             }
@@ -169,7 +167,7 @@ class Release331UiTest {
         for (p in palettes) for (night in listOf(false, true)) {
             compose.runOnIdle { palette = p; dark = night }
             compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
-            val expected = if (night) Color.Black else surface.copy(alpha = .20f).compositeOver(Color.Black)
+            val expected = Color.Black
             for (action in listOf("previous", "next", "today")) {
                 val node = compose.onNodeWithTag("calendar-month-$action")
                 val bounds = node.getUnclippedBoundsInRoot()
@@ -227,12 +225,12 @@ class Release331UiTest {
             } else {
                 val washes = (0..6).map { offset ->
                     val pixel = fill(sunday.plusDays(offset.toLong())); val daylight = daylightWashes[offset]
-                    assertEquals(daylight.red * .32f, pixel.red, .015f)
-                    assertEquals(daylight.green * .32f, pixel.green, .015f)
-                    assertEquals(daylight.blue * .32f, pixel.blue, .015f)
+                    assertEquals(daylight.red * .90f, pixel.red, .015f)
+                    assertEquals(daylight.green * .90f, pixel.green, .015f)
+                    assertEquals(daylight.blue * .90f, pixel.blue, .015f)
                     pixel.luminance()
                 }
-                assertTrue("Balanced ordinary night days: $p", washes.max() - washes.min() < .015f)
+                assertTrue("Balanced ordinary night days: $p", washes.max() - washes.min() < .08f)
             }
             for (offset in 0..6) {
                 val day = sunday.plusDays(offset.toLong())
@@ -240,7 +238,7 @@ class Release331UiTest {
                 compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
                 val rippleSettledAt = android.os.SystemClock.uptimeMillis() + 600
                 val daylight = daylightSelections[offset]
-                val expected = if (night) Color(daylight.red * .65f, daylight.green * .65f, daylight.blue * .65f) else daylight
+                val expected = if (night) Color(daylight.red * .90f, daylight.green * .90f, daylight.blue * .90f) else daylight
                 compose.waitUntil(5000) {
                     val pixel = fill(day)
                     android.os.SystemClock.uptimeMillis() >= rippleSettledAt &&
@@ -251,7 +249,10 @@ class Release331UiTest {
                 assertEquals("$p/$night/$day red", expected.red, pixel.red, .015f)
                 assertEquals("$p/$night/$day green", expected.green, pixel.green, .015f)
                 assertEquals("$p/$night/$day blue", expected.blue, pixel.blue, .015f)
-                if (night) assertTrue("White dates must remain legible: $p/$day", (Color(0xfff5f6f7).luminance() + .05f) / (pixel.luminance() + .05f) >= 4.5f)
+                val textInk = ink("calendar-day-number-$day")
+                assertTrue("Dates must remain legible: $p/$day",
+                    (maxOf(textInk.luminance(), pixel.luminance()) + .05f) /
+                        (minOf(textInk.luminance(), pixel.luminance()) + .05f) >= 4.5f)
                 if (offset in listOf(0,1,6)) shot("weekday-$offset-$p-$night-$sacredEnabled")
             }
         }

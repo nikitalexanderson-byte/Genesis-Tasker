@@ -932,7 +932,7 @@ private fun BoxScope.ProjectDropOverlay(held: TaskPickup, experimental: Boolean,
 }
 
 @Composable
-private fun CategoryEditor(existing: GenesisCategory?, position: Int, revision: Long, error: String?, onDismiss: () -> Unit,
+internal fun CategoryEditor(existing: GenesisCategory?, position: Int, revision: Long, error: String?, onDismiss: () -> Unit,
     initialTitle: String = "", onSave: (GenesisCategory, Long) -> Unit) {
     val expectedRevision = remember(existing?.id) { revision }
     var name by remember(existing?.id,initialTitle) { mutableStateOf(existing?.name ?: initialTitle) }
@@ -941,7 +941,7 @@ private fun CategoryEditor(existing: GenesisCategory?, position: Int, revision: 
         text = {
             Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(name, { name = it }, Modifier.testTag("category-name"), label = { Text("Название") }, singleLine = true)
+                OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth().testTag("category-name"), label = { Text("Название") }, singleLine = true)
                 CategoryColorPicker(color) { color = it }
                 error?.let { NativeAccessMessage(it, "personal-projects") }
             }

@@ -72,78 +72,108 @@ private fun monthCopyStyle(role: MonthCopyRole, mode: CalendarMode): TextStyle =
         lineHeight = if (mode == CalendarMode.PROFANE) 1.2.em else 1.25.em)
 }.copy(hyphens = Hyphens.None)
 
-/** Measure the same three real descriptions so changing calendar does not resize its artwork. */
+/** Use the owner's December reference for sizing, independent of the visible month or return action. */
 @Composable
 internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDate, mode: CalendarMode,
     zone: ZoneId, offerToday: Boolean, onToday: () -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
     val language = LocalGenesisLanguage.current
     val locale = remember(language) { Locale.forLanguageTag(language) }
     val originals = remember(calendar, referenceDate, zone, locale) { monthHeroCopies(calendar, referenceDate, zone, locale) }
+    // This date is only a layout reference; the displayed period always comes from referenceDate.
+    val referenceCopies = remember(calendar, zone, locale) {
+        monthHeroCopies(calendar, LocalDate.of(2026, 12, 31), zone, locale)
+    }.map { copy -> copy.copy(title = genesisTranslate(copy.title),
+        fields = copy.fields.map { field -> field.copy(text = genesisTranslate(field.text)) }) }
     val copies = originals.map { copy -> copy.copy(title = genesisTranslate(copy.title),
         fields = copy.fields.map { field -> field.copy(text = genesisTranslate(field.text)) }) }
     val civil = !LocalSacredFeaturesEnabled.current
     val copy = copies.first { it.mode == mode }.let { if (civil) it.copy(fields = emptyList()) else it }
     val headingStyle = MaterialTheme.typography.titleLarge.copy(lineHeight = 1.1.em, hyphens = Hyphens.None,
         shadow = Shadow(Color.Black.copy(alpha = .8f), Offset(0f, 1f), 4f))
-    val todayStyle = MaterialTheme.typography.labelMedium.copy(hyphens = Hyphens.None)
-    val todayLabel = genesisTranslate("Сегодня")
     val textMeasurer = rememberTextMeasurer(cacheSize = 32)
     val density = LocalDensity.current
     val paletteToned = mode != CalendarMode.PROFANE
-    val ink = Color(0xfff9f2e2)
+    val ink = calendarArtworkControlInk
     val tag = if (mode == CalendarMode.SACRED) "sacred-month-hero" else "calendar-month-description"
     Surface(Modifier.fillMaxWidth().testTag(tag), shape = AffairsLayout.shape,
         color = if (mode == CalendarMode.PROFANE) MaterialTheme.colorScheme.primaryContainer
             else eveningSurface(Color(0xff082e2f))) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val contentWidth = with(density) { (maxWidth - 24.dp).roundToPx().coerceAtLeast(1) }
-            val todayWidth = if (offerToday) with(density) { 48.dp.roundToPx() } else 0
-            val headingWidth = (contentWidth - todayWidth - if (offerToday) with(density) { 8.dp.roundToPx() } else 0).coerceAtLeast(1)
+            // Always reserve the same horizontal space, including when Today is absent.
+            val headingWidth = (contentWidth - with(density) { 56.dp.roundToPx() }).coerceAtLeast(1)
             val gap = with(density) { 4.dp.roundToPx() }
             var tallestContent = 0
-            for (original in copies) {
+            for (original in referenceCopies) {
                 val candidate = if (civil) original.copy(fields = emptyList()) else original
                 var height = maxOf(textMeasurer.measure(AnnotatedString(candidate.title), headingStyle,
                     constraints = Constraints(maxWidth = headingWidth)).size.height,
-                    if (offerToday) with(density) { 48.dp.roundToPx() } else 0)
+                    with(density) { 48.dp.roundToPx() })
                 for (field in candidate.fields) {
                     height += gap + textMeasurer.measure(AnnotatedString(field.text), monthCopyStyle(field.role, candidate.mode),
                         constraints = Constraints(maxWidth = contentWidth)).size.height
                 }
                 tallestContent = maxOf(tallestContent, height)
             }
-            val commonHeight = if (civil) maxOf(120.dp, calendarMonthHeroHeight * (2f / 3f),
+            val referenceHeight = if (civil) maxOf(120.dp, calendarMonthHeroHeight * (2f / 3f),
                 with(density) { tallestContent.toDp() } + 24.dp) else maxOf(calendarMonthHeroHeight,
                 with(density) { tallestContent.toDp() } + 80.dp)
-            Box(Modifier.fillMaxWidth().heightIn(min = commonHeight).testTag("month-description-layout")) {
+            // The compact civil card still needs two separate 48dp targets plus its padding.
+            val commonHeight = maxOf(referenceHeight * .75f, if (civil) 120.dp else 0.dp)
+            val styles = copy.fields.map { monthCopyStyle(it.role, mode).copy(shadow = headingStyle.shadow) }
+            val textGap = with(density) { 2.dp.roundToPx() }
+            fun TextStyle.scaled(scale: Float) = copy(fontSize = fontSize * scale,
+                lineHeight = if (lineHeight.isSp) lineHeight * scale else lineHeight)
+            fun copyLayout(scale: Float): Pair<Int, List<Int>> {
+                val title = textMeasurer.measure(AnnotatedString(copy.title), headingStyle.scaled(scale),
+                    constraints = Constraints(maxWidth = headingWidth))
+                var valid = !title.splitsWord()
+                var height = title.size.height
+                val widths = mutableListOf<Int>()
+                for ((index, field) in copy.fields.withIndex()) {
+                    val width = if (height + textGap < with(density) { 52.dp.roundToPx() }) headingWidth else contentWidth
+                    widths += width
+                    val text = textMeasurer.measure(AnnotatedString(field.text), styles[index].scaled(scale),
+                        constraints = Constraints(maxWidth = width))
+                    valid = valid && !text.splitsWord()
+                    height += textGap + text.size.height
+                }
+                return (if (valid) height else Int.MAX_VALUE) to widths
+            }
+            // Keep 2dp beyond the measured copy for independent text/padding pixel rounding.
+            fun copyFits(scale: Float) = copyLayout(scale).first <= with(density) { (commonHeight - 70.dp).roundToPx() }
+            var scale = 1f
+            if (!civil && !copyFits(scale)) {
+                var low = .25f
+                var high = 1f
+                repeat(12) {
+                    val probe = (low + high) / 2f
+                    if (copyFits(probe)) low = probe else high = probe
+                }
+                scale = low
+            }
+            val fieldWidths = copyLayout(scale).second
+            Box(Modifier.fillMaxWidth().height(commonHeight).testTag("month-description-layout")) {
                 OriginalImage(copy.image, genesisTranslate("Иллюстрация месяца") + " ${copy.title}",
                     Modifier.matchParentSize().testTag(copy.artTag), darkThemeBrightness = .82f,
-                    lightThemeBrightness = if (mode == CalendarMode.LUNAR) .85f * .93f else .90f * .85f)
+                    lightThemeBrightness = (if (mode == CalendarMode.LUNAR) .85f * .93f else .90f * .85f) * .90f)
                 if (LocalEveningTheme.current) CalendarHeroContrast(Modifier.matchParentSize(), paletteToned)
                 CompositionLocalProvider(LocalContentColor provides ink, LocalPreserveCalendarColors provides true) {
-                    Column(Modifier.fillMaxWidth().heightIn(min = commonHeight).padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (civil) {
-                            Spacer(Modifier.height(24.dp))
-                        } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Box(Modifier.weight(1f).testTag("month-description-name")) {
-                                    Text(copy.title, Modifier.testTag("calendar-month-period").semantics { heading() },
-                                        style = headingStyle, translate = false, color = ink, adjustInk = false)
-                                }
-                                if (offerToday) Spacer(Modifier.width(56.dp).height(48.dp))
+                    if (!civil) {
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).padding(bottom = 52.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Box(Modifier.fillMaxWidth().padding(end = 56.dp).testTag("month-description-name")) {
+                                Text(copy.title, Modifier.testTag("calendar-month-period").semantics { heading() },
+                                    style = headingStyle.scaled(scale), translate = false, color = ink, adjustInk = false)
                             }
-                            copy.fields.forEach { field ->
-                                Text(field.text, field.tag?.let { Modifier.testTag(it) } ?: Modifier,
+                            copy.fields.forEachIndexed { index, field ->
+                                Text(field.text, (field.tag?.let { Modifier.testTag(it) } ?: Modifier)
+                                    .padding(end = if (fieldWidths[index] < contentWidth) 56.dp else 0.dp),
                                     translate = false,
                                     color = ink, adjustInk = false,
-                                    style = monthCopyStyle(field.role, mode).copy(shadow = headingStyle.shadow))
+                                    style = styles[index].scaled(scale))
                             }
                         }
-                        }
-                        Spacer(Modifier.height(48.dp))
                     }
                     if (civil) Text(copy.title, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)
                         .padding(horizontal = 72.dp).testTag("calendar-month-period"), style = headingStyle,
@@ -152,7 +182,7 @@ internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDa
                     if (offerToday) androidx.compose.material3.Surface(onClick = onToday,
                         modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).size(48.dp).testTag("calendar-month-today")
                             .genesisDescription("Сегодня"), shape = AffairsLayout.controlShape,
-                        color = calendarArtworkControlBackground(), contentColor = MaterialTheme.colorScheme.primary) {
+                        color = Color.Transparent, contentColor = ink) {
                         Box(contentAlignment = Alignment.Center) { GenesisLucideIcon("undo-2") }
                     }
                 }

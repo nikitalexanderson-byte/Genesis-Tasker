@@ -20,6 +20,7 @@ internal class AuthApiError(val code: String) : Exception(code)
 
 /** The actual transport guard; keep account routes testable without opening a connection. */
 internal fun allowedAuthSessionRoute(method: String, path: String): Boolean =
+    (path == "/stoicheion/timeline/cards" && method in setOf("GET", "POST")) ||
     path in setOf("/session", "/auth/providers", "/workspace", "/bootstrap", "/stoicheion/draws", "/auth/google/native/challenge",
         "/auth/yandex/native", "/account/yandex-calendar/connect", "/account/yandex-calendar/disconnect",
         "/auth/google/native", "/auth/google/native/services/config", "/auth/google/native/services",
@@ -304,6 +305,12 @@ internal class AuthSessionClient(context: Context) {
                 }
             }
     fun stoicheionDraws(expected: Long): JSONObject = request(expected, "/stoicheion/draws", null)
+    fun stoicheionTimeline(expected: Long): JSONObject = request(expected, "/stoicheion/timeline/cards", null)
+    fun changeStoicheionTimeline(expected: Long, position: Int, action: String, revision: Long): JSONObject {
+        require(position in 0..2 && action in setOf("reveal", "reroll") && revision >= 0)
+        return request(expected, "/stoicheion/timeline/cards", JSONObject().put("position", position)
+            .put("action", action).put("revision", revision))
+    }
     fun saveStoicheionDraw(expected: Long, kind: String, seed: Long): JSONObject {
         require(kind in setOf("daily", "spread", "timeline")) { "Неизвестный вид расклада." }
         require(seed in 0..0xffff_ffffL)

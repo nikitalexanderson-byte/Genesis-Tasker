@@ -444,10 +444,11 @@ private fun HabitWorkspaceContent(app: GenesisApplication, experimental: Boolean
             if (current.settings.feedback.gamificationWidgets) {
                 val motionEnabled = current.settings.feedback.animations
                 val iconGlow = rememberIconPhase("hero-path-card-glow", 3_800, motionEnabled)
+                val heroPalette = eveningPalette(LocalDarkPalette.current)
                 CompositionLocalProvider(LocalPreserveCalendarColors provides true,
                     LocalContentColor provides Color(0xfffff6e2)) {
                 Surface(Modifier.fillMaxWidth().testTag("habit-hero-path-section"),
-                    shape = AffairsLayout.shape, color = Color(0xff0b1c36),
+                    shape = AffairsLayout.shape, color = heroPalette.secondaryContainer,
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x99dfc17e)),
                     shadowElevation = 8.dp) {
                     Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -459,7 +460,7 @@ private fun HabitWorkspaceContent(app: GenesisApplication, experimental: Boolean
                                 scaleX = 1.09f + pulse * .025f
                                 scaleY = 1.09f + pulse * .025f
                             }, shape = AffairsLayout.shape,
-                                color = Color(0xff16304c),
+                                color = heroPalette.surfaceContainerHigh,
                                 border = androidx.compose.foundation.BorderStroke(1.dp,
                                     Color(0xffdfc17e).copy(alpha = .45f + iconGlow * .3f))) {
                                 OriginalImage("hero-path/256/07_golden_horn_pathfinder.webp", null,
@@ -479,7 +480,7 @@ private fun HabitWorkspaceContent(app: GenesisApplication, experimental: Boolean
                                 Triple("Лавры",current.progress.laurelsBalance.toString(),"🌿"),
                             ).forEach { (label, value, icon) ->
                                 Surface(Modifier.weight(1f), shape = AffairsLayout.shape,
-                                    color = Color(0xff142e4b)) {
+                                    color = heroPalette.surfaceContainerHigh) {
                                     Column(Modifier.padding(9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(icon,style=MaterialTheme.typography.titleMedium)
                                         Text(value, color = Color(0xffffe4a6),

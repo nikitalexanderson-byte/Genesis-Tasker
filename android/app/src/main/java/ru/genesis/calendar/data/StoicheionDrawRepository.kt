@@ -16,14 +16,15 @@ import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.auth.AuthController
 
 data class StoicheionDraw(val kind: String, val dayKey: String, val seed: Long,
-    val attempts: Int, val firstAt: Long, val rerollDeadline: Long, val unlimited: Boolean = false) {
+    val attempts: Int, val firstAt: Long, val rerollDeadline: Long, val unlimited: Boolean = false,
+    val serverRerollAllowed: Boolean? = null) {
     fun remainingSeconds(now: Long): Int = if (attempts == 1)
         ((rerollDeadline - now + 999L) / 1000L).coerceAtLeast(0L).toInt() else 0
-    fun canReroll(now: Long): Boolean = unlimited || attempts == 1 && now < rerollDeadline
+    fun canReroll(now: Long): Boolean = serverRerollAllowed != false && (unlimited || attempts == 1 && now < rerollDeadline)
 }
 
 data class StoicheionDraws(val daily: StoicheionDraw? = null, val spread: StoicheionDraw? = null,
-    val timeline: StoicheionDraw? = null)
+    val timeline: StoicheionDraw? = null, val timelineSession: StoicheionTimelineState? = null)
 
 object StoicheionDrawRules {
     fun weekStart(dayKey: String): LocalDate { val date=LocalDate.parse(dayKey); return date.minusDays((date.dayOfWeek.value-1).toLong()) }
@@ -52,7 +53,8 @@ internal object StoicheionDrawWire {
         val draw = StoicheionDraw(value.getString("kind"), value.getString("dayKey"),
             value.getLong("seed"), value.getInt("attempts"),
             Instant.parse(value.getString("firstDrawAt")).toEpochMilli(),
-            Instant.parse(value.getString("rerollDeadline")).toEpochMilli(), value.optBoolean("unlimited"))
+            Instant.parse(value.getString("rerollDeadline")).toEpochMilli(), value.optBoolean("unlimited"),
+            value.opt("canReroll") as? Boolean)
         require(draw.kind in setOf("daily", "spread", "timeline") && draw.seed in 0..0xffff_ffffL && draw.attempts in 1..2)
         LocalDate.parse(draw.dayKey)
         return draw
@@ -96,8 +98,35 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         checkScope()
         require(scope.startsWith("account-")) { "Серверная синхронизация доступна после входа." }
         val payload = AuthController.get(app).loadStoicheionDraws()
+        StoicheionDrawWire.snapshot(payload)
         checkScope()
         replaceFromServer(payload)
+        // A paid timeline must never prevent the daily/nine-card snapshot from syncing.
+        if (app.featureAccess(scope).allows("stoicheion-timeline")) {
+            val timeline = AuthController.get(app).loadStoicheionTimeline()
+            checkScope()
+            app.database.withTransaction { replaceTimeline(timeline) }
+        }
+        checkScope()
+        read(currentRoot(), payload.getString("dayKey"))
+    }
+
+    suspend fun changeTimelineCard(position: Int, action: String): StoicheionTimelineState = accountLock.withLock {
+        checkScope()
+        require(scope.startsWith("account-"))
+        require(app.featureAccess(scope).allows("stoicheion-timeline")) { "FEATURE_SUBSCRIPTION_REQUIRED" }
+        val cached = currentRoot().optJSONObject("timelineSession")?.let { StoicheionTimelineWire.parse(it, it.getLong("receivedAt")) }
+        val payload = AuthController.get(app).changeStoicheionTimeline(position, action, cached?.revision ?: 0L)
+        checkScope()
+        app.database.withTransaction { replaceTimeline(payload) }
+        requireNotNull(StoicheionTimelineWire.parse(payload))
+    }
+
+    private suspend fun replaceTimeline(payload: JSONObject) {
+        StoicheionTimelineWire.parse(payload)
+        val root = currentRoot()
+        root.put("timelineSession", JSONObject(payload.toString()).put("receivedAt", System.currentTimeMillis()))
+        persist(root)
     }
 
     suspend fun save(drawKind: String, seed: Long = random.nextInt().toUInt().toLong()): StoicheionDraw = accountLock.withLock {
@@ -105,6 +134,7 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         val feature = when (drawKind) { "spread" -> "stoicheion-spread"; "timeline" -> "stoicheion-timeline"; else -> "stoicheion" }
         require(app.featureAccess(scope).allows(feature)) { "FEATURE_SUBSCRIPTION_REQUIRED" }
         if (scope.startsWith("account-")) {
+            require(drawKind != "timeline") { "TIMELINE_CARD_PROTOCOL_REQUIRED" }
             val payload = AuthController.get(app).saveStoicheionDraw(drawKind, seed)
             checkScope()
             return@withLock mergeServerDraw(payload.getJSONObject("draw"))
@@ -167,17 +197,23 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
     private fun localJson(draw: StoicheionDraw) = JSONObject().put("seed", draw.seed)
         .put("attempts", draw.attempts).put("firstAt", draw.firstAt)
         .put("rerollDeadline", draw.rerollDeadline).put("unlimited",draw.unlimited)
+        .put("serverRerollAllowed", draw.serverRerollAllowed ?: JSONObject.NULL)
 
     private fun read(root: JSONObject, dayKey: String): StoicheionDraws {
         val days=root.optJSONObject("days")?:return StoicheionDraws()
         fun latest(drawKind:String):StoicheionDraw?=days.keys().asSequence().filter { runCatching { StoicheionDrawRules.inPeriod(drawKind,it,dayKey) }.getOrDefault(false) }
             .sortedDescending().mapNotNull { key -> days.optJSONObject(key)?.optJSONObject(drawKind)?.let { fromJson(drawKind,key,it) } }.firstOrNull()
-        return StoicheionDraws(latest("daily"),latest("spread"),latest("timeline"))
+        val session = root.optJSONObject("timelineSession")?.let {
+            StoicheionTimelineWire.parse(it, it.getLong("receivedAt"))
+        }
+        return StoicheionDraws(latest("daily"), latest("spread"),
+            if (root.has("timelineSession")) session?.asDraw() else latest("timeline"), session)
     }
 
     private fun fromJson(drawKind: String, dayKey: String, value: JSONObject): StoicheionDraw? = runCatching {
         StoicheionDraw(drawKind, dayKey, value.getLong("seed"), value.getInt("attempts"),
-            value.getLong("firstAt"), value.getLong("rerollDeadline"), value.optBoolean("unlimited")).takeIf {
+            value.getLong("firstAt"), value.getLong("rerollDeadline"), value.optBoolean("unlimited"),
+            value.opt("serverRerollAllowed") as? Boolean).takeIf {
             it.seed in 0..0xffff_ffffL && it.attempts in 1..2
         }
     }.getOrNull()

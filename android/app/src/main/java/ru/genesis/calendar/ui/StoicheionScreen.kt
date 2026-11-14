@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import ru.genesis.calendar.ui.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.Dispatchers
@@ -147,12 +150,20 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
         }
     }
     var motionMode by remember { mutableStateOf<String?>(null) }
+    var timelineAction by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var saving by remember { mutableStateOf(false) }
     var practiceBusy by remember { mutableStateOf(false) }
     var practiceError by remember { mutableStateOf<String?>(null) }
     var drawError by remember { mutableStateOf<String?>(null) }
     var drawRefresh by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(repository, lifecycleOwner) {
+        if (app.workspaceScope.startsWith("account-")) lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            drawRefresh++
+            while (true) { delay(30_000L); if (!saving) drawRefresh++ }
+        }
+    }
     LaunchedEffect(repository, today, drawRefresh) {
         if (app.workspaceScope.startsWith("account-")) try {
             refreshing = true
@@ -219,7 +230,12 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                             restorationLabel = restorationCatalog?.copy("begin"),
                             onRestore = if (!restorationAllowed || restorationCatalog == null || theokyklos == null) null else { { openRestoration(null) } },
                             restorationError = restorationCatalogResult.isFailure || theokyklosResult.isFailure,
-                            onReloadRestoration = { restorationReload++ })
+                            onReloadRestoration = { restorationReload++ },
+                            onTimelineAction = if (!app.workspaceScope.startsWith("account-")) null else { position, action ->
+                                if (!saving && !refreshing && !divinationDisabled && access.allows("stoicheion-timeline")) {
+                                    timelineAction = position to action; beginMotion("timeline")
+                                }
+                            })
                         if (restorationAllowed && !divinationDisabled && restorationCatalog != null) {
                             val cycles = StoicheionRestoration.visibleHabits(habitWorkspace?.habits.orEmpty())
                             if (cycles.isNotEmpty()) {
@@ -409,12 +425,16 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                         StoicheionReading.cardOfDay(letters!!, chosen) == StoicheionReading.cardOfDay(letters!!, prior.seed))
                         chosen = (chosen + 1L) and 0xffff_ffffL
                     if (mode != "daily" && prior?.seed == chosen) chosen = (chosen + 1L) and 0xffff_ffffL
-                    repository.save(mode, chosen)
+                    if (mode == "timeline" && app.workspaceScope.startsWith("account-")) {
+                        val action = requireNotNull(timelineAction)
+                        repository.changeTimelineCard(action.first, action.second)
+                        timelineAction = null
+                    } else repository.save(mode, chosen)
                     drawError = null
                     selected = null
                     motionMode = null
                 } catch (error: CancellationException) { throw error }
-                catch (error: Exception) { drawError = error.message ?: "Не удалось сохранить расклад."; motionMode = null }
+                catch (error: Exception) { drawError = error.message ?: "Не удалось сохранить расклад."; motionMode = null; drawRefresh++ }
                 finally { saving = false }
             }
         })

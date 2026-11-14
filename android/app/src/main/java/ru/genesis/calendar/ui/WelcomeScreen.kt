@@ -70,7 +70,7 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
         listOf(welcomeNight, welcomeGreen, welcomeNight))).safeDrawingPadding().testTag("genesis-welcome")) {
         @Composable fun Intro() {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                OriginalImage("icons/icon-192.png", "GENESIS", Modifier.size(44.dp))
+                GenesisIdentityImage(Modifier.size(44.dp))
                 Text("Genesis Tasker", Modifier.padding(start = 10.dp), color = welcomeCream,
                     style = MaterialTheme.typography.titleLarge.copy(fontFamily = GenesisHeadingFont))
             }

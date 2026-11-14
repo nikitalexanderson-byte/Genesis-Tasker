@@ -740,7 +740,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
         (solar?.let { " · ${it.name}" } ?: "") +
         (if (adjacent) " · Другой месяц, только просмотр" else ""))
     val foreground = if (selected && palette != null) palette.selectedForeground else
-        if (palette != null && !LocalEveningTheme.current) Color(0xff132426) else MaterialTheme.colorScheme.onSurface
+        if (palette != null && !adjacent) Color(0xff132426) else MaterialTheme.colorScheme.onSurface
     CompositionLocalProvider(LocalPreserveCalendarColors provides (palette != null)) {
     Surface(onClick = { onChoose(date) }, enabled = !adjacent,
         modifier = modifier.then(if (civil) Modifier.aspectRatio(1f)
@@ -789,7 +789,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
                     }
                 }
                 if (crossDate != null) Text(crossDate, fontSize = 10.sp, lineHeight = 14.sp,
-                    maxLines = 1, color = if (selected && patron != null) foreground else MaterialTheme.colorScheme.onSurfaceVariant)
+                    maxLines = 1, color = if (palette != null && !adjacent) foreground else MaterialTheme.colorScheme.onSurfaceVariant)
             }
             CalendarMonthTaskRail(date, if (adjacent) 0 else taskCount, completedTaskCount, !adjacent,
                 onTaskBadgeClick)

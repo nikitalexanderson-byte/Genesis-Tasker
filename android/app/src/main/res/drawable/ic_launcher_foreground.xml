@@ -1,4 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/genesis_icon"
-    android:inset="8%" />
+<inset xmlns:android="http://schemas.android.com/apk/res/android" android:drawable="@drawable/genesis_launcher_green_light" android:inset="0dp"/>

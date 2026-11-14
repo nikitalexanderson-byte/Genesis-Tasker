@@ -485,6 +485,13 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     }
     val context = LocalContext.current
     val frameworkContext = remember(context, frameworkConfiguration) { GenesisLocaleContext(context, frameworkConfiguration) }
+    LaunchedEffect(context, darkPalette, eveningTheme) {
+        try { withContext(Dispatchers.IO) { GenesisBrandIcon.updateLauncher(context.applicationContext, darkPalette, eveningTheme) } }
+        catch (error: kotlinx.coroutines.CancellationException) { throw error }
+        catch (error: Exception) { android.util.Log.w("GenesisBrand", "Launcher icon update unavailable", error) }
+        runCatching { context.activity()?.let { GenesisBrandIcon.updateTask(it, darkPalette, eveningTheme) } }
+            .onFailure { android.util.Log.w("GenesisBrand", "Task icon update unavailable", it) }
+    }
     val guidanceSurfaces = remember { NativeGuidanceSurfaces() }
     val nativeGuidance = rememberNativePlanGuidance(authController, authState.user?.uid, language,
         enabled = !testWorkspace && !accountGate && !authState.requiresSignIn &&
@@ -1086,16 +1093,11 @@ internal fun TodayHabitTrackerBlock(content: @Composable ColumnScope.() -> Unit)
 
 @Composable
 internal fun GenesisBrandLogo(modifier: Modifier = Modifier) {
-    val assets = LocalContext.current.assets
-    // The fixed 192px identity mark is tiny: decode once without a transient empty async slot.
-    val bitmap = remember(assets) { assets.open("originals/icons/icon-192.png").use {
-        android.graphics.BitmapFactory.decodeStream(it)
-    }.asImageBitmap() }
     Box(modifier.shadow(3.dp, CircleShape).clip(CircleShape)
         .background(MaterialTheme.colorScheme.surface)
         .border(1.dp, Brush.linearGradient(listOf(Color(0xffe4c78c), Color(0xff203e35))), CircleShape)
         .padding(2.dp).testTag("drawer-brand-logo")) {
-        Image(bitmap, "GENESIS", Modifier.fillMaxSize().clip(CircleShape), contentScale = ContentScale.Crop)
+        GenesisIdentityImage(Modifier.fillMaxSize().clip(CircleShape))
     }
 }
 

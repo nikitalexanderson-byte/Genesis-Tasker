@@ -1,0 +1,86 @@
+{
+  "ru": [
+    "Карточки месяцев стали компактнее и одинаковыми по высоте. Улучшены контраст текста, стрелок и цветных дней.",
+    "Упорядочены отступы каталога олимпийцев и поле названия категории. «Путь Героя» следует выбранной палитре.",
+    "Недельные расклады на 3 и 9 карт согласованы с серверным состоянием сайта.",
+    "Новая иконка GENESIS меняет цвет вместе с темой."
+  ],
+  "en": [
+    "Month cards are more compact and have a consistent height. Improved contrast for text, arrows and coloured days.",
+    "Refined Olympian catalogue spacing and the category name field. Hero Path follows your selected palette.",
+    "Weekly three-card and nine-card readings now follow the website’s server state.",
+    "The new GENESIS icon changes colour with your theme."
+  ],
+  "el": [
+    "Πιο συμπαγείς κάρτες μηνών με ενιαίο ύψος. Καλύτερη αντίθεση κειμένου, βελών και χρωματιστών ημερών.",
+    "Βελτιώθηκαν τα περιθώρια του καταλόγου Ολυμπίων και το πεδίο ονόματος κατηγορίας. Η Πορεία του Ήρωα ακολουθεί την παλέτα σας.",
+    "Τα εβδομαδιαία ανοίγματα 3 και 9 καρτών ακολουθούν πλέον την κατάσταση του διακομιστή του ιστοτόπου.",
+    "Το νέο εικονίδιο GENESIS αλλάζει χρώμα μαζί με το θέμα."
+  ],
+  "de": [
+    "Monatskarten sind kompakter und gleich hoch. Verbesserter Kontrast für Text, Pfeile und farbige Tage.",
+    "Abstände im Olympierkatalog und das Feld für den Kategorienamen wurden angepasst. Der Heldenpfad folgt Ihrer Palette.",
+    "Wöchentliche Legungen mit 3 und 9 Karten übernehmen den Serverstand der Website.",
+    "Das neue GENESIS-Symbol ändert seine Farbe mit dem Design."
+  ],
+  "fr": [
+    "Cartes des mois plus compactes et de même hauteur. Contraste amélioré pour le texte, les flèches et les jours colorés.",
+    "Espacement du catalogue des Olympiens et champ du nom de catégorie ajustés. Le Parcours du Héros suit votre palette.",
+    "Les tirages hebdomadaires à 3 et 9 cartes suivent l’état du serveur du site.",
+    "La nouvelle icône GENESIS change de couleur avec le thème."
+  ],
+  "es": [
+    "Tarjetas de mes más compactas y de igual altura. Mejor contraste de texto, flechas y días de colores.",
+    "Ajustados los espacios del catálogo de olímpicos y el campo del nombre de categoría. El Camino del Héroe sigue tu paleta.",
+    "Las tiradas semanales de 3 y 9 cartas usan el estado del servidor del sitio web.",
+    "El nuevo icono de GENESIS cambia de color con el tema."
+  ],
+  "it": [
+    "Schede dei mesi più compatte e della stessa altezza. Migliorato il contrasto di testo, frecce e giorni colorati.",
+    "Rivisti gli spazi del catalogo degli Olimpi e il campo del nome categoria. Il Cammino dell’Eroe segue la tua tavolozza.",
+    "Le stese settimanali a 3 e 9 carte seguono lo stato del server del sito.",
+    "La nuova icona GENESIS cambia colore con il tema."
+  ],
+  "pt": [
+    "Cartões dos meses mais compactos e com a mesma altura. Melhor contraste do texto, das setas e dos dias coloridos.",
+    "Ajustados os espaços do catálogo dos olímpicos e o campo do nome da categoria. O Caminho do Herói segue a sua paleta.",
+    "As tiragens semanais de 3 e 9 cartas seguem o estado do servidor do site.",
+    "O novo ícone GENESIS muda de cor com o tema."
+  ],
+  "pl": [
+    "Karty miesięcy są mniejsze i mają jednakową wysokość. Lepszy kontrast tekstu, strzałek i kolorowych dni.",
+    "Poprawiono odstępy w katalogu olimpijczyków i pole nazwy kategorii. Ścieżka Bohatera używa wybranej palety.",
+    "Tygodniowe rozkłady 3 i 9 kart korzystają ze stanu serwera witryny.",
+    "Nowa ikona GENESIS zmienia kolor wraz z motywem."
+  ],
+  "sr": [
+    "Картице месеци су компактније и једнаке висине. Побољшан је контраст текста, стрелица и обојених дана.",
+    "Уређени су размаци у каталогу олимпијаца и поље назива категорије. Пут Хероја прати изабрану палету.",
+    "Недељни распореди од 3 и 9 карата користе стање са сервера сајта.",
+    "Нова икона GENESIS мења боју заједно са темом."
+  ],
+  "uk": [
+    "Картки місяців стали компактнішими та однаковими за висотою. Поліпшено контраст тексту, стрілок і кольорових днів.",
+    "Упорядковано відступи каталогу олімпійців і поле назви категорії. Шлях Героя відповідає вибраній палітрі.",
+    "Тижневі розклади на 3 та 9 карт узгоджено зі станом сервера сайту.",
+    "Нова іконка GENESIS змінює колір разом із темою."
+  ],
+  "zh": [
+    "月份卡片更紧凑，高度统一。提高文字、箭头和彩色日期的对比度。",
+    "调整奥林匹斯众神目录的间距和类别名称输入框。英雄之路采用所选配色。",
+    "每周三张牌和九张牌的牌阵与网站服务器状态保持一致。",
+    "新的 GENESIS 图标随主题切换颜色。"
+  ],
+  "tr": [
+    "Ay kartları daha kompakt ve eşit yükseklikte. Metin, oklar ve renkli günlerin kontrastı iyileştirildi.",
+    "Olimposlular kataloğunun aralıkları ve kategori adı alanı düzenlendi. Kahramanın Yolu seçili paleti kullanır.",
+    "Haftalık 3 ve 9 kart açılımları web sitesinin sunucu durumuyla eşleşir.",
+    "Yeni GENESIS simgesi temayla birlikte renk değiştirir."
+  ],
+  "ja": [
+    "月のカードをコンパクトにし、高さを統一しました。文字、矢印、色付きの日付のコントラストを改善しました。",
+    "オリュンポスの神々の一覧の余白とカテゴリ名の入力欄を調整しました。英雄の道に選択した配色を適用します。",
+    "週ごとの3枚と9枚のカード展開をウェブサイトのサーバー状態に合わせました。",
+    "新しい GENESIS アイコンはテーマに合わせて色が変わります。"
+  ]
+}

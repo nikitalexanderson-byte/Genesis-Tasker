@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources><color name="genesis_brand_green_light_background">#284B41</color>
+<color name="genesis_brand_green_dark_background">#142C25</color>
+<color name="genesis_brand_blue_light_background">#2D5889</color>
+<color name="genesis_brand_blue_dark_background">#132B4A</color>
+<color name="genesis_brand_burgundy_light_background">#873A53</color>
+<color name="genesis_brand_burgundy_dark_background">#391925</color>
+<color name="genesis_brand_violet_light_background">#694782</color>
+<color name="genesis_brand_violet_dark_background">#2B1A3A</color></resources>

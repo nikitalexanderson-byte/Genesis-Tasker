@@ -52,9 +52,9 @@ private fun JSONObject.localized(language: String): String = optString(language)
         if (expanded) {
             Dialog(onDismissRequest = { expanded = false; selected = null },
                 properties = DialogProperties(usePlatformDefaultWidth = false)) {
-            Surface(Modifier.padding(16.dp).widthIn(max = 720.dp).fillMaxWidth(), shape = AffairsLayout.shape) {
-            Column(Modifier.verticalScroll(catalogScroll).padding(16.dp).testTag("olympian-catalog-dialog"),
-                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Surface(Modifier.widthIn(max = AffairsLayout.formMaxWidth).fillMaxWidth(), shape = AffairsLayout.shape) {
+            Column(Modifier.verticalScroll(catalogScroll).padding(AffairsLayout.gutter).testTag("olympian-catalog-dialog"),
+                verticalArrangement = Arrangement.spacedBy(AffairsLayout.sectionGap)) {
             EditorDialogHeader(copy.getString("title"), "olympian-catalog-close") { expanded = false; selected = null }
             UntranslatedText(copy.getString("intro"), style = MaterialTheme.typography.bodyMedium)
             TextButton({ expanded = false; onOpenStoicheion() }, Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("olympian-stoicheion-link")) {
@@ -74,7 +74,7 @@ private fun JSONObject.localized(language: String): String = optString(language)
                                         .testTag("olympian-${deity.getString("id")}"), shape = AffairsLayout.shape,
                                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Column(Modifier.padding(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy(AffairsLayout.gap)) {
                                         OlympianSymbol(deity, Modifier.size(48.dp))
                                         UntranslatedText("${deity.getJSONObject("name").localized(language)} · ${deity.getInt("number")}",
                                             style = MaterialTheme.typography.titleSmall, maxLines = 1)
