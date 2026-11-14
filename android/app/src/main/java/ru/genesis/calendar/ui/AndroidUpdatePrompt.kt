@@ -244,7 +244,9 @@ internal fun AndroidUpdateDialog(context: Context, release: AndroidRelease, onDi
                                     .setTitle("GENESIS ${latest.versionName}")
                                     .setDescription(translateGenesisText(context,"Обновление приложения",language))
                                     .setMimeType("application/vnd.android.package-archive")
-                                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                                    // A completed system notification opens the APK directly, bypassing
+                                    // the fresh-release check above. Installation stays in this dialog.
+                                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                                     .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, name)
                                 destination = file
                                 downloadId = downloads.enqueue(request)
