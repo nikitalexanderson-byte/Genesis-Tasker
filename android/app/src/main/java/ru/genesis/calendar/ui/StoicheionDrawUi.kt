@@ -54,13 +54,14 @@ internal data class StoicheionSelection(val letter: StoicheionLetter, val revers
 private fun orientation(reversed: Boolean) = if (reversed) "Перевёрнутое положение" else "Парадное положение"
 @Composable internal fun stoicheionCardSurface(reversed: Boolean, upright: Color = MaterialTheme.colorScheme.surface): Color =
     if (!reversed) upright else if (LocalEveningTheme.current) stoicheionDarkReversedColor(LocalDarkPalette.current) else MaterialTheme.colorScheme.errorContainer
-private fun countdown(seconds: Int) = "%02d:%02d".format(seconds / 60, seconds % 60)
+internal fun countdown(seconds: Int) = "%02d:%02d".format(seconds / 60, seconds % 60)
 
 @Composable
 internal fun StoicheionDrawPanel(letters: List<StoicheionLetter>, draws: StoicheionDraws?, now: Long,
     busy: Boolean, error: String?, onBegin: (String) -> Unit, onSelect: (StoicheionSelection) -> Unit,
     restorationLabel: String? = null, onRestore: (() -> Unit)? = null,
-    restorationError: Boolean = false, onReloadRestoration: () -> Unit = {}, onRefresh: (() -> Unit)? = null) {
+    restorationError: Boolean = false, onReloadRestoration: () -> Unit = {}, onRefresh: (() -> Unit)? = null,
+    onTimelineAction: ((Int, String) -> Unit)? = null) {
     val spreadAllowed=LocalFeatureAccess.current.allows("stoicheion-spread")
     val restorationAllowed=LocalFeatureAccess.current.allows("stoicheion-restoration")
     val daily = draws?.daily
@@ -104,10 +105,11 @@ internal fun StoicheionDrawPanel(letters: List<StoicheionLetter>, draws: Stoiche
                 RerollAction(daily, now, busy, "Перебросить карту") { onBegin("daily") }
             }
         }
-        if (dailyLetter != null) {
+        if (dailyLetter != null || spread != null) {
             val cards = spread?.let { StoicheionReading.spread(letters, it.seed) }
             StoicheionSection(OracleTone.BLUE, "stoicheion-spread-block") {
                 Text("Космический круг и девять ликов силы", style = MaterialTheme.typography.titleLarge)
+                UntranslatedText(stoicheionTimelineCopy().getString(if (spread?.unlimited == true) "testingRule" else "weeklyRule"), style = MaterialTheme.typography.bodySmall)
                 Text("Девять букв соотносятся со сторонами света и центром. Расклад начинается с карты дня и вашего движения.",
                     style = MaterialTheme.typography.bodyMedium)
                 if (!spreadAllowed) NativeUpgradePrompt("stoicheion-spread")
@@ -172,7 +174,8 @@ internal fun StoicheionDrawPanel(letters: List<StoicheionLetter>, draws: Stoiche
             }
         }
         StoicheionTimelinePanel(letters, draws?.timeline, draws != null, now, busy,
-            onBegin = { onBegin("timeline") }, onSelect = onSelect)
+            onBegin = { onBegin("timeline") }, onSelect = onSelect,
+            session = draws?.timelineSession, onCardAction = onTimelineAction)
     }
 }
 
@@ -208,7 +211,7 @@ internal fun RerollAction(draw: StoicheionDraw, now: Long, busy: Boolean, label:
     } else if (draw.canReroll(now)) OutlinedButton(onClick = onClick, enabled = !busy,
         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("stoicheion-reroll-${draw.kind}")) {
         Text(if(draw.unlimited) label else "$label · ${countdown(draw.remainingSeconds(now))}")
-    } else Text(if (draw.attempts == 2) "Переброс на сегодня использован"
+    } else Text(if (draw.attempts == 2 && draw.kind == "daily") "Переброс на сегодня использован"
         else if(draw.kind=="daily") "Выбор закреплён до завтра" else "Расклад сохранён до следующей недели", style = MaterialTheme.typography.bodySmall)
 }
 

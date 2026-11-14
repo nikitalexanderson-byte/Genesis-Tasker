@@ -132,10 +132,8 @@ internal fun <T : Any> CalendarPeriodPager(period: T, previousPeriod: T?, nextPe
     }
 }
 
-/** Artwork stays visible: no fill at night, 80% transparent fill in daylight. */
-@Composable
-internal fun calendarArtworkControlBackground(): Color = if (LocalEveningTheme.current) Color.Transparent
-    else MaterialTheme.colorScheme.surface.copy(alpha = .20f)
+/** Artwork controls use the same light ink as the month copy in every palette. */
+internal val calendarArtworkControlInk = Color(0xfff9f2e2)
 
 @Composable
 internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> Unit, title: String? = null,
@@ -155,9 +153,8 @@ internal fun CalendarMonthHeroNavigation(onPrevious: () -> Unit, onNext: () -> U
         } else Spacer(Modifier.weight(1f))
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             if (offerToday) IconButton(onToday, Modifier.size(48.dp)
-                .clip(AffairsLayout.controlShape).background(calendarArtworkControlBackground())
                 .testTag("calendar-month-today").genesisDescription("Сегодня")) {
-                GenesisLucideIcon("undo-2", Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+                GenesisLucideIcon("undo-2", Modifier.size(24.dp), tint = calendarArtworkControlInk)
             }
         }
         PeriodArrow(1, "month", onNext, artwork = true)
@@ -187,10 +184,8 @@ private fun PeriodArrow(direction: Int, period: String, onClick: () -> Unit, art
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val shift by animateFloatAsState(if (pressed) direction * 3f else 0f, spring(stiffness = Spring.StiffnessLow), label = "arrow-press")
-    val ink = MaterialTheme.colorScheme.primary
-    val background = if (artwork) Modifier.clip(AffairsLayout.controlShape)
-        .background(calendarArtworkControlBackground()) else Modifier
-    IconButton(onClick, Modifier.size(48.dp).then(background).testTag("calendar-$period-${if (direction < 0) "previous" else "next"}")
+    val ink = if (artwork) calendarArtworkControlInk else MaterialTheme.colorScheme.primary
+    IconButton(onClick, Modifier.size(48.dp).testTag("calendar-$period-${if (direction < 0) "previous" else "next"}")
         .semantics { contentDescription = label }, interactionSource = interaction) {
         GenesisLucideIcon(if (direction < 0) "chevron-left" else "chevron-right",
             Modifier.size(24.dp).offset(x = shift.dp), tint = ink)

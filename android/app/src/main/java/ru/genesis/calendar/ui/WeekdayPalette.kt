@@ -51,12 +51,11 @@ internal fun WeekdayPatronMark.daylightCell(date: LocalDate): WeekdayPatronMark 
         selectedForeground = if (date.dayOfWeek == DayOfWeek.SATURDAY) Color(0xfff5f6f7) else Color(0xff132426))
 }
 
-/** Darken the approved daylight colors, keeping Monday silver and Saturday neutral gray. */
+/** Retain the daylight hues, with exactly 10% less RGB brightness at night. */
 internal fun WeekdayPatronMark.eveningCell(date: LocalDate): WeekdayPatronMark {
     val daylight = daylightCell(date)
     return daylight.copy(
-        wash = Color.Black.copy(alpha = .68f).compositeOver(daylight.wash),
-        selectedBackground = Color.Black.copy(alpha = .35f).compositeOver(daylight.selectedBackground),
-        selectedForeground = Color(0xfff5f6f7),
-        accent = Color.White.copy(alpha = .22f).compositeOver(daylight.selectedBackground))
+        wash = Color.Black.copy(alpha = .10f).compositeOver(daylight.wash),
+        selectedBackground = Color.Black.copy(alpha = .10f).compositeOver(daylight.selectedBackground),
+        selectedForeground = if (date.dayOfWeek == DayOfWeek.SATURDAY) daylight.selectedForeground else Color(0xff0b1517))
 }

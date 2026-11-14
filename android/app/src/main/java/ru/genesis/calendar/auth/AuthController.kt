@@ -1999,6 +1999,20 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
     }
 
+    internal suspend fun loadStoicheionTimeline(): JSONObject {
+        val generation = client.currentGeneration()
+        return try { stoicheionReadWithRetry { withContext(Dispatchers.IO) { client.stoicheionTimeline(generation) } } }
+        catch (error: CancellationException) { throw error }
+        catch (error: AuthFailure) { throw StoicheionSyncFailure(error.kind, error) }
+    }
+
+    internal suspend fun changeStoicheionTimeline(position: Int, action: String, revision: Long): JSONObject {
+        val generation = client.currentGeneration()
+        return try { withContext(Dispatchers.IO) { client.changeStoicheionTimeline(generation, position, action, revision) } }
+        catch (error: CancellationException) { throw error }
+        catch (error: AuthFailure) { throw IllegalStateException(stoicheionFailureMessage(error.kind)) }
+    }
+
     internal suspend fun saveStoicheionDraw(kind: String, seed: Long): JSONObject {
         val generation = client.currentGeneration()
         return try { withContext(Dispatchers.IO) { client.saveStoicheionDraw(generation, kind, seed) } }

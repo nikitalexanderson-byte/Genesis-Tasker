@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import org.json.JSONObject
 import ru.genesis.calendar.data.StoicheionDraw
+import ru.genesis.calendar.data.StoicheionTimelineState
 import ru.genesis.calendar.domain.StoicheionReading
 
 internal data class StoicheionTimePosition(val id: String, val title: String, val meaning: String)
@@ -26,12 +27,17 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
     val language = LocalGenesisLanguage.current
     return remember(context, language) {
         JSONObject(context.assets.open("originals/catalogs/stoicheion-timeline.json").bufferedReader().use { it.readText() })
-            .let { it.optJSONObject(language) ?: it.getJSONObject("en") }
+            .let { it.optJSONObject(language) ?: it.getJSONObject("en") }.also { copy ->
+                val extra = JSONObject(context.assets.open("originals/catalogs/stoicheion-timeline-web.json")
+                    .bufferedReader().use { it.readText() }).let { it.optJSONObject(language) ?: it.getJSONObject("en") }
+                extra.keys().forEach { key -> copy.put(key, extra.get(key)) }
+            }
     }
 }
 
 @Composable internal fun StoicheionTimelinePanel(letters: List<StoicheionLetter>, draw: StoicheionDraw?,
-    ready: Boolean, now: Long, busy: Boolean, onBegin: () -> Unit, onSelect: (StoicheionSelection) -> Unit) {
+    ready: Boolean, now: Long, busy: Boolean, onBegin: () -> Unit, onSelect: (StoicheionSelection) -> Unit,
+    session: StoicheionTimelineState? = null, onCardAction: ((Int, String) -> Unit)? = null) {
     val copy = stoicheionTimelineCopy()
     val allowed=LocalFeatureAccess.current.allows("stoicheion-timeline")
     var helpOpen by rememberSaveable { mutableStateOf(false) }
@@ -40,6 +46,7 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
     StoicheionSection(OracleTone.SAGE, "stoicheion-timeline-block") {
         UntranslatedText(copy.getString("title"), style = MaterialTheme.typography.titleLarge)
         UntranslatedText(copy.getString("subtitle"), style = MaterialTheme.typography.bodyMedium)
+        UntranslatedText(copy.getString("weeklyRule"), style = MaterialTheme.typography.bodySmall)
         if(!allowed) {
             Text(if(LocalGenesisLanguage.current=="en") "Three-card divination is available with Standard and above." else "Прорицание по трём картам доступно в Standard и выше.")
             val openUpgrade = LocalNativeUpgrade.current
@@ -47,7 +54,47 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
                 label = if (LocalGenesisLanguage.current == "en") "Compare plans" else genesisTranslate("Сравнить тарифы"),
                 compact = true, tag = "upgrade-prompt-stoicheion-timeline")
         }
-        if (cards == null) Button(onBegin, enabled = allowed && ready && !busy,
+        if (onCardAction != null) {
+            UntranslatedText(copy.getString("perCardRule"), style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth().testTag("stoicheion-timeline-cards"), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (index in 0..2) {
+                    val data = copy.getJSONArray("positions").getJSONObject(index)
+                    val position = StoicheionTimePosition(data.getString("id"), data.getString("title"), data.getString("meaning"))
+                    val revealed = index < (session?.cards?.size ?: 0)
+                    val card = cards?.getOrNull(index).takeIf { revealed }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Card(onClick = {
+                            if (card != null) onSelect(StoicheionSelection(card.first, card.second, timePosition = position))
+                            else onCardAction(index, "reveal")
+                        }, enabled = card != null || allowed && ready && !busy && index == (session?.cards?.size ?: 0),
+                            modifier = Modifier.fillMaxWidth().testTag("stoicheion-timeline-${position.id}")) {
+                            Column(Modifier.padding(5.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                UntranslatedText(position.title, maxLines = 1, style = MaterialTheme.typography.labelMedium)
+                                if (card != null) {
+                                    StoicheionCardFace(card.first, Modifier.fillMaxWidth().graphicsLayer { rotationZ = if (card.second) 180f else 0f })
+                                    UntranslatedText(card.first.name, maxLines = 1, style = MaterialTheme.typography.labelSmall)
+                                    UntranslatedText(copy.getString(if (card.second) "reversed" else "upright"), style = MaterialTheme.typography.labelSmall)
+                                } else {
+                                    Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f), contentAlignment = Alignment.Center) { GenesisLucideIcon("eye") }
+                                    UntranslatedText(copy.getString(if (index == (session?.cards?.size ?: 0)) "openCard" else "waiting"),
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                        if (card != null) {
+                            val remaining = session?.remainingSeconds(index, now) ?: 0
+                            OutlinedButton(onClick = { onCardAction(index, "reroll") }, enabled = allowed && !busy && remaining > 0,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("stoicheion-reroll-timeline-$index")) {
+                                UntranslatedText(if (remaining > 0) "${copy.getString("rerollCard")} · ${countdown(remaining)}"
+                                    else copy.getString(if (session?.cards?.get(index)?.rerolled == true) "rerollUsed" else "rerollExpired"),
+                                    style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (cards == null) Button(onBegin, enabled = allowed && ready && !busy,
             modifier = actionModifier.testTag("stoicheion-draw-timeline")) {
             UntranslatedText(copy.getString("begin"), maxLines = 1)
         } else {

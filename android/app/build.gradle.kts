@@ -44,8 +44,8 @@ android {
         applicationId = "ru.genesis.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 143
-        versionName = "3.3.1"
+        versionCode = 144
+        versionName = "3.3.2"
         buildConfigField("boolean", "PLAY_DISTRIBUTION", "false")
         buildConfigField("boolean", "TRIAL_BUILD", "false")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -192,6 +192,7 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     from(rootProject.file("../app/stoicheion-restoration-ui.json")) { into("catalogs") }
     from(rootProject.file("../app/stoicheion-reading-layout.json")) { into("catalogs") }
     from(rootProject.file("../app/stoicheion-timeline.json")) { into("catalogs") }
+    from(rootProject.file("../app/stoicheion-timeline-web.json")) { into("catalogs") }
     from(rootProject.file("../app/olympian-isopsephy.json")) { into("catalogs") }
     from(rootProject.file("../app/future-modeling.json")) { into("catalogs") }
     from(rootProject.file("../server/resources/modeling-service.json")) { into("catalogs") }
