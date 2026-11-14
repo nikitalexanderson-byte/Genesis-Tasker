@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import {createHash,randomUUID} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
 import {verifyUi317} from './web-ui317.mjs';
-import {versionInfo} from './full-lib.mjs';
-import {fileURLToPath} from 'node:url';
-
-const expectedVersion = versionInfo(fileURLToPath(new URL('../../', import.meta.url))).android.versionName;
+// The accepted website is released independently of Android. An APK-only
+// release must not require replacing the website's visible release label.
+const expectedVersion = '3.2.9';
 
 const canonical=value=>Array.isArray(value)?`[${value.map(canonical).join(',')}]`:value&&typeof value==='object'
   ?`{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`:JSON.stringify(value);

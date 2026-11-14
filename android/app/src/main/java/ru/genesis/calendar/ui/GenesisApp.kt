@@ -326,19 +326,26 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
         isLandscape, prefs.wideNavigationOnLeft)
     val portraitAutoScroll = !isLandscape && prefs.navigationLabels && prefs.navigationAutoScroll
     val portraitMenuSwipe = false // 3.0: horizontal gestures belong to calendars and mindmaps.
-    var pendingSharedProjectsToggle by remember(authState.user?.uid) { mutableStateOf<Boolean?>(null) }
+    var sharedAccessActivationAttempted by remember(authState.user?.uid) { mutableStateOf(false) }
     var invitationDestination by remember { mutableStateOf<SharedInvitationDestination?>(null) }
     var sharedTaskOpenRequest by remember { mutableIntStateOf(0) }
     val accountAccess = authState.accountSettings?.featureAccess ?: ru.genesis.calendar.auth.FeatureAccess()
     val sharedProjectsEnabled = !testWorkspace && accountAccess.allows("shared-projects") &&
         authState.accountSettings?.sharedProjectsEligible == true &&
-        (pendingSharedProjectsToggle ?: (pendingPreferences["sharedProjectsEnabled"] != "false" &&
-            authState.accountSettings?.sharedProjectsEnabled == true))
-    LaunchedEffect(authState.busy, authState.accountSettings?.sharedProjectsEnabled,
-        pendingSharedProjectsToggle) {
-        if (!authState.busy && pendingSharedProjectsToggle != null &&
-            authState.accountSettings?.sharedProjectsEnabled == pendingSharedProjectsToggle)
-            pendingSharedProjectsToggle = null
+        pendingPreferences["sharedProjectsEnabled"] != "false" &&
+        authState.accountSettings?.sharedProjectsEnabled == true
+    // Older accounts can retain the retired opt-out. Activate through the existing,
+    // entitlement-checked API; never bypass server access or retry in a busy loop.
+    LaunchedEffect(authState.user?.uid, authState.ready, authState.requiresSignIn, authState.busy,
+        authState.accountSettings, pendingPreferences["sharedProjectsEnabled"]) {
+        val sharedSettings = authState.accountSettings
+        if (!testWorkspace && authState.ready && !authState.requiresSignIn && !authState.busy &&
+            authState.user != null && !sharedAccessActivationAttempted &&
+            sharedSettings?.sharedProjectsEligible == true && accountAccess.allows("shared-projects") &&
+            (!sharedSettings.sharedProjectsEnabled || pendingPreferences["sharedProjectsEnabled"] == "false")) {
+            sharedAccessActivationAttempted = true
+            authController.updateSharedPreference("sharedProjectsEnabled", "true")
+        }
     }
     var sharedCalendarEntries by remember { mutableStateOf<List<SharedCalendarEntry>>(emptyList()) }
     var sharedCalendarCounts by remember { mutableStateOf<Map<String,Int>>(emptyMap()) }
@@ -402,6 +409,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     }
     LaunchedEffect(visiblePages, uiVisibility.hiddenSubmenus, sharedProjectsEnabled) {
         if (tab !in visiblePages) tab = "Сегодня"
+        if (settingsSections.none { it.id == menuSwipeState.settings }) menuSwipeState.settings = "appearance"
         if ("tasks.${menuSwipeState.tasks}" in uiVisibility.hiddenSubmenus) {
             menuSwipeState.tasks = if (menuSwipeState.tasks == "tasks") "lists" else "tasks"
             if (menuSwipeState.personalView != "projects") menuSwipeState.personalView = menuSwipeState.tasks
@@ -722,7 +730,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         if(sharedProjectsEnabled && visibleSwipeState.projectArea=="shared") key(invitationDestination, sharedTaskOpenRequest) {
                             SharedProjectsScreen(authController,prefs.language,invitationDestination,prefs,
                                 onPrivateMessages={ space -> messagingSpaceId=space;tab="Сообщения" },
-                                onProjectChat={ project -> messagingProjectId=project;tab="Сообщения" })
+                                onProjectChat={ project -> messagingProjectId=project;tab="Сообщения" },
+                                teamActivity = { SharedTeamActivity(authController, prefs.language) })
                         }
                         else personalAffairsContent(visibleSwipeState)
                     }
@@ -764,7 +773,6 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                             }
                         },
                         onSet = { name, value ->
-                            if (name == "sharedProjectsEnabled") pendingSharedProjectsToggle = value == "true"
                             if (!testWorkspace && authState.user != null) authController.updateSharedPreference(name, value)
                             else scope.launch { prefsStore.set(name, value) }
                         }, onSetLocal = { name, value -> scope.launch { prefsStore.set(name, value) } },
@@ -916,7 +924,6 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                 authState.user != null && authState.accountSettings?.sharedProjectsEligible == true && accountAccess.allows("shared-projects")) {
                 Box(Modifier.fillMaxSize().safeDrawingPadding().padding(start=12.dp,end=12.dp,bottom=100.dp), contentAlignment=Alignment.BottomStart) {
                     SharedInvitationNotices(authController,authState.user!!.uid,prefs.language) { destination ->
-                        pendingSharedProjectsToggle = true
                         invitationDestination = destination
                         menuSwipeState.projectArea = "shared"
                         tab = "Проекты"
@@ -1886,18 +1893,6 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
                 style = MaterialTheme.typography.bodySmall)
             rows.sortedBy{it.at}.takeLast(8).forEach{Text("Напоминание · ${it.state} · ${Instant.ofEpochMilli(it.at).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd.MM HH:mm"))}",style=MaterialTheme.typography.bodySmall)}
         }
-        }
-        "shared" -> SettingsSection("◈", "Общие дела", "Совместная работа в GENESIS", Color(0xffe9ede5)) {
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Общие дела",style=MaterialTheme.typography.titleSmall)
-                }
-                Switch(checked=sharedProjectsEnabled,
-                    enabled=accountSettings?.sharedProjectsEligible==true && accountSettings.featureAccess.allows("shared-projects"),
-                    onCheckedChange={onSet("sharedProjectsEnabled",it.toString())},
-                    modifier=Modifier.testTag("shared-projects-toggle"))
-            }
-            if (sharedController != null) SharedInvitationInbox(sharedController, prefs.language, sharedProjectsEnabled)
         }
         "region" -> {
         SeasonRegionSettings(prefs, onSetLocal)

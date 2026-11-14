@@ -551,8 +551,10 @@ private fun SevenDayGrid(calendar: GenesisCalendar, range: CalendarRange, mode: 
         (if (sundayFirst && english) listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
             else if (english) listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
             else if (sundayFirst) listOf("Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб")
-            else listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")).forEach {
-            Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall)
+            else listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")).forEachIndexed { index, label ->
+            Text(label, Modifier.weight(1f).testTag("calendar-weekday-heading-$index"),
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }
     val leading = weekLeadingOffset(range.start, mode, weekStartsOnSunday)
@@ -724,7 +726,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
     patron: WeekdayPatronMark? = null, adjacent: Boolean = false,
     onTaskBadgeClick: (LocalDate) -> Unit = {},
     completedTaskCount: Int = 0) {
-    val palette = if (LocalEveningTheme.current) patron else patron?.daylightCell(date)
+    val palette = patron?.let { if (LocalEveningTheme.current) it.eveningCell(date) else it.daylightCell(date) }
     val civil = !LocalSacredFeaturesEnabled.current
     val patron = patron.takeIf { LocalSacredFeaturesEnabled.current }
     val crossDate = crossDate.takeIf { LocalSacredFeaturesEnabled.current }
@@ -751,7 +753,7 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
             adjacent -> MaterialTheme.colorScheme.surface
             selected && palette != null -> palette.selectedBackground
             selected -> selectedControlContainer(true, !adjacent)
-            palette != null -> if(LocalEveningTheme.current) weekdayEveningWash(date) else palette.wash
+            palette != null -> palette.wash
             else -> MaterialTheme.colorScheme.surface
         },
         border = selectedControlBorder(selected, !adjacent, fallback = BorderStroke(if (today || selected) 2.dp else 1.dp,
@@ -1037,7 +1039,7 @@ private fun SelectedDayCard(calendar: GenesisCalendar, date: LocalDate, mode: Ca
                 CalendarMode.SACRED -> "${sacred.day} · ${month.name}"
             }, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("calendar-selected-primary-date"))
             if (mode == CalendarMode.PROFANE && LocalSacredFeaturesEnabled.current) {
-                val patron = weekdayPatronMark(date)
+                val patron = weekdayPatronMark(date).let { if (LocalEveningTheme.current) it.eveningCell(date) else it }
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.testTag("calendar-selected-patron")) {
@@ -1161,7 +1163,7 @@ private fun ExperimentalSelectedDayCard(calendar: GenesisCalendar, date: LocalDa
             }
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (mode == CalendarMode.PROFANE && LocalSacredFeaturesEnabled.current) {
-                    val patron = weekdayPatronMark(date)
+                    val patron = weekdayPatronMark(date).let { if (LocalEveningTheme.current) it.eveningCell(date) else it }
                     Row(Modifier.fillMaxWidth().testTag("calendar-selected-patron"), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(patron.symbol, style = MaterialTheme.typography.headlineMedium, color = patron.accent)

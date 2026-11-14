@@ -2,71 +2,99 @@
   "ru": [
     "Улучшена читаемость иллюстрированных блоков «Сегодня» и календаря в светлых темах.",
     "«Путь Героя» соответствует выбранной палитре. Компактнее погода, пустая история снов и окно проекта.",
-    "При выключенных сакральных функциях календарь проще: квадратные дни и компактные месяцы без описаний."
+    "При выключенных сакральных функциях календарь проще: квадратные дни и компактные месяцы без описаний.",
+    "Блоки «Сегодня» можно скрывать глазом. Категории жизни вынесены в отдельную кнопку, майндмепы — в шапку.",
+    "Обновление сразу до самой новой версии, без промежуточных установок."
   ],
   "en": [
     "Improved readability of illustrated Today and calendar panels in light themes.",
     "Hero Path follows your colour palette. Weather, empty dream history and the project dialog are more compact.",
-    "With sacred features off, the calendar has square day cells and compact months without descriptions."
+    "With sacred features off, the calendar has square day cells and compact months without descriptions.",
+    "Hide Today panels with the eye button. Life categories have their own button; mind maps are in the header.",
+    "Updates go straight to the latest version, skipping intermediate releases."
   ],
   "el": [
     "Πιο ευανάγνωστα εικονογραφημένα πλαίσια στο Σήμερα και στο ημερολόγιο στα φωτεινά θέματα.",
     "Η Πορεία του Ήρωα ακολουθεί την παλέτα σας. Πιο συμπαγής καιρός, κενό ιστορικό ονείρων και παράθυρο έργου.",
-    "Με τις ιερές λειτουργίες ανενεργές, το ημερολόγιο έχει τετράγωνα κελιά ημερών και μικρότερους μήνες χωρίς περιγραφές."
+    "Με τις ιερές λειτουργίες ανενεργές, το ημερολόγιο έχει τετράγωνα κελιά ημερών και μικρότερους μήνες χωρίς περιγραφές.",
+    "Κρύψτε πλαίσια του Σήμερα με το μάτι. Ξεχωριστό κουμπί κατηγοριών ζωής, νοητικοί χάρτες στην κεφαλίδα.",
+    "Άμεση ενημέρωση στην πιο πρόσφατη έκδοση, χωρίς ενδιάμεσες εγκαταστάσεις."
   ],
   "de": [
     "Bessere Lesbarkeit der bebilderten Heute- und Kalenderbereiche in hellen Designs.",
     "Der Heldenpfad folgt Ihrer Farbpalette. Wetter, leerer Traumverlauf und Projektdialog sind kompakter.",
-    "Ohne sakrale Funktionen zeigt der Kalender quadratische Tagesfelder und kompakte Monate ohne Beschreibungen."
+    "Ohne sakrale Funktionen zeigt der Kalender quadratische Tagesfelder und kompakte Monate ohne Beschreibungen.",
+    "Heute-Bereiche per Auge ausblenden. Lebenskategorien haben eine eigene Schaltfläche; Mindmaps stehen oben.",
+    "Updates führen direkt zur neuesten Version, ohne Zwischenversionen."
   ],
   "fr": [
     "Meilleure lisibilité des panneaux illustrés du jour et du calendrier dans les thèmes clairs.",
     "Le Parcours du Héros suit votre palette. La météo, l’historique des rêves vide et la fenêtre de projet sont plus compacts.",
-    "Lorsque les fonctions sacrées sont désactivées : cases des jours carrées et mois compacts sans descriptions."
+    "Lorsque les fonctions sacrées sont désactivées : cases des jours carrées et mois compacts sans descriptions.",
+    "Masquez les blocs du jour avec l’œil. Bouton des catégories de vie ; cartes mentales en haut.",
+    "Mise à jour directe vers la dernière version, sans versions intermédiaires."
   ],
   "es": [
     "Mejor legibilidad de los paneles ilustrados de Hoy y del calendario en los temas claros.",
     "El Camino del Héroe sigue tu paleta. El tiempo, el historial de sueños vacío y el diálogo del proyecto son más compactos.",
-    "Sin funciones sagradas, el calendario muestra días cuadrados y meses compactos sin descripciones."
+    "Sin funciones sagradas, el calendario muestra días cuadrados y meses compactos sin descripciones.",
+    "Oculta bloques de Hoy con el ojo. Categorías de vida con botón propio; mapas mentales en la cabecera.",
+    "Actualiza directamente a la última versión, sin instalar versiones intermedias."
   ],
   "it": [
     "Migliorata la leggibilità dei riquadri illustrati di Oggi e del calendario nei temi chiari.",
     "Il Cammino dell’Eroe segue la tua palette. Meteo, cronologia dei sogni vuota e finestra del progetto più compatti.",
-    "Con le funzioni sacre disattivate, il calendario mostra giorni quadrati e mesi compatti senza descrizioni."
+    "Con le funzioni sacre disattivate, il calendario mostra giorni quadrati e mesi compatti senza descrizioni.",
+    "Nascondi i riquadri di Oggi con l’occhio. Pulsante per le categorie di vita; mappe mentali in alto.",
+    "Aggiornamento diretto all’ultima versione, senza installazioni intermedie."
   ],
   "pt": [
     "Melhor legibilidade dos painéis ilustrados de Hoje e do calendário nos temas claros.",
     "O Caminho do Herói segue a sua paleta. Meteorologia, histórico de sonhos vazio e janela do projeto mais compactos.",
-    "Com as funções sagradas desativadas, o calendário mostra dias quadrados e meses compactos sem descrições."
+    "Com as funções sagradas desativadas, o calendário mostra dias quadrados e meses compactos sem descrições.",
+    "Oculte blocos de Hoje com o olho. Botão próprio para categorias de vida; mapas mentais no cabeçalho.",
+    "Atualização direta para a versão mais recente, sem versões intermédias."
   ],
   "pl": [
     "Czytelniejsze ilustrowane panele Dzisiaj i kalendarza w jasnych motywach.",
     "Ścieżka Bohatera używa wybranej palety. Pogoda, pusta historia snów i okno projektu zajmują mniej miejsca.",
-    "Po wyłączeniu funkcji sakralnych kalendarz ma kwadratowe pola dni i mniejsze miesiące bez opisów."
+    "Po wyłączeniu funkcji sakralnych kalendarz ma kwadratowe pola dni i mniejsze miesiące bez opisów.",
+    "Ukrywaj bloki Dzisiaj przyciskiem oka. Kategorie życia mają własny przycisk; mapy myśli są w nagłówku.",
+    "Aktualizacja od razu do najnowszej wersji, bez instalacji wersji pośrednich."
   ],
   "sr": [
     "Побољшана читљивост илустрованих блокова Данас и календара у светлим темама.",
     "Пут Хероја прати изабрану палету. Временска прогноза, празна историја снова и прозор пројекта су компактнији.",
-    "Без сакралних функција календар има квадратна поља дана и мање месеце без описа."
+    "Без сакралних функција календар има квадратна поља дана и мање месеце без описа.",
+    "Сакријте блокове Данас дугметом ока. Категорије живота имају своје дугме; мапе ума су у заглављу.",
+    "Ажурирање директно на најновију верзију, без инсталирања међуверзија."
   ],
   "uk": [
     "Поліпшено читабельність ілюстрованих блоків Сьогодні та календаря у світлих темах.",
     "Шлях Героя відповідає вибраній палітрі. Компактніші погода, порожня історія снів і вікно проєкту.",
-    "Без сакральних функцій календар має квадратні комірки днів і компактні місяці без описів."
+    "Без сакральних функцій календар має квадратні комірки днів і компактні місяці без описів.",
+    "Блоки Сьогодні можна приховувати оком. Категорії життя мають окрему кнопку, мапи думок — у шапці.",
+    "Оновлення одразу до найновішої версії, без проміжних установлень."
   ],
   "zh": [
     "提高浅色主题中“今天”和日历插图面板的文字可读性。",
     "英雄之路采用所选配色。天气、空的梦境历史和项目窗口更加紧凑。",
-    "关闭神圣功能后，日历使用正方形日期单元格和不含描述的紧凑月份卡片。"
+    "关闭神圣功能后，日历使用正方形日期单元格和不含描述的紧凑月份卡片。",
+    "可用眼睛按钮隐藏“今天”面板。生活类别使用独立按钮，思维导图移至顶栏。",
+    "直接更新至最新版本，无需逐一安装中间版本。"
   ],
   "tr": [
     "Açık temalarda Bugün ve takvimdeki görselli panellerin okunabilirliği iyileştirildi.",
     "Kahramanın Yolu seçili renk paletini kullanır. Hava durumu, boş rüya geçmişi ve proje penceresi daha kompakt.",
-    "Kutsal özellikler kapalıyken takvim, kare gün hücreleri ve açıklamasız küçük ay kartları gösterir."
+    "Kutsal özellikler kapalıyken takvim, kare gün hücreleri ve açıklamasız küçük ay kartları gösterir.",
+    "Bugün panellerini göz düğmesiyle gizleyin. Yaşam kategorileri ayrı düğmede, zihin haritaları üst çubukta.",
+    "Ara sürümleri yüklemeden doğrudan en son sürüme güncelleyin."
   ],
   "ja": [
     "ライトテーマで「今日」とカレンダーの画像付きパネルの文字を読みやすくしました。",
     "英雄の道に選択した配色を適用。天気、空の夢の履歴、プロジェクト画面をコンパクトにしました。",
-    "神聖機能がオフの場合、日付のマスを正方形にし、月の説明を省いて表示を小さくしました。"
+    "神聖機能がオフの場合、日付のマスを正方形にし、月の説明を省いて表示を小さくしました。",
+    "目のボタンで「今日」のブロックを非表示にできます。生活カテゴリは専用ボタンに、マインドマップは上部に移動しました。",
+    "中間バージョンをインストールせず、最新バージョンへ直接更新できます。"
   ]
 }

@@ -27,7 +27,6 @@ internal fun WorkspaceSearchDock(query: String, onQuery: (String) -> Unit, label
     var expanded by rememberSaveable { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val searchLabel = genesisTranslate(label)
     fun close() { focus.clearFocus(); keyboard?.hide(); expanded = false }
     BackHandler(expanded) { close() }
     val searchColor = if (LocalEveningTheme.current) Color(0xff173c4b) else Color(0xffe0eef5)
@@ -38,15 +37,7 @@ internal fun WorkspaceSearchDock(query: String, onQuery: (String) -> Unit, label
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
             Box { leading?.invoke() }
-            FilledTonalIconButton(onClick = { expanded = true },
-                modifier = Modifier.size(56.dp).testTag("$tag-open").semantics { contentDescription = searchLabel }, shape = AffairsLayout.controlShape,
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = if (query.isNotBlank() || active) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = if (query.isNotBlank() || active) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onPrimaryContainer)) {
-                GenesisLucideIcon("search", Modifier.size(24.dp))
-            }
+            WorkspaceDockButton(label, "search", "$tag-open", query.isNotBlank() || active) { expanded = true }
             }
         } else Surface(Modifier.fillMaxWidth().animateContentSize().testTag("$tag-dock"),
             shape = AffairsLayout.shape, color = searchColor, contentColor = searchInk,
@@ -65,5 +56,33 @@ internal fun WorkspaceSearchDock(query: String, onQuery: (String) -> Unit, label
             }
         }
     }
+    }
+}
+
+/** Matching corner controls for search and life categories. The icon remains fully opaque. */
+@Composable internal fun WorkspaceDockButton(label: String, icon: String, tag: String,
+    active: Boolean = false, onClick: () -> Unit) {
+    val description = genesisTranslate(label)
+    FilledTonalIconButton(onClick, modifier = Modifier.size(56.dp).testTag(tag)
+        .semantics { contentDescription = description }, shape = AffairsLayout.controlShape,
+        colors = IconButtonDefaults.filledTonalIconButtonColors(
+            containerColor = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
+            contentColor = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer)) {
+        GenesisLucideIcon(icon, Modifier.size(24.dp))
+    }
+}
+
+@Composable internal fun WorkspacePopupDock(tag: String, modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit) {
+    val paper = if (LocalEveningTheme.current) Color(0xff173c4b) else Color(0xffe0eef5)
+    val ink = if (LocalEveningTheme.current) Color(0xffedf6fb) else Color(0xff193c50)
+    CompositionLocalProvider(LocalPreserveCalendarColors provides true, LocalAffairsControlOutlined provides false) {
+        Box(modifier.fillMaxWidth().padding(12.dp)) {
+            Surface(Modifier.fillMaxWidth().animateContentSize().testTag(tag), shape = AffairsLayout.shape,
+                color = paper, contentColor = ink, border = BorderStroke(1.dp, ink.copy(alpha = .45f)), shadowElevation = 6.dp) {
+                Column(Modifier.padding(6.dp).heightIn(max = 320.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+            }
+        }
     }
 }

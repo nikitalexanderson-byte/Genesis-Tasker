@@ -25,7 +25,7 @@ import java.util.Locale
 @Composable internal fun Modifier.civilReadingArea(): Modifier =
     (if (!LocalEveningTheme.current) this else
         background(if (LocalContentColor.current.luminance() > .5f) Color.Black.copy(alpha = .08f)
-            else Color.White.copy(alpha = .16f), AffairsLayout.controlShape)).padding(3.dp)
+            else Color.White.copy(alpha = .14f), AffairsLayout.controlShape)).padding(3.dp)
 
 /** All readings remain visible in the right column, beside the date and clock. */
 @OptIn(ExperimentalLayoutApi::class)

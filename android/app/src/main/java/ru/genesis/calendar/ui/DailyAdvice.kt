@@ -252,6 +252,7 @@ import kotlin.math.min
     reaction: String? = null, reactionBusy: Boolean = false, reactionError: Boolean = false,
     onReaction: ((String) -> Unit)? = null, onOpenDiary: (() -> Unit)? = null,
     showReactions: Boolean = true, showDismiss: Boolean = true, authorizeShare: (suspend () -> DailyAdvice)? = null, onDismiss: () -> Unit) {
+    val lightArtwork = bitmap != null && card.collection == "philosophers" && !LocalEveningTheme.current
     val blue = LocalDarkPalette.current == "blue"
     val surface = if (blue && !LocalEveningTheme.current) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
     val visibility = if (blue) 1.04f else 1f
@@ -264,13 +265,16 @@ import kotlin.math.min
             .use { JSONObject(it.readText()).getJSONObject(card.language) }
     }
     var shareFailed by remember(card.id) { mutableStateOf(false) }
-    Surface(modifier.fillMaxWidth().testTag("today-daily-advice"), shape = AffairsLayout.shape) {
+    CompositionLocalProvider(LocalPreserveCalendarColors provides (lightArtwork || LocalPreserveCalendarColors.current)) {
+    Surface(modifier.fillMaxWidth().testTag("today-daily-advice"), shape = AffairsLayout.shape,
+        contentColor = if (lightArtwork) Color.White else MaterialTheme.colorScheme.onSurface) {
         Box {
             if (bitmap != null) Box(Modifier.matchParentSize()) {
                 Image(bitmap.asImageBitmap(), null, Modifier.fillMaxSize().testTag("daily-advice-art"),
-                    contentScale = ContentScale.Crop, colorFilter = if (blue) ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
+                    contentScale = ContentScale.Crop, colorFilter = if (blue && !lightArtwork) ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
                         .86f,0f,0f,0f,0f, 0f,.96f,0f,0f,0f, 0f,0f,1.08f,0f,0f, 0f,0f,0f,1f,0f))) else null)
-                Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
+                if (lightArtwork) Box(Modifier.matchParentSize().testTag("philosopher-art-dark-shade").background(Color.Black.copy(alpha = .55f)))
+                else Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
                     0f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .80f else .624f) * visibility),
                     .40f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .76f else .608f) * visibility),
                     .70f to surface.copy(alpha = 1f - (1f - if (LocalEveningTheme.current) .72f else .576f) * visibility),
@@ -330,12 +334,20 @@ import kotlin.math.min
                     val dislikeLabel = genesisTranslate("Не нравится")
                     if (showReactions) {
                         IconToggleButton(checked = reaction == "favorite", onCheckedChange = { onReaction?.invoke("favorite") },
-                            enabled = onReaction != null && !busy && !reactionBusy, modifier = Modifier.size(48.dp)
+                            enabled = onReaction != null && !busy && !reactionBusy,
+                            colors = if (lightArtwork) IconButtonDefaults.iconToggleButtonColors(
+                                contentColor = Color.White, checkedContentColor = Color.White,
+                                checkedContainerColor = Color.Black.copy(alpha = .18f), disabledContentColor = Color.White.copy(alpha = .38f))
+                                else IconButtonDefaults.iconToggleButtonColors(), modifier = Modifier.size(48.dp)
                                 .testTag("daily-advice-favorite").semantics { contentDescription = favoriteLabel }) {
                             GenesisLucideIcon("thumbs-up")
                         }
                         IconToggleButton(checked = reaction == "dislike", onCheckedChange = { onReaction?.invoke("dislike") },
-                            enabled = onReaction != null && !busy && !reactionBusy, modifier = Modifier.size(48.dp)
+                            enabled = onReaction != null && !busy && !reactionBusy,
+                            colors = if (lightArtwork) IconButtonDefaults.iconToggleButtonColors(
+                                contentColor = Color.White, checkedContentColor = Color.White,
+                                checkedContainerColor = Color.Black.copy(alpha = .18f), disabledContentColor = Color.White.copy(alpha = .38f))
+                                else IconButtonDefaults.iconToggleButtonColors(), modifier = Modifier.size(48.dp)
                                 .testTag("daily-advice-dislike").semantics { contentDescription = dislikeLabel }) {
                             GenesisLucideIcon("thumbs-down")
                         }
@@ -368,6 +380,7 @@ import kotlin.math.min
             }
         }
     }
+}
 }
 
 @Composable internal fun DailyAdviceSettings(preferences: AdvicePreferences, available: List<String>, catalogAvailable: Boolean,
