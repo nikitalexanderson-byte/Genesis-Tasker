@@ -1,0 +1,29 @@
+/* The day dialog follows the selected website palette in both themes. */
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial {
+  --celestial-background: var(--night-2, #102f32);
+  --celestial-card: color-mix(in srgb, var(--celestial-background) 88%, white);
+  --celestial-text: #f2f6fb;
+  --celestial-muted: #d2dce9;
+  color: var(--celestial-text);
+  background: var(--celestial-background);
+  border-color: color-mix(in srgb, var(--celestial-background) 55%, white);
+}
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial > summary {
+  color: var(--ink);
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial > summary:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--surface)) !important;
+}
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial > summary > small { color: var(--ink-soft); }
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial :is(.day-details-moon, .day-details-sun) {
+  color: var(--celestial-text);
+  background: var(--celestial-card);
+  border-color: color-mix(in srgb, var(--celestial-background) 72%, white);
+}
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial :is(.day-details-moon p, .day-details-moon small, .day-details-sun small, .day-details-sun dt) { color: var(--celestial-muted); }
+html[data-genesis-web="true"][data-genesis-theme] .genesis-app .day-details-celestial .day-details-sun dl > div {
+  background: color-mix(in srgb, var(--celestial-background) 76%, white);
+  border-color: color-mix(in srgb, var(--celestial-background) 72%, white);
+}
