@@ -2025,7 +2025,7 @@ export async function updateAccountPreferences(preferences: Partial<{
   advicePreferences: Partial<import("./daily-advice").AdvicePreferences>;
   calendarExplorationPending: false;
   sharedProjectsEnabled: boolean;
-  uiVisibility: import("./ui-visibility").UiVisibility;
+  uiVisibility: Partial<import("./ui-visibility").UiVisibility>;
   uiLayout: Partial<import("./ui-visibility").AccountLayout>;
   stoicheionDivinationDisabled: boolean;
   calendarMode: CalendarMode;

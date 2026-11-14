@@ -43,7 +43,7 @@ export async function verifyRelease317({context,page,tier,output,check,snapshot}
   };
   const openHabitData=async()=>{
     await visit('/#habits');
-    await page.getByRole('tab',{name:'Прогресс Статистика и награды',exact:true}).click();
+    await page.getByRole('tab',{name:'Прогресс',exact:true}).click();
     const details=page.locator('.habit-data-export');await details.locator('summary').click();return details;
   };
   let habitBackup=null,mapBackup=null;

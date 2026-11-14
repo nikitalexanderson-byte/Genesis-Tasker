@@ -1,0 +1,60 @@
+/* Main website section headings share the compact shared-affairs scale. */
+html[data-genesis-theme] .genesis-app :is(
+  .workspace-header,
+  .habits-hero,
+  .physis-hero,
+  .theokyklos-hero,
+  .stoicheion-hero,
+  .hero-card,
+  .year-header,
+  .partner-heading
+) h1,
+html[data-genesis-theme] .genesis-app :is(#admin-title, #physis-access-title, #stoicheion-title, #theokyklos-title) {
+  font-family: var(--font-heading) !important;
+  font-size: clamp(20px, 2.7vw, 32px) !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -.02em;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+/* The month heading can still shrink itself to fit translated month names. */
+html[data-genesis-theme] body .genesis-app .calendar-header .calendar-month-title h1 {
+  font-family: var(--font-heading) !important;
+  font-size: clamp(20px, 2.7vw, 32px);
+  font-style: normal !important;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+}
+
+html[data-genesis-theme] .genesis-app .hero-card #today-title .hero-day-title-primary {
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+html[data-genesis-theme] .genesis-app .hero-card #today-title .hero-day-title-translation {
+  font-size: min(1em, 7.8cqw) !important;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+/* Visibility stays a draft until the block-order dialog is saved. */
+html[data-genesis-web="true"] .genesis-app .today-order-dialog[data-web-visibility] .today-order-list > li {
+  grid-template-columns: 44px minmax(0, 1fr) 44px auto auto;
+}
+html[data-genesis-web="true"] .genesis-app .today-order-dialog .today-order-visibility {
+  display: grid; place-items: center; width: 44px; min-width: 44px; min-height: 44px; padding: 10px;
+  border: 0; border-radius: 10px; background: transparent; color: var(--ink);
+}
+html[data-genesis-web="true"] .genesis-app .today-order-dialog .today-order-visibility[aria-pressed="false"] { color: var(--ink-soft); }
+html[data-genesis-web="true"] .genesis-app .today-order-dialog .today-order-visibility:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+@media (max-width: 420px) {
+  html[data-genesis-web="true"] .genesis-app .today-order-dialog[data-web-visibility] .today-order-list > li { grid-template-columns: 44px minmax(0, 1fr) 44px auto; }
+  html[data-genesis-web="true"] .genesis-app .today-order-dialog[data-web-visibility] .today-order-visibility { grid-column: 3; grid-row: 1; }
+  html[data-genesis-web="true"] .genesis-app .today-order-dialog[data-web-visibility] .today-order-width { grid-column: 2 / 4; grid-row: 2; }
+  html[data-genesis-web="true"] .genesis-app .today-order-dialog[data-web-visibility] .today-order-arrows { grid-column: 4; grid-row: 1 / 3; }
+}

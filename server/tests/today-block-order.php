@@ -35,6 +35,14 @@ todayOrderCheck($layout['calendar_mode']===$before['calendar_mode']&&$layout['ta
 genesisUpdateAccountPreferences($user['id'],['uiVisibility'=>['hiddenTodayBlocks'=>['tasks'],'enabledCalendars'=>['profane']]]);
 $after=genesisUiVisibility(genesisFindUser($user['id'])['ui_visibility_json']);
 todayOrderCheck($after['todayHalfBlocks']===$prefs['todayHalfBlocks']&&$after['displayCalendarOrder']===$prefs['displayCalendarOrder'],'Older client erased web layout preferences');
+$webVisibility=genesisUpdateAccountPreferences($user['id'],['uiLayout'=>['webHiddenTodayBlocks'=>['advice','dream','ads','events']]]);
+todayOrderCheck(genesisUiVisibility($webVisibility['ui_visibility_json'])['webHiddenTodayBlocks']===['advice','dream','ads','events'],'Website block visibility was not saved');
+genesisUpdateAccountPreferences($user['id'],['uiVisibility'=>['hiddenTodayBlocks'=>['habits'],'enabledCalendars'=>['profane']]]);
+$legacyVisibility=genesisUiVisibility(genesisFindUser($user['id'])['ui_visibility_json']);
+todayOrderCheck($legacyVisibility['webHiddenTodayBlocks']===['advice','dream','ads','events'],'Older client erased website-only block visibility');
+todayOrderCheck($legacyVisibility['hiddenTodayBlocks']===['habits'],'Website-only visibility changed shared settings');
+try { genesisUpdateAccountPreferences($user['id'],['uiLayout'=>['webHiddenTodayBlocks'=>['tasks']]]); throw new LogicException('Invalid website visibility accepted'); }
+catch (InvalidArgumentException $error) { todayOrderCheck($error->getMessage()==='INVALID_WEB_TODAY_VISIBILITY','Wrong website visibility error'); }
 $otherPrefs=genesisUiVisibility(genesisFindUser($other['id'])['ui_visibility_json']);
 todayOrderCheck($otherPrefs['todayHalfBlocks']===[]&&$otherPrefs['displayCalendarOrder']===['profane','sacred','lunar'],'Website layout leaked across accounts');
 foreach(['todayHalfBlocks'=>[['hero'],['tasks','tasks'],['tasks'=>true],['tasks',false]],'displayCalendarOrder'=>[[],['sacred'],['profane','profane','lunar'],['profane','lunar','unknown']]] as $field=>$invalids){

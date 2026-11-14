@@ -27,6 +27,7 @@ export type AccountLayout = {
   sharedCalendarScale: CalendarScale;
   todayBlockOrder: TodayBlockId[] | null;
   todayHalfBlocks: TodayBlockId[];
+  webHiddenTodayBlocks: TodayBlockId[];
   displayCalendarOrder: CalendarMode[];
 };
 export const DEFAULT_ACCOUNT_LAYOUT: AccountLayout = {
@@ -41,6 +42,7 @@ export const DEFAULT_ACCOUNT_LAYOUT: AccountLayout = {
   sharedCalendarScale: 1,
   todayBlockOrder: null,
   todayHalfBlocks: [],
+  webHiddenTodayBlocks: [],
   displayCalendarOrder: ['profane', 'sacred', 'lunar'],
 };
 export function accountLayout(value?: Partial<AccountLayout> | null): AccountLayout {
@@ -65,6 +67,7 @@ export function accountLayout(value?: Partial<AccountLayout> | null): AccountLay
     sharedCalendarScale: calendarScaleValue(value?.sharedCalendarScale),
     todayBlockOrder: todayBlockOrder(value?.todayBlockOrder),
     todayHalfBlocks: todayHalfBlocks(value?.todayHalfBlocks),
+    webHiddenTodayBlocks: todayHalfBlocks(value?.webHiddenTodayBlocks).filter(id => ['advice', 'dream', 'ads', 'events'].includes(id)),
     displayCalendarOrder: displayCalendarOrder(value?.displayCalendarOrder),
   };
 }

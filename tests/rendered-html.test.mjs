@@ -2444,7 +2444,7 @@ test("Experimental applies one design system across ordinary views and adds safe
   assert.match(calendar, /Array\.isArray\(task\.tags\)/);
   assert.match(calendar, /<ViewErrorBoundary resetKey=\{view\}>/);
   assert.match(habits, /data-exp-layout="view"/);
-  assert.match(habits, /className="experimental-habit-tabs" role="tablist"/);
+  assert.match(habits, /className=\{webHeaderEnabled \? "header-section-switch habit-header-tabs" : "experimental-habit-tabs"\} role="tablist"/);
   assert.match(habits, /experimental-habit-tab-\$\{activeHabitTab\}/);
   assert.match(habits, /experimental-habit-section-today/);
   assert.match(habits, /experimental-habit-section-library/);

@@ -2,6 +2,7 @@
 import {useEffect, useRef, useState, type DragEvent} from 'react';
 import {DialogCloseButton} from './DialogCloseButton';
 import {ExperimentalIcon} from './ExperimentalIcon';
+import {translateText, type Language} from './i18n';
 import {effectiveTodayBlockOrder, moveTodayBlock, todayHalfBlocks, TODAY_BLOCK_IDS, type TodayBlockId} from './today-block-order';
 import copy from './today-block-order-copy.json';
 import './today-block-order.css';
@@ -16,12 +17,14 @@ export function TodayBlockOrderButton({language, onClick}: {language: string; on
     data-tooltip={c.title} aria-haspopup="dialog" onClick={onClick}><ExperimentalIcon name="settings"/></button>;
 }
 
-export function TodayBlockOrderDialog({order, halfBlocks = [], language, onSave, onClose}: {
-  order: readonly TodayBlockId[] | null; halfBlocks?: readonly TodayBlockId[]; language: string; onSave: (order: TodayBlockId[], failureMessage: string, halfBlocks: TodayBlockId[]) => void; onClose: () => void;
+export function TodayBlockOrderDialog({order, halfBlocks = [], hiddenBlocks = [], webVisibility = false, language, onSave, onClose}: {
+  order: readonly TodayBlockId[] | null; halfBlocks?: readonly TodayBlockId[]; hiddenBlocks?: readonly string[]; webVisibility?: boolean; language: string; onSave: (order: TodayBlockId[], failureMessage: string, halfBlocks: TodayBlockId[], hiddenBlocks: TodayBlockId[]) => Promise<void>; onClose: () => void;
 }) {
   const c = orderCopy(language);
   const [draft, setDraft] = useState(() => effectiveTodayBlockOrder(order));
   const [halves, setHalves] = useState(() => todayHalfBlocks(halfBlocks));
+  const [hidden, setHidden] = useState(() => TODAY_BLOCK_IDS.filter(id => hiddenBlocks.includes(id)));
+  const [saving, setSaving] = useState(false), [saveError, setSaveError] = useState('');
   const [moving, setMoving] = useState<TodayBlockId | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const dialog = useRef<HTMLDialogElement>(null), drag = useRef<TodayBlockId | null>(null);
@@ -38,9 +41,9 @@ export function TodayBlockOrderDialog({order, halfBlocks = [], language, onSave,
     if (!drag.current) return;
     event.preventDefault(); move(drag.current, target); drag.current = null; setMoving(null);
   };
-  return <dialog ref={dialog} className="today-order-dialog" aria-labelledby="today-order-title" aria-describedby="today-order-hint" data-no-translate
-    onCancel={event => { event.preventDefault(); onClose(); }}>
-    <header><h2 id="today-order-title">{c.title}</h2><DialogCloseButton aria-label={c.cancel} onClick={onClose}/></header>
+  return <dialog ref={dialog} className="today-order-dialog" aria-labelledby="today-order-title" aria-describedby="today-order-hint" data-no-translate data-web-visibility={webVisibility || undefined}
+    onCancel={event => { event.preventDefault(); if (!saving) onClose(); }}>
+    <header><h2 id="today-order-title">{c.title}</h2><DialogCloseButton aria-label={c.cancel} disabled={saving} onClick={onClose}/></header>
     <p id="today-order-hint">{c.hint}</p>
     <p className="today-order-width-hint">{c.widthHint}</p>
     <p className="today-order-fixed"><ExperimentalIcon name="lock"/>{c.fixed}</p>
@@ -55,6 +58,12 @@ export function TodayBlockOrderDialog({order, halfBlocks = [], language, onSave,
             if (target) { event.preventDefault(); move(id, target); }
           }}><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
         <span>{c[id]}</span>
+        {webVisibility ? <button type="button" className="today-order-visibility" aria-pressed={!hidden.includes(id)}
+          aria-label={`${translateText(hidden.includes(id) ? 'Показать' : 'Скрыть', language as Language)}: ${c[id]}`}
+          title={translateText(hidden.includes(id) ? 'Показать' : 'Скрыть', language as Language)}
+          onClick={() => setHidden(current => current.includes(id) ? current.filter(block => block !== id) : TODAY_BLOCK_IDS.filter(block => block === id || current.includes(block)))}>
+          <ExperimentalIcon name={hidden.includes(id) ? 'eye-off' : 'eye'}/>
+        </button> : null}
         <div className="today-order-width" role="group" aria-label={`${c.width}: ${c[id]}`}>
           <button type="button" aria-label={c.full} aria-pressed={!halves.includes(id)} onClick={() => setHalves(current => current.filter(block => block !== id))}>100%</button>
           <button type="button" aria-label={c.half} aria-pressed={halves.includes(id)} onClick={() => setHalves(current => todayHalfBlocks([...current, id]))}>50%</button>
@@ -68,8 +77,9 @@ export function TodayBlockOrderDialog({order, halfBlocks = [], language, onSave,
       </li>)}
     </ol>
     <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
+    {saveError ? <p role="alert">{saveError}</p> : null}
     <footer><button type="button" className="secondary-button today-order-reset" onClick={() => { setDraft([...TODAY_BLOCK_IDS]); setHalves([]); }}>{c.reset}</button>
-      <button type="button" className="secondary-button" onClick={onClose}>{c.cancel}</button>
-      <button type="button" className="primary-button" onClick={() => { onSave([...draft], c.saveFailure, halves); onClose(); }}>{c.save}</button></footer>
+      <button type="button" className="secondary-button" disabled={saving} onClick={onClose}>{c.cancel}</button>
+      <button type="button" className="primary-button" disabled={saving} onClick={() => { setSaving(true); setSaveError(''); void onSave([...draft], c.saveFailure, halves, hidden).then(onClose).catch(() => setSaveError(c.saveFailure)).finally(() => setSaving(false)); }}>{c.save}</button></footer>
   </dialog>;
 }

@@ -12,6 +12,16 @@ const facePullDictionary = language => Object.fromEntries([
 ]);
 Object.assign(english,facePullDictionary('en'));
 const missing = [];
+const habitHeaderCopy = JSON.parse(await readFile(new URL('../app/habit-web-header-copy.json', import.meta.url), 'utf8'));
+for (const language of ['ru', 'en', ...languages]) {
+  const entry = habitHeaderCopy[language];
+  if (!entry || typeof entry.title !== 'string' || !entry.title.trim()
+      || !Array.isArray(entry.tabs) || entry.tabs.length !== 4
+      || !Array.isArray(entry.descriptions) || entry.descriptions.length !== 4
+      || [...(entry.tabs ?? []), ...(entry.descriptions ?? [])].some(value => typeof value !== 'string' || !value.trim())) {
+    missing.push(language + ': invalid habit header copy');
+  }
+}
 const partnerCopy = JSON.parse(await readFile(new URL('../app/partner-copy.json', import.meta.url), 'utf8'));
 const siteLinks = JSON.parse(await readFile(new URL('../app/site-links.json', import.meta.url), 'utf8'));
 const partnerLanguages = ['ru','en',...languages];

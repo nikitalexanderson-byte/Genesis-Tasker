@@ -131,6 +131,7 @@ try {
         'sharedCalendarScale' => 0.25,
         'todayBlockOrder' => ['details','events','habits','tasks','rhythm','ads','dream','advice'],
         'todayHalfBlocks' => ['dream','tasks'],
+        'webHiddenTodayBlocks' => ['dream','events'],
         'displayCalendarOrder' => ['lunar','sacred','profane'],
     ];
     $user = genesisUpdateAccountPreferences($userId, ['uiVisibility' => $visibility]);
@@ -139,7 +140,7 @@ try {
     foreach (['sacredFeaturesEnabled', 'dreamJournalEnabled', 'sidebarAutoCollapseSeconds', 'sidebarWidth', 'personalInboxPosition', 'personalInboxHidden',
         'personalInboxCompact', 'sharedInboxPosition', 'sharedInboxHidden', 'sharedInboxCompact',
         'personalInboxWidth', 'sharedInboxWidth', 'sharedCategoriesExpanded', 'personalCategoriesExpanded', 'personalCategoriesView', 'sharedCategoriesView', 'sharedTasksCompact',
-        'notificationDockPinned', 'notificationDockX', 'notificationDockY', 'sharedProjectViewOrder', 'sharedCalendarScale', 'todayBlockOrder', 'todayHalfBlocks', 'displayCalendarOrder'] as $field) unset($legacyVisibility[$field]);
+        'notificationDockPinned', 'notificationDockX', 'notificationDockY', 'sharedProjectViewOrder', 'sharedCalendarScale', 'todayBlockOrder', 'todayHalfBlocks', 'webHiddenTodayBlocks', 'displayCalendarOrder'] as $field) unset($legacyVisibility[$field]);
     $user = genesisUpdateAccountPreferences($userId, ['uiVisibility' => $legacyVisibility]);
     expect(genesisUserForClient($user)['uiVisibility']['sidebarAutoCollapseSeconds'] === 30,
         'An older client reset the sidebar delay.');

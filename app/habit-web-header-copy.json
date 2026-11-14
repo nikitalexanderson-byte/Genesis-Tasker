@@ -1,0 +1,212 @@
+{
+  "ru": {
+    "title": "Привычки",
+    "tabs": [
+      "Сегодня",
+      "Шаблоны",
+      "Модули",
+      "Прогресс"
+    ],
+    "descriptions": [
+      "Отмечайте привычки и следите за ритмом сегодняшнего дня.",
+      "Выбирайте готовые привычки и создавайте собственные.",
+      "Управляйте сном и воздержанием в отдельных модулях.",
+      "Изучайте статистику, достижения и историю привычек."
+    ]
+  },
+  "en": {
+    "title": "Habits",
+    "tabs": [
+      "Today",
+      "Templates",
+      "Modules",
+      "Progress"
+    ],
+    "descriptions": [
+      "Track your habits and today's rhythm.",
+      "Choose ready-made habits and create your own.",
+      "Manage sleep and abstinence in dedicated modules.",
+      "Explore habit statistics, achievements and history."
+    ]
+  },
+  "el": {
+    "title": "Συνήθειες",
+    "tabs": [
+      "Σήμερα",
+      "Πρότυπα",
+      "Ενότητες",
+      "Πρόοδος"
+    ],
+    "descriptions": [
+      "Παρακολουθήστε τις συνήθειες και τον σημερινό ρυθμό σας.",
+      "Επιλέξτε έτοιμες συνήθειες ή δημιουργήστε δικές σας.",
+      "Διαχειριστείτε τον ύπνο και την αποχή σε ξεχωριστές ενότητες.",
+      "Δείτε στατιστικά, επιτεύγματα και ιστορικό συνηθειών."
+    ]
+  },
+  "de": {
+    "title": "Gewohnheiten",
+    "tabs": [
+      "Heute",
+      "Vorlagen",
+      "Module",
+      "Fortschritt"
+    ],
+    "descriptions": [
+      "Erfasse deine Gewohnheiten und deinen heutigen Rhythmus.",
+      "Wähle Vorlagen oder erstelle eigene Gewohnheiten.",
+      "Verwalte Schlaf und Abstinenz in eigenen Modulen.",
+      "Entdecke Statistiken, Erfolge und den Verlauf deiner Gewohnheiten."
+    ]
+  },
+  "fr": {
+    "title": "Habitudes",
+    "tabs": [
+      "Aujourd’hui",
+      "Modèles",
+      "Modules",
+      "Progression"
+    ],
+    "descriptions": [
+      "Suivez vos habitudes et votre rythme du jour.",
+      "Choisissez des habitudes prêtes à l’emploi ou créez les vôtres.",
+      "Gérez le sommeil et l’abstinence dans des modules dédiés.",
+      "Consultez les statistiques, les réussites et l’historique de vos habitudes."
+    ]
+  },
+  "es": {
+    "title": "Hábitos",
+    "tabs": [
+      "Hoy",
+      "Plantillas",
+      "Módulos",
+      "Progreso"
+    ],
+    "descriptions": [
+      "Registra tus hábitos y el ritmo de hoy.",
+      "Elige hábitos preparados o crea los tuyos.",
+      "Gestiona el sueño y la abstinencia en módulos separados.",
+      "Consulta las estadísticas, los logros y el historial de hábitos."
+    ]
+  },
+  "it": {
+    "title": "Abitudini",
+    "tabs": [
+      "Oggi",
+      "Modelli",
+      "Moduli",
+      "Progressi"
+    ],
+    "descriptions": [
+      "Registra le tue abitudini e il ritmo di oggi.",
+      "Scegli abitudini già pronte o crea le tue.",
+      "Gestisci sonno e astinenza in moduli dedicati.",
+      "Esplora statistiche, traguardi e cronologia delle abitudini."
+    ]
+  },
+  "pt": {
+    "title": "Hábitos",
+    "tabs": [
+      "Hoje",
+      "Modelos",
+      "Módulos",
+      "Progresso"
+    ],
+    "descriptions": [
+      "Registe os seus hábitos e o ritmo de hoje.",
+      "Escolha hábitos prontos ou crie os seus.",
+      "Gerir o sono e a abstinência em módulos próprios.",
+      "Consulte estatísticas, conquistas e histórico dos hábitos."
+    ]
+  },
+  "pl": {
+    "title": "Nawyki",
+    "tabs": [
+      "Dzisiaj",
+      "Szablony",
+      "Moduły",
+      "Postępy"
+    ],
+    "descriptions": [
+      "Śledź nawyki i rytm dzisiejszego dnia.",
+      "Wybierz gotowe nawyki lub utwórz własne.",
+      "Zarządzaj snem i abstynencją w osobnych modułach.",
+      "Przeglądaj statystyki, osiągnięcia i historię nawyków."
+    ]
+  },
+  "sr": {
+    "title": "Навике",
+    "tabs": [
+      "Данас",
+      "Шаблони",
+      "Модули",
+      "Напредак"
+    ],
+    "descriptions": [
+      "Пратите навике и ритам данашњег дана.",
+      "Изаберите готове навике или направите своје.",
+      "Управљајте сном и уздржавањем у засебним модулима.",
+      "Погледајте статистику, достигнућа и историју навика."
+    ]
+  },
+  "uk": {
+    "title": "Звички",
+    "tabs": [
+      "Сьогодні",
+      "Шаблони",
+      "Модулі",
+      "Прогрес"
+    ],
+    "descriptions": [
+      "Відмічайте звички та стежте за ритмом сьогоднішнього дня.",
+      "Обирайте готові звички або створюйте власні.",
+      "Керуйте сном і утриманням в окремих модулях.",
+      "Переглядайте статистику, досягнення та історію звичок."
+    ]
+  },
+  "zh": {
+    "title": "习惯",
+    "tabs": [
+      "今天",
+      "模板",
+      "模块",
+      "进度"
+    ],
+    "descriptions": [
+      "记录习惯，关注今天的节奏。",
+      "选择现成的习惯或创建自己的习惯。",
+      "在独立模块中管理睡眠和戒除。",
+      "查看习惯统计、成就和历史记录。"
+    ]
+  },
+  "tr": {
+    "title": "Alışkanlıklar",
+    "tabs": [
+      "Bugün",
+      "Şablonlar",
+      "Modüller",
+      "İlerleme"
+    ],
+    "descriptions": [
+      "Alışkanlıklarınızı ve bugünün ritmini takip edin.",
+      "Hazır alışkanlıkları seçin veya kendinizinkileri oluşturun.",
+      "Uyku ve uzak durmayı ayrı modüllerde yönetin.",
+      "Alışkanlık istatistiklerini, başarıları ve geçmişi inceleyin."
+    ]
+  },
+  "ja": {
+    "title": "習慣",
+    "tabs": [
+      "今日",
+      "テンプレート",
+      "モジュール",
+      "進捗"
+    ],
+    "descriptions": [
+      "習慣を記録し、今日のリズムを確認します。",
+      "用意された習慣を選ぶか、自分で作成します。",
+      "睡眠と節制を専用モジュールで管理します。",
+      "習慣の統計、達成、履歴を確認します。"
+    ]
+  }
+}

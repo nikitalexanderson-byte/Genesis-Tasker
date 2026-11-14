@@ -291,6 +291,13 @@ function genesisUiVisibility(mixed $value): array
         throw new InvalidArgumentException('INVALID_TODAY_BLOCK_WIDTH');
     }
     $result['todayHalfBlocks'] = array_values(array_intersect($todayBlocks, $halves));
+    $webHidden = $decoded['webHiddenTodayBlocks'] ?? [];
+    $webTodayBlocks = ['advice', 'dream', 'ads', 'events'];
+    if (!is_array($webHidden) || !array_is_list($webHidden) || count(array_unique($webHidden, SORT_REGULAR)) !== count($webHidden)
+        || array_filter($webHidden, static fn(mixed $block): bool => !is_string($block) || !in_array($block, $webTodayBlocks, true))) {
+        throw new InvalidArgumentException('INVALID_WEB_TODAY_VISIBILITY');
+    }
+    $result['webHiddenTodayBlocks'] = array_values(array_intersect($webTodayBlocks, $webHidden));
     $calendarOrder = $decoded['displayCalendarOrder'] ?? ['profane','sacred','lunar'];
     if (!is_array($calendarOrder) || !array_is_list($calendarOrder) || count($calendarOrder) !== 3
         || count(array_unique($calendarOrder, SORT_REGULAR)) !== 3
@@ -1391,7 +1398,7 @@ function genesisUpdateAccountPreferencesInTransaction(string $userId, array $pay
     }
     $visibilityInput = $payload['uiVisibility'] ?? ($user['ui_visibility_json'] ?? '{}');
     $savedVisibility = genesisUiVisibility($user['ui_visibility_json'] ?? '{}');
-    $layoutFields = ['sidebarWidth', 'personalInboxPosition', 'personalInboxHidden', 'personalInboxCompact', 'sharedInboxPosition', 'sharedInboxHidden', 'sharedInboxCompact', 'sharedCategoriesExpanded', 'personalCategoriesExpanded', 'personalCategoriesView', 'sharedCategoriesView', 'sharedTasksCompact', 'personalInboxWidth', 'sharedInboxWidth', 'notificationDockPinned', 'notificationDockX', 'notificationDockY', 'sharedProjectViewOrder', 'sharedCalendarScale', 'todayBlockOrder', 'todayHalfBlocks', 'displayCalendarOrder'];
+    $layoutFields = ['sidebarWidth', 'personalInboxPosition', 'personalInboxHidden', 'personalInboxCompact', 'sharedInboxPosition', 'sharedInboxHidden', 'sharedInboxCompact', 'sharedCategoriesExpanded', 'personalCategoriesExpanded', 'personalCategoriesView', 'sharedCategoriesView', 'sharedTasksCompact', 'personalInboxWidth', 'sharedInboxWidth', 'notificationDockPinned', 'notificationDockX', 'notificationDockY', 'sharedProjectViewOrder', 'sharedCalendarScale', 'todayBlockOrder', 'todayHalfBlocks', 'webHiddenTodayBlocks', 'displayCalendarOrder'];
     // Older web/native clients must not reset account layout preferences.
     if (is_array($visibilityInput)) {
         foreach (['sacredFeaturesEnabled', 'dreamJournalEnabled', 'sidebarAutoCollapseSeconds', ...$layoutFields] as $field) {

@@ -1224,6 +1224,8 @@ export function GenesisCalendar() {
   const mobileLayout = useMobileLayout();
   const compactHeader = useCompactHeader();
   const compactHeaderRef = useHeaderControlSize(compactHeader);
+  const [habitHeaderTarget, setHabitHeaderTarget] = useState<HTMLDivElement | null>(null);
+  const webHabitHeader = typeof document !== "undefined" && document.documentElement.dataset.genesisWeb === "true";
   const initial = useMemo(() => getSacredDate(new Date()), []);
   const [language, setLanguage] = useState<Language>(browserLanguage);
   const [today, setToday] = useState(() => new Date());
@@ -1778,14 +1780,39 @@ export function GenesisCalendar() {
   const todayOrder = effectiveTodayBlockOrder(cloudUser ? accountLayout.todayBlockOrder : guestTodayOrder);
   const [guestTodayHalves, setGuestTodayHalves] = useState<TodayBlockId[]>(() => readTodayHalfBlocks(availableTodayBlockStorage(typeof window === 'undefined' ? null : window), 'guest'));
   const todayHalves = cloudUser ? accountLayout.todayHalfBlocks : guestTodayHalves;
-  const saveTodayOrder = (order: TodayBlockId[], failureMessage: string, halfBlocks: TodayBlockId[]) => {
-    if (cloudUser) saveLayout({todayBlockOrder: order, todayHalfBlocks: halfBlocks});
+  const [guestTodayHidden, setGuestTodayHidden] = useState<TodayBlockId[]>(() => {
+    try { const value = JSON.parse(availableTodayBlockStorage(typeof window === 'undefined' ? null : window)?.getItem('genesis-today-hidden:v1:guest') ?? '[]'); return Array.isArray(value) ? value : []; }
+    catch { return []; }
+  });
+  const todayHidden = cloudUser ? [...storedVisibility.hiddenTodayBlocks, ...accountLayout.webHiddenTodayBlocks] : guestTodayHidden;
+  const saveTodayOrder = async (order: TodayBlockId[], failureMessage: string, halfBlocks: TodayBlockId[], hidden: TodayBlockId[]) => {
+    if (cloudUser) {
+      const guard = captureAccountSessionGuard();
+      const current = uiVisibility(cloudUserRef.current?.uiVisibility);
+      const common = ['rhythm', 'tasks', 'habits', 'details'];
+      const hiddenTodayBlocks = [...current.hiddenTodayBlocks.filter(id => !common.includes(id)), ...hidden.filter(id => common.includes(id))];
+      const webHiddenTodayBlocks = hidden.filter(id => ['advice', 'dream', 'ads', 'events'].includes(id));
+      guard();
+      const result = await updateAccountPreferences({
+        uiVisibility: { sacredFeaturesEnabled: current.sacredFeaturesEnabled, dreamJournalEnabled: current.dreamJournalEnabled,
+          hiddenMenuItems: current.hiddenMenuItems, hiddenSubmenus: current.hiddenSubmenus, hiddenTodayBlocks,
+          enabledCalendars: current.enabledCalendars, sidebarAutoCollapseSeconds: current.sidebarAutoCollapseSeconds },
+        uiLayout: { todayBlockOrder: order, todayHalfBlocks: halfBlocks, webHiddenTodayBlocks },
+      });
+      guard();
+      const saved = uiVisibility(result.user.uiVisibility);
+      if (hiddenTodayBlocks.some(id => !saved.hiddenTodayBlocks.includes(id)) || saved.hiddenTodayBlocks.some(id => !hiddenTodayBlocks.includes(id))
+        || webHiddenTodayBlocks.some(id => !saved.webHiddenTodayBlocks.includes(id)) || saved.webHiddenTodayBlocks.some(id => !webHiddenTodayBlocks.includes(id))
+        || JSON.stringify(saved.todayBlockOrder) !== JSON.stringify(order) || JSON.stringify(saved.todayHalfBlocks) !== JSON.stringify(halfBlocks)) throw new Error(failureMessage);
+      applyLayoutUser(result.user);
+    }
     else {
-      setGuestTodayOrder([...order]);
-      setGuestTodayHalves([...halfBlocks]);
       const storage = availableTodayBlockStorage(window);
       const savedOrder = storeTodayBlockOrder(storage, 'guest', order), savedHalves = storeTodayHalfBlocks(storage, 'guest', halfBlocks);
-      if (!savedOrder || !savedHalves) announce(failureMessage);
+      try { if (!storage) throw new Error(failureMessage); storage.setItem('genesis-today-hidden:v1:guest', JSON.stringify(hidden)); }
+      catch { throw new Error(failureMessage); }
+      if (!savedOrder || !savedHalves) throw new Error(failureMessage);
+      setGuestTodayOrder([...order]); setGuestTodayHalves([...halfBlocks]); setGuestTodayHidden([...hidden]);
     }
   };
   const saveSidebarWidth = useCallback((sidebarWidth: number) => saveLayout({ sidebarWidth }), [saveLayout]);
@@ -5219,7 +5246,7 @@ export function GenesisCalendar() {
   );
 
   const renderToday = () => {
-    const showToday = (block: string) => !visibility.hiddenTodayBlocks.includes(block);
+    const showToday = (block: string) => !(webHabitHeader ? todayHidden : visibility.hiddenTodayBlocks).includes(block);
     const isEnglish = language === "en";
     const info = todayInfo;
     const month = MONTHS[info.monthIndex];
@@ -5329,14 +5356,14 @@ export function GenesisCalendar() {
 
         {!experimentalThemeActive ? renderDisplayCalendarChoice(isEnglish ? "Today's calendar" : "Календарь сегодня", "today-calendar-choice") : null}
         </TodayBlock>
-        <TodayBlock id="advice">{cloudUser ? <Suspense fallback={null}><TodayAdvice key={cloudUser.uid} user={cloudUser} habits={habitWorkspace.habits} tasks={tasks} day={todayDateValue} ready={hydrated && syncStatus !== "syncing"} onOpenDiary={() => { setProjectsArea("personal"); setMindmapsOpen(false); setDiaryOpen(true); navigateTo("projects"); const url = new URL(location.href); url.searchParams.set("diary", "1"); history.replaceState(history.state, "", url); }} /></Suspense> : null}</TodayBlock>
+        <TodayBlock id="advice">{cloudUser && (!webHabitHeader || showToday("advice")) ? <Suspense fallback={null}><TodayAdvice key={cloudUser.uid} user={cloudUser} habits={habitWorkspace.habits} tasks={tasks} day={todayDateValue} ready={hydrated && syncStatus !== "syncing"} onOpenDiary={() => { setProjectsArea("personal"); setMindmapsOpen(false); setDiaryOpen(true); navigateTo("projects"); const url = new URL(location.href); url.searchParams.set("diary", "1"); history.replaceState(history.state, "", url); }} /></Suspense> : null}</TodayBlock>
 
-        <TodayBlock id="dream">{cloudUser ? <Suspense fallback={null}><DreamJournalToday user={cloudUser} date={todayDateValue} language={language} plans={habitWorkspace.sleepPlans} entries={habitWorkspace.sleepEntries}/></Suspense> : null}</TodayBlock>
-        <TodayBlock id="ads">{cloudUser ? <TodayAdBlock key={`${cloudUser.uid}:${language}`} language={language} userId={cloudUser.uid} /> : null}</TodayBlock>
+        <TodayBlock id="dream">{cloudUser && (!webHabitHeader || showToday("dream")) ? <Suspense fallback={null}><DreamJournalToday user={cloudUser} date={todayDateValue} language={language} plans={habitWorkspace.sleepPlans} entries={habitWorkspace.sleepEntries}/></Suspense> : null}</TodayBlock>
+        <TodayBlock id="ads">{cloudUser && (!webHabitHeader || showToday("ads")) ? <TodayAdBlock key={`${cloudUser.uid}:${language}`} language={language} userId={cloudUser.uid} /> : null}</TodayBlock>
 
         <TodayBlock id="rhythm">{sacredFeaturesEnabled && showToday("rhythm") ? <DayRhythmPanel timeFormat={activeTimeFormat} /> : null}</TodayBlock>
 
-        <TodayBlock id="tasks">{showToday("tasks") || showToday("quickCreate") ? <section className="today-tasks-panel" aria-labelledby="today-tasks-title" data-exp-ui="panel">
+        <TodayBlock id="tasks">{(webHabitHeader ? showToday("tasks") : showToday("tasks") || showToday("quickCreate")) ? <section className="today-tasks-panel" aria-labelledby="today-tasks-title" data-exp-ui="panel">
           <header>
             <div>
               <span className="eyebrow">{isEnglish ? "The shape of today" : "План сегодняшнего дня"}</span>
@@ -5413,7 +5440,7 @@ export function GenesisCalendar() {
           </Suspense>
         ) : null}</TodayBlock>
 
-        <TodayBlock id="events">{sacredFeaturesEnabled && (moon.event || solarEvent) ? (
+        <TodayBlock id="events">{sacredFeaturesEnabled && (!webHabitHeader || showToday("events")) && (moon.event || solarEvent) ? (
           <section className="today-event-notices" aria-label="Особая сила сегодняшнего дня" aria-live="polite">
             {moon.event ? (
               <article className="today-event-notice moon-practice-notice">
@@ -6887,6 +6914,7 @@ export function GenesisCalendar() {
   const pendingDeletionHasSeries = pendingDeletionTask ? taskHasSeries(pendingDeletionTask) : false;
 
   const renderHeaderSectionSwitch = () => {
+    if (view === "habits" && webHabitHeader && habitWorkspace.habitSettings.enabled) return <div ref={setHabitHeaderTarget} className="habit-header-slot" />;
     if (view === "calendar" || view === "year") return <HeaderSectionSwitch label={translateText("Календарь", language)} panelId="calendar-period-panel"
       sections={[
         ...(viewIsVisible("calendar", visibility) ? [{id: "calendar-month-tab", label: translateText("Месяц", language), icon: "section-month", active: view === "calendar", onSelect: () => navigateTo("calendar")}] : []),
@@ -7039,7 +7067,7 @@ export function GenesisCalendar() {
     >
       <PaletteArtFilter />
       {view === 'today' && todayOrderEditor.owner === todayOrderOwner && todayOrderEditor.view === view && todayOrderEditor.open ? <Suspense fallback={null}><TodayBlockOrderDialog key={todayOrderOwner}
-        order={todayOrder} halfBlocks={todayHalves} language={language} onSave={saveTodayOrder} onClose={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: false})}/></Suspense> : null}
+        order={todayOrder} halfBlocks={todayHalves} hiddenBlocks={todayHidden} webVisibility={webHabitHeader} language={language} onSave={saveTodayOrder} onClose={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: false})}/></Suspense> : null}
       {experimentalProjectFormOpen ? <div className="modal-backdrop experimental-project-composer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExperimentalProjectFormOpen(false); }}>{renderProjectCreateForm()}</div> : null}
       <ActionNotice message={layoutError || (view === "projects" && activeProjectsArea === "shared" ? "" : notice)}/>
       <UpgradeAccessUI user={cloudUser} onUserChange={user=>{if(cloudUserRef.current?.uid!==user.uid)return;setCloudUser(user);if(!privateDeviceAccessBlocked())localStorage.setItem(LAST_USER_KEY,JSON.stringify(user));}}/>
@@ -7178,6 +7206,8 @@ export function GenesisCalendar() {
               {view === "habits" && habitWorkspace.habitSettings.enabled ? (
                 <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening habit tracker…" : "Открываем трекер привычек…"} />}>
                   <HabitTrackerPage
+                    webHeaderEnabled={webHabitHeader}
+                    webHeaderTarget={habitHeaderTarget}
                     user={cloudUser}
                     reportContext={calendarContext({ gregorianYearStart: cloudUser?.gregorianYearStart ?? "january" })}
                     workspace={habitWorkspace}

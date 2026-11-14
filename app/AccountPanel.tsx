@@ -44,6 +44,7 @@ import { subscriptionName } from "./subscription-name";
 import { DARK_PALETTES, effectiveDarkPalette, type DarkPalette } from "./dark-palettes";
 import { featureAllowed } from "./feature-access";
 import paletteCopy from "./dark-palette-copy.json";
+import todayOrderCopy from "./today-block-order-copy.json";
 
 const COLOR_MODE_NAMES: Record<Language, { light: string; dark: string; group: string }> = {
   ru: { light: "Светлая", dark: "Тёмная", group: "Цветовая схема сайта" },
@@ -250,7 +251,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
     try {
       const result = await updateAccountPreferences({ uiVisibility: next });
       const saved = uiVisibility(result.user.uiVisibility);
-      const fields = ["hiddenMenuItems", "hiddenSubmenus", "hiddenTodayBlocks", "enabledCalendars"] as const;
+      const fields = ["hiddenMenuItems", "hiddenSubmenus", "hiddenTodayBlocks", "webHiddenTodayBlocks", "enabledCalendars"] as const;
       const scalarFields = ["sacredFeaturesEnabled", "dreamJournalEnabled", "sidebarAutoCollapseSeconds", "sidebarWidth", "personalInboxPosition", "personalInboxHidden", "personalInboxCompact", "sharedInboxPosition", "sharedInboxHidden", "sharedInboxCompact"] as const;
       if (scalarFields.some(field => next[field] !== saved[field]) || fields.some((field) => next[field].length !== saved[field].length ||
         next[field].some((item) => !(saved[field] as string[]).includes(item)))) {
@@ -709,6 +710,12 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
                   onChange={(event) => toggleVisibilityItem("hiddenTodayBlocks", id, event.target.checked)} />
                 <i aria-hidden="true" />
               </label>)}
+              {typeof document !== 'undefined' && document.documentElement.dataset.genesisWeb === 'true' ? (['advice', 'dream', 'ads', 'events'] as const).map(id => <label key={id} className="account-switch-row" data-exp-ui="row" data-no-translate>
+                <span>{(todayOrderCopy[user.language] ?? todayOrderCopy.en)[id]}</span>
+                <input type="checkbox" role="switch" checked={!visibility.webHiddenTodayBlocks.includes(id)} disabled={preferenceBusy}
+                  onChange={event => void updateVisibility({ ...visibility, webHiddenTodayBlocks: event.target.checked ? visibility.webHiddenTodayBlocks.filter(item => item !== id) : [...visibility.webHiddenTodayBlocks, id] })} />
+                <i aria-hidden="true" />
+              </label>) : null}
             </fieldset>
             {visibility.sacredFeaturesEnabled ? <fieldset><legend>{user.language === "en" ? "Available calendars" : "Доступные календари"}</legend>
               {(["profane", "sacred", "lunar"] as CalendarMode[]).filter(mode=>visibility.sacredFeaturesEnabled||mode!=="sacred").map((mode) => <label key={mode} className="account-switch-row" data-exp-ui="row">
