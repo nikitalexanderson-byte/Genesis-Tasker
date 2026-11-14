@@ -88,7 +88,7 @@ class Release332UiTest {
         try {
             for (p in GenesisBrandIcon.palettes) for (night in listOf(false, true)) {
                 compose.runOnIdle { palette = p; dark = night }
-                GenesisBrandIcon.updateLauncher(context, p, night)
+                runBlocking { GenesisBrandIcon.updateLauncher(context, p, night) }
                 val intent = android.content.Intent(android.content.Intent.ACTION_MAIN)
                     .addCategory(android.content.Intent.CATEGORY_LAUNCHER).setPackage(context.packageName)
                 val entries = context.packageManager.queryIntentActivities(intent, 0)
@@ -99,7 +99,7 @@ class Release332UiTest {
                 compose.onNodeWithContentDescription("GENESIS").assertIsDisplayed()
                 captureNativeWindow(File(context.getExternalFilesDir(null), "release332-icon-$p-$night.png"))
             }
-        } finally { GenesisBrandIcon.updateLauncher(context, "green", false) }
+        } finally { runBlocking { GenesisBrandIcon.updateLauncher(context, "green", false) } }
     }
 
     @Test fun formsAndHeroOverviewFollowTheSharedLayoutAndPalette() {

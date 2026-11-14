@@ -12,9 +12,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import ru.genesis.calendar.R
 
 internal object GenesisBrandIcon {
+    private val launcherLock = Mutex()
     val palettes = listOf("green", "blue", "burgundy", "violet")
     fun palette(value: String) = value.takeIf { it in palettes } ?: "green"
     fun alias(value: String, dark: Boolean): String = "ru.genesis.calendar.Launcher" +
@@ -32,7 +35,7 @@ internal object GenesisBrandIcon {
     }
 
     /** MainActivity stays enabled for notifications, updates and existing explicit shortcuts. */
-    fun updateLauncher(context: Context, value: String, dark: Boolean) {
+    suspend fun updateLauncher(context: Context, value: String, dark: Boolean) = launcherLock.withLock {
         val manager = context.packageManager
         val desired = alias(value, dark)
         val names = palettes.flatMap { p -> listOf(alias(p, false), alias(p, true)) }
