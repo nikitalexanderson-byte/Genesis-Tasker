@@ -5,6 +5,15 @@ html[data-genesis-web="true"] .genesis-app .habit-header-tabs > button { display
 html[data-genesis-web="true"] .genesis-app .habit-header-tabs > button > strong { color: inherit !important; font: inherit; white-space: nowrap; }
 html[data-genesis-web="true"] .genesis-app .habit-header-tabs > button > svg { flex: 0 0 22px; width: 22px; height: 22px; }
 html[data-genesis-web="true"] .genesis-app .habits-hero h1 .workspace-title-secondary { color: inherit; font-weight: 400; }
+html[data-genesis-web="true"] .genesis-app .physis-hero h1 .workspace-title-secondary { color: inherit; font-weight: 400; }
+html[data-genesis-web="true"] .genesis-app .physis-workspace-panel { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+html[data-genesis-web="true"] .genesis-app .physis-workspace-panel .physis-subnav > button[aria-current=page]::after { display: none; }
+
+@media (min-width: 1400px) {
+  html[data-genesis-web="true"] .genesis-app .physis-header-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(900px, calc(100vw - 500px)); }
+  html[data-genesis-web="true"] .genesis-app .physis-header-tabs > button { width: 100%; min-width: 0; padding-inline: 8px; }
+  html[data-genesis-web="true"] .genesis-app .physis-header-tabs > button > strong { white-space: normal; overflow-wrap: normal; word-break: normal; text-align: center; }
+}
 
 /* Keep the panel as an accessible tab panel, but remove its visual enclosure. */
 html[data-genesis-web="true"] .genesis-app .habits-view .habit-workspace-panel {

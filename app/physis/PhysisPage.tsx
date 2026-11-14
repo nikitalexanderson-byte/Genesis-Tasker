@@ -1,5 +1,7 @@
 "use client";
 import { Fragment, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import webHeaderCopy from './web-header-copy.json';
 import { LOCAL_SESSION_ENDED_EVENT, PERSONAL_DOCUMENT_READY_EVENT, captureAccountSessionGuard, personalDocumentAccess, physisRequest } from '../cloud-sync';
 import { calendarContext } from '../calendar-context';
 import type { CalendarMode } from '../calendar-data';
@@ -29,7 +31,7 @@ import './physis.css';
 
 type PageName = 'overview' | 'today' | 'programs' | 'control' | 'exercises' | 'diary' | 'foods' | 'intakes' | 'drugs';
 type KeyState = { key: CryptoKey; model: PhysisMemoryStore };
-type Props = { owner: string; language: string; calendarMode: CalendarMode; inputCalendarMode: CalendarMode; timeZone: string; settingsRequest?: number; weekStart?: 'sunday' | 'monday' };
+type Props = { owner: string; language: string; calendarMode: CalendarMode; inputCalendarMode: CalendarMode; timeZone: string; settingsRequest?: number; weekStart?: 'sunday' | 'monday'; webHeaderEnabled?: boolean; webHeaderTarget?: HTMLElement | null };
 type Area = 'training' | 'nutrition' | 'care' | 'monitoring';
 const GROUPS: { id: Area; title: string; subtitle: string; icon: HealthIconName; pages: [PageName, string][] }[] = [
   { id: 'training', title: 'Тренировки', subtitle: 'Контроль и программы', icon: 'dumbbell', pages: [['control', 'Контроль выполнения'], ['exercises', 'Справочник упражнений']] },
@@ -38,9 +40,11 @@ const GROUPS: { id: Area; title: string; subtitle: string; icon: HealthIconName;
   { id: 'monitoring', title: 'Мониторинг показателей', subtitle: 'Измерения и история', icon: 'heart-pulse', pages: [] },
 ];
 
-function PhysisHero({ language, onSettings, onPersonal, status }: { language: string; onSettings?: () => void; onPersonal?: () => void; status?: string }) {
+function PhysisHero({ language, onSettings, onPersonal, status, area }: { language: string; onSettings?: () => void; onPersonal?: () => void; status?: string; area?: Area }) {
+  const copy = webHeaderCopy[language as keyof typeof webHeaderCopy] ?? webHeaderCopy.en;
+  const index = GROUPS.findIndex(item => item.id === area);
   return <header className="physis-hero">
-    <div className="physis-hero-copy"><h1 id="physis-title">Фюзис</h1><p>Тренировки, дневник питания, БАДы и лекарства.</p></div>
+    <div className="physis-hero-copy">{index >= 0 ? <><h1 id="physis-title" data-no-translate>{copy.title} <span className="workspace-title-secondary">- {copy.tabs[index]}</span></h1><p data-no-translate>{copy.descriptions[index]}</p></> : <><h1 id="physis-title">Фюзис</h1><p>Тренировки, дневник питания, БАДы и лекарства.</p></>}</div>
     <div className="physis-hero-actions">
       {onPersonal ? <IconActionButton icon="account" label={language === 'ru' ? 'Личные данные' : 'Personal details'} className="physis-settings-button" aria-haspopup="dialog" onClick={onPersonal} /> : null}
       {onSettings ? <IconActionButton icon="gear" label={translateText('Настройки Фюзиса', language as Language)} className="physis-settings-button" aria-haspopup="dialog" onClick={onSettings} /> : null}
@@ -103,6 +107,7 @@ export function PhysisPage(props: Props) {
 }
 
 function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState }) {
+  const webCopy = webHeaderCopy[props.language as keyof typeof webHeaderCopy] ?? webHeaderCopy.en;
   const referenceCatalog = useReferenceCatalog(props.owner);
   const { keys: { model }, vaultState } = props;
   const store = useSyncExternalStore(model.subscribe, model.getSnapshot, model.getSnapshot);
@@ -138,9 +143,9 @@ function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState 
     downloadPhysis('physis-encrypted.json', JSON.stringify({ format: 'physis-encrypted', version: 1, owner: props.owner, exportedAt: new Date().toISOString(), vault: vaultState.vault, records }));
   };
   return <>
-    <PhysisHero language={props.language} onSettings={() => setSettingsOpen(true)} onPersonal={() => setPersonalOpen(true)} status={({ saved: '', saving: 'Сохраняется…', offline: 'Не сохранено — нет связи', conflict: 'Конфликт устройств', error: 'Не сохранено — ошибка' })[store.status]} />
+    <PhysisHero language={props.language} area={props.webHeaderEnabled ? area : undefined} onSettings={() => setSettingsOpen(true)} onPersonal={() => setPersonalOpen(true)} status={({ saved: '', saving: 'Сохраняется…', offline: 'Не сохранено — нет связи', conflict: 'Конфликт устройств', error: 'Не сохранено — ошибка' })[store.status]} />
     <div className="habit-workspace-frame physis-workspace-frame">
-    <nav className="experimental-habit-tabs physis-area-switch" aria-label="Разделы Фюзиса">{GROUPS.map(item => <button type="button" key={item.id} aria-label={translateText(item.title, props.language as Language)} data-tooltip={translateText(item.title, props.language as Language)} aria-current={area === item.id ? 'page' : undefined} onClick={() => setArea(item.id)}><span className="physis-area-icon"><HealthIcon name={item.icon} /></span><strong className="physis-area-label">{item.title}</strong><small className="physis-area-subtitle">{item.subtitle}</small></button>)}</nav>
+    {props.webHeaderEnabled ? props.webHeaderTarget && createPortal(<nav className="header-section-switch habit-header-tabs physis-header-tabs" aria-label={webCopy.title} data-no-translate>{GROUPS.map((item, index) => <button type="button" key={item.id} data-physis-area={item.id} aria-label={webCopy.tabs[index]} title={webCopy.tabs[index]} aria-pressed={area === item.id} onClick={() => setArea(item.id)}><HealthIcon name={item.icon} /><strong>{webCopy.tabs[index]}</strong></button>)}</nav>, props.webHeaderTarget) : <nav className="experimental-habit-tabs physis-area-switch" aria-label="Разделы Фюзиса">{GROUPS.map(item => <button type="button" key={item.id} aria-label={translateText(item.title, props.language as Language)} data-tooltip={translateText(item.title, props.language as Language)} aria-current={area === item.id ? 'page' : undefined} onClick={() => setArea(item.id)}><span className="physis-area-icon"><HealthIcon name={item.icon} /></span><strong className="physis-area-label">{item.title}</strong><small className="physis-area-subtitle">{item.subtitle}</small></button>)}</nav>}
 
     {store.error ? <div role="alert" className="physis-warning"><p>{store.error}</p><div className="physis-actions"><button onClick={() => void action.run(() => model.flush())}>Повторить сохранение</button><button onClick={() => { if (confirm('Открытый файл содержит личные данные. Экспортировать локальный вариант?')) downloadPhysis('physis-unsaved.json', JSON.stringify({ format: 'physis-plain', version: 1, records: store.records })); }}>Экспортировать локальный вариант</button><button onClick={() => { if (confirm('Отменить все несохранённые изменения этой вкладки и загрузить серверный вариант?')) void action.run(async () => { await model.discardAndReload(); setEditorEpoch(value => value + 1); }); }}>Загрузить серверный вариант</button></div></div> : null}
     {action.error ? <p role="alert" className="physis-warning">{action.error}</p> : null}

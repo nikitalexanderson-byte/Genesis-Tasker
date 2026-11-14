@@ -1,0 +1,212 @@
+{
+  "ru": {
+    "title": "Фюзис",
+    "tabs": [
+      "Тренировки",
+      "Питание",
+      "БАДы и лекарства",
+      "Мониторинг"
+    ],
+    "descriptions": [
+      "Планируйте тренировки, отмечайте выполнение и изучайте упражнения.",
+      "Ведите дневник питания и управляйте списком продуктов.",
+      "Управляйте схемами приёма и справочником препаратов.",
+      "Записывайте показатели здоровья и следите за их историей."
+    ]
+  },
+  "en": {
+    "title": "Physis",
+    "tabs": [
+      "Training",
+      "Nutrition",
+      "Supplements and medicines",
+      "Monitoring"
+    ],
+    "descriptions": [
+      "Plan workouts, track completion and explore exercises.",
+      "Keep a food diary and manage your food list.",
+      "Manage intake schedules and your medicine catalog.",
+      "Record health measurements and follow their history."
+    ]
+  },
+  "el": {
+    "title": "Φύσις",
+    "tabs": [
+      "Προπόνηση",
+      "Διατροφή",
+      "Συμπληρώματα και φάρμακα",
+      "Παρακολούθηση"
+    ],
+    "descriptions": [
+      "Σχεδιάστε προπονήσεις, καταγράψτε την ολοκλήρωση και δείτε ασκήσεις.",
+      "Κρατήστε ημερολόγιο διατροφής και διαχειριστείτε τα τρόφιμα.",
+      "Διαχειριστείτε τα προγράμματα λήψης και τον κατάλογο φαρμάκων.",
+      "Καταγράψτε μετρήσεις υγείας και παρακολουθήστε το ιστορικό τους."
+    ]
+  },
+  "de": {
+    "title": "Physis",
+    "tabs": [
+      "Training",
+      "Ernährung",
+      "Nahrungsergänzung und Medikamente",
+      "Monitoring"
+    ],
+    "descriptions": [
+      "Plane Trainingseinheiten, erfasse ihre Durchführung und entdecke Übungen.",
+      "Führe ein Ernährungstagebuch und verwalte deine Lebensmittel.",
+      "Verwalte Einnahmepläne und dein Arzneimittelverzeichnis.",
+      "Erfasse Gesundheitswerte und verfolge ihren Verlauf."
+    ]
+  },
+  "fr": {
+    "title": "Physis",
+    "tabs": [
+      "Entraînement",
+      "Alimentation",
+      "Compléments et médicaments",
+      "Suivi"
+    ],
+    "descriptions": [
+      "Planifiez vos séances, suivez leur réalisation et découvrez les exercices.",
+      "Tenez un journal alimentaire et gérez vos aliments.",
+      "Gérez les prises et votre répertoire de médicaments.",
+      "Enregistrez vos mesures de santé et consultez leur historique."
+    ]
+  },
+  "es": {
+    "title": "Physis",
+    "tabs": [
+      "Entrenamiento",
+      "Alimentación",
+      "Suplementos y medicamentos",
+      "Seguimiento"
+    ],
+    "descriptions": [
+      "Planifica entrenamientos, registra su realización y consulta ejercicios.",
+      "Lleva un diario de alimentación y administra tus alimentos.",
+      "Gestiona los horarios de toma y el catálogo de medicamentos.",
+      "Registra tus mediciones de salud y consulta su historial."
+    ]
+  },
+  "it": {
+    "title": "Physis",
+    "tabs": [
+      "Allenamento",
+      "Alimentazione",
+      "Integratori e farmaci",
+      "Monitoraggio"
+    ],
+    "descriptions": [
+      "Pianifica gli allenamenti, registra le attività svolte e consulta gli esercizi.",
+      "Tieni un diario alimentare e gestisci i tuoi alimenti.",
+      "Gestisci i programmi di assunzione e il catalogo dei farmaci.",
+      "Registra le misurazioni della salute e consulta la loro cronologia."
+    ]
+  },
+  "pt": {
+    "title": "Physis",
+    "tabs": [
+      "Treino",
+      "Alimentação",
+      "Suplementos e medicamentos",
+      "Monitoramento"
+    ],
+    "descriptions": [
+      "Planeje treinos, registre a conclusão e explore exercícios.",
+      "Mantenha um diário alimentar e gerencie seus alimentos.",
+      "Gerencie os horários de consumo e o catálogo de medicamentos.",
+      "Registre medições de saúde e acompanhe seu histórico."
+    ]
+  },
+  "pl": {
+    "title": "Physis",
+    "tabs": [
+      "Trening",
+      "Odżywianie",
+      "Suplementy i leki",
+      "Monitorowanie"
+    ],
+    "descriptions": [
+      "Planuj treningi, zapisuj ich wykonanie i poznawaj ćwiczenia.",
+      "Prowadź dziennik żywienia i zarządzaj listą produktów.",
+      "Zarządzaj harmonogramami przyjmowania i katalogiem leków.",
+      "Zapisuj pomiary zdrowia i śledź ich historię."
+    ]
+  },
+  "sr": {
+    "title": "Физис",
+    "tabs": [
+      "Тренинзи",
+      "Исхрана",
+      "Суплементи и лекови",
+      "Праћење"
+    ],
+    "descriptions": [
+      "Планирајте тренинге, бележите извршење и истражите вежбе.",
+      "Водите дневник исхране и управљајте списком намирница.",
+      "Управљајте распоредом узимања и каталогом лекова.",
+      "Бележите здравствена мерења и пратите њихову историју."
+    ]
+  },
+  "uk": {
+    "title": "Фюзис",
+    "tabs": [
+      "Тренування",
+      "Харчування",
+      "Добавки та ліки",
+      "Моніторинг"
+    ],
+    "descriptions": [
+      "Плануйте тренування, відмічайте виконання та переглядайте вправи.",
+      "Ведіть щоденник харчування та керуйте списком продуктів.",
+      "Керуйте схемами прийому та довідником препаратів.",
+      "Записуйте показники здоров’я та стежте за їхньою історією."
+    ]
+  },
+  "zh": {
+    "title": "Physis",
+    "tabs": [
+      "训练",
+      "饮食",
+      "补充剂和药物",
+      "监测"
+    ],
+    "descriptions": [
+      "规划训练、记录完成情况并浏览练习。",
+      "记录饮食日记并管理食物清单。",
+      "管理服用计划和药物目录。",
+      "记录健康指标并查看历史变化。"
+    ]
+  },
+  "tr": {
+    "title": "Physis",
+    "tabs": [
+      "Antrenman",
+      "Beslenme",
+      "Takviyeler ve ilaçlar",
+      "Takip"
+    ],
+    "descriptions": [
+      "Antrenmanları planlayın, tamamlanmalarını kaydedin ve egzersizleri inceleyin.",
+      "Beslenme günlüğü tutun ve besin listenizi yönetin.",
+      "Alım programlarını ve ilaç kataloğunu yönetin.",
+      "Sağlık ölçümlerinizi kaydedin ve geçmişlerini takip edin."
+    ]
+  },
+  "ja": {
+    "title": "Physis",
+    "tabs": [
+      "トレーニング",
+      "食事",
+      "サプリメントと薬",
+      "モニタリング"
+    ],
+    "descriptions": [
+      "トレーニングを計画し、実施状況を記録して、エクササイズを確認します。",
+      "食事日記をつけ、食品リストを管理します。",
+      "服用スケジュールと薬の一覧を管理します。",
+      "健康指標を記録し、履歴を確認します。"
+    ]
+  }
+}
