@@ -1893,6 +1893,7 @@
         "note": "pair.poseidon.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -1944,6 +1945,7 @@
         "note": "pair.apollo.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -1961,6 +1963,7 @@
         "note": "pair.artemis.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -1978,6 +1981,7 @@
         "note": "pair.ares.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -1995,6 +1999,7 @@
         "note": "pair.aphrodite.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2012,6 +2017,7 @@
         "note": "pair.hephaestus.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2029,6 +2035,7 @@
         "note": "pair.hermes.zeus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2080,6 +2087,7 @@
         "note": "pair.hera.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2114,6 +2122,7 @@
         "note": "pair.athena.hera.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2131,6 +2140,7 @@
         "note": "pair.apollo.hera.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2148,6 +2158,7 @@
         "note": "pair.artemis.hera.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2165,6 +2176,7 @@
         "note": "pair.ares.hera.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2216,6 +2228,7 @@
         "note": "pair.hera.hermes.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2284,6 +2297,7 @@
         "note": "pair.athena.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2301,6 +2315,7 @@
         "note": "pair.apollo.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2318,6 +2333,7 @@
         "note": "pair.artemis.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2335,6 +2351,7 @@
         "note": "pair.ares.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2352,6 +2369,7 @@
         "note": "pair.aphrodite.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2386,6 +2404,7 @@
         "note": "pair.hermes.poseidon.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2590,6 +2609,7 @@
         "note": "pair.apollo.athena.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2607,6 +2627,7 @@
         "note": "pair.artemis.athena.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2675,6 +2696,7 @@
         "note": "pair.athena.hermes.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2743,6 +2765,7 @@
         "note": "pair.apollo.ares.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2760,6 +2783,7 @@
         "note": "pair.aphrodite.apollo.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2777,6 +2801,7 @@
         "note": "pair.apollo.hephaestus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2845,6 +2870,7 @@
         "note": "pair.ares.artemis.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2879,6 +2905,7 @@
         "note": "pair.artemis.hephaestus.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -2896,6 +2923,7 @@
         "note": "pair.artemis.hermes.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -3049,6 +3077,7 @@
         "note": "pair.aphrodite.hermes.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
@@ -3100,6 +3129,7 @@
         "note": "pair.hephaestus.hermes.word.note"
       },
       "sourceIds": [
+        "S17",
         "S18"
       ]
     },
