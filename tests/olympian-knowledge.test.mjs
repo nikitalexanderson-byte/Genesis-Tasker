@@ -53,6 +53,8 @@ test("all 14 reading catalogues have every field and preserve Greek calculation 
     assert.deepEqual(Object.keys(copy).sort(), keys, language);
     for (const key of keys) {
       assert.ok(typeof copy[key] === "string" && copy[key].trim(), `${language}/${key}`);
+      assert.ok(!copy[key].includes('\n'), `${language}/${key}: one paragraph per field`);
+      if (key.startsWith('source.') && key.endsWith('.passage') && /^(?:[IVXLCDM]+[.;]|[0-9])/.test(copies.en[key])) assert.equal(copy[key], copies.en[key], `${language}/${key}: exact citation locator`);
       assert.doesNotMatch(copy[key], /⟦|⟧|〔|〕|авторская система|authorial system|author['’]s system/iu, `${language}/${key}`);
       for (const word of greek(copies.en[key])) assert.ok(copy[key].includes(word), `${language}/${key}: ${word}`);
     }
