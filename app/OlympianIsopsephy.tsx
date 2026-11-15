@@ -13,6 +13,8 @@ import { OlympianGuide, OlympianKnowledge, type OlympianNavigation } from "./Oly
 import type { TheokyklosSegmentId } from "./theokyklos-data";
 import content from "./olympian-isopsephy.json";
 import "./olympian-isopsephy.css";
+import { OlympianEmblem } from './OlympianEmblem';
+import { olympianLetterEquation } from './olympian-reading-math';
 
 type Copy = Record<Language, string>;
 export type OlympianDeity = {
@@ -38,10 +40,11 @@ export function OlympianIsopsephyContent({ language, onSelect, onOpenStoicheion,
   const query = search?.query ?? "";
   const needle = normalizeOlympianSearch(query);
   const visibleDeities = deities.filter(deity => {
-    const words = OLYMPIAN_KNOWLEDGE.deities[deity.id].words;
+    const knowledge = OLYMPIAN_KNOWLEDGE.deities[deity.id];
+    const words = [...knowledge.words, ...knowledge.rootWords];
     return !needle || normalizeOlympianSearch([
       deity.name[lang], deity.greek, deity.number, deity.summary[lang],
-      ...words.flatMap(word => [word.greek, greekIsopsephy(word.greek), knowledgeCopy?.[word.meaning] ?? ""]),
+      ...words.flatMap(word => [word.greek, greekIsopsephy(word.greek), knowledgeCopy?.[word.meaning] ?? "", knowledgeCopy?.[`rootName.${restorationRoot(greekIsopsephy(word.greek))}`] ?? ""]),
       ...OLYMPIAN_KNOWLEDGE.deities[deity.id].variants.flatMap(variant => [variant.greek, greekIsopsephy(variant.greek)]),
     ].join(" ")).includes(needle);
   });
@@ -94,8 +97,7 @@ export function OlympianIsopsephyDialog({ deity, language, onClose, onBack, onSe
   const dialogRef = useDialogAccessibility<HTMLElement>(onClose);
   const { copy: knowledgeCopy, error, retry } = useOlympianCopy(lang);
   const index = deities.findIndex(candidate => candidate.id === deity.id);
-  const sum = deity.calculatedNumber ?? deity.number;
-  const equation = `${deity.summands.join(" + ")} = ${sum}`;
+  const equation = olympianLetterEquation(deity.greek);
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -120,10 +122,8 @@ export function OlympianIsopsephyDialog({ deity, language, onClose, onBack, onSe
       {knowledgeCopy ? <OlympianKnowledge key={deity.id} deity={deity} deities={deities} language={lang} copy={knowledgeCopy} onSelect={onSelect} onOpenStoicheion={onOpenStoicheion} onOpenSector={onOpenSector} /> : <><div className="olympian-calculation">
         <span>{copy.formula}</span>
         <p className="olympian-equation" role="math" aria-label={equation}>
-          {deity.summands.map((value, index) => <span aria-hidden="true" key={index}>{index > 0 ? "+ " : ""}{value}</span>)}
-          <strong aria-hidden="true">= {sum}</strong>
+          {equation}
         </p>
-        <p className="olympian-root">{copy.root}: {restorationRoot(sum)}</p>
         {deity.calculationNote ? <p className="olympian-calculation-note">{deity.calculationNote[lang]}</p> : null}
       </div><p role="status">{error ? translateText("Не удалось загрузить данные", lang) : translateText("Загрузка…", lang)}</p>{error ? <button type="button" className="olympian-text-action" onClick={retry}>{translateText("Повторить", lang)}</button> : null}</>}
       {knowledgeCopy && onSelect ? <nav className="olympian-deity-navigation" aria-label={copy.title}>
@@ -147,6 +147,7 @@ export function OlympianIsopsephy({ language, onOpenStoicheion, onOpenSector, in
   const copy = content.locales[lang];
   const titleId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const [emblemState, setEmblemState] = useState<'rest' | 'hover' | 'pressed'>('rest');
   const close = () => {
     setOpen(false); setSelected(null);
     window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
@@ -178,8 +179,13 @@ export function OlympianIsopsephy({ language, onOpenStoicheion, onOpenSector, in
     </section>
   </div> : null;
   return <div className="olympian-isopsephy" lang={lang} data-no-translate>
-    <button ref={triggerRef} type="button" className="year-details-button olympian-disclosure" aria-haspopup="dialog" onClick={() => setOpen(true)}>
-      <span><ExperimentalIcon name="theokyklos" /></span>
+    <button ref={triggerRef} type="button" className="year-details-button olympian-disclosure" aria-haspopup="dialog" aria-expanded={open} data-emblem-state={emblemState}
+      onPointerEnter={() => setEmblemState('hover')} onPointerLeave={() => setEmblemState('rest')}
+      onPointerDown={() => setEmblemState('pressed')} onPointerUp={() => setEmblemState('hover')} onPointerCancel={() => setEmblemState('rest')}
+      onFocus={() => setEmblemState('hover')} onBlur={() => setEmblemState('rest')}
+      onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') setEmblemState('pressed'); }}
+      onKeyUp={() => setEmblemState('hover')} onClick={() => setOpen(true)}>
+      <span className="olympian-emblem-frame"><OlympianEmblem state={emblemState} /></span>
       <span><strong>{copy.title}</strong><small>{copy.subtitle}</small></span>
       <ExperimentalIcon name="open" />
     </button>

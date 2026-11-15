@@ -5,6 +5,7 @@ import { greekIsopsephy, restorationRoot, restorationTrace } from "./stoicheion-
 import metadata from "./olympian-knowledge.json";
 import russian from "./olympian-knowledge-copy/ru.json";
 import english from "./olympian-knowledge-copy/en.json";
+import { expandOlympianEquations } from './olympian-reading-math';
 
 export type KnowledgeCopy = Readonly<Record<string, string>>;
 export type KnowledgeWord = Readonly<{
@@ -17,17 +18,20 @@ export type DeityKnowledge = Readonly<{
   ancient: string; sacred: string; formula: string; meaning: string; bridge: string; limits: string;
   variants: { greek: string; label: string }[];
   words: KnowledgeWord[]; situations: { title: string; body: string }[];
+  rootWords: { greek: string; meaning: string; note: string }[];
 }>;
 export const OLYMPIAN_KNOWLEDGE = metadata as {
   version: number; deities: Record<string, DeityKnowledge>;
   sources: { id: string; url: string; author: string; work: string; passage: string }[];
   sectors: { id: TheokyklosSegmentId; title: string; patrons: string; names: string[] }[];
   numbers: { value: number; body: string; sourceIds: string[] }[];
+  interactions: { ids: string[]; myth: string; life: string; practice: string; word: { greek: string; meaning: string; note: string }; sourceIds: string[] }[];
 };
 
 // Only the selected reading language is fetched. Russian and English also give
 // an immediate first render; other locales never display an English substitute.
-const copies = new Map<Language, KnowledgeCopy>([["ru", russian], ["en", english]]);
+const prepareCopy = (copy: KnowledgeCopy): KnowledgeCopy => Object.fromEntries(Object.entries(copy).map(([key, value]) => [key, expandOlympianEquations(value)]));
+const copies = new Map<Language, KnowledgeCopy>([["ru", prepareCopy(russian)], ["en", prepareCopy(english)]]);
 const pending = new Map<Language, Promise<KnowledgeCopy>>();
 const loaders = {
   el: () => import("./olympian-knowledge-copy/el.json"),
@@ -49,9 +53,10 @@ export function loadOlympianCopy(language: Language): Promise<KnowledgeCopy> {
   let request = pending.get(language);
   if (!request) {
     request = loaders[language as keyof typeof loaders]().then(module => {
-      copies.set(language, module.default);
+      const copy = prepareCopy(module.default);
+      copies.set(language, copy);
       pending.delete(language);
-      return module.default;
+      return copy;
     }).catch(error => { pending.delete(language); throw error; });
     pending.set(language, request);
   }
