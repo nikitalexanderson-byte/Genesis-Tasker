@@ -1,0 +1,143 @@
+.modal-backdrop.gno-backdrop{position:fixed;inset:0;z-index:1060;display:grid;place-items:center;padding:20px;background:#0009}
+.gno-dialog{width:min(1160px,100%);height:min(900px,calc(100dvh - 40px));display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:var(--ui-radius,10px);background:var(--surface);color:var(--ink);font:400 14px/1.55 var(--font-ui,Inter,sans-serif);caret-color:var(--ink);scrollbar-color:var(--ink-soft) var(--surface)}
+.gno-dialog *,.gno-dialog *::before,.gno-dialog *::after{box-sizing:border-box}
+.gno-dialog :is(h2,h3,h4,p,span,label,strong,small,button,dt,dd){overflow-wrap:normal;word-break:normal;hyphens:none}
+.gno-dialog ::selection{background:var(--ink);color:var(--surface)}
+.gno-dialog :is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--ui-accent,var(--teal));outline-offset:3px}
+.gno-dialog :is(input,textarea,select,button){font:inherit;color:inherit;max-width:100%}
+.gno-dialog button{cursor:pointer}
+.gno-dialog button:disabled{cursor:not-allowed;color:var(--ink-soft);opacity:1}
+.gno-dialog :is(.primary-button,.secondary-button){display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 14px;border-radius:var(--ui-radius,10px);font-size:13px;line-height:1.35;font-weight:600;text-align:center}
+.gno-dialog .primary-button{background:var(--ui-accent,var(--teal));color:var(--ui-on-accent,var(--white));border:1px solid transparent}
+.gno-dialog .secondary-button{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.gno-dialog :is(.primary-button,.secondary-button):disabled{background:var(--paper);color:var(--ink-soft);border-color:var(--line)}
+.gno-dialog :is(.primary-button,.secondary-button):hover:not(:disabled){filter:brightness(1.06)}
+.gno-dialog button svg{width:18px;height:18px;flex-shrink:0}
+.gno-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 28px 12px;flex:none}
+.gno-header h2{margin:0;font-size:24px;line-height:1.2;font-weight:650;letter-spacing:-.02em}
+.gno-header p{margin:6px 0 0;font-size:13px;color:var(--ink-soft)}
+.gno-header>button{width:44px;height:44px;flex:none}
+.gno-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:0 28px 12px;border-bottom:1px solid var(--line);flex:none}
+.gno-progress button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px;border:0;border-radius:var(--ui-radius,10px);background:transparent;color:var(--ink-soft);font-size:13px;line-height:1.25}
+.gno-progress button[aria-current]{background:color-mix(in srgb,var(--teal) 12%,var(--surface));color:var(--ink);font-weight:650}
+.gno-progress button>span:first-child{font-variant-numeric:tabular-nums}
+.gno-body{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;padding:24px 28px;scrollbar-gutter:stable}
+.gno-step-title{margin:0 0 18px;font-size:22px;font-weight:600;outline:none}
+.gno-body:has(.gno-workspace)>.gno-step-title{display:none}
+.gno-dialog p{max-width:72ch;margin:10px 0 16px}
+.gno-dialog h3{font-size:20px;line-height:1.3;font-weight:600;margin:28px 0 12px}
+.gno-dialog h3:first-child{margin-top:0}
+.gno-dialog h4{font-size:16px;font-weight:650;line-height:1.4;margin:20px 0 8px}
+.gno-muted,.gno-map-caption{color:var(--ink-soft);font-size:13px}
+.gno-intake,.gno-choice,.gno-plan{max-width:740px;margin-inline:auto}
+.gno-field{display:grid;gap:7px;min-width:0;margin:18px 0}
+.gno-field>span{font-size:13px;font-weight:600}
+.gno-field :is(input,textarea,select){width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--ui-radius,10px);background:var(--surface)}
+.gno-field textarea{resize:vertical;line-height:1.6}
+.gno-field ::placeholder{color:var(--ink-soft);opacity:1}
+.gno-fields-row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.gno-workspace{display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.05fr);gap:32px;align-items:start}
+.gno-map{position:sticky;top:0;min-width:0}
+.gno-map h3{margin:0}
+.gno-map>p.gno-muted{margin:4px 0 12px}
+.gno-board{position:relative}
+.gno-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.gno-tile{display:flex;flex-direction:column;align-items:center;position:relative;min-width:0;height:clamp(90px,calc((var(--ui-dialog-height,100dvh) - 360px)/3),172px);padding:6px;border:1px solid var(--line);border-radius:var(--ui-radius,10px);background:var(--paper);isolation:isolate;transition:border-color .15s ease-out}
+.gno-tile[data-focus=true]{outline:2px solid var(--ui-accent,var(--teal));outline-offset:1px}
+.gno-tile[data-support=true]{border:2px dashed var(--ui-accent,var(--teal));padding:5px}
+.gno-tile:hover{background:color-mix(in srgb,var(--teal) 9%,var(--surface))}
+.gno-tile-position{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:10px;line-height:1.15;min-height:16px;color:var(--ink-soft);gap:4px}
+.gno-tile-position>span{max-width:calc(100% - 16px);text-align:end;font-weight:600}
+.gno-art{display:block;min-height:0;flex:1;width:100%;margin:3px 0;position:relative}
+.gno-art>.stoicheion-card-visual{height:100%;width:auto;max-width:100%;margin:auto;aspect-ratio:2/3}
+.gno-tile-name{display:flex;align-items:center;gap:4px;justify-content:center;font-size:12px;line-height:1.25;font-weight:600}
+.gno-connection{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 1px 2px var(--surface));color:var(--ui-accent,var(--teal))}
+.gno-connection>path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-dasharray:4 3}
+.gno-connection marker path{fill:currentColor}
+.gno-map-tools{display:flex;gap:8px;margin-top:14px}
+.gno-map-tools>button{flex:1}
+.gno-map-caption{margin:10px 0 0!important}
+.gno-detail{min-width:0}
+.gno-dialog details{padding:12px 0;border-bottom:1px solid var(--line)}
+.gno-dialog summary{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-weight:600;text-decoration:underline;text-underline-offset:4px}
+.gno-dialog summary::before{content:'+';font-size:18px;line-height:1;width:16px;flex:none;text-align:center;text-decoration:none}
+.gno-dialog details[open]>summary::before{content:'−'}
+.gno-reading-art{width:150px;margin:16px auto}
+.gno-note,.gno-message{padding:14px 16px;border-radius:var(--ui-radius,10px);background:color-mix(in srgb,var(--teal) 8%,var(--surface))}
+.gno-question{border:0;padding:0;margin:24px 0}
+.gno-question legend{font-size:17px;line-height:1.5;font-weight:600;padding:0;margin-bottom:14px}
+.gno-answer-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.gno-answer-buttons label{display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--ui-radius,10px);cursor:pointer}
+.gno-answer-buttons label:has(:checked){border-color:var(--teal);background:color-mix(in srgb,var(--teal) 8%,var(--surface))}
+.gno-dialog input[type=radio],.gno-dialog input[type=checkbox]{width:18px;height:18px;accent-color:var(--ui-accent,var(--teal));margin:0;flex:none}
+.gno-checkbox{display:flex;align-items:center;gap:10px;min-height:44px}
+.gno-link-line,.gno-situation-line{font-weight:600}
+.gno-bridge-suggestions{display:grid;gap:8px;margin:12px 0 24px}
+.gno-bridge-suggestions button[aria-pressed=true]{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 8%,var(--surface))}
+.gno-options{list-style:none;margin:0;padding:0;counter-reset:none}
+.gno-options>li{padding:24px 0;border-top:1px solid var(--line)}
+.gno-option-heading{display:flex;align-items:start;justify-content:space-between;gap:16px}
+.gno-option-heading h4{margin:0;font-size:19px}
+.gno-option-heading>span{flex:none;color:var(--ink-soft);font-size:13px;font-variant-numeric:tabular-nums}
+.gno-options details{margin-bottom:12px}
+.gno-conditions{margin:14px 0;color:var(--ink-soft)}
+.gno-conditions ul{padding-left:20px}
+.gno-answer-review{padding:16px 0;border-top:1px solid var(--line)}
+.gno-plan dl{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px 20px;margin:24px 0}
+.gno-plan dt{color:var(--ink-soft)}
+.gno-plan dd{margin:0;font-weight:600}
+.gno-plan>.secondary-button{margin:18px 0}
+.gno-plan article{padding:16px 0;border-top:1px solid var(--line)}
+.gno-plan time{font-size:12px;color:var(--ink-soft)}
+.gno-organon{font-size:26px}
+.gno-history{margin:32px auto 0;max-width:740px}
+.gno-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 28px;border-top:1px solid var(--line);flex:none;background:var(--surface)}
+.gno-footer>div{display:flex;gap:8px;flex-shrink:0}
+.gno-save{font-size:12px;line-height:1.35;color:var(--ink-soft)}
+.gno-mobile{display:none!important}
+.gno-dialog code{display:block;font-size:12px;line-height:1.8;white-space:normal;margin:14px 0}
+@media(max-width:767px){
+ .modal-backdrop.gno-backdrop{padding:0}
+ .gno-dialog{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}
+ .gno-header{padding:14px 16px 10px;gap:10px}
+ .gno-header h2{font-size:20px}
+ .gno-header p{display:none}
+ .gno-progress{padding:0 12px 8px;gap:2px}
+ .gno-progress button{flex-direction:column;gap:2px;padding:5px 2px;font-size:11px;min-height:46px}
+ .gno-body{padding:18px 16px;scrollbar-gutter:auto}
+ .gno-workspace{display:block}
+ .gno-map{position:static}
+ .gno-map h3{font-size:17px;margin:0}
+ .gno-map>p.gno-muted{font-size:12px;margin:3px 0 10px}
+ .gno-grid{gap:8px}
+ .gno-tile{height:clamp(80px,calc((var(--ui-dialog-height,100dvh) - 320px)/3),154px);padding:4px}
+ .gno-tile[data-support=true]{padding:3px}
+ .gno-tile-position{font-size:9px;min-height:11px}
+ .gno-tile-position>span{font-size:9px}
+ .gno-tile-name{font-size:11px}
+ .gno-art{margin:2px 0}
+ .gno-map-caption{font-size:11px;margin-top:8px!important}
+ .gno-map-tools{margin-top:10px}
+ .gno-map-tools>button{padding:8px;font-size:12px}
+ .gno-detail{display:none}
+ .gno-mobile{display:inline-flex!important}
+ .gno-workspace.is-detail-open .gno-map{display:none}
+ .gno-workspace.is-detail-open .gno-detail{display:block}
+ .gno-detail>.gno-mobile{margin-bottom:20px}
+ .gno-footer{padding:10px 16px;gap:10px}
+ .gno-footer>div{gap:8px}
+ .gno-save{font-size:10px;max-width:110px}
+ .gno-footer .primary-button,.gno-footer .secondary-button{padding:8px 10px;font-size:12px}
+ .gno-fields-row{grid-template-columns:1fr;gap:0}
+ .gno-plan dl{grid-template-columns:1fr;gap:6px}
+ .gno-plan dd{margin-bottom:12px}
+}
+@media(min-width:768px) and (max-width:1000px){.gno-header,.gno-footer{padding-inline:20px}.gno-body{padding:20px}.gno-progress{padding-inline:20px}.gno-workspace{grid-template-columns:minmax(290px,1fr) minmax(0,1fr);gap:20px}.gno-tile{height:clamp(80px,calc((var(--ui-dialog-height,100dvh) - 360px)/3),142px)}.gno-tile-position>span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.gno-dialog *{scroll-behavior:auto!important;transition:none!important}}
+
+.gno-projection-line{display:flex;align-items:center;gap:10px}.gno-projection-line img{flex:none;object-fit:contain}
+
+.gno-date-field{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}.gno-date-field>.secondary-button{margin-bottom:18px}
+
+/* This wizard needs a fixed viewport inside the shared popup frame. */
+html[data-genesis-theme] .modal-backdrop.gno-backdrop>.gno-dialog[aria-modal="true"]{height:var(--ui-dialog-height,calc(100dvh - 40px))!important;overflow:hidden}

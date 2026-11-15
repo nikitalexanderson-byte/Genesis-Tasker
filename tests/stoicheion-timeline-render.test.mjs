@@ -17,6 +17,7 @@ test("real Stoicheion keeps existing seed vectors and the localized modeling ent
         export { StoicheionView, buildStoicheionSpreadReading } from ${JSON.stringify(root + "StoicheionView.tsx")};
         export { FutureModelingGuideDialog, FutureModelingGuide } from ${JSON.stringify(root + "FutureModelingGuide.tsx")};
         export { StoicheionTimelineHelp } from ${JSON.stringify(root + "StoicheionTimelineHelp.tsx")};
+        export { gnoCopy } from ${JSON.stringify(root + "aurora/gno-copy.ts")};
         export { futureModelingCopy } from ${JSON.stringify(root + "future-modeling.ts")};
         export { stoicheionTimelineCopy } from ${JSON.stringify(root + "stoicheion-timeline.ts")};
         export { setRuntimeLanguage } from ${JSON.stringify(root + "i18n.ts")};
@@ -87,7 +88,7 @@ test("real Stoicheion keeps existing seed vectors and the localized modeling ent
       assert.equal(oriented,guide,`${language}: anonymous orientation booleans cannot become card instances`);
       assert.doesNotMatch(guide,/1 \+ 20|993|510|isopsephy|κ_K|ScenarioScore|SupportIndex/,`${language}: computation stays internal`);
       assert.doesNotMatch(guide, /1093|undefined|\[object Object\]/, language);
-      assert.ok(guide.includes(api.futureModelingCopy(language).title), `${language}: guide title`);
+      assert.ok(guide.includes(api.gnoCopy(language).title), `${language}: guide title`);
     }
   } finally { await rm(file, { force: true }); }
 });

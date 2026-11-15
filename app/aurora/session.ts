@@ -19,6 +19,7 @@ import {validateForecastTest,type ForecastTestDraft} from './forecast-test';
 import { sameFrozenBranch,validateScenarioBranch,type ScenarioBranch } from './condition-branches';
 import {validateTransformation,type TransformationDraft} from './transformation';
 import {validatePersonalLearning,type PersonalLearning} from './personal-learning';
+import {validateGno,assertGnoHistory,type GnoDraft} from './gno-engine';
 export type ContextSnapshot={id:string;profile:SituationProfile;createdAt:string;hash:string};
 export type PreparedAuroraResult={id:string;methodVersion:string;forecastHashes:string[];contextHash:string;iv:string;ciphertext:string};
 export type ObservationDraft={occurred:string;conditions:string;occurredAt:string;conditionAt:string;anchorAt:string;complete:boolean;contradictory:boolean;description:string};
@@ -27,6 +28,7 @@ export type ActionExecution={id:string;forecastId:string|null;actionId:string;mi
 export type PracticeSnapshot={goalText:string;goalTags:string[];sectorId:SectorId|null;primarySnapshotId:string;curatorId:CuratorId|null;
  organon:OrganonSelection|null;sphragisLetter:string|null;comfort:ComfortMode;ritualMinutes:1|3|5;ecphonesis:boolean;capturedAt:string};
 export type AuroraSession={id:string;ownerId:string;version:1;createdAt:string;updatedAt:string;stage:number;highestStage:number;
+ gno?:GnoDraft;
  guidePage?:{stage:number;part:number};
  historyOrigins?:string[];
  forecastTest?:ForecastTestDraft;
@@ -113,6 +115,7 @@ export function appendResolution(session:AuroraSession,resolution:ForecastResolu
  return {...session,resolutions:[...session.resolutions,structuredClone(resolution)]};
 }
 export function assertImmutableSession(previous:AuroraSession,next:AuroraSession):void{
+ assertGnoHistory(previous.gno,next.gno);
  if(previous.id!==next.id||canonicalJson(previous.primary)!==canonicalJson(next.primary)||previous.ownerId!==next.ownerId)throw new Error('AURORA_PRIMARY_SNAPSHOT_IMMUTABLE');
  for(const record of previous.forecasts){const after=next.forecasts.find(r=>r.id===record.id);if(!after||canonicalJson(after)!==canonicalJson(record))throw new Error('AURORA_ISSUED_FORECAST_IMMUTABLE');}
  for(const context of previous.contextSnapshots){const after=next.contextSnapshots.find(c=>c.id===context.id);if(!after||canonicalJson(after)!==canonicalJson(context))throw new Error('AURORA_FROZEN_CONTEXT_IMMUTABLE');}
@@ -126,6 +129,7 @@ export async function validateDocument(value:AuroraDocument,ownerId:string):Prom
   ||new Set(value.removed.map(row=>row.id)).size!==value.removed.length)throw new Error('AURORA_INVALID_DELETION');
  const ids=new Set<string>(),removed=new Set(value.removed.map(r=>r.id));
  for(const session of value.sessions){
+  if(session?.gno)validateGno(session.gno);
   if(!session||session.version!==1||session.ownerId!==ownerId||ids.has(session.id)||removed.has(session.id)||!Number.isInteger(session.stage)||session.stage<0||session.stage>8||!Number.isInteger(session.highestStage)||session.highestStage<session.stage||session.highestStage>8)throw new Error('AURORA_INVALID_SESSION');
   if(session.forecastTest)validateForecastTest(session.forecastTest);
   if(session.transformation){validateTransformation(session.transformation,session.primary);if((session.transformation.sectors[0]??null)!==session.selectedSectorId)throw Error('AURORA_TRANSFORMATION_FOCUS');}
