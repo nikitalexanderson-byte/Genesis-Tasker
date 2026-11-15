@@ -12,6 +12,12 @@ on:
         required: true
         type: string
 
+      storage_probe:
+        description: Check artifact storage with a tiny diagnostic file only
+        required: false
+        type: boolean
+        default: false
+
 permissions:
   contents: read
   actions: read
@@ -127,3 +133,23 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
+
+  artifact-storage-check:
+    if: github.repository == 'nikitalexanderson-byte/Genesis-Tasker' && github.ref == 'refs/heads/codex/android-artifact-quota-check' && inputs.storage_probe == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Prepare a tiny storage availability record
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/genesis-storage-probe"
+          printf 'Diagnostic storage probe only\nsource=%s\nrun=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" > "$RUNNER_TEMP/genesis-storage-probe/probe.txt"
+      - name: Check artifact storage availability
+        uses: actions/upload-artifact@v6
+        with:
+          name: genesis-storage-probe-${{ github.run_id }}
+          path: ${{ runner.temp }}/genesis-storage-probe/probe.txt
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 6
