@@ -12,7 +12,8 @@ const {SECTOR_IDS}=calendarModule('app/aurora/registry.ts');
 const NOW='2026-11-15T09:00:00Z';
 const snapshot=(seed=123)=>policy.snapshotFromSavedDraw({id:`source-${seed}`,seed,day:'2026-11-15',createdAt:NOW,cards:policy.expectedSourceDraw(seed)});
 const answer=(value='yes',detail='A specific reported example')=>({value,detail,at:NOW});
-const draft=(overrides={})=>({...g.newGnoDraft(),domain:'learning',goal:'Resume piano',episode:'Stopped at bar 12 yesterday',object:'transition between two bars',criterion:'Play the transition three times without stopping',deadline:'2026-12-01',people:'teacher',...overrides});
+// These fixtures also protect pre-v2 persisted calculations from reinterpretation.
+const draft=(overrides={})=>({...g.newGnoDraft(),modelVersion:undefined,guided:undefined,domain:'learning',goal:'Resume piano',episode:'Stopped at bar 12 yesterday',object:'transition between two bars',criterion:'Play the transition three times without stopping',deadline:'2026-12-01',people:'teacher',...overrides});
 const known=()=>Object.fromEntries(g.CORE_QUESTIONS.map(key=>[key,answer(key==='repeat'?'no':'yes')]));
 const doc=(d=draft(),seed=123)=>({version:1,ownerId:'owner',sessions:[{...sessions.newSession({id:'gno-session',ownerId:'owner',now:NOW,primary:snapshot(seed),timezone:'Europe/Moscow'}),gno:d}],removed:[],activeSessionId:'gno-session'});
 

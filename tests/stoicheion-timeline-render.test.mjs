@@ -15,7 +15,7 @@ test("real Stoicheion keeps existing seed vectors and the localized modeling ent
     plugins: [react(), { name: "stoicheion-timeline-render", resolveId: id => id === entry ? entry : undefined,
       load: id => id === entry ? `
         export { StoicheionView, buildStoicheionSpreadReading } from ${JSON.stringify(root + "StoicheionView.tsx")};
-        export { FutureModelingGuideDialog, FutureModelingGuide } from ${JSON.stringify(root + "FutureModelingGuide.tsx")};
+        export { FutureModelingGuideDialog, FutureModelingGuideTrigger } from ${JSON.stringify(root + "FutureModelingGuide.tsx")};
         export { StoicheionTimelineHelp } from ${JSON.stringify(root + "StoicheionTimelineHelp.tsx")};
         export { gnoCopy } from ${JSON.stringify(root + "aurora/gno-copy.ts")};
         export { futureModelingCopy } from ${JSON.stringify(root + "future-modeling.ts")};
@@ -54,7 +54,7 @@ test("real Stoicheion keeps existing seed vectors and the localized modeling ent
     for(const plan of ['free','standart','premium','business','premium4life']) {
       const entitled=['premium','business','premium4life'].includes(plan);
       const access={schemaVersion:1,policyRevision:'test',enforcementEnabled:true,declaredPlan:plan,effectivePlan:plan,lifetimePremium:plan==='premium4life',validUntil:'2999-01-01T00:00:00Z',evaluatedAt:'2026-11-06T09:00:00Z',allowedFeatures:entitled?['future-modeling']:[],freeFeatures:[]};
-      const render=(saved)=>renderToStaticMarkup(createElement(api.FeatureAccessContext.Provider,{value:access},createElement(api.FutureModelingGuide,{language:'en',userId:'synthetic-owner',primary:saved})));
+      const render=(saved)=>renderToStaticMarkup(createElement(api.FeatureAccessContext.Provider,{value:access},createElement(api.FutureModelingGuideTrigger,{language:'en',userId:'synthetic-owner',primary:saved,open:false,onOpen(){}})));
       assert.equal(render(null).includes('future-modeling-open'),false,plan+': no source');
       assert.equal(render(primary).includes('future-modeling-open'),entitled,plan+': Premium+ gate');
     }

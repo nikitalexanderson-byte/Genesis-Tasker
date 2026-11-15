@@ -42,7 +42,7 @@
 .gno-map>p.gno-muted{margin:4px 0 12px}
 .gno-board{position:relative}
 .gno-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.gno-tile{display:flex;flex-direction:column;align-items:center;position:relative;min-width:0;height:clamp(90px,calc((var(--ui-dialog-height,100dvh) - 360px)/3),172px);padding:6px;border:1px solid var(--line);border-radius:var(--ui-radius,10px);background:var(--paper);isolation:isolate;transition:border-color .15s ease-out}
+.gno-tile{display:flex;flex-direction:column;align-items:center;position:relative;min-width:0;height:clamp(90px,calc((var(--ui-dialog-height,100dvh) - 500px)/3),160px);padding:6px;border:1px solid var(--line);border-radius:var(--ui-radius,10px);background:var(--paper);isolation:isolate;transition:border-color .15s ease-out}
 .gno-tile[data-focus=true]{outline:2px solid var(--ui-accent,var(--teal));outline-offset:1px}
 .gno-tile[data-support=true]{border:2px dashed var(--ui-accent,var(--teal));padding:5px}
 .gno-tile:hover{background:color-mix(in srgb,var(--teal) 9%,var(--surface))}
@@ -110,7 +110,7 @@
  .gno-map h3{font-size:17px;margin:0}
  .gno-map>p.gno-muted{font-size:12px;margin:3px 0 10px}
  .gno-grid{gap:8px}
- .gno-tile{height:clamp(80px,calc((var(--ui-dialog-height,100dvh) - 320px)/3),154px);padding:4px}
+ .gno-tile{height:clamp(74px,calc((var(--ui-dialog-height,100dvh) - 470px)/3),150px);padding:4px}
  .gno-tile[data-support=true]{padding:3px}
  .gno-tile-position{font-size:9px;min-height:11px}
  .gno-tile-position>span{font-size:9px}
@@ -132,10 +132,18 @@
  .gno-plan dl{grid-template-columns:1fr;gap:6px}
  .gno-plan dd{margin-bottom:12px}
 }
-@media(min-width:768px) and (max-width:1000px){.gno-header,.gno-footer{padding-inline:20px}.gno-body{padding:20px}.gno-progress{padding-inline:20px}.gno-workspace{grid-template-columns:minmax(290px,1fr) minmax(0,1fr);gap:20px}.gno-tile{height:clamp(80px,calc((var(--ui-dialog-height,100dvh) - 360px)/3),142px)}.gno-tile-position>span{font-size:9px}}
+@media(min-width:768px) and (max-width:1000px){.gno-header,.gno-footer{padding-inline:20px}.gno-body{padding:20px}.gno-progress{padding-inline:20px}.gno-workspace{grid-template-columns:minmax(290px,1fr) minmax(0,1fr);gap:20px}.gno-tile{height:clamp(80px,calc((var(--ui-dialog-height,100dvh) - 500px)/3),142px)}.gno-tile-position>span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.gno-dialog *{scroll-behavior:auto!important;transition:none!important}}
 
 .gno-projection-line{display:flex;align-items:center;gap:10px}.gno-projection-line img{flex:none;object-fit:contain}
+.gno-sector-facets{padding-left:20px;display:grid;gap:6px}
+.gno-external-map{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-block:16px}
+.gno-external-map>.secondary-button{display:flex;flex-direction:column;align-items:center;padding:8px 5px;font-size:11px;min-height:76px}
+.gno-external-map button[aria-pressed=true]{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 8%,var(--surface))}
+.gno-model-links article{padding-block:12px;border-bottom:1px solid var(--line)}
+.gno-model-links code{overflow-wrap:normal;word-break:normal}
+.gno-olympian-library{min-width:0}
+.gno-olympian-library select{min-height:44px;max-width:100%;color:var(--ink);background:var(--surface)}
 
 .gno-date-field{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}.gno-date-field>.secondary-button{margin-bottom:18px}
 
