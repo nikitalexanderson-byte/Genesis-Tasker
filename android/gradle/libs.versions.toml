@@ -1,5 +1,6 @@
 [versions]
-agp = "9.4.0"
+# R8 9.4.24 includes the outlining/catch-handler fix for b/551348855.
+agp = "9.4.1"
 kotlin = "2.2.10"
 ksp = "2.3.12"
 compose = "2026.06.00"

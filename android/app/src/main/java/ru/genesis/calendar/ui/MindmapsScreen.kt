@@ -66,6 +66,7 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     fun defaultLabel(source:String)=translateGenesisText(mapContext,source,mapLanguage)
     var mapId by rememberSaveable { mutableStateOf<String?>(null) };var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) };var busy by remember { mutableStateOf(false) };var query by rememberSaveable { mutableStateOf("") }
+    var loadFailed by remember { mutableStateOf(false) }
     var archived by rememberSaveable { mutableStateOf(false) };var create by rememberSaveable { mutableStateOf(false) };var title by rememberSaveable { mutableStateOf("") };var description by rememberSaveable {mutableStateOf("")}
     var editing by rememberSaveable { mutableStateOf<String?>(null) };var text by rememberSaveable { mutableStateOf("") };var note by rememberSaveable { mutableStateOf("") }
     var occurrenceTask by remember {mutableStateOf<LocalTask?>(null)};var occurrenceDate by rememberSaveable {mutableStateOf("")}
@@ -81,7 +82,12 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     var view by remember { mutableStateOf(JSONObject().put("mode","map").put("zoom",1.0)) };var undo by remember { mutableStateOf<List<MindmapDocument>>(emptyList()) }
     val record=records.firstOrNull { it.document.id==mapId };val map=record?.document;val node=map?.nodes?.firstOrNull { it.id==selected } ?: map?.nodes?.firstOrNull()
     if (map != null && !readOnly) NativeGuidanceBlockingSurface()
-    fun run(action:suspend ()->Unit) { if(busy)return;busy=true;error=null;scope.launch {try { action() }catch(e:Exception){error=e.message ?: "Не удалось сохранить. Черновик остаётся на устройстве."}finally{busy=false} } }
+    fun run(action:suspend ()->Unit) { if(busy)return;busy=true;error=null;loadFailed=false;scope.launch {try { action() }catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=mindmapFailureMessage(e)}finally{busy=false} } }
+    suspend fun refreshMaps() {
+        try { repo.refresh(); loadFailed = false }
+        catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (e: Exception) { loadFailed = true; throw e }
+    }
     fun save(next:MindmapDocument,remember:Boolean=true) { if(busy)return;if(readOnly){error="Нет доступа к изменению карты.";return};if(remember&&map!=null)undo=(undo+map).takeLast(20);run { repo.save(next) } }
     fun open(id:String) {mapId=id;selected=null;editing=null;undo=emptyList();query="";exportMenu=false;files=false}
     fun changeView(next:JSONObject) {view=next;mapId?.let { id->scope.launch { repo.saveView(id,next) } } }
@@ -104,7 +110,11 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
         val snapshot=pdfSnapshot;pdfSnapshot=null
         if(uri!=null&&snapshot!=null)run {withContext(Dispatchers.IO){repo.requireDataExchange();context.contentResolver.openOutputStream(uri)?.use {writeMindmapPdf(it,snapshot.first,snapshot.second,snapshot.third,outlineTitle)} ?: error("Не удалось открыть файл PDF.")}}
     }
-    LaunchedEffect(repo) { runCatching { repo.loadCached() };runCatching { repo.refresh() }.onFailure { error=it.message ?: "Открыта защищённая копия устройства." } }
+    LaunchedEffect(repo) {
+        try { repo.loadCached(); refreshMaps() }
+        catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (e: Exception) { error = mindmapFailureMessage(e) }
+    }
     LaunchedEffect(repo,mapId) { mapId?.let { view=(repo.view(it) ?: JSONObject().put("zoom",1.0)).put("mode","map") } }
     LaunchedEffect(picker,pickerQuery) { if(picker&&!readOnly)onTaskSearch(pickerQuery) }
     LaunchedEffect(map?.id,map?.nodes?.filter {it.kind=="task"}?.map {it.refId}?.joinToString()) {
@@ -137,7 +147,7 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
                             leadingIcon={AffairsActionIcon(if(archived) AffairsAction.RESTORE else AffairsAction.ARCHIVE)},
                             modifier=Modifier.testTag("mindmaps-archive"), onClick={files=false;archived=!archived})
                         DropdownMenuItem(text={Text("Импорт JSON")},enabled=!readOnly && canExchange,leadingIcon={AffairsActionIcon(AffairsAction.IMPORT)},onClick={files=false;text="";import=true})
-                        DropdownMenuItem(text={Text("Обновить")},leadingIcon={AffairsActionIcon(AffairsAction.REFRESH)},onClick={files=false;run {repo.refresh()}})
+                            DropdownMenuItem(text={Text("Обновить")},leadingIcon={AffairsActionIcon(AffairsAction.REFRESH)},onClick={files=false;run {refreshMaps()}})
                     }
                 }
                 DropdownMenu(exportMenu && map!=null,{exportMenu=false}) {
@@ -159,7 +169,9 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
         if(!headerInShell) AffairsPageHeader(headerTitle, headerSubtitle, icon=GenesisPageIcon.MINDMAPS,
             onBack=::goBack, backLabel=if(mapId==null)backLabel else "Все майндмепы", titleIsUserContent=map!=null,
             contextMaxLines=1) { if (map == null) headerActions(Modifier) }
-        error?.let { NativeAccessMessage(it,"mindmaps");if(map!=null)FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        error?.let { NativeAccessMessage(it,"mindmaps")
+        if(loadFailed) TextButton(enabled=!busy,onClick={run {refreshMaps()}},modifier=Modifier.testTag("mindmaps-retry-load")){Text("Обновить")}
+        if(map!=null && record.unsynced && !loadFailed)FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             TextButton(enabled=!busy&&!readOnly,onClick={run { repo.retry(map.id) }}){Text("Повторить сохранение")}
             TextButton(enabled=!busy&&!readOnly,onClick={run {open(repo.fork(map).id)}}){Text("Сохранить отдельную карту")}
             TextButton(enabled=!busy,onClick={run { serverPreview=true;history=listOf(repo.serverVersion(map.id)) }}){Text("Серверная версия")}

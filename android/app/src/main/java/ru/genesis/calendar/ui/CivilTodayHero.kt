@@ -334,13 +334,15 @@ internal fun CivilTodayHero(location: SolarLocation, calendar: GenesisCalendar, 
         CivilWeatherOverlay(weatherEffects, weatherPolicy, plate.horizonY, daylight, Modifier.matchParentSize())
         if (!LocalEveningTheme.current) Box(Modifier.matchParentSize()
             .background(Color.Black.copy(alpha = .05f)).testTag("civil-today-photo-shade"))
+        if (altitude >= 0f) Box(Modifier.matchParentSize()
+            .background(Color.Black.copy(alpha = .12f)).testTag("civil-today-daytime-shade"))
         Column(Modifier.fillMaxWidth()) {
             androidx.compose.material3.Surface(Modifier.fillMaxWidth(), shape = AffairsLayout.shape,
                 color = Color.Transparent,
                 contentColor = if (!LocalEveningTheme.current) Color.White
-                    else if (altitude < 0f) Color(0xfff9f2e2) else Color(0xff102b2c)) {
+                    else if (altitude < 0f) Color(0xfff9f2e2) else Color.White) {
                 CompositionLocalProvider(LocalArtworkTextShadow provides
-                    if (!LocalEveningTheme.current) artworkTextShadow() else null) {
+                    if (!LocalEveningTheme.current || altitude >= 0f) artworkTextShadow() else null) {
                 Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     val ink = LocalContentColor.current
                     CivilTodayWeather(weather, clockNow, onChooseCity, solar = {

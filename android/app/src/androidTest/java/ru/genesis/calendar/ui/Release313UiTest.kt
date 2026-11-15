@@ -154,7 +154,7 @@ class Release313UiTest {
         var language by mutableStateOf("ru")
         compose.setContent { Frame { CompositionLocalProvider(LocalGenesisLanguage provides language) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-                key(language) { OlympianIsopsephy {}; FutureModelingGuide() }
+                key(language) { OlympianIsopsephy(onOpenStoicheion = {}); FutureModelingGuide() }
             }
         } } }
         for (choice in languages) {
@@ -197,7 +197,7 @@ class Release313UiTest {
     @Test fun olympianSymbolsOpenAllThirteenDescriptionsAndTheGuideHasEverySectorAndGoal() {
         var links = 0
         compose.setContent { Frame { Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-            OlympianIsopsephy { links++ }
+            OlympianIsopsephy(onOpenStoicheion = { links++ })
             FutureModelingGuide()
         } } }
         compose.onNodeWithTag("olympian-zeus").assertDoesNotExist()

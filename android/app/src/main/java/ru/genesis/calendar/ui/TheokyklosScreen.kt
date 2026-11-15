@@ -57,7 +57,8 @@ private val gold = Color(0xffdfc17e)
 
 @Composable
 fun TheokyklosScreen(app: GenesisApplication, calendarMode: CalendarMode, onOpenHabits: () -> Unit,
-    initialSectorId: String? = null, onInitialSectorConsumed: () -> Unit = {}, onOpenStoicheion: () -> Unit = {}) {
+    initialSectorId: String? = null, onInitialSectorConsumed: () -> Unit = {}, onOpenStoicheion: () -> Unit = {},
+    onOpenStoicheionCard: (String?) -> Unit = { onOpenStoicheion() }) {
     val context = LocalContext.current
     val language = LocalGenesisLanguage.current
     val english = language == "en"
@@ -120,7 +121,9 @@ fun TheokyklosScreen(app: GenesisApplication, calendarMode: CalendarMode, onOpen
         }
         NativeFeatureGate("theokyklos-olympians", if(english)
             "The 13 Olympians and their sacred numbers are available with Standard and above."
-            else "13 олимпийцев и их сакральные числа доступны в Standard и выше.") { OlympianIsopsephy(onOpenStoicheion) }
+            else "13 олимпийцев и их сакральные числа доступны в Standard и выше.") {
+                OlympianIsopsephy(onOpenStoicheion, onOpenStoicheionCard, { id -> if (id in data.byId) selectedId = id })
+            }
         }
         if (maxWidth >= 840.dp) Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             Column(Modifier.weight(1.2f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) { diagram() }

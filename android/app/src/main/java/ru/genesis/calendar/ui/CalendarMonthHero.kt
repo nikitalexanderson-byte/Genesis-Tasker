@@ -156,7 +156,7 @@ internal fun CalendarMonthHero(calendar: GenesisCalendar, referenceDate: LocalDa
             Box(Modifier.fillMaxWidth().height(commonHeight).testTag("month-description-layout")) {
                 OriginalImage(copy.image, genesisTranslate("Иллюстрация месяца") + " ${copy.title}",
                     Modifier.matchParentSize().testTag(copy.artTag), darkThemeBrightness = .82f,
-                    lightThemeBrightness = (if (mode == CalendarMode.LUNAR) .85f * .93f else .90f * .85f) * .90f)
+                    lightThemeBrightness = (if (mode == CalendarMode.LUNAR) .85f * .93f else .90f * .85f) * .90f * .90f)
                 if (LocalEveningTheme.current) CalendarHeroContrast(Modifier.matchParentSize(), paletteToned)
                 CompositionLocalProvider(LocalContentColor provides ink, LocalPreserveCalendarColors provides true) {
                     if (!civil) {

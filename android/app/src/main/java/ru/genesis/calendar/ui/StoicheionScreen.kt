@@ -270,7 +270,13 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                                     JSONObject().put("cardId",letter.id).put("reversed",reversed)
                                 }))
                         } }
-                        FutureModelingGuide(modelingSource,onModelingTask)
+                        val modelingTemporal = remember(draws?.timeline, draws?.timelineSession) {
+                            draws?.timeline?.takeIf { draws?.timelineSession?.cards?.size == 3 }?.let { triad ->
+                                JSONObject().put("id", "stoicheion-timeline-${triad.dayKey}-${triad.seed}")
+                                    .put("seed", triad.seed).put("createdAt", java.time.Instant.ofEpochMilli(triad.firstAt).toString())
+                            }
+                        }
+                        FutureModelingGuide(modelingSource,onModelingTask,modelingTemporal)
                     }
                 }
                 item(key = "stoicheion-alphabet", span = { GridItemSpan(maxLineSpan) }) {

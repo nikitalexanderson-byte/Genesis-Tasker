@@ -1,7 +1,6 @@
 package ru.genesis.calendar.ui
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import java.time.LocalDate
 import java.time.DayOfWeek
 
@@ -51,11 +50,13 @@ internal fun WeekdayPatronMark.daylightCell(date: LocalDate): WeekdayPatronMark 
         selectedForeground = if (date.dayOfWeek == DayOfWeek.SATURDAY) Color(0xfff5f6f7) else Color(0xff132426))
 }
 
-/** Retain the daylight hues, with exactly 10% less RGB brightness at night. */
-internal fun WeekdayPatronMark.eveningCell(date: LocalDate): WeekdayPatronMark {
-    val daylight = daylightCell(date)
-    return daylight.copy(
-        wash = Color.Black.copy(alpha = .10f).compositeOver(daylight.wash),
-        selectedBackground = Color.Black.copy(alpha = .10f).compositeOver(daylight.selectedBackground),
-        selectedForeground = if (date.dayOfWeek == DayOfWeek.SATURDAY) daylight.selectedForeground else Color(0xff0b1517))
+/** Dark cells follow their theme, with white ink and selection expressed by an outline. */
+internal fun WeekdayPatronMark.eveningCell(palette: String): WeekdayPatronMark {
+    val fill = when (palette) {
+        "blue" -> Color(0xff294d70)
+        "burgundy" -> Color(0xff633342)
+        "violet" -> Color(0xff4b396b)
+        else -> Color(0xff2b4f3b)
+    }
+    return copy(wash = fill, selectedBackground = fill, selectedForeground = Color.White)
 }

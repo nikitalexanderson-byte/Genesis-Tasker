@@ -44,8 +44,8 @@ android {
         applicationId = "ru.genesis.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 144
-        versionName = "3.3.2"
+        versionCode = 145
+        versionName = "3.3.3"
         buildConfigField("boolean", "PLAY_DISTRIBUTION", "false")
         buildConfigField("boolean", "TRIAL_BUILD", "false")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -224,7 +224,7 @@ abstract class GenesisAuroraAssetsTask : DefaultTask() {
 }
 val genesisAuroraAssets = tasks.register<GenesisAuroraAssetsTask>("genesisAuroraAssets") {
     assetsDirectory.set(layout.buildDirectory.dir("generated/auroraAssets"))
-    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "*.css", "*.ts", "*.json", "BackupPanel.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
+    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
     inputs.file(rootProject.file("../scripts/aurora/build-native.mjs"))
     inputs.file(rootProject.file("../pnpm-lock.yaml"))
 }

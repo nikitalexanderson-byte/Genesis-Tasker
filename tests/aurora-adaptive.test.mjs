@@ -96,13 +96,15 @@ test('Forecast screens advance through single questions, including the last answ
  draft=moveForecastScreen(draft,null,-1);assert.equal(draft.page,5);assert.equal(draft.cursor,7);
  assert.equal(forecastScreenMissing(draft,null),true);
 });
-test('The shared web and native method contains no accordion elements',()=>{
+test('The legacy method keeps its layout and native opens the current guided method',()=>{
  for(const file of ['AuroraWizard.tsx','TransformationView.tsx','ForecastTest.tsx']){
   const source=readFileSync(new URL('../app/aurora/'+file,import.meta.url),'utf8');
   assert.doesNotMatch(source,/<details|<summary/);
  }
  const native=readFileSync(new URL('../app/aurora/native-entry.tsx',import.meta.url),'utf8');
- assert.match(native,/import \{AuroraWizard\}/);
+ assert.match(native,/import \{GnoWizard\}/);
+ const current=readFileSync(new URL('../app/aurora/GnoWizard.tsx',import.meta.url),'utf8');
+ assert.match(current,/<AuroraWizard/); // Previously saved legacy work remains reachable.
 });
 
 test('Every catalog question, including myth checks, has an example and meaningful answer descriptions',()=>{

@@ -118,7 +118,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable internal fun NativeAuroraDialog(owner:String,source:JSONObject?,onClose:()->Unit,onTask:(AuroraTaskDraft)->Unit,
-    testGateway:AuroraGateway?=null) {
+    testGateway:AuroraGateway?=null, temporal:JSONObject?=null) {
     val context=LocalContext.current;val app=context.applicationContext as GenesisApplication
     val controller=remember(context){AuthController.get(context)}
     val gateway=remember(owner,testGateway){testGateway?:controller.auroraGateway(owner)}
@@ -135,6 +135,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
     fun encoded(value:JSONObject)=Base64.getEncoder().encodeToString(value.toString().toByteArray(Charsets.UTF_8))
     val boot=remember(owner){JSONObject().put("ownerId",owner).put("language",language)
         .put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android").put("source",source?:JSONObject.NULL)
+        .put("temporal",temporal?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}
     var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)}
     val density = LocalDensity.current.density
@@ -146,7 +147,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
     Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false)){
         Surface(Modifier.fillMaxWidth(),color=scheme.surface){
           BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val viewportHeight = contentHeight.coerceIn(48.dp, (maxHeight - headerHeight - 8.dp).coerceAtLeast(48.dp))
+            val viewportHeight = (maxHeight - headerHeight - 8.dp).coerceAtLeast(48.dp)
             Column(Modifier.fillMaxWidth().testTag("aurora-native-dialog")){
                 Box(Modifier.fillMaxWidth().onSizeChanged { headerHeight = (it.height / density).dp }
                     .padding(horizontal = 8.dp, vertical = 4.dp)) {

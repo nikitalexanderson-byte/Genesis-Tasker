@@ -26,11 +26,15 @@ import ru.genesis.calendar.domain.habits.HeroProgress
 import ru.genesis.calendar.domain.habits.HeroRankCatalog
 import ru.genesis.calendar.domain.habits.HeroicRank
 
-internal data class HeroPathColors(val background: Color, val panel: Color, val reached: Color, val current: Color)
+internal data class HeroPathColors(val background: Color, val panel: Color, val reached: Color, val current: Color,
+    val icon: Color = Color(0xff143b39), val amphora: Color = Color(0xff0a2928))
 internal fun heroPathColors(palette: String): HeroPathColors = when (palette) {
-    "blue" -> HeroPathColors(Color(0xff08182e), Color(0xff10243f), Color(0xff193552), Color(0xff112840))
-    "burgundy" -> HeroPathColors(Color(0xff260b15), Color(0xff351420), Color(0xff492030), Color(0xff351420))
-    "violet" -> HeroPathColors(Color(0xff1c102c), Color(0xff2c193d), Color(0xff3d2851), Color(0xff2c193d))
+    "blue" -> HeroPathColors(Color(0xff08182e), Color(0xff10243f), Color(0xff193552), Color(0xff112840),
+        Color(0xff193b62), Color(0xff102f50))
+    "burgundy" -> HeroPathColors(Color(0xff260b15), Color(0xff351420), Color(0xff492030), Color(0xff351420),
+        Color(0xff62283d), Color(0xff451827))
+    "violet" -> HeroPathColors(Color(0xff1c102c), Color(0xff2c193d), Color(0xff3d2851), Color(0xff2c193d),
+        Color(0xff51316d), Color(0xff39204f))
     else -> HeroPathColors(Color(0xff082e2f), Color(0xff102f2b), Color(0xff183a32), Color(0xff112a27))
 }
 @Composable internal fun heroPathColors() = heroPathColors(LocalDarkPalette.current)
@@ -204,7 +208,7 @@ private fun CheckpointNode(checkpoint: HeroPathCheckpoint, workspace: LocalHabit
     val claimed = workspace.rewards.any { it.idempotencyKey == "hero-path-amphora:self:${checkpoint.rankId}" }
     val art = amphoraPaintings.getOrNull(HeroProgress.checkpoints.indexOf(checkpoint))
     Surface(Modifier.fillMaxWidth().testTag("hero-checkpoint-${checkpoint.rankId}"),
-        shape = RoundedCornerShape(18.dp), color = Color(0xff0a2928),
+        shape = RoundedCornerShape(18.dp), color = heroPathColors().amphora,
         border = BorderStroke(1.dp, heroGold.copy(alpha = .30f))) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {

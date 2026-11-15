@@ -67,7 +67,7 @@ fun HabitArtGallery(workspace: LocalHabitWorkspace, today: LocalDate, busy: Bool
             border = BorderStroke(1.dp, Color(0x66dfc17e))) {
             Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(Modifier.size(40.dp), shape = RoundedCornerShape(12.dp), color = Color(0xff143b39),
+                    Surface(Modifier.size(40.dp).testTag("hero-rank-icon"), shape = RoundedCornerShape(12.dp), color = heroPathColors().icon,
                         border = BorderStroke(1.dp, Color(0x55dfc17e))) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("♜", color = Color(0xffdfc17e), style = MaterialTheme.typography.titleMedium)

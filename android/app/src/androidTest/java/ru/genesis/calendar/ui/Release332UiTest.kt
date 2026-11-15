@@ -124,7 +124,7 @@ class Release332UiTest {
                     Surface(Modifier.fillMaxSize()) {
                         when (panel) {
                             0 -> CategoryEditor(null, 0, 0, null, {}, onSave = { _, _ -> })
-                            1 -> Column(Modifier.safeDrawingPadding().verticalScroll(rememberScrollState())) { OlympianIsopsephy {} }
+                            1 -> Column(Modifier.safeDrawingPadding().verticalScroll(rememberScrollState())) { OlympianIsopsephy(onOpenStoicheion = {}) }
                             else -> HabitsScreen(app, true, openHeroPath = true)
                         }
                     }
@@ -142,8 +142,10 @@ class Release332UiTest {
                 compose.runOnIdle { panel = 1; epoch++ }
                 compose.onNodeWithTag("olympian-isopsephy-toggle").performClick()
                 val frame = compose.onNodeWithTag("genesis-modal-surface").getUnclippedBoundsInRoot()
-                val card = compose.onNodeWithTag("olympian-zeus").getUnclippedBoundsInRoot()
-                assertTrue("Standard catalog inset", card.left.value - frame.left.value <= 9f)
+                compose.onNodeWithTag("olympian-native-webview").assertExists()
+                val device = androidx.test.uiautomator.UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                assertTrue("Current local catalog loads", device.wait(androidx.test.uiautomator.Until.hasObject(
+                    androidx.test.uiautomator.By.textContains("Зевс")), 15000))
                 captureNativeWindow(File(context.getExternalFilesDir(null), "release332-olympians-$w-$night.png"))
                 compose.onNodeWithTag("olympian-catalog-close").performClick()
             }
