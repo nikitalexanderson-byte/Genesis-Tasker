@@ -1,6 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Preserve the original local patron artwork. */
 import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
+import {translateText} from '../i18n';
 import {catalogText} from '../catalog-i18n';
 import {DialogCloseButton} from '../DialogCloseButton';
 import {useDialogAccessibility} from '../use-dialog-accessibility';
@@ -118,7 +119,7 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
   <div className="gno-map-tools"><button type="button" className="secondary-button" aria-pressed={pickingSupport} onClick={()=>{setPickingSupport(!pickingSupport);setDetailOpen(false);}}>{pickingSupport?c.chooseSupport:c.useSupport}</button><button type="button" className="secondary-button gno-mobile" onClick={()=>setDetailOpen(true)}>{c.reading}</button></div>
   <p className="gno-map-caption">{c.focus}: {sourceName(d.focus)}{d.support?` · ${c.support}: ${sourceName(d.support)}`:''}</p>
  </aside>:null;
- return <div className="modal-backdrop gno-backdrop"><section className="gno-dialog" role="dialog" aria-modal="true" aria-labelledby="gno-title" ref={dialog} tabIndex={-1} lang={language} data-no-translate>
+ return <div className="modal-backdrop gno-backdrop"><section className="gno-dialog" role="dialog" aria-modal="true" aria-labelledby="gno-title" data-dialog-header="none" ref={dialog} tabIndex={-1} lang={language} data-no-translate>
   <header className="gno-header"><div><h2 id="gno-title">{c.title}</h2><p>{c.subtitle}</p></div><DialogCloseButton aria-label={c.close} data-dialog-save="false" disabled={busy} onClick={()=>void close()}/></header>
   {d?<nav className="gno-progress" aria-label={c.title}>{c.steps.map((label,index)=><button type="button" key={label} aria-current={d.step===index?'step':undefined} disabled={index>0&&(!readiness(d)||d.step===0&&d.deadline<localDay())||index===3&&!selected} onClick={()=>{edit({step:index as GnoDraft['step']});setDetailOpen(false);}}><span>{index+1}</span><span>{label}</span></button>)}</nav>:null}
   <div className="gno-body" ref={body}>
@@ -134,7 +135,7 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
      <Field label={c.object}><input maxLength={2000} value={d.object} onChange={e=>edit({object:e.target.value})}/></Field>
      <Field label={c.people}><input maxLength={2000} value={d.people} onChange={e=>edit({people:e.target.value})}/></Field>
      <Field label={c.criterion}><textarea rows={2} maxLength={2000} value={d.criterion} onChange={e=>edit({criterion:e.target.value})}/></Field>
-     <div className="gno-fields-row"><Field label={c.deadline}><input type="date" min={localDay()} value={d.deadline} onChange={e=>edit({deadline:e.target.value})}/></Field><Field label={c.minutes}><select value={d.minutes} onChange={e=>edit({minutes:Number(e.target.value) as GnoDraft['minutes']})}>{[0,2,10,30].map(n=><option value={n} key={n}>{n} {c.minuteUnit}</option>)}</select></Field></div>
+     <div className="gno-fields-row"><div className="gno-date-field"><Field label={c.deadline}><input type="date" min={localDay()} value={d.deadline} onChange={e=>edit({deadline:e.target.value})}/></Field><button type="button" className="secondary-button" onClick={()=>edit({deadline:localDay()})}>{translateText('Сегодня',language)}</button></div><Field label={c.minutes}><select value={d.minutes} onChange={e=>edit({minutes:Number(e.target.value) as GnoDraft['minutes']})}>{[0,2,10,30].map(n=><option value={n} key={n}>{n} {c.minuteUnit}</option>)}</select></Field></div>
      <Field label={c.blocker}><select value={d.blocker} onChange={e=>edit({blocker:e.target.value as GnoDraft['blocker']})}>{BLOCKERS.map((id,i)=><option value={id} key={id}>{c.blockers[i]}</option>)}</select></Field>
      {d.domain==='wellbeing'?<p className="gno-note">{c.healthNote}</p>:null}
      {!readiness(d)?<p className="gno-muted">{c.required}</p>:d.deadline<localDay()?<p role="alert">{c.futureCheck}</p>:null}

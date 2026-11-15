@@ -136,3 +136,5 @@
 @media(prefers-reduced-motion:reduce){.gno-dialog *{scroll-behavior:auto!important;transition:none!important}}
 
 .gno-projection-line{display:flex;align-items:center;gap:10px}.gno-projection-line img{flex:none;object-fit:contain}
+
+.gno-date-field{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}.gno-date-field>.secondary-button{margin-bottom:18px}
