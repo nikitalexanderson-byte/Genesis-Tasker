@@ -1,5 +1,6 @@
 "use client";
 import {requestUpgrade} from "./upgrade-events";
+import {guidedCopy} from './aurora/gno-guided';
 import "./stoicheion-card-surfaces.css";
 import { currentFeatureAccess,featureAllowed } from './feature-access';
 import {FeatureAccessUI} from './FeatureAccessUI';
@@ -56,7 +57,7 @@ import { RESTORATION_SECTORS } from "./stoicheion-restoration-data";
 import { restorationCopy, restorationLocal } from "./stoicheion-restoration-copy";
 import { readLocalTimelineDraw, saveLocalTimelineDraw, stoicheionWeekStart, receiveTimeline, timelineCardSeconds, stoicheionTimelineCopy, type ClientTimelineRecord, type StoicheionTimePosition } from "./stoicheion-timeline";
 import "./stoicheion-timeline.css";
-import { FutureModelingGuide } from "./FutureModelingGuide";
+import { FutureModelingGuide, FutureModelingGuideTrigger } from "./FutureModelingGuide";
 import { snapshotFromSavedDraw, createTemporalTriad } from "./aurora/draw-policy";
 import type { AuroraTaskRequest } from "./aurora/host";
 import { StoicheionTimelineHelp } from "./StoicheionTimelineHelp";
@@ -521,6 +522,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
   const restorationRef = useRef<RestorationHandle>(null);
   const [restorationPrimary, setRestorationPrimary] = useState<RestorationPrimaryState>("preparing");
   const [timelineHelpOpen, setTimelineHelpOpen] = useState(false);
+  const [modelingOpen, setModelingOpen] = useState(false);
   const restorationText = restorationCopy(language);
   const timeCopy = stoicheionTimelineCopy(language);
   const startRestoration = (sectorId: string | null) => {
@@ -864,7 +866,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
           <div className="stoicheion-section-intro">
             <span className="eyebrow">Первое взаимодействие · {dateLabel}</span>
             <h2 id="stoicheion-day-title">Карта дня</h2>
-            <p>Выбор открывает одну из 24 авторских карт. Случайность собирается на устройстве и фиксируется на текущий день.</p>
+            <p data-no-translate>{guidedCopy(language).dailyIntro}</p>
           </div>
 
           {drawError && drawErrorKind === "daily" ? <p className="stoicheion-draw-error" role="alert">{drawError}</p> : null}
@@ -915,7 +917,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
                 <h2 id="stoicheion-nine-title">Космический круг и девять ликов силы</h2>
                 <p>Магический квадрат 3×3 соотносит девять букв со сторонами света и архетипами человеческого бытия. Расклад выводится из числового значения карты, записанного при выборе карты дня + вашего волевого воздействия.</p>
                 <p className="stoicheion-period-rule" data-no-translate>{testingAccess ? timeCopy.testingRule : timeCopy.weeklyRule}</p>
-                {modelingInIntro ? <FutureModelingGuide language={language} userId={userId} primary={modelingPrimary} temporal={modelingTemporal} onAddTask={onModelingTask} /> : null}
+                {modelingInIntro ? <FutureModelingGuideTrigger language={language} userId={userId} primary={modelingPrimary} open={modelingOpen} onOpen={() => setModelingOpen(true)} /> : null}
               </div>
               {spreadVisible ? <aside className="stoicheion-isopsephy" aria-labelledby="isopsephy-title">
                 <span className="eyebrow">Исопсефия · числовое равенство</span>
@@ -1019,7 +1021,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
           workspace={workspace} calendarMode={calendarMode} onChange={onWorkspaceChange} onOpenHabits={onOpenHabits}
         /> : null}
 
-        {!modelingInIntro && modelingPrimary ? <FutureModelingGuide language={language} userId={userId} primary={modelingPrimary} temporal={modelingTemporal} onAddTask={onModelingTask} /> : null}
+        {!modelingInIntro && modelingPrimary ? <FutureModelingGuideTrigger language={language} userId={userId} primary={modelingPrimary} open={modelingOpen} onOpen={() => setModelingOpen(true)} /> : null}
 
         <details className="stoicheion-alphabet-section stoicheion-alphabet-disclosure" data-testid="stoicheion-alphabet-disclosure"
           onToggle={event => {
@@ -1064,6 +1066,8 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
           )}
         </footer>
       </div>
+
+      <FutureModelingGuide language={language} userId={userId} primary={modelingPrimary} temporal={modelingTemporal} onAddTask={onModelingTask} open={modelingOpen} onClose={() => setModelingOpen(false)} />
 
       {timelineHelpOpen && typeof document !== "undefined" ? createPortal(
         <StoicheionTimelineHelp language={language} onClose={() => setTimelineHelpOpen(false)} />, document.body) : null}

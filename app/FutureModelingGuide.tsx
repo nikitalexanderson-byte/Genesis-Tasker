@@ -31,14 +31,20 @@ export function FutureModelingGuideDialog({language,userId,primary,temporal,onAd
   <button type="button" className="secondary-button" onClick={onClose}>{copy.close}</button>
  </section></div>;
 }
-export function FutureModelingGuide(props:Props){
- const access=useFeatureAccess(),allowed=featureAllowed(access,'future-modeling',undefined,true),[open,setOpen]=useState(false),copy={...futureModelingCopy(props.language),...gnoCopy(props.language)};
+export function FutureModelingGuideTrigger(props:Props&{open:boolean;onOpen:()=>void}){
+ const access=useFeatureAccess(),allowed=featureAllowed(access,'future-modeling',undefined,true),copy={...futureModelingCopy(props.language),...gnoCopy(props.language)};
  if(!allowed||!props.userId||props.primary?.cards.length!==9)return null;
  return <div className="future-modeling" lang={copy.language} data-no-translate>
-  <button type="button" className="year-details-button future-modeling-trigger" data-testid="future-modeling-open" aria-haspopup="dialog" aria-expanded={allowed&&open}
-   onClick={()=>{if(featureAllowed(access,'future-modeling',Date.now(),true))setOpen(true);}}>
+  <button type="button" className="year-details-button future-modeling-trigger" data-testid="future-modeling-open" aria-haspopup="dialog" aria-expanded={allowed&&props.open}
+   onClick={()=>{if(featureAllowed(access,'future-modeling',Date.now(),true))props.onOpen();}}>
    <span aria-hidden="true"><ExperimentalIcon name="future-modeling"/></span><span><strong>{copy.title}</strong><small>{copy.subtitle}</small></span><ExperimentalIcon name="chevron"/>
   </button>
-  {allowed&&open?createPortal(<FutureModelingGuideDialog {...props} onClose={()=>setOpen(false)}/>,document.body):null}
  </div>;
+}
+/** Keep this owner mounted outside the responsive trigger locations. Moving a
+ * trigger must not unmount the wizard or discard its in-flight edits/readings. */
+export function FutureModelingGuide({open,onClose,...props}:Props&{open:boolean;onClose:()=>void}){
+ const access=useFeatureAccess();
+ if(!open||!featureAllowed(access,'future-modeling',undefined,true)||!props.userId||props.primary?.cards.length!==9)return null;
+ return createPortal(<FutureModelingGuideDialog {...props} onClose={onClose}/>,document.body);
 }
