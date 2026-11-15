@@ -44,6 +44,17 @@ test('The next question only asks about an answer that changes feasible mechanis
  assert.ok(!questions.includes('consent'));assert.ok(!questions.includes('reversible'));assert.ok(!questions.includes('repeat'));
  assert.equal(g.nextQuestion(draft({minutes:0})),null);
 });
+
+test('A question whose yes answer rules out failed repetition still has decision value',()=>{
+ const answers=known();delete answers.repeat;
+ const d=draft({answers});
+ assert.equal(g.nextQuestion(d),'repeat');
+ const repeated=g.answerDraft(d,'repeat',answer('yes','The same attempt failed twice under the same conditions'));
+ assert.ok(g.diverseActions(repeated,10).every(row=>!['trial','schedule'].includes(row.mechanism)));
+ const fresh=g.answerDraft(d,'repeat',answer('no','This is a new approach'));
+ assert.ok(g.diverseActions(fresh,10).some(row=>row.mechanism==='trial'));
+ assert.equal(g.nextQuestion(repeated),null);
+});
 test('Choices span mechanisms and always respect a single time budget over a broad state sweep',()=>{
  let checked=0;
  for(const domain of g.DOMAINS)for(const blocker of g.BLOCKERS)for(const minutes of [0,2,10,30])for(const value of ['yes','no','unknown']){

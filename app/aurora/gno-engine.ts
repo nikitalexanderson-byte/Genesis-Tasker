@@ -74,7 +74,8 @@ export function nextQuestion(d:GnoDraft):QuestionKey|null {
  const priority=(key:QuestionKey)=>{
   const yes=actionCandidates({...d,answers:{...d.answers,[key]:{value:'yes',detail:'comparison only',at:''}}}).filter(a=>!a.blocked.length);
   const no=actionCandidates({...d,answers:{...d.answers,[key]:{value:'no',detail:'comparison only',at:''}}}).filter(a=>!a.blocked.length);
-  return new Set(yes.filter(a=>!no.some(b=>b.id===a.id)).map(a=>a.mechanism)).size;
+  const yesMechanisms=new Set(yes.map(a=>a.mechanism)),noMechanisms=new Set(no.map(a=>a.mechanism));
+  return [...new Set([...yesMechanisms,...noMechanisms])].filter(mechanism=>yesMechanisms.has(mechanism)!==noMechanisms.has(mechanism)).length;
  };
  return unanswered.filter(key=>priority(key)>0).sort((a,b)=>priority(b)-priority(a))[0]??null;
 }
