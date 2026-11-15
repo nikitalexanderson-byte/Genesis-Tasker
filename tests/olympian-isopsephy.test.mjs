@@ -14,19 +14,19 @@ const content = JSON.parse(readFileSync(new URL("../app/olympian-isopsephy.json"
 const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
 const { greekIsopsephy, restorationRoot, restorationTrace } = calendarModule("app/stoicheion-restoration-math.ts");
 const expected = {
-  zeus: [612, "Закон, мера, причина жизни."],
-  hera: [109, "Воздух, атмосфера, пространство."],
-  poseidon: [1219, "Глубинные течения, подсознание."],
-  demeter: [468, "Рост, питание, циклы материи."],
-  athena: [69, "Интеллектуальный пик (акме), стратегия."],
-  apollo: [1061, "Единство, ясность, изгнание тьмы."],
-  artemis: [656, "Защита, чистота, сохранение."],
-  ares: [309, "Импульс, воля к господству."],
-  aphrodite: [993, "Гармония, тяга, объединение."],
-  hephaestus: [1289, "Формирование материи, мастерство."],
-  hermes: [353, "Коммуникация, речь, обмен."],
-  hestia: [516, "Центр, стабильность, сущность дома."],
-  dionysus: [1004, "Творческий экстаз, преображение."],
+  zeus: [612, "Закон, ответственность и общий порядок."],
+  hera: [109, "Союз, верность и пространство жизни."],
+  poseidon: [1219, "Глубина чувств, движение и сила."],
+  demeter: [468, "Питание, забота и созревание."],
+  athena: [69, "Мудрость, стратегия и точное действие."],
+  apollo: [1061, "Ясность, мера и стройный ритм."],
+  artemis: [656, "Защита, самостоятельность и целостность."],
+  ares: [309, "Мужество, решимость и действие."],
+  aphrodite: [993, "Красота, притяжение и взаимность."],
+  hephaestus: [1289, "Мастерство, созидание и завершение."],
+  hermes: [353, "Речь, посредничество и путь."],
+  hestia: [516, "Очаг, опора и возвращение."],
+  dionysus: [1004, "Преображение, свобода и живая связь."],
 };
 
 test("every Olympian symbol ships as a transparent PNG shared by web and Android", () => {
@@ -175,8 +175,8 @@ test("the real spoiler, all 13 dialogs and Stoicheion navigation preserve conten
           assert.match(html, /aria-labelledby="[^"]+" aria-describedby="[^"]+"/);
           assert.ok(html.includes(deity.greek));
           assert.ok(html.includes(escaped(deity.detail[language])));
-          assert.ok(html.includes(`${deity.summands.join(" + ")} = ${sum}`));
-          assert.ok(html.includes(`${content.locales[language].root}: ${restorationRoot(sum)}`));
+          for (const [index, letter] of [...deity.greek].entries()) assert.ok(html.includes(`${letter}(${deity.summands[index]})`));
+          assert.ok(html.includes(`= ${sum}`));
           assert.ok(html.includes(`${content.locales[language].close}: ${deity.name[language]}`));
           if (deity.calculationNote) assert.ok(html.includes(escaped(deity.calculationNote[language])));
         }

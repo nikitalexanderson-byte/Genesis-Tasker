@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "deities": {
     "zeus": {
       "sectorId": "zenith",
@@ -73,7 +73,54 @@
       "formula": "deity.zeus.formula",
       "meaning": "deity.zeus.meaning",
       "bridge": "deity.zeus.bridge",
-      "limits": "deity.zeus.limits"
+      "limits": "deity.zeus.limits",
+      "rootWords": [
+        {
+          "greek": "ΟΡΚΟΣ",
+          "meaning": "deity.zeus.rootWord.1.meaning",
+          "note": "deity.zeus.rootWord.1.note"
+        },
+        {
+          "greek": "ΑΙΘΗΡ",
+          "meaning": "deity.zeus.rootWord.2.meaning",
+          "note": "deity.zeus.rootWord.2.note"
+        },
+        {
+          "greek": "ΘΕΜΙΣ",
+          "meaning": "deity.zeus.rootWord.3.meaning",
+          "note": "deity.zeus.rootWord.3.note"
+        },
+        {
+          "greek": "ΣΩΤΗΡ",
+          "meaning": "deity.zeus.rootWord.4.meaning",
+          "note": "deity.zeus.rootWord.4.note"
+        },
+        {
+          "greek": "ΕΡΚΕΙΟΣ",
+          "meaning": "deity.zeus.rootWord.5.meaning",
+          "note": "deity.zeus.rootWord.5.note"
+        },
+        {
+          "greek": "ΔΙΚΗ",
+          "meaning": "deity.zeus.rootWord.6.meaning",
+          "note": "deity.zeus.rootWord.6.note"
+        },
+        {
+          "greek": "ΚΡΑΤΟΣ",
+          "meaning": "deity.zeus.rootWord.7.meaning",
+          "note": "deity.zeus.rootWord.7.note"
+        },
+        {
+          "greek": "ΟΛΥΜΠΟΣ",
+          "meaning": "deity.zeus.rootWord.8.meaning",
+          "note": "deity.zeus.rootWord.8.note"
+        },
+        {
+          "greek": "ΚΕΡΑΥΝΟΣ",
+          "meaning": "deity.zeus.rootWord.9.meaning",
+          "note": "deity.zeus.rootWord.9.note"
+        }
+      ]
     },
     "hera": {
       "sectorId": "zenith",
@@ -138,7 +185,54 @@
       "formula": "deity.hera.formula",
       "meaning": "deity.hera.meaning",
       "bridge": "deity.hera.bridge",
-      "limits": "deity.hera.limits"
+      "limits": "deity.hera.limits",
+      "rootWords": [
+        {
+          "greek": "ΟΡΚΟΣ",
+          "meaning": "deity.hera.rootWord.1.meaning",
+          "note": "deity.hera.rootWord.1.note"
+        },
+        {
+          "greek": "ΤΕΛΟΣ",
+          "meaning": "deity.hera.rootWord.2.meaning",
+          "note": "deity.hera.rootWord.2.note"
+        },
+        {
+          "greek": "ΣΥΜΦΩΝΙΑ",
+          "meaning": "deity.hera.rootWord.3.meaning",
+          "note": "deity.hera.rootWord.3.note"
+        },
+        {
+          "greek": "ΣΥΖΥΓΙΑ",
+          "meaning": "deity.hera.rootWord.4.meaning",
+          "note": "deity.hera.rootWord.4.note"
+        },
+        {
+          "greek": "ΟΜΟΝΟΙΑ",
+          "meaning": "deity.hera.rootWord.5.meaning",
+          "note": "deity.hera.rootWord.5.note"
+        },
+        {
+          "greek": "ΔΕΣΜΟΣ",
+          "meaning": "deity.hera.rootWord.6.meaning",
+          "note": "deity.hera.rootWord.6.note"
+        },
+        {
+          "greek": "ΒΑΣΙΛΕΙΑ",
+          "meaning": "deity.hera.rootWord.7.meaning",
+          "note": "deity.hera.rootWord.7.note"
+        },
+        {
+          "greek": "ΖΥΓΟΝ",
+          "meaning": "deity.hera.rootWord.8.meaning",
+          "note": "deity.hera.rootWord.8.note"
+        },
+        {
+          "greek": "ΤΕΛΕΙΑ",
+          "meaning": "deity.hera.rootWord.9.meaning",
+          "note": "deity.hera.rootWord.9.note"
+        }
+      ]
     },
     "poseidon": {
       "sectorId": "west",
@@ -206,7 +300,54 @@
       "formula": "deity.poseidon.formula",
       "meaning": "deity.poseidon.meaning",
       "bridge": "deity.poseidon.bridge",
-      "limits": "deity.poseidon.limits"
+      "limits": "deity.poseidon.limits",
+      "rootWords": [
+        {
+          "greek": "ΘΑΛΑΣΣΑ",
+          "meaning": "deity.poseidon.rootWord.1.meaning",
+          "note": "deity.poseidon.rootWord.1.note"
+        },
+        {
+          "greek": "ΚΥΜΑ",
+          "meaning": "deity.poseidon.rootWord.2.meaning",
+          "note": "deity.poseidon.rootWord.2.note"
+        },
+        {
+          "greek": "ΝΑΥΣ",
+          "meaning": "deity.poseidon.rootWord.3.meaning",
+          "note": "deity.poseidon.rootWord.3.note"
+        },
+        {
+          "greek": "ΤΡΙΑΙΝΑ",
+          "meaning": "deity.poseidon.rootWord.4.meaning",
+          "note": "deity.poseidon.rootWord.4.note"
+        },
+        {
+          "greek": "ΣΕΙΣΜΟΣ",
+          "meaning": "deity.poseidon.rootWord.5.meaning",
+          "note": "deity.poseidon.rootWord.5.note"
+        },
+        {
+          "greek": "ΣΑΛΟΣ",
+          "meaning": "deity.poseidon.rootWord.6.meaning",
+          "note": "deity.poseidon.rootWord.6.note"
+        },
+        {
+          "greek": "ΚΡΑΤΟΣ",
+          "meaning": "deity.poseidon.rootWord.7.meaning",
+          "note": "deity.poseidon.rootWord.7.note"
+        },
+        {
+          "greek": "ΙΠΠΟΣ",
+          "meaning": "deity.poseidon.rootWord.8.meaning",
+          "note": "deity.poseidon.rootWord.8.note"
+        },
+        {
+          "greek": "ΠΗΓΗ",
+          "meaning": "deity.poseidon.rootWord.9.meaning",
+          "note": "deity.poseidon.rootWord.9.note"
+        }
+      ]
     },
     "demeter": {
       "sectorId": "southwest",
@@ -274,7 +415,54 @@
       "formula": "deity.demeter.formula",
       "meaning": "deity.demeter.meaning",
       "bridge": "deity.demeter.bridge",
-      "limits": "deity.demeter.limits"
+      "limits": "deity.demeter.limits",
+      "rootWords": [
+        {
+          "greek": "ΠΕΡΣΕΦΟΝΗ",
+          "meaning": "deity.demeter.rootWord.1.meaning",
+          "note": "deity.demeter.rootWord.1.note"
+        },
+        {
+          "greek": "ΘΕΣΜΟΣ",
+          "meaning": "deity.demeter.rootWord.2.meaning",
+          "note": "deity.demeter.rootWord.2.note"
+        },
+        {
+          "greek": "ΣΠΕΡΜΑ",
+          "meaning": "deity.demeter.rootWord.3.meaning",
+          "note": "deity.demeter.rootWord.3.note"
+        },
+        {
+          "greek": "ΘΕΣΜΟΦΟΡΟΣ",
+          "meaning": "deity.demeter.rootWord.4.meaning",
+          "note": "deity.demeter.rootWord.4.note"
+        },
+        {
+          "greek": "ΒΩΜΟΣ",
+          "meaning": "deity.demeter.rootWord.5.meaning",
+          "note": "deity.demeter.rootWord.5.note"
+        },
+        {
+          "greek": "ΑΡΟΥΡΑ",
+          "meaning": "deity.demeter.rootWord.6.meaning",
+          "note": "deity.demeter.rootWord.6.note"
+        },
+        {
+          "greek": "ΘΑΛΛΟΣ",
+          "meaning": "deity.demeter.rootWord.7.meaning",
+          "note": "deity.demeter.rootWord.7.note"
+        },
+        {
+          "greek": "ΝΟΣΤΟΣ",
+          "meaning": "deity.demeter.rootWord.8.meaning",
+          "note": "deity.demeter.rootWord.8.note"
+        },
+        {
+          "greek": "ΣΠΟΡΟΣ",
+          "meaning": "deity.demeter.rootWord.9.meaning",
+          "note": "deity.demeter.rootWord.9.note"
+        }
+      ]
     },
     "athena": {
       "sectorId": "north",
@@ -346,7 +534,54 @@
       "formula": "deity.athena.formula",
       "meaning": "deity.athena.meaning",
       "bridge": "deity.athena.bridge",
-      "limits": "deity.athena.limits"
+      "limits": "deity.athena.limits",
+      "rootWords": [
+        {
+          "greek": "ΑΛΗΘΕΙΑ",
+          "meaning": "deity.athena.rootWord.1.meaning",
+          "note": "deity.athena.rootWord.1.note"
+        },
+        {
+          "greek": "ΔΙΑΝΟΙΑ",
+          "meaning": "deity.athena.rootWord.2.meaning",
+          "note": "deity.athena.rootWord.2.note"
+        },
+        {
+          "greek": "ΠΡΟΝΟΙΑ",
+          "meaning": "deity.athena.rootWord.3.meaning",
+          "note": "deity.athena.rootWord.3.note"
+        },
+        {
+          "greek": "ΦΡΟΝΗΣΙΣ",
+          "meaning": "deity.athena.rootWord.4.meaning",
+          "note": "deity.athena.rootWord.4.note"
+        },
+        {
+          "greek": "ΓΛΑΥΚΩΠΙΣ",
+          "meaning": "deity.athena.rootWord.5.meaning",
+          "note": "deity.athena.rootWord.5.note"
+        },
+        {
+          "greek": "ΒΟΥΛΗ",
+          "meaning": "deity.athena.rootWord.6.meaning",
+          "note": "deity.athena.rootWord.6.note"
+        },
+        {
+          "greek": "ΝΙΚΗ",
+          "meaning": "deity.athena.rootWord.7.meaning",
+          "note": "deity.athena.rootWord.7.note"
+        },
+        {
+          "greek": "ΑΙΓΙΣ",
+          "meaning": "deity.athena.rootWord.8.meaning",
+          "note": "deity.athena.rootWord.8.note"
+        },
+        {
+          "greek": "ΕΡΙΣ",
+          "meaning": "deity.athena.rootWord.9.meaning",
+          "note": "deity.athena.rootWord.9.note"
+        }
+      ]
     },
     "apollo": {
       "sectorId": "northwest",
@@ -419,7 +654,54 @@
       "formula": "deity.apollo.formula",
       "meaning": "deity.apollo.meaning",
       "bridge": "deity.apollo.bridge",
-      "limits": "deity.apollo.limits"
+      "limits": "deity.apollo.limits",
+      "rootWords": [
+        {
+          "greek": "ΜΟΥΣΙΚΗ",
+          "meaning": "deity.apollo.rootWord.1.meaning",
+          "note": "deity.apollo.rootWord.1.note"
+        },
+        {
+          "greek": "ΟΜΦΑΛΟΣ",
+          "meaning": "deity.apollo.rootWord.2.meaning",
+          "note": "deity.apollo.rootWord.2.note"
+        },
+        {
+          "greek": "ΧΡΗΣΜΟΣ",
+          "meaning": "deity.apollo.rootWord.3.meaning",
+          "note": "deity.apollo.rootWord.3.note"
+        },
+        {
+          "greek": "ΠΥΘΙΟΣ",
+          "meaning": "deity.apollo.rootWord.4.meaning",
+          "note": "deity.apollo.rootWord.4.note"
+        },
+        {
+          "greek": "ΧΟΡΟΣ",
+          "meaning": "deity.apollo.rootWord.5.meaning",
+          "note": "deity.apollo.rootWord.5.note"
+        },
+        {
+          "greek": "ΚΙΘΑΡΑ",
+          "meaning": "deity.apollo.rootWord.6.meaning",
+          "note": "deity.apollo.rootWord.6.note"
+        },
+        {
+          "greek": "ΔΕΛΦΟΙ",
+          "meaning": "deity.apollo.rootWord.7.meaning",
+          "note": "deity.apollo.rootWord.7.note"
+        },
+        {
+          "greek": "ΤΡΙΠΟΥΣ",
+          "meaning": "deity.apollo.rootWord.8.meaning",
+          "note": "deity.apollo.rootWord.8.note"
+        },
+        {
+          "greek": "ΜΟΥΣΑ",
+          "meaning": "deity.apollo.rootWord.9.meaning",
+          "note": "deity.apollo.rootWord.9.note"
+        }
+      ]
     },
     "artemis": {
       "sectorId": "northeast",
@@ -483,7 +765,54 @@
       "formula": "deity.artemis.formula",
       "meaning": "deity.artemis.meaning",
       "bridge": "deity.artemis.bridge",
-      "limits": "deity.artemis.limits"
+      "limits": "deity.artemis.limits",
+      "rootWords": [
+        {
+          "greek": "ΘΗΡΑ",
+          "meaning": "deity.artemis.rootWord.1.meaning",
+          "note": "deity.artemis.rootWord.1.note"
+        },
+        {
+          "greek": "ΠΑΡΘΕΝΟΣ",
+          "meaning": "deity.artemis.rootWord.2.meaning",
+          "note": "deity.artemis.rootWord.2.note"
+        },
+        {
+          "greek": "ΧΟΡΕΙΑ",
+          "meaning": "deity.artemis.rootWord.3.meaning",
+          "note": "deity.artemis.rootWord.3.note"
+        },
+        {
+          "greek": "ΑΓΡΟΤΕΡΑ",
+          "meaning": "deity.artemis.rootWord.4.meaning",
+          "note": "deity.artemis.rootWord.4.note"
+        },
+        {
+          "greek": "ΕΛΑΦΟΣ",
+          "meaning": "deity.artemis.rootWord.5.meaning",
+          "note": "deity.artemis.rootWord.5.note"
+        },
+        {
+          "greek": "ΑΛΣΟΣ",
+          "meaning": "deity.artemis.rootWord.6.meaning",
+          "note": "deity.artemis.rootWord.6.note"
+        },
+        {
+          "greek": "ΑΓΝΕΙΑ",
+          "meaning": "deity.artemis.rootWord.7.meaning",
+          "note": "deity.artemis.rootWord.7.note"
+        },
+        {
+          "greek": "ΟΡΟΣ",
+          "meaning": "deity.artemis.rootWord.8.meaning",
+          "note": "deity.artemis.rootWord.8.note"
+        },
+        {
+          "greek": "ΡΥΘΜΟΣ",
+          "meaning": "deity.artemis.rootWord.9.meaning",
+          "note": "deity.artemis.rootWord.9.note"
+        }
+      ]
     },
     "ares": {
       "sectorId": "south",
@@ -547,7 +876,54 @@
       "formula": "deity.ares.formula",
       "meaning": "deity.ares.meaning",
       "bridge": "deity.ares.bridge",
-      "limits": "deity.ares.limits"
+      "limits": "deity.ares.limits",
+      "rootWords": [
+        {
+          "greek": "ΜΑΧΗ",
+          "meaning": "deity.ares.rootWord.1.meaning",
+          "note": "deity.ares.rootWord.1.note"
+        },
+        {
+          "greek": "ΟΡΜΗ",
+          "meaning": "deity.ares.rootWord.2.meaning",
+          "note": "deity.ares.rootWord.2.note"
+        },
+        {
+          "greek": "ΟΠΛΟΝ",
+          "meaning": "deity.ares.rootWord.3.meaning",
+          "note": "deity.ares.rootWord.3.note"
+        },
+        {
+          "greek": "ΘΑΡΣΟΣ",
+          "meaning": "deity.ares.rootWord.4.meaning",
+          "note": "deity.ares.rootWord.4.note"
+        },
+        {
+          "greek": "ΑΛΚΗ",
+          "meaning": "deity.ares.rootWord.5.meaning",
+          "note": "deity.ares.rootWord.5.note"
+        },
+        {
+          "greek": "ΙΣΧΥΣ",
+          "meaning": "deity.ares.rootWord.6.meaning",
+          "note": "deity.ares.rootWord.6.note"
+        },
+        {
+          "greek": "ΔΟΡΥ",
+          "meaning": "deity.ares.rootWord.7.meaning",
+          "note": "deity.ares.rootWord.7.note"
+        },
+        {
+          "greek": "ΑΓΩΝ",
+          "meaning": "deity.ares.rootWord.8.meaning",
+          "note": "deity.ares.rootWord.8.note"
+        },
+        {
+          "greek": "ΕΡΙΣ",
+          "meaning": "deity.ares.rootWord.9.meaning",
+          "note": "deity.ares.rootWord.9.note"
+        }
+      ]
     },
     "aphrodite": {
       "sectorId": "south",
@@ -624,7 +1000,54 @@
       "formula": "deity.aphrodite.formula",
       "meaning": "deity.aphrodite.meaning",
       "bridge": "deity.aphrodite.bridge",
-      "limits": "deity.aphrodite.limits"
+      "limits": "deity.aphrodite.limits",
+      "rootWords": [
+        {
+          "greek": "ΚΥΘΕΡΕΙΑ",
+          "meaning": "deity.aphrodite.rootWord.1.meaning",
+          "note": "deity.aphrodite.rootWord.1.note"
+        },
+        {
+          "greek": "ΧΑΡΙΣ",
+          "meaning": "deity.aphrodite.rootWord.2.meaning",
+          "note": "deity.aphrodite.rootWord.2.note"
+        },
+        {
+          "greek": "ΣΥΜΦΩΝΙΑ",
+          "meaning": "deity.aphrodite.rootWord.3.meaning",
+          "note": "deity.aphrodite.rootWord.3.note"
+        },
+        {
+          "greek": "ΠΕΙΘΩ",
+          "meaning": "deity.aphrodite.rootWord.4.meaning",
+          "note": "deity.aphrodite.rootWord.4.note"
+        },
+        {
+          "greek": "ΗΔΟΝΗ",
+          "meaning": "deity.aphrodite.rootWord.5.meaning",
+          "note": "deity.aphrodite.rootWord.5.note"
+        },
+        {
+          "greek": "ΠΟΘΟΣ",
+          "meaning": "deity.aphrodite.rootWord.6.meaning",
+          "note": "deity.aphrodite.rootWord.6.note"
+        },
+        {
+          "greek": "ΦΙΛΤΡΟΝ",
+          "meaning": "deity.aphrodite.rootWord.7.meaning",
+          "note": "deity.aphrodite.rootWord.7.note"
+        },
+        {
+          "greek": "ΦΙΛΟΜΜΕΙΔΗΣ",
+          "meaning": "deity.aphrodite.rootWord.8.meaning",
+          "note": "deity.aphrodite.rootWord.8.note"
+        },
+        {
+          "greek": "ΚΑΛΛΟΣ",
+          "meaning": "deity.aphrodite.rootWord.9.meaning",
+          "note": "deity.aphrodite.rootWord.9.note"
+        }
+      ]
     },
     "hephaestus": {
       "sectorId": "southeast",
@@ -689,7 +1112,54 @@
       "formula": "deity.hephaestus.formula",
       "meaning": "deity.hephaestus.meaning",
       "bridge": "deity.hephaestus.bridge",
-      "limits": "deity.hephaestus.limits"
+      "limits": "deity.hephaestus.limits",
+      "rootWords": [
+        {
+          "greek": "ΑΓΛΑΙΑ",
+          "meaning": "deity.hephaestus.rootWord.1.meaning",
+          "note": "deity.hephaestus.rootWord.1.note"
+        },
+        {
+          "greek": "ΑΚΜΩΝ",
+          "meaning": "deity.hephaestus.rootWord.2.meaning",
+          "note": "deity.hephaestus.rootWord.2.note"
+        },
+        {
+          "greek": "ΧΑΛΚΟΣ",
+          "meaning": "deity.hephaestus.rootWord.3.meaning",
+          "note": "deity.hephaestus.rootWord.3.note"
+        },
+        {
+          "greek": "ΣΦΥΡΑ",
+          "meaning": "deity.hephaestus.rootWord.4.meaning",
+          "note": "deity.hephaestus.rootWord.4.note"
+        },
+        {
+          "greek": "ΔΗΜΙΟΥΡΓΟΣ",
+          "meaning": "deity.hephaestus.rootWord.5.meaning",
+          "note": "deity.hephaestus.rootWord.5.note"
+        },
+        {
+          "greek": "ΔΕΣΜΟΣ",
+          "meaning": "deity.hephaestus.rootWord.6.meaning",
+          "note": "deity.hephaestus.rootWord.6.note"
+        },
+        {
+          "greek": "ΔΕΣΜΑ",
+          "meaning": "deity.hephaestus.rootWord.7.meaning",
+          "note": "deity.hephaestus.rootWord.7.note"
+        },
+        {
+          "greek": "ΔΑΙΔΑΛΟΝ",
+          "meaning": "deity.hephaestus.rootWord.8.meaning",
+          "note": "deity.hephaestus.rootWord.8.note"
+        },
+        {
+          "greek": "ΚΑΛΛΟΣ",
+          "meaning": "deity.hephaestus.rootWord.9.meaning",
+          "note": "deity.hephaestus.rootWord.9.note"
+        }
+      ]
     },
     "hermes": {
       "sectorId": "east",
@@ -752,7 +1222,54 @@
       "formula": "deity.hermes.formula",
       "meaning": "deity.hermes.meaning",
       "bridge": "deity.hermes.bridge",
-      "limits": "deity.hermes.limits"
+      "limits": "deity.hermes.limits",
+      "rootWords": [
+        {
+          "greek": "ΟΝΕΙΡΟΣ",
+          "meaning": "deity.hermes.rootWord.1.meaning",
+          "note": "deity.hermes.rootWord.1.note"
+        },
+        {
+          "greek": "ΠΤΕΡΟΝ",
+          "meaning": "deity.hermes.rootWord.2.meaning",
+          "note": "deity.hermes.rootWord.2.note"
+        },
+        {
+          "greek": "ΚΗΡΥΞ",
+          "meaning": "deity.hermes.rootWord.3.meaning",
+          "note": "deity.hermes.rootWord.3.note"
+        },
+        {
+          "greek": "ΑΓΟΡΑ",
+          "meaning": "deity.hermes.rootWord.4.meaning",
+          "note": "deity.hermes.rootWord.4.note"
+        },
+        {
+          "greek": "ΛΟΓΙΟΣ",
+          "meaning": "deity.hermes.rootWord.5.meaning",
+          "note": "deity.hermes.rootWord.5.note"
+        },
+        {
+          "greek": "ΑΓΓΕΛΟΣ",
+          "meaning": "deity.hermes.rootWord.6.meaning",
+          "note": "deity.hermes.rootWord.6.note"
+        },
+        {
+          "greek": "ΕΜΠΟΡΟΣ",
+          "meaning": "deity.hermes.rootWord.7.meaning",
+          "note": "deity.hermes.rootWord.7.note"
+        },
+        {
+          "greek": "ΚΗΡΥΚΕΙΟΝ",
+          "meaning": "deity.hermes.rootWord.8.meaning",
+          "note": "deity.hermes.rootWord.8.note"
+        },
+        {
+          "greek": "ΤΕΤΡΑΔΙΟΣ",
+          "meaning": "deity.hermes.rootWord.9.meaning",
+          "note": "deity.hermes.rootWord.9.note"
+        }
+      ]
     },
     "hestia": {
       "sectorId": "hearth",
@@ -816,7 +1333,54 @@
       "formula": "deity.hestia.formula",
       "meaning": "deity.hestia.meaning",
       "bridge": "deity.hestia.bridge",
-      "limits": "deity.hestia.limits"
+      "limits": "deity.hestia.limits",
+      "rootWords": [
+        {
+          "greek": "ΕΙΡΗΝΗ",
+          "meaning": "deity.hestia.rootWord.1.meaning",
+          "note": "deity.hestia.rootWord.1.note"
+        },
+        {
+          "greek": "ΤΕΛΟΣ",
+          "meaning": "deity.hestia.rootWord.2.meaning",
+          "note": "deity.hestia.rootWord.2.note"
+        },
+        {
+          "greek": "ΦΛΟΞ",
+          "meaning": "deity.hestia.rootWord.3.meaning",
+          "note": "deity.hestia.rootWord.3.note"
+        },
+        {
+          "greek": "ΠΡΥΤΑΝΕΙΟΝ",
+          "meaning": "deity.hestia.rootWord.4.meaning",
+          "note": "deity.hestia.rootWord.4.note"
+        },
+        {
+          "greek": "ΜΕΣΟΝ",
+          "meaning": "deity.hestia.rootWord.5.meaning",
+          "note": "deity.hestia.rootWord.5.note"
+        },
+        {
+          "greek": "ΔΟΜΟΣ",
+          "meaning": "deity.hestia.rootWord.6.meaning",
+          "note": "deity.hestia.rootWord.6.note"
+        },
+        {
+          "greek": "ΕΣΧΑΡΑ",
+          "meaning": "deity.hestia.rootWord.7.meaning",
+          "note": "deity.hestia.rootWord.7.note"
+        },
+        {
+          "greek": "ΑΡΧΕΣΘΑΙ",
+          "meaning": "deity.hestia.rootWord.8.meaning",
+          "note": "deity.hestia.rootWord.8.note"
+        },
+        {
+          "greek": "ΞΕΝΙΑ",
+          "meaning": "deity.hestia.rootWord.9.meaning",
+          "note": "deity.hestia.rootWord.9.note"
+        }
+      ]
     },
     "dionysus": {
       "sectorId": "center",
@@ -885,7 +1449,54 @@
       "formula": "deity.dionysus.formula",
       "meaning": "deity.dionysus.meaning",
       "bridge": "deity.dionysus.bridge",
-      "limits": "deity.dionysus.limits"
+      "limits": "deity.dionysus.limits",
+      "rootWords": [
+        {
+          "greek": "ΛΥΣΙΟΣ",
+          "meaning": "deity.dionysus.rootWord.1.meaning",
+          "note": "deity.dionysus.rootWord.1.note"
+        },
+        {
+          "greek": "ΦΙΛΟΤΗΣ",
+          "meaning": "deity.dionysus.rootWord.2.meaning",
+          "note": "deity.dionysus.rootWord.2.note"
+        },
+        {
+          "greek": "ΑΜΠΕΛΟΣ",
+          "meaning": "deity.dionysus.rootWord.3.meaning",
+          "note": "deity.dionysus.rootWord.3.note"
+        },
+        {
+          "greek": "ΘΙΑΣΟΣ",
+          "meaning": "deity.dionysus.rootWord.4.meaning",
+          "note": "deity.dionysus.rootWord.4.note"
+        },
+        {
+          "greek": "ΜΑΙΝΑΣ",
+          "meaning": "deity.dionysus.rootWord.5.meaning",
+          "note": "deity.dionysus.rootWord.5.note"
+        },
+        {
+          "greek": "ΜΕΤΑΒΟΛΗ",
+          "meaning": "deity.dionysus.rootWord.6.meaning",
+          "note": "deity.dionysus.rootWord.6.note"
+        },
+        {
+          "greek": "ΘΥΡΣΟΣ",
+          "meaning": "deity.dionysus.rootWord.7.meaning",
+          "note": "deity.dionysus.rootWord.7.note"
+        },
+        {
+          "greek": "ΔΙΘΥΡΑΜΒΟΣ",
+          "meaning": "deity.dionysus.rootWord.8.meaning",
+          "note": "deity.dionysus.rootWord.8.note"
+        },
+        {
+          "greek": "ΤΕΛΕΤΗ",
+          "meaning": "deity.dionysus.rootWord.9.meaning",
+          "note": "deity.dionysus.rootWord.9.note"
+        }
+      ]
     }
   },
   "sources": [
@@ -1000,6 +1611,55 @@
       "author": "source.S16.author",
       "work": "source.S16.work",
       "passage": "source.S16.passage"
+    },
+    {
+      "id": "S17",
+      "author": "source.S17.author",
+      "work": "source.S17.work",
+      "passage": "source.S17.passage",
+      "url": "https://classics.mit.edu/Homer/iliad.20.xx.html"
+    },
+    {
+      "id": "S18",
+      "author": "source.S18.author",
+      "work": "source.S18.work",
+      "passage": "source.S18.passage",
+      "url": "https://classics.mit.edu/Homer/iliad.21.xxi.html"
+    },
+    {
+      "id": "S19",
+      "author": "source.S19.author",
+      "work": "source.S19.work",
+      "passage": "source.S19.passage",
+      "url": "https://classics.mit.edu/Euripides/bacchan.html"
+    },
+    {
+      "id": "S20",
+      "author": "source.S20.author",
+      "work": "source.S20.work",
+      "passage": "source.S20.passage",
+      "url": "https://www.theoi.com/Text/Pausanias1B.html"
+    },
+    {
+      "id": "S21",
+      "author": "source.S21.author",
+      "work": "source.S21.work",
+      "passage": "source.S21.passage",
+      "url": "https://www.theoi.com/Text/Apollodorus3.html"
+    },
+    {
+      "id": "S22",
+      "author": "source.S22.author",
+      "work": "source.S22.work",
+      "passage": "source.S22.passage",
+      "url": "https://classics.mit.edu/Homer/iliad.5.v.html"
+    },
+    {
+      "id": "S23",
+      "author": "source.S23.author",
+      "work": "source.S23.work",
+      "passage": "source.S23.passage",
+      "url": "https://classics.mit.edu/Homer/iliad.14.xiv.html"
     }
   ],
   "sectors": [
@@ -1198,6 +1858,1334 @@
       "sourceIds": [
         "S16",
         "S3"
+      ]
+    }
+  ],
+  "interactions": [
+    {
+      "ids": [
+        "hera",
+        "zeus"
+      ],
+      "myth": "pair.hera.zeus.myth",
+      "life": "theme.union.life",
+      "practice": "theme.union.practice",
+      "word": {
+        "greek": "ΟΡΚΟΣ",
+        "meaning": "pair.hera.zeus.word.meaning",
+        "note": "pair.hera.zeus.word.note"
+      },
+      "sourceIds": [
+        "S9"
+      ]
+    },
+    {
+      "ids": [
+        "poseidon",
+        "zeus"
+      ],
+      "myth": "pair.poseidon.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΣΩΤΗΡ",
+        "meaning": "pair.poseidon.zeus.word.meaning",
+        "note": "pair.poseidon.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "zeus"
+      ],
+      "myth": "pair.demeter.zeus.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΣΠΟΡΟΣ",
+        "meaning": "pair.demeter.zeus.word.meaning",
+        "note": "pair.demeter.zeus.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "zeus"
+      ],
+      "myth": "pair.athena.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΒΟΥΛΗ",
+        "meaning": "pair.athena.zeus.word.meaning",
+        "note": "pair.athena.zeus.word.note"
+      },
+      "sourceIds": [
+        "S9"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "zeus"
+      ],
+      "myth": "pair.apollo.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΟΛΥΜΠΟΣ",
+        "meaning": "pair.apollo.zeus.word.meaning",
+        "note": "pair.apollo.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "zeus"
+      ],
+      "myth": "pair.artemis.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΟΛΥΜΠΟΣ",
+        "meaning": "pair.artemis.zeus.word.meaning",
+        "note": "pair.artemis.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "zeus"
+      ],
+      "myth": "pair.ares.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΘΕΜΙΣ",
+        "meaning": "pair.ares.zeus.word.meaning",
+        "note": "pair.ares.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "zeus"
+      ],
+      "myth": "pair.aphrodite.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΘΕΜΙΣ",
+        "meaning": "pair.aphrodite.zeus.word.meaning",
+        "note": "pair.aphrodite.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hephaestus",
+        "zeus"
+      ],
+      "myth": "pair.hephaestus.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΑΙΘΗΡ",
+        "meaning": "pair.hephaestus.zeus.word.meaning",
+        "note": "pair.hephaestus.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hermes",
+        "zeus"
+      ],
+      "myth": "pair.hermes.zeus.myth",
+      "life": "theme.authority.life",
+      "practice": "theme.authority.practice",
+      "word": {
+        "greek": "ΑΙΘΗΡ",
+        "meaning": "pair.hermes.zeus.word.meaning",
+        "note": "pair.hermes.zeus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hestia",
+        "zeus"
+      ],
+      "myth": "pair.hestia.zeus.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΦΛΟΞ",
+        "meaning": "pair.hestia.zeus.word.meaning",
+        "note": "pair.hestia.zeus.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "dionysus",
+        "zeus"
+      ],
+      "myth": "pair.dionysus.zeus.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΜΑΙΝΑΣ",
+        "meaning": "pair.dionysus.zeus.word.meaning",
+        "note": "pair.dionysus.zeus.word.note"
+      },
+      "sourceIds": [
+        "S9"
+      ]
+    },
+    {
+      "ids": [
+        "hera",
+        "poseidon"
+      ],
+      "myth": "pair.hera.poseidon.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΑΛΚΗ",
+        "meaning": "pair.hera.poseidon.word.meaning",
+        "note": "pair.hera.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "hera"
+      ],
+      "myth": "pair.demeter.hera.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΠΕΡΣΕΦΟΝΗ",
+        "meaning": "pair.demeter.hera.word.meaning",
+        "note": "pair.demeter.hera.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "hera"
+      ],
+      "myth": "pair.athena.hera.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΝΙΚΗ",
+        "meaning": "pair.athena.hera.word.meaning",
+        "note": "pair.athena.hera.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "hera"
+      ],
+      "myth": "pair.apollo.hera.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΕΡΙΣ",
+        "meaning": "pair.apollo.hera.word.meaning",
+        "note": "pair.apollo.hera.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "hera"
+      ],
+      "myth": "pair.artemis.hera.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΕΡΙΣ",
+        "meaning": "pair.artemis.hera.word.meaning",
+        "note": "pair.artemis.hera.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "hera"
+      ],
+      "myth": "pair.ares.hera.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΘΑΡΣΟΣ",
+        "meaning": "pair.ares.hera.word.meaning",
+        "note": "pair.ares.hera.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "hera"
+      ],
+      "myth": "pair.aphrodite.hera.myth",
+      "life": "theme.affection.life",
+      "practice": "theme.affection.practice",
+      "word": {
+        "greek": "ΠΕΙΘΩ",
+        "meaning": "pair.aphrodite.hera.word.meaning",
+        "note": "pair.aphrodite.hera.word.note"
+      },
+      "sourceIds": [
+        "S23"
+      ]
+    },
+    {
+      "ids": [
+        "hephaestus",
+        "hera"
+      ],
+      "myth": "pair.hephaestus.hera.myth",
+      "life": "theme.craft.life",
+      "practice": "theme.craft.practice",
+      "word": {
+        "greek": "ΒΟΥΛΕΥΜΑ",
+        "meaning": "pair.hephaestus.hera.word.meaning",
+        "note": "pair.hephaestus.hera.word.note"
+      },
+      "sourceIds": [
+        "S20"
+      ]
+    },
+    {
+      "ids": [
+        "hera",
+        "hermes"
+      ],
+      "myth": "pair.hera.hermes.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΣΥΜΦΩΝΙΑ",
+        "meaning": "pair.hera.hermes.word.meaning",
+        "note": "pair.hera.hermes.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hera",
+        "hestia"
+      ],
+      "myth": "pair.hera.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΠΡΥΤΑΝΕΙΟΝ",
+        "meaning": "pair.hera.hestia.word.meaning",
+        "note": "pair.hera.hestia.word.note"
+      },
+      "sourceIds": [
+        "S10"
+      ]
+    },
+    {
+      "ids": [
+        "dionysus",
+        "hera"
+      ],
+      "myth": "pair.dionysus.hera.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΜΕΤΑΒΟΛΗ",
+        "meaning": "pair.dionysus.hera.word.meaning",
+        "note": "pair.dionysus.hera.word.note"
+      },
+      "sourceIds": [
+        "S20"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "poseidon"
+      ],
+      "myth": "pair.demeter.poseidon.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΘΕΣΜΟΦΟΡΟΣ",
+        "meaning": "pair.demeter.poseidon.word.meaning",
+        "note": "pair.demeter.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "poseidon"
+      ],
+      "myth": "pair.athena.poseidon.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΟΡΚΟΣ",
+        "meaning": "pair.athena.poseidon.word.meaning",
+        "note": "pair.athena.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "poseidon"
+      ],
+      "myth": "pair.apollo.poseidon.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΟΠΛΟΝ",
+        "meaning": "pair.apollo.poseidon.word.meaning",
+        "note": "pair.apollo.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "poseidon"
+      ],
+      "myth": "pair.artemis.poseidon.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΟΠΛΟΝ",
+        "meaning": "pair.artemis.poseidon.word.meaning",
+        "note": "pair.artemis.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "poseidon"
+      ],
+      "myth": "pair.ares.poseidon.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΔΟΡΥ",
+        "meaning": "pair.ares.poseidon.word.meaning",
+        "note": "pair.ares.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "poseidon"
+      ],
+      "myth": "pair.aphrodite.poseidon.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΔΟΡΥ",
+        "meaning": "pair.aphrodite.poseidon.word.meaning",
+        "note": "pair.aphrodite.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hephaestus",
+        "poseidon"
+      ],
+      "myth": "pair.hephaestus.poseidon.myth",
+      "life": "theme.speech.life",
+      "practice": "theme.speech.practice",
+      "word": {
+        "greek": "ΑΓΓΕΛΟΣ",
+        "meaning": "pair.hephaestus.poseidon.word.meaning",
+        "note": "pair.hephaestus.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S8"
+      ]
+    },
+    {
+      "ids": [
+        "hermes",
+        "poseidon"
+      ],
+      "myth": "pair.hermes.poseidon.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΔΕΣΜΟΣ",
+        "meaning": "pair.hermes.poseidon.word.meaning",
+        "note": "pair.hermes.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hestia",
+        "poseidon"
+      ],
+      "myth": "pair.hestia.poseidon.myth",
+      "life": "theme.boundaries.life",
+      "practice": "theme.boundaries.practice",
+      "word": {
+        "greek": "ΑΓΝΕΙΑ",
+        "meaning": "pair.hestia.poseidon.word.meaning",
+        "note": "pair.hestia.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "dionysus",
+        "poseidon"
+      ],
+      "myth": "pair.dionysus.poseidon.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΤΕΛΕΤΗ",
+        "meaning": "pair.dionysus.poseidon.word.meaning",
+        "note": "pair.dionysus.poseidon.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "demeter"
+      ],
+      "myth": "pair.athena.demeter.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΑΡΟΥΡΑ",
+        "meaning": "pair.athena.demeter.word.meaning",
+        "note": "pair.athena.demeter.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "demeter"
+      ],
+      "myth": "pair.apollo.demeter.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΝΟΣΤΟΣ",
+        "meaning": "pair.apollo.demeter.word.meaning",
+        "note": "pair.apollo.demeter.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "demeter"
+      ],
+      "myth": "pair.artemis.demeter.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΝΟΣΤΟΣ",
+        "meaning": "pair.artemis.demeter.word.meaning",
+        "note": "pair.artemis.demeter.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "demeter"
+      ],
+      "myth": "pair.ares.demeter.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΣΠΕΡΜΑ",
+        "meaning": "pair.ares.demeter.word.meaning",
+        "note": "pair.ares.demeter.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "demeter"
+      ],
+      "myth": "pair.aphrodite.demeter.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΣΠΕΡΜΑ",
+        "meaning": "pair.aphrodite.demeter.word.meaning",
+        "note": "pair.aphrodite.demeter.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "hephaestus"
+      ],
+      "myth": "pair.demeter.hephaestus.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΘΕΣΜΟΣ",
+        "meaning": "pair.demeter.hephaestus.word.meaning",
+        "note": "pair.demeter.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "hermes"
+      ],
+      "myth": "pair.demeter.hermes.myth",
+      "life": "theme.speech.life",
+      "practice": "theme.speech.practice",
+      "word": {
+        "greek": "ΠΤΕΡΟΝ",
+        "meaning": "pair.demeter.hermes.word.meaning",
+        "note": "pair.demeter.hermes.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "hestia"
+      ],
+      "myth": "pair.demeter.hestia.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΣΠΕΡΜΑ",
+        "meaning": "pair.demeter.hestia.word.meaning",
+        "note": "pair.demeter.hestia.word.note"
+      },
+      "sourceIds": [
+        "S6"
+      ]
+    },
+    {
+      "ids": [
+        "demeter",
+        "dionysus"
+      ],
+      "myth": "pair.demeter.dionysus.myth",
+      "life": "theme.care.life",
+      "practice": "theme.care.practice",
+      "word": {
+        "greek": "ΒΩΜΟΣ",
+        "meaning": "pair.demeter.dionysus.word.meaning",
+        "note": "pair.demeter.dionysus.word.note"
+      },
+      "sourceIds": [
+        "S19"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "athena"
+      ],
+      "myth": "pair.apollo.athena.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΑΛΚΗ",
+        "meaning": "pair.apollo.athena.word.meaning",
+        "note": "pair.apollo.athena.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "athena"
+      ],
+      "myth": "pair.artemis.athena.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΑΛΚΗ",
+        "meaning": "pair.artemis.athena.word.meaning",
+        "note": "pair.artemis.athena.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "athena"
+      ],
+      "myth": "pair.ares.athena.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΕΡΙΣ",
+        "meaning": "pair.ares.athena.word.meaning",
+        "note": "pair.ares.athena.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "athena"
+      ],
+      "myth": "pair.aphrodite.athena.myth",
+      "life": "theme.boundaries.life",
+      "practice": "theme.boundaries.practice",
+      "word": {
+        "greek": "ΡΥΘΜΟΣ",
+        "meaning": "pair.aphrodite.athena.word.meaning",
+        "note": "pair.aphrodite.athena.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "hephaestus"
+      ],
+      "myth": "pair.athena.hephaestus.myth",
+      "life": "theme.craft.life",
+      "practice": "theme.craft.practice",
+      "word": {
+        "greek": "ΔΑΙΔΑΛΟΝ",
+        "meaning": "pair.athena.hephaestus.word.meaning",
+        "note": "pair.athena.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "hermes"
+      ],
+      "myth": "pair.athena.hermes.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΑΓΩΝ",
+        "meaning": "pair.athena.hermes.word.meaning",
+        "note": "pair.athena.hermes.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "hestia"
+      ],
+      "myth": "pair.athena.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΞΕΝΙΑ",
+        "meaning": "pair.athena.hestia.word.meaning",
+        "note": "pair.athena.hestia.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "athena",
+        "dionysus"
+      ],
+      "myth": "pair.athena.dionysus.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΒΑΚΧΟΣ",
+        "meaning": "pair.athena.dionysus.word.meaning",
+        "note": "pair.athena.dionysus.word.note"
+      },
+      "sourceIds": [
+        "S9"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "artemis"
+      ],
+      "myth": "pair.apollo.artemis.myth",
+      "life": "theme.boundaries.life",
+      "practice": "theme.boundaries.practice",
+      "word": {
+        "greek": "ΑΓΝΕΙΑ",
+        "meaning": "pair.apollo.artemis.word.meaning",
+        "note": "pair.apollo.artemis.word.note"
+      },
+      "sourceIds": [
+        "S9"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "ares"
+      ],
+      "myth": "pair.apollo.ares.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΟΡΜΗ",
+        "meaning": "pair.apollo.ares.word.meaning",
+        "note": "pair.apollo.ares.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "apollo"
+      ],
+      "myth": "pair.aphrodite.apollo.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΟΡΜΗ",
+        "meaning": "pair.aphrodite.apollo.word.meaning",
+        "note": "pair.aphrodite.apollo.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "hephaestus"
+      ],
+      "myth": "pair.apollo.hephaestus.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΜΑΧΗ",
+        "meaning": "pair.apollo.hephaestus.word.meaning",
+        "note": "pair.apollo.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "hermes"
+      ],
+      "myth": "pair.apollo.hermes.myth",
+      "life": "theme.speech.life",
+      "practice": "theme.speech.practice",
+      "word": {
+        "greek": "ΟΝΕΙΡΟΣ",
+        "meaning": "pair.apollo.hermes.word.meaning",
+        "note": "pair.apollo.hermes.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "hestia"
+      ],
+      "myth": "pair.apollo.hestia.myth",
+      "life": "theme.boundaries.life",
+      "practice": "theme.boundaries.practice",
+      "word": {
+        "greek": "ΠΑΡΘΕΝΟΣ",
+        "meaning": "pair.apollo.hestia.word.meaning",
+        "note": "pair.apollo.hestia.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "apollo",
+        "dionysus"
+      ],
+      "myth": "pair.apollo.dionysus.myth",
+      "life": "theme.clarity.life",
+      "practice": "theme.clarity.practice",
+      "word": {
+        "greek": "ΠΥΘΙΟΣ",
+        "meaning": "pair.apollo.dionysus.word.meaning",
+        "note": "pair.apollo.dionysus.word.note"
+      },
+      "sourceIds": [
+        "S2"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "artemis"
+      ],
+      "myth": "pair.ares.artemis.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΟΡΜΗ",
+        "meaning": "pair.ares.artemis.word.meaning",
+        "note": "pair.ares.artemis.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "artemis"
+      ],
+      "myth": "pair.aphrodite.artemis.myth",
+      "life": "theme.boundaries.life",
+      "practice": "theme.boundaries.practice",
+      "word": {
+        "greek": "ΠΑΡΘΕΝΟΣ",
+        "meaning": "pair.aphrodite.artemis.word.meaning",
+        "note": "pair.aphrodite.artemis.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "hephaestus"
+      ],
+      "myth": "pair.artemis.hephaestus.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΜΑΧΗ",
+        "meaning": "pair.artemis.hephaestus.word.meaning",
+        "note": "pair.artemis.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "hermes"
+      ],
+      "myth": "pair.artemis.hermes.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΜΑΧΗ",
+        "meaning": "pair.artemis.hermes.word.meaning",
+        "note": "pair.artemis.hermes.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "hestia"
+      ],
+      "myth": "pair.artemis.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΤΕΛΟΣ",
+        "meaning": "pair.artemis.hestia.word.meaning",
+        "note": "pair.artemis.hestia.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "artemis",
+        "dionysus"
+      ],
+      "myth": "pair.artemis.dionysus.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΘΙΑΣΟΣ",
+        "meaning": "pair.artemis.dionysus.word.meaning",
+        "note": "pair.artemis.dionysus.word.note"
+      },
+      "sourceIds": [
+        "S9"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "ares"
+      ],
+      "myth": "pair.aphrodite.ares.myth",
+      "life": "theme.affection.life",
+      "practice": "theme.affection.practice",
+      "word": {
+        "greek": "ΠΟΘΟΣ",
+        "meaning": "pair.aphrodite.ares.word.meaning",
+        "note": "pair.aphrodite.ares.word.note"
+      },
+      "sourceIds": [
+        "S8"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "hephaestus"
+      ],
+      "myth": "pair.ares.hephaestus.myth",
+      "life": "theme.craft.life",
+      "practice": "theme.craft.practice",
+      "word": {
+        "greek": "ΔΗΜΙΟΥΡΓΟΣ",
+        "meaning": "pair.ares.hephaestus.word.meaning",
+        "note": "pair.ares.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S8"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "hermes"
+      ],
+      "myth": "pair.ares.hermes.myth",
+      "life": "theme.speech.life",
+      "practice": "theme.speech.practice",
+      "word": {
+        "greek": "ΑΛΚΗ",
+        "meaning": "pair.ares.hermes.word.meaning",
+        "note": "pair.ares.hermes.word.note"
+      },
+      "sourceIds": [
+        "S22"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "hestia"
+      ],
+      "myth": "pair.ares.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΔΟΜΟΣ",
+        "meaning": "pair.ares.hestia.word.meaning",
+        "note": "pair.ares.hestia.word.note"
+      },
+      "sourceIds": [
+        "S10"
+      ]
+    },
+    {
+      "ids": [
+        "ares",
+        "dionysus"
+      ],
+      "myth": "pair.ares.dionysus.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΑΓΩΝ",
+        "meaning": "pair.ares.dionysus.word.meaning",
+        "note": "pair.ares.dionysus.word.note"
+      },
+      "sourceIds": [
+        "S19"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "hephaestus"
+      ],
+      "myth": "pair.aphrodite.hephaestus.myth",
+      "life": "theme.craft.life",
+      "practice": "theme.craft.practice",
+      "word": {
+        "greek": "ΔΗΜΙΟΥΡΓΟΣ",
+        "meaning": "pair.aphrodite.hephaestus.word.meaning",
+        "note": "pair.aphrodite.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S8"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "hermes"
+      ],
+      "myth": "pair.aphrodite.hermes.myth",
+      "life": "theme.conflict.life",
+      "practice": "theme.conflict.practice",
+      "word": {
+        "greek": "ΑΛΚΗ",
+        "meaning": "pair.aphrodite.hermes.word.meaning",
+        "note": "pair.aphrodite.hermes.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "hestia"
+      ],
+      "myth": "pair.aphrodite.hestia.myth",
+      "life": "theme.boundaries.life",
+      "practice": "theme.boundaries.practice",
+      "word": {
+        "greek": "ΑΛΣΟΣ",
+        "meaning": "pair.aphrodite.hestia.word.meaning",
+        "note": "pair.aphrodite.hestia.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "aphrodite",
+        "dionysus"
+      ],
+      "myth": "pair.aphrodite.dionysus.myth",
+      "life": "theme.affection.life",
+      "practice": "theme.affection.practice",
+      "word": {
+        "greek": "ΦΙΛΟΜΜΕΙΔΗΣ",
+        "meaning": "pair.aphrodite.dionysus.word.meaning",
+        "note": "pair.aphrodite.dionysus.word.note"
+      },
+      "sourceIds": [
+        "S19"
+      ]
+    },
+    {
+      "ids": [
+        "hephaestus",
+        "hermes"
+      ],
+      "myth": "pair.hephaestus.hermes.myth",
+      "life": "theme.alliance.life",
+      "practice": "theme.alliance.practice",
+      "word": {
+        "greek": "ΘΑΡΣΟΣ",
+        "meaning": "pair.hephaestus.hermes.word.meaning",
+        "note": "pair.hephaestus.hermes.word.note"
+      },
+      "sourceIds": [
+        "S18"
+      ]
+    },
+    {
+      "ids": [
+        "hephaestus",
+        "hestia"
+      ],
+      "myth": "pair.hephaestus.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΜΕΣΟΝ",
+        "meaning": "pair.hephaestus.hestia.word.meaning",
+        "note": "pair.hephaestus.hestia.word.note"
+      },
+      "sourceIds": [
+        "S10"
+      ]
+    },
+    {
+      "ids": [
+        "dionysus",
+        "hephaestus"
+      ],
+      "myth": "pair.dionysus.hephaestus.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΘΥΡΣΟΣ",
+        "meaning": "pair.dionysus.hephaestus.word.meaning",
+        "note": "pair.dionysus.hephaestus.word.note"
+      },
+      "sourceIds": [
+        "S20"
+      ]
+    },
+    {
+      "ids": [
+        "hermes",
+        "hestia"
+      ],
+      "myth": "pair.hermes.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΜΕΣΟΝ",
+        "meaning": "pair.hermes.hestia.word.meaning",
+        "note": "pair.hermes.hestia.word.note"
+      },
+      "sourceIds": [
+        "S7"
+      ]
+    },
+    {
+      "ids": [
+        "dionysus",
+        "hermes"
+      ],
+      "myth": "pair.dionysus.hermes.myth",
+      "life": "theme.change.life",
+      "practice": "theme.change.practice",
+      "word": {
+        "greek": "ΘΥΡΣΟΣ",
+        "meaning": "pair.dionysus.hermes.word.meaning",
+        "note": "pair.dionysus.hermes.word.note"
+      },
+      "sourceIds": [
+        "S21"
+      ]
+    },
+    {
+      "ids": [
+        "dionysus",
+        "hestia"
+      ],
+      "myth": "pair.dionysus.hestia.myth",
+      "life": "theme.home.life",
+      "practice": "theme.home.practice",
+      "word": {
+        "greek": "ΑΡΧΕΣΘΑΙ",
+        "meaning": "pair.dionysus.hestia.word.meaning",
+        "note": "pair.dionysus.hestia.word.note"
+      },
+      "sourceIds": [
+        "S10"
       ]
     }
   ]
