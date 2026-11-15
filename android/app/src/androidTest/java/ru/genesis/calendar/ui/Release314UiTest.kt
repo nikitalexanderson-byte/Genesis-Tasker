@@ -106,7 +106,7 @@ class Release314UiTest {
     }
 
     @Test fun everyOlympianImageActuallyRendersFromThePackagedAsset() {
-        compose.setContent { Frame { Column(Modifier.verticalScroll(rememberScrollState())) { OlympianIsopsephy {} } } }
+        compose.setContent { Frame { Column(Modifier.verticalScroll(rememberScrollState())) { OlympianIsopsephy(onOpenStoicheion = {}) } } }
         compose.onNodeWithTag("olympian-isopsephy-toggle").performClick()
         for (id in listOf("zeus", "hera", "poseidon", "demeter", "athena", "apollo", "artemis", "ares",
             "aphrodite", "hephaestus", "hermes", "hestia", "dionysus")) {

@@ -33,13 +33,13 @@ import java.io.File
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 
-private class DiaryUiStore : DiaryStore {
+internal class DiaryUiStore : DiaryStore {
     var ciphertext: String? = null
     var failWrites = false
     override suspend fun read() = ciphertext
     override suspend fun write(ciphertext: String) { check(!failWrites) { "Synthetic storage failure" }; this.ciphertext = ciphertext }
 }
-private class DiaryUiGateway : DiaryGateway {
+internal class DiaryUiGateway : DiaryGateway {
     val key = ByteArray(32) { it.toByte() }
     val rows = mutableMapOf<String, JSONObject>()
     var offline = false

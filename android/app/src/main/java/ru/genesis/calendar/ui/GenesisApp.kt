@@ -707,7 +707,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                                 onOpenHabits = { requestedSacredHabits = true; tab = "Привычки" },
                                 initialSectorId = requestedTheokyklosSector,
                                 onInitialSectorConsumed = { requestedTheokyklosSector = null },
-                                onOpenStoicheion = { menuSwipeState.sacred = "stoicheion" })
+                                onOpenStoicheion = { menuSwipeState.sacred = "stoicheion" },
+                                onOpenStoicheionCard = { id -> requestedStoicheionCard = id; menuSwipeState.sacred = "stoicheion" })
                         else StoicheionScreen(app, prefs.divinationDisabled,
                             inputCalendarMode = prefs.input,
                             onModelingTask = { request ->

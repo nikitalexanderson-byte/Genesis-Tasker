@@ -21,11 +21,10 @@ import java.text.NumberFormat
 import java.time.Instant
 import java.util.Locale
 
-/** Confine the reading shade to the text so the landscape remains visible between groups. */
+/** Evening/night readings have no dark shade; preserve the daylight reading highlight. */
 @Composable internal fun Modifier.civilReadingArea(): Modifier =
-    (if (!LocalEveningTheme.current) this else
-        background(if (LocalContentColor.current.luminance() > .5f) Color.Black.copy(alpha = .08f)
-            else Color.White.copy(alpha = .14f), AffairsLayout.controlShape)).padding(3.dp)
+    (if (LocalEveningTheme.current && LocalContentColor.current.luminance() < .5f)
+        background(Color.White.copy(alpha = .14f), AffairsLayout.controlShape) else this).padding(3.dp)
 
 /** All readings remain visible in the right column, beside the date and clock. */
 @OptIn(ExperimentalLayoutApi::class)

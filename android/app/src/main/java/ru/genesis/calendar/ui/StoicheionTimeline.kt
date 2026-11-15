@@ -11,7 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import org.json.JSONObject
@@ -56,7 +60,27 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
         }
         if (onCardAction != null) {
             UntranslatedText(copy.getString("perCardRule"), style = MaterialTheme.typography.bodySmall)
-            Row(Modifier.fillMaxWidth().testTag("stoicheion-timeline-cards"), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val density = LocalDensity.current
+                val measurer = rememberTextMeasurer()
+                val captionStyle = MaterialTheme.typography.labelSmall.copy(hyphens = Hyphens.None)
+                val titleStyle = MaterialTheme.typography.labelMedium
+                // Reserve the same text space even before the cards are opened. The longest
+                // localized instruction and the revealed name/orientation must both fit.
+                val textWidth = with(density) { ((maxWidth - 12.dp) / 3 - 10.dp).roundToPx().coerceAtLeast(1) }
+                val footerHeight = with(density) {
+                    val constraints = Constraints(maxWidth = textWidth)
+                    val instructionHeight = listOf("openCard", "waiting").maxOf {
+                        measurer.measure(copy.getString(it), captionStyle, constraints = constraints).size.height
+                    }
+                    val nameHeight = measurer.measure("Ag", captionStyle, maxLines = 1).size.height
+                    val orientationHeight = listOf("upright", "reversed").maxOf {
+                        measurer.measure(copy.getString(it), captionStyle, constraints = constraints).size.height
+                    }
+                    maxOf(instructionHeight, nameHeight + 6.dp.roundToPx() + orientationHeight).toDp()
+                }
+                val titleHeight = with(density) { measurer.measure("Ag", titleStyle, maxLines = 1).size.height.toDp() }
+                Row(Modifier.fillMaxWidth().testTag("stoicheion-timeline-cards"), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 for (index in 0..2) {
                     val data = copy.getJSONArray("positions").getJSONObject(index)
                     val position = StoicheionTimePosition(data.getString("id"), data.getString("title"), data.getString("meaning"))
@@ -70,15 +94,20 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
                             modifier = Modifier.fillMaxWidth().testTag("stoicheion-timeline-${position.id}")) {
                             Column(Modifier.padding(5.dp), horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                UntranslatedText(position.title, maxLines = 1, style = MaterialTheme.typography.labelMedium)
+                                UntranslatedText(position.title, Modifier.heightIn(min = titleHeight), maxLines = 1, style = titleStyle)
                                 if (card != null) {
                                     StoicheionCardFace(card.first, Modifier.fillMaxWidth().graphicsLayer { rotationZ = if (card.second) 180f else 0f })
-                                    UntranslatedText(card.first.name, maxLines = 1, style = MaterialTheme.typography.labelSmall)
-                                    UntranslatedText(copy.getString(if (card.second) "reversed" else "upright"), style = MaterialTheme.typography.labelSmall)
                                 } else {
                                     Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f), contentAlignment = Alignment.Center) { GenesisLucideIcon("eye") }
-                                    UntranslatedText(copy.getString(if (index == (session?.cards?.size ?: 0)) "openCard" else "waiting"),
-                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                                Column(Modifier.fillMaxWidth().height(footerHeight), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    if (card != null) {
+                                        UntranslatedText(card.first.name, maxLines = 1, style = captionStyle)
+                                        UntranslatedText(copy.getString(if (card.second) "reversed" else "upright"), style = captionStyle)
+                                    } else {
+                                        UntranslatedText(copy.getString(if (index == (session?.cards?.size ?: 0)) "openCard" else "waiting"), style = captionStyle)
+                                    }
                                 }
                             }
                         }
@@ -93,6 +122,7 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
                         }
                     }
                 }
+            }
             }
         } else if (cards == null) Button(onBegin, enabled = allowed && ready && !busy,
             modifier = actionModifier.testTag("stoicheion-draw-timeline")) {

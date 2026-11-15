@@ -1,0 +1,7 @@
+html[data-olympian-native], html[data-olympian-native] body { margin:0; background:var(--surface); color:var(--ink); }
+html[data-olympian-native] main { padding:12px; }
+html[data-olympian-native] :is(button,select,summary,input) { min-height:48px; }
+html[data-olympian-native] .olympian-backdrop { padding:0; height:var(--olympian-native-height,100vh); display:block; background:var(--surface); }
+html[data-olympian-native] .olympian-backdrop>.olympian-modal[role=dialog] { width:100%; max-width:none; height:var(--olympian-native-height,100vh)!important; max-height:var(--olympian-native-height,100vh)!important; min-height:0; overflow-y:auto; border:0; border-radius:0; padding:12px; }
+html[data-olympian-native] :is(p,summary,button,h2,h3,strong) { overflow-wrap:normal; word-break:normal; hyphens:none; }
+html[data-olympian-native] .olympian-tile strong { font-size:clamp(.86rem,3.8vw,1.1rem); }

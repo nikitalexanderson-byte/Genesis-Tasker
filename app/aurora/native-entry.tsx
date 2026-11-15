@@ -1,7 +1,7 @@
 import {createRoot} from 'react-dom/client';
-import {AuroraWizard} from './AuroraWizard';
+import {GnoWizard} from './GnoWizard';
 import {AuroraRepository,type AuroraAccess,type Sealed} from './repository';
-import {snapshotFromSavedDraw} from './draw-policy';
+import {snapshotFromSavedDraw,createTemporalTriad} from './draw-policy';
 import type {AuroraHost} from './host';
 import '../globals.css';
 import '../experimental-theme.css';
@@ -9,7 +9,7 @@ import '../dark-theme.css';
 import '../dark-palettes.css';
 import '../universal-ui.css';
 import './native.css';
-type Boot={ownerId:string;language:string;client:'android'|'android-play';source:Parameters<typeof snapshotFromSavedDraw>[0]|null;dark:boolean;palette:string;colors:Record<string,string>};
+type Boot={ownerId:string;language:string;client:'android'|'android-play';source:Parameters<typeof snapshotFromSavedDraw>[0]|null;temporal?:Parameters<typeof createTemporalTriad>[0]|null;dark:boolean;palette:string;colors:Record<string,string>};
 type NativeBridge={postMessage:(message:string)=>void;getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void;removeItem:(key:string)=>void;contentSize?:(height:number,width:number)=>void};
 declare global{interface Window{GenesisAuroraBridge:NativeBridge;GenesisAuroraRuntime:{init:(payload:string)=>void;resolve:(id:string,payload:string)=>void;requestClose:()=>void;theme:(payload:string)=>void}}}
 const decode=(payload:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload),c=>c.charCodeAt(0))));
@@ -38,7 +38,7 @@ window.GenesisAuroraRuntime={
   };
   const sizeObserver=new ResizeObserver(reportContentSize);
   const watchContent=()=>{
-   const dialog=document.querySelector<HTMLElement>('.aurora-dialog');
+   const dialog=document.querySelector<HTMLElement>('.gno-dialog, .aurora-dialog');
    if(dialog!==measuredDialog){sizeObserver.disconnect();measuredDialog=dialog;if(dialog)sizeObserver.observe(dialog);}
    reportContentSize();
   };
@@ -53,11 +53,11 @@ window.GenesisAuroraRuntime={
    readResult:async id=>{const row=await rpc<{id:string;solution:Sealed&{kind:string}}>('billing',{path:`/billing/modeling/results/${id}`,method:'GET',body:null});if(row.id!==id||row.solution.kind!=='aurora-encrypted-solution-v1')throw new Error('AURORA_RESULT_MISMATCH');return {id,solution:await access.open(row.solution,`aurora-result:v1:${id}`)};},
    billing:<T,>(path:string,init:RequestInit={})=>rpc<T>('billing',{path,method:init.method??'GET',body:init.body?JSON.parse(String(init.body)):null}),
    openCheckout:url=>void rpc('checkout',{url}).catch(()=>undefined),addTask:value=>{taskPending=rpc('task',value);},speak:pronunciation=>void rpc('speak',{pronunciation}).catch(()=>undefined),close:()=>void(taskPending??Promise.resolve()).then(()=>rpc('close')).catch(()=>undefined)};
-  const primary=boot.source?snapshotFromSavedDraw(boot.source):null;createRoot(document.getElementById('root')!).render(<AuroraWizard host={host} primary={primary}/>);
+  const primary=boot.source?snapshotFromSavedDraw(boot.source):null,temporal=boot.temporal?createTemporalTriad(boot.temporal):null;createRoot(document.getElementById('root')!).render(<GnoWizard host={host} primary={primary} temporal={temporal}/>);
  },
  resolve(id,payload){const call=pending.get(id);if(!call)return;pending.delete(id);clearTimeout(call.timer);const response=decode(payload);
   if(response.error){const error=Object.assign(new Error(String(response.error)),{status:response.status??0});call.reject(error);}else call.resolve(response.value);
  },
- requestClose(){document.querySelector<HTMLButtonElement>('.aurora-header button')?.click();},
+ requestClose(){document.querySelector<HTMLButtonElement>('.gno-header .dialog-close-button, .gno-header button[aria-label], .aurora-header button')?.click();},
  theme(payload){applyTheme(decode(payload));},
 };

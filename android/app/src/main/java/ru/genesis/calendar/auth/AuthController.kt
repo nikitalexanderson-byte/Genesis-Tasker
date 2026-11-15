@@ -252,8 +252,41 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
 
     internal fun mindmapTransport(uid:String):ru.genesis.calendar.data.MindmapTransport = object : ru.genesis.calendar.data.MindmapTransport {
         override fun check() { check(mutableState.value.user?.uid==uid && app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)) { "Сессия карт завершена. Повторите вход; черновик сохранён." } }
-        override suspend fun workspace():JSONObject { check();check(!mutableState.value.requiresSignIn);val generation=client.currentGeneration();return withContext(Dispatchers.IO) { client.workspace(generation) }.also { check() } }
-        override suspend fun request(path:String,body:JSONObject?):JSONObject { check();check(!mutableState.value.requiresSignIn);val generation=client.currentGeneration();return withContext(Dispatchers.IO) { client.mindmaps(generation,path,body) }.also { check() } }
+        private suspend fun call(read: Boolean, action: (Long) -> JSONObject): JSONObject {
+            check()
+            if (mutableState.value.requiresSignIn) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+            val generation = client.currentGeneration()
+            try {
+                return withContext(Dispatchers.IO) { action(generation) }.also { check() }
+            } catch (failure: AuthFailure) {
+                // A read can safely revalidate the session. Never repeat an uncertain write here;
+                // MindmapRepository owns its durable operation ID and replay protection.
+                if (read && failure.kind == AuthFailure.Kind.UNAUTHORIZED) {
+                    try {
+                        val session = withContext(Dispatchers.IO) { client.session(generation) }
+                        check()
+                        if (AuthProtocol.identity(session)?.uid == uid) {
+                            // Revalidation also refreshes the live access receipt (including trials).
+                            // Do not leave the UI holding an obsolete receipt after a successful read.
+                            liveAccountSettings(session)?.let { settings ->
+                                publish(generation, mutableState.value.copy(accountSettings = settings,
+                                    checkedAt = System.currentTimeMillis()))
+                            }
+                            return withContext(Dispatchers.IO) { action(generation) }.also { check() }
+                        }
+                    } catch (revalidated: AuthFailure) {
+                        if (revalidated.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
+                        android.util.Log.w("GenesisMindmaps", "read revalidation failed: ${revalidated.kind}, HTTP ${revalidated.httpStatus ?: 0}")
+                        throw revalidated
+                    }
+                    requireSignIn(generation)
+                }
+                android.util.Log.w("GenesisMindmaps", "${if (read) "read" else "write"} failed: ${failure.kind}, HTTP ${failure.httpStatus ?: 0}")
+                throw failure
+            }
+        }
+        override suspend fun workspace():JSONObject = call(true) { client.workspace(it) }
+        override suspend fun request(path:String,body:JSONObject?):JSONObject = call(body == null) { client.mindmaps(it,path,body) }
     }
 
     override fun checkSharedMindmapAccount(uid: String) {
