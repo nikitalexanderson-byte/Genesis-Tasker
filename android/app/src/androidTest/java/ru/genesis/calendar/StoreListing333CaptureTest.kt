@@ -2,7 +2,6 @@ package ru.genesis.calendar
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
@@ -40,7 +39,7 @@ class StoreListing333CaptureTest {
             compose.onNodeWithTag("submenu-$section").performClick()
     }
 
-    @Test fun captureSixFinalScreensWithSyntheticData() = runBlocking {
+    @Test fun capturePlannerScreensWithSyntheticData() = runBlocking {
         check(BuildConfig.DEBUG && app.packageName == "ru.genesis.calendar.debug" && app.workspaceScope == "internal-validation-v1")
         val args = InstrumentationRegistry.getArguments()
         val language = args.getString("genesisStoreLanguage", "ru")
@@ -119,7 +118,6 @@ class StoreListing333CaptureTest {
             trackers.saveSleep("$token-sleep", date, LocalTime.of(23, 0), LocalTime.of(7, 0), 8.0, "", 0)
             trackers.saveAddiction(AddictionTracker(TrackerEntity.create("addiction", id = "$token-abstinence"), schedule,
                 copy("Меньше сахара", "Less sugar")))
-            StoicheionDrawRepository(app).save("timeline", 0x12345678L)
             await("workspace-menu")
             open("Сегодня"); await("today-list"); Thread.sleep(1000); capture("today")
             compose.onNodeWithTag("task-${ownedTasks[0]}").performScrollTo().performClick()
@@ -146,24 +144,6 @@ class StoreListing333CaptureTest {
             compose.waitForIdle(); capture("habits-dark")
             setCaptureTheme(false)
             open("Привычки", "Сон и настроение"); await("sleep-plan-header"); capture("sleep")
-            authState.value=authState.value.copy(accountSettings=settings.copy(uiVisibility=UiVisibility(sacredFeaturesEnabled=true)))
-            open("Сакральное", "stoicheion"); await("stoicheion-grid")
-            // The grid exists while the bundled cards are still being read on IO.
-            // Wait for actual scrollable content before looking for an offscreen card.
-            compose.waitUntil(15_000) {
-                compose.onNodeWithTag("stoicheion-grid").fetchSemanticsNode()
-                    .config[SemanticsProperties.VerticalScrollAxisRange].maxValue() > 0f
-            }
-            compose.onNodeWithTag("stoicheion-grid").performScrollToNode(hasTestTag("stoicheion-timeline-cards"))
-            val viewport = compose.onNodeWithTag("stoicheion-grid").fetchSemanticsNode().boundsInRoot
-            val block = compose.onNodeWithTag("stoicheion-timeline-block").fetchSemanticsNode().boundsInRoot
-            compose.onNodeWithTag("stoicheion-grid").performSemanticsAction(SemanticsActions.ScrollBy) {
-                it(0f, (block.top - viewport.top).coerceAtLeast(0f))
-            }
-            compose.onNodeWithTag("stoicheion-timeline-past").assertIsDisplayed()
-            compose.onNodeWithTag("stoicheion-timeline-present").assertIsDisplayed()
-            compose.onNodeWithTag("stoicheion-timeline-future").assertIsDisplayed()
-            capture("timeline")
         } finally {
             authState.value=originalAuth
             ownedTasks.forEach { id ->

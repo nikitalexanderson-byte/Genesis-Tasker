@@ -148,7 +148,7 @@ class Release333PreviewTest {
             repository.save(DiaryNote.create("Планы на неделю\nВыделить время для чтения, прогулок и нового проекта."))
         }
         compose.setContent {Frame {CompositionLocalProvider(LocalGenesisLanguage provides language) {
-            MobileWorkspaceShell("Дневник",null,emptyList(),"",true,onNavigate={}) {DiaryScreen(repository,{})}
+            MobileWorkspaceShell("Дневник",null,emptyList(),"",true,onNavigate={},actions={}) {DiaryScreen(repository,{})}
         }}}
         compose.waitUntil(15000){compose.onAllNodesWithTag("diary-screen").fetchSemanticsNodes().isNotEmpty()}
         shot("diary-ru-light")
