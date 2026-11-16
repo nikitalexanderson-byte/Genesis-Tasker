@@ -149,6 +149,7 @@ class NativeUiTest {
     @Test fun prioritySupportsImmediateHorizontalDragAndTap() {
         compose.scrollToTodayNode(hasTestTag("create-task"))
         compose.onNodeWithTag("create-task").performClick()
+        compose.onNodeWithTag("task-options-toggle").performScrollTo().performClick()
         compose.onNodeWithTag("priority-scale").performScrollTo().performTouchInput {
             down(Offset(center.x * .24f, center.y))
             advanceEventTime(30)

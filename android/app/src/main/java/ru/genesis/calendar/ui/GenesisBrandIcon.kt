@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.annotation.DrawableRes
@@ -39,11 +40,19 @@ internal object GenesisBrandIcon {
         val manager = context.packageManager
         val desired = alias(value, dark)
         val names = palettes.flatMap { p -> listOf(alias(p, false), alias(p, true)) }
-        // Enable first: older Android versions cannot atomically switch alias settings.
-        for (name in listOf(desired) + names.filter { it != desired }) {
+        val changes = (listOf(desired) + names.filter { it != desired }).mapNotNull { name ->
             val component = ComponentName(context.packageName, name)
             val state = if (name == desired) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            if (manager.getComponentEnabledSetting(component) != state)
+            if (manager.getComponentEnabledSetting(component) == state) null else component to state
+        }
+        if (changes.isEmpty()) return@withLock
+        if (Build.VERSION.SDK_INT >= 33) {
+            manager.setComponentEnabledSettings(changes.map { (component, state) ->
+                PackageManager.ComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
+            })
+        } else {
+            // Enable first on Android versions without atomic alias updates.
+            for ((component, state) in changes)
                 manager.setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
         }
     }

@@ -25,7 +25,7 @@ import java.util.Locale
 class Release330LocaleUiTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
     private val context get()=InstrumentationRegistry.getInstrumentation().targetContext
-    @Before fun isolated() { check(BuildConfig.DEBUG && context.packageName.endsWith(".qa330.debug")) }
+    @Before fun isolated() { check(BuildConfig.DEBUG && context.packageName.endsWith(".debug")) }
     @Composable private fun Frame(language:String,night:Boolean,content:@Composable ()->Unit) {
         CompositionLocalProvider(LocalDensity provides Density(compose.activity.resources.displayMetrics.widthPixels/360f,1.3f),
             LocalGenesisLanguage provides language,LocalEveningTheme provides night,LocalDarkPalette provides "blue") {
@@ -40,7 +40,7 @@ class Release330LocaleUiTest {
         for(lang in listOf("ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja")) for(dark in listOf(false,true)) {
             compose.runOnIdle {language=lang;night=dark;epoch++}
             compose.onNodeWithTag("release-notes-dialog").assertIsDisplayed()
-            val text=release331Notes.getValue(lang)
+            val text=release334Notes(context,lang)
             compose.onNodeWithText("• ${text.last()}",useUnmergedTree=true).performScrollTo().assertIsDisplayed()
             assertTrue(text.joinToString("\n").length<=500)
             assertTrue(timeZoneChoices(Locale.forLanguageTag(lang)).any {it.id=="Europe/Moscow" && it.city.isNotBlank()})

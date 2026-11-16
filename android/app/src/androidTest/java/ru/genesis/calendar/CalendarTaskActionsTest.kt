@@ -114,6 +114,8 @@ class CalendarTaskActionsTest {
             compose.onNodeWithContentDescription("Закрыть").performClick()
             compose.onNodeWithTag("calendar-task-count-$next").performScrollTo().performClick()
             compose.onNodeWithTag("calendar-task-edit-${task.id}").performClick()
+            compose.onNodeWithTag("task-options-toggle").performScrollTo().performClick()
+            compose.onNodeWithText("При удалении можно выбрать только $next.", substring = true).performScrollTo()
             compose.onNodeWithText("При удалении можно выбрать только $next.", substring = true).assertExists()
             compose.onNodeWithText("Отмена").performClick()
             compose.onNodeWithTag("calendar-task-count-$next").performScrollTo().performClick()

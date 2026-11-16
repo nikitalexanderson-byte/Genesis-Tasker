@@ -770,7 +770,9 @@ internal fun CalendarDay(calendar: GenesisCalendar, date: LocalDate, number: Int
             palette != null -> palette.wash
             else -> MaterialTheme.colorScheme.surface
         },
-        border = if (weekdayOutline && emphasized) null
+        border = if (!LocalEveningTheme.current && palette != null && !adjacent && selected && date.dayOfWeek == java.time.DayOfWeek.SATURDAY)
+            BorderStroke(3.dp, Color.Black)
+        else if (weekdayOutline && emphasized) null
         else selectedControlBorder(selected, !adjacent, fallback = BorderStroke(if (today || selected) 2.dp else 1.dp,
             if (today || selected) palette?.accent ?: MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.secondary.copy(alpha = if (LocalEveningTheme.current) .65f else .5f)),
@@ -1327,6 +1329,11 @@ private fun CalendarYearPanel(calendar: GenesisCalendar, shown: LocalDate, mode:
                         CalendarPeriodNavigation(yearLabel, true, onPrevious, onNext)
                     }
                 }
+                if (mode == CalendarMode.PROFANE && !gregorianYearStartsInMarch && !springSuggestionDismissed) {
+                    item(key = "year-spring-suggestion") {
+                        SpringYearSuggestionCard(onStartGregorianYearInMarch, onDismissSpringSuggestion)
+                    }
+                }
         if (experimental && sacredFeaturesEnabled) {
             item(key = "year-solar-points") {
                 var solarExpanded by rememberSaveable(shown.toString(), mode) { mutableStateOf(false) }
@@ -1432,42 +1439,34 @@ private fun CalendarYearPanel(calendar: GenesisCalendar, shown: LocalDate, mode:
             }
             }
         }
-        if (mode == CalendarMode.PROFANE && !gregorianYearStartsInMarch && !springSuggestionDismissed) {
-            item(key = "year-spring-suggestion") {
-            val copy = springYearCopy(LocalGenesisLanguage.current)
-            Card(Modifier.fillMaxWidth().padding(horizontal = 10.dp).testTag("spring-year-suggestion"),
-                shape = AffairsLayout.shape,
-                colors = CardDefaults.cardColors(containerColor = Color(0xff173b38)),
-                border = BorderStroke(1.dp, Color(0xffdfc17e).copy(alpha = .65f))) {
-                Row(Modifier.fillMaxWidth().padding(12.dp),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        UntranslatedText(copy.title, color = Color(0xfffff5df),
-                            style = MaterialTheme.typography.titleMedium)
-                        UntranslatedText(copy.body, color = Color(0xffc8d9d4),
-                            style = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = onStartGregorianYearInMarch,
-                            modifier = Modifier.testTag("spring-year-switch")) {
-                            UntranslatedText(copy.action, color = Color(0xffdfc17e))
-                        }
-                    }
-                    IconButton(onClick = onDismissSpringSuggestion,
-                        modifier = Modifier.size(48.dp).testTag("spring-year-dismiss")) {
-                        UntranslatedText("×", color = Color(0xffdfc17e),
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.semantics { contentDescription = copy.dismiss })
-                    }
-                }
-            }
-            }
-        }
         item(key = "year-description") {
         Box(Modifier.padding(horizontal = 10.dp)) {
             CalendarYearDescriptionCard(calendar, shown, mode, gregorianYearStartsInMarch, onDay)
         }
         }
             }
+    }
+}
+
+@Composable
+internal fun SpringYearSuggestionCard(onStart: () -> Unit, onDismiss: () -> Unit) {
+    val copy = springYearCopy(LocalGenesisLanguage.current)
+    val scheme = MaterialTheme.colorScheme
+    Card(Modifier.fillMaxWidth().testTag("spring-year-suggestion"), shape = AffairsLayout.shape,
+        colors = CardDefaults.cardColors(containerColor = scheme.surfaceContainerLow, contentColor = scheme.onSurface),
+        border = BorderStroke(1.dp, scheme.outlineVariant)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                UntranslatedText(copy.title, Modifier.weight(1f).padding(top = 8.dp),
+                    color = scheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                AffairsIconButton(copy.dismiss, AffairsAction.CLOSE, onDismiss,
+                    Modifier.testTag("spring-year-dismiss"), outlined = false)
+            }
+            UntranslatedText(copy.body, color = scheme.onSurface, style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = onStart, modifier = Modifier.heightIn(min = 48.dp).testTag("spring-year-switch")) {
+                UntranslatedText(copy.action)
+            }
+        }
     }
 }
 

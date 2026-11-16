@@ -57,28 +57,35 @@
             android:theme="@style/Theme.Genesis.Launcher">
         </activity>
 
-        <activity-alias android:name=".LauncherGreenLight" android:targetActivity=".MainActivity" android:exported="true" android:enabled="true" android:icon="@mipmap/ic_launcher_green_light" android:roundIcon="@mipmap/ic_launcher_green_light">
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+        <activity-alias android:name=".LauncherGreenLight" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="true" android:icon="@mipmap/ic_launcher_green_light" android:roundIcon="@mipmap/ic_launcher_green_light">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherGreenDark" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_green_dark" android:roundIcon="@mipmap/ic_launcher_green_dark">
+        <activity-alias android:name=".LauncherGreenDark" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_green_dark" android:roundIcon="@mipmap/ic_launcher_green_dark">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherBlueLight" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_blue_light" android:roundIcon="@mipmap/ic_launcher_blue_light">
+        <activity-alias android:name=".LauncherBlueLight" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_blue_light" android:roundIcon="@mipmap/ic_launcher_blue_light">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherBlueDark" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_blue_dark" android:roundIcon="@mipmap/ic_launcher_blue_dark">
+        <activity-alias android:name=".LauncherBlueDark" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_blue_dark" android:roundIcon="@mipmap/ic_launcher_blue_dark">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherBurgundyLight" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_burgundy_light" android:roundIcon="@mipmap/ic_launcher_burgundy_light">
+        <activity-alias android:name=".LauncherBurgundyLight" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_burgundy_light" android:roundIcon="@mipmap/ic_launcher_burgundy_light">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherBurgundyDark" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_burgundy_dark" android:roundIcon="@mipmap/ic_launcher_burgundy_dark">
+        <activity-alias android:name=".LauncherBurgundyDark" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_burgundy_dark" android:roundIcon="@mipmap/ic_launcher_burgundy_dark">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherVioletLight" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_violet_light" android:roundIcon="@mipmap/ic_launcher_violet_light">
+        <activity-alias android:name=".LauncherVioletLight" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_violet_light" android:roundIcon="@mipmap/ic_launcher_violet_light">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
-        <activity-alias android:name=".LauncherVioletDark" android:targetActivity=".MainActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_violet_dark" android:roundIcon="@mipmap/ic_launcher_violet_dark">
+        <activity-alias android:name=".LauncherVioletDark" android:targetActivity=".LauncherActivity" android:exported="true" android:enabled="false" android:icon="@mipmap/ic_launcher_violet_dark" android:roundIcon="@mipmap/ic_launcher_violet_dark">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
 

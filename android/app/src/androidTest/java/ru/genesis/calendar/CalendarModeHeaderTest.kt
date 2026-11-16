@@ -196,7 +196,7 @@ class CalendarModeHeaderTest {
         compose.onNodeWithTag("calendar-flow-nameplate").assertDoesNotExist()
     }
 
-    @Test fun monthAndYearKeepTheSameWidthInEveningTheme() {
+    @Test fun monthAndYearKeepCenteredUnclippedPanelsInEveningTheme() {
         compose.setContent {
             MaterialTheme(colorScheme = evening) {
                 CompositionLocalProvider(LocalEveningTheme provides true) {
@@ -210,18 +210,22 @@ class CalendarModeHeaderTest {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         compose.waitForIdle()
-        val monthWidth = compose.onNodeWithTag("calendar-month-panel-profane")
-            .fetchSemanticsNode().boundsInRoot.width
+        val monthBounds = compose.onNodeWithTag("calendar-month-panel-profane")
+            .fetchSemanticsNode().boundsInRoot
         compose.onNodeWithTag("calendar-flow-nameplate").assertDoesNotExist()
         assertTrue(device.takeScreenshot(File(context.getExternalFilesDir(null), "calendar-month-evening.png")))
         compose.onNodeWithText("Год").performClick()
         compose.waitForIdle()
-        val yearWidth = compose.onNodeWithTag("calendar-year-panel")
-            .fetchSemanticsNode().boundsInRoot.width
+        val yearBounds = compose.onNodeWithTag("calendar-year-panel")
+            .fetchSemanticsNode().boundsInRoot
         compose.onNodeWithTag("calendar-flow-nameplate").assertDoesNotExist()
         if (compose.activity.resources.configuration.screenWidthDp < 840) {
-            assertTrue("evening year panel=$yearWidth month panel=$monthWidth",
-                kotlin.math.abs(yearWidth - monthWidth) < 2f)
+            // Accepted month/year layouts use different symmetric outer insets.
+            val screenWidth = compose.activity.resources.displayMetrics.widthPixels
+            for (bounds in listOf(monthBounds, yearBounds)) {
+                assertTrue("Panel stays inside the screen: $bounds", bounds.left >= 0f && bounds.right <= screenWidth + 1f)
+                assertTrue("Panel stays centered: $bounds", kotlin.math.abs(bounds.center.x - screenWidth / 2f) < 2f)
+            }
         }
         assertTrue(device.takeScreenshot(File(context.getExternalFilesDir(null), "calendar-year-evening.png")))
         for (season in listOf("winter", "spring", "summer", "autumn")) {

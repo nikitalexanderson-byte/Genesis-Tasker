@@ -1,8 +1,12 @@
 import { greekIsopsephy, restorationRoot, restorationTrace } from './stoicheion-restoration-math';
 
 export function olympianLetterEquation(greek: string) {
-  const letters = [...greek.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()].filter(letter => greekIsopsephy(letter) > 0);
-  return `${letters.map(letter => `${letter}(${greekIsopsephy(letter)})`).join(' + ')} = ${greekIsopsephy(greek)}`;
+  // Epithets such as Ζεὺς Ἑρκεῖος are phrases. Whitespace has no numerical
+  // value; keep the word calculator's strict validation for every actual letter.
+  const form = greek.replace(/\s/gu, '');
+  const total = greekIsopsephy(form);
+  const letters = [...form.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase()];
+  return `${letters.map(letter => `${letter}(${greekIsopsephy(letter)})`).join(' + ')} = ${total}`;
 }
 
 /** Expand printed name totals as well as the interactive calculation. */
