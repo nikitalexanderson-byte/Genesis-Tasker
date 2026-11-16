@@ -118,7 +118,8 @@ import java.time.Instant
             }
     }
     val headerNavigation: @Composable () -> Unit = {
-        if (tab != "board") WorkspaceHeaderButton("Назад в дневник", "diary-back-to-board",
+        // This slot is composed by the shell; observe the tab state in that scope.
+        if ((if (category == "saved") savedTab else personalTab) != "board") WorkspaceHeaderButton("Назад в дневник", "diary-back-to-board",
             onClick = ::back) { GenesisLucideIcon("chevron-left") }
     }
     val headerInShell = WorkspaceScreenHeader("Дневник",
