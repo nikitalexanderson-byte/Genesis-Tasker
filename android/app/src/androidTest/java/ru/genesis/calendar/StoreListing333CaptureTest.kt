@@ -23,7 +23,7 @@ import ru.genesis.calendar.auth.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.json.JSONObject
 
-/** Actual application shell and repositories; exclusively synthetic data in the 3.3.3 QA app. */
+/** Actual application shell and repositories; exclusively synthetic data in an isolated QA app. */
 class StoreListing333CaptureTest {
     @get:Rule val compose = createAndroidComposeRule<TestWorkspaceActivity>()
     private val app get() = compose.activity.application as GenesisApplication
@@ -40,7 +40,7 @@ class StoreListing333CaptureTest {
     }
 
     @Test fun capturePlannerScreensWithSyntheticData() = runBlocking {
-        check(BuildConfig.DEBUG && app.packageName == "ru.genesis.calendar.debug" && app.workspaceScope == "internal-validation-v1")
+        check(BuildConfig.DEBUG && app.packageName in setOf("ru.genesis.calendar.debug", "ru.genesis.calendar.qa1103.debug") && app.workspaceScope == "internal-validation-v1")
         val args = InstrumentationRegistry.getArguments()
         val language = args.getString("genesisStoreLanguage", "ru")
         require(language in setOf("ru", "en"))

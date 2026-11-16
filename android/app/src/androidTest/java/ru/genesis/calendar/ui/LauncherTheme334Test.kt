@@ -26,7 +26,8 @@ class LauncherTheme334Test {
         }
         val launcher=Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(context.packageName)
         val initial=context.packageManager.queryIntentActivities(launcher,0).single().activityInfo.name
-        context.startActivity(Intent.makeMainActivity(ComponentName(context.packageName,initial)))
+        context.startActivity(Intent.makeMainActivity(ComponentName(context.packageName,initial))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
         device.waitForIdle()
         val deadline=System.currentTimeMillis()+10000
         while(mainTask()==null && System.currentTimeMillis()<deadline)Thread.sleep(100)
