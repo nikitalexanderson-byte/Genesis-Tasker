@@ -23,6 +23,11 @@ class MainActivity : ComponentActivity() {
     private val openedAdvice = mutableStateOf<ru.genesis.calendar.reminders.AdviceNotificationOpenRequest?>(null)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ru.genesis.calendar.ui.GenesisBrandIcon.canonicalLauncherIntent(this, intent)?.let { canonical ->
+            startActivity(canonical)
+            finish()
+            return
+        }
         enableEdgeToEdge()
         acceptIntent(intent)
         setContent { GenesisApp(application as GenesisApplication, openedTask.value, openedSection.value,

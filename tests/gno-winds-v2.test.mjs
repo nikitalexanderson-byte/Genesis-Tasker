@@ -5,10 +5,23 @@ import {calendarModule} from './helpers/calendar-modules.mjs';
 const g=calendarModule('app/aurora/gno-engine.ts'),m=calendarModule('app/aurora/gno-models.ts'),math=calendarModule('app/aurora/gno-decision-math.ts'),learner=calendarModule('app/aurora/gno-personal-ranking.ts'),intake=calendarModule('app/aurora/gno-guided.ts');
 const {SECTOR_IDS}=calendarModule('app/aurora/registry.ts');
 const {snapshotFromSavedDraw,expectedSourceDraw}=calendarModule('app/aurora/draw-policy.ts');
+const {olympianLetterEquation}=calendarModule('app/olympian-reading-math.ts');
 const at='2026-11-15T10:00:00Z';
 const answer=(value='yes',basis='checked')=>({value,basis,detail:'Explicit selected confirmation',at});
 function draft(){const d=g.newGnoDraft();return {...d,domain:'family',minutes:30,...intake.guidedPatch({...d,domain:'family'},{...intake.initialIntake(),topic:0,people:2,criterion:2,horizon:2},'en',new Date(at))};}
 const known=()=>Object.fromEntries(g.CORE_QUESTIONS.map(key=>[key,answer(key==='repeat'?'no':'yes')]));
+
+test('Every second-step model comparison renders its Greek name, including Zeus Herkeios',()=>{
+ assert.match(olympianLetterEquation('Ζεὺς Ἑρκεῖος'),/ = 1022$/u);
+ assert.equal(olympianLetterEquation('Ζεὺς\u00a0Ἑρκεῖος'),olympianLetterEquation('Ζεὺς Ἑρκεῖος'));
+ for(const source of SECTOR_IDS)for(const target of SECTOR_IDS){
+  for(const relation of m.crossRelation(source,target).numbers){
+   assert.ok(olympianLetterEquation(relation.left.greek).endsWith(` = ${relation.x}`),`${source}/${target}: ${relation.left.greek}`);
+   assert.ok(olympianLetterEquation(relation.right.greek).endsWith(` = ${relation.y}`),`${source}/${target}: ${relation.right.greek}`);
+  }
+ }
+ assert.throws(()=>olympianLetterEquation('Ζεύς + A'),/Unsupported isopsephy character/u);
+});
 
 test('The external table is independent of the introspective map and preserves all paired patrons',()=>{
  assert.deepEqual(Object.fromEntries(SECTOR_IDS.map(id=>[id,m.EXTERNAL_SECTORS[id].deities])),{northwest:['hermes'],north:['athena'],northeast:['hephaestus','prometheus'],west:['muses','dionysus'],center:['hestia','zeusHerkeios'],east:['demeter','helios'],southwest:['aphrodite'],south:['apollo'],southeast:['ploutos','tyche']});

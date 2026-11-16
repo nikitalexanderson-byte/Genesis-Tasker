@@ -9,6 +9,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.RenderProcessGoneDetail
 import androidx.annotation.Keep
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -65,7 +66,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
     private val scope: CoroutineScope, private val deliver: (String,JSONObject)->Unit,
     private val onTask: (AuroraTaskDraft)->Unit, private val onCheckout: (String)->Unit,
     private val onSpeak: (String)->Unit, private val onClose: ()->Unit,
-    private val onContentSize: (Int,Int)->Unit) {
+    private val onContentSize: (Int,Int)->Unit, private val onLoadFailed: ()->Unit) {
     @Volatile private var active=true
     @JavascriptInterface fun contentSize(height: Int, width: Int) {
         if (!active || height !in 1..100000 || width !in 1..8192) return
@@ -81,6 +82,11 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
         val id=request.optString("id");if(!id.matches(Regex("[a-f0-9-]{36}")))return
         scope.launch(Dispatchers.IO){
             val response=try{
+                // Leaving a failed view must not depend on a still-valid cloud session.
+                when (request.getString("method")) {
+                    "close" -> { withContext(Dispatchers.Main) { if(active)onClose() }; return@launch }
+                    "loadFailed" -> { withContext(Dispatchers.Main) { if(active)onLoadFailed() }; return@launch }
+                }
                 check();val payload=request.optJSONObject("payload")?:JSONObject()
                 val value:Any=when(request.getString("method")){
                     "request"->store.request(payload.getString("method"),payload.getString("path"),payload.optJSONObject("body"))
@@ -98,7 +104,6 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                         val kind=payload.getString("kind");require(kind in setOf("action","review"))
                         val source=payload.getString("sourceId");require(source.length<=350)
                         withContext(Dispatchers.Main){check();onTask(AuroraTaskDraft(title,description,date,time,zone,kind,source))};JSONObject()}
-                    "close"->{withContext(Dispatchers.Main){check();onClose()};JSONObject()}
                     else->error("AURORA_METHOD_INVALID")
                 }
                 check();JSONObject().put("value",value)
@@ -143,7 +148,18 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
     var headerHeight by remember { mutableStateOf(80.dp) }
     val speech=remember(context){TextToSpeech(context){}}
     DisposableEffect(speech){onDispose{speech.stop();speech.shutdown()}}
-    fun close(){val view=web;if(ready&&view!=null)view.evaluateJavascript("window.GenesisAuroraRuntime.requestClose()",null) else onClose()}
+    fun close(){
+        val view=web
+        if(!ready || failed || view==null || runCatching{gateway.check()}.isFailure) {onClose();return}
+        var answered=false
+        view.evaluateJavascript("window.GenesisAuroraRuntime?.requestClose() === true") { handled ->
+            answered=true
+            if(handled!="true")onClose()
+        }
+        // An unresponsive renderer cannot be allowed to capture the native close/back controls.
+        scope.launch {delay(1500);if(!answered)onClose()}
+    }
+    LaunchedEffect(web) {if(web!=null){delay(15000);if(!ready)failed=true}}
     Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false)){
         Surface(Modifier.fillMaxWidth(),color=scheme.surface){
           BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -153,8 +169,8 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                     .padding(horizontal = 8.dp, vertical = 4.dp)) {
                     EditorDialogHeader("Метод моделирования будущего","aurora-native-close"){close()}
                 }
-                if(failed)UntranslatedText(entryCopy.getString("loadError"),Modifier.padding(16.dp),color=scheme.error)
-                AndroidView(factory={ctx->WebView(ctx).apply{
+                if(failed)UntranslatedText(entryCopy.getString("loadError"),Modifier.padding(16.dp).testTag("aurora-native-error"),color=scheme.error)
+                if(!failed)AndroidView(factory={ctx->WebView(ctx).apply{
                     web=this;setBackgroundColor(scheme.surface.toArgb())
                     settings.javaScriptEnabled=true;settings.allowFileAccess=false;settings.allowContentAccess=false
                     settings.domStorageEnabled=false;settings.databaseEnabled=false;settings.javaScriptCanOpenWindowsAutomatically=false
@@ -164,7 +180,8 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                     val bridge=AuroraJavascriptBridge(store,gateway,scope,{id,response->
                         if(url==AuroraWebOrigin.ENTRY)evaluateJavascript("window.GenesisAuroraRuntime.resolve('$id','${encoded(response)}')",null)
                     },onTask,{url->ctx.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))},{text->speech.language=Locale.forLanguageTag("ru-RU");speech.speak(text,TextToSpeech.QUEUE_FLUSH,null,"aurora")},onClose,
-                        { height, width -> if (this.width > 0) contentHeight = (height.toFloat() * this.width / width / density).dp })
+                        { height, width -> if (this.width > 0) contentHeight = (height.toFloat() * this.width / width / density).dp },
+                        {failed=true;ready=false})
                     tag=bridge;addJavascriptInterface(bridge,"GenesisAuroraBridge")
                     webViewClient=object:WebViewClient(){
                         override fun shouldOverrideUrlLoading(view:WebView,request:WebResourceRequest)=true
@@ -177,7 +194,12 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                         }
                         override fun onPageFinished(view:WebView,url:String){
                             if(url!=AuroraWebOrigin.ENTRY)return
-                            view.evaluateJavascript("(function(){if(!window.GenesisAuroraRuntime)return false;window.GenesisAuroraRuntime.init('${encoded(boot)}');return true})()"){value->ready=value=="true";failed=!ready}
+                            view.evaluateJavascript("(function(){try{if(!window.GenesisAuroraRuntime)return false;window.GenesisAuroraRuntime.init('${encoded(boot)}');return true}catch(e){console.warn('AURORA_BOOTSTRAP_FAILED');return false}})()"){value->ready=value=="true";failed=!ready}
+                        }
+                        override fun onRenderProcessGone(view:WebView,detail:RenderProcessGoneDetail):Boolean {
+                            android.util.Log.w("GenesisAurora","Local renderer terminated; crashed=${detail.didCrash()}")
+                            failed=true;ready=false
+                            return true
                         }
                     }
                     loadUrl(AuroraWebOrigin.ENTRY)

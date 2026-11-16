@@ -43,7 +43,7 @@ internal fun weekdayOutlineColors(day: DayOfWeek): WeekdayOutlineColors = when (
     DayOfWeek.WEDNESDAY -> WeekdayOutlineColors(Color(0xff5cf5a1), Color(0xff19794b), Color(0xffd2ffe4), Color(0xff40eb91))
     DayOfWeek.THURSDAY -> WeekdayOutlineColors(Color(0xff6bafff), Color(0xff225dba), Color(0xffd8eeff), Color(0xff499cff))
     DayOfWeek.FRIDAY -> WeekdayOutlineColors(Color(0xffc890ff), Color(0xff6731a0), Color(0xfff2dfff), Color(0xffb86bff))
-    DayOfWeek.SATURDAY -> WeekdayOutlineColors(Color(0xff485664), Color(0xff111923), Color(0xffc0ccd6), Color(0xff8495a8))
+    DayOfWeek.SATURDAY -> WeekdayOutlineColors(Color(0xff27323e), Color(0xff080c12), Color(0xff91a2b3), Color(0xff485664))
 }
 
 /** Only active cells animate. State is read during drawing, without remeasuring the grid. */
@@ -59,6 +59,7 @@ internal fun Modifier.weekdayCalendarOutline(day: DayOfWeek, enabled: Boolean, a
         .12f, 1.12f, infiniteRepeatable(tween(4200, easing = LinearEasing)), label = "weekday-outline-glint")
         else rememberUpdatedState(.12f)
     val colors = remember(day) { weekdayOutlineColors(day) }
+    val saturday = day == DayOfWeek.SATURDAY
     return onGloballyPositioned { coordinates ->
         val bounds = coordinates.boundsInWindow()
         inViewport = bounds.width > 0f && bounds.height > 0f && bounds.right > 0f && bounds.bottom > 0f &&
@@ -78,7 +79,7 @@ internal fun Modifier.weekdayCalendarOutline(day: DayOfWeek, enabled: Boolean, a
             // Feathered outer strokes stay within 3dp of the cell; no full-grid blur/layer.
             if (strength > 0f) translate(inset, inset) {
                 for (spread in 6 downTo 1) drawOutline(outline, colors.glow,
-                    alpha = strength * .022f * (7 - spread), style = Stroke(stroke + spread * glowStep))
+                    alpha = strength * (if (saturday) .011f else .022f) * (7 - spread), style = Stroke(stroke + spread * glowStep))
             }
             drawContent()
             if (strength > 0f) {
@@ -88,11 +89,12 @@ internal fun Modifier.weekdayCalendarOutline(day: DayOfWeek, enabled: Boolean, a
                     val center = Offset(bounds.width / 2f, bounds.height / 2f)
                     val brush = Brush.linearGradient(listOf(colors.shade, colors.body, colors.highlight, colors.body, colors.shade),
                         start = center - beam, end = center + beam)
+                    if (saturday) drawOutline(outline, Color.Black, alpha = strength, style = Stroke(stroke + 1.dp.toPx()))
                     drawOutline(outline, brush, alpha = strength, style = Stroke(stroke))
                 }
-                // A fine silver bevel keeps Saturday's dark metal distinct from every fill.
+                // Saturday retains a dark edge with a quieter metallic highlight.
                 translate(bevelInset, bevelInset) {
-                    drawOutline(bevel, colors.highlight, alpha = strength * .60f, style = bevelStroke)
+                    drawOutline(bevel, colors.highlight, alpha = strength * if (saturday) .25f else .60f, style = bevelStroke)
                 }
             }
         }

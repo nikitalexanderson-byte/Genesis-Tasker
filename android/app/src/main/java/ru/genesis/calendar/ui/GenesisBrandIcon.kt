@@ -4,7 +4,9 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.annotation.DrawableRes
@@ -23,6 +25,15 @@ internal object GenesisBrandIcon {
     fun alias(value: String, dark: Boolean): String = "ru.genesis.calendar.Launcher" +
         palette(value).replaceFirstChar { it.uppercase() } + if (dark) "Dark" else "Light"
 
+    /** Samsung removes a running task when its launcher alias is disabled, even
+     * with DONT_KILL_APP. Transfer icon launches before rendering any app state. */
+    fun canonicalLauncherIntent(context: Context, incoming: Intent): Intent? {
+        val aliases = palettes.flatMap { listOf(alias(it, false), alias(it, true)) }
+        if (incoming.component?.className !in aliases) return null
+        return Intent(incoming).setComponent(ComponentName(context, ru.genesis.calendar.MainActivity::class.java))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+
     @DrawableRes fun drawable(value: String, dark: Boolean): Int = when (palette(value) to dark) {
         "blue" to false -> R.drawable.genesis_brand_blue_light
         "blue" to true -> R.drawable.genesis_brand_blue_dark
@@ -39,11 +50,19 @@ internal object GenesisBrandIcon {
         val manager = context.packageManager
         val desired = alias(value, dark)
         val names = palettes.flatMap { p -> listOf(alias(p, false), alias(p, true)) }
-        // Enable first: older Android versions cannot atomically switch alias settings.
-        for (name in listOf(desired) + names.filter { it != desired }) {
+        val changes = (listOf(desired) + names.filter { it != desired }).mapNotNull { name ->
             val component = ComponentName(context.packageName, name)
             val state = if (name == desired) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            if (manager.getComponentEnabledSetting(component) != state)
+            if (manager.getComponentEnabledSetting(component) == state) null else component to state
+        }
+        if (changes.isEmpty()) return@withLock
+        if (Build.VERSION.SDK_INT >= 33) {
+            manager.setComponentEnabledSettings(changes.map { (component, state) ->
+                PackageManager.ComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
+            })
+        } else {
+            // Enable first on Android versions without atomic alias updates.
+            for ((component, state) in changes)
                 manager.setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
         }
     }

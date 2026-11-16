@@ -24,6 +24,14 @@ import ru.genesis.calendar.ui.Text
 
 internal data class Notes(val title: String, val close: String, val changes: List<String>)
 
+/** The app and Open testing use the same reviewed release copy. */
+internal fun release334Notes(context: Context, language: String): List<String> {
+    val catalog = context.assets.open("originals/i18n/android-3.3.4-notes.json")
+        .bufferedReader(Charsets.UTF_8).use { org.json.JSONObject(it.readText()) }
+    val items = catalog.optJSONArray(language) ?: catalog.getJSONArray("ru")
+    return (0 until items.length()).map { items.getString(it) }
+}
+
 /** Reviewed release copy for every supported app language; also used for the Play Alpha notes. */
 internal val release331Notes = mapOf(
     "ru" to listOf(
@@ -264,7 +272,9 @@ internal fun releaseNotesTitle(): String = notes[LocalGenesisLanguage.current]?.
 @Composable
 internal fun ReleaseNotesDialog(onDismiss: () -> Unit) {
     val language = LocalGenesisLanguage.current
-    val copy = (notes[language] ?: notes.getValue("ru")).copy(changes = release331Notes[language] ?: release331Notes.getValue("ru"))
+    val context = LocalContext.current
+    val changes = remember(context, language) { release334Notes(context, language) }
+    val copy = (notes[language] ?: notes.getValue("ru")).copy(changes = changes)
     AlertDialog(onDismissRequest = onDismiss,
         modifier = Modifier.testTag("release-notes-dialog"),
         title = { Text("${copy.title} · ${BuildConfig.VERSION_NAME}") },

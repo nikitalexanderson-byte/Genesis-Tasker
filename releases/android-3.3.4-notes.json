@@ -1,0 +1,86 @@
+{
+  "ru": [
+    "Исправлено зависание второго шага метода моделирования будущего и закрытие его окна.",
+    "Устранён выход из приложения на Samsung при смене темы или палитры.",
+    "У субботы чёрная рамка в светлых темах и более тёмная рамка с мягким переливом в тёмных.",
+    "Предложение начинать год с марта перенесено наверх годового календаря; текст стал контрастнее."
+  ],
+  "en": [
+    "Fixed the future modeling method freezing on its second step and its window failing to close.",
+    "Fixed the app closing on Samsung when switching themes or color palettes.",
+    "Saturday has a black outline in light themes and a darker outline with a softer shimmer in dark themes.",
+    "Moved the March year-start suggestion to the top of the year view and improved text contrast."
+  ],
+  "el": [
+    "Διορθώθηκε το πάγωμα στο δεύτερο βήμα της μεθόδου μοντελοποίησης του μέλλοντος και το κλείσιμο του παραθύρου.",
+    "Διορθώθηκε το κλείσιμο της εφαρμογής σε Samsung κατά την αλλαγή θέματος ή παλέτας.",
+    "Το Σάββατο έχει μαύρο περίγραμμα στα φωτεινά θέματα και πιο σκούρο, με ηπιότερη λάμψη, στα σκοτεινά.",
+    "Η πρόταση έναρξης του έτους τον Μάρτιο μεταφέρθηκε στην κορυφή της ετήσιας προβολής με καλύτερη αντίθεση κειμένου."
+  ],
+  "de": [
+    "Einfrieren im zweiten Schritt der Zukunftsmodellierung und das Schließen des Fensters behoben.",
+    "Unbeabsichtigtes Schließen der App auf Samsung beim Wechsel von Design oder Farbpalette behoben.",
+    "Samstage haben in hellen Designs einen schwarzen Rand, in dunklen einen dunkleren Rand mit sanfterem Schimmer.",
+    "Der Hinweis zum Jahresbeginn im März steht jetzt oben in der Jahresansicht; der Text ist kontrastreicher."
+  ],
+  "fr": [
+    "Correction du blocage à la deuxième étape de la méthode de modélisation du futur et de la fermeture de sa fenêtre.",
+    "Correction de la fermeture de l’application sur Samsung lors du changement de thème ou de palette.",
+    "Le samedi a un contour noir en thème clair, plus sombre et moins brillant en thème sombre.",
+    "La suggestion de commencer l’année en mars est en haut de la vue annuelle, avec un texte plus contrasté."
+  ],
+  "es": [
+    "Corregido el bloqueo del segundo paso del método de modelado del futuro y el cierre de su ventana.",
+    "Corregido el cierre de la app en Samsung al cambiar de tema o paleta.",
+    "El sábado tiene borde negro en temas claros y más oscuro, con un brillo más suave, en temas oscuros.",
+    "La sugerencia de empezar el año en marzo está arriba en la vista anual y tiene mayor contraste de texto."
+  ],
+  "it": [
+    "Risolti il blocco al secondo passaggio del metodo di modellazione del futuro e il problema di chiusura della finestra.",
+    "Risolta la chiusura dell’app su Samsung cambiando tema o tavolozza.",
+    "Il sabato ha un bordo nero nei temi chiari e più scuro, con riflessi più delicati, nei temi scuri.",
+    "Il suggerimento di iniziare l’anno a marzo è in alto nella vista annuale, con testo più contrastato."
+  ],
+  "pt": [
+    "Corrigidos o bloqueio no segundo passo do método de modelação do futuro e o problema ao fechar a janela.",
+    "Corrigido o fecho da aplicação em Samsung ao mudar de tema ou paleta.",
+    "O sábado tem contorno preto nos temas claros e mais escuro, com brilho mais suave, nos temas escuros.",
+    "A sugestão de começar o ano em março está no topo da vista anual, com maior contraste do texto."
+  ],
+  "pl": [
+    "Naprawiono zawieszanie drugiego kroku metody modelowania przyszłości i zamykanie jej okna.",
+    "Naprawiono zamykanie aplikacji na Samsungu przy zmianie motywu lub palety.",
+    "Sobota ma czarną ramkę w jasnych motywach oraz ciemniejszą ramkę z łagodniejszym połyskiem w ciemnych.",
+    "Propozycja rozpoczynania roku w marcu jest u góry widoku rocznego, a tekst ma większy kontrast."
+  ],
+  "sr": [
+    "Исправљено замрзавање другог корака методе моделовања будућности и затварање њеног прозора.",
+    "Исправљено затварање апликације на Samsung уређајима при промени теме или палете.",
+    "Субота има црни оквир у светлим темама и тамнији оквир са блажим преливањем у тамним.",
+    "Предлог да година почне у марту је на врху годишњег приказа, уз контрастнији текст."
+  ],
+  "uk": [
+    "Виправлено зависання другого кроку методу моделювання майбутнього та закриття його вікна.",
+    "Усунуто закриття застосунку на Samsung під час зміни теми або палітри.",
+    "Субота має чорну рамку у світлих темах і темнішу рамку з м’яким переливом у темних.",
+    "Пропозицію починати рік із березня перенесено вгору річного календаря; текст став контрастнішим."
+  ],
+  "zh": [
+    "修复未来建模方法第二步卡住以及窗口无法关闭的问题。",
+    "修复 Samsung 设备切换主题或配色时应用意外关闭的问题。",
+    "浅色主题中的星期六使用黑色边框；深色主题中的边框更暗，流光效果更柔和。",
+    "将从三月开始一年的建议移至年视图顶部，并提高文字对比度。"
+  ],
+  "tr": [
+    "Geleceği modelleme yönteminin ikinci adımında donma ve pencerenin kapanmaması sorunları düzeltildi.",
+    "Samsung cihazlarda tema veya renk paleti değiştirirken uygulamanın kapanması düzeltildi.",
+    "Cumartesi, açık temalarda siyah; koyu temalarda daha koyu ve daha yumuşak parıltılı bir kenarlığa sahip.",
+    "Yılı martta başlatma önerisi yıl görünümünün üstüne taşındı ve metin kontrastı artırıldı."
+  ],
+  "ja": [
+    "未来モデリング手法の第2ステップで画面が固まり、ウィンドウを閉じられなくなる問題を修正しました。",
+    "Samsung端末でテーマや配色を切り替えるとアプリが閉じる問題を修正しました。",
+    "ライトテーマの土曜日に黒い枠線を追加。ダークテーマでは枠線を暗くし、光沢を控えめにしました。",
+    "3月から年を始める提案を年表示の上部へ移し、文字のコントラストを改善しました。"
+  ]
+}
