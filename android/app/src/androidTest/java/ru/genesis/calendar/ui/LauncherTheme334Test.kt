@@ -22,7 +22,8 @@ class LauncherTheme334Test {
         val device=UiDevice.getInstance(instrumentation)
         val manager=context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         fun mainTask()=manager.appTasks.mapNotNull {it.taskInfo}.firstOrNull {
-            it.baseActivity?.packageName==context.packageName && it.baseActivity?.className=="ru.genesis.calendar.MainActivity"
+            it.baseActivity?.packageName==context.packageName && it.baseActivity?.className=="ru.genesis.calendar.MainActivity" &&
+                it.baseIntent.component?.className=="ru.genesis.calendar.MainActivity"
         }
         val launcher=Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(context.packageName)
         val initial=context.packageManager.queryIntentActivities(launcher,0).single().activityInfo.name

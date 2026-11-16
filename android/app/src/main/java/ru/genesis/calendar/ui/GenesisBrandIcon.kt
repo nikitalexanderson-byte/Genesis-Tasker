@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.graphics.Bitmap
@@ -24,15 +23,6 @@ internal object GenesisBrandIcon {
     fun palette(value: String) = value.takeIf { it in palettes } ?: "green"
     fun alias(value: String, dark: Boolean): String = "ru.genesis.calendar.Launcher" +
         palette(value).replaceFirstChar { it.uppercase() } + if (dark) "Dark" else "Light"
-
-    /** Samsung removes a running task when its launcher alias is disabled, even
-     * with DONT_KILL_APP. Transfer icon launches before rendering any app state. */
-    fun canonicalLauncherIntent(context: Context, incoming: Intent): Intent? {
-        val aliases = palettes.flatMap { listOf(alias(it, false), alias(it, true)) }
-        if (incoming.component?.className !in aliases) return null
-        return Intent(incoming).setComponent(ComponentName(context, ru.genesis.calendar.MainActivity::class.java))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-    }
 
     @DrawableRes fun drawable(value: String, dark: Boolean): Int = when (palette(value) to dark) {
         "blue" to false -> R.drawable.genesis_brand_blue_light

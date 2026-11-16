@@ -59,6 +59,7 @@ class TaskRecurrenceFlowTest {
         println("GENESIS_QA_RECURRENCE_AFTER_BACK=" + compose.onNodeWithTag("task-title").printToString())
         compose.onNodeWithTag("task-title").assertTextContains(title)
         selectEditorChoice("task-form-calendar-lunar")
+        compose.onNodeWithTag("task-options-toggle").performScrollTo().performClick()
         compose.onNodeWithTag("custom-reminder-toggle").performScrollTo().performClick()
         compose.onNodeWithText("За время до задачи").assertExists()
         compose.onNodeWithTag("custom-reminder-toggle").performScrollTo().performClick()
@@ -87,6 +88,7 @@ class TaskRecurrenceFlowTest {
         assertEquals(1, runBlocking { app.repository.tasks.first().count { it.title == title } })
         compose.scrollToTodayNode(hasText(title))
         compose.onNodeWithText(title).performClick()
+        compose.onNodeWithTag("task-options-toggle").performScrollTo().performClick()
         compose.onNodeWithText("Удалить задачу").performScrollTo().performClick()
         compose.onNodeWithTag("delete-occurrence").assertExists().performClick()
         compose.waitUntil(10_000) { runBlocking {

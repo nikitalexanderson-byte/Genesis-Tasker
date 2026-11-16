@@ -50,6 +50,8 @@
 .gno-tile-position>span{max-width:calc(100% - 16px);text-align:end;font-weight:600}
 .gno-art{display:block;min-height:0;flex:1;width:100%;margin:3px 0;position:relative}
 .gno-art>.stoicheion-card-visual{height:100%;width:auto;max-width:100%;margin:auto;aspect-ratio:2/3}
+/* These map thumbnails have a separate readable name below the authored face. */
+.gno-art :is(.stoicheion-card-title,.stoicheion-card-caption){display:none}
 .gno-tile-name{display:flex;align-items:center;gap:4px;justify-content:center;font-size:12px;line-height:1.25;font-weight:600}
 .gno-connection{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 1px 2px var(--surface));color:var(--ui-accent,var(--teal))}
 .gno-connection>path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-dasharray:4 3}

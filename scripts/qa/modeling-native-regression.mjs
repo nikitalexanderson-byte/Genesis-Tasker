@@ -1,7 +1,7 @@
 import {execFileSync} from 'node:child_process';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
-import {chromium} from 'playwright';
+import {_android as android} from 'playwright';
 
 const option=(name,fallback)=>process.argv.find(value=>value.startsWith(`--${name}=`))?.slice(name.length+3)??fallback;
 const serial=option('serial',''),language=option('language','ru'),dark=option('dark','false')==='true';
@@ -13,23 +13,21 @@ mkdirSync(output,{recursive:true});
 const sdk=process.env.ANDROID_HOME??join(process.env.LOCALAPPDATA,'Android/Sdk');
 const adb=join(sdk,'platform-tools',process.platform==='win32'?'adb.exe':'adb');
 const pkg='ru.genesis.calendar.qa1103.release',activity='ru.genesis.calendar.ModelingReleaseQaActivity';
-const port=Number(option('port','9336'));
-if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid CDP port');
 const run=(...args)=>execFileSync(adb,['-s',serial,...args],{encoding:'utf8',windowsHide:true,timeout:45000}).trim();
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const results=[],errors=[];
-let browser,ownedForward=false;
+let devices=[];
 try {
   // This minified package is built with a fake gateway; production cannot enter this host.
   run('shell','am','start','-S','-W','-n',`${pkg}/${activity}`,'--es','language',language,'--ez','dark',String(dark),'--el','seed','4294967295');
-  const pid=run('shell','pidof',pkg);
-  if(!/^\d+$/.test(pid))throw Error('The isolated release QA process is unavailable');
-  run('forward','--no-rebind',`tcp:${port}`,`localabstract:webview_devtools_remote_${pid}`);ownedForward=true;
-  for(let attempt=0;attempt<30;attempt++) {
-    try {browser=await chromium.connectOverCDP(`http://127.0.0.1:${port}`,{timeout:1500});break;}catch(error){if(attempt===29)throw error;await sleep(250);}
-  }
-  const page=browser.contexts().flatMap(context=>context.pages()).find(page=>page.url()==='https://appassets.androidplatform.net/aurora/index.html');
-  if(!page)throw Error('The local signed modeling entry is not open');
+  // Android's WebView transport avoids desktop-only Browser context commands.
+  // Driver installation is unnecessary: all native input uses the selected ADB serial.
+  devices=await android.devices({omitDriverInstall:true});
+  const device=devices.find(candidate=>candidate.serial()===serial);
+  if(!device)throw Error('The explicitly selected Android device is unavailable');
+  const webview=await device.webView({pkg},{timeout:20000});
+  const page=await webview.page();
+  if(page.url()!=='https://appassets.androidplatform.net/aurora/index.html')throw Error('The local signed modeling entry is not open');
   page.on('pageerror',error=>errors.push(String(error)));
   await page.waitForSelector('.gno-dialog select',{timeout:20000});
   const check=async domain=>{
@@ -56,6 +54,13 @@ try {
     await page.waitForSelector('.gno-workspace',{timeout:10000});
     await check(domain);
     if(domain===3) {
+      await page.waitForFunction(()=>[...document.querySelectorAll('.gno-art .stoicheion-card-artwork')].every(image=>image.complete&&image.naturalWidth>0),null,{timeout:15000});
+      const art=await page.locator('.gno-art .stoicheion-card-visual').evaluateAll(cards=>cards.map(card=>({
+        card:card.getBoundingClientRect().toJSON(),image:card.querySelector('img').getBoundingClientRect().toJSON(),
+        loaded:card.querySelector('img').naturalWidth,title:getComputedStyle(card.querySelector('.stoicheion-card-title')).fontSize,
+        caption:getComputedStyle(card.querySelector('.stoicheion-card-caption')).fontSize,
+      })));
+      writeFileSync(join(output,'home-art-layout.json'),JSON.stringify(art,null,2));
       await page.screenshot({path:join(output,'home-second-step-webview.png')});
       writeFileSync(join(output,'home-second-step-native.png'),execFileSync(adb,['-s',serial,'exec-out','screencap','-p'],{windowsHide:true,timeout:10000}));
     }
@@ -75,6 +80,5 @@ try {
   writeFileSync(join(output,'results.json'),JSON.stringify({status:'FAIL',serial,language,dark,results,errors,error:String(error)},null,2));
   throw error;
 } finally {
-  if(browser)await browser.close().catch(()=>undefined);
-  if(ownedForward)run('forward','--remove',`tcp:${port}`);
+  await Promise.all(devices.map(device=>device.close().catch(()=>undefined)));
 }
