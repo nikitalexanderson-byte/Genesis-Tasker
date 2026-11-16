@@ -50,7 +50,7 @@ export async function grantedDevicePaymentRegion(permissions:Pick<Permissions,'q
 }
 
 export function paymentProviderOrder(region:PaymentRegion):BillingProvider[] {
-  return region==='RU'?['yookassa','lemon-squeezy','google-play']:['lemon-squeezy','yookassa','google-play'];
+  return region==='RU'?['yookassa','paddle','google-play']:['paddle','yookassa','google-play'];
 }
 
 /** Keep a deliberate user choice; otherwise prefer configured methods in the regional order. */

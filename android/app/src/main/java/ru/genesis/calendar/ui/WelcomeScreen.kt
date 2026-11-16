@@ -56,16 +56,18 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
     preferredLanguage: String? = null, onLanguage: (String) -> Unit) {
     val context = LocalContext.current
     val activity = context.activity()
+    var invitationBusy by remember { mutableStateOf(false) }
     WelcomeContent(state, language, onLanguage,
         onSignIn = { activity?.let { controller.signIn(it, preferredLanguage) } },
-        signInEnabled = activity != null, onRetry = controller::checkSession,
+        signInEnabled = activity != null && !invitationBusy, onRetry = controller::checkSession,
+        invitation = { NativeReferralInvitation(controller, language) { invitationBusy = it } },
         onWeb = { openWebsite(context) },
         onLegal = { path -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GENESIS_ORIGIN + path))) })
 }
 
 @Composable internal fun WelcomeContent(state: AuthPanelState, language: String, onLanguage: (String) -> Unit,
     onSignIn: () -> Unit, signInEnabled: Boolean = true, onRetry: () -> Unit, onWeb: () -> Unit,
-    onLegal: (String) -> Unit) {
+    onLegal: (String) -> Unit, invitation: @Composable () -> Unit = {}) {
     // The welcome artwork is always dark, independently of the host's selected palette.
     CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(
@@ -113,6 +115,7 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
                     TextButton(onWeb, Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("welcome-open-web")) {
                         Text("Открыть веб-версию", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
                     }
+                    invitation()
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

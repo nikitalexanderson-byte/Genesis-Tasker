@@ -5,6 +5,7 @@ import { MODELING_SERVICE_PRICES, modelingAvailableMethod, modelingCheckoutUrl, 
 import { billingMoney } from '../billing';
 import type { Language } from '../i18n';
 import type { AuroraHost } from './host';
+import drawAccessCopy from '../draw-access-copy.json';
 export function AuroraPayment({ host, resultId, onUnlocked }: {
     host: AuroraHost;
     resultId: string;
@@ -32,7 +33,7 @@ export function AuroraPayment({ host, resultId, onUnlocked }: {
         setBusy(true);
         setError('');
         try {
-            if ((catalog?.forecastElitePlus || catalog?.testingAccess)) {
+            if ((catalog?.includedInPlan || catalog?.forecastElitePlus || catalog?.testingAccess)) {
                 await open();
                 return;
             }
@@ -79,12 +80,12 @@ export function AuroraPayment({ host, resultId, onUnlocked }: {
     }
     return <section className="aurora-payment" aria-label={text.title}>
   <h3>{text.title}</h3><p>{text.description}</p>
-  {(catalog?.forecastElitePlus || catalog?.testingAccess) ? <p className="admin-elite-plus">{catalog?.testingAccess ? text.testing : text.privileged}</p> : <>
+  {(catalog?.includedInPlan || catalog?.forecastElitePlus || catalog?.testingAccess) ? <p className="admin-elite-plus">{catalog?.testingAccess ? text.testing : drawAccessCopy[host.language as Language].included}</p> : <>
    <p className="aurora-price">{billingMoney(MODELING_SERVICE_PRICES.RUB, host.language as Language, 'RUB')} / {billingMoney(MODELING_SERVICE_PRICES.USD, host.language as Language, 'USD')}</p>
    {catalog?.methods.filter(modelingAvailableMethod).map(m => <label className="aurora-choice" key={m.provider}><input type="radio" name="aurora-payment" checked={method?.provider === m.provider} onChange={() => setMethod(m)} disabled={busy || Boolean(order)}/>{m.provider === 'yookassa' ? 'YooKassa' : 'Lemon Squeezy'} · {billingMoney(m.amountMinor, host.language as Language, m.currency)}</label>)}
   </>}
-  <div className="aurora-actions"><button type="button" className="primary-button" disabled={busy || !catalog || !catalog.forecastElitePlus && !catalog.testingAccess && !method} onClick={() => void perform()}>{busy ? RU.text0001 : (catalog?.forecastElitePlus || catalog?.testingAccess) ? text.open : text.pay}</button>
+  <div className="aurora-actions"><button type="button" className="primary-button" disabled={busy || !catalog || !catalog.includedInPlan && !catalog.forecastElitePlus && !catalog.testingAccess && !method} onClick={() => void perform()}>{busy ? RU.text0001 : (catalog?.includedInPlan || catalog?.forecastElitePlus || catalog?.testingAccess) ? text.open : text.pay}</button>
    <button type="button" className="secondary-button" disabled={busy} onClick={() => void perform(true)}>{text.check}</button></div>
-  {catalog && !catalog.forecastElitePlus && !catalog.testingAccess && !method ? <p role="status">{text.unavailable}</p> : null}{error ? <p role="alert">{error}</p> : null}
+  {catalog && !catalog.includedInPlan && !catalog.forecastElitePlus && !catalog.testingAccess && !method ? <p role="status">{text.unavailable}</p> : null}{error ? <p role="alert">{error}</p> : null}
  </section>;
 }

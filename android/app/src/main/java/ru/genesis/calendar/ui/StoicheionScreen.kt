@@ -133,7 +133,7 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
     var restorationHabitId by remember { mutableStateOf<String?>(null) }
     val openRestoration: (String?) -> Unit = { sectorId ->
         val spread = draws?.spread
-        val cards = letters?.let { loaded -> spread?.let { StoicheionReading.spread(loaded, it.seed) } }
+        val cards = letters?.let { loaded -> spread?.let { actualSpreadReading(loaded, it) } }
         restorationSource = if (spread != null && cards != null) RestorationSource(spread.dayKey, spread.seed,
             cards.map { RestorationDrawCard(it.first.id, it.second) }) else null
         restorationSectorId = sectorId
@@ -231,6 +231,15 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                             onRestore = if (!restorationAllowed || restorationCatalog == null || theokyklos == null) null else { { openRestoration(null) } },
                             restorationError = restorationCatalogResult.isFailure || theokyklosResult.isFailure,
                             onReloadRestoration = { restorationReload++ },
+                            onSpreadCard = if (draws?.spread?.unlimited != true) null else { position -> scope.launch {
+                                if (!saving && !refreshing && !divinationDisabled) {
+                                    saving = true; drawError = null
+                                    try { repository.changeSpreadCard(position) }
+                                    catch (cancel: CancellationException) { throw cancel }
+                                    catch (error: Exception) { drawError = error.message }
+                                    finally { saving = false }
+                                }
+                            } },
                             onTimelineAction = if (!app.workspaceScope.startsWith("account-")) null else { position, action ->
                                 if (!saving && !refreshing && !divinationDisabled && access.allows("stoicheion-timeline")) {
                                     timelineAction = position to action; beginMotion("timeline")
@@ -265,8 +274,8 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                         }
                         val modelingSource=remember(draws?.spread,loaded) { draws?.spread?.let { spread ->
                             JSONObject().put("id","stoicheion-${spread.dayKey}-${spread.seed}").put("seed",spread.seed)
-                                .put("day",spread.dayKey).put("createdAt",java.time.Instant.ofEpochMilli(spread.firstAt).toString())
-                                .put("cards",JSONArray(StoicheionReading.spread(loaded,spread.seed).map { (letter,reversed) ->
+                                .put("day",spread.dayKey).put("cardRevision",spread.cardRevision).put("createdAt",java.time.Instant.ofEpochMilli(spread.firstAt).toString())
+                                .put("cards",JSONArray(actualSpreadReading(loaded,spread).map { (letter,reversed) ->
                                     JSONObject().put("cardId",letter.id).put("reversed",reversed)
                                 }))
                         } }

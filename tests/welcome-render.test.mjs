@@ -71,7 +71,7 @@ test("anonymous welcome renders Google-only sign-in in every supported language"
       }));
       assert.match(androidWelcome, /href="\/api\/android\/download"/, `${language}: download uses the current published release`);
       assert.match(androidWelcome, /android-install-help/, `${language}: installation instructions can be expanded`);
-      assert.doesNotMatch(androidWelcome, /TWA|3\.0\.1|удалите TWA|uninstall the TWA/i, `${language}: no obsolete migration or unreleased version`);
+      assert.doesNotMatch(androidWelcome, /\bTWA\b|3\.0\.1|удалите TWA|uninstall the TWA/i, `${language}: no obsolete migration or unreleased version`);
       const toolbar = renderToStaticMarkup(createElement(AndroidDownload, { href: "/api/android/download", language, toolbar: true }));
       assert.match(toolbar, /android-install-toolbar/, `${language}: signed-in workspace has the same installer`);
       assert.match(toolbar, /<button[^>]*aria-controls=[^>]*aria-expanded="false"/);

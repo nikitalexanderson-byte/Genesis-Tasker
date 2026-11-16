@@ -1,0 +1,100 @@
+{
+  "ru": {
+    "weeklyRule": "Расклад из девяти карт обновляется один раз за календарную неделю, с понедельника по воскресенье. Гно Метэр Басилея включён в Premium, Business и Elite / Elite+ без доплаты и использует только эти девять карт.",
+    "unlimitedRule": "Elite+: любую карту можно перебрасывать в любое время и без ограничения числа попыток.",
+    "rerollCard": "Перебросить эту карту",
+    "historical": "Это сохранённое прохождение использует прежние девять карт и доступно только для чтения. Для расчёта по текущему раскладу начните новое прохождение.",
+    "included": "Включено в Premium, Business и Elite / Elite+ без отдельной оплаты. Расчёт привязан к девяти выпавшим картам."
+  },
+  "en": {
+    "weeklyRule": "The nine-card spread is drawn once per calendar week, Monday through Sunday. Gno Meter Basileia is included in Premium, Business and Elite / Elite+ at no extra charge and uses only these nine cards.",
+    "unlimitedRule": "Elite+: reroll any card at any time, with no limit on attempts.",
+    "rerollCard": "Reroll this card",
+    "historical": "This saved session uses an earlier nine-card spread and is read-only. Start a new session to calculate from the current spread.",
+    "included": "Included in Premium, Business and Elite / Elite+ at no extra charge. Calculations are tied to the nine drawn cards."
+  },
+  "el": {
+    "weeklyRule": "Το άνοιγμα των εννέα καρτών κληρώνεται μία φορά ανά ημερολογιακή εβδομάδα, από Δευτέρα έως Κυριακή. Το Gno Meter Basileia περιλαμβάνεται στα Premium, Business και Elite / Elite+ χωρίς επιπλέον χρέωση και χρησιμοποιεί μόνο αυτές τις εννέα κάρτες.",
+    "unlimitedRule": "Elite+: μπορείτε να ξανακληρώσετε οποιαδήποτε κάρτα ανά πάσα στιγμή, χωρίς όριο προσπαθειών.",
+    "rerollCard": "Κληρώστε ξανά αυτή την κάρτα",
+    "historical": "Αυτή η αποθηκευμένη συνεδρία χρησιμοποιεί παλαιότερο άνοιγμα εννέα καρτών και είναι διαθέσιμη μόνο για ανάγνωση. Ξεκινήστε νέα συνεδρία για υπολογισμό με το τρέχον άνοιγμα.",
+    "included": "Περιλαμβάνεται στα Premium, Business και Elite / Elite+ χωρίς επιπλέον χρέωση. Οι υπολογισμοί συνδέονται με τις εννέα κάρτες που κληρώθηκαν."
+  },
+  "de": {
+    "weeklyRule": "Die Neun-Karten-Legung wird einmal pro Kalenderwoche von Montag bis Sonntag gezogen. Gno Meter Basileia ist in Premium, Business und Elite / Elite+ ohne Aufpreis enthalten und verwendet ausschließlich diese neun Karten.",
+    "unlimitedRule": "Elite+: Ziehe jede beliebige Karte jederzeit neu, ohne Begrenzung der Versuche.",
+    "rerollCard": "Diese Karte neu ziehen",
+    "historical": "Diese gespeicherte Sitzung verwendet eine frühere Neun-Karten-Legung und kann nur gelesen werden. Starte eine neue Sitzung, um mit der aktuellen Legung zu rechnen.",
+    "included": "In Premium, Business und Elite / Elite+ ohne Aufpreis enthalten. Die Berechnungen sind an die neun gezogenen Karten gebunden."
+  },
+  "fr": {
+    "weeklyRule": "Le tirage de neuf cartes est effectué une fois par semaine calendaire, du lundi au dimanche. Gno Meter Basileia est inclus dans Premium, Business et Elite / Elite+ sans frais supplémentaires et utilise uniquement ces neuf cartes.",
+    "unlimitedRule": "Elite+ : tirez à nouveau n’importe quelle carte à tout moment, sans limite de tentatives.",
+    "rerollCard": "Tirer à nouveau cette carte",
+    "historical": "Cette session enregistrée utilise un ancien tirage de neuf cartes et est disponible en lecture seule. Démarrez une nouvelle session pour effectuer les calculs avec le tirage actuel.",
+    "included": "Inclus dans Premium, Business et Elite / Elite+ sans frais supplémentaires. Les calculs sont liés aux neuf cartes tirées."
+  },
+  "es": {
+    "weeklyRule": "La tirada de nueve cartas se realiza una vez por semana natural, de lunes a domingo. Gno Meter Basileia está incluido en Premium, Business y Elite / Elite+ sin coste adicional y utiliza solo esas nueve cartas.",
+    "unlimitedRule": "Elite+: vuelve a sacar cualquier carta en cualquier momento, sin límite de intentos.",
+    "rerollCard": "Volver a sacar esta carta",
+    "historical": "Esta sesión guardada utiliza una tirada anterior de nueve cartas y es de solo lectura. Inicia una nueva sesión para calcular con la tirada actual.",
+    "included": "Incluido en Premium, Business y Elite / Elite+ sin coste adicional. Los cálculos están vinculados a las nueve cartas obtenidas en la tirada."
+  },
+  "it": {
+    "weeklyRule": "La stesa di nove carte viene estratta una volta per settimana di calendario, da lunedì a domenica. Gno Meter Basileia è incluso in Premium, Business ed Elite / Elite+ senza costi aggiuntivi e usa soltanto queste nove carte.",
+    "unlimitedRule": "Elite+: puoi estrarre di nuovo qualsiasi carta in ogni momento, senza limiti di tentativi.",
+    "rerollCard": "Estrai di nuovo questa carta",
+    "historical": "Questa sessione salvata usa una precedente stesa di nove carte ed è disponibile in sola lettura. Avvia una nuova sessione per eseguire i calcoli con la stesa attuale.",
+    "included": "Incluso in Premium, Business ed Elite / Elite+ senza costi aggiuntivi. I calcoli sono vincolati alle nove carte estratte."
+  },
+  "pt": {
+    "weeklyRule": "A tiragem de nove cartas é feita uma vez por semana de calendário, de segunda-feira a domingo. O Gno Meter Basileia está incluído no Premium, Business e Elite / Elite+ sem custo adicional e utiliza apenas essas nove cartas.",
+    "unlimitedRule": "Elite+: volte a tirar qualquer carta a qualquer momento, sem limite de tentativas.",
+    "rerollCard": "Voltar a tirar esta carta",
+    "historical": "Esta sessão guardada utiliza uma tiragem anterior de nove cartas e está disponível apenas para leitura. Inicie uma nova sessão para calcular com a tiragem atual.",
+    "included": "Incluído no Premium, Business e Elite / Elite+ sem custo adicional. Os cálculos estão associados às nove cartas tiradas."
+  },
+  "pl": {
+    "weeklyRule": "Rozkład dziewięciu kart jest losowany raz w tygodniu kalendarzowym, od poniedziałku do niedzieli. Gno Meter Basileia jest zawarty w Premium, Business i Elite / Elite+ bez dodatkowych opłat i korzysta wyłącznie z tych dziewięciu kart.",
+    "unlimitedRule": "Elite+: losuj ponownie dowolną kartę w każdej chwili, bez limitu prób.",
+    "rerollCard": "Wylosuj ponownie tę kartę",
+    "historical": "Ta zapisana sesja korzysta z wcześniejszego rozkładu dziewięciu kart i jest dostępna tylko do odczytu. Rozpocznij nową sesję, aby wykonać obliczenia dla aktualnego rozkładu.",
+    "included": "Zawarte w Premium, Business i Elite / Elite+ bez dodatkowych opłat. Obliczenia są powiązane z dziewięcioma wylosowanymi kartami."
+  },
+  "sr": {
+    "weeklyRule": "Распоред од девет карата извлачи се једном у календарској недељи, од понедељка до недеље. Gno Meter Basileia је укључен у Premium, Business и Elite / Elite+ без доплате и користи само тих девет карата.",
+    "unlimitedRule": "Elite+: било коју карту можете поново извући у било ком тренутку, без ограничења броја покушаја.",
+    "rerollCard": "Поново извуци ову карту",
+    "historical": "Ова сачувана сесија користи ранији распоред од девет карата и доступна је само за читање. Започните нову сесију за рачунање према тренутном распореду.",
+    "included": "Укључено у Premium, Business и Elite / Elite+ без доплате. Прорачуни су везани за девет извучених карата."
+  },
+  "uk": {
+    "weeklyRule": "Розклад із дев’яти карт витягується один раз за календарний тиждень, із понеділка до неділі. Gno Meter Basileia входить до Premium, Business та Elite / Elite+ без доплати й використовує лише ці дев’ять карт.",
+    "unlimitedRule": "Elite+: будь-яку карту можна витягувати повторно будь-коли й без обмеження кількості спроб.",
+    "rerollCard": "Витягнути цю карту повторно",
+    "historical": "Це збережене проходження використовує попередній розклад із дев’яти карт і доступне лише для читання. Щоб виконати розрахунок за поточним розкладом, почніть нове проходження.",
+    "included": "Входить до Premium, Business та Elite / Elite+ без окремої оплати. Розрахунок прив’язаний до дев’яти карт, що випали."
+  },
+  "zh": {
+    "weeklyRule": "九张牌的牌阵每个日历周（周一至周日）可抽取一次。Premium、Business 和 Elite / Elite+ 均包含 Gno Meter Basileia，无需额外付费，且仅使用这九张牌进行计算。",
+    "unlimitedRule": "Elite+：可随时重新抽取任意一张牌，次数不限。",
+    "rerollCard": "重新抽取这张牌",
+    "historical": "此已保存的会话使用之前的九张牌阵，仅供查看。请开始新会话，以当前牌阵进行计算。",
+    "included": "Premium、Business 和 Elite / Elite+ 均已包含，无需额外付费。计算仅与抽出的九张牌绑定。"
+  },
+  "tr": {
+    "weeklyRule": "Dokuz kartlık açılım, pazartesiden pazara kadar olan her takvim haftasında bir kez çekilir. Gno Meter Basileia, Premium, Business ve Elite / Elite+ planlarına ek ücret olmadan dahildir ve yalnızca bu dokuz kartı kullanır.",
+    "unlimitedRule": "Elite+: herhangi bir kartı istediğiniz zaman, deneme sınırı olmadan yeniden çekebilirsiniz.",
+    "rerollCard": "Bu kartı yeniden çek",
+    "historical": "Bu kayıtlı oturum önceki bir dokuz kartlık açılımı kullanır ve salt okunurdur. Güncel açılımla hesaplama yapmak için yeni bir oturum başlatın.",
+    "included": "Premium, Business ve Elite / Elite+ planlarına ek ücret olmadan dahildir. Hesaplamalar çekilen dokuz karta bağlıdır."
+  },
+  "ja": {
+    "weeklyRule": "9 枚のカードのスプレッドは、月曜日から日曜日までの暦週ごとに 1 回引くことができます。Gno Meter Basileia は Premium、Business、Elite / Elite+ に追加料金なしで含まれ、この 9 枚のカードのみを使用します。",
+    "unlimitedRule": "Elite+：いつでも任意のカードを、回数制限なく引き直せます。",
+    "rerollCard": "このカードを引き直す",
+    "historical": "この保存済みセッションでは以前の 9 枚のスプレッドを使用しており、閲覧のみ可能です。現在のスプレッドで計算するには、新しいセッションを開始してください。",
+    "included": "Premium、Business、Elite / Elite+ に追加料金なしで含まれます。計算は引いた 9 枚のカードに連動します。"
+  }
+}

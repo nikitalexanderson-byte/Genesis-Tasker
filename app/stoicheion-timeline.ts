@@ -12,6 +12,9 @@ export function receiveTimeline(record:StoicheionTimelineRecord, receivedAt:numb
 export function timelineCardSeconds(card:ClientTimelineRecord["cards"][number]|undefined, clock:number):number {
   return card?.canReroll?Math.max(0,Math.ceil((card.localDeadline-clock)/1000)):0;
 }
+export function timelineCardCanReroll(card:ClientTimelineRecord["cards"][number]|undefined, clock:number):boolean {
+  return Boolean(card?.canReroll && (card.unlimited || timelineCardSeconds(card,clock)>0));
+}
 
 const localizedCopy = Object.fromEntries(Object.keys(copy).map(key => [key, { ...copy[key as keyof typeof copy], ...web[key as keyof typeof web] }])) as { [K in keyof typeof copy]: typeof copy[K] & typeof web[K] };
 export function stoicheionTimelineCopy(language: string) {

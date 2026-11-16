@@ -31,6 +31,8 @@ function genesisSubscriptionRevoke(PDO $db, array $user, string $stamp): void
         $stamp=(new DateTimeImmutable($stamp))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
         require_once __DIR__.'/subscription-trials.php';
         genesisTrialRevoke($db,$user,(int)strtotime($stamp));
+        if(function_exists('genesisReferralsSchemaReady')&&genesisReferralsSchemaReady($db))
+            $db->prepare('DELETE FROM consumer_referral_grants WHERE user_id=?')->execute([$user['id']]);
         $identities = [$user];
         if (function_exists('genesisLinkedGoogleAccounts')) $identities = [...$identities, ...genesisLinkedGoogleAccounts((string)$user['id'])];
         $keys = [];

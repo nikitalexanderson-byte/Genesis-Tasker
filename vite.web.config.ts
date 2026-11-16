@@ -4,12 +4,13 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { LEGAL_UPDATED, legalPages } from "./app/legal-content";
+import { LEGAL_UPDATED, legalPages, legalPageContent } from "./app/legal-content";
 import { BACKUP_LEGAL_READY, BACKUP_LEGAL_VERSION } from './app/backup-legal';
 import feedbackAudioManifest from "./public/feedback-audio/manifest.json";
 import mindmapIconCatalog from "./app/mindmap-icon-catalog.json";
 import moodFaces from "./app/mood-faces.json";
 import { SERVICE_IDENTITY } from "./app/public-service";
+import {publicProductHtml, publicMerchantHtml} from './app/public-product';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const configuredBase = process.env.GENESIS_BASE_PATH?.trim() || "/";
@@ -49,7 +50,9 @@ function publicLegalDocuments(): Plugin {
     apply: "build",
     enforce: "post",
     transformIndexHtml(html) {
-      return html.replace("%GENESIS_SERVICE_IDENTITY%", escape(SERVICE_IDENTITY.ru));
+      return html.replace("%GENESIS_SERVICE_IDENTITY%", escape(SERVICE_IDENTITY.ru))
+        .replace('%GENESIS_PUBLIC_CONTENT%', publicProductHtml('en'))
+        .replace('%GENESIS_PUBLIC_MERCHANT%', publicMerchantHtml('en', 'home'));
     },
     generateBundle(_options, bundle) {
       const index = bundle["index.html"];
@@ -59,14 +62,15 @@ function publicLegalDocuments(): Plugin {
       const template = index.source;
       const root = /<div id="root">[\s\S]*<\/div>/;
       if (!root.test(template)) this.error("Public homepage root is missing.");
-      for (const [slug, document] of Object.entries(legalPages)) {
+      for (const slug of Object.keys(legalPages)) {
+        const document=legalPageContent(slug as keyof typeof legalPages,'en');
         const sections = document.sections.map(([title, body]) =>
           `<section><h2>${escape(title)}</h2><p>${escape(body)}</p></section>`).join("\n");
         const markup = `<div id="root"><main class="legal-shell">
           <header class="legal-header"><a class="welcome-brand" href="/"><span class="solar-mark"><i></i></span><span><strong>GENESIS</strong><small>доверие и ясность</small></span></a><a href="/">← На главную</a></header>
-          <article class="legal-document"><span class="welcome-kicker">ОФИЦИАЛЬНЫЙ ДОКУМЕНТ</span><h1>${escape(document.title)}</h1><p class="legal-intro">${escape(document.intro)}</p><p class="legal-date">Редакция от ${escape(LEGAL_UPDATED)}</p>${!BACKUP_LEGAL_READY && (slug==='privacy'||slug==='terms')?`<p role="note">Проект редакции ${escape(BACKUP_LEGAL_VERSION)}. Дополнения для 3.2.2 ещё не готовы к публикации: требуются подтверждение юридических фактов и приёмка отключённых функций.</p>`:''}${sections}
+          <article class="legal-document"><span class="welcome-kicker">ОФИЦИАЛЬНЫЙ ДОКУМЕНТ</span><h1>${escape(document.title)}</h1><p class="legal-intro">${escape(document.intro)}</p><p class="legal-date">Редакция от ${escape(LEGAL_UPDATED)}</p>${publicMerchantHtml('en', slug)}${!BACKUP_LEGAL_READY && (slug==='privacy'||slug==='terms')?`<p role="note">Проект редакции ${escape(BACKUP_LEGAL_VERSION)}. Дополнения для 3.2.2 ещё не готовы к публикации: требуются подтверждение юридических фактов и приёмка отключённых функций.</p>`:''}${sections}
           ${slug === "privacy" ? '<p class="legal-policy-link"><a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a></p>' : ""}</article>
-          <footer class="legal-footer"><a href="/privacy">Конфиденциальность</a><a href="/terms">Соглашение</a><a href="/support">Поддержка</a><a href="/delete-account">Удаление аккаунта</a></footer>
+          <footer class="legal-footer"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/refund">Refund Policy</a><a href="/support">Support</a><a href="/delete-account">Delete account</a></footer>
         </main></div>`;
         const source = template.replace(root, markup)
           .replace(/<title>[^<]*<\/title>/, `<title>${escape(document.title)} · GENESIS</title>`)

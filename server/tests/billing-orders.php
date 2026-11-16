@@ -59,14 +59,10 @@ foreach([
     orderInput('bad-currency-missing','lemon-squeezy',700,null),
     orderInput('bad-currency-same-number','lemon-squeezy',700,'RUB'),
     orderInput('bad-rub-currency-missing','yookassa',55500,null)
-]as$input)orderReject('BILLING_QUOTE_CHANGED',fn()=>genesisBillingCreateOrder('buyer',$input,$definition,$checkout));
+]as$input)orderReject($input['provider']==='lemon-squeezy'?'BILLING_NOT_CONFIGURED':'BILLING_QUOTE_CHANGED',fn()=>genesisBillingCreateOrder('buyer',$input,$definition,$checkout));
 orderCheck($checkoutCalls===0&&(int)$db->query('SELECT COUNT(*) FROM billing_orders')->fetchColumn()===0,'Invalid expected price/currency created a payable order');
-$input=orderInput('valid-dollar-order-key','lemon-squeezy',700,'USD');
-$dollars=genesisBillingCreateOrder('buyer',$input,$definition,$checkout);
-orderCheck($dollars['amountMinor']===700&&$dollars['listAmountMinor']===700&&$dollars['currency']==='USD'&&$checkoutCalls===1,'Foreign order used RUB magnitude instead of USD cents');
-orderCheck(genesisBillingCreateOrder('buyer',$input,$definition,$checkout)['id']===$dollars['id']&&$checkoutCalls===1,'Idempotent retry created a second checkout');
-orderReject('BILLING_QUOTE_CHANGED',fn()=>genesisBillingCreateOrder('buyer',[...$input,'expectedCurrency'=>'RUB'],$definition,$checkout));
-orderReject('BILLING_QUOTE_CHANGED',fn()=>genesisBillingCreateOrder('buyer',[...$input,'expectedAmountMinor'=>689],$definition,$checkout));
+// Retired Lemon Squeezy cannot create new orders, even with credentials and a valid USD amount.
+orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('buyer',orderInput('retired-dollar-order','lemon-squeezy',700,'USD'),$definition,$checkout));
 $rubles=genesisBillingCreateOrder('other',orderInput('valid-ruble-order-key','yookassa',55500,'RUB'),$definition,$checkout);
 orderCheck($rubles['amountMinor']===55500&&$rubles['currency']==='RUB','Domestic order changed denomination');
 $rubleCallCount=$checkoutCalls;
@@ -94,7 +90,7 @@ $callCount=$checkoutCalls;
 $retry=genesisBillingCreateOrder('buyer',[...$discountInput,'idempotencyKey'=>'discounted-second-key'],$definition,$checkout);
 orderCheck($retry['id']===$discount['id']&&$checkoutCalls===$callCount&&(int)$db->query('SELECT COUNT(*) FROM billing_upgrade_credits')->fetchColumn()===1,'New retry key spent a reserved source twice');
 orderReject('BILLING_QUOTE_CHANGED',fn()=>genesisBillingCreateOrder('buyer',[...$discountInput,'expectedAmountMinor'=>55500],$definition,$checkout));
-orderReject('BILLING_UPGRADE_UNAVAILABLE',fn()=>genesisBillingCreateOrder('buyer',orderInput('different-pending-provider','lemon-squeezy',700,'USD'),$definition,$checkout));
+orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('buyer',orderInput('different-pending-provider','lemon-squeezy',700,'USD'),$definition,$checkout));
 $repriced=$definition;$repriced['prices']['premium']['1']+=1000;
 $stillPending=genesisBillingCreateOrder('buyer',[...$discountInput,'idempotencyKey'=>'repriced-pending-key'],$repriced,$checkout);
 orderCheck($stillPending['id']===$discount['id']&&$stillPending['amountMinor']===$quote['amountMinor'],'Catalog repricing replaced a pending charge');
@@ -143,20 +139,16 @@ foreach($usdCatalog['offers']as$index=>$publicOffer){
                 'url'=>'https://example.invalid/fixed-checkout','preview'=>['currency'=>'USD','total'=>$expected,'discount_total'=>0]]]];
         });
     };
-    $matrixOrder=genesisBillingCreateOrder($matrixUser,$matrixInput,$definition,$matrixGateway);
-    orderCheck($providerCalls===1&&$matrixOrder['amountMinor']===$expected&&$matrixOrder['listAmountMinor']===$expected&&$matrixOrder['currency']==='USD','Checkout and preview diverged from fixed USD quote');
-    $changedDefinition=$definition;
-    if($publicOffer['plan']==='premium4life')$changedDefinition['foreignPricing']['lifetimeAmountMinor']++;
-    else $changedDefinition['foreignPricing']['prices'][$publicOffer['plan']][(string)$publicOffer['periodMonths']]++;
-    $retried=genesisBillingCreateOrder($matrixUser,$matrixInput,$changedDefinition,$matrixGateway);
-    orderCheck($retried['id']===$matrixOrder['id']&&$retried['amountMinor']===$expected&&$providerCalls===1,'Fixed USD revision rewrote an immutable pending order');
+    orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder($matrixUser,$matrixInput,$definition,$matrixGateway));
+    orderCheck($providerCalls===0,'Retired provider received a new checkout');
 }
 
 // A pending order created under the previous USD catalog keeps its historical 689-cent charge.
 $db->exec("INSERT INTO users VALUES('legacy-usd','legacy-usd@example.invalid','legacy-usd','google','free',NULL)");
 $db->prepare('INSERT INTO billing_orders(id,user_id,idempotency_key,provider,plan,period_months,amount_minor,currency,product_id,created_at,updated_at,list_amount_minor,upgrade_credit_minor,checkout_url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
     ->execute(['legacy-usd-order','legacy-usd','legacy-usd-order-key','lemon-squeezy','premium',1,689,'USD',$offers['premium:1']['products']['lemon-squeezy'],genesisNow(),genesisNow(),689,0,'https://example.invalid/historical-checkout']);
-$historical=genesisBillingCreateOrder('legacy-usd',orderInput('legacy-usd-order-key','lemon-squeezy',689,'USD'),$definition,static function():array{throw new RuntimeException('Historical checkout was recreated');});
+$historical=genesisBillingPublicOrder(genesisBillingOrder($db,'legacy-usd-order'));
+orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('legacy-usd',orderInput('legacy-usd-order-key','lemon-squeezy',689,'USD'),$definition,$checkout));
 orderCheck($historical['amountMinor']===689&&$historical['listAmountMinor']===689&&$historical['currency']==='USD','Fixed catalog repriced a historical order');
 
-echo "PASS billing orders: strict private pending-closure gate before order/provider I/O, real CreateOrder rejects absent/wrong currency and RUB-as-USD, binds all seven fixed USD catalog/quote/order/provider-preview amounts, immutable idempotent/pending orders, atomic credit retry, price changes and no Lifetime full-price fallback; synthetic DB/config, no network.\n";
+echo "PASS billing orders: strict private pending-closure gate before order/provider I/O, real CreateOrder rejects absent/wrong currency and RUB-as-USD, preserves all seven USD display amounts while retiring new Lemon purchases, immutable idempotent/pending orders, atomic credit retry, price changes and no Lifetime full-price fallback; synthetic DB/config, no network.\n";

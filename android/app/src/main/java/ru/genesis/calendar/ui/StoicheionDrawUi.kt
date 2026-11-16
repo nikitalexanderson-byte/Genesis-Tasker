@@ -55,18 +55,28 @@ private fun orientation(reversed: Boolean) = if (reversed) "Перевёрнут
 @Composable internal fun stoicheionCardSurface(reversed: Boolean, upright: Color = MaterialTheme.colorScheme.surface): Color =
     if (!reversed) upright else if (LocalEveningTheme.current) stoicheionDarkReversedColor(LocalDarkPalette.current) else MaterialTheme.colorScheme.errorContainer
 internal fun countdown(seconds: Int) = "%02d:%02d".format(seconds / 60, seconds % 60)
+internal fun actualSpreadReading(letters: List<StoicheionLetter>, draw: StoicheionDraw) =
+    if (draw.cards.isEmpty()) StoicheionReading.spread(letters, draw.seed)
+    else draw.cards.map { card -> requireNotNull(letters.find { it.id == card.cardId }) to card.reversed }
+
+@Composable internal fun drawAccessCopy(): org.json.JSONObject {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val language = LocalGenesisLanguage.current
+    return remember(context, language) { org.json.JSONObject(context.assets.open("originals/i18n/draw-access-copy.json").bufferedReader().use { it.readText() }).getJSONObject(language) }
+}
 
 @Composable
 internal fun StoicheionDrawPanel(letters: List<StoicheionLetter>, draws: StoicheionDraws?, now: Long,
     busy: Boolean, error: String?, onBegin: (String) -> Unit, onSelect: (StoicheionSelection) -> Unit,
     restorationLabel: String? = null, onRestore: (() -> Unit)? = null,
     restorationError: Boolean = false, onReloadRestoration: () -> Unit = {}, onRefresh: (() -> Unit)? = null,
-    onTimelineAction: ((Int, String) -> Unit)? = null) {
+    onTimelineAction: ((Int, String) -> Unit)? = null, onSpreadCard: ((Int) -> Unit)? = null) {
     val spreadAllowed=LocalFeatureAccess.current.allows("stoicheion-spread")
     val restorationAllowed=LocalFeatureAccess.current.allows("stoicheion-restoration")
     val daily = draws?.daily
     val dailyLetter = daily?.let { StoicheionReading.cardOfDay(letters, it.seed) }
     val spread = draws?.spread
+    val drawCopy = drawAccessCopy()
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         error?.let {
             Column(Modifier.fillMaxWidth().testTag("stoicheion-sync-error"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -106,10 +116,10 @@ internal fun StoicheionDrawPanel(letters: List<StoicheionLetter>, draws: Stoiche
             }
         }
         if (dailyLetter != null || spread != null) {
-            val cards = spread?.let { StoicheionReading.spread(letters, it.seed) }
+            val cards = spread?.let { actualSpreadReading(letters, it) }
             StoicheionSection(OracleTone.BLUE, "stoicheion-spread-block") {
                 Text("Космический круг и девять ликов силы", style = MaterialTheme.typography.titleLarge)
-                UntranslatedText(stoicheionTimelineCopy().getString(if (spread?.unlimited == true) "testingRule" else "weeklyRule"), style = MaterialTheme.typography.bodySmall)
+                UntranslatedText(drawCopy.getString(if (spread?.unlimited == true) "unlimitedRule" else "weeklyRule"), style = MaterialTheme.typography.bodySmall)
                 Text("Девять букв соотносятся со сторонами света и центром. Расклад начинается с карты дня и вашего движения.",
                     style = MaterialTheme.typography.bodyMedium)
                 if (!spreadAllowed) NativeUpgradePrompt("stoicheion-spread")
@@ -133,6 +143,10 @@ internal fun StoicheionDrawPanel(letters: List<StoicheionLetter>, draws: Stoiche
                                             .graphicsLayer { rotationZ = if (reversedCard) 180f else 0f })
                                         Text("${letter.name} · ${letter.value}", style = MaterialTheme.typography.labelSmall, maxLines = 2)
                                         Text(orientation(reversedCard), style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                                        if (spread?.unlimited == true && onSpreadCard != null) OutlinedButton(onClick = { onSpreadCard(row * 3 + column) }, enabled = !busy,
+                                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("stoicheion-spread-reroll-${position.id}")) {
+                                            UntranslatedText(drawCopy.getString("rerollCard"), style = MaterialTheme.typography.labelSmall)
+                                        }
                                     }
                                 }
                             }

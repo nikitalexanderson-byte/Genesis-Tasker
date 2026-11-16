@@ -44,10 +44,13 @@ private fun modelingMoney(minor: Int, currency: String, language: String): Strin
     val language = LocalGenesisLanguage.current
     val copy = modelingServiceJson("i18n/modeling-service-copy.json").getJSONObject(language)
     val prices = modelingServiceJson("catalogs/modeling-service.json").getJSONObject("prices")
+    val access = LocalFeatureAccess.current.let { if (it.source == "trial") it.paidAccess else it }
+    val included = access?.currentPlan() in setOf("premium", "business", "premium4life")
+    val includedText = drawAccessCopy().getString("included")
     Column(Modifier.fillMaxWidth().testTag("modeling-service-price"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         HorizontalDivider()
         UntranslatedText(copy.getString("title"), style = MaterialTheme.typography.titleSmall)
-        UntranslatedText(modelingMoney(prices.getInt("RUB"), "RUB", language) + " / " + modelingMoney(prices.getInt("USD"), "USD", language),
+        UntranslatedText(if (included) includedText else modelingMoney(prices.getInt("RUB"), "RUB", language) + " / " + modelingMoney(prices.getInt("USD"), "USD", language),
             style = MaterialTheme.typography.titleMedium)
         UntranslatedText(copy.getString("description"), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -65,6 +68,7 @@ private fun modelingMoney(minor: Int, currency: String, language: String): Strin
     val scope = rememberCoroutineScope()
     val unlock by rememberUpdatedState(onUnlocked)
     var methods by remember(resultId) { mutableStateOf<List<JSONObject>>(emptyList()) }
+    val accessCopy = drawAccessCopy()
     var elitePlus by remember(resultId) { mutableStateOf(false) }
     var provider by remember(resultId) { mutableStateOf<String?>(null) }
     var orderId by rememberSaveable(resultId) { mutableStateOf<String?>(null) }
@@ -81,7 +85,7 @@ private fun modelingMoney(minor: Int, currency: String, language: String): Strin
     suspend fun openResult() {
         val result = controller.billing("GET", "/billing/modeling/results/$resultId")
         require(result.getString("id") == resultId)
-        message = copy.getString(if (elitePlus) "privileged" else "paid")
+        message = if (elitePlus) accessCopy.getString("included") else copy.getString("paid")
         unlock(result)
     }
     suspend fun checkPayment() {
@@ -96,7 +100,7 @@ private fun modelingMoney(minor: Int, currency: String, language: String): Strin
     LaunchedEffect(controller, resultId) {
         try {
             val catalog = controller.billing("GET", "/billing/modeling/catalog?client=$client")
-            elitePlus = catalog.optBoolean("forecastElitePlus")
+            elitePlus = catalog.optBoolean("includedInPlan") || catalog.optBoolean("forecastElitePlus") || catalog.optBoolean("testingAccess")
             val values = catalog.getJSONArray("methods")
             methods = (0 until values.length()).map(values::getJSONObject).filter(::validMethod)
             provider = methods.firstOrNull { it.getString("provider") == catalog.getJSONObject("routing").getString("preferredProvider") }
@@ -117,7 +121,7 @@ private fun modelingMoney(minor: Int, currency: String, language: String): Strin
         onDispose { lifecycle.removeObserver(observer) }
     }
     Column(Modifier.fillMaxWidth().testTag("modeling-service-checkout"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (elitePlus) UntranslatedText(copy.getString("privileged"), color = MaterialTheme.colorScheme.primary)
+        if (elitePlus) UntranslatedText(accessCopy.getString("included"), color = MaterialTheme.colorScheme.primary)
         else FutureModelingPrice()
         (if (elitePlus) emptyList() else methods).forEach { method ->
             val id = method.getString("provider")

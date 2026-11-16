@@ -22,7 +22,7 @@ RewriteRule ^api(?:/|$) - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^assets/ - [R=404,L]
 RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^(privacy|terms|support|delete-account)$ $1.html [L]
+RewriteRule ^(privacy|terms|refund|support|delete-account)$ $1.html [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . index.html [L]
@@ -64,7 +64,7 @@ RewriteRule . index.html [L]
   </IfModule>
 </FilesMatch>
 
-<FilesMatch "^(?:privacy|terms|support|delete-account)\.html$">
+<FilesMatch "^(?:privacy|terms|refund|support|delete-account)\.html$">
   <IfModule mod_headers.c>
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"

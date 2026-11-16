@@ -1,4 +1,5 @@
 "use client";
+import drawAccessCopy from '../draw-access-copy.json';
 import availability from './availability.json';
 import {gnoTitle} from './gno-copy';
 import type { OptionalTemporalTriadSnapshot } from './types';
@@ -9,7 +10,7 @@ import {QuestionGuidance,guidedCopy} from './QuestionGuidance';
 import {domainChoices,questionPresentation,practicalGuidance,text as adaptiveText} from './adaptive-content';
 import {useAuroraAnalysis} from './use-aurora-analysis';
 /* eslint-disable @next/next/no-img-element -- Original local card and deity artwork is preserved. */
-import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { DialogCloseButton } from '../DialogCloseButton';
 import {IconActionButton} from '../IconActionButton';
 import sessionCopy from './session-copy.json';
@@ -32,7 +33,7 @@ import { transliterateGreek } from './transliteration';
 import { translateText } from '../i18n';
 import { applyAnswer, reviseAnswer, currentInterviewAnswers, recordField, knownValue, confirmedBoolean, branchingConsequences, type AnswerInput } from './context';
 import {answeredQuestionCount,questionLimitForStage} from './question-budget';
-import { createTemporalTriad, validateTemporalTriad } from './draw-policy';
+import { createTemporalTriad, validateTemporalTriad, samePrimaryDraw } from './draw-policy';
 import { issueForecast, conditionalForecast, evaluateForecast, resolveHorizon, reviewCalendarPoint, contextNowLines, type Horizon } from './forecast';
 import { verifyPreparedSolution, type VerifiedAuroraSolution } from './result';
 import type { AuroraConflict } from './repository';
@@ -84,8 +85,11 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
     const cancelDelete=useRef<HTMLButtonElement|null>(null);
     useEffect(()=>{if(deleteId)cancelDelete.current?.focus();},[deleteId]);
     const documentRef = useRef<AuroraDocument | null>(null), timer = useRef<ReturnType<typeof setTimeout> | null>(null), alive = useRef(true), heading = useRef<HTMLHeadingElement | null>(null);
-    const visibleSessions = document?.sessions.filter(s => !s.gno && (!lockSource || primary && s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay)) ?? [];
+    const visibleSessions = document?.sessions.filter(s => !s.gno && (!lockSource || primary && samePrimaryDraw(s.primary,primary))) ?? [];
     const session = visibleSessions.find(s => s.id === activeId) ?? null;
+    const historical=!!session&&!samePrimaryDraw(session.primary,primary);
+    const currentPrimary=useRef(primary);
+    useLayoutEffect(()=>{currentPrimary.current=primary;},[primary]);
     const observation = session?.observationDraft ?? { occurred: 'unknown', conditions: 'unknown', occurredAt: '', conditionAt: '', anchorAt: '', complete: false, contradictory: false, description: '' };
     const { ritualDone = false, actionDone = false, withoutRitual = false } = session?.completionDraft ?? {};
     function setObservation(value: ObservationDraft) { if (session)
@@ -123,6 +127,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
         setSaveState(host.syncState() === 'offline' ? RU.text0075 : RU.text0076);
     }
     function change(next: AuroraSession, invalidateForecast = false, learning?:PersonalLearning) {
+        if(!samePrimaryDraw(next.primary,currentPrimary.current))return;
         const current = documentRef.current;
         if (!current)
             return;
@@ -156,8 +161,8 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
             if (!alive.current)
                 return;
             if (temporal) validateTemporalTriad(temporal);
-            const candidates = loaded.sessions.filter(s => !s.gno && (!lockSource || primary && s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay));
-            const existing = candidates.find(s=>s.id===loaded.activeSessionId) ?? candidates.filter(s => !s.completedAt && (!primary || s.primary.sourceSeed === primary.sourceSeed && s.primary.sourceDay === primary.sourceDay)).at(-1) ?? candidates.at(-1);
+            const candidates = loaded.sessions.filter(s => !s.gno && (!lockSource || primary && samePrimaryDraw(s.primary,primary)));
+            const existing = candidates.find(s=>s.id===loaded.activeSessionId) ?? candidates.filter(s => !s.completedAt && (!primary || samePrimaryDraw(s.primary,primary))).at(-1) ?? candidates.at(-1);
             const changedTemporal = lockSource && temporal && existing && existing.triad?.sourceSeed !== temporal.sourceSeed;
             const frozenResult = changedTemporal && existing.forecasts.length > 0;
             const base = frozenResult && primary ? newSession({ id: crypto.randomUUID(), ownerId: host.ownerId, now: now(), primary, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }) : existing ?? (primary&&!loaded.removed.length ? newSession({ id: crypto.randomUUID(), ownerId: host.ownerId, now: now(), primary, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }) : null);
@@ -460,7 +465,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
    <nav className="aurora-progress" aria-label={RU.text0098}>{STAGES.map((title, index) => <button type="button" key={title} aria-label={`${index + 1}. ${title}`} aria-current={stage === index ? 'step' : undefined} disabled={index > session.highestStage || index >= 6 && index <=7 && !practiceAvailable} onClick={() => next(index)}><span aria-hidden="true">{index + 1}</span><span>{title}</span></button>)}</nav>
    </MethodSheet><IconActionButton icon="delete" className="aurora-delete-work" label={sessionCopy[locale.language].deleteLabel} disabled={busy} data-dialog-save="false" onClick={()=>setDeleteId(session.id)}/><span className="aurora-step-navigation">{RU.text0098} · {stage+1}/{STAGES.length}</span></div>
    {deleteId?<section data-no-translate className="aurora-delete-confirm" role="group" aria-labelledby="aurora-delete-title"><h4 id="aurora-delete-title">{sessionCopy[locale.language].confirmTitle}</h4><p>{sessionCopy[locale.language].confirmBody}</p><div className="aurora-actions"><button type="button" className="secondary-button" ref={cancelDelete} disabled={busy} onClick={()=>{setDeleteId(null);dialogElement.current?.querySelector<HTMLButtonElement>('.aurora-delete-work')?.focus();}}>{sessionCopy[locale.language].cancel}</button><button type="button" className="secondary-button" disabled={busy} data-dialog-save="false" onClick={()=>void run(deleteWork)}>{sessionCopy[locale.language].confirm}</button></div></section>:null}
-   <main className="aurora-stage" data-stage={stage} data-part={part} inert={Boolean(busy&&deleteId)} key={`${session.id}:${stage}`}><h3 ref={heading} tabIndex={-1}>{STAGES[stage]}</h3>{partCount>1?<p className="aurora-question-progress" role="status">{T.testPart} {part+1} {T.testOf} {partCount}</p>:null}
+   {historical?<p data-no-translate role="status">{drawAccessCopy[locale.language].historical}</p>:null}<fieldset className="aurora-source-session" disabled={historical}><main className="aurora-stage" data-stage={stage} data-part={part} inert={Boolean(busy&&deleteId)} key={`${session.id}:${stage}`}><h3 ref={heading} tabIndex={-1}>{STAGES[stage]}</h3>{partCount>1?<p className="aurora-question-progress" role="status">{T.testPart} {part+1} {T.testOf} {partCount}</p>:null}
     {stage === 0 ? <>
      <p>{A.cardsHelp}</p>
      <AuroraCards snapshot={session.primary} secondary selected={session.selectedSectorId} selectedSectors={selectedSectors} language={locale.language} onChoose={id=>change(toggleTransformationSector(session,id),true)}/>
@@ -638,7 +643,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
     }}>{RU.text0277}</button>
 
     <button type="button" className="primary-button" disabled={busy||forwardDisabled} aria-busy={busy} aria-describedby={busy||forwardDisabled&&stage!==8&&!(stage===5&&!testing)?'aurora-next-hint':undefined} title={testing&&forecastDraft.page===6?T.testPrepare:undefined} onClick={forward}>{stage===5&&(!testing||forecastDraft.page===6&&forecastTestProblems(forecastDraft,session.context,session.selectedSectorId).length)?A.practiceNext:RU.text0279}</button>
-   </footer>
+   </footer></fieldset>
   </>}
  </section></div>;
 }

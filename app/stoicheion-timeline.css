@@ -44,3 +44,6 @@ html[data-genesis-theme] .genesis-app .stoicheion-nine-preview > .stoicheion-pre
   .stoicheion-timeline-reroll { width: 44px; min-width: 44px; height: 44px; padding: 8px; }
   .stoicheion-timeline-reroll > span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
+
+.stoicheion-spread-cell { display:flex; min-width:0; flex-direction:column; gap:8px; }
+.stoicheion-spread-cell>.stoicheion-sector { width:100%; flex:1; }

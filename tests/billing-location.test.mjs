@@ -8,11 +8,11 @@ import locationCopy from '../app/billing-location-copy.json' with {type:'json'};
 const boundary=JSON.parse(await readFile(new URL('../app/billing-russia-boundary.json',import.meta.url),'utf8')).coordinates;
 
 test('device location only prioritizes methods and preserves manual choices',()=>{
-  assert.deepEqual(paymentProviderOrder('RU'),['yookassa','lemon-squeezy','google-play']);
-  assert.deepEqual(paymentProviderOrder('outside-RU'),['lemon-squeezy','yookassa','google-play']);
-  assert.equal(preferredPaymentProvider('RU',['yookassa','lemon-squeezy'],'lemon-squeezy'),'lemon-squeezy');
-  assert.equal(preferredPaymentProvider('outside-RU',['yookassa','lemon-squeezy'],'yookassa'),'yookassa');
-  assert.equal(preferredPaymentProvider('RU',['lemon-squeezy']),'lemon-squeezy');
+  assert.deepEqual(paymentProviderOrder('RU'),['yookassa','paddle','google-play']);
+  assert.deepEqual(paymentProviderOrder('outside-RU'),['paddle','yookassa','google-play']);
+  assert.equal(preferredPaymentProvider('RU',['yookassa','paddle'],'paddle'),'paddle');
+  assert.equal(preferredPaymentProvider('outside-RU',['yookassa','paddle'],'yookassa'),'yookassa');
+  assert.equal(preferredPaymentProvider('RU',['paddle']),'paddle');
   assert.equal(preferredPaymentProvider('outside-RU',['yookassa']),'yookassa');
 });
 test('local country geometry handles mainland, Kaliningrad, other countries and uncertainty',()=>{
@@ -74,29 +74,29 @@ test('fixed USD catalog preserves RUB and offers only approved month/year period
   assert.equal(catalog.lifetimeOffer.amountMinor,1290000);
   assert.equal(catalog.checkoutEnabled,false);assert.equal(catalog.creditCheckoutEnabled,false);
   for(const [plan,prices]of Object.entries(fixedUsdPrices))for(const [period,usd]of Object.entries(prices)){
-    assert.deepEqual(billingDisplayPrice(plan,Number(period),null,'lemon-squeezy'),{amountMinor:usd,currency:'USD'});
+    assert.deepEqual(billingDisplayPrice(plan,Number(period),null,'paddle'),{amountMinor:usd,currency:'USD'});
     for(const provider of ['yookassa','google-play'])assert.deepEqual(billingDisplayPrice(plan,Number(period),null,provider),{amountMinor:unchangedRubPrices[plan][period],currency:'RUB'});
   }
   for(const period of [1,12]){
-    assert.deepEqual(billingDisplayPrice('premium4life',period,null,'lemon-squeezy'),{amountMinor:16000,currency:'USD'});
+    assert.deepEqual(billingDisplayPrice('premium4life',period,null,'paddle'),{amountMinor:16000,currency:'USD'});
     assert.deepEqual(billingDisplayPrice('premium4life',period,null,'yookassa'),{amountMinor:1290000,currency:'RUB'});
   }
-  assert.equal(billingDisplayPrice('premium',6,null,'lemon-squeezy'),null);
+  assert.equal(billingDisplayPrice('premium',6,null,'paddle'),null);
 });
 test('fixed USD offers, quotes and checkout agree exactly without cosmetic rounding',()=>{
   const matrix=[...Object.entries(fixedUsdPrices).flatMap(([plan,prices])=>Object.entries(prices).map(([months,amount])=>[plan,Number(months),amount])),['premium4life',0,16000]];
   for(const [plan,periodMonths,amountMinor]of matrix){
-    const offer={id:`${plan}:${periodMonths}`,plan,periodMonths,amountMinor:plan==='premium4life'?1290000:unchangedRubPrices[plan][periodMonths],currency:'RUB',availableProviders:['yookassa','lemon-squeezy'],pricesByProvider:{'lemon-squeezy':{amountMinor,currency:'USD'}}};
-    const available={checkoutEnabled:true,offers:[offer],providers:[{id:'yookassa',available:true},{id:'lemon-squeezy',available:true}]};
-    const quote={offerId:offer.id,plan,periodMonths,listAmountMinor:amountMinor,creditMinor:0,amountMinor,currency:'USD',provider:'lemon-squeezy',availableProviders:['lemon-squeezy']};
-    for(const tab of plan==='premium4life'?[1,12]:[periodMonths])assert.deepEqual(billingDisplayPrice(plan,tab,available,'lemon-squeezy'),{amountMinor,currency:'USD'});
-    assert.equal(billingCheckoutReady(available,offer,quote,'lemon-squeezy'),true);
-    assert.equal(billingCheckoutReady(available,offer,{...quote,currency:'RUB'},'lemon-squeezy'),false);
+    const offer={id:`${plan}:${periodMonths}`,plan,periodMonths,amountMinor:plan==='premium4life'?1290000:unchangedRubPrices[plan][periodMonths],currency:'RUB',availableProviders:['yookassa','paddle'],pricesByProvider:{'paddle':{amountMinor,currency:'USD'}}};
+    const available={checkoutEnabled:true,offers:[offer],providers:[{id:'yookassa',available:true},{id:'paddle',available:true}]};
+    const quote={offerId:offer.id,plan,periodMonths,listAmountMinor:amountMinor,creditMinor:0,amountMinor,currency:'USD',provider:'paddle',availableProviders:['paddle']};
+    for(const tab of plan==='premium4life'?[1,12]:[periodMonths])assert.deepEqual(billingDisplayPrice(plan,tab,available,'paddle'),{amountMinor,currency:'USD'});
+    assert.equal(billingCheckoutReady(available,offer,quote,'paddle'),true);
+    assert.equal(billingCheckoutReady(available,offer,{...quote,currency:'RUB'},'paddle'),false);
     assert.equal(billingCheckoutReady(available,offer,quote,'yookassa'),false);
-    for(const wrong of [amountMinor+1,amountMinor+.5,offer.amountMinor])assert.equal(billingCheckoutReady(available,offer,{...quote,amountMinor:wrong,listAmountMinor:wrong},'lemon-squeezy'),false);
+    for(const wrong of [amountMinor+1,amountMinor+.5,offer.amountMinor])assert.equal(billingCheckoutReady(available,offer,{...quote,amountMinor:wrong,listAmountMinor:wrong},'paddle'),false);
   }
-  const legacyOffer={id:'standart:1',plan:'standart',periodMonths:1,amountMinor:33300,currency:'RUB',pricesByProvider:{'lemon-squeezy':{amountMinor:413,currency:'USD'}}};
-  assert.deepEqual(billingDisplayPrice('standart',1,{offers:[legacyOffer]},'lemon-squeezy'),{amountMinor:413,currency:'USD'});
+  const legacyOffer={id:'standart:1',plan:'standart',periodMonths:1,amountMinor:33300,currency:'RUB',pricesByProvider:{'paddle':{amountMinor:413,currency:'USD'}}};
+  assert.deepEqual(billingDisplayPrice('standart',1,{offers:[legacyOffer]},'paddle'),{amountMinor:413,currency:'USD'});
 });
 test('localized money retains cents and fixed catalogs never show a stale FX note',()=>{
   for(const language of Object.keys(locationCopy))for(const amount of [400,700,1000,4000,7000,10000,16000]){

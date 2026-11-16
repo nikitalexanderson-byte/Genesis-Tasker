@@ -403,6 +403,8 @@ export type StoicheionDrawRecord = {
   remainingSeconds: number;
   canReroll: boolean;
   unlimited?: boolean;
+  cardRevision?: number;
+  cards?: {cardId:string;reversed:boolean}[];
 };
 
 export type StoicheionTimelineWindow = {
@@ -412,6 +414,7 @@ export type StoicheionTimelineWindow = {
   remainingSeconds: number;
   canReroll: boolean;
   rerolled: boolean;
+  unlimited?: boolean;
 };
 export type StoicheionTimelineRecord = {
   dayKey: string;
@@ -910,7 +913,7 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
     && /^\/(?:workspace|tasks|mindmaps|diary|stoicheion-workspace|aurora-workspace|physis|recovered-tasks)(?:\/|$)/.test(path))
     throw new Error('BACKUP_RECONCILIATION_REQUIRED');
   const trialCheckpoint = beginTrialTransport();
-  if ((localSessionEnded || privateDeviceAccessBlocked()) && !["/session", "/auth/providers", "/partners/invitation"].includes(path) && !/^\/account-recovery\/(?:status|request|complete)$/.test(path)) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
+  if ((localSessionEnded || privateDeviceAccessBlocked()) && !["/session", "/auth/providers", "/partners/invitation", "/referrals/invitation"].includes(path) && !/^\/account-recovery\/(?:status|request|complete)$/.test(path)) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
   const generation = sessionGeneration;
   if (!API_BASE) throw new Error("Сервер GENESIS ещё не подключён");
   const { signal: callerSignal, ...requestInit } = init;
@@ -3383,6 +3386,10 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
     {method:'POST',body:JSON.stringify({expectedPlan,expectedRevision})});
 }
 
+export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
+  return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
+}
+
 export async function loadStoicheionTimelineCards() {
   return api<{timeline:StoicheionTimelineRecord|null;serverNow:string}>("/stoicheion/timeline/cards", {cache:"no-store"});
 }
@@ -3395,6 +3402,12 @@ export async function changeStoicheionTimelineCard(position:number, action:"reve
 
 export async function partnerApi<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!/^\/(?:partners\/|admin\/partners(?:\/|\?|$))/.test(path)) throw new Error('PARTNER_PATH_INVALID');
-  if (path === '/partners/invitation' && init.method === 'POST' && !csrfToken) await loadGenesisSession(init.signal ?? undefined);
+  if (path === '/partners/invitation' && init.method === 'POST') await loadGenesisSession(init.signal ?? undefined);
   return api<T>(path, init);
+}
+
+export async function referralApi<T>(path:string,init:RequestInit={}):Promise<T>{
+  if(!/^\/referrals\/(?:me|code|invitation|redeem)$/.test(path))throw new Error('REFERRAL_PATH_INVALID');
+  if(init.method==='POST'&&(path==='/referrals/invitation'||!csrfToken))await loadGenesisSession(init.signal??undefined);
+  return api<T>(path,init);
 }

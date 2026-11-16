@@ -1,0 +1,9 @@
+.referral-panel .referral-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-block:24px; }
+.referral-stats div { min-width:0; }
+.referral-stats dt { font-size:13px; line-height:1.5; }
+.referral-stats dd { margin:8px 0 0; font-size:24px; font-variant-numeric:tabular-nums; }
+.referral-field { display:grid; gap:8px; margin-top:18px; min-width:0; }
+.referral-field input { width:100%; min-width:0; max-width:100%; min-height:44px; font-size:14px; }
+.referral-panel button { min-height:44px; margin-block:8px; }
+.referral-panel p { max-width:72ch; line-height:1.6; overflow-wrap:normal; word-break:normal; }
+@media(max-width:600px) { .referral-panel .referral-stats { grid-template-columns:1fr; gap:16px; } }

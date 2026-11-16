@@ -9,6 +9,7 @@ assert.ok(revision, "legal source revision is required");
 const pages = {
   privacy: "Политика конфиденциальности",
   terms: "Пользовательское соглашение",
+  refund: "Refund Policy",
   support: "Поддержка GENESIS",
   "delete-account": "Удаление аккаунта и данных",
 };
@@ -23,7 +24,9 @@ for (const [slug, title] of Object.entries(pages)) {
   assert.ok(html.includes(`rel="canonical" href="https://genesiscalendar.com/${slug}"`), `${slug}: canonical URL is required`);
   assert.match(html, /<script type="module"[^>]*src="[^"]+\.js"/, `${slug}: interactive client must remain available`);
   assertPublicDocumentReferences(html, slug);
-  assert.doesNotMatch(body, /Логвинов|Logvinov|jurijjlogvinov@gmail\.com/i, `${slug}: retired personal identity must be absent`);
+  assert.match(body, /Iurii Logvinov/, `${slug}: Paddle service provider and website owner must be named`);
+  assert.match(body, /demiurge\.soft@gmail\.com/, `${slug}: Paddle support is required`);
+  assert.doesNotMatch(body, /jurijjlogvinov@gmail\.com/i, `${slug}: retired contact must be absent`);
   if (slug === "privacy" || slug === "delete-account") {
     const retention = body.match(/<h2>Общие задачи и вложения после удаления аккаунта<\/h2><p>([\s\S]*?)<\/p>/)?.[1];
     assert.ok(retention, `${slug}: shared-data retention must be readable without JavaScript`);
@@ -54,4 +57,4 @@ assert.doesNotMatch(homepage, /mc\.yandex|yandex\.ru|яндекс/i);
 assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes("nikitalexanderson@gmail.com"));
 assert.ok(homepage.includes("AI NCII") && homepage.includes("Google Calendar") && homepage.includes("Google Tasks"));
 assert.doesNotMatch(homepage, /%GENESIS_SERVICE_IDENTITY%/, "public identity must resolve at build time");
-console.log("Public homepage and four legal documents are readable without JavaScript; Google-only .com references verified.");
+console.log("Public homepage and five legal documents are readable without JavaScript; Google-only .com references verified.");

@@ -10,7 +10,17 @@ function genesisForecastTestingOwner(array $user): bool
         && function_exists('genesisSessionIsPrimaryGoogleUser') && genesisSessionIsPrimaryGoogleUser($user);
 }
 
-function genesisForecastFreeAccess(array $user): bool
+function genesisForecastFreeAccess(array $user, ?int $now=null): bool
+{
+    $plan=$user['subscription_plan']??'free';
+    $expiry=function_exists('genesisSubscriptionExpiry')?genesisSubscriptionExpiry($user['subscription_valid_until']??null):false;
+    return $plan==='premium4life'
+        || (in_array($plan,['premium','business'],true)&&$expiry!==false&&$expiry>($now??time()))
+        || genesisForecastTestingOwner($user);
+}
+
+/** Only Elite+ and the existing verified owner exception can change any drawn card without a timer. */
+function genesisForecastUnlimitedDraws(array $user): bool
 {
     return genesisForecastElitePlus($user)||genesisForecastTestingOwner($user);
 }

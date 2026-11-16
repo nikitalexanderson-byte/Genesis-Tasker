@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "3.1.8-dreams-palettes",
+  "revision": "3.3.5-included-modeling",
   "enforcementEnabled": true,
   "disabledFeatures": [
     "assistant"
@@ -105,7 +105,8 @@
     ],
     "future-modeling": [
       "premium",
-      "business"
+      "business",
+      "premium4life"
     ],
     "stoicheion-letters": [
       "free",

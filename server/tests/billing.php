@@ -70,15 +70,15 @@ foreach([null,false,0,1,'true',[]]as$unverified){
     $closed=genesisBillingCatalog($unverifiedSettings,'web',$definition);
     billingCheck(!$closed['checkoutEnabled']&&!$closed['creditCheckoutEnabled']&&!array_filter(array_column($closed['providers'],'available'))
         &&!array_filter(array_column($closed['offers'],'availableProviders')),'Unverified pending closure enabled new sales');
-    foreach(GENESIS_BILLING_PROVIDERS as$provider)billingCheck(genesisBillingProviderReady($provider,$unverifiedSettings),'Sales gate blocked configured verification/webhook readiness');
+    foreach(GENESIS_BILLING_PROVIDERS as$provider)billingCheck(genesisBillingProviderReady($provider,$unverifiedSettings)===($provider!=='paddle'),'Legacy verification readiness or pending Paddle adapter changed');
 }
 $settings['pending_order_closure_verified']=true; // Synthetic readiness, never runtime configuration.
 billingCheck(!genesisBillingCatalog($settings)['checkoutEnabled']&&!genesisBillingCatalog($settings)['creditCheckoutEnabled'],'Private readiness alone activated the prepared release');
 $web = genesisBillingCatalog($settings,'web',$definition); $play = genesisBillingCatalog($settings,'android-play',$definition);
 billingCheck($web['checkoutEnabled']&&$web['creditCheckoutEnabled']&&array_column($web['providers'],'available','id')['yookassa']
-    &&array_column($web['providers'],'available','id')['lemon-squeezy'],'Strict true readiness did not preserve eligible configured checkout');
+    &&!array_column($web['providers'],'available','id')['paddle'],'Strict true readiness did not preserve eligible configured checkout');
 billingCheck(array_column($web['providers'],'available','id')['google-play'] === false, 'Website offered native Play checkout');
-billingCheck(array_column($play['providers'],'available','id')['lemon-squeezy'] === false, 'Play alternative billing enabled without configuration');
+billingCheck(array_column($play['providers'],'available','id')['paddle'] === false, 'Play alternative billing enabled without configuration');
 billingCheck(!str_contains(json_encode($web,JSON_THROW_ON_ERROR),'synthetic-key') && !str_contains(json_encode($play,JSON_THROW_ON_ERROR),'synthetic-private')
     &&!array_key_exists('pending_order_closure_verified',$web), 'Public catalog exposed private configuration');
 billingFailure('BILLING_CLIENT_INVALID',fn()=>genesisBillingCatalog([],'untrusted'));

@@ -198,6 +198,8 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     from(rootProject.file("../app/future-modeling.json")) { into("catalogs") }
     from(rootProject.file("../server/resources/modeling-service.json")) { into("catalogs") }
     from(rootProject.file("../app/modeling-service-copy.json")) { into("i18n") }
+    from(rootProject.file("../app/draw-access-copy.json")) { into("i18n") }
+    from(rootProject.file("../app/referral-copy.json")) { into("i18n") }
     from(rootProject.file("../app/future-modeling-locales")) { include("*.json"); into("catalogs/future-modeling-locales") }
     from(rootProject.file("../app/stoicheion-restoration-locales")) { into("catalogs/stoicheion-restoration-locales") }
     from(rootProject.file("../app/catalog-translations")) {

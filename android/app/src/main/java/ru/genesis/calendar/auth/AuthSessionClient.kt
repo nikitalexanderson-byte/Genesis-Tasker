@@ -20,8 +20,9 @@ internal class AuthApiError(val code: String) : Exception(code)
 
 /** The actual transport guard; keep account routes testable without opening a connection. */
 internal fun allowedAuthSessionRoute(method: String, path: String): Boolean =
+    allowedReferralRoute(method, path) ||
     (path == "/stoicheion/timeline/cards" && method in setOf("GET", "POST")) ||
-    path in setOf("/session", "/auth/providers", "/workspace", "/bootstrap", "/stoicheion/draws", "/auth/google/native/challenge",
+    path in setOf("/session", "/auth/providers", "/workspace", "/bootstrap", "/stoicheion/draws", "/stoicheion/spread/cards", "/auth/google/native/challenge",
         "/auth/yandex/native", "/account/yandex-calendar/connect", "/account/yandex-calendar/disconnect",
         "/auth/google/native", "/auth/google/native/services/config", "/auth/google/native/services",
         "/auth/logout", "/account/preferences", "/admin/stats", "/feature-usage") ||
@@ -311,10 +312,18 @@ internal class AuthSessionClient(context: Context) {
         return request(expected, "/stoicheion/timeline/cards", JSONObject().put("position", position)
             .put("action", action).put("revision", revision))
     }
+    fun referrals(expected: Long, method: String, path: String, body: JSONObject? = null): JSONObject {
+        require(allowedReferralRoute(method, path))
+        return request(expected, path, body, method = method)
+    }
     fun saveStoicheionDraw(expected: Long, kind: String, seed: Long): JSONObject {
         require(kind in setOf("daily", "spread", "timeline")) { "Неизвестный вид расклада." }
         require(seed in 0..0xffff_ffffL)
         return request(expected, "/stoicheion/draws", JSONObject().put("kind", kind).put("seed", seed))
+    }
+    fun changeStoicheionSpreadCard(expected: Long, position: Int, revision: Long, seed: Long, dayKey: String): JSONObject {
+        require(position in 0..8 && revision >= 0 && seed in 0..0xffff_ffffL)
+        return request(expected, "/stoicheion/spread/cards", JSONObject().put("position", position).put("revision", revision).put("seed", seed).put("dayKey", dayKey))
     }
     fun putTask(expected: Long, id: String, task: JSONObject): JSONObject {
         val creation=if(task.optBoolean("mindmapCreateOnly")) task.optJSONObject("mindmapCreationPayload") ?: task else task

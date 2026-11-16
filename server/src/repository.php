@@ -13,6 +13,8 @@ require_once __DIR__.'/google-login-security.php';
 require_once __DIR__.'/account-retention.php';
 require_once __DIR__.'/partners.php';
 require_once __DIR__.'/stoicheion-timeline-cards.php';
+require_once __DIR__.'/stoicheion-spread-cards.php';
+require_once __DIR__.'/consumer-referrals.php';
 
 const GENESIS_ADMIN_EMAIL = 'nikitalexanderson@gmail.com';
 
@@ -489,7 +491,7 @@ function genesisTouchUser(string $userId, bool $login = false): void
     ]);
 }
 
-function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoogleTokens = true, bool $websiteRegistrationEmail = false, ?string $partnerInvitation = null): array
+function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoogleTokens = true, bool $websiteRegistrationEmail = false, ?string $partnerInvitation = null, ?string $consumerInvitation = null): array
 {
     $email = mb_strtolower(trim((string)($profile['email'] ?? '')));
     $googleSub = trim((string)($profile['sub'] ?? ''));
@@ -599,6 +601,7 @@ function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoo
             genesisEmailQueueRegistration($id,true);
             $db->prepare('UPDATE users SET calendar_exploration_pending = 1 WHERE id = ?')->execute([$id]);
             genesisPartnerBindRegistration($db, $id, $partnerInvitation);
+            if(genesisReferralsSchemaReady($db))genesisReferralBindRegistration($db,$id,$consumerInvitation);
             if($owns)$db->commit();
         }catch(Throwable $error){if($owns&&$db->inTransaction())$db->rollBack();throw $error;}
     }
@@ -1244,17 +1247,17 @@ function genesisStoicheionPeriodStart(string $dayKey, string $kind, bool $unlimi
 
 function genesisStoicheionDraws(string $userId): array
 {
-    $dayKey=genesisClientDayKey();$unlimited=genesisForecastTestingOwner(genesisFindUser($userId)??[]);$draws=[];
+    $dayKey=genesisClientDayKey();$drawUser=genesisFindUser($userId)??[];$unlimited=genesisForecastUnlimitedDraws($drawUser);$draws=[];
     foreach(['daily','spread','timeline'] as $kind){
         $table=$kind==='timeline'?'stoicheion_timeline_draws':'stoicheion_draws';
         $q=genesisDb()->prepare("SELECT * FROM $table WHERE user_id=? AND draw_kind=? AND day_key>=? AND day_key<=? ORDER BY day_key DESC,first_draw_at DESC LIMIT 1");
-        $q->execute([$userId,$kind,genesisStoicheionPeriodStart($dayKey,$kind,$unlimited),$dayKey]);
-        if($row=$q->fetch())$draws[$kind]=genesisStoicheionDrawForClient($row,$unlimited);
+        $q->execute([$userId,$kind,genesisStoicheionPeriodStart($dayKey,$kind,genesisForecastTestingOwner($drawUser)),$dayKey]);
+        if($row=$q->fetch())$draws[$kind]=genesisSpreadDrawForClient($row,$unlimited);
         if($kind==='timeline'&&isset($draws[$kind])&&genesisTimelineSession($userId)) {
             $draws[$kind]['canReroll']=false;$draws[$kind]['unlimited']=false;
         }
     }
-    return ['dayKey'=>$dayKey,'draws'=>$draws,'testingAccess'=>$unlimited,'weeklyStart'=>genesisStoicheionPeriodStart($dayKey,'spread')];
+    return ['dayKey'=>$dayKey,'draws'=>$draws,'testingAccess'=>genesisForecastTestingOwner($drawUser),'unlimitedDraws'=>$unlimited,'weeklyStart'=>genesisStoicheionPeriodStart($dayKey,'spread')];
 }
 
 function genesisSaveStoicheionDraw(string $userId, string $kind, int $seed): array
@@ -1276,10 +1279,13 @@ function genesisSaveStoicheionDraw(string $userId, string $kind, int $seed): arr
     $dayKey = genesisClientDayKey();
     $now = genesisNow();
     $drawTable = $kind === 'timeline' ? 'stoicheion_timeline_draws' : 'stoicheion_draws';
-    $unlimited=genesisForecastTestingOwner($user);
-    $periodStart=genesisStoicheionPeriodStart($dayKey,$kind,$unlimited);
     $db->exec('BEGIN IMMEDIATE');
     try {
+        $user=genesisFindUser($userId);
+        if(!$user)throw new DomainException('Пользователь не найден.');
+        if(!empty($user['stoicheion_divination_disabled']))throw new DomainException('Гадания по картам отключены в личном кабинете.');
+        $unlimited=genesisForecastUnlimitedDraws($user);
+        $periodStart=genesisStoicheionPeriodStart($dayKey,$kind,genesisForecastTestingOwner($user));
         if ($kind === 'timeline' && genesisTimelineSession($userId)) throw new DomainException('TIMELINE_CARD_PROTOCOL_REQUIRED');
         $statement = $db->prepare("SELECT * FROM $drawTable WHERE user_id = :user_id AND day_key >= :period_start AND day_key <= :day_key AND draw_kind = :draw_kind ORDER BY day_key DESC,first_draw_at DESC LIMIT 1");
         $statement->execute(['user_id' => $userId, 'period_start' => $periodStart, 'day_key' => $dayKey, 'draw_kind' => $kind]);
@@ -1296,6 +1302,7 @@ function genesisSaveStoicheionDraw(string $userId, string $kind, int $seed): arr
         } elseif($unlimited) {
             $db->prepare("UPDATE $drawTable SET seed_value=?,attempt_count=1,first_draw_at=?,updated_at=? WHERE user_id=? AND day_key=? AND draw_kind=?")->execute([$seed,$now,$now,$userId,$existing['day_key'],$kind]);
         } else {
+            if($kind==='spread')throw new DomainException('SPREAD_WEEKLY_LIMIT');
             $dayKey=(string)$existing['day_key'];
             $firstAt = strtotime((string)$existing['first_draw_at']);
             $withinWindow = $firstAt !== false && time() < $firstAt + 180;
@@ -1317,9 +1324,11 @@ function genesisSaveStoicheionDraw(string $userId, string $kind, int $seed): arr
         if (!is_array($saved)) {
             throw new RuntimeException('Расклад не удалось сохранить.');
         }
+        genesisSpreadResetCards($saved,$now);
+        $result=genesisSpreadDrawForClient($saved,$unlimited);
         $db->exec('COMMIT');
         genesisTouchUser($userId);
-        return genesisStoicheionDrawForClient($saved,$unlimited);
+        return $result;
     } catch (Throwable $error) {
         $db->exec('ROLLBACK');
         throw $error;

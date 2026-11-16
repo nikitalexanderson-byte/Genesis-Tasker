@@ -42,6 +42,7 @@ import ru.genesis.calendar.ui.release319Copy
 import ru.genesis.calendar.ui.WorkspaceStatusNotice
 import ru.genesis.calendar.ui.WorkspaceLoadingLine
 import ru.genesis.calendar.ui.rememberDonationAction
+import ru.genesis.calendar.ui.NativeReferrals
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -122,6 +123,12 @@ fun AuthPanel(app: GenesisApplication, localLanguage: String) {
             if (state.user != null) {
                 val identity=requireNotNull(state.user)
                 BillingPanel(controller,identity.uid,identity.email,state.accountSettings?.featureAccess ?: FeatureAccess(),localLanguage)
+                val access = state.accountSettings?.featureAccess
+                val paid = if (access?.source == "trial") access.paidAccess else access
+                if (!state.requiresSignIn && state.accountSettings?.privatePartnerPanelEnabled != true &&
+                    paid?.currentPlan() in setOf("premium", "business", "premium4life")) {
+                    NativeReferrals(controller, identity.uid, localLanguage)
+                }
                 OutlinedButton(onClick = {
                     val pending = controller.pendingSharedMutationsCount()
                     if (pending > 0) confirmDiscardSharedDrafts = pending else controller.logout()

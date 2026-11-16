@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-11-03-fixed-usd-prices",
+  "revision": "2026-11-17-paddle-preparation",
   "checkoutEnabled": false,
   "yookassaCheckoutEnabled": true,
   "creditCheckoutEnabled": false,
@@ -44,8 +44,8 @@
       ]
     },
     {
-      "id": "lemon-squeezy",
-      "name": "Lemon Squeezy",
+      "id": "paddle",
+      "name": "Paddle",
       "clients": [
         "web",
         "android"
@@ -61,7 +61,7 @@
     }
   ],
   "foreignPricing": {
-    "provider": "lemon-squeezy",
+    "provider": "paddle",
     "currency": "USD",
     "pricingModel": "fixed",
     "prices": {

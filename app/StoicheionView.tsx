@@ -55,13 +55,15 @@ import { StoicheionRestoration, type RestorationHandle, type RestorationPrimaryS
 import { StoicheionActionButton } from "./StoicheionActionButton";
 import { RESTORATION_SECTORS } from "./stoicheion-restoration-data";
 import { restorationCopy, restorationLocal } from "./stoicheion-restoration-copy";
-import { readLocalTimelineDraw, saveLocalTimelineDraw, stoicheionWeekStart, receiveTimeline, timelineCardSeconds, stoicheionTimelineCopy, type ClientTimelineRecord, type StoicheionTimePosition } from "./stoicheion-timeline";
+import { readLocalTimelineDraw, saveLocalTimelineDraw, stoicheionWeekStart, receiveTimeline, timelineCardSeconds, timelineCardCanReroll, stoicheionTimelineCopy, type ClientTimelineRecord, type StoicheionTimePosition } from "./stoicheion-timeline";
 import "./stoicheion-timeline.css";
 import { FutureModelingGuide, FutureModelingGuideTrigger } from "./FutureModelingGuide";
 import { snapshotFromSavedDraw, createTemporalTriad } from "./aurora/draw-policy";
 import type { AuroraTaskRequest } from "./aurora/host";
 import { StoicheionTimelineHelp } from "./StoicheionTimelineHelp";
 import alphabetCopy from "./stoicheion-alphabet-copy.json";
+import drawAccessCopy from './draw-access-copy.json';
+import {changeStoicheionSpreadCard} from './cloud-sync';
 import "./stoicheion-alphabet.css";
 
 const LOCAL_DRAW_STORAGE_PREFIX = "genesis-stoicheion-draws-v2:";
@@ -516,7 +518,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
       firstDrawAt:record.firstDrawAt,rerollDeadline:record.firstDrawAt,remainingSeconds:0,canReroll:false}):null);
     setTimelineClock(received);
   },[]);
-  const [testingAccess,setTestingAccess]=useState(false);
+
   const [motion, setMotion] = useState<{ mode: MotionMode; progress: number; replaceCurrent: boolean; position?:number } | null>(null);
   const [selectedReading, setSelectedReading] = useState<SelectedReading | null>(null);
   const restorationRef = useRef<RestorationHandle>(null);
@@ -585,7 +587,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
           ? await loadStoicheionDraws()
           : { dayKey, draws: readLocalDraws(dayKey), testingAccess:false };
         if (!active) return;
-        setTestingAccess(result.testingAccess===true);
+
         setDailyDraw(result.draws.daily ? toClientDraw(result.draws.daily) : null);
         setSpreadDraw(result.draws.spread ? toClientDraw(result.draws.spread) : null);
         if(isGoogleSyncConfigured&&timelineAllowed){
@@ -608,7 +610,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
 
   useEffect(() => {
     if (![dailyDraw, spreadDraw].some((draw) => draw?.attempts === 1 && draw.localDeadline > Date.now())
-      && !timelineSession?.cards.some(card=>timelineCardSeconds(card,performance.now())>0)) return;
+      && !timelineSession?.cards.some(card=>timelineCardCanReroll(card,performance.now()))) return;
     const timer = window.setInterval(() => {setClock(Date.now());setTimelineClock(performance.now());}, 1000);
     return () => window.clearInterval(timer);
   }, [dailyDraw, spreadDraw, timelineSession]);
@@ -618,13 +620,13 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
   const dailyReversed = dailyDraw ? isStoicheionCardReversed(dailyDraw.seed) : false;
   const spreadSeed = spreadDraw?.seed ?? null;
   const spreadCards = useMemo(
-    () => spreadSeed === null ? [] : buildStoicheionSpreadReading(letters, spreadSeed),
-    [letters, spreadSeed],
+    () => spreadSeed === null ? [] : spreadDraw?.cards ? spreadDraw.cards.map(card=>({letter:letters.find(letter=>letter.id===card.cardId)!,reversed:card.reversed})) : buildStoicheionSpreadReading(letters, spreadSeed),
+    [letters, spreadSeed, spreadDraw],
   );
   const spreadLetters = spreadCards.map((card) => card.letter);
   const modelingPrimary = useMemo(() => spreadDraw ? snapshotFromSavedDraw({
     id: `stoicheion-${spreadDraw.dayKey}-${spreadDraw.seed}`, seed: spreadDraw.seed, day: spreadDraw.dayKey,
-    createdAt: spreadDraw.firstDrawAt, cards: spreadCards.map(card => ({cardId:card.letter.id,reversed:card.reversed})),
+    createdAt: spreadDraw.firstDrawAt, cardRevision:spreadDraw.cardRevision, cards: spreadCards.map(card => ({cardId:card.letter.id,reversed:card.reversed})),
   }) : null, [spreadDraw, spreadCards]);
   const spreadVisible = spreadSeed !== null;
   const spreadTotal = spreadLetters.reduce((sum, letter) => sum + letter.value, 0);
@@ -633,7 +635,15 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
   const dailyRemaining = dailyDraw?.attempts === 1 ? Math.max(0, Math.ceil((dailyDraw.localDeadline - clock) / 1000)) : 0;
   const spreadRemaining = spreadDraw?.attempts === 1 ? Math.max(0, Math.ceil((spreadDraw.localDeadline - clock) / 1000)) : 0;
   const dailyCanReroll = Boolean(dailyDraw?.unlimited || dailyDraw?.attempts === 1 && dailyRemaining > 0);
-  const spreadCanReroll = Boolean(spreadDraw?.unlimited || spreadDraw?.attempts === 1 && spreadRemaining > 0);
+  const spreadCanReroll = Boolean(spreadDraw?.canReroll && (spreadDraw?.unlimited || spreadDraw?.attempts === 1 && spreadRemaining > 0));
+  const drawText=drawAccessCopy[language];
+  async function rerollSpreadCard(position:number){
+    if(!spreadDraw?.unlimited||savingKind!==null)return;
+    setSavingKind('spread');setDrawError('');
+    try{const {draw}=await changeStoicheionSpreadCard(spreadDraw,position);setSpreadDraw(toClientDraw(draw));setSelectedReading(null);}
+    catch{setDrawErrorKind('spread');setDrawError(drawText.unlimitedRule+' '+translateText('Не удалось выполнить действие.',language));}
+    finally{setSavingKind(null);}
+  }
   const timelineCards = useMemo(() => timelineDraw ? buildStoicheionSpreadReading(letters, timelineDraw.seed, 3) : [],
     [letters, timelineDraw]);
   const modelingTemporal = useMemo(() => timelineDraw && timelineRevealed === 3 ? createTemporalTriad({
@@ -718,7 +728,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
     if (divinationDisabled) return;
     if(mode==="timeline"&&!isGoogleSyncConfigured)return;
     const existing = mode === "daily" ? dailyDraw : mode === "spread" ? spreadDraw : timelineDraw;
-    const canReroll = mode === "daily" ? dailyCanReroll : mode === "spread" ? spreadCanReroll : timelineCardSeconds(timelineSession?.cards[position??0],performance.now())>0;
+    const canReroll = mode === "daily" ? dailyCanReroll : mode === "spread" ? spreadCanReroll : timelineCardCanReroll(timelineSession?.cards[position??0],performance.now());
     const revealNext = mode === "timeline" && existing && timelineRevealed < 3;
     if ((!replaceCurrent && existing && !revealNext) || (replaceCurrent && (!existing || !canReroll)) || savingKind || motionTracker.current) return;
     const baseSeed = mode === "spread"
@@ -916,7 +926,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
                 <span className="eyebrow">Прорицание по девяти картам</span>
                 <h2 id="stoicheion-nine-title">Космический круг и девять ликов силы</h2>
                 <p>Магический квадрат 3×3 соотносит девять букв со сторонами света и архетипами человеческого бытия. Расклад выводится из числового значения карты, записанного при выборе карты дня + вашего волевого воздействия.</p>
-                <p className="stoicheion-period-rule" data-no-translate>{testingAccess ? timeCopy.testingRule : timeCopy.weeklyRule}</p>
+                <p className="stoicheion-period-rule" data-no-translate>{spreadDraw?.unlimited ? drawText.unlimitedRule : drawText.weeklyRule}</p>
                 {modelingInIntro ? <FutureModelingGuideTrigger language={language} userId={userId} primary={modelingPrimary} open={modelingOpen} onOpen={() => setModelingOpen(true)} /> : null}
               </div>
               {spreadVisible ? <aside className="stoicheion-isopsephy" aria-labelledby="isopsephy-title">
@@ -947,10 +957,9 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
                     const card = spreadCards[index];
                     const letter = card.letter;
                     return (
-                      <button
+                      <div className="stoicheion-spread-cell" key={position.id}><button
                         type="button"
                         className={`stoicheion-sector sector-${position.id}${card.reversed ? " is-reversed" : ""}`}
-                        key={position.id}
                         onClick={() => setSelectedReading({ letter, reversed: card.reversed, position })}
                         aria-label={`${position.direction}: ${letter.name}, ${orientationLabel(card.reversed)}. ${position.meaning}`}
                       >
@@ -959,7 +968,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
                         <small className="stoicheion-spread-card-label"><strong>{letter.name}</strong><span>{language === "en" ? "Value" : "Число"} {letter.value}</span></small>
                         <em>{orientationLabel(card.reversed)}</em>
                         <span className="stoicheion-sector-details-link">{language === "en" ? "Sector details" : "Описание сектора"} →</span>
-                      </button>
+                      </button>{spreadDraw?.unlimited?<button type="button" className="stoicheion-timeline-card-reroll" data-no-translate aria-label={`${position.direction}: ${drawText.rerollCard}`} disabled={savingKind!==null} onClick={()=>void rerollSpreadCard(index)}>{drawText.rerollCard}</button>:null}</div>
                     );
                   })}
                 </div>
@@ -989,7 +998,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
               const card = index < timelineRevealed ? timelineCards[index] : null;
               const next = index === timelineRevealed;
               const window=timelineSession?.cards[index],remaining=timelineCardSeconds(window,timelineClock);
-              const canReroll=Boolean(card&&remaining>0);
+              const canReroll=Boolean(card&&timelineCardCanReroll(window,timelineClock));
               return <div className="stoicheion-timeline-slot" key={position.id}><button type="button" className={`stoicheion-timeline-card${card?.reversed ? " is-reversed" : ""}${card ? "" : " is-unopened"}`}
                 data-testid={`stoicheion-timeline-${position.id}`} data-revealed={Boolean(card)}
                 disabled={!card && (!next || !timelineAllowed || !drawsReady || !isGoogleSyncConfigured || savingKind !== null)}
@@ -1001,9 +1010,9 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
                   : <><span className="stoicheion-card-back" aria-hidden="true"><span><i>24</i></span></span><b>{next ? timeCopy.openCard : timeCopy.waiting}</b></>}
               </button><button type="button" className="stoicheion-timeline-card-reroll" data-testid={`stoicheion-timeline-reroll-${position.id}`}
                 disabled={!timelineAllowed||!canReroll||savingKind!==null} onClick={event=>beginMotion("timeline",true,event.timeStamp,index)}
-                aria-label={`${position.title}: ${timeCopy.rerollCard}${canReroll?` · ${formatCountdown(remaining)}`:""}`}>
-                <span>{window?.rerolled?timeCopy.rerollUsed:card&&!canReroll?timeCopy.rerollExpired:timeCopy.rerollCard}</span>
-                {canReroll?<time>{formatCountdown(remaining)}</time>:null}
+                aria-label={`${position.title}: ${timeCopy.rerollCard}${canReroll&&!window?.unlimited?` · ${formatCountdown(remaining)}`:""}`}>
+                <span>{window?.rerolled&&!window?.unlimited?timeCopy.rerollUsed:card&&!canReroll?timeCopy.rerollExpired:timeCopy.rerollCard}</span>
+                {canReroll&&!window?.unlimited?<time>{formatCountdown(remaining)}</time>:null}
               </button></div>;
             })}
           </div>
