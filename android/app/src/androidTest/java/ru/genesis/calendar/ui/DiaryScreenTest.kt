@@ -89,11 +89,13 @@ class DiaryScreenTest {
         val note = DiaryNote.create(body, "Афоризмы философов").changed { put("advice", advice) }
         val record = runBlocking { repository.refresh(); repository.save(note) }
         compose.setContent { Content() }
+        await("diary-category-saved")
+        compose.onNodeWithTag("diary-category-saved").performClick()
         await("diary-note-${note.id}")
-        compose.onNodeWithText("О дружбе", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("О дружбе", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
         val quote = compose.onNodeWithText("Дружба — благо.\nВторая строка.", useUnmergedTree = true)
         val author = compose.onNodeWithText("(Эпикур)", useUnmergedTree = true)
-        quote.assertIsDisplayed(); author.assertIsDisplayed()
+        quote.performScrollTo().assertIsDisplayed(); author.performScrollTo().assertIsDisplayed()
         assertTrue(author.fetchSemanticsNode().boundsInRoot.top > quote.fetchSemanticsNode().boundsInRoot.bottom)
         capture("original-advice-compact")
         val editedBody = "Моя заметка.\n\nЯ сохраняю этот отступ."
@@ -128,7 +130,15 @@ class DiaryScreenTest {
             }
         }
     }
-    private fun await(tag: String) { compose.waitUntil(20_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }; compose.waitForIdle() }
+    private fun await(tag: String) {
+        try { compose.waitUntil(20_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }; compose.waitForIdle() }
+        catch (failure: Throwable) {
+            val directory = compose.activity.getExternalFilesDir(null)
+            File(directory, "diary-missing-$tag.txt").writeText(compose.onRoot(useUnmergedTree = true).printToString())
+            captureNativeWindow(File(directory, "diary-missing-$tag.png"))
+            throw failure
+        }
+    }
     private fun capture(name: String, tag: String = "diary-screen") {
         compose.waitForIdle()
         compose.onNodeWithTag(tag).assertExists()
@@ -281,6 +291,8 @@ class DiaryScreenTest {
                         hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true).assertCountEquals(0)
                     state(tag, message)
                 }
+                // Narrow landscape fixtures can virtualize the note below the privacy text.
+                compose.onNodeWithTag("diary-notes").performScrollToNode(hasTestTag("diary-open-${note.id}"))
                 await("diary-open-${note.id}")
                 compose.onNodeWithTag("workspace-title").assertTextEquals(native.getString("Дневник"))
                 compose.onNodeWithTag("diary-create").assertContentDescriptionEquals(native.getString("Новая запись"))
@@ -309,17 +321,18 @@ class DiaryScreenTest {
                 state("editor", saveLabel, cancelLabel); shot("editor")
                 closeDialog("diary-editor")
                 compose.onNodeWithTag("diary-actions").performClick(); compose.onNodeWithTag("diary-favorites-open").performClick()
-                compose.onNodeWithTag("diary-notes").performScrollToNode(hasText(native.getString("Избранных советов пока нет.")))
-                compose.onNodeWithText(native.getString("Избранных советов пока нет.")).performScrollTo().assertIsDisplayed()
+                compose.onNodeWithTag("diary-notes").performScrollToNode(hasText(copy.getString("emptyFavorites")))
+                compose.onNodeWithText(copy.getString("emptyFavorites")).performScrollTo().assertIsDisplayed()
+                await("diary-back-to-board")
                 compose.onNodeWithTag("diary-back-to-board").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
                 compose.onNodeWithTag("diary-back-to-board").assertContentDescriptionEquals(t("Назад в дневник"))
-                state("favorites", native.getString("Избранных советов пока нет."))
+                state("favorites", copy.getString("emptyFavorites"))
                 compose.onNodeWithTag("diary-back-to-board").performClick()
                 compose.onNodeWithTag("diary-actions").performClick(); compose.onNodeWithText(t("Архив")).performClick()
-                compose.onNodeWithTag("diary-notes").performScrollToNode(hasText(native.getString("В архиве пока нет записей.")))
-                compose.onNodeWithText(native.getString("В архиве пока нет записей.")).performScrollTo().assertIsDisplayed()
+                compose.onNodeWithTag("diary-notes").performScrollToNode(hasText(copy.getString("emptyArchive")))
+                compose.onNodeWithText(copy.getString("emptyArchive")).performScrollTo().assertIsDisplayed()
                 compose.onNodeWithTag("diary-back-to-board").assertContentDescriptionEquals(t("Назад в дневник"))
-                state("archive", native.getString("В архиве пока нет записей."))
+                state("archive", copy.getString("emptyArchive"))
                 compose.onNodeWithTag("diary-back-to-board").performClick()
                 compose.onNodeWithTag("diary-search-open").assertContentDescriptionEquals(t("Поиск записей")).performClick(); await("diary-search")
                 compose.onNodeWithText(t("Поиск записей"), useUnmergedTree = true).assertExists()
@@ -327,9 +340,9 @@ class DiaryScreenTest {
                 state("search", t("Поиск записей"))
                 compose.onNodeWithTag("diary-search").performTextReplacement("missing-synthetic-note")
                 compose.dismissValidationKeyboard()
-                compose.onNodeWithTag("diary-notes").performScrollToNode(hasText(native.getString("Записи не найдены. Измените запрос.")))
-                compose.onNodeWithText(native.getString("Записи не найдены. Измените запрос.")).assertIsDisplayed()
-                state("empty-search", native.getString("Записи не найдены. Измените запрос."))
+                compose.onNodeWithTag("diary-notes").performScrollToNode(hasText(copy.getString("emptySearch")))
+                compose.onNodeWithText(copy.getString("emptySearch")).assertIsDisplayed()
+                state("empty-search", copy.getString("emptySearch"))
                 compose.onNodeWithTag("diary-search").performTextClearance()
                 compose.onNodeWithTag("diary-search-close").performClick(); await("diary-open-${note.id}")
                 val gate = CompletableDeferred<Unit>()
@@ -527,7 +540,8 @@ class DiaryScreenTest {
         compose.onNodeWithTag("diary-actions").performClick()
         compose.onNodeWithTag("diary-favorites-open").performClick()
         compose.onNodeWithTag("diary-note-$id").assertDoesNotExist()
-        compose.onNodeWithText("Избранных советов пока нет.").assertExists()
+        compose.onNodeWithText("Избранных советов пока нет").assertExists()
+        await("diary-back-to-board")
         val back = compose.onNodeWithTag("diary-back-to-board").assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
             .fetchSemanticsNode().boundsInRoot
         val title = compose.onNodeWithTag("workspace-title").fetchSemanticsNode().boundsInRoot

@@ -66,6 +66,7 @@ class TaskDatePicker314UiTest {
             android.util.Log.i("Date314", "editor open picker ${case.first} ${case.second}")
             compose.onNode(hasText(calendar.formatDate(LocalDate.parse(case.second), case.first)) and hasClickAction())
                 .performScrollTo().performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithTag("author-date-close").fetchSemanticsNodes().isNotEmpty() }
             var shown = LocalDate.parse(case.second)
             val target = LocalDate.parse(case.third)
             while (target !in calendar.monthRange(shown, case.first).let { it.start..it.end }) {

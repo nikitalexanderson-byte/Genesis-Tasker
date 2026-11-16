@@ -33,6 +33,9 @@ class LauncherTheme334Test {
         val deadline=System.currentTimeMillis()+10000
         while(mainTask()==null && System.currentTimeMillis()<deadline)Thread.sleep(100)
         assertNotNull("Icon must transfer the task to the permanent MainActivity",mainTask())
+        // Cold startup also applies the persisted appearance asynchronously.
+        device.waitForIdle(10_000)
+        Thread.sleep(2500)
         val taskId=mainTask()!!.id
         try {
             for(palette in GenesisBrandIcon.palettes)for(dark in listOf(false,true)) {

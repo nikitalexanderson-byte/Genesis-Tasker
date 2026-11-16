@@ -53,7 +53,7 @@ class HabitTimerFlowTest {
         }) { "A pre-existing timer belongs to another invocation; this test will not discard it" }
         val date = LocalDate.now()
         val habit = Habit(TrackerEntity.create("habit", id = "e1-timer-${UUID.randomUUID()}"), "E1 · Чтение", date,
-            HabitEngine(GenesisCalendar()).defaultSchedule(date, CalendarMode.PROFANE),
+            HabitEngine(GenesisCalendar(java.time.ZoneId.systemDefault())).defaultSchedule(date, CalendarMode.PROFANE),
             measurement = HabitMeasurement("duration", "min", 1000, 1000))
         var render by mutableStateOf(true)
         try {
@@ -201,7 +201,8 @@ class HabitTimerFlowTest {
         assertTrue(HabitTimers.reading(HabitTimers.sessions(recovered.timers).single { it.id == sessionId }.state!!).workMs >= paused)
         readyAction("habit-timer-finish").performClick()
         compose.waitUntil(15_000) { HabitTimers.sessions(saved().timers).single { it.id == sessionId }.state?.status == "finished" }
-        compose.onNodeWithTag("habit-timer-review").performScrollTo().assertExists()
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("habit-timer-review", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("habit-timer-review", useUnmergedTree = true).performScrollTo().assertExists()
         assertTrue(device.takeScreenshot(File(app.getExternalFilesDir(null), "e1-timer-review-dark.png")))
         compose.runOnIdle { dark = false }
         readyAction("habit-timer-save")

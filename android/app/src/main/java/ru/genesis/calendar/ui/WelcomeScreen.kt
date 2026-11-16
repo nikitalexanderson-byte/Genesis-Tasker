@@ -66,6 +66,8 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
 @Composable internal fun WelcomeContent(state: AuthPanelState, language: String, onLanguage: (String) -> Unit,
     onSignIn: () -> Unit, signInEnabled: Boolean = true, onRetry: () -> Unit, onWeb: () -> Unit,
     onLegal: (String) -> Unit) {
+    // The welcome artwork is always dark, independently of the host's selected palette.
+    CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(
         listOf(welcomeNight, welcomeGreen, welcomeNight))).safeDrawingPadding().testTag("genesis-welcome")) {
         @Composable fun Intro() {
@@ -138,6 +140,7 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
             Legal()
         } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)) { Intro(); SignIn(); Legal() }
+    }
     }
 }
 

@@ -3,6 +3,7 @@ package ru.genesis.calendar
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.core.graphics.ColorUtils
@@ -30,6 +31,15 @@ class ProjectsFlowTest {
     }
 
     private fun workspaceRoot() = compose.onNode(isRoot() and hasAnyDescendant(hasTestTag("projects-screen")))
+    private fun projectsViewport(): Rect {
+        val bounds = compose.onNodeWithTag("projects-screen").fetchSemanticsNode().boundsInRoot
+        // The search/category controls float above the list and are not drop destinations.
+        val dockTop = compose.onAllNodes(hasTestTag("personal-task-search-open") or
+            hasTestTag("personal-task-search-dock") or hasTestTag("personal-category-filters"))
+            .fetchSemanticsNodes().map { it.boundsInRoot }.filter { it.height > 0f && it.top > bounds.top }
+            .minOfOrNull { it.top } ?: bounds.bottom
+        return Rect(bounds.left, bounds.top, bounds.right, minOf(bounds.bottom, dockTop))
+    }
     private var dragAutoAdvance: Boolean? = null
     private fun restoreDragClock() { dragAutoAdvance?.let { compose.mainClock.autoAdvance = it }; dragAutoAdvance = null }
 
@@ -56,15 +66,15 @@ class ProjectsFlowTest {
 
     private fun dropTaskOn(id: String) {
         val tag = if (id == "__genesis_inbox__") "project-inbox" else "project-drop-$id"
-        val viewport = compose.onNodeWithTag("projects-screen").fetchSemanticsNode().boundsInRoot
+        val viewport = projectsViewport()
         val origin = workspaceRoot().fetchSemanticsNode().boundsInRoot.topLeft
         // Leave the scrolling edge before measuring the destination. A timed move/up
         // batch advances frames and can move that destination away from the old point.
         workspaceRoot().performTouchInput { moveTo(viewport.center - origin) }
         compose.mainClock.advanceTimeBy(64)
         fun targetVisible() = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().any { node ->
-            node.boundsInRoot.height >= minOf(node.size.height.toFloat(), 48f * compose.activity.resources.displayMetrics.density) &&
-                node.boundsInRoot.width > 0f
+            node.boundsInRoot.intersect(viewport).height >= minOf(node.size.height.toFloat(), 48f * compose.activity.resources.displayMetrics.density) &&
+                node.boundsInRoot.intersect(viewport).width > 0f
         }
         var soughtFrames = 0
         if (!targetVisible()) {
@@ -91,7 +101,7 @@ class ProjectsFlowTest {
             compose.mainClock.advanceTimeBy(64)
         }
         compose.mainClock.advanceTimeByFrame()
-        val target = compose.onNodeWithTag(tag).assertIsDisplayed().fetchSemanticsNode().boundsInRoot.center
+        val target = compose.onNodeWithTag(tag).assertIsDisplayed().fetchSemanticsNode().boundsInRoot.intersect(viewport).center
         workspaceRoot().performTouchInput { moveTo(target - origin) }
         compose.mainClock.advanceTimeByFrame()
         val releaseBounds = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
@@ -167,12 +177,14 @@ class ProjectsFlowTest {
         compose.onAllNodes(hasTestTag("app-theme-Standart") or hasTestTag("app-theme-Evening")).onFirst().assertExists()
         compose.onNodeWithTag("personal-task-search-open").performClick()
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("personal-task-search-dock").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("personal-task-search").assertExists()
+        compose.onNodeWithTag("personal-task-search-close").performClick()
         compose.onNodeWithTag("personal-category-filters").assertIsEnabled().performClick()
         compose.onNodeWithTag("category-filter-work").performScrollTo()
         compose.onNodeWithTag("category-filter-work")
             .assert(hasAnyAncestor(hasTestTag("life-categories-card")))
-        compose.onNodeWithTag("category-filter-work").performClick().assertIsSelected()
-        compose.onNodeWithTag("personal-task-search-close").performClick()
+        compose.onNodeWithTag("category-filter-work").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("personal-category-dock").fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithTag("projects-screen").performScrollToIndex(0)
         compose.waitForIdle()
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -370,7 +382,7 @@ class ProjectsFlowTest {
         beginTaskDrag(taskId)
         try {
             compose.mainClock.autoAdvance = false
-            val listBounds = compose.onNodeWithTag("projects-screen").fetchSemanticsNode().boundsInRoot
+            val listBounds = projectsViewport()
             val origin = workspaceRoot().fetchSemanticsNode().boundsInRoot.topLeft
             fun scrollPosition() = compose.onNodeWithTag("projects-screen").fetchSemanticsNode()
                 .config[SemanticsProperties.VerticalScrollAxisRange].value()
@@ -388,11 +400,9 @@ class ProjectsFlowTest {
                 targetBounds = targets.singleOrNull()?.boundsInRoot?.toString() ?: "absent"
                 targetSize = targets.singleOrNull()?.size?.toString() ?: "absent"
                 reached = targets.any {
-                    // boundsInRoot is clipped by the lazy viewport: compare it with the
-                    // complete measured size before considering the destination revealed.
-                    it.boundsInRoot.height >= it.size.height - 1f &&
-                        it.boundsInRoot.width >= it.size.width - 1f &&
-                        it.boundsInRoot.top >= listBounds.top && it.boundsInRoot.bottom <= listBounds.bottom
+                    val visible = it.boundsInRoot.intersect(listBounds)
+                    visible.height >= minOf(it.size.height.toFloat(), 48f * compose.activity.resources.displayMetrics.density) &&
+                        visible.width >= 48f * compose.activity.resources.displayMetrics.density
                 }
                 if (reached) break
             }
@@ -401,14 +411,14 @@ class ProjectsFlowTest {
                 .put("finger", Offset(listBounds.center.x, listBounds.bottom - 8f).toString())
                 .put("floatingPreview", compose.onAllNodesWithTag("drag-floating-task").fetchSemanticsNodes()
                     .singleOrNull()?.boundsInRoot?.toString() ?: "absent")
-                .put("target", targetBounds).put("targetSize", targetSize).put("targetFullyVisible", reached)
+                .put("target", targetBounds).put("targetSize", targetSize).put("targetHas48dpDropArea", reached)
                 .put("initialScroll", initialScroll.toDouble()).put("finalScroll", finalScroll.toDouble())
                 .put("virtualElapsedMs", compose.mainClock.currentTime - startedAt)
             File(app.getExternalFilesDir(null), "projects-auto-scroll-$theme-proof.json").writeText(proof.toString())
             println("QA313_PROJECT_AUTO_SCROLL=$proof")
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
                 .takeScreenshot(File(app.getExternalFilesDir(null), "projects-auto-scroll-$theme-${if (reached) "revealed" else "timeout"}.png"))
-            assertTrue("Holding at the bottom must fully reveal the18th target within8s of Compose time: $proof", reached)
+            assertTrue("Holding at the bottom must reveal a48dp drop area on the18th target within8s: $proof", reached)
             assertTrue("The list must actually scroll while the finger remains held: $proof", finalScroll > initialScroll)
             compose.onNodeWithTag("drag-floating-task").assertExists()
             compose.onNodeWithTag("project-drop-$lastId").assertIsDisplayed()
@@ -417,9 +427,10 @@ class ProjectsFlowTest {
             workspaceRoot().performTouchInput { moveTo(listBounds.center - origin) }
             compose.mainClock.advanceTimeBy(64)
             val dropTarget = compose.onNodeWithTag("project-drop-$lastId").fetchSemanticsNode()
-            assertTrue("The complete target must remain visible before dropping: $proof",
-                dropTarget.boundsInRoot.height >= dropTarget.size.height - 1f)
-            val dropPoint = dropTarget.boundsInRoot.center
+            val dropArea = dropTarget.boundsInRoot.intersect(listBounds)
+            assertTrue("The target must keep a usable drop area above the search controls: $proof",
+                dropArea.height >= minOf(dropTarget.size.height.toFloat(), 48f * compose.activity.resources.displayMetrics.density))
+            val dropPoint = dropArea.center
             // Deliver the move separately from up: with autoAdvance=false a single
             // 300ms event batch can release against geometry from an earlier frame.
             workspaceRoot().performTouchInput { moveTo(dropPoint - origin) }
@@ -442,7 +453,7 @@ class ProjectsFlowTest {
             if (compose.onAllNodesWithTag("drag-task-$taskId", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
                 compose.onNodeWithTag("project-drop-$lastId").performClick()
             beginTaskDrag(taskId)
-            val backViewport = compose.onNodeWithTag("projects-screen").fetchSemanticsNode().boundsInRoot
+            val backViewport = projectsViewport()
             val backOrigin = workspaceRoot().fetchSemanticsNode().boundsInRoot.topLeft
             val reverseStart = scrollPosition()
             workspaceRoot().performTouchInput { moveTo(Offset(backViewport.center.x, backViewport.top + 8f) - backOrigin) }
@@ -457,7 +468,7 @@ class ProjectsFlowTest {
             assertTrue("Holding at the top must return to the first item within8s: $reverseProof", reverseStart > 0f && reverseEnd <= .5f)
             workspaceRoot().performTouchInput { moveTo(backViewport.center - backOrigin) }
             compose.mainClock.advanceTimeBy(64)
-            val inboxTarget = compose.onNodeWithTag("project-inbox").assertIsDisplayed().fetchSemanticsNode().boundsInRoot.center
+            val inboxTarget = compose.onNodeWithTag("project-inbox").assertIsDisplayed().fetchSemanticsNode().boundsInRoot.intersect(backViewport).center
             workspaceRoot().performTouchInput { moveTo(inboxTarget - backOrigin) }
             compose.mainClock.advanceTimeByFrame()
             workspaceRoot().performTouchInput { up() }

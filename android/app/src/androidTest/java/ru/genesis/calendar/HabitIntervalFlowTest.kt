@@ -63,6 +63,8 @@ class HabitIntervalFlowTest {
         repeat(8) { compose.onNodeWithText("Час −").performScrollTo().performClick() }
         compose.onNodeWithText("Готово").performScrollTo().performClick()
         compose.onNodeWithTag("habit-interval-mode-each").performScrollTo().assertIsSelected()
+        // Timers are opt-in; seed the state whose later disable/history path is tested.
+        compose.onNodeWithTag("habit-timer-enabled").performScrollTo().assertIsOff().performClick().assertIsOn()
         screenshot("editor")
         compose.onNodeWithText("Сохранить").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(15_000) { saved().habits.any { it.title==title } }
