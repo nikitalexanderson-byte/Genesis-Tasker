@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class DailyAdviceUiTest {
     @get:Rule val compose = createAndroidComposeRule<StoicheionGestureActivity>()
+    private val owner = "qa-advice-${java.util.UUID.randomUUID()}"
     private val day = "2026-10-23"
     private val body = "Полный авторский текст совета.\nВторой абзац сохраняется без сокращения."
     private fun response(id: String, language: String = "ru", dismissed: Boolean = false) = JSONObject()
@@ -64,7 +65,7 @@ class DailyAdviceUiTest {
         compose.setContent { MaterialTheme(colorScheme = standart) {
             Surface { Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState())) {
                 if (offscreen) Spacer(Modifier.height(1600.dp))
-                TodayAdvicePanel(gateway, "alice", day, "ru", AdvicePreferences(), emptyList())
+                TodayAdvicePanel(gateway, owner, day, "ru", AdvicePreferences(), emptyList())
             } }
         } }
     }
@@ -181,15 +182,15 @@ class DailyAdviceUiTest {
 
     @Test fun changingAccountOrLanguageCannotShowThePreviousAdvice() {
         val first = Fixture(); val next = Fixture("advice-" + "b".repeat(24))
-        var uid by mutableStateOf("alice")
+        var uid by mutableStateOf(owner)
         var language by mutableStateOf("ru")
         compose.setContent { MaterialTheme(colorScheme = standart) { Surface {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                TodayAdvicePanel(if (uid == "alice") first else next, uid, day, language, AdvicePreferences(), emptyList())
+                TodayAdvicePanel(if (uid == owner) first else next, uid, day, language, AdvicePreferences(), emptyList())
             }
         } } }
         compose.onNodeWithText("Совет для a").waitUntilVisible()
-        compose.runOnIdle { uid = "bob" }
+        compose.runOnIdle { uid = "$owner-other" }
         compose.onNodeWithText("Совет для b").waitUntilVisible()
         compose.onNodeWithText("Совет для a").assertDoesNotExist()
         compose.runOnIdle { next.language = "ja"; language = "ja" }
@@ -232,7 +233,7 @@ class DailyAdviceUiTest {
 
     @Test fun disabledAdviceDoesNotReserveOrRecordAPost() {
         val fixture = Fixture()
-        compose.setContent { MaterialTheme { TodayAdvicePanel(fixture, "alice", day, "ru",
+        compose.setContent { MaterialTheme { TodayAdvicePanel(fixture, owner, day, "ru",
             AdvicePreferences(enabled = false), emptyList()) } }
         compose.runOnIdle { assertEquals(0, fixture.loads); assertTrue(fixture.records.isEmpty()) }
     }

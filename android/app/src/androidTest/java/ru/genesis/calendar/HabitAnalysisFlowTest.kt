@@ -59,8 +59,13 @@ class HabitAnalysisFlowTest {
     private fun observed(start: LocalDate): Habit {
         val at = start.atStartOfDay(ZoneId.systemDefault()).toInstant().toString()
         val habit = Habit(TrackerEntity("report-${UUID.randomUUID()}", at, at), "Собственная практика", start,
-            HabitEngine(GenesisCalendar()).defaultSchedule(start, CalendarMode.PROFANE))
+            HabitEngine(GenesisCalendar(ZoneId.systemDefault())).defaultSchedule(start, CalendarMode.PROFANE))
         return HabitLifecycle.apply(habit, HabitLifecycleCommand("observed", habit.id, at, "observe", emptyList()))
+    }
+    private fun selectDay(date: LocalDate) {
+        // The month scrolls vertically; the cell belongs to a separate horizontal grid.
+        compose.onNodeWithTag("habit-analysis-grid-${GenesisCalendar().monthRange(date, CalendarMode.PROFANE).start}").performScrollTo()
+        compose.onNodeWithTag("habit-analysis-day-$date").performScrollTo().assertIsDisplayed().performClick()
     }
     private fun render(mode: CalendarMode = CalendarMode.PROFANE, anchor: LocalDate = LocalDate.now(),
         history: (String, LocalDate) -> Unit = { _, _ -> }, decision: suspend (HabitDayDecisionCommand) -> Unit = { repository.decideDay(it) }) {
@@ -89,7 +94,7 @@ class HabitAnalysisFlowTest {
         compose.onNodeWithText("Сравнение").performScrollTo().performClick()
         compose.onNodeWithTag("habit-comparison-current").assertExists()
         capture("comparison")
-        compose.onNodeWithTag("habit-analysis-day-2026-10-19").performScrollTo().performClick()
+        selectDay(LocalDate.parse("2026-10-19"))
         compose.onNodeWithTag("habit-source-v1").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("habit-source-v2").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("habit-analysis-edit").performScrollTo().performClick()
@@ -106,11 +111,20 @@ class HabitAnalysisFlowTest {
             progress = UserProgress(lifetimeXp = 80, laurelsBalance = 25)))
         val before = read(); val commands = mutableListOf<HabitDayDecisionCommand>()
         render(decision = { commands += it; repository.decideDay(it) })
-        compose.onNodeWithTag("habit-analysis-day-$today").performScrollTo().performClick()
+        selectDay(today)
+        try {
+            compose.waitUntil(15_000) { compose.onAllNodesWithTag("habit-analysis-skip").fetchSemanticsNodes().isNotEmpty() }
+        } catch (failure: Throwable) {
+            java.io.File(app.getExternalFilesDir(null), "analysis-missing-skip.txt").writeText(
+                "today=$today now=${Instant.now()} zone=${ZoneId.systemDefault()} schedule=${habit.schedule}\n" +
+                    "day=${HabitAnalysis.day(before, habit, today)}\n" + compose.onRoot(useUnmergedTree = true).printToString())
+            capture("missing-skip")
+            throw failure
+        }
         compose.onNodeWithTag("habit-analysis-skip").performScrollTo().performClick()
         compose.waitUntil(15_000) { read().completions.firstOrNull { it.date == today }?.skippedAt != null }
         val skipped = read(); assertEquals(before.rewards, skipped.rewards); assertEquals(before.progress.lifetimeXp, skipped.progress.lifetimeXp)
-        compose.waitUntil(15_000) { compose.onNodeWithTag("habit-analysis-skip").fetchSemanticsNode().config.getOrNull(SemanticsProperties.Disabled) == null }
+        compose.waitUntil(15_000) { runCatching { compose.onNodeWithTag("habit-analysis-skip").assertIsEnabled(); true }.getOrDefault(false) }
         compose.onNodeWithTag("habit-analysis-skip").performScrollTo().performClick()
         compose.waitUntil(15_000) { read().completions.firstOrNull { it.date == today }?.skippedAt == null && read().history.size == 2 }
         assertEquals(before.rewards, read().rewards); assertEquals(before.progress.lifetimeXp, read().progress.lifetimeXp)
@@ -130,6 +144,8 @@ class HabitAnalysisFlowTest {
         val dates = SemanticsMatcher("report date") { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("habit-analysis-day-") == true }
         compose.waitUntil(30_000) { compose.onAllNodes(dates).fetchSemanticsNodes().size == range.dates().size }
         compose.onNodeWithTag("habit-analysis-day-${range.start}").assertExists()
+        // Reveal the vertical month before scrolling its narrow horizontal grid.
+        compose.onNodeWithTag("habit-analysis-grid-${calendar.monthRange(range.end, CalendarMode.LUNAR).start}").performScrollTo()
         compose.onNodeWithTag("habit-analysis-day-${range.end}").performScrollTo().assertIsDisplayed()
         assertTrue(range.dates().size > 370)
     }

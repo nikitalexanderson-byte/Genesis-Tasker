@@ -99,8 +99,13 @@ function Save-NativeExternalArtifacts([string]$Adb, [string]$Serial, [string]$Pa
     if (!$target.StartsWith($boundary, [StringComparison]::OrdinalIgnoreCase)) { throw 'Artifact destination is outside output/qa' }
     if (Test-Path -LiteralPath $target) { throw 'Artifact destination already exists; use a fresh run ID' }
     $remote = "/sdcard/Android/data/$Package/files"
-    $probe = (& $Adb -s $Serial shell "if test -d $remote; then echo present; else echo absent; fi" 2>&1) -join [Environment]::NewLine
-    if ($LASTEXITCODE -ne 0 -or $probe.Trim() -notin @('present','absent')) { throw 'Cannot inspect external artifact directory' }
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
+        $probe = (& $Adb -s $Serial shell "if test -d $remote; then echo present; else echo absent; fi" 2>&1) -join [Environment]::NewLine
+        $probeExit = $LASTEXITCODE
+        if ($probeExit -eq 0 -and $probe.Trim() -in @('present','absent')) { break }
+        if ($attempt -lt 2) { Start-Sleep -Milliseconds 500 }
+    }
+    if ($probeExit -ne 0 -or $probe.Trim() -notin @('present','absent')) { throw "Cannot inspect external artifact directory (exit $probeExit): $probe" }
     if ($probe.Trim() -eq 'absent') { return [ordered]@{ status='NOT_APPLICABLE'; files=@(); reason='This suite produced no external artifact directory.' } }
     $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
     $stage = [IO.Path]::GetFullPath((Join-Path $temporaryRoot ('genesis-qa-pull-' + [Guid]::NewGuid().ToString('N'))))

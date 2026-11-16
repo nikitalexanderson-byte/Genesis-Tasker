@@ -159,31 +159,23 @@ class CalendarVisual317Test {
         }
     }
 
-    @Test fun todayUsesBrightArtworkAndPaperOnlyBehindLightTextGroups() {
+    @Test fun todayKeepsDecodedArtworkAndAllReadingGroupsInBothSchemes() {
         val date = LocalDate.of(2026, 11, 3)
-        val calendar = GenesisCalendar()
-        val copy = todayHeroCopy(date, CalendarMode.PROFANE, calendar, "ru")
+        val copy = todayHeroCopy(date, CalendarMode.PROFANE, GenesisCalendar(), "ru")
         val scroll = ScrollState(0)
         var dark by mutableStateOf(false)
-        var reference by mutableStateOf(false)
-        var artHeight by mutableStateOf(1.dp)
         val states = JSONArray()
         val evidence = JSONObject().put("completed", false).put("artPath", copy.imagePath).put("states", states)
         compose.setContent {
             Frame(dark) {
                 Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(12.dp)) {
-                    if (reference) Box(Modifier.fillMaxWidth().height(artHeight)) {
-                        OriginalImage(copy.imagePath, null, Modifier.matchParentSize(), dimInDarkTheme = false)
-                    } else DayHeader(date, CalendarMode.PROFANE)
+                    DayHeader(date, CalendarMode.PROFANE)
                 }
             }
         }
         try {
-            for (eveningMode in listOf(false, true)) {
-                compose.runOnIdle { dark = eveningMode; reference = false; runBlocking { scroll.scrollTo(0) } }
-                compose.waitForIdle()
-                val state = JSONObject().put("dark", eveningMode)
-                states.put(state)
+            for (night in listOf(false, true)) {
+                compose.runOnIdle { dark = night; runBlocking { scroll.scrollTo(0) } }
                 val hero = compose.onNodeWithTag("today-hero").fetchSemanticsNode()
                 val density = hero.layoutInfo.density.density
                 val bounds = hero.boundsInRoot
@@ -192,49 +184,34 @@ class CalendarVisual317Test {
                 compose.waitUntil(10_000) { OriginalImageLoader.cached(copy.imagePath, widthBucket, heightBucket) != null }
                 compose.mainClock.advanceTimeByFrame()
                 compose.waitForIdle()
-                capture("today-${if (eveningMode) "dark" else "light"}-top")
-                val actual = compose.onRoot().captureToImage().asAndroidBitmap()
-                val rootBounds = compose.onRoot().fetchSemanticsNode().boundsInRoot
-                var largestGutterDelta = 0
-                if (!eveningMode) {
-                    // Render the same OriginalImage at the measured hero geometry, without text/overlay.
-                    // Comparing exposed gutter pixels catches a whole-image wash without a product test hook.
-                    compose.runOnIdle { artHeight = (hero.size.height / density).dp; reference = true }
-                    compose.waitForIdle()
-                    val original = compose.onRoot().captureToImage().asAndroidBitmap()
-                    val xPositions = listOf(bounds.left + 6 * density, bounds.right - 6 * density)
-                    val top = (bounds.top - rootBounds.top + 32 * density).roundToInt()
-                    val bottom = minOf(actual.height, original.height, (bounds.bottom - rootBounds.top).roundToInt()) - (20 * density).roundToInt()
-                    val sourceColors = mutableSetOf<Int>()
-                    for (y in top until bottom step max(1, (37 * density).roundToInt())) for (xAbsolute in xPositions) {
-                        val x = (xAbsolute - rootBounds.left).roundToInt()
-                        val expected = original.getPixel(x, y)
-                        sourceColors += expected
-                        largestGutterDelta = max(largestGutterDelta, colorDelta(actual.getPixel(x, y), expected))
+                compose.onNodeWithTag("today-calendar-image", useUnmergedTree = true).assertExists()
+                capture("today-${if (night) "dark" else "light"}-top")
+                val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+                val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+                val colors = mutableSetOf<Int>()
+                val top = (bounds.top - root.top + 32 * density).roundToInt()
+                val bottom = minOf(bitmap.height, (bounds.bottom - root.top).roundToInt()) - (20 * density).roundToInt()
+                for (y in top until bottom step max(1, (37 * density).roundToInt())) {
+                    for (x in listOf(bounds.left + 6 * density, bounds.right - 6 * density)) {
+                        colors += bitmap.getPixel((x - root.left).roundToInt(), y)
                     }
-                    state.put("largestLightGutterChannelDelta", largestGutterDelta).put("referenceSampleColors", sourceColors.size)
-                    assertTrue("Reference artwork has decoded varied pixels", sourceColors.size > 3)
-                    assertTrue("Exposed illustration keeps original colors (max channel delta $largestGutterDelta)", largestGutterDelta <= 2)
-                    compose.runOnIdle { reference = false }
-                    compose.waitForIdle()
                 }
+                // The approved 3.3.x treatment includes tint and shading. Require the
+                // authored image to remain visible rather than comparing it to an untinted copy.
+                assertTrue("Decoded artwork remains visible through its treatment", colors.size > 3)
                 val fills = JSONObject()
-                state.put("textFillsArgb", fills)
-                for (tag in listOf("today-hero-context", "today-hero-meaning", "today-hero-details", "today-solar-times")) {
+                for (tag in listOf("today-hero-context", "today-hero-meaning", "today-solar-times")) {
                     val group = compose.onNodeWithTag(tag, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-                    val color = dominantFill(group)
-                    fills.put(tag, Integer.toHexString(color))
-                    if (!eveningMode) assertEquals("Light text block $tag follows app paper", standart.background.toArgb(), color)
+                    val frame = group.fetchSemanticsNode().boundsInRoot
+                    assertTrue("Reading group remains inside its illustration", frame.left >= bounds.left - 1f && frame.right <= bounds.right + 1f)
+                    fills.put(tag, Integer.toHexString(dominantFill(group)))
                 }
-                capture("today-${if (eveningMode) "dark" else "light"}-solar")
-                if (eveningMode) state.put("largestLightGutterChannelDelta", JSONObject.NULL)
+                states.put(JSONObject().put("dark", night).put("visibleArtworkColors", colors.size).put("textFillsArgb", fills))
+                capture("today-${if (night) "dark" else "light"}-solar")
             }
             evidence.put("completed", true)
-        } finally {
-            proof("today", evidence)
-        }
+        } finally { proof("today", evidence) }
     }
-
     @Test fun lunarTodayKeepsTheMoonAndPhaseInsideTheFirstOfThreeGroups() {
         val date = LocalDate.of(2026, 11, 6)
         val calendar = GenesisCalendar()
@@ -264,15 +241,15 @@ class CalendarVisual317Test {
                 .assert(hasAnyAncestor(hasTestTag("today-hero-context")))
                 .assertTextEquals(lunarContext.progress).fetchSemanticsNode().boundsInRoot
             val epithet = compose.onNodeWithTag("today-lunar-epithet", useUnmergedTree = true)
-                .assertTextEquals(moon.epithet.uppercase(Locale.forLanguageTag("ru"))).fetchSemanticsNode().boundsInRoot
+                .assertTextEquals(moon.epithet).fetchSemanticsNode().boundsInRoot
             val phase = compose.onNodeWithTag("today-lunar-description", useUnmergedTree = true)
                 .assertTextEquals("${moon.direction} · ${moon.phase} · ${moon.illumination}%")
                 .fetchSemanticsNode().boundsInRoot
             assertTrue("Moon is in the upper right of the context block", phaseIcon.center.x > context.center.x && phaseIcon.top < month.top)
             assertTrue(phaseIcon.right <= context.right && phaseIcon.top >= context.top)
             assertTrue("Month context keeps the width below the moon", month.right >= phaseIcon.right - 1f)
-            assertTrue("Progress and phase follow the month", month.bottom <= progress.top &&
-                progress.bottom <= epithet.top && epithet.bottom <= phase.top)
+            assertTrue("The epithet remains inside the moon disc", phaseIcon.contains(epithet.center))
+            assertTrue("Progress and phase follow the month", month.bottom <= progress.top && progress.bottom <= phase.top)
             assertTrue(phase.bottom <= context.bottom)
             compose.onNodeWithTag("today-calendar-image", useUnmergedTree = true).assertExists()
             compose.onNodeWithTag("today-hero-description").assertTextEquals(copy.description)

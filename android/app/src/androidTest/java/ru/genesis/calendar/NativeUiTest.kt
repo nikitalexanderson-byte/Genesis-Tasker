@@ -64,8 +64,10 @@ class NativeUiTest {
         val title = "UI synthetic habit ${UUID.randomUUID()}"
         compose.openWorkspacePage("Привычки", "Привычки")
         compose.onNodeWithTag("habit-create").assertIsEnabled().performClick()
-        compose.onAllNodes(hasSetTextAction()).onFirst().performTextInput(title)
+        compose.onNode(hasSetTextAction() and hasText("Название")).performTextInput(title)
+        compose.dismissValidationKeyboard()
         compose.onNodeWithTag("habit-emoji-picker-open").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Животные и природа").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Животные и природа").performScrollTo().performClick()
         compose.onNodeWithTag("habit-emoji-choice-🦋").performScrollTo().performClick()
         compose.onNodeWithTag("habit-emoji").assertTextContains("🦋")
