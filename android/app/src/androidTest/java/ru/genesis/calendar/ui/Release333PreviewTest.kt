@@ -144,8 +144,8 @@ class Release333PreviewTest {
             DiaryKeystoreCipher("store333-diary","store333-diary"))
         runBlocking {
             repository.refresh()
-            repository.save(DiaryNote.create("Идея для выходных\nПройти новый маршрут в парке и взять книгу."))
-            repository.save(DiaryNote.create("Планы на неделю\nВыделить время для чтения, прогулок и нового проекта."))
+            repository.save(DiaryNote.create("Пройти новый маршрут в парке и взять книгу.", "Идея для выходных"))
+            repository.save(DiaryNote.create("Выделить время для чтения, прогулок и нового проекта.", "Планы на неделю"))
         }
         compose.setContent {Frame {CompositionLocalProvider(LocalGenesisLanguage provides language) {
             MobileWorkspaceShell("Дневник",null,emptyList(),"",true,onNavigate={},actions={}) {DiaryScreen(repository,{})}
@@ -154,8 +154,9 @@ class Release333PreviewTest {
         shot("diary-ru-light")
         runBlocking {
             repository.state.value.records.forEachIndexed {index,record->repository.save(record.note.changed {
-                put("body",if(index==0)"An idea for the weekend\nExplore a new route in the park and bring a book."
-                    else "Plans for the week\nMake time for reading, walks and a new project.")
+                put("title",if(index==0)"An idea for the weekend" else "Plans for the week")
+                put("body",if(index==0)"Explore a new route in the park and bring a book."
+                    else "Make time for reading, walks and a new project.")
             },record.revision)}
         }
         compose.runOnIdle {language="en"}

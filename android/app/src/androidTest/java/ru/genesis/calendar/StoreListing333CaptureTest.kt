@@ -67,6 +67,9 @@ class StoreListing333CaptureTest {
         val folder = File(app.getExternalFilesDir(null), "store-333-$language").apply { mkdirs() }
         fun capture(name: String) {
             compose.waitForIdle()
+            compose.waitUntil(10_000) {
+                compose.onAllNodesWithTag("habit-feedback-notice").fetchSemanticsNodes().isEmpty()
+            }
             val target = File(folder, "tasker-333-$name.png")
             captureNativeWindow(target)
             val bitmap = android.graphics.BitmapFactory.decodeFile(target.absolutePath)
@@ -85,8 +88,8 @@ class StoreListing333CaptureTest {
             prefs.set("stoicheionDivinationDisabled", "false")
             val date = LocalDate.now()
             val structure = WorkspaceStructureRepository(app)
-            structure.saveProject(GenesisProject(project, null, null, copy("Личные планы", "Personal plans"), "", emptyList(), "active", 0))
-            app.repository.save(LocalTask(ownedTasks[0], copy("Прочитать 10 страниц", "Read 10 pages"), date = date.toString(), projectId = project))
+            structure.saveProject(GenesisProject(project, null, null, copy("Моя неделя", "My week"), copy("Время для важных дел", "Time for what matters"), emptyList(), "active", 0))
+            app.repository.save(LocalTask(ownedTasks[0], copy("Прочитать 10 страниц", "Read 10 pages"), date = date.toString(), time = "18:00", reminders = listOf(TaskReminder.relative(10)), projectId = project))
             app.repository.save(LocalTask(ownedTasks[1], copy("Подготовить план недели", "Plan the week"), date = date.toString(), projectId = project))
             app.repository.save(LocalTask(ownedTasks[2], copy("Прогулка 20 минут", "Walk for 20 minutes"), date = date.toString(), projectId = project))
             val habits = HabitsRepository(app)
@@ -126,8 +129,12 @@ class StoreListing333CaptureTest {
             compose.onNodeWithTag("custom-reminder-toggle").performScrollTo()
             capture("reminders")
             compose.onNodeWithTag("close-task-editor").performClick()
-            open("Проекты"); await("projects-screen"); capture("projects")
+            open("Проекты"); await("projects-screen")
+            compose.onNodeWithTag("project-drop-$project").performScrollTo().performClick()
+            capture("projects")
+            setCaptureTheme(true)
             open("Календарь", "month"); await("calendar-month"); capture("calendar-month")
+            setCaptureTheme(false)
             compose.onNodeWithTag("submenu-year").performClick(); await("calendar-year")
             // OriginalImage adds its image semantics only after the bundled bitmap has decoded.
             // Compose being idle alone does not wait for that IO work.
@@ -139,6 +146,7 @@ class StoreListing333CaptureTest {
                 }
             }
             capture("calendar-year")
+            habits.complete("$token-habit", true)
             open("Привычки", "Привычки"); await("habit-view-today")
             setCaptureTheme(true)
             compose.waitForIdle(); capture("habits-dark")
