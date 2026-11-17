@@ -76,9 +76,10 @@
 Android 3.3.5/149 уже опубликован отдельно из 3cc5c1bd7467eff56895a069b95ff1263f9df657:
 signed build 44168478466, APK publisher 44181876895. APK SHA-256:
 0027746c382954972c711d7be96150d7dcca09c634f259b62c0f94892a3a70ff.
-Samsung SM-A566E обновлён с сохранением данных и прежней подписи; AAB149
-отправлен в существующий Google Play Open testing, статус Changes in review.
-Не объявлять магазинный выпуск доступным всем до завершения review.
+Samsung SM-A566E обновлён с сохранением данных и прежней подписи. Проверка Play
+завершена: AAB149 в существующем Open testing имеет статус **Available to testers
+on Google Play / Full rollout**, 150 стран, Alpha143 сохранён. Доказательства:
+локальные output/release-3.3.5/fix149/play-published.{json,jpg}.
 
 Роли создателя, владельца инфраструктуры и операторов платежей исправлены PR #39
 на всех 14 языках. Веб-галерея/валюта публикуются штатным web/API workflow

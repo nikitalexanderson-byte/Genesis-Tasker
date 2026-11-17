@@ -18,9 +18,9 @@
 - 18 ноября 2026 выпущен Android **3.3.5/149** из
   `3cc5c1bd7467eff56895a069b95ff1263f9df657`: signed build **44168478466**,
   APK-only publisher **44181876895** success. APK и manifest на сайте проверены;
-  Samsung SM-A566E обновлён с прежней подписью и данными. AAB149 отправлен
-  в существующий Open testing: **Changes in review**; не считать review завершённым
-  без проверки. `GENESIS_DEPLOY_ANDROID=false`, пороги обязательного обновления 0,
+  Samsung SM-A566E обновлён с прежней подписью и данными. AAB149 опубликован
+  в существующем Open testing: **Available to testers on Google Play / Full rollout**,
+  150 стран, Alpha143 сохранён. `GENESIS_DEPLOY_ANDROID=false`, пороги обязательного обновления 0,
   E2EE cutover выключен. Следующий versionCode должен быть выше 149.
   Галерея и валюта витрины — отдельное веб-поручение, без замены APK149.
   См. `docs/public-gallery-currency-2026-11-18.md`.
