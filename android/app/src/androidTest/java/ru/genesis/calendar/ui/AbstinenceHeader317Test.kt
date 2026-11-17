@@ -261,6 +261,8 @@ class AbstinenceHeader317Test {
         compose.setContent { Shell(dark = dark) { AbstinenceScreen(app) {} } }
         tap("abstinence-create")
         enabled("abstinence-name").performTextReplacement(marker)
+        // Finish the IME transition before dispatching a physical screen-coordinate tap.
+        compose.dismissValidationKeyboard()
         tap("abstinence-tracker-save")
         compose.waitUntil(10_000) { runBlocking { repo.workspace.first().addictionTrackers.any { it.trackedBehavior == marker } } }
         val tracker = runBlocking { repo.workspace.first().addictionTrackers.single { it.trackedBehavior == marker } }

@@ -21,15 +21,11 @@ import ru.genesis.calendar.domain.TheokyklosCatalogSource
 class StoicheionFlowTest {
     @get:Rule val compose = createAndroidComposeRule<TestWorkspaceActivity>()
     private fun openOracle() {
+        compose.openWorkspacePage("Сакральное", "stoicheion")
+        // The grid exists before its bundled catalogue finishes loading.
         compose.waitUntil(15_000) {
-            compose.onAllNodesWithTag("workspace-menu").fetchSemanticsNodes().isNotEmpty() ||
-                compose.onAllNodesWithTag("navigation-Сакральное").fetchSemanticsNodes().isNotEmpty()
-        }
-        if (compose.onAllNodesWithTag("navigation-Сакральное").fetchSemanticsNodes().isNotEmpty())
-            compose.onNodeWithTag("navigation-Сакральное").performClick()
-        else {
-            compose.onNodeWithTag("workspace-menu").performClick()
-            compose.onNodeWithTag("drawer-Сакральное-root").performScrollTo().performClick()
+            compose.onAllNodesWithTag("stoicheion-daily-block").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithText("Гадания по картам выключены").fetchSemanticsNodes().isNotEmpty()
         }
     }
 
@@ -49,9 +45,15 @@ class StoicheionFlowTest {
             }
         }
         openOracle()
-        compose.waitUntil(10_000) {
-            compose.onAllNodesWithTag("stoicheion-catalog-block", useUnmergedTree = true)
-                .fetchSemanticsNodes().isNotEmpty()
+        val grid = compose.onNodeWithTag("stoicheion-grid", useUnmergedTree = true)
+        grid.performScrollToNode(hasTestTag("stoicheion-alphabet-toggle"))
+        compose.onNodeWithTag("stoicheion-alphabet-toggle").assertIsNotSelected()
+        compose.onNodeWithTag("stoicheion-catalog-block").assertDoesNotExist()
+        compose.onNodeWithTag("stoicheion-alphabet-toggle").performClick().assertIsSelected()
+        for (index in 0 until letters.length()) {
+            val tag = "stoicheion-letter-${letters.getJSONObject(index).getString("id")}"
+            grid.performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).assertIsDisplayed()
         }
         compose.onNodeWithTag("stoicheion-grid", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("stoicheion-grid", useUnmergedTree = true)
@@ -131,6 +133,9 @@ class StoicheionFlowTest {
             compose.waitUntil(10_000) {
                 compose.onAllNodesWithText("Гадания по картам выключены").fetchSemanticsNodes().isNotEmpty()
             }
+            compose.onNodeWithTag("stoicheion-grid", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag("stoicheion-alphabet-toggle"))
+            compose.onNodeWithTag("stoicheion-alphabet-toggle").assertIsNotSelected().performClick()
             compose.onNodeWithTag("stoicheion-grid", useUnmergedTree = true)
                 .performScrollToNode(hasTestTag("stoicheion-letter-alpha"))
             compose.onNodeWithTag("stoicheion-letter-alpha").assertExists()

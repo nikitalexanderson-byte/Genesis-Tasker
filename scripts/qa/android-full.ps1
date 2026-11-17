@@ -7,16 +7,18 @@ param(
     [switch]$IncludeCaptures,
     [string]$MindmapFixtureDirectory = '',
     [string]$FixtureCa = '',
+    [string]$PlanningFixtureCa = '',
     [string]$RunId = ('android-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 )
 $ErrorActionPreference = 'Stop'
 if ($PhysicalDeviceLabel -notmatch '^[a-z][a-z0-9-]{2,48}$') { throw 'Invalid physical device label' }
 if ($RunId -notmatch '^[a-zA-Z0-9-]{6,80}$') { throw 'Invalid QA run ID' }
+if ($FixtureCa -and $PlanningFixtureCa) { throw 'Choose one owned HTTPS fixture' }
 $root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 . (Join-Path $PSScriptRoot 'android-common.ps1')
 $nativeSourceHash = Get-NativeSourceHash $root
 $runnerSourceHash = Get-NativeRunnerHash $root
-$backendSourceHash = if ($FixtureCa) { Get-NativeBackendHash $root } else { $null }
+$backendSourceHash = if ($FixtureCa -or $PlanningFixtureCa) { Get-NativeBackendHash $root } else { $null }
 $output = Join-Path $root "output/qa/$RunId"
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android/Sdk' }
@@ -193,6 +195,7 @@ try {
             }
             if ($hasTaskShapeFixture) { $instrumentArgs += @('-e', 'redactedTaskFixture', 'true') }
             if ($FixtureCa) { $instrumentArgs += @('-e', 'genesisFullQaHttps', 'true', '-e', 'genesisFixtureCa', $FixtureCa) }
+            if ($PlanningFixtureCa) { $instrumentArgs += @('-e', 'genesisPlanningHttps', 'true', '-e', 'genesisFixtureCa', $PlanningFixtureCa) }
             $instrumentArgs += "$package.test/androidx.test.runner.AndroidJUnitRunner"
             $raw = & $adb @instrumentArgs 2>&1
             $exit = $LASTEXITCODE
@@ -257,7 +260,7 @@ try {
         }
     }
     if ((Get-NativeSourceHash $root) -ne $nativeSourceHash) { $reasons.Add('Native source changed during instrumentation') }
-    if ($FixtureCa -and (Get-NativeBackendHash $root) -ne $backendSourceHash) { $reasons.Add('Backend source changed during native HTTPS tests') }
+    if (($FixtureCa -or $PlanningFixtureCa) -and (Get-NativeBackendHash $root) -ne $backendSourceHash) { $reasons.Add('Backend source changed during native HTTPS tests') }
 } catch { $reasons.Add($_.Exception.Message); Write-Error -ErrorAction Continue $_ }
 finally {
     foreach ($fixtureDevice in @($taskShapeDeviceInputs)) {

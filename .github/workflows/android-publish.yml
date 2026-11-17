@@ -139,7 +139,7 @@ jobs:
             "https://genesiscalendar.com/downloads/GENESIS-Android-Native-3.3.5.apk?run=$GITHUB_RUN_ID" -o published.apk
           test "$(sha256sum published.apk | cut -d' ' -f1)" = "$EXPECTED"
           curl -fsSI --max-time 30 https://genesiscalendar.com/api/android/download \
-            | tr -d '\r' | grep -Eqi '^location: /downloads/GENESIS-Android-Native-3\.3\.4\.apk$'
+            | tr -d '\r' | grep -Eqi '^location: /downloads/GENESIS-Android-Native-3\.3\.5\.apk$'
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/deploy-meta.json?android-after=$GITHUB_RUN_ID" \
             | jq -e --arg sha "$EXPECTED_CURRENT_COMMIT" '.commit == $sha'

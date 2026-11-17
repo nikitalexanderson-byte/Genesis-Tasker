@@ -1,5 +1,7 @@
 package ru.genesis.calendar.ui
 
+import android.view.View
+import android.webkit.WebView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,9 +14,16 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.*
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
+import org.hamcrest.Matcher
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +42,20 @@ import kotlinx.coroutines.runBlocking
 class Release332UiTest {
     @get:Rule val compose = createAndroidComposeRule<PagerTestActivity>()
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
+    private fun currentCatalogLoaded(): Boolean {
+        val result = AtomicReference<String?>()
+        onView(isAssignableFrom(WebView::class.java)).inRoot(isDialog()).perform(object : ViewAction {
+            override fun getConstraints(): Matcher<View> = isAssignableFrom(WebView::class.java)
+            override fun getDescription() = "Read the rendered local catalogue, including cards below the viewport"
+            override fun perform(controller: UiController, view: View) {
+                (view as WebView).evaluateJavascript(
+                    "document.querySelectorAll('button[data-olympian]').length === 13 && document.body.innerText.indexOf('Зевс') >= 0"
+                ) { result.set(it) }
+            }
+        })
+        compose.waitUntil(5000) { result.get() != null }
+        return result.get() == "true"
+    }
     private val baseline get() = InstrumentationRegistry.getArguments().getString("genesisBaseline") == "true"
 
     @Test fun threeCardsHonorTheStateReceivedFromTheWebsite() {
@@ -143,9 +166,13 @@ class Release332UiTest {
                 compose.onNodeWithTag("olympian-isopsephy-toggle").performClick()
                 val frame = compose.onNodeWithTag("genesis-modal-surface").getUnclippedBoundsInRoot()
                 compose.onNodeWithTag("olympian-native-webview").assertExists()
-                val device = androidx.test.uiautomator.UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-                assertTrue("Current local catalog loads", device.wait(androidx.test.uiautomator.Until.hasObject(
-                    androidx.test.uiautomator.By.textContains("Зевс")), 15000))
+                // At large text scale the tiles are below the native viewport. Accessibility
+                // cache visibility is not evidence that the local React catalogue failed to load.
+                try { compose.waitUntil(15000) { currentCatalogLoaded() } }
+                catch (failure: Throwable) {
+                    captureNativeWindow(File(context.getExternalFilesDir(null), "release332-olympians-failure-$w-$night.png"))
+                    throw failure
+                }
                 captureNativeWindow(File(context.getExternalFilesDir(null), "release332-olympians-$w-$night.png"))
                 compose.onNodeWithTag("olympian-catalog-close").performClick()
             }

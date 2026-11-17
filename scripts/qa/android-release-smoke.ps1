@@ -12,6 +12,7 @@ $package='ru.genesis.calendar.qa1103.release'
 $sourceHash=Get-NativeSourceHash $root
 if(!$SkipBuild){
     $env:JAVA_HOME=if($env:JAVA_HOME){$env:JAVA_HOME}else{'C:/Program Files/Android/Android Studio/jbr'}
+    $env:ANDROID_HOME=$sdk; $env:ANDROID_SDK_ROOT=$sdk
     Push-Location (Join-Path $root 'android')
     try {
         & ./gradlew.bat --no-daemon --console=plain --max-workers=1 '-Dorg.gradle.jvmargs=-Xmx6g -Dfile.encoding=COMPAT' '-Pkotlin.compiler.execution.strategy=in-process' '-PgenesisDebugApplicationIdSuffix=.qa1103.debug' '-PgenesisUrl=https://localhost:4443/' :app:assembleQaRelease *> (Join-Path $output 'build.log')
