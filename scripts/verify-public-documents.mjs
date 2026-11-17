@@ -24,7 +24,10 @@ for (const [slug, title] of Object.entries(pages)) {
   assert.ok(html.includes(`rel="canonical" href="https://genesiscalendar.com/${slug}"`), `${slug}: canonical URL is required`);
   assert.match(html, /<script type="module"[^>]*src="[^"]+\.js"/, `${slug}: interactive client must remain available`);
   assertPublicDocumentReferences(html, slug);
-  assert.match(body, /Iurii Logvinov/, `${slug}: Paddle service provider and website owner must be named`);
+  assert.match(body, /Domain and hosting owner: Iurii Logvinov/, `${slug}: infrastructure owner must be named accurately`);
+  assert.match(body, /GENESIS founder and creator of the website and app: Nikita Aleksandrovich Lyapin/, `${slug}: creator must be named separately`);
+  assert.match(body, /United States: Iurii Logvinov; for Russia: Nikita Aleksandrovich Lyapin/, `${slug}: payment responsibilities must identify both territories`);
+  assert.doesNotMatch(body, /Owned and operated by|GENESIS is owned by|Сайт, домен и хостинг принадлежат другому лицу/, `${slug}: obsolete ownership claims must be absent`);
   assert.match(body, /demiurge\.soft@gmail\.com/, `${slug}: Paddle support is required`);
   assert.doesNotMatch(body, /jurijjlogvinov@gmail\.com/i, `${slug}: retired contact must be absent`);
   if (slug === "privacy" || slug === "delete-account") {
@@ -46,7 +49,7 @@ for (const [slug, title] of Object.entries(pages)) {
     assert.ok(body.includes("Hostinger") && body.includes("Google API Services User Data Policy"));
     assert.ok(body.length > 10000, "privacy: complete policy must be served in the initial response");
     assert.match(body, /Исполнитель услуг и оператор персональных данных GENESIS — Ляпин Никита Александрович[\s\S]*?nikitalexanderson@gmail\.com/, "privacy: identify the actual controller and service contact");
-    assert.match(body, /Сайт, домен и хостинг принадлежат другому лицу; контакт по инфраструктуре: demiurge\.soft@gmail\.com/, "privacy: identify the separate infrastructure contact");
+    assert.match(body, /Владелец домена и хостинга — Юрий Логвинов \(Iurii Logvinov\)\. Контакт по инфраструктуре: demiurge\.soft@gmail\.com/, "privacy: identify the separate infrastructure owner and contact");
     assert.ok(body.includes("Дневник снов и диктовка") && body.includes("без аудиозаписи"), "privacy: dream storage and speech processing must be disclosed");
     assert.ok(body.includes("Платежи ЮKassa") && body.includes("Добровольные чаевые CloudTips"), "privacy: payment services must be disclosed");
   }

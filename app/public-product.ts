@@ -3,7 +3,6 @@ import catalog from '../server/resources/billing-catalog.json';
 import policy from '../server/resources/feature-access-policy.json';
 import copy from './public-product-copy.json';
 
-export const PADDLE_OWNER = 'Iurii Logvinov';
 export const PADDLE_SUPPORT = 'demiurge.soft@gmail.com';
 export const publicProductCopy = (language: string) => copy[language as keyof typeof copy] ?? copy.en;
 export const escapePublicText = (value: string | number) => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));
@@ -29,13 +28,14 @@ export function publicProductHtml(language: string): string {
     <p class="public-caption">${escape(c.sampleData)}</p></section>
     <section class="public-section" id="pricing" aria-labelledby="public-pricing-title"><h2 id="public-pricing-title">${escape(c.pricing)}</h2><p>${escape(c.free)}</p><div class="public-plans">${cards}</div>
     <p class="public-billing-terms">${escape(c.renew)}</p><p>${escape(c.tax)}</p><p>${escape(c.pending)}</p><p><a href="/refund">${escape(c.refund)}</a> · ${escape(c.refundSummary)}</p></section>
-    <footer class="welcome-footer public-footer"><span>© 2026 GENESIS. Owned and operated by Iurii Logvinov.</span><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a><nav aria-label="${escape(c.legal)}"><a href="/terms">${escape(c.terms)}</a><a href="/privacy">${escape(c.privacy)}</a><a href="/refund">${escape(c.refund)}</a><a href="/support">${escape(c.support)}</a><a href="/delete-account">${escape(c.deleteAccount)}</a></nav></footer>`;
+    <footer class="welcome-footer public-footer"><span>© 2026 GENESIS. ${escape(c.creator)}</span><span>${escape(c.infrastructure)}</span><span>${escape(c.paymentRoles)}</span><a href="mailto:nikitalexanderson@gmail.com">nikitalexanderson@gmail.com</a><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a><nav aria-label="${escape(c.legal)}"><a href="/terms">${escape(c.terms)}</a><a href="/privacy">${escape(c.privacy)}</a><a href="/refund">${escape(c.refund)}</a><a href="/support">${escape(c.support)}</a><a href="/delete-account">${escape(c.deleteAccount)}</a></nav></footer>`;
 }
 
 export function publicMerchantHtml(language: string, page: string): string {
   const c = publicProductCopy(language), escape = escapePublicText;
-  if(page==='home')return `<div class="public-merchant" data-no-translate><p>${escape(c.merchant)}</p><p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/privacy">${escape(c.privacy)}</a> · <a href="/refund">${escape(c.refund)}</a></p></div>`;
+  const roles=[c.creator,c.infrastructure,c.paymentRoles].map(text=>`<p>${escape(text)}</p>`).join('');
+  if(page==='home')return `<div class="public-merchant" data-no-translate>${roles}<p>${escape(c.merchant)}</p><p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/privacy">${escape(c.privacy)}</a> · <a href="/refund">${escape(c.refund)}</a></p></div>`;
   const r=referralCopy[language as keyof typeof referralCopy]??referralCopy.en;
   const referrals=page==='terms'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.rules)}</p><p>${escape(r.monthlyOnly)}</p></section>`:page==='privacy'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.privacy)}</p></section>`:'';
-  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2><p>${escape(c.merchant)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/refund">${escape(c.refund)}</a></p></section>`;
+  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/refund">${escape(c.refund)}</a></p></section>`;
 }
