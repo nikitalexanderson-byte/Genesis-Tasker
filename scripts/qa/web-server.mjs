@@ -25,6 +25,8 @@ export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
     try { candidate = path.resolve(directory, `.${decodeURIComponent(url.pathname)}`); }
     catch { response.writeHead(400); response.end(); return; }
     if (candidate !== directory && !candidate.startsWith(directory + path.sep)) { response.writeHead(403); response.end(); return; }
+    // Match the production .htaccess documents before falling back to the SPA.
+    if (/^\/(?:terms|privacy|refund|support|delete-account)\/?$/.test(url.pathname)) candidate = candidate.replace(/[\\/]$/, '') + '.html';
     if (!existsSync(candidate) || !statSync(candidate).isFile()) {
       if (path.extname(candidate)) { response.writeHead(404); response.end(); return; }
       candidate = path.join(directory, 'index.html');

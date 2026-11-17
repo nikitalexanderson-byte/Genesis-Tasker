@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
 
 // Requires the explicitly opted-in, synthetic qa:serve fixture. Never authenticates to production.
 const origin=new URL(process.argv.find(value=>value.startsWith('--origin='))?.slice(9)??'http://127.0.0.1:4380');
 assert.ok(['127.0.0.1','localhost','[::1]'].includes(origin.hostname)&&!origin.username&&!origin.password,'Loopback fixture required');
 const output=process.argv.find(value=>value.startsWith('--output='))?.slice(9)??'output/qa/paddle-readiness';
+assert.equal(existsSync(output),false,'Fresh acceptance output required');
 mkdirSync(output,{recursive:true});
 const copy=JSON.parse(readFileSync(new URL('../../app/public-product-copy.json',import.meta.url),'utf8'));
 const report={languages:[],publicLayouts:[],documents:[],invitation:null,referralLayouts:[],eligibility:[]};
@@ -22,6 +23,14 @@ try{
     report.languages.push(language);
   }
   await page.getByRole('radio',{name:'English',exact:true}).click();
+  for(const [target,label]of [['pricing',copy.en.pricing],['features',copy.en.features]]){
+    await page.locator('.welcome-nav').getByRole('link',{name:label,exact:true}).click();
+    await page.waitForFunction(id=>Math.abs(document.getElementById(id).getBoundingClientRect().top)<innerHeight,target);
+  }
+  await page.locator('.public-footer').getByRole('link',{name:copy.en.terms,exact:true}).click();
+  await page.locator('.public-merchant').getByText(copy.en.merchantTitle,{exact:true}).waitFor();
+  assert.equal(await page.locator('.welcome-auth').count(),0,'Terms required sign in');await page.goto(origin.href);
+  await page.locator('.welcome-language-flags').waitFor();
   await page.locator('.public-previews').scrollIntoViewIfNeeded();
   assert.deepEqual(await page.locator('.public-previews img').evaluateAll(images=>images.map(image=>image.complete&&image.naturalWidth>0)),[true,true]);
   for(const colorScheme of ['light','dark'])for(const width of [360,390,768,1440]){
@@ -30,10 +39,16 @@ try{
     const path=`${output}/public-${width}-${colorScheme}.png`;await page.screenshot({path,fullPage:true,animations:'disabled'});
     report.publicLayouts.push({width,colorScheme,path});
   }
+  await page.setViewportSize({width:390,height:1000});
+  await page.goto(new URL('/login#sign-in',origin).href);await page.locator('.welcome-language-flags').waitFor();
+  await page.waitForFunction(()=>Math.abs(document.getElementById('sign-in').getBoundingClientRect().top)<innerHeight);
+  assert.equal(new URL(page.url()).hash,'#sign-in','App routing overwrote the public sign-in anchor');
   const rawContext=await browser.newContext({javaScriptEnabled:false}), raw=await rawContext.newPage();
   for(const path of ['/','/terms','/privacy','/refund','/support','/delete-account']){
     const response=await raw.goto(new URL(path,origin).href);assert.equal(response.status(),200,path);
     const text=await raw.locator('body').innerText();assert.ok(text.includes('Iurii Logvinov')&&text.includes('demiurge.soft@gmail.com'),path);
+    const titles={'/terms':'Пользовательское соглашение','/privacy':'Политика конфиденциальности','/refund':'Refund Policy','/support':'Поддержка GENESIS','/delete-account':'Удаление аккаунта и данных'};
+    if(path!=='/')assert.equal(await raw.locator('h1').innerText(),titles[path],'Public document path served the homepage');
     if(path==='/'){assert.equal(await raw.locator('#pricing').count(),1);assert.equal(await raw.locator('#features').count(),1);}
     if(path==='/refund')assert.match(text,/14/);
     report.documents.push({path,status:response.status(),withoutJavaScript:true});
@@ -46,6 +61,7 @@ try{
   await owner.getByRole('button',{name:'Аккаунт GENESIS',exact:true}).click();
   const panel=owner.locator('.referral-panel');await panel.waitFor();
   const create=panel.getByRole('button',{name:'Создать ссылку приглашения',exact:true});
+  await create.or(panel.locator('input').first()).waitFor();
   if(await create.count())await create.click();
   await panel.locator('input').first().waitFor();const code=await panel.locator('input').first().inputValue();
   assert.match(code,/^g_[a-f0-9]{20}$/);const link=await panel.locator('input').nth(1).inputValue();

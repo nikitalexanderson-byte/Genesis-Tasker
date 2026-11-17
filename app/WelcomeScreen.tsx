@@ -7,7 +7,7 @@ import { LANGUAGES, LANGUAGE_LABELS, translateText, type Language } from "./i18n
 import {publicProductCopy, publicProductHtml, publicMerchantHtml} from './public-product';
 import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PartnerInvitation } from './PartnerInvitation';
 
 type WelcomeScreenProps = {
@@ -34,6 +34,12 @@ const WELCOME_TITLES: Partial<Record<Language, string>> = {
 };
 
 export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle }: WelcomeScreenProps) {
+  useEffect(() => {
+    const anchor = window.location.hash.slice(1);
+    if (!['features', 'pricing', 'sign-in'].includes(anchor)) return;
+    const frame = window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({block:'start',behavior:'instant'}));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const [invitationBusy, setInvitationBusy] = useState(()=>typeof window!=='undefined'&&['invite','ref'].some(key=>new URL(window.location.href).searchParams.has(key)));
   const product = publicProductCopy(language);
   const languageColumns = [7, 6, 5, 4, 3, 2, 1].find((count) => LANGUAGES.length % count === 0) ?? 1;
