@@ -2,6 +2,7 @@ param(
     [string[]]$Serial = @(),
     [string[]]$Class = @(),
     [string]$PhysicalDeviceLabel = 'samsung-physical',
+    [ValidateSet('clear', 'reinstall')][string]$ResetQaMode = 'clear',
     [switch]$SkipBuild,
     [switch]$IncludeCaptures,
     [string]$MindmapFixtureDirectory = '',
@@ -40,7 +41,7 @@ function Save-Report {
         sourceCommit = (& git -C $root rev-parse HEAD); sourceHash = $nativeSourceHash;
         nativeSourceHash = $nativeSourceHash; runnerSourceHash = $runnerSourceHash; backendSourceHash = $backendSourceHash; package = $package;
         backendOrigin = 'https://localhost:4443'; versionName = (Get-NativeVersion $root).versionName; versionCode = (Get-NativeVersion $root).versionCode;
-        build = $build; taskShapeFixture = $taskShapeFixture; devices = @($devices); results = @($results); reasons = @($reasons);
+        build = $build; resetQaMode = $ResetQaMode; taskShapeFixture = $taskShapeFixture; devices = @($devices); results = @($results); reasons = @($reasons);
         scope = 'Native Compose, Room, Keystore and local entitlement fixtures; authenticated provider E2E is reported separately.';
         status = if ($reasons.Count -or @($results | Where-Object status -ne 'PASS').Count -or !$results.Count) { 'INCOMPLETE' } else { 'PASS_LOCAL_SCOPE' }
     } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'results.json') -Encoding utf8
@@ -133,9 +134,15 @@ try {
             if ($suite -notmatch '^ru\.genesis\.calendar\.[A-Za-z0-9_.]+(?:#[A-Za-z0-9_]+)?$') { throw 'Invalid test class' }
             $label = $suite.Replace('ru.genesis.calendar.', '').Replace('#', '-')
             $log = Join-Path $devicePath "$label.log"
-            # Only this task's package is cleared. The main app and all prior QA packages stay intact.
+            # Some physical devices forbid shell pm clear. Reinstall only our synthetic QA
+            # target in that case; never loosen device security or touch the main package.
             if ($package -ne 'ru.genesis.calendar.qa1103.debug') { throw 'Isolation guard' }
-            Run-Adb @('-s', $device, 'shell', 'pm', 'clear', '--user', '0', $package) | Out-Null
+            if ($ResetQaMode -eq 'reinstall') {
+                Run-Adb @('-s', $device, 'shell', 'pm', 'uninstall', '--user', '0', $package) | Out-Null
+                Run-Adb @('-s', $device, 'install', '-r', '-g', $apk) | Out-Null
+            } else {
+                Run-Adb @('-s', $device, 'shell', 'pm', 'clear', '--user', '0', $package) | Out-Null
+            }
             if ($MindmapFixtureDirectory -and $suite -match '^ru\.genesis\.calendar\.ui\.MindmapsIntegrationTest(?:#|$)') {
                 $fixtureLabel = if ($device.StartsWith('emulator-')) { $device } else { $PhysicalDeviceLabel }
                 $fixturePath = [IO.Path]::GetFullPath((Join-Path $root "$MindmapFixtureDirectory/$fixtureLabel.json"))
@@ -152,7 +159,17 @@ try {
                 Run-Adb @('-s', $device, 'push', $taskShapePath, "/sdcard/Android/data/$package/files/task-shape.json") | Out-Null
                 $taskShapeDeviceInputs.Add($device)
             }
-            if ($api -ge 33) { Run-Adb @('-s', $device, 'shell', 'pm', 'grant', '--user', '0', $package, 'android.permission.POST_NOTIFICATIONS') | Out-Null }
+            if ($api -ge 33) {
+                if ($ResetQaMode -eq 'reinstall') {
+                    $packageState = Run-Adb @('-s', $device, 'shell', 'dumpsys', 'package', $package)
+                    $ownerState = [regex]::Match($packageState, '(?ms)^\s*User 0:.*?(?=^\s*User \d+:|\z)').Value
+                    if ($ownerState -notmatch 'android\.permission\.POST_NOTIFICATIONS: granted=true') {
+                        throw 'QA notification permission was not granted during isolated install'
+                    }
+                } else {
+                    Run-Adb @('-s', $device, 'shell', 'pm', 'grant', '--user', '0', $package, 'android.permission.POST_NOTIFICATIONS') | Out-Null
+                }
+            }
             Run-Adb @('-s', $device, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP') | Out-Null
             & $adb -s $device shell wm dismiss-keyguard *> (Join-Path $devicePath "$label-dismiss-keyguard.log")
             $keyguard = Convert-NativeKeyguardPolicy (Run-Adb @('-s', $device, 'shell', 'dumpsys', 'window', 'policy'))
