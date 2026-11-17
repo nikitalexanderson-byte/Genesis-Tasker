@@ -109,11 +109,14 @@ class NativeBillingProviderPolicyTest {
         value.getJSONObject("pricesByProvider").getJSONObject("yookassa").put("amountMinor",555.5)
         assertNull(nativeBillingProviderPrice(value,"yookassa"))
     }
-    @Test fun routingSortsEligibleChoicesAndPlayNeverShowsExternalBilling() {
-        assertEquals(listOf("yookassa","lemon-squeezy"),nativeBillingProviderChoices(catalog("yookassa"),offer(),false))
-        assertEquals(listOf("lemon-squeezy","yookassa"),nativeBillingProviderChoices(catalog("lemon-squeezy"),offer(),false))
-        val play = catalog("lemon-squeezy"); play.getJSONArray("providers").getJSONObject(0).put("reason","not-configured")
-        assertEquals(listOf("google-play"),nativeBillingProviderChoices(play,offer(),true))
+    @Test fun bridgeOnlyOffersYooKassaAndPlayNeverShowsDisabledOrExternalBilling() {
+        for (preferred in listOf("yookassa", "lemon-squeezy", "paddle", "google-play")) {
+            val staleCatalog = catalog(preferred)
+            staleCatalog.getJSONArray("providers").getJSONObject(0).put("reason", "not-configured")
+            staleCatalog.getJSONArray("providers").put(JSONObject().put("id", "paddle").put("reason", "not-configured"))
+            assertEquals(listOf("yookassa"), nativeBillingProviderChoices(staleCatalog, offer(), false))
+            assertEquals(emptyList<String>(), nativeBillingProviderChoices(staleCatalog, offer(), true))
+        }
     }
     @Test fun quoteAmountsAreIntegerAndPendingAuthorizationKeepsItsOriginalPrice() {
         val value = offer().put("amountMinor",700).put("currency","USD")

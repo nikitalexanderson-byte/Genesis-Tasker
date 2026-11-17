@@ -2,20 +2,23 @@ param(
     [string[]]$Serial = @(),
     [string[]]$Class = @(),
     [string]$PhysicalDeviceLabel = 'samsung-physical',
+    [ValidateSet('clear', 'reinstall')][string]$ResetQaMode = 'clear',
     [switch]$SkipBuild,
     [switch]$IncludeCaptures,
     [string]$MindmapFixtureDirectory = '',
     [string]$FixtureCa = '',
+    [string]$PlanningFixtureCa = '',
     [string]$RunId = ('android-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 )
 $ErrorActionPreference = 'Stop'
 if ($PhysicalDeviceLabel -notmatch '^[a-z][a-z0-9-]{2,48}$') { throw 'Invalid physical device label' }
 if ($RunId -notmatch '^[a-zA-Z0-9-]{6,80}$') { throw 'Invalid QA run ID' }
+if ($FixtureCa -and $PlanningFixtureCa) { throw 'Choose one owned HTTPS fixture' }
 $root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 . (Join-Path $PSScriptRoot 'android-common.ps1')
 $nativeSourceHash = Get-NativeSourceHash $root
 $runnerSourceHash = Get-NativeRunnerHash $root
-$backendSourceHash = if ($FixtureCa) { Get-NativeBackendHash $root } else { $null }
+$backendSourceHash = if ($FixtureCa -or $PlanningFixtureCa) { Get-NativeBackendHash $root } else { $null }
 $output = Join-Path $root "output/qa/$RunId"
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android/Sdk' }
@@ -40,7 +43,7 @@ function Save-Report {
         sourceCommit = (& git -C $root rev-parse HEAD); sourceHash = $nativeSourceHash;
         nativeSourceHash = $nativeSourceHash; runnerSourceHash = $runnerSourceHash; backendSourceHash = $backendSourceHash; package = $package;
         backendOrigin = 'https://localhost:4443'; versionName = (Get-NativeVersion $root).versionName; versionCode = (Get-NativeVersion $root).versionCode;
-        build = $build; taskShapeFixture = $taskShapeFixture; devices = @($devices); results = @($results); reasons = @($reasons);
+        build = $build; resetQaMode = $ResetQaMode; taskShapeFixture = $taskShapeFixture; devices = @($devices); results = @($results); reasons = @($reasons);
         scope = 'Native Compose, Room, Keystore and local entitlement fixtures; authenticated provider E2E is reported separately.';
         status = if ($reasons.Count -or @($results | Where-Object status -ne 'PASS').Count -or !$results.Count) { 'INCOMPLETE' } else { 'PASS_LOCAL_SCOPE' }
     } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'results.json') -Encoding utf8
@@ -133,9 +136,15 @@ try {
             if ($suite -notmatch '^ru\.genesis\.calendar\.[A-Za-z0-9_.]+(?:#[A-Za-z0-9_]+)?$') { throw 'Invalid test class' }
             $label = $suite.Replace('ru.genesis.calendar.', '').Replace('#', '-')
             $log = Join-Path $devicePath "$label.log"
-            # Only this task's package is cleared. The main app and all prior QA packages stay intact.
+            # Some physical devices forbid shell pm clear. Reinstall only our synthetic QA
+            # target in that case; never loosen device security or touch the main package.
             if ($package -ne 'ru.genesis.calendar.qa1103.debug') { throw 'Isolation guard' }
-            Run-Adb @('-s', $device, 'shell', 'pm', 'clear', '--user', '0', $package) | Out-Null
+            if ($ResetQaMode -eq 'reinstall') {
+                Run-Adb @('-s', $device, 'shell', 'pm', 'uninstall', '--user', '0', $package) | Out-Null
+                Run-Adb @('-s', $device, 'install', '-r', '-g', $apk) | Out-Null
+            } else {
+                Run-Adb @('-s', $device, 'shell', 'pm', 'clear', '--user', '0', $package) | Out-Null
+            }
             if ($MindmapFixtureDirectory -and $suite -match '^ru\.genesis\.calendar\.ui\.MindmapsIntegrationTest(?:#|$)') {
                 $fixtureLabel = if ($device.StartsWith('emulator-')) { $device } else { $PhysicalDeviceLabel }
                 $fixturePath = [IO.Path]::GetFullPath((Join-Path $root "$MindmapFixtureDirectory/$fixtureLabel.json"))
@@ -152,7 +161,17 @@ try {
                 Run-Adb @('-s', $device, 'push', $taskShapePath, "/sdcard/Android/data/$package/files/task-shape.json") | Out-Null
                 $taskShapeDeviceInputs.Add($device)
             }
-            if ($api -ge 33) { Run-Adb @('-s', $device, 'shell', 'pm', 'grant', '--user', '0', $package, 'android.permission.POST_NOTIFICATIONS') | Out-Null }
+            if ($api -ge 33) {
+                if ($ResetQaMode -eq 'reinstall') {
+                    $packageState = Run-Adb @('-s', $device, 'shell', 'dumpsys', 'package', $package)
+                    $ownerState = [regex]::Match($packageState, '(?ms)^\s*User 0:.*?(?=^\s*User \d+:|\z)').Value
+                    if ($ownerState -notmatch 'android\.permission\.POST_NOTIFICATIONS: granted=true') {
+                        throw 'QA notification permission was not granted during isolated install'
+                    }
+                } else {
+                    Run-Adb @('-s', $device, 'shell', 'pm', 'grant', '--user', '0', $package, 'android.permission.POST_NOTIFICATIONS') | Out-Null
+                }
+            }
             Run-Adb @('-s', $device, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP') | Out-Null
             & $adb -s $device shell wm dismiss-keyguard *> (Join-Path $devicePath "$label-dismiss-keyguard.log")
             $keyguard = Convert-NativeKeyguardPolicy (Run-Adb @('-s', $device, 'shell', 'dumpsys', 'window', 'policy'))
@@ -176,6 +195,7 @@ try {
             }
             if ($hasTaskShapeFixture) { $instrumentArgs += @('-e', 'redactedTaskFixture', 'true') }
             if ($FixtureCa) { $instrumentArgs += @('-e', 'genesisFullQaHttps', 'true', '-e', 'genesisFixtureCa', $FixtureCa) }
+            if ($PlanningFixtureCa) { $instrumentArgs += @('-e', 'genesisPlanningHttps', 'true', '-e', 'genesisFixtureCa', $PlanningFixtureCa) }
             $instrumentArgs += "$package.test/androidx.test.runner.AndroidJUnitRunner"
             $raw = & $adb @instrumentArgs 2>&1
             $exit = $LASTEXITCODE
@@ -240,7 +260,7 @@ try {
         }
     }
     if ((Get-NativeSourceHash $root) -ne $nativeSourceHash) { $reasons.Add('Native source changed during instrumentation') }
-    if ($FixtureCa -and (Get-NativeBackendHash $root) -ne $backendSourceHash) { $reasons.Add('Backend source changed during native HTTPS tests') }
+    if (($FixtureCa -or $PlanningFixtureCa) -and (Get-NativeBackendHash $root) -ne $backendSourceHash) { $reasons.Add('Backend source changed during native HTTPS tests') }
 } catch { $reasons.Add($_.Exception.Message); Write-Error -ErrorAction Continue $_ }
 finally {
     foreach ($fixtureDevice in @($taskShapeDeviceInputs)) {

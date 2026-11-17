@@ -9,6 +9,7 @@ import ru.genesis.calendar.GenesisApplication
 /** Rebuilds system alarms from the durable encrypted workspace without a screen or network. */
 class ReminderMaintenanceWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return Result.success()
         val app = applicationContext as GenesisApplication
         return try {
             app.scheduler.restore(recoverOverdue = true)
@@ -46,6 +47,7 @@ class ReminderMaintenanceWorker(context: Context, parameters: WorkerParameters) 
 /** A second, persistent delivery path for OEMs that occasionally defer AlarmManager callbacks. */
 class ReminderRecoveryWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return Result.success()
         val app = applicationContext as GenesisApplication
         return try {
             when (inputData.getString(KIND)) {

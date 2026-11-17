@@ -72,30 +72,6 @@ function genesisBillingGatewayCheckout(array $order, array $configuration, strin
         if (!is_string($result['id']??null) || !is_string($url) || !str_starts_with($url,'https://')) throw new DomainException('BILLING_PROVIDER_RESPONSE_INVALID');
         return ['checkoutUrl'=>$url,'providerReference'=>$result['id']];
     }
-    if ($order['provider']==='lemon-squeezy') {
-        if(($configuration['test_mode']??false)!==false)throw new DomainException('BILLING_TEST_PAYMENT_UNSUPPORTED');
-        if(($configuration['currency']??null)!=='USD'||($configuration['tax_inclusive']??false)!==true
-            ||($configuration['gross_total_verified']??false)!==true||$order['currency']!=='USD')throw new DomainException('BILLING_GROSS_PRICE_UNVERIFIED');
-        if(!is_string($order['product_id'])||preg_match('/\A[1-9][0-9]{0,14}\z/D',$order['product_id'])!==1)throw new DomainException('BILLING_PROVIDER_RESPONSE_INVALID');
-        $variant=(int)$order['product_id'];
-        $result=$http('POST','https://api.lemonsqueezy.com/v1/checkouts',['data'=>['type'=>'checkouts','attributes'=>[
-            'custom_price'=>(int)$order['amount_minor'],'test_mode'=>false,'preview'=>true,
-            'checkout_options'=>['discount'=>false],
-            'checkout_data'=>['custom'=>['genesis_order_id'=>$order['id']],'variant_quantities'=>[['variant_id'=>$variant,'quantity'=>1]]],
-            'product_options'=>['redirect_url'=>$returnUrl,'enabled_variants'=>[$variant]]],
-            'relationships'=>['store'=>['data'=>['type'=>'stores','id'=>(string)$configuration['store_id']]],
-                'variant'=>['data'=>['type'=>'variants','id'=>$order['product_id']]]]]],['Authorization: Bearer '.$configuration['api_key']],null);
-        $attributes=$result['data']['attributes']??[];$preview=$attributes['preview']??[];
-        if(($attributes['test_mode']??false)!==false||(string)($attributes['store_id']??'')!==(string)$configuration['store_id']
-            ||(string)($attributes['variant_id']??'')!==$order['product_id']||($attributes['custom_price']??null)!==(int)$order['amount_minor']
-            ||($preview['currency']??null)!==$order['currency']||($preview['total']??null)!==(int)$order['amount_minor']
-            ||($preview['discount_total']??null)!==0)throw new DomainException('BILLING_GROSS_PRICE_UNVERIFIED');
-        $url=$attributes['url']??null;
-        if (!is_string($url) || !str_starts_with($url,'https://')) throw new DomainException('BILLING_PROVIDER_RESPONSE_INVALID');
-        return ['checkoutUrl'=>$url,'providerReference'=>(string)($result['data']['id']??'')];
-    }
-    if ($order['provider']==='google-play') return ['checkoutUrl'=>null,'productId'=>$order['product_id'],
-        'obfuscatedAccountId'=>$order['owner_hash'],'obfuscatedProfileId'=>hash('sha256',$order['id'])];
     throw new InvalidArgumentException('BILLING_PROVIDER_INVALID');
 }
 

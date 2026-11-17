@@ -79,7 +79,7 @@ private fun modelingMoney(minor: Int, currency: String, language: String): Strin
     val client = if (BuildConfig.PLAY_DISTRIBUTION) "android-play" else "android"
     fun validMethod(method: JSONObject): Boolean {
         val currency = if (method.optString("provider") == "yookassa") "RUB" else "USD"
-        return method.optString("provider") in setOf("yookassa", "lemon-squeezy") && method.optBoolean("available") &&
+        return !ru.genesis.calendar.BuildConfig.PLAY_DISTRIBUTION && method.optString("provider") == "yookassa" && method.optBoolean("available") &&
             method.optString("currency") == currency && method.optInt("amountMinor") == prices.getInt(currency)
     }
     suspend fun openResult() {

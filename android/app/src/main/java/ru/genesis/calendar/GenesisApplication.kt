@@ -52,6 +52,7 @@ class GenesisApplication : Application() {
     val repository get() = TaskRepository(database, LocalCipher(), workspaceScope, scheduler)
     override fun onCreate() {
         super.onCreate()
+        ru.genesis.calendar.security.UpdateGate.initialize(this)
         ru.genesis.calendar.auth.NativeAdviceAgeAccess.load(this)
         val saved = getSharedPreferences("genesis.reminder.scope.v1", MODE_PRIVATE).getString("workspace", localScope)
         activeScope.value = saved?.takeIf { it == localScope || Regex("account-[a-f0-9]{32}").matches(it) } ?: localScope
@@ -59,6 +60,7 @@ class GenesisApplication : Application() {
         ru.genesis.calendar.reminders.ReminderMaintenanceWorker.enqueue(this)
         ru.genesis.calendar.auth.CloudSyncWorker.enqueue(this)
         appScope.launch {
+            if (ru.genesis.calendar.security.UpdateGate.blocked.value) return@launch
             scheduler.restore(recoverOverdue = true)
             scheduler.restoreHabitNotifications()
             ru.genesis.calendar.reminders.MoonReminderScheduler.restore(this@GenesisApplication)

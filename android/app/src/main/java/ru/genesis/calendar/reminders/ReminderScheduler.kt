@@ -30,7 +30,7 @@ class ReminderScheduler(private val context: Context) {
     // The application runs in one process. Serialize the DB transition and the
     // system side effect so an old delivery cannot race past an edit/cancel.
     private val mutation = Mutex()
-    suspend fun <T> withMutation(block: suspend () -> T): T = mutation.withLock { block() }
+    suspend fun <T> withMutation(block: suspend () -> T): T = mutation.withLock { ru.genesis.calendar.security.UpdateGate.requireOpen(); block() }
     companion object {
         const val TASK_CHANNEL = "genesis.tasks.v2"
         const val HABIT_CHANNEL = "genesis.habits.v2"

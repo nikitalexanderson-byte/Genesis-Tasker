@@ -87,5 +87,9 @@ referralCheck($period['ends_at']===genesisBillingPeriodEnd($at,1),'A discount sh
 referralCheck(genesisBillingFundedOrderValue($db,$order['id'])===49950,'A promotional discount became refundable cash');
 referralCheck(genesisBillingUpgradeQuote($db,$owner2['id'],$offer,$now)['referralDiscountMinor']===0,'Used discount became available again');
 $db->prepare("UPDATE users SET subscription_valid_until=? WHERE id=?")->execute([gmdate('Y-m-d\TH:i:s\Z',$now-1),$owner2['id']]);
-referralReject('REFERRAL_PREMIUM_REQUIRED',fn()=>genesisReferralDashboard($owner2['id']));
+referralReject('REFERRAL_STANDARD_REQUIRED',fn()=>genesisReferralDashboard($owner2['id']));
+$db->prepare("UPDATE users SET subscription_plan='standart',subscription_valid_until=? WHERE id=?")->execute([$until,$owner2['id']]);
+referralCheck(genesisReferralDashboard($owner2['id'])['monthlyLimit']===10,'Active Standard cannot use invitations');
+$db->prepare("UPDATE users SET subscription_plan='free' WHERE id=?")->execute([$owner2['id']]);
+referralReject('REFERRAL_STANDARD_REQUIRED',fn()=>genesisReferralDashboard($owner2['id']));
 echo "Consumer referrals: PASS (registration-only attribution, cap 10, verified purchases, 10% then 3%, annual coverage/expiry/refund, 30%/100% caps, idempotent reward/order, full duration, no invented money)\n";

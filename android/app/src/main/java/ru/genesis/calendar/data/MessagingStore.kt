@@ -25,5 +25,5 @@ internal class MessagingRoomStore(private val database: GenesisDatabase, private
         require(encrypted.length <= 512 * 1024) { "MESSAGING_CELL_TOO_LARGE" }
         database.dao().putDocument(DocumentRecord(scope, kind(key), encrypted, 1))
     }
-    override suspend fun delete(key: String) = withContext(Dispatchers.IO) { database.dao().deleteDocument(scope, kind(key)) }
+    override suspend fun delete(key: String) = withContext(Dispatchers.IO) { ru.genesis.calendar.security.UpdateGate.requireOpen(); database.dao().deleteDocument(scope, kind(key)) }
 }

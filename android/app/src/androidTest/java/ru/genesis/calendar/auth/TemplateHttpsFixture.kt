@@ -36,7 +36,8 @@ internal class TemplateHttpsFixture : AutoCloseable {
     fun open() {
         val args = InstrumentationRegistry.getArguments()
         assumeTrue("Local HTTPS fixture is opt-in", args.getString("genesisPlanningHttps") == "true")
-        check(app.packageName == "ru.genesis.calendar.ghttps.debug" && BuildConfig.DEBUG && AUTH_ORIGIN == "https://localhost:4443")
+        check(app.packageName in setOf("ru.genesis.calendar.ghttps.debug", "ru.genesis.calendar.qa1103.debug") &&
+            BuildConfig.DEBUG && AUTH_ORIGIN == "https://localhost:4443")
         val certificate = CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(Base64.getDecoder().decode(requireNotNull(args.getString("genesisFixtureCa")))))
         val trust = KeyStore.getInstance(KeyStore.getDefaultType()).apply { load(null); setCertificateEntry("loopback-fixture", certificate) }
         val managers = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(trust) }

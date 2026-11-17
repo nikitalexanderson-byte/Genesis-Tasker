@@ -9,6 +9,12 @@ require_once __DIR__.'/consumer-referrals.php';
 const GENESIS_BILLING_PROVIDERS = ['google-play', 'lemon-squeezy', 'yookassa'];
 const GENESIS_BILLING_PLANS = ['standart', 'premium', 'business'];
 
+/** Release policy, separate from credentials and historical receipt verification. */
+function genesisBillingCheckoutAllowed(string $provider,string $client): bool
+{
+    return $provider==='yookassa'&&in_array($client,['web','android'],true);
+}
+
 function genesisBillingDefinition(): array
 {
     return json_decode((string)file_get_contents(dirname(__DIR__) . '/resources/billing-catalog.json'), true, 32, JSON_THROW_ON_ERROR);
@@ -114,11 +120,10 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
     $creditEnabled=$enabled&&($definition['creditCheckoutEnabled']??false)===true&&($settings['credit_settlement_verified']??false)===true;
     $providers = [];
     foreach ($definition['providers'] as $provider) {
-        $allowed = in_array($client, $provider['clients'], true)
-            || ($client === 'android-play' && $provider['id'] !== 'google-play' && ($settings['play_external_billing_enabled'] ?? false) === true);
+        if($provider['id']!=='yookassa')continue;
+        $allowed = genesisBillingCheckoutAllowed($provider['id'],$client)&&in_array($client,$provider['clients'],true);
         $released=($definition['checkoutEnabled']??false)===true||($provider['id']==='yookassa'&&$yooEnabled);
-        // Lemon Squeezy is retired for new purchases. Its verified historical callbacks remain supported.
-        $ready=$provider['id']!=='lemon-squeezy'&&$enabled&&$released&&genesisBillingProviderReady($provider['id'],$settings);
+        $ready=$enabled&&$released&&genesisBillingProviderReady($provider['id'],$settings);
         $providers[] = ['id' => $provider['id'], 'name' => $provider['name'],
             'available' => $ready && $allowed,
             'reason' => !$allowed ? 'client-unavailable' : ($ready ? null : 'not-configured')];

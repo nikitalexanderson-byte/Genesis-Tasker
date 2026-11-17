@@ -98,31 +98,33 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       }
     });
   }
-  await check('release317-fixed-usd-prices',async()=>{
+  await check('release335-yookassa-prices-in-both-regions',async()=>{
     const catalog=await (await context.request.get('/api/billing/catalog')).json();assert.equal(catalog.foreignPricing.pricingModel,'fixed');assert.equal(catalog.checkoutEnabled,false,'QA checkout must remain disabled');
     await context.grantPermissions(['geolocation']);
     try {
-      for(const [currency,coordinates,prices] of [
-        ['USD',{latitude:47.6062,longitude:-122.3321,accuracy:20},[[4,7,10,160],[40,70,100,160]]],
-        ['RUB',{latitude:55.7558,longitude:37.6173,accuracy:20},[[333,555,777,12900],[3330,5550,7770,12900]]]
+      assert.deepEqual(catalog.providers.map(provider=>provider.id),['yookassa'],'Retired providers must not be offered');
+      const currency='RUB',prices=[[333,555,777,12900],[3330,5550,7770,12900]];
+      for(const [region,coordinates] of [
+        ['US',{latitude:47.6062,longitude:-122.3321,accuracy:20}],
+        ['RU',{latitude:55.7558,longitude:37.6173,accuracy:20}]
       ]){
         await context.setGeolocation(coordinates);const account=await openAccount();await account.locator('.account-plan-upgrade button').click();await upgrade().waitFor();
         await upgrade().locator('.upgrade-plan-premium input').check();
-        await upgrade().locator(`.upgrade-plan-standart .upgrade-plan-price`).filter({hasText:currency==='USD'?/\$/:/₽/}).waitFor();
+        await upgrade().locator(`.upgrade-plan-standart .upgrade-plan-price`).filter({hasText:/₽/}).waitFor();
         for(const [index,period] of [1,12].entries()){
           await upgrade().locator('.upgrade-period-options input').nth(index).check();
           const observed=[];
           for(const [planIndex,plan] of ['standart','premium','business','premium4life'].entries()){
             const text=(await upgrade().locator(`.upgrade-plan-${plan} .upgrade-plan-price`).innerText()).trim();
             const amount=Number(text.replace(/[^\d.,-]/g,'').replace(',','.'));assert.equal(amount,prices[index][planIndex],`${currency} ${plan} ${period}`);
-            assert.match(text,currency==='USD'?/\$/:/₽/);observed.push({plan,period,text,amount});
+            assert.match(text,/₽/);observed.push({plan,period,text,amount});
           }
           assert.equal(await upgrade().locator('.upgrade-fx-note').count(),0,'Fixed prices must not show a numeric FX conversion note');
-          await snapshot(`release317-prices-${currency}-${period}`);records.push({screen:'prices',currency,period,observed,syntheticGeolocation:coordinates});
+          await snapshot(`release335-prices-${region}-${period}`);records.push({screen:'prices',region,currency,period,observed,syntheticGeolocation:coordinates});
         }
         await closeUpgrade();await account.getByRole('button',{name:'Закрыть',exact:true}).click();
       }
-      await snapshot('release317-fixed-usd-prices');
+      await snapshot('release335-yookassa-prices-in-both-regions');
     } finally {await context.clearPermissions();await context.setGeolocation(null);}
   });
   await writeFile(`${output}/${tier}-release317-ui-details.json`,JSON.stringify({records,purchases:false,localCatalog:true,widths:[360,390,768,1440],schemes:['light','dark']},null,2));

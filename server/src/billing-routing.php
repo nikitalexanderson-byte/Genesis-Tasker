@@ -52,5 +52,5 @@ function genesisBillingRouting(array $server): array
     $ip=genesisBillingPublicIp(is_string($server['REMOTE_ADDR']??null)?$server['REMOTE_ADDR']:'');
     $region=$ip===null?'unknown':(genesisBillingRussianIp($ip)?'RU':'outside-RU');
     return ['region'=>$region,'source'=>$ip===null?'unknown':'ip',
-        'preferredProvider'=>$region==='RU'?'yookassa':'paddle','dataRevision'=>'2026-11-01'];
+        'preferredProvider'=>'yookassa','dataRevision'=>'2026-11-17'];
 }

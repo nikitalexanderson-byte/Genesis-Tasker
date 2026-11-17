@@ -40,7 +40,7 @@ class Release330LocaleUiTest {
         for(lang in listOf("ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja")) for(dark in listOf(false,true)) {
             compose.runOnIdle {language=lang;night=dark;epoch++}
             compose.onNodeWithTag("release-notes-dialog").assertIsDisplayed()
-            val text=release334Notes(context,lang)
+            val text=currentReleaseNotes(context,lang)
             compose.onNodeWithText("• ${text.last()}",useUnmergedTree=true).performScrollTo().assertIsDisplayed()
             assertTrue(text.joinToString("\n").length<=500)
             assertTrue(timeZoneChoices(Locale.forLanguageTag(lang)).any {it.id=="Europe/Moscow" && it.city.isNotBlank()})

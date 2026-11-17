@@ -7,10 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.text.AnnotatedString
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
 import org.junit.After
@@ -137,10 +139,19 @@ class SharedSavedViewsUiTest {
         } }
         await("shared-work-actions"); click("shared-work-actions", false); await("shared-saved-views-open"); click("shared-saved-views-open", false)
         select()
-        val id = fixture.query(JSONObject().put("savedViewId", saved.getString("id"))).getJSONArray("tasks").getJSONObject(0).getString("id")
-        click("saved-view-task-$id"); await("shared-task-title-input")
-        compose.onNodeWithTag("shared-task-title-input").assertTextContains("Проверить удобство на смартфоне", substring = true)
+        val task = fixture.query(JSONObject().put("savedViewId", saved.getString("id"))).getJSONArray("tasks").getJSONObject(0)
+        click("saved-view-task-${task.getString("id")}"); await("shared-task-dialog")
+        // Shared tasks open in reading mode; editing requires the explicit pencil action.
+        compose.onNodeWithTag("shared-task-dialog").assert(hasAnyDescendant(hasText(task.getString("title"))))
+        compose.onNodeWithTag("shared-task-title-input").assertDoesNotExist()
         compose.onNodeWithTag("saved-views-screen").assertDoesNotExist()
+        // Close the comment IME before changing modes so API26 does not pan the dialog.
+        compose.dismissValidationKeyboard()
+        click("shared-task-edit"); await("shared-task-title-input")
+        compose.dismissValidationKeyboard()
+        // Material text-field semantics also include its label; verify the editable value itself.
+        compose.onNodeWithTag("shared-task-title-input").performScrollTo().assertIsDisplayed()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(task.getString("title"))))
     }
     private fun screenshot(name: String) {
         compose.waitForIdle()

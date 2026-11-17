@@ -195,6 +195,7 @@ internal class AuthSessionClient(context: Context) {
     fun isCurrent(expected: Long): Boolean = synchronized(guard) { generation == expected && transportEpoch==NativeBackupEpoch.current() }
 
     private fun check(expected: Long) {
+        ru.genesis.calendar.security.UpdateGate.requireOpen()
         if (generation != expected||transportEpoch!=NativeBackupEpoch.current()) throw CancellationException("Authentication operation superseded")
     }
 
@@ -700,6 +701,7 @@ internal class AuthSessionClient(context: Context) {
 
     /** Authenticated binary download; metadata URLs never leave the native session. */
     fun sharedTaskFile(expected: Long, task: String, file: String): ByteArray {
+        ru.genesis.calendar.security.UpdateGate.requireOpen()
         val path = "/shared/tasks/${SharedTaskLifecycleProtocol.id(task)}/attachments/${SharedTaskLifecycleProtocol.id(file)}"
         require(allowedSharedTaskExtensionRoute("GET", path))
         val current = load(expected)
@@ -755,6 +757,7 @@ internal class AuthSessionClient(context: Context) {
         persist: Boolean = true, method: String = if (body == null) "GET" else "POST",
         responseReader: ((java.io.InputStream) -> JSONObject)? = null, importBody: DataImportBody? = null,
         timeZone: String? = null, foregroundCall: ForegroundAccountCall? = null): JSONObject {
+        ru.genesis.calendar.security.UpdateGate.requireOpen()
         val trialStarted = android.os.SystemClock.elapsedRealtime()
         val (requestTrialEpoch, requestSequence) = synchronized(guard) { check(expected); trialEpoch to trialProfileOrder.beginRequest() }
         require(allowedAuthSessionRoute(method, path))

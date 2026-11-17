@@ -112,7 +112,10 @@ class SharedProjectAccessUiTest {
         click("access-more-projects"); val id = f.snapshot.getJSONArray("projects").getJSONObject(7).getString("id")
         click("access-role-$id"); click("access-role-$id-commenter")
         compose.onNodeWithTag("access-search").performScrollTo().performTextReplacement("Контроль")
-        click("access-review"); compose.onNodeWithTag("access-change-count").assertExists(); assertEquals(0, f.sends)
+        compose.dismissValidationKeyboard()
+        click("access-review")
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("access-change-count").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("access-change-count").assertExists(); assertEquals(0, f.sends)
         assertTrue(importRows(f.stored().getJSONObject("edit").getJSONObject("draft").getJSONArray("grants")).any { it.getString("projectId") == id && it.getString("role") == "commenter" })
         click("access-apply"); compose.waitUntil(10000) { notices == 1 }; assertEquals(1, f.sends)
         compose.onNodeWithTag("access-saved").assertExists()

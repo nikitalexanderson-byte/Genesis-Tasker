@@ -63,8 +63,9 @@ class TaskDatePicker314UiTest {
         for ((index, case) in cases.withIndex()) {
             compose.runOnIdle { mode = case.first; initial = case.second; instance++; saved = null }
             compose.onNodeWithTag("task-title").performTextReplacement("QA Π date $index")
+            compose.dismissValidationKeyboard()
             android.util.Log.i("Date314", "editor open picker ${case.first} ${case.second}")
-            compose.onNode(hasText(calendar.formatDate(LocalDate.parse(case.second), case.first)) and hasClickAction())
+            compose.onNodeWithTag("task-date-picker")
                 .performScrollTo().performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithTag("author-date-close").fetchSemanticsNodes().isNotEmpty() }
             var shown = LocalDate.parse(case.second)

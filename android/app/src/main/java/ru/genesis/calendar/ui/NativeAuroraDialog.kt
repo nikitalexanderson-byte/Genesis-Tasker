@@ -57,7 +57,7 @@ internal object AuroraWebOrigin {
     fun checkout(url: String): Boolean = runCatching {
         val uri=URI(url);val host=uri.host.orEmpty()
         uri.scheme=="https" && uri.userInfo==null && uri.port==-1 &&
-            (host in setOf("yoomoney.ru","yookassa.ru","lemonsqueezy.com") || host.endsWith(".lemonsqueezy.com"))
+            !BuildConfig.PLAY_DISTRIBUTION && host in setOf("yoomoney.ru","yookassa.ru")
     }.getOrDefault(false)
 }
 

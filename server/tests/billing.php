@@ -75,10 +75,19 @@ foreach([null,false,0,1,'true',[]]as$unverified){
 $settings['pending_order_closure_verified']=true; // Synthetic readiness, never runtime configuration.
 billingCheck(!genesisBillingCatalog($settings)['checkoutEnabled']&&!genesisBillingCatalog($settings)['creditCheckoutEnabled'],'Private readiness alone activated the prepared release');
 $web = genesisBillingCatalog($settings,'web',$definition); $play = genesisBillingCatalog($settings,'android-play',$definition);
-billingCheck($web['checkoutEnabled']&&$web['creditCheckoutEnabled']&&array_column($web['providers'],'available','id')['yookassa']
-    &&!array_column($web['providers'],'available','id')['paddle'],'Strict true readiness did not preserve eligible configured checkout');
-billingCheck(array_column($web['providers'],'available','id')['google-play'] === false, 'Website offered native Play checkout');
-billingCheck(array_column($play['providers'],'available','id')['paddle'] === false, 'Play alternative billing enabled without configuration');
+billingCheck($web['checkoutEnabled']&&$web['creditCheckoutEnabled']&&array_column($web['providers'],'available','id')===['yookassa'=>true],
+    'Strict readiness did not preserve YooKassa as the only checkout');
+billingCheck(array_column($play['providers'],'available','id')===['yookassa'=>false], 'Play offered a disabled or external checkout');
+$staleDefinition=$definition;
+$staleDefinition['providers'][]=['id'=>'google-play','clients'=>['web','android','android-play']];
+$staleDefinition['providers'][]=['id'=>'lemon-squeezy','clients'=>['web','android','android-play']];
+$staleDefinition['providers'][]=['id'=>'paddle','clients'=>['web','android','android-play']];
+foreach(['web','android','android-play']as$client){
+    $stale=genesisBillingCatalog([...$settings,'play_external_billing_enabled'=>true],$client,$staleDefinition);
+    billingCheck(array_column($stale['providers'],'id')===['yookassa'],'Stale definition restored a retired provider');
+    foreach($stale['offers']as$offer)billingCheck(!array_diff($offer['availableProviders'],$client==='android-play'?[]:['yookassa']),
+        'Configuration bypassed channel checkout restrictions');
+}
 billingCheck(!str_contains(json_encode($web,JSON_THROW_ON_ERROR),'synthetic-key') && !str_contains(json_encode($play,JSON_THROW_ON_ERROR),'synthetic-private')
     &&!array_key_exists('pending_order_closure_verified',$web), 'Public catalog exposed private configuration');
 billingFailure('BILLING_CLIENT_INVALID',fn()=>genesisBillingCatalog([],'untrusted'));
@@ -171,24 +180,13 @@ billingCheck(genesisBillingLemonEvent($raw,hash_hmac('sha256',$raw,$config['webh
 try{genesisBillingLemonEvent($raw.' ',hash_hmac('sha256',$raw,$config['webhook_secret']),$config);throw new RuntimeException('Forged webhook accepted');}
 catch(GenesisResourceLimitException $error){billingCheck($error->getMessage()==='BILLING_SIGNATURE_INVALID','Wrong signature error');}
 
-// A checkout URL is returned only for the exact immutable USD gross amount, variant and no discount.
-$lsOrder=['id'=>'synthetic-ls','provider'=>'lemon-squeezy','product_id'=>'12345','amount_minor'=>700,'currency'=>'USD'];
-$lsConfig=['api_key'=>'synthetic','store_id'=>'1','currency'=>'USD','tax_inclusive'=>true,'gross_total_verified'=>true];
-$lsResult=['data'=>['id'=>'synthetic-checkout','attributes'=>['store_id'=>1,'variant_id'=>12345,'custom_price'=>700,'test_mode'=>false,
-    'url'=>'https://example.invalid/checkout','preview'=>['currency'=>'USD','total'=>700,'discount_total'=>0]]]];
-$checkout=genesisBillingGatewayCheckout($lsOrder,$lsConfig,'https://example.invalid/return',function($method,$url,$body)use($lsResult):array{
-    $attributes=$body['data']['attributes'];billingCheck($method==='POST'&&str_ends_with($url,'/checkouts')&&$attributes['custom_price']===700
-        &&$attributes['product_options']['enabled_variants']===[12345]&&$attributes['checkout_options']['discount']===false
-        &&$attributes['checkout_data']['variant_quantities']===[['variant_id'=>12345,'quantity'=>1]]&&$attributes['preview']===true,'Checkout did not bind exact amount/variant/quantity/discount');
-    return $lsResult;
-});
-billingCheck($checkout['checkoutUrl']==='https://example.invalid/checkout','Verified gross checkout URL missing');
-foreach([['currency'=>'RUB'],['total'=>689],['total'=>701],['discount_total'=>1]]as$bad){
-    $wrong=$lsResult;$wrong['data']['attributes']['preview']=[...$wrong['data']['attributes']['preview'],...$bad];
-    billingFailure('BILLING_GROSS_PRICE_UNVERIFIED',fn()=>genesisBillingGatewayCheckout($lsOrder,$lsConfig,'https://example.invalid/return',fn()=>$wrong));
-}
+// Retired gateways must fail before network I/O, even with historical configuration.
 $networkCalls=0;
-billingFailure('BILLING_GROSS_PRICE_UNVERIFIED',fn()=>genesisBillingGatewayCheckout($lsOrder,[...$lsConfig,'gross_total_verified'=>false],'https://example.invalid/return',function()use(&$networkCalls):array{$networkCalls++;return[];}));
-billingCheck($networkCalls===0&&!genesisBillingProviderReady('lemon-squeezy',['providers'=>['lemon-squeezy'=>[...$lsConfig,'webhook_secret'=>'synthetic','gross_total_verified'=>false]]]),'Unreviewed gross pricing reached a provider');
+foreach(['lemon-squeezy','paddle','google-play']as$retired){
+    billingFailure('BILLING_PROVIDER_INVALID',fn()=>genesisBillingGatewayCheckout(['provider'=>$retired],
+        ['api_key'=>'synthetic','service_account_private_key'=>'synthetic'],'https://example.invalid/return',
+        function()use(&$networkCalls):array{$networkCalls++;return[];}));
+}
+billingCheck($networkCalls===0,'Retired provider reached the network');
 
-echo "PASS billing foundation: fixed USD and unchanged RUB provider prices, legacy half-up FX compatibility, gross-safe immutable Lemon checkout, disabled/unconfigured gateways, private metadata, calendar periods, idempotence/reorder/account binding, refunds, expiry and permanent access.\n";
+echo "PASS billing: YooKassa-only catalog and gateway, channel restrictions, historical receipts, idempotence, refunds and entitlements.\n";

@@ -25,12 +25,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         acceptIntent(intent)
-        setContent { GenesisApp(application as GenesisApplication, openedTask.value, openedSection.value,
-            openedHabit = openedHabit.value, openedAdvice = openedAdvice.value) }
+        setContent { ru.genesis.calendar.ui.SecurityUpdateBoundary(application as GenesisApplication) { GenesisApp(application as GenesisApplication, openedTask.value, openedSection.value,
+            openedHabit = openedHabit.value, openedAdvice = openedAdvice.value) } }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (isActive) {
-                    AuthController.get(applicationContext).refreshIfReady()
+                    if (!ru.genesis.calendar.security.UpdateGate.blocked.value) AuthController.get(applicationContext).refreshIfReady()
                     delay(30_000)
                 }
             }
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onPause() {
         NativeActivityVisit.onPause()
-        AuthController.get(applicationContext).onTrialBackground()
+        if (!ru.genesis.calendar.security.UpdateGate.blocked.value) AuthController.get(applicationContext).onTrialBackground()
         super.onPause()
     }
 
@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         NativeActivityVisit.onResume()
         AuthController.get(applicationContext).onTrialForeground()
         // Returning from Android permission/battery settings must restore the schedule

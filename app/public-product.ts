@@ -11,15 +11,15 @@ export const escapePublicText = (value: string | number) => String(value).replac
 /** The public page and its no-JavaScript response share the approved price and quota sources. */
 export function publicProductHtml(language: string): string {
   const c = publicProductCopy(language), escape = escapePublicText;
-  const usd = (minor: number) => `$${minor / 100}`;
+  const rub = (minor: number) => new Intl.NumberFormat(language).format(minor / 100);
   const plans = ['standart','premium','business','premium4life'] as const;
   const cards = plans.map((plan, index) => {
     const lifetime = plan === 'premium4life';
     const limits = policy.limits[lifetime ? 'business' : plan];
-    const prices = catalog.foreignPricing.prices[plan as keyof typeof catalog.foreignPricing.prices];
+    const prices = catalog.prices[plan as keyof typeof catalog.prices];
     return `<article class="public-plan"><h3>${['Standard','Premium','Business','Elite'][index]}</h3>
-      <p class="public-price">${usd(lifetime ? catalog.foreignPricing.lifetimeAmountMinor : prices['1'])}<span> USD / ${escape(lifetime ? c.once : c.month)}</span></p>
-      ${lifetime ? `<p>${escape(c.lifetime)}</p>` : `<p class="public-yearly">${usd(prices['12'])} USD / ${escape(c.year)}</p>`}
+      <p class="public-price">${rub(lifetime ? catalog.lifetimeOffer.amountMinor : prices['1'])}<span> RUB / ${escape(lifetime ? c.once : c.month)}</span></p>
+      ${lifetime ? `<p>${escape(c.lifetime)}</p>` : `<p class="public-yearly">${rub(prices['12'])} RUB / ${escape(c.year)}</p>`}
       <ul>${[c.projects.replace('{n}', String(limits['personal-projects'])), c.habits.replace('{n}', String(limits.habits)), c.mindmaps.replace('{n}', String(limits.mindmaps)), c.diary.replace('{n}', String(limits.diary)), ...(index > 0 ? [c.gno] : []), ...(index > 1 ? [c.team] : [])].map(text => `<li>${escape(text)}</li>`).join('')}</ul>
       <a class="public-action" href="/login#sign-in">${escape(c.getStarted)}</a></article>`;
   }).join('');
@@ -37,5 +37,5 @@ export function publicMerchantHtml(language: string, page: string): string {
   if(page==='home')return `<div class="public-merchant" data-no-translate><p>${escape(c.merchant)}</p><p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/privacy">${escape(c.privacy)}</a> · <a href="/refund">${escape(c.refund)}</a></p></div>`;
   const r=referralCopy[language as keyof typeof referralCopy]??referralCopy.en;
   const referrals=page==='terms'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.rules)}</p><p>${escape(r.monthlyOnly)}</p></section>`:page==='privacy'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.privacy)}</p></section>`:'';
-  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2><p>${escape(c.merchant)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/refund">${escape(c.refund)}</a> · <a href="https://paddle.net">Paddle · ${escape(c.support)}</a></p></section>`;
+  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2><p>${escape(c.merchant)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/refund">${escape(c.refund)}</a></p></section>`;
 }

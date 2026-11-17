@@ -42,10 +42,10 @@ jobs:
       DEPLOY_COMMIT: ${{ inputs.commit }}
       EXPECTED_CURRENT_COMMIT: ${{ inputs.expected_current_commit }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24.19.0'
       - name: Require successful Source checks for this exact current-main commit
@@ -80,7 +80,7 @@ jobs:
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "$PRODUCTION_ORIGIN/deploy-meta.json?preflight=$GITHUB_RUN_ID" \
             | jq -e --arg expected "$EXPECTED_CURRENT_COMMIT" '.commit == $expected'
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
         with:
           version: '11.19.0'
       - name: Build the checked source with locked dependencies

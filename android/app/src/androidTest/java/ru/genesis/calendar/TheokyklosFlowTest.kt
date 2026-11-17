@@ -36,8 +36,7 @@ class TheokyklosFlowTest {
     @Test fun allFourAxisAndThresholdMarkersOpenNativeDetails() {
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
         check(BuildConfig.DEBUG && app.packageName.endsWith(".debug"))
-        compose.onNodeWithTag("navigation-Сакральное").performClick()
-        compose.onNodeWithTag("submenu-theokyklos").performClick()
+        compose.openWorkspacePage("Сакральное", "theokyklos")
         compose.onNodeWithTag("theokyklos-mandala").assertIsDisplayed()
         val entranceCenter = compose.onNodeWithTag("theokyklos-sector-entrance")
             .fetchSemanticsNode().boundsInRoot.center
@@ -87,7 +86,7 @@ class TheokyklosFlowTest {
                 Thread.sleep(600)
                 assertTrue(device.takeScreenshot(File(app.getExternalFilesDir(null), "theokyklos-zenith-detail.png")))
             }
-            compose.onNodeWithText("×").performClick()
+            compose.onNodeWithContentDescription("Закрыть").performClick()
         }
     }
 }

@@ -19,7 +19,7 @@ function genesisBillingPublicOrder(array $order,?PDO $db=null): array
     return ['id'=>$order['id'],'plan'=>$order['plan'],'periodMonths'=>(int)$order['period_months'],'provider'=>$order['provider'],
         'status'=>$blocked?($settlement['state']==='capture-pending'?'payment-verifying':'settlement-required')
             :($order['provider']==='yookassa'&&$order['status']==='pending'&&$order['checkout_url']===null?'payment-verifying':$order['status']),
-        'settlement'=>genesisBillingPublicSettlement($settlement,$order),'checkoutUrl'=>$blocked?null:$order['checkout_url'],'productId'=>$order['product_id'],
+        'settlement'=>genesisBillingPublicSettlement($settlement,$order),'checkoutUrl'=>$blocked||$order['provider']!=='yookassa'?null:$order['checkout_url'],'productId'=>$order['product_id'],
         'amountMinor'=>(int)$order['amount_minor'],'currency'=>$order['currency'],
         'listAmountMinor'=>(int)($order['list_amount_minor'] ?? $order['amount_minor']),
         'creditMinor'=>(int)($order['upgrade_credit_minor'] ?? 0),'referralDiscountMinor'=>(int)($order['referral_discount_minor']??0)];
@@ -145,32 +145,9 @@ function genesisBillingVerifyOrder(string $userId, string $id, array $input = []
 function genesisBillingWebhook(string $provider, string $raw, string $signature,?callable $http=null): void
 {
     $http??='genesisBillingHttp';
-    if ($provider==='lemon-squeezy-test') {
-        require_once __DIR__.'/billing-lemon-test.php';
-        genesisBillingLemonTestWebhook($raw,$signature);return;
-    }
+    if($provider!=='yookassa')throw new GenesisResourceLimitException(410,'BILLING_PROVIDER_RETIRED');
     $settings=genesisBillingSettings();$config=$settings['providers'][$provider]??[];
-    if (!genesisBillingProviderReady($provider,$settings)) throw new GenesisResourceLimitException(503,'BILLING_NOT_CONFIGURED');
-    if ($provider==='lemon-squeezy') {
-        $event=genesisBillingLemonEvent($raw,$signature,$config);
-        $id=$event['meta']['custom_data']['genesis_order_id']??'';
-        if (!is_string($id)) throw new InvalidArgumentException('BILLING_ORDER_INVALID');
-        $serviceQuery=genesisDb()->prepare('SELECT * FROM future_modeling_orders WHERE id=?');$serviceQuery->execute([$id]);$serviceOrder=$serviceQuery->fetch();
-        if($serviceOrder){
-            if($serviceOrder['provider']!==$provider)throw new DomainException('BILLING_RECEIPT_MISMATCH');
-            $resource=(string)($event['data']['id']??'');
-            if(!ctype_digit($resource))throw new InvalidArgumentException('BILLING_EVENT_INVALID');
-            $verified=$http('GET','https://api.lemonsqueezy.com/v1/orders/'.$resource,null,['Authorization: Bearer '.$config['api_key']]);
-            if((string)($verified['data']['id']??'')!==$resource)throw new DomainException('BILLING_RECEIPT_MISMATCH');
-            genesisModelingApplyReceipt(genesisBillingLemonReceipt($verified,$serviceOrder,$config));return;
-        }
-        $order=genesisBillingOrder(genesisDb(),$id);
-        if ($order['provider']!==$provider) throw new DomainException('BILLING_RECEIPT_MISMATCH');
-        $resource=(string)($event['data']['id']??'');
-        if (!ctype_digit($resource)) throw new InvalidArgumentException('BILLING_EVENT_INVALID');
-        $verified=$http('GET','https://api.lemonsqueezy.com/v1/orders/'.$resource,null,['Authorization: Bearer '.$config['api_key']]);
-        genesisBillingApplyReceipt(genesisDb(),genesisBillingLemonReceipt($verified,$order,$config),time());return;
-    }
+    if(!genesisBillingProviderReady($provider,$settings))throw new GenesisResourceLimitException(503,'BILLING_NOT_CONFIGURED');
     if ($provider==='yookassa') {
         $event=json_decode($raw,true,32,JSON_THROW_ON_ERROR);
         if(!is_array($event)||($event['type']??null)!=='notification'
