@@ -9,7 +9,8 @@ import ru.genesis.calendar.BuildConfig
 /** Network retry never blocks delivery from the local encrypted reminder schedule. */
 class CloudSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result = try {
-        if (BuildConfig.DEBUG && applicationContext.getSharedPreferences("genesis.validation.v1", Context.MODE_PRIVATE)
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) Result.success()
+        else if (BuildConfig.DEBUG && applicationContext.getSharedPreferences("genesis.validation.v1", Context.MODE_PRIVATE)
                 .getBoolean("isolated", false)) Result.success()
         else {
             val controller=AuthController.get(applicationContext)

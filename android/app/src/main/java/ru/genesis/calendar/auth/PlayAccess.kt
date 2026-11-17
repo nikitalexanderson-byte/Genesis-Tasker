@@ -54,6 +54,7 @@ internal class GenesisPlayBilling(context:Context,private val controller:AuthCon
             } else if(result.responseCode!=BillingClient.BillingResponseCode.USER_CANCELED) failed()
         }.enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()).enableAutoServiceReconnection().build()
     private suspend fun connect() {
+        check(ru.genesis.calendar.BuildConfig.PLAY_BILLING_ENABLED) { "BILLING_NOT_AVAILABLE" }
         if(client.isReady)return
         suspendCancellableCoroutine<Unit> { continuation -> client.startConnection(object:BillingClientStateListener {
             override fun onBillingSetupFinished(result:BillingResult) {if(continuation.isActive) {

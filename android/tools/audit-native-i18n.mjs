@@ -23,6 +23,8 @@ const SKIPPED_FILES = new Set([
   path.join(SOURCE_ROOT, "ui/AndroidUpdateBanner.kt"),
   // The shared update prompt copy defines all 14 locales explicitly.
   path.join(SOURCE_ROOT, "ui/AppUpdateCopy.kt"),
+  // Dedicated complete locale table, structurally checked below.
+  path.join(SOURCE_ROOT, "ui/SecurityUpdateCopy.kt"),
   // Advertisement labels are defined for every shipped locale in this component.
   path.join(SOURCE_ROOT, "ui/TodayAdPanel.kt"),
   // Generated RU/EN pairs; export-notification-copy.mjs --check verifies both platforms.
@@ -107,6 +109,14 @@ function kotlinStrings(source) {
     index += 1;
   }
   return result;
+}
+
+const securityCopy = await readFile(path.join(SOURCE_ROOT, "ui/SecurityUpdateCopy.kt"), "utf8");
+const securityRows = [...securityCopy.matchAll(/^\s*"([a-z]{2})" to SecurityUpdateCopy\((.*)\),$/gm)];
+const securityLocales = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+if (securityRows.length !== 14 || securityLocales.some(locale => securityRows.filter(row => row[1] === locale).length !== 1) ||
+    securityRows.some(row => kotlinStrings(row[2]).length !== 9 || kotlinStrings(row[2]).some(item => !item.value.trim()))) {
+  throw new Error("Security update copy must contain all nine fields in all 14 locales");
 }
 
 async function sourceFiles(directory) {

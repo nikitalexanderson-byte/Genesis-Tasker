@@ -2,7 +2,7 @@ import definition from '../server/resources/modeling-service.json';
 import copy from './modeling-service-copy.json';
 import type {Language} from './i18n';
 
-export type ModelingPaymentMethod = {provider:'yookassa'|'lemon-squeezy';amountMinor:number;currency:'RUB'|'USD';available:boolean};
+export type ModelingPaymentMethod = {provider:'yookassa';amountMinor:number;currency:'RUB'|'USD';available:boolean};
 export type ModelingPaymentCatalog = {service:string;methods:ModelingPaymentMethod[];routing:{preferredProvider:string};forecastElitePlus?:boolean;includedInPlan?:boolean;testingAccess?:boolean};
 export type ModelingPaymentOrder = {id:string;resultId:string;service:string;provider:ModelingPaymentMethod['provider'];amountMinor:number;currency:string;
   status:'pending'|'paid'|'cancelled'|'refunded';checkoutUrl:string|null};
@@ -12,16 +12,16 @@ export function modelingPaymentAmount(method:ModelingPaymentMethod) {
   return method.provider==='yookassa'?{currency:'RUB',amountMinor:definition.prices.RUB}:{currency:'USD',amountMinor:definition.prices.USD};
 }
 export function modelingAvailableMethod(method:ModelingPaymentMethod):boolean {
-  if(!['yookassa','lemon-squeezy'].includes(method.provider))return false;
+  if(method.provider!=='yookassa')return false;
   const fixed=modelingPaymentAmount(method);
   return method.available===true&&method.currency===fixed.currency&&method.amountMinor===fixed.amountMinor;
 }
 export function modelingCheckoutUrl(order:ModelingPaymentOrder):string|null {
-  if(!['yookassa','lemon-squeezy'].includes(order.provider))return null;
+  if(order.provider!=='yookassa')return null;
   const expected=modelingPaymentAmount({...order,available:true} as ModelingPaymentMethod);
   if(order.status!=='pending'||order.currency!==expected.currency||![expected.amountMinor,order.provider==='yookassa'?222200:2200].includes(order.amountMinor)||!order.checkoutUrl)return null;
   try {const url=new URL(order.checkoutUrl);const host=url.hostname;
-    const allowed=order.provider==='yookassa'?['yoomoney.ru','yookassa.ru'].includes(host):host==='lemonsqueezy.com'||host.endsWith('.lemonsqueezy.com');
+    const allowed=['yoomoney.ru','yookassa.ru'].includes(host);
     return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&allowed?url.toString():null;
   }catch{return null;}
 }

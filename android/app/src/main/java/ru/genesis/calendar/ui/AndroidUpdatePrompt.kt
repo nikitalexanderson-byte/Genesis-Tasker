@@ -85,6 +85,7 @@ internal fun updateInstallIntent(context: Context, apk: Uri): Intent =
 
 internal fun fetchAndroidRelease(): AndroidRelease? {
     val connection = URL("${ru.genesis.calendar.auth.AUTH_ORIGIN}/android-update.json?check=${System.currentTimeMillis()}").openConnection() as HttpURLConnection
+    connection.instanceFollowRedirects = false
     connection.connectTimeout = 10_000
     connection.readTimeout = 12_000
     connection.useCaches = false
@@ -132,7 +133,7 @@ internal fun AndroidUpdatePrompt(context: Context, synchronizedAt: Long?, enable
 }
 
 @Composable
-internal fun AndroidUpdateDialog(context: Context, release: AndroidRelease, onDismiss: () -> Unit) {
+internal fun AndroidUpdateDialog(context: Context, release: AndroidRelease, securityGate: Boolean = false, onDismiss: () -> Unit) {
     val language=LocalGenesisLanguage.current
     val copy=appUpdateCopy(language)
     val downloads = remember(context) { context.getSystemService(DownloadManager::class.java) }
@@ -198,6 +199,7 @@ internal fun AndroidUpdateDialog(context: Context, release: AndroidRelease, onDi
                 error -> "Не удалось скачать обновление. Проверьте соединение и попробуйте снова."
                 downloaded != null -> "Обновление скачано. Установите его через системный установщик Android."
                 downloadId > 0 -> "Скачиваем обновление…"
+                securityGate -> securityUpdateCopy(language).body
                 target.required -> "Поддержка установленной версии завершена. Синхронизация сохранённых данных доступна; для дальнейшей работы установите обновление."
                 else -> "Доступно обновление приложения. Скачайте его прямо здесь."
             })

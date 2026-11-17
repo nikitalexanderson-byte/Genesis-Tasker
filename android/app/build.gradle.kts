@@ -44,9 +44,10 @@ android {
         applicationId = "ru.genesis.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 147
-        versionName = "3.3.4"
+        versionCode = 148
+        versionName = "3.3.5"
         buildConfigField("boolean", "PLAY_DISTRIBUTION", "false")
+        buildConfigField("boolean", "PLAY_BILLING_ENABLED", "false")
         buildConfigField("boolean", "TRIAL_BUILD", "false")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -124,7 +125,7 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     }
     from(rootProject.file("third-party-licenses")) { into("third-party-licenses") }
     from(rootProject.file("../app/translations.en.json")) { into("i18n") }
-    from(rootProject.file("../releases/android-3.3.4-notes.json")) { into("i18n") }
+    from(rootProject.file("../releases/android-3.3.5-notes.json")) { into("i18n") }
     from(rootProject.file("../app")) { include("solar-model-localization.js", "solar-model-labels.json", "ui-refinement-copy.json"); into("i18n") }
     from(rootProject.file("../app")) {
         include("translations.el.a.json", "translations.el.b.json", "translations.de.json", "translations.de.b.json", "translations.fr.json", "translations.fr.b.json",

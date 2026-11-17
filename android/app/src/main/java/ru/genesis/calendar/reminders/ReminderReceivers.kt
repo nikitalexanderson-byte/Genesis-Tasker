@@ -17,6 +17,7 @@ import ru.genesis.calendar.R
 
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
         val wakeLock = context.getSystemService(PowerManager::class.java)
@@ -38,6 +39,7 @@ class ReminderReceiver : BroadcastReceiver() {
 
 class ReminderActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
         app.appScope.launch {
@@ -55,6 +57,7 @@ class ReminderActionReceiver : BroadcastReceiver() {
 
 class HabitNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
         val wakeLock = context.getSystemService(PowerManager::class.java)
@@ -76,6 +79,7 @@ class HabitNotificationReceiver : BroadcastReceiver() {
 
 class HabitReminderActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         if (intent.action != "ru.genesis.calendar.HABIT_SNOOZE") return
         val pending = goAsync(); val app = context.applicationContext as GenesisApplication
         app.appScope.launch {
@@ -96,12 +100,14 @@ class HabitReminderActionReceiver : BroadcastReceiver() {
 }
 class DiagnosticNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         val app = context.applicationContext as GenesisApplication
         app.scheduler.deliverDiagnosticNotification(intent)
     }
 }
 class RestoreReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         if(intent.action !in setOf(Intent.ACTION_BOOT_COMPLETED,Intent.ACTION_USER_UNLOCKED,
             Intent.ACTION_MY_PACKAGE_REPLACED,Intent.ACTION_TIME_CHANGED,Intent.ACTION_TIMEZONE_CHANGED,
             android.app.AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) return

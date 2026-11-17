@@ -126,7 +126,7 @@ fun AuthPanel(app: GenesisApplication, localLanguage: String) {
                 val access = state.accountSettings?.featureAccess
                 val paid = if (access?.source == "trial") access.paidAccess else access
                 if (!state.requiresSignIn && state.accountSettings?.privatePartnerPanelEnabled != true &&
-                    paid?.currentPlan() in setOf("premium", "business", "premium4life")) {
+                    paid?.currentPlan() in setOf("standart", "premium", "business", "premium4life")) {
                     NativeReferrals(controller, identity.uid, localLanguage)
                 }
                 OutlinedButton(onClick = {

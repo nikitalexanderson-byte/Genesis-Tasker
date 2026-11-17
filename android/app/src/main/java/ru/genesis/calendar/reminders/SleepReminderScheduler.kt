@@ -128,6 +128,7 @@ internal object SleepReminderScheduler {
 
 class SleepReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context,intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         val pending=goAsync()
         val app=context.applicationContext as GenesisApplication
         app.appScope.launch {

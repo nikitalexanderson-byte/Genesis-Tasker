@@ -373,15 +373,16 @@ try {
           for (let i = 0; i < 100 && await field.isVisible(); i++) await field.press(['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'][i % 4]);
         })()]);
         for (const result of completed) if (result.status === 'rejected') throw result.reason;
-        const card = page.locator('.stoicheion-revealed-card');
+        const card = page.getByRole('region', { name: 'Карта дня', exact: true }).getByRole('button', { name: /Открыть полное описание$/ });
         await card.waitFor();
         const label = await card.getAttribute('aria-label');
         assert(label && label.includes('Открыть полное описание'));
         const second = await newContext(tier);
         try {
           const other = await second.newPage(); await other.goto('/#stoicheion');
-          await other.locator('.stoicheion-revealed-card').waitFor();
-          assert.equal(await other.locator('.stoicheion-revealed-card').getAttribute('aria-label'), label);
+          const otherCard = other.getByRole('region', { name: 'Карта дня', exact: true }).getByRole('button', { name: /Открыть полное описание$/ });
+          await otherCard.waitFor();
+          assert.equal(await otherCard.getAttribute('aria-label'), label);
           await other.screenshot({ path: `${output}/${tier}-oracle-daily-second-client.png`, fullPage: true });
         } finally { await second.close(); }
         await snapshot('oracle-daily-draw-persistence');

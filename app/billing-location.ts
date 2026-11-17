@@ -49,13 +49,14 @@ export async function grantedDevicePaymentRegion(permissions:Pick<Permissions,'q
   } catch { return null; }
 }
 
-export function paymentProviderOrder(region:PaymentRegion):BillingProvider[] {
-  return region==='RU'?['yookassa','paddle','google-play']:['paddle','yookassa','google-play'];
+export function paymentProviderOrder(_region:PaymentRegion):BillingProvider[] {
+  void _region; // Preserve the call signature used by regional routing.
+  return ['yookassa'];
 }
 
 /** Keep a deliberate user choice; otherwise prefer configured methods in the regional order. */
 export function preferredPaymentProvider(region:PaymentRegion,available:readonly BillingProvider[],manual?:BillingProvider|null):BillingProvider {
-  if(manual&&available.includes(manual))return manual;
+  if(manual==='yookassa'&&available.includes(manual))return manual;
   const order=paymentProviderOrder(region);
   return order.find(provider=>available.includes(provider))??order[0];
 }

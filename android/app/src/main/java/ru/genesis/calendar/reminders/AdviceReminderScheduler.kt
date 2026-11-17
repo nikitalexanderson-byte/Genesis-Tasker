@@ -252,6 +252,7 @@ internal object AdviceReminderScheduler {
 
 class AdviceReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         if (intent.action == "ru.genesis.calendar.ADVICE_REMINDER") intent.data?.let { AdviceReminderScheduler.enqueueDelivery(context, it) }
     }
 }

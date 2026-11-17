@@ -14,7 +14,7 @@ function genesisModelingCatalog(string $client,?array $settings=null,?array $bil
     $settings??=genesisBillingSettings();$definition=genesisModelingDefinition();
     $billing=genesisBillingCatalog($settings,$client,$billingDefinition);$methods=[];
     foreach($billing['providers'] as $provider){
-        if(!in_array($provider['id'],['yookassa','lemon-squeezy'],true))continue;
+        if($provider['id']!=='yookassa')continue;
         $id=$provider['id'];$product=$id==='yookassa'?$definition['yookassaProduct']:($settings['services']['future-modeling']['products'][$id]??null);
         $currency=$id==='yookassa'?'RUB':'USD';
         $configured=is_string($product)&&($id==='yookassa'||preg_match('/\A[1-9][0-9]{0,14}\z/D',$product)===1);

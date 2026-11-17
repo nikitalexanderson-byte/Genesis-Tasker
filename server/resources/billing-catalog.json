@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-11-17-paddle-preparation",
+  "revision": "2026-11-17-security-bridge-335",
   "checkoutEnabled": false,
   "yookassaCheckoutEnabled": true,
   "creditCheckoutEnabled": false,
@@ -36,21 +36,6 @@
     "seats": 12
   },
   "providers": [
-    {
-      "id": "google-play",
-      "name": "Google Play",
-      "clients": [
-        "android-play"
-      ]
-    },
-    {
-      "id": "paddle",
-      "name": "Paddle",
-      "clients": [
-        "web",
-        "android"
-      ]
-    },
     {
       "id": "yookassa",
       "name": "ЮKassa",

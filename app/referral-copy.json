@@ -1,7 +1,7 @@
 {
   "ru": {
     "title": "Приглашения и скидки",
-    "intro": "Для Premium, Business, Elite и Elite+. Это скидки на подписку, без денежных выплат.",
+    "intro": "Для Standard, Premium, Business, Elite и Elite+. Это скидки на подписку, без денежных выплат.",
     "rules": "Приглашайте до 10 новых пользователей за календарный месяц по ссылке или коду. За каждого, кто зарегистрируется и впервые оплатит Standard или выше, — 10% на следующий месяц. Затем — 3% в месяц, пока у приглашённого действует оплаченный доступ. Постоянная часть учитывает максимум 10 человек и составляет до 30%; общая скидка — до 100%.",
     "monthlyOnly": "Скидка действует один календарный месяц и применяется один раз к месячной покупке на сайте. Она не уменьшает цену всего года или пожизненной лицензии. Регистрация без оплаты, пробный и подарочный доступ не дают скидку.",
     "create": "Создать ссылку приглашения",
@@ -27,7 +27,7 @@
   },
   "en": {
     "title": "Invitations and discounts",
-    "intro": "For Premium, Business, Elite and Elite+. Subscription discounts, with no cash payouts.",
+    "intro": "For Standard, Premium, Business, Elite and Elite+. Subscription discounts, with no cash payouts.",
     "rules": "Invite up to 10 new users per calendar month by link or code. Each invitee who registers and makes their first paid purchase of Standard or higher earns you 10% off in the following month. After that, each earns 3% per month while their paid access remains active. The ongoing portion counts at most 10 people, up to 30%; the combined discount is capped at 100%.",
     "monthlyOnly": "The discount is valid for one calendar month and applies once to a monthly purchase on the website. It does not reduce the entire annual or lifetime price. Registration without payment, trials and complimentary access do not earn a discount.",
     "create": "Create invitation link",
@@ -53,7 +53,7 @@
   },
   "el": {
     "title": "Προσκλήσεις και εκπτώσεις",
-    "intro": "Για Premium, Business, Elite και Elite+. Εκπτώσεις συνδρομής, χωρίς χρηματικές πληρωμές.",
+    "intro": "Για Standard, Premium, Business, Elite και Elite+. Εκπτώσεις συνδρομής, χωρίς χρηματικές πληρωμές.",
     "rules": "Προσκαλέστε έως 10 νέους χρήστες ανά ημερολογιακό μήνα μέσω συνδέσμου ή κωδικού. Για κάθε προσκεκλημένο που εγγράφεται και πραγματοποιεί την πρώτη του αγορά επί πληρωμή στο Standard ή σε ανώτερο πρόγραμμα, κερδίζετε έκπτωση 10% τον επόμενο μήνα. Στη συνέχεια, καθένας αποφέρει 3% τον μήνα όσο η πληρωμένη πρόσβασή του παραμένει ενεργή. Το επαναλαμβανόμενο μέρος υπολογίζει έως 10 άτομα, με ανώτατο όριο 30%· η συνολική έκπτωση δεν ξεπερνά το 100%.",
     "monthlyOnly": "Η έκπτωση ισχύει για έναν ημερολογιακό μήνα και εφαρμόζεται μία φορά σε μηνιαία αγορά στον ιστότοπο. Δεν μειώνει ολόκληρη την ετήσια τιμή ή την τιμή της ισόβιας άδειας. Η εγγραφή χωρίς πληρωμή, η δοκιμαστική και η δωρεάν παραχωρημένη πρόσβαση δεν αποφέρουν έκπτωση.",
     "create": "Δημιουργία συνδέσμου πρόσκλησης",
@@ -79,7 +79,7 @@
   },
   "de": {
     "title": "Einladungen und Rabatte",
-    "intro": "Für Premium, Business, Elite und Elite+. Rabatte auf das Abonnement, ohne Geldauszahlungen.",
+    "intro": "Für Standard, Premium, Business, Elite und Elite+. Rabatte auf das Abonnement, ohne Geldauszahlungen.",
     "rules": "Lade pro Kalendermonat bis zu 10 neue Nutzer per Link oder Code ein. Für jede eingeladene Person, die sich registriert und erstmals Standard oder einen höheren Tarif kostenpflichtig kauft, erhältst du im Folgemonat 10% Rabatt. Danach bringt sie dir jeden Monat 3%, solange ihr bezahlter Zugang aktiv bleibt. Der laufende Anteil berücksichtigt höchstens 10 Personen und beträgt bis zu 30%; der Gesamtrabatt ist auf 100% begrenzt.",
     "monthlyOnly": "Der Rabatt gilt für einen Kalendermonat und wird einmal auf einen Monatskauf auf der Website angewendet. Er reduziert nicht den gesamten Jahrespreis oder den Preis einer lebenslangen Lizenz. Eine Registrierung ohne Zahlung, Testzugänge und kostenlos gewährte Zugänge bringen keinen Rabatt.",
     "create": "Einladungslink erstellen",
@@ -105,7 +105,7 @@
   },
   "fr": {
     "title": "Invitations et réductions",
-    "intro": "Pour Premium, Business, Elite et Elite+. Des réductions sur l’abonnement, sans versements d’argent.",
+    "intro": "Pour Standard, Premium, Business, Elite et Elite+. Des réductions sur l’abonnement, sans versements d’argent.",
     "rules": "Invitez jusqu’à 10 nouveaux utilisateurs par mois calendaire à l’aide d’un lien ou d’un code. Chaque personne invitée qui s’inscrit et effectue son premier achat payant de Standard ou d’une offre supérieure vous donne droit à 10% de réduction le mois suivant. Ensuite, chacune vous donne droit à 3% par mois tant que son accès payant reste actif. La part récurrente prend en compte 10 personnes au maximum, jusqu’à 30% ; la réduction totale est plafonnée à 100%.",
     "monthlyOnly": "La réduction est valable un mois calendaire et s’applique une seule fois à un achat mensuel sur le site. Elle ne réduit pas le prix total d’une offre annuelle ou d’une licence à vie. L’inscription sans paiement, les essais et les accès offerts ne donnent pas droit à une réduction.",
     "create": "Créer un lien d’invitation",
@@ -131,7 +131,7 @@
   },
   "es": {
     "title": "Invitaciones y descuentos",
-    "intro": "Para Premium, Business, Elite y Elite+. Descuentos en la suscripción, sin recompensas monetarias.",
+    "intro": "Para Standard, Premium, Business, Elite y Elite+. Descuentos en la suscripción, sin recompensas monetarias.",
     "rules": "Invita a un máximo de 10 usuarios nuevos por mes natural mediante un enlace o código. Por cada invitado que se registre y realice su primera compra de pago de Standard o un plan superior, obtienes un 10% de descuento el mes siguiente. Después, cada uno aporta un 3% al mes mientras su acceso de pago siga activo. La parte recurrente cuenta hasta 10 personas, con un máximo del 30%; el descuento total está limitado al 100%.",
     "monthlyOnly": "El descuento es válido durante un mes natural y se aplica una sola vez a una compra mensual en el sitio web. No reduce el precio de todo un año ni el de una licencia de por vida. El registro sin pago, las pruebas y los accesos gratuitos de cortesía no generan descuentos.",
     "create": "Crear enlace de invitación",
@@ -157,7 +157,7 @@
   },
   "it": {
     "title": "Inviti e sconti",
-    "intro": "Per Premium, Business, Elite ed Elite+. Sconti sull’abbonamento, senza erogazioni di denaro.",
+    "intro": "Per Standard, Premium, Business, Elite ed Elite+. Sconti sull’abbonamento, senza erogazioni di denaro.",
     "rules": "Invita fino a 10 nuovi utenti per mese di calendario tramite link o codice. Per ogni invitato che si registra ed effettua il primo acquisto a pagamento di Standard o di un piano superiore, ottieni uno sconto del 10% nel mese successivo. In seguito, ciascuno dà diritto al 3% al mese finché il suo accesso a pagamento rimane attivo. La parte ricorrente considera al massimo 10 persone, fino al 30%; lo sconto complessivo è limitato al 100%.",
     "monthlyOnly": "Lo sconto è valido per un mese di calendario e si applica una sola volta a un acquisto mensile sul sito. Non riduce il prezzo dell’intero anno o di una licenza a vita. La registrazione senza pagamento, le prove e gli accessi omaggio non danno diritto a sconti.",
     "create": "Crea link d’invito",
@@ -183,7 +183,7 @@
   },
   "pt": {
     "title": "Convites e descontos",
-    "intro": "Para Premium, Business, Elite e Elite+. Descontos na subscrição, sem recompensas monetárias.",
+    "intro": "Para Standard, Premium, Business, Elite e Elite+. Descontos na subscrição, sem recompensas monetárias.",
     "rules": "Convide até 10 novos utilizadores por mês de calendário através de uma ligação ou código. Cada convidado que se registe e efetue a primeira compra paga do Standard ou de um plano superior dá-lhe 10% de desconto no mês seguinte. Depois, cada um dá-lhe 3% por mês enquanto o respetivo acesso pago se mantiver ativo. A parte recorrente contabiliza, no máximo, 10 pessoas, até 30%; o desconto total está limitado a 100%.",
     "monthlyOnly": "O desconto é válido por um mês de calendário e aplica-se uma única vez a uma compra mensal no site. Não reduz o preço de todo o ano nem de uma licença vitalícia. O registo sem pagamento, os períodos de teste e os acessos de oferta não dão direito a desconto.",
     "create": "Criar ligação de convite",
@@ -209,7 +209,7 @@
   },
   "pl": {
     "title": "Zaproszenia i zniżki",
-    "intro": "Dla Premium, Business, Elite i Elite+. Zniżki na subskrypcję, bez wypłat pieniężnych.",
+    "intro": "Dla Standard, Premium, Business, Elite i Elite+. Zniżki na subskrypcję, bez wypłat pieniężnych.",
     "rules": "Zaproś do 10 nowych użytkowników w miesiącu kalendarzowym za pomocą linku lub kodu. Każda zaproszona osoba, która się zarejestruje i dokona pierwszego płatnego zakupu Standard lub wyższego planu, daje Ci 10% zniżki w następnym miesiącu. Później każda zapewnia 3% miesięcznie, dopóki jej opłacony dostęp pozostaje aktywny. Część stała uwzględnia najwyżej 10 osób, do 30%; łączna zniżka nie przekracza 100%.",
     "monthlyOnly": "Zniżka jest ważna przez jeden miesiąc kalendarzowy i ma zastosowanie jednorazowo do zakupu miesięcznego na stronie internetowej. Nie obniża ceny całego roku ani licencji dożywotniej. Rejestracja bez płatności, okresy próbne i dostęp przyznany bezpłatnie nie dają zniżki.",
     "create": "Utwórz link zaproszenia",
@@ -235,7 +235,7 @@
   },
   "sr": {
     "title": "Позивнице и попусти",
-    "intro": "За Premium, Business, Elite и Elite+. Попусти на претплату, без новчаних исплата.",
+    "intro": "За Standard, Premium, Business, Elite и Elite+. Попусти на претплату, без новчаних исплата.",
     "rules": "Позовите до 10 нових корисника по календарском месецу путем везе или кода. За сваког позваног који се региструје и први пут плати Standard или виши пакет добијате 10% попуста следећег месеца. Након тога, сваки доноси 3% месечно док му је плаћени приступ активан. Стални део обухвата највише 10 особа, до 30%; укупан попуст је ограничен на 100%.",
     "monthlyOnly": "Попуст важи један календарски месец и примењује се једном на месечну куповину на сајту. Не умањује цену целе године или доживотне лиценце. Регистрација без плаћања, пробни и поклоњени приступ не доносе попуст.",
     "create": "Направи везу за позивање",
@@ -261,7 +261,7 @@
   },
   "uk": {
     "title": "Запрошення та знижки",
-    "intro": "Для Premium, Business, Elite та Elite+. Знижки на підписку, без грошових виплат.",
+    "intro": "Для Standard, Premium, Business, Elite та Elite+. Знижки на підписку, без грошових виплат.",
     "rules": "Запрошуйте до 10 нових користувачів за календарний місяць за посиланням або кодом. За кожного, хто зареєструється та вперше оплатить Standard або вищий тариф, — 10% знижки наступного місяця. Після цього кожен дає 3% на місяць, доки його оплачений доступ залишається активним. Постійна частина враховує щонайбільше 10 осіб і становить до 30%; загальна знижка — до 100%.",
     "monthlyOnly": "Знижка діє один календарний місяць і застосовується один раз до місячної покупки на сайті. Вона не зменшує ціну всього року або довічної ліцензії. Реєстрація без оплати, пробний і подарунковий доступ не дають знижки.",
     "create": "Створити посилання запрошення",
@@ -287,7 +287,7 @@
   },
   "zh": {
     "title": "邀请与折扣",
-    "intro": "适用于 Premium、Business、Elite 和 Elite+。仅提供订阅折扣，不发放现金。",
+    "intro": "适用于 Standard, Premium、Business、Elite 和 Elite+。仅提供订阅折扣，不发放现金。",
     "rules": "每个日历月可通过链接或邀请码邀请最多 10 位新用户。每位受邀者注册并首次付费购买 Standard 或更高方案后，您可在下个月获得 10% 折扣。此后的月份，只要其付费访问权限仍然有效，每位受邀者每月可为您带来 3% 折扣。持续折扣部分最多计入 10 人，上限为 30%；合计折扣上限为 100%。",
     "monthlyOnly": "折扣有效期为一个日历月，仅可用于网站上的一次月度购买。折扣不适用于整年的总价或终身许可价格。未付费注册、试用和赠送的访问权限均不产生折扣。",
     "create": "创建邀请链接",
@@ -313,7 +313,7 @@
   },
   "tr": {
     "title": "Davetler ve indirimler",
-    "intro": "Premium, Business, Elite ve Elite+ için. Para ödemesi yapılmaz; abonelik indirimi sağlanır.",
+    "intro": "Standard, Premium, Business, Elite ve Elite+ için. Para ödemesi yapılmaz; abonelik indirimi sağlanır.",
     "rules": "Her takvim ayında bağlantı veya kod ile en fazla 10 yeni kullanıcı davet edin. Kaydolup Standard veya daha yüksek bir planı ilk kez ücretli satın alan her davetli, sonraki ay size %10 indirim kazandırır. Bundan sonraki aylarda, ücretli erişimi aktif kaldığı sürece her biri ayda %3 kazandırır. Sürekli indirim kısmında en fazla 10 kişi sayılır ve bu kısım %30 ile sınırlıdır; toplam indirim en fazla %100 olabilir.",
     "monthlyOnly": "İndirim bir takvim ayı boyunca geçerlidir ve web sitesindeki bir aylık satın alıma yalnızca bir kez uygulanır. Yıllık veya ömür boyu erişimin toplam fiyatını düşürmez. Ödeme yapmadan kayıt olmak, deneme erişimi ve hediye erişim indirim kazandırmaz.",
     "create": "Davet bağlantısı oluştur",
@@ -339,7 +339,7 @@
   },
   "ja": {
     "title": "招待と割引",
-    "intro": "Premium、Business、Elite、Elite+ が対象です。サブスクリプションの割引であり、現金の支払いはありません。",
+    "intro": "Standard, Premium、Business、Elite、Elite+ が対象です。サブスクリプションの割引であり、現金の支払いはありません。",
     "rules": "暦月ごとに、リンクまたはコードで最大 10 人の新規ユーザーを招待できます。招待された方が登録し、Standard 以上のプランを初めて有料で購入すると、その翌月に一人につき 10% の割引を受けられます。その後の月は、その方の有料アクセスが有効である間、毎月一人につき 3% の割引となります。継続分の対象は最大 10 人、割引は最大 30% です。合計の割引率は 100% が上限です。",
     "monthlyOnly": "割引は 1 暦月の間有効で、ウェブサイトでの月額購入に 1 回だけ適用されます。年間料金全体や無期限ライセンスの料金は割引されません。支払いを伴わない登録、試用、無償で付与されたアクセスは割引の対象になりません。",
     "create": "招待リンクを作成",

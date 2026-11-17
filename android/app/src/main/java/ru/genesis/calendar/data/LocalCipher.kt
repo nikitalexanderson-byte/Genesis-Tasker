@@ -24,6 +24,7 @@ class LocalCipher {
         }.generateKey()
     }
     fun encrypt(value: String, context: String): String {
+        ru.genesis.calendar.security.UpdateGate.requireOpen()
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key(create=true))
         cipher.updateAAD(context.toByteArray(Charsets.UTF_8))

@@ -6942,6 +6942,9 @@ export function GenesisCalendar() {
             {sacredFeaturesEnabled ? <CalendarModeCycleButton mode={activeCalendarMode} enabledCalendars={visibility.enabledCalendars}
               order={accountLayout.displayCalendarOrder} language={language} onChange={changeDisplayCalendar}/> : null}
             {cloudUser ? <ThemeModeToggle state={themeState} language={language} onChange={changeGenesisTheme} /> : null}
+            {view === 'today' ? <Suspense fallback={<span className="header-control-placeholder" data-header-control-placeholder aria-hidden="true" />}><TodayBlockOrderButton language={language}
+              onClick={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: true})}/></Suspense> : null}
+            <div className="notification-header-slot" ref={setNotificationHeaderTarget} />
             {cloudUser ? (
               <div className={`account-chip${accountIdentityExpanded ? " is-expanded" : " is-compact"}`} ref={accountMenuRef}>
                 <button
@@ -6988,10 +6991,6 @@ export function GenesisCalendar() {
                 <path className="voice-microphone-stand" d="M12 17.4v3.35M8.9 20.75h6.2" />
               </svg>
             </button> : null}
-
-            <div className="notification-header-slot" ref={setNotificationHeaderTarget} />
-            {view === 'today' ? <Suspense fallback={<span className="header-control-placeholder" data-header-control-placeholder aria-hidden="true" />}><TodayBlockOrderButton language={language}
-              onClick={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: true})}/></Suspense> : null}
 
           </div>
   );

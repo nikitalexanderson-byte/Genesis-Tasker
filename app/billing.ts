@@ -69,7 +69,7 @@ export function billingDisplayPrice(plan:BillingPlan,months:number,catalog:Billi
 export function billingCheckoutReady(catalog:BillingCatalog|null,offer:BillingOffer|undefined,quote:BillingQuote|null|undefined,provider:BillingProvider):boolean {
   const price=offer?billingOfferPrice(offer,provider):null;
   const pending=typeof quote?.pendingOrderId==='string'&&/^[a-zA-Z0-9_-]{16,100}$/.test(quote.pendingOrderId);
-  return Boolean(catalog?.checkoutEnabled&&offer&&quote&&!quote.upgradeUnavailableReason&&quote.offerId===offer.id&&quote.plan===offer.plan&&quote.periodMonths===offer.periodMonths
+  return Boolean(provider==='yookassa'&&catalog?.checkoutEnabled&&offer&&quote&&!quote.upgradeUnavailableReason&&quote.offerId===offer.id&&quote.plan===offer.plan&&quote.periodMonths===offer.periodMonths
     &&[quote.amountMinor,quote.listAmountMinor,quote.creditMinor,quote.referralDiscountMinor??0].every(Number.isSafeInteger)&&quote.amountMinor>0&&quote.creditMinor>=0&&(quote.referralDiscountMinor??0)>=0&&quote.listAmountMinor-quote.creditMinor-(quote.referralDiscountMinor??0)===quote.amountMinor
     &&/^[A-Z]{3}$/.test(quote.currency)&&(pending||quote.currency===price?.currency&&quote.listAmountMinor===price?.amountMinor)
     &&(!quote.provider||quote.provider===provider)

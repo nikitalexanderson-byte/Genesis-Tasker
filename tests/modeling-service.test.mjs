@@ -14,9 +14,9 @@ test('a result checkout accepts only the exact fixed total and the matching paym
     {checkoutUrl:'http://yoomoney.ru/'},{checkoutUrl:'https://user:secret@yoomoney.ru/'},{checkoutUrl:'https://yoomoney.ru:444/'}])
     assert.equal(api.modelingCheckoutUrl({...order,...change}),null,JSON.stringify(change));
   const usd={...order,provider:'lemon-squeezy',amountMinor:20000,currency:'USD',checkoutUrl:'https://genesis.lemonsqueezy.com/checkout/synthetic'};
-  assert.equal(api.modelingCheckoutUrl(usd),usd.checkoutUrl);
+  assert.equal(api.modelingCheckoutUrl(usd),null);
   assert.equal(api.modelingCheckoutUrl({...usd,checkoutUrl:order.checkoutUrl}),null);
-  assert.equal(api.modelingAvailableMethod({provider:'lemon-squeezy',amountMinor:20000,currency:'USD',available:true}),true);
+  assert.equal(api.modelingAvailableMethod({provider:'lemon-squeezy',amountMinor:20000,currency:'USD',available:true}),false);
   assert.equal(api.modelingAvailableMethod({provider:'lemon-squeezy',amountMinor:2000000,currency:'RUB',available:true}),false);
   assert.equal(api.modelingAvailableMethod({provider:'yookassa',amountMinor:2000000,currency:'RUB',available:false}),false);
 });

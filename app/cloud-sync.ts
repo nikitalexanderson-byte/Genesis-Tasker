@@ -472,7 +472,8 @@ type BootstrapPayload = {
 
 const configuredBase = process.env.NEXT_PUBLIC_GENESIS_API_URL?.trim() ?? "";
 const API_BASE = configuredBase.replace(/\/$/, "");
-const retentionVisitId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : "";
+// This identifies a browser visit; Workers forbid random generation during module evaluation.
+const retentionVisitId = typeof window !== "undefined" && typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : "";
 
 export function loadPlanGuidance(signal?:AbortSignal) {
   return api<{notice:import('./plan-guidance-types').PlanGuidanceNotice|null}>('/account/plan-guidance',{signal},{upgradePrompt:false});

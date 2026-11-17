@@ -327,24 +327,17 @@ test("workspace API uses monotonic compare-and-swap without exposing plaintext",
 });
 
 async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
+  // The built worker imports cloudflare:workers. Exercise its real local runtime;
+  // Node's module loader cannot validate Workers-specific semantics.
+  const { unstable_dev } = await import('wrangler');
+  const worker = await unstable_dev(new URL('../dist/server/index.js',import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/,''), {
+    config: 'dist/server/wrangler.json', local: true, port: 0, inspectorPort: 0,
+    persist: false, logLevel: 'error', experimental: { disableExperimentalWarning: true, disableDevRegistry: true, watch: false },
+  });
+  try {
+    const response = await worker.fetch('/', {headers:{accept:'text/html'}});
+    return new Response(await response.arrayBuffer(), {status:response.status,headers:response.headers});
+  } finally { await worker.stop(); }
 }
 
 test("server-renders the GENESIS application shell", async () => {

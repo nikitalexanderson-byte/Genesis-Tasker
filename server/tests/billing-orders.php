@@ -63,8 +63,23 @@ foreach([
 orderCheck($checkoutCalls===0&&(int)$db->query('SELECT COUNT(*) FROM billing_orders')->fetchColumn()===0,'Invalid expected price/currency created a payable order');
 // Retired Lemon Squeezy cannot create new orders, even with credentials and a valid USD amount.
 orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('buyer',orderInput('retired-dollar-order','lemon-squeezy',700,'USD'),$definition,$checkout));
+foreach(['lemon-squeezy','paddle','google-play']as$retired){
+    foreach(['web','android','android-play']as$client){
+        orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('buyer',
+            [...orderInput('disabled-provider-'.$retired,$retired,700,'USD'),'client'=>$client],$definition,$checkout));
+    }
+}
+$GLOBALS['ordersFixtureConfig']['billing']['play_external_billing_enabled']=true;
+orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('buyer',
+    [...orderInput('play-yookassa-blocked','yookassa',55500,'RUB'),'client'=>'android-play'],$definition,$checkout));
+orderCheck($checkoutCalls===0,'Disabled provider reached checkout');
 $rubles=genesisBillingCreateOrder('other',orderInput('valid-ruble-order-key','yookassa',55500,'RUB'),$definition,$checkout);
 orderCheck($rubles['amountMinor']===55500&&$rubles['currency']==='RUB','Domestic order changed denomination');
+foreach(['lemon-squeezy','paddle','google-play']as$retired){
+    $historical=[...genesisBillingOrder($db,$rubles['id']),'provider'=>$retired,'checkout_url'=>'https://example.invalid/stale-checkout'];
+    $public=genesisBillingPublicOrder($historical,$db);
+    orderCheck($public['checkoutUrl']===null&&$public['id']===$rubles['id'],'Historical order restored a retired checkout');
+}
 $rubleCallCount=$checkoutCalls;
 $rubleRetry=genesisBillingCreateOrder('other',orderInput('ruble-dialog-reopened','yookassa',55500,'RUB'),$definition,$checkout);
 orderCheck($rubleRetry['id']===$rubles['id']&&$checkoutCalls===$rubleCallCount,'Reopened full-price Yoo dialog created a second payable checkout');

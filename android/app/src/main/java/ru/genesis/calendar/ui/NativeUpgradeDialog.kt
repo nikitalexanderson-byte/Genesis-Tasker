@@ -84,7 +84,7 @@ internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObjec
     val providers = catalog?.optJSONArray("providers") ?: return emptyList()
     return (0 until providers.length()).mapNotNull { providers.optJSONObject(it) }.filter {
         val id = it.optString("id")
-        id in setOf("google-play", "yookassa", "paddle") && (!playDistribution || id == "google-play") &&
+        id == "yookassa" && !playDistribution &&
             it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
     }.map { it.getString("id") }.distinct().sortedBy { if (it == preferred) 0 else 1 }
 }
@@ -537,7 +537,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                             }
                             if (error) UpgradeText(copy("Не удалось проверить оплату. Проверьте соединение и повторите попытку. Ваш доступ не изменился.",
                                 "Could not verify payment. Check your connection and try again. Your access has not changed."), color = upgradeScheme.error)
-                            if (BuildConfig.PLAY_DISTRIBUTION) TextButton({ scope.launch {
+                            if (BuildConfig.PLAY_DISTRIBUTION && BuildConfig.PLAY_BILLING_ENABLED) TextButton({ scope.launch {
                                 try { billing.restore() } catch (cancel: CancellationException) { throw cancel } catch (_: Exception) { error = true }
                             } }, Modifier.heightIn(min = 48.dp), enabled = !busy && catalog?.optBoolean("checkoutEnabled") == true) {
                                 UpgradeText(copy("Восстановить покупки", "Restore purchases"), color = upgradeScheme.primary)

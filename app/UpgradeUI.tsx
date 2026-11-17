@@ -109,7 +109,7 @@ export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOr
   const offer=catalog?.offers.find(value=>value.plan===selected&&value.periodMonths===(selected==='premium4life'?0:months));
   const offerId=offer?.id;
   const region=useAutomaticPaymentRegion(catalog?.routing,user.uid,busy);const methodOrder=paymentProviderOrder(region);
-  const methods=[...(catalog?.providers??[{id:'google-play' as const,name:'Google Play',available:false,reason:null},{id:'paddle' as const,name:'Paddle',available:false,reason:null},{id:'yookassa' as const,name:'ЮKassa',available:false,reason:null}])].sort((a,b)=>methodOrder.indexOf(a.id)-methodOrder.indexOf(b.id));
+  const methods=[...(catalog?.providers??[{id:'yookassa' as const,name:'ЮKassa',available:false,reason:null}])].filter(method=>method.id==='yookassa').sort((a,b)=>methodOrder.indexOf(a.id)-methodOrder.indexOf(b.id));
   const configuredMethods=methods.filter(method=>method.available&&offer?.availableProviders.includes(method.id));
   const effectiveProvider=preferredPaymentProvider(region,configuredMethods.map(method=>method.id),provider);
   useEffect(()=>{if(!offerId)return;let live=true;void loadBillingQuote(offerId,effectiveProvider).then(quote=>{if(live){setQuoteState({offerId,provider:effectiveProvider,quote,failed:false});if(quote.pendingOrderId&&quote.availableProviders.length===1&&!quote.availableProviders.includes(effectiveProvider))setProvider(quote.availableProviders[0]);}}).catch(()=>{if(live)setQuoteState({offerId,provider:effectiveProvider,quote:null,failed:true});});return()=>{live=false;};},[offerId,effectiveProvider,quoteRevision,user.uid]);

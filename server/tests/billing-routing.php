@@ -9,7 +9,7 @@ foreach(['213.180.193.3','77.88.8.8','2a02:6b8::1','::ffff:77.88.8.8'] as $ip){
 }
 foreach(['8.8.8.8','1.1.1.1','2001:4860:4860::8888'] as $ip){
     $route=genesisBillingRouting(['REMOTE_ADDR'=>$ip,'HTTP_CF_IPCOUNTRY'=>'RU','HTTP_X_FORWARDED_FOR'=>'77.88.8.8']);
-    checkRoute($route['region']==='outside-RU'&&$route['preferredProvider']==='paddle','Public outside IP; ignore spoofed proxy headers');
+    checkRoute($route['region']==='outside-RU'&&$route['preferredProvider']==='yookassa','Region or spoofed proxy headers restored a disabled provider');
 }
 foreach(['','invalid','127.0.0.1','::1','192.168.1.1','10.0.0.1','100.64.0.1','203.0.113.4','198.51.100.9','2001:db8::1','ff02::1','224.0.0.1'] as $ip)
     checkRoute(genesisBillingRouting(['REMOTE_ADDR'=>$ip])['region']==='unknown','Private/reserved IP is not a location: '.$ip);

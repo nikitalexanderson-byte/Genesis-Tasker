@@ -16,13 +16,13 @@ function genesisReferralEligible(array $user,int $now): bool
 {
     $plan=$user['subscription_plan']??'free';
     $expiry=genesisSubscriptionExpiry($user['subscription_valid_until']??null);
-    return $plan==='premium4life'||in_array($plan,['premium','business'],true)&&$expiry!==false&&$expiry>$now;
+    return $plan==='premium4life'||in_array($plan,['standart','premium','business'],true)&&$expiry!==false&&$expiry>$now;
 }
 function genesisReferralRequireUser(string $userId,int $now): array
 {
     $user=genesisFindUser($userId);
     if(!$user||!genesisSessionIsPrimaryGoogleUser($user))throw new GenesisResourceLimitException(403,'REFERRAL_PRIMARY_GOOGLE_REQUIRED');
-    if(!genesisReferralEligible($user,$now))throw new GenesisResourceLimitException(403,'REFERRAL_PREMIUM_REQUIRED');
+    if(!genesisReferralEligible($user,$now))throw new GenesisResourceLimitException(403,'REFERRAL_STANDARD_REQUIRED');
     $q=genesisDb()->prepare('SELECT 1 FROM partners WHERE user_id=? AND panel_enabled=1');$q->execute([$userId]);
     if($q->fetchColumn())throw new GenesisResourceLimitException(409,'REFERRAL_PRIVATE_PARTNER_PROGRAM');
     return $user;

@@ -7,12 +7,12 @@ import catalog from '../server/resources/billing-catalog.json' with {type:'json'
 import locationCopy from '../app/billing-location-copy.json' with {type:'json'};
 const boundary=JSON.parse(await readFile(new URL('../app/billing-russia-boundary.json',import.meta.url),'utf8')).coordinates;
 
-test('device location only prioritizes methods and preserves manual choices',()=>{
-  assert.deepEqual(paymentProviderOrder('RU'),['yookassa','paddle','google-play']);
-  assert.deepEqual(paymentProviderOrder('outside-RU'),['paddle','yookassa','google-play']);
-  assert.equal(preferredPaymentProvider('RU',['yookassa','paddle'],'paddle'),'paddle');
+test('stale regional catalog and manual selections cannot restore disabled providers',()=>{
+  assert.deepEqual(paymentProviderOrder('RU'),['yookassa']);
+  assert.deepEqual(paymentProviderOrder('outside-RU'),['yookassa']);
+  assert.equal(preferredPaymentProvider('RU',['yookassa','paddle'],'paddle'),'yookassa');
   assert.equal(preferredPaymentProvider('outside-RU',['yookassa','paddle'],'yookassa'),'yookassa');
-  assert.equal(preferredPaymentProvider('RU',['paddle']),'paddle');
+  assert.equal(preferredPaymentProvider('RU',['paddle']),'yookassa');
   assert.equal(preferredPaymentProvider('outside-RU',['yookassa']),'yookassa');
 });
 test('local country geometry handles mainland, Kaliningrad, other countries and uncertainty',()=>{
@@ -90,7 +90,7 @@ test('fixed USD offers, quotes and checkout agree exactly without cosmetic round
     const available={checkoutEnabled:true,offers:[offer],providers:[{id:'yookassa',available:true},{id:'paddle',available:true}]};
     const quote={offerId:offer.id,plan,periodMonths,listAmountMinor:amountMinor,creditMinor:0,amountMinor,currency:'USD',provider:'paddle',availableProviders:['paddle']};
     for(const tab of plan==='premium4life'?[1,12]:[periodMonths])assert.deepEqual(billingDisplayPrice(plan,tab,available,'paddle'),{amountMinor,currency:'USD'});
-    assert.equal(billingCheckoutReady(available,offer,quote,'paddle'),true);
+    assert.equal(billingCheckoutReady(available,offer,quote,'paddle'),false);
     assert.equal(billingCheckoutReady(available,offer,{...quote,currency:'RUB'},'paddle'),false);
     assert.equal(billingCheckoutReady(available,offer,quote,'yookassa'),false);
     for(const wrong of [amountMinor+1,amountMinor+.5,offer.amountMinor])assert.equal(billingCheckoutReady(available,offer,{...quote,amountMinor:wrong,listAmountMinor:wrong},'paddle'),false);
