@@ -44,7 +44,7 @@ android {
         applicationId = "ru.genesis.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 148
+        versionCode = 149
         versionName = "3.3.5"
         buildConfigField("boolean", "PLAY_DISTRIBUTION", "false")
         buildConfigField("boolean", "PLAY_BILLING_ENABLED", "false")

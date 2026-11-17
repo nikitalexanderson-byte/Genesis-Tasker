@@ -48,7 +48,7 @@ jobs:
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/deploy-meta.json?release=$GITHUB_RUN_ID" \
             | jq -e --arg expected "$EXPECTED_CURRENT_COMMIT" '.commit == $expected'
-          grep -Eq 'versionCode = 148$' android/app/build.gradle.kts
+          grep -Eq 'versionCode = 149$' android/app/build.gradle.kts
           grep -Fq 'versionName = "3.3.5"' android/app/build.gradle.kts
           grep -Fq 'buildConfigField("boolean", "TRIAL_BUILD", "false")' android/app/build.gradle.kts
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
@@ -99,7 +99,7 @@ jobs:
             release-artifact/signing-certificate.txt
           "$ANDROID_HOME/build-tools/37.0.0/zipalign" -c -P 16 4 "$APK"
           "$ANDROID_HOME/build-tools/37.0.0/aapt" dump badging "$APK" > release-artifact/apk-metadata.txt
-          grep -Fq "package: name='ru.genesis.calendar' versionCode='148' versionName='3.3.5'" release-artifact/apk-metadata.txt
+          grep -Fq "package: name='ru.genesis.calendar' versionCode='149' versionName='3.3.5'" release-artifact/apk-metadata.txt
           ! grep -q '^application-debuggable' release-artifact/apk-metadata.txt
           jarsigner -verify "$AAB" | grep -q 'jar verified'
           keytool -printcert -jarfile "$AAB" > release-artifact/play-signing-certificate.txt
@@ -117,12 +117,12 @@ jobs:
             cp "android/app/build/outputs/mapping/$variant/mapping.txt" "release-artifact/mapping-$variant.txt"
           done
           jq -n --arg commit "$GITHUB_SHA" --arg repository "$GITHUB_REPOSITORY" \
-            '{commit:$commit,repository:$repository,versionName:"3.3.5",versionCode:148}' > release-artifact/source.json
+            '{commit:$commit,repository:$repository,versionName:"3.3.5",versionCode:149}' > release-artifact/source.json
           (cd release-artifact && sha256sum GENESIS-Android-* > SHA256SUMS)
       - name: Save immutable release artifacts for acceptance
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: genesis-android-3.3.5-148-${{ github.sha }}
+          name: genesis-android-3.3.5-149-${{ github.sha }}
           path: release-artifact/
           if-no-files-found: error
           compression-level: 0

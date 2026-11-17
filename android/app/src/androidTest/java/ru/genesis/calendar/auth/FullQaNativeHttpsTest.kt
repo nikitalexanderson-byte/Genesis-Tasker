@@ -55,9 +55,9 @@ class FullQaNativeHttpsTest {
             return JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
         } finally { connection.disconnect() }
     }
-    private fun signIn(plan: String): Pair<AuthSessionClient, Long> {
+    private fun signIn(plan: String, identity: String = "primary"): Pair<AuthSessionClient, Long> {
         cookie = ""
-        assertTrue(request("/api/qa/login?tier=$plan").getBoolean("synthetic"))
+        assertTrue(request("/api/qa/login?tier=$plan&identity=$identity").getBoolean("synthetic"))
         val session = request("/api/session")
         val user = session.getJSONObject("user")
         check(user.getString("email").endsWith("@example.invalid"))
@@ -89,6 +89,10 @@ class FullQaNativeHttpsTest {
             assertTrue(settings.featureAccess.enforcementEnabled)
             assertTrue(settings.featureAccess.allows("calendar-sync"))
             assertFalse(settings.featureAccess.allows("assistant"))
+            if (plan == "free") {
+                try { client.referrals(generation, "GET", "/referrals/me"); fail("Free referral access must be rejected") }
+                catch (error: AuthApiError) { assertEquals("standardRequired", referralErrorKey(error)) }
+            } else assertEquals(10, client.referrals(generation, "GET", "/referrals/me").getInt("monthlyLimit"))
             val paidTeam = plan in setOf("business", "premium4life")
             assertEquals(paidTeam, settings.featureAccess.allows("shared-projects"))
             // Read/export of existing shared data deliberately survives a downgrade.
@@ -140,6 +144,11 @@ class FullQaNativeHttpsTest {
             } finally { key.fill(0) }
             assertTrue(WorkspaceStructureRepository(app).workspace.first().projects.any { it.id == id && it.title == title })
             assertFalse(app.database.dao().document(scope, "structure")!!.encrypted.contains(title))
+            // Linked login still opens the same workspace, but cannot manage primary-only rewards.
+            val (linked, linkedGeneration) = signIn(plan, "linked")
+            assertEquals(uid, linked.session(linkedGeneration).getJSONObject("user").getString("uid"))
+            try { linked.referrals(linkedGeneration, "GET", "/referrals/me"); fail("Linked identity must not manage primary-only rewards") }
+            catch (error: AuthApiError) { assertEquals("primaryRequired", referralErrorKey(error)) }
             // Log into another ordinary account. Its server workspace must not contain this user's data.
             val (outsider, outsiderGeneration) = signIn("outsider")
             assertNotEquals(uid, outsider.session(outsiderGeneration).getJSONObject("user").getString("uid"))

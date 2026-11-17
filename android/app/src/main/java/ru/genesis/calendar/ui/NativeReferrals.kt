@@ -15,6 +15,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import ru.genesis.calendar.auth.AuthController
+import ru.genesis.calendar.auth.referralErrorKey
 
 @Composable internal fun referralCopy(language: String = LocalGenesisLanguage.current): JSONObject {
     val context = LocalContext.current
@@ -23,18 +24,28 @@ import ru.genesis.calendar.auth.AuthController
 
 /** Source preparation for 3.3.5. Prices and rewards are always checked by the server. */
 @Composable internal fun NativeReferrals(controller: AuthController, userId: String, language: String) {
+    NativeReferrals(userId, language) { method, path, body ->
+        controller.referrals(method, path, body).also {
+            if (method == "POST" && path == "/referrals/redeem") controller.checkSession()
+        }
+    }
+}
+
+@Composable internal fun NativeReferrals(userId: String, language: String,
+    request: suspend (String, String, JSONObject?) -> JSONObject) {
     val c = referralCopy(language); val context = LocalContext.current; val scope = rememberCoroutineScope()
     var data by remember(userId) { mutableStateOf<JSONObject?>(null) }
     var expanded by remember(userId) { mutableStateOf(false) }
     var busy by remember(userId) { mutableStateOf(false) }
-    var error by remember(userId) { mutableStateOf(false) }
+    var error by remember(userId) { mutableStateOf<String?>(null) }
     var message by remember(userId) { mutableStateOf<String?>(null) }
     var reload by remember(userId) { mutableIntStateOf(0) }
     LaunchedEffect(userId, reload) {
-        error = false
-        try { data = controller.referrals("GET", "/referrals/me") }
+        error = null; busy = true
+        try { data = request("GET", "/referrals/me", null) }
         catch (cancel: CancellationException) { throw cancel }
-        catch (_: Exception) { error = true }
+        catch (failure: Exception) { error = referralErrorKey(failure); data = null; message = null }
+        finally { busy = false }
     }
     Column(Modifier.fillMaxWidth().testTag("consumer-referrals"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
@@ -56,26 +67,26 @@ import ru.genesis.calendar.auth.AuthController
                         message = c.getString("copied")
                     }, modifier = Modifier.heightIn(min = 48.dp)) { UntranslatedText(c.getString("copy")) }
                 } else Button(onClick = { if (!busy) scope.launch {
-                    busy = true; error = false
-                    try { data = controller.referrals("POST", "/referrals/code", JSONObject()) }
+                    busy = true; error = null
+                    try { data = request("POST", "/referrals/code", JSONObject()) }
                     catch (cancel: CancellationException) { throw cancel }
-                    catch (_: Exception) { error = true } finally { busy = false }
+                    catch (failure: Exception) { error = referralErrorKey(failure); if (error != "error") data = null; message = null } finally { busy = false }
                 } }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { UntranslatedText(c.getString("create")) }
                 if (current.optBoolean("used")) UntranslatedText(c.getString("used"))
                 if (current.optBoolean("canRedeemFreeMonth")) Button(onClick = { if (!busy) scope.launch {
-                    busy = true; error = false
+                    busy = true; error = null
                     try {
-                        controller.referrals("POST", "/referrals/redeem", JSONObject())
-                        message = c.getString("success"); reload++; controller.checkSession()
+                        request("POST", "/referrals/redeem", JSONObject())
+                        message = c.getString("success"); reload++
                     } catch (cancel: CancellationException) { throw cancel }
-                    catch (_: Exception) { error = true } finally { busy = false }
+                    catch (failure: Exception) { error = referralErrorKey(failure); if (error != "error") data = null; message = null } finally { busy = false }
                 } }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { UntranslatedText(c.getString("freeMonth")) }
             }
             UntranslatedText(c.getString("privacy"), style = MaterialTheme.typography.bodySmall)
             message?.let { UntranslatedText(it) }
-            if (error) {
-                UntranslatedText(c.getString("error"), color = MaterialTheme.colorScheme.error)
-                OutlinedButton(onClick = { reload++ }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { UntranslatedText(c.getString("retry")) }
+            error?.let { key ->
+                UntranslatedText(c.getString(key), color = MaterialTheme.colorScheme.error)
+                if (key == "error") OutlinedButton(onClick = { reload++ }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { UntranslatedText(c.getString("retry")) }
             }
         }
     }

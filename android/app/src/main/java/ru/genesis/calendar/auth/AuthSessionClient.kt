@@ -801,7 +801,7 @@ internal class AuthSessionClient(context: Context) {
             phase = "status"
             val status = connection.responseCode
             if (status !in 200..299) {
-                if (status == 403 || status == 409 && (BackupProtocol.allowedRoute(method,path)||BackupProtocol.personalWrite(method,path)||method == "POST" && path in setOf("/billing/orders", "/billing/trial"))) {
+                if (status == 403 || status == 409 && (allowedReferralRoute(method,path)||BackupProtocol.allowedRoute(method,path)||BackupProtocol.personalWrite(method,path)||method == "POST" && path in setOf("/billing/orders", "/billing/trial"))) {
                     val accessCode = runCatching {
                         val output = ByteArrayOutputStream()
                         connection.errorStream?.use { input ->
@@ -815,6 +815,7 @@ internal class AuthSessionClient(context: Context) {
                         JSONObject(output.toString(Charsets.UTF_8.name())).optString("error")
                     }.getOrDefault("")
                     // Preserve only known public access/price codes; other HTTP handling stays unchanged.
+                    if (allowedReferralRoute(method, path)) referralAccessError(status, accessCode)?.let { throw it }
                     if (status == 403 && accessCode in setOf("FEATURE_SUBSCRIPTION_REQUIRED", "SUBSCRIPTION_QUOTA_personal-projects",
                             "SUBSCRIPTION_QUOTA_habits", "SUBSCRIPTION_QUOTA_mindmaps", "SUBSCRIPTION_QUOTA_diary",
                             "SUBSCRIPTION_QUOTA_shared-projects", "SUBSCRIPTION_QUOTA_shared-mindmaps")) throw AuthApiError(accessCode)

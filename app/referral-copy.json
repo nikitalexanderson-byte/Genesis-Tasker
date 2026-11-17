@@ -23,7 +23,10 @@
     "discount": "Реферальная скидка",
     "invitation": "Код приглашения друга",
     "saved": "Приглашение сохранено. Оно будет учтено при первой регистрации через Google.",
-    "apply": "Применить код"
+    "apply": "Применить код",
+    "primaryRequired": "Приглашениями можно управлять только через основной Google-аккаунт, указанный в разделе «Тариф и доступ». Выйдите из GENESIS и войдите через него.",
+    "standardRequired": "Для приглашений нужен действующий тариф Standard или выше.",
+    "privateProgram": "В этом аккаунте действует отдельная партнёрская программа. Обычные приглашения недоступны."
   },
   "en": {
     "title": "Invitations and discounts",
@@ -49,7 +52,10 @@
     "discount": "Referral discount",
     "invitation": "Friend invitation code",
     "saved": "Invitation saved. It will be applied when you first register through Google.",
-    "apply": "Apply code"
+    "apply": "Apply code",
+    "primaryRequired": "To manage invitations, sign in with the primary Google account shown under Plan and access. Sign out of GENESIS, then sign in with that account.",
+    "standardRequired": "Invitations require an active Standard plan or higher.",
+    "privateProgram": "This account uses a separate partner program. Regular invitations are unavailable."
   },
   "el": {
     "title": "Προσκλήσεις και εκπτώσεις",
@@ -75,7 +81,10 @@
     "discount": "Έκπτωση παραπομπών",
     "invitation": "Κωδικός πρόσκλησης φίλου",
     "saved": "Η πρόσκληση αποθηκεύτηκε. Θα ληφθεί υπόψη κατά την πρώτη σας εγγραφή μέσω Google.",
-    "apply": "Εφαρμογή κωδικού"
+    "apply": "Εφαρμογή κωδικού",
+    "primaryRequired": "Για να διαχειριστείτε προσκλήσεις, συνδεθείτε με τον κύριο λογαριασμό Google που εμφανίζεται στην ενότητα προγράμματος και πρόσβασης. Αποσυνδεθείτε από το GENESIS και συνδεθείτε με αυτόν τον λογαριασμό.",
+    "standardRequired": "Οι προσκλήσεις απαιτούν ενεργό πρόγραμμα Standard ή ανώτερο.",
+    "privateProgram": "Αυτός ο λογαριασμός συμμετέχει σε ξεχωριστό πρόγραμμα συνεργατών. Οι συνηθισμένες προσκλήσεις δεν είναι διαθέσιμες."
   },
   "de": {
     "title": "Einladungen und Rabatte",
@@ -101,7 +110,10 @@
     "discount": "Empfehlungsrabatt",
     "invitation": "Einladungscode eines Freundes",
     "saved": "Einladung gespeichert. Sie wird bei deiner ersten Registrierung über Google berücksichtigt.",
-    "apply": "Code anwenden"
+    "apply": "Code anwenden",
+    "primaryRequired": "Melde dich zum Verwalten von Einladungen mit dem primären Google-Konto an, das im Bereich Tarif und Zugriff angezeigt wird. Melde dich von GENESIS ab und anschließend mit diesem Konto an.",
+    "standardRequired": "Einladungen erfordern einen aktiven Tarif Standard oder höher.",
+    "privateProgram": "Dieses Konto nimmt an einem separaten Partnerprogramm teil. Reguläre Einladungen sind nicht verfügbar."
   },
   "fr": {
     "title": "Invitations et réductions",
@@ -127,7 +139,10 @@
     "discount": "Réduction de parrainage",
     "invitation": "Code d’invitation d’un ami",
     "saved": "Invitation enregistrée. Elle sera prise en compte lors de votre première inscription via Google.",
-    "apply": "Appliquer le code"
+    "apply": "Appliquer le code",
+    "primaryRequired": "Pour gérer les invitations, connectez-vous avec le compte Google principal indiqué dans la section de votre forfait et de vos accès. Déconnectez-vous de GENESIS, puis reconnectez-vous avec ce compte.",
+    "standardRequired": "Les invitations nécessitent un forfait Standard actif ou supérieur.",
+    "privateProgram": "Ce compte participe à un programme partenaire distinct. Les invitations ordinaires ne sont pas disponibles."
   },
   "es": {
     "title": "Invitaciones y descuentos",
@@ -153,7 +168,10 @@
     "discount": "Descuento por invitaciones",
     "invitation": "Código de invitación de un amigo",
     "saved": "Invitación guardada. Se tendrá en cuenta cuando te registres por primera vez a través de Google.",
-    "apply": "Aplicar código"
+    "apply": "Aplicar código",
+    "primaryRequired": "Para gestionar invitaciones, inicia sesión con la cuenta principal de Google indicada en la sección de plan y acceso. Cierra sesión en GENESIS y vuelve a entrar con esa cuenta.",
+    "standardRequired": "Las invitaciones requieren un plan Standard activo o superior.",
+    "privateProgram": "Esta cuenta utiliza un programa de socios independiente. Las invitaciones habituales no están disponibles."
   },
   "it": {
     "title": "Inviti e sconti",
@@ -179,7 +197,10 @@
     "discount": "Sconto per gli inviti",
     "invitation": "Codice d’invito di un amico",
     "saved": "Invito salvato. Verrà considerato alla tua prima registrazione tramite Google.",
-    "apply": "Applica codice"
+    "apply": "Applica codice",
+    "primaryRequired": "Per gestire gli inviti, accedi con l’account Google principale indicato nella sezione del piano e degli accessi. Esci da GENESIS, poi accedi con quell’account.",
+    "standardRequired": "Gli inviti richiedono un piano Standard attivo o superiore.",
+    "privateProgram": "Questo account utilizza un programma partner separato. Gli inviti ordinari non sono disponibili."
   },
   "pt": {
     "title": "Convites e descontos",
@@ -205,7 +226,10 @@
     "discount": "Desconto por convites",
     "invitation": "Código de convite de um amigo",
     "saved": "Convite guardado. Será considerado quando se registar pela primeira vez através do Google.",
-    "apply": "Aplicar código"
+    "apply": "Aplicar código",
+    "primaryRequired": "Para gerir convites, inicie sessão com a conta Google principal indicada na secção do plano e acesso. Termine a sessão no GENESIS e volte a entrar com essa conta.",
+    "standardRequired": "Os convites exigem um plano Standard ativo ou superior.",
+    "privateProgram": "Esta conta utiliza um programa de parceiros separado. Os convites habituais não estão disponíveis."
   },
   "pl": {
     "title": "Zaproszenia i zniżki",
@@ -231,7 +255,10 @@
     "discount": "Zniżka za polecenia",
     "invitation": "Kod zaproszenia od znajomego",
     "saved": "Zaproszenie zapisane. Zostanie uwzględnione przy Twojej pierwszej rejestracji przez Google.",
-    "apply": "Zastosuj kod"
+    "apply": "Zastosuj kod",
+    "primaryRequired": "Aby zarządzać zaproszeniami, zaloguj się przez główne konto Google widoczne w sekcji planu i dostępu. Wyloguj się z GENESIS, a następnie zaloguj przez to konto.",
+    "standardRequired": "Zaproszenia wymagają aktywnego planu Standard lub wyższego.",
+    "privateProgram": "To konto korzysta z osobnego programu partnerskiego. Zwykłe zaproszenia są niedostępne."
   },
   "sr": {
     "title": "Позивнице и попусти",
@@ -257,7 +284,10 @@
     "discount": "Попуст за препоруке",
     "invitation": "Код позивнице пријатеља",
     "saved": "Позивница је сачувана. Биће узета у обзир при вашој првој регистрацији преко Google налога.",
-    "apply": "Примени код"
+    "apply": "Примени код",
+    "primaryRequired": "За управљање позивницама пријавите се преко главног Google налога приказаног у одељку за план и приступ. Одјавите се из GENESIS-а, па се пријавите преко тог налога.",
+    "standardRequired": "За позивнице је потребан активан план Standard или виши.",
+    "privateProgram": "Овај налог користи засебан партнерски програм. Обичне позивнице нису доступне."
   },
   "uk": {
     "title": "Запрошення та знижки",
@@ -283,7 +313,10 @@
     "discount": "Реферальна знижка",
     "invitation": "Код запрошення друга",
     "saved": "Запрошення збережено. Його буде враховано під час першої реєстрації через Google.",
-    "apply": "Застосувати код"
+    "apply": "Застосувати код",
+    "primaryRequired": "Керувати запрошеннями можна лише через основний Google-акаунт, указаний у розділі «Тариф і доступ». Вийдіть із GENESIS і увійдіть через нього.",
+    "standardRequired": "Для запрошень потрібен чинний тариф Standard або вище.",
+    "privateProgram": "Для цього акаунта діє окрема партнерська програма. Звичайні запрошення недоступні."
   },
   "zh": {
     "title": "邀请与折扣",
@@ -309,7 +342,10 @@
     "discount": "邀请折扣",
     "invitation": "好友邀请码",
     "saved": "邀请已保存。您首次通过 Google 注册时将计入此邀请。",
-    "apply": "应用邀请码"
+    "apply": "应用邀请码",
+    "primaryRequired": "要管理邀请，请使用套餐与访问权限部分显示的主要 Google 账号登录。请先退出 GENESIS，再使用该账号登录。",
+    "standardRequired": "邀请功能需要有效的 Standard 或更高级别套餐。",
+    "privateProgram": "此账号使用独立的合作伙伴计划，无法使用普通邀请。"
   },
   "tr": {
     "title": "Davetler ve indirimler",
@@ -335,7 +371,10 @@
     "discount": "Davet indirimi",
     "invitation": "Arkadaş davet kodu",
     "saved": "Davet kaydedildi. Google üzerinden ilk kez kaydolduğunuzda hesaba katılacak.",
-    "apply": "Kodu uygula"
+    "apply": "Kodu uygula",
+    "primaryRequired": "Davetleri yönetmek için plan ve erişim bölümünde gösterilen birincil Google hesabıyla giriş yapın. GENESIS oturumunu kapatıp o hesapla tekrar giriş yapın.",
+    "standardRequired": "Davetler için etkin bir Standard veya daha üst plan gerekir.",
+    "privateProgram": "Bu hesap ayrı bir iş ortağı programı kullanıyor. Normal davetler kullanılamaz."
   },
   "ja": {
     "title": "招待と割引",
@@ -361,6 +400,9 @@
     "discount": "紹介割引",
     "invitation": "友達の招待コード",
     "saved": "招待を保存しました。Google で初めて登録する際に適用されます。",
-    "apply": "コードを適用"
+    "apply": "コードを適用",
+    "primaryRequired": "招待を管理するには、プランとアクセス権の欄に表示されているメインの Google アカウントでログインしてください。GENESIS からログアウトしてから、そのアカウントでログインし直してください。",
+    "standardRequired": "招待機能には、有効な Standard 以上のプランが必要です。",
+    "privateProgram": "このアカウントは別のパートナープログラムを利用しているため、通常の招待機能は利用できません。"
   }
 }
