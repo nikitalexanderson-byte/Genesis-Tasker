@@ -34,7 +34,8 @@ import kotlin.coroutines.resume
 @Composable
 internal fun SecurityUpdateBoundary(app: GenesisApplication, content: @Composable () -> Unit) {
     val blocked by UpdateGate.blocked.collectAsState()
-    val prefs by remember(app) { LocalPreferences(app,app.workspaceScope).values }.collectAsState(UiPreferences())
+    val currentScope by app.scopeFlow.collectAsState()
+    val prefs by remember(app,currentScope) { LocalPreferences(app,currentScope).values }.collectAsState(UiPreferences())
     val scope = rememberCoroutineScope()
     val resumeEpoch = rememberUpdateResumeEpoch()
     val manager = remember(app) { if (BuildConfig.PLAY_DISTRIBUTION) AppUpdateManagerFactory.create(app) else null }
@@ -78,8 +79,10 @@ internal fun SecurityUpdateBoundary(app: GenesisApplication, content: @Composabl
     }
     LaunchedEffect(resumeEpoch) { checkAvailability(false) }
     if (!blocked) { content(); return }
-    CompositionLocalProvider(LocalGenesisLanguage provides prefs.language) {
-        MaterialTheme(colorScheme=if(prefs.theme in setOf("standart-dark", "experimental-dark"))eveningPalette(prefs.darkPalette) else daylightPalette(prefs.darkPalette),typography=GenesisTypography) {
+    val eveningTheme=rememberEveningTheme(AppearanceSettings.read("{}",prefs.theme))
+    CompositionLocalProvider(LocalGenesisLanguage provides prefs.language,
+        LocalEveningTheme provides eveningTheme, LocalDarkPalette provides prefs.darkPalette) {
+        MaterialTheme(colorScheme=if(eveningTheme)eveningPalette(prefs.darkPalette) else daylightPalette(prefs.darkPalette),typography=GenesisTypography) {
             Surface(modifier=Modifier.fillMaxSize()) {
                 val copy=securityUpdateCopy(prefs.language)
                 Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
