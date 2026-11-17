@@ -4,7 +4,8 @@ import { AccountRecoveryPanel } from './AccountSecurityPanels';
 /* eslint-disable @next/next/no-img-element -- Google requires the official, unmodified sign-in asset. */
 
 import { LANGUAGES, LANGUAGE_LABELS, translateText, type Language } from "./i18n";
-import {publicProductCopy, publicProductHtml, publicMerchantHtml} from './public-product';
+import {publicProductCopy, publicMerchantHtml} from './public-product';
+import {PublicProduct} from './PublicProduct';
 import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
 import { useEffect, useState } from 'react';
@@ -187,7 +188,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
         </aside>
       </section>
 
-      <div className="public-product" data-no-translate dangerouslySetInnerHTML={{__html:publicProductHtml(language)}} />
+      <PublicProduct language={language} />
     </main>
   );
 }
