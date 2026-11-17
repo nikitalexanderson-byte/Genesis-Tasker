@@ -92,6 +92,7 @@ data class AccountSettings(
     internal val profileReceipt: LiveAccountReceipt? = null,
     val darkPalette: String = "green",
     val emailVerification: EmailVerificationStatus = EmailVerificationStatus(),
+    val privatePartnerPanelEnabled: Boolean = false,
 ) {
     companion object {
         fun fromResponse(response: JSONObject, trialProof: TrialLiveProof? = null,
@@ -154,7 +155,8 @@ data class AccountSettings(
                 user.optJSONArray("adviceCollectionsReady")?.strings()?.filter { it in adviceCollections } ?: listOf("aurora"),
                 profileTrial ?: access.trial, profileReceipt?.takeIf { it.userId == user.optString("uid") },
                 user.optString("darkPalette", "green").takeIf { it in setOf("green","burgundy","blue","violet") } ?: "green",
-                EmailVerificationStatus.fromJson(user.optJSONObject("emailVerification")))
+                EmailVerificationStatus.fromJson(user.optJSONObject("emailVerification")),
+                user.optJSONObject("partnerAccess")?.optBoolean("panelEnabled") == true)
         }
     }
 }

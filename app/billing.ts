@@ -2,7 +2,7 @@ import type { FeatureAccess } from './feature-access';
 import {resolvedFeatureAccess, type BillingTrial} from './billing-trial.ts';
 import approvedPolicy from '../server/resources/feature-access-policy.json' with {type:'json'};
 import approvedCatalog from '../server/resources/billing-catalog.json' with {type:'json'};
-export type BillingProvider = 'google-play' | 'lemon-squeezy' | 'yookassa';
+export type BillingProvider = 'google-play' | 'paddle' | 'lemon-squeezy' | 'yookassa';
 export type BillingPrice={amountMinor:number;currency:string};
 export type BillingForeignRate={quotePerBase:string;effectiveDate:string;source?:string};
 export type BillingOffer = {id:string;plan:string;periodMonths:number;amountMinor:number|null;currency:string|null;availableProviders:BillingProvider[];seatLimit?:number;pricesByProvider?:Partial<Record<BillingProvider,BillingPrice>>};
@@ -11,7 +11,7 @@ export type BillingCatalog = {schemaVersion:1;checkoutEnabled:boolean;providers:
   offers:BillingOffer[];lifetimeSeats:{total:number;remaining:number};policy:BillingPolicy;
   trial?:BillingTrial;
   routing?:import('./billing-location').PaymentRouting;foreignPricing?:{pricingModel?:'fixed'|'fx-snapshot';rate?:BillingForeignRate|null}};
-export type BillingQuote = {offerId:string;plan:string;periodMonths:number;currentPlan:string;currency:string;listAmountMinor:number;creditMinor:number;amountMinor:number;quotedAt:string;validUntil:string|null;availableProviders:BillingProvider[];provider?:BillingProvider;pendingOrderId?:string|null;settlementOrderId?:string|null;upgradeUnavailableReason?:'shorter-period'|'upgrade-pending'|'already-lifetime'|'credit-covers-price'|'lifetime-credit-unavailable'|'credit-currency-unavailable'|'credit-source-unverified'|'credit-checkout-unavailable'|'settlement-required'|null;recommendedPeriodMonths?:number|null};
+export type BillingQuote = {referralDiscountMinor?:number;referralPercent?:number;referralMonth?:string|null;referralFreeMonthAvailable?:boolean;offerId:string;plan:string;periodMonths:number;currentPlan:string;currency:string;listAmountMinor:number;creditMinor:number;amountMinor:number;quotedAt:string;validUntil:string|null;availableProviders:BillingProvider[];provider?:BillingProvider;pendingOrderId?:string|null;settlementOrderId?:string|null;upgradeUnavailableReason?:'shorter-period'|'upgrade-pending'|'already-lifetime'|'credit-covers-price'|'lifetime-credit-unavailable'|'credit-currency-unavailable'|'credit-source-unverified'|'credit-checkout-unavailable'|'settlement-required'|null;recommendedPeriodMonths?:number|null};
 export type BillingSettlement = {status:'verifying'|'refund-required'|'refund-pending'|'refunded'|'cancelled'|'failed';reason:string|null;deficitMinor:number;refundAmountMinor:number|null;currency:string;retryAt:string|null;errorCode:string|null};
 export type BillingOrder = {id:string;plan:string;periodMonths:number;provider:BillingProvider;status:string;settlement:BillingSettlement|null;checkoutUrl:string|null;productId:string;amountMinor:number;currency:string;listAmountMinor:number;creditMinor:number};
 export const BILLING_PLANS = ['free','standart','premium','business','premium4life'] as const;
@@ -55,10 +55,10 @@ export function billingOfferPrice(offer:BillingOffer,provider:BillingProvider):B
 }
 /** Display-only fallback uses the same fixed USD catalog as the server; API prices take precedence. */
 export function billingDisplayPrice(plan:BillingPlan,months:number,catalog:BillingCatalog|null,provider:BillingProvider):BillingPrice|null {
-  if(plan==='free')return {amountMinor:0,currency:provider==='lemon-squeezy'?'USD':'RUB'};
+  if(plan==='free')return {amountMinor:0,currency:(provider==='paddle'||provider==='lemon-squeezy')?'USD':'RUB'};
   const offer=catalog?.offers.find(value=>value.plan===plan&&value.periodMonths===(plan==='premium4life'?0:months));
   if(offer?.pricesByProvider?.[provider])return offer.pricesByProvider[provider]!;
-  if(provider==='lemon-squeezy'){
+  if((provider==='paddle'||provider==='lemon-squeezy')){
     const foreign=approvedCatalog.foreignPricing;
     const amount=plan==='premium4life'?foreign.lifetimeAmountMinor:(foreign.prices as Record<string,Record<string,number>>)[plan]?.[String(months)];
     return typeof amount==='number'?{amountMinor:amount,currency:foreign.currency}:null;
@@ -70,7 +70,7 @@ export function billingCheckoutReady(catalog:BillingCatalog|null,offer:BillingOf
   const price=offer?billingOfferPrice(offer,provider):null;
   const pending=typeof quote?.pendingOrderId==='string'&&/^[a-zA-Z0-9_-]{16,100}$/.test(quote.pendingOrderId);
   return Boolean(catalog?.checkoutEnabled&&offer&&quote&&!quote.upgradeUnavailableReason&&quote.offerId===offer.id&&quote.plan===offer.plan&&quote.periodMonths===offer.periodMonths
-    &&[quote.amountMinor,quote.listAmountMinor,quote.creditMinor].every(Number.isSafeInteger)&&quote.amountMinor>0&&quote.creditMinor>=0&&quote.listAmountMinor-quote.creditMinor===quote.amountMinor
+    &&[quote.amountMinor,quote.listAmountMinor,quote.creditMinor,quote.referralDiscountMinor??0].every(Number.isSafeInteger)&&quote.amountMinor>0&&quote.creditMinor>=0&&(quote.referralDiscountMinor??0)>=0&&quote.listAmountMinor-quote.creditMinor-(quote.referralDiscountMinor??0)===quote.amountMinor
     &&/^[A-Z]{3}$/.test(quote.currency)&&(pending||quote.currency===price?.currency&&quote.listAmountMinor===price?.amountMinor)
     &&(!quote.provider||quote.provider===provider)
     &&quote.availableProviders?.includes(provider)&&offer.availableProviders.includes(provider)&&catalog.providers.some(method=>method.id===provider&&method.available));

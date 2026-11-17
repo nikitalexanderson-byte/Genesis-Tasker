@@ -6,7 +6,7 @@ export type FunctionShare={deityId:CuratorId;share:number};
 export type DrawnCard={cardId:string;cardInstanceId:string;sourcePositionId:SectorId;orientation:Orientation;weight:number;
   functions:readonly FunctionShare[]|null;temporalRole:'kronos'|'chronos'|null;unresolvedReason?:string};
 export type PrimaryDrawSnapshot={id:string;source:'stoicheion-spread';sourceModelId:string;secondaryModelId:string;anchorMapVersion:string;layoutId:string;projectionVersion:string;
-  sourceDay:string;sourceSeed:number;createdAt:string;cards:readonly DrawnCard[]};
+  sourceDay:string;sourceSeed:number;createdAt:string;cards:readonly DrawnCard[];sourceCardRevision?:number;sourceCards?:readonly {cardId:string;reversed:boolean}[]};
 export type Matrix=number[][];
 export type BasePotentials={kind:'base';values:Matrix};
 export type KronosAdjustedPotentials={kind:'kronos-adjusted';values:Matrix;operatorVersion:string;orientation:Orientation|'absent'};

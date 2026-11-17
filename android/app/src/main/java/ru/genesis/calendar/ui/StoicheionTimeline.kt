@@ -113,9 +113,11 @@ internal data class StoicheionTimePosition(val id: String, val title: String, va
                         }
                         if (card != null) {
                             val remaining = session?.remainingSeconds(index, now) ?: 0
-                            OutlinedButton(onClick = { onCardAction(index, "reroll") }, enabled = allowed && !busy && remaining > 0,
+                            val canReroll = session?.canReroll(index, now) == true
+                            OutlinedButton(onClick = { onCardAction(index, "reroll") }, enabled = allowed && !busy && canReroll,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("stoicheion-reroll-timeline-$index")) {
-                                UntranslatedText(if (remaining > 0) "${copy.getString("rerollCard")} · ${countdown(remaining)}"
+                                UntranslatedText(if (canReroll && session?.cards?.get(index)?.unlimited == true) copy.getString("rerollCard")
+                                    else if (remaining > 0) "${copy.getString("rerollCard")} · ${countdown(remaining)}"
                                     else copy.getString(if (session?.cards?.get(index)?.rerolled == true) "rerollUsed" else "rerollExpired"),
                                     style = MaterialTheme.typography.labelSmall)
                             }

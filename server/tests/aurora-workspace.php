@@ -20,7 +20,7 @@ auroraExpect(genesisAuroraPrepareResult('a',$manifest)['ready']===true,'Encrypte
 genesisAuroraPrepareResult('a',$manifest);
 try{genesisAuroraPrepareResult('a',[...$manifest,'amountMinor'=>1]);throw new RuntimeException('Client price accepted.');}catch(InvalidArgumentException){}
 try{genesisAuroraPrepareResult('a',[...$manifest,'ciphertext'=>base64_encode(random_bytes(128))]);throw new RuntimeException('Immutable result overwritten.');}catch(GenesisResourceLimitException $e){auroraExpect($e->status===409,'Wrong immutable status.');}
-try{genesisModelingResult('a',$manifest['id']);throw new RuntimeException('Unpaid result opened.');}catch(GenesisResourceLimitException $e){auroraExpect($e->status===402,'Wrong payment status.');}
+auroraExpect(genesisModelingResult('a',$manifest['id'])['solution']['kind']==='aurora-encrypted-solution-v1','Elite included result did not open.');
 try{genesisModelingResult('b',$manifest['id']);throw new RuntimeException('Other owner result opened.');}catch(GenesisResourceLimitException $e){auroraExpect($e->status===404,'Wrong owner status.');}
 $db->exec("UPDATE users SET forecast_elite_plus=1 WHERE id='a'");$opened=genesisModelingResult('a',$manifest['id']);auroraExpect($opened['solution']['kind']==='aurora-encrypted-solution-v1','Elite+ result mismatch.');
 $source=new PDO('sqlite:'.$fixture.'/genesis.sqlite');$backup=$fixture.'/backup.sqlite';$source->exec('VACUUM INTO '.$source->quote($backup));$copy=new PDO('sqlite:'.$backup);

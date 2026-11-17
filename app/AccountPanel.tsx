@@ -1,6 +1,9 @@
 "use client";
 import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
 import { partnerText } from './partner-copy';
+import {ReferralsPanel} from './ReferralsPanel';
+import {effectiveBillingPlan} from './billing';
+import {loadGenesisSession} from './cloud-sync';
 
 import {DreamJournalSettings} from './DreamJournalSettings';
 import { DonationLink } from "./DonationLink";
@@ -593,6 +596,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
 
         {settingsTab==='account'?<BillingPanel user={user}/>:null}
         {settingsTab === 'account' && onOpenPartners ? <section className="account-preferences" data-no-translate><h3>{partnerText('partner', user.language)}</h3><button type="button" onClick={onOpenPartners}>{partnerText('open', user.language)}</button></section> : null}
+        {settingsTab==='account'&&!user.partnerAccess?.panelEnabled&&['premium','business','premium4life'].includes(effectiveBillingPlan(user.featureAccess?.source==='trial'?user.featureAccess.paidAccess:user.featureAccess))?<ReferralsPanel language={user.language} onAccessChange={async()=>{const refreshed=await loadGenesisSession();if(refreshed)onUserChange(refreshed);}}/>:null}
         {settingsTab==='backups'?<BackupPanel key={`backups:${user.uid}`} user={user}/>:null}
         {settingsTab==='account'&&user.authProvider==='google'?<GoogleIdentityPanel key={`identities:${user.uid}`} user={user}/>:null}
         <div className="account-security-grid" data-settings-group="account">

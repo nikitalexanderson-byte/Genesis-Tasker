@@ -17,13 +17,16 @@
     <div id="root">
       <main class="welcome-screen" aria-labelledby="fallback-title">
         <div class="welcome-shell">
+          <header class="welcome-nav"><a class="welcome-brand" href="/">GENESIS</a><nav aria-label="GENESIS"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="/login#sign-in">Sign In</a></nav></header>
           <section class="welcome-copy">
             <p class="welcome-kicker">GENESIS · КАЛЕНДАРЬ И МЕНЕДЖЕР ПРОЕКТОВ</p>
             <h1 id="fallback-title"><span>Genesis Tasker</span><em>Календарь задач и проектов</em></h1>
             <p>
+              GENESIS is a cloud task planner, habit tracker and calendar with optional two-way Google Calendar and Google Tasks synchronization.
               GENESIS помогает планировать личные и рабочие задачи, проекты, подпроекты,
               повторения и напоминания, видеть план дня и отмечать выполненное.
             </p>
+            <p class="public-hero-actions"><a class="public-action" href="#pricing">See Pricing</a><a href="/login#sign-in">Get Started</a></p>
             <section class="google-data-purpose" aria-labelledby="fallback-google-purpose">
               <h2 id="fallback-google-purpose">Как GENESIS использует Google Calendar и Google Tasks</h2>
               <p>
@@ -35,6 +38,7 @@
             <section class="google-data-purpose" aria-labelledby="fallback-service-owner">
               <h2 id="fallback-service-owner">Сервис GENESIS и домен</h2>
               <p>%GENESIS_SERVICE_IDENTITY%</p>
+              %GENESIS_PUBLIC_MERCHANT%
               <p>Нейросетевой помощник GENESIS разбирает команды и готовит план задач. GENESIS не создаёт интимные изображения без согласия (AI NCII) и не использует Google API для этой цели.</p>
             </section>
             <nav class="welcome-top-links" aria-label="Правовая информация">
@@ -43,6 +47,7 @@
               <a href="/support">Поддержка</a>
             </nav>
           </section>
+          <div class="public-product">%GENESIS_PUBLIC_CONTENT%</div>
         </div>
       </main>
     </div>

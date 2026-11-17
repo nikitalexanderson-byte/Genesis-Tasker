@@ -5,14 +5,16 @@ import java.time.LocalDate
 import org.json.JSONObject
 
 data class StoicheionTimelineWindow(val position: Int, val firstAt: Long, val deadline: Long, val rerolled: Boolean,
-    val canReroll: Boolean) {
-    fun remainingSeconds(now: Long): Int = if (rerolled || !canReroll) 0 else ((deadline - now + 999L) / 1000L).coerceIn(0L, 180L).toInt()
+    val canReroll: Boolean, val unlimited: Boolean = false) {
+    fun remainingSeconds(now: Long): Int = if (rerolled || !canReroll || unlimited) 0 else ((deadline - now + 999L) / 1000L).coerceIn(0L, 180L).toInt()
+    fun rerollAllowed(now: Long): Boolean = canReroll && (unlimited || remainingSeconds(now) > 0)
 }
 
 data class StoicheionTimelineState(val dayKey: String, val periodKey: String, val seed: Long,
     val revision: Long, val firstAt: Long, val cards: List<StoicheionTimelineWindow>, val clockOffset: Long) {
     fun asDraw() = StoicheionDraw("timeline", dayKey, seed, 2, firstAt, firstAt)
     fun remainingSeconds(position: Int, deviceNow: Long): Int = cards.getOrNull(position)?.remainingSeconds(deviceNow + clockOffset) ?: 0
+    fun canReroll(position: Int, deviceNow: Long): Boolean = cards.getOrNull(position)?.rerollAllowed(deviceNow + clockOffset) == true
 }
 
 internal object StoicheionTimelineWire {
@@ -34,7 +36,7 @@ internal object StoicheionTimelineWire {
             val first = Instant.parse(card.getString("firstRevealedAt")).toEpochMilli()
             val deadline = Instant.parse(card.getString("rerollDeadline")).toEpochMilli()
             require(deadline <= first + 180_000L)
-            StoicheionTimelineWindow(index, first, deadline, card.getBoolean("rerolled"), card.getBoolean("canReroll"))
+            StoicheionTimelineWindow(index, first, deadline, card.getBoolean("rerolled"), card.getBoolean("canReroll"), card.optBoolean("unlimited"))
         }
         return StoicheionTimelineState(day.toString(), period.toString(), seed, revision,
             Instant.parse(value.getString("firstDrawAt")).toEpochMilli(), cards, serverNow - receivedAt)

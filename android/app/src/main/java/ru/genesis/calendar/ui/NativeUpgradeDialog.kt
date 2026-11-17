@@ -76,7 +76,7 @@ internal fun nativeBillingProviderPrice(offer: JSONObject?, provider: String): P
     val raw = price.opt("amountMinor")
     if (raw !is Int && raw !is Long) return null
     val amount = (raw as Number).toLong(); val currency = price.optString("currency")
-    if (amount !in 1L..9_007_199_254_740_991L || currency != if (provider == "lemon-squeezy") "USD" else "RUB") return null
+    if (amount !in 1L..9_007_199_254_740_991L || currency != if (provider in setOf("paddle","lemon-squeezy")) "USD" else "RUB") return null
     return amount to currency
 }
 internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObject?, playDistribution: Boolean): List<String> {
@@ -84,7 +84,7 @@ internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObjec
     val providers = catalog?.optJSONArray("providers") ?: return emptyList()
     return (0 until providers.length()).mapNotNull { providers.optJSONObject(it) }.filter {
         val id = it.optString("id")
-        id in setOf("google-play", "yookassa", "lemon-squeezy") && (!playDistribution || id == "google-play") &&
+        id in setOf("google-play", "yookassa", "paddle") && (!playDistribution || id == "google-play") &&
             it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
     }.map { it.getString("id") }.distinct().sortedBy { if (it == preferred) 0 else 1 }
 }
@@ -282,7 +282,8 @@ internal fun nativeBillingShouldPoll(order: JSONObject): Boolean = nativeBilling
 
 internal data class NativeBillingQuote(val amount: Long, val list: Long, val credit: Long,
     val currency: String, val providers: List<String>, val validUntil: Instant?,
-    val unavailableReason: String?, val recommendedPeriodMonths: Int?, val settlementOrderId: String? = null) {
+    val unavailableReason: String?, val recommendedPeriodMonths: Int?, val settlementOrderId: String? = null,
+    val referralDiscount: Long = 0) {
     companion object {
         fun read(source: JSONObject, offer: JSONObject): NativeBillingQuote {
             require(source.getString("offerId") == offer.getString("id") && source.getString("plan") == offer.getString("plan") &&
@@ -292,7 +293,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                 return (raw as Number).toLong().also { require(it in 0L..9_007_199_254_740_991L) }
             }
             val amount = minor("amountMinor"); val list = minor("listAmountMinor"); val credit = minor("creditMinor")
-            require(amount >= 0 && list >= amount && credit in 0..list && list - credit == amount)
+            val referral = if (source.has("referralDiscountMinor")) minor("referralDiscountMinor") else 0L
+            require(amount >= 0 && list >= amount && credit in 0..list && referral in 0..list && list - credit - referral == amount)
             val pending = !source.isNull("pendingOrderId") && source.optString("pendingOrderId").isNotBlank()
             val currency = source.getString("currency"); require(currency.matches(Regex("[A-Z]{3}")) &&
                 (pending || currency == offer.getString("currency") && list == offer.getLong("amountMinor")))
@@ -300,7 +302,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                 source.optString("validUntil").takeIf { !source.isNull("validUntil") && it.isNotBlank() }?.let(Instant::parse),
                 source.optString("upgradeUnavailableReason").takeIf { !source.isNull("upgradeUnavailableReason") && it.isNotBlank() },
                 source.optInt("recommendedPeriodMonths").takeIf { it in listOf(1, 12) },
-                source.optString("settlementOrderId").takeIf { !source.isNull("settlementOrderId") && it.matches(Regex("[a-f0-9-]{36}")) })
+                source.optString("settlementOrderId").takeIf { !source.isNull("settlementOrderId") && it.matches(Regex("[a-f0-9-]{36}")) }, referral)
         }
     }
 }
@@ -493,7 +495,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 if (providerChoices.isNotEmpty()) {
                                     UpgradeText(copy("Способ оплаты", "Payment method"), style = MaterialTheme.typography.titleSmall)
                                     providerChoices.forEach { method ->
-                                        val methodName = when (method) { "google-play" -> "Google Play"; "yookassa" -> "ЮKassa"; else -> "Lemon Squeezy" }
+                                        val methodName = when (method) { "google-play" -> "Google Play"; "yookassa" -> "ЮKassa"; "paddle" -> "Paddle"; else -> method }
                                         androidx.compose.material3.Surface(onClick = { provider = method }, enabled = !busy, shape = AffairsLayout.shape,
                                             color = selectedControlContainer(provider == method,!busy),
                                             border = selectedControlBorder(provider == method,!busy),
@@ -504,7 +506,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                         }
                                     }
                                 }
-                                if (provider == "lemon-squeezy" && catalog?.optJSONObject("foreignPricing")?.optString("pricingModel") != "fixed") catalog?.optJSONObject("foreignPricing")?.optJSONObject("rate")?.let { rate ->
+                                if (provider in setOf("paddle","lemon-squeezy") && catalog?.optJSONObject("foreignPricing")?.optString("pricingModel") != "fixed") catalog?.optJSONObject("foreignPricing")?.optJSONObject("rate")?.let { rate ->
                                     UpgradeText("1 USD = ${rate.optString("quotePerBase")} RUB · ${rate.optString("effectiveDate")}",
                                         style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant)
                                 }
@@ -514,6 +516,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                         UpgradeText(copy("Стоимость тарифа: ", "Plan price: ") + nativeBillingMoney(total.list, language, total.currency))
                                         UpgradeText(copy("Зачёт оплаченного остатка: −", "Unused paid period credit: −") + nativeBillingMoney(total.credit, language, total.currency), color = upgradeScheme.primary)
                                     }
+                                    if (total.referralDiscount > 0L) UpgradeText(referralCopy(language).getString("discount") + ": −" +
+                                        nativeBillingMoney(total.referralDiscount, language, total.currency), color = upgradeScheme.primary)
                                     UpgradeText(copy("К оплате: ", "Total: ") + nativeBillingMoney(total.amount, language, total.currency), style = MaterialTheme.typography.titleMedium)
                                     total.validUntil?.let { expiry -> UpgradeText(copy("Новый срок доступа до: ", "New access period ends: ") +
                                         expiry.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag(language))),

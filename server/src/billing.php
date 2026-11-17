@@ -4,6 +4,7 @@ require_once __DIR__.'/subscription-identity.php';
 require_once __DIR__.'/billing-upgrades.php';
 require_once __DIR__.'/billing-settlement.php';
 require_once __DIR__.'/partners.php';
+require_once __DIR__.'/consumer-referrals.php';
 
 const GENESIS_BILLING_PROVIDERS = ['google-play', 'lemon-squeezy', 'yookassa'];
 const GENESIS_BILLING_PLANS = ['standart', 'premium', 'business'];
@@ -75,7 +76,7 @@ function genesisBillingRubToUsdMinor(int $rubMinor,array $rate): int
 function genesisBillingProviderPrices(int $rubMinor,array $foreign,mixed $usdMinor): array
 {
     $prices=['yookassa'=>['amountMinor'=>$rubMinor,'currency'=>'RUB'],'google-play'=>['amountMinor'=>$rubMinor,'currency'=>'RUB']];
-    if(($foreign['provider']??null)==='lemon-squeezy'&&($foreign['currency']??null)==='USD'&&is_int($usdMinor)&&$usdMinor>0){
+    if(in_array($foreign['provider']??null,['paddle','lemon-squeezy'],true)&&($foreign['currency']??null)==='USD'&&is_int($usdMinor)&&$usdMinor>0){
         $pricingModel=$foreign['pricingModel']??'fx-snapshot';
         if($pricingModel==='fixed')$prices['lemon-squeezy']=['amountMinor'=>$usdMinor,'currency'=>'USD'];
         elseif($pricingModel==='fx-snapshot'){
@@ -83,14 +84,16 @@ function genesisBillingProviderPrices(int $rubMinor,array $foreign,mixed $usdMin
             catch(InvalidArgumentException){ /* A malformed legacy FX snapshot cannot enable a foreign checkout. */ }
         }
     }
+    // Keep legacy receipt/display clients compatible while moving the public offering to Paddle.
+    if(isset($prices['lemon-squeezy'])&&($foreign['provider']??null)==='paddle')$prices['paddle']=$prices['lemon-squeezy'];
     return $prices;
 }
 
 function genesisBillingProviderOffer(array $offer,string $provider): array
 {
     $price=$offer['pricesByProvider'][$provider]??null;
-    $currency=$provider==='lemon-squeezy'?'USD':'RUB';
-    if(!in_array($provider,GENESIS_BILLING_PROVIDERS,true)||!is_array($price)||!is_int($price['amountMinor']??null)
+    $currency=in_array($provider,['paddle','lemon-squeezy'],true)?'USD':'RUB';
+    if(!in_array($provider,[...GENESIS_BILLING_PROVIDERS,'paddle'],true)||!is_array($price)||!is_int($price['amountMinor']??null)
         ||$price['amountMinor']<=0||($price['currency']??null)!==$currency)throw new GenesisResourceLimitException(503,'BILLING_PRICE_NOT_CONFIGURED');
     return [...$offer,'amountMinor'=>$price['amountMinor'],'currency'=>$currency,
         'provider'=>$provider,'_allAvailableProviders'=>$offer['availableProviders'],
@@ -114,7 +117,8 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
         $allowed = in_array($client, $provider['clients'], true)
             || ($client === 'android-play' && $provider['id'] !== 'google-play' && ($settings['play_external_billing_enabled'] ?? false) === true);
         $released=($definition['checkoutEnabled']??false)===true||($provider['id']==='yookassa'&&$yooEnabled);
-        $ready=$enabled&&$released&&genesisBillingProviderReady($provider['id'],$settings);
+        // Lemon Squeezy is retired for new purchases. Its verified historical callbacks remain supported.
+        $ready=$provider['id']!=='lemon-squeezy'&&$enabled&&$released&&genesisBillingProviderReady($provider['id'],$settings);
         $providers[] = ['id' => $provider['id'], 'name' => $provider['name'],
             'available' => $ready && $allowed,
             'reason' => !$allowed ? 'client-unavailable' : ($ready ? null : 'not-configured')];
@@ -218,6 +222,7 @@ function genesisBillingApplyReceipt(PDO $db, GenesisVerifiedBillingReceipt $rece
             $receipt->currency,$receipt->productId,$receipt->confirmedAt,$receipt->evidenceHash,$receipt->validUntil,$refundedAmount);
         genesisBillingSettlementObserve($db,$order,$observed,$existing?:null,$now);
         genesisPartnerObserveReceipt($db, $order, $observed, $now);
+        genesisReferralObserveReceipt($db,$order,$observed);
         if ($order['plan'] === 'premium4life' && $state === 'paid' && !genesisBillingSettlementBlocked(genesisBillingSettlement($db,$order['id']))) {
             $seat = $db->prepare('SELECT seat FROM billing_lifetime_seats WHERE order_id=? AND owner_hash=?'); $seat->execute([$order['id'],$ownerHash]);
             if ($seat->fetchColumn() === false) throw new DomainException('BILLING_LIFETIME_RESERVATION_REQUIRED');
@@ -238,7 +243,8 @@ function genesisBillingApplyReceipt(PDO $db, GenesisVerifiedBillingReceipt $rece
 /** A deterministic projection of receipts, independent of webhook delivery order. */
 function genesisBillingRebuildPeriods(PDO $db, string $userId): void
 {
-    $query = $db->prepare("SELECT r.*,o.user_id,o.plan,o.period_months,o.amount_minor,o.list_amount_minor FROM billing_receipts r JOIN billing_orders o ON o.id=r.order_id
+    $promotionColumn=genesisReferralsSchemaReady($db)?'o.referral_discount_minor':'0 AS referral_discount_minor';
+    $query = $db->prepare("SELECT r.*,o.user_id,o.plan,o.period_months,o.amount_minor,o.list_amount_minor,$promotionColumn FROM billing_receipts r JOIN billing_orders o ON o.id=r.order_id
         LEFT JOIN subscription_access_state s ON s.user_id=o.user_id
         WHERE o.user_id=? AND r.state='paid' AND o.plan<>'premium4life'
         AND NOT EXISTS(SELECT 1 FROM billing_settlements bs WHERE bs.order_id=o.id AND bs.state<>'completed')
@@ -254,6 +260,9 @@ function genesisBillingRebuildPeriods(PDO $db, string $userId): void
         $endByPlan[$plan] = max($end, $endByPlan[$plan] ?? $end);
         $listValue = (int)($receipt['list_amount_minor'] ?? $receipt['amount_minor']);
         $funded = genesisBillingFundedReceiptValue($db,$receipt['provider'],$receipt['reference_hash']);
+        // A legitimate discount buys the full period but never becomes refundable upgrade cash.
+        $cash=(int)$receipt['amount_minor'];
+        $funded+=intdiv((int)$receipt['referral_discount_minor']*min($cash,$funded),max(1,$cash));
         if ($listValue > 0 && $funded < $listValue) {
             $starts = genesisSubscriptionExpiry($start); $ends = genesisSubscriptionExpiry($end);
             $end = gmdate('Y-m-d\TH:i:s\Z',$starts + intdiv(($ends-$starts)*$funded,$listValue));
@@ -276,8 +285,9 @@ function genesisBillingRefreshEntitlement(PDO $db, string $userId, int $now): ar
     $state = genesisSubscriptionState($db,$user);
     if ($user['subscription_plan'] === 'premium4life' && !(bool)$state['materialized_billing']) return ['plan' => 'premium4life', 'validUntil' => null];
     $stamp = gmdate('Y-m-d\TH:i:s\Z',$now);
-    $query = $db->prepare('SELECT plan,starts_at,ends_at FROM billing_periods WHERE user_id=? ORDER BY plan,starts_at,ends_at');
-    $query->execute([$userId]); $windows = [];
+    $referralUnion=genesisReferralsSchemaReady($db)?' UNION ALL SELECT plan,starts_at,ends_at FROM consumer_referral_grants WHERE user_id=?':'';
+    $query = $db->prepare('SELECT plan,starts_at,ends_at FROM billing_periods WHERE user_id=?'.$referralUnion.' ORDER BY plan,starts_at,ends_at');
+    $query->execute($referralUnion?[$userId,$userId]:[$userId]); $windows = [];
     foreach ($query->fetchAll() as $period) {
         $planWindows = $windows[$period['plan']] ?? []; $last = array_key_last($planWindows);
         if ($last !== null && $period['starts_at'] <= $planWindows[$last]['ends_at'])

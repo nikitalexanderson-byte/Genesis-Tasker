@@ -23,6 +23,7 @@ function genesisModelingCatalog(string $client,?array $settings=null,?array $bil
     }
     return ['service'=>$definition['id'],'prices'=>$definition['prices'],'methods'=>$methods,'routing'=>genesisBillingRouting($_SERVER),
         'forecastElitePlus'=>$userId!==null&&genesisForecastElitePlus(genesisFindUser($userId)??[]),
+        'includedInPlan'=>$userId!==null&&genesisForecastFreeAccess(genesisFindUser($userId)??[]),
         'testingAccess'=>$userId!==null&&genesisForecastTestingOwner(genesisFindUser($userId)??[])];
 }
 
@@ -110,7 +111,7 @@ function genesisModelingCreateOrder(string $userId,array $input,?array $settings
 {
     $settings??=genesisBillingSettings();$http??='genesisBillingHttp';$user=genesisFindUser($userId);
     if(!$user||!genesisSessionIsPrimaryGoogleUser($user))throw new GenesisResourceLimitException(403,'BILLING_PRIMARY_GOOGLE_REQUIRED');
-    if(array_diff(array_keys($input),['resultId','provider','client','idempotencyKey'])
+        if(array_diff(array_keys($input),['resultId','provider','client','idempotencyKey'])
         ||!is_string($input['resultId']??null)||preg_match('/\A[a-f0-9-]{36}\z/D',$input['resultId'])!==1
         ||!is_string($input['idempotencyKey']??null)||preg_match('/\A[a-zA-Z0-9_-]{16,100}\z/D',$input['idempotencyKey'])!==1)
         throw new InvalidArgumentException('BILLING_ORDER_INVALID');

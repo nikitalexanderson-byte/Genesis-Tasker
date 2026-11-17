@@ -407,6 +407,20 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if(!client.isCurrent(generation)||mutableState.value.user?.uid!=uid||app.workspaceScope!=CloudAccountSnapshot.scopeFor(uid))throw CancellationException()
         return result
     }
+    internal suspend fun referrals(method: String, path: String, body: JSONObject? = null): JSONObject {
+        require(allowedReferralRoute(method, path))
+        val initial = mutableState.value; val uid = initial.user?.uid
+        val anonymous = path == "/referrals/invitation" && uid == null
+        if (!anonymous && (uid == null || !initial.ready || initial.requiresSignIn)) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        val generation = client.currentGeneration()
+        val result = withContext(Dispatchers.IO) {
+            if (anonymous) client.session(generation)
+            client.referrals(generation, method, path, body)
+        }
+        if (!client.isCurrent(generation) || mutableState.value.user?.uid != uid ||
+            uid != null && app.workspaceScope != CloudAccountSnapshot.scopeFor(uid)) throw CancellationException()
+        return result
+    }
 
     internal suspend fun donationUrl(): String {
         val initial = mutableState.value
@@ -2049,6 +2063,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun saveStoicheionDraw(kind: String, seed: Long): JSONObject {
         val generation = client.currentGeneration()
         return try { withContext(Dispatchers.IO) { client.saveStoicheionDraw(generation, kind, seed) } }
+        catch (error: CancellationException) { throw error }
+        catch (error: AuthFailure) { throw IllegalStateException(stoicheionFailureMessage(error.kind)) }
+    }
+    internal suspend fun changeStoicheionSpreadCard(position: Int, revision: Long, seed: Long, dayKey: String): JSONObject {
+        val generation = client.currentGeneration()
+        return try { withContext(Dispatchers.IO) { client.changeStoicheionSpreadCard(generation, position, revision, seed, dayKey) } }
         catch (error: CancellationException) { throw error }
         catch (error: AuthFailure) { throw IllegalStateException(stoicheionFailureMessage(error.kind)) }
     }

@@ -9,14 +9,14 @@ function modelingReject(string $code,callable $action):void{
 $db=genesisDb();$suffix=bin2hex(random_bytes(4));
 $buyer=genesisUpsertGoogleUser(['sub'=>'modeling-'.$suffix,'email'=>'modeling-'.$suffix.'@example.invalid','email_verified'=>true],[],false,false);
 $other=genesisUpsertGoogleUser(['sub'=>'modeling-other-'.$suffix,'email'=>'modeling-other-'.$suffix.'@example.invalid','email_verified'=>true],[],false,false);
-$db->prepare("UPDATE users SET subscription_plan='premium4life' WHERE id=?")->execute([$buyer['id']]);$buyer=genesisFindUser($buyer['id']);
+$db->prepare("UPDATE users SET subscription_plan='standart' WHERE id=?")->execute([$buyer['id']]);$buyer=genesisFindUser($buyer['id']);
 genesisEstablishGoogleSession($buyer,$buyer['google_sub']);
 $settings=genesisBillingYooPrivateSettings([],['schema_version'=>1,'verified'=>true,'enabled'=>true,'shop_id'=>'1105773',
     'secret_key'=>'live_synthetic_modeling_not_real','receipt_mode'=>'npd-manual']);
 $catalog=genesisModelingCatalog('web',$settings);
 modelingCheck($catalog['prices']===['RUB'=>2000000,'USD'=>20000],'Fixed service prices changed');
 modelingCheck(array_column($catalog['methods'],'available','provider')['yookassa']===true,'Approved existing checkout was not reused');
-modelingCheck(array_column($catalog['methods'],'available','provider')['lemon-squeezy']===false,'Unconfigured USD product was exposed');
+modelingCheck(!isset(array_column($catalog['methods'],'available','provider')['lemon-squeezy']),'Unconfigured USD product was exposed');
 $resultId=genesisUuid();$input=['resultId'=>$resultId,'provider'=>'yookassa','client'=>'web','idempotencyKey'=>str_repeat('a',20)];
 $posts=[];$payments=[];$loseReply=true;
 $http=static function($method,$url,$body=null,$headers=[],$basic=null)use(&$posts,&$payments,&$loseReply):array{
@@ -40,12 +40,20 @@ modelingReject('MODELING_RESULT_IMMUTABLE',fn()=>genesisModelingPrepareResult($b
 modelingReject('BILLING_ORDER_INVALID',fn()=>genesisModelingCreateOrder($buyer['id'],[...$input,'amountMinor'=>1],$settings,$http));
 modelingReject('MODELING_RESULT_NOT_READY',fn()=>genesisModelingResult($other['id'],$resultId));
 modelingReject('MODELING_PAYMENT_REQUIRED',fn()=>genesisModelingResult($buyer['id'],$resultId));
-try{genesisModelingCreateOrder($buyer['id'],$input,$settings,$http);throw new LogicException('Lost reply ignored');}catch(RuntimeException $e){modelingCheck($e->getMessage()==='Synthetic lost reply','Wrong simulated failure: '.$e->getMessage());}
-$order=genesisModelingCreateOrder($buyer['id'],$input,$settings,$http);
+// Recovery of an invoice created by the previous release remains available after the plan rules change.
+$legacyId=genesisUuid();$stamp=genesisNow();
+$legacy=['id'=>$legacyId,'user_id'=>$buyer['id'],'provider'=>'yookassa','plan'=>'Future modeling result','amount_minor'=>2000000,'currency'=>'RUB',
+    'product_id'=>'genesis-future-modeling','receipt_email'=>$buyer['email']];
+$body=genesisBillingYooCheckoutBody($legacy,$settings['providers']['yookassa'],'https://localhost.invalid/?modelingOrder='.$legacyId.'#stoicheion');
+$db->prepare('INSERT INTO future_modeling_orders(id,user_id,result_id,provider,amount_minor,currency,product_id,idempotency_key,encrypted_request,started_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+    ->execute([$legacyId,$buyer['id'],$resultId,'yookassa',2000000,'RUB',$legacy['product_id'],$input['idempotencyKey'],genesisSharedContentEncrypt(json_encode($body,JSON_THROW_ON_ERROR)),$stamp,$stamp]);
+$recover=fn()=>genesisModelingPublicOrder(genesisModelingReconcile(genesisModelingOrder($legacyId),$settings,$http,true));
+try{$recover();throw new LogicException('Lost reply ignored');}catch(RuntimeException $e){modelingCheck($e->getMessage()==='Synthetic lost reply','Wrong simulated failure: '.$e->getMessage());}
+$order=$recover();
 modelingCheck(count($posts)===2&&$posts[0]===$posts[1],'Lost-reply retry changed the frozen request or deduplication key');
 modelingCheck($order['amountMinor']===2000000&&$order['currency']==='RUB'&&$order['status']==='pending','Wrong public service invoice');
 modelingCheck(str_contains($order['checkoutUrl'],'yoomoney.ru'),'No verified checkout URL');
-genesisModelingCreateOrder($buyer['id'],[...$input,'idempotencyKey'=>str_repeat('b',20)],$settings,$http);
+$recover();
 modelingCheck(count($posts)===2,'A second click created another checkout');
 modelingReject('BILLING_SETTLEMENT_REQUIRED',fn()=>genesisBillingAssertAccountDeletable($db,$buyer['id']));
 modelingReject('BILLING_ORDER_NOT_FOUND',fn()=>genesisModelingOrder($order['id'],$other['id']));
@@ -97,7 +105,7 @@ modelingReject('FORECAST_PRIVILEGE_CHANGED',fn()=>genesisAdminSetForecastPrivile
 genesisAdminSetForecastPrivilege($admin['id'],$buyer['id'],['enabled'=>false,'expectedRevision'=>1]);
 genesisUpdateAccountPreferences($buyer['id'],['timeFormat'=>'24h','forecastElitePlus'=>true,'forecast_elite_plus'=>1,'forecastPrivilegeRevision'=>999]);
 modelingCheck(!genesisForecastElitePlus(genesisFindUser($buyer['id'])),'A client profile patch granted its own Elite+ privilege');
-modelingReject('MODELING_PAYMENT_REQUIRED',fn()=>genesisModelingResult($buyer['id'],$resultId));
+modelingCheck(genesisModelingResult($buyer['id'],$resultId)['solution']['answer']==='Synthetic private solution','Elite lost its included method when Elite+ was disabled');
 modelingCheck((int)$db->query('SELECT COUNT(*) FROM forecast_privilege_events')->fetchColumn()===2,'Privilege audit lost grant/revoke or duplicated a stale mutation');
 modelingCheck(genesisModelingResult($buyer['id'],$usdResult)['solution']['answer']==='USD result','Revoking Elite+ removed a separately paid result');
 

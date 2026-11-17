@@ -33,6 +33,7 @@ define('GENESIS_STATELESS_REQUEST', $method === 'OPTIONS'
     || ($method === 'GET' && in_array($path, ['health', 'auth/providers'], true)));
 require $serverRoot . '/src/bootstrap.php';
 require $serverRoot . '/src/repository.php';
+require $serverRoot . '/src/consumer-referral-api.php';
 require $serverRoot . '/src/mindmaps.php';
 require $serverRoot . '/src/stoicheion-workspace.php';
 require $serverRoot . '/src/aurora-workspace.php';
@@ -279,6 +280,8 @@ try {
         genesisJson(['ok' => true, 'service' => 'GENESIS', 'privacyModel' => 2, 'time' => genesisNow(), 'backgroundWorker'=>$worker,'notificationChannels'=>$channels]);
     }
 
+    if (($segments[0]??'')==='referrals') genesisReferralRoute($method,$path);
+
     if ($method === 'GET' && $path === 'auth/providers') {
         genesisJson(['google' => true, 'yandex' => genesisYandexConfigured()]);
     }
@@ -465,7 +468,11 @@ try {
             || genesisFindLinkedGoogleAccountBySub((string)$profile['sub']) !== null
             ? 'found'
             : 'created';
-        $user = genesisUpsertGoogleUser($profile, [], false);
+        $partnerInvitation=genesisPartnerOAuthInvitation('login');
+        $consumerInvitation=genesisCurrentUserId()===null?(genesisReferralInvitation()['token_hash']??null):null;
+        $user = genesisUpsertGoogleUser($profile, [], false, true, $partnerInvitation, $consumerInvitation);
+        genesisPartnerFinishOAuth($partnerInvitation);
+        genesisReferralFinishOAuth($consumerInvitation);
         if (!session_regenerate_id(true)) {
             throw new GenesisNativeAuthException(503, 'NATIVE_AUTH_TEMPORARILY_UNAVAILABLE');
         }
@@ -685,6 +692,7 @@ try {
             'nonce' => $nonce,
             'security_epoch' => isset($requestUser)?(int)$requestUser['security_epoch']:null,
             'partner_invitation' => genesisPartnerOAuthInvitation($purpose),
+            'consumer_invitation' => $purpose==='login'&&genesisCurrentUserId()===null?(genesisReferralInvitation()['token_hash']??null):null,
         ];
         header('Cache-Control: no-store');
         header('Location: ' . genesisGoogleAuthUrl(
@@ -712,11 +720,13 @@ try {
         $googleError = trim((string)($_GET['error'] ?? ''));
         if ($googleError !== '') {
             genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
+            genesisReferralFinishOAuth($request['consumer_invitation'] ?? null);
             genesisOAuthRedirect($returnTo, $googleError === 'access_denied' ? 'access_denied' : 'oauth_failed');
         }
         $code = (string)($_GET['code'] ?? '');
         if ($code === '') {
             genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
+            genesisReferralFinishOAuth($request['consumer_invitation'] ?? null);
             genesisOAuthRedirect($returnTo, 'oauth_failed');
         }
 
@@ -784,16 +794,18 @@ try {
                     }
                 }
             } else {
-                $user = genesisUpsertGoogleUser($profile, $tokens, false, true, $request['partner_invitation'] ?? null);
+                $user = genesisUpsertGoogleUser($profile, $tokens, false, true, $request['partner_invitation'] ?? null, $request['consumer_invitation']??null);
                 genesisEstablishGoogleSession($user, (string)$profile['sub'], $profile, 'web');
                 session_regenerate_id(true);
             }
         } catch (Throwable $oauthError) {
             genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
+            genesisReferralFinishOAuth($request['consumer_invitation'] ?? null);
             genesisLogError('Google OAuth callback failed.', $oauthError);
             genesisOAuthRedirect($returnTo, 'oauth_failed');
         }
         genesisPartnerFinishOAuth($request['partner_invitation'] ?? null);
+            genesisReferralFinishOAuth($request['consumer_invitation'] ?? null);
         genesisOAuthRedirect($returnTo);
     }
 
@@ -1624,6 +1636,11 @@ try {
         if ($method === 'GET') genesisJson(genesisLoadTimelineCards($userId));
         genesisRequireCsrf();
         genesisJson(genesisChangeTimelineCard($userId, genesisReadJson()));
+    }
+
+    if ($method === 'POST' && $path === 'stoicheion/spread/cards') {
+        $userId=genesisRequireUserId();genesisRequireCsrf();genesisRequireFeature($userId,'stoicheion-spread');
+        genesisJson(['draw'=>genesisChangeSpreadCard($userId,genesisReadJson())]);
     }
 
     if ($method === 'GET' && $path === 'stoicheion/draws') {

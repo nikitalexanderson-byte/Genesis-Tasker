@@ -324,3 +324,5 @@ dialog.aurora-card-insight::backdrop { background:#0009; }
 }
 .aurora-dialog.aurora-empty { --ui-dialog-width:680px; width:min(680px,100%); }
 .aurora-dialog .aurora-new-pass { width:100%; }
+
+.aurora-source-session { border:0; padding:0; margin:0; min-width:0; }

@@ -18,6 +18,11 @@ function genesisBillingUnusedCredit(int $amountMinor, string $startsAt, string $
 /** Read-only, account-scoped quote. Administrative/test grants never create monetary credit. */
 function genesisBillingUpgradeQuote(PDO $db, string $userId, array $offer, int $now): array
 {
+    return genesisReferralApplyQuote($db,$userId,genesisBillingBaseUpgradeQuote($db,$userId,$offer,$now),$now);
+}
+
+function genesisBillingBaseUpgradeQuote(PDO $db, string $userId, array $offer, int $now): array
+{
     $q = $db->prepare('SELECT * FROM users WHERE id=?'); $q->execute([$userId]); $user = $q->fetch();
     if (!$user) throw new DomainException('BILLING_ACCOUNT_NOT_FOUND');
     $access = genesisResolveFeatureAccess($user, genesisFeatureAccessPolicy(), $now);

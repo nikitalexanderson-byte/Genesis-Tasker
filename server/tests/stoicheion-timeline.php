@@ -63,7 +63,7 @@ timelineCheck((int)$db->query("SELECT COUNT(*) FROM schema_migrations WHERE name
 timelineCheck(genesisStoicheionDraws('alice')['draws'] === [], 'New account has another owner\'s draws');
 foreach (['daily' => 0, 'spread' => 2147483648, 'timeline' => 4294967295] as $kind => $seed) {
     $draw = genesisSaveStoicheionDraw('alice', $kind, $seed);
-    timelineCheck($draw['kind'] === $kind && $draw['seed'] === $seed && $draw['attempts'] === 1 && $draw['canReroll'], 'First draw or uint32 seed changed');
+    timelineCheck($draw['kind'] === $kind && $draw['seed'] === $seed && $draw['attempts'] === 1 && $draw['canReroll'] === ($kind!=='spread'), 'First draw or uint32 seed changed');
 }
 $first = genesisStoicheionDraws('alice')['draws'];
 timelineCheck(count($first) === 3, 'Draw listing omitted a kind');

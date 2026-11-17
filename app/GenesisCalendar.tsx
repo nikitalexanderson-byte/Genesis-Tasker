@@ -2109,7 +2109,9 @@ export function GenesisCalendar() {
     finally { setCalendarCompletionBusy(""); }
   };
 
+  const publicPageVisible = Boolean(legalPage || (isGoogleSyncConfigured && (!cloudUser || privateDeviceAccessBlocked())));
   useEffect(() => {
+    if (publicPageVisible) return;
     const initialView = viewFromHash();
     const initialFrame = window.requestAnimationFrame(() => setView(initialView));
     const initialUrl = new URL(window.location.href);
@@ -2130,7 +2132,7 @@ export function GenesisCalendar() {
       window.cancelAnimationFrame(initialFrame);
       window.removeEventListener("popstate", handlePopState);
     };
-  }, []);
+  }, [publicPageVisible]);
   useEffect(() => {
     if (!cloudUser || viewIsVisible(view, uiVisibility(cloudUser.uiVisibility)) || invitedWorkspaceOpen) return;
     const frame = window.requestAnimationFrame(() => {

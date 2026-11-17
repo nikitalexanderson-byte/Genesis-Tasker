@@ -22,7 +22,7 @@ function genesisBillingPublicOrder(array $order,?PDO $db=null): array
         'settlement'=>genesisBillingPublicSettlement($settlement,$order),'checkoutUrl'=>$blocked?null:$order['checkout_url'],'productId'=>$order['product_id'],
         'amountMinor'=>(int)$order['amount_minor'],'currency'=>$order['currency'],
         'listAmountMinor'=>(int)($order['list_amount_minor'] ?? $order['amount_minor']),
-        'creditMinor'=>(int)($order['upgrade_credit_minor'] ?? 0)];
+        'creditMinor'=>(int)($order['upgrade_credit_minor'] ?? 0),'referralDiscountMinor'=>(int)($order['referral_discount_minor']??0)];
 }
 
 /** Optional dependencies are for isolated tests only; the HTTP route passes neither. */
@@ -39,6 +39,8 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
     $offer=genesisBillingProviderOffer($offer,$provider);
     $db=genesisDb();genesisBeginWriteTransaction($db);
     try {
+        $user=genesisFindUser($userId);
+        if(!$user||!genesisSessionIsPrimaryGoogleUser($user))throw new GenesisResourceLimitException(403,'BILLING_PRIMARY_GOOGLE_REQUIRED');
         $q=$db->prepare('SELECT * FROM billing_orders WHERE user_id=? AND idempotency_key=?');$q->execute([$userId,$input['idempotencyKey']]);$order=$q->fetch();
         if ($order && ($order['provider']!==$provider || $order['plan']!==$offer['plan'] || (int)$order['period_months']!==$offer['periodMonths']))
             throw new GenesisResourceLimitException(409,'BILLING_IDEMPOTENCY_CONFLICT');
@@ -69,6 +71,7 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
                     ->execute([$id,$userId,$input['idempotencyKey'],$provider,$offer['plan'],$offer['periodMonths'],$quote['amountMinor'],$offer['currency'],
                         $settings['offers'][$offer['id']]['products'][$provider],$now,$now,$offer['amountMinor'],$quote['creditMinor']]);
                 genesisBillingReserveUpgrade($db,$id,$quote);
+                genesisReferralReserve($db,$user,$quote,$id,time());
                 if($provider==='google-play')$db->prepare('UPDATE billing_orders SET play_profile_hash=? WHERE id=?')->execute([hash('sha256',$id),$id]);
                 if ($offer['plan']==='premium4life') genesisBillingReserveLifetime($db,$user,$id);
                 $order=genesisBillingOrder($db,$id);

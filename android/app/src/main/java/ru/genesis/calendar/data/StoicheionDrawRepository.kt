@@ -15,9 +15,17 @@ import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.auth.AuthController
 
+data class StoicheionSavedCard(val cardId: String, val reversed: Boolean)
+internal fun savedSpreadCards(value: JSONObject): List<StoicheionSavedCard> {
+    val array = value.optJSONArray("cards") ?: return emptyList()
+    require(array.length() == 9)
+    val cards = (0 until array.length()).map { index -> array.getJSONObject(index).let { StoicheionSavedCard(it.getString("cardId"), it.getBoolean("reversed")) } }
+    require(cards.map { it.cardId }.distinct().size == 9)
+    return cards
+}
 data class StoicheionDraw(val kind: String, val dayKey: String, val seed: Long,
     val attempts: Int, val firstAt: Long, val rerollDeadline: Long, val unlimited: Boolean = false,
-    val serverRerollAllowed: Boolean? = null) {
+    val serverRerollAllowed: Boolean? = null, val cardRevision: Long = 0L, val cards: List<StoicheionSavedCard> = emptyList()) {
     fun remainingSeconds(now: Long): Int = if (attempts == 1)
         ((rerollDeadline - now + 999L) / 1000L).coerceAtLeast(0L).toInt() else 0
     fun canReroll(now: Long): Boolean = serverRerollAllowed != false && (unlimited || attempts == 1 && now < rerollDeadline)
@@ -54,8 +62,8 @@ internal object StoicheionDrawWire {
             value.getLong("seed"), value.getInt("attempts"),
             Instant.parse(value.getString("firstDrawAt")).toEpochMilli(),
             Instant.parse(value.getString("rerollDeadline")).toEpochMilli(), value.optBoolean("unlimited"),
-            value.opt("canReroll") as? Boolean)
-        require(draw.kind in setOf("daily", "spread", "timeline") && draw.seed in 0..0xffff_ffffL && draw.attempts in 1..2)
+            value.opt("canReroll") as? Boolean, value.optLong("cardRevision"), savedSpreadCards(value))
+        require(draw.kind in setOf("daily", "spread", "timeline") && draw.seed in 0..0xffff_ffffL && draw.attempts in 1..2 && draw.cardRevision >= 0)
         LocalDate.parse(draw.dayKey)
         return draw
     }
@@ -120,6 +128,15 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         checkScope()
         app.database.withTransaction { replaceTimeline(payload) }
         requireNotNull(StoicheionTimelineWire.parse(payload))
+    }
+
+    suspend fun changeSpreadCard(position: Int): StoicheionDraw = accountLock.withLock {
+        checkScope(); require(scope.startsWith("account-"))
+        val draw = requireNotNull(read(currentRoot(), LocalDate.now().toString()).spread)
+        require(draw.unlimited && position in 0..8)
+        val result = AuthController.get(app).changeStoicheionSpreadCard(position, draw.cardRevision, draw.seed, draw.dayKey)
+        checkScope()
+        mergeServerDraw(result.getJSONObject("draw"))
     }
 
     private suspend fun replaceTimeline(payload: JSONObject) {
@@ -198,6 +215,7 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         .put("attempts", draw.attempts).put("firstAt", draw.firstAt)
         .put("rerollDeadline", draw.rerollDeadline).put("unlimited",draw.unlimited)
         .put("serverRerollAllowed", draw.serverRerollAllowed ?: JSONObject.NULL)
+        .put("cardRevision", draw.cardRevision).also { value -> if (draw.cards.isNotEmpty()) value.put("cards", JSONArray(draw.cards.map { JSONObject().put("cardId", it.cardId).put("reversed", it.reversed) })) }
 
     private fun read(root: JSONObject, dayKey: String): StoicheionDraws {
         val days=root.optJSONObject("days")?:return StoicheionDraws()
@@ -213,7 +231,7 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
     private fun fromJson(drawKind: String, dayKey: String, value: JSONObject): StoicheionDraw? = runCatching {
         StoicheionDraw(drawKind, dayKey, value.getLong("seed"), value.getInt("attempts"),
             value.getLong("firstAt"), value.getLong("rerollDeadline"), value.optBoolean("unlimited"),
-            value.opt("serverRerollAllowed") as? Boolean).takeIf {
+            value.opt("serverRerollAllowed") as? Boolean, value.optLong("cardRevision"), savedSpreadCards(value)).takeIf {
             it.seed in 0..0xffff_ffffL && it.attempts in 1..2
         }
     }.getOrNull()

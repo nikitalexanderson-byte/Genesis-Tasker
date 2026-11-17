@@ -30,7 +30,7 @@ function genesisTimelineRandom(int &$value): int
 }
 
 /** Exact existing web/native deal, including orientation and unique letters. */
-function genesisTimelineCards(int $seed): array
+function genesisTimelineCards(int $seed,int $size=3): array
 {
     $pool = range(0, 23); $state = $seed ^ 0xa511e9b3;
     for ($i = 23; $i > 0; $i--) {
@@ -38,7 +38,7 @@ function genesisTimelineCards(int $seed): array
         [$pool[$i], $pool[$swap]] = [$pool[$swap], $pool[$i]];
     }
     $result = [];
-    for ($i = 0; $i < 3; $i++) {
+    for ($i = 0; $i < $size; $i++) {
         $state = $seed ^ genesisTimelineImul($i + 2, 0x27d4eb2d);
         $result[] = ['letter' => $pool[$i], 'reversed' => genesisTimelineRandom($state) < 2147483648];
     }
@@ -72,6 +72,7 @@ function genesisTimelineForClient(?array $session): array
 {
     $instant = time();
     if (!$session) return ['timeline' => null, 'serverNow' => gmdate('Y-m-d\TH:i:s\Z', $instant)];
+    $unlimited=genesisForecastUnlimitedDraws(genesisFindUser($session['user_id'])??[]);
     $cards = [];
     foreach (genesisTimelineWindows($session) as $row) {
         $first = strtotime($row['first_revealed_at']);
@@ -80,7 +81,7 @@ function genesisTimelineForClient(?array $session): array
         $remaining = $row['rerolled_at'] === null ? max(0, $deadline - $instant) : 0;
         $cards[] = ['position' => (int)$row['position'], 'firstRevealedAt' => $row['first_revealed_at'],
             'rerollDeadline' => gmdate('Y-m-d\TH:i:s\Z', $deadline), 'remainingSeconds' => $remaining,
-            'canReroll' => $remaining > 0, 'rerolled' => $row['rerolled_at'] !== null];
+            'canReroll' => $unlimited || $remaining > 0, 'unlimited'=>$unlimited, 'rerolled' => $row['rerolled_at'] !== null];
     }
     return ['serverNow' => gmdate('Y-m-d\TH:i:s\Z', $instant), 'timeline' => [
         'dayKey' => $session['source_day_key'], 'periodKey' => $session['period_key'],
@@ -148,8 +149,9 @@ function genesisChangeTimelineCard(string $userId, array $payload): array
             $window = $windows[$position] ?? null;
             $first = $window ? strtotime($window['first_revealed_at']) : false;
             if (!$window) throw new DomainException('TIMELINE_ORDER');
-            if ($window['rerolled_at'] !== null) throw new DomainException('TIMELINE_REROLL_USED');
-            if ($first === false || time() >= $first + 180) throw new DomainException('TIMELINE_REROLL_EXPIRED');
+            $unlimited=genesisForecastUnlimitedDraws($user);
+            if (!$unlimited && $window['rerolled_at'] !== null) throw new DomainException('TIMELINE_REROLL_USED');
+            if (!$unlimited && ($first === false || time() >= $first + 180)) throw new DomainException('TIMELINE_REROLL_EXPIRED');
             $seed = genesisTimelineRerollSeed((int)$session['seed_value'], $position);
             $db->prepare('UPDATE stoicheion_timeline_sessions SET seed_value=? WHERE user_id=? AND period_key=?')->execute([$seed, $userId, $week]);
             $db->prepare('UPDATE stoicheion_timeline_card_windows SET rerolled_at=? WHERE user_id=? AND period_key=? AND position=?')->execute([$now, $userId, $week, $position]);

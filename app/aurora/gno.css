@@ -151,3 +151,4 @@
 
 /* This wizard needs a fixed viewport inside the shared popup frame. */
 html[data-genesis-theme] .modal-backdrop.gno-backdrop>.gno-dialog[aria-modal="true"]{height:var(--ui-dialog-height,calc(100dvh - 40px))!important;overflow:hidden}
+.gno-session { min-width:0; margin:0; padding:0; border:0; }

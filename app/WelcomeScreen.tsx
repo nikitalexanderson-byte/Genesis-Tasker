@@ -4,9 +4,10 @@ import { AccountRecoveryPanel } from './AccountSecurityPanels';
 /* eslint-disable @next/next/no-img-element -- Google requires the official, unmodified sign-in asset. */
 
 import { LANGUAGES, LANGUAGE_LABELS, translateText, type Language } from "./i18n";
-import { SERVICE_IDENTITY } from "./public-service";
+import {publicProductCopy, publicProductHtml, publicMerchantHtml} from './public-product';
+import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PartnerInvitation } from './PartnerInvitation';
 
 type WelcomeScreenProps = {
@@ -33,7 +34,14 @@ const WELCOME_TITLES: Partial<Record<Language, string>> = {
 };
 
 export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle }: WelcomeScreenProps) {
-  const [invitationBusy, setInvitationBusy] = useState(false);
+  useEffect(() => {
+    const anchor = window.location.hash.slice(1);
+    if (!['features', 'pricing', 'sign-in'].includes(anchor)) return;
+    const frame = window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({block:'start',behavior:'instant'}));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+  const [invitationBusy, setInvitationBusy] = useState(()=>typeof window!=='undefined'&&['invite','ref'].some(key=>new URL(window.location.href).searchParams.has(key)));
+  const product = publicProductCopy(language);
   const languageColumns = [7, 6, 5, 4, 3, 2, 1].find((count) => LANGUAGES.length % count === 0) ?? 1;
   const copy = language === "en" ? {
     home: "GENESIS — home",
@@ -98,12 +106,12 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
       <header className="welcome-nav">
         <a className="welcome-brand" href="/" aria-label={copy.home}>
           <span className="solar-mark"><i /></span>
-          <span><strong data-no-translate>Genesis Tasker</strong><small>{copy.tagline}</small></span>
+          <span><strong data-no-translate>GENESIS</strong><small>{copy.tagline}</small></span>
         </a>
-        <nav aria-label={copy.legalNav}>
-          <a href="/privacy">{copy.privacy}</a>
-          <a href="/terms">{copy.terms}</a>
-          <a href="/support">{copy.support}</a>
+        <nav aria-label="GENESIS" data-no-translate>
+          <a href="#features">{product.features}</a>
+          <a href="#pricing">{product.pricing}</a>
+          <a href="/login#sign-in">{product.signIn}</a>
         </nav>
       </header>
 
@@ -112,13 +120,14 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
           <span className="welcome-kicker">{copy.kicker}</span>
           <h1><span data-no-translate>Genesis Tasker</span><em data-no-translate>{WELCOME_TITLES[language] ?? copy.title}</em></h1>
           <p className="welcome-purpose">{copy.purpose}</p>
+          <div className="public-hero-actions" data-no-translate><a className="public-action" href="#pricing">{product.pricing}</a><a href="/login#sign-in">{product.getStarted}</a></div>
           <section className="google-data-purpose" aria-labelledby="google-purpose-title">
             <h2 id="google-purpose-title">{copy.googlePurposeTitle}</h2>
             <p>{copy.googlePurpose}</p>
           </section>
           <section className="google-data-purpose" aria-labelledby="service-owner-title">
             <h2 id="service-owner-title">{language === "en" ? "GENESIS service and domain" : "Сервис GENESIS и домен"}</h2>
-            <p>{language === "en" ? SERVICE_IDENTITY.en : SERVICE_IDENTITY.ru}</p>
+            <div dangerouslySetInnerHTML={{__html:publicMerchantHtml(language, 'home')}} />
             <p>{language === "en"
               ? "GENESIS uses AI assistance only to interpret commands and prepare task plans. It does not generate non-consensual intimate imagery (AI NCII) or use Google APIs for that purpose."
               : "Нейросетевой помощник GENESIS разбирает команды и готовит план задач. GENESIS не создаёт интимные изображения без согласия (AI NCII) и не использует Google API для этой цели."}</p>
@@ -139,7 +148,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
           </div>
         </div>
 
-        <aside className="welcome-auth" aria-labelledby="welcome-auth-title">
+        <aside className="welcome-auth" id="sign-in" aria-labelledby="welcome-auth-title">
           <span className="auth-sun" aria-hidden="true"><i /></span>
           <p className="welcome-kicker">{copy.privateSpace}</p>
           <h2 id="welcome-auth-title">{copy.signInTitle}</h2>
@@ -178,10 +187,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
         </aside>
       </section>
 
-      <footer className="welcome-footer">
-        <span>© {new Date().getFullYear()} GENESIS</span>
-        <a href="/delete-account">{copy.deleteAccount}</a>
-      </footer>
+      <div className="public-product" data-no-translate dangerouslySetInnerHTML={{__html:publicProductHtml(language)}} />
     </main>
   );
 }

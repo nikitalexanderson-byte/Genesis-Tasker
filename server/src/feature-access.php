@@ -39,9 +39,10 @@ function genesisResolveFeatureAccess(array $user, array $policy, int $now): arra
         if (!in_array($feature, $disabled, true) && (!$enabled || $lifetime || in_array($effective, $availablePlans, true))) $allowed[] = $feature;
     }
     $freeFeatures=array_keys(array_filter($features,static fn(array $values):bool=>in_array('free',$values,true)));
-    if(genesisForecastFreeAccess($user)&&!in_array('future-modeling',$disabled,true)){
+    if(array_key_exists('future-modeling',$features)&&genesisForecastFreeAccess($user,$now)&&!in_array('future-modeling',$disabled,true)){
         $allowed=array_values(array_unique([...$allowed,'future-modeling']));
-        $freeFeatures=array_values(array_unique([...$freeFeatures,'future-modeling']));
+        // A timed paid plan must lose this feature on expiry even while a client stays open.
+        if($lifetime||genesisForecastTestingOwner($user))$freeFeatures=array_values(array_unique([...$freeFeatures,'future-modeling']));
     }
     return [
         'schemaVersion' => 1,
