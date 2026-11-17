@@ -47,7 +47,13 @@ if ($_GET['path'] === 'qa/login') {
     $user = genesisFindUser($users[$tier]['id']);
     if (!$user || genesisIsAdminUser($user) || genesisSharedTester($user)) throw new RuntimeException('Invalid ordinary fixture user');
     if (!session_regenerate_id(true)) throw new RuntimeException('Cannot rotate synthetic session');
-    genesisEstablishGoogleSession($user, $user['google_sub'], ['sub' => $user['google_sub'], 'email' => $user['email'], 'email_verified' => true], 'web');
+    $sub=$user['google_sub'];$email=$user['email'];
+    if(($_GET['identity']??'primary')==='linked'){
+        $sub='synthetic-linked-'.$user['id'];$email='linked-'.$user['id'].'@example.invalid';
+        genesisDb()->prepare('INSERT OR IGNORE INTO linked_google_accounts(id,owner_user_id,google_sub,email,display_name,created_at,updated_at) VALUES(?,?,?,?,?,?,?)')
+            ->execute(['qa-link-'.$user['id'],$user['id'],$sub,$email,'Synthetic linked identity',genesisNow(),genesisNow()]);
+    }
+    genesisEstablishGoogleSession($user, $sub, ['sub' => $sub, 'email' => $email, 'email_verified' => true], 'web');
     genesisJson(['ok' => true, 'synthetic' => true, 'userId' => $user['id']]);
 }
 require dirname(__DIR__, 2) . '/server/public/api/index.php';
