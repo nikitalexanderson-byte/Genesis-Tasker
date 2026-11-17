@@ -51,7 +51,7 @@
 | Изолированный HTTP API | 402 PASS, 0 FAIL, пять тарифов, без production данных |
 | i18n | английский, остальные 12 каталогов, native/template/notification checks PASS; RU/EN и ещё 12 security-update таблиц и release notes вычитаны по смыслу |
 | Static web | build:web PASS; 13 locale chunks, публичные страницы, offline precache проверены |
-| Android unit/build | 1060 tests, 0 failures, 8 ранее пропускаемых; debug assemble PASS до финальных дополнений; финальный прогон ниже |
+| Android unit/build | Финальная сборка после правки account preferences: `android-final-3.log` BUILD SUCCESSFUL; 1060 tests, 0 failures, 8 ранее пропускаемых; debug и androidTest assemble PASS |
 | Backup drill | официальный age 1.3.2, побайтное совпадение, SQLite integrity/content PASS; wrong-key/truncation/tamper/digest/overwrite rejected |
 | Шапка web | Today и Дела на 360/390/768/1440, light/dark: 16 after-снимков; оба before пользователя сохранены; detector [] |
 
@@ -60,6 +60,23 @@
 принятому интерфейсу. Сама выбранная карта была видна и сохранена. Сценарий
 переведён на доступные имена region/button; повтор выполняется с production
 флагом mindmaps. Это не дефект данных и не повод менять принятый дизайн.
+
+PR #37 создан, HEAD `39d1f641` прошёл lint/typecheck и 1233/1234 JS tests в CI.
+Единственный сбой — устаревшее ожидание версии 3.3.4/147. Оно заменено на
+3.3.5/148; полный локальный повтор дал **1234/1234 PASS** (`js-final.log`).
+Браузерный сценарий цен также обновлён: в обеих геолокациях проверяются реальные
+цены ЮKassa в RUB вместо прежнего USD-каталога. Ранний запущенный процесс ещё
+содержит старый сценарий и не считается финальным зелёным прогоном.
+
+API26 на предыдущей сборке: gate/restart/deep link/writer guards/offline rescue,
+release notes на 14 языках в обеих схемах при масштабе 1.3 и передача APK
+системному установщику — **3/3 PASS** (`native-api26.log`). Проверка финальной
+сборки продолжается отдельно. Личные устройства не используются.
+
+Владелец подтвердил, что кроме Hostinger хранилищ нет. Подготовлен вариант
+Google Cloud Storage Free Tier (`docs/offsite-backup-google-cloud.md`), но
+production offsite destination, платёжный аккаунт и recovery recipient пока
+не подключены. Наличие зашифрованного инструмента не означает наличие внешней копии.
 
 ## Secrets scan
 
