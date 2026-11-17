@@ -35,6 +35,13 @@
   владелец и страна текущего платёжного профиля и банк выплат ещё не проверены.
   Подготовку и тестирование Billing можно выполнить до Production.
   Результаты исследования сохранены в подготовке 3.3.5.
+  Web/API опубликованы штатным Deploy **43993908653** success, исходник
+  **de4938d5c51c866fc2a36df747d626c78c7a7cef** (PR #35), Source checks
+  **43986629803** success с website_only=true и Android job skipped.
+  Живая приёмка без авторизации: шесть public routes, 14 языков, восемь
+  размеров/схем, Pricing/Features, юридические ссылки и мобильный Sign In — PASS.
+  Android 3.3.4/147, manifest, SHA-256, URL/размер/ETag APK сохранены;
+  GENESIS_DEPLOY_ANDROID=false. Подробности — paddle-readiness и подготовка 3.3.5.
 
 - 16 ноября 2026 выпущен **Android 3.3.4/147** по прямому поручению владельца.
   Релизный исходник `d850ed11f819c191014fcb60a2fc5e6d96872b6c` (PR #31–33),

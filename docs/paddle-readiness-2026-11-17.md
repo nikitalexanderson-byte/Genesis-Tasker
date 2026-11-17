@@ -3,6 +3,10 @@
 Исходная база: Genesis-Tasker/main d979da9319f9dc0c67a29b59c89593d3e73b1a37.
 Сайт развивается вперёд; Android-публикация не меняется.
 
+Позднее 17 ноября владелец отложил подключение Paddle и попросил временно
+оставить этот способ оплаты выключенным. Checkout и readiness остаются disabled;
+к приглашению пока не возвращаемся. Витрина, документы и изменения продукта опубликованы.
+
 ## Подготовлено
 
 - Главная открывается без Google-входа: Features, Pricing, Sign In, описание
@@ -71,3 +75,21 @@ Readiness остаётся false, новый checkout не создаётся. �
 Android-компиляция и внешние платёжные сценарии в этот объём не входят.
 Штатный web/API Deploy допускается только после успешных Source checks на точном
 актуальном main и проверки incumbent production commit. `GENESIS_DEPLOY_ANDROID=false`.
+
+## Подтверждённая публикация
+
+PR #35 слит в main, веб-исходник **de4938d5c51c866fc2a36df747d626c78c7a7cef**.
+Source checks **43986629803** — success: locked install, lint/types, переводы,
+unit/render tests, сборка, 131 PHP-набор, 402 HTTP-проверки и 390 строк PASS
+браузерных сценариев без FAIL. Android job — skipped (`website_only=true`).
+Штатный Hostinger Deploy **43993908653** — success; использован прямой выпуск
+вперёд от incumbent 4ba77f2ff9cbda28a70fbb80549a96e559882cca, restore не применялся.
+
+Живая приёмка: `output/playwright/paddle-live-20261117/results.json` — PASS.
+Шесть маршрутов доступны без JavaScript и без Google-сессии; 14 языков,
+восемь размеров/схем, реальные клики Pricing/Features/Terms/Privacy/Refund,
+два загруженных превью и прямой мобильный Sign In проверены в чистом контексте.
+`/api/health` и production deploy-meta подтверждают новый исходник.
+Android manifest полностью совпал с исходным 3.3.4/147, включая SHA-256;
+download endpoint, URL APK, размер 286493074 байта и ETag сохранены.
+Новая Android-сборка, установка, Play-релиз и внешние реальные платежи не выполнялись.
