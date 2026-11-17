@@ -1,0 +1,5538 @@
+{
+  "plan": "free",
+  "syntheticData": true,
+  "capturedAt": "2026-11-18",
+  "sourceBase": "67179bd8b78cafdceb6eaaff3cf008a245ebe979",
+  "sourceNote": "Captured from the local working tree including the public gallery and translation fixes; sourceBase is the base commit, not an exact capture revision.",
+  "images": [
+    {
+      "language": "ru",
+      "id": "today",
+      "headings": [
+        "Среда18 ноября 2026 г.",
+        "Практика чистого ужина",
+        "Сейчас — Ночь · Стихия Земли"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "de05baff04164df6820988e08c4e268620d8620624740b26a43f253d00fdb3d4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "task-create",
+      "headings": [
+        "Практика чистого ужина",
+        "Сейчас — Ночь · Стихия Земли",
+        "Задачи на сегодня — 1/3",
+        "Личные",
+        "Личные трекеры",
+        "Создать · Личное дело"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d43812f247d29a9a43e4d2a111c92262b64465b7410b32024bafff4f0e829fc0",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "task-recurrence",
+      "headings": [
+        "Практика чистого ужина",
+        "Сейчас — Ночь · Стихия Земли",
+        "Задачи на сегодня — 1/3",
+        "Личные",
+        "Личные трекеры",
+        "Создать · Личное дело"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "38ceac64229030eddbc8f223a6bd5be0fe6eac7c7b174ce6cb37df9df2943936",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "today-tasks",
+      "headings": [
+        "Практика чистого ужина",
+        "Сейчас — Ночь · Стихия Земли",
+        "Задачи на сегодня — 1/3",
+        "Личные",
+        "Личные трекеры"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d856133ea52e2b64f1e78317f23c2155adcd64e7052272007ae20f80d0a19819",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "day-rhythm",
+      "headings": [
+        "Практика чистого ужина",
+        "Сейчас — Ночь · Стихия Земли",
+        "Гестия · «Центр Очага»",
+        "Время «Корней» Гесиода"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0e8723a693eeb7503e18f147aa5b3c4a2387fc83485b9d166053211266776cc8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "projects",
+      "headings": [
+        "Дела · личные",
+        "Дерево проектов"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d66e2db72213a3c4016358e23ad4938d0088939016a21ec6f6f0d7d962f4dab5",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "project-create",
+      "headings": [
+        "Новый проект",
+        "Дела · личные",
+        "Дерево проектов"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "25cd7e72c1c047581a4dabf1ff225385eb32bc33e334fe79510fbdd47c5cf317",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "diary",
+      "headings": [
+        "Подключите Google Calendar и Google Tasks",
+        "Дневник",
+        "Здесь будут ваши личные заметки",
+        "Новая заметка"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6a2c5bc0dfe0376af150a66d05e606bac27f1c81e911f7e7195526c4b1032e35",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "mindmap",
+      "headings": [
+        "Майндмеп · Учёба и творчество"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5178a9a699fbaeb5dda9733e6ab7bcab761ee9042c6eef8886eb3423ccc9e25c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "calendar-gregorian",
+      "headings": [
+        "ноябрь"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6d47cef5bbb9422415581324718be3fbf286957c6473f63b84eb92c3d4248d3d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "calendar-sacred",
+      "headings": [
+        "АГРОТЕРА"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4d892a079ee5c19136aed2af0ac43ab2afea84d39832af580ab2a48950e131d8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "calendar-lunar",
+      "headings": [
+        "Софион"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f44643ebeeab48ec007917dd2ea11636afe685c6d73f8a4a4f36a94927148b91",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "calendar-year",
+      "headings": [
+        "Лунный год 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e6102074858e81a5b9bdc52ac078551e3887a6b00c81eafe1c4a52be670737bf",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "habits",
+      "headings": [
+        "Привычки - Шаблоны",
+        "Ядро привычек",
+        "Стартовые привычки"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d1418cb3cd28bcd1aefe317c318e84947a115e7ad8e50bfcacd5b50aeb58972e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "habit-settings",
+      "headings": [
+        "Привычки - Шаблоны",
+        "Ядро привычек",
+        "Стартовые привычки",
+        "Новая привычка"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1ef7296f8c218fb42c2939c86e3758625b26de0c9115f8a3d512483be6d34a86",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "habit-statistics",
+      "headings": [
+        "Метрики отдельных трекеров",
+        "Календарь выполнения привычек"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3a5ee699a64ac95c06d47e4c1fb35d8ce1ecd2cc11b8615ff2a21304cbe76f53",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "sleep",
+      "headings": [
+        "Привычки - Модули",
+        "Сон",
+        "Воздержание",
+        "Дневник снов",
+        "План сна"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "35dfc36c76b2f47e8829b5a01cb56490d358bb3e87b207cdc9f973b4aa2b3e13",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "mood",
+      "headings": [
+        "Настроение дня",
+        "Ритм Луны сегодня"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c4b9e6c93ab589a02dc9419b77fb75ef92dbeb6080c4263517f8db3c94fde306",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "stoicheion",
+      "headings": [
+        "Выберите букву"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "90277c4dd2f748c516af7540d4451b892c434890364130313205fe551c5c5b29",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ru",
+      "id": "theokyklos",
+      "headings": [
+        "Теокиклос",
+        "Круг божественных сил"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c3fe4f37e694d710f4f4e1466426eee4f9ac12bc1ee6407b9d6ae4603e8afb7c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "today",
+      "headings": [
+        "WednesdayNovember 18, 2026",
+        "Exchange in Service (Working Circle)",
+        "Now — Night · Element Earth"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "286d995807e45a641bbe21711fb1f63062505f75ca32111f6e5e5df46392412b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "task-create",
+      "headings": [
+        "Exchange in Service (Working Circle)",
+        "Now — Night · Element Earth",
+        "Today's tasks — 1/3",
+        "Personal",
+        "Personal trackers",
+        "Create · Personal affair"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "73d73f8c5a809960d4d5b39f90e6d5444c083c995a235778a6795bbf627a5995",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "task-recurrence",
+      "headings": [
+        "Exchange in Service (Working Circle)",
+        "Now — Night · Element Earth",
+        "Today's tasks — 1/3",
+        "Personal",
+        "Personal trackers",
+        "Create · Personal affair"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6de77cfd131529b89aeb7dc970865721a475a47c6a4bf29ccdb80472b77db628",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "day-rhythm",
+      "headings": [
+        "Hesiod's time of Roots",
+        "Today's tasks — 1/3",
+        "Personal",
+        "Personal trackers"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5dc551f24041cb38b7fc75081fd365353515b4465828f2ee78e10703a835849f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "projects",
+      "headings": [
+        "Affairs · personal",
+        "Project tree"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e8faaa0cf05d1c8d490ae306dfe0ddb7d112d22a107aa6956e4e874d1321e656",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "project-create",
+      "headings": [
+        "New project",
+        "Affairs · personal",
+        "Project tree"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "699fea1049bf1f7b6d63b8d7363f55678b952bf040dc905aeccb781ff702c745",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "diary",
+      "headings": [
+        "Diary",
+        "Your personal notes will appear here",
+        "New note"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "da891095813f655db5d064e8c5d50bc248688a0d9facb2574df095fb4be166b5",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "en",
+      "id": "mindmap",
+      "headings": [
+        "Mind map · Learning and creativity"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a887f8c8fb48025ef2c46ea1a86a71b222046a2fbb6ae00b40c38f494debab6d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "calendar-gregorian",
+      "headings": [
+        "November"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "700effae7d230b7cfd266ca4c87b5b14a7a68f03b6308dcdb99c1225faac1d54",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "bed63c0af9e7e044801f2870abb225da037a576647c3d49748e4fd9f4c28a302",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sophion"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "76731f296d0c64484095a5a34aa317ec6dd3aa0beb5e83f9bf98d45c0d2d5986",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "calendar-year",
+      "headings": [
+        "Lunar year 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0de2f77262cf231900f7af081d487d8c3ce2c96e527f6ee5e3b6b3ca0f3c985d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "habits",
+      "headings": [
+        "Habits - Templates",
+        "Habit core",
+        "Starter habits"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "08cf2c237447da6a53b62e7a2922054b7c07de5687fb5489be6e9f89d469721c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "habit-settings",
+      "headings": [
+        "Habits - Templates",
+        "Habit core",
+        "Starter habits",
+        "New habit"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4a9236bf938a750d1d0968190a0c0d3b15007da2d6e31e82e974b2911ef6dbc7",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "habit-statistics",
+      "headings": [
+        "Independent tracker metrics",
+        "Habit completion calendar"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a281ea322b2579cce0288e9a4b3074bcd7636c33d1023306de76eab8d6e628dc",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "sleep",
+      "headings": [
+        "Habits - Modules",
+        "Sleep",
+        "Abstinence",
+        "Dream journal",
+        "Sleep plan"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "099d040e4204b0d23672fadc6de64b39683ec029e93421eaa9eb4eb4a0d2b203",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "en",
+      "id": "today-tasks",
+      "headings": [
+        "Today's tasks — 1/3",
+        "Personal",
+        "Personal trackers"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "33fc84d2967c1d73cf6317bd63cb525f74eecfebc7686fff9cceb4ebf8e5f669",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "mood",
+      "headings": [
+        "Mood of the day",
+        "Today's lunar rhythm"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "aea8dd782455b35162d6d2a6e450e518bc208676bf49ca75bc5e8cb345592271",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "stoicheion",
+      "headings": [
+        "Choose a letter"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "dc3caba127682dc496d2022d01d17cfa0c528750ec8c76aecd683e4f43e16e1c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "en",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Circle of Divine Powers"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "00019b7433ef2fe303b7b264d0e9ea87270f7b2ffef994cb5d9306551150e905",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "today",
+      "headings": [
+        "Mittwoch18. November 2026",
+        "Das Schließen der Tore am Abend und die Inkubation",
+        "Jetzt — Nacht · Element Erde"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "af766cfa3d4eead9013351c9dd942ff2f84e3948aaef669c09d4f474748238e8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "task-create",
+      "headings": [
+        "Jetzt — Nacht · Element Erde",
+        "Heutige Aufgaben — 1/3",
+        "Persönlich",
+        "Persönliche Tracker",
+        "Erstellen · Persönliche Angelegenheit"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f8a088d4ce495e08104f0ba0903c75c3971d56c56f63432292c4dbb212e7ce93",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "task-recurrence",
+      "headings": [
+        "Jetzt — Nacht · Element Erde",
+        "Heutige Aufgaben — 1/3",
+        "Persönlich",
+        "Persönliche Tracker",
+        "Erstellen · Persönliche Angelegenheit"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1c2c517899baad7c1924f106251f9c2d65e389fe51a145b1a913ebd340dd10a8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "today-tasks",
+      "headings": [
+        "Heutige Aufgaben — 1/3",
+        "Persönlich",
+        "Persönliche Tracker"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a8e3c96c2b73d911b1f82be81275733b53771cb04c248332b6d9663f6351cbcd",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "mood",
+      "headings": [
+        "Stimmung des Tages",
+        "Datum im Zivilkalender"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8d4f3805947e5be93c54c3a64606480dbd0b4eda275cdf73c0d64cf51563cd77",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "day-rhythm",
+      "headings": [
+        "Hesiods Zeit der Wurzeln",
+        "Heutige Aufgaben — 1/3",
+        "Persönlich",
+        "Persönliche Tracker"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "38bda7412869bd6c157ff75c5f65e18578416c2d914c063ca8a52ae3170cf8d9",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "projects",
+      "headings": [
+        "Persönliche Aufgaben",
+        "Projektbaum"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9714ca9306e98abc641182d0dde7f2a877535e2450b17afc9a51542a8e2fd147",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "project-create",
+      "headings": [
+        "Neues Projekt",
+        "Persönliche Aufgaben",
+        "Projektbaum"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2a393fadde9f6f9782233d83a2ead14d4f92dad530e3d057d76ba3cc79790d43",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "diary",
+      "headings": [
+        "Tagebuch",
+        "Hier erscheinen Ihre persönlichen Notizen",
+        "Neue Notiz"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9a2c2a1805971fefab50303750d27a0fa535b154f7364cc843d2e5f5d8c6f0d8",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "de",
+      "id": "mindmap",
+      "headings": [
+        "Mindmap · Lernen und Kreativität"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f98bef98c2e0eca9826b98c7f4cbcf83c3a702cd89dabe94fae746b98688320e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "calendar-gregorian",
+      "headings": [
+        "November"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2c244ccae7e8360f7a83ad66717efb0b4d8ffa977673553fd87c1e4761d78269",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4bfeb23e631311b00b52b7ae2ad8c0359327a92dced24e553a46beb9d1bc49ca",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sophia"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "cec02728ce6966f156953ed91ea1e499620346f3ba83d799f90fb8481a856994",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "calendar-year",
+      "headings": [
+        "Mondjahr 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "db154fb755ff183bd42c5da2385e705bc79d6e3d90aff101e0dcdb2bcf862621",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "habits",
+      "headings": [
+        "Gewohnheiten - Vorlagen",
+        "Gewohnheitskern",
+        "Startergewohnheiten"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "bf425dbc1d1314accd3906005b0c910275627a0babc6b41b9c0f0814a10874b6",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "habit-settings",
+      "headings": [
+        "Gewohnheiten - Vorlagen",
+        "Gewohnheitskern",
+        "Startergewohnheiten",
+        "Neue Gewohnheit"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1db234c4f680f650185d33b85127384fe71093461b818cbf6a07a3b7008a515a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "habit-statistics",
+      "headings": [
+        "Unabhängige Tracker-Metriken",
+        "Kalender der Gewohnheitserfüllung"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e98e977ba8109a5c5c54af3ab7062e68f3ee8cf103367ec471aa9533736fec08",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "sleep",
+      "headings": [
+        "Gewohnheiten - Module",
+        "Schlaf",
+        "Abstinenz",
+        "Traumtagebuch",
+        "Schlafplan"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4edecc0a01ab4636e45cf60546370b09605eb0c6c69aceefb5218d926284568d",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "de",
+      "id": "stoicheion",
+      "headings": [
+        "Wählen Sie einen Buchstaben"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "58e9aee0be9a04cac8c275b43fbae11eb65127a421ecf681b6c95fe48796182b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "de",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Kreis göttlicher Kräfte"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "04335f070c92ab60ec8e2fe7de23b0c1d181a2b5c50614d0a102f4141cbc78b8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "today",
+      "headings": [
+        "Τετάρτη18 Νοεμβρίου 2026",
+        "Η Πρακτική του Καθαρού Βραδινού Γεύματος",
+        "Τώρα — Νύχτα · Στοιχείο Γη"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6fd99eda2cf8fd064ef918593b951b3c7b42a646eadca03d9a902f4c39b3fda9",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "task-create",
+      "headings": [
+        "Η Πρακτική του Καθαρού Βραδινού Γεύματος",
+        "Τώρα — Νύχτα · Στοιχείο Γη",
+        "Οι σημερινές εργασίες — 1/3",
+        "Προσωπικό",
+        "Προσωπικοί ιχνηλάτες",
+        "Δημιουργία · Προσωπική υπόθεση"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "bb00db2012ede45362777b93087fcc7bf1710a5d17fee6c5488a69524cf30a14",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "task-recurrence",
+      "headings": [
+        "Η Πρακτική του Καθαρού Βραδινού Γεύματος",
+        "Τώρα — Νύχτα · Στοιχείο Γη",
+        "Οι σημερινές εργασίες — 1/3",
+        "Προσωπικό",
+        "Προσωπικοί ιχνηλάτες",
+        "Δημιουργία · Προσωπική υπόθεση"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d02b281d073c8f2fefd2b778cd0039cef0b442a9ed6e475c802b6484446e8059",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "today-tasks",
+      "headings": [
+        "Οι σημερινές εργασίες — 1/3",
+        "Προσωπικό",
+        "Προσωπικοί ιχνηλάτες"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a6de9f7c238f78f44c92c45e987e5cdfac46f7cb7c7907f40a752bccc6ff3e6d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "mood",
+      "headings": [
+        "Η διάθεση της ημέρας",
+        "Ημερομηνία στο αστικό ημερολόγιο"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "eea5fdc71e30c216c810506ddcae42dbba02ca5b0c59b9a259c0f23b535048cb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "day-rhythm",
+      "headings": [
+        "Η εποχή των Ριζών του Ησίοδου",
+        "Οι σημερινές εργασίες — 1/3",
+        "Προσωπικό",
+        "Προσωπικοί ιχνηλάτες"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "08f2aea1ca70eba093e0fa52f5a618e0de535e5f848f5afec31110641bad463b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "projects",
+      "headings": [
+        "Προσωπικές εργασίες",
+        "Δέντρο έργου"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "89f1bdef2334d985babf04520dc80eb9656f55795320d34e95ab5a547346debb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "project-create",
+      "headings": [
+        "Νέο έργο",
+        "Προσωπικές εργασίες",
+        "Δέντρο έργου"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7645b38668900a105bf2614761931cb3305d7a21ec2c4a495148abd33e7026b7",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "diary",
+      "headings": [
+        "Ημερολόγιο",
+        "Εδώ θα εμφανίζονται οι προσωπικές σας σημειώσεις",
+        "Νέα σημείωση"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6ddf7a054fd1f1a8913ff76730f46977e74a5e8e6a8fabfcb7e964aa00ec3682",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "el",
+      "id": "mindmap",
+      "headings": [
+        "Νοητικός χάρτης · Μάθηση και δημιουργία"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1e4022a4e1ee6053c8c8b0e09aa719706939d0a8f58c9a9bf25cafeb9eeec16a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "calendar-gregorian",
+      "headings": [
+        "Νοεμβρίου"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f2f0d153e05b91e6230538ce9bb83298025c82749c005a01c8addbcf0bdd44e3",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "calendar-sacred",
+      "headings": [
+        "ΑΓΡΟΤΕΡΑ"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a2c36f1541e62c35a71acaf1e25a64bb439f680ef1f0ecf0e4ab63bb04dde91a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "calendar-lunar",
+      "headings": [
+        "Σοφίων"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f6b0de9a78aa010f9eef6f0b71f1d16e9e612116f22cc489eb70e12c91f93496",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "calendar-year",
+      "headings": [
+        "Σεληνιακό έτος 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "896612874d8adb680bc43e3b2481d2ef14c07f96e7dfada9e625f38f28bfc583",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "habits",
+      "headings": [
+        "Συνήθειες - Πρότυπα",
+        "Πυρήνας συνήθειας",
+        "Αρχικές συνήθειες"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "eb72687d91b273c55b57d6556d8ba876a2179a5d92109840c7bfe52cebcdf038",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "habit-settings",
+      "headings": [
+        "Συνήθειες - Πρότυπα",
+        "Πυρήνας συνήθειας",
+        "Αρχικές συνήθειες",
+        "Νέα συνήθεια"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e0a19d22b36e107380be78526054e294ba57a3b9b31e9a29871438b643d4cff8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "habit-statistics",
+      "headings": [
+        "Ανεξάρτητες μετρήσεις παρακολούθησης",
+        "Ημερολόγιο ολοκλήρωσης συνηθειών"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1e09d80fd6aa69953f1f6cb2650f72c01110bb5ece0fbd5050ead65cfa7d48e4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "sleep",
+      "headings": [
+        "Συνήθειες - Ενότητες",
+        "Ύπνος",
+        "Αποχή",
+        "Ημερολόγιο ονείρων",
+        "Πρόγραμμα ύπνου"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "45210aeaa7a0dbf3f543bc9974c9d3788e5acf1b17acbec20dca1f1832fe0c4c",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "el",
+      "id": "stoicheion",
+      "headings": [
+        "Επιλέξτε ένα γράμμα"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b79736a96aa439716793346922019c95b971e49d50ff4906f01bd3c68b175a0d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "el",
+      "id": "theokyklos",
+      "headings": [
+        "Θεόκυκλος",
+        "Κύκλος θεϊκών δυνάμεων"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6b7240a1ba07fbc959f8dd483501a42fabf50a27541a34f2c8f0fa6bb26d213e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "today",
+      "headings": [
+        "Mercredi18 novembre 2026",
+        "Fermeture des portes au soir et incubation",
+        "Maintenant — Nuit · Élément Terre"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d6e3d9f6ae10049988225a638e687bf8ad082940a1ff60d8c3fe2c10a9eb2591",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "task-create",
+      "headings": [
+        "Maintenant — Nuit · Élément Terre",
+        "Tâches d'aujourd'hui — 1/3",
+        "Personnel",
+        "Trackers personnels",
+        "Créer · Affaire personnelle"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c9ca540aabc641bda008bbddb6e34e6b50d5d2056117cc18d66473681ea75350",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "task-recurrence",
+      "headings": [
+        "Maintenant — Nuit · Élément Terre",
+        "Tâches d'aujourd'hui — 1/3",
+        "Personnel",
+        "Trackers personnels",
+        "Créer · Affaire personnelle"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f6bcb01f88f2905f0418602b7a5fda479677fdd4cd72cd0c33958dc7d5d91d4f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "today-tasks",
+      "headings": [
+        "Tâches d'aujourd'hui — 1/3",
+        "Personnel",
+        "Trackers personnels"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c53cede92b89718911617b5dc6167e540b9db7eced4df2f19562a5b122db911f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "mood",
+      "headings": [
+        "Humeur du jour",
+        "Date dans le calendrier civil"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "daaa567a575a7bdb787a9bb7bbfe3efa04efa5b4d04249be65cde7dba7723944",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "day-rhythm",
+      "headings": [
+        "L'époque des racines d'Hésiode",
+        "Tâches d'aujourd'hui — 1/3",
+        "Personnel",
+        "Trackers personnels"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4490f3b90d91948f41096eb019ba9b1b889ea37432f749b5af2c299f5c24defc",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "projects",
+      "headings": [
+        "Tâches personnelles",
+        "Arbre du projet"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8318d0ffd0fd1ff659c8c035dea96f87e22cef4a95d35caaca336dbd4fa032fe",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "project-create",
+      "headings": [
+        "Nouveau projet",
+        "Tâches personnelles",
+        "Arbre du projet"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2aba1f1ee5375cf764fad44714cbcdcedf0e5d0c49b13dc7421088a93f93f258",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "diary",
+      "headings": [
+        "Journal",
+        "Vos notes personnelles apparaîtront ici",
+        "Nouvelle note"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d3f40c9de438f45c0fb84055130bf5717f05ab70d0299a8e06218a8e196fa4ab",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "mindmap",
+      "headings": [
+        "Carte mentale · Apprentissage et créativité"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8dead7d649aa5bbec3391da346e1785ad19bacdde103d84ff4b1b965cf7c88a1",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "calendar-gregorian",
+      "headings": [
+        "novembre"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "cc261ce1fff0cadaad5c16ceef85b17692a729e64cfc0987c688781c3ede6d18",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "54516d9796ab20b8f16880e8c90711f7444703b1bb782ed3acfb092fa675cb41",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sophie"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e122c1231ffb101365de528257be61428a66e356e54045b8c3c87c9c8a570995",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "calendar-year",
+      "headings": [
+        "Année lunaire 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8c4524e5c62066d4972bd3a10b9833af984263d924585eb194f305f789714c87",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "habits",
+      "headings": [
+        "Habitudes - Modèles",
+        "Noyau d'habitude",
+        "Habitudes de démarrage"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "07c77af8b65cf41accdb2ae344825cb982a8570f4db24147110726876fe21aa8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "habit-settings",
+      "headings": [
+        "Habitudes - Modèles",
+        "Noyau d'habitude",
+        "Habitudes de démarrage",
+        "Nouvelle habitude"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "00e3a8e014d5276ec4e16e34bb2b8bc25b192dfb6e7ec22d1997243834faae0a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "habit-statistics",
+      "headings": [
+        "Métriques de suivi indépendantes",
+        "Calendrier des habitudes accomplies"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7d8a58420f86ed6dff9facaa91876af66d707206c98960288e01dc8ea6ee874f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "sleep",
+      "headings": [
+        "Habitudes - Modules",
+        "Sommeil",
+        "Abstinence",
+        "Journal de rêves",
+        "Plan de sommeil"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b1ffddf0a766a83c7a72729a80a01c1b32d94973e78cadf505a0e866b6fc5d50",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "stoicheion",
+      "headings": [
+        "Choisissez une lettre"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6c24d87665e4ecc82ab0ce7c40094de799b693765592a01491d8f17e7f0235f6",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "fr",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Cercle des forces divines"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "de4444de24a553d5f799dc785c99326cf579bb9e247910cb0239ed2c26b8d3eb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "today",
+      "headings": [
+        "Miércoles18 de noviembre de 2026",
+        "La práctica de la cena pura",
+        "Ahora — noche · Elemento tierra"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a0c60b55a71af32a3bd680cd07f52015cbd6d8d0f83a5fa1af790fc400caa78e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "task-create",
+      "headings": [
+        "La práctica de la cena pura",
+        "Ahora — noche · Elemento tierra",
+        "Tareas de hoy — 1/3",
+        "Personal",
+        "Rastreadores personales",
+        "Crear · Asunto personal"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "058f161c08ad67da694c13361d2bdbcd5007a5b6a2bcb98e725fc5e92ce46816",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "task-recurrence",
+      "headings": [
+        "La práctica de la cena pura",
+        "Ahora — noche · Elemento tierra",
+        "Tareas de hoy — 1/3",
+        "Personal",
+        "Rastreadores personales",
+        "Crear · Asunto personal"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c070cfcbfa278c5e412b9bc12e3af6795f5c6b026bf04d259fdb9aceb56abc42",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "today-tasks",
+      "headings": [
+        "Tareas de hoy — 1/3",
+        "Personal",
+        "Rastreadores personales"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "200ffe0674b28d7b7315528dea15d35d2083505448e55f34ec65cd057591a27f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "mood",
+      "headings": [
+        "Estado de ánimo del día",
+        "Fecha en el calendario civil"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "519881b469310074fa3fb8ace5345dcf5c1a78d47890f639b34ef6606ca96b90",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "day-rhythm",
+      "headings": [
+        "El tiempo de las raíces de Hesíodo",
+        "Tareas de hoy — 1/3",
+        "Personal",
+        "Rastreadores personales"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "14d59250d3a8cc700d44a9535a6d1a1048a6a8422c2a2b53a757357f2a297067",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "projects",
+      "headings": [
+        "Tareas personales",
+        "Árbol de proyectos"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "14de6c71a5ef5f98df0d03ad0b9b11ea668735b598ae989f733481be52b41e2e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "project-create",
+      "headings": [
+        "Nuevo proyecto",
+        "Tareas personales",
+        "Árbol de proyectos"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "49a0cc48dba31117a3ffadc1376a841ff434b38c45451b4c8220b601fdc2bb7e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "diary",
+      "headings": [
+        "Diario",
+        "Aquí aparecerán tus notas personales",
+        "Nueva nota"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5ab559aff530a438ab33bbaeca4b8edf9eea842281f5f5d9297b1371b88ff571",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "es",
+      "id": "mindmap",
+      "headings": [
+        "Mapa mental · Aprendizaje y creatividad"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b18c229874342da47685f9b9b31226ea513861ebeb7a30190b3974cb04d61b1c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "calendar-gregorian",
+      "headings": [
+        "noviembre"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8e92753fecf40f9693418962bda059b56b97d6dc464dac98b849d281e8d73dd7",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c2053712238fb217e7f71bc83f1d6c0a34771ca60d01993d6352c8459db8f45e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "calendar-lunar",
+      "headings": [
+        "sofión"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "cb2764d5f45a4bae1288627ee54100895bb90d578ce08dd9a036becaee8b5ff8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "calendar-year",
+      "headings": [
+        "año lunar 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d611a4a5b11e806ab76904b275799b62b12b0ddd28a73b9862973c43b320f08e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "habits",
+      "headings": [
+        "Hábitos - Plantillas",
+        "Núcleo del hábito",
+        "Hábitos iniciales"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "77d38b5f763aee70d73ffd9c446821396f9f27bd8aef3e007a2e7f3acda51637",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "habit-settings",
+      "headings": [
+        "Hábitos - Plantillas",
+        "Núcleo del hábito",
+        "Hábitos iniciales",
+        "Nuevo hábito"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "bc5f8438d713f19311cc6f0d22a682d0cd4987db44782231f31b64adcd71190a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "habit-statistics",
+      "headings": [
+        "Métricas de seguimiento independientes",
+        "Calendario de hábitos completados"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c2b0678565aaaab90b35e3da9b0f15a21898dcd448a307e794b5fbfa00db4ead",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "sleep",
+      "headings": [
+        "Hábitos - Módulos",
+        "Sueño",
+        "Abstinencia",
+        "Diario de sueños",
+        "Plan de sueño"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9edd6dc62c5bbc5425ecd3d4ea0458b91976deba94d11356f9d4b2414b100137",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "es",
+      "id": "stoicheion",
+      "headings": [
+        "Elige una letra"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "366de1325ea5490177abc9f5241a1189ead4e65bb2afcd9b2b5d3f6ebe6314be",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "es",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Círculo de fuerzas divinas"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a23707ef8a30d1ff8387ad555a21847a98cacdf391a52cea7bf63f5b7db7594c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "today",
+      "headings": [
+        "Mercoledì18 novembre 2026",
+        "Chiusura dei varchi serali e incubazione",
+        "Ora — Notte · Elemento Terra"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5d340d1d71a120c90d9d45be0a750d6ea04b77ec0d7b5d7ff13dc335b3efcf6e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "task-create",
+      "headings": [
+        "Chiusura dei varchi serali e incubazione",
+        "Ora — Notte · Elemento Terra",
+        "I compiti di oggi — 1/3",
+        "Personale",
+        "Localizzatori personali",
+        "Crea · Affare personale"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3cd6b4e77293dcf3b8eb7ce9f044217b7da8d9d76b1e46fe5535042e2562e5b8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "task-recurrence",
+      "headings": [
+        "Chiusura dei varchi serali e incubazione",
+        "Ora — Notte · Elemento Terra",
+        "I compiti di oggi — 1/3",
+        "Personale",
+        "Localizzatori personali",
+        "Crea · Affare personale"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8b46bb392df6847a0ec094912f8254db6604bec4276ef57cb12a6f6179f59a65",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "today-tasks",
+      "headings": [
+        "I compiti di oggi — 1/3",
+        "Personale",
+        "Localizzatori personali"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3ab1728acb6e18db9849ed9bbcf85ab8940d871efe461758e3a46fdc46712ec5",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "mood",
+      "headings": [
+        "Umore del giorno",
+        "Data nel calendario civile"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "854d2227299847f8ab35963e8e27990b54d8ff2b3a79e95acc3223df3e397b09",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "day-rhythm",
+      "headings": [
+        "Il tempo delle Radici di Esiodo",
+        "I compiti di oggi — 1/3",
+        "Personale",
+        "Localizzatori personali"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0718a2aa7d49d6dfa7a21ce1049cc3bcb824686ad0d6efd8aed4bd50ce8ff88d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "projects",
+      "headings": [
+        "Attività personali",
+        "Albero del progetto"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9b9db40f5e6900456f26d078b9c9b86b97bf1f4a9aba7b88ec0ae30f3246e1f4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "project-create",
+      "headings": [
+        "Nuovo progetto",
+        "Attività personali",
+        "Albero del progetto"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "92811be59819582c7eb828b9a2166ed0ebf8672e15d44835b15fcd74a44e5208",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "diary",
+      "headings": [
+        "Diario",
+        "Qui appariranno le tue note personali",
+        "Nuova nota"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "746a6c7928808ad598229050b68123364c4b795b8fa0b31fd9b7d8d487e1ba5e",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "it",
+      "id": "mindmap",
+      "headings": [
+        "Mappa mentale · Apprendimento e creatività"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d62d06a26991355768652ebcf43aec9620fe7aa7cf3e6252199beeb12abf65fd",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "calendar-gregorian",
+      "headings": [
+        "novembre"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5335eb745f1f6b5f521e7cfd575820c0d7c7c34cd29f77b916568af6583663f0",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b78e28142dfe75401d9d17cdd66c8e54175933cf4759c4fc3fb5101ff3fde925",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sophione"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e7b6390a48fccd55d6ee287ef3a0a51e164d54e02a72c014c37d96b3d081f4b5",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "calendar-year",
+      "headings": [
+        "Anno lunare 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b42840e53d0f86fd86334e16ba39a429ec3742c50a8e1edeffbb5d9fc5520ecc",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "habits",
+      "headings": [
+        "Abitudini - Modelli",
+        "Il nucleo dell'abitudine",
+        "Abitudini iniziali"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8b979de32544a8bcb2c4ccd4a3e6c2738a05125dee49e8c435f5a0ff6db4ff9f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "habit-settings",
+      "headings": [
+        "Abitudini - Modelli",
+        "Il nucleo dell'abitudine",
+        "Abitudini iniziali",
+        "Nuova abitudine"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d95acbf6c95f27614ca790035f189bd751e9197fd5d047ce6e8f079f742d5ae6",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "habit-statistics",
+      "headings": [
+        "Metriche tracker indipendenti",
+        "Calendario delle abitudini completate"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3ef0fd227dd90cbffd3d435867afed150289fc71caf18e09dcf641afafac993f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "sleep",
+      "headings": [
+        "Abitudini - Moduli",
+        "Sonno",
+        "Astinenza",
+        "Diario dei sogni",
+        "Piano del sonno"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "717461025020456620dc1626391cc3744088a023ef7679d202806ecacda898a9",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "it",
+      "id": "stoicheion",
+      "headings": [
+        "Scegli una lettera"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0f35f8bea4f7adbadce659f2d2e0e2ba3c498e0d429f87d8f24a3f2358422c8b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "it",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Cerchio delle forze divine"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9b873c50d92a15cf2bb5371fd7843465098934bd2dc5fc360eea97b31de32846",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "today",
+      "headings": [
+        "Quarta-feira18 de novembro de 2026",
+        "Fechamento dos Portões ao Anoitecer e Incubação",
+        "Agora. — Noite · Elemento Terra"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7cc19a415eaf885d5ba4cc212a55e69b32c0b224678695e6b844bd898674224d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "task-create",
+      "headings": [
+        "Fechamento dos Portões ao Anoitecer e Incubação",
+        "Agora. — Noite · Elemento Terra",
+        "Tarefas de hoje — 1/3",
+        "Pessoal",
+        "Rastreadores pessoais",
+        "Criar · Caso pessoal"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "74a5ee442cf5ca77c50ca11156e61aa5d243d3108c5e659423bdd0d88699cc17",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "task-recurrence",
+      "headings": [
+        "Fechamento dos Portões ao Anoitecer e Incubação",
+        "Agora. — Noite · Elemento Terra",
+        "Tarefas de hoje — 1/3",
+        "Pessoal",
+        "Rastreadores pessoais",
+        "Criar · Caso pessoal"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "522fc620449c1c1d46851ef37a861209e5344d593f3542b407edde941d3bbecf",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "today-tasks",
+      "headings": [
+        "Tarefas de hoje — 1/3",
+        "Pessoal",
+        "Rastreadores pessoais"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2a6d8285213eba2c0d9c25b10af60f867e3cada557c583d9ad4fa50d07718fe4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "mood",
+      "headings": [
+        "Humor do dia",
+        "Ritmo lunar de hoje"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0eb33e35b6640fb98c4d5a5e93397410f2c9e8b719d678132345ba25f3d8e868",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "day-rhythm",
+      "headings": [
+        "O tempo de Hesiod das Raízes",
+        "Tarefas de hoje — 1/3",
+        "Pessoal",
+        "Rastreadores pessoais"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ce4b2e55b78b4f5c4b57a0a7b6a9be6e95652530e14dc6e92e4fe0d65d0966ed",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "projects",
+      "headings": [
+        "Tarefas pessoais",
+        "Árvore do projeto"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2221ead829a9f6f6b1cdf7d442626b6ef84bd9a8d16eab8aeb06e70aadca4af8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "project-create",
+      "headings": [
+        "Novo projeto",
+        "Tarefas pessoais",
+        "Árvore do projeto"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d9b9031e18033c016023de5b1b63ccbee2f94985d270c9319ce8d1fd9c03e912",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "diary",
+      "headings": [
+        "Diário",
+        "Suas notas pessoais aparecerão aqui",
+        "Nova nota"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4e8188b21a2df52eabf1c1e1c5dd449390a530b95eb10adad4940bf3b0501907",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "mindmap",
+      "headings": [
+        "Mapa mental · Aprendizagem e criatividade"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6319e05c13f707156f971aeb6e7641ccbb8f5bba6072315d25cb47456f5c59da",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "calendar-gregorian",
+      "headings": [
+        "novembro"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f468ab9a333d97a0daf39de6fcbea6e856990ab2527b89a6570a9649e227832c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0dcceb3ec874534a05c7d720f6461a023572618cb8567577f05b4ffd239586f7",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sofião"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "19c19cbf691da3e5a4d68b22edb5dd105b9ab3f490b1cfe716136bcfc2ce25d3",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "calendar-year",
+      "headings": [
+        "Ano lunar 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "389afb82b6a05d4be2c002a6e28954c9c42678e73af05588eb324edcc681a71a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "habits",
+      "headings": [
+        "Hábitos - Modelos",
+        "Núcleo do hábito",
+        "Hábitos iniciais"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1fd8ff4c1de5d274c981099ad1e41be49fbeaecef413e4912302ead7a6863ffb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "habit-settings",
+      "headings": [
+        "Hábitos - Modelos",
+        "Núcleo do hábito",
+        "Hábitos iniciais",
+        "Novo hábito"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b0d3af052844b56b557ebbe603235229d6e2aa49f04120d9cda91519a81acc0c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "habit-statistics",
+      "headings": [
+        "Métricas de rastreador independente",
+        "Calendário de hábitos concluídos"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "32d8c1b3374e2aee528a84145e10ff14fe7c141c27cae29fbd7f6ad708f4cbd3",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "sleep",
+      "headings": [
+        "Hábitos - Módulos",
+        "Sono",
+        "Abstinência",
+        "Diário de sonhos",
+        "Plano de sono"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b7917f853f510086c7239d324dea1ec7f70b33298a583997553fba72e2913fd9",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "stoicheion",
+      "headings": [
+        "Escolha uma letra"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "80ca28347d12c44f1a70f820099e6d117037110da4f516f7d2f9021e0402e559",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pt",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Círculo de forças divinas"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b560409e8b365c1673204af59e8464eb3cf4935437fd748224e8e5cde0ecef2f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "today",
+      "headings": [
+        "Środa18 listopada 2026",
+        "Zamykanie bram wieczorem i inkubacja",
+        "Teraz. — Noc · Element Ziemia"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a8370ccf19a51340e8de152b503c0413df505e295c747f67106bb8c8841c0496",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "task-create",
+      "headings": [
+        "Zamykanie bram wieczorem i inkubacja",
+        "Teraz. — Noc · Element Ziemia",
+        "Dzisiejsze zadania — 1/3",
+        "Osobiste",
+        "Osobiste urządzenia śledzące",
+        "Utwórz · Sprawa osobista"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e0bfe4725325d273ba744323d14cee2c0a28e414a6fbee67756e009d9420421a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "task-recurrence",
+      "headings": [
+        "Zamykanie bram wieczorem i inkubacja",
+        "Teraz. — Noc · Element Ziemia",
+        "Dzisiejsze zadania — 1/3",
+        "Osobiste",
+        "Osobiste urządzenia śledzące",
+        "Utwórz · Sprawa osobista"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "afc293383021f437ca9325f23956c0c523fbfcaa90e2321921a73e0fc04cc0ed",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "today-tasks",
+      "headings": [
+        "Dzisiejsze zadania — 1/3",
+        "Osobiste",
+        "Osobiste urządzenia śledzące"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8e9259a465246455f050ff246d223de3247c93fe563084b826d0e4cce95eaa30",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "mood",
+      "headings": [
+        "Nastrój dnia",
+        "Dzisiejszy rytm księżycowy"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9ff153eb2928edfc409d3242ff5e964f6af7afcf08f7cca1e1c7effa793ef0a0",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "day-rhythm",
+      "headings": [
+        "Czas Hesiodów",
+        "Dzisiejsze zadania — 1/3",
+        "Osobiste",
+        "Osobiste urządzenia śledzące"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ab10d2230f689c5605b6326cfa2d5b43c322a8aa2d69a64538b7e08a18a817c2",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "projects",
+      "headings": [
+        "Zadania osobiste",
+        "Drzewo projektu"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "21f68e98da1e726cf71f314d50885eba14f4224584a2a625defa2088aa5077c1",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "project-create",
+      "headings": [
+        "Nowy projekt",
+        "Zadania osobiste",
+        "Drzewo projektu"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "dd62b6de3c9eba4f31a91a578018ff32471e58d696280b668a5f25af88aeceeb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "diary",
+      "headings": [
+        "Dziennik",
+        "Tutaj pojawią się Twoje osobiste notatki",
+        "Nowa notatka"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3180bff3190b66b2d8fc21087ccde033147624e04cb20418bcf960e822f4fe4c",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "mindmap",
+      "headings": [
+        "Mapa myśli · Nauka i twórczość"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8beb7729ff1e8769d36c8281e1579f21549f7f0f866d8b9c56d1db39ae09c077",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "calendar-gregorian",
+      "headings": [
+        "listopad"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b2b0b7a04f51925806ab8311a036db61292a2a216582670141d4742291f3771e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ca2f106e95ec100c3db15b9a1011fe5788a53f7a1073f76ef34d79d26089111f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sophion"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a3ef03440d0cbaf241b0413d06404407bbdb5f9db90c8f25d5fe2a35818309e4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "calendar-year",
+      "headings": [
+        "Rok księżycowy 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "932170c5da993a36cacc127321463432d6420b4e0706e314e123493efda36e92",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "habits",
+      "headings": [
+        "Nawyki - Szablony",
+        "Rdzeń nawyku",
+        "Nawyki początkowe"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a5546314ec9d8ddd065d3cf0e7790fa903426c500352b31c68bcdb726a399944",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "habit-settings",
+      "headings": [
+        "Nawyki - Szablony",
+        "Rdzeń nawyku",
+        "Nawyki początkowe",
+        "Nowy nawyk"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7f329d48fc45652e9bd47ec9ce31224f46cef76ff51ab71b77b0b8b215c4cb2f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "habit-statistics",
+      "headings": [
+        "Niezależne wskaźniki śledzenia",
+        "Kalendarz realizacji nawyków"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "793dbdff108fb3b083954da23599a660fd5b645955f6edf3ff8e625f2cec1f68",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "sleep",
+      "headings": [
+        "Nawyki - Moduły",
+        "Sen",
+        "Abstynencja",
+        "Dziennik snów",
+        "Plan uśpienia"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7a2c4d68e3b1baee55bcb8c81d6f0c59c7d77e97afd876bb6139795a4817695d",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "stoicheion",
+      "headings": [
+        "Wybierz literę"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "deabc01aef731435a9707d406ebd5045b33681a86c25b72e1bedecb66c5a1873",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "pl",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "Koło boskich sił"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "940d2667954760e8e12daf0c9ec1cf5a3b35bcf5bbe76f6d0d225369eead45be",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "today",
+      "headings": [
+        "среда18. новембар 2026.",
+        "Пракса чистог вечерњег оброка",
+        "Сада — ноћ · Елемент Земља",
+        "Данашњи задаци — 1/3",
+        "Лично"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5ec50bcef402e22a0d021dbbe429f490649d08bb686fdc4e5a77d585304f81f3",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "task-create",
+      "headings": [
+        "Пракса чистог вечерњег оброка",
+        "Сада — ноћ · Елемент Земља",
+        "Данашњи задаци — 1/3",
+        "Лично",
+        "Лични трагачи",
+        "Направи · Лична ствар"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d9b55d4aad3231c3f833bcee2011704fbb300bcc0612f7088bc885e6b4610edb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "task-recurrence",
+      "headings": [
+        "Пракса чистог вечерњег оброка",
+        "Сада — ноћ · Елемент Земља",
+        "Данашњи задаци — 1/3",
+        "Лично",
+        "Лични трагачи",
+        "Направи · Лична ствар"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6175e2df41b001818e48636183342e672cca03336663d3da5f95d77165b4e5cb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "today-tasks",
+      "headings": [
+        "Данашњи задаци — 1/3",
+        "Лично",
+        "Лични трагачи"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "350db58f3d2681b7c8130ab3af2d90635bca16b5bec8a5003fae9a11249f743b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "mood",
+      "headings": [
+        "Расположење дана",
+        "Датум у грађанском календару"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "16d7043471c882710d1a897ec79f725952f28d72be7126f634a7484103435e7a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "day-rhythm",
+      "headings": [
+        "Време „Корена“ код Хесиод-а",
+        "Данашњи задаци — 1/3",
+        "Лично",
+        "Лични трагачи"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "288b8084871eade4113655c3d5a9530649e6a79218bf2f0080eac859c19a0d73",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "projects",
+      "headings": [
+        "Лични задаци",
+        "стабло пројекта"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "dd5908ce9bf9561bd7e64df1379688966906031aef90a18c0aa0c31c06ef484e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "project-create",
+      "headings": [
+        "Нови пројекат",
+        "Лични задаци",
+        "стабло пројекта"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f43e2f6e557a68c1e3b1defac7ee34ac9a78e3c47c774a884a8215e87f95ec7f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "diary",
+      "headings": [
+        "Дневник",
+        "Овде ће се појавити ваше личне белешке",
+        "Нова напомена"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "1a35676aa5ebeb87840cf2cce6285b20f10a6d29f3c863fcc6ebf574ace0d1eb",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "mindmap",
+      "headings": [
+        "Мапа ума · Учење и стваралаштво"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "86ec8bade7b753c9de62f38cdfdf8592e0707dc759a24a86e5635023329311cd",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "calendar-gregorian",
+      "headings": [
+        "новембар"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "244d5ef65d6cfef666291ef3d1eb28ed6b756281998b819c64d64a99c27e194f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "calendar-sacred",
+      "headings": [
+        "АГРОТЕРА"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e2ca0792223aff8596ed9234ec99bdc09fa40cf3b833d30111d624e67c3afef5",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "calendar-lunar",
+      "headings": [
+        "Софион"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "df64da41c6a0b07af53540520def4922f93d7612832976b78fcbf59cc5c23e36",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "calendar-year",
+      "headings": [
+        "Лунарна година 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "725523f0244e3e4cf6793a3ac94c4989415a7cb3a6c898d694bb3849b8177d92",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "habits",
+      "headings": [
+        "Навике - Шаблони",
+        "Језгро навика",
+        "Стартнерске навике"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7b875ca1d9538abb72372c5eae4ecafc1d6ff1df2090e3ffacf64c7f2c3ae70a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "habit-settings",
+      "headings": [
+        "Навике - Шаблони",
+        "Језгро навика",
+        "Стартнерске навике",
+        "Нова навика"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "86704e92e1767e0b2954ad57ff3ec505501d9156fa71f01eff389ab20c59bb18",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "habit-statistics",
+      "headings": [
+        "Независне метрике праћења",
+        "Календар испуњавања навика"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8ba367b3d915860462e1d0609ed66471c207b31405ba48ab594741f8fb5c677c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "sleep",
+      "headings": [
+        "Навике - Модули",
+        "Спавање",
+        "Уздржавање",
+        "Дневник снова",
+        "План сна"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d76180ec5540ba5b38b2f3a71ab2ec146a6d91f4af7466cd309d7411f9a953ba",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "stoicheion",
+      "headings": [
+        "Изаберите слово"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e406d1c5402c1e6ef69bdd45711403b4112374dec14543d8faf2c69ade5dbb04",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "sr",
+      "id": "theokyklos",
+      "headings": [
+        "Теокиклос",
+        "Круг божанских сила"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a75b39cf1b8a07383735c4275a108b788f45902cbc0bbcba76eea41e6ba70d29",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "today",
+      "headings": [
+        "10 місячний деньДекади зростання",
+        "Зараз — Ніч · Стихія Землі",
+        "Сьогоднішні завдання — 1/3",
+        "Особисто"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3c106bb2e699f196ad7740e7fed793ff4a402d112b72c596c07245ed701f8ebf",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "task-create",
+      "headings": [
+        "Зараз — Ніч · Стихія Землі",
+        "Сьогоднішні завдання — 1/3",
+        "Особисто",
+        "Персональні трекери",
+        "Створити · Особиста справа"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ea55e02516fb4ecb7f3a117a9e64a868f7782d8b7ad8927f549e020444c87fc8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "task-recurrence",
+      "headings": [
+        "Зараз — Ніч · Стихія Землі",
+        "Сьогоднішні завдання — 1/3",
+        "Особисто",
+        "Персональні трекери",
+        "Створити · Особиста справа"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "73befd62a7d829d700669d7a15d7fe41156cf58e7296ed4e48b2b9b0517e292c",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "today-tasks",
+      "headings": [
+        "Сьогоднішні завдання — 1/3",
+        "Особисто",
+        "Персональні трекери"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "782595fb2a9c68a219ec56d371ddb5ea86fb77410180bf8290813921335a68c0",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "mood",
+      "headings": [
+        "Настрій дня",
+        "Дата в цивільному календарі"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8b960f13c2660c14f801ea00caddd3024d270aff3444d1caa3a4a46b6880e1eb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "day-rhythm",
+      "headings": [
+        "Час «Коренів» Гесіода",
+        "Сьогоднішні завдання — 1/3",
+        "Особисто",
+        "Персональні трекери"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "98820c5d1f8b53e610c158770cf78db4a6c5ae1cf7d3c6885b5bac1f9146179f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "projects",
+      "headings": [
+        "Особисті справи",
+        "Проектне дерево"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "471aec5a9513cdf3cc0a8e9e6a562036f66c347b4887002dbebd061e469c03ac",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "project-create",
+      "headings": [
+        "Новий проект",
+        "Підключення Google Calendar та Google Завдання",
+        "Особисті справи",
+        "Проектне дерево"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0f43768849c596b57fc8901f008f4f2a89b9a56a0705d5edff1d4a6b3bbc2e16",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "diary",
+      "headings": [
+        "Підключення Google Calendar та Google Завдання",
+        "Щоденник",
+        "Тут з’являться ваші особисті нотатки",
+        "Нова нотатка"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5d341e73dc320886f268835c11f6689b4de95202166e7154d38696d971a399f8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "mindmap",
+      "headings": [
+        "Підключення Google Calendar та Google Завдання",
+        "Майндмеп · Навчання і творчість"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ba6ed01797705d3b0748cfb137e61837d0468033427dbdc8047c986b52c0b98b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "calendar-gregorian",
+      "headings": [
+        "Підключення Google Calendar та Google Завдання",
+        "листопад"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0ded986a0ef8f9635acb68ebe6db9e435482900f21347006c9d9d7e1789fac48",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "calendar-sacred",
+      "headings": [
+        "Підключення Google Calendar та Google Завдання",
+        "АГРОТЕРА"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "add757d17a138e1b20fd1801a60298403a09f352f92de2d64cab6f0752839071",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "calendar-lunar",
+      "headings": [
+        "Підключення Google Calendar та Google Завдання",
+        "Софіон"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f30598958f62317932a715f35c444e5c71b5a6cb2880cb11596153f4a35c94f7",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "calendar-year",
+      "headings": [
+        "Місячний рік 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3862e6c477f105e8c7068b91747e48fee74ef3fb0b5481ea50737b8e3a11b9da",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "habits",
+      "headings": [
+        "Звички - Шаблони",
+        "Ядро звички",
+        "Стартові звички"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c501c11dbf768ec6dd6d8a47813da8fffaab2ac3357b4af0dad4e39346978338",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "habit-settings",
+      "headings": [
+        "Звички - Шаблони",
+        "Ядро звички",
+        "Стартові звички",
+        "Нова звичка"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5609e7598f3467cd962647f4147616ce2862f8a3a15d8c51190a7d00fb266a3f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "habit-statistics",
+      "headings": [
+        "Незалежні показники трекера",
+        "Календар виконання звичок"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5ea7ef6788c10bfb77dd0e8926dc0b46e56c88ebcc5654e0a1a828d9d529c3cd",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "sleep",
+      "headings": [
+        "Звички - Модулі",
+        "Сон",
+        "Утримання",
+        "Щоденник снів",
+        "План сну"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e4de2e0d06fc4a96df11225f4c763e8de6e01dd1c4c096a843341de0c2eb12b1",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "stoicheion",
+      "headings": [
+        "Виберіть літеру"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3e955adab116fc0e41736eeb3e0f0d9decb975e7b61b0fc7258a868e1f3c3bd9",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "uk",
+      "id": "theokyklos",
+      "headings": [
+        "Теокіклос",
+        "Коло божественних сил"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "66b6e2e4d96eadd7920c0a82be6e6cca11b12948f0e34bc09918241a3a0cc931",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "today",
+      "headings": [
+        "星期三2026年11月18日",
+        "夜间封门与孵化",
+        "现在 — 夜间 · 元素 地球"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9cbfb1b4f4a73c640de5cb2c509b94c9db1b658edac973e88177ec4e11c6dbd2",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "task-create",
+      "headings": [
+        "夜间封门与孵化",
+        "现在 — 夜间 · 元素 地球",
+        "今天的任务 — 1/3",
+        "个人",
+        "个人追踪器",
+        "创建 · 私人事务"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a20e1fe2fcc8e383ab456f474a748b45ca3ccfea2ab01a1de1af72b324bdbac3",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "task-recurrence",
+      "headings": [
+        "夜间封门与孵化",
+        "现在 — 夜间 · 元素 地球",
+        "今天的任务 — 1/3",
+        "个人",
+        "个人追踪器",
+        "创建 · 私人事务"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e149bcf4f69e539a702dc5f61b7c5664d070cb866a0c6384588cd0507fb2cfb1",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "today-tasks",
+      "headings": [
+        "今天的任务 — 1/3",
+        "个人",
+        "个人追踪器"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6f860d516547cdabb541e4b31a8b1a8cd80115cb4ffa1a3c72ab6e16eab64ddf",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "mood",
+      "headings": [
+        "今日心情",
+        "民事日历中的日期"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d0bcafc080e268ba0c01ad3d6109357a62d72636cfda93b037080910022951ef",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "day-rhythm",
+      "headings": [
+        "Hesiod 的“根源”之时",
+        "今天的任务 — 1/3",
+        "个人",
+        "个人追踪器"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c74f07606f08eccd2b8a578351dc1cbfd6514e9ca8b47cb3e237053d2ba96a99",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "projects",
+      "headings": [
+        "个人事务",
+        "项目树"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c5ff02784dffa2409e7d1c15a80965c265777f521dad243966c62786bdbeae60",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "project-create",
+      "headings": [
+        "新项目",
+        "个人事务",
+        "项目树"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c6693314b56134439d8fbbaacdb86a455a5871bd2c8c227df60cb41f01a56ebc",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "diary",
+      "headings": [
+        "日记",
+        "您的个人笔记将显示在这里",
+        "新注"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e4476ac2729b925a43e4e1aadeddcb9353ccc276f6257b157572de03333b08ec",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "mindmap",
+      "headings": [
+        "思维导图 · 学习与创造"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "805b065e9153b476b06b43f39fb3c30eec68e4c0f44aac33473bfac1174092b0",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "calendar-gregorian",
+      "headings": [
+        "十一月"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7b660a0f2ddefd3b8485a3a7b722891df078e6ab22951c09fee1db070c534605",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ce066e5818dc10117758441864529b459b31e3236af4b159a4f167f084252e82",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "calendar-lunar",
+      "headings": [
+        "苏菲恩"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "d344abe340ccb61103563637571b5c56494db0cdd118a928b7ee2d29bdf98356",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "calendar-year",
+      "headings": [
+        "农历年 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c6b8b6754acaa9b4aaa66e4ef83568f27aa0fe23bf38c96e691c748a2131a7c3",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "habits",
+      "headings": [
+        "习惯 - 模板",
+        "习惯核心",
+        "启动习惯",
+        "每日计划",
+        "醒来后一杯水"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3ec30bf0eccce64494d505f50a8f9a139b8fc9240e00fd8104f528668c17cee7",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "habit-settings",
+      "headings": [
+        "习惯 - 模板",
+        "习惯核心",
+        "启动习惯",
+        "每日计划",
+        "醒来后一杯水",
+        "新习惯"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "516b690d0e601f6f675f28a95b3905362ca685da2f3d121679488b3360832b31",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "habit-statistics",
+      "headings": [
+        "独立跟踪器指标",
+        "习惯完成日历",
+        "时段总结"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "0ef39d917459b7db1da0e6c5338ea1acda2e3cf8ba4cd3e48fe3ab2c89d68c5f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "sleep",
+      "headings": [
+        "习惯 - 模块",
+        "睡眠",
+        "禁欲",
+        "梦境日记",
+        "睡眠计划"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a84a3f7c432164fa42bc46f86530606020015384b77082ceae9afb256a488c70",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "stoicheion",
+      "headings": [
+        "选择一个字母"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "88155e49d622dee9b9b0f9112d55ea0ddac2d1a6330015eeb1a27c0c5dec62ce",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "zh",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "众神的力量圈"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "20341cbf3b7743711fbc8e8a704deb77f81bb37477585371dcc102e57f81b006",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "today",
+      "headings": [
+        "10 Ay GünüBüyüme Yılı",
+        "Şimdi — Gece · Element Toprak",
+        "Bugünün görevleri — 1/3",
+        "Kişisel"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8253d06fb80ec3a1eeec3806c37209de3732911a466f6e52c1dd1650b561bb36",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "task-create",
+      "headings": [
+        "Akşam Kapıların Kapatılması ve Kuluçka Süreci",
+        "Şimdi — Gece · Element Toprak",
+        "Bugünün görevleri — 1/3",
+        "Kişisel",
+        "Kişisel izleyiciler",
+        "Oluştur · Kişisel mesele"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "fcdf5e8b336049757fc6473da9064f3ba05abdc8a163db9a60f18c1a205fb622",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "task-recurrence",
+      "headings": [
+        "Akşam Kapıların Kapatılması ve Kuluçka Süreci",
+        "Şimdi — Gece · Element Toprak",
+        "Bugünün görevleri — 1/3",
+        "Kişisel",
+        "Kişisel izleyiciler",
+        "Oluştur · Kişisel mesele"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4a884b5024d9a97e1d5f1c5a04aaab1a5392e90ebd46f2676c16bde5803ef7a9",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "today-tasks",
+      "headings": [
+        "Bugünün görevleri — 1/3",
+        "Kişisel",
+        "Kişisel izleyiciler"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3f49644c4e303ff8c3efcccedec1fc52fd3a6fc0280bdb1897bc90e9db507931",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "mood",
+      "headings": [
+        "Günün ruh hâli",
+        "İç takvimde tarih"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "65efbfc762499d9382ea1525126bfe3a81a777fc893b7866af294e8cbb71c29b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "day-rhythm",
+      "headings": [
+        "Hesiod’un “Kökler” zamanı",
+        "Bugünün görevleri — 1/3",
+        "Kişisel",
+        "Kişisel izleyiciler"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "f1c94cd2f393845aaef24306d3756ad463703219ab1756e92b76146be21ee683",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "projects",
+      "headings": [
+        "Kişisel görevler",
+        "Proje ağacı"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2b0028660c4065c403652e80a74cb8372048ee04a696e4ad98219033af486835",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "project-create",
+      "headings": [
+        "Yeni Proje",
+        "Kişisel görevler",
+        "Proje ağacı"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "777a51a372eb2bb28dc8e5c4894bbc1b5f26589f7f6294e915c6e3c8b8a578f8",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "diary",
+      "headings": [
+        "Günlük",
+        "Kişisel notlarınız burada görünecek",
+        "Yeni not"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "5cec0ba0ee9a47ac3146874eed2ba12e8b60d7fe31e9544628549efe575b3808",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "mindmap",
+      "headings": [
+        "Zihin haritası · Öğrenme ve yaratıcılık"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ed3848de0ed6f2c2176679a9d3e9fd55900e6a877bd72b8d20c1ed7d4ad7837b",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "calendar-gregorian",
+      "headings": [
+        "Kasım"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c704f4865551b1a943e5fb3ddf23ad0d85d5a8e9bd73154290d243ac69fb37a1",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b27a251e092e48cb0392add73b6a7d5bba3045df9fff6a312d218f57b506048a",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "calendar-lunar",
+      "headings": [
+        "Sophion"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "83052382c7aa07ded80e02fbb98b31030cec0298a539de906bce57dad7394f08",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "calendar-year",
+      "headings": [
+        "Ay yılı 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a13086d8d0da9a21325b99c3870f9b86a90bc9bfc0617e5b0ecaff7f4b30d4e9",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "habits",
+      "headings": [
+        "Alışkanlıklar - Şablonlar",
+        "Alışkanlık çekirdeği",
+        "Başlangıç alışkanlıkları"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "8ea7297795fd76a380b7c6b7de5a5737eb3a8b21aacdebd02328aed0e7e2d784",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "habit-settings",
+      "headings": [
+        "Alışkanlıklar - Şablonlar",
+        "Alışkanlık çekirdeği",
+        "Başlangıç alışkanlıkları",
+        "Yeni alışkanlık"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "31b2a691d726c134db44ae8d480334633d84586324deebf2288ff4fdd6e0e029",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "habit-statistics",
+      "headings": [
+        "Bağımsız izleyici metrikleri",
+        "Alışkanlık tamamlama takvimi"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "19b4442dab679ca7bea2f8cb7456f7f986ade0251787f7bec8ef561df4e643f4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "sleep",
+      "headings": [
+        "Alışkanlıklar - Modüller",
+        "Uyku",
+        "Yoksunluk",
+        "Rüya günlüğü",
+        "Uyku planı"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "a81b63d1f15b17224b824ef77e36d8bfc28d8ec800ceca1bd6d273a9024ee958",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "stoicheion",
+      "headings": [
+        "Bir harf seçin"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "7b0c588aab337ec58f77939afaa0f78add2ad0330e8b778081706c8df511353d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "tr",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "İlahi güçlerin Çemberi"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ebb356f2ac870ff5192110a95cd11d1b65b8b0da1056468b889f7e9f7fff237e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "today",
+      "headings": [
+        "10 月の日成長の十年",
+        "現在 — 夜 · エレメント アース",
+        "今日の課題 — 1/3",
+        "パーソナル"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "ddd015a1901521e7c1f2e32988aeed54c6413159349904dd789629009fe3494f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "task-create",
+      "headings": [
+        "夜の門を閉ざすこと、そしてインキュベーション（孵化）",
+        "現在 — 夜 · エレメント アース",
+        "今日の課題 — 1/3",
+        "パーソナル",
+        "パーソナルトラッカー",
+        "作成する ・ 私事"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "afd0d03ae497bf567134e282a36019d9aa8ae7c2e56729fcbdce41a76702b704",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "task-recurrence",
+      "headings": [
+        "夜の門を閉ざすこと、そしてインキュベーション（孵化）",
+        "現在 — 夜 · エレメント アース",
+        "今日の課題 — 1/3",
+        "パーソナル",
+        "パーソナルトラッカー",
+        "作成する ・ 私事"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "832dad9a89b4dd3e86f48efd1e1a151efe0ac1f297d88c9563adf3d9e0edc614",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "today-tasks",
+      "headings": [
+        "今日の課題 — 1/3",
+        "パーソナル",
+        "パーソナルトラッカー"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "6f1a86e7037977e518ef813e20914515c9a3610885b5eb8092ef1c6eb4e60860",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "mood",
+      "headings": [
+        "一日の気分",
+        "市民カレンダーの日付"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "354280f1e3c8acb6d66fb08c3fcebe815f2a8dabd8eea7d1e28fb3e7f9642b82",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "day-rhythm",
+      "headings": [
+        "Hesiodの「根」の時",
+        "今日の課題 — 1/3",
+        "パーソナル",
+        "パーソナルトラッカー"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "3c170d772da49fbfc048352efdd4df37a968c534b0896a22cb5896cef9bd0ceb",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "projects",
+      "headings": [
+        "個人のタスク",
+        "プロジェクトツリー"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "87e750f4646c892252e3c77210d6ed38204b1949917f2dd429bb8f56af142dc5",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "project-create",
+      "headings": [
+        "新規プロジェクト",
+        "個人のタスク",
+        "プロジェクトツリー"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "969405499ba1e571b4ba99bb752fb425b2fb2446f3d8bb967abe8a2e44a4ad27",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "diary",
+      "headings": [
+        "日記",
+        "個人メモがここに表示されます",
+        "新しいノート"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "384d2e0ffd244009d4c63e7551b8adaca4e673d8b8cc36c443a768a75bc0f779",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "mindmap",
+      "headings": [
+        "マインドマップ ・ 学びと創造"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "e507d473c57805bb9bcdd28fb54df57bddd93f3e1cc373d19da26befbd46d4f6",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "calendar-gregorian",
+      "headings": [
+        "11月"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "720ef325868e557738d8c4e1eb480d460bf2ca7f8142a5fcdd5582f59cd6fb4e",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "calendar-sacred",
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "10e402e249a21fafa72c24652c44175a7e2094c99baf57d460811b8070434f7d",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "calendar-lunar",
+      "headings": [
+        "ソフィオン"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "4064ea0142a433cc2d69de300a3221508a14fb6f3e3b1a2a65b835a4489ef2c0",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "calendar-year",
+      "headings": [
+        "旧暦 2026–2027"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "b6ce8f73cd76a272158e8bd8a188ec62f28185b7a21fdb00dd289f122cde0322",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "habits",
+      "headings": [
+        "習慣 - テンプレート",
+        "習慣の核",
+        "スターターの習慣"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "436a5e9548c8e67d5caff2413bf07c6bf8dd3f3b7314a62f1440f29a8a1ce8f2",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "habit-settings",
+      "headings": [
+        "習慣 - テンプレート",
+        "習慣の核",
+        "スターターの習慣",
+        "新しい習慣"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9c24b3890e05f112bb69ba63ca925ccf43e93bdf0101b2937014753eed35c57f",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "habit-statistics",
+      "headings": [
+        "独立したトラッカーメトリクス",
+        "習慣の達成カレンダー"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "49e462dc161303013b2c82b9f559d247602cec33a4541cb5195a5a58ed1cbf78",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "sleep",
+      "headings": [
+        "習慣 - モジュール",
+        "睡眠",
+        "禁欲",
+        "夢日記",
+        "睡眠プラン"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "c097411b969e58cb5e33bbe7547dc35258e6a0744db269a07fd92c89179e5018",
+      "pixels": [
+        1440,
+        1000
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "stoicheion",
+      "headings": [
+        "文字を選ぶ"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "9a25f7e07805544e8e6a011e5758e670885a64300e79d7ecf55534b5706904e4",
+      "pixels": [
+        1425,
+        990
+      ]
+    },
+    {
+      "language": "ja",
+      "id": "theokyklos",
+      "headings": [
+        "Theokyklos",
+        "神力の円"
+      ],
+      "images": true,
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "sha256": "2e80ec4127cf32356ef1609df1f05a0b4cc4c7926efad77be2d1072e46d6dbe5",
+      "pixels": [
+        1425,
+        990
+      ]
+    }
+  ]
+}

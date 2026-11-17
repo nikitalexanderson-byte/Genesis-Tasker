@@ -32,7 +32,10 @@ try{
   assert.equal(await page.locator('.welcome-auth').count(),0,'Terms required sign in');await page.goto(origin.href);
   await page.locator('.welcome-language-flags').waitFor();
   await page.locator('.public-previews').scrollIntoViewIfNeeded();
-  assert.deepEqual(await page.locator('.public-previews img').evaluateAll(images=>images.map(image=>image.complete&&image.naturalWidth>0)),[true,true]);
+  assert.equal(await page.locator('.public-previews img').count(),20);
+  await page.locator('.public-previews img').first().evaluate(image=>image.decode());
+  assert.equal(await page.locator('.public-previews img').first().evaluate(image=>image.complete&&image.naturalWidth>0),true);
+  assert.equal(await page.locator('.public-previews img[loading="lazy"]').count(),20);
   for(const colorScheme of ['light','dark'])for(const width of [360,390,768,1440]){
     await page.emulateMedia({colorScheme});await page.setViewportSize({width,height:1000});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

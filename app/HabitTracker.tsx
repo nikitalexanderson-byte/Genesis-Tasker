@@ -960,7 +960,7 @@ export function HabitDailyPanel({ workspace, date, language, timeFormat, calenda
           {ritualGroups.map((group) => {
             const completedInGroup = group.habits.filter((habit) => completionFor(workspace, habit.id, date)?.completed).length;
             return <section className={`habit-ritual-group ritual-${group.id.split(":")[0]}`} key={group.id}>
-              <header><div><span>{isEnglish ? "Ritual" : "Ритуал"}</span><strong data-no-translate>{group.title}</strong></div><em>{completedInGroup}/{group.habits.length}</em></header>
+              <header><div><span>{isEnglish ? "Ritual" : "Ритуал"}</span><strong data-no-translate>{group.id.startsWith("custom:") ? group.title : translateText(group.title, language)}</strong></div><em>{completedInGroup}/{group.habits.length}</em></header>
               <div className="habit-check-list">
           {group.habits.map((habit) => {
             const entry = completionFor(workspace, habit.id, date);

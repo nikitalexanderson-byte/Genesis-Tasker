@@ -30,7 +30,7 @@ define('GENESIS_STATELESS_REQUEST', $method === 'OPTIONS'
     || $path === 'email/confirm'
     || ($method === 'POST' && $path === 'donations/cloudtips/webhook')
     || ($method === 'POST' && str_starts_with($path, 'billing/webhooks/'))
-    || ($method === 'GET' && in_array($path, ['health', 'auth/providers'], true)));
+    || ($method === 'GET' && in_array($path, ['health', 'auth/providers', 'billing/location'], true)));
 require $serverRoot . '/src/bootstrap.php';
 require $serverRoot . '/src/repository.php';
 require $serverRoot . '/src/consumer-referral-api.php';

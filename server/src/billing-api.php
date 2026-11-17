@@ -191,6 +191,10 @@ function genesisBillingWebhook(string $provider, string $raw, string $signature,
 function genesisBillingRoute(string $method, array $segments): never
 {
     header('Cache-Control: no-store');
+    if ($method==='GET' && $segments===['billing','location']) {
+        // Public display hint only. No cookies, raw IP, coordinates, or account information.
+        genesisJson(genesisBillingRouting($_SERVER));
+    }
     if (count($segments)===3 && $segments[1]==='webhooks' && $method==='POST') {
         $raw=(string)file_get_contents('php://input',false,null,0,500001);
         if (strlen($raw)>500000) throw new InvalidArgumentException('BILLING_EVENT_INVALID');
