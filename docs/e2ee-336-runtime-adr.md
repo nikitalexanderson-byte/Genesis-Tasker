@@ -173,6 +173,17 @@ may own its own transaction; the later complete notification plan uses a separat
 writer with a fresh scope check. These safeguards do not execute encrypted rules
 on the server or replace the required client automation integration.
 
+Schema disposition now compares all218 actual tables/columns, independently of
+the fence inventory.106 private legacy tables include copied operation results,
+backup staging/safety records and private notification state. Set-valued copy
+predicates include multiple explicit project/space references and conservative
+current author memberships; they are deny/source-token supersets, not read grants.
+Private user preferences have a targeted column fence while billing/identity
+remain independent. Shared housekeeping uses the same predicates atomically in
+DELETE and isolates protected cascades with a savepoint, preserving bytes/counts
+while unrelated legacy maintenance continues. Neither this inventory nor the
+fences encrypt the existing legacy generation or replace actual content adapters.
+
 ## Trust limits and remaining integration
 
 A saved trusted checkpoint detects rollback below that checkpoint and conflicting

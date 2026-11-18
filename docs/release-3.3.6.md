@@ -232,8 +232,53 @@ owner binding в synthetic recovery kit. Product code не ослаблялся;
 Сверка всей SQLite-схемы обнаружила дополнительные private copies в backup staging,
 safety snapshots, shared operation/receipt rows. Прежний тест inventory проверял
 только уже объявленные guards; он не доказывал, что все таблицы классифицированы.
-Сейчас выполняется отдельный полный schema disposition audit с проверкой новых
-необъявленных tables/columns. Полный coverage до этой работы не заявляется.
+Результат отдельного полного schema disposition audit и проверки новых
+необъявленных tables/columns приведён ниже. Это не доказательство полной
+продуктовой интеграции.
+
+## Полная классификация схемы и дополнительные private copies
+
+Сверка завершена для218 tables и всех их columns через migration127; контракт
+`contracts/e2ee/server-schema-v1.json`, actual SQLite regression `e2ee-schema`.
+106 legacy-private tables имеют persistent INSERT/UPDATE/DELETE fences. Добавлены
+backup staging/safety/receipts, advice state, private preferences, определения
+bulk и копии результатов/квитанций shared операций. Set-valued predicates
+учитывают несколько проектов и явные historical refs, включая spaceId бывшего
+участника; один произвольный проект не выбирается. Консервативная привязка к
+current author memberships служит только запрету/SourceHash, **не праву экспорта**.
+Существующие старые поколения не объявляются перешифрованными.
+
+В users отдельно защищены6 private preference/reference fields; no-op разрешён,
+identity/language/billing продолжают работать независимо. Категории участников
+разделены как private title + ACL authority. Conversation titles и жизненный цикл
+старых message keys явно остаются интеграцией, а не скрываются за словом metadata.
+Проверен `future_modeling_orders`: provider requests содержат checkout metadata и
+ID результата; solution хранится в private `future_modeling_results`.
+
+Review нашёл два дополнительных P2: global expiry sweep прекращал общий cron
+при protected row, а view receipt бывшего участника терял space ownership.
+Оба исправлены. Preview/backups/receipts/metrics используют scope-aware DELETE
+с той же predicate, что trigger. Shared maintenance сохраняет protected branch
+и counts через savepoint, продолжая независимую очистку; malformed historical
+receipt сохраняется для разбора. Server Google-copy worker исключает защищённые
+scopes при выборе и повторно проверяет scope перед обработкой; explicit external
+copy consent/product integration по-прежнему требует отдельной приёмки.
+
+Проверено:20/20 смежных PHP suites PASS (`runtime/backend-copies-05`), затем
+обновлённые7/7 PASS (`backend-copies-06`),4/4 shared maintenance/lifecycle PASS
+(`backend-maintenance-01`), actual paid preview/mixed-scope cleanup PASS
+(`backend-maintenance-02/03`),111/111 JS E2EE PASS (`js-copies-01.log`). Independent
+scoped review:2/2 schema/private-copy suites,1/1 maintenance, оба исходных repro,
+6 mixed users fields,6 personal copy families и cross-scope cascade rollback PASS.
+Новых P1/P2 в проверенном diff нет. Это внутренний review, не внешний crypto audit.
+
+Итоговый повтор после всех fixes/форматирования:26/26 PHP suites PASS,
+`runtime/backend-copies-final/`. Сайт, Play и личные устройства не изменялись.
+
+Сохранены failures `backend-copies-01` (тест ожидал запрет no-op private UPDATE),
+`backend-copies-03` (fixture использовал короткий hash вместо64 символов).
+Исправлены fixtures; production checks не ослаблялись. Полный продуктовый coverage,
+Android instrumented/low-memory и48 сценариев этим инкрементом не подтверждаются.
 
 ## Что ещё обязательно до полного security/E2EE-выпуска
 

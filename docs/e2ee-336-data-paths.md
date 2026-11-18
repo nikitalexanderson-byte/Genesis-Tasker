@@ -67,6 +67,37 @@ non-exportable browser CryptoKeys cannot be serialized as JSON and called a
 recoverable backup. Migration and lifecycle handling for their local key store
 remain a separate explicit integration task; forward secrecy is not claimed.
 
+`contracts/e2ee/server-schema-v1.json` separately classifies all218 actual SQLite
+tables through migration127, including every column. Acceptance checks the whole
+actual schema, so an undeclared table/column cannot disappear outside an already
+declared fence list.106 legacy-private tables have persistent INSERT/UPDATE/DELETE
+fences. This is schema disposition, not proof of complete feature integration.
+
+The copied-content inventory includes backup stages/safety snapshots/receipts,
+advice notification days/deliveries, shared preferences, bulk definitions and
+automation/template/custom-field/planning/mutation receipts. Multi-project copies
+use set-valued predicates: every explicit historical reference and a conservative
+superset of the author's current project memberships. They never choose one
+arbitrary project. This superset is only a deny/source-revision boundary; it must
+NEVER authorize reading/exporting another project's content. Former-member view
+receipts retain explicit spaceId/space_id and parents of resolved project refs.
+Legacy retirement remains a separate reviewed plan; missing purged historical
+provenance cannot be presented as newly encrypted history.
+
+Six private preference/reference fields in users have targeted fences/source
+hashing. Identity, billing and technical columns remain independent authority.
+Member-category titles are mixed with authoritative permissions; archives must
+whitelist content. Existing messenger conversation titles are explicitly marked
+as pending content integration, separate from the existing message ciphertext
+protocol. VK/Yandex copies remain explicit external boundaries. Modeling checkout
+requests contain payment metadata/result IDs; their content solution is in the
+separately classified private results table.
+
+Scope-aware housekeeping uses the same predicates as persistent fences. Protected
+staging/history/metrics are retained, legacy rows expire normally, and a protected
+shared cascade rolls back only its own item and counts. Corrupt historical receipt
+JSON is retained for investigation, never treated as an empty ownership binding.
+
 All feature adapter rows above are pending product integration. Current focused
 registry tests prove missing-path/forked-source/duplicate-output/incomplete-path
 rejection and snapshot preservation; they do not replace the original 48

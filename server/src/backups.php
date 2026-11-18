@@ -142,7 +142,7 @@ function genesisBackupPreview(string $owner,array $input): array
     genesisBeginWriteTransaction($db);
     try {
         genesisBackupRequirePaid($owner);
-        $db->prepare('DELETE FROM backup_stages WHERE expires_at<?')->execute([time()]);
+        $db->prepare('DELETE FROM backup_stages WHERE expires_at<? AND '.genesisE2eeLegacyRowsAvailableSql('backup_stages','backup_stages'))->execute([time()]);
         $q=$db->prepare('SELECT COUNT(*),COALESCE(SUM(length(payload_enc)),0) FROM backup_stages WHERE user_id=?');$q->execute([$owner]);$usage=$q->fetch(PDO::FETCH_NUM);
         if((int)$usage[0]>=3||(int)$usage[1]+strlen($encrypted)>64*1024*1024)throw new GenesisResourceLimitException(429,'BACKUP_STAGING_FULL');
         $db->prepare('INSERT INTO backup_stages VALUES(?,?,?,?,?,?,?,?)')->execute([$id,$owner,$hash,$generation,$revision,$encrypted,genesisNow(),time()+1800]);$db->commit();
@@ -226,8 +226,8 @@ function genesisBackupRequireGeneration(string $owner,?string $sent): void
 function genesisBackupMaintenance(): void
 {
     $db=genesisDb();
-    $db->prepare('DELETE FROM backup_stages WHERE expires_at<?')->execute([time()]);
-    $db->prepare('DELETE FROM backup_safety_snapshots WHERE expires_at<? AND id NOT IN (SELECT newer.id FROM backup_safety_snapshots newer WHERE newer.id=(SELECT recent.id FROM backup_safety_snapshots recent WHERE recent.user_id=newer.user_id ORDER BY recent.created_at DESC,recent.id DESC LIMIT 1))')->execute([time()]);
+    $db->prepare('DELETE FROM backup_stages WHERE expires_at<? AND '.genesisE2eeLegacyRowsAvailableSql('backup_stages','backup_stages'))->execute([time()]);
+    $db->prepare('DELETE FROM backup_safety_snapshots WHERE expires_at<? AND '.genesisE2eeLegacyRowsAvailableSql('backup_safety_snapshots','backup_safety_snapshots').' AND id NOT IN (SELECT newer.id FROM backup_safety_snapshots newer WHERE newer.id=(SELECT recent.id FROM backup_safety_snapshots recent WHERE recent.user_id=newer.user_id ORDER BY recent.created_at DESC,recent.id DESC LIMIT 1))')->execute([time()]);
     $db->prepare("UPDATE account_recovery_requests SET state='invalidated' WHERE expires_at<? AND state IN ('pending','approved')")->execute([time()]);
     $cutoff=gmdate('Y-m-d\TH:i:s\Z',time()-365*86400);
     $db->prepare("DELETE FROM account_recovery_requests WHERE created_at<? AND state NOT IN ('pending','approved')")->execute([$cutoff]);

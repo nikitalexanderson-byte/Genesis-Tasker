@@ -36,10 +36,6 @@ storeCheck(genesisE2eeRow($db,"SELECT checked_at,last_error FROM shared_task_ser
 storeCheck((int)genesisE2eeRow($db,"SELECT needs_refresh FROM habit_reminder_profiles WHERE user_id='synthetic-e2ee-owner'",[])['needs_refresh']===0);
 storeCheck(genesisE2eeRow($db,"SELECT id FROM habit_reminder_deliveries WHERE id='e2ee-habit-delivery'",[])!==false);
 // Direct leased entrypoints also defer, including a caller holding an old claim.
-$db->prepare('INSERT INTO advice_notification_devices VALUES(?,?,?,?,?,?)')->execute(['e2ee-advice-device','synthetic-e2ee-owner','synthetic-hash',genesisSharedContentEncrypt('{}'),$now,$now]);
-$db->prepare('INSERT INTO advice_notification_deliveries(id,user_id,device_id,day_key,created_at,updated_at) VALUES(?,?,?,?,?,?)')
-    ->execute(['e2ee-advice-delivery','synthetic-e2ee-owner','e2ee-advice-device','2026-11-18',$now,$now]);
-$db->prepare('UPDATE users SET advice_notifications_json=? WHERE id=?')->execute(['{"enabled":true}','synthetic-e2ee-owner']);
 storeCheck(genesisAdviceNotificationScan(100,$now,[],['available'=>true])===0);
 foreach(['habit'=>'genesisHabitReminderPerformLeased','advice'=>'genesisAdviceNotificationPerformLeased'] as $channel=>$perform) {
     $key=$channel.'-protected';genesisBackgroundEnqueue($channel.'-notification',$key,['deliveryId'=>'e2ee-'.$channel.'-delivery']);$job=jobRow($key);

@@ -62,7 +62,7 @@ function storePut(string $objectId,int $expected,array $lease,string $domain='wo
 $db->exec('DROP TRIGGER e2ee_fence_task_links_update');
 $db->exec("CREATE TRIGGER e2ee_fence_task_links_update BEFORE UPDATE ON task_links WHEN 0 BEGIN SELECT RAISE(ABORT,'STALE_GUARD'); END");
 $db->prepare('INSERT OR IGNORE INTO schema_migrations VALUES(?,?)')->execute(['e2ee-fence-v1',genesisNow()]);
-$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v2'");genesisE2eeInitializeGuards($db);
+$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v3'");genesisE2eeInitializeGuards($db);
 $runtime=json_decode((string)file_get_contents(dirname(__DIR__,2).'/tests/fixtures/e2ee/v1-runtime.json'),true,64,JSON_THROW_ON_ERROR);
 storeCheck(storeB64(genesisE2eeCommandBytes($runtime['signedCommand']['command']))===$runtime['commandBytes']);
 storeCheck(genesisE2eeCommandHash($runtime['signedCommand']['command'])===$runtime['commandHash']);
@@ -75,6 +75,11 @@ $db->prepare('INSERT INTO habit_reminder_devices(id,user_id,device_key,request_i
     ->execute(['e2ee-habit-device',$owner,'synthetic','synthetic','synthetic','UTC',$now,$now]);
 $db->prepare("INSERT INTO habit_reminder_deliveries(id,user_id,device_id,profile_revision,event_key,encrypted_target,scheduled_at,expires_at,created_at,updated_at) VALUES(?,?,?,0,?,?,?,'2000-01-01T00:00:00Z',?,?)")
     ->execute(['e2ee-habit-delivery',$owner,'e2ee-habit-device','synthetic',genesisSharedContentEncrypt('{}'),$now,$now,$now]);
+$db->prepare('INSERT INTO advice_notification_devices VALUES(?,?,?,?,?,?)')->execute(['e2ee-advice-device',$owner,'synthetic-hash',genesisSharedContentEncrypt('{}'),$now,$now]);
+$db->prepare('INSERT INTO advice_notification_deliveries(id,user_id,device_id,day_key,created_at,updated_at) VALUES(?,?,?,?,?,?)')
+    ->execute(['e2ee-advice-delivery',$owner,'e2ee-advice-device','2026-11-18',$now,$now]);
+$db->prepare('UPDATE users SET advice_notifications_json=? WHERE id=?')->execute(['{"enabled":true}',$owner]);
+$db->prepare('INSERT INTO backup_safety_snapshots VALUES(?,?,?,?,?)')->execute(['preserved-backup',$owner,genesisSharedContentEncrypt('{"synthetic":"historical safety copy"}'),$now,time()+3600]);
 foreach(['link-a','link-b'] as $id)$db->prepare('INSERT INTO tasks(id,user_id,sacred_year,month_index,sacred_day,due_date,title,created_at,updated_at) VALUES(?,?,2026,0,1,?,?,?,?)')
     ->execute([$id,$owner,'2026-11-18','Synthetic task',$now,$now]);
 $db->prepare('INSERT INTO task_links(user_id,task_id,depends_on_task_id,created_at) VALUES(?,?,?,?)')->execute([$owner,'link-a','link-b',$now]);
@@ -108,6 +113,8 @@ storeReject(fn()=>$db->prepare('UPDATE workspace_blobs SET ciphertext=? WHERE us
 storeReject(fn()=>$db->prepare("UPDATE task_links SET created_at='bypass' WHERE user_id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
 storeReject(fn()=>$db->prepare("UPDATE users SET workspace_key_mode='account',workspace_key_enc='lease-bypass' WHERE id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
 storeReject(fn()=>$db->prepare('UPDATE users SET data_generation=99 WHERE id=?')->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
+storeReject(fn()=>$db->prepare("UPDATE backup_safety_snapshots SET snapshot_enc='bypass' WHERE user_id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
+storeReject(fn()=>$db->prepare("UPDATE users SET advice_preferences_json='{\"enabled\":false}' WHERE id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
 $put=storePut('workspace-main',0,$lease);
 $bad=$put;$bad['command']['payload']['envelope']['context']['ownerId']='foreign';$bad['signature']=storeSign(genesisE2eeCommandBytes($bad['command']),$device['private']);
 storeReject(fn()=>genesisE2eeExecute($owner,$bad,$session),'E2EE_CONTEXT_MISMATCH');
@@ -137,6 +144,11 @@ foreach(['shared/messenger/devices','shared/messenger/conversations/test/message
     genesisE2eeEnforceLegacyRoute('POST',$route,$owner);
 storeReject(fn()=>$db->prepare("UPDATE users SET workspace_key_mode='account',workspace_key_enc='new-server-key' WHERE id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
 storeReject(fn()=>$db->prepare('UPDATE users SET data_generation=99 WHERE id=?')->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
+storeReject(fn()=>$db->prepare("DELETE FROM backup_safety_snapshots WHERE user_id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
+storeReject(fn()=>$db->prepare("UPDATE users SET advice_notifications_json='{}' WHERE id=?")->execute([$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');
+// Independent authoritative metadata stays writable; archive content cannot set it.
+$db->prepare("UPDATE users SET language='en',subscription_plan='free' WHERE id=?")->execute([$owner]);
+storeCheck(genesisFindUser($owner)['language']==='en');
 storeReject(fn()=>$db->prepare("UPDATE e2ee_scopes SET state='preparing' WHERE scope_id=?")->execute([$scopeId]),'E2EE_DOWNGRADE_FORBIDDEN');
 storeReject(fn()=>$db->prepare('DELETE FROM e2ee_scopes WHERE scope_id=?')->execute([$scopeId]),'E2EE_DOWNGRADE_FORBIDDEN');
 $challenge=genesisE2eeCreateChallenge($owner,$scopeId,$session,['deviceId'=>'device-b','keys'=>$public($newDevice)]);
