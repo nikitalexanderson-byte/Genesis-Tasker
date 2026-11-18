@@ -3,11 +3,19 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import { calendarModule } from './helpers/calendar-modules.mjs';
 import { cloudSyncClient, MemoryStorage, deferred } from './helpers/cloud-sync-client.mjs';
+import {WebLegacyTransportGate,WebMigrationTransportFence,validateLegacyTransportTransition} from '../app/e2ee/legacy-transport-fence.ts';
 const { DiaryRepository } = calendarModule('app/diary-storage.ts');
 const { newDiaryNote, validateDiaryNote, reactToAdvice, restoreDiaryNote, diaryCustomInk, diaryNoteCategory } = calendarModule('app/diary-model.ts');
 const advice = { id:'catalog-advice-123', dayKey:'2026-10-26', title:'A useful thought', body:'Private saved advice snapshot', language:'en', categories:['aretology'], dismissed:false, sources:[{work:'Original book',kind:'inspired'}] };
 const note = () => newDiaryNote('A private diary thought', 'Private diary title');
 const response=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json'}});
+function migrationFence(client) {
+  const markers={get:async owner=>client.legacyMarkers.get(owner)??null,commit:async(owner,expected,next)=>{
+    validateLegacyTransportTransition(owner,client.legacyMarkers.get(owner)??null,expected,next);
+    if(next)client.legacyMarkers.set(owner,next);else client.legacyMarkers.delete(owner);
+  }};
+  return new WebMigrationTransportFence(new WebLegacyTransportGate(markers,client.navigator.locks),client.userId,`personal:${client.userId}`,()=>{});
+}
 async function fixture() {
  const a=await cloudSyncClient({userId:'diary-owner'}), b=await cloudSyncClient({userId:a.userId,key:a.key});
  const rows=new Map(), last=new Map(), deleted=new Map(); let writes=0;
@@ -50,6 +58,38 @@ async function fixture() {
  return {a,b,rows,last,deleted,storage,otherStorage,respond,get settings(){return settings;},get writes(){return writes;},
    left:new DiaryRepository(a.userId,storage,a.client.personalDocumentAccess(a.userId)),right:new DiaryRepository(b.userId,otherStorage,b.client.personalDocumentAccess(b.userId))};
 }
+
+test('diary construction never rewrites source bytes, including after a migration fence',async()=>{
+ const f=await fixture();f.storage.setItem(`genesis-diary-v1:${f.a.userId}:settings`,JSON.stringify({syncEnabled:false,revision:2,deviceLocalOnly:true}));
+ const before=[...f.storage.data.entries()];await migrationFence(f.a).withFence(async()=>{});
+ const reopened=new DiaryRepository(f.a.userId,f.storage,f.a.client.personalDocumentAccess(f.a.userId));
+ assert.equal(reopened.syncEnabled,false);assert.deepEqual([...f.storage.data.entries()],before);
+});
+
+test('migration captures a completed encrypted draft and every subsequent diary write or cleanup is denied',{timeout:4000},async()=>{
+ const f=await fixture(),value=note(),held=f.a.holdCrypto('encrypt'),editing=f.left.keepDraft(value);await held.entered;
+ let captured;
+ const migration=migrationFence(f.a).withFence(async()=>{captured=[...f.storage.data.entries()];});
+ held.release();const draft=await editing;await migration;
+ assert.ok(captured.some(([key])=>key===draft.draftKey));assert.ok(!JSON.stringify(captured).includes(value.body));
+ const before=[...f.storage.data.entries()],count=f.a.requests.length;
+ const operations=[()=>f.left.keepDraft({...value,body:'late edit'},draft),()=>f.left.save(value),()=>f.left.list(),
+  ()=>f.left.discardDraft(draft.draftKey),()=>f.left.discardOwnDraft(value.id),()=>f.left.discardEditorDraft(value.id,draft.draftKey),
+  ()=>f.left.remove({note:value,revision:1}),()=>f.left.setSyncEnabled(false),()=>f.left.setDreamTodayMode('all-day'),
+  ()=>f.left.dreamToday('Europe/Moscow'),()=>f.left.authorizeDreamVoice(),()=>f.left.adviceId('synthetic-advice')];
+ for(const operation of operations)await assert.rejects(operation(),/E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN/);
+ assert.deepEqual([...f.storage.data.entries()],before);assert.equal(f.a.requests.length,count);
+});
+
+test('diary save cannot deadlock behind migration queued during encryption and cleanup precedes its snapshot',{timeout:4000},async()=>{
+ const f=await fixture(),value=note(),held=f.a.holdCrypto('encrypt'),saving=f.left.save(value);await held.entered;
+ let snapshot;
+ const migration=migrationFence(f.a).withFence(async()=>{snapshot=[...f.storage.data.entries()];});
+ held.release();const saved=await saving;await migration;
+ assert.equal(saved.revision,1);assert.equal(f.writes,1);
+ assert.ok(!snapshot.some(([key])=>key.includes(':draft:')),'The snapshot must see completed acknowledgment cleanup');
+ assert.ok(JSON.parse(f.storage.getItem(`genesis-diary-v1:${f.a.userId}:cache`)).some(row=>row.id===value.id&&row.revision===1));
+});
 test('custom palette colors survive encrypted sync and retain a legacy preset fallback', async()=>{
  const f=await fixture(), original={...note(),color:'rose',customColor:'#15aB73'};
  await f.left.save(original);

@@ -35,7 +35,7 @@ function NoteEditor({ record, language, onClose, onSaved }: { record?: DiaryReco
     try { await actions.current.keepDraft(note, record); setDraftStatus(text.draftSaved); return true; }
     catch { setError(text.draftError); return false; }
   };
-  const close = async () => { if (!saving && await persistDraft()) { if (!changed && !record?.draftKey) diary.discardOwn(note.id); onClose(); } };
+  const close = async () => { if (!saving && await persistDraft()) { try {if (!changed && !record?.draftKey) await diary.discardOwn(note.id); onClose();}catch{setError(text.draftError);} } };
   const ref = useDialogAccessibility<HTMLElement>(() => { void close(); });
   useEffect(() => {
     if (!changed || !note.body.trim() || saving) return;
@@ -48,7 +48,7 @@ function NoteEditor({ record, language, onClose, onSaved }: { record?: DiaryReco
     try {
       const saved = asCopy ? { ...value, id: crypto.randomUUID(), advice: undefined, reaction: null, archived: false, createdAt: value.updatedAt } : value;
       await diary.save(saved, asCopy ? undefined : record);
-      if (asCopy) { if (record?.draftKey) diary.discard(record.draftKey); else diary.discardOwn(note.id); }
+      if (asCopy) { if (record?.draftKey) await diary.discard(record.draftKey); else await diary.discardOwn(note.id); }
       onSaved(saved);
     } catch (failure) { setError(failure instanceof Error && /DIARY_(REVISION_CONFLICT|NOTE_DELETED|LOCAL_UPLOAD_PENDING)/.test(failure.message) ? text.conflict : text.error); }
     finally { setSaving(false); }

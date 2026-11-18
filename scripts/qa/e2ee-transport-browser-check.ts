@@ -1,4 +1,5 @@
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from '../../app/e2ee/legacy-transport-fence.ts';
+import type {LegacyOperationPermit} from '../../app/e2ee/legacy-transport-fence.ts';
 import {loadGenesisSession,loadSavedAdvice,e2eeRequest,updateAccountPreferences} from '../../app/cloud-sync';
 import {requireLegacyTransportWorker} from '../../app/e2ee/legacy-worker-client.ts';
 
@@ -6,6 +7,7 @@ import {requireLegacyTransportWorker} from '../../app/e2ee/legacy-worker-client.
 // files, secrets, real account session or production/provider endpoints.
 let markers=new IndexedDbLegacyTransportMarkers(),gate=new WebLegacyTransportGate(markers,navigator.locks);
 const pending=new Map<string,Promise<unknown>>(),releases=new Map<string,()=>void>();
+const operationPermits=new Map<string,LegacyOperationPermit>();
 const state:Record<string,unknown>={ready:true,secureContext:isSecureContext};
 function report(){document.querySelector('#result')!.textContent=JSON.stringify(state,null,2);}
 async function probe(){const response=await fetch('/private-probe');return await response.json();}
@@ -17,6 +19,15 @@ function hold(owner:string){
 }
 const api={
   hold,
+  holdOperation(owner:string){
+    const work=gate.withOperation(owner,()=>{},async permit=>{
+      operationPermits.set(owner,permit);state[`${owner}:operation-entered`]=true;report();
+      await new Promise<void>(resolve=>releases.set(owner,resolve));
+      await gate.borrow(permit,owner,()=>{},probe);
+      gate.assertOperation(permit,owner);state[`${owner}:local-committed`]=true;report();return true;
+    });pending.set(owner,work);return 'queued';
+  },
+  async reuseOperation(owner:string){try{await gate.borrow(operationPermits.get(owner)!,owner,()=>{},probe);return{ok:true};}catch(error){return{ok:false,error:(error as Error).message};}},
   release(owner:string){releases.get(owner)?.();},
   wait(owner:string){return pending.get(owner);},
   state(){return state;},

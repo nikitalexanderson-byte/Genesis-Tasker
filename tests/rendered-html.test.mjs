@@ -2513,7 +2513,7 @@ test("QA-01 precaches the complete cold-install shell before activating the work
   assert.match(viteConfig, /precache-manifest\.js/);
   assert.match(viteConfig, /createHash\("sha256"\)/);
   assert.match(viteConfig, /PRECACHE_STATIC_REVISION = "lunar-cool-calendar-art-v8"/);
-  assert.match(packageJson.scripts["build:web"], /^vite build --config vite\.web\.config\.ts && .*node scripts\/verify-offline-precache\.mjs$/);
+  assert.match(packageJson.scripts["build:web"], /^node scripts\/export-e2ee-legacy-worker\.mjs --check && vite build --config vite\.web\.config\.ts && .*node scripts\/verify-offline-precache\.mjs$/);
   assert.match(verifier, /missingAssets/);
   assert.match(verifier, /REQUIRED_VISUAL_ASSETS/);
   assert.match(verifier, /mandatory entry assets/);

@@ -8,6 +8,9 @@ export interface LegacyTransportMarkers {
   commit(ownerId:string,expected:LegacyTransportMarker|null,next:LegacyTransportMarker|null):Promise<void>;
 }
 export type LegacyTransportLocks = Pick<LockManager,'request'>;
+declare const legacyOperationBrand:unique symbol;
+export type LegacyOperationPermit=Readonly<{[legacyOperationBrand]:true}>;
+type OperationState={ownerId:string;current:()=>void;open:boolean;pending:Set<Promise<unknown>>};
 // Old pages have no authenticated owner binding. This lock is a conservative
 // transport DENY boundary only; it cannot grant access to any account's content.
 export const LEGACY_UNBOUND_TRANSPORT_LOCK='genesis-e2ee-legacy-transport-v1:unbound';
@@ -36,6 +39,7 @@ export function validateLegacyTransportTransition(ownerId:string,current:LegacyT
  * Its separate database is outside all legacy logout/import/cache cleanup paths. */
 export class IndexedDbLegacyTransportMarkers implements LegacyTransportMarkers {
   #database:Promise<IDBDatabase>;
+  static available() { try{return typeof globalThis.indexedDB?.open==='function';}catch{return false;} }
   constructor(factory:IDBFactory=indexedDB) {
     this.#database=new Promise((resolve,reject)=>{
       const request=factory.open('genesis-e2ee-legacy-transport-v1',1);let failed=false;
@@ -88,6 +92,7 @@ export class IndexedDbLegacyTransportMarkers implements LegacyTransportMarkers {
  * IO with the global permit; synchronous local writers still need integration. */
 export class WebLegacyTransportGate {
   readonly markers:LegacyTransportMarkers;readonly locks:LegacyTransportLocks;
+  #operations=new WeakMap<LegacyOperationPermit,OperationState>();
   constructor(markers:LegacyTransportMarkers,locks:LegacyTransportLocks) {
     if(!locks?.request)throw new Error('E2EE_BROWSER_LOCKS_REQUIRED');this.markers=markers;this.locks=locks;
   }
@@ -96,6 +101,37 @@ export class WebLegacyTransportGate {
       assertCurrent();if(await this.markers.get(ownerId))throw new Error('E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN');
       assertCurrent();const result=await operation();assertCurrent();return result;
     });
+  }
+  /** One shared lock covers local encryption, journals, IO and final cleanup.
+   * Nested IO borrows this exact live permit instead of queuing behind a waiting
+   * exclusive migration lock (which would deadlock its own parent operation). */
+  async withOperation<T>(ownerId:string,current:()=>void,operation:(permit:LegacyOperationPermit)=>Promise<T>,signal?:AbortSignal) {
+    return this.request(ownerId,current,async()=>{
+      const permit=Object.freeze({}) as LegacyOperationPermit;
+      const state:OperationState={ownerId,current,open:true,pending:new Set()};this.#operations.set(permit,state);
+      try {
+        const result=await operation(permit);this.assertOperation(permit,ownerId);
+        if(state.pending.size)throw new Error('E2EE_UNAWAITED_LEGACY_OPERATION');
+        return result;
+      } finally {
+        state.open=false;
+        // Rejected/unawaited children cannot release the exclusion while an old
+        // request is still receiving bytes. Their checks fail before local commit.
+        await Promise.allSettled([...state.pending]);this.#operations.delete(permit);
+      }
+    },signal);
+  }
+  assertOperation(permit:LegacyOperationPermit,ownerId:string) {
+    const state=this.#operations.get(permit);
+    if(!state?.open||state.ownerId!==ownerId)throw new Error('E2EE_INVALID_LEGACY_OPERATION');
+    state.current();
+  }
+  async borrow<T>(permit:LegacyOperationPermit,ownerId:string,current:()=>void,operation:()=>Promise<T>) {
+    this.assertOperation(permit,ownerId);current();const state=this.#operations.get(permit)!;
+    const task=Promise.resolve().then(()=>{this.assertOperation(permit,ownerId);current();return operation();})
+      .then(result=>{this.assertOperation(permit,ownerId);current();return result;});
+    state.pending.add(task);
+    try{return await task;}finally{state.pending.delete(task);}
   }
 }
 

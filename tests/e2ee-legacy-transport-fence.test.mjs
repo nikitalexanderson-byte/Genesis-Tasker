@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {WebLegacyTransportGate,WebMigrationTransportFence,validateLegacyTransportTransition} from '../app/e2ee/legacy-transport-fence.ts';
+import {FixtureLockManager} from './helpers/browser-locks.mjs';
 const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;});return{promise,resolve};};
 class Markers {
   rows=new Map();fail=false;
@@ -61,4 +62,43 @@ test('queued account changes and aborts cannot start a new private request',asyn
   await assert.rejects(gate.request('owner',()=>{},async()=>assert.fail('aborted IO'),abort.signal),/ABORTED/);
   assert.throws(()=>new WebLegacyTransportGate(new Markers(),null),/E2EE_BROWSER_LOCKS_REQUIRED/);
   await fence.withFence(async()=>{});
+});
+
+test('a complete operation borrows its permit for IO while migration waits, then commits locally before capture',{timeout:3000},async()=>{
+  const markers=new Markers(),locks=new FixtureLockManager(),gate=new WebLegacyTransportGate(markers,locks);
+  const fence=new WebMigrationTransportFence(gate,'owner','personal:scope',()=>{}),entered=deferred(),resume=deferred(),order=[];
+  let permit;
+  const editing=gate.withOperation('owner',()=>{},async borrowed=>{
+    permit=borrowed;entered.resolve();await resume.promise;order.push('encrypted');
+    await gate.borrow(borrowed,'owner',()=>{},async()=>{order.push('IO parsed');});
+    gate.assertOperation(borrowed,'owner');order.push('local commit');
+  });
+  await entered.promise;
+  const migrating=fence.withFence(async()=>{order.push('snapshot');});
+  for(let n=0;n<20&&(await locks.query()).pending.length===0;n++)await new Promise(resolve=>setImmediate(resolve));
+  assert.ok((await locks.query()).pending.length);resume.resolve();await editing;await migrating;
+  assert.deepEqual(order,['encrypted','IO parsed','local commit','snapshot']);
+  await assert.rejects(gate.borrow(permit,'owner',()=>{},async()=>assert.fail('expired IO')),/E2EE_INVALID_LEGACY_OPERATION/);
+});
+
+test('borrowed permits cannot be forged, moved to another owner or used by another gate',async()=>{
+  const markers=new Markers(),locks=new FixtureLockManager(),gate=new WebLegacyTransportGate(markers,locks),other=new WebLegacyTransportGate(markers,locks);
+  await gate.withOperation('owner',()=>{},async permit=>{
+    for(const [target,token,owner]of [[gate,{},'owner'],[gate,permit,'other'],[other,permit,'owner']])
+      await assert.rejects(target.borrow(token,owner,()=>{},async()=>assert.fail('invalid IO')),/E2EE_INVALID_LEGACY_OPERATION/);
+  });
+});
+
+test('an unawaited child is rejected and drained before an exclusive migration may capture',{timeout:3000},async()=>{
+  const markers=new Markers(),locks=new FixtureLockManager(),gate=new WebLegacyTransportGate(markers,locks);
+  const fence=new WebMigrationTransportFence(gate,'owner','personal:scope',()=>{}),entered=deferred(),release=deferred();
+  let child;
+  const editing=gate.withOperation('owner',()=>{},async permit=>{
+    child=gate.borrow(permit,'owner',()=>{},async()=>{entered.resolve();await release.promise;return true;}).catch(error=>error);
+    await entered.promise;
+  });
+  const rejected=assert.rejects(editing,/E2EE_UNAWAITED_LEGACY_OPERATION/);await entered.promise;
+  const migration=fence.withFence(async()=>{});
+  await new Promise(resolve=>setImmediate(resolve));assert.equal(await markers.get('owner'),null);
+  release.resolve();await rejected;assert.match((await child).message,/E2EE_INVALID_LEGACY_OPERATION/);await migration;
 });

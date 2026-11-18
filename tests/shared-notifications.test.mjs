@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
-import {runInNewContext} from 'node:vm';
+import {runServiceWorker} from './helpers/service-worker-context.mjs';
 import {clearPrivateDeviceStorage} from '../app/local-sign-out.ts';
 import {waitForSharedPush} from '../app/shared-push-device.ts';
 import {rebaseNotificationPreferences} from '../app/notification-preferences-rebase.ts';
@@ -38,7 +38,7 @@ function pushWorker({status=200,displayAllowed=true,externalUrl=false,stores=new
  const events=new Map(),shown=[],requests=[];
  const cacheFor=name=>{if(!stores.has(name))stores.set(name,new Map());const rows=stores.get(name);return{match:async key=>rows.get(typeof key==='string'?key:key.url)?.clone(),put:async(key,response)=>rows.set(typeof key==='string'?key:key.url,response),keys:async()=>[...rows.keys()].map(url=>new Request(url)),delete:async key=>rows.delete(typeof key==='string'?key:key.url)};};
  const self={registration:{scope:origin,showNotification:async(title,options)=>shown.push({title,...options})},location:{origin:new URL(origin).origin},addEventListener:(name,listener)=>events.set(name,listener)};
- runInNewContext(source,{self,URL,Request,Response,importScripts(){},caches:{open:async name=>cacheFor(name)},fetch:async(url,options)=>{
+ runServiceWorker(source,{self,URL,Request,Response,caches:{open:async name=>cacheFor(name)},fetch:async(url,options)=>{
   requests.push({url,options});const id=new URL(url).pathname.split('/').at(-1);return new Response(JSON.stringify({displayAllowed,message:{deliveryId:id,body:'Synthetic recipient-localized generic copy',lang:'el',url:externalUrl?'https://outside.invalid/':`${origin}?notice=${id}#projects`}}),{status,headers:{'Content-Type':'application/json'}});
  }});
  const push=async(data)=>{let work;events.get('push')({data:{json:()=>data},waitUntil:promise=>{work=promise;}});await work;};

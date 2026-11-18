@@ -506,7 +506,7 @@ const serverProtectedTransportOwners=new Set<string>();
 let personalTransportGate:WebLegacyTransportGate|null=null;
 function legacyTransportGate() {
   if(!personalTransportGate) {
-    if(typeof navigator==='undefined'||!navigator.locks||typeof indexedDB==='undefined')throw new Error('E2EE_BROWSER_LOCKS_REQUIRED');
+    if(typeof navigator==='undefined'||!navigator.locks||!IndexedDbLegacyTransportMarkers.available())throw new Error('E2EE_BROWSER_LOCKS_REQUIRED');
     personalTransportGate=new WebLegacyTransportGate(new IndexedDbLegacyTransportMarkers(),navigator.locks);
   }
   return personalTransportGate;
@@ -539,19 +539,34 @@ export async function physisRequest<T>(path: string, init: RequestInit = {}): Pr
 }
 
 /** Narrow adapter for independent encrypted personal documents. Reuses the session and workspace key. */
-export function personalDocumentAccess(userId: string) {
+export type PersonalDocumentAccess={
+  check:()=>void;
+  request:<T>(path:string,init?:RequestInit)=>Promise<T>;
+  privateId:(scope:string)=>Promise<string>;
+  seal:(value:unknown,scope:string)=>Promise<{iv:string;ciphertext:string}>;
+  open:<T>(envelope:{iv:string;ciphertext:string},scope:string)=>Promise<T>;
+  withLegacyOperation:<T>(operation:(access:PersonalDocumentAccess)=>Promise<T>)=>Promise<T>;
+};
+export function personalDocumentAccess(userId: string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):PersonalDocumentAccess {
   const active = captureAccountSessionGuard();
   const check = () => {
     active();
+    if (confirmedTransportOwnerId !== null && confirmedTransportOwnerId !== userId) throw new Error('E2EE_ACCOUNT_CHANGED');
     if (!userId || userId !== workspaceUserId || !workspaceKey) throw new Error("Разблокируйте зашифрованное пространство GENESIS.");
+    if(permit)legacyTransportGate().assertOperation(permit,userId);
   };
-  return {
+  const access:PersonalDocumentAccess={
     check,
+    withLegacyOperation:async operation=>{
+      check();
+      if(permit)return legacyTransportGate().borrow(permit,userId,check,()=>operation(access));
+      return legacyTransportGate().withOperation(userId,check,borrowed=>operation(personalDocumentAccess(userId,borrowed)));
+    },
     async request<T>(path: string, init: RequestInit = {}) {
       check();
       if (!/^\/(?:mindmaps(?:\/[a-zA-Z0-9_-]+(?:\/history)?)?|diary(?:\/[a-zA-Z0-9_-]+)?|stoicheion-workspace|aurora-workspace|aurora-results)$/.test(path)
         && !/^\/diary\/dream-clock\?timeZone=[A-Za-z0-9_%+.-]+$/.test(path)) throw new Error("Invalid personal document path");
-      const value = await api<T>(path, init); check(); return value;
+      const value = await api<T>(path, init,{},permit); check(); return value;
     },
     async privateId(scope: string) {
       check(); const encode = (value: string) => new TextEncoder().encode(value);
@@ -574,6 +589,7 @@ export function personalDocumentAccess(userId: string) {
       check(); return JSON.parse(new TextDecoder().decode(plain)) as T;
     },
   };
+  return access;
 }
 
 /** Deliberately separate from bootstrap: checking export must not pull or merge user data. */
@@ -923,20 +939,24 @@ export class GenesisApiError extends Error {
   }
 }
 
-async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {}): Promise<T> {
+async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
   const method=(init.method??'GET').toUpperCase();let body:unknown=undefined;
   if(path.replace(/^\/+/, '').split('?',1)[0]==='account/preferences'&&!['GET','HEAD','OPTIONS'].includes(method)) {
     try { if(typeof init.body!=='string')throw new Error();body=JSON.parse(init.body); }
     catch { throw new Error('E2EE_INVALID_LEGACY_REQUEST'); }
   }
-  if(!personalLegacyTransportProtected(method,path,body))return apiOverHttp<T>(path,init,feedback);
+  if(!permit&&!personalLegacyTransportProtected(method,path,body))return apiOverHttp<T>(path,init,feedback);
   const owner=confirmedTransportOwnerId,generation=sessionGeneration;
   if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  if(workspaceUserId&&workspaceUserId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');
   if(serverProtectedTransportOwners.has(owner))throw new Error('E2EE_UPGRADE_REQUIRED');
   const current=()=>{requireActiveLocalSession(generation);if(confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');if(serverProtectedTransportOwners.has(owner))throw new Error('E2EE_UPGRADE_REQUIRED');};
   const waiting=new AbortController(),abort=()=>waiting.abort(init.signal?.reason);
   accountRequests.add(waiting);if(init.signal?.aborted)abort();else init.signal?.addEventListener('abort',abort,{once:true});
-  try { return await legacyTransportGate().request(owner,current,()=>apiOverHttp<T>(path,{...init,signal:waiting.signal},feedback,owner),waiting.signal); }
+  try {
+    const send=()=>apiOverHttp<T>(path,{...init,signal:waiting.signal},feedback,owner);
+    return await (permit?legacyTransportGate().borrow(permit,owner,current,send):legacyTransportGate().request(owner,current,send,waiting.signal));
+  }
   finally { accountRequests.delete(waiting);init.signal?.removeEventListener('abort',abort); }
 }
 
@@ -1001,16 +1021,25 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: { 
       throw new Error("Сервис GENESIS временно недоступен.");
     }
     const profile = payload.user as GenesisUser | null | undefined;
-    if(legacyOwner&&profile!==undefined&&profile?.uid!==legacyOwner)throw new Error('E2EE_ACCOUNT_CHANGED');
-    if (profile && typeof profile.uid === 'string') {
+    if(legacyOwner&&profile!==undefined&&profile?.uid!==legacyOwner){endLocalSession();throw new Error('E2EE_ACCOUNT_CHANGED');}
+    // Only the fully validated /session reader may establish or change identity.
+    // Other endpoints can update this owner's metadata, never rebind old bytes
+    // or grant a new owner merely by returning a `user` object.
+    if (path !== '/session' && profile && typeof profile.uid === 'string') {
+      if (!confirmedTransportOwnerId || profile.uid !== confirmedTransportOwnerId) {
+        endLocalSession();
+        throw new Error('E2EE_ACCOUNT_CHANGED');
+      }
       if (!acceptTrialTransport(profile.uid, profile.featureAccess, trialCheckpoint)) throw new DOMException("Superseded account profile", "AbortError");
       rememberFeatureAccess(profile.uid, profile.featureAccess);
-      confirmedTransportOwnerId=profile.uid;
       // This server hint only denies legacy IO. It cannot approve a device or
       // open keys, and an absent later hint never reopens this owner's writer.
       if(Object.hasOwn(profile,'privatePreferencesMode'))serverProtectedTransportOwners.add(profile.uid);
     }
-    else if(profile===null)confirmedTransportOwnerId=null;
+    else if(path !== '/session' && profile===null) {
+      endLocalSession();
+      throw new Error('E2EE_ACCOUNT_CHANGED');
+    }
     return payload as T;
   } catch (error) {
     if (timedOut) throw new GenesisNetworkTimeoutError("Сервер GENESIS не ответил за 20 секунд. Изменения сохранены на устройстве и будут синхронизированы позже.");
@@ -1281,6 +1310,7 @@ function restoreWorkspaceSyncCache() {
 
 export function restoreOfflineWorkspaceSession(userId: string, provider: "google" | "yandex" = "google") {
   if (localSessionEnded || privateDeviceAccessBlocked()) return false;
+  if (confirmedTransportOwnerId !== null && confirmedTransportOwnerId !== userId) return false;
   activeAuthProvider = provider;
   workspaceUserId = userId;
   workspaceDeviceId = deviceWorkspaceId(userId);
@@ -1811,7 +1841,30 @@ export function observeGenesisUser(
 }
 
 const readGenesisSession = sessionReader(async () => {
-  try { return sessionEnvelope<GenesisUser>(await api<unknown>("/session", { cache: "no-store" })); }
+  const generation=sessionGeneration;
+  try {
+    const result=sessionEnvelope<GenesisUser>(await api<unknown>("/session", { cache: "no-store" }));
+    if(generation!==sessionGeneration)throw new DOMException('Session check superseded','AbortError');
+    // A validated identity change retires old capabilities even when persisting
+    // the new local login receipt fails (for example, exhausted storage).
+    const previousOwner=confirmedTransportOwnerId||workspaceUserId||null;
+    if(previousOwner!==null&&previousOwner!==result.user?.uid)endLocalSession();
+    const accepted=result.user!==null&&acceptAuthenticatedLogin(localStorage,result.loginId||'')&&!hasLocalSignOut(localStorage);
+    const user=accepted?result.user:null;
+    if(user===null&&previousOwner!==null&&previousOwner===result.user?.uid)endLocalSession();
+    localSessionEnded=user===null;
+    confirmedTransportOwnerId=user?.uid??null;
+    if(user) {
+      if(!acceptTrialTransport(user.uid,user.featureAccess,beginTrialTransport()))throw new DOMException('Superseded account profile','AbortError');
+      rememberFeatureAccess(user.uid,user.featureAccess);
+      if(Object.hasOwn(user,'privatePreferencesMode'))serverProtectedTransportOwners.add(user.uid);
+    } else invalidateTrialAccess();
+    csrfToken=result.csrf;
+    activeAuthProvider=user?.authProvider==='yandex'?'yandex':'google';
+    // Coalesced observers share the post-transition receipt. They must not
+    // mistake this reader's own deliberate retirement for a stale response.
+    return {user,generation:sessionGeneration};
+  }
   catch(error) {
     if(error instanceof GenesisApiError || error instanceof DOMException && error.name==="AbortError" ||
       error instanceof TypeError || error instanceof GenesisNetworkTimeoutError)throw error;
@@ -1820,20 +1873,8 @@ const readGenesisSession = sessionReader(async () => {
 });
 
 export async function loadGenesisSession(signal?: AbortSignal) {
-  const generation=sessionGeneration;
   const result = await readGenesisSession(signal);
-  if(generation!==sessionGeneration)throw new DOMException("Session check superseded", "AbortError");
-  if (!result.user) invalidateTrialAccess();
-  if (result.user && !acceptAuthenticatedLogin(localStorage, result.loginId || "")) {
-    localSessionEnded = true;
-    invalidateTrialAccess();
-    csrfToken = "";
-    return null;
-  }
-  localSessionEnded = result.user === null || hasLocalSignOut(localStorage);
-  if (localSessionEnded) invalidateTrialAccess();
-  csrfToken = result.csrf;
-  activeAuthProvider = result.user?.authProvider === "yandex" ? "yandex" : "google";
+  if(result.generation!==sessionGeneration)throw new DOMException("Session check superseded", "AbortError");
   return result.user;
 }
 
@@ -2971,16 +3012,22 @@ export function observeCloudTasks(
   listener: (tasks: GenesisTask[], taskLists: GoogleTaskList[], fromCache: boolean, warning: string | null) => void,
   onError: (error: Error) => void,
 ) {
+  const check=personalDocumentAccess(_uid).check;
   let active = true;
   let polling = false;
   const poll = async () => {
     if (polling) return;
     polling = true;
     try {
+      check();
       await flushSharedMutations();
+      check();
       await flushPendingMutations();
+      check();
       await refreshWorkspaceFromCloud();
+      check();
       const result = await api<{ tasks: GenesisTask[]; deletedTaskIds?: string[]; taskLists?: GoogleTaskList[]; syncWarning?: string | null }>("/sync/tasks");
+      check();
       rememberDeletedTasks(result.deletedTaskIds ?? []);
       if (active) listener(
         [...result.tasks.filter((task) => !isCloudTaskDeleted(task.id)).map((task) => normalizeTask(task)), ...await loadRecoveredTasks(_uid)],
@@ -3039,7 +3086,11 @@ export async function mergeLocalWorkspace(
   _uid: string,
   local: Pick<GenesisWorkspace, "tasks" | "projects" | "categories" | "taskListLinks" | "taskLists"> & Partial<HabitWorkspace>,
 ) {
+  const check=captureAccountSessionGuard();check();
+  if(confirmedTransportOwnerId!==_uid)throw new Error('E2EE_ACCOUNT_CHANGED');
   const remote = await loadGenesisWorkspace();
+  check();
+  if(remote.user.uid!==_uid)throw new Error('E2EE_ACCOUNT_CHANGED');
   if (readPending().some(isWorkspaceMutation)) {
     await flushPendingMutations();
   } else if (shouldSeedRemoteWorkspace(remote.hasRemoteStructure,
@@ -3072,10 +3123,12 @@ export async function mergeLocalWorkspace(
 }
 
 export async function saveCloudTask(_uid: string, task: GenesisTask) {
+  const check=personalDocumentAccess(_uid).check;check();
   if (task.restoredFrom && /^restored-[a-f0-9]{32}$/.test(task.id)) {
     const access = personalDocumentAccess(_uid);
     const envelope = await access.seal(task, `recovered-task:v1:${task.id}`);
     const receipt = await api<{ revision: number }>(`/recovered-tasks/${task.id}`, { method:'PUT', body:JSON.stringify({ ...envelope, expectedRevision:task.restoredRevision ?? 0 }) });
+    check();
     return { ...task, restoredRevision:receipt.revision };
   }
   if (isCloudTaskDeleted(task.id)) throw new Error("TASK_DELETED");
@@ -3088,9 +3141,11 @@ export async function saveCloudTask(_uid: string, task: GenesisTask) {
   const mutation: PendingMutation = { key: `task:${task.id}`, path, method: "PUT", body };
   queueMutation(mutation);
   return withTaskMutationLock(mutation.key, async () => {
+    check();
     if (isCloudTaskDeleted(task.id)) throw new Error("TASK_DELETED");
     try {
       const result = await api<{ task: GenesisTask }>(path, { method: "PUT", body });
+      check();
       clearMutation(mutation.key, mutation);
       return normalizeTask(result.task);
     } catch (error) {
@@ -3115,6 +3170,7 @@ export async function createCloudTaskOnce(uid: string, task: GenesisTask) {
 }
 
 export async function removeCloudTask(_uid: string, task: GenesisTask) {
+  const check=personalDocumentAccess(_uid).check;check();
   if (task.restoredFrom && /^restored-[a-f0-9]{32}$/.test(task.id)) {
     await api(`/recovered-tasks/${task.id}`, { method:'DELETE', body:JSON.stringify({ expectedRevision:task.restoredRevision ?? 0 }) }); return;
   }
@@ -3131,7 +3187,9 @@ export async function removeCloudTask(_uid: string, task: GenesisTask) {
   const mutation: PendingMutation = { key: `task:${task.id}`, path, method: "DELETE", body };
   queueMutation(mutation);
   await withTaskMutationLock(mutation.key, async () => {
+    check();
     await api<{ ok: boolean }>(path, { method: "DELETE", body });
+    check();
     clearMutation(mutation.key, mutation);
   });
 }

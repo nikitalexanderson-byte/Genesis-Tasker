@@ -11,7 +11,7 @@ type Context = State & { busy: boolean; refresh: () => Promise<void>; save: (not
   dreamToday: (zone:string,signal?:AbortSignal)=>Promise<string>; authorizeDreamVoice:()=>Promise<void>;
   remove: (record: DiaryRecord) => Promise<void>; setSyncEnabled: (enabled: boolean) => Promise<void>;
   setDreamTodayMode: (mode: DreamSettings['todayMode']) => Promise<void>; discardEditorDraft: (id: string, key?: string) => Promise<void>;
-  react: (advice: DailyAdvice, reaction: 'favorite' | 'dislike') => Promise<void>; keepDraft: (note: DiaryNote, record?: DiaryRecord) => Promise<void>; discard: (key: string) => void; discardOwn: (id: string) => void };
+  react: (advice: DailyAdvice, reaction: 'favorite' | 'dislike') => Promise<void>; keepDraft: (note: DiaryNote, record?: DiaryRecord) => Promise<void>; discard: (key: string) => Promise<void>; discardOwn: (id: string) => Promise<void> };
 const DiaryContext = createContext<Context | null>(null);
 export function useDiary() { const value = useContext(DiaryContext); if (!value) throw new Error('DIARY_PROVIDER_MISSING'); return value; }
 
@@ -59,8 +59,8 @@ export function DiaryProvider({ userId, ready, children, repositoryOverride }: {
     },
     keepDraft: async (note, record) => { if (!repository) throw new Error('DIARY_UNAVAILABLE'); ++request.current; const draft = await repository.keepDraft(note, record);
       setState(previous => ({ ...previous, records: [...previous.records.filter(row => row.draftKey !== draft.draftKey), draft] })); },
-    discard: key => { repository?.discardDraft(key); setState(previous => ({ ...previous, records: previous.records.filter(row => row.draftKey !== key) })); },
-    discardOwn: id => { const key = repository?.discardOwnDraft(id); setState(previous => ({ ...previous, records: previous.records.filter(row => row.draftKey !== key) })); },
+    discard: async key => { if(!repository)throw new Error('DIARY_UNAVAILABLE');await repository.discardDraft(key);setState(previous => ({ ...previous, records: previous.records.filter(row => row.draftKey !== key) })); },
+    discardOwn: async id => { if(!repository)throw new Error('DIARY_UNAVAILABLE');const key = await repository.discardOwnDraft(id);setState(previous => ({ ...previous, records: previous.records.filter(row => row.draftKey !== key) })); },
     discardEditorDraft: async (id, key) => {
       if (!repository) throw new Error('DIARY_UNAVAILABLE');
       ++request.current; const keys = await repository.discardEditorDraft(id, key);

@@ -72,16 +72,18 @@ test("shared startup cancellation stops waiting without canceling the common ini
 });
 
 test("shared startup retains the bounded bootstrap timeout instead of waiting forever", async () => {
-  const scheduled = new Map();let id = 0;
+  const scheduled = new Map(),entered=deferred();let id = 0;
   const fixture = await cloudSyncClient({ initializeWorkspace: false, timers: {
     setTimeout(callback, delay) { const handle = ++id; scheduled.set(handle, { callback, delay }); return handle; },
     clearTimeout(handle) { scheduled.delete(handle); },
   } });
   fixture.respond((_url, init) => new Promise((_resolve, reject) => {
     init.signal.addEventListener("abort", () => reject(init.signal.reason), { once: true });
+    entered.resolve();
   }));
   const initialized = assert.rejects(fixture.client.loadGenesisWorkspace(), error => error instanceof fixture.client.GenesisNetworkTimeoutError);
   const rejected = assert.rejects(fixture.client.querySharedTasks(queryFilter), error => error instanceof fixture.client.GenesisNetworkTimeoutError);
+  await entered.promise;
   const timeout = [...scheduled.values()].find(row => row.delay === 20_000);assert(timeout);
   timeout.callback(); await Promise.all([initialized, rejected]);
   assert.equal(scheduled.size, 0);
@@ -131,6 +133,8 @@ test("a successful stale shared response cannot enter the new account during an 
   const other = await cloudSyncClient({ storage: fixture.storage, userId: "response-user-b" });
   await other.seedStore({ cache: { [queryPath]: cacheEntry({ tasks: [{ ...task, title: "B private task" }] }) }, queue: [] });
   const before = fixture.storage.getItem(`genesis-shared-offline-v1:${other.userId}`);
+  fixture.respond(url=>url.endsWith('/session')?ok(session(other.userId,'response-login-b')):reply.promise);
+  await fixture.client.loadGenesisSession();
   assert.equal(fixture.client.restoreOfflineWorkspaceSession(other.userId), true);
   reply.resolve(ok({ tasks: [task] }));await rejected;
   assert.equal(fixture.storage.getItem(`genesis-shared-offline-v1:${other.userId}`), before);
@@ -427,6 +431,8 @@ test("a late denial from the previous workspace never invalidates the new worksp
   const rejected = assert.rejects(fixture.client.loadSharedTask("cache-project", "cache-task"), error => error.status === 401);
   const other = await cloudSyncClient({ storage: fixture.storage, userId: "cache-user-b", key: fixture.key });
   await other.seedStore({ cache: { [taskPath]: cacheEntry({ task }) }, queue: [] });
+  fixture.respond(url=>url.endsWith('/session')?ok(session(other.userId,'denial-login-b')):pending.promise);
+  await fixture.client.loadGenesisSession();
   assert.equal(fixture.client.restoreOfflineWorkspaceSession("cache-user-b"), true);
   pending.resolve(denied(403));
   await rejected;

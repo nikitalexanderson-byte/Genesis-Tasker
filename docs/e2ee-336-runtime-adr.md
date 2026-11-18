@@ -293,6 +293,15 @@ remain required. Pilot/cutover and mandatory update floors stay disabled.
 
 ## Trust limits and remaining integration
 
+The web transport owner is now established only by a validated session reader.
+Owner changes retire old capabilities before accepting a new login receipt;
+quota failures cannot retain an old editor under a changed cookie identity.
+Whole-operation permits extend the owner Web Lock through local journaling and
+cleanup. Nested IO borrows the gate's opaque live permit, avoiding reentrant lock
+deadlock behind a waiting migration. The actual diary writer is connected; other
+feature writers and migration-time protected editing remain mandatory. Evidence
+and exact limits: `e2ee-336-operation-fences.md`.
+
 A saved trusted checkpoint detects rollback below that checkpoint and conflicting
 extensions; completely new devices need a trusted-device exchange or independently
 held recovery kit. No external witness/anti-fork service is claimed. A malicious

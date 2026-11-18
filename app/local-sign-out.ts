@@ -51,7 +51,7 @@ export function acceptAuthenticatedLogin(storage: Storage, loginId: string) {
     // Only a different server-issued login can reopen a locally signed-out device.
     storage.removeItem(LOCAL_SIGN_OUT_KEY);
   }
-  if (loginId) storage.setItem(LOGIN_ID_KEY, loginId);
+  if (loginId && storage.getItem(LOGIN_ID_KEY) !== loginId) storage.setItem(LOGIN_ID_KEY, loginId);
   return true;
 }
 

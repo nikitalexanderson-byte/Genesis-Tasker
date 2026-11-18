@@ -11,7 +11,7 @@ registry does **not** mean that feature adapters have been implemented.
 | --- | --- | --- |
 | personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native adapters and native SQLite barrier implemented; selected actual Room/Keystore/API26 process-death cases pass; product routing, web multitab fence, older-format review and full upgrade/lifecycle acceptance remain |
 | personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Preserve all GENESIS tasks, recurrence, detached occurrences and tombstones; separate Google/Yandex copies and unsent external operations |
-| personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | New root for notes/dreams/references/settings/files; test offline drafts, conflicting edits, deleted advice notes and disabled sync |
+| personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | Web whole-operation writer fence now includes journals/IO/cleanup; actual source reconciliation, new root for notes/dreams/references/settings/files and native adapter remain required |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Maps, images, complete history and conversion-task references; no omission of unmounted maps |
 | personal.physis | Legacy password vault and account-v2 vault; active web memory store includes unsent queue/rotation; native encrypted documents; server records/IDs/receipts | Independently unlock every source, reconcile rotations and deleted IDs, re-encrypt account-known descendants; a locked source cannot be called empty |
 | personal.aurora | Encrypted cache/base/pending document, personal learning and removed sessions; native documents; server workspaces/model results | Preserve immutable sessions/results; explain optional assistant disclosure separately |
@@ -142,3 +142,9 @@ registry tests prove missing-path/forked-source/duplicate-output/incomplete-path
 rejection and snapshot preservation; they do not replace the original 48
 acceptance scenarios or establish full content coverage. Production flags/floors
 remain disabled.
+
+The actual web diary now holds one owner-scoped operation permit through local
+encryption/journals, borrowed HTTP and response cleanup; migration waits for that
+complete operation. Other local/editor sources still need integration. See
+`e2ee-336-operation-fences.md`; this is writer exclusion, not a finished diary
+source adapter or migration-time protected editor routing.
