@@ -10,14 +10,14 @@ function fixture(){const database=new Map(),keys=new Map();let offline=false,los
  return {database,offline:()=>{offline=true;},online:()=>{offline=false;},loseAck:()=>{lostAck=true;},lock:()=>{locked=true;},
  access(owner){if(!keys.has(owner))keys.set(owner,crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']));
  const check=()=>{if(locked)throw Object.assign(new Error('AUTH_REQUIRED'),{status:401});};
- return {check,async request(path,init={}){check();assert.equal(path,'/aurora-workspace');if(offline)throw new TypeError('Synthetic offline');
+ const access={check,async withLegacyOperation(operation){check();const value=await operation(access);check();return value;},async request(path,init={}){check();assert.equal(path,'/aurora-workspace');if(offline)throw new TypeError('Synthetic offline');
   const old=database.get(owner);if((init.method??'GET')==='GET')return {document:old??null};
   const body=JSON.parse(init.body),same=old&&old.iv===body.iv&&old.ciphertext===body.ciphertext&&old.expectedRevision===body.expectedRevision;
   if(same)return {revision:old.revision};if((old?.revision??0)!==body.expectedRevision)throw new Error('AURORA_REVISION_CONFLICT');
   const row={...body,revision:body.expectedRevision+1};database.set(owner,row);if(lostAck){lostAck=false;throw new TypeError('Synthetic lost acknowledgement');}return {revision:row.revision};
  },async seal(value,scope){check();const iv=crypto.getRandomValues(new Uint8Array(12)),key=await keys.get(owner),aad=new TextEncoder().encode(owner+':'+scope);
   const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:aad},key,new TextEncoder().encode(JSON.stringify(value)));return {iv:Buffer.from(iv).toString('base64'),ciphertext:Buffer.from(encrypted).toString('base64')};
- },async open(envelope,scope){check();const key=await keys.get(owner),plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Buffer.from(envelope.iv,'base64'),additionalData:new TextEncoder().encode(owner+':'+scope)},key,Buffer.from(envelope.ciphertext,'base64'));return JSON.parse(new TextDecoder().decode(plain));}};
+ },async open(envelope,scope){check();const key=await keys.get(owner),plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Buffer.from(envelope.iv,'base64'),additionalData:new TextEncoder().encode(owner+':'+scope)},key,Buffer.from(envelope.ciphertext,'base64'));return JSON.parse(new TextDecoder().decode(plain));}};return access;
  }};
 }
 function session(id,owner='a'){

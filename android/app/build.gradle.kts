@@ -149,6 +149,8 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     from(rootProject.file("../app/custom-field-recovery-translations.json")) { into("i18n") }
     from(rootProject.file("../app/planning-translations.json")) { into("i18n") }
     from(rootProject.file("../app/daily-advice-copy.json")) { into("i18n") }
+    from(rootProject.file("../app/native-web-runtime-copy.json")) { into("i18n") }
+    from(rootProject.file("../contracts/native-web-runtime-v1.json")) { into("i18n") }
     from(rootProject.file("../app/messenger-copy.json")) { into("i18n") }
     from(rootProject.file("../app/diary-copy.json")) { into("i18n") }
     from(rootProject.file("../app/dream-journal-copy.json")) { into("i18n") }
@@ -232,6 +234,7 @@ val genesisAuroraAssets = tasks.register<GenesisAuroraAssetsTask>("genesisAurora
     assetsDirectory.set(layout.buildDirectory.dir("generated/auroraAssets"))
     inputs.files(rootProject.fileTree("../app") { include("aurora/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
     inputs.file(rootProject.file("../scripts/aurora/build-native.mjs"))
+    inputs.file(rootProject.file("../contracts/native-web-runtime-v1.json"))
     inputs.file(rootProject.file("../pnpm-lock.yaml"))
 }
 androidComponents.onVariants { variant ->

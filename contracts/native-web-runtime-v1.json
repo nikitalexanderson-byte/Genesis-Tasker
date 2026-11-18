@@ -1,0 +1,5 @@
+{
+  "protocol": 1,
+  "minimumChromiumMajor": 111,
+  "buildTarget": "chrome111"
+}

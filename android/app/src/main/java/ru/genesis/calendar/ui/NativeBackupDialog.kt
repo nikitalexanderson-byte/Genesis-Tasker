@@ -151,6 +151,7 @@ private class BackupJavascriptBridge(private val store:BackupNativeStore,private
     val store=remember(owner,gateway){BackupNativeStore(app,owner,app.workspaceScope,gateway)}
     val scope=rememberCoroutineScope();val scheme=MaterialTheme.colorScheme
     val language=LocalGenesisLanguage.current;val dark=LocalEveningTheme.current;val palette=LocalDarkPalette.current
+    val runtimeProblem=rememberNativeWebRuntimeProblem(language)
     val textScale=LocalDensity.current.fontScale
     var chooser by remember { mutableStateOf<CompletableDeferred<Uri?>?>(null) }
     val openFile=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){uri->chooser?.complete(uri);chooser=null}
@@ -171,7 +172,8 @@ private class BackupJavascriptBridge(private val store:BackupNativeStore,private
         Surface(Modifier.fillMaxSize().safeDrawingPadding().imePadding(),color=scheme.surface) {
             Column(Modifier.fillMaxSize().testTag("backup-native-dialog")) {
                 Box(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=8.dp)){EditorDialogHeader(title,"backup-native-close",onClose)}
-                AndroidView(factory={ctx->WebView(ctx).apply {
+                if(runtimeProblem!=null)UntranslatedText(runtimeProblem,Modifier.padding(16.dp).testTag("backup-native-runtime-required"),color=scheme.error)
+                if(runtimeProblem==null)AndroidView(factory={ctx->WebView(ctx).apply {
                     setBackgroundColor(scheme.surface.toArgb());settings.javaScriptEnabled=true
                     settings.allowFileAccess=false;settings.allowContentAccess=false;settings.domStorageEnabled=false;settings.databaseEnabled=false
                     settings.javaScriptCanOpenWindowsAutomatically=false;settings.setSupportMultipleWindows(false)
@@ -199,7 +201,7 @@ private class BackupJavascriptBridge(private val store:BackupNativeStore,private
                     }
                     loadUrl(BackupWebOrigin.ENTRY)
                 }},modifier=Modifier.weight(1f).fillMaxWidth(),onRelease={view->(view.tag as? BackupJavascriptBridge)?.stop();view.removeJavascriptInterface("GenesisBackupBridge");view.stopLoading();view.destroy()})
-                if(!ready)LinearProgressIndicator(Modifier.fillMaxWidth())
+                if(!ready&&runtimeProblem==null)LinearProgressIndicator(Modifier.fillMaxWidth())
             }
         }
     }

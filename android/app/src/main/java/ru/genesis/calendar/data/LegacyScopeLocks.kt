@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap
  * SQLite separately enforces persistent storage barriers across connections. */
 internal object LegacyScopeLocks {
     private val locks = ConcurrentHashMap<String, Mutex>()
-    fun mutex(db: GenesisDatabase, scope: String): Mutex = locks.getOrPut(
+    fun identity(db: GenesisDatabase, scope: String) =
         "${db.openHelper.databaseName ?: "memory:${System.identityHashCode(db)}"}\u0000$scope"
-    ) { Mutex() }
+    fun mutex(db: GenesisDatabase, scope: String): Mutex = locks.getOrPut(identity(db,scope)) { Mutex() }
 }
 
 /** Blocks before any legacy personal socket is created; keeps its permit until
@@ -30,6 +30,9 @@ internal class NativeLegacyTransportGate(private val db: GenesisDatabase) {
             check(!db.inTransaction())
         } catch (_: IllegalStateException) {
             throw AuthApiError("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN")
+        }
+        NativeLegacyOperationPermit.current()?.let { permit ->
+            return permit.borrowTransport(db,scope,assertCurrent,operation)
         }
         return runBlocking {
             LegacyScopeLocks.mutex(db, scope).withLock {

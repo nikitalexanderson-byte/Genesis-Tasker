@@ -1,6 +1,7 @@
 import {createRoot} from 'react-dom/client';
 import {GnoWizard} from './GnoWizard';
-import {AuroraRepository,type AuroraAccess,type Sealed} from './repository';
+import {AuroraRepository,type Sealed} from './repository';
+import {createNativeAuroraAccess,type NativeAuroraBridge} from './native-access';
 import {snapshotFromSavedDraw,createTemporalTriad} from './draw-policy';
 import type {AuroraHost} from './host';
 import '../globals.css';
@@ -10,7 +11,7 @@ import '../dark-palettes.css';
 import '../universal-ui.css';
 import './native.css';
 type Boot={ownerId:string;language:string;client:'android'|'android-play';source:Parameters<typeof snapshotFromSavedDraw>[0]|null;temporal?:Parameters<typeof createTemporalTriad>[0]|null;dark:boolean;palette:string;colors:Record<string,string>};
-type NativeBridge={postMessage:(message:string)=>void;getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void;removeItem:(key:string)=>void;contentSize?:(height:number,width:number)=>void};
+type NativeBridge=NativeAuroraBridge&{postMessage:(message:string)=>void;contentSize?:(height:number,width:number)=>void};
 declare global{interface Window{GenesisAuroraBridge:NativeBridge;GenesisAuroraRuntime:{init:(payload:string)=>void;resolve:(id:string,payload:string)=>void;requestClose:()=>boolean;theme:(payload:string)=>void}}}
 const decode=(payload:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload),c=>c.charCodeAt(0))));
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
@@ -43,9 +44,9 @@ window.GenesisAuroraRuntime={
    reportContentSize();
   };
   new MutationObserver(watchContent).observe(document.getElementById('root')!,{subtree:true,childList:true,characterData:true});
-  const access:AuroraAccess={check(){},request:<T,>(path:string,init:RequestInit={})=>rpc<T>('request',{path,method:init.method??'GET',body:init.body?JSON.parse(String(init.body)):null}),
-   seal:(value,scope)=>rpc<Sealed>('seal',{value,scope}),open:<T,>(value:Sealed,scope:string)=>rpc<T>('open',{value,scope})};
-  const repo=new AuroraRepository(boot.ownerId,{getItem:key=>window.GenesisAuroraBridge.getItem(key)||null,setItem:(key,value)=>window.GenesisAuroraBridge.setItem(key,value),removeItem:key=>window.GenesisAuroraBridge.removeItem(key)},access);
+  const access=createNativeAuroraAccess(window.GenesisAuroraBridge,rpc);
+  const unboundStorage=()=>{throw new Error('E2EE_INVALID_LEGACY_OPERATION');};
+  const repo=new AuroraRepository(boot.ownerId,{getItem:unboundStorage,setItem:unboundStorage,removeItem:unboundStorage},access);
   let taskPending:Promise<unknown>|null=null;
   const host:AuroraHost={ownerId:boot.ownerId,language:boot.language,client:boot.client,canAddTask:true,load:()=>repo.load(),save:value=>repo.save(value),syncState:()=>repo.syncState,
    conflictVersions:()=>repo.conflictVersions(),recoverConflict:(ids,now)=>repo.recoverAsCopy(ids,now),

@@ -41,6 +41,7 @@ private class OlympianNavigationBridge(private val navigate: (String, String) ->
     onOpenStoicheion: (String?) -> Unit, onOpenSector: (String) -> Unit) {
     val context = LocalContext.current
     val language = LocalGenesisLanguage.current
+    val runtimeProblem = rememberNativeWebRuntimeProblem(language)
     val dark = LocalEveningTheme.current
     val palette = LocalDarkPalette.current
     val scheme = MaterialTheme.colorScheme
@@ -63,8 +64,9 @@ private class OlympianNavigationBridge(private val navigate: (String, String) ->
                 Box(Modifier.padding(horizontal = 12.dp)) {
                     EditorDialogHeader(title, "olympian-catalog-close") { currentClose() }
                 }
-                if (failed) Text("Не удалось загрузить данные", color = scheme.error, modifier = Modifier.padding(16.dp))
-                AndroidView(factory = { ctx -> WebView(ctx).apply {
+                if (runtimeProblem!=null) UntranslatedText(runtimeProblem, color = scheme.error, modifier = Modifier.padding(16.dp).testTag("olympian-native-runtime-required"))
+                else if (failed) Text("Не удалось загрузить данные", color = scheme.error, modifier = Modifier.padding(16.dp))
+                if(runtimeProblem==null)AndroidView(factory = { ctx -> WebView(ctx).apply {
                     web = this
                     setBackgroundColor(scheme.surface.toArgb())
                     settings.javaScriptEnabled = true

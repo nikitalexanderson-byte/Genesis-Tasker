@@ -18,10 +18,40 @@ const output=Array.isArray(result)?result.flatMap(row=>row.output):result.output
 const script=output.find(row=>row.type==='chunk'&&row.isEntry)?.code;if(!script)throw new Error('No browser entry built');
 let count=0,preferenceCount=0,owner='browser-api-'+randomUUID(),protectedProfile=false;
 const slow=new Map();
+const editorRows=new Map(),editorHeld=new Set(),editorReplies=new Map();let editorWrites=0;
 const workerProgram=`importScripts('/e2ee-worker.js');const guarded=GenesisLegacyTransportWorker.installLegacyTransportWorker(self);self.addEventListener('install',event=>event.waitUntil(self.skipWaiting()));self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));self.addEventListener('fetch',event=>{if(guarded.handles(event.request))event.respondWith(guarded(event.request));});`;
 const server=http.createServer((request,response)=>{
   response.setHeader('Cache-Control','no-store');response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'");
   const path=new URL(request.url,'http://localhost').pathname;
+  if(path==='/editor-controls/hold'&&request.method==='GET') {
+    const kind=new URL(request.url,'http://localhost').searchParams.get('kind');
+    if(!['mindmaps','shared','aurora','restoration'].includes(kind)){response.writeHead(400).end();return;}
+    editorHeld.add(kind);response.setHeader('Content-Type','application/json');response.end('{}');return;
+  }
+  if(path==='/editor-controls/state'&&request.method==='GET') {
+    response.setHeader('Content-Type','application/json');response.end(JSON.stringify({waiting:[...editorReplies.keys()],writes:editorWrites}));return;
+  }
+  if(path==='/editor-controls/release'&&request.method==='GET') {
+    const kind=new URL(request.url,'http://localhost').searchParams.get('kind');editorHeld.delete(kind);
+    editorReplies.get(kind)?.();editorReplies.delete(kind);response.setHeader('Content-Type','application/json');response.end('{}');return;
+  }
+  const editorRoute=path.match(/^\/api\/(mindmaps(?:\/[a-zA-Z0-9_-]+)?|shared\/spaces\/synthetic-space\/mindmaps(?:\/[a-zA-Z0-9_-]+)?|aurora-workspace|stoicheion-workspace)$/);
+  if(editorRoute&&['GET','PUT'].includes(request.method)) {
+    const kind=path.includes('/shared/')?'shared':path.includes('/mindmaps')?'mindmaps':path.includes('aurora')?'aurora':'restoration';
+    response.setHeader('Content-Type','application/json');
+    if(kind!=='shared'&&request.headers['x-genesis-account-id']!==owner){response.writeHead(409).end(JSON.stringify({error:'E2EE_ACCOUNT_CHANGED'}));return;}
+    const key=owner+':'+kind,old=editorRows.get(key);
+    if(request.method==='GET'){response.end(JSON.stringify(['mindmaps','shared'].includes(kind)?{maps:old?[old]:[]}:{document:old??null}));return;}
+    let body='',size=0;request.on('data',chunk=>{size+=chunk.length;if(size>8*1024*1024){request.destroy();return;}body+=chunk;});
+    request.on('end',()=>{
+      let value;try{value=JSON.parse(body);}catch{response.writeHead(400).end('{}');return;}
+      if(value.expectedRevision!==(old?.revision??0)){response.writeHead(409).end(JSON.stringify({error:'SYNTHETIC_REVISION_CONFLICT'}));return;}
+      const revision=value.expectedRevision+1;editorWrites++;
+      editorRows.set(key,{...value,id:path.split('/').at(-1),revision,updatedAt:'2026-11-18T00:00:00Z'});
+      const finish=()=>response.end(JSON.stringify({revision}));
+      if(editorHeld.has(kind))editorReplies.set(kind,finish);else finish();
+    });return;
+  }
   if(path==='/api/account/preferences'&&request.method==='PUT') {
     preferenceCount++;request.resume();response.setHeader('Content-Type','application/json');response.end(JSON.stringify({user:{uid:owner}}));return;
   }

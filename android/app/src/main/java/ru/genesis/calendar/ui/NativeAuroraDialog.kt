@@ -33,9 +33,11 @@ import ru.genesis.calendar.auth.AuthController
 import ru.genesis.calendar.auth.AuthFailure
 import ru.genesis.calendar.data.AuroraGateway
 import ru.genesis.calendar.data.AuroraNativeStore
+import ru.genesis.calendar.data.NativeLegacyOperationPermit
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 import java.util.Locale
 
 data class AuroraTaskDraft(val title: String, val description: String, val dueDate: String?,
@@ -62,33 +64,65 @@ internal object AuroraWebOrigin {
 }
 
 @Keep
-private class AuroraJavascriptBridge(private val store: AuroraNativeStore, private val gateway: AuroraGateway,
+internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, private val gateway: AuroraGateway,
     private val scope: CoroutineScope, private val deliver: (String,JSONObject)->Unit,
     private val onTask: (AuroraTaskDraft)->Unit, private val onCheckout: (String)->Unit,
     private val onSpeak: (String)->Unit, private val onClose: ()->Unit,
     private val onContentSize: (Int,Int)->Unit, private val onLoadFailed: ()->Unit) {
     @Volatile private var active=true
+    private val operationMonitor=Any()
+    private val operations=ConcurrentHashMap<String,NativeLegacyOperationPermit>()
+    private val startedOperations=mutableSetOf<String>()
+    private val endedOperations=mutableSetOf<String>()
     @JavascriptInterface fun contentSize(height: Int, width: Int) {
         if (!active || height !in 1..100000 || width !in 1..8192) return
         scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width) }
     }
     private fun check(){check(active){"AURORA_VIEW_CLOSED"};gateway.check()}
-    @JavascriptInterface fun getItem(key:String):String?=runBlocking(Dispatchers.IO){check();store.getItem(key).also{check()}}
-    @JavascriptInterface fun setItem(key:String,value:String)=runBlocking(Dispatchers.IO){check();store.setItem(key,value);check()}
-    @JavascriptInterface fun removeItem(key:String)=runBlocking(Dispatchers.IO){check();store.removeItem(key);check()}
+    private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
+    private fun endOperation(id:String)=synchronized(operationMonitor) { endedOperations.add(id);operations.remove(id) }
+    @JavascriptInterface fun checkSession(operationId:String){check();if(operationId.isNotEmpty())operation(operationId).check()}
+    @JavascriptInterface fun getItem(key:String,operationId:String):String?=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.getItem(key).also{check()} }}
+    @JavascriptInterface fun setItem(key:String,value:String,operationId:String)=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.setItem(key,value);check() }}
+    @JavascriptInterface fun removeItem(key:String,operationId:String)=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.removeItem(key);check() }}
     @JavascriptInterface fun postMessage(raw:String){
         if(raw.length>4_100_000)return
         val request=runCatching{JSONObject(raw)}.getOrNull()?:return
         val id=request.optString("id");if(!id.matches(Regex("[a-f0-9-]{36}")))return
-        scope.launch(Dispatchers.IO){
+        val beginToken=if(request.optString("method")=="operationBegin")request.optJSONObject("payload")?.optString("operationId")
+            ?.takeIf{it.matches(Regex("[a-f0-9-]{36}"))} else null
+        val job=scope.launch(Dispatchers.IO){
             val response=try{
                 // Leaving a failed view must not depend on a still-valid cloud session.
                 when (request.getString("method")) {
                     "close" -> { withContext(Dispatchers.Main) { if(active)onClose() }; return@launch }
                     "loadFailed" -> { withContext(Dispatchers.Main) { if(active)onLoadFailed() }; return@launch }
                 }
-                check();val payload=request.optJSONObject("payload")?:JSONObject()
-                val value:Any=when(request.getString("method")){
+                val method=request.getString("method");val payload=request.optJSONObject("payload")?:JSONObject()
+                // Cleanup must release even when the captured account/session has
+                // already changed. finish invalidates and drains native children.
+                if(method=="operationEnd") {
+                    val token=payload.getString("operationId");require(token.matches(Regex("[a-f0-9-]{36}")))
+                    val permit=endOperation(token)
+                    permit?.finish();withContext(Dispatchers.Main){if(active)deliver(id,JSONObject().put("value",JSONObject()))};return@launch
+                }
+                check()
+                suspend fun execute():Any=when(method){
+                    "operationBegin"->{
+                        val token=payload.getString("operationId");require(token.matches(Regex("[a-f0-9-]{36}")))
+                        synchronized(operationMonitor) {
+                            check(active && token !in endedOperations && startedOperations.add(token)) { "E2EE_INVALID_LEGACY_OPERATION" }
+                            check(startedOperations.size<=8192 && endedOperations.size<=8192) { "AURORA_OPERATION_LIMIT" }
+                        }
+                        val permit=store.beginLegacyOperation()
+                        try {
+                            check();synchronized(operationMonitor) {
+                                check(active && token !in endedOperations) { "E2EE_INVALID_LEGACY_OPERATION" };operations[token]=permit
+                            }
+                            JSONObject().put("operationId",token)
+                        }
+                        catch(error:Throwable){permit.close();operations.entries.removeAll { it.value===permit };throw error}
+                    }
                     "request"->store.request(payload.getString("method"),payload.getString("path"),payload.optJSONObject("body"))
                     "billing"->{val method=payload.getString("method");val path=payload.getString("path");val body=payload.optJSONObject("body")
                         if(method=="POST"&&path=="/billing/modeling/orders")body?.put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android")
@@ -106,16 +140,24 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                         withContext(Dispatchers.Main){check();onTask(AuroraTaskDraft(title,description,date,time,zone,kind,source))};JSONObject()}
                     else->error("AURORA_METHOD_INVALID")
                 }
-                check();JSONObject().put("value",value)
-            }catch(cancelled:CancellationException){return@launch}
+                val token=payload.optString("operationId")
+                val value=if(token.isNotEmpty() && method!="operationBegin")operation(token).borrow { execute() } else execute()
+                // A begin receipt must deliver its caller-selected cleanup ID
+                // even if the account expires immediately after acquisition.
+                if(method!="operationBegin")check();JSONObject().put("value",value)
+            }catch(cancelled:CancellationException){beginToken?.let{endOperation(it)?.close()};return@launch}
             catch(error:Exception){
-                val code=when(error){is AuthApiError->error.code;else->error.message?.takeIf{it.matches(Regex("(?:AURORA|MODELING)_[A-Z_]+"))}?:"AURORA_NATIVE_REQUEST_FAILED"}
+                val code=when(error){is AuthApiError->error.code;else->error.message?.takeIf{it.matches(Regex("(?:AURORA|MODELING|E2EE)_[A-Z_]+"))}?:"AURORA_NATIVE_REQUEST_FAILED"}
                 JSONObject().put("error",code).put("status",(error as? AuthFailure)?.httpStatus?:if(code=="AURORA_ACCOUNT_CHANGED")401 else 0)
             }
             withContext(Dispatchers.Main){if(active)deliver(id,response)}
         }
+        job.invokeOnCompletion { failure->if(failure!=null)beginToken?.let{endOperation(it)?.close()} }
     }
-    fun stop(){active=false;store.close()}
+    fun stop(){
+        val permits=synchronized(operationMonitor) { active=false;operations.values.toList().also { operations.clear() } }
+        permits.forEach{it.close()};store.close()
+    }
 }
 
 /** Native navigation/insets/crypto surround a local signed, shared module.
@@ -129,6 +171,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
     val gateway=remember(owner,testGateway){testGateway?:controller.auroraGateway(owner)}
     val scope=rememberCoroutineScope();val store=remember(owner,gateway){AuroraNativeStore(app,owner,app.workspaceScope,gateway)}
     val dark=LocalEveningTheme.current;val palette=LocalDarkPalette.current;val language=LocalGenesisLanguage.current
+    val runtimeProblem=rememberNativeWebRuntimeProblem(language)
     val entryCopy=remember(context,language){context.assets.open("originals/i18n/aurora-availability.json").bufferedReader(Charsets.UTF_8).use{JSONObject(it.readText()).getJSONObject(language)}}
     val scheme=MaterialTheme.colorScheme
     val textScale=LocalDensity.current.fontScale
@@ -142,7 +185,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
         .put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android").put("source",source?:JSONObject.NULL)
         .put("temporal",temporal?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}
-    var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)}
+    var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(runtimeProblem!=null)}
     val density = LocalDensity.current.density
     var contentHeight by remember { mutableStateOf(160.dp) }
     var headerHeight by remember { mutableStateOf(80.dp) }
@@ -169,7 +212,7 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                     .padding(horizontal = 8.dp, vertical = 4.dp)) {
                     EditorDialogHeader("Метод моделирования будущего","aurora-native-close"){close()}
                 }
-                if(failed)UntranslatedText(entryCopy.getString("loadError"),Modifier.padding(16.dp).testTag("aurora-native-error"),color=scheme.error)
+                if(failed)UntranslatedText(runtimeProblem?:entryCopy.getString("loadError"),Modifier.padding(16.dp).testTag("aurora-native-error"),color=scheme.error)
                 if(!failed)AndroidView(factory={ctx->WebView(ctx).apply{
                     web=this;setBackgroundColor(scheme.surface.toArgb())
                     settings.javaScriptEnabled=true;settings.allowFileAccess=false;settings.allowContentAccess=false

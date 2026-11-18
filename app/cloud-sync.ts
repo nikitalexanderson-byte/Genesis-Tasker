@@ -675,22 +675,34 @@ async function loadRecoveredTasks(userId:string):Promise<GenesisTask[]> {
 
 /** Server-encrypted shared documents; device drafts still use this member's private key. */
 export function sharedMindmapDocumentAccess(userId: string, spaceId: string) {
-  const local = personalDocumentAccess(userId);
+  return sharedMindmapAccess(personalDocumentAccess(userId),userId,spaceId);
+}
+type MindmapDocumentAccess=Pick<PersonalDocumentAccess,'check'|'seal'|'open'|'request'> & {
+  withLegacyOperation:<T>(operation:(access:MindmapDocumentAccess)=>Promise<T>)=>Promise<T>;
+};
+function sharedMindmapAccess(local:PersonalDocumentAccess,userId:string,spaceId:string):MindmapDocumentAccess {
   const scope = (value: string) => `shared:${spaceId}:${value}`;
   const seal = (value: unknown, valueScope: string) => local.seal(value, scope(valueScope));
   const open = <T>(envelope: {iv:string;ciphertext:string}, valueScope: string) => local.open<T>(envelope, scope(valueScope));
-  return {check: local.check, seal, open, async request<T>(path: string, init: RequestInit = {}) {
+  // The member's local ciphertext/journals belong to the personal migration
+  // inventory too. Keep its owner permit through shared IO and local cleanup.
+  // This is not the shared project's/space's own migration or signed ACL fence.
+  return {check: local.check, seal, open,
+    withLegacyOperation:operation=>local.withLegacyOperation(bound=>operation(sharedMindmapAccess(bound,userId,spaceId))),
+    async request<T>(path: string, init: RequestInit = {}) {
     local.check();
     if (!/^\/mindmaps(?:\/[a-zA-Z0-9_-]+(?:\/history)?)?$/.test(path)) throw new Error("Invalid shared document path");
     const remotePath = `/shared/spaces/${encodeURIComponent(spaceId)}${path}`;
+    const headers=new Headers(init.headers);headers.set('X-Genesis-Account-Id',userId);
+    const requestInit={...init,headers:Object.fromEntries(headers.entries())};
     if (init.method === "PUT") {
       const request = JSON.parse(String(init.body));
       const id = path.split("/")[2];
       const document = await open(request, `map:${id}`);
-      const result = await api<T>(remotePath, {...init,body:JSON.stringify({schemaVersion:1,expectedRevision:request.expectedRevision,operationId:request.operationId,document})});
+      const result = await api<T>(remotePath, {...requestInit,body:JSON.stringify({schemaVersion:1,expectedRevision:request.expectedRevision,operationId:request.operationId,document})});
       local.check(); return result;
     }
-    const result = await api<T>(remotePath, init); local.check();
+    const result = await api<T>(remotePath, requestInit); local.check();
     if (init.method === "DELETE") return result;
     const key = path.endsWith("/history") ? "versions" : "maps";
     const rows = (result as Record<string, {id:string;schemaVersion:number;revision:number;updatedAt:string;document:unknown}[]>)[key];

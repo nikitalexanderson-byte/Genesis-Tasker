@@ -1,6 +1,10 @@
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from '../../app/e2ee/legacy-transport-fence.ts';
 import type {LegacyOperationPermit} from '../../app/e2ee/legacy-transport-fence.ts';
-import {loadGenesisSession,loadSavedAdvice,e2eeRequest,updateAccountPreferences} from '../../app/cloud-sync';
+import {loadGenesisSession,loadSavedAdvice,e2eeRequest,updateAccountPreferences,personalDocumentAccess,restoreOfflineWorkspaceSession} from '../../app/cloud-sync';
+import {MindmapRepository} from '../../app/mindmaps-storage';
+import {newMindmap} from '../../app/mindmaps-model';
+import {RestorationRepository} from '../../app/stoicheion-restoration-storage';
+import {AuroraRepository,emptyAuroraDocument} from '../../app/aurora/repository';
 import {requireLegacyTransportWorker} from '../../app/e2ee/legacy-worker-client.ts';
 
 // Synthetic browser-only API harness. The loopback server exposes no repository
@@ -9,6 +13,7 @@ let markers=new IndexedDbLegacyTransportMarkers(),gate=new WebLegacyTransportGat
 const pending=new Map<string,Promise<unknown>>(),releases=new Map<string,()=>void>();
 const operationPermits=new Map<string,LegacyOperationPermit>();
 const state:Record<string,unknown>={ready:true,secureContext:isSecureContext};
+const editors=new Map<string,{owner:string;save:()=>Promise<unknown>;pending:()=>Promise<unknown>;sources:()=>[string,string|null][]}>();
 function report(){document.querySelector('#result')!.textContent=JSON.stringify(state,null,2);}
 async function probe(){const response=await fetch('/private-probe');return await response.json();}
 function hold(owner:string){
@@ -18,6 +23,32 @@ function hold(owner:string){
   });pending.set(owner,promise);return 'queued';
 }
 const api={
+  async initEditor(kind:string){
+    const user=await loadGenesisSession();if(!user)throw new Error('fixture owner missing');
+    const owner=user.uid,key=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
+    localStorage.setItem(`genesis-workspace-device-key-v2:${owner}`,JSON.stringify({key,recoveryCode:key}));
+    if(!restoreOfflineWorkspaceSession(owner))throw new Error('fixture key restore failed');
+    const sources=()=>Object.keys(localStorage).filter(key=>['genesis-mindmaps:','genesis-shared-mindmaps:','genesis-aurora-workspace-v1:','genesis-stoicheion-workspace-v1:'].some(prefix=>key.startsWith(prefix+owner+':'))).sort().map(key=>[key,localStorage.getItem(key)] as [string,string|null]);
+    let save:()=>Promise<unknown>;
+    if(kind==='mindmaps'||kind==='shared'){
+      const repo=new MindmapRepository(owner,kind==='shared'?'synthetic-space':undefined),document=newMindmap('Synthetic private browser map');
+      save=()=>repo.save(document,()=>{});
+    }else if(kind==='aurora'){
+      const repo=new AuroraRepository(owner,localStorage,personalDocumentAccess(owner));save=()=>repo.save(emptyAuroraDocument(owner));
+    }else if(kind==='restoration'){
+      const repo=new RestorationRepository(owner,localStorage);save=()=>repo.save({version:1,works:[],removed:[]});
+    }else throw new Error('invalid fixture editor');
+    editors.set(kind,{owner,save,pending:async()=>{},sources});return owner;
+  },
+  startEditor(kind:string){
+    const editor=editors.get(kind);if(!editor)throw new Error('fixture editor missing');
+    const promise=editor.save();editor.pending=()=>promise;
+    // Observe rejected work immediately while retaining the exact public outcome.
+    void promise.catch(()=>{});return true;
+  },
+  async waitEditor(kind:string){const editor=editors.get(kind);if(!editor)throw new Error('fixture editor missing');try{await editor.pending();return{ok:true};}catch(error){return{ok:false,error:(error as Error).message};}},
+  editorSources(kind:string){return editors.get(kind)?.sources();},
+  async editorControl(action:string,kind:string){if(!['hold','release','state'].includes(action))throw new Error('invalid fixture action');return await(await fetch('/editor-controls/'+action+'?kind='+encodeURIComponent(kind))).json();},
   hold,
   holdOperation(owner:string){
     const work=gate.withOperation(owner,()=>{},async permit=>{

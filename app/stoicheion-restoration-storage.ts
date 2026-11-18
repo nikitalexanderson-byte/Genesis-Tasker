@@ -35,63 +35,83 @@ export class RestorationRepository {
     this.access = access ?? personalDocumentAccess(userId);
     this.key = `genesis-stoicheion-workspace-v1:${userId}:pending`;
   }
-  private async remote() {
-    const { document } = await this.access.request<{ document: Envelope | null }>("/stoicheion-workspace", { cache: "no-store" });
-    const value = document ? validateRestorationDocument(await this.access.open(document, "stoicheion-workspace:v1")) : empty();
-    this.access.check(); this.revision = document?.revision ?? 0; this.base = value;
+  private enqueue<T>(work: (access: Access) => Promise<T>): Promise<T> {
+    // Acquire only after the previous operation releases its permit. Nested
+    // merge/recovery work uses this bound access, never this queue again.
+    const operation = this.serial.catch(() => {}).then(() => this.access.withLegacyOperation(async access => {
+      access.check(); const result = await work(access); access.check(); return result;
+    }));
+    this.serial = operation; return operation;
+  }
+  private async remote(access: Access) {
+    const { document } = await access.request<{ document: Envelope | null }>("/stoicheion-workspace", { cache: "no-store" });
+    const value = document ? validateRestorationDocument(await access.open(document, "stoicheion-workspace:v1")) : empty();
+    access.check(); this.revision = document?.revision ?? 0; this.base = value;
     return structuredClone(value);
   }
-  async load(): Promise<RestorationDocument> {
-    const remote = await this.remote();
+  load(): Promise<RestorationDocument> { return this.enqueue(access => this.loadDocument(access)); }
+  private async loadDocument(access: Access): Promise<RestorationDocument> {
+    const remote = await this.remote(access);
     const raw = this.storage.getItem(this.key);
     if (!raw) return remote;
     const pending = JSON.parse(raw);
-    const local = validateRestorationDocument(await this.access.open(pending.envelope, "stoicheion-workspace:v1"));
-    const base = validateRestorationDocument(await this.access.open(pending.base, "stoicheion-pending-base:v1"));
-    try { await this.send(pending.envelope); return structuredClone(this.base); }
+    const local = validateRestorationDocument(await access.open(pending.envelope, "stoicheion-workspace:v1"));
+    const base = validateRestorationDocument(await access.open(pending.base, "stoicheion-pending-base:v1"));
+    try { await this.send(pending.envelope, access); return structuredClone(this.base); }
     catch (error) {
+      access.check();
       if (!(error instanceof Error) || !error.message.includes("RESTORATION_REVISION_CONFLICT")) throw error;
-      try { return await this.save(mergeRestorationDocuments(base, local, remote)); }
+      try { return await this.saveDocument(mergeRestorationDocuments(base, local, remote), access); }
       catch (conflict) { this.conflict = true; throw conflict; }
     }
   }
-  private async send(envelope: Sealed & { expectedRevision: number }) {
-    const result = await this.access.request<{ revision: number }>("/stoicheion-workspace", { method: "PUT", body: JSON.stringify(envelope) });
-    this.access.check(); this.revision = result.revision;
-    this.base = validateRestorationDocument(await this.access.open(envelope, "stoicheion-workspace:v1"));
-    this.storage.removeItem(this.key); this.conflict = false;
+  private async send(envelope: Sealed & { expectedRevision: number }, access: Access) {
+    const result = await access.request<{ revision: number }>("/stoicheion-workspace", { method: "PUT", body: JSON.stringify(envelope) });
+    access.check();
+    if (!Number.isSafeInteger(result?.revision) || result.revision !== envelope.expectedRevision + 1) throw new Error('RESTORATION_INVALID_RESPONSE');
+    const value = validateRestorationDocument(await access.open(envelope, "stoicheion-workspace:v1"));
+    access.check(); this.revision = result.revision; this.base = value;
+    // Another tab can persist newer unsent work while this request is in flight.
+    // Acknowledging these bytes must never acknowledge that different envelope.
+    const raw = this.storage.getItem(this.key), pending = raw ? JSON.parse(raw) : null;
+    if (pending?.envelope?.iv === envelope.iv && pending.envelope.ciphertext === envelope.ciphertext
+      && pending.envelope.expectedRevision === envelope.expectedRevision) this.storage.removeItem(this.key);
+    this.conflict = false;
   }
   save(input: RestorationDocument): Promise<RestorationDocument> {
     const value = validateRestorationDocument(structuredClone(input));
-    const operation = this.serial.catch(() => undefined).then(async () => {
-      this.access.check();
-      const envelope = { ...await this.access.seal(value, "stoicheion-workspace:v1"), expectedRevision: this.revision };
-      const base = await this.access.seal(this.base, "stoicheion-pending-base:v1");
-      this.access.check(); this.storage.setItem(this.key, JSON.stringify({ envelope, base }));
-      try { await this.send(envelope); }
+    return this.enqueue(access => this.saveDocument(value, access));
+  }
+  private async saveDocument(value: RestorationDocument, access: Access): Promise<RestorationDocument> {
+      access.check();
+      const envelope = { ...await access.seal(value, "stoicheion-workspace:v1"), expectedRevision: this.revision };
+      const base = await access.seal(this.base, "stoicheion-pending-base:v1");
+      access.check(); this.storage.setItem(this.key, JSON.stringify({ envelope, base }));
+      try { await this.send(envelope, access); }
       catch (error) {
+        access.check();
         if (!(error instanceof Error) || !error.message.includes("RESTORATION_REVISION_CONFLICT")) throw error;
-        const previous = this.base, remote = await this.remote();
+        const previous = this.base, remote = await this.remote(access);
         let merged: RestorationDocument;
         try { merged = mergeRestorationDocuments(previous, value, remote); }
         catch (conflict) { this.conflict = true; throw conflict; }
-        const retry = { ...await this.access.seal(merged, "stoicheion-workspace:v1"), expectedRevision: this.revision };
-        this.storage.setItem(this.key, JSON.stringify({ envelope: retry, base: await this.access.seal(remote, "stoicheion-pending-base:v1") }));
-        await this.send(retry);
+        const retry = { ...await access.seal(merged, "stoicheion-workspace:v1"), expectedRevision: this.revision };
+        const retryBase = await access.seal(remote, "stoicheion-pending-base:v1");
+        access.check(); this.storage.setItem(this.key, JSON.stringify({ envelope: retry, base: retryBase }));
+        await this.send(retry, access);
       }
       return structuredClone(this.base);
-    });
-    this.serial = operation; return operation;
   }
   /** Only a deliberate user choice may supersede a concurrent version. */
-  async keepPending(): Promise<RestorationDocument> {
+  keepPending(): Promise<RestorationDocument> { return this.enqueue(access => this.keepDocument(access)); }
+  private async keepDocument(access: Access): Promise<RestorationDocument> {
     const raw = this.storage.getItem(this.key);
-    if (!raw) return this.load();
+    if (!raw) return this.loadDocument(access);
     const pending = JSON.parse(raw);
-    const value = validateRestorationDocument(await this.access.open(pending.envelope, "stoicheion-workspace:v1"));
-    const remote = await this.remote();
+    const value = validateRestorationDocument(await access.open(pending.envelope, "stoicheion-workspace:v1"));
+    const remote = await this.remote(access);
     const ids = new Set(value.works.map(row => row.id));
-    return this.save({ ...value, works: [...remote.works.filter(row => !ids.has(row.id)), ...value.works],
-      removed: [...new Map([...remote.removed, ...value.removed].map(row => [row.id, row])).values()] });
+    return this.saveDocument({ ...value, works: [...remote.works.filter(row => !ids.has(row.id)), ...value.works],
+      removed: [...new Map([...remote.removed, ...value.removed].map(row => [row.id, row])).values()] }, access);
   }
 }

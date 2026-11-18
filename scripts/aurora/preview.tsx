@@ -27,7 +27,7 @@ document.documentElement.dataset.genesisPalette=params.get('palette')??'forest';
 const key=crypto.subtle.importKey('raw',new Uint8Array(32).fill(23),'AES-GCM',false,['encrypt','decrypt']);
 const b64=(bytes:Uint8Array)=>{let text='';for(let offset=0;offset<bytes.length;offset+=16384)text+=String.fromCharCode(...bytes.subarray(offset,offset+16384));return btoa(text);},decode=(text:string)=>Uint8Array.from(atob(text),c=>c.charCodeAt(0));
 let offline=false,closed=()=>{},announce=(message:string)=>{console.info(message);};
-const access:AuroraAccess={check(){},async request<T>(_path:string,init:RequestInit={}){
+const access:AuroraAccess={check(){},withLegacyOperation:operation=>operation(access),async request<T>(_path:string,init:RequestInit={}){
  if(offline)throw new TypeError('Synthetic offline');if(_path!=='/aurora-workspace')throw new Error('QA_ROUTE_INVALID');
  const stored=localStorage.getItem(remoteKey),old=stored?JSON.parse(stored):null;
  if((init.method??'GET')==='GET')return {document:old} as T;

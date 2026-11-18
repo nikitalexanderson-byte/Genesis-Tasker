@@ -12,10 +12,10 @@ registry does **not** mean that feature adapters have been implemented.
 | personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native adapters and native SQLite barrier implemented; selected actual Room/Keystore/API26 process-death cases pass; product routing, web multitab fence, older-format review and full upgrade/lifecycle acceptance remain |
 | personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Preserve all GENESIS tasks, recurrence, detached occurrences and tombstones; separate Google/Yandex copies and unsent external operations |
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | Web whole-operation writer fence now includes journals/IO/cleanup; actual source reconciliation, new root for notes/dreams/references/settings/files and native adapter remain required |
-| personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Maps, images, complete history and conversion-task references; no omission of unmounted maps |
+| personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Web operation fences now cover staging/IO/retry/cleanup and retain immediate durable drafts; actual adapters, maps/images/complete history/conversion references and native lifecycle remain required |
 | personal.physis | Legacy password vault and account-v2 vault; active web memory store includes unsent queue/rotation; native encrypted documents; server records/IDs/receipts | Independently unlock every source, reconcile rotations and deleted IDs, re-encrypt account-known descendants; a locked source cannot be called empty |
-| personal.aurora | Encrypted cache/base/pending document, personal learning and removed sessions; native documents; server workspaces/model results | Preserve immutable sessions/results; explain optional assistant disclosure separately |
-| personal.stoicheion | Encrypted restoration workspace plus draw/timeline records and local pending choices; native documents; server draw/session/card rows | Private selections/history move with content; billing/reroll quota authority cannot be imported or forged |
+| personal.aurora | Encrypted cache/base/pending document, personal learning and removed sessions; native documents; server workspaces/model results | Web repository and native bridge operation capabilities implemented; actual adapters, all immutable sessions/results, per-writer drafts and optional assistant disclosure remain required |
+| personal.stoicheion | Encrypted restoration workspace plus draw/timeline records and local pending choices; native documents; server draw/session/card rows | Independent web restoration archive now has whole-operation exclusion; complete selections/history/draw adapters remain required; billing/reroll quota authority cannot be imported or forged |
 | personal.advice | Saved personal advice/selection state and metrics in memory/cache/server rows | Private selection/preferences need a deliberate content adapter; public art/catalogues remain public |
 | personal.local-work | All owner-scoped localStorage/IndexedDB caches, shared editor drafts, conflict choices and pending mutations | Enumerate unmounted editors too. Snapshot first; retain every prior migration attempt; reconcile content without restoring sessions/rights |
 | personal.reminders | Local schedules/Room reminders; server habit reminder profiles/devices/deliveries | Preserve private local state; explicitly allowed minimal technical schedule/push projection contains no titles/notes/values |
@@ -143,8 +143,13 @@ rejection and snapshot preservation; they do not replace the original 48
 acceptance scenarios or establish full content coverage. Production flags/floors
 remain disabled.
 
-The actual web diary now holds one owner-scoped operation permit through local
-encryption/journals, borrowed HTTP and response cleanup; migration waits for that
-complete operation. Other local/editor sources still need integration. See
+The actual web diary, mindmap, Aurora and independent restoration repositories
+now use owner-scoped operation permits through their local encryption/journals,
+borrowed HTTP and response cleanup. Mindmap immediate staging is a separate
+completed operation from its queued upload; migration between them retains the
+draft. The native Aurora bridge holds an exact native capability across RPC and
+Room calls, invalidating/draining on close. Shared map owner permits protect the
+member's local work, not the project's or space's own fence/ACL. Other sources,
+per-writer draft inventories and full adapters still need integration. See
 `e2ee-336-operation-fences.md`; this is writer exclusion, not a finished diary
 source adapter or migration-time protected editor routing.

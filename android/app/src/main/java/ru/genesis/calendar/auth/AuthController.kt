@@ -289,8 +289,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         return CloudAccountImporter(app.database,app.scheduler).import(snapshot)
     }
     internal fun auroraGateway(uid: String): ru.genesis.calendar.data.AuroraGateway = object : ru.genesis.calendar.data.AuroraGateway {
+        private val capturedGeneration=client.currentGeneration()
         override fun check() {
-            check(mutableState.value.user?.uid == uid && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "AURORA_ACCOUNT_CHANGED" }
+            check(client.currentGeneration()==capturedGeneration && !mutableState.value.requiresSignIn
+                && mutableState.value.user?.uid == uid && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "AURORA_ACCOUNT_CHANGED" }
         }
         override suspend fun workspace(): JSONObject { check(); val generation=client.currentGeneration(); return withContext(Dispatchers.IO) { client.workspace(generation) }.also { check() } }
         override suspend fun request(method: String, path: String, body: JSONObject?): JSONObject {

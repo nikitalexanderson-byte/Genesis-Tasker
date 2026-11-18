@@ -75,4 +75,55 @@ class E2eeLegacyTransportGateTest {
             assertEquals("ordinary-legacy",withContext(Dispatchers.IO) { gate.request(fixture.scope,{}) { "ordinary-legacy" } })
         } finally { room.close();fixture.context.deleteDatabase(name) }
     }
+    @Test fun operationSpansBridgeGapsAndBorrowsIoAheadOfWaitingMigration() = runBlocking {
+        val name="qa-e2ee-operation-${UUID.randomUUID()}.db";val room=fixture.open(name);val second=fixture.open(name)
+        var permit:NativeLegacyOperationPermit?=null
+        try {
+            room.dao().putOutbox(OutboxRecord(fixture.scope,"task",1,"immutable-operation"))
+            val held=NativeLegacyOperationPermit.acquire(room,fixture.scope,{});permit=held
+            val entered=CompletableDeferred<Unit>()
+            val migration=async(Dispatchers.IO) { NativeLegacyScopeFence(second,fixture.owner,fixture.remote,{}).withFence {
+                assertTrue(second.dao().outbox(fixture.scope).isEmpty());entered.complete(Unit)
+            } }
+            assertNull(withTimeoutOrNull(150) { entered.await() })
+            withTimeout(10_000) { held.borrow {
+                assertEquals("whole-response",withContext(Dispatchers.IO) { NativeLegacyTransportGate(second).request(fixture.scope,{}) { "whole-response" } })
+                room.dao().acknowledgeOutbox(fixture.scope,"task",1,"immutable-operation")
+            } }
+            assertNull(withTimeoutOrNull(150) { entered.await() })
+            held.finish();withTimeout(10_000) { migration.await() }
+            reject("E2EE_INVALID_LEGACY_OPERATION") { held.borrow { fail("Expired permit entered") } }
+        } finally { permit?.close();room.close();second.close();fixture.context.deleteDatabase(name) }
+    }
+    @Test fun abandonedOperationInvalidatesChildrenButDrainsTheirResponseBeforeCapture() = runBlocking {
+        val name="qa-e2ee-operation-${UUID.randomUUID()}.db";val room=fixture.open(name);val second=fixture.open(name)
+        val release=CountDownLatch(1);var permit:NativeLegacyOperationPermit?=null
+        try {
+            room.dao().putOutbox(OutboxRecord(fixture.scope,"task",1,"retained-immutable-operation"))
+            val held=NativeLegacyOperationPermit.acquire(room,fixture.scope,{});permit=held
+            val started=CompletableDeferred<Unit>()
+            val child=async(Dispatchers.IO) { reject("E2EE_INVALID_LEGACY_OPERATION") { held.borrow {
+                NativeLegacyTransportGate(second).request(fixture.scope,{}) { started.complete(Unit);check(release.await(10,TimeUnit.SECONDS));"late" }
+                fail("Invalidated response committed")
+            } } }
+            withTimeout(10_000) { started.await() }
+            reject("E2EE_UNAWAITED_LEGACY_OPERATION") { held.finish() }
+            val entered=CompletableDeferred<Unit>()
+            val migration=async(Dispatchers.IO) { NativeLegacyScopeFence(second,fixture.owner,fixture.remote,{}).withFence { entered.complete(Unit) } }
+            assertNull(withTimeoutOrNull(150) { entered.await() });release.countDown()
+            withTimeout(10_000) { child.await();migration.await() }
+            assertEquals("retained-immutable-operation",room.dao().outbox(fixture.scope).single().operationId)
+        } finally { release.countDown();permit?.close();room.close();second.close();fixture.context.deleteDatabase(name) }
+    }
+    @Test fun borrowedOperationRejectsForeignStorageScopeAndRoomIoInversion() = runBlocking {
+        val name="qa-e2ee-operation-${UUID.randomUUID()}.db";val room=fixture.open(name);val io=AtomicInteger()
+        try {
+            val permit=NativeLegacyOperationPermit.acquire(room,fixture.scope,{})
+            try { permit.borrow {
+                reject("E2EE_INVALID_LEGACY_OPERATION") { NativeLegacyTransportGate(room).request(CloudAccountSnapshot.scopeFor("foreign"),{}) { io.incrementAndGet() } }
+                room.withTransaction { reject("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN") { NativeLegacyTransportGate(room).request(fixture.scope,{}) { io.incrementAndGet() } } }
+            } } finally { permit.finish() }
+            assertEquals(0,io.get())
+        } finally { room.close();fixture.context.deleteDatabase(name) }
+    }
 }

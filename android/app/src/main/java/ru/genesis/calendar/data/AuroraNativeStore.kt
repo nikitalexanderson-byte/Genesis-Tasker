@@ -28,7 +28,9 @@ internal class AuroraNativeStore(private val app: GenesisApplication, private va
     private var memoryKey: ByteArray? = null
     private fun check() { mutation.check();gateway.check(); check(app.workspaceScope == scope) { "AURORA_ACCOUNT_CHANGED" } }
     private fun aad(kind: String) = "$scope/aurora/$owner/$kind"
-    private suspend fun workspaceKey(): ByteArray = lock.withLock {
+    suspend fun beginLegacyOperation(): NativeLegacyOperationPermit =
+        NativeLegacyOperationPermit.acquire(app.database,scope,::check)
+    private suspend fun workspaceKey(): ByteArray = NativeLegacyOperationPermit.run(app.database,scope,::check) { lock.withLock {
         check(); memoryKey?.let { return@withLock it.copyOf() }
         val cached = app.database.dao().document(scope, "aurora-account-key")
         val key = try {
@@ -44,7 +46,7 @@ internal class AuroraNativeStore(private val app: GenesisApplication, private va
             check(); WorkspaceCipher.decodeKey(cipher.decrypt(cached.encrypted, aad("account-key")))
         }
         check(); memoryKey = key.copyOf(); key
-    }
+    } }
     suspend fun getItem(key: String): String? {
         check(); val kind = AuroraProtocol.cacheKind(owner, key)
         val row = app.database.dao().document(scope, kind) ?: return null
