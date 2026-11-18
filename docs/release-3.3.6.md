@@ -646,3 +646,15 @@ direct upgrades/48 сценариев/14 языков и независимый 
 инвентарь — личные советы, включая actual Room snapshots и legacy hashed native
 SharedPreferences cache. Production3.3.5/149, floors0, cutover off и выключенный
 Android deploy не менялись;3.3.6 ещё не опубликована.
+
+## Советы: подписанный historical source read
+
+19 ноября2026. Серверный `legacy-advice` теперь читает private preference/
+selection/entry/view/dismiss history и metrics только для signed current personal
+owner/device/lease/source token. Live quota, identity, sessions, tokens и keys не
+выбираются; обычные helpers с publication side effects не используются.
+3/3 PHP/SQLite suites PASS, включая unchanged originals, foreign/shared/revoked/
+cancel/signature, empty source и oversized preference. Реальный клиентский
+capture/reconciliation adapter, Advice transport vectors и new-root acceptance
+ещё не готовы. Coverage остаётся3/20. Логи/границы:
+`e2ee-336-advice-source.md`. Production/floors/cutover не менялись.
