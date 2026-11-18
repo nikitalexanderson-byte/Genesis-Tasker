@@ -423,13 +423,26 @@ function genesisE2eeDirectory(string $actor,string $scopeId): array
 /** Read ciphertext only through a trusted device proof; owner login alone never returns a raw key. */
 function genesisE2eeRead(string $actor,array $packet,string $sessionBinding): array
 {
-    // Reads also consume signed operation identities, and require the current directory checkpoint.
+    // Authorization and reading share the writer lock: revocation, lease replacement
+    // and cutover cannot race a legacy migration read (which can include an OLD key).
+    $db=genesisDb();genesisBeginWriteTransaction($db);
+    try {
+        $result=genesisE2eeReadLocked($actor,$packet,$sessionBinding);$db->commit();return$result;
+    } catch(Throwable $error) {if($db->inTransaction())$db->rollBack();throw$error;}
+}
+function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBinding): array
+{
+    // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','legacy-workspace'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
     genesisE2eeVerifyCommand($packet,$device['signing_key']);
+    if($c['action']==='legacy-workspace') {
+        require_once __DIR__.'/e2ee-legacy-workspace.php';
+        return genesisE2eeLegacyWorkspace(genesisDb(),$actor,$scope,$c);
+    }
     if($c['action']==='sealed-heads') {
         genesisE2eeExactFields($c['payload'],['cryptoEpoch']);genesisE2eeInteger($c['payload']['cryptoEpoch']);
         $row=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_retired_manifests WHERE scope_id=? AND crypto_epoch=?',[$c['scopeId'],$c['payload']['cryptoEpoch']]);

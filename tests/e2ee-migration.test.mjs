@@ -86,7 +86,8 @@ async function fixture(options={}){
   let sources={
     requiredCoverage:['workspace','diary'],allowedContentDomains:['workspace','diary'],
     async captureLocal(){if(!trace.includes('snapshot-local'))assert.ok(!trace.some(row=>row.startsWith('network-')));trace.push('snapshot-local');return bytes('LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');},
-    async reconcile(snapshot,previousSnapshots){trace.push('reconcile-after-snapshot');server.previousSnapshots=previousSnapshots.map(value=>new TextDecoder().decode(value));assert.equal(new TextDecoder().decode(snapshot),'LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');
+    async reconcile(snapshot,previousSnapshots,context){trace.push('reconcile-after-snapshot');server.previousSnapshots=previousSnapshots.map(value=>new TextDecoder().decode(value));assert.equal(new TextDecoder().decode(snapshot),'LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');
+      assert.deepEqual(context,{ownerId:'owner',scopeId,migrationId:server.migrationId,fence:server.fence,sourceHash:encodeE2eeBytes(new Uint8Array(32).fill(13)),generation:server.generation});
       return{coverage:[{domain:'workspace',complete:!options.incomplete},{domain:'diary',complete:true}],content:[{domain:'workspace',objectId:'workspace',bytes:bytes('PERSONAL DATA INCLUDING OFFLINE EDIT')},
         {domain:'diary',objectId:'note',bytes:bytes('PRIVATE NOTE + DELETION LEDGER')}]};},
   };
@@ -95,7 +96,8 @@ async function fixture(options={}){
     for(const path of requiredPrivatePaths(kind)){
       if(path.id===options.missingPath)continue;
       sources.register({id:path.id,async captureLocal(){trace.push('snapshot-local');return bytes(`local:${path.id}`);},
-        async reconcile(local){assert.equal(new TextDecoder().decode(local),`local:${path.id}`);
+        async reconcile(local,_previous,context){assert.equal(new TextDecoder().decode(local),`local:${path.id}`);
+          assert.equal(context.migrationId,server.migrationId);assert.equal(context.fence,server.fence);assert.equal(context.scopeId,scopeId);
           return{complete:path.id!==options.incompletePath,content:[{domain:path.id==='project.content'?'shared-comment':path.domains[0],objectId:path.id,bytes:bytes(`reconciled:${path.id}`)}]};}});
     }
   }
@@ -162,15 +164,21 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
-  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
-    assert.equal(path,'/read');assert.equal(packet.command.action,'read');reads.push(packet);
+    assert.equal(path,'/read');
+    if(packet.command.action==='legacy-workspace')legacyRead=packet;
+    else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   });
   assert.deepEqual(await transport.readAll(),[]);assert.equal(reads.length,2);
+  const context={ownerId:'owner',scopeId:f.scopeId,migrationId:'web-migration-transport',fence:1,sourceHash:encodeE2eeBytes(new Uint8Array(32)),generation:1};
+  await transport.legacyWorkspace(context);assert.equal((await verifyE2eeCommand(legacyRead,f.keys.signing.publicKey)).action,'legacy-workspace');
+  assert.deepEqual({...legacyRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
+  await assert.rejects(transport.legacyWorkspace({...context,scopeId:'personal:foreign'}),/SCOPE_BINDING_MISMATCH/);
   mkdirSync('output/release-3.3.6/runtime',{recursive:true});
-  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads},null,2));
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));

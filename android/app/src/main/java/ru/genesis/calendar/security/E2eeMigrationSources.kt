@@ -39,18 +39,23 @@ class E2eeMigrationContent(val domain: String, val objectId: String, val bytes: 
 }
 class E2eePathReconciliation(val complete: Boolean, val content: List<E2eeMigrationContent>)
 class E2eeMigrationReconciliation(val coverage: List<Pair<String, Boolean>>, val content: List<E2eeMigrationContent>)
+class E2eeMigrationSourceContext(val ownerId: String, val scopeId: String, val migrationId: String, val fence: Long, val sourceHash: String, val generation: Long) {
+    override fun toString() = "E2eeMigrationSourceContext([redacted])"
+}
 interface E2eeMigrationSource {
     val requiredCoverage: List<String>
     val allowedContentDomains: Set<String>
     fun assertBinding(owner: String, scope: String, kind: String)
     suspend fun captureLocal(): ByteArray
     suspend fun reconcile(snapshot: ByteArray, previousSnapshots: List<ByteArray>): E2eeMigrationReconciliation
+    suspend fun reconcile(snapshot: ByteArray, previousSnapshots: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eeMigrationReconciliation = reconcile(snapshot,previousSnapshots)
 }
 interface E2eePrivatePathAdapter {
     val id: String
     /** Local-only capture; implementation must not drain queues, refresh or mutate sources. */
     suspend fun captureLocal(): ByteArray
     suspend fun reconcile(local: ByteArray, previous: List<ByteArray>): E2eePathReconciliation
+    suspend fun reconcile(local: ByteArray, previous: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eePathReconciliation = reconcile(local,previous)
 }
 
 /** Missing/unmounted/locked categories block completeness, not silently vanish.
@@ -101,6 +106,10 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
     }
     companion object { const val BYTE_BUDGET = 128 * 1024 * 1024 }
     override suspend fun reconcile(snapshot: ByteArray, previousSnapshots: List<ByteArray>): E2eeMigrationReconciliation {
+        return reconcile(snapshot,previousSnapshots,null)
+    }
+    override suspend fun reconcile(snapshot: ByteArray, previousSnapshots: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eeMigrationReconciliation {
+        if(context != null) assertBinding(context.ownerId,context.scopeId,kind)
         check(previousSnapshots.size <= 32) { "E2EE_MIGRATION_HISTORY_LIMIT" }
         check(snapshot.size.toLong() + previousSnapshots.sumOf { it.size.toLong() } <= BYTE_BUDGET) { "E2EE_MIGRATION_HISTORY_LIMIT" }
         val all = all(); val decoded = mutableListOf<Map<String, ByteArray>>(); val content = mutableListOf<E2eeMigrationContent>()
@@ -108,7 +117,7 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
             decoded += decode(snapshot); previousSnapshots.forEach { decoded += decode(it) }
             val coverage = mutableListOf<Pair<String, Boolean>>(); val seen = mutableSetOf<String>(); var contentBytes = 0L
             for ((path, adapter) in all) {
-                val result = adapter.reconcile(decoded.first().getValue(path.id), decoded.drop(1).map { it.getValue(path.id) })
+                val result = adapter.reconcile(decoded.first().getValue(path.id), decoded.drop(1).map { it.getValue(path.id) },context)
                 coverage += path.id to result.complete
                 for (item in result.content) {
                     E2eeKeys.technical(item.objectId)

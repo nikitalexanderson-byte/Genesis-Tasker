@@ -68,6 +68,12 @@ class E2eeMigrationTest {
                     return E2eeMigrationReconciliation(listOf("synthetic.workspace" to !options.incomplete,"synthetic.diary" to true),listOf(
                         E2eeMigrationContent("workspace","workspace","PRIVATE WORKSPACE".toByteArray()),E2eeMigrationContent("diary","note","PRIVATE NOTE".toByteArray())))
                 }
+                override suspend fun reconcile(snapshot: ByteArray, previous: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eeMigrationReconciliation {
+                    requireNotNull(context); assertEquals("owner",context.ownerId); assertEquals(scope,context.scopeId)
+                    assertEquals(migrationId,context.migrationId); assertEquals(fence,context.fence); assertEquals(generation,context.generation)
+                    assertEquals(E2eeEnvelope.encode(ByteArray(32) { 13 }),context.sourceHash)
+                    return reconcile(snapshot,previous)
+                }
             } else {
                 val file = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }
                     .map { File(it,"contracts/e2ee/private-paths-v1.json") }.first { it.isFile }
@@ -78,6 +84,10 @@ class E2eeMigrationTest {
                     override suspend fun reconcile(local: ByteArray, previous: List<ByteArray>): E2eePathReconciliation {
                         assertEquals("local:$id",local.toString(Charsets.UTF_8))
                         return E2eePathReconciliation(!options.incomplete,listOf(E2eeMigrationContent(if(id == "project.content")"shared-comment" else path.domains.first(),id,"reconciled:$id".toByteArray())))
+                    }
+                    override suspend fun reconcile(local: ByteArray, previous: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eePathReconciliation {
+                        requireNotNull(context); assertEquals(scope,context.scopeId); assertEquals(migrationId,context.migrationId); assertEquals(fence,context.fence)
+                        return reconcile(local,previous)
                     }
                 })
                 registry
@@ -236,14 +246,20 @@ class E2eeMigrationTest {
         f.badPage = "lock"; reject("E2EE_UNLOCK_REQUIRED") { transport.readAll() }
     }
     @Test fun emitActualNativeReadbackPacketsForPhpSqliteContract() = runBlocking {
-        val f = Fixture(); val reads = JSONArray()
+        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null
         val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace")) { path, packet ->
-            assertEquals("/read",path); assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet)
+            assertEquals("/read",path)
+            if(packet.getJSONObject("command").getString("action") == "legacy-workspace") legacyRead = packet
+            else { assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet) }
             JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).put("envelopes",JSONArray())
         }
         assertTrue(transport.readAll().isEmpty()); assertEquals(2,reads.length())
+        val context = E2eeMigrationSourceContext("owner",f.scope,"native-migration-transport",1,E2eeEnvelope.encode(ByteArray(32)),1)
+        transport.legacyWorkspace(context); assertEquals("legacy-workspace",E2eeCommands.verify(requireNotNull(legacyRead),f.device.keys().signing.public).getString("action"))
+        assertEquals(context.migrationId,legacyRead!!.getJSONObject("command").getJSONObject("payload").getString("migrationId"))
+        reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyWorkspace(E2eeMigrationSourceContext("foreign",f.scope,context.migrationId,1,context.sourceHash,1)) }
         val root = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }.first { File(it,"contracts/e2ee/private-paths-v1.json").isFile }
         val file = File(root,"output/release-3.3.6/runtime/native-migration-transport.json"); file.parentFile.mkdirs()
-        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).toString(2))
+        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).toString(2))
     }
 }

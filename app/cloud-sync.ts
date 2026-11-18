@@ -3393,6 +3393,22 @@ export function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/
     .catch(error=>{if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;});
 }
 
+/** Real read-only workspace migration sources. The caller must still provide the
+ * mounted editor capture and the coordinator's durable local/multitab fence.
+ * This factory does not start a migration or switch the active product writer.
+ */
+export async function createPersonalWorkspaceMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyWorkspace'>,
+  captureCurrent:()=>unknown|null,review?:import('./e2ee/workspace-source').WorkspaceSourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalWorkspaceSource}=await import('./e2ee/workspace-source');check();
+  return new PersonalWorkspaceSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+    memory:()=>{check();return{ownerId:workspaceUserId,key:workspaceKey,version:workspaceVersion,deviceId:workspaceDeviceId,
+      base:workspaceBase,baseMetadata:workspaceBaseMetadata,metadata:workspaceSyncMetadata,current:captureCurrent(),draftSource:workspaceDraftSource};},
+    legacyWorkspace:context=>transport.legacyWorkspace(context),review});
+}
+
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
 }

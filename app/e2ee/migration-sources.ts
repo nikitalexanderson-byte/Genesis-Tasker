@@ -2,7 +2,7 @@ import registry from '../../contracts/e2ee/private-paths-v1.json' with {type:'js
 import {E2EE_DOMAINS,decodeE2eeBytes,encodeE2eeBytes,type E2eeContext} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {E2EE_MAX_FILE_BYTES} from './files.ts';
-import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSources} from './migration.ts';
+import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSources,type MigrationSourceContext} from './migration.ts';
 
 export type PrivateScopeKind='personal'|'project'|'space';
 export type PrivatePath=typeof registry.paths[number];
@@ -18,7 +18,7 @@ export interface PrivatePathAdapter {
   /** No network or mutations. Empty sources still return an explicit serialized value. */
   captureLocal():Promise<Uint8Array>;
   /** Only after the complete protected local snapshot commits. All old attempts are supplied. */
-  reconcile(local:Uint8Array,previous:readonly Uint8Array[]):Promise<{complete:boolean;content:MigrationContent[]}>;
+  reconcile(local:Uint8Array,previous:readonly Uint8Array[],context?:MigrationSourceContext):Promise<{complete:boolean;content:MigrationContent[]}>;
 }
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 
@@ -72,7 +72,8 @@ export class E2eeMigrationSources implements MigrationSources {
       return decoded;
     }catch(error){decoded.forEach(bytes=>bytes.fill(0));throw error;}
   }
-  async reconcile(snapshot:Uint8Array,previousSnapshots:readonly Uint8Array[]){
+  async reconcile(snapshot:Uint8Array,previousSnapshots:readonly Uint8Array[],context?:MigrationSourceContext){
+    if(context&&(context.ownerId!==this.#ownerId||context.scopeId!==this.#scopeId))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     if(previousSnapshots.length>32)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
     if(snapshot.length+previousSnapshots.reduce((total,bytes)=>total+bytes.length,0)>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
     const adapters=this.#all(),decoded:Map<string,Uint8Array>[]=[];const coverage:{domain:string;complete:boolean}[]=[],content:MigrationContent[]=[];
@@ -80,7 +81,7 @@ export class E2eeMigrationSources implements MigrationSources {
       decoded.push(this.#decode(snapshot));for(const previous of previousSnapshots)decoded.push(this.#decode(previous));
       const seen=new Set<string>();let contentBytes=0;
       for(const {path,adapter} of adapters){
-        const result=await adapter.reconcile(decoded[0].get(path.id)!,decoded.slice(1).map(previous=>previous.get(path.id)!));
+        const result=await adapter.reconcile(decoded[0].get(path.id)!,decoded.slice(1).map(previous=>previous.get(path.id)!),context);
         if(typeof result.complete!=='boolean'||!Array.isArray(result.content))throw new Error('E2EE_INVALID_SOURCE_RESULT');
         coverage.push({domain:path.id,complete:result.complete});
         for(const item of result.content){

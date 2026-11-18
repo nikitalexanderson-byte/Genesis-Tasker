@@ -280,6 +280,63 @@ scoped review:2/2 schema/private-copy suites,1/1 maintenance, оба исход�
 Исправлены fixtures; production checks не ослаблялись. Полный продуктовый coverage,
 Android instrumented/low-memory и48 сценариев этим инкрементом не подтверждаются.
 
+## Первый реальный workspace adapter и чтение legacy-источника
+
+Добавлен `PersonalWorkspaceSource` для реальных localStorage workspace, sync
+base/metadata, device key и всех отдельных workspace journals. Factory в
+cloud-sync получает текущие memory key/base/metadata и callback открытого
+редактора. Сначала сохраняются исходные локальные bytes; mutating `readPending`
+не вызывается. В сетевой E2EE-контент не попадают raw legacy keys или HTTP queue
+authority. Исторические relational projects/categories защищаются отдельным
+зашифрованным объектом и не воскрешают удалённые записи актуального workspace.
+
+JS/Kotlin coordinators передают источникам актуальный context после snapshot и
+lease; transports подписывают `legacy-workspace`. Сервер проверяет owner/device,
+directory epoch/checkpoint, lease/fence/source в одном SQLite writer transaction.
+После active этот read закрыт. Он не вызывает Google/bootstrap, не создаёт ключи
+и возвращает только уже известный серверу **старый** key. Client-only legacy key
+нужен из локального snapshot. Selected fields,10000 combined rows и16MiB response
+ограничены; повреждённый/отсутствующий key и changed source блокируют read.
+
+При проверке закрыты: потеря document-only tombstones при отсутствии memory
+metadata, трактовка stale persisted cache как удаления из открытого редактора,
+приём произвольного truthy conflict choice и stack overflow большого base64
+parser. Future/invalid immutable events не пропускаются через lossy projection.
+Changed prior attempts, unscoped attribution и старые tracker formats требуют
+отдельного review UI и пока останавливают перенос с сохранением bytes.
+
+Проверки:125/125 JS PASS (`runtime/js-workspace-04.log`),46/46 native JVM,
+7 XML suites,0 failures/errors (`runtime/native-workspace-01.log`), typecheck и
+targeted ESLint PASS (`typecheck-workspace-03.log`, `lint-workspace-02.log`).
+9 смежных PHP suites PASS (`backend-workspace-final-01`), затем boundary checks
+10000 rows/16MiB/corrupt old key PASS (`backend-workspace-limits-02`). Реальные
+подписанные web/native pagination packets принимаются PHP; новые static legacy
+packets с намеренно stale source token отвергаются как `E2EE_SOURCE_CHANGED`
+(`backend-workspace-limits-01` transport PASS). Успешный bound legacy read отдельно
+проверен с реальным SQLite/HMAC/PHP signing fixture, не выдаётся за cross-platform
+успешную миграцию реального продукта.
+
+Сохранены diagnostic failures: первые4 backend-workspace-read прогона содержат
+исправленные ошибки нового fixture (название signature error, уникальность email,
+migration ID, missing shared helper). `backend-workspace-limits-01` первоначально
+упёрся в действующую1000-category quota; isolated oversized historical fixture
+временно повышает только свою technical quota и восстанавливает её до read.
+JS-workspace-01 проверял prototype вместо значений canonical payload;03 показал,
+что отсутствие base требует явного delete/edit review. Проверки не ослаблялись.
+
+Это первый feature adapter за выключенным контуром, ещё не active product
+bootstrap/editor routing. Полный набор adapters, native Room integration,
+multitab writer fences, clean-device recovery/UI и внешний crypto review остаются
+обязательными; этот инкремент не меняет production или номер Android149.
+
+Финальная сверка этого дерева:9/9 PHP suites PASS
+(`backend-workspace-final-02`, legacy-workspace264 cumulative assertions),
+typecheck/ESLint PASS (`typecheck-workspace-final.log`, `lint-workspace-final.log`).
+
+Поручение владельца: после фактического обновления до3.3.6 подготовить красивый,
+продающий Telegram-пост с картинкой и проверенными улучшениями надёжности.
+Автоматическая отправка не поручена; полный E2EE до готовности не рекламировать.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.

@@ -16,8 +16,18 @@ foreach($fixtures as $fixture) {
         if($response['envelopes']!==[]||$response['checkpointHash']!==$packet['command']['checkpointHash']||$response['directoryRevision']!==$packet['command']['expectedRevision'])throw new RuntimeException('E2EE real transport response mismatch');
         $checks++;
     }
+    // These static cross-platform signatures intentionally carry an old source
+    // token, independent of this fresh database's HMAC key. They must reach the
+    // lease/source checks, never succeed with that stale source or use a typoed action.
+    $packet=$fixture['legacyRead'];$command=$packet['command'];$p=$command['payload'];
+    if($command['action']!=='legacy-workspace')throw new RuntimeException('Invalid legacy workspace transport action');
+    $db->prepare('INSERT INTO e2ee_migrations(scope_id,migration_id,device_id,source_hash,target_generation,fence,lease_until) VALUES(?,?,?,?,?,?,?)')
+        ->execute([$scope,$p['migrationId'],$command['deviceId'],$p['sourceHash'],1,$p['fence'],time()+900]);
+    $db->prepare("UPDATE e2ee_scopes SET state='uploading' WHERE scope_id=?")->execute([$scope]);
+    try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform source accepted');}
+    catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
     // Both independent platform fixtures use a fresh personal test identity.
-    $db->prepare("DELETE FROM e2ee_scopes WHERE scope_id=? AND state='preparing'")->execute([$scope]);
+    $db->prepare("DELETE FROM e2ee_scopes WHERE scope_id=? AND state='uploading'")->execute([$scope]);
 }
-if($checks!==4)throw new RuntimeException('Missing web/native transport vectors');
-echo 'PASS e2ee-migration-transport '.$checks.' real signed web/native pagination packets accepted by PHP SQLite'.PHP_EOL;
+if($checks!==6)throw new RuntimeException('Missing web/native transport vectors');
+echo 'PASS e2ee-migration-transport '.$checks.' real signed web/native packets; pagination accepted, stale legacy-source tokens rejected'.PHP_EOL;

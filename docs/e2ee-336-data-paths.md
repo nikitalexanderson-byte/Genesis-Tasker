@@ -9,7 +9,7 @@ registry does **not** mean that feature adapters have been implemented.
 
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
 | --- | --- | --- |
-| personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Client-only workspace objects, complete three-way merge for every habit/tracker/timer/history/reward collection |
+| personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | First real web adapter + signed lease-bound owner-only legacy source implemented; product writer/multitab fences, older tracker/history review and actual native Room adapter remain |
 | personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Preserve all GENESIS tasks, recurrence, detached occurrences and tombstones; separate Google/Yandex copies and unsent external operations |
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | New root for notes/dreams/references/settings/files; test offline drafts, conflicting edits, deleted advice notes and disabled sync |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Maps, images, complete history and conversion-task references; no omission of unmounted maps |
@@ -36,6 +36,19 @@ source paths in the inventory are relative to
 Cross-owner rows require all relevant scopes, as reflected in the backend guard
 inventory. A project cutover does not silently assert that its parent space or
 another participant's device has migrated.
+
+The first actual `personal.workspace` web adapter is `app/e2ee/workspace-source.ts`,
+supplied by `createPersonalWorkspaceMigrationSource` in cloud-sync. It captures
+persisted/unmounted workspace queues and actual cloud memory before network;
+the caller must capture mounted editor memory and supply the coordinator fence.
+Its output is a canonical workspace plus encrypted historical relational content,
+never a raw-key/HTTP bundle. The legacy source reader explicitly selects only
+owner rows, requires the signed current device and exact live migration lease,
+and cannot read an active scope. It does not reuse bootstrap/Google enumeration.
+Unattributed sources, changed earlier attempts, conflicting mounted/persisted
+bases, unsupported old/future tracker formats and lossy event projections still
+block this adapter. Its presence does not mean product cutover or native Room
+integration is complete. All other required path adapters remain mandatory.
 
 The source registry captures local bytes without network writes or deletion.
 `E2eeMigration.prepare()` is responsible for durably protecting that complete

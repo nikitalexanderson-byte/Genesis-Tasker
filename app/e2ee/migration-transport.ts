@@ -3,7 +3,7 @@ import {E2EE_DOMAINS,decodeE2eeBytes,validateE2eeEnvelope,type E2eeContext,type 
 import {assertTechnical} from './keys.ts';
 import type {VerifiedDirectory} from './directory.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
-import type {MigrationTransport} from './migration.ts';
+import type {MigrationTransport,MigrationSourceContext} from './migration.ts';
 
 export type E2eeMigrationRequest=(path:'/source'|'/command'|'/read',body:unknown)=>Promise<Record<string,WireValue>>;
 /** Signed, paginated shadow readback through the real authenticated channel.
@@ -25,6 +25,15 @@ export class SignedMigrationTransport implements MigrationTransport {
   async command(packet:SignedE2eeCommand){
     if(packet.command.ownerId!==this.#owner||packet.command.scopeId!==this.#scope||packet.command.deviceId!==this.#device.deviceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     return this.#call('/command',packet);
+  }
+  async legacyWorkspace(context:MigrationSourceContext):Promise<unknown>{
+    if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action:'legacy-workspace',
+      expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),
+      payload:{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash}},this.#device.keys().signing.privateKey);
+    const response=await this.#call('/read',packet);
+    if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');
+    return response;
   }
   async readAll():Promise<E2eeEnvelope[]>{
     const result:E2eeEnvelope[]=[];let bytes=0;

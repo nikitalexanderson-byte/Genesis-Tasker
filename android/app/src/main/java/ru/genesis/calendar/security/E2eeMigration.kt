@@ -209,7 +209,9 @@ class E2eeMigration(
                 total += number(old,"snapshotSize"); check(total <= E2eeMigrationSources.BYTE_BUDGET) { "E2EE_MIGRATION_HISTORY_LIMIT" }
                 previous += snapshot(old)
             }
-            val result = sources.reconcile(local,previous); content = result.content
+            val currentLease = lease(state)
+            val result = sources.reconcile(local,previous,E2eeMigrationSourceContext(ownerId,scopeId,state.getString("migrationId"),
+                number(currentLease,"fence"),state.getString("sourceHash"),number(currentLease,"generation"))); content = result.content
             check(result.coverage.size == required.size && required.all { id -> result.coverage.count { it.first == id && it.second } == 1 }
                 && result.coverage.all { it.first in required } && content.size in 1..10000
                 && content.map { it.domain + "\u0000" + it.objectId }.toSet().size == content.size) { "E2EE_INCOMPLETE_COVERAGE" }

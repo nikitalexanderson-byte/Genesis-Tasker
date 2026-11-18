@@ -9,6 +9,8 @@ export type MigrationPhase = 'preparing'|'uploading'|'verified'|'active'|'cancel
 export type MigrationContent = { domain: E2eeContext['domain']; objectId: string; bytes: Uint8Array; filename?: string; mediaType?: string };
 export type MigrationCoverage = { domain: string; complete: boolean };
 export const E2EE_MIGRATION_BYTE_BUDGET = 128 * 1024 * 1024;
+/** Supplied only after the local snapshot and server lease have committed. */
+export type MigrationSourceContext = Readonly<{ownerId:string;scopeId:string;migrationId:string;fence:number;sourceHash:string;generation:number}>;
 export interface MigrationSources {
   readonly requiredCoverage: readonly string[];
   readonly allowedContentDomains: readonly E2eeContext['domain'][];
@@ -16,7 +18,7 @@ export interface MigrationSources {
   /** Must be local-only. Include outbox, drafts, tombstones, key metadata and all local stores. */
   captureLocal(): Promise<Uint8Array>;
   /** Runs only after the protected snapshot has committed. Missing/locked paths block activation. */
-  reconcile(snapshot: Uint8Array, previousSnapshots:readonly Uint8Array[]): Promise<{ coverage: MigrationCoverage[]; content: MigrationContent[] }>;
+  reconcile(snapshot: Uint8Array, previousSnapshots:readonly Uint8Array[], context?:MigrationSourceContext): Promise<{ coverage: MigrationCoverage[]; content: MigrationContent[] }>;
 }
 export interface MigrationTransport {
   sourceHash(): Promise<string>;
@@ -207,7 +209,10 @@ export class E2eeMigration {
         total+=previous.snapshotSize;if(total>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
         previousSnapshots.push(await this.#snapshot(previous));
       }
-      const reconciled=await this.#sources.reconcile(snapshot,previousSnapshots);content=reconciled.content;
+      if(!state.sourceHash)throw new Error('E2EE_CORRUPT_MIGRATION');
+      const lease=this.#lease(state);
+      const reconciled=await this.#sources.reconcile(snapshot,previousSnapshots,Object.freeze({ownerId:this.#directory.ownerId,
+        scopeId:this.#directory.scopeId,migrationId:state.migrationId,fence:lease.fence,sourceHash:state.sourceHash,generation:lease.generation}));content=reconciled.content;
       if(reconciled.coverage.length!==this.#required.length || this.#required.some(domain=>reconciled.coverage.filter(row=>row.domain===domain&&row.complete).length!==1)
         || reconciled.coverage.some(row=>!this.#required.includes(row.domain)) || content.length<1
         || content.length>10000 || new Set(content.map(row=>`${row.domain}\0${row.objectId}`)).size!==content.length)throw new Error('E2EE_INCOMPLETE_COVERAGE');

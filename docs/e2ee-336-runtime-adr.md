@@ -184,6 +184,41 @@ DELETE and isolates protected cascades with a savepoint, preserving bytes/counts
 while unrelated legacy maintenance continues. Neither this inventory nor the
 fences encrypt the existing legacy generation or replace actual content adapters.
 
+## First real workspace source adapter
+
+`PersonalWorkspaceSource` captures actual owner-scoped localStorage workspace,
+sync base/metadata, device key and every workspace queue journal without invoking
+the mutating `readPending()` helper. The cloud factory supplies real in-memory
+key/base/metadata and requires a mounted-editor capture callback. Raw legacy keys
+and HTTP queue metadata remain only in the protected local snapshot. Migrated
+content contains the reconciled workspace and a separate encrypted historical
+relational snapshot, never server identity/billing/ACL credentials. Old relational
+rows are not unioned into a current encrypted workspace and cannot resurrect it.
+
+Both coordinators pass immutable owner/scope/migration/fence/source/generation
+context only after durable capture and the server lease. Both authenticated
+transports sign `legacy-workspace` through the existing `/read` route. The backend
+authorizes and reads under one short SQLite writer transaction. It accepts only
+the personal owner/current trusted device, live matching lease/fence/source token
+and current directory; active/retirement scopes cannot read this legacy source.
+It never calls bootstrap/provider enumeration or `genesisEnsureWorkspaceKey`.
+Only an already server-known OLD workspace key can be returned; a client-only
+legacy key must come from the protected local capture. Missing/corrupt keys do
+not trigger generation of a new key. Explicit selected row fields,10000 combined
+rows and16MiB serialized response bound the read. Conservative guard ownership
+supersets never authorize an export.
+
+Reconciliation uses the existing three-way domain merger with explicit conflict
+choices and tombstones. Strict validation rejects future writers/schemas, invalid
+IDs, duplicate rows and event projections that would drop original fields. Changed
+prior attempts, unscoped legacy attribution, different mounted/persisted bases
+and legacy tracker conversion still require dedicated review before completeness.
+They are retained and stop migration, rather than becoming empty data. The first
+adapter is not yet wired into product enrollment/bootstrap/editor routing; durable
+multitab fences, every remaining adapter and the native Room adapter remain
+required before pilot. The native changes here supply lease context/transport,
+not a completed native workspace adapter.
+
 ## Trust limits and remaining integration
 
 A saved trusted checkpoint detects rollback below that checkpoint and conflicting
