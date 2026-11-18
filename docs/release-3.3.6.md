@@ -558,3 +558,20 @@ recoverable personal archives/Drive и системный backup schedule/restor
 эффект разработки. До обсуждения публикации должны быть конкретные готовые
 изменения и доказательства. После cutover нельзя возвращать account key mode,
 автоматически откатывать БД или очищать local storage.
+
+## Реальный web источник Авроры и подписанный legacy read
+
+Личные sessions/results, все pending writers и их старые snapshots теперь
+сводятся фактическим web adapter под новым root. Непосланные inline results
+также переносятся; старые keys не попадают в новое portable content. Source IO
+выполняется после durable protected capture. Backend ограничивает чтение
+подписанным personal owner/current lease/source token; payment authority не
+выбирается. Native signed transport поддерживает этот read, но его собственный
+Aurora source adapter и product routing ещё обязательны.
+
+Проверено1442/1442 JS,8/8 native JVM migration tests,4/4 PHP suites с8 реально
+подписанными web/native transport packets, typecheck/lint/web build. Реальная
+интеграция Aurora adapter → coordinator → normal scope client открывает новое
+содержимое и прежние ветки новым root и сохраняет legacy originals. Остальные
+registry paths в этом тесте synthetic, это не полная приёмка20 paths.
+Подробности: `docs/e2ee-336-aurora-source.md`. Активация и production не менялись.

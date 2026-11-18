@@ -27,8 +27,14 @@ export class SignedMigrationTransport implements MigrationTransport {
     return this.#call('/command',packet);
   }
   async legacyWorkspace(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-workspace',context);
+  }
+  async legacyAurora(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-aurora',context);
+  }
+  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora',context:MigrationSourceContext):Promise<unknown>{
     if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-    const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action:'legacy-workspace',
+    const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action,
       expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),
       payload:{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash}},this.#device.keys().signing.privateKey);
     const response=await this.#call('/read',packet);

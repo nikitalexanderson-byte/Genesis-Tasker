@@ -42,6 +42,12 @@ export class AuroraRepository{
  syncState:'saved'|'offline'|'conflict'='saved';
  constructor(private ownerId:string,private storage:AuroraStorage,private access:AuroraAccess){this.base=emptyAuroraDocument(ownerId);this.key=`genesis-aurora-workspace-v1:${ownerId}:`;this.journal=new EncryptedPendingJournal(this.key+'pending');}
  private disk(access:AuroraAccess){return access.storage??this.storage;}
+ /** Read-only mounted source capture. The coordinator supplies the exclusive
+  * migration fence; this method never drains a queue or acquires that lock. */
+ captureMigrationState(current:AuroraDocument|null){
+  this.access.check();if(current===null)return null;
+  return structuredClone({document:current,base:this.base,revision:this.revision});
+ }
  private enqueue<T>(operation:(access:AuroraAccess)=>Promise<T>):Promise<T>{
   const result=this.serial.catch(()=>{}).then(()=>this.access.withLegacyOperation(async access=>{
    access.check();const value=await operation(access);access.check();return value;

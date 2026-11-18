@@ -3527,6 +3527,20 @@ export async function createPersonalWorkspaceMigrationSource(userId:string,scope
     legacyWorkspace:context=>transport.legacyWorkspace(context),review});
 }
 
+/** Read-only Aurora source factory. The mounted callback must capture the real
+ * repository base/revision with its current editor document. Product migration
+ * still requires the complete source registry and persistent owner fence. */
+export async function createPersonalAuroraMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyAurora'>,
+  captureCurrent:()=>import('./e2ee/aurora-source').AuroraMigrationMemory['current']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalAuroraSource}=await import('./e2ee/aurora-source');check();
+  return new PersonalAuroraSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+    memory:()=>{check();return{ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired,current:captureCurrent()};},legacyAurora:context=>transport.legacyAurora(context)});
+}
+
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
 }

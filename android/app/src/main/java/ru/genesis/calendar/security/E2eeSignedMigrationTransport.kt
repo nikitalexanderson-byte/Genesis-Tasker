@@ -22,10 +22,12 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
         check(command.get("ownerId") == ownerId && command.get("scopeId") == scopeId && command.get("deviceId") == device.deviceId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         return call("/command",packet)
     }
-    suspend fun legacyWorkspace(context: E2eeMigrationSourceContext): JSONObject {
+    suspend fun legacyWorkspace(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-workspace",context)
+    suspend fun legacyAurora(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-aurora",context)
+    private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext): JSONObject {
         check(context.ownerId == ownerId && context.scopeId == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
-            .put("action","legacy-workspace").put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
+            .put("action",action).put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
             .put("operationId",UUID.randomUUID().toString()).put("payload",JSONObject().put("migrationId",context.migrationId)
                 .put("fence",context.fence).put("sourceHash",context.sourceHash)),device.keys().signing.private)
         val result = call("/read",packet)

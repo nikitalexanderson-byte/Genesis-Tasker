@@ -451,7 +451,7 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','legacy-workspace'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','legacy-workspace','legacy-aurora'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
@@ -459,6 +459,10 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
     if($c['action']==='legacy-workspace') {
         require_once __DIR__.'/e2ee-legacy-workspace.php';
         return genesisE2eeLegacyWorkspace(genesisDb(),$actor,$scope,$c);
+    }
+    if($c['action']==='legacy-aurora') {
+        require_once __DIR__.'/e2ee-legacy-aurora.php';
+        return genesisE2eeLegacyAurora(genesisDb(),$actor,$scope,$c);
     }
     if($c['action']==='sealed-heads') {
         genesisE2eeExactFields($c['payload'],['cryptoEpoch']);genesisE2eeInteger($c['payload']['cryptoEpoch']);

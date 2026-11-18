@@ -11,6 +11,8 @@ import { generateDeviceKeys, freshSecret, createRecoveryKit, publicDeviceKeys, s
 import { importE2eeRoot, encodeE2eeBytes } from '../app/e2ee/envelope.ts';
 import { signE2eeCommand, verifyE2eeCommand, e2eeCommandHash } from '../app/e2ee/commands.ts';
 import { envelopePayloadHash, objectManifestHash } from '../app/e2ee/files.ts';
+import {calendarModule} from './helpers/calendar-modules.mjs';
+import {MemoryStorage} from './helpers/cloud-sync-client.mjs';
 
 class AtomicStorage {
   rows=new Map(); fail=false;
@@ -95,6 +97,8 @@ async function fixture(options={}){
     sources=new E2eeMigrationSources('owner',scopeId,kind);
     for(const path of requiredPrivatePaths(kind)){
       if(path.id===options.missingPath)continue;
+      const actual=await options.sourceAdapter?.(path,{storage,server,trace,vault,scopeId});
+      if(actual){assert.equal(actual.id,path.id);sources.register(actual);continue;}
       sources.register({id:path.id,async captureLocal(){trace.push('snapshot-local');return bytes(`local:${path.id}`);},
         async reconcile(local,_previous,context){assert.equal(new TextDecoder().decode(local),`local:${path.id}`);
           assert.equal(context.migrationId,server.migrationId);assert.equal(context.fence,server.fence);assert.equal(context.scopeId,scopeId);
@@ -144,6 +148,53 @@ test('shared project registry migration produces comments readable by the normal
   });
   await normal.refresh();const opened=await normal.read('shared-comment','project.content');assert.equal(new TextDecoder().decode(opened.bytes),'reconciled:project.content');opened.bytes.fill(0);
 });
+
+test('actual Aurora journals migrate from a durable snapshot and open through the normal new-root client',async()=>{
+  const {PersonalAuroraSource}=calendarModule('app/e2ee/aurora-source.ts');
+  const {newSession}=calendarModule('app/aurora/session.ts'),policy=calendarModule('app/aurora/draw-policy.ts');
+  const empty=()=>({version:1,ownerId:'owner',sessions:[],removed:[]}),now='2026-11-05T09:00:00Z';
+  const document=id=>({...empty(),sessions:[newSession({id,ownerId:'owner',now,timezone:'Europe/Moscow',primary:policy.snapshotFromSavedDraw({id:'source',seed:123,day:'2026-11-05',createdAt:now,cards:policy.expectedSourceDraw(123)})})]});
+  const raw=freshSecret(),legacyKey=Buffer.from(raw).toString('base64'),key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt']);raw.fill(0);
+  const seal=async(value,scope)=>{const iv=crypto.getRandomValues(new Uint8Array(12)),ciphertext=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:bytes('genesis-mindmap-v1:owner:'+scope)},key,bytes(JSON.stringify(value)));
+    return{iv:Buffer.from(iv).toString('base64'),ciphertext:Buffer.from(ciphertext).toString('base64')};};
+  const local=new MemoryStorage(),prefix='genesis-aurora-workspace-v1:owner:',writer=crypto.randomUUID(),old=document('offline'),latest=structuredClone(old);
+  old.sessions[0].observationNote='Earlier private Aurora branch';latest.sessions[0].observationNote='Current private Aurora branch';
+  for(const [index,value] of [old,latest].entries())local.setItem(`${prefix}pending:writer:${writer}:${index+1}:pending`,JSON.stringify({envelope:{...await seal(value,'aurora-workspace:v1'),expectedRevision:0},base:await seal(empty(),'aurora-workspace-base:v1')}));
+  const original=[...local.data],workspace={...await seal(document('server'),'aurora-workspace:v1'),revision:1,updatedAt:now};
+  let reads=0;
+  // Only personal.aurora uses the real adapter here. Other registry paths remain
+  // synthetic; this is deliberately not whole-product migration acceptance.
+  const f=await fixture({registrySources:true,sourceAdapter:async(path,ports)=>path.id==='personal.aurora'?new PersonalAuroraSource('owner',ports.scopeId,{
+    storage:local,memory:()=>({ownerId:'owner',legacyKey,generation:0,reconciliationRequired:false,current:null}),assertCurrent:()=>ports.vault.assertUnlocked(),
+    legacyAurora:async context=>{
+      const journal=await ports.vault.read('local-snapshot',`${context.migrationId}:source:0`);assert.ok(journal,'all source bytes must already be durably encrypted');
+      try{assert.ok(new TextDecoder().decode(journal.value).includes('personal.aurora'));}finally{journal.value.fill(0);}
+      assert.ok(!JSON.stringify([...ports.storage.rows]).includes(legacyKey));assert.ok(!JSON.stringify([...ports.storage.rows]).includes('Current private Aurora branch'));
+      const {ownerId,scopeId,migrationId,fence,sourceHash}=context;
+      reads++;return{protocol:1,ownerId,scopeId,migrationId,fence,sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,workspace,results:[],legacyKey:{keyMode:'account',key:legacyKey}};
+    },
+  }):null});
+  await f.make().prepare();assert.equal(reads,0);assert.equal(f.server.count,0);assert.equal(await f.make().run(),'active');assert.equal(reads,1);assert.deepEqual([...local.data],original);
+  const serialized=JSON.stringify([...f.storage.rows,...f.server.objects]);assert.ok(!serialized.includes(legacyKey));assert.ok(!serialized.includes('private Aurora branch'));
+  const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events);
+  const device={ownerId:'owner',deviceId:'device',vault:f.vault,requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys,
+    rememberDirectory:async(_scope,pin,events,_owner,callback)=>verifyDeviceDirectory('owner',f.scopeId,pin,events,undefined,callback)};
+  const normal=new E2eeScopeClient(device,'owner',f.scopeId,f.recovery.kit.authority,{
+    async directory(){return{events:f.events};},async read(packet){
+      const {action,payload}=packet.command,objects=[...f.server.objects.values()],result={checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision};
+      if(action==='sealed-heads')result.objects=await Promise.all(objects.map(async envelope=>({domain:envelope.context.domain,objectId:envelope.context.objectId,revision:1,payloadHash:await envelopePayloadHash(envelope)})));
+      else result.envelopes=objects.filter(envelope=>envelope.context.domain===payload.domain&&envelope.context.objectId===payload.objectId);
+      return result;
+    },
+  });
+  await normal.refresh();
+  const opened=await normal.read('aurora','personal-aurora-workspace-v1');assert.ok(opened);
+  try{const value=JSON.parse(new TextDecoder().decode(opened.bytes));assert.deepEqual(new Set(value.document.sessions.map(row=>row.id)),new Set(['server','offline']));assert.equal(value.document.sessions.find(row=>row.id==='offline').observationNote,'Current private Aurora branch');}
+  finally{opened.bytes.fill(0);}
+  const history=await normal.read('aurora','personal-aurora-local-history-v1');assert.ok(history);
+  try{const value=JSON.parse(new TextDecoder().decode(history.bytes));assert.equal(value.snapshots.length,2);assert.equal(value.snapshots[0].document.sessions[0].observationNote,'Earlier private Aurora branch');}
+  finally{history.bytes.fill(0);}
+});
 test('signed shadow readback continues past short pages and rejects loops, directory changes and lock',async()=>{
   const f=await fixture();await f.make().prepare();await f.make().run();
   const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),seen=[];
@@ -164,11 +215,12 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
-  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead;
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
     assert.equal(path,'/read');
     if(packet.command.action==='legacy-workspace')legacyRead=packet;
+    else if(packet.command.action==='legacy-aurora')auroraRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   });
@@ -177,8 +229,11 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
   await transport.legacyWorkspace(context);assert.equal((await verifyE2eeCommand(legacyRead,f.keys.signing.publicKey)).action,'legacy-workspace');
   assert.deepEqual({...legacyRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
   await assert.rejects(transport.legacyWorkspace({...context,scopeId:'personal:foreign'}),/SCOPE_BINDING_MISMATCH/);
+  await transport.legacyAurora(context);assert.equal((await verifyE2eeCommand(auroraRead,f.keys.signing.publicKey)).action,'legacy-aurora');
+  assert.deepEqual({...auroraRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
+  await assert.rejects(transport.legacyAurora({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
   mkdirSync('output/release-3.3.6/runtime',{recursive:true});
-  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead},null,2));
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));
