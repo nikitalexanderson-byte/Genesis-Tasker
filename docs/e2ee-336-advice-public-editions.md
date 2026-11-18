@@ -54,7 +54,8 @@ SHA-256 проверяет целостность bytes и release pins. Это 
  не отправил. Console0 errors/0 warnings.
 - Web build PASS; browser server перед запуском сравнил каждый emitted byte
  с исходным файлом. Полный JS1474/1474 PASS. Web Advice signed transport
- дополнительно38/38 migration tests PASS; native Advice transport ещё нужен.
+ дополнительно38/38 migration tests PASS. Последующий подписанный native port
+ и web source/readback описаны в `e2ee-336-advice-web-source.md`.
 - Typecheck PASS. Полный ESLint сначала дал3 errors только в чужом untracked
  `demo-output/production/render_logo.cjs`. Файлы не менялись и не добавлялись.
  С исключением только `demo-output/**` —0 errors,4 прежних img warnings.

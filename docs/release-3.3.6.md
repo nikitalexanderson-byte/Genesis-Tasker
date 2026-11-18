@@ -710,3 +710,22 @@ coverage3/20,17 других categories, product lifecycle/all editor routing,
 recovery/direct upgrades/48 сценариев/14-language security UI и независимый
 crypto review остаются обязательными. Production3.3.5/149, floors0, cutover off
 и GENESIS_DEPLOY_ANDROID=false сохранены;3.3.6 ещё не опубликована.
+
+
+## Advice: web source, непрозрачный encrypted index и оба signed ports
+
+19 ноября2026. Web adapter переносит raw preferences, historical selections,
+все14 текстов точной public edition, прежние rendered copies и private metrics.
+Mounted preference changes сводятся относительно base; конфликт/неизвестный
+provenance/теряемый формат блокируют completion. Даты и selected IDs находятся
+внутри ciphertext; новые remote IDs — UUID, поиск идёт через encrypted index.
+
+Actual source прошёл coordinator/persist-before-IO/shadow/new-root ordinary read.
+Другие registry paths в этом fixture остаются synthetic. Full JS1482/1482,
+web build/typecheck/focused lint PASS. Native Advice signed port:8/8 migration
+JVM PASS; PHP6/6 suites с12 actual web/native signed transport packets PASS.
+Продукт не активирован, actual native Advice content capture/reconciliation
+ещё подключается. Coverage3/20, full recovery/upgrades/48 scenarios/14-language
+security UI и независимый crypto review всё ещё обязательны. Production3.3.5/149,
+floors0, cutover off, Android deploy false сохранены. Подробности:
+`e2ee-336-advice-web-source.md`.

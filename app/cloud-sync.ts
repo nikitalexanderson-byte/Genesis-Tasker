@@ -3554,6 +3554,22 @@ export async function createPersonalStoicheionMigrationSource(userId:string,scop
       reconciliationRequired:backupReconciliationRequired,nativeDraws:null};},legacyStoicheion:context=>transport.legacyStoicheion(context)});
 }
 
+/** Captures actual mounted Advice/settings while the complete owner coordinator
+ * holds its persistent fence. Public catalogue IO uses no account credentials. */
+export async function createPersonalAdviceMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyAdvice'>,
+  captureCurrent:()=>Pick<import('./e2ee/advice-source').AdviceMigrationMemory,'preferences'|'mounted'>) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const publicBase=new URL('.',new URL(API_BASE,window.location.href));
+  if(publicBase.origin!==window.location.origin)throw new Error('E2EE_ORIGIN_MISMATCH');
+  const [{PersonalAdviceSource},{PublicAdviceCatalogues,publicAdviceCatalogueReader}]=await Promise.all([import('./e2ee/advice-source'),import('./e2ee/advice-catalogue')]);check();
+  const catalogues=new PublicAdviceCatalogues(publicAdviceCatalogueReader(publicBase,check),check);
+  return new PersonalAdviceSource(userId,scopeId,{storage:localStorage,assertCurrent:check,catalogues,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired,rendered:[],seen:[],unassignedLegacy:false};},legacyAdvice:context=>transport.legacyAdvice(context)});
+}
+
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
 }

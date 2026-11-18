@@ -232,6 +232,47 @@ test('actual practice journals and draw history survive coordinator migration an
   const history=await normal.read('stoicheion','personal-stoicheion-local-history-v1');assert.ok(history);try{const value=JSON.parse(new TextDecoder().decode(history.bytes));assert.equal(value.snapshots.length,2);assert.equal(value.snapshots[0].document.works[0].snapshot.reflection,'Earlier synthetic private reflection');}finally{history.bytes.fill(0);}
   const draws=await normal.read('stoicheion','personal-stoicheion-draw-history-v1');assert.ok(draws);draws.bytes.fill(0);
 });
+test('actual Advice preferences and historical texts pass durable migration and ordinary new-root reads',async()=>{
+  const {PersonalAdviceSource}=calendarModule('app/e2ee/advice-source.ts'),{collectAdvicePublicAssets}=await import('../scripts/advice-public-assets.mjs');
+  const editorial={...JSON.parse(readFileSync('server/content/daily-advice.json','utf8')).items[0],collection:'aurora'},day='2026-11-19',now='2026-11-19T09:00:00Z';
+  const assets=collectAdvicePublicAssets(process.cwd()),publicRows=new Map(assets.assets.map(row=>[row.fileName,Buffer.from(row.source)]));
+  const {contentVersion,topics,...displayed}=editorial;assert.ok(contentVersion);assert.ok(topics);
+  const canary='Synthetic private previous Advice display',card={...displayed,language:'en',body:canary,dayKey:day,dismissed:false,sequence:1};
+  const mounted={language:'en',selection:card.id,result:{dayKey:day,state:'ready',advice:card,history:[card],sequence:1,dailyLimit:9,remaining:8,canNext:true}};
+  const local=new MemoryStorage();let reads=0,catalogueReads=0;
+  // Only Advice is real in this fixture. The other mandatory categories remain
+  // synthetic; a successful test must not be called complete product coverage.
+  const f=await fixture({registrySources:true,sourceAdapter:async(path,ports)=>path.id==='personal.advice'?new PersonalAdviceSource('owner',ports.scopeId,{
+    storage:local,memory:()=>({ownerId:'owner',generation:0,reconciliationRequired:false,preferences:null,mounted,rendered:[],seen:[],unassignedLegacy:false}),assertCurrent:()=>ports.vault.assertUnlocked(),
+    legacyAdvice:async context=>{
+      const protectedCopy=await ports.vault.read('local-snapshot',`${context.migrationId}:source:0`);assert.ok(protectedCopy);protectedCopy.value.fill(0);
+      assert.ok(!JSON.stringify([...ports.storage.rows]).includes(canary));reads++;
+      const {ownerId,scopeId,migrationId,fence,sourceHash}=context;
+      return{protocol:1,ownerId,scopeId,migrationId,fence,sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,
+        preferencesJson:'{"smart":false,"categories":["hermetica"]}',collectionsJson:'["aurora"]',notificationsJson:'{}',psychopompiaJson:'{}',philosophersPerDay:2,
+        days:[{dayKey:day,adviceId:editorial.id,entryJson:JSON.stringify(editorial),createdAt:now,viewedAt:now,dismissedAt:null,selectionJson:'{}'}],entries:[],extraEntries:[],metrics:null};
+    },catalogues:{async resolve(kind,version,language,id){assert.equal(reads,1);catalogueReads++;const row=assets.manifest.catalogues.find(row=>row.kind===kind&&row.version===version&&row.language===language);assert.ok(row);return JSON.parse(publicRows.get(row.path).toString('utf8'))[id];}},
+  }):null});
+  await f.make().prepare();assert.equal(reads,0);assert.equal(catalogueReads,0);assert.equal(await f.make().run(),'active');assert.equal(reads,1);assert.equal(catalogueReads,14);
+  assert.ok(!JSON.stringify([...f.storage.rows,...f.server.objects]).includes(canary));
+  const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),device={ownerId:'owner',deviceId:'device',vault:f.vault,requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys,
+    rememberDirectory:async(_scope,pin,events,_owner,callback)=>verifyDeviceDirectory('owner',f.scopeId,pin,events,undefined,callback)};
+  const normal=new E2eeScopeClient(device,'owner',f.scopeId,f.recovery.kit.authority,{
+    async directory(){return{events:f.events};},async read(packet){
+      const {action,payload}=packet.command,objects=[...f.server.objects.values()],result={checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision};
+      if(action==='sealed-heads')result.objects=await Promise.all(objects.map(async envelope=>({domain:envelope.context.domain,objectId:envelope.context.objectId,revision:1,payloadHash:await envelopePayloadHash(envelope)})));
+      else result.envelopes=objects.filter(envelope=>envelope.context.domain===payload.domain&&envelope.context.objectId===payload.objectId);return result;
+    },
+  });await normal.refresh();
+  const indexRecord=await normal.read('workspace','personal-advice-history-index-v1');assert.ok(indexRecord);let dayObject;
+  try{const index=JSON.parse(new TextDecoder().decode(indexRecord.bytes));assert.equal(index.days[0].dayKey,day);dayObject=index.days[0].objectId;assert.match(dayObject,/^personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);}finally{indexRecord.bytes.fill(0);}
+  for(const [id,verify]of [
+    ['personal-advice-preferences-v1',value=>{assert.equal(value.preferences.philosophersPerDay,2);assert.equal(value.preferences.smart,false);}],
+    [dayObject,value=>{assert.equal(Object.keys(value.pointer.translations).length,14);assert.equal(value.pointer.entryJson,JSON.stringify(editorial));}],
+    ['personal-advice-local-history-v1',value=>{assert.equal(value.mounted.result.advice.body,canary);assert.equal(value.mounted.result.canNext,undefined);}],
+  ]){const opened=await normal.read('workspace',id);assert.ok(opened);try{verify(JSON.parse(new TextDecoder().decode(opened.bytes)));}finally{opened.bytes.fill(0);}}
+});
+
 test('signed shadow readback continues past short pages and rejects loops, directory changes and lock',async()=>{
   const f=await fixture();await f.make().prepare();await f.make().run();
   const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),seen=[];
@@ -252,13 +293,14 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
-  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead;
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead,adviceRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
     assert.equal(path,'/read');
     if(packet.command.action==='legacy-workspace')legacyRead=packet;
     else if(packet.command.action==='legacy-aurora')auroraRead=packet;
     else if(packet.command.action==='legacy-stoicheion')stoicheionRead=packet;
+    else if(packet.command.action==='legacy-advice')adviceRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   });
@@ -273,8 +315,12 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
   await transport.legacyStoicheion(context);assert.equal((await verifyE2eeCommand(stoicheionRead,f.keys.signing.publicKey)).action,'legacy-stoicheion');
   assert.deepEqual({...stoicheionRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
   await assert.rejects(transport.legacyStoicheion({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
+  await transport.legacyAdvice(context);assert.equal((await verifyE2eeCommand(adviceRead,f.keys.signing.publicKey)).action,'legacy-advice');
+  assert.deepEqual({...adviceRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
+  await assert.rejects(transport.legacyAdvice({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
+  await assert.rejects(transport.legacyAdvice({...context,scopeId:'personal:foreign'}),/SCOPE_BINDING_MISMATCH/);
   mkdirSync('output/release-3.3.6/runtime',{recursive:true});
-  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead},null,2));
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead,adviceRead},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));

@@ -41,8 +41,11 @@ web/native transport vectors ещё нет.
 Первый fixture запуск ошибочно задал extra slot1; actual schema допускает7–9.
 Исправлен только seed на7; product schema/ограничения не ослаблялись.
 
-Обязательны дальше: web/native signed transport ports, реальные owner-bound
-cache/memory capture и domain reconciliation, new-root readback и recovery.
+Signed web/native Advice ports теперь проверены12 real packets в PHP и8 native
+JVM cases: `runtime/backend-advice-transport-01/`,
+`runtime/native-advice-transport-jvm-01.log`. Web source/coordinator/readback:
+`e2ee-336-advice-web-source.md`. Обязательны дальше реальные native owner-bound
+cache/memory capture/reconciliation, new-root readback и полное recovery.
 Native inventory включает `AdviceSnapshotStore`, рабочий дневной кеш/seen/history
 и старый SharedPreferences-кеш с hashed keys. Хеш сам по себе не подтверждает
 владельца неизвестной исторической записи. Unassigned копии нельзя молча считать
@@ -64,8 +67,9 @@ migration lease; после cancel разрешённое изменение ч�
 6/6 PHP/SQLite suites PASS:
 `runtime/backend-advice-raw-preferences-schema-01/`, включая полный schema drift,
 foreign/shared/current lease, неизменность исходников и17MiB каждого raw JSON.
-Обычные helpers с entitlement filtering не вызываются. Веб Advice transport
-добавлен, native transport vectors ещё не завершены.
+Обычные helpers с entitlement filtering не вызываются. Web/native Advice
+transport vectors завершены следующим инкрементом; actual native content
+adapter остаётся обязательным.
 
 Публичный historical resolver теперь реализован отдельно:
 `e2ee-336-advice-public-editions.md`.126 editions/14 languages сохраняются

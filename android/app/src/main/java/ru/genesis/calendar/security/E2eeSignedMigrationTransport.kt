@@ -25,6 +25,7 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
     suspend fun legacyWorkspace(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-workspace",context)
     suspend fun legacyAurora(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-aurora",context)
     suspend fun legacyStoicheion(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-stoicheion",context)
+    suspend fun legacyAdvice(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-advice",context)
     private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext): JSONObject {
         check(context.ownerId == ownerId && context.scopeId == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
