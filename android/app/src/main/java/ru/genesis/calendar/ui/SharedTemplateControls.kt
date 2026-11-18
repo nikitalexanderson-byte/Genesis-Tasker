@@ -115,16 +115,9 @@ internal fun templateIssueMessage(code: String, copy: JSONObject) = copy.getJSON
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun TemplateIconButton(label: String, action: AffairsAction, enabled: Boolean, modifier: Modifier = Modifier, selected: Boolean = false, onClick: () -> Unit) {
     val description = genesisTranslate(label)
-    val selection = selectedControlColors()
     Box(modifier.semantics(mergeDescendants = true) { contentDescription = description; this.selected = selected }) {
       TooltipBox(positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(), tooltip = { PlainTooltip { Text(label) } }, state = rememberTooltipState()) {
-        OutlinedIconButton(onClick, enabled = enabled, shape = AffairsLayout.controlShape,
-            border = selectedControlBorder(selected, enabled,
-                if (LocalAffairsControlOutlined.current && action != AffairsAction.CLOSE) IconButtonDefaults.outlinedIconButtonBorder(enabled) else null),
-            colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = selectedControlContainer(selected,enabled),
-                contentColor = if (selected) selection.content else MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledContainerColor = if (selected) selection.disabledContainer else androidx.compose.ui.graphics.Color.Transparent,
-                disabledContentColor = selection.disabledContent),
+        GenesisIconButton(onClick, enabled = enabled, selected = selected,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { contentDescription = description; this.selected = selected }) { AffairsActionIcon(action) }
       }
     }

@@ -182,7 +182,7 @@ fun timeLabel(value: String, use24: Boolean): String {
 fun AuthorDatePicker(value: String, mode: CalendarMode, minDate: LocalDate? = null,
     calculationContext: ru.genesis.calendar.domain.CalendarContext? = null, maxDate: LocalDate? = null, enabled: Boolean = true,
     placeholder: String? = null, modifier: Modifier = Modifier, displayMode: CalendarMode = mode, compact: Boolean = false,
-    showCalendarIcon: Boolean = false, onChange: (String) -> Unit) {
+    showCalendarIcon: Boolean = false, centerLabel: Boolean = false, onChange: (String) -> Unit) {
     val sacredFeaturesEnabled = LocalSacredFeaturesEnabled.current
     val mode = if (sacredFeaturesEnabled) mode else CalendarMode.PROFANE
     var open by rememberSaveable { mutableStateOf(false) }
@@ -204,7 +204,10 @@ fun AuthorDatePicker(value: String, mode: CalendarMode, minDate: LocalDate? = nu
             Spacer(Modifier.width(4.dp))
         }
         Text(label,maxLines=1,softWrap=false,style=MaterialTheme.typography.labelMedium)
-    } else OutlinedButton(onClick=openPicker,enabled=enabled,modifier=modifier){Text(label)}
+    } else OutlinedButton(onClick=openPicker,enabled=enabled,modifier=modifier) {
+        Text(label, modifier = if (centerLabel) Modifier.fillMaxWidth() else Modifier,
+            textAlign = if (centerLabel) androidx.compose.ui.text.style.TextAlign.Center else androidx.compose.ui.text.style.TextAlign.Unspecified)
+    }
     if (open && enabled) AuthorDatePickerDialog(date, mode, calendar, firstDate, lastDate, minDate,
         onDismiss = { open = false }, onChoose = { chosen -> open = false; onChange(chosen.toString()) })
 }

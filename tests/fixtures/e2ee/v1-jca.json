@@ -1,0 +1,28 @@
+{
+  "rootFixture": "v1.json",
+  "envelope": {
+    "ciphertext": "_YFz9kSWN1Q7uhD01fzMNLbAUGImQR_rNWffv6w3ah6MwEGsGslfZ68zfrsNK8n8QY5ZeeWINdO_6Fm_6j3VSODC4C2ZqJUDyua2OLhvpVTP-Tv_eSe2IuTcgHzjuO-2gYhp51fy7HwbGRY",
+    "signature": "wxbgV7iN3J5n65j1pon1xBLyrzA-2reFDUWCvvsDEgF-4hpQEXKOOasQPb3MGETPOAml_6dr4GbjnDIVldPO1g",
+    "context": {
+      "cryptoProtocol": 1,
+      "scopeId": "synthetic-owner",
+      "schemaVersion": 1,
+      "keyId": "synthetic-root-2",
+      "ownerId": "synthetic-owner",
+      "writerProtocol": 9,
+      "deviceId": "synthetic-device-1",
+      "revision": 7,
+      "suite": "A256KW-A256GCM-ES256",
+      "domain": "workspace",
+      "cryptoEpoch": 2,
+      "operationId": "00000000-0000-4000-8000-000000000001",
+      "dataGeneration": 4294967297,
+      "objectId": "synthetic-workspace",
+      "securityEpoch": 3
+    },
+    "nonce": "VGtbhmHhOUyMhx5_",
+    "wrappedKey": "TJzZLygMVBmPxE6amgiapVZtRMDQq_r_-nYP2yk9c-1QyaN0t-BA_Q"
+  },
+  "origin": "JCA 25.0.3",
+  "warning": "PUBLIC SYNTHETIC FIXTURE; NEVER USE FOR USER DATA"
+}

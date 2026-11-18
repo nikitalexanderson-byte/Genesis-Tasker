@@ -32,7 +32,7 @@ function Catalog({boot}:{boot:Boot}){
    <OlympianIsopsephyContent language={boot.language} onSelect={setSelected} {...navigation} search={copy?{id,query,onChange:setQuery,copy}:undefined}/>
    {error?<button type="button" onClick={retry}>{content.locales[boot.language].title} ↻</button>:null}
   </div>
-  {selected?<OlympianIsopsephyDialog deity={selected} language={boot.language} onSelect={deity=>{setSelected(deity);window.scrollTo(0,0);}} onBack={()=>setSelected(null)} onClose={()=>window.GenesisOlympianBridge.navigate('close','')} {...navigation}/>:null}
+  {selected?<OlympianIsopsephyDialog embedded deity={selected} language={boot.language} onSelect={deity=>{setSelected(deity);window.scrollTo(0,0);}} onBack={()=>setSelected(null)} onClose={()=>window.GenesisOlympianBridge.navigate('close','')} {...navigation}/>:null}
  </main>;
 }
 let initialized=false;

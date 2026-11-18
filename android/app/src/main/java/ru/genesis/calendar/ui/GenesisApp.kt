@@ -1018,7 +1018,7 @@ private fun AuthTransitionScreen(message: String) {
 }
 
 @Composable
-private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>, selected: String, use24: Boolean,
+internal fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>, selected: String, use24: Boolean,
     structure: WorkspaceStructure, onCreate: () -> Unit, onComplete: (LocalTask) -> Unit,
     onMoveToToday: (LocalTask) -> Unit, onOpen: (String) -> Unit,
     showCreate: Boolean = true,
@@ -1036,12 +1036,7 @@ private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>
         Column(Modifier.padding(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy((10f / 1.5f).dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Surface(Modifier.size(40.dp), shape = AffairsLayout.controlShape,
-                    color = MaterialTheme.colorScheme.primaryContainer) {
-                    Box(contentAlignment = Alignment.Center) {
-                        GenesisVectorIcon(GenesisPageIcon.TASKS, Modifier.size(24.dp), MaterialTheme.colorScheme.primary)
-                    }
-                }
+                TodaySectionIcon(GenesisPageIcon.TASKS, "today-tasks-section-icon")
                 Column(Modifier.weight(1f)) {
                     Text("Задачи дня", style = MaterialTheme.typography.titleLarge)
                     Text(if (tasks.isEmpty() && !hasShared) "День свободен для нового замысла" else
@@ -1056,10 +1051,8 @@ private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>
             TodayTaskGroup("Личные", Modifier.testTag("today-personal-tasks"),
                 titleModifier = Modifier.testTag("today-personal-tasks-title")) {
             if (tasks.isEmpty()) {
-                Surface(Modifier.fillMaxWidth(), shape = AffairsLayout.shape, color = MaterialTheme.colorScheme.surface) {
-                    Text(if (hasShared) "${genesisTranslate("Личные")} · 0" else "На сегодня задач нет. Можно оставить день свободным или создать задачу.",
-                        Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
-                }
+                TodayTaskEmptyState(if (hasShared) "${genesisTranslate("Личные")} · 0" else
+                    "На сегодня задач нет. Можно оставить день свободным или создать задачу.")
             } else tasks.forEach { task ->
                 TodayTaskRow(task.done, { onOpen(task.id) }, Modifier.testTag("task-${task.id}"),
                     onComplete = { onComplete(task) }) {

@@ -25,6 +25,13 @@ import androidx.compose.ui.unit.dp
     }
 }
 
+/** The accepted personal empty-state treatment is shared by both task scopes. */
+@Composable internal fun TodayTaskEmptyState(message: String, modifier: Modifier = Modifier) {
+    Surface(modifier.fillMaxWidth(), shape = AffairsLayout.shape, color = MaterialTheme.colorScheme.surface) {
+        Text(message, Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
 /** Both task scopes use the same card; shared completion remains governed by its workflow. */
 @Composable internal fun TodayTaskRow(completed: Boolean, onOpen: () -> Unit,
     modifier: Modifier = Modifier, onComplete: (() -> Unit)? = null,

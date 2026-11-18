@@ -114,16 +114,7 @@ internal fun TrackersScreen(app: GenesisApplication, experimental: Boolean = fal
                     HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
                     Text("Выберите день для просмотра записей", color=MaterialTheme.colorScheme.primary,
                         style=MaterialTheme.typography.labelMedium)
-                    Row(Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically,
-                        horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        Box(Modifier.weight(1f)) {
-                            AuthorDatePicker(dateValue,viewMode) { if(!busy)dateValue=it }
-                        }
-                        FilledTonalButton(onClick={dateValue=LocalDate.now().toString()}, enabled=!busy,
-                            modifier=Modifier.heightIn(min=48.dp).testTag("sleep-mood-today")) {
-                            Text("Сегодня")
-                        }
-                    }
+                    TrackerDateNavigation(dateValue, viewMode, enabled = !busy) { dateValue = it }
                     HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
                     Text("Ритм восстановления", color=MaterialTheme.colorScheme.onSurface,
                         style=MaterialTheme.typography.titleLarge)
@@ -497,6 +488,22 @@ internal fun SleepPlanEditor(plan: SleepPlan,use24: Boolean,busy: Boolean,error:
             }
         }
     } }
+}
+
+/** The date uses the full remaining width; Today keeps its own readable action target. */
+@Composable internal fun TrackerDateNavigation(value: String, mode: CalendarMode,
+    enabled: Boolean = true, onChange: (String) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.weight(1f)) {
+            AuthorDatePicker(value, mode, enabled = enabled, centerLabel = true,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("sleep-mood-date")) {
+                if (enabled) onChange(it)
+            }
+        }
+        FilledTonalButton(onClick = { onChange(LocalDate.now().toString()) }, enabled = enabled,
+            modifier = Modifier.heightIn(min = 48.dp).testTag("sleep-mood-today")) { Text("Сегодня") }
+    }
 }
 
 internal fun dailySleepSchedule(date: LocalDate,mode: CalendarMode): TrackerSchedule {

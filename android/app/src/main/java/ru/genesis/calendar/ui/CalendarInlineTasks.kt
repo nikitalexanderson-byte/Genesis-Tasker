@@ -29,14 +29,7 @@ internal fun calendarModeLabel(mode: CalendarMode): String = when(mode) {
     Column(Modifier.fillMaxWidth().testTag("calendar-inline-tasks"), verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Surface(Modifier.size(44.dp),shape=AffairsLayout.shape,
-                color=if(LocalEveningTheme.current) MaterialTheme.colorScheme.secondaryContainer else Color(0xff123b36)) {
-                Box(contentAlignment=Alignment.Center) {
-                    GenesisVectorIcon(GenesisPageIcon.TASKS,Modifier.size(28.dp),
-                        if(LocalEveningTheme.current) MaterialTheme.colorScheme.onSecondaryContainer else Color(0xfff3d68f),
-                        animated=true)
-                }
-            }
+            TodaySectionIcon(GenesisPageIcon.TASKS, "calendar-tasks-section-icon")
             Column(Modifier.weight(1f)) {
                 Text("Задачи дня", style = MaterialTheme.typography.titleLarge)
                 Text("${tasks.size} · ${date.format(DateTimeFormatter.ofPattern("d MMMM yyyy", locale))}",

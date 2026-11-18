@@ -136,9 +136,9 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     val headerActions: @Composable (Modifier) -> Unit = { actionsModifier ->
             Box(actionsModifier) {
                 if (map == null) WorkspaceHeaderButton("Действия с картой", "mindmaps-actions", onClick={files=true}) { AffairsActionIcon(AffairsAction.MORE) }
-                else OutlinedIconButton(onClick={exportMenu=true}, enabled=!busy && canExchange,
+                else GenesisIconButton(onClick={exportMenu=true}, enabled=!busy && canExchange, selected=exportMenu,
                     modifier=Modifier.size(48.dp).testTag("mindmap-export-menu")
-                        .semantics { contentDescription=exportLabel }, shape=AffairsLayout.controlShape) {
+                        .semantics { contentDescription=exportLabel }) {
                     GenesisLucideIcon("download")
                 }
                 DropdownMenu(files,{files=false}) {
@@ -209,6 +209,7 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
             }
         } else {
             BoxWithConstraints(Modifier.fillMaxWidth().testTag("mindmap-toolbar-viewport")) {
+            CompositionLocalProvider(LocalGenesisIconButtonTonal provides true) {
             Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min = maxWidth).height(IntrinsicSize.Min)
                 .testTag("mindmap-toolbar"),horizontalArrangement=Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment=Alignment.CenterVertically) {
@@ -216,10 +217,10 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
                 Box { AffairsIconButton(if (structure) "Показать карту" else "Показать структуру",
                     if (structure) AffairsAction.MINDMAP else AffairsAction.SUBTASK, {
                         query = ""; changeView(JSONObject(view.toString()).put("mode", if (structure) "map" else "structure"))
-                    }, Modifier.testTag("mindmap-mode-toggle")) }
+                    }, Modifier.testTag("mindmap-mode-toggle"), selected=structure) }
                 Box {
                     AffairsIconButton("Добавить",AffairsAction.ADD,{addMenu=true},enabled=!busy&&!readOnly,
-                        modifier=Modifier.testTag("mindmap-add-node"))
+                        modifier=Modifier.testTag("mindmap-add-node"), selected=addMenu)
                     DropdownMenu(addMenu,{addMenu=false}) {
                         DropdownMenuItem(text={Text("Добавить мысль")},leadingIcon={AffairsActionIcon(AffairsAction.ADD)},
                             modifier=Modifier.testTag("mindmap-add-thought"),onClick={addMenu=false;add()})
@@ -232,11 +233,12 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
                 }, Modifier.testTag("mindmap-undo"), enabled=undo.isNotEmpty()&&!busy&&!readOnly)
                 AffairsIconButton("Название и описание", AffairsAction.EDIT, {
                     title=map.title;description=map.description;create=true
-                }, Modifier.testTag("mindmap-title-description"), enabled=!busy&&!readOnly)
+                }, Modifier.testTag("mindmap-title-description"), enabled=!busy&&!readOnly, selected=create)
                 AffairsIconButton("История", AffairsAction.HISTORY, {
                     run {serverPreview=false;history=repo.history(map.id)}
-                }, Modifier.testTag("mindmap-history"), enabled=!busy)
+                }, Modifier.testTag("mindmap-history"), enabled=!busy, selected=history!=null)
                 headerActions(Modifier)
+            }
             }
             }
             if(view.optString("focus").isNotBlank()&&view.optString("focus")!="null")TextButton(onClick={changeView(JSONObject(view.toString()).removeFocus())}){Text("Вся карта")}
