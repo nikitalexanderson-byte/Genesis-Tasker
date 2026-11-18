@@ -125,6 +125,12 @@ staging/history/metrics are retained, legacy rows expire normally, and a protect
 shared cascade rolls back only its own item and counts. Corrupt historical receipt
 JSON is retained for investigation, never treated as an empty ownership binding.
 
+Personal legacy transport classification/guards are now connected to the actual
+web and Android HTTP clients, with per-owner durable deny markers and a checked
+deployable PHP policy resource; see `e2ee-336-legacy-transport.md`. No marker alone
+claims full writer coverage: old tabs/SW, non-Room sources, shared transports and
+direct external spelling remain explicit integrations, not hidden exceptions.
+
 All feature adapter rows above are pending product integration. Current focused
 registry tests prove missing-path/forked-source/duplicate-output/incomplete-path
 rejection and snapshot preservation; they do not replace the original 48

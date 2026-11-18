@@ -20,7 +20,7 @@ function Get-NativeVersion([string]$RepositoryRoot) {
 
 # Hash actual native inputs, including the byte-copied web resources from genesisAssets.
 function Get-NativeSourceHash([string]$RepositoryRoot) {
-    $paths = @(& git -C $RepositoryRoot -c core.quotepath=false ls-files --cached --others --exclude-standard -- android public app scripts/aurora 'releases/*.json' package.json pnpm-lock.yaml server/resources/feature-access-policy.json server/resources/advice-age-access-policy.json server/resources/billing-catalog.json) | Sort-Object -Unique
+    $paths = @(& git -C $RepositoryRoot -c core.quotepath=false ls-files --cached --others --exclude-standard -- android public app contracts/e2ee scripts/aurora 'releases/*.json' package.json pnpm-lock.yaml server/resources/feature-access-policy.json server/resources/advice-age-access-policy.json server/resources/billing-catalog.json) | Sort-Object -Unique
     if ($LASTEXITCODE -ne 0 -or !$paths.Count) { throw 'Cannot enumerate native build inputs' }
     $lines = foreach ($relative in $paths) {
         $path = Join-Path $RepositoryRoot $relative

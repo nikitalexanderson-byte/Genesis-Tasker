@@ -274,8 +274,11 @@ actual Room + AndroidKeyStore workspace-source test removed only a fresh QA key
 alias and proved capture fails without recreating a key, empty workspace or
 queue acknowledgement. The default legacy alias is unchanged.
 
-These are storage barriers, not a completed network/lifecycle route. Old workers
-still need explicit exclusion before plaintext external I/O and all new editors
+The central personal AuthSessionClient now shares the storage fence's scope mutex
+through complete IO, and the web API uses durable deny markers/Web Locks; see
+`e2ee-336-legacy-transport.md` for actual tested boundaries. These are not a
+completed product lifecycle route. Separate shared/external workers still need
+explicit exclusion before plaintext external I/O and all new editors
 need the protected queue. Exact shared child storage scopes require their own
 approved binding; this root-scope barrier does not assert those adapters exist.
 Web multitab fencing, full device-credential vault acceptance and all48 scenarios

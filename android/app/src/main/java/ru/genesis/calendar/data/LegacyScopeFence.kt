@@ -4,7 +4,6 @@ import androidx.room.migration.Migration
 import androidx.room.RoomDatabase
 import androidx.room.withTransaction
 import androidx.sqlite.db.SupportSQLiteDatabase
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import ru.genesis.calendar.auth.CloudAccountSnapshot
 import ru.genesis.calendar.security.E2eeDirectory
@@ -12,7 +11,6 @@ import ru.genesis.calendar.security.E2eeKeys
 import ru.genesis.calendar.security.E2eeMigration
 import ru.genesis.calendar.security.E2eeMigrationFence
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 /** Additive upgrade. All four original tables/rows, ciphertext, counters and
  * pending operations survive; there is no destructive migration fallback. */
@@ -48,11 +46,10 @@ internal object LegacyScopeFenceSql {
 internal class NativeLegacyScopeFence(private val db: GenesisDatabase, private val ownerId: String,
     private val remoteScopeId: String, private val assertCurrent: () -> Unit,
     private val storageScope: String = CloudAccountSnapshot.scopeFor(ownerId)) : E2eeMigrationFence {
-    companion object { private val locks=ConcurrentHashMap<String,Mutex>() }
     // App writers/controllers share one process; independent Room instances for
     // the same configured database must serialize migration/release too. SQLite
     // independently protects every old writer, including across connections.
-    private val mutex by lazy { locks.getOrPut("${db.openHelper.databaseName ?: "memory:${System.identityHashCode(db)}"}\u0000$storageScope") { Mutex() } }
+    private val mutex by lazy { LegacyScopeLocks.mutex(db,storageScope) }
     init {
         E2eeKeys.technical(ownerId); E2eeKeys.technical(remoteScopeId)
         val account=CloudAccountSnapshot.scopeFor(ownerId)

@@ -312,6 +312,9 @@ function genesisUiVisibility(mixed $value): array
 
 function genesisUserForClient(array $user): array
 {
+    require_once __DIR__.'/e2ee-policy.php';
+    $privateScope=genesisE2eeUserState((string)$user['id']);
+    $privatePreferencesProtected=$privateScope && in_array($privateScope['state'],['active','retirement'],true);
     $multiAccountEnabled = genesisMultiAccountEnabled($user);
     $localAccounts = genesisUserProvider($user) !== 'google'
         && function_exists('genesisLocalAccountMembers') ? genesisLocalAccountMembers($user) : [];
@@ -368,7 +371,7 @@ function genesisUserForClient(array $user): array
         ? count(array_filter($localAccounts, static fn(array $account): bool => !empty($account['calendarConnected']))) > 0
         : count(array_filter($accounts, static fn(array $account): bool => !empty($account['calendarConnected']))) > 0);
     $anyTasksConnected = $calendarSyncAllowed && count(array_filter($accounts, static fn(array $account): bool => !empty($account['googleTasksImportReady']))) > 0;
-    return [
+    $profile = [
         'uid' => (string)$user['id'],
         'dataGeneration' => (int)($user['data_generation'] ?? 0),
         'forecastElitePlus' => genesisForecastElitePlus($user),
@@ -417,6 +420,14 @@ function genesisUserForClient(array $user): array
             'categoryAccountIds' => (object)$categoryAccountIds,
         ],
     ];
+    if($privatePreferencesProtected) {
+        // /session and independent account/billing replies stay available. They
+        // must not become an alternate plaintext export of the retained legacy
+        // preferences after cutover. Absence is explicit, never an empty rewrite.
+        unset($profile['advicePreferences'],$profile['uiVisibility'],$profile['syncRouting']);
+        $profile['privatePreferencesMode']='e2ee';
+    }
+    return $profile;
 }
 
 function genesisFindUser(string $userId): ?array
@@ -1362,6 +1373,9 @@ function genesisUpdateAccountPreferences(string $userId, array $payload): array
 /** Read and merge layout patches under the same write lock across devices. */
 function genesisUpdateAccountPreferencesInTransaction(string $userId, array $payload): array
 {
+    require_once __DIR__.'/e2ee-policy.php';require_once __DIR__.'/e2ee-legacy-transport.php';
+    if(genesisE2eePersonalTransportProtected('PUT','account/preferences',$payload)&&genesisE2eeLegacyScopeBlocked('personal',$userId))
+        throw new DomainException('E2EE_UPGRADE_REQUIRED');
     $user = genesisFindUser($userId);
     if ($user === null) {
         throw new RuntimeException('Пользователь не найден.');

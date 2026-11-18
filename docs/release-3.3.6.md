@@ -425,6 +425,32 @@ host kill. Повтор при работающем system service прошёл.
 device-credential/biometric invalidation нового vault, low memory, все shared
 bindings, web multitab и полный48-сценарный переход.
 
+## Личные legacy transport guards сайта, API и Android
+
+Добавлены общий route/payload contract, серверная защита чтения saved advice и
+paid modeling results, транзакционная защита private/unknown preference patches
+и исключение legacy private preferences из ответов активного профиля. Новый
+owner header запрещает отправку очереди под cookie другого аккаунта. Подробности,
+границы и воспроизводимые проверки: `docs/e2ee-336-legacy-transport.md`.
+
+Android HTTP client делит scope mutex с persistent Room fence: уже начатый ответ
+завершается до подготовки snapshot, следующие private requests не создают даже
+соединение. Cookie/owner публикуются атомарно, mutable JSON копируется до
+классификации. Web API client использует реальные Web Locks и отдельные durable
+IndexedDB deny markers. Необратимый active/cancelled status CAS сохранён. Оба
+клиента также запрещают legacy IO по защищённому профилю на чистом устройстве без
+локального маркера. Identity, technical preferences и signed E2EE routes доступны.
+
+133/133 JS, 478/478 JVM auth/security (77 suites), 8/8 API26 instrumentation,
+22/22 real Chromium checks, 11/11 backend regression +3/3 focused suites
+(transport overlap), typecheck/ESLint/web build — PASS. Только synthetic QA
+package/данные, отдельный emulator5574 и loopback server; личные устройства и
+production не менялись. Native APK по metadata остаётся QA3.3.5/149.
+
+Это ещё не полный local/editor/SW barrier: shared scopes и отдельная внешняя
+проверка орфографии имеют самостоятельные границы. Эти результаты не заменяют
+полную миграцию20 private paths или независимую проверку криптографии.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.

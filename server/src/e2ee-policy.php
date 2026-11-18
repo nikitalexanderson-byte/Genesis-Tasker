@@ -300,12 +300,20 @@ function genesisE2eeLegacyScopeBlocked(string $kind,string $resource): bool
 /** One deny boundary runs BEFORE route-specific handlers, including early restore routes. */
 function genesisE2eeEnforceLegacyRoute(string $method,string $path,?string $userId): void
 {
-    if($userId===null || str_starts_with($path,'e2ee/v1/'))return;
+    if($userId===null)return;
+    // New transports bind queued private content to the live session owner.
+    // A cookie changed by another tab must not redirect an old account's writes.
+    // Absence remains compatible for legacy clients; active-scope fences still
+    // reject their private routes regardless of headers or claimed version.
+    $expectedOwner=$_SERVER['HTTP_X_GENESIS_ACCOUNT_ID']??null;
+    if($expectedOwner!==null && (!is_string($expectedOwner)||$expectedOwner!==$userId))throw new DomainException('E2EE_ACCOUNT_CHANGED');
+    if(str_starts_with($path,'e2ee/v1/'))return;
     // The existing messenger has a separate ciphertext protocol and history.
     // Keep both read and write routes, including its scoped conversation creation.
     if(preg_match('~^shared/(?:private-conversations|messenger|messaging)(?:/|$)|^shared/spaces/[^/]+/private-conversations$~D',$path))return;
     $personal=genesisE2eeUserState($userId);
-    $private=preg_match('~^(?:workspace(?:/|$)|bootstrap$|tasks(?:/|$)|task-lists(?:/|$)|diary(?:/|$)|mindmaps(?:/|$)|stoicheion(?:-|/|$)|aurora(?:-|/|$)|physis(?:/|$)|modeling(?:/|$)|habit-reminders(?:/|$)|backup/v1/(?:preview|commit|server-snapshot)$|recovered-tasks(?:/|$))~D',$path);
+    require_once __DIR__.'/e2ee-legacy-transport.php';
+    $private=genesisE2eePersonalTransportProtected($method,$path);
     if($personal && in_array($personal['state'],['active','retirement'],true) && $private)throw new DomainException('E2EE_UPGRADE_REQUIRED');
     // Future legacy mutation routes fail closed too. These namespaces contain only
     // independently authoritative identity/payment/consent/public metadata operations.

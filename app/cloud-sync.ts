@@ -6,6 +6,8 @@ import { notifyUpgradeError } from './upgrade-events';
 import {advicePushDeviceKey,type AdviceTarget} from './advice-notifications';
 import { habitLifecycleState } from './habit-lifecycle';
 import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
+import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
+import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import type { Language } from "./i18n";
 import { apiUnavailableMessage, billingApiErrorMessage, isTemporaryApiStatus } from "./api-availability";
 import type { SharedChecklist, SharedTaskDetailsDraft } from "./shared-task-details";
@@ -498,6 +500,16 @@ export function createCloudTipsCheckout() {
 const PENDING_KEY = "genesis-pending-mutations-v2";
 const LAST_USER_CACHE = "genesis-last-user-v2";
 let sessionGeneration = 0;
+let confirmedTransportOwnerId:string|null=null;
+const serverProtectedTransportOwners=new Set<string>();
+let personalTransportGate:WebLegacyTransportGate|null=null;
+function legacyTransportGate() {
+  if(!personalTransportGate) {
+    if(typeof navigator==='undefined'||!navigator.locks||typeof indexedDB==='undefined')throw new Error('E2EE_BROWSER_LOCKS_REQUIRED');
+    personalTransportGate=new WebLegacyTransportGate(new IndexedDbLegacyTransportMarkers(),navigator.locks);
+  }
+  return personalTransportGate;
+}
 let localSessionEnded = privateDeviceAccessBlocked();
 const accountRequests = new Set<AbortController>();
 export const LOCAL_SESSION_ENDED_EVENT = "genesis-local-session-ended";
@@ -671,6 +683,7 @@ export function sharedMindmapDocumentAccess(userId: string, spaceId: string) {
 }
 
 function endLocalSession() {
+  confirmedTransportOwnerId=null;
   cancelWorkspaceConflict?.();
   dismissedWorkspaceConflict = "";
   localSessionEnded = true;
@@ -910,6 +923,23 @@ export class GenesisApiError extends Error {
 }
 
 async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {}): Promise<T> {
+  const method=(init.method??'GET').toUpperCase();let body:unknown=undefined;
+  if(path.replace(/^\/+/, '').split('?',1)[0]==='account/preferences'&&!['GET','HEAD','OPTIONS'].includes(method)) {
+    try { if(typeof init.body!=='string')throw new Error();body=JSON.parse(init.body); }
+    catch { throw new Error('E2EE_INVALID_LEGACY_REQUEST'); }
+  }
+  if(!personalLegacyTransportProtected(method,path,body))return apiOverHttp<T>(path,init,feedback);
+  const owner=confirmedTransportOwnerId,generation=sessionGeneration;
+  if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  if(serverProtectedTransportOwners.has(owner))throw new Error('E2EE_UPGRADE_REQUIRED');
+  const current=()=>{requireActiveLocalSession(generation);if(confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');if(serverProtectedTransportOwners.has(owner))throw new Error('E2EE_UPGRADE_REQUIRED');};
+  const waiting=new AbortController(),abort=()=>waiting.abort(init.signal?.reason);
+  accountRequests.add(waiting);if(init.signal?.aborted)abort();else init.signal?.addEventListener('abort',abort,{once:true});
+  try { return await legacyTransportGate().request(owner,current,()=>apiOverHttp<T>(path,{...init,signal:waiting.signal},feedback,owner),waiting.signal); }
+  finally { accountRequests.delete(waiting);init.signal?.removeEventListener('abort',abort); }
+}
+
+async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {},legacyOwner?:string): Promise<T> {
   if (backupReconciliationRequired && !['GET','HEAD'].includes(init.method ?? 'GET')
     && /^\/(?:workspace|tasks|mindmaps|diary|stoicheion-workspace|aurora-workspace|physis|recovered-tasks)(?:\/|$)/.test(path))
     throw new Error('BACKUP_RECONCILIATION_REQUIRED');
@@ -942,6 +972,7 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
         "X-Genesis-Data-Generation": String(backupDataGeneration),
         ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
         ...init.headers,
+        ...(legacyOwner?{'X-Genesis-Account-Id':legacyOwner}:{}),
       },
     });
     if (generation !== sessionGeneration) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
@@ -969,10 +1000,16 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
       throw new Error("Сервис GENESIS временно недоступен.");
     }
     const profile = payload.user as GenesisUser | null | undefined;
+    if(legacyOwner&&profile!==undefined&&profile?.uid!==legacyOwner)throw new Error('E2EE_ACCOUNT_CHANGED');
     if (profile && typeof profile.uid === 'string') {
       if (!acceptTrialTransport(profile.uid, profile.featureAccess, trialCheckpoint)) throw new DOMException("Superseded account profile", "AbortError");
       rememberFeatureAccess(profile.uid, profile.featureAccess);
+      confirmedTransportOwnerId=profile.uid;
+      // This server hint only denies legacy IO. It cannot approve a device or
+      // open keys, and an absent later hint never reopens this owner's writer.
+      if(Object.hasOwn(profile,'privatePreferencesMode'))serverProtectedTransportOwners.add(profile.uid);
     }
+    else if(profile===null)confirmedTransportOwnerId=null;
     return payload as T;
   } catch (error) {
     if (timedOut) throw new GenesisNetworkTimeoutError("Сервер GENESIS не ответил за 20 секунд. Изменения сохранены на устройстве и будут синхронизированы позже.");
@@ -3391,6 +3428,16 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
 export function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal) {
   return api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})})
     .catch(error=>{if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;});
+}
+
+/** Transport exclusion only. The product must combine this with every mounted
+ * editor/local writer fence; this factory does not activate a migration. */
+export function createPersonalMigrationTransportFence(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  device:import('./e2ee/device-vault').UnlockedWebDevice) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();device.requireOpen();if(confirmedTransportOwnerId!==userId||device.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+  if(directory.kind!=='personal'||directory.ownerId!==userId||directory.resourceId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  return new WebMigrationTransportFence(legacyTransportGate(),userId,directory.scopeId,check);
 }
 
 /** Real read-only workspace migration sources. The caller must still provide the

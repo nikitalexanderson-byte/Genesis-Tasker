@@ -126,10 +126,22 @@ internal fun allowedSharedRoute(method: String, path: String): Boolean {
 }
 
 /** A dedicated, encrypted native cookie jar; never shared with Custom Tabs or the local drafts DB. */
-internal class AuthSessionClient(context: Context) {
+internal class AuthSessionClient(context: Context,
+    private val openConnection: (URL) -> HttpsURLConnection = { it.openConnection() as HttpsURLConnection },
+    private val cipher: LocalCipher = LocalCipher(),
+    personalTransportGate: (() -> ru.genesis.calendar.data.NativeLegacyTransportGate)? = null) {
     private val backupEpoch=NativeBackupEpochStore(context)
     private val transportEpoch=NativeBackupEpoch.current()
     private val backupApplication=context.applicationContext as? ru.genesis.calendar.GenesisApplication
+    private val legacyTransportPolicy=E2eeLegacyTransportPolicy.load(context)
+    private val legacyTransportGate by lazy {
+        personalTransportGate?.invoke() ?: backupApplication?.let { ru.genesis.calendar.data.NativeLegacyTransportGate(it.database) }
+            ?: throw AuthApiError("E2EE_LOCAL_STORAGE_UNAVAILABLE")
+    }
+    // Only an authenticated live profile binds cookies to a private local scope.
+    // Never infer the owner from whichever editor happens to be visible.
+    private var confirmedPersonalOwnerId: String? = null // protected by guard
+    private val serverProtectedOwners=mutableSetOf<String>() // deny-only, protected by guard
     private val preferences = context.getSharedPreferences("genesis.native.auth.v1", Context.MODE_PRIVATE)
     private val installationId: String by lazy {
         val install = context.getSharedPreferences("genesis.native.install.v1", Context.MODE_PRIVATE)
@@ -137,7 +149,6 @@ internal class AuthSessionClient(context: Context) {
             install.edit().putString("id", it).apply()
         }
     }
-    private val cipher = LocalCipher()
     // The encryption context stays stable when the service moves to another domain.
     private val aad = "genesis.native.auth.v2"
     private val legacyAad = "genesis.native.auth.v1|https://genesiscalendar.ru"
@@ -241,7 +252,7 @@ internal class AuthSessionClient(context: Context) {
     }
 
     fun clear(expected: Long) {
-        synchronized(guard) { check(expected); trialEpoch++; trialReceipts.clear(); trialProfileOrder.invalidate() }
+        synchronized(guard) { check(expected); confirmedPersonalOwnerId=null; trialEpoch++; trialReceipts.clear(); trialProfileOrder.invalidate() }
         save(expected, SessionSecret("", 0, ""))
     }
 
@@ -712,7 +723,7 @@ internal class AuthSessionClient(context: Context) {
         require(allowedSharedTaskExtensionRoute("GET", path))
         val current = load(expected)
         if (current.cookie.isBlank()) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
-        val connection = URL("$AUTH_ORIGIN/api$path").openConnection() as HttpsURLConnection
+        val connection = openConnection(URL("$AUTH_ORIGIN/api$path"))
         synchronized(guard) { check(expected); connections += connection }
         try {
             connection.instanceFollowRedirects = false
@@ -763,15 +774,41 @@ internal class AuthSessionClient(context: Context) {
         persist: Boolean = true, method: String = if (body == null) "GET" else "POST",
         responseReader: ((java.io.InputStream) -> JSONObject)? = null, importBody: DataImportBody? = null,
         timeZone: String? = null, foregroundCall: ForegroundAccountCall? = null): JSONObject {
+        require(allowedAuthSessionRoute(method,path))
+        // Classification and transmitted bytes must refer to the same snapshot.
+        // JSONObject supplied by a controller may still be mutated on another
+        // thread while this blocking transport waits for a scope permit.
+        val requestBody=try { body?.let { JSONObject(it.toString()) } }catch(_: Exception){throw AuthFailure(AuthFailure.Kind.PROTOCOL)}
+        val owner=if(legacyTransportPolicy.protected(method,path,requestBody)) synchronized(guard) {
+            check(expected);val bound=confirmedPersonalOwnerId ?: throw AuthApiError("E2EE_ACCOUNT_BINDING_REQUIRED")
+            if(bound in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED");bound
+        } else null
+        fun current() = synchronized(guard) {
+            check(expected)
+            if(owner!=null && confirmedPersonalOwnerId!=owner) throw CancellationException("Authentication operation superseded")
+            if(owner!=null && owner in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED")
+        }
+        val operation={ requestOverHttps(expected,path,requestBody,secret,persist,method,responseReader,importBody,timeZone,foregroundCall,owner) }
+        return if(owner==null)operation() else legacyTransportGate.request(CloudAccountSnapshot.scopeFor(owner),::current,operation)
+    }
+
+    private fun requestOverHttps(expected: Long,path: String,body: JSONObject?,secret: SessionSecret?,persist: Boolean,
+        method: String,responseReader: ((java.io.InputStream) -> JSONObject)?,importBody: DataImportBody?,
+        timeZone: String?,foregroundCall: ForegroundAccountCall?,legacyOwner: String?): JSONObject {
+        fun currentRequest() = synchronized(guard) {
+            check(expected)
+            if(legacyOwner!=null && confirmedPersonalOwnerId!=legacyOwner) throw CancellationException("Authentication operation superseded")
+            if(legacyOwner!=null && legacyOwner in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED")
+        }
         ru.genesis.calendar.security.UpdateGate.requireOpen()
         val trialStarted = android.os.SystemClock.elapsedRealtime()
         val (requestTrialEpoch, requestSequence) = synchronized(guard) { check(expected); trialEpoch to trialProfileOrder.beginRequest() }
         require(allowedAuthSessionRoute(method, path))
         if(BackupProtocol.personalWrite(method,path)&&backupEpoch.pending()!=null)throw AuthApiError("BACKUP_RECONCILIATION_REQUIRED")
         require(method in setOf("GET", "POST", "PUT", "PATCH", "DELETE") && (method == "GET") == (body == null))
-        val current = secret ?: load(expected)
+        val current = synchronized(guard) { currentRequest();secret ?: load(expected) }
         if (body != null && (current.cookie.isBlank() || current.csrf.isBlank())) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
-        val connection = URL("$AUTH_ORIGIN/api$path").openConnection() as HttpsURLConnection
+        val connection = openConnection(URL("$AUTH_ORIGIN/api$path"))
         synchronized(guard) { check(expected); connections += connection }
         var phase = "prepare"
         try {
@@ -788,6 +825,7 @@ internal class AuthSessionClient(context: Context) {
             connection.setRequestProperty("X-Genesis-App-Version", BuildConfig.VERSION_NAME)
             NativeActivityVisit.headers().forEach { (name, value) -> connection.setRequestProperty(name, value) }
             connection.setRequestProperty("X-Genesis-Data-Generation",backupEpoch.accepted().toString())
+            if(legacyOwner!=null)connection.setRequestProperty("X-Genesis-Account-Id",legacyOwner)
             connection.setRequestProperty("X-Genesis-Installation-Id", installationId)
             if (current.cookie.isNotBlank()) connection.setRequestProperty("Cookie", "$SESSION_COOKIE=${current.cookie}")
             if (body != null) {
@@ -796,18 +834,18 @@ internal class AuthSessionClient(context: Context) {
                 connection.doOutput = true
                 val bytes = if (importBody == null) body.toString().toByteArray(Charsets.UTF_8) else null
                 connection.setFixedLengthStreamingMode(importBody?.length ?: requireNotNull(bytes).size)
-                synchronized(guard) { check(expected) }
+                currentRequest()
                 phase = "write"
                 connection.outputStream.use { output ->
                     if (importBody == null) output.write(requireNotNull(bytes))
-                    else importBody.write(output) { synchronized(guard) { check(expected) } }
+                    else importBody.write(output) { currentRequest() }
                 }
             }
-            synchronized(guard) { check(expected) }
+            currentRequest()
             phase = "status"
             val status = connection.responseCode
             if (status !in 200..299) {
-                if (E2eeTransportProtocol.allowedRoute(method, path)) {
+                if (E2eeTransportProtocol.allowedRoute(method, path) || legacyOwner!=null) {
                     val code = runCatching {
                         val output = ByteArrayOutputStream()
                         connection.errorStream?.use { input ->
@@ -947,6 +985,10 @@ internal class AuthSessionClient(context: Context) {
                 }
                 JSONObject(output.toString(Charsets.UTF_8.name()))
             }
+            currentRequest()
+            val responseOwner=if(persist && payload.has("user")) AuthProtocol.identity(payload)?.uid else null
+            if(legacyOwner!=null && payload.has("user") && responseOwner!=legacyOwner)
+                throw AuthFailure(AuthFailure.Kind.PROTOCOL)
             if (persist) {
                 val headers = connection.headerFields.filterKeys { it?.equals("Set-Cookie", true) == true }.values.flatten()
                 val update = AuthProtocol.cookie(headers, System.currentTimeMillis())
@@ -958,9 +1000,18 @@ internal class AuthSessionClient(context: Context) {
                 val next = SessionSecret(if (update.present) update.value else current.cookie,
                     if (update.present) update.expiresAt else current.expiresAt, csrf)
                 if (next.cookie.isBlank() || next.csrf.isBlank()) throw AuthFailure(AuthFailure.Kind.PROTOCOL)
-                save(expected, next)
+                synchronized(guard) {
+                    currentRequest();save(expected,next)
+                    // Cookie rotation and its owner binding are one publication.
+                    // Another request must never load a new owner's cookie with
+                    // the previous owner's private transport permit.
+                    if(payload.has("user")) {
+                        confirmedPersonalOwnerId=responseOwner
+                        if(responseOwner!=null&&payload.getJSONObject("user").has("privatePreferencesMode"))serverProtectedOwners+=responseOwner
+                    }
+                }
             }
-            synchronized(guard) { check(expected) }
+            currentRequest()
             // A changed server generation must not reach import/bootstrap before local work is protected.
             payload.optJSONObject("user")?.takeIf { it.has("dataGeneration") }?.let { user ->
                 val accountScope=CloudAccountSnapshot.scopeFor(user.getString("uid"))
