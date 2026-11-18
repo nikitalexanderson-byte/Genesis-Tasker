@@ -1,56 +1,44 @@
 "use client";
-/* eslint-disable @next/next/no-html-link-for-pages */
 
-import { LEGAL_UPDATED, legalPageContent } from "./legal-content";
-import { BACKUP_LEGAL_READY, BACKUP_LEGAL_VERSION,backupPrivacySections,backupTermsSections } from './backup-legal';
+import { LEGAL_UPDATED } from "./legal-content";
+import { BACKUP_LEGAL_READY, BACKUP_LEGAL_VERSION } from './backup-legal';
 import {useBackupCopy} from './use-backup-copy';
-import {getRuntimeLanguage} from './i18n';
-import {localizedAccountRetentionSections} from './account-retention-legal';
-import {localizedDictationLegalSections} from './dictation-legal';
-import {localizedWeatherLegalSections} from './weather-legal';
+import {getRuntimeLanguage,translateText} from './i18n';
+import {legalPresentation} from './legal-presentation';
+import {publicPagePath} from './public-route';
 import type {LegalPageName} from './legal-route';
 import {publicMerchantHtml, publicProductCopy} from './public-product';
 import './public-product.css';
 export {currentLegalPage} from './legal-route';
 export type {LegalPageName} from './legal-route';
-const backupTitles=new Set([...backupPrivacySections,...backupTermsSections].map(([title])=>String(title)));
 
 export function LegalPage({ page }: { page: LegalPageName }) {
   const language=getRuntimeLanguage();
-  const content = legalPageContent(page,language);
   const {c}=useBackupCopy(language);
-  const retentionSections=localizedAccountRetentionSections(language);
-  const dictationSections=localizedDictationLegalSections(language);
-  const weatherSections=localizedWeatherLegalSections(language);
+  const content=legalPresentation(page,language,text=>translateText(text,language),text=>c(text,translateText(text,'en')));
+  const base=process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||'';
+  const home=publicPagePath(language,'home',base);
   return (
-    <main className="legal-shell">
+    <main className="legal-shell" data-no-translate>
       <header className="legal-header">
-        <a className="welcome-brand" href="/"><span className="solar-mark"><i /></span><span><strong>GENESIS</strong><small>доверие и ясность</small></span></a>
-        <a href="/">← На главную</a>
+        <a className="welcome-brand" href={home}><span className="solar-mark"><i /></span><span><strong>GENESIS</strong><small>{translateText('доверие и ясность',language)}</small></span></a>
+        <a href={home}>{translateText('← На главную',language)}</a>
       </header>
       <article className="legal-document" data-no-translate={page==='refund'?true:undefined}>
-        <span className="welcome-kicker">ОФИЦИАЛЬНЫЙ ДОКУМЕНТ</span>
+        <span className="welcome-kicker">{translateText('ОФИЦИАЛЬНЫЙ ДОКУМЕНТ',language)}</span>
         <h1>{content.title}</h1>
         <p className="legal-intro">{content.intro}</p>
-        <p className="legal-date">Редакция от {LEGAL_UPDATED}</p>
+        <p className="legal-date">{translateText('Редакция от',language)} {LEGAL_UPDATED}</p>
         <div data-no-translate dangerouslySetInnerHTML={{__html:publicMerchantHtml(language, page)}} />
         {!BACKUP_LEGAL_READY && (page==='privacy'||page==='terms')?<p data-no-translate role="note">{c('Проект редакции {version}. Дополнения для 3.2.2 ещё не готовы к публикации: требуются подтверждение юридических фактов и приёмка отключённых функций.','Draft revision {version}. The 3.2.2 additions await confirmation of legal facts and acceptance testing of the disabled features.').replace('{version}',BACKUP_LEGAL_VERSION)}</p>:null}
-        {content.sections.map(([title, body]) => {
-          const weather=weatherSections.get(title);
-          if(weather)return <section data-no-translate key={title}><h2>{weather[0]}</h2><p>{weather[1]}</p></section>;
-          const dictation=dictationSections.get(title);
-          if(dictation)return <section data-no-translate key={title}><h2>{dictation[0]}</h2><p>{dictation[1]}</p></section>;
-          const retention=retentionSections.get(title);
-          if(retention)return <section data-no-translate key={title}><h2>{retention[0]}</h2><p>{retention[1]}</p></section>;
-          return backupTitles.has(title)?<section data-no-translate key={title}><h2>{c(title,title)}</h2><p>{c(body,body)}</p></section>:<section key={title}><h2>{title}</h2><p>{body}</p></section>;
-        })}
+        {content.sections.map(([title,body])=><section data-no-translate key={title}><h2>{title}</h2><p>{body}</p></section>)}
         {page === "privacy" ? (
           <p className="legal-policy-link">
             <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a>
           </p>
         ) : null}
       </article>
-      <footer className="legal-footer"><a href="/privacy">{publicProductCopy(language).privacy}</a><a href="/terms">{publicProductCopy(language).terms}</a><a href="/refund">{publicProductCopy(language).refund}</a><a href="/support">{publicProductCopy(language).support}</a><a href="/delete-account">{publicProductCopy(language).deleteAccount}</a></footer>
+      <footer className="legal-footer">{(['privacy','terms','refund','support','delete-account'] as const).map(slug=><a key={slug} href={publicPagePath(language,slug,base)}>{slug==='delete-account'?publicProductCopy(language).deleteAccount:publicProductCopy(language)[slug]}</a>)}</footer>
     </main>
   );
 }

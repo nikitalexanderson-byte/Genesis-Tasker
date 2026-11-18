@@ -39,6 +39,8 @@ import ru.genesis.calendar.auth.AuthPanelState
 import ru.genesis.calendar.auth.activity
 import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.R
+import ru.genesis.calendar.data.PublicPage
+import ru.genesis.calendar.data.publicPagePath
 import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthResult
@@ -53,21 +55,23 @@ private val welcomeMuted = Color(0xFFB8C9C2)
 /** A single Google entry for the account used throughout GENESIS. */
 @Composable
 fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: String,
-    preferredLanguage: String? = null, onLanguage: (String) -> Unit) {
+    preferredLanguage: String? = null, languageReady: Boolean = true, russianAvailable: Boolean = false,
+    onLanguage: (String) -> Unit) {
     val context = LocalContext.current
     val activity = context.activity()
     var invitationBusy by remember { mutableStateOf(false) }
     WelcomeContent(state, language, onLanguage,
         onSignIn = { activity?.let { controller.signIn(it, preferredLanguage) } },
-        signInEnabled = activity != null && !invitationBusy, onRetry = controller::checkSession,
+        signInEnabled = activity != null && !invitationBusy && languageReady, onRetry = controller::checkSession,
         invitation = { NativeReferralInvitation(controller, language) { invitationBusy = it } },
-        onWeb = { openWebsite(context) },
-        onLegal = { path -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GENESIS_ORIGIN + path))) })
+        onWeb = { openWebsite(context, language) },
+        onLegal = { path -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GENESIS_ORIGIN + path))) },
+        russianAvailable = russianAvailable)
 }
 
 @Composable internal fun WelcomeContent(state: AuthPanelState, language: String, onLanguage: (String) -> Unit,
     onSignIn: () -> Unit, signInEnabled: Boolean = true, onRetry: () -> Unit, onWeb: () -> Unit,
-    onLegal: (String) -> Unit, invitation: @Composable () -> Unit = {}) {
+    onLegal: (String) -> Unit, invitation: @Composable () -> Unit = {}, russianAvailable: Boolean = true) {
     // The welcome artwork is always dark, independently of the host's selected palette.
     CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(
@@ -79,7 +83,8 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
                     style = MaterialTheme.typography.titleLarge.copy(fontFamily = GenesisHeadingFont))
             }
             Text("Выбор языка", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
-            LanguageChips(language, dark = true, flagsOnly = true, onLanguage = onLanguage)
+            LanguageChips(language, dark = true, flagsOnly = true, includeRussian = russianAvailable,
+                onLanguage = onLanguage)
             HorizontalDivider(color = welcomeGold.copy(alpha = .24f))
             androidx.compose.foundation.text.BasicText(genesisTranslate("Календарь задач и проектов"),
                 Modifier.fillMaxWidth().testTag("welcome-purpose-title"), maxLines = 1, softWrap = false,
@@ -126,10 +131,10 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
         }
         @Composable fun Legal() {
             Column(Modifier.fillMaxWidth().testTag("welcome-legal"), horizontalAlignment = Alignment.CenterHorizontally) {
-                TextButton({ onLegal("/terms") }, Modifier.heightIn(min = 48.dp).testTag("welcome-terms")) {
+                TextButton({ onLegal(publicPagePath(language, PublicPage.TERMS)) }, Modifier.heightIn(min = 48.dp).testTag("welcome-terms")) {
                     Text("Пользовательское соглашение", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
                 }
-                TextButton({ onLegal("/privacy") }, Modifier.heightIn(min = 48.dp).testTag("welcome-privacy")) {
+                TextButton({ onLegal(publicPagePath(language, PublicPage.PRIVACY)) }, Modifier.heightIn(min = 48.dp).testTag("welcome-privacy")) {
                     Text("Политика конфиденциальности", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
                 }
             }
@@ -196,7 +201,7 @@ private fun WelcomeTrustLine(symbol: String, text: String) {
 }
 
 @Composable
-fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = false,
+fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = false, includeRussian: Boolean = true,
     onLanguage: (String) -> Unit) {
     val languages = listOf(Triple("ru", "🇷🇺", "Русский"), Triple("en", "🇬🇧", "English"),
             Triple("el", "🇬🇷", "Ελληνικά"), Triple("de", "🇩🇪", "Deutsch"),
@@ -205,12 +210,14 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
             Triple("pl", "🇵🇱", "Polski"), Triple("sr", "🇷🇸", "Српски"),
             Triple("uk", "🇺🇦", "Українська"), Triple("zh", "🇨🇳", "简体中文"),
             Triple("tr", "🇹🇷", "Türkçe"), Triple("ja", "🇯🇵", "日本語"))
+        .filter { includeRussian || it.first != "ru" }
     if (flagsOnly) {
         val night = dark || LocalEveningTheme.current
         val selection = genesisSelectionColors(if (night) eveningPalette(LocalDarkPalette.current) else MaterialTheme.colorScheme,night)
         BoxWithConstraints(Modifier.fillMaxWidth().testTag("welcome-language-grid")) {
             // Keep complete rows as languages are added; compact cells still have a 48 dp height.
-            val columns = balancedLanguageColumns(languages.size, ((maxWidth.value + 2f) / 46f).toInt())
+            val columns = balancedLanguageColumns(languages.size + if (includeRussian) 0 else 1,
+                ((maxWidth.value + 2f) / 46f).toInt())
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 languages.chunked(columns).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -232,6 +239,7 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
                                 }
                             }
                         }
+                        repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
@@ -263,7 +271,7 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
 internal fun balancedLanguageColumns(count: Int, availableColumns: Int): Int =
     (minOf(count, availableColumns.coerceAtLeast(1), 7) downTo 1).first { count % it == 0 }
 
-private fun openWebsite(context: Context) {
+private fun openWebsite(context: Context, language: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW,
-        Uri.parse("${ru.genesis.calendar.auth.AUTH_ORIGIN}/")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        Uri.parse(ru.genesis.calendar.auth.AUTH_ORIGIN + publicPagePath(language))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }

@@ -52,6 +52,9 @@
 .welcome-nav nav a { display:inline-flex; min-height:44px; align-items:center; font-size:14px; letter-spacing:0; }
 .public-product,.public-product *,.public-hero-actions,.public-merchant { word-break:normal; overflow-wrap:normal; hyphens:none; }
 #sign-in { scroll-margin-top:40px; }
+.public-language-links { display:flex; flex-wrap:wrap; justify-content:center; gap:4px 12px; margin:20px 0; }
+.public-language-links a { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; color:inherit; text-underline-offset:4px; }
+.public-language-links a[aria-current="page"] { font-weight:700; text-decoration-thickness:2px; }
 @media(max-width:1000px) { .public-plans { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .welcome-shell .welcome-nav { flex-wrap:wrap; justify-content:center; gap:8px; padding:18px 0; } .welcome-shell .welcome-nav nav { justify-content:center; width:100%; } .public-features,.public-previews,.public-plans { grid-template-columns:1fr; } .public-section { padding:36px 0; } .public-features { gap:20px; } .public-footer nav { justify-content:center; gap:4px 14px; } .public-footer { text-align:center; } }
 @media(prefers-reduced-motion:reduce) { .welcome-shell * { scroll-behavior:auto; animation:none !important; transition:none !important; } }

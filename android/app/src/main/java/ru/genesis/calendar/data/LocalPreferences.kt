@@ -48,6 +48,9 @@ class LocalPreferences(private val context: Context, private val scope: String) 
     private fun pendingKey(name: String) = stringPreferencesKey("$scope:pending:$name")
     private val names = setOf("display", "input", "time", "weekStart", "gregorianYearStart",
         "language", "stoicheionDivinationDisabled", "sharedProjectsEnabled", "theme", "themeRevision", "darkPalette")
+    internal val selectedLanguage = context.genesisPreferences.data.map {
+        WelcomeLanguagePreference(it[key("language")]?.takeIf { value -> value in publicLanguages })
+    }
     val pending = context.genesisPreferences.data.map { values -> names.mapNotNull { name ->
         values[pendingKey(name)]?.let { name to it }
     }.toMap() }
@@ -55,7 +58,7 @@ class LocalPreferences(private val context: Context, private val scope: String) 
         UiPreferences(CalendarMode.fromWire(it[key("display")] ?: "profane"), CalendarMode.fromWire(it[key("input")] ?: "profane"),
             it[key("time")] != "12h", it[key("stoicheionDivinationDisabled")] == "true",
             it[key("language")].takeIf { value -> value in setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja") }
-                ?: if (scope == "welcome") regionalLanguageForDevice() else "ru",
+                ?: if (scope == "welcome") welcomeLanguageForDevice() else "ru",
             it[key("weekStart")] != "monday", it[key("wideNavigation")] != "top",
             it[key("navigationLabels")] == "text", it[key("navigationAutoScroll")] == "true",
             it[key("gregorianYearStart")] == "march", it[key("seasonArtMode")] == "regional",

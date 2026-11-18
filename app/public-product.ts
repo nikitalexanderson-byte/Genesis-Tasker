@@ -5,13 +5,18 @@ import copy from './public-product-copy.json';
 import pricingCopy from './public-pricing-copy.json';
 import type {PublicCurrency} from './public-currency';
 import {publicGalleryItems} from './public-gallery';
+import {publicPagePath,type PublicPage} from './public-route';
+import type {RegionLanguage} from './region-language';
+
+const APP_BASE=(process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||'').replace(/\/$/,'');
+const publicLink=(language:string,page:PublicPage,base=APP_BASE)=>publicPagePath(Object.hasOwn(copy,language)?language as RegionLanguage:'en',page,base);
 
 export const PADDLE_SUPPORT = 'demiurge.soft@gmail.com';
 export const publicProductCopy = (language: string) => copy[language as keyof typeof copy] ?? copy.en;
 export const escapePublicText = (value: string | number) => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));
 
 /** The public page and its no-JavaScript response share the approved price and quota sources. */
-export function publicPricingCardsHtml(language:string,currency:PublicCurrency):string {
+export function publicPricingCardsHtml(language:string,currency:PublicCurrency,base=APP_BASE):string {
   const c = publicProductCopy(language), escape = escapePublicText;
   const money = (minor: number) => new Intl.NumberFormat(language).format(minor / 100);
   const plans = ['standart','premium','business','premium4life'] as const;
@@ -25,7 +30,7 @@ export function publicPricingCardsHtml(language:string,currency:PublicCurrency):
       <p class="public-price">${money(lifetime ? lifetimePrice : prices['1'])}<span> ${currency} / ${escape(lifetime ? c.once : c.month)}</span></p>
       ${lifetime ? `<p>${escape(c.lifetime)}</p>` : `<p class="public-yearly">${money(prices['12'])} ${currency} / ${escape(c.year)}</p>`}
       <ul>${[c.projects.replace('{n}', String(limits['personal-projects'])), c.habits.replace('{n}', String(limits.habits)), c.mindmaps.replace('{n}', String(limits.mindmaps)), c.diary.replace('{n}', String(limits.diary)), ...(index > 0 ? [c.gno] : []), ...(index > 1 ? [c.team] : [])].map(text => `<li>${escape(text)}</li>`).join('')}</ul>
-      <a class="public-action" href="/login#sign-in">${escape(c.getStarted)}</a></article>`;
+      <a class="public-action" href="${publicLink(language,'login',base)}#sign-in">${escape(c.getStarted)}</a></article>`;
   }).join('');
 }
 
@@ -43,27 +48,27 @@ export function publicFeaturesHtml(language:string):string {
     <p class="public-caption">${escape(c.sampleData)}</p></section>`;
 }
 
-export function publicPricingTermsHtml(language:string,currency:PublicCurrency):string {
+export function publicPricingTermsHtml(language:string,currency:PublicCurrency,base=APP_BASE):string {
   const c=publicProductCopy(language),p=pricingCopy[language as keyof typeof pricingCopy]??pricingCopy.en,escape=escapePublicText;
-  return `<p class="public-billing-terms">${escape(c.renew)}</p>${currency==='RUB'?`<p>${escape(c.tax)}</p>`:''}<p>${escape(currency==='USD'?p.usdPending:c.pending)}</p><p><a href="/refund">${escape(c.refund)}</a> · ${escape(c.refundSummary)}</p>`;
+  return `<p class="public-billing-terms">${escape(c.renew)}</p>${currency==='RUB'?`<p>${escape(c.tax)}</p>`:''}<p>${escape(currency==='USD'?p.usdPending:c.pending)}</p><p><a href="${publicLink(language,'refund',base)}">${escape(c.refund)}</a> · ${escape(c.refundSummary)}</p>`;
 }
 
-export function publicFooterHtml(language:string):string {
+export function publicFooterHtml(language:string,base=APP_BASE):string {
   const c=publicProductCopy(language),escape=escapePublicText;
-  return `<footer class="welcome-footer public-footer"><span>© 2026 GENESIS. ${escape(c.creator)}</span><span>${escape(c.infrastructure)}</span><span>${escape(c.paymentRoles)}</span><a href="mailto:nikitalexanderson@gmail.com">nikitalexanderson@gmail.com</a><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a><nav aria-label="${escape(c.legal)}"><a href="/terms">${escape(c.terms)}</a><a href="/privacy">${escape(c.privacy)}</a><a href="/refund">${escape(c.refund)}</a><a href="/support">${escape(c.support)}</a><a href="/delete-account">${escape(c.deleteAccount)}</a></nav></footer>`;
+  return `<footer class="welcome-footer public-footer"><span>© 2026 GENESIS. ${escape(c.creator)}</span><span>${escape(c.infrastructure)}</span><span>${escape(c.paymentRoles)}</span><a href="mailto:nikitalexanderson@gmail.com">nikitalexanderson@gmail.com</a><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a><nav aria-label="${escape(c.legal)}">${(['terms','privacy','refund','support','delete-account'] as const).map(page=>`<a href="${publicLink(language,page,base)}">${escape(page==='delete-account'?c.deleteAccount:c[page])}</a>`).join('')}</nav></footer>`;
 }
 
 /** No-JavaScript visitors still see localized, approved prices and payment availability. */
-export function publicProductHtml(language:string):string {
+export function publicProductHtml(language:string,base=APP_BASE):string {
   const c=publicProductCopy(language),escape=escapePublicText,currency=language==='ru'?'RUB':'USD';
-  return `${publicFeaturesHtml(language)}<section class="public-section" id="pricing" aria-labelledby="public-pricing-title"><h2 id="public-pricing-title">${escape(c.pricing)}</h2><p>${escape(c.free)}</p><div class="public-plans">${publicPricingCardsHtml(language,currency)}</div>${publicPricingTermsHtml(language,currency)}</section>${publicFooterHtml(language)}`;
+  return `${publicFeaturesHtml(language)}<section class="public-section" id="pricing" aria-labelledby="public-pricing-title"><h2 id="public-pricing-title">${escape(c.pricing)}</h2><p>${escape(c.free)}</p><div class="public-plans">${publicPricingCardsHtml(language,currency,base)}</div>${publicPricingTermsHtml(language,currency,base)}</section>${publicFooterHtml(language,base)}`;
 }
 
-export function publicMerchantHtml(language: string, page: string): string {
+export function publicMerchantHtml(language: string, page: string,base=APP_BASE): string {
   const c = publicProductCopy(language), escape = escapePublicText;
   const roles=[c.creator,c.infrastructure,c.paymentRoles].map(text=>`<p>${escape(text)}</p>`).join('');
-  if(page==='home')return `<div class="public-merchant" data-no-translate>${roles}<p>${escape(c.merchant)}</p><p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/privacy">${escape(c.privacy)}</a> · <a href="/refund">${escape(c.refund)}</a></p></div>`;
+  if(page==='home')return `<div class="public-merchant" data-no-translate>${roles}<p>${escape(c.merchant)}</p><p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="${publicLink(language,'privacy',base)}">${escape(c.privacy)}</a> · <a href="${publicLink(language,'refund',base)}">${escape(c.refund)}</a></p></div>`;
   const r=referralCopy[language as keyof typeof referralCopy]??referralCopy.en;
   const referrals=page==='terms'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.rules)}</p><p>${escape(r.monthlyOnly)}</p></section>`:page==='privacy'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.privacy)}</p></section>`:'';
-  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="/refund">${escape(c.refund)}</a></p></section>`;
+  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${PADDLE_SUPPORT}">${PADDLE_SUPPORT}</a> · <a href="${publicLink(language,'refund',base)}">${escape(c.refund)}</a></p></section>`;
 }

@@ -166,6 +166,7 @@ import {
   type WorkspaceRecoveryRequest,
 } from "./cloud-sync";
 import { currentLegalPage } from "./legal-route";
+import {publicRouteForPath,publicPagePath} from './public-route';
 const LegalPage = lazy(() => import('./LegalPage').then(module => ({default: module.LegalPage})));
 import { TimeClockPicker, TimeClockFormatContext } from "./TimeClockPicker";
 import { CalendarDatePicker } from "./CalendarDatePicker";
@@ -2594,6 +2595,15 @@ export function GenesisCalendar() {
   const selectLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);
     storeLanguage(nextLanguage);
+    if(!cloudUser) {
+      const route=publicRouteForPath(window.location.pathname,APP_BASE);
+      if(route) {
+        const url=new URL(window.location.href),destination=new URL(publicPagePath(nextLanguage,route.page,APP_BASE),url.origin);
+        url.pathname=destination.pathname;
+        if(destination.searchParams.has('lang'))url.searchParams.set('lang',nextLanguage);else url.searchParams.delete('lang');
+        window.history.replaceState(window.history.state,'',`${url.pathname}${url.search}${url.hash}`);
+      }
+    }
   };
 
   const handleGoogleConnect = async () => {

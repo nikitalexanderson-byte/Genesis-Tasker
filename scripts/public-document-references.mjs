@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 
-const spelling = JSON.parse(readFileSync(new URL("../app/dictation-copy.json", import.meta.url), "utf8")).ru;
+const spellingCopy = JSON.parse(readFileSync(new URL("../app/dictation-copy.json", import.meta.url), "utf8"));
 const escape = value => value.replace(/[&<>"']/g, character => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[character]);
-const disclosure = `<section><h2>${escape(spelling.legalTitle)}</h2><p>${escape(spelling.legalBody)}</p></section>`;
 
 /** The approved spelling disclosure is the only Yandex reference allowed in the
  * public documents. Old domains/hosting remain prohibited even inside it. */
-export function assertPublicDocumentReferences(html, slug) {
+export function assertPublicDocumentReferences(html, slug,language='ru') {
+  const spelling=spellingCopy[language];
+  const disclosure = `<section><h2>${escape(spelling.legalTitle)}</h2><p>${escape(spelling.legalBody)}</p></section>`;
   assert.doesNotMatch(html, /genesiscalendar\.ru|beget/i, `${slug}: retired domain/hosting references must be absent`);
   let rest = html;
   if (slug === "privacy" || slug === "terms") {

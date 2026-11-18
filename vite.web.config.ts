@@ -4,13 +4,14 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { LEGAL_UPDATED, legalPages, legalPageContent } from "./app/legal-content";
-import { BACKUP_LEGAL_READY, BACKUP_LEGAL_VERSION } from './app/backup-legal';
 import feedbackAudioManifest from "./public/feedback-audio/manifest.json";
 import mindmapIconCatalog from "./app/mindmap-icon-catalog.json";
 import moodFaces from "./app/mood-faces.json";
-import { SERVICE_IDENTITY } from "./app/public-service";
-import {publicProductHtml, publicMerchantHtml} from './app/public-product';
+import {translateText} from './app/i18n';
+import {REGION_LANGUAGES} from './app/region-language';
+import {PUBLIC_PAGES,publicPagePath,publicPageAlternates} from './app/public-route';
+import {publicHomeHtml,publicLegalHtml,PUBLIC_ORIGIN} from './app/public-document-html';
+import publicPageCopy from './app/public-page-copy.json';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const configuredBase = process.env.GENESIS_BASE_PATH?.trim() || "/";
@@ -49,11 +50,7 @@ function publicLegalDocuments(): Plugin {
     name: "genesis-public-legal-documents",
     apply: "build",
     enforce: "post",
-    transformIndexHtml(html) {
-      return html.replace("%GENESIS_SERVICE_IDENTITY%", escape(SERVICE_IDENTITY.ru))
-        .replace('%GENESIS_PUBLIC_CONTENT%', publicProductHtml('en'))
-        .replace('%GENESIS_PUBLIC_MERCHANT%', publicMerchantHtml('en', 'home'));
-    },
+    transformIndexHtml(html) { return html.replace(/<div id="root">[\s\S]*<\/div>/,`<div id="root">${publicHomeHtml('en',text=>translateText(text,'en'),base)}</div>`); },
     generateBundle(_options, bundle) {
       const index = bundle["index.html"];
       if (!index || index.type !== "asset" || typeof index.source !== "string") {
@@ -62,22 +59,28 @@ function publicLegalDocuments(): Plugin {
       const template = index.source;
       const root = /<div id="root">[\s\S]*<\/div>/;
       if (!root.test(template)) this.error("Public homepage root is missing.");
-      for (const slug of Object.keys(legalPages)) {
-        const document=legalPageContent(slug as keyof typeof legalPages,'en');
-        const sections = document.sections.map(([title, body]) =>
-          `<section><h2>${escape(title)}</h2><p>${escape(body)}</p></section>`).join("\n");
-        const markup = `<div id="root"><main class="legal-shell">
-          <header class="legal-header"><a class="welcome-brand" href="/"><span class="solar-mark"><i></i></span><span><strong>GENESIS</strong><small>доверие и ясность</small></span></a><a href="/">← На главную</a></header>
-          <article class="legal-document"><span class="welcome-kicker">ОФИЦИАЛЬНЫЙ ДОКУМЕНТ</span><h1>${escape(document.title)}</h1><p class="legal-intro">${escape(document.intro)}</p><p class="legal-date">Редакция от ${escape(LEGAL_UPDATED)}</p>${publicMerchantHtml('en', slug)}${!BACKUP_LEGAL_READY && (slug==='privacy'||slug==='terms')?`<p role="note">Проект редакции ${escape(BACKUP_LEGAL_VERSION)}. Дополнения для 3.2.2 ещё не готовы к публикации: требуются подтверждение юридических фактов и приёмка отключённых функций.</p>`:''}${sections}
-          ${slug === "privacy" ? '<p class="legal-policy-link"><a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a></p>' : ""}</article>
-          <footer class="legal-footer"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/refund">Refund Policy</a><a href="/support">Support</a><a href="/delete-account">Delete account</a></footer>
-        </main></div>`;
-        const source = template.replace(root, markup)
-          .replace(/<title>[^<]*<\/title>/, `<title>${escape(document.title)} · GENESIS</title>`)
-          .replace(/(<meta name="description" content=")[^"]*("\s*\/?\s*>)/, `$1${escape(document.intro)}$2`)
-          .replace('href="https://genesiscalendar.com/"', `href="https://genesiscalendar.com/${slug}"`);
-        this.emitFile({ type: "asset", fileName: `${slug}.html`, source });
+      const urls:string[]=[];
+      for(const language of REGION_LANGUAGES) {
+        const translate=(text:string)=>translateText(text,language);
+        const backup=JSON.parse(readFileSync(path.join(projectRoot,'app/backup-locales',`${language}.json`),'utf8')) as Record<string,string>;
+        for(const page of PUBLIC_PAGES) {
+          const canonical=publicPagePath(language,page,base);
+          const legal=page!=='home'&&page!=='login'?publicLegalHtml(page,language,translate,text=>backup[text]??translate(text),base):null;
+          const markup=legal?.markup??publicHomeHtml(language,translate,base);
+          const title=legal?.title??publicPageCopy[language].title;
+          const description=legal?.description??translate('GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks.');
+          const alternates=publicPageAlternates(page,base).map(row=>`<link rel="alternate" hreflang="${row.language}" href="${PUBLIC_ORIGIN}${row.path}" />`).join('\n');
+          const source=template.replace(root,`<div id="root">${markup}</div>`)
+            .replace(/<html lang="[^"]+"/,`<html lang="${language}"`)
+            .replace(/<title>[^<]*<\/title>/,`<title>${escape(title)} · Genesis Tasker</title>`)
+            .replace(/(<meta name="description" content=")[^"]*("\s*\/?\s*>)/,(_match,start,end)=>`${start}${escape(description)}${end}`)
+            .replace(/<link rel="canonical"[^>]*>/,`<link rel="canonical" href="${PUBLIC_ORIGIN}${canonical}" />\n${alternates}`);
+          const filename=language==='en'?(page==='home'?'index.html':`${page}.html`):`${language==='ru'?'ru':`_public-locales/${language}`}/${page==='home'?'index.html':`${page}.html`}`;
+          if(filename==='index.html')index.source=source;else this.emitFile({type:'asset',fileName:filename,source});
+          if(page!=='login')urls.push(`${PUBLIC_ORIGIN}${canonical}`);
+        }
       }
+      this.emitFile({type:'asset',fileName:'sitemap.xml',source:`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(url=>`<url><loc>${url}</loc></url>`).join('')}</urlset>`});
     },
   };
 }

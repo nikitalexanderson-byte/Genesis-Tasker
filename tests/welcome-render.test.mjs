@@ -62,7 +62,8 @@ test("anonymous welcome renders Google-only sign-in in every supported language"
       }));
       assert.ok(html.includes("GENESIS"), `${language}: public purpose must render`);
       assert.ok(html.includes("google-signin-light-pill.svg"), `${language}: Google sign-in must render`);
-      assert.ok(html.includes('href="/privacy"') && html.includes('href="/terms"'), `${language}: public documents must remain linked`);
+      const prefix=language==='ru'?'/ru':'',query=['ru','en'].includes(language)?'':`?lang=${language}`;
+      assert.ok(html.includes(`href="${prefix}/privacy${query}"`) && html.includes(`href="${prefix}/terms${query}"`), `${language}: public documents must retain the selected language`);
       assert.doesNotMatch(html, /yandex|яндекс|genesiscalendar\.ru/i, `${language}: obsolete public auth must be absent`);
       assert.doesNotMatch(html, /android-install-welcome/, `${language}: other devices have no Android promotion`);
       const androidWelcome = renderToStaticMarkup(createElement(WelcomeScreen, {

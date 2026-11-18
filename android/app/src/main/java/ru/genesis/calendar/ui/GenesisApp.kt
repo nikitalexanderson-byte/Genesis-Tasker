@@ -184,8 +184,9 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     }
     val habitTrackingEnabled = habitWorkspace.settings.enabled
     val welcomePrefsStore=remember(app) { LocalPreferences(app,"welcome") }
-    val welcomePrefs by welcomePrefsStore.values.collectAsStateWithLifecycle(
-        UiPreferences(language = regionalLanguageForDevice()))
+    val welcomeSelection by welcomePrefsStore.selectedLanguage.collectAsStateWithLifecycle(null)
+    var preferredWelcomeLanguage by rememberSaveable { mutableStateOf<String?>(null) }
+    val explicitWelcomeLanguage = preferredWelcomeLanguage ?: welcomeSelection?.selected
     val taskSync by authController.taskSync.collectAsStateWithLifecycle()
     val accountTaskSync = taskSync.takeIf { it.scope == activeScope }
     val scope=rememberCoroutineScope()
@@ -193,7 +194,6 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
         ru.genesis.calendar.reminders.MoonReminderScheduler.restore(app)
         runCatching { ru.genesis.calendar.reminders.SleepReminderScheduler.restore(app) }
     }
-    var preferredWelcomeLanguage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(authController, testWorkspace) { if (!testWorkspace) authController.ensureSession() }
     LaunchedEffect(activeScope, authState.user, authState.busy) {
         if (!testWorkspace && activeScope.startsWith("account-") && authState.user != null && !authState.busy) {
@@ -462,6 +462,11 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     var updateCheckMessage by remember { mutableStateOf<String?>(null) }
     val accountGate = !testWorkspace && (!activeScope.startsWith("account-") || authState.user == null || !authState.ready)
     val welcomeVisible = accountGate && !(authState.busy && authState.user != null)
+    val welcomeRegion = rememberWelcomeIpRegion(welcomeVisible)
+    val welcomeRussianAvailable = welcomeRegion == ru.genesis.calendar.auth.WelcomeIpRegion.RUSSIA
+    val welcomeLanguage = ru.genesis.calendar.data.welcomeLanguageForDevice(explicitWelcomeLanguage, welcomeRussianAvailable)
+    // A stored Russian choice stays on disk, but cannot override the current startup region rule.
+    val acceptedWelcomeLanguage = explicitWelcomeLanguage?.takeIf { it != "ru" || welcomeRussianAvailable }
     val window = LocalContext.current.activity()?.window
     val changeDisplayCalendar: (CalendarMode) -> Unit = { next ->
         if (!testWorkspace && authState.user != null) authController.updateSharedPreference("display", next.wireValue)
@@ -479,7 +484,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             isAppearanceLightNavigationBars = !eveningTheme && !welcomeVisible
         }
     } }
-    val language = if (testWorkspace || activeScope.startsWith("account-")) prefs.language else welcomePrefs.language
+    val language = if (accountGate) welcomeLanguage else prefs.language
     val frameworkConfiguration = remember(configuration, language) {
         Configuration(configuration).apply { setLocale(java.util.Locale.forLanguageTag(language)) }
     }
@@ -527,7 +532,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             .testTag(if (eveningTheme) "app-theme-Evening" else "app-theme-Standart"),color=MaterialTheme.colorScheme.background) {
             if (accountGate) {
                 if (authState.busy && authState.user != null) AuthTransitionScreen(authState.message)
-                else WelcomeScreen(authState,authController,welcomePrefs.language,preferredWelcomeLanguage) { language ->
+                else WelcomeScreen(authState,authController,welcomeLanguage,acceptedWelcomeLanguage,
+                    languageReady = welcomeSelection != null, russianAvailable = welcomeRussianAvailable) { language ->
                         preferredWelcomeLanguage = language
                         scope.launch { welcomePrefsStore.set("language",language) }
                     }
