@@ -158,6 +158,21 @@ account generation and checks it before/after IO; web uses the existing account
 abort channel. Low-memory device acceptance at these upper bounds is pending;
 no streaming/unbounded storage guarantee is made.
 
+Migration pagination uses the server's signed `read` action. Independent web and
+native packets in `tests/fixtures/e2ee/migration-transport-v1.json` are replayed
+against the real PHP/SQLite reader, avoiding a permissive transport mock contract.
+
+Legacy background workers filter protected/live-migrating personal/project scopes
+(including a protected parent space) before scan/claim LIMIT. They recheck under
+the writer at execution and on acknowledgement after network IO. Deferral retains
+the original payload and source/delivery rows; attempts are refunded only at the
+unstarted entry gate. A corrupt private binding is quarantined with the retained
+payload and a fixed diagnostic code, outside SQLite's read-only filter callback.
+Database/configuration errors remain infrastructure failures. Advice selection
+may own its own transaction; the later complete notification plan uses a separate
+writer with a fresh scope check. These safeguards do not execute encrypted rules
+on the server or replace the required client automation integration.
+
 ## Trust limits and remaining integration
 
 A saved trusted checkpoint detects rollback below that checkpoint and conflicting

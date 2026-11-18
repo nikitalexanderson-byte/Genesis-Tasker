@@ -15,8 +15,8 @@ foreach([$owner=>'owner','synthetic-reader'=>'viewer','synthetic-commenter'=>'co
     $db->prepare('INSERT INTO shared_project_members(project_id,user_id,role,joined_at) VALUES(?,?,?,?)')->execute([$project,$id,$role,$now]);
 }
 $db->prepare('INSERT INTO shared_task_series(id,project_id,owner_id,rule_json,template_json,cursor_date,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
-    ->execute(['series-e2ee',$project,$owner,'{}','{}','2026-11-18',$now,$now]);
-$db->prepare('INSERT INTO shared_automation_rules(id,project_id,owner_id,title,definition_json,checked_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+    ->execute(['series-e2ee',$project,$owner,'{"limit":10}','{}','2026-11-18',$now,$now]);
+$db->prepare('INSERT INTO shared_automation_rules(id,project_id,owner_id,title,definition_json,checked_at,created_at,updated_at,enabled) VALUES(?,?,?,?,?,?,?,?,1)')
     ->execute(['rule-e2ee',$project,$owner,'Synthetic rule','{}',$now,$now,$now]);
 $kit['ownerId']=$owner;$kit['protectedKeys']['ownerId']=$owner;
 $c=['protocol'=>1,'ownerId'=>$owner,'scopeId'=>$scopeId,'deviceId'=>'device-a','action'=>'bootstrap','expectedRevision'=>0,'checkpointHash'=>'genesis','securityEpoch'=>1,

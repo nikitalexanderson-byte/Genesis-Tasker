@@ -69,6 +69,12 @@ storeCheck(genesisE2eeCommandHash($runtime['signedCommand']['command'])===$runti
 storeCheck(genesisE2eeVerifyCommand($runtime['signedCommand'],$runtime['device']['signingKey'])['action']==='read');
 $owner='synthetic-e2ee-owner';$scopeId='personal:synthetic-e2ee-owner';$session=str_repeat('s',32);$authority=storePair();$device=storePair();$newDevice=storePair();
 $now=genesisNow();$db->prepare('INSERT INTO users(id,google_sub,email,display_name,created_at,updated_at) VALUES(?,?,?,?,?,?)')->execute([$owner,$owner,'opaque@example.invalid','Synthetic',$now,$now]);
+$db->prepare("INSERT INTO habit_reminder_profiles(user_id,encrypted_plan,expires_at,needs_refresh,updated_at) VALUES(?,?,'2000-01-01T00:00:00Z',0,?)")
+    ->execute([$owner,genesisSharedContentEncrypt('{}'),$now]);
+$db->prepare('INSERT INTO habit_reminder_devices(id,user_id,device_key,request_id,request_hash,time_zone,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+    ->execute(['e2ee-habit-device',$owner,'synthetic','synthetic','synthetic','UTC',$now,$now]);
+$db->prepare("INSERT INTO habit_reminder_deliveries(id,user_id,device_id,profile_revision,event_key,encrypted_target,scheduled_at,expires_at,created_at,updated_at) VALUES(?,?,?,0,?,?,?,'2000-01-01T00:00:00Z',?,?)")
+    ->execute(['e2ee-habit-delivery',$owner,'e2ee-habit-device','synthetic',genesisSharedContentEncrypt('{}'),$now,$now,$now]);
 foreach(['link-a','link-b'] as $id)$db->prepare('INSERT INTO tasks(id,user_id,sacred_year,month_index,sacred_day,due_date,title,created_at,updated_at) VALUES(?,?,2026,0,1,?,?,?,?)')
     ->execute([$id,$owner,'2026-11-18','Synthetic task',$now,$now]);
 $db->prepare('INSERT INTO task_links(user_id,task_id,depends_on_task_id,created_at) VALUES(?,?,?,?)')->execute([$owner,'link-a','link-b',$now]);

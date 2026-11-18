@@ -166,7 +166,7 @@ class E2eeMigrationTest {
         fun paginatedTransport() = E2eeSignedMigrationTransport(device,directory,setOf("workspace","diary")) { path, body ->
             if (path == "/source") JSONObject().put("sourceHash",E2eeEnvelope.encode(ByteArray(32)))
             else {
-                val command = E2eeCommands.verify(body,device.keys().signing.public); val payload = command.getJSONObject("payload"); pageRequests++
+                val command = E2eeCommands.verify(body,device.keys().signing.public); assertEquals("read",command.getString("action")); val payload = command.getJSONObject("payload"); pageRequests++
                 val domain = payload.getString("domain"); val after = payload.getString("after")
                 val rows = current().filter { it.context.toJson().getString("domain") == domain }
                     .sortedBy { it.context.toJson().getString("objectId") }.filter { badPage == "loop" || it.context.toJson().getString("objectId") > after }.take(1)
@@ -234,5 +234,16 @@ class E2eeMigrationTest {
         f.badPage = "loop"; reject("E2EE_INVALID_RESPONSE") { transport.readAll() }
         f.badPage = "directory"; reject("E2EE_DIRECTORY_CONFLICT") { transport.readAll() }
         f.badPage = "lock"; reject("E2EE_UNLOCK_REQUIRED") { transport.readAll() }
+    }
+    @Test fun emitActualNativeReadbackPacketsForPhpSqliteContract() = runBlocking {
+        val f = Fixture(); val reads = JSONArray()
+        val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace")) { path, packet ->
+            assertEquals("/read",path); assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet)
+            JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).put("envelopes",JSONArray())
+        }
+        assertTrue(transport.readAll().isEmpty()); assertEquals(2,reads.length())
+        val root = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }.first { File(it,"contracts/e2ee/private-paths-v1.json").isFile }
+        val file = File(root,"output/release-3.3.6/runtime/native-migration-transport.json"); file.parentFile.mkdirs()
+        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).toString(2))
     }
 }

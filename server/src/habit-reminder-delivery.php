@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-background.php';
 
 function genesisHabitReminderDelivery(string $id,?string $userId=null): ?array
 {
@@ -104,6 +105,7 @@ function genesisHabitReminderPerformLeased(array $job,?callable $testTransport=n
     genesisBeginWriteTransaction($db);
     try{
         if(!$owns()){$db->commit();return 'superseded';}
+        if(($held=genesisE2eeBackgroundHold($job,$now,true))!==null){$db->commit();return $held;}
         $payload=json_decode(genesisSharedContentDecrypt($job['payload']),true,16,JSON_THROW_ON_ERROR);
         $delivery=genesisHabitReminderDelivery($payload['deliveryId']??'');
         $context=$delivery&&in_array($delivery['state'],['pending','sending'],true)?genesisHabitReminderCurrent($delivery,$now):null;
@@ -119,6 +121,7 @@ function genesisHabitReminderPerformLeased(array $job,?callable $testTransport=n
         try{$result=$testTransport!==null?$testTransport($subscription,$message):genesisPushSend($subscription,$message);}catch(Throwable $e){$failure=$e;}
         genesisBeginWriteTransaction($db);
         if(!$owns()){$db->commit();return 'superseded';}
+        if(($held=genesisE2eeBackgroundHold($job))!==null){$db->commit();return $held;}
         if($failure!==null)throw $failure;
         if($result==='expired'){
             genesisHabitReminderCancelDeliveries($delivery['user_id'],$delivery['device_id']);
@@ -133,6 +136,7 @@ function genesisHabitReminderPerformLeased(array $job,?callable $testTransport=n
         if($db->inTransaction())$db->rollBack();genesisBeginWriteTransaction($db);
         try{
             if(!$owns()){$db->commit();return 'superseded';}
+            if(($held=genesisE2eeBackgroundHold($job,$now))!==null){$db->commit();return $held;}
             $state=(int)$job['attempts']>=5||$e->getMessage()==='PUSH_REJECTED'?'failed':'pending';
             $code=in_array($e->getMessage(),['PUSH_RETRY','PUSH_REJECTED','PUSH_CRYPTO_FAILED','PUSH_RUNTIME_UNAVAILABLE'],true)?$e->getMessage():'HABIT_REMINDER_RETRY';
             $retry=gmdate('Y-m-d\TH:i:s\Z',strtotime($now)+min(3600,30*(2**min(7,(int)$job['attempts']))));

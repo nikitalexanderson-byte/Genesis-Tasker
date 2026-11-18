@@ -136,8 +136,9 @@ hydration открывает локальные черновики и прини
 Серверная additive migration 127 не опубликована. Persistent guards охватывают
 multi-owner tables, raw legacy keys, поколения данных и изменения shared ACL.
 ACL-изменения сейчас fail closed до реализации атомарной signed rotation.
-Background scans ещё требуют явного исключения migrated scopes, чтобы один
-защищённый scope не прерывал всю legacy job.
+Background scans теперь явно исключают migrated/live-migrating scopes до LIMIT;
+отдельная проверка перед исполнением и после сетевого ответа сохраняет queued
+payload и исходные записи. Полный охват реальных feature adapters остаётся впереди.
 
 | Последняя целевая проверка runtime | Фактический результат |
 | --- | --- |
@@ -191,6 +192,48 @@ fixture; `js-migration-03.log` — исправленную синтаксиче
 Android instrumented/process kill/low-memory acceptance этого инкремента,
 реальные feature adapters и полный48-сценарный прогон ещё не выполнены.
 Эти результаты не означают publication или готовность полного E2EE coverage.
+
+## Изоляция legacy workers и проверка реальных transport packets
+
+Следующий локальный инкремент исключает защищённые personal/project scopes и
+дочерние проекты защищённых spaces из scans серий, automation и уведомлений.
+Claim фильтрует scope до LIMIT под SQLite writer:120 защищённых заданий не мешают
+получить готовое legacy-задание за один вызов. Повторная проверка владельца lease
+предшествует deferral; attempts возвращается только если исполнение не началось.
+Сетевой ответ после начала migration не меняет source/delivery и не подтверждает
+задание. Payload, receipts и незавершённая работа сохраняются для reconciliation.
+
+Review выявил и помог закрыть starvation, расход попыток до исполнения,
+повреждённый payload, блокировавший каждый claim, и TOCTOU планирования advice.
+Повреждённые private bindings изолируются как `E2EE_JOB_REVIEW_REQUIRED`, сохраняя
+payload и source; legacy failure callbacks не вызываются. DB/config failures не
+маскируются как повреждение отдельного задания. Day snapshot, delivery и job
+планируются атомарно с новой проверкой scope под writer. Независимое повторение
+гонки через второй PDO создало0 snapshots/deliveries/jobs после lease.
+
+Моки скрывали опечатку pagination action `list`; обе платформы теперь подписывают
+реальный `read`. Сохранённые синтетические web/native packets проверены настоящими
+`genesisE2eeRead` и SQLite, а не только ответом мока. Fixture не содержит live secrets.
+
+| Проверка инкремента | Фактический результат |
+| --- | --- |
+| PHP scoped workers, смежные подсистемы и реальные transports |9 suites PASS в `runtime/backend-jobs-07/`, отдельный исправленный e2ee-background263 cumulative assertions PASS в `runtime/backend-jobs-09/` |
+| JS E2EE |111/111 PASS, `runtime/js-transport-01.log` |
+| Native JVM |46/46,7 XML suites,0 failures/errors; `runtime/native-transport-01.log` |
+| TypeScript / targeted ESLint |PASS, `runtime/typecheck-jobs-01.log`, `runtime/lint-jobs-01.log` |
+| Внутренний scoped read-only review |Все4 подтверждённых дефекта закрыты, новых P1/P2 в объёме нет;2/2 independent PHP suites PASS (`envelope-background-review-02`), malformed matrix9/9 и проверка stale lease PASS |
+
+Сохранены диагностические07/08 e2ee-background failures: новый race fixture сначала
+пытался bootstrap personal scope от другого synthetic owner, затем не заменил
+owner binding в synthetic recovery kit. Product code не ослаблялся; fixture
+исправлен,09 PASS. Проверки не включают production migration, Android instrumented
+или полный48-сценарный прогон. Внешний crypto review по-прежнему не проведён.
+
+Сверка всей SQLite-схемы обнаружила дополнительные private copies в backup staging,
+safety snapshots, shared operation/receipt rows. Прежний тест inventory проверял
+только уже объявленные guards; он не доказывал, что все таблицы классифицированы.
+Сейчас выполняется отдельный полный schema disposition audit с проверкой новых
+необъявленных tables/columns. Полный coverage до этой работы не заявляется.
 
 ## Что ещё обязательно до полного security/E2EE-выпуска
 

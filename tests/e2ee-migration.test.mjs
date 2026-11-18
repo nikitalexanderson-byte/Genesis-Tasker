@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import {mkdirSync,writeFileSync} from 'node:fs';
 import { E2eeMigration } from '../app/e2ee/migration.ts';
 import { E2eeMigrationSources, requiredPrivatePaths } from '../app/e2ee/migration-sources.ts';
 import { E2eeScopeClient } from '../app/e2ee/scope-client.ts';
@@ -148,7 +149,7 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   let malformed=null;
   const transport=new SignedMigrationTransport(device,directory,['workspace','diary'],async(path,body)=>{
     if(path==='/source')return{sourceHash:encodeE2eeBytes(new Uint8Array(32))};
-    const command=await verifyE2eeCommand(body,f.keys.signing.publicKey);seen.push(command);
+    const command=await verifyE2eeCommand(body,f.keys.signing.publicKey);assert.equal(command.action,'read');seen.push(command);
     const {domain,after}=command.payload,rows=[...f.server.objects.values()].filter(envelope=>envelope.context.domain===domain)
       .sort((a,b)=>a.context.objectId<b.context.objectId?-1:1).filter(envelope=>malformed==='loop'||envelope.context.objectId>after).slice(0,1);
     if(malformed==='lock')f.vault.lock();
@@ -159,6 +160,17 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='loop';await assert.rejects(transport.readAll(),/INVALID_RESPONSE/);
   malformed='directory';await assert.rejects(transport.readAll(),/DIRECTORY_CONFLICT/);
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
+});
+test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];
+  const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
+  const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
+    assert.equal(path,'/read');assert.equal(packet.command.action,'read');reads.push(packet);
+    return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
+  });
+  assert.deepEqual(await transport.readAll(),[]);assert.equal(reads.length,2);
+  mkdirSync('output/release-3.3.6/runtime',{recursive:true});
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));

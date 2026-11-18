@@ -182,6 +182,23 @@ function genesisE2eeRequireLegacyUser(string $userId): void
     if($scope && in_array($scope['state'],['active','retirement'],true))throw new DomainException('E2EE_UPGRADE_REQUIRED');
 }
 
+/** Constant qualified SQL identifiers only; callers never pass request fragments.
+ * Filter before LIMIT so protected rows cannot starve unrelated legacy work. */
+function genesisE2eeLegacyAvailableSql(string $kind,string $resource): string
+{
+    if(!in_array($kind,['personal','project','space'],true)||!preg_match('/\A[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*\z/D',$resource))
+        throw new InvalidArgumentException('E2EE_INVALID_SCOPE_FILTER');
+    $target="s.kind='$kind' AND s.resource_id=$resource";
+    if($kind==='project')$target="(($target) OR (s.kind='space' AND s.resource_id=(SELECT e2ee_parent.space_id FROM shared_projects e2ee_parent WHERE e2ee_parent.id=$resource)))";
+    return "NOT EXISTS(SELECT 1 FROM e2ee_scopes s WHERE ($target) AND EXISTS(SELECT 1 FROM users WHERE id=s.owner_id)
+      AND (s.state IN ('active','retirement') OR EXISTS(SELECT 1 FROM e2ee_migrations m WHERE m.scope_id=s.scope_id AND m.lease_until>=CAST(strftime('%s','now') AS INTEGER))))";
+}
+function genesisE2eeLegacyScopeBlocked(string $kind,string $resource): bool
+{
+    $sql=genesisE2eeLegacyAvailableSql($kind,'e2ee_source.resource');
+    $q=genesisDb()->prepare('SELECT '.$sql.' FROM (SELECT ? AS resource) e2ee_source');$q->execute([$resource]);$available=$q->fetchColumn();$q->closeCursor();return !$available;
+}
+
 /** One deny boundary runs BEFORE route-specific handlers, including early restore routes. */
 function genesisE2eeEnforceLegacyRoute(string $method,string $path,?string $userId): void
 {

@@ -29,7 +29,7 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
             while (true) {
                 device.requireOpen()
                 val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
-                    .put("action","list").put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
+                    .put("action","read").put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
                     .put("operationId",UUID.randomUUID().toString()).put("payload",JSONObject().put("domain",domain).put("after",after).put("limit",50)),device.keys().signing.private)
                 val page = call("/read",packet)
                 check(E2eeCommands.integer(page.get("directoryRevision"),1) == revision && page.get("checkpointHash") == checkpoint) { "E2EE_DIRECTORY_CONFLICT" }

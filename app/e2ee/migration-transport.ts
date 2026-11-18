@@ -32,7 +32,7 @@ export class SignedMigrationTransport implements MigrationTransport {
       let after='';
       for(;;){
         this.#device.requireOpen();
-        const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action:'list',
+        const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action:'read',
           expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),payload:{domain,after,limit:50}},this.#device.keys().signing.privateKey);
         const page=await this.#call('/read',packet);
         if(page.directoryRevision!==this.#revision||page.checkpointHash!==this.#checkpoint)throw new Error('E2EE_DIRECTORY_CONFLICT');

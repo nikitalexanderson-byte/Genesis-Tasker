@@ -35,16 +35,18 @@ function genesisAutomationCapture(string $eventId,string $projectId,string $acti
 /** Bounded fair scans; each page has an immutable ID cursor, each civil schedule slot has a durable key. */
 function genesisAutomationScan(?string $at=null):void
 {
-    $db=genesisDb();$clock=new DateTimeImmutable($at??genesisNow());$q=$db->query('SELECT * FROM shared_automation_rules WHERE enabled=1 AND deleted_at IS NULL AND owner_id IS NOT NULL ORDER BY checked_at,id LIMIT 20');$rules=$q->fetchAll();$deadline=microtime(true)+4;
+    $db=genesisDb();$clock=new DateTimeImmutable($at??genesisNow());$q=$db->query('SELECT r.* FROM shared_automation_rules r WHERE enabled=1 AND deleted_at IS NULL AND owner_id IS NOT NULL AND '.genesisE2eeLegacyAvailableSql('project','r.project_id').' ORDER BY checked_at,id LIMIT 20');$rules=$q->fetchAll();$q->closeCursor();$deadline=microtime(true)+4;
     foreach($rules as $rule){
-        if(microtime(true)>$deadline)break;$definition=genesisAutomationDecode($rule['definition_json']);$trigger=$definition['trigger'];
-        $db->prepare('UPDATE shared_automation_rules SET checked_at=? WHERE id=?')->execute([genesisNow(),$rule['id']]);
-        if(!in_array($trigger['type'],['schedule','dueSoon','due'],true))continue;
-        $zone=new DateTimeZone($definition['calendarContext']['timeZone']);$local=$clock->setTimezone($zone);$today=$local->format('Y-m-d');
-        if($local->format('H:i')<$trigger['time'])$through=genesisCalendarAddDays($today,-1);else $through=$today;
+        if(microtime(true)>$deadline)break;
         genesisBeginWriteTransaction($db);
         try{
+            if(genesisE2eeLegacyScopeBlocked('project',$rule['project_id'])){$db->commit();continue;}
             $q=$db->prepare('SELECT * FROM shared_automation_rules WHERE id=? AND revision=? AND enabled=1 AND deleted_at IS NULL');$q->execute([$rule['id'],$rule['revision']]);$current=$q->fetch();if(!$current){$db->commit();continue;}$rule=$current;
+            $definition=genesisAutomationDecode($rule['definition_json']);$trigger=$definition['trigger'];
+            $db->prepare('UPDATE shared_automation_rules SET checked_at=? WHERE id=?')->execute([genesisNow(),$rule['id']]);
+            if(!in_array($trigger['type'],['schedule','dueSoon','due'],true)){$db->commit();continue;}
+            $zone=new DateTimeZone($definition['calendarContext']['timeZone']);$local=$clock->setTimezone($zone);$today=$local->format('Y-m-d');
+            if($local->format('H:i')<$trigger['time'])$through=genesisCalendarAddDays($today,-1);else $through=$today;
             if($trigger['type']==='schedule'){
                 $baseline=max($trigger['recurrence']['rangeStart'],(new DateTimeImmutable($rule['updated_at']))->setTimezone($zone)->format('Y-m-d'));
                 $date=$rule['cursor_date']??genesisCalendarAddDays($baseline,-1);$after=$rule['scan_after_id'];

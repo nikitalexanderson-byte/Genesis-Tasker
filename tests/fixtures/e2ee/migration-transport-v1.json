@@ -1,0 +1,194 @@
+[
+  {
+    "protocol": 1,
+    "synthetic": true,
+    "platform": "web",
+    "bootstrap": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "bootstrap",
+        "expectedRevision": 0,
+        "checkpointHash": "genesis",
+        "securityEpoch": 1,
+        "operationId": "bootstrap",
+        "payload": {
+          "kind": "personal",
+          "resourceId": "owner",
+          "keyId": "root-one",
+          "generation": 1,
+          "recoveryKit": {
+            "protocol": 1,
+            "ownerId": "owner",
+            "authority": {
+              "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAES_IYznkP39I3ZOBiE2uZbiFqA5PA23yv6KPJwQ5bU1VGFmIZ5vl0xIbcr1bHX3UiO_7QQlogtOBoRT_LdZZ-TA",
+              "receivingKey": "BKH6rbNKQ5LW_jACGGCd8H9qdk4QMYDxNGtW_Ugslgb0F509fxM_pJvUk0AAwOG8N8gXftWx6Pd0MlT2BWG4oeM"
+            },
+            "protectedKeys": {
+              "protocol": 1,
+              "ownerId": "owner",
+              "purpose": "recovery-authority",
+              "salt": "f84BoZ-1jpz_s-_2xewApcE5IYlHoAcaBLqV6uVrs4A",
+              "nonce": "ArMBnqW_2PE8R7mH",
+              "ciphertext": "4JFkSoIWnjubKUOsbactvBjtgUruVOmjQe3SBkpNgi5nMwmBxiZ4H2OcI0gySVQ5eCypgsiQeYK8aEuTQfmSQnGionEMpC4tuYIZ4IaMit3iZbi8sOlXc2lTFwj9Ds3TRCdLWomlyJ09hHdXTTC4uBVjxxrfL5nDHFPuZamVjRg_NFTX7TC1Wz9auxheKLfMzI1xIjeU81rGEoSIbmp1jS469t9PLxfkqt_p0o7xS97NFROSm_Un00-F8IJES7Zq3S8GgsjgCKRgqtbrFD6wGtFHBFe4m2A2RcqN6VHejMy5uD62YImnWT0sjLR09UVI2aKZPHqsp7PToIoUmSOCa56cV_NXBOImR3ZY63zkUXVFx3OEzPMdN-BcwuOBeOR-WlrQ8kKy41NAbshpMWbiQ0lSdNcob91_glzO687GnIj2E3yL_NCBKLRmOzZTq3NdBKe5F7U9_F4MYoxbeNDaEbI-6xtcVEkbdn1eJjpCRGvVHLnze1s7vCqCO78GLER6zzRg86cfx-KazlTX8b7pkWjoRHd0i5RigbC6gYBtdtFYR3r02dNeblNXQlqzUwkQBMfeRYZZKtg-xTigmlG_5OVM4qmwf68TQYI9chNTOxMgRLp-5HJPcym8mmayrGGcDayDdOXak0jJCoFVb6L7vqUn2ZKtUieppBjcVG5y0VCj2WGUaReB_lEAkQxmIeIsBw"
+            }
+          },
+          "deviceKeys": {
+            "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsvr14MqRX9dLhLKvT5OcuxVCh6rOtuXFMQGYE4muyQzb9qZZGEffxoW1QgMXXPHwMFJnR897ESQ2b637MBS-Eg",
+            "receivingKey": "BMUBRTaW1yOCEg_953mfM6LcuFACEyVGZa3ekMJN3TyNs8sGuHGL8ZhSppsKgxFXtxLe6YIxMjHvbAjSJhJkXJk"
+          },
+          "deviceCapsule": {
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BGDL6_227gTE12TZGPoATcWmuwL8SR_Kg5O4VxXtXVjwAFbqHHIIyVqkc8Gvi-ddVKiVb_BJ6Z1ebamjargGGy4",
+            "ciphertext": "z6oj5cOVE4mTZaLO4ffLQKDV4ry4_T_EBcfeTXInPUwSe7GrfhF51qE0xnwGgf-L"
+          },
+          "recoveryCapsule": {
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BODgy1MvCcW7lT7imqIMYVvu8C-MECxxXSsBR-klLCXLqqsvYV1dRpyk72kZye9DPGSKLyov_L6xJZUhE7pXJfc",
+            "ciphertext": "63h4dbKreIp5we8MZ7hpO9oUsVVFq4DecB6CtDlPC2af35m3CWWHTgJQs8XNVK6-"
+          },
+          "selfProof": "ceYPkB69O_y2nNX3V397LEkYJbIxfI5x0rdsMT-qrqWLVsWE-4yjWINmqgh8XKEafZtfnBErXI9DzWWbJVTMBw"
+        }
+      },
+      "signature": "JIcT3yKaVw7uPxD51UxAzA_7yTIyML_I5TiJ8nb1RzDRCfeXcoxjSi_-0DPFLb9Jicja5cwIBFF5bXebRbwDig"
+    },
+    "reads": [
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "owner",
+          "scopeId": "personal:owner",
+          "deviceId": "device",
+          "action": "read",
+          "expectedRevision": 1,
+          "checkpointHash": "e29FgPtEhCZnBryzRL5QQVhnFEZ7EE_aqHMDDN7HEKE",
+          "securityEpoch": 1,
+          "operationId": "01152d2d-e2cf-4bb9-9fd7-7648be82623a",
+          "payload": {
+            "domain": "workspace",
+            "after": "",
+            "limit": 50
+          }
+        },
+        "signature": "UYh9Ivg_H6fjBGn7eCfYktLkW7odFXH-MnHE3qLN-UOSOenOddUZZcx0RR8DwKwde73wmHMOpYnDKpkOihVcmQ"
+      },
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "owner",
+          "scopeId": "personal:owner",
+          "deviceId": "device",
+          "action": "read",
+          "expectedRevision": 1,
+          "checkpointHash": "e29FgPtEhCZnBryzRL5QQVhnFEZ7EE_aqHMDDN7HEKE",
+          "securityEpoch": 1,
+          "operationId": "30bbc6d3-9f13-46bd-96b3-0aa786a0236f",
+          "payload": {
+            "domain": "attachment",
+            "after": "",
+            "limit": 50
+          }
+        },
+        "signature": "Dua7TzriIRIo68oDxbkmv38RH2odGo7S5SvkodpdL3gGH09ybGNOhOeXSZpLn72AGgJw-lIP9_lt6_NpLvLqWA"
+      }
+    ]
+  },
+  {
+    "synthetic": true,
+    "protocol": 1,
+    "reads": [
+      {
+        "signature": "wYeu_3jCjgNmLgEDi8B9bj0rLdLRDrvcrsGyB06hs7165jT-dJr7hBdYg56M-qv0ttNpR_wZUQKHGsEuDqo1Wg",
+        "command": {
+          "protocol": 1,
+          "scopeId": "personal:owner",
+          "checkpointHash": "hzIK3m3nmNzQK5GoGWwINcNu5ouHL1PZ_gkhM-h6H7E",
+          "payload": {
+            "domain": "workspace",
+            "limit": 50,
+            "after": ""
+          },
+          "action": "read",
+          "operationId": "2da74452-6dce-47e4-aed1-366a48e083d9",
+          "expectedRevision": 1,
+          "ownerId": "owner",
+          "deviceId": "device",
+          "securityEpoch": 1
+        }
+      },
+      {
+        "signature": "0kZ7FTxH96n0fPbe1Uh5rCBZWebOs0zWWUwuBW9XJodqa0TILzJdRPAtDFwIvoNu-mhehA-fhYojjQjf2AzUQQ",
+        "command": {
+          "protocol": 1,
+          "scopeId": "personal:owner",
+          "checkpointHash": "hzIK3m3nmNzQK5GoGWwINcNu5ouHL1PZ_gkhM-h6H7E",
+          "payload": {
+            "domain": "attachment",
+            "limit": 50,
+            "after": ""
+          },
+          "action": "read",
+          "operationId": "54d1161d-5410-4cfb-86ac-3841478e653e",
+          "expectedRevision": 1,
+          "ownerId": "owner",
+          "deviceId": "device",
+          "securityEpoch": 1
+        }
+      }
+    ],
+    "bootstrap": {
+      "signature": "SzG98XbqXWtYSpPWjY7gM0E5CepdqOqmRRqxJmbJdjAstOMYeeaTe4JbcLFMTl0bwiI5e4P_GUydM8i_Ve0wlA",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "genesis",
+        "payload": {
+          "generation": 1,
+          "deviceKeys": {
+            "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0elTX_2atdQf495bh7S7Trz9tFg6l-vFqhUmQ5mLZZsQCQcob5PD3syNqdzEgJp_xaDUDdpb5bNyuppRI_ywAg",
+            "receivingKey": "BH98WRvkFiqXn--aR8pGyhgZrLUYqvFLcjpJ8zchJUlUaYvnIEzQKxHscE6260sFoop25R7iKrZgdKBqhNB-h30"
+          },
+          "resourceId": "owner",
+          "recoveryKit": {
+            "protocol": 1,
+            "protectedKeys": {
+              "protocol": 1,
+              "ciphertext": "q6-b2qi8noBfdp0_jbVn3Pzqyyr5F_DBPF3F4hBoszxHJaLYmHY3-zWCYUEr_MdXbHADTQeiXyDwGalH3US-nR3JWUAW45JQfOGMUja81cv0PMd3r-ZzVbueV33RevWuC900oYkLQeNBcSrm3URQDYxfK1mj9yglOGQIaxJvu4WvVUd3OynQVO_ePlqgClT-wrLRttX8NwcS8M6QT9ywWvUkGTZ0ZYD-H1uF7YYjS1_sAaPV28znDNdAyoe2naZuNaVvK8kYl6jczdP7izGG1bcAIrMegsQ0Uny49fiGdcsxti1YXHlNAS80Jx2B9p0L2vw9gQa47Bc_3CXkfvLDBnXeA7Lc1Vw1OHtKPl15vT50us2Zevx-ZmEMjKmRzBb95yL0RXDFPyl633YGcWeQ_m_FQ30TrKw2GLlS4woaiJ3cz0ZpZChRq6pqTbglLvqGpd3KHJ-JBkoT6vdjTMcWPWtMHgj4ax_Ep5ktItanW_9xRV4ncD62jA-V12tWh6bdFJWmskmgWrOrSMiw8tAp7JngMcl_gnRoW_17dyXvEuvhHSbrxhnIyzPKD-9XjZcI2Ipe",
+              "salt": "0PxOgSA1y98mbXLnc_KUUVxL2SRBc_WlYerO4svLyQ8",
+              "purpose": "recovery-authority",
+              "ownerId": "owner",
+              "nonce": "ckm-j8sFdQjf2xYZ"
+            },
+            "authority": {
+              "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEUxoybhQmh_gC0OrjaqaSCOCloxmlw8bkjJZqvDq-tNlh8vKrA3xJXb-5i4tONsXxhY4uMkcGXPV84BLXb-2SaA",
+              "receivingKey": "BDiu28y7LFEJeZTGAMAU-oZ9YEiLALEf_Yv5qAJ-67LvtidMs42vQ1Dr2QAntpP7AM3Y2r1kXkE3p9hzkTi7ZfQ"
+            },
+            "ownerId": "owner"
+          },
+          "deviceCapsule": {
+            "ciphertext": "9CrkjdSU_UtewlOI5PCaPOgX-VhFrw6OyhwYi6j-5esyu_c9rDO7H8IsqJzvTdpu",
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BFrkhpULRHDcqbA6lsbliEL_hOTr5lKU1BjXZnlGojNIhCVjTMu4ZjVCwnV0xwbJJABsQTtxzhTPPMJZlzTv4hA"
+          },
+          "recoveryCapsule": {
+            "ciphertext": "E_XvUzLLtjImj_6fmATHCOEt4CguKBxc1SGJVo3hhtNIf_3LaoMb6Mef-JzEsWtQ",
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BIcqHxBct7S6dKRvlELUOdYIJN3JPaaHHHu516zsEhgpP8vEJF9sM6aBbpVGc021TpDNuH-eZn-1QJ_vvfLtcOY"
+          },
+          "kind": "personal",
+          "selfProof": "sOzCMbqD5yGUF-yPmnaXU2tHfAgu6us-GBt9okjvT9STWDsJW8E5bCySk7-hCzF_rmtSl3ESPqxNA8Es-Hwk9A",
+          "keyId": "root-one"
+        },
+        "action": "bootstrap",
+        "operationId": "bootstrap",
+        "expectedRevision": 0,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "platform": "native"
+  }
+]

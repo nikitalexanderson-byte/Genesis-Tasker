@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-background.php';
 require_once __DIR__.'/daily-advice.php';
 require_once __DIR__.'/web-push.php';
 require_once __DIR__.'/shared-content-storage.php';
@@ -45,15 +46,39 @@ function genesisAdviceNotificationDelete(string $userId,string $id): void
     }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
 }
 
+/** Advice selection can own its own transaction. Stage it first, then write the
+ * whole notification plan under one writer with a fresh migration-scope check. */
+function genesisAdviceNotificationPlan(string $userId,string $day,?array $snapshotValues,string $now): int
+{
+    $db=genesisDb();genesisBeginWriteTransaction($db);$count=0;
+    try {
+        if(genesisE2eeLegacyScopeBlocked('personal',$userId)){$db->commit();return 0;}
+        if($snapshotValues!==null) {
+            $db->prepare('INSERT OR IGNORE INTO advice_notification_days(user_id,day_key,advice_id,collection,scheduled_time,time_zone,expires_at,created_at) VALUES(?,?,?,?,?,?,?,?)')
+                ->execute([$userId,$day,...$snapshotValues,$now]);
+        }
+        $q=$db->prepare('SELECT 1 FROM advice_notification_days WHERE user_id=? AND day_key=?');$q->execute([$userId,$day]);$exists=$q->fetchColumn();$q->closeCursor();
+        if(!$exists){$db->commit();return 0;}
+        $q=$db->prepare('SELECT id FROM advice_notification_devices WHERE user_id=?');$q->execute([$userId]);$devices=$q->fetchAll(PDO::FETCH_COLUMN);$q->closeCursor();
+        foreach($devices as $device) {
+            $id=genesisUuid();$insert=$db->prepare('INSERT OR IGNORE INTO advice_notification_deliveries(id,user_id,device_id,day_key,created_at,updated_at) VALUES(?,?,?,?,?,?)');
+            $insert->execute([$id,$userId,$device,$day,$now,$now]);
+            if($insert->rowCount()) {genesisBackgroundEnqueue('advice-notification','advice-notification:'.$id,['deliveryId'=>$id],$now);$count++;}
+        }
+        $db->commit();return $count;
+    }catch(Throwable $error){if($db->inTransaction())$db->rollBack();throw $error;}
+}
+
 /** One snapshot per account/local day, then one idempotent delivery per explicitly connected browser. */
 function genesisAdviceNotificationScan(int $limit=100,?string $now=null,?array $catalogFixture=null,?array $testCapabilities=null): int
 {
     if (!($testCapabilities??genesisPushConfiguration())['available']) return 0;
     $now??=genesisNow();$instant=new DateTimeImmutable($now);$db=genesisDb();$count=0;
-    $q=$db->query("SELECT id,advice_notifications_json FROM users WHERE json_extract(advice_notifications_json,'$.enabled')=1 AND EXISTS(SELECT 1 FROM advice_notification_devices d WHERE d.user_id=users.id) ORDER BY id");
+    $q=$db->query("SELECT id,advice_notifications_json FROM users WHERE json_extract(advice_notifications_json,'$.enabled')=1 AND EXISTS(SELECT 1 FROM advice_notification_devices d WHERE d.user_id=users.id) AND ".genesisE2eeLegacyAvailableSql('personal','users.id')." ORDER BY id");
     $users=$q->fetchAll();$q->closeCursor();
     foreach ($users as $candidate) {
         if ($count>=max(1,min(500,$limit))) break;
+        try {
         $user=genesisFindUser($candidate['id']);if(!$user)continue;$preferences=genesisUserAdvicePreferences($user);$settings=$preferences['notifications'];
         if (!$preferences['enabled']||!$settings['enabled']) continue;
         $local=$instant->setTimezone(new DateTimeZone($settings['timeZone']));$day=$local->format('Y-m-d');
@@ -62,6 +87,7 @@ function genesisAdviceNotificationScan(int $limit=100,?string $now=null,?array $
         $expiry=min($local->setTime(0,0)->modify('+1 day')->getTimestamp(),$at->getTimestamp()+7200);
         if ($instant<$at||$instant->getTimestamp()>=$expiry) continue;
         $q=$db->prepare('SELECT * FROM advice_notification_days WHERE user_id=? AND day_key=?');$q->execute([$user['id'],$day]);$snapshot=$q->fetch();$q->closeCursor();
+        $snapshotValues=null;
         if (!$snapshot) {
             $q=$db->prepare('SELECT advice_id,entry_json FROM daily_advice_days WHERE user_id=? AND day_key=?');$q->execute([$user['id'],$day]);$current=$q->fetch();$q->closeCursor();
             if (!$current) {
@@ -75,19 +101,16 @@ function genesisAdviceNotificationScan(int $limit=100,?string $now=null,?array $
             if (!genesisAdviceNotificationSafe($entry)) continue;
             $target=['id'=>$current['advice_id'],'dayKey'=>$day,'collection'=>$entry['collection']??'aurora'];
             if (!genesisSavedAdvice($user['id'],$target)['advice']) continue;
-            $db->prepare('INSERT OR IGNORE INTO advice_notification_days(user_id,day_key,advice_id,collection,scheduled_time,time_zone,expires_at,created_at) VALUES(?,?,?,?,?,?,?,?)')
-                ->execute([$user['id'],$day,$target['id'],$target['collection'],$settings['time'],$settings['timeZone'],gmdate('Y-m-d\TH:i:s\Z',$expiry),$now]);
+            $snapshotValues=[$target['id'],$target['collection'],$settings['time'],$settings['timeZone'],gmdate('Y-m-d\TH:i:s\Z',$expiry)];
         }
-        genesisBeginWriteTransaction($db);
-        try {
-            $q=$db->prepare('SELECT id FROM advice_notification_devices WHERE user_id=?');$q->execute([$user['id']]);$devices=$q->fetchAll(PDO::FETCH_COLUMN);$q->closeCursor();
-            foreach ($devices as $device) {
-                $id=genesisUuid();$insert=$db->prepare('INSERT OR IGNORE INTO advice_notification_deliveries(id,user_id,device_id,day_key,created_at,updated_at) VALUES(?,?,?,?,?,?)');
-                $insert->execute([$id,$user['id'],$device,$day,$now,$now]);
-                if ($insert->rowCount()) {genesisBackgroundEnqueue('advice-notification','advice-notification:'.$id,['deliveryId'=>$id],$now);$count++;}
-            }
-            $db->commit();
-        }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
+        $count+=genesisAdviceNotificationPlan($user['id'],$day,$snapshotValues,$now);
+        }catch(Throwable $error) {
+            if($db->inTransaction())$db->rollBack();
+            // A cutover can win after the initial read. Its persistent fence
+            // stops the mutation without terminating this multi-account scan.
+            if(genesisE2eeLegacyScopeBlocked('personal',$candidate['id']))continue;
+            throw $error;
+        }
     }
     return $count;
 }
@@ -129,6 +152,7 @@ function genesisAdviceNotificationPerformLeased(array $job,?callable $testTransp
     genesisBeginWriteTransaction($db);
     try {
         if(!$owns()){$db->commit();return 'superseded';}
+        if(($held=genesisE2eeBackgroundHold($job,$now,true))!==null){$db->commit();return $held;}
         $payload=json_decode(genesisSharedContentDecrypt($job['payload']),true,16,JSON_THROW_ON_ERROR);
         $delivery=genesisAdviceNotificationDelivery($payload['deliveryId']??'');
         $advice=$delivery&&in_array($delivery['state'],['pending','sending'],true)?genesisAdviceNotificationCurrent($delivery,$now):null;
@@ -144,6 +168,7 @@ function genesisAdviceNotificationPerformLeased(array $job,?callable $testTransp
         try{$result=$testTransport!==null?$testTransport($subscription,$message):genesisPushSend($subscription,$message);}catch(Throwable $e){$failure=$e;}
         genesisBeginWriteTransaction($db);
         if(!$owns()){$db->commit();return 'superseded';}
+        if(($held=genesisE2eeBackgroundHold($job))!==null){$db->commit();return $held;}
         if($failure!==null)throw $failure;
         if($result==='expired') {
             $db->prepare('DELETE FROM advice_notification_devices WHERE id=? AND user_id=?')->execute([$delivery['device_id'],$delivery['user_id']]);
@@ -156,6 +181,7 @@ function genesisAdviceNotificationPerformLeased(array $job,?callable $testTransp
         if($db->inTransaction())$db->rollBack();genesisBeginWriteTransaction($db);
         try {
             if(!$owns()){$db->commit();return 'superseded';}
+            if(($held=genesisE2eeBackgroundHold($job,$now))!==null){$db->commit();return $held;}
             $state=(int)$job['attempts']>=5||$e->getMessage()==='PUSH_REJECTED'?'failed':'pending';
             $code=in_array($e->getMessage(),['PUSH_RETRY','PUSH_REJECTED','PUSH_CRYPTO_FAILED','PUSH_RUNTIME_UNAVAILABLE'],true)?$e->getMessage():'ADVICE_NOTIFICATION_RETRY';
             $retry=gmdate('Y-m-d\TH:i:s\Z',strtotime($now)+min(3600,30*(2**min(7,(int)$job['attempts']))));
