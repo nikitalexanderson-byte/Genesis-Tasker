@@ -14,7 +14,7 @@ registry does **not** mean that feature adapters have been implemented.
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | Web whole-operation writer fence now includes journals/IO/cleanup; actual source reconciliation, new root for notes/dreams/references/settings/files and native adapter remain required |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Web operation fences now cover staging/IO/retry/cleanup and retain immediate durable drafts; actual adapters, maps/images/complete history/conversion references and native lifecycle remain required |
 | personal.physis | Legacy password vault and account-v2 vault; active web memory store includes unsent queue/rotation; native encrypted documents; server records/IDs/receipts | Independently unlock every source, reconcile rotations and deleted IDs, re-encrypt account-known descendants; a locked source cannot be called empty |
-| personal.aurora | Encrypted cache/base/pending document, personal learning and removed sessions; native documents; server workspaces/model results | Web repository and native bridge operation capabilities implemented; actual adapters, all immutable sessions/results, per-writer drafts and optional assistant disclosure remain required |
+| personal.aurora | Encrypted cache/base/pending document, personal learning and removed sessions; native documents; server workspaces/model results | Real web/native capture and shared validator/merger implemented; actual Room/Keystore/packaged WebView cases pass with immutable sessions/results and writer history; product routing, source conflict UI, older-format review and optional assistant disclosure remain required |
 | personal.stoicheion | Encrypted restoration workspace plus draw/timeline records and local pending choices; native documents; server draw/session/card rows | Independent web restoration archive now has whole-operation exclusion; complete selections/history/draw adapters remain required; billing/reroll quota authority cannot be imported or forged |
 | personal.advice | Saved personal advice/selection state and metrics in memory/cache/server rows | Private selection/preferences need a deliberate content adapter; public art/catalogues remain public |
 | personal.local-work | All owner-scoped localStorage/IndexedDB caches, shared editor drafts, conflict choices and pending mutations | Enumerate unmounted editors too. Snapshot first; retain every prior migration attempt; reconcile content without restoring sessions/rights |
@@ -52,7 +52,7 @@ acceptance is complete. The native source/factory now reads4 real Room document
 kinds and their exact outbox under a transaction, includes portable plaintext in
 the protected snapshot and never acknowledges old work. Accepted/pending reset
 generations, base revisions, deleted IDs and explicit conflict choices are checked
-on both platforms. All other required path adapters remain mandatory.
+on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. All18 other required path adapters remain mandatory.
 
 Native Room now has an additive schema1→2 migration and technical deny table.
 Persistent triggers cover I/U/D of all4 legacy data tables in each explicit

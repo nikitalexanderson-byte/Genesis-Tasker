@@ -232,7 +232,7 @@ abstract class GenesisAuroraAssetsTask : DefaultTask() {
 }
 val genesisAuroraAssets = tasks.register<GenesisAuroraAssetsTask>("genesisAuroraAssets") {
     assetsDirectory.set(layout.buildDirectory.dir("generated/auroraAssets"))
-    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "BackupJournalChoices.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
+    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "e2ee/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "BackupJournalChoices.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
     inputs.file(rootProject.file("../scripts/aurora/build-native.mjs"))
     inputs.file(rootProject.file("../contracts/native-web-runtime-v1.json"))
     inputs.file(rootProject.file("../pnpm-lock.yaml"))

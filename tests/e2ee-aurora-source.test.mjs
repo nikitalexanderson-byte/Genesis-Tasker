@@ -115,3 +115,22 @@ test('cloud factory captures the actual mounted repository and persistent journa
  const snapshot=decode(await source.captureLocal());assert.equal(snapshot.memory.current.revision,0);assert.equal(snapshot.memory.current.document.ownerId,tab.userId);
  assert.deepEqual([...tab.storage.data],before);assert.equal(tab.requests.length,calls);
 });
+
+test('native-owned legacy opening uses the same validator/merger without accepting any key into the reconciler',async()=>{
+ const f=await fixture(doc('server'));await f.pending(doc('native-offline'));const snapshot=decode(await f.capture());snapshot.memory.legacyKey='';
+ const remote=structuredClone(f.remote);remote.legacyKey.key=null;let calls=0,live=true;
+ const key=await crypto.subtle.importKey('raw',Buffer.from(f.rawKey,'base64'),'AES-GCM',false,['decrypt']);
+ const source=new PersonalAuroraSource('owner','personal:owner',{storage:{getItem(){throw new Error('Unexpected live storage');},key:()=>null,length:0},memory(){throw new Error('Unexpected live capture');},
+  assertCurrent:()=>{if(!live)throw new Error('NATIVE_SCOPE_CLOSED');},legacyAurora:async()=>remote,
+  openLegacy:async(envelope,purpose)=>{
+   assert.deepEqual(Object.keys(envelope).sort(),['ciphertext','iv']);assert.ok(['aurora-workspace:v1','aurora-workspace-base:v1'].includes(purpose));calls++;
+   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:Buffer.from(envelope.iv,'base64'),additionalData:new TextEncoder().encode('genesis-mindmap-v1:owner:'+purpose)},key,Buffer.from(envelope.ciphertext,'base64'));
+   return decode(new Uint8Array(plain));
+  },
+ });
+ const result=await source.reconcile(bytes(snapshot),[],context);assert.ok(calls>=3);assert.deepEqual(new Set(decode(result.content[0].bytes).document.sessions.map(row=>row.id)),new Set(['server','native-offline']));
+ assert.ok(!JSON.stringify(result.content.map(row=>decode(row.bytes))).includes(f.rawKey));
+ const before=calls;remote.legacyKey.key=f.rawKey;await assert.rejects(source.reconcile(bytes(snapshot),[],context),/KEY_BRIDGE_FORBIDDEN/);assert.equal(calls,before);
+ remote.legacyKey.key=null;snapshot.memory.legacyKey=f.rawKey;await assert.rejects(source.reconcile(bytes(snapshot),[],context),/KEY_BRIDGE_FORBIDDEN/);assert.equal(calls,before);
+ live=false;await assert.rejects(source.reconcile(bytes(snapshot),[],context),/NATIVE_SCOPE_CLOSED/);
+});

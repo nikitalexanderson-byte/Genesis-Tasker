@@ -291,6 +291,23 @@ approved binding; this root-scope barrier does not assert those adapters exist.
 Web multitab fencing, full device-credential vault acceptance and all48 scenarios
 remain required. Pilot/cutover and mandatory update floors stay disabled.
 
+## Native Aurora source engine
+
+The real Room Aurora source now delegates domain validation/merging to the same
+packaged TypeScript source as web. A new owner/job-bound headless WebView has no
+network/storage/file/vault/mutation port. Captured old keys stay native; new roots
+and device private keys never enter it. Only bounded immutable captured documents
+and native-authenticated legacy plaintext cross the chunked bridge. Cancellation
+invalidates and drains operations before destroying it. The product account guard
+and UpdateGate are connected; unlocked-device/vault lifecycle and the complete
+migration/editor route remain the product coordinator's responsibility.
+
+API34 tested actual Room, Keystore and packaged runtime with40 sessions and
+immutable writer history, conflict refusal and account deactivation;3/3 PASS.
+Focused JVM13/13 and JS15/15 pass, plus1454 full JS and2 real UI regressions.
+Evidence/limits: `e2ee-336-aurora-source.md`. No direct upgrade/full product recovery
+claim, production activation or update floor change follows from these tests.
+
 ## Trust limits and remaining integration
 
 The web transport owner is now established only by a validated session reader.

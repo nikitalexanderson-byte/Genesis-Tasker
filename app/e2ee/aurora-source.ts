@@ -16,7 +16,11 @@ export type AuroraMigrationMemory={ownerId:string;legacyKey:string;generation:nu
   current:{document:AuroraDocument;base:AuroraDocument;revision:number}|null};
 type Snapshot={protocol:1;ownerId:string;scopeId:string;capturedAt:string;memory:AuroraMigrationMemory;entries:{key:string;value:string}[]};
 export type AuroraSourcePorts={storage:Pick<Storage,'getItem'|'key'|'length'>;memory:()=>AuroraMigrationMemory;assertCurrent:()=>void;
-  legacyAurora:(context:MigrationSourceContext)=>Promise<unknown>};
+  legacyAurora:(context:MigrationSourceContext)=>Promise<unknown>;
+  /** Native owns every legacy key. Its isolated, bundled domain reconciler can
+   * request authenticated OLD envelope plaintext without receiving those keys.
+   * New vault roots never cross this port. */
+  openLegacy?:(envelope:{iv:string;ciphertext:string},purpose:string)=>Promise<unknown>};
 function invalid():never{throw new Error('E2EE_AURORA_SOURCE_INVALID');}
 function object(value:unknown):asserts value is Row{if(!value||typeof value!=='object'||Array.isArray(value))invalid();}
 function integer(value:unknown,min=0):asserts value is number{if(!Number.isSafeInteger(value)||(value as number)<min||(value as number)>=Number.MAX_SAFE_INTEGER)invalid();}
@@ -75,11 +79,15 @@ export class PersonalAuroraSource implements PrivatePathAdapter {
     try {
       if(snapshot.memory.legacyKey)rawKeys.push(snapshot.memory.legacyKey);
       const deviceKey=entries.get(`genesis-workspace-device-key-v2:${this.#owner}`);if(deviceKey){const device=parse(deviceKey);object(device);if(typeof device.key!=='string')invalid();rawKeys.push(device.key);}
-      if(remote.legacyKey.keyMode==='account'){if(typeof remote.legacyKey.key!=='string')throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');rawKeys.push(remote.legacyKey.key);}
+      if(this.#ports.openLegacy&&(rawKeys.length||remote.legacyKey.key!==null))throw new Error('E2EE_KEY_BRIDGE_FORBIDDEN');
+      if(remote.legacyKey.keyMode==='account'&&!this.#ports.openLegacy){if(typeof remote.legacyKey.key!=='string')throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');rawKeys.push(remote.legacyKey.key);}
       else if(remote.legacyKey.key!==null)invalid();
       for(const raw of new Set(rawKeys)){const bytes=b64(raw,32);try{keys.push(await crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['decrypt']));}finally{bytes.fill(0);}}
       const open=async(envelope:unknown,scope:string):Promise<unknown>=>{
         object(envelope);const iv=b64(envelope.iv,12),ciphertext=b64(envelope.ciphertext,16,MAX);let opened:Uint8Array|undefined;
+        if(this.#ports.openLegacy){
+          this.#ports.assertCurrent();const value=await this.#ports.openLegacy({iv:envelope.iv as string,ciphertext:envelope.ciphertext as string},scope);this.#ports.assertCurrent();return value;
+        }
         for(const key of keys){try{opened=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:encoder.encode(`genesis-mindmap-v1:${this.#owner}:${scope}`)},key,ciphertext));break;}catch{/* Only captured legacy epochs; never manufacture a replacement. */}}
         if(!opened)throw new Error(keys.length?'E2EE_LEGACY_AURORA_CORRUPT':'E2EE_LEGACY_KEY_UNAVAILABLE');
         try{return parse(decoder.decode(opened));}finally{opened.fill(0);this.#ports.assertCurrent();}

@@ -593,3 +593,29 @@ Room rows совпали до/после. QA APK/test APK собраны, versio
 Документация, лог ошибок fixture и ограничения: `docs/backup-journal-choices-336.md`.
 Полный security coverage, recovery/direct upgrades и независимый crypto review
 ещё требуются до разрешённого полного деплоя3.3.6.
+
+## Native источник Авроры: Room → общий engine → новый root
+
+19 ноября2026. Реальный native source теперь захватывает encrypted originals,
+legacy account key/cache, все immutable writer journals и mounted state. Общий
+web/native validator/merger работает в отдельном headless WebView без сети,
+storage/file доступа или vault/mutation bridge. Все key bytes остаются native;
+engine получает только keyless capture и authenticated old plaintext. Job/owner/
+scope binding, bounded chunking, cancellation/drain и current-account checks
+не позволяют закончить сведение после закрытия/смены аккаунта.
+
+5/5 native source JVM +8/8 migration JVM,3/3 API34 Room/Keystore/packaged runtime,
+15/15 JS native-entry tests,1454/1454 full JS,2/2 API34 UI regressions,
+typecheck/lint/web build PASS. Source fixtures включают40 sessions, retained
+writer history, blocking conflict и account deactivation; originals проверены
+до/после. QA package/debug signing/metadata149 сохранены. Логи и точные границы:
+`e2ee-336-aurora-source.md`. В instrumentation legacy server response synthetic,
+реальный signed server transport проверен отдельно раньше. Full product
+bootstrap/unlock/fence/editor routing ещё не подключён; direct upgrade/recovery
+этими тестами не подтверждены.
+
+Реальные source adapters покрывают2/20 категорий: workspace и Aurora. Остальные18,
+shared ACL/rotation/files/automation, product lifecycle/recovery, полная приёмка
+48 сценариев/14 языков и независимый crypto review ещё обязательны. Никаких
+production публикаций/миграций/повышения floors не выполнялось;3.3.5/149 остаётся
+действующей версией до полного готового и проверенного3.3.6.

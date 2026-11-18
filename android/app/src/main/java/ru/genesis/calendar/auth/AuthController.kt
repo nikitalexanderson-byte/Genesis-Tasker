@@ -244,6 +244,31 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         },decrypt={ row -> current(); cipher.decrypt(row.encrypted,"$accountScope/${row.kind}").also { current() } },
             assertCurrent=::current,legacyWorkspace=transport::legacyWorkspace,review=review)
     }
+    internal fun e2eeAuroraSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eeAuroraReconciler,
+        captureMounted:suspend ()->JSONObject?):E2eeNativeAuroraSource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        check(directory.ownerId==uid&&directory.kind=="personal"){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+                &&app.workspaceScope==accountScope){"E2EE_ACCOUNT_CHANGED"}
+        }
+        val cipher=ru.genesis.calendar.data.LocalCipher()
+        return E2eeNativeAuroraSource(uid,directory.scopeId,captureRows={
+            current();val mounted=captureMounted()?.let{JSONObject(it.toString())};current()
+            withContext(Dispatchers.IO){app.database.withTransaction{
+                current();val dao=app.database.dao()
+                val kinds=dao.documentKinds(accountScope).filter{it.startsWith("aurora-")};check(kinds.size<=1026){"E2EE_JOURNAL_LIMIT"}
+                val documents=mutableListOf<ru.genesis.calendar.data.DocumentRecord>();var size=0L
+                for(kind in kinds){dao.document(accountScope,kind)?.let{row->size+=row.encrypted.length;check(size<=16*1024*1024){"E2EE_SNAPSHOT_TOO_LARGE"};documents+=row}}
+                val pending=dao.outbox(accountScope).filter{it.entityId.startsWith("aurora")};val epochs=NativeBackupEpochStore(app)
+                current();E2eeAuroraRows(documents,pending,epochs.accepted(accountScope),epochs.pending(accountScope),mounted)
+            }}
+        },decrypt={row->current();val kind=if(row.kind=="aurora-account-key")"account-key" else row.kind
+            cipher.decrypt(row.encrypted,"$accountScope/aurora/$uid/$kind").also{current()}},assertCurrent=::current,
+            legacyAurora=transport::legacyAurora,reconciler=reconciler)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
