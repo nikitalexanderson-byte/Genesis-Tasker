@@ -4,7 +4,7 @@ declare(strict_types=1);
 require __DIR__.'/e2ee-store.php';
 require_once dirname(__DIR__).'/src/shared-projects.php';
 
-function legacyWorkspaceFixture(string $mode='account',bool $blob=true,?string $storedKey=null,?callable $seed=null):array
+function legacyWorkspaceFixture(string $mode='account',bool $blob=true,?string $storedKey=null,?callable $seed=null,?callable $afterBootstrap=null):array
 {
     global $db,$owner,$scopeId,$device,$authority,$session;
     $owner='legacy-'.bin2hex(random_bytes(8));$scopeId='personal:'.$owner;$now=genesisNow();
@@ -26,11 +26,12 @@ function legacyWorkspaceFixture(string $mode='account',bool $blob=true,?string $
         'deviceKeys'=>['signingKey'=>$device['signingKey'],'receivingKey'=>$device['receivingKey']],'deviceCapsule'=>storeCapsule($device)]];
     $c['payload']['selfProof']=storeSign(genesisE2eeCommandBytes($c),$device['private']);
     genesisE2eeBootstrap($owner,['command'=>$c,'signature'=>storeSign(genesisE2eeCommandBytes($c),$authority['private'])]);
+    if($afterBootstrap)$afterBootstrap($owner);
     $source=genesisE2eeSourceHash($db,genesisE2eeScope($owner,$scopeId));
     $payload=['migrationId'=>'migration-'.$owner,'fence'=>1,'sourceHash'=>$source];
     storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-workspace',$payload),$session),'E2EE_MIGRATION_FENCED');
-    genesisE2eeExecute($owner,storeCommand('migration-start',['migrationId'=>$payload['migrationId'],'sourceHash'=>$source]),$session);
-    return ['payload'=>$payload,'raw'=>$raw];
+    $lease=genesisE2eeExecute($owner,storeCommand('migration-start',['migrationId'=>$payload['migrationId'],'sourceHash'=>$source]),$session);
+    return ['payload'=>$payload,'raw'=>$raw,'lease'=>$lease];
 }
 
 storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-workspace',['migrationId'=>'migration-one','fence'=>1,'sourceHash'=>storeB64(random_bytes(32))]),$session),'E2EE_MIGRATION_FENCED');
@@ -94,6 +95,34 @@ $f=legacyWorkspaceFixture('legacy',false,null,static function(string $id)use($db
     $db->prepare('UPDATE categories SET name=? WHERE user_id=?')->execute([str_repeat('а',3*1024*1024),$id]);
 });
 storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-workspace',$f['payload']),$session),'E2EE_SOURCE_TOO_LARGE');
+storeCheck(!$db->inTransaction());
+
+$f=legacyWorkspaceFixture('account',true,null,null,static function(string $id)use($db):void {
+    $db->prepare('UPDATE users SET data_generation=7 WHERE id=?')->execute([$id]);
+});
+storeCheck($f['lease']['generation']===8);
+storeCheck(genesisE2eeRead($owner,storeCommand('legacy-workspace',$f['payload']),$session)['legacyGeneration']===7);
+// Represent a pre-fix development lease whose shadow generation was below a
+// restore which preceded that lease. Reads/puts must fail closed as well.
+$db->prepare('UPDATE e2ee_scopes SET generation=7 WHERE scope_id=?')->execute([$scopeId]);
+$db->prepare('UPDATE e2ee_migrations SET target_generation=7 WHERE scope_id=?')->execute([$scopeId]);
+storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-workspace',$f['payload']),$session),'E2EE_STALE_GENERATION');
+storeReject(fn()=>genesisE2eeExecute($owner,storePut('stale-shadow',0,$f['lease']),$session),'E2EE_STALE_GENERATION');
+$db->prepare('UPDATE e2ee_scopes SET generation=8 WHERE scope_id=?')->execute([$scopeId]);
+$db->prepare('UPDATE e2ee_migrations SET target_generation=8 WHERE scope_id=?')->execute([$scopeId]);
+// A later reset requires a new attempt; preserve the abandoned shadow generation.
+genesisE2eeExecute($owner,storePut('old-shadow',0,$f['lease']),$session);
+$db->prepare('UPDATE e2ee_migrations SET lease_until=0 WHERE scope_id=?')->execute([$scopeId]);
+$db->prepare('UPDATE users SET data_generation=10 WHERE id=?')->execute([$owner]);
+$newSource=genesisE2eeSourceHash($db,genesisE2eeScope($owner,$scopeId));
+storeReject(fn()=>genesisE2eeExecute($owner,storeCommand('migration-start',['migrationId'=>$f['payload']['migrationId'],'sourceHash'=>$newSource]),$session),'E2EE_SOURCE_CHANGED');
+genesisE2eeExecute($owner,storeCommand('migration-cancel',['migrationId'=>$f['payload']['migrationId'],'fence'=>$f['lease']['fence']]),$session);
+$new=genesisE2eeExecute($owner,storeCommand('migration-start',['migrationId'=>'fresh-after-reset','sourceHash'=>$newSource]),$session);
+storeCheck($new['generation']===11);
+storeCheck((int)genesisE2eeRow($db,"SELECT COUNT(*) AS amount FROM e2ee_objects WHERE scope_id=? AND generation=8",[$scopeId])['amount']===1);
+storeReject(fn()=>legacyWorkspaceFixture('account',true,null,null,static function(string $id)use($db):void {
+    $db->prepare('UPDATE users SET data_generation=9007199254740991 WHERE id=?')->execute([$id]);
+}),'E2EE_ROTATION_REQUIRED');
 storeCheck(!$db->inTransaction());
 
 // Simulate a formerly unfenced legacy source changing, without bypassing a live

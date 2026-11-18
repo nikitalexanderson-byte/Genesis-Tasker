@@ -9,7 +9,7 @@ registry does **not** mean that feature adapters have been implemented.
 
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
 | --- | --- | --- |
-| personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | First real web adapter + signed lease-bound owner-only legacy source implemented; product writer/multitab fences, older tracker/history review and actual native Room adapter remain |
+| personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native source adapters + signed lease-bound owner-only legacy source implemented; product writer/multitab fences, older tracker/history review and actual Room/Keystore acceptance remain |
 | personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Preserve all GENESIS tasks, recurrence, detached occurrences and tombstones; separate Google/Yandex copies and unsent external operations |
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | New root for notes/dreams/references/settings/files; test offline drafts, conflicting edits, deleted advice notes and disabled sync |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Maps, images, complete history and conversion-task references; no omission of unmounted maps |
@@ -48,7 +48,11 @@ and cannot read an active scope. It does not reuse bootstrap/Google enumeration.
 Unattributed sources, changed earlier attempts, conflicting mounted/persisted
 bases, unsupported old/future tracker formats and lossy event projections still
 block this adapter. Its presence does not mean product cutover or native Room
-integration is complete. All other required path adapters remain mandatory.
+acceptance is complete. The native source/factory now reads4 real Room document
+kinds and their exact outbox under a transaction, includes portable plaintext in
+the protected snapshot and never acknowledges old work. Accepted/pending reset
+generations, base revisions, deleted IDs and explicit conflict choices are checked
+on both platforms. All other required path adapters remain mandatory.
 
 The source registry captures local bytes without network writes or deletion.
 `E2eeMigration.prepare()` is responsible for durably protecting that complete

@@ -318,7 +318,12 @@ function genesisE2eeExecute(string $actor, mixed $source, string $sessionBinding
 function genesisE2eeRequireLease(PDO $db,array $scope,string $device): array
 {
     $lease=genesisE2eeRow($db,'SELECT * FROM e2ee_migrations WHERE scope_id=?',[$scope['scope_id']]);
-    if (!$lease || (int)$lease['lease_until']<time() || $lease['device_id']!==$device) throw new DomainException('E2EE_MIGRATION_FENCED');
+    if (!$lease || (int)$lease['lease_until']<time() || $lease['device_id']!==$device
+        ||(int)$lease['target_generation']!==(int)$scope['generation']) throw new DomainException('E2EE_MIGRATION_FENCED');
+    if($scope['kind']==='personal') {
+        $legacy=genesisE2eeRow($db,'SELECT data_generation FROM users WHERE id=?',[$scope['resource_id']]);
+        if(!$legacy||(int)$scope['generation']<=(int)$legacy['data_generation'])throw new DomainException('E2EE_STALE_GENERATION');
+    }
     return $lease;
 }
 function genesisE2eeManifest(PDO $db,array $scope): array
@@ -368,10 +373,22 @@ function genesisE2eeMigrationCommand(PDO $db,array &$scope,array $c,array $packe
         if (!hash_equals($source,$p['sourceHash'])) throw new DomainException('E2EE_SOURCE_CHANGED');
         if($previous && $previous['migration_id']===$p['migrationId'] && !hash_equals($previous['source_hash'],$source))throw new DomainException('E2EE_SOURCE_CHANGED');
         $fence=$previous?(int)$previous['fence']+1:1; $until=time()+900;
+        $target=(int)$scope['generation'];
         if($previous && $previous['migration_id']!==$p['migrationId']) {
             // Abandoned shadow objects are retained, never mixed into the next attempt.
-            $scope['generation']=(int)$scope['generation']+1;
-            if($scope['generation']>9007199254740991)throw new DomainException('E2EE_ROTATION_REQUIRED');
+            $target++;
+        }
+        if($scope['kind']==='personal') {
+            $legacy=genesisE2eeRow($db,'SELECT data_generation FROM users WHERE id=?',[$scope['resource_id']]);
+            if(!$legacy)throw new DomainException('E2EE_SOURCE_UNAVAILABLE');
+            // A restore may occur after directory bootstrap, before the first
+            // lease or between cancelled attempts. Never cut over to its older
+            // generation or reuse abandoned shadow objects.
+            $target=max($target,(int)$legacy['data_generation']+1);
+        }
+        if($target>9007199254740991)throw new DomainException('E2EE_ROTATION_REQUIRED');
+        if($target!==(int)$scope['generation']) {
+            $scope['generation']=$target;
             $db->prepare('UPDATE e2ee_scopes SET generation=? WHERE scope_id=?')->execute([$scope['generation'],$scope['scope_id']]);
         }
         $db->prepare('INSERT INTO e2ee_migrations VALUES(?,?,?,?,?,?,?,NULL,NULL) ON CONFLICT(scope_id) DO UPDATE SET migration_id=excluded.migration_id,device_id=excluded.device_id,source_hash=excluded.source_hash,target_generation=excluded.target_generation,fence=excluded.fence,lease_until=excluded.lease_until,manifest_hash=NULL,verified_checkpoint=NULL')

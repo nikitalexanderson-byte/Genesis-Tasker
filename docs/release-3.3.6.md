@@ -337,6 +337,45 @@ typecheck/ESLint PASS (`typecheck-workspace-final.log`, `lint-workspace-final.lo
 продающий Telegram-пост с картинкой и проверенными улучшениями надёжности.
 Автоматическая отправка не поручена; полный E2EE до готовности не рекламировать.
 
+## Реальный native workspace source и защита поколений restore
+
+Следующий инкремент добавил `E2eeNativeWorkspaceSource` и factory AuthController:
+4 документа Room и workspace outbox читаются в одной transaction, без ACK/очистки.
+LocalCipher открывает существующие записи без генерации replacement key; snapshot
+содержит исходный ciphertext и portable JSON для нового защищённого поколения.
+Мёртвый Keystore, потерянная очередь, несовпавшая revision, held work и старые
+изменившиеся attempts останавливают перенос. Точный fingerprint связывает
+conflict review с его источниками. Native achievement ID/clocks приводятся к web
+identity, без потери самих записей; строгие event roundtrips блокируют lossy
+projection. JSON/UTF-8/date errors возвращают фиксированные коды без private values
+и cause. Это не подтверждение реального Room/Keystore instrumented-прогона.
+
+Новый разбор выявил общий restore-риск: старый локальный workspace мог попасть в
+перенос после смены data_generation. Web/native теперь сверяют accepted/pending
+generation и remote base revision; web snapshot format2 явно хранит происхождение
+поколения, старые snapshots без него требуют review. Backend выбирает shadow
+generation выше актуального legacy generation, в том числе при restore между
+bootstrap и lease. Старые shadow objects сохраняются; новый attempt после reset
+получает отдельное поколение. Stale target lease не допускается к reads/puts и
+verification. Максимум safe integer проверяется до записи.
+
+Проверено126/126 JS PASS (`runtime/js-workspace-generation-02.log`), native JVM
+(`native-workspace-source-final.log`, включая реальные codec roundtrips и
+8 исходных adapter-сценариев с последующими дополнениями),5 PHP suites PASS
+(`backend-generation-01`); финальный расширенный результат указан ниже после
+сверки дерева. Typecheck/ESLint повторены после изменения web capture format.
+Product routing, persistent writer fences, остальные paths, новая security UI,
+48 сценариев и внешний crypto review по-прежнему не завершены. Выпуска3.3.6 нет.
+
+Финальное дерево инкремента:56/56 JVM tests по8 XML suites,0 failures/errors,
+в том числе10 native source tests (`native-workspace-source-final.log`);
+126/126 JS (`js-workspace-generation-02.log`),9/9 PHP suites
+(`backend-generation-final`,275 cumulative legacy-workspace assertions),
+typecheck/ESLint PASS (`typecheck-workspace-generation-final.log`,
+`lint-workspace-generation-01.log`). Native tests используют injected read-only
+Room rows и настоящий JCA/JSON/domain codecs; фактические Room/Keystore,
+авторизованный upgrade, UI, process kill и low-memory не проверены этим JVM run.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.

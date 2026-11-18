@@ -3404,7 +3404,7 @@ export async function createPersonalWorkspaceMigrationSource(userId:string,scope
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalWorkspaceSource}=await import('./e2ee/workspace-source');check();
   return new PersonalWorkspaceSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
-    memory:()=>{check();return{ownerId:workspaceUserId,key:workspaceKey,version:workspaceVersion,deviceId:workspaceDeviceId,
+    memory:()=>{check();return{ownerId:workspaceUserId,key:workspaceKey,version:workspaceVersion,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,deviceId:workspaceDeviceId,
       base:workspaceBase,baseMetadata:workspaceBaseMetadata,metadata:workspaceSyncMetadata,current:captureCurrent(),draftSource:workspaceDraftSource};},
     legacyWorkspace:context=>transport.legacyWorkspace(context),review});
 }

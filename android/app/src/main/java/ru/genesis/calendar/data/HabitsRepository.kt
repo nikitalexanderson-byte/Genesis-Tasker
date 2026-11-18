@@ -402,6 +402,11 @@ internal object HabitDocument {
             value.getString("entryId"),value.getString("ruleId"),value.getJSONArray("replaces").let { ids ->
                 (0 until ids.length()).map { ids.getString(it) } },amount,value.optString("note"),value.getString("source"),value.optBoolean("historical"))
     }
+    /** Migration preflight uses existing codecs without rewriting the source. */
+    internal fun migrationEventProjection(kind: String, rows: JSONArray): JSONArray = JSONArray((0 until rows.length()).map { index ->
+        val row=rows.getJSONObject(index)
+        when(kind) { "measurement" -> measurementEvent(measurementEvent(row)); "rule" -> rule(rule(row)); else -> error("E2EE_WORKSPACE_FORMAT_UNSUPPORTED") }
+    })
     private fun habit(h: Habit): JSONObject = entity(h.entity).put("title",h.title).put("description",h.description).put("createdDate",h.createdDate.toString())
         .put("measurement",h.measurement?.let(::measurement) ?: JSONObject.NULL).put("ruleHistory",JSONArray(h.ruleHistory.map(::rule)))
         .apply {

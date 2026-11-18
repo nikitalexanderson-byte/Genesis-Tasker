@@ -15,7 +15,7 @@ async function fixture(options={}){
   const remoteDoc=options.remote??{projects:[],categories:[]},envelope=options.empty?null:await seal(remoteDoc);
   const remote={protocol:1,ownerId:'owner',scopeId:'personal:owner',migrationId:'migration',fence:7,sourceHash:context.sourceHash,legacyGeneration:0,
     checkpointHash:'A'.repeat(43),directoryRevision:1,workspace:{keyMode:options.empty?'empty':'account',key:options.empty?null:rawKey,envelope},projects:[],categories:[]};
-  const memory={ownerId:'owner',key:rawKey,version:1,deviceId:'local-device',base:options.base??null,baseMetadata:options.base?.syncMetadata??null,
+  const memory={ownerId:'owner',key:rawKey,version:options.empty?0:1,generation:0,reconciliationRequired:false,deviceId:'local-device',base:options.base??null,baseMetadata:options.base?.syncMetadata??null,
     metadata:options.local?.syncMetadata??null,current:options.current??null,draftSource:null};
   const rows=new Map(),storage={get length(){return rows.size;},key:index=>[...rows.keys()][index]??null,getItem:key=>rows.get(key)??null,
     setItem(){throw new Error('SOURCE_MUTATION');},removeItem(){throw new Error('SOURCE_MUTATION');}};
@@ -115,4 +115,11 @@ test('migration rejects malformed or unknown event fields instead of accepting l
 test('large valid legacy ciphertext does not overflow a base64 parser stack',async()=>{
   const f=await fixture({remote:{projects:[project('large','x'.repeat(512*1024))],categories:[]}});
   assert.equal(decode((await f.run()).content[0].bytes).projects[0].title.length,512*1024);
+});
+test('a server restore generation or rollback cannot import the old local workspace into a new generation',async()=>{
+  const reset=await fixture({local:{projects:[project('before-reset')],categories:[]}});reset.remote.legacyGeneration=1;
+  await assert.rejects(reset.run(),/GENERATION_REVIEW_REQUIRED/);
+  const pending=await fixture();pending.memory.reconciliationRequired=true;await assert.rejects(pending.run(),/GENERATION_REVIEW_REQUIRED/);assert.equal(pending.calls,0);
+  const stored=await fixture();stored.rows.set('genesis-data-generation-v1:owner','1');await assert.rejects(stored.run(),/GENERATION_REVIEW_REQUIRED/);assert.equal(stored.calls,0);
+  const rollback=await fixture();rollback.memory.version=3;await assert.rejects(rollback.run(),/REMOTE_ROLLBACK/);
 });

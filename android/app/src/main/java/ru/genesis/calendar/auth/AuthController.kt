@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.room.withTransaction
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -212,7 +213,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
     }
     internal fun e2eeMigrationTransport(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
-        directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource): ru.genesis.calendar.security.E2eeMigrationTransport {
+        directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource): ru.genesis.calendar.security.E2eeSignedMigrationTransport {
         val generation = client.currentGeneration()
         sources.assertBinding(directory.ownerId,directory.scopeId,directory.kind)
         check(device.ownerId == uid && directory.ownerId == uid) { "E2EE_SCOPE_BINDING_MISMATCH" }
@@ -224,6 +225,24 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             current()
             withContext(Dispatchers.IO) { current(); client.e2ee(generation,path,body).also { current() } }.also { current() }
         }
+    }
+    internal fun e2eeWorkspaceSource(uid: String, directory: ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport: ru.genesis.calendar.security.E2eeSignedMigrationTransport,
+        review: (suspend (E2eeWorkspaceReview) -> E2eeWorkspaceDecision)? = null): E2eeNativeWorkspaceSource {
+        val generation=client.currentGeneration(); val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        check(directory.ownerId == uid && directory.kind == "personal") { "E2EE_SCOPE_BINDING_MISMATCH" }
+        fun current() { check(client.isCurrent(generation) && mutableState.value.user?.uid == uid
+            && !mutableState.value.requiresSignIn && app.workspaceScope == accountScope) { "E2EE_ACCOUNT_CHANGED" } }
+        val cipher=ru.genesis.calendar.data.LocalCipher()
+        return E2eeNativeWorkspaceSource(uid,directory.scopeId,captureRows={
+            withContext(Dispatchers.IO) { app.database.withTransaction {
+                current(); val dao=app.database.dao()
+                val docs=listOf("cloud-base","structure","habits","trackers").mapNotNull { dao.document(accountScope,it) }
+                val pending=dao.outbox(accountScope).filter { it.entityId in setOf("workspace-structure","habits","trackers") }
+                val epochs=NativeBackupEpochStore(app);current(); E2eeWorkspaceRows(docs,pending,epochs.accepted(accountScope),epochs.pending(accountScope))
+            } }
+        },decrypt={ row -> current(); cipher.decrypt(row.encrypted,"$accountScope/${row.kind}").also { current() } },
+            assertCurrent=::current,legacyWorkspace=transport::legacyWorkspace,review=review)
     }
     private val mutableTaskSync = MutableStateFlow(AccountTaskSyncState())
     val taskSync = mutableTaskSync.asStateFlow()

@@ -12,8 +12,8 @@ import type {MigrationSourceContext,MigrationContent} from './migration.ts';
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true}),MAX_BYTES=16*1024*1024;
 const json=(value:unknown)=>JSON.stringify(value);
 type ObjectValue=Record<string,unknown>;
-type Memory={ownerId:string;key:string;version:number;deviceId:string;base:unknown;baseMetadata:unknown;metadata:unknown;current:unknown;draftSource:string|null};
-type Snapshot={protocol:1;ownerId:string;scopeId:string;capturedAt:string;entries:{key:string;value:string|null}[];memory:Memory};
+type Memory={ownerId:string;key:string;version:number;generation:number;reconciliationRequired:boolean;deviceId:string;base:unknown;baseMetadata:unknown;metadata:unknown;current:unknown;draftSource:string|null};
+type Snapshot={protocol:2;ownerId:string;scopeId:string;capturedAt:string;entries:{key:string;value:string|null}[];memory:Memory};
 export type WorkspaceSourcePorts={
   storage:Pick<Storage,'getItem'|'key'|'length'>;
   /** Synchronous, read-only capture of the actual cloud and mounted editor state. */
@@ -108,12 +108,12 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
   readonly id='personal.workspace';#owner:string;#scope:string;#ports:WorkspaceSourcePorts;
   constructor(ownerId:string,scopeId:string,ports:WorkspaceSourcePorts){assertTechnical(ownerId);assertTechnical(scopeId);this.#owner=ownerId;this.#scope=scopeId;this.#ports=ports;}
   #keys(){return[`genesis-calendar-v2:${this.#owner}`,`genesis-workspace-device-key-v2:${this.#owner}`,`genesis-workspace-device-id-v1:${this.#owner}`,
-    `genesis-workspace-sync-state-v1:${this.#owner}`,`genesis-pending-mutations-v2:${this.#owner}`,'genesis-calendar-v1','genesis-pending-mutations-v2'];}
+    `genesis-workspace-sync-state-v1:${this.#owner}`,`genesis-pending-mutations-v2:${this.#owner}`,`genesis-data-generation-v1:${this.#owner}`,'genesis-calendar-v1','genesis-pending-mutations-v2'];}
   async captureLocal():Promise<Uint8Array>{
     this.#ports.assertCurrent();const storage=this.#ports.storage,keys=this.#keys(),prefix=`genesis-pending-mutations-v2:${this.#owner}:workspace:`;
     for(let i=0;i<storage.length;i++){const key=storage.key(i);if(key?.startsWith(prefix))keys.push(key);}
     const entries=[...new Set(keys)].sort().map(key=>({key,value:storage.getItem(key)}));
-    const snapshot:Snapshot={protocol:1,ownerId:this.#owner,scopeId:this.#scope,capturedAt:new Date().toISOString(),entries,memory:this.#ports.memory()};
+    const snapshot:Snapshot={protocol:2,ownerId:this.#owner,scopeId:this.#scope,capturedAt:new Date().toISOString(),entries,memory:this.#ports.memory()};
     if(snapshot.memory.ownerId!==this.#owner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     const bytes=encoder.encode(json(snapshot));this.#ports.assertCurrent();
     if(bytes.length>MAX_BYTES){bytes.fill(0);throw new Error('E2EE_SNAPSHOT_TOO_LARGE');}return bytes;
@@ -121,15 +121,17 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
   #decode(bytes:Uint8Array):Snapshot{
     if(bytes.length<1||bytes.length>MAX_BYTES)throw new Error('E2EE_WORKSPACE_SOURCE_INVALID');
     const value=parse(decoder.decode(bytes));exactKeys(value,['protocol','ownerId','scopeId','capturedAt','entries','memory']);timestamp(value.capturedAt);
-    if(value.protocol!==1||value.ownerId!==this.#owner||value.scopeId!==this.#scope||!Array.isArray(value.entries)||value.entries.length>10007)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    if(value.protocol!==2)throw new Error('E2EE_WORKSPACE_GENERATION_REVIEW_REQUIRED');
+    if(value.ownerId!==this.#owner||value.scopeId!==this.#scope||!Array.isArray(value.entries)||value.entries.length>10008)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     const keys=this.#keys(),seen=new Set<string>();for(const entry of value.entries){exactKeys(entry,['key','value']);
       if(typeof entry.key!=='string'||seen.has(entry.key)||!keys.includes(entry.key)&&!entry.key.startsWith(`genesis-pending-mutations-v2:${this.#owner}:workspace:`)
         ||entry.value!==null&&typeof entry.value!=='string')throw new Error('E2EE_WORKSPACE_SOURCE_INVALID');seen.add(entry.key);}
     if(keys.some(key=>!seen.has(key)))throw new Error('E2EE_WORKSPACE_SOURCE_INVALID');
-    exactKeys(value.memory,['ownerId','key','version','deviceId','base','baseMetadata','metadata','current','draftSource']);
+    exactKeys(value.memory,['ownerId','key','version','generation','reconciliationRequired','deviceId','base','baseMetadata','metadata','current','draftSource']);
     if(value.memory.ownerId!==this.#owner||typeof value.memory.key!=='string'||typeof value.memory.deviceId!=='string'
       ||value.memory.draftSource!==null&&typeof value.memory.draftSource!=='string')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-    integer(value.memory.version);return value as unknown as Snapshot;
+    integer(value.memory.version);integer(value.memory.generation);
+    if(typeof value.memory.reconciliationRequired!=='boolean')throw new Error('E2EE_WORKSPACE_SOURCE_INVALID');return value as unknown as Snapshot;
   }
   async #merge(left:Variant,right:Variant,stage:string):Promise<Variant>{
     const input={left:left.document,right:right.document,leftFallback:left.clock,rightFallback:right.clock,base:left.base,reviewConflicts:true};
@@ -146,6 +148,8 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
   async reconcile(local:Uint8Array,previous:readonly Uint8Array[],context?:MigrationSourceContext):Promise<{complete:boolean;content:MigrationContent[]}>{
     this.#ports.assertCurrent();if(!context||context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     const snapshot=this.#decode(local),values=new Map(snapshot.entries.map(row=>[row.key,row.value]));
+    const storedGeneration=values.get(`genesis-data-generation-v1:${this.#owner}`);
+    if(snapshot.memory.reconciliationRequired||storedGeneration!==null&&storedGeneration!==String(snapshot.memory.generation))throw new Error('E2EE_WORKSPACE_GENERATION_REVIEW_REQUIRED');
     // Changed attempts require a dedicated history decision. Never union old
     // unsent records into the latest state and thereby resurrect deleted rows.
     for(const bytes of previous){const old=this.#decode(bytes);
@@ -156,6 +160,7 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
     if(remote.protocol!==1||remote.ownerId!==this.#owner||remote.scopeId!==this.#scope||remote.migrationId!==context.migrationId
       ||remote.fence!==context.fence||remote.sourceHash!==context.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     integer(remote.legacyGeneration);integer(remote.directoryRevision,1);decodeE2eeBytes(remote.checkpointHash,32);
+    if(remote.legacyGeneration!==snapshot.memory.generation||context.generation<=remote.legacyGeneration)throw new Error('E2EE_WORKSPACE_GENERATION_REVIEW_REQUIRED');
     exactKeys(remote.workspace,['keyMode','key','envelope']);
     if(!['account','client','empty'].includes(String(remote.workspace.keyMode))||remote.workspace.key!==null&&typeof remote.workspace.key!=='string')throw new Error('E2EE_WORKSPACE_SOURCE_INVALID');
     const rawKeys:string[]=[];if(snapshot.memory.key)rawKeys.push(snapshot.memory.key);
@@ -179,9 +184,10 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
       };
       const relational=this.#relational(remote.projects,remote.categories);
       let combined:Variant=remote.workspace.envelope===null?{document:relational.document,clock:{...clock,version:1,deviceId:'legacy-relational'},base:null}:await open(remote.workspace.envelope);
-      let base:SyncableWorkspaceDocument|null=null,localMetadata:WorkspaceSyncMetadata|undefined,baseMetadata:WorkspaceSyncMetadata|undefined;
+      let base:SyncableWorkspaceDocument|null=null,localMetadata:WorkspaceSyncMetadata|undefined,baseMetadata:WorkspaceSyncMetadata|undefined,cachedVersion=snapshot.memory.version;
       const cacheRaw=values.get(`genesis-workspace-sync-state-v1:${this.#owner}`);
       if(cacheRaw){const cache=parse(cacheRaw);exactKeys(cache,['version','base','baseMetadata','metadata']);integer(cache.version);
+        cachedVersion=Math.max(cachedVersion,cache.version);
         if(cache.base!==null)base=document(cache.base);if(cache.metadata!==null){metadata(cache.metadata);localMetadata=cache.metadata;}
         if(cache.baseMetadata!==null){metadata(cache.baseMetadata);baseMetadata=cache.baseMetadata;}}
       if(snapshot.memory.base!==null){const memoryBase=document(snapshot.memory.base);
@@ -196,6 +202,7 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
         if(localVariants.length&&json(document(localVariants[0],true))!==json(document(snapshot.memory.current,true)))throw new Error('E2EE_WORKSPACE_LOCAL_BASE_REVIEW_REQUIRED');
         if(!localVariants.length)localVariants.push(snapshot.memory.current);
       }
+      if(remote.workspace.envelope===null&&cachedVersion>0||remote.workspace.envelope!==null&&Number((remote.workspace.envelope as ObjectValue).version)<cachedVersion)throw new Error('E2EE_WORKSPACE_REMOTE_ROLLBACK');
       for(const [index,current] of localVariants.entries()){
         const value=document(current,true),prepared=prepareWorkspaceForSync({current:value,base,metadata:localMetadata??value.syncMetadata,baseMetadata:baseMetadata??base?.syncMetadata,clock});
         combined=await this.#merge({document:prepared.document,clock,base},combined,`local:${index}`);

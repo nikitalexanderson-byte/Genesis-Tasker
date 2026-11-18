@@ -215,9 +215,31 @@ prior attempts, unscoped legacy attribution, different mounted/persisted bases
 and legacy tracker conversion still require dedicated review before completeness.
 They are retained and stop migration, rather than becoming empty data. The first
 adapter is not yet wired into product enrollment/bootstrap/editor routing; durable
-multitab fences, every remaining adapter and the native Room adapter remain
-required before pilot. The native changes here supply lease context/transport,
-not a completed native workspace adapter.
+multitab fences and every remaining adapter remain required before pilot.
+
+`E2eeNativeWorkspaceSource` now captures the real Room `cloud-base`, `structure`,
+`habits` and `trackers` rows and their exact workspace outbox metadata. The
+AuthController factory reads those rows under one Room transaction and uses the
+existing LocalCipher without key creation. The protected snapshot contains both
+original ciphertext and portable decrypted JSON; neither source nor queue is
+acknowledged/cleared. Strict fragment validation precedes the existing conservative
+WorkspacePatch merger. Missing queues/revisions, held queues, changed prior
+attempts and a remote tombstone unknown to the local base stop reconciliation.
+An explicit conflict decision is bound to the exact preview fingerprint. Native
+achievement identities/clocks become canonical web IDs; unrelated web-only fields
+survive. Event codec roundtrips must retain the original fields, and parser errors
+are reduced to fixed codes without private values/causes. Actual Room/Keystore
+instrumentation, process-death and low-memory acceptance are still pending.
+
+Both adapters also capture accepted/pending restore generations and reject an
+unreconciled reset, source generation mismatch or remote workspace rollback.
+Web snapshot format2 adds explicit generation provenance; an older snapshot
+without it requires review, not an assumed generation0. The server allocates a
+shadow generation above the latest personal legacy data_generation even if a
+restore happened after bootstrap/between attempts, and never reuses an abandoned
+shadow generation. Reads/puts/verification require a lease whose target generation
+still matches the scope and exceeds the legacy generation. Existing shadow data
+is retained and same-attempt changed-source restarts are rejected.
 
 ## Trust limits and remaining integration
 
