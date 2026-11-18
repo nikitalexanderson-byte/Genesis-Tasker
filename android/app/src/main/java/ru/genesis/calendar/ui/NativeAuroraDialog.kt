@@ -68,21 +68,22 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
     private val scope: CoroutineScope, private val deliver: (String,JSONObject)->Unit,
     private val onTask: (AuroraTaskDraft)->Unit, private val onCheckout: (String)->Unit,
     private val onSpeak: (String)->Unit, private val onClose: ()->Unit,
-    private val onContentSize: (Int,Int)->Unit, private val onLoadFailed: ()->Unit) {
+    private val onContentSize: (Int,Int,Boolean)->Unit, private val onLoadFailed: ()->Unit) {
     @Volatile private var active=true
     private val operationMonitor=Any()
     private val operations=ConcurrentHashMap<String,NativeLegacyOperationPermit>()
     private val startedOperations=mutableSetOf<String>()
     private val endedOperations=mutableSetOf<String>()
-    @JavascriptInterface fun contentSize(height: Int, width: Int) {
+    @JavascriptInterface fun contentSize(height: Int, width: Int, fillViewport: Boolean) {
         if (!active || height !in 1..100000 || width !in 1..8192) return
-        scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width) }
+        scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width, fillViewport) }
     }
     private fun check(){check(active){"AURORA_VIEW_CLOSED"};gateway.check()}
     private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
     private fun endOperation(id:String)=synchronized(operationMonitor) { endedOperations.add(id);operations.remove(id) }
     @JavascriptInterface fun checkSession(operationId:String){check();if(operationId.isNotEmpty())operation(operationId).check()}
     @JavascriptInterface fun getItem(key:String,operationId:String):String?=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.getItem(key).also{check()} }}
+    @JavascriptInterface fun keys(operationId:String):String=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { org.json.JSONArray(store.keys()).toString().also{check()} }}
     @JavascriptInterface fun setItem(key:String,value:String,operationId:String)=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.setItem(key,value);check() }}
     @JavascriptInterface fun removeItem(key:String,operationId:String)=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.removeItem(key);check() }}
     @JavascriptInterface fun postMessage(raw:String){
@@ -188,6 +189,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
     var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(runtimeProblem!=null)}
     val density = LocalDensity.current.density
     var contentHeight by remember { mutableStateOf(160.dp) }
+    var fillsViewport by remember { mutableStateOf(true) }
     var headerHeight by remember { mutableStateOf(80.dp) }
     val speech=remember(context){TextToSpeech(context){}}
     DisposableEffect(speech){onDispose{speech.stop();speech.shutdown()}}
@@ -207,6 +209,10 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
         Surface(Modifier.fillMaxWidth(),color=scheme.surface){
           BoxWithConstraints(Modifier.fillMaxWidth()) {
             val viewportHeight = (maxHeight - headerHeight - 8.dp).coerceAtLeast(48.dp)
+            // Gno is a full-height editor; the retained archive fits its content
+            // until it needs to scroll. Feeding Gno's current measured height
+            // back into its own viewport would leave it stuck at the old size.
+            val webHeight = if (fillsViewport) viewportHeight else contentHeight.coerceIn(48.dp, viewportHeight)
             Column(Modifier.fillMaxWidth().testTag("aurora-native-dialog")){
                 Box(Modifier.fillMaxWidth().onSizeChanged { headerHeight = (it.height / density).dp }
                     .padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -223,7 +229,10 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                     val bridge=AuroraJavascriptBridge(store,gateway,scope,{id,response->
                         if(url==AuroraWebOrigin.ENTRY)evaluateJavascript("window.GenesisAuroraRuntime.resolve('$id','${encoded(response)}')",null)
                     },onTask,{url->ctx.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))},{text->speech.language=Locale.forLanguageTag("ru-RU");speech.speak(text,TextToSpeech.QUEUE_FLUSH,null,"aurora")},onClose,
-                        { height, width -> if (this.width > 0) contentHeight = (height.toFloat() * this.width / width / density).dp },
+                        { height, width, fill -> if (this.width > 0) {
+                            contentHeight = (height.toFloat() * this.width / width / density).dp
+                            fillsViewport = fill
+                        } },
                         {failed=true;ready=false})
                     tag=bridge;addJavascriptInterface(bridge,"GenesisAuroraBridge")
                     webViewClient=object:WebViewClient(){
@@ -247,7 +256,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                     }
                     loadUrl(AuroraWebOrigin.ENTRY)
                 }},update={view->if(ready)view.evaluateJavascript("window.GenesisAuroraRuntime.theme('${encoded(theme)}')",null)},
-                    modifier=Modifier.fillMaxWidth().height(viewportHeight).testTag("aurora-native-webview"),onRelease={view->
+                    modifier=Modifier.fillMaxWidth().height(webHeight).testTag("aurora-native-webview"),onRelease={view->
                         (view.tag as? AuroraJavascriptBridge)?.stop();view.removeJavascriptInterface("GenesisAuroraBridge");view.stopLoading();view.destroy();web=null
                     })
                 if(!ready&&!failed)LinearProgressIndicator(Modifier.fillMaxWidth())

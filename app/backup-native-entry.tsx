@@ -6,6 +6,7 @@ import {BACKUP_MAX_FILE,type BackupPayload} from './backup-format';
 import {metricsFor,type GenesisUser} from './cloud-sync';
 import {habitLifecycleState} from './habit-lifecycle';
 import type {BackupDocumentAccess} from './backup-restore';
+import {materializeBackupJournalChoices} from './backup-private-journals';
 import './globals.css';import './experimental-theme.css';import './dark-theme.css';import './dark-palettes.css';import './universal-ui.css';
 import './backup-native.css';
 type Boot={ownerId:string;language:string;dark:boolean;palette:string;colors:Record<string,string>};
@@ -41,7 +42,7 @@ window.GenesisBackupRuntime={
    authorizeBackup:()=>backupRequest('/authorize',{noticeVersion:BACKUP_NOTICE_VERSION}),
    freezeBackupDevice:async owner=>({owner,at:new Date().toISOString(),sources:{},sync:{},storage:{},nativeSnapshot:await rpc<BackupPayload>('capture')}) as unknown as NativeFrozen,
    retainBackupSafety:async frozen=>{await rpc('retain',{snapshot:(frozen as NativeFrozen).nativeSnapshot});return {persistent:true};},
-   materializeDeviceBackup:frozen=>rpc<BackupPayload>('materialize',{snapshot:(frozen as NativeFrozen).nativeSnapshot}),
+   materializeDeviceBackup:async frozen=>materializeBackupJournalChoices(await rpc<BackupPayload>('materialize',{snapshot:(frozen as NativeFrozen).nativeSnapshot})),
    materializeServerBackup:(owner,evidence)=>materializeServerBackup(owner,evidence,{access,openWorkspace:(_owner,envelope)=>access.open(envelope,'workspace')}),
    prepareBackupRestore:(payload,owner,selected,mode)=>prepareBackupRestore(payload,owner,selected,mode,{access,current:()=>rpc('current'),
     sealWorkspace:async(_owner,document,version)=>({...await access.seal(document,'workspace'),expectedVersion:version,version:version+1,writerProtocol:9,minimumWriterProtocol:9,

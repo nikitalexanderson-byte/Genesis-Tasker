@@ -78,7 +78,14 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
  },[host,install,report]);
  const close=useCallback(async()=>{if(await persist())host.close();},[host,persist]);
  const dialog=useDialogAccessibility<HTMLElement>(()=>{void close();},!legacy);
- function load(){setError(false);setStatus('loading');setReload(value=>value+1);}
+ const load=useCallback(()=>{setError(false);setStatus('loading');setReload(value=>value+1);},[]);
+ const legacyHost=useMemo<AuroraHost>(()=>({...host,
+  // Returning from the retained editor must not expose the parent's old
+  // pre-archive document while a refresh is in flight. Every child receipt is
+  // already durable and becomes the parent's current save base before close.
+  save:async input=>{const saved=await host.save(input);install(saved);return saved;},
+  close:()=>{setLegacy(false);load();},
+ }),[host,install,load]);
  useEffect(()=>{let live=true;mounted.current=true;void(async()=>{
   try{
    const [loaded,pack]=await Promise.all([host.load(),loadAuroraLocale(language)]);await validateDocument(loaded,host.ownerId);
@@ -129,7 +136,7 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
    const current=docRef.current?.sessions.find(s=>s.id===session.id);if(current&&current.gno&&draftBinding(current.gno)===draftBinding(d))change({...current,curatorId:curator,organon,organonPreferences:preferences,sphragisLetter:chooseSphragis(organon.entry.canonicalForm,preferences.goalTags,'visual').letter,goalText:d.goal});
   }catch{setWordError(true);}finally{worker.terminate();setBusy(false);}
  }
- if(legacy)return <AuroraWizard host={{...host,close:()=>{setLegacy(false);void load();}}} primary={primary} temporal={temporal}/>;
+ if(legacy)return <AuroraWizard host={legacyHost} primary={primary} temporal={temporal}/>;
  const card=session?.primary.cards.find(row=>row.sourcePositionId===inspected),insight=card?cardInsight(card,language):null,letter=card?getStoicheionLetters(language).find(row=>row.id===card.cardId):null;
  const source=d&&SOURCE_CIRCLE_REFERENCE.find(row=>row.id===d.focus),support=d?.support?SOURCE_CIRCLE_REFERENCE.find(row=>row.id===d.support):null;
 

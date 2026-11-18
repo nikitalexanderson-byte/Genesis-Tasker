@@ -1,6 +1,8 @@
 import { BACKUP_MODULES, backupJson, type BackupPayload, type BackupSection } from './backup-format';
 import { captureBackupSources } from './backup-sources';
 import { captureBackupSyncState, personalDocumentAccess, backupRequest, openBackupWorkspace } from './cloud-sync';
+import {EncryptedPendingJournal} from './encrypted-pending-journal';
+import {materializeBackupJournalChoices,type BackupJournalCopy,type BackupJournalData} from './backup-private-journals';
 export const BACKUP_NOTICE_VERSION = 'backup-3.2.2-v1';
 const memorySafety = new Map<string, FrozenDevice>();
 if (typeof window !== 'undefined') window.addEventListener('genesis-local-session-ended',()=>memorySafety.clear());
@@ -46,16 +48,23 @@ export async function materializeDeviceBackup(frozen: FrozenDevice): Promise<Bac
     target.data={ records, deletions:frozen.storage[`${prefix}deleted`] ?? [], frozenStorage:Object.fromEntries(Object.entries(frozen.storage).filter(([key])=>key.startsWith(prefix))) };
   }
   for (const [id,prefix,scope] of [['stoicheion',`genesis-stoicheion-workspace-v1:${frozen.owner}:`,'stoicheion-workspace:v1'],['aurora',`genesis-aurora-workspace-v1:${frozen.owner}:`,'aurora-workspace:v1']] as const) {
-    const target=section(id);const pending=frozen.storage[prefix+'pending'] as {envelope?:Envelope}|undefined;
-    const envelope=pending?.envelope ?? frozen.storage[prefix+'cache'] as Envelope|undefined;
-    if(envelope){ target.data={document:await access.open(envelope,scope),frozenStorage:Object.fromEntries(Object.entries(frozen.storage).filter(([key])=>key.startsWith(prefix)))};
-      target.count=1;target.pending=pending?1:0;target.revision=envelope.expectedRevision??envelope.revision??0;target.completeness='partial'; }
+    const target=section(id),rows=new Map(Object.entries(frozen.storage).filter(([key])=>key.startsWith(prefix)).map(([key,value])=>[key,JSON.stringify(value)]));
+    const branches=new EncryptedPendingJournal(prefix+'pending').read({get length(){return rows.size;},key:i=>[...rows.keys()][i]??null,getItem:key=>rows.get(key)??null,setItem:()=>{throw new Error('BACKUP_LOCAL_CACHE_INVALID');},removeItem:()=>{throw new Error('BACKUP_LOCAL_CACHE_INVALID');}});
+    const copies:BackupJournalCopy[]=[];
+    for(const branch of branches)for(const entry of branch.entries){const pending=JSON.parse(entry.raw) as {envelope:Envelope;base:Envelope};
+      copies.push({key:entry.key,expectedRevision:pending.envelope.expectedRevision!,document:await access.open(pending.envelope,scope),base:await access.open(pending.base,id==='aurora'?'aurora-workspace-base:v1':'stoicheion-pending-base:v1')});}
+    const cache=frozen.storage[prefix+'cache'] as Envelope|undefined;
+    if(cache||copies.length){
+      const data:BackupJournalData={journalVersion:1,cached:cache?{document:await access.open(cache,scope),revision:cache.revision!}:null,pendingCopies:copies,
+        frozenStorage:Object.fromEntries(Object.entries(frozen.storage).filter(([key])=>key.startsWith(prefix)))};
+      target.data=data;target.count=1;target.pending=copies.length;target.revision=cache?.revision??null;target.completeness='partial';
+    }
   }
   const physis=section('physis');
   if(frozen.sources.physis){physis.data=frozen.sources.physis;physis.completeness='partial';const value=frozen.sources.physis as {records?:unknown[];pending?:unknown[]};physis.count=value.records?.length??0;physis.pending=value.pending?.length??0;}
   physis.notices=['PHYSIS_UNLOCK_REQUIRED','PHYSIS_RESTORE_SEPARATE'];
   section('shared-drafts').notices=['SHARED_EXPORT_SEPARATE','SHARED_INDEXEDDB_DRAFTS_NOT_INCLUDED'];
-  return {schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:frozen.owner,createdAt:frozen.at,client:'web',sections,billingEvidence:null};
+  return materializeBackupJournalChoices({schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:frozen.owner,createdAt:frozen.at,client:'web',sections,billingEvidence:null});
 }
 /** Encrypted internal safety copy is retained even when the entitlement service is unavailable. */
 export async function retainBackupSafety(frozen: FrozenDevice, storage: Storage = localStorage) {

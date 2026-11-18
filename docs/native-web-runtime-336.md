@@ -35,3 +35,11 @@ Evidence and limitations are recorded in `e2ee-336-operation-fences.md` and the
 3.3.6 release worklog. The API26 old-provider fallback and a task-owned API35
 image with Chromium124 serve different acceptance purposes. Neither is a
 personal-device update or proof that every OEM WebView has been checked.
+
+The next increment also uses a task-owned API34 image with Chromium113, following
+repeat host-QEMU crashes of the API35 offline scenario. The complete Aurora
+empty/expanded/save/close/offline-reopen UI passed in both schemes at font1.3 on
+that stable image. It exposed and verified a fix for stale parent state when
+returning from the archive and immediately closing Gno. Earlier API35 host
+crashes remain recorded; provider compatibility is still distinct from current
+security patch status. Full evidence: `e2ee-336-operation-fences.md`.

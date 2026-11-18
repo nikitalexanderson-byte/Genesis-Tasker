@@ -36,6 +36,8 @@ interface GenesisDao {
     suspend fun cancelLegacyScopeFence(scope: String, token: String): Int
     @Query("SELECT * FROM documents WHERE scope=:scope")
     suspend fun backupDocuments(scope: String): List<DocumentRecord>
+    @Query("SELECT kind FROM documents WHERE scope=:scope ORDER BY kind")
+    suspend fun documentKinds(scope: String): List<String>
     @Query("DELETE FROM outbox WHERE scope=:scope")
     suspend fun clearBackupHeldOutbox(scope: String)
     @Query("SELECT * FROM tasks WHERE scope=:scope")

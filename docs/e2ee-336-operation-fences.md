@@ -195,13 +195,110 @@ writer code. Denying legacy writes is not a replacement for routing migration-ti
 edits to the new protected edit queue. Diary source reconciliation/output adapters
 and product bootstrap/unlock/recovery routing remain required.
 
-Aurora/restoration still use their existing single pending key per owner. This
-increment prevents a late acknowledgment from deleting another attempt; a full
-per-writer/multitab draft inventory and source reconciliation are still required
-before activation. It does not claim to preserve every concurrent legacy edit
-solely by adding an operation permit.
+The single-slot Aurora/restoration limit of the earlier increment is superseded
+by the append-only writer journals below. Complete migration reconciliation and
+the remaining product lifecycle/source adapters are still required.
 
 All coverage, files, shared ACL/rotations, archives/Drive, direct upgrades, restore
 drills, the 48 acceptance scenarios and independent crypto review remain release
 conditions. No production migration, deletion/retirement or global E2EE claim is
 authorized by these tests.
+
+## Append-only editor journals and portable copies
+
+The actual Aurora and independent restoration repositories now use
+`encrypted-pending-journal.ts`. Every repository instance has a random writer ID;
+each save stages a new immutable ciphertext snapshot before HTTP. A writer's
+newest full-document snapshot is its intentional successor, while every earlier
+unresolved request remains stored. Different writers and the old single-slot
+`pending` key form separate branches. Reload enumerates them even after all
+original editors close; independent branches merge and conflicting branches stay
+available for an explicit choice. No mutable shared journal index is required.
+
+Acknowledgment names the exact raw entries captured before that successful
+latest write. It cannot remove a changed entry, a later save or another writer.
+Automatic reconciliation/recovery uses a fresh internal writer so it cannot
+accidentally supersede this still-open editor's unprocessed branch. A 1024-entry
+limit blocks additional staging without pruning retained work. Storage errors
+prevent unjournaled HTTP. Invalid/lower receipts do not roll the current
+repository back to an earlier acknowledged revision. Existing legacy cache
+slots and uncontrolled old writers remain separate lifecycle concerns; this is
+not a claim that all browser storage now uses the E2EE vault.
+
+The native bridge exposes only owner-bound enumerated Aurora keys under the
+same operation capability. Native key loading also checks permanent store
+closure: a cold HTTP response cannot repopulate a closed editor's memory key or
+reopen the store. Temporary key bytes are wiped on failed publication/cache IO.
+
+Web and native device-backup materializers include **every** pending snapshot,
+its portable decrypted document/base and its exact source identity inside the
+encrypted archive, including older requests of a writer. Account keys are not
+part of the Aurora backup section. The restore planner recomputes branch heads
+and rejects different writers' differing documents with the existing explicit
+choice requirement; it does not trust an arbitrary `document` property. A
+conflicting backup is still exportable and all copies remain preserved. A UI
+for choosing among these portable branches is still required for full archive
+recovery acceptance; no first/last-writer choice is silently applied.
+
+Evidence in `output/release-3.3.6/runtime/`:
+
+- `frontend-journal-full-final.log`:1431/1431 JS PASS,0 skipped. New cases cover
+  closed offline tabs, same-writer immutable history, conflicts/copy recovery,
+  a still-open editor's unprocessed branch, full-journal refusal and portable
+  backup preservation/restore choice. `journal-open-editor-reconcile.log` and
+  `journal-backup-adversarial-01.log` retain focused evidence.
+- `browser-journal-01.log`:14/14 real two-tab Chromium checks PASS, actual
+  repositories/WebCrypto/Storage/Web Locks with loopback synthetic HTTP.
+  `browser-editor-journal-regression.log`:28/28 previous editor fence checks PASS.
+- `native-journal-build-01.log`:QA APK/test APK and JVM build PASS;1131 cases,
+  1123 PASS,8 explicit integration skips,0 failures/errors across206 suites.
+  `native-journal-assets-final.log` repackages the final shared JS assets.
+- `native-journal-api35-bridge.log`:6/6 actual Room/bridge/lifecycle/portable
+  backup instrumentation PASS. No release package, personal device or cloud
+  account is used. QA metadata remains3.3.5/149.
+- `native-journal-api26-bridge-final.log`:the same6/6 bridge/lifecycle/portable
+  backup cases also PASS on the task-owned API26 image with the final QA APK.
+- `editor-journal-typecheck-final.log`, `editor-journal-lint-01.log`,
+  `editor-journal-browser-lint.log`, `web-journal-build-final.log`:typecheck,
+  changed-code lint, web/locale/precache packaging PASS. No authored copy or
+  catalogue text changed in this increment.
+
+The measured archive height now controls the native WebView height, capped by
+the available viewport. Gno explicitly retains its full-height viewport rather
+than feeding its current measured height back into itself. The API35 light,
+font1.3 empty/expanded assertion passed unchanged. That run's later offline UI
+case was interrupted by another host QEMU access violation; the failed event is
+saved in `host-qemu-journal-failure.json`. A task-owned API34/Chromium113 image
+boots stably and reached a real next-step UI timeout, retained in
+`native-journal-api34-offline-light.log`. Neither the host crash nor that timeout
+is counted as a passing full UI scenario. Further evidence follows after repair.
+
+Final modern-provider acceptance supersedes that open UI item. The initial
+API34 next-step timeout came from input dispatched before the target was enabled;
+the driver now waits for its actual enabled/non-inert state, retains real
+UiDevice touches and all original progress/offline/viewport assertions. The next
+stable run exposed a product bug: immediately closing Gno after leaving the
+archive saved its old pre-archive document during reload. A memoized legacy host
+now installs accepted child saves into the parent's current document before
+returning; immutable/deletion checks and durable queues remain enforced.
+
+`native-journal-api34-ui-light-final.log`:3/3 actual UI cases PASS, font1.3.
+`native-journal-api34-dark-final.log`:9/9 UI + bridge cases PASS, font1.3.
+The isolated API34 image uses Chromium113. Tests cover empty content sizing,
+bounded active content/footer, original draw, two real taps, save, return/close
+and offline reopen, plus actual Room/capability/portable backup checks. They do
+not assert that Chromium113 is a currently patched provider. Ten complete-window
+screenshots are in `aurora-journal-screens/`; the original oversized window is
+`aurora-before-height.png`. Its interrupted JSON is empty, not a measurement.
+`aurora-after-height.json` reports400×190 CSS pixels with an exactly190px empty
+document. Light empty and dark offline-restored screenshots were inspected.
+Every OEM/tablet/14-language combination remains untested; this repair changes
+no authored copy, palette or catalogue. `native-journal-close-assets.log` packages
+the final shared UI; `journal-close-lint-final.log` and
+`journal-close-typecheck-final.log` PASS. Final post-repair checks are
+`frontend-journal-close-full-final.log`1431/1431 PASS and
+`web-journal-close-build-final.log` PASS. Earlier failed logs are retained.
+
+Latest owner authorization permits the complete3.3.6 web/API and signed website
+APK deployment **after** full acceptance. It does not turn these intermediate
+checks into full E2EE acceptance or waive independent cryptographic review.

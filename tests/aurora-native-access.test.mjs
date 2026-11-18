@@ -8,7 +8,8 @@ function nativeFixture(){
  const check=token=>{if(token&&!live.has(token))throw new Error('E2EE_INVALID_LEGACY_OPERATION');};
  const bridge={checkSession:check,getItem:(key,token)=>{check(token);calls.push(['get',token]);return disk.get(key)??null;},
   setItem:(key,value,token)=>{check(token);calls.push(['set',token]);disk.set(key,value);},
-  removeItem:(key,token)=>{check(token);calls.push(['remove',token]);disk.delete(key);}};
+  removeItem:(key,token)=>{check(token);calls.push(['remove',token]);disk.delete(key);},
+  keys:token=>{check(token);calls.push(['keys',token]);return JSON.stringify([...disk.keys()]);}};
  let failBegin=false,foreignReceipt=false;
  const rpc=async(method,payload)=>{
   calls.push([method,payload.operationId]);
@@ -22,11 +23,13 @@ test('native operation binds storage and every private RPC to one exact token, t
  const f=nativeFixture();let old;
  await f.access.withLegacyOperation(async access=>{
   old=access;access.storage.setItem('pending','ciphertext');assert.equal(access.storage.getItem('pending'),'ciphertext');
+  assert.equal(access.storage.length,1);assert.equal(access.storage.key(0),'pending');
   await access.seal({},'aurora-workspace:v1');await access.request('/aurora-workspace');await access.open({iv:'iv',ciphertext:'ct'},'aurora-workspace:v1');
-  await access.withLegacyOperation(async nested=>{nested.check();nested.storage.removeItem('pending');});
+  await access.withLegacyOperation(async nested=>{nested.check();nested.storage.removeItem('pending');assert.equal(nested.storage.length,0);});
  });
  assert.equal(f.live.size,0);assert.equal(new Set(f.calls.map(row=>row[1])).size,1);assert.equal(f.calls.filter(row=>row[0]==='operationBegin').length,1);
  assert.throws(()=>old.check(),/E2EE_INVALID_LEGACY_OPERATION/);
+ assert.throws(()=>old.storage.length,/E2EE_INVALID_LEGACY_OPERATION/);
  await f.access.withLegacyOperation(async access=>{access.check();});
  assert.equal(new Set(f.calls.map(row=>row[1])).size,2);
 });

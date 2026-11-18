@@ -33,7 +33,7 @@ const server=http.createServer((request,response)=>{
   }
   if(path==='/editor-controls/release'&&request.method==='GET') {
     const kind=new URL(request.url,'http://localhost').searchParams.get('kind');editorHeld.delete(kind);
-    editorReplies.get(kind)?.();editorReplies.delete(kind);response.setHeader('Content-Type','application/json');response.end('{}');return;
+    editorReplies.get(kind)?.forEach(finish=>finish());editorReplies.delete(kind);response.setHeader('Content-Type','application/json');response.end('{}');return;
   }
   const editorRoute=path.match(/^\/api\/(mindmaps(?:\/[a-zA-Z0-9_-]+)?|shared\/spaces\/synthetic-space\/mindmaps(?:\/[a-zA-Z0-9_-]+)?|aurora-workspace|stoicheion-workspace)$/);
   if(editorRoute&&['GET','PUT'].includes(request.method)) {
@@ -45,11 +45,13 @@ const server=http.createServer((request,response)=>{
     let body='',size=0;request.on('data',chunk=>{size+=chunk.length;if(size>8*1024*1024){request.destroy();return;}body+=chunk;});
     request.on('end',()=>{
       let value;try{value=JSON.parse(body);}catch{response.writeHead(400).end('{}');return;}
-      if(value.expectedRevision!==(old?.revision??0)){response.writeHead(409).end(JSON.stringify({error:'SYNTHETIC_REVISION_CONFLICT'}));return;}
+      const current=editorRows.get(key);
+      if(current&&current.iv===value.iv&&current.ciphertext===value.ciphertext&&current.expectedRevision===value.expectedRevision){response.end(JSON.stringify({revision:current.revision}));return;}
+      if(value.expectedRevision!==(current?.revision??0)){response.writeHead(409).end(JSON.stringify({error:kind==='aurora'?'AURORA_REVISION_CONFLICT':kind==='restoration'?'RESTORATION_REVISION_CONFLICT':'SYNTHETIC_REVISION_CONFLICT'}));return;}
       const revision=value.expectedRevision+1;editorWrites++;
       editorRows.set(key,{...value,id:path.split('/').at(-1),revision,updatedAt:'2026-11-18T00:00:00Z'});
       const finish=()=>response.end(JSON.stringify({revision}));
-      if(editorHeld.has(kind))editorReplies.set(kind,finish);else finish();
+      if(editorHeld.has(kind))editorReplies.set(kind,[...(editorReplies.get(kind)??[]),finish]);else finish();
     });return;
   }
   if(path==='/api/account/preferences'&&request.method==='PUT') {

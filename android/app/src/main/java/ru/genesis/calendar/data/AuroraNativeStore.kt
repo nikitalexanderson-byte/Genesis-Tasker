@@ -25,32 +25,41 @@ internal class AuroraNativeStore(private val app: GenesisApplication, private va
     private val cipher = LocalCipher()
     private val lock = Mutex()
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
+    private val memoryMonitor = Any()
+    @Volatile private var closed = false
     private var memoryKey: ByteArray? = null
-    private fun check() { mutation.check();gateway.check(); check(app.workspaceScope == scope) { "AURORA_ACCOUNT_CHANGED" } }
+    private fun check() { check(!closed) { "AURORA_VIEW_CLOSED" };mutation.check();gateway.check(); check(app.workspaceScope == scope) { "AURORA_ACCOUNT_CHANGED" } }
     private fun aad(kind: String) = "$scope/aurora/$owner/$kind"
     suspend fun beginLegacyOperation(): NativeLegacyOperationPermit =
         NativeLegacyOperationPermit.acquire(app.database,scope,::check)
     private suspend fun workspaceKey(): ByteArray = NativeLegacyOperationPermit.run(app.database,scope,::check) { lock.withLock {
-        check(); memoryKey?.let { return@withLock it.copyOf() }
+        check(); synchronized(memoryMonitor) { check(); memoryKey?.let { return@withLock it.copyOf() } }
         val cached = app.database.dao().document(scope, "aurora-account-key")
         val key = try {
             val response = gateway.workspace().getJSONObject("workspace"); check()
             require(response.getString("keyMode") == "account") { "AURORA_WORKSPACE_UNLOCK_REQUIRED" }
             WorkspaceCipher.decodeKey(response.getString("key")).also { bytes ->
-                val wrapped = cipher.encrypt(Base64.getEncoder().encodeToString(bytes), aad("account-key"))
-                app.database.withTransaction { check(); app.database.dao().putDocument(DocumentRecord(scope, "aurora-account-key", wrapped, 1)); check() }
+                try {
+                    val wrapped = cipher.encrypt(Base64.getEncoder().encodeToString(bytes), aad("account-key"))
+                    app.database.withTransaction { check(); app.database.dao().putDocument(DocumentRecord(scope, "aurora-account-key", wrapped, 1)); check() }
+                } catch (error: Throwable) { bytes.fill(0);throw error }
             }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: AuthFailure) {
             if (cached == null || error.kind !in setOf(AuthFailure.Kind.NETWORK, AuthFailure.Kind.SERVER, AuthFailure.Kind.NOT_DEPLOYED)) throw error
             check(); WorkspaceCipher.decodeKey(cipher.decrypt(cached.encrypted, aad("account-key")))
         }
-        check(); memoryKey = key.copyOf(); key
+        try { synchronized(memoryMonitor) { check(); memoryKey = key.copyOf() };key }
+        catch (error: Throwable) { key.fill(0);throw error }
     } }
     suspend fun getItem(key: String): String? {
         check(); val kind = AuroraProtocol.cacheKind(owner, key)
         val row = app.database.dao().document(scope, kind) ?: return null
         return cipher.decrypt(row.encrypted, aad(kind)).also { check() }
+    }
+    suspend fun keys():List<String> {
+        check();val keys=app.database.dao().documentKinds(scope).mapNotNull { AuroraProtocol.cacheKey(owner,it) }
+        require(keys.size<=1025) { "E2EE_JOURNAL_LIMIT" };check();return keys
     }
     suspend fun setItem(key: String, value: String) {
         check(); require(value.length <= 8_100_000) { "AURORA_CACHE_TOO_LARGE" }
@@ -82,5 +91,5 @@ internal class AuroraNativeStore(private val app: GenesisApplication, private va
     suspend fun billing(method: String, path: String, body: JSONObject?): JSONObject {
         check(); require(AuroraProtocol.allowedBilling(method, path)); return gateway.billing(method, path, body).also { check() }
     }
-    override fun close() { memoryKey?.fill(0); memoryKey = null }
+    override fun close() { synchronized(memoryMonitor) { closed = true;memoryKey?.fill(0);memoryKey = null } }
 }

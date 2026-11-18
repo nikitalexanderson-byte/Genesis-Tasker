@@ -150,6 +150,9 @@ completed operation from its queued upload; migration between them retains the
 draft. The native Aurora bridge holds an exact native capability across RPC and
 Room calls, invalidating/draining on close. Shared map owner permits protect the
 member's local work, not the project's or space's own fence/ACL. Other sources,
-per-writer draft inventories and full adapters still need integration. See
+other feature draft inventories and full adapters still need integration. Aurora
+and the independent restoration archive now have append-only per-writer journals,
+closed-tab reconciliation and portable backup copies of every retained snapshot;
+different archived writer heads require an explicit restore choice. See
 `e2ee-336-operation-fences.md`; this is writer exclusion, not a finished diary
 source adapter or migration-time protected editor routing.

@@ -26,6 +26,7 @@ function fence(tab){
   return new WebMigrationTransportFence(new WebLegacyTransportGate(markers,tab.navigator.locks),tab.userId,`personal:${tab.userId}`,()=>{});
 }
 const entries=storage=>[...storage.data.entries()].sort(([a],[b])=>a.localeCompare(b));
+const pendingEntries=(storage,key)=>entries(storage).filter(([name])=>name===key||name.startsWith(key+':writer:'));
 async function maps(shared=false){
   const tab=await cloudSyncClient({storage:browserStorage(),withMindmaps:true});
   const repo=new tab.mindmaps.MindmapRepository(tab.userId,shared?'shared-space':undefined);
@@ -145,8 +146,8 @@ test('restoration migration waits for local encryption, borrowed IO, decrypt and
   const {tab,repo,key}=await restoration(),held=tab.holdCrypto('encrypt');
   tab.respond(async(_url,init)=>response({revision:JSON.parse(init.body).expectedRevision+1}));
   const saving=repo.save(empty());await held.entered;let captured;
-  const migration=fence(tab).withFence(async()=>{captured=tab.storage.getItem(key);});
-  held.release();await saving;await migration;assert.equal(captured,null);assert.equal(tab.requests.length,1);
+  const migration=fence(tab).withFence(async()=>{captured=pendingEntries(tab.storage,key);});
+  held.release();await saving;await migration;assert.deepEqual(captured,[]);assert.equal(tab.requests.length,1);
   const before=entries(tab.storage);
   for(const action of [()=>repo.load(),()=>repo.save(empty()),()=>repo.keepPending()])await assert.rejects(action(),/E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN/);
   assert.deepEqual(entries(tab.storage),before);assert.equal(tab.requests.length,1);
@@ -160,7 +161,7 @@ test('restoration conflict merge uses the held operation, even with an exclusive
     if(++writes===1){entered.resolve();await release.promise;return response({error:'RESTORATION_REVISION_CONFLICT'},409);}
     assert.equal(JSON.parse(init.body).expectedRevision,1);return response({revision:2});
   });
-  const saving=repo.save(empty());await entered.promise;const migration=fence(tab).withFence(async()=>{assert.equal(tab.storage.getItem(key),null);});
+  const saving=repo.save(empty());await entered.promise;const migration=fence(tab).withFence(async()=>{assert.deepEqual(pendingEntries(tab.storage,key),[]);});
   release.resolve();await saving;await migration;assert.equal(writes,2);
 });
 
@@ -174,14 +175,14 @@ test('a restoration acknowledgment leaves a different pending envelope persisted
 
 test('a malformed restoration receipt cannot remove a pending copy',{timeout:8000},async()=>{
   const {tab,repo,key}=await restoration();tab.respond(async()=>response({revision:7}));
-  await assert.rejects(repo.save(empty()),/RESTORATION_INVALID_RESPONSE/);assert.ok(tab.storage.getItem(key));
+  await assert.rejects(repo.save(empty()),/RESTORATION_INVALID_RESPONSE/);assert.equal(pendingEntries(tab.storage,key).length,1);
 });
 
 test('Aurora migration waits for the full operation and every later public entry point is fenced',{timeout:8000},async()=>{
   const {tab,repo,document,key}=await aurora(),held=tab.holdCrypto('encrypt');
   tab.respond(async(_url,init)=>response({revision:JSON.parse(init.body).expectedRevision+1}));
   const saving=repo.save(document);await held.entered;
-  const migration=fence(tab).withFence(async()=>{assert.equal(tab.storage.getItem(key),null);});
+  const migration=fence(tab).withFence(async()=>{assert.deepEqual(pendingEntries(tab.storage,key),[]);});
   held.release();await saving;await migration;const before=entries(tab.storage);
   for(const action of [()=>repo.load(),()=>repo.save(document),()=>repo.conflictVersions(),()=>repo.recoverAsCopy({},'2026-11-18T00:00:00Z')]){
     await assert.rejects(action(),/E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN/);
@@ -198,13 +199,13 @@ test('Aurora conflict retry borrows its operation while a migration is queued',{
     assert.equal(JSON.parse(init.body).expectedRevision,1);return response({revision:2});
   });
   const saving=repo.save(document);await entered.promise;
-  const migration=fence(tab).withFence(async()=>{assert.equal(tab.storage.getItem(key),null);});
+  const migration=fence(tab).withFence(async()=>{assert.deepEqual(pendingEntries(tab.storage,key),[]);});
   release.resolve();await saving;await migration;assert.equal(writes,2);
 });
 
 test('Aurora malformed receipts fail without pretending an offline save or clearing pending bytes',{timeout:8000},async()=>{
   const {tab,repo,document,key}=await aurora();tab.respond(async()=>response({revision:0}));
-  await assert.rejects(repo.save(document),/AURORA_INVALID_RESPONSE/);assert.ok(tab.storage.getItem(key));assert.notEqual(repo.syncState,'offline');
+  await assert.rejects(repo.save(document),/AURORA_INVALID_RESPONSE/);assert.equal(pendingEntries(tab.storage,key).length,1);assert.notEqual(repo.syncState,'offline');
 });
 
 test('Aurora late acknowledgment cannot clear a newer pending document from another tab',{timeout:8000},async()=>{
@@ -219,9 +220,9 @@ for(const feature of ['aurora','restoration'])test(`${feature} changed session d
   const f=await (feature==='aurora'?aurora():restoration()),{tab,repo,key}=f;
   const entered=deferred(),release=deferred();
   tab.respond(async()=>{entered.resolve();await release.promise;return response({revision:1});});
-  const saving=observed(repo.save(f.document??empty()));await entered.promise;const before=tab.storage.getItem(key);assert.ok(before);
+  const saving=observed(repo.save(f.document??empty()));await entered.promise;const before=pendingEntries(tab.storage,key);assert.equal(before.length,1);
   tab.respond(async url=>{assert.equal(new URL(url).pathname,'/api/session');return response({user:null,csrf:'synthetic'});});
   try {await tab.client.loadGenesisSession();} finally {release.resolve();}
   assert.ok((await saving).error);
-  assert.equal(tab.storage.getItem(key),before);
+  assert.deepEqual(pendingEntries(tab.storage,key),before);
 });

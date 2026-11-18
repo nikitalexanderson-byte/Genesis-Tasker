@@ -117,6 +117,20 @@ test("independent archive edits merge, explicit deletions win, and conflicting f
   await fixture.a.save({version:1,works:deleted.stoicheionWorks,removed:deleted.stoicheionRemovedWorks});
   assert.equal((await fixture.b.load()).works.length,4);
 });
+
+test('two offline archive writers on the same storage retain both branches and reconcile after both close',async()=>{
+ const f=await archiveClients();const initial=independentDocument();await f.a.save(initial);
+ const a=new RestorationRepository(f.first.userId,f.storage,f.first.client.personalDocumentAccess(f.first.userId));
+ const b=new RestorationRepository(f.first.userId,f.storage,f.first.client.personalDocumentAccess(f.first.userId));
+ const left=await a.load(),right=await b.load();
+ left.works[0].snapshot.reflection='Left offline reflection';right.works[1].snapshot.reflection='Right offline reflection';
+ f.first.respond(async()=>{throw new TypeError('Synthetic offline');});
+ await assert.rejects(a.save(left));await assert.rejects(b.save(right));assert.equal(f.storage.length,2);
+ const before=[...f.storage.data];f.first.respond(f.respond);
+ const reopened=new RestorationRepository(f.first.userId,f.storage,f.first.client.personalDocumentAccess(f.first.userId));
+ const merged=await reopened.load();assert.equal(merged.works[0].snapshot.reflection,'Left offline reflection');assert.equal(merged.works[1].snapshot.reflection,'Right offline reflection');
+ assert.equal(f.storage.length,0);assert.equal(before.length,2);
+});
 test("a strategy without habits saves all choices, completes independently, and freezes the final reflection in the archive", () => {
   const source=fixture(); for(const plan of Object.values(source.plans))plan.withoutHabit=true;
   const before=workspace(), saved=commit.materializeRestorationStrategy(source,{...before,habitSettings:{...before.habitSettings,enabled:false}},options);

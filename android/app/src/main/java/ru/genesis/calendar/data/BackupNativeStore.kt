@@ -65,9 +65,19 @@ internal class BackupNativeStore(private val app: GenesisApplication,private val
         for(index in 0 until sections.length()) {
             val section=sections.getJSONObject(index);val data=section.optJSONObject("data")?:continue
             val envelopes=data.optJSONObject("nativeEnvelopes")?:continue
-            val pending=envelopes.optJSONObject("aurora-pending")?.optJSONObject("envelope")
-            val envelope=pending?:envelopes.optJSONObject("aurora-cache")
-            if(envelope!=null)data.put("document",open(envelope,"aurora-workspace:v1")).put("frozenStorage",envelopes)
+            require(section.getString("id")=="aurora") { "BACKUP_LOCAL_CACHE_INVALID" }
+            val copies=JSONArray()
+            for(kind in envelopes.keys()) {
+                val key=ru.genesis.calendar.auth.AuroraProtocol.cacheKey(owner,kind)?:error("BACKUP_LOCAL_CACHE_INVALID")
+                if(kind=="aurora-cache")continue
+                val pending=envelopes.getJSONObject(kind)
+                copies.put(JSONObject().put("key",key).put("document",open(pending.getJSONObject("envelope"),"aurora-workspace:v1"))
+                    .put("base",open(pending.getJSONObject("base"),"aurora-workspace-base:v1"))
+                    .put("expectedRevision",pending.getJSONObject("envelope").getLong("expectedRevision")))
+            }
+            val cache=envelopes.optJSONObject("aurora-cache")
+            data.put("journalVersion",1).put("pendingCopies",copies).put("frozenStorage",envelopes)
+                .put("cached",cache?.let { JSONObject().put("document",open(it,"aurora-workspace:v1")).put("revision",it.getLong("revision")) }?:JSONObject.NULL)
             data.remove("nativeEnvelopes")
         }
         check();return value

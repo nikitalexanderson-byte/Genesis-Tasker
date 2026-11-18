@@ -26,10 +26,15 @@ class AuroraOperationBridgeTest {
         val replies=ConcurrentHashMap<String,CompletableDeferred<JSONObject>>()
         @Volatile var authorized=true
         var onRequest:suspend ()->Unit={}
+        var onWorkspace:suspend ()->Unit={}
+        var workspaceReads=0
         val gateway=object: AuroraGateway {
             override fun check(){check(authorized && app.workspaceScope==scope){"AURORA_ACCOUNT_CHANGED"}}
-            override suspend fun workspace()=JSONObject().put("workspace",JSONObject().put("keyMode","account")
-                .put("key",Base64.getEncoder().encodeToString(ByteArray(32){it.toByte()})))
+            override suspend fun workspace():JSONObject {
+                workspaceReads++;onWorkspace()
+                return JSONObject().put("workspace",JSONObject().put("keyMode","account")
+                    .put("key",Base64.getEncoder().encodeToString(ByteArray(32){it.toByte()})))
+            }
             override suspend fun request(method:String,path:String,body:JSONObject?):JSONObject {
                 check();onRequest();return JSONObject().put("revision",1)
             }
@@ -43,7 +48,7 @@ class AuroraOperationBridgeTest {
             app.activateAccount(owner)
             store=AuroraNativeStore(app,owner,scope,gateway)
             bridge=AuroraJavascriptBridge(store,gateway,jobs,{id,value->replies.remove(id)?.complete(value)},
-                {},{},{},{},{_,_->},{})
+                {},{},{},{},{_,_,_->},{})
         }
         suspend fun call(method:String,payload:JSONObject=JSONObject()):JSONObject {
             val id=UUID.randomUUID().toString();val reply=CompletableDeferred<JSONObject>();replies[id]=reply
@@ -105,6 +110,53 @@ class AuroraOperationBridgeTest {
             assertTrue(runCatching{rig.bridge.checkSession(token)}.isFailure)
             assertTrue(rig.end(token).has("value"))
             withTimeout(10_000){NativeLegacyOperationPermit.acquire(rig.app.database,rig.scope,{}).finish()}
+        } finally {rig.close()}
+    }
+    @Test fun closingDuringColdKeyLoadCannotRepopulateOrReopenTheStore()=runBlocking {
+        val rig=Rig();val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        try {
+            rig.onWorkspace={entered.complete(Unit);release.await()}
+            val seal=async(Dispatchers.IO){runCatching { rig.store.seal(JSONObject().put("private","synthetic"),"aurora-workspace:v1") }}
+            withTimeout(10_000){entered.await()};rig.store.close();release.complete(Unit)
+            assertTrue(withTimeout(10_000){seal.await()}.isFailure)
+            assertNull(rig.app.database.dao().document(rig.scope,"aurora-account-key"))
+            assertTrue(runCatching { rig.store.seal(JSONObject(),"aurora-workspace:v1") }.isFailure)
+            assertTrue(runCatching { rig.store.getItem(rig.key) }.isFailure)
+            assertEquals(1,rig.workspaceReads)
+        } finally {release.complete(Unit);rig.close()}
+    }
+    @Test fun journalWritersAndSupersededRequestsAllReachThePortableBackup()=runBlocking {
+        val rig=Rig()
+        try {
+            val token=UUID.randomUUID().toString();assertTrue(rig.begin(token).has("value"))
+            suspend fun seal(value:JSONObject,scope:String)=rig.call("seal",JSONObject().put("operationId",token).put("value",value).put("scope",scope)).getJSONObject("value")
+            val base=seal(JSONObject().put("version",1).put("ownerId",rig.owner).put("sessions",org.json.JSONArray()).put("removed",org.json.JSONArray()),"aurora-workspace-base:v1")
+            val names=listOf("pending","pending:writer:${UUID.randomUUID()}:1:pending")
+            val writer=UUID.randomUUID().toString()
+            val suffixes=names+listOf("pending:writer:$writer:1:pending","pending:writer:$writer:2:pending")
+            for((index,suffix) in suffixes.withIndex()) {
+                val envelope=seal(JSONObject().put("private","synthetic-copy-$index"),"aurora-workspace:v1").put("expectedRevision",0)
+                rig.bridge.setItem("genesis-aurora-workspace-v1:${rig.owner}:$suffix",JSONObject().put("envelope",envelope).put("base",base).toString(),token)
+            }
+            val keys=org.json.JSONArray(rig.bridge.keys(token))
+            assertEquals(4,keys.length());assertFalse(keys.toString().contains("account-key"))
+            assertTrue(rig.end(token).has("value"));assertTrue(runCatching {rig.bridge.keys(token)}.isFailure)
+            val snapshot=GenesisBackupSnapshot(rig.app).capture(rig.owner)
+            val sections=snapshot.getJSONArray("sections")
+            val section=(0 until sections.length()).map {sections.getJSONObject(it)}.single {it.getString("id")=="aurora"}
+            assertEquals(4,section.getInt("pending"));assertEquals(4,section.getJSONObject("data").getJSONObject("nativeEnvelopes").length())
+            assertFalse(section.toString().contains("synthetic-copy-"))
+            val gateway=object:BackupGateway {
+                override fun check()=rig.gateway.check()
+                override suspend fun request(method:String,path:String,body:JSONObject?):JSONObject {
+                    check();require(method=="GET"&&path=="/workspace");return rig.gateway.workspace()
+                }
+                override suspend fun quiesce()=error("Synthetic reset disabled")
+            }
+            val materialized=BackupNativeStore(rig.app,rig.owner,rig.scope,gateway).materialize(snapshot).getJSONArray("sections")
+            val data=(0 until materialized.length()).map {materialized.getJSONObject(it)}.single {it.getString("id")=="aurora"}.getJSONObject("data")
+            assertEquals(1,data.getInt("journalVersion"));assertEquals(4,data.getJSONArray("pendingCopies").length())
+            for(index in 0..3)assertTrue(data.getJSONArray("pendingCopies").toString().contains("synthetic-copy-$index"))
         } finally {rig.close()}
     }
 }

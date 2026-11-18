@@ -103,7 +103,7 @@ class AuroraNativeTest{
         val app=compose.activity.application as GenesisApplication
         check(BuildConfig.DEBUG && app.packageName.contains(".qa"))
         val gateway=AuroraSyntheticGateway()
-        runBlocking{for(kind in listOf("aurora-cache","aurora-pending","aurora-account-key"))app.database.dao().deleteDocument(app.workspaceScope,kind)}
+        runBlocking{for(kind in app.database.dao().documentKinds(app.workspaceScope).filter{it=="aurora-account-key"||ru.genesis.calendar.auth.AuroraProtocol.cacheKey("aurora-synthetic-resize",it)!=null})app.database.dao().deleteDocument(app.workspaceScope,kind)}
         var active by mutableStateOf(false)
         compose.setContent {
             val density=LocalDensity.current
@@ -138,7 +138,7 @@ class AuroraNativeTest{
     @Test fun localBundleKeepsActualDrawAndEncryptedProgressOnCloseAndOfflineReopen(){
         val app=compose.activity.application as GenesisApplication
         val gateway=AuroraSyntheticGateway()
-        runBlocking{for(kind in listOf("aurora-cache","aurora-pending","aurora-account-key"))app.database.dao().deleteDocument(app.workspaceScope,kind)}
+        runBlocking{for(kind in app.database.dao().documentKinds(app.workspaceScope).filter{it=="aurora-account-key"||ru.genesis.calendar.auth.AuroraProtocol.cacheKey("aurora-synthetic-owner",it)!=null})app.database.dao().deleteDocument(app.workspaceScope,kind)}
         var open by mutableStateOf(true)
         compose.setContent{
             val density=LocalDensity.current
@@ -163,6 +163,7 @@ class AuroraNativeTest{
         capture("source")
         val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         for(selector in listOf(".aurora-sector[data-state=negative]", ".aurora-footer>.primary-button")) {
+            compose.waitUntil(10000){domString("String(!!document.querySelector('$selector')&&!document.querySelector('$selector').matches(':disabled')&&!document.querySelector('$selector').closest('[inert]'))")=="true"}
             // A WebView virtual text node can exist while its bounds are stale or
             // offscreen. Measure the actual footer and retain a real device touch.
             domString("(()=>{document.querySelector('$selector').scrollIntoView({block:'center'});return 'ready'})()")
@@ -184,7 +185,12 @@ class AuroraNativeTest{
             capture("next-control")
             assertTrue(device.click(touch.get()[0],touch.get()[1]))
         }
-        compose.waitUntil(10000){domString("document.querySelector('.aurora-stage h3')?.textContent??''")=="Направление изменения"}
+        try {compose.waitUntil(10000){domString("document.querySelector('.aurora-stage h3')?.textContent??''")=="Направление изменения"}}
+        catch(error:Throwable){
+            capture("next-failed")
+            File(compose.activity.getExternalFilesDir(null),"aurora-next-failed.json").writeText(domString("JSON.stringify({heading:document.querySelector('.aurora-stage h3')?.textContent,stage:document.querySelector('.aurora-stage')?.dataset.stage,text:document.body.innerText})"))
+            throw error
+        }
         capture("secondary")
         compose.onNodeWithTag("aurora-native-close",useUnmergedTree=true).performClick()
         compose.waitUntil(30000){runCatching{domString("String(!!document.querySelector('.gno-dialog'))")=="true"}.getOrDefault(false)}

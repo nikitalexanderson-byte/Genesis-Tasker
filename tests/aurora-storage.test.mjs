@@ -5,7 +5,7 @@ const {AuroraRepository,emptyAuroraDocument}=calendarModule('app/aurora/reposito
 const {newSession}=calendarModule('app/aurora/session.ts');
 const policy=calendarModule('app/aurora/draw-policy.ts');
 const NOW='2026-11-05T09:00:00Z';
-function store(){const rows=new Map();return {getItem:k=>rows.get(k)??null,setItem:(k,v)=>rows.set(k,v),removeItem:k=>rows.delete(k),rows};}
+function store(){const rows=new Map();return {get length(){return rows.size;},key:i=>[...rows.keys()][i]??null,getItem:k=>rows.get(k)??null,setItem:(k,v)=>rows.set(k,v),removeItem:k=>rows.delete(k),rows};}
 function fixture(){const database=new Map(),keys=new Map();let offline=false,lostAck=false,locked=false;
  return {database,offline:()=>{offline=true;},online:()=>{offline=false;},loseAck:()=>{lostAck=true;},lock:()=>{locked=true;},
  access(owner){if(!keys.has(owner))keys.set(owner,crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']));
@@ -105,4 +105,46 @@ test('Explicit conflict recovery retains both branches including immutable forec
  const versions=await b.conflictVersions();assert.deepEqual(versions.sessionIds,['issued']);assert.equal(versions.local.sessions[0].observationNote,'Local branch');
  const recovered=await b.recoverAsCopy({issued:'explicit-copy'},'2026-11-05T12:00:00Z');assert.equal(recovered.sessions.length,2);
  assert.equal(recovered.sessions.find(s=>s.id==='issued').observationNote,'Cloud branch');const copy=recovered.sessions.find(s=>s.id==='explicit-copy');assert.equal(copy.observationNote,'Local branch');assert.equal(copy.forecasts[0].payloadHash,forecast.payloadHash);assert.equal(copy.forecasts[0].situationId,'issued');assert.equal(copy.context.situationId,'explicit-copy');assert.equal(b.syncState,'saved');
+});
+
+test('two closed offline tabs retain independent encrypted branches and reconcile both after reload',async()=>{
+ const f=fixture(),disk=store(),a=new AuroraRepository('a',disk,f.access('a')),b=new AuroraRepository('a',disk,f.access('a'));
+ await a.load();await b.load();f.offline();
+ await a.save({...emptyAuroraDocument('a'),sessions:[session('left-offline')]});
+ await b.save({...emptyAuroraDocument('a'),sessions:[session('right-offline')]});
+ assert.equal([...disk.rows.keys()].filter(key=>key.endsWith(':pending')).length,2);
+ const reopened=new AuroraRepository('a',disk,f.access('a'));
+ assert.deepEqual(new Set((await reopened.load()).sessions.map(row=>row.id)),new Set(['left-offline','right-offline']));
+ f.online();assert.equal((await reopened.load()).sessions.length,2);
+ assert.equal([...disk.rows.keys()].some(key=>key.endsWith(':pending')),false);
+ assert.equal(f.database.get('a').revision,2);
+});
+test('repeated offline edits preserve original request bytes and reopen the latest snapshot of that writer',async()=>{
+ const f=fixture(),disk=store(),repo=new AuroraRepository('a',disk,f.access('a'));await repo.load();f.offline();
+ const doc={...emptyAuroraDocument('a'),sessions:[session('same-writer')]};doc.sessions[0].observationNote='First private note';await repo.save(doc);
+ const [first]=[...disk.rows];doc.sessions[0].observationNote='The later private note';await repo.save(doc);
+ assert.equal(disk.rows.get(first[0]),first[1]);assert.equal(disk.rows.size,2);
+ const reopened=new AuroraRepository('a',disk,f.access('a'));assert.equal((await reopened.load()).sessions[0].observationNote,'The later private note');
+ f.online();await reopened.load();assert.equal(f.database.get('a').revision,1);assert.equal([...disk.rows.keys()].some(key=>key.endsWith(':pending')),false);
+});
+test('conflicting offline writers remain recoverable independently, including after both original tabs close',async()=>{
+ const f=fixture(),disk=store(),seed=new AuroraRepository('a',disk,f.access('a'));await seed.load();await seed.save({...emptyAuroraDocument('a'),sessions:[session('shared-session')]});
+ const a=new AuroraRepository('a',disk,f.access('a')),b=new AuroraRepository('a',disk,f.access('a')),left=await a.load(),right=await b.load();f.offline();
+ left.sessions[0].observationNote='Left private branch';right.sessions[0].observationNote='Right private branch';await a.save(left);await b.save(right);
+ const before=[...disk.rows],reopened=new AuroraRepository('a',disk,f.access('a'));
+ await assert.rejects(reopened.load(),/AURORA_REVISION_CONFLICT/);assert.deepEqual([...disk.rows],before);
+ f.online();await assert.rejects(reopened.load(),/AURORA_REVISION_CONFLICT/);
+ const restored=await reopened.recoverAsCopy({'shared-session':'explicit-preserved-copy'},'2026-11-18T12:00:00Z');
+ assert.deepEqual(new Set(restored.sessions.map(row=>row.observationNote)),new Set(['Left private branch','Right private branch']));
+ assert.equal([...disk.rows.keys()].some(key=>key.endsWith(':pending')),false);
+});
+
+test('reconciling another writer cannot acknowledge this still-open editor before its own pending branch is merged',async()=>{
+ const f=fixture(),disk=store(),a=new AuroraRepository('a',disk,f.access('a')),b=new AuroraRepository('a',disk,f.access('a'));
+ f.offline();await a.save({...emptyAuroraDocument('a'),sessions:[session('own-a')]});
+ const aKey=[...disk.rows.keys()][0];await b.save({...emptyAuroraDocument('a'),sessions:[session('own-b')]});
+ const bKey=[...disk.rows.keys()].find(key=>key!==aKey),last=aKey.localeCompare(bKey,'en')>0?a:b;
+ f.online();const outside=new AuroraRepository('a',store(),f.access('a'));await outside.save({...emptyAuroraDocument('a'),sessions:[session('third-server')]});
+ const merged=await last.load();assert.deepEqual(new Set(merged.sessions.map(row=>row.id)),new Set(['own-a','own-b','third-server']));
+ assert.equal([...disk.rows.keys()].some(key=>key.endsWith(':pending')),false);
 });

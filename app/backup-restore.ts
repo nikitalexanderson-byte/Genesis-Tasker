@@ -8,6 +8,7 @@ import { validateMindmap } from './mindmaps-model';
 import { validateDiaryNote } from './diary-model';
 import { validateRestorationDocument } from './stoicheion-restoration-work';
 import type { AuroraDocument } from './aurora/session';
+import {selectBackupJournalDocument,type BackupJournalData} from './backup-private-journals';
 export type BackupRestoreMode='missing'|'replace';
 export type BackupOperation={section:string;id?:string;input:unknown};
 export const BACKUP_WORKSPACE_COLLECTIONS={projects:['Проекты','Projects'],categories:['Категории','Categories'],habits:['Привычки','Habits'],habitCompletions:['Выполнения привычек','Habit completions'],habitMeasurements:['Измерения привычек','Habit measurements'],habitTimers:['Таймеры привычек','Habit timers'],habitHistory:['История привычек','Habit history'],sleepPlans:['Планы сна','Sleep plans'],sleepEntries:['Записи сна','Sleep entries'],moodEntries:['Записи настроения','Mood entries'],addictionTrackers:['Трекеры воздержания','Abstinence trackers'],addictionEntries:['Записи воздержания','Abstinence entries'],analyticsSnapshots:['Снимки аналитики','Analytics snapshots'],dailyGoalRecords:['Дневные цели','Daily goals'],quests:['Квесты','Quests'],achievementUnlocks:['Достижения','Achievements'],rewardTransactions:['История наград','Reward history'],streakFreezeTransactions:['Защита серий','Streak protection'],hiddenDefaultTemplates:['Скрытые шаблоны','Hidden templates']} as const;
@@ -83,7 +84,8 @@ export async function prepareBackupRestore(payload:BackupPayload,owner:string,se
     }
     const isAurora=section.id==='aurora',path=isAurora?'/aurora-workspace':'/stoicheion-workspace',scope=isAurora?'aurora-workspace:v1':'stoicheion-workspace:v1';
     const response=await access.request<{document:({iv:string;ciphertext:string;revision:number})|null}>(path,{cache:'no-store'});
-    const value=(section.data as {document:unknown}).document;
+    const data=section.data as {document:unknown;journalVersion?:number};
+    const value=data.journalVersion!==undefined?selectBackupJournalDocument(isAurora?'aurora':'stoicheion',owner,data as BackupJournalData):data.document;
     const document=isAurora?await (await import('./aurora/session')).validateDocument(value as AuroraDocument,owner):validateRestorationDocument(value);
     if(response.document&&(mode==='missing'||same(await access.open(response.document,scope),document))){plan.skipped++;continue;}
     plan.operations.push({section:section.id,input:{...await access.seal(document,scope),expectedRevision:response.document?.revision??0}});

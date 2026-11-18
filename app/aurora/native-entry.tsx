@@ -11,7 +11,7 @@ import '../dark-palettes.css';
 import '../universal-ui.css';
 import './native.css';
 type Boot={ownerId:string;language:string;client:'android'|'android-play';source:Parameters<typeof snapshotFromSavedDraw>[0]|null;temporal?:Parameters<typeof createTemporalTriad>[0]|null;dark:boolean;palette:string;colors:Record<string,string>};
-type NativeBridge=NativeAuroraBridge&{postMessage:(message:string)=>void;contentSize?:(height:number,width:number)=>void};
+type NativeBridge=NativeAuroraBridge&{postMessage:(message:string)=>void;contentSize?:(height:number,width:number,fillViewport:boolean)=>void};
 declare global{interface Window{GenesisAuroraBridge:NativeBridge;GenesisAuroraRuntime:{init:(payload:string)=>void;resolve:(id:string,payload:string)=>void;requestClose:()=>boolean;theme:(payload:string)=>void}}}
 const decode=(payload:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload),c=>c.charCodeAt(0))));
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
@@ -35,7 +35,7 @@ window.GenesisAuroraRuntime={
   fitViewport();window.addEventListener('resize',fitViewport);window.visualViewport?.addEventListener('resize',fitViewport);
   let measuredDialog: HTMLElement | null = null;
   const reportContentSize=()=>{
-   if(measuredDialog)window.GenesisAuroraBridge.contentSize?.(Math.ceil(measuredDialog.scrollHeight),document.documentElement.clientWidth);
+   if(measuredDialog)window.GenesisAuroraBridge.contentSize?.(Math.ceil(measuredDialog.scrollHeight),document.documentElement.clientWidth,measuredDialog.matches('.gno-dialog'));
   };
   const sizeObserver=new ResizeObserver(reportContentSize);
   const watchContent=()=>{
@@ -46,7 +46,7 @@ window.GenesisAuroraRuntime={
   new MutationObserver(watchContent).observe(document.getElementById('root')!,{subtree:true,childList:true,characterData:true});
   const access=createNativeAuroraAccess(window.GenesisAuroraBridge,rpc);
   const unboundStorage=()=>{throw new Error('E2EE_INVALID_LEGACY_OPERATION');};
-  const repo=new AuroraRepository(boot.ownerId,{getItem:unboundStorage,setItem:unboundStorage,removeItem:unboundStorage},access);
+  const repo=new AuroraRepository(boot.ownerId,{get length(){return unboundStorage();},key:unboundStorage,getItem:unboundStorage,setItem:unboundStorage,removeItem:unboundStorage},access);
   let taskPending:Promise<unknown>|null=null;
   const host:AuroraHost={ownerId:boot.ownerId,language:boot.language,client:boot.client,canAddTask:true,load:()=>repo.load(),save:value=>repo.save(value),syncState:()=>repo.syncState,
    conflictVersions:()=>repo.conflictVersions(),recoverConflict:(ids,now)=>repo.recoverAsCopy(ids,now),
