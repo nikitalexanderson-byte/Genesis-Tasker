@@ -7,22 +7,8 @@ type Envelope = Sealed & { revision: number };
 type Access = ReturnType<typeof personalDocumentAccess>;
 type Storage = EncryptedJournalStorage;
 const empty = (): RestorationDocument => ({ version: 1, works: [], removed: [] });
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-/** Independent changes merge; two edits to the same practice require an explicit choice. */
-export function mergeRestorationDocuments(base: RestorationDocument, local: RestorationDocument, remote: RestorationDocument): RestorationDocument {
-  const byId = (doc: RestorationDocument) => new Map(doc.works.map(row => [row.id, row]));
-  const before = byId(base), left = byId(local), right = byId(remote);
-  const removed = [...new Map([...remote.removed, ...local.removed].map(row => [row.id, row])).values()];
-  const deleted = new Set(removed.map(row => row.id));
-  const works = [...new Set([...left.keys(), ...right.keys()])].flatMap(id => {
-    if (deleted.has(id)) return [];
-    const a = left.get(id), b = right.get(id), original = before.get(id);
-    if (!same(a, original) && !same(b, original) && !same(a, b)) throw new Error("RESTORATION_REVISION_CONFLICT");
-    const row = !same(a, original) ? a : b;
-    return row ? [row] : [];
-  });
-  return validateRestorationDocument({ version: 1, works, removed });
-}
+import { mergeRestorationDocuments } from "./stoicheion-restoration-merge";
+export { mergeRestorationDocuments } from "./stoicheion-restoration-merge";
 
 /** The ordinary encrypted workspace is untouched, so older web/Android writers stay compatible. */
 export class RestorationRepository {
@@ -108,6 +94,11 @@ export class RestorationRepository {
         await this.send(retry, retryBranch, access);
       }
       return structuredClone(this.base);
+  }
+  /** Called synchronously while the product coordinator holds every writer
+   * fence. Capture never drains or acknowledges the persistent journal. */
+  captureMigrationState(current:RestorationDocument|null){
+    this.access.check();return current===null?null:structuredClone({document:current,base:this.base,revision:this.revision});
   }
   /** Only a deliberate user choice may supersede a concurrent version. */
   keepPending(): Promise<RestorationDocument> { return this.enqueue(access => this.keepDocument(access)); }

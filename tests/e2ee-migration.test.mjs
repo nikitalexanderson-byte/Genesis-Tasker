@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import { E2eeMigration } from '../app/e2ee/migration.ts';
 import { E2eeMigrationSources, requiredPrivatePaths } from '../app/e2ee/migration-sources.ts';
 import { E2eeScopeClient } from '../app/e2ee/scope-client.ts';
@@ -195,6 +195,43 @@ test('actual Aurora journals migrate from a durable snapshot and open through th
   try{const value=JSON.parse(new TextDecoder().decode(history.bytes));assert.equal(value.snapshots.length,2);assert.equal(value.snapshots[0].document.sessions[0].observationNote,'Earlier private Aurora branch');}
   finally{history.bytes.fill(0);}
 });
+test('actual practice journals and draw history survive coordinator migration and normal new-root reads',async()=>{
+  const {PersonalStoicheionSource}=calendarModule('app/e2ee/stoicheion-source.ts'),value=JSON.parse(readFileSync('tests/fixtures/e2ee/stoicheion-content-v1.json','utf8'));
+  assert.equal(value.synthetic,true);const document=value.document,empty={version:1,works:[],removed:[]};
+  const raw=freshSecret(),legacyKey=Buffer.from(raw).toString('base64'),key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt']);raw.fill(0);
+  const seal=async(value,purpose)=>{const iv=crypto.getRandomValues(new Uint8Array(12)),ciphertext=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:bytes('genesis-mindmap-v1:owner:'+purpose)},key,bytes(JSON.stringify(value)));
+    return{iv:Buffer.from(iv).toString('base64'),ciphertext:Buffer.from(ciphertext).toString('base64')};};
+  const local=new MemoryStorage(),prefix='genesis-stoicheion-workspace-v1:owner:',writer=crypto.randomUUID(),old=structuredClone(document);
+  old.works[0].snapshot.reflection='Earlier synthetic private reflection';
+  for(const [index,value]of [old,document].entries())local.setItem(`${prefix}pending:writer:${writer}:${index+1}:pending`,JSON.stringify({envelope:{...await seal(value,'stoicheion-workspace:v1'),expectedRevision:0},base:await seal(empty,'stoicheion-pending-base:v1')}));
+  const original=[...local.data];let reads=0;
+  // Other required paths are deliberately synthetic here. This proves this real
+  // adapter with the coordinator/vault, not full twenty-path product acceptance.
+  const f=await fixture({registrySources:true,sourceAdapter:async(path,ports)=>path.id==='personal.stoicheion'?new PersonalStoicheionSource('owner',ports.scopeId,{
+    storage:local,memory:()=>({ownerId:'owner',legacyKey,generation:0,reconciliationRequired:false,current:null,draws:[],timeline:null,nativeDraws:null}),assertCurrent:()=>ports.vault.assertUnlocked(),
+    legacyStoicheion:async context=>{
+      const snapshot=await ports.vault.read('local-snapshot',`${context.migrationId}:source:0`);assert.ok(snapshot);
+      try{assert.ok(new TextDecoder().decode(snapshot.value).includes('personal.stoicheion'));}finally{snapshot.value.fill(0);}
+      assert.ok(!JSON.stringify([...ports.storage.rows]).includes(legacyKey));assert.ok(!JSON.stringify([...ports.storage.rows]).includes('Earlier synthetic private reflection'));
+      const {ownerId,scopeId,migrationId,fence,sourceHash}=context;reads++;
+      return{protocol:1,ownerId,scopeId,migrationId,fence,sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,workspace:null,draws:[],spreadCards:[],timelineSessions:[],timelineWindows:[],legacyKey:{keyMode:'account',key:legacyKey}};
+    },
+  }):null});
+  await f.make().prepare();assert.equal(reads,0);assert.equal(f.server.count,0);assert.equal(await f.make().run(),'active');assert.equal(reads,1);assert.deepEqual([...local.data],original);
+  const serialized=JSON.stringify([...f.storage.rows,...f.server.objects]);assert.ok(!serialized.includes(legacyKey));assert.ok(!serialized.includes('synthetic private reflection'));
+  const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),device={ownerId:'owner',deviceId:'device',vault:f.vault,requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys,
+    rememberDirectory:async(_scope,pin,events,_owner,callback)=>verifyDeviceDirectory('owner',f.scopeId,pin,events,undefined,callback)};
+  const normal=new E2eeScopeClient(device,'owner',f.scopeId,f.recovery.kit.authority,{
+    async directory(){return{events:f.events};},async read(packet){
+      const {action,payload}=packet.command,objects=[...f.server.objects.values()],result={checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision};
+      if(action==='sealed-heads')result.objects=await Promise.all(objects.map(async envelope=>({domain:envelope.context.domain,objectId:envelope.context.objectId,revision:1,payloadHash:await envelopePayloadHash(envelope)})));
+      else result.envelopes=objects.filter(envelope=>envelope.context.domain===payload.domain&&envelope.context.objectId===payload.objectId);return result;
+    },
+  });await normal.refresh();
+  const opened=await normal.read('stoicheion','personal-stoicheion-workspace-v1');assert.ok(opened);try{assert.deepEqual(JSON.parse(new TextDecoder().decode(opened.bytes)).document,document);}finally{opened.bytes.fill(0);}
+  const history=await normal.read('stoicheion','personal-stoicheion-local-history-v1');assert.ok(history);try{const value=JSON.parse(new TextDecoder().decode(history.bytes));assert.equal(value.snapshots.length,2);assert.equal(value.snapshots[0].document.works[0].snapshot.reflection,'Earlier synthetic private reflection');}finally{history.bytes.fill(0);}
+  const draws=await normal.read('stoicheion','personal-stoicheion-draw-history-v1');assert.ok(draws);draws.bytes.fill(0);
+});
 test('signed shadow readback continues past short pages and rejects loops, directory changes and lock',async()=>{
   const f=await fixture();await f.make().prepare();await f.make().run();
   const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),seen=[];
@@ -215,12 +252,13 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
-  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead;
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
     assert.equal(path,'/read');
     if(packet.command.action==='legacy-workspace')legacyRead=packet;
     else if(packet.command.action==='legacy-aurora')auroraRead=packet;
+    else if(packet.command.action==='legacy-stoicheion')stoicheionRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   });
@@ -232,8 +270,11 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
   await transport.legacyAurora(context);assert.equal((await verifyE2eeCommand(auroraRead,f.keys.signing.publicKey)).action,'legacy-aurora');
   assert.deepEqual({...auroraRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
   await assert.rejects(transport.legacyAurora({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
+  await transport.legacyStoicheion(context);assert.equal((await verifyE2eeCommand(stoicheionRead,f.keys.signing.publicKey)).action,'legacy-stoicheion');
+  assert.deepEqual({...stoicheionRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
+  await assert.rejects(transport.legacyStoicheion({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
   mkdirSync('output/release-3.3.6/runtime',{recursive:true});
-  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead},null,2));
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));

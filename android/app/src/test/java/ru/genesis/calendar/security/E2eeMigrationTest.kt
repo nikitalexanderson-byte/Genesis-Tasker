@@ -246,11 +246,12 @@ class E2eeMigrationTest {
         f.badPage = "lock"; reject("E2EE_UNLOCK_REQUIRED") { transport.readAll() }
     }
     @Test fun emitActualNativeReadbackPacketsForPhpSqliteContract() = runBlocking {
-        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null
+        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null; var stoicheionRead: JSONObject? = null
         val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace")) { path, packet ->
             assertEquals("/read",path)
             if(packet.getJSONObject("command").getString("action") == "legacy-workspace") legacyRead = packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-aurora") auroraRead = packet
+            else if(packet.getJSONObject("command").getString("action") == "legacy-stoicheion") stoicheionRead = packet
             else { assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet) }
             JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).put("envelopes",JSONArray())
         }
@@ -263,7 +264,9 @@ class E2eeMigrationTest {
         assertEquals(context.sourceHash,auroraRead!!.getJSONObject("command").getJSONObject("payload").getString("sourceHash"))
         reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyAurora(E2eeMigrationSourceContext("owner","personal:foreign",context.migrationId,1,context.sourceHash,1)) }
         val root = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }.first { File(it,"contracts/e2ee/private-paths-v1.json").isFile }
+        transport.legacyStoicheion(context); assertEquals("legacy-stoicheion",E2eeCommands.verify(requireNotNull(stoicheionRead),f.device.keys().signing.public).getString("action"))
+        assertEquals(context.sourceHash,stoicheionRead!!.getJSONObject("command").getJSONObject("payload").getString("sourceHash"))
         val file = File(root,"output/release-3.3.6/runtime/native-migration-transport.json"); file.parentFile.mkdirs()
-        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).put("auroraRead",auroraRead).toString(2))
+        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).put("auroraRead",auroraRead).put("stoicheionRead",stoicheionRead).toString(2))
     }
 }

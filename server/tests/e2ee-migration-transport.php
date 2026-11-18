@@ -30,8 +30,12 @@ foreach($fixtures as $fixture) {
     if($command['action']!=='legacy-aurora')throw new RuntimeException('Invalid legacy Aurora transport action');
     try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform Aurora source accepted');}
     catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
+    $packet=$fixture['stoicheionRead'];$command=$packet['command'];
+    if($command['action']!=='legacy-stoicheion')throw new RuntimeException('Invalid legacy Stoicheion transport action');
+    try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform Stoicheion source accepted');}
+    catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
     // Both independent platform fixtures use a fresh personal test identity.
     $db->prepare("DELETE FROM e2ee_scopes WHERE scope_id=? AND state='uploading'")->execute([$scope]);
 }
-if($checks!==8)throw new RuntimeException('Missing web/native transport vectors');
+if($checks!==10)throw new RuntimeException('Missing web/native transport vectors');
 echo 'PASS e2ee-migration-transport '.$checks.' real signed web/native packets; pagination accepted, stale legacy-source tokens rejected'.PHP_EOL;

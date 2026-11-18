@@ -308,6 +308,22 @@ Focused JVM13/13 and JS15/15 pass, plus1454 full JS and2 real UI regressions.
 Evidence/limits: `e2ee-336-aurora-source.md`. No direct upgrade/full product recovery
 claim, production activation or update floor change follows from these tests.
 
+## Native shared Aurora/Stoicheion source engine
+
+The same isolated runtime now selects either the actual Aurora or Stoicheion
+source. Native owns the selector and separately restricts output domain/object IDs;
+a source cannot broaden itself by returning another content domain. The pure
+Restoration merger has no HTTP/session/repository side effects. Native Stoicheion
+capture includes actual encrypted Room day history and previous old-key copies;
+the common source also validates practice journals, saved card replacements and
+timeline history. Live quota, subscription and reroll rights are absent from
+portable content. Details/evidence: `e2ee-336-stoicheion-source.md`.
+
+All3 implemented source categories still require complete product routing,
+unlocked-device lifecycle, source review and full upgrade/recovery acceptance.
+The other17 paths remain mandatory; no production activation follows from these
+focused tests.
+
 ## Trust limits and remaining integration
 
 The web transport owner is now established only by a validated session reader.

@@ -14,10 +14,12 @@ internal class E2eeAuroraRows(val documents:List<DocumentRecord>,val outbox:List
 
 /** Uses the same bundled domain validator/merger as web. This port receives only
  * captured envelopes/documents, never old keys, device private keys or new roots. */
-internal interface E2eeAuroraReconciler {
+internal interface E2eePersonalSourceReconciler {
     suspend fun reconcile(local:JSONObject,previous:List<JSONObject>,context:E2eeMigrationSourceContext,remote:JSONObject,
         assertCurrent:()->Unit,openLegacy:suspend (JSONObject,String)->Any):E2eePathReconciliation
 }
+
+internal typealias E2eeAuroraReconciler = E2eePersonalSourceReconciler
 
 /** Actual Room source; only the existing LocalCipher and captured legacy account
  * keys may open historical data. The migration coordinator supplies its durable

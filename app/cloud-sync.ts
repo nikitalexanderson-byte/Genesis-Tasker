@@ -3541,6 +3541,19 @@ export async function createPersonalAuroraMigrationSource(userId:string,scopeId:
       reconciliationRequired:backupReconciliationRequired,current:captureCurrent()};},legacyAurora:context=>transport.legacyAurora(context)});
 }
 
+/** Exact owner-scoped capture only; product migration supplies every mounted
+ * editor, the complete source registry and persistent owner/device lifecycle. */
+export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyStoicheion'>,
+  captureCurrent:()=>Pick<import('./e2ee/stoicheion-source').StoicheionMigrationMemory,'current'|'draws'|'timeline'>) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalStoicheionSource}=await import('./e2ee/stoicheion-source');check();
+  return new PersonalStoicheionSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired,nativeDraws:null};},legacyStoicheion:context=>transport.legacyStoicheion(context)});
+}
+
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
 }

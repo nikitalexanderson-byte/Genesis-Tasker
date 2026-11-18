@@ -619,3 +619,30 @@ shared ACL/rotation/files/automation, product lifecycle/recovery, полная �
 48 сценариев/14 языков и независимый crypto review ещё обязательны. Никаких
 production публикаций/миграций/повышения floors не выполнялось;3.3.5/149 остаётся
 действующей версией до полного готового и проверенного3.3.6.
+
+## Реальный источник Стойхейона на web/API/Android
+
+19 ноября2026. Полный immutable журнал практик, previous/base/mounted copies,
+расклады, замены карт и reveal/timeline history теперь читаются реальными source
+adapters и сводятся общим validator/merger. Подписанный legacy read ограничен
+personal owner/current device/lease/source token; не вызывает старые GET helpers
+с побочными записями. Сервер и portable objects не переносят live quota/payment
+authority. Ключи остаются native; общий headless runtime отдельно ограничивает
+выбранный domain/object IDs. Exact originals сохраняются, конфликт/rollback/
+неизвестный формат/смена аккаунта блокируют completion.
+
+1466/1466 full JS,53 focused source/coordinator/native-entry checks,18/18 native
+JVM,6/6 API34 source instrumentation (3 Stoicheion +3 Aurora),2/2 actual UI
+regressions,5/5 PHP suites с10 signed web/native transport packets,
+typecheck/lint/web build PASS. Actual Room/Keystore/new-root vault проверены
+с40 native day records и private reflection, сохранением всех исходных ciphertexts.
+Synthetic server responses в instrumentation и остальные synthetic registry
+paths не выданы за whole-product acceptance. QA metadata149/debug package
+сохраняются. Подробности и логи: `e2ee-336-stoicheion-source.md`.
+
+Реальные adapters реализованы для3/20 категорий;17 остаются. Для всех также
+нужны product lifecycle/editor routing, shared ACL/rotation, полное recovery/
+direct upgrades/48 сценариев/14 языков и независимый crypto review. Следующий
+инвентарь — личные советы, включая actual Room snapshots и legacy hashed native
+SharedPreferences cache. Production3.3.5/149, floors0, cutover off и выключенный
+Android deploy не менялись;3.3.6 ещё не опубликована.

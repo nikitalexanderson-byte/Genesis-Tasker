@@ -1,0 +1,46 @@
+{
+  "protocol": 1,
+  "synthetic": true,
+  "document": {
+    "version": 1,
+    "works": [{
+      "id": "restoration-work:2026-10-22:305419896:southeast:beta",
+      "createdAt": "2026-10-21T21:30:00.000Z",
+      "updatedAt": "2026-10-21T21:30:00.000Z",
+      "version": 1,
+      "syncState": "pending",
+      "snapshot": {
+        "version": 1,
+        "cycleId": "2026-10-22:305419896:southeast:beta",
+        "startedAt": "2026-10-21T21:30:00.000Z",
+        "startedDate": "2026-10-22",
+        "sourceDate": "2026-10-22",
+        "sourceSeed": 305419896,
+        "cards": [
+          {"letterId":"mu","reversed":false},{"letterId":"psi","reversed":false},{"letterId":"omega","reversed":false},
+          {"letterId":"theta","reversed":false},{"letterId":"upsilon","reversed":false},{"letterId":"chi","reversed":false},
+          {"letterId":"omicron","reversed":false},{"letterId":"pi","reversed":false},{"letterId":"beta","reversed":true}
+        ],
+        "sectorId": "southeast",
+        "letterId": "beta",
+        "need": "conflict",
+        "supportIds": ["hearth"],
+        "resourceLetterId": "xi",
+        "practiceId": "hephaestus-small-repair",
+        "spreadTotal": 2701,
+        "pythmen": 1,
+        "intention": "A synthetic private intention",
+        "action": "A synthetic private action",
+        "practiceText": "A synthetic private practice",
+        "reflection": "A synthetic private reflection"
+      },
+      "linkedHabitId": null,
+      "completionDates": [],
+      "completionEntries": [],
+      "requiredCompletions": 1,
+      "deadline": "2026-10-31",
+      "archivedAt": null
+    }],
+    "removed": []
+  }
+}

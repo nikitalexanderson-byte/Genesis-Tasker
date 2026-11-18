@@ -24,7 +24,7 @@ async function fixture(count=1){
   key:`genesis-aurora-workspace-v1:${owner}:pending:writer:11111111-1111-4111-8111-111111111111:1:pending`,
   value:JSON.stringify({envelope:{...await seal(document,'aurora-workspace:v1'),expectedRevision:0},base:await seal({version:1,ownerId:owner,sessions:[],removed:[]},'aurora-workspace-base:v1')})}]};
  const remote={protocol:1,...context,legacyGeneration:0,checkpointHash:encodeE2eeBytes(new Uint8Array(32)),directoryRevision:1,workspace:null,results:[],legacyKey:{keyMode:'account',key:null}};delete remote.generation;
- const input={protocol:1,ownerId:owner,scopeId:context.scopeId,local:encode(local),previous:[],context,remote};
+ const input={protocol:1,source:'aurora',ownerId:owner,scopeId:context.scopeId,local:encode(local),previous:[],context,remote};
  return{input,rawKey,local,document,key,owner};
 }
 async function withRuntime(f,action,{hold=false,corrupt=false}={}){
@@ -82,4 +82,25 @@ test('wrong response scope and closing during an outstanding legacy read never p
 test('altered source headers or an AEAD failure report fixed codes and retain the immutable input',async()=>{
  const binding=await fixture();binding.input.remote.ownerId='foreign';await withRuntime(binding,async rig=>{start(rig.runtime,binding.input);const result=await rig.outcome;assert.equal(result.kind,'error');assert.equal(result.code,'E2EE_SCOPE_BINDING_MISMATCH');assert.equal(rig.requests.length,0);});
  const corrupt=await fixture(),before=JSON.stringify(corrupt.input);await withRuntime(corrupt,async rig=>{start(rig.runtime,corrupt.input);const result=await rig.outcome;assert.equal(result.kind,'error');assert.equal(result.code,'E2EE_LEGACY_AURORA_CORRUPT');assert.ok(!rig.messages.some(row=>row.kind==='complete'));assert.equal(JSON.stringify(corrupt.input),before);},{corrupt:true});
+});
+
+async function stoicheionFixture(){
+ const f=await fixture(1),value=JSON.parse(readFileSync('tests/fixtures/e2ee/stoicheion-content-v1.json','utf8'));assert.equal(value.synthetic,true);
+ const iv=crypto.getRandomValues(new Uint8Array(12)),ciphertext=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(`genesis-mindmap-v1:${f.owner}:stoicheion-workspace:v1`)},f.key,new TextEncoder().encode(JSON.stringify(value.document)));
+ f.local.entries=[];f.local.memory={ownerId:f.owner,legacyKey:'',generation:0,reconciliationRequired:false,current:null,draws:[],timeline:null,nativeDraws:{days:{'2026-10-22':{spread:{seed:123,firstAt:Date.parse('2026-10-22T09:00:00Z'),attempts:2,unlimited:true}}}}};
+ f.input.source='stoicheion';f.input.local=encode(f.local);delete f.input.remote.results;
+ Object.assign(f.input.remote,{workspace:{iv:Buffer.from(iv).toString('base64'),ciphertext:Buffer.from(ciphertext).toString('base64'),revision:1,updatedAt:'2026-10-22T09:00:00Z'},draws:[],spreadCards:[],timelineSessions:[],timelineWindows:[]});
+ return{...f,expectedDocument:value.document};
+}
+test('the actual headless entry also migrates real practice and native draw history with only its chosen content domain',async()=>{
+ const f=await stoicheionFixture(),before=JSON.stringify(f.input);
+ await withRuntime(f,async rig=>{start(rig.runtime,f.input);const result=await rig.outcome;assert.equal(result.kind,'complete');assert.equal(result.complete,true);
+  assert.ok(result.content.every(row=>row.domain==='stoicheion'));const document=JSON.parse(new TextDecoder().decode(decodeE2eeBytes(result.content.find(row=>row.objectId==='personal-stoicheion-workspace-v1').bytes)));
+  assert.deepEqual(document.document,f.expectedDocument);const history=JSON.parse(new TextDecoder().decode(decodeE2eeBytes(result.content.find(row=>row.objectId==='personal-stoicheion-draw-history-v1').bytes)));
+  assert.equal(history.device.native.draws[0].seed,123);assert.ok(!JSON.stringify(history).includes('unlimited'));assert.deepEqual(rig.requests.map(row=>row.purpose),['stoicheion-workspace:v1']);});
+ assert.equal(JSON.stringify(f.input),before);
+});
+test('a foreign domain selector or mismatched keyless snapshot cannot broaden the native source runtime',async()=>{
+ for(const source of ['shared-project','unknown','aurora']){const f=await stoicheionFixture();f.input.source=source;
+  await withRuntime(f,async rig=>{start(rig.runtime,f.input);const result=await rig.outcome;assert.equal(result.kind,'error');assert.equal(result.content,undefined);});}
 });
