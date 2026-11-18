@@ -1,0 +1,80 @@
+package ru.genesis.calendar.security
+
+import android.app.KeyguardManager
+import android.content.Context
+import android.os.Build
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
+import android.security.keystore.KeyProperties
+import android.security.keystore.UserNotAuthenticatedException
+import android.util.AtomicFile
+import org.json.JSONObject
+import java.io.File
+import java.security.KeyStore
+import java.security.MessageDigest
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
+
+/** User-presence-protected portable device keys. Existing Room/LocalCipher data stays intact.
+ * Call the system credential/biometric flow before access. A background worker cannot
+ * manufacture a replacement key or silently initialize empty data after invalidation.
+ */
+class E2eeDeviceVault(context: Context, ownerId: String) {
+    companion object { private val mutationLock = Any(); private const val MAX_PRIVATE = 65536 }
+    private val app = context.applicationContext
+    private val owner = E2eeKeys.technical(ownerId)
+    private val ownerHash = MessageDigest.getInstance("SHA-256").digest(owner.toByteArray()).joinToString("") { "%02x".format(it) }
+    private val alias = "genesis.e2ee.device.v1.$ownerHash"
+    private val file = AtomicFile(File(app.noBackupFilesDir, "e2ee-device-$ownerHash.vault"))
+    private fun aad() = "GENESIS-E2EE-ANDROID-VAULT\u0000v1\u0000$owner".toByteArray(Charsets.UTF_8)
+    private fun key(create: Boolean): SecretKey = synchronized(mutationLock) {
+        val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        (store.getKey(alias, null) as? SecretKey)?.let { return@synchronized it }
+        if (!create || exists()) throw IllegalStateException("E2EE_DEVICE_KEY_UNAVAILABLE")
+        if (!app.getSystemService(KeyguardManager::class.java).isDeviceSecure) throw IllegalStateException("E2EE_DEVICE_CREDENTIAL_REQUIRED")
+        val builder = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256).setUserAuthenticationRequired(true).setInvalidatedByBiometricEnrollment(false)
+        if (Build.VERSION.SDK_INT >= 30) builder.setUserAuthenticationParameters(300,
+            KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL)
+        else @Suppress("DEPRECATION") builder.setUserAuthenticationValidityDurationSeconds(300)
+        KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply { init(builder.build()) }.generateKey()
+    }
+    fun exists(): Boolean = synchronized(mutationLock) { file.baseFile.exists() || File(file.baseFile.path + ".bak").exists() }
+    fun save(value: ByteArray, create: Boolean = false) = synchronized(mutationLock) {
+        if(create && exists())throw IllegalStateException("E2EE_DEVICE_ALREADY_EXISTS")
+        if (value.size > MAX_PRIVATE) throw IllegalArgumentException("E2EE_INVALID_KEY_BUNDLE")
+        val copy = value.copyOf()
+        try {
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, key(create)); cipher.updateAAD(aad())
+            val bytes = byteArrayOf(1) + cipher.iv + cipher.doFinal(copy)
+            val output = file.startWrite()
+            try { output.write(bytes); file.finishWrite(output) }
+            catch (error: Exception) { file.failWrite(output); throw error }
+        } catch (_: UserNotAuthenticatedException) { throw IllegalStateException("E2EE_UNLOCK_REQUIRED") }
+        catch (_: KeyPermanentlyInvalidatedException) { throw IllegalStateException("E2EE_DEVICE_KEY_INVALIDATED") }
+        finally { copy.fill(0) }
+    }
+    fun unlock(): ByteArray = synchronized(mutationLock) {
+        val bytes = file.openRead().use { input ->
+            val buffer = ByteArray(MAX_PRIVATE + 30); var size = 0
+            while (size < buffer.size) { val read = input.read(buffer, size, buffer.size - size); if (read < 0) break; size += read }
+            buffer.copyOf(size)
+        }
+        if (bytes.size !in 29..(MAX_PRIVATE + 29) || bytes[0] != 1.toByte()) throw IllegalStateException("E2EE_CORRUPT_DEVICE_VAULT")
+        try {
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.DECRYPT_MODE, key(false), GCMParameterSpec(128, bytes.copyOfRange(1,13)))
+            cipher.updateAAD(aad()); cipher.doFinal(bytes.copyOfRange(13,bytes.size))
+        } catch (_: UserNotAuthenticatedException) { throw IllegalStateException("E2EE_UNLOCK_REQUIRED") }
+        catch (_: KeyPermanentlyInvalidatedException) { throw IllegalStateException("E2EE_DEVICE_KEY_INVALIDATED") }
+        catch (error: IllegalStateException) { if (error.message == "E2EE_DEVICE_KEY_UNAVAILABLE") throw error; throw IllegalStateException("E2EE_CORRUPT_DEVICE_VAULT") }
+        catch (_: Exception) { throw IllegalStateException("E2EE_CORRUPT_DEVICE_VAULT") }
+    }
+    /** Recovery is explicit and owner-bound; no key deletion, database reset or empty fallback. */
+    fun recoverWithSecret(secret: ByteArray, protectedBundle: JSONObject): ByteArray =
+        E2eeKeys.openBundle(owner, "device-vault", secret, protectedBundle)
+}

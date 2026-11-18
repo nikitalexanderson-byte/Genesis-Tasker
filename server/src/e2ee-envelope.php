@@ -14,7 +14,7 @@ const GENESIS_E2EE_NUMBER_FIELDS = [
 ];
 const GENESIS_E2EE_DOMAINS = [
     'workspace', 'diary', 'dream-journal', 'mindmap', 'physis', 'aurora', 'stoicheion',
-    'shared-project', 'attachment', 'local-snapshot', 'outbox', 'draft', 'key-check',
+    'shared-project', 'shared-comment', 'attachment', 'local-snapshot', 'outbox', 'draft', 'key-check',
 ];
 
 function genesisE2eeInvalid(): never

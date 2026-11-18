@@ -51,6 +51,11 @@
 они требуют рабочего adapter и проверки восстановления. Paddle остаётся
 отдельной интеграцией с проверкой готовности, не частью криптографического cutover.
 
+После фактического обновления до 3.3.6 владелец поручил подготовить красивый,
+продающий пост для Telegram с картинкой: реальные изменения, улучшения удобства
+и объяснение надёжности GENESIS Tasker. Не публиковать автоматически; заявления
+о защите привязать к пройденной приёмке, не обещать абсолютную безопасность.
+
 ## Текущий инкремент
 
 Сначала общий строгий envelope, привязка полного контекста, новые одноразовые
@@ -111,16 +116,58 @@ emulator5560. Попытка read-only второго экземпляра су�
 прошли 2/2 за 0.115s. Это не проверка современного web bundle в старом WebView69
 или полноценного app journey на Android8. Логи в `output/release-3.3.6/api26/`.
 
+## Runtime vault, directory, migration and ordinary sync
+
+Продолжение реализации добавило независимые recovery/device keys, RFC9180 HPKE,
+защищённые web/native vaults, подписанные каталоги устройств/роли, серверные
+CAS/receipts/lease/fence и сохраняемую web migration state machine. Обычная
+синхронизация opaque объектов и файлов реализована одинаковым протоколом в
+`app/e2ee/scope-client.ts` и native `security/E2eeScopeClient.kt`. Состав и
+ограничения описаны в `docs/e2ee-336-runtime-adr.md`.
+
+При review исправлены сценарии потери ответа, истечения migration lease,
+повторной попытки после изменившегося legacy source, повторного keyId, подделки
+истории старым ключом и понижения current-epoch revision на чистом клиенте.
+Подписанные heads проверяются как нижняя граница; сохранённый ciphertext
+отменяется/подтверждается до rebase. Файл сохраняет имя и тип. Отдельная offline
+hydration открывает локальные черновики и принимает новые правки без сети;
+после неё серверная синхронизация требует свежую проверку каталога.
+
+Серверная additive migration 127 не опубликована. Persistent guards охватывают
+multi-owner tables, raw legacy keys, поколения данных и изменения shared ACL.
+ACL-изменения сейчас fail closed до реализации атомарной signed rotation.
+Background scans ещё требуют явного исключения migrated scopes, чтобы один
+защищённый scope не прерывал всю legacy job.
+
+| Последняя целевая проверка runtime | Фактический результат |
+| --- | --- |
+| Все JS E2EE suites | 90/90 PASS, `runtime/js-full-03.log`; независимый повтор review также 90/90 |
+| PHP actual SQLite | e2ee-store + e2ee-shared-store PASS, `runtime/backend-store-15/`; ownership expressions компилируются на полной схеме |
+| Android JVM | 22/22 PASS: keys6, storage3, envelope7, scope-client6; `runtime/native-scope-01.log` |
+| Реальный Chromium157 | 16/16 PASS, `runtime/browser-03.log`: Web/JCA HPKE, recovery, files, actual IndexedDB CAS/queued transaction abort |
+| TypeScript / targeted ESLint | PASS, `runtime/typecheck-scope-03.log`, `runtime/lint-scope-03.log` |
+
+Доказательства хранятся в `output/release-3.3.6/runtime/`. Неудачные прогоны
+сохранены: backend-store-13 содержит ошибку SQL placeholders в новом synthetic
+fixture (исправлена); первая проверка нового signed-floor test не передавала
+file metadata (исправлена). Это не результаты полного 48-сценарного приёмочного
+прогона. Последний native scope-client проверен JVM, не Android instrumented.
+
+Внутренний read-only review текущего runtime завершён без открытых подтверждённых
+P1/P2. Он не является внешним независимым криптографическим аудитом протокола.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.
 Сервер всё ещё знает **legacy** account keys; этот инкремент не меняет данную
 границу доверия и не даёт права обещать пользователям уже включённое E2EE.
-Далее требуются encrypted persistent vault/outbox/drafts, независимый recovery
-и переносимый импорт, подтверждение/отзыв устройств, signed directory/checkpoints,
-server CAS/idempotency и fence всех writers, полная shadow-миграция и аварийные
-сценарии, shared project epochs/files/chunks, web pilot, прямые Android upgrades,
-внешние обработки/документы и независимый crypto review. Существующие сообщения
+Готовые runtime-модули ещё нужно подключить к каждому реальному хранилищу,
+редактору и очереди; реализовать native migration, повторное офлайн-редактирование,
+полное сведение всех источников, atomic shared ACL + rotation, файлы/previews,
+recoverable personal archives/Drive и системный backup schedule/restore drills.
+Затем требуются web pilot, прямые Android upgrades, 48 сценариев, новые security
+экраны и смысловая приёмка всех 14 языков, внешние обработки/документы и
+независимый crypto review. Существующие сообщения
 сохраняют нынешнюю схему и историю; forward secrecy требует отдельного ADR.
 Тесты этого инкремента не заменяют 48 сценариев полного перехода.
 

@@ -33,7 +33,7 @@ object E2eeEnvelope {
         "dataGeneration", "writerProtocol", "cryptoEpoch", "securityEpoch", "revision", "keyId", "deviceId", "operationId")
     private val numbers = setOf("cryptoProtocol", "schemaVersion", "dataGeneration", "writerProtocol", "cryptoEpoch", "securityEpoch", "revision")
     private val domains = setOf("workspace", "diary", "dream-journal", "mindmap", "physis", "aurora", "stoicheion",
-        "shared-project", "attachment", "local-snapshot", "outbox", "draft", "key-check")
+        "shared-project", "shared-comment", "attachment", "local-snapshot", "outbox", "draft", "key-check")
     private val identifier = Regex("[A-Za-z0-9][A-Za-z0-9._:@/\\-]{0,127}")
     private val aadPrefix = "GENESIS-E2EE-AAD\u0000v1\u0000".toByteArray(Charsets.UTF_8)
     private val signaturePrefix = "GENESIS-E2EE-SIGNATURE\u0000v1\u0000".toByteArray(Charsets.UTF_8)
@@ -135,7 +135,7 @@ object E2eeEnvelope {
         finally { bytes.fill(0) }
     }
 
-    private fun assertP256(key: Any) {
+    internal fun assertP256(key: Any) {
         val params = (key as? ECKey)?.params ?: invalid()
         if (params.curve != p256.curve || params.generator != p256.generator
             || params.order != p256.order || params.cofactor != p256.cofactor) invalid()
@@ -144,6 +144,9 @@ object E2eeEnvelope {
     private fun signatureData(envelope: Envelope): ByteArray = signaturePrefix + envelope.context.additionalData() +
         decode(envelope.wrappedKey, 40) + decode(envelope.nonce, 12) +
         MessageDigest.getInstance("SHA-256").digest(decode(envelope.ciphertext, 16, MAX_PLAINTEXT + 16))
+
+    /** Stable ciphertext identity; ES256 proof bytes are deliberately excluded. */
+    fun payloadHash(envelope: Envelope): String = encode(MessageDigest.getInstance("SHA-256").digest(signatureData(envelope)))
 
     /** Fresh platform CSPRNG DEK for EVERY encryption. Persist/retry the result as a whole. */
     fun seal(root: SecretKey, signingKey: PrivateKey, context: Context, sourcePlaintext: ByteArray): Envelope {

@@ -1,0 +1,130 @@
+import { E2EE_SUITE, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope,
+  type E2eeContext, type E2eeEnvelope } from './envelope.ts';
+import { assertTechnical } from './keys.ts';
+
+export type SealedLocalRecord = { serial: number; envelope: E2eeEnvelope };
+export type StorageChange = { key: string; expected: number | null; value: SealedLocalRecord | null };
+export interface E2eeRecordStorage {
+  get(key: string): Promise<SealedLocalRecord | null>;
+  list(prefix: string): Promise<string[]>;
+  /** All compares and writes form ONE durable transaction. Conflict never clears data. */
+  commit(changes: StorageChange[], signal?: AbortSignal): Promise<void>;
+}
+export function openE2eeDatabase(factory: IDBFactory = indexedDB): Promise<IDBDatabase> {
+  return new Promise((resolve,reject)=>{
+    const request=factory.open('genesis-e2ee-v1',2);
+    request.onupgradeneeded=()=>{for(const name of ['records','keyMaterial'])if(!request.result.objectStoreNames.contains(name))request.result.createObjectStore(name);};
+    request.onsuccess=()=>{const db=request.result;db.onversionchange=()=>db.close();resolve(db);};
+    request.onerror=()=>reject(new Error('E2EE_STORAGE_UNAVAILABLE'));request.onblocked=()=>reject(new Error('E2EE_STORAGE_BLOCKED'));
+  });
+}
+
+/** No CryptoKey, raw key or plaintext value is persisted. No localStorage fallback. */
+export class IndexedDbE2eeStorage implements E2eeRecordStorage {
+  #database: Promise<IDBDatabase>;
+  constructor(factory: IDBFactory = indexedDB) {
+    this.#database = openE2eeDatabase(factory);
+  }
+  async get(key: string) {
+    const db = await this.#database;
+    return new Promise<SealedLocalRecord|null>((resolve, reject) => {
+      const transaction = db.transaction('records', 'readonly'), request = transaction.objectStore('records').get(key);
+      let value: SealedLocalRecord|null = null;
+      request.onsuccess = () => { value = request.result ?? null; };
+      transaction.oncomplete = () => resolve(value);
+      transaction.onerror = transaction.onabort = () => reject(new Error('E2EE_STORAGE_UNAVAILABLE'));
+    });
+  }
+  async list(prefix: string) {
+    const db = await this.#database;
+    return new Promise<string[]>((resolve, reject) => {
+      const transaction = db.transaction('records', 'readonly'); const keys: string[] = [];
+      const request = transaction.objectStore('records').openKeyCursor(IDBKeyRange.bound(prefix, prefix + '\uffff'));
+      request.onsuccess = () => { const cursor = request.result; if (cursor) { if (typeof cursor.key === 'string') keys.push(cursor.key); cursor.continue(); } };
+      transaction.oncomplete = () => resolve(keys);
+      transaction.onerror = transaction.onabort = () => reject(new Error('E2EE_STORAGE_UNAVAILABLE'));
+    });
+  }
+  async commit(changes: StorageChange[], signal?: AbortSignal) {
+    if (changes.length < 1 || changes.length > 10000 || new Set(changes.map(change => change.key)).size !== changes.length) throw new Error('E2EE_INVALID_LOCAL_BATCH');
+    const db = await this.#database;
+    if(signal?.aborted)throw new Error('E2EE_UNLOCK_REQUIRED');
+    return new Promise<void>((resolve, reject) => {
+      let conflict = false;
+      const transaction = db.transaction('records', 'readwrite', { durability: 'strict' }), store = transaction.objectStore('records');
+      const abort=()=>{try{transaction.abort();}catch{/* transaction already completed */}};
+      const cleanup=()=>signal?.removeEventListener('abort',abort);
+      signal?.addEventListener('abort',abort,{once:true});
+      // Request callbacks execute inside the transaction, so no async gap can release the lock.
+      for (const change of changes) {
+        const request = store.get(change.key);
+        request.onsuccess = () => {
+          if (conflict || signal?.aborted) { abort(); return; }
+          const current: SealedLocalRecord|undefined = request.result;
+          if ((current?.serial ?? null) !== change.expected) { conflict = true; transaction.abort(); return; }
+          if (change.value === null) store.delete(change.key); else store.put(change.value, change.key);
+        };
+      }
+      transaction.oncomplete = () => {cleanup();if(signal?.aborted)reject(new Error('E2EE_UNLOCK_REQUIRED'));else resolve();};
+      transaction.onerror = transaction.onabort = () => {cleanup();reject(new Error(signal?.aborted?'E2EE_UNLOCK_REQUIRED':conflict ? 'E2EE_LOCAL_CONFLICT' : 'E2EE_STORAGE_UNAVAILABLE'));};
+    });
+  }
+}
+
+export type VaultScope = { ownerId: string; scopeId: string; deviceId: string; generation: number; cryptoEpoch: number;
+  securityEpoch: number; keyId: string; signingKey: CryptoKey; roots: ReadonlyMap<string, CryptoKey>;
+  trustedSigner: (deviceId: string) => CryptoKey | undefined };
+export type LocalWrite = { domain: E2eeContext['domain']; objectId: string; value: Uint8Array; expected: number | null };
+export function localRecordKey(scope: Pick<VaultScope,'ownerId'|'scopeId'>, domain: E2eeContext['domain'], objectId: string) {
+  assertTechnical(scope.ownerId); assertTechnical(scope.scopeId); assertTechnical(objectId);
+  // Length encoding avoids collisions when IDs contain ':', '/' or other technical delimiters.
+  return [scope.ownerId, scope.scopeId, domain, objectId].map(part => `${part.length}:${part}`).join('');
+}
+
+/** An unlocked, memory-only capability. Lock invalidates pending work before a durable commit. */
+export class UnlockedE2eeVault {
+  #scope: VaultScope | null;
+  #lifecycle = 0;
+  #abort = new AbortController();
+  readonly storage: E2eeRecordStorage;
+  constructor(storage: E2eeRecordStorage, scope: VaultScope) { this.storage = storage; this.#scope = scope; }
+  lock() { this.#lifecycle++; this.#scope = null; this.#abort.abort(); }
+  assertUnlocked() { this.#open(); }
+  #open() { if (!this.#scope) throw new Error('E2EE_UNLOCK_REQUIRED'); return this.#scope; }
+  async read(domain: E2eeContext['domain'], objectId: string): Promise<{ serial: number; value: Uint8Array<ArrayBuffer> } | null> {
+    const scope = this.#open(), lifecycle = this.#lifecycle;
+    const record = await this.storage.get(localRecordKey(scope, domain, objectId));
+    if (lifecycle !== this.#lifecycle) throw new Error('E2EE_UNLOCK_REQUIRED');
+    if (record === null) return null;
+    const envelope = validateE2eeEnvelope(record.envelope), context = envelope.context;
+    if (!Number.isSafeInteger(record.serial) || record.serial < 1 || context.revision !== record.serial
+      || context.ownerId !== scope.ownerId || context.scopeId !== scope.scopeId || context.domain !== domain || context.objectId !== objectId
+      || context.dataGeneration !== scope.generation || context.cryptoEpoch > scope.cryptoEpoch || context.securityEpoch > scope.securityEpoch)
+      throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
+    const root = scope.roots.get(context.keyId), signer = scope.trustedSigner(context.deviceId);
+    if (!root || !signer) throw new Error('E2EE_KEY_UNAVAILABLE');
+    const value = await openE2eeEnvelope(root, signer, { ...context, ownerId: scope.ownerId, scopeId: scope.scopeId, domain, objectId }, envelope);
+    if (lifecycle !== this.#lifecycle) { value.fill(0); throw new Error('E2EE_UNLOCK_REQUIRED'); }
+    return { serial: record.serial, value };
+  }
+  async write(changes: LocalWrite[]): Promise<void> {
+    const scope = this.#open(), lifecycle = this.#lifecycle, root = scope.roots.get(scope.keyId);
+    if (!root) throw new Error('E2EE_KEY_UNAVAILABLE');
+    if (changes.some(change => change.expected !== null && (!Number.isSafeInteger(change.expected) || change.expected < 1))) throw new Error('E2EE_INVALID_LOCAL_BATCH');
+    // Copy input bytes before the first await so caller mutations cannot change an acknowledged save.
+    const captured = changes.map(change => ({ ...change, value: new Uint8Array(change.value) }));
+    try {
+      const writes = await Promise.all(captured.map(async change => {
+        const serial = (change.expected ?? 0) + 1;
+        const context: E2eeContext = { cryptoProtocol: 1, suite: E2EE_SUITE, ownerId: scope.ownerId, scopeId: scope.scopeId, domain: change.domain,
+          objectId: change.objectId, schemaVersion: 1, dataGeneration: scope.generation, writerProtocol: 9, cryptoEpoch: scope.cryptoEpoch,
+          securityEpoch: scope.securityEpoch, revision: serial, keyId: scope.keyId, deviceId: scope.deviceId, operationId: crypto.randomUUID() };
+        return { key: localRecordKey(scope, change.domain, change.objectId), expected: change.expected,
+          value: { serial, envelope: await sealE2eeEnvelope(root, scope.signingKey, context, change.value) } };
+      }));
+      if (lifecycle !== this.#lifecycle) throw new Error('E2EE_UNLOCK_REQUIRED');
+      await this.storage.commit(writes,this.#abort.signal);
+      if (lifecycle !== this.#lifecycle) throw new Error('E2EE_UNLOCK_REQUIRED');
+    } finally { captured.forEach(change => change.value.fill(0)); }
+  }
+}

@@ -52,6 +52,7 @@ require $serverRoot . '/src/physis.php';
 require $serverRoot . '/src/backups.php';
 require $serverRoot . '/src/weather.php';
 require $serverRoot . '/src/partner-api.php';
+require $serverRoot . '/src/e2ee-api.php';
 
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
@@ -148,6 +149,10 @@ function genesisRequireYandexUser(string $userId): array
 }
 
 try {
+    // Before every route, including early backup/import/shared handlers. Flags never
+    // remove the fence from an already activated scope.
+    genesisE2eeEnforceLegacyRoute($method, $path, genesisCurrentUserId());
+    if (str_starts_with($path, 'e2ee/v1/')) genesisE2eeRoute($method, $path);
     if ($path === 'donations/cloudtips/webhook') {
         if ($method !== 'POST') genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);
         $raw=file_get_contents('php://input',false,null,0,16385);
@@ -1703,6 +1708,9 @@ try {
     if ($error->status === 429) header('Retry-After: ' . (600 - time() % 600));
     genesisJson(['error' => $error->getMessage()], $error->status);
 } catch (PDOException $error) {
+    if (str_contains($error->getMessage(), 'E2EE_LEGACY_WRITE_FORBIDDEN') || str_contains($error->getMessage(), 'E2EE_DOWNGRADE_FORBIDDEN') || str_contains($error->getMessage(), 'E2EE_ACL_ROTATION_REQUIRED')) {
+        genesisJson(['error'=>'E2EE_UPGRADE_REQUIRED'],409);
+    }
     if(str_contains($error->getMessage(),'BILLING_SETTLEMENT_REQUIRED'))genesisJson(['error'=>'BILLING_SETTLEMENT_REQUIRED'],409);
     if (str_contains($error->getMessage(), 'GENESIS_QUOTA_EXCEEDED')) {
         genesisJson(['error' => 'STORAGE_QUOTA_EXCEEDED'], 409);

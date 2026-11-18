@@ -3386,6 +3386,12 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
   return api<{userId:string;subscriptionPlan:SubscriptionPlan;subscriptionRevision:number}>(`/admin/users/${encodeURIComponent(userId)}/reset-access`,
     {method:'POST',body:JSON.stringify({expectedPlan,expectedRevision})});
 }
+/** Shares authenticated transport/CSRF/cancellation only. No root or private key
+ * is accepted by this boundary; E2EE clients send signed commands/ciphertext. */
+export function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal) {
+  return api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})})
+    .catch(error=>{if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;});
+}
 
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});

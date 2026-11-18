@@ -6,7 +6,7 @@ export const E2EE_SUITE = 'A256KW-A256GCM-ES256' as const;
 export const E2EE_MAX_PLAINTEXT = 4 * 1024 * 1024;
 export const E2EE_DOMAINS = [
   'workspace', 'diary', 'dream-journal', 'mindmap', 'physis', 'aurora',
-  'stoicheion', 'shared-project', 'attachment', 'local-snapshot', 'outbox', 'draft', 'key-check',
+  'stoicheion', 'shared-project', 'shared-comment', 'attachment', 'local-snapshot', 'outbox', 'draft', 'key-check',
 ] as const;
 
 export type E2eeContext = {

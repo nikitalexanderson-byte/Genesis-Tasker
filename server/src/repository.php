@@ -829,6 +829,12 @@ function genesisVerifyPasswordLogin(string $email, string $password): ?array
 
 function genesisWorkspaceForClient(array $user): array
 {
+    require_once __DIR__ . '/e2ee-policy.php';
+    $e2ee = genesisE2eeUserState((string)$user['id']);
+    if ($e2ee && in_array($e2ee['state'], ['active', 'retirement'], true)) {
+        return ['key'=>null, 'keyMode'=>'e2ee', 'wrappedKey'=>null, 'wrappedKeyIv'=>null,
+            'supportedWriterProtocol'=>9, 'envelope'=>null, 'e2ee'=>$e2ee];
+    }
     $clientManaged = ($user['workspace_key_mode'] ?? 'legacy') === 'client' && empty($user['workspace_key_enc']);
     $key = null;
     if (!$clientManaged) {
@@ -859,6 +865,8 @@ function genesisWorkspaceForClient(array $user): array
 
 function genesisSaveClientWorkspaceKey(string $userId, array $payload): array
 {
+    require_once __DIR__ . '/e2ee-policy.php';
+    genesisE2eeRequireLegacyUser($userId);
     $key = trim((string)($payload['key'] ?? ''));
     $wrappedKey = trim((string)($payload['wrappedKey'] ?? ''));
     $iv = trim((string)($payload['iv'] ?? ''));
@@ -887,6 +895,8 @@ function genesisSaveClientWorkspaceKey(string $userId, array $payload): array
 
 function genesisSaveWorkspaceEnvelope(string $userId, array $payload): array
 {
+    require_once __DIR__ . '/e2ee-policy.php';
+    genesisE2eeRequireLegacyUser($userId);
     $ciphertext = trim((string)($payload['ciphertext'] ?? ''));
     $iv = trim((string)($payload['iv'] ?? ''));
     if ($ciphertext === '' || strlen($ciphertext) > 10_000_000 || !preg_match('/^[A-Za-z0-9+\/=]+$/', $ciphertext)) {

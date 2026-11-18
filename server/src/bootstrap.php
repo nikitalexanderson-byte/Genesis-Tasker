@@ -133,6 +133,8 @@ function genesisDb(): PDO
     genesisInitializeSharedTrashReadView($db);
     genesisInitializeSharedMapProjectIndex($db);
     genesisInitializeSharedTaskDetails($db);
+    require_once __DIR__ . '/e2ee-policy.php';
+    genesisE2eeInitializeGuards($db);
     return $db;
 }
 

@@ -242,6 +242,9 @@ tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
 dependencies {
     val composeBom = platform(libs.compose.bom)
 
+    // RFC 9180 HPKE and RFC 5869 HKDF; no application implementation of either primitive.
+    implementation("org.bouncycastle:bcprov-jdk18on:1.87")
+
     implementation(composeBom)
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.core:core:1.18.0")
