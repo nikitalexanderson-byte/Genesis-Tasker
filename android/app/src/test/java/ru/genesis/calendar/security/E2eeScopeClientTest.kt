@@ -10,10 +10,13 @@ class E2eeScopeClientTest {
     private class Memory : E2eeRecordStorage {
         var rows = mutableMapOf<String, E2eeLocalRecord>()
         var full = false
-        override fun get(key: String) = rows[key]
+        var beforeCommit: ((List<E2eeStorageChange>) -> Unit)? = null
+        var beforeGet: ((String) -> Unit)? = null
+        override fun get(key: String): E2eeLocalRecord? { beforeGet?.invoke(key); return rows[key] }
         override fun list(prefix: String) = rows.keys.filter { it.startsWith(prefix) }
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
             requireOpen(); check(!full) { "SYNTHETIC_DISK_FULL" }
+            beforeCommit?.invoke(changes)
             for (change in changes) check(rows[change.key]?.serial == change.expected) { "E2EE_LOCAL_CONFLICT" }
             val next = rows.toMutableMap()
             for (change in changes) if (change.value == null) next.remove(change.key) else next[change.key] = change.value
@@ -27,7 +30,8 @@ class E2eeScopeClientTest {
             privateKeys.signing.private, mapOf("local-one" to localRoot)) { if (it == deviceId) privateKeys.signing.public else null })
         override fun requireOpen() { vault.requireOpen() }
         override fun keys(): E2eeKeys.DeviceKeys { requireOpen(); return privateKeys }
-        override fun ensureDurableKeys() { requireOpen() }
+        var durable = true
+        override fun ensureDurableKeys() { requireOpen(); check(durable) { "E2EE_DEVICE_KEY_UNAVAILABLE" } }
         override fun rememberDirectory(scopeId: String, pin: JSONObject, events: JSONArray, scopeOwner: String,
             onVerified: ((E2eeDirectory.Verified) -> Unit)?): E2eeDirectory.Verified {
             val old = vault.read("key-check", "directory")
@@ -57,6 +61,7 @@ class E2eeScopeClientTest {
         var retired = JSONArray(); var writes = 0; var crashed = false; var beforeCrashed = false; var cancelCrashed = false
         var lastPut: JSONObject? = null
         var online = true; var network = 0
+        var onCommandResult: ((JSONObject) -> Unit)? = null
         lateinit var verified: E2eeDirectory.Verified
         init {
             val keys = E2eeKeys.publicKeys(device.keys())
@@ -114,6 +119,7 @@ class E2eeScopeClientTest {
             check((objects[key]?.context?.toJson()?.getLong("revision") ?: 0) == payload.getLong("expectedObjectRevision")) { "E2EE_OBJECT_CONFLICT" }
             val result = JSONObject().put("revision", context.get("revision")).put("generation", context.get("dataGeneration")).put("payloadHash", E2eeEnvelope.payloadHash(e))
             objects[key] = e; receipts[command.getString("operationId")] = JSONObject().put("payloadHash", identity).put("result", result); writes++
+            onCommandResult?.invoke(packet)
             if (writes == crashAtWrite && !crashed) { crashed = true; error("SYNTHETIC_PROCESS_DEATH") }; return result
         }
         override fun read(packet: JSONObject): JSONObject {
@@ -187,5 +193,88 @@ class E2eeScopeClientTest {
         client.hydrateOffline();client.prepare("diary","two","NEW OFFLINE DRAFT".toByteArray(),0)
         assertEquals("NEW OFFLINE DRAFT",client.readDraft("diary","two")!!.toString(Charsets.UTF_8));assertEquals(requests,f.network)
         reject("E2EE_REFRESH_REQUIRED"){client.flush("diary","two")};assertEquals(requests,f.network)
+    }
+    @Test fun repeatedOfflineEditsSurvivePendingUploadRestartAndFullDisk() {
+        val f=Fixture(crashAtWrite=1);var client=f.client();client.refresh();var editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        val first=editor.stage("FIRST EDIT".toByteArray(),null,0);editor.stage("SECOND EDIT".toByteArray(),first,0)
+        reject("SYNTHETIC_PROCESS_DEATH"){editor.flush()}
+        val previous=editor.load()!!;editor.stage("THIRD EDIT WHILE PENDING".toByteArray(),previous.serial,0)
+        f.storage.full=true;val saved=editor.load()!!;reject("SYNTHETIC_DISK_FULL"){editor.stage("MUST NOT REPLACE".toByteArray(),saved.serial,0)};f.storage.full=false
+        client=f.reopen();client.hydrateOffline();editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        assertEquals("THIRD EDIT WHILE PENDING",editor.load()!!.bytes.toString(Charsets.UTF_8));client.refresh();assertEquals(2L,editor.flush())
+        assertEquals("THIRD EDIT WHILE PENDING",client.read("diary","one")!!.bytes.toString(Charsets.UTF_8));assertFalse(editor.load()!!.pending)
+    }
+    @Test fun newEditDuringAcknowledgementIsRetainedAndStaleTabCannotOverwriteIt() {
+        val f=Fixture();val client=f.client();client.refresh();val editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        val oldSerial=editor.stage("INITIAL".toByteArray(),null,0);var edited=false
+        f.onCommandResult={packet->if(!edited&&packet.getJSONObject("command").getJSONObject("payload").getJSONObject("envelope").getJSONObject("context").getString("domain")=="diary"){
+            edited=true;val saved=editor.load()!!;editor.stage("EDIT DURING ACK".toByteArray(),saved.serial,saved.remoteRevision)
+        }}
+        assertEquals(2L,editor.flush());assertEquals("EDIT DURING ACK",client.read("diary","one")!!.bytes.toString(Charsets.UTF_8))
+        val second=E2eeEditorQueue(f.device,client,f.scope,"diary","one");reject("E2EE_LOCAL_CONFLICT"){second.stage("STALE TAB".toByteArray(),oldSerial,0)}
+    }
+    @Test fun crashBetweenScopeReceiptAndEditorCommitNeedsNoSecondRemoteWrite() {
+        val f=Fixture();val client=f.client();client.refresh();val editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        editor.stage("PRIVATE FINAL EDIT".toByteArray(),null,0);var crashed=false
+        f.storage.beforeCommit={changes->if(f.writes==2&&!crashed&&changes.any{it.value?.envelope?.context?.toJson()?.getString("objectId")?.startsWith("editor:")==true}){
+            crashed=true;error("SYNTHETIC_PROCESS_DEATH")
+        }}
+        reject("SYNTHETIC_PROCESS_DEATH"){editor.flush()};assertTrue(client.localJob("diary","one")!!.complete)
+        val writes=f.writes;assertEquals(1L,editor.flush());assertEquals(writes,f.writes);assertFalse(editor.load()!!.pending)
+    }
+    @Test fun missingDurableKeyBlocksNewEditorSaveAndRetainsPreviousSnapshot() {
+        val f=Fixture();val client=f.client();client.refresh();val editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        val serial=editor.stage("PRESERVED".toByteArray(),null,0);f.device.durable=false
+        reject("E2EE_DEVICE_KEY_UNAVAILABLE"){editor.stage("UNSAFE".toByteArray(),serial,0)};assertEquals("PRESERVED",editor.load()!!.bytes.toString(Charsets.UTF_8))
+    }
+    @Test fun actualRebasedRevisionWinsIfAnotherWorkerCompletesBeforeRebaseCall() {
+        val f=Fixture(crashBeforePut=true);val client=f.client();client.refresh();val editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        editor.stage("LOCAL EDIT".toByteArray(),null,0);reject("SYNTHETIC_PROCESS_DEATH"){editor.flush()}
+        val context=requireNotNull(f.lastPut).getJSONObject("command").getJSONObject("payload").getJSONObject("envelope").getJSONObject("context")
+            .put("domain","diary").put("objectId","one").put("revision",5).put("operationId","other-device-head")
+        val remote=E2eeFiles.seal(E2eeEnvelope.importRoot(f.root),f.device.keys().signing.private,E2eeEnvelope.Context.fromJson(context),"OTHER EDIT".toByteArray(),"","application/json")
+        f.objects["diary\u0000one"]=remote.manifest;for(chunk in remote.chunks)f.objects["attachment\u0000${chunk.context.toJson().getString("objectId")}"]=chunk
+        var interleaved=false
+        f.storage.beforeGet={key->if(!interleaved&&f.storage.rows[key]?.envelope?.context?.toJson()?.getString("objectId")?.startsWith("editor:")==true){
+            interleaved=true;val job=client.localJob("diary","one")!!;client.rebase("diary","one",5,originId=job.originId);client.flush("diary","one",job.originId)
+        }}
+        assertEquals("already-confirmed",editor.rebasePending(5));val saved=editor.load()!!;assertEquals(6L,saved.remoteRevision);assertFalse(saved.pending)
+        editor.stage("NEXT".toByteArray(),saved.serial,6)
+    }
+    @Test fun crossScopeOrDeviceQueueIsRejectedBeforeAcceptingPrivateText() {
+        val f=Fixture();val client=f.client()
+        reject("E2EE_SCOPE_BINDING_MISMATCH"){E2eeEditorQueue(f.device,client,"project:foreign","mindmap","one")}
+        reject("E2EE_SCOPE_BINDING_MISMATCH"){E2eeEditorQueue(Device(f.owner,Memory()),client,f.scope,"mindmap","one")}
+        assertTrue(f.storage.rows.isEmpty());assertEquals(0,f.writes)
+    }
+    @Test fun verifiedRemoteUpdateCanReconcileCleanAndUnpreparedDirtyEditor() {
+        for(dirty in listOf(false,true)){
+            val f=Fixture();val client=f.client();client.refresh();val editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+            editor.stage("INITIAL".toByteArray(),null,0);editor.flush();var saved=editor.load()!!
+            if(dirty){editor.stage("UNSENT".toByteArray(),saved.serial,1);saved=editor.load()!!}
+            client.prepare("diary","one","REMOTE UPDATE".toByteArray(),1);client.flush("diary","one");client.read("diary","one")
+            if(dirty)reject("E2EE_OBJECT_CONFLICT"){editor.flush()}
+            reject("E2EE_VERIFIED_REMOTE_REQUIRED"){editor.reconcile("UNVERIFIED".toByteArray(),saved.serial,3)}
+            val retained=f.storage.rows.size
+            editor.reconcile((if(dirty)"MERGED LOCAL AND REMOTE" else "REMOTE UPDATE").toByteArray(),saved.serial,2,cache=!dirty)
+            assertTrue(f.storage.rows.size>retained);saved=editor.load()!!;assertEquals(2L,saved.remoteRevision);assertEquals(dirty,saved.pending)
+            if(!dirty)editor.stage("NEXT EDIT".toByteArray(),saved.serial,2)
+            assertEquals(3L,editor.flush())
+        }
+    }
+    @Test fun reconciliationCanConsumeOlderCompletedReceiptWithoutDowngradingNewBase() {
+        val f=Fixture();val client=f.client();client.refresh();val editor=E2eeEditorQueue(f.device,client,f.scope,"diary","one")
+        editor.stage("LOCAL A".toByteArray(),null,0);var crashed=false
+        f.storage.beforeCommit={changes->if(f.writes==2&&!crashed&&changes.any{it.value?.envelope?.context?.toJson()?.getString("objectId")?.startsWith("editor:")==true}){
+            crashed=true;error("SYNTHETIC_PROCESS_DEATH")
+        }}
+        reject("SYNTHETIC_PROCESS_DEATH"){editor.flush()};assertTrue(client.localJob("diary","one")!!.complete)
+        val original=f.objects.getValue("diary\u0000one")
+        val remote=E2eeFiles.seal(E2eeEnvelope.importRoot(f.root),f.device.keys().signing.private,
+            E2eeEnvelope.Context.fromJson(original.context.toJson().put("revision",2).put("operationId","remote-after-crash")),"REMOTE B".toByteArray(),"","application/json")
+        f.objects["diary\u0000one"]=remote.manifest;for(chunk in remote.chunks)f.objects["attachment\u0000${chunk.context.toJson().getString("objectId")}"]=chunk
+        client.read("diary","one");val saved=editor.load()!!;editor.reconcile("MERGED A AND B".toByteArray(),saved.serial,2)
+        assertEquals(3L,editor.flush());assertEquals(3L,editor.load()!!.remoteRevision)
+        assertEquals("MERGED A AND B",client.read("diary","one")!!.bytes.toString(Charsets.UTF_8))
     }
 }

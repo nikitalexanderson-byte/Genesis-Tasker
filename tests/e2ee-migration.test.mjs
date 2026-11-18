@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { E2eeMigration } from '../app/e2ee/migration.ts';
+import { E2eeMigrationSources, requiredPrivatePaths } from '../app/e2ee/migration-sources.ts';
+import { E2eeScopeClient } from '../app/e2ee/scope-client.ts';
+import { SignedMigrationTransport } from '../app/e2ee/migration-transport.ts';
+import { verifyDeviceDirectory } from '../app/e2ee/directory.ts';
 import { UnlockedE2eeVault } from '../app/e2ee/storage.ts';
-import { generateDeviceKeys, freshSecret } from '../app/e2ee/keys.ts';
+import { generateDeviceKeys, freshSecret, createRecoveryKit, publicDeviceKeys, sealRoot } from '../app/e2ee/keys.ts';
 import { importE2eeRoot, encodeE2eeBytes } from '../app/e2ee/envelope.ts';
-import { verifyE2eeCommand, e2eeCommandHash } from '../app/e2ee/commands.ts';
+import { signE2eeCommand, verifyE2eeCommand, e2eeCommandHash } from '../app/e2ee/commands.ts';
 import { envelopePayloadHash, objectManifestHash } from '../app/e2ee/files.ts';
 
 class AtomicStorage {
@@ -20,9 +24,15 @@ class AtomicStorage {
 }
 const bytes=value=>new TextEncoder().encode(value);
 async function fixture(options={}){
-  const keys=await generateDeviceKeys(),root=await importE2eeRoot(freshSecret()),storage=new AtomicStorage();
-  const directory={ownerId:'owner',scopeId:'personal:owner',cryptoEpoch:1,securityEpoch:1,keyId:'root-one',generation:1,
-    checkpoint:{revision:1,hash:encodeE2eeBytes(new Uint8Array(32).fill(9))}};
+  const keys=await generateDeviceKeys(),raw=freshSecret(),root=await importE2eeRoot(raw),storage=new AtomicStorage();
+  const kind=options.registryKind??'personal',scopeId=`${kind}:owner`,recovery=await createRecoveryKit('owner'),pub=await publicDeviceKeys(keys);
+  const recipient={ownerId:'owner',scopeId,cryptoEpoch:1,keyId:'root-one',recipientId:'device'};
+  const bootstrap={protocol:1,ownerId:'owner',scopeId,deviceId:'device',action:'bootstrap',expectedRevision:0,checkpointHash:'genesis',securityEpoch:1,operationId:'bootstrap',payload:{
+    kind,resourceId:'owner',keyId:'root-one',generation:1,recoveryKit:recovery.kit,deviceKeys:pub,
+    deviceCapsule:await sealRoot(raw,pub.receivingKey,recipient),recoveryCapsule:await sealRoot(raw,recovery.kit.authority.receivingKey,{...recipient,recipientId:'recovery'})}};
+  bootstrap.payload.selfProof=(await signE2eeCommand(bootstrap,keys.signing.privateKey)).signature;
+  const events=[await signE2eeCommand(bootstrap,recovery.keys.signing.privateKey)];
+  let directory=await verifyDeviceDirectory('owner',scopeId,recovery.kit.authority,events);
   const vault=new UnlockedE2eeVault(storage,{...directory,deviceId:'device',signingKey:keys.signing.privateKey,
     roots:new Map([['root-one',root]]),trustedSigner:()=>keys.signing.publicKey});
   const trace=[],server={objects:new Map(),receipts:new Map(),state:'legacy',count:0,crashed:new Set(),fence:1,generation:1,expired:false,expiredOnce:false};
@@ -59,6 +69,7 @@ async function fixture(options={}){
         assert.equal(payload.objectCount,currentObjects().length);server.state='verified';result={state:'verified',manifestHash:payload.manifestHash};
       }else if(command.action==='migration-commit'){
         assert.equal(server.state,'verified');server.state='active';
+        events.push(packet);directory=await verifyDeviceDirectory('owner',scopeId,recovery.kit.authority,events);
         const hash=encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes(`${command.checkpointHash}\0${await e2eeCommandHash(command)}`))));
         result={state:'active',directoryRevision:command.expectedRevision+1,checkpointHash:options.poisonCheckpoint?'unsigned-server-value':hash};
       }
@@ -71,16 +82,26 @@ async function fixture(options={}){
     },
     async readAll(){trace.push('read-back');const rows=currentObjects();return options.truncate?rows.slice(1):rows;},
   };
-  const sources={
+  let sources={
+    requiredCoverage:['workspace','diary'],allowedContentDomains:['workspace','diary'],
     async captureLocal(){if(!trace.includes('snapshot-local'))assert.ok(!trace.some(row=>row.startsWith('network-')));trace.push('snapshot-local');return bytes('LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');},
     async reconcile(snapshot,previousSnapshots){trace.push('reconcile-after-snapshot');server.previousSnapshots=previousSnapshots.map(value=>new TextDecoder().decode(value));assert.equal(new TextDecoder().decode(snapshot),'LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');
       return{coverage:[{domain:'workspace',complete:!options.incomplete},{domain:'diary',complete:true}],content:[{domain:'workspace',objectId:'workspace',bytes:bytes('PERSONAL DATA INCLUDING OFFLINE EDIT')},
         {domain:'diary',objectId:'note',bytes:bytes('PRIVATE NOTE + DELETION LEDGER')}]};},
   };
+  if(options.registrySources){
+    sources=new E2eeMigrationSources('owner',scopeId,kind);
+    for(const path of requiredPrivatePaths(kind)){
+      if(path.id===options.missingPath)continue;
+      sources.register({id:path.id,async captureLocal(){trace.push('snapshot-local');return bytes(`local:${path.id}`);},
+        async reconcile(local){assert.equal(new TextDecoder().decode(local),`local:${path.id}`);
+          return{complete:path.id!==options.incompletePath,content:[{domain:path.id==='project.content'?'shared-comment':path.domains[0],objectId:path.id,bytes:bytes(`reconciled:${path.id}`)}]};}});
+    }
+  }
   const make=(scopeId=directory.scopeId)=>new E2eeMigration({vault,directory:{...directory,scopeId},deviceId:'device',signingKey:keys.signing.privateKey,signer:keys.signing.publicKey,root,transport,sources,
-    requiredDomains:['workspace','diary'],ensureDurableKeys:async()=>{trace.push('durable-key-check');if(options.missingKeys)throw new Error('KEYS_NOT_DURABLE');},
+    ensureDurableKeys:async()=>{trace.push('durable-key-check');if(options.missingKeys)throw new Error('KEYS_NOT_DURABLE');},
     withLocalWriteFence:async operation=>{trace.push('local-writer-fence');return operation();},verifyRecovery:async()=>{trace.push('recovery-checked');if(options.badRecovery)throw new Error('RECOVERY_FAILED');}});
-  return{storage,server,trace,make,transport,vault};
+  return{storage,server,trace,make,transport,vault,keys,root,events,recovery,scopeId};
 }
 test('snapshot is durable before all network work; read-back and independent recovery precede cutover',async()=>{
   const f=await fixture(),migration=f.make();await migration.prepare();assert.equal(f.server.count,0);
@@ -92,6 +113,52 @@ test('snapshot is durable before all network work; read-back and independent rec
   assert.ok(!JSON.stringify([...f.server.objects]).includes('PRIVATE NOTE'));
   const count=f.server.count;assert.equal(await f.make().run(),'active');assert.equal(f.server.count,count);
   await assert.rejects(migration.cancel(),/DOWNGRADE_FORBIDDEN/);
+});
+test('the actual path registry completes migration with coverage IDs distinct from crypto domains',async()=>{
+  const f=await fixture({registrySources:true}),migration=f.make();await migration.prepare();assert.equal(f.server.count,0);
+  assert.equal(await migration.run(),'active');assert.equal(f.server.objects.size,requiredPrivatePaths('personal').length*2);
+  assert.ok([...f.server.objects.values()].some(envelope=>envelope.context.domain==='workspace'&&envelope.context.objectId==='personal.tasks'));
+});
+test('required registry paths cannot be omitted, marked incomplete, or rebound to another scope',async()=>{
+  const missing=await fixture({registrySources:true,missingPath:'personal.tasks'});await assert.rejects(missing.make().prepare(),/SOURCE_ADAPTER_REQUIRED/);assert.equal(missing.server.count,0);
+  const incomplete=await fixture({registrySources:true,incompletePath:'personal.tasks'});await incomplete.make().prepare();await assert.rejects(incomplete.make().run(),/INCOMPLETE_COVERAGE/);assert.notEqual(incomplete.server.state,'active');
+  assert.throws(()=>incomplete.make('project:foreign'),/SCOPE_BINDING_MISMATCH/);
+});
+test('shared project registry migration produces comments readable by the normal scope client',async()=>{
+  const f=await fixture({registrySources:true,registryKind:'project'});await f.make().prepare();assert.equal(await f.make().run(),'active');
+  const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events);
+  const device={ownerId:'owner',deviceId:'device',vault:f.vault,requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys,
+    rememberDirectory:async(_scope,pin,events,_owner,callback)=>verifyDeviceDirectory('owner',f.scopeId,pin,events,undefined,callback)};
+  const normal=new E2eeScopeClient(device,'owner',f.scopeId,f.recovery.kit.authority,{
+    async directory(){return{events:f.events};},
+    async read(packet){
+      const {action,payload}=packet.command,objects=[...f.server.objects.values()];
+      const result={checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision};
+      if(action==='sealed-heads')result.objects=await Promise.all(objects.map(async envelope=>({domain:envelope.context.domain,objectId:envelope.context.objectId,revision:1,payloadHash:await envelopePayloadHash(envelope)})));
+      else result.envelopes=objects.filter(envelope=>envelope.context.domain===payload.domain&&envelope.context.objectId===payload.objectId);
+      return result;
+    },
+  });
+  await normal.refresh();const opened=await normal.read('shared-comment','project.content');assert.equal(new TextDecoder().decode(opened.bytes),'reconciled:project.content');opened.bytes.fill(0);
+});
+test('signed shadow readback continues past short pages and rejects loops, directory changes and lock',async()=>{
+  const f=await fixture();await f.make().prepare();await f.make().run();
+  const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),seen=[];
+  const device={ownerId:'owner',deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
+  let malformed=null;
+  const transport=new SignedMigrationTransport(device,directory,['workspace','diary'],async(path,body)=>{
+    if(path==='/source')return{sourceHash:encodeE2eeBytes(new Uint8Array(32))};
+    const command=await verifyE2eeCommand(body,f.keys.signing.publicKey);seen.push(command);
+    const {domain,after}=command.payload,rows=[...f.server.objects.values()].filter(envelope=>envelope.context.domain===domain)
+      .sort((a,b)=>a.context.objectId<b.context.objectId?-1:1).filter(envelope=>malformed==='loop'||envelope.context.objectId>after).slice(0,1);
+    if(malformed==='lock')f.vault.lock();
+    return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision+(malformed==='directory'?1:0),envelopes:rows};
+  });
+  assert.equal(await transport.sourceHash(),encodeE2eeBytes(new Uint8Array(32)));assert.equal((await transport.readAll()).length,4);
+  assert.ok(seen.filter(command=>command.payload.domain==='attachment').length>=3);
+  malformed='loop';await assert.rejects(transport.readAll(),/INVALID_RESPONSE/);
+  malformed='directory';await assert.rejects(transport.readAll(),/DIRECTORY_CONFLICT/);
+  malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));

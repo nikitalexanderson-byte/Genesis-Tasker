@@ -20,7 +20,7 @@ internal class AuthApiError(val code: String) : Exception(code)
 
 /** The actual transport guard; keep account routes testable without opening a connection. */
 internal fun allowedAuthSessionRoute(method: String, path: String): Boolean =
-    allowedReferralRoute(method, path) ||
+    E2eeTransportProtocol.allowedRoute(method, path) || allowedReferralRoute(method, path) ||
     (path == "/stoicheion/timeline/cards" && method in setOf("GET", "POST")) ||
     path in setOf("/session", "/auth/providers", "/workspace", "/bootstrap", "/stoicheion/draws", "/stoicheion/spread/cards", "/auth/google/native/challenge",
         "/auth/yandex/native", "/account/yandex-calendar/connect", "/account/yandex-calendar/disconnect",
@@ -263,6 +263,12 @@ internal class AuthSessionClient(context: Context) {
     fun recordAdvice(expected: Long, id: String, day: String, dismiss: Boolean): JSONObject =
         request(expected, if (dismiss) "/advice/dismiss" else "/advice/view", DailyAdviceProtocol.record(id, day))
     fun workspace(expected: Long): JSONObject = request(expected, "/workspace", null)
+
+    fun e2ee(expected: Long, path: String, body: JSONObject? = null): JSONObject {
+        val full = "/e2ee/v1$path"
+        require(E2eeTransportProtocol.allowedRoute(if(body == null) "GET" else "POST", full))
+        return request(expected, full, body)
+    }
     fun donationCheckout(expected: Long): JSONObject = request(expected, "/donations/cloudtips/checkout", JSONObject())
     fun weather(expected: Long, location: ru.genesis.calendar.domain.WeatherRequestV1, call: ForegroundAccountCall): JSONObject =
         request(expected, "/weather/v1/current", location.json(), foregroundCall = call)
@@ -801,6 +807,21 @@ internal class AuthSessionClient(context: Context) {
             phase = "status"
             val status = connection.responseCode
             if (status !in 200..299) {
+                if (E2eeTransportProtocol.allowedRoute(method, path)) {
+                    val code = runCatching {
+                        val output = ByteArrayOutputStream()
+                        connection.errorStream?.use { input ->
+                            val buffer = ByteArray(512)
+                            while (output.size() < 4096) {
+                                val count = input.read(buffer, 0, minOf(buffer.size, 4096 - output.size()))
+                                if (count < 0) break
+                                output.write(buffer, 0, count)
+                            }
+                        }
+                        E2eeTransportProtocol.errorCode(status, JSONObject(output.toString(Charsets.UTF_8.name())))
+                    }.getOrNull()
+                    if (code != null) throw AuthApiError(code)
+                }
                 if (status == 403 || status == 409 && (allowedReferralRoute(method,path)||BackupProtocol.allowedRoute(method,path)||BackupProtocol.personalWrite(method,path)||method == "POST" && path in setOf("/billing/orders", "/billing/trial"))) {
                     val accessCode = runCatching {
                         val output = ByteArrayOutputStream()
@@ -913,7 +934,7 @@ internal class AuthSessionClient(context: Context) {
                 while (true) {
                     val read = input.read(buffer)
                     if (read < 0) break
-                    val maximumBytes = when (path) {
+                    val maximumBytes = if (E2eeTransportProtocol.allowedRoute(method, path)) E2eeTransportProtocol.responseLimit(path) else when (path) {
                         "/workspace" -> 11_000_000
                         "/bootstrap" -> 24_000_000
                         "/admin/stats" -> 4_000_000

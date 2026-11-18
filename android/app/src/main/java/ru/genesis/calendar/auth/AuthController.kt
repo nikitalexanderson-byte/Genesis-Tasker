@@ -202,6 +202,29 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var pendingServicesUserId: String? = null
     private val mutableState = MutableStateFlow(AuthPanelState())
     val state = mutableState.asStateFlow()
+
+    /** Captures the account generation once; it cannot follow a later account switch. */
+    internal fun e2eeScopeTransport(uid: String): ru.genesis.calendar.security.E2eeScopeTransport {
+        val generation = client.currentGeneration()
+        return E2eeTransportProtocol.transport(client, generation) {
+            check(client.isCurrent(generation) && mutableState.value.user?.uid == uid
+                && !mutableState.value.requiresSignIn && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "E2EE_ACCOUNT_CHANGED" }
+        }
+    }
+    internal fun e2eeMigrationTransport(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
+        directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource): ru.genesis.calendar.security.E2eeMigrationTransport {
+        val generation = client.currentGeneration()
+        sources.assertBinding(directory.ownerId,directory.scopeId,directory.kind)
+        check(device.ownerId == uid && directory.ownerId == uid) { "E2EE_SCOPE_BINDING_MISMATCH" }
+        fun current() {
+            check(client.isCurrent(generation) && mutableState.value.user?.uid == uid && !mutableState.value.requiresSignIn
+                && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "E2EE_ACCOUNT_CHANGED" }
+        }
+        return ru.genesis.calendar.security.E2eeSignedMigrationTransport(device,directory,sources.allowedContentDomains) { path, body ->
+            current()
+            withContext(Dispatchers.IO) { current(); client.e2ee(generation,path,body).also { current() } }.also { current() }
+        }
+    }
     private val mutableTaskSync = MutableStateFlow(AccountTaskSyncState())
     val taskSync = mutableTaskSync.asStateFlow()
     internal fun backupGateway(uid: String): ru.genesis.calendar.data.BackupGateway = object : ru.genesis.calendar.data.BackupGateway {

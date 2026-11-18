@@ -1,5 +1,5 @@
 import { e2eeCommandHash, signE2eeCommand, type E2eeCommand, type SignedE2eeCommand, type WireValue } from './commands.ts';
-import { E2EE_SUITE, decodeE2eeBytes, encodeE2eeBytes, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
+import { E2EE_DOMAINS, E2EE_SUITE, decodeE2eeBytes, encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile, E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES } from './files.ts';
 import { freshSecret } from './keys.ts';
 import { UnlockedE2eeVault, type LocalWrite } from './storage.ts';
@@ -8,7 +8,11 @@ import type { VerifiedDirectory } from './directory.ts';
 export type MigrationPhase = 'preparing'|'uploading'|'verified'|'active'|'cancelled';
 export type MigrationContent = { domain: E2eeContext['domain']; objectId: string; bytes: Uint8Array; filename?: string; mediaType?: string };
 export type MigrationCoverage = { domain: string; complete: boolean };
+export const E2EE_MIGRATION_BYTE_BUDGET = 128 * 1024 * 1024;
 export interface MigrationSources {
+  readonly requiredCoverage: readonly string[];
+  readonly allowedContentDomains: readonly E2eeContext['domain'][];
+  assertBinding?(ownerId:string,scopeId:string,kind:string):void;
   /** Must be local-only. Include outbox, drafts, tombstones, key metadata and all local stores. */
   captureLocal(): Promise<Uint8Array>;
   /** Runs only after the protected snapshot has committed. Missing/locked paths block activation. */
@@ -44,23 +48,26 @@ function decodeState(bytes: Uint8Array): MigrationState {
  */
 export class E2eeMigration {
   #vault: UnlockedE2eeVault; #directory: VerifiedDirectory; #deviceId: string; #signingKey: CryptoKey;
-  #transport: MigrationTransport; #sources: MigrationSources; #required: readonly string[];
+  #transport: MigrationTransport; #sources: MigrationSources; #required: readonly string[]; #allowed: readonly E2eeContext['domain'][];
   #recoveryCheck: (root: CryptoKey) => Promise<void>; #root: CryptoKey; #signer: CryptoKey;
   #durableKeys: () => Promise<void>; #localFence: <T>(operation: () => Promise<T>) => Promise<T>;
   #stateId: Promise<string>;
   constructor(options: { vault: UnlockedE2eeVault; directory: VerifiedDirectory; deviceId: string; signingKey: CryptoKey; signer: CryptoKey;
-    root: CryptoKey; transport: MigrationTransport; sources: MigrationSources; requiredDomains: readonly string[];
+    root: CryptoKey; transport: MigrationTransport; sources: MigrationSources;
     ensureDurableKeys: () => Promise<void>;
     withLocalWriteFence: <T>(operation: () => Promise<T>) => Promise<T>;
     /** Must unwrap independently saved recovery material and prove it opens the new generation. */
     verifyRecovery: (root: CryptoKey) => Promise<void> }) {
     this.#vault=options.vault;this.#directory=options.directory;this.#deviceId=options.deviceId;this.#signingKey=options.signingKey;
-    this.#transport=options.transport;this.#sources=options.sources;this.#required=options.requiredDomains;
+    this.#transport=options.transport;this.#sources=options.sources;
+    this.#required=Object.freeze([...options.sources.requiredCoverage]);this.#allowed=Object.freeze([...options.sources.allowedContentDomains]);
     this.#root=options.root;this.#signer=options.signer;this.#recoveryCheck=options.verifyRecovery;
     this.#durableKeys=options.ensureDurableKeys;this.#localFence=options.withLocalWriteFence;
+    options.sources.assertBinding?.(options.directory.ownerId,options.directory.scopeId,options.directory.kind);
     // One device vault can hold personal data and several shared scopes.
     this.#stateId=digest(encoder.encode(this.#directory.scopeId)).then(hash=>`migration:${hash}`);
-    if (this.#required.length < 1 || new Set(this.#required).size !== this.#required.length) throw new Error('E2EE_COVERAGE_REQUIRED');
+    if (this.#required.length < 1 || new Set(this.#required).size !== this.#required.length || this.#allowed.length < 1
+      || new Set(this.#allowed).size !== this.#allowed.length || this.#allowed.some(domain=>!E2EE_DOMAINS.includes(domain))) throw new Error('E2EE_COVERAGE_REQUIRED');
   }
   async status(): Promise<MigrationState|null> {
     const record = await this.#vault.read('local-snapshot',await this.#stateId);
@@ -197,20 +204,27 @@ export class E2eeMigration {
       for(const id of state.ancestors) {
         const row=await this.#vault.read('local-snapshot',id);if(!row)throw new Error('E2EE_CORRUPT_SNAPSHOT');
         let previous:MigrationState;try{previous=decodeState(row.value);}finally{row.value.fill(0);}
-        total+=previous.snapshotSize;if(total>128*1024*1024)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
+        total+=previous.snapshotSize;if(total>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
         previousSnapshots.push(await this.#snapshot(previous));
       }
       const reconciled=await this.#sources.reconcile(snapshot,previousSnapshots);content=reconciled.content;
-      if(this.#required.some(domain=>reconciled.coverage.filter(row=>row.domain===domain&&row.complete).length!==1)
+      if(reconciled.coverage.length!==this.#required.length || this.#required.some(domain=>reconciled.coverage.filter(row=>row.domain===domain&&row.complete).length!==1)
         || reconciled.coverage.some(row=>!this.#required.includes(row.domain)) || content.length<1
-        || new Set(content.map(row=>`${row.domain}\0${row.objectId}`)).size!==content.length)throw new Error('E2EE_INCOMPLETE_COVERAGE');
+        || content.length>10000 || new Set(content.map(row=>`${row.domain}\0${row.objectId}`)).size!==content.length)throw new Error('E2EE_INCOMPLETE_COVERAGE');
+      let contentBytes=0;
+      for(const record of content){
+        if(!this.#allowed.includes(record.domain))throw new Error('E2EE_INCOMPLETE_COVERAGE');
+        if(!(record.bytes instanceof Uint8Array)||record.bytes.length>E2EE_MAX_FILE_BYTES||record.domain==='shared-comment'&&record.bytes.length>65536)throw new Error('E2EE_INVALID_SOURCE_RESULT');
+        contentBytes+=record.bytes.length;if(contentBytes>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_TOO_LARGE');
+      }
       const changes:LocalWrite[]=[];const plan:PlannedEnvelope[]=[];const logical:LogicalContent[]=[];
       for(const record of content) {
-        if(!this.#required.includes(record.domain)||!state.lease)throw new Error('E2EE_INCOMPLETE_COVERAGE');
+        if(!state.lease)throw new Error('E2EE_CORRUPT_MIGRATION');
         const context:E2eeContext={cryptoProtocol:1,suite:E2EE_SUITE,ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,domain:record.domain,
           objectId:record.objectId,schemaVersion:1,dataGeneration:state.lease.generation,writerProtocol:9,cryptoEpoch:this.#directory.cryptoEpoch,
           securityEpoch:this.#directory.securityEpoch,revision:1,keyId:this.#directory.keyId,deviceId:this.#deviceId,operationId:crypto.randomUUID()};
-        const file=await sealE2eeFile(this.#root,this.#signingKey,context,record.bytes,{filename:record.filename??'',mediaType:record.mediaType??'application/json'});
+        const file=record.domain==='shared-comment'?{chunks:[],manifest:await sealE2eeEnvelope(this.#root,this.#signingKey,context,record.bytes)}
+          :await sealE2eeFile(this.#root,this.#signingKey,context,record.bytes,{filename:record.filename??'',mediaType:record.mediaType??'application/json'});
         logical.push({domain:record.domain,objectId:record.objectId,plaintextHash:await digest(record.bytes),size:record.bytes.length});
         for(const envelope of [...file.chunks,file.manifest]) {
           const recordId=`${state.migrationId}:upload:${plan.length}`;
@@ -255,7 +269,8 @@ export class E2eeMigration {
       for(const item of state.plan)if(await envelopePayloadHash(byId.get(`${item.domain}\0${item.objectId}`)!)!==item.hash)throw new Error('E2EE_MANIFEST_MISMATCH');
       for(const content of state.logical) {
         const manifest=byId.get(`${content.domain}\0${content.objectId}`)!;
-        const opened=await openE2eeFile(this.#root,this.#signer,manifest.context,manifest,async id=>byId.get(`attachment\0${id}`)!);
+        const opened=content.domain==='shared-comment'?{bytes:await openE2eeEnvelope(this.#root,this.#signer,manifest.context,manifest)}
+          :await openE2eeFile(this.#root,this.#signer,manifest.context,manifest,async id=>byId.get(`attachment\0${id}`)!);
         try{if(opened.bytes.length!==content.size||await digest(opened.bytes)!==content.plaintextHash)throw new Error('E2EE_CONTENT_MISMATCH');}finally{opened.bytes.fill(0);}
       }
       await this.#recoveryCheck(this.#root);

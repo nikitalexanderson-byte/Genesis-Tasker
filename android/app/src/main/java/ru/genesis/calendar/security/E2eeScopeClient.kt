@@ -42,6 +42,9 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     private val sealedCache = mutableMapOf<String, JSONArray>()
     private var refreshed = false
     init { E2eeKeys.technical(ownerId); E2eeKeys.technical(scopeId) }
+    fun assertBinding(candidate: E2eeScopeDevice, candidateScope: String) {
+        check(candidate === device && candidateScope == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
+    }
     private fun current(): E2eeDirectory.Verified {
         device.requireOpen()
         return directory ?: throw IllegalStateException("E2EE_DIRECTORY_REQUIRED")
@@ -105,6 +108,16 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         return response
     }
     private class Job(val value: JSONObject, val serial: Long)
+    class LocalJob(val originId: String?, val expectedRevision: Long, val complete: Boolean)
+    @Synchronized fun localJob(domain: String, objectId: String): LocalJob? {
+        device.requireOpen(); val loaded = loadJob(id(domain, objectId)) ?: return null
+        return LocalJob(if(loaded.value.isNull("originId"))null else loaded.value.getString("originId"),loaded.value.getLong("expected"),loaded.value.getBoolean("complete"))
+    }
+    fun assertVerifiedRevision(domain: String, objectId: String, revision: Long) {
+        device.requireOpen(); val floor = device.vault.read("key-check", "floor:${id(domain,objectId)}")
+        try { check(floor != null && JSONObject(floor.bytes.toString(Charsets.UTF_8)).getLong("revision") == revision) { "E2EE_VERIFIED_REMOTE_REQUIRED" } }
+        finally { floor?.bytes?.fill(0) }
+    }
     private fun loadJob(id: String): Job? {
         val row = device.vault.read("outbox", "job:$id") ?: return null
         try {
@@ -125,11 +138,12 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         return (serial ?: 0) + 1
     }
     @Synchronized fun prepare(domain: String, objectId: String, source: ByteArray, expectedRevision: Long,
-        filename: String = "", mediaType: String = "application/json") {
-        prepareInternal(domain, objectId, source, expectedRevision, filename, mediaType, null)
+        filename: String = "", mediaType: String = "application/json", originId: String? = null) {
+        originId?.let(E2eeKeys::technical)
+        prepareInternal(domain, objectId, source, expectedRevision, filename, mediaType, null, originId)
     }
     private fun prepareInternal(domain: String, objectId: String, source: ByteArray, expectedRevision: Long,
-        filename: String, mediaType: String, replacement: Job?) {
+        filename: String, mediaType: String, replacement: Job?, originId: String? = null) {
         val value = current(); check(value.state == "active") { "E2EE_NOT_ACTIVE" }
         require(expectedRevision in 0..9007199254740990L) { "E2EE_INVALID_REVISION" }
         require(source.size <= E2eeFiles.MAX_FILE_BYTES && (domain != "shared-comment" || source.size <= 65536 && expectedRevision == 0L)) { "E2EE_FILE_TOO_LARGE" }
@@ -170,6 +184,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             val job = JSONObject().put("protocol", 1).put("scopeId", scopeId).put("domain", domain).put("objectId", objectId)
                 .put("generation", value.generation).put("cryptoEpoch", value.cryptoEpoch).put("keyId", value.keyId).put("expected", expectedRevision)
                 .put("size", bytes.size).put("metadata", JSONObject().put("filename", filename).put("mediaType", mediaType))
+                .put("originId", if(replacement!=null)replacement.value.opt("originId") ?: JSONObject.NULL else originId ?: JSONObject.NULL)
                 .put("draftId", draftId).put("draftParts", draftParts).put("plan", plan).put("uploaded", 0)
                 .put("pending", JSONObject.NULL).put("cancelling", JSONObject.NULL).put("complete", false)
             saveJob(key, job, previous?.serial, changes)
@@ -189,10 +204,11 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             device.requireOpen(); return bytes
         } catch (error: Exception) { bytes.fill(0); throw error }
     }
-    @Synchronized fun flush(domain: String, objectId: String): Long {
+    @Synchronized fun flush(domain: String, objectId: String, originId: String? = null): Long {
         check(refreshed) { "E2EE_REFRESH_REQUIRED" }
         val value = current(); val key = id(domain, objectId); val loaded = loadJob(key) ?: throw IllegalStateException("E2EE_PENDING_SAVE_REQUIRED")
         val job = loaded.value; var serial = loaded.serial
+        check(originId == null || job.opt("originId") == originId) { "E2EE_PENDING_EDITOR_MISMATCH" }
         if (job.getBoolean("complete")) return job.getLong("expected") + 1
         check(job.isNull("cancelling") && job.getLong("generation") == value.generation
             && job.getLong("cryptoEpoch") == value.cryptoEpoch && job.getString("keyId") == value.keyId) { "E2EE_DRAFT_REBASE_REQUIRED" }
@@ -242,10 +258,11 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         }
         try { return saveJob(id, job, serial, confirmed) } finally { confirmed.forEach { it.bytes.fill(0) } }
     }
-    @Synchronized fun rebase(domain: String, objectId: String, expectedRevision: Long, filename: String? = null, mediaType: String? = null): String {
+    @Synchronized fun rebase(domain: String, objectId: String, expectedRevision: Long, filename: String? = null, mediaType: String? = null, originId: String? = null): String {
         check(refreshed) { "E2EE_REFRESH_REQUIRED" }
         current(); val key = id(domain, objectId); val loaded = loadJob(key) ?: throw IllegalStateException("E2EE_PENDING_SAVE_REQUIRED")
         val job = loaded.value; var serial = loaded.serial
+        check(originId == null || job.opt("originId") == originId) { "E2EE_PENDING_EDITOR_MISMATCH" }
         if (job.getBoolean("complete")) return "already-confirmed"
         if (!job.isNull("pending")) {
             if (job.isNull("cancelling")) {

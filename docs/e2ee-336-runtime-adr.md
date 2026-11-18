@@ -120,8 +120,13 @@ network access. Reading an existing local draft needs only an unlocked device;
 preparing a new draft uses saved authenticated floors and performs no network
 requests. Network operations after offline hydration require a fresh directory
 refresh. A failed/untrusted response never silently selects an old directory.
-Autosaving product editors must use a separate durable latest-draft queue:
-the low-level `prepare` deliberately refuses to replace an uncompleted job.
+`editor-queue.ts` / `E2eeEditorQueue.kt` provide a separate durable latest-draft
+queue: every acknowledged save has an immutable protected snapshot while an
+earlier upload is unresolved. Intermediate uploads can be coalesced; the1024
+retained snapshots are never silently deleted. Scope/device binding prevents
+cross-scope reuse; CAS protects simultaneous editors. Authenticated remote
+reconciliation advances the base only after explicit merge or clean-cache
+acceptance. Completed older receipts cannot reduce that base.
 
 Android additionally has a ciphertext-only CAS database in `noBackupFilesDir`.
 Its database cannot be silently created during normal unlock or replaced on
@@ -135,6 +140,24 @@ receipt before re-signing a proven uncommitted migration operation with a new
 fence. Explicit restart archives the cancelled attempt and supplies every prior
 protected snapshot to reconciliation; it cannot cancel an active generation.
 
+Native `E2eeMigration.kt` implements the same snapshot/shadow/lease/readback/recovery
+state machine as the browser. Both use distinct required coverage path IDs and
+allowed crypto content domains from `private-paths-v1.json`. Missing adapters
+block capture, incomplete paths block activation. Sources are copied, not mutated;
+all previous attempts reach reconciliation. Input history and reconciled output
+each have a128MiB aggregate limit in addition to per-file/object limits. Shared
+local-work reconciles into authorized private objects; raw draft/outbox/legacy-key
+metadata stays protected locally. Shared comments retain the normal immutable
+64KiB envelope format rather than a file manifest.
+
+`SignedMigrationTransport` / `E2eeSignedMigrationTransport` use authenticated
+source/command routes and signed paginated readback. A short page does not mean
+EOF: readback ends on an empty page, verifies cursor progress/checkpoint binding,
+and is capped at8000 objects/256MiB serialized ciphertext. Android captures the
+account generation and checks it before/after IO; web uses the existing account
+abort channel. Low-memory device acceptance at these upper bounds is pending;
+no streaming/unbounded storage guarantee is made.
+
 ## Trust limits and remaining integration
 
 A saved trusted checkpoint detects rollback below that checkpoint and conflicting
@@ -145,8 +168,9 @@ non-extractability is not an XSS defence. Group epoch distribution uses signed
 membership and RFC9180 capsules; it does not promise MLS/ratchet/forward secrecy.
 Existing message history retains its current protocol.
 
-Required next work: native migration coordinator and complete adapters for every actual
-personal/shared/local queue/draft path; lifecycle/service worker/multitab routing;
+Required next work: complete adapters for every actual personal/shared/local
+queue/draft path and their shared writer fences; product bootstrap/editor routing,
+lifecycle/service worker/multitab routing;
 recoverable archives/Drive adapter; ACL change-and-rotation transaction; all 48
 acceptance scenarios, native API26 and actual authorized upgrade/restore/channel
 drills, 14-language semantic acceptance. External independent cryptographic review

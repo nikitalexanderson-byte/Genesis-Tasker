@@ -108,6 +108,8 @@ android {
         resValues = true
     }
     sourceSets.getByName("androidTest").assets.srcDir("src/test/resources")
+    // The same public path inventory is consumed by web and native migration.
+    sourceSets.getByName("main").assets.srcDir("../../contracts/e2ee")
     sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("../tests/fixtures"))
 }
 

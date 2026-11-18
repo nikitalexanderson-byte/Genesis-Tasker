@@ -34,6 +34,7 @@ object E2eeEnvelope {
     private val numbers = setOf("cryptoProtocol", "schemaVersion", "dataGeneration", "writerProtocol", "cryptoEpoch", "securityEpoch", "revision")
     private val domains = setOf("workspace", "diary", "dream-journal", "mindmap", "physis", "aurora", "stoicheion",
         "shared-project", "shared-comment", "attachment", "local-snapshot", "outbox", "draft", "key-check")
+    fun supportsDomain(domain: String): Boolean = domain in domains
     private val identifier = Regex("[A-Za-z0-9][A-Za-z0-9._:@/\\-]{0,127}")
     private val aadPrefix = "GENESIS-E2EE-AAD\u0000v1\u0000".toByteArray(Charsets.UTF_8)
     private val signaturePrefix = "GENESIS-E2EE-SIGNATURE\u0000v1\u0000".toByteArray(Charsets.UTF_8)

@@ -14,7 +14,7 @@ export interface ScopeTransport {
 }
 type PlanItem={recordId:string;hash:string;expected:number};
 type UploadJob={protocol:1;scopeId:string;domain:E2eeContext['domain'];objectId:string;generation:number;cryptoEpoch:number;keyId:string;
-  expected:number;size:number;metadata:{filename:string;mediaType:string};draftId:string;draftParts:number;plan:PlanItem[];uploaded:number;pending:SignedE2eeCommand|null;cancelling:SignedE2eeCommand|null;complete:boolean};
+  expected:number;size:number;metadata:{filename:string;mediaType:string};originId:string|null;draftId:string;draftParts:number;plan:PlanItem[];uploaded:number;pending:SignedE2eeCommand|null;cancelling:SignedE2eeCommand|null;complete:boolean};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 async function hash(value:string){return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))));}
 function epochKey(directory:Pick<VerifiedDirectory,'cryptoEpoch'|'securityEpoch'|'keyId'|'generation'>){return `${directory.cryptoEpoch}:${directory.securityEpoch}:${directory.keyId}:${directory.generation}`;}
@@ -31,6 +31,7 @@ export class E2eeScopeClient {
     assertTechnical(ownerId);assertTechnical(scopeId);this.#device=device;this.#owner=ownerId;this.#scopeId=scopeId;
     this.#pin=snapshotE2eeValue(pin);this.#transport=transport;
   }
+  assertBinding(device:object,scopeId:string){if(device!==this.#device||scopeId!==this.#scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}
   #open(){this.#device.requireOpen();if(!this.#directory)throw new Error('E2EE_DIRECTORY_REQUIRED');return this.#directory;}
   async refresh():Promise<VerifiedDirectory> {
     this.#refreshed=false;
@@ -75,6 +76,7 @@ export class E2eeScopeClient {
     const record=await this.#device.vault.read('outbox',`job:${id}`);if(!record)return null;
     try {
       const job=JSON.parse(decoder.decode(record.value)) as UploadJob;
+      job.originId??=null;
       if(job.protocol!==1||job.scopeId!==this.#scopeId||!Array.isArray(job.plan)||job.plan.length<1||job.plan.length>258
         ||!Number.isSafeInteger(job.uploaded)||job.uploaded<0||job.uploaded>job.plan.length||typeof job.complete!=='boolean'
         ||!Number.isSafeInteger(job.size)||job.size<0||job.size>E2EE_MAX_FILE_BYTES
@@ -87,10 +89,20 @@ export class E2eeScopeClient {
     const bytes=encoder.encode(JSON.stringify(job));try{await this.#device.vault.write([...changes,{domain:'outbox',objectId:`job:${id}`,value:bytes,expected:serial}]);}
     finally{bytes.fill(0);}return(serial??0)+1;
   }
-  async prepare(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,metadata={filename:'',mediaType:'application/json'}):Promise<void> {
-    return this.#prepare(domain,objectId,source,expectedRevision,metadata);
+  async localJob(domain:E2eeContext['domain'],objectId:string):Promise<{originId:string|null;expectedRevision:number;complete:boolean}|null> {
+    this.#device.requireOpen();const loaded=await this.#loadJob(await this.#id(domain,objectId));
+    return loaded?{originId:loaded.job.originId,expectedRevision:loaded.job.expected,complete:loaded.job.complete}:null;
   }
-  async #prepare(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,metadata:{filename:string;mediaType:string},replacement?:{serial:number;job:UploadJob}):Promise<void> {
+  async assertVerifiedRevision(domain:E2eeContext['domain'],objectId:string,revision:number){
+    this.#device.requireOpen();const floor=await this.#device.vault.read('key-check',`floor:${await this.#id(domain,objectId)}`);
+    try{if(!floor||JSON.parse(decoder.decode(floor.value)).revision!==revision)throw new Error('E2EE_VERIFIED_REMOTE_REQUIRED');}
+    finally{floor?.value.fill(0);}
+  }
+  async prepare(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,metadata={filename:'',mediaType:'application/json'},originId:string|null=null):Promise<void> {
+    if(originId!==null)assertTechnical(originId);
+    return this.#prepare(domain,objectId,source,expectedRevision,metadata,undefined,originId);
+  }
+  async #prepare(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,metadata:{filename:string;mediaType:string},replacement?:{serial:number;job:UploadJob},originId:string|null=null):Promise<void> {
     const directory=this.#open();if(directory.state!=='active')throw new Error('E2EE_NOT_ACTIVE');
     if(!Number.isSafeInteger(expectedRevision)||expectedRevision<0||expectedRevision>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_INVALID_REVISION');
     if(source.length>E2EE_MAX_FILE_BYTES||domain==='shared-comment'&&(source.length>65536||expectedRevision!==0))throw new Error('E2EE_FILE_TOO_LARGE');
@@ -123,7 +135,7 @@ export class E2eeScopeClient {
         plan.push({recordId,hash:await envelopePayloadHash(envelope),expected:envelope===sealed.manifest?expectedRevision:0});
       }
       const job:UploadJob={protocol:1,scopeId:this.#scopeId,domain,objectId,generation:directory.generation,cryptoEpoch:directory.cryptoEpoch,keyId:directory.keyId,
-        expected:expectedRevision,size:bytes.length,metadata,draftId,draftParts,plan,uploaded:0,pending:null,cancelling:null,complete:false};
+        expected:expectedRevision,size:bytes.length,metadata,originId:replacement?.job.originId??originId,draftId,draftParts,plan,uploaded:0,pending:null,cancelling:null,complete:false};
       await this.#saveJob(id,job,previous?.serial??null,changes);
     }finally{bytes.fill(0);changes.forEach(change=>change.value.fill(0));}
   }
@@ -138,10 +150,11 @@ export class E2eeScopeClient {
       this.#device.requireOpen();return bytes;
     }catch(error){bytes.fill(0);throw error;}
   }
-  async flush(domain:E2eeContext['domain'],objectId:string):Promise<number> {
+  async flush(domain:E2eeContext['domain'],objectId:string,originId?:string):Promise<number> {
     if(!this.#refreshed)throw new Error('E2EE_REFRESH_REQUIRED');
     const directory=this.#open(),id=await this.#id(domain,objectId),loaded=await this.#loadJob(id);if(!loaded)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
     const {job}=loaded;let serial=loaded.serial;
+    if(originId!==undefined&&job.originId!==originId)throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
     if(job.complete)return job.expected+1;
     if(job.cancelling)throw new Error('E2EE_DRAFT_REBASE_REQUIRED');
     if(job.generation!==directory.generation||job.cryptoEpoch!==directory.cryptoEpoch||job.keyId!==directory.keyId)throw new Error('E2EE_DRAFT_REBASE_REQUIRED');
@@ -187,10 +200,12 @@ export class E2eeScopeClient {
   }
   /** Resolves the old request under a server writer lock before replacing its
    * ciphertext. Every old draft/job remains encrypted locally for recovery. */
-  async rebase(domain:E2eeContext['domain'],objectId:string,expectedRevision:number,metadata?:{filename:string;mediaType:string}):Promise<'rebased'|'already-confirmed'> {
+  async rebase(domain:E2eeContext['domain'],objectId:string,expectedRevision:number,metadata?:{filename:string;mediaType:string},originId?:string):Promise<'rebased'|'already-confirmed'> {
     if(!this.#refreshed)throw new Error('E2EE_REFRESH_REQUIRED');
     this.#open();const id=await this.#id(domain,objectId),loaded=await this.#loadJob(id);if(!loaded)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
-    const {job}=loaded;let serial=loaded.serial;if(job.complete)return 'already-confirmed';
+    const {job}=loaded;let serial=loaded.serial;
+    if(originId!==undefined&&job.originId!==originId)throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
+    if(job.complete)return 'already-confirmed';
     if(job.pending) {
       if(!job.cancelling) {
         const value=encoder.encode(JSON.stringify(job));

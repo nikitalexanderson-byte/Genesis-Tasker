@@ -17,6 +17,16 @@ function storeB64(string $bytes):string{return rtrim(strtr(base64_encode($bytes)
 foreach(genesisE2eeLegacyInventory($db) as $table=>$predicates)foreach($predicates as [$kind,$expression]) {
     $q=$db->prepare('SELECT '.str_replace('{row}','row',$expression).' FROM "'.$table.'" row LIMIT 0');$q->execute();$q->closeCursor();
 }
+$paths=json_decode((string)file_get_contents(dirname(__DIR__,2).'/contracts/e2ee/private-paths-v1.json'),true,64,JSON_THROW_ON_ERROR);
+foreach($paths['remoteDomains'] as $kind=>$domains) {
+    $allowed=genesisE2eeAllowedContentDomains($kind);sort($allowed);sort($domains);storeCheck($allowed===$domains);
+}
+foreach($paths['paths'] as $path)storeCheck(count(array_diff($path['domains'],genesisE2eeAllowedContentDomains($path['scope'])))===0);
+$declared=[];foreach($paths['paths'] as $path)foreach($path['server'] as $table)$declared[$path['scope']][$table]=true;
+foreach(genesisE2eeLegacyInventory($db) as $table=>$predicates)foreach($predicates as [$kind]) {
+    if(!isset($declared[$kind][$table]))throw new RuntimeException('E2EE_PATH_INVENTORY_MISSING: '.$kind.'/'.$table);
+    storeCheck(true);
+}
 function storePair():array {
     $private=openssl_pkey_new(['private_key_type'=>OPENSSL_KEYTYPE_EC,'curve_name'=>'prime256v1']);$details=openssl_pkey_get_details($private);
     $der=base64_decode(preg_replace('~-----[^-]+-----|\s~','',$details['key']));

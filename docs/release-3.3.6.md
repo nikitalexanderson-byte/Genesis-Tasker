@@ -156,14 +156,50 @@ file metadata (исправлена). Это не результаты полн�
 Внутренний read-only review текущего runtime завершён без открытых подтверждённых
 P1/P2. Он не является внешним независимым криптографическим аудитом протокола.
 
+## Возобновляемый native migration и очереди редакторов
+
+Следующий локальный инкремент добавляет durable editor queue на обеих платформах,
+реестр20 data paths, native migration coordinator и реальные authenticated
+migration transports. Каждый подтверждённый offline edit получает защищённый
+неизменяемый снимок; незавершённая загрузка не мешает сохранять новые правки.
+Подтверждённое сведение с remote не уменьшает revision при позднем ACK.
+Scope/device binding предотвращает случайную запись личного редактора в общий scope.
+
+При review исправлены четыре интеграционные ошибки: смешение path IDs с crypto
+domains; недопустимые remote domains shared local-work; отсутствие aggregate byte
+budget; несовместимый file format комментария после миграции. Registry проверяется
+вместе с coordinator и обычным reader. Неполный/неподключённый источник блокирует
+активацию. Raw legacy keys, очередь, identity/billing/ACL не становятся shared
+content из local-work.
+
+Native перенос проверен на14 точках process death,6 expiries lease,2 обрывах
+renewal, restart с сохранением прошлых snapshots, неполных данных, отсутствующих
+ключах, заполненном диске, повреждённом readback/recovery/checkpoint. Signed
+readback проходит короткие страницы до пустой, проверяет продвижение курсора и
+checkpoint; account switch/lock прерывают продолжение запроса.
+
+| Последняя проверка инкремента | Результат и evidence в `output/release-3.3.6/runtime/` |
+| --- | --- |
+| JS E2EE suites |110/110 PASS, `js-migration-05.log` |
+| Native JVM |45/45 PASS по7 XML suites, `native-migration-03.log`; migration7 содержит перечисленные fault scenarios |
+| PHP actual SQLite |2/2 suites PASS, `backend-paths-02/`; все ownership tables и registry↔server domain policy |
+| TypeScript / targeted ESLint |PASS, `typecheck-migration-01.log`, `lint-migration-01.log` |
+| Внутренний read-only review |Все4 registry P2 закрыты; новых P1/P2 в native coordinator/transport нет; focused Node41/41 PASS |
+
+`native-migration-01.log` сохраняет исправленную ошибку имени recovery API в новом
+fixture; `js-migration-03.log` — исправленную синтаксическую ошибку regression.
+Android instrumented/process kill/low-memory acceptance этого инкремента,
+реальные feature adapters и полный48-сценарный прогон ещё не выполнены.
+Эти результаты не означают publication или готовность полного E2EE coverage.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.
 Сервер всё ещё знает **legacy** account keys; этот инкремент не меняет данную
 границу доверия и не даёт права обещать пользователям уже включённое E2EE.
 Готовые runtime-модули ещё нужно подключить к каждому реальному хранилищу,
-редактору и очереди; реализовать native migration, повторное офлайн-редактирование,
-полное сведение всех источников, atomic shared ACL + rotation, файлы/previews,
+редактору и очереди; реализовать полное сведение всех реальных источников,
+shared writer fences, atomic shared ACL + rotation, файлы/previews,
 recoverable personal archives/Drive и системный backup schedule/restore drills.
 Затем требуются web pilot, прямые Android upgrades, 48 сценариев, новые security
 экраны и смысловая приёмка всех 14 языков, внешние обработки/документы и

@@ -4,6 +4,12 @@ require_once __DIR__ . '/e2ee-commands.php';
 
 /** Transport/storage has no unwrap/decrypt API and accepts no client root/private keys. */
 function genesisE2eeJson(mixed $value): string { return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR); }
+function genesisE2eeAllowedContentDomains(string $kind): array
+{
+    if ($kind === 'personal') return ['workspace','diary','dream-journal','mindmap','physis','aurora','stoicheion','attachment','local-snapshot','outbox','draft','key-check'];
+    if ($kind === 'project' || $kind === 'space') return ['shared-project','shared-comment','mindmap','attachment','key-check'];
+    throw new InvalidArgumentException('E2EE_INVALID_SCOPE');
+}
 function genesisE2eeRow(PDO $db, string $sql, array $parameters): array|false
 {
     $q = $db->prepare($sql); $q->execute($parameters); $row = $q->fetch(); $q->closeCursor(); return $row;
@@ -277,7 +283,7 @@ function genesisE2eeExecute(string $actor, mixed $source, string $sessionBinding
             if($comment && $expected!==0)throw new GenesisResourceLimitException(403,'E2EE_COMMENT_IMMUTABLE');
             genesisE2eeAccess($actor,$scope['kind'],$scope['resource_id'],$comment?'comment':'write');
             if(!in_array($device['role'],$comment?['owner','writer','commenter']:['owner','writer'],true))throw new GenesisResourceLimitException(403,'E2EE_WRITE_FORBIDDEN');
-            if($scope['kind']==='personal'?in_array($ctx['domain'],['shared-project','shared-comment'],true):!in_array($ctx['domain'],['shared-project','shared-comment','mindmap','attachment','key-check'],true))
+            if(!in_array($ctx['domain'],genesisE2eeAllowedContentDomains($scope['kind']),true))
                 throw new DomainException('E2EE_CONTEXT_MISMATCH');
             if ($ctx['ownerId']!==$scope['owner_id'] || $ctx['scopeId']!==$scope['scope_id'] || $ctx['deviceId']!==$c['deviceId']
                 || $ctx['operationId']!==$c['operationId'] || $ctx['cryptoEpoch']!==(int)$scope['crypto_epoch'] || $ctx['securityEpoch']!==(int)$scope['security_epoch']
