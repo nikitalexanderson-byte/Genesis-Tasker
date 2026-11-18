@@ -44,9 +44,9 @@ window.GenesisBackupRuntime={
    retainBackupSafety:async frozen=>{await rpc('retain',{snapshot:(frozen as NativeFrozen).nativeSnapshot});return {persistent:true};},
    materializeDeviceBackup:async frozen=>materializeBackupJournalChoices(await rpc<BackupPayload>('materialize',{snapshot:(frozen as NativeFrozen).nativeSnapshot})),
    materializeServerBackup:(owner,evidence)=>materializeServerBackup(owner,evidence,{access,openWorkspace:(_owner,envelope)=>access.open(envelope,'workspace')}),
-   prepareBackupRestore:(payload,owner,selected,mode)=>prepareBackupRestore(payload,owner,selected,mode,{access,current:()=>rpc('current'),
+   prepareBackupRestore:(payload,owner,selected,mode,choices)=>prepareBackupRestore(payload,owner,selected,mode,{access,current:()=>rpc('current'),
     sealWorkspace:async(_owner,document,version)=>({...await access.seal(document,'workspace'),expectedVersion:version,version:version+1,writerProtocol:9,minimumWriterProtocol:9,
-      quotaUsage:{'personal-projects':document.projects.map(row=>row.id),habits:document.habits.filter(row=>habitLifecycleState(row).status!=='deleted').map(row=>row.id)},metrics:metricsFor([],document.projects,document.habits.length)})}),
+      quotaUsage:{'personal-projects':document.projects.map(row=>row.id),habits:document.habits.filter(row=>habitLifecycleState(row).status!=='deleted').map(row=>row.id)},metrics:metricsFor([],document.projects,document.habits.length)})},choices),
    captureAccountSessionGuard:()=>()=>{},backupNeedsReconciliation:()=>needs,
    holdBackupStaleChanges:async()=>{await rpc('reconcile');},restart:()=>void rpc('restart'),
    download:async(content,id)=>{

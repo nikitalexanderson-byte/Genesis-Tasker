@@ -122,6 +122,14 @@ test('portable backup opens every writer and superseded Aurora copy without trus
  await assert.rejects(f.backups.restore.prepareBackupRestore(payload,f.userId,['aurora'],'replace',{
   access,current:async()=>({document:{},version:0,tasks:[]}),sealWorkspace:()=>{throw new Error('Unexpected workspace change');},
  }),/BACKUP_DRAFT_CHOICE_REQUIRED/);
+ const {backupJournalConflicts}=calendarModule('app/backup-private-journals.ts'),[group]=await backupJournalConflicts(payload);
+ for(const variant of [group.variants[0],group.variants.at(-1)]){
+  const plan=await f.backups.restore.prepareBackupRestore(payload,f.userId,['aurora'],'replace',{
+   access,current:async()=>({document:{},version:0,tasks:[]}),sealWorkspace:()=>{throw new Error('Unexpected workspace change');},
+  },{aurora:{sourceHash:group.sourceHash,variantHash:variant.hash}});
+  assert.equal(plan.operations.length,1);assert.equal(plan.operations[0].section,'aurora');
+  const opened=await access.open(plan.operations[0].input,'aurora-workspace:v1');assert.deepEqual(JSON.parse(JSON.stringify(opened)),variant.document);
+ }
  assert.equal(f.requests.slice(requests).every(row=>!row.init.method||row.init.method==='GET'),true);
  assert.deepEqual([...f.storage.data],before);
 });

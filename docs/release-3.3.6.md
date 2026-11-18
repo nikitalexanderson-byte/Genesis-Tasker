@@ -575,3 +575,21 @@ Aurora source adapter и product routing ещё обязательны.
 содержимое и прежние ветки новым root и сохраняет legacy originals. Остальные
 registry paths в этом тесте synthetic, это не полная приёмка20 paths.
 Подробности: `docs/e2ee-336-aurora-source.md`. Активация и production не менялись.
+
+## Восстановление конфликтующих portable journals
+
+Общий web/Android UI теперь даёт явный выбор сохранённого черновика и прежнего
+snapshot Авроры/Практик. Решение связано с точным набором исходных copies/base/cache
+и выбранным документом; подделанный default в файле не разрешает выбор. Новая
+ветка снимает прежний preview/confirmation. Исходный encrypted archive и legacy
+очереди не меняются. Это дополнение к сохранению всех writers, а не полный E2EE
+archive/recovery или автоматическое решение всех конфликтов.
+
+1449/1449 JS, typecheck/lint/i18n/web build PASS. Chromium:28/28 flows,
+112 viewport checks на14 языках/2 схемах, font1.3 дополнительно EN/RU/DE;
+0 console errors. API34:2/2 actual SAF export/import + production native WebView,
+EN light/dark, font1.3; encrypted previews сверены JCA, все3 исходные encrypted
+Room rows совпали до/после. QA APK/test APK собраны, version metadata149 сохранена.
+Документация, лог ошибок fixture и ограничения: `docs/backup-journal-choices-336.md`.
+Полный security coverage, recovery/direct upgrades и независимый crypto review
+ещё требуются до разрешённого полного деплоя3.3.6.

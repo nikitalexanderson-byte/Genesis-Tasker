@@ -22,4 +22,14 @@
 .backup-removals { margin: 8px 0 0; }
 .backup-removals > div { display: flex; justify-content: space-between; gap: 16px; }
 .backup-removals dd { margin: 0; font-variant-numeric: tabular-nums; }
+.backup-journal-choices { display: grid; gap: 12px; min-width: 0; }
+.backup-variant { display: grid; gap: 6px; min-width: 0; padding-block: 8px 16px; }
+.backup-variant + .backup-variant { border-top: 1px solid var(--line); padding-top: 16px; }
+.backup-variant-label { font-weight: 600; }
+.backup-variant-kind { display: block; font-size: .875em; font-weight: 400; }
+.backup-variant .backup-check { min-height: 48px; }
+.backup-variant-note { padding-inline-start: 30px; max-height: 9em; overflow: auto; word-break: normal; }
+.backup-variant summary { cursor: pointer; align-content: center; min-height: 44px; }
+.backup-variant pre { max-width: 100%; max-height: 24rem; overflow: auto; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font-size: .875em; white-space: pre; }
+.backup-variant summary:focus-visible, .backup-variant pre:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 @media (max-width: 440px) { .backup-actions { display: grid; } .backup-panel select { font-size: 12px; } }
