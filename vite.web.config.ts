@@ -12,6 +12,7 @@ import {REGION_LANGUAGES} from './app/region-language';
 import {PUBLIC_PAGES,publicPagePath,publicPageAlternates} from './app/public-route';
 import {publicHomeHtml,publicLegalHtml,PUBLIC_ORIGIN} from './app/public-document-html';
 import publicPageCopy from './app/public-page-copy.json';
+import {advicePublicAssets} from './scripts/advice-public-assets.mjs';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const configuredBase = process.env.GENESIS_BASE_PATH?.trim() || "/";
@@ -138,7 +139,7 @@ export default defineConfig({
   root: path.join(projectRoot, "web"),
   base,
   publicDir: path.join(projectRoot, "public"),
-  plugins: [compactUiLocaleTransport(), react(), offlinePrecacheManifest(base), publicLegalDocuments()],
+  plugins: [compactUiLocaleTransport(), react(), offlinePrecacheManifest(base), publicLegalDocuments(), advicePublicAssets(projectRoot)],
   define: {
     "process.env.NEXT_PUBLIC_GENESIS_MINDMAPS": JSON.stringify(process.env.GENESIS_MINDMAPS === "true" ? "true" : "false"),
     "process.env.NEXT_PUBLIC_GENESIS_API_URL": JSON.stringify(apiUrl),
