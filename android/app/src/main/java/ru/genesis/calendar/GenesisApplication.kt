@@ -46,7 +46,9 @@ class GenesisApplication : Application() {
         appScope.launch { runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(this@GenesisApplication) } }
     }
     val database by lazy {
-        Room.databaseBuilder(this, GenesisDatabase::class.java, "genesis.db").build()
+        Room.databaseBuilder(this, GenesisDatabase::class.java, "genesis.db")
+            .addMigrations(ru.genesis.calendar.data.LegacyScopeFenceSql.migration1To2)
+            .addCallback(ru.genesis.calendar.data.LegacyScopeFenceSql.callback).build()
     }
     val scheduler by lazy { ReminderScheduler(this) }
     val repository get() = TaskRepository(database, LocalCipher(), workspaceScope, scheduler)

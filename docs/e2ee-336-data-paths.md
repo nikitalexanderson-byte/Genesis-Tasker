@@ -9,7 +9,7 @@ registry does **not** mean that feature adapters have been implemented.
 
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
 | --- | --- | --- |
-| personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native source adapters + signed lease-bound owner-only legacy source implemented; product writer/multitab fences, older tracker/history review and actual Room/Keystore acceptance remain |
+| personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native adapters and native SQLite barrier implemented; selected actual Room/Keystore/API26 process-death cases pass; product routing, web multitab fence, older-format review and full upgrade/lifecycle acceptance remain |
 | personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Preserve all GENESIS tasks, recurrence, detached occurrences and tombstones; separate Google/Yandex copies and unsent external operations |
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | New root for notes/dreams/references/settings/files; test offline drafts, conflicting edits, deleted advice notes and disabled sync |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Maps, images, complete history and conversion-task references; no omission of unmounted maps |
@@ -53,6 +53,16 @@ kinds and their exact outbox under a transaction, includes portable plaintext in
 the protected snapshot and never acknowledges old work. Accepted/pending reset
 generations, base revisions, deleted IDs and explicit conflict choices are checked
 on both platforms. All other required path adapters remain mandatory.
+
+Native Room now has an additive schema1→2 migration and technical deny table.
+Persistent triggers cover I/U/D of all4 legacy data tables in each explicit
+bound storage scope, including moves and REPLACE. No account is fenced merely
+by upgrading. The owner/session/unlocked-device factory can provide the barrier
+to the migration coordinator; product activation is still absent. Old network
+workers must also be excluded before external I/O, and shared child scopes need
+their own bindings. Instrumented API26 evidence includes real Keystore key loss,
+exact source retention after migration and host process kill, never a personal
+device update or full system acceptance.
 
 The source registry captures local bytes without network writes or deletion.
 `E2eeMigration.prepare()` is responsible for durably protecting that complete

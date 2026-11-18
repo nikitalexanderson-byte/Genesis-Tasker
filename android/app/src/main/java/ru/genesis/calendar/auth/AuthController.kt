@@ -244,6 +244,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         },decrypt={ row -> current(); cipher.decrypt(row.encrypted,"$accountScope/${row.kind}").also { current() } },
             assertCurrent=::current,legacyWorkspace=transport::legacyWorkspace,review=review)
     }
+    internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
+        directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        check(device.ownerId == uid && directory.ownerId == uid && directory.kind == "personal") { "E2EE_SCOPE_BINDING_MISMATCH" }
+        return ru.genesis.calendar.data.NativeLegacyScopeFence(app.database,uid,directory.scopeId,{
+            ru.genesis.calendar.security.UpdateGate.requireOpen();device.requireOpen()
+            check(client.isCurrent(generation) && mutableState.value.user?.uid == uid && !mutableState.value.requiresSignIn
+                && app.workspaceScope == accountScope) { "E2EE_ACCOUNT_CHANGED" }
+        })
+    }
     private val mutableTaskSync = MutableStateFlow(AccountTaskSyncState())
     val taskSync = mutableTaskSync.asStateFlow()
     internal fun backupGateway(uid: String): ru.genesis.calendar.data.BackupGateway = object : ru.genesis.calendar.data.BackupGateway {

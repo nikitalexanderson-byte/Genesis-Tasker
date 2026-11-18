@@ -10,9 +10,8 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /** Field encryption: Room/WAL never contains task text. Keys never leave Android Keystore. */
-class LocalCipher {
+class LocalCipher internal constructor(private val alias: String = "genesis.local.v1") {
     companion object { private val keyCreationLock = Any() }
-    private val alias = "genesis.local.v1"
     private fun key(create: Boolean): SecretKey = synchronized(keyCreationLock) {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         (store.getKey(alias, null) as? SecretKey)?.let { return@synchronized it }

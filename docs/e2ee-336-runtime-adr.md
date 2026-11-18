@@ -228,8 +228,10 @@ attempts and a remote tombstone unknown to the local base stop reconciliation.
 An explicit conflict decision is bound to the exact preview fingerprint. Native
 achievement identities/clocks become canonical web IDs; unrelated web-only fields
 survive. Event codec roundtrips must retain the original fields, and parser errors
-are reduced to fixed codes without private values/causes. Actual Room/Keystore
-instrumentation, process-death and low-memory acceptance are still pending.
+are reduced to fixed codes without private values/causes. Selected real
+Room/Keystore/source and storage-barrier scenarios have now passed on API26, as
+described below. Full lifecycle/upgrade, vault user-presence and low-memory
+acceptance are still pending.
 
 Both adapters also capture accepted/pending restore generations and reject an
 unreconciled reset, source generation mismatch or remote workspace rollback.
@@ -240,6 +242,44 @@ restore happened after bootstrap/between attempts, and never reuses an abandoned
 shadow generation. Reads/puts/verification require a lease whose target generation
 still matches the scope and exceeds the legacy generation. Existing shadow data
 is retained and same-attempt changed-source restarts are rejected.
+
+## Native persistent legacy storage barrier
+
+Room schema2 adds only `e2ee_legacy_fences`; migration1→2 preserves all original
+tables, row bytes/ciphertexts, revisions and queued operation IDs. There is no
+destructive fallback. A native barrier installs/retains SQLite guards for every
+INSERT/UPDATE/DELETE of tasks, documents, outbox and reminders in the explicitly
+bound storage scope. Both OLD and NEW scope are checked on moves. An active
+deny row cannot be updated/deleted/replaced, including SQLite REPLACE with
+recursive delete triggers disabled. Archive content APIs never import this table.
+The application installs guards on open, and the fence also installs them in
+the same Room transaction as a new preparing marker. No marker is created merely
+by upgrading; all existing legacy accounts continue normally until an explicit
+migration. No current product screen starts this migration yet.
+
+The preparing marker commits before local capture/network and survives failures
+and process death. A fresh protected cancelled status is read under the same
+controller lock before release; an old Status object is not accepted. Independent
+Room controllers for one configured DB/scope share the lock in the app's single
+writer process; persistent SQL independently protects old writers across database
+connections and process restart. Explicit retry/recovery is required after a
+failed preparation; exceptions never automatically reopen writes. Active is
+irreversible even when a stale preparing directory is passed to cancellation.
+
+API26 instrumentation checked direct schema1→2, all4 table mutation families,
+scope moves, REPLACE, unrelated writes, late cancellation across2 Room instances,
+connection reopening and real host SIGKILL/force-stop during the preparing
+operation. Exact original4 rows were checked in the new process. A separate
+actual Room + AndroidKeyStore workspace-source test removed only a fresh QA key
+alias and proved capture fails without recreating a key, empty workspace or
+queue acknowledgement. The default legacy alias is unchanged.
+
+These are storage barriers, not a completed network/lifecycle route. Old workers
+still need explicit exclusion before plaintext external I/O and all new editors
+need the protected queue. Exact shared child storage scopes require their own
+approved binding; this root-scope barrier does not assert those adapters exist.
+Web multitab fencing, full device-credential vault acceptance and all48 scenarios
+remain required. Pilot/cutover and mandatory update floors stay disabled.
 
 ## Trust limits and remaining integration
 

@@ -376,6 +376,55 @@ typecheck/ESLint PASS (`typecheck-workspace-generation-final.log`,
 Room rows и настоящий JCA/JSON/domain codecs; фактические Room/Keystore,
 авторизованный upgrade, UI, process kill и low-memory не проверены этим JVM run.
 
+## Постоянный native storage fence и настоящие API26 проверки
+
+Room schema2 добавляет только technical `e2ee_legacy_fences`. Additive1→2 не
+изменяет исходные4 таблицы, ciphertext, revisions, deleted flags или outbox IDs.
+Никаких destructive fallback нет. SQLite блокирует INSERT/UPDATE/DELETE tasks,
+documents, outbox и reminders для явно связанного scope; scope move и REPLACE
+также закрыты. Active marker нельзя удалить/понизить/заменить. Content archives
+эту таблицу не импортируют. При простом обновлении нет markers, поэтому legacy
+аккаунты работают по-прежнему; migration UI пока не подключён.
+
+Preparing marker коммитится до snapshot/network, переживает exceptions и process
+death. Между2 Room controllers одного DB/scope общий lock; cancellation перечитывает
+свежий защищённый Status, не принимает ранее сохранённый cancelled объект.
+После провала подготовки fence остаётся до явного retry/recovery/подтверждённой
+отмены, не открывает записи автоматически. AuthController связывает factory с
+owner/session/unlocked device и UpdateGate. Root fence не заменяет network guards,
+shared child bindings или новый product routing.
+
+На task-owned `GenesisSecurity336_API26` (serial5574) прошли:
+
+- 4/4 instrumented (`runtime/native-fence-instrumented-final.log`): прямой1→2 с
+  точной сверкой всех4 исходных rows, I/U/D families, scope move/REPLACE,
+  необратимость active, late cancellation между2 Room instances и действительный
+  Room + AndroidKeyStore workspace adapter;
+- После `e2eeFenceReady=true` host принудительно завершил только
+  `ru.genesis.calendar.qa1103.debug`. Новый процесс сохранил точные rows/outbox
+  и preparing barrier, затем проверил active/IUD:1/1 PASS
+  (`native-fence-process-retry-stage1/2.log`);
+- Удалён только отдельный свежий QA alias `genesis.e2ee.qa.<UUID>`: исходные rows
+  и очередь остались, plaintext capture остановился без создания replacement key.
+  Default alias `genesis.local.v1` сохраняется;
+- 56/56 JVM,8 XML suites,0 failures/errors; debug APK/test APK build PASS
+  (`native-fence-build-final.log`). Сборка остаётся QA3.3.5/149 по metadata:
+  это не финальный versionCode/релиз3.3.6.
+
+Сохранены failures: instrumented-01 использовал getJSONArray для необязательного
+поля indices старого exported Room schema; fixture исправлен, product migration
+не ослаблялась. Первая final process-stage1 встретила Android DeadSystemException
+в NotificationManager ещё до теста; ошибочный host переход к phase2 дал ожидаемо
+missing fixture. Orchestration исправлена: phase2 разрешена только после READY и
+host kill. Повтор при работающем system service прошёл. В корректном stage1
+`Process crashed` после READY ожидаем, он не выдаётся за самостоятельный PASS.
+
+Личный Samsung, emulator5560, сайт и Play не изменялись. Test DB names/alias
+уникальные, изолированные; основное приложение не удалялось/не очищалось.
+Не проверены этим этапом: полноценный app boot/unlock/enrollment/recovery,
+device-credential/biometric invalidation нового vault, low memory, все shared
+bindings, web multitab и полный48-сценарный переход.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.
