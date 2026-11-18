@@ -43,7 +43,7 @@ const GENESIS_E2EE_LEGACY_TABLES = [
 // These fields contain private preferences/references, while the same users row
 // also contains independent identity/billing authority which must keep working.
 const GENESIS_E2EE_PRIVATE_USER_FIELDS = ['advice_preferences_json','advice_collections_json','advice_notifications_json',
-    'advice_psychopompia_json','category_sync_map','ui_visibility_json'];
+    'advice_psychopompia_json','advice_philosophers_per_day','category_sync_map','ui_visibility_json'];
 
 /** SQL expressions are compile-time constants from the inventory, not requests.
  * A many-valued reference never chooses an arbitrary first project. */

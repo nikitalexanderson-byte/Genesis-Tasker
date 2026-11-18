@@ -10,9 +10,14 @@ require_once __DIR__.'/e2ee-legacy-personal.php';
 function genesisE2eeLegacyAdvice(PDO $db,string $actor,array $scope,array $c): array
 {
     $context=genesisE2eeLegacyPersonalContext($db,$actor,$scope,$c);
-    $preferences=genesisE2eeRow($db,'SELECT advice_preferences_json FROM users WHERE id=?',[$actor]);
+    $preferences=genesisE2eeRow($db,'SELECT advice_preferences_json,advice_collections_json,advice_notifications_json,advice_psychopompia_json,advice_philosophers_per_day FROM users WHERE id=?',[$actor]);
     $result=genesisE2eeLegacyPersonalHeader($actor,$scope,$context)+[
-        'preferencesJson'=>$preferences['advice_preferences_json'],'days'=>[],'entries'=>[],'extraEntries'=>[],'metrics'=>null];
+        'preferencesJson'=>$preferences['advice_preferences_json'],
+        'collectionsJson'=>$preferences['advice_collections_json'],
+        'notificationsJson'=>$preferences['advice_notifications_json'],
+        'psychopompiaJson'=>$preferences['advice_psychopompia_json'],
+        'philosophersPerDay'=>(int)$preferences['advice_philosophers_per_day'],
+        'days'=>[],'entries'=>[],'extraEntries'=>[],'metrics'=>null];
     $size=strlen(genesisE2eeJson($result));$count=0;
     $fields=['day_key'=>'dayKey','advice_id'=>'adviceId','entry_json'=>'entryJson','created_at'=>'createdAt','viewed_at'=>'viewedAt','dismissed_at'=>'dismissedAt'];
     foreach([

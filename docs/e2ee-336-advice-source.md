@@ -11,7 +11,10 @@
 
 Выбираются только поля текущего владельца:
 
-- `users.advice_preferences_json`: точный старый JSON приватных настроек.
+- `users.advice_preferences_json`, `advice_collections_json`,
+  `advice_notifications_json`, `advice_psychopompia_json` и
+  `advice_philosophers_per_day`: точные raw private choices, без entitlement
+  filtering обычного account response.
 - `daily_advice_days`: точные entry/selection JSON и временные отметки.
 - `daily_advice_entries` и `daily_advice_extra_entries`: все сохранённые slots,
   включая7–9, исходный entry JSON и view/dismiss history.
@@ -45,6 +48,29 @@ Native inventory включает `AdviceSnapshotStore`, рабочий днев
 владельца неизвестной исторической записи. Unassigned копии нельзя молча считать
 пустыми, присвоить текущему владельцу или удалить. Веб-состояние TodayAdvice
 снимается до source IO вместе с текущими preference/selection/dismiss changes.
+
+Entry JSON может содержать `contentVersion`/`translationVersion` вместо полного
+локализованного body. Будущий adapter обязан разрешить точные immutable public
+catalogue references и сохранить переносимое отображение/историю; missing version
+не означает пустой совет. Не подменять historical source текущим publication
+helper и не терять предыдущий язык/редакцию текста. Новый native рабочий кеш
+уже защищён отдельным owner container; доказательства и remaining raw legacy
+limits — `e2ee-336-advice-cache.md`.
+
+Дополнительная проверка обнаружила, что число афоризмов отсутствовало в
+private user fence/source-hash inventory. Оно добавлено в policy и schema
+contract. Все отдельные preferences запрещают legacy update при действующей
+migration lease; после cancel разрешённое изменение числа меняет source token.
+6/6 PHP/SQLite suites PASS:
+`runtime/backend-advice-raw-preferences-schema-01/`, включая полный schema drift,
+foreign/shared/current lease, неизменность исходников и17MiB каждого raw JSON.
+Обычные helpers с entitlement filtering не вызываются. Веб Advice transport
+добавлен, native transport vectors ещё не завершены.
+
+Публичный historical resolver теперь реализован отдельно:
+`e2ee-336-advice-public-editions.md`.126 editions/14 languages сохраняются
+побайтно;132 actual Chromium checks PASS. Это ещё не перенос private selections.
+
 
 Эта серверная подготовка не повышает real adapter coverage: готовые source
 categories по-прежнему workspace/Aurora/Stoicheion3/20,17 остальных обязательны.
