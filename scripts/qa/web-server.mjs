@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +10,10 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
   const directory = path.join(root, 'dist-web', 'public_html');
   if (!existsSync(path.join(directory, 'index.html'))) throw new Error('Build the web client with pnpm build:web first');
+  // Browser permission checks must use the same policy as the published bundle.
+  const permissionsPolicy = readFileSync(path.join(directory, '.htaccess'), 'utf8')
+    .match(/^\s*Header always set Permissions-Policy "([^"]+)"/m)?.[1];
+  if (!permissionsPolicy) throw new Error('The release bundle is missing Permissions-Policy');
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, `http://127.0.0.1:${port}`);
     if (url.pathname.startsWith('/api/')) {
@@ -33,7 +37,7 @@ export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
     }
     const stream = createReadStream(candidate);
     stream.on('error', () => { if (!response.headersSent) response.writeHead(503); response.end('Bundle temporarily unavailable'); });
-    stream.once('open', () => { response.writeHead(200, { 'Content-Type': types[path.extname(candidate)] ?? 'application/octet-stream', 'Cache-Control': 'no-store' }); stream.pipe(response); });
+    stream.once('open', () => { response.writeHead(200, { 'Content-Type': types[path.extname(candidate)] ?? 'application/octet-stream', 'Cache-Control': 'no-store', 'Permissions-Policy': permissionsPolicy }); stream.pipe(response); });
   });
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   return server;
