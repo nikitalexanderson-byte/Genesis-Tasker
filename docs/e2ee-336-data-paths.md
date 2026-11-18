@@ -125,6 +125,12 @@ staging/history/metrics are retained, legacy rows expire normally, and a protect
 shared cascade rolls back only its own item and counts. Corrupt historical receipt
 JSON is retained for investigation, never treated as an empty ownership binding.
 
+Controlled legacy pages are additionally protected by the service-worker private
+transport boundary and product controller-version preflight, with a conservative
+global deny for unidentified requests. The common bundle/policy are checked and
+precached; `e2ee-336-service-worker.md` records the13 real-worker checks and pending
+uncontrolled/restored-page/local-writer lifecycle. It does not grant source reads.
+
 Personal legacy transport classification/guards are now connected to the actual
 web and Android HTTP clients, with per-owner durable deny markers and a checked
 deployable PHP policy resource; see `e2ee-336-legacy-transport.md`. No marker alone

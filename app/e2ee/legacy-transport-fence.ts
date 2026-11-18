@@ -8,6 +8,9 @@ export interface LegacyTransportMarkers {
   commit(ownerId:string,expected:LegacyTransportMarker|null,next:LegacyTransportMarker|null):Promise<void>;
 }
 export type LegacyTransportLocks = Pick<LockManager,'request'>;
+// Old pages have no authenticated owner binding. This lock is a conservative
+// transport DENY boundary only; it cannot grant access to any account's content.
+export const LEGACY_UNBOUND_TRANSPORT_LOCK='genesis-e2ee-legacy-transport-v1:unbound';
 export function legacyTransportLock(ownerId:string) { assertTechnical(ownerId);return `genesis-e2ee-legacy-transport-v1:${ownerId.length}:${ownerId}`; }
 
 function marker(value:unknown,ownerId:string):LegacyTransportMarker|null {
@@ -69,12 +72,20 @@ export class IndexedDbLegacyTransportMarkers implements LegacyTransportMarkers {
       transaction.oncomplete=()=>resolve();transaction.onerror=transaction.onabort=()=>reject(error??new Error('E2EE_STORAGE_UNAVAILABLE'));
     });
   }
+  async any() {
+    const db=await this.#database;
+    return new Promise<boolean>((resolve,reject)=>{
+      const transaction=db.transaction('scopes','readonly'),request=transaction.objectStore('scopes').count();let present=false;
+      request.onsuccess=()=>{present=request.result>0;};transaction.oncomplete=()=>resolve(present);
+      transaction.onerror=transaction.onabort=()=>reject(new Error('E2EE_STORAGE_UNAVAILABLE'));
+    });
+  }
   async close() { (await this.#database).close(); }
 }
 
-/** Every participating page/worker and migration controller uses this origin-wide
- * Web Lock. Keep it through response parsing/cleanup, not just fetch headers.
- * Legacy pages/SW and synchronous local writers still need their own integration. */
+/** Application pages and migration controllers share this owner Web Lock through
+ * response parsing/cleanup. The controlling SW separately gates unidentified old
+ * IO with the global permit; synchronous local writers still need integration. */
 export class WebLegacyTransportGate {
   readonly markers:LegacyTransportMarkers;readonly locks:LegacyTransportLocks;
   constructor(markers:LegacyTransportMarkers,locks:LegacyTransportLocks) {
@@ -91,9 +102,9 @@ export class WebLegacyTransportGate {
 /** Transport half of a migration barrier. Combine with mounted-editor/local
  * writer exclusion before passing it as the coordinator's local-write fence. */
 export class WebMigrationTransportFence {
-  #gate:WebLegacyTransportGate;#ownerId:string;#scopeId:string;#current:()=>void;
-  constructor(gate:WebLegacyTransportGate,ownerId:string,scopeId:string,assertCurrent:()=>void) {
-    assertTechnical(ownerId);assertTechnical(scopeId);this.#gate=gate;this.#ownerId=ownerId;this.#scopeId=scopeId;this.#current=assertCurrent;
+  #gate:WebLegacyTransportGate;#ownerId:string;#scopeId:string;#current:()=>void;#preflight:()=>Promise<void>;
+  constructor(gate:WebLegacyTransportGate,ownerId:string,scopeId:string,assertCurrent:()=>void,preflight:()=>Promise<void>=async()=>{}) {
+    assertTechnical(ownerId);assertTechnical(scopeId);this.#gate=gate;this.#ownerId=ownerId;this.#scopeId=scopeId;this.#current=assertCurrent;this.#preflight=preflight;
   }
   #bound(row:LegacyTransportMarker) { if(row.ownerId!==this.#ownerId||row.scopeId!==this.#scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH'); }
   #directory(directory:VerifiedDirectory,state:'preparing'|'active') {
@@ -101,12 +112,13 @@ export class WebMigrationTransportFence {
       throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
   }
   async withFence<T>(operation:()=>Promise<T>):Promise<T> {
-    return this.#gate.locks.request(legacyTransportLock(this.#ownerId),{mode:'exclusive'},async()=>{
+    this.#current();await this.#preflight();this.#current();
+    return this.#gate.locks.request(LEGACY_UNBOUND_TRANSPORT_LOCK,{mode:'exclusive'},()=>this.#gate.locks.request(legacyTransportLock(this.#ownerId),{mode:'exclusive'},async()=>{
       this.#current();const row=await this.#gate.markers.get(this.#ownerId);this.#current();
       if(row)this.#bound(row);
       else await this.#gate.markers.commit(this.#ownerId,null,{protocol:1,ownerId:this.#ownerId,scopeId:this.#scopeId,phase:'preparing',token:crypto.randomUUID()});
       this.#current();const result=await operation();this.#current();return result;
-    });
+    }));
   }
   async token() { this.#current();const row=await this.#gate.markers.get(this.#ownerId);this.#current();if(row)this.#bound(row);return row?.token??null; }
   async activate(directory:VerifiedDirectory) {

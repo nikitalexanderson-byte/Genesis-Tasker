@@ -109,7 +109,7 @@ function offlinePrecacheManifest(basePath: string): Plugin {
         "fonts/experimental/SourceSerif4-latin.woff2"];
       const iconFiles = mindmapIconCatalog.map(icon => `mindmap-icons/${icon.id}.png`);
       const moodFiles = moodFaces.faces.map(face => `tracker-art/moods/mood-${face.value + 5}.svg`);
-      const staticFiles = [...feedbackAudioManifest.files.map(cue => `feedback-audio/${cue.file}`), ...fonts, ...iconFiles, ...moodFiles, "habit-reminder-worker.js", "icons/icon-round-v2.png", "mindmap-icons/LICENSE.txt", "mindmap-icons/SOURCE.txt", "mindmap-icons/GENESIS-100-PNG.zip", "sounds/task.wav", "sounds/habit.wav"];
+      const staticFiles = [...feedbackAudioManifest.files.map(cue => `feedback-audio/${cue.file}`), ...fonts, ...iconFiles, ...moodFiles, "habit-reminder-worker.js", "e2ee-legacy-transport-worker.js", "icons/icon-round-v2.png", "mindmap-icons/LICENSE.txt", "mindmap-icons/SOURCE.txt", "mindmap-icons/GENESIS-100-PNG.zip", "sounds/task.wav", "sounds/habit.wav"];
       const fingerprint = createHash("sha256").update(`${PRECACHE_STATIC_REVISION}\n${requiredFiles.join("\n")}`);
       staticFiles.forEach((file) => fingerprint.update(readFileSync(path.join(projectRoot, "public", file))));
       const version = fingerprint.digest("hex").slice(0, 16);

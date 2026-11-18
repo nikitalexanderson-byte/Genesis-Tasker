@@ -1,5 +1,6 @@
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from '../../app/e2ee/legacy-transport-fence.ts';
 import {loadGenesisSession,loadSavedAdvice,e2eeRequest,updateAccountPreferences} from '../../app/cloud-sync';
+import {requireLegacyTransportWorker} from '../../app/e2ee/legacy-worker-client.ts';
 
 // Synthetic browser-only API harness. The loopback server exposes no repository
 // files, secrets, real account session or production/provider endpoints.
@@ -47,9 +48,25 @@ const api={
     });
   },
   async productSession(){return(await loadGenesisSession())?.uid??null;},
+  async resetProfile(){const response=await fetch('/profile-legacy');if(!response.ok)throw new Error('fixture reset failed');return(await response.json()).owner;},
   async activeProfile(){await fetch('/profile-active');return(await loadGenesisSession())?.uid??null;},
   async productRequest(){try{await loadSavedAdvice({id:'advice-synthetic',dayKey:'2026-11-18',collection:'aurora'});return{ok:true};}catch(error){return{ok:false,error:(error as Error).message};}},
   productStatus(){return e2eeRequest('/status');},
   async productPreferences(privateContent:boolean){try{await updateAccountPreferences(privateContent?{advicePreferences:{enabled:false}}:{language:'en'});return{ok:true};}catch(error){return{ok:false,error:(error as Error).message};}},
+  async workerProbe(){try{await requireLegacyTransportWorker();return{ok:true};}catch(error){return{ok:false,error:(error as Error).message};}},
+  async registerWorker(){
+    await navigator.serviceWorker.register('/worker.js',{scope:'/',updateViaCache:'none'});await navigator.serviceWorker.ready;
+    if(!navigator.serviceWorker.controller)await new Promise<void>((resolve,reject)=>{
+      const changed=()=>{clearTimeout(timer);navigator.serviceWorker.removeEventListener('controllerchange',changed);resolve();};
+      const timer=setTimeout(()=>{navigator.serviceWorker.removeEventListener('controllerchange',changed);reject(new Error('fixture worker claim failed'));},10000);
+      navigator.serviceWorker.addEventListener('controllerchange',changed);if(navigator.serviceWorker.controller)changed();
+    });await requireLegacyTransportWorker();return{ok:true};
+  },
+  async workerFreeze(owner:string){const fence=new WebMigrationTransportFence(gate,owner,`personal:${owner}`,()=>{},()=>requireLegacyTransportWorker());await fence.withFence(async()=>{state[`${owner}:snapshot`]=true;report();});return await fence.token();},
+  async oldRequest(path:string,init?:RequestInit){const response=await fetch('/api'+path,init);return{status:response.status,payload:await response.json()};},
+  oldSlow(id:string){pending.set(id,api.oldRequest('/workspace/slow?id='+encodeURIComponent(id)));return 'queued';},
+  async slowStatus(){return await(await fetch('/slow-status')).json();},
+  async releaseSlow(id:string){return await fetch('/release-slow?id='+encodeURIComponent(id));},
+  async counters(){return await(await fetch('/probe-count')).json();},
 };
 Object.assign(globalThis,{genesisTransportFixture:api});report();

@@ -130,6 +130,8 @@ const configuredBase = process.env.GENESIS_BASE_PATH?.trim() || "/";
 const basePath = configuredBase.endsWith("/") ? configuredBase : `${configuredBase}/`;
 const precacheUrls = JSON.parse(manifest.match(/self\.__GENESIS_PRECACHE=(\[.*?\]);/s)?.[1] || "[]");
 if (!precacheUrls.length) throw new Error("Offline precache manifest has no resource URLs.");
+if(!precacheUrls.includes(`${basePath}e2ee-legacy-transport-worker.js`)||!serviceWorker.includes('importScripts(new URL("./e2ee-legacy-transport-worker.js", SCOPE).href)'))
+  throw new Error('Offline shell omits its E2EE legacy transport boundary.');
 const nonexistentPrecacheAssets = [];
 for (const url of precacheUrls) {
   if (!url.startsWith(basePath)) throw new Error(`Unexpected precache URL: ${url}`);

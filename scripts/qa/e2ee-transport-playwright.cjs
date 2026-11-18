@@ -5,6 +5,7 @@ async (page) => {
   const check=(name,passed)=>{checks.push({name,passed});if(!passed)throw new Error(name);};
   const url=page.url();
   await page.waitForFunction(()=>globalThis.genesisTransportFixture?.state().ready);
+  await page.evaluate(()=>globalThis.genesisTransportFixture.resetProfile());
   const second=await page.context().newPage();await second.goto(url);
   await second.waitForFunction(()=>globalThis.genesisTransportFixture?.state().ready);
   const owner='browser-transport-'+Date.now();
@@ -19,7 +20,8 @@ async (page) => {
     globalThis.freezeResult=globalThis.genesisTransportFixture.freeze(owner);
   },owner);
   const locks=await second.evaluate(()=>navigator.locks.query());
-  check('all tabs use the same real Web Lock',locks.held.length===2&&locks.held.every(lock=>lock.mode==='shared')&&locks.pending.length===1);
+  const ownerHeld=locks.held.filter(lock=>lock.name.endsWith(':'+owner)),ownerPending=locks.pending.filter(lock=>lock.name.endsWith(':'+owner));
+  check('all tabs use the same real Web Lock',ownerHeld.length===2&&ownerHeld.every(lock=>lock.mode==='shared')&&ownerPending.length===1);
   check('migration has not committed ahead of old IO',await second.evaluate(owner=>globalThis.genesisTransportFixture.marker(owner),owner)===null);
   await page.evaluate(owner=>globalThis.genesisTransportFixture.release(owner),owner);
   await page.evaluate(owner=>globalThis.genesisTransportFixture.wait(owner),owner);

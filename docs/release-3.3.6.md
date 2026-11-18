@@ -451,6 +451,22 @@ production не менялись. Native APK по metadata остаётся QA3.
 проверка орфографии имеют самостоятельные границы. Эти результаты не заменяют
 полную миграцию20 private paths или независимую проверку криптографии.
 
+## Service worker и контролируемые старые страницы
+
+Новый worker проверяет personal private API, включая изменяющие методы. Старые
+запросы без owner header делят global permit с подготовкой миграции; после deny
+marker они не достигают backend. Текущие клиенты сохраняют parallel owner permits;
+worker не берёт повторный owner lock и не создаёт deadlock. Старый ответ читается
+полностью с64MiB bound, обрыв/переполнение не выдаются за успешную часть данных.
+
+Product factory проверяет protocol текущего controller до marker/snapshot.
+Автоматические skipWaiting/reload/очистка не добавлены. Classic bundle создаётся
+из общего TypeScript/policy, проверяется build:web и входит в fingerprint/precache.
+139/139 JS, 13/13 real service-worker checks +22/22 browser regression checks,
+typecheck/ESLint/build:web — PASS. Только isolated loopback; full production cache
+lifecycle, все local writers/editors и uncontrolled/restored pages ещё требуют
+приёмки. Подробности: `docs/e2ee-336-service-worker.md`.
+
 ## Что ещё обязательно до полного security/E2EE-выпуска
 
 Согласованный контракт ещё не подключён к активным хранилищам/синхронизации.

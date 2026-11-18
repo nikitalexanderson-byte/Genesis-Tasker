@@ -8,6 +8,7 @@ import { habitLifecycleState } from './habit-lifecycle';
 import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
 import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
+import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
 import type { Language } from "./i18n";
 import { apiUnavailableMessage, billingApiErrorMessage, isTemporaryApiStatus } from "./api-availability";
 import type { SharedChecklist, SharedTaskDetailsDraft } from "./shared-task-details";
@@ -3437,7 +3438,7 @@ export function createPersonalMigrationTransportFence(userId:string,directory:im
   const session=captureAccountSessionGuard();
   const check=()=>{session();device.requireOpen();if(confirmedTransportOwnerId!==userId||device.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
   if(directory.kind!=='personal'||directory.ownerId!==userId||directory.resourceId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-  return new WebMigrationTransportFence(legacyTransportGate(),userId,directory.scopeId,check);
+  return new WebMigrationTransportFence(legacyTransportGate(),userId,directory.scopeId,check,()=>requireLegacyTransportWorker());
 }
 
 /** Real read-only workspace migration sources. The caller must still provide the

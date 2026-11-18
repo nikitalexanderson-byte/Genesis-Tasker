@@ -1,4 +1,7 @@
+/* global GenesisLegacyTransportWorker */
 const SCOPE = self.registration.scope;
+importScripts(new URL("./e2ee-legacy-transport-worker.js", SCOPE).href);
+const legacyPersonalRequest = GenesisLegacyTransportWorker.installLegacyTransportWorker(self);
 importScripts(new URL("./habit-reminder-worker.js", SCOPE).href);
 importScripts(new URL("./advice-notification-worker.js", SCOPE).href);
 const ASSETS_PATH = new URL("./assets/", SCOPE).pathname;
@@ -405,10 +408,13 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.includes("/api/")) return;
+  if (url.pathname.includes("/api/")) {
+    if (legacyPersonalRequest.handles(request)) event.respondWith(legacyPersonalRequest(request));
+    return;
+  }
+  if (request.method !== "GET") return;
   if (url.pathname.includes("/downloads/")) return;
 
   // Versioned bundles are immutable. Keep serving the current page's cached

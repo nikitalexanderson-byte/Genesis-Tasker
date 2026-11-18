@@ -274,6 +274,13 @@ actual Room + AndroidKeyStore workspace-source test removed only a fresh QA key
 alias and proved capture fails without recreating a key, empty workspace or
 queue acknowledgement. The default legacy alias is unchanged.
 
+The web's controlling worker now has a separate global permit for unidentified old
+requests and reads persistent owner deny markers. Product migration preflight
+requires its current controller's explicit protocol acknowledgement. See
+`e2ee-336-service-worker.md` for tested streaming/bounds, cache packaging and the
+remaining local/editor/uncontrolled-client limits. No force-reload or cleanup is
+introduced, and complete product migration is still disabled.
+
 The central personal AuthSessionClient now shares the storage fence's scope mutex
 through complete IO, and the web API uses durable deny markers/Web Locks; see
 `e2ee-336-legacy-transport.md` for actual tested boundaries. These are not a
