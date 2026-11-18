@@ -658,3 +658,55 @@ cancel/signature, empty source и oversized preference. Реальный кли�
 capture/reconciliation adapter, Advice transport vectors и new-root acceptance
 ещё не готовы. Coverage остаётся3/20. Логи/границы:
 `e2ee-336-advice-source.md`. Production/floors/cutover не менялись.
+
+## Android: зашифрованный рабочий кеш советов и writer fence
+
+19 ноября2026. Новые profile descriptors, current responses и seen markers
+хранятся внутри owner-scoped Keystore/Room container с постоянным техническим
+AAD. Приватные hashes/выборы не используются как новые открытые Row IDs. Exact
+known v1 bytes защищаются до fetch; вся операция держит owner permit до HTTP/
+commit/cleanup. Прежние ciphertexts сохраняются атомарно. Lost key, corruption,
+missing primary при наличии history и malformed container не становятся пустым
+кешем или новым network fallback. Старые SharedPreferences остаются read-only
+для будущего полного источника и не объявляются уже мигрированными.
+
+9/9 actual API34 cases PASS, main/test QA APK builds PASS; metadata149/package/
+signing не менялись. Включены original cache functional assertions и реальные
+Room/Keystore/owner/fence/key-loss cases. Нового UI/переводов нет. Логи, ограничения
+API26/upgrade/глобального LocalCipher lifecycle и fixture package failure:
+`e2ee-336-advice-cache.md`. Полный Advice content adapter/recovery, остальные17
+paths, product routing и независимый crypto review ещё нужны. Production и
+floors/cutover/Android deploy не менялись.
+
+
+## Native transactions, полный Advice preferences source и public editions
+
+19 ноября2026. Весь app-owned suspend Room code использует поддерживаемый
+transaction boundary, сохраняющий запрет legacy IO при dispatcher hops,
+nesting, rollback и cancellation. Restricted Room API удалён без suppression.
+Consolidated main/test APK +lintDebug +21/21 JVM PASS; lint0 errors/206 warnings.
+Actual API34:23/23 PASS, включая9 повторных Advice-cache cases,7 transport gates,
+workspace и настоящие Aurora/Stoicheion sources. Документы и точные границы:
+`e2ee-336-native-transactions.md`, `e2ee-336-advice-cache.md`.
+
+Signed Advice read сохраняет все пять raw preferences columns. Число афоризмов
+теперь также связано с source hash и persistent legacy fence;6/6 PHP suites
+PASS, включая actual schema drift. Обычные entitlement-filtered helpers не
+вызываются. Серверный инкремент:0596daba.
+
+Публичные historical translations доступны отдельными content-addressed JSON
+assets:9 editions ×14 languages,126 exact source files. Release pins запрещают
+перезапись прежнего version directory. Загрузчик проверяет SHA-256/размер/формат,
+не передаёт Cookie/Referer/selected ID и не делает fallback на новую редакцию.
+Chromium157:132/132 actual HTTP/WebCrypto checks,0 console errors. Инкремент:
+72647092; подробности `e2ee-336-advice-public-editions.md`.
+
+1474/1474 full JS PASS, typecheck/web build PASS. Scoped repository lint0 errors,
+4 прежних img warnings; обычный запуск также видит3 errors в чужом untracked
+`demo-output`, который не менялся. После расширения web Advice transport
+дополнительно38/38 migration tests PASS. Native Advice port ещё подключается.
+Полный private Advice reconciliation/new-root recovery ещё не завершён;
+coverage3/20,17 других categories, product lifecycle/all editor routing,
+recovery/direct upgrades/48 сценариев/14-language security UI и независимый
+crypto review остаются обязательными. Production3.3.5/149, floors0, cutover off
+и GENESIS_DEPLOY_ANDROID=false сохранены;3.3.6 ещё не опубликована.

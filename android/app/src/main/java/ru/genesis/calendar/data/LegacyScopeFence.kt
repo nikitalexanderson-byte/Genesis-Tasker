@@ -2,7 +2,7 @@ package ru.genesis.calendar.data
 
 import androidx.room.migration.Migration
 import androidx.room.RoomDatabase
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.sync.withLock
 import ru.genesis.calendar.auth.CloudAccountSnapshot

@@ -1,6 +1,6 @@
 package ru.genesis.calendar.data
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.*
 import org.junit.Assert.*
@@ -73,6 +73,34 @@ class E2eeLegacyTransportGateTest {
             catch(_: CancellationException) { /* no IO */ }
             assertEquals(0,io.get())
             assertEquals("ordinary-legacy",withContext(Dispatchers.IO) { gate.request(fixture.scope,{}) { "ordinary-legacy" } })
+        } finally { room.close();fixture.context.deleteDatabase(name) }
+    }
+    @Test fun transactionContextSurvivesDispatcherHopsAndRestoresAfterNestedRollbackAndCancellation() = runBlocking {
+        val name="qa-e2ee-public-transaction-${UUID.randomUUID()}.db";val room=fixture.open(name);val io=AtomicInteger()
+        try {
+            assertFalse(genesisRoomTransactionActive())
+            room.withTransaction {
+                assertTrue(genesisRoomTransactionActive())
+                withContext(Dispatchers.IO) {
+                    assertTrue(genesisRoomTransactionActive())
+                    reject("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN") { NativeLegacyTransportGate(room).request(fixture.scope,{}) { io.incrementAndGet() } }
+                    reject("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN") { NativeLegacyOperationPermit.acquire(room,fixture.scope,{}) }
+                }
+                room.withTransaction { withContext(Dispatchers.Default) {
+                    assertTrue(genesisRoomTransactionActive())
+                    reject("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN") { NativeLegacyTransportGate(room).request(fixture.scope,{}) { io.incrementAndGet() } }
+                } }
+                assertTrue(genesisRoomTransactionActive())
+            }
+            assertFalse(genesisRoomTransactionActive());assertEquals(0,io.get())
+            try { room.withTransaction { room.dao().putOutbox(OutboxRecord(fixture.scope,"rollback",1,"rollback-operation"));error("SYNTHETIC_ROLLBACK") };fail("Expected rollback") }
+            catch(error:IllegalStateException){assertEquals("SYNTHETIC_ROLLBACK",error.message)}
+            assertFalse(genesisRoomTransactionActive());assertTrue(room.dao().outbox(fixture.scope).isEmpty())
+            try { withTimeout(100) { room.withTransaction { withContext(Dispatchers.IO) { delay(10000) } } };fail("Expected cancellation") }
+            catch(_:TimeoutCancellationException){ /* Room and the app marker must both unwind. */ }
+            assertFalse(genesisRoomTransactionActive())
+            assertEquals("ordinary",withContext(Dispatchers.IO){NativeLegacyTransportGate(room).request(fixture.scope,{}){io.incrementAndGet();"ordinary"}})
+            val permit=NativeLegacyOperationPermit.acquire(room,fixture.scope,{});permit.finish();assertEquals(1,io.get())
         } finally { room.close();fixture.context.deleteDatabase(name) }
     }
     @Test fun operationSpansBridgeGapsAndBorrowsIoAheadOfWaitingMigration() = runBlocking {

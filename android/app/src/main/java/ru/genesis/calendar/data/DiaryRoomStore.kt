@@ -2,7 +2,7 @@ package ru.genesis.calendar.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import org.json.JSONArray
 import java.util.UUID
 

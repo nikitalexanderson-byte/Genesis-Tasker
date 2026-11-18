@@ -31,7 +31,7 @@ internal class NativeLegacyOperationPermit private constructor(
         suspend fun acquire(db: GenesisDatabase, scope: String, assertCurrent: () -> Unit): NativeLegacyOperationPermit {
             require(scope.matches(Regex("account-[a-f0-9]{32}"))) { "E2EE_SCOPE_BINDING_MISMATCH" }
             if(current()!=null)throw AuthApiError("E2EE_NESTED_LEGACY_OPERATION")
-            try { db.assertNotSuspendingTransaction();check(!db.inTransaction()) }
+            try { check(!genesisRoomTransactionActive()&&!db.inTransaction()) }
             catch(_: IllegalStateException) { throw AuthApiError("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN") }
             val mutex=LegacyScopeLocks.mutex(db,scope);val owner=Any()
             assertCurrent();mutex.lock(owner)

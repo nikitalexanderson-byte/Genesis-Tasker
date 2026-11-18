@@ -1,7 +1,7 @@
 package ru.genesis.calendar.data
 
 import androidx.room.Room
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking

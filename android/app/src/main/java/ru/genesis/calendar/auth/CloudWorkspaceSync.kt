@@ -1,6 +1,6 @@
 package ru.genesis.calendar.auth
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import java.time.Instant
 import java.time.LocalDate
 import org.json.JSONObject

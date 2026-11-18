@@ -26,8 +26,7 @@ internal class NativeLegacyTransportGate(private val db: GenesisDatabase) {
         // invert it and deadlock against preparation. Reject before taking a lock
         // (also detects suspended transactions on a different coroutine context).
         try {
-            db.assertNotSuspendingTransaction()
-            check(!db.inTransaction())
+            check(!genesisRoomTransactionActive()&&!db.inTransaction())
         } catch (_: IllegalStateException) {
             throw AuthApiError("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN")
         }

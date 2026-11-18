@@ -2,7 +2,7 @@ package ru.genesis.calendar
 
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme

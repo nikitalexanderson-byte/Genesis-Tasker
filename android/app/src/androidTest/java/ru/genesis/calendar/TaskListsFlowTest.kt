@@ -1,7 +1,7 @@
 package ru.genesis.calendar
 
 import androidx.room.Room
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.fillMaxSize
