@@ -64,7 +64,10 @@ Actual Room +Keystore +packaged source runtime/new-root vault:
   старый-provider UI1/1 PASS. Последний содержит84 состояния (14 языков ×2 схемы
   ×3 модуля), font1.3, zero IO и неизменный opaque source. Снимки:
   `runtime/advice-api26-runtime-screens/`, визуально просмотрены RU dark Aurora
-  и EN light Backup. Это **не** успешная Advice migration на старом WebView:
+  и EN light Backup. Сам текст fallback смыслово вычитан на всех14 языках:
+  обновить provider в магазине, вновь открыть экран, прежние данные остаются
+  на устройстве; обещания recovery без ключа или E2EE всего продукта нет.
+  Это **не** успешная Advice migration на старом WebView:
   совместимый runtime требуется до его запуска. Логи: `native-advice-source-storage-api26-01.log`,
   `native-advice-runtime-fallback-api26-01.log`, `native-advice-timezone-api26-01.log`.
 - API35/Chromium124: итоговые31/31 PASS (те же30 source/storage cases +public

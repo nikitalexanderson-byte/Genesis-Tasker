@@ -754,3 +754,29 @@ routing ещё обязательны. Default global v1 provenance review, бо
 rotation/files/automation, backup/Drive,48 scenarios и независимый crypto review
 не заменяются этими проверками. Production3.3.5/149, floors0, cutover off,
 GENESIS_DEPLOY_ANDROID=false сохранены; полного выпуска3.3.6 ещё нет.
+
+## Личные задачи: read-only server source следующей категории
+
+19 ноября2026. Signed `legacy-tasks` сохраняет все7 owner-scoped task/history
+таблиц: content/recurrence/reminders, links/deletions, recovered ciphertext/
+tombstones, exact creation state/provider operation history. Read проверяет
+current device/owner/lease/source token под одним writer lock и не выполняет
+внешние Google/Yandex операции или acknowledgement. Старый key возвращается
+только при наличии recovered ciphertext; missing/corrupt key и большой source
+дают отказ без пустого результата или удаления originals.
+
+9/9 isolated PHP suites PASS; расширенный task-only run также PASS, включая
+actual-schema completeness, expiry, foreign content, все7 write fences,
+10000+ rows/oversized Unicode и key minimization. Документ/логи:
+`e2ee-336-tasks-source.md`. Real web/native task adapters, offline reconciliation
+и consent ещё не реализованы этим шагом; общий real-adapter coverage4/20.
+Production, floors/cutover и GENESIS_DEPLOY_ANDROID=false не менялись.
+
+Дополнительно оба signed client ports получили legacyTasks:39/39 JS migration
+tests и8/8 native JVM PASS; typecheck/scoped lint/web build PASS. Actual Web Crypto/
+JCA fixtures проверены PHP:14 signed web/native packets,6/6 suites PASS в
+`runtime/backend-tasks-transport-03/`. Source capture/reconciliation task adapter
+ещё не готов. Автоматический i18n/catalogue audit14 языков PASS; смысловая
+приёмка всего будущего security/recovery UI по-прежнему обязательна.
+Итоговый полный JS regression после task ports/fixtures:1492/1492 PASS,
+`runtime/frontend-tasks-transport-final-full-02.log`.

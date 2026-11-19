@@ -39,7 +39,11 @@ foreach($fixtures as $fixture) {
     if($command['action']!=='legacy-advice')throw new RuntimeException('Invalid legacy Advice transport action');
     try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform Advice source accepted');}
     catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
+    $packet=$fixture['tasksRead'];$command=$packet['command'];
+    if($command['action']!=='legacy-tasks')throw new RuntimeException('Invalid legacy task transport action');
+    try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform task source accepted');}
+    catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
     $db->prepare("DELETE FROM e2ee_scopes WHERE scope_id=? AND state='uploading'")->execute([$scope]);
 }
-if($checks!==12)throw new RuntimeException('Missing web/native transport vectors');
+if($checks!==14)throw new RuntimeException('Missing web/native transport vectors');
 echo 'PASS e2ee-migration-transport '.$checks.' real signed web/native packets; pagination accepted, stale legacy-source tokens rejected'.PHP_EOL;

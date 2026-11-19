@@ -293,7 +293,7 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
-  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead,adviceRead;
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
     assert.equal(path,'/read');
@@ -301,6 +301,7 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
     else if(packet.command.action==='legacy-aurora')auroraRead=packet;
     else if(packet.command.action==='legacy-stoicheion')stoicheionRead=packet;
     else if(packet.command.action==='legacy-advice')adviceRead=packet;
+    else if(packet.command.action==='legacy-tasks')tasksRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   });
@@ -319,8 +320,12 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
   assert.deepEqual({...adviceRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
   await assert.rejects(transport.legacyAdvice({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
   await assert.rejects(transport.legacyAdvice({...context,scopeId:'personal:foreign'}),/SCOPE_BINDING_MISMATCH/);
+  await transport.legacyTasks(context);assert.equal((await verifyE2eeCommand(tasksRead,f.keys.signing.publicKey)).action,'legacy-tasks');
+  assert.deepEqual({...tasksRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash});
+  await assert.rejects(transport.legacyTasks({...context,ownerId:'foreign'}),/SCOPE_BINDING_MISMATCH/);
+  await assert.rejects(transport.legacyTasks({...context,scopeId:'personal:foreign'}),/SCOPE_BINDING_MISMATCH/);
   mkdirSync('output/release-3.3.6/runtime',{recursive:true});
-  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead,adviceRead},null,2));
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));
