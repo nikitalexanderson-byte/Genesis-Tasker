@@ -869,3 +869,24 @@ Provider follow-up: полный backend `provider-cache-full-backend-04/`148/14
 bde13c2b завершились success целиком, включая долгие browser scenarios; для новых
 gate/provider commits запускается отдельный CI. Native lint ожидает завершения
 своего процесса; packaged APK/JVM/API34/API35 не подменяют его exit status.
+
+Native provider acceptance завершена: main/test APK +JVM7/7 +lintDebug PASS,
+12m2s; lint0 errors/206 прежних warnings/8 hints. Оба эмулятора остановлены после
+45/45 API34 и45/45 API35; личные устройства не использовались.
+
+## Дневники и сны: historical server source и signed client ports
+
+19 ноября2026. Читаются все6 private tables с проверкой device/owner/lease/token
+и без обычного sync-disabled purge. Source сохраняет notes/tombstones/settings/
+dream preferences/references и exact encrypted originals; old keys выдаются лишь
+для existing notes. Тариф не превращается в право пропустить historical content.
+7/7 PHP suites,16 actual web/native signed packets,40/40 JS migration и8/8 JVM
+PASS; focused lint PASS. Документ: `e2ee-336-diary-source.md`.
+
+Реальный diary reconciliation ещё не завершён: local_only privacy marker не
+означает удаление. Записи «только на устройстве» должны остаться локальными при
+переходе и не попасть в cloud plan без нового согласия. Для этого проектируется
+отдельный protected local output plan; его реализация/acceptance ещё обязательны.
+Coverage5/20, остальные15 categories/full lifecycle/recovery/upgrades/shared/
+backup/48 scenarios/14 languages/independent review остаются до activation.
+Production/floors/cutover/Android deploy не менялись; полного выпуска3.3.6 ещё нет.

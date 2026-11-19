@@ -61,8 +61,8 @@ sync/create flags и требует нового внешнего согласи
   `output/playwright/provider-cache-source-336.png`. WebCrypto/IndexedDB,
   persist-before-IO, original queues, lock/reopen/new-root read and list history.
 - QA main/test APK packaged; native JVM source6/6 +policy1/1 PASS.
-  `native-provider-cache-build-01.log` also runs lint; completion is recorded
-  separately once that task exits, not inferred from APK packaging.
+  `native-provider-cache-build-01.log`: BUILD SUCCESSFUL12m2s, including lintDebug
+  (0 errors/206 existing warnings/8 hints), not inferred from APK packaging.
 - API34 `native-provider-cache-api34-01.log`45/45 PASS; API35
   `native-provider-cache-api35-01.log`45/45 PASS. Real Room/Keystore/new-root reads,
   file-only content/list history, no key bridge, historical-review denial, original

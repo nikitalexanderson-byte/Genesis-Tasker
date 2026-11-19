@@ -246,7 +246,7 @@ class E2eeMigrationTest {
         f.badPage = "lock"; reject("E2EE_UNLOCK_REQUIRED") { transport.readAll() }
     }
     @Test fun emitActualNativeReadbackPacketsForPhpSqliteContract() = runBlocking {
-        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null; var stoicheionRead: JSONObject? = null; var adviceRead: JSONObject? = null; var tasksRead: JSONObject? = null
+        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null; var stoicheionRead: JSONObject? = null; var adviceRead: JSONObject? = null; var tasksRead: JSONObject? = null; var diaryRead: JSONObject? = null
         val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace")) { path, packet ->
             assertEquals("/read",path)
             if(packet.getJSONObject("command").getString("action") == "legacy-workspace") legacyRead = packet
@@ -254,6 +254,7 @@ class E2eeMigrationTest {
             else if(packet.getJSONObject("command").getString("action") == "legacy-stoicheion") stoicheionRead = packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-advice") adviceRead = packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-tasks") tasksRead = packet
+            else if(packet.getJSONObject("command").getString("action") == "legacy-diary") diaryRead = packet
             else { assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet) }
             JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).put("envelopes",JSONArray())
         }
@@ -278,7 +279,12 @@ class E2eeMigrationTest {
         assertEquals(context.migrationId,tasksPayload.getString("migrationId"));assertEquals(context.fence,tasksPayload.getLong("fence"));assertEquals(context.sourceHash,tasksPayload.getString("sourceHash"))
         reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyTasks(E2eeMigrationSourceContext("foreign",f.scope,context.migrationId,1,context.sourceHash,1)) }
         reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyTasks(E2eeMigrationSourceContext("owner","personal:foreign",context.migrationId,1,context.sourceHash,1)) }
+        transport.legacyDiary(context);assertEquals("legacy-diary",E2eeCommands.verify(requireNotNull(diaryRead),f.device.keys().signing.public).getString("action"))
+        val diaryPayload=diaryRead!!.getJSONObject("command").getJSONObject("payload");E2eeKeys.exact(diaryPayload,setOf("migrationId","fence","sourceHash"))
+        assertEquals(context.migrationId,diaryPayload.getString("migrationId"));assertEquals(context.fence,diaryPayload.getLong("fence"));assertEquals(context.sourceHash,diaryPayload.getString("sourceHash"))
+        reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyDiary(E2eeMigrationSourceContext("foreign",f.scope,context.migrationId,1,context.sourceHash,1)) }
+        reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyDiary(E2eeMigrationSourceContext("owner","personal:foreign",context.migrationId,1,context.sourceHash,1)) }
         val file = File(root,"output/release-3.3.6/runtime/native-migration-transport.json"); file.parentFile.mkdirs()
-        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).put("auroraRead",auroraRead).put("stoicheionRead",stoicheionRead).put("adviceRead",adviceRead).put("tasksRead",tasksRead).toString(2))
+        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).put("auroraRead",auroraRead).put("stoicheionRead",stoicheionRead).put("adviceRead",adviceRead).put("tasksRead",tasksRead).put("diaryRead",diaryRead).toString(2))
     }
 }
