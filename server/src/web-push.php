@@ -18,6 +18,16 @@ function genesisPushPublicPem(string $point): string
     return "-----BEGIN PUBLIC KEY-----\n" . chunk_split(base64_encode($der), 64, "\n") . "-----END PUBLIC KEY-----\n";
 }
 
+/** OpenSSL may omit a leading zero in either unsigned P-256 coordinate. SEC1
+ * uncompressed points always encode both coordinates as exactly 32 octets. */
+function genesisPushPublicPoint(array $details):string
+{
+    $ec=$details['ec']??[];
+    if(($ec['curve_name']??'')!=='prime256v1')throw new RuntimeException('PUSH_CRYPTO_FAILED');
+    foreach(['x','y']as $field)if(!is_string($ec[$field]??null)||strlen($ec[$field])<1||strlen($ec[$field])>32)throw new RuntimeException('PUSH_CRYPTO_FAILED');
+    return "\x04".str_pad($ec['x'],32,"\0",STR_PAD_LEFT).str_pad($ec['y'],32,"\0",STR_PAD_LEFT);
+}
+
 function genesisPushEndpoint(string $endpoint): string
 {
     $url = parse_url($endpoint); $host = strtolower((string)($url['host'] ?? ''));
@@ -50,7 +60,7 @@ function genesisPushConfiguration(): array
     if (!$details || ($details['ec']['curve_name'] ?? '') !== 'prime256v1') return ['available' => false, 'blocker' => 'PUSH_KEYS_INVALID'];
     $subject = $config['subject'] ?? genesisConfig()['app_url'];
     if (!is_string($subject) || (!str_starts_with($subject, 'https://') && !(str_starts_with($subject, 'mailto:') && filter_var(substr($subject, 7), FILTER_VALIDATE_EMAIL)))) return ['available' => false, 'blocker' => 'PUSH_SUBJECT_INVALID'];
-    return ['available' => true, 'publicKey' => genesisPushBase64("\x04" . $details['ec']['x'] . $details['ec']['y']), 'private' => $private, 'subject' => $subject];
+    return ['available' => true, 'publicKey' => genesisPushBase64(genesisPushPublicPoint($details)), 'private' => $private, 'subject' => $subject];
 }
 
 function genesisPushExpand(string $prk, string $info, int $length): string { return substr(hash_hmac('sha256', $info . "\x01", $prk, true), 0, $length); }
@@ -62,7 +72,7 @@ function genesisPushEncrypt(array $subscription, string $payload, ?OpenSSLAsymme
     $key = $ephemeral ?? openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
     $details = $key ? openssl_pkey_get_details($key) : false;
     if (!$details) throw new RuntimeException('PUSH_CRYPTO_FAILED');
-    $server = "\x04" . $details['ec']['x'] . $details['ec']['y'];
+    $server = genesisPushPublicPoint($details);
     $peer = openssl_pkey_get_public(genesisPushPublicPem($client));
     $shared = $peer ? openssl_pkey_derive($peer, $key, 32) : false;
     if ($shared === false) throw new RuntimeException('PUSH_CRYPTO_FAILED');

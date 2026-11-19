@@ -40,6 +40,12 @@ web/service worker/native используют общий набор vectors; ac
   прогон не объявляется зелёным.
 - `personal-io-api-final-04/`: 402/402 реальных loopback HTTP lifecycle cases PASS.
 
+Web Push follow-up: SEC1 X/Y дополняются слева до32 байт; исправлены VAPID key
+и ephemeral header. Scalar43 — публичный synthetic fixture с31-byte Y. Valid
+65-byte point/header/derive, ошибочные curve/sizes и exact RFC8291 Appendix A
+vector PASS. `push-coordinate-repair-01/`: habit-reminders, web-push,
+e2ee-background, advice-notifications4/4 PASS. Общий failed log сохранён.
+
 Изолированные DB/config/session/tmp; внешняя отправка отключена. Это private
 legacy coordination, не shared migration gate или полный account lifecycle.
 Provider files ещё должны войти в source token/lossless read/client reconciliation.
