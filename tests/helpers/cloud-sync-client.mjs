@@ -28,7 +28,7 @@ export function deferred() {
 }
 
 // Each instance is a separate tab: real cloud-sync code and WebCrypto, no live network or account.
-export async function cloudSyncClient({ storage = new MemoryStorage(), sessionStorage = new MemoryStorage(), userId = "cache-qa-user", key, initializeWorkspace = true, authenticated = true, withDataExchange = false, withMindmaps = false, withPersonalRepositories = false, withPrivateMessages = false, withBackups = false, language = "ru", timers = { setTimeout, clearTimeout } } = {}) {
+export async function cloudSyncClient({ storage = new MemoryStorage(), sessionStorage = new MemoryStorage(), userId = "cache-qa-user", key, initializeWorkspace = true, authenticated = true, withDataExchange = false, withMindmaps = false, withPersonalRepositories = false, withPrivateMessages = false, withBackups = false, withPhysis = false, language = "ru", timers = { setTimeout, clearTimeout } } = {}) {
   key ??= Buffer.from(webcrypto.getRandomValues(new Uint8Array(32))).toString("base64");
   const deviceKey = `genesis-workspace-device-key-v2:${userId}`, keyRecord = JSON.stringify({ key, recoveryCode: key });
   if (storage.getItem(deviceKey) !== keyRecord) storage.setItem(deviceKey, keyRecord);
@@ -118,6 +118,7 @@ export async function cloudSyncClient({ storage = new MemoryStorage(), sessionSt
     mindmaps: withMindmaps ? load(resolve(root, "app/mindmaps-storage.ts")) : undefined,
     repositories: withPersonalRepositories ? {restoration:load(resolve(root, 'app/stoicheion-restoration-storage.ts')),aurora:load(resolve(root, 'app/aurora/repository.ts'))} : undefined,
     privateMessages: withPrivateMessages ? load(resolve(root, "app/private-messages-api.ts")) : undefined,
+    physis:withPhysis?{store:load(resolve(root,'app/physis/store.ts')),crypto:load(resolve(root,'app/physis/crypto.ts'))}:undefined,
     featureAccess: load(resolve(root, "app/feature-access.ts")),
     backups: withBackups ? {device:load(resolve(root,'app/backup-device.ts')),sources:load(resolve(root,'app/backup-sources.ts')),format:load(resolve(root,'app/backup-format.ts')),tasks:load(resolve(root,'app/backup-task-restore.ts')),restore:load(resolve(root,'app/backup-restore.ts'))} : undefined,
     respond(handler) { fetchResponse = handler; },

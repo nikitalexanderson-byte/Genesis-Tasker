@@ -1,4 +1,4 @@
-import { captureAccountSessionGuard, physisRequest } from '../cloud-sync';
+import { captureAccountSessionGuard, physisLegacyAccess } from '../cloud-sync';
 import { MAX_PHYSIS_PLAINTEXT_BYTES, openPhysis, sealPhysis, type PhysisEnvelope } from './crypto';
 import type { PhysisRecord, PhysisStore, SaveState } from './types';
 import { validatePhysisRecord } from './validation';
@@ -13,6 +13,7 @@ type RotationResult = { revision: number; cursor: number; keyVersion: number };
 type Rotation = { key: CryptoKey; vaultText: string; expectedRevision: number; payload?: string;
   result?: RotationResult; uncertain?: boolean; inFlight: Promise<RotationResult> | null };
 export type Transport = <T>(path: string, init?: RequestInit) => Promise<T>;
+export type PhysisOperation = <T>(operation:(transport:Transport)=>Promise<T>)=>Promise<T>;
 const errorCode = (error: unknown) => error instanceof Error ? error.message : 'PHYSIS_REQUEST_FAILED';
 const MAX_BATCH_BYTES = 2 * 1024 * 1024;
 const encodedBytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).byteLength;
@@ -50,13 +51,20 @@ export class PhysisMemoryStore {
   private rotation: Rotation | null = null;
   private alive = true;
   private checkSession: () => void;
+  private transport: Transport;
+  private operation: PhysisOperation;
   private state: PhysisStore;
   private unregisterBackup: () => void;
   cursor = 0;
   constructor(readonly owner: string, key: CryptoKey, readonly keyVersion: number,
-    private transport: Transport = physisRequest, sessionCheck?: () => void) {
+    transport?: Transport, sessionCheck?: () => void, operation?: PhysisOperation) {
     this.key = key;
-    this.checkSession = sessionCheck ?? captureAccountSessionGuard();
+    const access=transport?null:physisLegacyAccess(owner);
+    this.transport=transport??access!.request;
+    this.checkSession = sessionCheck ?? access?.check ?? captureAccountSessionGuard();
+    // Explicitly injected peers keep their own exclusion/session port. Product
+    // instances always use the real owner-bound Web Lock and borrowed transport.
+    this.operation=operation??access?.withLegacyOperation??(async task=>task(this.transport));
     this.state = { records: [], status: 'saved', error: '', save: record => this.saveMany([record]),
       saveMany: records => this.saveMany(records), remove: id => this.remove(id), reload: () => this.reload() };
     this.unregisterBackup = registerBackupSource('physis', { owner, capture:() => {
@@ -67,6 +75,11 @@ export class PhysisMemoryStore {
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   getSnapshot = () => this.state;
   private check() { if (!this.alive || !this.key) throw new Error('PHYSIS_LOCKED'); this.checkSession(); }
+  private async run<T>(operation:(transport:Transport)=>Promise<T>):Promise<T> {
+    this.check();return this.operation(async transport=>{
+      this.check();const result=await operation(transport);this.check();return result;
+    });
+  }
   private publish(patch: Partial<PhysisStore>) { this.state = { ...this.state, ...patch }; for (const listener of this.listeners) listener(); }
   private status(status: SaveState, error = '') { this.publish({ status, error }); }
   get hasPending() { return this.pending.length > 0; }
@@ -75,10 +88,10 @@ export class PhysisMemoryStore {
     this.check();
     if (this.rotation) throw new Error('Дождитесь подтверждения смены ключа. При сбое повторите её с сохранённым кодом восстановления.');
   }
-  private async readWire(): Promise<{ records: WireRecord[]; cursor: number }> {
+  private async readWire(transport:Transport): Promise<{ records: WireRecord[]; cursor: number }> {
     this.check(); let page = 0; let snapshot: number | undefined; const all: WireRecord[] = [];
     for (let count = 0; count < 500; count++) {
-      const result = await this.transport<Page>(`/records?page=${page}&limit=100${snapshot === undefined ? '' : `&snapshot=${snapshot}`}`);
+      const result = await transport<Page>(`/records?page=${page}&limit=100${snapshot === undefined ? '' : `&snapshot=${snapshot}`}`);
       this.check();
       if (!Array.isArray(result.records) || !result.records.every(validWire) || !Number.isSafeInteger(result.snapshot) ||
           !Number.isSafeInteger(result.cursor) || result.cursor < 0 || snapshot !== undefined && snapshot !== result.snapshot) throw new Error('PHYSIS_RESYNC_REQUIRED');
@@ -94,9 +107,12 @@ export class PhysisMemoryStore {
     throw new Error('Слишком много записей для этой версии клиента.');
   }
   async reload() {
+    return this.run(transport=>this.reloadWith(transport));
+  }
+  private async reloadWith(transport:Transport) {
     this.check(); if (this.pending.length) throw new Error('Сначала сохраните изменения или явно отмените локальный вариант.');
     const localGeneration = this.localGeneration; const reloadGeneration = ++this.reloadGeneration;
-    const { records: wire, cursor } = await this.readWire(); const records: PhysisRecord[] = [];
+    const { records: wire, cursor } = await this.readWire(transport); const records: PhysisRecord[] = [];
     for (const item of wire) {
       if (item.deletedAt || !item.envelope) continue;
       const decoded = await openPhysis(this.key!, this.owner, item.id, this.keyVersion, item.envelope);
@@ -118,28 +134,34 @@ export class PhysisMemoryStore {
       return Promise.reject(new Error('Проверьте формат и значения записи.'));
     const copies = structuredClone(records);
     try { checkBatchSize(copies); } catch (error) { return Promise.reject(error); }
+    return this.run(async transport=>{
+    this.checkEditable();
     this.localGeneration++;
     this.pending.push({ requestId: crypto.randomUUID(), records: copies, deletes: [] });
     const updated = new Map(this.state.records.map(record => [record.id, record]));
     for (const record of copies) updated.set(record.id, record);
     this.publish({ records: [...updated.values()] });
-    return this.flush();
+    return this.flushWith(transport);
+    });
   }
   private async remove(id: string): Promise<void> {
+    return this.run(async transport=>{
     this.checkEditable();
     if (!this.state.records.some(record => record.id === id)) return Promise.reject(new Error('Запись не найдена.'));
     this.localGeneration++; this.pending.push({ requestId: crypto.randomUUID(), records: [], deletes: [id] });
     this.publish({ records: this.state.records.filter(record => record.id !== id) });
-    return this.flush();
+    return this.flushWith(transport);
+    });
   }
-  flush = (): Promise<void> => {
+  flush = (): Promise<void> => this.run(transport=>this.flushWith(transport));
+  private flushWith(transport:Transport):Promise<void> {
     this.check();
     if (this.state.status === 'conflict') return Promise.reject(new Error(this.state.error));
     if (this.busy) return this.busy;
-    this.busy = this.sendQueue().finally(() => { this.busy = null; });
+    this.busy = this.sendQueue(transport).finally(() => { this.busy = null; });
     return this.busy;
-  };
-  private async sendQueue() {
+  }
+  private async sendQueue(transport:Transport) {
     if (!this.pending.length) return;
     this.status('saving');
     try {
@@ -163,7 +185,7 @@ export class PhysisMemoryStore {
           item.changes = changes;
         }
         this.check();
-        const response = await this.transport<{ records: Acknowledgement[]; cursor: number }>('/records', {
+        const response = await transport<{ records: Acknowledgement[]; cursor: number }>('/records', {
           method: 'POST', body: JSON.stringify({ requestId: item.requestId, changes: item.changes }),
         });
         this.check();
@@ -185,6 +207,7 @@ export class PhysisMemoryStore {
       this.status('saved');
     } catch (error) {
       if (!this.alive) throw error;
+      this.checkSession();
       const code = errorCode(error);
       const status = (error as { status?: number })?.status;
       const conflict = status === 409 || /CONFLICT|REVISION|RESYNC|IDEMPOTENCY|EXISTS|DELETED/.test(code);
@@ -197,13 +220,16 @@ export class PhysisMemoryStore {
     }
   }
   async discardAndReload() {
+    return this.run(async transport=>{
     this.checkEditable();
     if (this.busy) throw new Error('Дождитесь завершения текущего запроса.');
-    this.localGeneration++; this.pending = []; await this.reload();
+    this.localGeneration++; this.pending = []; await this.reloadWith(transport);
+    });
   }
   async exportWire() {
+    return this.run(async transport=>{
     this.checkEditable(); if (this.pending.length) throw new Error('Дождитесь сохранения перед зашифрованным экспортом.');
-    const generation = this.localGeneration; const { records } = await this.readWire();
+    const generation = this.localGeneration; const { records } = await this.readWire(transport);
     for (const record of records) {
       if (record.deletedAt || !record.envelope) continue;
       const decoded = await openPhysis(this.key!, this.owner, record.id, this.keyVersion, record.envelope);
@@ -212,23 +238,26 @@ export class PhysisMemoryStore {
     }
     if (generation !== this.localGeneration) throw new Error('Данные изменились во время экспорта. Повторите его после сохранения.');
     return records;
+    });
   }
-  rotate(newKey: CryptoKey, vault: unknown, expectedVaultRevision: number): Promise<RotationResult> {
+  async rotate(newKey: CryptoKey, vault: unknown, expectedVaultRevision: number): Promise<RotationResult> {
+    this.check();const vaultText = JSON.stringify(vault);
+    return this.run(async transport=>{
     this.check(); if (this.pending.length || this.busy) return Promise.reject(new Error('Сначала сохраните все изменения.'));
-    const vaultText = JSON.stringify(vault);
     if (this.rotation && (this.rotation.key !== newKey || this.rotation.vaultText !== vaultText || this.rotation.expectedRevision !== expectedVaultRevision))
       return Promise.reject(new Error('Смена ключа ещё не подтверждена. Повторите предыдущую попытку с тем же кодом восстановления.'));
     this.rotation ??= { key: newKey, vaultText, expectedRevision: expectedVaultRevision, inFlight: null };
     const candidate = this.rotation;
     if (candidate.result) return Promise.resolve(candidate.result);
     if (candidate.inFlight) return candidate.inFlight;
-    candidate.inFlight = this.sendRotation(candidate).finally(() => { candidate.inFlight = null; });
+    candidate.inFlight = this.sendRotation(candidate,transport).finally(() => { candidate.inFlight = null; });
     return candidate.inFlight;
+    });
   }
-  private async sendRotation(candidate: Rotation): Promise<RotationResult> {
+  private async sendRotation(candidate: Rotation,transport:Transport): Promise<RotationResult> {
     try {
       if (!candidate.payload) {
-        await this.reload();
+        await this.reloadWith(transport);
         const records = [];
         for (const record of this.state.records) records.push({ id: record.id, expectedRevision: this.confirmed.get(record.id)!.revision,
           envelope: await sealPhysis(candidate.key, this.owner, record.id, this.keyVersion + 1, record) });
@@ -239,13 +268,14 @@ export class PhysisMemoryStore {
         candidate.payload = payload;
       }
       this.check();
-      const result = await this.transport<RotationResult>('/rotate', { method: 'POST', body: candidate.payload });
+      const result = await transport<RotationResult>('/rotate', { method: 'POST', body: candidate.payload });
       this.check();
       if (result.revision !== candidate.expectedRevision + 1 || result.keyVersion !== this.keyVersion + 1 || !Number.isSafeInteger(result.cursor))
         throw new Error('PHYSIS_INVALID_RESPONSE');
       candidate.result = result;
       return result;
     } catch (error) {
+      this.check();
       // A network/invalid-response failure can mean the server committed; retain exact
       // payload and both keys. Only a definitive rejection or pre-send failure is safe to reset.
       const status = (error as { status?: number })?.status;

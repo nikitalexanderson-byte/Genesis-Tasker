@@ -529,9 +529,9 @@ export function captureAccountSessionGuard() {
 }
 
 /** Owner-scoped Physis transport; account wrapping uses personalDocumentAccess, with no offline queue. */
-export async function physisRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function physisRequest<T>(path: string, init: RequestInit = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
   if (!/^\/(access|vault|records|rotate|catalog)(?:\?[A-Za-z0-9=&_-]*)?$/.test(path)) throw new Error("Invalid Physis path");
-  try { return await api<T>(`/physis/v1${path}`, { ...init, cache: "no-store" }); }
+  try { return await api<T>(`/physis/v1${path}`, { ...init, cache: "no-store" },{},permit); }
   catch (error) {
     if (error instanceof GenesisNetworkTimeoutError) throw new Error("Сервер не ответил. Несинхронизированные данные Фюзиса остаются только в памяти этой вкладки.");
     throw error;
@@ -590,6 +590,30 @@ export function personalDocumentAccess(userId: string,permit?:import('./e2ee/leg
     },
   };
   return access;
+}
+
+export type PhysisLegacyRequest=<T>(path:string,init?:RequestInit)=>Promise<T>;
+export type PhysisLegacyAccess={check:()=>void;request:PhysisLegacyRequest;
+  withLegacyOperation:<T>(operation:(request:PhysisLegacyRequest)=>Promise<T>)=>Promise<T>};
+/** Physis also has an independent legacy vault: owner exclusion must not depend
+ * on opening the workspace key. Every nested HTTP request borrows the same
+ * operation so a queued exclusive migration cannot deadlock its parent. */
+export function physisLegacyAccess(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):PhysisLegacyAccess {
+  const active=captureAccountSessionGuard();
+  const check=()=>{
+    active();
+    if(confirmedTransportOwnerId!==userId||workspaceUserId&&workspaceUserId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');
+    if(serverProtectedTransportOwners.has(userId))throw new Error('E2EE_UPGRADE_REQUIRED');
+    if(permit)legacyTransportGate().assertOperation(permit,userId);
+  };
+  const request:PhysisLegacyRequest=async<T>(path:string,init:RequestInit={})=>{
+    check();const result=await physisRequest<T>(path,init,permit);check();return result;
+  };
+  return{check,request,withLegacyOperation:async operation=>{
+    check();
+    if(permit)return legacyTransportGate().borrow(permit,userId,check,()=>operation(request));
+    return legacyTransportGate().withOperation(userId,check,borrowed=>operation(physisLegacyAccess(userId,borrowed).request));
+  }};
 }
 
 /** Deliberately separate from bootstrap: checking export must not pull or merge user data. */

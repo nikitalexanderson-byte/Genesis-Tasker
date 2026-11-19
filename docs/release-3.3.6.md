@@ -1,8 +1,8 @@
 # Подготовка GENESIS 3.3.6
 
 Актуальный срез19 ноября: реализованы7/20 реальных source categories; это не
-процент готовности релиза. Physis legacy reader проходит отдельную приёмку и
-ещё не является8-м adapter. Остальные13 источников, полный product lifecycle,
+процент готовности релиза. Для Physis добавлены legacy readers и защита normal
+store operations; полный source adapter ещё не готов. Остальные13 источников, полный product lifecycle,
 shared/files/automation, archives/Drive/local-only recovery, direct upgrades,
 48 системных сценариев и14-language semantic review остаются обязательными.
 Проверяемый остаток по каждому исходному сценарию —
@@ -1152,6 +1152,11 @@ recovery/upgrades/shared/backups/original48/14-language semantics/independent
 crypto review gates сохраняются. Production3.3.5/149, floors0/cutover off/Android
 deploy false;3.3.6 не объявлена выпущенной.
 
+Source checks44535117678 на2af7cc42 завершились **success** целиком: Android и
+web/API, включая browser scenarios. Metadata сохранена в runtime
+`source-checks-44535117678-final-01.json`. Это acceptance cold-start исправления;
+следующим Physis-инкрементам соответствуют свои локальные проверки и новый CI.
+
 ## 19 ноября: строгие старые Physis readers web/native и карта остатка
 
 Добавлены read-only primitives обоих реальных форматов Physis: независимые
@@ -1207,3 +1212,42 @@ Fresh pnpm audit exit0/all severities0. Повторная проверка GitH
 Evidence и первоначальный finding сохранены в dependency review. Production
 3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены;
 версия3.3.6 и полный Deploy ещё не выпущены.
+
+## 19 ноября: Physis normal operations под полным owner permit
+
+Actual PhysisMemoryStore теперь удерживает один owner Web Lock от staging
+optimistic records/pending до encryption, paged read/decrypt, borrowed HTTP,
+acknowledgement и cleanup. Internal flush/reload/rotation не получают новый
+shared lock за ожидающим exclusive migration. Уже допущенные saves дренируются
+вместе; более поздние операции ждут до любых изменений памяти. Preparing/active
+marker запрещает их без queue/HTTP side effects. Factory привязана к validated
+transport owner/session generation, не требует workspace key для independent
+Physis key. Submitted records/vault text копируются до ожидания lock.
+
+Late account/logout response больше не публикует stale error state и не очищает
+pending/rotation. Existing exact uncertain retry/ciphertext/rotation semantics
+сохранены. Explicitly injected peers по-прежнему используют свои IO/session ports;
+единственный product constructor использует actual factory. Новый plaintext
+storage или durable Physis queue не добавлены.
+
+Existing Physis33/33, новые real cloud/store/WebCrypto/gate VM12/12 и focused
+набор35/35 PASS. Initial32/34 run сохранил две ошибки fixture: second save был
+допущен до фактической постановки exclusive lock после async preflight, и
+cross-realm array сравнивался без нормализации обеих сторон. Final run02 явно
+проверяет pending exclusive request и дополнительно покрывает opposite ordering:
+оба ранее допущенных saves завершаются до capture, без deadlock/lost queue.
+
+Full JS1611/1611, typecheck/scoped lint и static web build PASS. Native reassembly
+SUCCESS34s; main/test APK byte-identical принятому Physis reader build01, source
+identity обновлена. Новые native tests не требовались для тех же APK: existing
+API26/34/35 по6/6 остаются привязанными к exact hashes. Подробности и evidence:
+`e2ee-336-physis-operations.md`; native identity/comparison — runtime
+`physis-operation-native-*-01.json`.
+
+Это normal legacy writer exclusion, не готовая Physis source migration. Новые
+Chromium/IDB и полный authenticated Physis UI journey этим VM-набором не
+подтверждаются. Capture всех forms/keys/pending/rotation, reconciliation4 tables,
+new-root readback, bootstrap/unlock/close/recovery и весь оставшийся13-source/
+shared/files/backup/original48/14-language/independent-review охват обязательны.
+Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены;
+выпуска3.3.6 и публикации в этом инкременте нет.
