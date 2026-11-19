@@ -90,7 +90,7 @@ internal class E2eeNativeAdviceSource(private val ownerId:String,private val sco
             &&E2eeCommands.integer(remote.get("fence"),1)==lease.fence&&remote.get("sourceHash")==lease.sourceHash){"E2EE_SCOPE_BINDING_MISMATCH"}
         check(remote.getLong("legacyGeneration")==current.getLong("generation")&&lease.generation>remote.getLong("legacyGeneration")){"E2EE_ADVICE_GENERATION_REVIEW_REQUIRED"}
         val result=reconciler.reconcile(current,ancestors,lease,remote,assertCurrent){_,_->error("E2EE_KEY_BRIDGE_FORBIDDEN")}
-        try{assertCurrent();result}catch(error:Throwable){result.content.forEach{it.bytes.fill(0)};throw error}
+        try{assertCurrent();result}catch(error:Throwable){(result.content+result.localContent).forEach{it.bytes.fill(0)};throw error}
     }
     override fun toString()="E2eeNativeAdviceSource([redacted])"
 }

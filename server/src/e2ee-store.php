@@ -406,7 +406,10 @@ function genesisE2eeMigrationCommand(PDO $db,array &$scope,array $c,array $packe
     if(!$lease||$lease['device_id']!==$c['deviceId'])throw new DomainException('E2EE_MIGRATION_FENCED');
     if ($c['action']==='migration-verify') {
         genesisE2eeExactFields($p,['migrationId','fence','manifestHash','objectCount','verifiedCheckpoint']);
-        genesisE2eeDecode($p['manifestHash'],32); genesisE2eeDecode($p['verifiedCheckpoint'],32); genesisE2eeInteger($p['objectCount'],1);
+        // An entirely device-local or empty source has zero uploaded objects.
+        // This is still a signed current-device assertion with the exact lease,
+        // source revision and empty manifest; it grants no new content authority.
+        genesisE2eeDecode($p['manifestHash'],32); genesisE2eeDecode($p['verifiedCheckpoint'],32); genesisE2eeInteger($p['objectCount'],0);
         $manifest=genesisE2eeManifest($db,$scope);
         if ($scope['state']!=='uploading' || $p['manifestHash']!==$manifest['manifestHash'] || $p['objectCount']!==$manifest['objectCount']) throw new DomainException('E2EE_MANIFEST_MISMATCH');
         $db->prepare('UPDATE e2ee_migrations SET manifest_hash=?,verified_checkpoint=? WHERE scope_id=?')->execute([$p['manifestHash'],$p['verifiedCheckpoint'],$scope['scope_id']]);

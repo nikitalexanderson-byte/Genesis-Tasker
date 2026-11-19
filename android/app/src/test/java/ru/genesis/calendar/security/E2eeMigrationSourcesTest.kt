@@ -73,4 +73,21 @@ class E2eeMigrationSourcesTest {
         val result=f.sources.reconcile(f.sources.captureLocal(),emptyList())
         assertTrue(result.content.none{it.domain in setOf("draft","outbox","local-snapshot")})
     }
+    @Test fun localOnlyOutputNeverEntersRemoteListAndDuplicatePlacementIsRejected()=runBlocking{
+        for(duplicate in listOf(false,true)){
+            val sources=E2eeMigrationSources("owner","personal:one","personal",inventory)
+            for(path in inventory.required("personal"))sources.register(object:E2eePrivatePathAdapter{
+                override val id=path.id
+                override suspend fun captureLocal()="Exact source".toByteArray()
+                override suspend fun reconcile(local:ByteArray,previous:List<ByteArray>):E2eePathReconciliation {
+                    val row=E2eeMigrationContent(path.domains.first(),path.id,"private:${path.id}".toByteArray())
+                    return E2eePathReconciliation(true,if(path.id=="personal.diary"&&!duplicate)emptyList()else listOf(row),if(path.id=="personal.diary")listOf(row)else emptyList())
+                }
+            })
+            val snapshot=sources.captureLocal()
+            if(duplicate){reject("E2EE_INVALID_SOURCE_RESULT"){sources.reconcile(snapshot,emptyList())};continue}
+            val result=sources.reconcile(snapshot,emptyList());assertEquals(1,result.localContent.size);assertEquals("private:personal.diary",result.localContent.single().bytes.toString(Charsets.UTF_8))
+            assertTrue(result.content.none{it.objectId=="personal.diary"});assertEquals(inventory.required("personal").size,result.coverage.size)
+        }
+    }
 }

@@ -53,3 +53,16 @@ test('shared local-work produces normalized private content and rejects raw remo
     assert.ok(f.sources.allowedContentDomains.includes('shared-project'));
   }
 });
+
+test('the registry keeps local-only output separate and rejects a duplicate identity across local and remote placement',async()=>{
+ for(const duplicate of [false,true]){
+  const sources=new E2eeMigrationSources('owner','personal:one','personal');
+  for(const path of requiredPrivatePaths('personal'))sources.register({id:path.id,async captureLocal(){return bytes('Exact source');},async reconcile(){
+   const row={domain:path.domains[0],objectId:path.id,bytes:bytes(`private:${path.id}`)};
+   return{complete:true,content:path.id==='personal.diary'&&!duplicate?[]:[row],localContent:path.id==='personal.diary'?[row]:[]};
+  }});
+  const source=await sources.captureLocal();if(duplicate){await assert.rejects(sources.reconcile(source,[]),/INVALID_SOURCE_RESULT/);continue;}
+  const result=await sources.reconcile(source,[]);assert.equal(result.localContent.length,1);assert.equal(text(result.localContent[0].bytes),'private:personal.diary');
+  assert.ok(!result.content.some(row=>row.objectId==='personal.diary'));assert.equal(result.coverage.length,requiredPrivatePaths('personal').length);
+ }
+});

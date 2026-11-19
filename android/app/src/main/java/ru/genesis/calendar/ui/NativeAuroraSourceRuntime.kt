@@ -125,7 +125,7 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
             }
         }finally{
             active.set(false);bridge.clear();operations.cancel()
-            withContext(NonCancellable){operations.coroutineContext[Job]?.join();if(!handedOff)completed.getAndSet(null)?.content?.forEach{it.bytes.fill(0)}}
+            withContext(NonCancellable){operations.coroutineContext[Job]?.join();if(!handedOff)completed.getAndSet(null)?.let{(it.content+it.localContent).forEach{row->row.bytes.fill(0)}}}
             withContext(NonCancellable+Dispatchers.Main.immediate){view?.let{it.removeJavascriptInterface("GenesisAuroraSourceBridge");it.stopLoading();it.destroy()};view=null}
         }
     }
@@ -170,19 +170,20 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                         assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
                     }
                     "complete"->{
-                        E2eeKeys.exact(value,setOf("job","kind","complete","content"));val rows=value.getJSONArray("content")
-                        check(rows.length() in 1..10000){"E2EE_MIGRATION_TOO_LARGE"};val content=mutableListOf<E2eeMigrationContent>();var size=0L;val seen=mutableSetOf<String>()
+                        E2eeKeys.exact(value,setOf("job","kind","complete","content","localContent"));val rows=value.getJSONArray("content");val privateRows=value.getJSONArray("localContent")
+                        check(rows.length()+privateRows.length() in 1..10000){"E2EE_MIGRATION_TOO_LARGE"};val content=mutableListOf<E2eeMigrationContent>();val localContent=mutableListOf<E2eeMigrationContent>();var size=0L;val seen=mutableSetOf<String>()
                         try{
-                            for(index in 0 until rows.length()){
-                                val row=rows.getJSONObject(index);E2eeKeys.exact(row,setOf("domain","objectId","bytes"));val id=E2eeKeys.technical(row.getString("objectId"))
-                                check(row.get("domain")==source.domain&&source.accepts(id)&&seen.add(id)){"E2EE_AURORA_BRIDGE_INVALID"}
-                                val bytes=E2eeEnvelope.decode(row.getString("bytes"),1,SOURCE_MAXIMUM);content+=E2eeMigrationContent(source.domain,id,bytes);size+=bytes.size
-                                check(size<=SOURCE_MAXIMUM){"E2EE_MIGRATION_TOO_LARGE"}
+                            for((input,output) in listOf(rows to content,privateRows to localContent))for(index in 0 until input.length()){
+                                val row=input.getJSONObject(index);E2eeKeys.exact(row,setOf("domain","objectId","bytes","filename","mediaType"));val id=E2eeKeys.technical(row.getString("objectId"))
+                                check(row.get("domain")==source.domain&&source.accepts(id)&&seen.add(id)&&row.get("filename") is String&&row.get("mediaType") is String){"E2EE_AURORA_BRIDGE_INVALID"}
+                                val filename=row.getString("filename");val mediaType=row.getString("mediaType");check(filename.length<=512&&mediaType.length<=128){"E2EE_AURORA_BRIDGE_INVALID"}
+                                val encoded=row.getString("bytes");val bytes=if(encoded.isEmpty())byteArrayOf()else E2eeEnvelope.decode(encoded,1,SOURCE_MAXIMUM)
+                                output+=E2eeMigrationContent(source.domain,id,bytes,filename,mediaType);size+=bytes.size;check(size<=SOURCE_MAXIMUM){"E2EE_MIGRATION_TOO_LARGE"}
                             }
-                            assertCurrent();val reconciliation=E2eePathReconciliation(value.getBoolean("complete"),content)
-                            if(!active.get()||!completed.compareAndSet(null,reconciliation))content.forEach{it.bytes.fill(0)}
-                            else if(!result.complete(reconciliation)){completed.compareAndSet(reconciliation,null);content.forEach{it.bytes.fill(0)}}
-                        }catch(error:Throwable){content.forEach{it.bytes.fill(0)};throw error}
+                            assertCurrent();val reconciliation=E2eePathReconciliation(value.getBoolean("complete"),content,localContent)
+                            if(!active.get()||!completed.compareAndSet(null,reconciliation))(content+localContent).forEach{it.bytes.fill(0)}
+                            else if(!result.complete(reconciliation)){completed.compareAndSet(reconciliation,null);(content+localContent).forEach{it.bytes.fill(0)}}
+                        }catch(error:Throwable){(content+localContent).forEach{it.bytes.fill(0)};throw error}
                     }
                     "error"->{E2eeKeys.exact(value,setOf("job","kind","code"));val code=value.getString("code");fail(if(code.matches(Regex("E2EE_[A-Z_]{1,100}")))code else "E2EE_AURORA_RECONCILIATION_FAILED")}
                     else->fail("E2EE_AURORA_BRIDGE_INVALID")

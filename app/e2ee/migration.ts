@@ -1,9 +1,10 @@
 import { e2eeCommandHash, signE2eeCommand, type E2eeCommand, type SignedE2eeCommand, type WireValue } from './commands.ts';
 import { E2EE_DOMAINS, E2EE_SUITE, decodeE2eeBytes, encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile, E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES } from './files.ts';
-import { freshSecret } from './keys.ts';
+import { freshSecret,exactKeys,assertTechnical } from './keys.ts';
 import { UnlockedE2eeVault, type LocalWrite } from './storage.ts';
 import type { VerifiedDirectory } from './directory.ts';
+import {validateMigrationLocalEntries,planMigrationLocalContent,openMigrationLocalContent,type MigrationLocalEntry} from './migration-local.ts';
 
 export type MigrationPhase = 'preparing'|'uploading'|'verified'|'active'|'cancelled';
 export type MigrationContent = { domain: E2eeContext['domain']; objectId: string; bytes: Uint8Array; filename?: string; mediaType?: string };
@@ -18,7 +19,7 @@ export interface MigrationSources {
   /** Must be local-only. Include outbox, drafts, tombstones, key metadata and all local stores. */
   captureLocal(): Promise<Uint8Array>;
   /** Runs only after the protected snapshot has committed. Missing/locked paths block activation. */
-  reconcile(snapshot: Uint8Array, previousSnapshots:readonly Uint8Array[], context?:MigrationSourceContext): Promise<{ coverage: MigrationCoverage[]; content: MigrationContent[] }>;
+  reconcile(snapshot: Uint8Array, previousSnapshots:readonly Uint8Array[], context?:MigrationSourceContext): Promise<{ coverage: MigrationCoverage[]; content: MigrationContent[]; localContent?:MigrationContent[] }>;
 }
 export interface MigrationTransport {
   sourceHash(): Promise<string>;
@@ -27,21 +28,24 @@ export interface MigrationTransport {
 }
 type PlannedEnvelope = { recordId: string; domain: string; objectId: string; hash: string };
 type LogicalContent = { domain: E2eeContext['domain']; objectId: string; plaintextHash: string; size: number };
-type MigrationState = { protocol: 1; migrationId: string; phase: MigrationPhase; snapshotParts: number; snapshotSize: number; snapshotHash: string; ancestors:string[];
+type MigrationState = { protocol: 1|2; migrationId: string; phase: MigrationPhase; snapshotParts: number; snapshotSize: number; snapshotHash: string; ancestors:string[];
   sourceHash: string|null; lease: { fence: number; leaseUntil: number; generation: number }|null;
   plan: PlannedEnvelope[]; logical: LogicalContent[]; uploaded: number; manifestHash: string|null; verifiedCheckpoint: string|null;
-  pending: SignedE2eeCommand|null; resuming: SignedE2eeCommand|null; checkpointHash: string; directoryRevision: number };
+  pending: SignedE2eeCommand|null; resuming: SignedE2eeCommand|null; checkpointHash: string; directoryRevision: number;
+  local?:MigrationLocalEntry[];planned?:boolean };
 const encoder = new TextEncoder(), decoder = new TextDecoder('utf-8',{fatal:true});
 async function digest(bytes: Uint8Array) { return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))); }
 function decodeState(bytes: Uint8Array): MigrationState {
   const state = JSON.parse(decoder.decode(bytes)) as MigrationState;
-  if (state.protocol !== 1 || !['preparing','uploading','verified','active','cancelled'].includes(state.phase)
+  try{exactKeys(state,['protocol','migrationId','phase','snapshotParts','snapshotSize','snapshotHash','ancestors','sourceHash','lease','plan','logical','uploaded','manifestHash','verifiedCheckpoint','pending','resuming','checkpointHash','directoryRevision',...(state.protocol===2?['local','planned']:[])]);}catch{throw new Error('E2EE_CORRUPT_MIGRATION');}
+  if (![1,2].includes(state.protocol) || !['preparing','uploading','verified','active','cancelled'].includes(state.phase)
     || !Array.isArray(state.plan) || state.plan.length > 10000 || !Array.isArray(state.logical)
     || !Number.isSafeInteger(state.uploaded) || state.uploaded < 0 || state.uploaded > state.plan.length
     || !Number.isSafeInteger(state.snapshotParts) || state.snapshotParts < 0 || state.snapshotParts > 256
     || !Array.isArray(state.ancestors)||state.ancestors.length>32||new Set(state.ancestors).size!==state.ancestors.length
     || state.ancestors.some(id=>typeof id!=='string'||!/^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,127}$/.test(id)))
     throw new Error('E2EE_CORRUPT_MIGRATION');
+  if(state.protocol===2&&(!Array.isArray(state.local)||typeof state.planned!=='boolean'||!state.planned&&(state.local.length!==0||state.plan.length!==0||state.logical.length!==0||['verified','active'].includes(state.phase))))throw new Error('E2EE_CORRUPT_MIGRATION');
   return state;
 }
 
@@ -74,11 +78,21 @@ export class E2eeMigration {
   async status(): Promise<MigrationState|null> {
     const record = await this.#vault.read('local-snapshot',await this.#stateId);
     if (!record) return null;
-    try { return decodeState(record.value); } finally { record.value.fill(0); }
+    try { const state=decodeState(record.value);this.#localEntries(state);return state; } finally { record.value.fill(0); }
   }
   async #load() {
     const record=await this.#vault.read('local-snapshot',await this.#stateId);if(!record)throw new Error('E2EE_SNAPSHOT_REQUIRED');
-    try{return {state:decodeState(record.value),serial:record.serial};}finally{record.value.fill(0);}
+    try{const state=decodeState(record.value);this.#localEntries(state);return {state,serial:record.serial};}finally{record.value.fill(0);}
+  }
+  #localEntries(state:MigrationState){return state.protocol===2?validateMigrationLocalEntries(state.local,state.migrationId,this.#allowed):[];}
+  async #verifyLocal(state:MigrationState){for(const entry of this.#localEntries(state)){const content=await openMigrationLocalContent(this.#vault,entry);content.bytes.fill(0);}}
+  /** Local-only content has no transport fallback. A missing/corrupt part is an
+   * error, never an empty note or permission to fetch/upload a legacy copy. */
+  async readLocal(domain:E2eeContext['domain'],objectId:string):Promise<MigrationContent|null>{
+    assertTechnical(objectId);this.#vault.assertUnlocked();if(!this.#allowed.includes(domain))throw new Error('E2EE_LOCAL_CONTENT_FORBIDDEN');
+    const {state}=await this.#load();if(state.phase!=='active')throw new Error('E2EE_MIGRATION_UNVERIFIED');
+    const entry=this.#localEntries(state).find(row=>row.domain===domain&&row.objectId===objectId);
+    return entry?openMigrationLocalContent(this.#vault,entry):null;
   }
   async #save(state: MigrationState, serial: number|null, extra: LocalWrite[] = []) {
     const value=encoder.encode(JSON.stringify(state));
@@ -104,7 +118,7 @@ export class E2eeMigration {
       if(previous)changes.push({domain:'local-snapshot',objectId:ancestors.at(-1)!,value:encoder.encode(JSON.stringify(previous)),expected:null});
       for(let index=0;index<parts;index++)changes.push({domain:'local-snapshot',objectId:`${migrationId}:source:${index}`,
         value:snapshot.subarray(index*E2EE_CHUNK_BYTES,(index+1)*E2EE_CHUNK_BYTES),expected:null});
-      const state: MigrationState={protocol:1,migrationId,phase:'preparing',snapshotParts:parts,snapshotSize:snapshot.length,snapshotHash:await digest(snapshot),ancestors,
+      const state: MigrationState={protocol:2,migrationId,phase:'preparing',snapshotParts:parts,snapshotSize:snapshot.length,snapshotHash:await digest(snapshot),ancestors,local:[],planned:false,
         sourceHash:null,lease:null,plan:[],logical:[],uploaded:0,manifestHash:null,verifiedCheckpoint:null,pending:null,resuming:null,
         checkpointHash:this.#directory.checkpoint.hash,directoryRevision:this.#directory.checkpoint.revision};
       // One transaction: a visible state always has all of its protected source chunks.
@@ -139,6 +153,7 @@ export class E2eeMigration {
     const pending=state.pending;if(!pending)throw new Error('E2EE_CORRUPT_MIGRATION');
     // The exact signed ciphertext/operation is retried after a timeout or process death.
     this.#vault.assertUnlocked();
+    if(['migration-verify','migration-commit'].includes(pending.command.action))await this.#verifyLocal(state);
     let result:Record<string,WireValue>;
     try{result=await this.#transport.command(pending);}catch(error){
       if(error instanceof Error && error.message==='E2EE_MIGRATION_FENCED' && state.lease && pending.command.action!=='migration-start') {
@@ -200,7 +215,7 @@ export class E2eeMigration {
   async #plan(state: MigrationState,serial: number) {
     const snapshot=await this.#snapshot(state);
     const previousSnapshots:Uint8Array[]=[];
-    let content:MigrationContent[]=[];
+    let content:MigrationContent[]=[],localContent:MigrationContent[]=[];const changes:LocalWrite[]=[];
     try {
       let total=snapshot.length;
       for(const id of state.ancestors) {
@@ -212,17 +227,21 @@ export class E2eeMigration {
       if(!state.sourceHash)throw new Error('E2EE_CORRUPT_MIGRATION');
       const lease=this.#lease(state);
       const reconciled=await this.#sources.reconcile(snapshot,previousSnapshots,Object.freeze({ownerId:this.#directory.ownerId,
-        scopeId:this.#directory.scopeId,migrationId:state.migrationId,fence:lease.fence,sourceHash:state.sourceHash,generation:lease.generation}));content=reconciled.content;
+        scopeId:this.#directory.scopeId,migrationId:state.migrationId,fence:lease.fence,sourceHash:state.sourceHash,generation:lease.generation}));
+      if(!Array.isArray(reconciled.content)||reconciled.localContent!==undefined&&!Array.isArray(reconciled.localContent))throw new Error('E2EE_INVALID_SOURCE_RESULT');
+      content=reconciled.content;localContent=reconciled.localContent??[];const all=[...content,...localContent];
       if(reconciled.coverage.length!==this.#required.length || this.#required.some(domain=>reconciled.coverage.filter(row=>row.domain===domain&&row.complete).length!==1)
-        || reconciled.coverage.some(row=>!this.#required.includes(row.domain)) || content.length<1
-        || content.length>10000 || new Set(content.map(row=>`${row.domain}\0${row.objectId}`)).size!==content.length)throw new Error('E2EE_INCOMPLETE_COVERAGE');
+        || reconciled.coverage.some(row=>!this.#required.includes(row.domain)) || all.length<1
+        || all.length>10000 || new Set(all.map(row=>`${row.domain}\0${row.objectId}`)).size!==all.length)throw new Error('E2EE_INCOMPLETE_COVERAGE');
       let contentBytes=0;
-      for(const record of content){
+      for(const record of all){
+        assertTechnical(record.objectId);
         if(!this.#allowed.includes(record.domain))throw new Error('E2EE_INCOMPLETE_COVERAGE');
         if(!(record.bytes instanceof Uint8Array)||record.bytes.length>E2EE_MAX_FILE_BYTES||record.domain==='shared-comment'&&record.bytes.length>65536)throw new Error('E2EE_INVALID_SOURCE_RESULT');
+        if(record.filename!==undefined&&(typeof record.filename!=='string'||record.filename.length>512)||record.mediaType!==undefined&&(typeof record.mediaType!=='string'||record.mediaType.length>128))throw new Error('E2EE_INVALID_SOURCE_RESULT');
         contentBytes+=record.bytes.length;if(contentBytes>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_TOO_LARGE');
       }
-      const changes:LocalWrite[]=[];const plan:PlannedEnvelope[]=[];const logical:LogicalContent[]=[];
+      const plan:PlannedEnvelope[]=[];const logical:LogicalContent[]=[];
       for(const record of content) {
         if(!state.lease)throw new Error('E2EE_CORRUPT_MIGRATION');
         const context:E2eeContext={cryptoProtocol:1,suite:E2EE_SUITE,ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,domain:record.domain,
@@ -238,9 +257,10 @@ export class E2eeMigration {
         }
       }
       if(plan.length>8000)throw new Error('E2EE_MIGRATION_TOO_LARGE');
-      state.plan=plan;state.logical=logical;serial=await this.#save(state,serial,changes);
-      changes.forEach(change=>change.value.fill(0));return{state,serial};
-    }finally{snapshot.fill(0);previousSnapshots.forEach(bytes=>bytes.fill(0));content.forEach(record=>record.bytes.fill(0));}
+      const local=await planMigrationLocalContent(state.migrationId,localContent);changes.push(...local.changes);
+      state.protocol=2;state.local=validateMigrationLocalEntries(local.entries,state.migrationId,this.#allowed);state.planned=true;
+      state.plan=plan;state.logical=logical;serial=await this.#save(state,serial,changes);return{state,serial};
+    }finally{snapshot.fill(0);previousSnapshots.forEach(bytes=>bytes.fill(0));[...content,...localContent].forEach(record=>record.bytes.fill(0));changes.forEach(change=>change.value.fill(0));}
   }
   async run():Promise<MigrationPhase> {
     return this.#localFence(() => this.#runLocked());
@@ -248,6 +268,7 @@ export class E2eeMigration {
   async #runLocked():Promise<MigrationPhase> {
     await this.#durableKeys();
     let {state,serial}=await this.#load();
+    await this.#verifyLocal(state);
     if(state.resuming)({state,serial}=await this.#resume(state,serial));
     if(state.pending)({state,serial}=await this.#replay(state,serial));
     if(state.phase==='active'||state.phase==='cancelled')return state.phase;
@@ -258,7 +279,8 @@ export class E2eeMigration {
     }
     if(!state.lease)throw new Error('E2EE_CORRUPT_MIGRATION');
     if(state.lease.leaseUntil<=Math.floor(Date.now()/1000)+30)({state,serial}=await this.#resume(state,serial));
-    if(state.phase==='uploading'&&state.plan.length===0)({state,serial}=await this.#plan(state,serial));
+    if(state.phase==='uploading'&&(state.protocol===1?state.plan.length===0:!state.planned))({state,serial}=await this.#plan(state,serial));
+    await this.#verifyLocal(state);
     while(state.phase==='uploading'&&state.uploaded<state.plan.length) {
       const item=state.plan[state.uploaded],row=await this.#vault.read('outbox',item.recordId);if(!row)throw new Error('E2EE_CORRUPT_OUTBOX');
       let envelope:E2eeEnvelope;
@@ -279,6 +301,7 @@ export class E2eeMigration {
         try{if(opened.bytes.length!==content.size||await digest(opened.bytes)!==content.plaintextHash)throw new Error('E2EE_CONTENT_MISMATCH');}finally{opened.bytes.fill(0);}
       }
       await this.#recoveryCheck(this.#root);
+      await this.#verifyLocal(state);
       state.manifestHash=await objectManifestHash(state.plan.map(item=>({domain:item.domain,objectId:item.objectId,revision:1,payloadHash:item.hash})));
       state.verifiedCheckpoint=encodeE2eeBytes(freshSecret());
       ({state,serial}=await this.#send(state,serial,await this.#packet(state,'migration-verify',{migrationId:state.migrationId,fence:this.#lease(state).fence,

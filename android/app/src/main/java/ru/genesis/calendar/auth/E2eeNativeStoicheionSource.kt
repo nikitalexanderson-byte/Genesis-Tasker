@@ -103,7 +103,7 @@ internal class E2eeNativeStoicheionSource(private val ownerId:String,private val
                 val plain=opened?:error(if(keys.isEmpty())"E2EE_LEGACY_KEY_UNAVAILABLE" else "E2EE_LEGACY_STOICHEION_CORRUPT")
                 try{assertCurrent();JSONObject(Charsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(plain)).toString())}finally{plain.fill(0)}
             }
-            try{assertCurrent();result}catch(error:Throwable){result.content.forEach{it.bytes.fill(0)};throw error}
+            try{assertCurrent();result}catch(error:Throwable){(result.content+result.localContent).forEach{it.bytes.fill(0)};throw error}
         }finally{keys.forEach{it.fill(0)}}
     }
     override fun toString()="E2eeNativeStoicheionSource([redacted])"

@@ -41,7 +41,9 @@ lossless reconciliation/readback/new-root recovery на обеих платфо�
 Нельзя отправить такой текст/черновики/legacy ciphertext в cloud migration plan,
 даже за новым шифрованием, без нового согласия. Нужен отдельный защищённый local
 output plan и его crash/recovery acceptance. Этот контракт сейчас проектируется;
-реализация не объявляется готовой. Новый adapter не должен обходить это различие.
+реализация на этом этапе не объявлялась готовой. Последующий protected local
+output contract и его проверки реализованы в `e2ee-336-local-output.md`.
+Новый adapter должен использовать отдельное local placement для этих данных.
 
 Coverage остаётся5/20 real adapters. Production3.3.5/149, floors0, cutover off,
 GENESIS_DEPLOY_ANDROID=false; остальных15 categories, full lifecycle/48 scenarios/

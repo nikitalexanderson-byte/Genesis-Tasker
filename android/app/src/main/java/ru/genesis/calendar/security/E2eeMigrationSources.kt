@@ -37,8 +37,8 @@ class E2eeMigrationContent(val domain: String, val objectId: String, val bytes: 
     val filename: String = "", val mediaType: String = "application/json") {
     override fun toString() = "E2eeMigrationContent([redacted])"
 }
-class E2eePathReconciliation(val complete: Boolean, val content: List<E2eeMigrationContent>)
-class E2eeMigrationReconciliation(val coverage: List<Pair<String, Boolean>>, val content: List<E2eeMigrationContent>)
+class E2eePathReconciliation(val complete: Boolean, val content: List<E2eeMigrationContent>,val localContent:List<E2eeMigrationContent> = emptyList())
+class E2eeMigrationReconciliation(val coverage: List<Pair<String, Boolean>>, val content: List<E2eeMigrationContent>,val localContent:List<E2eeMigrationContent> = emptyList())
 class E2eeMigrationSourceContext(val ownerId: String, val scopeId: String, val migrationId: String, val fence: Long, val sourceHash: String, val generation: Long) {
     override fun toString() = "E2eeMigrationSourceContext([redacted])"
 }
@@ -112,24 +112,25 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
         if(context != null) assertBinding(context.ownerId,context.scopeId,kind)
         check(previousSnapshots.size <= 32) { "E2EE_MIGRATION_HISTORY_LIMIT" }
         check(snapshot.size.toLong() + previousSnapshots.sumOf { it.size.toLong() } <= BYTE_BUDGET) { "E2EE_MIGRATION_HISTORY_LIMIT" }
-        val all = all(); val decoded = mutableListOf<Map<String, ByteArray>>(); val content = mutableListOf<E2eeMigrationContent>()
+        val all = all(); val decoded = mutableListOf<Map<String, ByteArray>>(); val content = mutableListOf<E2eeMigrationContent>();val localContent=mutableListOf<E2eeMigrationContent>()
         try {
             decoded += decode(snapshot); previousSnapshots.forEach { decoded += decode(it) }
             val coverage = mutableListOf<Pair<String, Boolean>>(); val seen = mutableSetOf<String>(); var contentBytes = 0L
             for ((path, adapter) in all) {
                 val result = adapter.reconcile(decoded.first().getValue(path.id), decoded.drop(1).map { it.getValue(path.id) },context)
                 coverage += path.id to result.complete
-                for (item in result.content) {
+                for (item in result.content+result.localContent) {
                     E2eeKeys.technical(item.objectId)
-                    check(item.domain in path.domains && seen.add(item.domain + "\u0000" + item.objectId) && content.size < 10000 && item.bytes.size <= E2eeFiles.MAX_FILE_BYTES) { "E2EE_INVALID_SOURCE_RESULT" }
+                    check(item.domain in path.domains && seen.add(item.domain + "\u0000" + item.objectId) && content.size+localContent.size < 10000 && item.bytes.size <= E2eeFiles.MAX_FILE_BYTES) { "E2EE_INVALID_SOURCE_RESULT" }
                     contentBytes += item.bytes.size
                     check(contentBytes <= BYTE_BUDGET) { "E2EE_MIGRATION_TOO_LARGE" }
                 }
-                check(content.size + result.content.size <= 10000) { "E2EE_INVALID_SOURCE_RESULT" }
+                check(content.size+localContent.size+result.content.size+result.localContent.size <= 10000) { "E2EE_INVALID_SOURCE_RESULT" }
                 for (item in result.content) content += E2eeMigrationContent(item.domain, item.objectId, item.bytes.copyOf(), item.filename, item.mediaType)
+                for (item in result.localContent) localContent += E2eeMigrationContent(item.domain,item.objectId,item.bytes.copyOf(),item.filename,item.mediaType)
             }
-            return E2eeMigrationReconciliation(coverage, content)
-        } catch (error: Exception) { content.forEach { it.bytes.fill(0) }; throw error }
+            return E2eeMigrationReconciliation(coverage, content,localContent)
+        } catch (error: Exception) { (content+localContent).forEach { it.bytes.fill(0) }; throw error }
         finally { decoded.forEach { paths -> paths.values.forEach { it.fill(0) } } }
     }
     override fun toString() = "E2eeMigrationSources([redacted])"

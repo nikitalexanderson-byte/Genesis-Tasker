@@ -9,6 +9,7 @@ import {decodeE2eeBytes,encodeE2eeBytes} from '../e2ee/envelope';
 import {backupJson} from '../backup-format';
 import {exactKeys} from '../e2ee/keys';
 import type {MigrationSourceContext} from '../e2ee/migration';
+import type {PrivatePathAdapter} from '../e2ee/migration-sources';
 
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
@@ -46,7 +47,7 @@ async function run(encoded:string){
       legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,legacyTasks:async()=>value.remote,catalogues,
       openLegacy:(envelope:{iv:string;ciphertext:string},purpose:string):Promise<unknown>=>ask('open',{envelope,purpose}),
     };
-    const source=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
+    const source:PrivatePathAdapter=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
     let prepared=local.slice(),nativeMetadata:unknown;
     if(value.source==='advice'){
       const raw=local.map(bytes=>backupJson(decoder.decode(bytes)) as Record<string,unknown>);
@@ -58,8 +59,9 @@ async function run(encoded:string){
     }
     const result=await source.reconcile(prepared[0],prepared.slice(1),value.context as MigrationSourceContext);
     if(nativeMetadata!==undefined)result.content.push({domain:'workspace',objectId:'personal-advice-native-metadata-v1',bytes:new TextEncoder().encode(JSON.stringify(nativeMetadata))});
-    content.push(...result.content.map(row=>row.bytes));
-    current();send({job,kind:'complete',complete:result.complete,content:result.content.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes)}))});
+    const localContent=result.localContent??[];content.push(...[...result.content,...localContent].map(row=>row.bytes));
+    const outputPackets=(rows:typeof result.content)=>rows.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes),filename:row.filename??'',mediaType:row.mediaType??'application/json'}));
+    current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});
   }catch(error){
     if(!closed)send({job,kind:'error',code:error instanceof Error&&/^E2EE_[A-Z_]{1,100}$/.test(error.message)?error.message:'E2EE_AURORA_RECONCILIATION_FAILED'});
   }finally{local.forEach(bytes=>bytes.fill(0));content.forEach(bytes=>bytes.fill(0));window.GenesisAuroraSourceRuntime.close();}

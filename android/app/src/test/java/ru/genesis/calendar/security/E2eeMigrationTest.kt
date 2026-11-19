@@ -11,6 +11,7 @@ import java.security.MessageDigest
 class E2eeMigrationTest {
     private class Memory : E2eeRecordStorage {
         var rows = mutableMapOf<String,E2eeLocalRecord>(); var full = false
+        var afterCommit:((List<E2eeStorageChange>)->Unit)?=null
         override fun get(key: String) = rows[key]
         override fun list(prefix: String) = rows.keys.filter { it.startsWith(prefix) }
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
@@ -18,7 +19,7 @@ class E2eeMigrationTest {
             for (change in changes) check(rows[change.key]?.serial == change.expected) { "E2EE_LOCAL_CONFLICT" }
             val copy = rows.toMutableMap()
             for (change in changes) if (change.value == null) copy.remove(change.key) else copy[change.key] = change.value
-            requireOpen(); rows = copy
+            requireOpen(); rows = copy;afterCommit?.invoke(changes)
         }
     }
     private class Device(val storage: Memory) : E2eeScopeDevice {
@@ -37,13 +38,15 @@ class E2eeMigrationTest {
     private class Options(val before: Int? = null, val after: Int? = null, val expire: Int? = null,
         val resumeBefore: Boolean = false, val resumeAfter: Boolean = false, val registry: String? = null,
         val missing: String? = null, val incomplete: Boolean = false, val truncated: Boolean = false,
-        val badRecovery: Boolean = false, val poisonedCheckpoint: Boolean = false) { var changedSource = false }
+        val badRecovery: Boolean = false, val poisonedCheckpoint: Boolean = false,val localOnly:Boolean=false,val withLocal:Boolean=false,
+        val localBytes:ByteArray?=null) { var changedSource = false }
     private class Fixture(val options: Options = Options()) : E2eeMigrationTransport {
         val storage = Memory(); val device = Device(storage); val trace = mutableListOf<String>()
         val kind = options.registry ?: "personal"; val scope = "$kind:owner"
         val recovery = E2eeKeys.createRecoveryKit("owner"); val rawRoot = E2eeKeys.freshSecret(); val root = E2eeEnvelope.importRoot(rawRoot)
         val events = JSONArray(); val objects = mutableMapOf<String,E2eeEnvelope.Envelope>()
         val receipts = mutableMapOf<String,Pair<String,JSONObject>>(); var state = "legacy"; var calls = 0
+        val commands=mutableListOf<JSONObject>();var onReconcile:(()->Unit)?=null
         var fence = 1L; var generation = 1L; var migrationId: String? = null; var crashed = false; var resumedCrash = false; var expiredOnce = false
         var previousSnapshots = emptyList<String>()
         lateinit var directory: E2eeDirectory.Verified
@@ -65,8 +68,10 @@ class E2eeMigrationTest {
                 override suspend fun captureLocal(): ByteArray { trace += "snapshot-local"; return "LOCAL DRAFT + OUTBOX + TOMBSTONES".toByteArray() }
                 override suspend fun reconcile(snapshot: ByteArray, previous: List<ByteArray>): E2eeMigrationReconciliation {
                     trace += "reconcile"; assertEquals("LOCAL DRAFT + OUTBOX + TOMBSTONES",snapshot.toString(Charsets.UTF_8)); previousSnapshots = previous.map { it.toString(Charsets.UTF_8) }
-                    return E2eeMigrationReconciliation(listOf("synthetic.workspace" to !options.incomplete,"synthetic.diary" to true),listOf(
-                        E2eeMigrationContent("workspace","workspace","PRIVATE WORKSPACE".toByteArray()),E2eeMigrationContent("diary","note","PRIVATE NOTE".toByteArray())))
+                    onReconcile?.invoke()
+                    return E2eeMigrationReconciliation(listOf("synthetic.workspace" to !options.incomplete,"synthetic.diary" to true),if(options.localOnly)emptyList()else listOf(
+                        E2eeMigrationContent("workspace","workspace","PRIVATE WORKSPACE".toByteArray()),E2eeMigrationContent("diary","note","PRIVATE NOTE".toByteArray())),
+                        if(options.localOnly||options.withLocal)listOf(E2eeMigrationContent("diary","device-private-note",options.localBytes?.copyOf()?:"DEVICE-ONLY PRIVATE DIARY + DRAFT".toByteArray(),"Private diary title.json"))else emptyList())
                 }
                 override suspend fun reconcile(snapshot: ByteArray, previous: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eeMigrationReconciliation {
                     requireNotNull(context); assertEquals("owner",context.ownerId); assertEquals(scope,context.scopeId)
@@ -111,6 +116,7 @@ class E2eeMigrationTest {
         }
         override suspend fun command(packet: JSONObject): JSONObject {
             val command = E2eeCommands.verify(packet,device.keys().signing.public); val id = command.getString("operationId"); val identity = E2eeCommands.hash(command)
+            commands+=JSONObject(packet.toString())
             val action = command.getString("action"); trace += "network-$action"
             receipts[id]?.let { assertEquals(it.first,identity); return JSONObject(it.second.toString()) }
             val index = calls++; val payload = command.getJSONObject("payload")
@@ -154,6 +160,15 @@ class E2eeMigrationTest {
             return result
         }
         override suspend fun readAll(): List<E2eeEnvelope.Envelope> { trace += "read-back"; return if(options.truncated)current().drop(1) else current() }
+        fun stateObjectId()=storage.rows.values.first{it.envelope.context.toJson().getString("objectId").startsWith("migration:")}.envelope.context.toJson().getString("objectId")
+        fun journal():JSONObject {
+            val row=requireNotNull(device.vault.read("local-snapshot",stateObjectId()))
+            return try{JSONObject(row.bytes.toString(Charsets.UTF_8))}finally{row.bytes.fill(0)}
+        }
+        fun changeJournal(operation:(JSONObject)->Unit){
+            val id=stateObjectId();val row=requireNotNull(device.vault.read("local-snapshot",id));val value=try{JSONObject(row.bytes.toString(Charsets.UTF_8))}finally{row.bytes.fill(0)}
+            operation(value);val bytes=value.toString().toByteArray();try{device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",id,bytes,row.serial)))}finally{bytes.fill(0)}
+        }
         fun readComment(objectId: String): String {
             val client = E2eeScopeClient(device,"owner",scope,recovery.kit.getJSONObject("authority"),object : E2eeScopeTransport {
                 override fun directory(scopeId: String) = JSONObject().put("events",events)
@@ -188,6 +203,45 @@ class E2eeMigrationTest {
     }
     private suspend fun reject(code: String, action: suspend () -> Unit) {
         try { action() } catch (error: Exception) { assertEquals(code,error.message); return }; fail("Unsafe synthetic migration accepted")
+    }
+    @Test fun localOnlyOutputKeepsMultipartBytesFilenameAndDigestOffEveryNetworkPacket()=runBlocking{
+        val payload=ByteArray(3*E2eeFiles.CHUNK_BYTES+13){71};val f=Fixture(Options(withLocal=true,localBytes=payload));val migration=f.make()
+        migration.prepare();reject("E2EE_MIGRATION_UNVERIFIED"){migration.readLocal("diary","device-private-note")}
+        assertEquals("active",migration.run());assertEquals(4,f.objects.size)
+        val opened=requireNotNull(f.make().readLocal("diary","device-private-note"));try{assertArrayEquals(payload,opened.bytes);assertEquals("Private diary title.json",opened.filename)}finally{opened.bytes.fill(0)}
+        assertNull(f.make().readLocal("diary","absent"));reject("E2EE_LOCAL_CONTENT_FORBIDDEN"){f.make().readLocal("attachment","device-private-note")}
+        val journal=f.journal();assertEquals(2,journal.getInt("protocol"));assertEquals(4,journal.getJSONArray("local").getJSONObject(0).getInt("parts"))
+        val wire=f.commands.joinToString{it.toString()};for(privateValue in listOf("device-private-note","Private diary title.json",journal.getJSONArray("local").getJSONObject(0).getString("plaintextHash")))assertFalse(wire.contains(privateValue))
+        assertFalse(f.storage.rows.values.any{it.envelope.toJson().toString().contains("Private diary title.json")})
+        f.device.vault.lock();reject("E2EE_UNLOCK_REQUIRED"){migration.readLocal("diary","device-private-note")}
+    }
+    @Test fun entirelyLocalPlanAndEveryAmbiguousNetworkCrashNeverUploadAPrivateObject()=runBlocking{
+        for(timing in listOf("before","after"))for(index in 0..2){
+            val f=Fixture(Options(before=if(timing=="before")index else null,after=if(timing=="after")index else null,localOnly=true))
+            f.make().prepare();reject("SYNTHETIC_PROCESS_DEATH"){f.make().run()};assertEquals("active",f.make().run())
+            assertTrue(f.objects.isEmpty());assertTrue(f.commands.none{it.getJSONObject("command").getString("action")=="put"})
+            val record=requireNotNull(f.make().readLocal("diary","device-private-note"));try{assertEquals("DEVICE-ONLY PRIVATE DIARY + DRAFT",record.bytes.toString(Charsets.UTF_8))}finally{record.bytes.fill(0)}
+        }
+    }
+    @Test fun fullDiskAndProcessDeathAtLocalCommitKeepOriginalSnapshotAndReuseOnlyTheCommittedPlan()=runBlocking{
+        val full=Fixture(Options(withLocal=true));full.make().prepare();full.onReconcile={full.storage.full=true}
+        reject("SYNTHETIC_DISK_FULL"){full.make().run()};assertTrue(full.objects.isEmpty());assertTrue(full.storage.rows.values.none{it.envelope.context.toJson().getString("objectId").contains(":private:")})
+        full.storage.full=false;full.onReconcile=null;assertEquals("active",full.make().run())
+        val died=Fixture(Options(localOnly=true));died.make().prepare();var interrupted=false
+        died.storage.afterCommit={changes->if(!interrupted&&changes.any{it.value?.envelope?.context?.toJson()?.getString("objectId")?.contains(":private:")==true}){interrupted=true;error("SYNTHETIC_PROCESS_DEATH")}}
+        reject("SYNTHETIC_PROCESS_DEATH"){died.make().run()};val count=died.trace.count{it=="reconcile"};assertEquals("active",died.make().run());assertEquals(count,died.trace.count{it=="reconcile"});assertTrue(died.objects.isEmpty())
+    }
+    @Test fun missingLocalPartStopsPendingCommitReplayBeforeNetworkAndNeverBecomesEmpty()=runBlocking{
+        val f=Fixture(Options(before=2,localOnly=true));f.make().prepare();reject("SYNTHETIC_PROCESS_DEATH"){f.make().run()};assertEquals("verified",f.state)
+        val part=f.storage.rows.entries.first{it.value.envelope.context.toJson().getString("objectId").contains(":private:")};val saved=part.value;val key=part.key
+        f.storage.rows.remove(key);val count=f.commands.size;reject("E2EE_CORRUPT_LOCAL_CONTENT"){f.make().run()};assertEquals(count,f.commands.size);assertEquals("verified",f.state)
+        f.storage.rows[key]=saved;assertEquals("active",f.make().run());f.storage.rows.remove(key);reject("E2EE_CORRUPT_LOCAL_CONTENT"){f.make().readLocal("diary","device-private-note")}
+    }
+    @Test fun journalV1ResumesButUnboundV2LocalMetadataCannotReachNetwork()=runBlocking{
+        val old=Fixture();old.make().prepare();old.changeJournal{it.put("protocol",1);it.remove("local");it.remove("planned")};assertEquals("active",old.make().run())
+        val bad=Fixture(Options(before=1,localOnly=true));bad.make().prepare();reject("SYNTHETIC_PROCESS_DEATH"){bad.make().run()}
+        bad.changeJournal{it.getJSONArray("local").getJSONObject(0).put("recordId","foreign-source")};val count=bad.commands.size
+        reject("E2EE_CORRUPT_LOCAL_CONTENT"){bad.make().run()};assertEquals(count,bad.commands.size)
     }
     @Test fun snapshotReadbackRecoveryAndFinalCommitAreOrderedAndIdempotent() = runBlocking {
         val f = Fixture(); val migration = f.make(); migration.prepare(); assertEquals(0,f.calls)

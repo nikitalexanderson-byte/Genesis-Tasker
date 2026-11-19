@@ -890,3 +890,23 @@ PASS; focused lint PASS. Документ: `e2ee-336-diary-source.md`.
 Coverage5/20, остальные15 categories/full lifecycle/recovery/upgrades/shared/
 backup/48 scenarios/14 languages/independent review остаются до activation.
 Production/floors/cutover/Android deploy не менялись; полного выпуска3.3.6 ещё нет.
+
+## 19 ноября: device-only migration output
+
+Отдельный localContent plan реализован и проверен в обоих coordinators и native
+bridge: данные «только на устройстве» не превращаются в remote envelopes.
+Journal protocol2 сохраняет local manifest/256KiB parts атомарно в device vault,
+проверяет их перед verify/commit/retry и допускает корректный signed zero-upload
+plan. Protocol1 resume сохранён. Нормальное чтение требует active/unlocked.
+Recovery требует сохранённого device ciphertext; cloud recovery не является
+backup local-only bytes. Документ: `e2ee-336-local-output.md`.
+
+Evidence: full JS1528/1528, focused69/69, PHP6/6, Chromium20 checks/console0;
+QA APK/JVM/lint build16m10s PASS. JVM1154 passed из1162,8 opt-in HTTP skipped,
+failures/errors0. API34/API35 по48/48 instrumentation PASS; это не исходные48
+сценариев всего продукта. Линтер0 errors/206 existing warnings/8 hints.
+Сохранены failed-before-fixed logs и ограничения recovery/product lifecycle.
+
+Source checks44477260699 на ecd2c379 завершён success: web/API и Android.
+Coverage всё ещё5/20: diary source transport готов, client adapter ещё в работе.
+Production3.3.5/149, floors0, cutover off, Android deploy false; выпуск не объявлен.

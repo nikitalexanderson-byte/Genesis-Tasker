@@ -22,7 +22,7 @@ class AtomicStorage {
     if(this.fail)throw new Error('SYNTHETIC_DISK_FULL');
     for(const change of changes)if((this.rows.get(change.key)?.serial??null)!==change.expected)throw new Error('E2EE_LOCAL_CONFLICT');
     const rows=new Map(this.rows);
-    for(const change of changes){if(change.value===null)rows.delete(change.key);else rows.set(change.key,structuredClone(change.value));}this.rows=rows;
+    for(const change of changes){if(change.value===null)rows.delete(change.key);else rows.set(change.key,structuredClone(change.value));}this.rows=rows;await this.afterCommit?.(changes);
   }
 }
 const bytes=value=>new TextEncoder().encode(value);
@@ -38,12 +38,13 @@ async function fixture(options={}){
   let directory=await verifyDeviceDirectory('owner',scopeId,recovery.kit.authority,events);
   const vault=new UnlockedE2eeVault(storage,{...directory,deviceId:'device',signingKey:keys.signing.privateKey,
     roots:new Map([['root-one',root]]),trustedSigner:()=>keys.signing.publicKey});
-  const trace=[],server={objects:new Map(),receipts:new Map(),state:'legacy',count:0,crashed:new Set(),fence:1,generation:1,expired:false,expiredOnce:false};
+  const trace=[],server={objects:new Map(),receipts:new Map(),state:'legacy',count:0,crashed:new Set(),fence:1,generation:1,expired:false,expiredOnce:false,commands:[]};
   const currentObjects=()=>[...server.objects.values()].filter(e=>e.context.dataGeneration===server.generation);
   const transport={
     async sourceHash(){trace.push('network-source');assert.ok([...storage.rows.values()].some(row=>row.envelope.context.objectId.startsWith('migration:')));return encodeE2eeBytes(new Uint8Array(32).fill(13));},
     async command(packet){
       const command=await verifyE2eeCommand(packet,keys.signing.publicKey);trace.push('network-'+command.action);
+      server.commands.push(structuredClone(packet));
       const identity=await e2eeCommandHash(command),old=server.receipts.get(command.operationId);
       if(old){assert.equal(old.identity,identity,'retry must reuse the exact ciphertext/context payload');return old.result;}
       const index=server.count++,payload=command.payload;let result;
@@ -90,8 +91,10 @@ async function fixture(options={}){
     async captureLocal(){if(!trace.includes('snapshot-local'))assert.ok(!trace.some(row=>row.startsWith('network-')));trace.push('snapshot-local');return bytes('LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');},
     async reconcile(snapshot,previousSnapshots,context){trace.push('reconcile-after-snapshot');server.previousSnapshots=previousSnapshots.map(value=>new TextDecoder().decode(value));assert.equal(new TextDecoder().decode(snapshot),'LOCAL DRAFT + UNSENT OUTBOX + TOMBSTONES');
       assert.deepEqual(context,{ownerId:'owner',scopeId,migrationId:server.migrationId,fence:server.fence,sourceHash:encodeE2eeBytes(new Uint8Array(32).fill(13)),generation:server.generation});
-      return{coverage:[{domain:'workspace',complete:!options.incomplete},{domain:'diary',complete:true}],content:[{domain:'workspace',objectId:'workspace',bytes:bytes('PERSONAL DATA INCLUDING OFFLINE EDIT')},
-        {domain:'diary',objectId:'note',bytes:bytes('PRIVATE NOTE + DELETION LEDGER')}]};},
+      options.afterReconcile?.({storage,server});
+      return{coverage:[{domain:'workspace',complete:!options.incomplete},{domain:'diary',complete:true}],content:options.localOnly?[]:[{domain:'workspace',objectId:'workspace',bytes:bytes('PERSONAL DATA INCLUDING OFFLINE EDIT')},
+        {domain:'diary',objectId:'note',bytes:bytes('PRIVATE NOTE + DELETION LEDGER')}],localContent:options.localOnly||options.withLocal?
+        [{domain:'diary',objectId:'device-private-note',bytes:options.localBytes?.slice()??bytes('DEVICE-ONLY PRIVATE DIARY + DRAFT'),filename:'Private diary title.json',mediaType:'application/json'}]:[]};},
   };
   if(options.registrySources){
     sources=new E2eeMigrationSources('owner',scopeId,kind);
@@ -120,6 +123,67 @@ test('snapshot is durable before all network work; read-back and independent rec
   assert.ok(!JSON.stringify([...f.server.objects]).includes('PRIVATE NOTE'));
   const count=f.server.count;assert.equal(await f.make().run(),'active');assert.equal(f.server.count,count);
   await assert.rejects(migration.cancel(),/DOWNGRADE_FORBIDDEN/);
+});
+
+test('local-only migration output stays in the encrypted device vault, including multi-part bytes and private filenames',async()=>{
+ const payload=new Uint8Array(3*256*1024+13).fill(71),f=await fixture({withLocal:true,localBytes:payload}),migration=f.make();
+ await migration.prepare();await assert.rejects(migration.readLocal('diary','device-private-note'),/MIGRATION_UNVERIFIED/);
+ assert.equal(await migration.run(),'active');assert.equal(f.server.objects.size,4);
+ const record=await f.make().readLocal('diary','device-private-note');assert.deepEqual(record.bytes,payload);assert.equal(record.filename,'Private diary title.json');record.bytes.fill(0);
+ assert.equal(await f.make().readLocal('diary','missing'),null);await assert.rejects(f.make().readLocal('attachment','device-private-note'),/LOCAL_CONTENT_FORBIDDEN/);
+ const status=await migration.status();assert.equal(status.protocol,2);assert.equal(status.local[0].parts,4);
+ const wire=JSON.stringify(f.server.commands);for(const privateValue of ['device-private-note','Private diary title.json',status.local[0].plaintextHash])assert.ok(!wire.includes(privateValue));
+ assert.ok(!JSON.stringify([...f.storage.rows]).includes('Private diary title.json'));
+ f.vault.lock();await assert.rejects(migration.readLocal('diary','device-private-note'),/UNLOCK_REQUIRED/);
+});
+
+test('an entirely device-local content plan can complete without a private upload or a fabricated cloud object',async()=>{
+ const f=await fixture({localOnly:true}),migration=f.make();await migration.prepare();assert.equal(await migration.run(),'active');
+ assert.equal(f.server.objects.size,0);assert.ok(f.server.commands.every(row=>row.command.action!=='put'));
+ const record=await f.make().readLocal('diary','device-private-note');assert.equal(new TextDecoder().decode(record.bytes),'DEVICE-ONLY PRIVATE DIARY + DRAFT');record.bytes.fill(0);
+ const calls=f.server.count;assert.equal(await f.make().run(),'active');assert.equal(f.server.count,calls);
+});
+
+test('a disk-full local output commit preserves the snapshot and prevents the first upload',async()=>{
+ const options={withLocal:true,afterReconcile:({storage})=>{storage.fail=true;}},f=await fixture(options);await f.make().prepare();
+ await assert.rejects(f.make().run(),/SYNTHETIC_DISK_FULL/);assert.equal(f.server.objects.size,0);assert.notEqual(f.server.state,'active');
+ assert.ok(![...f.storage.rows.values()].some(row=>row.envelope.context.objectId.includes(':private:')));
+ f.storage.fail=false;delete options.afterReconcile;assert.equal(await f.make().run(),'active');
+ const record=await f.make().readLocal('diary','device-private-note');assert.equal(new TextDecoder().decode(record.bytes),'DEVICE-ONLY PRIVATE DIARY + DRAFT');record.bytes.fill(0);
+});
+
+test('process death after atomic local output commit reuses that plan without another reconciliation or private upload',async()=>{
+ const f=await fixture({localOnly:true});await f.make().prepare();let interrupted=false;
+ f.storage.afterCommit=changes=>{if(!interrupted&&changes.some(row=>row.value?.envelope.context.objectId.includes(':private:'))){interrupted=true;throw new Error('SYNTHETIC_PROCESS_DEATH');}};
+ await assert.rejects(f.make().run(),/SYNTHETIC_PROCESS_DEATH/);assert.equal(f.server.objects.size,0);const calls=f.trace.filter(row=>row==='reconcile-after-snapshot').length;
+ assert.equal(await f.make().run(),'active');assert.equal(f.trace.filter(row=>row==='reconcile-after-snapshot').length,calls);
+ const record=await f.make().readLocal('diary','device-private-note');assert.ok(record.bytes.length>0);record.bytes.fill(0);
+});
+
+for(const timing of ['Before','After'])for(let index=0;index<3;index++)test(`local-only plan survives crash${timing} network operation ${index} with zero private uploads`,async()=>{
+ const f=await fixture({localOnly:true,[`crash${timing}`]:index});await f.make().prepare();await assert.rejects(f.make().run(),/SYNTHETIC_PROCESS_DEATH/);
+ assert.equal(await f.make().run(),'active');assert.equal(f.server.objects.size,0);const record=await f.make().readLocal('diary','device-private-note');
+ assert.equal(new TextDecoder().decode(record.bytes),'DEVICE-ONLY PRIVATE DIARY + DRAFT');record.bytes.fill(0);
+});
+
+test('missing local ciphertext before a pending commit blocks its network replay and never becomes empty or cloud fallback',async()=>{
+ const f=await fixture({localOnly:true,crashBefore:2});await f.make().prepare();await assert.rejects(f.make().run(),/SYNTHETIC_PROCESS_DEATH/);
+ assert.equal(f.server.state,'verified');const row=[...f.storage.rows.entries()].find(([,value])=>value.envelope.context.objectId.includes(':private:'));
+ const saved=structuredClone(row[1]);f.storage.rows.delete(row[0]);const calls=f.server.commands.length;
+ await assert.rejects(f.make().run(),/CORRUPT_LOCAL_CONTENT/);assert.equal(f.server.commands.length,calls);assert.equal(f.server.state,'verified');
+ f.storage.rows.set(row[0],saved);assert.equal(await f.make().run(),'active');
+ f.storage.rows.delete(row[0]);await assert.rejects(f.make().readLocal('diary','device-private-note'),/CORRUPT_LOCAL_CONTENT/);
+});
+
+test('old journal v1 can resume while malformed v2 local metadata fails closed before network',async()=>{
+ const f=await fixture();await f.make().prepare();const key=[...f.storage.rows.values()].find(row=>row.envelope.context.objectId.startsWith('migration:')).envelope.context.objectId;
+ const row=await f.vault.read('local-snapshot',key);const legacy=JSON.parse(new TextDecoder().decode(row.value));row.value.fill(0);legacy.protocol=1;delete legacy.local;delete legacy.planned;
+ await f.vault.write([{domain:'local-snapshot',objectId:key,value:bytes(JSON.stringify(legacy)),expected:row.serial}]);assert.equal(await f.make().run(),'active');
+ const broken=await fixture({localOnly:true,crashBefore:1});await broken.make().prepare();await assert.rejects(broken.make().run(),/SYNTHETIC_PROCESS_DEATH/);
+ const id=[...broken.storage.rows.values()].find(row=>row.envelope.context.objectId.startsWith('migration:')).envelope.context.objectId;
+ const saved=await broken.vault.read('local-snapshot',id);const value=JSON.parse(new TextDecoder().decode(saved.value));saved.value.fill(0);value.local[0].recordId='foreign-source';
+ await broken.vault.write([{domain:'local-snapshot',objectId:id,value:bytes(JSON.stringify(value)),expected:saved.serial}]);const count=broken.server.commands.length;
+ await assert.rejects(broken.make().run(),/CORRUPT_LOCAL_CONTENT/);assert.equal(broken.server.commands.length,count);
 });
 test('the actual path registry completes migration with coverage IDs distinct from crypto domains',async()=>{
   const f=await fixture({registrySources:true}),migration=f.make();await migration.prepare();assert.equal(f.server.count,0);

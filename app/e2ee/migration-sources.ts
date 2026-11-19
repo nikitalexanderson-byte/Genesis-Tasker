@@ -18,7 +18,7 @@ export interface PrivatePathAdapter {
   /** No network or mutations. Empty sources still return an explicit serialized value. */
   captureLocal():Promise<Uint8Array>;
   /** Only after the complete protected local snapshot commits. All old attempts are supplied. */
-  reconcile(local:Uint8Array,previous:readonly Uint8Array[],context?:MigrationSourceContext):Promise<{complete:boolean;content:MigrationContent[]}>;
+  reconcile(local:Uint8Array,previous:readonly Uint8Array[],context?:MigrationSourceContext):Promise<{complete:boolean;content:MigrationContent[];localContent?:MigrationContent[]}>;
 }
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 
@@ -76,25 +76,27 @@ export class E2eeMigrationSources implements MigrationSources {
     if(context&&(context.ownerId!==this.#ownerId||context.scopeId!==this.#scopeId))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     if(previousSnapshots.length>32)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
     if(snapshot.length+previousSnapshots.reduce((total,bytes)=>total+bytes.length,0)>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
-    const adapters=this.#all(),decoded:Map<string,Uint8Array>[]=[];const coverage:{domain:string;complete:boolean}[]=[],content:MigrationContent[]=[];
+    const adapters=this.#all(),decoded:Map<string,Uint8Array>[]=[];const coverage:{domain:string;complete:boolean}[]=[],content:MigrationContent[]=[],localContent:MigrationContent[]=[];
     try{
       decoded.push(this.#decode(snapshot));for(const previous of previousSnapshots)decoded.push(this.#decode(previous));
       const seen=new Set<string>();let contentBytes=0;
       for(const {path,adapter} of adapters){
         const result=await adapter.reconcile(decoded[0].get(path.id)!,decoded.slice(1).map(previous=>previous.get(path.id)!),context);
-        if(typeof result.complete!=='boolean'||!Array.isArray(result.content))throw new Error('E2EE_INVALID_SOURCE_RESULT');
+        if(typeof result.complete!=='boolean'||!Array.isArray(result.content)||result.localContent!==undefined&&!Array.isArray(result.localContent))throw new Error('E2EE_INVALID_SOURCE_RESULT');
         coverage.push({domain:path.id,complete:result.complete});
-        for(const item of result.content){
+        const local=result.localContent??[];
+        for(const item of [...result.content,...local]){
           assertTechnical(item.objectId);const identity=`${item.domain}\0${item.objectId}`;
-          if(!path.domains.includes(item.domain)||seen.has(identity)||content.length>=10000||!(item.bytes instanceof Uint8Array)||item.bytes.length>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_INVALID_SOURCE_RESULT');
+          if(!path.domains.includes(item.domain)||seen.has(identity)||content.length+localContent.length>=10000||!(item.bytes instanceof Uint8Array)||item.bytes.length>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_INVALID_SOURCE_RESULT');
           contentBytes+=item.bytes.length;if(contentBytes>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_TOO_LARGE');
           seen.add(identity);
         }
-        if(content.length+result.content.length>10000)throw new Error('E2EE_INVALID_SOURCE_RESULT');
+        if(content.length+localContent.length+result.content.length+local.length>10000)throw new Error('E2EE_INVALID_SOURCE_RESULT');
         for(const item of result.content)content.push({...item,domain:item.domain as E2eeContext['domain'],bytes:new Uint8Array(item.bytes)});
+        for(const item of local)localContent.push({...item,domain:item.domain as E2eeContext['domain'],bytes:new Uint8Array(item.bytes)});
       }
-      return{coverage,content};
-    }catch(error){content.forEach(item=>item.bytes.fill(0));throw error;}
+      return{coverage,content,localContent};
+    }catch(error){[...content,...localContent].forEach(item=>item.bytes.fill(0));throw error;}
     finally{decoded.forEach(paths=>paths.forEach(bytes=>bytes.fill(0)));}
   }
 }
