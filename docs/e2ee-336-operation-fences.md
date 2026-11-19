@@ -302,3 +302,18 @@ the final shared UI; `journal-close-lint-final.log` and
 Latest owner authorization permits the complete3.3.6 web/API and signed website
 APK deployment **after** full acceptance. It does not turn these intermediate
 checks into full E2EE acceptance or waive independent cryptographic review.
+
+## Native task sync and controller ordering
+
+19 November. CloudTaskSync now acquires an opaque owner permit before decrypt,
+holds it across provider response and revision/operation-matched acknowledgement,
+and checks the same account generation/transition epoch before accepting a late
+response. The production account sync acquires the owner permit before its
+dataSyncMutex; nested task/HTTP calls borrow it. Migration capture therefore
+drains already-running response/ack work before installing its persistent fence.
+Persistent deny is checked before old key access. Denial is not network fallback
+or a successful sync. Actual API34/35 cases preserve pending ciphertext after a
+late owner change, deny before decryption and prove response/ack drain. The new
+task source separately preserves exact queue content under a new root; see
+`e2ee-336-tasks-client-source.md`. Other native feature writer/lifecycle paths
+still need complete product integration; this is not a blanket coverage claim.

@@ -1,6 +1,7 @@
 import {PersonalAuroraSource} from '../e2ee/aurora-source';
 import {PersonalStoicheionSource} from '../e2ee/stoicheion-source';
 import {PersonalAdviceSource} from '../e2ee/advice-source';
+import {PersonalTasksSource} from '../e2ee/tasks-source';
 import {PublicAdviceCatalogues} from '../e2ee/advice-catalogue';
 import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
 import {canonicalJson} from './forecast';
@@ -28,7 +29,7 @@ async function run(encoded:string){
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
     exactKeys(value,['protocol','source','ownerId','scopeId','local','previous','context','remote']);
-    if(value.protocol!==1||!['aurora','stoicheion','advice'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
+    if(value.protocol!==1||!['aurora','stoicheion','advice','tasks'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
       ||!Array.isArray(value.previous)||value.previous.length>32)throw new Error('E2EE_AURORA_SOURCE_INVALID');
     local.push(decodeE2eeBytes(value.local,1,16*1024*1024));for(const old of value.previous)local.push(decodeE2eeBytes(old,1,16*1024*1024));
     const ask=(kind:string,fields:Record<string,unknown>):Promise<unknown>=>new Promise((resolve,reject)=>{
@@ -42,10 +43,10 @@ async function run(encoded:string){
     },current);
     const ports={
       storage:{getItem(){throw new Error('E2EE_SOURCE_MUTATION');},key:()=>null,length:0},memory(){throw new Error('E2EE_SOURCE_MUTATION');},assertCurrent:current,
-      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,catalogues,
+      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,legacyTasks:async()=>value.remote,catalogues,
       openLegacy:(envelope:{iv:string;ciphertext:string},purpose:string):Promise<unknown>=>ask('open',{envelope,purpose}),
     };
-    const source=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
+    const source=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
     let prepared=local.slice(),nativeMetadata:unknown;
     if(value.source==='advice'){
       const raw=local.map(bytes=>backupJson(decoder.decode(bytes)) as Record<string,unknown>);

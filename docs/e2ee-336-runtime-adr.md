@@ -357,6 +357,25 @@ remain required; four real source adapters are not whole-product acceptance.
 
 ## Trust limits and remaining integration
 
+The fifth real category, personal tasks, now captures actual owner cache, Room
+rows, complete offline changes/deletions, revisions, detached recurrence and
+recovered/creation history on both platforms. New object IDs are random and the
+lookup index is encrypted; historical provider identities do not grant consent.
+Raw HTTP queues/keys stay in the protected local snapshot. Native keys stay out
+of the shared engine; its opening port accepts only exact captured old recovered
+ciphertext and purpose. A bounded task JSON preflight rejects duplicate decoded
+field names instead of accepting JSON.parse's last value. Native task sync holds
+the owner capability through decrypt/IO/ack, acquired before controller locks.
+Source/coordinator/new-root56 JS cases, actual IndexedDB14 checks and API34/35
+43 cases pass; see `e2ee-336-tasks-client-source.md`. This is5/20 real sources,
+not full product enrollment/recovery/consent/shared integration or activation.
+The producer-state follow-up increased these to57 JS source/migration cases and
+1510 full regressions; the actual target fingerprint passed additional native
+new-root reads. A newly found server-side provider snapshot is outside the current
+SQL source token. Its inventory and owner/file-operation lock boundary remain a
+release blocker, documented in `e2ee-336-provider-cache.md`;5/20 counts adapters,
+not complete account inventory. No activation follows from that count.
+
 The web transport owner is now established only by a validated session reader.
 Owner changes retire old capabilities before accepting a new login receipt;
 quota failures cannot retain an old editor under a changed cookie identity.

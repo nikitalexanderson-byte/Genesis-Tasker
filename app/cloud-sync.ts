@@ -3541,6 +3541,20 @@ export async function createPersonalAuroraMigrationSource(userId:string,scopeId:
       reconciliationRequired:backupReconciliationRequired,current:captureCurrent()};},legacyAurora:context=>transport.legacyAurora(context)});
 }
 
+/** Exact task cache/queue capture, without readPending's attribution or writers.
+ * The product coordinator must fence every mounted editor before calling it. */
+export async function createPersonalTasksMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyTasks'>,
+  captureCurrent:()=>Pick<import('./e2ee/tasks-source').TasksMigrationMemory,'tasks'|'editors'>,
+  review?:import('./e2ee/tasks-source').TasksSourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalTasksSource}=await import('./e2ee/tasks-source');check();
+  return new PersonalTasksSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired};},legacyTasks:context=>transport.legacyTasks(context),review});
+}
+
 /** Exact owner-scoped capture only; product migration supplies every mounted
  * editor, the complete source registry and persistent owner/device lifecycle. */
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,

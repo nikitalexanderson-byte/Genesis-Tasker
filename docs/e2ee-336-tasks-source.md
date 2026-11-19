@@ -1,5 +1,10 @@
 # Personal tasks: подписанный read-only migration source
 
+Продолжение19 ноября: реальные web/native adapters и их source/new-root acceptance
+описаны в `e2ee-336-tasks-client-source.md`. Актуальный real-source coverage5/20;
+это не product activation или публикация3.3.6. Ниже сохранён исходный срез
+server/transport этапа и обнаруженные тогда client boundaries.
+
 19 ноября2026. Это серверная часть следующей категории, не готовый web/native
 adapter и не product activation. Реальных source категорий по-прежнему4/20.
 Production3.3.5/149, floors0, pilot/cutover off, Android deploy false.

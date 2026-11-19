@@ -10,7 +10,7 @@ registry does **not** mean that feature adapters have been implemented.
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
 | --- | --- | --- |
 | personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native adapters and native SQLite barrier implemented; selected actual Room/Keystore/API26 process-death cases pass; product routing, web multitab fence, older-format review and full upgrade/lifecycle acceptance remain |
-| personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Signed owner-only legacy read now preserves all7 server task/history tables, exact raw creation state and recovered ciphertext;9 PHP suites pass. Real client capture/reconciliation/new-root adapters remain required, including recurrence/detached occurrences/tombstones and separate Google/Yandex copies/unsent external operations. Historical provider receipts cannot grant execution consent |
+| personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Real web/native source and signed owner-only read preserve all7 server task/history tables, exact offline edits/deletions, recurrence/detached identity, recovered content and inert creation history. Actual source/coordinator/new-root JS, Chromium IndexedDB and API34/35 Room/Keystore/packaged-engine cases pass. Raw queues/keys stay local, new record IDs are random, external copies need new consent. Product editor/review/consent routing, full authenticated inventory, API26 compatible-provider and direct-upgrade/recovery acceptance remain |
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | Web whole-operation writer fence now includes journals/IO/cleanup; actual source reconciliation, new root for notes/dreams/references/settings/files and native adapter remain required |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Web operation fences now cover staging/IO/retry/cleanup and retain immediate durable drafts; actual adapters, maps/images/complete history/conversion references and native lifecycle remain required |
 | personal.physis | Legacy password vault and account-v2 vault; active web memory store includes unsent queue/rotation; native encrypted documents; server records/IDs/receipts | Independently unlock every source, reconcile rotations and deleted IDs, re-encrypt account-known descendants; a locked source cannot be called empty |
@@ -29,6 +29,12 @@ registry does **not** mean that feature adapters have been implemented.
 | space.content | Space content/covers/labels/categories/templates/fields/history/views/imports and personal UI records | Correct space/project/personal ownership, signed grants and role enforcement; atomic ACL change plus all affected rotations |
 | space.mindmaps | Space-owned maps and associated versions/files/conversion/deletion journals | Distinguish project-owned maps; preserve all inherited references/history |
 | space.local-work | Unmounted space editors, templates/fields/workflow/planning/import drafts | Explicit inventory and adapters; no reliance on currently mounted React components |
+
+The task source still needs the newly discovered server-side Google snapshot
+inventory and owner/file-operation boundary outside SQL. This is a release
+blocker even though both task adapters have real-source acceptance; see
+`e2ee-336-provider-cache.md`. Five real adapters do not prove every account's
+complete data inventory or permit product activation.
 
 The JSON lists the concrete repository sources and SQL table families. Native
 source paths in the inventory are relative to
@@ -52,7 +58,7 @@ acceptance is complete. The native source/factory now reads4 real Room document
 kinds and their exact outbox under a transaction, includes portable plaintext in
 the protected snapshot and never acknowledges old work. Accepted/pending reset
 generations, base revisions, deleted IDs and explicit conflict choices are checked
-on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. The real Stoicheion practice/draw-history source is also implemented on both platforms; see `e2ee-336-stoicheion-source.md`. All17 other required path adapters remain mandatory.
+on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. The real Stoicheion practice/draw-history source is also implemented on both platforms; see `e2ee-336-stoicheion-source.md`. Advice and personal tasks now also have real sources on both platforms; see `e2ee-336-advice-native-work.md` and `e2ee-336-tasks-client-source.md`. Five real categories are implemented; all15 others and full product integration remain mandatory.
 
 Native Room now has an additive schema1→2 migration and technical deny table.
 Persistent triggers cover I/U/D of all4 legacy data tables in each explicit

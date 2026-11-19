@@ -321,6 +321,25 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             check(legacy.all.keys.toSet()==keys){"E2EE_ADVICE_SOURCE_CHANGED"};current();E2eeAdviceLegacyRows(owned,unknown)
         }},assertCurrent=::current,legacyAdvice=transport::legacyAdvice,reconciler=reconciler)
     }
+    internal fun e2eeTasksSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        captureMounted:suspend ()->JSONObject?):E2eeNativeTasksSource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        val cipher=ru.genesis.calendar.data.LocalCipher()
+        return E2eeNativeTasksSource(uid,directory.scopeId,captureRows={
+            current();val mounted=captureMounted()?.let{JSONObject(it.toString())};current()
+            withContext(Dispatchers.IO){app.database.withTransaction{
+                current();val dao=app.database.dao();val tasks=dao.backupTasks(accountScope);val pending=dao.outbox(accountScope)
+                val docs=listOfNotNull(dao.document(accountScope,"aurora-account-key"));val epochs=NativeBackupEpochStore(app)
+                current();E2eeTasksRows(tasks,pending,docs,epochs.accepted(accountScope),epochs.pending(accountScope),mounted)
+            }}
+        },decryptTask={row->current();cipher.decrypt(row.encrypted,"$accountScope/${row.id}").also{current()}},
+            decryptDocument={row->current();cipher.decrypt(row.encrypted,"$accountScope/aurora/$uid/account-key").also{current()}},
+            assertCurrent=::current,legacyTasks=transport::legacyTasks,reconciler=reconciler)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
@@ -2240,9 +2259,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val identity = mutableState.value.user ?: return
         val accountScope = CloudAccountSnapshot.scopeFor(identity.uid)
         if (app.workspaceScope != accountScope || mutableState.value.requiresSignIn || syncJob?.isActive == true) return
-        val generation = client.currentGeneration()
+        val generation = client.currentGeneration();val workspaceEpoch=app.workspaceEpoch
+        fun currentSyncOwner() {
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            if(!client.isCurrent(generation)||mutableState.value.user?.uid!=identity.uid||mutableState.value.requiresSignIn
+                ||app.workspaceScope!=accountScope||app.workspaceEpoch!=workspaceEpoch)throw CancellationException("E2EE_ACCOUNT_CHANGED")
+        }
         syncJob = scope.launch(NativeActivityVisit.requestContext(inBackground)) {
+          try { ru.genesis.calendar.data.NativeLegacyOperationPermit.run(app.database,accountScope,::currentSyncOwner) {
           dataSyncMutex.withLock {
+            currentSyncOwner()
             AuthDiagnostics.event("SYNC_STARTED")
             var sentTasks = 0
             var sentWorkspace = 0
@@ -2286,7 +2312,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                         CloudTaskSync(app.database, object : CloudTaskTransport {
                             override fun put(id: String, task: JSONObject) = client.putTask(generation, id, task)
                             override fun delete(id: String, task: JSONObject) = client.deleteTask(generation, id, task)
-                        }).flush(accountScope)
+                        }).flush(accountScope,::currentSyncOwner)
                     }
                 } catch (error: CancellationException) { throw error }
                 catch (error: Exception) {
@@ -2296,11 +2322,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                         "Изменения задач пока не подтверждены сервером и сохранены на устройстве.").joinToString(" ")
                 }
             }
+            currentSyncOwner()
             if (client.isCurrent(generation)) mutableState.value = mutableState.value.copy(
                 workspaceConflictPath = conflictPath, workspaceConflictPreview = conflictPreview, outgoingSyncIssue = failure, message = failure ?:
                 if (sentTasks + sentWorkspace > 0) "Синхронизировано: $sentTasks задач, $sentWorkspace изменений пространства."
                 else mutableState.value.message)
             AuthDiagnostics.event(if (failure == null) "SYNC_SUCCESS" else "SYNC_FAILED")
+          }
+          }}catch(error:AuthApiError) {
+            if(error.code.startsWith("E2EE_"))throw CancellationException(error.code).apply{initCause(error)}
+            throw error
           }
         }
     }

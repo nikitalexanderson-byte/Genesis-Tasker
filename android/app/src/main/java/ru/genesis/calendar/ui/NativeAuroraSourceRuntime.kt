@@ -33,16 +33,19 @@ private const val SOURCE_CHUNK=131072
 private fun sourceCode(error:Throwable):String=error.message?.takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_AURORA_RECONCILIATION_FAILED"
 
 internal enum class PersonalSourceKind(val wire:String,val domain:String){
-    AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion"),ADVICE("advice","workspace");
+    AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion"),ADVICE("advice","workspace"),TASKS("tasks","workspace");
     fun accepts(id:String):Boolean=when(this){
         AURORA->id in setOf("personal-aurora-workspace-v1","personal-aurora-local-history-v1")||id.matches(Regex("aurora-result:[a-f0-9-]{36}"))
         STOICHEION->id in setOf("personal-stoicheion-workspace-v1","personal-stoicheion-local-history-v1","personal-stoicheion-draw-history-v1")
         ADVICE->id in setOf("personal-advice-preferences-v1","personal-advice-local-history-v1","personal-advice-history-index-v1","personal-advice-native-metadata-v1")
             ||id.matches(Regex("personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
+        TASKS->id in setOf("personal-task-index-v1","personal-task-history-v1")
+            ||id.matches(Regex("personal-task-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
     }
 }
 internal class NativeAuroraSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.AURORA)
 internal class NativeStoicheionSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.STOICHEION)
+internal class NativeTasksSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.TASKS)
 internal class NativeAdviceSourceRuntime(context:Context,
     publicBytes:suspend (String,()->Unit)->ByteArray=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v1.json").use{it.readBytes()}})::read)
     :E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.ADVICE,publicBytes)

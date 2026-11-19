@@ -273,6 +273,45 @@ test('actual Advice preferences and historical texts pass durable migration and 
   ]){const opened=await normal.read('workspace',id);assert.ok(opened);try{verify(JSON.parse(new TextDecoder().decode(opened.bytes)));}finally{opened.bytes.fill(0);}}
 });
 
+test('actual personal task source survives a crashed shadow upload and ordinary new-root reads preserve outbox edits and tombstones',async()=>{
+  const {PersonalTasksSource,readMigratedPersonalTasks}=calendarModule('app/e2ee/tasks-source.ts');
+  const storage=new MemoryStorage(),canary='Synthetic private queued task '+crypto.randomUUID(),id='task-private-2026-11-19';
+  const old={id,title:'Older displayed copy',description:'Original private description',dueDate:'2026-11-19',done:false,updatedAt:1,
+    recurrenceMode:'lunar',recurrencePattern:'lunar-days',recurrenceDays:[2,7],recurrenceSeriesId:'private-series',recurrenceOriginalDate:'2026-11-18',googleTaskId:'private-provider-id',syncToGoogle:true};
+  const edited={...old,title:canary};
+  storage.setItem('genesis-calendar-v2:owner',JSON.stringify({tasks:[old]}));
+  storage.setItem('genesis-pending-mutations-v2:owner',JSON.stringify([{key:'task:'+id,path:'/tasks/'+id,method:'PUT',body:JSON.stringify(edited)}]));
+  storage.setItem('genesis-pending-mutations-v2-deleted:owner','["task-removed-offline"]');
+  const before=[...storage.data];let reads=0;
+  // Only personal.tasks uses the real source in this fixture. All other mandatory
+  // categories remain explicitly synthetic; this cannot activate the product.
+  const f=await fixture({registrySources:true,crashAfter:1,sourceAdapter:async(path,ports)=>path.id==='personal.tasks'?new PersonalTasksSource('owner',ports.scopeId,{
+    storage,assertCurrent:()=>ports.vault.assertUnlocked(),memory:()=>({ownerId:'owner',legacyKey:'',generation:0,reconciliationRequired:false,tasks:[old],editors:[]}),
+    legacyTasks:async context=>{
+      assert.ok([...ports.storage.rows.values()].some(row=>row.envelope.context.domain==='local-snapshot'));
+      assert.equal(ports.server.state,'uploading');assert.equal(context.migrationId,ports.server.migrationId);reads++;
+      return{protocol:1,ownerId:context.ownerId,scopeId:context.scopeId,migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,
+        tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null}};
+    },
+  }):null});
+  await f.make().prepare();assert.equal(reads,0);await assert.rejects(f.make().run(),/SYNTHETIC_PROCESS_DEATH/);assert.equal(reads,1);
+  assert.equal(await f.make().run(),'active');assert.equal(reads,1,'A shadow retry reuses its persisted ciphertext plan');assert.deepEqual([...storage.data],before);
+  const serialized=JSON.stringify([...f.storage.rows.values(),...f.server.objects.values()]);assert.ok(!serialized.includes(canary)&&!serialized.includes('private-provider-id'));
+  const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events);
+  const device={ownerId:'owner',deviceId:'device',vault:f.vault,requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys,
+    rememberDirectory:async(_scope,pin,events,_owner,callback)=>verifyDeviceDirectory('owner',f.scopeId,pin,events,undefined,callback)};
+  const normal=new E2eeScopeClient(device,'owner',f.scopeId,f.recovery.kit.authority,{
+    async directory(){return{events:f.events};},async read(packet){
+      const {action,payload}=packet.command,objects=[...f.server.objects.values()],result={checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision};
+      if(action==='sealed-heads')result.objects=await Promise.all(objects.map(async envelope=>({domain:envelope.context.domain,objectId:envelope.context.objectId,revision:1,payloadHash:await envelopePayloadHash(envelope)})));
+      else result.envelopes=objects.filter(envelope=>envelope.context.domain===payload.domain&&envelope.context.objectId===payload.objectId);return result;
+    },
+  });await normal.refresh();
+  const read=await readMigratedPersonalTasks('owner',async objectId=>(await normal.read('workspace',objectId))?.bytes??null,()=>f.vault.assertUnlocked());
+  assert.equal(read.tasks[0].title,canary);assert.equal(read.tasks[0].description,old.description);assert.equal(read.tasks[0].recurrenceOriginalDate,old.recurrenceOriginalDate);
+  assert.equal(read.tasks[0].googleTaskId,'private-provider-id');assert.equal(read.tasks[0].syncToGoogle,false);assert.deepEqual(read.deletedIds,['task-removed-offline']);
+});
+
 test('signed shadow readback continues past short pages and rejects loops, directory changes and lock',async()=>{
   const f=await fixture();await f.make().prepare();await f.make().run();
   const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),seen=[];

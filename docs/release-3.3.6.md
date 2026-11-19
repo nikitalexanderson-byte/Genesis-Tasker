@@ -792,3 +792,37 @@ fixture-only cipher seam; настоящий shared wrapper выполняетс
 Isolated `runtime/ci-settlement-wrapper-01/`: billing-settlement,
 billing-deletion и e2ee-background3/3 PASS. Полный CI повторяется отдельно.
 Production3.3.5/149, floors0, cutover off, Android deploy false сохранены.
+
+## Личные задачи: реальные web/native sources и защита фоновой очереди
+
+19 ноября2026. Перенос сохраняет exact offline task changes/deletions, recurrence/
+detached identity, reminders, recovered ciphertexts/revisions и operation history.
+Неизвестное происхождение, corruption, потеря key, смена account/generation,
+orphan queue и delete/edit conflict не становятся пустым source. New remote
+object IDs случайны; index и provider history зашифрованы. Внешняя копия требует
+нового согласия, raw HTTP/keys не экспортируются из protected local snapshot.
+
+CloudTaskSync держит owner permit через decrypt/HTTP/commit/ack; account sync
+получает его перед controller mutex. Native engine не получает keys и может
+открыть только exact captured recovered record с прежним owner/purpose AAD.
+Дополнительная проверка нашла duplicate-key projection JSON.parse; task source
+теперь отказывает decoded duplicate fields, сохраняя все original bytes.
+
+Full JS1509/1509, actual source/coordinator/new-root56/56, actual Chromium157
+IndexedDB14/14, typecheck/scoped lint/web build PASS. Native main/test APK и6/6
+JVM PASS, lint0 errors/206 прежних warnings/8 hints. Финальные API34/API35:
+по43/43 PASS, включая task sources, queues и regression4 прежних categories.
+Логи, failed-before-fixed evidence и пределы: `e2ee-336-tasks-client-source.md`.
+Fresh dependency audit0 advisories. Real source coverage5/20; оставшиеся15,
+product routing/recovery/upgrades/shared/backup/48 scenarios/14-language security
+UI и независимый crypto review обязательны до activation. Production3.3.5/149,
+floors0, cutover off и GENESIS_DEPLOY_ANDROID=false не менялись.
+
+Actual-producer follow-up: creation state — target hash, не JSON. Opaque states
+сохраняются без интерпретации/исполнения;57/57 source/migration JS и1510/1510 full
+JS PASS. Final state fixture прошёл5/5 на API34 и5/5 на API35, main/test APK +lint
+PASS. API26 storage/fence/task queue25/25 PASS. Дополнительно найден файловый
+Google cache вне SQL inventory/source token. Его нельзя исключить из полного
+перехода; owner/file lock и read-only capture — следующий release blocker в
+`e2ee-336-provider-cache.md`. Число5/20 означает adapters, не всё содержимое
+каждого аккаунта. Все production flags/floors остаются выключенными.
