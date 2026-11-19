@@ -936,3 +936,21 @@ global LocalCipher lost-key protection, direct upgrades/clean recovery/original4
 14-language security UI/independent crypto review остаются обязательными.
 Production3.3.5/149, floors0, cutover off, GENESIS_DEPLOY_ANDROID=false.
 Релиз3.3.6 ещё не выпущен.
+
+## 19 ноября: полный signed historical source личных mindmaps
+
+Серверный legacy-mindmaps read отдаёт все4 owner tables: current maps, versions,
+receipts и tombstones. UI LIMIT20 здесь не применяется; old key только при
+ciphertext. Header/lease/source/device/signature/owner gates сохраняются. Действия
+создания Google tasks, receipt replay и cleanup не вызываются.
+
+4/4 первоначальных PHP suites PASS; final source/transport5/5 PASS с actual18
+WebCrypto/JCA packets, actual-schema/25 retained versions, Unicode/count limits,
+foreign owner/revocation/tamper/fences/key corruption и no-source-change checks.
+Web migration52/52, native migration JVM13/13 без skips, full JS1543/1543,
+types/scoped lint PASS. Объединяющая lifecycle-сборка ещё проверяется отдельно;
+partial build не объявляется финальным native acceptance.
+
+`e2ee-336-mindmaps-source.md` фиксирует предел: actual client adapter/capture всех
+local/view/conversion/request/drafts/editor/history и normal routing ещё в работе.
+Coverage6/20; production3.3.5/149, floors0/cutover off/Android deploy false сохранены.
