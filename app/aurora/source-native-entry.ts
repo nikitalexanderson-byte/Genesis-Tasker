@@ -2,6 +2,8 @@ import {PersonalAuroraSource} from '../e2ee/aurora-source';
 import {PersonalStoicheionSource} from '../e2ee/stoicheion-source';
 import {PersonalAdviceSource} from '../e2ee/advice-source';
 import {PersonalTasksSource} from '../e2ee/tasks-source';
+import {PersonalDiarySource} from '../e2ee/diary-source';
+import {normalizeNativeDiaryCapture} from '../e2ee/diary-native-source';
 import {PublicAdviceCatalogues} from '../e2ee/advice-catalogue';
 import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
 import {canonicalJson} from './forecast';
@@ -30,7 +32,7 @@ async function run(encoded:string){
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
     exactKeys(value,['protocol','source','ownerId','scopeId','local','previous','context','remote']);
-    if(value.protocol!==1||!['aurora','stoicheion','advice','tasks'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
+    if(value.protocol!==1||!['aurora','stoicheion','advice','tasks','diary'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
       ||!Array.isArray(value.previous)||value.previous.length>32)throw new Error('E2EE_AURORA_SOURCE_INVALID');
     local.push(decodeE2eeBytes(value.local,1,16*1024*1024));for(const old of value.previous)local.push(decodeE2eeBytes(old,1,16*1024*1024));
     const ask=(kind:string,fields:Record<string,unknown>):Promise<unknown>=>new Promise((resolve,reject)=>{
@@ -44,11 +46,17 @@ async function run(encoded:string){
     },current);
     const ports={
       storage:{getItem(){throw new Error('E2EE_SOURCE_MUTATION');},key:()=>null,length:0},memory(){throw new Error('E2EE_SOURCE_MUTATION');},assertCurrent:current,
-      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,legacyTasks:async()=>value.remote,catalogues,
+      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,legacyTasks:async()=>value.remote,legacyDiary:async()=>value.remote,catalogues,
       openLegacy:(envelope:{iv:string;ciphertext:string},purpose:string):Promise<unknown>=>ask('open',{envelope,purpose}),
     };
-    const source:PrivatePathAdapter=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
-    let prepared=local.slice(),nativeMetadata:unknown;
+    const source:PrivatePathAdapter=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):value.source==='diary'?new PersonalDiarySource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
+    let prepared=local.slice(),nativeMetadata:unknown,diaryMetadata:unknown;
+    if(value.source==='diary'){
+      prepared=[];for(const bytes of local.slice()){
+        const normalized=normalizeNativeDiaryCapture(backupJson(decoder.decode(bytes)),current),encoded=new TextEncoder().encode(JSON.stringify(normalized.snapshot));
+        local.push(encoded);prepared.push(encoded);if(diaryMetadata===undefined)diaryMetadata=normalized.metadata;
+      }
+    }
     if(value.source==='advice'){
       const raw=local.map(bytes=>backupJson(decoder.decode(bytes)) as Record<string,unknown>);
       if(raw[0]&&Object.hasOwn(raw[0],'documents')){
@@ -59,6 +67,7 @@ async function run(encoded:string){
     }
     const result=await source.reconcile(prepared[0],prepared.slice(1),value.context as MigrationSourceContext);
     if(nativeMetadata!==undefined)result.content.push({domain:'workspace',objectId:'personal-advice-native-metadata-v1',bytes:new TextEncoder().encode(JSON.stringify(nativeMetadata))});
+    if(diaryMetadata!==undefined)(result.localContent??=[]).push({domain:'diary',objectId:'personal-diary-native-history-v1',bytes:new TextEncoder().encode(JSON.stringify(diaryMetadata))});
     const localContent=result.localContent??[];content.push(...[...result.content,...localContent].map(row=>row.bytes));
     const outputPackets=(rows:typeof result.content)=>rows.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes),filename:row.filename??'',mediaType:row.mediaType??'application/json'}));
     current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});

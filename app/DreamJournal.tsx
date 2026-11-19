@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDiary } from "./DiaryProvider";
 import { diaryCopy } from "./diary-copy";
 import { newDiaryNote, validDreamDay, type DiaryNote } from "./diary-model";
@@ -111,6 +111,9 @@ function DreamEditor({user,record,date,language,onSaved,onClose,dateEditable=tru
   const spelling=useRef(false), spellingRequests=useRef(new Set<AbortController>());
   const voiceDocument=useRef<{base:string;expected:string;parts:string[]}|null>(null);
   const noteRef=useRef(note);
+  const migrationForm=useRef({note,revision:record?.revision??0,state:{voicePartial}}),registerMigrationEditor=diary.registerMigrationEditor;
+  useLayoutEffect(()=>{migrationForm.current={note,revision:record?.revision??0,state:{voicePartial}};},[note,record?.revision,voicePartial]);
+  useEffect(()=>registerMigrationEditor(()=>({...migrationForm.current,state:{...migrationForm.current.state,voiceDocument:voiceDocument.current}})),[registerMigrationEditor]);
   useEffect(()=>{noteRef.current=note;},[note]);
   const voice=useRef<DreamDictation|null>(null); const active=useRef(true); const pending=useRef(false);
   const voiceGeneration=useRef(0), deleting=useRef(false);

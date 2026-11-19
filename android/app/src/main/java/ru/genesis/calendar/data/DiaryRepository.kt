@@ -29,6 +29,10 @@ internal class DiaryConflict : Exception("DIARY_REVISION_CONFLICT")
 internal class DiaryRepository(private val owner: String, private val gateway: DiaryGateway,
     private val store: DiaryStore, private val cacheCipher: DiaryCacheCipher) {
     private val mutex = Mutex()
+    // The owner permit precedes this mutex and covers decrypt/HTTP/journal/ack.
+    private suspend fun <T> operation(block:suspend ()->T):T=gateway.withLegacyOperation {
+        mutex.withLock { check();block().also{check()} }
+    }
     private val writer = UUID.randomUUID().toString()
     private var initialized = false
     private var hasCache = false
@@ -104,7 +108,7 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
         check(); store.write(encrypted); check()
         committed = saved; drafts = kept; hasCache = cache; publish(offline)
     }
-    suspend fun loadCached() = mutex.withLock { loadLocked() }
+    suspend fun loadCached() = operation { loadLocked() }
     private fun offline(error: Exception): Boolean = error is IOException || error is AuthFailure && error.kind == AuthFailure.Kind.NETWORK
     private fun acceptMetadata(response: JSONObject, activate: Boolean = false) {
         response.optJSONObject("dreamSettings")?.let { row ->
@@ -154,14 +158,14 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
         protected = false
         persist(byId.values.toList(), kept = retain(drafts), cache = true, offline = false)
     }
-    suspend fun refresh() = mutex.withLock { refreshLocked() }
-    suspend fun dreamToday(timeZone: String): String {
+    suspend fun refresh() = operation { refreshLocked() }
+    suspend fun dreamToday(timeZone: String): String = operation {
         check()
         val response=gateway.request("/diary/dream-clock?timeZone=" + java.net.URLEncoder.encode(timeZone, "UTF-8"))
         check(); require(response.getString("timeZone")==timeZone)
-        return java.time.LocalDate.parse(response.getString("today")).toString()
+        java.time.LocalDate.parse(response.getString("today")).toString()
     }
-    suspend fun authorizeDreamVoice() { check(); require(gateway.request("/diary/dream-voice").getBoolean("allowed")); check() }
+    suspend fun authorizeDreamVoice() = operation { check(); require(gateway.request("/diary/dream-voice").getBoolean("allowed")); check() }
 
     private fun ownKey(id: String): String = "draft:$writer:$id"
     private suspend fun keepLocked(note: DiaryNote, revision: Long, key: String?): DiaryRecord {
@@ -175,19 +179,19 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
         persist(kept = drafts.filterNot { it.draftKey == draftKey } + draft)
         return draft
     }
-    suspend fun keepDraft(note: DiaryNote, revision: Long = 0, draftKey: String? = null): DiaryRecord = mutex.withLock {
+    suspend fun keepDraft(note: DiaryNote, revision: Long = 0, draftKey: String? = null): DiaryRecord = operation {
         loadLocked(); keepLocked(DiaryNote.parse(note.json()), revision, draftKey)
     }
-    suspend fun discardDraft(draftKey: String) = mutex.withLock {
+    suspend fun discardDraft(draftKey: String) = operation {
         loadLocked(); require(draftKey.startsWith("draft:")) { "DIARY_INVALID_DRAFT" }
         persist(kept = drafts.filterNot { it.draftKey == draftKey })
     }
-    suspend fun discardEditorDraft(id: String, draftKey: String?) = mutex.withLock {
+    suspend fun discardEditorDraft(id: String, draftKey: String?) = operation {
         loadLocked(); check()
         require(draftKey == null || draftKey.startsWith("draft:") && draftKey.endsWith(":" + id))
         persist(kept = drafts.filterNot { it.draftKey == ownKey(id) || draftKey != null && it.draftKey == draftKey })
     }
-    suspend fun setDreamTodayMode(mode: String) = mutex.withLock {
+    suspend fun setDreamTodayMode(mode: String) = operation {
         loadLocked(); check(); require(mode in setOf("off", "morning", "all-day"))
         try {
             val response = gateway.request("/diary/dream-settings", JSONObject().put("todayMode", mode).put("expectedRevision", dreamSettings.revision))
@@ -236,10 +240,10 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
         persist(kept = drafts.filterNot { it.draftKey == row.draftKey } + row)
         return send(row)
     }
-    suspend fun save(note: DiaryNote, revision: Long = 0, draftKey: String? = null): DiaryRecord = mutex.withLock {
+    suspend fun save(note: DiaryNote, revision: Long = 0, draftKey: String? = null): DiaryRecord = operation {
         loadLocked(); saveLocked(DiaryNote.parse(note.json()), revision, draftKey)
     }
-    suspend fun saveCopy(note: DiaryNote, originalDraftKey: String?): DiaryRecord = mutex.withLock {
+    suspend fun saveCopy(note: DiaryNote, originalDraftKey: String?): DiaryRecord = operation {
         loadLocked()
         val copyId = UUID.nameUUIDFromBytes("$owner:${originalDraftKey ?: ownKey(note.id)}:copy".toByteArray(Charsets.UTF_8)).toString()
         val prior = drafts.firstOrNull { it.note.id == copyId }
@@ -251,7 +255,7 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
         if (originalDraftKey != null) persist(kept = drafts.filterNot { it.draftKey == originalDraftKey })
         result
     }
-    suspend fun adviceId(adviceId: String): String = mutex.withLock {
+    suspend fun adviceId(adviceId: String): String = operation {
         loadLocked(); adviceIdLocked(adviceId)
     }
     private suspend fun adviceIdLocked(adviceId: String): String {
@@ -269,13 +273,13 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
             id
         } finally { key.fill(0) }
     }
-    suspend fun react(advice: JSONObject, reaction: String): DiaryRecord = mutex.withLock {
+    suspend fun react(advice: JSONObject, reaction: String): DiaryRecord = operation {
         loadLocked(); refreshLocked(); require(!protected) { "DIARY_PROTECTED_DATA" }
         val id = adviceIdLocked(advice.getString("id"))
         val current = committed.firstOrNull { it.note.id == id }
         saveLocked(DiaryNote.reaction(advice, id, reaction, current?.note), current?.revision ?: 0, "draft:reaction:$writer:$id")
     }
-    suspend fun remove(record: DiaryRecord) = mutex.withLock {
+    suspend fun remove(record: DiaryRecord) = operation {
         loadLocked(); check(); require(!record.draft && !protected) { "DIARY_INVALID_NOTE" }
         val marker = if (!syncEnabled || record.localOnly) DiaryDeletion(record.note.id, maxOf(2, record.revision + 1), java.time.Instant.now().toString(), false)
         else {
@@ -287,7 +291,7 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
         deletions = deletions + (marker.id to marker)
         persist(saved = retain(committed), kept = retain(drafts))
     }
-    suspend fun setSyncEnabled(enabled: Boolean) = mutex.withLock {
+    suspend fun setSyncEnabled(enabled: Boolean) = operation {
         refreshLocked(); check(); require(!mutable.value.offline && snapshot.isNotBlank()) { "DIARY_ONLINE_REQUIRED" }
         // A failed device write prevents the destructive server request.
         persist()

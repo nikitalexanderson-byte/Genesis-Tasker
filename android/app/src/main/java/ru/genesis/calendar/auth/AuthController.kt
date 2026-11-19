@@ -340,6 +340,24 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             decryptDocument={row->current();cipher.decrypt(row.encrypted,"$accountScope/aurora/$uid/account-key").also{current()}},
             assertCurrent=::current,legacyTasks=transport::legacyTasks,reconciler=reconciler)
     }
+    internal fun e2eeDiarySource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        captureMounted:suspend ()->JSONObject?):E2eeNativeDiarySource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        val cipher=ru.genesis.calendar.data.LocalCipher()
+        return E2eeNativeDiarySource(uid,directory.scopeId,captureRows={
+            current();val mounted=captureMounted()?.let{JSONObject(it.toString())};current()
+            withContext(Dispatchers.IO){app.database.withTransaction{
+                current();val docs=app.database.dao().backupDocuments(accountScope).filter{it.kind.startsWith("diary-v1")||it.kind=="aurora-account-key"}
+                val epochs=NativeBackupEpochStore(app);current();E2eeDiaryRows(docs,epochs.accepted(accountScope),epochs.pending(accountScope),mounted)
+            }}
+        },decryptCache={value->current();cipher.decrypt(value,"$accountScope/diary-v1:$uid").also{current()}},
+            decryptAccountKey={row->current();cipher.decrypt(row.encrypted,"$accountScope/aurora/$uid/account-key").also{current()}},
+            assertCurrent=::current,legacyDiary=transport::legacyDiary,reconciler=reconciler)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
@@ -483,13 +501,18 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             call(JSONObject().put("command", command).put("audio", audio ?: JSONObject.NULL).put("context", context))
     }
 
-    internal fun diaryGateway(uid: String): DiaryGateway = object : DiaryGateway {
+    internal fun diaryGateway(uid: String): DiaryGateway {
+      val capturedGeneration=client.currentGeneration();val capturedEpoch=app.workspaceEpoch;val accountScope=CloudAccountSnapshot.scopeFor(uid)
+      return object : DiaryGateway {
         override fun featureAccess(): FeatureAccess = mutableState.value.accountSettings?.featureAccess ?: FeatureAccess()
         override fun check() {
-            check(mutableState.value.user?.uid == uid && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) {
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            check(client.isCurrent(capturedGeneration)&&app.workspaceEpoch==capturedEpoch&&mutableState.value.user?.uid == uid && app.workspaceScope == accountScope) {
                 "Сессия дневника завершена. Черновик сохранён на устройстве."
             }
         }
+        override suspend fun <T> withLegacyOperation(operation:suspend ()->T):T =
+            ru.genesis.calendar.data.NativeLegacyOperationPermit.run(app.database,accountScope,::check,operation)
         override suspend fun workspace(): JSONObject {
             check(); check(!mutableState.value.requiresSignIn)
             val generation = client.currentGeneration()
@@ -507,6 +530,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
     }
 
+    }
     suspend fun yandexAvailable(): Boolean = withContext(Dispatchers.IO) {
         runCatching { client.providers(client.currentGeneration()).optBoolean("yandex") }.getOrDefault(false)
     }

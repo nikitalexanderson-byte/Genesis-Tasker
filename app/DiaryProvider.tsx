@@ -1,13 +1,14 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PERSONAL_DOCUMENT_READY_EVENT } from './cloud-sync';
-import { DiaryRepository, type DiaryRecord } from './diary-storage';
+import { DiaryRepository, type DiaryRecord, type DiaryEditorCapture } from './diary-storage';
 import { reactToAdvice, type DiaryNote } from './diary-model';
 import type { DailyAdvice } from './daily-advice';
 import { DEFAULT_DREAM_SETTINGS, type DreamSettings } from './dream-journal-model';
 
 type State = { records: DiaryRecord[]; loading: boolean; error: boolean; offline: boolean; syncEnabled: boolean; pendingUploads: number; dreamSettings: DreamSettings };
 type Context = State & { busy: boolean; refresh: () => Promise<void>; save: (note: DiaryNote, record?: DiaryRecord) => Promise<void>;
+  registerMigrationEditor:(read:()=>DiaryEditorCapture)=>(()=>void);captureMigration:()=>ReturnType<DiaryRepository['captureMigration']>;
   dreamToday: (zone:string,signal?:AbortSignal)=>Promise<string>; authorizeDreamVoice:()=>Promise<void>;
   remove: (record: DiaryRecord) => Promise<void>; setSyncEnabled: (enabled: boolean) => Promise<void>;
   setDreamTodayMode: (mode: DreamSettings['todayMode']) => Promise<void>; discardEditorDraft: (id: string, key?: string) => Promise<void>;
@@ -20,6 +21,7 @@ export function DiaryProvider({ userId, ready, children, repositoryOverride }: {
   const [state, setState] = useState<State>({ records: [], loading: true, error: false, offline: false, syncEnabled: repository?.syncEnabled ?? true, pendingUploads: 0, dreamSettings: repository?.dreamSettings ?? DEFAULT_DREAM_SETTINGS });
   const [busy, setBusy] = useState(false);
   const request = useRef(0);
+  const registerMigrationEditor=useCallback((read:()=>DiaryEditorCapture)=>{if(!repository)throw new Error('DIARY_UNAVAILABLE');return repository.registerMigrationEditor(read);},[repository]);
   const dreamToday=useCallback(async(zone:string,signal?:AbortSignal)=>{if(!repository)throw new Error('DIARY_UNAVAILABLE');return repository.dreamToday(zone,signal);},[repository]);
   const authorizeDreamVoice=useCallback(async()=>{if(!repository)throw new Error('DIARY_UNAVAILABLE');await repository.authorizeDreamVoice();},[repository]);
   const refresh = useCallback(async () => {
@@ -44,7 +46,8 @@ export function DiaryProvider({ userId, ready, children, repositoryOverride }: {
     catch (error) { await refresh(); throw error; }
     finally { setBusy(false); }
   };
-  return <DiaryContext value={{ ...state, busy, refresh, save, dreamToday, authorizeDreamVoice,
+  return <DiaryContext value={{ ...state, busy, refresh, save, dreamToday, authorizeDreamVoice,registerMigrationEditor,
+    captureMigration:()=>{if(!repository)throw new Error('DIARY_UNAVAILABLE');return repository.captureMigration(state.records);},
     remove: async record => {
       if (!repository || busy) throw new Error('DIARY_UNAVAILABLE'); setBusy(true); ++request.current;
       try { await repository.remove(record); ++request.current; setState(previous => ({ ...previous, error: false,

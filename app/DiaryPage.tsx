@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type CSSProperties } from 'react';
 import { useDiary } from './DiaryProvider';
 import { DIARY_COLORS, newDiaryNote, restoreDiaryNote, diaryCustomInk, diaryNoteCategory, type DiaryNote, type DiaryCategory } from './diary-model';
 import type { DiaryRecord } from './diary-storage';
@@ -26,6 +26,9 @@ function customNoteStyle(color?: string): CSSProperties | undefined {
 function NoteEditor({ record, language, onClose, onSaved }: { record?: DiaryRecord; language: string; onClose: () => void; onSaved: (note: DiaryNote) => void }) {
   const text: Copy = diaryCopy(language); const diary = useDiary();
   const [note, setNote] = useState<DiaryNote>(() => record?.note ?? newDiaryNote());
+  const migrationForm=useRef({note,revision:record?.revision??0}),registerMigrationEditor=diary.registerMigrationEditor;
+  useLayoutEffect(()=>{migrationForm.current={note,revision:record?.revision??0};},[note,record?.revision]);
+  useEffect(()=>registerMigrationEditor(()=>migrationForm.current),[registerMigrationEditor]);
   const [error, setError] = useState(''); const [draftStatus, setDraftStatus] = useState(''); const [saving, setSaving] = useState(false);
   const actions = useRef(diary); useEffect(() => { actions.current = diary; }, [diary]);
   const [baseline] = useState(() => JSON.stringify(record?.note ?? note));

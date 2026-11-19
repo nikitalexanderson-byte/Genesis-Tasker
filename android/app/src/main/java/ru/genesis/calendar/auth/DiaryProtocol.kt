@@ -11,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec
 /** Implemented by the existing authenticated account transport; no second session or workspace key. */
 internal interface DiaryGateway {
     fun check()
+    suspend fun <T> withLegacyOperation(operation:suspend ()->T):T { check();return operation().also{check()} }
     fun featureAccess(): FeatureAccess = FeatureAccess()
     suspend fun workspace(): JSONObject
     /** GET when body is null; otherwise PUT. The transport must keep its existing session generation guards. */

@@ -49,3 +49,9 @@ Coverage остаётся5/20 real adapters. Production3.3.5/149, floors0, cutov
 GENESIS_DEPLOY_ANDROID=false; остальных15 categories, full lifecycle/48 scenarios/
 recovery/direct upgrades/14-language security UI и independent crypto review
 этот signed source не заменяет.
+
+Последующее продолжение19 ноября: real web/native capture/reconciliation
+реализован, с отдельным device-only placement, actual Chromium и API34/API35
+проверками. Актуальный объём и оставшиеся product/lifecycle ограничения —
+`e2ee-336-diary-implementation.md`. Исторический срез5/20 выше не является
+актуальным итогом этой последующей реализации.

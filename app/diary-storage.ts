@@ -9,6 +9,7 @@ type Deletion = { id: string; revision: number; updatedAt: string; localOnly: bo
 type Settings = { syncEnabled: boolean; revision: number };
 type Pending = Sealed & { expectedRevision: number; schemaVersion: 1 };
 export type DiaryRecord = { note: DiaryNote; revision: number; draftKey?: string; pending?: Pending; localOnly?: boolean };
+export type DiaryEditorCapture = {note:DiaryNote;revision:number;state?:unknown};
 type Access = Pick<ReturnType<typeof personalDocumentAccess>, 'check' | 'request' | 'seal' | 'open' | 'privateId' | 'withLegacyOperation'>;
 type Storage = Pick<globalThis.Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'>;
 const sameContent = (a: DiaryNote, b: DiaryNote) => JSON.stringify({ ...a, updatedAt: '' }) === JSON.stringify({ ...b, updatedAt: '' });
@@ -24,6 +25,14 @@ export class DiaryRepository {
   private settings: Settings = { syncEnabled: true, revision: 0 };
   private deviceLocalOnly = false;
   private snapshot = '';
+  private migrationEditors = new Map<string,()=>DiaryEditorCapture>();
+  registerMigrationEditor(read:()=>DiaryEditorCapture) {
+    this.check();const source='diary-editor:'+crypto.randomUUID();this.migrationEditors.set(source,read);
+    return()=>{this.migrationEditors.delete(source);};
+  }
+  captureMigration(records:readonly DiaryRecord[]) {
+    this.check();const result={records:structuredClone(records),editors:[...this.migrationEditors].map(([source,read])=>({source,...structuredClone(read())}))};this.check();return result;
+  }
   get syncEnabled() { return this.settings.syncEnabled && !this.deviceLocalOnly; }
   get pendingUploads() { return this.cache().filter(row => row.localOnly).length; }
   offline = false;
@@ -37,7 +46,7 @@ export class DiaryRepository {
     if (saved) { const value = JSON.parse(saved); this.deviceLocalOnly = value.deviceLocalOnly === true; this.acceptSettings({ settings: value }, false, false); }
     this.acceptDeletions(JSON.parse(this.storage.getItem(`${this.prefix}deleted`) || '[]'));
   }
-  dispose() { this.stopped = true; }
+  dispose() { this.stopped = true;this.migrationEditors.clear(); }
   private check(access = this.access) { if (this.stopped) throw new Error('DIARY_SESSION_CLOSED'); access.check(); }
   private async run<T>(operation:(access:Access)=>Promise<T>) {
     this.check();return this.access.withLegacyOperation(async access=>{this.check(access);const result=await operation(access);this.check(access);return result;});

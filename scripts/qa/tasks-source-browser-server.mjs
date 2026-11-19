@@ -4,7 +4,7 @@ import {build} from 'vite';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
-const checkEntry=process.argv.includes('--local-output')?'local-output-browser-check.ts':'tasks-source-browser-check.ts';
+const checkEntry=process.argv.includes('--diary')?'diary-source-browser-check.ts':process.argv.includes('--local-output')?'local-output-browser-check.ts':'tasks-source-browser-check.ts';
 const result=await build({configFile:false,root,logLevel:'warn',build:{write:false,minify:false,target:'es2022',
  lib:{entry:resolve(root,'scripts/qa',checkEntry),formats:['es'],fileName:'check'},rolldownOptions:{output:{codeSplitting:false}}}});
 const output=Array.isArray(result)?result.flatMap(row=>row.output):result.output;

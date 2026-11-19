@@ -3558,6 +3558,18 @@ export async function createPersonalTasksMigrationSource(userId:string,scopeId:s
 
 /** Exact owner-scoped capture only; product migration supplies every mounted
  * editor, the complete source registry and persistent owner/device lifecycle. */
+export async function createPersonalDiaryMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyDiary'>,
+  captureCurrent:()=>Pick<import('./e2ee/diary-source').DiaryMigrationMemory,'records'|'editors'>,
+  review?:import('./e2ee/diary-source').DiarySourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalDiarySource}=await import('./e2ee/diary-source');check();
+  return new PersonalDiarySource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired};},legacyDiary:context=>transport.legacyDiary(context),review});
+}
+
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,
   transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyStoicheion'>,
   captureCurrent:()=>Pick<import('./e2ee/stoicheion-source').StoicheionMigrationMemory,'current'|'draws'|'timeline'>) {

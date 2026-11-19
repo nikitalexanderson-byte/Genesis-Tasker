@@ -910,3 +910,29 @@ failures/errors0. API34/API35 по48/48 instrumentation PASS; это не исх
 Source checks44477260699 на ecd2c379 завершён success: web/API и Android.
 Coverage всё ещё5/20: diary source transport готов, client adapter ещё в работе.
 Production3.3.5/149, floors0, cutover off, Android deploy false; выпуск не объявлен.
+
+## 19 ноября: real diary web/native source и private local placement
+
+Завершён следующий source increment: actual web/native diary capture, shared strict
+reconciliation и current-generation readback. Все6 SQL tables, web owner caches/
+closed-tab/upload drafts, native current/dangling Room chunks, old pending envelopes,
+сны, advice snapshots и metadata сохраняются. Local-only privacy не означает delete:
+данные/черновики/editor state остаются в device-only output, без cloud upload или
+replay старых requests/acknowledgements. Conflicts требуют exact review.
+Native repository держит owner permit до repo mutex через decrypt/HTTP/journal;
+gateway дополнительно привязан к session generation/workspace epoch.
+
+Evidence: full JS1543/1543, focused96/96; typecheck/scoped lint/web build PASS.
+Native QA build main/test/JVM/lint12m6s SUCCESS. JVM1167 tests:1159 passed,
+8 opt-in PHP HTTP skipped, failures/errors0. Actual API34 и API35 по54/54 PASS,
+включая6 diary cases; это не исходные48 whole-system acceptance scenarios.
+Chromium157 report05:26 checks PASS, console0, actual IndexedDB/WebCrypto,
+coordinator/saved recovery/ambiguous commit retry/cold normal scope read без oldkeys.
+Доказательства и failures-before-fixes: `e2ee-336-diary-implementation.md`.
+
+Source coverage6/20; product lifecycle/normal writes/review UI, остальных14
+categories, archives/local-only backup/Drive, shared rotations/files/automation,
+global LocalCipher lost-key protection, direct upgrades/clean recovery/original48,
+14-language security UI/independent crypto review остаются обязательными.
+Production3.3.5/149, floors0, cutover off, GENESIS_DEPLOY_ANDROID=false.
+Релиз3.3.6 ещё не выпущен.
