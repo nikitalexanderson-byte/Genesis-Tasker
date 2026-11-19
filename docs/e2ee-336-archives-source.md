@@ -59,8 +59,14 @@ Evidence: `output/qa/security336-archives-cross-platform-04/results.json`,
 `archives-fragments-native-assembly-identity-01.json`,
 `archives-fragments-web-build-01.log` (последние4 под тем же runtime).
 
-Остаются native fragment collector и настоящий capture всех local archives/import
-staging/memory/held/safety/native files; strict nested content reconciliation,
+Web local capture теперь сохраняет все owner safety/held entries, memory-only
+quota safety, actual mounted/detached BackupPanel и выбранные file bytes. Actual
+Chromium/React/File/WebCrypto/IDB14 assertions PASS; полный JS1719/1719. Это
+только protected source input primitive, без reconciliation/complete authority.
+Приёмка и точные ограничения: `e2ee-336-archives-local-capture.md`.
+
+Остаются native fragment collector, native archive/import files inventory,
+strict nested content reconciliation web/native,
 retained old-key availability и new-root readback/recovery. Cap generic pager
 8MiB включает original+decoded payload: превышение явно отказывает; fragment
 transport сам по себе не является готовым переносом. Большие архивы нельзя

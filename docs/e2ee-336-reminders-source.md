@@ -177,11 +177,21 @@ cancellation: сохраняются запрет и исходники, фон�
   `security336-reminders-guards-api26-01/results.json`.
   Все3 task-owned AVD остановлены; личные устройства не использовались.
 
+Дополнение после archives capture/normal-operation hardening: на отдельном
+task-owned AOSP API26 с реально выбранным compatible WebView113 прошёл полный
+тот же выбранный набор22/22, failures/skips0. Включает все8 packaged reminders
+source/guard/bootstrap,1 Physis old-key-loss,11 importer и2 reminder cases.
+`output/qa/security336-reminders-source-api26-supported-02/results.json`.
+Это не изменение прежнего GuardOnly результата на Google26/provider69.
+Official runtime provenance, public QA-only certificate/resource overlay и
+ограничения: `e2ee-336-api26-supported-runtime.md`. Все9 sources целиком на API26
+этим набором не подтверждены; full authenticated product и OEM matrix ещё нужны.
+
 Непроверенное/оставшееся: полный authenticated enrollment/migration/normal E2EE
 editors и восстановление форм; native mounted editor provider в product UI;
 системный multitab/service-worker upgrade journey и реальные push permissions/
 delivery; большие совокупные источники сверх128MiB/10000objects/локальных cap;
-API26 packaged source с совместимым provider/fallback (Chromium69 недостаточен);
+остальные API26 packaged sources/OEM matrix (Chromium69 недостаточен);
 прямые signed upgrades/recovery, все48 сценариев, остальные source categories,
 14-language semantic/full visual acceptance и independent human crypto review.
 Ни одно ограничение не заменено пустыми данными, усечением или включением rollout.

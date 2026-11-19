@@ -1404,3 +1404,46 @@ normal operations, new-root recovery/readback ещё не завершены: co
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены. Ни Deploy,
 ни Play, ни личные устройства не затрагивались. CI44588254949 на163d05e3:
 Android SUCCESS, web/API до browser stage PASS; browser job ещё выполняется.
+
+## Архивы: protected web input и native operation exclusion,19 ноября
+
+Actual web BackupPanel сохраняет выбранный File целиком, key input, preview,
+choices и точные uncertain operation IDs при навигации. В source inventory входят
+raw owner storage originals, включая malformed/duplicate JSON, и memory-only
+safety после quota failure. До завершения операции/React commit capture отказывает;
+account/session/state/File/storage rechecks не допускают смешанный snapshot.
+Это protected input primitive; old keys ещё не должны попадать в будущий output.
+
+Web regression24/24, full JS1719/1719 после regenerated signed fixture, types и
+scoped lint0 errors/4 прежних img warnings PASS. Build:web PASS:98 HTML/14 languages,
+exact dictionaries,280 gallery/offline assets. Actual Chromium157/React/File/
+WebCrypto/IDB14 assertions PASS, console0; после detach/encrypted capture и удаления
+оригиналов fixture cold unlock вернул точные file/form/history/memory safety.
+Оба снимка просмотрены. Это не приёмка полного product restore/design.
+
+BackupNativeStore/BackupSafetyStore теперь удерживают owner permit до завершения
+crypto/HTTP/generation/safety writes и reset acceptance. Same-UID relogin не
+реанимирует старый gateway; nested calls не deadlock за ожидающей migration.
+Build01 full JVM1209 total/1201 passed/8 opt-in HTTP skipped/0 failed;
+final build02 SUCCESS20m41s, focused backup JVM21/21, lint0 errors/206 warnings/
+8 hints. Final API34 actual Room/DataStore/Keystore/SAF/journal flows10/10 PASS.
+Два initial failures были test fixtures (JUnit Boolean result/old package guard),
+они исправлены без ослабления production boundary. Полный multi-call native
+Backup WebView job и native selected-file/forms capture ещё нужны.
+
+Evidence/identity/limits: `e2ee-336-archives-local-capture.md`. Отдельный task-owned
+AOSP Android8 AVD получил проверенный official compatible WebView113 с PUBLIC
+development QA подписью и code-free provider resource overlay. Product guard111
+не менялся; весь выбранный reminders source набор22/22 PASS, failures/skips0.
+Включает actual source/history>16MiB/new-root readback, Physis old-key-loss,
+11 importer и2 reminder regression cases. Это не все9 sources/не полная OEM
+матрица и не authenticated product acceptance. Происхождение,
+initial QA failures и ограничения: `e2ee-336-api26-supported-runtime.md`.
+
+Coverage остаётся9/20; native archives/reconciliation/recovery, остальные11
+sources, full lifecycle/normal writers/forms, shared ACL+rotation, Drive/direct
+upgrades, исходные48/14-language semantics и independent human crypto review
+остаются обязательными. Production3.3.5/149, floors0/pilot/cutover off и
+GENESIS_DEPLOY_ANDROID=false сохранены. CI44588254949 на163d05e3 завершился
+SUCCESS; новый CI44600100480 наbf8749d8 ещё выполняется. Ни Deploy, ни Play,
+ни установки на личное устройство этим инкрементом не было.

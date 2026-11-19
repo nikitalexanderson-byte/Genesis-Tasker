@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { authorizeBackup, BACKUP_NOTICE_VERSION, freezeBackupDevice, materializeDeviceBackup, materializeServerBackup, retainBackupSafety, type ServerEvidence, type FrozenDevice } from './backup-device';
 import { BACKUP_MAX_FILE, newBackupRecoveryKey, openBackup, sealBackup, type BackupPayload, type BackupModuleId } from './backup-format';
 import { BACKUP_WORKSPACE_COLLECTIONS, prepareBackupRestore, type BackupRestoreMode, type BackupRestorePlan } from './backup-restore';
@@ -7,6 +7,7 @@ import './backup.css';
 import {useBackupCopy} from './use-backup-copy';
 import {backupJournalConflicts,type BackupJournalConflict,type BackupJournalChoices} from './backup-private-journals';
 import {BackupJournalChoicesPanel} from './BackupJournalChoices';
+import {registerBackupMigrationEditor,withBackupEditorTask,type BackupMigrationForm} from './backup-migration-memory';
 type Stage={stageId:string;digest:string;counts:Record<string,number>;expiresIn:number};
 type Status={enabled:boolean;noticeVersion:string;generation:number;driveEnabled:false;serverSigningConfigured:boolean};
 const names={workspace:['Дела, проекты, привычки и прогресс','Tasks, projects, habits and progress'],mindmaps:['Карты мыслей','Mind maps'],diary:['Дневник и сны','Diary and dreams'],stoicheion:['Практики','Practices'],aurora:['Гно Метэр Басилея','Gno Meter Basileia'],physis:['Фюзис','Physis'],'shared-drafts':['Общие дела','Shared affairs']} as const;
@@ -35,8 +36,14 @@ export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?
   const [plan,setPlan]=useState<BackupRestorePlan|null>(null),[stage,setStage]=useState<Stage|null>(null),[confirmed,setConfirmed]=useState(false);
   const [conflicts,setConflicts]=useState<BackupJournalConflict[]>([]),[journalChoices,setJournalChoices]=useState<BackupJournalChoices>({});
   const [history,setHistory]=useState<{attempt?:string;success?:string}>(()=>{try{return JSON.parse(localStorage.getItem(`genesis-backup-history-v1:${user.uid}`)||'{}');}catch{return {};}});
-  const operation=useRef(''),live=useRef(true),guard=useRef(captureAccountSessionGuard());
+  const operation=useRef(''),live=useRef(true),guard=useRef(captureAccountSessionGuard()),running=useRef(false);
   const historyKey=`genesis-backup-history-v1:${user.uid}`;
+  const migrationForm=useRef<BackupMigrationForm>({state:null,file:null,settled:false});
+  useLayoutEffect(()=>{migrationForm.current={file,settled:!busy,state:{key,savedKey,consent,payload,selected,mode,plan,stage,confirmed,conflicts,journalChoices,
+    operationId:operation.current,history,status,error,message}};});
+  useLayoutEffect(()=>registerBackupMigrationEditor(user.uid,'backup-panel',()=>({...migrationForm.current,
+    state:{...migrationForm.current.state as Record<string,unknown>,operationId:operation.current},
+    settled:migrationForm.current.settled&&!running.current})),[user.uid]);
   useEffect(()=>{live.current=true;void backupRequest<Status>('/status').then(value=>{if(live.current)setStatus(value);}).catch(()=>{if(live.current)setError(c('Проверка резервирования недоступна. Данные устройства сохранены.','Backup service is unavailable. Device data is preserved.'));});
     return()=>{live.current=false;};
   // The panel is keyed by owner in AccountPanel; translations do not restart operations.
@@ -44,11 +51,11 @@ export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?
   },[historyKey]);
   const check=()=>{guard.current();if(!live.current)throw new Error('BACKUP_PANEL_CLOSED');};
   const stamp=(success=false)=>{const at=new Date().toISOString();setHistory(old=>{const value={...old,attempt:at,...success?{success:at}:{}};localStorage.setItem(historyKey,JSON.stringify(value));return value;});};
-  const run=async(action:()=>Promise<void>)=>{if(busy)return;setBusy(true);setError('');setMessage('');try{check();stamp();await action();check();}catch(reason){if(live.current){const code=reason instanceof Error?reason.message:'';
+  const run=async(action:()=>Promise<void>)=>{if(running.current)return;running.current=true;setBusy(true);setError('');setMessage('');try{await withBackupEditorTask(user.uid,async()=>{check();stamp();await action();check();});}catch(reason){if(live.current){const code=reason instanceof Error?reason.message:'';
     if(code==='BACKUP_CANCELLED'){setMessage(c('Действие отменено.','Action cancelled.'));return;}
     const errors:Record<string,string>={BACKUP_DISABLED:c('Резервирование подготовлено, но ещё не включено владельцем сервиса.','Backups are prepared and await service activation.'),FEATURE_SUBSCRIPTION_REQUIRED:c('Нужен действующий Standart или выше.','An active Standart plan or higher is required.'),BACKUP_OWNER:c('Копия принадлежит другому аккаунту GENESIS.','This backup belongs to another GENESIS account.'),BACKUP_PREVIEW_CHANGED:c('Данные изменились. Создайте новый предпросмотр.','Data changed. Prepare a new preview.'),BACKUP_RECOVERY_OR_INTEGRITY:c('Ключ не подошёл или файл повреждён. Исходные данные сохранены.','The key is incorrect or the file is damaged. Existing data is preserved.'),BACKUP_DRAFT_CHOICE_REQUIRED:c('В копии несколько разных черновиков одной записи. Автоматический выбор остановлен.','This backup has conflicting drafts. Automatic selection has stopped.'),BACKUP_SIGNING_NOT_CONFIGURED:c('Для серверного снимка ещё не настроены ключи подписи.','Server snapshot signing keys are not configured.')};
     setError(errors[code]??c('Не удалось завершить действие. Проверьте файл, ключ и соединение; данные сохранены.','The operation could not finish. Check the file, key and connection; data is preserved.'));}}
-    finally{if(live.current)setBusy(false);}};
+    finally{running.current=false;if(live.current)setBusy(false);}};
   const exportFile=(source:'device'|'server')=>run(async()=>{
     const frozen=await freezeBackupDevice(user.uid); // MUST precede every network request.
     const safety=await retainBackupSafety(frozen);check();

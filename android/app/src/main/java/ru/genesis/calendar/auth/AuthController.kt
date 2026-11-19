@@ -419,12 +419,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private val mutableTaskSync = MutableStateFlow(AccountTaskSyncState())
     val taskSync = mutableTaskSync.asStateFlow()
     internal fun backupGateway(uid: String): ru.genesis.calendar.data.BackupGateway = object : ru.genesis.calendar.data.BackupGateway {
+        private val capturedGeneration=client.currentGeneration()
+        private val capturedEpoch=app.workspaceEpoch
         override fun check() {
-            check(mutableState.value.user?.uid==uid && app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)) { "BACKUP_OWNER" }
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            check(client.isCurrent(capturedGeneration)&&app.workspaceEpoch==capturedEpoch&&!mutableState.value.requiresSignIn&&
+                mutableState.value.user?.uid==uid && app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)) { "BACKUP_OWNER" }
         }
         override suspend fun request(method: String,path: String,body: JSONObject?): JSONObject {
-            check();val generation=client.currentGeneration()
-            return withContext(Dispatchers.IO) { client.backup(generation,method,path,body) }.also { check() }
+            check()
+            return withContext(Dispatchers.IO) { client.backup(capturedGeneration,method,path,body) }.also { check() }
         }
         override suspend fun quiesce() {
             check()
@@ -445,7 +449,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         current()
         val epochs=NativeBackupEpochStore(app)
         epochs.pending(snapshot.scope)?.let { generation ->
-            val safety=ru.genesis.calendar.data.BackupSafetyStore(app,snapshot.scope)
+            val safety=ru.genesis.calendar.data.BackupSafetyStore(app,snapshot.scope,::current)
             safety.protectCurrent()
             if(safety.hasLocalState())return CloudAccountImporter.Result.PENDING_LOCAL_CHANGES
             // A proven-empty installation has no queue/cache to reconcile. Existing

@@ -3669,6 +3669,22 @@ export async function createPersonalRemindersMigrationSource(userId:string,scope
   },legacyReminders:context=>collectLegacyPersonalPages(context,'reminders',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyRemindersPage(value,table,offset)}),...options});
 }
 
+/** Archive capture primitive only. The full owner coordinator must persist these
+ * bytes under the new root before it reads any signed legacy archive fragment.
+ * This is deliberately not registered as a complete private-path adapter. */
+export async function createPersonalArchivesLocalCapture(userId:string,scopeId:string){
+  const session=captureAccountSessionGuard();const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{captureWebArchiveInventory},{captureBackupMemorySafety}]=await Promise.all([import('./e2ee/archives-web-source'),import('./backup-device')]);check();
+  return{captureLocal:async()=>{
+    check();const generation=backupDataGeneration,reconciliationRequired=backupReconciliationRequired,legacyKey=workspaceKey;
+    const local=await captureWebArchiveInventory(userId,{storage:localStorage,memorySafety:()=>captureBackupMemorySafety(userId),assertCurrent:check});check();
+    if(generation!==backupDataGeneration||reconciliationRequired!==backupReconciliationRequired||legacyKey!==workspaceKey)throw new Error('E2EE_ARCHIVE_CAPTURE_CHANGED');
+    const bytes=new TextEncoder().encode(JSON.stringify({protocol:1,ownerId:userId,scopeId,capturedAt:new Date().toISOString(),
+      memory:{ownerId:userId,generation,reconciliationRequired,legacyKey,local}}));
+    if(bytes.length>48*1024*1024){bytes.fill(0);throw new Error('E2EE_SNAPSHOT_TOO_LARGE');}return bytes;
+  }};
+}
+
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,
   transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyStoicheion'>,
   captureCurrent:()=>Pick<import('./e2ee/stoicheion-source').StoicheionMigrationMemory,'current'|'draws'|'timeline'>) {

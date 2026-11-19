@@ -51,7 +51,7 @@ class NativeBackupSafTest {
     }
     private fun waitText(text:String) { compose.waitUntil(30000){body().contains(text)} }
     @Test fun realDocumentPickersCancelExportAndReopenEncryptedPersonalArchive() {
-        check(BuildConfig.DEBUG&&compose.activity.packageName.endsWith(".qa322.debug"))
+        check(BuildConfig.DEBUG&&compose.activity.packageName=="ru.genesis.calendar.qa1103.debug")
         val app=compose.activity.application as GenesisApplication
         val owner="saf-qa-${UUID.randomUUID()}"
         app.activateAccount(owner)

@@ -35,7 +35,7 @@ adapters. У финального результата каждой строки
 | 19 | Смена аккаунта/logout с pending data | Частично: owner permits и ряд источников проверены; остальные writers/drafts ещё подключаются |
 | 20 | Инвалидирование Android Keystore | Частично: actual alias-loss/refusal/retained-key cases есть; полного recovery всех категорий нет |
 | 21 | Crash reports, логи, clipboard, temp files | Частично: redaction/ограниченные ports есть; нужен системный canary-прогон финального кандидата |
-| 22 | Backup перед первым sync | Частично: девять реальных captures и coordinator проверены; остальные11 и весь product lifecycle mounted/unmounted drafts обязательны |
+| 22 | Backup перед первым sync | Частично: девять реальных captures и coordinator проверены; archive web input отдельно прошёл actual File/React/IDB cold readback. Остальные11 полных sources и весь product lifecycle mounted/unmounted drafts обязательны |
 | 23 | Обрыв на каждом шаге миграции | Частично: state-machine/частные real cases есть; нужны все feature paths, process death и clean restart |
 | 24 | Две параллельные миграции | Частично: lease/fence/CAS проверены; полный многоклиентский product-переход ещё нужен |
 | 25 | Legacy write во время финального commit | Частично: SQLite/HTTP/SW/owner barriers есть; все local/normal/background writers ещё не охвачены |

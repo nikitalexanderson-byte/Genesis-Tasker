@@ -6,6 +6,8 @@ import {materializeBackupJournalChoices,type BackupJournalCopy,type BackupJourna
 export const BACKUP_NOTICE_VERSION = 'backup-3.2.2-v1';
 const memorySafety = new Map<string, FrozenDevice>();
 if (typeof window !== 'undefined') window.addEventListener('genesis-local-session-ended',()=>memorySafety.clear());
+/** Read-only source inventory. No ordinary restore, re-encryption or pruning. */
+export function captureBackupMemorySafety(owner:string){return structuredClone(memorySafety.get(owner)??null);}
 export type FrozenDevice = { owner: string; at: string; sources: ReturnType<typeof captureBackupSources>; sync: ReturnType<typeof captureBackupSyncState>; storage: Record<string, unknown> };
 /** One JS turn, no awaits, no pull, no queue drain, no modification of any source. */
 export function freezeBackupDevice(owner: string, storage: Storage = localStorage): FrozenDevice {
