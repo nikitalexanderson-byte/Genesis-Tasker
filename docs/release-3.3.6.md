@@ -780,3 +780,15 @@ JCA fixtures проверены PHP:14 signed web/native packets,6/6 suites PASS
 приёмка всего будущего security/recovery UI по-прежнему обязательна.
 Итоговый полный JS regression после task ports/fixtures:1492/1492 PASS,
 `runtime/frontend-tasks-transport-final-full-02.log`.
+
+## CI: изоляция billing settlement после background fences
+
+19 ноября2026. Source checks44438783090: Android PASS, web/API остановлен
+одним backend fatal в billing-settlement fixture. Старые заглушки
+genesisSharedContentEncrypt/Decrypt конфликтовали с реальным wrapper,
+который теперь подключает e2ee-background. Заглушки перенесены на нижний
+fixture-only cipher seam; настоящий shared wrapper выполняется и проверяется
+при enqueue/decrypt settlement job. Production code/queue/key logic не менялись.
+Isolated `runtime/ci-settlement-wrapper-01/`: billing-settlement,
+billing-deletion и e2ee-background3/3 PASS. Полный CI повторяется отдельно.
+Production3.3.5/149, floors0, cutover off, Android deploy false сохранены.
