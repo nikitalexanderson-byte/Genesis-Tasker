@@ -52,7 +52,8 @@ internal object BackupWebOrigin {
 @Keep
 internal class BackupJavascriptBridge(private val store:BackupNativeStore,private val gateway:BackupGateway,
     private val app:GenesisApplication,private val owner:String,private val scope:CoroutineScope,
-    private val deliver:(String,JSONObject)->Unit,private val choose:suspend(Boolean,String)->Uri?,private val restart:()->Unit) {
+    private val deliver:(String,JSONObject)->Unit,private val choose:suspend(Boolean,String)->Uri?,private val restart:()->Unit,
+    private val beforeUiDispatch:suspend (String)->Unit={}) {
     @Volatile private var active=true
     private val operationMonitor=Any()
     private val operations=java.util.concurrent.ConcurrentHashMap<String,NativeLegacyOperationPermit>()
@@ -66,14 +67,21 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     private var exportId=""
     @Volatile private var reconciled=false
     private val transfers=ru.genesis.calendar.data.BackupTransfer()
-    private fun check(){check(active) { "BACKUP_VIEW_CLOSED" };gateway.check();NativeLegacyOperationPermit.current()?.check()}
+    private fun check(){check(active) { "BACKUP_VIEW_CLOSED" };store.checkOperationOwner();gateway.check();NativeLegacyOperationPermit.current()?.check()}
     private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
+    private fun errorResponse(error:Exception)=JSONObject().put("error",(error as? AuthApiError)?.code?:error.message?.takeIf { it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+")) }?:"BACKUP_NATIVE_FAILED")
     private fun endOperation(id:String)=synchronized(operationMonitor){
         // Cleanup never throws from a coroutine completion handler. Once the
         // bounded unknown-ID history is full, fresh begins are refused too.
         if(id !in endedOperations&&id !in startedOperations&&endedOperations.size>=8192)return@synchronized null
         endedOperations.add(id);operations.remove(id)
     }
+    @JavascriptInterface fun currentSession(operationId:String):Boolean=try{
+        if(reconciled&&operationId.isNotEmpty()){
+            check(active){"BACKUP_VIEW_CLOSED"};store.checkOperationOwner();operation(operationId).check()
+        }else{check();if(operationId.isNotEmpty())operation(operationId).check()}
+        true
+    }catch(_:Exception){false}
     @JavascriptInterface fun getHistory():String? { check();return history.getString(owner,null) }
     @JavascriptInterface fun setHistory(value:String,operationId:String) {
         check();store.writeHistory(operation(operationId)){
@@ -168,8 +176,21 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
                 if(method !in setOf("operationBegin","reconcile","restart"))check()
                 JSONObject().put("value",value)
             } catch(cancelled:CancellationException){beginToken?.let{endOperation(it)?.close()};return@launch}
-            catch(error:Exception){JSONObject().put("error",(error as? AuthApiError)?.code?:error.message?.takeIf { it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+")) }?:"BACKUP_NATIVE_FAILED")}
-            withContext(Dispatchers.Main){if(active)deliver(id,response)}
+            catch(error:Exception){errorResponse(error)}
+            beforeUiDispatch(request.optString("method"))
+            withContext(Dispatchers.Main){if(active){
+                // The owner may change while a completed IO response waits for
+                // the UI queue. Never publish that old private result into the
+                // still-mounted view. Only our own verified reset may retire
+                // the gateway while retaining the SAME account activation.
+                val outgoing=try{
+                    if(request.optString("method") in setOf("reconcile","restart"))store.checkOperationOwner()else check()
+                    response
+                }catch(error:Exception){
+                    beginToken?.let{endOperation(it)?.close()};errorResponse(error)
+                }
+                deliver(id,outgoing)
+            }}
         }
         job.invokeOnCompletion{failure->if(failure!=null)beginToken?.let{endOperation(it)?.close()}}
     }

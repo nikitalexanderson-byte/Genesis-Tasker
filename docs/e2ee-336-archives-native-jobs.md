@@ -85,3 +85,57 @@ PASS:98 HTML/14 languages, exact dictionaries,280 gallery/offline assets.
 Runtime logs находятся под `output/release-3.3.6/runtime/archives-native-job-*`.
 APK/package/release certificate, production3.3.5/149, floors0/cutover off,
 GENESIS_DEPLOY_ANDROID=false сохранены. Deploy/Play/личных устройств не было.
+
+## Ответ, ожидающий UI dispatch: проверенный инкремент20 ноября
+
+20 ноября: выбранная implementation/acceptance завершена. Предыдущая проверка gateway
+проходила до `withContext(Main)`; account epoch могла смениться, пока уже готовый
+private reply ожидал UI queue. Actual view ещё мог оставаться mounted до Compose
+dispose. Теперь owner/session проверяется также непосредственно перед `deliver`.
+При смене аккаунта в UI выходит только bounded owner error. Поздний begin receipt
+сразу закрывает свою native capability; caller-selected cleanup остаётся допустим.
+Собственный verified reset сохраняет исключение только для прежней app activation.
+
+Два новых actual bridge regressions приостанавливают ответ между IO и Main
+publication: private server-snapshot reply после смены аккаунта и begin receipt
+после logout/login в тот же UID. Test-only scheduling callback находится только
+в native constructor, не в JavascriptInterface и не в provider/server API.
+В build03 JVM34/34 и actual API34 whole-job class8/8 PASS, включая обе новые
+гонки Main queue. Его lint остановлен агентом после assembly/приёмки, чтобы
+завершить guard также в renderer queue перед окончательной общей проверкой.
+Это не отдельный внешний crash/не полный successful lint03.
+
+Final implementation04 добавляет native `currentSession(operationId)` и проверку
+этого bound owner/permit в JavaScript непосредственно перед promise adoption.
+Actual BackupPanel account guard и document access больше не используют no-op
+в native entry. Исключение после intentional transport retirement допускается
+лишь для прежней account activation и ещё живой capability собственного verified
+reset; оно не разрешает новый API/write. Только exact `true` end и empty-object
+restart receipts могут завершаться без текущей transport session. Malformed,
+смешанные или private cleanup replies запрещены; native exception details не
+становятся JS error text. Коды существующих subscription/auth ошибок сохраняются.
+
+JS78/78 и полный1738/1738 PASS, failures/skips0; types04/scoped lint04 PASS.
+Native build04 SUCCESS20m34s; focused backup/collector JVM34/34 PASS, failures/
+skips0. Lint0 errors/206 прежних warnings/8 hints. Native source hash до/после
+сборки совпал:
+`971BF938347356691EDD15ACF89E1C8112464ACADFCEE3774EF049F854D49861`.
+Main APK SHA256:
+`F0F88954A7EF0DED986DA095A626F193836B96683ECFB75EEE73A7E7189FE1CA`;
+test APK:
+`33400DF71B094BC0F928EC4B3EA0B45759094E25438815D56D73BE3329884FB6`.
+
+Actual API34 и API26/provider113: по19/19 PASS, failures/skips0 на тех же APK:
+9 whole-job cases,6 operation-fence,2 reconciliation и2 реальных SAF/journal UI
+flows. На API26 runner закрыл только наблюдаемое stock statementservice crash
+dialog; действие записано, verifier/permissions/AppOps не отключались. API35
+для этого reply delta не повторялся. Прежние16/16 относятся к build02;8/8 — к03.
+Это не полная product lifecycle, source/recovery или визуальная приёмка.
+
+Evidence: `output/qa/security336-archives-reply-api34-04/results.json`,
+`output/qa/security336-archives-reply-api26-04/results.json`,
+`runtime/archives-native-reply-device-summary-04.json`, `archives-native-job-identity-04.json`,
+`archives-native-job-jvm-04.json`, `archives-native-job-lint-04.xml`,
+`archives-native-reply-{js,full-js,types,lint}-04.log` под
+`output/release-3.3.6/`. Coverage остаётся9/20; production3.3.5/149,
+floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false сохранены.

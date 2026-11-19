@@ -1501,3 +1501,24 @@ native selected-file/forms inventory, nested archive content, key loss/recovery,
 GENESIS_DEPLOY_ANDROID=false сохранены; Deploy/Play/личных устройств не было.
 Предыдущий Source checks44600100480 наbf8749d8 полностью SUCCESS, включая
 Android и web/API/browser. Это ещё не CI новых локальных инкрементов.
+
+## Архивы: поздний native reply при смене аккаунта,20 ноября
+
+Owner/session повторно проверяются непосредственно перед Main publication и
+перед JS promise adoption в renderer. IO admission не закрывал обе очереди.
+Private reply прежнего аккаунта заменяется bounded error; поздний begin receipt
+закрывает свою capability. Captured RPC method/token не заменяются новым token.
+Только exact empty cleanup/navigation receipts допустимы после intentional reset.
+Native document access и account guard больше не no-op.
+
+Full JS1738/1738, focused78/78, types/scoped lint04 PASS. Native build04
+SUCCESS20m34s, focused JVM34/34, lint0 errors/206 прежних warnings/8 hints.
+Actual API34 и API26/WebView113 по19/19 PASS на одинаковых APK,0 fail/skip:
+9 whole-job,6 fence,2 reset,2 real SAF/journal UI. Обе новые Main-queue races и
+renderer-session case включены. API26 statementservice dialog закрыт только
+после наблюдения; системные проверки не отключались. API35 не повторялся.
+Точные source/APK hashes, reports и ограничения в
+`e2ee-336-archives-native-jobs.md`. Это не полный archives source или recovery.
+Coverage9/20, остальные11 sources и все системные release gates сохраняются.
+Production3.3.5/149, floors0/pilot/cutover off, GENESIS_DEPLOY_ANDROID=false;
+Deploy/Play/личных устройств не было.

@@ -26,6 +26,8 @@ class BackupWholeOperationTest {
         val checks=AtomicInteger();val requests=AtomicInteger();val pickers=AtomicInteger();val restarts=AtomicInteger()
         var epoch=0L;@Volatile var live=true;var generation=0L
         var io:(()->Unit)?=null
+        var beforeUiDispatch:suspend (String)->Unit={}
+        var extraReply:JSONObject?=null
         lateinit var bridge:BackupJavascriptBridge
         fun ownerCheck(){check(app.workspaceScope==account&&app.workspaceEpoch==epoch){"BACKUP_OWNER"}}
         fun check(){checks.incrementAndGet();check(live){"BACKUP_OWNER"};ownerCheck()}
@@ -35,15 +37,15 @@ class BackupWholeOperationTest {
                 override fun check()=this@Rig.check()
                 override suspend fun quiesce(){check();live=false}
                 override suspend fun request(method:String,path:String,body:JSONObject?):JSONObject {
-                    check();assertEquals("GET",method);assertEquals("/backup/v1/status",path)
+                    check();assertTrue(method=="GET"&&path=="/backup/v1/status"||method=="POST"&&path=="/backup/v1/server-snapshot")
                     return NativeLegacyTransportGate(app.database).request(account,this@Rig::check){
-                        requests.incrementAndGet();io?.invoke();JSONObject().put("generation",generation)
+                        requests.incrementAndGet();io?.invoke();JSONObject().put("generation",generation).apply{extraReply?.let{extra->for(key in extra.keys())put(key,extra.get(key))}}
                     }
                 }
             }
             val store=BackupNativeStore(app,owner,account,gateway)
             bridge=BackupJavascriptBridge(store,gateway,app,owner,jobs,{id,value->responses.remove(id)?.complete(value)},
-                {_,_->pickers.incrementAndGet();null},{restarts.incrementAndGet()})
+                {_,_->pickers.incrementAndGet();null},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)})
         }
         fun submit(method:String,payload:JSONObject=JSONObject()):Deferred<JSONObject>{
             val id=UUID.randomUUID().toString();val result=CompletableDeferred<JSONObject>();responses[id]=result
@@ -126,8 +128,42 @@ class BackupWholeOperationTest {
             LocalPreferences(r.app,r.account).setPending("language","en")
             val token=r.begin();val reset=r.call("reconcile",r.payload(token));ok(reset);assertEquals(2L,reset.getLong("value"))
             assertFalse(r.live);assertEquals(2L,NativeBackupEpochStore(r.app).accepted(r.account));assertNull(NativeBackupEpochStore(r.app).pending(r.account))
-            error(r.call("restart"),"BACKUP_RECONCILE_REQUIRED");ok(r.end(token));ok(r.call("restart"));assertEquals(1,r.restarts.get())
+            assertTrue(r.bridge.currentSession(token));assertFalse(r.bridge.currentSession(""))
+            error(r.call("restart"),"BACKUP_RECONCILE_REQUIRED");ok(r.end(token));assertFalse(r.bridge.currentSession(token));ok(r.call("restart"));assertEquals(1,r.restarts.get())
             error(r.call("restart"),"BACKUP_RECONCILE_REQUIRED")
+        }finally{r.finish()}
+    }
+    @Test fun aPrivateReplyQueuedAfterIoCannotCrossAnAccountChangeBeforeUiPublication():Unit=runBlocking {
+        val r=Rig();r.start();val queued=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        try{
+            val token=r.begin();val canary="private archive from the departed account"
+            r.extraReply=JSONObject().put("payload",canary)
+            r.beforeUiDispatch={method->if(method=="request"){queued.complete(Unit);release.await()}}
+            val reply=r.submit("request",r.payload(token).put("method","POST").put("path","/backup/v1/server-snapshot").put("body",JSONObject()))
+            withTimeout(10000){queued.await()};r.app.activateAccount(null);r.app.activateAccount("next-${UUID.randomUUID()}");release.complete(Unit)
+            val result=withTimeout(10000){reply.await()};error(result,"BACKUP_OWNER");assertFalse(result.toString().contains(canary));assertFalse(result.has("value"))
+            ok(r.end(token));assertEquals(1,r.requests.get())
+        }finally{release.complete(Unit);r.finish()}
+    }
+    @Test fun aLateBeginReceiptAfterSameOwnerReloginClosesItsCapabilityBeforePublishingRefusal():Unit=runBlocking {
+        val r=Rig();r.start();val queued=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        try{
+            val token=UUID.randomUUID().toString();r.beforeUiDispatch={method->if(method=="operationBegin"){queued.complete(Unit);release.await()}}
+            val reply=r.submit("operationBegin",r.payload(token));withTimeout(10000){queued.await()}
+            r.app.activateAccount(null);r.app.activateAccount(r.owner);release.complete(Unit)
+            val result=withTimeout(10000){reply.await()};error(result,"BACKUP_OWNER");assertFalse(result.has("value"))
+            val permit=withTimeout(10000){NativeLegacyOperationPermit.acquire(r.app.database,r.account,{})};permit.finish()
+            ok(r.end(token));assertEquals(0,r.requests.get())
+        }finally{release.complete(Unit);r.finish()}
+    }
+    @Test fun rendererSessionCheckRefusesAResponseThatWasDispatchedBeforeTheOwnerChanged():Unit=runBlocking {
+        val r=Rig();r.start()
+        try{
+            val token=r.begin();assertTrue(r.bridge.currentSession(token));assertTrue(r.bridge.currentSession(""))
+            r.extraReply=JSONObject().put("payload","private old archive already in the renderer queue")
+            val response=r.call("request",r.payload(token).put("method","POST").put("path","/backup/v1/server-snapshot").put("body",JSONObject()));ok(response)
+            r.app.activateAccount(null);r.app.activateAccount(r.owner)
+            assertFalse(r.bridge.currentSession(token));assertFalse(r.bridge.currentSession(""));ok(r.end(token))
         }finally{r.finish()}
     }
 }

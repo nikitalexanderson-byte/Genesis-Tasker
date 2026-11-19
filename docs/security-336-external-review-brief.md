@@ -1,6 +1,6 @@
 # GENESIS 3.3.6: brief for independent cryptographic review
 
-Prepared 19 November 2026. **Draft review material, not an audit result or release
+Prepared 19 November 2026, updated 20 November. **Draft review material, not an audit result or release
 approval.** No reviewer has been appointed or contacted through this task. The
 owner must arrange a qualified independent human or organization; model review,
 unit tests and dependency scanners do not satisfy this gate.
@@ -22,6 +22,13 @@ A category's source adapter does not prove its complete product lifecycle.
 The signed server archive reader/byte fragments are still a partial next
 increment, not a tenth source adapter. See each implementation document and the
 actual candidate commit/evidence; this brief's original baseline is historical.
+
+The latest pushed, locally accepted increment is
+`d31bd64233694fefa2a7595b2965006257e0e64c`: archive fragment collectors, original
+web file/form capture and native whole-backup operation permits. Native Main/
+renderer reply-adoption guards are the following locally accepted delta, not a frozen
+or independently reviewed candidate. Their detailed state and exact test scope
+are in `e2ee-336-archives-native-jobs.md`.
 
 The independent review may begin with the implemented protocol while feature
 integration continues. Final composed-protocol and migration acceptance is
@@ -62,8 +69,8 @@ revoked retroactively.
 | Migration | `app/e2ee/{migration,migration-local,migration-sources,migration-transport}.ts`, native counterparts | Snapshot before IO, protected old keys, local-only placement, prior attempts/conflicts/tombstones, lease/fence/source stability, download/decrypt verification, atomic commit and no downgrade |
 | Old-format readers | Real source files in `app/e2ee/`, native `auth/E2eeNative*Source.kt`; Physis `app/e2ee/physis-legacy.ts` and native `security/E2eeLegacyPhysis.kt` | Complete private originals and queues, legacy AAD/password semantics, strict duplicate-name handling before key-opening requests, bound native capabilities, retained-key loss/recovery, no key output to JS/HTTP |
 | Server exclusions | `server/src/e2ee-{policy,background,legacy-transport,personal-io-gate}.php`; `contracts/e2ee/{server-schema,legacy-transport,private-paths}-v1.json` | Every actual mutation/background path, persistent SQLite fences and cascade behavior, migration/active scope exclusions, correct owner/space/project predicates; inventory is not proof of feature coverage |
-| Web/native boundary | `e2ee-336-service-worker.md`, `e2ee-336-operation-fences.md`, `e2ee-336-native-source-stream.md`; native `ui/NativeAuroraSourceRuntime.kt` | Old/uncontrolled tabs, service-worker lifetime, whole-operation permits, cancellation and bridge admission/output binding, supported WebView gate, memory/stream budgets |
-| Backup/retirement | `security-bridge-335-adr.md`, `e2ee-336-local-output.md`, `e2ee-336-retained-native-old-keys.md` | Whole-system external-recipient encryption, independent private-key custody and restore drills, personal archives/Drive/local-only scope, rights/credentials excluded from content import, retention of old server-readable copies |
+| Web/native boundary | `e2ee-336-service-worker.md`, `e2ee-336-operation-fences.md`, `e2ee-336-native-source-stream.md`, `e2ee-336-archives-native-jobs.md`; native `ui/NativeAuroraSourceRuntime.kt`, `ui/NativeBackupDialog.kt` | Old/uncontrolled tabs, service-worker lifetime, whole-operation permits, cancellation, account changes across both Main and renderer queues, bound reply adoption and intentional-reset exceptions, supported WebView gate, memory/stream budgets |
+| Backup/retirement | `security-bridge-335-adr.md`, `e2ee-336-local-output.md`, `e2ee-336-retained-native-old-keys.md`, `e2ee-336-archives-source.md`, `e2ee-336-archives-local-capture.md` | Whole-system external-recipient encryption, independent private-key custody and restore drills, exact raw fragment/duplicate-name integrity, selected file/forms, personal archives/Drive/local-only scope, rights/credentials excluded from content import, retention of old server-readable copies |
 
 Web HPKE uses exact `@hpke/core1.10.1` (MIT); native uses exact
 `bcprov-jdk18on1.87` (Bouncy Castle licence) for HPKE/HKDF and the legacy Physis
@@ -107,12 +114,16 @@ alias. Do not request real Google sessions, recovery kits or production keys.
 
 ## Required closure before activation
 
-The thirteen remaining source categories, full bootstrap/unlock/editor routing,
+The eleven remaining source categories, full bootstrap/unlock/editor routing,
 normal writes and whole-product fences, shared ACL-change/rotation transaction,
 files/automation, archives/Drive/local-only backup, large-data/old-provider
 acceptance, clean recovery, direct signed upgrades, all48 system scenarios and
 14-language semantic review remain unfinished. Do not substitute current unit
-counts, the seven-adapter count or a successful CI run for these gates.
+counts, the nine-adapter count or a successful CI run for these gates. The owned
+API26/WebView113 fixture proves selected compatibility paths; its publicly signed
+development provider/overlay is not a production distribution or a security
+certification of obsolete operating systems/providers. Runtime support and the
+native/WebView capability boundary still require explicit review.
 
 The review deliverable must identify reviewer/organization, scope, exact commit
 and lockfile, threat assumptions, methods, reproducible findings and severity,
