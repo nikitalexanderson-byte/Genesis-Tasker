@@ -963,3 +963,26 @@ full project lint0 errors/4 existing image warnings PASS, локально ис�
 чужой untracked demo-output без изменения/добавления его в Git. Этот CI не прошёл
 web/API/browser этапы, его нельзя считать общим success. Повтор запускается на
 исправленном head с новым signed mindmaps source.
+
+## 19 ноября: большие historical sources без обрезания
+
+Серверный `legacy-physis` читает все4 owner tables без bootstrap/entitlement/
+prune. Старые tombstones, used IDs и raw vault/envelope/receipt JSON сохраняются.
+32MiB ФЮЗИС и40,000,000-byte history личных mindmaps больше single-message cap:
+добавлены signed table/offset pages с exact totals и explicit continuation, под
+неизменным owner/device/directory/session/lease/source/file/SQLite gate. Старый
+small-source mindmaps contract сохранён. Независимый v1 vault не считается пустым
+или автоматически разблокированным; account-v2 получает только pre-existing key.
+
+`paged-personal-source-server-04/`:4/4 PHP PASS, включая actual schema/all raw
+columns, >16MiB Physis,253 retained IDs/128-row boundary,50 map versions >16MiB
+и ниже реального40MB cap, signed offset tamper/foreign/revoked/fence/no mutation,
+ordinary Physis security и существующий actual18 WebCrypto/JCA packet contract.
+Клиентские collectors и новые cross-platform page packets проверяются отдельно.
+Документ: `e2ee-336-paged-personal-sources.md`. Coverage остаётся6/20; всех
+product/recovery/upgrades/shared/backup/original48/14 languages/independent review
+gates это не заменяет. Production3.3.5/149, floors0/cutover off/Android deploy false.
+
+Source checks44498325136 на0d596974 завершились **success**: web/API и Android,
+включая lint/types/build/backend/browser. Это проверка предыдущего committed head;
+новые LocalCipher/page changes требуют своей отдельной приёмки и CI.
