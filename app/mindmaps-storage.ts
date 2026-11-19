@@ -38,7 +38,11 @@ export class MindmapRepository {
   dispose() { this.stopped = true;this.migrationEditors.clear(); }
   private storageKeys(){return Array.from({length:this.storage.length},(_,index)=>this.storage.key(index)).filter((key):key is string=>key!==null);}
   registerMigrationEditor(capture:()=>{document:Mindmap|null;revision:number;state?:unknown}){
-    this.check();const source=mapId();this.migrationEditors.set(source,capture);return()=>{this.migrationEditors.delete(source);};
+    // Direct links mount before account bootstrap restores the workspace key.
+    // Registration grants no data access; captureMigration checks the current
+    // unlocked owner before invoking any of these callbacks.
+    if(this.stopped)throw new Error("Сессия карт закрыта.");
+    const source=mapId();this.migrationEditors.set(source,capture);return()=>{this.migrationEditors.delete(source);};
   }
   captureMigration(records:readonly MapRecord[]){
     this.check();return{records:structuredClone(records),editors:[...this.migrationEditors].map(([source,capture])=>({source:'mounted:'+source,...structuredClone(capture())})),localWork:[]};

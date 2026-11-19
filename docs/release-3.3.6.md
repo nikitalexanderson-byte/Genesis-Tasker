@@ -1008,6 +1008,37 @@ logs: `e2ee-336-local-key-lifecycle.md`. Global lost-key UX/emergency export,
 14 languages/independent crypto review ещё обязательны до активации и выпуска.
 Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.
 
+## 19 ноября: исправление cold mindmap bootstrap и обычная web-приёмка
+
+CI44515254641 выявил regression second-client/direct map URL: layout registration
+нового migration editor проверяла workspace key до bootstrap и выбрасывала ошибку
+в view boundary. Регистрация теперь только сохраняет callback и отвергает disposed
+repo; настоящий capture по-прежнему проверяет current unlocked owner **до** callback.
+Browser console и before screenshot подтвердили причину. Новый тест падает на
+прежнем коде, проверяет zero callbacks locked/foreign и закрытый repo.
+
+33/33 focused source/operation checks,1588/1588 full JS, types/scoped lint/web build
+PASS. Native assembly24s SUCCESS: оба QA APK byte-identical прежней принятой
+revision; actual native76/76 API34/35 и18/18 API26 не заменяются новым непроверенным
+артефактом. Документ: `e2ee-336-mindmaps-cold-start.md`.
+
+Первый local browser run неверно использовал bundle с disabled mindmaps; второй
+с correct flag воспроизвёл настоящий cold regression. Run03:120/121, единственный
+отдельный habit-import readiness сбой. QA отправлял файл программно, минуя
+disabled picker до открытия encrypted journal. Добавлено ожидание enabled control,
+все preview/apply/write assertions сохранены. Actual original/changed backup parse
+PASS. Final run04:121/121 Business/global trial/header checks плюс startup4/4 и
+observer control PASS, compiled bundle hash unchanged, fixture cleanup PASS.
+Картографические UI states360/390/768/1440 light/dark проверены; две after-images
+осмотрены. Это не full five-plan local acceptance; свежий remote CI обязателен.
+
+Отдельный Android job старого CI остановился до compilation на KSP resolution;
+та же pinned version есть в previous successful CI/current local builds. Не меняем
+зависимости/workflow по этому сбою. Coverage7/20, оставшиеся source/product/
+recovery/upgrades/shared/backups/original48/14-language semantics/independent
+crypto review gates сохраняются. Production3.3.5/149, floors0/cutover off/Android
+deploy false;3.3.6 не объявлена выпущенной.
+
 ## 19 ноября: signed page ports и оба client collectors
 
 Web/Kotlin подписывают table/offset вместе с owner/device/lease/checkpoint.

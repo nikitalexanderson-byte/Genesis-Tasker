@@ -45,6 +45,21 @@ async function aurora(){
     document:emptyAuroraDocument(tab.userId),key:`genesis-aurora-workspace-v1:${tab.userId}:pending`};
 }
 
+test('a cold map editor can register before workspace unlock while capture still requires the current unlocked owner',async()=>{
+  const {tab,map}=await maps();let state='locked',checks=0,captures=0;
+  const access={check(){checks++;if(state==='locked')throw new Error('SYNTHETIC_UNLOCK_REQUIRED');if(state==='foreign')throw new Error('E2EE_ACCOUNT_CHANGED');},
+    withLegacyOperation(){throw new Error('Unexpected IO during editor registration');}};
+  const repository=new tab.mindmaps.MindmapRepository(tab.userId,undefined,{storage:tab.storage,access});
+  const remove=repository.registerMigrationEditor(()=>{captures++;return{document:map,revision:0,state:{title:'Synthetic unfinished edit'}};});
+  assert.equal(checks,0);assert.throws(()=>repository.captureMigration([]),/SYNTHETIC_UNLOCK_REQUIRED/);assert.equal(captures,0);
+  state='ready';const captured=repository.captureMigration([]);assert.equal(captured.editors.length,1);
+  assert.equal(captured.editors[0].document.title,map.title);assert.equal(captured.editors[0].state.title,'Synthetic unfinished edit');
+  state='foreign';assert.throws(()=>repository.captureMigration([]),/E2EE_ACCOUNT_CHANGED/);assert.equal(captures,1);
+  state='ready';remove();assert.equal(repository.captureMigration([]).editors.length,0);
+  repository.dispose();assert.throws(()=>repository.registerMigrationEditor(()=>({document:map,revision:0})),/Сессия карт закрыта/);
+  assert.throws(()=>repository.captureMigration([]),/Сессия карт закрыта/);
+});
+
 test('migration between immediate map staging and network upload captures the complete encrypted draft',{timeout:8000},async()=>{
   const {tab,repo,map,prefix}=await maps(),held=tab.holdCrypto('encrypt');
   const saving=observed(repo.save(map,()=>{}));await held.entered;
