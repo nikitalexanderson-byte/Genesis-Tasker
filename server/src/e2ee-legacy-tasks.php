@@ -43,6 +43,8 @@ function genesisE2eeLegacyTasks(PDO $db,string $actor,array $scope,array $c): ar
     // Only encrypted recovered records need the pre-existing server-known key.
     // A missing/corrupt key cannot turn those records into an empty history.
     $result['legacyKey']=$result['recovered']?genesisE2eeLegacyAccountKey($context['user'],true):['keyMode'=>'empty','key'=>null];
+    require_once __DIR__.'/e2ee-provider-cache.php';
+    $result['providerCaches']=genesisE2eeReadProviderCaches($db,$actor);
     if(strlen(genesisE2eeJson($result))>16*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_SOURCE_TOO_LARGE');
     return $result;
 }

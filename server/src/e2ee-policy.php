@@ -272,6 +272,10 @@ function genesisE2eeSourceHashLocked(PDO $db,array $scope): string
         $q->closeCursor();sort($rows,SORT_STRING);hash_update($hash,$table."\0");
         foreach($rows as $encoded)hash_update($hash,pack('N',strlen($encoded)).$encoded);
     }
+    if($scope['kind']==='personal'){
+        require_once __DIR__.'/e2ee-provider-cache.php';
+        genesisE2eeHashProviderCaches($db,$scope['resource_id'],$hash,$bytes);
+    }
     return rtrim(strtr(base64_encode(hash_final($hash,true)),'+/','-_'),'=');
 }
 

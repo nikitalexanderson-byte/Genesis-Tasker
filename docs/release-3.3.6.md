@@ -842,3 +842,24 @@ Web Push; исправление/повтор выполняются отдел�
 подключаются. Полный lifecycle, остальные15 categories, recovery/upgrades,
 shared/backup/48 scenarios/14-language security UI и независимый crypto review
 обязательны. Production3.3.5/149, floors0/cutover off/Android deploy false сохранены.
+
+## Provider cache: файловый source token и оба task adapters
+
+19 ноября2026. Exact primary/linked/current/retained ciphertext и отсутствие
+файлов теперь входят в opaque source token и final commit check. Signed read
+сохраняет tasks/list names/history без fingerprints/provider cursors/credentials.
+Corrupt working cache больше не становится пустым. Перед grant reset сохраняется
+exact original ciphertext. Direct Google APIs/token refresh тоже удерживают
+owner permit; jobs/CLI не обходят scope fence.
+
+1515/1515 full JS,62/62 source/coordinator, actual Chromium15716/16 +console0,
+web build/typecheck/focused lint, PHP7/7 и402/402 HTTP PASS. Main/test QA APK
+packaged, JVM7/7; API34/API35 по45/45 PASS. Финальные lint/full PHP результаты
+записываются после завершения процессов. Предыдущий Web Push дефект исправлен:
+fixed-width SEC1 X/Y, scalar43/31-byte Y и exact RFC8291 vector;4/4 PHP PASS.
+Документы: `e2ee-336-provider-cache-implementation.md`,
+`e2ee-336-personal-server-io.md`. Historical review UI/cutover deletion lifecycle,
+large histories/API26 compatible provider и остальные15 categories ещё нужны.
+Whole-product recovery/upgrades/shared/backup/48 scenarios/14-language security
+UI и независимый crypto review обязательны до activation. Production3.3.5/149,
+floors0/cutover off/Android deploy false сохранены; полного выпуска3.3.6 ещё нет.

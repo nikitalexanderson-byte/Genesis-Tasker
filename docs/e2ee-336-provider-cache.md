@@ -11,6 +11,10 @@ Google accounts/list. Client task source теперь сохраняет его 
 state strings как inert history без JSON conversion, новой задачи или повторного
 provider POST. Исправление проверяется отдельно от cache boundary.
 
+Актуальная реализация следующего инкремента и её границы:
+`e2ee-336-provider-cache-implementation.md`. Ниже сохранён исходный inventory
+обнаружения; утверждения «ещё не реализовано» относятся к этому раннему срезу.
+
 ## Обнаруженный источник и ограничения
 
 - `dirname(config.db_path)/google-sync/<sha256(primary:USER_ID)>.enc` либо

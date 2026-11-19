@@ -202,8 +202,7 @@ function genesisRevokeGoogleToken(array $user): void
 
 function genesisGoogleAccessToken(array $user, bool $forceRefresh = false): string
 {
-    $user = (!empty($user['_linked_account']) ? genesisFindLinkedGoogleAccount((string)$user['id'])
-        : genesisFindUser((string)$user['id'])) ?? $user;
+    return genesisGoogleWithLegacyOperation($user,static function(array $user)use($forceRefresh):string{
     $current = genesisDecrypt($user['access_token_enc'] ?? null);
     if (!$forceRefresh && $current && (int)($user['token_expires_at'] ?? 0) > time() + 60) {
         return $current;
@@ -238,6 +237,7 @@ function genesisGoogleAccessToken(array $user, bool $forceRefresh = false): stri
     ]);
     genesisLogError('[AuthFlow] TOKEN_REFRESH_SUCCESS');
     return $access;
+    });
 }
 
 function genesisClearGoogleAuthorization(array $user): void
@@ -281,8 +281,7 @@ function genesisHandleGoogleAuthorizationFailure(array $user, string $scope, Gen
 
 function genesisGoogleApi(string $method, string $path, array $user, ?array $payload = null): array
 {
-    $user = (!empty($user['_linked_account']) ? genesisFindLinkedGoogleAccount((string)$user['id'])
-        : genesisFindUser((string)$user['id'])) ?? $user;
+    return genesisGoogleWithLegacyOperation($user,static function(array $user)use($method,$path,$payload):array{
     genesisGoogleQuotaCheck('calendar');
     $path .= (str_contains($path, '?') ? '&' : '?') . 'quotaUser=' . substr(genesisGoogleCacheKey($user), 0, 40);
     $headers = [
@@ -307,12 +306,12 @@ function genesisGoogleApi(string $method, string $path, array $user, ?array $pay
         if (genesisGoogleDailyQuotaError($error)) throw new GenesisGoogleHttpException(429, 'GENESIS_GOOGLE_DAILY_QUOTA', genesisGoogleQuotaWarning('calendar'));
         genesisHandleGoogleAuthorizationFailure($user, GENESIS_GOOGLE_CALENDAR_SCOPE, $error);
     }
+    });
 }
 
 function genesisGoogleTasksApi(string $method, string $path, array $user, ?array $payload = null): array
 {
-    $user = (!empty($user['_linked_account']) ? genesisFindLinkedGoogleAccount((string)$user['id'])
-        : genesisFindUser((string)$user['id'])) ?? $user;
+    return genesisGoogleWithLegacyOperation($user,static function(array $user)use($method,$path,$payload):array{
     genesisGoogleQuotaCheck('tasks');
     $path .= (str_contains($path, '?') ? '&' : '?') . 'quotaUser=' . substr(genesisGoogleCacheKey($user), 0, 40);
     $headers = [
@@ -337,6 +336,7 @@ function genesisGoogleTasksApi(string $method, string $path, array $user, ?array
         if (genesisGoogleDailyQuotaError($error)) throw new GenesisGoogleHttpException(429, 'GENESIS_GOOGLE_DAILY_QUOTA', genesisGoogleQuotaWarning('tasks'));
         genesisHandleGoogleAuthorizationFailure($user, GENESIS_GOOGLE_TASKS_SCOPE, $error);
     }
+    });
 }
 
 function genesisGoogleScopeGranted(array $user, string $scope): bool

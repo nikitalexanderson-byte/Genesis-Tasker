@@ -30,11 +30,13 @@ registry does **not** mean that feature adapters have been implemented.
 | space.mindmaps | Space-owned maps and associated versions/files/conversion/deletion journals | Distinguish project-owned maps; preserve all inherited references/history |
 | space.local-work | Unmounted space editors, templates/fields/workflow/planning/import drafts | Explicit inventory and adapters; no reliance on currently mounted React components |
 
-The task source still needs the newly discovered server-side Google snapshot
-inventory and owner/file-operation boundary outside SQL. This is a release
-blocker even though both task adapters have real-source acceptance; see
-`e2ee-336-provider-cache.md`. Five real adapters do not prove every account's
-complete data inventory or permit product activation.
+The newly discovered server-side Google files now participate in the exact
+owner-scoped source token and signed task read/reconciliation on both clients.
+Current and retained snapshots preserve tasks/list history without credentials;
+historical provenance requires explicit review. Product review/deletion lifecycle
+and streaming acceptance remain incomplete; see
+`e2ee-336-provider-cache-implementation.md`. Five real adapters do not prove every
+account's complete data inventory or permit product activation.
 
 The JSON lists the concrete repository sources and SQL table families. Native
 source paths in the inventory are relative to

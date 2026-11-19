@@ -3546,13 +3546,14 @@ export async function createPersonalAuroraMigrationSource(userId:string,scopeId:
 export async function createPersonalTasksMigrationSource(userId:string,scopeId:string,
   transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyTasks'>,
   captureCurrent:()=>Pick<import('./e2ee/tasks-source').TasksMigrationMemory,'tasks'|'editors'>,
-  review?:import('./e2ee/tasks-source').TasksSourcePorts['review']) {
+  review?:import('./e2ee/tasks-source').TasksSourcePorts['review'],
+  reviewProviderHistory?:import('./e2ee/tasks-source').TasksSourcePorts['reviewProviderHistory']) {
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalTasksSource}=await import('./e2ee/tasks-source');check();
   return new PersonalTasksSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
-      reconciliationRequired:backupReconciliationRequired};},legacyTasks:context=>transport.legacyTasks(context),review});
+      reconciliationRequired:backupReconciliationRequired};},legacyTasks:context=>transport.legacyTasks(context),review,reviewProviderHistory});
 }
 
 /** Exact owner-scoped capture only; product migration supplies every mounted

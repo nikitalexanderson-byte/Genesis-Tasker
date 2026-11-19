@@ -61,10 +61,16 @@ try {
         $loader=static function()use(&$called):array{$called=true;return ['items'=>[]];};
         storeReject(fn()=>genesisGoogleReadSnapshot($migrationUser,$loader,$loader),'E2EE_MIGRATION_FENCED');
         storeReject(fn()=>genesisGoogleSnapshotTaskSaved($migrationUser,['id'=>'blocked']),'E2EE_MIGRATION_FENCED');
+        storeReject(fn()=>genesisGoogleAccessToken($migrationUser),'E2EE_MIGRATION_FENCED');
+        storeReject(fn()=>genesisGoogleApi('POST','/calendars/primary/events',$migrationUser,['summary'=>'blocked']),'E2EE_MIGRATION_FENCED');
+        storeReject(fn()=>genesisGoogleTasksApi('POST','/lists/primary/tasks',$migrationUser,['title'=>'blocked']),'E2EE_MIGRATION_FENCED');
         storeReject(fn()=>genesisGoogleForgetSnapshot($migrationUser),'E2EE_MIGRATION_FENCED');
         storeCheck(!$called&&!is_file($migrationPath.'.enc')&&!is_file($migrationPath.'.lock'));
     }
     storeCheck(file_get_contents($paths[0].'.enc')===$original);
+    // Credential fallback is forbidden after the authoritative row is removed,
+    // even if a job retained an old encrypted token-bearing array.
+    storeReject(fn()=>genesisGoogleAccessToken($linked),'E2EE_ACCOUNT_CHANGED');
 }finally{
     foreach($paths as $base)foreach(['.enc','.lock']as $suffix)if(is_file($base.$suffix))unlink($base.$suffix);
 }

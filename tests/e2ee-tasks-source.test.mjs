@@ -12,7 +12,8 @@ const sql=(id='private-2026-11-19',fields={})=>({id,project_id:'project-one',cat
 function fixture(){
  const memory={ownerId:'owner',legacyKey:'',generation:0,reconciliationRequired:false,tasks:[],editors:[]};
  const remote={protocol:1,ownerId:'owner',scopeId:context.scopeId,migrationId:context.migrationId,fence:7,sourceHash:context.sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,
-  tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null}};
+  tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null},
+  providerCaches:[{kind:'primary',accountId:'owner',slot:'current',version:null,presence:'missing',provenance:'none',calendar:null,tasks:null}]};
  const storage=new MemoryStorage();let captured=false,live=true,calls=0;const check=()=>{if(!live)throw new Error('E2EE_ACCOUNT_CHANGED');};
  const ports={storage,memory:()=>memory,assertCurrent:check,legacyTasks:async actual=>{assert.ok(captured);assert.deepEqual(actual,context);calls++;return structuredClone(remote);}};
  const source=new PersonalTasksSource('owner',context.scopeId,ports);
@@ -21,9 +22,60 @@ function fixture(){
   async run(previous=[]){return source.reconcile(await this.capture(),previous,context);}};
 }
 const queue=(value,method='PUT')=>({key:'task:'+value.id,path:'/tasks/'+encodeURIComponent(value.id),method,body:JSON.stringify(value)});
+const provider=(accountId='owner',kind='primary',fields={})=>({kind,accountId,slot:'current',version:'b'.repeat(64),presence:'stored',provenance:'current-grant',calendar:null,
+ tasks:{items:[task('from-file',{createdIn:'google-tasks',googleTaskId:'native-only',googleTaskListId:'list-only',googleTaskListTitle:'Private list from file'})],
+  lists:[{id:'list-only',title:'Private list from file',updatedAt:NOW,isDefault:true}],checkedAt:123,nextAttempt:456,warning:null},...fields});
 async function logical(result,owner='owner'){
  const rows=new Map(result.content.map(row=>[row.objectId,row.bytes]));return readMigratedPersonalTasks(owner,async id=>rows.has(id)?new Uint8Array(rows.get(id)):null,()=>{});
 }
+
+test('provider-only private task and list survive under the new root with actual legacy account identity decoration',async()=>{
+ const f=fixture();f.remote.providerCaches=[provider()];const before=structuredClone(f.remote),result=await f.run(),read=await logical(result);
+ const prefix=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('owner'))).toString('hex').slice(0,10);
+ assert.equal(read.tasks.length,1);assert.equal(read.tasks[0].id,`account-${prefix}-from-file`);assert.equal(read.tasks[0].googleAccountId,'owner');
+ assert.equal(read.tasks[0].googleTaskListTitle,'Private list from file');assert.equal(read.tasks[0].syncToGoogle,false);assert.deepEqual(read.tasks[0].syncAccountIds,[]);
+ const history=decode(result.content.find(row=>row.objectId==='personal-task-history-v1').bytes);assert.deepEqual(history.providerCaches,before.providerCaches);assert.deepEqual(f.remote,before);
+ assert.ok(result.content.every(row=>!row.objectId.includes('from-file')&&!row.objectId.includes('list-only')));
+});
+
+test('same raw provider ID in primary and linked accounts cannot collapse two unrelated private tasks',async()=>{
+ const f=fixture();f.remote.providerCaches=[provider(),provider('linked-one','linked')];
+ const read=await logical(await f.run());assert.equal(read.tasks.length,2);assert.notEqual(read.tasks[0].id,read.tasks[1].id);
+ assert.deepEqual(new Set(read.tasks.map(row=>row.googleAccountId)),new Set(['owner','linked-one']));
+});
+
+test('retained or historical grant requires exact new review; retain-only still preserves the complete private history',async()=>{
+ for(const changed of [{provenance:'historical-grant'},{slot:'retained:'+'b'.repeat(64)}]){
+  const f=fixture(),missing=f.remote.providerCaches[0];f.remote.providerCaches=changed.slot?[missing,provider('owner','primary',changed)]:[provider('owner','primary',changed)];
+  const before=structuredClone(f.remote);await assert.rejects(f.run(),/PROVIDER_HISTORY_REVIEW_REQUIRED/);assert.deepEqual(f.remote,before);
+  let source='';f.ports.reviewProviderHistory=async rows=>{assert.equal(rows.length,1);source=rows[0].source;assert.equal(rows[0].tasks.items[0].title,'Synthetic private task');return{[source]:'retain-only'};};
+  const retained=await f.run();assert.equal((await logical(retained)).tasks.length,0);assert.deepEqual(decode(retained.content.find(row=>row.objectId==='personal-task-history-v1').bytes).providerCaches,before.providerCaches);
+  f.ports.reviewProviderHistory=async()=>({[source]:'include'});assert.equal((await logical(await f.run())).tasks.length,1);
+  for(const decisions of [{},{foreign:'include'},{[source]:'legacy-receipt'},{[source]:'include',foreign:'retain-only'}]){f.ports.reviewProviderHistory=async()=>decisions;await assert.rejects(f.run(),/PROVIDER_HISTORY_REVIEW_REQUIRED/);}
+ }
+ const changed=fixture();changed.remote.providerCaches=[provider('owner','primary',{provenance:'historical-grant'})];changed.ports.reviewProviderHistory=async rows=>{changed.lock();return{[rows[0].source]:'include'};};
+ await assert.rejects(changed.run(),/ACCOUNT_CHANGED/);
+});
+
+test('provider inventory cannot silently omit its primary or a retained linked current slot, import credentials or project future content',async()=>{
+ for(const modify of [f=>f.remote.providerCaches=[],f=>delete f.remote.providerCaches,
+  f=>f.remote.providerCaches=[provider('foreign')],f=>f.remote.providerCaches.push(provider('linked','linked',{slot:'retained:'+'b'.repeat(64)})),
+  f=>f.remote.providerCaches=[provider(),provider()],f=>f.remote.providerCaches=[provider('owner','primary',{version:'bad'})],
+  f=>f.remote.providerCaches=[provider('owner','primary',{slot:'retained:'+'a'.repeat(64)})],
+  f=>{const row=provider();row.tasks.syncToken='credential-must-not-migrate';f.remote.providerCaches=[row];},
+  f=>{const row=provider();row.tasks.items[0].unknownPrivateField='Do not discard';f.remote.providerCaches=[row];},
+  f=>{const row=provider();row.tasks.items.push(structuredClone(row.tasks.items[0]));f.remote.providerCaches=[row];},
+  f=>{const row=provider();row.tasks.lists[0].futureField='Do not discard';f.remote.providerCaches=[row];}]){
+  const f=fixture();modify(f);const before=structuredClone(f.remote);await assert.rejects(f.run(),/E2EE_/);assert.deepEqual(f.remote,before);
+ }
+});
+
+test('a provider cache cannot resurrect a GENESIS tombstone and an unsent edit requires conflict review',async()=>{
+ const f=fixture();f.remote.providerCaches=[provider('owner','primary',{tasks:{items:[task('removed',{createdIn:'genesis'})]}})];
+ f.remote.deletions=[{task_id:'removed',deleted_at:NOW}];assert.deepEqual((await logical(await f.run())).deletedIds,['removed']);
+ f.pending([queue(task('removed',{title:'New unsent change'}))]);await assert.rejects(f.run(),/CONFLICT_REVIEW_REQUIRED/);
+ f.ports.review=async()=>({removed:'queued'});assert.equal((await logical(await f.run())).tasks[0].title,'New unsent change');
+});
 
 test('task capture keeps exact owner cache, outbox, tombstones and all mounted editor bytes without IO or attribution',async()=>{
  const f=fixture();f.cache([task()]);f.pending([queue(task())]);f.storage.setItem(`${PENDING}-deleted:owner`,'[ "removed" ]');f.memory.editors=[{id:'editor-new',base:null,current:task('editor-new')}];

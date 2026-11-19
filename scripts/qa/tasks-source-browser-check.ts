@@ -12,7 +12,7 @@ let identity:UnlockedWebDevice|undefined,recovery:Awaited<ReturnType<typeof crea
 try{
  check('actual secure WebCrypto, localStorage and IndexedDB',isSecureContext&&!!crypto.subtle&&!!localStorage&&!!indexedDB);
  recovery=await createRecoveryKit(owner);const storage=new IndexedDbE2eeStorage();identity=await UnlockedWebDevice.provision(owner,recovery.secret,recovery.kit,storage,new IndexedDbDeviceKeyStorage());
- const currentDevice=identity,canary='Synthetic task browser canary '+crypto.randomUUID();
+ const currentDevice=identity,canary='Synthetic task browser canary '+crypto.randomUUID(),providerCanary='Synthetic file-only canary '+crypto.randomUUID();
  const old={id:'private-task-2026-11-19',title:'Older synthetic display',description:'Exact original text',dueDate:'2026-11-19',done:false,updatedAt:1,googleTaskId:'old-external-copy',syncToGoogle:true,
   recurrenceOriginalDate:'2026-11-18',recurrenceSeriesId:'private-series',recurrenceMode:'lunar',recurrencePattern:'lunar-days',recurrenceDays:[3,8]};
  const changed={...old,title:canary},memory:TasksMigrationMemory={ownerId:owner,legacyKey:'',generation:0,reconciliationRequired:false,tasks:[old],editors:[]};
@@ -23,7 +23,10 @@ try{
   check('source IO follows durable encrypted capture',!!await currentDevice.vault.read('local-snapshot','task-source').then(row=>{row?.value.fill(0);return row;}));
   check('source receives the exact owner/lease',JSON.stringify(context)===JSON.stringify(lease));reads++;
   return{protocol:1,ownerId:owner,scopeId,migrationId:lease.migrationId,fence:1,sourceHash:lease.sourceHash,legacyGeneration:0,checkpointHash:lease.sourceHash,directoryRevision:1,
-   tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null}};
+   tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null},
+   providerCaches:[{kind:'primary',accountId:owner,slot:'current',version:'b'.repeat(64),presence:'stored',provenance:'current-grant',calendar:null,
+    tasks:{items:[{id:'file-only',title:providerCanary,done:false,createdIn:'google-tasks',googleTaskId:'file-only-native',googleTaskListId:'private-file-list'}],
+     lists:[{id:'private-file-list',title:'Synthetic original file list',isDefault:true,updatedAt:null}]}}]};
  }});
  const snapshot=await source.captureLocal();check('capture cannot perform an early private read',reads===0);await currentDevice.ensureDurableKeys();
  try{await currentDevice.vault.write([{domain:'local-snapshot',objectId:'task-source',value:snapshot,expected:null}]);}finally{snapshot.fill(0);}
@@ -33,13 +36,18 @@ try{
  for(const row of result.content){try{await currentDevice.vault.write([{domain:row.domain,objectId:row.objectId,value:row.bytes,expected:null}]);}finally{row.bytes.fill(0);}}
  check('raw task queue and tombstones remain byte-identical',sourceKeys.every((key,index)=>localStorage.getItem(key)===before[index]));
  const rawStorage=JSON.stringify(await Promise.all((await storage.list('')).map(id=>storage.get(id))));
- check('new IndexedDB storage contains no task plaintext or recovery secret',!rawStorage.includes(canary)&&!rawStorage.includes(encodeE2eeBytes(recovery.secret)));
+ check('new IndexedDB storage contains no task plaintext or recovery secret',!rawStorage.includes(canary)&&!rawStorage.includes(providerCanary)&&!rawStorage.includes(encodeE2eeBytes(recovery.secret)));
  currentDevice.lock();let blocked=false;try{await currentDevice.vault.read('workspace','personal-task-index-v1');}catch{blocked=true;}check('locked device denies task read',blocked);
  identity=await UnlockedWebDevice.unlock(owner,recovery.secret,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage());const reopened=identity;
  const values=await readMigratedPersonalTasks(owner,async id=>(await reopened.vault.read('workspace',id))?.value??null,()=>reopened.requireOpen());
- check('fresh device-vault connection reads unsent content',values.tasks.length===1&&values.tasks[0].title===canary&&values.tasks[0].description===old.description);
- check('fresh connection preserves detached identity and deletions',values.tasks[0].recurrenceOriginalDate==='2026-11-18'&&values.deletedIds[0]==='removed-private-task');
- check('provider copy requires new consent after read',values.tasks[0].syncToGoogle===false&&Array.isArray(values.tasks[0].syncAccountIds)&&values.tasks[0].syncAccountIds.length===0);
+ const unsent=values.tasks.find(row=>row.id===old.id),fileOnly=values.tasks.find(row=>row.title===providerCanary);
+ check('fresh device-vault connection reads unsent content',values.tasks.length===2&&unsent?.title===canary&&unsent?.description===old.description);
+ check('fresh connection preserves detached identity and deletions',unsent?.recurrenceOriginalDate==='2026-11-18'&&values.deletedIds[0]==='removed-private-task');
+ check('provider copy requires new consent after read',values.tasks.every(row=>row.syncToGoogle===false&&Array.isArray(row.syncAccountIds)&&row.syncAccountIds.length===0));
+ check('file-only task survives without an old client copy',!!fileOnly&&fileOnly.googleAccountId===owner&&fileOnly.googleTaskId==='file-only-native');
+ const history=await reopened.vault.read('workspace','personal-task-history-v1');try{
+  check('file-only list titles survive in encrypted history',!!history&&JSON.parse(new TextDecoder().decode(history.value)).providerCaches[0].tasks.lists[0].title==='Synthetic original file list');
+ }finally{history?.value.fill(0);}
  check('ordinary new-root read never reopens legacy source',reads===1);
  const duplicate='{"tasks":[{"id":"duplicate-private","title":"First original","ti\\u0074le":"Second original"}]}';
  localStorage.setItem(sourceKeys[0],duplicate);let unexpectedReads=0;

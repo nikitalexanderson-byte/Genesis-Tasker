@@ -291,7 +291,8 @@ test('actual personal task source survives a crashed shadow upload and ordinary 
       assert.ok([...ports.storage.rows.values()].some(row=>row.envelope.context.domain==='local-snapshot'));
       assert.equal(ports.server.state,'uploading');assert.equal(context.migrationId,ports.server.migrationId);reads++;
       return{protocol:1,ownerId:context.ownerId,scopeId:context.scopeId,migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,
-        tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null}};
+        tasks:[],deletions:[],links:[],recovered:[],recoveredDeletions:[],creations:[],creationTargets:[],legacyKey:{keyMode:'empty',key:null},
+        providerCaches:[{kind:'primary',accountId:context.ownerId,slot:'current',version:null,presence:'missing',provenance:'none',calendar:null,tasks:null}]};
     },
   }):null});
   await f.make().prepare();assert.equal(reads,0);await assert.rejects(f.make().run(),/SYNTHETIC_PROCESS_DEATH/);assert.equal(reads,1);

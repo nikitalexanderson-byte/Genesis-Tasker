@@ -25,6 +25,8 @@ class E2eeNativeTasksSourceTest {
             .put("sourceHash",lease.sourceHash).put("legacyGeneration",0).put("checkpointHash",E2eeEnvelope.encode(ByteArray(32))).put("directoryRevision",1)
             .put("tasks",JSONArray()).put("deletions",JSONArray()).put("links",JSONArray()).put("recovered",JSONArray()).put("recoveredDeletions",JSONArray())
             .put("creations",JSONArray()).put("creationTargets",JSONArray()).put("legacyKey",JSONObject().put("keyMode","account").put("key",encoded))
+            .put("providerCaches",JSONArray().put(JSONObject().put("kind","primary").put("accountId","owner").put("slot","current").put("version",JSONObject.NULL)
+                .put("presence","missing").put("provenance","none").put("calendar",JSONObject.NULL).put("tasks",JSONObject.NULL)))
         var engine:suspend (JSONObject,JSONObject,suspend (JSONObject,String)->Any)->E2eePathReconciliation={local,remote,_->
             assertFalse(local.toString().contains(encoded));assertFalse(remote.toString().contains(encoded));assertFalse(local.toString().contains("original-operation"))
             assertEquals("original-operation",outbox.single().operationId)

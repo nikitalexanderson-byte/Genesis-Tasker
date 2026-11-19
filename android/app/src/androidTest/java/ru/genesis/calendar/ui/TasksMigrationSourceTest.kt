@@ -37,6 +37,8 @@ class TasksMigrationSourceTest {
             .put("sourceHash",lease.sourceHash).put("legacyGeneration",0).put("checkpointHash",E2eeEnvelope.encode(ByteArray(32))).put("directoryRevision",1)
             .put("tasks",JSONArray()).put("deletions",JSONArray()).put("links",JSONArray()).put("recovered",JSONArray()).put("recoveredDeletions",JSONArray())
             .put("creations",JSONArray()).put("creationTargets",JSONArray()).put("legacyKey",JSONObject().put("keyMode","account").put("key",oldEncoded))
+            .put("providerCaches",JSONArray().put(JSONObject().put("kind","primary").put("accountId",owner).put("slot","current").put("version",JSONObject.NULL)
+                .put("presence","missing").put("provenance","none").put("calendar",JSONObject.NULL).put("tasks",JSONObject.NULL)))
         init{
             check(BuildConfig.DEBUG&&app.packageName.endsWith(".qa1103.debug"));app.activateAccount(owner);epoch=app.workspaceEpoch
             storage=E2eeSqliteStorage(app,allowCreate=true)
@@ -98,6 +100,42 @@ class TasksMigrationSourceTest {
         val f=Rig();try{f.seed();f.app.database.dao().putOutbox(OutboxRecord(f.account,"missing-original-task",1,"retained-orphan"));val before=f.originals()
             try{f.run();fail("Expected queue review")}catch(error:IllegalStateException){assertEquals("E2EE_TASK_QUEUE_REVIEW_REQUIRED",error.message)}
             assertEquals(0,f.reads.get());assertEquals(before,f.originals());assertNotNull(f.vault.read("local-snapshot","tasks-source")?.also{it.bytes.fill(0)})
+        }finally{f.close()}
+    }
+    @Test fun providerFileOnlyTaskAndListReachNewRootWithoutAnyNativeProviderOrKeyBridge()=runBlocking{
+        val f=Rig();try{
+            f.seed();val before=f.originals();val operations=f.app.database.dao().outbox(f.account)
+            val provider=f.response.getJSONArray("providerCaches").getJSONObject(0)
+            provider.put("presence","stored").put("version","b".repeat(64)).put("provenance","current-grant")
+                .put("tasks",JSONObject().put("items",JSONArray().put(JSONObject().put("id","file-only").put("title","Synthetic file-only private task")
+                    .put("done",false).put("createdIn","google-tasks").put("googleTaskId","native-file-only").put("googleTaskListId","private-list")))
+                    .put("lists",JSONArray().put(JSONObject().put("id","private-list").put("title","Synthetic file-only list").put("updatedAt",JSONObject.NULL).put("isDefault",true))))
+            val result=withTimeout(90000){f.run()};assertTrue(result.complete);assertEquals(1,f.reads.get());assertEquals(1,f.opens.get())
+            for(row in result.content)try{f.vault.write(listOf(UnlockedE2eeVault.Write(row.domain,row.objectId,row.bytes,null)))}finally{row.bytes.fill(0)}
+            f.oldKey.fill(0);f.eraseAlias()
+            val index=requireNotNull(f.vault.read("workspace","personal-task-index-v1"));val entries=try{JSONObject(index.bytes.toString(Charsets.UTF_8)).getJSONArray("tasks")}finally{index.bytes.fill(0)}
+            var found=false
+            for(i in 0 until entries.length()){
+                val record=requireNotNull(f.vault.read("workspace",entries.getJSONObject(i).getString("objectId")))
+                try{val objectValue=JSONObject(record.bytes.toString(Charsets.UTF_8));val task=objectValue.optJSONObject("value")
+                    if(task?.optString("googleTaskId")=="native-file-only"){
+                        found=true;assertEquals("Synthetic file-only private task",task.getString("title"));assertEquals(f.owner,task.getString("googleAccountId"))
+                        assertTrue(task.getString("id").startsWith("account-"));assertEquals("requires-new-consent",objectValue.getString("externalCopy"))
+                    }
+                }finally{record.bytes.fill(0)}
+            }
+            assertTrue(found);val history=requireNotNull(f.vault.read("workspace","personal-task-history-v1"))
+            try{assertEquals("Synthetic file-only list",JSONObject(history.bytes.toString(Charsets.UTF_8)).getJSONArray("providerCaches").getJSONObject(0).getJSONObject("tasks").getJSONArray("lists").getJSONObject(0).getString("title"))}finally{history.bytes.fill(0)}
+            assertEquals(before,f.originals());assertEquals(operations,f.app.database.dao().outbox(f.account))
+        }finally{f.close()}
+    }
+    @Test fun historicalProviderGrantRefusesMigrationWithoutInventingConsentAndRetainsOriginalRoomQueue()=runBlocking{
+        val f=Rig();try{
+            f.seed();val before=f.originals();val operations=f.app.database.dao().outbox(f.account)
+            f.response.getJSONArray("providerCaches").getJSONObject(0).put("presence","stored").put("version","b".repeat(64)).put("provenance","historical-grant")
+            try{withTimeout(90000){f.run()};fail("Expected provider history review")}catch(error:IllegalStateException){assertEquals("E2EE_PROVIDER_HISTORY_REVIEW_REQUIRED",error.message)}
+            assertEquals(1,f.reads.get());assertEquals(0,f.opens.get());assertEquals(before,f.originals());assertEquals(operations,f.app.database.dao().outbox(f.account))
+            assertNotNull(f.vault.read("local-snapshot","tasks-source")?.also{it.bytes.fill(0)})
         }finally{f.close()}
     }
     @Test fun lostKeystoreKeyStopsBeforeIOAndNeverCreatesANewKeyOverOriginalTasks()=runBlocking{

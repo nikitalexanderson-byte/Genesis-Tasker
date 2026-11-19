@@ -8,6 +8,7 @@ const GENESIS_GOOGLE_FULL_SYNC_SECONDS = 86400;
 function genesisGoogleCacheDirectory(): string
 {
     $directory = dirname((string)genesisConfig()['db_path']) . '/google-sync';
+    if(is_link($directory))throw new RuntimeException('Google sync storage is unavailable.');
     if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
         throw new RuntimeException('Google sync storage is unavailable.');
     }
@@ -36,10 +37,47 @@ function genesisGoogleCacheOwner(array $user,bool $cleanup=false): string
         $hint=$user['_owner_user_id']??$user['owner_user_id']??null;
         if($owner===false&&$cleanup&&is_string($hint))$owner=$hint;
         if(!is_string($owner)||$owner===''||$hint!==null&&$hint!==$owner)throw new DomainException('E2EE_ACCOUNT_CHANGED');
+        foreach(['_owner_user_id','owner_user_id']as $field)if(isset($user[$field])&&$user[$field]!==$owner)throw new DomainException('E2EE_ACCOUNT_CHANGED');
     }else $owner=$id;
     $q=$db->prepare('SELECT 1 FROM users WHERE id=?');$q->execute([$owner]);$exists=$q->fetchColumn();$q->closeCursor();
     if($exists===false)throw new DomainException('E2EE_ACCOUNT_CHANGED');
     return $owner;
+}
+
+/** Service IO is fenced even when called by jobs/CLI without the HTTP middleware.
+ * Never fall back to credentials captured before unlink or account removal. */
+function genesisGoogleWithLegacyOperation(array $user,callable $operation):mixed
+{
+    $owner=genesisGoogleCacheOwner($user);
+    return genesisE2eeWithPersonalIo($owner,false,static function()use($owner,$user,$operation):mixed{
+        if(genesisGoogleCacheOwner($user)!==$owner)throw new DomainException('E2EE_ACCOUNT_CHANGED');
+        if(genesisE2eeLegacyScopeBlocked('personal',$owner))throw new DomainException('E2EE_MIGRATION_FENCED');
+        $current=!empty($user['_linked_account'])?genesisFindLinkedGoogleAccount((string)$user['id']):genesisFindUser((string)$user['id']);
+        if(!is_array($current)||genesisGoogleCacheOwner($current)!==$owner)throw new DomainException('E2EE_ACCOUNT_CHANGED');
+        return $operation($current);
+    });
+}
+
+/** Preserve a previous grant's exact ciphertext before resetting its working
+ * cache. No plaintext/token is written here. Migration inventories these files;
+ * uncertain provenance requires explicit review instead of a silent omission. */
+function genesisGoogleCacheRetainOriginal(string $base,string $cipher):void
+{
+    $directory=dirname($base).'/retained';$identity=basename($base);
+    if(!preg_match('/\A[a-f0-9]{64}\z/D',$identity))throw new LogicException('Invalid Google cache target.');
+    foreach([$directory,$directory.'/'.$identity]as $path){
+        if(is_link($path)||!is_dir($path)&&!@mkdir($path,0700)&&!is_dir($path))throw new RuntimeException('Google snapshot retention failed.');
+    }
+    $destination=$directory.'/'.$identity.'/'.hash('sha256',$cipher).'.enc';
+    if(is_link($destination))throw new RuntimeException('Google snapshot retention failed.');
+    if(file_exists($destination)){
+        if(!is_file($destination)||file_get_contents($destination)!==$cipher)throw new RuntimeException('Google snapshot retention failed.');
+        return;
+    }
+    $temporary=$destination.'.'.bin2hex(random_bytes(8)).'.tmp';
+    try{
+        if(file_put_contents($temporary,$cipher)!==strlen($cipher)||!chmod($temporary,0600)||!rename($temporary,$destination))throw new RuntimeException('Google snapshot retention failed.');
+    }finally{if(is_file($temporary))unlink($temporary);}
 }
 
 /** Technical file mutex only. The caller already holds its owner operation.
@@ -51,6 +89,7 @@ function genesisGoogleCacheFileOperation(array $user,callable $operation): mixed
         throw new LogicException('Nested Google snapshot operation.');
     }
     $path = genesisGoogleCacheDirectory() . '/' . $key;
+    if(is_link($path.'.lock')||is_link($path.'.enc')||file_exists($path.'.lock')&&!is_file($path.'.lock')||file_exists($path.'.enc')&&!is_file($path.'.enc'))throw new RuntimeException('Google sync storage is unavailable.');
     $lock = fopen($path . '.lock', 'c+');
     if ($lock === false) throw new RuntimeException('Google sync lock is unavailable.');
     if (!flock($lock, LOCK_EX|LOCK_NB)) {fclose($lock);throw new DomainException('E2EE_OPERATION_BUSY');}
@@ -75,16 +114,22 @@ function genesisGoogleCacheWithLock(array $user, callable $operation, bool $pers
         // Unlink/reassignment can finish while this request obtains the file
         // mutex. A stale captured account must not open the former snapshot.
         genesisGoogleCacheOwner($user);
-        $snapshot = [];
+        $snapshot = [];$previousGrant=null;
         if (is_file($path . '.enc')) {
-            try { $plain = genesisDecrypt((string)file_get_contents($path . '.enc')); }
-            catch (Throwable) { $plain = null; }
-            $decoded = $plain !== null ? json_decode($plain, true) : null;
-            if (is_array($decoded) && ($decoded['fingerprint'] ?? '') === genesisGoogleCacheFingerprint($user)) $snapshot = $decoded;
+            if(filesize($path.'.enc')>32*1024*1024)throw new DomainException('E2EE_PROVIDER_CACHE_REVIEW_REQUIRED');
+            $original=file_get_contents($path.'.enc');
+            if(!is_string($original))throw new DomainException('E2EE_PROVIDER_CACHE_UNAVAILABLE');
+            require_once __DIR__.'/e2ee-provider-cache.php';
+            try{$plain=genesisDecrypt($original);if(is_string($plain))genesisE2eeProviderJson($plain);$decoded=is_string($plain)?json_decode($plain,true,40,JSON_THROW_ON_ERROR):null;}
+            catch(Throwable){throw new DomainException('E2EE_PROVIDER_CACHE_CORRUPT');}
+            if(!is_array($decoded)||!is_string($decoded['fingerprint']??null)||!preg_match('/\A[a-f0-9]{64}\z/D',$decoded['fingerprint']))throw new DomainException('E2EE_PROVIDER_CACHE_CORRUPT');
+            if(hash_equals($decoded['fingerprint'],genesisGoogleCacheFingerprint($user)))$snapshot=$decoded;
+            else $previousGrant=$original;
         }
         $snapshot['fingerprint'] = genesisGoogleCacheFingerprint($user);
         $result = $operation($snapshot);
         if (!$persist) return $result;
+        if($previousGrant!==null)genesisGoogleCacheRetainOriginal($path,$previousGrant);
         $encoded = genesisEncrypt(json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $temporary = $path . '.' . bin2hex(random_bytes(8)) . '.tmp';
         try {
@@ -103,8 +148,18 @@ function genesisGoogleForgetSnapshot(array $user): void
     genesisE2eeWithPersonalIo($owner,false,static function()use($owner,$user):void{
         if(genesisE2eeLegacyScopeBlocked('personal',$owner))throw new DomainException('E2EE_MIGRATION_FENCED');
         genesisGoogleCacheFileOperation($user,static function(string $base):void{
-            $path=$base.'.enc';
-            if (is_file($path) && !unlink($path)) throw new RuntimeException('Google snapshot removal failed.');
+            $targets=[$base.'.enc'];$retained=dirname($base).'/retained/'.basename($base);
+            if(is_link(dirname($retained))||is_link($retained))throw new RuntimeException('Google snapshot removal failed.');
+            if(file_exists($retained)){
+                if(!is_dir($retained)||($entries=scandir($retained))===false)throw new RuntimeException('Google snapshot removal failed.');
+                foreach($entries as $entry){
+                    if($entry==='.'||$entry==='..')continue;
+                    if(!preg_match('/\A[a-f0-9]{64}\.enc\z/D',$entry)||is_link($retained.'/'.$entry)||!is_file($retained.'/'.$entry))throw new RuntimeException('Google snapshot removal failed.');
+                    $targets[]=$retained.'/'.$entry;
+                }
+            }
+            foreach($targets as $path)if(is_file($path)&&!unlink($path))throw new RuntimeException('Google snapshot removal failed.');
+            if(is_dir($retained)&&!rmdir($retained))throw new RuntimeException('Google snapshot removal failed.');
         });
     });
 }
