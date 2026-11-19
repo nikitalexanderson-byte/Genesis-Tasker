@@ -33,6 +33,7 @@ import ru.genesis.calendar.auth.AuthApiError
 import ru.genesis.calendar.data.BackupGateway
 import ru.genesis.calendar.data.BackupNativeStore
 import ru.genesis.calendar.data.GenesisBackupContainer
+import ru.genesis.calendar.data.NativeLegacyOperationPermit
 import java.io.ByteArrayInputStream
 import java.util.Base64
 
@@ -49,24 +50,38 @@ internal object BackupWebOrigin {
 
 /** Bounded, ordered chunks are also used for document payloads, not only the SAF file. */
 @Keep
-private class BackupJavascriptBridge(private val store:BackupNativeStore,private val gateway:BackupGateway,
+internal class BackupJavascriptBridge(private val store:BackupNativeStore,private val gateway:BackupGateway,
     private val app:GenesisApplication,private val owner:String,private val scope:CoroutineScope,
     private val deliver:(String,JSONObject)->Unit,private val choose:suspend(Boolean,String)->Uri?,private val restart:()->Unit) {
     @Volatile private var active=true
+    private val operationMonitor=Any()
+    private val operations=java.util.concurrent.ConcurrentHashMap<String,NativeLegacyOperationPermit>()
+    private val startedOperations=mutableSetOf<String>()
+    private val endedOperations=mutableSetOf<String>()
+    private val uuid=Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
     private val history=app.getSharedPreferences("genesis.backup.history.v1",android.content.Context.MODE_PRIVATE)
     private var importText:String?=null
     private var exportText:StringBuilder?=null
     private var exportLength=0
     private var exportId=""
-    private var reconciled=false
+    @Volatile private var reconciled=false
     private val transfers=ru.genesis.calendar.data.BackupTransfer()
-    private fun check(){check(active) { "BACKUP_VIEW_CLOSED" };gateway.check()}
+    private fun check(){check(active) { "BACKUP_VIEW_CLOSED" };gateway.check();NativeLegacyOperationPermit.current()?.check()}
+    private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
+    private fun endOperation(id:String)=synchronized(operationMonitor){
+        // Cleanup never throws from a coroutine completion handler. Once the
+        // bounded unknown-ID history is full, fresh begins are refused too.
+        if(id !in endedOperations&&id !in startedOperations&&endedOperations.size>=8192)return@synchronized null
+        endedOperations.add(id);operations.remove(id)
+    }
     @JavascriptInterface fun getHistory():String? { check();return history.getString(owner,null) }
-    @JavascriptInterface fun setHistory(value:String) {
-        check();require(value.length<=500);val parsed=JSONObject(value)
+    @JavascriptInterface fun setHistory(value:String,operationId:String) {
+        check();store.writeHistory(operation(operationId)){
+        require(value.length<=500);val parsed=JSONObject(value)
         require(parsed.keys().asSequence().all { it in setOf("attempt","success") })
         for(key in parsed.keys())java.time.Instant.parse(parsed.getString(key))
         check(history.edit().putString(owner,parsed.toString()).commit())
+        }
     }
     @JavascriptInterface @Synchronized fun postChunk(id:String,index:Int,last:Boolean,text:String) {
         check();transfers.append(id,index,last,text)?.let(::postMessage)
@@ -75,10 +90,31 @@ private class BackupJavascriptBridge(private val store:BackupNativeStore,private
         if(raw.length>32*1024*1024)return
         val request=runCatching { JSONObject(raw) }.getOrNull()?:return
         val id=request.optString("id");if(!id.matches(Regex("[a-f0-9-]{36}")))return
-        scope.launch(Dispatchers.IO) {
+        val beginToken=if(request.optString("method")=="operationBegin")request.optJSONObject("payload")?.optString("operationId")?.takeIf{uuid.matches(it)}else null
+        val job=scope.launch(Dispatchers.IO) {
             val response=try {
-                if(request.getString("method")=="restart"&&reconciled)check(active)else check();val payload=request.optJSONObject("payload")?:JSONObject()
-                val value:Any=when(request.getString("method")) {
+                val method=request.getString("method");val payload=request.optJSONObject("payload")?:JSONObject()
+                if(method=="operationEnd"){
+                    val token=payload.getString("operationId");require(uuid.matches(token));endOperation(token)?.finish()
+                    withContext(Dispatchers.Main){if(active)deliver(id,JSONObject().put("value",true))};return@launch
+                }
+                if(method=="restart"){
+                    check(reconciled&&operations.isEmpty()&&payload.optString("operationId").isEmpty()){"BACKUP_RECONCILE_REQUIRED"}
+                    check(active);store.checkOperationOwner()
+                }else check()
+                suspend fun execute():Any=when(method) {
+                    "operationBegin"->{
+                        val token=payload.getString("operationId");require(uuid.matches(token))
+                        synchronized(operationMonitor){
+                            check(active&&token !in endedOperations&&token !in startedOperations){"E2EE_INVALID_LEGACY_OPERATION"}
+                            check(startedOperations.size<8192&&endedOperations.size<8192){"BACKUP_OPERATION_LIMIT"};startedOperations.add(token)
+                        }
+                        val permit=store.beginLegacyOperation{check(active){"BACKUP_VIEW_CLOSED"}}
+                        try{
+                            check();synchronized(operationMonitor){check(active&&token !in endedOperations){"E2EE_INVALID_LEGACY_OPERATION"};operations[token]=permit}
+                            JSONObject().put("operationId",token)
+                        }catch(error:Throwable){permit.close();operations.entries.removeAll{it.value===permit};throw error}
+                    }
                     "request"->store.request(payload.getString("method"),payload.getString("path"),payload.optJSONObject("body"))
                     "capture"->store.capture()
                     "retain"->store.retain(payload.getJSONObject("snapshot"))
@@ -87,7 +123,7 @@ private class BackupJavascriptBridge(private val store:BackupNativeStore,private
                     "seal"->store.seal(payload.get("value"),payload.getString("scope"))
                     "current"->store.current()
                     "reconcile"->store.reconcile().also { reconciled=true }
-                    "restart"->{withContext(Dispatchers.Main){restart()};JSONObject()}
+                    "restart"->{reconciled=false;withContext(Dispatchers.Main){check(active);store.checkOperationOwner();restart()};JSONObject()}
                     "exportBegin"->{
                         val length=payload.getInt("length");require(length in 1..GenesisBackupContainer.MAX_FILE)
                         val backupId=payload.getString("id");require(backupId.matches(Regex("[a-f0-9-]{36}")))
@@ -124,15 +160,23 @@ private class BackupJavascriptBridge(private val store:BackupNativeStore,private
                     "importClear"->{importText=null;true}
                     else->error("BACKUP_METHOD_INVALID")
                 }
+                val token=payload.optString("operationId")
+                val bootstrap=method=="request"&&payload.optString("method")=="GET"&&payload.optString("path")=="/backup/v1/status"&&token.isEmpty()
+                val value=if(method=="operationBegin"||bootstrap||method=="restart"&&reconciled&&token.isEmpty())execute()
+                    else operation(token).borrow{execute()}
                 // Reconciliation deliberately retires this gateway before returning its receipt.
-                if(request.getString("method") !in setOf("reconcile","restart"))check()
+                if(method !in setOf("operationBegin","reconcile","restart"))check()
                 JSONObject().put("value",value)
-            } catch(cancelled:CancellationException){return@launch}
-            catch(error:Exception){JSONObject().put("error",(error as? AuthApiError)?.code?:error.message?.takeIf { it.matches(Regex("BACKUP_[A-Z_]+")) }?:"BACKUP_NATIVE_FAILED")}
+            } catch(cancelled:CancellationException){beginToken?.let{endOperation(it)?.close()};return@launch}
+            catch(error:Exception){JSONObject().put("error",(error as? AuthApiError)?.code?:error.message?.takeIf { it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+")) }?:"BACKUP_NATIVE_FAILED")}
             withContext(Dispatchers.Main){if(active)deliver(id,response)}
         }
+        job.invokeOnCompletion{failure->if(failure!=null)beginToken?.let{endOperation(it)?.close()}}
     }
-    @Synchronized fun stop(){active=false;transfers.clear();importText=null;exportText=null}
+    @Synchronized fun stop(){
+        val permits=synchronized(operationMonitor){active=false;operations.values.toList().also{operations.clear()}}
+        permits.forEach{it.close()};transfers.clear();importText=null;exportText=null
+    }
 }
 
 @Composable internal fun NativeBackupEntry() {

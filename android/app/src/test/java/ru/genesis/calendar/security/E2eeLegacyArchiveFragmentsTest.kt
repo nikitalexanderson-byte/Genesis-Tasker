@@ -110,9 +110,9 @@ class E2eeLegacyArchiveFragmentsTest {
         val f=Fixture();f.chunkSize=1;val result=f.run();result.getJSONObject("legacyKey").put("key",JSONObject.NULL)
         val duplicate=Fixture();duplicate.raw["stages"]=mutableListOf("{\"id\":\"original\",\"\\u0069d\":\"other\"}")
         val duplicateResult=duplicate.run();duplicateResult.getJSONObject("legacyKey").put("key",JSONObject.NULL)
-        val root=generateSequence(java.io.File(System.getProperty("user.dir")).absoluteFile){it.parentFile}
+        val root=generateSequence<java.io.File>(java.io.File(requireNotNull(System.getProperty("user.dir"))).absoluteFile){it.parentFile}
             .first{java.io.File(it,"contracts/e2ee").isDirectory&&java.io.File(it,"android/app").isDirectory}
-        val output=java.io.File(root,"output/release-3.3.6/runtime/archives-native-fragments-vector.json");output.parentFile.mkdirs()
+        val output=java.io.File(root,"output/release-3.3.6/runtime/archives-native-fragments-vector.json");requireNotNull(output.parentFile).mkdirs()
         val bound=JSONObject().put("ownerId",context.ownerId).put("scopeId",context.scopeId).put("migrationId",context.migrationId)
             .put("fence",context.fence).put("sourceHash",context.sourceHash).put("generation",context.generation)
         output.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("context",bound).put("transport",result).put("duplicate",duplicateResult).toString(2),Charsets.UTF_8)

@@ -23,6 +23,7 @@ export type BackupPanelRuntime={
  captureAccountSessionGuard:typeof captureAccountSessionGuard;holdBackupStaleChanges:typeof holdBackupStaleChanges;
  download:(content:string,id:string)=>void|Promise<void>;
  readFile?:()=>Promise<File>;restart?:()=>void;
+ withOperation?:<T>(operation:()=>Promise<T>)=>Promise<T>;
 };
 const webRuntime:BackupPanelRuntime={authorizeBackup,freezeBackupDevice,materializeDeviceBackup,materializeServerBackup,retainBackupSafety,
  prepareBackupRestore:(payload,owner,selected,mode,choices)=>prepareBackupRestore(payload,owner,selected,mode,undefined,choices),backupNeedsReconciliation,backupRequest,captureAccountSessionGuard,holdBackupStaleChanges,download:webDownload};
@@ -50,8 +51,10 @@ export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[historyKey]);
   const check=()=>{guard.current();if(!live.current)throw new Error('BACKUP_PANEL_CLOSED');};
-  const stamp=(success=false)=>{const at=new Date().toISOString();setHistory(old=>{const value={...old,attempt:at,...success?{success:at}:{}};localStorage.setItem(historyKey,JSON.stringify(value));return value;});};
-  const run=async(action:()=>Promise<void>)=>{if(running.current)return;running.current=true;setBusy(true);setError('');setMessage('');try{await withBackupEditorTask(user.uid,async()=>{check();stamp();await action();check();});}catch(reason){if(live.current){const code=reason instanceof Error?reason.message:'';
+  const stamp=(success=false)=>{const at=new Date().toISOString(),value={...history,attempt:at,...success?{success:at}:{}};localStorage.setItem(historyKey,JSON.stringify(value));setHistory(value);};
+  const run=async(action:()=>Promise<void>)=>{if(running.current)return;running.current=true;setBusy(true);setError('');setMessage('');try{await withBackupEditorTask(user.uid,async()=>{
+    const execute=async()=>{check();stamp();await action();check();};if(runtime.withOperation)await runtime.withOperation(execute);else await execute();
+  });}catch(reason){if(live.current){const code=reason instanceof Error?reason.message:'';
     if(code==='BACKUP_CANCELLED'){setMessage(c('Действие отменено.','Action cancelled.'));return;}
     const errors:Record<string,string>={BACKUP_DISABLED:c('Резервирование подготовлено, но ещё не включено владельцем сервиса.','Backups are prepared and await service activation.'),FEATURE_SUBSCRIPTION_REQUIRED:c('Нужен действующий Standart или выше.','An active Standart plan or higher is required.'),BACKUP_OWNER:c('Копия принадлежит другому аккаунту GENESIS.','This backup belongs to another GENESIS account.'),BACKUP_PREVIEW_CHANGED:c('Данные изменились. Создайте новый предпросмотр.','Data changed. Prepare a new preview.'),BACKUP_RECOVERY_OR_INTEGRITY:c('Ключ не подошёл или файл повреждён. Исходные данные сохранены.','The key is incorrect or the file is damaged. Existing data is preserved.'),BACKUP_DRAFT_CHOICE_REQUIRED:c('В копии несколько разных черновиков одной записи. Автоматический выбор остановлен.','This backup has conflicting drafts. Automatic selection has stopped.'),BACKUP_SIGNING_NOT_CONFIGURED:c('Для серверного снимка ещё не настроены ключи подписи.','Server snapshot signing keys are not configured.')};
     setError(errors[code]??c('Не удалось завершить действие. Проверьте файл, ключ и соединение; данные сохранены.','The operation could not finish. Check the file, key and connection; data is preserved.'));}}

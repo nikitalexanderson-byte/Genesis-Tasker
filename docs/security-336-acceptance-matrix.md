@@ -38,7 +38,7 @@ adapters. У финального результата каждой строки
 | 22 | Backup перед первым sync | Частично: девять реальных captures и coordinator проверены; archive web input отдельно прошёл actual File/React/IDB cold readback. Остальные11 полных sources и весь product lifecycle mounted/unmounted drafts обязательны |
 | 23 | Обрыв на каждом шаге миграции | Частично: state-machine/частные real cases есть; нужны все feature paths, process death и clean restart |
 | 24 | Две параллельные миграции | Частично: lease/fence/CAS проверены; полный многоклиентский product-переход ещё нужен |
-| 25 | Legacy write во время финального commit | Частично: SQLite/HTTP/SW/owner barriers есть; все local/normal/background writers ещё не охвачены |
+| 25 | Legacy write во время финального commit | Частично: SQLite/HTTP/SW/owner barriers и полный native backup job проверены; web backup whole-job и все остальные local/normal/background writers ещё не охвачены |
 | 26 | Legacy write после activation | Частично: persistent deny и API policy проверены; product activation отключена, полный routing не принят |
 | 27 | Старый offline outbox после удаления | Частично: task/diary/map reconciliation cases есть; все очереди и прямые обновления ещё нужны |
 | 28 | Прямое3.3.4 →3.3.6 | Не выполнено: подписанного финального3.3.6 APK ещё нет; данные/сертификат должны быть проверены на upgrade |

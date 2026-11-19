@@ -70,8 +70,10 @@ Explicit reset намеренно переживает собственный qu
 но сохраняет прежнюю account activation binding. Incoming bootstrap передаёт
 собственную verified owner guard, а не текущий UI scope как authority.
 
-Это exclusion отдельных native operations. Полный многовызовный Backup WebView
-job и его mounted/detached source capture требуют дальнейшей интеграции; наличие
+Это exclusion отдельных native operations. Следующий проверенный инкремент
+`e2ee-336-archives-native-jobs.md` добавил полный многовызовный Backup WebView job:
+actual API34/API26 по16 принятых cases. Его mounted/detached source capture ещё
+требует дальнейшей интеграции; наличие
 этой защиты не увеличивает source coverage9/20.
 
 Native build01 SUCCESS22m2s: full JVM1209 total/1201 passed/8 прежних opt-in HTTP

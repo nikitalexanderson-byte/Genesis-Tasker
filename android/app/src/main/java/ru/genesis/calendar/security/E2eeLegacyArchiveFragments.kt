@@ -88,7 +88,11 @@ internal object E2eeLegacyArchiveFragments {
                             if(next>length)invalid()
                             if(next<length){
                                 if(page.isNull("nextByteOffset")||integer(page.get("nextByteOffset"))!=next.toLong()||page.isNull("nextOffset")||integer(page.get("nextOffset"))!=offset)invalid()
-                            }else if(!page.isNull("nextByteOffset")||if(offset+1<total)page.isNull("nextOffset")||integer(page.get("nextOffset"))!=offset+1 else !page.isNull("nextOffset"))invalid()
+                            }else {
+                                if(!page.isNull("nextByteOffset"))invalid()
+                                if(offset+1<total){if(page.isNull("nextOffset")||integer(page.get("nextOffset"))!=offset+1)invalid()}
+                                else if(!page.isNull("nextOffset"))invalid()
+                            }
                             part.copyInto(buffer,position)
                         }finally{part.fill(0)}
                         position=next;if(position==length)break;page=read(table,offset,position.toLong())

@@ -18,7 +18,17 @@ internal interface BackupGateway {
 internal class BackupNativeStore(private val app: GenesisApplication,private val owner: String,private val scope: String,
     private val gateway: BackupGateway) {
     private val epochs=NativeBackupEpochStore(app)
+    private val activation=app.workspaceEpoch
     private fun check() { gateway.check();check(app.workspaceScope==scope) { "BACKUP_OWNER" } }
+    /** Permit lifetime only, never a replacement for each action's gateway check.
+     * The verified reset may retire its own HTTP generation while it drains. */
+    fun checkOperationOwner(){check(app.workspaceScope==scope&&app.workspaceEpoch==activation){"BACKUP_OWNER"}}
+    suspend fun beginLegacyOperation(assertView:()->Unit):NativeLegacyOperationPermit {
+        check();checkOperationOwner()
+        val permit=NativeLegacyOperationPermit.acquire(app.database,scope){assertView();checkOperationOwner()}
+        try{check();return permit}catch(error:Throwable){permit.close();throw error}
+    }
+    fun <T> writeHistory(permit:NativeLegacyOperationPermit,write:()->T):T=permit.borrowTransport(app.database,scope,::check,write)
     private suspend fun <T> operation(action:suspend ()->T):T=NativeLegacyOperationPermit.run(app.database,scope,::check,action)
     private suspend fun key(): ByteArray {
         check();val workspace=gateway.request("GET","/workspace").getJSONObject("workspace");check()

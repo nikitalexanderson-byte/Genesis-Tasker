@@ -1469,3 +1469,35 @@ strict nested archive reconciliation, old-key-loss/new-root recovery и оста
 системные release gates остаются обязательными. Source production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false не менялись. Ни Deploy,
 ни Play, ни личные устройства не затрагивались.
+
+## Архивы: полный native backup job,19 ноября
+
+Caller-selected native permit теперь охватывает всё действие BackupPanel: picker,
+local capture/crypto, nested RPC/HTTP, safety/generation/history writes и receipts.
+Миграция не вклинивается между отдельными вызовами. Lost begin/early end закрывают
+правильный capability, фактические native children drain до освобождения mutex.
+View close/same-UID relogin запрещают поздние записи. Без permit разрешён только
+guarded startup status; verified reset может retire свой gateway, затем завершить
+acceptance и один restart после cleanup. Новый JS helper не скрывает исходную
+ошибку или failed cleanup. History side effect убран из deferred React updater.
+
+Full JS1732/1732, focused72/72, types02/scoped lint02 и static build02 PASS.
+Browser capture regression14/14 PASS, console0; exact file/form/uncertain IDs
+сохранились после new-root cold unlock. Native build02 SUCCESS20m3s, focused
+backup/collector JVM34/34, lint0 errors/206 warnings/8 hints. Actual API34:
+16/16 PASS. API26/provider113:14 bridge/guard/reset cases PASS, затем2 real SAF/
+journal cases PASS в отдельном retry с теми же source/APK hashes. Initial UI
+failures вызваны наблюдаемым stock AOSP statementservice error window до действий
+приложения. Его сообщение закрыто в exact owned AVD; service/permissions/AppOps
+не отключались. Failure logs и explicit setup action сохранены. API35 для нового
+job не повторялся. См. `e2ee-336-archives-native-jobs.md`.
+
+Новый collector output повторно прошёл общий strict parser6 checks с тем же SHA256.
+Строгий server/web/native transport и backup job ещё не дают готовый source:
+native selected-file/forms inventory, nested archive content, key loss/recovery,
+полный web job и product lifecycle остаются. Coverage9/20; остальные11 sources,
+48 сценариев,14-language semantic acceptance и independent human crypto review
+по-прежнему обязательны. Production3.3.5/149, floors0/pilot/cutover off и
+GENESIS_DEPLOY_ANDROID=false сохранены; Deploy/Play/личных устройств не было.
+Предыдущий Source checks44600100480 наbf8749d8 полностью SUCCESS, включая
+Android и web/API/browser. Это ещё не CI новых локальных инкрементов.

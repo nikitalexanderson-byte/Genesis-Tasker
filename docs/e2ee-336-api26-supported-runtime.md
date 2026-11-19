@@ -74,3 +74,11 @@ strict duplicate parser, old-grant inertness, new-root readback и account chang
 evidence сохраняется отдельно. Enrollment/normal E2EE/recovery/прямые signed
 upgrades/остальные категории/48 сценариев/14 языков/independent crypto review
 остаются обязательными.
+
+Дополнение: backup whole-job/operations/reset и actual SAF/journal flows также
+приняты на этом provider:16 cases, см. `e2ee-336-archives-native-jobs.md`. Initial
+два UI cases заблокировало собственное system error window stock statementservice:
+его receiver нарушает Android8 background-start policy после APK installation.
+Crash log/screenshot сохранены; закрыто только наблюдаемое окно, без изменения
+verifier/permissions/AppOps. Это не приёмка системного deep-link verification.
+Optional maintenance flag строго проверяет exact own AVD ДО install/reset.

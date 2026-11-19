@@ -7,29 +7,34 @@ import {metricsFor,type GenesisUser} from './cloud-sync';
 import {habitLifecycleState} from './habit-lifecycle';
 import type {BackupDocumentAccess} from './backup-restore';
 import {materializeBackupJournalChoices} from './backup-private-journals';
+import {nativeBackupOperations} from './backup-native-operations';
 import './globals.css';import './experimental-theme.css';import './dark-theme.css';import './dark-palettes.css';import './universal-ui.css';
 import './backup-native.css';
 type Boot={ownerId:string;language:string;dark:boolean;palette:string;colors:Record<string,string>};
-type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void;getHistory:()=>string|null;setHistory:(value:string)=>void};
+type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void;getHistory:()=>string|null;setHistory:(value:string,operationId:string)=>void};
 declare global {interface Window {GenesisBackupBridge:Bridge;GenesisBackupRuntime:{init:(value:string)=>void;resolve:(id:string,value:string)=>void;resolveChunk:(id:string,value:string,index:number,last:boolean)=>void}}}
 const decode=(value:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(value),c=>c.charCodeAt(0))));
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>}>();
-function rpc<T>(method:string,payload:unknown={}):Promise<T>{
+let operations:ReturnType<typeof nativeBackupOperations>|undefined;
+function rpc<T>(method:string,payload:Record<string,unknown>={}):Promise<T>{
  const id=crypto.randomUUID();return new Promise((resolve,reject)=>{
   const timer=setTimeout(()=>{pending.delete(id);reject(new Error('BACKUP_NATIVE_TIMEOUT'));},180000);
-  pending.set(id,{resolve:resolve as (value:unknown)=>void,reject,timer});const raw=JSON.stringify({id,method,payload});
+  pending.set(id,{resolve:resolve as (value:unknown)=>void,reject,timer});const token=operations?.token();
+  const submitted=token&&!['operationBegin','operationEnd','restart'].includes(method)?{...payload,operationId:token}:payload;
+  const raw=JSON.stringify({id,method,payload:submitted});
   if(raw.length<=131072)window.GenesisBackupBridge.postMessage(raw);else for(let offset=0,index=0;offset<raw.length;offset+=131072,index++)window.GenesisBackupBridge.postChunk(id,index,offset+131072>=raw.length,raw.slice(offset,offset+131072));
  });
 }
 let initialized=false;const responseChunks=new Map<string,string>();
 window.GenesisBackupRuntime={
  init(value){if(initialized)return;initialized=true;const boot=decode(value) as Boot;
+  operations=nativeBackupOperations({begin:operationId=>rpc('operationBegin',{operationId}),end:operationId=>rpc('operationEnd',{operationId}),restart:()=>rpc('restart')});
   document.documentElement.lang=boot.language;document.documentElement.dataset.genesisTheme=boot.dark?'standart-dark':'standart';document.documentElement.dataset.genesisPalette=boot.palette;
   for(const [name,color] of Object.entries(boot.colors))if(/^--[a-z-]+$/.test(name)&&/^#[a-f0-9]{6,8}$/i.test(color))document.documentElement.style.setProperty(name,color);
   // Only operation timestamps are persisted. Files, recovery keys and decoded contents stay in memory.
   const historyKey=`genesis-backup-history-v1:${boot.ownerId}`;
   Object.defineProperty(window,'localStorage',{value:{getItem:(key:string)=>key===historyKey?window.GenesisBackupBridge.getHistory():null,
-   setItem:(key:string,value:string)=>{if(key!==historyKey||value.length>500)throw Error('BACKUP_STORAGE_SCOPE');window.GenesisBackupBridge.setHistory(value);},removeItem(){},clear(){},key:()=>null,length:0}});
+   setItem:(key:string,value:string)=>{if(key!==historyKey||value.length>500)throw Error('BACKUP_STORAGE_SCOPE');window.GenesisBackupBridge.setHistory(value,operations!.token());},removeItem(){},clear(){},key:()=>null,length:0}});
   let needs=false;
   const access:BackupDocumentAccess={check(){},request:<T,>(path:string,init:RequestInit={})=>rpc<T>('request',{path,method:init.method??'GET',body:init.body?JSON.parse(String(init.body)):null}),
    open:<T,>(value:{iv:string;ciphertext:string},scope:string)=>rpc<T>('open',{value,scope}),seal:(value:unknown,scope:string)=>rpc('seal',{value,scope})};
@@ -39,6 +44,7 @@ window.GenesisBackupRuntime={
   };
   type NativeFrozen=FrozenDevice&{nativeSnapshot:BackupPayload};
   const runtime:BackupPanelRuntime={backupRequest,
+   withOperation:action=>operations!.run(action),
    authorizeBackup:()=>backupRequest('/authorize',{noticeVersion:BACKUP_NOTICE_VERSION}),
    freezeBackupDevice:async owner=>({owner,at:new Date().toISOString(),sources:{},sync:{},storage:{},nativeSnapshot:await rpc<BackupPayload>('capture')}) as unknown as NativeFrozen,
    retainBackupSafety:async frozen=>{await rpc('retain',{snapshot:(frozen as NativeFrozen).nativeSnapshot});return {persistent:true};},
@@ -48,7 +54,7 @@ window.GenesisBackupRuntime={
     sealWorkspace:async(_owner,document,version)=>({...await access.seal(document,'workspace'),expectedVersion:version,version:version+1,writerProtocol:9,minimumWriterProtocol:9,
       quotaUsage:{'personal-projects':document.projects.map(row=>row.id),habits:document.habits.filter(row=>habitLifecycleState(row).status!=='deleted').map(row=>row.id)},metrics:metricsFor([],document.projects,document.habits.length)})},choices),
    captureAccountSessionGuard:()=>()=>{},backupNeedsReconciliation:()=>needs,
-   holdBackupStaleChanges:async()=>{await rpc('reconcile');},restart:()=>void rpc('restart'),
+   holdBackupStaleChanges:async()=>{await rpc('reconcile');},restart:()=>operations!.requestRestart(),
    download:async(content,id)=>{
     if(content.length>BACKUP_MAX_FILE)throw Error('BACKUP_TOO_LARGE');await rpc('exportBegin',{length:content.length,id});
     for(let offset=0;offset<content.length;offset+=131072)await rpc('exportChunk',{offset,text:content.slice(offset,offset+131072)});
