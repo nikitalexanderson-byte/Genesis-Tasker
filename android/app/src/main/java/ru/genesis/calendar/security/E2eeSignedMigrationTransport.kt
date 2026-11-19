@@ -29,12 +29,20 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
     suspend fun legacyTasks(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-tasks",context)
     suspend fun legacyDiary(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-diary",context)
     suspend fun legacyMindmaps(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-mindmaps",context)
-    private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext): JSONObject {
+    suspend fun legacyMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+        check(table in setOf("maps","versions","receipts","deletions")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
+        return legacyPersonal("legacy-mindmaps",context,JSONObject().put("table",table).put("offset",offset))
+    }
+    suspend fun legacyPhysisPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+        check(table in setOf("owners","records","usedIds","receipts")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
+        return legacyPersonal("legacy-physis",context,JSONObject().put("table",table).put("offset",offset))
+    }
+    private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null): JSONObject {
         check(context.ownerId == ownerId && context.scopeId == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
             .put("action",action).put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
             .put("operationId",UUID.randomUUID().toString()).put("payload",JSONObject().put("migrationId",context.migrationId)
-                .put("fence",context.fence).put("sourceHash",context.sourceHash)),device.keys().signing.private)
+                .put("fence",context.fence).put("sourceHash",context.sourceHash).apply{page?.let{put("table",it.get("table"));put("offset",it.get("offset"))}}),device.keys().signing.private)
         val result = call("/read",packet)
         check(result.get("checkpointHash") == checkpoint && E2eeCommands.integer(result.get("directoryRevision"),1) == revision) { "E2EE_DIRECTORY_CONFLICT" }
         return result

@@ -46,8 +46,10 @@ Evidence under `output/release-3.3.6/runtime/`:
   the byte cap returns an explicit continuation first, then refuses that row
   without changing/deleting the source. A synthetic map history above 16 MiB
   and below the real 40,000,000-byte allowance is read with all 50 versions.
-- The existing actual 18-packet WebCrypto/JCA fixture remains accepted. New
-  page-specific web/native emitters and client collectors are still required.
+- The original 18-packet WebCrypto/JCA fixture passed the server increment.
+  Follow-up client emitters now collect 22 actual signed packets, including
+  mindmap-version / Physis-record page offsets. PHP checks those packets and
+  four tampered offsets in 26 assertions; no replacement signatures are made.
 
 The retained `physis-paged-source-server-02/` failure was an incorrect test
 expectation: its valid first tombstone page correctly returned a continuation
@@ -60,3 +62,30 @@ Physis source, embedded map attachments, large-data bridge/lifecycle acceptance,
 normal product routing and recovery/direct-upgrade tests remain required.
 All private paths, shared rotations/files/automation, backups, the original 48
 scenarios, 14-language review and independent crypto review remain release gates.
+
+## Web and native signed page collection
+
+The new web/native ports sign table and integer offset together with owner,
+device, directory checkpoint and migration lease. Invalid table/offset/binding
+requests refuse before HTTP. Both collectors verify the exact response shape,
+all source/header/generation bindings, stable table counts and old-key identity,
+consecutive offsets, explicit EOF and bounded pages. Empty/truncated pages and
+changed metadata cannot become successful partial data. Unknown row fields and
+raw JSON are retained for the category's subsequent validation. A collector is
+not an unlock of an independent vault and does not validate private row meaning.
+
+Limits are explicit: 128 rows / 16 MiB per received response, 128 MiB aggregate,
+10,000 pages and 1,000,000 declared rows. The server's 8 MiB body budget is tighter.
+Oversize input refuses without changing sources. The JS context is copied/frozen
+before asynchronous IO; native uses its immutable source context. The optional JS
+opaque-key capability is explicit: it refuses raw account keys and is only for
+the native bridge. The ordinary web collector requires a canonical old key.
+
+Evidence: `legacy-pages-migration-js-02.log` 79/79 web tests PASS (27 collector
+and 52 coordinator/transport); native page collector 3/3 and migration 13/13
+JVM PASS, no skips in these suites, from `native-mindmaps-jvm-summary-01.json`.
+Main/test APK and full native lint build01 completed successfully in 19m8s.
+`mindmaps-source-server-05/` 7/7 PHP PASS includes the new actual 22-packet
+fixture. Types/scoped lint passed. A separate new map repository instrumentation
+fixture is being corrected; that failure is not part of this transport proof.
+Native large bridge/source integration and the Physis category remain required.

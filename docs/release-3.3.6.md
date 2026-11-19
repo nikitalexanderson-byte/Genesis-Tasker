@@ -1007,3 +1007,21 @@ logs: `e2ee-336-local-key-lifecycle.md`. Global lost-key UX/emergency export,
 общий lifecycle/recovery/upgrades/остальные14 adapters/shared/backups/original48/
 14 languages/independent crypto review ещё обязательны до активации и выпуска.
 Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.
+
+## 19 ноября: signed page ports и оба client collectors
+
+Web/Kotlin подписывают table/offset вместе с owner/device/lease/checkpoint.
+Оба collectors проверяют exact response/header/generation, неизменные totals и
+old-key identity, consecutive offsets и explicit EOF. Short/empty/tampered page
+не считается полным источником; aggregate/page/row limits явные и безопасные.
+Private row schemas/locked vaults по-прежнему проверяет соответствующий adapter.
+
+79/79 focused web PASS, native collector3/3 +migration13/13 JVM PASS; общий
+native build01 main/test/JVM/lint19m8s SUCCESS. Actual22 WebCrypto/JCA packets
+собраны без синтеза signatures; PHP26 assertions включают4 tampered offsets.
+`mindmaps-source-server-05/`:7/7 PHP PASS. Документ:
+`e2ee-336-paged-personal-sources.md`. Сам map adapter отдельно проходит приёмку:
+в первом instrumentation73 cases один новый fixture использовал разные outer
+field keys; исправление и повтор обязательны. Coverage пока6/20, product/
+large-source/recovery/upgrades/shared/backups/original48/14 languages/independent
+review gates сохраняются. Production3.3.5/149 и все release/cutover flags прежние.

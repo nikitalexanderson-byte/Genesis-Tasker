@@ -300,7 +300,7 @@ class E2eeMigrationTest {
         f.badPage = "lock"; reject("E2EE_UNLOCK_REQUIRED") { transport.readAll() }
     }
     @Test fun emitActualNativeReadbackPacketsForPhpSqliteContract() = runBlocking {
-        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null; var stoicheionRead: JSONObject? = null; var adviceRead: JSONObject? = null; var tasksRead: JSONObject? = null; var diaryRead: JSONObject? = null; var mindmapsRead: JSONObject? = null
+        val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null; var stoicheionRead: JSONObject? = null; var adviceRead: JSONObject? = null; var tasksRead: JSONObject? = null; var diaryRead: JSONObject? = null; var mindmapsRead: JSONObject? = null; var mindmapsPageRead:JSONObject?=null;var physisPageRead:JSONObject?=null
         val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace")) { path, packet ->
             assertEquals("/read",path)
             if(packet.getJSONObject("command").getString("action") == "legacy-workspace") legacyRead = packet
@@ -309,7 +309,9 @@ class E2eeMigrationTest {
             else if(packet.getJSONObject("command").getString("action") == "legacy-advice") adviceRead = packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-tasks") tasksRead = packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-diary") diaryRead = packet
+            else if(packet.getJSONObject("command").getString("action") == "legacy-mindmaps"&&packet.getJSONObject("command").getJSONObject("payload").has("table"))mindmapsPageRead=packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-mindmaps") mindmapsRead = packet
+            else if(packet.getJSONObject("command").getString("action") == "legacy-physis")physisPageRead=packet
             else { assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet) }
             JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).put("envelopes",JSONArray())
         }
@@ -344,7 +346,16 @@ class E2eeMigrationTest {
         assertEquals(context.migrationId,mapsPayload.getString("migrationId"));assertEquals(context.fence,mapsPayload.getLong("fence"));assertEquals(context.sourceHash,mapsPayload.getString("sourceHash"))
         reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyMindmaps(E2eeMigrationSourceContext("foreign",f.scope,context.migrationId,1,context.sourceHash,1)) }
         reject("E2EE_SCOPE_BINDING_MISMATCH") { transport.legacyMindmaps(E2eeMigrationSourceContext("owner","personal:foreign",context.migrationId,1,context.sourceHash,1)) }
+        transport.legacyMindmapsPage(context,"versions",128)
+        assertEquals("legacy-mindmaps",E2eeCommands.verify(requireNotNull(mindmapsPageRead),f.device.keys().signing.public).getString("action"))
+        val mapPage=mindmapsPageRead!!.getJSONObject("command").getJSONObject("payload");E2eeKeys.exact(mapPage,setOf("migrationId","fence","sourceHash","table","offset"));assertEquals("versions",mapPage.getString("table"));assertEquals(128,mapPage.getInt("offset"))
+        transport.legacyPhysisPage(context,"records",128)
+        assertEquals("legacy-physis",E2eeCommands.verify(requireNotNull(physisPageRead),f.device.keys().signing.public).getString("action"))
+        val physisPage=physisPageRead!!.getJSONObject("command").getJSONObject("payload");E2eeKeys.exact(physisPage,setOf("migrationId","fence","sourceHash","table","offset"));assertEquals("records",physisPage.getString("table"));assertEquals(128,physisPage.getInt("offset"))
+        reject("E2EE_LEGACY_PAGE_INVALID"){transport.legacyMindmapsPage(context,"users",0)}
+        reject("E2EE_LEGACY_PAGE_INVALID"){transport.legacyPhysisPage(context,"records",-1)}
+        reject("E2EE_SCOPE_BINDING_MISMATCH"){transport.legacyPhysisPage(E2eeMigrationSourceContext("owner","personal:foreign",context.migrationId,1,context.sourceHash,1),"records",0)}
         val file = File(root,"output/release-3.3.6/runtime/native-migration-transport.json"); file.parentFile.mkdirs()
-        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).put("auroraRead",auroraRead).put("stoicheionRead",stoicheionRead).put("adviceRead",adviceRead).put("tasksRead",tasksRead).put("diaryRead",diaryRead).put("mindmapsRead",mindmapsRead).toString(2))
+        file.writeText(JSONObject().put("protocol",1).put("synthetic",true).put("platform","native").put("bootstrap",f.events.getJSONObject(0)).put("reads",reads).put("legacyRead",legacyRead).put("auroraRead",auroraRead).put("stoicheionRead",stoicheionRead).put("adviceRead",adviceRead).put("tasksRead",tasksRead).put("diaryRead",diaryRead).put("mindmapsRead",mindmapsRead).put("mindmapsPageRead",mindmapsPageRead).put("physisPageRead",physisPageRead).toString(2))
     }
 }

@@ -47,11 +47,19 @@ export class SignedMigrationTransport implements MigrationTransport {
   async legacyMindmaps(context:MigrationSourceContext):Promise<unknown>{
     return this.#legacyPersonal('legacy-mindmaps',context);
   }
-  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps',context:MigrationSourceContext):Promise<unknown>{
+  async legacyMindmapsPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    if(!['maps','versions','receipts','deletions'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
+    return this.#legacyPersonal('legacy-mindmaps',context,{table,offset});
+  }
+  async legacyPhysisPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    if(!['owners','records','usedIds','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
+    return this.#legacyPersonal('legacy-physis',context,{table,offset});
+  }
+  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis',context:MigrationSourceContext,page?:{table:string;offset:number}):Promise<unknown>{
     if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action,
       expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),
-      payload:{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash}},this.#device.keys().signing.privateKey);
+      payload:{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,...page}},this.#device.keys().signing.privateKey);
     const response=await this.#call('/read',packet);
     if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');
     return response;

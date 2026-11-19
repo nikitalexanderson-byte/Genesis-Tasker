@@ -51,7 +51,16 @@ foreach($fixtures as $fixture) {
     if($command['action']!=='legacy-mindmaps')throw new RuntimeException('Invalid legacy mindmap transport action');
     try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform map source accepted');}
     catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
+    foreach(['mindmapsPageRead'=>['legacy-mindmaps','versions'],'physisPageRead'=>['legacy-physis','records']]as $name=>[$action,$table]){
+        $packet=$fixture[$name];$command=$packet['command'];
+        if($command['action']!==$action||$command['payload']['table']!==$table||$command['payload']['offset']!==128)throw new RuntimeException('Invalid actual page transport binding');
+        $tampered=$packet;$tampered['command']['payload']['offset']=129;
+        try{genesisE2eeRead($owner,$tampered,str_repeat('s',32));throw new RuntimeException('Tampered page offset accepted');}
+        catch(DomainException $error){if($error->getMessage()!=='E2EE_UNTRUSTED_COMMAND')throw$error;$checks++;}
+        try{genesisE2eeRead($owner,$packet,str_repeat('s',32));throw new RuntimeException('Stale cross-platform paged source accepted');}
+        catch(DomainException $error){if($error->getMessage()!=='E2EE_SOURCE_CHANGED')throw$error;$checks++;}
+    }
     $db->prepare("DELETE FROM e2ee_scopes WHERE scope_id=? AND state='uploading'")->execute([$scope]);
 }
-if($checks!==18)throw new RuntimeException('Missing web/native transport vectors');
-echo 'PASS e2ee-migration-transport '.$checks.' real signed web/native packets; pagination accepted, stale legacy-source tokens rejected'.PHP_EOL;
+if($checks!==26)throw new RuntimeException('Missing web/native transport vectors');
+echo 'PASS e2ee-migration-transport '.$checks.' assertions over 22 real signed web/native packets and 4 tampered offsets; pagination accepted, stale legacy-source tokens rejected'.PHP_EOL;
