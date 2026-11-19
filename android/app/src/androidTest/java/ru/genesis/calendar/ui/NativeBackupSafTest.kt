@@ -94,7 +94,7 @@ class NativeBackupSafTest {
             click("Choose file");picker()
             val exported=device.wait(Until.findObject(By.text(filename)),15000)
             assertNotNull("The real exported archive must be offered by OpenDocument",exported);exported.click()
-            waitText("import.genesisbackup")
+            waitText(filename)
             click("Check and decrypt")
             waitText("File checked on this device.")
             assertFalse(body().contains("The operation could not finish"))

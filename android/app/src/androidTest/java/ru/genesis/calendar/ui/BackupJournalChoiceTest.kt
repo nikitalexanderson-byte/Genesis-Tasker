@@ -130,7 +130,7 @@ class BackupJournalChoiceTest {
             val save=device.wait(Until.findObject(By.res("android:id/button1")),10000);assertNotNull(save);save.click()
             waitText("Encrypted backup saved.")
             click("Choose file");val exported=device.wait(Until.findObject(By.text(filename)),15000);assertNotNull("Actual encrypted SAF file",exported);exported.click()
-            waitText("import.genesisbackup");click("Check and decrypt");waitText("Choose a saved version")
+            waitText(filename);click("Check and decrypt");waitText("Choose a saved version")
             assertEquals("3",js("document.querySelectorAll('input[type=radio]').length"));assertEquals("0",js("document.querySelectorAll('input[type=radio]:checked').length"))
             assertEquals("true",js("document.querySelector('.backup-coverage > .backup-actions button').disabled"));assertEquals(0,previews.get())
             js("(()=>{for(const input of document.querySelectorAll('.backup-coverage > ul input'))if(input.checked&&!input.closest('label').textContent.includes('Gno Meter Basileia'))input.click();document.querySelectorAll('input[type=radio]')[2].click();return true})()")

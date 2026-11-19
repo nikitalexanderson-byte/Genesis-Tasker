@@ -121,7 +121,7 @@ export async function cloudSyncClient({ storage = new MemoryStorage(), sessionSt
     physis:withPhysis?{store:load(resolve(root,'app/physis/store.ts')),crypto:load(resolve(root,'app/physis/crypto.ts')),account:load(resolve(root,'app/physis/account-session.ts'))}:undefined,
     featureAccess: load(resolve(root, "app/feature-access.ts")),
     backups: withBackups ? {device:load(resolve(root,'app/backup-device.ts')),sources:load(resolve(root,'app/backup-sources.ts')),format:load(resolve(root,'app/backup-format.ts')),tasks:load(resolve(root,'app/backup-task-restore.ts')),restore:load(resolve(root,'app/backup-restore.ts')),
-      memory:load(resolve(root,'app/backup-migration-memory.ts')),archives:load(resolve(root,'app/e2ee/archives-web-source.ts'))} : undefined,
+      memory:load(resolve(root,'app/backup-migration-memory.ts')),archives:load(resolve(root,'app/e2ee/archives-web-source.ts')),operations:load(resolve(root,'app/backup-web-operations.ts'))} : undefined,
     respond(handler) { fetchResponse = handler; },
     holdCrypto(method) {
       const gate = { entered: deferred(), release: deferred() };

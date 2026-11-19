@@ -23,12 +23,18 @@ The signed server archive reader/byte fragments are still a partial next
 increment, not a tenth source adapter. See each implementation document and the
 actual candidate commit/evidence; this brief's original baseline is historical.
 
-The latest pushed, locally accepted increment is
+The pushed baseline before the latest backup batch is
 `d31bd64233694fefa2a7595b2965006257e0e64c`: archive fragment collectors, original
 web file/form capture and native whole-backup operation permits. Native Main/
 renderer reply-adoption guards are the following locally accepted delta, not a frozen
 or independently reviewed candidate. Their detailed state and exact test scope
-are in `e2ee-336-archives-native-jobs.md`.
+are in `e2ee-336-archives-native-jobs.md`. The following backup batch also preserves
+exact native file bytes/provider provenance and holds explicit whole-operation
+web permits through crypto, IO, files and receipts. Current selected evidence is
+in `e2ee-336-archives-native-file.md` and `e2ee-336-archives-web-jobs.md`: full
+JS1755/1755, real Chromium22/22, JVM23/23 and actual API26/API34 acceptance22/22
+each. This still does not implement the complete archives source or constitute
+the independent human review.
 
 The independent review may begin with the implemented protocol while feature
 integration continues. Final composed-protocol and migration acceptance is

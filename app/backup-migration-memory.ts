@@ -1,10 +1,11 @@
 import {assertTechnical} from './e2ee/keys.ts';
 import {encodeE2eeBytes} from './e2ee/envelope.ts';
 import {BACKUP_MAX_FILE} from './backup-format.ts';
+import {nativeBackupFileOrigin,type NativeBackupFileOrigin} from './backup-native-file.ts';
 
 export type BackupMigrationForm={state:unknown;file:File|null;settled:boolean};
 export type BackupMigrationCapture={source:string;mounted:boolean;settled:boolean;state:unknown;
- file:{name:string;type:string;size:number;lastModified:number;bytes:string}|null};
+ file:{name:string;type:string;size:number;lastModified:number;bytes:string;nativeOrigin?:NativeBackupFileOrigin}|null};
 type Editor={source:string;read:()=>BackupMigrationForm};
 type Session={mounted:Map<object,Editor>;detached:{source:string;form:BackupMigrationForm}[];tasks:number;revision:number};
 const sessions=new Map<string,Session>();let listening=false;
@@ -44,7 +45,8 @@ export async function captureBackupMigrationEditors(ownerId:string,assertCurrent
    if(!Number.isSafeInteger(file.size)||file.size<0||file.size>BACKUP_MAX_FILE)throw new Error('E2EE_SOURCE_TOO_LARGE');
    const raw=new Uint8Array(await file.arrayBuffer());
    try{current();if(raw.length!==file.size)throw new Error('E2EE_ARCHIVE_CAPTURE_CHANGED');
-    captured={name:file.name,type:file.type,size:file.size,lastModified:file.lastModified,bytes:encodeE2eeBytes(raw)};
+    const nativeOrigin=nativeBackupFileOrigin(file);
+    captured={name:file.name,type:file.type,size:file.size,lastModified:file.lastModified,bytes:encodeE2eeBytes(raw),...nativeOrigin?{nativeOrigin}:{}};
    }finally{raw.fill(0);}
   }
   const entry={source:row.source,mounted:row.mounted,settled:row.form.settled,state:row.form.state,file:captured};

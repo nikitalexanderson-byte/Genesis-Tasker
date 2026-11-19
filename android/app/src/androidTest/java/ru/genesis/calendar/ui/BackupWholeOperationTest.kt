@@ -28,6 +28,8 @@ class BackupWholeOperationTest {
         var io:(()->Unit)?=null
         var beforeUiDispatch:suspend (String)->Unit={}
         var extraReply:JSONObject?=null
+        var chosen:android.net.Uri?=null
+        var beforeChoose:suspend ()->Unit={}
         lateinit var bridge:BackupJavascriptBridge
         fun ownerCheck(){check(app.workspaceScope==account&&app.workspaceEpoch==epoch){"BACKUP_OWNER"}}
         fun check(){checks.incrementAndGet();check(live){"BACKUP_OWNER"};ownerCheck()}
@@ -45,7 +47,7 @@ class BackupWholeOperationTest {
             }
             val store=BackupNativeStore(app,owner,account,gateway)
             bridge=BackupJavascriptBridge(store,gateway,app,owner,jobs,{id,value->responses.remove(id)?.complete(value)},
-                {_,_->pickers.incrementAndGet();null},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)})
+                {_,_->pickers.incrementAndGet();beforeChoose();chosen},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)})
         }
         fun submit(method:String,payload:JSONObject=JSONObject()):Deferred<JSONObject>{
             val id=UUID.randomUUID().toString();val result=CompletableDeferred<JSONObject>();responses[id]=result
@@ -165,5 +167,45 @@ class BackupWholeOperationTest {
             r.app.activateAccount(null);r.app.activateAccount(r.owner)
             assertFalse(r.bridge.currentSession(token));assertFalse(r.bridge.currentSession(""));ok(r.end(token))
         }finally{r.finish()}
+    }
+    @Test fun selectedProviderFileTransfersExactBinaryBytesAndMetadataThenRetiresItsBuffer():Unit=runBlocking {
+        val r=Rig();r.start();val directory=java.io.File(r.app.cacheDir,"advice-shares");check(directory.isDirectory||directory.mkdirs())
+        val file=java.io.File(directory,"QA336-исходный-${UUID.randomUUID()}.genesisbackup")
+        val original=ByteArray(BackupImportFile.CHUNK+19){(it%256).toByte()};file.writeBytes(original)
+        try{
+            r.chosen=androidx.core.content.FileProvider.getUriForFile(r.app,"${r.app.packageName}.updates",file)
+            val token=r.begin();val reply=r.call("importChoose",r.payload(token));ok(reply);val info=reply.getJSONObject("value")
+            assertEquals(file.name,info.getString("name"));assertEquals(original.size,info.getInt("length"));assertEquals(file.length(),info.getLong("declaredSize"))
+            assertTrue(info.isNull("lastModified"));assertFalse(info.toString().contains(file.absolutePath));val joined=java.io.ByteArrayOutputStream();var offset=0
+            while(offset<original.size){val part=r.call("importChunk",r.payload(token).put("id",info.getString("id")).put("offset",offset));ok(part)
+                val value=part.getJSONObject("value");assertEquals(offset,value.getInt("offset"));joined.write(java.util.Base64.getUrlDecoder().decode(value.getString("bytes")));offset=value.getInt("nextOffset")}
+            assertArrayEquals(original,joined.toByteArray())
+            assertEquals(java.security.MessageDigest.getInstance("SHA-256").digest(original).joinToString(""){"%02x".format(it)},info.getString("sha256"))
+            ok(r.call("importClear",r.payload(token).put("id",info.getString("id"))))
+            assertTrue(r.call("importChunk",r.payload(token).put("id",info.getString("id")).put("offset",0)).has("error"));ok(r.end(token))
+            assertEquals(0,r.requests.get())
+        }finally{original.fill(0);file.delete();r.finish()}
+    }
+    @Test fun cancelledReplacementKeepsTheOriginalTransferAndEndCannotLeaveBytesForAnotherJob():Unit=runBlocking {
+        val r=Rig();r.start();val directory=java.io.File(r.app.cacheDir,"advice-shares");check(directory.isDirectory||directory.mkdirs())
+        val file=java.io.File(directory,"QA336-cancel-${UUID.randomUUID()}.genesisbackup");file.writeBytes(byteArrayOf(0,-1,0xc3.toByte(),0x28))
+        try{
+            r.chosen=androidx.core.content.FileProvider.getUriForFile(r.app,"${r.app.packageName}.updates",file)
+            val token=r.begin();val first=r.call("importChoose",r.payload(token));ok(first);val id=first.getJSONObject("value").getString("id");r.chosen=null
+            error(r.call("importChoose",r.payload(token)),"BACKUP_CANCELLED")
+            ok(r.call("importChunk",r.payload(token).put("id",id).put("offset",0)));ok(r.end(token))
+            val next=r.begin();assertTrue(r.call("importChunk",r.payload(next).put("id",id).put("offset",0)).has("error"));ok(r.end(next))
+        }finally{file.delete();r.finish()}
+    }
+    @Test fun endingTheJobWhileItsPickerWaitsCannotPublishOrInstallAFileAfterCleanup():Unit=runBlocking {
+        val r=Rig();r.start();val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        try{
+            r.chosen=android.net.Uri.parse("content://ru.genesis.synthetic.unavailable/picker-must-not-open")
+            val token=r.begin();r.beforeChoose={entered.complete(Unit);release.await()}
+            val result=r.submit("importChoose",r.payload(token));withTimeout(10000){entered.await()}
+            error(r.end(token),"E2EE_UNAWAITED_LEGACY_OPERATION");release.complete(Unit)
+            error(withTimeout(10000){result.await()},"E2EE_INVALID_LEGACY_OPERATION")
+            val next=r.begin();ok(r.end(next));assertEquals(0,r.requests.get())
+        }finally{release.complete(Unit);r.finish()}
     }
 }

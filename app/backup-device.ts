@@ -26,8 +26,8 @@ export function freezeBackupDevice(owner: string, storage: Storage = localStorag
   return structuredClone({ owner, at:new Date().toISOString(), sources, sync, storage:frozen });
 }
 type Envelope = { id:string; revision?:number; expectedRevision?:number; iv:string; ciphertext:string; schemaVersion?:number };
-export async function materializeDeviceBackup(frozen: FrozenDevice): Promise<BackupPayload> {
-  const access = personalDocumentAccess(frozen.owner); access.check();
+export async function materializeDeviceBackup(frozen: FrozenDevice,adapter?:Pick<ReturnType<typeof personalDocumentAccess>,'check'|'open'>): Promise<BackupPayload> {
+  const access = adapter??personalDocumentAccess(frozen.owner); access.check();
   const sections: BackupSection[] = BACKUP_MODULES.map(id => ({ id, source:'device', capturedAt:frozen.at, count:0, pending:0, revision:null, completeness:'unavailable', notices:[], data:null }));
   const section = (id: BackupSection['id']) => sections.find(row => row.id === id)!;
   const workspace = section('workspace');
@@ -69,9 +69,9 @@ export async function materializeDeviceBackup(frozen: FrozenDevice): Promise<Bac
   return materializeBackupJournalChoices({schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:frozen.owner,createdAt:frozen.at,client:'web',sections,billingEvidence:null});
 }
 /** Encrypted internal safety copy is retained even when the entitlement service is unavailable. */
-export async function retainBackupSafety(frozen: FrozenDevice, storage: Storage = localStorage) {
+export async function retainBackupSafety(frozen: FrozenDevice, storage: Storage = localStorage,adapter?:Pick<ReturnType<typeof personalDocumentAccess>,'check'|'seal'>) {
+  const access=adapter??personalDocumentAccess(frozen.owner);access.check();
   memorySafety.set(frozen.owner,structuredClone(frozen));
-  const access=personalDocumentAccess(frozen.owner);
   const prefix=`genesis-backup-safety-v1:${frozen.owner}:`;
   const keys=Array.from({length:storage.length},(_,i)=>storage.key(i)).filter((key):key is string=>Boolean(key?.startsWith(prefix))).sort();
   const envelope=await access.seal(frozen,'backup-device-safety:v1');access.check();

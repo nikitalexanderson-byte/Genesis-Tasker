@@ -9,6 +9,7 @@ import type {BackupDocumentAccess} from './backup-restore';
 import {materializeBackupJournalChoices} from './backup-private-journals';
 import {nativeBackupOperations} from './backup-native-operations';
 import {acceptNativeBackupReply,assertNativeBackupSession} from './backup-native-replies';
+import {readNativeBackupFile} from './backup-native-file';
 import './globals.css';import './experimental-theme.css';import './dark-theme.css';import './dark-palettes.css';import './universal-ui.css';
 import './backup-native.css';
 type Boot={ownerId:string;language:string;dark:boolean;palette:string;colors:Record<string,string>};
@@ -48,7 +49,7 @@ window.GenesisBackupRuntime={
   };
   type NativeFrozen=FrozenDevice&{nativeSnapshot:BackupPayload};
   const runtime:BackupPanelRuntime={backupRequest,
-   withOperation:action=>operations!.run(action),
+   withOperation:(owner,action)=>{if(owner!==boot.ownerId)throw new Error('BACKUP_OWNER');return operations!.run(()=>action(runtime));},
    authorizeBackup:()=>backupRequest('/authorize',{noticeVersion:BACKUP_NOTICE_VERSION}),
    freezeBackupDevice:async owner=>({owner,at:new Date().toISOString(),sources:{},sync:{},storage:{},nativeSnapshot:await rpc<BackupPayload>('capture')}) as unknown as NativeFrozen,
    retainBackupSafety:async frozen=>{await rpc('retain',{snapshot:(frozen as NativeFrozen).nativeSnapshot});return {persistent:true};},
@@ -64,11 +65,7 @@ window.GenesisBackupRuntime={
     for(let offset=0;offset<content.length;offset+=131072)await rpc('exportChunk',{offset,text:content.slice(offset,offset+131072)});
     await rpc('exportSave');
    },
-   readFile:async()=>{
-    const file=await rpc<{length:number;name:string}>('importChoose');if(file.length>BACKUP_MAX_FILE)throw Error('BACKUP_TOO_LARGE');
-    let text='';try{while(text.length<file.length)text+=await rpc<string>('importChunk',{offset:text.length});}finally{await rpc('importClear');}
-    return new File([text],file.name,{type:'application/octet-stream'});
-   },
+   readFile:()=>readNativeBackupFile({choose:()=>rpc('importChoose'),chunk:(id,offset)=>rpc('importChunk',{id,offset}),clear:id=>rpc('importClear',{id}),check}),
   };
   createRoot(document.getElementById('root')!).render(<BackupPanel user={{uid:boot.ownerId,language:boot.language} as GenesisUser} runtime={runtime}/>);
  },

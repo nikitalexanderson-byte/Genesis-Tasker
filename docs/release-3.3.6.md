@@ -1522,3 +1522,40 @@ renderer-session case включены. API26 statementservice dialog закры
 Coverage9/20, остальные11 sources и все системные release gates сохраняются.
 Production3.3.5/149, floors0/pilot/cutover off, GENESIS_DEPLOY_ANDROID=false;
 Deploy/Play/личных устройств не было.
+
+## Архивы: точный native файл и полный web job,20 ноября
+
+Native import передаёт original bytes через bounded base64url fragments с точными
+byte offsets, явным EOF и проверкой полного SHA256 перед созданием File. Больше
+нет промежуточного replacement UTF8 decoder и выдуманного имени вместо provider
+metadata. Отсутствующие поля остаются null; browser MIME normalization/display
+fallback не заменяет original provenance в protected source input. При cancelled
+replacement прежний transfer не удаляется заранее; chunk/clear привязаны к exact
+operation/file ID. При end сначала удаляется capability, затем очищается buffer;
+late installation повторно проверяет operation под import lock.
+
+Actual web BackupPanel теперь передаёт callback полный bound runtime. Один owner
+permit охватывает capture/safety/crypto/nested HTTP/preview/file/history. Children
+включая pure crypto и file work tracked/drained; unawaited child не освобождает
+lock до завершения и не может записать поздний результат. Restart отложен до
+успешного cleanup и original-session check. Нет global borrowed permit.
+
+Focused32/32 и полный JS1755/1755 PASS, failures/skips0. Types/scoped ESLint и
+build:web PASS:98 HTML/14 languages, exact dictionaries,280 gallery/offline assets.
+Actual Chromium157/React/File/WebCrypto/IDB/Web Locks22/22 PASS, console0.
+Проверены original14 capture/new-root cold-unlock checks, whole-job exclusion,
+durable deny и invalid UTF8 binary File/provenance. Own browser/listener закрыты;
+оба PNG просмотрены. Это desktop/light fixture, не полная visual/provider matrix.
+См. `e2ee-336-archives-web-jobs.md`, `e2ee-336-archives-native-file.md`.
+
+Native build01 имел исправленную syntax error; build02 SUCCESS8m46s и selected
+JVM23/23 PASS. Final build03 с composed web/native callback и end/publication guard
+SUCCESS26m44s: selected JVM23/23 и actual API26/API34 по22/22,0 fail/skip.
+Lint0 errors/208 warnings/8 hints: net2 warning обусловлены изменившимся lookup
+доступных версий Compose/Lifecycle, новых product-source предупреждений нет.
+Точные hashes/reports и ограничения в native-file документе. Source checks44613760022 на
+d31bd642 полностью SUCCESS; следующие локальные инкременты этим CI не проверены.
+Coverage9/20: native detached forms, nested archive reconciliation/recovery и
+остальные11 sources/48 сценариев/14-language semantics/human crypto review нужны.
+Production3.3.5/149, floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false;
+Deploy/Play/личных устройств не было.

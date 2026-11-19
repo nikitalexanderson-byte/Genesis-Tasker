@@ -628,8 +628,29 @@ export async function withPhysisAccountOperation<T>(userId:string,operation:(por
 }
 
 /** Deliberately separate from bootstrap: checking export must not pull or merge user data. */
-export function backupRequest<T>(path: '/status' | '/authorize' | '/server-snapshot' | '/preview' | '/commit', body?: unknown) {
-  return api<T>(`/backup/v1${path}`, { method:body === undefined ? 'GET' : 'POST', cache:'no-store', ...(body === undefined ? {} : { body:JSON.stringify(body) }) });
+export function backupRequest<T>(path: '/status' | '/authorize' | '/server-snapshot' | '/preview' | '/commit', body?: unknown,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  return api<T>(`/backup/v1${path}`, { method:body === undefined ? 'GET' : 'POST', cache:'no-store', ...(body === undefined ? {} : { body:JSON.stringify(body) }) },{},permit);
+}
+export type BackupOperationAccess={access:PersonalDocumentAccess;request:typeof backupRequest;run:<T>(operation:()=>Promise<T>)=>Promise<T>;
+  openWorkspace:typeof openBackupWorkspace;sealWorkspace:typeof sealBackupWorkspace;current:()=>ReturnType<typeof backupRestoreCurrent>;hold:()=>Promise<void>};
+/** One explicit permit through capture, safety encryption, every nested IO,
+ * archive parsing/crypto, download and final receipts. Nothing is stored in a
+ * mutable global/current permit. Ports expire with this one captured session. */
+export async function withBackupOperation<T>(userId:string,operation:(ports:BackupOperationAccess)=>Promise<T>):Promise<T>{
+  const original=personalDocumentAccess(userId);original.check();
+  return legacyTransportGate().withOperation(userId,original.check,async permit=>{
+    const raw=personalDocumentAccess(userId,permit);raw.check();
+    const run=<V>(action:()=>Promise<V>)=>legacyTransportGate().borrow(permit,userId,raw.check,action);
+    const access:PersonalDocumentAccess={...raw,withLegacyOperation:action=>run(()=>action(access)),
+      request:(path,init)=>run(()=>raw.request(path,init)),privateId:scope=>run(()=>raw.privateId(scope)),
+      seal:(value,purpose)=>run(()=>raw.seal(value,purpose)),open:(value,purpose)=>run(()=>raw.open(value,purpose))};
+    const owner=(candidate:string)=>{access.check();if(candidate!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};
+    const ports:BackupOperationAccess={access,run,request:(path,body)=>run(()=>backupRequest(path,body,permit)),
+      openWorkspace:(candidate,envelope)=>run(async()=>{owner(candidate);return openBackupWorkspace(candidate,envelope,permit);}),
+      sealWorkspace:(candidate,document,version)=>run(async()=>{owner(candidate);return sealBackupWorkspace(candidate,document,version,permit);}),
+      current:()=>run(()=>backupRestoreCurrent(userId,permit)),hold:()=>run(()=>holdBackupStaleChanges(userId,permit))};
+    const result=await operation(ports);access.check();return result;
+  });
 }
 export function accountSecurityRequest<T>(path:'/account/google-identities'|'/account/google-identities/primary'|'/account/google-identities/disable'|'/account/google-identities/recovery-code'|'/account-recovery/status'|'/account-recovery/request'|'/account-recovery/complete'|'/admin/account-recovery'|'/admin/account-recovery/review',body?:unknown) {
   return api<T>(path,{cache:'no-store',method:body===undefined?'GET':'POST',...(body===undefined?{}:{body:JSON.stringify(body)})});
@@ -656,23 +677,23 @@ export function captureBackupSyncState(userId: string) {
   });
   return structuredClone({ generation:backupDataGeneration, version:workspaceVersion, metadata:workspaceSyncMetadata, baseMetadata:workspaceBaseMetadata, pending:rows });
 }
-export async function sealBackupWorkspace(userId: string, document: EncryptedWorkspaceStructure, expectedVersion: number) {
-  const access=personalDocumentAccess(userId);access.check();
+export async function sealBackupWorkspace(userId: string, document: EncryptedWorkspaceStructure, expectedVersion: number,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  const access=personalDocumentAccess(userId,permit);access.check();
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const ciphertext=await crypto.subtle.encrypt({name:'AES-GCM',iv},await importWorkspaceKey(),new TextEncoder().encode(JSON.stringify(document)));
   access.check();return {iv:bytesToBase64(iv),ciphertext:bytesToBase64(new Uint8Array(ciphertext)),expectedVersion,version:expectedVersion+1,writerProtocol:9,minimumWriterProtocol:workspaceMinimumWriterProtocol(document),
     quotaUsage:{'personal-projects':document.projects.map(row=>row.id),habits:document.habits.filter(row=>habitLifecycleState(row).status!=='deleted').map(row=>row.id)},metrics:metricsFor([],document.projects,document.habits.length)};
 }
-export async function openBackupWorkspace(userId:string,envelope:{iv:string;ciphertext:string}):Promise<EncryptedWorkspaceStructure> {
-  const access=personalDocumentAccess(userId);access.check();
+export async function openBackupWorkspace(userId:string,envelope:{iv:string;ciphertext:string},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<EncryptedWorkspaceStructure> {
+  const access=personalDocumentAccess(userId,permit);access.check();
   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:base64ToBytes(envelope.iv)},await importWorkspaceKey(),base64ToBytes(envelope.ciphertext));
   access.check();return JSON.parse(new TextDecoder().decode(plain));
 }
-export async function backupRestoreCurrent(userId:string) {
-  personalDocumentAccess(userId).check();
-  const response=await api<{workspace:{envelope:WorkspaceEnvelope|null}}>('/workspace',{cache:'no-store'});
-  const document=response.workspace.envelope?await openBackupWorkspace(userId,response.workspace.envelope):{projects:[],categories:[],taskLists:[],taskListLinks:[],...EMPTY_HABIT_WORKSPACE};
-  return {document,version:response.workspace.envelope?.version??0,tasks:await loadRecoveredTasks(userId)};
+export async function backupRestoreCurrent(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  const access=personalDocumentAccess(userId,permit);access.check();
+  const response=await api<{workspace:{envelope:WorkspaceEnvelope|null}}>('/workspace',{cache:'no-store'},{},permit);access.check();
+  const document=response.workspace.envelope?await openBackupWorkspace(userId,response.workspace.envelope,permit):{projects:[],categories:[],taskLists:[],taskListLinks:[],...EMPTY_HABIT_WORKSPACE};
+  const tasks=await loadRecoveredTasks(userId,permit);access.check();return {document,version:response.workspace.envelope?.version??0,tasks};
 }
 export function backupNeedsReconciliation() { return backupReconciliationRequired; }
 function backupOwnedLocalKeys(userId:string) {
@@ -688,8 +709,8 @@ function retainHeldBackup(userId:string,key:string,value:unknown) {
   for(const row of rows.slice(2))localStorage.removeItem(row.key);
 }
 /** Explicitly hold the old device state instead of replaying it under the new generation. */
-export async function holdBackupStaleChanges(userId:string) {
-  const access=personalDocumentAccess(userId);access.check();
+export async function holdBackupStaleChanges(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  const access=personalDocumentAccess(userId,permit);access.check();
   const saved=backupOwnedLocalKeys(userId).map(key=>[key,localStorage.getItem(key)] as const);
   const protectedCopy=await access.seal(saved,'backup-held-state:v1');access.check();
   // A failed storage write leaves every original and the barrier intact.
@@ -697,10 +718,10 @@ export async function holdBackupStaleChanges(userId:string) {
   for(const [key,raw]of saved)if(localStorage.getItem(key)===raw)localStorage.removeItem(key);
   localStorage.setItem(`genesis-data-generation-v1:${userId}`,String(backupDataGeneration));backupReconciliationRequired=false;
 }
-async function loadRecoveredTasks(userId:string):Promise<GenesisTask[]> {
+async function loadRecoveredTasks(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<GenesisTask[]> {
   if (!backupTransportSupported) return [];
-  const access=personalDocumentAccess(userId);
-  const result=await api<{tasks:{id:string;revision:number;iv:string;ciphertext:string}[]}>('/recovered-tasks');
+  const access=personalDocumentAccess(userId,permit);access.check();
+  const result=await api<{tasks:{id:string;revision:number;iv:string;ciphertext:string}[]}>('/recovered-tasks',{}, {},permit);access.check();
   return Promise.all(result.tasks.map(async row=>{
     const task=await access.open<GenesisTask>(row,`recovered-task:v1:${row.id}`);
     if(task.id!==row.id||!task.restoredFrom)throw new Error('RECOVERED_TASK_INVALID');

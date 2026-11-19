@@ -8,6 +8,7 @@ import {clearBackupMigrationMemory} from '../../app/backup-migration-memory';
 import {createRecoveryKit} from '../../app/e2ee/keys';
 import {UnlockedWebDevice,IndexedDbDeviceKeyStorage} from '../../app/e2ee/device-vault';
 import {IndexedDbE2eeStorage} from '../../app/e2ee/storage';
+import {checkWholeBackupOperation} from './archives-whole-operation-browser';
 
 const owner='synthetic-archive-'+crypto.randomUUID(),key=btoa('b'.repeat(32)),canary='Synthetic unsent archive '+crypto.randomUUID();
 const at='2026-11-19T12:00:00Z',payload:BackupPayload={schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:owner,createdAt:at,client:'web',billingEvidence:null,
@@ -56,6 +57,7 @@ async function acceptance(){
    const value=JSON.parse(new TextDecoder().decode(restored!.value));check('selected import and unsent private content survive new-root cold readback',value.editors[0].file.bytes===editor!.file!.bytes&&JSON.stringify(value).includes(canary));
    check('in-memory quota safety copy survives independently of legacy storage',value.memorySafety.storage.original===canary);
   }finally{restored?.value.fill(0);}
+  await checkWholeBackupOperation(check);
  }catch(error){report.error=error instanceof Error&&/^E2EE_[A-Z_]+$/.test(error.message)?error.message:'BROWSER_ARCHIVE_CAPTURE_FAILED';}
  finally{device?.lock();recovery?.secret.fill(0);clearBackupMigrationMemory();}
  report.status=report.error||report.checks.some(value=>!value.passed)?'FAIL':'PASS';update();

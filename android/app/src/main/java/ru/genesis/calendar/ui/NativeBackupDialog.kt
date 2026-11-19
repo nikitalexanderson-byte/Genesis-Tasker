@@ -33,6 +33,7 @@ import ru.genesis.calendar.auth.AuthApiError
 import ru.genesis.calendar.data.BackupGateway
 import ru.genesis.calendar.data.BackupNativeStore
 import ru.genesis.calendar.data.GenesisBackupContainer
+import ru.genesis.calendar.data.BackupImportFile
 import ru.genesis.calendar.data.NativeLegacyOperationPermit
 import java.io.ByteArrayInputStream
 import java.util.Base64
@@ -61,7 +62,9 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     private val endedOperations=mutableSetOf<String>()
     private val uuid=Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
     private val history=app.getSharedPreferences("genesis.backup.history.v1",android.content.Context.MODE_PRIVATE)
-    private var importText:String?=null
+    private val importMonitor=Any()
+    private var importFile:BackupImportFile?=null
+    private var importOperation=""
     private var exportText:StringBuilder?=null
     private var exportLength=0
     private var exportId=""
@@ -74,7 +77,10 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
         // Cleanup never throws from a coroutine completion handler. Once the
         // bounded unknown-ID history is full, fresh begins are refused too.
         if(id !in endedOperations&&id !in startedOperations&&endedOperations.size>=8192)return@synchronized null
-        endedOperations.add(id);operations.remove(id)
+        endedOperations.add(id)
+        val permit=operations.remove(id)
+        synchronized(importMonitor){if(importOperation==id){importFile?.clear();importFile=null;importOperation=""}}
+        permit
     }
     @JavascriptInterface fun currentSession(operationId:String):Boolean=try{
         if(reconciled&&operationId.isNotEmpty()){
@@ -154,18 +160,28 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
                         finally { bytes.fill(0) }
                     }
                     "importChoose"->{
-                        importText=null;val uri=choose(false,"")?:error("BACKUP_CANCELLED");check()
-                        val bytes=requireNotNull(app.contentResolver.openInputStream(uri)).use { input ->
-                            val output=java.io.ByteArrayOutputStream();val buffer=ByteArray(65536)
-                            while(true){val count=input.read(buffer);if(count<0)break;require(output.size()+count<=GenesisBackupContainer.MAX_FILE){"BACKUP_TOO_LARGE"};output.write(buffer,0,count)}
-                            output.toByteArray()
-                        }
-                        try { check();val text=bytes.toString(Charsets.UTF_8);importText=text
-                            JSONObject().put("length",text.length).put("name","import.genesisbackup")
-                        }finally { bytes.fill(0) }
+                        val uri=choose(false,"")?:error("BACKUP_CANCELLED");check()
+                        val resolver=app.contentResolver;var name:String?=null;var modified:Long?=null;var declared:Long?=null
+                        resolver.query(uri,null,null,null,null)?.use { cursor->if(cursor.moveToFirst()){
+                            fun string(column:String)=cursor.getColumnIndex(column).takeIf{it>=0&&!cursor.isNull(it)}?.let{cursor.getString(it)}
+                            fun number(column:String)=cursor.getColumnIndex(column).takeIf{it>=0&&!cursor.isNull(it)}?.let{cursor.getLong(it)}
+                            name=string(android.provider.OpenableColumns.DISPLAY_NAME);declared=number(android.provider.OpenableColumns.SIZE)
+                            modified=number(android.provider.DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                        }}
+                        val type=resolver.getType(uri);check()
+                        val file=requireNotNull(resolver.openInputStream(uri)).use { input->BackupImportFile.read(input,name,type,modified,declared,::check) }
+                        try{
+                            check();synchronized(importMonitor){check();operation(payload.getString("operationId")).check();importFile?.clear();importFile=file;importOperation=payload.getString("operationId");file.descriptor()}
+                        }catch(error:Throwable){file.clear();throw error}
                     }
-                    "importChunk"->{val text=requireNotNull(importText);val offset=payload.getInt("offset");require(offset in 0 until text.length);text.substring(offset,minOf(offset+131072,text.length))}
-                    "importClear"->{importText=null;true}
+                    "importChunk"->synchronized(importMonitor){
+                        check(importOperation==payload.getString("operationId")){"BACKUP_TRANSFER"}
+                        requireNotNull(importFile).chunk(payload.getString("id"),payload.getInt("offset"))
+                    }
+                    "importClear"->synchronized(importMonitor){
+                        check(importOperation==payload.getString("operationId")&&importFile?.id==payload.getString("id")){"BACKUP_TRANSFER"}
+                        importFile?.clear();importFile=null;importOperation="";true
+                    }
                     else->error("BACKUP_METHOD_INVALID")
                 }
                 val token=payload.optString("operationId")
@@ -196,7 +212,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     }
     @Synchronized fun stop(){
         val permits=synchronized(operationMonitor){active=false;operations.values.toList().also{operations.clear()}}
-        permits.forEach{it.close()};transfers.clear();importText=null;exportText=null
+        permits.forEach{it.close()};transfers.clear();synchronized(importMonitor){importFile?.clear();importFile=null;importOperation=""};exportText=null
     }
 }
 

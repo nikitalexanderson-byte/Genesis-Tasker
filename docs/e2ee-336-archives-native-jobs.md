@@ -27,8 +27,8 @@ Permit lifetime привязан к исходной app account epoch. Пров
 затем освобождает permit. Restart разрешён единожды после verified reconciliation
 и закрытия capability; его нельзя использовать как standalone reset authority.
 
-Обычные web jobs пока используют прежние transport guards и capture task counter;
-полный многовызовный web permit ещё требует собственной интеграции. Native mounted/
+Следующий инкремент20 ноября добавил полный многовызовный web permit:
+`e2ee-336-archives-web-jobs.md`. Native mounted/
 detached forms ещё не сохраняются этим job-контрактом. Это отдельные release gates.
 
 ## Доказательства и оставшаяся приёмка
