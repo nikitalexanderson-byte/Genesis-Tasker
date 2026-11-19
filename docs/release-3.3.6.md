@@ -1373,4 +1373,8 @@ archives/Drive/clean recovery/direct signed upgrades, aggregate limits, исхо
 остаются обязательными. Production3.3.5/149, floors0/pilot/cutover off и
 GENESIS_DEPLOY_ANDROID=false сохранены. Полного3.3.6 Deploy/Play/personal-device
 выпуска этим инкрементом не было. Предыдущий CI44560437459 на2f3d77bc SUCCESS;
-этому новому source increment нужен собственный CI после commit.
+новый CI44585970905 на1cff2407 остановился: lint обнаружил unused helper только
+в новом тесте, Android job не смог разрешить KSP2.3.12 до компиляции. Helper
+удалён; локальный lint расширен на tests/scripts. Official plugin marker и Maven
+artifact повторно доступны HTTP200; зависимости/workflow не меняются. Failed logs
+сохранены, полный новый CI ещё должен пройти.

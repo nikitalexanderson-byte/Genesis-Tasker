@@ -10,7 +10,7 @@ const {captureWebReminderInventory}=calendarModule('app/e2ee/reminders-web-sourc
 const memoryModule=calendarModule('app/reminder-migration-memory.ts');
 const now='2026-11-19T14:00:00Z',ownerId='reminder-owner',scopeId='personal:'+ownerId;
 const context={ownerId,scopeId,migrationId:'reminder-migration',fence:4,sourceHash:'A'.repeat(43),generation:2};
-const encode=value=>new TextEncoder().encode(JSON.stringify(value)),decode=bytes=>JSON.parse(new TextDecoder().decode(bytes));
+const decode=bytes=>JSON.parse(new TextDecoder().decode(bytes));
 const target={id:'private-occurrence',kind:'habit',date:'2026-11-19',at:now,timeZone:'Europe/Moscow',allowDuringQuietHours:false,habitId:'private-habit',ruleId:'private-rule',action:'input'};
 const plan={version:1,generatedAt:now,expiresAt:'2026-11-20T14:00:00Z',timeZone:'Europe/Moscow',tone:'calm',quietHoursStart:'22:00',quietHoursEnd:'08:00',rows:[target]};
 function fixture(){
