@@ -68,9 +68,14 @@ sync/create flags и требует нового внешнего согласи
   file-only content/list history, no key bridge, historical-review denial, original
   queues preserved; regression4 earlier categories, transport and task sync.
 - `provider-cache-api-final-05/`:402/402 loopback HTTP cases PASS.
-- `provider-cache-full-backend-04/`: complete backend regression running;
-  final result is recorded separately. Earlier146/1 log and fixed Web Push4/4
-  evidence remain in `e2ee-336-personal-server-io.md`.
+- `provider-cache-full-backend-04/`:148/148 complete backend checks PASS,
+  including syntax, files/source hashes, shared bulk/detail flows, account
+  deletion and Web Push. Earlier146/1 failed log and fixed Web Push4/4 evidence
+  remain in `e2ee-336-personal-server-io.md`.
+
+CI44470155370 on prior task-source commit bde13c2b completed successfully:
+Android +web/API +full browser scenarios. This is the prior commit's evidence;
+the following server gate/provider increment needs its own CI after push.
 
 No production account/config/DB or personal device was used. Synthetic responses
 in browser/native are not live Google/Paddle acceptance. API26 success with a

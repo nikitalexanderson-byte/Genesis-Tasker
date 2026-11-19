@@ -863,3 +863,9 @@ large histories/API26 compatible provider и остальные15 categories е�
 Whole-product recovery/upgrades/shared/backup/48 scenarios/14-language security
 UI и независимый crypto review обязательны до activation. Production3.3.5/149,
 floors0/cutover off/Android deploy false сохранены; полного выпуска3.3.6 ещё нет.
+
+Provider follow-up: полный backend `provider-cache-full-backend-04/`148/148 PASS,
+включая ранее падавшие reminders/Web Push. Source checks44470155370 предыдущего
+bde13c2b завершились success целиком, включая долгие browser scenarios; для новых
+gate/provider commits запускается отдельный CI. Native lint ожидает завершения
+своего процесса; packaged APK/JVM/API34/API35 не подменяют его exit status.
