@@ -1082,3 +1082,30 @@ aggregation и alias loss between prepare/reconcile ещё требуют accept
 Coverage7/20 не изменился; full product/recovery/upgrades/shared/backups/original48/
 14-language semantics/independent crypto review обязательны. Production3.3.5/149,
 floors0/cutover off/GENESIS_DEPLOY_ANDROID=false; release/version bump не выполнен.
+
+## 19 ноября: native late-alias-loss recovery для diary/mindmaps captures
+
+Новые native captures сохраняют старый account key рядом с exact old wrapper
+внутри snapshot, который coordinator защищает new root до первого source IO.
+Новый root/private device/Keystore keys этим не экспортируются. Перед packaged
+JS engine current и ancestor captures клонируются без old plaintext key; native
+opening capability по-прежнему ограничен exact retained envelope+purpose.
+Старые snapshots без added key требуют original LocalCipher; malformed key и
+противоречивая key history не превращаются в пустую миграцию и блокируют IO.
+
+Build01 SUCCESS17m21s, main/test APK/JVM/lint; JVM1184 tests/1176 passed/8 opt-in
+HTTP skipped/0 failures, lint0 errors/206 existing warnings/8 hints. Actual
+API34/API35:76/76 каждый, API26:18/18 appropriate key/JCA/old-provider cases.
+Оба новых actual cases сохраняют snapshot в Room under new root, удаляют только
+собственный fixture alias и old raw bytes до source read, создают fresh adapter
+и завершают reconciliation без server-provided old key. New content читается
+new root, old rows exact, replacement alias отсутствует, old key не попадает
+в JS/current/history outputs. Previous large-history case также PASS.
+
+Документ/точные bounds/evidence: `e2ee-336-retained-native-old-keys.md`, runtime
+summaries01. API26 Chromium69 — только fallback/refusal, не packaged migration;
+сохранены84 PNGs и hashes. Все3 emulators остановлены. Source coverage7/20;
+product unlock/freeze/normal writes/review/OS saves, large local captures, clean
+recovery/direct upgrades, остальные13 sources/shared/backups/original48/
+14-language semantics/independent crypto review ещё обязательны до release.
+Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.

@@ -109,3 +109,10 @@ new synthetic diary test had an unused `body` variable. Removed that variable;
 `diary-full-project-lint-fix-01.log` has 0 errors and 4 existing image warnings.
 Only unrelated untracked `demo-output/` was excluded locally; it was not changed
 or added to Git. A fresh remote CI run is required after the fix.
+
+Follow-ups on 19 November: the global LocalCipher creation guard passed its
+dedicated acceptance (`e2ee-336-local-key-lifecycle.md`). New diary/map snapshots
+also retain the old account key under the new root, strip it from the packaged
+source bridge and pass actual API34/35 source migration after late alias loss;
+see `e2ee-336-retained-native-old-keys.md`. These are source/lifecycle increments,
+not full product or clean-device recovery acceptance.

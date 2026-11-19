@@ -127,8 +127,12 @@ API34/35 with the normal 192 MiB Java heap; see
 `e2ee-336-native-source-stream.md`. Native capture still has a 16 MiB snapshot cap,
 remote/input aggregation remains, and the legacy single Room document is subject
 to CursorWindow limits. This is not full large-account acceptance. Room saved-map
-normalization and retained wrapped old keys also require explicit older-format /
-alias-loss recovery tests.
+normalization still needs older-format acceptance. New native diary/map captures
+now independently retain the old account key under the new-root-protected
+snapshot, with key removal before the JS bridge; actual API34/35 late-alias-loss
+source cases pass. See `e2ee-336-retained-native-old-keys.md`. Older captures
+without retained key material still need their original field key. Full product
+and clean-device recovery remain separate gates.
 
 Shared maps/ACL rotations, files/automation, independent Physis sources, archives /
 Drive and local-only backup, clean-device recovery, signed direct upgrades, the

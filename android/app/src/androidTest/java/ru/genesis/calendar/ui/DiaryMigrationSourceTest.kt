@@ -60,14 +60,14 @@ class DiaryMigrationSourceTest {
             response.getJSONArray("dreams").put(JSONObject().put("note_id","server-dream").put("dream_day","2026-11-18").put("time_zone","UTC"))
         }
         private val engine=NativeDiarySourceRuntime(app)
-        val source by lazy{E2eeNativeDiarySource(owner,scope,captureRows={app.database.withTransaction{
+        val source get()=E2eeNativeDiarySource(owner,scope,captureRows={app.database.withTransaction{
             check();E2eeDiaryRows(app.database.dao().backupDocuments(account).filter{it.kind.startsWith("diary-v1")||it.kind=="aurora-account-key"},0,null,
                 JSONObject().put("records",JSONArray()).put("editors",JSONArray().put(JSONObject().put("source","blank-editor").put("revision",0).put("note",note("blank","")))))
         }},decryptCache={check();cipher.decrypt(it,"$account/diary-v1:$owner")},decryptAccountKey={check();cipher.decrypt(it.encrypted,"$account/aurora/$owner/account-key")},assertCurrent=::check,
             legacyDiary={assertNotNull(vault.read("local-snapshot","diary-source")?.also{it.bytes.fill(0)});assertEquals(lease.migrationId,it.migrationId);reads.incrementAndGet();JSONObject(response.toString())},
             reconciler=object:E2eePersonalSourceReconciler{override suspend fun reconcile(local:JSONObject,previous:List<JSONObject>,context:E2eeMigrationSourceContext,remote:JSONObject,assertCurrent:()->Unit,openLegacy:suspend (JSONObject,String)->Any):E2eePathReconciliation{
                 assertFalse((local.toString()+remote.toString()).contains(encoded));return engine.reconcile(local,previous,context,remote,assertCurrent){packet,purpose->opens.incrementAndGet();onOpen();openLegacy(packet,purpose)}
-            }})}
+            }})
         suspend fun run():E2eePathReconciliation=NativeLegacyScopeFence(app.database,owner,scope,::check).withFence{
             val raw=source.captureLocal();assertEquals(0,reads.get());try{vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","diary-source",raw,null)))}finally{raw.fill(0)}
             val saved=requireNotNull(vault.read("local-snapshot","diary-source"));try{source.reconcile(saved.bytes,emptyList(),lease)}finally{saved.bytes.fill(0)}
@@ -100,6 +100,24 @@ class DiaryMigrationSourceTest {
     }
     @Test fun lostKeystoreStopsBeforeNetworkWithoutCreatingAReplacementOverExistingChunks()=runBlocking{
         val f=Rig();try{f.seed();val before=f.originals();f.eraseAlias();assertTrue(runCatching{f.run()}.isFailure);assertEquals(0,f.reads.get());assertEquals(before,f.originals());assertFalse(KeyStore.getInstance("AndroidKeyStore").apply{load(null)}.containsAlias(f.alias))}finally{f.close()}
+    }
+    @Test fun aFreshSourceCompletesFromTheProtectedSnapshotAfterLosingKeystoreWithoutAnyServerOldKey()=runBlocking{
+        val f=Rig();try{f.seed();val before=f.originals();f.response.getJSONObject("legacyKey").put("keyMode","client").put("key",JSONObject.NULL)
+            val result=NativeLegacyScopeFence(f.app.database,f.owner,f.scope,f::check).withFence{
+                val raw=f.source.captureLocal();assertEquals(0,f.reads.get())
+                try{f.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","diary-source",raw,null)))}finally{raw.fill(0)}
+                f.eraseAlias();f.oldKey.fill(0)
+                val saved=requireNotNull(f.vault.read("local-snapshot","diary-source"))
+                try{withTimeout(90000){f.source.reconcile(saved.bytes,emptyList(),f.lease)}}finally{saved.bytes.fill(0)}
+            }
+            assertTrue(result.complete);assertEquals(2,f.opens.get());assertEquals(1,f.reads.get())
+            for(row in result.content+result.localContent)assertFalse(row.bytes.toString(Charsets.UTF_8).contains(f.encoded))
+            for(row in result.content){f.vault.write(listOf(UnlockedE2eeVault.Write(row.domain,row.objectId,row.bytes,null)));row.bytes.fill(0)}
+            result.localContent.forEach{it.bytes.fill(0)}
+            val index=requireNotNull(f.vault.read("diary","personal-diary-index-v1"));val recordId=try{JSONObject(index.bytes.toString(Charsets.UTF_8)).getJSONArray("records").getJSONObject(0).getString("objectId")}finally{index.bytes.fill(0)}
+            val head=requireNotNull(f.vault.read("diary",recordId));try{assertEquals("Synthetic cloud diary canary",JSONObject(head.bytes.toString(Charsets.UTF_8)).getJSONObject("selected").getJSONObject("note").getString("body"))}finally{head.bytes.fill(0)}
+            assertEquals(before,f.originals());assertFalse(KeyStore.getInstance("AndroidKeyStore").apply{load(null)}.containsAlias(f.alias))
+        }finally{f.close()}
     }
     @Test fun incompleteDanglingChunksAreNeverSilentlyOmitted()=runBlocking{
         val f=Rig();try{f.seed();f.app.database.dao().putDocument(DocumentRecord(f.account,"diary-v1/11111111-1111-4111-8111-111111111111/1","retained",1));val before=f.originals()

@@ -82,7 +82,11 @@ all versions and exact content, leave the old source unchanged, and read the
 final version with only the new root. A passing case would not prove the maximum
 40,000,000-byte history or a large native local snapshot.
 
-Full product routing/unlock/freeze/normal writes, source review, old-key loss
-after preparation, clean-device recovery, direct signed upgrades, other source
+Full product routing/unlock/freeze/normal writes, source review, clean-device
+recovery, direct signed upgrades, other source
 categories, shared ACL rotations, archives/Drive, the original 48 scenarios,
 14-language semantics and independent crypto review remain release gates.
+
+Follow-up `e2ee-336-retained-native-old-keys.md` addresses old account-key loss
+after preparation for newly captured native diary/maps. It does not recover an
+older capture which never contained the independently retained key.

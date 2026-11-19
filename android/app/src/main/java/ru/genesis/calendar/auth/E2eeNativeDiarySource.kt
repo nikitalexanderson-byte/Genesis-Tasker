@@ -24,6 +24,23 @@ internal class E2eeNativeDiarySource(private val ownerId:String,private val scop
     private val prefix="genesis-diary-chunks-v1:"
     init{E2eeKeys.technical(ownerId);E2eeKeys.technical(scopeId)}
     private fun bytes(value:JSONObject)=value.toString().toByteArray(Charsets.UTF_8)
+    private fun oldKey(encoded:String):ByteArray {
+        check(encoded.length==44){"E2EE_LEGACY_KEY_UNAVAILABLE"}
+        val raw=try{WorkspaceCipher.decodeKey(encoded)}catch(_:IllegalArgumentException){error("E2EE_LEGACY_KEY_UNAVAILABLE")}
+        if(Base64.getEncoder().encodeToString(raw)!=encoded){raw.fill(0);error("E2EE_LEGACY_KEY_UNAVAILABLE")};return raw
+    }
+    /** Old key material is only in the capture protected by the coordinator.
+     * Strip it from current and historical captures before the JS bridge. */
+    private fun bridgeSnapshot(value:JSONObject)=JSONObject(value.toString()).also{copy->
+        val rows=copy.getJSONArray("documents");for(index in 0 until rows.length()){
+            val row=rows.getJSONObject(index);if(row.get("kind")=="aurora-account-key")row.remove("plain")
+        }
+    }
+    private fun retainedKey(value:JSONObject):String? {
+        val rows=value.getJSONArray("documents");for(index in 0 until rows.length()){
+            val row=rows.getJSONObject(index);if(row.get("kind")=="aurora-account-key")return if(row.has("plain"))row.getString("plain") else null
+        };return null
+    }
     private suspend fun <T> safe(operation:suspend ()->T):T=try{operation()}
         catch(_:JSONException){error("E2EE_DIARY_SOURCE_INVALID")}
         catch(_:java.nio.charset.CharacterCodingException){error("E2EE_DIARY_SOURCE_INVALID")}
@@ -34,10 +51,11 @@ internal class E2eeNativeDiarySource(private val ownerId:String,private val scop
         for(row in rows.documents.sortedBy{it.kind}){
             check(row.scope==account&&row.revision>=0&&seen.add(row.kind)&&row.encrypted.isNotEmpty()){"E2EE_SCOPE_BINDING_MISMATCH"}
             size+=row.encrypted.toByteArray(Charsets.UTF_8).size;check(size<=maximum){"E2EE_SNAPSHOT_TOO_LARGE"}
-            documents.put(JSONObject().put("kind",row.kind).put("revision",row.revision).put("encrypted",row.encrypted))
+            val document=JSONObject().put("kind",row.kind).put("revision",row.revision).put("encrypted",row.encrypted)
+            documents.put(document)
             when(row.kind){
                 "diary-v1"->root=row.encrypted
-                "aurora-account-key"->Unit
+                "aurora-account-key"->{val plain=decryptAccountKey(row).also{assertCurrent()};oldKey(plain).fill(0);document.put("plain",plain)}
                 else->{
                     val match=Regex("diary-v1/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/(0|[1-9][0-9]{0,3})").matchEntire(row.kind)?:error("E2EE_DIARY_FORMAT_UNSUPPORTED")
                     check(chunks.getOrPut(match.groupValues[1]){mutableMapOf()}.put(match.groupValues[2].toInt(),row.encrypted)==null){"E2EE_DIARY_SOURCE_INVALID"}
@@ -73,6 +91,11 @@ internal class E2eeNativeDiarySource(private val ownerId:String,private val scop
         check(E2eeCommands.integer(value.get("protocol"))==1L&&value.get("ownerId")==ownerId&&value.get("scopeId")==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"}
         Instant.parse(value.getString("capturedAt"));E2eeCommands.integer(value.get("generation"));check(value.isNull("pendingGeneration")){"E2EE_DIARY_GENERATION_REVIEW_REQUIRED"}
         val docs=value.getJSONArray("documents");val caches=value.getJSONArray("caches");check(docs.length()<=10000&&caches.length()<=4097){"E2EE_SNAPSHOT_TOO_LARGE"}
+        for(index in 0 until docs.length()){
+            val row=docs.getJSONObject(index);val retained=row.get("kind")=="aurora-account-key"&&row.has("plain")
+            E2eeKeys.exact(row,if(retained)setOf("kind","revision","encrypted","plain") else setOf("kind","revision","encrypted"))
+            if(retained){check(row.get("plain") is String){"E2EE_DIARY_SOURCE_INVALID"};oldKey(row.getString("plain")).fill(0)}
+        }
         return value
     }
     override suspend fun reconcile(local:ByteArray,previous:List<ByteArray>):E2eePathReconciliation=error("E2EE_SCOPE_BINDING_MISMATCH")
@@ -80,20 +103,21 @@ internal class E2eeNativeDiarySource(private val ownerId:String,private val scop
         assertCurrent();val lease=requireNotNull(context){"E2EE_SCOPE_BINDING_MISMATCH"};check(lease.ownerId==ownerId&&lease.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"}
         check(previous.size<=32&&local.size+previous.sumOf{it.size.toLong()}<=E2eeMigrationSources.BYTE_BUDGET){"E2EE_MIGRATION_HISTORY_LIMIT"}
         val captured=snapshot(local);val ancestors=previous.map(::snapshot)
-        fun stable(value:JSONObject)=JSONObject(value.toString()).apply{remove("capturedAt")}
-        for(old in ancestors)check(workspaceConflictJson(stable(old))==workspaceConflictJson(stable(captured))){"E2EE_DIARY_HISTORY_REVIEW_REQUIRED"}
+        fun stable(value:JSONObject)=bridgeSnapshot(value).apply{remove("capturedAt")}
+        for(old in ancestors){
+            check(workspaceConflictJson(stable(old))==workspaceConflictJson(stable(captured))){"E2EE_DIARY_HISTORY_REVIEW_REQUIRED"}
+            val priorKey=retainedKey(old);val currentKey=retainedKey(captured)
+            check(priorKey==null||currentKey==null||priorKey==currentKey){"E2EE_DIARY_HISTORY_REVIEW_REQUIRED"}
+        }
         val remote=legacyDiary(lease);assertCurrent();check(bytes(remote).size<=maximum){"E2EE_SOURCE_TOO_LARGE"}
         check(remote.get("ownerId")==ownerId&&remote.get("scopeId")==scopeId&&remote.get("migrationId")==lease.migrationId
             &&E2eeCommands.integer(remote.get("fence"),1)==lease.fence&&remote.get("sourceHash")==lease.sourceHash){"E2EE_SCOPE_BINDING_MISMATCH"}
         check(remote.getLong("legacyGeneration")==captured.getLong("generation")&&lease.generation>remote.getLong("legacyGeneration")){"E2EE_DIARY_GENERATION_REVIEW_REQUIRED"}
         val keys=mutableListOf<ByteArray>()
-        fun key(encoded:String){
-            val raw=try{WorkspaceCipher.decodeKey(encoded)}catch(_:IllegalArgumentException){error("E2EE_LEGACY_KEY_UNAVAILABLE")}
-            if(raw.size!=32||Base64.getEncoder().encodeToString(raw)!=encoded){raw.fill(0);error("E2EE_LEGACY_KEY_UNAVAILABLE")};keys+=raw
-        }
+        fun key(encoded:String){keys+=oldKey(encoded)}
         try{
             val docs=captured.getJSONArray("documents");for(index in 0 until docs.length()){
-                val row=docs.getJSONObject(index);if(row.getString("kind")=="aurora-account-key")key(decryptAccountKey(DocumentRecord(account,"aurora-account-key",row.getString("encrypted"),row.getLong("revision"))).also{assertCurrent()})
+                val row=docs.getJSONObject(index);if(row.getString("kind")=="aurora-account-key")key(if(row.has("plain"))row.getString("plain") else decryptAccountKey(DocumentRecord(account,"aurora-account-key",row.getString("encrypted"),row.getLong("revision"))).also{assertCurrent()})
             }
             val old=remote.getJSONObject("legacyKey");E2eeKeys.exact(old,setOf("keyMode","key"))
             if(old.get("keyMode")=="account")key(old.getString("key"))else check(old.get("keyMode") in setOf("client","empty")&&old.isNull("key")){"E2EE_DIARY_SOURCE_INVALID"}
@@ -115,7 +139,7 @@ internal class E2eeNativeDiarySource(private val ownerId:String,private val scop
                 }
             }
             captured.optJSONObject("mounted")?.optJSONArray("records")?.let{rows->for(index in 0 until rows.length()){val row=rows.getJSONObject(index);row.optJSONObject("pending")?.let{retain(row.getJSONObject("note").getString("id"),it)}}}
-            val result=reconciler.reconcile(captured,ancestors,lease,safeRemote,assertCurrent){envelope,purpose->
+            val result=reconciler.reconcile(bridgeSnapshot(captured),ancestors.map(::bridgeSnapshot),lease,safeRemote,assertCurrent){envelope,purpose->
                 assertCurrent();E2eeKeys.exact(envelope,setOf("iv","ciphertext"));val iv=envelope.getString("iv");val cipher=envelope.getString("ciphertext")
                 check(cipher.length<=maximum&&originals[purpose]?.contains(iv to cipher)==true){"E2EE_DIARY_SOURCE_INVALID"}
                 var opened:ByteArray?=null

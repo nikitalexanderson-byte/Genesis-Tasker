@@ -75,13 +75,13 @@ class MindmapsMigrationSourceTest {
             response.put("maps",JSONArray().put(head)).put("versions",versions)
         }
         private val engine=NativeMindmapsSourceRuntime(app)
-        val source by lazy{E2eeNativeMindmapsSource(owner,scope,captureRows={app.database.withTransaction{check();E2eeMindmapsRows(app.database.dao().backupDocuments(account).filter{it.kind.startsWith("mindmap")||it.kind=="aurora-account-key"},0,null,
+        val source get()=E2eeNativeMindmapsSource(owner,scope,captureRows={app.database.withTransaction{check();E2eeMindmapsRows(app.database.dao().backupDocuments(account).filter{it.kind.startsWith("mindmap")||it.kind=="aurora-account-key"},0,null,
             JSONObject().put("records",JSONArray()).put("editors",JSONArray().put(JSONObject().put("source","new-dialog").put("document",JSONObject.NULL).put("revision",0).put("state",JSONObject().put("title","Synthetic unfinished new map")))))
         }},decrypt={row->check();cipher.decrypt(row.encrypted,if(row.kind=="aurora-account-key")"$account/aurora/$owner/account-key" else "$account/${row.kind}")},assertCurrent=::check,
             legacyMindmaps={assertNotNull(vault.read("local-snapshot","mindmaps-source")?.also{it.bytes.fill(0)});reads.incrementAndGet();JSONObject(response.toString())},
             reconciler=object:E2eePersonalSourceReconciler{override suspend fun reconcile(local:JSONObject,previous:List<JSONObject>,context:E2eeMigrationSourceContext,remote:JSONObject,assertCurrent:()->Unit,openLegacy:suspend (JSONObject,String)->Any):E2eePathReconciliation{
                 assertFalse((local.toString()+remote.toString()).contains(encoded));return engine.reconcile(local,previous,context,remote,assertCurrent){packet,purpose->opens.incrementAndGet();onOpen();openLegacy(packet,purpose)}
-            }})}
+            }})
         suspend fun run():E2eePathReconciliation=NativeLegacyScopeFence(app.database,owner,scope,::check).withFence{
             val raw=source.captureLocal();assertEquals(0,reads.get());try{vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","mindmaps-source",raw,null)))}finally{raw.fill(0)}
             val captured=requireNotNull(vault.read("local-snapshot","mindmaps-source"));try{source.reconcile(captured.bytes,emptyList(),lease)}finally{captured.bytes.fill(0)}
@@ -126,6 +126,24 @@ class MindmapsMigrationSourceTest {
         val unknown=Rig();try{unknown.seed();unknown.app.database.dao().putDocument(DocumentRecord(unknown.account,"mindmap-private-future","retain",1));val before=unknown.originals()
             try{unknown.run();fail("Expected unknown source refusal")}catch(error:IllegalStateException){assertEquals("E2EE_MINDMAPS_FORMAT_UNSUPPORTED",error.message)};assertEquals(0,unknown.reads.get());assertEquals(before,unknown.originals())
         }finally{unknown.close()}
+    }
+    @Test fun aFreshSourceCompletesFromTheProtectedSnapshotAfterLosingKeystoreWithoutAnyServerOldKey()=runBlocking{
+        val f=Rig();try{f.seed();val before=f.originals();f.response.getJSONObject("legacyKey").put("keyMode","client").put("key",JSONObject.NULL)
+            val result=NativeLegacyScopeFence(f.app.database,f.owner,f.scope,f::check).withFence{
+                val raw=f.source.captureLocal();assertEquals(0,f.reads.get())
+                try{f.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","mindmaps-source",raw,null)))}finally{raw.fill(0)}
+                f.eraseAlias();f.oldKey.fill(0)
+                val saved=requireNotNull(f.vault.read("local-snapshot","mindmaps-source"))
+                try{withTimeout(90000){f.source.reconcile(saved.bytes,emptyList(),f.lease)}}finally{saved.bytes.fill(0)}
+            }
+            assertTrue(result.complete);assertEquals(27,f.opens.get());assertEquals(1,f.reads.get())
+            for(row in result.content+result.localContent)assertFalse(row.bytes.toString(Charsets.UTF_8).contains(f.encoded))
+            for(row in result.content){f.vault.write(listOf(UnlockedE2eeVault.Write(row.domain,row.objectId,row.bytes,null)));row.bytes.fill(0)}
+            result.localContent.forEach{it.bytes.fill(0)}
+            val index=requireNotNull(f.vault.read("mindmap","personal-mindmap-index-v1"));val recordId=try{val value=JSONObject(index.bytes.toString(Charsets.UTF_8));assertEquals(25,value.getJSONArray("versions").length());value.getJSONArray("records").getJSONObject(0).getString("objectId")}finally{index.bytes.fill(0)}
+            val head=requireNotNull(f.vault.read("mindmap",recordId));try{assertEquals("Synthetic acknowledged map",JSONObject(head.bytes.toString(Charsets.UTF_8)).getJSONObject("selected").getJSONObject("document").getString("title"))}finally{head.bytes.fill(0)}
+            assertEquals(before,f.originals());assertFalse(KeyStore.getInstance("AndroidKeyStore").apply{load(null)}.containsAlias(f.alias))
+        }finally{f.close()}
     }
     @Test fun switchingAwayAndBackCancelsActualLegacyOpeningWithoutDroppingTheOldSource()=runBlocking{
         val f=Rig();try{f.seed();val before=f.originals();f.onOpen={f.app.activateAccount(null);f.app.activateAccount(f.owner)}
