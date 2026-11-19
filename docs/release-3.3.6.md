@@ -1,6 +1,17 @@
 # Подготовка GENESIS 3.3.6
 
-Последний инкремент18 ноября: отдельные append-only encrypted journals Авроры и
+Актуальный срез19 ноября: реализованы7/20 реальных source categories; это не
+процент готовности релиза. Physis legacy reader проходит отдельную приёмку и
+ещё не является8-м adapter. Остальные13 источников, полный product lifecycle,
+shared/files/automation, archives/Drive/local-only recovery, direct upgrades,
+48 системных сценариев и14-language semantic review остаются обязательными.
+Проверяемый остаток по каждому исходному сценарию —
+`docs/security-336-acceptance-matrix.md`; подготовлен черновой brief для внешнего
+аудитора: `docs/security-336-external-review-brief.md`. Независимый crypto review
+человеком/организацией ещё не проведён. Production3.3.5/149, floors0, cutover off,
+GENESIS_DEPLOY_ANDROID=false; полного выпуска/деплоя3.3.6 пока нет.
+
+Исторический инкремент18 ноября: отдельные append-only encrypted journals Авроры и
 независимого архива практик, сохранение всех writer snapshots в личных backups,
 защита закрытия нативного редактора и исправление его измеряемой высоты.
 Финальная JS-регрессия1431/1431 PASS, реальные две вкладки14/14 и editor-fence
@@ -1008,37 +1019,6 @@ logs: `e2ee-336-local-key-lifecycle.md`. Global lost-key UX/emergency export,
 14 languages/independent crypto review ещё обязательны до активации и выпуска.
 Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.
 
-## 19 ноября: исправление cold mindmap bootstrap и обычная web-приёмка
-
-CI44515254641 выявил regression second-client/direct map URL: layout registration
-нового migration editor проверяла workspace key до bootstrap и выбрасывала ошибку
-в view boundary. Регистрация теперь только сохраняет callback и отвергает disposed
-repo; настоящий capture по-прежнему проверяет current unlocked owner **до** callback.
-Browser console и before screenshot подтвердили причину. Новый тест падает на
-прежнем коде, проверяет zero callbacks locked/foreign и закрытый repo.
-
-33/33 focused source/operation checks,1588/1588 full JS, types/scoped lint/web build
-PASS. Native assembly24s SUCCESS: оба QA APK byte-identical прежней принятой
-revision; actual native76/76 API34/35 и18/18 API26 не заменяются новым непроверенным
-артефактом. Документ: `e2ee-336-mindmaps-cold-start.md`.
-
-Первый local browser run неверно использовал bundle с disabled mindmaps; второй
-с correct flag воспроизвёл настоящий cold regression. Run03:120/121, единственный
-отдельный habit-import readiness сбой. QA отправлял файл программно, минуя
-disabled picker до открытия encrypted journal. Добавлено ожидание enabled control,
-все preview/apply/write assertions сохранены. Actual original/changed backup parse
-PASS. Final run04:121/121 Business/global trial/header checks плюс startup4/4 и
-observer control PASS, compiled bundle hash unchanged, fixture cleanup PASS.
-Картографические UI states360/390/768/1440 light/dark проверены; две after-images
-осмотрены. Это не full five-plan local acceptance; свежий remote CI обязателен.
-
-Отдельный Android job старого CI остановился до compilation на KSP resolution;
-та же pinned version есть в previous successful CI/current local builds. Не меняем
-зависимости/workflow по этому сбою. Coverage7/20, оставшиеся source/product/
-recovery/upgrades/shared/backups/original48/14-language semantics/independent
-crypto review gates сохраняются. Production3.3.5/149, floors0/cutover off/Android
-deploy false;3.3.6 не объявлена выпущенной.
-
 ## 19 ноября: signed page ports и оба client collectors
 
 Web/Kotlin подписывают table/offset вместе с owner/device/lease/checkpoint.
@@ -1140,3 +1120,90 @@ product unlock/freeze/normal writes/review/OS saves, large local captures, clean
 recovery/direct upgrades, остальные13 sources/shared/backups/original48/
 14-language semantics/independent crypto review ещё обязательны до release.
 Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.
+
+## 19 ноября: исправление cold mindmap bootstrap и обычная web-приёмка
+
+CI44515254641 выявил regression second-client/direct map URL: layout registration
+нового migration editor проверяла workspace key до bootstrap и выбрасывала ошибку
+в view boundary. Регистрация теперь только сохраняет callback и отвергает disposed
+repo; настоящий capture по-прежнему проверяет current unlocked owner **до** callback.
+Browser console и before screenshot подтвердили причину. Новый тест падает на
+прежнем коде, проверяет zero callbacks locked/foreign и закрытый repo.
+
+33/33 focused source/operation checks,1588/1588 full JS, types/scoped lint/web build
+PASS. Native assembly24s SUCCESS: оба QA APK byte-identical прежней принятой
+revision; actual native76/76 API34/35 и18/18 API26 не заменяются новым непроверенным
+артефактом. Документ: `e2ee-336-mindmaps-cold-start.md`.
+
+Первый local browser run неверно использовал bundle с disabled mindmaps; второй
+с correct flag воспроизвёл настоящий cold regression. Run03:120/121, единственный
+отдельный habit-import readiness сбой. QA отправлял файл программно, минуя
+disabled picker до открытия encrypted journal. Добавлено ожидание enabled control,
+все preview/apply/write assertions сохранены. Actual original/changed backup parse
+PASS. Final run04:121/121 Business/global trial/header checks плюс startup4/4 и
+observer control PASS, compiled bundle hash unchanged, fixture cleanup PASS.
+Картографические UI states360/390/768/1440 light/dark проверены; две after-images
+осмотрены. Это не full five-plan local acceptance; свежий remote CI обязателен.
+
+Отдельный Android job старого CI остановился до compilation на KSP resolution;
+та же pinned version есть в previous successful CI/current local builds. Не меняем
+зависимости/workflow по этому сбою. Coverage7/20, оставшиеся source/product/
+recovery/upgrades/shared/backups/original48/14-language semantics/independent
+crypto review gates сохраняются. Production3.3.5/149, floors0/cutover off/Android
+deploy false;3.3.6 не объявлена выпущенной.
+
+## 19 ноября: строгие старые Physis readers web/native и карта остатка
+
+Добавлены read-only primitives обоих реальных форматов Physis: независимые
+password/PHY1 recovery v1 и account-v2. Exact fields/целые числа/canonical base64,
+fixed PBKDF2-SHA256600000/salt16/IV12/size limits проверяются до открытия ключа;
+неверный/отсутствующий/отменённый independent secret не заменяется account key
+или пустыми данными. Web key nonextractable/decrypt-only. Native owner/epoch-bound
+Reader хранит DEK только внутри native API, работает с оригинальным AAD и отдаёт
+исходный UTF-8 текст для общего strict duplicate-name parser. Typed JSONObject
+boundary сам по себе не доказывает отсутствие дублей в raw legacy JSON.
+
+Native PBKDF2 использует уже закреплённый BC1.87 off main thread; UTF-16 password
+encoder явно совпадает с WebCrypto TextEncoder, включая unpaired surrogates.
+Owned mutable buffers очищаются, закрытый/account-invalidated Reader не выдаёт
+данные; ограничения immutable strings/internal crypto copies описаны честно.
+Нет bootstrap/rotation/write/new-key export или произвольного native JS port.
+Неизвестные ошибки credential provider не отражают секрет в сообщении.
+
+Actual WebCrypto legacy fixture и11/11 focused cases PASS;1599/1599 full JS,
+typecheck/scoped lint PASS. Native build01 SUCCESS15m57s:1196 JVM cases,
+1188 passed/8 opt-in HTTP skipped/0 failures; новые12/12 PASS. Lint0 errors,
+206 existing warnings/8 hints, new reader findings0. После последней web-only
+redaction assembly02 SUCCESS39s; оба APK byte-identical accepted build01,
+новая source identity записана. QA native hash дополнен фактическими fixture
+assets из tests/fixtures, чтобы изменение vectors не обходило input identity.
+
+Actual API26/API34/API35: по4/4 новых Physis +2/2 existing envelope provider
+cases PASS (6/6 каждый),0 failures/skips. Проверены old password/recovery/account
+wrappers, Unicode, owner changes, substitution, canonical recovery, полный
+256KiB record и сохранение duplicate JSON text для shared parser. Это не
+packaged-source migration на API26; Chromium69 всё ещё ниже accepted minimum.
+Все3 task-owned emulators остановлены; personal devices/Play/production не менялись.
+Подробности и точные evidence paths — `e2ee-336-physis-legacy-reader.md`.
+
+Static web build PASS:98 public HTML variants/14 languages, exact locale
+dictionaries,280 gallery images и offline precache; этот reader пока не включён
+в обычный product routing. Финальный native source hash после всех проверок
+совпал с записанной identity02, APK inputs не изменены.
+
+Source adapters остаются7/20: это primitive, а не готовый Physis capture/merge.
+Ещё нужны memory keys/pending/uncertain rotation/mounted forms под owner fence,
+все4 signed server tables, tombstone/conflict reconciliation и new-root readback.
+Остальные13 categories и весь product/recovery/upgrades/shared/files/backups
+охват по-прежнему обязательны. Новая матрица
+`security-336-acceptance-matrix.md` сверена по всем48 исходным ID; отдельные
+unit/source проверки не превращены в полную системную приёмку. Подготовлен
+`security-336-external-review-brief.md`; независимый human/organization review
+не проведён, материалы никому не отправлялись.
+
+Fresh pnpm audit exit0/all severities0. Повторная проверка GitHub установила,
+что исходная high GHSA-fc5q-39xc-vjpf была withdrawn18 ноября15:38:56Z;
+это не suppression и не объявление той же версии picomatch исправленной.
+Evidence и первоначальный finding сохранены в dependency review. Production
+3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены;
+версия3.3.6 и полный Deploy ещё не выпущены.

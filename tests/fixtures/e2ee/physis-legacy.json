@@ -1,0 +1,84 @@
+{
+  "warning": "PUBLIC SYNTHETIC TEST KEYS; NEVER USE FOR USER DATA",
+  "origin": "Actual app/physis/crypto.ts with WebCrypto; PBKDF2-SHA256/600000; UTF-16 TextEncoder edge cases",
+  "ownerId": "synthetic-legacy-physis-interop",
+  "independent": [
+    {
+      "password": "Synthetic independent password only",
+      "recovery": "PHY1-Xh_9soOsYHEY_Ar32htoDLkAnGe5MVwbduc-YRm9rr8",
+      "vault": {
+        "version": 1,
+        "keyVersion": 7,
+        "password": {
+          "iv": "At6J6GY3J+rtcQrs",
+          "ciphertext": "0nrdwQlR7RMpY8HlHUTqCW80/ZCmu+9ymtAZuFfW4XNfYKTGkAgND/vOyp+wISZs",
+          "salt": "01WEJQPfSzVQUeTcRGg/yA==",
+          "iterations": 600000
+        },
+        "recovery": {
+          "iv": "lFJ6PA7SbEQI7ylb",
+          "ciphertext": "kNGkTZdqjdoSyLugkdDEEPIHI8DidmyyM139DTxQOSfPn4fAJa+2gALkHeboM0Gs"
+        }
+      },
+      "id": "c5bad0cf-19d8-413d-be05-5ed95fb3f0a2",
+      "plaintext": "{\"id\":\"c5bad0cf-19d8-413d-be05-5ed95fb3f0a2\",\"kind\":\"synthetic-unknown-private-record\",\"schemaVersion\":1,\"note\":\"Original ФЮЗИС 🌿 日本語\",\"empty\":\"\",\"zero\":0,\"unknownPrivateField\":{\"nullable\":null,\"enabled\":false},\"createdAt\":\"2026-11-19T00:00:00.000Z\"}",
+      "envelope": {
+        "version": 1,
+        "schemaVersion": 1,
+        "keyVersion": 7,
+        "iv": "yRzkOS2pbmapAcLs",
+        "ciphertext": "YddGm3KaM2PSfyTP2X+IzAyOGy/eftaZ232ullE9sNkw2fYbIGlRAeKrMQ9qxFJu93aQEp/F+fiyU2jh5EH1Tn3SRHXquEEGnYGVSEp0vyvc4Tw5lVdLRLnio1F5hBpKTUDnxLa6rKAfUQKEFpEfo3quz75yfnUSpyelWdg32A/Nrpc51wPMZn7DRcHkspdyYT/Yps7owhcJ7LKUeZI6vcKxyDeVmODuPfVv6u2D6YRM8Fx4/LixUOtOpGqb88M8nJRDdXFOhsIc2947UOb8o6Odj6aHartBdw6aH2PoiZMKpdVyZv3jT3QULUX1waV988DdnIyaFxkv6Bl0wJLpm6M4CKZL/e/6NJc4kIyXBHi3ACr0kcoh+g=="
+      },
+      "recordKey": "Ei42uXepDAuxya5Ljmcg5SFUAKX9myVObeHro4Sxoys="
+    },
+    {
+      "password": "Секрет 🌿 \ud800 lone-high / \udc00 lone-low",
+      "recovery": "PHY1-RAroc-wvXEQMZjhzKHArxohfXrHxyBNxjTljwRmujtg",
+      "vault": {
+        "version": 1,
+        "keyVersion": 9007199254740991,
+        "password": {
+          "iv": "GJj1o6WtJpzzeRtc",
+          "ciphertext": "8knzXnkWtpNdSDmisRvoDo+j4V6bcobrD5H1USRSgWnZEDafwyJO3KmuB1vURwQV",
+          "salt": "N+f5Vsf9V9MxPQeLJ71ZyA==",
+          "iterations": 600000
+        },
+        "recovery": {
+          "iv": "kxGcROdzayR/okGC",
+          "ciphertext": "1RivqedFcpqhRPN856DjpaZfAFzFuep+lW9+R6k6g638WHcutTR103vkM4ExIAw/"
+        }
+      },
+      "id": "b8e9c6da-ee44-4abf-8250-fd6e008a4903",
+      "plaintext": "{\"id\":\"b8e9c6da-ee44-4abf-8250-fd6e008a4903\",\"kind\":\"synthetic-unknown-private-record\",\"schemaVersion\":1,\"note\":\"Original ФЮЗИС 🌿 日本語\",\"empty\":\"\",\"zero\":0,\"unknownPrivateField\":{\"nullable\":null,\"enabled\":false},\"createdAt\":\"2026-11-19T00:00:00.000Z\"}",
+      "envelope": {
+        "version": 1,
+        "schemaVersion": 1,
+        "keyVersion": 9007199254740991,
+        "iv": "i/6kIRoJ/VuNpNGk",
+        "ciphertext": "BYOw7ZeXhL0K7+DLAeHi79AtwFVOy/exYqC11pKqag/ZSgcHuDtYCNeM0hqlFoll7HKNMeuXUlSwY3/wDlWLIZvAUu6XRPg2IARi5eZ11amF2mQC1C/vpe08T6mp27XYhswL3IYVhIlulIu4JoHEe0YMi1s0VxF6zS5IqoJPYosGXvWynYHcXnBH50k45EXPKJYg3kexJLakIb3VevEQ3sDtbvwBXv7pfFH+MldDI1lHJnxgS4NWyvaEdLESt6HzkAas+5OHEMCyt1x4WCHj0gah216T8wDaXDfB6gwtF5DxECaRYxZugd3O/pJcabs8DW1+zaH7RMyJGI+cg50oFQleZmeCsdYiByz+6JbztD9l0IdKwhdSJQ=="
+      },
+      "recordKey": "EJjtMHgvzF46p+i1xLNcPbryzBU3ScD1aOhSdPIFNdM="
+    }
+  ],
+  "account": {
+    "oldKey": "N9BoPwjN5/oJXp84XVAVj2tAbRlyUEb32cLm+g0IyPI=",
+    "vault": {
+      "version": 2,
+      "keyVersion": 3,
+      "account": {
+        "iv": "3ko/swoGGaOnrGxb",
+        "ciphertext": "fudeqWqNBAPiNwC1h5UNIRGCGPHSkFwR6YeMgj+k3ht/9FmNdgTbfBvUcTZTk+q2xheaTU9kJOJHM6ZfLJo="
+      }
+    },
+    "id": "1321215e-1c15-4601-ace8-6755f3e915d8",
+    "plaintext": "{\"id\":\"1321215e-1c15-4601-ace8-6755f3e915d8\",\"kind\":\"synthetic-unknown-private-record\",\"schemaVersion\":1,\"note\":\"Original ФЮЗИС 🌿 日本語\",\"empty\":\"\",\"zero\":0,\"unknownPrivateField\":{\"nullable\":null,\"enabled\":false},\"createdAt\":\"2026-11-19T00:00:00.000Z\"}",
+    "envelope": {
+      "version": 1,
+      "schemaVersion": 1,
+      "keyVersion": 3,
+      "iv": "jqDs01TkF4zAboSc",
+      "ciphertext": "GSOPjUEG/e0rcBBPm7WE3ffKAuH88Dd3JRdocQetJPU08wNeq07bL+z04897CiHdSLElTRtYrcMTpHiWlhjZXvrZTf26zC9wt6EM9sOUajiRS6KOpn4x4xJw9DbWOtE+dxNTd7k+3Lpt4G7lAJQwBZoE932L3VHhyhZpV0nsEJLQfQTg10IgAgeYgUrEql8R3QcyCvdhVC5UmDePN0d2AIItcN7S0Kjh12+54/nkbFEkQLdoVTROOagOpK9bT84iLlXTVVEx9Q25ffUNhOhKcZnLIqZdnMsN3Tu438kthjtnkdeZybgy5IFj2oPvrLj0cqLtjyFA5lOVThGGCgEAdcRZdCn6E160L243zePKDunbM12mPn1aKQ=="
+    },
+    "recordKey": "HYfcnabk/6lA65cyoyAx3LGigdR8dnVPvABqaEXjExY="
+  }
+}

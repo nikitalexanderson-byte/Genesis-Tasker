@@ -7,13 +7,18 @@ the same file as an asset; there is no separately maintained native category lis
 required path IDs. Missing adapters fail before the first partial capture. The
 registry does **not** mean that feature adapters have been implemented.
 
+Status19 November: seven real source categories are implemented on web/native;
+the remaining thirteen and full product integration are required. The Physis
+old-format reader is a primitive, not an eighth source adapter. The system
+acceptance remainder is tracked in `security-336-acceptance-matrix.md`.
+
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
 | --- | --- | --- |
 | personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native adapters and native SQLite barrier implemented; selected actual Room/Keystore/API26 process-death cases pass; product routing, web multitab fence, older-format review and full upgrade/lifecycle acceptance remain |
 | personal.tasks | Web task cache/mutation journals; native encrypted tasks + Room outbox; server tasks/links/deletions/creation receipts | Real web/native source and signed owner-only read preserve all7 server task/history tables, exact offline edits/deletions, recurrence/detached identity, recovered content and inert creation history. Actual source/coordinator/new-root JS, Chromium IndexedDB and API34/35 Room/Keystore/packaged-engine cases pass. Raw queues/keys stay local, new record IDs are random, external copies need new consent. Product editor/review/consent routing, full authenticated inventory, API26 compatible-provider and direct-upgrade/recovery acceptance remain |
 | personal.diary | LocalStorage encrypted notes/drafts plus settings/deletions/dream metadata; native DiaryRoomStore; server diary tables | Real web/native capture and shared strict reconciliation/readback preserve all6 tables, current/dangling chunks, old pending notes, private local-only placement and mounted drafts. Actual Chromium coordinator/recovery/retry and API34/35 Room/Keystore/packaged-engine cases pass. Product lock/cutover/editor routing, normal writes, explicit conflict UI, older formats, archives/local-only backup and full upgrade/lifecycle acceptance remain; see e2ee-336-diary-implementation.md |
 | personal.mindmaps | LocalStorage maps/cache/view/conversion/request journals; encrypted native documents; server map/version/deletion/receipt rows | Real web/native capture and reconciliation preserve all retained versions, images, closed-tab drafts, pending requests, view/conversion journals and mounted edits. Chromium coordinator/recovery/readback, API34/35 large histories and source recovery after late old-key loss pass; see e2ee-336-mindmaps-implementation.md and e2ee-336-retained-native-old-keys.md. Product routing/review/normal writes, larger local captures, supported-provider API26, clean recovery and direct upgrades remain required |
-| personal.physis | Legacy password vault and account-v2 vault; active web memory store includes unsent queue/rotation; server records/IDs/receipts. Current Android has no Physis editor/repository; its backup placeholder explicitly reports unavailable | Native migration must still preserve the account's server Physis data. Independently unlock every source, capture memory keys/rotation and mounted drafts without ordinary reload/bootstrap, reconcile rotations and deleted IDs, re-encrypt account-known descendants; unavailable or locked never means empty |
+| personal.physis | Legacy password vault and account-v2 vault; active web memory store includes unsent queue/rotation; server records/IDs/receipts. Current Android has no Physis editor/repository; its backup placeholder explicitly reports unavailable | Read-only legacy primitives now pass WebCrypto and API26/34/35 compatibility; see e2ee-336-physis-legacy-reader.md. The complete source adapter must still preserve server data, capture memory keys/rotation and mounted drafts without ordinary reload/bootstrap, reconcile rotations and deleted IDs, newly encrypt and read back all content. Unavailable or locked never means empty |
 | personal.aurora | Encrypted cache/base/pending document, personal learning and removed sessions; native documents; server workspaces/model results | Real web/native capture and shared validator/merger implemented; actual Room/Keystore/packaged WebView cases pass with immutable sessions/results and writer history; product routing, source conflict UI, older-format review and optional assistant disclosure remain required |
 | personal.stoicheion | Encrypted restoration workspace plus draw/timeline records and local pending choices; native documents; server draw/session/card rows | Real web/native practice journals and draw/timeline history adapters implemented; shared validator and actual Room/Keystore/packaged runtime cases pass. Product routing/source review/older-format acceptance remain; billing and live reroll authority are never imported |
 | personal.advice | Saved personal advice/selection state and metrics in memory/cache/server rows | Real web/native adapters and signed owner-only history read implemented. Actual Room/Keystore/packaged source cases pass on API34/35, storage fences on API26; raw v1/current/history/mounted copies and all exact public-language editions are retained. Unknown v1 provenance blocks reconciliation; default full inventory review, account-entry private copy, large histories, product routing and recovery/upgrade acceptance remain. Public art/catalogues remain public |
@@ -35,7 +40,7 @@ owner-scoped source token and signed task read/reconciliation on both clients.
 Current and retained snapshots preserve tasks/list history without credentials;
 historical provenance requires explicit review. Product review/deletion lifecycle
 and streaming acceptance remain incomplete; see
-`e2ee-336-provider-cache-implementation.md`. Five real adapters do not prove every
+`e2ee-336-provider-cache-implementation.md`. Seven real source categories do not prove every
 account's complete data inventory or permit product activation.
 
 The JSON lists the concrete repository sources and SQL table families. Native
@@ -60,7 +65,7 @@ acceptance is complete. The native source/factory now reads4 real Room document
 kinds and their exact outbox under a transaction, includes portable plaintext in
 the protected snapshot and never acknowledges old work. Accepted/pending reset
 generations, base revisions, deleted IDs and explicit conflict choices are checked
-on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. The real Stoicheion practice/draw-history source is also implemented on both platforms; see `e2ee-336-stoicheion-source.md`. Advice and personal tasks now also have real sources on both platforms; see `e2ee-336-advice-native-work.md` and `e2ee-336-tasks-client-source.md`. Five real categories are implemented; all15 others and full product integration remain mandatory.
+on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. The real Stoicheion practice/draw-history source is also implemented on both platforms; see `e2ee-336-stoicheion-source.md`. Advice, personal tasks, diary and personal mindmaps now also have real sources on both platforms; see their implementation documents. Seven real categories are implemented; all13 others and full product integration remain mandatory.
 
 Native Room now has an additive schema1→2 migration and technical deny table.
 Persistent triggers cover I/U/D of all4 legacy data tables in each explicit
@@ -162,5 +167,5 @@ other feature draft inventories and full adapters still need integration. Aurora
 and the independent restoration archive now have append-only per-writer journals,
 closed-tab reconciliation and portable backup copies of every retained snapshot;
 different archived writer heads require an explicit restore choice. See
-`e2ee-336-operation-fences.md`; this is writer exclusion, not a finished diary
-source adapter or migration-time protected editor routing.
+`e2ee-336-operation-fences.md`; this is writer exclusion, not complete diary
+product routing or migration-time protected editing.
