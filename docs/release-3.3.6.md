@@ -986,3 +986,24 @@ gates это не заменяет. Production3.3.5/149, floors0/cutover off/And
 Source checks44498325136 на0d596974 завершились **success**: web/API и Android,
 включая lint/types/build/backend/browser. Это проверка предыдущего committed head;
 новые LocalCipher/page changes требуют своей отдельной приёмки и CI.
+
+## 19 ноября: общий LocalCipher guard от автоматической замены потерянного ключа
+
+Все потребители LocalCipher теперь разделяют durable alias witness в noBackup и
+nonblocking cross-process creation lock. Старый valid key принимается без замены;
+потерянный witnessed alias не генерируется заново. Для старых установок inventory
+проверяет Room/prefs/backup XML/file drafts/import staging без private columns и
+без deleting SQLite corruption handler. Обнаруженные данные или ошибка inventory
+оставляют durable denial даже после чужой последующей очистки. Decrypt read-only.
+Startup готовит ключ вне exclusive Room writer; ошибка сохраняется как redacted
+problem, данные/БД не сбрасываются. Это не backup потерянного Keystore key.
+
+`native-key-lifecycle-build-04.log`: BUILD SUCCESSFUL25m2s, main/test QA APK/JVM/
+lintDebug; lint0 errors/206 existing warnings/8 hints. JVM1167 total/1159 passed,
+8 opt-in real-PHP HTTP skipped, failures/errors0. Actual API26:14/14 lifecycle;
+API34 и API35:68/68 каждый, включая14 lifecycle +54 source/storage regressions.
+Личные устройства не затрагивались; все эмуляторы остановлены. Документ и exact
+logs: `e2ee-336-local-key-lifecycle.md`. Global lost-key UX/emergency export,
+общий lifecycle/recovery/upgrades/остальные14 adapters/shared/backups/original48/
+14 languages/independent crypto review ещё обязательны до активации и выпуска.
+Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.

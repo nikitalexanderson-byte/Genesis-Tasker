@@ -10,17 +10,46 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /** Field encryption: Room/WAL never contains task text. Keys never leave Android Keystore. */
-class LocalCipher internal constructor(private val alias: String = "genesis.local.v1") {
-    companion object { private val keyCreationLock = Any() }
+class LocalCipher internal constructor(private val alias: String = DEFAULT_ALIAS,private val witnesses:LocalKeyWitnessStore?=null) {
+    companion object {
+        internal const val DEFAULT_ALIAS="genesis.local.v1"
+        private val keyCreationLock = Any()
+        @Volatile private var installedWitnesses:LocalKeyWitnessStore?=null
+        @Volatile internal var initializationProblem:String?=null
+            private set
+        internal fun initialize(context:android.content.Context) {
+            synchronized(keyCreationLock){
+                installedWitnesses=LocalKeyWitnessStore(context.applicationContext)
+                // Prepare before Room workers/transactions start. A first key
+                // must not need a separate read connection behind its own
+                // exclusive rollback-journal writer on low-memory devices.
+                initializationProblem=try{LocalCipher().prepare();null}catch(error:Exception){
+                    error.message?.takeIf{it in setOf("LOCAL_ENCRYPTION_KEY_LOST","LOCAL_KEY_STORAGE_UNAVAILABLE","LOCAL_KEY_OPERATION_BUSY")}
+                        ?:"LOCAL_KEY_STORAGE_UNAVAILABLE"
+                }
+            }
+        }
+    }
+    internal fun prepare() { ru.genesis.calendar.security.UpdateGate.requireOpen();key(create=true) }
     private fun key(create: Boolean): SecretKey = synchronized(keyCreationLock) {
-        val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-        (store.getKey(alias, null) as? SecretKey)?.let { return@synchronized it }
-        check(create) { "Local encryption key is unavailable; existing data must not be replaced" }
-        KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply {
-            init(KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                .setKeySize(256).build())
-        }.generateKey()
+        if(!create){
+            val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+            return@synchronized checkNotNull(store.getKey(alias,null) as? SecretKey){"Local encryption key is unavailable; existing data must not be replaced"}
+        }
+        val witness=witnesses?:installedWitnesses?:error("LOCAL_KEY_STORAGE_UNAVAILABLE")
+        witness.withCreationPermit(alias) {
+            val current=KeyStore.getInstance("AndroidKeyStore").apply{load(null)}.getKey(alias,null) as? SecretKey
+            if(current!=null){witness.remember(alias);current}
+            else {
+                witness.requireFresh(alias)
+                val generated=KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply {
+                    init(KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .setKeySize(256).build())
+                }.generateKey()
+                witness.remember(alias);generated
+            }
+        }
     }
     fun encrypt(value: String, context: String): String {
         ru.genesis.calendar.security.UpdateGate.requireOpen()

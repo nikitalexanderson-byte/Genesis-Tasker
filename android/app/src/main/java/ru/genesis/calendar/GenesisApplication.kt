@@ -59,6 +59,7 @@ class GenesisApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         ru.genesis.calendar.security.UpdateGate.initialize(this)
+        LocalCipher.initialize(this)
         ru.genesis.calendar.auth.NativeAdviceAgeAccess.load(this)
         val saved = getSharedPreferences("genesis.reminder.scope.v1", MODE_PRIVATE).getString("workspace", localScope)
         activeScope.value = saved?.takeIf { it == localScope || Regex("account-[a-f0-9]{32}").matches(it) } ?: localScope
