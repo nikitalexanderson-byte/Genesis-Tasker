@@ -96,3 +96,31 @@ export async function collectLegacyArchiveFragments(context:MigrationSourceConte
  }
  ports.assertCurrent();return{...header,...result,legacyKey:key};
 }
+
+/** Kotlin retains the ORIGINAL row text until this common duplicate-name parser
+ * sees it. The native capability must remove every old account key first. This
+ * normalizes transport only, never a complete category or restore permission. */
+export function normalizeNativeArchiveRows(value:unknown,context:MigrationSourceContext,assertCurrent:()=>void):Row{
+ assertCurrent();exactKeys(value,[...headerFields,'encoding',...LEGACY_ARCHIVE_TABLES,'legacyKey']);
+ assertTechnical(context.ownerId);assertTechnical(context.scopeId);assertTechnical(context.migrationId);
+ integer(context.fence,1);integer(context.generation,1);decodeE2eeBytes(context.sourceHash,32).fill(0);
+ if(value.protocol!==1||value.ownerId!==context.ownerId||value.scopeId!==context.scopeId||value.migrationId!==context.migrationId||value.fence!==context.fence||value.sourceHash!==context.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ integer(value.legacyGeneration);integer(value.directoryRevision,1);decodeE2eeBytes(value.checkpointHash,32).fill(0);
+ if(value.legacyGeneration>=context.generation)throw new Error('E2EE_GENERATION_REVIEW_REQUIRED');
+ if(value.encoding!=='utf8-json-rows-v1')invalid();
+ const key=oldKey(value.legacyKey,true),result:Row=Object.fromEntries(headerFields.map(name=>[name,value[name]]));let bytes=0,rows=0;
+ for(const table of LEGACY_ARCHIVE_TABLES){
+  const raw=value[table];if(!Array.isArray(raw))invalid();rows+=raw.length;if(rows>1000000)throw new Error('E2EE_SOURCE_TOO_LARGE');
+  const parsed:Row[]=[];
+  for(const text of raw){
+   assertCurrent();if(typeof text!=='string'||text.length<1||text.length>MAX_ROW)invalid();
+   const encoded=encoder.encode(text),size=encoded.length;encoded.fill(0);bytes+=size;
+   if(size>MAX_ROW||bytes>MAX_TOTAL)throw new Error('E2EE_SOURCE_TOO_LARGE');
+   const row=parseLegacyMigrationJson(text,'E2EE_ARCHIVE_TRANSPORT_INVALID',MAX_ROW);object(row);parsed.push(row);
+  }
+  result[table]=parsed;
+ }
+ const needsKey=(result.stages as Row[]).length+(result.safety as Row[]).length>0;
+ if(needsKey?key.keyMode==='empty':key.keyMode!=='empty')invalid();
+ assertCurrent();return{...result,legacyKey:key};
+}

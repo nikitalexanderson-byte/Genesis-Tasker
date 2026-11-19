@@ -1447,3 +1447,25 @@ upgrades, исходные48/14-language semantics и independent human crypto r
 GENESIS_DEPLOY_ANDROID=false сохранены. CI44588254949 на163d05e3 завершился
 SUCCESS; новый CI44600100480 наbf8749d8 ещё выполняется. Ни Deploy, ни Play,
 ни установки на личное устройство этим инкрементом не было.
+
+## Архивы: native raw fragments и общий строгий parser,19 ноября
+
+Native collector проверяет signed-source context/header/totals/old-key provenance,
+полную length/hash/UTF-8, последовательность fragments и явный EOF. Raw row JSON
+до общего parser остаётся точным текстом; JSONObject не может скрыть duplicate
+private fields. Shared normalization принимает только opaque old-key capability,
+не создаёт complete/restore authority. Limits64MiB row/128MiB source/192MiB wire/
+10000 requests остаются явными; превышение не приводит к truncation/empty.
+
+JVM collector/pages/migration29/29 PASS, включая13 новых collector cases;
+main compilation01 SUCCESS8m22s, emitter02 SUCCESS45s. Actual JCA collector output
+с Unicode byte splits прочитан common TypeScript parser:6 assertions PASS,
+4 exact rows, duplicate/raw-key refusal. Focused JS41/41, types01/scoped lint02
+и build:web01 PASS. Полный новый JS/native assembly/device/lint collector этим
+инкрементом не заявляются. Source docs содержат точные identity/evidence.
+
+Это transport increment: coverage всё ещё9/20. Полный native inventory/forms,
+strict nested archive reconciliation, old-key-loss/new-root recovery и остальные
+системные release gates остаются обязательными. Source production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false не менялись. Ни Deploy,
+ни Play, ни личные устройства не затрагивались.

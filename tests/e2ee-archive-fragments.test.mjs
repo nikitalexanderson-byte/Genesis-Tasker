@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createHash} from 'node:crypto';
-import {collectLegacyArchiveFragments,LEGACY_ARCHIVE_TABLES} from '../app/e2ee/archive-fragments.ts';
+import {collectLegacyArchiveFragments,normalizeNativeArchiveRows,LEGACY_ARCHIVE_TABLES} from '../app/e2ee/archive-fragments.ts';
 const context={ownerId:'archive-owner',scopeId:'personal:archive-owner',migrationId:'archive-attempt',fence:4,sourceHash:'A'.repeat(43),generation:2};
 const key=Buffer.alloc(32,7).toString('base64');
 function fixture(){
@@ -63,4 +63,43 @@ test('nonempty archives require old-key provenance while receipt-only rows never
  for(const table of ['stages','receipts']){
   const f=fixture(),read=f.ports.readFragment;f.ports.readFragment=async(...args)=>{const p=await read(...args);if(p.table===table)p.legacyKey=table==='stages'?{keyMode:'empty',key:null}:{keyMode:'account',key};return p;};await assert.rejects(f.run(),/TRANSPORT_INVALID/);
  }
+});
+
+function nativeRows(){const f=fixture();return{protocol:1,ownerId:context.ownerId,scopeId:context.scopeId,migrationId:context.migrationId,fence:context.fence,
+ sourceHash:context.sourceHash,legacyGeneration:0,checkpointHash:'A'.repeat(43),directoryRevision:1,encoding:'utf8-json-rows-v1',
+ ...Object.fromEntries(LEGACY_ARCHIVE_TABLES.map(table=>[table,f.rows[table].map(row=>JSON.stringify(row))])),legacyKey:{keyMode:'account',key:null}};}
+test('native exact raw rows pass the common strict parser with an explicitly opaque old key',()=>{
+ const input=nativeRows(),result=normalizeNativeArchiveRows(input,context,()=>{}),f=fixture();
+ for(const table of LEGACY_ARCHIVE_TABLES)assert.deepEqual(result[table],f.rows[table]);assert.deepEqual(result.legacyKey,{keyMode:'account',key:null});
+ assert.equal(result.stages[0].payload_json,f.rows.stages[0].payload_json);assert.ok(!Object.hasOwn(result,'encoding'));
+});
+test('native raw duplicate names cannot be hidden by Android JSONObject',()=>{
+ for(const raw of ['{"id":"original","\\u0069d":"other"}','{"id":"first","nested":{"private":"one","private":"two"}}',
+  '{"__proto__":{"private":"value"}}','{"id":"truncated"','["not-a-row"]']){
+  const input=nativeRows();input.stages[0]=raw;assert.throws(()=>normalizeNativeArchiveRows(input,context,()=>{}),/E2EE_/);
+ }
+});
+test('native raw row normalization refuses foreign context future encoding and a leaked old key',()=>{
+ for(const change of [p=>p.ownerId='foreign',p=>p.scopeId='foreign',p=>p.migrationId='other',p=>p.fence++,p=>p.sourceHash='B'.repeat(43),
+  p=>p.protocol=2,p=>p.encoding='future',p=>p.extra=true,p=>p.stages[0]={id:'already-parsed'},p=>p.legacyKey.key=key,
+  p=>p.legacyGeneration=2,p=>p.directoryRevision=0]){
+  const input=nativeRows();change(input);assert.throws(()=>normalizeNativeArchiveRows(input,context,()=>{}),/E2EE_/);
+ }
+});
+test('native empty and receipt-only inputs stay explicit and reject lost or smuggled key provenance',()=>{
+ for(const withReceipt of [false,true]){
+  const input=nativeRows();input.stages=[];input.safety=[];if(!withReceipt)input.receipts=[];
+  assert.throws(()=>normalizeNativeArchiveRows(input,context,()=>{}),/TRANSPORT_INVALID/);
+  input.legacyKey={keyMode:'empty',key:null};const result=normalizeNativeArchiveRows(input,context,()=>{});
+  assert.equal(result.receipts.length,withReceipt?2:0);
+ }
+ const input=nativeRows();input.legacyKey={keyMode:'empty',key:null};assert.throws(()=>normalizeNativeArchiveRows(input,context,()=>{}),/TRANSPORT_INVALID/);
+});
+test('native exact large raw rows normalize without truncating nested archive text',()=>{
+ const input=nativeRows();input.stages=[JSON.stringify({payload_json:'x'.repeat(9*1024*1024)})];
+ const result=normalizeNativeArchiveRows(input,context,()=>{});assert.equal(result.stages[0].payload_json.length,9*1024*1024);
+});
+test('native raw normalization rechecks account binding before returning the complete set',()=>{
+ let checks=0;assert.throws(()=>normalizeNativeArchiveRows(nativeRows(),context,()=>{if(++checks===3)throw new Error('E2EE_ACCOUNT_CHANGED');}),/ACCOUNT_CHANGED/);
+ assert.equal(checks,3);
 });
