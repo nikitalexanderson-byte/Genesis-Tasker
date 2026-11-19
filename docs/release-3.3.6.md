@@ -1378,3 +1378,29 @@ GENESIS_DEPLOY_ANDROID=false сохранены. Полного3.3.6 Deploy/Play
 удалён; локальный lint расширен на tests/scripts. Official plugin marker и Maven
 artifact повторно доступны HTTP200; зависимости/workflow не меняются. Failed logs
 сохранены, полный новый CI ещё должен пройти.
+
+## Архивы: полный fragment transport и реальные межплатформенные подписи,19 ноября
+
+Web collector собирает64MiB rows из bounded1MiB fragments, проверяет стабильные
+owner/lease/source/header/totals/key provenance, offsets/EOF, полный SHA256,
+fatal UTF-8 и duplicate-name parser. Original nested JSON и uncertain IDs остаются
+точными; receipt/empty rows не принимают старый ключ, native opaque mode явный.
+На ошибках/account change owned byte buffers очищаются. Total128MiB/wire192MiB/
+10000 requests остаются явными пределами; больших sources не усекать.
+
+Web/native signed archive API добавлены в actual WebCrypto/JCA emitters и PHP
+verifier. Regenerated fixture содержит24 реальных signed packets; PHP дополнительно
+проверяет6 подмен offsets. Backend04:3/3 PASS; JVM E2eeMigrationTest13/13 PASS;
+focused JS после fixture87/87 PASS. Full JS1703/1703 пройден до regeneration
+fixture, а не заявлен повторённым после неё. Types03/scoped lint04 PASS.
+Web build01 PASS:98 HTML/14 языков, exact dictionaries,280 gallery/offline assets.
+Native reassembly SUCCESS1m23s: main SHA256
+`671DACC2C8F9E0F1B0B6AFCE296F42D1F12474A63B72484D0CAF442610E2C7A6`, test
+`A2974FDBE31981ADB45C7F11155A2C90AEEC7EA6655002D003BFB993E7248FC4`.
+
+Это transport increment. Actual archive local/native capture, nested reconciliation,
+normal operations, new-root recovery/readback ещё не завершены: coverage9/20.
+Точные evidence/ограничения — `e2ee-336-archives-source.md`. Production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены. Ни Deploy,
+ни Play, ни личные устройства не затрагивались. CI44588254949 на163d05e3:
+Android SUCCESS, web/API до browser stage PASS; browser job ещё выполняется.

@@ -1,6 +1,6 @@
-# Личные архивы: подписанное чтение retained server history
+# Личные архивы: подписанное чтение и transport больших rows
 
-19 ноября 2026. Реализован только backend reader для следующего обязательного
+19 ноября 2026. Реализованы backend reader, web collector и native signed API для следующего обязательного
 source increment `personal.archives`; это ещё **не готовый source adapter**.
 К coverage categories этот reader сам по себе ничего не прибавляет.
 
@@ -36,11 +36,34 @@ original+decoded row собирается без усечения; тест5MiB 
 Результат: `output/qa/security336-archives-fragments-backend-03/results.json`.
 Этот старый source hash не является будущим remote AAD/object ID.
 
-Остаются web/native transport и настоящий capture всех local archives/import
+Web collector проверяет точный header/context, стабильные totals/old-key provenance,
+каждый offset/progress/EOF, canonical base64url, полный SHA256 перед fatal UTF-8
+и strict duplicate-name JSON parser. До1MiB chunk,64MiB row,128MiB decoded total,
+192MiB wire и10000 requests; owned byte buffers очищаются также при смене аккаунта.
+Native opaque account key допускается только явно; web не принимает missing key.
+Collector возвращает исходные rows, не complete/activation/restore authority.
+
+WebCrypto/JCA emitters обновили cross-platform fixture:24 реальных signed packets,
+включая archive fragment, плюс6 tampered offsets в PHP. Backend04:3/3 PASS;
+JVM E2eeMigrationTest13/13 PASS. Final fixture SHA256:
+`3e71c49ee2257e71a73dfc3399a8ac2527c4cbec420a00618cb3ccd2eae600bf`.
+Focused web transport/migration87/87 PASS после regeneration fixture. Более8MiB
+row, UTF-8 byte splits, duplicates/tamper/truncation/key loss проверены.
+Static web build01 PASS:98 HTML/14 языков, exact dictionaries,280 gallery images,
+offline precache. Native reassembly SUCCESS1m23s; это не device acceptance
+нового archive API и не повтор full JVM/lint.
+
+Evidence: `output/qa/security336-archives-cross-platform-04/results.json`,
+`output/release-3.3.6/runtime/archives-fragments-js-fixtures-02.log`,
+`archives-fragments-native-jvm-summary-01.json`,
+`archives-fragments-native-assembly-identity-01.json`,
+`archives-fragments-web-build-01.log` (последние4 под тем же runtime).
+
+Остаются native fragment collector и настоящий capture всех local archives/import
 staging/memory/held/safety/native files; strict nested content reconciliation,
 retained old-key availability и new-root readback/recovery. Cap generic pager
-8MiB включает original+decoded payload: превышение явно отказывает; клиентский
-fragment collector ещё обязателен, backend-only chunks не являются готовым
-переносом. Большие архивы нельзя усекать или заменять empty. Общий content-only import, Drive, normal product
+8MiB включает original+decoded payload: превышение явно отказывает; fragment
+transport сам по себе не является готовым переносом. Большие архивы нельзя
+усекать или заменять empty. Общий content-only import, Drive, normal product
 routing, direct upgrades, исходные48 сценариев и независимый human crypto review
 остаются обязательными. Pilot/cutover/floors и production не менялись.

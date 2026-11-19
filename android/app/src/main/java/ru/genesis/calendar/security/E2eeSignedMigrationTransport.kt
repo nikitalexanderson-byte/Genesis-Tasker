@@ -41,12 +41,16 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
         check(table in setOf("habitProfiles","habitDevices","habitDeliveries","adviceDays","adviceDeliveries","sharedPreferences")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
         return legacyPersonal("legacy-reminders",context,JSONObject().put("table",table).put("offset",offset))
     }
+    suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long):JSONObject {
+        check(table in setOf("stages","safety","receipts")&&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_ARCHIVE_TRANSPORT_INVALID"}
+        return legacyPersonal("legacy-archives",context,JSONObject().put("table",table).put("offset",offset).put("byteOffset",byteOffset))
+    }
     private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null): JSONObject {
         check(context.ownerId == ownerId && context.scopeId == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
             .put("action",action).put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
             .put("operationId",UUID.randomUUID().toString()).put("payload",JSONObject().put("migrationId",context.migrationId)
-                .put("fence",context.fence).put("sourceHash",context.sourceHash).apply{page?.let{put("table",it.get("table"));put("offset",it.get("offset"))}}),device.keys().signing.private)
+                .put("fence",context.fence).put("sourceHash",context.sourceHash).apply{page?.let{put("table",it.get("table"));put("offset",it.get("offset"));if(it.has("byteOffset"))put("byteOffset",it.get("byteOffset"))}}),device.keys().signing.private)
         val result = call("/read",packet)
         check(result.get("checkpointHash") == checkpoint && E2eeCommands.integer(result.get("directoryRevision"),1) == revision) { "E2EE_DIRECTORY_CONFLICT" }
         return result

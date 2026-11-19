@@ -397,7 +397,7 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
 test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
-  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead,diaryRead,mindmapsRead,mindmapsPageRead,physisPageRead;
+  const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead,diaryRead,mindmapsRead,mindmapsPageRead,physisPageRead,archiveRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
     assert.equal(path,'/read');
@@ -410,6 +410,7 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
     else if(packet.command.action==='legacy-mindmaps'&&Object.hasOwn(packet.command.payload,'table'))mindmapsPageRead=packet;
     else if(packet.command.action==='legacy-mindmaps')mindmapsRead=packet;
     else if(packet.command.action==='legacy-physis')physisPageRead=packet;
+    else if(packet.command.action==='legacy-archives')archiveRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   });
@@ -444,6 +445,13 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
   assert.deepEqual({...mindmapsPageRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,table:'versions',offset:128});
   assert.equal((await verifyE2eeCommand(mindmapsPageRead,f.keys.signing.publicKey)).action,'legacy-mindmaps');
   await transport.legacyPhysisPage(context,'records',128);
+  await transport.legacyArchiveFragment(context,'stages',0,1024*1024);
+  assert.equal((await verifyE2eeCommand(archiveRead,f.keys.signing.publicKey)).action,'legacy-archives');
+  assert.deepEqual({...archiveRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,table:'stages',offset:0,byteOffset:1024*1024});
+  for(const [table,offset,byteOffset] of [['users',0,0],['stages',-1,0],['stages',0,-1],['stages',0,64*1024*1024+1],['safety',NaN,0]])
+    await assert.rejects(transport.legacyArchiveFragment(context,table,offset,byteOffset),/ARCHIVE_TRANSPORT_INVALID/);
+  await assert.rejects(transport.legacyArchiveFragment({...context,ownerId:'foreign'},'stages',0,0),/SCOPE_BINDING_MISMATCH/);
+  await assert.rejects(transport.legacyArchiveFragment({...context,scopeId:'personal:foreign'},'stages',0,0),/SCOPE_BINDING_MISMATCH/);
   assert.deepEqual({...physisPageRead.command.payload},{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,table:'records',offset:128});
   assert.equal((await verifyE2eeCommand(physisPageRead,f.keys.signing.publicKey)).action,'legacy-physis');
   for(const method of ['legacyMindmapsPage','legacyPhysisPage']){
@@ -451,7 +459,7 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
     for(const [table,offset]of [['users',0],['receipts',-1],['receipts',0.5]])await assert.rejects(transport[method](context,table,offset),/LEGACY_PAGE_INVALID/);
   }
   mkdirSync('output/release-3.3.6/runtime',{recursive:true});
-  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead,diaryRead,mindmapsRead,mindmapsPageRead,physisPageRead},null,2));
+  writeFileSync('output/release-3.3.6/runtime/web-migration-transport.json',JSON.stringify({protocol:1,synthetic:true,platform:'web',bootstrap:f.events[0],reads,legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead,diaryRead,mindmapsRead,mindmapsPageRead,physisPageRead,archiveRead},null,2));
 });
 test('personal and multiple shared scopes share one device vault without migration journal collisions',async()=>{
   const f=await fixture(),personal=f.make(),project=f.make('project:one'),long=f.make('p'.repeat(128));
