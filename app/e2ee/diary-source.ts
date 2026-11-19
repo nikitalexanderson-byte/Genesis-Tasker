@@ -1,6 +1,6 @@
 import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes} from './envelope.ts';
-import {backupJson} from '../backup-format.ts';
+import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {canonicalJson} from '../aurora/forecast.ts';
 import {validateDiaryNote,validDreamDay} from '../diary-model.ts';
 import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSourceContext} from './migration.ts';
@@ -25,17 +25,7 @@ function time(value:unknown):asserts value is string{text(value,64);if(!Number.i
 function list(value:unknown):asserts value is unknown[]{if(!Array.isArray(value)||value.length>10000)invalid();}
 /** Preserve raw JSON until duplicate decoded names have been checked. */
 export function parseDiaryMigrationJson(value:unknown):unknown{
- text(value);try{
-  const result=backupJson(value,MAX),stack:(Set<string>|null)[]=[];
-  for(let index=0;index<value.length;index++){
-   const char=value[index];if(char==='{'||char==='['){stack.push(char==='{'?new Set():null);if(stack.length>41)invalid();}
-   else if(char==='}'||char===']')stack.pop();else if(char==='"'){
-    const start=index;index++;while(index<value.length&&value[index]!=='"'){if(value[index]==='\\')index++;index++;}
-    let next=index+1;while(next<value.length&&/\s/u.test(value[next]))next++;
-    if(value[next]===':'){const names=stack.at(-1);if(!names)invalid();const key=JSON.parse(value.slice(start,index+1)) as string;if(names.has(key))invalid();names.add(key);}
-   }
-  }return result;
- }catch{return invalid();}
+ return parseLegacyMigrationJson(value,'E2EE_DIARY_SOURCE_INVALID',MAX);
 }
 function note(value:unknown,draft=false):Row{
  object(value);id(value.id);if(draft&&typeof value.body==='string'&&!value.body.trim()){

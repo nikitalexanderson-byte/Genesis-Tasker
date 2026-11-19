@@ -3570,6 +3570,18 @@ export async function createPersonalDiaryMigrationSource(userId:string,scopeId:s
       reconciliationRequired:backupReconciliationRequired};},legacyDiary:context=>transport.legacyDiary(context),review});
 }
 
+export async function createPersonalMindmapsMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyMindmapsPage'>,
+  captureCurrent:()=>Pick<import('./e2ee/mindmaps-source').MindmapsMigrationMemory,'records'|'editors'|'localWork'>,
+  review?:import('./e2ee/mindmaps-source').MindmapsSourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{PersonalMindmapsSource},{collectLegacyPersonalPages}]=await Promise.all([import('./e2ee/mindmaps-source'),import('./e2ee/legacy-pages')]);check();
+  return new PersonalMindmapsSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired};},
+    legacyMindmaps:context=>collectLegacyPersonalPages(context,'mindmaps',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyMindmapsPage(value,table,offset)}),review});
+}
+
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,
   transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyStoicheion'>,
   captureCurrent:()=>Pick<import('./e2ee/stoicheion-source').StoicheionMigrationMemory,'current'|'draws'|'timeline'>) {

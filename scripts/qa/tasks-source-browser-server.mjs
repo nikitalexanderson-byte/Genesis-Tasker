@@ -4,8 +4,8 @@ import {build} from 'vite';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
-const checkEntry=process.argv.includes('--diary')?'diary-source-browser-check.ts':process.argv.includes('--local-output')?'local-output-browser-check.ts':'tasks-source-browser-check.ts';
-const result=await build({configFile:false,root,logLevel:'warn',build:{write:false,minify:false,target:'es2022',
+const checkEntry=process.argv.includes('--mindmaps')?'mindmaps-source-browser-check.ts':process.argv.includes('--diary')?'diary-source-browser-check.ts':process.argv.includes('--local-output')?'local-output-browser-check.ts':'tasks-source-browser-check.ts';
+const result=await build({configFile:false,root,logLevel:'warn',define:{'process.env.NODE_ENV':JSON.stringify('production'),'process.env':JSON.stringify({NODE_ENV:'production',NEXT_PUBLIC_GENESIS_API_URL:''})},build:{write:false,minify:false,target:'es2022',
  lib:{entry:resolve(root,'scripts/qa',checkEntry),formats:['es'],fileName:'check'},rolldownOptions:{output:{codeSplitting:false}}}});
 const output=Array.isArray(result)?result.flatMap(row=>row.output):result.output;
 const script=output.find(row=>row.type==='chunk'&&row.isEntry)?.code;if(!script)throw new Error('Missing synthetic task-source entry');

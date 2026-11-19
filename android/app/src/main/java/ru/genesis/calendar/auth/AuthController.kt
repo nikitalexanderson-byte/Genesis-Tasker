@@ -358,6 +358,21 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             decryptAccountKey={row->current();cipher.decrypt(row.encrypted,"$accountScope/aurora/$uid/account-key").also{current()}},
             assertCurrent=::current,legacyDiary=transport::legacyDiary,reconciler=reconciler)
     }
+    internal fun e2eeMindmapsSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        captureMounted:suspend ()->JSONObject?):E2eeNativeMindmapsSource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        val cipher=ru.genesis.calendar.data.LocalCipher()
+        return E2eeNativeMindmapsSource(uid,directory.scopeId,captureRows={
+            current();val mounted=captureMounted()?.let{JSONObject(it.toString())};current()
+            withContext(Dispatchers.IO){app.database.withTransaction{current();val docs=app.database.dao().backupDocuments(accountScope).filter{it.kind.startsWith("mindmap")||it.kind=="aurora-account-key"}
+                val epochs=NativeBackupEpochStore(app);current();E2eeMindmapsRows(docs,epochs.accepted(accountScope),epochs.pending(accountScope),mounted)}}
+        },decrypt={row->current();cipher.decrypt(row.encrypted,if(row.kind=="aurora-account-key")"$accountScope/aurora/$uid/account-key" else "$accountScope/${row.kind}").also{current()}},
+            assertCurrent=::current,legacyMindmaps={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"mindmaps",::current,transport::legacyMindmapsPage)},reconciler=reconciler)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
@@ -418,8 +433,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
     }
 
-    internal fun mindmapTransport(uid:String):ru.genesis.calendar.data.MindmapTransport = object : ru.genesis.calendar.data.MindmapTransport {
-        override fun check() { check(mutableState.value.user?.uid==uid && app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)) { "Сессия карт завершена. Повторите вход; черновик сохранён." } }
+    internal fun mindmapTransport(uid:String):ru.genesis.calendar.data.MindmapTransport {
+      val capturedGeneration=client.currentGeneration();val capturedEpoch=app.workspaceEpoch;val accountScope=CloudAccountSnapshot.scopeFor(uid)
+      return object : ru.genesis.calendar.data.MindmapTransport {
+        override fun check() {ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(capturedGeneration)&&app.workspaceEpoch==capturedEpoch
+            &&mutableState.value.user?.uid==uid && app.workspaceScope==accountScope) { "Сессия карт завершена. Повторите вход; черновик сохранён." } }
+        override suspend fun <T> withLegacyOperation(operation:suspend ()->T):T =
+            ru.genesis.calendar.data.NativeLegacyOperationPermit.run(app.database,accountScope,::check,operation)
         private suspend fun call(read: Boolean, action: (Long) -> JSONObject): JSONObject {
             check()
             if (mutableState.value.requiresSignIn) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
@@ -455,6 +475,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
         override suspend fun workspace():JSONObject = call(true) { client.workspace(it) }
         override suspend fun request(path:String,body:JSONObject?):JSONObject = call(body == null) { client.mindmaps(it,path,body) }
+      }
     }
 
     override fun checkSharedMindmapAccount(uid: String) {

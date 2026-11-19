@@ -1025,3 +1025,34 @@ native build01 main/test/JVM/lint19m8s SUCCESS. Actual22 WebCrypto/JCA packets
 field keys; исправление и повтор обязательны. Coverage пока6/20, product/
 large-source/recovery/upgrades/shared/backups/original48/14 languages/independent
 review gates сохраняются. Production3.3.5/149 и все release/cutover flags прежние.
+
+## 19 ноября: personal mindmaps web/native source increment
+
+Завершён source capture/reconciliation/readback личных maps: все4 signed tables,
+каждая retained version, cache/closed-tab draft/request, view/conversion journals,
+mounted forms и undo state. Graph validation не нормализует/не теряет optional
+empty fields. Images вынесены в отдельные attachment objects с существующим
+file-key/chunk/manifest protocol. Новые logical IDs случайные; имена/refs/alt text
+остаются внутри ciphertext. Dirty/uncertain/editor work — только device-local,
+старые provider/conversion commands не исполняются. Tombstone/выбор отсутствия
+не загружает stale cached plaintext повторно. Conflicts требуют exact review.
+Native owner permit действует до repo mutex через decrypt/HTTP/journal/ack;
+сессия связана с generation +workspace epoch. Old keys остаются native.
+
+Full JS1583/1583, Chromium15786 checks/console0, actual IndexedDB/WebCrypto/
+saved recovery/ambiguous commit retry/cold scope reading25 versions и exact image
+без old key; PHP7/7 с actual22 signed packets +4 offset tamper, types/full lint/
+web build/automated14-language audit PASS. JVM1174 tests/1166 passed/8 opt-in
+HTTP skipped/0 failures. Native main/test/JVM/lint build01 SUCCESS19m8s; после
+исправления отдельного test key mismatch build02 SUCCESS2m2s. API34 и API35:
+73/73 каждый PASS. API26:17/17 JCA/key-loss/old-WebView fallback; это не source
+migration на Chromium69. 84 fallback PNGs сохранены; supported-WebView API26
+migration ещё не проверена. Все эмуляторы/браузеры/loopback servers остановлены.
+
+`e2ee-336-mindmaps-implementation.md` фиксирует точные limits: native16MiB capture,
+bridge/cursor large-data integration, product bootstrap/unlock/freeze/normal writes,
+source-review UI/OS savers и alias-loss recovery ещё нужны. Coverage adapters7/20,
+не процент готовности релиза. Остальные13 adapters/shared/files/automation/
+archives/Drive/local-only backup/direct upgrades/original48/14-language semantics/
+independent crypto review остаются до activation/release. Production3.3.5/149,
+floors0/cutover off/GENESIS_DEPLOY_ANDROID=false; полного деплоя3.3.6 ещё нет.

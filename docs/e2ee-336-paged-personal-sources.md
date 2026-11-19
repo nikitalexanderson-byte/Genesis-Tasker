@@ -86,6 +86,7 @@ and 52 coordinator/transport); native page collector 3/3 and migration 13/13
 JVM PASS, no skips in these suites, from `native-mindmaps-jvm-summary-01.json`.
 Main/test APK and full native lint build01 completed successfully in 19m8s.
 `mindmaps-source-server-05/` 7/7 PHP PASS includes the new actual 22-packet
-fixture. Types/scoped lint passed. A separate new map repository instrumentation
-fixture is being corrected; that failure is not part of this transport proof.
+fixture. Types/scoped lint passed. The separate new map repository fixture was
+corrected and subsequently passed 73/73 on both API34/API35; its first failure
+is retained in the map implementation evidence.
 Native large bridge/source integration and the Physis category remain required.

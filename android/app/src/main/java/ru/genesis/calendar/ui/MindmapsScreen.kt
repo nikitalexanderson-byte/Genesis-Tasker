@@ -81,6 +81,12 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     var history by remember { mutableStateOf<List<NativeMapRecord>?>(null) };var import by remember { mutableStateOf(false) };var export by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf(JSONObject().put("mode","map").put("zoom",1.0)) };var undo by remember { mutableStateOf<List<MindmapDocument>>(emptyList()) }
     val record=records.firstOrNull { it.document.id==mapId };val map=record?.document;val node=map?.nodes?.firstOrNull { it.id==selected } ?: map?.nodes?.firstOrNull()
+    val migrationCapture by rememberUpdatedState<()->JSONObject>({JSONObject().put("document",map?.json()?:JSONObject.NULL).put("revision",record?.revision?:0)
+        .put("state",JSONObject().put("mapId",mapId?:JSONObject.NULL).put("selected",selected?:JSONObject.NULL).put("create",create).put("title",title).put("description",description)
+            .put("editing",editing?:JSONObject.NULL).put("text",text).put("note",note).put("query",query).put("template",template).put("pickerQuery",pickerQuery)
+            .put("occurrenceTask",occurrenceTask?.let{JSONObject(it.json())}?:JSONObject.NULL).put("occurrenceDate",occurrenceDate)
+            .put("view",JSONObject(view.toString())).put("undo",org.json.JSONArray(undo.map{it.json()})).put("history",history?.let{org.json.JSONArray(it.map{row->row.json()})}?:JSONObject.NULL))})
+    DisposableEffect(repo){val release=repo.registerMigrationEditor{migrationCapture()};onDispose{release()}}
     if (map != null && !readOnly) NativeGuidanceBlockingSurface()
     fun run(action:suspend ()->Unit) { if(busy)return;busy=true;error=null;loadFailed=false;scope.launch {try { action() }catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=mindmapFailureMessage(e)}finally{busy=false} } }
     suspend fun refreshMaps() {

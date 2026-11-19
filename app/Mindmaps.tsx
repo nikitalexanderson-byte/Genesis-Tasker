@@ -1,6 +1,6 @@
 "use client";
 import { DialogCloseButton } from "./DialogCloseButton";
-import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { GenesisProject, GenesisTask } from "./cloud-sync";
 import { GenesisApiError, LOCAL_SESSION_ENDED_EVENT } from "./cloud-sync";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
@@ -116,6 +116,11 @@ export default function Mindmaps(props: Props) {
   const alive = useRef(true);
   const panelHistory = useRef(false);
   const isMobile = useSyncExternalStore(subscribeMobile, mobileSnapshot, serverSnapshot);
+  const migrationCapture=useRef<()=>{document:Mindmap|null;revision:number;state:unknown}>(()=>({document:null,revision:0,state:{}}));
+  useLayoutEffect(()=>{migrationCapture.current=()=>({document:current.current,revision:record?.revision??0,state:{records,record,ideaDraft,inlineNodeId,
+    selected,selectedLink,view:latestView.current,dialog,title,template,text,preview,versions,history:editHistory.captureMigration(),parent,linkTo,linkLabel,tagDraft,
+    pickerQuery,pickerTask,pickerDate,importAsIdeas,journal,nodeDialogBaseline:nodeDialogBaseline.current}});});
+  useLayoutEffect(()=>repository.registerMigrationEditor(()=>migrationCapture.current()),[repository]);
   const onStatus = (state: SaveState, message?: string) => { if (alive.current) { setStatus(state); if (message) setError(message === "MAP_REVISION_CONFLICT" ? "Другая вкладка изменила карту. Ваш текст сохранён отдельно. Откройте историю или сохраните этот вариант отдельной картой." : message); } };
   const fail = (e: unknown) => { if (alive.current) setError(e instanceof Error ? e.message : "Не удалось выполнить действие."); };
   const refresh = async () => { setLoading(true); try { const list = await repository.list(); if (alive.current) setRecords(list); } catch (e) { fail(e); } finally { if (alive.current) setLoading(false); } };

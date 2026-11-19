@@ -23,16 +23,26 @@ export class MindmapRepository {
   private pending = new Map<string, PendingMap>();
   private staged = new Map<string, number>();
   private stopped = false;
+  private storage:Storage;
+  private migrationEditors=new Map<string,()=>{document:Mindmap|null;revision:number;state?:unknown}>();
   private journalListeners = new Set<() => void>();
   subscribeJournal(listener: () => void) { this.journalListeners.add(listener); return () => { this.journalListeners.delete(listener); }; }
-  constructor(private userId: string, private spaceId?: string) {
+  constructor(private userId: string, private spaceId?: string,ports?:{storage?:Storage;access?:Access}) {
     this.envelopeVersion = spaceId ? 1 : 2;
-    this.access = spaceId ? sharedMindmapDocumentAccess(userId, spaceId) : personalDocumentAccess(userId);
+    this.storage=ports?.storage??globalThis.localStorage;
+    this.access = ports?.access??(spaceId ? sharedMindmapDocumentAccess(userId, spaceId) : personalDocumentAccess(userId));
     this.prefix = spaceId ? `genesis-shared-mindmaps:${userId}:${spaceId}:` : `genesis-mindmaps:${userId}:`;
     // A duplicated browser tab inherits sessionStorage. Use a fresh writer identity.
     this.tab = mapId();
   }
-  dispose() { this.stopped = true; }
+  dispose() { this.stopped = true;this.migrationEditors.clear(); }
+  private storageKeys(){return Array.from({length:this.storage.length},(_,index)=>this.storage.key(index)).filter((key):key is string=>key!==null);}
+  registerMigrationEditor(capture:()=>{document:Mindmap|null;revision:number;state?:unknown}){
+    this.check();const source=mapId();this.migrationEditors.set(source,capture);return()=>{this.migrationEditors.delete(source);};
+  }
+  captureMigration(records:readonly MapRecord[]){
+    this.check();return{records:structuredClone(records),editors:[...this.migrationEditors].map(([source,capture])=>({source:'mounted:'+source,...structuredClone(capture())})),localWork:[]};
+  }
   private check(access: Access = this.access) { if (this.stopped) throw new Error("Сессия карт закрыта."); access.check(); }
   private async operation<T>(work: (access: Access) => Promise<T>) {
     this.check();
@@ -50,8 +60,8 @@ export class MindmapRepository {
   private async load(access: Access): Promise<MapRecord[]> {
     this.check(access);
     const drafts: MapRecord[] = [];
-    for (const key of Object.keys(localStorage).filter(k => k.startsWith(`${this.prefix}draft:`))) {
-      const pending: PendingMap = JSON.parse(localStorage.getItem(key)!);
+    for (const key of this.storageKeys().filter(k => k.startsWith(`${this.prefix}draft:`))) {
+      const pending: PendingMap = JSON.parse(this.storage.getItem(key)!);
       const id = key.split(":").at(-1)!;
       const document = validateMindmap(await access.open(pending, `map:${id}`)); this.check(access);
       drafts.push({ document, revision: pending.expectedRevision, updatedAt: "", pending: true, draftKey: key });
@@ -59,14 +69,14 @@ export class MindmapRepository {
     let envelopes: Envelope[];
     try {
       envelopes = (await access.request<{ maps: Envelope[] }>("/mindmaps")).maps;
-      this.check(access); localStorage.setItem(`${this.prefix}cache`, JSON.stringify(envelopes));
+      this.check(access); this.storage.setItem(`${this.prefix}cache`, JSON.stringify(envelopes));
     } catch (error) {
       this.check(access);
-      if (error instanceof GenesisApiError || !localStorage.getItem(`${this.prefix}cache`)) {
+      if (error instanceof GenesisApiError || !this.storage.getItem(`${this.prefix}cache`)) {
         if (drafts.length && !(error instanceof GenesisApiError)) return drafts;
         throw error;
       }
-      envelopes = JSON.parse(localStorage.getItem(`${this.prefix}cache`)!);
+      envelopes = JSON.parse(this.storage.getItem(`${this.prefix}cache`)!);
     }
     const records: MapRecord[] = [];
     for (const e of envelopes) {
@@ -81,7 +91,7 @@ export class MindmapRepository {
   adopt(record: MapRecord) {
     this.check(); this.revisions.set(record.document.id, record.revision);
     if (record.draftKey) {
-      const raw = localStorage.getItem(record.draftKey.replace(":draft:", ":request:"));
+      const raw = this.storage.getItem(record.draftKey.replace(":draft:", ":request:"));
       if (raw) this.pending.set(record.document.id, JSON.parse(raw));
     }
   }
@@ -90,14 +100,14 @@ export class MindmapRepository {
     const snapshot = structuredClone(operation);
     return this.operation(async access => {
       const encrypted = await access.seal(snapshot, `conversion:${snapshot.mapId}:${snapshot.nodeId}`);
-      this.check(access); localStorage.setItem(`${this.prefix}conversion:${snapshot.mapId}:${snapshot.nodeId}`, JSON.stringify(encrypted));
+      this.check(access); this.storage.setItem(`${this.prefix}conversion:${snapshot.mapId}:${snapshot.nodeId}`, JSON.stringify(encrypted));
       this.journalListeners.forEach(listener => listener());
     });
   }
   async conversions(map: Mindmap) {
     const prefix = `${this.prefix}conversion:${map.id}:`;
-    return this.operation(access => Promise.all(Object.keys(localStorage).filter(k => k.startsWith(prefix)).map(async key =>
-      access.open<Conversion>(JSON.parse(localStorage.getItem(key)!), `conversion:${map.id}:${key.split(":").at(-1)}`))));
+    return this.operation(access => Promise.all(this.storageKeys().filter(k => k.startsWith(prefix)).map(async key =>
+      access.open<Conversion>(JSON.parse(this.storage.getItem(key)!), `conversion:${map.id}:${key.split(":").at(-1)}`))));
   }
   saveView(id: string, view: MapView) {
     const snapshot = structuredClone(view);
@@ -107,7 +117,7 @@ export class MindmapRepository {
       const previous = await this.readView(id, access);
       const next = { ...snapshot, viewport: snapshot.viewport ?? previous?.viewport, positions: snapshot.positions ?? previous?.positions };
       const e = await access.seal(next, `view:${id}`);
-      this.check(access); localStorage.setItem(`${this.prefix}view:${id}`, JSON.stringify(e));
+      this.check(access); this.storage.setItem(`${this.prefix}view:${id}`, JSON.stringify(e));
     }));
     this.viewSerial = write; return write;
   }
@@ -116,7 +126,7 @@ export class MindmapRepository {
   }
   private async readView(id: string, access: Access): Promise<MapView | null> {
     this.check(access);
-    const raw = localStorage.getItem(`${this.prefix}view:${id}`);
+    const raw = this.storage.getItem(`${this.prefix}view:${id}`);
     return raw ? access.open<MapView>(JSON.parse(raw), `view:${id}`) : null;
   }
   remove(record: MapRecord): Promise<void> {
@@ -130,14 +140,14 @@ export class MindmapRepository {
       await access.request(`/mindmaps/${id}`, { method: "DELETE", body: JSON.stringify({ expectedRevision, schemaVersion: this.envelopeVersion }) });
       this.check(access);
       this.pending.delete(id); this.revisions.delete(id);
-      for (const key of Object.keys(localStorage)) {
+      for (const key of this.storageKeys()) {
         if (key === `${this.prefix}view:${id}` || key.startsWith(`${this.prefix}conversion:${id}:`)
           || (key.startsWith(`${this.prefix}draft:`) || key.startsWith(`${this.prefix}request:`)) && key.endsWith(`:${id}`)) {
-          localStorage.removeItem(key);
+          this.storage.removeItem(key);
         }
       }
-      const cached: Envelope[] = JSON.parse(localStorage.getItem(`${this.prefix}cache`) || "[]");
-      localStorage.setItem(`${this.prefix}cache`, JSON.stringify(cached.filter(value => value.id !== id)));
+      const cached: Envelope[] = JSON.parse(this.storage.getItem(`${this.prefix}cache`) || "[]");
+      this.storage.setItem(`${this.prefix}cache`, JSON.stringify(cached.filter(value => value.id !== id)));
       });
     });
     this.serial = operation; return operation;
@@ -153,7 +163,7 @@ export class MindmapRepository {
       this.check(access);
       const request: PendingMap = { ...encrypted, schemaVersion: this.envelopeVersion, expectedRevision: this.revisions.get(snapshot.id) ?? 0, operationId: mapId() };
       if (this.staged.get(snapshot.id) === sequence) {
-        localStorage.setItem(this.draftKey(snapshot.id), JSON.stringify(request)); status("device");
+        this.storage.setItem(this.draftKey(snapshot.id), JSON.stringify(request)); status("device");
       }
       return request;
     }).catch(error => { status("error", "Не удалось сохранить защищённый черновик. Не закрывайте карту; освободите место на устройстве и повторите сохранение."); throw error; });
@@ -174,12 +184,12 @@ export class MindmapRepository {
         const savedCount = [...this.revisions.values()].filter(revision => revision > 0).length;
         requireQuotaGrowth(currentFeatureAccess(this.userId), 'mindmaps', savedCount, savedCount + 1);
       }
-      localStorage.setItem(this.draftKey(snapshot.id), JSON.stringify(request));
+      this.storage.setItem(this.draftKey(snapshot.id), JSON.stringify(request));
       this.pending.set(snapshot.id, request);
-      localStorage.setItem(this.draftKey(snapshot.id).replace(":draft:", ":request:"), JSON.stringify(request));
+      this.storage.setItem(this.draftKey(snapshot.id).replace(":draft:", ":request:"), JSON.stringify(request));
       await this.send(snapshot.id, status, access);
       this.check(access);
-      if (this.staged.get(snapshot.id) === sequence) localStorage.removeItem(this.draftKey(snapshot.id));
+      if (this.staged.get(snapshot.id) === sequence) this.storage.removeItem(this.draftKey(snapshot.id));
       });
     });
     this.serial = operation; return operation;
@@ -189,23 +199,23 @@ export class MindmapRepository {
   }
   private async retryRecord(record: MapRecord, status: (state: SaveState, message?: string) => void, access: Access) {
     if (record.draftKey) {
-      this.check(access); const raw = localStorage.getItem(record.draftKey);
+      this.check(access); const raw = this.storage.getItem(record.draftKey);
       if (raw) {
         const id = record.document.id;
         const requestKey = record.draftKey.replace(":draft:", ":request:");
-        const sent = localStorage.getItem(requestKey);
+        const sent = this.storage.getItem(requestKey);
         if (sent) { this.pending.set(id, JSON.parse(sent)); await this.send(id, status, access); }
         const request: PendingMap = JSON.parse(raw);
         if (!sent || JSON.parse(sent).operationId !== request.operationId) {
           // A newer draft follows the acknowledged write, with a fresh CAS revision.
           if (sent) request.expectedRevision = this.revisions.get(id)!;
-          this.pending.set(id, request); localStorage.setItem(requestKey, JSON.stringify(request));
+          this.pending.set(id, request); this.storage.setItem(requestKey, JSON.stringify(request));
           await this.send(id, status, access);
         }
         this.check(access);
-        if (localStorage.getItem(record.draftKey) === raw) localStorage.removeItem(record.draftKey);
-        const remaining = localStorage.getItem(requestKey);
-        if (remaining && JSON.parse(remaining).operationId === request.operationId) localStorage.removeItem(requestKey);
+        if (this.storage.getItem(record.draftKey) === raw) this.storage.removeItem(record.draftKey);
+        const remaining = this.storage.getItem(requestKey);
+        if (remaining && JSON.parse(remaining).operationId === request.operationId) this.storage.removeItem(requestKey);
         return;
       }
     }
@@ -219,13 +229,13 @@ export class MindmapRepository {
       this.check(access);
       if (!Number.isSafeInteger(result?.revision) || result.revision !== request.expectedRevision + 1) throw new Error('MINDMAP_INVALID_RESPONSE');
       this.revisions.set(id, result.revision); this.pending.delete(id);
-      for (const key of Object.keys(localStorage).filter(k => k.startsWith(`${this.prefix}request:`))) {
-        const raw = localStorage.getItem(key);
-        if (raw && JSON.parse(raw).operationId === request.operationId) localStorage.removeItem(key);
+      for (const key of this.storageKeys().filter(k => k.startsWith(`${this.prefix}request:`))) {
+        const raw = this.storage.getItem(key);
+        if (raw && JSON.parse(raw).operationId === request.operationId) this.storage.removeItem(key);
       }
-      const cached: Envelope[] = JSON.parse(localStorage.getItem(`${this.prefix}cache`) || "[]");
+      const cached: Envelope[] = JSON.parse(this.storage.getItem(`${this.prefix}cache`) || "[]");
       const latest: Envelope = { id, schemaVersion: request.schemaVersion, revision: result.revision, ciphertext: request.ciphertext, iv: request.iv, updatedAt: new Date().toISOString() };
-      if (!cached.some(e => e.id === id && e.revision > result.revision)) localStorage.setItem(`${this.prefix}cache`, JSON.stringify([...cached.filter(e => e.id !== id), latest]));
+      if (!cached.some(e => e.id === id && e.revision > result.revision)) this.storage.setItem(`${this.prefix}cache`, JSON.stringify([...cached.filter(e => e.id !== id), latest]));
       status("synced");
     } catch (error) {
       this.check(access); status(error instanceof GenesisApiError && error.status === 409 ? "conflict" : "error",
