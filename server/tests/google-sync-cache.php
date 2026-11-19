@@ -6,6 +6,11 @@ require dirname(__DIR__) . '/src/google.php';
 function cacheExpect(bool $ok, string $message): void { if (!$ok) throw new RuntimeException($message); }
 $user = ['id' => 'cache-test-a', 'google_sub' => 'synthetic-sub', 'refresh_token_enc' => 'synthetic-grant',
     'granted_scopes' => GENESIS_GOOGLE_TASKS_SCOPE . ' ' . GENESIS_GOOGLE_CALENDAR_SCOPE];
+$fixtureNow=genesisNow();
+foreach(['cache-test-a','cache-test-b','cache-test-c']as $fixtureOwner)
+    genesisDb()->prepare('INSERT INTO users(id,google_sub,email,created_at,updated_at) VALUES(?,?,?,?,?)')->execute([$fixtureOwner,$fixtureOwner,$fixtureOwner.'@example.invalid',$fixtureNow,$fixtureNow]);
+genesisDb()->prepare('INSERT INTO linked_google_accounts(id,owner_user_id,google_sub,email,display_name,created_at,updated_at) VALUES(?,?,?,?,?,?,?)')
+    ->execute(['cache-test-a','cache-test-a','synthetic-linked-sub','linked@example.invalid','Synthetic linked',$fixtureNow,$fixtureNow]);
 $now = time(); $calls = 0; $fullCalls = 0;
 $calendar = static fn() => ['items' => [['id' => 'event-a', 'title' => 'Private event', 'googleEventId' => 'event-a']], 'syncToken' => 'synthetic-cursor'];
 $tasks = function (array $state, bool $full) use (&$calls, &$fullCalls): array {

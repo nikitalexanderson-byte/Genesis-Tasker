@@ -53,8 +53,9 @@ refresh и account change требуют отдельной проверки; re
 missing/corrupt key/file, fingerprint mismatch, exact original bytes, отсутствие
 IO до local snapshot, concurrent file writer/SQL writer без lock inversion,
 новый/изменённый cache между source read и commit, process death и no legacy
-provider POST после scope fence. Файловые locks/tokens/границы нельзя объявлять
-внедрёнными по этому документу: пока это выявленный release blocker.
+provider POST после scope fence. File tokens/read/client reconciliation пока
+остаются release blocker. Первый owner/file operation gate уже реализован и
+проверен отдельно: `e2ee-336-personal-server-io.md`; он не заменяет inventory.
 
 Пять real source adapters описывают проверенный web/native code path, а не
 полноту каждого аккаунта/всех источников. Этот новый файловый inventory ещё

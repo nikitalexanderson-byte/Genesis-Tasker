@@ -13,7 +13,7 @@ try {
 } finally { unset($_SERVER['HTTP_X_GENESIS_ACCOUNT_ID']); }
 
 // Exercise actual post-cutover middleware and domain API, not just regex parity.
-foreach(['advice/saved','billing/modeling/results/synthetic','assistant/spellcheck','assistant/spelling'] as $route)
+foreach(['sync/tasks','advice/saved','billing/modeling/results/synthetic','assistant/spellcheck','assistant/spelling'] as $route)
     foreach(['GET','POST'] as $method)storeReject(fn()=>genesisE2eeEnforceLegacyRoute($method,$route,$owner),'E2EE_UPGRADE_REQUIRED');
 foreach(['session','billing/catalog','billing/orders','billing/modeling/orders/synthetic','account/preferences','e2ee/v1/status'] as $route)
     genesisE2eeEnforceLegacyRoute('GET',$route,$owner);

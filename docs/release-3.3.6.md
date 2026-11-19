@@ -826,3 +826,19 @@ Google cache вне SQL inventory/source token. Его нельзя исключ
 перехода; owner/file lock и read-only capture — следующий release blocker в
 `e2ee-336-provider-cache.md`. Число5/20 означает adapters, не всё содержимое
 каждого аккаунта. Все production flags/floors остаются выключенными.
+
+## Серверный owner/file operation gate
+
+19 ноября2026. Личные legacy requests удерживают owner permit до конца ответа;
+signed migration/read и source hash берут исключающий permit перед SQLite writer.
+Nonblocking locks исключают SQL/file lock inversion. Google cache проверяет
+authoritative primary/linked owner до callback и повторно под file lock.
+GET sync/tasks добавлен в общий PHP/web/worker/native private transport contract.
+
+402/402 real HTTP PASS, policy9/9 JS +1/1 JVM, web build и focused PHP suites
+PASS. Полный backend146 PASS/1 FAIL выявил отдельную проблему EC-координат
+Web Push; исправление/повтор выполняются отдельно. Документ и точные ограничения:
+`e2ee-336-personal-server-io.md`. Файловый source hash/read/reconciliation ещё
+подключаются. Полный lifecycle, остальные15 categories, recovery/upgrades,
+shared/backup/48 scenarios/14-language security UI и независимый crypto review
+обязательны. Production3.3.5/149, floors0/cutover off/Android deploy false сохранены.

@@ -174,6 +174,12 @@ function genesisE2eeCheckpointEvent(PDO $db, array &$scope, array $packet): void
 /** All verification, ACL, epoch, replay and compare-and-swap checks share one SQLite write lock. */
 function genesisE2eeExecute(string $actor, mixed $source, string $sessionBinding): array
 {
+    $packet=genesisE2eeExactFields($source,['command','signature']);$command=genesisE2eeCommand($packet['command']);
+    if(str_starts_with($command['action'],'migration-'))return genesisE2eeWithPersonalIo($actor,true,static fn():array=>genesisE2eeExecuteLocked($actor,$source,$sessionBinding));
+    return genesisE2eeExecuteLocked($actor,$source,$sessionBinding);
+}
+function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBinding): array
+{
     $packet = genesisE2eeExactFields($source, ['command','signature']); $c = genesisE2eeCommand($packet['command']);
     $db = genesisDb(); genesisBeginWriteTransaction($db);
     try {
@@ -439,6 +445,12 @@ function genesisE2eeDirectory(string $actor,string $scopeId): array
 
 /** Read ciphertext only through a trusted device proof; owner login alone never returns a raw key. */
 function genesisE2eeRead(string $actor,array $packet,string $sessionBinding): array
+{
+    $command=genesisE2eeCommand($packet['command']??null);
+    if(str_starts_with($command['action'],'legacy-'))return genesisE2eeWithPersonalIo($actor,true,static fn():array=>genesisE2eeReadTransaction($actor,$packet,$sessionBinding));
+    return genesisE2eeReadTransaction($actor,$packet,$sessionBinding);
+}
+function genesisE2eeReadTransaction(string $actor,array $packet,string $sessionBinding): array
 {
     // Authorization and reading share the writer lock: revocation, lease replacement
     // and cutover cannot race a legacy migration read (which can include an OLD key).

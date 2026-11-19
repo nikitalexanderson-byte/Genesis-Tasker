@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-personal-io-gate.php';
 
 /** Fixed inventory of legacy private storage. No billing/identity/session tables. */
 const GENESIS_E2EE_LEGACY_TABLES = [
@@ -234,6 +235,11 @@ function genesisE2eeInitializeGuards(PDO $db): void
 }
 
 function genesisE2eeSourceHash(PDO $db,array $scope): string
+{
+    if($scope['kind']==='personal')return genesisE2eeWithPersonalIo($scope['resource_id'],true,static fn():string=>genesisE2eeSourceHashLocked($db,$scope));
+    return genesisE2eeSourceHashLocked($db,$scope);
+}
+function genesisE2eeSourceHashLocked(PDO $db,array $scope): string
 {
     // This is a server-authenticated opaque revision token for LEGACY data, not a public
     // plaintext hash. It never serves as a client key or signs/decrypts E2EE content.

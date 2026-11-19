@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-policy.php';
 
 const GENESIS_GOOGLE_INCREMENTAL_SECONDS = 900;
 const GENESIS_GOOGLE_FULL_SYNC_SECONDS = 86400;
@@ -24,8 +25,26 @@ function genesisGoogleCacheFingerprint(array $user): string
         (string)($user['refresh_token_enc'] ?? ''), (string)($user['granted_scopes'] ?? '')]));
 }
 
-/** Runtime files contain authenticated ciphertext only, isolated by Google account and grant. */
-function genesisGoogleCacheWithLock(array $user, callable $operation, bool $persist = true): mixed
+/** Resolve the authoritative owner before borrowing a personal operation gate.
+ * Detached linked metadata is accepted only by the non-reading cleanup path. */
+function genesisGoogleCacheOwner(array $user,bool $cleanup=false): string
+{
+    $id=(string)($user['id']??'');$db=genesisDb();
+    if($id==='')throw new DomainException('E2EE_ACCOUNT_CHANGED');
+    if(!empty($user['_linked_account'])) {
+        $q=$db->prepare('SELECT owner_user_id FROM linked_google_accounts WHERE id=?');$q->execute([$id]);$owner=$q->fetchColumn();$q->closeCursor();
+        $hint=$user['_owner_user_id']??$user['owner_user_id']??null;
+        if($owner===false&&$cleanup&&is_string($hint))$owner=$hint;
+        if(!is_string($owner)||$owner===''||$hint!==null&&$hint!==$owner)throw new DomainException('E2EE_ACCOUNT_CHANGED');
+    }else $owner=$id;
+    $q=$db->prepare('SELECT 1 FROM users WHERE id=?');$q->execute([$owner]);$exists=$q->fetchColumn();$q->closeCursor();
+    if($exists===false)throw new DomainException('E2EE_ACCOUNT_CHANGED');
+    return $owner;
+}
+
+/** Technical file mutex only. The caller already holds its owner operation.
+ * Nonblocking acquisition also protects callers that already own SQLite. */
+function genesisGoogleCacheFileOperation(array $user,callable $operation): mixed
 {
     $key = genesisGoogleCacheKey($user);
     if (isset($GLOBALS['GENESIS_GOOGLE_CACHE_LOCKS'][$key])) {
@@ -33,10 +52,29 @@ function genesisGoogleCacheWithLock(array $user, callable $operation, bool $pers
     }
     $path = genesisGoogleCacheDirectory() . '/' . $key;
     $lock = fopen($path . '.lock', 'c+');
-    if ($lock === false || !flock($lock, LOCK_EX)) throw new RuntimeException('Google sync lock is unavailable.');
+    if ($lock === false) throw new RuntimeException('Google sync lock is unavailable.');
+    if (!flock($lock, LOCK_EX|LOCK_NB)) {fclose($lock);throw new DomainException('E2EE_OPERATION_BUSY');}
     chmod($path . '.lock', 0600);
     $GLOBALS['GENESIS_GOOGLE_CACHE_LOCKS'][$key] = true;
     try {
+        return $operation($path);
+    } finally {
+        unset($GLOBALS['GENESIS_GOOGLE_CACHE_LOCKS'][$key]);
+        flock($lock, LOCK_UN); fclose($lock);
+    }
+}
+
+/** Runtime files contain authenticated ciphertext only, isolated by Google account and grant. */
+function genesisGoogleCacheWithLock(array $user, callable $operation, bool $persist = true): mixed
+{
+    $owner=genesisGoogleCacheOwner($user);
+    return genesisE2eeWithPersonalIo($owner,false,static function()use($owner,$user,$operation,$persist):mixed{
+        if(genesisGoogleCacheOwner($user)!==$owner)throw new DomainException('E2EE_ACCOUNT_CHANGED');
+        if(genesisE2eeLegacyScopeBlocked('personal',$owner))throw new DomainException('E2EE_MIGRATION_FENCED');
+        return genesisGoogleCacheFileOperation($user,static function(string $path)use($user,$operation,$persist):mixed{
+        // Unlink/reassignment can finish while this request obtains the file
+        // mutex. A stale captured account must not open the former snapshot.
+        genesisGoogleCacheOwner($user);
         $snapshot = [];
         if (is_file($path . '.enc')) {
             try { $plain = genesisDecrypt((string)file_get_contents($path . '.enc')); }
@@ -55,18 +93,20 @@ function genesisGoogleCacheWithLock(array $user, callable $operation, bool $pers
             if (!rename($temporary, $path . '.enc')) throw new RuntimeException('Google snapshot replacement failed.');
         } finally { if (is_file($temporary)) unlink($temporary); }
         return $result;
-    } finally {
-        unset($GLOBALS['GENESIS_GOOGLE_CACHE_LOCKS'][$key]);
-        flock($lock, LOCK_UN); fclose($lock);
-    }
+        });
+    });
 }
 
 function genesisGoogleForgetSnapshot(array $user): void
 {
-    genesisGoogleCacheWithLock($user, static function () use ($user): void {
-        $path = genesisGoogleCacheDirectory() . '/' . genesisGoogleCacheKey($user) . '.enc';
-        if (is_file($path) && !unlink($path)) throw new RuntimeException('Google snapshot removal failed.');
-    }, false);
+    $owner=genesisGoogleCacheOwner($user,true);
+    genesisE2eeWithPersonalIo($owner,false,static function()use($owner,$user):void{
+        if(genesisE2eeLegacyScopeBlocked('personal',$owner))throw new DomainException('E2EE_MIGRATION_FENCED');
+        genesisGoogleCacheFileOperation($user,static function(string $base):void{
+            $path=$base.'.enc';
+            if (is_file($path) && !unlink($path)) throw new RuntimeException('Google snapshot removal failed.');
+        });
+    });
 }
 
 function genesisGoogleDailyQuotaError(Throwable $error): bool

@@ -153,6 +153,9 @@ try {
     // remove the fence from an already activated scope.
     genesisE2eeEnforceLegacyRoute($method, $path, genesisCurrentUserId());
     if (str_starts_with($path, 'e2ee/v1/')) genesisE2eeRoute($method, $path);
+    // Keep the capability alive through provider callbacks, local commits and
+    // response construction. PHP request teardown releases it after exit/error.
+    $personalLegacyIo=genesisE2eeLegacyRequestGate($method,$path,genesisCurrentUserId());
     if ($path === 'donations/cloudtips/webhook') {
         if ($method !== 'POST') genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);
         $raw=file_get_contents('php://input',false,null,0,16385);
