@@ -4,6 +4,8 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 import {calendarModule} from './helpers/calendar-modules.mjs';
+import {collectAdvicePublicAssets} from '../scripts/advice-public-assets.mjs';
+import {createHash} from 'node:crypto';
 const require=createRequire(import.meta.url),ts=require('typescript');
 // Load ordinary modules before installing the isolated native window capability.
 calendarModule('app/e2ee/aurora-source.ts');
@@ -11,6 +13,8 @@ const {encodeE2eeBytes,decodeE2eeBytes}=calendarModule('app/e2ee/envelope.ts');
 const compiled=ts.transpileModule(readFileSync('app/aurora/source-native-entry.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;
 const CHUNK=131072,job='44444444-4444-4444-8444-444444444444';
 const encode=value=>encodeE2eeBytes(new TextEncoder().encode(JSON.stringify(value)));
+const publicCatalogues=collectAdvicePublicAssets(process.cwd());
+const publicAssets=new Map(publicCatalogues.assets.map(row=>[row.fileName,new Uint8Array(Buffer.from(row.source))]));
 async function fixture(count=1){
  const original=JSON.parse(readFileSync('tests/fixtures/backup-journal-aurora-v1.json','utf8')).document;
  const owner=original.ownerId,document=structuredClone(original),template=document.sessions[0];document.sessions=[];
@@ -33,6 +37,14 @@ async function withRuntime(f,action,{hold=false,corrupt=false}={}){
  const consume=raw=>{
   const value=JSON.parse(raw);messages.push(value);
   assert.equal(value.job,job);
+  if(value.kind==='public-catalogue'){
+   requests.push(value);assert.deepEqual(Object.keys(value).sort(),['id','job','kind','path']);assert.ok(!value.path.includes(f.owner));
+   if(hold)return;
+   let response;const bytes=publicAssets.get(value.path)?.slice();
+   if(!bytes)response={error:'E2EE_ADVICE_CATALOGUE_UNAVAILABLE'};
+   else{if(corrupt&&!value.path.endsWith('/manifest.json'))bytes[bytes.length-2]^=1;response={value:encodeE2eeBytes(bytes)};}
+   queueMicrotask(()=>{const encoded=encode(response);for(let offset=0,index=0;offset<encoded.length;offset+=CHUNK,index++){replyChunks++;surface.GenesisAuroraSourceRuntime.resolveChunk(job,value.id,index,offset+CHUNK>=encoded.length,encoded.slice(offset,offset+CHUNK));}});return;
+  }
   if(value.kind!=='open'){resolveOutcome(value);return;}
   requests.push(value);assert.deepEqual(Object.keys(value.envelope).sort(),['ciphertext','iv']);assert.ok(!raw.includes(f.rawKey));
   if(hold)return;
@@ -103,4 +115,69 @@ test('the actual headless entry also migrates real practice and native draw hist
 test('a foreign domain selector or mismatched keyless snapshot cannot broaden the native source runtime',async()=>{
  for(const source of ['shared-project','unknown','aurora']){const f=await stoicheionFixture();f.input.source=source;
   await withRuntime(f,async rig=>{start(rig.runtime,f.input);const result=await rig.outcome;assert.equal(result.kind,'error');assert.equal(result.content,undefined);});}
+});
+
+async function adviceFixture(){
+ const f=await fixture(1),entry={...JSON.parse(readFileSync('server/content/daily-advice.json','utf8')).items[0],collection:'aurora'},day='2026-11-19',now=day+'T09:00:00Z';
+ const shown=structuredClone(entry);for(const key of ['contentVersion','topics'])delete shown[key];Object.assign(shown,{body:'Synthetic private old advice display',dayKey:day,language:'en',dismissed:false,sequence:1});
+ const response={dayKey:day,state:'ready',advice:shown,history:[shown],sequence:1,dailyLimit:9,canNext:true,remaining:8};
+ f.local={protocol:1,ownerId:f.owner,scopeId:f.input.context.scopeId,capturedAt:now,generationMarker:null,memory:{ownerId:f.owner,generation:0,reconciliationRequired:false,preferences:null,
+  mounted:{language:'en',result:response,selection:entry.id},rendered:[],seen:[],unassignedLegacy:false}};
+ f.input.source='advice';f.input.local=encode(f.local);f.input.remote={protocol:1,...f.input.context,legacyGeneration:0,checkpointHash:encodeE2eeBytes(new Uint8Array(32)),directoryRevision:1,
+  preferencesJson:'{}',collectionsJson:'["aurora"]',notificationsJson:'{}',psychopompiaJson:'{}',philosophersPerDay:1,
+  days:[{dayKey:day,adviceId:entry.id,entryJson:JSON.stringify(entry),createdAt:now,viewedAt:now,dismissedAt:null,selectionJson:'{}'}],entries:[],extraEntries:[],metrics:null};delete f.input.remote.generation;
+ return{...f,advice:entry,day};
+}
+
+test('actual Advice entry resolves all fourteen exact public editions through bounded native RPC and keeps dates inside its encrypted index',async()=>{
+ const f=await adviceFixture(),before=JSON.stringify(f.input);
+ await withRuntime(f,async rig=>{start(rig.runtime,f.input);const result=await rig.outcome;assert.equal(result.kind,'complete');assert.equal(result.complete,true);
+  assert.equal(result.content.length,4);assert.ok(result.content.every(row=>row.domain==='workspace'&&!row.objectId.includes(f.day)&&!row.objectId.includes(f.advice.id)));
+  const decode=row=>JSON.parse(new TextDecoder().decode(decodeE2eeBytes(row.bytes)));
+  const index=decode(result.content.find(row=>row.objectId==='personal-advice-history-index-v1'));assert.equal(index.days[0].dayKey,f.day);assert.match(index.days[0].objectId,/^personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);
+  const day=decode(result.content.find(row=>row.objectId===index.days[0].objectId));assert.equal(Object.keys(day.pointer.translations).length,14);
+  const history=decode(result.content.find(row=>row.objectId==='personal-advice-local-history-v1'));assert.equal(history.mounted.result.advice.body,'Synthetic private old advice display');assert.equal(history.mounted.result.canNext,undefined);
+  assert.equal(rig.requests.length,15);assert.ok(rig.requests.every(row=>row.kind==='public-catalogue'&&publicAssets.has(row.path)&&!row.path.includes(f.advice.id)));assert.ok(rig.replyChunks>15);
+ });assert.equal(JSON.stringify(f.input),before);
+});
+
+test('changed public Advice bytes and closing a pending public RPC cannot complete migration',async()=>{
+ const corrupt=await adviceFixture(),before=JSON.stringify(corrupt.input);
+ await withRuntime(corrupt,async rig=>{start(rig.runtime,corrupt.input);const result=await rig.outcome;assert.equal(result.kind,'error');assert.equal(result.code,'E2EE_ADVICE_CATALOGUE_INTEGRITY');assert.equal(result.content,undefined);},{corrupt:true});assert.equal(JSON.stringify(corrupt.input),before);
+ const closing=await adviceFixture();await withRuntime(closing,async rig=>{start(rig.runtime,closing.input);
+  for(let index=0;index<10&&!rig.requests.length;index++)await new Promise(resolve=>setImmediate(resolve));assert.equal(rig.requests[0].kind,'public-catalogue');
+  rig.runtime.close();await new Promise(resolve=>setImmediate(resolve));assert.ok(!rig.messages.some(row=>row.kind==='complete'));
+  assert.throws(()=>rig.runtime.resolveChunk(job,rig.requests[0].id,0,true,encode({value:'ignored'})),/RUNTIME_CLOSED/);
+ },{hold:true});
+});
+
+async function nativeAdviceFixture(){
+ const f=await adviceFixture(),{advicePreferences}=calendarModule('app/daily-advice.ts'),preferences=JSON.stringify(advicePreferences({enabled:false}));
+ const sha=value=>createHash('sha256').update(value).digest('hex'),hash=sha(`${f.owner}\0en\0${preferences}`),response=f.local.memory.mounted.result;
+ const container=body=>({protocol:2,ownerId:f.owner,profiles:{[hash]:{language:'en',preferences,current:{deviceDay:f.day,response:{...response,advice:{...response.advice,body},history:response.history.map(card=>({...card,body}))}},seen:{},legacyOriginal:null}}});
+ const record=(kind,value,encrypted='synthetic-native-encrypted-'+kind)=>({kind,revision:1,encrypted,plain:JSON.stringify(value)});
+ const oldCipher='synthetic-old-exact-native-ciphertext',kind=`advice-snapshot-v1-${f.day}-aurora-${f.advice.id}`;
+ const raw={protocol:1,ownerId:f.owner,scopeId:f.input.context.scopeId,capturedAt:f.local.capturedAt,generation:0,pendingGeneration:null,outbox:[],unknownLegacyCount:0,
+  knownProfiles:[{language:'en',preferences}],mounted:{preferences:null,mounted:f.local.memory.mounted},legacy:[{key:hash,value:JSON.stringify({deviceDay:f.day,response})}],
+  documents:[record('advice-cache-v2',container('Current private Room cache')),record('advice-cache-history-v2:'+sha(oldCipher),container('Earlier private Room cache'),oldCipher),
+   record(kind,{...response,dailyLimit:1,remaining:0,canNext:false}),record('advice-snapshots-v1',{entries:[kind],latest:[{day:f.day,language:'en',kind}],targets:[{day:f.day,kind}],delivered:[f.day]})]};
+ f.input.local=encode(raw);return{...f,raw};
+}
+
+test('actual native Room/v1 wire shapes are normalized inside the packaged entry with profiles and notification history preserved',async()=>{
+ const f=await nativeAdviceFixture(),before=JSON.stringify(f.raw);
+ await withRuntime(f,async rig=>{start(rig.runtime,f.input);const result=await rig.outcome;assert.equal(result.kind,'complete');assert.equal(result.complete,true);assert.equal(result.content.length,5);
+  const decode=row=>JSON.parse(new TextDecoder().decode(decodeE2eeBytes(row.bytes)));
+  const metadata=decode(result.content.find(row=>row.objectId==='personal-advice-native-metadata-v1'));assert.equal(metadata.profiles.length,2);assert.deepEqual(metadata.indexes[0].delivered,[f.day]);assert.equal(metadata.legacy.length,1);
+  const history=decode(result.content.find(row=>row.objectId==='personal-advice-local-history-v1'));assert.ok(history.rendered.some(row=>row.response.advice.body==='Current private Room cache'));assert.ok(history.rendered.some(row=>row.response.advice.body==='Earlier private Room cache'));
+  for(const forbidden of ['"canNext":','"dailyLimit":','synthetic-old-exact-native-ciphertext'])assert.ok(!JSON.stringify([history,metadata]).includes(forbidden));
+  assert.ok(rig.requests.every(row=>row.kind==='public-catalogue'));assert.equal(JSON.stringify(f.raw),before);
+ });
+});
+
+test('native unknown provenance or changed protected Room lineage is rejected before public RPC',async()=>{
+ const provenance=await nativeAdviceFixture();provenance.raw.unknownLegacyCount=1;provenance.input.local=encode(provenance.raw);
+ await withRuntime(provenance,async rig=>{start(rig.runtime,provenance.input);const result=await rig.outcome;assert.equal(result.code,'E2EE_ADVICE_PROVENANCE_REVIEW_REQUIRED');assert.equal(rig.requests.length,0);});
+ const history=await nativeAdviceFixture(),old=structuredClone(history.raw);old.documents[0].revision=0;history.input.previous=[encode(old)];
+ await withRuntime(history,async rig=>{start(rig.runtime,history.input);const result=await rig.outcome;assert.equal(result.code,'E2EE_ADVICE_HISTORY_REVIEW_REQUIRED');assert.equal(rig.requests.length,0);});
 });

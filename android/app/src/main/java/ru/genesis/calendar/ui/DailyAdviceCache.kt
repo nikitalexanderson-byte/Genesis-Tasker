@@ -25,11 +25,12 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
     private val cipher:LocalCipher=LocalCipher()) {
     private val app=context.applicationContext as GenesisApplication
     private val scope=CloudAccountSnapshot.scopeFor(user)
+    private val epoch=app.workspaceEpoch
     private val legacy=context.getSharedPreferences("daily_advice_day_v1",Context.MODE_PRIVATE)
     private val key=hash("$user\u0000$language\u0000$preferences") // Only inside ciphertext or the pre-existing v1 lookup.
     private val dao=app.database.dao()
     private val mutex get()=locks.getOrPut(scope){Mutex()}
-    private fun check(){UpdateGate.requireOpen();check(app.workspaceScope==scope){"E2EE_ACCOUNT_CHANGED"}}
+    private fun check(){UpdateGate.requireOpen();check(app.workspaceScope==scope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
     private suspend fun <T> operation(action:suspend ()->T):T=NativeLegacyOperationPermit.run(app.database,scope,::check){
         mutex.withLock{withContext(Dispatchers.IO){check();verifyExistingKey();action().also{check()}}}
     }

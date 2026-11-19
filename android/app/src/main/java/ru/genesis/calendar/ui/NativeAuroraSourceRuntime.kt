@@ -13,6 +13,7 @@ import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.genesis.calendar.auth.E2eePersonalSourceReconciler
+import ru.genesis.calendar.auth.NativeAdvicePublicCatalogues
 import ru.genesis.calendar.data.BackupTransfer
 import ru.genesis.calendar.security.*
 import java.io.ByteArrayInputStream
@@ -32,25 +33,32 @@ private const val SOURCE_CHUNK=131072
 private fun sourceCode(error:Throwable):String=error.message?.takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_AURORA_RECONCILIATION_FAILED"
 
 internal enum class PersonalSourceKind(val wire:String,val domain:String){
-    AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion");
+    AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion"),ADVICE("advice","workspace");
     fun accepts(id:String):Boolean=when(this){
         AURORA->id in setOf("personal-aurora-workspace-v1","personal-aurora-local-history-v1")||id.matches(Regex("aurora-result:[a-f0-9-]{36}"))
         STOICHEION->id in setOf("personal-stoicheion-workspace-v1","personal-stoicheion-local-history-v1","personal-stoicheion-draw-history-v1")
+        ADVICE->id in setOf("personal-advice-preferences-v1","personal-advice-local-history-v1","personal-advice-history-index-v1","personal-advice-native-metadata-v1")
+            ||id.matches(Regex("personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
     }
 }
 internal class NativeAuroraSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.AURORA)
 internal class NativeStoicheionSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.STOICHEION)
+internal class NativeAdviceSourceRuntime(context:Context,
+    publicBytes:suspend (String,()->Unit)->ByteArray=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v1.json").use{it.readBytes()}})::read)
+    :E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.ADVICE,publicBytes)
 
 /** One owner-bound job in a newly constructed, network-disabled WebView. Only
  * immutable capture/legacy documents enter it. Every key stays in native code;
  * there are no vault, HTTP, storage, file or mutation bridge methods. */
-internal class NativePersonalSourceRuntime(private val context:Context,private val source:PersonalSourceKind):E2eePersonalSourceReconciler {
+internal class NativePersonalSourceRuntime(private val context:Context,private val source:PersonalSourceKind,
+    private val publicBytes:(suspend (String,()->Unit)->ByteArray)?=null):E2eePersonalSourceReconciler {
     @SuppressLint("SetJavaScriptEnabled")
     override suspend fun reconcile(local:JSONObject,previous:List<JSONObject>,context:E2eeMigrationSourceContext,remote:JSONObject,
         assertCurrent:()->Unit,openLegacy:suspend (JSONObject,String)->Any):E2eePathReconciliation=coroutineScope {
         assertCurrent();val owner=context.ownerId;val scope=context.scopeId
         check(local.get("ownerId")==owner&&local.get("scopeId")==scope&&remote.get("ownerId")==owner&&remote.get("scopeId")==scope){"E2EE_SCOPE_BINDING_MISMATCH"}
-        check(local.getJSONObject("memory").getString("legacyKey").isEmpty()&&remote.getJSONObject("legacyKey").isNull("key")){"E2EE_KEY_BRIDGE_FORBIDDEN"}
+        if(source==PersonalSourceKind.ADVICE)check(!local.has("legacyKey")&&local.optJSONObject("memory")?.has("legacyKey")!=true&&!remote.has("legacyKey")&&publicBytes!=null){"E2EE_KEY_BRIDGE_FORBIDDEN"}
+        else check(local.getJSONObject("memory").getString("legacyKey").isEmpty()&&remote.getJSONObject("legacyKey").isNull("key")){"E2EE_KEY_BRIDGE_FORBIDDEN"}
         val id=UUID.randomUUID().toString();val outcome=CompletableDeferred<E2eePathReconciliation>()
         val operations=CoroutineScope(SupervisorJob(currentCoroutineContext()[Job])+Dispatchers.IO)
         val completed=AtomicReference<E2eePathReconciliation?>();var handedOff=false
@@ -65,7 +73,7 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
                 encoded.chunked(SOURCE_CHUNK).forEachIndexed{index,chunk->current.evaluateJavascript("window.GenesisAuroraSourceRuntime.resolveChunk('$id','$request',$index,${index==((encoded.length-1)/SOURCE_CHUNK)},'$chunk')",null)}
             }
         }
-        val bridge=AuroraSourceBridge(id,source,active,operations,outcome,completed,assertCurrent,openLegacy,::deliver)
+        val bridge=AuroraSourceBridge(id,source,active,operations,outcome,completed,assertCurrent,openLegacy,publicBytes,::deliver)
         try{
             withTimeout(120000){
                 val input=JSONObject().put("protocol",1).put("source",source.wire).put("ownerId",owner).put("scopeId",scope)
@@ -124,7 +132,8 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
 @Keep
 private class AuroraSourceBridge(private val job:String,private val source:PersonalSourceKind,private val active:AtomicBoolean,private val operations:CoroutineScope,
     private val result:CompletableDeferred<E2eePathReconciliation>,private val completed:AtomicReference<E2eePathReconciliation?>,private val assertCurrent:()->Unit,
-    private val openLegacy:suspend (JSONObject,String)->Any,private val deliver:suspend (String,JSONObject)->Unit){
+    private val openLegacy:suspend (JSONObject,String)->Any,private val publicBytes:(suspend (String,()->Unit)->ByteArray)?,
+    private val deliver:suspend (String,JSONObject)->Unit){
     private val transfers=BackupTransfer(24*1024*1024);private val inflight=AtomicInteger()
     @JavascriptInterface fun postChunk(id:String,index:Int,last:Boolean,text:String){
         if(!active.get()||result.isCompleted)return
@@ -140,10 +149,21 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                 val value=JSONObject(raw);check(value.get("job")==job){"E2EE_SCOPE_BINDING_MISMATCH"}
                 when(value.getString("kind")){
                     "open"->{
+                        check(source!=PersonalSourceKind.ADVICE){"E2EE_KEY_BRIDGE_FORBIDDEN"}
                         E2eeKeys.exact(value,setOf("job","id","kind","envelope","purpose"));val id=value.getString("id")
                         check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_AURORA_BRIDGE_INVALID"}
                         val envelope=value.getJSONObject("envelope");E2eeKeys.exact(envelope,setOf("iv","ciphertext"))
                         val response=try{JSONObject().put("value",openLegacy(envelope,value.getString("purpose")))}catch(error:Throwable){JSONObject().put("error",sourceCode(error))}
+                        assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
+                    }
+                    "public-catalogue"->{
+                        check(source==PersonalSourceKind.ADVICE&&publicBytes!=null){"E2EE_AURORA_BRIDGE_INVALID"}
+                        E2eeKeys.exact(value,setOf("job","id","kind","path"));val id=value.getString("id");val path=value.getString("path")
+                        check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))&&path.length<=256){"E2EE_AURORA_BRIDGE_INVALID"}
+                        val response=try{
+                            val bytes=publicBytes.invoke(path,assertCurrent)
+                            try{assertCurrent();check(bytes.size in 2..8*1024*1024){"E2EE_ADVICE_CATALOGUE_INVALID"};JSONObject().put("value",E2eeEnvelope.encode(bytes))}finally{bytes.fill(0)}
+                        }catch(error:Throwable){JSONObject().put("error",sourceCode(error))}
                         assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
                     }
                     "complete"->{

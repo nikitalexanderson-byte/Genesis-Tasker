@@ -8,10 +8,18 @@ import ru.genesis.calendar.data.DocumentRecord
 import ru.genesis.calendar.data.LocalCipher
 
 /** Exact, account-bound server snapshots. No text or identity is stored in alarms or WorkManager. */
-internal class AdviceSnapshotStore(private val app: GenesisApplication) {
+internal class AdviceSnapshotStore(private val app: GenesisApplication,private val cipher:LocalCipher=LocalCipher()) {
     private val dao = app.database.dao()
-    private val cipher = LocalCipher()
     private val indexKind = "advice-snapshots-v1"
+    private suspend fun <T> operation(scope:String,run:suspend ()->T):T=legacyAdviceOperation(app,scope){
+        // A new index/card/marker cannot replace a lost key while any old Advice
+        // ciphertext remains. Other LocalCipher users need their own lifecycle.
+        val witness=dao.documentKinds(scope).firstOrNull{it.startsWith("advice-")}
+        if(witness!=null){val row=requireNotNull(dao.document(scope,witness)){"E2EE_ADVICE_SOURCE_CHANGED"}
+            val aad=if(witness.startsWith("advice-cache-history-v2:"))"advice-cache-v2" else witness
+            cipher.decrypt(row.encrypted,"$scope/$aad")}
+        run()
+    }
     private fun kind(id: String, day: String, collection: String): String {
         DailyAdviceProtocol.savedPath(id, day, collection)
         return "advice-snapshot-v1-$day-$collection-$id"
@@ -33,7 +41,7 @@ internal class AdviceSnapshotStore(private val app: GenesisApplication) {
         (0 until rows.length()).map { rows.getString(it) }
     }.orEmpty()
 
-    suspend fun cache(scope: String, response: JSONObject, current: Boolean = true) = app.database.withTransaction {
+    suspend fun cache(scope: String, response: JSONObject, current: Boolean = true) = operation(scope) { app.database.withTransaction {
         val parsed = DailyAdviceProtocol.parse(response)
         val index = index(scope)
         val entries = index.strings("entries").toMutableList()
@@ -67,21 +75,21 @@ internal class AdviceSnapshotStore(private val app: GenesisApplication) {
         entries.filterNot { it in retained }.forEach { dao.deleteDocument(scope, it) }
         index.put("entries", JSONArray(retained.distinct()))
         writeDocument(scope, indexKind, index)
-    }
+    } }
 
-    suspend fun saved(scope: String, id: String, day: String, collection: String): JSONObject? {
+    suspend fun saved(scope: String, id: String, day: String, collection: String): JSONObject? = operation(scope) {
         index(scope) // Validate the account scope even when there is no index yet.
-        return readDocument(scope, kind(id, day, collection))?.also { DailyAdviceProtocol.parse(it) }
+        readDocument(scope, kind(id, day, collection))?.also { DailyAdviceProtocol.parse(it) }
     }
 
-    suspend fun latest(scope: String, day: String, language: String): JSONObject? {
+    suspend fun latest(scope: String, day: String, language: String): JSONObject? = operation(scope) {
         val key = index(scope).rows("latest").lastOrNull { it.optString("day") == day && it.optString("language") == language }
-            ?.getString("kind") ?: return null
-        return readDocument(scope, key)?.also { DailyAdviceProtocol.parse(it) }
+            ?.getString("kind") ?: return@operation null
+        readDocument(scope, key)?.also { DailyAdviceProtocol.parse(it) }
     }
 
     /** First selection wins even if a user explicitly draws a later card before a delivery retry. */
-    suspend fun notificationTarget(scope: String, day: String, candidate: DailyAdvice?): JSONObject? = app.database.withTransaction {
+    suspend fun notificationTarget(scope: String, day: String, candidate: DailyAdvice?): JSONObject? = operation(scope) { app.database.withTransaction {
         val index = index(scope)
         val targets = index.rows("targets").toMutableList()
         val existing = targets.firstOrNull { it.getString("day") == day }
@@ -95,21 +103,21 @@ internal class AdviceSnapshotStore(private val app: GenesisApplication) {
             writeDocument(scope, indexKind, index)
         }
         saved
-    }
+    } }
 
-    suspend fun delivered(scope: String, day: String): Boolean = day in index(scope).strings("delivered")
-    suspend fun markDelivered(scope: String, day: String) = app.database.withTransaction {
+    suspend fun delivered(scope: String, day: String): Boolean = operation(scope) { day in index(scope).strings("delivered") }
+    suspend fun markDelivered(scope: String, day: String) = operation(scope) { app.database.withTransaction {
         val index = index(scope)
         index.put("delivered", JSONArray((index.strings("delivered").filterNot { it == day } + day).takeLast(35)))
         writeDocument(scope, indexKind, index)
-    }
+    } }
 
-    suspend fun invalidate(scope: String, id: String, day: String, collection: String) = app.database.withTransaction {
+    suspend fun invalidate(scope: String, id: String, day: String, collection: String) = operation(scope) { app.database.withTransaction {
         val key = kind(id, day, collection)
         dao.deleteDocument(scope, key)
         val index = index(scope)
         index.put("entries", JSONArray(index.strings("entries").filterNot { it == key }))
         index.put("latest", JSONArray(index.rows("latest").filterNot { it.optString("kind") == key }))
         writeDocument(scope, indexKind, index)
-    }
+    } }
 }

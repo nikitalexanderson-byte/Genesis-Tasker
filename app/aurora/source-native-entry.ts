@@ -1,5 +1,9 @@
 import {PersonalAuroraSource} from '../e2ee/aurora-source';
 import {PersonalStoicheionSource} from '../e2ee/stoicheion-source';
+import {PersonalAdviceSource} from '../e2ee/advice-source';
+import {PublicAdviceCatalogues} from '../e2ee/advice-catalogue';
+import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
+import {canonicalJson} from './forecast';
 import {decodeE2eeBytes,encodeE2eeBytes} from '../e2ee/envelope';
 import {backupJson} from '../backup-format';
 import {exactKeys} from '../e2ee/keys';
@@ -24,19 +28,36 @@ async function run(encoded:string){
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
     exactKeys(value,['protocol','source','ownerId','scopeId','local','previous','context','remote']);
-    if(value.protocol!==1||!['aurora','stoicheion'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
+    if(value.protocol!==1||!['aurora','stoicheion','advice'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
       ||!Array.isArray(value.previous)||value.previous.length>32)throw new Error('E2EE_AURORA_SOURCE_INVALID');
     local.push(decodeE2eeBytes(value.local,1,16*1024*1024));for(const old of value.previous)local.push(decodeE2eeBytes(old,1,16*1024*1024));
+    const ask=(kind:string,fields:Record<string,unknown>):Promise<unknown>=>new Promise((resolve,reject)=>{
+      current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});
+      try{send({job,id,kind,...fields});}catch(error){pending.delete(id);reject(error);}
+    });
+    const catalogues=new PublicAdviceCatalogues(async path=>{
+      if(value.source!=='advice')throw new Error('E2EE_ADVICE_CATALOGUE_INVALID');
+      const result=await ask('public-catalogue',{path});current();if(typeof result!=='string')throw new Error('E2EE_ADVICE_CATALOGUE_INVALID');
+      return decodeE2eeBytes(result,2,8*1024*1024);
+    },current);
     const ports={
       storage:{getItem(){throw new Error('E2EE_SOURCE_MUTATION');},key:()=>null,length:0},memory(){throw new Error('E2EE_SOURCE_MUTATION');},assertCurrent:current,
-      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,
-      openLegacy:(envelope:{iv:string;ciphertext:string},purpose:string):Promise<unknown>=>new Promise((resolve,reject)=>{
-        current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});
-        try{send({job,id,kind:'open',envelope,purpose});}catch(error){pending.delete(id);reject(error);}
-      }),
+      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,catalogues,
+      openLegacy:(envelope:{iv:string;ciphertext:string},purpose:string):Promise<unknown>=>ask('open',{envelope,purpose}),
     };
-    const source=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):new PersonalStoicheionSource(value.ownerId,value.scopeId,ports);
-    const result=await source.reconcile(local[0],local.slice(1),value.context as MigrationSourceContext);content.push(...result.content.map(row=>row.bytes));
+    const source=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
+    let prepared=local.slice(),nativeMetadata:unknown;
+    if(value.source==='advice'){
+      const raw=local.map(bytes=>backupJson(decoder.decode(bytes)) as Record<string,unknown>);
+      if(raw[0]&&Object.hasOwn(raw[0],'documents')){
+        const identity=(snapshot:Record<string,unknown>)=>Object.fromEntries(Object.entries(snapshot).filter(([key])=>key!=='capturedAt'));
+        for(const previous of raw.slice(1))if(canonicalJson(identity(previous))!==canonicalJson(identity(raw[0])))throw new Error('E2EE_ADVICE_HISTORY_REVIEW_REQUIRED');
+        prepared=[];for(const snapshot of raw){const normalized=await normalizeNativeAdviceCapture(snapshot,value.remote,current);const bytes=new TextEncoder().encode(JSON.stringify(normalized.snapshot));local.push(bytes);prepared.push(bytes);if(nativeMetadata===undefined)nativeMetadata=normalized.metadata;}
+      }
+    }
+    const result=await source.reconcile(prepared[0],prepared.slice(1),value.context as MigrationSourceContext);
+    if(nativeMetadata!==undefined)result.content.push({domain:'workspace',objectId:'personal-advice-native-metadata-v1',bytes:new TextEncoder().encode(JSON.stringify(nativeMetadata))});
+    content.push(...result.content.map(row=>row.bytes));
     current();send({job,kind:'complete',complete:result.complete,content:result.content.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes)}))});
   }catch(error){
     if(!closed)send({job,kind:'error',code:error instanceof Error&&/^E2EE_[A-Z_]{1,100}$/.test(error.message)?error.message:'E2EE_AURORA_RECONCILIATION_FAILED'});

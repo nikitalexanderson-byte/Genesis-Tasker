@@ -218,6 +218,8 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
         include("*.json")
         into("i18n/year-translations")
     }
+    // Only public edition pins are bundled; large catalogue bodies stay lazy.
+    from(rootProject.file("../contracts/public-advice-editions-v1.json")) { into("catalogs") }
     into(assetsDirectory.dir("originals"))
 }
 abstract class GenesisAuroraAssetsTask : DefaultTask() {

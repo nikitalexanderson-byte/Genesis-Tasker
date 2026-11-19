@@ -293,6 +293,34 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         },decrypt={row->current();val aad=if(row.kind=="aurora-account-key")"$accountScope/aurora/$uid/account-key" else "$accountScope/${row.kind}"
             cipher.decrypt(row.encrypted,aad).also{current()}},assertCurrent=::current,legacyStoicheion=transport::legacyStoicheion,reconciler=reconciler)
     }
+    internal fun e2eeAdviceSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        captureMounted:suspend ()->JSONObject?):E2eeNativeAdviceSource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope){"E2EE_ACCOUNT_CHANGED"}}
+        val cipher=ru.genesis.calendar.data.LocalCipher();val legacy=app.getSharedPreferences("daily_advice_day_v1",android.content.Context.MODE_PRIVATE)
+        return E2eeNativeAdviceSource(uid,directory.scopeId,captureRows={
+            current();val mounted=captureMounted()?.let{JSONObject(it.toString())};current()
+            val preferences=requireNotNull(mutableState.value.accountSettings){"E2EE_ACCOUNT_PROFILE_REQUIRED"}.advicePreferences.toJson().toString()
+            withContext(Dispatchers.IO){app.database.withTransaction{
+                current();val dao=app.database.dao();val kinds=dao.documentKinds(accountScope).filter{it.startsWith("advice-")};check(kinds.size<=1026){"E2EE_JOURNAL_LIMIT"}
+                val documents=mutableListOf<ru.genesis.calendar.data.DocumentRecord>();var size=0L
+                for(kind in kinds){dao.document(accountScope,kind)?.let{row->size+=row.encrypted.length;check(size<=16*1024*1024){"E2EE_SNAPSHOT_TOO_LARGE"};documents+=row}}
+                val pending=dao.outbox(accountScope).filter{it.entityId.startsWith("advice")};val epochs=NativeBackupEpochStore(app)
+                current();E2eeAdviceRows(documents,pending,epochs.accepted(accountScope),epochs.pending(accountScope),listOf(preferences),mounted)
+            }}
+        },decrypt={row->current();val kind=if(row.kind.startsWith("advice-cache-history-v2:"))"advice-cache-v2" else row.kind
+            cipher.decrypt(row.encrypted,"$accountScope/$kind").also{current()}},captureLegacy={known->withContext(Dispatchers.IO){
+            current();val keys=legacy.all.keys.toSet();check(keys.size<=100000){"E2EE_JOURNAL_LIMIT"};val owned=linkedMapOf<String,String>();var unknown=0
+            for(key in keys.sorted()){
+                val match=Regex("([a-f0-9]{64})(?::seen:advice-[a-f0-9]{24})?").matchEntire(key)
+                if(match!=null&&match.groupValues[1] in known)owned[key]=requireNotNull(legacy.getString(key,null)){"E2EE_ADVICE_SOURCE_CHANGED"} else unknown++
+            }
+            check(legacy.all.keys.toSet()==keys){"E2EE_ADVICE_SOURCE_CHANGED"};current();E2eeAdviceLegacyRows(owned,unknown)
+        }},assertCurrent=::current,legacyAdvice=transport::legacyAdvice,reconciler=reconciler)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
@@ -632,16 +660,23 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             app.workspaceScope == CloudAccountSnapshot.scopeFor(uid))
     }
 
+    internal suspend fun <T> withLegacyAdviceScope(accountScope:String,operation:suspend ()->T):T {
+        val generation=client.currentGeneration()
+        return legacyAdviceOperation(app,accountScope,{
+            if(!client.isCurrent(generation))throw AuthApiError("E2EE_ACCOUNT_CHANGED")
+        },operation)
+    }
+
     internal fun dailyAdviceTransport(uid: String): DailyAdviceGateway = object : DailyAdviceGateway {
-        override suspend fun today(context: JSONObject): JSONObject {
+        override suspend fun today(context: JSONObject): JSONObject = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
             checkAdviceAccount(uid)
             val generation = client.currentGeneration()
             val result = withContext(Dispatchers.IO) { client.dailyAdvice(generation, context) }
             checkAdviceAccount(uid)
             withContext(Dispatchers.IO) { AdviceSnapshotStore(app).cache(CloudAccountSnapshot.scopeFor(uid), result) }
-            return result
+            result
         }
-        override suspend fun record(id: String, day: String, dismiss: Boolean) {
+        override suspend fun record(id: String, day: String, dismiss: Boolean):Unit = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
             checkAdviceAccount(uid)
             val generation = client.currentGeneration()
             val result = withContext(Dispatchers.IO) { client.recordAdvice(generation, id, day, dismiss) }
@@ -656,15 +691,15 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 AdviceSnapshotStore(app).invalidate(CloudAccountSnapshot.scopeFor(uid), id, day, collection)
             } }
         }
-        override suspend fun next(context: JSONObject, id: String, day: String): JSONObject {
+        override suspend fun next(context: JSONObject, id: String, day: String): JSONObject = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
             checkAdviceAccount(uid)
             val generation = client.currentGeneration()
             val result = withContext(Dispatchers.IO) { client.nextDailyAdvice(generation, context, id, day) }
             checkAdviceAccount(uid)
             withContext(Dispatchers.IO) { AdviceSnapshotStore(app).cache(CloudAccountSnapshot.scopeFor(uid), result) }
-            return result
+            result
         }
-        override suspend fun saved(id: String, day: String, collection: String): JSONObject {
+        override suspend fun saved(id: String, day: String, collection: String): JSONObject = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
             DailyAdviceProtocol.savedPath(id, day, collection)
             val accountScope = CloudAccountSnapshot.scopeFor(uid)
             fun current() {
@@ -674,9 +709,9 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             current()
             val store = AdviceSnapshotStore(app)
             val cached = withContext(Dispatchers.IO) { store.saved(accountScope, id, day, collection) }
-            if (mutableState.value.requiresSignIn) return cached ?: throw AuthFailure(AuthFailure.Kind.NETWORK)
+            if (mutableState.value.requiresSignIn) return@withLegacyAdviceScope cached ?: throw AuthFailure(AuthFailure.Kind.NETWORK)
             val generation = client.currentGeneration()
-            return try {
+            try {
                 val result = withContext(Dispatchers.IO) { client.savedDailyAdvice(generation, id, day, collection) }
                 current()
                 if (!client.isCurrent(generation)) throw CancellationException()
@@ -692,13 +727,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 if (error.kind == AuthFailure.Kind.NETWORK && cached != null) cached else throw error
             }
         }
-        override suspend fun share(id: String, day: String, collection: String): JSONObject {
+        override suspend fun share(id: String, day: String, collection: String): JSONObject = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
             checkAdviceAccount(uid)
             // Export revalidates against the server and never falls back to an offline cache.
             val result = notificationSavedAdvice(CloudAccountSnapshot.scopeFor(uid), id, day, collection)
             checkAdviceAccount(uid)
             require(DailyAdviceProtocol.parse(result).advice != null)
-            return result
+            result
         }
     }
 
@@ -724,7 +759,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         return verification
     }
 
-    internal suspend fun saveAdvicePreferences(uid: String, patch: JSONObject): AdvicePreferences = advicePreferencesMutex.withLock {
+    internal suspend fun saveAdvicePreferences(uid: String, patch: JSONObject): AdvicePreferences = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
+        val savedPreferences=advicePreferencesMutex.withLock {
         checkAdviceAccount(uid)
         require(patch.length() > 0 && patch.keys().asSequence().all { it in setOf("enabled", "smart", "categories", "aphrodisiaAdult", "collections", "philosophersPerDay", "notifications", "psychopompia") })
         patch.optJSONObject("notifications")?.let { AdviceNotificationPreferences.fromJson(it) }
@@ -743,12 +779,15 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             if (!client.isCurrent(generation)) throw CancellationException()
             withContext(Dispatchers.IO) { CachedAccountEntry(app).save(identity, settings) }
         }
-        ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(app)
         settings.advicePreferences
+        }
+        // Release the preference mutex before entering scheduler serialization.
+        ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(app)
+        savedPreferences
     }
 
     /** Only a profile read: does not bootstrap/import the workspace or grant account readiness. */
-    internal suspend fun adviceNotificationAccount(accountScope: String): CachedAccountEntry.Entry = advicePreferencesMutex.withLock {
+    internal suspend fun adviceNotificationAccount(accountScope: String): CachedAccountEntry.Entry = withLegacyAdviceScope(accountScope) { advicePreferencesMutex.withLock {
         val generation = client.currentGeneration()
         val before = mutableState.value
         fun current() {
@@ -776,28 +815,30 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             withContext(Dispatchers.IO) { CachedAccountEntry(app).save(identity, settings) }
         }
         CachedAccountEntry.Entry(identity, settings)
-    }
+    } }
 
     internal suspend fun cachedAdviceNotificationAccount(accountScope: String): CachedAccountEntry.Entry? {
         if (app.workspaceScope != accountScope) return null
+        return withLegacyAdviceScope(accountScope) {
         val state = mutableState.value
         val user = state.user
         val settings = state.accountSettings
-        return if (state.ready && user != null && settings != null && CloudAccountSnapshot.scopeFor(user.uid) == accountScope)
+        if (state.ready && user != null && settings != null && CloudAccountSnapshot.scopeFor(user.uid) == accountScope)
             CachedAccountEntry.Entry(user, settings)
         else withContext(Dispatchers.IO) { CachedAccountEntry(app).read(accountScope) }
+        }
     }
 
-    internal suspend fun notificationDailyAdvice(accountScope: String, timeZone: String): JSONObject {
+    internal suspend fun notificationDailyAdvice(accountScope: String, timeZone: String): JSONObject = withLegacyAdviceScope(accountScope) {
         val generation = client.currentGeneration()
         if (app.workspaceScope != accountScope) throw AuthFailure(AuthFailure.Kind.CONFLICT)
         val result = withContext(Dispatchers.IO + NativeActivityVisit.requestContext(true)) { client.dailyAdvice(generation, JSONObject(), timeZone) }
         if (app.workspaceScope != accountScope || !client.isCurrent(generation)) throw AuthFailure(AuthFailure.Kind.CONFLICT)
         withContext(Dispatchers.IO) { AdviceSnapshotStore(app).cache(accountScope, result) }
-        return result
+        result
     }
 
-    internal suspend fun notificationSavedAdvice(accountScope: String, id: String, day: String, collection: String): JSONObject {
+    internal suspend fun notificationSavedAdvice(accountScope: String, id: String, day: String, collection: String): JSONObject = withLegacyAdviceScope(accountScope) {
         val generation = client.currentGeneration()
         if (app.workspaceScope != accountScope) throw AuthFailure(AuthFailure.Kind.CONFLICT)
         val result = withContext(Dispatchers.IO + NativeActivityVisit.requestContext(true)) { client.savedDailyAdvice(generation, id, day, collection) }
@@ -808,11 +849,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             if (card == null) AdviceSnapshotStore(app).invalidate(accountScope, id, day, collection)
             else AdviceSnapshotStore(app).cache(accountScope, result, current = false)
         }
-        return result
+        result
     }
 
     /** Called only while holding the shared scope/preference notification guard, immediately before notify(). */
     internal fun adviceNotificationStillVisible(accountScope: String, card: DailyAdvice, settings: AccountSettings): Boolean {
+        val permit=ru.genesis.calendar.data.NativeLegacyOperationPermit.current()?:return false
+        permit.check()
         val current = mutableState.value
         val currentSettings = current.accountSettings?.takeIf { current.user?.uid?.let(CloudAccountSnapshot::scopeFor) == accountScope } ?: settings
         return app.workspaceScope == accountScope && "$accountScope|${card.day}|${card.id}" !in locallyDismissedAdvice &&

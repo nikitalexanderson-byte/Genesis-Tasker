@@ -319,10 +319,41 @@ the common source also validates practice journals, saved card replacements and
 timeline history. Live quota, subscription and reroll rights are absent from
 portable content. Details/evidence: `e2ee-336-stoicheion-source.md`.
 
-All3 implemented source categories still require complete product routing,
+The three source categories described above still require complete product routing,
 unlocked-device lifecycle, source review and full upgrade/recovery acceptance.
-The other17 paths remain mandatory; no production activation follows from these
-focused tests.
+Advice is described below; the remaining16 paths are mandatory. No production
+activation follows from these focused tests.
+
+## Native Advice source engine
+
+The actual owner-scoped Room source captures exact current/history ciphertexts,
+authenticated plaintext, proven v1 lookup bytes, generations and mounted work.
+Unassigned historical hashes are neither assigned to this owner nor treated as
+empty. The common validator retains rendered copies and notification/index
+metadata inside new encrypted objects; dates and advice IDs stay out of new
+remote object IDs. Captured and new key bytes never enter this JS source.
+
+Advice has only a bounded public-byte port restricted to APK-pinned catalogue
+paths. It has no legacy key-opening port. The native reader verifies SHA/length,
+does not use the account client/cookie jar and refuses an inherited Java cookie
+context. Actual TLS with the new deployed editions remains untested.
+
+Preference/gateway/snapshot/reminder operations hold one owner permit before
+controller/scheduler locks through offline fallback, writes and cleanup. Nested
+IO borrows that permit. A process-local account-transition counter prevents
+A→B→A from reviving old work; it is not a dataGeneration or crypto/security epoch.
+Preference mutex release precedes scheduler restore. These scheduler mutexes
+remain distinct; no prior same-mutex deadlock is asserted.
+
+Actual source/retention/old-key-removal cases passed on API34 and final API35;
+API26 passed storage/fence tests and all14-language old-provider fallback states.
+The API35 run found a real provider difference: Java GMT is returned by WebView124
+Intl as +00:00. The calendar contract now normalizes that unambiguous zero-offset
+alias to UTC without changing device settings or accepting ambiguous/nonzero
+shorthand. Full repeated API35 run31/31 and full JS1492/1492 pass. Evidence and
+precise limits: `e2ee-336-advice-native-work.md`. Actual default global v1 inventory,
+large histories, all product routing/recovery/upgrades and independent review
+remain required; four real source adapters are not whole-product acceptance.
 
 ## Trust limits and remaining integration
 

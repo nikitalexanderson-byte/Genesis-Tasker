@@ -729,3 +729,28 @@ JVM PASS; PHP6/6 suites с12 actual web/native signed transport packets PASS.
 security UI и независимый crypto review всё ещё обязательны. Production3.3.5/149,
 floors0, cutover off, Android deploy false сохранены. Подробности:
 `e2ee-336-advice-web-source.md`.
+
+## Native Advice: полный source и фоновые operation fences
+
+19 ноября2026. Реальные Room current/history cache, snapshot/index/target/delivered,
+known v1 bytes и mounted work переносятся общим validator в новый root. Оригиналы
+сохраняются; unknown provenance/нечитаемый key/конфликт не становятся пустым
+источником. Все Advice gateway/preferences/store/notification операции удерживают
+owner permit, включая offline fallback; process-local owner epoch закрывает
+A→B→A. Public bytes ограничены APK pins и не получают account credentials.
+
+QA main/test APK,17/17 JVM, full JS1492/1492, typecheck/scoped lint/web build,
+native lint0 errors/206 прежних warnings PASS. API34:7 новых source +23 regression
++4 UI cases PASS. API26:22 storage/fence +public timezone +old-provider fallback
+PASS,84 UI состояния на14 языках/2 схемах при font1.3. API35 final31/31 PASS.
+Его первый прогон выявил8 ошибок boot общего JS из-за Intl default +00:00 при
+Java GMT. Исправлено канонизацией zero offset в UTC; настройки устройства не
+менялись. Failed log сохранён, полный прогон повторён успешно. Подробности:
+`e2ee-336-advice-native-work.md`.
+
+Теперь4/20 реальных source категорий, остальные16 и product lifecycle/editor
+routing ещё обязательны. Default global v1 provenance review, большие истории,
+совместимый provider на API26, прямые signed upgrades, clean recovery, shared
+rotation/files/automation, backup/Drive,48 scenarios и независимый crypto review
+не заменяются этими проверками. Production3.3.5/149, floors0, cutover off,
+GENESIS_DEPLOY_ANDROID=false сохранены; полного выпуска3.3.6 ещё нет.

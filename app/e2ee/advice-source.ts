@@ -164,3 +164,8 @@ export class PersonalAdviceSource implements PrivatePathAdapter{
   }finally{if(!complete)content.forEach(row=>row.bytes.fill(0));}
  }
 }
+
+/** The native capture normalizer uses the identical lossless preference and
+ * portable response validation; it never imports cached live permissions. */
+export const validateAdviceMigrationPreferences=preferences;
+export const normalizeAdviceMigrationResponse=response;

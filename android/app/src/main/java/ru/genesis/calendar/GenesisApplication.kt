@@ -21,6 +21,9 @@ class GenesisApplication : Application() {
     private val activeScope = MutableStateFlow(localScope)
     val scopeFlow = activeScope.asStateFlow()
     val workspaceScope get() = activeScope.value
+    // Process-local owner transition only, never a crypto/data generation.
+    private val scopeEpoch = java.util.concurrent.atomic.AtomicLong()
+    internal val workspaceEpoch get() = scopeEpoch.get()
     internal val adviceNotificationGuard = Any()
     @Volatile private var featureSnapshot: Pair<String,ru.genesis.calendar.auth.FeatureAccess>? = null
     fun rememberFeatureAccess(scope: String, value: ru.genesis.calendar.auth.FeatureAccess) { featureSnapshot = scope to value }
@@ -40,6 +43,7 @@ class GenesisApplication : Application() {
             // This contains only the hashed workspace key, never credentials or tokens.
             check(getSharedPreferences("genesis.reminder.scope.v1", MODE_PRIVATE).edit()
                 .putString("workspace", next).commit())
+            if (next != activeScope.value) scopeEpoch.incrementAndGet()
             activeScope.value = next
             if (featureSnapshot?.first != next) featureSnapshot = null
         }
