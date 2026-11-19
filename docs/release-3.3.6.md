@@ -954,3 +954,12 @@ partial build не объявляется финальным native acceptance.
 `e2ee-336-mindmaps-source.md` фиксирует предел: actual client adapter/capture всех
 local/view/conversion/request/drafts/editor/history и normal routing ещё в работе.
 Coverage6/20; production3.3.5/149, floors0/cutover off/Android deploy false сохранены.
+
+## 19 ноября: исправление full-project lint и повторный CI
+
+CI44493179690/bd706ca3: Android success; web/API остановился на lint из-за unused
+body в новом synthetic diary test. Переменная убрана. Diary15/15 PASS;
+full project lint0 errors/4 existing image warnings PASS, локально исключён только
+чужой untracked demo-output без изменения/добавления его в Git. Этот CI не прошёл
+web/API/browser этапы, его нельзя считать общим success. Повтор запускается на
+исправленном head с новым signed mindmaps source.

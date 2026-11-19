@@ -102,3 +102,10 @@ upgrade acceptance, the original 48 scenarios, 14-language security UI review an
 independent crypto review. Global LocalCipher encrypt-after-lost-key protection
 is a separate mandatory blocker; these source readers do not regenerate a key.
 No release number or production setting is changed by this work.
+
+CI44493179690 on bd706ca3: Android success; web/API stopped at lint because the
+new synthetic diary test had an unused `body` variable. Removed that variable;
+`diary-test-lint-fix-01.log` is 15/15 PASS. Full project lint
+`diary-full-project-lint-fix-01.log` has 0 errors and 4 existing image warnings.
+Only unrelated untracked `demo-output/` was excluded locally; it was not changed
+or added to Git. A fresh remote CI run is required after the fix.

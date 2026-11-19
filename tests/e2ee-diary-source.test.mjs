@@ -50,7 +50,7 @@ test('authenticated diary factory captures current records and registered blank 
 
 test('actual web repository encrypted cache, drafts and unknown note metadata survive signed-source conversion with no replay',async()=>{
  const client=await cloudSyncClient({userId:'owner'}),storage=new MemoryStorage();let writes=0;
- client.respond(async(url,init)=>{if(init.method==='PUT'){writes++;const body=JSON.parse(init.body);return new Response(JSON.stringify({revision:1,updatedAt:NOW}));}throw new Error('NO_SOURCE_HTTP');});
+ client.respond(async(url,init)=>{if(init.method==='PUT'){writes++;return new Response(JSON.stringify({revision:1,updatedAt:NOW}));}throw new Error('NO_SOURCE_HTTP');});
  const repository=new DiaryRepository('owner',storage,client.client.personalDocumentAccess('owner'));
  const original=note('actual',{customColor:'#12abef',futureMetadata:{private:'preserve exact optional fields'}}),saved=await repository.save(original);
  await repository.keepDraft({...original,body:'Неотправленный текст'},saved);const before=[...storage.data];
