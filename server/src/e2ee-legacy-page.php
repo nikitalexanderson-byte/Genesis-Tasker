@@ -4,7 +4,7 @@ require_once __DIR__.'/e2ee-legacy-personal.php';
 
 /** Internal table specifications only; no caller-controlled SQL identifiers.
  * Pages are always read under the signed lease/source/file/SQLite fences. */
-function genesisE2eeLegacyPersonalPage(PDO $db,string $actor,array $scope,array $c,array $queries,string $ownerColumn):array
+function genesisE2eeLegacyPersonalPage(PDO $db,string $actor,array $scope,array $c,array $queries,string $ownerColumn,?callable $transform=null):array
 {
     $p=genesisE2eeExactFields($c['payload'],['migrationId','fence','sourceHash','table','offset']);
     if(!is_string($p['table'])||!isset($queries[$p['table']]))genesisE2eeInvalid();
@@ -25,6 +25,10 @@ function genesisE2eeLegacyPersonalPage(PDO $db,string $actor,array $scope,array 
     $q->bindValue(1,$actor);$q->bindValue(2,$offset,PDO::PARAM_INT);$q->execute();$bytes=strlen(genesisE2eeJson($result));
     try{while($row=$q->fetch()){
         foreach($integers as $field)if($row[$field]!==null)$row[$field]=(int)$row[$field];
+        // Internal transforms (e.g. opening the OLD at-rest reminder plan) are
+        // part of the same bounded page. Count the actual returned bytes, not
+        // just the smaller stored ciphertext or an unbounded appended payload.
+        if($transform)$row=$transform($p['table'],$row);
         $size=strlen(genesisE2eeJson($row))+1;
         if($bytes+$size>8*1024*1024){
             if(!$result['rows'])throw new GenesisResourceLimitException(413,'E2EE_SOURCE_TOO_LARGE');

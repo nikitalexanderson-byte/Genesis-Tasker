@@ -11,6 +11,7 @@ import { privateDeviceAccessBlocked } from "./local-sign-out";
 import { translateText, type Language } from "./i18n";
 import type { HabitWorkspace } from "./habits";
 import "./habit-reminders.css";
+import {useReminderMigrationCapture,useReminderMigrationTask} from './reminder-migration-editors';
 
 type ReminderReceiveRequest = { kind: "intent" | "notice"; id: string };
 
@@ -29,6 +30,8 @@ export default function HabitReminderBridge({ userId, workspace, language, appBa
   const [inputTarget,setInputTarget]=useState<HabitReminderTarget|null>(null);
   const [message, setMessage] = useState(""), [busy, setBusy] = useState(false), [revision, setRevision] = useState(0);
   const received = useRef("");
+  const migrationTask=useReminderMigrationTask(userId);
+  useReminderMigrationCapture(userId,'habit-reminder-bridge',()=>({status,checked,pending,receiveRequest,receiving,inputTarget,message,busy,revision,received:received.current}));
   const t = (text: string) => translateText(text, language);
   useEffect(() => {
     let active=true, checking=false;
@@ -62,7 +65,7 @@ export default function HabitReminderBridge({ userId, workspace, language, appBa
   const apply = async (item: NonNullable<typeof pending>) => {
     if(busy||privateDeviceAccessBlocked())return;
     setBusy(true);setMessage("");
-    try{
+    try{await migrationTask(async()=>{
       let intent=item.intent;
       if(intent.deliveryId){
         const access=await loadHabitReminderDelivery(intent.deliveryId);
@@ -75,7 +78,7 @@ export default function HabitReminderBridge({ userId, workspace, language, appBa
       const action=target?habitReminderAction(live.current.workspace,target):null;
       if(intent.action==="snooze"){
         if(intent.deliveryId)await snoozeHabitReminderDelivery(intent.deliveryId);
-        else if(intent.target)snoozeLocalHabitReminder(userId,intent.target,live.current.workspace);
+        else if(intent.target)await snoozeLocalHabitReminder(userId,intent.target,live.current.workspace);
         setMessage("Напоминание отложено.");
       } else if(action==="stale"||action==="unavailable")setMessage("Уведомление устарело. Сегодняшние отметки не изменены.");
       else if(action==="completed")setMessage("Результат уже записан.");
@@ -85,6 +88,7 @@ export default function HabitReminderBridge({ userId, workspace, language, appBa
       if(item.id)await habitReminderWorkerIntent(item.id,userId,true);
       setPending(null);
       const url=new URL(window.location.href);url.searchParams.delete("habitIntent");url.searchParams.delete("habitNotice");history.replaceState(history.state,"",url);
+    });
     }catch{setMessage("Не удалось обработать напоминание. Проверьте сеть и повторите.");setPending(item);}
     finally{setBusy(false);}
   };
@@ -123,7 +127,7 @@ export default function HabitReminderBridge({ userId, workspace, language, appBa
   if(!message&&!pending&&!inputTarget&&!receiveRequest)return null;
   return <div className="habit-reminder-status" role="status" aria-live="polite">
     {message?<p>{t(message)}</p>:null}
-    {inputTarget?<HabitReminderInputPanel key={`${inputTarget.habitId}:${inputTarget.date}:${inputTarget.at}`} workspace={workspace} target={inputTarget}
+    {inputTarget?<HabitReminderInputPanel key={`${inputTarget.habitId}:${inputTarget.date}:${inputTarget.at}`} userId={userId} workspace={workspace} target={inputTarget}
       language={language} calendarMode={calendarMode} timeFormat={timeFormat} onSave={onApply}/>:null}
     <div className="habit-reminder-buttons">
       {receiveRequest?<button type="button" className="secondary-button" disabled={busy||receiving} onClick={()=>void receive(receiveRequest)}>{t("Повторить")}</button>

@@ -31,6 +31,7 @@ storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-aurora',['migratio
 storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-stoicheion',['migrationId'=>'group-read','fence'=>1,'sourceHash'=>storeB64(random_bytes(32))]),$session),'E2EE_SCOPE_FORBIDDEN');
 storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-advice',['migrationId'=>'group-read','fence'=>1,'sourceHash'=>storeB64(random_bytes(32))]),$session),'E2EE_SCOPE_FORBIDDEN');
 storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-tasks',['migrationId'=>'group-read','fence'=>1,'sourceHash'=>storeB64(random_bytes(32))]),$session),'E2EE_SCOPE_FORBIDDEN');
+storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-archives',['migrationId'=>'group-read','fence'=>1,'sourceHash'=>storeB64(random_bytes(32)),'table'=>'stages','offset'=>0]),$session),'E2EE_SCOPE_FORBIDDEN');
 $scope=genesisE2eeScope($owner,$scopeId);$source=genesisE2eeSourceHash($db,$scope);
 $db->prepare('UPDATE shared_task_series SET checked_at=? WHERE id=?')->execute(['before-lease','series-e2ee']);
 storeCheck(genesisE2eeSourceHash($db,$scope)!==$source);$source=genesisE2eeSourceHash($db,$scope);

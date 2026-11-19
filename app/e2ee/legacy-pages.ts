@@ -3,9 +3,10 @@ import {decodeE2eeBytes} from './envelope.ts';
 import type {MigrationSourceContext} from './migration.ts';
 
 type Row=Record<string,unknown>;
-export type LegacyPersonalSource='mindmaps'|'physis';
+export type LegacyPersonalSource='mindmaps'|'physis'|'reminders';
 export type LegacyPersonalPagePorts={assertCurrent:()=>void;readPage:(context:MigrationSourceContext,table:string,offset:number)=>Promise<unknown>};
-const tables={mindmaps:['maps','versions','receipts','deletions'],physis:['owners','records','usedIds','receipts']} as const;
+const tables={mindmaps:['maps','versions','receipts','deletions'],physis:['owners','records','usedIds','receipts'],
+ reminders:['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences']} as const;
 const encoder=new TextEncoder(),MAX_PAGE=16*1024*1024,MAX_TOTAL=128*1024*1024;
 function invalid():never{throw new Error('E2EE_LEGACY_PAGE_INVALID');}
 function integer(value:unknown,min=0):asserts value is number{if(!Number.isSafeInteger(value)||(value as number)<min||(value as number)>Number.MAX_SAFE_INTEGER-1)invalid();}
@@ -52,6 +53,7 @@ export async function collectLegacyPersonalPages(context:MigrationSourceContext,
     for(const name of names)if(totals![name]!==page.totals[name])invalid();
    }
    const old=key(page.legacyKey,opaque);
+   if(source==='reminders'&&old.keyMode!=='empty')invalid();
    if(old.keyMode!=='empty'){
     if(oldKey.keyMode!=='empty'&&(oldKey.keyMode!==old.keyMode||oldKey.key!==old.key))invalid();oldKey=old;
    }

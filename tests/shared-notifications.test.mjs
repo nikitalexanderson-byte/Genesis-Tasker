@@ -40,7 +40,7 @@ function pushWorker({status=200,displayAllowed=true,externalUrl=false,stores=new
  const self={registration:{scope:origin,showNotification:async(title,options)=>shown.push({title,...options})},location:{origin:new URL(origin).origin},addEventListener:(name,listener)=>events.set(name,listener)};
  runServiceWorker(source,{self,URL,Request,Response,caches:{open:async name=>cacheFor(name)},fetch:async(url,options)=>{
   requests.push({url,options});const id=new URL(url).pathname.split('/').at(-1);return new Response(JSON.stringify({displayAllowed,message:{deliveryId:id,body:'Synthetic recipient-localized generic copy',lang:'el',url:externalUrl?'https://outside.invalid/':`${origin}?notice=${id}#projects`}}),{status,headers:{'Content-Type':'application/json'}});
- }});
+ }},{unmigratedBackground:true});
  const push=async(data)=>{let work;events.get('push')({data:{json:()=>data},waitUntil:promise=>{work=promise;}});await work;};
  return{push,shown,requests,stores};
 }

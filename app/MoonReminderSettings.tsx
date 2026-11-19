@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import { MOON_SETTINGS_CHANGED, planMoonReminders, readMoonReminderSettings, saveMoonReminderSettings } from "./moon-reminders";
 import { privateDeviceAccessBlocked } from "./local-sign-out";
+import {useReminderMigrationCapture} from './reminder-migration-editors';
+import {withPersonalReminderOperation} from './cloud-sync';
 
 export function MoonReminderSettings({ accountId, english, permission, requestPermission }: {
   accountId: string; english: boolean; permission: string; requestPermission: () => Promise<unknown>;
 }) {
   const [settings, setSettings] = useState(() => readMoonReminderSettings(accountId));
+  useReminderMigrationCapture(accountId,'moon-reminder-settings',()=>({settings,permission}));
   return <section className="account-preferences settings-reminders-panel" data-settings-group="reminders">
     <div><span className="eyebrow">GENESIS</span><h3>{english ? "Lunar reminders" : "Лунные напоминания"}</h3>
       <p>{english ? "Choose one or several lead times for each phase. Notifications arrive at 09:00 device time."
@@ -19,7 +22,7 @@ export function MoonReminderSettings({ accountId, english, permission, requestPe
         onClick={() => {
           const next = { ...settings, [kind]: days === 0 ? [] : settings[kind].includes(days)
             ? settings[kind].filter((day) => day !== days) : [...settings[kind], days].sort() };
-          setSettings(next); saveMoonReminderSettings(accountId, next);
+          setSettings(next);void saveMoonReminderSettings(accountId,next).catch(()=>setSettings(readMoonReminderSettings(accountId)));
         }}>{days === 0 ? english ? "Off" : "Выключено" : english ? `${days} day${days > 1 ? "s" : ""} before` : `За ${days} ${days === 1 ? "сутки" : "суток"}`}</button>)}</div>
     </fieldset>)}
     <div className="moon-reminder-delivery">
@@ -40,7 +43,7 @@ export function useMoonReminders(accountId: string | null, english: boolean) {
     const check = async () => {
       if (!alive || checking || privateDeviceAccessBlocked() || Notification.permission !== "granted") return;
       checking = true;
-      try {
+      try {await withPersonalReminderOperation(accountId,async()=>{
         const now = new Date();
         const plans = planMoonReminders(new Date(now.getTime() - 6 * 3_600_000), readMoonReminderSettings(accountId), 7);
         let stored: unknown = [];
@@ -58,6 +61,7 @@ export function useMoonReminders(accountId: string | null, english: boolean) {
           sent.add(plan.key);
           if (!privateDeviceAccessBlocked()) localStorage.setItem(sentKey, JSON.stringify([...sent].slice(-200)));
         }
+      });
       } catch { /* Retry on the next wake-up, without interrupting the workspace. */ }
       finally { checking = false; }
     };

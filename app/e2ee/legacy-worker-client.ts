@@ -9,7 +9,7 @@ export async function requireLegacyTransportWorker(container:ServiceWorkerContai
     const finish=(error?:Error)=>{clearTimeout(timer);channel.port1.close();channel.port2.close();if(error)reject(error);else resolve();};
     const timer=setTimeout(()=>finish(new Error('E2EE_WORKER_UPGRADE_REQUIRED')),2500);
     channel.port1.onmessage=event=>{
-      if(event.data?.type!==STATUS||event.data?.protocol!==1||container.controller!==worker){finish(new Error('E2EE_WORKER_UPGRADE_REQUIRED'));return;}finish();
+      if(event.data?.type!==STATUS||event.data?.protocol!==2||container.controller!==worker){finish(new Error('E2EE_WORKER_UPGRADE_REQUIRED'));return;}finish();
     };
     channel.port1.onmessageerror=()=>finish(new Error('E2EE_WORKER_UPGRADE_REQUIRED'));
     try { worker.postMessage({type:STATUS},[channel.port2]); }catch{finish(new Error('E2EE_WORKER_UPGRADE_REQUIRED'));}

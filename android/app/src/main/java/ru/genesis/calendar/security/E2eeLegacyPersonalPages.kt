@@ -9,7 +9,8 @@ import java.util.Base64
 internal object E2eeLegacyPersonalPages {
     suspend fun collect(context:E2eeMigrationSourceContext,source:String,assertCurrent:()->Unit,
         readPage:suspend (E2eeMigrationSourceContext,String,Long)->JSONObject):JSONObject {
-        val names=when(source){"mindmaps"->listOf("maps","versions","receipts","deletions");"physis"->listOf("owners","records","usedIds","receipts");else->error("E2EE_LEGACY_PAGE_INVALID")}
+        val names=when(source){"mindmaps"->listOf("maps","versions","receipts","deletions");"physis"->listOf("owners","records","usedIds","receipts")
+            "reminders"->listOf("habitProfiles","habitDevices","habitDeliveries","adviceDays","adviceDeliveries","sharedPreferences");else->error("E2EE_LEGACY_PAGE_INVALID")}
         E2eeKeys.technical(context.ownerId);E2eeKeys.technical(context.scopeId);E2eeKeys.technical(context.migrationId)
         check(context.fence>0&&context.generation>0){"E2EE_LEGACY_PAGE_INVALID"};E2eeEnvelope.decode(context.sourceHash,32).fill(0)
         var header:JSONObject?=null;var totals:JSONObject?=null;var oldKey=JSONObject().put("keyMode","empty").put("key",JSONObject.NULL)
@@ -35,6 +36,7 @@ internal object E2eeLegacyPersonalPages {
                 }
                 val old=page.getJSONObject("legacyKey");E2eeKeys.exact(old,setOf("keyMode","key"));val mode=old.getString("keyMode")
                 check(mode in setOf("account","client","empty")){"E2EE_LEGACY_PAGE_INVALID"}
+                check(source!="reminders"||mode=="empty"){"E2EE_LEGACY_PAGE_INVALID"}
                 if(mode=="account"){
                     val encoded=old.getString("key");val raw=try{Base64.getDecoder().decode(encoded)}catch(_:IllegalArgumentException){error("E2EE_LEGACY_PAGE_INVALID")}
                     try{check(raw.size==32&&Base64.getEncoder().encodeToString(raw)==encoded){"E2EE_LEGACY_PAGE_INVALID"}}finally{raw.fill(0)}

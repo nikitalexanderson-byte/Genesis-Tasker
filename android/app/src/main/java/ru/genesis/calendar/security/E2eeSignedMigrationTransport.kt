@@ -37,6 +37,10 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
         check(table in setOf("owners","records","usedIds","receipts")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
         return legacyPersonal("legacy-physis",context,JSONObject().put("table",table).put("offset",offset))
     }
+    suspend fun legacyRemindersPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+        check(table in setOf("habitProfiles","habitDevices","habitDeliveries","adviceDays","adviceDeliveries","sharedPreferences")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
+        return legacyPersonal("legacy-reminders",context,JSONObject().put("table",table).put("offset",offset))
+    }
     private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null): JSONObject {
         check(context.ownerId == ownerId && context.scopeId == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)

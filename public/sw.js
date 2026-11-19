@@ -500,7 +500,7 @@ self.addEventListener("push", (event) => {
       if (typeof receivedAt === "number" && receivedAt < Date.now() - 172800000) await receipts.delete(key);
     }
   };
-  sharedPushChain = sharedPushChain.catch(() => undefined).then(receive).catch(() => undefined);
+  sharedPushChain = sharedPushChain.catch(() => undefined).then(() => legacyPersonalRequest.background(receive)).catch(() => undefined);
   event.waitUntil(sharedPushChain);
 });
 
@@ -517,6 +517,7 @@ self.addEventListener("notificationclick", (event) => {
       if (visibleClient) {
         visibleClient.postMessage({
           type: "GENESIS_NOTIFICATION_OPENED",
+          userId:data.userId,
           notificationId: data.genesisNotificationId,
           kind: data.kind,
           variant: data.variant,
@@ -529,3 +530,6 @@ self.addEventListener("notificationclick", (event) => {
     }),
   );
 });
+// Only this main worker knows its imported and own handlers use the background
+// barrier. A new transport import alone must not certify an old cached sw.js.
+legacyPersonalRequest.completeBackgroundInstall();

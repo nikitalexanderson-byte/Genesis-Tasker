@@ -5,7 +5,7 @@ const {collectLegacyPersonalPages}=calendarModule('app/e2ee/legacy-pages.ts');
 const context={ownerId:'owner',scopeId:'personal:owner',migrationId:'migration',fence:7,sourceHash:'A'.repeat(43),generation:2};
 const key=Buffer.alloc(32,29).toString('base64');
 function fixture(source='mindmaps'){
- const tables=source==='mindmaps'?['maps','versions','receipts','deletions']:['owners','records','usedIds','receipts'];
+ const tables=source==='mindmaps'?['maps','versions','receipts','deletions']:source==='physis'?['owners','records','usedIds','receipts']:['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences'];
  const rows=Object.fromEntries(tables.map(table=>[table,Array.from({length:3},(_,i)=>({id:table+'-'+i,raw:'{ "unprojected": true }'}))]));
  const calls=[];let live=true;
  const ports={assertCurrent(){if(!live)throw new Error('E2EE_ACCOUNT_CHANGED');},async readPage(value,table,offset){
@@ -16,10 +16,14 @@ function fixture(source='mindmaps'){
  }};
  return{tables,rows,calls,ports,lock(){live=false;},run(options={}){return collectLegacyPersonalPages(context,source,ports,options);}};
 }
-for(const source of ['mindmaps','physis'])test(`${source}: all exact tables and opaque JSON survive consecutive fenced pages`,async()=>{
+for(const source of ['mindmaps','physis','reminders'])test(`${source}: all exact tables and opaque JSON survive consecutive fenced pages`,async()=>{
  const f=fixture(source),result=await f.run();for(const table of f.tables){assert.deepEqual(result[table],f.rows[table]);assert.deepEqual(f.calls.filter(row=>row.table===table).map(row=>row.offset),[0,2]);}
- assert.equal(result.ownerId,'owner');assert.equal(result.legacyKey.key,key);assert.equal(result.sourceHash,context.sourceHash);assert.equal(result.checkpointHash,'A'.repeat(43));
- assert.ok(!Object.hasOwn(result,'rows')&&!Object.hasOwn(result,'totals')&&!Object.hasOwn(result,'nextOffset'));assert.equal(f.calls.length,8);
+ assert.equal(result.ownerId,'owner');assert.equal(result.legacyKey.key,source==='reminders'?null:key);assert.equal(result.sourceHash,context.sourceHash);assert.equal(result.checkpointHash,'A'.repeat(43));
+ assert.ok(!Object.hasOwn(result,'rows')&&!Object.hasOwn(result,'totals')&&!Object.hasOwn(result,'nextOffset'));assert.equal(f.calls.length,f.tables.length*2);
+});
+test('reminder pages cannot introduce an old account key even under an opaque native-key mode',async()=>{
+ const f=fixture('reminders'),read=f.ports.readPage;f.ports.readPage=async(...args)=>({...await read(...args),legacyKey:{keyMode:'account',key:null}});
+ await assert.rejects(f.run({opaqueKeys:true}),/E2EE_/);
 });
 test('genuinely absent source tables are explicit, not synthesized from an incomplete first page',async()=>{
  const f=fixture('physis');for(const table of f.tables)f.rows[table]=[];

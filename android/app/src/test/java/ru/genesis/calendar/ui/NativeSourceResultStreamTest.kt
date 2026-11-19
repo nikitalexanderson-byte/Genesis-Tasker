@@ -50,4 +50,10 @@ class NativeSourceResultStreamTest {
         val f=stream();f.part(part(byteArrayOf(),id="empty"));var result:E2eePathReconciliation?=null;f.finish(true,1,0){result=it;true};assertEquals(0,result!!.content.single().bytes.size)
         val wrong=stream();wrong.part(part(byteArrayOf(1)));rejects{wrong.finish(true,0,1){true}}
     }
+    @Test fun categoryPlacementRulesRejectLocalHistoryBeforeAnyRemoteResultCanPublish(){
+        val input="old private action".toByteArray();val f=NativeSourceResultStream(acceptsPlacement={placement,_,id->placement=="local"&&id=="one"},accepts={domain,id->domain=="mindmap"&&id=="one"})
+        rejects{f.part(part(input,placement="remote"))};rejects{f.finish(true,1,0){true}}
+        val g=NativeSourceResultStream(acceptsPlacement={placement,_,_->placement=="local"},accepts={_,_->true});g.part(part(input,placement="local"));var result:E2eePathReconciliation?=null
+        g.finish(true,0,1){result=it;true};assertArrayEquals(input,result!!.localContent.single().bytes)
+    }
 }

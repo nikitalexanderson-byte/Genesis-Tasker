@@ -4,14 +4,14 @@ import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 const source=fs.readFileSync(new URL('../public/habit-reminder-worker.js',import.meta.url),'utf8');
 const origin='https://genesiscalendar.com/',userId='synthetic-habit-user',id='11111111-1111-4111-8111-111111111111',receiptKey='a'.repeat(64);
-function fixture({stores=new Map(),status=200,allowed=true,failShow=false,snoozeStatus=200,sessionUser=userId}={}){
+function fixture({stores=new Map(),status=200,allowed=true,failShow=false,snoozeStatus=200,sessionUser=userId,background=operation=>operation()}={}){
  const events=new Map(),shown=[],requests=[],opened=[];
  const cache={match:async key=>stores.get(typeof key==='string'?key:key.url)?.clone(),put:async(key,response)=>stores.set(typeof key==='string'?key:key.url,response),
   delete:async key=>stores.delete(typeof key==='string'?key:key.url),keys:async()=>[...stores.keys()].map(url=>new Request(url))};
  const self={registration:{scope:origin,showNotification:async(title,options)=>{if(failShow)throw Error('Synthetic OS failure');shown.push({title,...options});}},
   clients:{matchAll:async()=>[],openWindow:async url=>opened.push(url)},addEventListener:(name,callback)=>events.set(name,callback)};
  const target={id:'opaque-occurrence',kind:'habit',date:'2026-10-17',at:'2026-10-17T09:00:00.000Z',habitId:'opaque-habit',ruleId:'opaque-rule',action:'complete',timeZone:'UTC',allowDuringQuietHours:false};
- runInNewContext(source,{self,URL,Request,Response,crypto,caches:{open:async()=>cache},fetch:async(url,options)=>{
+ runInNewContext(source,{self,legacyPersonalRequest:{background},URL,Request,Response,crypto,caches:{open:async()=>cache},fetch:async(url,options)=>{
   const path=new URL(url).pathname;requests.push({path,options});
   const result=path==='/api/session'?{user:{uid:sessionUser},csrf:'synthetic-csrf'}:path.endsWith('/snooze')?{ok:true}
    :{userId,target,receiptKey,displayAllowed:allowed,message:{deliveryId:id,body:'Neutral translated copy',lang:'de',kind:'habit',primaryLabel:'Done',snoozeLabel:'Snooze',url:`${origin}?habitNotice=${id}#habits`}};
@@ -60,4 +60,16 @@ test('snooze uses authenticated CSRF, while offline or changed-account actions o
   const failed=fixture(options);await failed.click('snooze');assert.equal(failed.opened.length,1);
   if(options.sessionUser)assert.equal(failed.requests.filter(value=>value.path.endsWith('/snooze')).length,0);
  }
+});
+test('a preparing marker blocks habit push, saved intents and snooze before any fetch/cache/display effect',async()=>{
+ const worker=fixture({background:async()=>{throw Error('E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN');}});
+ await worker.push();await worker.click('snooze');assert.equal(await worker.message({type:'GENESIS_HABIT_EVENT_RECEIPT',userId,key:receiptKey,action:'reserve'}),false);
+ assert.equal(worker.requests.length,0);assert.equal(worker.stores.size,0);assert.equal(worker.shown.length,0);assert.equal(worker.opened.length,0);
+});
+test('a push waiting for the global permit cannot occupy the cache queue needed by an admitted page receipt',async()=>{
+ let release,entered;const ready=new Promise(resolve=>{entered=resolve;}),waiting=new Promise(resolve=>{release=resolve;});
+ const worker=fixture({background:async(operation,borrowed)=>{if(!borrowed){entered();await waiting;}return operation();}}),push=worker.push();await ready;
+ let timer;try{const result=await Promise.race([worker.message({type:'GENESIS_HABIT_EVENT_RECEIPT',userId,key:receiptKey,action:'reserve',ownerPermit:1}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Receipt deadlocked behind a waiting background job')),3000);})]);assert.equal(result,true);}
+ finally{clearTimeout(timer);release();await push;}
+ assert.equal(worker.shown.length,0);
 });

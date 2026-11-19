@@ -6,8 +6,19 @@ const workerImports=new Map(['e2ee-legacy-transport-worker.js','habit-reminder-w
 
 /** Run the actual production worker and its actual security import. Only the
  * precache manifest is supplied by each isolated synthetic cache fixture. */
-export function runServiceWorker(source,globals) {
+export function runServiceWorker(source,globals,{unmigratedBackground=false}={}) {
   globals.self.navigator??={};
+  // Domain notification fixtures explicitly model an unmigrated origin. The
+  // real generated security module still checks this synthetic marker provider;
+  // fence/missing-provider cases use the dedicated legacy-worker tests.
+  if(unmigratedBackground){
+    globals.self.navigator.locks={request:async(_name,_options,operation)=>operation()};
+    globals.indexedDB={open(){const request={};queueMicrotask(()=>{
+      request.result={close(){},transaction(name,mode){if(name!=='scopes'||mode!=='readonly')throw Error('Unexpected synthetic marker write');const transaction={};
+        transaction.objectStore=()=>({count(){const count={result:0};queueMicrotask(()=>{count.onsuccess?.();queueMicrotask(()=>transaction.oncomplete?.());});return count;}});return transaction;}};
+      request.onsuccess();
+    });return request;}};
+  }
   const context=createContext({...globals,TextEncoder,TextDecoder,Headers,DOMException,AbortController});
   context.importScripts=(...urls)=>{
     for(const value of urls) {

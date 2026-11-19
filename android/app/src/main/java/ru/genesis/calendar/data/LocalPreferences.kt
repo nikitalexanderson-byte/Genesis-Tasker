@@ -51,6 +51,15 @@ class LocalPreferences(private val context: Context, private val scope: String) 
     internal val selectedLanguage = context.genesisPreferences.data.map {
         WelcomeLanguagePreference(it[key("language")]?.takeIf { value -> value in publicLanguages })
     }
+    /** Exact two device-local reminder values, including absent or invalid old
+     * values. Ordinary UiPreferences parsing normalizes malformed lead lists. */
+    internal suspend fun reminderMigrationRaw():JSONObject {
+        val values=context.genesisPreferences.data.first().asMap()
+        return JSONObject().apply{for(name in listOf("fullMoonLeadDays","newMoonLeadDays")){
+            val value=values.entries.firstOrNull{it.key.name=="$scope:$name"}?.value
+            put(name,value?:JSONObject.NULL)
+        }}
+    }
     val pending = context.genesisPreferences.data.map { values -> names.mapNotNull { name ->
         values[pendingKey(name)]?.let { name to it }
     }.toMap() }
@@ -79,7 +88,10 @@ class LocalPreferences(private val context: Context, private val scope: String) 
             it[key("weatherPressureUnit")]?.takeIf { value -> value in setOf("hpa", "mmhg") } ?: "hpa",
             it[key("todayHiddenBlocks")] ?: "")
     }
-    suspend fun set(name: String, value: String) { context.genesisPreferences.edit { mutation.check();it[key(name)] = value } }
+    suspend fun set(name: String, value: String) {
+        val save:suspend (()->Unit)->Unit={current->context.genesisPreferences.edit { current();mutation.check();it[key(name)] = value };Unit}
+        if(name in setOf("fullMoonLeadDays","newMoonLeadDays"))ru.genesis.calendar.reminders.legacyReminderOperation(context,scope,save) else save({})
+    }
     suspend fun initializeNewAccount() {
         context.genesisPreferences.edit { prefs ->
             mutation.check()

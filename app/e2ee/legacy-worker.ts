@@ -5,6 +5,18 @@ import {assertTechnical} from './keys.ts';
 export const LEGACY_WORKER_STATUS='GENESIS_E2EE_LEGACY_TRANSPORT_STATUS';
 const MAX_PREFERENCES=64*1024,MAX_OLD_RESPONSE=64*1024*1024;
 type MarkerReader=Pick<IndexedDbLegacyTransportMarkers,'get'|'any'>;
+type WorkerGate={locks?:LegacyTransportLocks;markers:()=>MarkerReader};
+/** The unknown-owner background worker uses the same global exclusion as old
+ * sockets. Current page receipt calls already hold their owner's operation and
+ * explicitly borrow it to avoid queuing behind an exclusive migration waiting
+ * for that same page. This flag is a local lifecycle contract, no ACL authority. */
+export async function legacyWorkerBackground<T>(options:WorkerGate,operation:()=>Promise<T>,borrowedOwner:string|null=null):Promise<T>{
+ if(!options.locks?.request)throw new Error('E2EE_BROWSER_LOCKS_REQUIRED');
+ if(borrowedOwner!==null){assertTechnical(borrowedOwner);if(await options.markers().get(borrowedOwner))throw new Error('E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN');return operation();}
+ return options.locks.request(LEGACY_UNBOUND_TRANSPORT_LOCK,{mode:'shared'},async()=>{
+  if(await options.markers().any())throw new Error('E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN');return operation();
+ });
+}
 function denied(code:string,status=409) { return new Response(JSON.stringify({error:code}),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}}); }
 function storageFailure(error:unknown) { return error instanceof Error&&error.message==='E2EE_CORRUPT_LOCAL_FENCE'
   ?denied('E2EE_CORRUPT_LOCAL_FENCE'):denied('E2EE_STORAGE_UNAVAILABLE',503); }
@@ -71,14 +83,14 @@ export function legacyWorkerGuard(options:{origin:string;apiPrefix:string;locks?
 /** Classic SW bundle entry. Storage opens lazily, not during public shell boot. */
 export function installLegacyTransportWorker(target:{location:{origin:string};registration:{scope:string};navigator:{locks?:LegacyTransportLocks};
   addEventListener:(type:'message',listener:(event:MessageEvent)=>void)=>void}) {
-  let markers:IndexedDbLegacyTransportMarkers|null=null;
+  let markers:IndexedDbLegacyTransportMarkers|null=null,backgroundReady=false;
   const origin=target.location.origin,apiPrefix=new URL('api/',target.registration.scope).pathname;
   target.addEventListener('message',event=>{
-    if(event.data?.type===LEGACY_WORKER_STATUS)event.ports[0]?.postMessage({type:LEGACY_WORKER_STATUS,protocol:target.navigator.locks?.request?1:0});
+    if(event.data?.type===LEGACY_WORKER_STATUS)event.ports[0]?.postMessage({type:LEGACY_WORKER_STATUS,protocol:target.navigator.locks?.request?(backgroundReady?2:1):0});
   });
   const guard=legacyWorkerGuard({origin,apiPrefix,locks:target.navigator.locks,
     markers:()=>markers??(markers=new IndexedDbLegacyTransportMarkers()),fetch:request=>fetch(request)});
-  return Object.assign(guard,{handles:(request:Request)=>{
+  return Object.assign(guard,{completeBackgroundInstall:()=>{backgroundReady=true;},background:<T,>(operation:()=>Promise<T>,borrowedOwner:string|null=null)=>legacyWorkerBackground({locks:target.navigator.locks,markers:()=>markers??(markers=new IndexedDbLegacyTransportMarkers())},operation,borrowedOwner),handles:(request:Request)=>{
     const url=new URL(request.url);if(url.origin!==origin||!url.pathname.startsWith(apiPrefix))return false;
     const path=url.pathname.slice(apiPrefix.length);
     return path==='account/preferences'&&!['GET','HEAD','OPTIONS'].includes(request.method)||personalLegacyTransportProtected(request.method,path);

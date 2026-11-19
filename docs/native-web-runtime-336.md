@@ -43,3 +43,15 @@ that stable image. It exposed and verified a fix for stale parent state when
 returning from the archive and immediately closing Gno. Earlier API35 host
 crashes remain recorded; provider compatibility is still distinct from current
 security patch status. Full evidence: `e2ee-336-operation-fences.md`.
+
+Reminder source acceptance exposed another compatibility difference within the
+supported runtime range: on actual WebView113, JavaScript URL exposes an empty
+hostname for the internal `genesis://` scheme, while native Android Uri has the
+generated authority and owner. A bounded CDP diagnostic recorded only static
+code frames and technical URL properties. Native registry attribution now checks
+the exact generated scheme/authority/first owner component without normalizing
+it through the browser URL parser. Userinfo, ports, queries, fragments, controls
+and backslashes are refused. This preserves raw historical records and does not
+replay their actions. The final packaged source passes on WebView113/API34 and
+WebView124/API35; API26 still has guard-only acceptance with its old provider.
+Details: `e2ee-336-reminders-source.md`.

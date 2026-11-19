@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {legacyWorkerGuard,installLegacyTransportWorker,LEGACY_WORKER_STATUS} from '../app/e2ee/legacy-worker.ts';
+import {legacyWorkerGuard,legacyWorkerBackground,installLegacyTransportWorker,LEGACY_WORKER_STATUS} from '../app/e2ee/legacy-worker.ts';
 import {requireLegacyTransportWorker} from '../app/e2ee/legacy-worker-client.ts';
 import {WebLegacyTransportGate,WebMigrationTransportFence,validateLegacyTransportTransition,LEGACY_UNBOUND_TRANSPORT_LOCK} from '../app/e2ee/legacy-transport-fence.ts';
 const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;});return{promise,resolve};};
@@ -70,21 +70,45 @@ test('worker status opens no key/storage database and does not claim an unavaila
     let listener,reply;const handler=installLegacyTransportWorker({location:{origin:'https://worker.invalid'},registration:{scope:'https://worker.invalid/calendar/'},
       navigator:{locks:supported?new Locks():undefined},addEventListener(type,callback){assert.equal(type,'message');listener=callback;}});
     listener({data:{type:LEGACY_WORKER_STATUS},ports:[{postMessage(value){reply=value;}}]});assert.equal(reply.protocol,supported?1:0);
+    handler.completeBackgroundInstall();listener({data:{type:LEGACY_WORKER_STATUS},ports:[{postMessage(value){reply=value;}}]});assert.equal(reply.protocol,supported?2:0);
     assert.equal(handler.handles(new Request('https://worker.invalid/calendar/api/workspace')),true);
     assert.equal(handler.handles(new Request('https://worker.invalid/calendar/api/account/preferences',{method:'PUT',body:'{}'})),true);
     for(const path of ['auth/google/start','e2ee/v1/status','billing/orders','shared/messenger/devices'])
       assert.equal(handler.handles(new Request('https://worker.invalid/calendar/api/'+path)),false);
   }
 });
+test('a new imported transport module cannot certify old main-worker notification handlers as background-safe',()=>{
+ let listener,reply;const handler=installLegacyTransportWorker({location:{origin:'https://worker.invalid'},registration:{scope:'https://worker.invalid/calendar/'},
+  navigator:{locks:new Locks()},addEventListener(_type,callback){listener=callback;}});
+ const status=()=>{listener({data:{type:LEGACY_WORKER_STATUS},ports:[{postMessage(value){reply=value;}}]});return reply.protocol;};
+ assert.equal(status(),1);handler.completeBackgroundInstall();assert.equal(status(),2);
+});
 test('product migration preflight requires the same current worker to explicitly acknowledge the protocol',async()=>{
   await assert.rejects(requireLegacyTransportWorker({controller:null}),/E2EE_SERVICE_WORKER_REQUIRED/);
-  for(const protocol of [0,1]) {
+  for(const protocol of [0,1,2]) {
     const container={controller:{postMessage(_message,ports){ports[0].postMessage({type:LEGACY_WORKER_STATUS,protocol});}}};
-    if(protocol===1)await requireLegacyTransportWorker(container);else await assert.rejects(requireLegacyTransportWorker(container),/E2EE_WORKER_UPGRADE_REQUIRED/);
+    if(protocol===2)await requireLegacyTransportWorker(container);else await assert.rejects(requireLegacyTransportWorker(container),/E2EE_WORKER_UPGRADE_REQUIRED/);
   }
   const changed={controller:{postMessage(_message,ports){changed.controller={};ports[0].postMessage({type:LEGACY_WORKER_STATUS,protocol:1});}}};
   await assert.rejects(requireLegacyTransportWorker(changed),/E2EE_WORKER_UPGRADE_REQUIRED/);
   const {locks,markers}=fixture();const fence=new WebMigrationTransportFence(new WebLegacyTransportGate(markers,locks),'owner','scope',()=>{},async()=>{throw Error('E2EE_WORKER_UPGRADE_REQUIRED');});
   await assert.rejects(fence.withFence(async()=>assert.fail('unsafe capture')),/E2EE_WORKER_UPGRADE_REQUIRED/);
   assert.equal(locks.calls.length,0);assert.equal(await markers.get('owner'),null);
+});
+test('background cache/display work drains before preparation and is denied after a durable marker',async()=>{
+ const {locks,markers}=fixture(),entered=deferred(),release=deferred();let captured=false,writes=0;
+ const old=legacyWorkerBackground({locks,markers:()=>markers},async()=>{entered.resolve();await release.promise;writes++;});await entered.promise;
+ const fence=new WebMigrationTransportFence(new WebLegacyTransportGate(markers,locks),'owner','personal:owner',()=>{});
+ const migration=fence.withFence(async()=>{captured=true;assert.equal(writes,1);});await new Promise(setImmediate);assert.equal(captured,false);
+ release.resolve();await Promise.all([old,migration]);assert.equal(captured,true);
+ await assert.rejects(legacyWorkerBackground({locks,markers:()=>markers},async()=>{writes++;}),/LEGACY_TRANSPORT_FORBIDDEN/);assert.equal(writes,1);
+ await assert.rejects(legacyWorkerBackground({markers:()=>markers},async()=>assert.fail('no-lock fallback')),/BROWSER_LOCKS_REQUIRED/);
+});
+test('an admitted owner receipt borrows its permit while migration waits; later unidentified work stays blocked',async()=>{
+ const {locks,markers}=fixture(),gate=new WebLegacyTransportGate(markers,locks),entered=deferred(),release=deferred();let received=false,late=false;
+ const page=gate.withOperation('owner',()=>{},async()=>{entered.resolve();await release.promise;
+  await legacyWorkerBackground({locks,markers:()=>markers},async()=>{received=true;},'owner');});await entered.promise;
+ const fence=new WebMigrationTransportFence(gate,'owner','personal:owner',()=>{}),migration=fence.withFence(async()=>assert.equal(received,true));await new Promise(setImmediate);
+ const unknown=legacyWorkerBackground({locks,markers:()=>markers},async()=>{late=true;});const refused=assert.rejects(unknown,/LEGACY_TRANSPORT_FORBIDDEN/);
+ release.resolve();await Promise.all([page,migration,refused]);assert.equal(late,false);
 });

@@ -1,9 +1,14 @@
+/* global legacyPersonalRequest */
 /* Personal reminders contain only scoped IDs. Private habit content is never fetched by this worker. */
 (() => {
   const scope=self.registration.scope, origin=new URL(scope).origin;
   const storeName="genesis-habit-push-receipts-v1";
   const key=(kind,id)=>new URL(`./__habit-${kind}/${encodeURIComponent(id)}`,scope).href;
   let chain=Promise.resolve();
+  // Acquire the global/borrowed permit BEFORE joining this cache queue. A push
+  // waiting behind migration must not occupy the queue needed by an admitted
+  // page's receipt, while migration itself waits for that page to finish.
+  const serial=operation=>{const result=chain.catch(()=>undefined).then(operation);chain=result.catch(()=>undefined);return result;};
   const read=async(kind,id)=>{const response=await(await caches.open(storeName)).match(key(kind,id));return response?response.json():null;};
   const write=async(kind,id,value)=>(await caches.open(storeName)).put(key(kind,id),new Response(JSON.stringify(value),{headers:{"Content-Type":"application/json"}}));
   const access=async id=>{
@@ -22,19 +27,19 @@
       if(recorded&&(recorded.state==="delivered"||recorded.receivedAt>Date.now()-120000))return;
       const url=new URL(message.url,scope);if(url.origin!==origin||!url.pathname.startsWith(new URL(scope).pathname))return;
       const actions=message.kind==="habit"?[{action:"primary",title:message.primaryLabel},{action:"snooze",title:message.snoozeLabel}]:[];
-      await write("event",eventKey,{state:"reserved",receivedAt:Date.now()});
+      await write("event",eventKey,{userId:value.userId,state:"reserved",receivedAt:Date.now()});
       try{await self.registration.showNotification("GENESIS",{body:message.body,lang:message.lang,tag:`genesis-habit-${id}`,renotify:false,actions,
         icon:new URL("./mindmap-icons/repeat-2.png",scope).href,data:{habitDeliveryId:id,userId:value.userId,url:url.href}});}
       catch(error){await(await caches.open(storeName)).delete(key("event",eventKey));throw error;}
-      await write("event",eventKey,{state:"delivered",receivedAt:Date.now()});
-      await write("receipt",id,{receivedAt:Date.now()});
+      await write("event",eventKey,{userId:value.userId,state:"delivered",receivedAt:Date.now()});
+      await write("receipt",id,{userId:value.userId,receivedAt:Date.now()});
       const cache=await caches.open(storeName);
       for(const entry of await cache.keys()){
         const response=await cache.match(entry);let record;try{record=await response.json();}catch{continue;}
         if(record.receivedAt<Date.now()-7*86400000)await cache.delete(entry);
       }
     };
-    chain=chain.catch(()=>undefined).then(receive).catch(()=>undefined);event.waitUntil(chain);
+    event.waitUntil(legacyPersonalRequest.background(()=>serial(receive)).catch(()=>undefined));
   });
   self.addEventListener("message",event=>{
     const data=event.data, port=event.ports?.[0];
@@ -46,26 +51,26 @@
         const previous=await read("event",eventKey);
         if(data.action==="reserve"){
           if(previous&&(previous.state==="delivered"||previous.receivedAt>Date.now()-120000)){port.postMessage(false);return;}
-          await write("event",eventKey,{state:"reserved",receivedAt:Date.now()});
-        }else if(data.action==="commit")await write("event",eventKey,{state:"delivered",receivedAt:Date.now()});
+          await write("event",eventKey,{userId:data.userId,state:"reserved",receivedAt:Date.now()});
+        }else if(data.action==="commit")await write("event",eventKey,{userId:data.userId,state:"delivered",receivedAt:Date.now()});
         else if(data.action==="release"&&previous?.state==="reserved")await(await caches.open(storeName)).delete(key("event",eventKey));
         port.postMessage(true);
       };
-      chain=chain.catch(()=>undefined).then(act).catch(()=>port.postMessage(false));event.waitUntil(chain);return;
+      event.waitUntil(legacyPersonalRequest.background(()=>serial(act),data.ownerPermit===1?data.userId:null).catch(()=>port.postMessage(false)));return;
     }
     if(data.type!=="GENESIS_HABIT_INTENT"&&data.type!=="GENESIS_HABIT_INTENT_ACK")return;
-    event.waitUntil((async()=>{
+    event.waitUntil(legacyPersonalRequest.background(async()=>{
       const intent=typeof data.id==="string"?await read("intent",data.id):null;
       if(!intent||intent.userId!==data.userId||intent.receivedAt<Date.now()-86400000){port.postMessage(null);return;}
       if(data.type==="GENESIS_HABIT_INTENT_ACK")await(await caches.open(storeName)).delete(key("intent",data.id));
       port.postMessage(data.type==="GENESIS_HABIT_INTENT"?intent:{ok:true});
-    })().catch(()=>port.postMessage(null)));
+    }).catch(()=>port.postMessage(null)));
   });
   self.addEventListener("notificationclick",event=>{
     const data=event.notification.data||{};
     if(!data.habitDeliveryId&&!data.habitTarget)return;
     event.notification.close();
-    event.waitUntil((async()=>{
+    event.waitUntil(legacyPersonalRequest.background(async()=>{
       if(event.action==="snooze"&&data.habitDeliveryId){
         try{
           const sessionResponse=await fetch(new URL("./api/session",scope),{credentials:"include",cache:"no-store"});
@@ -82,6 +87,6 @@
       const client=clients.find(item=>new URL(item.url).origin===origin&&new URL(item.url).pathname.startsWith(new URL(scope).pathname));
       if(client&&"focus"in client){await client.focus();if("navigate"in client)await client.navigate(url.href);}
       else await self.clients.openWindow(url.href);
-    })());
+    }).catch(()=>undefined));
   });
 })();

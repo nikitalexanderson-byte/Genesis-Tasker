@@ -15,10 +15,13 @@ dependency lock hash; this baseline is not a freeze of the final product.
 Subsequent integration changes require a delta review.
 
 Production remains Android3.3.5/149 with mandatory update floors0, migration
-pilot/cutover off and `GENESIS_DEPLOY_ANDROID=false`. There are seven real source
-categories out of twenty: workspace, Aurora, Stoicheion, Advice, tasks, diary and
-personal mindmaps. A category's source adapter does not prove its complete
-product lifecycle. The Physis old-format reader is not an eighth adapter.
+pilot/cutover off and `GENESIS_DEPLOY_ANDROID=false`. The subsequent Physis and
+reminders increments bring real source categories to nine out of twenty:
+workspace, Aurora, Stoicheion, Advice, tasks, diary, mindmaps, Physis and reminders.
+A category's source adapter does not prove its complete product lifecycle.
+The signed server archive reader/byte fragments are still a partial next
+increment, not a tenth source adapter. See each implementation document and the
+actual candidate commit/evidence; this brief's original baseline is historical.
 
 The independent review may begin with the implemented protocol while feature
 integration continues. Final composed-protocol and migration acceptance is

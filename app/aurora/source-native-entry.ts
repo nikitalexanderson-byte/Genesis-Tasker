@@ -8,6 +8,8 @@ import {PersonalMindmapsSource} from '../e2ee/mindmaps-source';
 import {normalizeNativeMindmapsCapture} from '../e2ee/mindmaps-native-source';
 import {PersonalPhysisSource} from '../e2ee/physis-source';
 import {normalizeNativePhysisCapture} from '../e2ee/physis-native-source';
+import {PersonalRemindersSource} from '../e2ee/reminders-source';
+import {normalizeNativeReminderCapture} from '../e2ee/reminders-native-source';
 import {streamNativeSourceResults} from '../e2ee/native-source-stream';
 import {PublicAdviceCatalogues} from '../e2ee/advice-catalogue';
 import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
@@ -37,7 +39,7 @@ async function run(encoded:string){
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
     exactKeys(value,['protocol','source','ownerId','scopeId','local','previous','context','remote']);
-    if(value.protocol!==1||!['aurora','stoicheion','advice','tasks','diary','mindmaps','physis'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
+    if(value.protocol!==1||!['aurora','stoicheion','advice','tasks','diary','mindmaps','physis','reminders'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
       ||!Array.isArray(value.previous)||value.previous.length>32)throw new Error('E2EE_AURORA_SOURCE_INVALID');
     local.push(decodeE2eeBytes(value.local,1,16*1024*1024));for(const old of value.previous)local.push(decodeE2eeBytes(old,1,16*1024*1024));
     const ask=(kind:string,fields:Record<string,unknown>):Promise<unknown>=>new Promise((resolve,reject)=>{
@@ -51,7 +53,7 @@ async function run(encoded:string){
     },current);
     const ports={
       storage:{getItem(){throw new Error('E2EE_SOURCE_MUTATION');},key:()=>null,length:0},memory(){throw new Error('E2EE_SOURCE_MUTATION');},assertCurrent:current,
-      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,legacyTasks:async()=>value.remote,legacyDiary:async()=>value.remote,legacyMindmaps:async()=>value.remote,catalogues,
+      legacyAurora:async()=>value.remote,legacyStoicheion:async()=>value.remote,legacyAdvice:async()=>value.remote,legacyTasks:async()=>value.remote,legacyDiary:async()=>value.remote,legacyMindmaps:async()=>value.remote,legacyReminders:async()=>value.remote,catalogues,
       openLegacy:(envelope:{iv:string;ciphertext:string},purpose:string):Promise<unknown>=>ask('open',{envelope,purpose}),
     };
     const physisPorts={assertCurrent:current,memory:async()=>{throw new Error('E2EE_SOURCE_MUTATION');},legacyPhysis:async()=>value.remote,
@@ -62,8 +64,14 @@ async function run(encoded:string){
         current();if(accepted!==true)throw new Error('E2EE_PHYSIS_UNLOCK_REQUIRED');
         return(id:string,envelope:import('../physis/crypto').PhysisEnvelope)=>ports.openLegacy({iv:envelope.iv,ciphertext:envelope.ciphertext},`physis-record:${id}:${vault.keyVersion}`);
       }};
-    const source:PrivatePathAdapter=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):value.source==='diary'?new PersonalDiarySource(value.ownerId,value.scopeId,ports):value.source==='mindmaps'?new PersonalMindmapsSource(value.ownerId,value.scopeId,ports):value.source==='physis'?new PersonalPhysisSource(value.ownerId,value.scopeId,physisPorts):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
+    const source:PrivatePathAdapter=value.source==='aurora'?new PersonalAuroraSource(value.ownerId,value.scopeId,ports):value.source==='stoicheion'?new PersonalStoicheionSource(value.ownerId,value.scopeId,ports):value.source==='tasks'?new PersonalTasksSource(value.ownerId,value.scopeId,ports):value.source==='diary'?new PersonalDiarySource(value.ownerId,value.scopeId,ports):value.source==='mindmaps'?new PersonalMindmapsSource(value.ownerId,value.scopeId,ports):value.source==='physis'?new PersonalPhysisSource(value.ownerId,value.scopeId,physisPorts):value.source==='reminders'?new PersonalRemindersSource(value.ownerId,value.scopeId,ports):new PersonalAdviceSource(value.ownerId,value.scopeId,ports);
     let prepared=local.slice(),nativeMetadata:unknown,diaryMetadata:unknown,mindmapsMetadata:unknown,physisMetadata:unknown;
+    if(value.source==='reminders'){
+      prepared=[];for(const bytes of local.slice()){
+        const normalized=await normalizeNativeReminderCapture(backupJson(decoder.decode(bytes)),current),encoded=new TextEncoder().encode(JSON.stringify(normalized));
+        local.push(encoded);prepared.push(encoded);
+      }
+    }
     if(value.source==='physis'){
       prepared=[];for(const bytes of local.slice()){
         const normalized=normalizeNativePhysisCapture(backupJson(decoder.decode(bytes)),current),encoded=new TextEncoder().encode(JSON.stringify(normalized.snapshot));
@@ -97,7 +105,7 @@ async function run(encoded:string){
     if(physisMetadata!==undefined)(result.localContent??=[]).push({domain:'physis',objectId:'personal-physis-native-history-v1',bytes:new TextEncoder().encode(JSON.stringify(physisMetadata))});
     const localContent=result.localContent??[];content.push(...[...result.content,...localContent].map(row=>row.bytes));
     const outputPackets=(rows:typeof result.content)=>rows.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes),filename:row.filename??'',mediaType:row.mediaType??'application/json'}));
-    if(value.source==='mindmaps'||value.source==='physis'){
+    if(value.source==='mindmaps'||value.source==='physis'||value.source==='reminders'){
       const counts=await streamNativeSourceResults(result,part=>ask('result-part',{part}),current);
       current();send({job,kind:'complete-stream',protocol:1,complete:result.complete,...counts});
     }else{current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});}

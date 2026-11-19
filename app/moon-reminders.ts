@@ -14,8 +14,9 @@ export function readMoonReminderSettings(accountId: string): MoonReminderSetting
   try { return normalizeMoonReminderSettings(JSON.parse(localStorage.getItem(storageKey(accountId)) || "null")); }
   catch { return { full: [], new: [] }; }
 }
-export function saveMoonReminderSettings(accountId: string, settings: MoonReminderSettings) {
-  localStorage.setItem(storageKey(accountId), JSON.stringify(normalizeMoonReminderSettings(settings)));
+export async function saveMoonReminderSettings(accountId: string, settings: MoonReminderSettings) {
+  const {saveReminderLocalValue}=await import('./cloud-sync');
+  await saveReminderLocalValue(accountId,storageKey(accountId),JSON.stringify(normalizeMoonReminderSettings(settings)));
   window.dispatchEvent(new Event(MOON_SETTINGS_CHANGED));
 }
 const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;

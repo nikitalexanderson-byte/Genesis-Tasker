@@ -1947,12 +1947,12 @@ export function GenesisCalendar() {
       || right.priority - left.priority);
   useEffect(() => {
     const permissionTimer = window.setTimeout(() => setHabitNotificationPermissionState(habitNotificationPermission()), 0);
-    const stopObserving = observeHabitNotificationClicks();
+    const stopObserving = observeHabitNotificationClicks(cloudUser?.uid);
     return () => {
       window.clearTimeout(permissionTimer);
       stopObserving();
     };
-  }, []);
+  }, [cloudUser?.uid]);
 
   useEffect(() => {
     if (!cloudUser?.uid || typeof Notification === "undefined" || Notification.permission !== "granted") return;
@@ -7919,7 +7919,7 @@ export function GenesisCalendar() {
               return permission;
             }}
             onHabitNotificationSettingsChange={(notifications) => {
-              if (habitWorkspace.habitSettings.notifications.enabled && !notifications.enabled) recordHabitNotificationsDisabled();
+              if (habitWorkspace.habitSettings.notifications.enabled && !notifications.enabled) recordHabitNotificationsDisabled(cloudUser?.uid);
               updateHabitWorkspace({ ...habitWorkspace, habitSettings: { ...habitWorkspace.habitSettings, notifications } });
             }}
             onHabitFeedbackSettingsChange={(feedback) => {

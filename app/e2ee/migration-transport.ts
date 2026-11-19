@@ -55,7 +55,11 @@ export class SignedMigrationTransport implements MigrationTransport {
     if(!['owners','records','usedIds','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
     return this.#legacyPersonal('legacy-physis',context,{table,offset});
   }
-  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis',context:MigrationSourceContext,page?:{table:string;offset:number}):Promise<unknown>{
+  async legacyRemindersPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    if(!['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
+    return this.#legacyPersonal('legacy-reminders',context,{table,offset});
+  }
+  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis'|'legacy-reminders',context:MigrationSourceContext,page?:{table:string;offset:number}):Promise<unknown>{
     if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action,
       expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),

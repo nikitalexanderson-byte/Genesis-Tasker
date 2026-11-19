@@ -7,9 +7,9 @@ the same file as an asset; there is no separately maintained native category lis
 required path IDs. Missing adapters fail before the first partial capture. The
 registry does **not** mean that feature adapters have been implemented.
 
-Status19 November: eight real source categories are implemented on web/native;
-the remaining twelve and full product integration are required. Physis now has
-full retained-source capture/reconciliation and new-root readback. The system
+Status19 November: nine real source categories are implemented on web/native;
+the remaining eleven and full product integration are required. Physis and
+reminders now have retained-source capture/reconciliation and new-root readback. The system
 acceptance remainder is tracked in `security-336-acceptance-matrix.md`.
 
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
@@ -23,8 +23,8 @@ acceptance remainder is tracked in `security-336-acceptance-matrix.md`.
 | personal.stoicheion | Encrypted restoration workspace plus draw/timeline records and local pending choices; native documents; server draw/session/card rows | Real web/native practice journals and draw/timeline history adapters implemented; shared validator and actual Room/Keystore/packaged runtime cases pass. Product routing/source review/older-format acceptance remain; billing and live reroll authority are never imported |
 | personal.advice | Saved personal advice/selection state and metrics in memory/cache/server rows | Real web/native adapters and signed owner-only history read implemented. Actual Room/Keystore/packaged source cases pass on API34/35, storage fences on API26; raw v1/current/history/mounted copies and all exact public-language editions are retained. Unknown v1 provenance blocks reconciliation; default full inventory review, account-entry private copy, large histories, product routing and recovery/upgrade acceptance remain. Public art/catalogues remain public |
 | personal.local-work | All owner-scoped localStorage/IndexedDB caches, shared editor drafts, conflict choices and pending mutations | Enumerate unmounted editors too. Snapshot first; retain every prior migration attempt; reconcile content without restoring sessions/rights |
-| personal.reminders | Local schedules/Room reminders; server habit reminder profiles/devices/deliveries | Preserve private local state; explicitly allowed minimal technical schedule/push projection contains no titles/notes/values |
-| personal.archives | Encrypted safety/held copies, personal export/import staging and history; native backup documents | Current-generation encrypted archives, recovery on clean client, loss-of-key UX and Drive adapter; archive import never changes identity/billing/ACL |
+| personal.reminders | Exact web owner keys/worker receipts/forms; native Room reminders/5 registries/raw moon settings; all6 retained server schedule/history/preference tables | Real web/native source preserves history/forms/uncertain actions under the new root as device-local inert history, with private shared preferences remote. Chromium29 checks, API34/35 packaged source and bootstrap/reminder22 cases each, API26 guards17 cases pass. Fresh delivery consent, product routing/restore forms, true push, API26 compatible provider and full lifecycle remain; see e2ee-336-reminders-source.md |
+| personal.archives | Encrypted safety/held copies, personal export/import staging and history; native backup documents | Signed owner-only retained server reader and bounded 1MiB row fragments implemented for all3 backup tables; this is not a source adapter. Web/native local capture/transport/reconciliation/new-root readback, current-generation archives, clean recovery/Drive and content-only import remain; see e2ee-336-archives-source.md |
 | project.content | Server-readable encrypted projects/tasks/checklists/comments/labels/dependencies/review/planning; native/web caches | Signed project roster with per-role checks; private fields encrypted for approved participants; client queries/merge preserve existing features |
 | project.files | Shared task images/attachments and derived previews/filenames | New file keys/chunks/manifests in actual file paths, not only a standalone cipher test; truncation/pending upload/recovery/orphan cleanup |
 | project.mindmaps | Shared map versions/conversions/deletions in project + space inherited ownership | Preserve images/history/tombstones and correct scope ownership; no cross-scope cached client |
@@ -40,7 +40,7 @@ owner-scoped source token and signed task read/reconciliation on both clients.
 Current and retained snapshots preserve tasks/list history without credentials;
 historical provenance requires explicit review. Product review/deletion lifecycle
 and streaming acceptance remain incomplete; see
-`e2ee-336-provider-cache-implementation.md`. Seven real source categories do not prove every
+`e2ee-336-provider-cache-implementation.md`. Nine real source categories do not prove every
 account's complete data inventory or permit product activation.
 
 The JSON lists the concrete repository sources and SQL table families. Native
@@ -65,7 +65,7 @@ acceptance is complete. The native source/factory now reads4 real Room document
 kinds and their exact outbox under a transaction, includes portable plaintext in
 the protected snapshot and never acknowledges old work. Accepted/pending reset
 generations, base revisions, deleted IDs and explicit conflict choices are checked
-on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. The real Stoicheion practice/draw-history source is also implemented on both platforms; see `e2ee-336-stoicheion-source.md`. Advice, personal tasks, diary and personal mindmaps now also have real sources on both platforms; see their implementation documents. Seven real categories are implemented; all13 others and full product integration remain mandatory.
+on both platforms. The real Aurora adapter also captures all writer histories and results on both platforms; see `e2ee-336-aurora-source.md`. The real Stoicheion practice/draw-history source is also implemented on both platforms; see `e2ee-336-stoicheion-source.md`. Advice, personal tasks, diary, mindmaps, Physis and reminders also have real sources on both platforms; see their implementation documents. Nine real categories are implemented; all11 others and full product integration remain mandatory.
 
 Native Room now has an additive schema1→2 migration and technical deny table.
 Persistent triggers cover I/U/D of all4 legacy data tables in each explicit

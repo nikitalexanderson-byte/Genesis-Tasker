@@ -1,5 +1,5 @@
 import type {GenesisTask} from "./cloud-sync";
-import {captureAccountSessionGuard} from "./cloud-sync";
+import {captureAccountSessionGuard,withPersonalReminderOperation} from "./cloud-sync";
 import {webTaskReminderPlan} from "./web-task-reminder-plan";
 import {presentWebReminder} from "./web-reminder-presentation";
 import {privateDeviceAccessBlocked} from "./local-sign-out";
@@ -24,7 +24,7 @@ export function scheduleWebTaskReminders(tasks:GenesisTask[],userId:string,appBa
    if(document.hidden){if(registration)await registration.showNotification(candidate.title,options);else new Notification(candidate.title,options);}
    guard();if(active)localStorage.setItem(key,JSON.stringify([...delivered,candidate.id].slice(-512)));
   };
-  if(navigator.locks)await navigator.locks.request(`genesis-task-reminder:${userId}`,deliver);else await deliver();
+  await withPersonalReminderOperation(userId,async()=>{if(navigator.locks)await navigator.locks.request(`genesis-task-reminder:${userId}`,deliver);else await deliver();});
  })().catch(()=>{});},Math.max(0,candidate.at-Date.now())));
   }
  };

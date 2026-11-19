@@ -11,7 +11,7 @@ internal fun habitReminderFrequency(context: Context, scope: String): HabitRemin
         saved.getInt("$scope:snooze", 10).takeIf { it in setOf(5, 10, 15, 30, 60) } ?: 10)
 }
 
-internal fun saveHabitReminderFrequency(context: Context, scope: String, value: HabitReminderFrequency) {
+internal suspend fun saveHabitReminderFrequency(context: Context, scope: String, value: HabitReminderFrequency) = legacyReminderOperation(context,scope){
     require(value.maxPerDay in setOf(4, 12, 24, 64, 128) && value.snoozeMinutes in setOf(5, 10, 15, 30, 60))
     check(context.getSharedPreferences("genesis_habit_reminder_preferences", Context.MODE_PRIVATE).edit()
         .putInt("$scope:max", value.maxPerDay).putInt("$scope:snooze", value.snoozeMinutes).commit())

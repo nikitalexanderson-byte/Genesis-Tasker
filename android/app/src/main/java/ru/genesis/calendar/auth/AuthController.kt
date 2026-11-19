@@ -388,6 +388,24 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             assertCurrent=::current,legacyPhysis={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"physis",::current,transport::legacyPhysisPage)},
             reconciler=reconciler,independentUnlock=independentUnlock)
     }
+    internal fun e2eeRemindersSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        captureMounted:suspend ()->JSONObject?):E2eeNativeRemindersSource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        return E2eeNativeRemindersSource(uid,directory.scopeId,captureRows={
+            current();val mounted=captureMounted()?.let{JSONObject(it.toString())};current()
+            withContext(Dispatchers.IO){
+                val local=ru.genesis.calendar.data.LocalPreferences(app,accountScope).reminderMigrationRaw();current()
+                val preferences=ru.genesis.calendar.reminders.reminderMigrationRegistries(app);current()
+                val rows=app.database.withTransaction{current();app.database.dao().reminders(accountScope)};current()
+                check(workspaceConflictJson(preferences)==workspaceConflictJson(ru.genesis.calendar.reminders.reminderMigrationRegistries(app))){"E2EE_REMINDER_CAPTURE_CHANGED"}
+                val epochs=NativeBackupEpochStore(app);current();E2eeRemindersRows(rows,preferences,local,epochs.accepted(accountScope),epochs.pending(accountScope),mounted)
+            }
+        },assertCurrent=::current,legacyReminders={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"reminders",::current,transport::legacyRemindersPage)},reconciler=reconciler)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
@@ -420,7 +438,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             }
         }
     }
-    private suspend fun importBackupSafe(snapshot: CloudAccountSnapshot): CloudAccountImporter.Result {
+    private suspend fun importBackupSafe(snapshot: CloudAccountSnapshot,generation:Long): CloudAccountImporter.Result {
+        val uid=mutableState.value.user?.uid?:throw AuthApiError("E2EE_ACCOUNT_CHANGED")
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen()
+            if(!client.isCurrent(generation)||mutableState.value.user?.uid!=uid||mutableState.value.requiresSignIn||snapshot.scope!=CloudAccountSnapshot.scopeFor(uid))throw AuthApiError("E2EE_ACCOUNT_CHANGED")}
+        current()
         val epochs=NativeBackupEpochStore(app)
         epochs.pending(snapshot.scope)?.let { generation ->
             val safety=ru.genesis.calendar.data.BackupSafetyStore(app,snapshot.scope)
@@ -430,7 +452,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             // devices still require the explicit protected reset in backup settings.
             epochs.acceptAfterProtectedReset(snapshot.scope,generation)
         }
-        return CloudAccountImporter(app.database,app.scheduler).import(snapshot)
+        current();return CloudAccountImporter(app.database,app.scheduler).import(snapshot,::current)
     }
     internal fun auroraGateway(uid: String): ru.genesis.calendar.data.AuroraGateway = object : ru.genesis.calendar.data.AuroraGateway {
         private val capturedGeneration=client.currentGeneration()
@@ -1881,7 +1903,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             val snapshot = withContext(Dispatchers.Default) { CloudAccountSnapshot.fromBootstrap(payload) }
             stage = "ACCOUNT_IMPORT"
             val imported = dataSyncMutex.withLock {
-                withContext(Dispatchers.IO) { importBackupSafe(snapshot) }
+                withContext(Dispatchers.IO) { importBackupSafe(snapshot,generation) }
             }
             val stoicheionPayload = try {
                 withContext(Dispatchers.IO) { client.stoicheionDraws(generation) }
@@ -2127,7 +2149,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                     val snapshot = withContext(Dispatchers.Default) { CloudAccountSnapshot.fromBootstrap(payload) }
                     val preview = withContext(Dispatchers.Default) { CloudWorkspacePreview.inspect(payload) }
                     val imported = withContext(Dispatchers.IO) {
-                        importBackupSafe(snapshot)
+                        importBackupSafe(snapshot,generation)
                     }
                     withContext(Dispatchers.IO) { ru.genesis.calendar.data.TaskListsRepository.cacheBootstrap(app.database, accountScope, payload) }
                     val available = withContext(Dispatchers.IO) { app.database.dao().accountTasks(accountScope).size }

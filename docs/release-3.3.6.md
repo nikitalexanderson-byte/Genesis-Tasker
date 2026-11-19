@@ -1,8 +1,10 @@
 # Подготовка GENESIS 3.3.6
 
-Актуальный срез19 ноября: реализованы8/20 реальных source categories; это не
-процент готовности релиза. Physis получил web/native capture/reconciliation,
-сохранение форм/очередей/ротации и проверенное чтение с новым root. Остальные12 источников, полный product lifecycle,
+Актуальный срез19 ноября: реализованы9/20 реальных source categories; это не
+процент готовности релиза. Напоминания получили web/native capture/reconciliation,
+сохранение истории/форм/uncertain actions и проверенное чтение с новым root.
+Подготовлен server reader/byte fragments архивов; это ещё не десятая категория.
+Остальные11 источников, полный product lifecycle,
 shared/files/automation, archives/Drive/local-only recovery, direct upgrades,
 48 системных сценариев и14-language semantic review остаются обязательными.
 Проверяемый остаток по каждому исходному сценарию —
@@ -1308,3 +1310,67 @@ shared/files/automation/archives/Drive, recovery/direct upgrades, исходны
 14-language semantic acceptance и independent human crypto review остаются.
 Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.
 Выпуска, Deploy, Play upload или установки на личное устройство не было.
+
+## Напоминания: девятый source и начало архивов,19 ноября
+
+`personal.reminders` теперь захватывает реальные owner web keys,3 worker caches,
+display/data payload уже показанных notices, mounted/detached формы, raw numeric
+input/notes/operation IDs; native — все Room states,5 SharedPreferences registries
+и2 raw moon DataStore values. Все6 retained server tables читаются owner-only
+signed lease pager без ordinary scheduling/prune. Original server-at-rest plan/
+target JSON сохраняет duplicate names для strict parser. Push grants и старые
+jobs/actions не становятся executable output: их полная история и исходные
+requests остаются device-local под новым root, scheduling требует fresh consent.
+
+Normal web/native reminder writers удерживают owner permit до OS effects и
+финальных receipts. Offline local settings сохраняются без разрешения socket;
+known remote privatePreferencesMode отказывает даже без local deny marker.
+Verified native bootstrap импортирует target owner до activateAccount с прежним
+session/generation proof, не принимает текущий UI scope за incoming identity.
+Rechecks после scheduler/DataStore waits не позволяют выполнить stale callback
+в новом workspace. Worker capability2 подтверждает только guarded main sw.js;
+cache ordering не создаёт nested queue/lock deadlock.
+
+Real device QA выявила и закрыла две integration ошибки: account switch при
+startup restore падал как unhandled background exception, а supported WebView
+не разбирал `genesis://` hostname как desktop URL. Expected scope/fence refusal
+теперь отменяет только coroutine; exact Android URI attribution не зависит от
+custom-scheme URL normalization. Исходные failed runs и red/green сохранены.
+
+Final JS1668/1668, types10, scoped eslint06 и changed-module eslint07 PASS;
+у scoped lint4 прежних img warnings. Actual Chromium/React/WebCrypto/IDB/Web Locks
+source29 assertions PASS, final bundle byte-identical accepted browser02. Web
+build04:98 public HTML variants/14 languages, exact dictionaries,280 gallery images
+и offline precache PASS. Native build03 SUCCESS23m52s,04 SUCCESS27m35s, final
+JS-only repack05 SUCCESS44s. JVM1209 total/1201 passed/8 прежних opt-in HTTP skipped/
+0 failures; native lint04:0 errors/206 warnings/8 hints. После04 Kotlin/resources
+не менялись, test APK byte-identical; повтор native lint для JS-only fix не заявлен.
+
+API34/35 final: по22/22 PASS (8 source/guard/bootstrap +1 Physis regression +
+11 importer +2 reminder flows); API26 GuardOnly17/17 PASS. Это61 фактический
+instrumentation scenario,0 failures/skips, не full authenticated product QA.
+Проверены >16MiB history/stream/backpressure/new-root readback, сохранение точных
+форм/requests, account changes и вход в incoming owner. Main APK SHA256
+`55BB544071660F1739F8169301D3A0AE1839F53CCF2757ACA1A98BBED75CD0FF`, test APK
+`B94B83C1F9B8488024441704E806CC2CE90536619C8DADD296CAA9730DBBD05A`.
+Все3 task-owned эмулятора остановлены, CDP forwards закрыты. Точные evidence,
+предыдущие failures и ограничения: `e2ee-336-reminders-source.md`.
+
+Начат следующий `personal.archives`: backend owner-only signed reader всех3
+retained backup tables, original+decoded JSON, expired copies/uncertain restore
+receipts без restore/prune. Для large row добавлен opt-in signed byte transport:
+1MiB fragments, точные offsets/totals/length/hash, до64MiB row, source/lease
+recheck каждого fragment. Existing generic8MiB cap не ослаблен, проверен полный
+join5MiB original payload с его encrypted wrapper. Backend03:3/3 PASS, включая
+reminders/shared-owner boundaries. Web/native collector/local capture/strict
+reconciliation/new-root recovery ещё не реализованы; это не десятый adapter.
+См. `e2ee-336-archives-source.md`.
+
+Coverage теперь9/20; остальные11 sources, full product routing/freeze/review/
+normal new-format writes/form restore, shared ACL+rotation/files/automation,
+archives/Drive/clean recovery/direct signed upgrades, aggregate limits, исходные48,
+14-language semantic/full visual acceptance и независимый human crypto review
+остаются обязательными. Production3.3.5/149, floors0/pilot/cutover off и
+GENESIS_DEPLOY_ANDROID=false сохранены. Полного3.3.6 Deploy/Play/personal-device
+выпуска этим инкрементом не было. Предыдущий CI44560437459 на2f3d77bc SUCCESS;
+этому новому source increment нужен собственный CI после commit.

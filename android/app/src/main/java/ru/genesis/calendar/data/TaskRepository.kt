@@ -114,7 +114,7 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
     suspend fun get(id: String): LocalTask? = dao.task(scope, id)?.takeUnless { it.deleted }?.let {
         LocalTask.from(it, cipher.decrypt(it.encrypted, "$scope/${it.id}"))
     }
-    suspend fun save(task: LocalTask): LocalTask = scheduler.withMutation { saveLocked(task) }
+    suspend fun save(task: LocalTask): LocalTask = scheduler.withMutation(scope) { saveLocked(task) }
     private suspend fun saveLocked(task: LocalTask, updateAlarms:Boolean=true): LocalTask {
         require(task.title.isNotBlank() && task.title.length <= 500)
         if(task.date.isNotBlank()) LocalDate.parse(task.date)
@@ -162,7 +162,7 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
         val task = get(id) ?: return
         if (!task.done) save(task.copy(done = true))
     }
-    suspend fun saveOccurrence(draft:LocalTask):LocalTask = scheduler.withMutation {
+    suspend fun saveOccurrence(draft:LocalTask):LocalTask = scheduler.withMutation(scope) {
         val meta=JSONObject(draft.sourceFieldsJson);val id=meta.getString("recurrenceSeriesId");val date=meta.getString("recurrenceOriginalDate")
         val parent=get(id) ?: throw IllegalArgumentException("Задача больше недоступна.")
         require(parent.revision==meta.getLong("mindmapOccurrenceParentRevision")) { "Запись изменилась. Откройте её заново." }
@@ -183,7 +183,7 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
         val remaining = TaskOccurrences.withoutDate(current, date)
         if (remaining == null) delete(id, expectedRevision) else save(remaining)
     }
-    suspend fun delete(id: String, expectedRevision: Long? = null) = scheduler.withMutation {
+    suspend fun delete(id: String, expectedRevision: Long? = null) = scheduler.withMutation(scope) {
         val reminders = dao.taskReminders(scope, id)
         db.withTransaction {
             mutation.check()
@@ -201,7 +201,7 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
         reminderAction(id,revision,"snooze",durationMillis)
 
     suspend fun reminderAction(id: String, revision: Long, action: String,
-        durationMillis: Long = 10 * 60_000L): Boolean = scheduler.withMutation {
+        durationMillis: Long = 10 * 60_000L): Boolean = scheduler.withMutation(scope) {
         val reminder = dao.reminder(scope,id) ?: return@withMutation false
         if(reminder.revision!=revision || reminder.state!="delivered") return@withMutation false
         val task=get(reminder.taskId)?.takeUnless { it.done } ?: return@withMutation false

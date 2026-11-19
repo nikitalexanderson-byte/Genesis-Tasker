@@ -46,10 +46,13 @@ internal object MoonReminderScheduler {
             (if (create) PendingIntent.FLAG_UPDATE_CURRENT else PendingIntent.FLAG_NO_CREATE) or
                 PendingIntent.FLAG_IMMUTABLE)
 
-    suspend fun restore(context: Context) = mutex.withLock {
+    suspend fun restore(context: Context) {
         val app = context.applicationContext as GenesisApplication
         val scope = app.workspaceScope
+      legacyReminderOperation(context,scope){current->mutex.withLock {
+        current()
         val prefs = LocalPreferences(context, scope).values.first()
+        current()
         val now = Instant.now()
         val zone = ZoneId.systemDefault()
         val storage = registry(context)
@@ -60,6 +63,7 @@ internal object MoonReminderScheduler {
             val key = uri(scope, candidate).toString()
             if (key !in delivered) post(context, scope, candidate, key, storage)
         }
+        current()
         val future = plan.filter { it.at > now }
         val scheduled = future.mapTo(linkedSetOf()) { uri(scope, it).toString() }
         val alarms = context.getSystemService(AlarmManager::class.java)
@@ -76,23 +80,29 @@ internal object MoonReminderScheduler {
             }
         }
         storage.edit().putStringSet("alarms", scheduled).apply()
+      }}
     }
 
-    suspend fun deliver(context: Context, received: Intent) = mutex.withLock {
+    suspend fun deliver(context: Context, received: Intent) {
         val app = context.applicationContext as GenesisApplication
+        val scope = app.workspaceScope
+      legacyReminderOperation(context,scope){current->mutex.withLock {
+        current()
         val raw = received.data ?: return@withLock
         if (received.action != ACTION || raw.scheme != "genesis" || raw.authority != "moon-reminder") return@withLock
         val parts = raw.pathSegments
-        if (parts.size != 4 || parts[0] != app.workspaceScope || parts[1] !in setOf("full", "new")) return@withLock
+        if (parts.size != 4 || parts[0] != scope || parts[1] !in setOf("full", "new")) return@withLock
         val eventDate = runCatching { LocalDate.parse(parts[2]) }.getOrNull() ?: return@withLock
         val leadDays = parts[3].toIntOrNull()?.takeIf { it in 1..3 } ?: return@withLock
-        val prefs = LocalPreferences(context, app.workspaceScope).values.first()
+        val prefs = LocalPreferences(context, scope).values.first()
+        current()
         val now = Instant.now()
         val candidate = planMoonReminders(now.minusSeconds(LATE_SECONDS), ZoneId.systemDefault(),
             prefs.fullMoonLeadDays, prefs.newMoonLeadDays, 7)
             .firstOrNull { it.kind == parts[1] && it.eventDate == eventDate && it.leadDays == leadDays && it.at <= now }
             ?: return@withLock
-        post(context, app.workspaceScope, candidate, raw.toString(), registry(context))
+        post(context, scope, candidate, raw.toString(), registry(context))
+      }}
     }
 
     private suspend fun post(context: Context, scope: String, candidate: PlannedMoonReminder,
@@ -104,6 +114,8 @@ internal object MoonReminderScheduler {
         val delivered = storage.getStringSet("delivered", emptySet()).orEmpty()
         if (key in delivered) return
         val language = LocalPreferences(context, scope).values.first().language
+        ru.genesis.calendar.data.NativeLegacyOperationPermit.current()?.check()
+        if((context.applicationContext as GenesisApplication).workspaceScope!=scope)return
         val english = language != "ru"
         val title = if (candidate.kind == "full") {
             if (english) "Full moon" else "Полнолуние"

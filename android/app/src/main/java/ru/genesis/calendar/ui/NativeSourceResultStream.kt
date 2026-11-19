@@ -6,7 +6,7 @@ import java.security.MessageDigest
 
 /** In-process bridge framing only. Hashes stay local; upload crypto remains the
  * existing signed file protocol. No incomplete/failed transfer becomes content. */
-internal class NativeSourceResultStream(private val accepts:(String,String)->Boolean) {
+internal class NativeSourceResultStream(private val acceptsPlacement:(String,String,String)->Boolean={_,_,_->true},private val accepts:(String,String)->Boolean) {
     private data class Pending(val sequence:Long,val placement:String,val domain:String,val id:String,val filename:String,val mediaType:String,
         val hash:String,val expected:ByteArray,val bytes:ByteArray,val digest:MessageDigest,var next:Int=0){
         override fun toString()="Pending([redacted])"
@@ -22,7 +22,7 @@ internal class NativeSourceResultStream(private val accepts:(String,String)->Boo
         check(E2eeCommands.integer(value.get("protocol"))==1L){"E2EE_SOURCE_STREAM_INVALID"}
         val sequence=E2eeCommands.integer(value.get("sequence"));val declared=E2eeCommands.integer(value.get("size"));val index=E2eeCommands.integer(value.get("index"))
         val domain=value.getString("domain");val id=E2eeKeys.technical(value.getString("objectId"));val placement=value.getString("placement")
-        check(placement in setOf("remote","local")&&accepts(domain,id)&&declared<=E2eeFiles.MAX_FILE_BYTES&&value.get("last") is Boolean
+        check(placement in setOf("remote","local")&&accepts(domain,id)&&acceptsPlacement(placement,domain,id)&&declared<=E2eeFiles.MAX_FILE_BYTES&&value.get("last") is Boolean
             &&value.get("filename") is String&&value.get("mediaType") is String&&value.get("bytes") is String){"E2EE_SOURCE_STREAM_INVALID"}
         val filename=value.getString("filename");val mediaType=value.getString("mediaType");val hash=value.getString("hash")
         check(filename.length<=512&&mediaType.length<=128&&sequence==remote.size.toLong()+local.size&&sequence<10000){"E2EE_SOURCE_STREAM_INVALID"}

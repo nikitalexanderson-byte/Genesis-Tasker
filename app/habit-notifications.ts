@@ -3,6 +3,7 @@ import { habitNotificationMessage, notificationCopyIndex } from "./habit-notific
 import { habitReminderDateTime } from "./habit-reminder-time.ts";
 import type { Language } from "./i18n";
 import { privateDeviceAccessBlocked } from "./local-sign-out.ts";
+import type {LegacyOperationPermit} from './e2ee/legacy-transport-fence.ts';
 export type HabitNotificationTone = "calm" | "heroic" | "ironic";
 
 export type HabitNotificationSettings = {
@@ -150,47 +151,51 @@ export function buildHabitNotificationPlan(input: HabitNotificationPlanInput): H
   }
   return candidates.sort((left, right) => left.scheduledAt.localeCompare(right.scheduledAt));
 }
-function readTelemetry(): HabitNotificationTelemetryEvent[] {
+function readTelemetry(userId?:string): HabitNotificationTelemetryEvent[] {
   if (typeof window === "undefined") return [];
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(TELEMETRY_KEY) ?? "[]");
+    const parsed = JSON.parse(window.localStorage.getItem(userId?`${TELEMETRY_KEY.replace('-v1','-v2')}:${userId}`:TELEMETRY_KEY) ?? "[]");
     return Array.isArray(parsed) ? parsed.filter((entry) => entry && typeof entry.notificationId === "string").slice(-120) : [];
   } catch {
     return [];
   }
 }
 
-function recordTelemetry(candidate: Pick<HabitNotificationCandidate, "id" | "kind" | "variant">, event: HabitNotificationTelemetryEvent["event"]) {
-  if (typeof window === "undefined" || privateDeviceAccessBlocked()) return;
-  const metrics = [...readTelemetry(), { notificationId: candidate.id, kind: candidate.kind, variant: candidate.variant, event, occurredAt: new Date().toISOString() }].slice(-120);
-  window.localStorage.setItem(TELEMETRY_KEY, JSON.stringify(metrics));
+async function recordTelemetry(candidate: Pick<HabitNotificationCandidate, "id" | "kind" | "variant">, event: HabitNotificationTelemetryEvent["event"],userId?:string,permit?:LegacyOperationPermit) {
+  if (typeof window === "undefined" || privateDeviceAccessBlocked()||!userId) return;
+  const {withPersonalReminderOperation}=await import('./cloud-sync');
+  return withPersonalReminderOperation(userId,async()=>{
+    const metrics = [...readTelemetry(userId), { notificationId: candidate.id, kind: candidate.kind, variant: candidate.variant, event, occurredAt: new Date().toISOString() }].slice(-120);
+    window.localStorage.setItem(`${TELEMETRY_KEY.replace('-v1','-v2')}:${userId}`,JSON.stringify(metrics));
+  },permit);
 }
 
-function deliveredIds() {
+function deliveredIds(userId?:string) {
   if (typeof window === "undefined") return new Set<string>();
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(DELIVERED_KEY) ?? "[]");
+    const parsed = JSON.parse(window.localStorage.getItem(userId?`${DELIVERED_KEY.replace('-v1','-v2')}:${userId}`:DELIVERED_KEY) ?? "[]");
     return new Set(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string").slice(-60) : []);
   } catch {
     return new Set<string>();
   }
 }
 
-export function hasNotificationFatigue() {
-  const metrics = readTelemetry();
+export function hasNotificationFatigue(userId?:string) {
+  const metrics = readTelemetry(userId);
   const opened = new Set(metrics.filter((entry) => entry.event === "opened").map((entry) => entry.notificationId));
   const ignored = metrics.filter((entry) => entry.event === "delivered" && !opened.has(entry.notificationId));
   return ignored.slice(-3).length >= 3;
 }
 
-async function showCandidate(candidate: HabitNotificationCandidate, appBase: string) {
-  if (privateDeviceAccessBlocked()) return;
+async function showCandidate(candidate: HabitNotificationCandidate, appBase: string,userId:string) {
+  if (privateDeviceAccessBlocked()) return;const {withPersonalReminderOperation}=await import('./cloud-sync');
+  return withPersonalReminderOperation(userId,async permit=>{
   const options: NotificationOptions = {
     body: candidate.body,
     tag: `genesis-${candidate.id}`,
     icon: `${appBase}/mindmap-icons/repeat-2.png`,
     badge: `${appBase}/mindmap-icons/repeat-2.png`,
-    data: { genesisNotificationId: candidate.id, kind: candidate.kind, variant: candidate.variant, url: `${appBase || "/"}#today` },
+    data: {userId, genesisNotificationId: candidate.id, kind: candidate.kind, variant: candidate.variant, url: `${appBase || "/"}#today` },
   };
   const registration = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
   if (privateDeviceAccessBlocked()) return;
@@ -204,10 +209,11 @@ async function showCandidate(candidate: HabitNotificationCandidate, appBase: str
     shown?.forEach((notification) => notification.close());
     return;
   }
-  const delivered = deliveredIds();
+  const delivered = deliveredIds(userId);
   delivered.add(candidate.id);
-  window.localStorage.setItem(DELIVERED_KEY, JSON.stringify(Array.from(delivered).slice(-60)));
-  recordTelemetry(candidate, "delivered");
+  window.localStorage.setItem(`${DELIVERED_KEY.replace('-v1','-v2')}:${userId}`,JSON.stringify(Array.from(delivered).slice(-60)));
+  await recordTelemetry(candidate, "delivered",userId,permit);
+  });
 }
 
 export function habitNotificationPermission(): HabitNotificationPermission {
@@ -220,36 +226,36 @@ export async function requestHabitNotificationPermission(): Promise<HabitNotific
   return Notification.requestPermission();
 }
 
-export function scheduleHabitNotifications(candidates: readonly HabitNotificationCandidate[], appBase = "") {
-  if (typeof window === "undefined" || privateDeviceAccessBlocked() || habitNotificationPermission() !== "granted") return () => undefined;
-  const delivered = deliveredIds();
-  const fatigue = hasNotificationFatigue();
+export function scheduleHabitNotifications(candidates: readonly HabitNotificationCandidate[], appBase = "",userId?:string) {
+  if (typeof window === "undefined" || privateDeviceAccessBlocked() || habitNotificationPermission() !== "granted"||!userId) return () => undefined;
+  const delivered = deliveredIds(userId);
+  const fatigue = hasNotificationFatigue(userId);
   const timers = candidates.flatMap((candidate) => {
     if (delivered.has(candidate.id) || (fatigue && ["daily-goal", "perfect-day"].includes(candidate.kind))) return [];
     const delay = Math.max(0, new Date(candidate.scheduledAt).getTime() - Date.now());
     if (delay > 24 * 60 * 60_000) return [];
-    return [window.setTimeout(() => void showCandidate(candidate, appBase), delay)];
+    return [window.setTimeout(() => void showCandidate(candidate, appBase,userId).catch(()=>undefined), delay)];
   });
   return () => timers.forEach((timer) => window.clearTimeout(timer));
 }
 
-export function observeHabitNotificationClicks() {
-  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return () => undefined;
+export function observeHabitNotificationClicks(userId?:string) {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)||!userId) return () => undefined;
   const listener = (event: MessageEvent) => {
-    const payload = event.data as { type?: string; notificationId?: string; kind?: HabitNotificationCandidate["kind"]; variant?: HabitNotificationCandidate["variant"] };
-    if (payload?.type !== "GENESIS_NOTIFICATION_OPENED" || !payload.notificationId || !payload.kind || !payload.variant) return;
-    recordTelemetry({ id: payload.notificationId, kind: payload.kind, variant: payload.variant }, "opened");
+    const payload = event.data as { userId?:string;type?: string; notificationId?: string; kind?: HabitNotificationCandidate["kind"]; variant?: HabitNotificationCandidate["variant"] };
+    if (payload?.type !== "GENESIS_NOTIFICATION_OPENED" ||payload.userId!==userId|| !payload.notificationId || !payload.kind || !payload.variant) return;
+    void recordTelemetry({ id: payload.notificationId, kind: payload.kind, variant: payload.variant }, "opened",userId).catch(()=>undefined);
   };
   navigator.serviceWorker.addEventListener("message", listener);
   return () => navigator.serviceWorker.removeEventListener("message", listener);
 }
 
-export function recordHabitNotificationsDisabled() {
-  recordTelemetry({ id: `notification-disabled:${new Date().toISOString().slice(0, 10)}`, kind: "daily-goal", variant: "concise" }, "disabled");
+export function recordHabitNotificationsDisabled(userId?:string) {
+  void recordTelemetry({ id: `notification-disabled:${new Date().toISOString().slice(0, 10)}`, kind: "daily-goal", variant: "concise" }, "disabled",userId).catch(()=>undefined);
 }
 
-export function recordHabitReminderTelemetry(event:"delivered"|"opened",id:string,goal=false) {
-  recordTelemetry({id,kind:goal?"daily-goal":"habit",variant:"concise"},event);
+export function recordHabitReminderTelemetry(event:"delivered"|"opened",id:string,goal=false,userId?:string,permit?:LegacyOperationPermit) {
+  return recordTelemetry({id,kind:goal?"daily-goal":"habit",variant:"concise"},event,userId,permit);
 }
 
 export function suggestHabitReminderTime(completions: readonly { completed: boolean; updatedAt: string }[], currentTime: string) {

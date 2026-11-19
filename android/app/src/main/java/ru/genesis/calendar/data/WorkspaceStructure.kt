@@ -186,7 +186,7 @@ class WorkspaceStructureRepository(private val app: GenesisApplication) {
 
     /** A confirmed server import removes the private tree and its tasks as one local commit. */
     suspend fun removeImportedProjectTree(rootId: String, expectedRevision: Long,
-        expectedProjectIds: Set<String>, expectedTasks: Map<String, Long>) = app.scheduler.withMutation {
+        expectedProjectIds: Set<String>, expectedTasks: Map<String, Long>) = app.scheduler.withMutation(scope) {
         val reminders = mutableListOf<ReminderRecord>()
         app.database.withTransaction {
             mutation.check()

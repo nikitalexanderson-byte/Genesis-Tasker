@@ -3326,19 +3326,35 @@ export async function loadSharedCalendarPreviews(from: string, to: string, signa
 }
 
 export async function loadHabitReminderStatus(userId: string) {
-  const status = await api<HabitReminderStatus>(`/habit-reminders/status?deviceKey=${encodeURIComponent(habitReminderDeviceKey(userId))}`);
-  if (workspaceUserId === userId) habitReminderProjectionWanted = status.hasDevices;
-  return status;
+  return withPersonalReminderOperation(userId,async permit=>{
+    const status=await api<HabitReminderStatus>(`/habit-reminders/status?deviceKey=${encodeURIComponent(habitReminderDeviceKey(userId))}`,{},{},permit);
+    habitReminderProjectionWanted=status.hasDevices;return status;
+  });
 }
 
 export async function registerHabitReminderDevice(userId: string, subscription: PushSubscription, frequency: HabitReminderFrequency,
   expectedRevision: number, requestId: string) {
-  const result = await api<{ id: string; revision: number }>("/habit-reminders/devices", { method: "POST", body: JSON.stringify({
-    deviceKey: habitReminderDeviceKey(userId), subscription: subscription.toJSON(), consent: true,
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, ...frequency, expectedRevision, requestId,
-  }) });
-  if (workspaceUserId === userId) habitReminderProjectionWanted = true;
-  return result;
+  return withPersonalReminderOperation(userId,async permit=>{
+    const result = await api<{ id: string; revision: number }>("/habit-reminders/devices", { method: "POST", body: JSON.stringify({
+      deviceKey: habitReminderDeviceKey(userId), subscription: subscription.toJSON(), consent: true,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, ...frequency, expectedRevision, requestId,
+    }) },{},permit);
+    habitReminderProjectionWanted=true;return result;
+  });
+}
+
+/** Reminder settings/local receipts have no workspace-key requirement. Hold
+ * the SAME owner permit used by personal API transport through async OS work
+ * and final storage writes; nested API calls borrow it explicitly. */
+export async function withPersonalReminderOperation<T>(userId:string,operation:(permit:import('./e2ee/legacy-transport-fence').LegacyOperationPermit)=>Promise<T>,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<T>{
+  const session=captureAccountSessionGuard();const check=()=>{session();
+    if(!userId||workspaceUserId!==userId||(confirmedTransportOwnerId!==null?confirmedTransportOwnerId!==userId:!workspaceKey))throw new Error('E2EE_ACCOUNT_CHANGED');
+    if(serverProtectedTransportOwners.has(userId))throw new Error('E2EE_UPGRADE_REQUIRED');};
+  check();return permit?legacyTransportGate().borrow(permit,userId,check,()=>operation(permit)):legacyTransportGate().withOperation(userId,check,operation);
+}
+export async function saveReminderLocalValue(userId:string,key:string,value:string){
+  if(![`genesis.habit-reminder.frequency.${userId}`,`genesis-moon-reminders-v1:${userId}`].includes(key))throw new Error('E2EE_REMINDER_SOURCE_INVALID');
+  return withPersonalReminderOperation(userId,async()=>{localStorage.setItem(key,value);});
 }
 
 export async function deleteHabitReminderDevice(device: NonNullable<HabitReminderStatus["device"]>) {
@@ -3630,6 +3646,27 @@ export async function createPersonalPhysisMigrationSource(userId:string,scopeId:
       if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
       return{ownerId:userId,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,legacyKey:workspaceKey,stores};},
     legacyPhysis:context=>collectLegacyPersonalPages(context,'physis',{assertCurrent:access.check,readPage:(value,table,offset)=>transport.legacyPhysisPage(value,table,offset)}),...options});
+}
+
+/** Read-only reminder inventory. The full product coordinator must hold its
+ * owner/global local-write fence, freeze the mounted UI and retain this input
+ * under the new root before reaching the signed server pages. */
+export async function createPersonalRemindersMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyRemindersPage'>,
+  options:Pick<import('./e2ee/reminders-source').RemindersSourcePorts,'reviewUnassigned'>={}) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{PersonalRemindersSource},{captureWebReminderInventory},{collectLegacyPersonalPages}]=await Promise.all([
+    import('./e2ee/reminders-source'),import('./e2ee/reminders-web-source'),import('./e2ee/legacy-pages')]);check();
+  return new PersonalRemindersSource(userId,scopeId,{assertCurrent:check,memory:async()=>{
+    check();const generation=backupDataGeneration,projectionWanted=habitReminderProjectionWanted;
+    const local=await captureWebReminderInventory(userId,{storage:localStorage,assertCurrent:check,caches:typeof caches==='undefined'?null:caches,projectionWanted,
+      notifications:async()=>{
+        if(typeof navigator==='undefined'||!navigator.serviceWorker)return[];const registration=await navigator.serviceWorker.getRegistration();check();
+        return(await registration?.getNotifications()??[]).map(({title,body,tag,lang,data,silent})=>({title,body,tag,lang,data,silent}));
+      }});check();if(generation!==backupDataGeneration||projectionWanted!==habitReminderProjectionWanted)throw new Error('E2EE_REMINDER_CAPTURE_CHANGED');
+    return{ownerId:userId,generation,reconciliationRequired:backupReconciliationRequired,local};
+  },legacyReminders:context=>collectLegacyPersonalPages(context,'reminders',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyRemindersPage(value,table,offset)}),...options});
 }
 
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,

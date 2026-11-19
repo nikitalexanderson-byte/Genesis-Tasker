@@ -22,6 +22,7 @@ import ru.genesis.calendar.R
 import ru.genesis.calendar.data.ReminderRecord
 import ru.genesis.calendar.data.LocalPreferences
 import ru.genesis.calendar.data.HabitsRepository
+import ru.genesis.calendar.data.NativeLegacyOperationPermit
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
@@ -30,7 +31,15 @@ class ReminderScheduler(private val context: Context) {
     // The application runs in one process. Serialize the DB transition and the
     // system side effect so an old delivery cannot race past an edit/cancel.
     private val mutation = Mutex()
-    suspend fun <T> withMutation(block: suspend () -> T): T = mutation.withLock { ru.genesis.calendar.security.UpdateGate.requireOpen(); block() }
+    suspend fun <T> withMutation(scope:String=app.workspaceScope,block: suspend (()->Unit) -> T): T =
+        legacyReminderOperation(context,scope){current->mutation.withLock { current();block(current).also{current()} }}
+    /** A verified bootstrap is imported BEFORE activateAccount. Bind this
+     * distinct path to its original authenticated session and target scope;
+     * ordinary local editors/schedulers still require the active workspace. */
+    internal suspend fun <T> withIncomingAccountMutation(scope:String,assertCurrent:()->Unit,block:suspend ()->T):T =
+        ru.genesis.calendar.data.NativeLegacyOperationPermit.run(app.database,scope,{
+            ru.genesis.calendar.security.UpdateGate.requireOpen();assertCurrent()
+        }){mutation.withLock{assertCurrent();block().also{assertCurrent()}}}
     companion object {
         const val TASK_CHANNEL = "genesis.tasks.v2"
         const val HABIT_CHANNEL = "genesis.habits.v2"
@@ -229,12 +238,15 @@ class ReminderScheduler(private val context: Context) {
         val upcoming = app.database.dao().reminders(scope).asSequence()
             .filter { it.state == "pending" && it.at > now }
             .sortedBy { it.at }.take(100).toList()
+        NativeLegacyOperationPermit.current()?.check()
+        if(scope!=app.workspaceScope)return
         upcoming.forEach(::schedule)
         ReminderRecoveryWorker.scheduleTasks(context, upcoming.firstOrNull()?.at)
         // Recovery can replay at most four recent rows; older overdue rows remain visible in diagnostics.
     }
-    suspend fun restore(recoverOverdue: Boolean = false) = withMutation {
-        val scope = app.workspaceScope
+    suspend fun restore(recoverOverdue: Boolean = false) {
+      val scope = app.workspaceScope
+      withMutation(scope) { current ->
         if (recoverOverdue) {
             val now = System.currentTimeMillis()
             app.database.dao().reminders(scope).asSequence()
@@ -242,16 +254,21 @@ class ReminderScheduler(private val context: Context) {
                 .sortedBy { it.at }.toList().takeLast(4)
                 .forEach { deliverLocked(scope, it.id, it.revision, scheduleNext = false) }
         }
+        current()
         scheduleUpcomingLocked(scope)
+        current()
         diagnosticStore.edit().putLong("lastRecoveryAt", System.currentTimeMillis()).apply()
+      }
     }
 
     /** System PendingIntents survive closing the UI and process recreation. */
-    suspend fun restoreHabitNotifications() = withMutation {
-        val scope = app.workspaceScope
+    suspend fun restoreHabitNotifications() {
+      val scope = app.workspaceScope
+      withMutation(scope) { current ->
         val workspace = runCatching { HabitsRepository(app).workspace.first() }.getOrNull() ?: return@withMutation
+        current()
         val language = LocalPreferences(context, scope).values.first().language
-        if (scope != app.workspaceScope) return@withMutation
+        current()
         val zone = ZoneId.systemDefault()
         val registry = context.getSharedPreferences("genesis_habit_alarm_registry", Context.MODE_PRIVATE)
         val now = java.time.Instant.now()
@@ -304,6 +321,7 @@ class ReminderScheduler(private val context: Context) {
         registry.edit().putStringSet("alarms", scheduledUris).commit()
         ReminderRecoveryWorker.scheduleHabits(context, plan.firstOrNull()?.at?.toEpochMilli())
         diagnosticStore.edit().putLong("lastRecoveryAt", System.currentTimeMillis()).apply()
+      }
     }
 
     private fun habitUri(candidate: PlannedHabitNotification, scope: String) = Uri.Builder().scheme("genesis")
@@ -318,15 +336,18 @@ class ReminderScheduler(private val context: Context) {
         alarms.cancel(operation)
     }
 
-    suspend fun deliverHabitNotification(intent: Intent) = withMutation {
-        val scope = intent.getStringExtra("scope")
+    suspend fun deliverHabitNotification(intent: Intent) {
+      val scope = intent.getStringExtra("scope") ?: return
+      withMutation(scope) { current ->
         if (scope != app.workspaceScope || !notificationsAllowed()) return@withMutation
         val date = runCatching { LocalDate.parse(intent.getStringExtra("date")) }.getOrNull() ?: return@withMutation
         val at = java.time.Instant.ofEpochMilli(intent.getLongExtra("at", 0))
         val now = java.time.Instant.now()
         if (at > now.plusSeconds(1) || at < now.minusSeconds(HABIT_LATE_WINDOW_SECONDS)) return@withMutation
         val workspace = HabitsRepository(app).workspace.first()
-        val language = LocalPreferences(context, app.workspaceScope).values.first().language
+        current()
+        val language = LocalPreferences(context, scope).values.first().language
+        current()
         val target = habitReminderTarget(intent)
         val snoozed = target?.takeIf { it.at != at }?.let { original ->
             habitReminderSnoozes(context.getSharedPreferences("genesis_habit_alarm_registry", Context.MODE_PRIVATE))
@@ -345,6 +366,7 @@ class ReminderScheduler(private val context: Context) {
         val key = intent.data.toString()
         if (scope != app.workspaceScope) return@withMutation
         postHabitNotification(candidate.copy(at = at), scope, key, registry, language)
+      }
     }
 
     private fun postHabitNotification(candidate: PlannedHabitNotification, scope: String, key: String,
@@ -408,13 +430,15 @@ class ReminderScheduler(private val context: Context) {
         }
     }
 
-    suspend fun snoozeHabitNotification(intent: Intent): Boolean = withMutation {
-        val scope = intent.getStringExtra("scope") ?: return@withMutation false
+    suspend fun snoozeHabitNotification(intent: Intent): Boolean {
+      val scope = intent.getStringExtra("scope") ?: return false
+      return withMutation(scope) { current ->
         if (scope != app.workspaceScope || !notificationsAllowed()) return@withMutation false
         val target = habitReminderTarget(intent) ?: return@withMutation false
         val requestId = intent.getStringExtra("requestId") ?: return@withMutation false
         if (!requestId.startsWith("genesis://habit-reminder/")) return@withMutation false
         val workspace = HabitsRepository(app).workspace.first()
+        current()
         val habit = workspace.habits.firstOrNull { it.id == target.habitId }
         val now = java.time.Instant.now()
         if (ru.genesis.calendar.domain.habits.habitReminderAction(habit, target, workspace.completions,
@@ -431,9 +455,14 @@ class ReminderScheduler(private val context: Context) {
         check(registry.edit().putStringSet("snoozes", next).putStringSet("snoozeRequests", (receipts + requestId).toList().takeLast(256).toSet()).commit())
         notifications.cancel(requestId, 2)
         true
+      }
     }
     /** Remove account-specific system alarms/notifications when its session leaves the device. */
-    suspend fun deactivate(scope: String) = withMutation {
+    // Logout may cancel OS delivery even for a fenced account. It cannot create
+    // new content/grants; the migration's account guard rejects a concurrent
+    // logout. Do not make local sign-out depend on an open legacy writer.
+    suspend fun deactivate(scope: String) = mutation.withLock {
+        ru.genesis.calendar.security.UpdateGate.requireOpen()
         app.database.dao().reminders(scope).forEach(::cancel)
         val registry = context.getSharedPreferences("genesis_habit_alarm_registry", Context.MODE_PRIVATE)
         val all = registry.getStringSet("alarms", emptySet()).orEmpty()
@@ -444,19 +473,23 @@ class ReminderScheduler(private val context: Context) {
             it.tag?.let { tag -> Uri.parse(tag).authority == "habit-reminder" && Uri.parse(tag).pathSegments.firstOrNull() == scope } == true
         }.forEach { notifications.cancel(it.tag, it.id) }
     }
-    suspend fun deliver(scope: String, id: String, revision: Long) = withMutation { deliverLocked(scope,id,revision) }
+    suspend fun deliver(scope: String, id: String, revision: Long) = withMutation(scope) { deliverLocked(scope,id,revision) }
     private suspend fun deliverLocked(scope: String, id: String, revision: Long, scheduleNext: Boolean = true) {
         if (scope != app.workspaceScope) return
         val dao = app.database.dao()
         val row = dao.reminder(scope, id) ?: return
         if (row.revision != revision || row.state != "pending" || row.at > System.currentTimeMillis() + 1000) return
         val task = dao.task(scope, row.taskId) ?: return
+        NativeLegacyOperationPermit.current()?.check()
+        if(scope!=app.workspaceScope)return
         if (task.done || task.deleted || task.revision != revision) return
         val permitted = notificationsAllowed() && channelAllowed()
         // Keep the row pending while Android blocks notifications. Recovery can deliver it after
         // the user restores permission instead of permanently losing a transiently blocked alarm.
         if (!permitted) { if (scheduleNext) scheduleUpcomingLocked(scope); return }
         if (dao.claimReminder(scope, id, revision, "delivered", System.currentTimeMillis()) != 1) return
+        NativeLegacyOperationPermit.current()?.check()
+        if(scope!=app.workspaceScope)return
         val open = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java).apply {
             data = Uri.Builder().scheme("genesis").authority("task").appendPath(scope).appendPath(row.taskId).build()
             putExtra("scope", scope); putExtra("taskId", row.taskId)
@@ -465,6 +498,8 @@ class ReminderScheduler(private val context: Context) {
         fun action(name: String) = PendingIntent.getBroadcast(context, 0,
             intent(row, name, ReminderActionReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val taskCopy = taskNotificationCopy(LocalPreferences(context, scope).values.first().language)
+        NativeLegacyOperationPermit.current()?.check()
+        if(scope!=app.workspaceScope)return
         val note = NotificationCompat.Builder(context, TASK_CHANNEL)
             .setGroup("genesis.tasks").setSubText(notifications.getNotificationChannel(TASK_CHANNEL)?.name)
             .setColor(Color.rgb(37, 91, 89)).setSmallIcon(R.drawable.ic_notification_task).setContentTitle("GENESIS")
