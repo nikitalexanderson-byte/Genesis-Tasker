@@ -616,6 +616,17 @@ export function physisLegacyAccess(userId:string,permit?:import('./e2ee/legacy-t
   }};
 }
 
+/** Bootstrap/unlock/wrapping and the first store read are one admitted owner
+ * operation. Its nested account crypto and HTTP use the same live permit. */
+export async function withPhysisAccountOperation<T>(userId:string,operation:(ports:{account:PersonalDocumentAccess;request:PhysisLegacyRequest;
+  permit:import('./e2ee/legacy-transport-fence').LegacyOperationPermit})=>Promise<T>):Promise<T> {
+  const physis=physisLegacyAccess(userId);physis.check();
+  return legacyTransportGate().withOperation(userId,physis.check,async permit=>{
+    const account=personalDocumentAccess(userId,permit),bound=physisLegacyAccess(userId,permit);account.check();bound.check();
+    const result=await operation({account,request:bound.request,permit});account.check();bound.check();return result;
+  });
+}
+
 /** Deliberately separate from bootstrap: checking export must not pull or merge user data. */
 export function backupRequest<T>(path: '/status' | '/authorize' | '/server-snapshot' | '/preview' | '/commit', body?: unknown) {
   return api<T>(`/backup/v1${path}`, { method:body === undefined ? 'GET' : 'POST', cache:'no-store', ...(body === undefined ? {} : { body:JSON.stringify(body) }) });
@@ -3604,6 +3615,21 @@ export async function createPersonalMindmapsMigrationSource(userId:string,scopeI
   return new PersonalMindmapsSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired};},
     legacyMindmaps:context=>collectLegacyPersonalPages(context,'mindmaps',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyMindmapsPage(value,table,offset)}),review});
+}
+
+/** Capture retained Physis queues/forms before signed source IO. A cold/unmounted
+ * Android source uses its native capability instead of exporting account keys. */
+export async function createPersonalPhysisMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPhysisPage'>,
+  options:Pick<import('./e2ee/physis-source').PhysisSourcePorts,'independentUnlock'|'review'>={}) {
+  const access=physisLegacyAccess(userId);access.check();
+  const [{PersonalPhysisSource},{collectLegacyPersonalPages},{capturePhysisSessionMemory}]=await Promise.all([
+    import('./e2ee/physis-source'),import('./e2ee/legacy-pages'),import('./physis/session-memory')]);access.check();
+  return new PersonalPhysisSource(userId,scopeId,{assertCurrent:access.check,
+    memory:async()=>{access.check();const stores=await capturePhysisSessionMemory(userId);access.check();
+      if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+      return{ownerId:userId,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,legacyKey:workspaceKey,stores};},
+    legacyPhysis:context=>collectLegacyPersonalPages(context,'physis',{assertCurrent:access.check,readPage:(value,table,offset)=>transport.legacyPhysisPage(value,table,offset)}),...options});
 }
 
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,

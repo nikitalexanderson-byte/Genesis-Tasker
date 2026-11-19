@@ -373,6 +373,21 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         },decrypt={row->current();cipher.decrypt(row.encrypted,if(row.kind=="aurora-account-key")"$accountScope/aurora/$uid/account-key" else "$accountScope/${row.kind}").also{current()}},
             assertCurrent=::current,legacyMindmaps={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"mindmaps",::current,transport::legacyMindmapsPage)},reconciler=reconciler)
     }
+    internal fun e2eePhysisSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        independentUnlock:suspend (JSONObject)->E2eePhysisCredential?={null}):E2eeNativePhysisSource {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        val cipher=ru.genesis.calendar.data.LocalCipher()
+        return E2eeNativePhysisSource(uid,directory.scopeId,captureRows={withContext(Dispatchers.IO){app.database.withTransaction{
+            current();val docs=app.database.dao().backupDocuments(accountScope).filter{it.kind.startsWith("physis")||it.kind=="aurora-account-key"}
+            val epochs=NativeBackupEpochStore(app);current();E2eePhysisRows(docs,epochs.accepted(accountScope),epochs.pending(accountScope))
+        }}},decrypt={row->current();cipher.decrypt(row.encrypted,"$accountScope/aurora/$uid/account-key").also{current()}},
+            assertCurrent=::current,legacyPhysis={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"physis",::current,transport::legacyPhysisPage)},
+            reconciler=reconciler,independentUnlock=independentUnlock)
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)

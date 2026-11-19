@@ -1,4 +1,5 @@
 'use client';
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useEffect, useId, useRef, useState } from 'react';
 import { DialogCloseButton } from '../DialogCloseButton';
 import { useDialogAccessibility } from '../use-dialog-accessibility';
@@ -10,6 +11,7 @@ import { NutritionSettings, type NutritionSettingsHandle } from './nutrition';
 import './personal-profile.css';
 
 export function PhysisPersonalProfile({ onClose, ...props }: PhysisFeatureProps & { onClose: () => void }) {
+
   const { store, language } = props;
   const nutritionEditor = useRef<NutritionSettingsHandle>(null);
   const t = (ru: string, en: string) => language === 'ru' ? ru : en;
@@ -18,6 +20,7 @@ export function PhysisPersonalProfile({ onClose, ...props }: PhysisFeatureProps 
   const [draft, setDraft] = useState(() => personalProfileDraft(record?.data));
   const [newRecord] = useState(() => newPhysisRecord('nutrition-profile', defaultNutritionProfile()));
   const action = usePhysisAction(); const [saved, setSaved] = useState(false);
+  usePhysisMigrationCapture('personal-profile.PhysisPersonalProfile',()=>({draft,newRecord,saved}));
   useEffect(() => { if (!saved) return; const timer = setTimeout(() => setSaved(false), 2300); return () => clearTimeout(timer); }, [saved]);
   const change = (patch: Partial<typeof draft>) => { setSaved(false); setDraft(current => ({ ...current, ...patch })); };
   return <div className="modal-backdrop physis-settings-backdrop">

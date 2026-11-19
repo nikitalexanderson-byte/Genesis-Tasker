@@ -60,6 +60,7 @@ export const TRAINING_LIMIT = 1098;
  * Clear it only after acknowledged success; an explicit discard remounts the UI. */
 export class TrainingCreationDrafts<T> {
   private records = new Map<string, PhysisRecord<T>>();
+  captureMigration() { return structuredClone([...this.records].map(([intent, record]) => ({ intent, record }))); }
   get(key: string, create: () => PhysisRecord<T>): PhysisRecord<T> {
     let record = this.records.get(key);
     if (!record) { record = create(); this.records.set(key, record); }

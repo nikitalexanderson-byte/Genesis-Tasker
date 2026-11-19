@@ -1,3 +1,4 @@
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useEffect, useId, useState } from 'react';
 import { useDialogAccessibility } from '../use-dialog-accessibility';
 import { DialogCloseButton } from '../DialogCloseButton';
@@ -52,6 +53,7 @@ function MonitoringHint({ modal, text, onClose, onDisable }: {
 }
 
 export function PhysisMeasurements({ store, settings, context, language, hintOwner, onDisableHints }: PhysisFeatureProps & { hintOwner?: string; onDisableHints?: () => void }) {
+
   const text = (value: string) => translateText(value, language as Language);
   const [hintOpen, setHintOpen] = useState(false);
   const [desktopHint, setDesktopHint] = useState(false);
@@ -86,6 +88,7 @@ export function PhysisMeasurements({ store, settings, context, language, hintOwn
   const customMetric = definitions.find(item => item.id === selectedCustomId) ?? definitions[0];
   const draftKey = type === 'custom' ? `custom:${customMetric?.id ?? ''}` : type;
   const [drafts, setDrafts] = useState<Record<string, PhysisRecord<Measurement> | null>>({});
+  usePhysisMigrationCapture('measurements.PhysisMeasurements',()=>({hintOpen,desktopHint,selectedType,contextFilter,period,selectedCustomId,editingMetric,drafts}));
   const draft = drafts[draftKey] ?? null;
   const setDraft = (next: PhysisRecord<Measurement> | null | ((current: PhysisRecord<Measurement> | null) => PhysisRecord<Measurement> | null)) => setDrafts(current => ({ ...current, [draftKey]: typeof next === 'function' ? next(current[draftKey] ?? null) : next }));
   const action = usePhysisAction(); const today = todayCivilDate(context);

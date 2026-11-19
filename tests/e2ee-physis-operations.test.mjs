@@ -34,6 +34,26 @@ async function wire(tab,key,record){
   envelope:await tab.physis.crypto.sealPhysis(key,tab.userId,record.id,1,record)};
 }
 
+test('Physis bootstrap and initial reload borrow one owner permit across account crypto and a queued migration',{timeout:8000},async()=>{
+ const tab=await cloudSyncClient({withPhysis:true});let savedVault=null,model,borrowed,admitted=false;
+ tab.respond(async(url,init)=>{const path=new URL(url).pathname;
+  if(path==='/api/physis/v1/vault'&&init.method==='PUT'){const body=JSON.parse(init.body);assert.equal(body.expectedRevision,0);savedVault=body.vault;return response({revision:1});}
+  if(path==='/api/physis/v1/vault')return response({vault:savedVault,revision:savedVault?1:0});
+  assert.equal(path,'/api/physis/v1/records');return response({records:[],cursor:0,minCursor:0,snapshot:0,hasMore:false});
+ });
+ const held=tab.holdCrypto('encrypt'),opening=observed(tab.client.withPhysisAccountOperation(tab.userId,async({account,request,permit})=>{
+  borrowed=permit;const result=await tab.physis.account.openPhysisAccount(tab.userId,account,request,account.check);
+  model=new tab.physis.store.PhysisMemoryStore(tab.userId,result.key,result.state.vault.keyVersion);await model.reload(permit);admitted=true;return result.state;
+ }));
+ await held.entered;let captured;
+ const migrating=fence(tab).withFence(async()=>{captured=await model.captureMigrationMemory();});
+ await turn();assert.equal(captured,undefined);assert.equal(tab.requests.length,1);
+ held.release();assert.equal((await opening).error,undefined);await migrating;assert.equal(admitted,true);assert.equal(captured.records.length,0);assert.equal(captured.keyVersion,1);
+ assert.equal(tab.requests.length,3);assert.equal(savedVault.version,2);
+ let late=false;await assert.rejects(tab.client.withPhysisAccountOperation(tab.userId,async()=>{late=true;}),/E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN/);assert.equal(late,false);
+ await assert.rejects(model.reload(borrowed),/E2EE_INVALID_LEGACY_OPERATION/);assert.equal(tab.requests.length,3);model.destroy();
+});
+
 test('Physis migration waits for optimistic memory, encryption, borrowed HTTP and final acknowledgement',{timeout:8000},async()=>{
  const{tab,key,store}=await fixture(),bodies=savePeer(tab),record=settingsRecord(),held=tab.holdCrypto('encrypt');
  const saving=observed(store.getSnapshot().save(record));await held.entered;let captured;

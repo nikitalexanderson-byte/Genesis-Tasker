@@ -8,7 +8,7 @@
 «Частично» означает наличие проверенных компонентов, но отсутствие полной
 системной приёмки во всём требуемом охвате. «Не выполнено» означает, что нужное
 испытание новой версии ещё не проводилось. Ни одна строка здесь не закрыта
-общим количеством unit-тестов, проверкой schema inventory или семью source
+общим количеством unit-тестов, проверкой schema inventory или восемью source
 adapters. У финального результата каждой строки должны быть commit/artifact,
 конкретный сценарий, платформа, evidence и явно указанные ограничения.
 
@@ -20,7 +20,7 @@ adapters. У финального результата каждой строки
 | 04 | Неизвестный suite, неверный base64, переполнение | Частично: bounded parsers проверены; остаются large-data и полный набор feature inputs |
 | 05 | Retry и crash до/после записи | Частично: immutable queues/receipts/coordinator проверены; все product writers ещё не подключены |
 | 06 | Обрезаны/переставлены chunks, подменён manifest | Частично: file primitive и часть source output проверены; действующие вложения/загрузки ещё нужны |
-| 07 | Сервер получил DB/config нового поколения | Не выполнено во всём продукте: все13 оставшихся sources и нормальные записи должны перейти в новый формат |
+| 07 | Сервер получил DB/config нового поколения | Не выполнено во всём продукте: все12 оставшихся sources и нормальные записи должны перейти в новый формат |
 | 08 | Google-вход на новом устройстве | Частично: независимость crypto authority реализована; нужна полная login/unlock UX-приёмка |
 | 09 | Подмена public key при QR enrollment | Частично: challenge/signature contract проверен; нужен реальный product enrollment и сравнение fingerprint |
 | 10 | Replay истёкшего challenge или чужой аккаунт | Частично: контракт/серверные проверки есть; нужен полный UI/session journey |
@@ -35,7 +35,7 @@ adapters. У финального результата каждой строки
 | 19 | Смена аккаунта/logout с pending data | Частично: owner permits и ряд источников проверены; остальные writers/drafts ещё подключаются |
 | 20 | Инвалидирование Android Keystore | Частично: actual alias-loss/refusal/retained-key cases есть; полного recovery всех категорий нет |
 | 21 | Crash reports, логи, clipboard, temp files | Частично: redaction/ограниченные ports есть; нужен системный canary-прогон финального кандидата |
-| 22 | Backup перед первым sync | Частично: семь реальных captures и coordinator проверены; остальные13 и все mounted/unmounted drafts обязательны |
+| 22 | Backup перед первым sync | Частично: восемь реальных captures и coordinator проверены; остальные12 и весь product lifecycle mounted/unmounted drafts обязательны |
 | 23 | Обрыв на каждом шаге миграции | Частично: state-machine/частные real cases есть; нужны все feature paths, process death и clean restart |
 | 24 | Две параллельные миграции | Частично: lease/fence/CAS проверены; полный многоклиентский product-переход ещё нужен |
 | 25 | Legacy write во время финального commit | Частично: SQLite/HTTP/SW/owner barriers есть; все local/normal/background writers ещё не охвачены |

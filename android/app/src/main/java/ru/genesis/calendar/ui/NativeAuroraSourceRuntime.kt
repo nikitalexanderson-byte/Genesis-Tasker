@@ -33,7 +33,7 @@ private const val SOURCE_CHUNK=131072
 private fun sourceCode(error:Throwable):String=error.message?.takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_AURORA_RECONCILIATION_FAILED"
 
 internal enum class PersonalSourceKind(val wire:String,val domain:String){
-    AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion"),ADVICE("advice","workspace"),TASKS("tasks","workspace"),DIARY("diary","diary"),MINDMAPS("mindmaps","mindmap");
+    AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion"),ADVICE("advice","workspace"),TASKS("tasks","workspace"),DIARY("diary","diary"),MINDMAPS("mindmaps","mindmap"),PHYSIS("physis","physis");
     fun accepts(id:String):Boolean=when(this){
         AURORA->id in setOf("personal-aurora-workspace-v1","personal-aurora-local-history-v1")||id.matches(Regex("aurora-result:[a-f0-9-]{36}"))
         STOICHEION->id in setOf("personal-stoicheion-workspace-v1","personal-stoicheion-local-history-v1","personal-stoicheion-draw-history-v1")
@@ -45,6 +45,8 @@ internal enum class PersonalSourceKind(val wire:String,val domain:String){
             ||id.matches(Regex("personal-diary-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
         MINDMAPS->id in setOf("personal-mindmap-index-v1","personal-mindmap-metadata-v1","personal-mindmap-local-work-v1","personal-mindmap-native-history-v1")
             ||id.matches(Regex("personal-mindmap-(?:record|version|image):[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
+        PHYSIS->id in setOf("personal-physis-index-v1","personal-physis-metadata-v1","personal-physis-local-history-v1","personal-physis-native-history-v1")
+            ||id.matches(Regex("personal-physis-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
     }
 }
 internal class NativeAuroraSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.AURORA)
@@ -52,6 +54,7 @@ internal class NativeStoicheionSourceRuntime(context:Context):E2eePersonalSource
 internal class NativeTasksSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.TASKS)
 internal class NativeDiarySourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.DIARY)
 internal class NativeMindmapsSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.MINDMAPS)
+internal class NativePhysisSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.PHYSIS)
 internal class NativeAdviceSourceRuntime(context:Context,
     publicBytes:suspend (String,()->Unit)->ByteArray=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v1.json").use{it.readBytes()}})::read)
     :E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.ADVICE,publicBytes)
@@ -92,7 +95,7 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
                     .put("context",JSONObject().put("ownerId",owner).put("scopeId",scope).put("migrationId",context.migrationId).put("fence",context.fence).put("sourceHash",context.sourceHash).put("generation",context.generation))
                     .put("remote",remote)
                 val inputBytes=input.toString().toByteArray(Charsets.UTF_8)
-                val maximum:Long=if(source==PersonalSourceKind.MINDMAPS)E2eeMigrationSources.BYTE_BUDGET.toLong() else 48L*1024*1024
+                val maximum:Long=if(source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS))E2eeMigrationSources.BYTE_BUDGET.toLong() else 48L*1024*1024
                 val encoded=try{check(inputBytes.size.toLong()<=maximum){"E2EE_MIGRATION_TOO_LARGE"};E2eeEnvelope.encode(inputBytes)}finally{inputBytes.fill(0)}
                 withContext(Dispatchers.Main.immediate){
                     assertCurrent();check(nativeWebRuntimeProblem(this@NativePersonalSourceRuntime.context,"en")==null){"E2EE_WEB_RUNTIME_UPDATE_REQUIRED"}
@@ -146,7 +149,7 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
     private val openLegacy:suspend (JSONObject,String)->Any,private val publicBytes:(suspend (String,()->Unit)->ByteArray)?,
     private val deliver:suspend (String,JSONObject)->Unit){
     private val transfers=BackupTransfer(24*1024*1024);private val inflight=AtomicInteger()
-    private val stream=NativeSourceResultStream{domain,id->source==PersonalSourceKind.MINDMAPS&&source.accepts(id)
+    private val stream=NativeSourceResultStream{domain,id->source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS)&&source.accepts(id)
         &&domain==if(id.startsWith("personal-mindmap-image:"))"attachment" else source.domain}
     @JavascriptInterface fun postChunk(id:String,index:Int,last:Boolean,text:String){
         if(!active.get()||result.isCompleted)return
@@ -180,12 +183,12 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                         assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
                     }
                     "result-part"->{
-                        check(source==PersonalSourceKind.MINDMAPS){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","id","kind","part"));val id=value.getString("id")
+                        check(source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS)){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","id","kind","part"));val id=value.getString("id")
                         check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_AURORA_BRIDGE_INVALID"}
                         stream.part(value.getJSONObject("part"));assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,JSONObject().put("value",true))
                     }
                     "complete-stream"->{
-                        check(source==PersonalSourceKind.MINDMAPS){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","kind","protocol","complete","remoteCount","localCount"))
+                        check(source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS)){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","kind","protocol","complete","remoteCount","localCount"))
                         check(E2eeCommands.integer(value.get("protocol"))==1L&&value.get("complete") is Boolean){"E2EE_AURORA_BRIDGE_INVALID"};assertCurrent()
                         stream.finish(value.getBoolean("complete"),E2eeCommands.integer(value.get("remoteCount")),E2eeCommands.integer(value.get("localCount"))){reconciliation->
                             if(!active.get()||!completed.compareAndSet(null,reconciliation))false

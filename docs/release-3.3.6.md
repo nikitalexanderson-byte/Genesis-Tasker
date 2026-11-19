@@ -1,8 +1,8 @@
 # Подготовка GENESIS 3.3.6
 
-Актуальный срез19 ноября: реализованы7/20 реальных source categories; это не
-процент готовности релиза. Для Physis добавлены legacy readers и защита normal
-store operations; полный source adapter ещё не готов. Остальные13 источников, полный product lifecycle,
+Актуальный срез19 ноября: реализованы8/20 реальных source categories; это не
+процент готовности релиза. Physis получил web/native capture/reconciliation,
+сохранение форм/очередей/ротации и проверенное чтение с новым root. Остальные12 источников, полный product lifecycle,
 shared/files/automation, archives/Drive/local-only recovery, direct upgrades,
 48 системных сценариев и14-language semantic review остаются обязательными.
 Проверяемый остаток по каждому исходному сценарию —
@@ -1251,3 +1251,60 @@ new-root readback, bootstrap/unlock/close/recovery и весь оставший�
 shared/files/backup/original48/14-language/independent-review охват обязательны.
 Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены;
 выпуска3.3.6 и публикации в этом инкременте нет.
+
+## ФЮЗИС: полный source capture/reconciliation и чтение с новым root,19 ноября
+
+Добавлен восьмой реальный source adapter: `personal.physis`, web и native.
+Owner-only signed pages всех4 retained tables сводятся с реальными memory stores,
+очередями, удалениями, точными uncertain request/ciphertext IDs, обоими ключами
+незавершённой ротации и44 читателями mounted/detached форм в12 исходных файлах.
+Snapshot сохраняет old keys только в локальном protected source journal до IO;
+новые remote/local output placements их не содержат. Необранные варианты,
+исходные receipts, requests и формы остаются device-local history-only; старые
+мутации не replayed. Locked/unknown/corrupt/неполный источник не становится empty.
+
+Navigation сохраняет модель/детаченные формы в памяти активной сессии, logout
+закрывает её. Open/bootstrap/unlock/account wrapping и первая reload получили
+один owner permit с borrowed HTTP/crypto; queued exclusive migration не создаёт
+nested-lock deadlock. Асинхронные form/file/import tasks запрещают capture до
+своего завершения; глобальная product freeze/review/new-format editor UI ещё нужна.
+Used ID без row и без ненулевого pruned checkpoint теперь останавливает перенос:
+сначала regression воспроизвёл неправильное принятие, затем прошёл с исправлением.
+
+Native фиксирует отсутствие собственного Physis repository явно, но читает
+серверный vault. Room/LocalCipher authority сохраняется под новым root и не
+попадает в isolated JS; capability ограничена точным captured vault/records и
+закрывается после job/account change. Shared strict parser видит raw originals.
+Независимый v1 recovery остаётся native. Вывод передаётся частями с backpressure.
+
+Focused Physis69/69, full JS1628/1628, types/scoped lint/web build PASS. Настоящие
+Chromium/React формы, WebCrypto, IndexedDB и signed coordinator —29 assertions
+PASS: detached профиль/некорректная числовая строка, protected capture до IO,
+уничтожение старой модели, uncertain commit/restart, cold unlock/new-root readback,
+оба варианта и инертная исходная queue. Старые plaintext/keys/recovery secret
+не появились в signed transport/IndexedDB.
+
+Native build01 SUCCESS17m38s, build02 SUCCESS2m32s, final build03 SUCCESS1m52s.
+JVM1202 total /1194 passed /8 прежних opt-in HTTP skipped /0 failed,217 suites,
+включая6 новых. Lint0 errors/206 прежних warnings/8 hints; new source findings0.
+API34 и35: по7/7 PASS (6 Physis +1 existing Mindmaps source), failures/skips0.
+Проверены native account-v2/recovery-v1, actual Room/Keystore/new-root storage,
+alias-loss resume, duplicates, account switch и local recovery history>16MiB.
+
+Initial device runs4/6 каждый выявили synthetic fixture mismatch: Android
+JSONObject.quote экранирует `/` внутри base64 DEK, а исходный WebCrypto format
+имеет ровно46 plaintext/62 cipher bytes. Исправлен fixture с явным46-byte assert;
+строгий reader сохранён. Main APK после этого byte-identical build02, test APK
+обновлён; весь набор повторён. Final main SHA256
+`C77B032005E52320B2B81F7D3CE3078E4C6BA452230E0CD025554E7335465398`, test
+`E853769C3269A11B699898AD417AC335E9BE85D71F06E6F02164B9A60494E935`.
+Эмуляторы остановлены. Source checks44546379203 на предыдущем2361d28f полностью
+SUCCESS, включая Android и web/API/browser; это не CI нового незакоммиченного кода.
+
+Точные evidence/ограничения — `e2ee-336-physis-source.md`. Coverage8/20 является
+счётчиком source categories. Остальные12, полные product lifecycle/security UI/
+normal writes/restore forms, API26 compatible runtime, большие совокупные captures,
+shared/files/automation/archives/Drive, recovery/direct upgrades, исходные48,
+14-language semantic acceptance и independent human crypto review остаются.
+Production3.3.5/149, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены.
+Выпуска, Deploy, Play upload или установки на личное устройство не было.

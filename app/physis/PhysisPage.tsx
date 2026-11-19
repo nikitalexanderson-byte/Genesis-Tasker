@@ -1,8 +1,9 @@
 "use client";
+import { usePhysisMigrationCapture, PhysisMigrationProvider } from './migration-editors';
 import { Fragment, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import webHeaderCopy from './web-header-copy.json';
-import { LOCAL_SESSION_ENDED_EVENT, PERSONAL_DOCUMENT_READY_EVENT, captureAccountSessionGuard, personalDocumentAccess, physisRequest } from '../cloud-sync';
+import { LOCAL_SESSION_ENDED_EVENT, PERSONAL_DOCUMENT_READY_EVENT, captureAccountSessionGuard, withPhysisAccountOperation } from '../cloud-sync';
 import { calendarContext } from '../calendar-context';
 import type { CalendarMode } from '../calendar-data';
 import { IconActionButton } from '../IconActionButton';
@@ -11,6 +12,7 @@ import { useDialogAccessibility } from '../use-dialog-accessibility';
 import { translateText, type Language } from '../i18n';
 import { openPhysisAccount, type VaultState } from './account-session';
 import { PhysisMemoryStore } from './store';
+import { rememberPhysisSession, retainedPhysisSession, forgetPhysisSession } from './session-memory';
 import { editPhysisRecord, newPhysisRecord, physisRecords, type PhysisFeatureProps, type PhysisSettings } from './types';
 import { METRICS, type Measurement } from './care-domain';
 import { customMetricDefinitions } from './custom-metric-domain';
@@ -30,7 +32,7 @@ import { Field, NumberField, usePhysisAction } from './fields';
 import './physis.css';
 
 type PageName = 'overview' | 'today' | 'programs' | 'control' | 'exercises' | 'diary' | 'foods' | 'intakes' | 'drugs';
-type KeyState = { key: CryptoKey; model: PhysisMemoryStore };
+type KeyState = { model: PhysisMemoryStore };
 type Props = { owner: string; language: string; calendarMode: CalendarMode; inputCalendarMode: CalendarMode; timeZone: string; settingsRequest?: number; weekStart?: 'sunday' | 'monday'; webHeaderEnabled?: boolean; webHeaderTarget?: HTMLElement | null };
 type Area = 'training' | 'nutrition' | 'care' | 'monitoring';
 const GROUPS: { id: Area; title: string; subtitle: string; icon: HealthIconName; pages: [PageName, string][] }[] = [
@@ -68,15 +70,21 @@ export function PhysisPage(props: Props) {
     const check = () => { active(); if (epoch !== generation.current) throw new Error('PHYSIS_SESSION_ENDED'); };
     pending.current = true; setBusy(true); setError('');
     let model: PhysisMemoryStore | undefined;
-    try {
-      const access = personalDocumentAccess(props.owner); access.check();
-      const result = await openPhysisAccount(props.owner, access, physisRequest, check, legacy); check();
+    try { await withPhysisAccountOperation(props.owner, async ({account,request,permit}) => {
+      const retained = retainedPhysisSession(props.owner);
+      if (retained) {
+        check(); keyRef.current = { model: retained.model }; setKeys(keyRef.current); setVaultState(retained.vaultState); setSecret(''); return;
+      }
+      account.check();
+      const result = await openPhysisAccount(props.owner, account, request, check, legacy); check();
       setVaultState(result.state);
       if (result.key) {
         model = new PhysisMemoryStore(props.owner, result.key, result.state.vault!.keyVersion);
-        await model.reload(); check();
-        keyRef.current = { key: result.key, model }; setKeys(keyRef.current); setSecret('');
+        await model.reload(permit); check();
+        rememberPhysisSession(props.owner, model, result.state);
+        keyRef.current = { model }; setKeys(keyRef.current); setSecret('');
       }
+    });
     } catch (failure) {
       model?.destroy();
       if (epoch === generation.current) setError(failure instanceof Error ? failure.message : 'Не удалось открыть Фюзис.');
@@ -85,16 +93,17 @@ export function PhysisPage(props: Props) {
     }
   }, [props.owner]);
   useEffect(() => {
-    const end = () => { generation.current++; pending.current = false; keyRef.current?.model.destroy(); keyRef.current = null; setKeys(null); setVaultState(null); setSecret(''); };
+    const end = (close = true) => { generation.current++; pending.current = false; if (close) forgetPhysisSession(props.owner); keyRef.current = null; setKeys(null); setVaultState(null); setSecret(''); };
+    const sessionEnded = () => end();
     const retry = () => { void open(); };
     void open();
-    window.addEventListener(LOCAL_SESSION_ENDED_EVENT, end);
+    window.addEventListener(LOCAL_SESSION_ENDED_EVENT, sessionEnded);
     window.addEventListener(PERSONAL_DOCUMENT_READY_EVENT, retry);
     window.addEventListener('online', retry);
-    return () => { end(); window.removeEventListener(LOCAL_SESSION_ENDED_EVENT, end); window.removeEventListener(PERSONAL_DOCUMENT_READY_EVENT, retry); window.removeEventListener('online', retry); };
-  }, [open]);
+    return () => { end(false); window.removeEventListener(LOCAL_SESSION_ENDED_EVENT, sessionEnded); window.removeEventListener(PERSONAL_DOCUMENT_READY_EVENT, retry); window.removeEventListener('online', retry); };
+  }, [open, props.owner]);
   return <div className="physis" data-physis-private="true">
-    {keys ? <UnlockedPhysis {...props} keys={keys} vaultState={vaultState!} /> : <><PhysisHero language={props.language} /><section className="physis-panel physis-lock">
+    {keys ? <PhysisMigrationProvider model={keys.model}><UnlockedPhysis {...props} keys={keys} vaultState={vaultState!} /></PhysisMigrationProvider> : <><PhysisHero language={props.language} /><section className="physis-panel physis-lock">
       {vaultState?.vault?.version === 1 ? <><h2>Перенести сохранённые данные</h2><p>Эти записи были сохранены со старым паролем Фюзиса. Введите его один раз, чтобы подключить их к общему аккаунту. После переноса Фюзис будет открываться вместе с сайтом.</p>
         <form className="physis-form" onSubmit={e => { e.preventDefault(); void open({ secret, method }); }}>
           <div className="physis-tabs"><button type="button" aria-pressed={method === 'password'} onClick={() => { setMethod('password'); setSecret(''); }}>Прежний пароль</button><button type="button" aria-pressed={method === 'recovery'} onClick={() => { setMethod('recovery'); setSecret(''); }}>Код восстановления</button></div>
@@ -107,6 +116,7 @@ export function PhysisPage(props: Props) {
 }
 
 function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState }) {
+
   const webCopy = webHeaderCopy[props.language as keyof typeof webHeaderCopy] ?? webHeaderCopy.en;
   const referenceCatalog = useReferenceCatalog(props.owner);
   const { keys: { model }, vaultState } = props;
@@ -121,7 +131,8 @@ function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState 
   const setPage = (next: PageName) => setPages(current => ({ ...current, [area]: next }));
   const openIntakes = () => { setArea('care'); setPages(current => ({ ...current, care: 'intakes' })); };
   const [editorEpoch, setEditorEpoch] = useState(0);
-  const [now, setNow] = useState(() => Date.now()); const action = usePhysisAction();
+  const [now, setNow] = useState(() => Date.now());
+  usePhysisMigrationCapture('PhysisPage.UnlockedPhysis',()=>({area,pages,settingsOpen,personalOpen,settingsSaved,editorEpoch,now})); const action = usePhysisAction();
   const settingsRecord = physisRecords<PhysisSettings>(store, 'settings')[0];
   const settings = { ...(settingsRecord?.data ?? defaultPhysisSettings(props)), calendarMode: props.calendarMode }; const context = calendarContext({ timeZone: settings.timeZone });
   const feature: PhysisFeatureProps = { store, settings, context, language: props.language, weekStart: props.weekStart, referenceCatalog };
@@ -184,7 +195,9 @@ function PhysisSettingsDialog({ open, onClose, language, children }: { open: boo
 }
 
 function PhysisSettingsForm({ store, settings, onSaved }: PhysisFeatureProps & { onSaved: () => void }) {
-  const [draft, setDraft] = useState(settings); const action = usePhysisAction();
+
+  const [draft, setDraft] = useState(settings);
+  usePhysisMigrationCapture('PhysisPage.PhysisSettingsForm',()=>({draft})); const action = usePhysisAction();
   const change = (patch: Partial<PhysisSettings>) => setDraft(s => ({ ...s, ...patch }));
   const customDefinitions = customMetricDefinitions(draft, physisRecords<Measurement>(store, 'measurement').map(record => record.data));
   const calendarOptions = <><option value="profane">Григорианский</option><option value="sacred">Сакральный</option><option value="lunar">Лунный</option></>;

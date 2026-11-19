@@ -1,5 +1,5 @@
 import { captureAccountSessionGuard, physisLegacyAccess } from '../cloud-sync';
-import { MAX_PHYSIS_PLAINTEXT_BYTES, openPhysis, sealPhysis, type PhysisEnvelope } from './crypto';
+import { MAX_PHYSIS_PLAINTEXT_BYTES, openPhysis, sealPhysis, toBase64, type PhysisEnvelope } from './crypto';
 import type { PhysisRecord, PhysisStore, SaveState } from './types';
 import { validatePhysisRecord } from './validation';
 import { registerBackupSource } from '../backup-sources.ts';
@@ -12,6 +12,16 @@ type Pending = { requestId: string; records: PhysisRecord[]; deletes: string[]; 
 type RotationResult = { revision: number; cursor: number; keyVersion: number };
 type Rotation = { key: CryptoKey; vaultText: string; expectedRevision: number; payload?: string;
   result?: RotationResult; uncertain?: boolean; inFlight: Promise<RotationResult> | null };
+/** This value is for the new-root-protected local migration journal only. It
+ * contains old keys and exact retry bodies; it must never enter remote content. */
+export type PhysisMigrationStoreMemory = {
+  ownerId: string; keyVersion: number; key: string; cursor: number;
+  localGeneration: number; reloadGeneration: number;
+  records: PhysisRecord[]; pending: Pending[]; confirmed: WireRecord[];
+  status: SaveState; error: string; editors: { id: string; mounted: boolean; value: unknown }[];
+  rotation: { key: string; vaultText: string; expectedRevision: number; payload: string | null;
+    result: RotationResult | null; uncertain: boolean } | null;
+};
 export type Transport = <T>(path: string, init?: RequestInit) => Promise<T>;
 export type PhysisOperation = <T>(operation:(transport:Transport)=>Promise<T>)=>Promise<T>;
 const errorCode = (error: unknown) => error instanceof Error ? error.message : 'PHYSIS_REQUEST_FAILED';
@@ -49,6 +59,11 @@ export class PhysisMemoryStore {
   private localGeneration = 0;
   private reloadGeneration = 0;
   private rotation: Rotation | null = null;
+  private migrationSerial = 0;
+  private activeOperations = 0;
+  private activeEditorTasks = 0;
+  private migrationEditors = new Map<string, () => unknown>();
+  private detachedEditors = new Map<string, unknown>();
   private alive = true;
   private checkSession: () => void;
   private transport: Transport;
@@ -75,15 +90,67 @@ export class PhysisMemoryStore {
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   getSnapshot = () => this.state;
   private check() { if (!this.alive || !this.key) throw new Error('PHYSIS_LOCKED'); this.checkSession(); }
-  private async run<T>(operation:(transport:Transport)=>Promise<T>):Promise<T> {
-    this.check();return this.operation(async transport=>{
-      this.check();const result=await operation(transport);this.check();return result;
+  private async run<T>(operation:(transport:Transport)=>Promise<T>,permit?:import('../e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<T> {
+    this.check();const admit=permit?physisLegacyAccess(this.owner,permit).withLegacyOperation:this.operation;
+    return admit(async transport=>{
+      this.check();this.activeOperations++;this.migrationSerial++;
+      try { const result=await operation(transport);this.check();return result; }
+      finally { this.activeOperations--;this.migrationSerial++; }
     });
   }
-  private publish(patch: Partial<PhysisStore>) { this.state = { ...this.state, ...patch }; for (const listener of this.listeners) listener(); }
+  private publish(patch: Partial<PhysisStore>) { this.migrationSerial++; this.state = { ...this.state, ...patch }; for (const listener of this.listeners) listener(); }
   private status(status: SaveState, error = '') { this.publish({ status, error }); }
   get hasPending() { return this.pending.length > 0; }
   get rotationPending() { return this.rotation !== null && !this.rotation.result; }
+  assertCurrent() { this.check(); }
+  /** File decoding, import preparation and form validation can precede a store
+   * request. A source capture must refuse until these admitted tasks settle,
+   * including tasks whose component has since unmounted. No nested owner lock. */
+  async withEditorTask<T>(operation: () => Promise<T>): Promise<T> {
+    this.check(); this.activeEditorTasks++; this.migrationSerial++;
+    try { const result = await operation(); this.check(); return result; }
+    finally { this.activeEditorTasks--; this.migrationSerial++; }
+  }
+  /** Unmount retains the last form state in memory. A later source capture must
+   * include it even when that form is no longer mounted. No browser persistence. */
+  registerMigrationEditor(capture: () => unknown): () => void {
+    this.check(); const id = crypto.randomUUID();
+    this.migrationSerial++; this.migrationEditors.set(id, capture);
+    return () => {
+      if (!this.migrationEditors.has(id)) return;
+      // Capture before unregistering: a failing reader cannot silently drop a draft.
+      if (this.alive) this.detachedEditors.set(id, structuredClone(capture()));
+      this.migrationEditors.delete(id); this.migrationSerial++;
+    };
+  }
+  /** The owner migration fence drains admitted operations before calling this.
+   * No reload/bootstrap, pruning, acknowledgement, rotation or network IO here.
+   * Refuse concurrent mutation while WebCrypto exports the retained old keys. */
+  async captureMigrationMemory(): Promise<PhysisMigrationStoreMemory> {
+    this.check();
+    if (this.activeOperations || this.activeEditorTasks || this.busy || this.rotation?.inFlight) throw new Error('E2EE_PHYSIS_OPERATION_PENDING');
+    const serial = this.migrationSerial, key = this.key!, rotation = this.rotation;
+    const editors = () => [...this.detachedEditors].map(([id, value]) => ({ id, mounted: false, value }))
+      .concat([...this.migrationEditors].map(([id, capture]) => ({ id, mounted: true, value: capture() })));
+    const memory = structuredClone({ ownerId: this.owner, keyVersion: this.keyVersion, cursor: this.cursor,
+      localGeneration: this.localGeneration, reloadGeneration: this.reloadGeneration,
+      records: this.state.records, pending: this.pending, confirmed: [...this.confirmed.values()],
+      status: this.state.status, error: this.state.error,
+      editors: editors(),
+      rotation: rotation ? { vaultText: rotation.vaultText, expectedRevision: rotation.expectedRevision,
+        payload: rotation.payload ?? null, result: rotation.result ?? null, uncertain: rotation.uncertain ?? false } : null });
+    let raw: Uint8Array | undefined, next: Uint8Array | undefined;
+    try {
+      raw = new Uint8Array(await crypto.subtle.exportKey('raw', key));
+      if (rotation) next = new Uint8Array(await crypto.subtle.exportKey('raw', rotation.key));
+      this.check();
+      if (serial !== this.migrationSerial || this.activeOperations || this.activeEditorTasks || this.busy || rotation !== this.rotation || rotation?.inFlight
+        || JSON.stringify(memory.editors) !== JSON.stringify(editors()))
+        throw new Error('E2EE_PHYSIS_CAPTURE_CHANGED');
+      if (raw.length !== 32 || next && next.length !== 32) throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');
+      return { ...memory, key: toBase64(raw), rotation: memory.rotation ? { ...memory.rotation, key: toBase64(next!) } : null };
+    } finally { raw?.fill(0); next?.fill(0); }
+  }
   private checkEditable() {
     this.check();
     if (this.rotation) throw new Error('Дождитесь подтверждения смены ключа. При сбое повторите её с сохранённым кодом восстановления.');
@@ -106,8 +173,8 @@ export class PhysisMemoryStore {
     }
     throw new Error('Слишком много записей для этой версии клиента.');
   }
-  async reload() {
-    return this.run(transport=>this.reloadWith(transport));
+  async reload(permit?:import('../e2ee/legacy-transport-fence').LegacyOperationPermit) {
+    return this.run(transport=>this.reloadWith(transport),permit);
   }
   private async reloadWith(transport:Transport) {
     this.check(); if (this.pending.length) throw new Error('Сначала сохраните изменения или явно отмените локальный вариант.');
@@ -182,7 +249,7 @@ export class PhysisMemoryStore {
           }
           // Never retain a partially encrypted batch after an exception.
           if (encodedBytes({ requestId: item.requestId, changes }) > MAX_BATCH_BYTES) throw new Error('PHYSIS_BATCH_TOO_LARGE');
-          item.changes = changes;
+          item.changes = changes; this.migrationSerial++;
         }
         this.check();
         const response = await transport<{ records: Acknowledgement[]; cursor: number }>('/records', {
@@ -202,7 +269,7 @@ export class PhysisMemoryStore {
           const change = item.changes.find(value => value.id === record.id)!;
           this.confirmed.set(record.id, { ...record, envelope: change.operation === 'delete' ? null : change.envelope! });
         }
-        this.cursor = response.cursor; this.pending.shift();
+        this.cursor = response.cursor; this.pending.shift(); this.migrationSerial++;
       }
       this.status('saved');
     } catch (error) {
@@ -246,7 +313,7 @@ export class PhysisMemoryStore {
     this.check(); if (this.pending.length || this.busy) return Promise.reject(new Error('Сначала сохраните все изменения.'));
     if (this.rotation && (this.rotation.key !== newKey || this.rotation.vaultText !== vaultText || this.rotation.expectedRevision !== expectedVaultRevision))
       return Promise.reject(new Error('Смена ключа ещё не подтверждена. Повторите предыдущую попытку с тем же кодом восстановления.'));
-    this.rotation ??= { key: newKey, vaultText, expectedRevision: expectedVaultRevision, inFlight: null };
+    if (!this.rotation) { this.rotation = { key: newKey, vaultText, expectedRevision: expectedVaultRevision, inFlight: null }; this.migrationSerial++; }
     const candidate = this.rotation;
     if (candidate.result) return Promise.resolve(candidate.result);
     if (candidate.inFlight) return candidate.inFlight;
@@ -265,14 +332,14 @@ export class PhysisMemoryStore {
         const payload = JSON.stringify({ requestId: crypto.randomUUID(), expectedRevision: candidate.expectedRevision,
           expectedCursor: this.cursor, vault: JSON.parse(candidate.vaultText), records });
         if (new TextEncoder().encode(payload).byteLength > 48 * 1024 * 1024) throw new Error('Пакет смены ключа слишком велик.');
-        candidate.payload = payload;
+        candidate.payload = payload; this.migrationSerial++;
       }
       this.check();
       const result = await transport<RotationResult>('/rotate', { method: 'POST', body: candidate.payload });
       this.check();
       if (result.revision !== candidate.expectedRevision + 1 || result.keyVersion !== this.keyVersion + 1 || !Number.isSafeInteger(result.cursor))
         throw new Error('PHYSIS_INVALID_RESPONSE');
-      candidate.result = result;
+      candidate.result = result; this.migrationSerial++;
       return result;
     } catch (error) {
       this.check();
@@ -282,12 +349,14 @@ export class PhysisMemoryStore {
       const definitive = status !== undefined && [400, 403, 409, 413, 415].includes(status);
       if (!candidate.payload || definitive && !candidate.uncertain) this.rotation = null;
       else candidate.uncertain = true;
+      this.migrationSerial++;
       throw error;
     }
   }
   destroy() {
     this.unregisterBackup();
     this.alive = false; this.key = null; this.pending = []; this.confirmed.clear(); this.rotation = null;
+    this.migrationEditors.clear(); this.detachedEditors.clear();
     this.publish({ records: [], error: '', status: 'saved' }); this.listeners.clear();
   }
 }

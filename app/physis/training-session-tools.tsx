@@ -1,3 +1,4 @@
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useState } from 'react';
 import { usePhysisAction } from './fields';
 import { exerciseTagLabel } from './exercise-media';
@@ -14,9 +15,11 @@ export function ExerciseReplacement({ exercise, choices, en, allowProgram, onRep
   exercise: TrainingExercise; choices: ExerciseChoice[]; en: boolean; allowProgram: boolean;
   onReplace: (choice: ExerciseChoice, scope: 'today' | 'program') => Promise<void>;
 }) {
+
   const t = (ru: string, english: string) => en ? english : ru;
   const [equipment, setEquipment] = useState(''); const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(''); const [scope, setScope] = useState<'today' | 'program'>('today');
+  usePhysisMigrationCapture('training-session-tools.ExerciseReplacement',()=>({equipment,query,selected,scope}));
   const action = usePhysisAction();
   const alternatives = choices.filter(choice => choice.id !== exercise.exerciseId && choice.data.movement === exercise.snapshot.movement);
   const visible = alternatives.filter(choice => (!equipment || choice.data.equipment === equipment) && `${choice.data.name} ${choice.data.nameEn}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
