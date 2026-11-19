@@ -23,10 +23,22 @@ import ru.genesis.calendar.data.*
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import ru.genesis.calendar.security.E2eeEnvelope
+import ru.genesis.calendar.security.E2eeMigrationSourceContext
 
 /** Run on the task-owned API26 image with its original Chromium69 provider. */
 class NativeWebRuntimeGateTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
+    @Test fun oldProviderRefusesTheMapSourceEngineBeforeAnyLegacyOpeningOrEditorCreation()=runBlocking{
+        val app=compose.activity.application as GenesisApplication;assertNotNull(nativeWebRuntimeProblem(app,"en"));val calls=AtomicInteger()
+        val owner="runtime-map-owner";val scope="personal:$owner";val context=E2eeMigrationSourceContext(owner,scope,"migration",1,E2eeEnvelope.encode(ByteArray(32)),2)
+        val local=JSONObject().put("ownerId",owner).put("scopeId",scope).put("memory",JSONObject().put("legacyKey",""))
+        val remote=JSONObject().put("ownerId",owner).put("scopeId",scope).put("legacyKey",JSONObject().put("keyMode","account").put("key",JSONObject.NULL))
+        val before=local.toString()+remote.toString()
+        try{NativeMindmapsSourceRuntime(app).reconcile(local,emptyList(),context,remote,{}){_,_->calls.incrementAndGet();error("Unexpected old source opening")};fail("Expected old provider refusal")}
+        catch(error:IllegalStateException){assertEquals("E2EE_WEB_RUNTIME_UPDATE_REQUIRED",error.message)}
+        assertEquals(0,calls.get());assertEquals(before,local.toString()+remote.toString())
+    }
     @Test fun oldProviderShowsAllLocalizedFallbacksWithoutOpeningAnEditorOrChangingData(){
         val app=compose.activity.application as GenesisApplication
         check(BuildConfig.DEBUG && app.packageName.contains(".qa"))

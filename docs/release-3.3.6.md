@@ -1056,3 +1056,29 @@ source-review UI/OS savers и alias-loss recovery ещё нужны. Coverage ad
 archives/Drive/local-only backup/direct upgrades/original48/14-language semantics/
 independent crypto review остаются до activation/release. Production3.3.5/149,
 floors0/cutover off/GENESIS_DEPLOY_ANDROID=false; полного деплоя3.3.6 ещё нет.
+
+## 19 ноября: native result streaming для больших историй mindmaps
+
+Снят single-message output cap16MiB для packaged source. JS передаёт256KiB parts
+с backpressure; native проверяет exact fields, placement/domain/object ID,
+sequence/size/EOF и локальную checksum до публикации. В HTTP plaintext hash не
+добавлен; existing new-root/file-key/chunk/manifest crypto сохранён. Failed или
+отменённый transfer не публикуется; повторный finish/late part не стирает уже
+переданные coordinator bytes. Native old-WebView gate проверяется до bulk input.
+
+Full JS1587/1587, typecheck/scoped lint PASS. Native build02 SUCCESS18m8s после
+исправления Int/Long comparison; JVM1180 tests/1172 passed/8 opt-in HTTP skipped,
+0 failures; lint0 errors/206 existing warnings/8 hints. Actual API34/API35:
+74/74 каждый, API26:18/18 appropriate key/JCA/old-provider cases, failures/skips0.
+25-version result17,644,546 bytes прошёл на API34/35 с normal192MiB Java heap:
+old source intact, exact final note/history/images read with new root after old
+key/alias removal. API26Chromium69 — только fallback/refusal, не successful
+migration. Сохранены84 PNGs; visually inspected RU dark/EN light at font1.3,
+all14-language fallback assertions passed. Все3 emulators остановлены.
+
+Evidence/точные limits: `e2ee-336-native-source-stream.md` и runtime summaries02.
+Native16MiB local capture, single Room row/CursorWindow, bulk remote/input
+aggregation и alias loss between prepare/reconcile ещё требуют acceptance.
+Coverage7/20 не изменился; full product/recovery/upgrades/shared/backups/original48/
+14-language semantics/independent crypto review обязательны. Production3.3.5/149,
+floors0/cutover off/GENESIS_DEPLOY_ANDROID=false; release/version bump не выполнен.

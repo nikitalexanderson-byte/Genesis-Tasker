@@ -59,6 +59,21 @@ class MindmapsMigrationSourceTest {
             for(revision in 1..25)response.getJSONArray("versions").put(sealedRow(revision,"Synthetic historical map $revision"))
             response.getJSONArray("receipts").put(JSONObject().put("map_id","server-map").put("operation_id","uncertain-server-write").put("payload_hash","a".repeat(64)).put("revision",29))
         }
+        fun largeServerHistory(){
+            val body="x".repeat(12000)
+            fun row(revision:Int,title:String):JSONObject{
+                val value=map("server-map",title);val nodes=value.getJSONArray("nodes")
+                for(index in 0 until 54)nodes.put(JSONObject().put("id","node-$index").put("parentId","root").put("kind","idea").put("text","Synthetic child $index").put("note",body))
+                check(value.toString().toByteArray().size<2000000)
+                val packet=WorkspaceCipher.encrypt(value.toString().toByteArray(),oldKey,"genesis-mindmap-v1:$owner:map:server-map".toByteArray())
+                return JSONObject().put("map_id","server-map").put("revision",revision).put("schema_version",2).put("iv",packet.iv).put("ciphertext",packet.ciphertext).put("updated_at","2026-11-19T10:00:00Z")
+            }
+            val versions=JSONArray();var cipherBytes=0
+            for(revision in 1..25){val version=row(revision,"Synthetic large version $revision");cipherBytes+=version.getString("ciphertext").length;versions.put(version)}
+            check(cipherBytes>16*1024*1024&&cipherBytes<40000000)
+            val head=row(30,"Synthetic large acknowledged map");head.remove("map_id");head.put("id","server-map")
+            response.put("maps",JSONArray().put(head)).put("versions",versions)
+        }
         private val engine=NativeMindmapsSourceRuntime(app)
         val source by lazy{E2eeNativeMindmapsSource(owner,scope,captureRows={app.database.withTransaction{check();E2eeMindmapsRows(app.database.dao().backupDocuments(account).filter{it.kind.startsWith("mindmap")||it.kind=="aurora-account-key"},0,null,
             JSONObject().put("records",JSONArray()).put("editors",JSONArray().put(JSONObject().put("source","new-dialog").put("document",JSONObject.NULL).put("revision",0).put("state",JSONObject().put("title","Synthetic unfinished new map")))))
@@ -94,6 +109,16 @@ class MindmapsMigrationSourceTest {
         val f=Rig();try{f.seed();f.writeRoot(f.root.toString().replace("\"dirty\":true","\"dirty\":true,\"d\\u0069rty\":false"));val before=f.originals()
             try{withTimeout(90000){f.run()};fail("Expected duplicate refusal")}catch(error:IllegalStateException){assertEquals("E2EE_MINDMAPS_SOURCE_INVALID",error.message)}
             assertEquals(before,f.originals());assertNotNull(f.vault.read("local-snapshot","mindmaps-source")?.also{it.bytes.fill(0)})
+        }finally{f.close()}
+    }
+    @Test fun historyAboveTheOldSixteenMiBBridgeCapStreamsCompletelyAndStillOpensWithOnlyTheNewRoot()=runBlocking{
+        val f=Rig();try{f.seed();f.largeServerHistory();val before=f.originals();val result=withTimeout(120000){f.run()}
+            val size=result.content.sumOf{it.bytes.size.toLong()};assertTrue(size>16L*1024*1024);assertTrue(result.complete);assertEquals(1,f.reads.get())
+            for(row in result.content){f.vault.write(listOf(UnlockedE2eeVault.Write(row.domain,row.objectId,row.bytes,null)));row.bytes.fill(0)}
+            result.localContent.forEach{it.bytes.fill(0)};f.oldKey.fill(0);f.eraseAlias()
+            val index=requireNotNull(f.vault.read("mindmap","personal-mindmap-index-v1"));val versionId=try{val versions=JSONObject(index.bytes.toString(Charsets.UTF_8)).getJSONArray("versions");assertEquals(25,versions.length());versions.getJSONObject(24).getString("objectId")}finally{index.bytes.fill(0)}
+            val last=requireNotNull(f.vault.read("mindmap",versionId));try{val value=JSONObject(last.bytes.toString(Charsets.UTF_8)).getJSONObject("document");assertEquals("Synthetic large version 25",value.getString("title"));assertEquals("x".repeat(12000),value.getJSONArray("nodes").getJSONObject(54).getString("note"))}finally{last.bytes.fill(0)}
+            assertEquals(before,f.originals());println("SYNTHETIC_MINDMAP_STREAM decodedBytes=$size heapLimit=${Runtime.getRuntime().maxMemory()}")
         }finally{f.close()}
     }
     @Test fun lostKeystoreAndUnknownRetainedDocumentsStopBeforeAnySourceRequest()=runBlocking{

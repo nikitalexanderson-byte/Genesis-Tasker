@@ -68,6 +68,7 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
         check(local.get("ownerId")==owner&&local.get("scopeId")==scope&&remote.get("ownerId")==owner&&remote.get("scopeId")==scope){"E2EE_SCOPE_BINDING_MISMATCH"}
         if(source==PersonalSourceKind.ADVICE)check(!local.has("legacyKey")&&local.optJSONObject("memory")?.has("legacyKey")!=true&&!remote.has("legacyKey")&&publicBytes!=null){"E2EE_KEY_BRIDGE_FORBIDDEN"}
         else check(local.getJSONObject("memory").getString("legacyKey").isEmpty()&&remote.getJSONObject("legacyKey").isNull("key")){"E2EE_KEY_BRIDGE_FORBIDDEN"}
+        withContext(Dispatchers.Main.immediate){assertCurrent();check(nativeWebRuntimeProblem(this@NativePersonalSourceRuntime.context,"en")==null){"E2EE_WEB_RUNTIME_UPDATE_REQUIRED"}}
         val id=UUID.randomUUID().toString();val outcome=CompletableDeferred<E2eePathReconciliation>()
         val operations=CoroutineScope(SupervisorJob(currentCoroutineContext()[Job])+Dispatchers.IO)
         val completed=AtomicReference<E2eePathReconciliation?>();var handedOff=false
@@ -91,7 +92,8 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
                     .put("context",JSONObject().put("ownerId",owner).put("scopeId",scope).put("migrationId",context.migrationId).put("fence",context.fence).put("sourceHash",context.sourceHash).put("generation",context.generation))
                     .put("remote",remote)
                 val inputBytes=input.toString().toByteArray(Charsets.UTF_8)
-                val encoded=try{check(inputBytes.size<=48*1024*1024){"E2EE_MIGRATION_TOO_LARGE"};E2eeEnvelope.encode(inputBytes)}finally{inputBytes.fill(0)}
+                val maximum:Long=if(source==PersonalSourceKind.MINDMAPS)E2eeMigrationSources.BYTE_BUDGET.toLong() else 48L*1024*1024
+                val encoded=try{check(inputBytes.size.toLong()<=maximum){"E2EE_MIGRATION_TOO_LARGE"};E2eeEnvelope.encode(inputBytes)}finally{inputBytes.fill(0)}
                 withContext(Dispatchers.Main.immediate){
                     assertCurrent();check(nativeWebRuntimeProblem(this@NativePersonalSourceRuntime.context,"en")==null){"E2EE_WEB_RUNTIME_UPDATE_REQUIRED"}
                     val started=AtomicBoolean(false)
@@ -144,6 +146,8 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
     private val openLegacy:suspend (JSONObject,String)->Any,private val publicBytes:(suspend (String,()->Unit)->ByteArray)?,
     private val deliver:suspend (String,JSONObject)->Unit){
     private val transfers=BackupTransfer(24*1024*1024);private val inflight=AtomicInteger()
+    private val stream=NativeSourceResultStream{domain,id->source==PersonalSourceKind.MINDMAPS&&source.accepts(id)
+        &&domain==if(id.startsWith("personal-mindmap-image:"))"attachment" else source.domain}
     @JavascriptInterface fun postChunk(id:String,index:Int,last:Boolean,text:String){
         if(!active.get()||result.isCompleted)return
         try{transfers.append(id,index,last,text)?.let(::postMessage)}catch(_:Throwable){fail("E2EE_AURORA_BRIDGE_INVALID")}
@@ -175,6 +179,19 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                         }catch(error:Throwable){JSONObject().put("error",sourceCode(error))}
                         assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
                     }
+                    "result-part"->{
+                        check(source==PersonalSourceKind.MINDMAPS){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","id","kind","part"));val id=value.getString("id")
+                        check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_AURORA_BRIDGE_INVALID"}
+                        stream.part(value.getJSONObject("part"));assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,JSONObject().put("value",true))
+                    }
+                    "complete-stream"->{
+                        check(source==PersonalSourceKind.MINDMAPS){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","kind","protocol","complete","remoteCount","localCount"))
+                        check(E2eeCommands.integer(value.get("protocol"))==1L&&value.get("complete") is Boolean){"E2EE_AURORA_BRIDGE_INVALID"};assertCurrent()
+                        stream.finish(value.getBoolean("complete"),E2eeCommands.integer(value.get("remoteCount")),E2eeCommands.integer(value.get("localCount"))){reconciliation->
+                            if(!active.get()||!completed.compareAndSet(null,reconciliation))false
+                            else if(result.complete(reconciliation))true else{completed.compareAndSet(reconciliation,null);false}
+                        }
+                    }
                     "complete"->{
                         E2eeKeys.exact(value,setOf("job","kind","complete","content","localContent"));val rows=value.getJSONArray("content");val privateRows=value.getJSONArray("localContent")
                         check(rows.length()+privateRows.length() in 1..10000){"E2EE_MIGRATION_TOO_LARGE"};val content=mutableListOf<E2eeMigrationContent>();val localContent=mutableListOf<E2eeMigrationContent>();var size=0L;val seen=mutableSetOf<String>()
@@ -199,5 +216,5 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
         }
     }
     private fun fail(code:String){result.completeExceptionally(IllegalStateException(code))}
-    fun clear(){transfers.clear()}
+    fun clear(){transfers.clear();stream.clear()}
 }

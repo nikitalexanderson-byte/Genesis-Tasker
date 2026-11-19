@@ -6,6 +6,7 @@ import {PersonalDiarySource} from '../e2ee/diary-source';
 import {normalizeNativeDiaryCapture} from '../e2ee/diary-native-source';
 import {PersonalMindmapsSource} from '../e2ee/mindmaps-source';
 import {normalizeNativeMindmapsCapture} from '../e2ee/mindmaps-native-source';
+import {streamNativeSourceResults} from '../e2ee/native-source-stream';
 import {PublicAdviceCatalogues} from '../e2ee/advice-catalogue';
 import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
 import {canonicalJson} from './forecast';
@@ -18,7 +19,7 @@ import type {PrivatePathAdapter} from '../e2ee/migration-sources';
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
   resolveChunk:(job:string,id:string,index:number,last:boolean,value:string)=>void;close:()=>void}}}
-const MAX=48*1024*1024,CHUNK=131072,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
+const MAX=128*1024*1024,CHUNK=131072,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const decoder=new TextDecoder('utf-8',{fatal:true});
 let job='',input='',started=false,closed=false;
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:unknown)=>void;chunks:string}>();
@@ -79,7 +80,10 @@ async function run(encoded:string){
     if(mindmapsMetadata!==undefined)(result.localContent??=[]).push({domain:'mindmap',objectId:'personal-mindmap-native-history-v1',bytes:new TextEncoder().encode(JSON.stringify(mindmapsMetadata))});
     const localContent=result.localContent??[];content.push(...[...result.content,...localContent].map(row=>row.bytes));
     const outputPackets=(rows:typeof result.content)=>rows.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes),filename:row.filename??'',mediaType:row.mediaType??'application/json'}));
-    current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});
+    if(value.source==='mindmaps'){
+      const counts=await streamNativeSourceResults(result,part=>ask('result-part',{part}),current);
+      current();send({job,kind:'complete-stream',protocol:1,complete:result.complete,...counts});
+    }else{current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});}
   }catch(error){
     if(!closed)send({job,kind:'error',code:error instanceof Error&&/^E2EE_[A-Z_]{1,100}$/.test(error.message)?error.message:'E2EE_AURORA_RECONCILIATION_FAILED'});
   }finally{local.forEach(bytes=>bytes.fill(0));content.forEach(bytes=>bytes.fill(0));window.GenesisAuroraSourceRuntime.close();}

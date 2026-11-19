@@ -122,11 +122,13 @@ that the product registry is complete. Implemented source adapters are now 7/20;
 this count does not mean seven fully activated product categories.
 
 Server paging and web collection can read valid histories above 16 MiB. Native
-source capture still has a 16 MiB snapshot cap; bridge input/output caps and the
-legacy single Room document/CursorWindow need dedicated large-data integration
-and acceptance. These conditions refuse safely; they must not be represented as
-full large-account migration support. Room saved-map normalization and retained
-wrapped old keys also require explicit older-format/alias-loss recovery tests.
+result streaming now passes an actual 17,644,546-byte, 25-version history on
+API34/35 with the normal 192 MiB Java heap; see
+`e2ee-336-native-source-stream.md`. Native capture still has a 16 MiB snapshot cap,
+remote/input aggregation remains, and the legacy single Room document is subject
+to CursorWindow limits. This is not full large-account acceptance. Room saved-map
+normalization and retained wrapped old keys also require explicit older-format /
+alias-loss recovery tests.
 
 Shared maps/ACL rotations, files/automation, independent Physis sources, archives /
 Drive and local-only backup, clean-device recovery, signed direct upgrades, the
