@@ -49,6 +49,61 @@ object E2eeCommands {
         }
         write(value, 0); output.flush(); return buffer.toByteArray()
     }
+    /** Strict inverse of canonical technical metadata. Private text stays opaque bytes. */
+    fun decodeCanonical(bytes: ByteArray, maximum: Int = MAX_BYTES): Any {
+        if (maximum !in 1..MAX_BYTES || bytes.isEmpty() || bytes.size > maximum) invalid()
+        var at = 0
+        var nodes = 0
+        fun need(count: Int) { if (count < 0 || count > bytes.size - at) invalid() }
+        fun u32(): Long {
+            need(4)
+            var value = 0L
+            repeat(4) { value = (value shl 8) or (bytes[at++].toLong() and 255) }
+            return value
+        }
+        fun read(depth: Int): Any {
+            if (depth > 16 || ++nodes > maximum) invalid()
+            need(1)
+            return when (bytes[at++].toInt() and 255) {
+                0 -> JSONObject.NULL
+                1 -> false
+                2 -> true
+                3 -> {
+                    val high = u32()
+                    val low = u32()
+                    if (high > 0x1fffffL) invalid()
+                    (high shl 32) or low
+                }
+                4 -> {
+                    val count = u32()
+                    if (count > (bytes.size - at).toLong()) invalid()
+                    val size = count.toInt()
+                    repeat(size) { if ((bytes[at + it].toInt() and 255) !in 32..126) invalid() }
+                    String(bytes, at, size, Charsets.US_ASCII).also { at += size }
+                }
+                5 -> {
+                    val count = u32()
+                    if (count > 10000L) invalid()
+                    JSONArray().apply { repeat(count.toInt()) { put(read(depth + 1)) } }
+                }
+                6 -> {
+                    val count = u32()
+                    if (count !in 1L..128L) invalid()
+                    var previous = ""
+                    JSONObject().apply { repeat(count.toInt()) {
+                        val name = read(depth + 1) as? String ?: invalid()
+                        if (!name.matches(Regex("[A-Za-z][A-Za-z0-9]{0,63}")) || name <= previous) invalid()
+                        previous = name
+                        put(name, read(depth + 1))
+                    } }
+                }
+                else -> invalid()
+            }
+        }
+        val value = read(0)
+        if (at != bytes.size) invalid()
+        return value
+    }
     fun commandBytes(source: JSONObject): ByteArray {
         E2eeKeys.exact(source, commandFields)
         if (integer(source.get("protocol")) != 1L) invalid()

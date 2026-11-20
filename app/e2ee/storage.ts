@@ -39,10 +39,15 @@ export class IndexedDbE2eeStorage implements E2eeRecordStorage {
     const db = await this.#database;
     return new Promise<string[]>((resolve, reject) => {
       const transaction = db.transaction('records', 'readonly'); const keys: string[] = [];
+      let limit=false;
       const request = transaction.objectStore('records').openKeyCursor(IDBKeyRange.bound(prefix, prefix + '\uffff'));
-      request.onsuccess = () => { const cursor = request.result; if (cursor) { if (typeof cursor.key === 'string') keys.push(cursor.key); cursor.continue(); } };
+      request.onsuccess = () => { const cursor = request.result; if (cursor) {
+        if (typeof cursor.key !== 'string') { transaction.abort(); return; }
+        if (keys.length===10000) { limit=true;transaction.abort();return; }
+        keys.push(cursor.key);cursor.continue();
+      } };
       transaction.oncomplete = () => resolve(keys);
-      transaction.onerror = transaction.onabort = () => reject(new Error('E2EE_STORAGE_UNAVAILABLE'));
+      transaction.onerror = transaction.onabort = () => reject(new Error(limit?'E2EE_LOCAL_RECORD_LIMIT':'E2EE_STORAGE_UNAVAILABLE'));
     });
   }
   async commit(changes: StorageChange[], signal?: AbortSignal) {
@@ -90,6 +95,25 @@ export class UnlockedE2eeVault {
   constructor(storage: E2eeRecordStorage, scope: VaultScope) { this.storage = storage; this.#scope = scope; }
   lock() { this.#lifecycle++; this.#scope = null; this.#abort.abort(); }
   assertUnlocked() { this.#open(); }
+  /** Technical identity only; no roots, key material or signing capability. */
+  localIdentity() {
+    const scope=this.#open();
+    return Object.freeze({ownerId:scope.ownerId,scopeId:scope.scopeId,deviceId:scope.deviceId});
+  }
+  /** Bounded technical-key discovery, with no plaintext/authority fallback. */
+  async listLocal(domain:E2eeContext['domain'],objectPrefix:string) {
+    assertTechnical(objectPrefix);const scope=this.#open(),lifecycle=this.#lifecycle;
+    const prefix=[scope.ownerId,scope.scopeId,domain].map(part=>`${part.length}:${part}`).join('');
+    const keys=await this.storage.list(prefix);if(lifecycle!==this.#lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');
+    if(keys.length>10000||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
+    for(const key of keys){
+      if(typeof key!=='string'||!key.startsWith(prefix))throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
+      const rest=key.slice(prefix.length),colon=rest.indexOf(':');if(colon<1||!/^[1-9][0-9]{0,2}$/.test(rest.slice(0,colon)))throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
+      const id=rest.slice(colon+1);assertTechnical(id);if(Number(rest.slice(0,colon))!==id.length)throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
+      if(id.startsWith(objectPrefix))ids.push(id);
+    }
+    return ids;
+  }
   #open() { if (!this.#scope) throw new Error('E2EE_UNLOCK_REQUIRED'); return this.#scope; }
   async read(domain: E2eeContext['domain'], objectId: string): Promise<{ serial: number; value: Uint8Array<ArrayBuffer> } | null> {
     const scope = this.#open(), lifecycle = this.#lifecycle;

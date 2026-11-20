@@ -84,6 +84,32 @@ export function canonicalE2eeValue(value: WireValue): Uint8Array<ArrayBuffer> {
   for (const part of parts) { bytes.set(part, offset); offset += part.length; }
   return bytes;
 }
+/** Strict bounded inverse of the established tagged encoding. Technical ASCII
+ * metadata only; source/private text is opaque bytes outside this codec. */
+export function decodeCanonicalE2eeValue(bytes:Uint8Array,maximum=MAX_BYTES):WireValue {
+  const invalid=():never=>{throw new Error('E2EE_INVALID_COMMAND');};
+  if(!(bytes instanceof Uint8Array)||!Number.isSafeInteger(maximum)||maximum<1||maximum>MAX_BYTES||bytes.length<1||bytes.length>maximum)invalid();
+  let at=0,nodes=0;const data=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const requireBytes=(size:number)=>{if(size<0||at+size>bytes.length)invalid();};
+  const u32=()=>{requireBytes(4);const value=data.getUint32(at);at+=4;return value;};
+  function value(depth:number):WireValue {
+    if(depth>16||++nodes>maximum)invalid();requireBytes(1);const tag=bytes[at++];
+    if(tag===0)return null;if(tag===1)return false;if(tag===2)return true;
+    if(tag===3){requireBytes(8);const number=data.getUint32(at)*0x100000000+data.getUint32(at+4);at+=8;if(!Number.isSafeInteger(number))invalid();return number;}
+    if(tag===4){const size=u32();requireBytes(size);const text=bytes.subarray(at,at+size);if(text.some(byte=>byte<32||byte>126))invalid();at+=size;return new TextDecoder('utf-8',{fatal:true}).decode(text);}
+    if(tag===5){const count=u32();if(count>10000)invalid();const rows:WireValue[]=[];for(let index=0;index<count;index++)rows.push(value(depth+1));return rows;}
+    if(tag===6){
+      const count=u32();if(count<1||count>128)invalid();const row:{[key:string]:WireValue}=Object.create(null);let previous='';
+      for(let index=0;index<count;index++){
+        const name=value(depth+1);if(typeof name!=='string'||!/^[A-Za-z][A-Za-z0-9]{0,63}$/.test(name)||name<=previous)return invalid();previous=name;
+        Object.defineProperty(row,name,{value:value(depth+1),enumerable:true,writable:true,configurable:true});
+      }
+      return row;
+    }
+    return invalid();
+  }
+  const result=value(0);if(at!==bytes.length)invalid();return result;
+}
 export type E2eeCommand = { protocol: 1; ownerId: string; scopeId: string; deviceId: string;
   action: string; expectedRevision: number; checkpointHash: string; securityEpoch: number; operationId: string; payload: { [key: string]: WireValue } };
 export type SignedE2eeCommand = { command: E2eeCommand; signature: string };

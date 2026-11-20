@@ -1858,3 +1858,61 @@ nested old ciphers. Legacy32/48/64MiB gates сохранены; coverage9/20 и 
 11 categories/normal lifecycle/shared ACL/files/Drive/48 scenarios/human review
 остаются обязательными. Production3.3.5/149, floors0/pilot/cutover off и
 GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные устройства/версию здесь не меняли.
+
+## Защищённые потоковые снимки: локальный журнал,20 ноября
+
+Добавлены TS/Kotlin source stages в существующем signed-AEAD vault. До producer
+атомарно сохраняются каталог и исходный journal; каждый256KiB chunk и его
+продвижение — одной CAS-транзакцией. Target owner/scope/kind отличаются от
+original device actor и связаны в metadata/technical IDs. Новый строгий decoder
+читает существующий tagged binary, не JSON. Незавершённые/неизвестные остатки,
+отсутствующие/лишние parts, смена actor и частичный EOF явно отказывают; очистки,
+перепривязки и превращения prefix в завершённый снимок нет. Complete stage ещё
+инертен: coordinator pointer/общий reader/reconciliation к нему не подключены.
+
+JS final02 —87/87; scoped ESLint/owned types PASS. Реальный Chromium157/IndexedDB
+final02 —15/15, включая повторное открытие9MiB+13 и65,543-byte paths, сохранение
+неполной попытки, no-space/retirement/EOF/wipe и чтение actual JCA stage.
+Input01 811034B9C6C296E3038B3A7212E20747E93DC250706CA433BCCBAC6897B0E500:
+build SUCCESS18m20s, JVM147/147. Native API26/API34 — по3/3. Только тесты/fixtures
+усилены для final input02
+465616425600287ABDEBE573E05CF47E1BCE42B2739631A843F727691F05807C:
+build SUCCESS2m17s; Main APK и lint XML байт-в-байт совпадают с01. Lint0 errors/
+208 warnings/8 hints, новых issue/file pairs0. JVM147 — evidence01, не новый02 run.
+
+Actual final02 API26/API34 — по4/4,0 fail/skip. Совместный retained input:
+24/17/10MiB files,4 original/replaced/unselected values,2 manifest histories и
+исходные provider/UTF16 units.51MiB оригиналов ->71,305,891 source bytes проходят
+через реальный SQLite stage; после удаления только synthetic old spill alias
+и cold reopening весь поток совпадает с независимым bounded host construction.
+Elapsed95,529/82,304ms(API26/API34), max Java heap512/192MiB; peak heap/SLA не
+заявляются. По2 extracted artifacts каждого результата сверены по хешам.
+
+Публичный JS vector с distinct target owner и неполной/полной попытками открыт
+обоими native providers. Обе платформы создали новый signed stage; Node WebCrypto
+прочитал оба, Chromium — actual API34:2 opaque paths/63bytes, без JSON-проекции
+duplicate private names или non-UTF8 binary. Native custody в этом fixture —
+отдельный no-auth synthetic LocalCipher alias, не приёмка product presence/
+recovery/new-device flow. Точные hashes, format и ограничения:
+`e2ee-336-source-stage.md`.
+
+Для git diff --check из public canonical JSON fixture удалена только пустая
+строка в конце. Input03
+181E3710A28804C37179AAE220DE3E89D1CC0A5828F1D9D7D4FE4239D2FB187E:
+build SUCCESS1m22s, Main APK тот же. Сверены все668 ZIP entries Test APK: отличается
+только canonical JSON asset, весь исполняемый код совпадает с02. Actual03
+API26/API34 — по1/1 focused codec case PASS;4/4 полного stage остаются02 evidence,
+не повторным03 запуском. Нового JVM run нет.
+
+Последний CI8ff/44696853150 исходно упал: Android не скачал KSP2.3.12, web/API —
+на сравнении изменяющегося секундного email cooldown с неизменным объектом.
+Android-only повтор этого же commit прошёл без смены зависимостей. Тест email
+теперь отдельно сравнивает стабильные поля и countdown в фактическом elapsed
+окне; isolated email-verification PASS. Полный CI нового commit ещё нужен.
+
+Coverage остаётся9/20. Stage не является полным personal.archives adapter;
+обязательны coordinator/common-reader/content streaming, все process directories
+и nested old ciphers, остальные11 categories, lifecycle/shared ACL/files/Drive/
+direct upgrades,48 scenarios,14-language semantics и независимый human crypto
+review. Production3.3.5/149, floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false;
+Deploy, Play, личные устройства и версия в этой части не менялись.

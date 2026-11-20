@@ -5,6 +5,11 @@ accepted migration. Keep the existing32/48/64MiB gates, coverage9/20,
 floors0 and pilot/cutover off until the complete replacement is accepted.
 Requirements: `e2ee-336-archive-stream-requirements.md`.
 
+The next local stage module is now under separate acceptance in
+`e2ee-336-source-stage.md`. It implements encrypted quarantine/catalogues,
+not this plan's coordinator pointer, complete source registry or common-reader
+integration. Keep those distinctions when composing the following steps.
+
 ## Source and storage boundary
 
 The retained-inventory writer is only a producer for this process's views.

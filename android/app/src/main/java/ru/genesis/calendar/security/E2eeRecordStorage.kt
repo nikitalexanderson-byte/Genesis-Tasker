@@ -93,6 +93,24 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) {
     private val lifecycle = AtomicLong(0)
     fun requireOpen():Scope = scope.get() ?: throw IllegalStateException("E2EE_UNLOCK_REQUIRED")
     fun lock() { lifecycle.incrementAndGet();scope.set(null) }
+    data class LocalIdentity(val ownerId: String, val scopeId: String, val deviceId: String)
+    fun localIdentity(): LocalIdentity = requireOpen().let { LocalIdentity(it.ownerId, it.scopeId, it.deviceId) }
+    /** Technical discovery only. Invalid framing never becomes an empty store. */
+    fun listLocal(domain: String, objectPrefix: String): List<String> {
+        E2eeKeys.technical(domain); E2eeKeys.technical(objectPrefix)
+        val captured = lifecycle.get(); val current = requireOpen()
+        val prefix = listOf(current.ownerId, current.scopeId, domain).joinToString("") { E2eeKeys.technical(it); "${it.length}:$it" }
+        val keys = storage.list(prefix); alive(captured)
+        check(keys.size <= 10000 && keys.toSet().size == keys.size) { "E2EE_LOCAL_RECORD_LIMIT" }
+        return keys.mapNotNull { key ->
+            check(key.startsWith(prefix)) { "E2EE_CORRUPT_LOCAL_RECORD" }
+            val rest = key.substring(prefix.length); val colon = rest.indexOf(':')
+            check(colon > 0 && rest.substring(0, colon).matches(Regex("[1-9][0-9]{0,2}"))) { "E2EE_CORRUPT_LOCAL_RECORD" }
+            val id = rest.substring(colon + 1); E2eeKeys.technical(id)
+            check(rest.substring(0, colon).toInt() == id.length) { "E2EE_CORRUPT_LOCAL_RECORD" }
+            id.takeIf { it.startsWith(objectPrefix) }
+        }
+    }
     private fun alive(captured:Long) { check(lifecycle.get()==captured && scope.get()!=null) { "E2EE_UNLOCK_REQUIRED" } }
     companion object {
         fun recordKey(scope:Scope,domain:String,objectId:String):String = listOf(scope.ownerId,scope.scopeId,domain,objectId)
