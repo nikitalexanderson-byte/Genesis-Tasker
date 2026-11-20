@@ -76,3 +76,9 @@ adapters. У финального результата каждой строки
 документы конкретных source adapters и `security-bridge-335-adr.md`.
 Границы нового read-only coordinator increment и точная приёмка:
 `e2ee-336-migration-history.md`; он не закрывает полный системный сценарий.
+
+Строгий HTTP JSON до проекции native/web принят отдельным компонентом:
+`e2ee-336-transport-json.md`. Full JS1956/1956, Chromium143/143, selected JVM235/235,
+API26/API34 each3/3 actual-client cases плюс7/7 regressions на frozen input02.
+Это не durable remote-original custody и не закрытие какого-либо полного
+product-сценария выше. Сохраняются coverage9/20 и все условия активации.

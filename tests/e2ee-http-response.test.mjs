@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {readFileSync} from 'node:fs';
 import {e2eeResponseLimit,isE2eeResponsePath,readE2eeJsonResponse} from '../app/e2ee/http-response.ts';
 import {cloudSyncClient,deferred} from './helpers/cloud-sync-client.mjs';
 
@@ -32,6 +33,56 @@ test('invalid UTF8 syntax roots content types and zero progress never yield a su
   const f=streamed(parts);await assert.rejects(readE2eeJsonResponse(f.response,path,()=>{}),/E2EE_INVALID_RESPONSE/);assert.equal(f.response.body.locked,false);
  }
  const f=streamed([new TextEncoder().encode('{}')],{headers:{'Content-Type':'text/html'}});await assert.rejects(readE2eeJsonResponse(f.response,path,()=>{}),/E2EE_INVALID_RESPONSE/);assert.equal(f.cancelled(),true);
+});
+
+test('duplicate and escaped duplicate E2EE fields refuse before last-value projection',async()=>{
+ for(const raw of ['{"sourceHash":"first","sourceHash":"second"}','{"ownerId":"first","own\\u0065rId":"second"}',
+  '{"envelopes":[{"context":{"securityEpoch":1,"securityEpoch":2}}]}']){
+  const bytes=new TextEncoder().encode(raw),f=streamed(Array.from({length:bytes.length},(_,at)=>bytes.slice(at,at+1)));
+  await assert.rejects(readE2eeJsonResponse(f.response,'/e2ee/v1/read',()=>{}),/E2EE_INVALID_RESPONSE/);
+  assert.ok(f.loans.every(value=>value.every(byte=>byte===0)));assert.equal(f.response.body.locked,false);
+ }
+});
+
+test('shared wire corpus is identical for split web/native success and error bodies',async()=>{
+ const corpus=JSON.parse(readFileSync(new URL('../contracts/e2ee/transport-json-v1.json',import.meta.url),'utf8'));
+ for(const row of corpus.cases)for(const status of [200,409]){
+  const bytes=row.hex?new Uint8Array(Buffer.from(row.hex,'hex')):new TextEncoder().encode(row.raw);
+  const f=streamed(Array.from({length:bytes.length},(_,at)=>bytes.slice(at,at+1)),{status});
+  if(row.valid)assert.ok(await readE2eeJsonResponse(f.response,path,()=>{}),row.id);
+  else if(status===409)assert.equal(await readE2eeJsonResponse(f.response,path,()=>{}),null,row.id);
+  else await assert.rejects(readE2eeJsonResponse(f.response,path,()=>{}),/E2EE_INVALID_RESPONSE/,row.id);
+  assert.ok(f.loans.every(value=>value.every(byte=>byte===0)),row.id);assert.equal(f.response.body.locked,false,row.id);
+ }
+});
+
+test('wire node member key number and depth budgets admit the boundary then refuse over it',async()=>{
+ const read=raw=>readE2eeJsonResponse(new Response(raw,{headers}),'/e2ee/v1/directory',()=>{});
+ const cases=[
+  ['{"'+ 'a'.repeat(1024)+'":1}','{"'+ 'a'.repeat(1025)+'":1}'],
+  ['{"x":'+ '['.repeat(39)+'0'+']'.repeat(39)+'}','{"x":'+ '['.repeat(40)+'0'+']'.repeat(40)+'}'],
+  ['{"x":0.'+'0'.repeat(125)+'1}','{"x":0.'+'0'.repeat(126)+'1}'],
+  ['{'+Array.from({length:10000},(_,i)=>`"k${i}":0`).join(',')+'}','{'+Array.from({length:10001},(_,i)=>`"k${i}":0`).join(',')+'}'],
+  ['{"x":['+'0,'.repeat(249997)+'0]}','{"x":['+'0,'.repeat(249998)+'0]}'],
+ ];
+ for(const[valid,invalid]of cases){assert.ok(await read(valid));await assert.rejects(read(invalid),/E2EE_INVALID_RESPONSE/);}
+ const directory=JSON.stringify({events:Array.from({length:2048},(_,revision)=>({protocol:1,ownerId:'synthetic',scopeId:'personal:synthetic',deviceId:'synthetic-device',action:'rotate',expectedRevision:revision,checkpointHash:'synthetic',securityEpoch:revision+1,operationId:'synthetic-'+revision,payload:{keyId:'synthetic-root',generation:revision+1,capsules:[{deviceId:'synthetic-device',ciphertext:'A'.repeat(128)}]}}))});
+ assert.ok((await read(directory)).events.length===2048);
+});
+
+test('ambiguous error codes and invalid JSON resource shapes never become migration instructions',async()=>{
+ const ambiguous=streamed([new TextEncoder().encode('{"error":"E2EE_SOURCE_CHANGED","err\\u006fr":"E2EE_MIGRATION_FENCED"}')],{status:409});
+ assert.equal(await readE2eeJsonResponse(ambiguous.response,'/e2ee/v1/read',()=>{}),null);
+ for(const raw of ['{"value":1e999}','{"x":'+ '['.repeat(41)+'0'+']'.repeat(41)+'}',
+  '{"'+ 'a'.repeat(1025)+'":1}']){
+  const f=streamed([new TextEncoder().encode(raw)]);await assert.rejects(readE2eeJsonResponse(f.response,'/e2ee/v1/read',()=>{}),/E2EE_INVALID_RESPONSE/);
+ }
+});
+
+test('the real authenticated web channel refuses duplicate source authority and preserves all previous durable state',async()=>{
+ const f=await cloudSyncClient(),before=new Map(f.storage.data);f.respond(()=>new Response('{"sourceHash":"first","sourceHash":"second"}',{headers}));
+ await assert.rejects(f.client.e2eeRequest('/source',{scopeId:'personal:fixture'}),/E2EE_INVALID_RESPONSE/);
+ for(const[key,value]of before)assert.equal(f.storage.getItem(key),value);
 });
 
 test('an invalid non-byte stream chunk keeps the sanitized protocol failure during cleanup',async()=>{

@@ -845,7 +845,14 @@ internal class AuthSessionClient(context: Context,
             phase = "status"
             val status = connection.responseCode
             if (status !in 200..299) {
-                if (E2eeTransportProtocol.allowedRoute(method, path) || legacyOwner!=null) {
+                if (E2eeTransportProtocol.allowedRoute(method, path)) {
+                    val payload = connection.errorStream?.use { input ->
+                        E2eeHttpResponseJson.read(input, path, status, connection.contentType, connection.contentLengthLong, ::currentRequest)
+                    }
+                    currentRequest()
+                    val code = payload?.let { E2eeTransportProtocol.errorCode(status, it) }
+                    if (code != null) throw AuthApiError(code)
+                } else if (legacyOwner!=null) {
                     val code = runCatching {
                         val output = ByteArrayOutputStream()
                         connection.errorStream?.use { input ->
@@ -962,17 +969,19 @@ internal class AuthSessionClient(context: Context,
                     else -> AuthFailure.Kind.SERVER
                 }, httpStatus = status)
             }
-            if (!connection.contentType.orEmpty().substringBefore(';').trim().equals("application/json", true))
+            if (!E2eeTransportProtocol.allowedRoute(method, path) && !connection.contentType.orEmpty().substringBefore(';').trim().equals("application/json", true))
                 throw AuthFailure(AuthFailure.Kind.PROTOCOL)
             phase = "read"
             val payload = connection.inputStream.use { input ->
+                if (E2eeTransportProtocol.allowedRoute(method, path)) return@use requireNotNull(
+                    E2eeHttpResponseJson.read(input, path, status, connection.contentType, connection.contentLengthLong, ::currentRequest))
                 if (responseReader != null) return@use responseReader(input)
                 val output = ByteArrayOutputStream()
                 val buffer = ByteArray(4096)
                 while (true) {
                     val read = input.read(buffer)
                     if (read < 0) break
-                    val maximumBytes = if (E2eeTransportProtocol.allowedRoute(method, path)) E2eeTransportProtocol.responseLimit(path) else when (path) {
+                    val maximumBytes = when (path) {
                         "/workspace" -> 11_000_000
                         "/bootstrap" -> 24_000_000
                         "/admin/stats" -> 4_000_000

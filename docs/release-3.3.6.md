@@ -2363,3 +2363,46 @@ custody и реальные bounded process inputs с nested old keys/AAD; вс�
 sources/product/recovery/shared/Drive/upgrades/48 scenarios/14-language/human
 review остаются обязательными. Coverage9/20, production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; без Play/личных устройств.
+
+## Строгие ответы E2EE в реальных HTTP-клиентах,20 ноября
+
+В web readE2eeJsonResponse и реальном Android AuthSessionClient ответы E2EE
+проверяются до JSON.parse/JSONObject: decoded duplicate names на любой глубине,
+strict JSON, fatal UTF8, один object root, finite numbers и общие ограниченные
+структурные бюджеты. Старые private-file limits не расширены. Нативный E2EE
+error path больше не глотает account cancellation через runCatching. Публичные
+корректные E2EE error codes сохраняются, неоднозначный error даёт generic HTTP
+failure. Исходные route/error byte limits сохранены, owned wire buffers очищаются;
+immutable strings/parsed objects не объявляются zeroized.
+
+Shared44-case corpus:8 valid/36 refused. Initial web RED воспроизвёл3 missing
+refusals. Final full JS1956/1956, owned types02/scoped lint02 PASS. Chromium157
+через actual authenticated fetch и split-byte error reader —143/143; cold
+encrypted IDB и private outbox original побайтно сохранены. Console — ровно2
+ожидаемых HTTP409 diagnostics,0 warnings/других errors. Static web build и все
+gallery/documents/dictionaries/offline/worker checks PASS:98 HTML/14 languages,
+280 images и disclosures сохранены. Нового UI/public copy в этом пакете нет.
+
+Final native input02:
+F4F0CFD43E619DFC5775B18395DDCD52BD3A38E27E5B6CA98BFD7667F5147FAB.
+Build SUCCESS1m28s, selected JVM235/235 across32 suites. API26/API34 каждый прошёл
+3/3 actual AuthSessionClient cases (88 corpus observations каждый) и7/7 regressions.
+Использован реальный encrypted Keystore session journal с controlled connection
+factory, не реальный TLS/backend. Шесть bounded host checks сверили fresh proof
+hashes и все4,194,392 history bytes/24 hashes/48 неизменных rows,4,194,310 readback
+bytes и9,437,191-byte plan file/38 exact gets плюс3 local bytes. Final source и
+оба APK совпали после devices/lint. Full lint01 SUCCESS15m17s, final incremental
+lint02 SUCCESS2m9s:0 errors/208 warnings/8 hints, без новых issue/file pairs.
+
+Первый actual-native run01 был диагностическим: неверный64-character synthetic
+CSRF вместо требуемых48 отвергал test session до ответа. Исправлен только fixture
+с предварительной валидацией. MAIN APK тот же; TEST APK новый, принят input02.
+Точные hashes, reports и пределы проверки — e2ee-336-transport-json.md.
+
+Source checks предыдущего a6cd2589, run44798319382, оба jobs SUCCESS. Текущий
+пакет ещё не считается CI/Deploy или выпуском. Это parser hardening, не protected
+remote originals: их отдельная durable quarantine до normalization — следующий
+обязательный этап вместе с source/plan/state4 composition. Coverage9/20, все11
+real sources и product/recovery/shared/Drive/upgrades/48 scenarios/14-language/
+human review остаются обязательными. Production3.3.5/149, floors0/pilot/cutover
+off/GENESIS_DEPLOY_ANDROID=false; без Deploy/Play/личных устройств.

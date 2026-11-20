@@ -76,6 +76,14 @@ original owner/actor, request role, lease/source token, offsets/EOF, old-key
 provenance and exact raw bytes before normalization. Capturing an observation
 does not manufacture historical authenticity against a malicious old server.
 
+The real web/native authenticated E2EE HTTP readers now reject ambiguous raw
+JSON before projected objects reach these ports. Exact admission, common44-case
+corpus and platform evidence are in `e2ee-336-transport-json.md`. Native's E2EE
+error path preserves account cancellation instead of swallowing it through
+runCatching. This is parser hardening only: an in-memory parsed response is NOT
+the required durable remote original. Capture must precede UTF8 decoding/JSON
+projection and bind the exact raw EOF, request/lease role and original actor.
+
 The complete content-plan reference must be bound to the exact source catalogue,
 source histories, original actor, target scope/generation, directory checkpoint
 and server lease/source token. Its own final marker is inert. Coordinator

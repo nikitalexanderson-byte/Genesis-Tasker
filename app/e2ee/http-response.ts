@@ -1,3 +1,5 @@
+import {parseE2eeTransportJson} from './transport-json.ts';
+
 const prefix='/e2ee/v1/',routes=new Set(['status','bootstrap','command','read','challenge','directory','source']);
 /** Same route budgets as native E2eeTransportProtocol, before JSON parsing. */
 export function isE2eeResponsePath(path:string){return path.startsWith(prefix)&&routes.has(path.slice(prefix.length));}
@@ -32,7 +34,7 @@ export async function readE2eeJsonResponse(response:Response,path:string,assertC
   }
   try{append(decoder.decode());}catch{if(!response.ok)return null;invalid();}
   parts.push(tail);tail='';assertCurrent();let value:unknown;
-  try{value=JSON.parse(parts.join(''));}catch{if(!response.ok)return null;return invalid();}
+  try{value=parseE2eeTransportJson(parts.join(''));}catch{if(!response.ok)return null;return invalid();}
   assertCurrent();if(!value||typeof value!=='object'||Array.isArray(value)){if(!response.ok)return null;invalid();}
   return value as Record<string,unknown>;
  }finally{

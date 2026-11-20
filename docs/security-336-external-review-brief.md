@@ -314,3 +314,13 @@ has0 errors/208 warnings/8 hints and no new issue/file pairs. Native acceptance
 must use that exact frozen02 component record and reports03, not superseded
 native01 or the invalid abbreviated-class runner02. The cancelled-copy red
 witness is explicitly retained. Real source coverage remains9/20.
+
+Wire JSON hardening is recorded separately in `e2ee-336-transport-json.md`.
+Review the shared44-case byte corpus and decoded duplicate-name refusals BEFORE
+JSON.parse/Android JSONObject, fatal UTF8, fixed route/error budgets, strict
+number/depth/node/key/member limits and native account-cancellation propagation.
+The private-file parser's limits are unchanged. This does not authenticate an
+envelope or protect a remote original durably. A memory acknowledgement port
+cannot be cited as encrypted custody. Actual native
+acceptance must use the final corrected session fixture/component input, not
+the superseded fixture that failed before response parsing.
