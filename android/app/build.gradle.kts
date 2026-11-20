@@ -111,6 +111,7 @@ android {
     // The same public path inventory is consumed by web and native migration.
     sourceSets.getByName("main").assets.srcDir("../../contracts/e2ee")
     sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("../tests/fixtures"))
+    sourceSets.getByName("test").resources.srcDir(rootProject.file("../tests/fixtures"))
 }
 
 // Original byte copies in generated assets; no tracked duplicate or image conversion.

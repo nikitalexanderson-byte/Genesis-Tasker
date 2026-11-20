@@ -24,7 +24,15 @@ internal object GenesisBackupContainer {
         return result
     }
     private fun digest(value: ByteArray) = MessageDigest.getInstance("SHA-256").digest(value).joinToString("") { "%02x".format(it) }
-    private fun aad(value: JSONObject): ByteArray = JSONArray(listOf("genesisbackup", 1, value.getString("backupId"), "A256GCM+A256KW", value.getString("wrappedKey"))).toString().toByteArray(Charsets.UTF_8)
+    internal fun authenticatedHeader(backupId:String,wrappedKey:String,legacyAndroid:Boolean=false):ByteArray {
+        require(backupId.matches(Regex("[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}"))){"BACKUP_INVALID"}
+        val wrapped=bytes(wrappedKey,40);try{require(wrapped.size==40){"BACKUP_INVALID"}}finally{wrapped.fill(0)}
+        // Both dynamic fields are validated ASCII, so no platform JSON quoting
+        // choices enter the authenticated bytes. Match JSON.stringify exactly.
+        val canonical="[\"genesisbackup\",1,\"$backupId\",\"A256GCM+A256KW\",\"$wrappedKey\"]"
+        return (if(legacyAndroid)canonical.replace("/","\\/")else canonical).toByteArray(Charsets.UTF_8)
+    }
+    private fun aad(value:JSONObject,legacyAndroid:Boolean=false)=authenticatedHeader(value.getString("backupId"),value.getString("wrappedKey"),legacyAndroid)
     /** Bounds parser nesting before org.json sees the input. No compression is accepted. */
     private fun bounded(text: String, limit: Int): JSONObject {
         require(text.toByteArray(Charsets.UTF_8).size <= limit) { "BACKUP_TOO_LARGE" }
@@ -86,8 +94,16 @@ internal object GenesisBackupContainer {
         try {
             val unwrap = Cipher.getInstance("AESWrap").apply { init(Cipher.UNWRAP_MODE, SecretKeySpec(recoveryBytes, "AES")) }
             val dataKey = unwrap.unwrap(wrapped, "AES", Cipher.SECRET_KEY)
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.DECRYPT_MODE, dataKey, GCMParameterSpec(128, iv)); updateAAD(aad(root)) }
-            val plain = cipher.doFinal(ciphertext)
+            fun decrypt(legacyAndroid:Boolean):ByteArray {
+                val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.DECRYPT_MODE, dataKey, GCMParameterSpec(128, iv)); updateAAD(aad(root,legacyAndroid)) }
+                return cipher.doFinal(ciphertext)
+            }
+            // Import exactly the historical Android v1 solidus encoding too;
+            // each attempt must authenticate the full same semantic header.
+            val plain = try{decrypt(false)}catch(error:javax.crypto.BadPaddingException){
+                if(!root.getString("wrappedKey").contains('/'))throw error
+                decrypt(true)
+            }
             try { return payload(bounded(plain.toString(Charsets.UTF_8), MAX_PLAIN)).also { require(it.getString("backupId") == root.getString("backupId")) } }
             finally { plain.fill(0) }
         } finally { recoveryBytes.fill(0) }

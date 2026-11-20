@@ -71,7 +71,13 @@ export function validateBackupPayload(value: unknown): BackupPayload {
   return root as BackupPayload;
 }
 export function newBackupRecoveryKey(): string { return backupBase64(crypto.getRandomValues(new Uint8Array(32))); }
-function aad(file: Pick<BackupFile, 'format' | 'schema' | 'backupId' | 'algorithm' | 'wrappedKey'>) { return encoder.encode(JSON.stringify([file.format, file.schema, file.backupId, file.algorithm, file.wrappedKey])); }
+function aad(file: Pick<BackupFile, 'format' | 'schema' | 'backupId' | 'algorithm' | 'wrappedKey'>, legacyAndroid = false) {
+  const json = JSON.stringify([file.format, file.schema, file.backupId, file.algorithm, file.wrappedKey]);
+  // Historical Android JSONArray escaped solidus in standard Base64. New
+  // writers use canonical JSON; this exact authenticated v1 encoding stays
+  // readable locally. No header, suite, key or plaintext fallback is permitted.
+  return encoder.encode(legacyAndroid ? json.replaceAll('/', '\\/') : json);
+}
 async function recoveryKey(secret: string) {
   const bytes = backupBytes(secret.trim(), 32); if (bytes.length !== 32) return fail('BACKUP_RECOVERY_KEY');
   return crypto.subtle.importKey('raw', new Uint8Array(bytes), 'AES-KW', false, ['wrapKey', 'unwrapKey']);
@@ -97,7 +103,12 @@ export async function openBackup(text: string, secret: string): Promise<BackupPa
   let plain: ArrayBuffer;
   try {
     const key = await crypto.subtle.unwrapKey('raw', new Uint8Array(wrapped), await recoveryKey(secret), 'AES-KW', { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
-    plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv), additionalData: aad(file as BackupFile), tagLength: 128 }, key, new Uint8Array(ciphertext));
+    try {
+      plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv), additionalData: aad(file as BackupFile), tagLength: 128 }, key, new Uint8Array(ciphertext));
+    } catch (error) {
+      if (!String(file.wrappedKey).includes('/') || !(error instanceof DOMException) || error.name !== 'OperationError') throw error;
+      plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv), additionalData: aad(file as BackupFile, true), tagLength: 128 }, key, new Uint8Array(ciphertext));
+    }
   } catch { return fail('BACKUP_RECOVERY_OR_INTEGRITY'); }
   const payload = validateBackupPayload(backupJson(new TextDecoder('utf-8', { fatal: true }).decode(plain)));
   if (payload.backupId !== file.backupId) return fail('BACKUP_INTEGRITY'); return payload;
