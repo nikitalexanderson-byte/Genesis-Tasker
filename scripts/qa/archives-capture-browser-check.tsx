@@ -9,16 +9,29 @@ import {createRecoveryKit} from '../../app/e2ee/keys';
 import {UnlockedWebDevice,IndexedDbDeviceKeyStorage} from '../../app/e2ee/device-vault';
 import {IndexedDbE2eeStorage} from '../../app/e2ee/storage';
 import {checkWholeBackupOperation} from './archives-whole-operation-browser';
+import {retainNativeBackupForm} from '../../app/backup-native-form';
+import {readNativeBackupFile} from '../../app/backup-native-file';
+import {normalizeNativeArchiveForms} from '../../app/e2ee/archives-native-forms';
+import type {BackupMigrationForm} from '../../app/backup-migration-memory';
 
 const owner='synthetic-archive-'+crypto.randomUUID(),key=btoa('b'.repeat(32)),canary='Synthetic unsent archive '+crypto.randomUUID();
 const at='2026-11-19T12:00:00Z',payload:BackupPayload={schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:owner,createdAt:at,client:'web',billingEvidence:null,
  sections:[{id:'workspace',source:'device',completeness:'partial',capturedAt:at,revision:0,count:1,pending:1,notices:[],data:{document:{tasks:[{id:'synthetic-task',title:canary}]}}}]};
 const file=await sealBackup(payload,key);let commits=0,downloads=0,previews=0;
+const nativeBytes=new TextEncoder().encode(file),nativeId=crypto.randomUUID(),nativeView=crypto.randomUUID();
+const nativeDescriptor={protocol:1,id:nativeId,length:nativeBytes.length,name:'selected.genesisbackup',type:'APPLICATION/OCTET-STREAM',lastModified:1700000000123,declaredSize:nativeBytes.length,
+ sha256:Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',nativeBytes)),byte=>byte.toString(16).padStart(2,'0')).join('')};
+let nativeForm='',nativeTransfer='',nativeToken='',mirrored:BackupMigrationForm|undefined;
+const endedForms:boolean[]=[];
 const report:{synthetic:true;runtime:string;checks:{name:string;passed:boolean}[];status:string;error?:string}={synthetic:true,runtime:navigator.userAgent,checks:[],status:'READY'};
 const update=()=>{document.querySelector('#result')!.textContent=JSON.stringify(report,null,2);document.title=report.status+' GENESIS archive capture';};
 function check(name:string,passed:boolean){report.checks.push({name,passed});if(!passed)throw new Error('BROWSER_ARCHIVE_CAPTURE_FAILED');}
 const unavailable=async():Promise<never>=>{throw new Error('SYNTHETIC_UNUSED_PORT');};
 const runtime:BackupPanelRuntime={authorizeBackup:async()=>({ownerId:owner,generation:0}),freezeBackupDevice:()=>({owner,at,sources:{},sync:{} as never,storage:{}}),
+ retainForm:form=>{retainNativeBackupForm(form,{check(){},operationId:()=>nativeToken,submit:(_id,index,last,raw)=>{
+  if(index===0)nativeTransfer='';nativeTransfer+=raw;if(last)nativeForm=nativeTransfer;return '';
+ }});mirrored={...form,state:structuredClone(form.state)};},
+ withOperation:async(_owner,action)=>{nativeToken=crypto.randomUUID();try{return await action(runtime);}finally{endedForms.push(mirrored?.settled===true);nativeToken='';}},
  materializeDeviceBackup:async()=>payload,materializeServerBackup:async()=>payload,retainBackupSafety:async()=>({persistent:true}),
  prepareBackupRestore:async()=>({operations:[{section:'workspace',input:{iv:'exact-old-preview-iv',ciphertext:'exact-old-preview-ciphertext'}}],added:1,changed:0,skipped:0,removed:0,workspaceRemovals:[],notices:[]}),
  backupNeedsReconciliation:()=>false,backupRequest:async<T,>(path:string)=>{
@@ -26,7 +39,10 @@ const runtime:BackupPanelRuntime={authorizeBackup:async()=>({ownerId:owner,gener
   if(path==='/preview'){previews++;return{stageId:'exact-uncertain-stage',digest:'b'.repeat(64),counts:{workspace:1},expiresIn:1800} as T;}
   commits++;throw new Error('SYNTHETIC_UNEXPECTED_RESTORE');
  },captureAccountSessionGuard:()=>()=>{},holdBackupStaleChanges:unavailable,download:async()=>{downloads++;},
- readFile:async()=>new File([file],'selected.genesisbackup',{type:'application/octet-stream',lastModified:1700000000123})};
+ readFile:()=>readNativeBackupFile({check(){},choose:async()=>nativeDescriptor,clear:async()=>true,chunk:async(id,offset)=>{
+  const nextOffset=Math.min(offset+98304,nativeBytes.length);let binary='';for(const byte of nativeBytes.subarray(offset,nextOffset))binary+=String.fromCharCode(byte);
+  return{id,offset,bytes:btoa(binary).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,''),nextOffset,eof:nextOffset===nativeBytes.length};
+ }})};
 
 async function acceptance(){
  let device:UnlockedWebDevice|undefined,recovery:Awaited<ReturnType<typeof createRecoveryKit>>|undefined;
@@ -44,12 +60,19 @@ async function acceptance(){
   check('decoded preview content and selected section survive navigation',JSON.stringify(state?.payload).includes(canary)&&JSON.stringify(state?.selected)==='["workspace"]');
   check('uncertain stage and operation IDs remain exact inert data',(state?.stage as {stageId?:string})?.stageId==='exact-uncertain-stage'&&typeof state?.operationId==='string'&&state.operationId.length===36);
   check('preview was prepared exactly once with no restore or download',previews===1&&commits===0&&downloads===0);
+  check('actual React mirror acknowledges all final form states before each backup job releases its capability',endedForms.length===3&&endedForms.every(Boolean));
+  const nativeInput={protocol:1,ownerId:owner,sessionEpoch:1,views:[{id:nativeView,source:'backup-panel',mounted:false,rawForm:nativeForm,files:[{descriptor:nativeDescriptor,bytes:editor!.file!.bytes}]}]};
+  const [native]=await normalizeNativeArchiveForms(nativeInput,owner,()=>{});
+  check('actual renderer retains the same exact key and uncertain operation before view disposal',native.form?.state.key===key&&native.form?.state.operationId===state?.operationId&&native.rawForm===nativeForm);
+  check('native mirror file reference resolves to exact original bytes and unnormalized provider metadata',native.files[0].descriptor.type==='APPLICATION/OCTET-STREAM'&&native.files[0].bytes===editor?.file?.bytes);
   check('expired and duplicate raw originals remain byte exact',local.entries.some(row=>row.key===safetyKey&&row.value==='{ "original":"expired raw ciphertext" }')&&local.entries.some(row=>row.key===heldKey&&row.value==='{ "duplicate":1,"duplicate":2 }'));
   check('other-owner archives are never attributed',!JSON.stringify(local).includes('foreign-canary'));
   check('capture performs no local storage rewrite or prune',before===JSON.stringify(Object.entries(localStorage).sort()));
   recovery=await createRecoveryKit(owner);const storage=new IndexedDbE2eeStorage();device=await UnlockedWebDevice.provision(owner,recovery.secret,recovery.kit,storage,new IndexedDbDeviceKeyStorage());
   const bytes=new TextEncoder().encode(JSON.stringify(local));try{await device.vault.write([{domain:'local-snapshot',objectId:'archive-capture',value:bytes,expected:null}]);}finally{bytes.fill(0);}
+  const nativeSnapshot=new TextEncoder().encode(JSON.stringify(nativeInput));try{await device.vault.write([{domain:'local-snapshot',objectId:'archive-native-form-input',value:nativeSnapshot,expected:null}]);}finally{nativeSnapshot.fill(0);}
   clearBackupMigrationMemory();localStorage.removeItem(safetyKey);localStorage.removeItem(heldKey);memorySafety.storage.original='deleted legacy memory';
+  nativeForm='';nativeTransfer='';mirrored=undefined;nativeBytes.fill(0);
   const disk=JSON.stringify(await Promise.all((await storage.list('')).map(id=>storage.get(id))));check('protected IndexedDB contains no plaintext private canary or independent archive input',!disk.includes(canary)&&!disk.includes(key));
   device.lock();device=await UnlockedWebDevice.unlock(owner,recovery.secret,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage());
   const restored=await device.vault.read('local-snapshot','archive-capture');check('cold unlock reads the complete archive capture after originals were discarded by the fixture',!!restored);
@@ -57,6 +80,10 @@ async function acceptance(){
    const value=JSON.parse(new TextDecoder().decode(restored!.value));check('selected import and unsent private content survive new-root cold readback',value.editors[0].file.bytes===editor!.file!.bytes&&JSON.stringify(value).includes(canary));
    check('in-memory quota safety copy survives independently of legacy storage',value.memorySafety.storage.original===canary);
   }finally{restored?.value.fill(0);}
+  const nativeReadback=await device.vault.read('local-snapshot','archive-native-form-input');
+  try{const reopened=await normalizeNativeArchiveForms(JSON.parse(new TextDecoder().decode(nativeReadback!.value)),owner,()=>{});
+   check('new-root cold readback preserves native form input after renderer memory and original bytes are cleared',reopened[0].rawForm===native.rawForm&&reopened[0].files[0].bytes===native.files[0].bytes);
+  }finally{nativeReadback?.value.fill(0);}
   await checkWholeBackupOperation(check);
  }catch(error){report.error=error instanceof Error&&/^E2EE_[A-Z_]+$/.test(error.message)?error.message:'BROWSER_ARCHIVE_CAPTURE_FAILED';}
  finally{device?.lock();recovery?.secret.fill(0);clearBackupMigrationMemory();}

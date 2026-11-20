@@ -1,6 +1,6 @@
 # Подготовка GENESIS 3.3.6
 
-Актуальный срез19 ноября: реализованы9/20 реальных source categories; это не
+Актуальный срез20 ноября: реализованы9/20 реальных source categories; это не
 процент готовности релиза. Напоминания получили web/native capture/reconciliation,
 сохранение истории/форм/uncertain actions и проверенное чтение с новым root.
 Подготовлен server reader/byte fragments архивов; это ещё не десятая категория.
@@ -1559,3 +1559,34 @@ Coverage9/20: native detached forms, nested archive reconciliation/recovery и
 остальные11 sources/48 сценариев/14-language semantics/human crypto review нужны.
 Production3.3.5/149, floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false;
 Deploy/Play/личных устройств не было.
+## Архивы: сохранение native формы до перерисовки,20 ноября
+
+BackupPanel сохраняет принятое значение до React update; исходные key input,
+preview/stage/operation IDs и выбранные native bytes/provenance переживают
+закрытие окна. Native inventory удерживает все mounted/detached branches и
+непринятые файловые candidates в памяти исходной account epoch. Смена аккаунта
+сбрасывает ссылки и очищает owned binary arrays. Полный protected local capture
+сохраняет Room safety/chunks, raw state, историю и этот inventory до будущего IO;
+это ещё не полный `personal.archives` adapter.
+
+Первый API26 прогон выявил реальную гонку: обычный background owner permit
+мешал немедленной публикации формы. Исправлено отдельным memory monitor,
+замораживаемым migration fence до durable deny/capture; нормальный IO не
+замораживает ввод. Долгое ожидание scope mutex на WebView bridge thread исключено.
+Проверен также final form собственного verified reset после retirement HTTP.
+
+Full JS1778/1778, types/scoped lint(0 errors/4 прежних img warnings), web build
+98 HTML/14 languages/gallery/offline PASS. Actual Chromium157:27/27, console0;
+encrypted IDB/cold unlock сохраняет native-style form/file input. Native build02
+SUCCESS27m16s, selected JVM15/15, lint0 errors/208 прежних warnings/8 hints,
+новых warning/file combinations0. Actual API26/API34:26/26 каждый, включая real
+SAF/view disposal и journal choices; по5 host common-parser/WebCrypto checks.
+См. `e2ee-336-archives-native-forms.md` для exact inputs/APK hashes/evidence.
+
+Это выбранная small-data приёмка. Native32MiB form/48MiB memory/capture budgets
+ещё требуют composed24MiB-file/decoded-payload/preview-plan validation и bounded
+storage/streaming с сохранением прежнего file-size support до release. Также
+обязательны opening всех nested old ciphers, остальные11 categories, full product
+lifecycle/recovery/Drive/direct upgrades, исходные48/14-language semantics и
+independent human crypto review. Coverage9/20 и production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены; публикаций нет.

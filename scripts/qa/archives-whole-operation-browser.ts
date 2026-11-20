@@ -7,6 +7,8 @@ import type {BackupPanelRuntime} from '../../app/BackupPanel';
 import {WebLegacyTransportGate,WebMigrationTransportFence,IndexedDbLegacyTransportMarkers,legacyTransportLock} from '../../app/e2ee/legacy-transport-fence';
 import {readNativeBackupFile,nativeBackupFileOrigin} from '../../app/backup-native-file';
 import {registerBackupMigrationEditor,captureBackupMigrationEditors} from '../../app/backup-migration-memory';
+import {retainNativeBackupForm} from '../../app/backup-native-form';
+import {normalizeNativeArchiveForms} from '../../app/e2ee/archives-native-forms';
 
 /** Real browser LockManager/IDB/crypto and actual cloud backup ports. Network is
  * forbidden by the own loopback page's CSP. Only synthetic owner/key/data exist. */
@@ -64,5 +66,17 @@ export async function checkWholeBackupOperation(check:(name:string,passed:boolea
  try{
   const [entry]=await captureBackupMigrationEditors(owner,current);
   check('actual capture retains native provenance and the exact binary file',entry.file?.nativeOrigin?.sha256===hash&&entry.file?.size===bytes.length&&entry.file?.name===info.name);
- }finally{detach();actual.fill(0);bytes.fill(0);}
+ }finally{detach();actual.fill(0);}
+ try{
+  const original={...info,id:crypto.randomUUID(),name:'\ufefforiginal-\ud800-name'};
+  const display=await readNativeBackupFile({check:current,choose:async()=>original,clear:async()=>true,chunk:async(value,offset)=>{
+   const nextOffset=Math.min(offset+98304,bytes.length);let raw='';for(const byte of bytes.subarray(offset,nextOffset))raw+=String.fromCharCode(byte);
+   return{id:value,offset,bytes:btoa(raw).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,''),nextOffset,eof:nextOffset===bytes.length};
+  }});
+  let form='';retainNativeBackupForm({file:display,state:{operationId:'inert source input'},settled:true},{check:current,operationId:()=>'',submit:(_id,index,_last,text)=>{if(index===0)form='';form+=text;return '';}});
+  let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
+  const [normalized]=await normalizeNativeArchiveForms({protocol:1,ownerId:owner,sessionEpoch:1,views:[{id:crypto.randomUUID(),source:'backup-panel',mounted:false,rawForm:form,
+   files:[{descriptor:original,bytes:btoa(binary).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'')}]}]},owner,current);
+  check('actual Chromium File display normalizes a lone surrogate while source provenance and leading BOM remain exact',display.name==='\ufefforiginal-\ufffd-name'&&normalized.files[0].descriptor.name===original.name&&normalized.form?.file?.name===display.name);
+ }finally{bytes.fill(0);}
 }

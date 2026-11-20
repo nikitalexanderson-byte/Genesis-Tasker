@@ -34,6 +34,9 @@ internal class BackupImportFile(bytes:ByteArray,private val name:String?,private
             .put("nextOffset",next).put("eof",next==content.size)}finally{part.fill(0)}
     }
     @Synchronized fun clear(){retired=true;content.fill(0)}
+    @Synchronized fun migrationCopy():BackupMigrationInventory.File {
+        check(!retired){"BACKUP_TRANSFER"};return BackupMigrationInventory.File(descriptor().toString(),content)
+    }
     override fun toString()="BackupImportFile([redacted])"
     companion object {
         const val CHUNK=98304

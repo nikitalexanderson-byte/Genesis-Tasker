@@ -406,6 +406,33 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             }
         },assertCurrent=::current,legacyReminders={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"reminders",::current,transport::legacyRemindersPage)},reconciler=reconciler)
     }
+    /** Exact protected input only; not an archives adapter or restore authority.
+     * The complete coordinator must persist it under the new root before IO. */
+    internal fun e2eeArchivesLocalCapture(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified):suspend ()->ByteArray {
+        val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==accountScope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        return {withContext(Dispatchers.IO){
+            current();val revision=app.backupMigrationMemory.version();val forms=app.backupMigrationMemory.capture(uid,epoch)
+            val history=app.getSharedPreferences("genesis.backup.history.v1",android.content.Context.MODE_PRIVATE)
+            val originalHistory=history.getString(uid,null)
+            val result=app.database.withTransaction{
+                current();val safety=app.database.dao().backupDocuments(accountScope).filter{it.kind.startsWith("backup-safety:")}
+                check(safety.size<=10000){"E2EE_SOURCE_TOO_LARGE"}
+                val epochs=NativeBackupEpochStore(app)
+                JSONObject().put("protocol",1).put("ownerId",uid).put("scopeId",directory.scopeId).put("capturedAt",java.time.Instant.now().toString())
+                    .put("platform","android").put("inventoryVersion",1).put("generation",epochs.accepted(accountScope))
+                    .put("pendingGeneration",epochs.pending(accountScope)?:JSONObject.NULL).put("history",originalHistory?:JSONObject.NULL)
+                    .put("protectedState",ru.genesis.calendar.data.BackupSafetyStore(app,accountScope,::current).captureRaw().toString())
+                    .put("safety",org.json.JSONArray(safety.map{row->JSONObject().put("scope",row.scope).put("kind",row.kind).put("encrypted",row.encrypted).put("revision",row.revision)}))
+                    .put("forms",forms)
+            }
+            current();check(app.backupMigrationMemory.version()==revision&&history.getString(uid,null)==originalHistory){"E2EE_ARCHIVE_CAPTURE_CHANGED"}
+            val bytes=result.toString().toByteArray(Charsets.UTF_8)
+            try{current();check(bytes.size<=48*1024*1024){"E2EE_SNAPSHOT_TOO_LARGE"};bytes}catch(error:Throwable){bytes.fill(0);throw error}
+        }}
+    }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)

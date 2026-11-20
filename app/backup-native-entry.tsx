@@ -10,10 +10,12 @@ import {materializeBackupJournalChoices} from './backup-private-journals';
 import {nativeBackupOperations} from './backup-native-operations';
 import {acceptNativeBackupReply,assertNativeBackupSession} from './backup-native-replies';
 import {readNativeBackupFile} from './backup-native-file';
+import {retainNativeBackupForm} from './backup-native-form';
 import './globals.css';import './experimental-theme.css';import './dark-theme.css';import './dark-palettes.css';import './universal-ui.css';
 import './backup-native.css';
 type Boot={ownerId:string;language:string;dark:boolean;palette:string;colors:Record<string,string>};
-type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void;getHistory:()=>string|null;setHistory:(value:string,operationId:string)=>void;currentSession:(operationId:string)=>boolean};
+type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void;getHistory:()=>string|null;setHistory:(value:string,operationId:string)=>void;currentSession:(operationId:string)=>boolean;
+ retainFormChunk:(id:string,index:number,last:boolean,text:string,operationId:string)=>string};
 declare global {interface Window {GenesisBackupBridge:Bridge;GenesisBackupRuntime:{init:(value:string)=>void;resolve:(id:string,value:string)=>void;resolveChunk:(id:string,value:string,index:number,last:boolean)=>void}}}
 const decode=(value:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(value),c=>c.charCodeAt(0))));
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>;method:string;operationId:string}>();
@@ -49,6 +51,7 @@ window.GenesisBackupRuntime={
   };
   type NativeFrozen=FrozenDevice&{nativeSnapshot:BackupPayload};
   const runtime:BackupPanelRuntime={backupRequest,
+   retainForm:form=>retainNativeBackupForm(form,{check,operationId:()=>operations!.formToken(),submit:(...args)=>window.GenesisBackupBridge.retainFormChunk(...args)}),
    withOperation:(owner,action)=>{if(owner!==boot.ownerId)throw new Error('BACKUP_OWNER');return operations!.run(()=>action(runtime));},
    authorizeBackup:()=>backupRequest('/authorize',{noticeVersion:BACKUP_NOTICE_VERSION}),
    freezeBackupDevice:async owner=>({owner,at:new Date().toISOString(),sources:{},sync:{},storage:{},nativeSnapshot:await rpc<BackupPayload>('capture')}) as unknown as NativeFrozen,

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { authorizeBackup, BACKUP_NOTICE_VERSION, freezeBackupDevice, materializeDeviceBackup, materializeServerBackup, retainBackupSafety, type ServerEvidence, type FrozenDevice } from './backup-device';
 import { BACKUP_MAX_FILE, newBackupRecoveryKey, openBackup, sealBackup, type BackupPayload, type BackupModuleId } from './backup-format';
 import { BACKUP_WORKSPACE_COLLECTIONS, prepareBackupRestore, type BackupRestoreMode, type BackupRestorePlan } from './backup-restore';
@@ -9,6 +9,7 @@ import {backupJournalConflicts,type BackupJournalConflict,type BackupJournalChoi
 import {BackupJournalChoicesPanel} from './BackupJournalChoices';
 import {registerBackupMigrationEditor,withBackupEditorTask,type BackupMigrationForm} from './backup-migration-memory';
 import {withWebBackupRuntime} from './backup-web-operations';
+import {backupPanelMirror} from './backup-panel-mirror';
 type Stage={stageId:string;digest:string;counts:Record<string,number>;expiresIn:number};
 type Status={enabled:boolean;noticeVersion:string;generation:number;driveEnabled:false;serverSigningConfigured:boolean};
 const names={workspace:['Дела, проекты, привычки и прогресс','Tasks, projects, habits and progress'],mindmaps:['Карты мыслей','Mind maps'],diary:['Дневник и сны','Diary and dreams'],stoicheion:['Практики','Practices'],aurora:['Гно Метэр Басилея','Gno Meter Basileia'],physis:['Фюзис','Physis'],'shared-drafts':['Общие дела','Shared affairs']} as const;
@@ -25,27 +26,29 @@ export type BackupPanelRuntime={
  download:(content:string,id:string)=>void|Promise<void>;
  readFile?:()=>Promise<File>;restart?:()=>void;
  withOperation?:<T>(owner:string,operation:(runtime:BackupPanelRuntime)=>Promise<T>)=>Promise<T>;
+ retainForm?:(form:BackupMigrationForm)=>void;
 };
 const webRuntime:BackupPanelRuntime={authorizeBackup,freezeBackupDevice,materializeDeviceBackup,materializeServerBackup,retainBackupSafety,
  prepareBackupRestore:(payload,owner,selected,mode,choices)=>prepareBackupRestore(payload,owner,selected,mode,undefined,choices),backupNeedsReconciliation,backupRequest,captureAccountSessionGuard,holdBackupStaleChanges,download:webDownload,
  withOperation:(owner,action)=>withWebBackupRuntime(owner,webRuntime,action)};
+function useBackupPanelState<T>(mirror:ReturnType<typeof backupPanelMirror>,name:string,initial:T|(()=>T)):[T,Dispatch<SetStateAction<T>>]{
+ const [value,setValue]=useState(initial);mirror.initialize(name,value);
+ return[value,action=>setValue(mirror.update(name,action))];
+}
 export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?:BackupPanelRuntime}){
   const {backupNeedsReconciliation,backupRequest,captureAccountSessionGuard}=runtime;
   const {c,ready,failed,retry}=useBackupCopy(user.language);
-  const [status,setStatus]=useState<Status|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
-  const [key,setKey]=useState(''),[savedKey,setSavedKey]=useState(false),[consent,setConsent]=useState(false),[file,setFile]=useState<File|null>(null);
-  const [payload,setPayload]=useState<BackupPayload|null>(null),[selected,setSelected]=useState<BackupModuleId[]>([]),[mode,setMode]=useState<BackupRestoreMode>('missing');
-  const [plan,setPlan]=useState<BackupRestorePlan|null>(null),[stage,setStage]=useState<Stage|null>(null),[confirmed,setConfirmed]=useState(false);
-  const [conflicts,setConflicts]=useState<BackupJournalConflict[]>([]),[journalChoices,setJournalChoices]=useState<BackupJournalChoices>({});
-  const [history,setHistory]=useState<{attempt?:string;success?:string}>(()=>{try{return JSON.parse(localStorage.getItem(`genesis-backup-history-v1:${user.uid}`)||'{}');}catch{return {};}});
-  const operation=useRef(''),live=useRef(true),guard=useRef(captureAccountSessionGuard()),running=useRef(false);
+  const live=useRef(true),guard=useRef(captureAccountSessionGuard()),running=useRef(false);
+  const [mirror]=useState(()=>backupPanelMirror(runtime.retainForm));
+  const [status,setStatus]=useBackupPanelState<Status|null>(mirror,'status',null),[busy,setBusy]=useBackupPanelState(mirror,'busy',false),[error,setError]=useBackupPanelState(mirror,'error',''),[message,setMessage]=useBackupPanelState(mirror,'message','');
+  const [key,setKey]=useBackupPanelState(mirror,'key',''),[savedKey,setSavedKey]=useBackupPanelState(mirror,'savedKey',false),[consent,setConsent]=useBackupPanelState(mirror,'consent',false),[file,setFile]=useBackupPanelState<File|null>(mirror,'file',null);
+  const [payload,setPayload]=useBackupPanelState<BackupPayload|null>(mirror,'payload',null),[selected,setSelected]=useBackupPanelState<BackupModuleId[]>(mirror,'selected',[]),[mode,setMode]=useBackupPanelState<BackupRestoreMode>(mirror,'mode','missing');
+  const [plan,setPlan]=useBackupPanelState<BackupRestorePlan|null>(mirror,'plan',null),[stage,setStage]=useBackupPanelState<Stage|null>(mirror,'stage',null),[confirmed,setConfirmed]=useBackupPanelState(mirror,'confirmed',false);
+  const [conflicts,setConflicts]=useBackupPanelState<BackupJournalConflict[]>(mirror,'conflicts',[]),[journalChoices,setJournalChoices]=useBackupPanelState<BackupJournalChoices>(mirror,'journalChoices',{});
+  const [history,setHistory]=useBackupPanelState<{attempt?:string;success?:string}>(mirror,'history',()=>{try{return JSON.parse(localStorage.getItem(`genesis-backup-history-v1:${user.uid}`)||'{}');}catch{return {};}});
   const historyKey=`genesis-backup-history-v1:${user.uid}`;
-  const migrationForm=useRef<BackupMigrationForm>({state:null,file:null,settled:false});
-  useLayoutEffect(()=>{migrationForm.current={file,settled:!busy,state:{key,savedKey,consent,payload,selected,mode,plan,stage,confirmed,conflicts,journalChoices,
-    operationId:operation.current,history,status,error,message}};});
-  useLayoutEffect(()=>registerBackupMigrationEditor(user.uid,'backup-panel',()=>({...migrationForm.current,
-    state:{...migrationForm.current.state as Record<string,unknown>,operationId:operation.current},
-    settled:migrationForm.current.settled&&!running.current})),[user.uid]);
+  useLayoutEffect(()=>{mirror.publish();},[mirror]);
+  useLayoutEffect(()=>registerBackupMigrationEditor(user.uid,'backup-panel',mirror.snapshot),[user.uid,mirror]);
   useEffect(()=>{live.current=true;void backupRequest<Status>('/status').then(value=>{if(live.current)setStatus(value);}).catch(()=>{if(live.current)setError(c('Проверка резервирования недоступна. Данные устройства сохранены.','Backup service is unavailable. Device data is preserved.'));});
     return()=>{live.current=false;};
   // The panel is keyed by owner in AccountPanel; translations do not restart operations.
@@ -53,13 +56,22 @@ export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?
   },[historyKey]);
   const check=()=>{guard.current();if(!live.current)throw new Error('BACKUP_PANEL_CLOSED');};
   const stamp=(success=false)=>{const at=new Date().toISOString(),value={...history,attempt:at,...success?{success:at}:{}};localStorage.setItem(historyKey,JSON.stringify(value));setHistory(value);};
-  const run=async(action:(ports:BackupPanelRuntime)=>Promise<void>)=>{if(running.current)return;running.current=true;setBusy(true);setError('');setMessage('');try{await withBackupEditorTask(user.uid,async()=>{
-    const execute=async(bound:BackupPanelRuntime)=>{check();stamp();await action(bound);check();};if(runtime.withOperation)await runtime.withOperation(user.uid,execute);else await execute(runtime);
-  });}catch(reason){if(live.current){const code=reason instanceof Error?reason.message:'';
+  const report=(reason:unknown)=>{if(live.current){const code=reason instanceof Error?reason.message:'';
     if(code==='BACKUP_CANCELLED'){setMessage(c('Действие отменено.','Action cancelled.'));return;}
     const errors:Record<string,string>={BACKUP_DISABLED:c('Резервирование подготовлено, но ещё не включено владельцем сервиса.','Backups are prepared and await service activation.'),FEATURE_SUBSCRIPTION_REQUIRED:c('Нужен действующий Standart или выше.','An active Standart plan or higher is required.'),BACKUP_OWNER:c('Копия принадлежит другому аккаунту GENESIS.','This backup belongs to another GENESIS account.'),BACKUP_PREVIEW_CHANGED:c('Данные изменились. Создайте новый предпросмотр.','Data changed. Prepare a new preview.'),BACKUP_RECOVERY_OR_INTEGRITY:c('Ключ не подошёл или файл повреждён. Исходные данные сохранены.','The key is incorrect or the file is damaged. Existing data is preserved.'),BACKUP_DRAFT_CHOICE_REQUIRED:c('В копии несколько разных черновиков одной записи. Автоматический выбор остановлен.','This backup has conflicting drafts. Automatic selection has stopped.'),BACKUP_SIGNING_NOT_CONFIGURED:c('Для серверного снимка ещё не настроены ключи подписи.','Server snapshot signing keys are not configured.')};
-    setError(errors[code]??c('Не удалось завершить действие. Проверьте файл, ключ и соединение; данные сохранены.','The operation could not finish. Check the file, key and connection; data is preserved.'));}}
-    finally{running.current=false;if(live.current)setBusy(false);}};
+    setError(errors[code]??c('Не удалось завершить действие. Проверьте файл, ключ и соединение; данные сохранены.','The operation could not finish. Check the file, key and connection; data is preserved.'));}};
+  const run=async(action:(ports:BackupPanelRuntime)=>Promise<void>)=>{if(running.current)return;running.current=true;
+   let reported=false;
+   try{setBusy(true);setError('');setMessage('');await withBackupEditorTask(user.uid,async()=>{
+    const execute=async(bound:BackupPanelRuntime)=>{try{check();stamp();await action(bound);check();}catch(reason){reported=true;report(reason);throw reason;}
+     finally{if(live.current)setBusy(false);}};
+    if(runtime.withOperation)await runtime.withOperation(user.uid,execute);else await execute(runtime);
+   });}catch(reason){try{if(!reported){report(reason);if(live.current)setBusy(false);}}catch(refused){
+    // A retired owner/frozen scope cannot adopt even a late UI-only error. The
+    // last acknowledged form remains retained, and the failed action never runs.
+    const code=refused instanceof Error?refused.message:'';
+    if(!['BACKUP_OWNER','E2EE_ACCOUNT_CHANGED','E2EE_ARCHIVE_CAPTURE_BUSY','E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN'].includes(code))throw refused;
+   }}finally{running.current=false;}};
   const exportFile=(source:'device'|'server')=>run(async ports=>{
     const {freezeBackupDevice,retainBackupSafety,authorizeBackup,materializeDeviceBackup,materializeServerBackup,backupRequest,download}=ports;
     const frozen=await freezeBackupDevice(user.uid); // MUST precede every network request.
@@ -77,9 +89,9 @@ export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?
   const preview=()=>run(async ports=>{const {freezeBackupDevice,retainBackupSafety,authorizeBackup,prepareBackupRestore,backupRequest}=ports;if(!payload)return;const frozen=await freezeBackupDevice(user.uid);await retainBackupSafety(frozen);check();await authorizeBackup();
     const next=await prepareBackupRestore(payload,user.uid,selected,mode,journalChoices);check();setPlan(next);setStage(null);setConfirmed(false);
     if(!next.operations.length){setMessage(c('Добавлять нечего. Дубликаты не созданы.','Nothing to add. No duplicates created.'));return;}
-    const result=await backupRequest<Stage>('/preview',{noticeVersion:BACKUP_NOTICE_VERSION,operations:next.operations,...payload.serverEvidence?{serverEvidence:payload.serverEvidence}:{}});check();setStage(result);operation.current=crypto.randomUUID();});
+    const result=await backupRequest<Stage>('/preview',{noticeVersion:BACKUP_NOTICE_VERSION,operations:next.operations,...payload.serverEvidence?{serverEvidence:payload.serverEvidence}:{}});check();setStage(result);mirror.setOperationId(crypto.randomUUID());});
   const commit=()=>run(async ports=>{const {freezeBackupDevice,retainBackupSafety,backupRequest}=ports;if(!stage||!confirmed)return;const frozen=await freezeBackupDevice(user.uid);await retainBackupSafety(frozen);check();
-    const result=await backupRequest<{generation:number;duplicate:boolean}>('/commit',{noticeVersion:BACKUP_NOTICE_VERSION,stageId:stage.stageId,digest:stage.digest,operationId:operation.current,confirmed:true});check();
+    const result=await backupRequest<{generation:number;duplicate:boolean}>('/commit',{noticeVersion:BACKUP_NOTICE_VERSION,stageId:stage.stageId,digest:stage.digest,operationId:mirror.operationId(),confirmed:true});check();
     setStage(null);setConfirmed(false);stamp(true);setMessage(c('Восстановление завершено. Поколение данных: {generation}. Перезагрузите приложение; старая очередь будет сохранена для сверки.','Restore completed. Data generation: {generation}. Reload the app; the old queue will be held for review.').replace('{generation}',String(result.generation)));});
   const resetPreview=()=>{setStage(null);setPlan(null);setConfirmed(false);};
   if(!ready)return <section className="backup-panel" data-no-translate><p role="status">{failed?c('Перевод не загружен. Повторите попытку.','Translation could not load. Try again.'):c('Загрузка…','Loading…')}</p>{failed?<button type="button" onClick={retry}>{c('Повторить','Retry')}</button>:null}</section>;

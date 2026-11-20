@@ -48,6 +48,6 @@ No JCA/native UI/runtime capture integration, new-root complete archive recovery
 or device acceptance is claimed for this unconnected reader. The preceding
 composed file/web-job increment is accepted at commit
 `8db67ced212ef0caaad55ff0f3465e06dbcdcd7a`; its exact native identity and44 selected
-device cases are separate evidence. Source checks44634492570 is running on that
-commit; it does not include this following reader. Production3.3.5/149,
+device cases are separate evidence. Source checks44634492570 completed SUCCESS
+on that commit; it does not include this following reader. Production3.3.5/149,
 floors0/pilot/cutover off and GENESIS_DEPLOY_ANDROID=false remain unchanged.

@@ -35,6 +35,7 @@ import ru.genesis.calendar.data.BackupNativeStore
 import ru.genesis.calendar.data.GenesisBackupContainer
 import ru.genesis.calendar.data.BackupImportFile
 import ru.genesis.calendar.data.NativeLegacyOperationPermit
+import ru.genesis.calendar.data.LegacyScopeLocks
 import java.io.ByteArrayInputStream
 import java.util.Base64
 
@@ -70,6 +71,9 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     private var exportId=""
     @Volatile private var reconciled=false
     private val transfers=ru.genesis.calendar.data.BackupTransfer()
+    private val formTransfers=ru.genesis.calendar.data.BackupTransfer()
+    private val account=ru.genesis.calendar.auth.CloudAccountSnapshot.scopeFor(owner)
+    private val migrationView=app.backupMigrationMemory.open(owner,app.workspaceEpoch)
     private fun check(){check(active) { "BACKUP_VIEW_CLOSED" };store.checkOperationOwner();gateway.check();NativeLegacyOperationPermit.current()?.check()}
     private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
     private fun errorResponse(error:Exception)=JSONObject().put("error",(error as? AuthApiError)?.code?:error.message?.takeIf { it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+")) }?:"BACKUP_NATIVE_FAILED")
@@ -89,6 +93,23 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
         true
     }catch(_:Exception){false}
     @JavascriptInterface fun getHistory():String? { check();return history.getString(owner,null) }
+    /** Only the admitted verified reset can retain its final form after retiring
+     * its own HTTP generation. It grants no further HTTP/crypto/file operation. */
+    private fun <T> formWrite(operationId:String,action:()->T):T {
+        fun current(){
+            if(reconciled&&operationId.isNotEmpty()){
+                check(active){"BACKUP_VIEW_CLOSED"};store.checkOperationOwner();operation(operationId).check()
+            }else check()
+        }
+        current();check(operationId.isEmpty()||operations.containsKey(operationId)||synchronized(operationMonitor){operationId in endedOperations}){"E2EE_INVALID_LEGACY_OPERATION"}
+        return LegacyScopeLocks.memoryWrite(app.database,account,::current,action)
+    }
+    @JavascriptInterface @Synchronized fun retainFormChunk(id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
+        formWrite(operationId){
+            if(index==0)app.backupMigrationMemory.beginPublication(migrationView)
+            formTransfers.append(id,index,last,text)?.let{app.backupMigrationMemory.publish(migrationView,it)}
+        };""
+    }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
     @JavascriptInterface fun setHistory(value:String,operationId:String) {
         check();store.writeHistory(operation(operationId)){
         require(value.length<=500);val parsed=JSONObject(value)
@@ -171,7 +192,12 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
                         val type=resolver.getType(uri);check()
                         val file=requireNotNull(resolver.openInputStream(uri)).use { input->BackupImportFile.read(input,name,type,modified,declared,::check) }
                         try{
-                            check();synchronized(importMonitor){check();operation(payload.getString("operationId")).check();importFile?.clear();importFile=file;importOperation=payload.getString("operationId");file.descriptor()}
+                            check();synchronized(importMonitor){
+                                check();operation(payload.getString("operationId")).check()
+                                val retained=file.migrationCopy()
+                                try{app.backupMigrationMemory.retainFile(migrationView,retained)}catch(error:Throwable){retained.clear();throw error}
+                                importFile?.clear();importFile=file;importOperation=payload.getString("operationId");file.descriptor()
+                            }
                         }catch(error:Throwable){file.clear();throw error}
                     }
                     "importChunk"->synchronized(importMonitor){
@@ -212,7 +238,8 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     }
     @Synchronized fun stop(){
         val permits=synchronized(operationMonitor){active=false;operations.values.toList().also{operations.clear()}}
-        permits.forEach{it.close()};transfers.clear();synchronized(importMonitor){importFile?.clear();importFile=null;importOperation=""};exportText=null
+        permits.forEach{it.close()};transfers.clear();formTransfers.clear();app.backupMigrationMemory.detach(migrationView)
+        synchronized(importMonitor){importFile?.clear();importFile=null;importOperation=""};exportText=null
     }
 }
 

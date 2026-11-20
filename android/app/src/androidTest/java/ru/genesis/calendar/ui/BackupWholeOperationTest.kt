@@ -131,6 +131,8 @@ class BackupWholeOperationTest {
             val token=r.begin();val reset=r.call("reconcile",r.payload(token));ok(reset);assertEquals(2L,reset.getLong("value"))
             assertFalse(r.live);assertEquals(2L,NativeBackupEpochStore(r.app).accepted(r.account));assertNull(NativeBackupEpochStore(r.app).pending(r.account))
             assertTrue(r.bridge.currentSession(token));assertFalse(r.bridge.currentSession(""))
+            assertEquals("",retain(r,form(),token))
+            assertEquals("BACKUP_OWNER",retain(r,form()))
             error(r.call("restart"),"BACKUP_RECONCILE_REQUIRED");ok(r.end(token));assertFalse(r.bridge.currentSession(token));ok(r.call("restart"));assertEquals(1,r.restarts.get())
             error(r.call("restart"),"BACKUP_RECONCILE_REQUIRED")
         }finally{r.finish()}
@@ -207,5 +209,63 @@ class BackupWholeOperationTest {
             error(withTimeout(10000){result.await()},"E2EE_INVALID_LEGACY_OPERATION")
             val next=r.begin();ok(r.end(next));assertEquals(0,r.requests.get())
         }finally{release.complete(Unit);r.finish()}
+    }
+    private fun form(settled:Boolean=true,file:JSONObject?=null)=JSONObject().put("protocol",1).put("state",JSONObject().put("key"," exact private input ")
+        .put("operationId","original-uncertain-operation").put("confirmed",false).put("zero",0)).put("settled",settled).put("file",file?:JSONObject.NULL).toString()
+    private fun retain(r:Rig,raw:String,token:String=""):String {
+        val id=UUID.randomUUID().toString();var reply=""
+        raw.chunked(131072).forEachIndexed{index,part->reply=r.bridge.retainFormChunk(id,index,(index+1)*131072>=raw.length,part,token);if(reply.isNotEmpty())return reply}
+        return reply
+    }
+    @Test fun acceptedFormAndSelectedFileRemainExactAfterTransferRetirementAndActualBridgeStop():Unit=runBlocking {
+        val r=Rig();r.start();val directory=java.io.File(r.app.cacheDir,"advice-shares");check(directory.isDirectory||directory.mkdirs())
+        val file=java.io.File(directory,"QA336-retain-${UUID.randomUUID()}.genesisbackup");val original=byteArrayOf(0,-1,0xc3.toByte(),0x28);file.writeBytes(original)
+        try{
+            assertEquals("",retain(r,form()));r.chosen=androidx.core.content.FileProvider.getUriForFile(r.app,"${r.app.packageName}.updates",file)
+            val token=r.begin();val picked=r.call("importChoose",r.payload(token));ok(picked);val info=picked.getJSONObject("value")
+            ok(r.call("importClear",r.payload(token).put("id",info.getString("id"))))
+            val selected=JSONObject().put("id",info.getString("id")).put("name",info.getString("name")).put("type",info.getString("type").lowercase())
+                .put("size",original.size).put("lastModified",0)
+            val raw=" \n"+form(file=selected)+"\n";assertEquals("",retain(r,raw,token));ok(r.end(token));r.bridge.stop()
+            val captured=r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views").getJSONObject(0)
+            assertEquals(raw,captured.getString("rawForm"));assertFalse(captured.getBoolean("mounted"));val retained=captured.getJSONArray("files").getJSONObject(0)
+            assertEquals(info.toString(),retained.getJSONObject("descriptor").toString());assertArrayEquals(original,java.util.Base64.getUrlDecoder().decode(retained.getString("bytes")))
+            assertFalse(captured.toString().contains(file.absolutePath));assertEquals(0,r.requests.get())
+        }finally{original.fill(0);file.delete();r.finish()}
+    }
+    @Test fun synchronousFinalJobStatePrecedesMigrationFreezeAndPreparingRefusesImmediately():Unit=runBlocking {
+        val r=Rig();r.start();val entered=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        try{
+            assertEquals("",retain(r,form()));val token=r.begin();assertEquals("",retain(r,form(false),token))
+            val migration=async(Dispatchers.IO){NativeLegacyScopeFence(r.app.database,r.owner,"personal:${r.owner}",r::ownerCheck).withFence{
+                val snapshot=r.app.backupMigrationMemory.capture(r.owner,r.epoch);entered.complete(Unit);release.await();snapshot
+            }}
+            assertNull(withTimeoutOrNull(150){entered.await()});val accepted=form().replace("exact private input","complete before releasing job")
+            assertEquals("",retain(r,accepted,token));ok(r.end(token));withTimeout(10000){entered.await()}
+            assertEquals("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN",retain(r,form()));release.complete(Unit)
+            val captured=withTimeout(10000){migration.await()};assertEquals(accepted,captured.getJSONArray("views").getJSONObject(0).getString("rawForm"))
+            assertEquals("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN",retain(r,form()))
+            assertEquals(accepted,r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views").getJSONObject(0).getString("rawForm"))
+        }finally{release.complete(Unit);r.finish()}
+    }
+    @Test fun partialPublicationNeverHidesAcceptedInputAndOwnerChangeRetiresAllForms():Unit=runBlocking {
+        val r=Rig();r.start()
+        try{
+            val accepted=form();assertEquals("",retain(r,accepted));val id=UUID.randomUUID().toString()
+            assertEquals("",r.bridge.retainFormChunk(id,0,false," ".repeat(131072),""))
+            assertThrows(IllegalStateException::class.java){r.app.backupMigrationMemory.capture(r.owner,r.epoch)}
+            r.bridge.stop();assertEquals(accepted,r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views").getJSONObject(0).getString("rawForm"))
+            r.app.activateAccount(null);r.app.activateAccount(r.owner)
+            assertEquals(0,r.app.backupMigrationMemory.capture(r.owner,r.app.workspaceEpoch).getJSONArray("views").length())
+            assertEquals("BACKUP_VIEW_CLOSED",retain(r,form()));assertFalse(r.bridge.currentSession(""))
+        }finally{r.finish()}
+    }
+    @Test fun ordinaryAdmittedBackgroundIoDoesNotBlockAcknowledgingCurrentFormInput():Unit=runBlocking {
+        val r=Rig();r.start()
+        try{
+            val ordinary=NativeLegacyOperationPermit.acquire(r.app.database,r.account,r::check)
+            try{assertEquals("",retain(r,form()));assertEquals(form(),r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views").getJSONObject(0).getString("rawForm"))}
+            finally{ordinary.finish()}
+        }finally{r.finish()}
     }
 }

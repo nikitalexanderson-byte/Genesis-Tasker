@@ -1,6 +1,7 @@
 package ru.genesis.calendar.data
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import ru.genesis.calendar.auth.AuthApiError
@@ -11,9 +12,30 @@ import java.util.concurrent.ConcurrentHashMap
  * SQLite separately enforces persistent storage barriers across connections. */
 internal object LegacyScopeLocks {
     private val locks = ConcurrentHashMap<String, Mutex>()
+    private class MemoryGate { var frozen=false }
+    private val memory=ConcurrentHashMap<String,MemoryGate>()
     fun identity(db: GenesisDatabase, scope: String) =
         "${db.openHelper.databaseName ?: "memory:${System.identityHashCode(db)}"}\u0000$scope"
     fun mutex(db: GenesisDatabase, scope: String): Mutex = locks.getOrPut(identity(db,scope)) { Mutex() }
+    private fun memoryGate(db:GenesisDatabase,scope:String)=memory.getOrPut(identity(db,scope)){MemoryGate()}
+    /** Memory input must not wait for the scope mutex on a WebView bridge
+     * thread: migration can need that thread for its offline reconciler. Freeze
+     * under this monitor BEFORE installing the durable deny and taking capture.
+     * Ordinary legacy IO may hold the scope mutex without freezing UI input. */
+    fun freezeMemory(db:GenesisDatabase,scope:String){val gate=memoryGate(db,scope);synchronized(gate){gate.frozen=true}}
+    fun releaseCancelledMemory(db:GenesisDatabase,scope:String){val gate=memoryGate(db,scope);synchronized(gate){gate.frozen=false}}
+    fun <T> memoryWrite(db:GenesisDatabase,scope:String,assertCurrent:()->Unit,operation:()->T):T {
+        require(scope.matches(Regex("account-[a-f0-9]{32}"))){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val gate=memoryGate(db,scope)
+        return synchronized(gate){
+            assertCurrent();if(gate.frozen)throw AuthApiError("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN")
+            try{check(!genesisRoomTransactionActive()&&!db.inTransaction())}
+            catch(_:IllegalStateException){throw AuthApiError("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN")}
+            // Also honor a preparing/active marker restored in a fresh process.
+            runBlocking(Dispatchers.IO){if(db.dao().legacyScopeFence(scope)!=null)throw AuthApiError("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN")}
+            assertCurrent();operation().also{assertCurrent()}
+        }
+    }
 }
 
 /** Blocks before any legacy personal socket is created; keeps its permit until

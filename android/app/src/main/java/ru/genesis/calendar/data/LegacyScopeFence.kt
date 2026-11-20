@@ -60,6 +60,7 @@ internal class NativeLegacyScopeFence(private val db: GenesisDatabase, private v
     }
     override suspend fun <T> withFence(operation: suspend () -> T): T = mutex.withLock {
         assertCurrent()
+        LegacyScopeLocks.freezeMemory(db,storageScope)
         db.withTransaction {
             LegacyScopeFenceSql.install(db.openHelper.writableDatabase)
             val row=db.dao().legacyScopeFence(storageScope)
@@ -92,6 +93,7 @@ internal class NativeLegacyScopeFence(private val db: GenesisDatabase, private v
             check(status?.phase == "cancelled" && status.pendingAction == null && !status.resuming) { "E2EE_LOCAL_DOWNGRADE_FORBIDDEN" }
             check(db.dao().cancelLegacyScopeFence(storageScope,token) == 1) { "E2EE_LOCAL_CONFLICT" };assertCurrent()
         }
+        LegacyScopeLocks.releaseCancelledMemory(db,storageScope)
     }
     override fun toString() = "NativeLegacyScopeFence([redacted])"
 }

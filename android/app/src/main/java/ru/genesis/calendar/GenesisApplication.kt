@@ -24,6 +24,7 @@ class GenesisApplication : Application() {
     // Process-local owner transition only, never a crypto/data generation.
     private val scopeEpoch = java.util.concurrent.atomic.AtomicLong()
     internal val workspaceEpoch get() = scopeEpoch.get()
+    internal val backupMigrationMemory=BackupMigrationInventory()
     internal val adviceNotificationGuard = Any()
     @Volatile private var featureSnapshot: Pair<String,ru.genesis.calendar.auth.FeatureAccess>? = null
     fun rememberFeatureAccess(scope: String, value: ru.genesis.calendar.auth.FeatureAccess) { featureSnapshot = scope to value }
@@ -43,7 +44,7 @@ class GenesisApplication : Application() {
             // This contains only the hashed workspace key, never credentials or tokens.
             check(getSharedPreferences("genesis.reminder.scope.v1", MODE_PRIVATE).edit()
                 .putString("workspace", next).commit())
-            if (next != activeScope.value) scopeEpoch.incrementAndGet()
+            if (next != activeScope.value) { backupMigrationMemory.clear();scopeEpoch.incrementAndGet() }
             activeScope.value = next
             if (featureSnapshot?.first != next) featureSnapshot = null
         }
