@@ -6,6 +6,7 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.MessageDigest
 import java.util.UUID
+import java.io.InputStream
 import javax.crypto.SecretKey
 
 /** Independent file key, fresh per-chunk DEKs and authenticated encrypted final manifest. */
@@ -31,23 +32,56 @@ object E2eeFiles {
     private fun corrupt(): Nothing = throw IllegalStateException("E2EE_CORRUPT_FILE")
     fun seal(root: SecretKey, signingKey: PrivateKey, context: E2eeEnvelope.Context, source: ByteArray, filename: String, mediaType: String): Sealed {
         require(source.size <= MAX_FILE_BYTES && filename.length <= 512 && mediaType.length <= 128) { "E2EE_FILE_TOO_LARGE" }
-        val copy = source.copyOf(); val fileKey = E2eeKeys.freshSecret(); val fileId = UUID.randomUUID().toString()
+        val copy = source.copyOf(); val chunks = mutableListOf<E2eeEnvelope.Envelope>()
         try {
-            val chunkRoot = E2eeEnvelope.importRoot(fileKey); val chunks = mutableListOf<E2eeEnvelope.Envelope>(); val descriptors = JSONArray()
-            var offset = 0; var index = 0
-            while (offset < copy.size) {
-                val objectId = "$fileId:${index.toString().padStart(6,'0')}"; val operationId = UUID.randomUUID().toString()
-                val bytes = copy.copyOfRange(offset, minOf(offset + CHUNK_BYTES,copy.size))
-                val header = E2eeEnvelope.Context.fromJson(context.toJson().put("domain", "attachment").put("objectId",objectId).put("operationId",operationId).put("revision",1))
-                val chunk = try { E2eeEnvelope.seal(chunkRoot,signingKey,header,bytes) } finally { bytes.fill(0) }
-                val size = minOf(CHUNK_BYTES,copy.size-offset)
-                descriptors.put(JSONObject().put("objectId",objectId).put("operationId",operationId).put("index",index).put("size",size).put("hash",E2eeEnvelope.payloadHash(chunk)))
-                chunks += chunk; offset += size; index++
+            val manifest = copy.inputStream().use { input -> sealStream(root, signingKey, context, input, copy.size.toLong(), filename, mediaType, {}, { chunks += it }) }
+            return Sealed(manifest, chunks)
+        } finally { copy.fill(0) }
+    }
+    /** Same v1 format. Only bounded plaintext/ciphertext is held here. The
+     * caller owns source closing, durable original/key custody and local-only
+     * ciphertext quarantine. A prefix is not a complete file or save receipt;
+     * upload/restore authority still requires the complete coordinator plan. */
+    fun sealStream(root: SecretKey, signingKey: PrivateKey, original: E2eeEnvelope.Context, source: InputStream, size: Long,
+        filename: String, mediaType: String, assertCurrent: () -> Unit, writeQuarantinedChunk: (E2eeEnvelope.Envelope) -> Unit): E2eeEnvelope.Envelope {
+        assertCurrent()
+        require(size in 0..MAX_FILE_BYTES.toLong() && filename.length <= 512 && mediaType.length <= 128) { "E2EE_FILE_TOO_LARGE" }
+        val context = E2eeEnvelope.Context.fromJson(original.toJson()); val fileKey = E2eeKeys.freshSecret()
+        val buffer = ByteArray(CHUNK_BYTES); val descriptors = JSONArray(); val fileId = UUID.randomUUID().toString()
+        var filled = 0; var total = 0L
+        try {
+            val chunkRoot = E2eeEnvelope.importRoot(fileKey)
+            fun append(count: Int) {
+                assertCurrent(); val index = descriptors.length(); val objectId = "$fileId:${index.toString().padStart(6, '0')}"; val operationId = UUID.randomUUID().toString()
+                val header = E2eeEnvelope.Context.fromJson(context.toJson().put("domain", "attachment").put("objectId", objectId).put("operationId", operationId).put("revision", 1))
+                val bytes = buffer.copyOf(count)
+                val chunk = try { E2eeEnvelope.seal(chunkRoot, signingKey, header, bytes) } finally { bytes.fill(0) }
+                assertCurrent(); val hash = E2eeEnvelope.payloadHash(chunk); assertCurrent()
+                writeQuarantinedChunk(chunk); assertCurrent()
+                descriptors.put(JSONObject().put("objectId", objectId).put("operationId", operationId).put("index", index).put("size", count).put("hash", hash))
             }
-            val manifest = JSONObject().put("protocol",1).put("fileKey",E2eeEnvelope.encode(fileKey)).put("size",copy.size).put("chunkSize",CHUNK_BYTES)
-                .put("filename",filename).put("mediaType",mediaType).put("chunks",descriptors).toString().toByteArray(Charsets.UTF_8)
-            return try { Sealed(E2eeEnvelope.seal(root,signingKey,context,manifest),chunks) } finally { manifest.fill(0) }
-        } finally { copy.fill(0);fileKey.fill(0) }
+            while (true) {
+                assertCurrent(); val count = source.read(buffer, filled, buffer.size - filled); assertCurrent()
+                if (count == -1) break
+                check(count in 1..(buffer.size - filled) && total + count <= size) { "E2EE_INVALID_FILE_STREAM" }
+                total += count; filled += count
+                if (filled == buffer.size) { append(filled); buffer.fill(0); filled = 0 }
+            }
+            check(total == size) { "E2EE_INVALID_FILE_STREAM" }; assertCurrent()
+            if (filled > 0) append(filled); buffer.fill(0)
+            val text = JSONObject().put("protocol", 1).put("fileKey", E2eeEnvelope.encode(fileKey)).put("size", size).put("chunkSize", CHUNK_BYTES)
+                .put("filename", filename).put("mediaType", mediaType).put("chunks", descriptors).toString()
+            // JSONObject's UTF8 conversion otherwise replaces lone UTF16 units.
+            // Escaping every surrogate preserves both pairs and lone units in
+            // the existing private JSON manifest without changing its schema.
+            val safe = buildString { for (char in text) if (char.isSurrogate()) {
+                append("\\u"); val hex = "0123456789abcdef"
+                append(hex[char.code ushr 12]).append(hex[char.code ushr 8 and 15]).append(hex[char.code ushr 4 and 15]).append(hex[char.code and 15])
+            } else append(char) }
+            val bytes = safe.toByteArray(Charsets.UTF_8)
+            try { assertCurrent(); val manifest = E2eeEnvelope.seal(root, signingKey, context, bytes); assertCurrent(); return manifest }
+            finally { bytes.fill(0) }
+        } finally { buffer.fill(0); fileKey.fill(0) }
     }
     fun open(root: SecretKey, signer: PublicKey, expected: E2eeEnvelope.Context, manifestEnvelope: E2eeEnvelope.Envelope,
         fetch: (String) -> E2eeEnvelope.Envelope): Opened {

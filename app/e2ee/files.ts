@@ -27,21 +27,59 @@ export async function sealE2eeFile(root: CryptoKey, signingKey: CryptoKey, conte
   if (source.length > E2EE_MAX_FILE_BYTES || typeof metadata.filename !== 'string' || metadata.filename.length > 512
     || typeof metadata.mediaType !== 'string' || metadata.mediaType.length > 128) throw new Error('E2EE_FILE_TOO_LARGE');
   context = snapshotE2eeValue(context); metadata = { filename: metadata.filename, mediaType: metadata.mediaType };
-  const copy = new Uint8Array(source), fileKey = freshSecret(), fileId = crypto.randomUUID();
+  const copy = new Uint8Array(source),chunks:E2eeEnvelope[]=[];
   try {
-    const chunkRoot = await importE2eeRoot(fileKey), chunks: E2eeEnvelope[] = [], descriptors: ChunkDescriptor[] = [];
-    for (let offset = 0, index = 0; offset < copy.length; offset += E2EE_CHUNK_BYTES, index++) {
-      const objectId = `${fileId}:${String(index).padStart(6,'0')}`, operationId = crypto.randomUUID();
-      const bytes = copy.subarray(offset, Math.min(offset + E2EE_CHUNK_BYTES, copy.length));
-      const chunk = await sealE2eeEnvelope(chunkRoot, signingKey, { ...context, domain: 'attachment', objectId, operationId, revision: 1 }, bytes);
-      chunks.push(chunk); descriptors.push({ objectId, operationId, index, size: bytes.length, hash: await envelopePayloadHash(chunk) });
-    }
-    const manifest: FileManifest = { protocol: 1, fileKey: encodeE2eeBytes(fileKey), size: copy.length, chunkSize: E2EE_CHUNK_BYTES,
-      filename: metadata.filename, mediaType: metadata.mediaType, chunks: descriptors };
-    const privateBytes = encoder.encode(JSON.stringify(manifest));
-    try { return { manifest: await sealE2eeEnvelope(root, signingKey, context, privateBytes), chunks }; }
-    finally { privateBytes.fill(0); }
-  } finally { copy.fill(0); fileKey.fill(0); }
+    const source=(async function*(){for(let offset=0;offset<copy.length;offset+=E2EE_CHUNK_BYTES)yield copy.subarray(offset,Math.min(offset+E2EE_CHUNK_BYTES,copy.length));})();
+    const manifest=await sealE2eeFileStream({root,signingKey,context,size:copy.length,source,metadata,assertCurrent:()=>{},
+      writeQuarantinedChunk:async chunk=>{chunks.push(chunk);}});
+    return{manifest,chunks};
+  } finally { copy.fill(0); }
+}
+
+export type E2eeFileStreamOptions={root:CryptoKey;signingKey:CryptoKey;context:E2eeContext;size:number;
+ source:AsyncIterable<Uint8Array>;metadata:{filename:string;mediaType:string};assertCurrent:()=>void;
+ /** Local ciphertext quarantine only. Caller retains the protected original;
+  * no transport/restore authority exists before the COMPLETE manifest and
+  * coordinator plan have authenticated/read back and committed. */
+ writeQuarantinedChunk:(chunk:E2eeEnvelope)=>Promise<void>};
+
+/** Same v1 file format, bounded plaintext and ciphertext working set. The
+ * mandatory source EOF includes a legacy source's final tag check. A prefix
+ * chunk accepted by quarantine is not a completed file or input-save receipt.
+ * The caller owns quota/key custody and must keep output local until publication. */
+export async function sealE2eeFileStream(input:E2eeFileStreamOptions):Promise<E2eeEnvelope>{
+ const options={...input,context:snapshotE2eeValue(input.context),metadata:{filename:input.metadata.filename,mediaType:input.metadata.mediaType}};
+ const {root,signingKey,context,size,metadata,assertCurrent,writeQuarantinedChunk}=options;
+ assertCurrent();e2eeAdditionalData(context);
+ if(!Number.isSafeInteger(size)||size<0||size>E2EE_MAX_FILE_BYTES||typeof metadata.filename!=='string'||metadata.filename.length>512
+  ||typeof metadata.mediaType!=='string'||metadata.mediaType.length>128)throw new Error('E2EE_FILE_TOO_LARGE');
+ const source=options.source[Symbol.asyncIterator](),fileKey=freshSecret(),fileId=crypto.randomUUID(),buffer=new Uint8Array(E2EE_CHUNK_BYTES),descriptors:ChunkDescriptor[]=[];
+ let filled=0,total=0,ended=false,failed=false,failure:unknown,result:E2eeEnvelope|undefined;
+ try{
+  const chunkRoot=await importE2eeRoot(fileKey);assertCurrent();
+  const append=async(count:number)=>{
+   assertCurrent();const objectId=`${fileId}:${String(descriptors.length).padStart(6,'0')}`,operationId=crypto.randomUUID();
+   const chunk=snapshotE2eeValue(await sealE2eeEnvelope(chunkRoot,signingKey,{...context,domain:'attachment',objectId,operationId,revision:1},buffer.subarray(0,count)));
+   assertCurrent();const hash=await envelopePayloadHash(chunk);assertCurrent();
+   await writeQuarantinedChunk(chunk);assertCurrent();descriptors.push({objectId,operationId,index:descriptors.length,size:count,hash});
+  };
+  while(true){
+   assertCurrent();const next=await source.next();assertCurrent();if(next.done){ended=true;break;}
+   const value=next.value;if(!(value instanceof Uint8Array)||value.length<1||value.length>E2EE_CHUNK_BYTES||total+value.length>size)throw new Error('E2EE_INVALID_FILE_STREAM');
+   // Snapshot a borrowed source chunk before the next await/iterator advance.
+   const bytes=new Uint8Array(value);let at=0;
+   try{total+=bytes.length;while(at<bytes.length){assertCurrent();const count=Math.min(bytes.length-at,buffer.length-filled);buffer.set(bytes.subarray(at,at+count),filled);at+=count;filled+=count;
+    if(filled===buffer.length){await append(filled);buffer.fill(0);filled=0;}}}
+   finally{bytes.fill(0);}
+  }
+  if(total!==size)throw new Error('E2EE_INVALID_FILE_STREAM');assertCurrent();if(filled)await append(filled);buffer.fill(0);
+  const manifest:FileManifest={protocol:1,fileKey:encodeE2eeBytes(fileKey),size,chunkSize:E2EE_CHUNK_BYTES,filename:metadata.filename,mediaType:metadata.mediaType,chunks:descriptors};
+  const privateBytes=encoder.encode(JSON.stringify(manifest));
+  try{assertCurrent();const sealed=await sealE2eeEnvelope(root,signingKey,context,privateBytes);assertCurrent();result=snapshotE2eeValue(sealed);}
+  finally{privateBytes.fill(0);}
+ }catch(error){failed=true;failure=error;}
+ finally{buffer.fill(0);fileKey.fill(0);if(!ended)try{await source.return?.();}catch(error){if(!failed){failed=true;failure=error;}}}
+ if(failed)throw failure;if(!result)throw new Error('E2EE_INVALID_FILE_STREAM');return result;
 }
 export async function openE2eeFile(root: CryptoKey, signer: CryptoKey, expectedContext: E2eeContext, manifestEnvelope: E2eeEnvelope,
   fetchChunk: (objectId: string) => Promise<E2eeEnvelope>): Promise<{ bytes: Uint8Array<ArrayBuffer>; filename: string; mediaType: string }> {

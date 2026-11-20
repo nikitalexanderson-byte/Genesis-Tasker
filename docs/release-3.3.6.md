@@ -1916,3 +1916,35 @@ Coverage остаётся9/20. Stage не является полным personal
 direct upgrades,48 scenarios,14-language semantics и независимый human crypto
 review. Production3.3.5/149, floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false;
 Deploy, Play, личные устройства и версия в этой части не менялись.
+
+## Файлы: потоковый writer без смены формата,20 ноября
+
+Следующий блок sealE2eeFileStream/native sealStream сохраняет v1 file key,
+свежие DEK,256KiB chunks и encrypted signed manifest. Ciphertext передаётся по
+одной части в local quarantine; прежние batch API используют этот writer,
+сохраняя массивы для совместимости. Per-file64MiB не повышен. Actual EOF обязателен
+и после declared byte count: late source tag failure/retirement/IO refusal не
+возвращает complete manifest. Это ещё не streaming всего coordinator/content
+planner. Native JSON manifest экранирует исходные surrogate units перед UTF8,
+сохраняя имена без silent replacement, при прежней схеме.
+
+Input01 96A2A7D95458F510BD211851950CFD6E422019BBBFFFB12D97B68FE4A0E3B12A:
+build SUCCESS18m1s; JVM152/152, lint0/208/8, новых issue/file pairs0. Actual
+API26/API34 — по3/3,0 fail/skip.40MiB generated input ->160 individual private
+ciphertext files -> полный v1 readback; независимый bounded host SHA совпал.
+Elapsed8,011/11,670ms(API26/API34), max Java heap512/192MiB; peak heap/SLA не
+заявляются. Оба JCA providers читают новый public WebCrypto vector; Node читает
+оба native vectors с9 исходными bytes и всеми filename units(BOM/lone/emoji).
+Каждый результат дал2 extracted artifacts, оба проверены по хешам.
+
+Actual Chromium157/IndexedDB —8/8:9MiB+7bytes/37 immutable chunks читаются через
+новое соединение, native v1 открывается, tag/retirement/borrowed wipe проверены.
+JS draft01 —67 cases; после cleanup lint repair draft02 —64 stream/storage/
+migration cases;3 device-vault cases в02 не повторялись. Scoped ESLint/types PASS.
+Синтетические file-test keys публичные/в памяти, а не product presence/recovery.
+Hashes и точная граница: e2ee-336-file-stream.md.
+
+Далее — descriptor/private-manifest preflight до chunk IO и composed source/
+content/coordinator streaming. Остальные gates и coverage9/20 сохраняются.
+Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
+никаких Deploy/Play/личных устройств/обновления версии в этом блоке нет.

@@ -82,6 +82,81 @@ old keys. Quarantine large legacy AEAD plaintext under the new root until its
 final tag authenticates. Copying an opaque old cipher into a new encrypted
 record does not meet this requirement.
 
+## Concrete composition constraints after the accepted source-stage increment
+
+These are implementation decisions for the next coordinator increment, not
+claims that it exists. Review them against both actual `migration.ts` and
+native `E2eeMigration.kt`; do not implement a web-only state transition.
+
+- Introduce an explicit local state version3. Keep strict readers for1/2.
+  Represent the source as a discriminated staged reference, with its original
+  actor/vault identity and exact required-path registry. Do not encode a staged
+  source as legacy `snapshotParts:0`/empty bytes or silently reinterpret an old
+  snapshot hash. Crypto/writer protocol versions remain independent.
+- Current `openSourceStage` deliberately derives the capturing vault's actor.
+  The accepted cold tests reopen that same synthetic device identity, not a
+  newly enrolled device. A recovery path needs an explicitly authenticated,
+  read-only capability for the original vault/roots/signers. It must not rewrite
+  the original actor, import an old active signing identity as the current device,
+  restore old membership/billing/session authority, or rely on a backend boolean.
+- `SourceStageReference` grants no source lease or network permission. Publish
+  the complete immutable stage reference into the coordinator record under its
+  existing CAS and original-source fence. A lost CAS leaves its stage inert.
+  Only the committed coordinator pointer plus independently reopened keys/source
+  may allow the existing lease/prepare command. Check actor/source versions both
+  before and after capacity/key awaits and durable publication.
+- Register streaming path adapters separately from bounded legacy adapters.
+  Check **all** required registry paths before calling any producer or durable
+  key callback. A missing stream-only adapter cannot be replaced by a successful
+  empty legacy capture. Bound old per-path compatibility reads by their actual
+  old limits; never funnel the combined staged output back into64MiB JSON.
+- Complete stages that lost publication are still original history. Cancelled
+  coordinator ancestors may contain1/2 or3 states and must retain their exact
+  formats and source hashes. A new attempt must discover/reconcile every known
+  original, not only references in the caller's conveniently supplied array.
+- The current stage inspector makes incomplete attempts explicit but exposes
+  no incomplete-prefix recovery reader. Do not silently omit those markers from
+  a successful migration. Add an explicit inert-prefix/history mechanism with
+  original journal serial/hash and per-part authentication, or refuse for
+  reconciliation. A physical prefix EOF must never be labelled whole-source EOF.
+- Extend the content planner too. Both current coordinators still gather
+  `MigrationContent[]`/ByteArrays and `sealE2eeFile` still receives whole files.
+  A reference-only prepare followed by that same aggregate planner is not
+  streaming completion. Accept one bounded semantic record or file chunk at a
+  time into encrypted local quarantine; keep only bounded descriptors, coverage,
+  duplicate identities and receipts in the plan. Publish `planned:true` only
+  after every required path, nested old tag and resulting record/file manifest
+  has authenticated and read back successfully. No upload while planning.
+- Preserve remote versus device-only placement. Plaintext hashes and old keys
+  remain in encrypted local metadata; wire receipts/manifests expose only the
+  allowed technical/ciphertext information. A streamed file still needs the
+  existing independent file-key/chunk-context/authenticated-manifest guarantees.
+  Use established AEAD implementations, including for legacy large-input reads.
+- Add an actual bounded pull/ack port to the native shared reader. The current
+  common engine cannot consume a huge new snapshot through one JSON/Base64
+  bridge argument. Preserve the existing Main/renderer adoption fences, original
+  actor, view/operation nonce and cancellation across every read and terminal
+  adoption. A returned handle is read capability for inert bytes, not restore.
+- The complete process collector cannot simply call `retained()` with the
+  default form metadata reader on every directory: value/manifest/binary roles
+  have different raw bodies. Authenticate original locators first, strictly
+  decode their length-framed owner/epoch/view/role binding, filter the selected
+  owner before opening private bodies, and use the corresponding bounded reader.
+  Unknown roles/bindings/old remnants refuse. Active jobs/current views must be
+  fenced and deduplicated against process directories without dropping input.
+- Actual admission must include metadata, prior attempts, source parts and
+  content-plan records. The current bounded storage key query can refuse at
+  10000 local records before the per-stage allowance is exhausted. Do not claim
+  all-account capacity from one51MiB fixture, raise a heap or truncate a list.
+  Record refusal/recovery behavior, and preserve accepted originals on failure.
+
+The composed acceptance must fault-inject after journal/part/stage completion,
+before/after the coordinator CAS, during legacy mixed-ancestor reads, during
+record/file plan publication and at account retirement. Assert that no transport
+can observe an unpublished/partial plan, all losing originals remain recoverable
+and direct old-version upgrades require no intermediate APK. These cases and
+independent human review remain release gates beyond the local stage evidence.
+
 ## Acceptance and review
 
 Use actual combined retained forms, selected/unselected file histories and a
