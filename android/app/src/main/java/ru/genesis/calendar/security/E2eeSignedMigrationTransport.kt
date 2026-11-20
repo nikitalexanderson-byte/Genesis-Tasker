@@ -5,7 +5,7 @@ import java.util.UUID
 
 /** Authenticated requests are supplied by AuthController, not a second HTTP/session stack. */
 class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, directory: E2eeDirectory.Verified, domains: Set<String>,
-    private val request: suspend (String, JSONObject) -> JSONObject) : E2eeMigrationTransport {
+    private val request: suspend (String, JSONObject) -> JSONObject) : E2eeMigrationTransport, E2eeBoundedMigrationReadback {
     private val ownerId = directory.ownerId
     private val scopeId = directory.scopeId
     private val securityEpoch = directory.securityEpoch

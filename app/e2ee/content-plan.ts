@@ -1,6 +1,6 @@
 import {sha256} from '@noble/hashes/sha2.js';
 import {snapshotE2eeValue} from './commands.ts';
-import {E2EE_DOMAINS,E2EE_SUITE,decodeE2eeBytes,encodeE2eeBytes,e2eeAdditionalData,openE2eeEnvelope,sealE2eeEnvelope,type E2eeContext,type E2eeEnvelope} from './envelope.ts';
+import {E2EE_DOMAINS,E2EE_SUITE,decodeE2eeBytes,encodeE2eeBytes,e2eeAdditionalData,openE2eeEnvelope,sealE2eeEnvelope,verifyE2eeEnvelope,validateE2eeEnvelope,type E2eeContext,type E2eeEnvelope} from './envelope.ts';
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES,envelopePayloadHash,openE2eeFileStream,sealE2eeFileStream} from './files.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
@@ -92,16 +92,16 @@ function validate(options:Common,value:unknown,attempt:string):Manifest{
  for(const local of row.local){if(seen.has(local.domain+'\0'+local.objectId))invalid();seen.add(local.domain+'\0'+local.objectId);}
  if(records.size!==row.plan.length)invalid();return row;
 }
-async function verifyRecords(options:Common,value:Pick<Manifest,'attemptId'|'plan'|'logical'|'local'>){
+async function verifyRecords(options:Common,value:Pick<Manifest,'attemptId'|'plan'|'logical'|'local'>,load:(item:PlanEnvelope)=>Promise<E2eeEnvelope>=item=>sealed(options,item)){
  const byId=new Map(value.plan.map(item=>[item.domain+'\0'+item.objectId,item]));const used=new Set<string>();
  for(const logical of value.logical){
-  const descriptor=value.plan.find(item=>item.recordId===logical.manifestRecordId);if(!descriptor)invalid();const manifest=await sealed(options,descriptor),hash=sha256.create();let size=0;
+  const descriptor=value.plan.find(item=>item.recordId===logical.manifestRecordId);if(!descriptor)invalid();const manifest=await load(descriptor),hash=sha256.create();let size=0;
   try{
    if(logical.domain==='shared-comment'){
     const bytes=await openE2eeEnvelope(options.root,options.signer,manifest.context,manifest);try{current(options);hash.update(bytes);size=bytes.length;}finally{bytes.fill(0);}
    }else{
     const opened=await openE2eeFileStream({root:options.root,signer:options.signer,expectedContext:manifest.context,manifestEnvelope:manifest,assertCurrent:()=>current(options),
-     fetchChunk:async objectId=>{const item=byId.get('attachment\0'+objectId);if(!item||used.has(item.recordId))invalid();used.add(item.recordId);return sealed(options,item);},
+     fetchChunk:async objectId=>{const item=byId.get('attachment\0'+objectId);if(!item||used.has(item.recordId))invalid();used.add(item.recordId);return load(item);},
      writeQuarantinedPlaintext:async bytes=>{hash.update(bytes);size+=bytes.length;}});
     if(opened.filename!==logical.filename||opened.mediaType!==logical.mediaType||opened.size!==logical.size)invalid();
    }
@@ -248,4 +248,47 @@ export async function openMigrationContentPlan(input:Common&{reference:Migration
   const result=structuredClone(manifest);for(const rows of [result.plan,result.logical,result.local,result.coverage]){rows.forEach(Object.freeze);Object.freeze(rows);}Object.freeze(result.paths);Object.freeze(result.target);Object.freeze(result.actor);Object.freeze(result.context);
   return Object.freeze(result);
  }finally{stored.bytes.fill(0);}
+}
+
+export type MigrationContentPlanReadback=Readonly<{
+ forEachEnvelope:(consume:(envelope:E2eeEnvelope)=>Promise<void>)=>Promise<number>;
+ getEnvelope:(domain:E2eeContext['domain'],objectId:string)=>Promise<E2eeEnvelope|null>;
+}>;
+/** Full inventory/signature and original-byte readback of an inert plan. The
+ * coordinator must supply the pinned shadow-generation transport and bind the
+ * returned reference to its source/lease/CAS; this grants no activation. No
+ * ciphertext list or whole plaintext file is collected. Local-only parts never
+ * enter the transport. Every required callback is captured before local IO. */
+export async function verifyMigrationContentPlanReadback(input:Common&{reference:MigrationContentPlanReference},port:MigrationContentPlanReadback){
+ const walk=port?.forEachEnvelope,get=port?.getEnvelope;
+ if(typeof walk!=='function'||typeof get!=='function')throw new Error('E2EE_STREAMED_READBACK_REQUIRED');
+ const each=walk.bind(port),fetch=get.bind(port),options=captured(input),reference={...input.reference};current(options);
+ const manifest=await openMigrationContentPlan({...options,reference});current(options);
+ const expected=new Map(manifest.plan.map(item=>[item.domain+'\0'+item.objectId,item])),seen=new Set<string>();
+ const mismatch=():never=>{throw new Error('E2EE_CONTENT_READBACK_MISMATCH');};
+ const checked=async(item:PlanEnvelope,value:E2eeEnvelope|null)=>{
+  current(options);const envelope=validateE2eeEnvelope(value??mismatch()),context={...options.context,domain:item.domain,objectId:item.objectId,operationId:envelope.context.operationId};
+  // payloadHash excludes the signature; verify it separately on EVERY reply.
+  const valid=await verifyE2eeEnvelope(envelope,context,options.signer);current(options);
+  if(await envelopePayloadHash(valid)!==item.hash)mismatch();current(options);return valid;
+ };
+ let closed=false,busy=false,failed=false,failure:unknown;
+ const consume=async(value:E2eeEnvelope)=>{
+  if(closed)throw new Error('E2EE_READBACK_CLOSED');
+  let entered=false;
+  try{
+   current(options);if(failed)throw failure;if(busy)throw new Error('E2EE_READBACK_BUSY');busy=true;entered=true;
+   const envelope=validateE2eeEnvelope(value),key=envelope.context.domain+'\0'+envelope.context.objectId,item=expected.get(key)??mismatch();
+   if(seen.has(key))mismatch();await checked(item,envelope);if(closed)throw new Error('E2EE_READBACK_CLOSED');current(options);seen.add(key);
+  }catch(error){if(!failed){failed=true;failure=error;}throw error;}finally{if(entered)busy=false;}
+ };
+ try{
+  const count=await each(consume);current(options);if(failed)throw failure;
+  if(busy||count!==manifest.plan.length||seen.size!==manifest.plan.length)mismatch();
+ }finally{closed=true;}
+ await verifyRecords(options,manifest,async item=>{current(options);const value=await fetch(item.domain,item.objectId);current(options);return checked(item,value);});current(options);
+ // Re-open the exact complete reference after remote awaits: vanished or
+ // changed quarantine/local-only records cannot yield a success receipt.
+ await openMigrationContentPlan({...options,reference});current(options);
+ return Object.freeze({...reference,envelopes:manifest.plan.length,remoteRecords:manifest.logical.length,localRecords:manifest.local.length});
 }

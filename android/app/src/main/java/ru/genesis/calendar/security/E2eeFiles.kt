@@ -4,6 +4,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.security.PrivateKey
 import java.security.PublicKey
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import java.security.MessageDigest
 import java.util.UUID
 import java.io.InputStream
@@ -110,15 +112,20 @@ object E2eeFiles {
      * returned until all ordered chunks and the final actor check succeed. */
     fun openStream(root:SecretKey,signer:PublicKey,expected:E2eeEnvelope.Context,manifestEnvelope:E2eeEnvelope.Envelope,
         fetch:(String)->E2eeEnvelope.Envelope,assertCurrent:()->Unit,writeQuarantinedPlaintext:(ByteArray)->Unit):OpenedMetadata =
-        readChunks(root,signer,expected,manifestEnvelope,fetch,assertCurrent){writeQuarantinedPlaintext}
-    private fun readChunks(root:SecretKey,signer:PublicKey,original:E2eeEnvelope.Context,manifestEnvelope:E2eeEnvelope.Envelope,
-        fetch:(String)->E2eeEnvelope.Envelope,assertCurrent:()->Unit,begin:(OpenedMetadata)->((ByteArray)->Unit)):OpenedMetadata {
+        readChunks(root,signer,expected,manifestEnvelope,fetch,assertCurrent,{},writeQuarantinedPlaintext)
+    /** Same strict reader, with genuinely awaited fetch/ack rather than a
+     * blocking bridge or a collected ciphertext file. */
+    suspend fun openStreamSuspending(root:SecretKey,signer:PublicKey,expected:E2eeEnvelope.Context,manifestEnvelope:E2eeEnvelope.Envelope,
+        fetch:suspend(String)->E2eeEnvelope.Envelope,assertCurrent:()->Unit,writeQuarantinedPlaintext:suspend(ByteArray)->Unit):OpenedMetadata =
+        readChunks(root,signer,expected,manifestEnvelope,{fetch(it)},{currentCoroutineContext().ensureActive();assertCurrent()},{},{writeQuarantinedPlaintext(it)})
+    private inline fun readChunks(root:SecretKey,signer:PublicKey,original:E2eeEnvelope.Context,manifestEnvelope:E2eeEnvelope.Envelope,
+        fetch:(String)->E2eeEnvelope.Envelope,assertCurrent:()->Unit,begin:(OpenedMetadata)->Unit,write:(ByteArray)->Unit):OpenedMetadata {
         val expected=E2eeEnvelope.Context.fromJson(original.toJson());assertCurrent()
         val privateBytes=E2eeEnvelope.open(root,signer,expected,manifestEnvelope);var keyBytes:ByteArray?=null
         try{
             assertCurrent();val manifest=privateFileManifest(privateBytes);val size=E2eeCommands.integer(manifest.get("size"));val chunks=manifest.getJSONArray("chunks")
             val fileKey=manifest.get("fileKey") as? String?:corrupt();keyBytes=try{E2eeEnvelope.decode(fileKey,32)}catch(_:Exception){corrupt()};val chunkRoot=E2eeEnvelope.importRoot(keyBytes);assertCurrent()
-            val metadata=OpenedMetadata(size,manifest.getString("filename"),manifest.getString("mediaType"));val write=begin(metadata);assertCurrent();var offset=0L
+            val metadata=OpenedMetadata(size,manifest.getString("filename"),manifest.getString("mediaType"));begin(metadata);assertCurrent();var offset=0L
             for (index in 0 until chunks.length()) {
                 val entry = chunks.getJSONObject(index);E2eeKeys.exact(entry,setOf("objectId","operationId","index","size","hash"))
                 val objectId = entry.getString("objectId");val operationId = entry.getString("operationId")
@@ -136,10 +143,9 @@ object E2eeFiles {
         fetch: (String) -> E2eeEnvelope.Envelope): Opened {
         var output:ByteArray?=null;var offset=0
         try{
-            val metadata=readChunks(root,signer,expected,manifestEnvelope,fetch,{}){meta->
+            val metadata=readChunks(root,signer,expected,manifestEnvelope,fetch,{}, {meta->
                 val result=ByteArray(meta.size.toInt());output=result;
-                {bytes:ByteArray->bytes.copyInto(result,offset);offset+=bytes.size}
-            }
+            }, {bytes->bytes.copyInto(requireNotNull(output),offset);offset+=bytes.size})
             if(offset.toLong()!=metadata.size)corrupt();return Opened(requireNotNull(output),metadata.filename,metadata.mediaType)
         }catch(_:Exception){output?.fill(0);corrupt()}
     }

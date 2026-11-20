@@ -2204,3 +2204,39 @@ mixed legacy history/custody и настоящий bounded native/WebView input;
 48 scenarios/14-language semantics/independent human review сохраняются.
 Coverage9/20, production3.3.5/149, floors0/pilot/cutover off,
 GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные устройства/версия не менялись.
+
+## Полная проверка плана через потоковый readback,20 ноября
+
+Следующий component increment сопоставляет ВСЮ ожидаемую inventory с signed
+envelope context/signature/payload hash, затем через bounded exact get открывает
+все manifests/chunks и проверяет полный исходный SHA-256/size/filename/mediaType.
+Payload hash не включает signature, поэтому подпись проверяется отдельно у
+каждого ответа. Missing/extra/duplicate/count mismatch, пойманная портом ошибка
+sink, concurrent/late callback и retirement не дают complete receipt.
+Защищённый local reference повторно читается после remote awaits; локальные
+черновики не имеют remote fallback. Local writes/activation здесь отсутствуют.
+
+Native suspending reader использует тот же strict v1 parser/chunk loop, что
+sync/batch: настоящий await fetch/ack, cancellation guard и cleanup borrowed
+plaintext/private manifest/key bytes. Нет runBlocking bridge или сборки полного
+ciphertext/file в массив. Новая explicit bounded capability не выводится из
+fail-closed default aggregate ports.
+
+Selected JS133/133, owned types/scoped lint/full build:web PASS. Финальный
+Chromium157/IDB15/15/console0 с полным9MiB+7byte original digest PASS.
+Native input01 845F51489CB525DF4E604EB5164654045273AECC80A23DA9CC6A9F36BE87D3B7:
+build SUCCESS4m22s, JVM203/203,0 failures/skips. Actual API26/API34 — по3/3 новых
+cases и4/4 regressions. Каждый полный9,437,191-byte file hash проверен независимым
+bounded Node construction, вместе с extracted proof. Регрессии дополнительно
+сверяют4,194,310 bytes readback и4,194,408 bytes/six logical hashes, все33 original
+rows сохранены. Full Android lint SUCCESS14m6s:0 errors/208 warnings/8 hints,
+новых issue/file pairs против original-source-native-lint-01.xml нет. Точные scope,
+reports/hashes: e2ee-336-content-plan-readback.md. Synthetic lazy peer не означает
+actual HTTP/backend/product migration/custody.
+
+Новый компонент не открывает v3 run: полная state/source/plan/coordinator
+публикация, mixed old histories/custody, protected remote originals, настоящий
+bounded native/WebView source input и все11 real-source/product/recovery/shared/
+Drive/direct-upgrade/48-scenario/14-language/human-review gates сохраняются.
+Coverage9/20, production3.3.5/149, floors0/pilot/cutover off,
+GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные устройства/версия не менялись.

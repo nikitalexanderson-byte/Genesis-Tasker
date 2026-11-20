@@ -24,6 +24,12 @@ interface E2eeMigrationTransport {
     suspend fun forEachEnvelope(consume:suspend(E2eeEnvelope.Envelope)->Unit):Int = error("E2EE_STREAMED_READBACK_REQUIRED")
     suspend fun getEnvelope(domain:String,objectId:String):E2eeEnvelope.Envelope? = error("E2EE_STREAMED_READBACK_REQUIRED")
 }
+/** Explicit capability for streamed shadow verification. The aggregate
+ * transport's fail-closed default methods do not grant this capability. */
+interface E2eeBoundedMigrationReadback {
+    suspend fun forEachEnvelope(consume:suspend(E2eeEnvelope.Envelope)->Unit):Int
+    suspend fun getEnvelope(domain:String,objectId:String):E2eeEnvelope.Envelope?
+}
 
 /** Native parity with app/e2ee/migration.ts. Snapshot and new keys must be durable
  * before any network operation. Shadow objects, prior attempts and local work

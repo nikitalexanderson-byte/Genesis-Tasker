@@ -246,3 +246,18 @@ plus2/2 staged regressions support component scope; native signed ports remain
 synthetic callback fixtures, and actual backend/product migration is not claimed.
 The full4MiB+6byte payload hashes are independently checked. This does not switch
 the old coordinator to streaming, protect remote originals or enable v3 run.
+
+The complete-plan verifier is described in `e2ee-336-content-plan-readback.md`.
+Review the exact committed expected inventory and independent signature checks
+(payload hashes omit signatures), swallowed/concurrent/late callback semantics,
+bounded exact-get context/file authentication and whole original digests. Local
+quarantine is re-authenticated after remote awaits; local-only records have no
+remote fallback. Native's suspending fetch/ack shares the existing strict v1
+reader and must retain cancellation/finally cleanup. Component peer fixtures do
+not establish an actual backend migration, source provenance, coordinator CAS,
+product recovery, new real adapter coverage or independent human review.
+Selected JS133/133, JVM203/203, Chromium15/15 and actual API26/API34 each3/3 new
+plus4/4 regression cases PASS. Full native lint0/208/8 has no new issue/file pairs;
+complete9MiB+7byte file and regression hashes are independently checked. These
+remain component fixtures with an inert reference receipt; all release gates
+still apply.

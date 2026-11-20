@@ -20,6 +20,13 @@ pinned headers does not prove server completeness; the full expected plan and
 content authentication remain mandatory. Old coordinator readAll/file arrays,
 complete source/plan publication and remote-original custody are still open.
 
+The following complete-plan verifier is tracked separately in
+`e2ee-336-content-plan-readback.md`: whole expected inventory with independent
+signature checks, bounded exact file gets and complete original digests, followed
+by a new local reference authentication. Native suspending fetch/ack shares the
+strict synchronous v1 reader. Its receipt carries no publication/activation
+authority. Use that document's current platform acceptance, not old test totals.
+
 ## Primitives and formats
 
 Root delivery uses RFC 9180 base-mode HPKE with DHKEM(P-256, HKDF-SHA256),

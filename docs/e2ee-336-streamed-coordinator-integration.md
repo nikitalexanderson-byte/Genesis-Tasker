@@ -62,6 +62,14 @@ expected inventory and reject extra/missing/duplicate objects, then verify every
 complete content/file digest. Metadata may remain bounded in memory; whole
 ciphertext/file arrays may not.
 
+The complete-plan bounded verifier now has a separate implementation/evidence
+record in `e2ee-336-content-plan-readback.md`. It verifies the whole expected
+inventory (including signatures independently of payload hashes), then exact
+gets and complete original digests, and reopens the protected local reference.
+Native uses the shared strict v1 reader with suspending fetch/ack. Its component
+receipt is inert; coordinator publication/history/custody remain to be composed.
+Native/provider acceptance must be taken from that document, not old APKs.
+
 Do not recreate an aggregate planner after a reference-only prepare. Reconcile
 one semantic record/file stream at a time into `ProtectedMigrationContentPlan` /
 `E2eeContentPlan.Writer`. Keep only bounded descriptors, duplicate identities,

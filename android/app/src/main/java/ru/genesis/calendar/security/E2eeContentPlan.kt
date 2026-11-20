@@ -9,6 +9,8 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.UUID
 import javax.crypto.SecretKey
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /** Local encrypted quarantine only. A complete plan does not grant transport,
  * restore, enrollment or replay authority; the coordinator owns source/lease/CAS. */
@@ -17,6 +19,9 @@ internal object E2eeContentPlan {
     data class Capacity(val maximumBytes:Long,val maximumEnvelopes:Int,val maximumLocalParts:Int)
     data class Admission(val bytes:Long,val envelopes:Int,val localParts:Int,val metadataBytes:Int,val additionalStorageBytes:Long)
     data class Reference(val attemptId:String,val manifestHash:String)
+    class ReadbackReceipt(val reference:Reference,val envelopes:Int,val remoteRecords:Int,val localRecords:Int) {
+        override fun toString()="E2eeContentPlan.ReadbackReceipt([redacted])"
+    }
     class ReadOptions(val vault:E2eeSourceReadVault,val root:SecretKey,val signer:PublicKey,val context:E2eeEnvelope.Context,
         val target:E2eeSourceStage.Target,val migrationId:String,val sourceHash:String,val paths:List<String>,val inventory:E2eePrivatePaths,val assertCurrent:()->Unit) {
         override fun toString()="E2eeContentPlan.ReadOptions([redacted])"
@@ -145,6 +150,60 @@ internal object E2eeContentPlan {
             if(stored.first!=1L||hash(stored.second.first)!=reference.manifestHash)invalid();binding.current();val value=validate(binding,stored.second.second,reference.attemptId)
             inventory(binding,value,true);verifyRecords(binding,value);inventory(binding,value,true);binding.current();return Opened(copy(value))
         }finally{stored.second.first.fill(0)}
+    }
+    /** Full expected inventory/signature and original-byte readback, with no
+     * aggregate ciphertext or file buffer. The coordinator supplies the pinned
+     * generation transport and still owns source/lease/CAS and activation. */
+    suspend fun verifyReadback(input:ReadOptions,reference:Reference,port:E2eeBoundedMigrationReadback):ReadbackReceipt {
+        val job=currentCoroutineContext()
+        val read=ReadOptions(input.vault,input.root,input.signer,input.context,input.target.copy(),input.migrationId,input.sourceHash,input.paths.toList(),input.inventory){job.ensureActive();input.assertCurrent()}
+        val binding=Binding(read);val value=open(read,reference).manifest;binding.current()
+        val plan=value.getJSONArray("plan");val logical=value.getJSONArray("logical")
+        val expected=(0 until plan.length()).associate{plan.getJSONObject(it).let{row->text(row,"domain")+"\u0000"+text(row,"objectId") to row}}
+        val byRecord=(0 until plan.length()).associate{plan.getJSONObject(it).let{row->text(row,"recordId") to row}}
+        fun mismatch():Nothing=error("E2EE_CONTENT_READBACK_MISMATCH")
+        fun checked(item:JSONObject,raw:E2eeEnvelope.Envelope?):E2eeEnvelope.Envelope {
+            binding.current();if(raw==null)mismatch();val envelope=E2eeEnvelope.Envelope.fromJson(raw.toJson());val ctx=envelope.context.toJson()
+            val context=E2eeEnvelope.Context.fromJson(binding.context.toJson().put("domain",item.get("domain")).put("objectId",item.get("objectId")).put("operationId",ctx.get("operationId")))
+            // The payload hash excludes the signature. Both are mandatory.
+            val valid=E2eeEnvelope.verify(envelope,context,binding.signer);binding.current();if(E2eeEnvelope.payloadHash(valid)!=item.get("hash"))mismatch();binding.current();return valid
+        }
+        val gate=Any();val seen=mutableSetOf<String>();var closed=false;var busy=false;var failure:Throwable?=null
+        try{
+            val count=port.forEachEnvelope{raw->
+                var entered=false
+                try{
+                    synchronized(gate){check(!closed){"E2EE_READBACK_CLOSED"};binding.current();failure?.let{throw it};check(!busy){"E2EE_READBACK_BUSY"};busy=true;entered=true}
+                    val envelope=E2eeEnvelope.Envelope.fromJson(raw.toJson());val ctx=envelope.context.toJson();val key=text(ctx,"domain")+"\u0000"+text(ctx,"objectId")
+                    val item=synchronized(gate){if(key in seen)mismatch();expected[key]?:mismatch()};checked(item,envelope)
+                    synchronized(gate){check(!closed){"E2EE_READBACK_CLOSED"};binding.current();seen.add(key)}
+                }catch(error:Throwable){synchronized(gate){if(failure==null)failure=error};throw error}
+                finally{if(entered)synchronized(gate){busy=false}}
+            }
+            synchronized(gate){binding.current();failure?.let{throw it};if(busy||count!=plan.length()||seen.size!=plan.length())mismatch()}
+        }finally{synchronized(gate){closed=true}}
+        suspend fun load(item:JSONObject):E2eeEnvelope.Envelope {
+            binding.current();val raw=port.getEnvelope(text(item,"domain"),text(item,"objectId"));binding.current();return checked(item,raw)
+        }
+        val used=mutableSetOf<String>()
+        for(index in 0 until logical.length()){
+            binding.current();val row=logical.getJSONObject(index);val descriptor=byRecord[text(row,"manifestRecordId")]?:mismatch();val manifest=load(descriptor)
+            val digest=MessageDigest.getInstance("SHA-256");var size=0L
+            if(text(row,"domain")=="shared-comment"){
+                val bytes=E2eeEnvelope.open(binding.root,binding.signer,manifest.context,manifest);try{binding.current();digest.update(bytes);size=bytes.size.toLong()}finally{bytes.fill(0)}
+            }else{
+                val opened=E2eeFiles.openStreamSuspending(binding.root,binding.signer,manifest.context,manifest,{objectId->
+                    val item=expected["attachment\u0000$objectId"]?:mismatch();if(!used.add(text(item,"recordId")))mismatch();load(item)
+                },binding::current,{bytes->digest.update(bytes);size+=bytes.size})
+                if(opened.size!=integer(row,"size")||opened.filename!=text(row,"filename")||opened.mediaType!=text(row,"mediaType"))mismatch()
+            }
+            val bytes=digest.digest();try{if(size!=integer(row,"size")||E2eeEnvelope.encode(bytes)!=text(row,"plaintextHash"))mismatch()}finally{bytes.fill(0)}
+            if(!used.add(text(descriptor,"recordId")))mismatch();binding.current()
+        }
+        if(used.size!=plan.length())mismatch()
+        // Re-authenticate the exact reference after all remote awaits, including
+        // every protected local-only part. No success if quarantine disappeared.
+        open(read,reference);binding.current();return ReadbackReceipt(reference,plan.length(),logical.length(),value.getJSONArray("local").length())
     }
     fun create(input:Options):Writer {
         val binding=Binding(input.read);val vault=binding.vault as? UnlockedE2eeVault?:error("E2EE_CONTENT_PLAN_WRITE_REQUIRED");val capacity=input.capacity.copy()
