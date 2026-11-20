@@ -11,9 +11,15 @@ $make=static function(string $suffix,bool $website=false)use($prefix,&$users):ar
 $jobs=static function(string $id)use($db):array{$q=$db->prepare('SELECT * FROM account_email_outbox WHERE user_id=? ORDER BY created_at,id');$q->execute([$id]);$rows=$q->fetchAll();$q->closeCursor();return $rows;};
 try{
     $native=$make('-native');$web=$make('-web',true);
-    $initial=genesisEmailRegistrationStatus($native);
+    $initialReadAt=time();$initial=genesisEmailRegistrationStatus($native);
     verificationExpect($initial['required']&&!$initial['confirmed']&&$initial['hasRequest']&&$initial['retryAfter']>0&&$initial['reminderDue'],'New native accounts need a queued registration and mandatory notice');
-    verificationExpect(genesisUserForClient($native)['emailVerification']===$initial,'Session omitted verification status');
+    // These calls may cross a second boundary: compare every stable field and
+    // bound the live countdown by the actual elapsed wall clock.
+    $sessionStatus=genesisUserForClient($native)['emailVerification'];$afterStatus=time();
+    $initialRetry=$initial['retryAfter'];$sessionRetry=$sessionStatus['retryAfter']??null;
+    verificationExpect(is_int($sessionRetry)&&$sessionRetry>=max(0,$initialRetry-($afterStatus-$initialReadAt))&&$sessionRetry<=$initialRetry,'Session verification cooldown is missing or increased');
+    unset($initial['retryAfter'],$sessionStatus['retryAfter']);
+    verificationExpect($sessionStatus===$initial,'Session omitted verification status');
     for($i=0;$i<5;$i++)genesisEmailRegistrationStatus($native);
     verificationExpect(count($jobs($native['id']))===1,'Reading a notice queued additional mail');
     $settings=genesisNotificationDefaults();$settings['enabled']=false;$settings['channels']['email']=false;$settings['channels']['inbox']=false;
