@@ -1,5 +1,6 @@
 import { isRecurrencePattern, recurrenceDatesForTask, type RecurrenceMode, type RecurrencePattern } from "./task-recurrence";
 import {isE2eeResponsePath,readE2eeJsonResponse} from './e2ee/http-response';
+import type {E2eeHttpObservation} from './e2ee/http-observation';
 import { currentFeatureAccess, rememberFeatureAccess } from './feature-access';
 import {beginTrialTransport,acceptTrialTransport,invalidateTrialAccess,type BillingTrial,type BillingTrialPlan} from './billing-trial';
 import {allowDataTransfer,requireDataTransfer} from './data-transfer-access';
@@ -1008,7 +1009,8 @@ export class GenesisApiError extends Error {
   }
 }
 
-async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
+type ApiFeedback={upgradePrompt?:boolean;e2eeObservation?:E2eeHttpObservation};
+async function api<T>(path: string, init: RequestInit = {}, feedback: ApiFeedback = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
   const method=(init.method??'GET').toUpperCase();let body:unknown=undefined;
   if(path.replace(/^\/+/, '').split('?',1)[0]==='account/preferences'&&!['GET','HEAD','OPTIONS'].includes(method)) {
     try { if(typeof init.body!=='string')throw new Error();body=JSON.parse(init.body); }
@@ -1029,7 +1031,7 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
   finally { accountRequests.delete(waiting);init.signal?.removeEventListener('abort',abort); }
 }
 
-async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {},legacyOwner?:string): Promise<T> {
+async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: ApiFeedback = {},legacyOwner?:string): Promise<T> {
   if (backupReconciliationRequired && !['GET','HEAD'].includes(init.method ?? 'GET')
     && /^\/(?:workspace|tasks|mindmaps|diary|stoicheion-workspace|aurora-workspace|physis|recovered-tasks)(?:\/|$)/.test(path))
     throw new Error('BACKUP_RECONCILIATION_REQUIRED');
@@ -1050,6 +1052,12 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: { 
   }, API_TIMEOUT_MS);
   let response: Response;
   try {
+    if(feedback.e2eeObservation){
+      if(!isE2eeResponsePath(path)||requestInit.body!=null&&typeof requestInit.body!=='string')throw new Error('E2EE_OBSERVATION_REQUEST_INVALID');
+      await feedback.e2eeObservation.prepare(Object.freeze({path,method:requestInit.method??'GET',body:typeof requestInit.body==='string'?requestInit.body:null}));
+      if(generation!==sessionGeneration)throw new GenesisApiError(401,null,'AUTH_REQUIRED');
+      if(requestController.signal.aborted)throw requestController.signal.reason;
+    }
     response = await fetch(`${API_BASE}${path}`, {
       ...requestInit,
       credentials: "include",
@@ -1070,7 +1078,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: { 
     const payload = (isE2eeResponsePath(path)?await readE2eeJsonResponse(response,path,()=>{
       if(generation!==sessionGeneration)throw new GenesisApiError(401,null,'AUTH_REQUIRED');
       if(requestController.signal.aborted)throw requestController.signal.reason;
-    }):await response.json().catch((error: unknown) => {
+    },feedback.e2eeObservation):await response.json().catch((error: unknown) => {
       if (requestController.signal.aborted) throw requestController.signal.reason ?? error;
       return null;
     })) as ({ error?: string } & Record<string, unknown>) | null;
@@ -3572,10 +3580,12 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
 }
 /** Shares authenticated transport/CSRF/cancellation only. No root or private key
  * is accepted by this boundary; E2EE clients send signed commands/ciphertext. */
-export function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal) {
-  if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))return Promise.reject(new Error('E2EE_ROUTE_FORBIDDEN'));
-  return api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})})
-    .catch(error=>{if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;});
+export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
+  try{
+    if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
+    return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
+  }catch(error){if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;}
+  finally{observation?.close();}
 }
 
 /** Transport exclusion only. The product must combine this with every mounted

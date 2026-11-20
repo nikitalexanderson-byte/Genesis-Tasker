@@ -1,6 +1,6 @@
 # Подготовка GENESIS 3.3.6
 
-Актуальный срез20 ноября: реализованы9/20 реальных source categories; это не
+Актуальный срез21 ноября: реализованы9/20 реальных source categories; это не
 процент готовности релиза. Напоминания получили web/native capture/reconciliation,
 сохранение истории/форм/uncertain actions и проверенное чтение с новым root.
 Подготовлен server reader/byte fragments архивов; это ещё не десятая категория.
@@ -2406,3 +2406,57 @@ remote originals: их отдельная durable quarantine до normalization 
 real sources и product/recovery/shared/Drive/upgrades/48 scenarios/14-language/
 human review остаются обязательными. Production3.3.5/149, floors0/pilot/cutover
 off/GENESIS_DEPLOY_ANDROID=false; без Deploy/Play/личных устройств.
+
+## Защищённые remote originals до JSON projection,21 ноября
+
+Реализованы web/native HTTP observation ports и отдельная same-active-actor
+quarantine `remote-original/v1`. Exact immutable signed request регистрируется
+до fetch/connection; metadata и каждый ограниченный raw part защищаются до
+UTF8/JSON. Atomic catalogue/journal/part CAS, explicit raw EOF/manifest и
+полный original SHA256 проверяются холодным чтением. Отказы/partial prefixes
+сохраняются; новые attempts их не стирают. Complete raw response не считается
+исторической authenticity, semantic completeness или migration authority.
+Metadata использует canonical binary codec, raw request/response сохраняют
+точные bytes/BOM/whitespace. Существующие HTTP/private-file limits не расширены.
+Provider/admission exceptions не раскрывают private text/path/cause; cancellation
+не превращается в network failure. Early/escaped readers не получают receipt;
+явный close после действительно прочитанного EOF совместим на web/native.
+
+Initial ordering RED и отдельные web/native failure-classification RED сохранены.
+Final JS1977/1977, scoped lint04/owned types04 PASS. Chromium157 actual fetch/
+encrypted IDB —19/19,0 console errors/warnings; полный original2097234 bytes
+прочитан после reopen с тем же hash и неизменными ciphertext rows. Static web
+build/gallery/documents/dictionaries/offline/worker проверки PASS:98 HTML/14
+languages/280 gallery images и disclosures сохранены. Первый полный JS run имел
+2 environment failures из-за исчезнувшего временного PHP; проверенный официальный
+archive извлечён в свежий каталог, complete rerun1977/1977 PASS. Тесты не ослаблены.
+
+Native frozen input01:
+0BC8290607FE3CE6B33082C182AE475ACADF336BE02AAC33A4B44FB57AB5A7B5.
+Build SUCCESS10m27s; component JVM17/17, broad JVM248/248 across33 suites.
+API26/API34 — каждый4/4 новых actual-client/ciphertext-SQLite cases и3/3 strict
+JSON regressions. Проверены524370-byte full original/cold read, duplicate после
+protected EOF, quotas до network, сохранённый8192-byte prefix при injected storage
+IO, sanitized local failure, cancellation и reader revocation. Используются actual
+AuthSessionClient/JCA/Keystore session с controlled HTTPS connection factory;
+реальный TLS/backend, process death, old-key loss/new-device custody не заявлены.
+Full regression/lint SUCCESS13m49s:0 errors/208 warnings/8 hints, без новых issue/
+file pairs. Source и оба APK совпали после devices и lint. Точные hashes и пределы:
+`e2ee-336-remote-originals-design.md`.
+
+Предыдущий05264f49, Source checks44810515343: оба jobs SUCCESS после повтора
+Android dependency-resolution failure KSP2.3.12; без изменения кода/workflow.
+Это не Deploy. Текущий компонент проверен локально; собственный CI ещё впереди.
+Найдены отдельные HTTP policy gaps и подготовлены RED: web redirect/error text и
+root user/CSRF до semantic validation. Их исправление — следующий пакет.
+
+Capture в реальных HTTP clients пока optional. Mandatory concrete factories в
+SignedMigrationTransport/browser/AuthController, global provider admission,
+authenticated original custody и source/plan/state4 composition ещё обязательны.
+Coverage остаётся9/20. Остались personal.archives, personal.local-work, все6
+project sources (content/files/mindmaps/automation/history/local-work) и3 space
+sources (content/mindmaps/local-work), normal product writers/unlock/enrollment/
+recovery, ACL+rotation, files/Drive, direct signed upgrades, исходные48 сценариев,
+14-language semantic acceptance и независимый human crypto review.
+Production3.3.5/149, floors0/pilot/cutover off, GENESIS_DEPLOY_ANDROID=false;
+без Deploy, Play и личных устройств.

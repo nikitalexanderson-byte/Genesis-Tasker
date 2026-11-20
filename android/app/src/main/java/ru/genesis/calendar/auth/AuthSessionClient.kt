@@ -275,10 +275,12 @@ internal class AuthSessionClient(context: Context,
         request(expected, if (dismiss) "/advice/dismiss" else "/advice/view", DailyAdviceProtocol.record(id, day))
     fun workspace(expected: Long): JSONObject = request(expected, "/workspace", null)
 
-    fun e2ee(expected: Long, path: String, body: JSONObject? = null): JSONObject {
-        val full = "/e2ee/v1$path"
-        require(E2eeTransportProtocol.allowedRoute(if(body == null) "GET" else "POST", full))
-        return request(expected, full, body)
+    fun e2ee(expected: Long, path: String, body: JSONObject? = null, observation: E2eeHttpObservation? = null): JSONObject {
+        try {
+            val full = "/e2ee/v1$path"
+            require(E2eeTransportProtocol.allowedRoute(if(body == null) "GET" else "POST", full))
+            return request(expected, full, body, e2eeObservation = observation)
+        } finally { observation?.close() }
     }
     fun donationCheckout(expected: Long): JSONObject = request(expected, "/donations/cloudtips/checkout", JSONObject())
     fun weather(expected: Long, location: ru.genesis.calendar.domain.WeatherRequestV1, call: ForegroundAccountCall): JSONObject =
@@ -773,7 +775,7 @@ internal class AuthSessionClient(context: Context,
     private fun request(expected: Long, path: String, body: JSONObject?, secret: SessionSecret? = null,
         persist: Boolean = true, method: String = if (body == null) "GET" else "POST",
         responseReader: ((java.io.InputStream) -> JSONObject)? = null, importBody: DataImportBody? = null,
-        timeZone: String? = null, foregroundCall: ForegroundAccountCall? = null): JSONObject {
+        timeZone: String? = null, foregroundCall: ForegroundAccountCall? = null, e2eeObservation: E2eeHttpObservation? = null): JSONObject {
         require(allowedAuthSessionRoute(method,path))
         // Classification and transmitted bytes must refer to the same snapshot.
         // JSONObject supplied by a controller may still be mutated on another
@@ -788,13 +790,13 @@ internal class AuthSessionClient(context: Context,
             if(owner!=null && confirmedPersonalOwnerId!=owner) throw CancellationException("Authentication operation superseded")
             if(owner!=null && owner in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED")
         }
-        val operation={ requestOverHttps(expected,path,requestBody,secret,persist,method,responseReader,importBody,timeZone,foregroundCall,owner) }
+        val operation={ requestOverHttps(expected,path,requestBody,secret,persist,method,responseReader,importBody,timeZone,foregroundCall,owner,e2eeObservation) }
         return if(owner==null)operation() else legacyTransportGate.request(CloudAccountSnapshot.scopeFor(owner),::current,operation)
     }
 
     private fun requestOverHttps(expected: Long,path: String,body: JSONObject?,secret: SessionSecret?,persist: Boolean,
         method: String,responseReader: ((java.io.InputStream) -> JSONObject)?,importBody: DataImportBody?,
-        timeZone: String?,foregroundCall: ForegroundAccountCall?,legacyOwner: String?): JSONObject {
+        timeZone: String?,foregroundCall: ForegroundAccountCall?,legacyOwner: String?,e2eeObservation: E2eeHttpObservation?): JSONObject {
         fun currentRequest() = synchronized(guard) {
             check(expected)
             if(legacyOwner!=null && confirmedPersonalOwnerId!=legacyOwner) throw CancellationException("Authentication operation superseded")
@@ -808,6 +810,10 @@ internal class AuthSessionClient(context: Context,
         require(method in setOf("GET", "POST", "PUT", "PATCH", "DELETE") && (method == "GET") == (body == null))
         val current = synchronized(guard) { currentRequest();secret ?: load(expected) }
         if (body != null && (current.cookie.isBlank() || current.csrf.isBlank())) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        val observedBody = if (e2eeObservation != null) {
+            require(E2eeTransportProtocol.allowedRoute(method, path))
+            val text = body?.toString(); e2eeObservation.prepare(E2eeHttpObservation.Request(path, method, text)); currentRequest(); text
+        } else null
         val connection = openConnection(URL("$AUTH_ORIGIN/api$path"))
         synchronized(guard) { check(expected); connections += connection }
         var phase = "prepare"
@@ -832,7 +838,7 @@ internal class AuthSessionClient(context: Context,
                 connection.setRequestProperty("X-CSRF-Token", current.csrf)
                 connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
                 connection.doOutput = true
-                val bytes = if (importBody == null) body.toString().toByteArray(Charsets.UTF_8) else null
+                val bytes = if (importBody == null) (observedBody ?: body.toString()).toByteArray(Charsets.UTF_8) else null
                 connection.setFixedLengthStreamingMode(importBody?.length ?: requireNotNull(bytes).size)
                 currentRequest()
                 phase = "write"
@@ -847,7 +853,7 @@ internal class AuthSessionClient(context: Context,
             if (status !in 200..299) {
                 if (E2eeTransportProtocol.allowedRoute(method, path)) {
                     val payload = connection.errorStream?.use { input ->
-                        E2eeHttpResponseJson.read(input, path, status, connection.contentType, connection.contentLengthLong, ::currentRequest)
+                        E2eeHttpResponseJson.read(input, path, status, connection.contentType, connection.contentLengthLong, ::currentRequest, e2eeObservation)
                     }
                     currentRequest()
                     val code = payload?.let { E2eeTransportProtocol.errorCode(status, it) }
@@ -974,7 +980,7 @@ internal class AuthSessionClient(context: Context,
             phase = "read"
             val payload = connection.inputStream.use { input ->
                 if (E2eeTransportProtocol.allowedRoute(method, path)) return@use requireNotNull(
-                    E2eeHttpResponseJson.read(input, path, status, connection.contentType, connection.contentLengthLong, ::currentRequest))
+                    E2eeHttpResponseJson.read(input, path, status, connection.contentType, connection.contentLengthLong, ::currentRequest, e2eeObservation))
                 if (responseReader != null) return@use responseReader(input)
                 val output = ByteArrayOutputStream()
                 val buffer = ByteArray(4096)

@@ -84,6 +84,16 @@ runCatching. This is parser hardening only: an in-memory parsed response is NOT
 the required durable remote original. Capture must precede UTF8 decoding/JSON
 projection and bind the exact raw EOF, request/lease role and original actor.
 
+The distinct same-active-actor remote quarantine and optional HTTP observation
+ports are now implemented separately in `e2ee-336-remote-originals-design.md`.
+Exact input/byte hashes and web/native provider evidence are recorded there.
+They preserve complete and partial raw entity bytes without extending any old
+original-source read capability. The concrete SignedMigrationTransport/browser
+and AuthController factories still need mandatory capture, exact retained
+references in state4 and global provider admission. A caller's optional sink,
+retained in-memory key or complete raw EOF cannot stand in for that composition,
+historical authenticity, semantic completeness or authenticated key custody.
+
 The complete content-plan reference must be bound to the exact source catalogue,
 source histories, original actor, target scope/generation, directory checkpoint
 and server lease/source token. Its own final marker is inert. Coordinator

@@ -82,13 +82,45 @@ class E2eeHttpResponseJsonTest {
                 }
             }
             try {
-                E2eeHttpResponseJson.read(input, path, status, "application/json", -1) { if (touched) throw CancellationException("synthetic-retired") }
+                E2eeHttpResponseJson.read(input, path, status, "application/json", -1, current = { if (touched) throw CancellationException("synthetic-retired") })
                 fail("Account cancellation swallowed")
             } catch (error: CancellationException) { assertEquals("synthetic-retired", error.message) }
             assertTrue(requireNotNull(loan).all { it == 0.toByte() })
             val io = object : InputStream() { override fun read(): Int = throw IOException("synthetic-wire-canary") }
             if (status == 409) assertNull(E2eeHttpResponseJson.read(io, path, status, "application/json", -1, {}))
             else try { E2eeHttpResponseJson.read(io, path, status, "application/json", -1, {}); fail("IO error swallowed") } catch (_: IOException) { }
+        }
+    }
+
+    @Test fun rawObservationMustAcknowledgeExactBytesBeforeParsingAndCannotMutateItsInput() {
+        val raw = "\ufeff {\"sourceHash\":\"first\", \"sourceHash\":\"second\"}\r\n".toByteArray()
+        val events = mutableListOf<String>(); val copies = mutableListOf<ByteArray>(); val loans = mutableListOf<ByteArray>()
+        val capture = object : E2eeHttpBodyObservation {
+            override fun begin(response: E2eeHttpBodyObservation.Response) { assertEquals(200, response.status); events += "begin" }
+            override fun append(bytes: ByteArray) { assertTrue(bytes.size <= 65536); copies += bytes.copyOf(); loans += bytes; bytes.fill(32); events += "append" }
+            override fun finish() { events += "eof" }
+            override fun close() { events += "close" }
+        }
+        refuses { E2eeHttpResponseJson.read(ByteArrayInputStream(raw), path, 200, "application/json", -1, {}, capture) }
+        assertEquals(listOf("begin", "append", "eof", "close"), events)
+        assertArrayEquals(raw, copies.single()); assertTrue(loans.all { value -> value.all { it == 0.toByte() } })
+        val parsed = E2eeHttpResponseJson.read(ByteArrayInputStream("{\"sourceHash\":\"original\"}".toByteArray()), path, 200, "application/json", -1, {}, capture)
+        assertEquals("original", parsed!!.getString("sourceHash"))
+    }
+
+    @Test fun observationStorageIoAndCancellationAreNeverSwallowedByAnHttpErrorBody() {
+        for (status in listOf(200, 409)) for (cancel in listOf(false, true)) {
+            var eof = false; var closed = false; var loan: ByteArray? = null
+            val failure = if (cancel) CancellationException("synthetic-retired") else IOException("synthetic-storage-private-canary")
+            val capture = object : E2eeHttpBodyObservation {
+                override fun begin(response: E2eeHttpBodyObservation.Response) = Unit
+                override fun append(bytes: ByteArray) { loan = bytes; throw failure }
+                override fun finish() { eof = true }
+                override fun close() { closed = true }
+            }
+            try { E2eeHttpResponseJson.read(ByteArrayInputStream("{}".toByteArray()), path, status, "application/json", -1, {}, capture); fail("Observation failure swallowed") }
+            catch (error: Exception) { assertSame(failure, error) }
+            assertFalse(eof); assertTrue(closed); assertTrue(requireNotNull(loan).all { it == 0.toByte() })
         }
     }
 }

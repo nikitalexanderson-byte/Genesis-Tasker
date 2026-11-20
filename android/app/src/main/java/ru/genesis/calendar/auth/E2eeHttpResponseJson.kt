@@ -29,24 +29,32 @@ internal object E2eeHttpResponseJson {
     }
 
     fun read(input: InputStream, path: String, status: Int, mime: String?, declared: Long,
-        current: () -> Unit): JSONObject? {
+        current: () -> Unit, observation: E2eeHttpBodyObservation? = null): JSONObject? {
         require(E2eeTransportProtocol.allowedRoute(if (path == "/e2ee/v1/status") "GET" else "POST", path))
         val success = status in 200..299
         val maximum = if (success) E2eeTransportProtocol.responseLimit(path) else 8192
         val chunk = ByteArray(8192)
         try {
             current()
+            observation?.begin(E2eeHttpBodyObservation.Response(path, status, mime, declared.takeIf { it >= 0 }?.toString())); current()
             if (declared > maximum) throw Invalid("E2EE_RESPONSE_TOO_LARGE")
             if (!mime.orEmpty().substringBefore(';').trim().equals("application/json", true)) invalid()
             Bytes(maximum).use { bytes ->
                 while (true) {
-                    current(); val count = input.read(chunk)
+                    current(); val count = try { input.read(chunk) } catch (error: java.io.IOException) {
+                        current(); if (success) throw error; return null
+                    }
                     try {
                         current(); if (count == -1) break
                         if (count !in 1..chunk.size) invalid()
                         bytes.append(chunk, count)
+                        if (observation != null) {
+                            val loan = chunk.copyOf(count)
+                            try { observation.append(loan); current() } finally { loan.fill(0) }
+                        }
                     } finally { chunk.fill(0) }
                 }
+                observation?.finish(); current()
                 // Validate without allocating a second whole-body CharBuffer.
                 val decoder = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
                     .onUnmappableCharacter(CodingErrorAction.REPORT)
@@ -72,9 +80,7 @@ internal object E2eeHttpResponseJson {
             }
         } catch (error: Invalid) {
             current(); if (success) throw AuthApiError(error.code); return null
-        } catch (error: java.io.IOException) {
-            current(); if (success) throw error; return null
-        } finally { chunk.fill(0) }
+        } finally { chunk.fill(0); observation?.close() }
     }
 
     private fun validate(text: String, current: () -> Unit) {
