@@ -2240,3 +2240,44 @@ bounded native/WebView source input и все11 real-source/product/recovery/sha
 Drive/direct-upgrade/48-scenario/14-language/human-review gates сохраняются.
 Coverage9/20, production3.3.5/149, floors0/pilot/cutover off,
 GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные устройства/версия не менялись.
+
+## Старые JSON/Base64 snapshots: потоковый original reader,20 ноября
+
+Следующий компонент читает точные старые wrappers registry из local states1/2,
+проверяет исходные size/parts/raw SHA-256, полный набор путей, строгий JSON,
+canonical Base64URL/unused bits, physical inventory и actual EOF. Поддержаны оба
+порядка полей исторических serializers, валидный произвольный порядок путей,
+escaped JSON и исходный UTF8 BOM без изменения исходного хеша. Новый source-stage
+не подставляется вместо старого wrapper; v3 run по-прежнему закрыт.
+
+Вместо полного JSON/Base64/file в памяти каждый путь повторно сканирует bounded
+original. Цена — повторный IO/CPU, без заявления performance/peak-heap/capacity.
+Закрытие/retirement чистит retained raw и decoded buffers; per-reader cleanup
+не закрывает следующего читателя, а pending read удерживает reservation до
+реального drain. Поздно пришедший raw buffer тоже очищается. Найденные в WIP
+cleanup defects сохранены как red evidence, исправления повторно проверены.
+
+Финальный JS106/106, owned types/scoped lint/full build:web PASS. Chromium157/
+WebCrypto/encrypted IDB17/17, console0: каждый исходный byte шести SYNTHETIC paths
+и полный hash JSON/Base64 wrapper совпали с независимым bounded Node construction.
+Это не шесть новых реальных adapters: coverage9/20. Данные не переписываются.
+
+Native diagnostic01/02 superseded до provider acceptance;02 raw build9m16s/
+JVM213/213 отказал source-identity guard после последней web cleanup repair.
+Повторный input03 480AA0F4129ACB7061F955CDCEC4BA7D1E752051B1558302B6A4872E2C9F551D:
+build SUCCESS33s, JVM213/213,0 failure/skip. API26/API34 — по2/2 новых cases и3/3
+readback regressions. Независимый bounded Node construction совпал со всеми
+12,583,247 bytes исходного wrapper/49 physical parts и9,437,206 decoded bytes/
+six logical hashes. Обе fresh JCA vectors читаются через WebCrypto с root и
+PUBLIC signer, без private signing key:по18 bytes/six paths. Хеши всех extracted
+artifacts и source/APK identities после выполнения совпали.
+Новый full native lint для этого input не запускался; он остаётся
+обязательным на полном финальном кандидате. Подробности:
+e2ee-336-legacy-snapshot-stream.md.
+
+Generic read port не устанавливает authenticated old custody. Прежняя original
+source-stage capability намеренно не расширена; нужны отдельный узкий legacy
+read-only handle, mixed-history/coordinator publication и все nested old keys/AAD.
+Полный product routing,11 real sources/shared/Drive/upgrades/48 scenarios/
+14-language/human-review gates сохраняются. Production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false, без Deploy/Play/личных устройств.

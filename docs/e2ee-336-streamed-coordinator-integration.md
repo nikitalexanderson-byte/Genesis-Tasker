@@ -32,6 +32,14 @@ It cannot relabel an old hash as a new manifest hash, import an old active priva
 signing identity or silently omit an incomplete/unknown prefix. A new device
 still needs authenticated handoff/custody; Google identity is insufficient.
 
+The old-registry JSON/Base64 wrapper now has a separate bounded reader in
+`e2ee-336-legacy-snapshot-stream.md`. It retains the exact original reference/
+hash, preflights full syntax/inventory/EOF and rescans the original for each
+selected path. Its platform evidence and pending native gates are explicit.
+It does not widen the existing original-source-stage capability, authenticate
+old custody or discover omitted ancestors. Coordinator history/publication and
+all nested legacy key/AAD materialization remain mandatory.
+
 Remote legacy inputs also need durable original provenance. The pre-network
 local snapshot does not magically contain later server responses. Materialize
 each authenticated remote page/fragment and necessary old key material into

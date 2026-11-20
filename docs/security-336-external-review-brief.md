@@ -261,3 +261,16 @@ plus4/4 regression cases PASS. Full native lint0/208/8 has no new issue/file pai
 complete9MiB+7byte file and regression hashes are independently checked. These
 remain component fixtures with an inert reference receipt; all release gates
 still apply.
+
+Legacy local-state1/2 registry wrappers now have a separate bounded compatibility
+reader, `e2ee-336-legacy-snapshot-stream.md`. Review exact ORIGINAL hash/size/part
+provenance, the strict JSON/Base64 parser (duplicate/escaped fields, unused bits,
+boundaries/BOM/EOF), repeated path scans versus complete source authentication,
+per-reader cleanup ownership and pending reservations until actual IO drain.
+Revoked cursors must also wipe raw parts returned by late pending reads. Original
+records remain immutable and retained; source-stage-v1 is a different format.
+The generic reader neither widens the original source-stage capability nor
+establishes authenticated original custody, complete mixed history, nested
+legacy key/AAD materialization, product restoration or activation. Exact native
+provider acceptance must come from that component document; older APKs do not
+prove it. Synthetic path counts never increase real source coverage9/20.
