@@ -22,18 +22,18 @@ internal class BackupValueInventory(private val storage:()->BackupFormSpool,priv
     val largestValue get()=values.values.maxOfOrNull{it.stored.characters}?:0
     data class Statistics(val values:Int,val manifests:Int,val characters:Long,val chunks:Long)
     fun statistics()=Statistics(values.size,manifests.size,submittedCharacters,submittedChunks)
-    fun append(name:String,id:String,index:Int,last:Boolean,text:String) {
-        requireName(name);check(id !in values&&retainedCount<10000){"BACKUP_TRANSFER_BUSY"}
-        if(index==0){pending?.second?.clear();pending=name to BackupValueTransfer(storage(),view,"$binding:field-v2:${name.length}:$name")}
+    fun append(name:String,id:String,index:Int,last:Boolean,text:String,assertCurrent:()->Unit={}) {
+        assertCurrent();requireName(name);check(id !in values&&retainedCount<10000){"BACKUP_TRANSFER_BUSY"}
+        if(index==0){pending?.second?.clear();pending=name to BackupValueTransfer(storage(),view,"$binding:field-v2:${name.length}:$name",assertCurrent)}
         val transfer=pending?:error("BACKUP_TRANSFER_ORDER")
         check(transfer.first==name){"BACKUP_TRANSFER_ORDER"}
         val stored=transfer.second.append(id,index,last,text);submittedCharacters+=text.length;submittedChunks++
         stored?.let{
-            values[id]=Value(id,name,stored);pending=null
+            try{assertCurrent();values[id]=Value(id,name,stored);pending=null}catch(error:Throwable){stored.clear();throw error}
         }
     }
-    fun commit(raw:String) {
-        check(raw.length in 1..32768&&retainedCount<10000){"E2EE_SOURCE_TOO_LARGE"}
+    fun commit(raw:String,assertCurrent:()->Unit={}) {
+        assertCurrent();check(raw.length in 1..32768&&retainedCount<10000){"E2EE_SOURCE_TOO_LARGE"}
         check(pending==null){"BACKUP_TRANSFER_BUSY"}
         val parsed=manifestMetadata(raw)
         check(parsed.keys().asSequence().toSet()==setOf("protocol","fields","settled","file")&&parsed.get("protocol")==2&&parsed.get("settled") is Boolean){"E2EE_ARCHIVE_SOURCE_INVALID"}
@@ -51,9 +51,9 @@ internal class BackupValueInventory(private val storage:()->BackupFormSpool,priv
         if(!parsed.isNull("file"))checkFile(parsed.getJSONObject("file"))
         // Persist the ORIGINAL small manifest before acknowledging it. Its
         // ordinal in the encrypted locator distinguishes restart history.
-        val transfer=BackupValueTransfer(storage(),view,"$binding:manifest-v2:${manifests.size}")
+        val transfer=BackupValueTransfer(storage(),view,"$binding:manifest-v2:${manifests.size}",assertCurrent)
         val stored=try{requireNotNull(transfer.append(UUID.randomUUID().toString(),0,true,raw))}finally{transfer.clear()}
-        manifests+=Manifest(stored);settled=parsed.getBoolean("settled")
+        try{assertCurrent();manifests+=Manifest(stored);settled=parsed.getBoolean("settled")}catch(error:Throwable){stored.clear();throw error}
     }
     fun capture(owner:String,epoch:Long):JSONObject {
         // History lives in authenticated spill, not a second retained plaintext

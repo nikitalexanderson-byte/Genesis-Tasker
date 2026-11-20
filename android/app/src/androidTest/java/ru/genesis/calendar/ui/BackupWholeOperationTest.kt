@@ -31,6 +31,7 @@ class BackupWholeOperationTest {
         var chosen:android.net.Uri?=null
         var beforeChoose:suspend ()->Unit={}
         var beforeFileRetention:()->Unit={}
+        var beforeFormRetention:()->Unit={}
         lateinit var bridge:BackupJavascriptBridge
         fun ownerCheck(){check(app.workspaceScope==account&&app.workspaceEpoch==epoch){"BACKUP_OWNER"}}
         fun check(){checks.incrementAndGet();check(live){"BACKUP_OWNER"};ownerCheck()}
@@ -48,7 +49,7 @@ class BackupWholeOperationTest {
             }
             val store=BackupNativeStore(app,owner,account,gateway)
             bridge=BackupJavascriptBridge(store,gateway,app,owner,jobs,{id,value->responses.remove(id)?.complete(value)},
-                {_,_->pickers.incrementAndGet();beforeChoose();chosen},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)},{beforeFileRetention()})
+                {_,_->pickers.incrementAndGet();beforeChoose();chosen},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)},{beforeFileRetention()},{beforeFormRetention()})
         }
         fun submit(method:String,payload:JSONObject=JSONObject()):Deferred<JSONObject>{
             val id=UUID.randomUUID().toString();val result=CompletableDeferred<JSONObject>();responses[id]=result
@@ -257,6 +258,51 @@ class BackupWholeOperationTest {
     }
     private fun valueManifest(id:String)=JSONObject().put("protocol",2).put("fields",org.json.JSONArray().put(JSONObject().put("name","key").put("id",id)))
         .put("settled",true).put("file",JSONObject.NULL).toString()
+    @Test fun allThreeFormPortsCanBeDisposedDuringPublicationWithoutLosingPriorAcknowledgedInput():Unit=runBlocking {
+        for(port in listOf("form","value","manifest")){
+            val r=Rig();r.start();val entered=CompletableDeferred<Unit>();val release=CountDownLatch(1)
+            try{
+                val token=r.begin();val old=UUID.randomUUID().toString();val next=UUID.randomUUID().toString()
+                if(port=="form")assertEquals("",retain(r,form(),token))else{
+                    assertEquals("",r.bridge.retainValueChunk("key",old,0,true,"\"prior acknowledged input\"",token))
+                    assertEquals("",r.bridge.retainValueManifest(valueManifest(old),token))
+                }
+                val previous=r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views").getJSONObject(0)
+                r.beforeFormRetention={entered.complete(Unit);check(release.await(10,TimeUnit.SECONDS))}
+                val write=async(Dispatchers.IO){when(port){
+                    "form"->r.bridge.retainFormChunk(next,0,true,form().replace("exact private input","late input"),token)
+                    "value"->r.bridge.retainValueChunk("key",next,0,true,"\"late input\"",token)
+                    else->r.bridge.retainValueManifest(valueManifest(old).replace("\"settled\":true","\"settled\":false"),token)
+                }}
+                withTimeout(10000){entered.await()};val close=async(Dispatchers.Main){r.bridge.stop()}
+                val prompt=withTimeoutOrNull(1000){close.await();true}?:false
+                val captured=CompletableDeferred<JSONObject>();val migration=async(Dispatchers.IO){
+                    NativeLegacyScopeFence(r.app.database,r.owner,"personal:${r.owner}",r::ownerCheck).withFence{
+                        captured.complete(r.app.backupMigrationMemory.capture(r.owner,r.epoch))
+                    }
+                }
+                assertNull(withTimeoutOrNull(150){captured.await()});release.countDown()
+                assertEquals("BACKUP_VIEW_CLOSED",withTimeout(10000){write.await()});withTimeout(10000){close.await();migration.await()}
+                assertTrue("Disposal waited for the synchronous $port port",prompt)
+                val retained=captured.await().getJSONArray("views").getJSONObject(0);assertFalse(retained.getBoolean("mounted"))
+                assertEquals(previous.get("rawForm").toString(),retained.get("rawForm").toString())
+                assertEquals(previous.optJSONObject("valueForm")?.toString(),retained.optJSONObject("valueForm")?.toString());assertEquals(0,r.requests.get())
+            }finally{release.countDown();r.finish()}
+        }
+    }
+    @Test fun accountEpochRetiresBeforeInventoryCleanupWaitsAndSameUidCannotReuseTheOldActor():Unit=runBlocking {
+        val r=Rig();r.start();val entered=CompletableDeferred<Unit>();val release=CountDownLatch(1)
+        try{
+            val blockedInventory=async(Dispatchers.IO){synchronized(r.app.backupMigrationMemory){entered.complete(Unit);check(release.await(10,TimeUnit.SECONDS))}}
+            withTimeout(10000){entered.await()}
+            val relogin=async(Dispatchers.Main){r.app.activateAccount(null);r.app.activateAccount(r.owner)}
+            val retiredEarly=withTimeoutOrNull(1000){while(r.app.workspaceEpoch==r.epoch)delay(10);true}?:false
+            val deniedBeforeCleanup=!r.bridge.currentSession("");release.countDown()
+            withTimeout(10000){blockedInventory.await();relogin.await()}
+            assertTrue("Account epoch waited behind inventory cleanup",retiredEarly);assertTrue(deniedBeforeCleanup)
+            assertFalse(r.bridge.currentSession(""));assertEquals(0,r.app.backupMigrationMemory.capture(r.owner,r.app.workspaceEpoch).getJSONArray("views").length())
+        }finally{release.countDown();r.finish()}
+    }
     @Test fun valueAndManifestPortsDrainBeforeCaptureAndBothHonorThePersistentMemoryFence():Unit=runBlocking {
         val r=Rig();r.start();val captured=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
         try{

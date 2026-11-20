@@ -44,7 +44,10 @@ class GenesisApplication : Application() {
             // This contains only the hashed workspace key, never credentials or tokens.
             check(getSharedPreferences("genesis.reminder.scope.v1", MODE_PRIVATE).edit()
                 .putString("workspace", next).commit())
-            if (next != activeScope.value) { backupMigrationMemory.clear();scopeEpoch.incrementAndGet() }
+            // Invalidate readers before cleanup can wait for a currently
+            // publishing form's inventory monitor. Its bounded checkpoints can
+            // then retire the original actor and release that monitor.
+            if (next != activeScope.value) { scopeEpoch.incrementAndGet();backupMigrationMemory.clear() }
             activeScope.value = next
             if (featureSnapshot?.first != next) featureSnapshot = null
         }

@@ -1747,3 +1747,43 @@ adapter, другие11 источников, normal writers/lifecycle/shared AC
 direct upgrades,48 сценариев,14-language semantics и human crypto review.
 Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
 Deploy/Play/личных устройств/версии в этом продолжении не меняли.
+
+## Архивы: границы жизни text/form ports,20 ноября
+
+Проверенный binary spill сохранён в63b90e17. Следующий инкремент передаёт
+original actor guard через все три form/value/manifest ports, включая полный
+metadata readback. Источники сериализуются owner memory gate/inventory, поэтому
+закрытие окна больше не держится за общий Java monitor публикации. Процессный
+scopeEpoch инвалидируется до ожидания inventory cleanup; он не заменяет
+dataGeneration/cryptoEpoch/securityEpoch. Неподтверждённый новый value/manifest
+при отказе не стирает предыдущий принятый ввод.
+
+Build01 SUCCESS19m38s, selected JVM46/46. API26 прошёл60/60; API34 —59/60,
+с ошибкой QA-выражения document.body.innerText до создания body. Файл ещё не
+выбирался. Console TypeError и исходный failure/screenshot сохранены. Null от
+evaluateJavascript ошибочно считался отсутствием callback. Три related UI helpers
+теперь учитывают готовность body и отдельно отмечают завершение callback;
+таймауты не увеличены, actions не повторяются автоматически. Это androidTest-only
+repair; application/JVM sources и Main APK не изменены между01 и02.
+
+Input02 B39709ADA38C5018A155D45CCB07D5929FE8434293B974808A860A0D513ADBB2,
+build SUCCESS2m26s. Lint0 errors/208 warnings/8 hints, новых issue/file pairs0.
+Actual API26/API34 — по60/60,0 fail/skip, включая22 whole-job cases с тремя
+ports и same-UID retirement. По21 host-проверке каждого результата PASS.
+JVM46/46 относится к исходному build01; нового запуска JVM для02 не заявляем.
+
+Actual20,615,080-byte file/eight-map preview прошёл без restore:54,123/50,608ms
+(API26/API34); small confirmation217/269ms, один4-code-unit value плюс manifest.
+Перед screenshot проверены viewport, два browser frames и native visual-state
+callback. Оба dark preview PNG просмотрены, counts8 и confirmation видны.
+API26 heap512MiB, API34 heap192MiB; полные visual/provider/API35/OEM/14-language/
+product/direct-upgrade состояния не приняты. Evidence, hashes и failure01:
+`e2ee-336-archives-port-lifetimes.md`.
+
+Следующий gate — полный streaming source/coordinator snapshot, ранняя привязка
+process remnants и открытие всех nested old ciphers до принятия переносимого
+снимка. Требования: `e2ee-336-archive-stream-requirements.md`. Простое увеличение
+32/48/64MiB лимитов не принимается. Coverage остаётся9/20; остальные11 categories,
+normal lifecycle/shared/files/Drive/48 scenarios/human review обязательны.
+Production3.3.5/149 и floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
+никаких Deploy/Play/личных устройств/повышения версии здесь не было.

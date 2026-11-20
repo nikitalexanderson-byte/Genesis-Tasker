@@ -37,6 +37,7 @@ import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Actual encrypted Room -> SAF archive -> native WebView -> selected encrypted
  * restore preview. All scopes/files are synthetic in the separate QA package. */
@@ -44,17 +45,17 @@ class BackupJournalChoiceTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
     private val args get()=InstrumentationRegistry.getArguments()
     private fun js(expression:String):String {
-        val result=AtomicReference<String?>()
+        val result=AtomicReference<String?>();val completed=AtomicBoolean(false)
         onView(isAssignableFrom(WebView::class.java)).inRoot(isDialog()).perform(object:ViewAction {
             override fun getConstraints():Matcher<View> = isAssignableFrom(WebView::class.java)
             override fun getDescription()="Exercise synthetic archive choices"
             override fun perform(controller:UiController,view:View) {
-                (view as WebView).evaluateJavascript("String((function(){return $expression})())") { result.set(JSONTokener(it).nextValue() as? String) }
+                (view as WebView).evaluateJavascript("String((function(){return $expression})())") { try{result.set(JSONTokener(it).nextValue() as? String)}finally{completed.set(true)} }
             }
         })
-        compose.waitUntil(10000){result.get()!=null};return result.get()!!
+        compose.waitUntil(10000){completed.get()};return checkNotNull(result.get()){"Synthetic WebView evaluation did not return a String"}
     }
-    private fun waitText(text:String){compose.waitUntil(30000){js("document.body.innerText").contains(text)}}
+    private fun waitText(text:String){compose.waitUntil(30000){js("document.body?.innerText??''").contains(text)}}
     private fun click(label:String){assertEquals("true",js("(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==${JSONObject.quote(label)});if(!b||b.disabled)return false;b.click();return true})()"))}
     private fun visualFrame(){
         val ready=java.util.concurrent.atomic.AtomicBoolean(false)

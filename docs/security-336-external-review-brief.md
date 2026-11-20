@@ -134,6 +134,14 @@ AEAD alone is insufficient to accept a legacy record.
   operation still drains; source-only streams and locators grant no restore or
   replay authority. The selected24/51MiB probes do not close aggregate snapshot
   streaming, process-remnant capture or the complete archives adapter gate.
+- Native original-form port lifetimes: `e2ee-336-archives-port-lifetimes.md`.
+  Review original actor checkpoints through terminal field/manifest readback,
+  window disposal outside the publication monitor and epoch retirement before
+  waiting for inventory cleanup. The recorded startup-helper failure is distinct
+  from product IO and its original59/60 report is retained. Complete streaming,
+  pending-process provenance and old-cipher opening requirements are listed in
+  `e2ee-336-archive-stream-requirements.md`; these are remaining gates, not an
+  implemented source protocol or proof of all-account portability.
 - Chronological evidence and failed-run limitations: `release-3.3.6.md` and its
   linked increment documents. Local logs/artifact hashes are under
   `output/release-3.3.6/`; they are not all tracked or externally distributed.

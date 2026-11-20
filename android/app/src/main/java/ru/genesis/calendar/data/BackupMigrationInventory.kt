@@ -136,27 +136,27 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
         // rejected setter. Any leftover encrypted locator stays inert history.
         runCatching{previous?.clear()}
     }
-    @Synchronized fun appendForm(id:String,transfer:String,index:Int,last:Boolean,text:String){
-        val row=view(id);check(row.values==null){"BACKUP_TRANSFER_ORDER"};if(index==0){row.publishing=true;revision++}
+    @Synchronized fun appendForm(id:String,transfer:String,index:Int,last:Boolean,text:String,assertCurrent:()->Unit={}){
+        assertCurrent();val row=view(id);check(row.values==null){"BACKUP_TRANSFER_ORDER"};if(index==0){row.publishing=true;revision++}
         val storage=spool?:checkNotNull(spoolFactory){"BACKUP_FORM_STORAGE"}.invoke(BackupStoredValue.MAX).also{spool=it}
         val binding="${owner!!.length}:$owner:${epoch!!}:$id"
-        storage.append(id,binding,transfer,index,last,text)?.let{form->try{accept(row,form)}catch(error:Throwable){form.clear();throw error}}
+        storage.append(id,binding,transfer,index,last,text,assertCurrent)?.let{form->try{assertCurrent();accept(row,form)}catch(error:Throwable){form.clear();throw error}}
     }
-    @Synchronized fun appendValue(id:String,name:String,transfer:String,index:Int,last:Boolean,text:String){
-        val row=view(id);check(row.form==null){"BACKUP_TRANSFER_ORDER"}
+    @Synchronized fun appendValue(id:String,name:String,transfer:String,index:Int,last:Boolean,text:String,assertCurrent:()->Unit={}){
+        assertCurrent();val row=view(id);check(row.form==null){"BACKUP_TRANSFER_ORDER"}
         if(index==0){check(views.values.sumOf{it.values?.retainedCount?:0}<10000){"E2EE_SOURCE_TOO_LARGE"};row.publishing=true;revision++}
         val registry=row.values?:BackupValueInventory({
             valueSpool?:checkNotNull(spoolFactory){"BACKUP_FORM_STORAGE"}.invoke(BackupValueInventory.PHYSICAL_MAX).also{valueSpool=it}
         },id,"${owner!!.length}:$owner:${epoch!!}:$id",valueMetadata){selected->checkFile(row,selected)}.also{row.values=it}
-        registry.append(name,transfer,index,last,text);revision++
+        registry.append(name,transfer,index,last,text,assertCurrent);revision++
     }
-    @Synchronized fun publishManifest(id:String,raw:String){
-        val row=view(id);check(row.form==null&&views.values.sumOf{it.values?.retainedCount?:0}<10000){"BACKUP_TRANSFER_ORDER"}
+    @Synchronized fun publishManifest(id:String,raw:String,assertCurrent:()->Unit={}){
+        assertCurrent();val row=view(id);check(row.form==null&&views.values.sumOf{it.values?.retainedCount?:0}<10000){"BACKUP_TRANSFER_ORDER"}
         // Even an empty state needs an authenticated manifest and its view binding.
         val registry=row.values?:BackupValueInventory({
             valueSpool?:checkNotNull(spoolFactory){"BACKUP_FORM_STORAGE"}.invoke(BackupValueInventory.PHYSICAL_MAX).also{valueSpool=it}
         },id,"${owner!!.length}:$owner:${epoch!!}:$id",valueMetadata){selected->checkFile(row,selected)}.also{row.values=it}
-        registry.commit(raw);row.settled=registry.settled;row.publishing=false;revision++
+        registry.commit(raw,assertCurrent);row.settled=registry.settled;row.publishing=false;revision++
     }
     @Synchronized fun detach(id:String){views[id]?.let{spool?.cancel(id);it.values?.detach();it.mounted=false;it.publishing=false;revision++}}
     @Synchronized fun capture(uid:String,generation:Long):JSONObject {

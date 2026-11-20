@@ -34,6 +34,7 @@ import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.crypto.Cipher
 import javax.crypto.CipherOutputStream
 import javax.crypto.KeyGenerator
@@ -46,18 +47,18 @@ import javax.crypto.spec.SecretKeySpec
 class NativeBackupLargeTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
     private fun js(expression:String):String {
-        val result=AtomicReference<String?>()
+        val result=AtomicReference<String?>();val completed=AtomicBoolean(false)
         onView(isAssignableFrom(WebView::class.java)).inRoot(isDialog()).perform(object:ViewAction {
             override fun getConstraints():Matcher<View> = isAssignableFrom(WebView::class.java)
             override fun getDescription()="Exercise near-limit synthetic backup"
-            override fun perform(controller:UiController,view:View){(view as WebView).evaluateJavascript("String((function(){return $expression})())"){result.set(JSONTokener(it).nextValue() as? String)}}
+            override fun perform(controller:UiController,view:View){(view as WebView).evaluateJavascript("String((function(){return $expression})())"){try{result.set(JSONTokener(it).nextValue() as? String)}finally{completed.set(true)}}}
         })
-        compose.waitUntil(90000){result.get()!=null};return result.get()!!
+        compose.waitUntil(90000){completed.get()};return checkNotNull(result.get()){"Synthetic WebView evaluation did not return a String"}
     }
     private fun waitText(text:String){
         var body=""
         try{
-            compose.waitUntil(180000){body=js("document.body.innerText");body.contains(text)||js("!!document.querySelector('[role=alert]')")=="true"}
+            compose.waitUntil(180000){body=js("document.body?.innerText??''");body.contains(text)||js("!!document.querySelector('[role=alert]')")=="true"}
             assertTrue("Expected synthetic backup phase: $text",body.contains(text))
         }catch(error:Throwable){
             val app=compose.activity.application as GenesisApplication
@@ -67,6 +68,15 @@ class NativeBackupLargeTest {
         }
     }
     private fun click(text:String){assertEquals("true",js("(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==${JSONObject.quote(text)});if(!b||b.disabled)return false;b.click();return true})()"))}
+    private fun visualFrame(){
+        val ready=AtomicBoolean(false)
+        onView(isAssignableFrom(WebView::class.java)).inRoot(isDialog()).perform(object:ViewAction{
+            override fun getConstraints():Matcher<View> = isAssignableFrom(WebView::class.java)
+            override fun getDescription()="Wait for large backup preview frame"
+            override fun perform(controller:UiController,view:View){(view as WebView).postVisualStateCallback(1,object:WebView.VisualStateCallback(){override fun onComplete(id:Long){ready.set(true)}})}
+        })
+        compose.waitUntil(10000){ready.get()}
+    }
     private fun makeArchive(file:File,owner:String,secret:String):Pair<Int,List<String>> {
         val id=UUID.randomUUID().toString();val ids=(0 until 8).map{UUID.randomUUID().toString()}
         var dataKey=KeyGenerator.getInstance("AES").apply{init(256)}.generateKey()
@@ -185,7 +195,9 @@ class NativeBackupLargeTest {
             assertEquals(1,after.values-before.values);assertEquals(1L,after.chunks-before.chunks);assertEquals(4L,after.characters-before.characters)
             assertEquals(1,after.manifests-before.manifests);assertTrue("Small input edit still blocked the UI for over five seconds: $editMs",editMs<5000)
             val sizes=app.backupMigrationMemory.retainedFormCharacters(owner,epoch);assertEquals(1,sizes.size);assertTrue(sizes.single()>32*1024*1024)
-            js("(()=>{document.querySelector('.backup-preview').scrollIntoView({block:'start',behavior:'instant'});return true})()")
+            js("(()=>{window.__genesisQa336PreviewReady=false;document.querySelector('.backup-preview').scrollIntoView({block:'center',behavior:'instant'});requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__genesisQa336PreviewReady=true}));return true})()")
+            compose.waitUntil(10000){js("(()=>{const panel=document.querySelector('.backup-preview');const input=panel?.querySelector('.backup-check input');if(!panel||!input)return false;const box=panel.getBoundingClientRect(),check=input.getBoundingClientRect();return window.__genesisQa336PreviewReady===true&&input.checked&&box.top>=0&&check.top>=0&&check.bottom<=window.innerHeight})()")=="true"}
+            visualFrame()
             captureNativeWindow(File(app.getExternalFilesDir(null),"backup336-large-preview.png"))
             compose.runOnIdle{visible.value=false};compose.waitForIdle()
             assertEquals(sizes,app.backupMigrationMemory.retainedFormCharacters(owner,epoch))
@@ -198,6 +210,7 @@ class NativeBackupLargeTest {
                 .put("retainedFileMemoryBytes",files.memoryBytes).put("retainedFileBytes",files.bytes)
                 .put("smallEditMs",editMs).put("smallEditValueChunks",after.chunks-before.chunks).put("smallEditValueCharacters",after.characters-before.characters)
                 .put("smallEditedField","confirmed")
+                .put("previewCheckboxInViewport",true).put("previewPaintFrames",2).put("nativeVisualStateCallback",true)
                 .put("totalValueChunks",after.chunks).put("totalValueCharacters",after.characters).put("acceptedValues",after.values).put("acceptedManifests",after.manifests)
                 .put("largeAggregateCaptureGate","E2EE_SNAPSHOT_TOO_LARGE").put("elapsedMs",android.os.SystemClock.elapsedRealtime()-started).toString(2))
         }finally{oldKey.fill(0);file.delete();app.activateAccount(null)}

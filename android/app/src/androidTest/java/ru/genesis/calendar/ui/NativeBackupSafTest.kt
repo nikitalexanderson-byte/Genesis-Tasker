@@ -29,24 +29,25 @@ import ru.genesis.calendar.data.BackupGateway
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Real SAF and production WebView bridge; only a unique account in a separate QA package. */
 class NativeBackupSafTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
     private fun js(expression:String):String {
-        val result=AtomicReference<String?>()
+        val result=AtomicReference<String?>();val completed=AtomicBoolean(false)
         onView(isAssignableFrom(WebView::class.java)).inRoot(isDialog()).perform(object:ViewAction {
             override fun getConstraints():Matcher<View> = isAssignableFrom(WebView::class.java)
             override fun getDescription()="Exercise isolated backup UI"
             override fun perform(controller:UiController,view:View) {
                 (view as WebView).evaluateJavascript("String((function(){return $expression})())") {
-                    result.set(JSONTokener(it).nextValue() as? String)
+                    try{result.set(JSONTokener(it).nextValue() as? String)}finally{completed.set(true)}
                 }
             }
         })
-        compose.waitUntil(10000){result.get()!=null};return result.get()!!
+        compose.waitUntil(10000){completed.get()};return checkNotNull(result.get()){"Synthetic WebView evaluation did not return a String"}
     }
-    private fun body()=js("document.body.innerText")
+    private fun body()=js("document.body?.innerText??''")
     private fun click(label:String) {
         assertEquals("true",js("(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==${JSONObject.quote(label)});if(!b||b.disabled)return false;b.click();return true})()"))
     }

@@ -57,7 +57,7 @@ internal object BackupWebOrigin {
 internal class BackupJavascriptBridge(private val store:BackupNativeStore,private val gateway:BackupGateway,
     private val app:GenesisApplication,private val owner:String,private val scope:CoroutineScope,
     private val deliver:(String,JSONObject)->Unit,private val choose:suspend(Boolean,String)->Uri?,private val restart:()->Unit,
-    private val beforeUiDispatch:suspend (String)->Unit={},private val beforeFileRetention:()->Unit={}) {
+    private val beforeUiDispatch:suspend (String)->Unit={},private val beforeFileRetention:()->Unit={},private val beforeFormRetention:()->Unit={}) {
     @Volatile private var active=true
     private val operationMonitor=Any()
     private val operations=java.util.concurrent.ConcurrentHashMap<String,NativeLegacyOperationPermit>()
@@ -97,25 +97,27 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     @JavascriptInterface fun getHistory():String? { check();return history.getString(owner,null) }
     /** Only the admitted verified reset can retain its final form after retiring
      * its own HTTP generation. It grants no further HTTP/crypto/file operation. */
-    private fun <T> formWrite(operationId:String,action:()->T):T {
+    private fun <T> formWrite(operationId:String,action:(()->Unit)->T):T {
         fun current(){
             if(reconciled&&operationId.isNotEmpty()){
                 check(active){"BACKUP_VIEW_CLOSED"};store.checkOperationOwner();operation(operationId).check()
             }else check()
         }
         current();check(operationId.isEmpty()||operations.containsKey(operationId)||synchronized(operationMonitor){operationId in endedOperations}){"E2EE_INVALID_LEGACY_OPERATION"}
-        return LegacyScopeLocks.memoryWrite(app.database,account,::current,action)
+        return LegacyScopeLocks.memoryWrite(app.database,account,::current){beforeFormRetention();current();action(::current)}
     }
-    @JavascriptInterface @Synchronized fun retainFormChunk(id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
-        formWrite(operationId){
-            app.backupMigrationMemory.appendForm(migrationView,id,index,last,text)
+    // The owner memory gate/inventory serialize publication. Do not hold the
+    // window monitor: stop must invalidate the actor before waiting for IO.
+    @JavascriptInterface fun retainFormChunk(id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
+        formWrite(operationId){current->
+            app.backupMigrationMemory.appendForm(migrationView,id,index,last,text,current)
         };""
     }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
-    @JavascriptInterface @Synchronized fun retainValueChunk(name:String,id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
-        formWrite(operationId){app.backupMigrationMemory.appendValue(migrationView,name,id,index,last,text)};""
+    @JavascriptInterface fun retainValueChunk(name:String,id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
+        formWrite(operationId){current->app.backupMigrationMemory.appendValue(migrationView,name,id,index,last,text,current)};""
     }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
-    @JavascriptInterface @Synchronized fun retainValueManifest(raw:String,operationId:String):String=try {
-        formWrite(operationId){app.backupMigrationMemory.publishManifest(migrationView,raw)};""
+    @JavascriptInterface fun retainValueManifest(raw:String,operationId:String):String=try {
+        formWrite(operationId){current->app.backupMigrationMemory.publishManifest(migrationView,raw,current)};""
     }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
     @JavascriptInterface fun setHistory(value:String,operationId:String) {
         check();store.writeHistory(operation(operationId)){
@@ -125,7 +127,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
         check(history.edit().putString(owner,parsed.toString()).commit())
         }
     }
-    @JavascriptInterface @Synchronized fun postChunk(id:String,index:Int,last:Boolean,text:String) {
+    @JavascriptInterface fun postChunk(id:String,index:Int,last:Boolean,text:String) {
         check();transfers.append(id,index,last,text)?.let(::postMessage)
     }
     @JavascriptInterface fun postMessage(raw:String) {

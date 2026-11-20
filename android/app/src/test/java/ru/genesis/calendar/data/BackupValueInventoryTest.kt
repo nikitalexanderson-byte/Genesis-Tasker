@@ -81,4 +81,31 @@ class BackupValueInventoryTest {
             assertThrows(Exception::class.java){r.memory.publishManifest(r.view,raw)}
         }finally{r.clear()}
     }
+    @Test fun originalActorRetirementDuringFinalFieldReadbackCannotAdoptOrEraseOtherValues(){
+        val r=Rig();try{
+            val old=r.value("key","\"original acknowledged value\"");val accepted=r.manifest(listOf("key" to old));r.memory.publishManifest(r.view,accepted)
+            val next=UUID.randomUUID().toString();var live=true;val raw=JSONObject.quote("x".repeat(300000))
+            assertEquals("E2EE_ACCOUNT_CHANGED",assertThrows(Exception::class.java){
+                raw.chunked(BackupFormSpool.CHUNK).forEachIndexed{index,text->r.memory.appendValue(r.view,"payload",next,index,(index+1)*BackupFormSpool.CHUNK>=raw.length,text){
+                    if(r.root.listFiles()!!.any{folder->folder.listFiles()!!.any{it.name=="$next.bin"}})live=false
+                    check(live){"E2EE_ACCOUNT_CHANGED"}
+                }}
+            }.message)
+            assertFalse(live);r.memory.detach(r.view);val captured=r.captured()
+            assertEquals(accepted,captured.getString("rawManifest"));assertEquals(1,captured.getJSONArray("values").length());assertEquals(old,captured.getJSONArray("values").getJSONObject(0).getString("id"))
+        }finally{r.clear()}
+    }
+    @Test fun actorRetirementDuringManifestPersistenceCannotReplaceThePreviousManifest(){
+        val r=Rig();try{
+            val id=r.value("key","\"original value\"");val original=r.manifest(listOf("key" to id));r.memory.publishManifest(r.view,original)
+            val existing=r.root.listFiles()!!.flatMap{it.listFiles()!!.map{file->file.name}}.toSet();var live=true
+            assertEquals("E2EE_ACCOUNT_CHANGED",assertThrows(Exception::class.java){
+                r.memory.publishManifest(r.view,r.manifest(listOf("key" to id),settled=false)){
+                    if(r.root.listFiles()!!.any{folder->folder.listFiles()!!.any{it.name.endsWith(".bin")&&it.name !in existing}})live=false
+                    check(live){"E2EE_ACCOUNT_CHANGED"}
+                }
+            }.message)
+            assertFalse(live);val captured=r.captured();assertEquals(original,captured.getString("rawManifest"));assertEquals(1,captured.getJSONArray("rawManifests").length())
+        }finally{r.clear()}
+    }
 }
