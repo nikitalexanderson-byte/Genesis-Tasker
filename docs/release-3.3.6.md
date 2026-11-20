@@ -2460,3 +2460,50 @@ recovery, ACL+rotation, files/Drive, direct signed upgrades, исходные48 
 14-language semantic acceptance и независимый human crypto review.
 Production3.3.5/149, floors0/pilot/cutover off, GENESIS_DEPLOY_ANDROID=false;
 без Deploy, Play и личных устройств.
+
+## HTTP redirects, error text и identity isolation,21 ноября
+
+Закрыты три воспроизведённые границы E2EE transports. Web теперь запрещает
+redirect для всех7 E2EE routes; native прежний запрет проверен actual-client
+тестом. Нативно совместимая ограниченная grammar технических error codes
+сохранена; произвольный server error text/payload больше не попадает в web
+exceptions/upgrade notifications. Unknown errors дают fixed E2EE_HTTP_ERROR,
+корректный migration fencing code сохраняется. Success root user/CSRF отклоняются
+до profile/trial/session publication на обеих платформах. Nested private names
+сохраняются как data; обычные session routes не меняются. Browser Set-Cookie
+остаётся сетевой функцией браузера, не объявляется управляемым этим JS guard.
+
+Initial actual two-origin Chromium RED подтвердил forwarding одного synthetic
+POST/CSRF на другой loopback origin. Теперь9/9 проверок PASS, receiving metrics
+0 requests/no CSRF. Console — ровно3 expected diagnostics (blocked redirect и2
+HTTP409),0 warnings/other errors. Native RED воспроизвёл применение root user:
+4 passed/1 failed. После исправления те же tests на новом MAIN APK проходят,
+без ослабления fixture или повторной маркировки RED как acceptance.
+
+Full JS1980/1980, scoped lint01/owned types01 и static web build PASS; прежние
+98 HTML/14 languages/280 images, disclosures, dictionaries/offline/worker
+проверены. Native input01:
+1E4FEBF8B9154CF4416A40F74495A04445D3DDBA1CA0A1A4CB139E11EA0B58BC.
+Build SUCCESS10m23s, JVM248/248 across33 suites,0 skipped/failures.
+API26/API34 каждый прошёл5 actual-client cases и4 protected-original regressions,
+9/9. Проверены exact report/source/APK identities и required methods. Это JCA/
+Keystore session/ciphertext-SQLite с controlled HTTPS ports, не live TLS/backend,
+process death, physical/OEM или полный recovery. Lint SUCCESS16m15s:0 errors,
+208 warnings/8 hints, без новых issue/file pairs. После devices/lint source и
+оба APK совпали; исходный security prompt hash прежний. Точные hashes/пределы —
+`e2ee-336-http-policy.md`. Нового UI текста в этом пакете нет.
+
+Source checks предыдущего raw-original e52b553f, run44821684027: Android первый
+attempt остановился до компиляции на скачивании Compose2.2.10; web/API ещё
+проверяется. После завершения требуется повтор только failed dependency job;
+не отменять текущий CI следующим push. Текущий HTTP policy компонент принят
+локально, собственного CI/Deploy/выпуска ещё нет.
+
+Scope остаётся9/20. Mandatory protected capture factories, pre-network ownership
+reservation, state4/source/plan composition и authenticated original custody
+ещё не реализованы; конкретные требования и отдельная shared-reader authorization
+записаны в `e2ee-336-streamed-coordinator-integration.md`. Все11 remaining real
+sources, normal writers/enrollment/unlock/recovery, ACL+rotation/files/Drive,
+direct upgrades,48 scenarios/14-language/human review остаются обязательными.
+Production3.3.5/149, floors0/pilot/cutover off, GENESIS_DEPLOY_ANDROID=false;
+без Deploy/Play/личных устройств.

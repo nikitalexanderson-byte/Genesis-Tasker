@@ -191,6 +191,9 @@ records are `http-policy-browser-red-01.log`/`http-policy-web-red-01.log`. Root
 user/CSRF fields must also be prevented from reaching session/profile adoption
 on both platforms before content semantic validation. Do not claim those gaps
 fixed by the raw quarantine; the next increment must keep its own evidence.
+The following working implementation and its separate gates are now recorded in
+`e2ee-336-http-policy.md`; the historical raw-original acceptance above does not
+stand in for that candidate's new MAIN APK or native/provider/lint checks.
 
 The remaining integration must additionally prove actual encrypted IDB/SQLite cold
 readback, interrupted/failed/CAS-losing attempts, malformed/error/oversize

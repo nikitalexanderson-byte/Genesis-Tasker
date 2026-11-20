@@ -94,6 +94,56 @@ references in state4 and global provider admission. A caller's optional sink,
 retained in-memory key or complete raw EOF cannot stand in for that composition,
 historical authenticity, semantic completeness or authenticated key custody.
 
+Concrete factory requirements: production browser and AuthController migration
+factories must refuse every legacy-* read without a protected-original provider.
+The optional low-level HTTP port remains useful for status/directory/ciphertext
+readback and isolated tests; it is not an application opt-out from custody. The
+provider receives the exact signed packet and original active vault/actor, a
+verified directory public signer, target kind/generation and the actual bound
+lease/source token. It must not accept a caller's self-declared signer as a new
+authority. Durable-key adoption and provider-wide capacity callbacks must be
+real product ports, not the no-op fixture callbacks used in component tests.
+
+Use the concrete provisioned device's independent `vault` and its existing
+`ensureDurableKeys`, not an arbitrary caller-supplied legacy/account-key vault.
+Keep authentication-operation generation distinct from the target content data
+generation. Current quarantine references become available only after raw EOF;
+state4 pre-network reservation therefore still needs an explicit inert original
+registration identity/request binding before prepare, plus authenticated binding
+discovery for restart. Its descriptor may expose technical ids/hashes, never
+private response bytes or key material. A post-success-only callback is
+insufficient: it loses the ownership link on a crash or a rejected JSON reply.
+
+After a successful raw capture, preserve its inert manifest/id/original hash
+with the exact owned planning attempt before derived content can advance. A
+parsed-result callback failure cannot delete the raw capture; a malformed/error
+reply may have a complete raw original and no valid semantic result. Interrupted
+captures have registered/receiving references and cannot claim EOF. Every retry
+retains the earlier originals. The factory must cover all existing ten legacy
+actions and page/record/byte-offset forms; future project/space source readers
+need explicit authorized roles, not a caller-provided arbitrary action string.
+
+State4 must reserve and bind those exact owned observation/plan identities with
+the source catalogue/history in a local CAS. The current strict history reader
+must keep refusing network-touched/unknown output until the new state reader
+composes their provenance. Do not implement the factory by adding an arbitrary
+remote-original/content-plan prefix ignore-list to v1/v2/v3 discovery. Global
+admission must include other contexts, raw ciphertext overhead, all partials and
+source/plan/coordinator metadata. A full catalogue and retained in-memory keys
+alone do not prove process recovery or authenticated original key custody.
+
+Shared-reader authorization is a separate upcoming boundary. The server source
+token in `genesisE2eeSourceHashLocked` intentionally hashes conservative legacy
+fence predicates, including current ACL rows. It is an opaque revision token,
+not permission to export every row matched by that inventory. Project/space
+source readers must apply explicit live read/manage and signed migration-device/
+lease checks before bodies, with per-table ownership/lineage predicates. In
+particular, import/transfer/bulk/relocation snapshots can touch several resources;
+reusing an OR-based fence query as a SELECT-* read grant can expose an unrelated
+resource. Unknown/ambiguous ownership must refuse before the corresponding body,
+not silently omit it and call coverage complete. This does not replace the
+separate required atomic shared ACL-change plus new-epoch rotation transaction.
+
 The complete content-plan reference must be bound to the exact source catalogue,
 source histories, original actor, target scope/generation, directory checkpoint
 and server lease/source token. Its own final marker is inert. Coordinator

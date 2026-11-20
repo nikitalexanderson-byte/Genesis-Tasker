@@ -120,4 +120,39 @@ class E2eeHttpResponseDeviceTest {
             assertEquals("synthetic-valid", rig.call().getString("sourceHash")); rig.assertClean()
         }
     }
+
+    @Test fun actualE2eeContentCannotPublishIdentityCsrfOrRemovePendingWork() {
+        Rig().use { rig ->
+            val before = rig.preferences.all.toMap()
+            val reserved = listOf(
+                JSONObject().put("user", JSONObject().put("uid", "foreign-owner").put("email", "synthetic@example.invalid")),
+                JSONObject().put("user", JSONObject.NULL),
+                JSONObject().put("csrf", "b".repeat(48)))
+            for (fields in reserved) {
+                fields.put("sourceHash", "synthetic"); rig.reply = Reply(fields.toString().toByteArray())
+                try { rig.call(); fail("E2EE content published session fields") } catch (error: AuthApiError) { assertEquals("E2EE_INVALID_RESPONSE", error.code) }
+                assertEquals(before, rig.preferences.all); rig.assertClean()
+            }
+            // Only root transport fields are reserved; private nested names
+            // remain ordinary data for their eventual semantic reader.
+            rig.reply = Reply("{\"envelopes\":[{\"user\":\"synthetic-private-name\"}],\"sourceHash\":\"synthetic\"}".toByteArray())
+            assertEquals("synthetic-private-name", rig.call().getJSONArray("envelopes").getJSONObject(0).getString("user")); rig.assertClean()
+        }
+    }
+
+    @Test fun nativeHttpPolicyRefusesRedirectsAndPrivateFreeTextButKeepsTechnicalErrorCodes() {
+        Rig().use { rig ->
+            val before = rig.preferences.all.toMap(); rig.reply = Reply("{}".toByteArray(), 307)
+            try { rig.call(); fail("Redirect accepted") } catch (error: AuthFailure) { assertEquals(AuthFailure.Kind.PROTOCOL, error.kind) }
+            assertFalse(rig.reply.instanceFollowRedirects); rig.assertClean(); assertEquals(before, rig.preferences.all)
+            for (raw in listOf("E2EE_PRIVATE synthetic-private-error-canary", "E2EE_private", "E2EE_" + "A".repeat(81))) {
+                rig.reply = Reply(JSONObject().put("error", raw).toString().toByteArray(), 409)
+                try { rig.call(); fail("Free-text error accepted") } catch (error: AuthFailure) { assertEquals(AuthFailure.Kind.CONFLICT, error.kind); assertFalse(error.message.orEmpty().contains("canary")) }
+                rig.assertClean(); assertEquals(before, rig.preferences.all)
+            }
+            rig.reply = Reply("{\"error\":\"E2EE_MIGRATION_FENCED\"}".toByteArray(), 409)
+            try { rig.call(); fail("Fencing error lost") } catch (error: AuthApiError) { assertEquals("E2EE_MIGRATION_FENCED", error.code) }
+            rig.assertClean(); assertEquals(before, rig.preferences.all)
+        }
+    }
 }

@@ -9,6 +9,11 @@ export function e2eeResponseLimit(path:string,status:number){
  if(status<200||status>=300)return 8192;
  return path===prefix+'directory'?32*1024*1024:path===prefix+'read'?16*1024*1024:256*1024;
 }
+/** Same bounded technical-code grammar as native E2eeTransportProtocol. Raw
+ * error bodies and arbitrary private strings are never exception payloads. */
+export function e2eeHttpErrorCode(status:number,payload:Record<string,unknown>|null){
+ const value=payload?.error;return status>=400&&status<=599&&typeof value==='string'&&/^E2EE_[A-Z_]{1,80}$/.test(value)?value:null;
+}
 /** Consumes only bounded UTF8 JSON from the existing authenticated fetch.
  * This does not authenticate envelope content or certify remote completeness.
  * No response snippet is included in errors. Parsed values/immutable strings

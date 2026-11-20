@@ -1,5 +1,5 @@
 import { isRecurrencePattern, recurrenceDatesForTask, type RecurrenceMode, type RecurrencePattern } from "./task-recurrence";
-import {isE2eeResponsePath,readE2eeJsonResponse} from './e2ee/http-response';
+import {e2eeHttpErrorCode,isE2eeResponsePath,readE2eeJsonResponse} from './e2ee/http-response';
 import type {E2eeHttpObservation} from './e2ee/http-observation';
 import { currentFeatureAccess, rememberFeatureAccess } from './feature-access';
 import {beginTrialTransport,acceptTrialTransport,invalidateTrialAccess,type BillingTrial,type BillingTrialPlan} from './billing-trial';
@@ -1060,6 +1060,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
     }
     response = await fetch(`${API_BASE}${path}`, {
       ...requestInit,
+      ...(isE2eeResponsePath(path)?{redirect:'error' as const}:{}),
       credentials: "include",
       signal: requestController.signal,
       headers: {
@@ -1085,6 +1086,10 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
     if (generation !== sessionGeneration) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
     if (requestController.signal.aborted) throw requestController.signal.reason;
     if (!response.ok) {
+      if(isE2eeResponsePath(path)){
+        const code=e2eeHttpErrorCode(response.status,payload);
+        throw new GenesisApiError(response.status,code?{error:code}:null,code??'E2EE_HTTP_ERROR');
+      }
       const message = isTemporaryApiStatus(response.status) ? apiUnavailableMessage()
         : response.status === 413 ? "Запрос превышает допустимый размер. Уменьшите объём данных или вложений."
         : response.status === 429 ? "Слишком много запросов. Повторите позже."
@@ -1100,6 +1105,9 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
     if (payload === null) {
       throw new Error("Сервис GENESIS временно недоступен.");
     }
+    // Content/control-plane responses cannot publish identity, profile/trial
+    // metadata or CSRF. Ordinary authenticated endpoints keep their own rules.
+    if(isE2eeResponsePath(path)&&(Object.hasOwn(payload,'user')||Object.hasOwn(payload,'csrf')))throw new Error('E2EE_INVALID_RESPONSE');
     const profile = payload.user as GenesisUser | null | undefined;
     if(legacyOwner&&profile!==undefined&&profile?.uid!==legacyOwner){endLocalSession();throw new Error('E2EE_ACCOUNT_CHANGED');}
     // Only the fully validated /session reader may establish or change identity.
@@ -3584,7 +3592,7 @@ export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/re
   try{
     if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
     return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
-  }catch(error){if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;}
+  }catch(error){const code=error instanceof GenesisApiError?e2eeHttpErrorCode(error.status,error.payload):null;if(code)throw new Error(code);throw error;}
   finally{observation?.close();}
 }
 

@@ -32,7 +32,7 @@ adapters. У финального результата каждой строки
 | 16 | Потеря всех ключей | Частично: key-loss отказы/retained snapshots проверены; нужна полная понятная UX без пустого replacement vault |
 | 17 | Кража browser storage при lock | Частично: новое encrypted storage проверено; действующий legacy product ещё не переведён целиком |
 | 18 | Reload, новая вкладка, stale service worker | Частично: реальные worker/two-tab/fence cases есть; остаются общий product routing и uncontrolled/restored pages |
-| 19 | Смена аккаунта/logout с pending data | Частично: owner permits и ряд источников проверены; остальные writers/drafts ещё подключаются |
+| 19 | Смена аккаунта/logout с pending data | Частично: owner permits, ряд источников и отказ от E2EE body user/CSRF до session/profile adoption проверены на actual web/native HTTP; остальные writers/drafts ещё подключаются |
 | 20 | Инвалидирование Android Keystore | Частично: actual alias-loss/refusal/retained-key cases есть; полного recovery всех категорий нет |
 | 21 | Crash reports, логи, clipboard, temp files | Частично: redaction/ограниченные ports есть; нужен системный canary-прогон финального кандидата |
 | 22 | Backup перед первым sync | Частично: девять реальных captures и coordinator проверены; archive web input отдельно прошёл actual File/React/IDB cold readback. Остальные11 полных sources и весь product lifecycle mounted/unmounted drafts обязательны |

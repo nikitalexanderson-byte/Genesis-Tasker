@@ -1001,6 +1001,10 @@ internal class AuthSessionClient(context: Context,
                 JSONObject(output.toString(Charsets.UTF_8.name()))
             }
             currentRequest()
+            // E2EE bodies are never account/CSRF/profile authority. Refuse
+            // before cookie/session persistence and live-profile publication.
+            if (E2eeTransportProtocol.allowedRoute(method, path) && (payload.has("user") || payload.has("csrf")))
+                throw AuthApiError("E2EE_INVALID_RESPONSE")
             val responseOwner=if(persist && payload.has("user")) AuthProtocol.identity(payload)?.uid else null
             if(legacyOwner!=null && payload.has("user") && responseOwner!=legacyOwner)
                 throw AuthFailure(AuthFailure.Kind.PROTOCOL)
