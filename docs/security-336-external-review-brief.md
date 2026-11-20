@@ -208,3 +208,18 @@ evidence: JS105/105, JVM172/172, Chromium14/14 and actual API26/API34 each2/2 pl
 original and both fresh JCA vectors were independently checked. This proves a
 reader boundary, not authenticated product recovery handoff, key custody, whole
 account coverage or authority to restore an old active signing identity.
+
+The next bounded content-plan component is documented in
+`e2ee-336-content-plan-stream.md`. Review reservation/part/receipt/final-marker
+CAS, separate remote/local placement, complete-byte incremental SHA-256,
+attempt inventory, original-source preconditions and the serialization-failure
+cleanup repair. Selected evidence is JS120/120, JVM179/179, actual API26/API34
+each3/3 plus5/5 file regressions, Chromium13/13 and public-signer-only JCA/web
+interoperability. Each native80MiB and browser18MiB+14byte original is checked
+in full. The native lint baseline precedes this increment and cannot be used
+as its new lint result. Full Android lint on the release candidate is pending.
+The component does not activate v3 run or establish product input provenance,
+whole-account custody/recovery or source coverage. Integration requirements in
+`e2ee-336-streamed-coordinator-integration.md` are a design, not implemented
+functionality; they explicitly retain every mixed old ancestor/remote original
+and require real native/WebView bounded input before whole-product acceptance.

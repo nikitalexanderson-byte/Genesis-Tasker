@@ -1,9 +1,13 @@
 /** Strict small private-file JSON, including decoded duplicate names. This is
  * syntax/resource validation before projecting the authenticated body; private
  * filenames preserve original UTF16 units. No crypto or IO capability exists. */
-export function parseE2eeFileManifestJson(bytes:Uint8Array):unknown{
- const invalid=():never=>{throw new Error('E2EE_CORRUPT_FILE');};
- if(!(bytes instanceof Uint8Array)||bytes.length<1||bytes.length>256*1024)invalid();
+export function parseE2eeFileManifestJson(bytes:Uint8Array):unknown{return readPrivateJson(bytes,256*1024,10000,'E2EE_CORRUPT_FILE');}
+/** Separate encrypted technical plan metadata budget. This does not change
+ * the existing file manifest's256KiB/10000-node admission. */
+export function parseE2eeContentPlanJson(bytes:Uint8Array):unknown{return readPrivateJson(bytes,4*1024*1024,250000,'E2EE_CORRUPT_CONTENT_PLAN');}
+function readPrivateJson(bytes:Uint8Array,maximumBytes:number,maximumNodes:number,code:string):unknown{
+ const invalid=():never=>{throw new Error(code);};
+ if(!(bytes instanceof Uint8Array)||bytes.length<1||bytes.length>maximumBytes)invalid();
  try{
   const text=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);let at=0,nodes=0;
   const whitespace=()=>{while(at<text.length&&' \t\r\n'.includes(text[at]))at++;};
@@ -23,7 +27,7 @@ export function parseE2eeFileManifestJson(bytes:Uint8Array):unknown{
    return invalid();
   };
   function value(depth:number):void{
-   if(depth>16||++nodes>10000)invalid();whitespace();const char=text[at];
+   if(depth>16||++nodes>maximumNodes)invalid();whitespace();const char=text[at];
    if(char==='{'){
     at++;whitespace();const names=new Set<string>();if(text[at]==='}'){at++;return;}
     while(true){whitespace();const name=string(true);if(names.size>=128||names.has(name))invalid();names.add(name);whitespace();if(text[at++]!==':')invalid();value(depth+1);whitespace();

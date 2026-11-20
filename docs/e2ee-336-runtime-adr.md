@@ -15,6 +15,16 @@ keys are the RFC 9180 65-byte uncompressed point; private scalars are 32 bytes.
 No application AES, ECDH, HPKE or HKDF arithmetic is implemented. API26 platform
 acceptance and dependency scanning of these additions remain required.
 
+Bounded content planning now preserves complete-byte SHA-256 without retaining
+whole web plaintext via exact `@noble/hashes`2.4.0 (MIT, Node>=20.19.0; browser
+ES2022 build). Native uses platform JCA SHA-256. Both full/runtime dependency
+audits returned0 currently known advisories; exact lock integrity and selected
+browser/JCA interoperability are recorded in `e2ee-336-content-plan-stream.md`.
+AES/AEAD/keys remain on the established providers. The new local plan format is
+inert and not wired into active migration. Its metadata has a separate strict
+4MiB/250000-node budget; the old file manifest remains256KiB/10000 nodes. No
+crypto suite, writer protocol, rollout floor or production state is changed.
+
 A recovery authority has independent randomly generated signing and receiving
 keys, separate from every device. A newly generated 32-byte CSPRNG recovery
 secret protects the authority's portable private key bundle. HKDF info is

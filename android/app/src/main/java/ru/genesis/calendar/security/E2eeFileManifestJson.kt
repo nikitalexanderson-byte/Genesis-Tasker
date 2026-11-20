@@ -10,8 +10,12 @@ import java.util.regex.Pattern
 internal object E2eeFileManifestJson {
     private val number = Pattern.compile("-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
     private fun invalid(): Nothing = throw IllegalStateException("E2EE_CORRUPT_FILE")
-    fun read(bytes: ByteArray): JSONObject {
-        if (bytes.size !in 1..256 * 1024) invalid()
+    fun read(bytes: ByteArray): JSONObject = readBounded(bytes,256 * 1024,10000)
+    /** Separate encrypted technical plan metadata budget; file manifests keep
+     * their original strict256KiB/10000-node admission above. */
+    fun readContentPlan(bytes:ByteArray):JSONObject=readBounded(bytes,4*1024*1024,250000)
+    private fun readBounded(bytes:ByteArray,maximumBytes:Int,maximumNodes:Int):JSONObject {
+        if (bytes.size !in 1..maximumBytes) invalid()
         try {
             val text = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()
             var at = 0; var nodes = 0; val matcher = number.matcher(text)
@@ -42,7 +46,7 @@ internal object E2eeFileManifestJson {
                 invalid()
             }
             fun value(depth: Int) {
-                if (depth > 16 || ++nodes > 10000) invalid(); whitespace(); if (at == text.length) invalid()
+                if (depth > 16 || ++nodes > maximumNodes) invalid(); whitespace(); if (at == text.length) invalid()
                 when (text[at]) {
                     '{' -> {
                         at++; whitespace(); val names = mutableSetOf<String>()

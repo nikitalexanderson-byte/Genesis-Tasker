@@ -2073,3 +2073,48 @@ Coverage9/20 и все product/common-reader/recovery/shared/Drive/direct-upgrad
 48-scenario/14-language/human-review gates сохраняются. Production3.3.5/149,
 floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
 устройства/номер версии не менялись.
+
+## Потоковый план контента в локальном quarantine,20 ноября
+
+Web ProtectedMigrationContentPlan и native E2eeContentPlan.Writer сохраняют по
+одному encrypted envelope/local part с журналом попытки, читают каждый результат
+обратно и публикуют complete marker/manifest одной локальной CAS-транзакцией.
+Файлы сохраняют v1/64MiB; комментарии — отдельный single-envelope формат,
+local-only записи не попадают в upload descriptors. В памяти остаются bounded
+buffers/metadata. Reader проверяет весь manifest/inventory и оригинальные SHA-256
+через bounded readback; web использует exact @noble/hashes2.4.0, native — JCA.
+Полный и runtime-only dependency audit:0 известных advisories. Metadata имеет
+отдельный strict4MiB/250000-node budget; file manifest остаётся256KiB/10000.
+
+Dedicated red-тест выявил неочищенную временную local copy при отказе metadata
+serialization. Guard исправлен на обеих платформах до runtime acceptance.
+Input01 с JVM179/179/SUCCESS8m32s поэтому не использовался для приёмки runtime.
+Accepted input02
+C19E425C692BF040E9081E73CE6B274F5AC68A25BF799E5EB7347339F6FA2BD5:
+build SUCCESS10m16s, JVM179/179. Actual API26/API34 — по3/3 new-plan и5/5 file
+regressions,0 failure/skip. Все83,886,080 remote bytes(2files по40MiB)/322 envelopes
+прочитаны через cold SQLite после удаления только synthetic old alias; SHA
+совпадают с независимым bounded host construction. Source/APK hashes сверены
+после выполнения; оба extracted artifacts каждой new suite проверены.
+Elapsed108,008/156,019ms, max heaps512/192MiB; peak heap/product capacity/SLA
+не заявляются. Новый Android lint для этого input не запускался; последняя полная
+проверка — original-source, полный lint release candidate ещё обязателен.
+
+JS120/120, scoped lint/types PASS, полный static web build02 PASS. Actual
+Chromium157/IndexedDB13/13: два9MiB+7byte файла, все76 envelopes, local-only value,
+каждый исходный byte/host SHA, borrowed wipe, late tag/incomplete source/quota/
+syntax/actor refusals. Browser CLI был переоткрыт; только финальный13/13 report
+после progress-only QA restart считается passing evidence. Public WebCrypto
+vector открыт обоими JCA providers, Node читает обе fresh JCA variants,
+Chromium — fresh API34; read ports требуют только roots/public signer.
+Подробности, точные hashes и границы: e2ee-336-content-plan-stream.md.
+
+Original-source676d06d1 прошёл полный CI44739109349. Новый план пока не проходил
+remote CI. Он инертен и не подключён к активной миграции: v3 run сохраняет отказ
+до transport. Новый design e2ee-336-streamed-coordinator-integration.md отдельно
+фиксирует mixed old ancestors, сохранение remote originals и реальный bounded
+native/WebView input как незавершённую интеграцию. Coverage9/20, все11 real sources,
+product lifecycle/recovery/ACL+rotation/Drive/direct upgrades/48 scenarios/
+14-language semantics/human crypto review остаются обязательными. Production
+3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/
+личные устройства/релизная версия не менялись.
