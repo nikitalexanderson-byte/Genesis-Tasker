@@ -23,7 +23,7 @@ This primitive has no key generation, AEAD, HTTP, restore or identity port.
 
 Frozen input01:
 `3B613B4C03FCB5E2694A26C59EAA6B4C8C4972CAEAADF72F02AD36627A8B24F2`.
-Full selected build SUCCESS12m36s, lint0 errors/208 warnings/8 hints and no new
+Full selected build SUCCESS12m33s, lint0 errors/208 warnings/8 hints and no new
 issue/file pairs against ports02. Selected JVM7/7,0 failure/skip: exact Unicode/control round trips across short
 reads, generated40MiB text, binary sizes around64KiB, EOF/tag failures,
 limits/zero progress, original actor retirement and sink/source ownership.
@@ -46,10 +46,12 @@ cross-api26-01,cross-api34-01,assembled-01,lint-delta-01}.json`,
 `archives-source-wire-build-01.log`, saved lint XML,
 and `output/qa/security336-archives-source-wire-api{26,34}-01/`.
 
-The codec is not yet wired into the inventory/coordinator. Aggregate32/48/64MiB
-gates remain in place. Early authenticated process-remnant bindings, nested
-old-cipher materialization, complete protected source/reconciliation streaming
-and cold recovery without synthetic old keys remain required. Coverage remains
+The codec now feeds the retained-inventory producer described in
+`e2ee-336-archive-inventory-stream.md`. Legacy aggregate32/48/64MiB gates remain
+in place. Early origins are separately described in `e2ee-336-archive-origins.md`;
+full remnant collection, nested old-cipher materialization, complete protected
+source/coordinator/reconciliation streaming and cold recovery without synthetic
+old keys remain required. Coverage remains
 9/20. Full product/direct-upgrade/14-language/visual/provider acceptance and
 independent human crypto review remain open. No production/Play/personal device
 or version was changed; floors0 and pilot/cutover off are preserved.

@@ -115,3 +115,31 @@ test('AuthController inventory normalizes original protected state, forms and hi
  assert.equal(value.originalHistory,input.history);assert.deepEqual(value.safety,[]);assert.equal('complete' in value,false);
  for(const history of ['{"attempt":"invalid"}','{"attempt":"2026-11-20","attempt":"2026-11-20"}','{"authority":true}'])await assert.rejects(normalizeNativeArchiveCapture({...input,history},()=>{}),/E2EE_/);
 });
+// Append to tests/e2ee-archives-native-forms.test.mjs after the protocol3 reader
+// and native writer land. Uses that file's existing fixture/valueFixture helpers.
+async function streamFixture(){
+ const input=await valueFixture(),row=input.views[0],candidate=row.files[0],descriptor=candidate.descriptor;
+ descriptor.name='\ufeffbad\ud800name';const manifest=JSON.parse(row.valueForm.rawManifest);manifest.file.name=new File([],descriptor.name).name;
+ row.valueForm.rawManifest=JSON.stringify(manifest);row.valueForm.rawManifests=[row.valueForm.rawManifest];
+ candidate.rawDescriptor=' \n'+JSON.stringify(descriptor).replace('"protocol"','"protoco\\u006c"')+'\r\n';delete candidate.descriptor;
+ input.protocol=3;return input;
+}
+test('v3 source wire preserves original provider JSON and exact value/manifests without a metadata projection',async()=>{
+ const input=await streamFixture(),before=JSON.stringify(input),[result]=await normalizeNativeArchiveForms(input,owner,()=>{});
+ assert.equal(result.files[0].rawDescriptor,input.views[0].files[0].rawDescriptor);assert.equal(result.files[0].descriptor.name,'\ufeffbad\ud800name');
+ assert.equal(result.files[0].descriptor.protocol,1);assert.equal(result.form.state.key,' exact independent input ');assert.equal(result.valueForm.manifests.length,1);
+ assert.deepEqual(Buffer.from(result.files[0].bytes,'base64url'),Buffer.from([0,255,0xc3,0x28]));assert.equal(JSON.stringify(input),before);assert.equal('complete' in result,false);
+});
+test('v3 original provider metadata rejects escaped duplicates trailing text unsafe types and extra projected input',async()=>{
+ for(const alter of [candidate=>candidate.rawDescriptor=candidate.rawDescriptor.replace('"length":4','"length":4,"len\\u0067th":4'),
+  candidate=>candidate.rawDescriptor+='{}',candidate=>candidate.rawDescriptor=candidate.rawDescriptor.replace('"length":4','"length":4.5'),
+  candidate=>candidate.descriptor={},candidate=>candidate.bytes='AP_D']){
+  const input=await streamFixture();alter(input.views[0].files[0]);const before=JSON.stringify(input);
+  await assert.rejects(normalizeNativeArchiveForms(input,owner,()=>{}),/E2EE_/);assert.equal(JSON.stringify(input),before);
+ }
+});
+test('v3 source protocol and provider text are pinned before reentrant actor callbacks',async()=>{
+ const input=await streamFixture(),raw=input.views[0].files[0].rawDescriptor;let checks=0;
+ const [result]=await normalizeNativeArchiveForms(input,owner,()=>{if(++checks===2){input.protocol=1;input.views[0].files[0].rawDescriptor='{}';}});
+ assert.equal(result.files[0].rawDescriptor,raw);assert.equal(result.valueForm.sessionEpoch,5);assert.equal(result.files[0].descriptor.name,'\ufeffbad\ud800name');
+});

@@ -9,7 +9,7 @@ type Row=Record<string,unknown>;
 export type NativeArchiveForm=Readonly<{id:string;source:'backup-panel';mounted:boolean;rawForm:string|null;
  form:Readonly<{state:Row;settled:boolean;file:Row|null}>|null;
  valueForm:ReturnType<typeof normalizeNativeArchiveValues>|null;
- files:readonly Readonly<{descriptor:NativeBackupFileOrigin;bytes:string}>[]}>;
+ files:readonly Readonly<{descriptor:NativeBackupFileOrigin;bytes:string;rawDescriptor?:string}>[]}>;
 const encoder=new TextEncoder(),uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const MAX=48*1024*1024,MAX_FILE=24*1024*1024;
 function invalid():never{throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');}
@@ -36,11 +36,11 @@ function displayName(value:string|null){
  * even when a native JSONObject could project a different duplicate field. */
 export async function normalizeNativeArchiveForms(input:unknown,ownerId:string,current:()=>void):Promise<readonly NativeArchiveForm[]> {
  assertTechnical(ownerId);current();exactKeys(input,['protocol','ownerId','sessionEpoch','views']);
- if(![1,2].includes(input.protocol as number)||input.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');integer(input.sessionEpoch);
+ if(![1,2,3].includes(input.protocol as number)||input.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');integer(input.sessionEpoch);
  if(!Array.isArray(input.views)||input.views.length>1000)invalid();
  const protocol=input.protocol,sessionEpoch=input.sessionEpoch;
  let candidates=0;
- if(protocol===2)for(const row of input.views){object(row);if(row.valueForm===null)continue;object(row.valueForm);
+ if(protocol!==1)for(const row of input.views){object(row);if(row.valueForm===null)continue;object(row.valueForm);
   if(!Array.isArray(row.valueForm.values)||!Array.isArray(row.valueForm.rawManifests))invalid();
   candidates+=row.valueForm.values.length+row.valueForm.rawManifests.length;
   if(candidates>10000)throw new Error('E2EE_SOURCE_TOO_LARGE');
@@ -48,7 +48,7 @@ export async function normalizeNativeArchiveForms(input:unknown,ownerId:string,c
  const views=structuredClone(input.views),ids=new Set<string>(),files=new Set<string>(),output:NativeArchiveForm[]=[];let size=0;
  const budget=(value:string)=>{const raw=encoder.encode(value);try{size+=raw.length;if(size>MAX)throw new Error('E2EE_SOURCE_TOO_LARGE');}finally{raw.fill(0);}};
  for(const row of views){
-  current();exactKeys(row,protocol===2?['id','source','mounted','rawForm','valueForm','files']:['id','source','mounted','rawForm','files']);
+  current();exactKeys(row,protocol!==1?['id','source','mounted','rawForm','valueForm','files']:['id','source','mounted','rawForm','files']);
   if(typeof row.id!=='string'||!uuid.test(row.id)||ids.has(row.id)||row.source!=='backup-panel'||typeof row.mounted!=='boolean')invalid();ids.add(row.id);
   if(!Array.isArray(row.files)||row.files.length>1000)invalid();
   let form:NativeArchiveForm['form']=null;
@@ -60,7 +60,7 @@ export async function normalizeNativeArchiveForms(input:unknown,ownerId:string,c
    form=Object.freeze({state:value.state,settled:value.settled,file:value.file as Row|null});
   }
   let valueForm:NativeArchiveForm['valueForm']=null;
-  if(protocol===2&&row.valueForm!==null){
+  if(protocol!==1&&row.valueForm!==null){
    if(row.rawForm!==null)invalid();object(row.valueForm);
    const raw=row.valueForm;
    if(!Array.isArray(raw.values)||!Array.isArray(raw.rawManifests)||raw.values.length+raw.rawManifests.length>10000)invalid();
@@ -73,14 +73,17 @@ export async function normalizeNativeArchiveForms(input:unknown,ownerId:string,c
   if(row.mounted&&(!form||!form.settled))throw new Error('E2EE_ARCHIVE_OPERATION_IN_PROGRESS');
   const preserved:NativeArchiveForm['files'][number][]=[];
   for(const candidate of row.files){
-   exactKeys(candidate,['descriptor','bytes']);const descriptor=Object.freeze(fileOrigin(candidate.descriptor));
+   exactKeys(candidate,protocol===3?['rawDescriptor','bytes']:['descriptor','bytes']);
+   let rawDescriptor:string|undefined;
+   if(protocol===3){text(candidate.rawDescriptor,32768);budget(candidate.rawDescriptor);rawDescriptor=candidate.rawDescriptor;}
+   const descriptor=Object.freeze(fileOrigin(rawDescriptor===undefined?candidate.descriptor:parseLegacyMigrationJson(rawDescriptor,'E2EE_ARCHIVE_SOURCE_INVALID',32768)));
    if(files.has(descriptor.id)||files.size>=10000)invalid();files.add(descriptor.id);text(candidate.bytes,Math.ceil(MAX_FILE/3)*4);budget(candidate.bytes);
    if(descriptor.length===0&&candidate.bytes!=='')invalid();
    const raw=descriptor.length===0?new Uint8Array():decodeE2eeBytes(candidate.bytes,descriptor.length);let digest:Uint8Array|undefined;
    try{digest=new Uint8Array(await crypto.subtle.digest('SHA-256',raw));current();
     if(Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join('')!==descriptor.sha256)throw new Error('E2EE_ARCHIVE_FILE_INTEGRITY');
    }finally{raw.fill(0);digest?.fill(0);}
-   preserved.push(Object.freeze({descriptor,bytes:candidate.bytes}));
+   preserved.push(Object.freeze({descriptor,bytes:candidate.bytes,...(rawDescriptor===undefined?{}:{rawDescriptor})}));
   }
   const selections=[form?.file,...valueForm?.manifests.map(item=>item.manifest.file)??[]];
   for(const selected of selections){if(!selected)continue;const found=preserved.find(file=>file.descriptor.id===selected.id)?.descriptor;

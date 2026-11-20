@@ -10,7 +10,8 @@ import java.util.Base64
  * and even an unpaired surrogate must not be replaced by a charset encoder. */
 internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
     private val metadata:(Reader)->JSONObject,private val maximum:Int=96*1024*1024,
-    private val quota:Long=768L*1024*1024,private val otherBytes:()->Long={0L},private val quotaMonitor:Any=Any()) {
+    private val quota:Long=768L*1024*1024,private val otherBytes:()->Long={0L},private val quotaMonitor:Any=Any(),
+    private val syncDirectory:(File)->Unit={}) {
     internal interface Crypto { fun seal(value:String,aad:String):String;fun open(value:String,aad:String):String }
     internal interface Form {
         val characters:Int
@@ -19,6 +20,11 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
         fun reader():Reader
         fun clear()
     }
+    /** Authenticated provenance only. An incomplete origin is inert input,
+     * never a Form, permission to resume, or evidence of an empty history. */
+    internal class Origin(val binding:String,val view:String,val id:String,val complete:Boolean) {
+        override fun toString()="BackupFormSpool.Origin([redacted])"
+    }
     private class Pending(val binding:String,val id:String,val view:String,val file:File,val stream:FileOutputStream) {
         val output=DataOutputStream(stream.buffered());val hash=MessageDigest.getInstance("SHA-256")
         var characters=0;var chunks=0
@@ -26,7 +32,11 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
     private val pending=linkedMapOf<String,Pending>()
     private var retired=false
     private val uuid=Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
-    private fun requireRoot(){check(!retired){"BACKUP_VIEW_CLOSED"};check(root.isDirectory||root.mkdirs()){"BACKUP_FORM_STORAGE"};check(!java.nio.file.Files.isSymbolicLink(root.toPath())){"BACKUP_FORM_STORAGE"}}
+    private fun requireRoot(){
+        check(!retired){"BACKUP_VIEW_CLOSED"};val existed=root.exists()
+        check(root.isDirectory||root.mkdirs()){"BACKUP_FORM_STORAGE"};check(!java.nio.file.Files.isSymbolicLink(root.toPath())){"BACKUP_FORM_STORAGE"}
+        if(!existed){syncDirectory(root.parentFile);syncDirectory(root)}
+    }
     private fun owned(file:File):File { check(file.canonicalFile.parentFile==root.canonicalFile&&!java.nio.file.Files.isSymbolicLink(file.toPath())){"BACKUP_FORM_STORAGE"};return file }
     private fun used():Long=otherBytes()+(root.listFiles()?.sumOf{file->if(file.isFile&&!java.nio.file.Files.isSymbolicLink(file.toPath()))file.length()else 0L}?:0L)
     private fun record(out:DataOutputStream,value:String){
@@ -39,7 +49,20 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
     }
     private fun aad(binding:String,id:String,part:String)="backup-form-spool-v1:${binding.length}:$binding:$id:$part"
     private fun digest(hash:MessageDigest)=hash.digest().joinToString(""){"%02x".format(it)}
-    private fun discard(value:Pending){runCatching{value.output.close()};owned(value.file).delete()}
+    private fun discard(value:Pending){runCatching{value.output.close()};owned(value.file).delete();owned(File(root,"${value.id}.origin")).delete()}
+    private fun originAad(id:String)="backup-form-spool-origin-v1:${root.name}:$id"
+    private fun persistOrigin(value:Pending){
+        val locator=JSONObject().put("protocol",1).put("binding",value.binding).put("view",value.view).put("id",value.id)
+        val bytes=crypto.seal(locator.toString(),originAad(value.id)).toByteArray(Charsets.US_ASCII)
+        try{
+            check(bytes.size in 1..16384){"BACKUP_FORM_STORAGE"}
+            synchronized(quotaMonitor){
+                check(used()+bytes.size<=quota){"BACKUP_FORM_QUOTA"}
+                val file=owned(File(root,"${value.id}.origin"));check(file.createNewFile()){"BACKUP_TRANSFER_BUSY"}
+                FileOutputStream(file).use{it.write(bytes);it.fd.sync()};syncDirectory(root)
+            }
+        }finally{bytes.fill(0)}
+    }
     @Synchronized fun append(view:String,binding:String,id:String,index:Int,last:Boolean,text:String,assertCurrent:()->Unit={}):Form? {
         assertCurrent();requireRoot();check(uuid.matches(view)&&uuid.matches(id)&&binding.length in 1..4096&&index in 0..maximum/CHUNK&&text.length<=CHUNK){"BACKUP_TRANSFER_INVALID"}
         if(index==0){
@@ -47,9 +70,16 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
             // candidates, never the preceding acknowledged form.
             pending.values.filter{it.view==view&&it.id!=id}.toList().forEach{pending.remove(it.id);discard(it)}
             check(id !in pending&&pending.size<2){"BACKUP_TRANSFER_BUSY"}
+            check(listOf("origin","pending","bin","ref","index-pending").none{owned(File(root,"$id.$it")).exists()}){"BACKUP_TRANSFER_BUSY"}
             val file=owned(File(root,"$id.pending"));check(file.createNewFile()){"BACKUP_TRANSFER_BUSY"}
             val stream=try{FileOutputStream(file)}catch(error:Throwable){file.delete();throw error}
-            pending[id]=Pending(binding,id,view,file,stream).also{it.output.writeInt(MAGIC)}
+            val value=Pending(binding,id,view,file,stream)
+            try{
+                value.output.writeInt(MAGIC);value.output.flush()
+                // Persist the ORIGINAL binding before any input chunk can be
+                // acknowledged. A process can die before the final .ref exists.
+                persistOrigin(value);pending[id]=value
+            }catch(error:Throwable){discard(value);throw error}
         }
         val value=pending[id]?:error("BACKUP_TRANSFER_ORDER")
         try{
@@ -68,6 +98,9 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
                     check(used()+encrypted.length+4+(if(value.chunks==0)4 else 0)<=quota){"BACKUP_FORM_QUOTA"}
                     record(value.output,encrypted);value.output.flush()
                 }
+                // Acknowledging a non-final chunk must not depend on a later
+                // footer's fsync. No whole form/binary buffer is retained here.
+                value.stream.fd.sync();assertCurrent()
             }finally{bytes.fill(0)}
             value.characters+=text.length;value.chunks++
             if(!last)return null
@@ -106,10 +139,14 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
                     assertCurrent()
                     synchronized(quotaMonitor){
                         check(used()+bytes.size<=quota){"BACKUP_FORM_QUOTA"};check(temporary.createNewFile()&&!target.exists()){"BACKUP_FORM_STORAGE"}
-                        FileOutputStream(temporary).use{it.write(bytes);it.fd.sync()};check(temporary.renameTo(target)){"BACKUP_FORM_STORAGE"}
+                        FileOutputStream(temporary).use{it.write(bytes);it.fd.sync()};check(temporary.renameTo(target)){"BACKUP_FORM_STORAGE"};syncDirectory(root)
                     }
                 }finally{bytes.fill(0);temporary.delete()}
-                assertCurrent();return result
+                assertCurrent()
+                // The complete ref is durable first. A leftover matching origin
+                // after a crash/cleanup refusal is valid inert provenance.
+                runCatching{if(owned(File(root,"$id.origin")).delete())syncDirectory(root)}
+                return result
             }catch(error:Throwable){result.clear();throw error}
         }catch(error:Throwable){pending.remove(id);discard(value);throw error}
     }
@@ -150,23 +187,53 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
                 override fun close(){if(!closed){closed=true;data.fill(0);raw.close()}}
             }
         }
-        override fun clear(){owned(file).delete();owned(File(root,"$id.ref")).delete()}
+        override fun clear(){owned(file).delete();owned(File(root,"$id.ref")).delete();owned(File(root,"$id.origin")).delete()}
         override fun toString()="BackupFormSpool.Form([redacted])"
     }
     @Synchronized fun cancel(view:String){pending.values.filter{it.view==view}.toList().forEach{pending.remove(it.id);discard(it)}}
+    private fun reference(file:File,id:String):JSONObject {
+        check(owned(file).length() in 1..16384){"BACKUP_FORM_INTEGRITY"}
+        val value=JSONObject(crypto.open(file.readText(Charsets.US_ASCII),"backup-form-spool-index-v1:${root.name}:$id"))
+        check(value.keys().asSequence().toSet()==setOf("protocol","binding","view","id","characters","chunks","sha256")&&
+            value.get("protocol")==1&&value.getString("id")==id&&uuid.matches(value.getString("view"))&&
+            value.getString("binding").length in 1..4096&&value.getInt("characters") in 1..maximum&&
+            value.getInt("chunks")== (value.getInt("characters")+CHUNK-1)/CHUNK&&value.getString("sha256").matches(Regex("[a-f0-9]{64}"))){"BACKUP_FORM_INTEGRITY"}
+        return value
+    }
+    /** Small restart catalog only; no bulk reads or reattachment to a session.
+     * Unknown legacy remnants are retained and explicitly block, never swept. */
+    @Synchronized fun origins():List<Origin> {
+        requireRoot();val files=root.listFiles()?:error("BACKUP_FORM_STORAGE");check(files.size<=30000){"E2EE_SOURCE_TOO_LARGE"}
+        val groups=linkedMapOf<String,MutableSet<String>>()
+        for(file in files){
+            check(owned(file).isFile){"BACKUP_FORM_STORAGE"}
+            val id=file.name.substringBefore('.');val suffix=file.name.substringAfter('.',"")
+            check(uuid.matches(id)&&suffix in setOf("ref","origin","pending","bin","index-pending")){"BACKUP_FORM_UNBOUND_REMNANT"}
+            groups.getOrPut(id){mutableSetOf()}.add(suffix)
+        }
+        check(groups.size<=10000){"E2EE_SOURCE_TOO_LARGE"}
+        return groups.map{(id,names)->
+            check("pending" !in names||"bin" !in names){"BACKUP_FORM_INTEGRITY"}
+            val complete=if("ref" in names){check("bin" in names&&"pending" !in names){"BACKUP_FORM_INTEGRITY"};reference(File(root,"$id.ref"),id)}else null
+            val early=if("origin" in names){
+                val file=owned(File(root,"$id.origin"));check(file.length() in 1..16384){"BACKUP_FORM_INTEGRITY"}
+                JSONObject(crypto.open(file.readText(Charsets.US_ASCII),originAad(id))).also{value->
+                    check(value.keys().asSequence().toSet()==setOf("protocol","binding","view","id")&&value.get("protocol")==1&&
+                        value.getString("id")==id&&uuid.matches(value.getString("view"))&&value.getString("binding").length in 1..4096){"BACKUP_FORM_INTEGRITY"}
+                }
+            }else null
+            check(complete!=null||early!=null){"BACKUP_FORM_UNBOUND_REMNANT"}
+            if(complete!=null&&early!=null)check(complete.getString("binding")==early.getString("binding")&&complete.getString("view")==early.getString("view")){"BACKUP_FORM_INTEGRITY"}
+            val value=requireNotNull(complete?:early);Origin(value.getString("binding"),value.getString("view"),id,complete!=null)
+        }
+    }
     /** Read-only restart inventory. Callers still need owner filtering, durable
      * fencing, old-key capture and new-root materialization before activation. */
     @Synchronized fun retained():List<Pair<String,Form>> {
         requireRoot()
-        val references=root.listFiles()?.filter{it.name.endsWith(".ref")}?:emptyList()
-        check(references.size<=10000){"E2EE_SOURCE_TOO_LARGE"}
-        return references.map{file->
-            val id=file.name.removeSuffix(".ref");check(uuid.matches(id)&&owned(file).length() in 1..16384){"BACKUP_FORM_INTEGRITY"}
-            val raw=file.readText(Charsets.US_ASCII);val value=JSONObject(crypto.open(raw,"backup-form-spool-index-v1:${root.name}:$id"))
-            check(value.keys().asSequence().toSet()==setOf("protocol","binding","view","id","characters","chunks","sha256")&&
-                value.get("protocol")==1&&value.getString("id")==id&&uuid.matches(value.getString("view"))&&
-                value.getString("binding").length in 1..4096&&value.getInt("characters") in 1..maximum&&
-                value.getInt("chunks")== (value.getInt("characters")+CHUNK-1)/CHUNK&&value.getString("sha256").matches(Regex("[a-f0-9]{64}"))){"BACKUP_FORM_INTEGRITY"}
+        val catalog=origins();check(catalog.all{it.complete}){"BACKUP_FORM_INCOMPLETE"}
+        return catalog.map{origin->
+            val id=origin.id;val value=reference(File(root,"$id.ref"),id)
             val form=Stored(owned(File(root,"$id.bin")),value.getString("binding"),id,value.getInt("characters"),value.getInt("chunks"),value.getString("sha256"))
             form.header=form.reader().use(metadata);value.getString("binding") to form
         }

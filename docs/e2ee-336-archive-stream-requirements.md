@@ -10,10 +10,10 @@ See the immutable security prompt and `security-336-acceptance-matrix.md`.
 | --- | --- |
 | Native retained forms/values | Authenticated UTF16 spill,96Mi code-unit logical value/form limit, independent stored candidates/history; complete capture still materializes JSON |
 | Native retained binary | Original file up to24MiB, source-only bounded readback with full digest/footer/EOF; retained File arrays released after spill |
-| Archive inventory |32MiB raw-form/value and48MiB aggregate capture limits; complete local source/coordinator streaming has not replaced them |
+| Archive inventory | Reference-catalog protocol3 producer streams current retained views without an aggregate; legacy32/48MiB capture and complete source/coordinator replacement remain open |
 | Shared source/coordinator |64MiB serialized snapshot and128MiB aggregate history/content budgets; capture and planning currently copy complete ByteArrays/JSON |
 | Native safety/held state | Original Room rows and `native-protected-state-v1` can contain nested old LocalCipher documents/tasks and encrypted safety groups; their framing alone proves no authentication or portability |
-| Process remnants | Final encrypted `.ref` locators retain original binding. A crash before that final locator can leave an incomplete candidate without durable binding; current `retained()` enumerates only final refs |
+| Process remnants | New `.origin` locators bind candidates before first acknowledgment; final-v1 refs remain readable. The bounded catalog distinguishes known partials and refuses unknown old remnants. Full owner-filtered directory collection/materialization remains open |
 | Web | Original localStorage safety/held strings, memory safety and actual File/editor input are preserved in a bounded aggregate; streaming must include these real paths too |
 
 ## Required properties
@@ -45,6 +45,8 @@ See the immutable security prompt and `security-336-acceptance-matrix.md`.
    partial publication from a final footer and manifest. Do not sweep unknown
    remnants, rebind them to a later session, or infer a complete empty history.
    Existing final-v1 refs remain readable with their exact historical semantics.
+   The new spill implements early origins (`e2ee-336-archive-origins.md`);
+   whole-source collection and new-root stage journals still need this property.
 7. Capture small immutable catalogs/references under the inventory monitor;
    bulk reads must release that monitor and check original actor/version before
    and after bounded IO. Retirement must be visible before waiting for cleanup.

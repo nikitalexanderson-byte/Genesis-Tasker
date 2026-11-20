@@ -79,12 +79,27 @@ internal object NativeBackupValueManifest {
 }
 
 private val nativeBackupSpillQuotaMonitor=Any()
+/** Android private ext4/f2fs directories must be durable too: syncing a file
+ * alone cannot make its newly created name/rename survive a restart. */
+internal fun syncNativeBackupDirectory(directory:File){
+    // O_CLOEXEC entered the public SDK at27. At26 the read-only no-follow
+    // descriptor is used only for fstat/fsync and is always closed here.
+    val closeOnExec=if(android.os.Build.VERSION.SDK_INT>=27)android.system.OsConstants.O_CLOEXEC else 0
+    val descriptor=android.system.Os.open(directory.absolutePath,android.system.OsConstants.O_RDONLY or
+        android.system.OsConstants.O_NOFOLLOW or closeOnExec,0)
+    try{
+        check(android.system.OsConstants.S_ISDIR(android.system.Os.fstat(descriptor).st_mode)){"BACKUP_FORM_STORAGE"}
+        android.system.Os.fsync(descriptor)
+    }finally{android.system.Os.close(descriptor)}
+}
 internal fun nativeBackupFormSpool(context:Context,maximum:Int=96*1024*1024):BackupFormSpool {
     val cipher=LocalCipher()
     // A session owns this exact directory. Account clear removes only its own
     // referenced frames. Process-death remnants stay encrypted, for the future
     // complete archive collector; never sweep another session's candidates.
     val parent=File(context.noBackupFilesDir,"backup-forms-v1")
+    check(!java.nio.file.Files.isSymbolicLink(parent.toPath())&&(parent.isDirectory||parent.mkdir())){"BACKUP_FORM_STORAGE"}
+    syncNativeBackupDirectory(context.noBackupFilesDir)
     val root=File(parent,UUID.randomUUID().toString())
     fun otherBytes():Long {
         check(!java.nio.file.Files.isSymbolicLink(parent.toPath())){"BACKUP_FORM_STORAGE"}
@@ -100,5 +115,5 @@ internal fun nativeBackupFormSpool(context:Context,maximum:Int=96*1024*1024):Bac
     return BackupFormSpool(root,object:BackupFormSpool.Crypto{
         override fun seal(value:String,aad:String)=cipher.encrypt(value,aad)
         override fun open(value:String,aad:String)=cipher.decrypt(value,aad)
-    },NativeBackupFormMetadata::read,maximum=maximum,otherBytes=::otherBytes,quotaMonitor=nativeBackupSpillQuotaMonitor)
+    },NativeBackupFormMetadata::read,maximum=maximum,otherBytes=::otherBytes,quotaMonitor=nativeBackupSpillQuotaMonitor,syncDirectory=::syncNativeBackupDirectory)
 }

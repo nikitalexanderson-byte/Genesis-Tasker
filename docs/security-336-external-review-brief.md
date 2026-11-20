@@ -160,6 +160,16 @@ alias. Do not request real Google sessions, recovery kits or production keys.
 
 ## Required closure before activation
 
+Latest retained-archive component evidence,20 November: early original-context
+locators and a bounded current-process source producer are documented in
+`e2ee-336-archive-origins.md` and `e2ee-336-archive-inventory-stream.md`.
+The latter explicitly separates failed drafts, the input03 JVM/functional
+evidence and input04's androidTest-only repair with an identical Main APK.
+Its24/17/10MiB input and independently checked greater-than64MiB source are not
+a complete protected coordinator snapshot or large WebView reader acceptance.
+Review the remaining integration in `e2ee-336-snapshot-stream-plan.md` as a plan,
+not an implemented or reviewed stage protocol. Coverage remains9/20.
+
 The eleven remaining source categories, full bootstrap/unlock/editor routing,
 normal writes and whole-product fences, shared ACL-change/rotation transaction,
 files/automation, archives/Drive/local-only backup, large-data/old-provider

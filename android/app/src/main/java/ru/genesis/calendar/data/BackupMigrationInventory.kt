@@ -16,7 +16,7 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
         private var originalDescriptor:String?=rawDescriptor
         private var content:ByteArray?=bytes.copyOf()
         private var stored:BackupStoredBinary?=null
-        private var retired=false
+        @Volatile private var retired=false
         val id=JSONObject(rawDescriptor).getString("id")
         val length=bytes.size
         val descriptor:String @Synchronized get(){check(!retired){"BACKUP_FILE_CLOSED"};return originalDescriptor?:requireNotNull(stored).descriptor}
@@ -31,6 +31,19 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
             val bytes=content?:requireNotNull(stored).bytes{check(!retired){"BACKUP_FILE_CLOSED"}}
             return try{JSONObject().put("descriptor",JSONObject(descriptor)).put("bytes",Base64.getUrlEncoder().withoutPadding().encodeToString(bytes))}
             finally{if(transient)bytes.fill(0)}
+        }
+        /** Capture references only. Opening descriptor/file readers happens
+         * outside both the inventory and File monitors, with original guards. */
+        @Synchronized fun source():(BackupSourceSink)->Unit {
+            check(!retired){"BACKUP_FILE_CLOSED"}
+            val descriptor=originalDescriptor;val bytes=content;val retained=stored
+            return {target->
+                val sink=target.guarded{check(!retired){"BACKUP_FILE_CLOSED"}}
+                sink.syntax("{\"rawDescriptor\":");sink.checkCurrent()
+                val raw=descriptor?:requireNotNull(retained).descriptor;sink.checkCurrent();sink.quoted(raw,32768);sink.syntax(",\"bytes\":")
+                (bytes?.inputStream()?:requireNotNull(retained).open(sink::checkCurrent)).use{sink.binary(it,length.toLong())}
+                sink.syntax("}")
+            }
         }
         @Synchronized fun clear(){retired=true;content?.fill(0);content=null;originalDescriptor=null;try{stored?.clear()}finally{stored=null}}
         override fun toString()="BackupMigrationInventory.File([redacted])"
@@ -47,7 +60,7 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
     private var owner:String?=null
     private var epoch:Long?=null
     private val views=linkedMapOf<String,View>()
-    private var revision=0L
+    @Volatile private var revision=0L
     private var spool:BackupFormSpool?=null
     private var valueSpool:BackupFormSpool?=null
     private var fileSpool:BackupFormSpool?=null
@@ -159,6 +172,15 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
         registry.commit(raw,assertCurrent);row.settled=registry.settled;row.publishing=false;revision++
     }
     @Synchronized fun detach(id:String){views[id]?.let{spool?.cancel(id);it.values?.detach();it.mounted=false;it.publishing=false;revision++}}
+    @Synchronized fun source(uid:String,generation:Long,assertCurrent:()->Unit={}):BackupInventorySource {
+        assertCurrent();E2eeKeys.technical(uid);check(generation>=0){"E2EE_SCOPE_BINDING_MISMATCH"};if(owner!=null)bind(uid,generation)
+        check(views.values.none{it.pendingFiles.isNotEmpty()||it.mounted&&(it.publishing||(it.form==null&&it.values?.hasManifest!=true)||!it.settled)}){"E2EE_ARCHIVE_OPERATION_IN_PROGRESS"}
+        val original=incarnation;val version=revision
+        val catalog=views.map{(id,row)->BackupInventorySource.View(id,row.mounted,row.form,row.values?.source(uid,generation),row.files.values.map{it.source()})}
+        return BackupInventorySource(uid,generation,catalog){
+            assertCurrent();check(incarnation===original){"E2EE_ACCOUNT_CHANGED"};check(revision==version){"E2EE_ARCHIVE_CAPTURE_CHANGED"}
+        }
+    }
     @Synchronized fun capture(uid:String,generation:Long):JSONObject {
         E2eeKeys.technical(uid);if(owner!=null)bind(uid,generation)
         check(views.values.none{it.pendingFiles.isNotEmpty()||it.mounted&&(it.publishing||(it.form==null&&it.values?.hasManifest!=true)||!it.settled)}){"E2EE_ARCHIVE_OPERATION_IN_PROGRESS"}

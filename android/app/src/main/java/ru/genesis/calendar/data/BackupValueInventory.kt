@@ -55,6 +55,22 @@ internal class BackupValueInventory(private val storage:()->BackupFormSpool,priv
         val stored=try{requireNotNull(transfer.append(UUID.randomUUID().toString(),0,true,raw))}finally{transfer.clear()}
         try{assertCurrent();manifests+=Manifest(stored);settled=parsed.getBoolean("settled")}catch(error:Throwable){stored.clear();throw error}
     }
+    fun source(owner:String,epoch:Long):(BackupSourceSink)->Unit {
+        val originalValues=values.values.toList();val originalManifests=manifests.toList()
+        return {sink->
+            sink.syntax("{\"protocol\":2,\"ownerId\":");sink.quoted(owner);sink.syntax(",\"sessionEpoch\":$epoch,\"viewId\":");sink.quoted(view)
+            sink.syntax(",\"rawManifest\":")
+            if(originalManifests.isEmpty())sink.syntax("null")else originalManifests.last().stored.reader().use{sink.quoted(it,32768)}
+            sink.syntax(",\"rawManifests\":[")
+            for((index,manifest)in originalManifests.withIndex()){if(index>0)sink.syntax(",");manifest.stored.reader().use{sink.quoted(it,32768)}}
+            sink.syntax("],\"values\":[")
+            for((index,value)in originalValues.withIndex()){
+                if(index>0)sink.syntax(",");sink.syntax("{\"id\":");sink.quoted(value.id);sink.syntax(",\"name\":");sink.quoted(value.name)
+                sink.syntax(",\"rawJson\":");value.stored.reader().use{sink.quoted(it)};sink.syntax("}")
+            }
+            sink.syntax("]}")
+        }
+    }
     fun capture(owner:String,epoch:Long):JSONObject {
         // History lives in authenticated spill, not a second retained plaintext
         // String list. Only this explicit, bounded capture materializes it.

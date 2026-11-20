@@ -1807,3 +1807,54 @@ generated stream. Java max heap512/192MiB, elapsed1603/1852ms(API26/API34).
 Coverage9/20;32/48/64MiB aggregate gates ещё действуют. Полные source/coordinator
 streaming, process remnants, nested old ciphers, остальные категории и общая
 приёмка обязательны. Production3.3.5/149 и floors0/pilot/cutover off сохраняются.
+
+## Архивы: ранние локаторы и потоковый retained source,20 ноября
+
+Source-wire codec сохранён вbf6c504b; полный Source checks44688120762 прошёл
+web/API и Android. Новая часть добавляет authenticated origin до подтверждения
+первого frame, fsync frames/каталога и bounded restart catalog. Завершённый
+final-v1 ref сохраняет совместимость; известные partials остаются инертными,
+unknown remnants явно блокируют вместо sweep/rebind/пустой истории.
+
+Immutable reference catalog теперь отдаёт исходные формы, каждое принятое
+value/manifest и все selected/unselected files через bounded readers вне
+inventory/File monitors. Новый local wire3 сохраняет rawDescriptor строкой;
+общий strict reader проверяет её до проекции и сохраняет оригинал. Это номер
+локального source-формата, не cryptoProtocol/writerProtocol/update floor.
+
+Draft01 остановился на отсутствующем в SDK O_DIRECTORY; draft02 прошёл47 JVM
+и64 native/platform cases, но lint нашёл O_CLOEXEC API27 при min26. Input03
+использует только public SDK с явной SDK-проверкой. Build03 SUCCESS20m36s,
+JVM51/51, lint0 errors/208 warnings/8 hints, новых issue/file pairs0.
+JS75/75, scoped lint и owned types PASS. Native03: API34 —67/67; API26 —66/67.
+Один новый QA pause predicate ожидал array write>1024, тогда как API26 platform
+Base64 пишет одиночными bytes (max array277, против8124 наAPI34). Сам большой
+source case прошёл на обеих платформах. Failure и diagnostic03 сохранены.
+
+Только androidTest helper изменён на pause по суммарной позиции потока, без
+увеличения timeout/retry. Input04
+8D019006D15FD53A698B7D076749C0D3AD6AB295D546AF1CE767539B7310C528,
+build SUCCESS2m19s; Main APK байт-в-байт совпадает с03, lint XML также идентичен.
+JVM51 относится к03; нового JVM run для04 не заявляем. Actual04 API26/API34 —
+по18/18 focused cases,0 fail/skip, включая3 source и3 origin cases; по31 host
+checks PASS, все15 extracted artifact hashes/platform проверены. Неизменённые
+64 functional cases остаются явно03 evidence, а не повторным04 запуском.
+
+Actual24/17/10MiB file history —51MiB оригиналов и71,304,915 source bytes.
+Независимый bounded host construction подтвердил весь wire digest и три binary
+digest. Полный synthetic fixture с retention/streaming занял75,108/61,300ms
+(API26/API34), max Java heap512/192MiB. Clear во время остановленного binary
+output занял7/2ms; writer отказал E2EE_ACCOUNT_CHANGED. Peak heap, unlimited
+capacity и SLA не заявляются. Оба03 dark preview PNG просмотрены: counts8 и
+confirmation видны; light journal — отдельный02 evidence. Полная visual/
+provider/API35/OEM/14-language/direct-upgrade matrix открыта.
+
+Форматы, hashes, failed drafts и точный объём: `e2ee-336-archive-origins.md`,
+`e2ee-336-archive-inventory-stream.md`. Следующая интеграция:
+`e2ee-336-snapshot-stream-plan.md` (план, не реализованный stage protocol).
+Producer пока не является полным personal.archives adapter: нужны encrypted
+new-root stages/coordinator/common-reader streaming, все process directories и
+nested old ciphers. Legacy32/48/64MiB gates сохранены; coverage9/20 и остальные
+11 categories/normal lifecycle/shared ACL/files/Drive/48 scenarios/human review
+остаются обязательными. Production3.3.5/149, floors0/pilot/cutover off и
+GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные устройства/версию здесь не меняли.
