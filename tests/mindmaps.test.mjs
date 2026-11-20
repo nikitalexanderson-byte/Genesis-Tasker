@@ -60,6 +60,49 @@ test('opening a new map draft does not consume its quota twice; persisted maps s
  assert.equal(writes,2,'A second Free map must never reach the transport');
 });
 
+test('an earlier upload cannot report synced while a newer map edit is still unsent',async()=>{
+ const tab=await cloudSyncClient({withMindmaps:true}),entered=deferred(),release=deferred(),secondEntered=deferred(),secondRelease=deferred();
+ tab.featureAccess.rememberFeatureAccess(tab.userId,{schemaVersion:1,enforcementEnabled:true,effectivePlan:'free',limits:{mindmaps:1},validUntil:null});
+ let writes=0;const requests=[];
+ tab.respond(async(_url,init)=>{
+  const request=JSON.parse(init.body);requests.push(request);
+  if(++writes===1){entered.resolve();await release.promise;}else{secondEntered.resolve();await secondRelease.promise;}
+  return Response.json({revision:request.expectedRevision+1});
+ });
+ const repository=new tab.mindmaps.MindmapRepository(tab.userId),states=[],document=newMindmap('Slow upload',null);
+ const first=repository.save(document,state=>states.push(state));await entered.promise;
+ const latest={...document,description:'Saved on the next revision 🌱.'};
+ const second=repository.save(latest,state=>states.push(state));
+ try{
+  release.resolve();await first;await secondEntered.promise;
+  assert.notEqual(states.at(-1),'synced','The latest edit is still waiting for its own acknowledgement');
+  assert.equal(states.includes('synced'),false,'An older upload must not publish a transient synced state');
+ }finally{secondRelease.resolve();await second;}
+ assert.equal(states.at(-1),'synced');assert.deepEqual(requests.map(row=>row.expectedRevision),[0,1]);
+ const saved=await tab.client.personalDocumentAccess(tab.userId).open(requests[1],`map:${document.id}`);
+ assert.equal(saved.description,latest.description);
+ assert.equal([...tab.storage.data.keys()].some(key=>key.includes(':draft:')||key.includes(':request:')),false);
+});
+
+test('resolving an uncertain older request does not acknowledge the newer description',async()=>{
+ const tab=await cloudSyncClient({withMindmaps:true}),entered=deferred(),release=deferred();
+ tab.featureAccess.rememberFeatureAccess(tab.userId,{schemaVersion:1,enforcementEnabled:true,effectivePlan:'free',limits:{mindmaps:1},validUntil:null});
+ let writes=0;const requests=[];
+ tab.respond(async(_url,init)=>{
+  const request=JSON.parse(init.body);requests.push(request);
+  if(++writes===1)throw new TypeError('Synthetic lost acknowledgement');
+  if(writes===3){entered.resolve();await release.promise;}
+  return Response.json({revision:request.expectedRevision+1});
+ });
+ const repository=new tab.mindmaps.MindmapRepository(tab.userId),document=newMindmap('Uncertain map',null),states=[];
+ await assert.rejects(repository.save(document,()=>{}),/Synthetic lost acknowledgement/);
+ const latest=repository.save({...document,description:'Newer private text'},state=>states.push(state));
+ try{await entered.promise;assert.equal(states.includes('synced'),false);}
+ finally{release.resolve();await latest;}
+ assert.equal(states.at(-1),'synced');assert.equal(requests[0].operationId,requests[1].operationId);
+ assert.notEqual(requests[2].operationId,requests[1].operationId);assert.equal(requests[2].expectedRevision,1);
+});
+
 test('map edit history restores content and positions, groups typing, and clears redo after a new edit',()=>{
  const {MindmapEditHistory}=loadTs(resolve('app/mindmap-edit-history.ts'));
  const history=new MindmapEditHistory(),document=newMindmap('History',null,'idea');

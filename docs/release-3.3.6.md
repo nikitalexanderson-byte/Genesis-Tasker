@@ -1636,3 +1636,23 @@ crypto review по-прежнему обязательны. Source checks4464656
 полностью SUCCESS; новые локальные инкременты этим старым CI не проверены.
 Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false
 сохранены. Deploy/Play/личных устройств в этом продолжении не было.
+
+## Порядок подтверждения сохранения карт,20 ноября
+
+Source checks44658090511 наd6f99745 обнаружил пустое новое описание в отдельном
+premium-клиенте. Контролируемая задержка подтвердила реальную гонку: ответ на
+старую запись показывал synced, пока новая правка ещё не подтверждена. Статус
+теперь привязан к последней staged sequence; разрешение старого uncertain
+request тоже не подтверждает новую правку. CAS/receipts/ciphertext сохранены.
+Исходный browser scenario усилен двумя управляемыми задержками, проверкой всех
+состояний и точного operationId/revision перед открытием отдельного клиента.
+
+До исправления deterministic regression0/1; после42/42 focused и1806/1806 full
+JS,0 fail/skip, owned types/scoped lint PASS. Web сGENESIS_MINDMAPS=true PASS.
+Actual Chromium145:4 startup checks и3 controlled two-write/cold-client cycles
+PASS, console0; финальный desktop/light PNG просмотрен. Первые browser01/02
+не дошли до сценария из-за выключенного mindmap build flag и сохранены как
+неуспешные. См. `e2ee-336-mindmap-save-status.md` для evidence/ограничений.
+Новый CI ещё не подтверждён; старый failure не переименован вPASS. Этот инкремент
+не закрывает native архивацию/9 из20 источников/общие условия выпуска. Production,
+floors0, pilot/cutover off иGENESIS_DEPLOY_ANDROID=false сохраняются.

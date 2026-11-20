@@ -160,17 +160,22 @@ export class MindmapRepository {
     const snapshot = validateMindmap(structuredClone(document));
     const sequence = (this.staged.get(snapshot.id) ?? 0) + 1;
     this.staged.set(snapshot.id, sequence);
-    status("saving");
+    // A response for an older edit may arrive after the next draft is already
+    // on the device. Only that latest edit can publish its save state.
+    const report = (state: SaveState, message?: string) => {
+      if (this.staged.get(snapshot.id) === sequence) status(state, message);
+    };
+    report("saving");
     // Encrypt immediately, independently of a slow/failed network request.
     const staged = this.operation(async access => {
       const encrypted = await access.seal(snapshot, `map:${snapshot.id}`);
       this.check(access);
       const request: PendingMap = { ...encrypted, schemaVersion: this.envelopeVersion, expectedRevision: this.revisions.get(snapshot.id) ?? 0, operationId: mapId() };
       if (this.staged.get(snapshot.id) === sequence) {
-        this.storage.setItem(this.draftKey(snapshot.id), JSON.stringify(request)); status("device");
+        this.storage.setItem(this.draftKey(snapshot.id), JSON.stringify(request)); report("device");
       }
       return request;
-    }).catch(error => { status("error", "Не удалось сохранить защищённый черновик. Не закрывайте карту; освободите место на устройстве и повторите сохранение."); throw error; });
+    }).catch(error => { report("error", "Не удалось сохранить защищённый черновик. Не закрывайте карту; освободите место на устройстве и повторите сохранение."); throw error; });
     // Encryption can fail before an earlier slow upload finishes. Observe that
     // rejection now, retaining it for the public save promise without an unhandled child.
     void staged.catch(() => {});
@@ -180,7 +185,10 @@ export class MindmapRepository {
       return this.operation(async access => {
       if (this.staged.get(snapshot.id) !== sequence) return;
       // Do not overwrite an unresolved request: its receipt must be checked first.
-      if (this.pending.has(snapshot.id)) await this.send(snapshot.id, status, access);
+      if (this.pending.has(snapshot.id)) await this.send(snapshot.id, (state, message) => {
+        // Resolving an uncertain older request does not acknowledge this draft.
+        if (state !== "synced") report(state, message);
+      }, access);
       request.expectedRevision = this.revisions.get(snapshot.id) ?? 0;
       if (!this.spaceId && request.expectedRevision === 0) {
         // Opening a new draft adopts revision 0 before its first save. Only
@@ -191,7 +199,7 @@ export class MindmapRepository {
       this.storage.setItem(this.draftKey(snapshot.id), JSON.stringify(request));
       this.pending.set(snapshot.id, request);
       this.storage.setItem(this.draftKey(snapshot.id).replace(":draft:", ":request:"), JSON.stringify(request));
-      await this.send(snapshot.id, status, access);
+      await this.send(snapshot.id, report, access);
       this.check(access);
       if (this.staged.get(snapshot.id) === sequence) this.storage.removeItem(this.draftKey(snapshot.id));
       });
