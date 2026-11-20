@@ -29,6 +29,9 @@ object E2eeFiles {
     class Opened(val bytes: ByteArray, val filename: String, val mediaType: String) {
         override fun toString() = "E2eeFiles.Opened([redacted])"
     }
+    class OpenedMetadata(val size:Long,val filename:String,val mediaType:String) {
+        override fun toString()="E2eeFiles.OpenedMetadata([redacted])"
+    }
     private fun corrupt(): Nothing = throw IllegalStateException("E2EE_CORRUPT_FILE")
     fun seal(root: SecretKey, signingKey: PrivateKey, context: E2eeEnvelope.Context, source: ByteArray, filename: String, mediaType: String): Sealed {
         require(source.size <= MAX_FILE_BYTES && filename.length <= 512 && mediaType.length <= 128) { "E2EE_FILE_TOO_LARGE" }
@@ -83,11 +86,8 @@ object E2eeFiles {
             finally { bytes.fill(0) }
         } finally { buffer.fill(0); fileKey.fill(0) }
     }
-    fun open(root: SecretKey, signer: PublicKey, expected: E2eeEnvelope.Context, manifestEnvelope: E2eeEnvelope.Envelope,
-        fetch: (String) -> E2eeEnvelope.Envelope): Opened {
-        val privateBytes = E2eeEnvelope.open(root,signer,expected,manifestEnvelope)
-        var keyBytes: ByteArray? = null;var output: ByteArray? = null
-        try {
+    private fun privateFileManifest(privateBytes:ByteArray):JSONObject {
+        try{
             val manifest = E2eeFileManifestJson.read(privateBytes)
             E2eeKeys.exact(manifest,setOf("protocol","fileKey","size","chunkSize","filename","mediaType","chunks"))
             val size = E2eeCommands.integer(manifest.get("size"));val chunks = manifest.getJSONArray("chunks")
@@ -102,22 +102,45 @@ object E2eeFiles {
                 if (E2eeCommands.integer(entry.get("index")) != index.toLong() || E2eeCommands.integer(entry.get("size")) != minOf(CHUNK_BYTES.toLong(), size - index.toLong() * CHUNK_BYTES)
                     || !seen.add(objectId)) corrupt()
             }
-            val fileKey = manifest.get("fileKey") as? String ?: corrupt()
-            keyBytes = E2eeEnvelope.decode(fileKey,32);val chunkRoot = E2eeEnvelope.importRoot(keyBytes)
-            val result = ByteArray(size.toInt());output = result;var offset = 0
+            return manifest
+        }catch(_:Exception){corrupt()}
+    }
+    /** Borrowed plaintext belongs only in protected local quarantine. Each
+     * buffer is wiped on callback return/failure; no completed file metadata is
+     * returned until all ordered chunks and the final actor check succeed. */
+    fun openStream(root:SecretKey,signer:PublicKey,expected:E2eeEnvelope.Context,manifestEnvelope:E2eeEnvelope.Envelope,
+        fetch:(String)->E2eeEnvelope.Envelope,assertCurrent:()->Unit,writeQuarantinedPlaintext:(ByteArray)->Unit):OpenedMetadata =
+        readChunks(root,signer,expected,manifestEnvelope,fetch,assertCurrent){writeQuarantinedPlaintext}
+    private fun readChunks(root:SecretKey,signer:PublicKey,original:E2eeEnvelope.Context,manifestEnvelope:E2eeEnvelope.Envelope,
+        fetch:(String)->E2eeEnvelope.Envelope,assertCurrent:()->Unit,begin:(OpenedMetadata)->((ByteArray)->Unit)):OpenedMetadata {
+        val expected=E2eeEnvelope.Context.fromJson(original.toJson());assertCurrent()
+        val privateBytes=E2eeEnvelope.open(root,signer,expected,manifestEnvelope);var keyBytes:ByteArray?=null
+        try{
+            assertCurrent();val manifest=privateFileManifest(privateBytes);val size=E2eeCommands.integer(manifest.get("size"));val chunks=manifest.getJSONArray("chunks")
+            val fileKey=manifest.get("fileKey") as? String?:corrupt();keyBytes=try{E2eeEnvelope.decode(fileKey,32)}catch(_:Exception){corrupt()};val chunkRoot=E2eeEnvelope.importRoot(keyBytes);assertCurrent()
+            val metadata=OpenedMetadata(size,manifest.getString("filename"),manifest.getString("mediaType"));val write=begin(metadata);assertCurrent();var offset=0L
             for (index in 0 until chunks.length()) {
                 val entry = chunks.getJSONObject(index);E2eeKeys.exact(entry,setOf("objectId","operationId","index","size","hash"))
                 val objectId = entry.getString("objectId");val operationId = entry.getString("operationId")
                 val length = E2eeCommands.integer(entry.get("size"))
-                val envelope = fetch(objectId)
-                if (E2eeEnvelope.payloadHash(envelope) != entry.getString("hash")) corrupt()
+                assertCurrent();val envelope = fetch(objectId);assertCurrent()
+                val hash=E2eeEnvelope.payloadHash(envelope);assertCurrent();if(hash!=entry.getString("hash"))corrupt()
                 val context = E2eeEnvelope.Context.fromJson(expected.toJson().put("domain","attachment").put("objectId",objectId).put("operationId",operationId).put("revision",1))
                 val bytes = E2eeEnvelope.open(chunkRoot,signer,context,envelope)
-                try { if (bytes.size.toLong() != length) corrupt();bytes.copyInto(result,offset);offset += bytes.size } finally { bytes.fill(0) }
+                try {assertCurrent();if(bytes.size.toLong()!=length)corrupt();write(bytes);assertCurrent();offset+=bytes.size}finally{bytes.fill(0)}
             }
-            if (offset != result.size) corrupt()
-            return Opened(result,filename,mediaType)
-        } catch (_: Exception) { output?.fill(0);corrupt() }
-        finally { privateBytes.fill(0);keyBytes?.fill(0) }
+            if(offset!=size)corrupt();assertCurrent();return metadata
+        }finally{privateBytes.fill(0);keyBytes?.fill(0)}
+    }
+    fun open(root: SecretKey, signer: PublicKey, expected: E2eeEnvelope.Context, manifestEnvelope: E2eeEnvelope.Envelope,
+        fetch: (String) -> E2eeEnvelope.Envelope): Opened {
+        var output:ByteArray?=null;var offset=0
+        try{
+            val metadata=readChunks(root,signer,expected,manifestEnvelope,fetch,{}){meta->
+                val result=ByteArray(meta.size.toInt());output=result;
+                {bytes:ByteArray->bytes.copyInto(result,offset);offset+=bytes.size}
+            }
+            if(offset.toLong()!=metadata.size)corrupt();return Opened(requireNotNull(output),metadata.filename,metadata.mediaType)
+        }catch(_:Exception){output?.fill(0);corrupt()}
     }
 }

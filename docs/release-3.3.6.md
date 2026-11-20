@@ -2011,3 +2011,35 @@ sources/lifecycle/ACL+rotation/Drive/direct upgrades/48 scenarios/14-language
 semantics/human crypto review остаются обязательными. Production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
 устройства/версия здесь не менялись.
+
+## Файлы: bounded readback без полного plaintext,20 ноября
+
+Web openE2eeFileStream и native E2eeFiles.openStream используют общий с batch
+reader строгий preflight всего private manifest. Каждый chunk проверяется по
+hash/context/signature/AEAD/размеру; actor guards окружают crypto/fetch/sink.
+Borrowed plaintext очищается после callback, включая ошибку, а итоговые metadata
+возвращаются только после всех ordered chunks и финального actor check. Поздняя
+ошибка, no-space или retirement не превращают prefix в целый файл. Prefix
+допустим только в защищённом local quarantine. Формат v1 и64MiB/file не меняются.
+
+Accepted native input01
+F3D6AB03EB13FCFB91ECF5DBDCCCD7336DB635C8F2F67EEEBF95D41D53F9C22D:
+build SUCCESS19m13s, JVM167/167, lint0/208/8, новых issue/file pairs0. Actual
+API26/API34 — по5/5,0 fail/skip. Весь40MiB source прочитан через160 bounded
+chunks, borrowed buffers очищены, digest совпал с независимым host construction.
+По два extracted artifacts на платформу сверены по хешам; fresh JCA vectors
+открыты обоими WebCrypto readers. Elapsed10,652/16,164ms, Java max heaps512/192MiB;
+peak heap/capacity/SLA не заявляются. Runtime использовал свежие assembled APK
+параллельно с lint; оба APK hash совпадают с финальным successful build identity.
+Chromium157/IndexedDB —17/17, включая полный9MiB+7byte cold readback/37 chunks,
+late failures, guard/options capture и empty file. JS93/93, scoped lint/types PASS.
+Подробности и APK hashes: e2ee-336-file-read-stream.md.
+
+Предшествующий file-preflight d69787b1 прошёл полный CI44721059631. Source
+publication9af1f6b3: Android CI PASS, web/API44727123730 ещё выполнялся на момент
+этой записи; новый reader remote CI пока не запускался. Это не release evidence.
+Далее нужны original-source read-only recovery и полный streamed planner/common
+reader. Coverage9/20, все оставшиеся product/recovery/shared/Drive/upgrade/48/
+14-language/human-review gates сохраняются. Production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
+устройства/версия в этом блоке не менялись.

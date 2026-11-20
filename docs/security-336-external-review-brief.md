@@ -189,3 +189,11 @@ fix/retest disposition, residual limits and explicit remaining activation
 blockers. Any critical data-loss or key-disclosure finding blocks activation.
 The owner retains publication authority; this brief grants no permission to
 send messages, distribute private evidence or enable production migration.
+
+Existing-v1 file readback now has a bounded web/native API, sharing full private
+manifest preflight with the batch reader. Borrowed plaintext expires after the
+sink settles; complete metadata is returned only after every ordered chunk and
+final actor check. Selected evidence: `e2ee-336-file-read-stream.md`, JS93/93,
+JVM167/167, actual API26/API34 each5/5 and Chromium17/17. The native40MiB and
+browser9MiB+7byte checks are primitive/provider/IO acceptance. They do not close
+coordinator/content streaming, product recovery, source coverage or human review.

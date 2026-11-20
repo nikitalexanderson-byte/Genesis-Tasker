@@ -37,6 +37,7 @@ class E2eeFileManifestPreflightTest {
                 .put("filename", "private").put("mediaType", "application/octet-stream").put("chunks", JSONArray().put(first).put(bad))
             val bytes = value.toString().toByteArray(); val packet = try { E2eeEnvelope.seal(root, signing, context, bytes) } finally { bytes.fill(0) }; var calls = 0
             rejects { E2eeFiles.open(root, signer, context, packet) { calls++; error("UNEXPECTED_PRIVATE_IO") } }; assertEquals(mode, 0, calls)
+            var outputs=0;rejects{E2eeFiles.openStream(root,signer,context,packet,{calls++;error("UNEXPECTED_PRIVATE_IO")},{},{outputs++})};assertEquals(mode,0,calls);assertEquals(mode,0,outputs)
         }
     }
 }

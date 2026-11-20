@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import {parseE2eeFileManifestJson} from '../app/e2ee/file-manifest-json.ts';
-import {openE2eeFile,E2EE_CHUNK_BYTES} from '../app/e2ee/files.ts';
+import {openE2eeFile,openE2eeFileStream,E2EE_CHUNK_BYTES} from '../app/e2ee/files.ts';
 import {decodeE2eeBytes,encodeE2eeBytes,importE2eeRoot,sealE2eeEnvelope} from '../app/e2ee/envelope.ts';
 const vectors=JSON.parse(readFileSync(new URL('./fixtures/e2ee/file-manifest-json-v1.json',import.meta.url),'utf8'));
 const fixture=JSON.parse(readFileSync(new URL('./fixtures/e2ee/v1.json',import.meta.url),'utf8')),utf8=new TextEncoder();
@@ -33,5 +33,7 @@ test('the entire authenticated descriptor set is validated before any chunk fetc
   else if(mode==='duplicate')bad.objectId=manifest.chunks[0].objectId;else if(mode==='index')bad.index=0;else bad.size=2;
   const envelope=await sealE2eeEnvelope(root,signing,context,utf8.encode(JSON.stringify(manifest)));let calls=0;
   await assert.rejects(openE2eeFile(root,signer,context,envelope,async()=>{calls++;throw new Error('UNEXPECTED_PRIVATE_IO');}),/E2EE_CORRUPT_FILE/);assert.equal(calls,0,mode);
+  let outputs=0;await assert.rejects(openE2eeFileStream({root,signer,expectedContext:context,manifestEnvelope:envelope,assertCurrent:()=>{},
+   fetchChunk:async()=>{calls++;throw new Error('UNEXPECTED_PRIVATE_IO');},writeQuarantinedPlaintext:async()=>{outputs++;}}),/E2EE_CORRUPT_FILE/);assert.equal(calls,0,mode);assert.equal(outputs,0,mode);
  }
 });

@@ -23,6 +23,43 @@ class E2eeFileStreamTest {
     private fun refuses(code: String, body: () -> Unit) {
         try { body() } catch (error: Exception) { assertTrue("Expected $code, got ${error.message}", error.message.orEmpty().contains(code)); return }; fail("Invalid stream produced a file manifest")
     }
+    private val readName="\uFEFFreader\uD800😀.bin"
+    private fun readManifest(f:Fixture,size:Int=E2eeFiles.CHUNK_BYTES*2+37):E2eeEnvelope.Envelope {
+        val bytes=ByteArray(size){(it*31).toByte()}
+        return try{bytes.inputStream().use{E2eeFiles.sealStream(f.root,f.signing,f.context,it,size.toLong(),readName,"application/octet-stream",f::current,f::write)}}finally{bytes.fill(0)}
+    }
+    @Test fun streamingReadChecksAllOriginalBytesAndWipesBorrowedChunksBeforeTheNextFetch() {
+        val f=Fixture();val manifest=readManifest(f);val borrowed=mutableListOf<ByteArray>();var at=0
+        val metadata=E2eeFiles.openStream(f.root,f.signer,f.context,manifest,{id->assertTrue(borrowed.all{bytes->bytes.all{it==0.toByte()}});f.chunks.getValue(id)},f::current){bytes->
+            assertTrue(bytes.size<=E2eeFiles.CHUNK_BYTES);for(index in bytes.indices)assertEquals(((at+index)*31).toByte(),bytes[index]);at+=bytes.size;borrowed+=bytes
+        }
+        assertEquals((E2eeFiles.CHUNK_BYTES*2+37).toLong(),metadata.size);assertEquals(3,borrowed.size);assertEquals(readName,metadata.filename)
+        assertTrue(borrowed.all{bytes->bytes.all{it==0.toByte()}})
+    }
+    @Test fun missingLaterChunkTamperAndQuarantineFailureReturnNoCompleteReadReceipt() {
+        for(mode in listOf("missing","tamper","space")){
+            val f=Fixture();val manifest=readManifest(f);var fetches=0;var result:E2eeFiles.OpenedMetadata?=null;val borrowed=mutableListOf<ByteArray>()
+            refuses(when(mode){"missing"->"SYNTHETIC_CHUNK_MISSING";"space"->"SYNTHETIC_NO_SPACE";else->"CORRUPT_FILE"}){
+                result=E2eeFiles.openStream(f.root,f.signer,f.context,manifest,{id->fetches++;val envelope=f.chunks.getValue(id)
+                    if(fetches==2&&mode=="missing")error("SYNTHETIC_CHUNK_MISSING")
+                    if(fetches==2&&mode=="tamper"){val value=envelope.toJson();val raw=value.getString("ciphertext");E2eeEnvelope.Envelope.fromJson(value.put("ciphertext",(if(raw[0]=='A')"B" else "A")+raw.substring(1)))}else envelope
+                },f::current){bytes->borrowed+=bytes;if(mode=="space")error("SYNTHETIC_NO_SPACE")}
+            }
+            assertNull(result);assertTrue(fetches<=2);assertTrue(borrowed.isNotEmpty());assertTrue(borrowed.all{bytes->bytes.all{it==0.toByte()}})
+        }
+    }
+    @Test fun streamingReadActorChecksSurroundFetchAndSinkWithNoReceiptAfterRetirement() {
+        for(mode in listOf("before","fetch","sink")){
+            val f=Fixture();val manifest=readManifest(f);var fetches=0;val borrowed=mutableListOf<ByteArray>();if(mode=="before")f.live=false
+            refuses("ACCOUNT_CHANGED"){E2eeFiles.openStream(f.root,f.signer,f.context,manifest,{id->fetches++;if(mode=="fetch")f.live=false;f.chunks.getValue(id)},f::current){bytes->borrowed+=bytes;if(mode=="sink")f.live=false}}
+            assertEquals(if(mode=="before")0 else 1,fetches);assertEquals(if(mode=="sink")1 else 0,borrowed.size);assertTrue(borrowed.all{bytes->bytes.all{it==0.toByte()}})
+        }
+    }
+    @Test fun zeroLengthStreamingReadHasNoImplicitFetchOrOutput() {
+        val f=Fixture();val manifest=readManifest(f,0)
+        val metadata=E2eeFiles.openStream(f.root,f.signer,f.context,manifest,{error("IMPLICIT_CHUNK")},f::current){error("IMPLICIT_OUTPUT")}
+        assertEquals(0L,metadata.size);assertEquals(readName,metadata.filename)
+    }
     @Test fun boundedReadsProduceTheExistingFormatAndPreserveAllFilenameUnits() {
         val f = Fixture(); val original = ByteArray(E2eeFiles.CHUNK_BYTES * 2 + 37) { (it * 31).toByte() }; var closed = false
         val input = object : ByteArrayInputStream(original) {

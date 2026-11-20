@@ -11,6 +11,10 @@ The coordinator SOURCE-publication increment is accepted separately in
 capture and atomic catalogue/pointer publication. Its v3 run refuses before
 transport until the complete streamed planner/common reader is implemented.
 Neither increment completes this plan or raises real product source coverage.
+The matching bounded existing-v1 file writer/reader are accepted separately in
+`e2ee-336-file-stream.md` and `e2ee-336-file-read-stream.md`. They are now available
+for content planning, but neither current coordinator uses a complete streamed
+planner/common-reader path. Their presence does not remove the run gate.
 
 ## Source and storage boundary
 

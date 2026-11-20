@@ -82,11 +82,8 @@ export async function sealE2eeFileStream(input:E2eeFileStreamOptions):Promise<E2
  finally{buffer.fill(0);fileKey.fill(0);if(!ended)try{await source.return?.();}catch(error){if(!failed){failed=true;failure=error;}}}
  if(failed)throw failure;if(!result)throw new Error('E2EE_INVALID_FILE_STREAM');return result;
 }
-export async function openE2eeFile(root: CryptoKey, signer: CryptoKey, expectedContext: E2eeContext, manifestEnvelope: E2eeEnvelope,
-  fetchChunk: (objectId: string) => Promise<E2eeEnvelope>): Promise<{ bytes: Uint8Array<ArrayBuffer>; filename: string; mediaType: string }> {
-  const privateBytes = await openE2eeEnvelope(root, signer, expectedContext, manifestEnvelope);
-  let keyBytes: Uint8Array | undefined, output: Uint8Array<ArrayBuffer> | undefined;
-  try {
+function privateFileManifest(privateBytes:Uint8Array):FileManifest{
+  try{
     const manifest= parseE2eeFileManifestJson(privateBytes) as FileManifest;
     exactKeys(manifest, ['protocol','fileKey','size','chunkSize','filename','mediaType','chunks']);
     if (manifest.protocol !== 1 || manifest.chunkSize !== E2EE_CHUNK_BYTES || !Number.isSafeInteger(manifest.size)
@@ -100,20 +97,52 @@ export async function openE2eeFile(root: CryptoKey, signer: CryptoKey, expectedC
       exactKeys(entry,['objectId','operationId','index','size','hash']);assertTechnical(entry.objectId);assertTechnical(entry.operationId);decodeE2eeBytes(entry.hash,32);
       if(entry.index!==index||entry.size!==Math.min(E2EE_CHUNK_BYTES,manifest.size-index*E2EE_CHUNK_BYTES)||seen.has(entry.objectId))corrupt();seen.add(entry.objectId);
     }
-    keyBytes = decodeE2eeBytes(manifest.fileKey, 32); const chunkRoot = await importE2eeRoot(keyBytes);
-    output = new Uint8Array(manifest.size); let offset = 0;
+    return manifest;
+  }catch{return corrupt();}
+}
+export type E2eeOpenedFileMetadata=Readonly<{size:number;filename:string;mediaType:string}>;
+type FileReadOptions={root:CryptoKey;signer:CryptoKey;expectedContext:E2eeContext;manifestEnvelope:E2eeEnvelope;
+ fetchChunk:(objectId:string)=>Promise<E2eeEnvelope>;assertCurrent:()=>void};
+export type E2eeFileReadStreamOptions=FileReadOptions&{
+ /** Borrowed bytes expire when this promise settles. The sink must retain them
+  * only in protected local quarantine; prefixes grant no file/restore/transport
+  * authority. Only the successful final metadata result proves whole-file EOF. */
+ writeQuarantinedPlaintext:(chunk:Uint8Array)=>Promise<void>};
+async function readE2eeFileChunks(input:FileReadOptions,begin:(metadata:E2eeOpenedFileMetadata)=>(chunk:Uint8Array)=>Promise<void>):Promise<E2eeOpenedFileMetadata>{
+ const {root,signer,fetchChunk,assertCurrent}=input,expectedContext=snapshotE2eeValue(input.expectedContext),manifestEnvelope=snapshotE2eeValue(input.manifestEnvelope);
+ assertCurrent();const privateBytes=await openE2eeEnvelope(root,signer,expectedContext,manifestEnvelope);let keyBytes:Uint8Array|undefined;
+ try{
+    assertCurrent();const manifest=privateFileManifest(privateBytes);
+    try{keyBytes=decodeE2eeBytes(manifest.fileKey,32);}catch{return corrupt();}
+    const chunkRoot=await importE2eeRoot(keyBytes);assertCurrent();
+    const metadata=Object.freeze({size:manifest.size,filename:manifest.filename,mediaType:manifest.mediaType}),write=begin(metadata);assertCurrent();let offset=0;
     for (let index = 0; index < manifest.chunks.length; index++) {
       const entry = manifest.chunks[index];
-      const envelope = validateE2eeEnvelope(await fetchChunk(entry.objectId));
-      if (entry.hash !== await envelopePayloadHash(envelope)) corrupt();
+      assertCurrent();const fetched=await fetchChunk(entry.objectId);assertCurrent();const envelope=validateE2eeEnvelope(fetched);
+      const hash=await envelopePayloadHash(envelope);assertCurrent();if(entry.hash!==hash)corrupt();
       const bytes = await openE2eeEnvelope(chunkRoot, signer, { ...expectedContext, domain: 'attachment', objectId: entry.objectId, operationId: entry.operationId, revision: 1 }, envelope);
-      try { if (bytes.length !== entry.size) corrupt(); output.set(bytes, offset); offset += bytes.length; }
+      try {assertCurrent();if(bytes.length!==entry.size)corrupt();await write(bytes);assertCurrent();offset+=bytes.length;}
       finally { bytes.fill(0); }
     }
-    if (offset !== manifest.size) corrupt();
-    return { bytes: output, filename: manifest.filename, mediaType: manifest.mediaType };
-  } catch { output?.fill(0); return corrupt(); }
-  finally { privateBytes.fill(0); keyBytes?.fill(0); }
+    if(offset!==manifest.size)corrupt();assertCurrent();return metadata;
+ }finally{privateBytes.fill(0);keyBytes?.fill(0);}
+}
+/** Bounded existing-v1 readback. Authentication is per chunk AND the entire
+ * ordered manifest. A later missing/bad chunk or retired actor returns no final
+ * metadata receipt; previously accepted sink output remains inert quarantine. */
+export async function openE2eeFileStream(input:E2eeFileReadStreamOptions):Promise<E2eeOpenedFileMetadata>{
+ const {writeQuarantinedPlaintext,...options}=input;
+ return readE2eeFileChunks(options,()=>writeQuarantinedPlaintext);
+}
+export async function openE2eeFile(root: CryptoKey, signer: CryptoKey, expectedContext: E2eeContext, manifestEnvelope: E2eeEnvelope,
+  fetchChunk: (objectId: string) => Promise<E2eeEnvelope>): Promise<{ bytes: Uint8Array<ArrayBuffer>; filename: string; mediaType: string }> {
+ let output:Uint8Array<ArrayBuffer>|undefined,offset=0;
+ try{
+  const metadata=await readE2eeFileChunks({root,signer,expectedContext,manifestEnvelope,fetchChunk,assertCurrent:()=>{}},meta=>{
+   output=new Uint8Array(meta.size);return async chunk=>{output!.set(chunk,offset);offset+=chunk.length;};
+  });
+  if(!output||offset!==metadata.size)corrupt();return{bytes:output,filename:metadata.filename,mediaType:metadata.mediaType};
+ }catch{output?.fill(0);return corrupt();}
 }
 export async function objectManifestHash(items: { domain: string; objectId: string; revision: number; payloadHash: string }[]) {
   const sorted = [...items].sort((a,b) => a.domain < b.domain ? -1 : a.domain > b.domain ? 1 : a.objectId < b.objectId ? -1 : a.objectId > b.objectId ? 1 : 0);

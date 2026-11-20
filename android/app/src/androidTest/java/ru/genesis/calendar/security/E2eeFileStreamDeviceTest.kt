@@ -59,14 +59,18 @@ class E2eeFileStreamDeviceTest {
             }
             assertTrue(eof); assertEquals(160, chunks); assertEquals(size, at)
             save(File(directory, "manifest.json"), manifest.toJson())
-            // Re-open actual ciphertext files through the unchanged v1 reader.
+            // Re-open actual ciphertext files without an aggregate plaintext.
             val reopened = E2eeEnvelope.Envelope.fromJson(JSONObject(File(directory, "manifest.json").readText()))
-            val output = E2eeFiles.open(f.root, f.signer, f.context, reopened) { id -> E2eeEnvelope.Envelope.fromJson(JSONObject(File(directory, "$id.json").readText())) }
-            val digest = try { assertEquals(name, output.filename); assertEquals(mime, output.mediaType); assertEquals(size, output.bytes.size.toLong())
-                MessageDigest.getInstance("SHA-256").digest(output.bytes) } finally { output.bytes.fill(0) }
+            val readHash=MessageDigest.getInstance("SHA-256");var readBytes=0L;var readChunks=0;var previous:ByteArray?=null
+            val output=E2eeFiles.openStream(f.root,f.signer,f.context,reopened,{id->assertTrue(previous?.all{it==0.toByte()}?:true);E2eeEnvelope.Envelope.fromJson(JSONObject(File(directory,"$id.json").readText()))},f::current){bytes->
+                assertTrue(bytes.size<=E2eeFiles.CHUNK_BYTES);readHash.update(bytes);readBytes+=bytes.size;readChunks++;previous=bytes
+            }
+            assertEquals(name,output.filename);assertEquals(mime,output.mediaType);assertEquals(size,output.size);assertEquals(size,readBytes);assertEquals(160,readChunks);assertTrue(previous!!.all{it==0.toByte()})
+            val digest=readHash.digest()
             assertArrayEquals(originalHash.digest(), digest)
             val proof = JSONObject().put("synthetic", true).put("primitiveOnly", true).put("bytes", size).put("chunks", chunks).put("readCalls", calls).put("actualEof", eof)
                 .put("sha256", digest.joinToString("") { "%02x".format(it) }).put("filenameUnits", JSONArray(name.toCharArray().map { it.code }))
+                .put("streamReadback",true).put("readerChunks",readChunks).put("borrowedWiped",previous!!.all{it==0.toByte()})
                 .put("maxHeap", Runtime.getRuntime().maxMemory()).put("elapsedMs", android.os.SystemClock.elapsedRealtime() - started)
             save(File(app.getExternalFilesDir(null), "file-stream336-large-proof.json"), proof)
         } finally { clean(directory) }
@@ -114,6 +118,24 @@ class E2eeFileStreamDeviceTest {
             val bytes = value.toString().toByteArray(); val packet = try { E2eeEnvelope.seal(f.root, f.signing, f.context, bytes) } finally { bytes.fill(0) }; var fetches = 0
             val error = assertThrows(IllegalStateException::class.java) { E2eeFiles.open(f.root, f.signer, f.context, packet) { fetches++; error("UNEXPECTED_PRIVATE_IO") } }
             assertEquals("E2EE_CORRUPT_FILE", error.message); assertEquals(mode, 0, fetches)
+            var outputs=0;val streamError=assertThrows(IllegalStateException::class.java){E2eeFiles.openStream(f.root,f.signer,f.context,packet,{fetches++;error("UNEXPECTED_PRIVATE_IO")},f::current){outputs++}}
+            assertEquals("E2EE_CORRUPT_FILE",streamError.message);assertEquals(mode,0,fetches);assertEquals(mode,0,outputs)
+        }
+    }
+    @Test fun streamingReaderLateFailuresAndRetirementWipePrefixWithoutWholeFileReceipt() {
+        for(mode in listOf("missing","tamper","space","fetch-actor","sink-actor","empty")){
+            val f=Rig(fixture("v1.json"));val original=ByteArray(if(mode=="empty")0 else E2eeFiles.CHUNK_BYTES+1){(it*31).toByte()};val chunks=mutableMapOf<String,E2eeEnvelope.Envelope>()
+            val packet=try{original.inputStream().use{E2eeFiles.sealStream(f.root,f.signing,f.context,it,original.size.toLong(),"\uFEFFreader\uD800😀","application/octet-stream",f::current){chunk->chunks[chunk.context.toJson().getString("objectId")]=chunk}}}finally{original.fill(0)}
+            var fetches=0;var borrowed:ByteArray?=null;var result:E2eeFiles.OpenedMetadata?=null
+            fun read(){result=E2eeFiles.openStream(f.root,f.signer,f.context,packet,{id->fetches++;val chunk=chunks.getValue(id)
+                if(mode=="fetch-actor")f.live=false
+                if(fetches==2&&mode=="missing")error("SYNTHETIC_CHUNK_MISSING")
+                if(fetches==2&&mode=="tamper"){val value=chunk.toJson();val raw=value.getString("ciphertext");E2eeEnvelope.Envelope.fromJson(value.put("ciphertext",(if(raw[0]=='A')"B" else "A")+raw.substring(1)))}else chunk
+            },f::current){bytes->borrowed=bytes;if(mode=="space")error("SYNTHETIC_NO_SPACE");if(mode=="sink-actor")f.live=false}}
+            if(mode=="empty"){read();assertEquals(0L,requireNotNull(result).size);assertEquals(0,fetches);assertNull(borrowed)}else{
+                val error=assertThrows(IllegalStateException::class.java){read()};assertEquals(when(mode){"missing"->"SYNTHETIC_CHUNK_MISSING";"tamper"->"E2EE_CORRUPT_FILE";"space"->"SYNTHETIC_NO_SPACE";else->"E2EE_ACCOUNT_CHANGED"},error.message)
+                assertNull(result);assertTrue(borrowed?.all{it==0.toByte()}?:true)
+            }
         }
     }
 }
