@@ -46,6 +46,18 @@ without reactivating the old signing identity. Stage and legacy purposes have
 disjoint read/discovery rules. Its current exact platform gates are documented
 there; it still does not establish authenticated custody or a complete history.
 
+The actual coordinator now has a SAME-original-actor bounded read scope,
+`withStagedSourceHistory`, described in `e2ee-336-migration-history.md`. It
+composes original v1/v2 wrappers and v3 stages, validates archived/cancelled
+metadata roles/bindings and includes complete orphan stages. Every declared
+path must really authenticate EOF; final raw metadata, locator and catalogue
+rechecks precede callback return. This is read-only input, not state4 planning
+or publication. Network-touched history, retained plans/orphan output and any
+content-plan journal explicitly refuse pending provenance review. A consumer's
+new journal also refuses: future composition must reserve/bind the EXACT owned
+attempt and protect its originals, never install an arbitrary ignore-list.
+Its exact native/provider/lint scope must come from that component record.
+
 Remote legacy inputs also need durable original provenance. The pre-network
 local snapshot does not magically contain later server responses. Materialize
 each authenticated remote page/fragment and necessary old key material into
@@ -55,6 +67,14 @@ source may have changed or been deleted. Do not assume that every partial
 content plan is disposable derived data unless its complete reproducible
 original input is demonstrably protected. Old raw metadata/queues stay local
 and grant no replay, identity, billing or ACL authority.
+
+Remote-original quarantine needs a distinct authenticated purpose/catalogue.
+Do not append a partial remote path set into the complete local-registry
+source-stage catalogue for the same target: its strict current/orphan readers
+require the entire original path registry. Bind remote observations to their
+original owner/actor, request role, lease/source token, offsets/EOF, old-key
+provenance and exact raw bytes before normalization. Capturing an observation
+does not manufacture historical authenticity against a malicious old server.
 
 The complete content-plan reference must be bound to the exact source catalogue,
 source histories, original actor, target scope/generation, directory checkpoint

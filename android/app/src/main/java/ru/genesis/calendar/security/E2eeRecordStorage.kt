@@ -98,7 +98,14 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
     override fun localIdentity(): LocalIdentity = requireOpen().let { LocalIdentity(it.ownerId, it.scopeId, it.deviceId) }
     /** Technical discovery only. Invalid framing never becomes an empty store. */
     override fun listLocal(domain: String, objectPrefix: String): List<String> {
-        E2eeKeys.technical(domain); E2eeKeys.technical(objectPrefix)
+        E2eeKeys.technical(objectPrefix);return localIds(domain){it.startsWith(objectPrefix)}
+    }
+    /** Dedicated locator role; the public read-only source interfaces retain
+     * their narrow prefix rules and do not gain a general empty-prefix read. */
+    internal fun listMigrationOriginalParts():List<String> = localIds("local-snapshot"){it.contains(":source:")||it.endsWith(":source")}
+    internal fun listMigrationHistoryCopies():List<String> = localIds("local-snapshot"){it.endsWith(":archive")||it.contains(":archive:")||it.endsWith(":cancel")||it.contains(":cancel:")}
+    private fun localIds(domain:String,include:(String)->Boolean):List<String> {
+        E2eeKeys.technical(domain)
         val captured = lifecycle.get(); val current = requireOpen()
         val prefix = listOf(current.ownerId, current.scopeId, domain).joinToString("") { E2eeKeys.technical(it); "${it.length}:$it" }
         val keys = storage.list(prefix); alive(captured)
@@ -109,7 +116,7 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
             check(colon > 0 && rest.substring(0, colon).matches(Regex("[1-9][0-9]{0,2}"))) { "E2EE_CORRUPT_LOCAL_RECORD" }
             val id = rest.substring(colon + 1); E2eeKeys.technical(id)
             check(rest.substring(0, colon).toInt() == id.length) { "E2EE_CORRUPT_LOCAL_RECORD" }
-            id.takeIf { it.startsWith(objectPrefix) }
+            id.takeIf(include)
         }
     }
     private fun alive(captured:Long) { check(lifecycle.get()==captured && scope.get()!=null) { "E2EE_UNLOCK_REQUIRED" } }

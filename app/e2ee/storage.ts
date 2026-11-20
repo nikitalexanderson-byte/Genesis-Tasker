@@ -102,7 +102,15 @@ export class UnlockedE2eeVault {
   }
   /** Bounded technical-key discovery, with no plaintext/authority fallback. */
   async listLocal(domain:E2eeContext['domain'],objectPrefix:string) {
-    assertTechnical(objectPrefix);const scope=this.#open(),lifecycle=this.#lifecycle;
+    assertTechnical(objectPrefix);return this.#localIds(domain,id=>id.startsWith(objectPrefix));
+  }
+  /** Dedicated original-migration locator role. No empty-prefix general read
+   * capability is added to listLocal or the original-stage/legacy handles. */
+  async listMigrationOriginalParts(){return this.#localIds('local-snapshot',id=>id.includes(':source:')||id.endsWith(':source'));}
+  /** Reserved original archive/cancel roles, including malformed remnants. */
+  async listMigrationHistoryCopies(){return this.#localIds('local-snapshot',id=>id.endsWith(':archive')||id.includes(':archive:')||id.endsWith(':cancel')||id.includes(':cancel:'));}
+  async #localIds(domain:E2eeContext['domain'],include:(id:string)=>boolean){
+    const scope=this.#open(),lifecycle=this.#lifecycle;
     const prefix=[scope.ownerId,scope.scopeId,domain].map(part=>`${part.length}:${part}`).join('');
     const keys=await this.storage.list(prefix);if(lifecycle!==this.#lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');
     if(keys.length>10000||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
@@ -110,7 +118,7 @@ export class UnlockedE2eeVault {
       if(typeof key!=='string'||!key.startsWith(prefix))throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
       const rest=key.slice(prefix.length),colon=rest.indexOf(':');if(colon<1||!/^[1-9][0-9]{0,2}$/.test(rest.slice(0,colon)))throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
       const id=rest.slice(colon+1);assertTechnical(id);if(Number(rest.slice(0,colon))!==id.length)throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
-      if(id.startsWith(objectPrefix))ids.push(id);
+      if(include(id))ids.push(id);
     }
     return ids;
   }

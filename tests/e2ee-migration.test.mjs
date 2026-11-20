@@ -120,6 +120,136 @@ function stagedInput(f,producer){
  return{target,paths,async capturePath(id,write){assert.ok(paths.includes(id));if(producer)await producer(id,write);else await write(bytes('STAGED ORIGINAL '+id));}};
 }
 function stagedOptions(){return{capacity:{maximumBytes:4*1024*1024,maximumParts:16},assertCurrent(){},async admit(){}};}
+function historyOptions(){return{capacity:{maximumBytes:8*1024*1024,maximumParts:128,maximumMetadataBytes:4*1024*1024},assertCurrent(){},async admit(){}};}
+async function readHistory(input){
+ const result=[];
+ for(const source of [input.current,...input.previous]){const values=[];for(const path of source.paths){const reader=source.openPath(path),parts=[];
+  for await(const part of reader.chunks)parts.push(Buffer.from(part));reader.assertComplete();values.push(Buffer.concat(parts).toString());}
+  result.push({id:source.id,values});
+ }
+ return result;
+}
+
+test('actual coordinator resolves mixed v1/v2/v3 originals and a complete orphan through bounded local history with no transport',async()=>{
+ for(const protocol of [1,2]){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepare();
+  if(protocol===1){const id=[...f.storage.rows.values()].find(row=>row.envelope.context.objectId.startsWith('migration:')).envelope.context.objectId;
+   const row=await f.vault.read('local-snapshot',id),state=JSON.parse(new TextDecoder().decode(row.value));row.value.fill(0);state.protocol=1;delete state.local;delete state.planned;
+   await f.vault.write([{domain:'local-snapshot',objectId:id,value:bytes(JSON.stringify(state)),expected:row.serial}]);}
+  await migration.cancel();const capture=stagedInput(f),stage=await ProtectedSourceStage.create({vault:f.vault,target:capture.target,paths:capture.paths,...stagedOptions(),ensureDurableKeys:async()=>{}});
+  for(const path of capture.paths)await stage.capturePath(path,async write=>write(bytes('ORPHAN '+path)));const orphan=await stage.finish();
+  await migration.prepareStaged(capture,stagedOptions());await migration.cancel();await migration.restartStaged(capture,stagedOptions());
+  f.sources.captureLocal=async()=>{throw new Error('NO_AGGREGATE_CAPTURE');};const before=structuredClone(f.storage.rows);let retained,admission;
+  const result=await f.make().withStagedSourceHistory(async input=>{retained=input;return readHistory(input);},{...historyOptions(),admit:async value=>{admission=value;}});
+  assert.equal(result.length,4);assert.equal(result[0].values[0],'STAGED ORIGINAL '+capture.paths[0]);
+  assert.equal(result[1].values[0],'local:'+capture.paths[0]);assert.equal(result[2].id,'stage:'+orphan.stageId);assert.equal(result[2].values[0],'ORPHAN '+capture.paths[0]);
+  assert.equal(result[3].values[0],'STAGED ORIGINAL '+capture.paths[0]);assert.equal(admission.sources,4);assert.ok(admission.metadataBytes>0&&admission.parts>0&&admission.bytes>0);
+  assert.deepEqual(f.storage.rows,before);assert.equal(f.server.count,0);assert.ok(!f.trace.includes('network-source'));
+  assert.throws(()=>retained.current.openPath(capture.paths[0]),/HISTORY_CLOSED/);
+ }
+});
+
+test('coordinator history requires every current and ancestor path EOF and refuses caught prefix or concurrent-reader failures',async()=>{
+ for(const mode of ['empty','prefix','missed-history','caught-busy']){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepare();await migration.cancel();await migration.prepareStaged(stagedInput(f),stagedOptions());
+  const kept=structuredClone(f.storage.rows);await assert.rejects(migration.withStagedSourceHistory(async input=>{
+   if(mode==='empty')return;
+   if(mode==='prefix'){const reader=input.current.openPath(input.current.paths[0]);await reader.chunks.next();await reader.chunks.return();return;}
+   if(mode==='missed-history'){await readHistory({current:input.current,previous:[]});return;}
+   const reader=input.current.openPath(input.current.paths[0]);assert.throws(()=>input.previous[0].openPath(input.current.paths[0]),/INPUT_BUSY/);await reader.chunks.return();
+  },historyOptions()),/EOF_REQUIRED/);assert.deepEqual(f.storage.rows,kept);assert.equal(f.server.count,0);
+ }
+});
+
+test('unknown original prefix, missing cancelled archive, changed original parts and new incomplete stages refuse without a consumer',async()=>{
+ for(const mode of ['unknown','missing','corrupt','incomplete']){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepare();await migration.cancel();const capture=stagedInput(f);await migration.prepareStaged(capture,stagedOptions());const state=await migration.status();
+  if(mode==='unknown')await f.vault.write([{domain:'local-snapshot',objectId:'unresolved:source:0',value:bytes('UNKNOWN ORIGINAL'),expected:null}]);
+  if(mode==='missing'){const key=[...f.storage.rows.keys()].find(key=>key.endsWith(state.ancestors[0]));f.storage.rows.delete(key);}
+  if(mode==='corrupt'){const id=[...f.storage.rows.values()].find(row=>row.envelope.context.objectId.includes(':source:')).envelope.context.objectId;const row=await f.vault.read('local-snapshot',id);row.value.fill(0);
+   await f.vault.write([{domain:'local-snapshot',objectId:id,value:bytes('changed'),expected:row.serial}]);}
+  if(mode==='incomplete')await ProtectedSourceStage.create({vault:f.vault,target:capture.target,paths:capture.paths,...stagedOptions(),ensureDurableKeys:async()=>{}});
+  const kept=structuredClone(f.storage.rows);let called=0;await assert.rejects(migration.withStagedSourceHistory(async()=>{called++;},historyOptions()),/E2EE_/);
+  assert.equal(called,0);assert.deepEqual(f.storage.rows,kept);assert.equal(f.server.count,0);
+ }
+});
+
+test('original raw duplicate metadata, non-cancelled ancestors and holes in the ancestor chain never project into a valid source',async()=>{
+ for(const mode of ['duplicate','active','hole']){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepare();await migration.cancel();await migration.prepareStaged(stagedInput(f),stagedOptions());const state=await migration.status(),id=state.ancestors[0];
+  const row=await f.vault.read('local-snapshot',id),old=JSON.parse(new TextDecoder().decode(row.value));row.value.fill(0);
+  if(mode==='active')old.phase='active';if(mode==='hole')old.ancestors=['unknown:archive'];
+  let raw=JSON.stringify(old);if(mode==='duplicate')raw=raw.replace('"protocol":2','"protocol":1,"pr\\u006ftocol":2');
+  // Re-seal as an immutable original to test the history decoder, not only serial guards.
+  const key=[...f.storage.rows.keys()].find(key=>key.endsWith(id));f.storage.rows.delete(key);await f.vault.write([{domain:'local-snapshot',objectId:id,value:bytes(raw),expected:null}]);
+  let called=0;await assert.rejects(migration.withStagedSourceHistory(async()=>{called++;},historyOptions()),/E2EE_/);assert.equal(called,0);assert.equal(f.server.count,0);
+ }
+});
+
+test('capacity and admission refusal precede history bodies and preserve all original records',async()=>{
+ for(const mode of ['bytes','parts','metadata','admission']){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepareStaged(stagedInput(f),stagedOptions());const kept=structuredClone(f.storage.rows),options=historyOptions();let consumed=0;
+  if(mode==='bytes')options.capacity.maximumBytes=1;if(mode==='parts')options.capacity.maximumParts=1;if(mode==='metadata')options.capacity.maximumMetadataBytes=1;
+  if(mode==='admission')options.admit=async()=>{throw new Error('SYNTHETIC_NO_SPACE');};
+  await assert.rejects(migration.withStagedSourceHistory(async()=>{consumed++;},options),/CAPACITY|NO_SPACE/);assert.equal(consumed,0);assert.deepEqual(f.storage.rows,kept);assert.equal(f.server.count,0);
+ }
+});
+
+test('account retirement, changed coordinator and changed source catalogue cannot return an inert success receipt',async()=>{
+ for(const mode of ['actor','state','catalogue']){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make(),capture=stagedInput(f);await migration.prepareStaged(capture,stagedOptions());let live=true;const options=historyOptions();
+  options.assertCurrent=()=>{if(!live)throw new Error('E2EE_ACCOUNT_CHANGED');};
+  await assert.rejects(migration.withStagedSourceHistory(async input=>{await readHistory(input);
+   if(mode==='actor')live=false;
+   if(mode==='state')await f.make().cancel();
+   if(mode==='catalogue')await ProtectedSourceStage.create({vault:f.vault,target:capture.target,paths:capture.paths,...stagedOptions(),ensureDurableKeys:async()=>{}});
+  },options),/E2EE_/);assert.equal(f.server.count,0);
+ }
+});
+
+test('closing the coordinator history wipes borrowed bytes and preserves a consumer failure',async()=>{
+ const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepareStaged(stagedInput(f),stagedOptions());let borrowed,retained;
+ await assert.rejects(migration.withStagedSourceHistory(async input=>{retained=input;borrowed=(await input.current.openPath(input.current.paths[0]).chunks.next()).value;throw new Error('SYNTHETIC_CONSUMER_FAILURE');},historyOptions()),/SYNTHETIC_CONSUMER_FAILURE/);
+ assert.ok(borrowed.every(value=>value===0));assert.throws(()=>retained.current.openPath(retained.current.paths[0]),/HISTORY_CLOSED/);assert.equal(f.server.count,0);
+});
+
+test('unknown ancestor locator roles refuse before opening any corresponding body',async()=>{
+ const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepareStaged(stagedInput(f),stagedOptions());
+ const id=[...f.storage.rows.values()].find(row=>row.envelope.context.objectId.startsWith('migration:')).envelope.context.objectId,row=await f.vault.read('local-snapshot',id),state=JSON.parse(new TextDecoder().decode(row.value));row.value.fill(0);
+ state.ancestors=['private:unexpected'];await f.vault.write([{domain:'local-snapshot',objectId:id,value:bytes(JSON.stringify(state)),expected:row.serial}]);
+ const reads=[],get=f.storage.get.bind(f.storage);f.storage.get=async key=>{reads.push(key);return get(key);};
+ await assert.rejects(migration.withStagedSourceHistory(async()=>assert.fail('unknown role reached consumer'),historyOptions()),/HISTORY_INVALID/);
+ assert.ok(reads.every(key=>!key.endsWith('private:unexpected')));assert.equal(f.server.count,0);
+});
+
+test('retained legacy output and partial content plans require explicit original review before a source-only callback',async()=>{
+ for(const mode of ['legacy-output','orphan-upload','orphan-private','content-plan']){
+  const f=await fixture({registrySources:true,registryKind:'project',crashBefore:2}),migration=f.make();await migration.prepare();
+  if(mode==='legacy-output')await assert.rejects(migration.run(),/PROCESS_DEATH/);
+  const original=await migration.status();await migration.cancel();await migration.prepareStaged(stagedInput(f),stagedOptions());
+  if(mode==='orphan-upload')await f.vault.write([{domain:'outbox',objectId:original.migrationId+':upload:unbound',value:bytes('UNIQUE OLD SERVER DATA'),expected:null}]);
+  if(mode==='orphan-private')await f.vault.write([{domain:'local-snapshot',objectId:original.migrationId+':private:unbound',value:bytes('UNIQUE LOCAL DATA'),expected:null}]);
+  if(mode==='content-plan')await f.vault.write([{domain:'local-snapshot',objectId:'content-plan:unbound:journal',value:bytes('UNIQUE REMOTE SOURCE'),expected:null}]);
+  const kept=structuredClone(f.storage.rows),calls=f.server.count;let consumed=false;
+  await assert.rejects(migration.withStagedSourceHistory(async()=>{consumed=true;},historyOptions()),/PLAN_REVIEW_REQUIRED/);
+  assert.equal(consumed,false);assert.deepEqual(f.storage.rows,kept);assert.equal(f.server.count,calls);
+ }
+});
+
+test('all present cancellation copies retain original bindings and unknown or malformed roles refuse before body reads',async()=>{
+ for(const mode of ['changed','duplicate','missing','unknown-role']){
+  const f=await fixture({registrySources:true,registryKind:'project'}),migration=f.make();await migration.prepare();await migration.cancel();await migration.prepareStaged(stagedInput(f),stagedOptions());
+  const copy=[...f.storage.rows.values()].find(row=>row.envelope.context.objectId.includes(':cancel:')).envelope.context.objectId;
+  if(mode==='missing'){f.storage.rows.delete([...f.storage.rows.keys()].find(key=>key.endsWith(copy)));}
+  else if(mode==='unknown-role')await f.vault.write([{domain:'local-snapshot',objectId:'unknown:cancel:'+crypto.randomUUID(),value:bytes('UNKNOWN ORIGINAL ROLE'),expected:null}]);
+  else{const row=await f.vault.read('local-snapshot',copy),old=JSON.parse(new TextDecoder().decode(row.value));row.value.fill(0);if(mode==='changed')old.snapshotHash='A'.repeat(43);
+   let raw=JSON.stringify(old);if(mode==='duplicate')raw=raw.replace('"protocol":2','"protocol":1,"pr\\u006ftocol":2');f.storage.rows.delete([...f.storage.rows.keys()].find(key=>key.endsWith(copy)));
+   await f.vault.write([{domain:'local-snapshot',objectId:copy,value:bytes(raw),expected:null}]);}
+  const kept=structuredClone(f.storage.rows),reads=[],get=f.storage.get.bind(f.storage);f.storage.get=async key=>{reads.push(key);return get(key);};let consumed=false;
+  await assert.rejects(migration.withStagedSourceHistory(async input=>{consumed=true;await readHistory(input);},historyOptions()),/E2EE_/);
+  assert.equal(consumed,false);if(mode==='unknown-role')assert.ok(reads.every(key=>!key.includes('unknown:cancel:')));assert.deepEqual(f.storage.rows,kept);assert.equal(f.server.count,0);
+ }
+});
 
 test('v3 publishes a distinct staged source after full local readback and never reaches legacy planning or transport',async()=>{
  const f=await fixture(),input=stagedInput(f),migration=f.make();await migration.prepareStaged(input,stagedOptions());

@@ -287,3 +287,30 @@ hashes and fresh public-only JCA/WebCrypto vectors support component scope only.
 The old synthetic Keystore alias remains deleted while a separate new identity,
 draft and all encrypted rows survive. Full mixed history, old nested-key/AAD
 materialization, coordinator publication and product recovery remain pending.
+
+Same-original-actor coordinator history is being composed in
+`e2ee-336-migration-history.md`. Review exact archive-chain prefixes, immutable
+cancel-copy source bindings, raw duplicate/UTF8/size admission BEFORE projected
+native JSON, all-role locator preflight before corresponding body lookup and
+final metadata hashes/serials plus catalogue/locator rechecks. Discovery adds
+two explicit original-role methods to the active vault; empty-prefix listLocal
+and the original-stage/legacy private capabilities remain narrow. A complete
+orphan stage cannot disappear from a source list. Every path must authenticate
+actual EOF; caught prefix/busy/factory failures and escaped readers cannot yield
+a successful source receipt. Cleanup owns/drains web chunk buffers and native
+streams, without claiming erasure of caller-owned buffers or immutable strings.
+
+This component REFUSES retained network-touched ancestors/copies, prior plans,
+orphan uploads/private output and content-plan journals. Such data may be the
+only surviving copy of a remote original; a new derived plan cannot be admitted
+by simply ignoring it. Review future state4 reservation/provenance/CAS separately.
+The current factory does not establish cross-device custody, reopen an old
+active private signer, feed real bounded WebView process roles, materialize
+nested legacy keys or activate a migration. Its source/read admission is not a
+provider-wide storage inventory or reservation for new writes. Selected full
+JS1951/1951, JVM249/249, actual Chromium16/16/console0 and API26/API34 each2/2 new
+plus6/6 regression cases support the stated component scope. Full Android lint
+has0 errors/208 warnings/8 hints and no new issue/file pairs. Native acceptance
+must use that exact frozen02 component record and reports03, not superseded
+native01 or the invalid abbreviated-class runner02. The cancelled-copy red
+witness is explicitly retained. Real source coverage remains9/20.

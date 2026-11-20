@@ -14,7 +14,10 @@ internal object E2eeFileManifestJson {
     /** Separate encrypted technical plan metadata budget; file manifests keep
      * their original strict256KiB/10000-node admission above. */
     fun readContentPlan(bytes:ByteArray):JSONObject=readBounded(bytes,4*1024*1024,250000)
-    private fun readBounded(bytes:ByteArray,maximumBytes:Int,maximumNodes:Int):JSONObject {
+    /** Old coordinator metadata can contain an exact pending ciphertext packet.
+     * Keep file/plan string limits unchanged; this is a separate bounded role. */
+    fun readMigrationHistory(bytes:ByteArray):JSONObject=readBounded(bytes,4*1024*1024,250000,4*1024*1024)
+    private fun readBounded(bytes:ByteArray,maximumBytes:Int,maximumNodes:Int,maximumString:Int=512):JSONObject {
         if (bytes.size !in 1..maximumBytes) invalid()
         try {
             val text = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()
@@ -41,7 +44,7 @@ internal object E2eeFileManifestJson {
                             else -> invalid()
                         }
                     }
-                    if (++length > (if (name) 64 else 512)) invalid(); decoded?.append(char)
+                    if (++length > (if (name) 64 else maximumString)) invalid(); decoded?.append(char)
                 }
                 invalid()
             }

@@ -36,7 +36,7 @@ adapters. У финального результата каждой строки
 | 20 | Инвалидирование Android Keystore | Частично: actual alias-loss/refusal/retained-key cases есть; полного recovery всех категорий нет |
 | 21 | Crash reports, логи, clipboard, temp files | Частично: redaction/ограниченные ports есть; нужен системный canary-прогон финального кандидата |
 | 22 | Backup перед первым sync | Частично: девять реальных captures и coordinator проверены; archive web input отдельно прошёл actual File/React/IDB cold readback. Остальные11 полных sources и весь product lifecycle mounted/unmounted drafts обязательны |
-| 23 | Обрыв на каждом шаге миграции | Частично: state-machine/частные real cases есть; нужны все feature paths, process death и clean restart |
+| 23 | Обрыв на каждом шаге миграции | Частично: state-machine/частные real cases и отдельное same-actor чтение mixed v1/v2/v3/cancel/orphan history проверены; нужны protected remote originals, полная state4/source/plan публикация, все feature paths, process death и clean restart |
 | 24 | Две параллельные миграции | Частично: lease/fence/CAS проверены; полный многоклиентский product-переход ещё нужен |
 | 25 | Legacy write во время финального commit | Частично: SQLite/HTTP/SW/owner barriers, полный native backup job и web backup whole-job проверены отдельно; все остальные local/normal/background writers и общая продуктовая приёмка ещё не завершены |
 | 26 | Legacy write после activation | Частично: persistent deny и API policy проверены; product activation отключена, полный routing не принят |
@@ -74,3 +74,5 @@ adapters. У финального результата каждой строки
 `e2ee-336-service-worker.md`, `e2ee-336-native-transactions.md`,
 `e2ee-336-retained-native-old-keys.md`, `e2ee-336-native-source-stream.md`,
 документы конкретных source adapters и `security-bridge-335-adr.md`.
+Границы нового read-only coordinator increment и точная приёмка:
+`e2ee-336-migration-history.md`; он не закрывает полный системный сценарий.

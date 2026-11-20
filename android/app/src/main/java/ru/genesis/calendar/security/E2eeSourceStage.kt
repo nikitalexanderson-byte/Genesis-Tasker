@@ -186,6 +186,8 @@ class E2eeSourceStage private constructor(private val options: Options, private 
     class Opened internal constructor(private val vault: E2eeSourceReadVault, private val hash: String, private val id: String,
         private val entries: JSONArray, private val check: () -> Unit) {
         val paths: List<String> get() = (0 until entries.length()).map { entries.getJSONObject(it).getString("id") }
+        internal val storageUsage:Pair<Long,Int> get() { StageCodec.current(vault,check);return (0 until entries.length()).sumOf{entries.getJSONObject(it).getLong("size")} to
+            (0 until entries.length()).sumOf{entries.getJSONObject(it).getJSONArray("parts").length()} }
         fun openPath(path: String): SourceInput {
             val index = (0 until entries.length()).singleOrNull { entries.getJSONObject(it).getString("id") == path } ?: throw IllegalStateException("E2EE_SOURCE_STAGE_PATH")
             return SourceInput(vault, hash, id, index, entries.getJSONObject(index), check)

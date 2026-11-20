@@ -2312,3 +2312,54 @@ nested old keys/AAD, real bounded native/WebView input и11 real sources ост�
 обязательными, как product/recovery/shared/Drive/direct-upgrade/48 scenarios/
 14-language/human review. Coverage9/20; v3 run закрыт, production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false, без Deploy/Play/личных устройств.
+
+## Потоковая история в действующем координаторе,20 ноября
+
+Web/native E2eeMigration получили отдельный withStagedSourceHistory под тем же
+local writer fence. Он читает исходные v1/v2 registry wrappers и v3 stages,
+проверяет точную цепочку archives, отдельные cancel copies и complete orphans.
+Все роли проверяются до соответствующих bodies; каждый путь требует actual EOF.
+После callback повторно проверяются raw metadata hashes/serials, locators и весь
+source catalogue. Смена аккаунта, неполный prefix, неизвестный источник, пропуск
+cancel copy, validly sealed rebinding или конкурентный reader не дают успех.
+Все original rows сохраняются, transport не вызывается.
+
+Это same-original-actor READ-ONLY component. Network-touched ancestors/copies,
+retained plans и orphan outbox/private output требуют отдельного original/plan
+review: они могут содержать единственную оставшуюся копию remote данных. Новые
+content-plan journals тоже пока не разрешаются через этот read scope. Нет
+state4 publication, key custody/handoff, cross-device recovery или активации.
+Inventory20 paths выделен в независимый модуль без изменения состава: это
+устранило выявленный import cycle; общего empty-prefix чтения не добавлено.
+
+Final full JS1951/1951, owned types03/scoped lint03 PASS. Chromium157/IDB16/16,
+console0, все4,194,392 logical bytes/24 hashes совпали с независимым bounded host
+construction. Static build:web04 PASS:98 public HTML/14 languages, disclosures,
+280 gallery images, dictionaries/offline assets сохранены. ENOSPC diagnostics01/03
+и прежний build02 сохранены; final04 повторён после завершения временных fixtures.
+Тест cancelled-copy RED01 воспроизвёл missing rejection и исправлен до приёмки.
+
+Frozen native02:
+7BEE05EA18133ADAF44F949D68BE0582902B8520497B76D576FA53E4A130CDEA.
+Build SUCCESS10m55s; JVM249/249 across34 E2EE security/auth suites,0 failure/skip.
+Actual API26/API34 — по2/2 новых coordinator cases и6/6 regressions, reports03.
+Все48 encrypted rows совпали до/после. Bounded host сверил все4,194,392 bytes и24
+hashes каждого нового proof; отдельные regressions заново сверили12,583,247-byte
+raw wrapper/49parts/9,437,206 decoded bytes,1,048,598 old-actor legacy bytes и
+73,400,354 stage bytes. Fresh JCA vectors остаются читаемыми через WebCrypto с
+roots/PUBLIC signer. Max Java heap512/192MiB; peak heap/SLA/OEM не заявляются.
+
+Full Android lint02 SUCCESS12m40s:0 errors/208 warnings/8 hints, без новых
+issue/file pairs против complete-plan baseline. Source и оба APK hashes повторно
+совпали после actual device runs и после lint. Native01 с189/189 security-only
+JVM и build9m30s superseded после cancel-copy RED; runtime02 отверг abbreviated
+class names до выполнения, actual03 использует fully qualified names на APK02.
+Точная область и hashes/reports: e2ee-336-migration-history.md.
+
+Предыдущий original-legacy increment354ec6b6 прошёл Source checks44790045069,
+оба jobs SUCCESS; до него9cddfd1c/44782484382 также SUCCESS. Это не Deploy.
+Нужны full source/plan/state4 composition, protected remote originals, trusted
+custody и реальные bounded process inputs с nested old keys/AAD; все11 real
+sources/product/recovery/shared/Drive/upgrades/48 scenarios/14-language/human
+review остаются обязательными. Coverage9/20, production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; без Play/личных устройств.

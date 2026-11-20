@@ -2,7 +2,7 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES} from './files.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
-import {requiredPrivatePaths} from './migration-sources.ts';
+import {requiredPrivatePaths} from './private-paths.ts';
 import type {SourceStageReadVault,SourceStageTarget} from './source-stage.ts';
 
 export type LegacyMigrationSnapshotReference=Readonly<{migrationId:string;snapshotSize:number;snapshotParts:number;snapshotHash:string}>;

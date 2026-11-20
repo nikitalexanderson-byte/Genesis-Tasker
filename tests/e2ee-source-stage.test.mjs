@@ -35,6 +35,21 @@ async function completed(f,input=bytes('ORIGINAL PRIVATE SOURCE INPUT')){
  const stage=await ProtectedSourceStage.create(f.options);for(const id of f.options.paths)await stage.capturePath(id,write=>send(write,input));return stage.finish();
 }
 
+test('original-part locator discovery stays inside the original actor snapshot namespace and validates framing before filtering',async()=>{
+ const f=await fixture();await f.vault.write([{domain:'local-snapshot',objectId:'old:source:0',value:bytes('old source'),expected:null},{domain:'local-snapshot',objectId:'other:source',value:bytes('unbound malformed source'),expected:null},
+  {domain:'local-snapshot',objectId:'unrelated',value:bytes('unrelated'),expected:null},{domain:'draft',objectId:'draft:source:0',value:bytes('draft'),expected:null}]);
+ let gets=0;const get=f.storage.get.bind(f.storage);f.storage.get=async key=>{gets++;return get(key);};
+ assert.deepEqual((await f.vault.listMigrationOriginalParts()).sort(),['old:source:0','other:source']);assert.equal(gets,0);
+ await assert.rejects(f.vault.listLocal('local-snapshot',''),/E2EE_/);
+ const prefix=[f.scope.ownerId,f.scope.scopeId,'local-snapshot'].map(value=>`${value.length}:${value}`).join('');
+ f.storage.rows.set(prefix+'02:xx',{});await assert.rejects(f.vault.listMigrationOriginalParts(),/CORRUPT_LOCAL_RECORD/);assert.equal(gets,0);
+});
+
+test('an original-part locator lookup retired while pending returns no discovery result',async()=>{
+ const f=await fixture();let release;const gate=new Promise(resolve=>{release=resolve;});f.storage.list=async()=>{await gate;return[];};
+ const pending=f.vault.listMigrationOriginalParts();f.vault.lock();release();await assert.rejects(pending,/UNLOCK_REQUIRED/);
+});
+
 test('independent new-root chunks cold-read exact complete input and keep target owner separate from the device actor',async()=>{
  const f=await fixture(),input=new Uint8Array(E2EE_CHUNK_BYTES*2+31);for(let index=0;index<input.length;index++)input[index]=(index*37)&255;
  const ref=await completed(f,input);assert.equal(f.durable(),1);assert.ok(f.admissions.some(row=>row.parts>=6));assert.equal(JSON.stringify([...f.storage.rows]).includes('ORIGINAL PRIVATE SOURCE INPUT'),false);

@@ -6,6 +6,8 @@ import { UnlockedE2eeVault, type LocalWrite } from './storage.ts';
 import type { VerifiedDirectory } from './directory.ts';
 import {validateMigrationLocalEntries,planMigrationLocalContent,openMigrationLocalContent,type MigrationLocalEntry} from './migration-local.ts';
 import {captureStagedMigrationSnapshot,validateStagedMigrationSnapshot,verifyStagedMigrationSnapshot,stagedMigrationPublicationGuard,type StagedMigrationSnapshot,type StagedMigrationCapture,type StagedMigrationOptions} from './migration-stage.ts';
+import {openMigrationSourceHistory,type MigrationHistoryOptions} from './migration-history.ts';
+import type {StagedSourceInput} from './staged-reconciliation.ts';
 
 export type MigrationPhase = 'preparing'|'uploading'|'verified'|'active'|'cancelled';
 export type MigrationContent = { domain: E2eeContext['domain']; objectId: string; bytes: Uint8Array; filename?: string; mediaType?: string };
@@ -179,6 +181,20 @@ export class E2eeMigration {
       if(offset!==bytes.length||await digest(bytes)!==state.snapshotHash)throw new Error('E2EE_CORRUPT_SNAPSHOT');
       return bytes;
     } catch(error){bytes.fill(0);throw error;}
+  }
+  /** Same-original-actor bounded input under the actual coordinator fence.
+   * Every path/ancestor must reach EOF and remain unchanged before returning.
+   * No lease, plan publication, remote source, recovered identity or activation. */
+  async withStagedSourceHistory<T>(consume:(input:StagedSourceInput)=>Promise<T>,options:MigrationHistoryOptions):Promise<T>{
+    const policy={...options,capacity:{...options.capacity}},target={ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,kind:this.#directory.kind};
+    return this.#localFence(async()=>{
+      const history=await openMigrationSourceHistory({vault:this.#vault,target,paths:this.#required,stateId:await this.#stateId,
+        decode:bytes=>{const state=decodeState(bytes);this.#localEntries(state);return state;},options:policy});
+      let rejected=false;
+      const close=async()=>{try{await history.close();}catch(error){if(!rejected)throw error;}};
+      try{const result=await consume(history.input);await history.assertCompleteAndUnchanged();return result;}
+      catch(error){rejected=true;throw error;}finally{await close();}
+    });
   }
   #packet(state: MigrationState, action: string, payload: Record<string,WireValue>, operationId=crypto.randomUUID()) {
     const command:E2eeCommand={protocol:1,ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,deviceId:this.#deviceId,action,

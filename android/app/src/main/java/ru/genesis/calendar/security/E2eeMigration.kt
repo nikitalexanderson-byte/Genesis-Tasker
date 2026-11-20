@@ -193,6 +193,16 @@ class E2eeMigration(
             return result
         } catch (error: Exception) { result.fill(0); throw error }
     }
+    /** Same-original-actor bounded input under the actual coordinator fence.
+     * A complete callback still grants no lease/plan publication or activation. */
+    internal suspend fun <T> withStagedSourceHistory(inventory:E2eePrivatePaths,options:E2eeMigrationHistory.Options,
+        consume:suspend(E2eeStagedSourceInput)->T):T = fenced {
+        val history=E2eeMigrationHistory.open(vault,E2eeSourceStage.Target(ownerId,scopeId,kind),required,stateId,inventory,::decode,options)
+        var rejected:Throwable?=null
+        try{val result=consume(history.input);history.assertCompleteAndUnchanged();result}
+        catch(error:Throwable){rejected=error;throw error}
+        finally{try{history.close()}catch(error:Throwable){if(rejected==null)throw error else if(rejected!==error)rejected.addSuppressed(error)}}
+    }
     private fun packet(state: JSONObject, action: String, payload: JSONObject, operationId: String = UUID.randomUUID().toString()): JSONObject =
         E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",deviceId)
             .put("action",action).put("expectedRevision",number(state,"directoryRevision")).put("checkpointHash",state.get("checkpointHash"))

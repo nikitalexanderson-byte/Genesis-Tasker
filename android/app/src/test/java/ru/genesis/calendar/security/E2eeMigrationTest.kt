@@ -13,9 +13,10 @@ import kotlinx.coroutines.yield
 class E2eeMigrationTest {
     private class Memory : E2eeRecordStorage {
         var rows = mutableMapOf<String,E2eeLocalRecord>(); var full = false
+        val reads=mutableListOf<String>()
         var afterCommit:((List<E2eeStorageChange>)->Unit)?=null
         var beforeCommit:((List<E2eeStorageChange>)->Unit)?=null
-        override fun get(key: String) = rows[key]
+        override fun get(key: String):E2eeLocalRecord? {reads+=key;return rows[key]}
         override fun list(prefix: String) = rows.keys.filter { it.startsWith(prefix) }
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
             requireOpen(); check(!full) { "SYNTHETIC_DISK_FULL" }
@@ -48,6 +49,125 @@ class E2eeMigrationTest {
         if(producer!=null)producer(id,out)else{yield();out.write("STAGED ORIGINAL $id".toByteArray());yield()}
     }
     private fun stagedOptions()=E2eeStagedMigrationOptions(E2eeSourceStage.Capacity(4L*1024*1024,16),{},{})
+    private fun historyInventory():E2eePrivatePaths {
+        val file=generateSequence(File(requireNotNull(System.getProperty("user.dir")))){it.parentFile}.map{File(it,"contracts/e2ee/private-paths-v1.json")}.first{it.isFile}
+        return E2eePrivatePaths(JSONObject(file.readText()))
+    }
+    private fun historyOptions()=E2eeMigrationHistory.Options(E2eeMigrationHistory.Capacity(8L*1024*1024,128,4*1024*1024),{},{})
+    private fun readHistory(input:E2eeStagedSourceInput):List<Pair<String,List<String>>> = (listOf(input.current)+input.previous).map{source->
+        source.id to source.paths.map{path->val reader=source.openPath(path);reader.input.use{val bytes=it.readBytes();try{reader.assertComplete();bytes.toString(Charsets.UTF_8)}finally{bytes.fill(0)}}}
+    }
+    @Test fun coordinatorResolvesExactMixedOriginalsAndCompleteOrphanWithoutNetwork()=runBlocking {
+        for(protocol in listOf(1,2)){
+            val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepare()
+            if(protocol==1){val id="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(f.scope.toByteArray()));val row=requireNotNull(f.device.vault.read("local-snapshot",id))
+                val old=JSONObject(row.bytes.toString(Charsets.UTF_8));row.bytes.fill(0);old.put("protocol",1);old.remove("local");old.remove("planned")
+                f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",id,old.toString().toByteArray(),row.serial)))}
+            migration.cancel();val capture=staged(f);val orphan=E2eeSourceStage.create(E2eeSourceStage.Options(f.device.vault,capture.target,capture.paths,stagedOptions().capacity,{},{},{}))
+            for(path in capture.paths)orphan.capturePath(path){it.write("ORPHAN $path".toByteArray())};val original=orphan.finish()
+            migration.prepareStaged(capture,stagedOptions());migration.cancel();migration.restartStaged(capture,stagedOptions());val kept=f.storage.rows.toMap();var retained:E2eeStagedSourceInput?=null
+            val result=f.make().withStagedSourceHistory(historyInventory(),historyOptions()){input->retained=input;readHistory(input)}
+            assertEquals(4,result.size);assertEquals("STAGED ORIGINAL ${capture.paths[0]}",result[0].second[0]);assertEquals("local:${capture.paths[0]}",result[1].second[0]);assertEquals("stage:${original.stageId}",result[2].first);assertEquals("ORPHAN ${capture.paths[0]}",result[2].second[0])
+            assertEquals(kept,f.storage.rows);assertEquals(0,f.calls);reject("E2EE_SOURCE_HISTORY_CLOSED"){requireNotNull(retained).current.openPath(capture.paths[0])}
+        }
+    }
+    @Test fun coordinatorHistoryRequiresActualEofForEveryPathAndKeepsCaughtPrefixFailures()=runBlocking {
+        for(mode in listOf("empty","prefix","missed-history","caught-busy")){
+            val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepare();migration.cancel();migration.prepareStaged(staged(f),stagedOptions());val kept=f.storage.rows.toMap()
+            reject("E2EE_SOURCE_INPUT_EOF_REQUIRED"){migration.withStagedSourceHistory(historyInventory(),historyOptions()){input->
+                when(mode){
+                    "prefix"->{val reader=input.current.openPath(input.current.paths.first());reader.input.read();reader.input.close()}
+                    "missed-history"->readHistory(E2eeStagedSourceInput(input.current,emptyList()))
+                    "caught-busy"->{val reader=input.current.openPath(input.current.paths.first());reject("E2EE_SOURCE_INPUT_BUSY"){input.previous.first().openPath(input.current.paths.first())};reader.input.close()}
+                }
+            }};assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        }
+    }
+    @Test fun unknownOriginalMissingArchiveCorruptPartAndIncompleteStageRefuseBeforeConsumer()=runBlocking {
+        for(mode in listOf("unknown","missing","corrupt","incomplete")){
+            val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepare();migration.cancel();val capture=staged(f);migration.prepareStaged(capture,stagedOptions());val state=stagedState(f)
+            when(mode){
+                "unknown"->f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","unresolved:source:0",byteArrayOf(1),null)))
+                "missing"->{val id=state.getJSONArray("ancestors").getString(0);f.storage.rows.remove(f.storage.rows.keys.single{it.endsWith(id)})}
+                "corrupt"->{val id=f.storage.rows.values.first{it.envelope.context.toJson().getString("objectId").contains(":source:")}.envelope.context.toJson().getString("objectId");val row=requireNotNull(f.device.vault.read("local-snapshot",id));row.bytes.fill(0);f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",id,byteArrayOf(9),row.serial)))}
+                "incomplete"->E2eeSourceStage.create(E2eeSourceStage.Options(f.device.vault,capture.target,capture.paths,stagedOptions().capacity,{},{},{}))
+            }
+            val kept=f.storage.rows.toMap();var called=0
+            try{migration.withStagedSourceHistory(historyInventory(),historyOptions()){called++};fail("Incomplete history accepted")}catch(error:Exception){assertTrue(error.message.orEmpty().contains("E2EE_"))}
+            assertEquals(0,called);assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        }
+    }
+    @Test fun duplicateRawStateAndNonCancelledOrGappedAncestorCannotProjectIntoHistory()=runBlocking {
+        for(mode in listOf("duplicate","active","hole")){
+            val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepare();migration.cancel();migration.prepareStaged(staged(f),stagedOptions());val id=stagedState(f).getJSONArray("ancestors").getString(0)
+            val row=requireNotNull(f.device.vault.read("local-snapshot",id));val old=JSONObject(row.bytes.toString(Charsets.UTF_8));row.bytes.fill(0)
+            if(mode=="active")old.put("phase","active");if(mode=="hole")old.put("ancestors",JSONArray().put("unknown:archive"))
+            var raw=old.toString();if(mode=="duplicate")raw=raw.replace("\"protocol\":2","\"protocol\":1,\"pr\\u006ftocol\":2")
+            f.storage.rows.remove(f.storage.rows.keys.single{it.endsWith(id)});f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",id,raw.toByteArray(),null)))
+            var called=0;try{migration.withStagedSourceHistory(historyInventory(),historyOptions()){called++};fail("Invalid original accepted")}catch(error:Exception){assertTrue(error.message.orEmpty().contains("E2EE_"))};assertEquals(0,called);assertEquals(0,f.calls)
+        }
+    }
+    @Test fun historyCapacityAndAdmissionRefuseBeforeAnyOriginalPartBody()=runBlocking {
+        for(mode in listOf("bytes","parts","metadata","admission")){
+            val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepareStaged(staged(f),stagedOptions());val kept=f.storage.rows.toMap();var called=0
+            val capacity=E2eeMigrationHistory.Capacity(if(mode=="bytes")1 else 8L*1024*1024,if(mode=="parts")1 else 128,if(mode=="metadata")1 else 4*1024*1024)
+            val options=E2eeMigrationHistory.Options(capacity,{},{if(mode=="admission")error("SYNTHETIC_NO_SPACE")})
+            try{migration.withStagedSourceHistory(historyInventory(),options){called++};fail("Over-capacity history accepted")}catch(error:Exception){assertTrue(error.message.orEmpty().contains("CAPACITY")||error.message=="SYNTHETIC_NO_SPACE")}
+            assertEquals(0,called);assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        }
+    }
+    @Test fun retiredActorChangedCoordinatorOrCatalogueCannotReturnHistorySuccess()=runBlocking {
+        for(mode in listOf("actor","state","catalogue")){
+            val f=Fixture(Options(registry="project"));val migration=f.make();val capture=staged(f);migration.prepareStaged(capture,stagedOptions());var live=true
+            val options=E2eeMigrationHistory.Options(historyOptions().capacity,{check(live){"E2EE_ACCOUNT_CHANGED"}},{})
+            try{migration.withStagedSourceHistory(historyInventory(),options){input->readHistory(input)
+                when(mode){"actor"->live=false;"state"->f.make().cancel();"catalogue"->E2eeSourceStage.create(E2eeSourceStage.Options(f.device.vault,capture.target,capture.paths,stagedOptions().capacity,{},{},{}))}
+            };fail("Changed history accepted")}catch(error:Exception){assertTrue(error.message.orEmpty().contains("E2EE_"))};assertEquals(0,f.calls)
+        }
+    }
+    @Test fun retainedReaderIsClosedAndConsumerFailureSurvivesCleanup()=runBlocking {
+        val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepareStaged(staged(f),stagedOptions());var retained:E2eeStagedPathReader?=null
+        reject("SYNTHETIC_CONSUMER_FAILURE"){migration.withStagedSourceHistory(historyInventory(),historyOptions()){input->val reader=input.current.openPath(input.current.paths.first());retained=reader;reader.input.read();error("SYNTHETIC_CONSUMER_FAILURE")}}
+        reject("E2EE_SOURCE_HISTORY_CLOSED"){requireNotNull(retained).input.read()};assertEquals(0,f.calls)
+    }
+    @Test fun unknownAncestorRoleRefusesBeforeCorrespondingBodyLookup()=runBlocking {
+        val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepareStaged(staged(f),stagedOptions())
+        val id="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(f.scope.toByteArray()));val row=requireNotNull(f.device.vault.read("local-snapshot",id));val state=JSONObject(row.bytes.toString(Charsets.UTF_8));row.bytes.fill(0)
+        state.put("ancestors",JSONArray().put("private:unexpected"));f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",id,state.toString().toByteArray(),row.serial)));f.storage.reads.clear()
+        reject("E2EE_SOURCE_HISTORY_INVALID"){migration.withStagedSourceHistory(historyInventory(),historyOptions()){fail("Unknown role reached consumer")}}
+        assertFalse(f.storage.reads.any{it.endsWith("private:unexpected")});assertEquals(0,f.calls)
+    }
+    @Test fun retainedPlanOrOrphanOutputCannotBeDiscardedBySourceOnlyHistory()=runBlocking {
+        for(mode in listOf("legacy-output","orphan-upload","orphan-private","content-plan")){
+            val f=Fixture(Options(before=2,registry="project"));val migration=f.make();migration.prepare()
+            if(mode=="legacy-output")reject("SYNTHETIC_PROCESS_DEATH"){migration.run()}
+            val original=stagedState(f).getString("migrationId");migration.cancel();migration.prepareStaged(staged(f),stagedOptions())
+            when(mode){
+                "orphan-upload"->f.device.vault.write(listOf(UnlockedE2eeVault.Write("outbox","$original:upload:unbound",byteArrayOf(1),null)))
+                "orphan-private"->f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","$original:private:unbound",byteArrayOf(1),null)))
+                "content-plan"->f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","content-plan:unbound:journal",byteArrayOf(1),null)))
+            }
+            val kept=f.storage.rows.toMap();val calls=f.calls;var consumed=false
+            reject("E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"){migration.withStagedSourceHistory(historyInventory(),historyOptions()){consumed=true}}
+            assertFalse(consumed);assertEquals(kept,f.storage.rows);assertEquals(calls,f.calls)
+        }
+    }
+    @Test fun everyPresentCancellationCopyNeedsItsOriginalBindingAndKnownRole()=runBlocking {
+        for(mode in listOf("changed","duplicate","missing","unknown-role")){
+            val f=Fixture(Options(registry="project"));val migration=f.make();migration.prepare();migration.cancel();migration.prepareStaged(staged(f),stagedOptions())
+            val copy=f.storage.rows.values.first{it.envelope.context.toJson().getString("objectId").contains(":cancel:")}.envelope.context.toJson().getString("objectId")
+            if(mode=="missing")f.storage.rows.remove(f.storage.rows.keys.single{it.endsWith(copy)})
+            else if(mode=="unknown-role")f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","unknown:cancel:${java.util.UUID.randomUUID()}",byteArrayOf(9),null)))
+            else{
+                val row=requireNotNull(f.device.vault.read("local-snapshot",copy));val old=JSONObject(row.bytes.toString(Charsets.UTF_8));row.bytes.fill(0);if(mode=="changed")old.put("snapshotHash","A".repeat(43))
+                var raw=old.toString();if(mode=="duplicate")raw=raw.replace("\"protocol\":2","\"protocol\":1,\"pr\\u006ftocol\":2")
+                f.storage.rows.remove(f.storage.rows.keys.single{it.endsWith(copy)});f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",copy,raw.toByteArray(),null)))
+            }
+            val kept=f.storage.rows.toMap();f.storage.reads.clear();var consumed=false
+            try{migration.withStagedSourceHistory(historyInventory(),historyOptions()){input->consumed=true;readHistory(input)};fail("Invalid cancellation history accepted")}catch(error:Exception){assertTrue(error.message.orEmpty().contains("E2EE_"))}
+            assertFalse(consumed);if(mode=="unknown-role")assertFalse(f.storage.reads.any{it.contains("unknown:cancel:")});assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        }
+    }
     private fun stagedState(f:Fixture):JSONObject {
         val id="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(f.scope.toByteArray()))
         val row=requireNotNull(f.device.vault.read("local-snapshot",id));return try{JSONObject(row.bytes.toString(Charsets.UTF_8))}finally{row.bytes.fill(0)}

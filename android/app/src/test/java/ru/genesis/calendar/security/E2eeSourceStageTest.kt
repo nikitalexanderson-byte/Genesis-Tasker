@@ -48,6 +48,21 @@ class E2eeSourceStageTest {
         try { action() } catch (error: Exception) { assertTrue("Expected $code, got ${error.message}", error.message.orEmpty().contains(code)); return }
         fail("Forbidden source stage operation accepted")
     }
+    @Test fun originalPartLocatorsFilterOnlyActorSnapshotIdsAfterAllFramingChecks() {
+        val f=Fixture();var gets=0;val tracked=object:E2eeRecordStorage by f.memory{override fun get(key:String):E2eeLocalRecord?{gets++;return f.memory.get(key)}}
+        val vault=UnlockedE2eeVault(tracked,f.scope)
+        vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","old:source:0",byteArrayOf(1),null),UnlockedE2eeVault.Write("local-snapshot","other:source",byteArrayOf(2),null),
+            UnlockedE2eeVault.Write("local-snapshot","unrelated",byteArrayOf(3),null),UnlockedE2eeVault.Write("draft","draft:source:0",byteArrayOf(4),null)))
+        assertEquals(listOf("old:source:0","other:source"),vault.listMigrationOriginalParts().sorted());assertEquals(0,gets);refuses("E2EE_"){vault.listLocal("local-snapshot","")}
+        val prefix=listOf(f.scope.ownerId,f.scope.scopeId,"local-snapshot").joinToString(""){"${it.length}:$it"};f.memory.rows[prefix+"02:xx"]=f.memory.rows.values.first()
+        refuses("CORRUPT_LOCAL_RECORD"){vault.listMigrationOriginalParts()};assertEquals(0,gets)
+    }
+    @Test fun aRetiredPendingOriginalLocatorLookupCannotReturnIds() {
+        val f=Fixture();val entered=CountDownLatch(1);val resume=CountDownLatch(1);val result=AtomicReference<Throwable?>()
+        val tracked=object:E2eeRecordStorage by f.memory{override fun list(prefix:String):List<String>{entered.countDown();check(resume.await(10,TimeUnit.SECONDS));return emptyList()}}
+        val vault=UnlockedE2eeVault(tracked,f.scope);val thread=Thread{try{vault.listMigrationOriginalParts();result.set(AssertionError("Retired discovery accepted"))}catch(error:Throwable){result.set(error)}}
+        thread.start();check(entered.await(10,TimeUnit.SECONDS));vault.lock();resume.countDown();thread.join(10000);assertFalse(thread.isAlive);assertEquals("E2EE_UNLOCK_REQUIRED",result.get()?.message)
+    }
     @Test fun coldReadExactBytesUnderNewRootAndIndependentActor() {
         val f = Fixture(); val input = ByteArray(E2eeFiles.CHUNK_BYTES * 2 + 31) { (it * 37).toByte() }
         val ref = f.complete(input); assertEquals(1, f.durable)

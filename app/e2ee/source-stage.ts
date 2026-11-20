@@ -247,7 +247,8 @@ export async function openSourceStage(vault:SourceStageReadVault,target:SourceSt
  for(const [path,entry]of manifest.entries.entries())for(const part of entry.parts.keys())expectedKeys.add(partId(hash,ref.stageId,path,part));
  const ownPrefix=`source-stage:${hash}:${ref.stageId}:`,actual=index.keys.filter(key=>key.startsWith(ownPrefix));
  if(actual.length!==expectedKeys.size||actual.some(key=>!expectedKeys.has(key)))throw new Error('E2EE_SOURCE_STAGE_UNBOUND_REMNANT');
- return Object.freeze({paths:Object.freeze(manifest.entries.map(row=>row.id)),openPath(id:string){
+ return Object.freeze({paths:Object.freeze(manifest.entries.map(row=>row.id)),
+  storageUsage:Object.freeze({bytes:manifest.entries.reduce((total,row)=>total+row.size,0),parts:manifest.entries.reduce((total,row)=>total+row.parts.length,0)}),openPath(id:string){
   const path=manifest.entries.findIndex(row=>row.id===id);if(path<0)throw new Error('E2EE_SOURCE_STAGE_PATH');const entry=manifest.entries[path];let complete=false;
   const chunks=(async function*(){let total=0;
    for(const [part,expected]of entry.parts.entries()){
