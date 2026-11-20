@@ -44,7 +44,41 @@ internal object NativeBackupFormMetadata {
     }
 }
 
-internal fun nativeBackupFormSpool(context:Context):BackupFormSpool {
+/** Small manifest only. Unlike JSONObject's duplicate projection, this check
+ * rejects duplicate names before accepting any new field/file reference. */
+internal object NativeBackupValueManifest {
+    fun read(raw:String):JSONObject {
+        check(raw.length in 1..32768){"E2EE_ARCHIVE_SOURCE_INVALID"}
+        return JsonReader(java.io.StringReader(raw)).use{reader->
+            reader.isLenient=false;var count=0
+            fun value(depth:Int):Any {
+                check(depth<=8&&++count<=1000){"E2EE_ARCHIVE_SOURCE_INVALID"}
+                return when(reader.peek()){
+                    JsonToken.BEGIN_OBJECT->{
+                        val result=JSONObject();val seen=mutableSetOf<String>();reader.beginObject()
+                        while(reader.hasNext()){val name=reader.nextName();check(seen.add(name)){"E2EE_ARCHIVE_SOURCE_INVALID"};result.put(name,value(depth+1))}
+                        reader.endObject();result
+                    }
+                    JsonToken.BEGIN_ARRAY->{
+                        val result=org.json.JSONArray();reader.beginArray()
+                        while(reader.hasNext()){check(result.length()<64){"E2EE_ARCHIVE_SOURCE_INVALID"};result.put(value(depth+1))}
+                        reader.endArray();result
+                    }
+                    JsonToken.STRING->reader.nextString()
+                    JsonToken.BOOLEAN->reader.nextBoolean()
+                    JsonToken.NULL->{reader.nextNull();JSONObject.NULL}
+                    JsonToken.NUMBER->{val text=reader.nextString();check(text.matches(Regex("-?(?:0|[1-9][0-9]{0,15})"))){"E2EE_ARCHIVE_SOURCE_INVALID"}
+                        val number=text.toLong();check(number in -9007199254740991L..9007199254740991L){"E2EE_ARCHIVE_SOURCE_INVALID"}
+                        if(number in Int.MIN_VALUE..Int.MAX_VALUE)number.toInt()else number}
+                    else->error("E2EE_ARCHIVE_SOURCE_INVALID")
+                }
+            }
+            val result=value(0);check(result is JSONObject&&reader.peek()==JsonToken.END_DOCUMENT){"E2EE_ARCHIVE_SOURCE_INVALID"};result
+        }
+    }
+}
+
+internal fun nativeBackupFormSpool(context:Context,maximum:Int=96*1024*1024):BackupFormSpool {
     val cipher=LocalCipher()
     // A session owns this exact directory. Account clear removes only its own
     // referenced frames. Process-death remnants stay encrypted, for the future
@@ -58,12 +92,12 @@ internal fun nativeBackupFormSpool(context:Context):BackupFormSpool {
         return folders.filter{it.name!=root.name}.sumOf{folder->
             check(folder.name.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))&&folder.isDirectory&&
                 !java.nio.file.Files.isSymbolicLink(folder.toPath())&&folder.canonicalFile.parentFile==parent.canonicalFile){"BACKUP_FORM_STORAGE"}
-            val files=folder.listFiles()?:error("BACKUP_FORM_STORAGE");check(files.size<=10000){"BACKUP_FORM_QUOTA"}
+            val files=folder.listFiles()?:error("BACKUP_FORM_STORAGE");check(files.size<=30000){"BACKUP_FORM_QUOTA"}
             files.sumOf{file->check(file.isFile&&!java.nio.file.Files.isSymbolicLink(file.toPath())&&file.canonicalFile.parentFile==folder.canonicalFile){"BACKUP_FORM_STORAGE"};file.length()}
         }
     }
     return BackupFormSpool(root,object:BackupFormSpool.Crypto{
         override fun seal(value:String,aad:String)=cipher.encrypt(value,aad)
         override fun open(value:String,aad:String)=cipher.decrypt(value,aad)
-    },NativeBackupFormMetadata::read,otherBytes=::otherBytes)
+    },NativeBackupFormMetadata::read,maximum=maximum,otherBytes=::otherBytes)
 }

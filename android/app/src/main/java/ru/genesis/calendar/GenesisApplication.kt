@@ -24,7 +24,7 @@ class GenesisApplication : Application() {
     // Process-local owner transition only, never a crypto/data generation.
     private val scopeEpoch = java.util.concurrent.atomic.AtomicLong()
     internal val workspaceEpoch get() = scopeEpoch.get()
-    internal val backupMigrationMemory=BackupMigrationInventory{nativeBackupFormSpool(this)}
+    internal val backupMigrationMemory=BackupMigrationInventory{maximum->nativeBackupFormSpool(this,maximum)}
     internal val adviceNotificationGuard = Any()
     @Volatile private var featureSnapshot: Pair<String,ru.genesis.calendar.auth.FeatureAccess>? = null
     fun rememberFeatureAccess(scope: String, value: ru.genesis.calendar.auth.FeatureAccess) { featureSnapshot = scope to value }

@@ -1656,3 +1656,50 @@ PASS, console0; финальный desktop/light PNG просмотрен. Пе�
 Новый CI ещё не подтверждён; старый failure не переименован вPASS. Этот инкремент
 не закрывает native архивацию/9 из20 источников/общие условия выпуска. Production,
 floors0, pilot/cutover off иGENESIS_DEPLOY_ANDROID=false сохраняются.
+
+## Архивы: отдельные поля и переносимость v1,20 ноября
+
+Новый local-кандидат передаёт и шифрует только изменившиеся serialized значения
+BackupPanel; полное точное JSON-сравнение сохраняет изменения внутри прежнего
+object reference. Native хранит оригинальные значения/невыбранные candidates и
+все подтверждённые manifest с исходной owner/epoch/view/field привязкой. Малый
+manifest принимает только существующие значения правильного поля и проверенные
+оригинальные file references. Mixed v1/v2 collector сохраняет history, а новый
+UTF8 codec не заменяет lone-surrogate provider metadata вопросительными знаками.
+
+Проверка API26 выявила самостоятельную несовместимость v1 portable backup:
+Android JSONArray экранирует solidus в Base64, JS использует другие AAD bytes.
+Новые записи используют единый формат, readers допускают только два точных
+полностью аутентифицированных исторических представления того же v1 header.
+Suite, key, context, nonce/tag, digest и ограничения не ослаблены; plaintext/
+entitlement/restore fallback не добавлен. См. `backup-336-portable-aad.md`.
+
+Full JS1814/1814,0 fail/skip; types07/scoped lint06 и web build PASS. Actual
+Chromium15736/36, console0: реальные React/File/WebCrypto/IDB, предыдущие key
+inputs, все manifest, original binary и new-root cold unlock; оба PNG просмотрены.
+Исходный CI44658090511 failure сохранён; fix7d67c53a прошёл полный Source
+checks44664513690 web/API+Android. Дополнительный existing premium run92/92 и
+4 startup checks PASS. Это не полная security UX-приёмка.
+
+Native04 SUCCESS21m18s, JVM25/25; lint0 errors/208 warnings/8 hints, новых issue/
+file pairs0. InputADECE99F52C96CAD98452E21EFB20339B142E9F351DC0A273AF6DFE04A862EDD.
+Actual API26/API34:57 уникальных cases PASS каждый. Исходный base56 PASS+1 opt-in
+skip сохранён; точный20MiB source case прошёл отдельно с явным аргументом, derived
+summary сохраняет оба отчёта. В каждом окружении ещё15 независимых host checks:
+6 source/new-root,4 native-export portable/canonical и5 реального SAF.
+
+Файл20,615,080 bytes с8 картами прошёл decrypt/preview без restore:42,946ms(API34)
+и49,919ms(API26), против185,287/257,242ms прежнего v1 fixture. Малое подтверждение
+заняло329/198ms, один value chunk4 code units плюс малый manifest; неизменённые
+payload/plan повторно не переданы. Это synthetic emulator measurement. Обе dark
+PNG просмотрены. API26 heap512MiB, API34 heap192MiB; API26/192MiB, API35/OEM и
+полная visual/provider matrix не приняты. Полные hashes/evidence/failed01–03:
+`e2ee-336-archives-values-transport.md`.
+
+Coverage остаётся9/20: binary retention в памяти, redundant manifest strings,
+aggregate48MiB capture, process remnants/все nested old keys и полный archives
+adapter ещё нужны. Не повышать supported protocol или cutover по этим57 cases.
+Остальные11 categories, normal writers/lifecycle/shared ACL/files/Drive/direct
+upgrades, исходные48 сценариев,14-language semantics и human crypto review
+сохраняются условиями выпуска. Production3.3.5/149, floors0/pilot/cutover off и
+GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личных устройств в этом продолжении нет.

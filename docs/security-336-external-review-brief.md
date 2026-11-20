@@ -113,6 +113,17 @@ AEAD alone is insufficient to accept a legacy record.
   isolated. Review unchanged format/AAD/nonce handling, no unauthenticated partial
   plaintext, failure cleanup and old-key-loss witnesses including the new spill
   root. The observed diagnostic matrix is distinct from final device acceptance.
+- Per-value native archive retention: `e2ee-336-archives-values-transport.md`.
+  Review field identity before the first chunk, exact raw UTF16 values, every
+  pending/unselected candidate and acknowledged manifest, original provider
+  strings across JSON/UTF8, historical file references, quotas and original
+  account/job/freeze lifetimes. It still does not complete aggregate streaming,
+  process-remnant collection or the archives migration adapter.
+- Existing v1 independent-key backup compatibility: `backup-336-portable-aad.md`.
+  Actual Android JSON solidus quoting differs from JavaScript/JVM. Review the
+  canonical new writer and exactly two fully authenticated semantic-header
+  encodings for reading old files. This is not fallback to an unverified key,
+  weaker E2EE suite, omitted context, plaintext or restore authority.
 - Chronological evidence and failed-run limitations: `release-3.3.6.md` and its
   linked increment documents. Local logs/artifact hashes are under
   `output/release-3.3.6/`; they are not all tracked or externally distributed.

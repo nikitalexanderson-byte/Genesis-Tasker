@@ -217,6 +217,39 @@ class BackupWholeOperationTest {
         raw.chunked(131072).forEachIndexed{index,part->reply=r.bridge.retainFormChunk(id,index,(index+1)*131072>=raw.length,part,token);if(reply.isNotEmpty())return reply}
         return reply
     }
+    private fun valueManifest(id:String)=JSONObject().put("protocol",2).put("fields",org.json.JSONArray().put(JSONObject().put("name","key").put("id",id)))
+        .put("settled",true).put("file",JSONObject.NULL).toString()
+    @Test fun valueAndManifestPortsDrainBeforeCaptureAndBothHonorThePersistentMemoryFence():Unit=runBlocking {
+        val r=Rig();r.start();val captured=CompletableDeferred<Unit>();val release=CompletableDeferred<Unit>()
+        try{
+            val token=r.begin();val first=UUID.randomUUID().toString();assertEquals("",r.bridge.retainValueChunk("key",first,0,true,"\"earlier input\"",token))
+            assertEquals("",r.bridge.retainValueManifest(valueManifest(first),token))
+            val migration=async(Dispatchers.IO){NativeLegacyScopeFence(r.app.database,r.owner,"personal:${r.owner}",r::ownerCheck).withFence{
+                val snapshot=r.app.backupMigrationMemory.capture(r.owner,r.epoch);captured.complete(Unit);release.await();snapshot
+            }}
+            assertNull(withTimeoutOrNull(150){captured.await()})
+            val latest=UUID.randomUUID().toString();assertEquals("",r.bridge.retainValueChunk("key",latest,0,true,"\"complete before releasing job\"",token))
+            val accepted=valueManifest(latest);assertEquals("",r.bridge.retainValueManifest(accepted,token));ok(r.end(token));withTimeout(10000){captured.await()}
+            assertEquals("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN",r.bridge.retainValueChunk("key",UUID.randomUUID().toString(),0,true,"\"late input\"",""))
+            assertEquals("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN",r.bridge.retainValueManifest(accepted,""));release.complete(Unit)
+            val source=withTimeout(10000){migration.await()}.getJSONArray("views").getJSONObject(0).getJSONObject("valueForm")
+            assertEquals(accepted,source.getString("rawManifest"));assertEquals(2,source.getJSONArray("values").length());assertEquals(2,source.getJSONArray("rawManifests").length())
+        }finally{release.complete(Unit);r.finish()}
+    }
+    @Test fun valueFormCanFinishItsOwnVerifiedResetButCannotSurviveCapabilityOrAccountRetirement():Unit=runBlocking {
+        val r=Rig();r.start();r.generation=2
+        try{
+            val token=r.begin();ok(r.call("reconcile",r.payload(token)));assertFalse(r.live)
+            val id=UUID.randomUUID().toString();assertEquals("",r.bridge.retainValueChunk("key",id,0,true,"\"final original input\"",token))
+            val raw=valueManifest(id);assertEquals("",r.bridge.retainValueManifest(raw,token))
+            assertEquals("BACKUP_OWNER",r.bridge.retainValueChunk("key",UUID.randomUUID().toString(),0,true,"null",""))
+            assertEquals("BACKUP_OWNER",r.bridge.retainValueManifest(raw,""));ok(r.end(token))
+            assertEquals("E2EE_INVALID_LEGACY_OPERATION",r.bridge.retainValueManifest(raw,token))
+            r.app.activateAccount(null);r.app.activateAccount(r.owner);assertFalse(r.bridge.currentSession(token))
+            assertEquals("BACKUP_OWNER",r.bridge.retainValueChunk("key",UUID.randomUUID().toString(),0,true,"null",token))
+            assertEquals(0,r.app.backupMigrationMemory.capture(r.owner,r.app.workspaceEpoch).getJSONArray("views").length())
+        }finally{r.finish()}
+    }
     @Test fun acceptedFormAndSelectedFileRemainExactAfterTransferRetirementAndActualBridgeStop():Unit=runBlocking {
         val r=Rig();r.start();val directory=java.io.File(r.app.cacheDir,"advice-shares");check(directory.isDirectory||directory.mkdirs())
         val file=java.io.File(directory,"QA336-retain-${UUID.randomUUID()}.genesisbackup");val original=byteArrayOf(0,-1,0xc3.toByte(),0x28);file.writeBytes(original)

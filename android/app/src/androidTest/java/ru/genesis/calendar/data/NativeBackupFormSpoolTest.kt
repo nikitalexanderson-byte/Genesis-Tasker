@@ -39,7 +39,7 @@ class NativeBackupFormSpoolTest {
             "{\"protocol\":1,\"state\":{},\"settled\":true,\"file\":null} {}")
         for(raw in samples)assertThrows(Exception::class.java){NativeBackupFormMetadata.read(raw.reader())}
         val raw="{\"protocol\":1,\"state\":{\"duplicate\":1,\"duplicate\":2,\"note\":\"α😀\\uD800\"},\"settled\":false,\"file\":null}"
-        val memory=BackupMigrationInventory{nativeBackupFormSpool(context)};val view=memory.open("synthetic-spool-owner",7)
+        val memory=BackupMigrationInventory{maximum->nativeBackupFormSpool(context,maximum)};val view=memory.open("synthetic-spool-owner",7)
         try{memory.appendForm(view,UUID.randomUUID().toString(),0,true,raw);memory.detach(view)
             assertEquals(raw,memory.capture("synthetic-spool-owner",7).getJSONArray("views").getJSONObject(0).getString("rawForm"))
         }finally{memory.clear()}

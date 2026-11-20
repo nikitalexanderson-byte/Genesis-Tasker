@@ -49,3 +49,10 @@ failure is not declared resolved in CI until a new run actually passes.
 No new Android build/device acceptance, full visual matrix, deployment, version
 bump, Play update or personal-device action is claimed by this increment.
 Production remains 3.3.5/149; update floors 0 and E2EE pilot/cutover off.
+
+Follow-up: Source checks44664513690 on7d67c53a completed SUCCESS on both web/API
+and Android. This closes the original CI failure without changing its recorded
+result. The current local candidate also passed the existing premium feature
+run92/92 plus4 startup checks in `security336-map-premium-04`; it includes the
+controlled map regression, 360/390/768/1440 light/dark and the existing trial/header
+follow-ups. That selected local run is not the full new security product matrix.

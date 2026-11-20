@@ -9,6 +9,55 @@ async function fixture(){
   file:{id:fileId,name:descriptor.name,type:'application/json',size:4,lastModified:1234}};
  return{protocol:1,ownerId:owner,sessionEpoch:5,views:[{id:view,source:'backup-panel',mounted:true,rawForm:' \n'+JSON.stringify(form)+'\n',files:[{descriptor,bytes:Buffer.from(raw).toString('base64url')}]}]};
 }
+async function valueFixture(){
+ const input=await fixture(),row=input.views[0],form=JSON.parse(row.rawForm);
+ const values=Object.entries(form.state).map(([name,value])=>({name,id:crypto.randomUUID(),rawJson:JSON.stringify(value)}));
+ const rawManifest=JSON.stringify({protocol:2,fields:values.map(({name,id})=>({name,id})),settled:true,file:form.file});
+ input.protocol=2;row.rawForm=null;row.valueForm={protocol:2,ownerId:owner,sessionEpoch:5,viewId:view,rawManifest,rawManifests:[rawManifest],values};
+ return input;
+}
+test('composed v2 inventory keeps every original value, previous manifest and mixed detached v1 branch',async()=>{
+ const input=await valueFixture(),row=input.views[0],source=row.valueForm,previous=source.rawManifest;
+ const next={name:'key',id:crypto.randomUUID(),rawJson:JSON.stringify(' exact new key \ud800 ')};source.values.push(next);
+ const manifest=JSON.parse(previous);manifest.fields=manifest.fields.map(field=>field.name==='key'?{name:field.name,id:next.id}:field);
+ source.rawManifest=JSON.stringify(manifest);source.rawManifests.push(source.rawManifest);
+ const unselected={name:'payload',id:crypto.randomUUID(),rawJson:' { "neverCommitted": true } '};source.values.push(unselected);
+ const legacy=await fixture();legacy.views[0].id=crypto.randomUUID();legacy.views[0].mounted=false;legacy.views[0].files=[];
+ const oldForm=JSON.parse(legacy.views[0].rawForm);oldForm.file=null;legacy.views[0].rawForm=JSON.stringify(oldForm);legacy.views[0].valueForm=null;input.views.push(legacy.views[0]);
+ const before=JSON.stringify(input),captured=await normalizeNativeArchiveForms(input,owner,()=>{});
+ assert.equal(captured.length,2);assert.equal(captured[0].form.state.key,' exact new key \ud800 ');
+ assert.equal(captured[0].valueForm.manifests[0].state.key,' exact independent input ');
+ assert.equal(captured[0].valueForm.values.at(-1).rawJson,unselected.rawJson);assert.equal(captured[0].form.state.payload,undefined);
+ assert.equal(captured[1].rawForm,legacy.views[0].rawForm);assert.equal(captured[1].valueForm,null);assert.equal(JSON.stringify(input),before);
+ assert.equal('complete' in captured[0],false);assert.equal(captured[0].valueForm.execution,'source-input');
+});
+test('composed v2 validation rejects a foreign binding, ambiguous legacy state, hidden duplicates and missing manifest history',async()=>{
+ for(const change of [input=>input.views[0].valueForm.ownerId='foreign',input=>input.views[0].valueForm.sessionEpoch++,input=>input.views[0].valueForm.viewId=crypto.randomUUID(),
+  input=>input.views[0].rawForm='{}',input=>input.views[0].valueForm.rawManifests=[],
+  input=>input.views[0].valueForm.values.push({name:'payload',id:crypto.randomUUID(),rawJson:'{"hidden":1,"hidden":2}'})]){
+  const input=await valueFixture();change(input);await assert.rejects(normalizeNativeArchiveForms(input,owner,()=>{}),/E2EE_/);
+ }
+});
+test('a file selected only by a prior v2 manifest still requires its original verified binary candidate',async()=>{
+ const input=await valueFixture(),source=input.views[0].valueForm,next=JSON.parse(source.rawManifest);next.file=null;
+ source.rawManifest=JSON.stringify(next);source.rawManifests.push(source.rawManifest);
+ await normalizeNativeArchiveForms(input,owner,()=>{});
+ input.views[0].files=[];await assert.rejects(normalizeNativeArchiveForms(input,owner,()=>{}),/E2EE_ARCHIVE_FILE_INTEGRITY/);
+});
+test('composed v2 input pins its original inventory protocol and epoch before source callbacks run',async()=>{
+ const input=await valueFixture();let checks=0;
+ const [result]=await normalizeNativeArchiveForms(input,owner,()=>{if(++checks===2){input.protocol=1;input.sessionEpoch=99;}});
+ assert.equal(result.valueForm.sessionEpoch,5);assert.equal(result.valueForm.protocol,2);
+});
+test('the composed candidate bound is global across v2 views, before cloning and parsing private values',async()=>{
+ const input=await valueFixture();input.views=[];
+ for(let index=0;index<2;index++){
+  const id=crypto.randomUUID(),values=Array.from({length:5001},()=>({name:'key',id:crypto.randomUUID(),rawJson:'0'}));
+  const manifest=JSON.stringify({protocol:2,fields:[{name:'key',id:values[0].id}],settled:true,file:null});
+  input.views.push({id,source:'backup-panel',mounted:false,rawForm:null,files:[],valueForm:{protocol:2,ownerId:owner,sessionEpoch:5,viewId:id,rawManifest:manifest,rawManifests:[manifest],values}});
+ }
+ await assert.rejects(normalizeNativeArchiveForms(input,owner,()=>{}),/E2EE_SOURCE_TOO_LARGE/);
+});
 test('actual native inventory framing preserves exact forms, binary input, provider absence and uncertain operations without executing plans',async()=>{
  const input=await fixture(),before=JSON.stringify(input),[captured]=await normalizeNativeArchiveForms(input,owner,()=>{});
  assert.equal(captured.rawForm,input.views[0].rawForm);assert.deepEqual(Buffer.from(captured.files[0].bytes,'base64url'),Buffer.from([0,255,0xc3,0x28]));

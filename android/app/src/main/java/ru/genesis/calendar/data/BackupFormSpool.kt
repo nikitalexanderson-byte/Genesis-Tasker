@@ -136,7 +136,7 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
     @Synchronized fun retained():List<Pair<String,Form>> {
         requireRoot()
         val references=root.listFiles()?.filter{it.name.endsWith(".ref")}?:emptyList()
-        check(references.size<=1000){"E2EE_SOURCE_TOO_LARGE"}
+        check(references.size<=10000){"E2EE_SOURCE_TOO_LARGE"}
         return references.map{file->
             val id=file.name.removeSuffix(".ref");check(uuid.matches(id)&&owned(file).length() in 1..16384){"BACKUP_FORM_INTEGRITY"}
             val raw=file.readText(Charsets.US_ASCII);val value=JSONObject(crypto.open(raw,"backup-form-spool-index-v1:${root.name}:$id"))

@@ -104,17 +104,25 @@ class NativeBackupSafTest {
             var captured:JSONObject?=null
             compose.waitUntil(10000){runCatching{app.backupMigrationMemory.capture(owner,app.workspaceEpoch)}.getOrNull()?.also{captured=it}!=null}
             val beforeClose=requireNotNull(captured).getJSONArray("views").getJSONObject(0)
-            val rawForm=beforeClose.getString("rawForm");val retained=JSONObject(rawForm)
+            assertEquals(2,requireNotNull(captured).getInt("protocol"));assertTrue(beforeClose.isNull("rawForm"))
+            val valueForm=beforeClose.getJSONObject("valueForm");val rawManifest=valueForm.getString("rawManifest");val retained=JSONObject(rawManifest)
+            val state=JSONObject();val fields=retained.getJSONArray("fields");val candidates=valueForm.getJSONArray("values")
+            for(index in 0 until fields.length()){
+                val field=fields.getJSONObject(index);val matches=(0 until candidates.length()).map{candidates.getJSONObject(it)}.filter{it.getString("id")==field.getString("id")}
+                assertEquals(1,matches.size);assertEquals(field.getString("name"),matches.single().getString("name"))
+                state.put(field.getString("name"),JSONTokener(matches.single().getString("rawJson")).nextValue())
+            }
             assertTrue(retained.getBoolean("settled"));assertEquals(filename,retained.getJSONObject("file").getString("name"))
-            assertEquals(owner,retained.getJSONObject("state").getJSONObject("payload").getString("ownerId"))
+            assertEquals(owner,state.getJSONObject("payload").getString("ownerId"))
             val selected=beforeClose.getJSONArray("files").getJSONObject(0)
             assertEquals(retained.getJSONObject("file").getString("id"),selected.getJSONObject("descriptor").getString("id"))
             val bytes=java.util.Base64.getUrlDecoder().decode(selected.getString("bytes"))
             try{assertEquals(selected.getJSONObject("descriptor").getString("sha256"),java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString(""){"%02x".format(it)})}finally{bytes.fill(0)}
             compose.runOnIdle{visible.value=false};compose.waitForIdle()
             val detached=app.backupMigrationMemory.capture(owner,app.workspaceEpoch)
-            assertFalse(detached.getJSONArray("views").getJSONObject(0).getBoolean("mounted"));assertEquals(rawForm,detached.getJSONArray("views").getJSONObject(0).getString("rawForm"))
-            File(app.getExternalFilesDir(null),"backup336-native-form-input.json").writeText(detached.toString())
+            assertFalse(detached.getJSONArray("views").getJSONObject(0).getBoolean("mounted"));assertEquals(valueForm.toString(),detached.getJSONArray("views").getJSONObject(0).getJSONObject("valueForm").toString())
+            val capturedBytes=ru.genesis.calendar.data.backupJsonUtf8(detached.toString())
+            try{File(app.getExternalFilesDir(null),"backup336-native-form-input.json").writeBytes(capturedBytes)}finally{capturedBytes.fill(0)}
             File(app.getExternalFilesDir(null),"backup322-saf-proof.json").writeText(JSONObject().put("synthetic",true)
                 .put("cancelledOpenAndSave",true).put("actualEncryptedExportAndOpen",true).put("decryptedByProductionWebView",true)
                 .put("authorizedAfterSavePicker",true).put("retainedAfterNativeViewDisposal",true).put("filename",filename).toString(2))

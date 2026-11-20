@@ -429,7 +429,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                     .put("forms",forms)
             }
             current();check(app.backupMigrationMemory.version()==revision&&history.getString(uid,null)==originalHistory){"E2EE_ARCHIVE_CAPTURE_CHANGED"}
-            val bytes=result.toString().toByteArray(Charsets.UTF_8)
+            val bytes=ru.genesis.calendar.data.backupJsonUtf8(result.toString())
             try{current();check(bytes.size<=48*1024*1024){"E2EE_SNAPSHOT_TOO_LARGE"};bytes}catch(error:Throwable){bytes.fill(0);throw error}
         }}
     }

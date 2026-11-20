@@ -108,6 +108,12 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
             app.backupMigrationMemory.appendForm(migrationView,id,index,last,text)
         };""
     }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
+    @JavascriptInterface @Synchronized fun retainValueChunk(name:String,id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
+        formWrite(operationId){app.backupMigrationMemory.appendValue(migrationView,name,id,index,last,text)};""
+    }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
+    @JavascriptInterface @Synchronized fun retainValueManifest(raw:String,operationId:String):String=try {
+        formWrite(operationId){app.backupMigrationMemory.publishManifest(migrationView,raw)};""
+    }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
     @JavascriptInterface fun setHistory(value:String,operationId:String) {
         check();store.writeHistory(operation(operationId)){
         require(value.length<=500);val parsed=JSONObject(value)
@@ -273,7 +279,10 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     val colors=JSONObject().put("--ink",hex(scheme.onSurface)).put("--ink-soft",hex(scheme.onSurfaceVariant)).put("--surface",hex(scheme.surface))
         .put("--paper",hex(scheme.background)).put("--line",hex(scheme.outlineVariant)).put("--ui-accent",hex(scheme.primary)).put("--teal",hex(scheme.primary)).put("--ui-on-accent",hex(scheme.onPrimary))
     val boot=remember(owner){JSONObject().put("ownerId",owner).put("language",language).put("dark",dark).put("palette",palette).put("colors",colors)}
-    fun encoded(value:String)=Base64.getEncoder().encodeToString(value.toByteArray(Charsets.UTF_8))
+    fun encoded(value:String):String {
+        val bytes=ru.genesis.calendar.data.backupJsonUtf8(value)
+        return try{Base64.getEncoder().encodeToString(bytes)}finally{bytes.fill(0)}
+    }
     var ready by remember { mutableStateOf(false) }
     DisposableEffect(Unit){onDispose { chooser?.cancel();chooser=null }}
     Dialog(onDismissRequest=onClose,properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false)) {
