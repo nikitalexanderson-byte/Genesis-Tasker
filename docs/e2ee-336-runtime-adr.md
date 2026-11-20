@@ -4,6 +4,15 @@
 is disabled. This document extends `e2ee-336-contract-adr.md`; it does not claim
 that all existing data paths have already been migrated.
 
+20 November checkpoint: bounded source-history reconciliation now composes
+protected original readers with per-record content-plan writers on web/native.
+Full registry preflight happens synchronously before callers obtain keys/lease;
+EOF, concurrency, cancellation and cleanup failures block completeness. Evidence
+and exact remaining boundaries: `e2ee-336-staged-reconciliation.md`. Synthetic
+composition does not increase real source coverage9/20 or open v3 run. Complete
+coordinator/custody, normal product routing,11 remaining sources and independent
+human review remain required; production activation stays disabled.
+
 ## Primitives and formats
 
 Root delivery uses RFC 9180 base-mode HPKE with DHKEM(P-256, HKDF-SHA256),

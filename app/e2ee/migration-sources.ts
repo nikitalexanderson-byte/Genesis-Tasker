@@ -5,6 +5,7 @@ import {E2EE_MAX_FILE_BYTES} from './files.ts';
 import {E2EE_CHUNK_BYTES} from './files.ts';
 import type {StagedMigrationCapture} from './migration-stage.ts';
 import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSources,type MigrationSourceContext} from './migration.ts';
+import {reconcileStagedPrivatePaths,type StagedPathReconciler,type StagedSourceInput} from './staged-reconciliation.ts';
 
 export type PrivateScopeKind='personal'|'project'|'space';
 export type PrivatePath=typeof registry.paths[number];
@@ -36,6 +37,7 @@ const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 export class E2eeMigrationSources implements MigrationSources {
   #ownerId:string;#scopeId:string;#kind:PrivateScopeKind;#paths:readonly PrivatePath[];#adapters=new Map<string,PrivatePathAdapter>();
   #streamAdapters=new Map<string,PrivatePathStreamAdapter>();
+  #stagedReconcilers=new Map<string,StagedPathReconciler>();
   readonly requiredCoverage:readonly string[];
   readonly allowedContentDomains:readonly E2eeContext['domain'][];
   constructor(ownerId:string,scopeId:string,kind:PrivateScopeKind){
@@ -53,6 +55,24 @@ export class E2eeMigrationSources implements MigrationSources {
   registerStream(adapter:PrivatePathStreamAdapter){
     if(!this.requiredCoverage.includes(adapter.id)||this.#streamAdapters.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
     this.#streamAdapters.set(adapter.id,adapter);
+  }
+  registerStagedReconciler(adapter:StagedPathReconciler){
+    if(!this.requiredCoverage.includes(adapter.id)||this.#stagedReconcilers.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
+    this.#stagedReconcilers.set(adapter.id,adapter);
+  }
+  /** Synchronous full preflight and callback capture, before source capture,
+   * durable-key callbacks or a server lease. The returned runner stays inert. */
+  stagedReconciliation(){
+    const reconcilers=new Map(this.#paths.map(path=>{
+      const adapter=this.#stagedReconcilers.get(path.id);if(!adapter)throw new Error('E2EE_STAGED_RECONCILER_REQUIRED');
+      return[path.id,Object.freeze({id:path.id,reconcile:adapter.reconcile.bind(adapter)})] as const;
+    })),ownerId=this.#ownerId,scopeId=this.#scopeId,kind=this.#kind,paths=this.#paths;
+    return Object.freeze({run(input:StagedSourceInput,context:MigrationSourceContext,emit:Parameters<typeof reconcileStagedPrivatePaths>[0]['emit'],assertCurrent:()=>void){
+      return reconcileStagedPrivatePaths({ownerId,scopeId,kind,paths,reconcilers,input,context,emit,assertCurrent});
+    }});
+  }
+  async reconcileStaged(input:StagedSourceInput,context:MigrationSourceContext,emit:Parameters<typeof reconcileStagedPrivatePaths>[0]['emit'],assertCurrent:()=>void){
+    return this.stagedReconciliation().run(input,context,emit,assertCurrent);
   }
   /** Snapshot ALL callbacks and validate the full registry before any durable-key
    * callback or producer. Legacy compatibility requires an explicit per-path

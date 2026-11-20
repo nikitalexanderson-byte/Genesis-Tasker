@@ -4,6 +4,12 @@
 functionality. Current v3 `run()` still refuses before transport. Source
 coverage remains9/20 and every release/recovery/human-review gate remains.
 
+The following component now exists separately: full synchronous reconciler
+preflight and bounded current/history -> per-record protected-plan streaming,
+`e2ee-336-staged-reconciliation.md`. Its browser/JS evidence does not open the
+coordinator run gate. Native acceptance is recorded in that component document
+with its frozen-input build/provider checks, not inferred from older APKs.
+
 The accepted local state3 publishes a source reference only. It deliberately
 rejects injected leases, plans and receipts. Preserve that strict reader. A
 complete source-and-content integration should use a new explicit local state
@@ -43,6 +49,15 @@ publication uses the existing local CAS and source-catalogue guard after every
 capacity/key/source await. A lost CAS preserves every losing source and plan.
 Read back a newly published/reopened plan before beginning upload; missing or
 corrupt plan/source records cannot become successful empty input.
+
+The current migration transport's `readAll()` still collects remote ciphertext
+and the old coordinator opens complete file arrays. Do not route a streamed
+plan through those aggregate paths. Existing signed `read` and `get` actions can
+support bounded inventory iteration and individual envelope/chunk fetches with
+the pinned directory/checkpoint and exact planned context/hash; a new permissive
+server read route is unnecessary. Inventory must check a final authenticated EOF
+and reject extra/missing/duplicate objects before completing readback. Metadata
+may remain bounded in memory; whole ciphertext/file arrays may not.
 
 Do not recreate an aggregate planner after a reference-only prepare. Reconcile
 one semantic record/file stream at a time into `ProtectedMigrationContentPlan` /

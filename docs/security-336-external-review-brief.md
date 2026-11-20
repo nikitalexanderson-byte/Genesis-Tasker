@@ -223,3 +223,15 @@ whole-account custody/recovery or source coverage. Integration requirements in
 `e2ee-336-streamed-coordinator-integration.md` are a design, not implemented
 functionality; they explicitly retain every mixed old ancestor/remote original
 and require real native/WebView bounded input before whole-product acceptance.
+
+The following bounded staged-reconciliation increment is separately documented
+in `e2ee-336-staged-reconciliation.md`: synchronous complete callback preflight,
+tracked current/history readers, actual EOF versus prefix, sticky invalid/sink
+failures, per-emission native acknowledgement, NonCancellable all-reader cleanup
+and primary-error preservation. Review those lifetimes and the caller-owned
+authenticated history/custody boundary. JS66/66, JVM190/190, Chromium11/11 and
+actual API26/API34 each2/2 new plus5/5 regressions support the stated component
+scope. The complete4,194,408-byte composed output hashes and unchanged original
+rows are independently checked. No new crypto format, complete coordinator run,
+product adapters, remote-input provenance or human review is implied. New native
+full lint remains pending; source/APK hashes are in that component document.

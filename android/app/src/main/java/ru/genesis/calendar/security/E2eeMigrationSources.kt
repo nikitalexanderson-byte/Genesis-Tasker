@@ -73,6 +73,7 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
     override val allowedContentDomains = paths.flatMap { it.domains }.toSet()
     private val adapters = mutableMapOf<String, E2eePrivatePathAdapter>()
     private val streamAdapters=mutableMapOf<String,E2eePrivatePathStreamAdapter>()
+    private val stagedReconcilers=mutableMapOf<String,E2eeStagedPathReconciler>()
     init { E2eeKeys.technical(ownerId); E2eeKeys.technical(scopeId) }
     override fun assertBinding(owner: String, scope: String, kind: String) {
         check(owner == ownerId && scope == scopeId && kind == this.kind) { "E2EE_SCOPE_BINDING_MISMATCH" }
@@ -85,6 +86,18 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
         check(adapter.id in requiredCoverage&&!streamAdapters.containsKey(adapter.id)){"E2EE_INVALID_SOURCE_ADAPTER"}
         streamAdapters[adapter.id]=adapter
     }
+    internal fun registerStagedReconciler(adapter:E2eeStagedPathReconciler){
+        check(adapter.id in requiredCoverage&&!stagedReconcilers.containsKey(adapter.id)){"E2EE_INVALID_SOURCE_ADAPTER"};stagedReconcilers[adapter.id]=adapter
+    }
+    /** Full preflight/callback capture before durable keys, capture or lease. */
+    internal fun stagedReconciliation():E2eeStagedReconciliationPlan {
+        val registered=paths.associate{path->val adapter=stagedReconcilers[path.id]?:error("E2EE_STAGED_RECONCILER_REQUIRED");val captured=adapter::reconcile
+            path.id to object:E2eeStagedPathReconciler{override val id=path.id
+                override suspend fun reconcile(current:E2eeReconciliationPathInput,previous:List<E2eeReconciliationPathInput>,context:E2eeMigrationSourceContext,emit:suspend(E2eeContentPlan.Record)->Unit)=captured(current,previous,context,emit)}}
+        return E2eeStagedReconciliationPlan{input,context,emit,current->E2eeStagedReconciliation.run(ownerId,scopeId,kind,paths,registered,input,context,emit,current)}
+    }
+    internal suspend fun reconcileStaged(input:E2eeStagedSourceInput,context:E2eeMigrationSourceContext,emit:suspend(String,E2eeContentPlan.Record)->Unit,assertCurrent:()->Unit):List<Pair<String,Boolean>> =
+        stagedReconciliation().run(input,context,emit,assertCurrent)
     /** Full preflight before keys/producers. Small compatibility readers have
      * explicit per-path bounds and are consumed one at a time. */
     fun stagedCapture(legacyLimits:Map<String,Int> = emptyMap()):E2eeStagedMigrationCapture {

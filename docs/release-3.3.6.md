@@ -2118,3 +2118,42 @@ product lifecycle/recovery/ACL+rotation/Drive/direct upgrades/48 scenarios/
 14-language semantics/human crypto review остаются обязательными. Production
 3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/
 личные устройства/релизная версия не менялись.
+
+## Потоковое согласование исходников и истории,20 ноября
+
+Web/native registry теперь синхронно проверяет и сохраняет все reconciliation
+callbacks до получения ключей/lease. Текущий и каждый прежний original reader
+обязаны дойти до authenticated EOF. Один semantic record/file stream передаётся
+в защищённый content-plan sink; aggregate content array не создаётся. Ошибки
+источника, дубликаты, параллельная/неожидаемая запись и смена аккаунта блокируют
+complete coverage, даже если adapter перехватил исключение. Cleanup закрывает
+все readers и сохраняет первичную ошибку; Android завершает отдельную запись
+под общей блокировкой и выполняет cleanup при cancellation.
+
+Red lifecycle suite воспроизвёл три дефекта незавершённого web-черновика; они
+исправлены до приёмки. Диагностическая native compile01 упала на промежуточных
+несогласованных интерфейсах во время редактирования и не считается результатом.
+Следующий input01 был зафиксирован перед новой сборкой:
+481149A2B51B0AA4FBC8D418F7178EE145F89103B5E83373696F032B542537DE.
+Build SUCCESS11m, JVM190/190,0 failure/skip. Actual API26/API34 — по2/2 new cases,
+3/3 content-plan и2/2 original-source regressions. Все4,194,408bytes composed
+output/6 hashes совпадают с независимым bounded host construction; все33 исходные
+encrypted rows сохранены. Elapsed7,212/11,623ms; heap-peak/SLA не заявляются.
+Регрессия также независимо сверила все83,886,080bytes двух40MiB файлов и обе
+свежие JCA variants через WebCrypto. Source/APK hashes после runtime совпали.
+Android lint для нового input не запускался: полный lint кандидата обязателен.
+
+JS66/66, owned types/scoped lint PASS; static web build PASS. Chromium157/IDB
+11/11: полный cold readback всех bytes/hashes, неизменность originals, quota,
+непрочитанная история и retirement. Browser draft01 выявил старые test handles
+после lock; финальный bundle заново открывает originals через cold connection.
+Точные reports/hashes и границы: e2ee-336-staged-reconciliation.md.
+
+Предыдущий content-plan3905118d прошёл оба CI44749102743. Новый registry не
+подключает v3 run и не заменяет authenticated coordinator history/custody,
+сохранение remote originals или реальный native/WebView bounded input. Его шесть
+synthetic project paths не являются real adapters: coverage остаётся9/20.
+Все11 источников, product lifecycle/recovery/ACL+rotation/Drive/direct upgrades/
+48 scenarios/14-language semantics/independent human review обязательны.
+Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
+Deploy/Play/личные устройства/релизная версия здесь не менялись.
