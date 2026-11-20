@@ -155,7 +155,7 @@ class E2eeSourceStage private constructor(private val options: Options, private 
             } finally { changes.forEach { it.bytes.fill(0) } }
             return E2eeSourceStage(options, context, hash, journal)
         }
-        fun inspect(vault: UnlockedE2eeVault, target: Target, check: () -> Unit): List<Marker> {
+        fun inspect(vault: E2eeSourceReadVault, target: Target, check: () -> Unit): List<Marker> {
             val context = StageCodec.context(vault, target); val old = StageCodec.catalog(vault, context, StageCodec.identity(context), check) ?: return emptyList()
             val rows = old.body.getJSONArray("stages")
             return (0 until rows.length()).map { rows.getJSONObject(it).let { row -> Marker(row.getString("id"), row.getBoolean("complete"), if (row.isNull("manifestHash")) null else row.getString("manifestHash")) } }
@@ -170,7 +170,7 @@ class E2eeSourceStage private constructor(private val options: Options, private 
                 row.getBoolean("complete")&&row.get("id")==refs[index].stageId&&row.get("manifestHash")==refs[index].manifestHash}){"E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"}
             StageCodec.current(vault,check);return StageCodec.write(StageCodec.catalogId(hash),old.body,old.serial)
         }
-        fun open(vault: UnlockedE2eeVault, target: Target, reference: Reference, check: () -> Unit): Opened {
+        fun open(vault: E2eeSourceReadVault, target: Target, reference: Reference, check: () -> Unit): Opened {
             StageCodec.current(vault, check); val context = StageCodec.context(vault, target); val hash = StageCodec.identity(context)
             StageCodec.id(reference.stageId); E2eeEnvelope.decode(reference.manifestHash, 32)
             val old = StageCodec.catalog(vault, context, hash, check) ?: StageCodec.invalid()
@@ -183,7 +183,7 @@ class E2eeSourceStage private constructor(private val options: Options, private 
             return Opened(vault, hash, reference.stageId, manifest.body.getJSONArray("entries"), check)
         }
     }
-    class Opened internal constructor(private val vault: UnlockedE2eeVault, private val hash: String, private val id: String,
+    class Opened internal constructor(private val vault: E2eeSourceReadVault, private val hash: String, private val id: String,
         private val entries: JSONArray, private val check: () -> Unit) {
         val paths: List<String> get() = (0 until entries.length()).map { entries.getJSONObject(it).getString("id") }
         fun openPath(path: String): SourceInput {
@@ -191,7 +191,7 @@ class E2eeSourceStage private constructor(private val options: Options, private 
             return SourceInput(vault, hash, id, index, entries.getJSONObject(index), check)
         }
     }
-    class SourceInput internal constructor(private val vault: UnlockedE2eeVault, private val hash: String, private val id: String,
+    class SourceInput internal constructor(private val vault: E2eeSourceReadVault, private val hash: String, private val id: String,
         private val path: Int, private val entry: JSONObject, private val check: () -> Unit) : InputStream() {
         private var part = 0; private var at = 0; private var total = 0L
         private var buffer: ByteArray? = null; private var complete = false; private var closed = false; private var failed = false
@@ -225,7 +225,7 @@ private object StageCodec {
     private const val MAX_METADATA = 2 * 1024 * 1024
     private val uuid = Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
     fun invalid(): Nothing = throw IllegalStateException("E2EE_CORRUPT_SOURCE_STAGE")
-    fun current(vault: UnlockedE2eeVault, check: () -> Unit) { check(); vault.requireOpen() }
+    fun current(vault: E2eeSourceReadVault, check: () -> Unit) { check(); vault.assertOpen() }
     fun id(value: String) { if (!uuid.matches(value)) invalid() }
     fun key(hash: String, id: String, role: String, path: Int = 0, part: Int = 0): String {
         E2eeEnvelope.decode(hash, 32); id(id)
@@ -237,7 +237,7 @@ private object StageCodec {
     fun copy(value: JSONObject) = JSONObject(value.toString())
     fun digest(value: ByteArray): String = E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(value))
     fun identity(value: Any): String { val bytes = canonical(value); return try { digest(bytes) } finally { bytes.fill(0) } }
-    fun context(vault: UnlockedE2eeVault, target: E2eeSourceStage.Target): JSONObject {
+    fun context(vault: E2eeSourceReadVault, target: E2eeSourceStage.Target): JSONObject {
         E2eeKeys.technical(target.ownerId); E2eeKeys.technical(target.scopeId)
         if (target.kind !in listOf("personal", "project", "space")) invalid()
         val actor = vault.localIdentity()
@@ -249,7 +249,7 @@ private object StageCodec {
         check(fields.all { value.get(it) == expected.get(it) }) { "E2EE_SOURCE_STAGE_CONTEXT" }
     }
     class Metadata(val serial: Long, val body: JSONObject)
-    fun metadata(vault: UnlockedE2eeVault, id: String, check: () -> Unit): Metadata? {
+    fun metadata(vault: E2eeSourceReadVault, id: String, check: () -> Unit): Metadata? {
         current(vault, check); val row = vault.read(DOMAIN, id)
         try {
             current(vault, check); if (row == null) return null
@@ -287,7 +287,7 @@ private object StageCodec {
     class Catalog(val serial: Long, val body: JSONObject)
     /** Caller holds the original-source fence. Re-reads detect concurrent changes
      * during discovery; none are repaired, resumed, rebound or deleted here. */
-    fun catalog(vault: UnlockedE2eeVault, context: JSONObject, hash: String, check: () -> Unit): Catalog? {
+    fun catalog(vault: E2eeSourceReadVault, context: JSONObject, hash: String, check: () -> Unit): Catalog? {
         val before = metadata(vault, catalogId(hash), check)
         val keys = vault.listLocal(DOMAIN, "source-stage:"); current(vault, check)
         val after = metadata(vault, catalogId(hash), check)

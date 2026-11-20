@@ -197,3 +197,14 @@ final actor check. Selected evidence: `e2ee-336-file-read-stream.md`, JS93/93,
 JVM167/167, actual API26/API34 each5/5 and Chromium17/17. The native40MiB and
 browser9MiB+7byte checks are primitive/provider/IO acceptance. They do not close
 coordinator/content streaming, product recovery, source coverage or human review.
+
+Original-device read-only capability is documented in
+`e2ee-336-original-source-reader.md`. Review the original actor/generation/epoch
+bounds, trusted public signer/root lookup, namespace restriction, callback/key-map
+snapshot before IO and close/retirement guards through borrowed-byte delivery.
+Capture/publication still require the separate active writable vault. Selected
+evidence: JS105/105, JVM172/172, Chromium14/14 and actual API26/API34 each2/2 plus
+5/5 coordinator and4/4 retained-source regressions. Every73,400,354-byte generated
+original and both fresh JCA vectors were independently checked. This proves a
+reader boundary, not authenticated product recovery handoff, key custody, whole
+account coverage or authority to restore an old active signing identity.

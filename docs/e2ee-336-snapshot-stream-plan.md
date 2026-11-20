@@ -106,6 +106,11 @@ Review both actual `migration.ts` and native `E2eeMigration.kt` together.
   read-only capability for the original vault/roots/signers. It must not rewrite
   the original actor, import an old active signing identity as the current device,
   restore old membership/billing/session authority, or rely on a backend boolean.
+  Selected read-only original-source capability evidence is now available in
+  `e2ee-336-original-source-reader.md`: public original signer/independently
+  unwrapped roots, strict original context and revocable bounded path readers.
+  It does not implement the authenticated handoff, custody or complete product
+  recovery ceremony; those remain required integration work.
 - `SourceStageReference` grants no source lease or network permission. Publish
   the complete immutable stage reference into the coordinator record under its
   existing CAS and original-source fence. A lost CAS leaves its stage inert.

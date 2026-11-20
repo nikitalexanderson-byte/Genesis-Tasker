@@ -2043,3 +2043,33 @@ reader. Coverage9/20, все оставшиеся product/recovery/shared/Drive/
 14-language/human-review gates сохраняются. Production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
 устройства/версия в этом блоке не менялись.
+
+## Исходный снимок: только чтение со старым public signer,20 ноября
+
+Web openOriginalSourceStage и native E2eeOriginalSource.open читают оригинальный
+защищённый stage по отдельно полученным roots и публичному ключу подписи.
+Восстановление старого активного vault/права подписи для этого больше не требуется.
+Namespace ограничен source-stage; original actor/generation/schema/epochs/key ID
+проверяются до открытия. Handle даёт только пути, bounded reader и close; смена
+аккаунта/закрытие во время IO не возвращают plaintext или complete receipt.
+Authenticated recovery handoff и product custody ещё не реализованы этим API.
+
+Input01 6FC6A3B73E094EFABC398272DA1DDB4D93D4967235A6BDBB2B7EE0777373D8FE:
+build SUCCESS24m50s, JVM172/172, lint0/208/8, новых issue/file pairs0. Actual
+API26/API34 — по2/2 new-reader,5/5 coordinator и4/4 retained regressions,
+0 failure/skip. Все73,400,354 original bytes(2paths по35MiB+17) совпали с bounded
+host construction после удаления только synthetic old alias; новая active
+device identity сохранена. Fresh JCA vectors2paths/6bytes прочитаны WebCrypto.
+Coordinator source73,400,327bytes и весь retained wire71,305,891bytes также
+проверены независимо. Chromium157/IndexedDB14/14, JS105/105, scoped lint/types
+PASS. Runtime начал проверки после новой assembly параллельно с lint; оба APK
+hash совпали с финальным successful build. Подробнее: e2ee-336-original-source-reader.md.
+
+Предыдущий source-publication9af1f6b3 прошёл полный CI44727123730; bounded-reader
+61922ffa — Android CI PASS, web/API44733098308 пока выполняется. Это не приёмка
+полного релиза. Начат следующий план bounded content quarantine; red-тест его
+отсутствующего модуля не является passing evidence и не входит в этот checkpoint.
+Coverage9/20 и все product/common-reader/recovery/shared/Drive/direct-upgrade/
+48-scenario/14-language/human-review gates сохраняются. Production3.3.5/149,
+floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
+устройства/номер версии не менялись.

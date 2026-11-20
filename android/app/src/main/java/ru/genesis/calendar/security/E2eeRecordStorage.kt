@@ -84,7 +84,7 @@ class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRe
 }
 
 /** Memory capability with the same record/context/CAS format as the web vault. */
-class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) {
+class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : E2eeSourceReadVault {
     class Scope(val ownerId:String,val scopeId:String,val deviceId:String,val generation:Long,val cryptoEpoch:Long,val securityEpoch:Long,
         val keyId:String,val signingKey:PrivateKey,val roots:Map<String,SecretKey>,val trustedSigner:(String)->PublicKey?)
     class Write(val domain:String,val objectId:String,val bytes:ByteArray,val expected:Long?)
@@ -92,11 +92,12 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) {
     private val scope = AtomicReference<Scope?>(value)
     private val lifecycle = AtomicLong(0)
     fun requireOpen():Scope = scope.get() ?: throw IllegalStateException("E2EE_UNLOCK_REQUIRED")
+    override fun assertOpen() { requireOpen() }
     fun lock() { lifecycle.incrementAndGet();scope.set(null) }
     data class LocalIdentity(val ownerId: String, val scopeId: String, val deviceId: String)
-    fun localIdentity(): LocalIdentity = requireOpen().let { LocalIdentity(it.ownerId, it.scopeId, it.deviceId) }
+    override fun localIdentity(): LocalIdentity = requireOpen().let { LocalIdentity(it.ownerId, it.scopeId, it.deviceId) }
     /** Technical discovery only. Invalid framing never becomes an empty store. */
-    fun listLocal(domain: String, objectPrefix: String): List<String> {
+    override fun listLocal(domain: String, objectPrefix: String): List<String> {
         E2eeKeys.technical(domain); E2eeKeys.technical(objectPrefix)
         val captured = lifecycle.get(); val current = requireOpen()
         val prefix = listOf(current.ownerId, current.scopeId, domain).joinToString("") { E2eeKeys.technical(it); "${it.length}:$it" }
@@ -116,7 +117,7 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) {
         fun recordKey(scope:Scope,domain:String,objectId:String):String = listOf(scope.ownerId,scope.scopeId,domain,objectId)
             .joinToString("") { E2eeKeys.technical(it); "${it.length}:$it" }
     }
-    fun read(domain:String,objectId:String):Opened? {
+    override fun read(domain:String,objectId:String):Opened? {
         val captured=lifecycle.get();val current=requireOpen()
         val record=storage.get(recordKey(current,domain,objectId));alive(captured);if(record==null)return null
         val ctx=record.envelope.context.toJson()

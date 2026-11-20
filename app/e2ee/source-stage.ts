@@ -4,6 +4,10 @@ import {E2EE_CHUNK_BYTES} from './files.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import type {UnlockedE2eeVault,LocalWrite} from './storage.ts';
 
+/** Read-only source access. Capture/publication still require the active vault;
+ * an original-device recovery reader cannot sign, commit or become that actor. */
+export type SourceStageReadVault=Pick<UnlockedE2eeVault,'assertUnlocked'|'localIdentity'|'read'|'listLocal'>;
+
 export type SourceStageTarget=Readonly<{ownerId:string;scopeId:string;kind:'personal'|'project'|'space'}>;
 type Context=SourceStageTarget&{actorId:string;actorScopeId:string;deviceId:string};
 type Part={size:number;hash:string};
@@ -19,7 +23,7 @@ export type SourceStageOptions={vault:UnlockedE2eeVault;target:SourceStageTarget
 const MAX_METADATA=2*1024*1024,MAX_PARTS=10000,MAX_STAGES=64;
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 function invalid():never{throw new Error('E2EE_CORRUPT_SOURCE_STAGE');}
-function current(vault:UnlockedE2eeVault,check:()=>void){check();vault.assertUnlocked();}
+function current(vault:SourceStageReadVault,check:()=>void){check();vault.assertUnlocked();}
 function canonical(value:unknown){const bytes=canonicalE2eeValue(value as WireValue);if(bytes.length>MAX_METADATA){bytes.fill(0);throw new Error('E2EE_SOURCE_STAGE_METADATA_LIMIT');}return bytes;}
 function parse(bytes:Uint8Array):unknown{
  if(bytes.length<1||bytes.length>MAX_METADATA)invalid();const value:unknown=decodeCanonicalE2eeValue(bytes,MAX_METADATA),encoded=canonical(value);
@@ -29,7 +33,7 @@ async function digest(bytes:Uint8Array){
  const captured=new Uint8Array(bytes);try{return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',captured)));}finally{captured.fill(0);}
 }
 async function identity(value:unknown){const bytes=canonical(value);try{return await digest(bytes);}finally{bytes.fill(0);}}
-function context(vault:UnlockedE2eeVault,target:SourceStageTarget):Context{
+function context(vault:SourceStageReadVault,target:SourceStageTarget):Context{
  exactKeys(target,['ownerId','scopeId','kind']);const{ownerId,scopeId,kind}=target;assertTechnical(ownerId);assertTechnical(scopeId);
  if(!['personal','project','space'].includes(kind))invalid();const actor=vault.localIdentity();
  return{ownerId,scopeId,kind,actorId:actor.ownerId,actorScopeId:actor.scopeId,deviceId:actor.deviceId};
@@ -68,7 +72,7 @@ function catalog(value:unknown,expected:Context):Catalog{
   if(row.complete)decodeE2eeBytes(row.manifestHash,32);else if(row.manifestHash!==null)invalid();}
  return value as Catalog;
 }
-async function metadata(vault:UnlockedE2eeVault,id:string,check:()=>void){
+async function metadata(vault:SourceStageReadVault,id:string,check:()=>void){
  current(vault,check);const row=await vault.read('local-snapshot',id);
  try{current(vault,check);return row?{serial:row.serial,value:parse(row.value)}:null;}finally{row?.value.fill(0);}
 }
@@ -80,7 +84,7 @@ function journal(value:unknown,scope:Context,id:string):Journal{
 }
 /** Metadata/key checks happen under the caller's source fence. The second
  * catalog read also catches another creator/completer before classifying keys. */
-async function knownCatalog(vault:UnlockedE2eeVault,scope:Context,hash:string,check:()=>void){
+async function knownCatalog(vault:SourceStageReadVault,scope:Context,hash:string,check:()=>void){
  const before=await metadata(vault,catalogId(hash),check),keys=await vault.listLocal('local-snapshot','source-stage:');current(vault,check);
  const after=await metadata(vault,catalogId(hash),check);if((before?.serial??null)!==(after?.serial??null))throw new Error('E2EE_SOURCE_STAGE_BUSY');
  const prefix=`source-stage:${hash}:`,owned:string[]=[];
@@ -210,7 +214,7 @@ export class ProtectedSourceStage {
 
 /** Read-only restart discovery. Incomplete stages are explicit; nothing is
  * deleted, resumed, rebound, uploaded or treated as a completed empty source. */
-export async function inspectSourceStages(vault:UnlockedE2eeVault,target:SourceStageTarget,check:()=>void){
+export async function inspectSourceStages(vault:SourceStageReadVault,target:SourceStageTarget,check:()=>void){
  const scope=context(vault,target),hash=await identity(scope),old=await knownCatalog(vault,scope,hash,check);if(!old)return[];
  return old.value.stages.map(row=>Object.freeze({...row}));
 }
@@ -229,7 +233,7 @@ export async function sourceStagePublicationGuard(vault:UnlockedE2eeVault,target
 
 /** Opening authenticates metadata; consuming a path through actual EOF proves
  * its complete ordered bytes. Closing an iterator early proves no completeness. */
-export async function openSourceStage(vault:UnlockedE2eeVault,target:SourceStageTarget,reference:SourceStageReference,check:()=>void){
+export async function openSourceStage(vault:SourceStageReadVault,target:SourceStageTarget,reference:SourceStageReference,check:()=>void){
  current(vault,check);const scope=context(vault,target);exactKeys(reference,['stageId','manifestHash']);const ref={stageId:reference.stageId,manifestHash:reference.manifestHash};stageId(ref.stageId);decodeE2eeBytes(ref.manifestHash,32);
  const hash=await identity(scope),row=await metadata(vault,manifestId(hash,ref.stageId),check);if(!row||row.serial!==1)invalid();exactKeys(row.value,['protocol','stageId','context','chunkSize','entries']);
  if(row.value.protocol!==1||row.value.stageId!==ref.stageId||row.value.chunkSize!==E2EE_CHUNK_BYTES)invalid();sameContext(row.value.context,scope);
