@@ -13,6 +13,13 @@ composition does not increase real source coverage9/20 or open v3 run. Complete
 coordinator/custody, normal product routing,11 remaining sources and independent
 human review remain required; production activation stays disabled.
 
+The next bounded signed readback ports and web raw-response budgets are accepted
+as separate components in `e2ee-336-readback-stream.md`. They use existing signed
+read/get actions and existing account transport. A final empty response with
+pinned headers does not prove server completeness; the full expected plan and
+content authentication remain mandatory. Old coordinator readAll/file arrays,
+complete source/plan publication and remote-original custody are still open.
+
 ## Primitives and formats
 
 Root delivery uses RFC 9180 base-mode HPKE with DHKEM(P-256, HKDF-SHA256),

@@ -2157,3 +2157,50 @@ synthetic project paths не являются real adapters: coverage остаё
 48 scenarios/14-language semantics/independent human review обязательны.
 Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
 Deploy/Play/личные устройства/релизная версия здесь не менялись.
+
+## Ограниченное чтение после загрузки и ответы web API,20 ноября
+
+Web/native signed transport получил forEachEnvelope с одной записью на ответ,
+ожиданием sink и guard до следующего запроса, плюс getEnvelope с точным domain/ID.
+Есть защита от loop/чужого scope/лишних записей/смены checkpoint/retirement.
+Пустые страницы с pinned headers не доказывают полноту сервера: обязательна
+сверка ВСЕГО ожидаемого плана и аутентификация каждого content/file. Старый
+readAll и агрегатный путь coordinator ещё сохраняются; новый v3 run не открыт.
+
+На сайте E2EE-ответы теперь ограничены ДО JSON parsing: read16MiB, directory32MiB,
+остальные известные маршруты256KiB, ошибки8KiB — по аналогии с существующим
+native HTTP channel. Проверяются UTF8/размер/тип ответа, не возвращается parsed
+prefix при отмене; wire buffers очищаются, stream отменяется/освобождается.
+Существующие cookie/CSRF/timeouts/session guard и коды API-ошибок сохраняются.
+Проверен реальный cloud-sync путь в изолированной fixture, включая смену аккаунта
+во время body read и сохранение прежних durable данных. Остальной web API parser
+этим ограниченным изменением не переделан.
+
+JS110/110, owned types/scoped lint PASS; static web build PASS. Первоначальный
+PHP packaging case не выполнился из-за отсутствующего локального php.exe; после
+проверенной установки официального SHA-pinned runtime в новую temp-папку весь
+выбранный109-case набор PASS. После дополнительного regression case итог110/110.
+Chromium157/IDB17/17 включает все4MiB+6bytes,
+независимые hashes, реальные loopback HTTP oversize/UTF8/HTML503 и guards. Один
+console503 относится к намеренной /http/error fixture, записан отдельно.
+
+Accepted native input03
+8026B1BAF9512B21956B66A14A05EDD3A6E678C830434E43FF7D4B520F694D41:
+build SUCCESS31s, JVM195/195,0 failure/skip. API26/API34 — по2/2 new-provider
+и2/2 staged regressions; полные4MiB+6bytes/hashes совпали с независимым bounded
+Node construction. Native порты здесь — synthetic signed callbacks, не actual
+HTTP/backend или product enrollment. Source/APK identities после выполнения
+совпали. Новый full Android lint не запускался; он обязателен на release candidate.
+Input01 имел ошибку return type в test fixture и не использовался для runtime.
+Input02 с успешными provider reports заменён после cleanup regression:
+non-byte response chunk вызывал TypeError вместо безопасного protocol error.
+Red witness сохранён; cleanup теперь очищает только Uint8Array. Итоговые
+JS/browser/native03 относятся к исправленному source.
+Точные границы, reports/hashes: e2ee-336-readback-stream.md.
+
+Нужны полная source/plan/coordinator публикация, protected remote originals,
+mixed legacy history/custody и настоящий bounded native/WebView input; все11
+оставшихся real sources, product lifecycle/recovery/ACL+rotation/Drive/upgrades/
+48 scenarios/14-language semantics/independent human review сохраняются.
+Coverage9/20, production3.3.5/149, floors0/pilot/cutover off,
+GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные устройства/версия не менялись.

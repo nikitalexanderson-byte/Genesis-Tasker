@@ -72,28 +72,48 @@ export class SignedMigrationTransport implements MigrationTransport {
     if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');
     return response;
   }
-  async readAll():Promise<E2eeEnvelope[]>{
-    const result:E2eeEnvelope[]=[];let bytes=0;
+  async #read(action:'read'|'get',payload:Record<string,WireValue>){
+    this.#device.requireOpen();
+    const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action,
+      expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),payload},this.#device.keys().signing.privateKey);
+    const page=await this.#call('/read',packet);
+    if(page.directoryRevision!==this.#revision||page.checkpointHash!==this.#checkpoint)throw new Error('E2EE_DIRECTORY_CONFLICT');return page;
+  }
+  /** No aggregate ciphertext list. One structurally validated envelope per
+   * response, then an awaited sink. Empty pages must have pinned headers;
+   * callers still compare the entire expected inventory and authenticate data. */
+  async forEachEnvelope(consume:(envelope:E2eeEnvelope)=>Promise<void>):Promise<number>{return this.#walk(1,consume);}
+  async getEnvelope(domain:E2eeContext['domain'],objectId:string):Promise<E2eeEnvelope|null>{
+    this.#device.requireOpen();assertTechnical(objectId);if(!this.#domains.includes(domain))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const page=await this.#read('get',{domain,objectId});if(!Array.isArray(page.envelopes)||page.envelopes.length>1)throw new Error('E2EE_INVALID_RESPONSE');
+    if(page.envelopes.length===0)return null;const envelope=validateE2eeEnvelope(page.envelopes[0]),ctx=envelope.context;
+    if(ctx.ownerId!==this.#owner||ctx.scopeId!==this.#scope||ctx.domain!==domain||ctx.objectId!==objectId)throw new Error('E2EE_INVALID_RESPONSE');this.#device.requireOpen();return envelope;
+  }
+  async #walk(limit:number,consume:(envelope:E2eeEnvelope)=>Promise<void>){
+    if(typeof consume!=='function')throw new Error('E2EE_INVALID_READBACK_SINK');const sink=consume;let count=0;
     for(const domain of this.#domains){
       let after='';
       for(;;){
         this.#device.requireOpen();
-        const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action:'read',
-          expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),payload:{domain,after,limit:50}},this.#device.keys().signing.privateKey);
-        const page=await this.#call('/read',packet);
-        if(page.directoryRevision!==this.#revision||page.checkpointHash!==this.#checkpoint)throw new Error('E2EE_DIRECTORY_CONFLICT');
-        if(!Array.isArray(page.envelopes)||page.envelopes.length>50)throw new Error('E2EE_INVALID_RESPONSE');
+        const page=await this.#read('read',{domain,after,limit});
+        if(!Array.isArray(page.envelopes)||page.envelopes.length>limit)throw new Error('E2EE_INVALID_RESPONSE');
         if(page.envelopes.length===0)break;
-        for(const raw of page.envelopes){
-          const envelope=validateE2eeEnvelope(raw),ctx=envelope.context;
-          if(ctx.ownerId!==this.#owner||ctx.scopeId!==this.#scope||ctx.domain!==domain||ctx.objectId<=after)throw new Error('E2EE_INVALID_RESPONSE');
-          after=ctx.objectId;bytes+=JSON.stringify(envelope).length;
-          if(result.length>=8000||bytes>256*1024*1024)throw new Error('E2EE_MIGRATION_TOO_LARGE');
-          result.push(envelope);
+        if(count+page.envelopes.length>8000)throw new Error('E2EE_MIGRATION_TOO_LARGE');
+        const envelopes=page.envelopes.map(validateE2eeEnvelope);let cursor=after;
+        for(const envelope of envelopes){const ctx=envelope.context;
+          if(ctx.ownerId!==this.#owner||ctx.scopeId!==this.#scope||ctx.domain!==domain||ctx.objectId<=cursor)throw new Error('E2EE_INVALID_RESPONSE');cursor=ctx.objectId;
         }
-        // A server byte cap may return fewer than50; only an empty page proves EOF.
+        for(const envelope of envelopes){
+          after=envelope.context.objectId;this.#device.requireOpen();await sink(envelope);this.#device.requireOpen();count++;
+        }
+        // Short pages never imply EOF, including the legacy aggregate reader.
       }
     }
+    this.#device.requireOpen();return count;
+  }
+  async readAll():Promise<E2eeEnvelope[]>{
+    const result:E2eeEnvelope[]=[];let bytes=0;
+    await this.#walk(50,async envelope=>{bytes+=JSON.stringify(envelope).length;if(bytes>256*1024*1024)throw new Error('E2EE_MIGRATION_TOO_LARGE');result.push(envelope);});
     return result;
   }
 }

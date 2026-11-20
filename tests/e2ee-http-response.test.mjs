@@ -1,0 +1,70 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {e2eeResponseLimit,isE2eeResponsePath,readE2eeJsonResponse} from '../app/e2ee/http-response.ts';
+import {cloudSyncClient,deferred} from './helpers/cloud-sync-client.mjs';
+
+const headers={'Content-Type':'application/json; charset=utf-8'},path='/e2ee/v1/source';
+function streamed(parts,options={}){let at=0,cancelled=false;const loans=[];
+ const stream=new ReadableStream({pull(controller){if(at===parts.length){controller.close();return;}const bytes=new Uint8Array(parts[at++]);loans.push(bytes);controller.enqueue(bytes);},cancel(){cancelled=true;}});
+ return{response:new Response(stream,{status:options.status??200,headers:{...headers,...options.headers}}),loans,cancelled:()=>cancelled};
+}
+test('E2EE raw response limits match native routes and bound error bodies separately',()=>{
+ assert.equal(e2eeResponseLimit('/e2ee/v1/read',200),16*1024*1024);assert.equal(e2eeResponseLimit('/e2ee/v1/directory',200),32*1024*1024);
+ for(const suffix of ['source','status','bootstrap','command','challenge'])assert.equal(e2eeResponseLimit('/e2ee/v1/'+suffix,200),256*1024);
+ assert.equal(e2eeResponseLimit('/e2ee/v1/read',503),8192);assert.equal(isE2eeResponsePath('/e2ee/v1/read'),true);assert.equal(isE2eeResponsePath('/session'),false);
+ assert.throws(()=>e2eeResponseLimit('/e2ee/v1/unknown',200),/E2EE_/);
+});
+test('split UTF8 and a BOM decode correctly while consumed wire buffers expire',async()=>{
+ const bytes=new TextEncoder().encode('\ufeff{"value":"α😀ёж","count":3}'),f=streamed(Array.from({length:bytes.length},(_,index)=>bytes.slice(index,index+1)));
+ assert.deepEqual(await readE2eeJsonResponse(f.response,path,()=>{}),{value:'α😀ёж',count:3});assert.ok(f.loans.every(row=>row.every(byte=>byte===0)));assert.equal(f.response.body.locked,false);
+});
+test('declared and actual oversize bodies are cancelled without a parsed prefix',async()=>{
+ const declared=streamed([new TextEncoder().encode('{}')],{headers:{'Content-Length':String(256*1024+1)}});await assert.rejects(readE2eeJsonResponse(declared.response,path,()=>{}),/RESPONSE_TOO_LARGE/);assert.equal(declared.cancelled(),true);
+ const actual=streamed(Array.from({length:6},()=>new Uint8Array(65536).fill(32)));await assert.rejects(readE2eeJsonResponse(actual.response,path,()=>{}),/RESPONSE_TOO_LARGE/);assert.equal(actual.cancelled(),true);assert.ok(actual.loans.slice(0,5).every(row=>row.every(byte=>byte===0)));
+});
+test('actor retirement after a body pull wipes that loan and closes the reader',async()=>{
+ const f=streamed([new TextEncoder().encode('{"private":"fixture"}'),new Uint8Array([32])]);let calls=0;
+ await assert.rejects(readE2eeJsonResponse(f.response,path,()=>{if(++calls===3)throw new Error('E2EE_ACCOUNT_CHANGED');}),/ACCOUNT_CHANGED/);
+ assert.equal(f.cancelled(),true);assert.ok(f.loans[0].every(byte=>byte===0));assert.equal(f.response.body.locked,false);
+});
+test('invalid UTF8 syntax roots content types and zero progress never yield a success object',async()=>{
+ for(const parts of [[new Uint8Array([123,34,120,34,58,34,0xc3,34,125])],[new TextEncoder().encode('{"x":')],[new TextEncoder().encode('[]')],[new Uint8Array()]]){
+  const f=streamed(parts);await assert.rejects(readE2eeJsonResponse(f.response,path,()=>{}),/E2EE_INVALID_RESPONSE/);assert.equal(f.response.body.locked,false);
+ }
+ const f=streamed([new TextEncoder().encode('{}')],{headers:{'Content-Type':'text/html'}});await assert.rejects(readE2eeJsonResponse(f.response,path,()=>{}),/E2EE_INVALID_RESPONSE/);assert.equal(f.cancelled(),true);
+});
+
+test('an invalid non-byte stream chunk keeps the sanitized protocol failure during cleanup',async()=>{
+ const response=new Response(new ReadableStream({start(controller){controller.enqueue('synthetic-wire-canary');}}),{headers});
+ await assert.rejects(readE2eeJsonResponse(response,path,()=>{}),/E2EE_INVALID_RESPONSE/);assert.equal(response.body.locked,false);
+});
+test('bounded non-JSON HTTP errors remain errors without accepting success or copying large pages',async()=>{
+ const f=streamed([new TextEncoder().encode('<html>temporary fixture</html>')],{status:503,headers:{'Content-Type':'text/html'}});
+ assert.equal(await readE2eeJsonResponse(f.response,'/e2ee/v1/read',()=>{}),null);assert.equal(f.response.body.locked,false);
+ const g=streamed([new TextEncoder().encode('{"error":"E2EE_SOURCE_CHANGED"}')],{status:409});assert.deepEqual(await readE2eeJsonResponse(g.response,'/e2ee/v1/read',()=>{}),{error:'E2EE_SOURCE_CHANGED'});
+});
+
+test('the real authenticated web channel uses E2EE limits and preserves the existing error code',async()=>{
+ const f=await cloudSyncClient();f.respond((url,init)=>{assert.equal(new URL(url).pathname,'/api/e2ee/v1/source');assert.equal(init.method,'POST');return Response.json({sourceHash:'synthetic-source'});});
+ assert.equal((await f.client.e2eeRequest('/source',{scopeId:'personal:fixture'})).sourceHash,'synthetic-source');
+ const large=streamed([new Uint8Array(65536).fill(32),new Uint8Array(65536).fill(32)],{headers:{'Content-Length':String(256*1024+1)}});f.respond(()=>large.response);
+ await assert.rejects(f.client.e2eeRequest('/source',{scopeId:'personal:fixture'}),/E2EE_RESPONSE_TOO_LARGE/);assert.equal(large.cancelled(),true);
+ f.respond(()=>Response.json({error:'E2EE_SOURCE_CHANGED'},{status:409}));await assert.rejects(f.client.e2eeRequest('/read',{}),/E2EE_SOURCE_CHANGED/);
+});
+
+test('an account change aborts an in-flight E2EE body and preserves the old durable data',async()=>{
+ const f=await cloudSyncClient(),reached=deferred();let loan;const originals=[...f.storage.data.entries()];
+ f.respond((url,init)=>{
+  if(new URL(url).pathname==='/api/session')return Response.json({user:{uid:'new-owner'},csrf:'new-csrf',loginId:'new-login'});
+  const stream=new ReadableStream({start(controller){loan=new TextEncoder().encode('{"envelopes":[');controller.enqueue(loan);reached.resolve();init.signal.addEventListener('abort',()=>controller.error(init.signal.reason),{once:true});}});
+  return new Response(stream,{headers});
+ });
+ const reading=f.client.e2eeRequest('/read',{}).then(value=>({value}),error=>({error}));await reached.promise;await new Promise(resolve=>setImmediate(resolve));
+ assert.equal((await f.client.loadGenesisSession()).uid,'new-owner');const result=await reading;assert.equal(result.value,undefined);assert.ok(result.error);assert.ok(loan.every(byte=>byte===0));assert.equal(f.requests[0].init.signal.aborted,true);
+ for(const[key,value]of originals)if(key!=='genesis-local-login-id-v1')assert.equal(f.storage.getItem(key),value);
+});
+
+test('invalid E2EE route methods refuse before fetch',async()=>{
+ const f=await cloudSyncClient();for(const[route,body]of [['/read',undefined],['/status',{}],['/unknown',{}]])await assert.rejects(f.client.e2eeRequest(route,body),/E2EE_ROUTE_FORBIDDEN/);
+ assert.equal(f.requests.length,0);
+});

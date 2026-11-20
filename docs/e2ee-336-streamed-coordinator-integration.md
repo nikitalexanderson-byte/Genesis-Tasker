@@ -50,14 +50,17 @@ capacity/key/source await. A lost CAS preserves every losing source and plan.
 Read back a newly published/reopened plan before beginning upload; missing or
 corrupt plan/source records cannot become successful empty input.
 
-The current migration transport's `readAll()` still collects remote ciphertext
-and the old coordinator opens complete file arrays. Do not route a streamed
-plan through those aggregate paths. Existing signed `read` and `get` actions can
-support bounded inventory iteration and individual envelope/chunk fetches with
-the pinned directory/checkpoint and exact planned context/hash; a new permissive
-server read route is unnecessary. Inventory must check a final authenticated EOF
-and reject extra/missing/duplicate objects before completing readback. Metadata
-may remain bounded in memory; whole ciphertext/file arrays may not.
+Bounded signed `forEachEnvelope`/`getEnvelope` ports now exist separately;
+`e2ee-336-readback-stream.md` records exact evidence and limits. Web raw E2EE
+JSON responses also have native-parity byte budgets before parsing. The old
+coordinator still collects remote ciphertext through `readAll()` and opens full
+file arrays. Do not route a streamed plan through those aggregate paths. Reuse
+the bounded ports with pinned directory/checkpoint and exact planned contexts/
+hashes; a new permissive server route is unnecessary. An empty page/header alone
+cannot prove completeness against an untrusted server: compare the entire
+expected inventory and reject extra/missing/duplicate objects, then verify every
+complete content/file digest. Metadata may remain bounded in memory; whole
+ciphertext/file arrays may not.
 
 Do not recreate an aggregate planner after a reference-only prepare. Reconcile
 one semantic record/file stream at a time into `ProtectedMigrationContentPlan` /

@@ -1,4 +1,5 @@
 import { isRecurrencePattern, recurrenceDatesForTask, type RecurrenceMode, type RecurrencePattern } from "./task-recurrence";
+import {isE2eeResponsePath,readE2eeJsonResponse} from './e2ee/http-response';
 import { currentFeatureAccess, rememberFeatureAccess } from './feature-access';
 import {beginTrialTransport,acceptTrialTransport,invalidateTrialAccess,type BillingTrial,type BillingTrialPlan} from './billing-trial';
 import {allowDataTransfer,requireDataTransfer} from './data-transfer-access';
@@ -1066,7 +1067,10 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: { 
     });
     if (generation !== sessionGeneration) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
     if (requestController.signal.aborted) throw requestController.signal.reason;
-    const payload = (await response.json().catch((error: unknown) => {
+    const payload = (isE2eeResponsePath(path)?await readE2eeJsonResponse(response,path,()=>{
+      if(generation!==sessionGeneration)throw new GenesisApiError(401,null,'AUTH_REQUIRED');
+      if(requestController.signal.aborted)throw requestController.signal.reason;
+    }):await response.json().catch((error: unknown) => {
       if (requestController.signal.aborted) throw requestController.signal.reason ?? error;
       return null;
     })) as ({ error?: string } & Record<string, unknown>) | null;
@@ -3569,6 +3573,7 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
 /** Shares authenticated transport/CSRF/cancellation only. No root or private key
  * is accepted by this boundary; E2EE clients send signed commands/ciphertext. */
 export function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal) {
+  if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))return Promise.reject(new Error('E2EE_ROUTE_FORBIDDEN'));
   return api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})})
     .catch(error=>{if(error instanceof GenesisApiError&&typeof error.payload?.error==='string'&&error.payload.error.startsWith('E2EE_'))throw new Error(error.payload.error);throw error;});
 }

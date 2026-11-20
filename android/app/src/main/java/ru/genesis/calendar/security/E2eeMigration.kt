@@ -20,6 +20,9 @@ interface E2eeMigrationTransport {
     suspend fun sourceHash(): String
     suspend fun command(packet: JSONObject): JSONObject
     suspend fun readAll(): List<E2eeEnvelope.Envelope>
+    /** Explicit bounded ports; never fall back to collecting readAll(). */
+    suspend fun forEachEnvelope(consume:suspend(E2eeEnvelope.Envelope)->Unit):Int = error("E2EE_STREAMED_READBACK_REQUIRED")
+    suspend fun getEnvelope(domain:String,objectId:String):E2eeEnvelope.Envelope? = error("E2EE_STREAMED_READBACK_REQUIRED")
 }
 
 /** Native parity with app/e2ee/migration.ts. Snapshot and new keys must be durable

@@ -55,29 +55,47 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
         check(result.get("checkpointHash") == checkpoint && E2eeCommands.integer(result.get("directoryRevision"),1) == revision) { "E2EE_DIRECTORY_CONFLICT" }
         return result
     }
-    override suspend fun readAll(): List<E2eeEnvelope.Envelope> {
-        val result = mutableListOf<E2eeEnvelope.Envelope>(); var bytes = 0L
+    private suspend fun read(action:String,payload:JSONObject):JSONObject {
+        device.requireOpen()
+        val packet=E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
+            .put("action",action).put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
+            .put("operationId",UUID.randomUUID().toString()).put("payload",payload),device.keys().signing.private)
+        val page=call("/read",packet)
+        check(E2eeCommands.integer(page.get("directoryRevision"),1)==revision&&page.get("checkpointHash")==checkpoint){"E2EE_DIRECTORY_CONFLICT"};return page
+    }
+    /** One bounded response, awaited sink, then the next request. The caller
+     * still verifies exact expected hashes/context/signatures and plaintext. */
+    override suspend fun forEachEnvelope(consume:suspend(E2eeEnvelope.Envelope)->Unit):Int=walk(1,consume)
+    override suspend fun getEnvelope(domain:String,objectId:String):E2eeEnvelope.Envelope? {
+        device.requireOpen();E2eeKeys.technical(objectId);check(domain in domains){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val page=read("get",JSONObject().put("domain",domain).put("objectId",objectId));val values=page.getJSONArray("envelopes");check(values.length()<=1){"E2EE_INVALID_RESPONSE"}
+        if(values.length()==0)return null;val envelope=E2eeEnvelope.Envelope.fromJson(values.getJSONObject(0));val context=envelope.context.toJson()
+        check(context.get("ownerId")==ownerId&&context.get("scopeId")==scopeId&&context.get("domain")==domain&&context.get("objectId")==objectId){"E2EE_INVALID_RESPONSE"};device.requireOpen();return envelope
+    }
+    private suspend fun walk(limit:Int,consume:suspend(E2eeEnvelope.Envelope)->Unit):Int {
+        var count=0
         for (domain in domains) {
             var after = ""
             while (true) {
                 device.requireOpen()
-                val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
-                    .put("action","read").put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
-                    .put("operationId",UUID.randomUUID().toString()).put("payload",JSONObject().put("domain",domain).put("after",after).put("limit",50)),device.keys().signing.private)
-                val page = call("/read",packet)
-                check(E2eeCommands.integer(page.get("directoryRevision"),1) == revision && page.get("checkpointHash") == checkpoint) { "E2EE_DIRECTORY_CONFLICT" }
-                val envelopes = page.getJSONArray("envelopes"); check(envelopes.length() <= 50) { "E2EE_INVALID_RESPONSE" }
+                val page=read("read",JSONObject().put("domain",domain).put("after",after).put("limit",limit))
+                val envelopes = page.getJSONArray("envelopes"); check(envelopes.length() <= limit) { "E2EE_INVALID_RESPONSE" }
                 if (envelopes.length() == 0) break
-                for (index in 0 until envelopes.length()) {
-                    val envelope = E2eeEnvelope.Envelope.fromJson(envelopes.getJSONObject(index)); val ctx = envelope.context.toJson()
-                    check(ctx.get("ownerId") == ownerId && ctx.get("scopeId") == scopeId && ctx.get("domain") == domain && ctx.getString("objectId") > after) { "E2EE_INVALID_RESPONSE" }
-                    after = ctx.getString("objectId"); bytes += envelope.toJson().toString().length
-                    check(result.size < 8000 && bytes <= 256L*1024*1024) { "E2EE_MIGRATION_TOO_LARGE" }; result += envelope
+                check(count+envelopes.length()<=8000){"E2EE_MIGRATION_TOO_LARGE"}
+                val bounded=(0 until envelopes.length()).map{E2eeEnvelope.Envelope.fromJson(envelopes.getJSONObject(it))};var cursor=after
+                for(envelope in bounded){val context=envelope.context.toJson()
+                    check(context.get("ownerId")==ownerId&&context.get("scopeId")==scopeId&&context.get("domain")==domain&&context.getString("objectId")>cursor){"E2EE_INVALID_RESPONSE"};cursor=context.getString("objectId")}
+                for(envelope in bounded){
+                    after=envelope.context.toJson().getString("objectId");device.requireOpen();consume(envelope);device.requireOpen();count++
                 }
                 // A short page may be due to the server byte cap. Continue until empty.
             }
         }
-        return result
+        device.requireOpen();return count
+    }
+    override suspend fun readAll(): List<E2eeEnvelope.Envelope> {
+        val result=mutableListOf<E2eeEnvelope.Envelope>();var bytes=0L
+        walk(50){envelope->bytes+=envelope.toJson().toString().length;check(bytes<=256L*1024*1024){"E2EE_MIGRATION_TOO_LARGE"};result+=envelope};return result
     }
     override fun toString() = "E2eeSignedMigrationTransport([redacted])"
 }

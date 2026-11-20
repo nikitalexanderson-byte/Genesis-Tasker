@@ -26,6 +26,10 @@ export interface MigrationTransport {
   sourceHash(): Promise<string>;
   command(packet: SignedE2eeCommand): Promise<Record<string, WireValue>>;
   readAll(): Promise<E2eeEnvelope[]>;
+  /** Optional bounded shadow-read ports. A streamed coordinator must require
+   * these explicitly; it must never emulate them with aggregate readAll(). */
+  forEachEnvelope?(consume:(envelope:E2eeEnvelope)=>Promise<void>):Promise<number>;
+  getEnvelope?(domain:E2eeContext['domain'],objectId:string):Promise<E2eeEnvelope|null>;
 }
 type PlannedEnvelope = { recordId: string; domain: string; objectId: string; hash: string };
 type LogicalContent = { domain: E2eeContext['domain']; objectId: string; plaintextHash: string; size: number };

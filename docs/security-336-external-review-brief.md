@@ -235,3 +235,14 @@ scope. The complete4,194,408-byte composed output hashes and unchanged original
 rows are independently checked. No new crypto format, complete coordinator run,
 product adapters, remote-input provenance or human review is implied. New native
 full lint remains pending; source/APK hashes are in that component document.
+
+Bounded signed inventory/get and raw web response parsing follow in
+`e2ee-336-readback-stream.md`. Review post-sink device checks, exact cursor/context
+and directory headers, final empty pages versus FULL expected-inventory proof,
+missing/duplicate replies, HTTP budgets/UTF8/error/cancellation semantics and the
+unchanged prohibition on treating a callback envelope as authenticated plaintext.
+Selected JS110/110, JVM195/195, Chromium17/17 and actual API26/API34 each2/2 new
+plus2/2 staged regressions support component scope; native signed ports remain
+synthetic callback fixtures, and actual backend/product migration is not claimed.
+The full4MiB+6byte payload hashes are independently checked. This does not switch
+the old coordinator to streaming, protect remote originals or enable v3 run.
