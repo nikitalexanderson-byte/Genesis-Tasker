@@ -1,14 +1,15 @@
 import { canonicalE2eeValue, snapshotE2eeValue, type WireValue } from './commands.ts';
 import { decodeE2eeBytes, encodeE2eeBytes, e2eeAdditionalData, importE2eeRoot, openE2eeEnvelope, sealE2eeEnvelope,
   validateE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
-import { exactKeys, freshSecret } from './keys.ts';
+import { exactKeys, freshSecret,assertTechnical } from './keys.ts';
+import {parseE2eeFileManifestJson} from './file-manifest-json.ts';
 
 export const E2EE_CHUNK_BYTES = 256 * 1024;
 export const E2EE_MAX_FILE_BYTES = 64 * 1024 * 1024;
 type ChunkDescriptor = { objectId: string; operationId: string; index: number; size: number; hash: string };
 type FileManifest = { protocol: 1; fileKey: string; size: number; chunkSize: number; filename: string; mediaType: string; chunks: ChunkDescriptor[] };
 export type SealedE2eeFile = { manifest: E2eeEnvelope; chunks: E2eeEnvelope[] };
-const encoder = new TextEncoder(), decoder = new TextDecoder('utf-8', { fatal: true });
+const encoder = new TextEncoder();
 function corrupt(): never { throw new Error('E2EE_CORRUPT_FILE'); }
 export async function envelopePayloadHash(envelope: E2eeEnvelope) {
   const valid = validateE2eeEnvelope(envelope);
@@ -86,18 +87,23 @@ export async function openE2eeFile(root: CryptoKey, signer: CryptoKey, expectedC
   const privateBytes = await openE2eeEnvelope(root, signer, expectedContext, manifestEnvelope);
   let keyBytes: Uint8Array | undefined, output: Uint8Array<ArrayBuffer> | undefined;
   try {
-    const manifest: FileManifest = JSON.parse(decoder.decode(privateBytes));
+    const manifest= parseE2eeFileManifestJson(privateBytes) as FileManifest;
     exactKeys(manifest, ['protocol','fileKey','size','chunkSize','filename','mediaType','chunks']);
     if (manifest.protocol !== 1 || manifest.chunkSize !== E2EE_CHUNK_BYTES || !Number.isSafeInteger(manifest.size)
       || manifest.size < 0 || manifest.size > E2EE_MAX_FILE_BYTES || typeof manifest.filename !== 'string' || manifest.filename.length > 512
       || typeof manifest.mediaType !== 'string' || manifest.mediaType.length > 128 || !Array.isArray(manifest.chunks)
       || manifest.chunks.length !== Math.ceil(manifest.size / E2EE_CHUNK_BYTES)) corrupt();
+    // Preflight the ENTIRE authenticated descriptor set before the first
+    // fetch or aggregate allocation, including a malformed later descriptor.
+    const seen=new Set<string>();
+    for(const [index,entry]of manifest.chunks.entries()){
+      exactKeys(entry,['objectId','operationId','index','size','hash']);assertTechnical(entry.objectId);assertTechnical(entry.operationId);decodeE2eeBytes(entry.hash,32);
+      if(entry.index!==index||entry.size!==Math.min(E2EE_CHUNK_BYTES,manifest.size-index*E2EE_CHUNK_BYTES)||seen.has(entry.objectId))corrupt();seen.add(entry.objectId);
+    }
     keyBytes = decodeE2eeBytes(manifest.fileKey, 32); const chunkRoot = await importE2eeRoot(keyBytes);
-    output = new Uint8Array(manifest.size); const seen = new Set<string>(); let offset = 0;
+    output = new Uint8Array(manifest.size); let offset = 0;
     for (let index = 0; index < manifest.chunks.length; index++) {
-      const entry = manifest.chunks[index]; exactKeys(entry, ['objectId','operationId','index','size','hash']);
-      if (entry.index !== index || entry.size !== Math.min(E2EE_CHUNK_BYTES, manifest.size - offset) || seen.has(entry.objectId)) corrupt();
-      seen.add(entry.objectId);
+      const entry = manifest.chunks[index];
       const envelope = validateE2eeEnvelope(await fetchChunk(entry.objectId));
       if (entry.hash !== await envelopePayloadHash(envelope)) corrupt();
       const bytes = await openE2eeEnvelope(chunkRoot, signer, { ...expectedContext, domain: 'attachment', objectId: entry.objectId, operationId: entry.operationId, revision: 1 }, envelope);

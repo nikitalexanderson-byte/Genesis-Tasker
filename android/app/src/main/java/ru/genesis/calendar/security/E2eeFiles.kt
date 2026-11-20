@@ -88,19 +88,27 @@ object E2eeFiles {
         val privateBytes = E2eeEnvelope.open(root,signer,expected,manifestEnvelope)
         var keyBytes: ByteArray? = null;var output: ByteArray? = null
         try {
-            val manifest = JSONObject(privateBytes.toString(Charsets.UTF_8))
+            val manifest = E2eeFileManifestJson.read(privateBytes)
             E2eeKeys.exact(manifest,setOf("protocol","fileKey","size","chunkSize","filename","mediaType","chunks"))
             val size = E2eeCommands.integer(manifest.get("size"));val chunks = manifest.getJSONArray("chunks")
             val filename = manifest.get("filename") as? String ?: corrupt(); val mediaType = manifest.get("mediaType") as? String ?: corrupt()
             if (E2eeCommands.integer(manifest.get("protocol")) != 1L || E2eeCommands.integer(manifest.get("chunkSize")) != CHUNK_BYTES.toLong()
                 || size > MAX_FILE_BYTES || filename.length > 512 || mediaType.length > 128 || chunks.length().toLong() != (size + CHUNK_BYTES - 1) / CHUNK_BYTES) corrupt()
-            keyBytes = E2eeEnvelope.decode(manifest.getString("fileKey"),32);val chunkRoot = E2eeEnvelope.importRoot(keyBytes)
-            val result = ByteArray(size.toInt());output = result;val seen = mutableSetOf<String>();var offset = 0
+            val seen = mutableSetOf<String>()
+            for (index in 0 until chunks.length()) {
+                val entry = chunks.getJSONObject(index); E2eeKeys.exact(entry, setOf("objectId", "operationId", "index", "size", "hash"))
+                val objectId = entry.get("objectId") as? String ?: corrupt(); val operationId = entry.get("operationId") as? String ?: corrupt()
+                val hash = entry.get("hash") as? String ?: corrupt(); E2eeKeys.technical(objectId); E2eeKeys.technical(operationId); E2eeEnvelope.decode(hash, 32)
+                if (E2eeCommands.integer(entry.get("index")) != index.toLong() || E2eeCommands.integer(entry.get("size")) != minOf(CHUNK_BYTES.toLong(), size - index.toLong() * CHUNK_BYTES)
+                    || !seen.add(objectId)) corrupt()
+            }
+            val fileKey = manifest.get("fileKey") as? String ?: corrupt()
+            keyBytes = E2eeEnvelope.decode(fileKey,32);val chunkRoot = E2eeEnvelope.importRoot(keyBytes)
+            val result = ByteArray(size.toInt());output = result;var offset = 0
             for (index in 0 until chunks.length()) {
                 val entry = chunks.getJSONObject(index);E2eeKeys.exact(entry,setOf("objectId","operationId","index","size","hash"))
                 val objectId = entry.getString("objectId");val operationId = entry.getString("operationId")
                 val length = E2eeCommands.integer(entry.get("size"))
-                if (E2eeCommands.integer(entry.get("index")) != index.toLong() || length != minOf(CHUNK_BYTES,result.size-offset).toLong() || !seen.add(objectId)) corrupt()
                 val envelope = fetch(objectId)
                 if (E2eeEnvelope.payloadHash(envelope) != entry.getString("hash")) corrupt()
                 val context = E2eeEnvelope.Context.fromJson(expected.toJson().put("domain","attachment").put("objectId",objectId).put("operationId",operationId).put("revision",1))

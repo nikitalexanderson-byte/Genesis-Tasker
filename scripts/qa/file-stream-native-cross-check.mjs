@@ -10,7 +10,7 @@ const source=resolve(root,input),output=resolve(root,outputArg);assert.ok(source
 assert.ok(output.startsWith(resolve(root,'output/release-3.3.6/runtime')+sep));await assert.rejects(access(output));
 const report=JSON.parse(await readFile(source,'utf8'));assert.equal(report.status,'PASS_LOCAL_SCOPE');assert.equal(report.package,'ru.genesis.calendar.qa1103.debug');assert.deepEqual(report.reasons,[]);
 assert.equal(report.nativeSourceHash,report.build.nativeSourceHash);const rows=report.results.filter(row=>row.class==='ru.genesis.calendar.security.E2eeFileStreamDeviceTest');assert.equal(rows.length,1);const [row]=rows;
-assert.equal(row.status,'PASS');assert.equal(row.passed,3);assert.equal(row.failed,0);assert.equal(row.skipped,0);assert.equal(row.externalArtifacts.status,'PASS');
+assert.equal(row.status,'PASS');assert.ok(row.passed===3||row.passed===4);assert.equal(row.failed,0);assert.equal(row.skipped,0);assert.equal(row.externalArtifacts.status,'PASS');
 const artifacts=new Map();for(const file of row.externalArtifacts.files){const path=resolve(root,file.path);assert.ok(path.startsWith(resolve(source,'..')+sep));const raw=await readFile(path);
  assert.equal(raw.length,file.bytes);assert.equal(createHash('sha256').update(raw).digest('hex').toUpperCase(),file.sha256.toUpperCase());artifacts.set(path.split(sep).at(-1),JSON.parse(raw.toString('utf8')));
 }

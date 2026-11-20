@@ -1,6 +1,7 @@
 import {sealE2eeFileStream,openE2eeFile,E2EE_CHUNK_BYTES} from '../../app/e2ee/files.ts';
-import {decodeE2eeBytes,importE2eeRoot,type E2eeContext,type E2eeEnvelope} from '../../app/e2ee/envelope.ts';
+import {decodeE2eeBytes,encodeE2eeBytes,importE2eeRoot,sealE2eeEnvelope,type E2eeContext,type E2eeEnvelope} from '../../app/e2ee/envelope.ts';
 import {IndexedDbE2eeStorage} from '../../app/e2ee/storage.ts';
+import {parseE2eeFileManifestJson} from '../../app/e2ee/file-manifest-json.ts';
 type Vector={synthetic:boolean;rootKey:string;publicKeySpki:string;context:E2eeContext;manifest:E2eeEnvelope;chunks:E2eeEnvelope[];plaintext:string;filenameUnits:number[];mediaType:string};
 const report:{synthetic:boolean;runtime:string;checks:{name:string;passed:boolean}[];status?:string;error?:string}={synthetic:true,runtime:navigator.userAgent,checks:[]};
 const check=(name:string,passed:boolean)=>{report.checks.push({name,passed});if(!passed)throw new Error(name);};
@@ -13,10 +14,24 @@ async function readVector(vector:Vector){
 }
 try{
  check('actual secure WebCrypto and IndexedDB',isSecureContext&&!!crypto.subtle&&!!indexedDB);
- const [web,native,keys]=await Promise.all(['/web.json','/native.json','/keys.json'].map(async path=>{const response=await fetch(path);if(!response.ok)throw new Error('SYNTHETIC_FIXTURE_UNAVAILABLE');return response.json();}));
+ const [web,native,keys,syntax]=await Promise.all(['/web.json','/native.json','/keys.json','/syntax.json'].map(async path=>{const response=await fetch(path);if(!response.ok)throw new Error('SYNTHETIC_FIXTURE_UNAVAILABLE');return response.json();}));
  check('public web stream vector opens with all filename units',await readVector(web));check('actual JCA stream vector opens in the existing browser v1 reader',await readVector(native));
  const root=await importE2eeRoot(decodeE2eeBytes(keys.rootKey,32)),signingKey=await crypto.subtle.importKey('pkcs8',decodeE2eeBytes(keys.privateKeyPkcs8,1,8192),{name:'ECDSA',namedCurve:'P-256'},false,['sign']);
  const signer=await crypto.subtle.importKey('spki',decodeE2eeBytes(keys.publicKeySpki,1,8192),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+ const utf8=new TextEncoder();let strict=true;
+ for(const row of syntax.valid){try{strict=strict&&JSON.stringify(parseE2eeFileManifestJson(utf8.encode(row.text)))===JSON.stringify(JSON.parse(row.text));}catch{strict=false;}}
+ for(const row of syntax.invalid){let refused=false;try{parseE2eeFileManifestJson(row.hex?Uint8Array.from(String(row.hex).match(/../g)??[],part=>Number.parseInt(part,16)):utf8.encode(row.text));}catch(error){refused=(error as Error).message==='E2EE_CORRUPT_FILE';}strict=strict&&refused;}
+ check('shared strict UTF8 JSON and decoded-name corpus',strict&&syntax.valid.length===4&&syntax.invalid.length===25);
+ let noIo=true;const hash=encodeE2eeBytes(new Uint8Array(32));
+ for(const mode of ['id-type','operation-type','hash','duplicate','index','size']){
+  const bad:{objectId:string|number;operationId:string|number;index:number;size:number;hash:string}={objectId:'second-part',operationId:'second-operation',index:1,size:1,hash};
+  if(mode==='id-type')bad.objectId=42;else if(mode==='operation-type')bad.operationId=42;else if(mode==='hash')bad.hash='invalid';else if(mode==='duplicate')bad.objectId='first-part';else if(mode==='index')bad.index=0;else bad.size=2;
+  const value={protocol:1,fileKey:hash,size:E2EE_CHUNK_BYTES+1,chunkSize:E2EE_CHUNK_BYTES,filename:'private',mediaType:'application/octet-stream',chunks:[{objectId:'first-part',operationId:'first-operation',index:0,size:E2EE_CHUNK_BYTES,hash},bad]};
+  const packet=await sealE2eeEnvelope(root,signingKey,web.context,utf8.encode(JSON.stringify(value)));let calls=0,refused=false;
+  try{await openE2eeFile(root,signer,web.context,packet,async()=>{calls++;throw new Error('UNEXPECTED_PRIVATE_IO');});}catch(error){refused=(error as Error).message==='E2EE_CORRUPT_FILE';}
+  noIo=noIo&&refused&&calls===0;
+ }
+ check('all six malformed later descriptors refuse before first IO',noIo);
  const storage=new IndexedDbE2eeStorage(),prefix='file-stream-synthetic:'+crypto.randomUUID()+':',size=9*1024*1024+7;let eof=false,chunks=0,live=true,immutable=true;
  const current=()=>{if(!live)throw new Error('E2EE_ACCOUNT_CHANGED');},filename=String.fromCharCode(...web.filenameUnits);
  const manifest=await sealE2eeFileStream({root,signingKey,context:web.context,size,metadata:{filename,mediaType:web.mediaType},assertCurrent:current,

@@ -1,0 +1,124 @@
+{
+  "synthetic": true,
+  "format": "Strict bounded private-file JSON syntax, not a new crypto format",
+  "valid": [
+    {
+      "name": "empty",
+      "text": "{}"
+    },
+    {
+      "name": "unicode-units-and-numbers",
+      "text": " \t\r\n{\"name\":\"\\ud800😀﻿\",\"n\":1e0,\"nested\":[false,null,{},[]]}\n"
+    },
+    {
+      "name": "escaped-name",
+      "text": "{\"\\u0061\":\"\\\"\\\\\\/\\b\\f\\n\\r\\t\\u0000\"}"
+    },
+    {
+      "name": "constructor-data",
+      "text": "{\"constructor\":0,\"x\":-0.0e+01}"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "duplicate",
+      "text": "{\"a\":1,\"a\":2}"
+    },
+    {
+      "name": "escaped-duplicate",
+      "text": "{\"a\":1,\"\\u0061\":2}"
+    },
+    {
+      "name": "nested-duplicate",
+      "text": "{\"obj\":{\"a\":0,\"\\u0061\":1}}"
+    },
+    {
+      "name": "bom",
+      "text": "﻿{}"
+    },
+    {
+      "name": "trailing",
+      "text": "{} {}"
+    },
+    {
+      "name": "object-comma",
+      "text": "{\"a\":1,}"
+    },
+    {
+      "name": "array-comma",
+      "text": "{\"a\":[1,]}"
+    },
+    {
+      "name": "unquoted",
+      "text": "{a:1}"
+    },
+    {
+      "name": "single-quoted",
+      "text": "{'a':1}"
+    },
+    {
+      "name": "equals",
+      "text": "{\"a\"=1}"
+    },
+    {
+      "name": "semicolon",
+      "text": "{\"a\":1;}"
+    },
+    {
+      "name": "comment",
+      "text": "{/*x*/\"a\":1}"
+    },
+    {
+      "name": "leading-zero",
+      "text": "{\"a\":01}"
+    },
+    {
+      "name": "plus",
+      "text": "{\"a\":+1}"
+    },
+    {
+      "name": "nan",
+      "text": "{\"a\":NaN}"
+    },
+    {
+      "name": "bad-literal",
+      "text": "{\"a\":truefalse}"
+    },
+    {
+      "name": "raw-control",
+      "text": "{\"a\":\"\n\"}"
+    },
+    {
+      "name": "bad-escape",
+      "text": "{\"a\":\"\\x20\"}"
+    },
+    {
+      "name": "unicode-non-ascii-hex",
+      "text": "{\"\\u００６１\":0}"
+    },
+    {
+      "name": "empty",
+      "text": ""
+    },
+    {
+      "name": "root-array",
+      "text": "[]"
+    },
+    {
+      "name": "root-scalar",
+      "text": "null"
+    },
+    {
+      "name": "long-name",
+      "text": "{\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\":0}"
+    },
+    {
+      "name": "bad-utf8",
+      "hex": "7b2261223a22ff227d"
+    },
+    {
+      "name": "utf8-surrogate",
+      "hex": "7b2261223a22eda080227d"
+    }
+  ]
+}

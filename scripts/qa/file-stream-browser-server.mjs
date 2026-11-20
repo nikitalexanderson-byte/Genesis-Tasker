@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const result=await build({configFile:false,root,logLevel:'warn',build:{write:false,minify:false,target:'es2022',lib:{entry:resolve(root,'scripts/qa/file-stream-browser-check.ts'),formats:['es'],fileName:'check'},rolldownOptions:{output:{codeSplitting:false}}}});
 const output=Array.isArray(result)?result.flatMap(row=>row.output):result.output,script=output.find(row=>row.type==='chunk'&&row.isEntry)?.code;if(!script)throw new Error('No synthetic entry');
-const fixtures={'/web.json':'tests/fixtures/e2ee/file-stream-web-v1.json','/keys.json':'tests/fixtures/e2ee/v1.json','/native.json':'output/release-3.3.6/runtime/file-stream-native-api34-vector-01.json'};
+const fixtures={'/web.json':'tests/fixtures/e2ee/file-stream-web-v1.json','/keys.json':'tests/fixtures/e2ee/v1.json','/native.json':'output/release-3.3.6/runtime/file-stream-native-api34-vector-01.json','/syntax.json':'tests/fixtures/e2ee/file-manifest-json-v1.json'};
 const server=http.createServer((request,response)=>{
  response.setHeader('Cache-Control','no-store');response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'");
  if(request.method!=='GET'){response.writeHead(405).end();return;}const path=new URL(request.url,'http://localhost').pathname;

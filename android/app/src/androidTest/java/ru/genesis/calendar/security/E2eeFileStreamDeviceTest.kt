@@ -96,4 +96,24 @@ class E2eeFileStreamDeviceTest {
             assertEquals(if (tag) "SYNTHETIC_FINAL_TAG_FAILURE" else "E2EE_ACCOUNT_CHANGED", error.message); assertEquals(1, chunks)
         }
     }
+    @Test fun strictPrivateSyntaxAndEveryDescriptorAreCheckedBeforeAnyFetch() {
+        val corpus = fixture("file-manifest-json-v1.json"); val valid = corpus.getJSONArray("valid")
+        for (index in 0 until valid.length()) E2eeFileManifestJson.read(valid.getJSONObject(index).getString("text").toByteArray(Charsets.UTF_8))
+        val invalid = corpus.getJSONArray("invalid")
+        for (index in 0 until invalid.length()) {
+            val row = invalid.getJSONObject(index); val bytes = if (row.has("hex")) row.getString("hex").chunked(2).map { it.toInt(16).toByte() }.toByteArray() else row.getString("text").toByteArray(Charsets.UTF_8)
+            assertEquals("E2EE_CORRUPT_FILE", assertThrows(IllegalStateException::class.java) { E2eeFileManifestJson.read(bytes) }.message)
+        }
+        val f = Rig(fixture("v1.json")); val hash = E2eeEnvelope.encode(ByteArray(32))
+        for (mode in listOf("id-type", "operation-type", "hash", "duplicate", "index", "size")) {
+            val first = JSONObject().put("objectId", "first-part").put("operationId", "first-operation").put("index", 0).put("size", E2eeFiles.CHUNK_BYTES).put("hash", hash)
+            val second = JSONObject().put("objectId", "second-part").put("operationId", "second-operation").put("index", 1).put("size", 1).put("hash", hash)
+            when (mode) { "id-type" -> second.put("objectId", 42); "operation-type" -> second.put("operationId", 42); "hash" -> second.put("hash", "invalid"); "duplicate" -> second.put("objectId", "first-part"); "index" -> second.put("index", 0); else -> second.put("size", 2) }
+            val value = JSONObject().put("protocol", 1).put("fileKey", hash).put("size", E2eeFiles.CHUNK_BYTES + 1).put("chunkSize", E2eeFiles.CHUNK_BYTES)
+                .put("filename", "private").put("mediaType", "application/octet-stream").put("chunks", JSONArray().put(first).put(second))
+            val bytes = value.toString().toByteArray(); val packet = try { E2eeEnvelope.seal(f.root, f.signing, f.context, bytes) } finally { bytes.fill(0) }; var fetches = 0
+            val error = assertThrows(IllegalStateException::class.java) { E2eeFiles.open(f.root, f.signer, f.context, packet) { fetches++; error("UNEXPECTED_PRIVATE_IO") } }
+            assertEquals("E2EE_CORRUPT_FILE", error.message); assertEquals(mode, 0, fetches)
+        }
+    }
 }

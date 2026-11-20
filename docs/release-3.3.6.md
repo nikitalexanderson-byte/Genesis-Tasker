@@ -1948,3 +1948,27 @@ Hashes и точная граница: e2ee-336-file-stream.md.
 content/coordinator streaming. Остальные gates и coverage9/20 сохраняются.
 Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
 никаких Deploy/Play/личных устройств/обновления версии в этом блоке нет.
+
+## Файлы: строгая проверка manifest до чтения частей,20 ноября
+
+Web/native reader теперь проверяет весь private JSON и все descriptors до
+первого chunk IO, импорта file key и выделения полного output. Строгий UTF8,
+decoded duplicate names, platform-lenient syntax, trailing documents и bounded
+строки/числа/глубина проверяются до JSON-проекции. Все IDs/types/hashes/indices/
+sizes/duplicates проверяются сразу, включая повреждённую последующую строку.
+Формат v1, исходные filename units и непрозрачные bytes сохраняются.
+
+Input02 E2837F269C221F759B6A9B2DF6120C54DC95758378E6381372898D1311ABCF77:
+build SUCCESS18m50s, JVM154/154, lint0/208/8, новых issue/file pairs0. Actual
+API26/API34 — по4/4,0 fail/skip, включая shared4valid/25invalid corpus и шесть
+malformed later descriptors с нулём fetches. Оба host cross-check PASS; по два
+extracted artifacts сверены по хешам. Весь generated40MiB/160chunks совпадает
+с независимым bounded host digest. Elapsed8,922/14,069ms, max heaps512/192MiB;
+peak heap/SLA не заявляются. Chromium157/IndexedDB —10/10, включая полный
+9MiB+7byte readback через холодное соединение. JS draft03 —67/67; types/scoped
+lint PASS. Детали/точные hashes: e2ee-336-file-manifest-preflight.md.
+
+Далее — публикация staged source в coordinator и полная потоковая интеграция.
+Coverage9/20 и остальные release gates сохраняются. Production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
+устройства/версия в этой части не менялись.
