@@ -2281,3 +2281,34 @@ read-only handle, mixed-history/coordinator publication и все nested old key
 Полный product routing,11 real sources/shared/Drive/upgrades/48 scenarios/
 14-language/human-review gates сохраняются. Production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false, без Deploy/Play/личных устройств.
+
+## Узкое чтение legacy original от прежнего устройства,20 ноября
+
+Web/native получили отдельную read-only capability для точного старого registry
+snapshot. Она принимает независимо восстановленные original roots и PUBLIC
+signer, проверяет original actor/generation/epochs и разрешает только точные
+migrationId:source:index/serial1. Прежний stage/catalog namespace не расширен.
+Общий строгий reference preflight работает до выделения ID set и чтения bodies.
+Старый private signer не импортируется и не становится активным. Authenticated
+custody/handoff этим компонентом не устанавливается.
+
+JS112/112, owned types/scoped lint/full build:web PASS; Chromium157/IDB14/14,
+console0. Native input02
+238AD76062D44324990C09DA0765F344457B4EA5552380922F610317943FF4DE:
+build SUCCESS1m47s, JVM219/219,0 failure/skip. Actual API26/API34 — по2/2 новых,
+2/2 original-stage и2/2 generic-legacy regressions. Удалён только собственный
+synthetic old Keystore alias, все1,048,598 decoded bytes/six logical hashes
+совпали с независимым bounded host construction. Отдельная новая identity,
+draft[9,8,7] и encrypted rows сохранились; old alias не появился снова. Два fresh
+JCA vectors прочитаны через WebCrypto с roots/PUBLIC signer, по18bytes/six paths.
+Регрессии дополнительно сверили73,400,354 decoded stage bytes и точный старый
+12,583,247byte wrapper/49parts/9,437,206 decoded bytes. Все artifact/source/APK
+hashes после runtime совпали. No new native full lint for this input; final
+candidate lint обязателен. Diagnostic build01 исправлен до input02 и не принят.
+Точные reports и пределы: e2ee-336-original-legacy-source.md.
+
+State/source/plan coordinator, mixed histories/custody, durable remote originals,
+nested old keys/AAD, real bounded native/WebView input и11 real sources остаются
+обязательными, как product/recovery/shared/Drive/direct-upgrade/48 scenarios/
+14-language/human review. Coverage9/20; v3 run закрыт, production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false, без Deploy/Play/личных устройств.

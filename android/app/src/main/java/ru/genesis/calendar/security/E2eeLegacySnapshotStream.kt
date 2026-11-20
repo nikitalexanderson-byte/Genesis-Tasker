@@ -121,9 +121,13 @@ internal object E2eeLegacySnapshotStream {
         }
         companion object {fun create(options:Options)=Handle(options)}
     }
-    fun open(input:Options):Handle {
-        val reference=input.reference.copy();E2eeKeys.technical(reference.migrationId);E2eeEnvelope.decode(reference.snapshotHash,32)
+    internal fun captureReference(input:Reference):Reference {
+        val reference=input.copy();E2eeKeys.technical(reference.migrationId);E2eeEnvelope.decode(reference.snapshotHash,32)
         check(reference.snapshotSize in 1..E2eeFiles.MAX_FILE_BYTES&&reference.snapshotParts==(reference.snapshotSize+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES){"E2EE_CORRUPT_LEGACY_SNAPSHOT"}
+        return reference
+    }
+    fun open(input:Options):Handle {
+        val reference=captureReference(input.reference)
         E2eeKeys.technical(input.target.ownerId);E2eeKeys.technical(input.target.scopeId);check(input.target.kind in setOf("personal","project","space")&&input.paths==input.inventory.required(input.target.kind).map{it.id}){"E2EE_SOURCE_ADAPTER_REQUIRED"}
         return Handle.create(Options(input.vault,input.target.copy(),input.paths.toList(),reference,input.inventory,input.assertCurrent))
     }

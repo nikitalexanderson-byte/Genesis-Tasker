@@ -2,6 +2,7 @@ import {openE2eeEnvelope,validateE2eeEnvelope,type E2eeContext} from './envelope
 import {assertTechnical,exactKeys} from './keys.ts';
 import {localRecordKey,type E2eeRecordStorage} from './storage.ts';
 import {openSourceStage,type SourceStageReadVault,type SourceStageReference,type SourceStageTarget} from './source-stage.ts';
+import {captureLegacyMigrationSnapshotReference,openLegacyMigrationSnapshot,type LegacyMigrationSnapshotReference} from './legacy-snapshot-stream.ts';
 
 /** These coordinates and PUBLIC signer must come from the authenticated recovery
  * handoff, not ciphertext/server metadata. Roots are already independently
@@ -10,6 +11,8 @@ import {openSourceStage,type SourceStageReadVault,type SourceStageReference,type
 export type OriginalSourceIdentity=Readonly<{ownerId:string;scopeId:string;deviceId:string;generation:number;cryptoEpoch:number;securityEpoch:number}>;
 export type OriginalSourceOptions={storage:Pick<E2eeRecordStorage,'get'|'list'>;original:OriginalSourceIdentity;
  roots:ReadonlyMap<string,CryptoKey>;signer:CryptoKey;target:SourceStageTarget;reference:SourceStageReference;assertCurrent:()=>void};
+export type OriginalLegacySnapshotOptions=Omit<OriginalSourceOptions,'reference'>&{reference:LegacyMigrationSnapshotReference;paths:readonly string[]};
+type OriginalReadOptions=Omit<OriginalSourceOptions,'target'|'reference'>;
 function invalid():never{throw new Error('E2EE_INVALID_ORIGINAL_SOURCE');}
 function sourceId(id:string){assertTechnical(id);if(!id.startsWith('source-stage:')&&!id.startsWith('source-stage-catalog:'))throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');}
 
@@ -18,7 +21,8 @@ function sourceId(id:string){assertTechnical(id);if(!id.startsWith('source-stage
 class OriginalSourceVault implements SourceStageReadVault {
  #original:OriginalSourceIdentity;#roots:Map<string,CryptoKey>;#signer:CryptoKey;#check:()=>void;#closed=false;
  #get:E2eeRecordStorage['get'];#list:E2eeRecordStorage['list'];
- constructor(input:OriginalSourceOptions){
+ #legacy:Set<string>|null;#prefix:string;
+ constructor(input:OriginalReadOptions,legacy?:LegacyMigrationSnapshotReference){
   const original={...input.original};exactKeys(original,['ownerId','scopeId','deviceId','generation','cryptoEpoch','securityEpoch']);
   for(const name of ['ownerId','scopeId','deviceId'] as const)assertTechnical(original[name]);
   for(const name of ['generation','cryptoEpoch','securityEpoch'] as const)if(!Number.isSafeInteger(original[name])||original[name]<1)invalid();
@@ -26,16 +30,19 @@ class OriginalSourceVault implements SourceStageReadVault {
   for(const[id,key]of this.#roots){assertTechnical(id);if(!key||key.type!=='secret'||key.algorithm.name!=='AES-KW'||(key.algorithm as AesKeyAlgorithm).length!==256||!key.usages.includes('unwrapKey')||key.extractable)invalid();}
   const signer=input.signer;if(!signer||signer.type!=='public'||signer.algorithm.name!=='ECDSA'||(signer.algorithm as EcKeyAlgorithm).namedCurve!=='P-256'||!signer.usages.includes('verify'))invalid();
   this.#original=Object.freeze(original);this.#signer=signer;this.#check=input.assertCurrent;this.#get=input.storage.get.bind(input.storage);this.#list=input.storage.list.bind(input.storage);
+  this.#prefix=legacy?`${legacy.migrationId}:source:`:'source-stage:';
+  this.#legacy=legacy?new Set(Array.from({length:legacy.snapshotParts},(_,index)=>this.#prefix+index)):null;
   this.assertUnlocked();
  }
  assertUnlocked(){if(this.#closed)throw new Error('E2EE_ORIGINAL_SOURCE_CLOSED');this.#check();}
  close(){this.#closed=true;this.#roots.clear();}
  localIdentity(){this.assertUnlocked();const{ownerId,scopeId,deviceId}=this.#original;return Object.freeze({ownerId,scopeId,deviceId});}
  async read(domain:E2eeContext['domain'],objectId:string){
-  this.assertUnlocked();if(domain!=='local-snapshot')throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');sourceId(objectId);
+  this.assertUnlocked();if(domain!=='local-snapshot')throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');
+  if(this.#legacy){assertTechnical(objectId);if(!this.#legacy.has(objectId))throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');}else sourceId(objectId);
   const scope=this.#original,record=await this.#get(localRecordKey(scope,domain,objectId));this.assertUnlocked();if(record===null)return null;
   const envelope=validateE2eeEnvelope(record.envelope),context=envelope.context;
-  if(!Number.isSafeInteger(record.serial)||record.serial<1||context.revision!==record.serial||context.ownerId!==scope.ownerId||context.scopeId!==scope.scopeId
+  if(!Number.isSafeInteger(record.serial)||record.serial<1||this.#legacy!==null&&record.serial!==1||context.revision!==record.serial||context.ownerId!==scope.ownerId||context.scopeId!==scope.scopeId
    ||context.deviceId!==scope.deviceId||context.domain!==domain||context.objectId!==objectId||context.schemaVersion!==1||context.dataGeneration!==scope.generation
    ||context.cryptoEpoch>scope.cryptoEpoch||context.securityEpoch>scope.securityEpoch)throw new Error('E2EE_CORRUPT_ORIGINAL_SOURCE');
   const root=this.#roots.get(context.keyId);if(!root)throw new Error('E2EE_KEY_UNAVAILABLE');
@@ -43,7 +50,7 @@ class OriginalSourceVault implements SourceStageReadVault {
   try{this.assertUnlocked();return{serial:record.serial,value};}catch(error){value.fill(0);throw error;}
  }
  async listLocal(domain:E2eeContext['domain'],objectPrefix:string){
-  this.assertUnlocked();if(domain!=='local-snapshot'||objectPrefix!=='source-stage:')throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');
+  this.assertUnlocked();if(domain!=='local-snapshot'||objectPrefix!==this.#prefix)throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');
   const prefix=[this.#original.ownerId,this.#original.scopeId,domain].map(part=>`${part.length}:${part}`).join(''),keys=await this.#list(prefix);this.assertUnlocked();
   if(keys.length>10000||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
   for(const key of keys){
@@ -72,5 +79,18 @@ export async function openOriginalSourceStage(input:OriginalSourceOptions){
    }finally{active.delete(id);}})();
    return Object.freeze({chunks,assertComplete(){current();if(!complete)throw new Error('E2EE_SOURCE_STAGE_EOF_REQUIRED');}});
   }});
+ }catch(error){close();throw error;}
+}
+
+/** Separate narrow purpose: exact original old-wrapper part IDs only. Roots,
+ * actor bounds and the PUBLIC signer still require authenticated custody;
+ * this read capability cannot establish that trust or restore old authority. */
+export async function openOriginalLegacySnapshot(input:OriginalLegacySnapshotOptions){
+ const options={...input,original:{...input.original},target:{...input.target},paths:[...input.paths],reference:captureLegacyMigrationSnapshotReference(input.reference)};
+ const vault=new OriginalSourceVault(options,options.reference);let opened:Awaited<ReturnType<typeof openLegacyMigrationSnapshot>>|undefined;
+ const close=()=>{vault.close();opened?.close();};
+ try{
+  const source=await openLegacyMigrationSnapshot({...options,vault,assertCurrent:()=>vault.assertUnlocked()});opened=source;vault.assertUnlocked();
+  return Object.freeze({paths:source.paths,reference:source.reference,close,openPath(id:string){vault.assertUnlocked();return source.openPath(id);}});
  }catch(error){close();throw error;}
 }

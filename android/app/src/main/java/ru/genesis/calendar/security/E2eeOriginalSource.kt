@@ -15,8 +15,12 @@ import javax.crypto.SecretKey
 object E2eeOriginalSource {
     data class Identity(val ownerId:String,val scopeId:String,val deviceId:String,val generation:Long,val cryptoEpoch:Long,val securityEpoch:Long)
     private fun invalid():Nothing=throw IllegalStateException("E2EE_INVALID_ORIGINAL_SOURCE")
-    internal class Vault(storage:E2eeRecordStorage,val original:Identity,roots:Map<String,SecretKey>,private val signer:PublicKey,private val check:()->Unit):E2eeSourceReadVault {
+    internal class Vault(storage:E2eeRecordStorage,val original:Identity,roots:Map<String,SecretKey>,private val signer:PublicKey,private val check:()->Unit,
+        legacyReference:E2eeLegacySnapshotStream.Reference?=null):E2eeSourceReadVault {
         private val get=storage::get;private val list=storage::list
+        private val legacy=legacyReference?.let(E2eeLegacySnapshotStream::captureReference)
+        private val sourcePrefix=legacy?.let{"${it.migrationId}:source:"}?:"source-stage:"
+        private val legacyIds=legacy?.let{(0 until it.snapshotParts).map{index->sourcePrefix+index}.toSet()}
         private val material=AtomicReference<Map<String,SecretKey>?>(roots.toMap());private val closed=AtomicBoolean(false)
         init {
             listOf(original.ownerId,original.scopeId,original.deviceId).forEach(E2eeKeys::technical)
@@ -31,11 +35,12 @@ object E2eeOriginalSource {
         override fun localIdentity():UnlockedE2eeVault.LocalIdentity {assertOpen();return UnlockedE2eeVault.LocalIdentity(original.ownerId,original.scopeId,original.deviceId)}
         override fun read(domain:String,objectId:String):UnlockedE2eeVault.Opened? {
             assertOpen();E2eeKeys.technical(objectId)
-            check(domain=="local-snapshot"&&(objectId.startsWith("source-stage:")||objectId.startsWith("source-stage-catalog:"))){"E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN"}
+            val allowed=if(legacyIds==null)objectId.startsWith("source-stage:")||objectId.startsWith("source-stage-catalog:")else objectId in legacyIds
+            check(domain=="local-snapshot"&&allowed){"E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN"}
             val key=listOf(original.ownerId,original.scopeId,domain,objectId).joinToString(""){"${it.length}:$it"}
             val row=get(key);assertOpen();if(row==null)return null
             val ctx=row.envelope.context.toJson()
-            check(row.serial in 1..9007199254740991L&&E2eeCommands.integer(ctx.get("revision"),1)==row.serial&&ctx.get("ownerId")==original.ownerId
+            check((legacy==null||row.serial==1L)&&row.serial in 1..9007199254740991L&&E2eeCommands.integer(ctx.get("revision"),1)==row.serial&&ctx.get("ownerId")==original.ownerId
                 &&ctx.get("scopeId")==original.scopeId&&ctx.get("deviceId")==original.deviceId&&ctx.get("domain")==domain&&ctx.get("objectId")==objectId
                 &&E2eeCommands.integer(ctx.get("schemaVersion"),1)==1L&&E2eeCommands.integer(ctx.get("dataGeneration"),1)==original.generation
                 &&E2eeCommands.integer(ctx.get("cryptoEpoch"),1)<=original.cryptoEpoch&&E2eeCommands.integer(ctx.get("securityEpoch"),1)<=original.securityEpoch){"E2EE_CORRUPT_ORIGINAL_SOURCE"}
@@ -44,7 +49,7 @@ object E2eeOriginalSource {
             try{assertOpen();return UnlockedE2eeVault.Opened(row.serial,bytes)}catch(error:Exception){bytes.fill(0);throw error}
         }
         override fun listLocal(domain:String,objectPrefix:String):List<String> {
-            assertOpen();check(domain=="local-snapshot"&&objectPrefix=="source-stage:"){"E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN"}
+            assertOpen();check(domain=="local-snapshot"&&objectPrefix==sourcePrefix){"E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN"}
             val prefix=listOf(original.ownerId,original.scopeId,domain).joinToString(""){"${it.length}:$it"};val keys=list(prefix);assertOpen()
             check(keys.size<=10000&&keys.toSet().size==keys.size){"E2EE_LOCAL_RECORD_LIMIT"}
             return keys.mapNotNull{key->
@@ -60,6 +65,21 @@ object E2eeOriginalSource {
         val vault=Vault(storage,original.copy(),roots,signer,assertCurrent)
         try{val opened=E2eeSourceStage.open(vault,target.copy(),reference.copy(),vault::assertOpen);vault.assertOpen();return Stage(vault,opened)}
         catch(error:Exception){vault.close();throw error}
+    }
+    /** Separate purpose: exact old-wrapper source parts only. This does not
+     * widen Stage or establish trust in supplied original roots/coordinates. */
+    internal fun openLegacy(storage:E2eeRecordStorage,original:Identity,roots:Map<String,SecretKey>,signer:PublicKey,target:E2eeSourceStage.Target,
+        paths:List<String>,reference:E2eeLegacySnapshotStream.Reference,inventory:E2eePrivatePaths,assertCurrent:()->Unit):Legacy {
+        val bound=E2eeLegacySnapshotStream.captureReference(reference);val vault=Vault(storage,original.copy(),roots,signer,assertCurrent,bound)
+        try{val opened=E2eeLegacySnapshotStream.open(E2eeLegacySnapshotStream.Options(vault,target.copy(),paths.toList(),bound,inventory,vault::assertOpen));vault.assertOpen();return Legacy(vault,opened)}
+        catch(error:Throwable){vault.close();throw error}
+    }
+    internal class Legacy(private val vault:Vault,private val opened:E2eeLegacySnapshotStream.Handle):Closeable {
+        val paths:List<String> get(){vault.assertOpen();return opened.paths.toList()}
+        val reference:E2eeLegacySnapshotStream.Reference get(){vault.assertOpen();return opened.reference.copy()}
+        fun openPath(path:String):E2eeLegacySnapshotStream.Handle.SourceInput {vault.assertOpen();return opened.openPath(path)}
+        override fun close(){vault.close();opened.close()}
+        override fun toString()="E2eeOriginalSource.Legacy([redacted])"
     }
     class Stage internal constructor(private val vault:Vault,private val opened:E2eeSourceStage.Opened):Closeable {
         private val active=mutableMapOf<String,SourceInput>()

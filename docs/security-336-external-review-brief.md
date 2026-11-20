@@ -274,3 +274,16 @@ establishes authenticated original custody, complete mixed history, nested
 legacy key/AAD materialization, product restoration or activation. Exact native
 provider acceptance must come from that component document; older APKs do not
 prove it. Synthetic path counts never increase real source coverage9/20.
+
+The original-actor legacy capability now has its own acceptance record,
+`e2ee-336-original-legacy-source.md`. Review its two DISJOINT reader purposes:
+stage/catalog versus exact bounded migrationId:source:index, serial1. Reference
+validation precedes allowed-ID allocation and source lookups. Roots and PUBLIC
+signer still require authenticated custody; the factory does not establish it.
+Neither legacy nor stage handles can write or restore an old active private
+signing identity. JS112/112, JVM219/219, Chromium14/14 and actual API26/API34
+each2/2 new plus4/4 regression cases PASS. Independently checked original logical
+hashes and fresh public-only JCA/WebCrypto vectors support component scope only.
+The old synthetic Keystore alias remains deleted while a separate new identity,
+draft and all encrypted rows survive. Full mixed history, old nested-key/AAD
+materialization, coordinator publication and product recovery remain pending.

@@ -40,6 +40,12 @@ It does not widen the existing original-source-stage capability, authenticate
 old custody or discover omitted ancestors. Coordinator history/publication and
 all nested legacy key/AAD materialization remain mandatory.
 
+A separate narrow original-actor legacy capability is now implemented in
+`e2ee-336-original-legacy-source.md`. It uses roots plus a PUBLIC original signer,
+without reactivating the old signing identity. Stage and legacy purposes have
+disjoint read/discovery rules. Its current exact platform gates are documented
+there; it still does not establish authenticated custody or a complete history.
+
 Remote legacy inputs also need durable original provenance. The pre-network
 local snapshot does not magically contain later server responses. Materialize
 each authenticated remote page/fragment and necessary old key material into

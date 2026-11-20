@@ -6,6 +6,15 @@ import {requiredPrivatePaths} from './migration-sources.ts';
 import type {SourceStageReadVault,SourceStageTarget} from './source-stage.ts';
 
 export type LegacyMigrationSnapshotReference=Readonly<{migrationId:string;snapshotSize:number;snapshotParts:number;snapshotHash:string}>;
+/** Shared bounded preflight for original-actor capabilities before allocating
+ * an allowed-ID set or doing any original storage lookup. */
+export function captureLegacyMigrationSnapshotReference(value:unknown):LegacyMigrationSnapshotReference{
+ exactKeys(value,['migrationId','snapshotSize','snapshotParts','snapshotHash']);const reference={...value} as unknown as LegacyMigrationSnapshotReference;
+ assertTechnical(reference.migrationId);decodeE2eeBytes(reference.snapshotHash,32);
+ if(!Number.isSafeInteger(reference.snapshotSize)||reference.snapshotSize<1||reference.snapshotSize>E2EE_MAX_FILE_BYTES
+  ||reference.snapshotParts!==Math.ceil(reference.snapshotSize/E2EE_CHUNK_BYTES))invalid();
+ return Object.freeze(reference);
+}
 type Options={vault:SourceStageReadVault;target:SourceStageTarget;paths:readonly string[];reference:LegacyMigrationSnapshotReference;assertCurrent:()=>void};
 type Path={id:string;size:number};
 type Captured={read:SourceStageReadVault['read'];list:SourceStageReadVault['listLocal'];current:()=>void;watch:(close:()=>void)=>()=>void;target:SourceStageTarget;paths:readonly string[];reference:LegacyMigrationSnapshotReference};
@@ -115,11 +124,9 @@ async function* scan(options:Captured,selected?:number):AsyncGenerator<Uint8Arra
  * restoration/lease/signing authority. Each path rescans the bounded original
  * to prove its exact raw hash/EOF; partial output is inert until assertComplete. */
 export async function openLegacyMigrationSnapshot(input:Options){
- const reference={...input.reference},target={...input.target},paths=[...input.paths];
- exactKeys(reference,['migrationId','snapshotSize','snapshotParts','snapshotHash']);assertTechnical(reference.migrationId);decodeE2eeBytes(reference.snapshotHash,32);
+ const reference=captureLegacyMigrationSnapshotReference(input.reference),target={...input.target},paths=[...input.paths];
  exactKeys(target,['ownerId','scopeId','kind']);assertTechnical(target.ownerId);assertTechnical(target.scopeId);
- if(!['personal','project','space'].includes(target.kind)||!Number.isSafeInteger(reference.snapshotSize)||reference.snapshotSize<1||reference.snapshotSize>E2EE_MAX_FILE_BYTES
-  ||reference.snapshotParts!==Math.ceil(reference.snapshotSize/E2EE_CHUNK_BYTES))invalid();
+ if(!['personal','project','space'].includes(target.kind))invalid();
  const required=requiredPrivatePaths(target.kind).map(row=>row.id);if(paths.length!==required.length||paths.some((path,index)=>path!==required[index]))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
  const guard=input.assertCurrent,unlocked=input.vault.assertUnlocked.bind(input.vault),read=input.vault.read.bind(input.vault),list=input.vault.listLocal.bind(input.vault);
  let closed=false,active:{revoked:boolean;borrowed?:Uint8Array}|undefined;const cursors=new Set<()=>void>();
