@@ -27,6 +27,10 @@ object E2eeDirectory {
     private fun trust(condition: Boolean) { if (!condition) throw IllegalStateException("E2EE_UNTRUSTED_DIRECTORY") }
     private fun technical(source: JSONObject, field: String): String = (source.get(field) as? String)?.let(E2eeKeys::technical)
         ?: throw IllegalStateException("E2EE_UNTRUSTED_DIRECTORY")
+    private fun detachedFrame(value:Verified):Verified = Verified(value.ownerId,value.scopeId,value.resourceId,value.kind,value.cryptoEpoch,value.securityEpoch,
+        value.keyId,value.generation,value.state,value.checkpoint,JSONObject(value.recoveryKit.toString()),JSONObject(value.recoveryCapsule.toString()),
+        value.devices.mapValues{(_,device)->Device(device.deviceId,device.userId,device.role,device.signingKey,device.receivingKey,device.revoked,
+            JSONObject(device.capsule.toString()),device.historyCapsules.map{grant->HistoricalRoot(grant.cryptoEpoch,grant.keyId,JSONObject(grant.capsule.toString()))}.toMutableList())}.toMutableMap(),value.sealedHeads)
     fun signingKey(spki: String): PublicKey = KeyFactory.getInstance("EC")
         .generatePublic(X509EncodedKeySpec(E2eeEnvelope.decode(spki,91))).also(E2eeEnvelope::assertP256)
     fun contentSigningKey(directory:Verified,context:JSONObject):PublicKey {
@@ -128,9 +132,9 @@ object E2eeDirectory {
             }
             val checkpoint=requireNotNull(directory).checkpoint
             if(previous?.revision==checkpoint.revision){trust(previous.hash==checkpoint.hash);checkedPrevious=true}
-            onVerified?.invoke(requireNotNull(directory).let{value->Verified(value.ownerId,value.scopeId,value.resourceId,value.kind,value.cryptoEpoch,value.securityEpoch,
-                value.keyId,value.generation,value.state,value.checkpoint,value.recoveryKit,value.recoveryCapsule,value.devices.mapValues{(_,device)->Device(device.deviceId,device.userId,
-                    device.role,device.signingKey,device.receivingKey,device.revoked,device.capsule,device.historyCapsules.toMutableList())}.toMutableMap(),value.sealedHeads)})
+            // Detached provisional history frame. Final chain verification,
+            // the saved checkpoint and durable CAS still must succeed.
+            onVerified?.invoke(detachedFrame(requireNotNull(directory)))
         }
         trust(checkedPrevious);return requireNotNull(directory)
     }

@@ -27,13 +27,14 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
     }
     private fun directoryId(scopeId:String):String = "directory-"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(E2eeKeys.technical(scopeId).toByteArray()))
     override fun rememberDirectory(scopeId:String,pin:JSONObject,events:JSONArray,scopeOwner:String,onVerified:((E2eeDirectory.Verified)->Unit)?):E2eeDirectory.Verified {
-        requireOpen();val id=directoryId(scopeId);val previous=vault.read("key-check",id)
+        requireOpen();val retainedPin=JSONObject(pin.toString());val retainedEvents=JSONArray(events.toString())
+        val id=directoryId(scopeId);val previous=vault.read("key-check",id)
         try {
             val old=previous?.let{JSONObject(it.bytes.toString(Charsets.UTF_8))}
-            if(old!=null)check(old.getString("ownerId")==scopeOwner&&E2eeCommands.canonical(old.getJSONObject("pin")).contentEquals(E2eeCommands.canonical(pin))){"E2EE_AUTHORITY_CHANGED"}
+            if(old!=null)check(old.getString("ownerId")==scopeOwner&&E2eeCommands.canonical(old.getJSONObject("pin")).contentEquals(E2eeCommands.canonical(retainedPin))){"E2EE_AUTHORITY_CHANGED"}
             val checkpoint=old?.getJSONObject("checkpoint")?.let{E2eeDirectory.Checkpoint(it.getLong("revision"),it.getString("hash"))}
-            val directory=E2eeDirectory.verify(scopeOwner,scopeId,pin,events,checkpoint,onVerified)
-            val bytes=JSONObject().put("ownerId",scopeOwner).put("pin",pin).put("events",events)
+            val directory=E2eeDirectory.verify(scopeOwner,scopeId,retainedPin,retainedEvents,checkpoint,onVerified)
+            val bytes=JSONObject().put("ownerId",scopeOwner).put("pin",retainedPin).put("events",retainedEvents)
                 .put("checkpoint",JSONObject().put("revision",directory.checkpoint.revision).put("hash",directory.checkpoint.hash)).toString().toByteArray()
             try{vault.write(listOf(UnlockedE2eeVault.Write("key-check",id,bytes,previous?.serial)))}finally{bytes.fill(0)}
             return directory

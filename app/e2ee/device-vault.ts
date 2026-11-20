@@ -35,6 +35,10 @@ export class IndexedDbDeviceKeyStorage implements DeviceKeyStorage {
 }
 type PrivateDeviceBundle = {protocol:1;ownerId:string;deviceId:string;localKeyId:string;localRoot:string;deviceKeys:Awaited<ReturnType<typeof exportPrivateDeviceKeys>>;authorityPin:PublicDeviceKeys};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
+function retainedSecret(source:Uint8Array){
+  if(!(source instanceof Uint8Array)||source.length!==32)throw new Error('E2EE_INVALID_KEY_BUNDLE');
+  const copy=new Uint8Array(source);if(copy.length!==32){copy.fill(0);throw new Error('E2EE_INVALID_KEY_BUNDLE');}return copy;
+}
 
 /** Google login never constructs this capability. It needs a separately held secret. */
 export class UnlockedWebDevice {
@@ -46,44 +50,50 @@ export class UnlockedWebDevice {
       keyId:bundle.localKeyId,signingKey:keys.signing.privateKey,roots:new Map([[bundle.localKeyId,root]]),trustedSigner:id=>id===bundle.deviceId?keys.signing.publicKey:undefined});
   }
   static async provision(ownerId:string,secret:Uint8Array,recoveryKit:RecoveryKit,storage:E2eeRecordStorage,keyStorage:DeviceKeyStorage){
-    assertTechnical(ownerId);
-    // Verify independently entered/saved recovery material before any root is made durable.
-    await recoverAuthority(ownerId,secret,recoveryKit);
-    if(await keyStorage.get(ownerId))throw new Error('E2EE_DEVICE_ALREADY_EXISTS');
-    const keys=await generateDeviceKeys(),localRoot=freshSecret(),deviceId=crypto.randomUUID();
-    const bundle:PrivateDeviceBundle={protocol:1,ownerId,deviceId,localKeyId:`local:${deviceId}`,localRoot:encodeE2eeBytes(localRoot),
-      deviceKeys:await exportPrivateDeviceKeys(keys),authorityPin:recoveryKit.authority};
-    const bytes=encoder.encode(JSON.stringify(bundle));
-    try{await keyStorage.create(ownerId,await protectBundle(ownerId,'device-vault',secret,bytes));}
-    finally{bytes.fill(0);localRoot.fill(0);}
-    // Read/decrypt the persisted copy rather than accepting an in-memory successful seal.
-    return this.unlock(ownerId,secret,storage,keyStorage);
+    assertTechnical(ownerId);recoveryKit=snapshotE2eeValue(recoveryKit);const held=retainedSecret(secret);
+    let localRoot:Uint8Array|undefined,bytes:Uint8Array|undefined;
+    try{
+      // Verify independently entered/saved recovery material before any root is made durable.
+      await recoverAuthority(ownerId,held,recoveryKit);
+      if(await keyStorage.get(ownerId))throw new Error('E2EE_DEVICE_ALREADY_EXISTS');
+      const keys=await generateDeviceKeys(),deviceId=crypto.randomUUID();localRoot=freshSecret();
+      const bundle:PrivateDeviceBundle={protocol:1,ownerId,deviceId,localKeyId:`local:${deviceId}`,localRoot:encodeE2eeBytes(localRoot),
+        deviceKeys:await exportPrivateDeviceKeys(keys),authorityPin:recoveryKit.authority};
+      bytes=encoder.encode(JSON.stringify(bundle));
+      await keyStorage.create(ownerId,await protectBundle(ownerId,'device-vault',held,bytes));
+      // Read/decrypt the persisted copy rather than accepting an in-memory successful seal.
+      return await this.unlock(ownerId,held,storage,keyStorage);
+    }finally{held.fill(0);bytes?.fill(0);localRoot?.fill(0);}
   }
   static async unlock(ownerId:string,secret:Uint8Array,storage:E2eeRecordStorage,keyStorage:DeviceKeyStorage){
-    assertTechnical(ownerId);const record=await keyStorage.get(ownerId);
-    if(!record)throw new Error('E2EE_DEVICE_NOT_ENROLLED');
-    if(!Number.isSafeInteger(record.serial)||record.serial<1)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');
-    const bytes=await openBundle(ownerId,'device-vault',secret,record.bundle);let raw:Uint8Array|undefined;
+    assertTechnical(ownerId);const held=retainedSecret(secret);let bytes:Uint8Array|undefined,raw:Uint8Array|undefined;
     try{
+      const record=snapshotE2eeValue(await keyStorage.get(ownerId));
+      if(!record)throw new Error('E2EE_DEVICE_NOT_ENROLLED');
+      if(!Number.isSafeInteger(record.serial)||record.serial<1)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');
+      bytes=await openBundle(ownerId,'device-vault',held,record.bundle);
       const bundle:PrivateDeviceBundle=JSON.parse(decoder.decode(bytes));
       exactKeys(bundle,['protocol','ownerId','deviceId','localKeyId','localRoot','deviceKeys','authorityPin']);
       if(bundle.protocol!==1||bundle.ownerId!==ownerId)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');
       assertTechnical(bundle.deviceId);assertTechnical(bundle.localKeyId);exactKeys(bundle.authorityPin,['signingKey','receivingKey']);
       raw=decodeE2eeBytes(bundle.localRoot,32);const root=await importE2eeRoot(raw),keys=await importDeviceKeys(bundle.deviceKeys);
       return new UnlockedWebDevice(ownerId,bundle,keys,root,storage,keyStorage,record);
-    }finally{bytes.fill(0);raw?.fill(0);}
+    }finally{held.fill(0);bytes?.fill(0);raw?.fill(0);}
   }
   requireOpen(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');}
   keys(){this.requireOpen();return this.#keys!;}
   lock(){this.#closed=true;this.vault.lock();this.#keys=null;}
   async ensureDurableKeys(){
-    this.requireOpen();const row=await this.#keyStorage.get(this.ownerId);this.requireOpen();
-    if(!row||row.serial!==this.#record.serial||row.bundle.ciphertext!==this.#record.bundle.ciphertext
-      ||row.bundle.nonce!==this.#record.bundle.nonce||row.bundle.salt!==this.#record.bundle.salt)throw new Error('E2EE_DEVICE_KEY_UNAVAILABLE');
+    this.requireOpen();const stored=await this.#keyStorage.get(this.ownerId);this.requireOpen();
+    const fields=['protocol','ownerId','purpose','salt','nonce','ciphertext'] as const;let row:ProtectedDeviceRecord|null;
+    try{row=snapshotE2eeValue(stored);if(row)exactKeys(row.bundle,fields);}
+    catch{throw new Error('E2EE_DEVICE_KEY_UNAVAILABLE');}
+    if(!row||row.serial!==this.#record.serial||fields.some(name=>row.bundle[name]!==this.#record.bundle[name]))throw new Error('E2EE_DEVICE_KEY_UNAVAILABLE');
   }
   async #directoryId(scopeId:string){assertTechnical(scopeId);return 'directory-'+encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(scopeId))));}
   async rememberDirectory(scopeId:string,pin:PublicDeviceKeys,events:SignedE2eeCommand[],ownerId=this.ownerId,onVerified?:(directory:VerifiedDirectory)=>void):Promise<VerifiedDirectory>{
-    this.requireOpen();const id=await this.#directoryId(scopeId),previous=await this.vault.read('key-check',id);
+    this.requireOpen();pin=snapshotE2eeValue(pin);events=snapshotE2eeValue(events);
+    const id=await this.#directoryId(scopeId),previous=await this.vault.read('key-check',id);
     let checkpoint:VerifiedDirectory['checkpoint']|undefined;
     try{
       if(previous){const old=JSON.parse(decoder.decode(previous.value));
@@ -109,6 +119,7 @@ export function bindWebVaultLifecycle(device:UnlockedWebDevice,target:Window=win
   const pageHide=()=>{lock();channel?.postMessage({locked:true});};
   target.addEventListener('pagehide',pageHide);target.document.addEventListener('visibilitychange',visibility);
   target.addEventListener('genesis-local-session-ended',pageHide);
+  visibility();
   return()=>{lock();target.removeEventListener('pagehide',pageHide);target.document.removeEventListener('visibilitychange',visibility);
     target.removeEventListener('genesis-local-session-ended',pageHide);channel?.close();};
 }

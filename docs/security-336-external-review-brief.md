@@ -5,6 +5,13 @@ approval.** No reviewer has been appointed or contacted through this task. The
 owner must arrange a qualified independent human or organization; model review,
 unit tests and dependency scanners do not satisfy this gate.
 
+21 November: the owner asked the implementing agent to perform the review
+itself. A separate adversarial internal pass, reproducible findings/fixes and
+its exact scope are recorded in `security-336-internal-crypto-review.md`.
+It is not independent of the implementer and does not satisfy the independent
+human-review gate. No reviewer has been selected and nothing has been sent.
+The preliminary `faa7d1eb` ZIP predates those fixes and needs a delta review.
+
 ## Candidate and activation boundary
 
 Repository: `nikitalexanderson-byte/Genesis-Tasker`, branch `codex/security-336`.

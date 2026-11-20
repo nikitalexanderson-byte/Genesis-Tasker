@@ -67,6 +67,13 @@ test('directory rollback, substituted root, command tamper and revoked signer ex
     checkpointHash:last.hash,securityEpoch:2,operationId:'revoked-op',payload:events[2].command.payload},keys.signing.privateKey);
   await assert.rejects(verify([...events,revoked]),/UNTRUSTED_DIRECTORY/);
 });
+
+test('the saved checkpoint cannot be lowered by mutating the caller object while verification yields',async()=>{
+  const first=await verify(fixture.directory.events.slice(0,1)),previous={...fixture.directory.checkpoint};
+  const pending=verify(fixture.directory.events.slice(0,-1),previous);
+  Object.assign(previous,first.checkpoint);
+  await assert.rejects(pending,/E2EE_UNTRUSTED_DIRECTORY/);
+});
 test('revoked root/device cannot open future root or future content; survivor can',async()=>{
   const directory=await verify(),survivor=await importDeviceKeys(fixture.secondDevice),revoked=await importDeviceKeys(fixture.device);
   const context={ownerId,scopeId,cryptoEpoch:2,keyId:directory.keyId,recipientId:'fixture-second'};

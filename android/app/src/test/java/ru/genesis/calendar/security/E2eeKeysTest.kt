@@ -86,6 +86,21 @@ class E2eeKeysTest {
         val truncated=org.json.JSONArray().apply{for(index in 0 until events.length()-1)put(events.get(index))}
         reject{E2eeDirectory.verify(owner,scope,pin,truncated,directory.checkpoint)}
     }
+    @Test fun directoryFrameObserverCannotModifyAuthenticatedCapsulesOrAuthority() {
+        val owner=fixture.getJSONObject("rootContext").getString("ownerId");val scope=fixture.getJSONObject("rootContext").getString("scopeId")
+        val pin=fixture.getJSONObject("recoveryKit").getJSONObject("authority");val events=fixture.getJSONObject("directory").getJSONArray("events")
+        val frames=mutableListOf<E2eeDirectory.Verified>()
+        val directory=E2eeDirectory.verify(owner,scope,pin,events,onVerified={frame->
+            frames.add(frame);frame.recoveryKit.getJSONObject("authority").put("signingKey","invalid")
+            frame.recoveryCapsule.put("ciphertext","invalid")
+            frame.devices.values.forEach{device->device.capsule.put("ciphertext","invalid");device.historyCapsules.forEach{it.capsule.put("ciphertext","invalid")}}
+        })
+        assertEquals(pin.getString("signingKey"),directory.recoveryKit.getJSONObject("authority").getString("signingKey"))
+        val survivor=requireNotNull(directory.devices["fixture-second"])
+        val device=E2eeKeys.importDeviceKeys(fixture.getJSONObject("secondDevice"))
+        E2eeKeys.openRoot(survivor.capsule,device.receiving,E2eeKeys.RootRecipient(owner,scope,directory.cryptoEpoch,directory.keyId,survivor.deviceId))
+        assertTrue(frames.isNotEmpty());assertNotEquals("invalid",survivor.historyCapsules.single().capsule.getString("ciphertext"))
+    }
     @Test fun authenticatedFileFromWebOpensOnNativeAndRejectsTruncation() {
         val file=fixture.getJSONObject("file");val envelope=E2eeEnvelope.Envelope.fromJson(file.getJSONObject("manifest"))
         val chunks=file.getJSONArray("chunks");val records=(0 until chunks.length()).map{E2eeEnvelope.Envelope.fromJson(chunks.getJSONObject(it))}

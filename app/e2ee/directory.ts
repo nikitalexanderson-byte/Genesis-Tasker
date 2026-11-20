@@ -27,6 +27,7 @@ export async function verifyDeviceDirectory(ownerId: string, scopeId: string, pi
   if (!Array.isArray(events) || events.length < 1 || events.length > 2048) throw new Error('E2EE_UNTRUSTED_DIRECTORY');
   pinnedAuthority = snapshotE2eeValue(pinnedAuthority);
   events = snapshotE2eeValue(events);
+  previous = previous ? snapshotE2eeValue(previous) : undefined;
   const authority = await signingPublicKey(pinnedAuthority.signingKey);
   let directory: VerifiedDirectory | undefined, checkedPrevious = !previous;
   const epochs=new Map<number,string>();
@@ -124,6 +125,8 @@ export async function verifyDeviceDirectory(ownerId: string, scopeId: string, pi
     if (previous?.revision === directory.checkpoint.revision) {
       requireState(previous.hash === directory.checkpoint.hash); checkedPrevious = true;
     }
+    // A detached frame for provisional history collection only. Whole-chain
+    // trust, the saved checkpoint and durable CAS still require final success.
     onVerified?.(structuredClone(directory));
   }
   requireState(!!directory && checkedPrevious);

@@ -2507,3 +2507,35 @@ sources, normal writers/enrollment/unlock/recovery, ACL+rotation/files/Drive,
 direct upgrades,48 scenarios/14-language/human review остаются обязательными.
 Production3.3.5/149, floors0/pilot/cutover off, GENESIS_DEPLOY_ANDROID=false;
 без Deploy/Play/личных устройств.
+
+## Внутреннее крипторевью по поручению владельца,21 ноября
+
+Владелец сообщил, что внешний специалист пока не выбран, и поручил исполнителю
+провести review самостоятельно. Выполнен отдельный adversarial проход ядра;
+его нельзя называть независимым от автора кода или заменять им human-review gate.
+Полный отчёт: `security-336-internal-crypto-review.md`. Никому материалы не отправлялись.
+
+Исправлены шесть классов проблем: runtime типы ключевого input, владение bytes/
+recovery secret до await, неизменяемая HPKE owner/scope/epoch/recipient binding,
+сохранённый antirollback checkpoint, exact verified directory/key-bundle
+persistence и initial-hidden lifecycle lock. Сохранены отдельные реальные RED;
+строковый secret удалось открыть отдельным Node/OpenSSL empty-IKM oracle.
+Это дефекты нового выключенного ядра, не доказательство production-взлома.
+
+Core JS84/84, full JS2000/2000, Chromium15731/31/console0, scoped lint/owned types
+и static web build PASS. Fresh isolated PHP envelope/store/shared-store/
+migration-transport4/4 PASS. Native build10m48s, JVM249/249, API26/API34 каждый
+12/12, включая actual user-presence Keystore/SQLite directory cold read. Full
+lint14m46s:0 errors/208 warnings/8 hints, без новых issue/file pairs. Финальный
+web-only delta прошёл fresh assemble/unit/lint51s с побайтно идентичными обоими
+APK; exact old/new input/provider binding сохранён отдельно. Тестовые credentials
+двух именованных QA AVD восстановлены в NONE; личные устройства не менялись.
+Точные final hashes/границы — в отчёте, не в старом предварительном ZIPfaa7d1eb.
+
+Общие прогоны включают5 прежних web remote-registration WIP cases. Этот
+инкремент остаётся отдельно незавершённым: native registration/descriptor API,
+mandatory capture factories и state4/custody ещё не приняты. Его2 WIP файла
+не входят в commit этого review. Coverage остаётся9/20; остальные11 sources,
+normal writers/unlock/enrollment/recovery, shared ACL+rotation, files/Drive,
+direct upgrades,48 system scenarios/14-language/human review обязательны.
+Review не включает pilot/cutover/floors и не является выпуском3.3.6.
