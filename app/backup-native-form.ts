@@ -10,7 +10,9 @@ export function retainNativeBackupForm(form:BackupMigrationForm,ports:Ports){
  if(form.file){const origin=nativeBackupFileOrigin(form.file);if(!origin)throw new Error('E2EE_ARCHIVE_FILE_ORIGIN_REQUIRED');
   file={id:origin.id,name:form.file.name,type:form.file.type,size:form.file.size,lastModified:form.file.lastModified};}
  const raw=JSON.stringify({protocol:1,state:form.state,settled:form.settled,file});
- const bytes=new TextEncoder().encode(raw);try{if(bytes.length>32*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');}finally{bytes.fill(0);}
+ // Native persistence streams exact UTF16 units into encrypted frames. Do not
+ // allocate another full UTF8 copy of payload + encrypted preview on each setter.
+ if(raw.length>96*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');
  const id=crypto.randomUUID(),token=ports.operationId();
  for(let offset=0,index=0;offset<raw.length;offset+=131072,index++){
   ports.check();const result=ports.submit(id,index,offset+131072>=raw.length,raw.slice(offset,offset+131072),token);

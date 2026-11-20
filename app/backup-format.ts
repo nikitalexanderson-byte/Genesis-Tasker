@@ -14,9 +14,19 @@ export function backupBase64(bytes: Uint8Array): string {
   return btoa(result);
 }
 export function backupBytes(value: unknown, max = BACKUP_MAX_FILE): Uint8Array {
-  if (typeof value !== 'string' || value.length > Math.ceil(max / 3) * 4 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) return fail();
-  const bytes = Uint8Array.from(atob(value), c => c.charCodeAt(0));
-  if (bytes.length > max || backupBase64(bytes) !== value) return fail(); return bytes;
+  if (typeof value !== 'string' || value.length > Math.ceil(max / 3) * 4 || value.length % 4 !== 0) return fail();
+  // A repeated four-character regexp group exhausts V8's regexp stack on a
+  // supported multi-MiB archive. Scan once and check unused padding bits;
+  // canonical validation needs neither backtracking nor a full re-encoding.
+  const padding=value.endsWith('==')?2:value.endsWith('=')?1:0,end=value.length-padding;
+  const digit=(code:number)=>code>=65&&code<=90?code-65:code>=97&&code<=122?code-71:code>=48&&code<=57?code+4:code===43?62:code===47?63:-1;
+  for(let index=0;index<end;index++)if(digit(value.charCodeAt(index))<0)return fail();
+  if(padding&&((end<2)||(digit(value.charCodeAt(end-1))&(padding===2?15:3))!==0))return fail();
+  const length=value.length/4*3-padding;if(length>max)return fail();
+  const binary=atob(value),bytes=new Uint8Array(length);
+  // Avoid the iterable conversion's multi-million-element intermediate array.
+  for(let index=0;index<length;index++)bytes[index]=binary.charCodeAt(index);
+  return bytes;
 }
 export async function backupDigest(value: string | Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', typeof value === 'string' ? encoder.encode(value) : new Uint8Array(value));

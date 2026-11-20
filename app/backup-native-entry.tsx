@@ -38,7 +38,8 @@ window.GenesisBackupRuntime={
   operations=nativeBackupOperations({begin:operationId=>rpc('operationBegin',{operationId}),end:operationId=>rpc('operationEnd',{operationId}),restart:()=>rpc('restart')});
   document.documentElement.lang=boot.language;document.documentElement.dataset.genesisTheme=boot.dark?'standart-dark':'standart';document.documentElement.dataset.genesisPalette=boot.palette;
   for(const [name,color] of Object.entries(boot.colors))if(/^--[a-z-]+$/.test(name)&&/^#[a-f0-9]{6,8}$/i.test(color))document.documentElement.style.setProperty(name,color);
-  // Only operation timestamps are persisted. Files, recovery keys and decoded contents stay in memory.
+  // The history preference contains only timestamps. Native form retention
+  // separately encrypts accepted input in private no-backup frames.
   const historyKey=`genesis-backup-history-v1:${boot.ownerId}`;
   Object.defineProperty(window,'localStorage',{value:{getItem:(key:string)=>key===historyKey?window.GenesisBackupBridge.getHistory():null,
    setItem:(key:string,value:string)=>{if(key!==historyKey||value.length>500)throw Error('BACKUP_STORAGE_SCOPE');window.GenesisBackupBridge.setHistory(value,operations!.token());},removeItem(){},clear(){},key:()=>null,length:0}});

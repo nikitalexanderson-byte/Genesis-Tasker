@@ -102,6 +102,17 @@ AEAD alone is insufficient to accept a legacy record.
   are distinguishable; a shared implementation is not an independent oracle.
 - Regression sources: `tests/e2ee-*.test.mjs`, native JVM/instrumented suites and
   isolated PHP/browser runners under `scripts/qa/`.
+- Native form spill: `e2ee-336-archives-form-spool.md` and `BackupFormSpool`.
+  Review exact UTF16 framing, owner/epoch/view/blob/index AAD, authenticated
+  count/hash/EOF, private no-backup storage, replacement/crash locators, quota
+  failure and old-local-key loss. Source-only restart locators grant no replay
+  authority. Full aggregate streaming and crash-remnant/new-root reconciliation
+  are still required; ordinary preview tests cannot close those gates.
+- Existing Android LocalCipher now uses bounded update/finalization on encryption
+  and decryption after an actual API26 large-input authentication failure was
+  isolated. Review unchanged format/AAD/nonce handling, no unauthenticated partial
+  plaintext, failure cleanup and old-key-loss witnesses including the new spill
+  root. The observed diagnostic matrix is distinct from final device acceptance.
 - Chronological evidence and failed-run limitations: `release-3.3.6.md` and its
   linked increment documents. Local logs/artifact hashes are under
   `output/release-3.3.6/`; they are not all tracked or externally distributed.

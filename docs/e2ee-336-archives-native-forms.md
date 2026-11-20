@@ -4,6 +4,12 @@
 not the complete `personal.archives` adapter or a release. Coverage remains9/20.
 Large-data/product acceptance remains a release gate as detailed below.
 
+Follow-up20 November: `e2ee-336-archives-form-spool.md` replaces the ordinary
+native form-memory path with bounded encrypted spill and documents its actual
+failed/fixed large-data attempts. The memory-only/32MiB adoption description below
+records this earlier accepted increment; it is not the current implementation's
+ordinary form-storage limit. Binary inventory and aggregate migration gates remain.
+
 ## Input lifetime and operation boundary
 
 `BackupPanel` mirrors each accepted setter value synchronously before scheduling

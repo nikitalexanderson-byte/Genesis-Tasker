@@ -1590,3 +1590,49 @@ storage/streaming с сохранением прежнего file-size support �
 lifecycle/recovery/Drive/direct upgrades, исходные48/14-language semantics и
 independent human crypto review. Coverage9/20 и production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false сохранены; публикаций нет.
+
+## Архивы: большие формы, Base64 и Android Keystore,20 ноября
+
+Обычное принятие native формы больше не собирает её целиком в StringBuilder и
+JSONObject: точные UTF16 части сохраняются зашифрованными в private no-backup
+storage, с owner/epoch/view/blob/index AAD, length/count/SHA256/footer/EOF.
+Малый зашифрованный locator сохраняет исходную привязку при потере процесса;
+он не разрешает повторять операции. Предыдущая принятая форма сохраняется при
+ошибке нового кандидата. Каталог форм включён в действующий key-loss inventory,
+чтобы сохранённые данные не разрешали незаметно создать заменяющий локальный ключ.
+
+Actual large-file проверка нашла два реальных дефекта. Общий web/Android Base64
+regexp переполнял стек на допустимом файле; теперь проверка линейная, строгие
+padding/unused bits сохранены, лишний многомиллионный iterable array устранён.
+В API26 крупный doFinal не проходил проверку MAC; контролируемая матрица показала,
+что bounded updates нужны на шифровании И расшифровке. Общий LocalCipher использует
+части8192 bytes, прежние format/key/AAD/IV сохранены. Частичный plaintext не
+возвращается до doFinal; owned buffers очищаются при отказе. Ошибки02/03 и
+остановленные01/02/04 сборки не скрыты; детали в `e2ee-336-archives-form-spool.md`.
+
+Full JS1790/1790,0 fail/skip; owned types/scoped lint и web build98 HTML/14 языков/
+280 gallery/offline PASS. Actual Chromium157:29/29, console0, включая16MiB+tag
+Base64 и native-style source/new-root cold readback. Native05 SUCCESS21m11s,
+selected JVM16/16; lint0 errors/208 warnings/8 hints, новых warning/file pairs0.
+Actual API26/API34:по49 уникальных cases PASS. Исходный opt-in skip20MiB import
+сохранён в базовом отчёте и закрыт отдельным запуском с явным аргументом; derived
+summary сохраняет оба результата. По5 host common-parser/WebCrypto checks PASS.
+Input `A718C4795F2F0A27F485F77023E7DBD2F05B73E2DF3E559131BDC8F8C4E5D3F7`;
+APKs и полные evidence/limits указаны в source-документе.
+
+Реальный файл15,461,065 plaintext /20,615,080 encrypted bytes с8 валидными картами
+прошёл decrypt и preview,8 документов сверены, retained form36,077,145 characters
+пережила закрытие окна. Restore не выполнялся. Full fixture185s(API34/heap192MiB)
+и257s(API26/heap512MiB): повторные записи неизменившихся больших полей остаются
+обязательным UX/performance исправлением перед выпуском. Оба dark PNG просмотрены;
+это не полная visual/OEM/provider matrix.
+
+Aggregate capture48MiB/shared form32MiB ещё явно отказывает до materialization
+большой формы; нужны streaming всего snapshot, lifetime выбранных binary files,
+crash-remnant/old-key materialization и полный archives adapter. Coverage9/20,
+остальные11 categories, normal writers/lifecycle, shared ACL/rotation, Drive,
+direct upgrades, исходные48/14-language semantic acceptance и independent human
+crypto review по-прежнему обязательны. Source checks44646564201 на642d7a99
+полностью SUCCESS; новые локальные инкременты этим старым CI не проверены.
+Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false
+сохранены. Deploy/Play/личных устройств в этом продолжении не было.

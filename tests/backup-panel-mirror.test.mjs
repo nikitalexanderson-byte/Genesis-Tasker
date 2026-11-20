@@ -55,3 +55,13 @@ test('missing provenance, failed acknowledgement and changed owner refuse input 
  for(const result of ['E2EE_ARCHIVE_CAPTURE_BUSY','private unbounded exception'])assert.throws(()=>retainNativeBackupForm({file:null,state:{key:'private'},settled:true},{...ports,submit:()=>result}),new RegExp(result.startsWith('E2EE_')?result:'BACKUP_NATIVE_FAILED'));
  assert.throws(()=>retainNativeBackupForm({file:null,state:{},settled:true},{...ports,check(){throw new Error('BACKUP_OWNER');}}),/BACKUP_OWNER/);
 });
+
+test('large mirrored payload and encrypted preview are retained without allocating a full UTF8 copy',()=>{
+ const state={payload:{document:'x'.repeat(16*1024*1024-2048)},plan:{ciphertext:'y'.repeat(22*1024*1024)},key:' exact input ',confirmed:false};
+ let characters=0,parts=0;const original=TextEncoder.prototype.encode;
+ TextEncoder.prototype.encode=function(){throw new Error('full extra buffer is forbidden in form retention');};
+ try{retainNativeBackupForm({file:null,state,settled:true},{check(){},operationId:()=>'',submit:(_id,index,last,text)=>{
+  assert.equal(index,parts++);characters+=text.length;if(last)assert.ok(characters>32*1024*1024);return '';
+ }});}finally{TextEncoder.prototype.encode=original;}
+ assert.ok(parts>256);
+});

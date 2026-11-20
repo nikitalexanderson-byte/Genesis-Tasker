@@ -77,6 +77,23 @@ class LocalCipherKeyLifecycleTest {
             }finally{f.close()}
         }
     }
+    @Test fun restoredBackupFormLocatorsBlockReplacementThroughTheActualContextInventory(){
+        val f=Rig();try{
+            val files=File(f.directory,"files").apply{mkdir()};val noBackup=File(f.directory,"no_backup").apply{mkdir()}
+            val context=object:android.content.ContextWrapper(f.app){
+                override fun getDatabasePath(name:String)=f.database
+                override fun getFilesDir()=files
+                override fun getNoBackupFilesDir()=noBackup
+                override fun getApplicationInfo()=android.content.pm.ApplicationInfo().apply{dataDir=f.directory.path}
+            }
+            val directory=File(noBackup,"backup-forms-v1/${UUID.randomUUID()}");check(directory.mkdirs())
+            val locator=File(directory,"${UUID.randomUUID()}.ref");locator.writeBytes(byteArrayOf(3,7,9,5));val original=locator.readBytes()
+            val inventory=LegacyLocalCipherInventory(context);assertTrue(inventory.containsRetainedData())
+            val witnesses=LocalKeyWitnessStore(f.witnessDirectory,inventory::containsRetainedData){true}
+            rejects("LOCAL_ENCRYPTION_KEY_LOST"){LocalCipher(f.alias,witnesses).encrypt("Attempted new form","new")}
+            assertFalse(f.exists());assertArrayEquals(original,locator.readBytes());assertTrue(witnesses.wasUsed(f.alias))
+        }finally{f.close()}
+    }
     @Test fun aFreshEmptyDatabaseAndTechnicalPreferencesAllowFirstEncryption(){
         val f=Rig();try{
             f.createDatabase().close();check(f.preferences.mkdir());File(f.preferences,"genesis.settings.xml").writeText("<map><string name='language'>en</string><boolean name='dark' value='true'/></map>")

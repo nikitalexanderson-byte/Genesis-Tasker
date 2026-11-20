@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {BackupPanel,type BackupPanelRuntime} from '../../app/BackupPanel';
-import {sealBackup,type BackupPayload} from '../../app/backup-format';
+import {sealBackup,backupBytes,backupBase64,BACKUP_MAX_PLAIN,type BackupPayload} from '../../app/backup-format';
 import type {GenesisUser} from '../../app/cloud-sync';
 import {captureWebArchiveInventory} from '../../app/e2ee/archives-web-source';
 import {clearBackupMigrationMemory} from '../../app/backup-migration-memory';
@@ -48,6 +48,12 @@ async function acceptance(){
  let device:UnlockedWebDevice|undefined,recovery:Awaited<ReturnType<typeof createRecoveryKit>>|undefined;
  try{
   check('real secure Chromium File, WebCrypto and IndexedDB are available',isSecureContext&&!!crypto.subtle&&!!indexedDB&&typeof File==='function');
+  const largePlain=new Uint8Array(BACKUP_MAX_PLAIN+16).fill(173);let largeDecoded:Uint8Array|undefined;
+  try{largeDecoded=backupBytes(backupBase64(largePlain),BACKUP_MAX_PLAIN+16);
+   check('actual Chromium validates canonical Base64 at the full backup plaintext limit without regexp stack overflow',largeDecoded.length===largePlain.length&&largeDecoded.every(byte=>byte===173));
+  }finally{largePlain.fill(0);largeDecoded?.fill(0);}
+  let paddingRefused=false;try{backupBytes('AB==');}catch{paddingRefused=true;}
+  check('actual Chromium refuses noncanonical unused Base64 bits',paddingRefused);
   const safetyKey=`genesis-backup-safety-v1:${owner}:expired`,heldKey=`genesis-backup-held-v1:${owner}:old`;
   localStorage.setItem(safetyKey,'{ "original":"expired raw ciphertext" }');localStorage.setItem(heldKey,'{ "duplicate":1,"duplicate":2 }');
   localStorage.setItem(`genesis-backup-safety-v1:${owner}-foreign:copy`,'foreign-canary');

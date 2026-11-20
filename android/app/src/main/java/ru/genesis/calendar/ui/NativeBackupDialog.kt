@@ -71,7 +71,6 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     private var exportId=""
     @Volatile private var reconciled=false
     private val transfers=ru.genesis.calendar.data.BackupTransfer()
-    private val formTransfers=ru.genesis.calendar.data.BackupTransfer()
     private val account=ru.genesis.calendar.auth.CloudAccountSnapshot.scopeFor(owner)
     private val migrationView=app.backupMigrationMemory.open(owner,app.workspaceEpoch)
     private fun check(){check(active) { "BACKUP_VIEW_CLOSED" };store.checkOperationOwner();gateway.check();NativeLegacyOperationPermit.current()?.check()}
@@ -106,8 +105,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     }
     @JavascriptInterface @Synchronized fun retainFormChunk(id:String,index:Int,last:Boolean,text:String,operationId:String):String=try {
         formWrite(operationId){
-            if(index==0)app.backupMigrationMemory.beginPublication(migrationView)
-            formTransfers.append(id,index,last,text)?.let{app.backupMigrationMemory.publish(migrationView,it)}
+            app.backupMigrationMemory.appendForm(migrationView,id,index,last,text)
         };""
     }catch(error:Exception){error.message?.takeIf{it.matches(Regex("(?:BACKUP|E2EE)_[A-Z_]+"))}?:"BACKUP_NATIVE_FAILED"}
     @JavascriptInterface fun setHistory(value:String,operationId:String) {
@@ -238,7 +236,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     }
     @Synchronized fun stop(){
         val permits=synchronized(operationMonitor){active=false;operations.values.toList().also{operations.clear()}}
-        permits.forEach{it.close()};transfers.clear();formTransfers.clear();app.backupMigrationMemory.detach(migrationView)
+        permits.forEach{it.close()};transfers.clear();app.backupMigrationMemory.detach(migrationView)
         synchronized(importMonitor){importFile?.clear();importFile=null;importOperation=""};exportText=null
     }
 }
@@ -253,7 +251,8 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
 }
 
 @SuppressLint("SetJavaScriptEnabled")
-@Composable internal fun NativeBackupDialog(owner:String,title:String,onClose:()->Unit,testGateway:BackupGateway?=null) {
+@Composable internal fun NativeBackupDialog(owner:String,title:String,onClose:()->Unit,testGateway:BackupGateway?=null,
+    testChoose:(suspend(Boolean,String)->Uri?)?=null) {
     val context=LocalContext.current;val app=context.applicationContext as GenesisApplication
     val gateway=remember(owner,testGateway){testGateway?:AuthController.get(context).backupGateway(owner)}
     val store=remember(owner,gateway){BackupNativeStore(app,owner,app.workspaceScope,gateway)}
@@ -265,6 +264,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     val openFile=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){uri->chooser?.complete(uri);chooser=null}
     val saveFile=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")){uri->chooser?.complete(uri);chooser=null}
     suspend fun choose(save:Boolean,name:String):Uri? {
+        if(testChoose!=null){check(ru.genesis.calendar.BuildConfig.DEBUG);return testChoose(save,name)}
         val result=CompletableDeferred<Uri?>()
         withContext(Dispatchers.Main){check(chooser==null);chooser=result;if(save)saveFile.launch(name)else openFile.launch(arrayOf("application/octet-stream","application/json","*/*"))}
         return result.await()

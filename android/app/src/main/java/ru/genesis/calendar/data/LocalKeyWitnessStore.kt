@@ -18,7 +18,8 @@ import java.util.Base64
  * Unknown/corrupt/busy storage is an error, never permission to create a key. */
 internal class LegacyLocalCipherInventory(private val database:File,private val preferences:File,private val fileStores:List<File>) {
     constructor(context:Context):this(context.getDatabasePath("genesis.db"),File(context.applicationInfo.dataDir,"shared_prefs"),
-        listOf(File(context.filesDir,"shared-task-file-drafts"),File(context.noBackupFilesDir,"shared-data-import-v1")))
+        listOf(File(context.filesDir,"shared-task-file-drafts"),File(context.noBackupFilesDir,"shared-data-import-v1"),
+            File(context.noBackupFilesDir,"backup-forms-v1")))
     private fun regular(file:File) {
         check(!Files.isSymbolicLink(file.toPath())){"LOCAL_KEY_STORAGE_UNAVAILABLE"}
     }
