@@ -7,6 +7,9 @@ import java.io.File
 import java.nio.file.Files
 import java.util.Base64
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -98,6 +101,50 @@ class BackupFormSpoolTest {
             assertEquals(source,sources.single().second.reader().use{it.readText()});assertTrue(sources.single().second.header.getBoolean("settled"))
             val ref=root.listFiles()!!.single{it.name.endsWith(".ref")};ref.appendText("!")
             assertThrows(Exception::class.java){restarted.retained()};original.clear();restarted.clear()
+        }finally{store.clear();root.delete()}
+    }
+    @Test fun simultaneousSessionsCannotOverrunTheSharedPhysicalQuota(){
+        val root=Files.createTempDirectory("genesis-shared-spill-quota-").toFile();val monitor=Any();val ready=CountDownLatch(2)
+        val executor=Executors.newFixedThreadPool(2);val stores=mutableListOf<BackupFormSpool>();val accepted=mutableListOf<BackupFormSpool.Form>()
+        try{
+            for(name in listOf("first","second")){
+                val folder=File(root,name);val delegate=Crypto()
+                stores+=BackupFormSpool(folder,object:BackupFormSpool.Crypto{
+                    override fun seal(value:String,aad:String):String {
+                        if(aad.endsWith("chunk:0")){ready.countDown();check(ready.await(5,TimeUnit.SECONDS))}
+                        return delegate.seal(value,aad)
+                    }
+                    override fun open(value:String,aad:String)=delegate.open(value,aad)
+                },{reader->val value=JSONObject(reader.readText());check(value.get("state") is JSONObject);value},quota=15000,
+                    otherBytes={root.listFiles()?.filter{it!=folder}?.sumOf{it.listFiles()?.sumOf(File::length)?:0L}?:0L},quotaMonitor=monitor)
+            }
+            val futures=stores.map{store->executor.submit<BackupFormSpool.Form?>{
+                try{publish(store,raw("x".repeat(2500)))}catch(error:IllegalStateException){assertEquals("BACKUP_FORM_QUOTA",error.message);null}
+            }}
+            futures.mapNotNullTo(accepted){it.get(10,TimeUnit.SECONDS)}
+            assertEquals(1,accepted.size);assertEquals(raw("x".repeat(2500)),accepted.single().reader().use{it.readText()})
+            assertTrue(root.listFiles()!!.sumOf{it.listFiles()?.sumOf(File::length)?:0L}<=15000L)
+        }finally{
+            executor.shutdownNow();assertTrue(executor.awaitTermination(10,TimeUnit.SECONDS));accepted.forEach{it.clear()};stores.forEach{it.clear()}
+            root.listFiles()?.forEach{assertTrue(it.listFiles().isNullOrEmpty());it.delete()};root.delete()
+        }
+    }
+    @Test fun retirementDuringFinalMetadataReadbackAbortsOnlyTheNewCandidate(){
+        val root=Files.createTempDirectory("genesis-spill-readback-cancel-").toFile();var live=true;var cancelReadback=false
+        val store=BackupFormSpool(root,Crypto(),{reader->
+            val buffer=CharArray(8192)
+            try{while(reader.read(buffer)>=0){if(cancelReadback)live=false}}finally{buffer.fill('\u0000')}
+            JSONObject().put("protocol",1).put("settled",true).put("file",JSONObject.NULL)
+        })
+        try{
+            val original=raw("earlier accepted input");val first=publish(store,original);val candidate=raw("x".repeat(300000));cancelReadback=true
+            val id=UUID.randomUUID().toString()
+            assertEquals("E2EE_ACCOUNT_CHANGED",assertThrows(IllegalStateException::class.java){
+                candidate.chunked(BackupFormSpool.CHUNK).forEachIndexed{index,text->
+                    store.append(view,binding,id,index,(index+1)*BackupFormSpool.CHUNK>=candidate.length,text){check(live){"E2EE_ACCOUNT_CHANGED"}}
+                }
+            }.message)
+            assertFalse(live);assertEquals(original,first.reader().use{it.readText()});assertEquals(2,root.listFiles()!!.size);first.clear()
         }finally{store.clear();root.delete()}
     }
 }

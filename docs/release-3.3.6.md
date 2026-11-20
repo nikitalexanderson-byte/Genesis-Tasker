@@ -1703,3 +1703,47 @@ adapter ещё нужны. Не повышать supported protocol или cutov
 upgrades, исходные48 сценариев,14-language semantics и human crypto review
 сохраняются условиями выпуска. Production3.3.5/149, floors0/pilot/cutover off и
 GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личных устройств в этом продолжении нет.
+
+## Архивы: binary spill и завершение файловых операций,20 ноября
+
+Оригинальные бинарные candidates и provider descriptor теперь сохраняются в
+существующих authenticated UTF16 frames с отдельной ролью file-v1. После
+успешного сохранения native освобождает свои retained массив/descriptor; старые
+невыбранные файлы сохраняются как инертные исходники. Проверяются исходная
+сессия/owner/epoch/view/blob, длина, SHA256, canonical Base64/padding и полный
+footer/EOF. История manifest больше не держит redundant plaintext String list.
+Pending reservations учитывают memory/count budgets; общий disk quota768MiB
+проверяется атомарно для всех native spools. При отказе удаляется только новый
+неподтверждённый candidate. Прежний принятый ввод не заменяется нулевыми bytes.
+
+Файловая запись вынесена из inventory/window monitors; отдельный coroutine mutex
+сериализует выбор файлов. Закрытие окна и operationEnd инвалидируют работу сразу,
+но whole-job permit освобождается после реального drain. Смена исходной сессии
+останавливает также полный metadata readback до публикации locator. Остальные
+синхронные form/value ports и aggregate snapshot ещё требуют продолжения.
+
+Selected binary04: input5AE5744ED2647F4283F8401C5650C582E754A5901B46B5B8E9402214E1F5A07E,
+build SUCCESS19m, JVM40/40,0 fail/skip; lint0 errors/208 warnings/8 hints, новых
+issue/file pairs0. Actual API26/API34 — по58 selected cases,0 fail/skip, включая
+две новые paused-IO lifetime проверки. По21 независимой host-проверке в каждом
+окружении: original values/provider units/new-root, real SAF, portable canonical
+AAD и binary integrity. Уровневые детали, hashes, failed drafts01/02 и baseline03:
+`e2ee-336-archives-binary-spill.md`.
+
+Файл24MiB прочитан с полным SHA/footer/EOF; история51MiB в трёх файлах сохранилась
+без retained native File arrays. Actual20,615,080-byte backup с8 картами прошёл
+preview без restore:60,236ms(API26)/53,725ms(API34), small confirmation247/335ms,
+один value chunk4 code units плюс manifest. Файловый spill добавляет ограниченную
+работу и примерно4.74x physical amplification; обещаний ускорения этого шага нет.
+API26 Java heap512MiB, API34 heap192MiB. API26 preview PNG просмотрен; API34 PNG
+показывает верх формы после запроса scroll, поэтому видимость самого preview
+этим снимком не принята. Semantic/full visual/provider/API35/OEM coverage открыт.
+
+Related JS77/77, owned types01 и scoped lint02 PASS. Предыдущий сохранённый
+98db50e4 полностью прошёл Source checks44672125329 web/API+Android; новый
+инкремент ещё не имеет собственного подтверждённого CI. Coverage остаётся9/20:
+нужны snapshot streaming, process remnants/все nested old keys, полный archives
+adapter, другие11 источников, normal writers/lifecycle/shared ACL/files/Drive/
+direct upgrades,48 сценариев,14-language semantics и human crypto review.
+Production3.3.5/149, floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
+Deploy/Play/личных устройств/версии в этом продолжении не меняли.

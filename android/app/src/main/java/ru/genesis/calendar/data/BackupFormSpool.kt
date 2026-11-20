@@ -10,7 +10,7 @@ import java.util.Base64
  * and even an unpaired surrogate must not be replaced by a charset encoder. */
 internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
     private val metadata:(Reader)->JSONObject,private val maximum:Int=96*1024*1024,
-    private val quota:Long=768L*1024*1024,private val otherBytes:()->Long={0L}) {
+    private val quota:Long=768L*1024*1024,private val otherBytes:()->Long={0L},private val quotaMonitor:Any=Any()) {
     internal interface Crypto { fun seal(value:String,aad:String):String;fun open(value:String,aad:String):String }
     internal interface Form {
         val characters:Int
@@ -40,8 +40,8 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
     private fun aad(binding:String,id:String,part:String)="backup-form-spool-v1:${binding.length}:$binding:$id:$part"
     private fun digest(hash:MessageDigest)=hash.digest().joinToString(""){"%02x".format(it)}
     private fun discard(value:Pending){runCatching{value.output.close()};owned(value.file).delete()}
-    @Synchronized fun append(view:String,binding:String,id:String,index:Int,last:Boolean,text:String):Form? {
-        requireRoot();check(uuid.matches(view)&&uuid.matches(id)&&binding.length in 1..4096&&index in 0..maximum/CHUNK&&text.length<=CHUNK){"BACKUP_TRANSFER_INVALID"}
+    @Synchronized fun append(view:String,binding:String,id:String,index:Int,last:Boolean,text:String,assertCurrent:()->Unit={}):Form? {
+        assertCurrent();requireRoot();check(uuid.matches(view)&&uuid.matches(id)&&binding.length in 1..4096&&index in 0..maximum/CHUNK&&text.length<=CHUNK){"BACKUP_TRANSFER_INVALID"}
         if(index==0){
             // A new publication explicitly abandons only this view's incomplete
             // candidates, never the preceding acknowledged form.
@@ -60,20 +60,40 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
                 text.forEachIndexed{at,char->bytes[at*2]=(char.code ushr 8).toByte();bytes[at*2+1]=char.code.toByte()}
                 value.hash.update(bytes)
                 val encrypted=crypto.seal(Base64.getEncoder().encodeToString(bytes),aad(binding,id,"chunk:$index"))
-                check(used()+encrypted.length+4<=quota){"BACKUP_FORM_QUOTA"};record(value.output,encrypted);value.output.flush()
+                assertCurrent()
+                // Quota is shared across native form/value/binary sessions.
+                // Check and flush one bounded frame atomically; crypto and
+                // full metadata readback never hold this shared monitor.
+                synchronized(quotaMonitor){
+                    check(used()+encrypted.length+4+(if(value.chunks==0)4 else 0)<=quota){"BACKUP_FORM_QUOTA"}
+                    record(value.output,encrypted);value.output.flush()
+                }
             }finally{bytes.fill(0)}
             value.characters+=text.length;value.chunks++
             if(!last)return null
             val sha=digest(value.hash)
             val footer=JSONObject().put("protocol",1).put("characters",value.characters).put("chunks",value.chunks).put("sha256",sha)
             val encryptedFooter=crypto.seal(footer.toString(),aad(binding,id,"footer"))
-            check(used()+encryptedFooter.length+8<=quota){"BACKUP_FORM_QUOTA"}
-            value.output.writeInt(0);record(value.output,encryptedFooter);value.output.flush();value.stream.fd.sync();value.output.close()
+            assertCurrent()
+            synchronized(quotaMonitor){
+                check(used()+encryptedFooter.length+8<=quota){"BACKUP_FORM_QUOTA"}
+                value.output.writeInt(0);record(value.output,encryptedFooter);value.output.flush()
+            }
+            value.stream.fd.sync();value.output.close()
             pending.remove(id)
             val file=owned(File(root,"$id.bin"));check(!file.exists()&&value.file.renameTo(file)){"BACKUP_FORM_STORAGE"}
             val result=Stored(file,binding,id,value.characters,value.chunks,sha)
             try{
-                result.header=result.reader().use(metadata)
+                // Final metadata validation drains the complete encrypted
+                // source. Retirement must interrupt that read too, so account
+                // clear never waits for an entire large candidate to decrypt.
+                result.header=object:FilterReader(result.reader()){
+                    override fun read(target:CharArray,start:Int,length:Int):Int {
+                        assertCurrent();return super.read(target,start,length).also{assertCurrent()}
+                    }
+                    override fun read():Int {assertCurrent();return super.read().also{assertCurrent()}}
+                }.use(metadata)
+                assertCurrent()
                 // A crash must not leave an acknowledged encrypted form whose
                 // AAD binding exists only in lost process memory. This encrypted
                 // locator preserves that binding for the complete source reader.
@@ -83,10 +103,13 @@ internal class BackupFormSpool(private val root:File,private val crypto:Crypto,
                 val bytes=crypto.seal(locator.toString(),"backup-form-spool-index-v1:${root.name}:$id").toByteArray(Charsets.US_ASCII)
                 val temporary=owned(File(root,"$id.index-pending"));val target=owned(File(root,"$id.ref"))
                 try{
-                    check(used()+bytes.size<=quota){"BACKUP_FORM_QUOTA"};check(temporary.createNewFile()&&!target.exists()){"BACKUP_FORM_STORAGE"}
-                    FileOutputStream(temporary).use{it.write(bytes);it.fd.sync()};check(temporary.renameTo(target)){"BACKUP_FORM_STORAGE"}
+                    assertCurrent()
+                    synchronized(quotaMonitor){
+                        check(used()+bytes.size<=quota){"BACKUP_FORM_QUOTA"};check(temporary.createNewFile()&&!target.exists()){"BACKUP_FORM_STORAGE"}
+                        FileOutputStream(temporary).use{it.write(bytes);it.fd.sync()};check(temporary.renameTo(target)){"BACKUP_FORM_STORAGE"}
+                    }
                 }finally{bytes.fill(0);temporary.delete()}
-                return result
+                assertCurrent();return result
             }catch(error:Throwable){result.clear();throw error}
         }catch(error:Throwable){pending.remove(id);discard(value);throw error}
     }

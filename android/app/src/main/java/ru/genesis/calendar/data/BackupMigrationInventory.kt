@@ -7,32 +7,58 @@ import java.util.Base64
 import java.util.UUID
 
 /** Session inventory until the complete coordinator protects capture under the
- * NEW root. Forms use encrypted bounded spill; binary candidates stay owned
- * memory. Acknowledged input survives view disposal. No restore/write authority. */
+ * NEW root. Forms and binary candidates use encrypted bounded spill when the
+ * native factory is provided. Acknowledged input survives view disposal.
+ * Aggregate capture still has its explicit bound. No restore/write authority. */
 internal class BackupMigrationInventory(private val valueMetadata:(String)->JSONObject=NativeBackupValueManifest::read,
     private val spoolFactory:((Int)->BackupFormSpool)?=null) {
-    internal class File(val descriptor:String,bytes:ByteArray) {
-        private val content=bytes.copyOf()
-        val id=JSONObject(descriptor).getString("id")
-        val length get()=content.size
-        fun capture()=JSONObject().put("descriptor",JSONObject(descriptor)).put("bytes",Base64.getUrlEncoder().withoutPadding().encodeToString(content))
-        fun clear(){content.fill(0)}
+    internal class File(rawDescriptor:String,bytes:ByteArray) {
+        private var originalDescriptor:String?=rawDescriptor
+        private var content:ByteArray?=bytes.copyOf()
+        private var stored:BackupStoredBinary?=null
+        private var retired=false
+        val id=JSONObject(rawDescriptor).getString("id")
+        val length=bytes.size
+        val descriptor:String @Synchronized get(){check(!retired){"BACKUP_FILE_CLOSED"};return originalDescriptor?:requireNotNull(stored).descriptor}
+        val memoryBytes:Long @Synchronized get()=(content?.size?.toLong()?:0)+(originalDescriptor?.length?.toLong()?:0)*2
+        @Synchronized fun persist(spool:BackupFormSpool,view:String,binding:String,metadataReader:(String)->JSONObject,assertCurrent:()->Unit){
+            check(!retired&&stored==null){"BACKUP_FILE_CLOSED"};assertCurrent()
+            val accepted=BackupStoredBinary.store(spool,view,binding,requireNotNull(originalDescriptor),requireNotNull(content),metadataReader,assertCurrent)
+            try{assertCurrent();stored=accepted;content?.fill(0);content=null;originalDescriptor=null}catch(error:Throwable){accepted.clear();throw error}
+        }
+        @Synchronized fun capture():JSONObject {
+            check(!retired){"BACKUP_FILE_CLOSED"};val transient=content==null
+            val bytes=content?:requireNotNull(stored).bytes{check(!retired){"BACKUP_FILE_CLOSED"}}
+            return try{JSONObject().put("descriptor",JSONObject(descriptor)).put("bytes",Base64.getUrlEncoder().withoutPadding().encodeToString(bytes))}
+            finally{if(transient)bytes.fill(0)}
+        }
+        @Synchronized fun clear(){retired=true;content?.fill(0);content=null;originalDescriptor=null;try{stored?.clear()}finally{stored=null}}
         override fun toString()="BackupMigrationInventory.File([redacted])"
     }
     private class View {
-        var mounted=true;var publishing=false;var form:BackupFormSpool.Form?=null;var settled=false
+        @Volatile var mounted=true
+        var publishing=false;var form:BackupFormSpool.Form?=null;var settled=false
         var values:BackupValueInventory?=null
         val files=linkedMapOf<String,File>()
+        val pendingFiles=linkedMapOf<String,Long>()
     }
+    private class FileTarget(val owner:String,val epoch:Long,val incarnation:Any,val row:View,val spool:BackupFormSpool?)
+    @Volatile private var incarnation=Any()
     private var owner:String?=null
     private var epoch:Long?=null
     private val views=linkedMapOf<String,View>()
     private var revision=0L
     private var spool:BackupFormSpool?=null
     private var valueSpool:BackupFormSpool?=null
+    private var fileSpool:BackupFormSpool?=null
     @Synchronized fun version()=revision
     @Synchronized internal fun retainedFormCharacters(uid:String,generation:Long):List<Int>{bind(uid,generation);return views.values.map{it.form?.characters?:it.values?.characters?.coerceAtMost(Int.MAX_VALUE.toLong())?.toInt()?:0}}
     @Synchronized internal fun valueStatistics(uid:String,generation:Long):List<BackupValueInventory.Statistics>{bind(uid,generation);return views.values.mapNotNull{it.values?.statistics()}}
+    internal data class FileStatistics(val files:Int,val bytes:Long,val memoryBytes:Long,val pending:Int)
+    @Synchronized internal fun fileStatistics(uid:String,generation:Long):FileStatistics {
+        bind(uid,generation);return FileStatistics(views.values.sumOf{it.files.size},views.values.sumOf{it.files.values.sumOf{file->file.length.toLong()}},
+            views.values.sumOf{it.files.values.sumOf{file->file.memoryBytes}},views.values.sumOf{it.pendingFiles.size})
+    }
     private fun bind(uid:String,generation:Long){check(owner==uid&&epoch==generation){"E2EE_ACCOUNT_CHANGED"}}
     @Synchronized fun open(uid:String,generation:Long):String {
         E2eeKeys.technical(uid);check(generation>=0){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -41,12 +67,39 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
         return UUID.randomUUID().toString().also{views[it]=View();revision++}
     }
     private fun view(id:String)=views[id]?.also{check(it.mounted){"BACKUP_VIEW_CLOSED"}}?:error("BACKUP_VIEW_CLOSED")
-    private fun retainedBytes()=views.values.sumOf{(it.form?.memoryBytes?:0L)+it.files.values.sumOf{file->file.length.toLong()}}
+    private fun retainedBytes()=views.values.sumOf{(it.form?.memoryBytes?:0L)+it.files.values.sumOf{file->file.memoryBytes}+it.pendingFiles.values.sum()}
+    private fun fileCount()=views.values.sumOf{it.files.size+it.pendingFiles.size}
     @Synchronized fun beginPublication(id:String){view(id).publishing=true;revision++}
-    @Synchronized fun retainFile(id:String,file:File){
-        val row=view(id);check(!row.files.containsKey(file.id)){"BACKUP_TRANSFER"}
-        check(row.files.size<1000&&views.values.sumOf{it.files.size}<10000&&retainedBytes()+file.length<=48L*1024*1024){"E2EE_SOURCE_TOO_LARGE"}
-        row.files[file.id]=file;revision++
+    fun retainFile(id:String,file:File,assertCurrent:()->Unit={}){
+        // Do not hold the inventory's memory monitor across bulk encryption.
+        // The admitted whole-job permit still excludes migration; original
+        // session checks run for each bounded write and again before adoption.
+        val target=synchronized(this){
+            assertCurrent();val row=view(id);check(file.id !in row.files&&file.id !in row.pendingFiles){"BACKUP_TRANSFER"}
+            val size=file.memoryBytes
+            check(row.files.size+row.pendingFiles.size<1000&&fileCount()<10000&&retainedBytes()+size<=48L*1024*1024){"E2EE_SOURCE_TOO_LARGE"}
+            val storage=spoolFactory?.let{factory->fileSpool?:factory(BackupValueInventory.PHYSICAL_MAX).also{fileSpool=it}}
+            row.pendingFiles[file.id]=size;revision++
+            FileTarget(requireNotNull(owner),requireNotNull(epoch),incarnation,row,storage)
+        }
+        fun current(){
+            check(incarnation===target.incarnation){"E2EE_ACCOUNT_CHANGED"}
+            check(target.row.mounted){"BACKUP_VIEW_CLOSED"};assertCurrent()
+        }
+        try{
+            target.spool?.let{file.persist(it,id,"${target.owner.length}:${target.owner}:${target.epoch}:$id",valueMetadata,::current)}
+            synchronized(this){
+                current();bind(target.owner,target.epoch);val row=view(id);check(row===target.row&&file.id !in row.files){"BACKUP_TRANSFER"}
+                check(retainedBytes()-requireNotNull(row.pendingFiles[file.id])+file.memoryBytes<=48L*1024*1024){"E2EE_SOURCE_TOO_LARGE"}
+                row.files[file.id]=file;revision++
+            }
+        }catch(error:Throwable){
+            // Only this reserved, never-acknowledged candidate is retired.
+            // A duplicate rejected before reservation cannot erase prior input.
+            file.clear();throw error
+        }finally{
+            synchronized(this){target.row.pendingFiles.remove(file.id);revision++}
+        }
     }
     @Synchronized fun publish(id:String,raw:String){
         val row=view(id);check(row.values==null){"BACKUP_TRANSFER_ORDER"};val size=backupJsonUtf8(raw).let{try{it.size}finally{it.fill(0)}}
@@ -108,7 +161,7 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
     @Synchronized fun detach(id:String){views[id]?.let{spool?.cancel(id);it.values?.detach();it.mounted=false;it.publishing=false;revision++}}
     @Synchronized fun capture(uid:String,generation:Long):JSONObject {
         E2eeKeys.technical(uid);if(owner!=null)bind(uid,generation)
-        check(views.values.none{it.mounted&&(it.publishing||(it.form==null&&it.values?.rawManifest==null)||!it.settled)}){"E2EE_ARCHIVE_OPERATION_IN_PROGRESS"}
+        check(views.values.none{it.pendingFiles.isNotEmpty()||it.mounted&&(it.publishing||(it.form==null&&it.values?.hasManifest!=true)||!it.settled)}){"E2EE_ARCHIVE_OPERATION_IN_PROGRESS"}
         // The current migration collector still materializes an aggregate.
         // Refuse BEFORE reading a large spooled form; ordinary UI adoption no
         // longer pays this migration-only memory limit. Streaming the complete
@@ -125,6 +178,6 @@ internal class BackupMigrationInventory(private val valueMetadata:(String)->JSON
         try{check(bytes.size<=48*1024*1024){"E2EE_SNAPSHOT_TOO_LARGE"}}finally{bytes.fill(0)}
         return result
     }
-    @Synchronized fun clear(){views.values.forEach{it.form?.clear();it.values?.clear();it.files.values.forEach(File::clear)};views.clear();spool?.clear();spool=null;valueSpool?.clear();valueSpool=null;owner=null;epoch=null;revision++}
+    @Synchronized fun clear(){incarnation=Any();views.values.forEach{it.form?.clear();it.values?.clear();it.files.values.forEach(File::clear)};views.clear();spool?.clear();spool=null;valueSpool?.clear();valueSpool=null;fileSpool?.clear();fileSpool=null;owner=null;epoch=null;revision++}
     override fun toString()="BackupMigrationInventory([redacted])"
 }

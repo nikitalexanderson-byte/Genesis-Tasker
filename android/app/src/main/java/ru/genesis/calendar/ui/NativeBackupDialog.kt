@@ -26,6 +26,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.auth.AuthController
@@ -55,7 +57,7 @@ internal object BackupWebOrigin {
 internal class BackupJavascriptBridge(private val store:BackupNativeStore,private val gateway:BackupGateway,
     private val app:GenesisApplication,private val owner:String,private val scope:CoroutineScope,
     private val deliver:(String,JSONObject)->Unit,private val choose:suspend(Boolean,String)->Uri?,private val restart:()->Unit,
-    private val beforeUiDispatch:suspend (String)->Unit={}) {
+    private val beforeUiDispatch:suspend (String)->Unit={},private val beforeFileRetention:()->Unit={}) {
     @Volatile private var active=true
     private val operationMonitor=Any()
     private val operations=java.util.concurrent.ConcurrentHashMap<String,NativeLegacyOperationPermit>()
@@ -64,6 +66,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     private val uuid=Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
     private val history=app.getSharedPreferences("genesis.backup.history.v1",android.content.Context.MODE_PRIVATE)
     private val importMonitor=Any()
+    private val importSelectionMutex=Mutex()
     private var importFile:BackupImportFile?=null
     private var importOperation=""
     private var exportText:StringBuilder?=null
@@ -184,7 +187,8 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
                         try { requireNotNull(app.contentResolver.openOutputStream(uri,"wt")).use { it.write(bytes);it.flush() };check();true }
                         finally { bytes.fill(0) }
                     }
-                    "importChoose"->{
+                    "importChoose"->importSelectionMutex.withLock{
+                        check();operation(payload.getString("operationId")).check()
                         val uri=choose(false,"")?:error("BACKUP_CANCELLED");check()
                         val resolver=app.contentResolver;var name:String?=null;var modified:Long?=null;var declared:Long?=null
                         resolver.query(uri,null,null,null,null)?.use { cursor->if(cursor.moveToFirst()){
@@ -196,10 +200,17 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
                         val type=resolver.getType(uri);check()
                         val file=requireNotNull(resolver.openInputStream(uri)).use { input->BackupImportFile.read(input,name,type,modified,declared,::check) }
                         try{
-                            check();synchronized(importMonitor){
+                            check();operation(payload.getString("operationId")).check()
+                            val retained=file.migrationCopy()
+                            try{
+                                beforeFileRetention()
+                                app.backupMigrationMemory.retainFile(migrationView,retained){check();operation(payload.getString("operationId")).check()}
+                            }catch(error:Throwable){retained.clear();throw error}
+                            // Only the small transfer adoption uses the window
+                            // monitor. Disposal/end can invalidate promptly while
+                            // the whole-job permit still drains encrypted IO.
+                            synchronized(importMonitor){
                                 check();operation(payload.getString("operationId")).check()
-                                val retained=file.migrationCopy()
-                                try{app.backupMigrationMemory.retainFile(migrationView,retained)}catch(error:Throwable){retained.clear();throw error}
                                 importFile?.clear();importFile=file;importOperation=payload.getString("operationId");file.descriptor()
                             }
                         }catch(error:Throwable){file.clear();throw error}

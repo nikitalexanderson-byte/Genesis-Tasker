@@ -10,15 +10,15 @@ import java.util.UUID
 internal class BackupValueInventory(private val storage:()->BackupFormSpool,private val view:String,private val binding:String,
     private val manifestMetadata:(String)->JSONObject,private val checkFile:(JSONObject)->Unit) {
     private class Value(val id:String,val name:String,val stored:BackupStoredValue)
-    private class Manifest(val raw:String,val stored:BackupStoredValue)
+    private class Manifest(val stored:BackupStoredValue)
     private val values=linkedMapOf<String,Value>()
     private val manifests=mutableListOf<Manifest>()
     private var pending:Pair<String,BackupValueTransfer>?=null
     private var submittedCharacters=0L;private var submittedChunks=0L
-    var rawManifest:String?=null;private set
+    val hasManifest get()=manifests.isNotEmpty()
     var settled=false;private set
     val retainedCount get()=values.size+manifests.size
-    val characters get()=values.values.sumOf{it.stored.characters.toLong()}+manifests.sumOf{it.raw.length.toLong()}
+    val characters get()=values.values.sumOf{it.stored.characters.toLong()}+manifests.sumOf{it.stored.characters.toLong()}
     val largestValue get()=values.values.maxOfOrNull{it.stored.characters}?:0
     data class Statistics(val values:Int,val manifests:Int,val characters:Long,val chunks:Long)
     fun statistics()=Statistics(values.size,manifests.size,submittedCharacters,submittedChunks)
@@ -53,14 +53,18 @@ internal class BackupValueInventory(private val storage:()->BackupFormSpool,priv
         // ordinal in the encrypted locator distinguishes restart history.
         val transfer=BackupValueTransfer(storage(),view,"$binding:manifest-v2:${manifests.size}")
         val stored=try{requireNotNull(transfer.append(UUID.randomUUID().toString(),0,true,raw))}finally{transfer.clear()}
-        manifests+=Manifest(raw,stored);rawManifest=raw;settled=parsed.getBoolean("settled")
+        manifests+=Manifest(stored);settled=parsed.getBoolean("settled")
     }
-    fun capture(owner:String,epoch:Long):JSONObject=JSONObject().put("protocol",2).put("ownerId",owner).put("sessionEpoch",epoch).put("viewId",view)
-        .put("rawManifest",rawManifest?:JSONObject.NULL)
-        .put("rawManifests",JSONArray(manifests.map{manifest->manifest.stored.reader().use{source->source.readText()}.also{check(it==manifest.raw){"BACKUP_FORM_INTEGRITY"}}}))
-        .put("values",JSONArray(values.values.map{value->JSONObject().put("id",value.id).put("name",value.name).put("rawJson",value.stored.reader().use{it.readText()})}))
+    fun capture(owner:String,epoch:Long):JSONObject {
+        // History lives in authenticated spill, not a second retained plaintext
+        // String list. Only this explicit, bounded capture materializes it.
+        val history=manifests.map{manifest->manifest.stored.reader().use{it.readText()}}
+        return JSONObject().put("protocol",2).put("ownerId",owner).put("sessionEpoch",epoch).put("viewId",view)
+            .put("rawManifest",history.lastOrNull()?:JSONObject.NULL).put("rawManifests",JSONArray(history))
+            .put("values",JSONArray(values.values.map{value->JSONObject().put("id",value.id).put("name",value.name).put("rawJson",value.stored.reader().use{it.readText()})}))
+    }
     fun detach(){pending?.second?.clear();pending=null}
-    fun clear(){detach();values.values.forEach{it.stored.clear()};manifests.forEach{it.stored.clear()};values.clear();manifests.clear();rawManifest=null;settled=false}
+    fun clear(){detach();values.values.forEach{it.stored.clear()};manifests.forEach{it.stored.clear()};values.clear();manifests.clear();settled=false}
     override fun toString()="BackupValueInventory([redacted])"
     companion object {
         fun requireName(name:String){check(name.matches(Regex("[A-Za-z][A-Za-z0-9_-]{0,63}"))&&name !in setOf("__proto__","prototype","constructor")){"E2EE_ARCHIVE_SOURCE_INVALID"}}

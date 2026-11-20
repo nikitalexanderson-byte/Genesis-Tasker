@@ -40,7 +40,7 @@ class BackupMigrationInventoryTest {
     @Test fun clearedSessionWipesOwnedBuffersAndRejectsStaleViewTokensEvenForTheSameUid(){
         val memory=BackupMigrationInventory();val view=memory.open(owner,7);val file=BackupImportFile(byteArrayOf(4,3,2,1),null,null,null,null).migrationCopy()
         memory.retainFile(view,file);memory.publish(view,raw());val before=memory.version();memory.clear();assertTrue(memory.version()>before)
-        assertArrayEquals(byteArrayOf(0,0,0,0),Base64.getUrlDecoder().decode(file.capture().getString("bytes")))
+        assertThrows(IllegalStateException::class.java){file.capture()}
         val next=memory.open(owner,9);memory.publish(next,raw());assertThrows(IllegalStateException::class.java){memory.publish(view,raw())};assertEquals(1,memory.capture(owner,9).getJSONArray("views").length());memory.clear()
     }
 }

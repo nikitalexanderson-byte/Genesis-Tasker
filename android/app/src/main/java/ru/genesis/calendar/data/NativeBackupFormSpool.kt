@@ -78,6 +78,7 @@ internal object NativeBackupValueManifest {
     }
 }
 
+private val nativeBackupSpillQuotaMonitor=Any()
 internal fun nativeBackupFormSpool(context:Context,maximum:Int=96*1024*1024):BackupFormSpool {
     val cipher=LocalCipher()
     // A session owns this exact directory. Account clear removes only its own
@@ -99,5 +100,5 @@ internal fun nativeBackupFormSpool(context:Context,maximum:Int=96*1024*1024):Bac
     return BackupFormSpool(root,object:BackupFormSpool.Crypto{
         override fun seal(value:String,aad:String)=cipher.encrypt(value,aad)
         override fun open(value:String,aad:String)=cipher.decrypt(value,aad)
-    },NativeBackupFormMetadata::read,maximum=maximum,otherBytes=::otherBytes)
+    },NativeBackupFormMetadata::read,maximum=maximum,otherBytes=::otherBytes,quotaMonitor=nativeBackupSpillQuotaMonitor)
 }

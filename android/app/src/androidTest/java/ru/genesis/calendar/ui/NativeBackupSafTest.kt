@@ -104,6 +104,8 @@ class NativeBackupSafTest {
             var captured:JSONObject?=null
             compose.waitUntil(10000){runCatching{app.backupMigrationMemory.capture(owner,app.workspaceEpoch)}.getOrNull()?.also{captured=it}!=null}
             val beforeClose=requireNotNull(captured).getJSONArray("views").getJSONObject(0)
+            val fileStatistics=app.backupMigrationMemory.fileStatistics(owner,app.workspaceEpoch)
+            assertEquals(1,fileStatistics.files);assertEquals(0L,fileStatistics.memoryBytes);assertEquals(0,fileStatistics.pending)
             assertEquals(2,requireNotNull(captured).getInt("protocol"));assertTrue(beforeClose.isNull("rawForm"))
             val valueForm=beforeClose.getJSONObject("valueForm");val rawManifest=valueForm.getString("rawManifest");val retained=JSONObject(rawManifest)
             val state=JSONObject();val fields=retained.getJSONArray("fields");val candidates=valueForm.getJSONArray("values")
@@ -125,6 +127,7 @@ class NativeBackupSafTest {
             try{File(app.getExternalFilesDir(null),"backup336-native-form-input.json").writeBytes(capturedBytes)}finally{capturedBytes.fill(0)}
             File(app.getExternalFilesDir(null),"backup322-saf-proof.json").writeText(JSONObject().put("synthetic",true)
                 .put("cancelledOpenAndSave",true).put("actualEncryptedExportAndOpen",true).put("decryptedByProductionWebView",true)
+                .put("retainedFileMemoryBytes",fileStatistics.memoryBytes).put("retainedFileBytes",fileStatistics.bytes)
                 .put("authorizedAfterSavePicker",true).put("retainedAfterNativeViewDisposal",true).put("filename",filename).toString(2))
         } finally { app.activateAccount(null) }
     }

@@ -30,6 +30,7 @@ class BackupWholeOperationTest {
         var extraReply:JSONObject?=null
         var chosen:android.net.Uri?=null
         var beforeChoose:suspend ()->Unit={}
+        var beforeFileRetention:()->Unit={}
         lateinit var bridge:BackupJavascriptBridge
         fun ownerCheck(){check(app.workspaceScope==account&&app.workspaceEpoch==epoch){"BACKUP_OWNER"}}
         fun check(){checks.incrementAndGet();check(live){"BACKUP_OWNER"};ownerCheck()}
@@ -47,7 +48,7 @@ class BackupWholeOperationTest {
             }
             val store=BackupNativeStore(app,owner,account,gateway)
             bridge=BackupJavascriptBridge(store,gateway,app,owner,jobs,{id,value->responses.remove(id)?.complete(value)},
-                {_,_->pickers.incrementAndGet();beforeChoose();chosen},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)})
+                {_,_->pickers.incrementAndGet();beforeChoose();chosen},{restarts.incrementAndGet()},{method->beforeUiDispatch(method)},{beforeFileRetention()})
         }
         fun submit(method:String,payload:JSONObject=JSONObject()):Deferred<JSONObject>{
             val id=UUID.randomUUID().toString();val result=CompletableDeferred<JSONObject>();responses[id]=result
@@ -209,6 +210,43 @@ class BackupWholeOperationTest {
             error(withTimeout(10000){result.await()},"E2EE_INVALID_LEGACY_OPERATION")
             val next=r.begin();ok(r.end(next));assertEquals(0,r.requests.get())
         }finally{release.complete(Unit);r.finish()}
+    }
+    @Test fun closingTheWindowDuringFileRetentionReturnsPromptlyAndMigrationStillWaitsForActualIo():Unit=runBlocking {
+        val r=Rig();r.start();val entered=CompletableDeferred<Unit>();val release=CountDownLatch(1)
+        val directory=java.io.File(r.app.cacheDir,"advice-shares");check(directory.isDirectory||directory.mkdirs())
+        val file=java.io.File(directory,"QA336-close-retain-${UUID.randomUUID()}.genesisbackup");file.writeBytes(ByteArray(300000){(it*17).toByte()})
+        try{
+            r.chosen=androidx.core.content.FileProvider.getUriForFile(r.app,"${r.app.packageName}.updates",file)
+            r.beforeFileRetention={entered.complete(Unit);check(release.await(10,TimeUnit.SECONDS))}
+            val token=r.begin();r.submit("importChoose",r.payload(token));withTimeout(10000){entered.await()}
+            val close=async(Dispatchers.Main){r.bridge.stop()}
+            val prompt=withTimeoutOrNull(1000){close.await();true}?:false
+            val captured=CompletableDeferred<Unit>();val migration=async(Dispatchers.IO){
+                NativeLegacyScopeFence(r.app.database,r.owner,"personal:${r.owner}",r::ownerCheck).withFence{captured.complete(Unit)}
+            }
+            assertNull(withTimeoutOrNull(150){captured.await()});release.countDown();withTimeout(10000){close.await();migration.await()}
+            assertTrue("Disposing the native window waited for bulk file IO",prompt)
+            val views=r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views");assertEquals(1,views.length())
+            assertFalse(views.getJSONObject(0).getBoolean("mounted"));assertEquals(0,views.getJSONObject(0).getJSONArray("files").length());assertEquals(0,r.requests.get())
+        }finally{release.countDown();file.delete();r.finish()}
+    }
+    @Test fun endingTheJobDuringFileRetentionInvalidatesPromptlyButCannotReleaseItsPermitEarly():Unit=runBlocking {
+        val r=Rig();r.start();val entered=CompletableDeferred<Unit>();val release=CountDownLatch(1)
+        val directory=java.io.File(r.app.cacheDir,"advice-shares");check(directory.isDirectory||directory.mkdirs())
+        val file=java.io.File(directory,"QA336-end-retain-${UUID.randomUUID()}.genesisbackup");file.writeBytes(ByteArray(300000){(it*19).toByte()})
+        try{
+            r.chosen=androidx.core.content.FileProvider.getUriForFile(r.app,"${r.app.packageName}.updates",file)
+            r.beforeFileRetention={entered.complete(Unit);check(release.await(10,TimeUnit.SECONDS))}
+            val token=r.begin();val response=r.submit("importChoose",r.payload(token));withTimeout(10000){entered.await()}
+            error(withTimeout(1000){r.end(token)},"E2EE_UNAWAITED_LEGACY_OPERATION")
+            val captured=CompletableDeferred<Unit>();val migration=async(Dispatchers.IO){
+                NativeLegacyScopeFence(r.app.database,r.owner,"personal:${r.owner}",r::ownerCheck).withFence{captured.complete(Unit)}
+            }
+            assertNull(withTimeoutOrNull(150){captured.await()});release.countDown()
+            error(withTimeout(10000){response.await()},"E2EE_INVALID_LEGACY_OPERATION");withTimeout(10000){migration.await()}
+            r.bridge.stop();val views=r.app.backupMigrationMemory.capture(r.owner,r.epoch).getJSONArray("views")
+            assertEquals(0,views.getJSONObject(0).getJSONArray("files").length());assertEquals(0,r.requests.get())
+        }finally{release.countDown();file.delete();r.finish()}
     }
     private fun form(settled:Boolean=true,file:JSONObject?=null)=JSONObject().put("protocol",1).put("state",JSONObject().put("key"," exact private input ")
         .put("operationId","original-uncertain-operation").put("confirmed",false).put("zero",0)).put("settled",settled).put("file",file?:JSONObject.NULL).toString()

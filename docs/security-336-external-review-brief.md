@@ -124,6 +124,16 @@ AEAD alone is insufficient to accept a legacy record.
   canonical new writer and exactly two fully authenticated semantic-header
   encodings for reading old files. This is not fallback to an unverified key,
   weaker E2EE suite, omitted context, plaintext or restore authority.
+- Native binary retention: `e2ee-336-archives-binary-spill.md` and
+  `BackupStoredBinary`. Review reuse of the existing authenticated UTF16 spill,
+  original descriptor/binary binding, strict small metadata, canonical Base64
+  length/padding/unused bits and complete digest/footer/EOF before whole-file
+  publication. Review pending reservations, original opaque session incarnation,
+  cleanup ownership, shared physical quota and cancellation during final metadata
+  readback. Window disposal and job-end must invalidate promptly while the whole
+  operation still drains; source-only streams and locators grant no restore or
+  replay authority. The selected24/51MiB probes do not close aggregate snapshot
+  streaming, process-remnant capture or the complete archives adapter gate.
 - Chronological evidence and failed-run limitations: `release-3.3.6.md` and its
   linked increment documents. Local logs/artifact hashes are under
   `output/release-3.3.6/`; they are not all tracked or externally distributed.

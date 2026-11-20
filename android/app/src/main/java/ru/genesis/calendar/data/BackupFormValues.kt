@@ -2,8 +2,8 @@ package ru.genesis.calendar.data
 
 import java.io.Reader
 
-/** Staged value framing; not wired into the ordinary bridge yet. Wrapping one
- * JSON value in the existing form format reuses authenticated local frames and
+/** Native value framing. Wrapping one JSON value in the existing form format
+ * reuses authenticated local frames and
  * restart locators. Original UTF16 JSON is never projected through JSONObject. */
 internal class BackupStoredValue(private val form:BackupFormSpool.Form) {
     val characters=form.characters-PREFIX.length-SUFFIX.length
@@ -44,7 +44,7 @@ internal class BackupStoredValue(private val form:BackupFormSpool.Form) {
 /** A bounded re-framer, not a second whole-value StringBuilder. The input and
  * encrypted-spool boundaries differ by the small fixed wrapper. Prefix/suffix
  * code units have exactly the same authenticated lifetime as the value itself. */
-internal class BackupValueTransfer(private val spool:BackupFormSpool,private val view:String,private val binding:String) {
+internal class BackupValueTransfer(private val spool:BackupFormSpool,private val view:String,private val binding:String,private val assertCurrent:()->Unit={}) {
     private class Pending(val id:String) {
         var inputIndex=0;var outputIndex=0;var characters=0
         val buffer=StringBuilder(BackupStoredValue.PREFIX)
@@ -63,7 +63,7 @@ internal class BackupValueTransfer(private val spool:BackupFormSpool,private val
             var result:BackupStoredValue?=null
             while(value.buffer.length>BackupFormSpool.CHUNK||last&&value.buffer.isNotEmpty()){
                 val count=minOf(value.buffer.length,BackupFormSpool.CHUNK);val end=last&&count==value.buffer.length
-                val stored=spool.append(view,binding,id,value.outputIndex++,end,value.buffer.substring(0,count))
+                val stored=spool.append(view,binding,id,value.outputIndex++,end,value.buffer.substring(0,count),assertCurrent)
                 value.buffer.delete(0,count)
                 if(stored!=null){check(end&&result==null){"BACKUP_TRANSFER_ORDER"};result=BackupStoredValue(stored)}
             }

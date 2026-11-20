@@ -189,10 +189,13 @@ class NativeBackupLargeTest {
             captureNativeWindow(File(app.getExternalFilesDir(null),"backup336-large-preview.png"))
             compose.runOnIdle{visible.value=false};compose.waitForIdle()
             assertEquals(sizes,app.backupMigrationMemory.retainedFormCharacters(owner,epoch))
+            val files=app.backupMigrationMemory.fileStatistics(owner,epoch)
+            assertEquals(1,files.files);assertEquals(file.length(),files.bytes);assertEquals(0L,files.memoryBytes);assertEquals(0,files.pending)
             val refused=assertThrows(IllegalStateException::class.java){app.backupMigrationMemory.capture(owner,epoch)}
             assertEquals("E2EE_SNAPSHOT_TOO_LARGE",refused.message)
             File(app.getExternalFilesDir(null),"backup336-large-preview-proof.json").writeText(JSONObject().put("synthetic",true).put("plainBytes",plain).put("fileBytes",file.length())
                 .put("formCharacters",sizes.single()).put("validatedAndSealedMaps",documents.get()).put("previews",previews.get()).put("retainedAfterClose",true)
+                .put("retainedFileMemoryBytes",files.memoryBytes).put("retainedFileBytes",files.bytes)
                 .put("smallEditMs",editMs).put("smallEditValueChunks",after.chunks-before.chunks).put("smallEditValueCharacters",after.characters-before.characters)
                 .put("smallEditedField","confirmed")
                 .put("totalValueChunks",after.chunks).put("totalValueCharacters",after.characters).put("acceptedValues",after.values).put("acceptedManifests",after.manifests)

@@ -1,8 +1,8 @@
 import type {BackupMigrationForm} from './backup-migration-memory.ts';
 import {nativeBackupFileOrigin} from './backup-native-file.ts';
 
-/** Staged local-only transport. It is not wired into the production renderer
- * until the native receiver and complete source preservation are implemented. */
+/** View-local transport to the native encrypted value/manifest registry. This
+ * does not itself grant archive migration, key or restore authority. */
 export type NativeBackupValueManifest=Readonly<{protocol:2;fields:readonly Readonly<{name:string;id:string}>[];
  settled:boolean;file:Readonly<{id:string;name:string;type:string;size:number;lastModified:number}>|null}>;
 type Ports={check:()=>void;operationId:()=>string;
