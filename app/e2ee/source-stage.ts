@@ -215,6 +215,18 @@ export async function inspectSourceStages(vault:UnlockedE2eeVault,target:SourceS
  return old.value.stages.map(row=>Object.freeze({...row}));
 }
 
+/** Compare AND re-seal this exact complete catalogue in the coordinator's own
+ * publication transaction. Any concurrent create/finish then loses a CAS;
+ * there is no unguarded gap between source verification and pointer visibility.
+ * The returned owned metadata bytes must be wiped by the transaction owner. */
+export async function sourceStagePublicationGuard(vault:UnlockedE2eeVault,target:SourceStageTarget,references:readonly SourceStageReference[],check:()=>void):Promise<LocalWrite>{
+ const refs=references.map(row=>{exactKeys(row,['stageId','manifestHash']);stageId(row.stageId);decodeE2eeBytes(row.manifestHash,32);return{...row};});
+ const scope=context(vault,target),hash=await identity(scope),old=await knownCatalog(vault,scope,hash,check);current(vault,check);
+ if(!old||refs.length<1||old.value.stages.length!==refs.length||old.value.stages.some((row,index)=>!row.complete||row.id!==refs[index].stageId||row.manifestHash!==refs[index].manifestHash))
+  throw new Error('E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED');
+ return write(catalogId(hash),old.value,old.serial);
+}
+
 /** Opening authenticates metadata; consuming a path through actual EOF proves
  * its complete ordered bytes. Closing an iterator early proves no completeness. */
 export async function openSourceStage(vault:UnlockedE2eeVault,target:SourceStageTarget,reference:SourceStageReference,check:()=>void){

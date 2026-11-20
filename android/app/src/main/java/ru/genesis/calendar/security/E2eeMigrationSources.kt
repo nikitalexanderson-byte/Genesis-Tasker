@@ -3,6 +3,7 @@ package ru.genesis.calendar.security
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.OutputStream
 
 /** Path inventory is packaged from the same JSON imported by the website. */
 class E2eePrivatePaths(source: JSONObject) {
@@ -57,6 +58,11 @@ interface E2eePrivatePathAdapter {
     suspend fun reconcile(local: ByteArray, previous: List<ByteArray>): E2eePathReconciliation
     suspend fun reconcile(local: ByteArray, previous: List<ByteArray>, context: E2eeMigrationSourceContext?): E2eePathReconciliation = reconcile(local,previous)
 }
+interface E2eePrivatePathStreamAdapter {
+    val id:String
+    /** Local-only original producer; return only after authenticated source EOF. */
+    suspend fun captureLocal(output:OutputStream)
+}
 
 /** Missing/unmounted/locked categories block completeness, not silently vanish.
  * Actual feature adapters are required before this can drive a product cutover.
@@ -66,6 +72,7 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
     override val requiredCoverage = paths.map { it.id }
     override val allowedContentDomains = paths.flatMap { it.domains }.toSet()
     private val adapters = mutableMapOf<String, E2eePrivatePathAdapter>()
+    private val streamAdapters=mutableMapOf<String,E2eePrivatePathStreamAdapter>()
     init { E2eeKeys.technical(ownerId); E2eeKeys.technical(scopeId) }
     override fun assertBinding(owner: String, scope: String, kind: String) {
         check(owner == ownerId && scope == scopeId && kind == this.kind) { "E2EE_SCOPE_BINDING_MISMATCH" }
@@ -73,6 +80,26 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
     fun register(adapter: E2eePrivatePathAdapter) {
         check(adapter.id in requiredCoverage && !adapters.containsKey(adapter.id)) { "E2EE_INVALID_SOURCE_ADAPTER" }
         adapters[adapter.id] = adapter
+    }
+    fun registerStream(adapter:E2eePrivatePathStreamAdapter) {
+        check(adapter.id in requiredCoverage&&!streamAdapters.containsKey(adapter.id)){"E2EE_INVALID_SOURCE_ADAPTER"}
+        streamAdapters[adapter.id]=adapter
+    }
+    /** Full preflight before keys/producers. Small compatibility readers have
+     * explicit per-path bounds and are consumed one at a time. */
+    fun stagedCapture(legacyLimits:Map<String,Int> = emptyMap()):E2eeStagedMigrationCapture {
+        val producers=paths.associate{path->
+            val stream=streamAdapters[path.id]
+            val producer:suspend(OutputStream)->Unit=if(stream!=null){val capture=stream::captureLocal;{out->capture(out)}}else{
+                val legacy=adapters[path.id]?:error("E2EE_SOURCE_ADAPTER_REQUIRED");val maximum=legacyLimits[path.id]?:error("E2EE_SOURCE_ADAPTER_REQUIRED")
+                check(maximum in 1..E2eeFiles.MAX_FILE_BYTES){"E2EE_SOURCE_ADAPTER_REQUIRED"};val capture=legacy::captureLocal;
+                {out:OutputStream->val value=capture();check(value.size in 1..maximum){"E2EE_SNAPSHOT_TOO_LARGE"};val bytes=value.copyOf()
+                    try{var at=0;while(at<bytes.size){val count=minOf(E2eeFiles.CHUNK_BYTES,bytes.size-at);out.write(bytes,at,count);at+=count}}
+                    finally{bytes.fill(0)}}
+            }
+            path.id to producer
+        }
+        return E2eeStagedMigrationCapture(E2eeSourceStage.Target(ownerId,scopeId,kind),requiredCoverage){id,out->(producers[id]?:error("E2EE_SOURCE_ADAPTER_REQUIRED"))(out)}
     }
     private fun all() = paths.map { path -> path to (adapters[path.id] ?: throw IllegalStateException("E2EE_SOURCE_ADAPTER_REQUIRED")) }
     override suspend fun captureLocal(): ByteArray {

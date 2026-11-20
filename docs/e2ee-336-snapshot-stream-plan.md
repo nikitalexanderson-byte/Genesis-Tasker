@@ -5,10 +5,12 @@ accepted migration. Keep the existing32/48/64MiB gates, coverage9/20,
 floors0 and pilot/cutover off until the complete replacement is accepted.
 Requirements: `e2ee-336-archive-stream-requirements.md`.
 
-The next local stage module is now under separate acceptance in
-`e2ee-336-source-stage.md`. It implements encrypted quarantine/catalogues,
-not this plan's coordinator pointer, complete source registry or common-reader
-integration. Keep those distinctions when composing the following steps.
+The local stage module was accepted separately in `e2ee-336-source-stage.md`.
+The coordinator SOURCE-publication increment is accepted separately in
+`e2ee-336-staged-coordinator.md`: explicit local state3, complete registry
+capture and atomic catalogue/pointer publication. Its v3 run refuses before
+transport until the complete streamed planner/common reader is implemented.
+Neither increment completes this plan or raises real product source coverage.
 
 ## Source and storage boundary
 
@@ -84,9 +86,10 @@ record does not meet this requirement.
 
 ## Concrete composition constraints after the accepted source-stage increment
 
-These are implementation decisions for the next coordinator increment, not
-claims that it exists. Review them against both actual `migration.ts` and
-native `E2eeMigration.kt`; do not implement a web-only state transition.
+These are composition requirements for the whole integration. SOURCE-only
+state3/publication has the separate local acceptance cited above; remaining
+planning, recovery and reader requirements are not claims of implementation.
+Review both actual `migration.ts` and native `E2eeMigration.kt` together.
 
 - Introduce an explicit local state version3. Keep strict readers for1/2.
   Represent the source as a discriminated staged reference, with its original

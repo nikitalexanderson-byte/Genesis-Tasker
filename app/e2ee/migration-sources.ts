@@ -2,6 +2,8 @@ import registry from '../../contracts/e2ee/private-paths-v1.json' with {type:'js
 import {E2EE_DOMAINS,decodeE2eeBytes,encodeE2eeBytes,type E2eeContext} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {E2EE_MAX_FILE_BYTES} from './files.ts';
+import {E2EE_CHUNK_BYTES} from './files.ts';
+import type {StagedMigrationCapture} from './migration-stage.ts';
 import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSources,type MigrationSourceContext} from './migration.ts';
 
 export type PrivateScopeKind='personal'|'project'|'space';
@@ -20,6 +22,11 @@ export interface PrivatePathAdapter {
   /** Only after the complete protected local snapshot commits. All old attempts are supplied. */
   reconcile(local:Uint8Array,previous:readonly Uint8Array[],context?:MigrationSourceContext):Promise<{complete:boolean;content:MigrationContent[];localContent?:MigrationContent[]}>;
 }
+export interface PrivatePathStreamAdapter {
+ readonly id:string;
+ /** Local-only producer; success must follow complete original source EOF. */
+ captureLocal(write:(bytes:Uint8Array)=>Promise<void>):Promise<void>;
+}
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 
 /** A missing category cannot silently turn a partial adapter into full migration.
@@ -28,6 +35,7 @@ const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
  */
 export class E2eeMigrationSources implements MigrationSources {
   #ownerId:string;#scopeId:string;#kind:PrivateScopeKind;#paths:readonly PrivatePath[];#adapters=new Map<string,PrivatePathAdapter>();
+  #streamAdapters=new Map<string,PrivatePathStreamAdapter>();
   readonly requiredCoverage:readonly string[];
   readonly allowedContentDomains:readonly E2eeContext['domain'][];
   constructor(ownerId:string,scopeId:string,kind:PrivateScopeKind){
@@ -41,6 +49,31 @@ export class E2eeMigrationSources implements MigrationSources {
   register(adapter:PrivatePathAdapter){
     if(!this.requiredCoverage.includes(adapter.id)||this.#adapters.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
     this.#adapters.set(adapter.id,adapter);
+  }
+  registerStream(adapter:PrivatePathStreamAdapter){
+    if(!this.requiredCoverage.includes(adapter.id)||this.#streamAdapters.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
+    this.#streamAdapters.set(adapter.id,adapter);
+  }
+  /** Snapshot ALL callbacks and validate the full registry before any durable-key
+   * callback or producer. Legacy compatibility requires an explicit per-path
+   * bound and never aggregates several path results. */
+  stagedCapture(legacyLimits:ReadonlyMap<string,number>=new Map()):StagedMigrationCapture{
+    const producers=new Map<string,(write:(bytes:Uint8Array)=>Promise<void>)=>Promise<void>>();
+    for(const path of this.#paths){
+      const stream=this.#streamAdapters.get(path.id);
+      if(stream){producers.set(path.id,stream.captureLocal.bind(stream));continue;}
+      const legacy=this.#adapters.get(path.id),maximum=legacyLimits.get(path.id);
+      if(!legacy||!Number.isSafeInteger(maximum)||maximum!<1||maximum!>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+      const capture=legacy.captureLocal.bind(legacy),limit=maximum!;
+      producers.set(path.id,async write=>{
+        const value=await capture();if(!(value instanceof Uint8Array)||value.length<1||value.length>limit)throw new Error('E2EE_SNAPSHOT_TOO_LARGE');
+        const bytes=new Uint8Array(value);
+        try{for(let at=0;at<bytes.length;at+=E2EE_CHUNK_BYTES)await write(bytes.subarray(at,Math.min(bytes.length,at+E2EE_CHUNK_BYTES)));}
+        finally{bytes.fill(0);}
+      });
+    }
+    return Object.freeze({target:Object.freeze({ownerId:this.#ownerId,scopeId:this.#scopeId,kind:this.#kind}),paths:Object.freeze([...this.requiredCoverage]),
+      async capturePath(id:string,write:(bytes:Uint8Array)=>Promise<void>){const producer=producers.get(id);if(!producer)throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');await producer(write);}});
   }
   #all(){
     return this.#paths.map(path=>{const adapter=this.#adapters.get(path.id);if(!adapter)throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');return{path,adapter};});

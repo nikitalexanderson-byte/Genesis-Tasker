@@ -34,7 +34,7 @@ class E2eeMigration(
     private val localFence: E2eeMigrationFence, private val verifyRecovery: suspend (SecretKey) -> Unit,
 ) {
     class Status(val migrationId: String, val phase: String, val uploaded: Int, val planned: Int,
-        val ancestors: List<String>, val pendingAction: String?, val resuming: Boolean, val fence: Long?,val localObjects:Int=0,val planReady:Boolean=false) {
+        val ancestors: List<String>, val pendingAction: String?, val resuming: Boolean, val fence: Long?,val localObjects:Int=0,val planReady:Boolean=false,val sourceFormat:String="legacy") {
         override fun toString() = "E2eeMigration.Status([redacted])"
     }
     private class Loaded(val state: JSONObject, var serial: Long)
@@ -63,24 +63,29 @@ class E2eeMigration(
         val state = JSONObject(bytes.toString(Charsets.UTF_8))
         val phases = setOf("preparing", "uploading", "verified", "active", "cancelled")
         val protocol=number(state,"protocol")
-        check(protocol in setOf(1L,2L) && state.getString("phase") in phases) { "E2EE_CORRUPT_MIGRATION" }
-        E2eeKeys.exact(state,setOf("protocol","migrationId","phase","snapshotParts","snapshotSize","snapshotHash","ancestors","sourceHash","lease","plan","logical","uploaded","manifestHash","verifiedCheckpoint","pending","resuming","checkpointHash","directoryRevision")+
-            if(protocol==2L)setOf("local","planned")else emptySet())
+        check(protocol in setOf(1L,2L,3L) && state.getString("phase") in phases) { "E2EE_CORRUPT_MIGRATION" }
+        E2eeKeys.exact(state,setOf("protocol","migrationId","phase","ancestors","sourceHash","lease","plan","logical","uploaded","manifestHash","verifiedCheckpoint","pending","resuming","checkpointHash","directoryRevision")+
+            (if(protocol==3L)setOf("source")else setOf("snapshotParts","snapshotSize","snapshotHash"))+(if(protocol!=1L)setOf("local","planned")else emptySet()))
         E2eeKeys.technical(state.getString("migrationId"))
         val plan = state.getJSONArray("plan"); val logical = state.getJSONArray("logical"); val ancestors = state.getJSONArray("ancestors")
         check(plan.length() <= 10000 && logical.length() <= 10000 && number(state,"uploaded") <= plan.length()
-            && number(state,"snapshotParts") <= 256 && number(state,"snapshotSize") <= E2eeFiles.MAX_FILE_BYTES
+            && (protocol==3L||number(state,"snapshotParts") <= 256 && number(state,"snapshotSize") <= E2eeFiles.MAX_FILE_BYTES)
             && ancestors.length() <= 32) { "E2EE_CORRUPT_MIGRATION" }
         val seen = mutableSetOf<String>()
         for (index in 0 until ancestors.length()) check(seen.add(E2eeKeys.technical(ancestors.getString(index)))) { "E2EE_CORRUPT_MIGRATION" }
-        if(protocol==2L){
+        if(protocol!=1L){
             check(state.get("planned") is Boolean){"E2EE_CORRUPT_MIGRATION"}
             val local=localEntries(state)
             check(state.getBoolean("planned")||local.isEmpty()&&plan.length()==0&&logical.length()==0&&state.getString("phase") !in setOf("verified","active")){"E2EE_CORRUPT_MIGRATION"}
         }
+        if(protocol==3L){
+            check(state.get("phase") in setOf("preparing","cancelled")&&!state.getBoolean("planned")&&number(state,"uploaded")==0L
+                &&listOf("sourceHash","lease","pending","resuming","manifestHash","verifiedCheckpoint").all{state.isNull(it)}){"E2EE_CORRUPT_MIGRATION"}
+            E2eeMigrationStage.validate(state.getJSONObject("source"),vault,E2eeSourceStage.Target(ownerId,scopeId,kind),required)
+        }
         return state
     }
-    private fun localEntries(state:JSONObject)=if(number(state,"protocol")==2L)E2eeMigrationLocal.validate(state.getJSONArray("local"),state.getString("migrationId"),allowed)else emptyList()
+    private fun localEntries(state:JSONObject)=if(number(state,"protocol")!=1L)E2eeMigrationLocal.validate(state.getJSONArray("local"),state.getString("migrationId"),allowed)else emptyList()
     private fun verifyLocal(state:JSONObject){for(entry in localEntries(state))E2eeMigrationLocal.open(vault,entry).bytes.fill(0)}
     /** No network/legacy fallback for missing local-only content. */
     fun readLocal(domain:String,objectId:String):E2eeMigrationContent? {
@@ -98,7 +103,8 @@ class E2eeMigration(
         Status(state.getString("migrationId"),state.getString("phase"),number(state,"uploaded").toInt(),state.getJSONArray("plan").length(),
             (0 until ancestors.length()).map { ancestors.getString(it) },nullable(state,"pending")?.getJSONObject("command")?.getString("action"),
             !state.isNull("resuming"),nullable(state,"lease")?.let { number(it,"fence",1) },localEntries(state).size,
-            if(number(state,"protocol")==2L)state.getBoolean("planned")else state.getJSONArray("plan").length()>0)
+            if(number(state,"protocol")!=1L)state.getBoolean("planned")else state.getJSONArray("plan").length()>0,
+            if(number(state,"protocol")==3L)"source-stage-v1" else "legacy")
     }
     private fun save(loaded: Loaded, extra: List<UnlockedE2eeVault.Write> = emptyList()) {
         val bytes = encoded(loaded.state)
@@ -112,6 +118,7 @@ class E2eeMigration(
     private suspend fun prepareLocked() {
         ensureDurableKeys(); vault.requireOpen()
         val old = loadOrNull()
+        check(old==null||number(old.state,"protocol")!=3L){"E2EE_STREAMED_SOURCE_REQUIRED"}
         check(old == null || old.state.get("phase") == "cancelled") { "E2EE_MIGRATION_ALREADY_PREPARED" }
         val ancestors = old?.state?.getJSONArray("ancestors")?.let { JSONArray(it.toString()) } ?: JSONArray()
         if (old != null) ancestors.put("${old.state.getString("migrationId")}:archive")
@@ -133,7 +140,36 @@ class E2eeMigration(
             save(Loaded(state,old?.serial ?: 0),changes)
         } finally { snapshot.fill(0); changes.forEach { it.bytes.fill(0) } }
     }
+    /** Durable source publication only. v3 run remains closed until the complete
+     * streaming planner/common reader is independently accepted. */
+    suspend fun prepareStaged(capture:E2eeStagedMigrationCapture,options:E2eeStagedMigrationOptions) {
+        val captured=E2eeStagedMigrationCapture(capture.target,capture.paths,capture.capturePath)
+        return fenced{prepareStagedLocked(captured,options)}
+    }
+    private suspend fun prepareStagedLocked(capture:E2eeStagedMigrationCapture,options:E2eeStagedMigrationOptions) {
+        val target=E2eeSourceStage.Target(ownerId,scopeId,kind);check(capture.target==target){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val current:()->Unit={options.assertCurrent();vault.requireOpen()};current();val old=loadOrNull()
+        check(old==null||old.state.get("phase")=="cancelled"){"E2EE_MIGRATION_ALREADY_PREPARED"}
+        val ancestors=old?.state?.getJSONArray("ancestors")?.let{JSONArray(it.toString())}?:JSONArray()
+        if(old!=null)ancestors.put("${old.state.getString("migrationId")}:archive")
+        check(ancestors.length()<=32){"E2EE_MIGRATION_HISTORY_LIMIT"}
+        val source=E2eeMigrationStage.capture(vault,capture,required,options,ensureDurableKeys);current()
+        val state=JSONObject().put("protocol",3).put("migrationId",UUID.randomUUID().toString()).put("phase","preparing").put("source",source).put("ancestors",ancestors)
+            .put("local",JSONArray()).put("planned",false).put("sourceHash",JSONObject.NULL).put("lease",JSONObject.NULL).put("plan",JSONArray()).put("logical",JSONArray())
+            .put("uploaded",0).put("manifestHash",JSONObject.NULL).put("verifiedCheckpoint",JSONObject.NULL).put("pending",JSONObject.NULL).put("resuming",JSONObject.NULL)
+            .put("checkpointHash",initialCheckpoint.hash).put("directoryRevision",initialCheckpoint.revision)
+        val changes=mutableListOf<UnlockedE2eeVault.Write>()
+        if(old!=null)changes+=UnlockedE2eeVault.Write("local-snapshot",ancestors.getString(ancestors.length()-1),encoded(old.state),null)
+        val bytes=encoded(state)
+        try{
+            val totals=E2eeMigrationStage.verify(vault,source,target,required,current);current()
+            changes+=E2eeMigrationStage.publicationGuard(vault,source,target,required,current);current()
+            options.admit(E2eeSourceStage.Admission(totals.first,totals.second,bytes.size+changes.sumOf{it.bytes.size}));current()
+            save(Loaded(state,old?.serial?:0),changes);current()
+        }finally{bytes.fill(0);changes.forEach{it.bytes.fill(0)}}
+    }
     private fun snapshot(state: JSONObject): ByteArray {
+        check(number(state,"protocol")!=3L){"E2EE_STREAMED_PLANNER_REQUIRED"}
         val size = number(state,"snapshotSize"); check(size <= E2eeFiles.MAX_FILE_BYTES) { "E2EE_CORRUPT_SNAPSHOT" }
         val result = ByteArray(size.toInt()); var offset = 0
         try {
@@ -224,6 +260,7 @@ class E2eeMigration(
             for (index in 0 until ancestors.length()) {
                 val row = vault.read("local-snapshot",ancestors.getString(index)) ?: error("E2EE_CORRUPT_SNAPSHOT")
                 val old = try { decode(row.bytes) } finally { row.bytes.fill(0) }
+                check(number(old,"protocol")!=3L){"E2EE_STREAMED_SOURCE_REQUIRED"}
                 total += number(old,"snapshotSize"); check(total <= E2eeMigrationSources.BYTE_BUDGET) { "E2EE_MIGRATION_HISTORY_LIMIT" }
                 previous += snapshot(old)
             }
@@ -261,7 +298,10 @@ class E2eeMigration(
     }
     suspend fun run(): String = fenced { runLocked() }
     private suspend fun runLocked(): String {
-        ensureDurableKeys(); val loaded = load(); val state = loaded.state
+        val loaded = load(); val state = loaded.state
+        if(number(state,"protocol")==3L&&state.get("phase")=="cancelled")return "cancelled"
+        check(number(state,"protocol")!=3L){"E2EE_STREAMED_PLANNER_REQUIRED"}
+        ensureDurableKeys()
         verifyLocal(state)
         if (!state.isNull("resuming")) resume(loaded)
         if (!state.isNull("pending")) replay(loaded)
@@ -333,6 +373,10 @@ class E2eeMigration(
         if (!state.isNull("lease")) send(loaded,packet(state,"migration-cancel",JSONObject().put("migrationId",state.get("migrationId")).put("fence",lease(state).get("fence"))))
         else { state.put("phase","cancelled"); save(loaded) }
     }
-    suspend fun restart() = fenced { cancelLocked(); prepareLocked() }
+    suspend fun restart() = fenced { check(loadOrNull()?.state?.let{number(it,"protocol")}!=3L){"E2EE_STREAMED_SOURCE_REQUIRED"};cancelLocked(); prepareLocked() }
+    suspend fun restartStaged(capture:E2eeStagedMigrationCapture,options:E2eeStagedMigrationOptions) {
+        val captured=E2eeStagedMigrationCapture(capture.target,capture.paths,capture.capturePath)
+        return fenced{cancelLocked();prepareStagedLocked(captured,options)}
+    }
     override fun toString() = "E2eeMigration([redacted])"
 }

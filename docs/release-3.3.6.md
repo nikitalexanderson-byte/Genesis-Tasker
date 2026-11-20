@@ -1972,3 +1972,42 @@ lint PASS. Детали/точные hashes: e2ee-336-file-manifest-preflight.md
 Coverage9/20 и остальные release gates сохраняются. Production3.3.5/149,
 floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
 устройства/версия в этой части не менялись.
+
+## Потоковый источник: атомарная ссылка coordinator,20 ноября
+
+Локальное состояние3 явно ссылается на защищённый stage с original target,
+device actor, полным registry путей и всеми известными complete attempts.
+Старые1/2 и cancelled ancestors сохраняют собственные форматы. Полный registry
+проверяется до keys/producers; stream adapters отделены от bounded compatibility.
+Incomplete/unknown remnants явно блокируют reconciliation, complete orphan
+после проигранного CAS включается в следующую попытку. Новый source format не
+кодируется как пустой legacy snapshot и не меняет crypto/writer protocol.
+
+Pointer, прежний ancestor и compare/re-seal исходного stage catalogue сохраняются
+одной существующей vault-транзакцией. Это закрывает также гонку при capacity
+await: отдельная вставка stage между проверкой и публикацией приводит к CAS
+отказу без потери обеих попыток. Native producer может suspend между bounded
+writes с прежними actor/single-path/EOF guards. Metadata admission учитывает
+catalogue guard и state/ancestor, а owned buffers очищаются.
+
+Accepted input03
+20692275A82E6641B8E231BEF1C0D96156DBCFD17895A73B79048C3C69A6A7CB:
+build SUCCESS18m52s, JVM163/163, lint0/208/8, новых issue/file pairs0. Actual
+API26/API34 — по5/5 new coordinator-source и4/4 retained-source regression,
+0 fail/skip. Независимый bounded host подтвердил все73,400,327 bytes primary
+source(70MiB+7) и весь прежний71,305,891-byte archive wire с51MiB files/4 values/
+2 manifests. New-source elapsed41,231/70,099ms, Java max heaps512/192MiB;
+peak heap/SLA не заявляются. По3 extracted artifacts каждого отчёта сверены
+по хешам; свежие JCA vectors открыты Node WebCrypto. Browser25/25, JS88/88,
+scoped lint/owned types PASS. Input01 compiler failure и02 cancelled до
+acceptance сохранены как отдельные черновики. Подробности/точные hashes:
+e2ee-336-staged-coordinator.md.
+
+V3 run пока явно отказывает E2EE_STREAMED_PLANNER_REQUIRED до transport:
+это приёмка source publication, не завершённая потоковая миграция. Synthetic
+registry из6 project producers не является6 real adapters. Coverage9/20 и
+полные archives/process/nested cipher/common reader/content planner, остальные
+sources/lifecycle/ACL+rotation/Drive/direct upgrades/48 scenarios/14-language
+semantics/human crypto review остаются обязательными. Production3.3.5/149,
+floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false; Deploy/Play/личные
+устройства/версия здесь не менялись.

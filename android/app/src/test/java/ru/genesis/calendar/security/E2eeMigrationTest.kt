@@ -7,15 +7,19 @@ import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
 import java.security.MessageDigest
+import java.io.OutputStream
+import kotlinx.coroutines.yield
 
 class E2eeMigrationTest {
     private class Memory : E2eeRecordStorage {
         var rows = mutableMapOf<String,E2eeLocalRecord>(); var full = false
         var afterCommit:((List<E2eeStorageChange>)->Unit)?=null
+        var beforeCommit:((List<E2eeStorageChange>)->Unit)?=null
         override fun get(key: String) = rows[key]
         override fun list(prefix: String) = rows.keys.filter { it.startsWith(prefix) }
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
             requireOpen(); check(!full) { "SYNTHETIC_DISK_FULL" }
+            beforeCommit?.invoke(changes)
             for (change in changes) check(rows[change.key]?.serial == change.expected) { "E2EE_LOCAL_CONFLICT" }
             val copy = rows.toMutableMap()
             for (change in changes) if (change.value == null) copy.remove(change.key) else copy[change.key] = change.value
@@ -40,6 +44,83 @@ class E2eeMigrationTest {
         val missing: String? = null, val incomplete: Boolean = false, val truncated: Boolean = false,
         val badRecovery: Boolean = false, val poisonedCheckpoint: Boolean = false,val localOnly:Boolean=false,val withLocal:Boolean=false,
         val localBytes:ByteArray?=null) { var changedSource = false }
+    private fun staged(f:Fixture,producer:(suspend (String,OutputStream)->Unit)?=null)=E2eeStagedMigrationCapture(E2eeSourceStage.Target("owner",f.scope,f.kind),f.sources.requiredCoverage){id,out->
+        if(producer!=null)producer(id,out)else{yield();out.write("STAGED ORIGINAL $id".toByteArray());yield()}
+    }
+    private fun stagedOptions()=E2eeStagedMigrationOptions(E2eeSourceStage.Capacity(4L*1024*1024,16),{},{})
+    private fun stagedState(f:Fixture):JSONObject {
+        val id="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(f.scope.toByteArray()))
+        val row=requireNotNull(f.device.vault.read("local-snapshot",id));return try{JSONObject(row.bytes.toString(Charsets.UTF_8))}finally{row.bytes.fill(0)}
+    }
+    @Test fun stagedPointerSurvivesColdCoordinatorAndCannotReachLegacyTransport()=runBlocking {
+        val f=Fixture();val capture=staged(f);f.make().prepareStaged(capture,stagedOptions())
+        val status=requireNotNull(f.make().status());assertEquals("source-stage-v1",status.sourceFormat);assertFalse(status.planReady)
+        val state=stagedState(f);assertEquals(3,state.getInt("protocol"));for(field in listOf("snapshotParts","snapshotSize","snapshotHash"))assertFalse(state.has(field))
+        val source=state.getJSONObject("source");val ref=source.getJSONObject("reference")
+        assertEquals("device:device",source.getJSONObject("actor").getString("scopeId"))
+        val opened=E2eeSourceStage.open(f.device.vault,capture.target,E2eeSourceStage.Reference(ref.getString("stageId"),ref.getString("manifestHash")),{})
+        for(path in opened.paths)opened.openPath(path).use{assertEquals("STAGED ORIGINAL $path",it.readBytes().toString(Charsets.UTF_8));it.assertComplete()}
+        reject("E2EE_STREAMED_PLANNER_REQUIRED"){f.make().run()};assertEquals(0,f.calls);assertFalse(f.trace.contains("network-source"))
+    }
+    @Test fun missingStagedRegistryPathRefusesBeforeKeysAndProducer()=runBlocking {
+        val f=Fixture();var calls=0;val capture=E2eeStagedMigrationCapture(E2eeSourceStage.Target("owner",f.scope,f.kind),f.sources.requiredCoverage.dropLast(1)){_,_->calls++}
+        reject("E2EE_SOURCE_ADAPTER_REQUIRED"){f.make().prepareStaged(capture,stagedOptions())}
+        assertEquals(0,calls);assertFalse(f.trace.contains("durable-keys"));assertTrue(f.storage.rows.isEmpty());assertEquals(0,f.calls)
+    }
+    @Test fun committedPartDeathBlocksFutureCaptureWithoutDroppingIncompleteHistory()=runBlocking {
+        val f=Fixture();val capture=staged(f){_,out->out.write(ByteArray(E2eeFiles.CHUNK_BYTES){47})};var died=false
+        f.storage.afterCommit={changes->if(!died&&changes.any{it.key.contains("source-stage:")&&it.key.endsWith(":p:00:00000")}){died=true;error("SYNTHETIC_PART_DEATH")}}
+        reject("SYNTHETIC_PART_DEATH"){f.make().prepareStaged(capture,stagedOptions())};assertNull(f.make().status())
+        assertFalse(E2eeSourceStage.inspect(f.device.vault,capture.target,{}).single().complete);val kept=f.storage.rows.toMap();var calls=0;f.storage.afterCommit=null
+        reject("E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"){f.make().prepareStaged(staged(f){_,_->calls++},stagedOptions())}
+        assertEquals(0,calls);assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+    }
+    @Test fun lostCoordinatorCasLeavesCompleteOrphanInTheNextSnapshotHistory()=runBlocking {
+        val f=Fixture();val capture=staged(f);var refused=false
+        f.storage.beforeCommit={changes->if(!refused&&changes.any{it.value?.envelope?.context?.toJson()?.getString("objectId")?.startsWith("migration:")==true}){refused=true;error("E2EE_LOCAL_CONFLICT")}}
+        reject("E2EE_LOCAL_CONFLICT"){f.make().prepareStaged(capture,stagedOptions())};assertNull(f.make().status())
+        val orphan=E2eeSourceStage.inspect(f.device.vault,capture.target,{}).single();assertTrue(orphan.complete);val kept=f.storage.rows.toMap()
+        f.make().prepareStaged(capture,stagedOptions());val history=stagedState(f).getJSONObject("source").getJSONArray("history");assertEquals(1,history.length());assertEquals(orphan.id,history.getJSONObject(0).getString("stageId"))
+        for((key,value)in kept)if(!key.contains("source-stage-catalog:"))assertSame(value,f.storage.rows[key]);assertEquals(0,f.calls)
+    }
+    @Test fun pointerCommitDeathDoesNotStartAnotherCaptureAfterColdLoad()=runBlocking {
+        val f=Fixture();val capture=staged(f);var died=false
+        f.storage.afterCommit={changes->if(!died&&changes.any{it.value?.envelope?.context?.toJson()?.getString("objectId")?.startsWith("migration:")==true}){died=true;error("SYNTHETIC_POINTER_DEATH")}}
+        reject("SYNTHETIC_POINTER_DEATH"){f.make().prepareStaged(capture,stagedOptions())};f.storage.afterCommit=null
+        assertEquals("source-stage-v1",requireNotNull(f.make().status()).sourceFormat);val kept=f.storage.rows.toMap()
+        reject("E2EE_MIGRATION_ALREADY_PREPARED"){f.make().prepareStaged(capture,stagedOptions())};assertEquals(kept,f.storage.rows)
+        assertEquals(1,E2eeSourceStage.inspect(f.device.vault,capture.target,{}).size);assertEquals(0,f.calls)
+    }
+    @Test fun cancelledMixedAncestorsKeepExactVersionsAndCannotUseLegacyRestart()=runBlocking {
+        val f=Fixture();val migration=f.make();migration.prepare();val original=stagedState(f);migration.cancel();val capture=staged(f)
+        migration.prepareStaged(capture,stagedOptions());var state=stagedState(f);assertEquals(1,state.getJSONArray("ancestors").length())
+        val previous=requireNotNull(f.device.vault.read("local-snapshot",state.getJSONArray("ancestors").getString(0)))
+        try{val old=JSONObject(previous.bytes.toString(Charsets.UTF_8));assertEquals(2,old.getInt("protocol"));assertEquals(original.get("snapshotHash"),old.get("snapshotHash"));assertEquals("cancelled",old.get("phase"))}finally{previous.bytes.fill(0)}
+        migration.cancel();assertEquals("cancelled",migration.run());val kept=f.storage.rows.toMap()
+        reject("E2EE_STREAMED_SOURCE_REQUIRED"){migration.prepare()};reject("E2EE_STREAMED_SOURCE_REQUIRED"){migration.restart()};assertEquals(kept,f.storage.rows)
+        migration.restartStaged(capture,stagedOptions());state=stagedState(f);assertEquals(2,state.getJSONArray("ancestors").length());assertEquals(1,state.getJSONObject("source").getJSONArray("history").length());assertEquals(0,f.calls)
+    }
+    @Test fun injectedStagedLeaseOrPlanCannotReachTransport()=runBlocking {
+        for(mode in listOf("lease","planned","binding")){
+            val f=Fixture();val capture=staged(f);f.make().prepareStaged(capture,stagedOptions());val state=stagedState(f)
+            if(mode=="lease")state.put("lease",JSONObject().put("fence",1).put("generation",1).put("leaseUntil",2000000000))else if(mode=="planned")state.put("planned",true)
+            else state.getJSONObject("source").getJSONObject("actor").put("deviceId","foreign-device")
+            val id="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(f.scope.toByteArray()))
+            val row=requireNotNull(f.device.vault.read("local-snapshot",id));val bytes=state.toString().toByteArray()
+            try{f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",id,bytes,row.serial)))}finally{bytes.fill(0);row.bytes.fill(0)}
+            reject(if(mode=="binding")"E2EE_CORRUPT_STAGED_MIGRATION" else "E2EE_CORRUPT_MIGRATION"){f.make().run()};assertEquals(0,f.calls)
+        }
+    }
+    @Test fun catalogueRaceDuringAdmissionAtomicallyRefusesPointerAndRetainsAllOriginals()=runBlocking {
+        val f=Fixture();val capture=staged(f);var injected=false;val capacity=E2eeSourceStage.Capacity(4L*1024*1024,16)
+        val options=E2eeStagedMigrationOptions(capacity,{}, {
+            val known=E2eeSourceStage.inspect(f.device.vault,capture.target,{})
+            if(!injected&&known.size==1&&known.single().complete){injected=true;E2eeSourceStage.create(E2eeSourceStage.Options(f.device.vault,capture.target,capture.paths,capacity,{},{},{}))}
+        })
+        reject("E2EE_LOCAL_CONFLICT"){f.make().prepareStaged(capture,options)};assertTrue(injected);assertNull(f.make().status())
+        val known=E2eeSourceStage.inspect(f.device.vault,capture.target,{});assertEquals(2,known.size);assertTrue(known[0].complete);assertFalse(known[1].complete)
+        val kept=f.storage.rows.toMap();reject("E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"){f.make().prepareStaged(capture,stagedOptions())};assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+    }
     private class Fixture(val options: Options = Options()) : E2eeMigrationTransport {
         val storage = Memory(); val device = Device(storage); val trace = mutableListOf<String>()
         val kind = options.registry ?: "personal"; val scope = "$kind:owner"

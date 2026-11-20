@@ -5,6 +5,9 @@ import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
+import java.io.OutputStream
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.yield
 
 class E2eeMigrationSourcesTest {
     private val inventory by lazy {
@@ -27,6 +30,23 @@ class E2eeMigrationSourcesTest {
         return Fixture(sources,live,calls)
     }
     private suspend fun reject(code:String,action:suspend()->Unit){try{action()}catch(error:Exception){assertEquals(code,error.message);return};fail("Incomplete migration source accepted")}
+    @Test fun streamRegistryPreflightsAllKindsAndRequiresExplicitBoundedCompatibility()=runBlocking {
+        for(kind in listOf("personal","project","space")){
+            val sources=E2eeMigrationSources("owner","$kind:one",kind,inventory);var calls=0;val paths=sources.requiredCoverage
+            for(path in paths.drop(1))sources.registerStream(object:E2eePrivatePathStreamAdapter{override val id=path
+                override suspend fun captureLocal(output:OutputStream){yield();calls++;output.write(id.toByteArray())}})
+            reject("E2EE_SOURCE_ADAPTER_REQUIRED"){sources.stagedCapture()};assertEquals(0,calls)
+            sources.register(object:E2eePrivatePathAdapter{override val id=paths.first()
+                override suspend fun captureLocal():ByteArray{calls++;yield();return "bounded".toByteArray()}
+                override suspend fun reconcile(local:ByteArray,previous:List<ByteArray>):E2eePathReconciliation=error("NO_RECONCILE_DURING_CAPTURE")})
+            reject("E2EE_SOURCE_ADAPTER_REQUIRED"){sources.stagedCapture(mapOf(paths.first() to 0))};assertEquals(0,calls)
+            val capture=sources.stagedCapture(mapOf(paths.first() to 7));val first=ByteArrayOutputStream()
+            for(path in capture.paths)capture.capturePath(path,if(path==paths.first())first else ByteArrayOutputStream())
+            assertEquals(paths.size,calls);assertEquals("bounded",first.toString("UTF-8"))
+            reject("E2EE_SNAPSHOT_TOO_LARGE"){sources.stagedCapture(mapOf(paths.first() to 6)).capturePath(paths.first(),ByteArrayOutputStream())}
+            reject("E2EE_SOURCE_ADAPTER_REQUIRED"){sources.captureLocal()}
+        }
+    }
     @Test fun missingUnmountedAdaptersBlockBeforeFirstCapture()=runBlocking {
         val sources=E2eeMigrationSources("owner","personal:one","personal",inventory);var calls=0
         sources.register(object:E2eePrivatePathAdapter{

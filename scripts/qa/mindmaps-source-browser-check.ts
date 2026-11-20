@@ -49,7 +49,7 @@ try{
  let sourceReads=0,pageReads=0,reconciliations=0,captures=0,recoveryChecks=0,interrupted=false,state='legacy';
  const source=new PersonalMindmapsSource(owner,scopeId,{storage:localStorage,memory:()=>memory,assertCurrent:()=>device!.requireOpen(),legacyMindmaps:async context=>{
   sourceReads++;return collectLegacyPersonalPages(context,'mindmaps',{assertCurrent:()=>device!.requireOpen(),readPage:async(value,table,offset)=>{
-   pageReads++;check('each map page follows the committed protected snapshot',((await make().status())?.snapshotParts??0)>0);
+   pageReads++;const state=await make().status();check('each map page follows the committed protected snapshot',!!state&&state.protocol!==3&&state.snapshotParts>0);
    const rows=oldData[table].slice(offset,offset+7),next=offset+rows.length;
    return{protocol:1,ownerId:owner,scopeId,migrationId:value.migrationId,fence:value.fence,sourceHash:value.sourceHash,legacyGeneration:0,checkpointHash:directory.checkpoint.hash,directoryRevision:1,
     table,offset,totals:Object.fromEntries(Object.entries(oldData).map(([name,items])=>[name,items.length])),rows,nextOffset:next<oldData[table].length?next:null,

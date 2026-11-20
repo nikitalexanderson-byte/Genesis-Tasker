@@ -47,7 +47,11 @@ class E2eeSourceStage private constructor(private val options: Options, private 
     }
     /** Output close/flush is not a completion receipt. Only the producer's
      * successful full authenticated EOF and this method's return close a path. */
-    fun capturePath(id: String, producer: (OutputStream) -> Unit) {
+    fun capturePath(id: String, producer: (OutputStream) -> Unit) = capturePathInternal(id, producer)
+    /** A local producer may suspend between bounded writes. The original actor,
+     * single-path gate and completion checks span that suspension. */
+    suspend fun captureSuspendPath(id: String, producer: suspend (OutputStream) -> Unit) = capturePathInternal(id) { producer(it) }
+    private inline fun capturePathInternal(id: String, producer: (OutputStream) -> Unit) {
         current(); check(busy.compareAndSet(false, true)) { "E2EE_SOURCE_STAGE_BUSY" }
         val buffer = ByteArray(StageCodec.CHUNK); val gate = ReentrantLock()
         var count = 0; val accepting = AtomicBoolean(true)
@@ -155,6 +159,16 @@ class E2eeSourceStage private constructor(private val options: Options, private 
             val context = StageCodec.context(vault, target); val old = StageCodec.catalog(vault, context, StageCodec.identity(context), check) ?: return emptyList()
             val rows = old.body.getJSONArray("stages")
             return (0 until rows.length()).map { rows.getJSONObject(it).let { row -> Marker(row.getString("id"), row.getBoolean("complete"), if (row.isNull("manifestHash")) null else row.getString("manifestHash")) } }
+        }
+        /** Include this compare/re-seal in the SAME transaction as the pointer.
+         * Returned owned bytes belong to the publication transaction owner. */
+        internal fun publicationGuard(vault:UnlockedE2eeVault,target:Target,references:List<Reference>,check:()->Unit):UnlockedE2eeVault.Write {
+            val refs=references.toList();refs.forEach{StageCodec.id(it.stageId);E2eeEnvelope.decode(it.manifestHash,32)}
+            val context=StageCodec.context(vault,target);val hash=StageCodec.identity(context)
+            val old=StageCodec.catalog(vault,context,hash,check)?:StageCodec.invalid();val rows=old.body.getJSONArray("stages")
+            check(refs.isNotEmpty()&&rows.length()==refs.size&&(0 until rows.length()).all{index->val row=rows.getJSONObject(index)
+                row.getBoolean("complete")&&row.get("id")==refs[index].stageId&&row.get("manifestHash")==refs[index].manifestHash}){"E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"}
+            StageCodec.current(vault,check);return StageCodec.write(StageCodec.catalogId(hash),old.body,old.serial)
         }
         fun open(vault: UnlockedE2eeVault, target: Target, reference: Reference, check: () -> Unit): Opened {
             StageCodec.current(vault, check); val context = StageCodec.context(vault, target); val hash = StageCodec.identity(context)
