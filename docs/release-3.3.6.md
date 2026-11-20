@@ -1787,3 +1787,23 @@ process remnants и открытие всех nested old ciphers до приня
 normal lifecycle/shared/files/Drive/48 scenarios/human review обязательны.
 Production3.3.5/149 и floors0/pilot/cutover off/GENESIS_DEPLOY_ANDROID=false;
 никаких Deploy/Play/личных устройств/повышения версии здесь не было.
+
+## Архивы: потоковое кодирование исходников,20 ноября
+
+Следующий source-only модуль BackupSourceJson сохраняет исходные UTF16 units
+и binary bytes в JSON wire без полной промежуточной строки/Base64. Он проверяет
+original actor по bounded IO и требует фактического EOF, включая финальную
+проверку tag/footer источника. Частичный вывод остаётся quarantine; модуль не
+даёт snapshot/restore/network authority и пока не подключён к coordinator.
+
+Input01 3B613B4C03FCB5E2694A26C59EAA6B4C8C4972CAEAADF72F02AD36627A8B24F2.
+Selected JVM7/7; actual API26/API34 — по1/1 native codec case,0 fail/skip.
+Независимые host checks сохранили все исходные units/bytes, отказ общего strict
+parser на duplicate private names и подтвердили SHA256 полного quoted40MiB
+generated stream. Java max heap512/192MiB, elapsed1603/1852ms(API26/API34).
+Это проверка codec, не всей миграции и не peak-heap measurement. APK hashes,
+точный объём и evidence: `e2ee-336-archive-source-wire.md`.
+
+Coverage9/20;32/48/64MiB aggregate gates ещё действуют. Полные source/coordinator
+streaming, process remnants, nested old ciphers, остальные категории и общая
+приёмка обязательны. Production3.3.5/149 и floors0/pilot/cutover off сохраняются.
