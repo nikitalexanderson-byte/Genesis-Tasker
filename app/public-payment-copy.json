@@ -1,0 +1,58 @@
+{
+  "ru": {
+    "period": "Доступ на месяц или год. Elite — разовая покупка бессрочного доступа. Условия продления зависят от выбранного способа оплаты и указаны до покупки.",
+    "checkout": "Выберите тариф после входа. Доступные способы оплаты, валюта, налоги и итоговая сумма показываются до оплаты."
+  },
+  "en": {
+    "period": "Choose monthly or yearly access. Elite is a one-time purchase of lifetime access. Renewal terms depend on the selected payment method and are shown before purchase.",
+    "checkout": "Choose a plan after signing in. Available payment methods, currency, taxes and the final total are shown before you pay."
+  },
+  "el": {
+    "period": "Επιλέξτε μηνιαία ή ετήσια πρόσβαση. Το Elite είναι εφάπαξ αγορά ισόβιας πρόσβασης. Οι όροι ανανέωσης εξαρτώνται από τον επιλεγμένο τρόπο πληρωμής και εμφανίζονται πριν από την αγορά.",
+    "checkout": "Επιλέξτε πρόγραμμα αφού συνδεθείτε. Οι διαθέσιμοι τρόποι πληρωμής, το νόμισμα, οι φόροι και το τελικό ποσό εμφανίζονται πριν πληρώσετε."
+  },
+  "de": {
+    "period": "Wählen Sie monatlichen oder jährlichen Zugang. Elite bietet lebenslangen Zugang gegen eine einmalige Zahlung. Die Verlängerungsbedingungen hängen von der gewählten Zahlungsart ab und werden vor dem Kauf angezeigt.",
+    "checkout": "Wählen Sie nach der Anmeldung einen Tarif. Verfügbare Zahlungsarten, Währung, Steuern und Gesamtbetrag werden vor der Zahlung angezeigt."
+  },
+  "fr": {
+    "period": "Choisissez un accès mensuel ou annuel. Elite est un achat unique donnant accès à vie. Les conditions de renouvellement dépendent du moyen de paiement choisi et sont affichées avant l’achat.",
+    "checkout": "Choisissez une formule après connexion. Les moyens de paiement disponibles, la devise, les taxes et le montant total sont affichés avant le paiement."
+  },
+  "es": {
+    "period": "Elige acceso mensual o anual. Elite es una compra única de acceso de por vida. Las condiciones de renovación dependen del método de pago elegido y se muestran antes de la compra.",
+    "checkout": "Elige un plan después de iniciar sesión. Los métodos de pago disponibles, la moneda, los impuestos y el importe final se muestran antes de pagar."
+  },
+  "it": {
+    "period": "Scegli l’accesso mensile o annuale. Elite è un acquisto una tantum con accesso a vita. Le condizioni di rinnovo dipendono dal metodo di pagamento scelto e sono mostrate prima dell’acquisto.",
+    "checkout": "Scegli un piano dopo aver effettuato l’accesso. I metodi di pagamento disponibili, la valuta, le imposte e l’importo totale sono mostrati prima del pagamento."
+  },
+  "pt": {
+    "period": "Escolha acesso mensal ou anual. Elite é uma compra única com acesso vitalício. As condições de renovação dependem do método de pagamento escolhido e são apresentadas antes da compra.",
+    "checkout": "Escolha um plano após iniciar sessão. Os métodos de pagamento disponíveis, a moeda, os impostos e o valor total são apresentados antes do pagamento."
+  },
+  "pl": {
+    "period": "Wybierz dostęp miesięczny lub roczny. Elite to jednorazowy zakup dożywotniego dostępu. Warunki odnowienia zależą od wybranej metody płatności i są podane przed zakupem.",
+    "checkout": "Wybierz plan po zalogowaniu. Dostępne metody płatności, waluta, podatki i łączna kwota są wyświetlane przed zapłatą."
+  },
+  "sr": {
+    "period": "Изаберите месечни или годишњи приступ. Elite је једнократна куповина доживотног приступа. Услови обнове зависе од изабраног начина плаћања и приказују се пре куповине.",
+    "checkout": "Изаберите план након пријављивања. Доступни начини плаћања, валута, порези и укупан износ приказују се пре плаћања."
+  },
+  "uk": {
+    "period": "Оберіть доступ на місяць або рік. Elite — одноразова купівля безстрокового доступу. Умови продовження залежать від обраного способу оплати та вказані до купівлі.",
+    "checkout": "Оберіть тариф після входу. Доступні способи оплати, валюта, податки та підсумкова сума відображаються до оплати."
+  },
+  "zh": {
+    "period": "可选择按月或按年访问。Elite 为一次性购买终身访问权限。续期条款取决于所选支付方式，并会在购买前显示。",
+    "checkout": "登录后选择套餐。可用支付方式、币种、税费和最终总额会在付款前显示。"
+  },
+  "tr": {
+    "period": "Aylık veya yıllık erişimi seçin. Elite, ömür boyu erişim sağlayan tek seferlik bir satın almadır. Yenileme koşulları seçilen ödeme yöntemine bağlıdır ve satın almadan önce gösterilir.",
+    "checkout": "Oturum açtıktan sonra bir plan seçin. Kullanılabilir ödeme yöntemleri, para birimi, vergiler ve toplam tutar ödeme yapmadan önce gösterilir."
+  },
+  "ja": {
+    "period": "月単位または年単位のアクセスを選べます。Elite は一度の購入で無期限に利用できます。更新条件は選択した支払い方法によって異なり、購入前に表示されます。",
+    "checkout": "ログイン後にプランを選択してください。利用可能な支払い方法、通貨、税金、合計金額は支払い前に表示されます。"
+  }
+}

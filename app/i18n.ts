@@ -72,6 +72,7 @@ import chineseYear from "./year-translations/zh.json";
 import turkishYear from "./year-translations/tr.json";
 import japaneseYear from "./year-translations/ja.json";
 import { languageForRegion, regionFromLocales, REGION_LANGUAGES, type RegionLanguage } from "./region-language";
+import {publicRouteForPath,publicPagePath,publicPageAlternates} from './public-route';
 
 export const LANGUAGES = REGION_LANGUAGES;
 export type Language = RegionLanguage;
@@ -1039,8 +1040,11 @@ export function isLanguage(value: unknown): value is Language {
 
 export function browserLanguage(): Language {
   if (typeof window === "undefined") return "ru";
+  const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE);
+  if(publicRoute?.explicitLanguage)return publicRoute.language;
   const requested = new URLSearchParams(window.location.search).get("lang");
   if (requested && (LANGUAGES as readonly string[]).includes(requested)) return requested as Language;
+  if(publicRoute)return publicRoute.language;
   const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
   if (stored && (LANGUAGES as readonly string[]).includes(stored)) return stored as Language;
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -1151,6 +1155,15 @@ export function useDocumentLanguage(language: Language) {
     runtimeLanguage = language;
     document.documentElement.lang = language;
     document.documentElement.dataset.language = language;
+    const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE);
+    if(publicRoute) {
+      const canonical=document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if(canonical)canonical.href=`https://genesiscalendar.com${publicPagePath(language,publicRoute.page,APP_BASE)}`;
+      for(const row of publicPageAlternates(publicRoute.page,APP_BASE)) {
+        const alternate=document.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${row.language}"]`);
+        if(alternate)alternate.href=`https://genesiscalendar.com${row.path}`;
+      }
+    }
     localizeTree(document.body, language);
     const headTimer = window.setTimeout(() => {
       document.title = PAGE_TITLES[language];

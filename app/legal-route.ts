@@ -1,10 +1,11 @@
+import {publicRouteForPath} from './public-route';
 export type LegalPageName = keyof typeof import('./legal-content').legalPages;
 
 const legalPageNames = ['privacy', 'terms', 'refund', 'support', 'delete-account'] as const satisfies readonly LegalPageName[];
 
 /** Route detection stays independent of the localized document bundles. */
 export function legalPageForPath(pathname: string): LegalPageName | null {
-  const name = pathname.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
+  const name = publicRouteForPath(pathname,process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||'')?.page;
   return legalPageNames.find(page => page === name) ?? null;
 }
 
