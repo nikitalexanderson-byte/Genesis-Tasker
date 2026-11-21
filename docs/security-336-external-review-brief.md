@@ -191,13 +191,15 @@ not an implemented or reviewed stage protocol. Coverage remains9/20.
 The eleven remaining source categories, full bootstrap/unlock/editor routing,
 normal writes and whole-product fences, shared ACL-change/rotation transaction,
 files/automation, archives/Drive/local-only backup, large-data/old-provider
-acceptance, clean recovery, direct signed upgrades, all48 system scenarios and
+acceptance, clean recovery, signed3.3.5/149 →3.3.6 upgrade, system scenarios and
 14-language semantic review remain unfinished. Do not substitute current unit
 counts, the nine-adapter count or a successful CI run for these gates. The owned
 API26/WebView113 fixture proves selected compatibility paths; its publicly signed
 development provider/overlay is not a production distribution or a security
 certification of obsolete operating systems/providers. Runtime support and the
-native/WebView capability boundary still require explicit review.
+native/WebView capability boundary still require explicit review. Pre-3.3.5 APK
+upgrade testing was explicitly removed from support by the owner21 November;
+that cancelled scope is not represented as a passing test.
 
 The review deliverable must identify reviewer/organization, scope, exact commit
 and lockfile, threat assumptions, methods, reproducible findings and severity,

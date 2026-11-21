@@ -159,7 +159,7 @@ web report02 не подтверждают финальное состояние
 | Original custody и process restart | Same-active-actor quarantine не даёт authenticated handoff старых keys/roots/signer на другом устройстве. Реальные bounded WebView roles и nested legacy key/AAD ещё обязательны |
 | Нормальная работа и recovery | Все writers/background paths, unlock/enrollment/recovery, файлы/Drive и clean-device восстановление ещё не приняты во всём охвате. Неуспех не разрешает empty vault/fallback/удаление старых оригиналов |
 | Общие данные | Нужны explicit authorized source predicates и атомарные ACL-change + independent-root rotation. Conservative source token/inventory не является read grant |
-| Доставка | Signed direct upgrades старых версий,48 system journeys и14-language semantic/visual security UX не завершены. Эти строки не закрываются1998 unit tests |
+| Доставка | Signed upgrade3.3.5/149 →3.3.6, системные journeys и14-language semantic/visual security UX не завершены. APK до3.3.5 исключены владельцем21 ноября. Эти строки не закрываются1998 unit tests |
 | Независимость | Review выполнил тот же AI-разработчик. Тестовые библиотеки и разные crypto providers дают отдельные oracles, но не независимую экспертизу полного протокола человеком |
 
 Дополнительные пределы обещаний: trusted client/code delivery входит в модель
