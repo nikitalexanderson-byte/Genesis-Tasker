@@ -45,6 +45,8 @@ interface GenesisDao {
     suspend fun backupDocuments(scope: String): List<DocumentRecord>
     @Query("SELECT kind FROM documents WHERE scope=:scope ORDER BY kind")
     suspend fun documentKinds(scope: String): List<String>
+    @Query("SELECT DISTINCT scope FROM documents WHERE scope=:account OR substr(scope,1,length(:prefix))=:prefix ORDER BY scope")
+    suspend fun migrationDocumentScopes(account:String,prefix:String):List<String>
     @Query("DELETE FROM outbox WHERE scope=:scope")
     suspend fun clearBackupHeldOutbox(scope: String)
     @Query("SELECT * FROM tasks WHERE scope=:scope")

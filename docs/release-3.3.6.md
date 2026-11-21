@@ -79,8 +79,9 @@ dark UI+bridge, font1.3; исправлен также устаревший pare
    atomic commit/fence и crash/concurrency/offline/tombstone проверки.
 7. Сначала web/API за выключенными флагами и web-only pilot; старые вкладки/SW
    и старый Android не должны обходить запрет записи мигрированного scope.
-8. Android с тем же контрактом; прямое обновление 3.3.4 и более старых версий
-   без обязательной промежуточной 3.3.5. Сохранение подписи/package/данных.
+8. Android с тем же контрактом; поддерживаемое обновление3.3.5/149 →3.3.6.
+   Отдельные APK ранних версий исключены владельцем21 ноября; существующие
+   schema migrations, подпись/package/данные сохраняются.
 9. Общие проекты, документы, previews и вложения; сообщения/история и отдельный
    ADR forward secrecy; Google/AI/spelling — явные внешние границы.
 10. Полная приёмка 48 сценариев, 14 языков по смыслу, обе схемы/все палитры,
@@ -2771,5 +2772,26 @@ Build02 отказал только на test export helper; build03 испра�
 Затем device19/20 выявил ошибочный64KiB fixture вместо существующего256KiB file
 chunk. Input04 A2381E7D сохраняет тот же exact main APK7AEE8744, новый test3E1BDDF5;
 API26/API34 каждый44 distinct PASS в трёх свежих credential groups,0 failures/skips.
-Personal browser21/21 PASS с одним ожидаемым console409/0 warnings; project/space
-и full native lint ещё проверяются. Failed runs не переименованы в PASS.
+Browser personal/project/space каждый21/21 PASS с одним ожидаемым console409/
+0 warnings на профиль. Full native lint15m13s:0 errors/208 warnings/8 hints,
+без новых issue/file pairs/count increases. WebCrypto проверил native wire3
+для всех трёх kind на обоих API, включая независимые host raw hashes. Final
+identity относится к e93b23d0/inputA2381E7D; custody пока не реализован. Failed
+runs не переименованы в PASS. Run/upload/activation и coverage9/20 сохраняют gates.
+
+## 21 ноября: owner custody исходного local root
+
+Добавлен purpose-separated owner recovery artifact без старых private device
+keys. Он связывает исходные owner/device coordinates/epochs, local key ID,
+public signer и root hash подписью основной recovery authority владельца.
+Project/space authority не получает этот root. Artifact/reference сохраняются
+вместе вне старого local root; без remembered reference работает bounded owner
+discovery. Recovered capability предоставляет только revocable original reads,
+не enrollment/writer/session/ACL/billing/activation.
+
+Web full JS2081/2081, project TSC04/scoped lint03, build:web02 и Chromium19/19
+PASS после отдельного durable-reference RED. Native build01/JVM component
+прошли; окончательная native device/lint acceptance продолжается. Точные failed
+inputs, архитектура, ограничения и evidence — `docs/e2ee-336-original-root-custody.md`.
+Nested legacy materialization, mixed state4/history/plan composition и11 real
+sources остаются обязательными. Coverage9/20,3.3.5/149 production и gates сохраняются.

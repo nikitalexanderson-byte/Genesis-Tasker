@@ -5,6 +5,8 @@ import { assertTechnical, exactKeys, freshSecret, generateDeviceKeys, exportPriv
 import { verifyDeviceDirectory, type VerifiedDirectory } from './directory.ts';
 import { openE2eeDatabase, IndexedDbE2eeStorage, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
 import {commitE2eeIndexedDb} from './indexeddb-write.ts';
+import {sealOriginalCustody,persistOriginalCustody} from './original-custody.ts';
+import {IndexedDbOriginalCustodyStorage} from './original-custody-storage.ts';
 
 export type ProtectedDeviceRecord = { serial: number; bundle: ProtectedBundle };
 export interface DeviceKeyStorage {
@@ -25,6 +27,7 @@ export class IndexedDbDeviceKeyStorage implements DeviceKeyStorage {
   async create(ownerId:string,bundle:ProtectedBundle){
     assertTechnical(ownerId);return commitE2eeIndexedDb(this.#database,'keyMaterial',[{key:ownerId,expected:null,value:{serial:1,bundle}}]);
   }
+  originalCustodyStorage(){return new IndexedDbOriginalCustodyStorage(undefined,this.#database);}
 }
 type PrivateDeviceBundle = {protocol:1;ownerId:string;deviceId:string;localKeyId:string;localRoot:string;deviceKeys:Awaited<ReturnType<typeof exportPrivateDeviceKeys>>;authorityPin:PublicDeviceKeys};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
@@ -88,6 +91,23 @@ export class UnlockedWebDevice {
     try{row=snapshotE2eeValue(stored);if(row)exactKeys(row.bundle,fields);}
     catch{throw new Error('E2EE_DEVICE_KEY_UNAVAILABLE');}
     if(!row||row.serial!==this.#record.serial||fields.some(name=>row.bundle[name]!==this.#record.bundle[name]))throw new Error('E2EE_DEVICE_KEY_UNAVAILABLE');
+  }
+  /** Explicit owner recovery custody. Re-entered secret opens the exact saved
+   * bundle; only its root and PUBLIC signer leave this method inside a new
+   * owner-secret-protected artifact. Never export the old signing identity. */
+  async preserveOriginalSources(secret:Uint8Array,recoveryKit:RecoveryKit,assertCurrent:()=>void){
+    const held=retainedSecret(secret),current=()=>{this.requireOpen();assertCurrent();};let bytes:Uint8Array|undefined,root:Uint8Array|undefined;
+    try{
+      const kit=snapshotE2eeValue(recoveryKit);
+      this.requireDurableProvider();current();await this.ensureDurableKeys();current();
+      bytes=await openBundle(this.ownerId,'device-vault',held,this.#record.bundle);current();const saved=JSON.parse(decoder.decode(bytes));
+      if(saved.ownerId!==this.ownerId||saved.deviceId!==this.deviceId||saved.localKeyId!==`local:${this.deviceId}`)throw new Error('E2EE_DEVICE_KEY_UNAVAILABLE');
+      root=decodeE2eeBytes(saved.localRoot,32);const signer=saved.deviceKeys.signingKey;delete saved.localRoot;delete saved.deviceKeys;bytes.fill(0);
+      const sealed=await sealOriginalCustody({original:{ownerId:this.ownerId,scopeId:`device:${this.deviceId}`,deviceId:this.deviceId,generation:1,cryptoEpoch:1,securityEpoch:1},keyId:saved.localKeyId,
+        signer,root,primaryPin:this.authorityPin,recoveryKit:kit,secret:held,assertCurrent:current});current();
+      await this.ensureDurableKeys();current();const reference=await persistOriginalCustody((this.#keyStorage as IndexedDbDeviceKeyStorage).originalCustodyStorage(),this.ownerId,sealed,current);
+      await this.ensureDurableKeys();current();return reference;
+    }finally{held.fill(0);bytes?.fill(0);root?.fill(0);}
   }
   async #directoryId(scopeId:string){assertTechnical(scopeId);return 'directory-'+encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(scopeId))));}
   async rememberDirectory(scopeId:string,pin:PublicDeviceKeys,events:SignedE2eeCommand[],ownerId=this.ownerId,onVerified?:(directory:VerifiedDirectory)=>void):Promise<VerifiedDirectory>{

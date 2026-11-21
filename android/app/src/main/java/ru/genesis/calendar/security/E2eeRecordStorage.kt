@@ -76,7 +76,7 @@ class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRe
             return E2eeStorageAdmission.providerFiles(folder,records)
         }catch(error:Exception){throw IllegalStateException(if(error.message=="E2EE_STORAGE_CAPACITY")"E2EE_STORAGE_CAPACITY"else"E2EE_STORAGE_USAGE_UNAVAILABLE")}
     }
-    @Synchronized override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
+    @Synchronized override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) = synchronized(E2eeStorageAdmission.providerMutationLock) {
         require(changes.size in 1..10000 && changes.map { it.key }.toSet().size == changes.size) { "E2EE_INVALID_LOCAL_BATCH" }
         class Planned(val key:String,val expected:Long?,val serial:Long?,val envelope:String?,val bytes:Long?)
         val planned=changes.map{change->

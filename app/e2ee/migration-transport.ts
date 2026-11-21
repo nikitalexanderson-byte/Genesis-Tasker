@@ -6,6 +6,7 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 import type {MigrationTransport,MigrationSourceContext} from './migration.ts';
 import type {E2eeHttpObservation} from './http-observation.ts';
 import type {MigrationPlanningSession,MigrationLegacyAction} from './migration-session.ts';
+import {validatePrivatePathPage} from './private-path-source.ts';
 
 export type E2eeMigrationRequest=(path:'/source'|'/command'|'/read',body:unknown,observation?:E2eeHttpObservation,signal?:AbortSignal)=>Promise<Record<string,WireValue>>;
 /** Signed, paginated shadow readback through the real authenticated channel.
@@ -68,7 +69,10 @@ export class SignedMigrationTransport implements MigrationTransport {
       if(!['maps','versions','receipts','deletions','deletionScopes','conversions'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
     });
   }
-  async #legacyPersonal(action:MigrationLegacyAction,context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number},validate:()=>void=()=>{}):Promise<unknown>{
+  async legacyPrivatePathFragment(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-private-path',context,{pathId,table,offset,byteOffset},()=>validatePrivatePathPage(this.#kind,pathId,table,offset,byteOffset));
+  }
+  async #legacyPersonal(action:MigrationLegacyAction,context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number;pathId?:string},validate:()=>void=()=>{}):Promise<unknown>{
     const preflight=()=>{if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');validate();};
     if(!this.#planning){preflight();throw new Error('E2EE_STREAMED_CAPTURE_REQUIRED');}
     return this.#planning.requestLegacy(context,action,page,async(packet,observation,signal)=>{

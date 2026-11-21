@@ -66,4 +66,14 @@ internal class SharedOfflineStore(context: Context) {
         preferences.all.keys.filter { it.startsWith("cache:$userId:") }.forEach(editor::remove)
         check(editor.commit()) { "Shared offline snapshots could not be cleared" }
     }
+    /** Include expired caches and uncertain requests; ordinary snapshot's age
+     * filter is inappropriate for a lossless migration inventory. */
+    @Synchronized fun captureMigration(userId:String,current:()->Unit):List<JSONObject>{
+        current();val original=preferences.all.filterKeys{it==queueKey(userId)||it.startsWith("cache:$userId:")}.toSortedMap()
+        val rows=mutableListOf<JSONObject>();var size=0L
+        for((key,stored)in original){current();check(stored is String){"E2EE_LOCAL_WORK_SOURCE_INVALID"};size+=stored.length
+            check(size<=64L*1024*1024&&rows.size<10000){"E2EE_SOURCE_TOO_LARGE"}
+            rows+=JSONObject().put("store","genesis.shared.offline.v1").put("key",key).put("encrypted",stored).put("rawDocument",cipher.decrypt(stored,key))}
+        check(preferences.all.filterKeys{it==queueKey(userId)||it.startsWith("cache:$userId:")}==original){"E2EE_LOCAL_WORK_CAPTURE_CHANGED"};current();return rows
+    }
 }

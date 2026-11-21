@@ -276,3 +276,30 @@ upgrade stale guards и bounded read всех retained versions. Это серв
 Evidence, точные ограничения и сохранённые RED —
 `e2ee-336-shared-mindmap-source.md`. Review выполняет тот же AI-разработчик;
 независимая человеческая экспертиза и полный переход продукта не заявляются.
+
+## Продолжение21 ноября: owner custody исходного local root
+
+Device-local root открывает private scopes владельца, поэтому нельзя обернуть
+его для project authority или server-provided receiving key. Новая custody
+подтверждает отдельно введённый32-byte secret и ОБА public keys primary owner
+kit по pin разблокированного устройства. Purpose-bound owner certificate
+связывает original identity/epochs, key ID, PUBLIC signer и root hash. Старые
+private device keys не передаются; recovery capability только читает originals.
+
+Actual Chromium RED выявил циклическую dependency: ciphertext был durable,
+а его reference оставалась только у вызывающего кода. Теперь обе части
+записываются одной admitted create-only row/file вне старого local root;
+owner-only discovery и `recoverById` проверяют untrusted descriptor по owner
+certificate. Accessor descriptor отвергается до чтения ID. Cleanup secret
+охватывает также ошибки binding read ports. Wrong secret, оба pin fields,
+same-owner project kit, rehashed root/signer/context substitution и old-device
+self-signature отказывают, сохраняя исходные records.
+
+Native custody получает явный retained `.new` с file force/atomic rename/
+directory fsync, общий key-file/SQLite admission lock и учёт всех remnants.
+Missing DB не создаётся. Web full JS2081/2081, TSC04/scoped lint03, build:web02
+и Chromium19/19 PASS; final native acceptance выполняется отдельно. Ограничения,
+failed runs и hashes — `e2ee-336-original-root-custody.md`. Nested legacy
+materialization, remote originals/mixed state4 plans и полный product recovery
+ещё обязательны; coverage9/20 и rollout gates сохраняются. Это внутренний
+AI review исполнителя по поручению владельца, не независимое заключение человека.

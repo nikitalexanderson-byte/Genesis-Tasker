@@ -2,9 +2,10 @@ import type {MigrationContentStream} from './content-plan.ts';
 import type {RemoteOriginalRegistration,RemoteOriginalReference} from './remote-original.ts';
 import type {StagedSourceInput} from './staged-reconciliation.ts';
 import type {MigrationCoverage} from './migration.ts';
+import type {SignedE2eeCommand} from './commands.ts';
 
 export type MigrationContentPlanningSession=Readonly<{sources:StagedSourceInput;
- originals:readonly Readonly<{registration:RemoteOriginalRegistration;completion:RemoteOriginalReference}>[];
+ originals:readonly Readonly<{registration:RemoteOriginalRegistration;completion:RemoteOriginalReference;packet?:SignedE2eeCommand}>[];
  withOriginal:(id:string,consume:(bytes:AsyncIterable<Uint8Array>)=>Promise<void>)=>Promise<void>;
  emit:(path:string,record:MigrationContentStream)=>Promise<void>}>;
 type Hooks<T>={sources:StagedSourceInput;originals:MigrationContentPlanningSession['originals'];assertCurrent:()=>void;

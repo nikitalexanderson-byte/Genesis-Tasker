@@ -44,6 +44,33 @@ export class E2eeMigrationSources implements MigrationSources {
     if(!this.requiredCoverage.includes(adapter.id)||this.#adapters.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
     this.#adapters.set(adapter.id,adapter);
   }
+  /** Compose existing bounded domain adapters with the streamed coordinator.
+   * Limits are enforced on authenticated EOF; no dummy category is registered. */
+  registerIntegrated(adapter:PrivatePathAdapter,assertCurrent:()=>void,maximum=E2EE_MAX_FILE_BYTES){
+    if(!Number.isSafeInteger(maximum)||maximum<1||maximum>E2EE_MAX_FILE_BYTES||this.#adapters.has(adapter.id)||this.#streamAdapters.has(adapter.id)||this.#stagedReconcilers.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
+    const capture=adapter.captureLocal.bind(adapter),reconcile=adapter.reconcile.bind(adapter),id=adapter.id;
+    this.register(adapter);
+    this.registerStream({id,async captureLocal(write){assertCurrent();const bytes=await capture();
+      try{assertCurrent();if(!(bytes instanceof Uint8Array)||bytes.length<1||bytes.length>maximum)throw new Error('E2EE_SNAPSHOT_TOO_LARGE');
+        for(let at=0;at<bytes.length;at+=E2EE_CHUNK_BYTES){assertCurrent();await write(bytes.subarray(at,Math.min(at+E2EE_CHUNK_BYTES,bytes.length)));assertCurrent();}
+      }finally{bytes.fill(0);}}});
+    this.registerStagedReconciler({id,async reconcile(input,context,emit){
+      const buffers:Uint8Array[]=[];let total=0;
+      try{
+        for(const source of [input.current,...input.previous]){
+          const reader=source.open(),parts:Uint8Array[]=[];let length=0;
+          try{for await(const part of reader.chunks){assertCurrent();length+=part.length;total+=part.length;
+            if(length>maximum||total>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');parts.push(new Uint8Array(part));}
+            reader.assertComplete();const bytes=new Uint8Array(length);let at=0;for(const part of parts){bytes.set(part,at);at+=part.length;}buffers.push(bytes);
+          }finally{parts.forEach(part=>part.fill(0));await reader.close();}
+        }
+        const result=await reconcile(buffers[0],buffers.slice(1),context);
+        try{assertCurrent();for(const [placement,rows]of [['remote',result.content],['local',result.localContent??[]]] as const)for(const row of rows){
+          assertCurrent();await emit({...row,placement,size:row.bytes.length,source:(async function*(){for(let at=0;at<row.bytes.length;at+=E2EE_CHUNK_BYTES){assertCurrent();yield row.bytes.subarray(at,Math.min(at+E2EE_CHUNK_BYTES,row.bytes.length));}})()});assertCurrent();
+        }return result.complete;}finally{[...result.content,...result.localContent??[]].forEach(row=>row.bytes.fill(0));}
+      }finally{buffers.forEach(bytes=>bytes.fill(0));}
+    }});
+  }
   registerStream(adapter:PrivatePathStreamAdapter){
     if(!this.requiredCoverage.includes(adapter.id)||this.#streamAdapters.has(adapter.id))throw new Error('E2EE_INVALID_SOURCE_ADAPTER');
     this.#streamAdapters.set(adapter.id,adapter);

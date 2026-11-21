@@ -82,6 +82,33 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
         check(adapter.id in requiredCoverage && !adapters.containsKey(adapter.id)) { "E2EE_INVALID_SOURCE_ADAPTER" }
         adapters[adapter.id] = adapter
     }
+    internal fun registerIntegrated(adapter:E2eePrivatePathAdapter,assertCurrent:()->Unit,maximum:Int=E2eeFiles.MAX_FILE_BYTES){
+        check(maximum in 1..E2eeFiles.MAX_FILE_BYTES&&!adapters.containsKey(adapter.id)&&!streamAdapters.containsKey(adapter.id)&&!stagedReconcilers.containsKey(adapter.id)){"E2EE_INVALID_SOURCE_ADAPTER"}
+        register(adapter)
+        registerStream(object:E2eePrivatePathStreamAdapter{override val id=adapter.id
+            override suspend fun captureLocal(output:OutputStream){assertCurrent();val bytes=adapter.captureLocal()
+                try{assertCurrent();check(bytes.size in 1..maximum){"E2EE_SNAPSHOT_TOO_LARGE"};var at=0
+                    while(at<bytes.size){assertCurrent();val count=minOf(E2eeFiles.CHUNK_BYTES,bytes.size-at);output.write(bytes,at,count);at+=count;assertCurrent()}
+                }finally{bytes.fill(0)}}})
+        registerStagedReconciler(object:E2eeStagedPathReconciler{override val id=adapter.id
+            override suspend fun reconcile(current:E2eeReconciliationPathInput,previous:List<E2eeReconciliationPathInput>,context:E2eeMigrationSourceContext,emit:suspend(E2eeContentPlan.Record)->Unit):Boolean {
+                val buffers=mutableListOf<ByteArray>();var total=0L
+                try{
+                    for(source in listOf(current)+previous){val parts=mutableListOf<ByteArray>();var length=0
+                        try{source.open().use{reader->val buffer=ByteArray(E2eeFiles.CHUNK_BYTES)
+                            try{while(true){assertCurrent();val count=reader.input.read(buffer);if(count<0)break;check(count>0){"E2EE_INVALID_SOURCE_STREAM"};length+=count;total+=count
+                                check(length<=maximum&&total<=BYTE_BUDGET){"E2EE_MIGRATION_HISTORY_LIMIT"};parts+=buffer.copyOf(count)};reader.assertComplete()}
+                            finally{buffer.fill(0)}}
+                            val bytes=ByteArray(length);var at=0;for(part in parts){part.copyInto(bytes,at);at+=part.size};buffers+=bytes
+                        }finally{parts.forEach{it.fill(0)}}
+                    }
+                    val result=adapter.reconcile(buffers[0],buffers.drop(1),context)
+                    try{for((placement,rows)in listOf("remote" to result.content,"local" to result.localContent))for(row in rows){assertCurrent()
+                        java.io.ByteArrayInputStream(row.bytes).use{stream->emit(E2eeContentPlan.Record(placement,row.domain,row.objectId,row.bytes.size,stream,row.filename,row.mediaType))};assertCurrent()};return result.complete
+                    }finally{(result.content+result.localContent).forEach{it.bytes.fill(0)}}
+                }finally{buffers.forEach{it.fill(0)}}
+            }})
+    }
     fun registerStream(adapter:E2eePrivatePathStreamAdapter) {
         check(adapter.id in requiredCoverage&&!streamAdapters.containsKey(adapter.id)){"E2EE_INVALID_SOURCE_ADAPTER"}
         streamAdapters[adapter.id]=adapter

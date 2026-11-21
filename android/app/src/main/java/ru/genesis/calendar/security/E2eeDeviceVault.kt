@@ -22,7 +22,7 @@ import javax.crypto.spec.GCMParameterSpec
  * manufacture a replacement key or silently initialize empty data after invalidation.
  */
 class E2eeDeviceVault(context: Context, ownerId: String) {
-    companion object { private val mutationLock = Any(); private const val MAX_PRIVATE = 65536 }
+    companion object { private val mutationLock get()=E2eeStorageAdmission.providerMutationLock; private const val MAX_PRIVATE = 65536 }
     private val app = context.applicationContext
     private val owner = E2eeKeys.technical(ownerId)
     private val ownerHash = MessageDigest.getInstance("SHA-256").digest(owner.toByteArray()).joinToString("") { "%02x".format(it) }
@@ -88,4 +88,5 @@ class E2eeDeviceVault(context: Context, ownerId: String) {
     /** Recovery is explicit and owner-bound; no key deletion, database reset or empty fallback. */
     fun recoverWithSecret(secret: ByteArray, protectedBundle: JSONObject): ByteArray =
         E2eeKeys.openBundle(owner, "device-vault", secret, protectedBundle)
+    internal fun originalCustodyStorage():E2eeOriginalCustodyStorage=E2eeOriginalCustodyFiles(app)
 }

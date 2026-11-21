@@ -231,7 +231,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         return ru.genesis.calendar.security.E2eeSignedMigrationTransport(device,directory,sources.allowedContentDomains,planning,::request)
     }
     internal fun e2eeWorkspaceSource(uid: String, directory: ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport: ru.genesis.calendar.security.E2eeSignedMigrationTransport,
+        transport: ru.genesis.calendar.security.E2eeLegacyReadTransport,
         review: (suspend (E2eeWorkspaceReview) -> E2eeWorkspaceDecision)? = null): E2eeNativeWorkspaceSource {
         val generation=client.currentGeneration(); val accountScope=CloudAccountSnapshot.scopeFor(uid)
         check(directory.ownerId == uid && directory.kind == "personal") { "E2EE_SCOPE_BINDING_MISMATCH" }
@@ -249,7 +249,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             assertCurrent=::current,legacyWorkspace=transport::legacyWorkspace,review=review)
     }
     internal fun e2eeAuroraSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eeAuroraReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eeAuroraReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeAuroraSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
         check(directory.ownerId==uid&&directory.kind=="personal"){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -274,7 +274,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             legacyAurora=transport::legacyAurora,reconciler=reconciler)
     }
     internal fun e2eeStoicheionSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeStoicheionSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -298,7 +298,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             cipher.decrypt(row.encrypted,aad).also{current()}},assertCurrent=::current,legacyStoicheion=transport::legacyStoicheion,reconciler=reconciler)
     }
     internal fun e2eeAdviceSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeAdviceSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid)
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -326,7 +326,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }},assertCurrent=::current,legacyAdvice=transport::legacyAdvice,reconciler=reconciler)
     }
     internal fun e2eeTasksSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeTasksSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -345,7 +345,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             assertCurrent=::current,legacyTasks=transport::legacyTasks,reconciler=reconciler)
     }
     internal fun e2eeDiarySource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeDiarySource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -363,7 +363,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             assertCurrent=::current,legacyDiary=transport::legacyDiary,reconciler=reconciler)
     }
     internal fun e2eeMindmapsSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeMindmapsSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -378,7 +378,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             assertCurrent=::current,legacyMindmaps={context->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(context,"mindmaps",::current,transport::legacyMindmapsPage)},reconciler=reconciler)
     }
     internal fun e2eePhysisSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         independentUnlock:suspend (JSONObject)->E2eePhysisCredential?={null}):E2eeNativePhysisSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -393,7 +393,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             reconciler=reconciler,independentUnlock=independentUnlock)
     }
     internal fun e2eeRemindersSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeSignedMigrationTransport,reconciler:E2eePersonalSourceReconciler,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
         captureMounted:suspend ()->JSONObject?):E2eeNativeRemindersSource {
         val generation=client.currentGeneration();val accountScope=CloudAccountSnapshot.scopeFor(uid);val epoch=app.workspaceEpoch
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -436,6 +436,46 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             val bytes=ru.genesis.calendar.data.backupJsonUtf8(result.toString())
             try{current();check(bytes.size<=48*1024*1024){"E2EE_SNAPSHOT_TOO_LARGE"};bytes}catch(error:Throwable){bytes.fill(0);throw error}
         }}
+    }
+    internal fun e2eeArchivesSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler):E2eeNativeArchivesSource {
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val account=CloudAccountSnapshot.scopeFor(uid)
+        check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==account&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        return E2eeNativeArchivesSource(uid,directory.scopeId,e2eeArchivesLocalCapture(uid,directory),::current,
+            {lease->ru.genesis.calendar.security.E2eeLegacyArchiveFragments.collect(lease,::current,transport::legacyArchiveFragment)},reconciler)
+    }
+    internal fun e2eeRelationalSources(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
+        captureMounted:suspend()->JSONObject):List<E2eeNativeRelationalSource>{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val account=CloudAccountSnapshot.scopeFor(uid)
+        check(directory.ownerId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==account&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        val inventory=ru.genesis.calendar.security.E2eePrivatePaths.load(app);val catalogue=ru.genesis.calendar.security.E2eePrivatePathCatalogue(app)
+        return inventory.required(directory.kind).filter{directory.kind!="personal"||it.id=="personal.local-work"}.map{path->
+            E2eeNativeRelationalSource(uid,directory.scopeId,directory.kind,directory.resourceId,path.id,catalogue.tables(directory.kind,path.id),{
+                current();val mounted=JSONObject(captureMounted().toString());current()
+                withContext(Dispatchers.IO){NativeLocalWorkInventory.capture(app,app.database,uid,directory.kind,directory.resourceId,mounted,::current)}
+            },::current,transport,reconciler)
+        }
+    }
+    internal fun e2eeCompleteSources(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,existingPersonal:List<ru.genesis.calendar.security.E2eePrivatePathAdapter>,
+        captureMounted:suspend()->JSONObject):ru.genesis.calendar.security.E2eeMigrationSources{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val account=CloudAccountSnapshot.scopeFor(uid)
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(directory.ownerId==uid&&client.isCurrent(generation)&&mutableState.value.user?.uid==uid
+            &&!mutableState.value.requiresSignIn&&app.workspaceScope==account&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        current();val inventory=ru.genesis.calendar.security.E2eePrivatePaths.load(app)
+        val expected=inventory.required("personal").map{it.id}.filter{it !in setOf("personal.archives","personal.local-work")}.toSet()
+        check(if(directory.kind=="personal")existingPersonal.size==expected.size&&existingPersonal.map{it.id}.toSet()==expected else existingPersonal.isEmpty()){"E2EE_SOURCE_ADAPTER_REQUIRED"}
+        val all=existingPersonal.toMutableList()
+        if(directory.kind=="personal")all+=e2eeArchivesSource(uid,directory,transport,ru.genesis.calendar.ui.NativeArchivesSourceRuntime(app))
+        all+=e2eeRelationalSources(uid,directory,transport,ru.genesis.calendar.ui.NativeRelationalSourceRuntime(app),captureMounted)
+        val registry=ru.genesis.calendar.security.E2eeMigrationSources(uid,directory.scopeId,directory.kind,inventory)
+        for(adapter in all)registry.registerIntegrated(adapter,::current)
+        registry.stagedCapture();registry.stagedReconciliation();return registry
     }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {

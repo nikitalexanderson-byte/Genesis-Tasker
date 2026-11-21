@@ -2,7 +2,7 @@
 
 21 ноября 2026. Реализация текущего state4 связывает bounded content-plan writer
 с настоящим coordinator/source CAS. Native input04 прошёл выбранные device
-группы, browser personal PASS; project/space и full native lint проверяются.
+группы; browser personal/project/space и full native lint завершены.
 Это ещё не system acceptance3.3.6:
 coverage9/20,3.3.5/149 production, run/upload/activation и rollout gates сохраняются.
 
@@ -115,16 +115,23 @@ raw hashes, cold reopen сохраняет ciphertext, failed prefix имеет 
 outbox chunk row, retry использует новый ID и сохраняет failed rows. Console:
 один ожидаемый HTTP409 resource error,0 warnings; profile закрыт после PASS.
 Это synthetic registry/loopback/authenticated client, не настоящий OAuth/
-production backend или clean-device recovery. Project/space проверяются отдельно.
+production backend или clean-device recovery. Project и space также прошли
+по21/21, каждый с одним ожидаемым console409/0 warnings. Все три профиля закрыты,
+loopback server остановлен. Host inventory содержит15/10/10 responses;
+первые полные raw bodies каждого scope превышают2MiB.
 
-Native wire3 ownership/manifest прошли WebCrypto на API26 personal и API34 всех
+Native wire3 ownership/manifest прошли WebCrypto на ОБОИХ API для всех
 трёх kind, включая независимо восстановленные host raw bytes. Изначальный host
 assertDeepEqual неверно сравнивал ordinary context object и safe null-prototype
 snapshot: исправлен только prototype-normalizing comparison, все поля остаются
 строго проверенными. API26 project/space metadata были очищены очередным QA
 pm clear до копирования; отдельный replay одного export case восстанавливает
-эти synthetic artifacts. Это не новый distinct product case. Final evidence
-и lint добавляются после завершения. Все credential groups возвращают PIN в NONE.
+эти synthetic artifacts. Это не новый distinct product case. Все credential groups
+возвращают PIN в NONE. Full native lint завершён за15m13s:0 errors/208 warnings/
+8 hints; относительно shared-capture нет новых issue/file pairs или увеличения
+counts (`content-provenance-native-lint-delta-01.json`). Итоговая identity сохраняет
+HEAD e93b23d0, frozen inputA2381E7D и точные main/test APK; последующие изменения
+custody не наследуют эту приёмку.
 
 ## Оставшиеся условия
 

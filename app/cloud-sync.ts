@@ -3729,6 +3729,67 @@ export async function createPersonalArchivesLocalCapture(userId:string,scopeId:s
   }};
 }
 
+/** Composed personal archive source. Capture remains local-only; the signed
+ * archive reader is reached by reconcile after the coordinator protects input. */
+export async function createPersonalArchivesMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyArchiveFragment'>,
+  options:Pick<import('./e2ee/archives-source').ArchivesSourcePorts,'openPhysis'>={}){
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [capture,{PersonalArchivesSource},{collectLegacyArchiveFragments}]=await Promise.all([
+    createPersonalArchivesLocalCapture(userId,scopeId),import('./e2ee/archives-source'),import('./e2ee/archive-fragments')]);check();
+  return new PersonalArchivesSource(userId,scopeId,{assertCurrent:check,captureLocal:capture.captureLocal,
+    legacyArchives:context=>collectLegacyArchiveFragments(context,{assertCurrent:check,
+      readFragment:(value,table,offset,byteOffset)=>transport.legacyArchiveFragment(value,table,offset,byteOffset)}),...options});
+}
+
+/** Source factories for the remaining personal/project/space data paths. Local
+ * originals are read without using a live legacy transport permit or key API. */
+export async function createRelationalMigrationSources(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathFragment'>){
+  const session=captureAccountSessionGuard(),legacy=workspaceKey;
+  const check=()=>{session();if(workspaceUserId!==userId||workspaceKey!==legacy||directory.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+  const [{RelationalPrivatePathSource},{captureWebPrivatePathLocal},{collectPrivatePathFragments},{requiredPrivatePaths}]=await Promise.all([
+    import('./e2ee/relational-path-source'),import('./e2ee/local-work-source'),import('./e2ee/private-path-fragments'),import('./e2ee/private-paths')]);check();
+  const open=async(envelope:{iv:string;ciphertext:string},purpose:string)=>{
+    check();if(!/^shared-work-draft:[A-Za-z0-9_-]+:[a-z-]+:[A-Za-z0-9_-]+$/.test(purpose)
+      &&!/^shared:[A-Za-z0-9_-]+:(?:map|view|conversion):[A-Za-z0-9_:-]+$/.test(purpose))throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
+    if(!legacy)throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');
+    const raw=base64ToBytes(legacy),iv=base64ToBytes(envelope.iv),cipher=base64ToBytes(envelope.ciphertext);let plain:Uint8Array|undefined;
+    try{if(raw.length!==32||iv.length!==12||cipher.length<16||cipher.length>64*1024*1024)throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
+      const key=await crypto.subtle.importKey('raw',new Uint8Array(raw),'AES-GCM',false,['decrypt']);check();
+      plain=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv),additionalData:new TextEncoder().encode(`genesis-mindmap-v1:${userId}:${purpose}`)},key,new Uint8Array(cipher)));check();
+      return new TextDecoder('utf-8',{fatal:true}).decode(plain);
+    }finally{raw.fill(0);iv.fill(0);cipher.fill(0);plain?.fill(0);}
+  };
+  return requiredPrivatePaths(directory.kind).filter(path=>directory.kind!=='personal'||path.id==='personal.local-work').map(path=>{
+    const target={ownerId:userId,scopeId:directory.scopeId,kind:directory.kind,resourceId:directory.resourceId,pathId:path.id};
+    return new RelationalPrivatePathSource(target,{assertCurrent:check,
+      capture:()=>captureWebPrivatePathLocal(target,{storage:localStorage,assertCurrent:check,open}),
+      read:context=>collectPrivatePathFragments(context,target,{assertCurrent:check,
+        read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset)})});
+  });
+}
+
+/** Full-registry composition is explicit. Each required existing personal
+ * adapter comes from its real factory; omissions refuse before source IO. */
+export async function createCompleteMigrationSourceRegistry(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  transport:import('./e2ee/source-replay').LegacyReadPorts,
+  existingPersonal:readonly import('./e2ee/migration-sources').PrivatePathAdapter[]=[],
+  archives:Pick<import('./e2ee/archives-source').ArchivesSourcePorts,'openPhysis'>={}){
+  const session=captureAccountSessionGuard();const check=()=>{session();if(workspaceUserId!==userId||directory.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+  const {E2eeMigrationSources,requiredPrivatePaths}=await import('./e2ee/migration-sources');check();
+  const expected=requiredPrivatePaths('personal').filter(path=>!['personal.archives','personal.local-work'].includes(path.id)).map(path=>path.id);
+  if(directory.kind==='personal'&&(existingPersonal.length!==expected.length||new Set(existingPersonal.map(path=>path.id)).size!==expected.length||expected.some(id=>!existingPersonal.some(path=>path.id===id)))
+    ||directory.kind!=='personal'&&existingPersonal.length)throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+  const remaining=await createRelationalMigrationSources(userId,directory,transport);check();
+  const all=directory.kind==='personal'?[...existingPersonal,await createPersonalArchivesMigrationSource(userId,directory.scopeId,transport,archives),...remaining]:remaining;check();
+  const registry=new E2eeMigrationSources(userId,directory.scopeId,directory.kind);
+  for(const adapter of all)registry.registerIntegrated(adapter,check);
+  // Synchronous full preflight, before capture, new-key persistence or a lease.
+  registry.stagedCapture();registry.stagedReconciliation();return registry;
+}
+
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,
   transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyStoicheion'>,
   captureCurrent:()=>Pick<import('./e2ee/stoicheion-source').StoicheionMigrationMemory,'current'|'draws'|'timeline'>) {

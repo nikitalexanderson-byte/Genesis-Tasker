@@ -7,6 +7,8 @@ import java.nio.file.Files
 /** Provider-wide capacity only. No content, original EOF, device trust,
  * identity, membership or recovery authority is granted by these numbers. */
 internal object E2eeStorageAdmission {
+    /** All provider writes share the same key-file/count admission lock. */
+    val providerMutationLock=Any()
     class Usage(val records:Long,val keyRecords:Long,val usageBytes:Long,val quotaBytes:Long) {
         override fun toString()="E2eeStorageAdmission.Usage([redacted])"
     }
@@ -71,9 +73,10 @@ internal object E2eeStorageAdmission {
                 val file=File(folder,database.name+suffix)
                 if(file.exists()){check(!missing){"E2EE_STORAGE_USAGE_UNAVAILABLE"};bytes=add(bytes,length(file))}
             }
-            val names=mutableSetOf<String>();val pattern=Regex("e2ee-device-([a-f0-9]{64})\\.vault(?:\\.(?:bak|new))?")
-            Files.newDirectoryStream(folder.toPath(),"e2ee-device-*").use{files->for(path in files){
-                val file=path.toFile();val match=pattern.matchEntire(file.name)?:error("E2EE_STORAGE_USAGE_UNAVAILABLE")
+            val names=mutableSetOf<String>();val pattern=Regex("(e2ee-device-[a-f0-9]{64}|e2ee-original-custody-[a-f0-9]{64}-[a-f0-9-]{36})\\.vault(?:\\.(?:bak|new))?")
+            Files.newDirectoryStream(folder.toPath(),"e2ee-*").use{files->for(path in files){
+                val file=path.toFile();if(!file.name.startsWith("e2ee-device-")&&!file.name.startsWith("e2ee-original-custody-"))continue
+                val match=pattern.matchEntire(file.name)?:error("E2EE_STORAGE_USAGE_UNAVAILABLE")
                 names+=match.groupValues[1];check(names.size<=1000){"E2EE_STORAGE_CAPACITY"}
                 bytes=add(bytes,length(file))
             }}

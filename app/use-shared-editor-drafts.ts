@@ -4,12 +4,14 @@ import {GenesisApiError} from './cloud-sync';
 import {useSharedWorkDrafts} from './use-shared-work-drafts';
 import type {WorkDraft} from './shared-work-draft-journal';
 import {editorDeviceEdit,sendEditorDeviceDraft,validateEditorDeviceDraft,type EditorDeviceDraft,type EditorOperation,type EditorPurpose} from './shared-editor-device-drafts';
+import {registerLocalWorkMigrationEditor} from './local-work-migration-memory';
 
 export function useSharedEditorDrafts<T>(userId:string,spaceId:string,projectId:string,purpose:EditorPurpose,validateEditor:(value:unknown)=>T){
  const validate=useCallback((value:unknown)=>validateEditorDeviceDraft(value,spaceId,projectId,purpose,validateEditor),[spaceId,projectId,purpose,validateEditor]);
  const device=useSharedWorkDrafts(userId,projectId,purpose,true,validate);
  const [document,setDocument]=useState<EditorDeviceDraft<T>|null>(null),[source,setSource]=useState<WorkDraft<EditorDeviceDraft<T>>|null>(null);
  const current=useRef(document),live=useRef(true);
+ useEffect(()=>registerLocalWorkMigrationEditor({ownerId:userId,spaceId,projectId,source:purpose},()=>current.current),[userId,spaceId,projectId,purpose]);
  useEffect(()=>{live.current=true;return()=>{live.current=false;};},[userId,spaceId,projectId,purpose]);
  const set=useCallback((value:EditorDeviceDraft<T>|null)=>{current.current=value;setDocument(value);},[]);
  const persist=async(value:EditorDeviceDraft<T>)=>{if(!live.current)throw Error('DRAFT_CLOSED');const safe=validate(JSON.parse(JSON.stringify(value)));await device.stage(safe);if(!live.current)throw Error('DRAFT_CLOSED');set(safe);};

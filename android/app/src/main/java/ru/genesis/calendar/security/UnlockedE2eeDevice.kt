@@ -20,10 +20,24 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
     override fun ensureDurableKeys() {
         requireOpen();val bytes=persistence.unlock()
         try {requireOpen();val saved=JSONObject(bytes.toString(Charsets.UTF_8))
-            check(saved.getString("deviceId")==deviceId && saved.getString("localKeyId")==bundle.getString("localKeyId")
+            check(saved.get("protocol")==1&&saved.get("ownerId")==ownerId&&saved.getString("deviceId")==deviceId && saved.getString("localKeyId")==bundle.getString("localKeyId")
                 &&saved.getString("localRoot")==bundle.getString("localRoot")
-                &&E2eeCommands.canonical(saved.getJSONObject("deviceKeys")).contentEquals(E2eeCommands.canonical(bundle.getJSONObject("deviceKeys")))) {"E2EE_DEVICE_KEY_UNAVAILABLE"}
+                &&E2eeCommands.canonical(saved.getJSONObject("deviceKeys")).contentEquals(E2eeCommands.canonical(bundle.getJSONObject("deviceKeys")))
+                &&E2eeCommands.canonical(saved.getJSONObject("authorityPin")).contentEquals(E2eeCommands.canonical(bundle.getJSONObject("authorityPin")))) {"E2EE_DEVICE_KEY_UNAVAILABLE"}
         }finally{bytes.fill(0)}
+    }
+    /** New artifact carries only the original local root/PUBLIC signer, signed
+     * by the separately confirmed primary owner recovery authority. */
+    internal fun preserveOriginalSources(secret:ByteArray,recoveryKit:JSONObject,assertCurrent:()->Unit):JSONObject {
+        check(secret.size==32){"E2EE_INVALID_ORIGINAL_CUSTODY"};val held=secret.copyOf();var bytes:ByteArray?=null;var root:ByteArray?=null
+        val current:()->Unit={requireOpen();assertCurrent()}
+        try{
+            val kit=JSONObject(recoveryKit.toString());current();ensureDurableKeys();current();bytes=persistence.unlock();current()
+            val saved=JSONObject(bytes.toString(Charsets.UTF_8));check(saved.get("ownerId")==ownerId&&saved.get("deviceId")==deviceId&&saved.get("localKeyId")=="local:$deviceId"){"E2EE_DEVICE_KEY_UNAVAILABLE"}
+            root=E2eeEnvelope.decode(saved.getString("localRoot"),32);val signer=saved.getJSONObject("deviceKeys").getString("signingKey");saved.remove("localRoot");saved.remove("deviceKeys");bytes.fill(0)
+            val sealed=E2eeOriginalCustody.seal(E2eeOriginalSource.Identity(ownerId,"device:$deviceId",deviceId,1,1,1),"local:$deviceId",signer,root,authorityPin,kit,held,current)
+            current();ensureDurableKeys();current();val reference=E2eeOriginalCustody.persist(persistence.originalCustodyStorage(),ownerId,sealed,current);ensureDurableKeys();current();return reference
+        }finally{held.fill(0);bytes?.fill(0);root?.fill(0)}
     }
     private fun directoryId(scopeId:String):String = "directory-"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(E2eeKeys.technical(scopeId).toByteArray()))
     override fun rememberDirectory(scopeId:String,pin:JSONObject,events:JSONArray,scopeOwner:String,onVerified:((E2eeDirectory.Verified)->Unit)?):E2eeDirectory.Verified {

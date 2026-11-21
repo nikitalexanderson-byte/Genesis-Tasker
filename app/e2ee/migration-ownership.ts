@@ -16,7 +16,7 @@ export type StreamedPlanningOwnership=OwnershipBase&({protocol:1;originals:reado
 type Expected={migrationId:string;target:SourceStageTarget;actor:{ownerId:string;scopeId:string;deviceId:string};sourceHash:string|null;
  lease:{fence:number;generation:number;leaseUntil:number}|null;checkpointHash:string;directoryRevision:number};
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
-const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps']);
+const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path']);
 function invalid():never{throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');}
 function positive(value:unknown):asserts value is number{if(!Number.isSafeInteger(value)||(value as number)<1)invalid();}
 function fields(value:unknown,expected:Record<string,unknown>){exactKeys(value,Object.keys(expected));for(const key of Object.keys(expected))if(value[key]!==expected[key])invalid();}

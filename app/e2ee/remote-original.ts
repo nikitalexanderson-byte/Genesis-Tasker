@@ -1,4 +1,5 @@
 import {sha256} from '@noble/hashes/sha2.js';
+import {validatePrivatePathPage} from './private-path-source.ts';
 import {canonicalE2eeValue,decodeCanonicalE2eeValue,snapshotE2eeValue,verifyE2eeCommand,type SignedE2eeCommand,type WireValue} from './commands.ts';
 import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
@@ -26,7 +27,7 @@ export type RemoteOriginalRegistration=Readonly<{protocol:1;purpose:'remote-orig
 export type RemoteOriginalDescriptor=Readonly<{registration:RemoteOriginalRegistration;bodyVerified:false;phase:Journal['phase'];request:Readonly<Request>;response:Response|null;size:number;parts:number;rawHash:string|null;manifestHash:string|null}>;
 const PURPOSE='remote-original/v1',MAX_META=2*1024*1024,MAX_REQUEST=128*1024,MAX_PART=65536;
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
-const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps']);
+const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path']);
 const encoder=new TextEncoder();
 // Never put a provider/admission exception (possibly containing source text or
 // a filesystem path) on the authenticated HTTP failure surface.
@@ -121,13 +122,17 @@ async function commit(options:RemoteOriginalOptions,changes:LocalWrite[]){try{ch
 async function packetBinding(packet:SignedE2eeCommand,signer:CryptoKey,scope:Context,generation:number):Promise<Binding>{
  const command=await verifyE2eeCommand(packet,signer);if(command.ownerId!==scope.ownerId||command.scopeId!==scope.scopeId||command.deviceId!==scope.deviceId||!actions.has(command.action))throw new Error('E2EE_REMOTE_ORIGINAL_CONTEXT');
  if(command.action==='legacy-shared-mindmaps'&&(!['project','space'].includes(scope.kind)||!Object.hasOwn(command.payload,'table')))throw new Error('E2EE_REMOTE_ORIGINAL_CONTEXT');
- const payload=command.payload;const names=['migrationId','fence','sourceHash',...(Object.hasOwn(payload,'table')?['table','offset']:[]),...(Object.hasOwn(payload,'byteOffset')?['byteOffset']:[])];exactKeys(payload,names);
+ const payload=command.payload;const names=['migrationId','fence','sourceHash',...(Object.hasOwn(payload,'table')?['table','offset']:[]),...(Object.hasOwn(payload,'byteOffset')?['byteOffset']:[]),...(command.action==='legacy-private-path'?['pathId']:[])];exactKeys(payload,names);
+ if(command.action==='legacy-private-path'){
+  if(typeof payload.pathId!=='string'||typeof payload.table!=='string'||typeof payload.offset!=='number'||typeof payload.byteOffset!=='number')invalid();
+  validatePrivatePathPage(scope.kind,payload.pathId,payload.table,payload.offset,payload.byteOffset);
+ }
  if(typeof payload.migrationId!=='string'||!uuid.test(payload.migrationId))invalid();integer(payload.fence,1);decodeE2eeBytes(payload.sourceHash,32);integer(command.expectedRevision,1);decodeE2eeBytes(command.checkpointHash,32);integer(generation,1);
- if(Object.hasOwn(payload,'table')){
+ if(Object.hasOwn(payload,'table')&&command.action!=='legacy-private-path'){
   const tables:Record<string,readonly string[]>={'legacy-mindmaps':['maps','versions','receipts','deletions'],'legacy-physis':['owners','records','usedIds','receipts'],'legacy-reminders':['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences'],'legacy-archives':['stages','safety','receipts'],'legacy-shared-mindmaps':['maps','versions','receipts','deletions','deletionScopes','conversions']};
   if(typeof payload.table!=='string'||!tables[command.action]?.includes(payload.table))invalid();integer(payload.offset);
  }
- if(Object.hasOwn(payload,'byteOffset')){if(command.action!=='legacy-archives'||!Object.hasOwn(payload,'table'))invalid();integer(payload.byteOffset,0,64*1024*1024);}
+ if(Object.hasOwn(payload,'byteOffset')){if(!['legacy-archives','legacy-private-path'].includes(command.action)||!Object.hasOwn(payload,'table'))invalid();integer(payload.byteOffset,0,64*1024*1024);}
  const spki=encodeE2eeBytes(new Uint8Array(await crypto.subtle.exportKey('spki',signer)));decodeE2eeBytes(spki,91);
  return{packetHash:identity(packet),signer:spki,generation,migrationId:payload.migrationId,fence:payload.fence,sourceHash:payload.sourceHash as string,action:command.action,directoryRevision:command.expectedRevision,checkpointHash:command.checkpointHash,securityEpoch:command.securityEpoch};
 }

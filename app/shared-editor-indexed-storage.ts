@@ -76,3 +76,21 @@ export async function clearSharedEditorDraftStorage(){
  const db=await openDatabase();
  try{await new Promise<void>((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear();tx.oncomplete=()=>resolve();tx.onerror=tx.onabort=()=>reject(tx.error??failure());});}finally{db.close();}
 }
+
+/** Read original owner records independently of localStorage. Conflicting
+ * copies from the two stores must both reach the protected migration input. */
+export async function captureSharedEditorIndexedOriginals(ownerId:string,assertCurrent:()=>void){
+ const prefix=`genesis-shared-work-drafts-v1:${ownerId}:`;assertCurrent();
+ const db=await openDatabase();
+ try{return await new Promise<{key:string;raw:string}[]>((resolve,reject)=>{
+  const rows:{key:string;raw:string}[]=[],tx=db.transaction(STORE,'readonly');let size=0,error:unknown;
+  const request=tx.objectStore(STORE).openCursor(range(prefix));
+  request.onsuccess=()=>{try{assertCurrent();const cursor=request.result;if(!cursor)return;
+   if(typeof cursor.key!=='string'||typeof cursor.value!=='string'||rows.length>=10000)throw failure();
+   size+=new TextEncoder().encode(cursor.value).length;if(size>64*1024*1024)throw new WorkDraftError('DRAFT_TOO_LARGE');
+   rows.push({key:cursor.key,raw:cursor.value});cursor.continue();
+  }catch(reason){error=reason;tx.abort();}};
+  tx.oncomplete=()=>{try{assertCurrent();resolve(rows);}catch(reason){reject(reason);}};
+  tx.onerror=tx.onabort=()=>reject(error??tx.error??failure());
+ });}finally{db.close();}
+}

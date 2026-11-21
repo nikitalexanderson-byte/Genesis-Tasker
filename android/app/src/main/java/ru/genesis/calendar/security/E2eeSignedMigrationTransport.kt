@@ -6,7 +6,7 @@ import java.util.UUID
 
 /** Authenticated requests are supplied by AuthController, not a second HTTP/session stack. */
 class E2eeSignedMigrationTransport private constructor(private val device: E2eeScopeDevice, directory: E2eeDirectory.Verified, domains: Set<String>,
-    private val request: suspend (String, JSONObject,E2eeHttpObservation?) -> JSONObject,private val planning:E2eeMigrationPlanningPort?) : E2eeMigrationTransport, E2eeBoundedMigrationReadback {
+    private val request: suspend (String, JSONObject,E2eeHttpObservation?) -> JSONObject,private val planning:E2eeMigrationPlanningPort?) : E2eeMigrationTransport, E2eeBoundedMigrationReadback, E2eeLegacyReadTransport {
     constructor(device:E2eeScopeDevice,directory:E2eeDirectory.Verified,domains:Set<String>,request:suspend(String,JSONObject)->JSONObject):
         this(device,directory,domains,{path,body,_->request(path,body)},null)
     internal constructor(device:E2eeScopeDevice,directory:E2eeDirectory.Verified,domains:Set<String>,planning:E2eeMigrationPlanningPort,
@@ -29,31 +29,36 @@ class E2eeSignedMigrationTransport private constructor(private val device: E2eeS
         check(command.get("ownerId") == ownerId && command.get("scopeId") == scopeId && command.get("deviceId") == device.deviceId) { "E2EE_SCOPE_BINDING_MISMATCH" }
         return call("/command",packet)
     }
-    suspend fun legacyWorkspace(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-workspace",context)
-    suspend fun legacyAurora(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-aurora",context)
-    suspend fun legacyStoicheion(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-stoicheion",context)
-    suspend fun legacyAdvice(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-advice",context)
-    suspend fun legacyTasks(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-tasks",context)
-    suspend fun legacyDiary(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-diary",context)
-    suspend fun legacyMindmaps(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-mindmaps",context)
-    suspend fun legacyMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+    override suspend fun legacyWorkspace(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-workspace",context)
+    override suspend fun legacyAurora(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-aurora",context)
+    override suspend fun legacyStoicheion(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-stoicheion",context)
+    override suspend fun legacyAdvice(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-advice",context)
+    override suspend fun legacyTasks(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-tasks",context)
+    override suspend fun legacyDiary(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-diary",context)
+    override suspend fun legacyMindmaps(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-mindmaps",context)
+    override suspend fun legacyMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
         return legacyPersonal("legacy-mindmaps",context,JSONObject().put("table",table).put("offset",offset)){check(table in setOf("maps","versions","receipts","deletions")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}}
     }
-    suspend fun legacyPhysisPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+    override suspend fun legacyPhysisPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
         return legacyPersonal("legacy-physis",context,JSONObject().put("table",table).put("offset",offset)){check(table in setOf("owners","records","usedIds","receipts")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}}
     }
-    suspend fun legacyRemindersPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+    override suspend fun legacyRemindersPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
         return legacyPersonal("legacy-reminders",context,JSONObject().put("table",table).put("offset",offset)){check(table in setOf("habitProfiles","habitDevices","habitDeliveries","adviceDays","adviceDeliveries","sharedPreferences")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}}
     }
-    suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long):JSONObject {
+    override suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long):JSONObject {
         return legacyPersonal("legacy-archives",context,JSONObject().put("table",table).put("offset",offset).put("byteOffset",byteOffset)){check(table in setOf("stages","safety","receipts")&&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_ARCHIVE_TRANSPORT_INVALID"}}
     }
-    suspend fun legacySharedMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+    override suspend fun legacySharedMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
         return legacyPersonal("legacy-shared-mindmaps",context,JSONObject().put("table",table).put("offset",offset)){
             check(kind in setOf("project","space")){"E2EE_SCOPE_BINDING_MISMATCH"}
             check(table in setOf("maps","versions","receipts","deletions","deletionScopes","conversions")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
         }
     }
+    override suspend fun legacyPrivatePathFragment(context:E2eeMigrationSourceContext,pathId:String,table:String,offset:Long,byteOffset:Long):JSONObject =
+        legacyPersonal("legacy-private-path",context,JSONObject().put("pathId",pathId).put("table",table).put("offset",offset).put("byteOffset",byteOffset)){
+            check(pathId.startsWith("$kind.")&&pathId.matches(Regex("(?:personal|project|space)\\.[a-z-]+"))&&table.matches(Regex("[a-z][a-z_]{0,99}"))
+                &&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_SOURCE_PATH_FORBIDDEN"}
+        }
     private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null,validate:()->Unit={}): JSONObject {
         val preflight:()->Unit={check(context.ownerId==ownerId&&context.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};validate()}
         val session=planning?:run{preflight();error("E2EE_STREAMED_CAPTURE_REQUIRED")}

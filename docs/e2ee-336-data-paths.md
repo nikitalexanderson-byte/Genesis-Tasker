@@ -12,6 +12,12 @@ the remaining eleven and full product integration are required. Physis and
 reminders now have retained-source capture/reconciliation and new-root readback. The system
 acceptance remainder is tracked in `security-336-acceptance-matrix.md`.
 
+21 November implementation-first pass: candidate source code for the remaining11
+paths and complete registry/controller composition has been added. It is not yet
+accepted coverage; the table below retains the prior acceptance boundary. Product
+entrypoint binding and the consolidated test/fix pass remain open. Exact scope:
+`security-336-implementation-pass.md`. Production flags/floors remain disabled.
+
 | Required path | Existing source, format and current reader | Target / migration evidence still required |
 | --- | --- | --- |
 | personal.workspace | Web localStorage JSON/base + account-key AES-GCM workspace; native LocalCipher Room documents; backend can open legacy workspace key | Real web/native adapters and native SQLite barrier implemented; selected actual Room/Keystore/API26 process-death cases pass; product routing, web multitab fence, older-format review and full upgrade/lifecycle acceptance remain |
