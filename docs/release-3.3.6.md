@@ -2729,3 +2729,22 @@ deny/hash predicates; marker v4 атомарно обновляет persistent t
 `docs/e2ee-336-shared-mindmap-source.md`. Нового UI copy/Android input нет.
 Coverage9/20 и все release gates сохраняются; этот reader не закрывает ни одну
 полную source category и не является Deploy3.3.6.
+
+## 21 ноября: mandatory capture общих карт на web/native
+
+Shared page role теперь проходит тот же настоящий authenticated transport и
+owned session для project/space. Все6 таблиц имеют exact page/scope preflight,
+raw-original codecs и сохранённую ownership; personal context и отсутствующая/
+чужая page отказывают. Content plan/run/activation этим не открываются.
+
+Full JS2062/2062, owned TSC02/scoped ESLint02 и web build01 PASS. Actual
+Chromium157 personal/project/space каждый15/15,32 полных retained responses,
+по одному ожидаемому resource409 в console,0 warnings. Native input7F87B612:
+build10m55s, JVM1408 PASS/8 existing HTTP opt-in skips, API26 clean34/34.
+API34 initial01 имеет33 PASS и один key-audit UNLOCK_REQUIRED после300s freshness;
+targeted02 после нового system verification проходит1/1 с теми же APK. Полный
+failed initial01 сохранён, составная34-case приёмка явно не объявлена единым
+clean run. Оба PIN восстановлены в NONE. Fresh full lint14m18s без новых issue/
+file pairs/count increases,0 errors/208 warnings/8 hints. Личные устройства и
+Play не менялись. Scope, hashes, неизменный prompt и evidence —
+`docs/e2ee-336-shared-capture.md`. Coverage9/20 и3.3.5/149 production сохраняются.

@@ -37,6 +37,24 @@ async function complete(f,raw=encode('\ufeff {"private":"SYNTHETIC-PRIVATE-RAW-C
 }
 async function readAll(options,id,mode){const chunks=[];const receipt=await withRemoteOriginal(options,id,async source=>{for await(const row of source)chunks.push(Buffer.from(row));},mode);return{receipt,bytes:Buffer.concat(chunks)};}
 
+test('shared original role requires a shared target and an exact bounded signed page before any write',async()=>{
+ const f=await fixture();
+ try{for(const kind of ['personal','project','space']){
+  const target={...f.target,scopeId:`${kind}:${f.target.ownerId}`,kind};
+  for(const mode of ['valid','missing-page','unknown-table','negative-offset','byte-offset']){
+   const command=structuredClone(f.packet.command);command.scopeId=target.scopeId;command.action='legacy-shared-mindmaps';
+   command.payload={migrationId:command.payload.migrationId,fence:1,sourceHash:command.payload.sourceHash,...(mode==='missing-page'?{}:{table:mode==='unknown-table'?'users':'maps',offset:mode==='negative-offset'?-1:0}),...(mode==='byte-offset'?{byteOffset:0}:{})};
+   // Invalid negative numbers are refused by the signed command encoder too.
+   const before=structuredClone(f.storage.rows);
+   if(mode==='negative-offset'){await assert.rejects(signE2eeCommand(command,f.keys.signing.privateKey));continue;}
+   const packet=await signE2eeCommand(command,f.keys.signing.privateKey),options={...f.options,target,packet};
+   if(kind==='personal'||mode!=='valid')await assert.rejects(ProtectedRemoteOriginal.create(options));
+   else{const capture=await ProtectedRemoteOriginal.create(options);assert.equal(capture.registration().context.kind,kind);capture.close();}
+   assert.deepEqual(f.storage.rows,before);
+  }
+ }}finally{f.vault.lock();}
+});
+
 test('actual signed AEAD quarantine cold-reads exact raw BOM whitespace and private UTF8 without a plaintext store',async()=>{
  const f=await fixture(),{raw,ref}=await complete(f);assert.equal(f.durable(),1);assert.equal(ref.rawHash,hash(raw));assert.equal(ref.size,raw.length);assert.equal(Object.isFrozen(ref),true);
  assert.equal(JSON.stringify([...f.storage.rows]).includes('SYNTHETIC-PRIVATE-RAW-CANARY'),false);const before=new Map(f.storage.rows);f.vault.lock();

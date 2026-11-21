@@ -10,7 +10,7 @@ internal object E2eeMigrationOwnership {
         val sourceHash:String?,val lease:JSONObject?,val checkpointHash:String,val directoryRevision:Long)
     private val uuid=Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
     private val actions=setOf("legacy-workspace","legacy-aurora","legacy-stoicheion","legacy-advice","legacy-tasks",
-        "legacy-diary","legacy-mindmaps","legacy-physis","legacy-reminders","legacy-archives")
+        "legacy-diary","legacy-mindmaps","legacy-physis","legacy-reminders","legacy-archives","legacy-shared-mindmaps")
     private fun invalid():Nothing=error("E2EE_CORRUPT_STREAMED_OWNERSHIP")
     private fun positive(value:Any)=E2eeCommands.integer(value,1)
     private fun fields(value:JSONObject,expected:Map<String,Any>){
@@ -51,6 +51,7 @@ internal object E2eeMigrationOwnership {
                 ||binding.get("migrationId")!=expected.migrationId||binding.get("sourceHash")!=expected.sourceHash
                 ||positive(binding.get("directoryRevision"))!=expected.directoryRevision||binding.get("checkpointHash")!=expected.checkpointHash
                 ||positive(binding.get("securityEpoch"))!=positive(value.get("securityEpoch"))||binding.get("action") !in actions)invalid()
+            if(binding.get("action")=="legacy-shared-mindmaps"&&expected.target.kind !in setOf("project","space"))invalid()
             if(positive(binding.get("fence"))>positive(lease.get("fence")))invalid();E2eeEnvelope.decode(binding.getString("packetHash"),32)
             val packet=owned.getJSONObject("packet");E2eeKeys.exact(packet,setOf("command","signature"))
             val command=packet.getJSONObject("command");E2eeCommands.commandBytes(command).fill(0);E2eeEnvelope.decode(packet.getString("signature"),64)

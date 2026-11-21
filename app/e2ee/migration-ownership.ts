@@ -12,7 +12,7 @@ export type StreamedPlanningOwnership=OwnershipBase&({protocol:1;originals:reado
 type Expected={migrationId:string;target:SourceStageTarget;actor:{ownerId:string;scopeId:string;deviceId:string};sourceHash:string|null;
  lease:{fence:number;generation:number;leaseUntil:number}|null;checkpointHash:string;directoryRevision:number};
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
-const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives']);
+const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps']);
 function invalid():never{throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');}
 function positive(value:unknown):asserts value is number{if(!Number.isSafeInteger(value)||(value as number)<1)invalid();}
 function fields(value:unknown,expected:Record<string,unknown>){exactKeys(value,Object.keys(expected));for(const key of Object.keys(expected))if(value[key]!==expected[key])invalid();}
@@ -44,6 +44,7 @@ export function validateStreamedPlanningOwnership(source:unknown,expected:Expect
   if(binding.signer!==value.signer||binding.generation!==expected.lease!.generation||binding.migrationId!==expected.migrationId||binding.sourceHash!==expected.sourceHash
    ||binding.directoryRevision!==expected.directoryRevision||binding.checkpointHash!==expected.checkpointHash||binding.securityEpoch!==value.securityEpoch
    ||typeof binding.action!=='string'||!actions.has(binding.action))invalid();
+  if(binding.action==='legacy-shared-mindmaps'&&!['project','space'].includes(expected.target.kind))invalid();
   positive(binding.fence);if(binding.fence>expected.lease!.fence)invalid();decodeE2eeBytes(binding.packetHash,32);
   exactKeys(original.packet,['command','signature']);const packet=original.packet as SignedE2eeCommand,command=packet.command;
   commandBytes(command).fill(0);decodeE2eeBytes(packet.signature,64);

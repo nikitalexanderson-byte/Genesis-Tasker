@@ -3,7 +3,7 @@ import {ProtectedRemoteOriginal,describeRemoteOriginal,withRemoteOriginal,type R
 import type {MigrationSourceContext} from './migration.ts';
 import type {E2eeHttpObservation} from './http-observation.ts';
 
-export type MigrationLegacyAction='legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis'|'legacy-reminders'|'legacy-archives';
+export type MigrationLegacyAction='legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis'|'legacy-reminders'|'legacy-archives'|'legacy-shared-mindmaps';
 type Page=Readonly<{table:string;offset:number;byteOffset?:number}>;
 type Response=Record<string,WireValue>;
 type Binding=Readonly<{ownerId:string;scopeId:string;deviceId:string;checkpointHash:string;directoryRevision:number;securityEpoch:number}>;
@@ -23,7 +23,7 @@ type Hooks<T>={
  complete:(registration:RemoteOriginalRegistration,packet:SignedE2eeCommand,reference:RemoteOriginalReference,current:()=>void)=>Promise<void>;
  finish:()=>Promise<T>;
 };
-const actions=new Set<MigrationLegacyAction>(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives']);
+const actions=new Set<MigrationLegacyAction>(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps']);
 function same(left:unknown,right:unknown){
  const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);
  try{return a.length===b.length&&a.every((byte,index)=>byte===b[index]);}finally{a.fill(0);b.fill(0);}

@@ -12,6 +12,7 @@ class E2eeSignedMigrationTransport private constructor(private val device: E2eeS
     internal constructor(device:E2eeScopeDevice,directory:E2eeDirectory.Verified,domains:Set<String>,planning:E2eeMigrationPlanningPort,
         request:suspend(String,JSONObject,E2eeHttpObservation?)->JSONObject):this(device,directory,domains,request,planning)
     private val ownerId = directory.ownerId
+    private val kind = directory.kind
     private val scopeId = directory.scopeId
     private val securityEpoch = directory.securityEpoch
     private val revision = directory.checkpoint.revision
@@ -46,6 +47,12 @@ class E2eeSignedMigrationTransport private constructor(private val device: E2eeS
     }
     suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long):JSONObject {
         return legacyPersonal("legacy-archives",context,JSONObject().put("table",table).put("offset",offset).put("byteOffset",byteOffset)){check(table in setOf("stages","safety","receipts")&&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_ARCHIVE_TRANSPORT_INVALID"}}
+    }
+    suspend fun legacySharedMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
+        return legacyPersonal("legacy-shared-mindmaps",context,JSONObject().put("table",table).put("offset",offset)){
+            check(kind in setOf("project","space")){"E2EE_SCOPE_BINDING_MISMATCH"}
+            check(table in setOf("maps","versions","receipts","deletions","deletionScopes","conversions")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
+        }
     }
     private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null,validate:()->Unit={}): JSONObject {
         val preflight:()->Unit={check(context.ownerId==ownerId&&context.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};validate()}

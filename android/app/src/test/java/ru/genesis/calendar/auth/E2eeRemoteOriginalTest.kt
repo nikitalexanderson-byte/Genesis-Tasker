@@ -51,6 +51,20 @@ class E2eeRemoteOriginalTest {
     private fun readAll(options: E2eeRemoteOriginal.ReadOptions, id: String, allowIncomplete: Boolean = false): Pair<E2eeRemoteOriginal.Receipt, ByteArray> {
         var bytes = byteArrayOf(); val receipt = E2eeRemoteOriginal.withOriginal(options, id, allowIncomplete) { input -> bytes = input.readBytes() }; return receipt to bytes
     }
+    @Test fun sharedOriginalRequiresSharedTargetAndExactSignedPageBeforeAnyWrite() {
+        val f=Rig()
+        try{for(kind in listOf("personal","project","space"))for(mode in listOf("valid","missing-page","unknown-table","byte-offset")){
+            val target=E2eeRemoteOriginal.Target("owner","$kind:owner",kind)
+            val command=JSONObject(f.command.toString()).put("scopeId",target.scopeId).put("action","legacy-shared-mindmaps")
+            val payload=command.getJSONObject("payload");if(mode=="missing-page"){payload.remove("table");payload.remove("offset")}else payload.put("table",if(mode=="unknown-table")"users"else"maps")
+            if(mode=="byte-offset")payload.put("byteOffset",0)
+            val packet=E2eeCommands.sign(command,f.keys.signing.private);val options=f.options.copy(target=target,packet=packet);val before=f.storage.snapshot()
+            if(kind=="personal"||mode!="valid")rejects{E2eeRemoteOriginal.create(options)}else{
+                val capture=E2eeRemoteOriginal.create(options);assertEquals(kind,capture.registration().context.kind);capture.close()
+            }
+            assertEquals(before,f.storage.snapshot())
+        }}finally{f.vault.lock()}
+    }
     @Test fun signedAeadQuarantineColdReadsExactRawBytesWithoutAPlaintextStore() {
         val f = Rig(); val (reference, raw) = f.complete(); assertEquals(hash(raw), reference.rawHash); assertEquals(raw.size.toLong(), reference.size); assertEquals(1, f.durable)
         val before = f.storage.snapshot(); assertFalse(before.contains("SYNTHETIC-PRIVATE-RAW-CANARY")); f.vault.lock(); val cold = UnlockedE2eeVault(f.storage, f.scope)

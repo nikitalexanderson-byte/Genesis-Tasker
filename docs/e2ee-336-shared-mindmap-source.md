@@ -2,9 +2,10 @@
 
 21 ноября 2026. Серверный reader и исправление существующего write/source
 fence. Это ещё не `project.mindmaps`/`space.mindmaps` adapters: coverage9/20,
-production3.3.5/149, floors0/pilot/cutover off сохраняются. Web/native capture
-session пока принимает прежние10 personal actions; новый action не подключён
-к приложению и не означает готовую миграцию общих карт.
+production3.3.5/149, floors0/pilot/cutover off сохраняются. Отдельный следующий
+web/native capture increment принят в `e2ee-336-shared-capture.md`: новый action
+проходит mandatory session. Полные source adapters и product migration ещё
+не подключены; само чтение не означает готовую миграцию общих карт.
 
 `legacy-shared-mindmaps` проходит обычный signed E2EE read dispatch. Live ACL
 конкретного ресурса, owner account, current device/checkpoint/security epoch,

@@ -49,17 +49,17 @@ class Keys{
  async create(id,bundle){assert.equal(this.rows.has(id),false);this.rows.set(id,{serial:1,bundle:structuredClone(bundle)});}
 }
 async function fixture(t,options={}){
- const ownerId='streamed-owner',scopeId=`personal:${ownerId}`,recovery=await createRecoveryKit(ownerId),records=new Records(),keys=new Keys();
+ const kind=options.kind??'personal',ownerId='streamed-owner',scopeId=`${kind}:${ownerId}`,recovery=await createRecoveryKit(ownerId),records=new Records(),keys=new Keys();
  let device=await UnlockedWebDevice.provision(ownerId,recovery.secret,recovery.kit,records,keys);
  const deviceId=device.deviceId,publicKeys=await publicDeviceKeys(device.keys()),publicKey=device.keys().signing.publicKey,raw=freshSecret(),root=await importE2eeRoot(raw);
  const recipient={ownerId,scopeId,cryptoEpoch:1,keyId:'content-root',recipientId:deviceId};
  const bootstrap={protocol:1,ownerId,scopeId,deviceId,action:'bootstrap',expectedRevision:0,checkpointHash:'genesis',securityEpoch:1,operationId:'streamed-bootstrap',payload:{
-  kind:'personal',resourceId:ownerId,keyId:'content-root',generation:1,recoveryKit:recovery.kit,deviceKeys:publicKeys,
+  kind,resourceId:ownerId,keyId:'content-root',generation:1,recoveryKit:recovery.kit,deviceKeys:publicKeys,
   deviceCapsule:await sealRoot(raw,publicKeys.receivingKey,recipient),recoveryCapsule:await sealRoot(raw,recovery.kit.authority.receivingKey,{...recipient,recipientId:'recovery'})}};
  raw.fill(0);
  bootstrap.payload.selfProof=(await signE2eeCommand(bootstrap,device.keys().signing.privateKey)).signature;
  const directory=await verifyDeviceDirectory(ownerId,scopeId,recovery.kit.authority,[await signE2eeCommand(bootstrap,recovery.keys.signing.privateKey)]);
- const required=requiredPrivatePaths('personal').map(value=>value.id),sourceHash=encodeE2eeBytes(new Uint8Array(32).fill(29)),trace=[],server={fence:1,generation:2,receipts:new Map(),lost:false};
+ const required=requiredPrivatePaths(kind).map(value=>value.id),sourceHash=encodeE2eeBytes(new Uint8Array(32).fill(29)),trace=[],server={fence:1,generation:2,receipts:new Map(),lost:false};
  const transport={async sourceHash(){trace.push('source');assert.equal((await coordinator.status()).protocol,4);await options.onSource?.();return sourceHash;},
   async command(packet){
    const command=await verifyE2eeCommand(packet,publicKey);trace.push(structuredClone(packet));const identity=await e2eeCommandHash(command),known=server.receipts.get(command.operationId);await options.onCommand?.(command,packet);
@@ -73,11 +73,11 @@ async function fixture(t,options={}){
    server.receipts.set(command.operationId,{hash:identity,result});if(options.loss==='after'&&!server.lost){server.lost=true;throw new Error('SYNTHETIC_PROCESS_DEATH');}
    return structuredClone(result);
   },async readAll(){throw new Error('AGGREGATE_READ_FORBIDDEN');}};
- const sources={requiredCoverage:required,allowedContentDomains:['workspace','diary','mindmap','physis','aurora','stoicheion','attachment','draft','outbox','local-snapshot'],
+ const sources={requiredCoverage:required,allowedContentDomains:[...new Set(requiredPrivatePaths(kind).flatMap(path=>path.domains))],
   async captureLocal(){throw new Error('AGGREGATE_CAPTURE_FORBIDDEN');},async reconcile(){throw new Error('AGGREGATE_RECONCILIATION_FORBIDDEN');}};
  const make=()=>new E2eeMigration({vault:device.vault,directory,deviceId,signingKey:device.keys().signing.privateKey,signer:device.keys().signing.publicKey,root,transport,sources,
   ensureDurableKeys:()=>device.ensureDurableKeys(),withLocalWriteFence:options.withLocalWriteFence??(operation=>operation()),verifyRecovery:async()=>{throw new Error('RECOVERY_NOT_PART_OF_PREPARATION');}});
- let coordinator=make();const target={ownerId,scopeId,kind:'personal'},stage={target,paths:required,async capturePath(path,write){await write(bytes('SYNTHETIC LOCAL ORIGINAL '+path));}};
+ let coordinator=make();const target={ownerId,scopeId,kind},stage={target,paths:required,async capturePath(path,write){await write(bytes('SYNTHETIC LOCAL ORIGINAL '+path));}};
  const stagePolicy={capacity:{maximumBytes:16*1024*1024,maximumParts:1000},assertCurrent(){},async admit(){}};
  const originalCapacity={maximumBytes:8*1024*1024,maximumParts:1000,maximumObservations:100,maximumRecords:4000,maximumMetadataBytes:4*1024*1024};
  const policy=()=>({device,capacity:{maximumBytes:32*1024*1024,maximumParts:2000,maximumMetadataBytes:8*1024*1024},originalCapacity,assertCurrent(){},async admit(){}});
@@ -311,4 +311,33 @@ test('caught public legacy page preflight refusal remains sticky without fetchin
   try{await port.legacyMindmapsPage(session.context,'users',0);}catch(error){assert.match(error.message,/LEGACY_PAGE_INVALID/);caught=true;}
  },f.policy()),/LEGACY_PAGE_INVALID/);
  assert.equal(caught,true);assert.equal(calls,0);assert.equal((await f.readState()).state.ownership.originals.length,0);
+});
+
+for(const kind of ['project','space'])test(`owned ${kind} map pages bind all six raw forms and cold-read without an aggregate transport`,async t=>{
+ const f=await fixture(t,{kind}),tables=['maps','versions','receipts','deletions','deletionScopes','conversions'],requests=[];let escaped,context;
+ const receipt=await f.coordinator.withStreamedPlanning(async session=>{
+  context=session.context;
+  const port=new SignedMigrationTransport(f.device,f.directory,['mindmap'],async(path,packet,observation,signal)=>{
+   assert.equal(path,'/read');assert.equal(packet.command.action,'legacy-shared-mindmaps');assert.equal(packet.command.scopeId,f.directory.scopeId);
+   await verifyE2eeCommand(packet,f.device.keys().signing.publicKey);requests.push(packet.command.payload.table);return sessionReply(f,packet,observation,signal);
+  },session);escaped=port;
+  for(const table of tables)await port.legacySharedMindmapsPage(context,table,0);
+ },f.policy());
+ assert.deepEqual(requests,tables);assert.equal(receipt.originals.length,6);assert.ok(receipt.originals.every(row=>row.completion&&row.registration.context.kind===kind));
+ const retained=structuredClone(f.records.rows);await assert.rejects(escaped.legacySharedMindmapsPage(context,'maps',0),/SESSION_CLOSED/);assert.deepEqual(f.records.rows,retained);
+ await f.reopen();await f.coordinator.prepareStreamedPlanning(f.policy());assert.deepEqual(f.records.rows,retained);
+ let caught=false;await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{
+  const port=new SignedMigrationTransport(f.device,f.directory,['mindmap'],async()=>{throw new Error('UNEXPECTED_HTTP');},session);
+  try{await port.legacySharedMindmapsPage(session.context,'users',0);}catch(error){assert.match(error.message,/LEGACY_PAGE_INVALID/);caught=true;}
+ },f.policy()),/LEGACY_PAGE_INVALID/);
+ assert.equal(caught,true);assert.equal(requests.length,6);assert.deepEqual(f.records.rows,retained);
+});
+
+test('personal planning cannot request a shared map original even when the public scope refusal is caught',async t=>{
+ const f=await fixture(t);let calls=0,caught=false;
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{
+  const port=new SignedMigrationTransport(f.device,f.directory,['mindmap'],async()=>{calls++;return{};},session);
+  try{await port.legacySharedMindmapsPage(session.context,'maps',0);}catch(error){assert.match(error.message,/SCOPE_BINDING_MISMATCH/);caught=true;}
+ },f.policy()),/SCOPE_BINDING_MISMATCH/);
+ assert.equal(calls,0);assert.equal(caught,true);const row=await f.readState();try{assert.equal(row.state.ownership.originals.length,0);}finally{row.raw.fill(0);}
 });

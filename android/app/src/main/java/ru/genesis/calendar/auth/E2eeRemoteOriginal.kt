@@ -243,7 +243,7 @@ private class RemoteOriginalInput(private val options: E2eeRemoteOriginal.ReadOp
 private object RemoteOriginalCodec {
     const val PURPOSE = "remote-original/v1"; const val MAX_META = 2 * 1024 * 1024; const val MAX_REQUEST = 128 * 1024; const val MAX_PART = 65536
     val uuid = Regex("^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$")
-    private val actions = setOf("legacy-workspace", "legacy-aurora", "legacy-stoicheion", "legacy-advice", "legacy-tasks", "legacy-diary", "legacy-mindmaps", "legacy-physis", "legacy-reminders", "legacy-archives")
+    private val actions = setOf("legacy-workspace", "legacy-aurora", "legacy-stoicheion", "legacy-advice", "legacy-tasks", "legacy-diary", "legacy-mindmaps", "legacy-physis", "legacy-reminders", "legacy-archives", "legacy-shared-mindmaps")
     class Meta(val serial: Long, val value: JSONObject, val hash: String, val bytes: Int)
     class Inventory(val context: JSONObject, val hash: String, val catalog: JSONObject, val serial: Long?, val journals: List<Meta>, val usage: E2eeRemoteOriginal.Admission, val stamp: String)
     fun invalid(): Nothing = error("E2EE_CORRUPT_REMOTE_ORIGINAL")
@@ -339,9 +339,10 @@ private object RemoteOriginalCodec {
     fun packetBinding(packet: JSONObject, signer: PublicKey, context: JSONObject, generation: Long): JSONObject {
         val command = E2eeCommands.verify(packet, signer)
         check(command.get("ownerId") == context.get("ownerId") && command.get("scopeId") == context.get("scopeId") && command.get("deviceId") == context.get("deviceId") && command.get("action") in actions) { "E2EE_REMOTE_ORIGINAL_CONTEXT" }
+        if(command.get("action")=="legacy-shared-mindmaps")check(context.get("kind") in setOf("project","space")&&command.getJSONObject("payload").has("table")){"E2EE_REMOTE_ORIGINAL_CONTEXT"}
         val payload = command.getJSONObject("payload"); val names = mutableSetOf("migrationId", "fence", "sourceHash"); if (payload.has("table")) names += setOf("table", "offset"); if (payload.has("byteOffset")) names += "byteOffset"; E2eeKeys.exact(payload, names)
         if (!uuid.matches(payload.getString("migrationId"))) invalid(); number(payload.get("fence"), 1); E2eeEnvelope.decode(payload.getString("sourceHash"), 32); number(command.get("expectedRevision"), 1); E2eeEnvelope.decode(command.getString("checkpointHash"), 32); number(generation, 1)
-        if (payload.has("table")) { val tables = mapOf("legacy-mindmaps" to setOf("maps", "versions", "receipts", "deletions"), "legacy-physis" to setOf("owners", "records", "usedIds", "receipts"), "legacy-reminders" to setOf("habitProfiles", "habitDevices", "habitDeliveries", "adviceDays", "adviceDeliveries", "sharedPreferences"), "legacy-archives" to setOf("stages", "safety", "receipts")); if (tables[command.getString("action")]?.contains(payload.getString("table")) != true) invalid(); number(payload.get("offset")) }
+        if (payload.has("table")) { val tables = mapOf("legacy-mindmaps" to setOf("maps", "versions", "receipts", "deletions"), "legacy-physis" to setOf("owners", "records", "usedIds", "receipts"), "legacy-reminders" to setOf("habitProfiles", "habitDevices", "habitDeliveries", "adviceDays", "adviceDeliveries", "sharedPreferences"), "legacy-archives" to setOf("stages", "safety", "receipts"), "legacy-shared-mindmaps" to setOf("maps","versions","receipts","deletions","deletionScopes","conversions")); if (tables[command.getString("action")]?.contains(payload.getString("table")) != true) invalid(); number(payload.get("offset")) }
         if (payload.has("byteOffset")) { if (command.get("action") != "legacy-archives" || !payload.has("table")) invalid(); number(payload.get("byteOffset"), 0, 64L * 1024 * 1024) }
         val spki = E2eeEnvelope.encode(signer.encoded); E2eeEnvelope.decode(spki, 91)
         return JSONObject().put("packetHash", identity(packet)).put("signer", spki).put("generation", generation).put("migrationId", payload.get("migrationId")).put("fence", payload.get("fence"))

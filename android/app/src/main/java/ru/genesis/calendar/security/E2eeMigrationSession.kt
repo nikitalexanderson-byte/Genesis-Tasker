@@ -91,7 +91,7 @@ internal class E2eeMigrationSession private constructor(private val hooks:Hooks<
     }
     override fun toString()="E2eeMigrationSession([redacted])"
     companion object {
-        private val actions=setOf("legacy-workspace","legacy-aurora","legacy-stoicheion","legacy-advice","legacy-tasks","legacy-diary","legacy-mindmaps","legacy-physis","legacy-reminders","legacy-archives")
+        private val actions=setOf("legacy-workspace","legacy-aurora","legacy-stoicheion","legacy-advice","legacy-tasks","legacy-diary","legacy-mindmaps","legacy-physis","legacy-reminders","legacy-archives","legacy-shared-mindmaps")
         suspend fun<T> use(hooks:Hooks<T>,consume:suspend(E2eeMigrationSession)->Unit):T {
             val parent=currentCoroutineContext();val owner=SupervisorJob(parent.job);val session=E2eeMigrationSession(hooks,CoroutineScope(parent+owner))
             try{

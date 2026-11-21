@@ -51,19 +51,19 @@ class E2eeStreamedPlanningDeviceTest {
         override fun getErrorStream()=input
         override fun getOutputStream()=sent
     }
-    private class Rig:AutoCloseable {
+    private class Rig(val kind:String="personal"):AutoCloseable {
         val app=InstrumentationRegistry.getInstrumentation().targetContext
         private val folder=File(app.noBackupFilesDir,"synthetic-streamed-${UUID.randomUUID()}").apply{check(mkdir())}
         private val stores=mutableSetOf<String>()
         private val context=object:ContextWrapper(app){override fun getApplicationContext()=this;override fun getNoBackupFilesDir()=folder
             override fun getSharedPreferences(name:String,mode:Int):SharedPreferences {val scoped="${folder.name}.$name";stores+=scoped;return app.getSharedPreferences(scoped,mode)}}
-        val owner="streamed-${UUID.randomUUID()}";val scope="personal:$owner"
+        val owner="streamed-${UUID.randomUUID()}";val scope="$kind:$owner"
         val recovery=E2eeKeys.createRecoveryKit(owner)
         var device=UnlockedE2eeDevice.provision(context,owner,recovery.secret,recovery.kit)
         private val raw=E2eeKeys.freshSecret()
         private val root=try{E2eeEnvelope.importRoot(raw)}finally{raw.fill(0)}
-        val inventory=E2eePrivatePaths.load(context);val required=inventory.required("personal").map{it.id}
-        val target=E2eeSourceStage.Target(owner,scope,"personal")
+        val inventory=E2eePrivatePaths.load(context);val required=inventory.required(kind).map{it.id}
+        val target=E2eeSourceStage.Target(owner,scope,kind)
         val sourceHash=E2eeEnvelope.encode(ByteArray(32){29})
         val directory:E2eeDirectory.Verified
         val commands=mutableListOf<JSONObject>();var discoveries=0;var fence=1L;var lost:String?=null;var didLose=false
@@ -73,8 +73,8 @@ class E2eeStreamedPlanningDeviceTest {
         private val receipts=mutableMapOf<String,Pair<String,JSONObject>>()
         private val sources=object:E2eeMigrationSource {
             override val requiredCoverage=required
-            override val allowedContentDomains=inventory.required("personal").flatMap{it.domains}.toSet()
-            override fun assertBinding(owner:String,scope:String,kind:String){check(owner==this@Rig.owner&&scope==this@Rig.scope&&kind=="personal")}
+            override val allowedContentDomains=inventory.required(kind).flatMap{it.domains}.toSet()
+            override fun assertBinding(owner:String,scope:String,kind:String){check(owner==this@Rig.owner&&scope==this@Rig.scope&&kind==this@Rig.kind)}
             override suspend fun captureLocal():ByteArray=error("AGGREGATE_CAPTURE_FORBIDDEN")
             override suspend fun reconcile(snapshot:ByteArray,previousSnapshots:List<ByteArray>):E2eeMigrationReconciliation=error("AGGREGATE_PLAN_FORBIDDEN")
         }
@@ -100,7 +100,7 @@ class E2eeStreamedPlanningDeviceTest {
         init {
             check(BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug")
             val rawRoot=E2eeKeys.freshSecret();val publicKeys=E2eeKeys.publicKeys(device.keys());val keyId="streamed-root"
-            val payload=JSONObject().put("kind","personal").put("resourceId",owner).put("keyId",keyId).put("generation",1).put("recoveryKit",recovery.kit).put("deviceKeys",publicKeys)
+            val payload=JSONObject().put("kind",kind).put("resourceId",owner).put("keyId",keyId).put("generation",1).put("recoveryKit",recovery.kit).put("deviceKeys",publicKeys)
                 .put("deviceCapsule",E2eeKeys.sealRoot(rawRoot,publicKeys.getString("receivingKey"),E2eeKeys.RootRecipient(owner,scope,1,keyId,device.deviceId)))
                 .put("recoveryCapsule",E2eeKeys.sealRoot(rawRoot,recovery.kit.getJSONObject("authority").getString("receivingKey"),E2eeKeys.RootRecipient(owner,scope,1,keyId,"recovery")))
             rawRoot.fill(0)
@@ -123,7 +123,7 @@ class E2eeStreamedPlanningDeviceTest {
             {error("RECOVERY_NOT_PART_OF_PREPARATION")})
         fun options()=E2eeStreamedPlanningOptions(device,inventory,E2eeMigrationHistory.Capacity(32L*1024*1024,2000,8*1024*1024),
             E2eeRemoteOriginal.Capacity(8L*1024*1024,1000,100,4000,4*1024*1024),{check(live){"SYNTHETIC_RETIRED"}},{onAdmission?.invoke();check(!refusedAdmission){"SYNTHETIC_ADMISSION_REFUSAL"}})
-        fun readOptions()=E2eeRemoteOriginal.ReadOptions(device.vault,E2eeRemoteOriginal.Target(owner,scope,"personal"),options().originalCapacity,{check(live){"SYNTHETIC_RETIRED"}})
+        fun readOptions()=E2eeRemoteOriginal.ReadOptions(device.vault,E2eeRemoteOriginal.Target(owner,scope,kind),options().originalCapacity,{check(live){"SYNTHETIC_RETIRED"}})
         suspend fun stage(){migration.prepareStaged(E2eeStagedMigrationCapture(target,required){path,out->out.write("SYNTHETIC LOCAL ORIGINAL $path".toByteArray())},
             E2eeStagedMigrationOptions(E2eeSourceStage.Capacity(16L*1024*1024,1000),{},{}))}
         private fun stateId()="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(scope.toByteArray()))
@@ -149,6 +149,35 @@ class E2eeStreamedPlanningDeviceTest {
     private suspend fun refused(code:String,operation:suspend()->Unit){try{operation();fail("Unprotected continuation accepted")}catch(error:Exception){assertTrue(error.message.orEmpty(),error.message.orEmpty().contains(code))}}
     private fun response(f:Rig,large:Boolean=false):ByteArray=("\uFEFF {\r\n\"checkpointHash\":\"${f.directory.checkpoint.hash}\",\"directoryRevision\":${f.directory.checkpoint.revision},\"rows\":[],\"private\":\"SYNTHETIC ORIGINAL α😀"+
         "a".repeat(if(large)512*1024+7 else 17)+"\"}\r\n").toByteArray()
+    @Test fun actualSharedClientCapturesSixRolesForProjectAndSpaceAndColdReadsEveryOriginal()=runBlocking {
+        val tables=listOf("maps","versions","receipts","deletions","deletionScopes","conversions")
+        for(kind in listOf("project","space"))Rig(kind).use{f->
+            f.stage();val observed=mutableListOf<String>();var escaped:E2eeSignedMigrationTransport?=null;var context:E2eeMigrationSourceContext?=null
+            val receipt=f.migration.withStreamedPlanning(f.options()){session->
+                context=session.context
+                val port=E2eeSignedMigrationTransport(f.device,f.directory,setOf("mindmap"),session){path,packet,observation->
+                    assertEquals("/read",path);val command=E2eeCommands.verify(packet,f.device.keys().signing.public)
+                    assertEquals("legacy-shared-mindmaps",command.get("action"));assertEquals(f.scope,command.get("scopeId"));observed+=command.getJSONObject("payload").getString("table")
+                    val bytes=response(f);try{withContext(Dispatchers.IO){f.http(packet,observation,bytes)}}finally{bytes.fill(0)}
+                };escaped=port
+                for(table in tables)port.legacySharedMindmapsPage(session.context,table,0)
+            }
+            assertEquals(tables,observed);assertEquals(6,f.httpCalls);assertEquals(6,receipt.originals.size)
+            for(entry in receipt.originals){assertEquals(kind,entry.registration.context.kind);assertNotNull(entry.completion)}
+            val before=f.snapshot();refused("E2EE_STREAMED_SESSION_CLOSED"){escaped!!.legacySharedMindmapsPage(requireNotNull(context),"maps",0)};assertEquals(before,f.snapshot())
+            f.cold();assertEquals(receipt.ticket,f.migration.prepareStreamedPlanning(f.options()));assertEquals(before,f.snapshot())
+        }
+    }
+    @Test fun caughtSharedScopeOrPageRefusalsStayStickyBeforeAuthenticatedHttp()=runBlocking {
+        for(kind in listOf("personal","project","space"))Rig(kind).use{f->f.stage();var caught=false
+            val code=if(kind=="personal")"E2EE_SCOPE_BINDING_MISMATCH"else"E2EE_LEGACY_PAGE_INVALID"
+            refused(code){f.migration.withStreamedPlanning(f.options()){session->
+                val port=E2eeSignedMigrationTransport(f.device,f.directory,setOf("mindmap"),session){_,_,_->error("UNEXPECTED_HTTP")}
+                try{port.legacySharedMindmapsPage(session.context,if(kind=="personal")"maps"else"users",0)}catch(error:Exception){assertTrue(error.message.orEmpty().contains(code));caught=true}
+            }}
+            assertTrue(caught);assertEquals(0,f.httpCalls);assertEquals(0,f.state().getJSONObject("ownership").getJSONArray("originals").length())
+        }
+    }
     @Test fun actualAuthenticatedClientOwnsAllLegacyActionsAndColdReadsEveryBoundOriginal()=runBlocking {
         Rig().use{f->f.stage();val entries=f.fenceEntries;val actions=mutableListOf<String>();val expected=mutableListOf<Pair<String,Long>>()
             var escaped:E2eeSignedMigrationTransport?=null;var context:E2eeMigrationSourceContext?=null
