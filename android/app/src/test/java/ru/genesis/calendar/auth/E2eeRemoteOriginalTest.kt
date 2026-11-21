@@ -14,7 +14,8 @@ import java.util.UUID
 class E2eeRemoteOriginalTest {
     private class Storage : E2eeRecordStorage {
         var rows = mutableMapOf<String, E2eeLocalRecord>(); var full = false
-        override fun get(key: String) = rows[key]
+        var bodyGets=0;var afterGet:((String)->Unit)?=null
+        override fun get(key: String):E2eeLocalRecord? {val value=rows[key];if(key.contains(":p:"))bodyGets++;afterGet?.invoke(key);return value}
         override fun list(prefix: String) = rows.keys.filter { it.startsWith(prefix) }
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
             requireOpen(); check(!full) { "E2EE_SYNTHETIC_STORAGE_FULL" }; for (row in changes) check(rows[row.key]?.serial == row.expected) { "E2EE_LOCAL_CONFLICT" }
@@ -120,5 +121,64 @@ class E2eeRemoteOriginalTest {
         val metadata = try { E2eeCommands.decodeCanonical(row.bytes) as JSONObject } finally { row.bytes.fill(0) }; metadata.getJSONObject("binding").put("sourceHash", E2eeEnvelope.encode(ByteArray(32) { 9 }))
         val bytes = E2eeCommands.canonical(metadata); try { f.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot", jid, bytes, row.serial))) } finally { bytes.fill(0) }
         val before = f.storage.snapshot(); rejects { readAll(f.read(), original.id, true) }; assertEquals(before, f.storage.snapshot())
+    }
+    @Test fun registrationIsImmutableInertIdentityBeforeDurableWritesAndAfterRetirement() {
+        val f=Rig();val capture=E2eeRemoteOriginal.create(f.options);val registered=capture.registration()
+        assertEquals(1,registered.protocol);assertEquals("remote-original/v1",registered.purpose)
+        assertEquals(hash(E2eeCommands.canonical(f.packet)),registered.binding.packetHash)
+        assertEquals(f.scope.ownerId,registered.context.actorId);assertEquals(2L,registered.binding.generation)
+        assertTrue(f.storage.rows.isEmpty());assertEquals(0,f.durable);assertTrue(f.admissions.isEmpty())
+        rejects{E2eeRemoteOriginal.describeOriginal(f.read(),registered.id)}
+        capture.close();f.live=false;f.vault.lock();assertEquals(registered,capture.registration())
+        assertTrue(registered.toString().contains("[redacted]"));assertFalse(registered.toString().contains(registered.id))
+    }
+    @Test fun descriptorAuthenticatesRegisteredAndPartialRequestWithoutOpeningResponseBodies() {
+        val f=Rig();val capture=f.registered();val registration=capture.registration()
+        var descriptor=E2eeRemoteOriginal.describeOriginal(f.read(),registration.id)
+        assertEquals(registration,descriptor.registration);assertFalse(descriptor.bodyVerified);assertEquals("registered",descriptor.phase);assertNull(descriptor.response)
+        assertEquals(hash(f.packet.toString().toByteArray()),descriptor.request.hash)
+        capture.begin(header);capture.append("prefix".toByteArray());capture.close();val before=f.storage.snapshot();f.storage.bodyGets=0
+        descriptor=E2eeRemoteOriginal.describeOriginal(f.read(),registration.id)
+        assertEquals("receiving",descriptor.phase);assertEquals(6L,descriptor.size);assertEquals(1,descriptor.parts);assertFalse(descriptor.bodyVerified)
+        assertNull(descriptor.rawHash);assertNull(descriptor.manifestHash);assertEquals(0,f.storage.bodyGets);assertEquals(before,f.storage.snapshot())
+        rejects{E2eeRemoteOriginal.describeOriginal(f.read().copy(capacity=f.options.capacity.copy(maximumBytes=1)),registration.id)}
+        assertEquals(0,f.storage.bodyGets);assertTrue(descriptor.toString().contains("[redacted]"))
+    }
+    @Test fun completeDescriptorIsMetadataAndDoesNotAuthenticateATamperedBody() {
+        val f=Rig();val (reference,_)=f.complete();val key=f.storage.rows.keys.single{it.contains(":p:00000")};val old=f.storage.rows.getValue(key)
+        val value=old.envelope.toJson();val cipher=value.getString("ciphertext");value.put("ciphertext",(if(cipher[0]=='A')"B" else "A")+cipher.substring(1))
+        f.storage.rows[key]=E2eeLocalRecord(old.serial,E2eeEnvelope.Envelope.fromJson(value));val before=f.storage.snapshot();f.storage.bodyGets=0
+        val descriptor=E2eeRemoteOriginal.describeOriginal(f.read(),reference.id)
+        assertEquals("complete",descriptor.phase);assertFalse(descriptor.bodyVerified);assertEquals(reference.rawHash,descriptor.rawHash);assertEquals(0,f.storage.bodyGets)
+        rejects{readAll(f.read(),reference.id)};assertEquals(before,f.storage.snapshot())
+    }
+    @Test fun descriptorRejectsSourceRebindingCatalogueDriftAndPreservesExactCancellationBeforeBodyRead() {
+        for(mode in listOf("binding","catalog","retire")){
+            val f=Rig();val capture=f.registered();capture.begin(header);capture.append("prefix".toByteArray());capture.close();val id=capture.registration().id
+            if(mode=="binding"){
+                val jid=f.vault.listLocal("local-snapshot","remote-original:").single{it.endsWith(":j:00000")};val row=f.vault.read("local-snapshot",jid)!!
+                val metadata=try{E2eeCommands.decodeCanonical(row.bytes) as JSONObject}finally{row.bytes.fill(0)}
+                metadata.getJSONObject("binding").put("sourceHash",E2eeEnvelope.encode(ByteArray(32){9}));val bytes=E2eeCommands.canonical(metadata)
+                try{f.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",jid,bytes,row.serial)))}finally{bytes.fill(0)}
+            }
+            val before=f.storage.rows.toMap();var changed=false;var retired=false;val cancellation=CancellationException("synthetic-descriptor-retired")
+            val read=f.read().copy(assertCurrent={if(retired)throw cancellation;f.options.assertCurrent()})
+            f.storage.bodyGets=0;f.storage.afterGet={key->if(key.contains(":r:")&&!changed){changed=true;if(mode=="catalog")f.registered().close();if(mode=="retire")retired=true}}
+            try{E2eeRemoteOriginal.describeOriginal(read,id);fail("Invalid descriptor accepted")}catch(error:Exception){if(mode=="retire")assertSame(cancellation,error)else assertTrue(error.message.orEmpty().startsWith("E2EE_"))}
+            assertEquals(0,f.storage.bodyGets)
+            for((key,row)in before)if(!key.contains("remote-original-catalog:"))assertEquals(row.envelope.toJson().toString(),f.storage.rows.getValue(key).envelope.toJson().toString())
+        }
+    }
+    @Test fun descriptorAndBodyReaderRejectPhysicalRequestBomEvenAfterValidLocalResealing() {
+        val f=Rig();val capture=f.registered();capture.close();val id=capture.registration().id
+        val rid=f.vault.listLocal("local-snapshot","remote-original:").single{it.endsWith(":r:00000")};val request=f.vault.read("local-snapshot",rid)!!
+        val bytes=try{byteArrayOf(0xef.toByte(),0xbb.toByte(),0xbf.toByte())+request.bytes}finally{request.bytes.fill(0)}
+        val key=f.storage.rows.keys.single{it.endsWith(rid)};val old=f.storage.rows.getValue(key)
+        f.storage.rows[key]=E2eeLocalRecord(1,E2eeEnvelope.seal(f.scope.roots.getValue(f.scope.keyId),f.keys.signing.private,old.envelope.context,bytes))
+        val jid=f.vault.listLocal("local-snapshot","remote-original:").single{it.endsWith(":j:00000")};val journal=f.vault.read("local-snapshot",jid)!!
+        val metadata=try{E2eeCommands.decodeCanonical(journal.bytes) as JSONObject}finally{journal.bytes.fill(0)}
+        metadata.put("request",JSONObject().put("size",bytes.size).put("hash",hash(bytes)));val encoded=E2eeCommands.canonical(metadata)
+        try{f.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot",jid,encoded,journal.serial)))}finally{encoded.fill(0);bytes.fill(0)}
+        val before=f.storage.snapshot();rejects{E2eeRemoteOriginal.describeOriginal(f.read(),id)};rejects{readAll(f.read(),id,true)};assertEquals(before,f.storage.snapshot())
     }
 }

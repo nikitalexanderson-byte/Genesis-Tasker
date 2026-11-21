@@ -31,6 +31,27 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
     data class Reference(val id: String, val manifestHash: String, val rawHash: String, val size: Long)
     data class Marker(val id: String, val phase: String, val size: Long, val parts: Int, val manifestHash: String?)
     data class Receipt(val id: String, val size: Long, val rawHash: String, val complete: Boolean, val manifestHash: String?)
+    data class OriginalContext(val ownerId:String,val scopeId:String,val kind:String,val actorId:String,val actorScopeId:String,val deviceId:String) {
+        override fun toString()="E2eeRemoteOriginal.OriginalContext([redacted])"
+    }
+    data class RequestBinding(val packetHash:String,val signer:String,val generation:Long,val migrationId:String,val fence:Long,val sourceHash:String,
+        val action:String,val directoryRevision:Long,val checkpointHash:String,val securityEpoch:Long) {
+        override fun toString()="E2eeRemoteOriginal.RequestBinding([redacted])"
+    }
+    /** Technical identity only. No durable storage, EOF, body proof or custody. */
+    data class Registration(val id:String,val context:OriginalContext,val binding:RequestBinding) {
+        val protocol:Int get()=1
+        val purpose:String get()=RemoteOriginalCodec.PURPOSE
+        override fun toString()="E2eeRemoteOriginal.Registration([redacted])"
+    }
+    data class RequestDigest(val size:Int,val hash:String) {
+        override fun toString()="E2eeRemoteOriginal.RequestDigest([redacted])"
+    }
+    data class Descriptor(val registration:Registration,val phase:String,val request:RequestDigest,val response:E2eeHttpBodyObservation.Response?,
+        val size:Long,val parts:Int,val rawHash:String?,val manifestHash:String?) {
+        val bodyVerified:Boolean get()=false
+        override fun toString()="E2eeRemoteOriginal.Descriptor([redacted])"
+    }
     private val id = UUID.randomUUID().toString()
     private var state: JSONObject? = null
     private var serial = 0L
@@ -40,6 +61,7 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
     private val digest = MessageDigest.getInstance("SHA-256")
     private var reference: Reference? = null
     private fun readOptions() = ReadOptions(options.vault, options.target, options.capacity, options.assertCurrent)
+    fun registration():Registration=RemoteOriginalCodec.registration(id,context,binding)
     private fun current() {
         RemoteOriginalCodec.current(readOptions()); RemoteOriginalCodec.same(RemoteOriginalCodec.context(readOptions()), context)
         check(!closed.get() && !broken.get()) { "E2EE_REMOTE_ORIGINAL_CLOSED" }
@@ -134,21 +156,28 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
             RemoteOriginalCodec.capacity(options.capacity); val state = RemoteOriginalCodec.inventory(options); RemoteOriginalCodec.within(state.usage, options.capacity)
             return state.journals.map { val row = it.value; Marker(row.getString("id"), row.getString("phase"), row.getLong("size"), row.getJSONArray("parts").length(), row.get("manifestHash") as? String) }
         }
+        /** Request-authenticated metadata discovery; never opens response parts.
+         * Even a complete marker is not a body/EOF or migration receipt. */
+        fun describeOriginal(options:ReadOptions,id:String):Descriptor {
+            RemoteOriginalCodec.capacity(options.capacity);RemoteOriginalCodec.current(options)
+            check(RemoteOriginalCodec.uuid.matches(id)){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+            val before=RemoteOriginalCodec.inventory(options);RemoteOriginalCodec.within(before.usage,options.capacity)
+            val journal=before.journals.singleOrNull{it.value.getString("id")==id}?.value?:error("E2EE_REMOTE_ORIGINAL_MISSING")
+            val registered=RemoteOriginalCodec.verifiedRequest(options,before,journal)
+            RemoteOriginalCodec.stable(options,before);RemoteOriginalCodec.current(options)
+            val request=journal.getJSONObject("request")
+            val response=if(journal.isNull("response"))null else journal.getJSONObject("response").let{value->
+                E2eeHttpBodyObservation.Response(value.getString("path"),value.getInt("status"),value.get("contentType") as? String,value.get("contentLength") as? String)
+            }
+            return Descriptor(registered,journal.getString("phase"),RequestDigest(request.getInt("size"),request.getString("hash")),response,
+                journal.getLong("size"),journal.getJSONArray("parts").length(),journal.get("rawHash") as? String,journal.get("manifestHash") as? String)
+        }
         fun withOriginal(options: ReadOptions, id: String, allowIncomplete: Boolean = false, consume: (InputStream) -> Unit): Receipt {
             RemoteOriginalCodec.capacity(options.capacity); RemoteOriginalCodec.current(options); check(RemoteOriginalCodec.uuid.matches(id)) { "E2EE_CORRUPT_REMOTE_ORIGINAL" }
             val before = RemoteOriginalCodec.inventory(options); RemoteOriginalCodec.within(before.usage, options.capacity)
             val row = before.journals.singleOrNull { it.value.getString("id") == id } ?: error("E2EE_REMOTE_ORIGINAL_MISSING"); val journal = row.value
             check(journal.getString("phase") == "complete" || allowIncomplete) { "E2EE_REMOTE_ORIGINAL_INCOMPLETE" }
-            val request = options.vault.read("local-snapshot", RemoteOriginalCodec.key(before.hash, id, "r"))
-            try {
-                RemoteOriginalCodec.current(options); val descriptor = journal.getJSONObject("request")
-                check(request != null && request.serial == 1L && request.bytes.size.toLong() == descriptor.getLong("size") && RemoteOriginalCodec.hash(request.bytes) == descriptor.getString("hash")) { "E2EE_CORRUPT_REMOTE_ORIGINAL" }
-                check(request.bytes.size in 1..RemoteOriginalCodec.MAX_REQUEST && !(request.bytes.size >= 3 && request.bytes[0] == 0xef.toByte() && request.bytes[1] == 0xbb.toByte() && request.bytes[2] == 0xbf.toByte())) { "E2EE_CORRUPT_REMOTE_ORIGINAL" }
-                val packet = E2eeHttpResponseJson.read(ByteArrayInputStream(request.bytes), "/e2ee/v1/read", 200, "application/json", request.bytes.size.toLong(), { RemoteOriginalCodec.current(options) }) ?: RemoteOriginalCodec.invalid()
-                val signer = E2eeDirectory.signingKey(journal.getJSONObject("binding").getString("signer"))
-                val bound = RemoteOriginalCodec.packetBinding(packet, signer, journal.getJSONObject("context"), journal.getJSONObject("binding").getLong("generation"))
-                RemoteOriginalCodec.current(options); check(RemoteOriginalCodec.identity(bound) == RemoteOriginalCodec.identity(journal.getJSONObject("binding"))) { "E2EE_CORRUPT_REMOTE_ORIGINAL" }
-            } finally { request?.bytes?.fill(0) }
+            RemoteOriginalCodec.verifiedRequest(options,before,journal)
             val stream = RemoteOriginalInput(options, before, journal)
             try {
                 consume(stream); RemoteOriginalCodec.current(options)
@@ -205,6 +234,22 @@ private object RemoteOriginalCodec {
     fun identity(value: Any): String { val bytes = encoded(value); return try { hash(bytes) } finally { bytes.fill(0) } }
     fun copy(value: JSONObject): JSONObject { val bytes = encoded(value); return try { E2eeCommands.decodeCanonical(bytes, MAX_META) as? JSONObject ?: invalid() } finally { bytes.fill(0) } }
     fun current(options: E2eeRemoteOriginal.ReadOptions) { options.assertCurrent(); options.vault.assertOpen() }
+    fun registration(id:String,context:JSONObject,binding:JSONObject):E2eeRemoteOriginal.Registration = E2eeRemoteOriginal.Registration(id,
+        E2eeRemoteOriginal.OriginalContext(context.getString("ownerId"),context.getString("scopeId"),context.getString("kind"),context.getString("actorId"),context.getString("actorScopeId"),context.getString("deviceId")),
+        E2eeRemoteOriginal.RequestBinding(binding.getString("packetHash"),binding.getString("signer"),binding.getLong("generation"),binding.getString("migrationId"),binding.getLong("fence"),binding.getString("sourceHash"),
+            binding.getString("action"),binding.getLong("directoryRevision"),binding.getString("checkpointHash"),binding.getLong("securityEpoch")))
+    fun verifiedRequest(options:E2eeRemoteOriginal.ReadOptions,inventory:Inventory,journal:JSONObject):E2eeRemoteOriginal.Registration {
+        val id=journal.getString("id");val request=options.vault.read("local-snapshot",key(inventory.hash,id,"r"))
+        try {
+            current(options);val descriptor=journal.getJSONObject("request")
+            check(request!=null&&request.serial==1L&&request.bytes.size.toLong()==descriptor.getLong("size")&&hash(request.bytes)==descriptor.getString("hash")){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+            check(request.bytes.size in 1..MAX_REQUEST&&!(request.bytes.size>=3&&request.bytes[0]==0xef.toByte()&&request.bytes[1]==0xbb.toByte()&&request.bytes[2]==0xbf.toByte())){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+            val packet=E2eeHttpResponseJson.read(ByteArrayInputStream(request.bytes),"/e2ee/v1/read",200,"application/json",request.bytes.size.toLong(),{current(options)})?:invalid()
+            val binding=journal.getJSONObject("binding");val context=journal.getJSONObject("context");val signer=E2eeDirectory.signingKey(binding.getString("signer"))
+            val bound=packetBinding(packet,signer,context,binding.getLong("generation"));current(options)
+            check(identity(bound)==identity(binding)){"E2EE_CORRUPT_REMOTE_ORIGINAL"};return registration(id,context,binding)
+        }finally{request?.bytes?.fill(0)}
+    }
     fun capacity(value: E2eeRemoteOriginal.Capacity) {
         check(value.maximumBytes in 1..128L * 1024 * 1024 && value.maximumParts in 1..8000 && value.maximumObservations in 1..1000 && value.maximumRecords in 1..10000 && value.maximumMetadataBytes in 1..16 * 1024 * 1024) { "E2EE_REMOTE_ORIGINAL_CAPACITY" }
     }

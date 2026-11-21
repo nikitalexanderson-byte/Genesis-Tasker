@@ -20,10 +20,14 @@
 новое ядро ещё не включено. Итог для полного продукта — **NO-GO для pilot/cutover**,
 пока не завершены перечисленные ниже интеграция и системная приёмка.
 
-Текущий незавершённый web-инкремент `RemoteOriginalRegistration`/descriptor
+На срезе review незавершённый web-инкремент `RemoteOriginalRegistration`/descriptor
 присутствует в рабочей копии и некоторых общих прогонах. Он не входит в
 исправления review, не принят нативно как новый API и не закрывает state4.
 Его наличие в fingerprint APK не меняет этот статус.
+
+Последующая отдельная web/native приёмка registration/descriptor описана в
+`e2ee-336-remote-registration.md`. Она не изменяет frozen evidence этого review,
+не включает state4/custody и не превращает внутренний review в независимый.
 
 ## Проверенный объём и модель угроз
 

@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createHash} from 'node:crypto';
 import {ProtectedRemoteOriginal,listRemoteOriginals,withRemoteOriginal} from '../app/e2ee/remote-original.ts';
+import * as remoteOriginals from '../app/e2ee/remote-original.ts';
 import {UnlockedE2eeVault} from '../app/e2ee/storage.ts';
 import {freshSecret,generateDeviceKeys} from '../app/e2ee/keys.ts';
-import {importE2eeRoot,encodeE2eeBytes} from '../app/e2ee/envelope.ts';
+import {importE2eeRoot,encodeE2eeBytes,sealE2eeEnvelope} from '../app/e2ee/envelope.ts';
 import {signE2eeCommand,canonicalE2eeValue,decodeCanonicalE2eeValue} from '../app/e2ee/commands.ts';
 import {readE2eeJsonResponse} from '../app/e2ee/http-response.ts';
 import {cloudSyncClient} from './helpers/cloud-sync-client.mjs';
@@ -123,4 +124,54 @@ test('a validly sealed partial journal cannot rebind its original signed source 
  try{await f.vault.write([{domain:'local-snapshot',objectId:jid,value:bytes,expected:row.serial}]);}finally{bytes.fill(0);}
  let bodyGets=0;const get=f.storage.get.bind(f.storage);f.storage.get=async key=>{if(key.includes(':p:'))bodyGets++;return get(key);};const before=new Map(f.storage.rows);
  await assert.rejects(readAll(f.options,entry.id,{allowIncomplete:true}),/E2EE_/);assert.equal(bodyGets,0);assert.deepEqual(f.storage.rows,before);
+});
+
+test('pre-network registration is immutable inert identity without a durable original or receipt',async()=>{
+ const f=await fixture(),capture=await ProtectedRemoteOriginal.create(f.options),registration=capture.registration();
+ assert.equal(registration.protocol,1);assert.equal(registration.purpose,'remote-original/v1');assert.match(registration.id,/^[a-f0-9-]{36}$/);
+ assert.equal(registration.binding.packetHash,hash(canonicalE2eeValue(f.packet)));assert.equal(registration.context.actorId,f.scope.ownerId);assert.equal(registration.binding.generation,2);
+ assert.ok(Object.isFrozen(registration)&&Object.isFrozen(registration.context)&&Object.isFrozen(registration.binding));assert.equal(Object.hasOwn(registration,'complete'),false);
+ assert.equal(f.storage.rows.size,0);assert.equal(f.durable(),0);await assert.rejects(remoteOriginals.describeRemoteOriginal(f.options,registration.id),/MISSING/);
+ capture.close();f.retire();assert.deepEqual(capture.registration(),registration);
+});
+
+test('authenticated descriptor discovers registered and partial request bindings without opening response bodies',async()=>{
+ const f=await fixture(),capture=await registered(f),registration=capture.registration(),originalGet=f.storage.get.bind(f.storage);let bodyGets=0;
+ f.storage.get=async key=>{if(key.includes(':p:'))bodyGets++;return originalGet(key);};
+ let descriptor=await remoteOriginals.describeRemoteOriginal(f.options,registration.id);
+ assert.equal(descriptor.bodyVerified,false);assert.equal(descriptor.phase,'registered');assert.deepEqual(descriptor.registration,registration);assert.equal(descriptor.request.hash,hash(encode(JSON.stringify(f.packet))));
+ await capture.begin(header);await capture.append(encode('prefix'));capture.close();const before=new Map(f.storage.rows);
+ descriptor=await remoteOriginals.describeRemoteOriginal(f.options,registration.id);assert.equal(descriptor.phase,'receiving');assert.equal(descriptor.size,6);assert.equal(descriptor.parts,1);assert.equal(descriptor.rawHash,null);assert.equal(descriptor.manifestHash,null);
+ assert.ok(Object.isFrozen(descriptor)&&Object.isFrozen(descriptor.request)&&Object.isFrozen(descriptor.response));assert.equal(bodyGets,0);assert.deepEqual(f.storage.rows,before);
+});
+
+test('metadata discovery is not body proof even when an authenticated complete marker exists',async()=>{
+ const f=await fixture(),{ref}=await complete(f),key=[...f.storage.rows.keys()].find(key=>key.includes(':p:00000')),changed=structuredClone(f.storage.rows.get(key));
+ changed.envelope.ciphertext=(changed.envelope.ciphertext[0]==='A'?'B':'A')+changed.envelope.ciphertext.slice(1);f.storage.rows.set(key,changed);const before=new Map(f.storage.rows);
+ const descriptor=await remoteOriginals.describeRemoteOriginal(f.options,ref.id);assert.equal(descriptor.phase,'complete');assert.equal(descriptor.bodyVerified,false);assert.equal(descriptor.rawHash,ref.rawHash);
+ await assert.rejects(readAll(f.options,ref.id),/E2EE_/);assert.deepEqual(f.storage.rows,before);
+});
+
+test('authenticated descriptor refuses signed-source rebinding catalogue drift and actor retirement before body access',async()=>{
+ for(const mode of ['binding','catalog','retire']){
+  const f=await fixture(),{ref}=await complete(f);let bodyGets=0,changed=false;const get=f.storage.get.bind(f.storage);
+  if(mode==='binding'){
+   const jid=(await f.vault.listLocal('local-snapshot','remote-original:')).find(id=>id.endsWith(':j:00000')),row=await f.vault.read('local-snapshot',jid),metadata=decodeCanonicalE2eeValue(row.value);row.value.fill(0);
+   metadata.binding.sourceHash=encodeE2eeBytes(new Uint8Array(32).fill(9));const bytes=canonicalE2eeValue(metadata);try{await f.vault.write([{domain:'local-snapshot',objectId:jid,value:bytes,expected:row.serial}]);}finally{bytes.fill(0);}
+  }
+  const before=new Map(f.storage.rows);
+  f.storage.get=async key=>{if(key.includes(':p:'))bodyGets++;const value=await get(key);if(key.includes(':r:')&&!changed){changed=true;if(mode==='retire')f.retire();if(mode==='catalog')(await registered(f)).close();}return value;};
+  await assert.rejects(remoteOriginals.describeRemoteOriginal(f.options,ref.id),/E2EE_/);assert.equal(bodyGets,0);
+  for(const[key,value]of before)if(!key.includes('remote-original-catalog:'))assert.deepEqual(f.storage.rows.get(key),value);
+ }
+});
+
+test('physical request BOM is forbidden on protected readback as on native even after valid local resealing',async()=>{
+ const f=await fixture(),capture=await registered(f);capture.close();const [marker]=await listRemoteOriginals(f.options);
+ const ids=await f.vault.listLocal('local-snapshot','remote-original:'),rid=ids.find(id=>id.endsWith(':r:00000')),jid=ids.find(id=>id.endsWith(':j:00000'));
+ const request=await f.vault.read('local-snapshot',rid),bytes=Buffer.concat([Buffer.from([239,187,191]),Buffer.from(request.value)]);request.value.fill(0);
+ const rkey=[...f.storage.rows.keys()].find(key=>key.endsWith(rid)),stored=f.storage.rows.get(rkey);f.storage.rows.set(rkey,{serial:1,envelope:await sealE2eeEnvelope(f.scope.roots.get(f.scope.keyId),f.keys.signing.privateKey,stored.envelope.context,bytes)});
+ const journal=await f.vault.read('local-snapshot',jid),metadata=decodeCanonicalE2eeValue(journal.value);journal.value.fill(0);metadata.request={size:bytes.length,hash:hash(bytes)};const encoded=canonicalE2eeValue(metadata);
+ try{await f.vault.write([{domain:'local-snapshot',objectId:jid,value:encoded,expected:journal.serial}]);}finally{encoded.fill(0);bytes.fill(0);}
+ const before=new Map(f.storage.rows);await assert.rejects(readAll(f.options,marker.id,{allowIncomplete:true}),/E2EE_/);await assert.rejects(remoteOriginals.describeRemoteOriginal(f.options,marker.id),/E2EE_/);assert.deepEqual(f.storage.rows,before);
 });

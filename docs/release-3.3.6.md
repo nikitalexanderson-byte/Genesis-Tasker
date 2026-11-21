@@ -2493,11 +2493,9 @@ process death, physical/OEM или полный recovery. Lint SUCCESS16m15s:0 e
 оба APK совпали; исходный security prompt hash прежний. Точные hashes/пределы —
 `e2ee-336-http-policy.md`. Нового UI текста в этом пакете нет.
 
-Source checks предыдущего raw-original e52b553f, run44821684027: Android первый
-attempt остановился до компиляции на скачивании Compose2.2.10; web/API ещё
-проверяется. После завершения требуется повтор только failed dependency job;
-не отменять текущий CI следующим push. Текущий HTTP policy компонент принят
-локально, собственного CI/Deploy/выпуска ещё нет.
+Source checks предыдущего raw-original e52b553f, run44821684027: SUCCESS после
+повтора Android dependency failure. Следующий HTTP policy faa7d1eb,
+run44831923528: Android и web/API SUCCESS. Deploy/выпуска этих компонентов нет.
 
 Scope остаётся9/20. Mandatory protected capture factories, pre-network ownership
 reservation, state4/source/plan composition и authenticated original custody
@@ -2532,10 +2530,41 @@ APK; exact old/new input/provider binding сохранён отдельно. Т�
 двух именованных QA AVD восстановлены в NONE; личные устройства не менялись.
 Точные final hashes/границы — в отчёте, не в старом предварительном ZIPfaa7d1eb.
 
-Общие прогоны включают5 прежних web remote-registration WIP cases. Этот
-инкремент остаётся отдельно незавершённым: native registration/descriptor API,
-mandatory capture factories и state4/custody ещё не приняты. Его2 WIP файла
-не входят в commit этого review. Coverage остаётся9/20; остальные11 sources,
+На момент этого review общие прогоны включали5 прежних web remote-registration
+WIP cases. Native registration/descriptor API тогда ещё не был принят, а2 web
+WIP файла не входили в commit review. Следующая отдельная приёмка API записана
+ниже; mandatory capture factories и state4/custody остаются незавершёнными.
+Coverage остаётся9/20; остальные11 sources,
 normal writers/unlock/enrollment/recovery, shared ACL+rotation, files/Drive,
 direct upgrades,48 system scenarios/14-language/human review обязательны.
 Review не включает pilot/cutover/floors и не является выпуском3.3.6.
+
+## Идентичность remote original до сети и проверка metadata,21 ноября
+
+Web и Android теперь возвращают immutable inert registration до prepare/IO и
+проверяют точные сохранённые signed request/binding при discovery до чтения
+response body. Descriptor всегда сообщает bodyVerified=false, даже при complete;
+полный body/EOF по-прежнему обязан проверить отдельный reader. Web/native
+согласованы по physical request BOM и точному cancellation. Это API для будущего
+state4 CAS, не реализация reservation/custody или permission на upload/cutover.
+
+Приёмка: full JS2000/2000, Chromium15723/23/console0, owned types/scoped lint и
+static web build PASS. Fresh native build11m4s, JVM254/254 across33 suites,
+API26/API34 каждый13/13. Native lint11m51s:0 errors/208 warnings/8 hints, ни новых
+issue/file pairs, ни роста их count. После devices/lint/web build exact source,
+оба APK и исходный prompt совпали. Frozen input:
+181ED242A8FB0A64B43F54610D94F49280F23271CCC309DCB4A67C9C83AB843B.
+Контракт, hashes, отдельные environment RED и ограничения:
+`e2ee-336-remote-registration.md`. Нет нового UI текста и изменений личных устройств.
+
+Review commit49c79ee4 отправлен в ветку; Source checks44838841218 первый Android
+attempt остановился до компиляции при разрешении Compose plugin2.2.10. Его
+реальный log сохранён отдельно. Web/API на момент записи выполняет browser
+scenarios; после завершения нужен повтор только failed Android job. Не отменять
+его следующим push и не считать весь CI успешным по локальным результатам.
+
+Все11 remaining source paths, mandatory factories/state4/global admission,
+original-key custody/new-device recovery, normal writers, shared ACL+rotation,
+files/Drive, direct upgrades и полная системная/языковая приёмка ещё впереди.
+Coverage9/20, production3.3.5/149, floors0/pilot/cutover off и Android deploy false
+сохраняются. Это принятый компонент, не выпуск3.3.6.

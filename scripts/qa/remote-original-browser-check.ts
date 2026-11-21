@@ -1,4 +1,4 @@
-import {ProtectedRemoteOriginal,listRemoteOriginals,withRemoteOriginal,type RemoteOriginalOptions} from '../../app/e2ee/remote-original.ts';
+import {ProtectedRemoteOriginal,listRemoteOriginals,describeRemoteOriginal,withRemoteOriginal,type RemoteOriginalOptions} from '../../app/e2ee/remote-original.ts';
 import {IndexedDbE2eeStorage,UnlockedE2eeVault} from '../../app/e2ee/storage.ts';
 import {generateDeviceKeys,freshSecret} from '../../app/e2ee/keys.ts';
 import {importE2eeRoot,encodeE2eeBytes} from '../../app/e2ee/envelope.ts';
@@ -20,12 +20,20 @@ try{
  const select=async(mode:string)=>{const response=await fetch('/control?mode='+mode);if(!response.ok)throw new Error('Fixture control failed');};
  const snapshot=async()=>{const result=[];for(const key of (await storage.list('')).sort()){const bytes=new TextEncoder().encode(JSON.stringify(await storage.get(key)));try{result.push([key,encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)))]);}finally{bytes.fill(0);}}return JSON.stringify(result);};
  const expected=await(await fetch('/expected.json')).json() as {largeBytes:number;largeHash:string;duplicateBytes:number;duplicateHash:string};
- await select('large');const large=await ProtectedRemoteOriginal.create(options),value=await e2eeRequest<{private:string}>('/read',packet,undefined,large),ref=large.reference();
+ await select('large');const large=await ProtectedRemoteOriginal.create(options),registration=large.registration();
+ check('pre-network registration is frozen inert identity without a stored original or receipt',Object.isFrozen(registration)&&Object.isFrozen(registration.context)&&Object.isFrozen(registration.binding)
+  &&registration.binding.generation===2&&!Object.hasOwn(registration,'complete')&&(await storage.list('')).length===0);
+ check('an unprepared registration cannot be discovered as a durable original',await refuses(()=>describeRemoteOriginal(options,registration.id)));
+ const value=await e2eeRequest<{private:string}>('/read',packet,undefined,large),ref=large.reference();
  check('actual fetch captures the full generated2MiB response before returning parsed private text',value.private.startsWith('SYNTHETIC-RAW-CANARY α😀')&&ref.size===expected.largeBytes&&ref.rawHash===expected.largeHash);
  check('the finished capture capability is closed while its reference stays inert',await refuses(()=>large.append(new Uint8Array([7]))));
  // Failed late calls deliberately poison that live object; use only its prior
  // immutable reference for the independent cold protected-reader checks.
  const before=await snapshot();vault.lock();storage=new IndexedDbE2eeStorage();vault=new UnlockedE2eeVault(storage,scope);const cold={...options,vault};
+ let bodyGets=0;const storedGet=storage.get.bind(storage);storage.get=async key=>{if(key.includes(':p:'))bodyGets++;return storedGet(key);};
+ const descriptor=await describeRemoteOriginal(cold,ref.id);
+ check('cold metadata authenticates the signed request without reading response bodies or claiming body proof',descriptor.registration.id===registration.id&&descriptor.phase==='complete'
+  &&descriptor.bodyVerified===false&&descriptor.rawHash===expected.largeHash&&bodyGets===0);
  let bytes=0;const receipt=await withRemoteOriginal(cold,ref.id,async source=>{for await(const row of source)bytes+=row.length;});
  check('cold actual IDB authenticates every original byte and exact EOF',receipt.complete&&bytes===expected.largeBytes&&receipt.rawHash===expected.largeHash);
  check('cold readback leaves every encrypted record byte-identical',await snapshot()===before);
@@ -36,6 +44,9 @@ try{
  check('the rejected duplicate still has its exact protected raw BOM whitespace and original EOF',duplicateProof.complete&&duplicateProof.size===expected.duplicateBytes&&duplicateProof.rawHash===expected.duplicateHash);
  const partial=await ProtectedRemoteOriginal.create(cold);await partial.prepare({path:'/e2ee/v1/read',method:'POST',body:JSON.stringify(packet)});await partial.begin({path:'/e2ee/v1/read',status:200,contentType:'application/json',contentLength:null});await partial.append(new TextEncoder().encode('retained-prefix'));partial.close();
  const markers=await listRemoteOriginals(cold),prefix=markers.find(row=>row.phase==='receiving')!;
+ bodyGets=0;const partialDescriptor=await describeRemoteOriginal(cold,prefix.id);
+ check('partial request descriptor is discoverable without body reads or an EOF claim',partialDescriptor.phase==='receiving'&&partialDescriptor.bodyVerified===false
+  &&partialDescriptor.rawHash===null&&partialDescriptor.manifestHash===null&&partialDescriptor.parts===1&&bodyGets===0);
  check('process-style close leaves a discoverable incomplete prefix',!!prefix&&await refuses(()=>withRemoteOriginal(cold,prefix.id,async()=>{})));
  const prefixReceipt=await withRemoteOriginal(cold,prefix.id,async source=>{for await(const row of source)row.fill(0);},{allowIncomplete:true});check('explicit prefix reading never claims remote EOF',!prefixReceipt.complete&&prefixReceipt.size===15);
  const limited=await ProtectedRemoteOriginal.create({...cold,capacity:{...cold.capacity,maximumObservations:markers.length}}),kept=await snapshot();

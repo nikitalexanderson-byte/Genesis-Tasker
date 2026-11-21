@@ -68,8 +68,12 @@ class E2eeRemoteOriginalDeviceTest {
         val scope = UnlockedE2eeVault.Scope("remote-native-owner", "device:remote-native", "remote-native-device", 1, 1, 1, "local-root", keys.signing.private, mapOf("local-root" to root)) { if (it == "remote-native-device") keys.signing.public else null }
         val target = E2eeRemoteOriginal.Target(scope.ownerId, "personal:${scope.ownerId}", "personal")
         var storage = E2eeSqliteStorage(context, true); var failAfter: Int? = null; var commits = 0
+        var bodyGets=0;var bodyTransform:((E2eeLocalRecord)->E2eeLocalRecord)?=null
         private val port = object : E2eeRecordStorage {
-            override fun get(key: String) = storage.get(key)
+            override fun get(key: String):E2eeLocalRecord? {
+                val row=storage.get(key);if(!key.contains(":p:"))return row
+                bodyGets++;return row?.let{bodyTransform?.invoke(it)?:it}
+            }
             override fun list(prefix: String) = storage.list(prefix)
             override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
                 if (failAfter?.let { commits >= it } == true) throw IOException("SYNTHETIC-PRIVATE-QUOTA-CANARY")
@@ -138,6 +142,39 @@ class E2eeRemoteOriginalDeviceTest {
             f.admission = { f.live = false }; val next = E2eeRemoteOriginal.create(f.options())
             try { f.call(next); fail("Retired admission accepted") } catch (_: CancellationException) { }
             assertEquals(0, f.calls); f.live = true; assertEquals(before, f.snapshot()); assertEquals("registered", E2eeRemoteOriginal.listOriginals(f.read()).single().phase)
+        }
+    }
+    @Test fun inertRegistrationAndPartialDescriptorSurviveColdSqliteReadWithoutBodyAccess() {
+        Rig().use{f->
+            val capture=E2eeRemoteOriginal.create(f.options());val registration=capture.registration()
+            assertEquals(0,f.calls);assertEquals(0,f.commits);assertTrue(f.snapshot().isEmpty())
+            assertEquals(f.scope.ownerId,registration.context.actorId);assertEquals(2L,registration.binding.generation)
+            capture.prepare(E2eeHttpObservation.Request("/e2ee/v1/read","POST",f.packet.toString()))
+            val registered=E2eeRemoteOriginal.describeOriginal(f.read(),registration.id)
+            assertEquals(registration,registered.registration);assertEquals("registered",registered.phase);assertNull(registered.response);assertFalse(registered.bodyVerified)
+            capture.begin(E2eeHttpBodyObservation.Response("/e2ee/v1/read",200,"application/json",null));capture.append("prefix".toByteArray());capture.close()
+            val before=f.snapshot();f.cold();f.bodyGets=0
+            val partial=E2eeRemoteOriginal.describeOriginal(f.read(),registration.id)
+            assertEquals(registration,partial.registration);assertEquals("receiving",partial.phase);assertEquals(6L,partial.size);assertEquals(1,partial.parts)
+            assertFalse(partial.bodyVerified);assertNull(partial.rawHash);assertNull(partial.manifestHash);assertEquals(0,f.bodyGets);assertEquals(before,f.snapshot())
+            refused{capture.reference()};f.live=false;assertEquals(registration,capture.registration())
+            try{E2eeRemoteOriginal.describeOriginal(f.read(),registration.id);fail("Retired descriptor accepted")}catch(_:CancellationException){}
+        }
+    }
+    @Test fun completeColdDescriptorNeverSubstitutesForBodyAuthenticationOrChangesStoredCiphertext() {
+        Rig().use{f->
+            val bytes=raw();f.reply=Reply(bytes);val capture=E2eeRemoteOriginal.create(f.options());val registration=capture.registration()
+            f.call(capture);f.clean();val reference=capture.reference();val before=f.snapshot();f.cold();f.bodyGets=0
+            f.bodyTransform={old->
+                val value=old.envelope.toJson();val cipher=value.getString("ciphertext")
+                value.put("ciphertext",(if(cipher[0]=='A')"B" else "A")+cipher.substring(1))
+                E2eeLocalRecord(old.serial,E2eeEnvelope.Envelope.fromJson(value))
+            }
+            val descriptor=E2eeRemoteOriginal.describeOriginal(f.read(),reference.id)
+            assertEquals(registration,descriptor.registration);assertEquals("complete",descriptor.phase);assertFalse(descriptor.bodyVerified)
+            assertEquals(reference.rawHash,descriptor.rawHash);assertEquals(0,f.bodyGets)
+            refused{proof(f.read(),reference.id)};assertTrue(f.bodyGets>0);assertEquals(before,f.snapshot())
+            f.bodyTransform=null;val receipt=proof(f.read(),reference.id);assertTrue(receipt.complete);assertEquals(reference.rawHash,receipt.rawHash);assertEquals(before,f.snapshot())
         }
     }
 }

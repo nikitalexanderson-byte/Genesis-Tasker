@@ -107,12 +107,16 @@ real product ports, not the no-op fixture callbacks used in component tests.
 Use the concrete provisioned device's independent `vault` and its existing
 `ensureDurableKeys`, not an arbitrary caller-supplied legacy/account-key vault.
 Keep authentication-operation generation distinct from the target content data
-generation. Current quarantine references become available only after raw EOF;
-state4 pre-network reservation therefore still needs an explicit inert original
-registration identity/request binding before prepare, plus authenticated binding
-discovery for restart. Its descriptor may expose technical ids/hashes, never
-private response bytes or key material. A post-success-only callback is
-insufficient: it loses the ownership link on a crash or a rejected JSON reply.
+generation. Complete quarantine references become available only after raw EOF.
+An explicit inert registration identity/request binding before prepare and
+request-authenticated metadata discovery now exist separately on both platforms;
+see `e2ee-336-remote-registration.md` for exact acceptance. Every descriptor has
+`bodyVerified:false`, including complete journals. State4 still needs to reserve
+and own these exact identities before networking; the APIs do not perform that
+CAS, provider-wide reservation or authenticated key custody. A post-success-only
+callback remains insufficient: it loses the ownership link on a crash or a
+rejected JSON reply. Descriptors contain technical ids/hashes, never private
+response bytes or key material.
 
 After a successful raw capture, preserve its inert manifest/id/original hash
 with the exact owned planning attempt before derived content can advance. A

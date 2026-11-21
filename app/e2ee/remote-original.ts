@@ -20,6 +20,10 @@ export type RemoteOriginalAdmission=Readonly<{bytes:number;parts:number;observat
 export type RemoteOriginalReadOptions={vault:ReadVault;target:Target;capacity:RemoteOriginalCapacity;assertCurrent:()=>void};
 export type RemoteOriginalOptions=Omit<RemoteOriginalReadOptions,'vault'>&{vault:UnlockedE2eeVault;packet:SignedE2eeCommand;signer:CryptoKey;generation:number;ensureDurableKeys:()=>Promise<void>;admit:(request:RemoteOriginalAdmission)=>Promise<void>};
 export type RemoteOriginalReference=Readonly<{id:string;manifestHash:string;rawHash:string;size:number}>;
+/** An inert identity for future pre-network ownership reservation. No store,
+ * EOF, body integrity, custody or migration receipt is implied by this value. */
+export type RemoteOriginalRegistration=Readonly<{protocol:1;purpose:'remote-original/v1';id:string;context:Readonly<Context>;binding:Readonly<Binding>}>;
+export type RemoteOriginalDescriptor=Readonly<{registration:RemoteOriginalRegistration;bodyVerified:false;phase:Journal['phase'];request:Readonly<Request>;response:Response|null;size:number;parts:number;rawHash:string|null;manifestHash:string|null}>;
 const PURPOSE='remote-original/v1',MAX_META=2*1024*1024,MAX_REQUEST=128*1024,MAX_PART=65536;
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const actions=new Set(['legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives']);
@@ -36,6 +40,7 @@ function integer(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):asserts value 
 function bytesHash(bytes:Uint8Array){return encodeE2eeBytes(sha256(bytes));}
 function encoded(value:unknown){const bytes=canonicalE2eeValue(value as WireValue);if(bytes.length>MAX_META){bytes.fill(0);throw new Error('E2EE_REMOTE_ORIGINAL_METADATA_LIMIT');}return bytes;}
 function identity(value:unknown){const bytes=encoded(value);try{return bytesHash(bytes);}finally{bytes.fill(0);}}
+function registration(id:string,scope:Context,binding:Binding):RemoteOriginalRegistration{return Object.freeze({protocol:1,purpose:PURPOSE,id,context:Object.freeze({...scope}),binding:Object.freeze({...binding})});}
 function parse(bytes:Uint8Array){const value=decodeCanonicalE2eeValue(bytes,MAX_META),canonical=encoded(value);try{if(canonical.length!==bytes.length||canonical.some((byte,at)=>byte!==bytes[at]))invalid();return value;}finally{canonical.fill(0);}}
 function capacity(source:RemoteOriginalCapacity){
  const result=snapshotE2eeValue(source);exactKeys(result,['maximumBytes','maximumParts','maximumObservations','maximumRecords','maximumMetadataBytes']);
@@ -123,13 +128,14 @@ export class ProtectedRemoteOriginal implements E2eeHttpObservation {
   const options={...source,target:snapshotE2eeValue(source.target),capacity:capacity(source.capacity),packet:snapshotE2eeValue(source.packet)};check(options);const scope=context(options.vault,options.target),binding=await packetBinding(options.packet,options.signer,scope,options.generation);check(options);
   return new ProtectedRemoteOriginal(options,scope,binding);
  }
+ registration(){return registration(this.#id,this.#scope,this.#binding);}
  #current(){check(this.#options);same(context(this.#options.vault,this.#options.target),this.#scope);if(this.#closed||this.#broken)throw new Error('E2EE_REMOTE_ORIGINAL_CLOSED');}
  async #operation<T>(body:()=>Promise<T>):Promise<T>{if(this.#busy){this.#broken=true;throw new Error('E2EE_REMOTE_ORIGINAL_BUSY');}this.#busy=true;try{this.#current();return await body();}catch(error){this.#broken=true;return localFailure(error);}finally{this.#busy=false;}}
  async #admit(previous:Inventory,usage:RemoteOriginalAdmission){within(usage,this.#options.capacity);await this.#options.admit(Object.freeze({...usage}));this.#current();await stable(this.#options,previous);this.#current();}
  prepare(request:Parameters<E2eeHttpObservation['prepare']>[0]){return this.#operation(async()=>{
   if(this.#journal||request.path!=='/e2ee/v1/read'||request.method!=='POST'||typeof request.body!=='string')throw new Error('E2EE_OBSERVATION_REQUEST_INVALID');
   const bytes=encoder.encode(request.body);try{
-   if(bytes.length<1||bytes.length>MAX_REQUEST||identity(parseE2eeTransportJson(request.body))!==this.#binding.packetHash)throw new Error('E2EE_OBSERVATION_REQUEST_INVALID');
+   if(bytes.length<1||bytes.length>MAX_REQUEST||request.body.charCodeAt(0)===0xfeff||identity(parseE2eeTransportJson(request.body))!==this.#binding.packetHash)throw new Error('E2EE_OBSERVATION_REQUEST_INVALID');
    await this.#options.ensureDurableKeys();this.#current();const previous=await inventory(this.#options),j:Journal={protocol:1,purpose:PURPOSE,id:this.#id,context:this.#scope,binding:this.#binding,request:{size:bytes.length,hash:bytesHash(bytes)},response:null,phase:'registered',size:0,parts:[],rawHash:null,manifestHash:null};
    const index={...previous.catalog,ids:[...previous.catalog.ids,this.#id]},jbytes=encoded(j),cbytes=encoded(index),oldCatalog=encoded(previous.catalog);
    try{await this.#admit(previous,{...previous.usage,observations:previous.usage.observations+1,records:previous.usage.records+2+(previous.serial===null?1:0),metadataBytes:previous.usage.metadataBytes+jbytes.length+bytes.length+cbytes.length-(previous.serial===null?0:oldCatalog.length)});
@@ -165,18 +171,31 @@ export class ProtectedRemoteOriginal implements E2eeHttpObservation {
 
 function readOptions(source:RemoteOriginalReadOptions):RemoteOriginalReadOptions{return{vault:source.vault,target:snapshotE2eeValue(source.target),capacity:capacity(source.capacity),assertCurrent:source.assertCurrent};}
 export async function listRemoteOriginals(source:RemoteOriginalReadOptions){const options=readOptions(source),state=await inventory(options);within(state.usage,options.capacity);return Object.freeze(state.journals.map(row=>Object.freeze({id:row.value.id,phase:row.value.phase,size:row.value.size,parts:row.value.parts.length,manifestHash:row.value.manifestHash})));}
+async function verifiedRequest(options:RemoteOriginalReadOptions,state:Inventory,j:Journal){
+ const request=await options.vault.read('local-snapshot',key(state.hash,j.id,'r'));
+ try{check(options);if(!request||request.serial!==1||request.value.length!==j.request.size||bytesHash(request.value)!==j.request.hash
+  ||request.value.length<1||request.value.length>MAX_REQUEST||request.value.length>=3&&request.value[0]===239&&request.value[1]===187&&request.value[2]===191)invalid();
+  let parsed:SignedE2eeCommand;try{parsed=parseE2eeTransportJson(new TextDecoder('utf-8',{fatal:true}).decode(request.value)) as unknown as SignedE2eeCommand;}catch{invalid();}
+  let signer:CryptoKey;try{signer=await crypto.subtle.importKey('spki',decodeE2eeBytes(j.binding.signer,91),{name:'ECDSA',namedCurve:'P-256'},true,['verify']);}catch{check(options);invalid();}check(options);
+  let bound:Binding;try{bound=await packetBinding(parsed,signer,j.context,j.binding.generation);}catch{check(options);invalid();}check(options);if(identity(bound)!==identity(j.binding))invalid();
+  return registration(j.id,j.context,j.binding);
+ }finally{request?.value.fill(0);}
+}
+/** Same-active-actor technical discovery before ANY response part is opened.
+ * A complete marker remains metadata only; withRemoteOriginal still must
+ * authenticate every body part and actual EOF before returning its receipt. */
+export async function describeRemoteOriginal(source:RemoteOriginalReadOptions,id:string):Promise<RemoteOriginalDescriptor>{
+ const options=readOptions(source);check(options);if(!uuid.test(id))invalid();const before=await inventory(options);within(before.usage,options.capacity);
+ const item=before.journals.find(row=>row.value.id===id);if(!item)throw new Error('E2EE_REMOTE_ORIGINAL_MISSING');const j=item.value,registered=await verifiedRequest(options,before,j);
+ await stable(options,before);check(options);return Object.freeze({registration:registered,bodyVerified:false,phase:j.phase,request:Object.freeze({...j.request}),response:j.response?Object.freeze({...j.response}):null,size:j.size,parts:j.parts.length,rawHash:j.rawHash,manifestHash:j.manifestHash});
+}
 /** Active-original-actor read scope. All yielded loans expire on next/return;
  * a partial prefix is available only by explicit opt-in and never claims EOF. */
 export async function withRemoteOriginal(sourceOptions:RemoteOriginalReadOptions,id:string,consume:(source:AsyncIterable<Uint8Array>)=>Promise<void>,mode:{allowIncomplete?:boolean}={}){
  const options=readOptions(sourceOptions),allowIncomplete=mode.allowIncomplete===true;
  check(options);if(!uuid.test(id))invalid();const before=await inventory(options);within(before.usage,options.capacity);const item=before.journals.find(row=>row.value.id===id);if(!item)throw new Error('E2EE_REMOTE_ORIGINAL_MISSING');const j=item.value;
  if(j.phase!=='complete'&&!allowIncomplete)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE');
- const request=await options.vault.read('local-snapshot',key(before.hash,id,'r'));let parsed:SignedE2eeCommand;
- try{check(options);if(!request||request.serial!==1||request.value.length!==j.request.size||bytesHash(request.value)!==j.request.hash)invalid();
-  parsed=parseE2eeTransportJson(new TextDecoder('utf-8',{fatal:true}).decode(request.value)) as unknown as SignedE2eeCommand;
-  const signer=await crypto.subtle.importKey('spki',decodeE2eeBytes(j.binding.signer,91),{name:'ECDSA',namedCurve:'P-256'},true,['verify']);check(options);
-  const bound=await packetBinding(parsed,signer,j.context,j.binding.generation);check(options);if(identity(bound)!==identity(j.binding))invalid();
- }finally{request?.value.fill(0);}
+ await verifiedRequest(options,before,j);
  let live=true,started=false,ended=false,failed=false,busy=false;const digest=sha256.create();let size=0,iterator:AsyncGenerator<Uint8Array>|undefined;
  const generate=async function*(){
   try{for(const[index,part]of j.parts.entries()){

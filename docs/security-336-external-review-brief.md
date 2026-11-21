@@ -89,6 +89,13 @@ revoked retroactively.
 | Web/native boundary | `e2ee-336-service-worker.md`, `e2ee-336-operation-fences.md`, `e2ee-336-native-source-stream.md`, `e2ee-336-archives-native-jobs.md`; native `ui/NativeAuroraSourceRuntime.kt`, `ui/NativeBackupDialog.kt` | Old/uncontrolled tabs, service-worker lifetime, whole-operation permits, cancellation, account changes across both Main and renderer queues, bound reply adoption and intentional-reset exceptions, supported WebView gate, memory/stream budgets |
 | Backup/retirement | `security-bridge-335-adr.md`, `e2ee-336-local-output.md`, `e2ee-336-retained-native-old-keys.md`, `e2ee-336-archives-source.md`, `e2ee-336-archives-local-capture.md` | Whole-system external-recipient encryption, independent private-key custody and restore drills, exact raw fragment/duplicate-name integrity, selected file/forms, personal archives/Drive/local-only scope, rights/credentials excluded from content import, retention of old server-readable copies |
 
+The following registration/descriptor increment is documented separately in
+`e2ee-336-remote-registration.md`. Review the immutable pre-prepare technical
+identity, exact retained-request verification before response-body access,
+catalogue/current-actor rechecks, cancellation and the unconditional
+`bodyVerified:false` marker. It still does not perform state4 ownership CAS,
+mandatory factory capture, provider-wide reservation or original-key custody.
+
 Web HPKE uses exact `@hpke/core1.10.1` (MIT); native uses exact
 `bcprov-jdk18on1.87` (Bouncy Castle licence) for HPKE/HKDF and the legacy Physis
 PBKDF2 reader, with platform JCA for AES/ECDSA. No global JCA provider is replaced.
