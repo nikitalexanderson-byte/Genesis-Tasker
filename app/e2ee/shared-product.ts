@@ -75,6 +75,15 @@ export class E2eeSharedProduct{
   if(!offline)await this.options.client.assertObjectReference(entity.domain,entity.objectId,1,entity.payloadHash);this.#current();return structuredClone(value);
  }
  read(entity:ProductEntity,offline=false){const held=productEntity(structuredClone(entity));return this.#operation(()=>this.#read(held,offline));}
+ history(entityId:string,before=Number.MAX_SAFE_INTEGER,limit=5){assertTechnical(entityId);return this.#operation(async()=>{
+  await this.options.client.refresh();this.#current();let response;
+  for(;;){try{response=await this.options.client.readProductHistory(entityId,before,limit);break;}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}}
+  exactKeys(response,['pages','checkpointHash','directoryRevision']);if(!Array.isArray(response.pages)||response.pages.length>limit)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+  const versions:ProductVersion[]=[];let previous=before;
+  for(const page of response.pages){const verified=await verifyProductPage(page,packet=>this.options.client.verifyServiceProof(packet));this.#current();
+   if(verified.entities.length!==1)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');const entity=verified.entities[0];if(entity.entityId!==entityId||entity.revision>=previous)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');previous=entity.revision;versions.push(await this.#read(entity,false));
+  }return{versions,nextBefore:versions.length===limit?previous:null};
+ });}
  stage(input:ProductEdit[],intentId=crypto.randomUUID()){const edits=structuredClone(input);return this.#operation(async()=>{
   assertTechnical(intentId);if(edits.length<1||edits.length>100||new Set(edits.map(row=>row.entityId)).size!==edits.length)throw new Error('E2EE_PRODUCT_BATCH_INVALID');const drafts:Draft[]=[];
   const id=(await this.#prefix)+intentId,previous=await this.#transaction(id).load();
@@ -124,8 +133,16 @@ export class E2eeSharedProduct{
   await this.options.client.assertObjectReference('shared-project',proposal.operation.objectId,1,expectedHash);this.#current();return{proposal,version};
  }
  proposal(id:string,expectedHash:string){return this.#operation(()=>this.#proposal(id,expectedHash));}
+ completionProposals(){this.#current();return structuredClone([...this.#proposals.values()]);}
+ approvalPreview(entityId:string){assertTechnical(entityId);return this.#operation(async()=>{const entities=await this.#readIndex(false),entity=entities.find(row=>row.entityId===entityId&&row.kind==='task'&&!row.deleted);if(!entity)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');
+  const rows=[];for(const proposal of this.#proposals.values())if(proposal.entityId===entityId&&proposal.baseRevision===entity.revision&&proposal.operation.metadata.approverIds?.includes(this.options.device.ownerId)){
+   const opened=await this.#proposal(proposal.proposalId,proposal.operation.payloadHash);rows.push({proposalId:proposal.proposalId,payloadHash:proposal.operation.payloadHash,version:opened.version});
+  }return rows;
+ });}
  approve(review:{proposalId:string;payloadHash:string;version:ProductVersion},intentId=crypto.randomUUID()){
-  const held=structuredClone(review);assertTechnical(intentId);return this.#operation(async()=>{const current=await this.#proposal(held.proposalId,held.payloadHash);
+  const held=structuredClone(review);assertTechnical(intentId);return this.#operation(async()=>{
+   const decision=new E2eeDeviceDocument(this.options.device,(await this.#prefix).replace('product-tx:','product-approval:')+intentId,value=>{exactKeys(value,['scopeId','intentId','review']);if(value.scopeId!==this.options.scopeId||value.intentId!==intentId||!same(value.review,held))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');return value;},()=>this.#current());
+   const saved=await decision.load();if(!saved)await decision.save({scopeId:this.options.scopeId,intentId,review:held},null);this.#current();const current=await this.#proposal(held.proposalId,held.payloadHash);
    if(!same(await this.#version(held.version),current.version))throw new Error('E2EE_PRODUCT_PROPOSAL_STALE');
    const index=await this.#index.load(),entity=index?.value.entities.find(row=>row.entityId===current.proposal.entityId);
    if(entity?.revision===current.proposal.baseRevision+1&&entity.objectId===current.proposal.operation.objectId&&entity.payloadHash===held.payloadHash)

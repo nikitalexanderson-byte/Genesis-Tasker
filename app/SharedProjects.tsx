@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- User-provided board pictures remain native img elements. */
 "use client";
 import "./shared-dialog-ui.css";
+import {PrivateTaskCompletionReview} from './PrivateTaskCompletionReview';
+import {usesPrivateProductStorage} from './cloud-sync';
 import { SharedBoardColor } from "./SharedBoardColor";
 import { DialogCloseButton } from "./DialogCloseButton";
 import { foregroundRefresh } from "./foreground-refresh";
@@ -157,6 +159,7 @@ function localDateKey(date: Date) {
 
 export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", weekStart = 'monday', destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale }: Props) {
   const english = language === "en";
+  const [privateApprovalTask,setPrivateApprovalTask]=useState<SharedTask|null>(null);
   const sacredFeaturesEnabled = useSacredFeaturesEnabled();
   const tasksCompact = inboxCompact;
   const [initialPlace] = useState(() => {
@@ -1128,6 +1131,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
   const selectedSpace=spaces.find(space=>space.id===spaceId);
   const confirmTask = (task: SharedTask) => {
     if (busy) return;
+    if(usesPrivateProductStorage(userId)){setPrivateApprovalTask(task);return;}
     void run(async () => {
       const result = await approveSharedTask(task.projectId, task.id);
       setEditTaskRevision(result.revision);
@@ -2034,5 +2038,6 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
         </form> : null}
       </> : null}
     </dialog>
+    {privateApprovalTask?<PrivateTaskCompletionReview ownerId={userId} task={privateApprovalTask} language={language} onClose={()=>setPrivateApprovalTask(null)} onApproved={result=>{setPrivateApprovalTask(null);setEditTaskRevision(result.revision);void run(async()=>{await refreshTaskProject(result.projectId);await refreshProject(result.projectId);await refreshProjects(spaceId);window.dispatchEvent(new Event('genesis:shared-updates'));});}}/>:null}
   </div>;
 }

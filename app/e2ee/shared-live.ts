@@ -9,6 +9,9 @@ import {overlayPendingSharedVersions} from './shared-local-overlay.ts';
 import {calendarContext,isCivilDate} from '../calendar-context.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
 import {encodeE2eeBytes} from './envelope.ts';
+import type {VerifiedProductProposal} from './product-proofs.ts';
+import {prepareSharedTaskFiles,sharedRequestFileInputs,sharedFileReference,type SharedFileReference} from './shared-file-values.ts';
+import {privateSharedTaskPage,privateSharedCustomFieldMatch} from './shared-query.ts';
 
 type ObjectValue=Record<string,unknown>;
 export type SharedLiveContext={ownerId:string;spaceId:string;role:string;spaceRole:string;permissions:Record<string,boolean>;members:ObjectValue[];invitations:ObjectValue[]};
@@ -18,6 +21,12 @@ export interface SharedLivePorts{
  binding:SharedDomainBinding;actorId:string;online:boolean;current:()=>void;
  context:()=>Promise<SharedLiveContext>;versions:()=>Promise<ProductVersion[]>;
  localVersions?:()=>Promise<PendingProductVersion[]>;
+ history?:(entityId:string,before:number)=>Promise<{versions:ProductVersion[];nextBefore:number|null}>;
+ completionProposals?:()=>Promise<VerifiedProductProposal[]>;
+ approvalPreview?:(entityId:string)=>Promise<{proposalId:string;payloadHash:string;version:ProductVersion}[]>;
+ approve?:(review:{proposalId:string;payloadHash:string;version:ProductVersion},intentId:string)=>Promise<unknown>;
+ stageFile?:(reference:SharedFileReference,bytes:Uint8Array)=>Promise<void>;
+ readFile?:(reference:SharedFileReference)=>Promise<{bytes:Uint8Array;filename:string;mediaType:string}>;
  stage:(edits:ProductEdit[],intentId:string)=>Promise<string>;flush:(intentId:string)=>Promise<unknown>;
  loadRequest:(id:string)=>Promise<{value:SavedRequest;serial:number}|null>;
  saveRequest:(value:SavedRequest,expected:number|null)=>Promise<number>;
@@ -47,12 +56,14 @@ export function validateSharedLiveContext(input:unknown):SharedLiveContext{
  * Unsupported operations fail explicitly instead of reaching legacy routes. */
 export class SharedLiveModel{
  #serial:Promise<unknown>=Promise.resolve();
+ #completion:VerifiedProductProposal[]=[];
  constructor(private readonly ports:SharedLivePorts){}
  #run<T>(work:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.ports.current();return work();});this.#serial=task;return task;}
  async #snapshot(){const context=await this.ports.context();this.ports.current();const versions=await this.ports.versions();this.ports.current();
   if(context.ownerId.length<1||context.spaceId.length<1||!Array.isArray(context.members)||!Array.isArray(context.invitations))throw new Error('E2EE_SHARED_CONTEXT_INVALID');
   for(const row of versions){if(row.scopeId!==this.ports.binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');if(!row.deleted)validateSharedRecordBody(this.ports.binding,row.kind,row.body,row);}
   const local=this.ports.localVersions?await this.ports.localVersions():[];this.ports.current();
+  this.#completion=this.ports.completionProposals?await this.ports.completionProposals():[];this.ports.current();
   return{context,versions:overlayPendingSharedVersions(this.ports.binding,versions,local)};
  }
  #row(version:ProductVersion,context:SharedLiveContext):ObjectValue{
@@ -112,6 +123,13 @@ export class SharedLiveModel{
   const result=this.#row(version,context),children=versions.filter(row=>!row.deleted&&row.kind==='task'&&plain(row).record.parent_task_id===result.id);
   result.childCount=children.length;result.completedChildCount=children.filter(row=>plain(row).record.completed_at!==null).length;
   result.spaceId=context.spaceId;const project=versions.find(row=>row.kind==='project'&&!row.deleted);if(project){result.projectTitle=plain(project).record.title;result.isInbox=plain(project).record.is_inbox;}
+  const body=plain(version);result.imageUrl=(body.related.shared_task_images??[]).length?`/api/shared/tasks/${encodeURIComponent(String(result.id))}/image`:null;
+  result.attachments=(body.related.shared_task_attachments??[]).map(row=>{const file=sharedFileReference(row);return{id:row.id,name:file.filename,type:file.mediaType,size:file.size,url:`/api/shared/tasks/${encodeURIComponent(String(result.id))}/attachments/${encodeURIComponent(String(row.id))}`};});
+  const proposals=this.#completion.filter(proposal=>proposal.entityId===version.entityId&&(proposal.baseRevision===version.revision||proposal.baseRevision+1===version.revision));
+  if(proposals.length){const active=proposals.filter(proposal=>proposal.baseRevision===version.revision);result.completionRequested=active.length>0;
+   const approved=new Map(proposals.flatMap(proposal=>proposal.approvals??[]).map(row=>[row.userId,row.createdAt]));
+   result.approvals=(result.approvals as ObjectValue[]).map(row=>({...row,approvedAt:approved.get(String(row.userId))??null}));
+  }
   return result;
  }
  #draft(kind:ProductKind,table:string,record:SharedContentRecord,related:Record<string,SharedContentRecord[]>={}):SharedRecordBody{
@@ -121,7 +139,7 @@ export class SharedLiveModel{
  #edit(body:SharedRecordBody,expectedRevision:number,action:ProductEdit['action']='update'):ProductEdit{return{action,entityId:sharedRecordKey(body.kind,body.record),kind:body.kind,expectedRevision,parentId:sharedBodyParent(body),metadata:sharedBodyMetadata(body),body:action==='delete'?null:body};}
  #find(versions:ProductVersion[],kind:ProductKind,id:string){const row=versions.find(value=>value.kind===kind&&value.entityId===`${kind}:${id}`);if(!row)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');return row;}
  #tasks(versions:ProductVersion[],context:SharedLiveContext,filter:ObjectValue={}){
-  const allowed=['projectIds','statusIds','assigneeIds','priority','labelIds','tags','q','from','to','dueFrom','dueTo','undated','completion','archived','includeArchived','parentTaskId','ids','createdBy','spaceId'];
+  const allowed=['projectIds','statusIds','assigneeIds','priority','labelIds','tags','q','from','to','dueFrom','dueTo','undated','completion','archived','includeArchived','parentTaskId','ids','createdBy','spaceId','sprintId','backlog','unscheduled','scheduled','approvalPending','customFields'];
   if(Object.keys(filter).some(key=>!allowed.includes(key)))throw new Error('E2EE_SHARED_FILTER_REVIEW_REQUIRED');
   return versions.filter(row=>row.kind==='task'&&!row.deleted).map(row=>this.#task(row,versions,context)).filter(row=>{
    for(const [key,field]of Object.entries({projectIds:'projectId',statusIds:'statusId',assigneeIds:'assigneeId',priority:'priority',ids:'id'}))if(filter[key]!==undefined){if(!Array.isArray(filter[key]))throw new Error('E2EE_SHARED_FILTER_INVALID');if((filter[key] as unknown[]).length&&!(filter[key] as unknown[]).includes(row[field]))return false;}
@@ -129,6 +147,11 @@ export class SharedLiveModel{
    if(!filter.includeArchived&&!!row.archivedAt!==(filter.archived===true))return false;
    if(filter.completion==='open'&&row.completedAt||filter.completion==='completed'&&!row.completedAt)return false;
    if(filter.undated===true&&row.dueDate!==null)return false;
+   if(Object.hasOwn(filter,'sprintId')&&(row.sprintId??null)!==filter.sprintId||filter.backlog===true&&row.sprintId!==null&&row.sprintId!==undefined)return false;
+   const scheduledDate=typeof row.startDate==='string'||typeof row.dueDate==='string',scheduledTime=scheduledDate&&typeof row.startTime==='string'&&typeof row.endTime==='string';
+   if(filter.unscheduled==='date'&&scheduledDate||filter.unscheduled==='time'&&scheduledTime||filter.scheduled==='date'&&!scheduledDate||filter.scheduled==='time'&&!scheduledTime)return false;
+   if(filter.approvalPending===true&&(!row.approvalRequired||!!row.completedAt||!(row.approvals as ObjectValue[]).some(value=>!value.approvedAt)))return false;
+   if(filter.customFields!==undefined&&!privateSharedCustomFieldMatch(row.customFields,filter.customFields))return false;
    for(const [key,lower]of [['from',true],['dueFrom',true],['to',false],['dueTo',false]] as const)if(filter[key]!==undefined&&(typeof filter[key]!=='string'||typeof row.dueDate!=='string'||(lower?row.dueDate<filter[key]:row.dueDate>filter[key])))return false;
    for(const [key,field]of [['labelIds','labelIds'],['tags','tags']] as const)if(filter[key]!==undefined){if(!Array.isArray(filter[key]))throw new Error('E2EE_SHARED_FILTER_INVALID');if(!(filter[key] as unknown[]).every(value=>(row[field] as unknown[]).includes(value)))return false;}
    if(filter.q!==undefined){if(typeof filter.q!=='string')throw new Error('E2EE_SHARED_FILTER_INVALID');const text=filter.q.trim().toLocaleLowerCase();if(text&&!`${row.title}\n${row.description}\n${(row.tags as string[]).join(' ')}`.toLocaleLowerCase().includes(text))return false;}
@@ -136,29 +159,34 @@ export class SharedLiveModel{
   });
  }
  #page(tasks:ObjectValue[],url:URL){
-  const sort=url.searchParams.get('sort')??'position',sorts:Record<string,{field:string;direction:number}>={position:{field:'position',direction:1},dueDate:{field:'dueDate',direction:1},priority:{field:'priority',direction:-1},updatedAt:{field:'updatedAt',direction:-1},title:{field:'title',direction:1},createdAt:{field:'createdAt',direction:-1},createdAtAsc:{field:'createdAt',direction:1}};
-  if(!Object.hasOwn(sorts,sort))throw new Error('E2EE_SHARED_FILTER_REVIEW_REQUIRED');const {field,direction}=sorts[sort];
-  tasks.sort((a,b)=>{const left=a[field],right=b[field];if(left===null||left===undefined)return right===null||right===undefined?String(a.id).localeCompare(String(b.id)):1;if(right===null||right===undefined)return -1;const compared=typeof left==='number'&&typeof right==='number'?left-right:String(left).localeCompare(String(right));return direction*compared||String(a.id).localeCompare(String(b.id));});
   const cursor=url.searchParams.get('cursor');if(cursor)throw new Error('E2EE_SHARED_QUERY_REFRESH_REQUIRED');
   // A complete bounded local result has no server cursor whose meaning could
   // change under an unrelated plaintext query/index or leak private filters.
-  return{tasks,total:tasks.length,hasMore:false,nextCursor:null};
+  return privateSharedTaskPage(tasks,url.searchParams.get('sort')??'position');
  }
  async #get(path:string){const url=new URL(path,'https://private.invalid'),{context,versions}=await this.#snapshot(),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
   const list=(kind:ProductKind,table?:string)=>live.filter(row=>row.kind===kind&&(!table||plain(row).table===table)).map(row=>this.#row(row,context));
   if(segments.length===0){const root=this.#find(versions,this.ports.binding.kind,this.ports.binding.resourceId);
    if(this.ports.binding.kind==='space')return{space:this.#row(root,context),members:context.members,invitations:context.invitations};
-   const raw=url.searchParams.get('filter'),filter=raw?parse(raw):{};object(filter);const page=this.#page(this.#tasks(versions,context,filter),url);
+   const raw=url.searchParams.get('filter'),filter=raw?parse(raw):{};object(filter);const page=await this.#page(this.#tasks(versions,context,filter),url);
    return{project:this.#row(root,context),statuses:list('status').filter(row=>row.isChaos!==1),categories:list('category','shared_project_categories'),tasks:page.tasks,taskPage:{total:page.total,hasMore:false,nextCursor:null},members:context.members,customFieldDefinitions:list('custom-field')};
   }
   if(segments[0]==='tasks'){
    if(segments.length===1){const filter=parse(url.searchParams.get('filter')??'{}');object(filter);return this.#page(this.#tasks(versions,context,filter),url);}
    const task=this.#find(versions,'task',segments[1]);if(segments.length===2)return{task:this.#task(task,versions,context)};
    if(segments[2]==='comments')return{comments:live.filter(row=>row.kind==='comment'&&plain(row).record.task_id===segments[1]).map(row=>this.#row(row,context)),nextCursor:null,hasMore:false};
+   if(segments[2]==='image'&&segments.length===3||segments[2]==='attachments'&&segments.length===4){
+    if(!this.ports.readFile)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');const body=plain(task),row=segments[2]==='image'?body.related.shared_task_images?.[0]:body.related.shared_task_attachments?.find(row=>row.id===segments[3]);
+    if(!row)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');const reference=sharedFileReference(row),file=await this.ports.readFile(reference);this.ports.current();
+    try{if(file.bytes.length!==reference.size||file.filename!==reference.filename||file.mediaType!==reference.mediaType)throw new Error('E2EE_PRIVATE_FILE_CORRUPT');return{data:encodeE2eeBytes(file.bytes),size:reference.size,filename:file.filename,mediaType:file.mediaType};}finally{file.bytes.fill(0);}
+   }
   }
   if(segments[0]==='workflow'){
    const saved=live.find(row=>row.kind==='workflow'),definition=saved?parse(plain(saved).record.definition_json):{statuses:[],transitions:[]};object(definition);
-   if(segments[1]==='history')throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+   if(segments[1]==='history'){
+    if(!saved||!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER;
+    const page=await this.ports.history(saved.entityId,before);this.ports.current();return{versions:page.versions.filter(row=>!row.deleted).map(row=>{const body=plain(row),definition=parse(body.record.definition_json);object(definition);return{...definition,enabled:body.record.enabled===1,revision:row.revision,createdAt:body.record.updated_at,actorId:body.record.updated_by};}),nextCursor:page.nextBefore};
+   }
    const statuses=list('status'),counts=Object.fromEntries(statuses.map(status=>[String(status.id),live.filter(row=>row.kind==='task'&&plain(row).record.status_id===status.id).length]));
    return{config:{...definition,enabled:saved?plain(saved).record.enabled===1:false,revision:saved?.revision??0},counts,context:{project:this.#row(this.#find(versions,'project',this.ports.binding.resourceId),context),statuses,customFieldDefinitions:list('custom-field')}};
   }
@@ -170,6 +198,11 @@ export class SharedLiveModel{
   if(segments[0]==='automations'){const rules=list('automation').filter(row=>row.deleted===(url.searchParams.get('deleted')==='true'));
    if(segments.length===1)return{rules,nextCursor:null,canCreate:context.permissions.manageProjects,workerCompletedAt:null};
    if(segments.length===2){const rule=rules.find(row=>row.id===segments[1]);if(!rule)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');return{rule};}
+  }
+  if(segments.length===3&&segments[2]==='history'&&['mindmaps','custom-fields','templates','tasks'].includes(segments[0])){
+   if(!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const kinds:Record<string,ProductKind>={mindmaps:'mindmap','custom-fields':'custom-field',templates:'template',tasks:'task'},kind=kinds[segments[0]],entity=this.#find(versions,kind,segments[1]);
+   const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER,page=await this.ports.history(entity.entityId,before);this.ports.current();
+   return{versions:page.versions.map(row=>row.deleted?{id:segments[1],revision:row.revision,deleted:true}:{...(kind==='custom-field'?{field:this.#row(row,context)}:this.#row(row,context)),revision:row.revision}),nextCursor:page.nextBefore};
   }
   const collections:Record<string,[ProductKind,string?]>={statuses:['status'],categories:['category','shared_project_categories'],labels:['label'],comments:['project-comment'],mindmaps:['mindmap'],'project-categories':['category','shared_space_project_categories'],'member-categories':['category','shared_member_categories'],'custom-fields':['custom-field'],templates:['template'],views:['view']};
   if(Object.hasOwn(collections,segments[0])){const [kind,table]=collections[segments[0]],rows=list(kind,table);return segments[1]?{[kind]:rows.find(row=>row.id===segments[1])??(()=>{throw new Error('E2EE_PRODUCT_ENTITY_MISSING');})()}:{[segments[0]==='project-categories'||segments[0]==='member-categories'?'categories':segments[0]]:rows};}
@@ -205,7 +238,7 @@ export class SharedLiveModel{
     if(versions.some(row=>!row.deleted&&row.parentId===old!.entityId))throw new Error('E2EE_SHARED_SUBTREE_REVIEW_REQUIRED');edits.push(this.#edit(body,expected,'delete'));output={ok:true,id:body.record.id};
    }else{
     const fields:Record<string,string>={title:'title',description:'description',statusId:'status_id',categoryId:'category_id',assigneeId:'assignee_id',dueDate:'due_date',startDate:'start_date',startTime:'start_time',endTime:'end_time',entryType:'entry_type',priority:'priority',parentTaskId:'parent_task_id',position:'position',archivedAt:'archived_at'};
-    const allowed=[...Object.keys(fields),'tags','checklists','labelIds','dependsOnIds','approverIds','approvalRequired','customFields','sprintId','storyPoints','estimateHours','expectedRevision','requestId','completedAt','completedBy'];
+    const allowed=[...Object.keys(fields),'tags','checklists','labelIds','dependsOnIds','approverIds','approvalRequired','customFields','sprintId','storyPoints','estimateHours','expectedRevision','requestId','completedAt','completedBy','imageData','attachments','removeAttachmentIds'];
     if(Object.keys(input).some(key=>!allowed.includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
     for(const [name,column]of Object.entries(fields))if(Object.hasOwn(input,name))body.record[column]=input[name] as SharedContentRecord[string];
     for(const key of ['tags','checklists'] as const)if(Object.hasOwn(input,key))body.record[`${key}_json`]=JSON.stringify(input[key]);
@@ -216,6 +249,7 @@ export class SharedLiveModel{
     if(Object.hasOwn(input,'approverIds')){if(!Array.isArray(input.approverIds)||input.approverIds.length>200)throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.related.shared_task_approvals=input.approverIds.map(userId=>{assertTechnical(userId);return{id:crypto.randomUUID(),task_id:taskId,user_id:userId,approved_at:null};});}
     if(input.approvalRequired===false)body.related.shared_task_approvals=[];
     if(Object.hasOwn(input,'customFields')){object(input.customFields);body.related.shared_custom_field_values=Object.entries(input.customFields).map(([fieldId,value])=>{assertTechnical(fieldId);return{task_id:taskId,field_id:fieldId,value_json:JSON.stringify(value)};});}
+    prepareSharedTaskFiles(body,input,request.id,request.createdAt);
     if(['sprintId','storyPoints','estimateHours'].some(key=>Object.hasOwn(input,key))){const previous=body.related.shared_task_planning?.[0],estimates=previous?parse(previous.estimates_json):{};object(estimates);for(const key of ['storyPoints','estimateHours'])if(Object.hasOwn(input,key))estimates[key]=input[key];body.related.shared_task_planning=[{task_id:taskId,sprint_id:Object.hasOwn(input,'sprintId')?input.sprintId as string|null:previous?.sprint_id??null,estimates_json:JSON.stringify(estimates)}];}
     const status=versions.find(row=>row.kind==='status'&&!row.deleted&&plain(row).record.id===body.record.status_id);if(!status)throw new Error('E2EE_PRODUCT_WORKFLOW_STATUS');const done=plain(status).record.is_done===1;
     body.record.completed_at=done?(body.record.completed_at??request.createdAt):null;body.record.completed_by=done?(body.record.completed_by??this.ports.actorId):null;
@@ -316,6 +350,16 @@ export class SharedLiveModel{
  }
  async #execute(method:string,path:string,held:ObjectValue,intentId?:string){
   if(method==='GET')return this.#get(path);
+  const segments=path.split('?')[0].split('/').filter(Boolean);
+  if(method==='POST'&&segments.length===3&&segments[0]==='tasks'&&segments[2]==='approval-preview'){
+   if(!this.ports.online||!this.ports.approvalPreview)throw new Error('E2EE_ONLINE_REQUIRED');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',segments[1]),proposals=await this.ports.approvalPreview(task.entityId);this.ports.current();
+   return{current:this.#task(task,versions,context),proposals:proposals.map(row=>({...row,task:this.#task(row.version,versions,context)}))};
+  }
+  if(method==='POST'&&segments.length===3&&segments[0]==='tasks'&&segments[2]==='approve'){
+   if(!this.ports.online||!this.ports.approve)throw new Error('E2EE_ONLINE_REQUIRED');exactKeys(held,['review','requestId']);assertTechnical(held.requestId);exactKeys(held.review,['proposalId','payloadHash','version']);
+   const review=held.review as {proposalId:string;payloadHash:string;version:ProductVersion};if(review.version.entityId!==`task:${segments[1]}`||review.version.scopeId!==this.ports.binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   await this.ports.approve(review,held.requestId);this.ports.current();const {context,versions}=await this.#snapshot();return{task:this.#task(this.#find(versions,'task',segments[1]),versions,context)};
+  }
   if(method==='POST'&&path.split('?')[0]==='custom-fields/preview'){const {context,versions}=await this.#snapshot();return this.#fieldPreview(held,versions,context);}
   if(!['POST','PATCH','PUT','DELETE'].includes(method))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
   const id=intentId??(typeof held.operationId==='string'?held.operationId:typeof held.requestId==='string'?held.requestId:crypto.randomUUID());assertTechnical(id);let saved=await this.ports.loadRequest(id),request:SavedRequest;
@@ -324,6 +368,9 @@ export class SharedLiveModel{
   else{request={protocol:1,scopeId:this.ports.binding.scopeId,id,method,path,body:held,createdAt:new Date().toISOString(),edits:null,result:null,complete:false};saved={value:request,serial:await this.ports.saveRequest(request,null)};}
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
   if(!request.edits){const prepared=await this.#prepare(request);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}
+  for(const edit of request.edits!)if(edit.kind==='task'&&edit.body!==null){const uploads=sharedRequestFileInputs(edit.body as SharedRecordBody,request.body,id);
+   try{for(const upload of uploads){if(!this.ports.stageFile)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');await this.ports.stageFile(upload.reference,upload.bytes);this.ports.current();}}finally{uploads.forEach(upload=>upload.bytes.fill(0));}
+  }
   await this.ports.stage(request.edits!,id);this.ports.current();
   if(!this.ports.online){const result=structuredClone(request.result!);for(const key of ['task','comment','project','space','status','category','label'])if(result[key]&&typeof result[key]==='object')result[key]={...(result[key] as ObjectValue),pending:true};return{...result,pending:true};}
   await this.ports.flush(id);this.ports.current();

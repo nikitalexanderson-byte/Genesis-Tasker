@@ -103,6 +103,10 @@ export function validateSharedRecordBody(binding:SharedDomainBinding,kind:Produc
  const children:Record<string,SharedContentRecord[]>={};for(const [table,values]of Object.entries(input.related)){if(!Array.isArray(values)||values.length>10000)invalid();children[table]=values.map(value=>{
   const child=record(table,value,binding),key=kind==='comment'?'comment_id':kind==='project'?'project_id':'task_id';if(child[key]!==row.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return child;});}
  const body={...input,record:row,related:children} as SharedRecordBody;
+ if(kind==='task'){
+  const attachments=children.shared_task_attachments??[],images=children.shared_task_images??[];if(attachments.length>5||images.length>1||new Set(attachments.map(row=>row.id)).size!==attachments.length)invalid();
+  for(const item of [...attachments,...images]){const file=item.file;if(!file||typeof file!=='object'||file.size!==item.byte_size||file.mediaType!==item.mime_type)invalid();}
+ }
  if(header&&(header.scopeId!==binding.scopeId||header.kind!==kind||header.entityId!==sharedRecordKey(kind,row)||header.parentId!==sharedBodyParent(body)||!samePrivateJson(header.metadata,sharedBodyMetadata(body))))throw new Error('E2EE_SHARED_HEADER_MISMATCH');
  return body;
 }

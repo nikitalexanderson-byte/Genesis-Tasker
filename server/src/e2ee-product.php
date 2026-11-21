@@ -61,12 +61,18 @@ function genesisE2eeProductPublic(array $row): array
 }
 function genesisE2eeProductIndex(PDO $db,array $scope,array $payload): array
 {
-    require_once __DIR__.'/e2ee-product-bootstrap.php';$bootstrap=genesisE2eeProductBootstrapReady($db,$scope);
     genesisE2eeExactFields($payload,['after','limit']);$after=$payload['after'];if($after!=='')genesisE2eeIdentifier($after);$limit=genesisE2eeInteger($payload['limit'],1);if($limit>50)throw new InvalidArgumentException('E2EE_INVALID_LIMIT');
     $q=$db->prepare('SELECT * FROM e2ee_product_entities WHERE scope_id=? AND generation=? AND entity_id>? ORDER BY entity_id LIMIT ?');
     $q->bindValue(1,$scope['scope_id']);$q->bindValue(2,(int)$scope['generation'],PDO::PARAM_INT);$q->bindValue(3,$after);$q->bindValue(4,$limit,PDO::PARAM_INT);$q->execute();$rows=[];$usage=0;
     $consume=static function(int $amount)use(&$usage):void{$usage+=$amount;if($usage>4*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_PAGE_TOO_LARGE');};
     try{while($row=$q->fetch()){$consume(strlen(genesisE2eeJson($row)));$rows[]=$row;}}finally{$q->closeCursor();}
+    return genesisE2eeProductProofRows($db,$scope,$rows);
+}
+function genesisE2eeProductProofRows(PDO $db,array $scope,array $rows): array
+{
+    require_once __DIR__.'/e2ee-product-bootstrap.php';$bootstrap=genesisE2eeProductBootstrapReady($db,$scope);$usage=0;
+    $consume=static function(int $amount)use(&$usage):void{$usage+=$amount;if($usage>4*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_PAGE_TOO_LARGE');};
+    foreach($rows as $row)$consume(strlen(genesisE2eeJson($row)));
     $entities=array_map('genesisE2eeProductPublic',$rows);$proposals=[];$attestations=[];$proofs=[];$heads=[];
     $proof=static function(string $raw)use(&$proofs,$consume):string{if(strlen($raw)>4*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_PAGE_TOO_LARGE');
         $packet=json_decode($raw,true,512,JSON_THROW_ON_ERROR);$hash=genesisE2eeCommandHash($packet['command']);if(!isset($proofs[$hash])){$consume(strlen($raw)+100);$proofs[$hash]=['proofHash'=>$hash,'packet'=>$raw];}return$hash;};
@@ -82,6 +88,31 @@ function genesisE2eeProductIndex(PDO $db,array $scope,array $payload): array
         }}finally{$p->closeCursor();}
     }
     return ['entities'=>$entities,'heads'=>$heads,'proofs'=>array_values($proofs),'proposals'=>$proposals,'attestations'=>$attestations,'bootstrapProofHash'=>$bootstrapProof,'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
+}
+/** Immutable user-visible history. Every row carries the same independently
+ * verifiable bootstrap/command/approval proofs as a current index head. Reading
+ * history never changes the live index or replays an old mutation. */
+function genesisE2eeProductHistory(PDO $db,array $scope,array $payload):array
+{
+    genesisE2eeExactFields($payload,['entityId','before','limit']);$id=genesisE2eeIdentifier($payload['entityId']);$before=genesisE2eeInteger($payload['before'],1);$limit=genesisE2eeInteger($payload['limit'],1);
+    if($limit>10)throw new InvalidArgumentException('E2EE_INVALID_LIMIT');$entity=genesisE2eeProductRow($db,$scope,$id);if(!$entity)throw new DomainException('E2EE_PRODUCT_ENTITY_MISSING');
+    $q=$db->prepare('SELECT * FROM e2ee_product_history WHERE scope_id=? AND generation=? AND entity_id=? AND revision<? ORDER BY revision DESC LIMIT ?');
+    $q->bindValue(1,$scope['scope_id']);$q->bindValue(2,(int)$scope['generation'],PDO::PARAM_INT);$q->bindValue(3,$id);$q->bindValue(4,$before,PDO::PARAM_INT);$q->bindValue(5,$limit,PDO::PARAM_INT);$q->execute();$rows=$q->fetchAll();$q->closeCursor();$pages=[];$usage=0;
+    foreach($rows as $history){
+        $command=json_decode($history['signed_command'],true,512,JSON_THROW_ON_ERROR)['command'];$source=$command;$operation=null;
+        if($command['action']==='product-approve'){
+            $proposal=genesisE2eeRow($db,'SELECT signed_command FROM e2ee_product_proposals WHERE scope_id=? AND generation=? AND proposal_id=?',[$scope['scope_id'],$scope['generation'],$command['payload']['proposalId']]);
+            if(!$proposal)throw new DomainException('E2EE_PRODUCT_HISTORY_MISSING');$source=json_decode($proposal['signed_command'],true,512,JSON_THROW_ON_ERROR)['command'];
+        }
+        $operations=$source['action']==='product-bootstrap-stage'?array_column($source['payload']['items'],'operation'):($source['payload']['operations']??[]);
+        foreach($operations as $candidate)if($candidate['entityId']===$id&&$candidate['expectedRevision']+1===(int)$history['revision']&&$candidate['objectId']===$history['object_id']&&$candidate['payloadHash']===$history['payload_hash']){
+            if($operation!==null)throw new DomainException('E2EE_PRODUCT_HISTORY_MISSING');$operation=$candidate;
+        }
+        if($operation===null)throw new DomainException('E2EE_PRODUCT_HISTORY_MISSING');
+        $row=$entity;$row['revision']=(int)$history['revision'];$row['domain']=$operation['domain'];$row['object_id']=$operation['objectId'];$row['payload_hash']=$operation['payloadHash'];$row['parent_id']=$operation['parentId'];$row['deleted']=$operation['action']==='delete'?1:0;$row['metadata_json']=genesisE2eeJson($operation['metadata']);$row['updated_at']=$history['created_at'];
+        $page=genesisE2eeProductProofRows($db,$scope,[$row]);$usage+=strlen(genesisE2eeJson($page));if($usage>4*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_PAGE_TOO_LARGE');$pages[]=$page;
+    }
+    return ['pages'=>$pages,'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
 }
 /** No content field can enter this boundary. The staged signed version is
  * immutable; only an authorized transaction can make its reference active. */

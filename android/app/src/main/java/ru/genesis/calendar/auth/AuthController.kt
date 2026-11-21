@@ -1263,9 +1263,23 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         require(kind in setOf("task", "project")); api.sharedTaskExtension(generation, "PATCH", "/shared/spaces/${SharedTaskLifecycleProtocol.id(space)}/trash/$kind/${SharedTaskLifecycleProtocol.id(id)}", command)
     }
     override suspend fun sharedTrashPurge(space: String, task: String, command: JSONObject) = sharedOnlineCall { api, generation -> api.sharedTaskExtension(generation, "POST", "/shared/spaces/${SharedTaskLifecycleProtocol.id(space)}/trash/task/${SharedTaskLifecycleProtocol.id(task)}/purge", command) }
-    override suspend fun sharedTaskFile(task: String, file: String): ByteArray = sharedOnlineCall { api, generation -> api.sharedTaskFile(generation, task, file) }
+    override suspend fun sharedTaskFile(task: String, file: String): ByteArray {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)){
+            SharedTaskLifecycleProtocol.id(task);SharedTaskLifecycleProtocol.id(file);val result=ru.genesis.calendar.security.NativePrivateProducts.sharedRequest(app.workspaceScope,"GET","/shared/tasks/$task/attachments/$file",null)
+            val size=ru.genesis.calendar.security.E2eeCommands.integer(result.get("size"),1);check(size<=SharedTaskFilesProtocol.limit){"INVALID_TASK_FILE"};return ru.genesis.calendar.security.E2eeEnvelope.decode(result.getString("data"),size.toInt())
+        }
+        return sharedOnlineCall { api, generation -> api.sharedTaskFile(generation, task, file) }
+    }
     override suspend fun saveSharedTaskFiles(project: String, task: String, command: JSONObject) = sharedOnlineCall { api, generation -> api.updateSharedTask(generation, project, task, command) }
     override suspend fun sharedTaskApprove(project: String, task: String) = sharedOnlineCall { api, generation -> api.sharedTaskExtension(generation, "POST", "/shared/projects/${SharedTaskLifecycleProtocol.id(project)}/tasks/${SharedTaskLifecycleProtocol.id(task)}/approve", JSONObject()) }
+    override suspend fun sharedTaskApprovalPreview(project:String,task:String):JSONObject?{
+        if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return null
+        return sharedOnlineCall{api,generation->api.sharedTaskExtension(generation,"POST","/shared/projects/${SharedTaskLifecycleProtocol.id(project)}/tasks/${SharedTaskLifecycleProtocol.id(task)}/approval-preview",JSONObject())}
+    }
+    override suspend fun sharedTaskApproveReviewed(project:String,task:String,review:JSONObject,requestId:String):JSONObject{
+        check(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)){"E2EE_SCOPE_BINDING_MISMATCH"};SharedTaskLifecycleProtocol.id(requestId)
+        val held=JSONObject(review.toString());return sharedOnlineCall{api,generation->api.sharedTaskExtension(generation,"POST","/shared/projects/${SharedTaskLifecycleProtocol.id(project)}/tasks/${SharedTaskLifecycleProtocol.id(task)}/approve",JSONObject().put("review",held).put("requestId",requestId))}
+    }
     override suspend fun sharedTaskReview(project: String, task: String, command: JSONObject) = sharedOnlineCall { api, generation -> api.sharedTaskExtension(generation, "PATCH", "/shared/projects/${SharedTaskLifecycleProtocol.id(project)}/tasks/${SharedTaskLifecycleProtocol.id(task)}/reviews", command) }
     override suspend fun sharedTaskApprovers(project: String, task: String, command: JSONObject) = sharedOnlineCall { api, generation -> api.updateSharedTask(generation, project, task, command) }
     override suspend fun sharedTaskReviewSettings(project: String) = sharedOnlineCall { api, generation -> api.sharedTaskExtension(generation, "GET", "/shared/projects/${SharedTaskLifecycleProtocol.id(project)}/review-settings") }

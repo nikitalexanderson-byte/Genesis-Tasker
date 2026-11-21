@@ -1,5 +1,35 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Shared history, exact completion review and real files (candidate, no QA)
+
+After ac386416, added a signed bounded product-history read on PHP/web/native,
+reusing bootstrap/command/attestation proof verification. It reads immutable old
+versions without changing live heads. Historical migrated table versions still
+need composition with these new normal-operation histories.
+
+Completion proposals now have actual web/native preview/review UI and a durable
+exact-version decision before signing. Native task review uses the same product
+model; the separate native mindmap quick-toggle path still needs explicit review
+composition. Proposal counters with concurrent proposals remain a QA target.
+
+Shared task attachments/images are now references inside the task's encrypted
+signed body, so an approval binds the exact files. Association/source joins on
+both clients preserve migrated bytes. New files use deterministic per-request
+object coordinates and immutable encrypted queues, before the task transaction.
+Explicit downloads use authenticated client decryption; the browser's decrypted
+image URLs are ephemeral and revoked on lifecycle lock. Native file downloads
+use the same model/Keystore channel. Full native image presentation, new-device
+offline download caching, cancelled/process-death transfers and orphan retention
+still require composition/acceptance.
+
+Added a common bounded private task-query/sort implementation and custom-field
+criteria. Cross-project/global query/overview, saved views, reports, group
+creation, notices, policies/membership UI, bulk/cross-scope work and client jobs
+are still unfinished. This is not accepted shared coverage.
+
+No tests/typecheck/lint/build/CI/push/deploy/device actions have been run in this
+implementation continuation. Production3.3.5/149 and all gates remain unchanged.
+
 ## Continued recovery, shared editors and consent (21 November, candidate code)
 
 Still implementation-first: NO tests, typecheck, lint, builds, CI, push, deployment,

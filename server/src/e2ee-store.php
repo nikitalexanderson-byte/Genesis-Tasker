@@ -503,7 +503,7 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','stoicheion-state','advice-policy','product-index','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
@@ -538,6 +538,10 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
     if($c['action']==='product-index'){
         if(!in_array($scope['kind'],['project','space'],true)||$scope['state']!=='active')throw new DomainException('E2EE_NOT_ACTIVE');
         require_once __DIR__.'/e2ee-product.php';return genesisE2eeProductIndex(genesisDb(),$scope,$c['payload']);
+    }
+    if($c['action']==='product-history'){
+        if(!in_array($scope['kind'],['project','space'],true)||$scope['state']!=='active')throw new DomainException('E2EE_NOT_ACTIVE');
+        require_once __DIR__.'/e2ee-product.php';return genesisE2eeProductHistory(genesisDb(),$scope,$c['payload']);
     }
     if($c['action']==='legacy-private-path') {
         require_once __DIR__.'/e2ee-legacy-private-path.php';

@@ -77,6 +77,11 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
         val table=value.getString("table");check(table in roots(kind)&&paths.required(scopeKind).any{table in source.tables(scopeKind,it.id)}){"E2EE_SHARED_DOMAIN_INVALID"}
         val root=row(table,value.getJSONObject("record"));val children=value.getJSONObject("related");check(children.keys().asSequence().all{it in related(kind)}){"E2EE_SHARED_DOMAIN_INVALID"}
         for(name in children.keys()){val rows=children.getJSONArray(name);check(rows.length()<=10000);for(at in 0 until rows.length()){val child=row(name,rows.getJSONObject(at));val key=if(kind=="comment")"comment_id"else if(kind=="project")"project_id"else"task_id";check(child.get(key)==root.get("id")){"E2EE_SCOPE_BINDING_MISMATCH"}}}
+        if(kind=="task"){
+            val attachments=children.optJSONArray("shared_task_attachments")?:JSONArray();val images=children.optJSONArray("shared_task_images")?:JSONArray();check(attachments.length()<=5&&images.length()<=1){"E2EE_SHARED_DOMAIN_INVALID"};val ids=mutableSetOf<String>()
+            for(at in 0 until attachments.length())check(ids.add(attachments.getJSONObject(at).getString("id"))){"E2EE_SHARED_DOMAIN_INVALID"}
+            for(rows in listOf(attachments,images))for(at in 0 until rows.length()){val item=rows.getJSONObject(at);val file=item.getJSONObject("file");check(file.getLong("size")==item.getLong("byte_size")&&file.getString("mediaType")==item.getString("mime_type")){"E2EE_SHARED_DOMAIN_INVALID"}}
+        }
         if(header!=null)check(header.getString("scopeId")==scopeId&&header.getString("kind")==kind&&header.getString("entityId")==recordKey(kind,root)&&header.get("parentId")==parent(value)&&E2eeProductJson.same(header.get("metadata"),metadata(value))){"E2EE_SHARED_HEADER_MISMATCH"}
         return JSONObject(value.toString())
     }

@@ -2506,8 +2506,8 @@ export async function saveSharedProjectAccess(spaceId: string, userId: string, c
   if (typeof window !== "undefined") window.dispatchEvent(new Event("genesis:shared-updates"));
   return receipt;
 }
-export async function approveSharedTask(projectId: string, taskId: string) {
-  return (await api<{task: SharedTask}>(`/shared/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}/approve`, {method:"POST",body:"{}"})).task;
+export async function approveSharedTask(projectId: string, taskId: string,decision?:{review:{proposalId:string;payloadHash:string;version:import('./e2ee/shared-product').ProductVersion};requestId:string}) {
+  return (await api<{task: SharedTask}>(`/shared/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}/approve`, {method:"POST",body:JSON.stringify(decision??{})})).task;
 }
 export type SharedComment = { id: string; body: string; mentionIds?: string[]; authorId: string; authorName: string; importedAuthorName?:string; createdAt: string };
 export type SharedActivityEvent = { id: string; action: string; objectId: string; taskId: string | null; boardId: string | null; actorName: string; createdAt: string;

@@ -10,7 +10,7 @@ export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
   command(packet:SignedE2eeCommand):Promise<Record<string,WireValue>>;
   read(packet:SignedE2eeCommand):Promise<{envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
-    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;context?:unknown;bootstrap?:unknown;part?:unknown;bootstrapProofHash?:string;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];checkpointHash:string;directoryRevision:number}>;
+    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;context?:unknown;bootstrap?:unknown;part?:unknown;bootstrapProofHash?:string;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];pages?:unknown[];checkpointHash:string;directoryRevision:number}>;
 }
 
 export type ReviewedDeviceRole={deviceId:string;role:'owner'|'writer'|'commenter'|'reader'|null};
@@ -387,6 +387,7 @@ export class E2eeScopeClient {
   async readStoicheionState():Promise<unknown>{return this.#readPacket('stoicheion-state',{});}
   async readBootstrapState(afterPart=-1){if(!Number.isInteger(afterPart)||afterPart< -1||afterPart>255)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-bootstrap-state',{afterPart});}
   async readProductContext(){return this.#readPacket('product-context',{});}
+  async readProductHistory(entityId:string,before:number,limit=5){assertTechnical(entityId);if(!Number.isSafeInteger(before)||before<1||!Number.isInteger(limit)||limit<1||limit>10)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-history',{entityId,before,limit});}
   async readAdvicePolicy():Promise<unknown>{return this.#readPacket('advice-policy',{});}
   async originalMigrationManifest(){
     this.#open();const frame=[...this.#directoryFrames.values()].find(frame=>frame.state==='active'&&frame.sealedHeads?.cryptoEpoch===0),sealed=frame?.sealedHeads;

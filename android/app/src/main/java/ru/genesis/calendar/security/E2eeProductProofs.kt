@@ -55,6 +55,7 @@ internal object E2eeProductProofs{
             }else{val proposal=proposals[command.getJSONObject("payload").getString("proposalId")]?:error("E2EE_PRODUCT_PROOF_INVALID");val operation=proposal.getJSONObject("operation");val metadata=operation.getJSONObject("metadata");val required=E2eeProductContract.ids(metadata.getJSONArray("approverIds"))
                 check(proposal.get("entityId")==entity.get("entityId")&&matches(operation,entity)&&metadata.getBoolean("completed")&&required.isNotEmpty()&&required.all{it in (approvals[proposal.getString("proposalId")]?:emptySet())}){"E2EE_PRODUCT_PROOF_INVALID"}}
         }
+        for(proposal in proposals.values){val accepted=JSONArray();for(row in attestations)if(row.get("proposalId")==proposal.get("proposalId")){Instant.parse(row.getString("createdAt"));accepted.put(JSONObject().put("userId",row.get("userId")).put("createdAt",row.get("createdAt"))};proposal.put("approvals",accepted)}
         return Page(JSONArray(entities.values),JSONArray(proposals.values),JSONObject().put("bootstrapId",baselinePayload.get("bootstrapId")).put("proofHash",baseline.get("proofHash")).put("expectedCount",baselinePayload.get("expectedCount")).put("parts",baselinePayload.get("parts")))
     }
 }

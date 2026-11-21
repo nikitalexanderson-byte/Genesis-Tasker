@@ -55,6 +55,12 @@ async function run(encoded:string){
       const model=new SharedLiveModel({binding:value.binding as SharedDomainBinding,actorId:value.actorId,online:value.online,current,
         context:async()=>validateSharedLiveContext(await invoke('context')),
         localVersions:async()=>await invoke('localVersions') as import('../e2ee/shared-product.ts').PendingProductVersion[],
+        history:async(entityId,before)=>await invoke('history',{entityId,before}) as {versions:ProductVersion[];nextBefore:number|null},
+        completionProposals:async()=>await invoke('completionProposals') as import('../e2ee/product-proofs.ts').VerifiedProductProposal[],
+        approvalPreview:async entityId=>await invoke('approvalPreview',{entityId}) as {proposalId:string;payloadHash:string;version:ProductVersion}[],
+        approve:(review,intentId)=>invoke('approve',{review,intentId}),
+        stageFile:async(reference,bytes)=>{const value=await invoke('stageFile',{reference,data:encodeE2eeBytes(bytes)});exactKeys(value,['staged']);if(value.staged!==true)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');},
+        readFile:async reference=>{const value=await invoke('readFile',{reference});exactKeys(value,['data','size','filename','mediaType']);if(value.size!==reference.size||value.filename!==reference.filename||value.mediaType!==reference.mediaType)throw new Error('E2EE_PRIVATE_FILE_CORRUPT');return{bytes:decodeE2eeBytes(value.data,reference.size),filename:reference.filename,mediaType:reference.mediaType};},
         versions:async()=>{const heads=await invoke('heads');if(!Array.isArray(heads)||heads.length>10000)throw new Error('E2EE_PRODUCT_INDEX_INVALID');const rows:ProductVersion[]=[];let size=0;
           for(const head of heads){exactKeys(head,['entityId']);const row=await invoke('version',{entityId:head.entityId}) as ProductVersion;size+=JSON.stringify(row).length;if(size>128*1024*1024)throw new Error('E2EE_PRODUCT_CONTENT_TOO_LARGE');rows.push(row);}return rows;},
         stage:async(edits:ProductEdit[],intentId:string)=>await invoke('stage',{edits,intentId}) as string,

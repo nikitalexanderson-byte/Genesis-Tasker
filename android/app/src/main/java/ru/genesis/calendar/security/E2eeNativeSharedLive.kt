@@ -36,6 +36,24 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 "heads"->{E2eeKeys.exact(payload,emptySet());check(heads.isEmpty()){"E2EE_PRODUCT_INDEX_INVALID"};val rows=records.index();val ids=JSONArray();for(at in 0 until rows.length()){val row=rows.getJSONObject(at);val id=row.getString("entityId");check(heads.put(id,row)==null){"E2EE_PRODUCT_INDEX_INVALID"};ids.put(JSONObject().put("entityId",id))};ids}
                 "version"->{E2eeKeys.exact(payload,setOf("entityId"));records.read(heads[payload.getString("entityId")]?:error("E2EE_PRODUCT_ENTITY_MISSING"))}
                 "localVersions"->{E2eeKeys.exact(payload,emptySet());records.product.localVersions()}
+                "history"->{E2eeKeys.exact(payload,setOf("entityId","before"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.history(payload.getString("entityId"),E2eeCommands.integer(payload.get("before"),1))}
+                "completionProposals"->{E2eeKeys.exact(payload,emptySet());records.product.completionProposals()}
+                "approvalPreview"->{E2eeKeys.exact(payload,setOf("entityId"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.approvalPreview(payload.getString("entityId"))}
+                "approve"->{E2eeKeys.exact(payload,setOf("review","intentId"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.approve(payload.getJSONObject("review"),payload.getString("intentId"))}
+                "stageFile"->{
+                    E2eeKeys.exact(payload,setOf("reference","data"));val reference=payload.getJSONObject("reference");E2eeKeys.exact(reference,setOf("objectId","size","filename","mediaType"));val size=E2eeCommands.integer(reference.get("size"),1);check(size<=10*1024*1024){"TASK_FILES_TOO_LARGE"}
+                    val bytes=E2eeEnvelope.decode(payload.getString("data"),size.toInt());val client=account.sharedScope(binding.scopeId,binding.scopeKind,binding.resourceId).client;val queue=E2eeEditorQueue(account.device,client,binding.scopeId,"attachment",reference.getString("objectId"));val saved=queue.load()
+                    try{if(saved!=null)check(saved.remoteRevision<=1&&saved.bytes.contentEquals(bytes)&&saved.filename==reference.getString("filename")&&saved.mediaType==reference.getString("mediaType")){"E2EE_IDEMPOTENCY_CONFLICT"}
+                        else queue.stage(bytes,null,0,reference.getString("filename"),reference.getString("mediaType"));current()
+                        if(!account.offline){queue.flush();current();check(client.objectReference("attachment",reference.getString("objectId")).getLong("revision")==1L){"E2EE_PRIVATE_FILE_IMMUTABLE"}}
+                    }finally{bytes.fill(0);saved?.bytes?.fill(0)};JSONObject().put("staged",true)
+                }
+                "readFile"->{
+                    E2eeKeys.exact(payload,setOf("reference"));val reference=payload.getJSONObject("reference");E2eeKeys.exact(reference,setOf("objectId","size","filename","mediaType"));val client=account.sharedScope(binding.scopeId,binding.scopeKind,binding.resourceId).client
+                    if(account.offline){val saved=E2eeEditorQueue(account.device,client,binding.scopeId,"attachment",reference.getString("objectId")).load()?:error("E2EE_OFFLINE_CONTENT_UNAVAILABLE")
+                        try{JSONObject().put("data",E2eeEnvelope.encode(saved.bytes)).put("size",saved.bytes.size).put("filename",saved.filename).put("mediaType",saved.mediaType)}finally{saved.bytes.fill(0)}}
+                    else{val file=client.read("attachment",reference.getString("objectId"))?:error("E2EE_PRIVATE_FILE_UNAVAILABLE");try{current();JSONObject().put("data",E2eeEnvelope.encode(file.bytes)).put("size",file.bytes.size).put("filename",file.filename).put("mediaType",file.mediaType)}finally{file.bytes.fill(0)}}
+                }
                 "stage"->{E2eeKeys.exact(payload,setOf("edits","intentId"));records.product.stage(payload.getJSONArray("edits"),payload.getString("intentId"))}
                 "flush"->{E2eeKeys.exact(payload,setOf("intentId"));records.flush(payload.getString("intentId"))}
                 "requestLoad"->{E2eeKeys.exact(payload,setOf("id"));request(payload.getString("id")).load()?.let{JSONObject().put("value",it.value).put("serial",it.serial)}?:JSONObject.NULL}
@@ -70,6 +88,12 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         for(item in pendingLocked()){val request=item.getJSONObject("request");open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),request.getString("id"));current();count++;cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)};count}}
     suspend fun request(method:String,path:String,body:JSONObject?):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
         current();val uri=Uri.parse(path);val parts=uri.pathSegments;check(parts.firstOrNull()=="shared"){"E2EE_SHARED_REQUEST_INVALID"};val query=uri.encodedQuery?.let{"?$it"}?:"";val input=body?.let{JSONObject(it.toString())}?:JSONObject()
+        if(method=="GET"&&parts.getOrNull(1)=="tasks"&&(parts.size==4&&parts[3]=="image"||parts.size==5&&parts[3]=="attachments")){
+            for(binding in bindings())if(binding.getString("kind")=="project"){val live=open("project",binding.getString("resourceId"));val entities=live.records.index()
+                if((0 until entities.length()).any{entities.getJSONObject(it).let{row->row.getString("entityId")=="task:${parts[2]}"&&row.getString("kind")=="task"&&!row.getBoolean("deleted")}})
+                    return@withLock live.execute("GET","tasks/"+parts.drop(2).joinToString("/"),JSONObject())}
+            error("E2EE_PRODUCT_ENTITY_MISSING")
+        }
         if(parts.size>=3&&parts[1] in setOf("projects","spaces")){
             val kind=if(parts[1]=="projects")"project"else"space";val id=E2eeKeys.technical(parts[2])
             if(method=="GET"&&kind=="space"&&parts.size==4&&parts[3] in setOf("projects","archived-projects")){

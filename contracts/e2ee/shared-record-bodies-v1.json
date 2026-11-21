@@ -5,14 +5,14 @@
   "comment":["shared_comments"],"project-comment":["shared_project_comments"],
   "status":["shared_project_statuses"],"category":["shared_project_categories","shared_space_project_categories","shared_member_categories"],
   "label":["shared_space_labels"],"mindmap":["shared_mindmaps"],
-  "file":["shared_task_attachments","shared_task_images"],"workflow":["shared_project_workflows"],
+  "file":[],"workflow":["shared_project_workflows"],
   "review-policy":["shared_project_review_policies"],"planning":["shared_project_planning"],"sprint":["shared_sprints"],
   "series":["shared_task_series"],"automation":["shared_automation_rules"],"template":["shared_templates"],
   "custom-field":["shared_custom_fields"],"custom-field-value":["shared_custom_field_values"],"view":["shared_saved_views"],
   "history":["shared_audit_events"],"trash":["shared_trash"],"import":["shared_data_import_records"]
  },
  "related":{
-  "task":["shared_task_labels","shared_task_dependencies","shared_task_planning","shared_task_approvals","shared_task_reviews","shared_custom_field_values","shared_task_watchers"],
+  "task":["shared_task_labels","shared_task_dependencies","shared_task_planning","shared_task_approvals","shared_task_reviews","shared_custom_field_values","shared_task_watchers","shared_task_attachments","shared_task_images"],
   "comment":["shared_comment_mentions"],
   "project":["shared_project_labels"],"space":[],"project-comment":[],"status":[],"category":[],"label":[],"mindmap":[],"file":[],"workflow":[],"review-policy":[],"planning":[],"sprint":[],"series":[],"automation":[],"template":[],"custom-field":[],"custom-field-value":[],"view":[],"history":[],"trash":[],"import":[]
  },

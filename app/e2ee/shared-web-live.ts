@@ -6,6 +6,7 @@ import {encodeE2eeBytes} from './envelope.ts';
 import type {SharedDomainBinding} from './shared-domain.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import {exactKeys} from './keys.ts';
+import {E2eeEditorQueue} from './editor-queue.ts';
 
 const models=new WeakMap<WebPrivateAccount,Map<string,WebSharedLive>>();
 class WebSharedLive{
@@ -22,6 +23,19 @@ class WebSharedLive{
    },
    versions:async()=>{const entities=await records.index(),versions=[];for(const entity of entities){versions.push(await records.read(entity));account.requireOpen();}return versions;},
    localVersions:()=>records.product.localVersions(),
+   history:(entityId,before)=>records.product.history(entityId,before),
+   completionProposals:async()=>records.product.completionProposals(),
+   approvalPreview:entityId=>records.product.approvalPreview(entityId),
+   approve:(review,id)=>records.product.approve(review,id),
+   stageFile:async(reference,bytes)=>{account.requireOpen();const {client}=account.shared(binding.scopeId,binding.kind,binding.resourceId),queue=new E2eeEditorQueue(account.device,client,binding.scopeId,'attachment',reference.objectId),saved=await queue.load();account.requireOpen();
+    try{if(saved){if(saved.remoteRevision>1||saved.bytes.length!==bytes.length||saved.bytes.some((byte,index)=>byte!==bytes[index])||saved.metadata.filename!==reference.filename||saved.metadata.mediaType!==reference.mediaType)throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}
+     else await queue.stage(bytes,null,0,{filename:reference.filename,mediaType:reference.mediaType});account.requireOpen();if(account.mode==='online'){await queue.flush();account.requireOpen();const head=await client.objectReference('attachment',reference.objectId);if(head.revision!==1)throw new Error('E2EE_PRIVATE_FILE_IMMUTABLE');}
+    }finally{saved?.bytes.fill(0);}
+   },
+   readFile:async reference=>{account.requireOpen();const {client}=account.shared(binding.scopeId,binding.kind,binding.resourceId);
+    if(account.mode==='offline'){const local=await new E2eeEditorQueue(account.device,client,binding.scopeId,'attachment',reference.objectId).load();account.requireOpen();if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return{bytes:local.bytes,...local.metadata};}
+    const file=await client.read('attachment',reference.objectId);account.requireOpen();if(!file)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');return file;
+   },
    stage:(edits,id)=>records.product.stage(edits,id),flush:async id=>{if(account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return records.flush(id);},
    loadRequest:async id=>(await this.requestDocument(id)).load(),saveRequest:async(value,expected)=>(await(await this.requestDocument(value.id)).save(value,expected)).serial,
   });
@@ -53,6 +67,10 @@ export async function privateSharedRequest(ownerId:string,path:string,init:Reque
  const run=async(binding:Pick<SharedDomainBinding,'kind'|'resourceId'>,relative:string)=>{
   const live=await open(ownerId,binding.kind,binding.resourceId);init.signal?.throwIfAborted();const result=await live.model.request(method,relative+url.search,body);requirePrivateAccount(ownerId).requireOpen();init.signal?.throwIfAborted();return result;
  };
+ if(method==='GET'&&segments[1]==='tasks'&&(segments.length===4&&segments[3]==='image'||segments.length===5&&segments[3]==='attachments')){
+  for(const scope of await bindings(ownerId))if(scope.kind==='project'){const live=await open(ownerId,'project',scope.resourceId),entities=await live.records.index();if(entities.some(row=>row.entityId===`task:${segments[2]}`&&row.kind==='task'&&!row.deleted))return run(scope,`tasks/${segments.slice(2).join('/')}`);}
+  throw new Error('E2EE_PRODUCT_ENTITY_MISSING');
+ }
  if(segments.length>=3&&(segments[1]==='projects'||segments[1]==='spaces')){
   const kind=segments[1]==='projects'?'project':'space',resourceId=segments[2];
   if(method==='GET'&&kind==='space'&&['projects','archived-projects'].includes(segments[3])&&segments.length===4){const projects=[];
