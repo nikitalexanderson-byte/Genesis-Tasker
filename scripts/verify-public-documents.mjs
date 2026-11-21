@@ -1,32 +1,34 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { assertPublicDocumentReferences } from "./public-document-references.mjs";
+import {verifyPublicLocales} from './verify-public-locales.mjs';
 
 const output = new URL("../dist-web/public_html/", import.meta.url);
 const legalSource = await readFile(new URL("../app/legal-content.ts", import.meta.url), "utf8");
 const revision = legalSource.match(/export const LEGAL_UPDATED = "([^"]+)"/)?.[1];
 assert.ok(revision, "legal source revision is required");
+const publicCopy=JSON.parse(await readFile(new URL('../app/public-product-copy.json',import.meta.url),'utf8'));
 const pages = {
   privacy: "Политика конфиденциальности",
   terms: "Пользовательское соглашение",
-  refund: "Refund Policy",
+  refund: publicCopy.ru.refund,
   support: "Поддержка GENESIS",
   "delete-account": "Удаление аккаунта и данных",
 };
 for (const [slug, title] of Object.entries(pages)) {
-  const html = await readFile(new URL(`${slug}.html`, output), "utf8");
+  const html = await readFile(new URL(`ru/${slug}.html`, output), "utf8");
   const body = html.split("<body>")[1]?.split("</body>")[0];
   assert.ok(body, `${slug}: HTML body is required`);
   assert.ok(body.includes(`<h1>${title}</h1>`), `${slug}: document must be readable without JavaScript`);
   assert.ok(body.includes(revision), `${slug}: current revision is required`);
   assert.ok(body.includes("<section><h2>"), `${slug}: substantive sections are required`);
-  assert.ok(body.includes('href="/privacy"') && body.includes('href="/terms"'), `${slug}: navigation is required`);
-  assert.ok(html.includes(`rel="canonical" href="https://genesiscalendar.com/${slug}"`), `${slug}: canonical URL is required`);
+  assert.ok(body.includes('href="/ru/privacy"') && body.includes('href="/ru/terms"'), `${slug}: navigation is required`);
+  assert.ok(html.includes(`rel="canonical" href="https://genesiscalendar.com/ru/${slug}"`), `${slug}: canonical URL is required`);
   assert.match(html, /<script type="module"[^>]*src="[^"]+\.js"/, `${slug}: interactive client must remain available`);
   assertPublicDocumentReferences(html, slug);
-  assert.match(body, /Domain and hosting owner: Iurii Logvinov/, `${slug}: infrastructure owner must be named accurately`);
-  assert.match(body, /GENESIS founder and creator of the website and app: Nikita Aleksandrovich Lyapin/, `${slug}: creator must be named separately`);
-  assert.match(body, /United States: Iurii Logvinov; for Russia: Nikita Aleksandrovich Lyapin/, `${slug}: payment responsibilities must identify both territories`);
+  assert.match(body, /Владелец домена и хостинга — Юрий Логвинов/, `${slug}: infrastructure owner must be named accurately`);
+  assert.match(body, /Создатель сайта и приложения, основатель GENESIS — Ляпин Никита Александрович/, `${slug}: creator must be named separately`);
+  assert.match(body, /для США отвечает Юрий Логвинов; для России — Ляпин Никита Александрович/, `${slug}: payment responsibilities must identify both territories`);
   assert.doesNotMatch(body, /Owned and operated by|GENESIS is owned by|Сайт, домен и хостинг принадлежат другому лицу/, `${slug}: obsolete ownership claims must be absent`);
   assert.match(body, /demiurge\.soft@gmail\.com/, `${slug}: Paddle support is required`);
   assert.doesNotMatch(body, /jurijjlogvinov@gmail\.com/i, `${slug}: retired contact must be absent`);
@@ -55,9 +57,10 @@ for (const [slug, title] of Object.entries(pages)) {
   }
 }
 const homepage = await readFile(new URL("index.html", output), "utf8");
-assert.match(homepage, /GENESIS[\s\S]*Календарь задач и проектов/);
+assert.match(homepage, /GENESIS[\s\S]*Task and project calendar/);
 assert.doesNotMatch(homepage, /mc\.yandex|yandex\.ru|яндекс/i);
-assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes("nikitalexanderson@gmail.com"));
+assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes('href="/support"'));
 assert.ok(homepage.includes("AI NCII") && homepage.includes("Google Calendar") && homepage.includes("Google Tasks"));
 assert.doesNotMatch(homepage, /%GENESIS_SERVICE_IDENTITY%/, "public identity must resolve at build time");
-console.log("Public homepage and five legal documents are readable without JavaScript; Google-only .com references verified.");
+await verifyPublicLocales(output);
+console.log("Russian section and English homepage preserve all existing disclosures; localized public HTML and Google-only .com references verified.");

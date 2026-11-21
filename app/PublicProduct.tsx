@@ -15,6 +15,7 @@ export function PublicProduct({language}:{language:string}) {
   const [locating,setLocating]=useState(false),[locationError,setLocationError]=useState(false);
   const locationRequest=useRef({generation:0});
   useEffect(()=>{
+    if(language!=='ru')return;
     const requests=locationRequest.current;
     requests.generation++;
     const controller=new AbortController();
@@ -31,8 +32,8 @@ export function PublicProduct({language}:{language:string}) {
     const storage=(event:StorageEvent)=>{if(event.key===PUBLIC_CURRENCY_KEY)setManual(publicCurrency(event.newValue));};
     window.addEventListener('storage',storage);
     return()=>{controller.abort();consent.abort();requests.generation++;window.clearTimeout(timeout);window.removeEventListener('storage',storage);};
-  },[]);
-  const selection=resolvePublicCurrency({...signals,manual,language});
+  },[language]);
+  const selection=language==='ru'?resolvePublicCurrency({...signals,manual,language}):{currency:'USD' as const,source:'manual' as const};
   const choose=(currency:PublicCurrency|null)=>{
     locationRequest.current.generation++;setLocating(false);setLocationError(false);setManual(currency);
     try {if(currency)localStorage.setItem(PUBLIC_CURRENCY_KEY,currency);else localStorage.removeItem(PUBLIC_CURRENCY_KEY);} catch { /* Keep this visit's choice even without persistence. */ }
@@ -58,7 +59,7 @@ export function PublicProduct({language}:{language:string}) {
     </section>
     <section className="public-section" id="pricing" aria-labelledby="public-pricing-title">
       <h2 id="public-pricing-title">{c.pricing}</h2><p>{c.free}</p>
-      <div className="public-currency-controls">
+      {language==='ru'?<><div className="public-currency-controls">
         <span id="public-currency-label">{p.currency}</span>
         <div className="public-currency-switch" role="group" aria-labelledby="public-currency-label">
           {(['USD','RUB'] as const).map(currency=><button key={currency} type="button" aria-pressed={selection.currency===currency} onClick={()=>choose(currency)}>{currency}</button>)}
@@ -67,8 +68,7 @@ export function PublicProduct({language}:{language:string}) {
         <button className="public-currency-locate" type="button" onClick={()=>void locate()} disabled={locating} title={p.privacy}>{locating?p.locating:p.locate}</button>
       </div>
       <p className="public-currency-status" role="status">{locationError?p.unavailable:p[selection.source]}</p>
-      <p className="public-currency-privacy">{p.privacy}</p>
-      {selection.currency==='USD'?<p className="public-currency-availability">{p.usdPending}</p>:null}
+      <p className="public-currency-privacy">{p.privacy}</p></>:null}
       <div className="public-plans" data-currency={selection.currency} dangerouslySetInnerHTML={{__html:publicPricingCardsHtml(language,selection.currency)}} />
       <div dangerouslySetInnerHTML={{__html:publicPricingTermsHtml(language,selection.currency)}} />
     </section>

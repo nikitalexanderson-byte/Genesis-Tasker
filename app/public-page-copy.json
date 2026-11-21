@@ -1,0 +1,16 @@
+{
+  "ru":{"title":"Календарь задач и проектов","kicker":"GENESIS · КАЛЕНДАРЬ И МЕНЕДЖЕР ПРОЕКТОВ"},
+  "en":{"title":"Task and project calendar","kicker":"GENESIS · CALENDAR AND PROJECT MANAGER"},
+  "el":{"title":"Ημερολόγιο εργασιών και έργων","kicker":"GENESIS · ΗΜΕΡΟΛΟΓΙΟ ΚΑΙ ΔΙΑΧΕΙΡΙΣΗ ΕΡΓΩΝ"},
+  "de":{"title":"Aufgaben- und Projektkalender","kicker":"GENESIS · KALENDER UND PROJEKTVERWALTUNG"},
+  "fr":{"title":"Calendrier des tâches et des projets","kicker":"GENESIS · CALENDRIER ET GESTION DE PROJETS"},
+  "es":{"title":"Calendario de tareas y proyectos","kicker":"GENESIS · CALENDARIO Y GESTIÓN DE PROYECTOS"},
+  "it":{"title":"Calendario di attività e progetti","kicker":"GENESIS · CALENDARIO E GESTIONE PROGETTI"},
+  "pt":{"title":"Calendário de tarefas e projetos","kicker":"GENESIS · CALENDÁRIO E GESTÃO DE PROJETOS"},
+  "pl":{"title":"Kalendarz zadań i projektów","kicker":"GENESIS · KALENDARZ I ZARZĄDZANIE PROJEKTAMI"},
+  "sr":{"title":"Календар задатака и пројеката","kicker":"GENESIS · КАЛЕНДАР И УПРАВЉАЊЕ ПРОЈЕКТИМА"},
+  "uk":{"title":"Календар завдань і проєктів","kicker":"GENESIS · КАЛЕНДАР І КЕРУВАННЯ ПРОЄКТАМИ"},
+  "zh":{"title":"任务与项目日历","kicker":"GENESIS · 日历与项目管理"},
+  "tr":{"title":"Görev ve Proje Takvimi","kicker":"GENESIS · TAKVİM VE PROJE YÖNETİMİ"},
+  "ja":{"title":"タスクとプロジェクトのカレンダー","kicker":"GENESIS · カレンダーとプロジェクト管理"}
+}

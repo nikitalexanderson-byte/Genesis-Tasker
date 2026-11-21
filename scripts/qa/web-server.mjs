@@ -29,8 +29,16 @@ export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
     try { candidate = path.resolve(directory, `.${decodeURIComponent(url.pathname)}`); }
     catch { response.writeHead(400); response.end(); return; }
     if (candidate !== directory && !candidate.startsWith(directory + path.sep)) { response.writeHead(403); response.end(); return; }
-    // Match the production .htaccess documents before falling back to the SPA.
-    if (/^\/(?:terms|privacy|refund|support|delete-account)\/?$/.test(url.pathname)) candidate = candidate.replace(/[\\/]$/, '') + '.html';
+    // Match public HTML rewrites in production, including queries without JS.
+    const publicDocument = url.pathname.match(/^\/(ru\/)?(login|terms|privacy|refund|support|delete-account)(?:\.html)?\/?$/);
+    const publicHome = /^\/(?:ru\/?|(?:ru\/)?index\.html)?$/.test(url.pathname);
+    if (publicDocument || publicHome) {
+      const requested = url.searchParams.get('lang');
+      const language = url.pathname.startsWith('/ru') ? 'ru' :
+        ['ru','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : 'en';
+      const localeDirectory = language === 'en' ? '' : language === 'ru' ? 'ru' : `_public-locales/${language}`;
+      candidate = path.join(directory, localeDirectory, `${publicDocument?.[2] ?? 'index'}.html`);
+    }
     if (!existsSync(candidate) || !statSync(candidate).isFile()) {
       if (path.extname(candidate)) { response.writeHead(404); response.end(); return; }
       candidate = path.join(directory, 'index.html');
