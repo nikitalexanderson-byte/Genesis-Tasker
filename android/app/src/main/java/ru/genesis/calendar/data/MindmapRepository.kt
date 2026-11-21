@@ -21,19 +21,24 @@ internal data class NativeMapRecord(val document:MindmapDocument,val revision:Lo
     val unsynced get()=dirty || pending!=null || revision==0L
     fun json()=JSONObject().put("document",document.json()).put("revision",revision).put("pending",pending ?: JSONObject.NULL).put("pendingDocument",pendingDocument?.json() ?: JSONObject.NULL).put("dirty",dirty)
 }
+internal data class PrivateSharedMapBinding(val storageScope:String,val owner:String,val spaceId:String)
 /** Uses the existing scoped encrypted Room documents; task rows remain in TaskRepository. */
 internal class MindmapRepository(private val db:GenesisDatabase,private val scope:String,private val uid:String,private val transport:MindmapTransport,
     private val featureAccess: () -> ru.genesis.calendar.auth.FeatureAccess = { ru.genesis.calendar.auth.FeatureAccess() },
-    private val dataExchangeAccess: () -> ru.genesis.calendar.auth.FeatureAccess = featureAccess) {
+    private val dataExchangeAccess: () -> ru.genesis.calendar.auth.FeatureAccess = featureAccess,
+    private val privateShared:PrivateSharedMapBinding?=null) {
     private val mutex=Mutex();private val cipher=LocalCipher();private val mutable=MutableStateFlow<List<NativeMapRecord>>(emptyList());val records=mutable.asStateFlow()
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
-    private var privateMaps:NativePrivateMindmaps?=null
-    private val privateContent get()=NativePrivateProducts.isProtected(scope)
-    @Synchronized private fun product():NativePrivateMindmaps?{
-        if(!privateContent)return null;val account=NativePrivateProducts.account(scope,uid)
-        return privateMaps?.takeIf{it.account===account}?:NativePrivateMindmaps(scope,uid,account).also{privateMaps=it}
+    private var privateMaps:NativeMapProduct?=null
+    private val productScope get()=privateShared?.storageScope?:scope
+    private val productOwner get()=privateShared?.owner?:uid
+    private val privateContent get()=NativePrivateProducts.isProtected(productScope)
+    @Synchronized private fun product():NativeMapProduct?{
+        if(!privateContent)return null;val account=NativePrivateProducts.account(productScope,productOwner)
+        return privateMaps?.takeIf{it.account===account}?:if(privateShared!=null)NativePrivateSharedMindmaps(productScope,productOwner,privateShared.spaceId,account).also{privateMaps=it}
+            else NativePersonalMapProduct(productScope,productOwner,account).also{privateMaps=it}
     }
-    private fun check() { if(privateContent)NativePrivateProducts.account(scope,uid).requireOpen()else mutation.check();transport.check() }
+    private fun check() { if(privateContent)NativePrivateProducts.account(productScope,productOwner).requireOpen()else mutation.check();transport.check() }
     // Personal auth supplies the owner permit before this mutex, through all
     // decrypt/HTTP/durable journal/response adoption. No lock-order inversion.
     private suspend fun <T> operation(block:suspend ()->T):T=if(privateContent)withContext(Dispatchers.IO){mutex.withLock{check();try{block().also{check()}}finally{privateMaps?.let{try{mutable.value=it.snapshot()}catch(_:IllegalStateException){}}}}}

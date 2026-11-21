@@ -11,8 +11,8 @@ export type ContentArchiveValue={id:string;encoding:'base64url';bytes:string;sha
 export type ContentArchiveEntry={placement:'editor'|'device'|'remote';scope:ArchiveScope|null;domain:string;objectId:string;pending:boolean;current:ContentArchiveValue;history:ContentArchiveValue[]};
 export type ContentArchiveSection={format:'genesis-content-only-v1';execution:'history-only';entries:ContentArchiveEntry[]};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
-const domains=new Set(['workspace','mindmap','diary','dream-journal','physis','aurora','stoicheion','advice','attachment','shared-project','shared-comment']);
-const deviceContent=(id:string)=>id==='personal-diary-device-live-v1'||id==='personal-physis-editor-forms-v1'||id.startsWith('shared-request:')||id.startsWith('product-tx:')||id.startsWith('product-approval:')||id.startsWith('mindmap-view:')||id.startsWith('mindmap-conversions:')||id.startsWith('imported-legacy-content:');
+const domains=new Set(['workspace','mindmap','diary','dream-journal','physis','aurora','stoicheion','advice','attachment','shared-project','shared-comment','local-snapshot']);
+const deviceContent=(id:string)=>id==='personal-diary-device-live-v1'||id==='personal-physis-editor-forms-v1'||['shared-request:','product-tx:','product-approval:','mindmap-view:','mindmap-conversions:','shared-map-draft:','shared-map-local:','shared-map-conversion-journal:','imported-legacy-content:'].some(prefix=>id.startsWith(prefix));
 const moduleFor=(domain:string,scope:ArchiveScope|null):BackupModuleId=>scope&&scope.kind!=='personal'||domain==='shared-project'||domain==='shared-comment'?'shared-drafts':domain==='mindmap'?'mindmaps':domain==='diary'?'diary':domain==='physis'?'physis':domain==='aurora'?'aurora':domain==='stoicheion'?'stoicheion':'workspace';
 async function value(id:string,bytes:Uint8Array,metadata={filename:'',mediaType:'application/json'}):Promise<ContentArchiveValue>{
  return{id,encoding:'base64url',bytes:encodeE2eeBytes(bytes),sha256:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))),size:bytes.length,...metadata};

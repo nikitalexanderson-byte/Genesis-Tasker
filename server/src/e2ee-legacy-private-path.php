@@ -41,7 +41,9 @@ function genesisE2eePrivatePathWhere(string $kind,string $table):string
     if(in_array($table,['shared_mindmap_deletions','shared_mindmap_deletion_scopes','shared_mindmap_receipts','shared_mindmap_conversions'],true))
         throw new DomainException('E2EE_SHARED_MAP_LINEAGE_READER_REQUIRED');
     if($table==='shared_saved_views')return!$project?"r.space_id=:resource AND r.visibility='shared'":throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
-    if($table==='shared_space_ui')return!$project?'r.space_id=:resource AND r.user_id=:actor':throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
+    // User-specific view/layout state is captured only by personal.local-work.
+    // It must never be re-encrypted under a key shared with space members.
+    if($table==='shared_space_ui')throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
     if($table==='shared_data_imports')return!$project?'r.space_id=:resource AND r.actor_id=:actor':throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
     if($table==='shared_data_import_records')return$project?'r.project_id=:resource':
         'r.project_id IS NULL AND EXISTS(SELECT 1 FROM shared_data_imports i WHERE i.id=r.import_id AND i.space_id=:resource AND i.actor_id=:actor)';

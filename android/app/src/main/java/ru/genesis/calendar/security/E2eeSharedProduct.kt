@@ -88,11 +88,11 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     @Synchronized fun history(entityId:String,before:Long=9_007_199_254_740_991L,requestedLimit:Int=5):JSONObject{
         check();E2eeKeys.technical(entityId);client.refresh();check();var limit=requestedLimit
         var response:JSONObject?=null;while(response==null){try{response=client.readProductHistory(entityId,before,limit)}catch(error:Exception){if(error.message!="E2EE_PRODUCT_PAGE_TOO_LARGE"||limit<=1)throw error;limit=(limit/2).coerceAtLeast(1)}}
-        val accepted=checkNotNull(response);E2eeKeys.exact(accepted,setOf("pages","checkpointHash","directoryRevision"));val pages=accepted.getJSONArray("pages");check(pages.length()<=limit){"E2EE_PRODUCT_HISTORY_INVALID"};val versions=JSONArray();var previous=before
+        val accepted=checkNotNull(response);E2eeKeys.exact(accepted,setOf("pages","checkpointHash","directoryRevision"));val pages=accepted.getJSONArray("pages");check(pages.length()<=limit){"E2EE_PRODUCT_HISTORY_INVALID"};val versions=JSONArray();val origins=JSONArray();var previous=before
         for(at in 0 until pages.length()){
             val verified=E2eeProductProofs.verifyPage(pages.getJSONObject(at),client::verifyServiceProof);check();check(verified.entities.length()==1){"E2EE_PRODUCT_HISTORY_INVALID"};val entity=verified.entities.getJSONObject(0)
-            check(entity.getString("entityId")==entityId&&entity.getLong("revision")<previous){"E2EE_PRODUCT_HISTORY_INVALID"};previous=entity.getLong("revision");versions.put(read(entity))
-        };return JSONObject().put("versions",versions).put("nextBefore",if(versions.length()==limit)previous else JSONObject.NULL)
+            check(entity.getString("entityId")==entityId&&entity.getLong("revision")<previous){"E2EE_PRODUCT_HISTORY_INVALID"};previous=entity.getLong("revision");versions.put(read(entity));origins.put(verified.origins.getJSONObject(0))
+        };return JSONObject().put("versions",versions).put("origins",origins).put("nextBefore",if(versions.length()==limit)previous else JSONObject.NULL)
     }
     @Synchronized fun localVersions():JSONArray{
         check();val result=JSONArray()

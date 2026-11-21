@@ -9,7 +9,7 @@ import {overlayPendingSharedVersions} from './shared-local-overlay.ts';
 import {calendarContext,isCivilDate} from '../calendar-context.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
 import {encodeE2eeBytes} from './envelope.ts';
-import type {VerifiedProductProposal} from './product-proofs.ts';
+import type {VerifiedProductProposal,VerifiedProductOrigin} from './product-proofs.ts';
 import {prepareSharedTaskFiles,sharedRequestFileInputs,sharedFileReference,type SharedFileReference} from './shared-file-values.ts';
 import {privateSharedTaskPage,privateSharedCustomFieldMatch} from './shared-query.ts';
 
@@ -21,7 +21,9 @@ export interface SharedLivePorts{
  binding:SharedDomainBinding;actorId:string;online:boolean;current:()=>void;
  context:()=>Promise<SharedLiveContext>;versions:()=>Promise<ProductVersion[]>;
  localVersions?:()=>Promise<PendingProductVersion[]>;
- history?:(entityId:string,before:number)=>Promise<{versions:ProductVersion[];nextBefore:number|null}>;
+ history?:(entityId:string,before:number)=>Promise<{versions:ProductVersion[];origins:VerifiedProductOrigin[];nextBefore:number|null}>;
+ sourceTable?:(table:string)=>Promise<ObjectValue[]>;
+ eventCache?:{load:()=>Promise<ObjectValue[]|null>;save:(events:ObjectValue[])=>Promise<void>};
  completionProposals?:()=>Promise<VerifiedProductProposal[]>;
  approvalPreview?:(entityId:string)=>Promise<{proposalId:string;payloadHash:string;version:ProductVersion}[]>;
  approve?:(review:{proposalId:string;payloadHash:string;version:ProductVersion},intentId:string)=>Promise<unknown>;
@@ -39,7 +41,7 @@ function plain(version:ProductVersion):SharedRecordBody{if(version.deleted||!ver
 export function validateSharedLiveRequest(binding:SharedDomainBinding,input:unknown):SavedRequest{
  exactKeys(input,['protocol','scopeId','id','method','path','body','createdAt','edits','result','complete']);assertTechnical(input.id);
  if(input.protocol!==1||input.scopeId!==binding.scopeId||!['POST','PATCH','PUT','DELETE'].includes(String(input.method))||typeof input.path!=='string'||input.path.length>2048
-  ||typeof input.complete!=='boolean'||typeof input.createdAt!=='string'||!Number.isFinite(Date.parse(input.createdAt))||input.edits!==null&&(!Array.isArray(input.edits)||input.edits.length<1||input.edits.length>100))throw new Error('E2EE_SHARED_REQUEST_INVALID');
+  ||typeof input.complete!=='boolean'||typeof input.createdAt!=='string'||!Number.isFinite(Date.parse(input.createdAt))||input.edits!==null&&(!Array.isArray(input.edits)||input.edits.length>100))throw new Error('E2EE_SHARED_REQUEST_INVALID');
  object(input.body);if(input.result!==null)object(input.result);return input as SavedRequest;
 }
 export function validateSharedLiveContext(input:unknown):SharedLiveContext{
@@ -57,12 +59,14 @@ export function validateSharedLiveContext(input:unknown):SharedLiveContext{
 export class SharedLiveModel{
  #serial:Promise<unknown>=Promise.resolve();
  #completion:VerifiedProductProposal[]=[];
+ #pendingEntities=new Set<string>();
  constructor(private readonly ports:SharedLivePorts){}
  #run<T>(work:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.ports.current();return work();});this.#serial=task;return task;}
  async #snapshot(){const context=await this.ports.context();this.ports.current();const versions=await this.ports.versions();this.ports.current();
   if(context.ownerId.length<1||context.spaceId.length<1||!Array.isArray(context.members)||!Array.isArray(context.invitations))throw new Error('E2EE_SHARED_CONTEXT_INVALID');
   for(const row of versions){if(row.scopeId!==this.ports.binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');if(!row.deleted)validateSharedRecordBody(this.ports.binding,row.kind,row.body,row);}
   const local=this.ports.localVersions?await this.ports.localVersions():[];this.ports.current();
+  this.#pendingEntities=new Set(local.map(row=>row.version.entityId));
   this.#completion=this.ports.completionProposals?await this.ports.completionProposals():[];this.ports.current();
   return{context,versions:overlayPendingSharedVersions(this.ports.binding,versions,local)};
  }
@@ -81,6 +85,8 @@ export class SharedLiveModel{
    result.approvals=(related.shared_task_approvals??[]).map(row=>({userId:row.user_id,displayName:String(context.members.find(member=>member.userId===row.user_id)?.displayName??''),approvedAt:row.approved_at}));
    result.approvalRequired=(result.approvals as unknown[]).length>0;
    result.customFields=Object.fromEntries((related.shared_custom_field_values??[]).map(row=>[String(row.field_id),parse(row.value_json)]));
+   const watched=(related.shared_task_watchers??[]).find(row=>row.user_id===this.ports.actorId),imported=(related.shared_notification_task_state??[]).some(row=>row.imported===1);
+   result.watching=watched?watched.watching===1:!imported&&(source.created_by===this.ports.actorId||source.assignee_id===this.ports.actorId);result.notificationImported=imported;
    const planning=related.shared_task_planning??[];if(planning.length>1)throw new Error('E2EE_SHARED_DOMAIN_INVALID');
    if(planning[0]){const estimates=parse(planning[0].estimates_json);object(estimates);Object.assign(result,estimates,{sprintId:planning[0].sprint_id});}
    // Historical approvals/reviews are display-only. Fresh completion still
@@ -164,6 +170,28 @@ export class SharedLiveModel{
   // change under an unrelated plaintext query/index or leak private filters.
   return privateSharedTaskPage(tasks,url.searchParams.get('sort')??'position');
  }
+ async #events(versions:ProductVersion[],context:SharedLiveContext){
+  if(this.ports.binding.kind!=='project'||!this.ports.eventCache)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+  if(!this.ports.online){const saved=await this.ports.eventCache.load();this.ports.current();if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved;}
+  if(!this.ports.history||!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+  const old=await this.ports.sourceTable('shared_audit_events');this.ports.current();if(old.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');const events:ObjectValue[]=old.map(row=>({id:row.id,action:row.action,objectId:row.object_id,actorId:row.actor_id,createdAt:row.created_at,taskId:row.task_id,boardId:row.board_id,legacy:true}));
+  for(const entity of versions){if(!['project','task','comment','project-comment'].includes(entity.kind))continue;let before=Number.MAX_SAFE_INTEGER,last=before;
+   do{const page=await this.ports.history(entity.entityId,before);this.ports.current();if(page.origins.length!==page.versions.length)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+    for(const [at,version]of page.versions.entries()){const origin=page.origins[at];if(origin.entityId!==version.entityId||origin.revision!==version.revision||version.revision>=last)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');last=version.revision;
+     if(origin.bootstrap)continue;const body=version.deleted?null:plain(version),source=body?.record,time=source?.updated_at??source?.created_at;
+     // A deletion's prior content remains in history, but a removed object is
+     // never turned into a new navigable content preview.
+     if(version.deleted)continue;if(typeof time!=='string'||!Number.isFinite(Date.parse(time)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');
+     const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${this.ports.binding.scopeId}\0${version.entityId}\0${version.revision}\0${origin.operationId}`)));bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes.subarray(0,16),value=>value.toString(16).padStart(2,'0')).join(''),id=`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+     events.push({id,action:version.kind==='comment'?'comment.created':version.kind==='project-comment'?'project.comment_created':`${version.kind}.${origin.action==='create'?'created':origin.action==='complete'?'completed':'updated'}`,objectId:source!.id,actorId:origin.actorId,createdAt:time,taskId:version.kind==='task'?source!.id:source!.task_id??null,boardId:source!.board_id??null,legacy:false});
+     if(events.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');
+    }
+    before=page.nextBefore??0;if(before&&before!==last)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+   }while(before);
+  }
+  const ids=new Set<string>();for(const event of events){assertTechnical(event.id);assertTechnical(event.objectId);if(event.actorId!==null)assertTechnical(event.actorId);if(ids.has(String(event.id))||typeof event.action!=='string'||typeof event.createdAt!=='string'||!Number.isFinite(Date.parse(event.createdAt)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');ids.add(String(event.id));}
+  await this.ports.eventCache.save(events);this.ports.current();return events;
+ }
  async #get(path:string){const url=new URL(path,'https://private.invalid'),{context,versions}=await this.#snapshot(),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
   const list=(kind:ProductKind,table?:string)=>live.filter(row=>row.kind===kind&&(!table||plain(row).table===table)).map(row=>this.#row(row,context));
   if(segments.length===0){const root=this.#find(versions,this.ports.binding.kind,this.ports.binding.resourceId);
@@ -171,6 +199,7 @@ export class SharedLiveModel{
    const raw=url.searchParams.get('filter'),filter=raw?parse(raw):{};object(filter);const page=await this.#page(this.#tasks(versions,context,filter),url);
    return{project:this.#row(root,context),statuses:list('status').filter(row=>row.isChaos!==1),categories:list('category','shared_project_categories'),tasks:page.tasks,taskPage:{total:page.total,hasMore:false,nextCursor:null},members:context.members,customFieldDefinitions:list('custom-field')};
   }
+  if(segments[0]==='events'&&segments.length===1){const events=await this.#events(versions,context),project=this.#row(this.#find(versions,'project',this.ports.binding.resourceId),context),tasks=live.filter(row=>row.kind==='task').map(row=>this.#task(row,versions,context)),comments=live.filter(row=>row.kind==='comment').map(row=>this.#row(row,context));return{events,project,tasks,comments,members:context.members};}
   if(segments[0]==='tasks'){
    if(segments.length===1){const filter=parse(url.searchParams.get('filter')??'{}');object(filter);return this.#page(this.#tasks(versions,context,filter),url);}
    const task=this.#find(versions,'task',segments[1]);if(segments.length===2)return{task:this.#task(task,versions,context)};
@@ -202,8 +231,11 @@ export class SharedLiveModel{
   if(segments.length===3&&segments[2]==='history'&&['mindmaps','custom-fields','templates','tasks'].includes(segments[0])){
    if(!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const kinds:Record<string,ProductKind>={mindmaps:'mindmap','custom-fields':'custom-field',templates:'template',tasks:'task'},kind=kinds[segments[0]],entity=this.#find(versions,kind,segments[1]);
    const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER,page=await this.ports.history(entity.entityId,before);this.ports.current();
-   return{versions:page.versions.map(row=>row.deleted?{id:segments[1],revision:row.revision,deleted:true}:{...(kind==='custom-field'?{field:this.#row(row,context)}:this.#row(row,context)),revision:row.revision}),nextCursor:page.nextBefore};
+   const history:ObjectValue[]=page.versions.map(row=>row.deleted?{id:segments[1],revision:row.revision,deleted:true}:{...(kind==='custom-field'?{field:this.#row(row,context)}:this.#row(row,context)),revision:row.revision});
+   if(kind==='mindmap'&&page.nextBefore===null){if(!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const original=await this.ports.sourceTable('shared_mindmap_versions');this.ports.current();for(const row of original.filter(row=>row.map_id===segments[1]))history.push({id:segments[1],revision:Number(row.revision),document:validateMindmap(parse(row.content)),updatedAt:row.updated_at,schemaVersion:1,historyOrigin:'migration'});}
+   return{versions:history,nextCursor:page.nextBefore};
   }
+  if(segments[0]==='mindmaps'&&segments.length===1)return{maps:list('mindmap').map(row=>({...row,schemaVersion:1}))};
   const collections:Record<string,[ProductKind,string?]>={statuses:['status'],categories:['category','shared_project_categories'],labels:['label'],comments:['project-comment'],mindmaps:['mindmap'],'project-categories':['category','shared_space_project_categories'],'member-categories':['category','shared_member_categories'],'custom-fields':['custom-field'],templates:['template'],views:['view']};
   if(Object.hasOwn(collections,segments[0])){const [kind,table]=collections[segments[0]],rows=list(kind,table);return segments[1]?{[kind]:rows.find(row=>row.id===segments[1])??(()=>{throw new Error('E2EE_PRODUCT_ENTITY_MISSING');})()}:{[segments[0]==='project-categories'||segments[0]==='member-categories'?'categories':segments[0]]:rows};}
   throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
@@ -221,6 +253,15 @@ export class SharedLiveModel{
  }
  async #prepare(request:SavedRequest){
   const {context,versions}=await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
+  if(parts[0]==='mindmaps'&&parts.length===2&&['PUT','DELETE'].includes(request.method)){
+   assertTechnical(parts[1]);const old=versions.find(row=>row.kind==='mindmap'&&row.entityId===`mindmap:${parts[1]}`),expected=old?.revision??0;
+   if(old?.deleted||number(input.expectedRevision)!==expected||request.method==='DELETE'&&!old)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
+   if(Object.keys(input).some(key=>!['expectedRevision','operationId','requestId','schemaVersion','document'].includes(key))||input.schemaVersion!==undefined&&![1,2].includes(Number(input.schemaVersion)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+   const row:SharedContentRecord=old?structuredClone(plain(old).record):{space_id:context.spaceId,id:parts[1],revision:1,content:'',updated_at:request.createdAt,project_id:this.ports.binding.kind==='project'?this.ports.binding.resourceId:null};
+   if(request.method==='PUT'){const document=validateMindmap(input.document);if(document.id!==parts[1]||document.projectId!==row.project_id)throw new Error('E2EE_SHARED_CROSS_SCOPE_REVIEW_REQUIRED');row.content=JSON.stringify(document);}
+   row.revision=expected+1;row.updated_at=request.createdAt;const body=this.#body('mindmap','shared_mindmaps',row),edit=this.#edit(body,expected,request.method==='DELETE'?'delete':old?'update':'create');
+   return{edits:[edit],result:request.method==='DELETE'?{ok:true}:{id:parts[1],revision:expected+1,updatedAt:request.createdAt}};
+  }
   if(parts[0]==='custom-fields'&&parts.length===1&&request.method==='PUT'){
    const draft=this.#fieldInput(input),preview=await this.#fieldPreview(input,versions,context);if(preview.fingerprint!==input.fingerprint||preview.replaceType!==input.replaceType)throw new Error('E2EE_SHARED_PREVIEW_CHANGED');
    const old=versions.find(row=>!row.deleted&&row.kind==='custom-field'&&plain(row).record.id===draft.id),expected=old?.revision??0,replace=preview.replaceType,id=replace?crypto.randomUUID():String(draft.id);
@@ -234,11 +275,17 @@ export class SharedLiveModel{
   if(parts[0]==='tasks'&&(parts.length===1||parts.length===2)){
    const create=parts.length===1&&request.method==='POST',old=create?null:this.#find(versions,'task',parts[1]),body=old?structuredClone(plain(old)):this.#draft('task','shared_tasks',this.#newRecord('shared_tasks',{},context,request.createdAt,crypto.randomUUID()),{shared_task_labels:[],shared_task_dependencies:[],shared_task_planning:[],shared_task_approvals:[],shared_task_reviews:[],shared_custom_field_values:[],shared_task_watchers:[]});
    const expected=old?.revision??0;if(old&&number(input.expectedRevision)!==expected)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
+   if(create&&input.mindmapSource!==undefined){exactKeys(input.mindmapSource,['mapId','nodeId']);assertTechnical(input.mindmapSource.mapId);assertTechnical(input.mindmapSource.nodeId);const source=input.mindmapSource;
+    const converted=versions.find(row=>row.kind==='task'&&!row.deleted&&(plain(row).related.shared_mindmap_conversions??[]).some(reference=>reference.map_id===source.mapId&&reference.node_id===source.nodeId));
+    if(converted)return{edits:[],result:{task:this.#task(converted,versions,context)}};
+    const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${this.ports.binding.scopeId}\0map-conversion\0${source.mapId}\0${source.nodeId}`)));bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes.subarray(0,16),value=>value.toString(16).padStart(2,'0')).join('');body.record.id=`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+    body.related.shared_mindmap_conversions=[{space_id:context.spaceId,map_id:source.mapId,node_id:source.nodeId,project_id:this.ports.binding.resourceId,task_id:body.record.id}];
+   }
    if(request.method==='DELETE'){
     if(versions.some(row=>!row.deleted&&row.parentId===old!.entityId))throw new Error('E2EE_SHARED_SUBTREE_REVIEW_REQUIRED');edits.push(this.#edit(body,expected,'delete'));output={ok:true,id:body.record.id};
    }else{
     const fields:Record<string,string>={title:'title',description:'description',statusId:'status_id',categoryId:'category_id',assigneeId:'assignee_id',dueDate:'due_date',startDate:'start_date',startTime:'start_time',endTime:'end_time',entryType:'entry_type',priority:'priority',parentTaskId:'parent_task_id',position:'position',archivedAt:'archived_at'};
-    const allowed=[...Object.keys(fields),'tags','checklists','labelIds','dependsOnIds','approverIds','approvalRequired','customFields','sprintId','storyPoints','estimateHours','expectedRevision','requestId','completedAt','completedBy','imageData','attachments','removeAttachmentIds'];
+    const allowed=[...Object.keys(fields),'tags','checklists','labelIds','dependsOnIds','approverIds','approvalRequired','customFields','sprintId','storyPoints','estimateHours','expectedRevision','requestId','completedAt','completedBy','imageData','attachments','removeAttachmentIds',...(create?['mindmapSource']:[])];
     if(Object.keys(input).some(key=>!allowed.includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
     for(const [name,column]of Object.entries(fields))if(Object.hasOwn(input,name))body.record[column]=input[name] as SharedContentRecord[string];
     for(const key of ['tags','checklists'] as const)if(Object.hasOwn(input,key))body.record[`${key}_json`]=JSON.stringify(input[key]);
@@ -368,6 +415,9 @@ export class SharedLiveModel{
   else{request={protocol:1,scopeId:this.ports.binding.scopeId,id,method,path,body:held,createdAt:new Date().toISOString(),edits:null,result:null,complete:false};saved={value:request,serial:await this.ports.saveRequest(request,null)};}
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
   if(!request.edits){const prepared=await this.#prepare(request);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}
+  if(request.edits!.length===0){const taskId=(request.result?.task as ObjectValue|undefined)?.id;if(typeof taskId!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',taskId),result={task:this.#task(task,versions,context)};
+   if(this.#pendingEntities.has(task.entityId))return{task:{...result.task,pending:true},pending:true};await this.ports.saveRequest({...request,result,complete:true},saved.serial);this.ports.current();return result;
+  }
   for(const edit of request.edits!)if(edit.kind==='task'&&edit.body!==null){const uploads=sharedRequestFileInputs(edit.body as SharedRecordBody,request.body,id);
    try{for(const upload of uploads){if(!this.ports.stageFile)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');await this.ports.stageFile(upload.reference,upload.bytes);this.ports.current();}}finally{uploads.forEach(upload=>upload.bytes.fill(0));}
   }

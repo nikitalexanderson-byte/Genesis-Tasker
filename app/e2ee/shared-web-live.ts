@@ -7,8 +7,22 @@ import type {SharedDomainBinding} from './shared-domain.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import {exactKeys} from './keys.ts';
 import {E2eeEditorQueue} from './editor-queue.ts';
+import {E2eeFeatureDocument} from './feature-document.ts';
+import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState} from './shared-aggregate.ts';
+import {parseLegacyMigrationJson} from './legacy-json.ts';
 
 const models=new WeakMap<WebPrivateAccount,Map<string,WebSharedLive>>();
+const aggregates=new WeakMap<WebPrivateAccount,SharedAggregateModel>();
+function aggregate(ownerId:string){const account=requirePrivateAccount(ownerId);let value=aggregates.get(account);if(value)return value;
+ const personal=new E2eeFeatureDocument({ownerId,domain:'workspace',objectId:'personal-shared-views-live-v1',validate:input=>validatePersonalSharedState(input,ownerId),seed:async()=>{
+  const original=await account.personal().client.readMigrationOriginal('local-snapshot','private-table:personal.local-work:shared_saved_views');account.requireOpen();
+  try{return seedPersonalSharedState(parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(original.bytes),'E2EE_PRIVATE_SEED_REQUIRED',64*1024*1024),ownerId,await account.personal().client.sharedReadHistory());}finally{original.bytes.fill(0);}
+ }});
+ value=new SharedAggregateModel({actorId:ownerId,current:()=>account.requireOpen(),personal,
+  bindings:async()=>(await bindings(ownerId)).map(row=>({scopeId:row.scopeId,kind:row.kind,resourceId:row.resourceId})),
+  request:async(binding,method,path,body={})=>{const live=await open(ownerId,binding.kind,binding.resourceId);account.requireOpen();if(live.records.binding.scopeId!==binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return live.model.request(method,path,body);},
+ });aggregates.set(account,value);return value;
+}
 class WebSharedLive{
  readonly model:SharedLiveModel;readonly prefix:Promise<string>;
  constructor(readonly account:WebPrivateAccount,readonly records:E2eeSharedRecords){const binding=records.binding;
@@ -16,6 +30,7 @@ class WebSharedLive{
   const contextStore=new E2eeDeviceDocument(account.device,`shared-context:${binding.scopeId}`,value=>{
    exactKeys(value,['scopeId','context']);if(value.scopeId!==binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return{scopeId:binding.scopeId,context:validateSharedLiveContext(value.context)};
   },()=>account.requireOpen());
+  const eventStore=new E2eeDeviceDocument(account.device,`shared-events:${binding.scopeId}`,value=>{exactKeys(value,['scopeId','events']);if(value.scopeId!==binding.scopeId||!Array.isArray(value.events)||value.events.length>10000)throw new Error('E2EE_SHARED_DOMAIN_INVALID');return value as {scopeId:string;events:Record<string,unknown>[]};},()=>account.requireOpen());
   this.model=new SharedLiveModel({binding,actorId:account.ownerId,online:account.mode==='online',current:()=>account.requireOpen(),
    context:async()=>{const saved=await contextStore.load();account.requireOpen();if(account.mode==='offline'){if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved.value.context;}
     const response=await account.shared(binding.scopeId,binding.kind,binding.resourceId).client.readProductContext();account.requireOpen();exactKeys(response,['context','checkpointHash','directoryRevision']);
@@ -24,6 +39,8 @@ class WebSharedLive{
    versions:async()=>{const entities=await records.index(),versions=[];for(const entity of entities){versions.push(await records.read(entity));account.requireOpen();}return versions;},
    localVersions:()=>records.product.localVersions(),
    history:(entityId,before)=>records.product.history(entityId,before),
+   sourceTable:table=>records.sourceTable(table),
+   eventCache:{load:async()=>{const row=await eventStore.load();account.requireOpen();return row?.value.events??null;},save:async events=>{const before=await eventStore.load();account.requireOpen();await eventStore.save({scopeId:binding.scopeId,events},before?.serial??null);account.requireOpen();}},
    completionProposals:async()=>records.product.completionProposals(),
    approvalPreview:entityId=>records.product.approvalPreview(entityId),
    approve:(review,id)=>records.product.approve(review,id),
@@ -64,6 +81,9 @@ export async function privateSharedRequest(ownerId:string,path:string,init:Reque
  const url=new URL(path,'https://private.invalid'),method=(init.method??'GET').toUpperCase();init.signal?.throwIfAborted();
  let body:Record<string,unknown>={};if(init.body!==undefined&&init.body!==null){if(typeof init.body!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const value=JSON.parse(init.body);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_REQUEST_INVALID');body=value;}
  const segments=url.pathname.split('/').filter(Boolean).map(value=>decodeURIComponent(value));if(segments[0]!=='shared')throw new Error('E2EE_SHARED_REQUEST_INVALID');
+ if(['views','overview','inbox','notifications'].includes(segments[1])||segments[1]==='spaces'&&segments[3]==='mindmaps'||segments[1]==='projects'&&segments.length===6&&segments[3]==='tasks'&&['read','watch'].includes(segments[5])||method==='GET'&&(segments[1]==='tasks'&&segments.length===2||segments[1]==='spaces'&&segments[3]==='search'&&segments.length===4)){
+  const result=await aggregate(ownerId).request(method,path,body);requirePrivateAccount(ownerId).requireOpen();init.signal?.throwIfAborted();return result;
+ }
  const run=async(binding:Pick<SharedDomainBinding,'kind'|'resourceId'>,relative:string)=>{
   const live=await open(ownerId,binding.kind,binding.resourceId);init.signal?.throwIfAborted();const result=await live.model.request(method,relative+url.search,body);requirePrivateAccount(ownerId).requireOpen();init.signal?.throwIfAborted();return result;
  };

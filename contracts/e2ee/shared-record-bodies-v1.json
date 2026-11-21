@@ -12,7 +12,7 @@
   "history":["shared_audit_events"],"trash":["shared_trash"],"import":["shared_data_import_records"]
  },
  "related":{
-  "task":["shared_task_labels","shared_task_dependencies","shared_task_planning","shared_task_approvals","shared_task_reviews","shared_custom_field_values","shared_task_watchers","shared_task_attachments","shared_task_images"],
+  "task":["shared_task_labels","shared_task_dependencies","shared_task_planning","shared_task_approvals","shared_task_reviews","shared_custom_field_values","shared_task_watchers","shared_notification_task_state","shared_mindmap_conversions","shared_task_attachments","shared_task_images"],
   "comment":["shared_comment_mentions"],
   "project":["shared_project_labels"],"space":[],"project-comment":[],"status":[],"category":[],"label":[],"mindmap":[],"file":[],"workflow":[],"review-policy":[],"planning":[],"sprint":[],"series":[],"automation":[],"template":[],"custom-field":[],"custom-field-value":[],"view":[],"history":[],"trash":[],"import":[]
  },

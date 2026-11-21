@@ -6,6 +6,7 @@ import {decodeE2eeBytes} from './envelope.ts';
 import type {SignedE2eeCommand,E2eeCommand,WireValue} from './commands.ts';
 
 export type VerifiedProductProposal={proposalId:string;entityId:string;baseRevision:number;operation:ProductMutation;actorId:string;createdAt:string;approvals?:{userId:string;createdAt:string}[]};
+export type VerifiedProductOrigin={entityId:string;revision:number;actorId:string;bootstrap:boolean;action:string;operationId:string};
 type Proof={command:E2eeCommand;actorId:string;proofHash:string};
 const invalid=():never=>{throw new Error('E2EE_PRODUCT_PROOF_INVALID');};
 /** The index is an untrusted server projection. Active heads and completion
@@ -48,7 +49,7 @@ export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeC
    ||!proposal.operation.metadata.approverIds!.includes(proof.actorId))invalid();
   if(!approvals.has(proposal.proposalId))approvals.set(proposal.proposalId,new Set());const users=approvals.get(proposal.proposalId)!;if(users.has(proof.actorId))invalid();users.add(proof.actorId);
  }
- const seen=new Set<string>();for(const row of heads){exactKeys(row,['entityId','revision','proofHash']);const entity=entities.find(value=>value.entityId===row.entityId),proof=proofs.get(String(row.proofHash));
+ const origins:VerifiedProductOrigin[]=[],seen=new Set<string>();for(const row of heads){exactKeys(row,['entityId','revision','proofHash']);const entity=entities.find(value=>value.entityId===row.entityId),proof=proofs.get(String(row.proofHash));
   if(!entity||!proof||seen.has(entity.entityId)||row.revision!==entity.revision)invalid();seen.add(entity.entityId);
   if(proof.command.action==='product-commit'){
    const operation=(proof.command.payload.operations as WireValue[]).map(productMutation).find(row=>row.entityId===entity.entityId);if(!operation||operation.action==='propose-complete'||!matches(operation,entity))invalid();
@@ -60,8 +61,10 @@ export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeC
    if(!item||!matches(item.operation,entity)||entity.authorId!==item.authorId)invalid();
   }else{const proposal=reviewed.get(String(proof.command.payload.proposalId));if(!proposal||proposal.entityId!==entity.entityId||!matches(proposal.operation,entity)
     ||!proposal.operation.metadata.completed||!proposal.operation.metadata.approverIds?.length||proposal.operation.metadata.approverIds.some(user=>!approvals.get(proposal.proposalId)?.has(user)))invalid();}
+  const action=proof.command.action==='product-commit'?(proof.command.payload.operations as unknown as ProductMutation[]).find(row=>row.entityId===entity.entityId)!.action:proof.command.action==='product-approve'?'complete':'baseline';
+  origins.push({entityId:entity.entityId,revision:entity.revision,actorId:proof.actorId,bootstrap:proof.command.action==='product-bootstrap-stage',action,operationId:proof.command.operationId});
  }
- return{entities,proposals:[...reviewed.values()].map(proposal=>({...proposal,approvals:attestations.filter(row=>row.proposalId===proposal.proposalId).map(row=>{if(typeof row.createdAt!=='string'||!Number.isFinite(Date.parse(row.createdAt)))invalid();return{userId:String(row.userId),createdAt:row.createdAt};})})),bootstrap:{bootstrapId:baseline.command.payload.bootstrapId as string,proofHash:baseline.proofHash,expectedCount:baseline.command.payload.expectedCount as number,parts:baseline.command.payload.parts as {partIndex:number;proofHash:string}[]}};
+ return{entities,origins,proposals:[...reviewed.values()].map(proposal=>({...proposal,approvals:attestations.filter(row=>row.proposalId===proposal.proposalId).map(row=>{if(typeof row.createdAt!=='string'||!Number.isFinite(Date.parse(row.createdAt)))invalid();return{userId:String(row.userId),createdAt:row.createdAt};})})),bootstrap:{bootstrapId:baseline.command.payload.bootstrapId as string,proofHash:baseline.proofHash,expectedCount:baseline.command.payload.expectedCount as number,parts:baseline.command.payload.parts as {partIndex:number;proofHash:string}[]}};
 }
 function matches(operation:ProductMutation,entity:ProductEntity){return operation.expectedRevision+1===entity.revision&&operation.kind===entity.kind&&operation.domain===entity.domain
  &&operation.objectId===entity.objectId&&operation.payloadHash===entity.payloadHash&&operation.parentId===entity.parentId&&(operation.action==='delete')===entity.deleted&&samePrivateJson(operation.metadata,entity.metadata);}

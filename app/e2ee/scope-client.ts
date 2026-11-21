@@ -1,6 +1,6 @@
 import { canonicalE2eeValue, e2eeCommandHash, signE2eeCommand, snapshotE2eeValue,verifyE2eeCommand, type SignedE2eeCommand, type WireValue } from './commands.ts';
 import { contentSigningKey, type VerifiedDirectory } from './directory.ts';
-import { E2EE_SUITE, decodeE2eeBytes,encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, verifyE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
+import { E2EE_SUITE, E2EE_DOMAINS, decodeE2eeBytes,encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, verifyE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES, envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile } from './files.ts';
 import { assertTechnical, exactKeys, freshSecret, openRoot, sealRoot, type PublicDeviceKeys } from './keys.ts';
 import { UnlockedWebDevice } from './device-vault.ts';
@@ -10,7 +10,7 @@ export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
   command(packet:SignedE2eeCommand):Promise<Record<string,WireValue>>;
   read(packet:SignedE2eeCommand):Promise<{envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
-    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;context?:unknown;bootstrap?:unknown;part?:unknown;bootstrapProofHash?:string;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];pages?:unknown[];checkpointHash:string;directoryRevision:number}>;
+    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;context?:unknown;history?:unknown;bootstrap?:unknown;part?:unknown;bootstrapProofHash?:string;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];pages?:unknown[];checkpointHash:string;directoryRevision:number}>;
 }
 
 export type ReviewedDeviceRole={deviceId:string;role:'owner'|'writer'|'commenter'|'reader'|null};
@@ -85,7 +85,7 @@ export class E2eeScopeClient {
   /** Includes confirmed chunks and objects added after the last signed retired
    * manifest. A server cannot omit a newer locally observed object during rekey.
    * Per-object CAS avoids a shared mutable index losing concurrent additions. */
-  async #assertKnownHeads(objects:{domain:string;objectId:string;revision:number;payloadHash:string}[]){
+  async #assertKnownHeads(objects:{domain:string;objectId:string;revision:number;payloadHash:string}[],requireSettled=true){
     const directory=this.#open(),prefix=await this.#knownPrefix(directory.generation),byId=new Map<string,typeof objects[number]>();
     for(const row of objects){const id=prefix+await this.#id(row.domain as E2eeContext['domain'],row.objectId);if(byId.has(id))throw new Error('E2EE_MANIFEST_MISMATCH');byId.set(id,row);}
     const ids=await this.#device.vault.listLocal('key-check',prefix);this.#device.requireOpen();
@@ -99,7 +99,7 @@ export class E2eeScopeClient {
     // candidate devices created before confirmed-head records were introduced.
     for(const id of await this.#device.vault.listLocal('outbox','job:')){const record=await this.#device.vault.read('outbox',id);if(!record)throw new Error('E2EE_CORRUPT_OUTBOX');
       try{const job=JSON.parse(decoder.decode(record.value)) as UploadJob;if(job.scopeId!==this.#scopeId||job.generation!==directory.generation)continue;
-        if(!job.complete)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
+        if(!job.complete){if(requireSettled)throw new Error('E2EE_PENDING_SAVE_REQUIRED');continue;}
         for(const item of job.plan){const bytes=await this.#device.vault.read('outbox',item.recordId);if(!bytes)throw new Error('E2EE_CORRUPT_OUTBOX');
           try{const envelope=validateE2eeEnvelope(JSON.parse(decoder.decode(bytes.value))),head=byId.get(prefix+await this.#id(envelope.context.domain,envelope.context.objectId));
             if(await envelopePayloadHash(envelope)!==item.hash||!head||head.revision<envelope.context.revision||head.revision===envelope.context.revision&&head.payloadHash!==item.hash)throw new Error('E2EE_REMOTE_ROLLBACK');
@@ -331,7 +331,7 @@ export class E2eeScopeClient {
     const sealed=current.sealedHeads;if(!sealed||context.cryptoEpoch>sealed.cryptoEpoch)throw new Error('E2EE_UNSEALED_HISTORY');
     if(!head||head.revision!==context.revision||head.payloadHash!==payloadHash)throw new Error('E2EE_UNSEALED_HISTORY');
   }
-  async read(domain:E2eeContext['domain'],objectId:string):Promise<{bytes:Uint8Array;filename:string;mediaType:string;revision:number}|null> {
+  async read(domain:E2eeContext['domain'],objectId:string,expected?:{revision:number;payloadHash:string}):Promise<{bytes:Uint8Array;filename:string;mediaType:string;revision:number}|null> {
     this.#open();const id=await this.#id(domain,objectId),floorRecord=await this.#device.vault.read('key-check',`floor:${id}`);
     let floor:{revision:number;hash:string}|null=null;
     try{if(floorRecord)floor=JSON.parse(decoder.decode(floorRecord.value));}finally{floorRecord?.value.fill(0);}
@@ -340,6 +340,7 @@ export class E2eeScopeClient {
     const context=envelope.context,directory=this.#history.get(epochKey({cryptoEpoch:context.cryptoEpoch,securityEpoch:context.securityEpoch,keyId:context.keyId,generation:context.dataGeneration}));
     if(!directory||context.ownerId!==this.#owner||context.scopeId!==this.#scopeId||context.domain!==domain||context.objectId!==objectId)throw new Error('E2EE_CONTEXT_MISMATCH');
     const payloadHash=await envelopePayloadHash(envelope);
+    if(expected&&(context.revision!==expected.revision||payloadHash!==expected.payloadHash))throw new Error('E2EE_MANIFEST_MISMATCH');
     if(floor&&(context.revision<floor.revision||context.revision===floor.revision&&payloadHash!==floor.hash))throw new Error('E2EE_REMOTE_ROLLBACK');
     const root=this.#roots.get(context.keyId);if(!root)throw new Error('E2EE_KEY_UNAVAILABLE');
     await this.#historicalHead(envelope);
@@ -382,11 +383,31 @@ export class E2eeScopeClient {
       await this.refresh();this.#device.requireOpen();
     }throw new Error('E2EE_DIRECTORY_CONFLICT');
   }
+  /** Catalogue completeness is checked against protected observations and the
+   * signed migration/retirement floors. A fresh device still cannot prove that
+   * an otherwise malicious server disclosed all previously unseen objects. */
+  async contentHeads(){
+    const directory=this.#open();if(!this.#refreshed||!['active','retirement'].includes(directory.state))throw new Error('E2EE_REFRESH_REQUIRED');
+    const objects:{domain:string;objectId:string;revision:number;payloadHash:string}[]=[];let manifestHash:string|null=null,count=-1;
+    do{const response=await this.#readPacket('content-heads',{offset:objects.length,manifestHash});this.#device.requireOpen();
+      if(!Number.isSafeInteger(response.objectCount)||Number(response.objectCount)<0||Number(response.objectCount)>10000||!Array.isArray(response.objects)||response.objects.length>50||typeof response.manifestHash!=='string')throw new Error('E2EE_MANIFEST_MISMATCH');
+      decodeE2eeBytes(response.manifestHash,32);if(manifestHash!==null&&(manifestHash!==response.manifestHash||count!==response.objectCount))throw new Error('E2EE_MANIFEST_MISMATCH');
+      manifestHash=response.manifestHash;count=response.objectCount!;
+      for(const row of response.objects){exactKeys(row,['domain','objectId','revision','payloadHash']);assertTechnical(row.objectId);decodeE2eeBytes(row.payloadHash,32);
+        if(!E2EE_DOMAINS.includes(row.domain as E2eeContext['domain'])||!Number.isSafeInteger(row.revision)||row.revision<1)throw new Error('E2EE_MANIFEST_MISMATCH');objects.push({...row});}
+      if(objects.length>count||response.objects.length===0&&objects.length<count)throw new Error('E2EE_MANIFEST_MISMATCH');
+    }while(objects.length<count);
+    if(await objectManifestHash(objects)!==manifestHash)throw new Error('E2EE_MANIFEST_MISMATCH');await this.#assertKnownHeads(objects,false);
+    const floors=await this.#sealedHeads(),byId=new Map(objects.map(row=>[`${row.domain}\0${row.objectId}`,row]));
+    for(const [id,floor]of floors??[]){const row=byId.get(id);if(!row||row.revision<floor.revision||row.revision===floor.revision&&row.payloadHash!==floor.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');}
+    this.#device.requireOpen();if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');return{objects,manifestHash:manifestHash!,objectCount:count};
+  }
   async readProductIndex(after='',limit=50){if(after)assertTechnical(after);if(!Number.isSafeInteger(limit)||limit<1||limit>50)throw new Error('E2EE_INVALID_LIMIT');
     return this.#readPacket('product-index',{after,limit});}
   async readStoicheionState():Promise<unknown>{return this.#readPacket('stoicheion-state',{});}
   async readBootstrapState(afterPart=-1){if(!Number.isInteger(afterPart)||afterPart< -1||afterPart>255)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-bootstrap-state',{afterPart});}
   async readProductContext(){return this.#readPacket('product-context',{});}
+  async sharedReadHistory(){const result=await this.#readPacket('shared-read-history',{});exactKeys(result,['history','checkpointHash','directoryRevision']);return result.history;}
   async readProductHistory(entityId:string,before:number,limit=5){assertTechnical(entityId);if(!Number.isSafeInteger(before)||before<1||!Number.isInteger(limit)||limit<1||limit>10)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-history',{entityId,before,limit});}
   async readAdvicePolicy():Promise<unknown>{return this.#readPacket('advice-policy',{});}
   async originalMigrationManifest(){
@@ -394,6 +415,12 @@ export class E2eeScopeClient {
     if(!sealed)throw new Error('E2EE_MIGRATION_PROOF_REQUIRED');const response=await this.#readPacket('sealed-heads',{cryptoEpoch:0});
     if(!response.objects||response.objects.length!==sealed.count||await objectManifestHash(response.objects)!==sealed.hash)throw new Error('E2EE_MANIFEST_MISMATCH');
     this.#device.requireOpen();return{manifestHash:sealed.hash,objectCount:sealed.count};
+  }
+  async readMigrationOriginal(domain:E2eeContext['domain'],objectId:string){
+    this.#open();const frame=[...this.#directoryFrames.values()].find(frame=>frame.state==='active'&&frame.sealedHeads?.cryptoEpoch===0),sealed=frame?.sealedHeads;if(!sealed)throw new Error('E2EE_MIGRATION_PROOF_REQUIRED');
+    const response=await this.#readPacket('sealed-heads',{cryptoEpoch:0});this.#device.requireOpen();if(!response.objects||response.objects.length!==sealed.count||await objectManifestHash(response.objects)!==sealed.hash)throw new Error('E2EE_MANIFEST_MISMATCH');
+    const reference=response.objects.find(row=>row.domain===domain&&row.objectId===objectId);if(!reference||reference.revision!==1)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');
+    const opened=await this.read(domain,objectId,reference);if(!opened)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');return opened;
   }
   async authorizeMembership(intentId:string,changeHash:string){
     assertTechnical(intentId);decodeE2eeBytes(changeHash,32);const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);

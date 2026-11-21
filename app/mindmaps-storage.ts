@@ -1,5 +1,6 @@
 import { GenesisApiError, personalDocumentAccess, sharedMindmapDocumentAccess,usesPrivateProductStorage, type GenesisTask } from "./cloud-sync";
 import {E2eeMindmapRepository} from './e2ee/mindmaps-product';
+import {E2eeSharedMindmapRepository} from './e2ee/shared-mindmaps-product';
 import { mapId, validateMindmap, type Mindmap, type MapView } from "./mindmaps-model";
 import { currentFeatureAccess, requireQuotaGrowth } from './feature-access';
 
@@ -14,7 +15,7 @@ export const MINDMAPS_ENABLED = process.env.NEXT_PUBLIC_GENESIS_MINDMAPS === "tr
 
 /** Each tab has its own encrypted draft; a tab can never overwrite another tab's unsent text. */
 export class MindmapRepository {
-  private product:E2eeMindmapRepository|null;
+  private product:E2eeMindmapRepository|E2eeSharedMindmapRepository|null;
   private access: Access;
   private prefix: string;
   private tab: string;
@@ -30,7 +31,7 @@ export class MindmapRepository {
   private journalListeners = new Set<() => void>();
   subscribeJournal(listener: () => void) { if(this.product)return this.product.subscribeJournal(listener);this.journalListeners.add(listener); return () => { this.journalListeners.delete(listener); }; }
   constructor(private userId: string, private spaceId?: string,ports?:{storage?:Storage;access?:Access}) {
-    this.product=!spaceId&&usesPrivateProductStorage(userId)?new E2eeMindmapRepository(userId):null;
+    this.product=usesPrivateProductStorage(userId)?spaceId?new E2eeSharedMindmapRepository(userId,spaceId):new E2eeMindmapRepository(userId):null;
     this.envelopeVersion = spaceId ? 1 : 2;
     this.storage=ports?.storage??globalThis.localStorage;
     this.access = ports?.access??(spaceId ? sharedMindmapDocumentAccess(userId, spaceId) : personalDocumentAccess(userId));

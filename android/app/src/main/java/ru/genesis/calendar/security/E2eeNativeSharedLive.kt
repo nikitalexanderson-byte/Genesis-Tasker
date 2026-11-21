@@ -16,6 +16,12 @@ import ru.genesis.calendar.ui.NativeAdviceProductRuntime
  * credentials, arbitrary endpoints, or a generic native storage capability. */
 internal class E2eeNativeSharedLive(private val context:Context,private val account:E2eeProductAccount){
     private val mutex=Mutex();private val trust=E2eeSharedTrust(account);private val opened=mutableMapOf<String,Live>()
+    private var aggregateSeed:JSONObject?=null
+    private fun validatePersonal(value:JSONObject):JSONObject{
+        E2eeKeys.exact(value,setOf("protocol","ownerId","views","requests","readFlags","watching"));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId&&value.getJSONArray("views").length()<=10000&&value.getJSONArray("requests").length()<=10000&&value.getJSONObject("readFlags").length()<=100000&&value.getJSONObject("watching").length()<=100000){"E2EE_SHARED_VIEW_INVALID"};return JSONObject(value.toString())
+    }
+    private val aggregatePersonal by lazy{E2eeFeatureDocument(account,"workspace","personal-shared-views-live-v1",::validatePersonal,{aggregateSeed?.let{JSONObject(it.toString())}?:error("E2EE_PRIVATE_SEED_REQUIRED")},::current)}
+    private val aggregateRuntime=NativeAdviceProductRuntime(context,"shared-aggregate")
     @Volatile var cachedPendingCount=0;private set
     private fun current(){account.requireOpen()}
     private inner class Live(val records:E2eeSharedRecords){
@@ -24,10 +30,11 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         val runtime=NativeAdviceProductRuntime(context,"shared-product")
         private fun validateRequest(value:JSONObject):JSONObject{
             E2eeKeys.exact(value,setOf("protocol","scopeId","id","method","path","body","createdAt","edits","result","complete"));check(value.getInt("protocol")==1&&value.getString("scopeId")==binding.scopeId&&value.getString("method") in setOf("POST","PATCH","PUT","DELETE")&&value.getString("path").length<=2048&&value.get("complete") is Boolean){"E2EE_SHARED_REQUEST_INVALID"}
-            E2eeKeys.technical(value.getString("id"));value.getJSONObject("body");java.time.Instant.parse(value.getString("createdAt"));if(!value.isNull("edits"))check(value.getJSONArray("edits").length() in 1..100){"E2EE_SHARED_REQUEST_INVALID"};if(!value.isNull("result"))value.getJSONObject("result");return JSONObject(value.toString())
+            E2eeKeys.technical(value.getString("id"));value.getJSONObject("body");java.time.Instant.parse(value.getString("createdAt"));if(!value.isNull("edits"))check(value.getJSONArray("edits").length() in 0..100){"E2EE_SHARED_REQUEST_INVALID"};if(!value.isNull("result"))value.getJSONObject("result");return JSONObject(value.toString())
         }
         fun request(id:String):E2eeDeviceDocument{E2eeKeys.technical(id);return E2eeDeviceDocument(account.device,prefix+id,::validateRequest,::current)}
         private val metadata=E2eeDeviceDocument(account.device,"shared-context:${binding.scopeId}",{value->E2eeKeys.exact(value,setOf("scopeId","context"));check(value.getString("scopeId")==binding.scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};value.getJSONObject("context");value},::current)
+        private val eventStore=E2eeDeviceDocument(account.device,"shared-events:${binding.scopeId}",{value->E2eeKeys.exact(value,setOf("scopeId","events"));check(value.getString("scopeId")==binding.scopeId&&value.getJSONArray("events").length()<=10000){"E2EE_SHARED_DOMAIN_INVALID"};value},::current)
         suspend fun execute(method:String,path:String,body:JSONObject,resumeId:String?=null):JSONObject{
             val heads=linkedMapOf<String,JSONObject>()
             suspend fun call(name:String,payload:JSONObject):Any{current();return when(name){
@@ -37,6 +44,9 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 "version"->{E2eeKeys.exact(payload,setOf("entityId"));records.read(heads[payload.getString("entityId")]?:error("E2EE_PRODUCT_ENTITY_MISSING"))}
                 "localVersions"->{E2eeKeys.exact(payload,emptySet());records.product.localVersions()}
                 "history"->{E2eeKeys.exact(payload,setOf("entityId","before"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.history(payload.getString("entityId"),E2eeCommands.integer(payload.get("before"),1))}
+                "sourceTable"->{E2eeKeys.exact(payload,setOf("table"));check(payload.getString("table") in setOf("shared_audit_events","shared_mindmap_versions")){"E2EE_SOURCE_PATH_FORBIDDEN"};records.sourceTable(payload.getString("table"))}
+                "eventLoad"->{E2eeKeys.exact(payload,emptySet());eventStore.load()?.value?.getJSONArray("events")?:JSONObject.NULL}
+                "eventSave"->{E2eeKeys.exact(payload,setOf("events"));val old=eventStore.load();eventStore.save(JSONObject().put("scopeId",binding.scopeId).put("events",payload.getJSONArray("events")),old?.serial);JSONObject().put("saved",true)}
                 "completionProposals"->{E2eeKeys.exact(payload,emptySet());records.product.completionProposals()}
                 "approvalPreview"->{E2eeKeys.exact(payload,setOf("entityId"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.approvalPreview(payload.getString("entityId"))}
                 "approve"->{E2eeKeys.exact(payload,setOf("review","intentId"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.approve(payload.getJSONObject("review"),payload.getString("intentId"))}
@@ -74,6 +84,20 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         val rows=trust.list();val candidate=(0 until rows.length()).map{rows.getJSONObject(it)}.singleOrNull{it.getString("kind")==kind&&it.getString("resourceId")==resourceId}?:error("E2EE_SHARED_FINGERPRINT_REQUIRED")
         val id=candidate.getString("scopeId");trust.open(id);current();return opened.getOrPut(id){Live(E2eeSharedRecords(context,account,id,kind,resourceId))}
     }
+    private suspend fun aggregate(method:String,path:String,body:JSONObject):JSONObject{
+        suspend fun call(name:String,payload:JSONObject):Any{current();return when(name){
+            "bindings"->{E2eeKeys.exact(payload,emptySet());val result=JSONArray();for(row in bindings())result.put(JSONObject().put("scopeId",row.get("scopeId")).put("kind",row.get("kind")).put("resourceId",row.get("resourceId")));result}
+            "scopedRequest"->{E2eeKeys.exact(payload,setOf("binding","method","path","body"));val binding=payload.getJSONObject("binding");E2eeKeys.exact(binding,setOf("scopeId","kind","resourceId"));val live=open(binding.getString("kind"),binding.getString("resourceId"));check(live.binding.scopeId==binding.getString("scopeId")){"E2EE_SCOPE_BINDING_MISMATCH"};live.execute(payload.getString("method"),payload.getString("path"),payload.getJSONObject("body"))}
+            "personalRead"->{E2eeKeys.exact(payload,if(payload.has("seed"))setOf("seed")else emptySet());if(payload.has("seed"))aggregateSeed=validatePersonal(payload.getJSONObject("seed"));try{aggregatePersonal.read()}finally{aggregateSeed=null}}
+            "readHistorySeed"->{E2eeKeys.exact(payload,emptySet());check(!account.offline){"E2EE_ONLINE_REQUIRED"};account.client.sharedReadHistory()}
+            "personalSeed"->{E2eeKeys.exact(payload,emptySet());check(!account.offline){"E2EE_ONLINE_REQUIRED"};val original=account.client.readMigrationOriginal("local-snapshot","private-table:personal.local-work:shared_saved_views")
+                try{check(original.revision==1L){"E2EE_PRIVATE_SEED_REQUIRED"};E2eeFileManifestJson.readPrivateDocument(original.bytes)}finally{original.bytes.fill(0)}}
+            "personalWrite"->{E2eeKeys.exact(payload,setOf("document"));aggregatePersonal.write(validatePersonal(payload.getJSONObject("document")))}
+            "personalFlush"->{E2eeKeys.exact(payload,emptySet());aggregatePersonal.flush()}
+            else->error("E2EE_SHARED_REQUEST_INVALID")
+        }.also{current()}}
+        return aggregateRuntime.execute(JSONObject().put("protocol",1).put("mode","shared-aggregate-v1").put("actorId",account.ownerId).put("method",method).put("path",path).put("body",body),::current,::call)
+    }
     private fun pendingLocked(projectId:String?=null):List<JSONObject>{
         val result=mutableListOf<JSONObject>()
         for(binding in bindings())if(projectId==null||binding.getString("kind")=="project"&&binding.getString("resourceId")==projectId){val live=open(binding.getString("kind"),binding.getString("resourceId"))
@@ -88,6 +112,7 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         for(item in pendingLocked()){val request=item.getJSONObject("request");open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),request.getString("id"));current();count++;cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)};count}}
     suspend fun request(method:String,path:String,body:JSONObject?):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
         current();val uri=Uri.parse(path);val parts=uri.pathSegments;check(parts.firstOrNull()=="shared"){"E2EE_SHARED_REQUEST_INVALID"};val query=uri.encodedQuery?.let{"?$it"}?:"";val input=body?.let{JSONObject(it.toString())}?:JSONObject()
+        if(parts.getOrNull(1) in setOf("views","overview","inbox","notifications")||parts.getOrNull(1)=="spaces"&&parts.getOrNull(3)=="mindmaps"||parts.size==6&&parts[1]=="projects"&&parts[3]=="tasks"&&parts[5] in setOf("read","watch")||method=="GET"&&(parts.size==2&&parts[1]=="tasks"||parts.size==4&&parts[1]=="spaces"&&parts[3]=="search"))return@withLock aggregate(method,path,input)
         if(method=="GET"&&parts.getOrNull(1)=="tasks"&&(parts.size==4&&parts[3]=="image"||parts.size==5&&parts[3]=="attachments")){
             for(binding in bindings())if(binding.getString("kind")=="project"){val live=open("project",binding.getString("resourceId"));val entities=live.records.index()
                 if((0 until entities.length()).any{entities.getJSONObject(it).let{row->row.getString("entityId")=="task:${parts[2]}"&&row.getString("kind")=="task"&&!row.getBoolean("deleted")}})

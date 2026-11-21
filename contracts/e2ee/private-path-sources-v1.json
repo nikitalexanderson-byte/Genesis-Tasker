@@ -154,7 +154,6 @@
         "shared_custom_fields",
         "shared_custom_field_versions",
         "shared_saved_views",
-        "shared_space_ui",
         "shared_data_imports",
         "shared_data_import_records",
         "shared_template_sources",
@@ -196,7 +195,13 @@
   "tables": [
     {
       "table": "shared_member_categories",
-      "columns": ["id", "space_id", "title", "permissions_json", "revision"]
+      "columns": [
+        "id",
+        "space_id",
+        "title",
+        "permissions_json",
+        "revision"
+      ]
     },
     {
       "table": "shared_audit_events",

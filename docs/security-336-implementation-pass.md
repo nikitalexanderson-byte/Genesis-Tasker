@@ -8,6 +8,40 @@ never call it independent human assurance. Historical human-review gates below
 are superseded. Full coverage/recovery/upgrade and all technical acceptance stay.
 Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
+## Shared aggregate queries, histories and maps (candidate, no QA)
+
+Added a common web/native aggregate model for global task queries, saved-view
+filters, civil-week/calendar-month relative dates, private/shared saved views,
+view options and space search. Personal view content seeds only from its own
+immutable migration table. Removed the duplicate shared_space_ui source from
+space.content: that owner-only content remains in personal.local-work and must
+not be encrypted under a space-member key.
+
+Added immutable migration-original reads bound directly to the signed original
+manifest, plus historical proof origins (actor/action/operation) on web/native.
+Project notification feeds compose old audit content and verified new business
+histories. Aggregate overview/unread counts derive actual content/read state;
+read flags and watch overrides are a separate encrypted personal document,
+seeded from bounded owner-only old technical read/watch metadata. Device-only
+feed caches support offline reads after a successful authenticated capture.
+Notification preference parity, due/approval-generated events and external
+delivery remain unfinished; do not claim those channels work.
+
+Added shared map model upserts/history and the actual web/native editor adapters.
+Scope resolution distinguishes space-owned maps from project-owned maps; cross-
+scope changes refuse until the reviewed transfer transaction is implemented.
+Full new map intents, views and conversions persist under the new device root.
+Old native conversion journals remain inert retained history, never auto-replayed.
+Map-to-task conversion retains its source association and uses a deterministic
+content identity for idempotency; an existing verified conversion is returned
+without fabricating another creation. Native map quick approval now displays
+an exact proposal review before signing. Shared conflict resolution, old local
+draft projection, all advanced surface parity and transfer acceptance remain.
+
+All changes are uncompiled candidate code. No tests/typecheck/lint/build/CI,
+push/deploy/device actions ran. Accepted coverage9/20, incumbent3.3.5/149 and all
+rollout gates are unchanged. The complete original scope is still outstanding.
+
 ## Content archives and native SAF continuation (candidate, no QA)
 
 Added a web/native content-only archive codec with read-back verified new-root

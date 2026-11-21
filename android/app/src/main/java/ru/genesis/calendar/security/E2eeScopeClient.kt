@@ -395,7 +395,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         val heads = sealedHeads() ?: return null
         return (0 until heads.length()).map { heads.getJSONObject(it) }.firstOrNull { it.get("domain") == domain && it.get("objectId") == objectId }
     }
-    @Synchronized fun read(domain: String, objectId: String): Opened? {
+    @Synchronized fun read(domain: String, objectId: String,expected:JSONObject?=null): Opened? {
         current(); val key = id(domain, objectId); val floor = device.vault.read("key-check", "floor:$key")
         val previous = try { floor?.let { JSONObject(it.bytes.toString(Charsets.UTF_8)) } } finally { floor?.bytes?.fill(0) }
         val envelope = envelope(domain, objectId)
@@ -408,6 +408,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         check(frame != null && context.get("ownerId") == ownerId && context.get("scopeId") == scopeId
             && context.get("domain") == domain && context.get("objectId") == objectId) { "E2EE_CONTEXT_MISMATCH" }
         val payloadHash = E2eeEnvelope.payloadHash(envelope)
+        check(expected==null||context.getLong("revision")==expected.getLong("revision")&&payloadHash==expected.getString("payloadHash")){"E2EE_MANIFEST_MISMATCH"}
         check(previous == null || context.getLong("revision") > previous.getLong("revision")
             || context.getLong("revision") == previous.getLong("revision") && payloadHash == previous.get("hash")) { "E2EE_REMOTE_ROLLBACK" }
         val root = roots[context.getString("keyId")] ?: throw IllegalStateException("E2EE_KEY_UNAVAILABLE")
@@ -486,12 +487,19 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     @Synchronized fun readStoicheionState():JSONObject=readPacket("stoicheion-state",JSONObject())
     @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..255){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",afterPart))}
     @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject())
+    @Synchronized fun sharedReadHistory():JSONObject{val result=readPacket("shared-read-history",JSONObject());E2eeKeys.exact(result,setOf("history","checkpointHash","directoryRevision"));return result.getJSONObject("history")}
     @Synchronized fun readProductHistory(entityId:String,before:Long,limit:Int=5):JSONObject{E2eeKeys.technical(entityId);check(before in 1..9_007_199_254_740_991L&&limit in 1..10){"E2EE_INVALID_LIMIT"};return readPacket("product-history",JSONObject().put("entityId",entityId).put("before",before).put("limit",limit))}
     @Synchronized fun readAdvicePolicy():JSONObject=readPacket("advice-policy",JSONObject())
     @Synchronized fun originalMigrationManifest():JSONObject{
         current();val sealed=directoryFrames.values.firstOrNull{it.state=="active"&&it.sealedHeads?.cryptoEpoch==0L}?.sealedHeads?:error("E2EE_MIGRATION_PROOF_REQUIRED")
         val response=readPacket("sealed-heads",JSONObject().put("cryptoEpoch",0));val objects=response.getJSONArray("objects");check(objects.length()==sealed.count&&E2eeFiles.objectManifestHash(objects)==sealed.hash){"E2EE_MANIFEST_MISMATCH"};device.requireOpen()
         return JSONObject().put("manifestHash",sealed.hash).put("objectCount",sealed.count)
+    }
+    @Synchronized fun readMigrationOriginal(domain:String,objectId:String):Opened{
+        current();val sealed=directoryFrames.values.firstOrNull{it.state=="active"&&it.sealedHeads?.cryptoEpoch==0L}?.sealedHeads?:error("E2EE_MIGRATION_PROOF_REQUIRED")
+        val response=readPacket("sealed-heads",JSONObject().put("cryptoEpoch",0));val objects=response.getJSONArray("objects");check(objects.length()==sealed.count&&E2eeFiles.objectManifestHash(objects)==sealed.hash){"E2EE_MANIFEST_MISMATCH"};device.requireOpen()
+        val reference=(0 until objects.length()).map{objects.getJSONObject(it)}.singleOrNull{it.getString("domain")==domain&&it.getString("objectId")==objectId}?:error("E2EE_PRIVATE_SEED_REQUIRED")
+        check(reference.getLong("revision")==1L){"E2EE_PRIVATE_SEED_REQUIRED"};return read(domain,objectId,reference)?:error("E2EE_PRIVATE_SEED_REQUIRED")
     }
     @Synchronized fun authorizeMembership(intentId:String,changeHash:String):JSONObject{
         E2eeKeys.technical(intentId);E2eeEnvelope.decode(changeHash,32);val value=current();val own=value.devices[device.deviceId]

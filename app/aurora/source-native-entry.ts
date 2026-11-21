@@ -28,6 +28,7 @@ import type {PrivatePathAdapter} from '../e2ee/migration-sources';
 import {SharedLiveModel,validateSharedLiveContext,type SavedSharedRequest} from '../e2ee/shared-live';
 import type {ProductEdit,ProductVersion} from '../e2ee/shared-product';
 import type {SharedDomainBinding} from '../e2ee/shared-domain';
+import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState,type PersonalSharedState} from '../e2ee/shared-aggregate';
 
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
@@ -47,6 +48,20 @@ async function run(encoded:string){
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    if(value.mode==='shared-aggregate-v1'){
+      exactKeys(value,['protocol','mode','actorId','method','path','body']);if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.method!=='string'||typeof value.path!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');
+      const actorId=value.actorId,invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'shared-aggregate-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
+      const view=(input:unknown)=>{exactKeys(input,['document','base','pending','remoteRevision','conflict']);const result=input as FeatureDocumentView<PersonalSharedState>;result.document=validatePersonalSharedState(result.document,actorId);result.base=validatePersonalSharedState(result.base,actorId);if(result.conflict)result.conflict.document=validatePersonalSharedState(result.conflict.document,actorId);return result;};
+      const model=new SharedAggregateModel({actorId,current,
+        bindings:async()=>await invoke('bindings') as SharedDomainBinding[],
+        request:async(binding,method,path,body={})=>await invoke('scopedRequest',{binding,method,path,body}) as Record<string,unknown>,
+        personal:{read:async()=>{try{return view(await invoke('personalRead'));}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_PRIVATE_SEED_REQUIRED')throw error;
+          const seed=seedPersonalSharedState(await invoke('personalSeed'),actorId,await invoke('readHistorySeed'));return view(await invoke('personalRead',{seed}));}},
+          write:async input=>view(await invoke('personalWrite',{document:validatePersonalSharedState(input,actorId)})),
+          flush:async()=>view(await invoke('personalFlush')),
+          resolve:async()=>{throw new Error('E2EE_CONFLICT_REVIEW_REQUIRED');}},
+      });const result=await model.request(value.method,value.path,value.body as Record<string,unknown>);current();send({job,kind:'shared-aggregate-complete',value:result});return;
+    }
     if(value.mode==='shared-product-v1'){
       exactKeys(value,['protocol','mode','binding','actorId','online','method','path','body','resumeId']);
       if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.method!=='string'||typeof value.path!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');
@@ -55,7 +70,9 @@ async function run(encoded:string){
       const model=new SharedLiveModel({binding:value.binding as SharedDomainBinding,actorId:value.actorId,online:value.online,current,
         context:async()=>validateSharedLiveContext(await invoke('context')),
         localVersions:async()=>await invoke('localVersions') as import('../e2ee/shared-product.ts').PendingProductVersion[],
-        history:async(entityId,before)=>await invoke('history',{entityId,before}) as {versions:ProductVersion[];nextBefore:number|null},
+          history:async(entityId,before)=>await invoke('history',{entityId,before}) as {versions:ProductVersion[];origins:import('../e2ee/product-proofs.ts').VerifiedProductOrigin[];nextBefore:number|null},
+          sourceTable:async table=>await invoke('sourceTable',{table}) as Record<string,unknown>[],
+          eventCache:{load:async()=>await invoke('eventLoad') as Record<string,unknown>[]|null,save:async events=>{await invoke('eventSave',{events});}},
         completionProposals:async()=>await invoke('completionProposals') as import('../e2ee/product-proofs.ts').VerifiedProductProposal[],
         approvalPreview:async entityId=>await invoke('approvalPreview',{entityId}) as {proposalId:string;payloadHash:string;version:ProductVersion}[],
         approve:(review,intentId)=>invoke('approve',{review,intentId}),

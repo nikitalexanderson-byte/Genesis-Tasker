@@ -7,7 +7,7 @@ import java.time.Instant
 /** An untrusted index cannot turn an arbitrary upload into an active object,
  * replace an attestation or claim approvals for another encrypted version. */
 internal object E2eeProductProofs{
-    class Page(val entities:JSONArray,val proposals:JSONArray,val bootstrap:JSONObject){override fun toString()="E2eeProductProofs.Page([redacted])"}
+    class Page(val entities:JSONArray,val proposals:JSONArray,val bootstrap:JSONObject,val origins:JSONArray){override fun toString()="E2eeProductProofs.Page([redacted])"}
     private fun rows(value:JSONArray)=(0 until value.length()).map{value.getJSONObject(it)}
     private fun matches(operation:JSONObject,entity:JSONObject)=operation.getLong("expectedRevision")+1==entity.getLong("revision")&&listOf("kind","domain","objectId","payloadHash","parentId").all{operation.get(it)==entity.get(it)}
         &&(operation.getString("action")=="delete")==entity.getBoolean("deleted")&&E2eeProductJson.same(operation.get("metadata"),entity.get("metadata"))
@@ -44,7 +44,7 @@ internal object E2eeProductProofs{
                 &&payload.getLong("baseRevision")==proposal.getLong("baseRevision")&&payload.get("payloadHash")==operation.get("payloadHash")&&row.get("payloadHash")==operation.get("payloadHash")
                 &&actor in E2eeProductContract.ids(operation.getJSONObject("metadata").getJSONArray("approverIds"))&&approvals.getOrPut(id){mutableSetOf()}.add(actor)){"E2EE_PRODUCT_PROOF_INVALID"}
         }
-        val seen=mutableSetOf<String>();for(row in heads){E2eeKeys.exact(row,setOf("entityId","revision","proofHash"));val entity=entities[row.getString("entityId")]?:error("E2EE_PRODUCT_PROOF_INVALID");val proof=proofs[row.getString("proofHash")]?:error("E2EE_PRODUCT_PROOF_INVALID");val command=proof.getJSONObject("command")
+        val origins=JSONArray();val seen=mutableSetOf<String>();for(row in heads){E2eeKeys.exact(row,setOf("entityId","revision","proofHash"));val entity=entities[row.getString("entityId")]?:error("E2EE_PRODUCT_PROOF_INVALID");val proof=proofs[row.getString("proofHash")]?:error("E2EE_PRODUCT_PROOF_INVALID");val command=proof.getJSONObject("command")
             check(seen.add(row.getString("entityId"))&&row.getLong("revision")==entity.getLong("revision")){"E2EE_PRODUCT_PROOF_INVALID"}
             if(command.get("action")=="product-commit"){val operation=rows(command.getJSONObject("payload").getJSONArray("operations")).singleOrNull{it.get("entityId")==entity.get("entityId")}?:error("E2EE_PRODUCT_PROOF_INVALID")
                 check(operation.get("action")!="propose-complete"&&matches(operation,entity)&&(operation.get("action")!="create"||entity.get("authorId")==proof.get("actorId"))){"E2EE_PRODUCT_PROOF_INVALID"}
@@ -54,8 +54,10 @@ internal object E2eeProductProofs{
                 check(matches(item.getJSONObject("operation"),entity)&&entity.get("authorId")==item.get("authorId")){"E2EE_PRODUCT_PROOF_INVALID"}
             }else{val proposal=proposals[command.getJSONObject("payload").getString("proposalId")]?:error("E2EE_PRODUCT_PROOF_INVALID");val operation=proposal.getJSONObject("operation");val metadata=operation.getJSONObject("metadata");val required=E2eeProductContract.ids(metadata.getJSONArray("approverIds"))
                 check(proposal.get("entityId")==entity.get("entityId")&&matches(operation,entity)&&metadata.getBoolean("completed")&&required.isNotEmpty()&&required.all{it in (approvals[proposal.getString("proposalId")]?:emptySet())}){"E2EE_PRODUCT_PROOF_INVALID"}}
+            val action=when(command.getString("action")){"product-commit"->rows(command.getJSONObject("payload").getJSONArray("operations")).single{it.get("entityId")==entity.get("entityId")}.getString("action");"product-approve"->"complete";else->"baseline"}
+            origins.put(JSONObject().put("entityId",entity.get("entityId")).put("revision",entity.get("revision")).put("actorId",proof.get("actorId")).put("bootstrap",command.getString("action")=="product-bootstrap-stage").put("action",action).put("operationId",command.get("operationId")))
         }
         for(proposal in proposals.values){val accepted=JSONArray();for(row in attestations)if(row.get("proposalId")==proposal.get("proposalId")){Instant.parse(row.getString("createdAt"));accepted.put(JSONObject().put("userId",row.get("userId")).put("createdAt",row.get("createdAt"))};proposal.put("approvals",accepted)}
-        return Page(JSONArray(entities.values),JSONArray(proposals.values),JSONObject().put("bootstrapId",baselinePayload.get("bootstrapId")).put("proofHash",baseline.get("proofHash")).put("expectedCount",baselinePayload.get("expectedCount")).put("parts",baselinePayload.get("parts")))
+        return Page(JSONArray(entities.values),JSONArray(proposals.values),JSONObject().put("bootstrapId",baselinePayload.get("bootstrapId")).put("proofHash",baseline.get("proofHash")).put("expectedCount",baselinePayload.get("expectedCount")).put("parts",baselinePayload.get("parts")),origins)
     }
 }

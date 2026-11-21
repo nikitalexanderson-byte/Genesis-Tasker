@@ -79,10 +79,10 @@ export class E2eeSharedProduct{
   await this.options.client.refresh();this.#current();let response;
   for(;;){try{response=await this.options.client.readProductHistory(entityId,before,limit);break;}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}}
   exactKeys(response,['pages','checkpointHash','directoryRevision']);if(!Array.isArray(response.pages)||response.pages.length>limit)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
-  const versions:ProductVersion[]=[];let previous=before;
+  const versions:ProductVersion[]=[],origins:import('./product-proofs.ts').VerifiedProductOrigin[]=[];let previous=before;
   for(const page of response.pages){const verified=await verifyProductPage(page,packet=>this.options.client.verifyServiceProof(packet));this.#current();
-   if(verified.entities.length!==1)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');const entity=verified.entities[0];if(entity.entityId!==entityId||entity.revision>=previous)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');previous=entity.revision;versions.push(await this.#read(entity,false));
-  }return{versions,nextBefore:versions.length===limit?previous:null};
+   if(verified.entities.length!==1)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');const entity=verified.entities[0];if(entity.entityId!==entityId||entity.revision>=previous)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');previous=entity.revision;versions.push(await this.#read(entity,false));origins.push(verified.origins[0]);
+  }return{versions,origins,nextBefore:versions.length===limit?previous:null};
  });}
  stage(input:ProductEdit[],intentId=crypto.randomUUID()){const edits=structuredClone(input);return this.#operation(async()=>{
   assertTechnical(intentId);if(edits.length<1||edits.length>100||new Set(edits.map(row=>row.entityId)).size!==edits.length)throw new Error('E2EE_PRODUCT_BATCH_INVALID');const drafts:Draft[]=[];

@@ -28,6 +28,11 @@ export class E2eeSharedRecords{
   return this.product.stage([{action,entityId:sharedRecordKey(value.kind,value.record),kind:value.kind,expectedRevision,parentId:sharedBodyParent(value),metadata:sharedBodyMetadata(value),body:value}]);
  }
  flush(intentId:string){this.account.requireOpen();if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return this.product.flush(intentId);}
+ async sourceTable(table:string){
+  this.account.requireOpen();const paths=requiredPrivatePaths(this.binding.kind).filter(row=>row.server.includes(table));if(paths.length!==1)throw new Error('E2EE_SOURCE_PATH_FORBIDDEN');
+  const path=paths[0],domain=privatePathDocumentDomain(this.binding.kind,path.id),{client}=this.account.shared(this.binding.scopeId,this.binding.kind,this.binding.resourceId),opened=await client.readMigrationOriginal(domain,privateTableObjectId(path.id,table));this.account.requireOpen();
+  try{const value=parseSharedDomainBytes(opened.bytes);exactKeys(value,['format','pathId','table','rows','execution']);if(value.format!=='genesis-private-table-v1'||value.pathId!==path.id||value.table!==table||value.execution!=='content-only'||!Array.isArray(value.rows)||value.rows.length>1000000)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');return structuredClone(value.rows) as Record<string,unknown>[];}finally{opened.bytes.fill(0);}
+ }
  /** Reads each declared migrated source/index with exact EOF/count/schema
   * bindings. Missing tables cannot become empty categories. Old jobs/receipts
   * remain in their content-only originals and never enter this live plan. */
