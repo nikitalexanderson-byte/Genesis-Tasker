@@ -8,12 +8,15 @@ import { translateText } from './i18n';
 import { collaborationText } from './collaboration-copy';
 import { PRIVATE_MESSAGE_OPEN, type PrivateMessagePeer } from './SharedMemberMessageButton';
 import { spaceParticipants,messagingKey,openConversation,respondPrivateInvitation,privateMessages,privateInbox,privateConversationDestination,savePrivateMessage,deletePrivateMessage,readPrivateMessages,clearPrivateConversation,uploadPrivateFileChunk,loadPrivateFileChunk,discardPrivateFile,type SpaceParticipant,type PrivateMessage,type PrivateNotice,type PrivateInvitation,type PrivateConversation } from './private-messages-api';
-import { createMessagingIdentity,keyFingerprint,conversationKey,encryptPrivateMessage,decryptPrivateMessage,securityCode,exportMessagingBackup,importMessagingBackup,encryptPrivateFile,decryptPrivateFile,decodePrivateContent,PRIVATE_FILE_LIMIT,type PrivateFile,type MessagingIdentity } from './private-message-crypto';
+import { createMessagingIdentity,keyFingerprint,conversationKey,encryptPrivateMessage,decryptPrivateMessage,securityCode,exportMessagingBackup,importMessagingBackup,isMessagingRecoveryKey,encryptPrivateFile,decryptPrivateFile,decodePrivateContent,PRIVATE_FILE_LIMIT,type PrivateFile,type MessagingIdentity } from './private-message-crypto';
 import {loadMessagingIdentity,saveMessagingIdentity,claimMessagingIdentity,pinPeerKey} from './private-message-vault';
 import type { NoticeActivity } from './notification-dock-model';
 import { PrivateConversationList } from './PrivateConversationList';
 import {useDataTransferGuard} from './FeatureAccessContext';
 import './shared-space-collaboration.css';
+import {newBackupRecoveryKey} from './backup-format';
+import {localRecoveryText} from './e2ee/local-recovery-copy';
+import {privateAccountIsRequired,privateAccountView,subscribePrivateAccount} from './e2ee/product-session';
 type Peer={spaceId:string;userId:string;displayName:string};
 
 async function identityFor(userId:string,create=false):Promise<MessagingIdentity|null>{
@@ -26,16 +29,18 @@ async function identityFor(userId:string,create=false):Promise<MessagingIdentity
 function KeyRecovery({userId,onReady,identity,missing,language}:{userId:string;onReady:(key:MessagingIdentity)=>void;identity:MessagingIdentity|null;missing:boolean;language:string}){
   const transfer=useDataTransferGuard();
   const [password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(false);
+  const [keySaved,setKeySaved]=useState(false),recovery=localRecoveryText(language);
   const c=(key:Parameters<typeof collaborationText>[0])=>collaborationText(key,language);
   const run=async(action:()=>Promise<void>)=>{setBusy(true);setError(false);try{await action();}catch{setError(true);}finally{setBusy(false);}};
-  return <details className="shared-key-recovery" open={!identity} data-no-translate><summary>{identity?c('backup'):c('restore')}</summary><p>{c('recovery')} {c('signOut')}</p>
+  return <details className="shared-key-recovery" open={!identity} data-no-translate><summary>{identity?c('backup'):c('restore')}</summary><p>{recovery.notice}</p>
     {missing?<p role="status">{c('missing')}</p>:!identity?<button type="button" className="primary-button" disabled={busy} onClick={()=>void run(async()=>{const key=await identityFor(userId,true);if(key)onReady(key);})}>{c('enable')}</button>:null}
-    <label>{c('password')}<input type="password" minLength={12} autoComplete="new-password" value={password} onChange={event=>setPassword(event.target.value)}/></label>
-    <div className="shared-key-actions">{identity?<button type="button" className="secondary-button" disabled={busy||password.length<12} onClick={()=>void run(async()=>{
+    <label>{recovery.input}<input type="text" maxLength={4096} autoComplete="off" autoCapitalize="none" spellCheck={false} value={password} onChange={event=>{setPassword(event.target.value);setKeySaved(false);}}/></label>
+    {identity?<><button type="button" className="secondary-button" disabled={busy} onClick={()=>{setPassword(newBackupRecoveryKey());setKeySaved(false);}}>{recovery.generate}</button><label className="shared-key-saved"><input type="checkbox" checked={keySaved} disabled={busy||!isMessagingRecoveryKey(password)} onChange={event=>setKeySaved(event.target.checked)}/><span>{recovery.saved}</span></label></>:null}
+    <div className="shared-key-actions">{identity?<button type="button" className="secondary-button" disabled={busy||!keySaved||!isMessagingRecoveryKey(password)} onClick={()=>void run(async()=>{
       if(!transfer.check())return;const source=await exportMessagingBackup(identity,password);if(!transfer.check())return;const url=URL.createObjectURL(new Blob([source],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='genesis-private-messages-key.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setPassword('');
     })}>{c('backup')}</button>:null}
     <label className="shared-key-import">{c('restore')}<input type="file" accept=".json,application/json" disabled={busy||password.length<12} onChange={event=>{
-      const file=event.target.files?.[0];event.target.value='';if(!file||!transfer.check())return;void run(async()=>{if(file.size>4000)throw new Error('INVALID_BACKUP');const text=await file.text();if(!transfer.check())return;const key=await importMessagingBackup(text,password),server=await messagingKey();if(!transfer.check())return;if(server.keyId&&server.keyId!==key.keyId)throw new Error('KEY_MISMATCH');await messagingKey(key.publicKey);await saveMessagingIdentity(userId,key);setPassword('');onReady(key);});
+      const file=event.target.files?.[0];event.target.value='';if(!file||!transfer.check())return;void run(async()=>{if(file.size>16384)throw new Error('INVALID_BACKUP');const text=await file.text();if(!transfer.check())return;const key=await importMessagingBackup(text,password),server=await messagingKey();if(!transfer.check())return;if(server.keyId&&server.keyId!==key.keyId)throw new Error('KEY_MISMATCH');await messagingKey(key.publicKey);await saveMessagingIdentity(userId,key);setPassword('');onReady(key);});
     }}/></label></div>{error?<p role="alert">{c('failure')}</p>:null}</details>;
 }
 
@@ -50,6 +55,8 @@ export function SharedPrivateMessages({userId,peer,language,onClose,embedded=fal
   const [files,setFiles]=useState<File[]>([]),[position,setPosition]=useState<{x:number;y:number}|null>(null);
   const drag=useRef<{x:number;y:number;left:number;top:number}|null>(null),messageList=useRef<HTMLOListElement>(null),lastRead=useRef(0),loadingMessages=useRef(false);
   const [draft,setDraft]=useState(''),[editing,setEditing]=useState<PrivateMessage|null>(null),[busy,setBusy]=useState(false),[peerMissing,setPeerMissing]=useState(false);
+  useEffect(()=>subscribePrivateAccount(()=>{if(!privateAccountIsRequired(userId))return;const view=privateAccountView();if(view.ownerId!==userId||view.phase!=='ready'){generation.current++;setIdentity(null);setReady(null);setMessages([]);setEditing(null);}
+    else void identityFor(userId).then(key=>{const current=privateAccountView();if(current.ownerId===userId&&current.phase==='ready')setIdentity(key);}).catch(()=>setMissing(true));}),[userId]);
   const c=(key:Parameters<typeof collaborationText>[0])=>collaborationText(key,language),t=(text:string)=>translateText(text,language as import('./i18n').Language);
   useEffect(()=>{if(embedded&&active)embeddedRoot.current?.focus({preventScroll:true});},[embedded,active]);
   useEffect(()=>{

@@ -21,13 +21,19 @@ import javax.crypto.spec.GCMParameterSpec
  * Call the system credential/biometric flow before access. A background worker cannot
  * manufacture a replacement key or silently initialize empty data after invalidation.
  */
-class E2eeDeviceVault(context: Context, ownerId: String) {
+class E2eeDeviceVault(context: Context, ownerId: String, slotId: String? = null) {
     companion object { private val mutationLock get()=E2eeStorageAdmission.providerMutationLock; private const val MAX_PRIVATE = 65536 }
     private val app = context.applicationContext
     private val owner = E2eeKeys.technical(ownerId)
     private val ownerHash = MessageDigest.getInstance("SHA-256").digest(owner.toByteArray()).joinToString("") { "%02x".format(it) }
-    private val alias = "genesis.e2ee.device.v1.$ownerHash"
-    private val file = AtomicFile(File(app.noBackupFilesDir, "e2ee-device-$ownerHash.vault"))
+    private val slots = app.getSharedPreferences("genesis.e2ee.device-slots.v1", Context.MODE_PRIVATE)
+    private val slot = (slotId ?: slots.getString(ownerHash, "").orEmpty()).also {
+        check(it.isEmpty() || Regex("[a-f0-9-]{36}").matches(it)) { "E2EE_CORRUPT_DEVICE_VAULT" }
+    }
+    private val suffix = if (slot.isEmpty()) "" else "-$slot"
+    private val alias = "genesis.e2ee.device.v1.$ownerHash$suffix"
+    private val file = AtomicFile(File(app.noBackupFilesDir, "e2ee-device-$ownerHash$suffix.vault"))
+    private val recovery = AtomicFile(File(app.noBackupFilesDir, "e2ee-recovery-$ownerHash$suffix.vault"))
     private fun aad() = "GENESIS-E2EE-ANDROID-VAULT\u0000v1\u0000$owner".toByteArray(Charsets.UTF_8)
     private fun key(create: Boolean): SecretKey = synchronized(mutationLock) {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
@@ -88,5 +94,63 @@ class E2eeDeviceVault(context: Context, ownerId: String) {
     /** Recovery is explicit and owner-bound; no key deletion, database reset or empty fallback. */
     fun recoverWithSecret(secret: ByteArray, protectedBundle: JSONObject): ByteArray =
         E2eeKeys.openBundle(owner, "device-vault", secret, protectedBundle)
+    /** Independent owner-secret copy of this EXACT device bundle. This is kept
+     * outside Keystore encryption so credential invalidation cannot destroy the
+     * only opening capability. It is never uploaded or included in content backups. */
+    internal fun retainRecovery(secret: ByteArray, kit: JSONObject, bytes: ByteArray) = synchronized(mutationLock) {
+        E2eeKeys.recoverAuthority(owner, secret, kit)
+        val value = E2eeFileManifestJson.readPrivateDocument(bytes)
+        check(value.getString("ownerId") == owner && E2eeProductJson.same(value.getJSONObject("authorityPin"), kit.getJSONObject("authority"))) { "E2EE_AUTHORITY_CHANGED" }
+        check(!File(recovery.baseFile.path + ".new").exists()) { "E2EE_RECOVERY_COPY_INCOMPLETE" }
+        if (recovery.baseFile.exists() || File(recovery.baseFile.path + ".bak").exists()) {
+            val previous = recovery.openRead().use { it.readBytesBounded(MAX_PRIVATE * 2) }
+            try {
+                val opened = recoverWithSecret(secret, E2eeFileManifestJson.readPrivateDocument(previous))
+                try { check(opened.contentEquals(bytes)) { "E2EE_DEVICE_KEY_UNAVAILABLE" } } finally { opened.fill(0) }
+            } finally { previous.fill(0) }
+        } else {
+            val sealed = E2eeKeys.protectBundle(owner, "device-vault", secret, bytes).toString().toByteArray(Charsets.UTF_8)
+            try {
+                val usage = E2eeSqliteStorage(app).use { it.providerUsage() }
+                val growth = E2eeStorageAdmission.writeGrowth(listOf(E2eeStorageAdmission.WriteSize(sealed.size.toLong(), null)))
+                E2eeStorageAdmission.admit(usage, E2eeStorageAdmission.Growth(0, 1, growth.writeBytes, growth.rewriteBytes), E2eeStorageAdmission.providerBudget)
+                val output = recovery.startWrite()
+                try { output.write(sealed); recovery.finishWrite(output) } catch (error: Exception) { recovery.failWrite(output); throw error }
+            } finally { sealed.fill(0) }
+        }
+    }
+    /** Explicit recovery preserves every old file, alias, root and queue. A
+     * fresh hardware slot wraps the SAME authenticated device identity; server
+     * directory verification still rejects a revoked device. No empty vault is created. */
+    internal fun restoreHardware(secret: ByteArray, kit: JSONObject, current: () -> Unit) = synchronized(mutationLock) {
+        current(); E2eeKeys.recoverAuthority(owner, secret, kit); current()
+        check(exists()) { "E2EE_DEVICE_NOT_ENROLLED" }
+        val sealed = recovery.openRead().use { it.readBytesBounded(MAX_PRIVATE * 2) }
+        val bytes = try { recoverWithSecret(secret, E2eeFileManifestJson.readPrivateDocument(sealed)) } finally { sealed.fill(0) }
+        try {
+            current(); val value = E2eeFileManifestJson.readPrivateDocument(bytes)
+            check(value.getString("ownerId") == owner && E2eeProductJson.same(value.getJSONObject("authorityPin"), kit.getJSONObject("authority"))) { "E2EE_AUTHORITY_CHANGED" }
+            check(slots.getString(ownerHash, "").orEmpty() == slot) { "E2EE_ACCOUNT_CHANGED" }
+            // Persist a resumable slot BEFORE touching hardware. Interrupted
+            // attempts use it again and never replace either accepted container.
+            val pendingKey = "$ownerHash:pending:$slot"
+            val pending = slots.getString(pendingKey, null) ?: java.util.UUID.randomUUID().toString().also {
+                check(slots.edit().putString(pendingKey, it).commit()) { "E2EE_STORAGE_UNAVAILABLE" }
+            }
+            val destination = E2eeDeviceVault(app, owner, pending)
+            if (!destination.exists()) destination.save(bytes, create = true)
+            val readback = destination.unlock()
+            try { check(readback.contentEquals(bytes)) { "E2EE_DEVICE_KEY_UNAVAILABLE" } } finally { readback.fill(0) }
+            destination.retainRecovery(secret, kit, bytes); current()
+            check(slots.getString(ownerHash, "").orEmpty() == slot) { "E2EE_ACCOUNT_CHANGED" }
+            check(slots.edit().putString(ownerHash, pending).remove(pendingKey).commit()) { "E2EE_STORAGE_UNAVAILABLE" }
+            current()
+        } finally { bytes.fill(0) }
+    }
+    private fun java.io.InputStream.readBytesBounded(maximum: Int): ByteArray {
+        val output = java.io.ByteArrayOutputStream(); val buffer = ByteArray(8192)
+        try { while (true) { val count = read(buffer); if (count < 0) break; check(count > 0 && output.size() + count <= maximum) { "E2EE_CORRUPT_DEVICE_VAULT" }; output.write(buffer, 0, count) }; return output.toByteArray() }
+        finally { buffer.fill(0); output.reset() }
+    }
     internal fun originalCustodyStorage():E2eeOriginalCustodyStorage=E2eeOriginalCustodyFiles(app)
 }

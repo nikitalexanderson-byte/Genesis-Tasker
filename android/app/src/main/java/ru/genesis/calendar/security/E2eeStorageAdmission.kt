@@ -73,9 +73,9 @@ internal object E2eeStorageAdmission {
                 val file=File(folder,database.name+suffix)
                 if(file.exists()){check(!missing){"E2EE_STORAGE_USAGE_UNAVAILABLE"};bytes=add(bytes,length(file))}
             }
-            val names=mutableSetOf<String>();val pattern=Regex("(e2ee-device-[a-f0-9]{64}|e2ee-original-custody-[a-f0-9]{64}-[a-f0-9-]{36})\\.vault(?:\\.(?:bak|new))?")
+            val names=mutableSetOf<String>();val pattern=Regex("(e2ee-(?:device|recovery)-[a-f0-9]{64}(?:-[a-f0-9-]{36})?|e2ee-original-custody-[a-f0-9]{64}-[a-f0-9-]{36})\\.vault(?:\\.(?:bak|new))?")
             Files.newDirectoryStream(folder.toPath(),"e2ee-*").use{files->for(path in files){
-                val file=path.toFile();if(!file.name.startsWith("e2ee-device-")&&!file.name.startsWith("e2ee-original-custody-"))continue
+                val file=path.toFile();if(!file.name.startsWith("e2ee-device-")&&!file.name.startsWith("e2ee-recovery-")&&!file.name.startsWith("e2ee-original-custody-"))continue
                 val match=pattern.matchEntire(file.name)?:error("E2EE_STORAGE_USAGE_UNAVAILABLE")
                 names+=match.groupValues[1];check(names.size<=1000){"E2EE_STORAGE_CAPACITY"}
                 bytes=add(bytes,length(file))

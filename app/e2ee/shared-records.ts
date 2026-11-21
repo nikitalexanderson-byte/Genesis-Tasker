@@ -50,7 +50,7 @@ export class E2eeSharedRecords{
   for(const [kind,roots]of Object.entries(contract.roots) as [ProductKind,string[]][]){
    if(contract.historyOnlyKinds.includes(kind))continue;
    for(const table of roots)for(const row of tables.get(table)??[]){const related:Record<string,SharedContentRecord[]>={};for(const name of contract.related[kind]){
-     if(!tables.has(name))throw new Error('E2EE_PRIVATE_SEED_REQUIRED');const key=kind==='comment'?'comment_id':'task_id';related[name]=tables.get(name)!.filter(value=>value[key]===row.id);
+     if(!tables.has(name))throw new Error('E2EE_PRIVATE_SEED_REQUIRED');const key=kind==='comment'?'comment_id':kind==='project'?'project_id':'task_id';related[name]=tables.get(name)!.filter(value=>value[key]===row.id);
     }
     const body=validateSharedRecordBody(this.binding,kind,{format:'genesis-shared-record-v1',kind,scopeId:this.binding.scopeId,scopeKind:this.binding.kind,resourceId:this.binding.resourceId,table,record:row,related,execution:'live'}),entityId=sharedRecordKey(kind,row);
     if(seen.has(entityId))throw new Error('E2EE_SHARED_BOOTSTRAP_DUPLICATE');seen.add(entityId);

@@ -414,6 +414,15 @@ try {
         }
         genesisJson(genesisCreateAssistantPlan(genesisReadJson()));
     }
+    if ($method === 'POST' && $path === 'private-services/assistant/plan') {
+        $userId=genesisRequireUserId();genesisRequireCsrf();$user=genesisFindUser($userId);
+        if($user===null)genesisJson(['error'=>'AUTH_REQUIRED'],401);
+        $input=genesisReadJson();genesisE2eeExactFields($input,['command','audio','context','provider','consentVersion']);
+        if($input['consentVersion']!=='external-copy-336-v1'||!in_array($input['provider'],['gemini','gigachat'],true)||$input['provider']!==genesisAssistantProvider())genesisJson(['error'=>'E2EE_EXTERNAL_COPY_CONSENT_REQUIRED'],409);
+        // This is an explicitly selected external copy. It never reads a vault,
+        // private key, encrypted workspace, original, queue or shared table.
+        genesisJson(genesisCreateAssistantPlan(array_intersect_key($input,array_flip(['command','audio','context']))));
+    }
 
     if ($method === 'GET' && $path === 'sync/tasks') {
         $userId = genesisRequireUserId();

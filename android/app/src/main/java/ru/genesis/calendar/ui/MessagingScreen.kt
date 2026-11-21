@@ -43,6 +43,8 @@ import java.io.InputStream
     val state by repository.state.collectAsStateWithLifecycle()
     val canExchange = LocalFeatureAccess.current.allows("data-export")
     val scope = rememberCoroutineScope(); val context = LocalContext.current
+    val language=LocalGenesisLanguage.current
+    val recoveryCopy=remember(context,language){ru.genesis.calendar.security.LocalRecoveryCopy.read(context,language)}
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -52,6 +54,7 @@ import java.io.InputStream
     var password by remember { mutableStateOf("") }
     var backupSource by remember { mutableStateOf<String?>(null) }
     var backupExport by remember { mutableStateOf<String?>(null) }
+    var recoveryKeySaved by remember { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
     var security by remember { mutableStateOf(false) }
     var clearConfirm by remember { mutableStateOf(false) }
@@ -120,7 +123,7 @@ import java.io.InputStream
         if (uri != null) run {
             repository.requireDataExchange()
             val source = context.contentResolver.openInputStream(uri)?.use { input ->
-                val bytes = messagingRead(input, 4000); bytes.toString(Charsets.UTF_8)
+                val bytes = messagingRead(input, 16384); bytes.toString(Charsets.UTF_8)
             } ?: error("FILE_READ_FAILED")
             repository.requireDataExchange()
             backupSource = source
@@ -347,9 +350,13 @@ import java.io.InputStream
         Column(Modifier.heightIn(max = (LocalConfiguration.current.screenHeightDp * .55f).dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!canExchange) NativeAccessMessage("FEATURE_SUBSCRIPTION_REQUIRED", "data-export")
-            Text("Копия защищена паролем. Сохраните её и пароль отдельно: без ключа старые сообщения недоступны.")
-            OutlinedTextField(password, { password = it }, modifier = Modifier.fillMaxWidth().testTag("messaging-backup-password"),
-                label = { Text("Пароль: не менее 12 символов") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = RoundedCornerShape(10.dp))
+            Text(recoveryCopy.getString("notice"))
+            OutlinedTextField(password, { password = it.take(4096);recoveryKeySaved=false }, modifier = Modifier.fillMaxWidth().testTag("messaging-backup-password"),
+                label = { Text(recoveryCopy.getString("input")) }, visualTransformation = if(backupSource==null)androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(), singleLine = true, shape = RoundedCornerShape(10.dp))
+            if(backupSource==null&&state.keyReady){
+                OutlinedButton({password=GenesisBackupContainer.newRecoveryKey();recoveryKeySaved=false},enabled=!busy,modifier=Modifier.heightIn(min=48.dp)){Text(recoveryCopy.getString("generate"))}
+                Row(verticalAlignment=Alignment.CenterVertically){Checkbox(recoveryKeySaved,{recoveryKeySaved=it},enabled=!busy&&MessagingCrypto.isRecoveryKey(password));Text(recoveryCopy.getString("saved"),Modifier.weight(1f))}
+            }
             if (backupSource != null) Text("Файл ключа выбран. Введите его пароль и восстановите ключ.", style = MaterialTheme.typography.bodySmall)
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
             OutlinedButton({ importKey.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }, enabled = !busy && canExchange) { Text("Выбрать копию ключа") }
@@ -357,7 +364,7 @@ import java.io.InputStream
     }, confirmButton = { Button({
         if (backupSource != null) run { repository.importBackup(backupSource!!, password); backup = false; password = ""; backupSource = null }
         else run { backupExport = repository.exportBackup(password); withContext(Dispatchers.Main) { exportKey.launch("genesis-messaging-key.json") } }
-    }, enabled = !busy && canExchange && password.length >= 12 && (backupSource != null || state.keyReady)) {
+    }, enabled = !busy && canExchange && (if(backupSource!=null)password.length>=12 else state.keyReady&&recoveryKeySaved&&MessagingCrypto.isRecoveryKey(password))) {
         Text(if (backupSource != null || !state.keyReady) "Восстановить" else "Сохранить копию") } },
         dismissButton = { TextButton({ backup = false; password = ""; backupSource = null }, enabled = !busy) { Text("Закрыть") } })
 }
@@ -389,7 +396,7 @@ private fun messagingRead(input: InputStream, maximum: Int): ByteArray {
     val output = ByteArrayOutputStream(); val buffer = ByteArray(8192)
     while (true) {
         val count = input.read(buffer); if (count < 0) break
-        require(output.size() + count <= maximum) { if (maximum == 4000) "INVALID_BACKUP" else "PRIVATE_FILE_TOO_LARGE" }
+        require(output.size() + count <= maximum) { if (maximum == 16384) "INVALID_BACKUP" else "PRIVATE_FILE_TOO_LARGE" }
         output.write(buffer, 0, count)
     }
     return output.toByteArray()

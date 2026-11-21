@@ -1,5 +1,48 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Continued recovery, shared editors and consent (21 November, candidate code)
+
+Still implementation-first: NO tests, typecheck, lint, builds, CI, push, deployment,
+or device actions were run. Production remains3.3.5/149; accepted coverage9/20,
+pilot/cutover off, update floors0 and GENESIS_DEPLOY_ANDROID=false are unchanged.
+
+- The inherited uncommitted message-key/local-cell, assistant consent, independent
+  messaging-route and random-key recovery-copy changes are preserved. They remain
+  uncompiled candidate code, not accepted results.
+- Android now retains a separately owner-secret-protected exact device bundle.
+  Explicit hardware-key recovery uses a resumable new slot, preserves the old
+  encrypted files/aliases/queues and retains original-root custody. It does not
+  reinstate a revoked device. Shared provider capacity includes recovery/slot
+  files. Credential invalidation, partial atomic files, concurrent slot changes,
+  revocation and process-death acceptance remain required. Existing devices with
+  no independently protected copy cannot be recovered by inventing a new root.
+- Shared reads now compose durable local transaction batches in revision order,
+  preserving offline edits without flushing during reads. Divergent branches
+  require review. Web and the bundled native model use the same overlay.
+- Added actual common workflow/planning/sprint, automation/template and discussion
+  record paths; sprint completion retains exact unfinished-task outcomes in one
+  batch. Custom-field preview binds the complete decrypted snapshot and input;
+  a type change archives the original definition and keeps its values. Added
+  bounded domain validators. Full advanced-domain parity, inherited definitions,
+  quotas, histories, reports, cross-scope CRUD and client jobs remain unfinished.
+- Fixed project-label source composition: association rows belong to the project
+  body, rather than pretending that each association is a separately titled label.
+- Added web/native fingerprint comparison and signed baseline-resume UI under
+  account settings. Discovery verifies chain consistency but never accepts its
+  own server-provided authority as a user trust decision. The comparison field
+  is never prefilled. The14-language catalogue is candidate copy awaiting review.
+- Optional dictated-phrase spelling now binds each disclosed external copy to
+  the exact unlocked account and phrase; saved content/imports cannot recreate
+  consent. The existing explicit spelling option remains the UI decision.
+
+Next implementation work: finish shared advanced reads/history/proposals, real
+file/map paths, roles/membership review and multi-owner coordination, creation,
+client automation and cross-scope transactions; compose setup/migration/resume
+with all captures; full content-only backup/import/Drive; private reminders and
+background/deep-link behavior; explicit revoked-device replacement with retained
+original custody; remaining Google-copy consent. Only then consolidated QA and
+repairs. The independent human crypto review remains an activation requirement.
+
 ## Continued shared composition (21 November, uncompiled candidate)
 
 - Added the actual common web/native shared content model and foreground

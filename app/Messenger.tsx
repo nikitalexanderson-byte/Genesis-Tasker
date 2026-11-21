@@ -10,6 +10,7 @@ import type { NoticeActivity } from './notification-dock-model';
 import copy from './messenger-copy.json';
 import {GenesisApiError} from './cloud-sync';
 import './messenger.css';
+import {privateAccountIsRequired,privateAccountView,subscribePrivateAccount} from './e2ee/product-session';
 const Legacy = lazy(() => import('./SharedSpaceCollaboration').then(m => ({ default: m.SharedPrivateNotices })));
 type CopyKey = keyof typeof copy.ru;
 type DisplayMessage = MessengerMessage & {
@@ -64,6 +65,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
     const earlierLoaded = useRef(false);
     const generation = useRef(0), selection = useRef<string | null>(null), working = useRef(false), alive = useRef(true), device = useRef<LocalMessengerDevice | null>(null), createId = useRef('');
     const list = useRef<HTMLOListElement>(null);
+    useEffect(()=>subscribePrivateAccount(()=>{if(!privateAccountIsRequired(userId))return;const view=privateAccountView();if(view.ownerId!==userId||view.phase!=='ready'){generation.current++;selection.current=null;device.current=null;setSelected(null);setMessages([]);setCode('');setSecretError('');setPending(null);setEditing(null);}}),[userId]);
     const path = (id: string, suffix = '') => '/conversations/' + encodeURIComponent(id) + suffix;
     function failure(e: unknown) { const msg = e instanceof Error ? e.message : ''; return msg.includes('CONTACT_UNAVAILABLE') ? c('contactUnavailable') : msg.includes('RATE_LIMIT') ? c('requestLimit') : c('failure'); }
     async function run(action: () => Promise<void>) { if (working.current)

@@ -158,14 +158,22 @@ internal object MessagingCrypto {
         return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded } finally { spec.clearPassword() }
     }
     fun exportBackup(identity: MessagingIdentity, password: String): String {
-        val salt = ByteArray(16).also(random::nextBytes); val iv = ByteArray(12).also(random::nextBytes)
-        val key = backupKey(password, salt); val plain = bytes(privateJwk(identity))
-        val ciphertext = try { crypt(Cipher.ENCRYPT_MODE, key, iv, bytes("GENESIS messaging backup v1"), plain) } finally { key.fill(0); plain.fill(0) }
-        return JSONObject().put("format", "genesis-messaging-key").put("version", 1).put("salt", base64(salt)).put("iv", base64(iv)).put("ciphertext", base64(ciphertext)).toString()
+        require(isRecoveryKey(password)){"BACKUP_RECOVERY_KEY"};val at=java.time.Instant.now().toString()
+        val section=JSONObject().put("id","shared-drafts").put("source","device").put("completeness","available").put("capturedAt",at).put("revision",JSONObject.NULL).put("count",1).put("pending",0).put("notices",org.json.JSONArray())
+            .put("data",JSONObject().put("format","genesis-messaging-key-material-v2").put("keyId",identity.keyId).put("privateKey",JSONObject(privateJwk(identity))))
+        val payload=JSONObject().put("schema",1).put("backupId",java.util.UUID.randomUUID().toString()).put("source","device_snapshot").put("ownerId","messaging-key").put("createdAt",at).put("client","android").put("billingEvidence",JSONObject.NULL).put("sections",org.json.JSONArray().put(section))
+        return JSONObject().put("format","genesis-messaging-key").put("version",2).put("archive",ru.genesis.calendar.data.GenesisBackupContainer.seal(payload,password)).toString()
     }
+    fun isRecoveryKey(value:String):Boolean=try{val text=value.trim();if(text.length!=44)false else{val raw=java.util.Base64.getDecoder().decode(text);try{raw.size==32&&java.util.Base64.getEncoder().encodeToString(raw)==text}finally{raw.fill(0)}}}catch(_:Exception){false}
     fun importBackup(source: String, password: String): MessagingIdentity {
-        require(source.length <= 4000) { "INVALID_BACKUP" }
-        val json = JSONObject(source)
+        require(source.length <= 16384) { "INVALID_BACKUP" }
+        val json=E2eeFileManifestJson.readPrivateDocument(source.toByteArray(Charsets.UTF_8))
+        if(json.opt("format")=="genesis-messaging-key"&&json.optInt("version")==2){
+            E2eeKeys.exact(json,setOf("format","version","archive"));require(isRecoveryKey(password)){"BACKUP_RECOVERY_KEY"};val payload=ru.genesis.calendar.data.GenesisBackupContainer.open(json.getString("archive"),password)
+            val sections=payload.getJSONArray("sections");require(payload.getString("ownerId")=="messaging-key"&&sections.length()==1&&sections.getJSONObject(0).getString("id")=="shared-drafts"){"INVALID_BACKUP"}
+            val key=sections.getJSONObject(0).getJSONObject("data");E2eeKeys.exact(key,setOf("format","keyId","privateKey"));require(key.getString("format")=="genesis-messaging-key-material-v2"){"INVALID_BACKUP"};return importIdentity(key.getJSONObject("privateKey")).also{require(it.keyId==key.getString("keyId")){"MESSAGING_KEY_MISMATCH"}}
+        }
+        require(source.length<=4000){"INVALID_BACKUP"};E2eeKeys.exact(json,setOf("format","version","salt","iv","ciphertext"))
         require(json.getString("format") == "genesis-messaging-key" && integer(json, "version", 1, 1) == 1) { "INVALID_BACKUP" }
         val key = backupKey(password, unbase64(json.getString("salt")))
         val plain = try { crypt(Cipher.DECRYPT_MODE, key, unbase64(json.getString("iv")), bytes("GENESIS messaging backup v1"), unbase64(json.getString("ciphertext"))) } finally { key.fill(0) }

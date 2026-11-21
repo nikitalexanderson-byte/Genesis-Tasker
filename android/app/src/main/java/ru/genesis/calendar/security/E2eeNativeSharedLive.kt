@@ -35,6 +35,7 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                     else{val result=account.sharedScope(binding.scopeId,binding.scopeKind,binding.resourceId).client.readProductContext();current();E2eeKeys.exact(result,setOf("context","checkpointHash","directoryRevision"));val value=result.getJSONObject("context");metadata.save(JSONObject().put("scopeId",binding.scopeId).put("context",value),saved?.serial);value}}
                 "heads"->{E2eeKeys.exact(payload,emptySet());check(heads.isEmpty()){"E2EE_PRODUCT_INDEX_INVALID"};val rows=records.index();val ids=JSONArray();for(at in 0 until rows.length()){val row=rows.getJSONObject(at);val id=row.getString("entityId");check(heads.put(id,row)==null){"E2EE_PRODUCT_INDEX_INVALID"};ids.put(JSONObject().put("entityId",id))};ids}
                 "version"->{E2eeKeys.exact(payload,setOf("entityId"));records.read(heads[payload.getString("entityId")]?:error("E2EE_PRODUCT_ENTITY_MISSING"))}
+                "localVersions"->{E2eeKeys.exact(payload,emptySet());records.product.localVersions()}
                 "stage"->{E2eeKeys.exact(payload,setOf("edits","intentId"));records.product.stage(payload.getJSONArray("edits"),payload.getString("intentId"))}
                 "flush"->{E2eeKeys.exact(payload,setOf("intentId"));records.flush(payload.getString("intentId"))}
                 "requestLoad"->{E2eeKeys.exact(payload,setOf("id"));request(payload.getString("id")).load()?.let{JSONObject().put("value",it.value).put("serial",it.serial)}?:JSONObject.NULL}

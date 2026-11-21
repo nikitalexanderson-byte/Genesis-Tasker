@@ -18,12 +18,15 @@ export type PrivateAccountTransport=ScopeTransport&{
 };
 export type PrivateAccountView=Readonly<{ownerId:string|null;phase:'closed'|'locked'|'unlocking'|'ready';reason:'unlock'|'recovery';language:string}>;
 const listeners=new Set<()=>void>(),waiters=new Set<{ownerId:string;resolve:()=>void;reject:(error:Error)=>void}>();
+const privateOwners=new Set<string>();
+export const privateAccountIsRequired=(ownerId:string)=>privateOwners.has(ownerId);
+export function markPrivateAccountOwner(ownerId:string){assertTechnical(ownerId);privateOwners.add(ownerId);}
 let view:PrivateAccountView=Object.freeze({ownerId:null,phase:'closed',reason:'unlock',language:'en'}),active:WebPrivateAccount|null=null;
 const notify=()=>{for(const listener of listeners)listener();};
 export const privateAccountView=()=>view;
 export const subscribePrivateAccount=(listener:()=>void)=>{listeners.add(listener);return()=>{listeners.delete(listener);};};
 export function privateAccountRequired(ownerId:string,language='en'){
- assertTechnical(ownerId);if(active?.ownerId===ownerId){try{active.requireOpen();return;}catch{/* Locked capabilities are retired below. */}}
+ assertTechnical(ownerId);privateOwners.add(ownerId);if(active?.ownerId===ownerId){try{active.requireOpen();return;}catch{/* Locked capabilities are retired below. */}}
  if(view.ownerId!==null&&view.ownerId!==ownerId)closePrivateAccount();
  view=Object.freeze({ownerId,phase:'locked',reason:view.ownerId===ownerId?view.reason:'unlock',language});notify();
 }
@@ -111,6 +114,18 @@ export class WebPrivateAccount{
  }
  requireOpen(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.#current();this.device.requireOpen();}
  async scopeSummaries(){this.requireOpen();if(this.mode==='offline')throw new Error('E2EE_ONLINE_REQUIRED');const status=validateStatus(await this.#transport.status());this.requireOpen();return structuredClone(status.scopes);}
+ /** Discovery is only a candidate. Its authority becomes trusted only after
+  * comparison outside this server and an explicit personal-vault decision. */
+ async proposeSharedTrust(scopeId:string){
+  const scope=(await this.scopeSummaries()).find(row=>row.scopeId===scopeId&&row.kind!=='personal');if(!scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const response=await this.#transport.directory(scopeId);this.requireOpen();const first=response.events[0]?.command;
+  if(!first||first.action!=='bootstrap'||first.scopeId!==scopeId)throw new Error('E2EE_DIRECTORY_REQUIRED');
+  const kit=first.payload.recoveryKit as unknown as RecoveryKit;
+  const directory=await verifyDeviceDirectory(first.ownerId,scopeId,kit.authority,response.events);this.requireOpen();
+  if(directory.kind!==scope.kind||directory.resourceId!==scope.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const proposal={scopeId,ownerId:directory.ownerId,kind:scope.kind as 'project'|'space',resourceId:scope.resourceId,authority:structuredClone(directory.recoveryKit.authority)};
+  const {sharedScopeFingerprint}=await import('./shared-trust.ts');const fingerprint=await sharedScopeFingerprint(proposal);this.requireOpen();return{proposal,fingerprint};
+ }
  close(){if(this.#closed)return;this.#closed=true;this.#cleanup?.();this.#cleanup=null;for(const value of this.#clients.values())value.client.close();this.#clients.clear();this.#sharedRecords.clear();this.device.lock();}
  bindLifecycle(target:Window=window){
   this.requireOpen();const channel=typeof BroadcastChannel==='undefined'?null:new BroadcastChannel(`genesis-e2ee-lock:${this.ownerId}`);
@@ -188,6 +203,7 @@ export async function unlockPrivateAccount(secretText:string,transport:PrivateAc
  try{
   const check=()=>{current();if(view.ownerId!==expected.ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');};
   account=mode==='offline'?await WebPrivateAccount.openOffline(expected.ownerId,secret,transport,check):await WebPrivateAccount.open(expected.ownerId,secret,transport,check,kit);check();account.bindLifecycle();account.requireOpen();
+  const {adoptMessagingOriginals}=await import('../private-message-vault.ts');check();await adoptMessagingOriginals(account);check();account.requireOpen();
   await onOpen?.(account);check();account.requireOpen();active=account;
   view=Object.freeze({...expected,phase:'ready'});for(const waiter of [...waiters])if(waiter.ownerId===expected.ownerId){waiters.delete(waiter);waiter.resolve();}notify();
  }catch(error){account?.close();if(active===account)active=null;if(view.ownerId===expected.ownerId){view=Object.freeze({...expected,phase:'locked',reason:error instanceof Error&&error.message==='E2EE_RECOVERY_KIT_REQUIRED'?'recovery':expected.reason});notify();}throw error;}

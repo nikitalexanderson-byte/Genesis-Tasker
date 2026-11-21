@@ -80,7 +80,7 @@ function aad(file: Pick<BackupFile, 'format' | 'schema' | 'backupId' | 'algorith
 }
 async function recoveryKey(secret: string) {
   const bytes = backupBytes(secret.trim(), 32); if (bytes.length !== 32) return fail('BACKUP_RECOVERY_KEY');
-  return crypto.subtle.importKey('raw', new Uint8Array(bytes), 'AES-KW', false, ['wrapKey', 'unwrapKey']);
+  try{return await crypto.subtle.importKey('raw', new Uint8Array(bytes), 'AES-KW', false, ['wrapKey', 'unwrapKey']);}finally{bytes.fill(0);}
 }
 export async function sealBackup(payload: BackupPayload, secret: string): Promise<string> {
   validateBackupPayload(backupJson(JSON.stringify(payload)));
@@ -88,7 +88,8 @@ export async function sealBackup(payload: BackupPayload, secret: string): Promis
   const wrappedKey = backupBase64(new Uint8Array(await crypto.subtle.wrapKey('raw', key, await recoveryKey(secret), 'AES-KW')));
   const header = { format: 'genesisbackup' as const, schema: 1 as const, backupId: payload.backupId, algorithm: 'A256GCM+A256KW' as const, wrappedKey };
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: aad(header), tagLength: 128 }, key, encoder.encode(JSON.stringify(payload))));
+  const plain=encoder.encode(JSON.stringify(payload));let ciphertext:Uint8Array;
+  try{ciphertext=new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: aad(header), tagLength: 128 }, key,plain));}finally{plain.fill(0);}
   const file: BackupFile = { ...header, iv: backupBase64(iv), ciphertext: backupBase64(ciphertext), sha256: await backupDigest(ciphertext) };
   const text = JSON.stringify(file); if (encoder.encode(text).length > BACKUP_MAX_FILE) return fail('BACKUP_TOO_LARGE'); return text;
 }
@@ -110,6 +111,7 @@ export async function openBackup(text: string, secret: string): Promise<BackupPa
       plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv), additionalData: aad(file as BackupFile, true), tagLength: 128 }, key, new Uint8Array(ciphertext));
     }
   } catch { return fail('BACKUP_RECOVERY_OR_INTEGRITY'); }
-  const payload = validateBackupPayload(backupJson(new TextDecoder('utf-8', { fatal: true }).decode(plain)));
-  if (payload.backupId !== file.backupId) return fail('BACKUP_INTEGRITY'); return payload;
+  try{const payload = validateBackupPayload(backupJson(new TextDecoder('utf-8', { fatal: true }).decode(plain)));
+   if (payload.backupId !== file.backupId) return fail('BACKUP_INTEGRITY'); return payload;
+  }finally{new Uint8Array(plain).fill(0);}
 }

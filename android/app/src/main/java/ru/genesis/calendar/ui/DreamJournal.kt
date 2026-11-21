@@ -195,7 +195,9 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
             generation==voiceGeneration[0]&&app.workspaceScope==editorAccountScope&&!saving&&!deleteConfirm&&spellingPatches.contains(ticket)
         scope.launch{
             try{
-                val corrected=correctDictatedPhrase(heard.trim(),language)
+                val privateAccount=if(repository.privateContent)ru.genesis.calendar.security.NativePrivateProducts.currentAccount(editorAccountScope)else null
+                val consent=privateAccount?.let{ru.genesis.calendar.security.ExternalCopyConsent.approve(it,"yandex-speller","dictation",JSONObject().put("text",heard.trim()).put("language",language),ownsPatch())}
+                val corrected=correctDictatedPhrase(heard.trim(),language,privateAccount,consent)
                 if(ownsPatch())spellingPatches.apply(JSONObject(formJson).getString("body"),ticket,corrected)?.let{update("body",it)}
             }catch(timeout:TimeoutCancellationException){if(ownsPatch())error=dictationCopy.getString("unavailable")}
             catch(cancel:CancellationException){throw cancel}

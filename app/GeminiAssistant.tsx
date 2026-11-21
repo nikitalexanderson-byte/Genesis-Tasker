@@ -1,15 +1,17 @@
 "use client";
 import { DialogCloseButton } from "./DialogCloseButton";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   requestAssistantPlan,
+  reviewAssistantCopy,
   type AssistantProvider,
   type GeminiAssistantContext,
   type GeminiPlan,
 } from "./cloud-sync";
 import type { Language } from "./i18n";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
+import {externalCopyText} from './e2ee/external-copy';
 
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 const MAX_RECORDING_MS = 60_000;
@@ -95,6 +97,8 @@ export function GeminiAssistant({ language, context, provider, onApply, onStartC
   const [model, setModel] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [copyConsent,setCopyConsent]=useState(false),copyNoticeId=useId(),copyText=externalCopyText(language);
+  useEffect(()=>setCopyConsent(false),[provider,context,command,audio]);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -241,21 +245,25 @@ export function GeminiAssistant({ language, context, provider, onApply, onStartC
       return;
     }
     if (!command.trim() && !audio) return;
+    if(!copyConsent){setError(copyText.required);return;}
     setBusy(true);
     setError("");
     setMessage("");
     try {
-      const result = await requestAssistantPlan({
+      const payload={
         command: command.trim(),
         audio: audio ? { data: audio.data, mimeType: audio.mimeType } : null,
         context,
-      });
+      };
+      const consent=await reviewAssistantCopy(payload,provider,copyConsent);
+      const result = await requestAssistantPlan(payload,{provider,consent});
       setPlan(result.plan);
       setModel(result.model);
     } catch (requestError) {
       setError(assistantError(requestError, language, provider));
     } finally {
       setBusy(false);
+      setCopyConsent(false);
     }
   };
 
@@ -321,12 +329,16 @@ export function GeminiAssistant({ language, context, provider, onApply, onStartC
         </label>
 
         <p className="gemini-privacy"><span aria-hidden="true">◇</span> {labels.privacy}</p>
+        {!plan?<div className="gemini-external-copy" data-no-translate>
+          <p id={copyNoticeId}>{copyText.notice.replace('{provider}',providerName)}</p>
+          <label className="gemini-copy-consent"><input type="checkbox" checked={copyConsent} disabled={busy||recording} aria-describedby={copyNoticeId} onChange={event=>setCopyConsent(event.target.checked)}/><span>{copyText.accept}</span></label>
+        </div>:null}
 
         {error ? <p className="form-error" role="alert">{error}</p> : null}
         {message ? <p className="form-success" role="status">{message}</p> : null}
 
         {!plan ? (
-          <button type="button" className="gemini-primary" onClick={() => void analyze()} disabled={busy || recording || (!command.trim() && !audio)}>
+          <button type="button" className="gemini-primary" onClick={() => void analyze()} disabled={busy || recording || !copyConsent || (!command.trim() && !audio)}>
             {busy ? labels.preparing : labels.prepare}
           </button>
         ) : (

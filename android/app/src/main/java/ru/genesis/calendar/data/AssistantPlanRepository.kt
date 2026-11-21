@@ -103,16 +103,25 @@ internal class AssistantPlanRepository(private val app: GenesisApplication, priv
     private fun check() { gateway.check(); check(app.workspaceScope == scope) }
     private suspend fun persist(value: JSONObject?) {
         check()
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)){
+            val content=value?.let{JSONObject().put("format","genesis-private-assistant-plan-v1").put("execution","live").put("plan",it).toString()}
+            ru.genesis.calendar.security.NativePrivateLocalCell(scope,owner,"assistant-plan-v1","plan").save(content){historicalOriginal()};check();return
+        }
         if (value == null) app.database.dao().deleteDocument(scope, kind)
         else app.database.dao().putDocument(DocumentRecord(scope, kind, cipher.encrypt(value.toString(), "$scope/$kind/$owner"), System.currentTimeMillis()))
         check()
     }
     private suspend fun readCurrent(): JSONObject? {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)){
+            check();val raw=ru.genesis.calendar.security.NativePrivateLocalCell(scope,owner,"assistant-plan-v1","plan").load{historicalOriginal()};check();return raw?.let{val saved=JSONObject(it);ru.genesis.calendar.security.E2eeKeys.exact(saved,setOf("format","execution","plan"));check(saved.getString("format")=="genesis-private-assistant-plan-v1"&&saved.getString("execution") in setOf("live","history-only")){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};saved.getJSONObject("plan").put("execution",saved.getString("execution")).also{value->require(value.getInt("schemaVersion")==1)}}
+        }
         check(); app.database.dao().document(scope, kind)?.let {
             return JSONObject(cipher.decrypt(it.encrypted, "$scope/$kind/$owner")).also { value -> require(value.getInt("schemaVersion") == 1) }
         }
         return null
     }
+    private suspend fun original():String?=app.database.dao().document(scope,kind)?.let{cipher.decrypt(it.encrypted,"$scope/$kind/$owner")}
+    private suspend fun historicalOriginal():String?=original()?.let{JSONObject().put("format","genesis-private-assistant-plan-v1").put("execution","history-only").put("plan",JSONObject(it)).toString()}
     suspend fun load(): JSONObject? = mutex.withLock { readCurrent() }
     suspend fun discard(id: String) = mutex.withLock {
         require(readCurrent()?.getString("id") == id) { "Запись изменилась. Проверьте созданные задачи." }
@@ -138,6 +147,7 @@ internal class AssistantPlanRepository(private val app: GenesisApplication, priv
     suspend fun apply(journal: JSONObject, accounts: List<LinkedGoogleAccount>, mode: CalendarMode, onProgress: (JSONObject) -> Unit) = mutex.withLock {
         check()
         val state = requireNotNull(readCurrent()) { "Запись изменилась. Проверьте созданные задачи." }
+        check(state.optString("execution")!="history-only"){"E2EE_HISTORY_NOT_EXECUTABLE"}
         require(state.getString("id") == journal.getString("id")) { "Запись изменилась. Проверьте созданные задачи." }
         val plan = state.getJSONObject("response").getJSONObject("plan")
         val structureRepository = WorkspaceStructureRepository(app)

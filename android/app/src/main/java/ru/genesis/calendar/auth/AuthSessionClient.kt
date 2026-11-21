@@ -721,6 +721,7 @@ internal class AuthSessionClient(context: Context,
 
     fun assistant(expected: Long, body: JSONObject? = null): JSONObject =
         request(expected, if (body == null) "/assistant/status" else "/assistant/plan", body)
+    fun privateAssistant(expected:Long,body:JSONObject):JSONObject=request(expected,"/private-services/assistant/plan",body)
 
     fun messaging(expected: Long, method: String, path: String, body: JSONObject?): JSONObject {
         require(MessagingProtocol.allowedRoute(method, path))
@@ -793,7 +794,7 @@ internal class AuthSessionClient(context: Context,
         // JSONObject supplied by a controller may still be mutated on another
         // thread while this blocking transport waits for a scope permit.
         val requestBody=try { body?.let { JSONObject(it.toString()) } }catch(_: Exception){throw AuthFailure(AuthFailure.Kind.PROTOCOL)}
-        if(path.startsWith("/shared/")){
+        if(path.startsWith("/shared/")&&!MessagingProtocol.allowedRoute(method,path)){
             val privateOwner=synchronized(guard){check(expected);confirmedPersonalOwnerId?.takeIf{it in serverProtectedOwners}}
             if(privateOwner!=null){
                 ru.genesis.calendar.security.UpdateGate.requireOpen()

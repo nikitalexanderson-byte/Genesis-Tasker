@@ -44,3 +44,6 @@ html[data-genesis-theme] .genesis-app .shared-projects-modal.shared-private-dial
 .shared-private-notice { display:flex; flex-direction:column; gap:8px; text-align:left; width:100%; padding:16px; margin-block:8px; }
 @media(max-width:767px) { html[data-genesis-theme] .genesis-app .shared-projects-modal.shared-private-dialog { inset:auto 12px 12px 12px!important; width:calc(100vw - 24px); height:auto; max-height:calc(100dvh - 24px); border-radius: var(--ui-surface-radius); padding:16px; } .shared-private-drag-bar { cursor:default; touch-action:auto; } }
 @media(max-width:600px) { .shared-space-collaboration li>button { width:100%; } .shared-private-messages li { max-width:95%; } }
+.shared-key-saved { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.shared-key-saved input { flex: 0 0 auto; width: 20px; height: 20px; accent-color: var(--teal); }
+.shared-key-saved span { min-width: 0; overflow-wrap: normal; word-break: normal; }

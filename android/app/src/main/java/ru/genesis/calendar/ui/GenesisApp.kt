@@ -117,6 +117,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     val privateController=remember(app){ru.genesis.calendar.auth.AuthController.get(app)}
     val privateAuth by privateController.state.collectAsStateWithLifecycle()
     val privateRevision by ru.genesis.calendar.security.NativePrivateProducts.revision.collectAsStateWithLifecycle()
+    val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
     LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}
     val privateProtected=privateAuth.user?.privateVault==true||ru.genesis.calendar.security.NativePrivateProducts.isProtected(activeScope)
     val privateUnlocked=remember(activeScope,privateRevision){ru.genesis.calendar.security.NativePrivateProducts.isOpen(activeScope)}
@@ -767,10 +768,10 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         DiaryScreen(diary, onClose = ::navigateBack)
                     }
                     "Сообщения" -> authState.user?.uid?.let { uid ->
-                        val repository = remember(app, activeScope, uid) {
+                        val repository = remember(app, activeScope, uid,privateCustodyRevision) {
                             ru.genesis.calendar.data.MessagingRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
-                        val messenger = remember(app, activeScope, uid) {
+                        val messenger = remember(app, activeScope, uid,privateCustodyRevision) {
                             ru.genesis.calendar.data.MessengerRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
                         MessengerScreen(messenger, prefs.language, initialProjectId=messagingProjectId,
@@ -1933,6 +1934,7 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
         }
             ru.genesis.calendar.auth.AuthPanel(app, prefs.language)
             NativeBackupEntry()
+            PrivateSharedSecurityEntry()
             onOpenAssistant?.let { open ->
                 OutlinedButton(onClick = open, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .testTag("open-server-assistant")) {

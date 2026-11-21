@@ -7,6 +7,7 @@ import {productMetadata,type ProductKind,type ProductMetadata} from './product-c
 import type {ProductVersion} from './shared-product.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
 import {isCivilDate,calendarContext} from '../calendar-context.ts';
+import {validateSharedAutomation,validateSharedTemplateManifest,validateSharedReviewPolicy,validateSharedSavedDefinition} from './shared-domain-values.ts';
 
 type RecordValue=string|number|null;
 export type SharedContentRecord=Record<string,RecordValue|{objectId:string;size:number;filename:string;mediaType:string}>;
@@ -60,9 +61,13 @@ function record(table:string,input:unknown,binding:SharedDomainBinding):SharedCo
   // membership transaction can change the live server ACL/category policy.
  }
  if(table==='shared_custom_fields'){
-  if(!['text','number','date','select','multi','checkbox','url'].includes(String(input.type)))invalid();const definition=json(input.definition_json);object(definition);const options=definition.options;if(!Array.isArray(options)||options.length>200)invalid();const ids=new Set<string>();
+  if(!['text','number','date','select','multi','checkbox','url'].includes(String(input.type)))invalid();const definition=json(input.definition_json);object(definition);const options=definition.options;if(!Array.isArray(options)||options.length>10000)invalid();const ids=new Set<string>();
   for(const option of options){object(option);if(typeof option.id!=='string'||ids.has(option.id)||typeof option.title!=='string'||option.title.length>2000||typeof option.archived!=='boolean')invalid();ids.add(option.id);}
  }
+ if(table==='shared_automation_rules'){if(![0,1].includes(Number(input.enabled))||typeof input.title!=='string'||!input.title.trim()||input.title.length>2000)invalid();validateSharedAutomation(json(input.definition_json));}
+ if(table==='shared_templates'){const manifest=validateSharedTemplateManifest(json(input.manifest_json));if(manifest.kind!==input.kind||typeof input.title!=='string'||!input.title.trim()||manifest.projects.length!==input.project_count||manifest.tasks.length!==input.task_count)invalid();}
+ if(table==='shared_project_review_policies')validateSharedReviewPolicy(json(input.policy_json));
+ if(table==='shared_saved_views'){if(!['personal','shared'].includes(String(input.visibility)))invalid();validateSharedSavedDefinition(json(input.payload));}
  if(table==='shared_sprints'){if(!['planning','active','completed'].includes(String(input.state))||!['points','hours',null].includes(input.estimate_unit as string|null))invalid();const data=json(input.content_json);object(data);if(data.calendarContext!==undefined)calendarContext(data.calendarContext as Parameters<typeof calendarContext>[0]);if(String(input.start_date)>String(input.end_date))invalid();}
  return input as SharedContentRecord;
 }
@@ -96,7 +101,7 @@ export function validateSharedRecordBody(binding:SharedDomainBinding,kind:Produc
  const source=catalogue.paths.filter(path=>path.scope===binding.kind).flatMap(path=>path.server);if(!source.includes(input.table as string))invalid();
  const row=record(input.table as string,input.record,binding);object(input.related);if(Object.keys(input.related).some(name=>!related.includes(name as never)))invalid();
  const children:Record<string,SharedContentRecord[]>={};for(const [table,values]of Object.entries(input.related)){if(!Array.isArray(values)||values.length>10000)invalid();children[table]=values.map(value=>{
-  const child=record(table,value,binding),key=kind==='comment'?'comment_id':'task_id';if(child[key]!==row.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return child;});}
+  const child=record(table,value,binding),key=kind==='comment'?'comment_id':kind==='project'?'project_id':'task_id';if(child[key]!==row.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return child;});}
  const body={...input,record:row,related:children} as SharedRecordBody;
  if(header&&(header.scopeId!==binding.scopeId||header.kind!==kind||header.entityId!==sharedRecordKey(kind,row)||header.parentId!==sharedBodyParent(body)||!samePrivateJson(header.metadata,sharedBodyMetadata(body))))throw new Error('E2EE_SHARED_HEADER_MISMATCH');
  return body;

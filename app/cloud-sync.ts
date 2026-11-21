@@ -11,7 +11,7 @@ import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
 import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
-import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,type PrivateAccountTransport} from './e2ee/product-session';
+import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
@@ -35,6 +35,7 @@ import {
 } from "./habits";
 import { clearAllTrackerAnalyticsCaches, clearTrackerAnalyticsCache } from "./tracker-cache";
 import {clearMessagingVault} from "./private-message-vault";
+import {isIndependentMessagingPath} from './e2ee/independent-messaging';
 import {clearHabitRestoreJournal} from "./habit-restore-journal";
 import {clearSharedEditorDraftStorage} from "./shared-editor-indexed-storage";
 import { acceptAuthenticatedLogin, clearPrivateDeviceStorage, hasLocalSignOut, LOCAL_SIGN_OUT_KEY, markLocalSignOut, prepareLocalSignIn, privateDeviceAccessBlocked } from "./local-sign-out";
@@ -1018,7 +1019,14 @@ export class GenesisApiError extends Error {
 
 type ApiFeedback={upgradePrompt?:boolean;e2eeObservation?:E2eeHttpObservation};
 async function api<T>(path: string, init: RequestInit = {}, feedback: ApiFeedback = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
-  if(path.startsWith('/shared/')&&confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+  if(isIndependentMessagingPath(path)&&confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const owner=confirmedTransportOwnerId,account=requirePrivateAccount(owner),controller=new AbortController(),cancel=()=>controller.abort(init.signal?.reason);account.requireOpen();
+    const unsubscribe=subscribePrivateAccount(()=>{const view=privateAccountView();if(view.ownerId!==owner||view.phase!=='ready')controller.abort();});
+    if(init.signal?.aborted)cancel();else init.signal?.addEventListener('abort',cancel,{once:true});
+    try{const result=await apiOverHttp<T>(path,{...init,signal:controller.signal},feedback);account.requireOpen();return result;}
+    finally{unsubscribe();init.signal?.removeEventListener('abort',cancel);}
+  }
+  if(path.startsWith('/shared/')&&!isIndependentMessagingPath(path)&&confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
     if(permit)throw new Error('E2EE_LEGACY_WRITE_FORBIDDEN');const owner=confirmedTransportOwnerId,current=captureAccountSessionGuard();current();
     const {privateSharedRequest}=await import('./e2ee/shared-web-live');current();const result=await privateSharedRequest(owner,path,init);current();return result as T;
   }
@@ -1133,7 +1141,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
       rememberFeatureAccess(profile.uid, profile.featureAccess);
       // This server hint only denies legacy IO. It cannot approve a device or
       // open keys, and an absent later hint never reopens this owner's writer.
-      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);privateIdentityCache=profile;}
+      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);markPrivateAccountOwner(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);privateIdentityCache=profile;}
     }
     else if(path !== '/session' && profile===null) {
       endLocalSession();
@@ -1972,7 +1980,7 @@ const readGenesisSession = sessionReader(async () => {
       if(!acceptTrialTransport(user.uid,user.featureAccess,beginTrialTransport()))throw new DOMException('Superseded account profile','AbortError');
       rememberFeatureAccess(user.uid,user.featureAccess);
       if(Object.hasOwn(user,'privatePreferencesMode')){
-        serverProtectedTransportOwners.add(user.uid);protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
+        serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
         privateIdentityCache=user;
       }
     } else invalidateTrialAccess();
@@ -3597,11 +3605,24 @@ export async function saveStoicheionDraw(kind: StoicheionDrawKind, seed: number)
   });
 }
 
-export async function requestAssistantPlan(payload: {
+export type AssistantPlanInput={
   command: string;
   audio: { data: string; mimeType: string } | null;
   context: GeminiAssistantContext;
-}) {
+};
+export async function reviewAssistantCopy(payload:AssistantPlanInput,provider:Exclude<AssistantProvider,'local'>,confirmed:boolean){
+  if(!confirmed)throw new Error('E2EE_EXTERNAL_COPY_CONSENT_REQUIRED');const owner=confirmedTransportOwnerId;
+  if(!owner||!usesPrivateProductStorage(owner))return undefined;const account=requirePrivateAccount(owner),{approveExternalCopy,EXTERNAL_COPY_NOTICE_VERSION}=await import('./e2ee/external-copy');account.requireOpen();
+  return approveExternalCopy(account,provider,'assistant-plan',payload,{confirmed,noticeVersion:EXTERNAL_COPY_NOTICE_VERSION});
+}
+export async function requestAssistantPlan(payload:AssistantPlanInput,authorization?:{provider:Exclude<AssistantProvider,'local'>;consent:import('./e2ee/external-copy').ExternalCopyConsent|undefined}) {
+  const owner=confirmedTransportOwnerId;if(owner&&usesPrivateProductStorage(owner)){
+    const account=requirePrivateAccount(owner);if(!authorization)throw new Error('E2EE_EXTERNAL_COPY_CONSENT_REQUIRED');
+    const {consumeExternalCopy,EXTERNAL_COPY_NOTICE_VERSION}=await import('./e2ee/external-copy'),snapshot=await consumeExternalCopy(account,authorization.consent,authorization.provider,'assistant-plan',payload);account.requireOpen();
+    const controller=new AbortController(),unsubscribe=subscribePrivateAccount(()=>{const view=privateAccountView();if(view.ownerId!==owner||view.phase!=='ready')controller.abort();});
+    try{const result=await api<{provider:Exclude<AssistantProvider,'local'>;model:string;plan:GeminiPlan}>('/private-services/assistant/plan',{method:'POST',signal:controller.signal,body:JSON.stringify({...snapshot,provider:authorization.provider,consentVersion:EXTERNAL_COPY_NOTICE_VERSION})});account.requireOpen();return result;}
+    finally{unsubscribe();}
+  }
   return api<{ provider: Exclude<AssistantProvider, "local">; model: string; plan: GeminiPlan }>("/assistant/plan", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -3717,7 +3738,7 @@ export async function privateServiceRequest<T>(ownerId:string,service:'dream-clo
  * device enrollment, billing or ACL is restored from this profile. */
 export async function restoreOfflinePrivateWorkspace(user:GenesisUser){
   if(localSessionEnded||privateDeviceAccessBlocked()||!Object.hasOwn(user,'privatePreferencesMode')||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
-  confirmedTransportOwnerId=user.uid;privateIdentityCache=user;serverProtectedTransportOwners.add(user.uid);
+  confirmedTransportOwnerId=user.uid;privateIdentityCache=user;serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);
   protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
   await waitForPrivateAccount(user.uid,user.language);requirePrivateAccount(user.uid).requireOpen();
 }

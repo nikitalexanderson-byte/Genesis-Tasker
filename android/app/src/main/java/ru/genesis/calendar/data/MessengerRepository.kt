@@ -217,5 +217,9 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
         else {val fresh=chat(request("GET","/conversations/${current.id}"));publish(mutable.value.copy(selected=fresh));secretLocked(fresh);if(mutable.value.secretError==null)messagesLocked()}
         inboxLocked()
     }
-    companion object { fun room(database: GenesisDatabase, scope: String, owner: String, gateway: MessagingGateway) = MessengerRepository(owner,gateway,MessagingRoomStore(database,scope,owner)) }
+    companion object {
+        private val instances=java.util.WeakHashMap<MessengerRepository,Unit>()
+        fun room(database:GenesisDatabase,scope:String,owner:String,gateway:MessagingGateway)=MessengerRepository(owner,gateway,MessagingRoomStore(database,scope,owner)).also{synchronized(instances){instances[it]=Unit}}
+        fun lockForOwner(owner:String)=synchronized(instances){for(repository in instances.keys.toList())if(repository.owner==owner){repository.currentKey?.fill(0);repository.currentKey=null;repository.currentIds=emptyMap();repository.identity=null;repository.deviceId=null;repository.mutable.value=MessengerState()}}
+    }
 }

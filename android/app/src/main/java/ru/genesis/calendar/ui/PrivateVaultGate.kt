@@ -42,11 +42,17 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
     var busy by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)};val scope=rememberCoroutineScope()
     var offlineMode by remember{mutableStateOf(false)}
     var needsRecovery by remember(state.user?.uid){mutableStateOf(false)}
+    var hardwareRecovery by remember(state.user?.uid){mutableStateOf(false)}
+    var recoveryConfirmed by remember(state.user?.uid){mutableStateOf(false)}
+    val recoveryCopy=remember(language){context.assets.open("native-key-recovery-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val hasDevice=state.user?.uid?.let(controller::privateVaultDeviceExists)?:false
     val keyguard=context.getSystemService(KeyguardManager::class.java)
     val credential=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()){result->
         if(result.resultCode==Activity.RESULT_OK){busy=true;failed=false;scope.launch{
-            try{lifecycle.withResumed{};controller.unlockPrivateVault(secret,kit,offlineMode)}catch(cancelled:kotlinx.coroutines.CancellationException){throw cancelled}catch(error:Exception){if(error.message=="E2EE_RECOVERY_KIT_REQUIRED")needsRecovery=true;failed=true}
+            try{lifecycle.withResumed{};controller.unlockPrivateVault(secret,kit,offlineMode,hardwareRecovery&&recoveryConfirmed&&!offlineMode)}catch(cancelled:kotlinx.coroutines.CancellationException){throw cancelled}catch(error:Exception){
+                if(error.message=="E2EE_RECOVERY_KIT_REQUIRED")needsRecovery=true
+                if(error.message in setOf("E2EE_DEVICE_KEY_UNAVAILABLE","E2EE_DEVICE_KEY_INVALIDATED","E2EE_CORRUPT_DEVICE_VAULT")){hardwareRecovery=true;needsRecovery=true;recoveryConfirmed=false}
+                failed=true}
             finally{secret="";busy=false}
         }}else{secret="";failed=true}
     }
@@ -73,13 +79,20 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
                     Text(copy.getString("kitHint"),style=MaterialTheme.typography.bodyMedium)
                 }
                 if(failed)Text(copy.getString("error"),color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodyMedium)
+                if(hardwareRecovery){
+                    Text(recoveryCopy.getString("notice"),style=MaterialTheme.typography.bodyMedium)
+                    Row(Modifier.fillMaxWidth(),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                        Checkbox(checked=recoveryConfirmed,onCheckedChange={recoveryConfirmed=it},enabled=!busy)
+                        Text(recoveryCopy.getString("confirmed"),modifier=Modifier.weight(1f))
+                    }
+                }
                 if(state.user==null||state.requiresSignIn){Button(onClick={context.activity()?.let{controller.signIn(it,language)}},enabled=!busy&&!state.busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("signIn"))}}
                 else if(!keyguard.isDeviceSecure){Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("screenLock"))}}
                 else Button(onClick={
                     offlineMode=false
                     @Suppress("DEPRECATION") val intent=keyguard.createConfirmDeviceCredentialIntent(copy.getString("title"),copy.getString("description"))
                     if(intent!=null)credential.launch(intent)else failed=true
-                },enabled=!busy&&!state.busy&&(hasDevice&&!needsRecovery||secret.isNotBlank()&&kit!=null),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString(if(busy)"busy"else "unlock"))}
+                },enabled=!busy&&!state.busy&&(hasDevice&&!needsRecovery||secret.isNotBlank()&&kit!=null)&&(!hardwareRecovery||recoveryConfirmed),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(if(hardwareRecovery&&!busy)recoveryCopy.getString("action")else copy.getString(if(busy)"busy"else "unlock"))}
                 if(hasDevice&&state.user!=null&&keyguard.isDeviceSecure)TextButton(onClick={
                     offlineMode=true
                     @Suppress("DEPRECATION") val intent=keyguard.createConfirmDeviceCredentialIntent(copy.getString("title"),copy.getString("offline"))

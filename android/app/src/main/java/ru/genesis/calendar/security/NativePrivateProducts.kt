@@ -19,6 +19,7 @@ internal object NativePrivateProducts{
     private var inventory:E2eePrivatePaths?=null
     private var applicationContext:Context?=null
     val revision=MutableStateFlow(0L)
+    val custodyRevision=MutableStateFlow(0L)
     @Synchronized fun initialize(context:Context){
         applicationContext=context.applicationContext
         inventory=E2eePrivatePaths.load(context)
@@ -32,11 +33,13 @@ internal object NativePrivateProducts{
     @Synchronized fun isOpen(scope:String):Boolean=entries[scope]?.let{try{it.account.requireOpen();true}catch(_:IllegalStateException){false}}?:false
     @Synchronized fun isOffline(scope:String):Boolean=entries[scope]?.account?.offline==true
     @Synchronized fun attach(account:E2eeProductAccount,product:E2eePersonalProduct,preferences:E2eePrivatePreferences?=null){
-        account.requireOpen();val scope=CloudAccountSnapshot.scopeFor(account.ownerId);check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};entries.remove(scope)?.account?.close();entries[scope]=Entry(requireNotNull(applicationContext),account,product,preferences);revision.value++
+        account.requireOpen();val scope=CloudAccountSnapshot.scopeFor(account.ownerId);check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};entries.remove(scope)?.account?.close();clearMessageMemory(account.ownerId);entries[scope]=Entry(requireNotNull(applicationContext),account,product,preferences);custodyRevision.value++;revision.value++
     }
-    @Synchronized fun lock(){for(entry in entries.values)entry.account.close();entries.clear();revision.value++}
+    @Synchronized fun lock(){val owners=entries.values.map{it.account.ownerId};for(entry in entries.values)entry.account.close();entries.clear();owners.forEach(::clearMessageMemory);if(owners.isNotEmpty())custodyRevision.value++;revision.value++}
+    private fun clearMessageMemory(owner:String){ru.genesis.calendar.data.MessagingRepository.lockForOwner(owner);ru.genesis.calendar.data.MessengerRepository.lockForOwner(owner)}
     @Synchronized private fun entry(scope:String):Entry{check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};val value=entries[scope]?:error("E2EE_UNLOCK_REQUIRED");value.account.requireOpen();return value}
     fun account(scope:String,owner:String):E2eeProductAccount=entry(scope).account.also{check(it.ownerId==owner){"E2EE_SCOPE_BINDING_MISMATCH"}}
+    fun currentAccount(scope:String):E2eeProductAccount=entry(scope).account
     fun preferences(scope:String):E2eePrivatePreferences=checkNotNull(entry(scope).preferences){"E2EE_PRODUCT_READ_REQUIRED"}
     fun stoicheion(scope:String):E2eeStoicheionProduct=entry(scope).stoicheion
     fun advice(scope:String):E2eeNativeAdviceProduct=entry(scope).advice

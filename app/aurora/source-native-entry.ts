@@ -54,6 +54,7 @@ async function run(encoded:string){
       if(typeof value.online!=='boolean')throw new Error('E2EE_SHARED_REQUEST_INVALID');
       const model=new SharedLiveModel({binding:value.binding as SharedDomainBinding,actorId:value.actorId,online:value.online,current,
         context:async()=>validateSharedLiveContext(await invoke('context')),
+        localVersions:async()=>await invoke('localVersions') as import('../e2ee/shared-product.ts').PendingProductVersion[],
         versions:async()=>{const heads=await invoke('heads');if(!Array.isArray(heads)||heads.length>10000)throw new Error('E2EE_PRODUCT_INDEX_INVALID');const rows:ProductVersion[]=[];let size=0;
           for(const head of heads){exactKeys(head,['entityId']);const row=await invoke('version',{entityId:head.entityId}) as ProductVersion;size+=JSON.stringify(row).length;if(size>128*1024*1024)throw new Error('E2EE_PRODUCT_CONTENT_TOO_LARGE');rows.push(row);}return rows;},
         stage:async(edits:ProductEdit[],intentId:string)=>await invoke('stage',{edits,intentId}) as string,

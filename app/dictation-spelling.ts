@@ -1,5 +1,7 @@
 /** Optional, free spelling checks for newly dictated phrases only. No account
  * credentials, request logs, persistent cache, or paid-service fallback. */
+import {privateAccountView,requirePrivateAccount,subscribePrivateAccount} from './e2ee/product-session.ts';
+import {consumeExternalCopy,type ExternalCopyConsent} from './e2ee/external-copy.ts';
 const SPELLING_ENDPOINT = "https://speller.yandex.net/services/spellservice.json/checkText";
 const MAX_INPUT = 4_000;
 const MAX_REPLY_BYTES = 65_536;
@@ -110,12 +112,17 @@ async function spellingReply(response: Response, signal: AbortSignal): Promise<u
 
 /** Call only after the person enables the disclosed external spelling option.
  * Abort or any transport/validation failure always returns the original phrase. */
-export async function correctDictationSpelling(text: string, language: string, signal?: AbortSignal): Promise<SpellingResult> {
+export async function correctDictationSpelling(text: string, language: string, signal?: AbortSignal,authorization?:{ownerId:string;consent:ExternalCopyConsent}): Promise<SpellingResult> {
   const fallback: SpellingResult = {text, available: false};
   const lang = spellingLanguage(language);
   if (lang === null || text.length > MAX_INPUT || signal?.aborted) return fallback;
   if (text.trim() === "") return {text, available: true};
   const controller = new AbortController();
+  const privateView=privateAccountView(),owner=authorization?.ownerId??privateView.ownerId;
+  const account=owner?(()=>{try{return requirePrivateAccount(owner);}catch{return null;}})():null;
+  if(authorization&&!account||privateView.ownerId&&!authorization)return fallback;
+  const current=()=>{if(account&&requirePrivateAccount(account.ownerId)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');signal?.throwIfAborted();};
+  const unsubscribe=account?subscribePrivateAccount(()=>{try{current();}catch{controller.abort();}}):()=>{};
   const cancel = () => controller.abort();
   const timeout = setTimeout(cancel, TIMEOUT_MS);
   signal?.addEventListener("abort", cancel, {once: true});
@@ -127,12 +134,14 @@ export async function correctDictationSpelling(text: string, language: string, s
   if (signal?.aborted) cancel();
   try {
     const operation = (async () => {
+      current();if(account){if(!authorization)throw new Error('E2EE_EXTERNAL_COPY_CONSENT_REQUIRED');await consumeExternalCopy(account,authorization.consent,'yandex-speller','dictation',{text,language});current();}
       const response = await fetch(SPELLING_ENDPOINT, {
         method: "POST", mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", redirect: "error",
         headers: {"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
         body: new URLSearchParams({text, lang, options: "6", format: "plain"}), signal: controller.signal,
       });
       const reply = await spellingReply(response, controller.signal);
+      current();
       if (controller.signal.aborted || signal?.aborted) return fallback;
       return {text: applySpellingReply(text, reply, lang), available: true};
     })();
@@ -141,6 +150,7 @@ export async function correctDictationSpelling(text: string, language: string, s
     controller.abort();
     return fallback;
   } finally {
+    unsubscribe();
     clearTimeout(timeout);
     signal?.removeEventListener("abort", cancel);
     if (rejectAbort) controller.signal.removeEventListener("abort", rejectAbort);

@@ -449,9 +449,11 @@ internal class MessagingRepository(private val owner: String, private val gatewa
     companion object {
         private val instances = java.util.WeakHashMap<GenesisDatabase, MutableMap<String, java.lang.ref.WeakReference<MessagingRepository>>>()
         fun room(database: GenesisDatabase, scope: String, ownerUid: String, gateway: MessagingGateway): MessagingRepository = synchronized(instances) {
-            val key = "$scope:$ownerUid"
+            val key = "$scope:$ownerUid:${gateway.custodyEpoch}"
             val entries = instances.getOrPut(database) { mutableMapOf() }
+            entries.entries.removeAll{it.value.get()==null}
             entries[key]?.get() ?: MessagingRepository(ownerUid, gateway, MessagingRoomStore(database, scope, ownerUid)).also { entries[key] = java.lang.ref.WeakReference(it) }
         }
+        fun lockForOwner(owner:String)=synchronized(instances){for(entries in instances.values)for(reference in entries.values)reference.get()?.takeIf{it.owner==owner}?.let{it.currentKey?.fill(0);it.currentKey=null;it.identity=null;it.currentPeer=null;it.pins=JSONObject();it.initialized=false;it.mutable.value=MessagingState()}}
     }
 }

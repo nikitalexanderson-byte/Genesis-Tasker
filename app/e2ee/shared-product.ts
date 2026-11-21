@@ -14,6 +14,7 @@ type Draft={operation:Omit<ProductMutation,'payloadHash'>;version:ProductVersion
 type Transaction={format:'genesis-product-transaction-v1';scopeId:string;intentId:string;drafts:Draft[];acknowledged:boolean;receipt:Record<string,WireValue>|null};
 type Index={protocol:1;scopeId:string;entities:ProductEntity[]};
 export type ProductEdit={action:ProductMutation['action'];entityId:string;kind:ProductKind;expectedRevision:number;parentId:string|null;metadata:ProductMetadata;body:unknown;proposalId?:string};
+export type PendingProductVersion={intentId:string;action:ProductMutation['action'];expectedRevision:number;version:ProductVersion};
 export type SharedProductOptions={scopeId:string;kind:'project'|'space';device:UnlockedWebDevice;client:E2eeScopeClient;assertCurrent:()=>void;
  /** Required real domain parser. Unknown/future records are review errors,
   * not permissive JSON blobs or empty categories. */
@@ -107,6 +108,14 @@ export class E2eeSharedProduct{
  flush(intentId:string){assertTechnical(intentId);return this.#operation(()=>this.#flush(intentId));}
  pending(){return this.#operation(async()=>{const prefix=await this.#prefix,ids=await this.options.device.vault.listLocal('draft',prefix);this.#current();const pending:string[]=[];
   for(const id of ids){const value=await this.#transaction(id).load();if(!value)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');if(!value.value.acknowledged)pending.push(value.value.intentId);}return pending;});}
+ localVersions(){return this.#operation(async()=>{const prefix=await this.#prefix,ids=await this.options.device.vault.listLocal('draft',prefix),rows:PendingProductVersion[]=[];this.#current();
+  for(const id of ids){const saved=await this.#transaction(id).load();if(!saved)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');if(saved.value.acknowledged)continue;
+   for(const draft of saved.value.drafts){const version=await this.#version(draft.version),operation=draft.operation;
+    if(version.entityId!==operation.entityId||version.kind!==operation.kind||version.revision!==operation.expectedRevision+1||version.parentId!==operation.parentId||version.deleted!==(operation.action==='delete')||!same(version.metadata,operation.metadata))throw new Error('E2EE_PRODUCT_TRANSACTION_INVALID');
+    rows.push({intentId:saved.value.intentId,action:operation.action,expectedRevision:operation.expectedRevision,version});if(rows.length>10000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');
+   }
+  }return rows;
+ });}
  async #proposal(id:string,expectedHash:string){assertTechnical(id);await this.#readIndex(false);const proposal=this.#proposals.get(id);
   if(!proposal||proposal.operation.payloadHash!==expectedHash)throw new Error('E2EE_PRODUCT_PROPOSAL_STALE');
   const opened=await this.#document(proposal.operation.objectId,'task').load('online'),version=await this.#version(opened.value);this.#current();

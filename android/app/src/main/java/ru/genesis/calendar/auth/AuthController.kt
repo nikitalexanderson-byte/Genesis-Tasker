@@ -501,9 +501,9 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     fun privateVaultDeviceExists(uid:String):Boolean=ru.genesis.calendar.security.E2eeDeviceVault(app,uid).exists()
     /** Called after Android's credential confirmation. Recovery input is kept
      * in this call only; the server receives signed public enrollment proofs. */
-    suspend fun unlockPrivateVault(secretText:String?=null,recoveryKit:JSONObject?=null,offline:Boolean=false){
+    suspend fun unlockPrivateVault(secretText:String?=null,recoveryKit:JSONObject?=null,offline:Boolean=false,restoreHardware:Boolean=false){
         val identity=mutableState.value.user?:error("E2EE_ACCOUNT_BINDING_REQUIRED")
-        check(identity.privateVault&&(offline||!mutableState.value.requiresSignIn)){"E2EE_ACCOUNT_BINDING_REQUIRED"}
+        check(identity.privateVault&&(offline||!mutableState.value.requiresSignIn)&&(!restoreHardware||!offline)){"E2EE_ACCOUNT_BINDING_REQUIRED"}
         val uid=identity.uid;val epoch=app.workspaceEpoch;var opened:ru.genesis.calendar.security.E2eeProductAccount?=null
         val lifecycle=privateVaultLifecycle.get()
         fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&mutableState.value.user?.uid==uid&&(offline||!mutableState.value.requiresSignIn)
@@ -524,7 +524,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
         try{withContext(Dispatchers.IO){
             current();val account=if(offline)ru.genesis.calendar.security.E2eeProductAccount.openOffline(app,uid,transport,::current)
-                else ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit);opened=account
+                else ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit,restoreHardware);opened=account
             val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load(offline);current()
             val preferences=ru.genesis.calendar.security.E2eePrivatePreferences(app,account);preferences.load();current()
             ru.genesis.calendar.security.NativePrivateProducts.attach(account,product,preferences)
@@ -654,10 +654,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun sharedMindmapDocument(space: String, path: String, body: JSONObject?, method: String): JSONObject =
         sharedOnlineCall { api, generation -> api.sharedMindmapDocument(generation, space, path, body, method) }
 
-    internal fun messagingGateway(uid: String): MessagingGateway = object : MessagingGateway {
+    internal fun messagingGateway(uid: String): MessagingGateway {
+      val epoch=ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.value
+      return object : MessagingGateway {
+        override val custodyEpoch=epoch
         override fun featureAccess(): FeatureAccess = mutableState.value.accountSettings?.featureAccess ?: FeatureAccess()
         override fun check() {
             if (mutableState.value.user?.uid != uid || app.workspaceScope != CloudAccountSnapshot.scopeFor(uid)) throw CancellationException()
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid))&&ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.value!=epoch)throw CancellationException()
+            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid)))ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(uid),uid).requireOpen()
         }
         override suspend fun request(method: String, path: String, body: JSONObject?): JSONObject {
             check()
@@ -673,10 +679,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
     }
 
+    }
     internal fun assistantGateway(uid: String): AssistantGateway = object : AssistantGateway {
         override fun check() {
             val state = mutableState.value
             check(state.user?.uid == uid && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "Аккаунт изменился. Откройте помощника заново." }
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid)))ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(uid),uid).requireOpen()
         }
         private suspend fun call(body: JSONObject?): JSONObject {
             check(); val generation = client.currentGeneration()
@@ -686,8 +695,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             }
         }
         override suspend fun status() = call(null)
-        override suspend fun plan(command: String, audio: JSONObject?, context: JSONObject) =
-            call(JSONObject().put("command", command).put("audio", audio ?: JSONObject.NULL).put("context", context))
+        override suspend fun plan(command: String, audio: JSONObject?, context: JSONObject):JSONObject {
+            check(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid))){"E2EE_EXTERNAL_COPY_CONSENT_REQUIRED"}
+            return call(JSONObject().put("command", command).put("audio", audio ?: JSONObject.NULL).put("context", context))
+        }
+        override suspend fun planWithConsent(command:String,audio:JSONObject?,context:JSONObject,provider:String,consent:ru.genesis.calendar.security.ExternalCopyConsent):JSONObject{
+            check();val account=ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(uid),uid)
+            val payload=consent.consume(account,provider,"assistant-plan",JSONObject().put("command",command).put("audio",audio?:JSONObject.NULL).put("context",context))
+            payload.put("provider",provider).put("consentVersion",ru.genesis.calendar.security.ExternalCopyConsent.NOTICE_VERSION);val generation=client.currentGeneration()
+            return withContext(Dispatchers.IO){check();client.privateAssistant(generation,payload).also{account.requireOpen();check();check(client.isCurrent(generation)){"E2EE_ACCOUNT_CHANGED"}}}
+        }
     }
 
     internal fun diaryGateway(uid: String): DiaryGateway {

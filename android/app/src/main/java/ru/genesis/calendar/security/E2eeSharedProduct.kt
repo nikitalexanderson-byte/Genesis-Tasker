@@ -85,6 +85,19 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
         store.save(state.put("acknowledged",true).put("receipt",receipt),saved.serial);check();return JSONObject(receipt.toString())
     }
     @Synchronized fun pending():List<String>{check();return device.vault.listLocal("draft",prefix).mapNotNull{id->val value=transaction(id).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");if(value.value.getBoolean("acknowledged"))null else value.value.getString("intentId")}}
+    @Synchronized fun localVersions():JSONArray{
+        check();val result=JSONArray()
+        for(id in device.vault.listLocal("draft",prefix)){
+            val saved=transaction(id).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");if(saved.value.getBoolean("acknowledged"))continue
+            val drafts=saved.value.getJSONArray("drafts")
+            for(at in 0 until drafts.length()){
+                val draft=drafts.getJSONObject(at);val header=version(draft.getJSONObject("version"));val operation=draft.getJSONObject("operation")
+                check(header.get("entityId")==operation.get("entityId")&&header.get("kind")==operation.get("kind")&&header.getLong("revision")==operation.getLong("expectedRevision")+1&&header.get("parentId")==operation.get("parentId")&&header.getBoolean("deleted")== (operation.getString("action")=="delete")&&E2eeProductJson.same(header.get("metadata"),operation.get("metadata"))){"E2EE_PRODUCT_TRANSACTION_INVALID"}
+                result.put(JSONObject().put("intentId",saved.value.get("intentId")).put("action",operation.get("action")).put("expectedRevision",operation.get("expectedRevision")).put("version",header))
+                check(result.length()<=10000){"E2EE_SCOPE_OBJECT_LIMIT"}
+            }
+        };return result
+    }
     @Synchronized fun proposal(id:String,expectedHash:String):JSONObject{
         check();E2eeKeys.technical(id);index();val proposal=proposals[id]?:error("E2EE_PRODUCT_PROPOSAL_STALE");val operation=proposal.getJSONObject("operation");check(operation.get("payloadHash")==expectedHash){"E2EE_PRODUCT_PROPOSAL_STALE"}
         val opened=document(operation.getString("objectId"),"task").load();val header=version(opened.value);check(!opened.pending&&opened.conflict==null&&opened.remoteRevision==1L&&header.get("entityId")==proposal.get("entityId")&&header.get("kind")=="task"

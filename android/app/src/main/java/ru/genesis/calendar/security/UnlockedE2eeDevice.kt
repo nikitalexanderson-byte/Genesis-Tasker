@@ -26,6 +26,21 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
                 &&E2eeCommands.canonical(saved.getJSONObject("authorityPin")).contentEquals(E2eeCommands.canonical(bundle.getJSONObject("authorityPin")))) {"E2EE_DEVICE_KEY_UNAVAILABLE"}
         }finally{bytes.fill(0)}
     }
+    internal fun retainDeviceRecovery(secret:ByteArray,kit:JSONObject,current:()->Unit){
+        requireOpen();current();ensureDurableKeys();val bytes=persistence.unlock()
+        try{
+            persistence.retainRecovery(secret,kit,bytes);current()
+            val custody=persistence.originalCustodyStorage();var retained=false
+            for(id in custody.list(ownerId,current)){
+                val reference=custody.describe(ownerId,id,current)?:error("E2EE_ORIGINAL_CUSTODY_UNAVAILABLE")
+                if(reference.getJSONObject("original").getString("deviceId")!=deviceId)continue
+                val artifact=custody.get(ownerId,id,current)?:error("E2EE_ORIGINAL_CUSTODY_UNAVAILABLE")
+                E2eeOriginalCustody.open(ownerId,authorityPin,kit,secret,reference,artifact,storage,current).close();retained=true
+            }
+            if(!retained)preserveOriginalSources(secret,kit,current);current()
+        }
+        finally{bytes.fill(0)}
+    }
     /** New artifact carries only the original local root/PUBLIC signer, signed
      * by the separately confirmed primary owner recovery authority. */
     internal fun preserveOriginalSources(secret:ByteArray,recoveryKit:JSONObject,assertCurrent:()->Unit):JSONObject {

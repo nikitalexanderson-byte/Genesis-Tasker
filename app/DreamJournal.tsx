@@ -4,7 +4,9 @@ import { useDiary } from "./DiaryProvider";
 import { diaryCopy } from "./diary-copy";
 import { newDiaryNote, validDreamDay, type DiaryNote } from "./diary-model";
 import type { DiaryRecord } from "./diary-storage";
-import { GenesisApiError, type GenesisUser } from "./cloud-sync";
+import { GenesisApiError,usesPrivateProductStorage, type GenesisUser } from "./cloud-sync";
+import {requirePrivateAccount} from './e2ee/product-session';
+import {approveExternalCopy,EXTERNAL_COPY_NOTICE_VERSION} from './e2ee/external-copy';
 import { featureAllowed } from "./feature-access";
 import { requestUpgrade } from "./upgrade-events";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
@@ -181,11 +183,14 @@ function DreamEditor({user,record,date,language,onSaved,onClose,dateEditable=tru
           const index=session.parts.push(phrase)-1;publish();
           if(!confirmed||!spelling.current||!supportedSpellingLanguage(language))return;
           const controller=new AbortController();spellingRequests.current.add(controller);
-          void correctDictationSpelling(heard,language,controller.signal).then(result=>{
+          void (async()=>{const account=usesPrivateProductStorage(user.uid)?requirePrivateAccount(user.uid):null;
+            const consent=account?await approveExternalCopy(account,'yandex-speller','dictation',{text:heard,language},{confirmed:current()&&spelling.current,noticeVersion:EXTERNAL_COPY_NOTICE_VERSION}):undefined;
+            if(!current()||!spelling.current||controller.signal.aborted)return;
+            const result=await correctDictationSpelling(heard,language,controller.signal,consent?{ownerId:user.uid,consent}:undefined);
             if(!current()||!spelling.current||controller.signal.aborted)return;
             setSpellingUnavailable(!result.available);
             if(result.available){session.parts[index]=formatDictation(result.text,language);publish();}
-          }).finally(()=>spellingRequests.current.delete(controller));
+          })().catch(()=>{if(current()&&spelling.current&&!controller.signal.aborted)setSpellingUnavailable(true);}).finally(()=>spellingRequests.current.delete(controller));
         }
       });
       voice.current.start();

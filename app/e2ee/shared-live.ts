@@ -3,8 +3,12 @@ import {sharedBodyMetadata,sharedBodyParent,sharedRecordKey,validateSharedRecord
 import {samePrivateJson} from './product-json.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
-import type {ProductEdit,ProductVersion} from './shared-product.ts';
+import type {ProductEdit,ProductVersion,PendingProductVersion} from './shared-product.ts';
 import type {ProductKind} from './product-contract.ts';
+import {overlayPendingSharedVersions} from './shared-local-overlay.ts';
+import {calendarContext,isCivilDate} from '../calendar-context.ts';
+import {validateMindmap} from '../mindmaps-model.ts';
+import {encodeE2eeBytes} from './envelope.ts';
 
 type ObjectValue=Record<string,unknown>;
 export type SharedLiveContext={ownerId:string;spaceId:string;role:string;spaceRole:string;permissions:Record<string,boolean>;members:ObjectValue[];invitations:ObjectValue[]};
@@ -13,6 +17,7 @@ type SavedRequest=SavedSharedRequest;
 export interface SharedLivePorts{
  binding:SharedDomainBinding;actorId:string;online:boolean;current:()=>void;
  context:()=>Promise<SharedLiveContext>;versions:()=>Promise<ProductVersion[]>;
+ localVersions?:()=>Promise<PendingProductVersion[]>;
  stage:(edits:ProductEdit[],intentId:string)=>Promise<string>;flush:(intentId:string)=>Promise<unknown>;
  loadRequest:(id:string)=>Promise<{value:SavedRequest;serial:number}|null>;
  saveRequest:(value:SavedRequest,expected:number|null)=>Promise<number>;
@@ -47,7 +52,8 @@ export class SharedLiveModel{
  async #snapshot(){const context=await this.ports.context();this.ports.current();const versions=await this.ports.versions();this.ports.current();
   if(context.ownerId.length<1||context.spaceId.length<1||!Array.isArray(context.members)||!Array.isArray(context.invitations))throw new Error('E2EE_SHARED_CONTEXT_INVALID');
   for(const row of versions){if(row.scopeId!==this.ports.binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');if(!row.deleted)validateSharedRecordBody(this.ports.binding,row.kind,row.body,row);}
-  return{context,versions};
+  const local=this.ports.localVersions?await this.ports.localVersions():[];this.ports.current();
+  return{context,versions:overlayPendingSharedVersions(this.ports.binding,versions,local)};
  }
  #row(version:ProductVersion,context:SharedLiveContext):ObjectValue{
   const body=plain(version),source=body.record,result:ObjectValue={};
@@ -71,9 +77,36 @@ export class SharedLiveModel{
    result.review={enabled:false,allowed:{checked:false,confirmed:false,deletable:false},entries:(related.shared_task_reviews??[]).map(row=>({kind:row.kind,userId:row.user_id,displayName:String(context.members.find(member=>member.userId===row.user_id)?.displayName??''),reviewedAt:row.reviewed_at}))};
   }
   if(body.kind==='comment'){result.mentionIds=(body.related.shared_comment_mentions??[]).map(row=>row.user_id);result.authorName=String(context.members.find(member=>member.userId===source.author_id)?.displayName??'');}
+  if(body.kind==='project')result.labelIds=(body.related.shared_project_labels??[]).map(row=>row.label_id);
   if(body.kind==='mindmap')result.document=parse(source.content);
+  if(body.kind==='automation')Object.assign(result,{definition:parse(source.definition_json),enabled:source.enabled===1,deleted:source.deleted_at!==null,canManage:context.permissions.manageProjects,workerCompletedAt:null});
+  if(body.kind==='template')Object.assign(result,{manifest:parse(source.manifest_json),notices:parse(source.source_notices_json),deleted:source.deleted_at!==null,system:false,canEdit:context.permissions.manageProjects});
+  if(body.kind==='custom-field'){const definition=parse(source.definition_json);object(definition);Object.assign(result,definition,{required:source.required===1,showCard:source.show_card===1,showList:source.show_list===1,archived:source.archived_at!==null});}
+  if(body.kind==='sprint'){const content=parse(source.content_json);object(content);Object.assign(result,content);}
+  if(body.kind==='view')Object.assign(result,{definition:parse(source.payload),invalid:false,canEdit:source.owner_id===this.ports.actorId||context.permissions.manageProjects});
   if(body.kind==='category'&&body.table==='shared_member_categories')result.permissions=parse(source.permissions_json);
   return result;
+ }
+ async #fingerprint(versions:ProductVersion[],input:unknown){const bytes=new TextEncoder().encode(JSON.stringify({scopeId:this.ports.binding.scopeId,versions:[...versions].sort((a,b)=>a.entityId<b.entityId?-1:a.entityId>b.entityId?1:0),input}));
+  try{return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)));}finally{bytes.fill(0);}}
+ #fieldInput(input:ObjectValue){
+  const names=['id','title','type','projectId','options','position','required','showCard','showList','archived','expectedRevision'],result:ObjectValue={};
+  if(Object.keys(input).some(name=>![...names,'fingerprint','operationId','replaceType'].includes(name)))throw new Error('CUSTOM_FIELD_INVALID');
+  for(const name of names){if(!Object.hasOwn(input,name))throw new Error('CUSTOM_FIELD_INVALID');result[name]=structuredClone(input[name]);}
+  assertTechnical(result.id);if(typeof result.title!=='string'||!result.title.trim()||result.title.length>2000||!['text','number','date','select','multi','checkbox','url'].includes(String(result.type))||!Number.isSafeInteger(result.position)||Math.abs(Number(result.position))>100000)throw new Error('CUSTOM_FIELD_INVALID');
+  if(result.projectId!==(this.ports.binding.kind==='project'?this.ports.binding.resourceId:null))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  for(const name of ['required','showCard','showList','archived'])if(typeof result[name]!=='boolean')throw new Error('CUSTOM_FIELD_INVALID');number(result.expectedRevision);
+  if(!Array.isArray(result.options)||result.options.length>10000)throw new Error('CUSTOM_FIELD_OPTIONS_LIMIT');const seen=new Set<string>();
+  for(const option of result.options){exactKeys(option,['id','title','archived']);assertTechnical(option.id);if(seen.has(option.id)||typeof option.title!=='string'||!option.title.trim()||option.title.length>2000||typeof option.archived!=='boolean')throw new Error('CUSTOM_FIELD_INVALID');seen.add(option.id);}
+  return result;
+ }
+ async #fieldPreview(input:ObjectValue,versions:ProductVersion[],context:SharedLiveContext){const draft=this.#fieldInput(input),old=versions.find(row=>!row.deleted&&row.kind==='custom-field'&&plain(row).record.id===draft.id);
+  if((old?.revision??0)!==draft.expectedRevision)throw new Error('CUSTOM_FIELD_CONFLICT');const prior=old?this.#row(old,context):null,replaceType=!!prior&&prior.type!==draft.type;
+  const previousOptions=prior?.options as {id:string;title:string;archived:boolean}[]|undefined,options=draft.options as {id:string;title:string;archived:boolean}[];
+  if(options.filter(row=>!row.archived).length>200||options.length>Math.max(200,replaceType?0:previousOptions?.length??0))throw new Error('CUSTOM_FIELD_OPTIONS_LIMIT');
+  if(!replaceType&&previousOptions?.some(option=>!options.some(row=>row.id===option.id)))throw new Error('CUSTOM_FIELD_OPTIONS_RETAIN_REQUIRED');
+  const field={...draft,spaceId:context.spaceId,predecessorId:replaceType?draft.id:prior?.predecessorId??null};delete field.expectedRevision;
+  return{field,fingerprint:await this.#fingerprint(versions,draft),valueCount:versions.filter(row=>!row.deleted&&row.kind==='task'&&(plain(row).related.shared_custom_field_values??[]).some(value=>value.field_id===draft.id)).length,replaceType,previousRevision:old?.revision??0,preservesPreviousValues:true};
  }
  #task(version:ProductVersion,versions:ProductVersion[],context:SharedLiveContext){
   const result=this.#row(version,context),children=versions.filter(row=>!row.deleted&&row.kind==='task'&&plain(row).record.parent_task_id===result.id);
@@ -123,7 +156,22 @@ export class SharedLiveModel{
    const task=this.#find(versions,'task',segments[1]);if(segments.length===2)return{task:this.#task(task,versions,context)};
    if(segments[2]==='comments')return{comments:live.filter(row=>row.kind==='comment'&&plain(row).record.task_id===segments[1]).map(row=>this.#row(row,context)),nextCursor:null,hasMore:false};
   }
-  const collections:Record<string,[ProductKind,string?]>={statuses:['status'],categories:['category','shared_project_categories'],labels:['label'],comments:['project-comment'],mindmaps:['mindmap'],'project-categories':['category','shared_space_project_categories'],'member-categories':['category','shared_member_categories']};
+  if(segments[0]==='workflow'){
+   const saved=live.find(row=>row.kind==='workflow'),definition=saved?parse(plain(saved).record.definition_json):{statuses:[],transitions:[]};object(definition);
+   if(segments[1]==='history')throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+   const statuses=list('status'),counts=Object.fromEntries(statuses.map(status=>[String(status.id),live.filter(row=>row.kind==='task'&&plain(row).record.status_id===status.id).length]));
+   return{config:{...definition,enabled:saved?plain(saved).record.enabled===1:false,revision:saved?.revision??0},counts,context:{project:this.#row(this.#find(versions,'project',this.ports.binding.resourceId),context),statuses,customFieldDefinitions:list('custom-field')}};
+  }
+  if(segments[0]==='planning'&&segments.length===1){const saved=live.find(row=>row.kind==='planning'),raw=saved?plain(saved).record:null,tasks=live.filter(row=>row.kind==='task').map(row=>this.#task(row,versions,context)),totals:ObjectValue={},byAssignee:ObjectValue={};
+   const summarize=(rows:ObjectValue[])=>({count:rows.length,completed:rows.filter(row=>row.completedAt!==null).length,points:{value:rows.reduce((sum,row)=>sum+(typeof row.storyPoints==='number'?row.storyPoints:0),0),unestimated:rows.filter(row=>row.storyPoints===null||row.storyPoints===undefined).length},hours:{value:rows.reduce((sum,row)=>sum+(typeof row.estimateHours==='number'?row.estimateHours:0),0),unestimated:rows.filter(row=>row.estimateHours===null||row.estimateHours===undefined).length}});
+   const sprints=list('sprint');for(const id of ['backlog',...sprints.map(row=>String(row.id))]){const rows=tasks.filter(row=>(row.sprintId??'backlog')===id);totals[id]=summarize(rows);byAssignee[id]=Object.fromEntries([...new Set(rows.map(row=>String(row.assigneeId??'')))].map(userId=>[userId,summarize(rows.filter(row=>String(row.assigneeId??'')===userId))]));}
+   return{config:{enabled:raw?.enabled===1,estimateUnit:raw?.estimate_unit??'points',revision:saved?.revision??0},sprints,totals,byAssignee,fingerprint:await this.#fingerprint(versions,null),context:{permissions:context.permissions}};
+  }
+  if(segments[0]==='automations'){const rules=list('automation').filter(row=>row.deleted===(url.searchParams.get('deleted')==='true'));
+   if(segments.length===1)return{rules,nextCursor:null,canCreate:context.permissions.manageProjects,workerCompletedAt:null};
+   if(segments.length===2){const rule=rules.find(row=>row.id===segments[1]);if(!rule)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');return{rule};}
+  }
+  const collections:Record<string,[ProductKind,string?]>={statuses:['status'],categories:['category','shared_project_categories'],labels:['label'],comments:['project-comment'],mindmaps:['mindmap'],'project-categories':['category','shared_space_project_categories'],'member-categories':['category','shared_member_categories'],'custom-fields':['custom-field'],templates:['template'],views:['view']};
   if(Object.hasOwn(collections,segments[0])){const [kind,table]=collections[segments[0]],rows=list(kind,table);return segments[1]?{[kind]:rows.find(row=>row.id===segments[1])??(()=>{throw new Error('E2EE_PRODUCT_ENTITY_MISSING');})()}:{[segments[0]==='project-categories'||segments[0]==='member-categories'?'categories':segments[0]]:rows};}
   throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
  }
@@ -140,6 +188,16 @@ export class SharedLiveModel{
  }
  async #prepare(request:SavedRequest){
   const {context,versions}=await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
+  if(parts[0]==='custom-fields'&&parts.length===1&&request.method==='PUT'){
+   const draft=this.#fieldInput(input),preview=await this.#fieldPreview(input,versions,context);if(preview.fingerprint!==input.fingerprint||preview.replaceType!==input.replaceType)throw new Error('E2EE_SHARED_PREVIEW_CHANGED');
+   const old=versions.find(row=>!row.deleted&&row.kind==='custom-field'&&plain(row).record.id===draft.id),expected=old?.revision??0,replace=preview.replaceType,id=replace?crypto.randomUUID():String(draft.id);
+   const row=this.#newRecord('shared_custom_fields',{},context,request.createdAt,id);row.project_id=draft.projectId as string|null;row.type=draft.type as string;row.definition_json=JSON.stringify({title:draft.title,options:draft.options});row.position=draft.position as number;
+   for(const [name,column]of [['required','required'],['showCard','show_card'],['showList','show_list']])row[column]=draft[name]?1:0;
+   row.archived_at=draft.archived?request.createdAt:null;row.predecessor_id=replace?String(draft.id):old?plain(old).record.predecessor_id:null;row.revision=replace?1:expected+1;if(old&&!replace){row.created_at=plain(old).record.created_at;row.created_by=plain(old).record.created_by;}
+   const body=this.#body('custom-field','shared_custom_fields',row);if(replace&&old){const archived=structuredClone(plain(old));archived.record.archived_at=request.createdAt;archived.record.updated_at=request.createdAt;archived.record.revision=expected+1;edits.push(this.#edit(this.#body('custom-field',archived.table,archived.record),expected));}
+   const edit=this.#edit(body,replace?0:expected,replace||!old?'create':'update');edits.push(edit);const version:ProductVersion={protocol:1,scopeId:this.ports.binding.scopeId,entityId:edit.entityId,kind:'custom-field',revision:replace?1:expected+1,parentId:edit.parentId,deleted:false,metadata:edit.metadata,body};
+   return{edits,result:{field:this.#row(version,context),previousFieldId:replace?draft.id:null}};
+  }
   if(parts[0]==='tasks'&&(parts.length===1||parts.length===2)){
    const create=parts.length===1&&request.method==='POST',old=create?null:this.#find(versions,'task',parts[1]),body=old?structuredClone(plain(old)):this.#draft('task','shared_tasks',this.#newRecord('shared_tasks',{},context,request.createdAt,crypto.randomUUID()),{shared_task_labels:[],shared_task_dependencies:[],shared_task_planning:[],shared_task_approvals:[],shared_task_reviews:[],shared_custom_field_values:[],shared_task_watchers:[]});
    const expected=old?.revision??0;if(old&&number(input.expectedRevision)!==expected)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
@@ -172,14 +230,24 @@ export class SharedLiveModel{
    const row=this.#newRecord('shared_comments',{body:input.body},context,request.createdAt,crypto.randomUUID());row.task_id=parts[1];const body=this.#body('comment','shared_comments',row,{shared_comment_mentions:mentionIds.map(userId=>{assertTechnical(userId);return{comment_id:row.id,user_id:userId};})});edits.push(this.#edit(body,0,'create'));
    output={comment:this.#row({protocol:1,scopeId:this.ports.binding.scopeId,entityId:sharedRecordKey('comment',row),kind:'comment',revision:1,parentId:sharedBodyParent(body),deleted:false,metadata:sharedBodyMetadata(body),body},context)};
   }else{
-   const collections:Record<string,[ProductKind,string]>={statuses:['status','shared_project_statuses'],categories:['category','shared_project_categories'],labels:['label','shared_space_labels'],'project-categories':['category','shared_space_project_categories']};
+   const singletons:Record<string,[ProductKind,string]>={workflow:['workflow','shared_project_workflows'],planning:['planning','shared_project_planning']};
+   const collections:Record<string,[ProductKind,string]>={statuses:['status','shared_project_statuses'],categories:['category','shared_project_categories'],labels:['label','shared_space_labels'],'project-categories':['category','shared_space_project_categories'],comments:['project-comment','shared_project_comments'],automations:['automation','shared_automation_rules'],templates:['template','shared_templates'],mindmaps:['mindmap','shared_mindmaps'],views:['view','shared_saved_views']};
+   if(parts[0]==='planning'&&parts[1]==='sprints')return this.#prepareSprint(request,context,versions);
+   const singleton=parts.length===1?singletons[parts[0]]:undefined;
    const root=parts.length===0,descriptor=root?[this.ports.binding.kind,this.ports.binding.kind==='project'?'shared_projects':'shared_spaces'] as [ProductKind,string]:collections[parts[0]];
-   if(!descriptor||parts.length>2)throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');const [kind,table]=descriptor,create=!root&&parts.length===1&&request.method==='POST',old=create?null:this.#find(versions,kind,root?this.ports.binding.resourceId:parts[1]);
+   if(!descriptor&&!singleton||parts.length>2)throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');const [kind,table]=(singleton??descriptor)!;
+   const singletonOld=singleton?versions.find(row=>row.kind===kind&&row.entityId===`${kind}:${this.ports.binding.resourceId}`):undefined;
+   const create=singleton?!singletonOld:!root&&parts.length===1&&request.method==='POST',old=singleton?singletonOld??null:create?null:this.#find(versions,kind,root?this.ports.binding.resourceId:parts[1]);
    if(old&&plain(old).table!==table)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const expected=old?.revision??0;if(old&&number(input.expectedRevision)!==expected)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
    const body=old?structuredClone(plain(old)):this.#draft(kind,table,this.#newRecord(table,{},context,request.createdAt,crypto.randomUUID()));
+   if(singleton)body.record.project_id=this.ports.binding.resourceId;
+   if(['workflow','planning','automation','template','mindmap','project-comment','view'].includes(kind)){
+    return this.#prepareAdvancedRecord(request,context,versions,body,expected,create);
+   }
    const fields:Record<string,string>={title:'title',description:'description',color:'color',layout:'layout',parentId:'parent_id',boardStatusId:'board_status_id',categoryId:'category_id',imageUrl:'image_url',isDone:'is_done',taskTitleLines:'task_title_lines',visibleTaskCount:'visible_task_count'};
-   if(Object.keys(input).some(key=>!Object.hasOwn(fields,key)&&!['tags','expectedRevision','requestId'].includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+   if(Object.keys(input).some(key=>!Object.hasOwn(fields,key)&&!['tags','labelIds','expectedRevision','requestId'].includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
    for(const [name,column]of Object.entries(fields))if(Object.hasOwn(input,name)){if(!Object.hasOwn(body.record,column))throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record[column]=name==='isDone'?(input[name]===true?1:0):input[name] as SharedContentRecord[string];}
+   if(Object.hasOwn(input,'labelIds')){if(kind!=='project'||!Array.isArray(input.labelIds)||input.labelIds.length>50||new Set(input.labelIds).size!==input.labelIds.length)throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.related.shared_project_labels=input.labelIds.map(id=>{assertTechnical(id);return{project_id:body.record.id,label_id:id};});}
    if(Object.hasOwn(input,'tags'))body.record.tags_json=JSON.stringify(input.tags);if(Object.hasOwn(body.record,'updated_at'))body.record.updated_at=request.createdAt;if(Object.hasOwn(body.record,'revision'))body.record.revision=expected+1;
    if(request.method==='DELETE'&&versions.some(row=>!row.deleted&&(row.parentId===old!.entityId||row.kind==='task'&&plain(row).record.status_id===body.record.id)))throw new Error('E2EE_SHARED_SUBTREE_REVIEW_REQUIRED');
    const validated=this.#body(kind,table,body.record,body.related);edits.push(this.#edit(validated,expected,request.method==='DELETE'?'delete':create?'create':'update'));
@@ -187,9 +255,70 @@ export class SharedLiveModel{
   }
   return{edits,result:output};
  }
+ #prepareAdvancedRecord(request:SavedRequest,context:SharedLiveContext,versions:ProductVersion[],body:SharedRecordBody,expected:number,create:boolean){
+  const {kind}=body,input=request.body,fields:Record<string,string>=kind==='automation'?{title:'title',definition:'definition_json',enabled:'enabled',deleted:'deleted_at'}:kind==='template'?{title:'title',manifest:'manifest_json',notices:'source_notices_json',deleted:'deleted_at'}:kind==='mindmap'?{document:'content'}:kind==='view'?{visibility:'visibility',definition:'payload'}:kind==='workflow'?{enabled:'enabled',statuses:'definition_json',transitions:'definition_json'}:kind==='planning'?{enabled:'enabled',estimateUnit:'estimate_unit'}:{body:'body',mentionIds:'mention_ids_json',boardId:'board_id'};
+  const allowed=[...Object.keys(fields),'expectedRevision','requestId','operationId',...(kind==='template'?['projectId']:[])];if(Object.keys(input).some(key=>!allowed.includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+  if(!['POST','PATCH','PUT','DELETE'].includes(request.method)||create&&!['POST','PUT'].includes(request.method)||request.method==='DELETE'&&['workflow','planning'].includes(kind))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+  if(kind==='workflow'){
+   const before=create?{statuses:[],transitions:[]}:parse(body.record.definition_json);object(before);body.record.definition_json=JSON.stringify({statuses:input.statuses??before.statuses,transitions:input.transitions??before.transitions});
+   body.record.enabled=Object.hasOwn(input,'enabled')?(input.enabled===true?1:input.enabled===false?0:(()=>{throw new Error('E2EE_SHARED_DOMAIN_INVALID');})()):body.record.enabled;
+  }else for(const [name,column]of Object.entries(fields))if(Object.hasOwn(input,name)){
+   if(name==='enabled'){if(typeof input[name]!=='boolean')throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record[column]=input[name]?1:0;}
+   else if(name==='deleted'){if(typeof input[name]!=='boolean')throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record[column]=input[name]?request.createdAt:null;}
+   else if(column.endsWith('_json')||column==='payload'||column==='content')body.record[column]=JSON.stringify(input[name]);
+   else body.record[column]=input[name] as SharedContentRecord[string];
+  }
+  if(kind==='automation'){
+   if(create){body.record.enabled=body.record.enabled??0;body.record.deleted_at=null;body.record.owner_id=this.ports.actorId;}
+  }
+  if(kind==='template'){
+   const manifest=parse(body.record.manifest_json);object(manifest);if(!Array.isArray(manifest.projects)||!Array.isArray(manifest.tasks))throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record.kind=manifest.kind as string;body.record.project_count=manifest.projects.length;body.record.task_count=manifest.tasks.length;
+   body.record.source_notices_json=body.record.source_notices_json??'[]';if(create)body.record.deleted_at=null;
+   if(Object.hasOwn(input,'projectId')){if(input.projectId!==null&&input.projectId!==this.ports.binding.resourceId||input.projectId!==null&&this.ports.binding.kind!=='project')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');body.record.project_id=input.projectId as string|null;}
+  }
+  if(kind==='mindmap'){const document=validateMindmap(parse(body.record.content));if(create)body.record.id=document.id;if(document.id!==body.record.id||document.projectId!==(this.ports.binding.kind==='project'?this.ports.binding.resourceId:null))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}
+  if(kind==='view'){const definition=parse(body.record.payload);object(definition);if(input.visibility!=='shared'&&create)throw new Error('E2EE_PERSONAL_VIEW_STORE_REQUIRED');if(create)body.record.deleted_at=null;}
+  if(kind==='planning'&&!['points','hours'].includes(String(body.record.estimate_unit)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');
+  if(Object.hasOwn(body.record,'revision'))body.record.revision=expected+1;if(Object.hasOwn(body.record,'updated_at'))body.record.updated_at=request.createdAt;if(Object.hasOwn(body.record,'updated_by'))body.record.updated_by=this.ports.actorId;
+  const validated=this.#body(kind,body.table,body.record,body.related),edit=this.#edit(validated,expected,request.method==='DELETE'?'delete':create?'create':'update'),version:ProductVersion={protocol:1,scopeId:this.ports.binding.scopeId,entityId:edit.entityId,kind,revision:expected+1,parentId:edit.parentId,deleted:request.method==='DELETE',metadata:edit.metadata,body:edit.body};
+  let result:ObjectValue=request.method==='DELETE'?{ok:true}:{[kind==='automation'?'rule':kind==='project-comment'?'comment':kind==='mindmap'?'map':kind]:this.#row(version,context)};
+  if(kind==='template')result={id:body.record.id,revision:expected+1,deleted:body.record.deleted_at!==null};
+  if(kind==='workflow'){const definition=parse(body.record.definition_json);object(definition);result={config:{...definition,enabled:body.record.enabled===1,revision:expected+1},counts:Object.fromEntries(versions.filter(row=>row.kind==='status'&&!row.deleted).map(row=>[String(plain(row).record.id),versions.filter(task=>!task.deleted&&task.kind==='task'&&plain(task).record.status_id===plain(row).record.id).length]))};}
+  if(kind==='planning')result={config:{enabled:body.record.enabled===1,estimateUnit:body.record.estimate_unit,revision:expected+1}};
+  return{edits:[edit],result};
+ }
+ async #prepareSprint(request:SavedRequest,context:SharedLiveContext,versions:ProductVersion[]){
+  const parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,transition=parts[3]==='transition',create=parts.length===2&&request.method==='POST';
+  if(!create&&parts.length!==3&&!(transition&&parts.length===4))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+  if(transition&&request.method!=='POST'||!transition&&!['POST','PATCH'].includes(request.method))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+  const old=create?null:this.#find(versions,'sprint',parts[2]),expected=old?.revision??0;if(number(input.expectedRevision)!==expected)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
+  const body=old?structuredClone(plain(old)):this.#draft('sprint','shared_sprints',this.#newRecord('shared_sprints',{},context,request.createdAt,crypto.randomUUID())),edits:ProductEdit[]=[];
+  if(create){body.record.state='planning';body.record.estimate_unit=null;body.record.started_at=null;body.record.completed_at=null;}
+  if(transition){
+   if(input.fingerprint!==await this.#fingerprint(versions,null)||!['start','complete'].includes(String(input.action)))throw new Error('E2EE_SHARED_PREVIEW_CHANGED');
+   if(input.action==='start'){if(body.record.state!=='planning'||versions.some(row=>!row.deleted&&row.kind==='sprint'&&plain(row).record.state==='active'))throw new Error('PLANNING_ACTIVE_SPRINT');body.record.state='active';body.record.started_at=request.createdAt;
+    const config=versions.find(row=>row.kind==='planning'&&!row.deleted);if(!config||plain(config).record.enabled!==1)throw new Error('PLANNING_DISABLED');body.record.estimate_unit=plain(config).record.estimate_unit;
+   }else{if(body.record.state!=='active'||!Array.isArray(input.outcomes))throw new Error('SPRINT_OUTCOMES_REQUIRED');const affected=versions.filter(row=>!row.deleted&&row.kind==='task'&&(plain(row).related.shared_task_planning??[]).some(plan=>plan.sprint_id===body.record.id)&&plain(row).record.completed_at===null),outcomes=input.outcomes;
+    if(outcomes.length!==affected.length||new Set(outcomes.map(row=>{object(row);return row.taskId;})).size!==affected.length)throw new Error('SPRINT_OUTCOMES_REQUIRED');
+    for(const task of affected){const change=outcomes.find(row=>{object(row);return row.taskId===plain(task).record.id;});if(!change)throw new Error('SPRINT_OUTCOMES_REQUIRED');object(change);if(change.expectedRevision!==task.revision)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
+     if(change.destinationSprintId!==null&&!versions.some(row=>!row.deleted&&row.kind==='sprint'&&plain(row).record.id===change.destinationSprintId&&plain(row).record.state!=='completed'&&plain(row).record.id!==body.record.id))throw new Error('SPRINT_STATE_INVALID');
+     const value=structuredClone(plain(task));value.related.shared_task_planning[0].sprint_id=change.destinationSprintId as string|null;value.record.updated_at=request.createdAt;value.record.updated_by=this.ports.actorId;value.record.revision=task.revision+1;edits.push(this.#edit(this.#body('task',value.table,value.record,value.related),task.revision));
+    }body.record.state='completed';body.record.completed_at=request.createdAt;
+   }
+  }else{
+   if(body.record.state==='completed')throw new Error('SPRINT_COMPLETED');if(Object.keys(input).some(key=>!['title','goal','startDate','endDate','calendarMode','calendarContext','expectedRevision','requestId'].includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+   const content=create?{}:parse(body.record.content_json);object(content);for(const name of ['title','goal','calendarMode','calendarContext'])if(Object.hasOwn(input,name))content[name]=input[name];
+   if(typeof content.title!=='string'||!content.title.trim()||content.title.length>2000||typeof content.goal!=='string'||content.goal.length>100000||!['profane','sacred','lunar'].includes(String(content.calendarMode)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');calendarContext(content.calendarContext as Parameters<typeof calendarContext>[0]);body.record.content_json=JSON.stringify(content);
+   for(const [name,column]of [['startDate','start_date'],['endDate','end_date']])if(Object.hasOwn(input,name)){if(typeof input[name]!=='string'||!isCivilDate(input[name]))throw new Error('SPRINT_DATES_INVALID');body.record[column]=input[name];}
+  }
+  body.record.updated_at=request.createdAt;body.record.revision=expected+1;const validated=this.#body('sprint',body.table,body.record,body.related),edit=this.#edit(validated,expected,create?'create':'update');edits.push(edit);if(edits.length>100)throw new Error('E2EE_PRODUCT_BATCH_INVALID');
+  return{edits,result:{sprint:this.#row({protocol:1,scopeId:this.ports.binding.scopeId,entityId:edit.entityId,kind:'sprint',revision:expected+1,parentId:edit.parentId,deleted:false,metadata:edit.metadata,body:validated},context)}};
+ }
  async #execute(method:string,path:string,held:ObjectValue,intentId?:string){
-  if(method==='GET')return this.#get(path);if(!['POST','PATCH','PUT','DELETE'].includes(method))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
-  const id=intentId??(typeof held.requestId==='string'?held.requestId:crypto.randomUUID());assertTechnical(id);let saved=await this.ports.loadRequest(id),request:SavedRequest;
+  if(method==='GET')return this.#get(path);
+  if(method==='POST'&&path.split('?')[0]==='custom-fields/preview'){const {context,versions}=await this.#snapshot();return this.#fieldPreview(held,versions,context);}
+  if(!['POST','PATCH','PUT','DELETE'].includes(method))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+  const id=intentId??(typeof held.operationId==='string'?held.operationId:typeof held.requestId==='string'?held.requestId:crypto.randomUUID());assertTechnical(id);let saved=await this.ports.loadRequest(id),request:SavedRequest;
   if(intentId&&!saved)throw new Error('E2EE_SHARED_REQUEST_MISSING');
   if(saved){request=validateSharedLiveRequest(this.ports.binding,saved.value);if(request.method!==method||request.path!==path||!samePrivateJson(request.body,held))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}
   else{request={protocol:1,scopeId:this.ports.binding.scopeId,id,method,path,body:held,createdAt:new Date().toISOString(),edits:null,result:null,complete:false};saved={value:request,serial:await this.ports.saveRequest(request,null)};}

@@ -3,6 +3,7 @@ package ru.genesis.calendar.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
 import ru.genesis.calendar.ui.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.CancellationException
@@ -19,6 +21,7 @@ import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.auth.AssistantGateway
 import ru.genesis.calendar.auth.LinkedGoogleAccount
+import ru.genesis.calendar.auth.CloudAccountSnapshot
 import ru.genesis.calendar.data.*
 import ru.genesis.calendar.domain.CalendarMode
 import java.time.LocalDate
@@ -40,7 +43,12 @@ internal fun ServerAssistantDialog(app: GenesisApplication, uid: String, gateway
     var error by remember { mutableStateOf<String?>(null) }
     var confirmingClose by remember { mutableStateOf(false) }
     var confirmingDiscard by remember { mutableStateOf(false) }
+    var externalConsent by remember(uid) { mutableStateOf(false) }
     val provider = status?.optString("provider")?.let { if (it == "gemini") "Gemini" else if (it == "gigachat") "GigaChat" else "GENESIS" } ?: "GENESIS"
+    val externalNotice=remember(context,language,provider){ru.genesis.calendar.security.ExternalCopyConsent.copy(context,language,"notice").replace("{provider}",provider)}
+    val externalAccept=remember(context,language){ru.genesis.calendar.security.ExternalCopyConsent.copy(context,language,"accept")}
+    val localRecovery=remember(context,language){ru.genesis.calendar.security.LocalRecoveryCopy.read(context,language)}
+    LaunchedEffect(provider,structure.projects,structure.categories,lists,accounts){externalConsent=false}
     fun copy(source: String) = translateGenesisText(context, source, language)
     fun fail(failure: Throwable) { error = failure.message?.takeIf { it.isNotBlank() && it != "Authentication request failed" } ?: copy("Не удалось подготовить план. Проверьте соединение и повторите.") }
     fun close() {
@@ -71,8 +79,12 @@ internal fun ServerAssistantDialog(app: GenesisApplication, uid: String, gateway
                             else "Команда, названия проектов и списков и адреса подключённых аккаунтов будут отправлены в Google Gemini после нажатия «Подготовить план».",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (status?.optBoolean("available") == false) Text("Серверный помощник сейчас недоступен. Повторите позже.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        OutlinedTextField(command, { command = it.take(6000) }, Modifier.fillMaxWidth().testTag("server-assistant-command"),
+                        OutlinedTextField(command, { command = it.take(6000);externalConsent=false }, Modifier.fillMaxWidth().testTag("server-assistant-command"),
                             label = { Text("Команда") }, minLines = 3, maxLines = 8, enabled = !busy)
+                        Text(externalNotice,style=MaterialTheme.typography.bodyMedium)
+                        Row(Modifier.fillMaxWidth().heightIn(min=48.dp).toggleable(value=externalConsent,enabled=!busy,role=Role.Checkbox,onValueChange={externalConsent=it}),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                            Checkbox(checked=externalConsent,onCheckedChange=null);Text(externalAccept,Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium)
+                        }
                         Button(onClick = { scope.launch {
                             busy = true; error = null
                             try {
@@ -84,12 +96,18 @@ internal fun ServerAssistantDialog(app: GenesisApplication, uid: String, gateway
                                         .put("category", structure.categories.firstOrNull { it.id == project.categoryId }?.name.orEmpty()) }))
                                     .put("taskLists", JSONArray(lists.map { JSONObject().put("title", it.title).put("accountEmail", it.accountEmail) }))
                                     .put("accounts", JSONArray(accounts.map { JSONObject().put("email", it.email) }))
-                                val response = gateway.plan(command, null, payload)
+                                check(externalConsent){"E2EE_EXTERNAL_COPY_CONSENT_REQUIRED"}
+                                val privateScope=CloudAccountSnapshot.scopeFor(uid)
+                                val response=if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(privateScope)){
+                                    val account=ru.genesis.calendar.security.NativePrivateProducts.account(privateScope,uid);val providerId=requireNotNull(status).getString("provider")
+                                    val consent=ru.genesis.calendar.security.ExternalCopyConsent.approve(account,providerId,"assistant-plan",JSONObject().put("command",command).put("audio",JSONObject.NULL).put("context",payload),externalConsent)
+                                    gateway.planWithConsent(command,null,payload,providerId,consent)
+                                }else gateway.plan(command,null,payload)
                                 journal = repository.prepare(response, structure, lists, accounts)
                             } catch (failure: CancellationException) { throw failure }
                             catch (failure: Exception) { fail(failure) }
-                            finally { busy = false }
-                        } }, enabled = !busy && !storageBlocked && status?.optBoolean("available") == true && (command.isNotBlank()),
+                            finally { busy = false;externalConsent=false }
+                        } }, enabled = !busy && !storageBlocked && externalConsent && status?.optBoolean("available") == true && (command.isNotBlank()),
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("server-assistant-preview")) {
                             Text(if (busy) "Подготовка…" else "Подготовить план")
                         }
@@ -140,6 +158,10 @@ internal fun ServerAssistantDialog(app: GenesisApplication, uid: String, gateway
                     } }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("Повторить") }
                 }
                 journal?.let { saved ->
+                    if(saved.optString("execution")=="history-only"){
+                        Text(localRecovery.getString("assistantHistory"),style=MaterialTheme.typography.bodyMedium)
+                        TextButton({scope.launch{busy=true;try{repository.discard(saved.getString("id"));journal=null}catch(failure:CancellationException){throw failure}catch(failure:Exception){fail(failure)}finally{busy=false}}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(localRecovery.getString("assistantNew"))}
+                    }else{
                     Button(onClick = { scope.launch {
                         busy = true; error = null
                         try { repository.apply(saved, accounts, mode) { journal = it }; journal = null; onSaved() }
@@ -148,6 +170,7 @@ internal fun ServerAssistantDialog(app: GenesisApplication, uid: String, gateway
                         finally { busy = false }
                     } }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("server-assistant-apply")) {
                         Text(if (busy) "Сохранение…" else "Создать по плану")
+                    }
                     }
                 }
             }

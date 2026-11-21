@@ -22,6 +22,15 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     fun scopeSummaries():JSONArray{requireOpen();check(!offline){"E2EE_ONLINE_REQUIRED"};val value=transport.status();requireOpen();E2eeKeys.exact(value,setOf("pilotAllowed","cryptoProtocol","scopes"));check(value.get("pilotAllowed") is Boolean&&value.getInt("cryptoProtocol")==1){"E2EE_INVALID_RESPONSE"};val scopes=value.getJSONArray("scopes");check(scopes.length()<=4096){"E2EE_INVALID_RESPONSE"};val seen=mutableSetOf<String>()
         for(at in 0 until scopes.length()){val row=scopes.getJSONObject(at);E2eeKeys.exact(row,setOf("scopeId","kind","resourceId","state"));check(seen.add(E2eeKeys.technical(row.getString("scopeId")))&&row.getString("kind") in setOf("personal","project","space")&&row.getString("state") in setOf("preparing","uploading","verified","active","retirement")){"E2EE_INVALID_RESPONSE"};E2eeKeys.technical(row.getString("resourceId"))};return JSONArray(scopes.toString())}
     @Synchronized fun close(){if(!closed){closed=true;shared.values.forEach{it.client.close()};shared.clear();client.close();device.lock()}}
+    fun proposeSharedTrust(scopeId:String):JSONObject{
+        requireOpen();val scopes=scopeSummaries();val scope=(0 until scopes.length()).map{scopes.getJSONObject(it)}.singleOrNull{it.getString("scopeId")==scopeId&&it.getString("kind")!="personal"}?:error("E2EE_SCOPE_BINDING_MISMATCH")
+        val response=transport.directory(scopeId);requireOpen();val events=response.getJSONArray("events");check(events.length()>0){"E2EE_DIRECTORY_REQUIRED"}
+        val first=events.getJSONObject(0).getJSONObject("command");check(first.getString("action")=="bootstrap"&&first.getString("scopeId")==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val pin=first.getJSONObject("payload").getJSONObject("recoveryKit").getJSONObject("authority");val directory=E2eeDirectory.verify(first.getString("ownerId"),scopeId,pin,events);requireOpen()
+        check(directory.kind==scope.getString("kind")&&directory.resourceId==scope.getString("resourceId")){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val proposal=JSONObject().put("scopeId",scopeId).put("ownerId",directory.ownerId).put("kind",directory.kind).put("resourceId",directory.resourceId).put("authority",directory.recoveryKit.getJSONObject("authority"))
+        return JSONObject().put("proposal",proposal).put("fingerprint",E2eeSharedTrust.fingerprint(proposal)).also{requireOpen()}
+    }
     @Synchronized fun openSharedScope(scopeId:String,kind:String,resourceId:String,scopeOwner:String,pin:JSONObject):SharedScope{
         requireOpen();check(kind in setOf("project","space")){"E2EE_SCOPE_BINDING_MISMATCH"};E2eeKeys.technical(scopeId);E2eeKeys.technical(resourceId);E2eeKeys.technical(scopeOwner)
         shared[scopeId]?.let{existing->val known=existing.directory;check(known.kind==kind&&known.resourceId==resourceId&&known.ownerId==scopeOwner&&E2eeProductJson.same(known.recoveryKit.getJSONObject("authority"),pin)){"E2EE_SCOPE_BINDING_MISMATCH"}
@@ -38,10 +47,11 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     }
     override fun toString()="E2eeProductAccount([redacted])"
     companion object{
-        fun open(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit,secret:ByteArray?=null,kit:JSONObject?=null):E2eeProductAccount{
+        fun open(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit,secret:ByteArray?=null,kit:JSONObject?=null,restoreHardware:Boolean=false):E2eeProductAccount{
             E2eeKeys.technical(owner);current();val persistence=E2eeDeviceVault(context,owner);val existed=persistence.exists();var device:UnlockedE2eeDevice?=null
             val held=secret?.copyOf()
             try{
+                if(restoreHardware){check(existed&&held?.size==32&&kit!=null){"E2EE_RECOVERY_KIT_REQUIRED"};persistence.restoreHardware(requireNotNull(held),requireNotNull(kit),current);current()}
                 device=if(existed)UnlockedE2eeDevice.unlock(context,owner)else{
                     check(held?.size==32&&kit!=null){"E2EE_RECOVERY_KIT_REQUIRED"};UnlockedE2eeDevice.provision(context,owner,requireNotNull(held),requireNotNull(kit))}
                 current();val status=transport.status();current();E2eeKeys.exact(status,setOf("pilotAllowed","cryptoProtocol","scopes"))
@@ -50,6 +60,7 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                 val personal=(0 until scopes.length()).map{scopes.getJSONObject(it)}.filter{it.getString("kind")=="personal"&&it.getString("resourceId")==owner}
                 check(personal.size==1){"E2EE_PERSONAL_SCOPE_REQUIRED"};val scope=personal.single().getString("scopeId");E2eeKeys.technical(scope)
                 val candidate=requireNotNull(device)
+                if(held!=null&&kit!=null)candidate.retainDeviceRecovery(held,kit,current)
                 if(!existed||candidate.savedDirectory(scope)==null){check(held?.size==32&&kit!=null){"E2EE_RECOVERY_KIT_REQUIRED"};recoverEnrollment(owner,scope,candidate,transport,requireNotNull(held),requireNotNull(kit),current)}
                 val client=E2eeScopeClient(candidate,owner,scope,candidate.authorityPin,transport);val directory=client.refresh();current()
                 check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_MIGRATION_RESUME_REQUIRED"}

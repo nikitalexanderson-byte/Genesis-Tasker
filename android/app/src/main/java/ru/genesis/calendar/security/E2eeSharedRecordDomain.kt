@@ -76,7 +76,7 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
         check(value.getString("execution") in setOf("live","history-only")&&(!historyOnly(kind)||value.getString("execution")=="history-only")){"E2EE_HISTORY_NOT_EXECUTABLE"}
         val table=value.getString("table");check(table in roots(kind)&&paths.required(scopeKind).any{table in source.tables(scopeKind,it.id)}){"E2EE_SHARED_DOMAIN_INVALID"}
         val root=row(table,value.getJSONObject("record"));val children=value.getJSONObject("related");check(children.keys().asSequence().all{it in related(kind)}){"E2EE_SHARED_DOMAIN_INVALID"}
-        for(name in children.keys()){val rows=children.getJSONArray(name);check(rows.length()<=10000);for(at in 0 until rows.length()){val child=row(name,rows.getJSONObject(at));val key=if(kind=="comment")"comment_id"else"task_id";check(child.get(key)==root.get("id")){"E2EE_SCOPE_BINDING_MISMATCH"}}}
+        for(name in children.keys()){val rows=children.getJSONArray(name);check(rows.length()<=10000);for(at in 0 until rows.length()){val child=row(name,rows.getJSONObject(at));val key=if(kind=="comment")"comment_id"else if(kind=="project")"project_id"else"task_id";check(child.get(key)==root.get("id")){"E2EE_SCOPE_BINDING_MISMATCH"}}}
         if(header!=null)check(header.getString("scopeId")==scopeId&&header.getString("kind")==kind&&header.getString("entityId")==recordKey(kind,root)&&header.get("parentId")==parent(value)&&E2eeProductJson.same(header.get("metadata"),metadata(value))){"E2EE_SHARED_HEADER_MISMATCH"}
         return JSONObject(value.toString())
     }

@@ -10,6 +10,7 @@ import { DonationLink } from "./DonationLink";
 import release319Copy from "./release-319-copy.json";
 import { BillingPanel } from './BillingPanel';
 import { BackupPanel } from './BackupPanel';
+import {PrivateSharedSecurityPanel} from './PrivateSharedSecurityPanel';
 import { GoogleIdentityPanel } from './AccountSecurityPanels';
 import {UpgradeButton,isFreeBillingUser} from './UpgradeUI';
 import {BillingTrialStatus} from './BillingTrialStatus';
@@ -595,6 +596,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
         </div>
 
         {settingsTab==='account'?<BillingPanel user={user}/>:null}
+        {settingsTab==='account'&&user.privateVault?<PrivateSharedSecurityPanel key={`private-shared:${user.uid}`} ownerId={user.uid} language={user.language}/>:null}
         {settingsTab === 'account' && onOpenPartners ? <section className="account-preferences" data-no-translate><h3>{partnerText('partner', user.language)}</h3><button type="button" onClick={onOpenPartners}>{partnerText('open', user.language)}</button></section> : null}
         {settingsTab==='account'&&!user.partnerAccess?.panelEnabled&&['standart','premium','business','premium4life'].includes(effectiveBillingPlan(user.featureAccess?.source==='trial'?user.featureAccess.paidAccess:user.featureAccess))?<ReferralsPanel language={user.language} onAccessChange={async()=>{const refreshed=await loadGenesisSession();if(refreshed)onUserChange(refreshed);}}/>:null}
         {settingsTab==='backups'?<BackupPanel key={`backups:${user.uid}`} user={user}/>:null}

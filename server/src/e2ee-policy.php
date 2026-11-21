@@ -328,9 +328,11 @@ function genesisE2eeEnforceLegacyRoute(string $method,string $path,?string $user
     if($expectedOwner!==null && (!is_string($expectedOwner)||$expectedOwner!==$userId))throw new DomainException('E2EE_ACCOUNT_CHANGED');
     if(str_starts_with($path,'e2ee/v1/'))return;
     if($path==='private-services/physis-catalog'&&in_array($method,['GET','PUT'],true))return;
+    if($path==='private-services/assistant/plan'&&$method==='POST')return;
     // The existing messenger has a separate ciphertext protocol and history.
     // Keep both read and write routes, including its scoped conversation creation.
     if(preg_match('~^shared/(?:private-conversations|messenger|messaging)(?:/|$)|^shared/spaces/[^/]+/private-conversations$~D',$path))return;
+    if(in_array($method,['GET','POST'],true)&&preg_match('~^shared/spaces/[A-Za-z0-9_-]{1,160}/participants$~D',$path))return;
     $personal=genesisE2eeUserState($userId);
     require_once __DIR__.'/e2ee-legacy-transport.php';
     $private=genesisE2eePersonalTransportProtected($method,$path);
