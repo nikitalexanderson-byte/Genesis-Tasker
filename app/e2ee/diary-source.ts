@@ -183,17 +183,17 @@ export class PersonalDiarySource implements PrivatePathAdapter{
 
 /** Product reads decrypted current-generation content; never old keys or HTTP
  * commands. Device-only overlays are explicit and require the retained vault. */
-export async function readMigratedDiary(readRemote:(domain:'diary',id:string)=>Promise<unknown>,readLocal:(domain:'diary',id:string)=>Promise<Uint8Array|null>,ownerId:string){
+export async function readMigratedDiary(readRemote:(domain:'diary',id:string)=>Promise<unknown>,readLocal:((domain:'diary',id:string)=>Promise<Uint8Array|null>)|null,ownerId:string){
  const indexes:{placement:'remote'|'local';value:unknown}[]=[{placement:'remote',value:await readRemote('diary','personal-diary-index-v1')}];
- const raw=await readLocal('diary','personal-diary-local-index-v1');if(!raw)throw new Error('E2EE_DIARY_LOCAL_CONTENT_REQUIRED');
- try{indexes.push({placement:'local',value:parseDiaryMigrationJson(decoder.decode(raw))});}finally{raw.fill(0);}
- const records:{placement:'remote'|'local';id:string;note:Row|null;deleted:boolean}[]=[];
+ if(readLocal){const raw=await readLocal('diary','personal-diary-local-index-v1');if(!raw)throw new Error('E2EE_DIARY_LOCAL_CONTENT_REQUIRED');
+ try{indexes.push({placement:'local',value:parseDiaryMigrationJson(decoder.decode(raw))});}finally{raw.fill(0);}}
+ const records:{placement:'remote'|'local';id:string;note:Row|null;revision:number;deleted:boolean}[]=[];
  for(const {placement,value}of indexes){exactKeys(value,['protocol','ownerId','records','references']);if(value.protocol!==1||value.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');list(value.records);list(value.references);const seen=new Set<string>();
   for(const entry of value.records){exactKeys(entry,['id','objectId','deleted']);id(entry.id);if(seen.has(entry.id)||typeof entry.objectId!=='string'||!/^personal-diary-record:[a-f0-9-]{36}$/.test(entry.objectId)||typeof entry.deleted!=='boolean')invalid();seen.add(entry.id);
-   let row:unknown;if(placement==='remote')row=await readRemote('diary',entry.objectId);else{const bytes=await readLocal('diary',entry.objectId);if(!bytes)throw new Error('E2EE_DIARY_LOCAL_CONTENT_REQUIRED');try{row=parseDiaryMigrationJson(decoder.decode(bytes));}finally{bytes.fill(0);}}
+   let row:unknown;if(placement==='remote')row=await readRemote('diary',entry.objectId);else{const bytes=await readLocal!('diary',entry.objectId);if(!bytes)throw new Error('E2EE_DIARY_LOCAL_CONTENT_REQUIRED');try{row=parseDiaryMigrationJson(decoder.decode(bytes));}finally{bytes.fill(0);}}
    exactKeys(row,['protocol','ownerId','id','selected','variants']);if(row.protocol!==1||row.ownerId!==ownerId||row.id!==entry.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');list(row.variants);exactKeys(row.selected,['source','note','revision','deleted']);integer(row.selected.revision);text(row.selected.source,1024);
    if(row.selected.deleted!==entry.deleted||!row.variants.some(variant=>canonicalJson(variant)===canonicalJson(row.selected)))invalid();
-   const value=row.selected.deleted?(row.selected.note===null?null:invalid()):note(row.selected.note);if(value&&value.id!==entry.id)invalid();records.push({placement,id:entry.id,note:value,deleted:entry.deleted});
+   const value=row.selected.deleted?(row.selected.note===null?null:invalid()):note(row.selected.note);if(value&&value.id!==entry.id)invalid();records.push({placement,id:entry.id,note:value,revision:row.selected.revision,deleted:entry.deleted});
   }
  }
  return records;

@@ -691,6 +691,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             val generation = client.currentGeneration()
             return withContext(Dispatchers.IO) { client.diary(generation, path, body) }.also { check() }
         }
+        override suspend fun privateService(service:String,timeZone:String?):JSONObject{
+            check();check(!mutableState.value.requiresSignIn)
+            val account=ru.genesis.calendar.security.NativePrivateProducts.account(accountScope,uid);account.requireOpen();check(!account.offline){"DIARY_ONLINE_REQUIRED"}
+            val generation=client.currentGeneration();return withContext(Dispatchers.IO){client.privateService(generation,service,timeZone)}.also{check();account.requireOpen()}
+        }
         override suspend fun remove(id: String, expectedRevision: Long): JSONObject {
             check(); check(!mutableState.value.requiresSignIn)
             val generation = client.currentGeneration()

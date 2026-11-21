@@ -15,8 +15,10 @@ import ru.genesis.calendar.auth.CloudAccountSnapshot
 internal object NativePrivateProducts{
     private class Entry(val account:E2eeProductAccount,val product:E2eePersonalProduct){val mutex=Mutex()}
     private val entries=mutableMapOf<String,Entry>();private val protectedScopes=mutableSetOf<String>()
+    private var inventory:E2eePrivatePaths?=null
     val revision=MutableStateFlow(0L)
     @Synchronized fun initialize(context:Context){
+        inventory=E2eePrivatePaths.load(context)
         for((scope,value)in context.getSharedPreferences("genesis.e2ee.product-scopes.v1",Context.MODE_PRIVATE).all)
             if(value==true&&scope.matches(Regex("account-[a-f0-9]{32}")))protectedScopes+=scope
     }
@@ -31,6 +33,9 @@ internal object NativePrivateProducts{
     }
     @Synchronized fun lock(){for(entry in entries.values)entry.account.close();entries.clear();revision.value++}
     @Synchronized private fun entry(scope:String):Entry{check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};val value=entries[scope]?:error("E2EE_UNLOCK_REQUIRED");value.account.requireOpen();return value}
+    fun account(scope:String,owner:String):E2eeProductAccount=entry(scope).account.also{check(it.ownerId==owner){"E2EE_SCOPE_BINDING_MISMATCH"}}
+    fun history(scope:String,owner:String,domain:String,id:String):E2eeMigrationProductHistory.Result{val account=account(scope,owner)
+        return E2eeMigrationProductHistory.read(account.device,account.directory,requireNotNull(inventory){"E2EE_INVALID_COVERAGE_REGISTRY"},domain,id)}
     fun snapshot(scope:String):JSONObject=entry(scope).product.snapshot()
     fun contentRevision(scope:String):Long=entry(scope).product.contentRevision()
     fun snapshots(scope:String)=revision.map{if(isProtected(scope))snapshot(scope)else null}

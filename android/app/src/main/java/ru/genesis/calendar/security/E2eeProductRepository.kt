@@ -18,7 +18,7 @@ internal class E2eePrivateDocument(private val device:E2eeScopeDevice,private va
         return validate(parsed)
     }
     fun load(offline:Boolean=false):Opened{
-        assertCurrent();device.requireOpen();val local=queue.load();assertCurrent()
+        assertCurrent();device.requireOpen();if(!offline)queue.recoverAcknowledgement();assertCurrent();val local=queue.load();assertCurrent()
         try{
             if(offline){check(local!=null){"E2EE_OFFLINE_CONTENT_UNAVAILABLE"};return Opened(decode(local.bytes),local.serial,local.remoteRevision,local.pending)}
             val remote=client.read(domain,objectId)
@@ -26,6 +26,7 @@ internal class E2eePrivateDocument(private val device:E2eeScopeDevice,private va
             try{val value=decode(remote.bytes);assertCurrent()
                 if(local?.pending==true)return Opened(decode(local.bytes),local.serial,local.remoteRevision,true,
                     if(remote.revision==local.remoteRevision)null else Conflict(value,remote.revision))
+                if(local!=null&&remote.revision==local.remoteRevision){check(local.bytes.contentEquals(remote.bytes)){"E2EE_PRIVATE_DOCUMENT_DIVERGED"};return Opened(value,local.serial,remote.revision,false)}
                 val serial=queue.reconcile(remote.bytes,local?.serial,remote.revision,cache=true);assertCurrent();return Opened(value,serial,remote.revision,false)
             }finally{remote.bytes.fill(0)}
         }finally{local?.bytes?.fill(0)}

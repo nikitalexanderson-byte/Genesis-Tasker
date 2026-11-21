@@ -1318,6 +1318,14 @@ try {
         if(count($segments)===6 && $method==='PATCH'){genesisRequireCsrf();genesisJson(genesisSharedRestoreTrash($userId,$segments[2],$segments[4],$segments[5],genesisReadJson()));}
     }
 
+    // Read-only metadata/entitlement tools for the private client. No content,
+    // settings, keys, or legacy mutation path is accepted on this surface.
+    if (count($segments) === 2 && $segments[0] === 'private-services' && $method === 'GET') {
+        $userId=genesisRequireUserId(); header('Cache-Control: no-store');
+        if ($segments[1] === 'dream-clock') genesisJson(genesisDreamClock((string)($_GET['timeZone']??'UTC')));
+        if ($segments[1] === 'dream-voice') { genesisRequireFeature($userId,'dream-voice'); genesisJson(['allowed'=>true]); }
+    }
+
     if ($segments && $segments[0] === 'diary') {
         $userId=genesisRequireUserId(); header('Cache-Control: no-store');
         if ($method==='GET' && count($segments)===2 && $segments[1]==='dream-clock') genesisJson(genesisDreamClock((string)($_GET['timeZone']??'UTC')));

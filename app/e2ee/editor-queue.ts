@@ -127,6 +127,11 @@ export class E2eeEditorQueue {
     }
     throw new Error('E2EE_EDITOR_BUSY');
   }
+  async recoverAcknowledgement(){
+    const saved=await this.#load();if(!saved?.state.pending.length)return;
+    const receipt=await this.#client.recoverReceipt(this.#domain,this.#objectId);
+    if(receipt&&saved.state.pending.includes(receipt.originId))await this.#confirm(receipt.originId,receipt.revision);
+  }
   /** Epoch/concurrency conflicts are explicit; every later local edit stays queued. */
   async rebasePending(expectedRemoteRevision:number){
     const job=await this.#client.localJob(this.#domain,this.#objectId),saved=await this.#load();

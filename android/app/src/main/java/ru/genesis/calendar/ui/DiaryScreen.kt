@@ -40,6 +40,9 @@ import java.time.Instant
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun DiaryScreen(repository: DiaryRepository, onClose: () -> Unit) {
     val state by repository.state.collectAsStateWithLifecycle()
+    val historyContext=androidx.compose.ui.platform.LocalContext.current;val historyLanguage=LocalGenesisLanguage.current
+    val historyCopy=remember(historyContext,historyLanguage){historyContext.assets.open("device-history-copy-v1.json").bufferedReader(Charsets.UTF_8).use{
+        val all=JSONObject(it.readText());all.optString(historyLanguage,all.getString("en"))}}
     val scope = rememberCoroutineScope()
     var category by rememberSaveable { mutableStateOf("personal") }
     var personalTab by rememberSaveable { mutableStateOf("board") }
@@ -150,6 +153,7 @@ import java.time.Instant
             else "Не удалось обновить дневник. Черновики сохранены на устройстве.", "diary-error",
             isError = true, retryEnabled = !loading && !busy, onRetry = { refresh() })
         if (state.offline) WorkspacePageNotice("Нет сети. Доступна защищённая локальная копия дневника.", "diary-offline")
+        if(state.localHistory=="not-on-this-device")WorkspacePageNotice(historyCopy,"diary-history-unavailable")
         if (!state.syncEnabled) WorkspacePageNotice(diaryText("localOnly"), "diary-local-only")
         LazyColumn(Modifier.fillMaxSize().testTag("diary-notes"),
             state = if (category == "saved") savedListState else personalListState,
@@ -268,7 +272,7 @@ import java.time.Instant
     val scope = rememberCoroutineScope()
     val key = record?.draftKey ?: record?.note?.id ?: "new"
     val encryptedSaver = remember(repository) { Saver<String, String>(
-        save = { repository.sealEditorState(it) }, restore = { repository.openEditorState(it) }) }
+        save = { try{repository.sealEditorState(it)}catch(error:IllegalStateException){if(error.message=="E2EE_UNLOCK_REQUIRED")null else throw error} }, restore = { repository.openEditorState(it) }) }
     var formJson by rememberSaveable(key, stateSaver = encryptedSaver) { mutableStateOf(JSONObject()
         .put("note", record?.note?.json() ?: DiaryNote.newDraftJson())
         .put("baseline", JSONObject().put("title", record?.note?.title ?: "").put("body", record?.note?.body ?: "").put("color", record?.note?.color ?: "sage")
@@ -283,6 +287,7 @@ import java.time.Instant
     var error by remember { mutableStateOf(false) }
     var quotaFailure by remember { mutableStateOf(false) }
     var conflict by remember { mutableStateOf(false) }
+    LaunchedEffect(repository,formJson){if(repository.privateContent)try{repository.keepEditorState(formJson)}catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=true}}
     var draftSaved by remember { mutableStateOf(record?.draft == true) }
     var paletteOpen by rememberSaveable(key) { mutableStateOf(false) }
     val customColor = (form.opt("customColor") as? String)

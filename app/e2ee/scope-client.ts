@@ -180,6 +180,17 @@ export class E2eeScopeClient {
     }
     return job.expected+1;
   }
+  /** Read-only recovery of a previously sent immutable packet. A GET/list must
+   * never upload an unconfirmed draft merely to discover a lost response. */
+  async recoverReceipt(domain:E2eeContext['domain'],objectId:string):Promise<{originId:string;revision:number}|null>{
+    if(!this.#refreshed)throw new Error('E2EE_REFRESH_REQUIRED');this.#open();const id=await this.#id(domain,objectId),loaded=await this.#loadJob(id);
+    if(!loaded||!loaded.job.originId)return null;const {job}=loaded;
+    if(!job.complete&&job.pending&&!job.cancelling){
+      const hash=await e2eeCommandHash(job.pending.command),lookup=await this.#readPacket('receipt',{operationId:job.pending.command.operationId,payloadHash:hash});
+      if(lookup.receipt){if(lookup.receipt.payloadHash!==hash)throw new Error('E2EE_INVALID_RECEIPT');if(lookup.receipt.result.cancelled!==true)await this.#acknowledge(id,job,loaded.serial,lookup.receipt.result);}
+    }
+    return job.complete?{originId:job.originId,revision:job.expected+1}:null;
+  }
   async #acknowledge(id:string,job:UploadJob,serial:number,result:Record<string,WireValue>) {
       this.#device.requireOpen();const pending=job.pending,item=job.plan[job.uploaded];if(!pending||!item)throw new Error('E2EE_CORRUPT_OUTBOX');
       const envelope=validateE2eeEnvelope(pending.command.payload.envelope);

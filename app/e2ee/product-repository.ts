@@ -25,7 +25,7 @@ export class E2eePrivateDocument<T>{
  }
  #decode(bytes:Uint8Array){return this.#validate(parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024));}
  async load(mode:'online'|'offline'='online'):Promise<PrivateDocumentView<T>>{
-  this.#current();const local=await this.#queue.load();this.#current();
+  this.#current();if(mode==='online')await this.#queue.recoverAcknowledgement();this.#current();const local=await this.#queue.load();this.#current();
   try{
    if(mode==='offline'){
     if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');
@@ -40,6 +40,10 @@ export class E2eePrivateDocument<T>{
     const value=this.#decode(remote.bytes);this.#current();
     if(local?.pending)return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:true,
      conflict:remote.revision===local.remoteRevision?null:{value,revision:remote.revision}};
+    if(local&&remote.revision===local.remoteRevision){
+     if(local.bytes.length!==remote.bytes.length||local.bytes.some((byte,index)=>byte!==remote.bytes[index]))throw new Error('E2EE_PRIVATE_DOCUMENT_DIVERGED');
+     return{value,serial:local.serial,remoteRevision:remote.revision,pending:false,conflict:null};
+    }
     const serial=await this.#queue.reconcile(remote.bytes,local?.serial??null,remote.revision,undefined,'cache');this.#current();
     return{value,serial,remoteRevision:remote.revision,pending:false,conflict:null};
    }finally{remote.bytes.fill(0);}

@@ -16,6 +16,7 @@ internal interface DiaryGateway {
     suspend fun workspace(): JSONObject
     /** GET when body is null; otherwise PUT. The transport must keep its existing session generation guards. */
     suspend fun request(path: String, body: JSONObject? = null): JSONObject
+    suspend fun privateService(service:String,timeZone:String?=null):JSONObject = error("E2EE_PRIVATE_SERVICE_UNAVAILABLE")
     suspend fun remove(id: String, expectedRevision: Long): JSONObject = throw UnsupportedOperationException("DIARY_DELETE_UNAVAILABLE")
 }
 

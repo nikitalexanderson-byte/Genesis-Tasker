@@ -146,3 +146,50 @@ implementation boundary, not a claim that private reminders are complete. Also
 finish the remaining optimistic web editor closures so that acknowledgement
 requires durable encryption before dismissal/backgrounding. No additional category
 is marked accepted by these edits. No tests/builds/CI/deploy were started.
+
+## Diary integration continuation, 21 November (candidate code, untested)
+
+Continued the owner's implementation-first order. This checkpoint is code, not
+acceptance: accepted source coverage remains9/20, production remains3.3.5/149,
+all cutover/update gates remain unchanged. No tests, typecheck, lint, build,
+push/CI, device installation or deployment have run for this continuation.
+
+- Connected actual web and Android diary repository entrypoints to the same
+  `personal-diary-live-v1` document/schema. Device-only notes, drafts and promotion
+  tickets use a separate new-root document with no transport/flush capability.
+  The original local migration journal is validated against owner, scope, device,
+  source registry, generation and planning ownership before opening its contents.
+- Disabling sync requires online review, durably copies active notes and drafts
+  locally first, pauses device uploads, then tombstones the remote active notes.
+  Explicit re-enabling persists new promotion IDs before sending and retains the
+  source until acknowledgement. Existing migration originals remain history.
+  Retention of historical server ciphertext is not a promise of physical erasure.
+- Native saved editor state now references a new-root local draft, including
+  blank in-progress forms, instead of the retired account cache key. Form changes
+  schedule encrypted staging; close/save still await durable storage. A locked
+  saver can retain a previously staged pointer, not start legacy encryption.
+- A shared14-language notice distinguishes local history absent on this device
+  from empty content. The original device's incomplete/corrupt history blocks
+  initialization; a clean device can read committed remote notes explicitly.
+- Added narrow authenticated read-only private-service endpoints for dream clock
+  and voice entitlement. They accept no diary text/key/settings and do not reopen
+  the retired diary content route. Payment/identity authority stays outside imports.
+- Added a bounded64MiB device-document format with256KiB ciphertext chunks, digest,
+  authenticated manifest and atomic root/slot CAS on both clients. Fixed slots
+  bound disk growth across edits instead of retaining a new orphan part set for
+  every form change. Concurrent reads/edits fail explicitly rather than overwrite.
+- Normal product reads recover a previously sent operation by its exact receipt
+  identity, without sending an unsent write. Unchanged acknowledged reads no longer
+  append redundant editor history on each poll. Actual edits retain their history.
+- Web diary views are recreated after unlock and guarded against late callbacks
+  from a previous repository/account. Native private mutations bypass the legacy
+  owner permit and still use the account/lifecycle capability and repository mutex.
+
+Still pending in this code pass: complete explicit conflict-review actions for
+aggregate product documents (including prepared upload cancellation/replacement),
+native mindmap product routing, remaining Aurora/stoicheion/Physis/advice/preferences
+entrypoints, setup/migration/resume composition, shared business transactions and
+authorization, external-copy consent, content-only backup/Drive/import, remaining
+per-scope local-work attribution, reminders/background/deep links and enrollment /
+invalidated-keystore recovery. Do not treat the new diary route or metadata tools
+as accepted scenarios before the consolidated end-to-end review and repair pass.

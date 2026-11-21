@@ -32,6 +32,7 @@ internal fun allowedAuthSessionRoute(method: String, path: String): Boolean =
     (path == "/donations/cloudtips/checkout" && method == "POST") ||
     (path == "/weather/v1/current" && method == "POST") ||
     (path == "/account/plan-guidance" && method == "GET") ||
+    (method=="GET"&&(path=="/private-services/dream-voice"||path.matches(Regex("/private-services/dream-clock\\?timeZone=[A-Za-z0-9_%+./-]{1,384}")))) ||
     (path in setOf("/account/plan-guidance/claim", "/account/plan-guidance/shown", "/account/plan-guidance/read", "/account/plan-guidance/release") && method == "POST") ||
     (method == "GET" && path.matches(Regex("/ads/today\\?language=[a-z]{2}&country=[A-Z]{0,2}&platform=android"))) ||
     (method == "POST" && path in setOf("/advice/today", "/advice/next", "/advice/view", "/advice/dismiss")) ||
@@ -331,6 +332,11 @@ internal class AuthSessionClient(context: Context,
         require(position in 0..2 && action in setOf("reveal", "reroll") && revision >= 0)
         return request(expected, "/stoicheion/timeline/cards", JSONObject().put("position", position)
             .put("action", action).put("revision", revision))
+    }
+    fun privateService(expected:Long,service:String,timeZone:String?=null):JSONObject{
+        require(service in setOf("dream-clock","dream-voice")&&(service!="dream-clock"||timeZone!=null&&timeZone.length<=128)){"E2EE_ROUTE_FORBIDDEN"}
+        val query=if(service=="dream-clock")"?timeZone="+java.net.URLEncoder.encode(requireNotNull(timeZone),"UTF-8")else ""
+        return request(expected,"/private-services/$service$query",null,method="GET")
     }
     fun referrals(expected: Long, method: String, path: String, body: JSONObject? = null): JSONObject {
         require(allowedReferralRoute(method, path))

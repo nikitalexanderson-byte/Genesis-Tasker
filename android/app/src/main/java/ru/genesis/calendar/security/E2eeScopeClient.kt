@@ -240,6 +240,19 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         }
         return job.getLong("expected") + 1
     }
+    /** Recover only an already sent packet by its immutable receipt identity.
+     * Reading an editor must not send a previously unsent write. */
+    @Synchronized fun recoverReceipt(domain:String,objectId:String):Pair<String,Long>?{
+        check(refreshed){"E2EE_REFRESH_REQUIRED"};current();val key=id(domain,objectId);val loaded=loadJob(key)?:return null;val job=loaded.value
+        val origin=job.opt("originId") as? String?:return null
+        if(!job.getBoolean("complete")&&!job.isNull("pending")&&job.isNull("cancelling")){
+            val command=job.getJSONObject("pending").getJSONObject("command");val hash=E2eeCommands.hash(command)
+            val lookup=readPacket("receipt",JSONObject().put("operationId",command.get("operationId")).put("payloadHash",hash))
+            lookup.optJSONObject("receipt")?.let{receipt->check(receipt.get("payloadHash")==hash){"E2EE_INVALID_RECEIPT"}
+                val result=receipt.getJSONObject("result");if(!result.optBoolean("cancelled"))acknowledge(key,job,loaded.serial,result)}
+        }
+        return if(job.getBoolean("complete"))origin to job.getLong("expected")+1 else null
+    }
     private fun acknowledge(id: String, job: JSONObject, serial: Long, result: JSONObject): Long {
         device.requireOpen(); val pending = job.getJSONObject("pending"); val item = job.getJSONArray("plan").getJSONObject(job.getInt("uploaded"))
         val envelope = E2eeEnvelope.Envelope.fromJson(pending.getJSONObject("command").getJSONObject("payload").getJSONObject("envelope"))

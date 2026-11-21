@@ -3647,6 +3647,15 @@ function observePrivateProduct(ownerId:string,listener:(workspace:GenesisWorkspa
   return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);window.removeEventListener(PERSONAL_DOCUMENT_READY_EVENT,refresh);};
 }
 export function usesPrivateProductStorage(ownerId:string){return serverProtectedTransportOwners.has(ownerId);}
+/** Read-only service metadata. These routes accept no diary text or old key and
+ * remain separate from the retired diary content transport. */
+export async function privateServiceRequest<T>(ownerId:string,service:'dream-clock'|'dream-voice',timeZone?:string,signal?:AbortSignal):Promise<T>{
+  const current=captureAccountSessionGuard(),account=requirePrivateAccount(ownerId);current();account.requireOpen();
+  if(account.mode!=='online'||confirmedTransportOwnerId!==ownerId)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  if(service!=='dream-clock'&&service!=='dream-voice'||service==='dream-clock'&&(typeof timeZone!=='string'||timeZone.length>128))throw new Error('E2EE_ROUTE_FORBIDDEN');
+  const result=await api<T>(`/private-services/${service}${service==='dream-clock'?`?timeZone=${encodeURIComponent(timeZone!)}`:''}`,{cache:'no-store',signal});
+  current();account.requireOpen();return result;
+}
 /** Cached identity supplies display metadata only. Offline access still needs
  * the independent device secret and verified saved directory; no HTTP session,
  * device enrollment, billing or ACL is restored from this profile. */

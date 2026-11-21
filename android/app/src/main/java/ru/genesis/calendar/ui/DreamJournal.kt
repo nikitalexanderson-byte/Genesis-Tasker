@@ -170,7 +170,7 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
     val currentLanguage by rememberUpdatedState(language)
     val currentEditorKey by rememberUpdatedState(key)
     DisposableEffect(spellingPatches){onDispose{spellingPatches.clear()}}
-    val saver=remember(repository){Saver<String,String>(save={repository.sealEditorState(it)},restore={repository.openEditorState(it)})}
+    val saver=remember(repository){Saver<String,String>(save={try{repository.sealEditorState(it)}catch(error:IllegalStateException){if(error.message=="E2EE_UNLOCK_REQUIRED")null else throw error}},restore={repository.openEditorState(it)})}
     var formJson by rememberSaveable(key,stateSaver=saver){mutableStateOf((record?.note?.json()?:DiaryNote.newDraftJson()
         .put("dream",JSONObject().put("day",date.toString()).put("timeZone",ZoneId.systemDefault().id))).toString())}
     var draftKey by rememberSaveable(key){mutableStateOf(record?.draftKey)}
@@ -183,6 +183,7 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
     val voiceGeneration=remember { intArrayOf(0) }
     val voiceCommit=remember(key){arrayOfNulls<Pair<String,String>>(1)}
     var changed by rememberSaveable(key) { mutableStateOf(false) }
+    LaunchedEffect(repository,formJson){if(repository.privateContent)try{repository.keepEditorState(formJson)}catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=common.getString("draftError")}}
     fun update(field:String,value:String){formJson=JSONObject(formJson).put(field,value).toString();changed=true;error=null}
     fun checkFinalPhrase(heard:String,generation:Int){
         val candidate=voiceCommit[0];voiceCommit[0]=null

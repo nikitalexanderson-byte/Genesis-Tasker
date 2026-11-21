@@ -1,4 +1,5 @@
-import { personalDocumentAccess, GenesisApiError } from './cloud-sync';
+import { personalDocumentAccess, GenesisApiError,usesPrivateProductStorage } from './cloud-sync';
+import {E2eeDiaryRepository} from './e2ee/diary-product';
 import { currentFeatureAccess, requireQuotaGrowth, requireFeature } from './feature-access';
 import { validateDiaryNote, validDreamDay, type DiaryNote } from './diary-model';
 import { DEFAULT_DREAM_SETTINGS, parseDreamSettings, type DreamSettings } from './dream-journal-model';
@@ -16,6 +17,7 @@ const sameContent = (a: DiaryNote, b: DiaryNote) => JSON.stringify({ ...a, updat
 
 /** Each tab journals its own encrypted draft before any network write. No plaintext is cached. */
 export class DiaryRepository {
+  private product:E2eeDiaryRepository|null;
   private access: Access;
   private prefix: string;
   private writer = crypto.randomUUID();
@@ -33,21 +35,28 @@ export class DiaryRepository {
   captureMigration(records:readonly DiaryRecord[]) {
     this.check();const result={records:structuredClone(records),editors:[...this.migrationEditors].map(([source,read])=>({source,...structuredClone(read())}))};this.check();return result;
   }
-  get syncEnabled() { return this.settings.syncEnabled && !this.deviceLocalOnly; }
-  get pendingUploads() { return this.cache().filter(row => row.localOnly).length; }
-  offline = false;
-  dreamSettings: DreamSettings = { ...DEFAULT_DREAM_SETTINGS };
+  get syncEnabled() { return this.product?.syncEnabled??(this.settings.syncEnabled && !this.deviceLocalOnly); }
+  get pendingUploads() { return this.product?.pendingUploads??this.cache().filter(row => row.localOnly).length; }
+  get localHistory() { return this.product?.localHistory??null; }
+  private legacyOffline = false;
+  get offline(){return this.product?.offline??this.legacyOffline;}
+  set offline(value:boolean){this.legacyOffline=value;}
+  private legacyDreamSettings: DreamSettings = { ...DEFAULT_DREAM_SETTINGS };
+  get dreamSettings(){return this.product?.dreamSettings??this.legacyDreamSettings;}
+  set dreamSettings(value:DreamSettings){this.legacyDreamSettings=value;}
   constructor(private userId: string, private storage: Storage, access?: Access) {
+    this.product=usesPrivateProductStorage(userId)?new E2eeDiaryRepository(userId):null;
     this.access = access ?? personalDocumentAccess(userId);
     this.prefix = `genesis-diary-v1:${userId}:`;
+    if(this.product)return;
     const dreamSettings = this.storage.getItem(`${this.prefix}dream-settings`);
     if (dreamSettings) this.dreamSettings = parseDreamSettings(JSON.parse(dreamSettings));
     const saved = this.storage.getItem(`${this.prefix}settings`);
     if (saved) { const value = JSON.parse(saved); this.deviceLocalOnly = value.deviceLocalOnly === true; this.acceptSettings({ settings: value }, false, false); }
     this.acceptDeletions(JSON.parse(this.storage.getItem(`${this.prefix}deleted`) || '[]'));
   }
-  dispose() { this.stopped = true;this.migrationEditors.clear(); }
-  private check(access = this.access) { if (this.stopped) throw new Error('DIARY_SESSION_CLOSED'); access.check(); }
+  dispose() { this.stopped = true;this.migrationEditors.clear();this.product?.dispose(); }
+  private check(access = this.access) { if (this.stopped) throw new Error('DIARY_SESSION_CLOSED');if(this.product){this.product.check();return;}access.check(); }
   private async run<T>(operation:(access:Access)=>Promise<T>) {
     this.check();return this.access.withLegacyOperation(async access=>{this.check(access);const result=await operation(access);this.check(access);return result;});
   }
@@ -55,6 +64,7 @@ export class DiaryRepository {
     const task=this.serial.then(()=>this.run(operation));this.serial=task.then(()=>{},()=>{});return task;
   }
   async adviceId(id: string) {
+    if(this.product)return this.product.adviceId(id);
     return this.run(async access=>{
     for (const row of this.cache()) {
       const note = validateDiaryNote(await access.open(row, this.scope(row.id)));
@@ -111,6 +121,7 @@ export class DiaryRepository {
     }
   }
   async keepDraft(input: DiaryNote, record?: DiaryRecord) {
+    if(this.product)return this.product.keepDraft(input,record);
     const note = validateDiaryNote(input);
     return this.enqueue(async access=>{
       this.check(access); if (this.deleted.get(note.id)?.localOnly === false) throw new Error('DIARY_NOTE_DELETED');
@@ -123,6 +134,7 @@ export class DiaryRepository {
     });
   }
   async list(): Promise<DiaryRecord[]> {
+    if(this.product)return this.product.list();
     return this.run(access=>this.listNow(access));
   }
   private async listNow(access:Access):Promise<DiaryRecord[]> {
@@ -167,6 +179,7 @@ export class DiaryRepository {
     this.check(access); return records.filter(row => this.deleted.get(row.note.id)?.localOnly !== false);
   }
   async save(input: DiaryNote, record?: DiaryRecord): Promise<DiaryRecord & { clearedDraftKey: string }> {
+    if(this.product)return this.product.save(input,record);
     const note = validateDiaryNote(input);
     if (record && note.id !== record.note.id) throw new Error('DIARY_INVALID_NOTE');
     return this.enqueue(access=>this.saveNow(note, record,access));
@@ -196,6 +209,7 @@ export class DiaryRepository {
       this.storage.removeItem(draftKey); return { note: reuse ? before! : note, revision: result.revision, clearedDraftKey: draftKey, localOnly: !this.syncEnabled };
   }
   async remove(record: DiaryRecord) {
+    if(this.product)return this.product.remove(record);
     return this.enqueue(async access=>{
       this.check(access); if (record.draftKey) throw new Error('DIARY_INVALID_NOTE');
       let marker: Deletion;
@@ -209,6 +223,7 @@ export class DiaryRepository {
     });
   }
   async setSyncEnabled(enabled: boolean) {
+    if(this.product)return this.product.setSyncEnabled(enabled);
     return this.enqueue(async access=>{
       // list() persists all remote ciphertext and local drafts before deletion is allowed.
       await this.listNow(access); this.check(access);
@@ -242,13 +257,15 @@ export class DiaryRepository {
     }
   }
   private discardDraftNow(key:string,access:Access) { this.check(access); if (!key.startsWith(`${this.prefix}draft:`)) throw new Error('DIARY_INVALID_DRAFT'); this.storage.removeItem(key); }
-  async discardDraft(key: string) { return this.enqueue(async access=>{this.discardDraftNow(key,access);}); }
-  async discardOwnDraft(id: string) { const key = `${this.prefix}draft:${this.writer}:${id}`; await this.discardDraft(key); return key; }
+  async discardDraft(key: string) { if(this.product)return this.product.discardDraft(key);return this.enqueue(async access=>{this.discardDraftNow(key,access);}); }
+  async discardOwnDraft(id: string) { if(this.product)return this.product.discardOwnDraft(id);const key = `${this.prefix}draft:${this.writer}:${id}`; await this.discardDraft(key); return key; }
   async discardEditorDraft(id: string, draftKey?: string) {
+    if(this.product)return this.product.discardEditorDraft(id,draftKey);
     const keys = [draftKey, `${this.prefix}draft:${this.writer}:${id}`].filter((key): key is string => Boolean(key));
     return this.enqueue(async access=>{for(const key of keys)this.discardDraftNow(key,access);return keys;});
   }
   async setDreamTodayMode(todayMode: DreamSettings['todayMode']) {
+    if(this.product)return this.product.setDreamTodayMode(todayMode);
     return this.enqueue(async access=>{
       this.check(access);
       const result = await access.request<{dreamSettings: DreamSettings}>('/diary/dream-settings', {
@@ -257,10 +274,11 @@ export class DiaryRepository {
     });
   }
   async dreamToday(timeZone: string, signal?: AbortSignal) {
+    if(this.product)return this.product.dreamToday(timeZone,signal);
     return this.run(async access=>{
       this.check(access); const result = await access.request<{today:string;timeZone:string}>(`/diary/dream-clock?timeZone=${encodeURIComponent(timeZone)}`, {signal});
       this.check(access); if (!validDreamDay(result.today) || result.timeZone !== timeZone) throw new Error('DREAM_CLOCK_INVALID'); return result.today;
     });
   }
-  async authorizeDreamVoice() { return this.run(async access=>{await access.request('/diary/dream-voice');this.check(access);}); }
+  async authorizeDreamVoice() { if(this.product)return this.product.authorizeDreamVoice();return this.run(async access=>{await access.request('/diary/dream-voice');this.check(access);}); }
 }

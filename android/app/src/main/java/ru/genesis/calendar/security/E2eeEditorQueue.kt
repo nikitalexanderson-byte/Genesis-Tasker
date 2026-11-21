@@ -120,6 +120,10 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
         }
         error("E2EE_EDITOR_BUSY")
     }
+    fun recoverAcknowledgement(){
+        val saved=loadState()?:return;val pending=strings(saved.value.getJSONArray("pending"));if(pending.isEmpty())return
+        val receipt=client.recoverReceipt(domain,objectId)?:return;if(receipt.first in pending)confirm(receipt.first,receipt.second)
+    }
     fun rebasePending(expectedRemoteRevision: Long): String {
         val job = client.localJob(domain, objectId); val saved = loadState()
         check(job?.originId != null && saved != null && job.originId in strings(saved.value.getJSONArray("pending"))) { "E2EE_PENDING_EDITOR_MISMATCH" }
