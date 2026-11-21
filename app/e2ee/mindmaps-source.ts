@@ -185,7 +185,7 @@ export class PersonalMindmapsSource implements PrivatePathAdapter{
 /** Cold current-generation reading. No old key, legacy endpoint, conversion or
  * upload replay. Missing device-only work/files is an error, never an empty map. */
 export async function readMigratedMindmaps(readRemote:(domain:'mindmap',id:string)=>Promise<unknown>,
- readAttachment:(id:string)=>Promise<{bytes:Uint8Array;mediaType:string}|null>,readLocal:(domain:'mindmap',id:string)=>Promise<Uint8Array|null>,ownerId:string){
+ readAttachment:(id:string)=>Promise<{bytes:Uint8Array;mediaType:string}|null>,readLocal:((domain:'mindmap',id:string)=>Promise<Uint8Array|null>)|null,ownerId:string){
  const hydrate=async(raw:unknown)=>{
   object(raw);const value=structuredClone(raw);list(value.nodes,1000);
   for(const node of value.nodes){object(node);const p=node.presentation as Row|undefined,image=p?.image as Row|undefined;if(!image)continue;exactKeys(image,['alt','fit','dataRef']);
@@ -211,6 +211,9 @@ export async function readMigratedMindmaps(readRemote:(domain:'mindmap',id:strin
   if(row.protocol!==1||row.ownerId!==ownerId||row.id!==entry.mapId||row.revision!==entry.revision||row.schemaVersion!==entry.schemaVersion||row.updatedAt!==entry.updatedAt)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
   const value=await hydrate(row.document);if(value.id!==entry.mapId)invalid();versions.push({...entry,document:value});
  }
+ // A clean device can read the committed remote content without claiming it
+ // owns another device's local journals. Their absence is explicit, not empty.
+ if(readLocal===null)return{records,versions,local:null};
  const bytes=await readLocal('mindmap','personal-mindmap-local-work-v1');if(!bytes)throw new Error('E2EE_MINDMAPS_LOCAL_CONTENT_REQUIRED');let local:unknown;
  try{local=parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_MINDMAPS_SOURCE_INVALID',64*1024*1024);}finally{bytes.fill(0);}
  exactKeys(local,['protocol','ownerId','history','drafts','views','conversions','editors','entries','execution']);if(local.protocol!==1||local.ownerId!==ownerId||local.execution!=='history-only')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');

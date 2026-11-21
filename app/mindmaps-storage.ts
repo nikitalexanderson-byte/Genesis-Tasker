@@ -1,4 +1,5 @@
-import { GenesisApiError, personalDocumentAccess, sharedMindmapDocumentAccess, type GenesisTask } from "./cloud-sync";
+import { GenesisApiError, personalDocumentAccess, sharedMindmapDocumentAccess,usesPrivateProductStorage, type GenesisTask } from "./cloud-sync";
+import {E2eeMindmapRepository} from './e2ee/mindmaps-product';
 import { mapId, validateMindmap, type Mindmap, type MapView } from "./mindmaps-model";
 import { currentFeatureAccess, requireQuotaGrowth } from './feature-access';
 
@@ -13,6 +14,7 @@ export const MINDMAPS_ENABLED = process.env.NEXT_PUBLIC_GENESIS_MINDMAPS === "tr
 
 /** Each tab has its own encrypted draft; a tab can never overwrite another tab's unsent text. */
 export class MindmapRepository {
+  private product:E2eeMindmapRepository|null;
   private access: Access;
   private prefix: string;
   private tab: string;
@@ -26,8 +28,9 @@ export class MindmapRepository {
   private storage:Storage;
   private migrationEditors=new Map<string,()=>{document:Mindmap|null;revision:number;state?:unknown}>();
   private journalListeners = new Set<() => void>();
-  subscribeJournal(listener: () => void) { this.journalListeners.add(listener); return () => { this.journalListeners.delete(listener); }; }
+  subscribeJournal(listener: () => void) { if(this.product)return this.product.subscribeJournal(listener);this.journalListeners.add(listener); return () => { this.journalListeners.delete(listener); }; }
   constructor(private userId: string, private spaceId?: string,ports?:{storage?:Storage;access?:Access}) {
+    this.product=!spaceId&&usesPrivateProductStorage(userId)?new E2eeMindmapRepository(userId):null;
     this.envelopeVersion = spaceId ? 1 : 2;
     this.storage=ports?.storage??globalThis.localStorage;
     this.access = ports?.access??(spaceId ? sharedMindmapDocumentAccess(userId, spaceId) : personalDocumentAccess(userId));
@@ -35,7 +38,7 @@ export class MindmapRepository {
     // A duplicated browser tab inherits sessionStorage. Use a fresh writer identity.
     this.tab = mapId();
   }
-  dispose() { this.stopped = true;this.migrationEditors.clear(); }
+  dispose() { this.stopped = true;this.migrationEditors.clear();this.product?.dispose(); }
   private storageKeys(){return Array.from({length:this.storage.length},(_,index)=>this.storage.key(index)).filter((key):key is string=>key!==null);}
   registerMigrationEditor(capture:()=>{document:Mindmap|null;revision:number;state?:unknown}){
     // Direct links mount before account bootstrap restores the workspace key.
@@ -47,7 +50,7 @@ export class MindmapRepository {
   captureMigration(records:readonly MapRecord[]){
     this.check();return{records:structuredClone(records),editors:[...this.migrationEditors].map(([source,capture])=>({source:'mounted:'+source,...structuredClone(capture())})),localWork:[]};
   }
-  private check(access: Access = this.access) { if (this.stopped) throw new Error("Сессия карт закрыта."); access.check(); }
+  private check(access: Access = this.access) { if (this.stopped) throw new Error("Сессия карт закрыта.");if(this.product){this.product.check();return;}access.check(); }
   private async operation<T>(work: (access: Access) => Promise<T>) {
     this.check();
     return this.access.withLegacyOperation(async access => {
@@ -60,7 +63,7 @@ export class MindmapRepository {
     this.serial = operation.then(() => {}, () => {}); return operation;
   }
   private draftKey(id: string) { return `${this.prefix}draft:${this.tab}:${id}`; }
-  list(): Promise<MapRecord[]> { return this.enqueue(access => this.load(access)); }
+  list(): Promise<MapRecord[]> { if(this.product)return this.product.list();return this.enqueue(access => this.load(access)); }
   private async load(access: Access): Promise<MapRecord[]> {
     this.check(access);
     const drafts: MapRecord[] = [];
@@ -93,6 +96,7 @@ export class MindmapRepository {
     this.check(access); return [...drafts, ...records];
   }
   adopt(record: MapRecord) {
+    if(this.product){this.product.adopt(record);return;}
     this.check(); this.revisions.set(record.document.id, record.revision);
     if (record.draftKey) {
       const raw = this.storage.getItem(record.draftKey.replace(":draft:", ":request:"));
@@ -101,6 +105,7 @@ export class MindmapRepository {
   }
   /** Await this before starting any task write. The durable journal is separately encrypted. */
   async journal(operation: Conversion) {
+    if(this.product)return this.product.journal(operation);
     const snapshot = structuredClone(operation);
     return this.operation(async access => {
       const encrypted = await access.seal(snapshot, `conversion:${snapshot.mapId}:${snapshot.nodeId}`);
@@ -109,11 +114,13 @@ export class MindmapRepository {
     });
   }
   async conversions(map: Mindmap) {
+    if(this.product)return this.product.conversions(map);
     const prefix = `${this.prefix}conversion:${map.id}:`;
     return this.operation(access => Promise.all(this.storageKeys().filter(k => k.startsWith(prefix)).map(async key =>
       access.open<Conversion>(JSON.parse(this.storage.getItem(key)!), `conversion:${map.id}:${key.split(":").at(-1)}`))));
   }
   saveView(id: string, view: MapView) {
+    if(this.product)return this.product.saveView(id,view);
     const snapshot = structuredClone(view);
     // Mode/zoom can be captured before a debounced scroll update. They must not
     // erase its coordinates, and encryption completion order must not reorder writes.
@@ -126,6 +133,7 @@ export class MindmapRepository {
     this.viewSerial = write; return write;
   }
   async view(id: string): Promise<MapView | null> {
+    if(this.product)return this.product.view(id);
     return this.operation(access => this.readView(id, access));
   }
   private async readView(id: string, access: Access): Promise<MapView | null> {
@@ -134,6 +142,7 @@ export class MindmapRepository {
     return raw ? access.open<MapView>(JSON.parse(raw), `view:${id}`) : null;
   }
   remove(record: MapRecord): Promise<void> {
+    if(this.product)return this.product.remove(record);
     const id = record.document.id;
     this.staged.set(id, (this.staged.get(id) ?? 0) + 1);
     const views = this.viewSerial;
@@ -157,6 +166,7 @@ export class MindmapRepository {
     this.serial = operation; return operation;
   }
   save(document: Mindmap, status: (state: SaveState, message?: string) => void): Promise<void> {
+    if(this.product)return this.product.save(document,status);
     const snapshot = validateMindmap(structuredClone(document));
     const sequence = (this.staged.get(snapshot.id) ?? 0) + 1;
     this.staged.set(snapshot.id, sequence);
@@ -207,6 +217,7 @@ export class MindmapRepository {
     this.serial = operation; return operation;
   }
   retry(record: MapRecord, status: (state: SaveState, message?: string) => void) {
+    if(this.product)return this.product.retry(record,status);
     return this.enqueue(access => this.retryRecord(record, status, access));
   }
   private async retryRecord(record: MapRecord, status: (state: SaveState, message?: string) => void, access: Access) {
@@ -255,10 +266,12 @@ export class MindmapRepository {
     }
   }
   async forkDraft(document: Mindmap, status: (state: SaveState, message?: string) => void) {
+    if(this.product)return this.product.forkDraft(document,status);
     const copy = validateMindmap({ ...document, id: mapId(), title: `${document.title.slice(0, 1900)} — сохранённый вариант` });
     await this.save(copy, status); return copy;
   }
   async history(id: string): Promise<MapRecord[]> {
+    if(this.product)return this.product.history(id);
     return this.operation(async access => {
       const { versions } = await access.request<{ versions: Envelope[] }>(`/mindmaps/${id}/history`);
       return Promise.all(versions.map(async e => ({ document: validateMindmap(await access.open(e, `map:${id}`)), revision: e.revision, updatedAt: e.updatedAt })));

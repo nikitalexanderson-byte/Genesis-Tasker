@@ -6,7 +6,7 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import {privatePathSource} from './private-path-source.ts';
 import {privateTableObjectId,type PrivateTableDocument} from './relational-path-source.ts';
-import type {PrivateScopeKind} from './private-paths.ts';
+import {privatePathDocumentDomain,type PrivateScopeKind} from './private-paths.ts';
 
 type Opened<T>={value:T;serial:number;remoteRevision:number;pending:boolean};
 export type PrivateDocumentView<T>=Opened<T>&{conflict:null|{value:T;revision:number}};
@@ -32,7 +32,10 @@ export class E2eePrivateDocument<T>{
     return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:local.pending,conflict:null};
    }
    const remote=await this.#client.read(this.#domain,this.#id);this.#current();
-   if(!remote)throw new Error('E2EE_PRIVATE_DOCUMENT_MISSING');
+   if(!remote){
+    if(local?.pending&&local.remoteRevision===0)return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:0,pending:true,conflict:null};
+    throw new Error('E2EE_PRIVATE_DOCUMENT_MISSING');
+   }
    try{
     const value=this.#decode(remote.bytes);this.#current();
     if(local?.pending)return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:true,
@@ -68,6 +71,6 @@ export class E2eePrivateTable{
     ||Object.keys(value).some(name=>!['format','pathId','table','rows','execution'].includes(name)))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
    return{format:'genesis-private-table-v1',pathId:options.pathId,table:options.table,execution:'content-only',rows:value.rows.map(options.validateRow)};
   };
-  this.document=new E2eePrivateDocument({...options,domain:options.kind==='personal'?'local-snapshot':'shared-project',objectId:privateTableObjectId(options.pathId,options.table),validate});
+  this.document=new E2eePrivateDocument({...options,domain:privatePathDocumentDomain(options.kind,options.pathId),objectId:privateTableObjectId(options.pathId,options.table),validate});
  }
 }

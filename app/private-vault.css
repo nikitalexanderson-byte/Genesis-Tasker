@@ -1,0 +1,17 @@
+#genesis-app-content{display:contents;}
+.private-vault-gate{position:fixed;inset:0;z-index:11000;display:grid;place-items:center;overflow-y:auto;padding:clamp(16px,4vw,40px);background:var(--surface);color:var(--ink);}
+.private-vault-dialog{width:min(620px,100%);grid-template-columns:32px minmax(0,1fr);border:0;background:var(--surface);box-shadow:none;gap:20px;}
+.private-vault-icon{width:30px;height:30px;margin-top:8px;color:var(--ink-soft);}
+.private-vault-dialog .workspace-recovery-heading{padding-right:0;}
+.private-vault-dialog .workspace-recovery-heading h2{font-size:clamp(26px,4.5vw,36px);line-height:1.15;}
+.private-vault-dialog .workspace-recovery-heading p,.private-vault-dialog .workspace-recovery-hint,.private-vault-dialog .workspace-recovery-error{font-size:15px;line-height:1.6;}
+.private-vault-dialog .workspace-recovery-field{font-size:14px;letter-spacing:normal;text-transform:none;}
+.private-vault-dialog .workspace-recovery-field>div{background:var(--surface);}
+.private-vault-dialog .workspace-recovery-field input{font-size:16px;min-height:44px;max-width:100%;}
+.private-vault-dialog input[type=file]{font:inherit;color:var(--ink);padding:8px 0;}
+.private-vault-dialog input::file-selector-button{font:inherit;min-height:44px;margin-inline-end:12px;padding:8px 12px;border:0;border-radius:var(--ui-surface-radius);background:var(--surface-raised,var(--surface));color:var(--ink);}
+.private-vault-dialog .workspace-recovery-privacy{font-size:13px;line-height:1.55;text-align:start;}
+.private-vault-dialog .workspace-recovery-actions{display:flex;flex-wrap:wrap;}
+.private-vault-dialog .workspace-recovery-actions button{min-height:44px;white-space:normal;}
+.private-vault-dialog :is(input,button):focus-visible{outline:2px solid var(--teal);outline-offset:3px;}
+@media(max-width:480px){.private-vault-dialog{padding:12px 0;grid-template-columns:24px minmax(0,1fr);gap:16px 12px;}.private-vault-icon{width:24px;height:24px;}.private-vault-dialog .workspace-recovery-actions{flex-direction:column-reverse;}.private-vault-dialog .workspace-recovery-actions button{width:100%;}}

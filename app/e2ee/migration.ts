@@ -503,9 +503,12 @@ export class E2eeMigration {
           await this.#savePlanningCell(cell,next,policy,history,current);state=state4();
         }
         if(state.ownership.protocol!==3)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
-        const originals=state.ownership.originals.map(row=>{
-          if(row.completion===null)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE');
-          return Object.freeze({registration:Object.freeze({...row.registration,context:Object.freeze({...row.registration.context}),binding:Object.freeze({...row.registration.binding})}),completion:Object.freeze({...row.completion}),packet:snapshotE2eeValue(row.packet)});
+        // Failed read-only responses cannot contain a unique acknowledged edit.
+        // Preserve their reservations/prefixes in ownership, without promoting
+        // them to EOF proof. The full registry must read the SAME fenced source
+        // through complete replies before it can finish a new plan.
+        const originals=state.ownership.originals.filter(row=>row.completion!==null).map(row=>{
+          return Object.freeze({registration:Object.freeze({...row.registration,context:Object.freeze({...row.registration.context}),binding:Object.freeze({...row.registration.binding})}),completion:Object.freeze({...row.completion!}),packet:snapshotE2eeValue(row.packet)});
         }),references=originals.map(row=>row.completion),{signer}=await this.#planningSigner(current);
         const same=(left:unknown,right:unknown)=>{const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);try{return a.length===b.length&&a.every((byte,index)=>byte===b[index]);}finally{a.fill(0);b.fill(0);}};
         const plans=state.ownership.plans;
@@ -576,10 +579,10 @@ export class E2eeMigration {
       const state=loaded.state;
       if(state.protocol!==4||state.ownership.protocol!==3||!state.lease||!state.sourceHash||state.pending||state.resuming)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
       const reserved=state.ownership.plans.find(plan=>plan.completion?.attemptId===chosen.attemptId&&plan.completion.manifestHash===chosen.manifestHash);
-      if(!reserved||reserved.fence!==state.lease.fence||reserved.generation!==state.lease.generation||state.ownership.originals.some(row=>row.completion===null))throw new Error('E2EE_CONTENT_PLAN_CONFLICT');
+      if(!reserved||reserved.fence!==state.lease.fence||reserved.generation!==state.lease.generation)throw new Error('E2EE_CONTENT_PLAN_CONFLICT');
       const {signer}=await this.#planningSigner(current);await this.#checkOwnedOriginals(state,policy,signer,current);
       const manifest=await openMigrationContentPlan({...this.#contentPlanRead(state,reserved,current),reference:chosen});current();
-      const expected=state.ownership.originals.map(row=>row.completion),same=(left:unknown,right:unknown)=>{const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);try{return a.length===b.length&&a.every((byte,index)=>byte===b[index]);}finally{a.fill(0);b.fill(0);}};
+      const expected=state.ownership.originals.filter(row=>row.completion!==null).map(row=>row.completion),same=(left:unknown,right:unknown)=>{const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);try{return a.length===b.length&&a.every((byte,index)=>byte===b[index]);}finally{a.fill(0);b.fill(0);}};
       if(!same(reserved.originals,expected))throw new Error('E2EE_CONTENT_PLAN_CONFLICT');
       await this.#drainPreparedHistory(await this.#preparedHistory(loaded,policy,current),current);
       await this.#recoveryCheck(this.#root);current();await policy.device.ensureDurableKeys();current();await this.#durableKeys();current();

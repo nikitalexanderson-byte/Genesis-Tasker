@@ -50,6 +50,7 @@ internal class CachedAccountEntry(private val app: GenesisApplication) {
             .put("sharedProjectsEligible", settings.sharedProjectsEligible)
             .put("sharedProjectsLifetimeAccess", settings.sharedProjectsLifetimeAccess)
             .put("sharedProjectsEnabled", settings.sharedProjectsEnabled)
+        if(identity.privateVault)user.put("privatePreferencesMode","e2ee")
         val encoded = LocalCipher().encrypt(JSONObject().put("user", user).toString(), "$scope/$kind")
         app.database.dao().putDocument(DocumentRecord(scope, kind, encoded, System.currentTimeMillis()))
     }

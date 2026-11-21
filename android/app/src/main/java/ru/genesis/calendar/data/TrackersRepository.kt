@@ -27,16 +27,21 @@ class TrackersRepository(app: GenesisApplication) {
     private val scope=app.workspaceScope
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
     private val cipher=LocalCipher()
-    val workspace=dao.observeDocument(scope,"trackers").map { row ->
+    val workspace=PrivatePersonalDocuments.observe(scope,"trackers",dao.observeDocument(scope,"trackers").map { row ->
         if(row==null)LocalTrackersWorkspace() else TrackersDocument.decode(cipher.decrypt(row.encrypted,"$scope/trackers"),row.revision)
-    }.flowOn(Dispatchers.IO)
-    private suspend fun mutate(change: (LocalTrackersWorkspace) -> LocalTrackersWorkspace) = db.withTransaction {
+    },TrackersDocument::decode).flowOn(Dispatchers.IO)
+    private suspend fun mutate(change: (LocalTrackersWorkspace) -> LocalTrackersWorkspace) {
+      if(PrivatePersonalDocuments.isProtected(scope))return PrivatePersonalDocuments.mutate(scope,"trackers"){raw,revision->
+        TrackersDocument.encode(change(TrackersDocument.decode(raw,revision)).copy(revision=revision+1)) to Unit
+      }
+      db.withTransaction {
         mutation.check()
         val row=dao.document(scope,"trackers")
         val current=if(row==null)LocalTrackersWorkspace() else TrackersDocument.decode(cipher.decrypt(row.encrypted,"$scope/trackers"),row.revision)
         val next=change(current).copy(revision=current.revision+1)
         dao.putDocument(DocumentRecord(scope,"trackers",cipher.encrypt(TrackersDocument.encode(next),"$scope/trackers"),next.revision))
         if (scope.startsWith("account-")) dao.putOutbox(OutboxRecord(scope,"trackers",next.revision,UUID.randomUUID().toString()))
+      }
     }
     suspend fun savePlan(plan: SleepPlan) = mutate { current ->
         require(plan.title.isNotBlank()&&plan.title.length<=500) { "Введите название плана до 500 символов." }

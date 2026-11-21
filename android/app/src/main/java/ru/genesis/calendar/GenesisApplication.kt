@@ -62,6 +62,7 @@ class GenesisApplication : Application() {
     val repository get() = TaskRepository(database, LocalCipher(), workspaceScope, scheduler)
     override fun onCreate() {
         super.onCreate()
+        ru.genesis.calendar.security.NativePrivateProducts.initialize(this)
         ru.genesis.calendar.security.UpdateGate.initialize(this)
         LocalCipher.initialize(this)
         ru.genesis.calendar.auth.NativeAdviceAgeAccess.load(this)

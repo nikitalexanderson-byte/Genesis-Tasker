@@ -133,12 +133,18 @@ class WorkspaceStructureRepository(private val app: GenesisApplication) {
     private val scope = app.workspaceScope
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
     private val kind = "structure"
-    val workspace = dao.observeDocument(scope, kind).map { record ->
+    val workspace = PrivatePersonalDocuments.observe(scope,kind,dao.observeDocument(scope, kind).map { record ->
         if (record == null) WorkspaceStructure() else WorkspaceStructureCodec.decode(
             cipher.decrypt(record.encrypted, "$scope/$kind"), record.revision)
-    }.flowOn(Dispatchers.IO)
+    },WorkspaceStructureCodec::decode).flowOn(Dispatchers.IO)
 
-    private suspend fun mutate(expectedRevision: Long?, change: (WorkspaceStructure) -> WorkspaceStructure) = app.database.withTransaction {
+    private suspend fun mutate(expectedRevision: Long?, change: (WorkspaceStructure) -> WorkspaceStructure) {
+      if(PrivatePersonalDocuments.isProtected(scope))return PrivatePersonalDocuments.mutate(scope,kind){raw,revision->
+        val current=WorkspaceStructureCodec.decode(raw,revision);require(expectedRevision==null||current.revision==expectedRevision){"E2EE_LOCAL_CONFLICT"}
+        val next=change(current).copy(revision=revision+1);app.requireQuotaGrowth("personal-projects",current.projects.size,next.projects.size,scope)
+        WorkspaceStructureCodec.encode(next) to Unit
+      }
+      app.database.withTransaction {
         mutation.check()
         val record = dao.document(scope, kind)
         val current = if (record == null) WorkspaceStructure() else WorkspaceStructureCodec.decode(
@@ -150,6 +156,7 @@ class WorkspaceStructureRepository(private val app: GenesisApplication) {
         app.requireQuotaGrowth("personal-projects",current.projects.size,next.projects.size,scope)
         dao.putDocument(DocumentRecord(scope, kind, cipher.encrypt(WorkspaceStructureCodec.encode(next), "$scope/$kind"), next.revision))
         dao.putOutbox(OutboxRecord(scope, "workspace-structure", next.revision, UUID.randomUUID().toString()))
+      }
     }
 
     suspend fun saveProject(project: GenesisProject, expectedRevision: Long? = null) = mutate(expectedRevision) { current ->

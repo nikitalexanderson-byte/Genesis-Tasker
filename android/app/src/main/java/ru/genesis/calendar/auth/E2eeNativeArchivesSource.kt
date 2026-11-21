@@ -15,7 +15,9 @@ import java.util.Base64
 internal class E2eeNativeArchivesSource(private val ownerId:String,private val scopeId:String,
     private val captureRaw:suspend ()->ByteArray,private val assertCurrent:()->Unit,
     private val legacyArchives:suspend (E2eeMigrationSourceContext)->JSONObject,
-    private val reconciler:E2eePersonalSourceReconciler):E2eePrivatePathAdapter {
+    private val reconciler:E2eePersonalSourceReconciler,
+    private val legacyPhysis:(suspend(E2eeMigrationSourceContext)->JSONObject)?=null,
+    private val independentUnlock:suspend(JSONObject)->E2eePhysisCredential?={null}):E2eePrivatePathAdapter {
     override val id="personal.archives"
     private val account=CloudAccountSnapshot.scopeFor(ownerId)
     private val cipher=LocalCipher()
@@ -121,35 +123,69 @@ internal class E2eeNativeArchivesSource(private val ownerId:String,private val s
         assertCurrent();val lease=requireNotNull(context){"E2EE_SCOPE_BINDING_MISMATCH"};check(lease.ownerId==ownerId&&lease.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"}
         check(previous.size<=32&&local.size+previous.sumOf{it.size.toLong()}<=E2eeMigrationSources.BYTE_BUDGET){"E2EE_MIGRATION_HISTORY_LIMIT"}
         val snapshots=listOf(snapshot(local))+previous.map(::snapshot);val remote=legacyArchives(lease);assertCurrent()
-        val keys=mutableListOf<ByteArray>()
+        val keys=mutableListOf<ByteArray>();var physis:E2eeLegacyPhysis.Reader?=null;var physisVersion:Long?=null
         try{
             for(capture in snapshots){val retained=capture.getJSONArray("oldKeys");for(i in 0 until retained.length())keys+=key(retained.getString(i))}
             val legacy=remote.getJSONObject("legacyKey");if(legacy.getString("keyMode")=="account")keys+=key(legacy.getString("key"))else check(legacy.isNull("key")){"E2EE_KEY_BRIDGE_FORBIDDEN"}
             val safeRemote=JSONObject(remote.toString());safeRemote.getJSONObject("legacyKey").put("key",JSONObject.NULL)
-            val originals=linkedMapOf<String,MutableSet<Pair<String,String>>>()
+            val originals=linkedMapOf<String,MutableSet<Pair<String,String>>>();val physisOriginals=linkedMapOf<String,MutableList<JSONObject>>()
             fun retain(purpose:String,row:JSONObject){originals.getOrPut(purpose){linkedSetOf()}.add(row.getString("iv") to row.getString("ciphertext"))}
             for(table in listOf("stages","safety")){val rows=remote.getJSONArray(table);for(i in 0 until rows.length()){
                 val row=JSONObject(rows.getString(i))
                 if(table=="stages"){val operations=JSONArray(row.getString("payload_json"));for(j in 0 until operations.length()){
                     val op=operations.getJSONObject(j);val id=op.optString("id");val purpose=when(op.getString("section")){"workspace"->"workspace";"mindmaps"->"map:$id";"diary"->"diary-note:v1:$id";"stoicheion"->"stoicheion-workspace:v1";"aurora"->"aurora-workspace:v1";"recovered-tasks"->"recovered-task:v1:$id";else->error("E2EE_ARCHIVE_FORMAT_UNSUPPORTED")};retain(purpose,op.getJSONObject("input"))
                 }}else{val tables=JSONObject(row.getString("snapshot_json"));for(name in tables.keys()){val records=tables.getJSONArray(name);for(j in 0 until records.length()){
-                    val record=records.getJSONObject(j);if(!record.has("iv"))continue
+                    val record=records.getJSONObject(j)
+                    if(name=="physis_records"&&!record.isNull("envelope_json")){
+                        val packet=JSONObject(record.getString("envelope_json"));val identity=record.getString("id")+":"+packet.getLong("keyVersion")
+                        physisOriginals.getOrPut(identity){mutableListOf()}.add(packet)
+                    }
+                    if(!record.has("iv"))continue
                     val purpose=when(name){"workspace_blobs"->"workspace";"personal_mindmaps"->"map:${record.getString("id")}";"personal_mindmap_versions"->"map:${record.getString("map_id")}";"personal_diary_notes"->"diary-note:v1:${record.getString("id")}";"stoicheion_workspaces"->"stoicheion-workspace:v1";"aurora_workspaces"->"aurora-workspace:v1";"personal_recovered_tasks"->"recovered-task:v1:${record.getString("id")}";else->error("E2EE_ARCHIVE_FORMAT_UNSUPPORTED")};retain(purpose,record)
                 }}}
             }}
+            fun retainPlan(plan:JSONObject){val operations=plan.getJSONArray("operations");for(i in 0 until operations.length()){
+                val op=operations.getJSONObject(i);val id=op.optString("id");val purpose=when(op.getString("section")){"workspace"->"workspace";"mindmaps"->"map:$id";"diary"->"diary-note:v1:$id";"stoicheion"->"stoicheion-workspace:v1";"aurora"->"aurora-workspace:v1";"recovered-tasks"->"recovered-task:v1:$id";else->error("E2EE_ARCHIVE_FORMAT_UNSUPPORTED")};retain(purpose,op.getJSONObject("input"))
+            }}
+            for(capture in snapshots){val views=capture.getJSONObject("original").getJSONObject("forms").getJSONArray("views")
+                for(i in 0 until views.length()){val view=views.getJSONObject(i)
+                    if(!view.isNull("rawForm")){val state=JSONObject(view.getString("rawForm")).getJSONObject("state");state.optJSONObject("plan")?.let(::retainPlan)}
+                    view.optJSONObject("valueForm")?.getJSONArray("values")?.let{values->for(j in 0 until values.length()){val row=values.getJSONObject(j);if(row.getString("name")=="plan"&&row.getString("rawJson")!="null")retainPlan(JSONObject(row.getString("rawJson")))}}
+                }
+            }
             // Raw originals go only to the common validator, without oldKeys.
             fun bridge(capture:JSONObject)=JSONObject(capture.getJSONObject("portable").toString()).put("nativeOriginal",capture.getJSONObject("original"))
             val result=reconciler.reconcile(bridge(snapshots[0]),snapshots.drop(1).map(::bridge),lease,safeRemote,assertCurrent){envelope,purpose->
                 assertCurrent();E2eeKeys.exact(envelope,setOf("iv","ciphertext"));val pair=envelope.getString("iv") to envelope.getString("ciphertext")
+                if(purpose.startsWith("archive-physis:")){
+                    val match=Regex("archive-physis:([a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}):([1-9][0-9]{0,15})").matchEntire(purpose)?:error("E2EE_ARCHIVE_SOURCE_INVALID")
+                    val identity=match.groupValues[1]+":"+match.groupValues[2]
+                    val packet=physisOriginals[identity]?.find{it.getString("iv")==pair.first&&it.getString("ciphertext")==pair.second}?:error("E2EE_ARCHIVE_SOURCE_INVALID")
+                    if(physis==null){
+                        val source=requireNotNull(legacyPhysis){"E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED"}(lease);assertCurrent()
+                        check(source.get("ownerId")==ownerId&&source.get("scopeId")==scopeId&&source.get("sourceHash")==lease.sourceHash&&source.get("migrationId")==lease.migrationId&&source.getLong("fence")==lease.fence){"E2EE_SCOPE_BINDING_MISMATCH"}
+                        val owners=source.getJSONArray("owners");check(owners.length()==1&&!owners.getJSONObject(0).isNull("vault_json")){"E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED"}
+                        val raw=owners.getJSONObject(0).getString("vault_json").toByteArray(Charsets.UTF_8)
+                        val vault=try{check(raw.size<=8192){"E2EE_ARCHIVE_SOURCE_INVALID"};E2eeFileManifestJson.readPrivateDocument(raw)}finally{raw.fill(0)}
+                        physisVersion=vault.getLong("keyVersion")
+                        val old=source.getJSONObject("legacyKey");if(old.get("keyMode")=="account")keys+=key(old.getString("key"))
+                        if(vault.getInt("version")==2){for(key in keys)try{physis=E2eeLegacyPhysis.unlockAccount(ownerId,vault,key,assertCurrent);break}catch(error:IllegalStateException){assertCurrent();if(error.message!="E2EE_PHYSIS_UNLOCK_REQUIRED")throw error}}
+                        else{val credential=independentUnlock(vault)?:error("E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED")
+                            try{physis=E2eeLegacyPhysis.unlockIndependent(ownerId,vault,credential.method,credential.secret,assertCurrent)}finally{credential.close()}}
+                    }
+                    check(physisVersion?.toString()==match.groupValues[2]){"E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED"}
+                    requireNotNull(physis){"E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED"}.readRecord(ownerId,match.groupValues[1],packet)
+                }else{
                 check(originals[purpose]?.contains(pair)==true){"E2EE_ARCHIVE_SOURCE_INVALID"};var opened:ByteArray?=null
                 val aad=if(purpose=="workspace")byteArrayOf()else "genesis-mindmap-v1:$ownerId:$purpose".toByteArray(Charsets.UTF_8)
                 for(key in keys)try{opened=WorkspaceCipher.decrypt(WorkspaceCipher.Envelope(pair.second,pair.first),key,aad);break}catch(_:java.security.GeneralSecurityException){/* Captured old keys only. */}
                 val plain=opened?:error(if(keys.isEmpty())"E2EE_LEGACY_KEY_UNAVAILABLE"else "E2EE_ARCHIVE_CONTENT_CORRUPT")
                 try{assertCurrent();Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(plain)).toString()}finally{plain.fill(0)}
+                }
             }
             try{assertCurrent();check(result.localContent.isEmpty()&&result.content.all{it.domain=="local-snapshot"&&(it.objectId=="personal-archive-index-v1"||it.objectId.matches(Regex("personal-archive:[a-f0-9-]{36}")))}){"E2EE_KEY_BRIDGE_FORBIDDEN"};return result}
             catch(error:Throwable){(result.content+result.localContent).forEach{it.bytes.fill(0)};throw error}
-        }finally{keys.forEach{it.fill(0)}}
+        }finally{physis?.close();keys.forEach{it.fill(0)}}
     }
     override fun toString()="E2eeNativeArchivesSource([redacted])"
 }

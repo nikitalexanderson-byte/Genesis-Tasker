@@ -34,14 +34,15 @@ private fun sourceCode(error:Throwable):String=error.message?.takeIf{it.matches(
 
 internal enum class PersonalSourceKind(val wire:String,val domain:String){
     AURORA("aurora","aurora"),STOICHEION("stoicheion","stoicheion"),ADVICE("advice","workspace"),TASKS("tasks","workspace"),DIARY("diary","diary"),MINDMAPS("mindmaps","mindmap"),PHYSIS("physis","physis"),REMINDERS("reminders","workspace"),ARCHIVES("archives","local-snapshot"),RELATIONAL("relational","shared-project");
-    fun domainFor(id:String):String=if(this==RELATIONAL){if(id.startsWith("private-file:"))"attachment"else if(id.startsWith("private-table:personal.")||id.startsWith("private-path:personal.")||id.startsWith("private-work:personal."))"local-snapshot"else domain}
+    fun domainFor(id:String):String=if(this==RELATIONAL){if(id.startsWith("private-file:"))"attachment"else if(id.startsWith("private-table:personal.")||id.startsWith("private-path:personal.")||id.startsWith("private-work:personal."))"local-snapshot"
+        else if(listOf("private-table:","private-path:","private-work:").any{prefix->id.startsWith(prefix+"project.mindmaps:")||id.startsWith(prefix+"space.mindmaps:")})"mindmap"else domain}
         else if(this==MINDMAPS&&id.startsWith("personal-mindmap-image:"))"attachment"else domain
     fun accepts(id:String):Boolean=when(this){
         AURORA->id in setOf("personal-aurora-workspace-v1","personal-aurora-local-history-v1")||id.matches(Regex("aurora-result:[a-f0-9-]{36}"))
         STOICHEION->id in setOf("personal-stoicheion-workspace-v1","personal-stoicheion-local-history-v1","personal-stoicheion-draw-history-v1")
         ADVICE->id in setOf("personal-advice-preferences-v1","personal-advice-local-history-v1","personal-advice-history-index-v1","personal-advice-native-metadata-v1")
             ||id.matches(Regex("personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
-        TASKS->id in setOf("personal-task-index-v1","personal-task-history-v1")
+        TASKS->id in setOf("personal-task-index-v1","personal-task-history-v1","personal-tasks-live-v1")
             ||id.matches(Regex("personal-task-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
         DIARY->id in setOf("personal-diary-index-v1","personal-diary-local-index-v1","personal-diary-settings-v1","personal-diary-local-history-v1","personal-diary-native-history-v1")
             ||id.matches(Regex("personal-diary-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))

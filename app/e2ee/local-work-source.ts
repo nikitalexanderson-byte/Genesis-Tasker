@@ -3,6 +3,7 @@ import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {captureSharedEditorIndexedOriginals} from '../shared-editor-indexed-storage.ts';
 import {captureLocalWorkMigrationMemory} from '../local-work-migration-memory.ts';
 import type {PrivateScopeKind} from './private-paths.ts';
+import {capturePrivateLocalValues} from './local-work-values.ts';
 
 export type PrivatePathLocalEntry={store:string;key:string;raw:string;content:unknown;spaceId:string|null;projectId:string|null};
 export type PrivatePathLocalInventory={platform:'web'|'android';entries:PrivatePathLocalEntry[];editors:unknown[];inventoryVersion:1};
@@ -19,7 +20,7 @@ export async function captureWebPrivatePathLocal(target:Target,ports:{storage:Pi
   const key=ports.storage.key(i);if(!key||!key.startsWith(draft)&&!key.startsWith(maps)&&key!==pending&&!key.startsWith(pending+':'))continue;
   const raw=ports.storage.getItem(key);if(raw!==null)rows.push({key,raw});if(rows.length>10000)throw new Error('E2EE_SOURCE_TOO_LARGE');
  }return rows.sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);};
- const stored=readStorage(),mounted=captureLocalWorkMigrationMemory(binding.ownerId),indexed=await captureSharedEditorIndexedOriginals(binding.ownerId,ports.assertCurrent);ports.assertCurrent();
+ const stored=readStorage(),mounted=await capturePrivateLocalValues(captureLocalWorkMigrationMemory(binding.ownerId),ports.assertCurrent) as ReturnType<typeof captureLocalWorkMigrationMemory>,indexed=await captureSharedEditorIndexedOriginals(binding.ownerId,ports.assertCurrent);ports.assertCurrent();
  const entries:PrivatePathLocalEntry[]=[];let size=0;
  const parse=(raw:string)=>parseLegacyMigrationJson(raw,'E2EE_LOCAL_WORK_SOURCE_INVALID',MAX);
  for(const [store,rows]of [['localStorage',stored],['indexedDB',indexed]] as const)for(const row of rows){
@@ -55,7 +56,8 @@ export async function captureWebPrivatePathLocal(target:Target,ports:{storage:Pi
   entries.push({store,key:row.key,raw:row.raw,content,spaceId,projectId});
  }
  const afterIndexed=await captureSharedEditorIndexedOriginals(binding.ownerId,ports.assertCurrent);ports.assertCurrent();
- if(JSON.stringify(stored)!==JSON.stringify(readStorage())||JSON.stringify(indexed)!==JSON.stringify(afterIndexed)||JSON.stringify(mounted)!==JSON.stringify(captureLocalWorkMigrationMemory(binding.ownerId)))throw new Error('E2EE_LOCAL_WORK_CAPTURE_CHANGED');
+ const afterMounted=await capturePrivateLocalValues(captureLocalWorkMigrationMemory(binding.ownerId),ports.assertCurrent);ports.assertCurrent();
+ if(JSON.stringify(stored)!==JSON.stringify(readStorage())||JSON.stringify(indexed)!==JSON.stringify(afterIndexed)||JSON.stringify(mounted)!==JSON.stringify(afterMounted))throw new Error('E2EE_LOCAL_WORK_CAPTURE_CHANGED');
  const editors=mounted.filter(row=>binding.kind==='personal'||binding.kind==='project'&&row.projectId===binding.resourceId||binding.kind==='space'&&row.spaceId===binding.resourceId&&row.projectId===binding.resourceId);
  return{platform:'web',inventoryVersion:1,entries,editors};
 }

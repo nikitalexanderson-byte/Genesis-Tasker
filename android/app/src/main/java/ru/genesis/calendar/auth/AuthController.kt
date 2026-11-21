@@ -80,6 +80,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     fun onTrialBackground() {
+        ru.genesis.calendar.security.NativePrivateProducts.lock()
         client.setTrialForeground(false)
         trialRefreshJob?.cancel()
         trialTickerJob?.cancel()
@@ -438,13 +439,15 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }}
     }
     internal fun e2eeArchivesSource(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
-        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler):E2eeNativeArchivesSource {
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
+        independentUnlock:suspend(JSONObject)->E2eePhysisCredential?={null}):E2eeNativeArchivesSource {
         val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val account=CloudAccountSnapshot.scopeFor(uid)
         check(directory.ownerId==uid&&directory.kind=="personal"&&directory.resourceId==uid){"E2EE_SCOPE_BINDING_MISMATCH"}
         fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid
             &&!mutableState.value.requiresSignIn&&app.workspaceScope==account&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
         return E2eeNativeArchivesSource(uid,directory.scopeId,e2eeArchivesLocalCapture(uid,directory),::current,
-            {lease->ru.genesis.calendar.security.E2eeLegacyArchiveFragments.collect(lease,::current,transport::legacyArchiveFragment)},reconciler)
+            {lease->ru.genesis.calendar.security.E2eeLegacyArchiveFragments.collect(lease,::current,transport::legacyArchiveFragment)},reconciler,
+            {lease->ru.genesis.calendar.security.E2eeLegacyPersonalPages.collect(lease,"physis",::current,transport::legacyPhysisPage)},independentUnlock)
     }
     internal fun e2eeRelationalSources(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
         transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,reconciler:E2eePersonalSourceReconciler,
@@ -456,14 +459,17 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val inventory=ru.genesis.calendar.security.E2eePrivatePaths.load(app);val catalogue=ru.genesis.calendar.security.E2eePrivatePathCatalogue(app)
         return inventory.required(directory.kind).filter{directory.kind!="personal"||it.id=="personal.local-work"}.map{path->
             E2eeNativeRelationalSource(uid,directory.scopeId,directory.kind,directory.resourceId,path.id,catalogue.tables(directory.kind,path.id),{
-                current();val mounted=JSONObject(captureMounted().toString());current()
-                withContext(Dispatchers.IO){NativeLocalWorkInventory.capture(app,app.database,uid,directory.kind,directory.resourceId,mounted,::current)}
+                current()
+                if(path.id.endsWith(".local-work")){
+                    val mounted=JSONObject(captureMounted().toString());current()
+                    withContext(Dispatchers.IO){NativeLocalWorkInventory.capture(app,app.database,uid,directory.kind,directory.resourceId,mounted,::current)}
+                }else JSONObject().put("platform","android").put("inventoryVersion",1).put("entries",org.json.JSONArray()).put("editors",org.json.JSONArray())
             },::current,transport,reconciler)
         }
     }
     internal fun e2eeCompleteSources(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
         transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,existingPersonal:List<ru.genesis.calendar.security.E2eePrivatePathAdapter>,
-        captureMounted:suspend()->JSONObject):ru.genesis.calendar.security.E2eeMigrationSources{
+        captureMounted:suspend()->JSONObject,independentPhysisUnlock:suspend(JSONObject)->E2eePhysisCredential?={null}):ru.genesis.calendar.security.E2eeMigrationSources{
         val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val account=CloudAccountSnapshot.scopeFor(uid)
         fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(directory.ownerId==uid&&client.isCurrent(generation)&&mutableState.value.user?.uid==uid
             &&!mutableState.value.requiresSignIn&&app.workspaceScope==account&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
@@ -471,11 +477,36 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val expected=inventory.required("personal").map{it.id}.filter{it !in setOf("personal.archives","personal.local-work")}.toSet()
         check(if(directory.kind=="personal")existingPersonal.size==expected.size&&existingPersonal.map{it.id}.toSet()==expected else existingPersonal.isEmpty()){"E2EE_SOURCE_ADAPTER_REQUIRED"}
         val all=existingPersonal.toMutableList()
-        if(directory.kind=="personal")all+=e2eeArchivesSource(uid,directory,transport,ru.genesis.calendar.ui.NativeArchivesSourceRuntime(app))
+        if(directory.kind=="personal")all+=e2eeArchivesSource(uid,directory,transport,ru.genesis.calendar.ui.NativeArchivesSourceRuntime(app),independentPhysisUnlock)
         all+=e2eeRelationalSources(uid,directory,transport,ru.genesis.calendar.ui.NativeRelationalSourceRuntime(app),captureMounted)
         val registry=ru.genesis.calendar.security.E2eeMigrationSources(uid,directory.scopeId,directory.kind,inventory)
         for(adapter in all)registry.registerIntegrated(adapter,::current)
         registry.stagedCapture();registry.stagedReconciliation();return registry
+    }
+    fun privateVaultDeviceExists(uid:String):Boolean=ru.genesis.calendar.security.E2eeDeviceVault(app,uid).exists()
+    /** Called after Android's credential confirmation. Recovery input is kept
+     * in this call only; the server receives signed public enrollment proofs. */
+    suspend fun unlockPrivateVault(secretText:String?=null,recoveryKit:JSONObject?=null){
+        val identity=mutableState.value.user?:error("E2EE_ACCOUNT_BINDING_REQUIRED")
+        check(identity.privateVault&&!mutableState.value.requiresSignIn){"E2EE_ACCOUNT_BINDING_REQUIRED"}
+        val uid=identity.uid;val epoch=app.workspaceEpoch;var opened:ru.genesis.calendar.security.E2eeProductAccount?=null
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+            &&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
+        val secret=secretText?.takeIf{it.isNotBlank()}?.let{ru.genesis.calendar.security.E2eeEnvelope.decode(it.trim(),32)}
+        val transport=object:ru.genesis.calendar.security.E2eeAccountTransport{
+            private fun call(path:String,body:JSONObject?=null):JSONObject{current();return client.e2ee(client.currentGeneration(),path,body).also{current()}}
+            override fun status()=call("/status")
+            override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
+            override fun command(packet:JSONObject)=call("/command",packet)
+            override fun read(packet:JSONObject)=call("/read",packet)
+            override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
+        }
+        try{withContext(Dispatchers.IO){
+            current();val account=ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit);opened=account
+            val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load();current()
+            ru.genesis.calendar.security.NativePrivateProducts.attach(account,product)
+        };current();mutableState.value=mutableState.value.copy(ready=true,busy=false,outgoingSyncIssue=null)
+        }catch(error:Throwable){opened?.close();throw error}finally{secret?.fill(0)}
     }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {
@@ -1961,6 +1992,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val identity = AuthProtocol.identity(session) ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         AuthDiagnostics.event("GENESIS_USER_RESOLVED")
         val settings = liveAccountSettings(session) ?: throw AuthFailure(AuthFailure.Kind.PROTOCOL)
+        if(identity.privateVault){
+            ru.genesis.calendar.security.NativePrivateProducts.protect(app,identity.uid)
+            if(app.workspaceScope!=CloudAccountSnapshot.scopeFor(identity.uid))app.activateAccount(identity.uid)
+            withContext(Dispatchers.IO){CachedAccountEntry(app).save(identity,settings)}
+            publish(generation,AuthPanelState(ready=ru.genesis.calendar.security.NativePrivateProducts.isOpen(app.workspaceScope),user=identity,accountSettings=settings,
+                checkedAt=System.currentTimeMillis(),message=successMessage))
+            return
+        }
         val cachedState = mutableState.value.takeIf {
             it.ready && it.user?.uid == identity.uid && app.workspaceScope == CloudAccountSnapshot.scopeFor(identity.uid)
         }
@@ -2158,6 +2197,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     fun logout() = start("Закрываем серверную сессию…") { generation ->
+        ru.genesis.calendar.security.NativePrivateProducts.lock()
         val previousScope = app.workspaceScope
         // begin() has already invalidated every in-flight response before touching stored credentials.
         var remoteClosed = false
@@ -2414,6 +2454,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private fun syncPending(conflictPolicy: WorkspacePatch.ConflictPolicy, expectedConflictFingerprint: String? = null,
         inBackground: Boolean = false) {
         val identity = mutableState.value.user ?: return
+        if(identity.privateVault){
+            if(inBackground||syncJob?.isActive==true||mutableState.value.requiresSignIn)return
+            syncJob=scope.launch{
+                try{ru.genesis.calendar.security.NativePrivateProducts.flush(CloudAccountSnapshot.scopeFor(identity.uid))}
+                catch(error:CancellationException){throw error}
+                catch(_:Exception){mutableState.value=mutableState.value.copy(outgoingSyncIssue="E2EE_PRIVATE_SYNC_REQUIRED")}
+            };return
+        }
         val accountScope = CloudAccountSnapshot.scopeFor(identity.uid)
         if (app.workspaceScope != accountScope || mutableState.value.requiresSignIn || syncJob?.isActive == true) return
         val generation = client.currentGeneration();val workspaceEpoch=app.workspaceEpoch

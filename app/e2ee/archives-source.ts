@@ -5,17 +5,19 @@ import {readLegacyArchiveOperations,readLegacyArchiveTables,type ArchiveContentR
 import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSourceContext} from './migration.ts';
 import type {PrivatePathAdapter} from './migration-sources.ts';
 import type {WebArchiveInventory} from './archives-web-source.ts';
+import {readLegacyPhysisRecordText,unlockLegacyPhysisSource,validateLegacyPhysisVault,type PhysisLegacyUnlockPorts} from './physis-legacy.ts';
 
 type Row=Record<string,unknown>;
 type Snapshot={protocol:1;ownerId:string;scopeId:string;capturedAt:string;
- memory:{ownerId:string;generation:number;reconciliationRequired:boolean;legacyKey:string;local:WebArchiveInventory}};
+ memory:{ownerId:string;generation:number;reconciliationRequired:boolean;legacyKey:string;local:WebArchiveInventory;physis?:unknown[]}};
 export type PortableArchiveCapture={protocol:2;ownerId:string;scopeId:string;capturedAt:string;generation:number;
  platform:'android';histories:readonly {source:string;value:unknown}[]};
 export type ArchivesSourcePorts={assertCurrent:()=>void;captureLocal:()=>Promise<Uint8Array>;
  legacyArchives:(context:MigrationSourceContext)=>Promise<unknown>;
  /** Native binds this to exact captured originals. It returns original UTF-8
   * JSON, keeps old keys native, and never exposes a generic decrypt service. */
- openAccount?:ArchiveContentReaderPorts['openAccount'];openPhysis?:ArchiveContentReaderPorts['openPhysis']};
+ openAccount?:ArchiveContentReaderPorts['openAccount'];openPhysis?:ArchiveContentReaderPorts['openPhysis'];
+ legacyPhysis?:(context:MigrationSourceContext)=>Promise<unknown>;independentUnlock?:PhysisLegacyUnlockPorts['independentUnlock']};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true}),MAX=64*1024*1024;
 function invalid():never{throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');}
 function object(value:unknown):asserts value is Row{if(!value||typeof value!=='object'||Array.isArray(value))invalid();}
@@ -31,7 +33,7 @@ function base64(value:unknown,min:number,max=min){
 }
 function purposeAllowed(purpose:string){return purpose==='workspace'||['backup-device-safety:v1','backup-held-state:v1','aurora-workspace:v1',
  'aurora-workspace-base:v1','stoicheion-workspace:v1','stoicheion-pending-base:v1'].includes(purpose)
- ||/^(?:map:|diary-note:v1:|recovered-task:v1:)[A-Za-z0-9_-]{1,100}$/.test(purpose);}
+ ||/^(?:map:|diary-note:v1:|recovered-task:v1:)[A-Za-z0-9_-]{1,100}$/.test(purpose)||/^physis-vault:v2:[1-9][0-9]{0,15}$/.test(purpose);}
 
 /** Import only retained old keys; no HTTP/key creation/legacy write fallback. */
 export async function archiveAccountReader(ownerId:string,rawKeys:readonly string[],assertCurrent:()=>void):Promise<ArchiveContentReaderPorts['openAccount']>{
@@ -99,7 +101,65 @@ async function materializeFrozen(ownerId:string,input:unknown,ports:ArchiveConte
   }else if(!['task','workspace'].includes(String(row.kind)))throw new Error('E2EE_ARCHIVE_FORMAT_UNSUPPORTED');pending.push(row);
  }
  const storage=[];for(const [key,value]of Object.entries(input.storage))storage.push({key,value:await materializeStored(ownerId,key,value,ports)});
- ports.assertCurrent();return{ownerId,at:input.at,sources:input.sources,sync:{...input.sync,pending},storage,execution:'history-only'};
+ const sources=structuredClone(input.sources);
+ if(sources.physis!==undefined)sources.physis=await materializeArchivedPhysis(ownerId,sources.physis,ports);
+ ports.assertCurrent();return{ownerId,at:input.at,sources,sync:{...input.sync,pending},storage,execution:'history-only'};
+}
+
+/** Old independently encrypted Physis records inside otherwise portable
+ * archives need their own authenticated plaintext sidecars too. */
+export async function materializeArchivedPhysis(ownerId:string,input:unknown,ports:ArchiveContentReaderPorts){
+ object(input);const original=structuredClone(input),opened:{source:string;rawDocument:string}[]=[];
+ const open=async(id:unknown,packet:unknown,source:string)=>{
+  string(id,100);object(packet);if(!ports.openPhysis)throw new Error('E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED');
+  const rawDocument=await ports.openPhysis(ownerId,id,packet);ports.assertCurrent();parse(rawDocument);opened.push({source,rawDocument});
+ };
+ for(const family of ['wire','confirmed']){const rows=original[family];if(rows===undefined)continue;if(!Array.isArray(rows)||rows.length>50000)invalid();
+  for(let i=0;i<rows.length;i++){const row=rows[i];object(row);
+   if(row.envelope_json!==null&&row.envelope_json!==undefined)await open(row.id,parse(row.envelope_json),`${family}:${i}`);
+   else if(row.envelope!==null&&row.envelope!==undefined)await open(row.id,row.envelope,`${family}:${i}`);
+  }
+ }
+ if(original.pending!==undefined){if(!Array.isArray(original.pending)||original.pending.length>10000)invalid();
+  for(let i=0;i<original.pending.length;i++){const row=original.pending[i];object(row);if(row.changes===undefined)continue;if(!Array.isArray(row.changes))invalid();
+   for(let j=0;j<row.changes.length;j++){const change=row.changes[j];object(change);if(change.envelope!==null&&change.envelope!==undefined)await open(change.id,change.envelope,`pending:${i}:${j}`);}
+  }
+ }
+ ports.assertCurrent();return{original,opened,execution:'history-only'};
+}
+export async function materializeLegacyBackupPayload(ownerId:string,input:unknown,ports:ArchiveContentReaderPorts){
+ object(input);if(input.schema!==1||input.ownerId!==ownerId||!Array.isArray(input.sections)||input.sections.length>7)throw new Error('E2EE_ARCHIVE_FORMAT_UNSUPPORTED');
+ const opened:unknown[]=[];const ids=new Set<string>();
+ for(const candidate of input.sections){object(candidate);string(candidate.id,100);if(ids.has(candidate.id))invalid();ids.add(candidate.id);const data=candidate.data;
+  if(data===null)continue;object(data);
+  if(candidate.id==='physis')opened.push({section:candidate.id,value:await materializeArchivedPhysis(ownerId,data,ports)});
+  if(candidate.id==='aurora'&&data.nativeEnvelopes!==undefined){object(data.nativeEnvelopes);const entries=[];
+   for(const [kind,value]of Object.entries(data.nativeEnvelopes)){
+    const scope=`genesis-aurora-workspace-v1:${ownerId}:`+(kind==='aurora-cache'?'cache':kind.replace(/^aurora-pending/,'pending'));
+    entries.push({source:kind,value:await materializeStored(ownerId,scope,value,ports)});
+   }opened.push({section:candidate.id,entries});
+  }
+  if(['mindmaps','diary','aurora','stoicheion'].includes(candidate.id)&&data.frozenStorage!==undefined){
+   const frozen=data.frozenStorage,entries=[];
+   if(input.client==='android'&&candidate.id==='mindmaps'){
+    // GenesisBackupSnapshot stores the already opened native map rows as an
+    // array. Numeric indexes are not web storage keys or absent documents.
+    if(!Array.isArray(frozen)||frozen.length>10000)invalid();
+    for(const row of frozen){object(row);for(const field of ['document','pendingDocument'])if(row[field]!==undefined&&row[field]!==null)object(row[field]);}
+    opened.push({section:candidate.id,nativeRecords:structuredClone(frozen)});
+   }else if(input.client==='android'&&candidate.id==='diary'){
+    object(frozen);if(!Array.isArray(frozen.records)||frozen.records.length>10000||frozen.drafts!==undefined&&!Array.isArray(frozen.drafts))invalid();
+    opened.push({section:candidate.id,nativeRecords:structuredClone(frozen)});
+   }else{
+    object(frozen);
+    for(const [key,value]of Object.entries(frozen)){
+     const storageKey=input.client==='android'&&candidate.id==='aurora'?`genesis-aurora-workspace-v1:${ownerId}:`+(key==='aurora-cache'?'cache':key.replace(/^aurora-pending/,'pending')):key;
+     entries.push({key,value:await materializeStored(ownerId,storageKey,value,ports)});
+    }opened.push({section:candidate.id,entries});
+   }
+  }
+ }
+ ports.assertCurrent();return{original:input,opened,execution:'history-only'};
 }
 
 export async function materializeWebArchiveInventory(ownerId:string,input:unknown,ports:ArchiveContentReaderPorts){
@@ -134,6 +194,7 @@ export async function materializeWebArchiveInventory(ownerId:string,input:unknow
   // Recovery input remains only in the protected original. Never copy it beside
   // a portable archive or turn saved UI consent into restore authority.
   delete state.key;delete state.savedKey;delete state.consent;delete state.confirmed;
+  if(state.payload!==null&&state.payload!==undefined)state.materializedPayload=await materializeLegacyBackupPayload(ownerId,state.payload,ports);
   if(plan!==null&&plan!==undefined){object(plan);if(!Array.isArray(plan.operations))invalid();state.materializedPlan=await readLegacyArchiveOperations(JSON.stringify(plan.operations),ownerId,ports);}
   if(editor.file!==null){object(editor.file);integer(editor.file.size);string(editor.file.bytes);const bytes=editor.file.size===0?new Uint8Array():decodeE2eeBytes(editor.file.bytes,editor.file.size);bytes.fill(0);}
   histories.push({source:`editor:${index}`,value:{...editor,state,execution:'history-only'}});
@@ -152,7 +213,8 @@ export class PersonalArchivesSource implements PrivatePathAdapter{
   if(value.ownerId!==this.#owner||value.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');time(value.capturedAt);
   if(value.protocol===2){exactKeys(value,['protocol','ownerId','scopeId','capturedAt','generation','platform','histories']);integer(value.generation);
    if(value.platform!=='android'||!Array.isArray(value.histories)||value.histories.length>10000)invalid();for(const row of value.histories){exactKeys(row,['source','value']);string(row.source,1024);}return value as PortableArchiveCapture;}
-  exactKeys(value,['protocol','ownerId','scopeId','capturedAt','memory']);if(value.protocol!==1)invalid();exactKeys(value.memory,['ownerId','generation','reconciliationRequired','legacyKey','local']);
+  exactKeys(value,['protocol','ownerId','scopeId','capturedAt','memory']);if(value.protocol!==1)invalid();object(value.memory);exactKeys(value.memory,['ownerId','generation','reconciliationRequired','legacyKey','local',...(Object.hasOwn(value.memory,'physis')?['physis']:[])]);
+  if(value.memory.physis!==undefined&&(!Array.isArray(value.memory.physis)||value.memory.physis.length>1000))invalid();
   if(value.memory.ownerId!==this.#owner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');integer(value.memory.generation);string(value.memory.legacyKey,44);
   if(value.memory.reconciliationRequired!==false)throw new Error('E2EE_ARCHIVE_GENERATION_REVIEW_REQUIRED');return value as Snapshot;
  }
@@ -171,6 +233,32 @@ export class PersonalArchivesSource implements PrivatePathAdapter{
   if(this.#ports.openAccount){if(keys.length||remote.legacyKey.key!==null)throw new Error('E2EE_KEY_BRIDGE_FORBIDDEN');}
   else if(remote.legacyKey.keyMode==='account'){string(remote.legacyKey.key,44);keys.push(remote.legacyKey.key);}else if(remote.legacyKey.key!==null)invalid();
   const readers:ArchiveContentReaderPorts={assertCurrent:this.#ports.assertCurrent,openAccount:this.#ports.openAccount??await archiveAccountReader(this.#owner,keys,this.#ports.assertCurrent),openPhysis:this.#ports.openPhysis};
+  if(!readers.openPhysis&&!this.#ports.openAccount){
+   const retained=new Map<number,CryptoKey[]>();let loaded=false;
+   const retain=async(version:number,encoded:unknown)=>{integer(version);if(version<1)invalid();const bytes=base64(encoded,32);
+    try{const key=await crypto.subtle.importKey('raw',new Uint8Array(bytes),'AES-GCM',false,['decrypt']);this.#ports.assertCurrent();const group=retained.get(version)??[];group.push(key);retained.set(version,group);}finally{bytes.fill(0);}};
+   for(const snapshot of snapshots)if(snapshot.protocol===1)for(const candidate of snapshot.memory.physis??[]){object(candidate);object(candidate.state);
+    if(candidate.state.ownerId!==this.#owner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');integer(candidate.state.keyVersion);await retain(candidate.state.keyVersion,candidate.state.key);
+    if(candidate.state.rotation!==null&&candidate.state.rotation!==undefined){object(candidate.state.rotation);await retain(candidate.state.keyVersion+1,candidate.state.rotation.key);}
+   }
+   readers.openPhysis=async(ownerId,id,envelope)=>{
+    if(ownerId!==this.#owner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');object(envelope);integer(envelope.keyVersion);const version=envelope.keyVersion;
+    if(!retained.has(version)&&!loaded){
+     loaded=true;if(this.#ports.legacyPhysis){
+      const source=await this.#ports.legacyPhysis(context);this.#ports.assertCurrent();object(source);
+      if(source.ownerId!==this.#owner||source.scopeId!==this.#scope||source.sourceHash!==context.sourceHash||source.migrationId!==context.migrationId||source.fence!==context.fence||!Array.isArray(source.owners)||source.owners.length>1)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+      if(source.owners.length){const row=source.owners[0];object(row);if(row.vault_json!==null){
+       const vault=validateLegacyPhysisVault(parse(row.vault_json));const key=await unlockLegacyPhysisSource(this.#owner,vault,{assertCurrent:this.#ports.assertCurrent,
+        accountOpen:async(packet,purpose)=>parse(await readers.openAccount(this.#owner,packet,purpose)),independentUnlock:this.#ports.independentUnlock});retained.set(vault.keyVersion,[...retained.get(vault.keyVersion)??[],key]);
+      }}
+     }
+    }
+    const candidates=retained.get(version);if(!candidates?.length)throw new Error('E2EE_ARCHIVE_PHYSIS_UNLOCK_REQUIRED');
+    for(const key of candidates){try{return await readLegacyPhysisRecordText(this.#owner,id,version,key,envelope,this.#ports.assertCurrent);}
+     catch(error){this.#ports.assertCurrent();if(!(error instanceof Error)||error.message!=='E2EE_LEGACY_PHYSIS_CORRUPT')throw error;}}
+    throw new Error('E2EE_LEGACY_PHYSIS_CORRUPT');
+   };
+  }
   const content:MigrationContent[]=[];let size=0;const index:{objectId:string;source:string}[]=[];
   const add=(source:string,value:unknown)=>{const objectId='personal-archive:'+crypto.randomUUID(),bytes=encoder.encode(JSON.stringify({format:'genesis-private-archive-history-v1',ownerId:this.#owner,execution:'history-only',source,value}));
    size+=bytes.length;if(bytes.length>MAX||size>E2EE_MIGRATION_BYTE_BUDGET||content.length>=9999){bytes.fill(0);throw new Error('E2EE_SOURCE_TOO_LARGE');}content.push({domain:'local-snapshot',objectId,bytes});index.push({objectId,source});};

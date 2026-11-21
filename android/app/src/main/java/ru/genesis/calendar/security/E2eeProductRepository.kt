@@ -21,7 +21,8 @@ internal class E2eePrivateDocument(private val device:E2eeScopeDevice,private va
         assertCurrent();device.requireOpen();val local=queue.load();assertCurrent()
         try{
             if(offline){check(local!=null){"E2EE_OFFLINE_CONTENT_UNAVAILABLE"};return Opened(decode(local.bytes),local.serial,local.remoteRevision,local.pending)}
-            val remote=client.read(domain,objectId)?:error("E2EE_PRIVATE_DOCUMENT_MISSING");assertCurrent()
+            val remote=client.read(domain,objectId)
+            if(remote==null){if(local?.pending==true&&local.remoteRevision==0L)return Opened(decode(local.bytes),local.serial,0,true);error("E2EE_PRIVATE_DOCUMENT_MISSING")};assertCurrent()
             try{val value=decode(remote.bytes);assertCurrent()
                 if(local?.pending==true)return Opened(decode(local.bytes),local.serial,local.remoteRevision,true,
                     if(remote.revision==local.remoteRevision)null else Conflict(value,remote.revision))

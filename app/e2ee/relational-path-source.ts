@@ -5,7 +5,7 @@ import {privatePathSource} from './private-path-source.ts';
 import type {PrivatePathRemote} from './private-path-fragments.ts';
 import type {PrivatePathLocalInventory} from './local-work-source.ts';
 import type {PrivatePathAdapter} from './migration-sources.ts';
-import type {PrivateScopeKind} from './private-paths.ts';
+import {privatePathDocumentDomain,type PrivateScopeKind} from './private-paths.ts';
 import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSourceContext} from './migration.ts';
 
 type Target=Readonly<{ownerId:string;scopeId:string;kind:PrivateScopeKind;resourceId:string;pathId:string}>;
@@ -29,7 +29,7 @@ export class RelationalPrivatePathSource implements PrivatePathAdapter{
  read:(context:MigrationSourceContext)=>Promise<PrivatePathRemote>};
  constructor(target:Target,ports:{assertCurrent:()=>void;capture:()=>Promise<PrivatePathLocalInventory>;read:(context:MigrationSourceContext)=>Promise<PrivatePathRemote>}){
   const source=privatePathSource(target.kind,target.pathId);assertTechnical(target.ownerId);assertTechnical(target.scopeId);assertTechnical(target.resourceId);
-  this.#target=Object.freeze({...target});this.id=source.id;this.#domain=(target.kind==='personal'?'local-snapshot':'shared-project');this.#ports=ports;
+  this.#target=Object.freeze({...target});this.id=source.id;this.#domain=privatePathDocumentDomain(target.kind,target.pathId);this.#ports=ports;
  }
  async captureLocal():Promise<Uint8Array>{
   this.#ports.assertCurrent();const local=structuredClone(await this.#ports.capture());this.#ports.assertCurrent();

@@ -76,12 +76,26 @@ export async function clearSharedEditorDraftStorage(){
  const db=await openDatabase();
  try{await new Promise<void>((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear();tx.oncomplete=()=>resolve();tx.onerror=tx.onabort=()=>reject(tx.error??failure());});}finally{db.close();}
 }
+/** An inventory must not create an absent database. Abort the initial upgrade,
+ * including on browsers without indexedDB.databases(), without changing stores. */
+function openExistingDatabase():Promise<IDBDatabase|null>{
+ return new Promise((resolve,reject)=>{
+  let absent=false,settled=false;const request=indexedDB.open(DATABASE);
+  request.onupgradeneeded=event=>{if(event.oldVersion===0){absent=true;request.transaction?.abort();}else{request.transaction?.abort();reject(failure());settled=true;}};
+  request.onerror=()=>{if(settled)return;settled=true;if(absent)resolve(null);else reject(request.error??failure());};
+  request.onblocked=()=>{settled=true;reject(failure());};
+  request.onsuccess=()=>{const db=request.result;if(settled){db.close();return;}
+   if(!db.objectStoreNames.contains(STORE)){db.close();settled=true;reject(failure());return;}
+   settled=true;db.onversionchange=()=>db.close();resolve(db);
+  };
+ });
+}
 
 /** Read original owner records independently of localStorage. Conflicting
  * copies from the two stores must both reach the protected migration input. */
 export async function captureSharedEditorIndexedOriginals(ownerId:string,assertCurrent:()=>void){
  const prefix=`genesis-shared-work-drafts-v1:${ownerId}:`;assertCurrent();
- const db=await openDatabase();
+ const db=await openExistingDatabase();assertCurrent();if(!db)return[];
  try{return await new Promise<{key:string;raw:string}[]>((resolve,reject)=>{
   const rows:{key:string;raw:string}[]=[],tx=db.transaction(STORE,'readonly');let size=0,error:unknown;
   const request=tx.objectStore(STORE).openCursor(range(prefix));

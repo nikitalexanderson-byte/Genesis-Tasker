@@ -16,6 +16,8 @@ import { AppUrlCleaner } from "./AppUrlCleaner";
 import { ButtonTooltips } from "./ButtonTooltips";
 import { DialogDismissal } from "./DialogDismissal";
 import { DialogHeaderActions } from "./DialogHeaderActions";
+import {PrivateVaultGate} from './PrivateVaultGate';
+import './private-vault.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -74,7 +76,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru">
-      <body><AppUrlCleaner /><ButtonTooltips /><DialogDismissal /><DialogHeaderActions />{children}</body>
+      <body><AppUrlCleaner /><ButtonTooltips /><DialogDismissal /><DialogHeaderActions /><div id="genesis-app-content">{children}</div><PrivateVaultGate /></body>
     </html>
   );
 }

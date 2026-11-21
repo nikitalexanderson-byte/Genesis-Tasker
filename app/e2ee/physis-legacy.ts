@@ -82,7 +82,7 @@ export async function unlockLegacyPhysisSource(ownerId:string,input:unknown,port
 /** Return the original parsed plaintext, without projecting away optional or
  * unknown record fields. Category schema validation is a separate mandatory
  * step. This path cannot rotate, bootstrap, acknowledge or upload old records. */
-export async function readLegacyPhysisRecord(ownerId:string,id:string,keyVersion:number,key:CryptoKey,input:unknown,assertCurrent:()=>void):Promise<unknown>{
+export async function readLegacyPhysisRecordText(ownerId:string,id:string,keyVersion:number,key:CryptoKey,input:unknown,assertCurrent:()=>void):Promise<string>{
  assertTechnical(ownerId);if(typeof id!=='string'||!UUID.test(id))invalid();assertCurrent();
  const envelope=validateLegacyPhysisEnvelope(input,keyVersion),iv=bytes(envelope.iv,12),cipher=bytes(envelope.ciphertext,16,MAX_CIPHER);
  let plain:Uint8Array<ArrayBuffer>|undefined;
@@ -91,6 +91,9 @@ export async function readLegacyPhysisRecord(ownerId:string,id:string,keyVersion
   catch{assertCurrent();throw new Error('E2EE_LEGACY_PHYSIS_CORRUPT');}
   assertCurrent();if(plain.length>MAX_PLAIN)invalid();
   let text:string;try{text=decoder.decode(plain);}catch{invalid();}
-  const value=parseLegacyPhysisJson(text,MAX_PLAIN);assertCurrent();return value;
+  parseLegacyPhysisJson(text,MAX_PLAIN);assertCurrent();return text;
  }finally{iv.fill(0);cipher.fill(0);plain?.fill(0);}
+}
+export async function readLegacyPhysisRecord(ownerId:string,id:string,keyVersion:number,key:CryptoKey,input:unknown,assertCurrent:()=>void):Promise<unknown>{
+ return parseLegacyPhysisJson(await readLegacyPhysisRecordText(ownerId,id,keyVersion,key,input,assertCurrent),MAX_PLAIN);
 }

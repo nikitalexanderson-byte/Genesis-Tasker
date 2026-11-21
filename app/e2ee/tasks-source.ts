@@ -206,6 +206,7 @@ export class PersonalTasksSource implements PrivatePathAdapter{
    const index:{id:string;objectId:string}[]=[];
    for(const [id,current]of [...selected].sort(([a],[b])=>a.localeCompare(b,'en'))){const objectId='personal-task-record:'+crypto.randomUUID();index.push({id,objectId});push(objectId,{protocol:1,ownerId:this.#owner,id,...current,variants:variants.get(id),externalCopy:'requires-new-consent'});}
    push('personal-task-index-v1',{protocol:1,ownerId:this.#owner,tasks:index});
+   push('personal-tasks-live-v1',{protocol:1,ownerId:this.#owner,tasks:[...selected].sort(([a],[b])=>a.localeCompare(b,'en')).map(([id,row])=>({id,value:row.value,deleted:row.deleted})),externalCopy:'requires-new-consent'});
    // Raw HTTP queues/keys remain solely in the protected local capture. These
    // server receipts are inert private history and grant no external execution.
    push('personal-task-history-v1',{protocol:1,ownerId:this.#owner,legacyGeneration:remote.legacyGeneration,tasks:remote.tasks,deletions:remote.deletions,links:remote.links,recovered:remote.recovered,

@@ -69,7 +69,12 @@ async function run(encoded:string){
         current();if(accepted!==true)throw new Error('E2EE_PHYSIS_UNLOCK_REQUIRED');
         return(id:string,envelope:import('../physis/crypto').PhysisEnvelope)=>ports.openLegacy({iv:envelope.iv,ciphertext:envelope.ciphertext},`physis-record:${id}:${vault.keyVersion}`);
       }};
-    const archiveReaders={assertCurrent:current,openAccount:async(owner:string,envelope:{iv:string;ciphertext:string},purpose:string)=>{
+    const archiveReaders={assertCurrent:current,openPhysis:async(owner:string,id:string,input:unknown)=>{
+      if(owner!==value.ownerId||!input||typeof input!=='object'||Array.isArray(input))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+      const envelope=input as {iv:string;ciphertext:string;keyVersion:number};
+      const raw=await ports.openLegacy({iv:envelope.iv,ciphertext:envelope.ciphertext},`archive-physis:${id}:${envelope.keyVersion}`);
+      if(typeof raw!=='string')throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');return raw;
+    },openAccount:async(owner:string,envelope:{iv:string;ciphertext:string},purpose:string)=>{
       if(owner!==value.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const raw=await ports.openLegacy(envelope,purpose);
       if(typeof raw!=='string')throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');return raw;
     }};

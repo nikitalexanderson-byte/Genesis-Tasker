@@ -22,8 +22,13 @@ internal object NativeLocalWorkInventory{
             entries.put(JSONObject().put("store",store).put("key",key).put("raw",original)
                 .put("content",JSONObject().put("rawDocument",plain).put("execution","history-only")).put("spaceId",space?:JSONObject.NULL).put("projectId",project?:JSONObject.NULL))
         }
+        fun identity(value:JSONObject?,name:String,objectName:String):String?{
+            val candidates=listOfNotNull(value?.optString(name)?.takeIf{it.isNotEmpty()},value?.optJSONObject(objectName)?.optString("id")?.takeIf{it.isNotEmpty()},
+                value?.optJSONObject("payload")?.optString(name)?.takeIf{it.isNotEmpty()},value?.optJSONObject("payload")?.optJSONObject(objectName)?.optString("id")?.takeIf{it.isNotEmpty()}).toSet()
+            check(candidates.size<=1){"E2EE_SCOPE_BINDING_MISMATCH"};return candidates.firstOrNull()
+        }
         for(row in raw){val plain=row.getString("rawDocument");val parsed=org.json.JSONTokener(plain).nextValue();val value=parsed as? JSONObject
-            val project=value?.optString("projectId")?.takeIf{it.isNotEmpty()};val space=value?.optString("spaceId")?.takeIf{it.isNotEmpty()}
+            val project=identity(value,"projectId","project");val space=identity(value,"spaceId","space")
             if(kind=="personal"||project==resource||space==resource)add(row.getString("store"),row.getString("key"),row.getString("encrypted"),plain,space,project)
         }
         database.withTransaction{assertCurrent();val dao=database.dao();val scopes=dao.migrationDocumentScopes(account,"$account:shared-mindmaps:")

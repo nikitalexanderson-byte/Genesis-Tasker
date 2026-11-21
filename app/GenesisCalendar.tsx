@@ -131,6 +131,7 @@ import {
   type TaskOrigin,
   GENESIS_LEGACY_WORKSPACE_STORAGE_KEY,
   GENESIS_USER_WORKSPACE_STORAGE_PREFIX,
+  usesPrivateProductStorage,
   connectAdditionalGoogleAccount,
   connectGoogleServices,
   consumeGoogleAuthError,
@@ -2238,7 +2239,8 @@ export function GenesisCalendar() {
     taskListLinksRef.current = taskListLinks;
     habitWorkspaceRef.current = habitWorkspace;
     const key = cloudUser ? `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}` : GENESIS_LEGACY_WORKSPACE_STORAGE_KEY;
-    try { writeProtectedWorkspace(localStorage, key, { tasks, projects, categories, taskLists, taskListLinks, ...habitWorkspace }); }
+    try { void Promise.resolve(writeProtectedWorkspace(localStorage, key, { tasks, projects, categories, taskLists, taskListLinks, ...habitWorkspace }))
+      .catch(()=>{setSyncError("Не удалось сохранить запись. Проверьте значение и повторите.");setSyncStatus("error");}); }
     catch {
       const timer = window.setTimeout(() => {
         setSyncError("Не удалось сохранить запись. Проверьте значение и повторите."); setSyncStatus("error");
@@ -2396,7 +2398,8 @@ export function GenesisCalendar() {
       loadedCalendarConnected = user.calendarConnected;
 
       const userKey = `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`;
-      const local = loadLocalWorkspace(localStorage.getItem(userKey) ? userKey : GENESIS_LEGACY_WORKSPACE_STORAGE_KEY);
+      const encryptedAccount=usesPrivateProductStorage(user.uid);
+      const local = loadLocalWorkspace(encryptedAccount||localStorage.getItem(userKey) ? userKey : GENESIS_LEGACY_WORKSPACE_STORAGE_KEY);
       if (!local) return;
       tasksRef.current = local.tasks;
       projectsRef.current = local.projects;
@@ -2426,8 +2429,8 @@ export function GenesisCalendar() {
           const nextProjects = workspace.hasRemoteStructure ? workspace.projects : local.projects;
           const nextCategories = workspace.hasRemoteStructure ? workspace.categories : local.categories;
           const nextTaskListLinks = workspace.hasRemoteStructure ? workspace.taskListLinks : local.taskListLinks;
-          const currentTasks=tasksRef.current;
-          const reconciledWorkspaceTasks = mergeInitialWorkspaceCollection(local.tasks,currentTasks,reconcileGoogleTaskMetadata(workspace.tasks,currentTasks));
+          const currentTasks=encryptedAccount?[]:tasksRef.current;
+          const reconciledWorkspaceTasks = encryptedAccount?workspace.tasks:mergeInitialWorkspaceCollection(local.tasks,currentTasks,reconcileGoogleTaskMetadata(workspace.tasks,currentTasks));
           const nextTasksById = new Map(reconciledWorkspaceTasks.map((task) => [task.id, task]));
           currentTasks.forEach((task) => {
             if (isCloudTaskDeleted(task.id)) return;
@@ -2437,14 +2440,14 @@ export function GenesisCalendar() {
               nextTasksById.set(task.id, task);
             }
           });
-          const nextTasks = Array.from(nextTasksById.values()).filter(task=>!isCloudTaskDeleted(task.id));
+          const nextTasks = Array.from(nextTasksById.values()).filter(task=>encryptedAccount||!isCloudTaskDeleted(task.id));
           tasksRef.current = nextTasks;
           projectsRef.current = nextProjects;
           categoriesRef.current = nextCategories;
           setTasks(nextTasks);
           setProjects(nextProjects);
           setCategories(nextCategories);
-          const nextTaskLists=mergeInitialWorkspaceCollection(local.taskLists,taskListsRef.current,workspace.taskLists);
+          const nextTaskLists=encryptedAccount?workspace.taskLists:mergeInitialWorkspaceCollection(local.taskLists,taskListsRef.current,workspace.taskLists);
           setTaskLists(nextTaskLists);
           taskListsRef.current = nextTaskLists;
           setTaskListLinks(nextTaskListLinks);
@@ -2481,6 +2484,7 @@ export function GenesisCalendar() {
         if(cloudUserRef.current?.uid){setAuthResolved(true);setSyncStatus(navigator.onLine ? "error" : "offline");return;}
         const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
         if (cached?.uid) {
+          if(Object.hasOwn(cached,'privatePreferencesMode'))throw new Error('E2EE_OFFLINE_UNLOCK_REQUIRED');
           restoreOfflineWorkspaceSession(cached.uid,
             cached.authProvider === "yandex" ? "yandex" : "google");
           const cachedLanguage = normalizeLanguage(cached.language);
@@ -2546,7 +2550,7 @@ export function GenesisCalendar() {
   }, [cloudUser, activeTaskCalendarMode]);
 
   const saveTask = (task: Task) => {
-    if (!cloudUser || !cloudUser.calendarConnected) return;
+    if (!cloudUser || !cloudUser.calendarConnected&&!usesPrivateProductStorage(cloudUser.uid)) return;
     setSyncStatus("syncing");
     void saveCloudTask(cloudUser.uid, task)
       .then((saved) => {
@@ -2560,7 +2564,7 @@ export function GenesisCalendar() {
   };
 
   const saveTaskSeries = (series: Task[]) => {
-    if (!cloudUser || !cloudUser.calendarConnected || !series.length) return;
+    if (!cloudUser || !cloudUser.calendarConnected&&!usesPrivateProductStorage(cloudUser.uid) || !series.length) return;
     setSyncStatus("syncing");
     void (async () => {
       const savedTasks: Task[] = [];
@@ -3057,11 +3061,11 @@ export function GenesisCalendar() {
         await mindmapConversion.repository.journal(operation);
         guard();
         const existing = tasksRef.current.find(item => item.id === task.id);
-        const saved = existing ?? (cloudUser.calendarConnected ? await createCloudTaskOnce(cloudUser.uid, task) : task);
+        const saved = existing ?? (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid) ? await createCloudTaskOnce(cloudUser.uid, task) : task);
         guard();
         const localKey = `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}`;
         const local = readStoredState(localKey);
-        writeProtectedWorkspace(localStorage, localKey, { ...local, tasks: [...local.tasks.filter(item => item.id !== saved.id), saved] });
+        await writeProtectedWorkspace(localStorage, localKey, { ...local, tasks: [...local.tasks.filter(item => item.id !== saved.id), saved] });
         tasksRef.current = [...tasksRef.current.filter(item => item.id !== saved.id), saved];
         setTasks(current => [...current.filter(item => item.id !== saved.id), saved]);
         setMindmapConversion(null);
@@ -3285,7 +3289,7 @@ export function GenesisCalendar() {
         occurrenceTask,
       ]);
       if (remainingSeries) saveTask(remainingSeries);
-      else if (cloudUser && cloudUser.calendarConnected) void removeCloudTask(cloudUser.uid, original);
+      else if (cloudUser && (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid))) void removeCloudTask(cloudUser.uid, original);
       saveTask(occurrenceTask);
       setEditingTask(null);
       return;
@@ -3345,7 +3349,7 @@ export function GenesisCalendar() {
       const consolidated = buildTaskSeries(consolidatedDraft, recurrenceConfig)[0] ?? consolidatedDraft;
       const memberIds = new Set(seriesMembers.map((task) => task.id));
       setTasks((current) => [...current.filter((task) => !memberIds.has(task.id)), consolidated]);
-      if (cloudUser && cloudUser.calendarConnected) {
+      if (cloudUser && (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid))) {
         setSyncStatus("syncing");
         void (async () => {
           await Promise.all(seriesMembers.map((task) => removeCloudTask(cloudUser.uid, task)));
@@ -3460,7 +3464,7 @@ export function GenesisCalendar() {
     const ids = new Set(tasksToDelete.map((task) => task.id));
     tasksRef.current = tasksRef.current.filter((task) => !ids.has(task.id));
     setTasks((current) => current.filter((task) => !ids.has(task.id)));
-    if (cloudUser && cloudUser.calendarConnected && tasksToDelete.length) {
+    if (cloudUser && (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid)) && tasksToDelete.length) {
       setSyncStatus("syncing");
       void Promise.all(tasksToDelete.map((task) => removeCloudTask(cloudUser.uid, task)))
         .then(() => setSyncStatus("synced"))
@@ -3703,7 +3707,7 @@ export function GenesisCalendar() {
       const next = applyHabitTimerCommand(base, command);
       await updateHabitWorkspace(next, true);
       guard();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current,
         ...habitWorkspaceRef.current });
     });
@@ -3727,7 +3731,7 @@ export function GenesisCalendar() {
       const next = input ? applyHabitReminderInput(base,target,input,new Date()) : completeHabitReminder(base, target, new Date());
       if(next===base)return;
       await updateHabitWorkspace(next, true);guard();
-      writeProtectedWorkspace(localStorage, key, {tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
+      await writeProtectedWorkspace(localStorage, key, {tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
         taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current});
     });
   };
@@ -3741,7 +3745,7 @@ export function GenesisCalendar() {
       const base=normalizeHabitWorkspace(preserveHabitTimerRecords(stored,habitWorkspaceRef.current),activeTaskCalendarMode);
       const next=applyHabitHistoryCommand(base,command,activeTaskCalendarMode);
       await updateHabitWorkspace(next,true,true);guard();
-      writeProtectedWorkspace(localStorage,key,{tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
+      await writeProtectedWorkspace(localStorage,key,{tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
         taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current});
     });
   };
@@ -3756,7 +3760,7 @@ export function GenesisCalendar() {
       const base = normalizeHabitWorkspace(preserveHabitTimerRecords(stored, habitWorkspaceRef.current), activeTaskCalendarMode);
       const next = applyHabitLifecycleToWorkspace(base, command);
       await updateHabitWorkspace(next, true, true); guard();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...habitWorkspaceRef.current });
     });
   };
@@ -3776,7 +3780,7 @@ export function GenesisCalendar() {
       if (next === base) return;
       await updateHabitWorkspace(next, true, true);
       check();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...habitWorkspaceRef.current });
     });
   };
@@ -3814,7 +3818,7 @@ export function GenesisCalendar() {
       if (next === base) return;
       await updateHabitWorkspace(next, true, true);
       check();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...habitWorkspaceRef.current });
     });
   };
@@ -3851,7 +3855,7 @@ export function GenesisCalendar() {
       );
       tasksRef.current = remainingTasks;
       habitWorkspaceRef.current = clearedWorkspace;
-      writeProtectedWorkspace(localStorage, `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}`,
+      await writeProtectedWorkspace(localStorage, `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}`,
         { tasks: remainingTasks, projects: projectsRef.current, categories: categoriesRef.current,
           taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...clearedWorkspace });
       setTasks(remainingTasks);
@@ -6123,7 +6127,7 @@ export function GenesisCalendar() {
           const occurrence = standaloneTaskFromOccurrence({ ...taskForOccurrence(task,date), id: uid(), recurrenceOriginalDate: date,
             done: !task.done, completedAt: task.done ? null : new Date().toISOString(), googleEventId:null, googleTaskId:null, googleLinks:{}, updatedAt:timestamp() },task.id);
           setTasks(current => [...current.filter(t => t.id !== task.id && t.id !== occurrence.id), ...(remaining ? [remaining] : []), occurrence]);
-          if (remaining) saveTask(remaining); else if (cloudUser.calendarConnected) void removeCloudTask(cloudUser.uid,task);
+          if (remaining) saveTask(remaining); else if (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid)) void removeCloudTask(cloudUser.uid,task);
           saveTask(occurrence);
         }}
         onCalendar={(task,date) => { const value = date || task.dueDate; if (value) {

@@ -55,3 +55,62 @@ and lifecycle routing. Review partial HTTP read recovery when composing the driv
 partial source originals must remain retained without becoming completeness proof.
 The9 accepted source categories are not relabeled20 accepted by these code edits.
 No new tests, lint, native builds, push/CI or deployments were started in this pass.
+
+## Product integration continuation, 21 November (candidate code, untested)
+
+Owner reaffirmed: the remaining code comes first, consolidated testing second,
+then repairs. The following additions are not acceptance evidence and do not
+change the9/20 accepted boundary, production3.3.5/149 or any activation gate.
+
+- Corrected the table/index domain for project/space mindmaps consistently in
+  web, native reconciliation and native bridge result validation. The original
+  shared-project choice was incompatible with those paths' mindmap domain.
+- Read-only editor inventory aborts creation of an absent IndexedDB database.
+  Selected File/Blob and byte values now have bounded portable content instead
+  of JSON.stringify's empty File objects. Relational server paths no longer each
+  duplicate the whole local-work inventory. Native scope lookup also checks the
+  actual nested payload/project/space metadata of expired offline caches.
+- Archive materialization distinguishes Android's native mindmap array and
+  diary object from the web's frozenStorage key map. The archive/Physis changes
+  retained from the previous checkpoint remain part of this untested pass.
+- Added the web foreground account capability: verified scope discovery,
+  independently entered secret, durable device unlock, owner recovery enrollment
+  with exact challenge/self-proof, retained signed request before HTTP, signed
+  directory verification and lifecycle locking. Added a matching native account
+  capability using the existing authenticated channel and system credential key.
+- Connected the web identity observer, workspace bootstrap, tasks, workspace
+  persistence, timer/history actions and ordinary polling to the private product
+  channel. A protected account cannot load the old plaintext workspace as its
+  active view. Actual destructive handlers await encrypted persistence.
+- Added a common personal-product-live-v1 CAS document for workspace, tasks and
+  tombstones. Initialization requires both authenticated migrated seed documents;
+  it never creates an empty account after a failed read. Existing migration task
+  records remain history; a separate live task seed is now emitted by both source
+  runtimes. Normal private task writes do not execute old Google projections.
+- Added root-level web/native unlock surfaces and one shared14-language recovery
+  copy catalogue. Native protected scopes are remembered by hashed local scope;
+  old workspace content stays unmounted before system unlock. Android lifecycle
+  background/sign-out retires its capabilities. No new UI acceptance has run.
+- Native task/project/list/habit/tracker repositories now have real product
+  readers/writers using the existing model codecs and business mutations. The
+  private account sync branch bypasses old HTTP permits. Retired native mutation
+  paths fail closed instead of writing the old store for a protected scope.
+- The actual web personal mindmap repository now routes current content, saves,
+  tombstones, history, views and conversion journals through new-root storage.
+  A clean-device content reader explicitly distinguishes absent device history
+  from an empty journal; it does not replay old conversion receipts.
+
+Remaining implementation includes: complete setup/migration/resume UI wiring,
+offline cold unlock, expired enrollment challenge renewal, invalidated-keystore
+recovery/custody integration, explicit conflict review, the other feature editor
+routes (including diary/Physis/Aurora/stoicheion/advice), shared transaction and
+approval/role/rotation semantics, external-copy consent, content-only backup /
+import / Drive, complete per-scope draft attribution and nested archive pins.
+Native reminders/background/deep-link projections must be composed with the new
+repository routes before acceptance. The aggregate product documents also need
+the consolidated concurrency, history-growth and quota scenarios. They are not
+asserted to pass those scenarios or to replace shared multi-table semantics.
+
+No tests, typecheck/lint, builds, push/CI, device installation or publication were
+run for these additions. Compilation and the complete acceptance matrix remain
+deferred until the full implementation pass, as the owner requested.

@@ -114,6 +114,15 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     openedAdvice: ru.genesis.calendar.reminders.AdviceNotificationOpenRequest? = null) {
     require(!testWorkspace || BuildConfig.DEBUG)
     val activeScope by app.scopeFlow.collectAsStateWithLifecycle()
+    val privateController=remember(app){ru.genesis.calendar.auth.AuthController.get(app)}
+    val privateAuth by privateController.state.collectAsStateWithLifecycle()
+    val privateRevision by ru.genesis.calendar.security.NativePrivateProducts.revision.collectAsStateWithLifecycle()
+    LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}
+    val privateProtected=privateAuth.user?.privateVault==true||ru.genesis.calendar.security.NativePrivateProducts.isProtected(activeScope)
+    val privateUnlocked=remember(activeScope,privateRevision){ru.genesis.calendar.security.NativePrivateProducts.isOpen(activeScope)}
+    if(!testWorkspace&&privateProtected&&!privateUnlocked){
+        MaterialTheme(typography=GenesisTypography,shapes=GenesisShapes){PrivateVaultGate(privateController,privateAuth)};return
+    }
     key(activeScope) { GenesisWorkspaceContent(app, openedTask, openedSection, activeScope, testWorkspace, openedHabit, openedAdvice) }
 }
 

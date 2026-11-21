@@ -3,7 +3,7 @@ import {normalizeNativeArchiveCapture} from './archives-native-forms.ts';
 import {normalizeNativeArchiveRows} from './archive-fragments.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {readLegacyArchiveOperations,type ArchiveContentReaderPorts} from './archives-content.ts';
-import type {PortableArchiveCapture} from './archives-source.ts';
+import {materializeLegacyBackupPayload,type PortableArchiveCapture} from './archives-source.ts';
 import type {MigrationSourceContext} from './migration.ts';
 
 type Row=Record<string,unknown>;
@@ -18,6 +18,7 @@ export async function normalizeNativeArchivesSource(input:unknown,ports:ArchiveC
  async function state(value:unknown){
   if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');
   const copy=structuredClone(value) as Row;delete copy.key;delete copy.savedKey;delete copy.consent;delete copy.confirmed;
+  if(copy.payload!==null&&copy.payload!==undefined)copy.materializedPayload=await materializeLegacyBackupPayload(original.ownerId,copy.payload,ports);
   if(copy.plan!==null&&copy.plan!==undefined){const plan=copy.plan as Row;
    if(!plan||!Array.isArray(plan.operations))throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');
    copy.materializedPlan=await readLegacyArchiveOperations(JSON.stringify(plan.operations),original.ownerId,ports);
@@ -44,6 +45,7 @@ export async function normalizeNativeArchivesSource(input:unknown,ports:ArchiveC
    histories.push({source:candidate.source,value:parsed});continue;
   }
   const value=candidate.value as Row;if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_ARCHIVE_SOURCE_INVALID');
+  if(value.portableBackup!==undefined)value.materializedBackup=await materializeLegacyBackupPayload(original.ownerId,value.portableBackup,ports);
   for(const list of ['documents','tasks'])if(Array.isArray(value[list]))for(const entry of value[list] as Row[]){
    if(typeof entry.rawDocument==='string')parseLegacyMigrationJson(entry.rawDocument,'E2EE_ARCHIVE_SOURCE_INVALID',64*1024*1024);
   }

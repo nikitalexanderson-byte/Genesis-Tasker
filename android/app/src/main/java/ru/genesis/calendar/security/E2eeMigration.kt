@@ -542,8 +542,8 @@ class E2eeMigration(
                     owned.put("protocol",3).put("plans",JSONArray());savePlanningCell(cell,next,policy,history,current)
                 }
                 val entries=state().getJSONObject("ownership").getJSONArray("originals");val publicKey=planningSigner(policy)
-                val originals=(0 until entries.length()).map{index->val row=entries.getJSONObject(index)
-                    check(!row.isNull("completion")){"E2EE_REMOTE_ORIGINAL_INCOMPLETE"};val ref=row.getJSONObject("completion")
+                val originals=(0 until entries.length()).map{entries.getJSONObject(it)}.filter{!it.isNull("completion")}.map{row->
+                    val ref=row.getJSONObject("completion")
                     E2eeStreamedPlanningOriginal(E2eeRemoteOriginal.authenticateRegistration(row.getJSONObject("registration"),row.getJSONObject("packet"),publicKey,originalRead(policy),number(lease(state()),"generation",1)),
                         E2eeRemoteOriginal.Reference(ref.getString("id"),ref.getString("manifestHash"),ref.getString("rawHash"),number(ref,"size")),JSONObject(row.getJSONObject("packet").toString()))}
                 val references=JSONArray(originals.map{completionJson(requireNotNull(it.completion))})
@@ -613,7 +613,7 @@ class E2eeMigration(
             val reserved=(0 until plans.length()).map{plans.getJSONObject(it)}.find{!it.isNull("completion")&&sameTechnical(it.getJSONObject("completion"),planReferenceJson(chosen))}?:error("E2EE_CONTENT_PLAN_CONFLICT")
             check(number(reserved,"fence",1)==number(lease(state),"fence",1)&&number(reserved,"generation",1)==number(lease(state),"generation",1)){"E2EE_CONTENT_PLAN_CONFLICT"}
             val originals=ownership.getJSONArray("originals");val expected=JSONArray()
-            for(i in 0 until originals.length()){val row=originals.getJSONObject(i);check(!row.isNull("completion")){"E2EE_CONTENT_PLAN_CONFLICT"};expected.put(row.getJSONObject("completion"))}
+            for(i in 0 until originals.length()){val row=originals.getJSONObject(i);if(!row.isNull("completion"))expected.put(row.getJSONObject("completion"))}
             check(sameTechnical(JSONObject().put("values",reserved.getJSONArray("originals")),JSONObject().put("values",expected))){"E2EE_CONTENT_PLAN_CONFLICT"}
             checkOwnedOriginals(state,policy,planningSigner(policy));val manifest=E2eeContentPlan.open(contentPlanRead(state,reserved,policy),chosen).manifest;current()
             drainHistory(preparedHistory(loaded,policy),current);verifyRecovery(root);current();input.device.ensureDurableKeys();current();ensureDurableKeys();current()
@@ -629,7 +629,7 @@ class E2eeMigration(
         }
     }
     private fun adoptedPlan(state:JSONObject,policy:PlanningPolicy):Pair<E2eeContentPlan.ReadOptions,JSONObject>{
-        val current=policy.current;check(number(state,"protocol")==5L){"E2EE_STREAMED_PLAN_ADOPTION_REQUIRED"};decode(encoded(state));current()
+        val current=policy.current;check(number(state,"protocol")==5L){"E2EE_STREAMED_PLAN_ADOPTION_REQUIRED"};val serialized=encoded(state);try{decode(serialized)}finally{serialized.fill(0)};current()
         val adopted=state.getJSONObject("adopted");val reference=planReference(adopted.getJSONObject("reference"));val id=adopted.getString("stateId")
         check(id=="${state.getString("migrationId")}:adoption:${reference.attemptId}"){"E2EE_CONTENT_PLAN_CONFLICT"}
         val saved=vault.read("local-snapshot",id)?:error("E2EE_CONTENT_PLAN_CONFLICT")
