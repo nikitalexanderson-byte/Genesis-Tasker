@@ -1,5 +1,6 @@
 import { preserveHabitTimerRecords } from "./habit-timer-storage.ts";
 import {privateWorkspaceBridge} from './private-workspace-storage.ts';
+import {assertLegacyLocalWriteAllowed} from './e2ee/web-local-migration-fence.ts';
 
 type WorkspaceStorage = Pick<Storage, "getItem" | "setItem">;
 const blocked = new WeakMap<WorkspaceStorage, Set<string>>();
@@ -25,6 +26,7 @@ export function readProtectedWorkspace<T>(storage: WorkspaceStorage, key: string
 }
 
 export function assertWorkspaceWritable(storage: WorkspaceStorage, key: string) {
+  if(key.startsWith('genesis-calendar-v2:'))assertLegacyLocalWriteAllowed(key.slice('genesis-calendar-v2:'.length),storage);
   if (blocked.get(storage)?.has(key)) throw new Error("LOCAL_WORKSPACE_RECOVERY_REQUIRED");
 }
 

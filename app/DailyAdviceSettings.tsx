@@ -20,6 +20,8 @@ import {waitForSharedPush} from './shared-push-device';
 import {ExperimentalIcon} from './ExperimentalIcon';
 import {AdvicePsychopompiaSettings} from './AdvicePsychopompiaSettings';
 import {useDialogAccessibility} from './use-dialog-accessibility';
+import {usePersonalMigrationSource} from './use-personal-migration-source';
+import {usesPrivateProductStorage} from './cloud-sync';
 
 export function DailyAdviceSettings({ user, onUserChange }: { user: GenesisUser; onUserChange: (user: GenesisUser) => void }) {
   const copy = labels[user.language];
@@ -37,6 +39,10 @@ export function DailyAdviceSettings({ user, onUserChange }: { user: GenesisUser;
   const [pushStatus,setPushStatus]=useState<AdviceNotificationStatus|null>(null);
   const [pushFailed,setPushFailed]=useState(false),[pushRevision,setPushRevision]=useState(0),[deviceId,setDeviceId]=useState('');
   const operation=useRef<AbortController|null>(null);
+  usePersonalMigrationSource(!usesPrivateProductStorage(user.uid)?user.uid:null,'advice',()=>({
+    preferences:{base:preferences,value:preferences},mounted:null,
+    state:{collectionTab,ageCategories},settled:!busy,
+  }));
   const supported=typeof window!=='undefined'&&window.isSecureContext&&'serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;
   useEffect(()=>{
     const controller=new AbortController();

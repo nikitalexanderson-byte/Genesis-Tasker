@@ -3,6 +3,7 @@ import {IndexedDbLegacyTransportMarkers,LEGACY_UNBOUND_TRANSPORT_LOCK,type Legac
 import {assertTechnical} from './keys.ts';
 
 export const LEGACY_WORKER_STATUS='GENESIS_E2EE_LEGACY_TRANSPORT_STATUS';
+const MIGRATION_WINDOW='GENESIS_E2EE_MIGRATION_WINDOW';
 const MAX_PREFERENCES=64*1024,MAX_OLD_RESPONSE=64*1024*1024;
 type MarkerReader=Pick<IndexedDbLegacyTransportMarkers,'get'|'any'>;
 type WorkerGate={locks?:LegacyTransportLocks;markers:()=>MarkerReader};
@@ -82,11 +83,23 @@ export function legacyWorkerGuard(options:{origin:string;apiPrefix:string;locks?
 
 /** Classic SW bundle entry. Storage opens lazily, not during public shell boot. */
 export function installLegacyTransportWorker(target:{location:{origin:string};registration:{scope:string};navigator:{locks?:LegacyTransportLocks};
+  clients?:{matchAll:(options:{type:'window';includeUncontrolled:true})=>Promise<readonly {id:string;url:string}[]>};
   addEventListener:(type:'message',listener:(event:MessageEvent)=>void)=>void}) {
   let markers:IndexedDbLegacyTransportMarkers|null=null,backgroundReady=false;
   const origin=target.location.origin,apiPrefix=new URL('api/',target.registration.scope).pathname;
   target.addEventListener('message',event=>{
     if(event.data?.type===LEGACY_WORKER_STATUS)event.ports[0]?.postMessage({type:LEGACY_WORKER_STATUS,protocol:target.navigator.locks?.request?(backgroundReady?2:1):0});
+    if(event.data?.type===MIGRATION_WINDOW){
+      const port=event.ports[0],source=event.source,clientId=source&&'id'in source?source.id:null;
+      if(!port)return;
+      void (async()=>{
+        try{
+          const windows=await target.clients?.matchAll({type:'window',includeUncontrolled:true});
+          const own=windows?.filter(client=>new URL(client.url).origin===origin);
+          port.postMessage({type:MIGRATION_WINDOW,protocol:1,exclusive:backgroundReady&&typeof clientId==='string'&&own?.length===1&&own[0].id===clientId});
+        }catch{port.postMessage({type:MIGRATION_WINDOW,protocol:1,exclusive:false});}
+      })();
+    }
   });
   const guard=legacyWorkerGuard({origin,apiPrefix,locks:target.navigator.locks,
     markers:()=>markers??(markers=new IndexedDbLegacyTransportMarkers()),fetch:request=>fetch(request)});

@@ -49,12 +49,13 @@ export function closePrivateAccount(){
  view=Object.freeze({ownerId:null,phase:'closed',reason:'unlock',language:'en'});
  for(const waiter of waiters)waiter.reject(new Error('E2EE_ACCOUNT_CHANGED'));waiters.clear();notify();
 }
-function validateStatus(input:unknown):PrivateAccountStatus{
+export function validatePrivateAccountStatus(input:unknown):PrivateAccountStatus{
  exactKeys(input,['pilotAllowed','cryptoProtocol','scopes']);if(typeof input.pilotAllowed!=='boolean'||input.cryptoProtocol!==1||!Array.isArray(input.scopes)||input.scopes.length>4096)throw new Error('E2EE_INVALID_RESPONSE');
  const seen=new Set<string>();for(const scope of input.scopes){exactKeys(scope,['scopeId','kind','resourceId','state']);assertTechnical(scope.scopeId);assertTechnical(scope.resourceId);
   if(!['personal','project','space'].includes(String(scope.kind))||!['preparing','uploading','verified','active','retirement'].includes(String(scope.state))||seen.has(scope.scopeId))throw new Error('E2EE_INVALID_RESPONSE');seen.add(scope.scopeId);
  }return input as PrivateAccountStatus;
 }
+const validateStatus=validatePrivateAccountStatus;
 /** Identity establishes the HTTP session. This capability additionally requires
  * independently entered recovery material or the durable device bundle, and
  * verifies the complete signed directory before opening any product object. */

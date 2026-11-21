@@ -1366,6 +1366,21 @@ internal fun TaskEditor(task:LocalTask?,selected:String,prefs:UiPreferences,stru
         yandexBusy, yandexVisibility, yandexReminders).joinToString("\u001f")
     val originalFingerprint = rememberSaveable(task?.id) { draftFingerprint }
     var pendingExit by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val migrationContext=LocalContext.current
+    val migrationAuth=remember(migrationContext){ru.genesis.calendar.auth.AuthController.get(migrationContext)}
+    val migrationIdentity by migrationAuth.state.collectAsStateWithLifecycle()
+    val migrationBase=remember(task?.id){task?:LocalTask(title="")}
+    RememberMigrationInput(migrationIdentity.user?.takeIf{!it.privateVault}?.uid,"tasks",migrationBase.id){
+        val draft=migrationBase.copy(title=title,description=description,date=date,time=time,priority=priority,projectId=projectId,recurrence=recurrence,reminders=reminders)
+        val state=JSONObject().put("form","personal-task").put("draft",JSONObject(draft.json())).put("calendarMode",formCalendarMode.wireValue)
+            .put("taskListId",listId?:JSONObject.NULL).put("syncTargets",JSONArray(syncTargets)).put("entryType",entryType).put("yandexEntryType",yandexEntryType)
+            .put("endDate",yandexEndDate).put("endTime",yandexEndTime).put("location",yandexLocation).put("telemost",yandexTelemost)
+            .put("attendees",yandexAttendees).put("optionalAttendees",yandexOptionalAttendees).put("busy",yandexBusy).put("visibility",yandexVisibility).put("providerReminders",JSONArray(yandexReminders))
+            .put("customReminder",customReminder).put("customRelative",customRelative).put("customAmount",customAmount).put("customUnit",customUnit)
+            .put("absoluteDate",absoluteDate).put("absoluteTime",absoluteTime).put("absoluteCalendarMode",absoluteCalendarMode.wireValue)
+            .put("confirmDelete",confirmDelete).put("pendingExit",pendingExit!=null)
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(null,state,!saving)
+    }
     fun requestExit(action: () -> Unit) {
         if (saving) return
         if (draftFingerprint != originalFingerprint) pendingExit = action else action()

@@ -65,6 +65,13 @@ import java.time.Instant
     var discard by remember { mutableStateOf<DiaryRecord?>(null) }
     var deleteNote by remember { mutableStateOf<DiaryRecord?>(null) }
     var settingsOpen by remember { mutableStateOf(false) }
+    RememberMigrationInput(repository.migrationOwner,"diary",repository){
+        val records=org.json.JSONArray(state.records.map{row->JSONObject().put("note",row.note.json()).put("revision",row.revision)
+            .put("draftKey",row.draftKey?:JSONObject.NULL).put("localOnly",row.localOnly)})
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(JSONObject().put("records",records).put("editors",org.json.JSONArray()),
+            JSONObject().put("category",category).put("personalTab",personalTab).put("savedTab",savedTab).put("personalQuery",personalQuery).put("savedQuery",savedQuery)
+                .put("editing",editing?:JSONObject.NULL).put("newEditor",newEditor),!busy&&!loading)
+    }
     fun refresh() { scope.launch {
         loading = true; error = false
         try { repository.loadCached(); repository.refresh() }
@@ -290,6 +297,12 @@ import java.time.Instant
     LaunchedEffect(repository,formJson){if(repository.privateContent)try{repository.keepEditorState(formJson)}catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=true}}
     var draftSaved by remember { mutableStateOf(record?.draft == true) }
     var paletteOpen by rememberSaveable(key) { mutableStateOf(false) }
+    val migrationEditorId=remember(repository,key){java.util.UUID.randomUUID().toString()}
+    RememberMigrationInput(repository.migrationOwner,"diary",migrationEditorId){
+        val state=JSONObject(formJson).put("draftKey",draftKey?:JSONObject.NULL).put("closeConfirm",closeConfirm).put("paletteOpen",paletteOpen)
+        val editor=JSONObject().put("source",migrationEditorId).put("note",JSONObject(formJson).getJSONObject("note")).put("revision",revision)
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(JSONObject().put("records",org.json.JSONArray()).put("editors",org.json.JSONArray().put(editor)),state,!saving)
+    }
     val customColor = (form.opt("customColor") as? String)
     val changed = listOf("title", "body", "color", "customColor").any { form.optString(it, "") != baseline.optString(it, "") }
     val valid = form.optString("body").isNotBlank()

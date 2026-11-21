@@ -18,7 +18,8 @@ import { useSharedWorkDrafts } from "./use-shared-work-drafts";
 import type { WorkDraft } from "./shared-work-draft-journal";
 import { RestorationStrategyDialog, RESTORATION_DRAFT_SCOPE } from "./StoicheionRestorationDialog";
 import { RestorationRepository } from "./stoicheion-restoration-storage";
-import { PERSONAL_DOCUMENT_READY_EVENT } from "./cloud-sync";
+import { PERSONAL_DOCUMENT_READY_EVENT, usesPrivateProductStorage } from "./cloud-sync";
+import {usePersonalMigrationSource} from './use-personal-migration-source';
 import { completeRestorationWork, deleteRestorationWork, deleteArchivedRestorationWorks, reflectRestorationWork, restorationExpired, restorationWorks, linkedRestorationHabit, type RestorationWork, type RestorationWorkspace, type RestorationDocument } from "./stoicheion-restoration-work";
 import { StoicheionActionButton } from "./StoicheionActionButton";
 import { ExperimentalIcon } from "./ExperimentalIcon";
@@ -72,6 +73,11 @@ export const StoicheionRestoration = forwardRef<RestorationHandle, Props>(functi
   const draftTrigger = useRef<HTMLButtonElement | null>(null);
   const archiveCancel = useRef<HTMLButtonElement>(null);
   const archiveTrigger = useRef<HTMLButtonElement | null>(null);
+  usePersonalMigrationSource(userId&&repository&&!usesPrivateProductStorage(userId)?userId:null,'stoicheion',()=>({
+    current:repository?.captureMigrationState(document)??null,
+    state:{memory,staged,editingKey,recovered,open,document,draftDeleteKey,archiveDeleteKey},
+    settled:cloudReady&&!draftDeleting&&!archiveDeleting,
+  }),repository);
   useEffect(() => { if (archiveDeleteKey) archiveCancel.current?.focus(); }, [archiveDeleteKey]);
   useEffect(() => { if (draftDeleteKey && !web) draftCancel.current?.focus(); }, [draftDeleteKey, web]);
   function cancelArchiveDelete() { if (archiveDeleting) return; setArchiveDeleteKey(null); archiveTrigger.current?.focus(); }

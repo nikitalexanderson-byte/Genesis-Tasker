@@ -31,6 +31,12 @@ internal object LegacyScopeFenceSql {
         for(table in listOf("tasks","documents","outbox","reminders"))for(action in listOf("INSERT","UPDATE","DELETE")) {
             val scopes=when(action) { "INSERT" -> "scope=NEW.scope"; "DELETE" -> "scope=OLD.scope"; else -> "scope=OLD.scope OR scope=NEW.scope" }
             db.execSQL("CREATE TRIGGER IF NOT EXISTS e2ee_legacy_${table}_${action.lowercase()} BEFORE $action ON $table WHEN EXISTS(SELECT 1 FROM e2ee_legacy_fences WHERE $scopes) BEGIN SELECT RAISE(ABORT,'E2EE_LOCAL_LEGACY_WRITE_FORBIDDEN'); END")
+            // Personal migration also retains member-owned shared-map child
+            // caches. Cover descendants with an additive trigger, including
+            // databases that already installed the earlier exact-scope one.
+            fun descendant(row:String)="substr($row.scope,1,length(scope)+1)=scope||':'"
+            val descendants=when(action){"INSERT"->descendant("NEW");"DELETE"->descendant("OLD");else->"${descendant("OLD")} OR ${descendant("NEW")}"}
+            db.execSQL("CREATE TRIGGER IF NOT EXISTS e2ee_legacy_descendant_${table}_${action.lowercase()} BEFORE $action ON $table WHEN EXISTS(SELECT 1 FROM e2ee_legacy_fences WHERE $descendants) BEGIN SELECT RAISE(ABORT,'E2EE_LOCAL_LEGACY_WRITE_FORBIDDEN'); END")
         }
         // BEFORE INSERT also covers SQLite REPLACE when recursive DELETE triggers
         // are disabled. A legacy/import writer cannot remove an active deny row.

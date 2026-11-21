@@ -11,6 +11,7 @@ import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
 import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
+import {assertLegacyLocalWriteAllowed} from './e2ee/web-local-migration-fence';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
@@ -583,11 +584,11 @@ export function personalDocumentAccess(userId: string,permit?:import('./e2ee/leg
       return Array.from(new Uint8Array(result), value => value.toString(16).padStart(2, '0')).join('');
     },
     async seal(value: unknown, scope: string) {
-      check(); const iv = crypto.getRandomValues(new Uint8Array(12));
+      check();assertLegacyLocalWriteAllowed(userId); const iv = crypto.getRandomValues(new Uint8Array(12));
       const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv,
         additionalData: new TextEncoder().encode(`genesis-mindmap-v1:${userId}:${scope}`) },
       await importWorkspaceKey(), new TextEncoder().encode(JSON.stringify(value)));
-      check(); return { iv: bytesToBase64(iv), ciphertext: bytesToBase64(new Uint8Array(encrypted)) };
+      check();assertLegacyLocalWriteAllowed(userId); return { iv: bytesToBase64(iv), ciphertext: bytesToBase64(new Uint8Array(encrypted)) };
     },
     async open<T>(envelope: { iv: string; ciphertext: string }, scope: string) {
       check(); const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(envelope.iv),
@@ -916,6 +917,7 @@ function readPending(): PendingMutation[] {
   try {
     const storageKey = pendingStorageKey();
     if (workspaceUserId && !localStorage.getItem(storageKey) && localStorage.getItem(PENDING_KEY)) {
+      assertLegacyLocalWriteAllowed(workspaceUserId);
       localStorage.setItem(storageKey, localStorage.getItem(PENDING_KEY) || "[]");
       localStorage.removeItem(PENDING_KEY);
     }
@@ -941,11 +943,13 @@ function readPending(): PendingMutation[] {
 function writePending(items: PendingMutation[]) {
   if (localSessionEnded || privateDeviceAccessBlocked()) return;
   if (typeof window !== "undefined") {
+    if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
     localStorage.setItem(pendingStorageKey(), JSON.stringify(items.filter(row => !row.key.startsWith("workspace:")).slice(-2000)));
   }
 }
 
 function queueMutation(mutation: PendingMutation) {
+  if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
   if (isWorkspaceMutation(mutation) && mutation.key !== "workspace") {
     requireActiveLocalSession();
     localStorage.setItem(workspaceJournalPrefix() + mutation.key, JSON.stringify(mutation));
@@ -957,6 +961,7 @@ function queueMutation(mutation: PendingMutation) {
 }
 
 function clearMutation(key: string, sent?: PendingMutation) {
+  if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
   if (key.startsWith("workspace:")) {
     const stored = localStorage.getItem(workspaceJournalPrefix() + key);
     const row = stored ? JSON.parse(stored) as PendingMutation : null;
@@ -969,6 +974,7 @@ function clearMutation(key: string, sent?: PendingMutation) {
 
 function rememberDeletedTasks(ids: string[]) {
   if (localSessionEnded || privateDeviceAccessBlocked()) return;
+  if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
   const key = `${PENDING_KEY}-deleted:${workspaceUserId || "anonymous"}`;
   let previous: unknown = [];
   try { previous = JSON.parse(localStorage.getItem(key) || "[]"); } catch { /* Recover a malformed local cache from the server ledger. */ }
@@ -1396,6 +1402,7 @@ function readWorkspaceSyncCache(userId = workspaceUserId): WorkspaceSyncCache | 
 
 function persistWorkspaceSyncCache() {
   if (typeof window === "undefined" || !workspaceUserId || localSessionEnded || privateDeviceAccessBlocked()) return;
+  assertLegacyLocalWriteAllowed(workspaceUserId);
   const cache: WorkspaceSyncCache = {
     version: workspaceVersion,
     base: workspaceBase,
@@ -3758,6 +3765,37 @@ export function privateAccountHttpTransport():PrivateAccountTransport{
     read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys}),
     membership:{membershipState:targets=>e2eeRequest('/membership-state',{targets}),membershipPreview:(intentId,changes)=>e2eeRequest('/membership-preview',{intentId,changes}),membershipCommit:batch=>e2eeRequest('/membership',batch)}};
 }
+export function privateScopeSetupHttpTransport():import('./e2ee/scope-setup').ScopeSetupTransport{
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const check=()=>{session();if(!owner||confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+ return{bootstrap:async packet=>{check();if(packet.command.ownerId!==owner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const result=await e2eeRequest('/bootstrap',packet);check();return result;},
+   directory:async scopeId=>{check();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});check();return result;}};
+}
+export async function currentPrivateMigrationStatus(){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const check=()=>{session();if(!owner||confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+ const {validatePrivateAccountStatus}=await import('./e2ee/product-session');check();
+ const status=validatePrivateAccountStatus(await e2eeRequest('/status'));check();return{ownerId:owner!,...status};
+}
+/** Opens an explicit setup/resume operation. The caller holds an inert editor
+ * surface throughout; status discovery never starts this operation itself. */
+export async function prepareCurrentPrivateMigration(secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const current=()=>{session();if(!owner||confirmedTransportOwnerId!==owner||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();assertEditorsFrozen();
+ const {WebProductMigration}=await import('./e2ee/web-product-migration');current();
+ return WebProductMigration.open(owner!,secret,kit,backupDataGeneration,{account:privateAccountHttpTransport(),setup:privateScopeSetupHttpTransport(),
+   request:(path,body,observation,signal)=>{current();return e2eeRequest(path,body,signal,observation);},
+   sources:async(device,directory,ports)=>{
+    current();if(workspaceUserId!==owner){
+     if(workspaceUserId)throw new Error('E2EE_ACCOUNT_CHANGED');
+     const {readDeviceMigrationResume}=await import('./e2ee/migration');current();
+     if(!await readDeviceMigrationResume(device,directory))throw new Error('E2EE_LEGACY_SNAPSHOT_REQUIRED');current();
+     workspaceUserId=owner!;
+    }
+    return createMountedPersonalMigrationSources(owner!,directory,ports);
+   },
+   fence:(device,directory)=>createPersonalMigrationTransportFence(owner!,directory,device),assertCurrent:current,assertEditorsFrozen});
+}
 export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
   if(!owner||!serverProtectedTransportOwners.has(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
@@ -3863,14 +3901,14 @@ export async function createPersonalMindmapsMigrationSource(userId:string,scopeI
 export async function createPersonalPhysisMigrationSource(userId:string,scopeId:string,
   transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPhysisPage'>,
   options:Pick<import('./e2ee/physis-source').PhysisSourcePorts,'independentUnlock'|'review'>={}) {
-  const access=physisLegacyAccess(userId);access.check();
+  const session=captureAccountSessionGuard();const check=()=>{session();if(confirmedTransportOwnerId!==userId||workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const [{PersonalPhysisSource},{collectLegacyPersonalPages},{capturePhysisSessionMemory}]=await Promise.all([
-    import('./e2ee/physis-source'),import('./e2ee/legacy-pages'),import('./physis/session-memory')]);access.check();
-  return new PersonalPhysisSource(userId,scopeId,{assertCurrent:access.check,
-    memory:async()=>{access.check();const stores=await capturePhysisSessionMemory(userId);access.check();
+    import('./e2ee/physis-source'),import('./e2ee/legacy-pages'),import('./physis/session-memory')]);check();
+  return new PersonalPhysisSource(userId,scopeId,{assertCurrent:check,
+    memory:async()=>{check();const stores=await capturePhysisSessionMemory(userId);check();
       if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
       return{ownerId:userId,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,legacyKey:workspaceKey,stores};},
-    legacyPhysis:context=>collectLegacyPersonalPages(context,'physis',{assertCurrent:access.check,readPage:(value,table,offset)=>transport.legacyPhysisPage(value,table,offset)}),...options});
+    legacyPhysis:context=>collectLegacyPersonalPages(context,'physis',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyPhysisPage(value,table,offset)}),...options});
 }
 
 /** Read-only reminder inventory. The full product coordinator must hold its
@@ -3971,6 +4009,70 @@ export async function createCompleteMigrationSourceRegistry(userId:string,direct
   for(const adapter of all)registry.registerIntegrated(adapter,check);
   // Synchronous full preflight, before capture, new-key persistence or a lease.
   registry.stagedCapture();registry.stagedReconciliation();return registry;
+}
+
+/** Product composition for the actual web repositories. Closed screens are
+ * captured from their durable stores by the same adapters; live input comes
+ * from every registered owner-bound instance. Arbitrary forms remain inert in
+ * personal.local-work rather than becoming executable tasks/provider jobs. */
+export async function createMountedPersonalMigrationSources(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  transport:import('./e2ee/source-replay').LegacyReadPorts,
+  reviews:{workspace?:import('./e2ee/workspace-source').WorkspaceSourcePorts['review'];
+    tasks?:import('./e2ee/tasks-source').TasksSourcePorts['review'];providers?:import('./e2ee/tasks-source').TasksSourcePorts['reviewProviderHistory'];
+    diary?:import('./e2ee/diary-source').DiarySourcePorts['review'];mindmaps?:import('./e2ee/mindmaps-source').MindmapsSourcePorts['review'];
+    physis?:Pick<import('./e2ee/physis-source').PhysisSourcePorts,'independentUnlock'|'review'>;
+    reminders?:Pick<import('./e2ee/reminders-source').RemindersSourcePorts,'reviewUnassigned'>;
+    archives?:Pick<import('./e2ee/archives-source').ArchivesSourcePorts,'openPhysis'|'independentUnlock'>}={}){
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId||directory.kind!=='personal'||directory.ownerId!==userId||directory.resourceId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{capturePersonalMigrationSources},{captureAllBackupSources},{samePrivateJson}]=await Promise.all([
+    import('./personal-migration-memory'),import('./backup-sources'),import('./e2ee/product-json')]);check();
+  const read=<K extends keyof import('./personal-migration-memory').PersonalMigrationMemory>(kind:K)=>{
+    check();const values=capturePersonalMigrationSources(userId,kind).filter(row=>row.mounted);
+    if(values.some(row=>row.value.settled===false))throw new Error('E2EE_SOURCE_NOT_SETTLED');return values;
+  };
+  const one=<T>(values:readonly (T|null)[]):T|null=>{
+    const present=values.filter((value):value is T=>value!==null);
+    if(present.some(value=>!samePrivateJson(value,present[0])))throw new Error('E2EE_MOUNTED_SOURCE_REVIEW_REQUIRED');return present[0]??null;
+  };
+  const workspace=()=>{
+    check();const values=captureAllBackupSources(userId).sources.filter(row=>row.moduleId==='workspace');
+    const documents=values.map(row=>{
+      const value=row.value as {format?:unknown;workspace?:unknown};
+      if(row.format!=='migration'||value?.format!=='genesis-workspace-editor-v1'||!value.workspace||typeof value.workspace!=='object'||Array.isArray(value.workspace))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+      return value.workspace;
+    });return one(documents);
+  };
+  const domainEditors=(values:unknown[],prefix:string)=>values.map((value,index)=>{
+    if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+    // The complete state, including File/Blob values, is materialized by the
+    // local-work source. Typed content reconciliation uses only the document.
+    const {state:ignored,...editor}=value as Record<string,unknown>;void ignored;
+    return{...editor,source:`${prefix}:${String(editor.source??index)}`};
+  });
+  const adapters:import('./e2ee/migration-sources').PrivatePathAdapter[]=[];
+  adapters.push(await createPersonalWorkspaceMigrationSource(userId,directory.scopeId,transport,workspace,reviews.workspace));check();
+  adapters.push(await createPersonalTasksMigrationSource(userId,directory.scopeId,transport,()=>{
+    const current=workspace() as {tasks?:unknown}|null;
+    if(current&&!Array.isArray(current.tasks))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');return{tasks:current?.tasks as unknown[]??[],editors:[]};
+  },reviews.tasks,reviews.providers));check();
+  adapters.push(await createPersonalDiaryMigrationSource(userId,directory.scopeId,transport,()=>{
+    const values=read('diary');return{records:values.flatMap(row=>row.value.records),editors:values.flatMap(row=>domainEditors(row.value.editors,row.sourceId))};
+  },reviews.diary));check();
+  adapters.push(await createPersonalMindmapsMigrationSource(userId,directory.scopeId,transport,()=>{
+    const values=read('mindmaps');return{records:values.flatMap(row=>row.value.records),editors:values.flatMap(row=>domainEditors(row.value.editors,row.sourceId)),localWork:values.flatMap(row=>row.value.localWork)};
+  },reviews.mindmaps));check();
+  adapters.push(await createPersonalPhysisMigrationSource(userId,directory.scopeId,transport,reviews.physis));check();
+  adapters.push(await createPersonalRemindersMigrationSource(userId,directory.scopeId,transport,reviews.reminders));check();
+  adapters.push(await createPersonalAuroraMigrationSource(userId,directory.scopeId,transport,()=>one(read('aurora').map(row=>row.value.current))));check();
+  adapters.push(await createPersonalStoicheionMigrationSource(userId,directory.scopeId,transport,()=>{
+    const draws=read('stoicheion-draws');return{current:one(read('stoicheion').map(row=>row.value.current)),
+      draws:one(draws.map(row=>row.value.draws))??[],timeline:one(draws.map(row=>row.value.timeline))};
+  }));check();
+  adapters.push(await createPersonalAdviceMigrationSource(userId,directory.scopeId,transport,()=>{
+    const values=read('advice');return{preferences:one(values.map(row=>row.value.preferences)),mounted:one(values.map(row=>row.value.mounted))};
+  }));check();
+  return createCompleteMigrationSourceRegistry(userId,directory,transport,adapters,reviews.archives);
 }
 
 export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,

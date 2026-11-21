@@ -33,6 +33,8 @@ internal class MindmapRepository(private val db:GenesisDatabase,private val scop
     private val productScope get()=privateShared?.storageScope?:scope
     private val productOwner get()=privateShared?.owner?:uid
     private val privateContent get()=NativePrivateProducts.isProtected(productScope)
+    val migrationOwner:String? get()=if(privateContent)null else uid
+    val personalMigrationSource:Boolean get()=scope==ru.genesis.calendar.auth.CloudAccountSnapshot.scopeFor(uid)
     @Synchronized private fun product():NativeMapProduct?{
         if(!privateContent)return null;val account=NativePrivateProducts.account(productScope,productOwner)
         return privateMaps?.takeIf{it.account===account}?:if(privateShared!=null)NativePrivateSharedMindmaps(productScope,productOwner,privateShared.spaceId,account).also{privateMaps=it}

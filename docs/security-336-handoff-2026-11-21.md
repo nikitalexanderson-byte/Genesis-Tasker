@@ -223,3 +223,12 @@ and multi-owner rotations need real UI approval. Advice/Timeline cache and
 clock-boundary behavior and translated snapshot parity need consolidated QA.
 Content-only backup must never replay these new issue/membership receipts.
 
+# Continuation checkpoint: 22 November 2026
+
+Continue code first, then consolidated acceptance/repairs, then release. The new
+scope-setup/editor-source/product-controller increment is documented at the top
+of `security-336-implementation-pass.md`; it is not compiled or accepted. Actual
+setup/resume screens, complete native mounted input, streamed cancellation and
+revoked-device replacement still need implementation. The original prompt is
+unchanged. Accepted coverage remains 9/20. Do not read/stage `demo-output/`.
+

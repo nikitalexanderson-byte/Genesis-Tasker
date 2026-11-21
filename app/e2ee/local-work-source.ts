@@ -4,6 +4,8 @@ import {captureSharedEditorIndexedOriginals} from '../shared-editor-indexed-stor
 import {captureLocalWorkMigrationMemory} from '../local-work-migration-memory.ts';
 import type {PrivateScopeKind} from './private-paths.ts';
 import {capturePrivateLocalValues} from './local-work-values.ts';
+import {captureMountedBackupMigrationSources} from '../backup-sources.ts';
+import {materializePersonalMigrationSources} from '../personal-migration-memory.ts';
 
 export type PrivatePathLocalEntry={store:string;key:string;raw:string;content:unknown;spaceId:string|null;projectId:string|null};
 export type PrivatePathLocalInventory={platform:'web'|'android';entries:PrivatePathLocalEntry[];editors:unknown[];inventoryVersion:1};
@@ -21,6 +23,8 @@ export async function captureWebPrivatePathLocal(target:Target,ports:{storage:Pi
   const raw=ports.storage.getItem(key);if(raw!==null)rows.push({key,raw});if(rows.length>10000)throw new Error('E2EE_SOURCE_TOO_LARGE');
  }return rows.sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);};
  const stored=readStorage(),mounted=await capturePrivateLocalValues(captureLocalWorkMigrationMemory(binding.ownerId),ports.assertCurrent) as ReturnType<typeof captureLocalWorkMigrationMemory>,indexed=await captureSharedEditorIndexedOriginals(binding.ownerId,ports.assertCurrent);ports.assertCurrent();
+ const productForms=binding.kind==='personal'?await captureMountedBackupMigrationSources(binding.ownerId,ports.assertCurrent):null;ports.assertCurrent();
+ const personalForms=binding.kind==='personal'?await materializePersonalMigrationSources(binding.ownerId,ports.assertCurrent):null;ports.assertCurrent();
  const entries:PrivatePathLocalEntry[]=[];let size=0;
  const parse=(raw:string)=>parseLegacyMigrationJson(raw,'E2EE_LOCAL_WORK_SOURCE_INVALID',MAX);
  for(const [store,rows]of [['localStorage',stored],['indexedDB',indexed]] as const)for(const row of rows){
@@ -57,7 +61,12 @@ export async function captureWebPrivatePathLocal(target:Target,ports:{storage:Pi
  }
  const afterIndexed=await captureSharedEditorIndexedOriginals(binding.ownerId,ports.assertCurrent);ports.assertCurrent();
  const afterMounted=await capturePrivateLocalValues(captureLocalWorkMigrationMemory(binding.ownerId),ports.assertCurrent);ports.assertCurrent();
- if(JSON.stringify(stored)!==JSON.stringify(readStorage())||JSON.stringify(indexed)!==JSON.stringify(afterIndexed)||JSON.stringify(mounted)!==JSON.stringify(afterMounted))throw new Error('E2EE_LOCAL_WORK_CAPTURE_CHANGED');
+ const afterProductForms=binding.kind==='personal'?await captureMountedBackupMigrationSources(binding.ownerId,ports.assertCurrent):null;ports.assertCurrent();
+ const afterPersonalForms=binding.kind==='personal'?await materializePersonalMigrationSources(binding.ownerId,ports.assertCurrent):null;ports.assertCurrent();
+ if(JSON.stringify(stored)!==JSON.stringify(readStorage())||JSON.stringify(indexed)!==JSON.stringify(afterIndexed)||JSON.stringify(mounted)!==JSON.stringify(afterMounted)||JSON.stringify(productForms)!==JSON.stringify(afterProductForms)||JSON.stringify(personalForms)!==JSON.stringify(afterPersonalForms))throw new Error('E2EE_LOCAL_WORK_CAPTURE_CHANGED');
  const editors=mounted.filter(row=>binding.kind==='personal'||binding.kind==='project'&&row.projectId===binding.resourceId||binding.kind==='space'&&row.spaceId===binding.resourceId&&row.projectId===binding.resourceId);
+ if(productForms!==null)editors.push({ownerId:binding.ownerId,spaceId:'personal',projectId:binding.ownerId,source:'mounted-product-sources-v1',mounted:true,value:productForms});
+ if(personalForms!==null)editors.push({ownerId:binding.ownerId,spaceId:'personal',projectId:binding.ownerId,source:'personal-product-sources-v1',mounted:true,value:personalForms});
+ if(editors.length>1000)throw new Error('E2EE_SOURCE_TOO_LARGE');
  return{platform:'web',inventoryVersion:1,entries,editors};
 }

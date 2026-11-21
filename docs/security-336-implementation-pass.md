@@ -8,6 +8,48 @@ never call it independent human assurance. Historical human-review gates below
 are superseded. Full coverage/recovery/upgrade and all technical acceptance stay.
 Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
+## Scope setup, real editor capture and product controllers (22 November; candidate)
+
+Added paired initial-scope setup with a durable immutable bootstrap packet,
+independent recovery-authority verification, device self-proof, signed-directory
+readback and preserved cancellation on native directory requests. Added a real
+AEAD recovery probe, using the exact candidate root and separately supplied
+kit/secret, before content-plan adoption/activation.
+
+Web workspace captures now include current forms without changing ordinary
+backup content. A typed registry connects diary, maps, Aurora/Gno, Stoicheion,
+draws and advice/settings. Every mounted instance and detached input is retained
+in personal.local-work as inert history. Blob/File/byte values are materialized;
+unsupported values and moving sources refuse instead of silently serializing
+to empty objects. The complete web factory composes all nine actual personal
+source adapters plus archives and local work. Typed domain reconciliation does
+not execute captured forms or external-copy intents.
+
+Added web/native product migration controllers composing setup, source registry,
+original-response capture/replay, streamed plan, shadow upload/readback, recovery
+verification and persistent legacy denial. Cold web resume can inspect the
+authenticated local journal without a legacy network bootstrap. Added a
+synchronous public technical web write marker to the workspace, legacy task
+journals/cache, document sealing, Physis mutation and shared-draft writes. The
+service worker can attest that the migration tab is the only same-origin window;
+the controller checks this at write-fenced phases and before migration commit.
+Other tabs are never closed or reloaded by the agent/application.
+
+Native now composes the actual personal source factories, closes a prepared
+migration capability on background/logout and captures native task/diary/map
+input through an owner/repository-bound registry. Additive SQL triggers also
+deny legacy writes in account child scopes, including retained shared-map caches.
+
+These are uncompiled implementation candidates. Remaining setup work includes
+actual web/native setup/resume screens, final binding of every native editor
+(especially embedded Aurora/Gno, dream/voice, trackers and shared advanced forms),
+conflict/independent-Physis-key review UI, fully verified streamed cancellation
+and original-device/revoked-device replacement. Single-window/preparation races,
+marker lifecycle, cold resumes, all parser/crypto parity and descendant triggers
+need consolidated acceptance. No tests, typecheck, lint, build, CI, push, deploy,
+provider requests or device changes ran. Coverage remains 9/20, production
+3.3.5/149, pilot/cutover off, update floors 0, Android deployment false.
+
 ## Explicit Google copy path (candidate, no QA)
 
 Added web/native new-root retained copy intents, exact content/account/provider

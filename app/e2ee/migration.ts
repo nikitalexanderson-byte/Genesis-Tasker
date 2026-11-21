@@ -107,6 +107,19 @@ function decodeState(bytes: Uint8Array): MigrationState {
   return state;
 }
 
+/** Cold product resume may inspect the authenticated journal without restoring
+ * legacy runtime keys or issuing a legacy bootstrap. This metadata grants no
+ * writer capability; runStreamed still verifies all originals/plans/receipts. */
+export async function readDeviceMigrationResume(device:UnlockedWebDevice,directory:VerifiedDirectory){
+ device.requireOpen();const row=await device.vault.read('local-snapshot',`migration:${await digest(encoder.encode(directory.scopeId))}`);device.requireOpen();
+ if(!row)return null;
+ try{
+  const state=decodeState(row.value);if(state.protocol<3||!('source'in state))throw new Error('E2EE_STREAMED_SOURCE_REQUIRED');
+  validateStagedMigrationSnapshot(state.source,{ownerId:directory.ownerId,scopeId:directory.scopeId,kind:directory.kind},device.vault.localIdentity(),requiredPrivatePaths(directory.kind).map(path=>path.id));
+  return Object.freeze({protocol:state.protocol,phase:state.phase});
+ }finally{row.value.fill(0);}
+}
+
 /** Durable snapshot/shadow state machine. No legacy data is erased, including on failure.
  * Account/session/billing/ACL restoration is deliberately absent from the content adapter API.
  */

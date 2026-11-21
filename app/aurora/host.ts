@@ -4,6 +4,7 @@ import type {AuroraDocument,PreparedAuroraResult,AuroraResultSeal} from './sessi
 import {AuroraPrivateRepository,privateAuroraDocument,E2eeAuroraResults} from '../e2ee/aurora-product';
 export type AuroraTaskRequest={title:string;description:string;dueDate:string|null;dueTime?:string|null;zoneId?:string;kind:'action'|'review';sourceId:string};
 export type AuroraHost={ownerId:string;language:string;client:'web'|'android'|'android-play';canAddTask:boolean;load:()=>Promise<AuroraDocument>;save:(doc:AuroraDocument)=>Promise<AuroraDocument>;
+ captureMigration?:(current:AuroraDocument|null)=>import('../e2ee/aurora-source').AuroraMigrationMemory['current'];
  syncState:()=>string;sealResult:(value:unknown,id:string)=>Promise<AuroraResultSeal>;prepareResult:(value:PreparedAuroraResult)=>Promise<void>;
  conflictVersions:()=>Promise<AuroraConflict|null>;recoverConflict:(newIds:Readonly<Record<string,string>>,now:string)=>Promise<AuroraDocument>;
  readResult:(id:string)=>Promise<{id:string;solution:unknown}>;billing:<T>(path:string,init?:RequestInit)=>Promise<T>;
@@ -13,6 +14,7 @@ export function webAuroraHost(input:{ownerId:string;language:string;close:()=>vo
   results=privateMode?new E2eeAuroraResults(input.ownerId):null,
   repo=privateMode?new AuroraPrivateRepository(input.ownerId,privateAuroraDocument(input.ownerId)):new AuroraRepository(input.ownerId,localStorage,access);
  return {ownerId:input.ownerId,language:input.language,client:'web',canAddTask:Boolean(input.addTask),load:()=>repo.load(),save:doc=>repo.save(doc),syncState:()=>repo.syncState,
+  ...(!privateMode&&repo instanceof AuroraRepository?{captureMigration:(current:AuroraDocument|null)=>repo.captureMigrationState(current)}:{}),
   conflictVersions:()=>repo.conflictVersions(),recoverConflict:(ids,now)=>repo.recoverAsCopy(ids,now),
   sealResult:(value,id)=>results?results.seal(value,id):access.seal(value,`aurora-result:v1:${id}`),prepareResult:async value=>{if(results){await results.prepare(value);return;}
    if('kind'in value)throw new Error('AURORA_RESULT_MISMATCH');await access.request('/aurora-results',{method:'POST',body:JSON.stringify(value)});},

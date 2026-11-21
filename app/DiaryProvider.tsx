@@ -6,6 +6,7 @@ import { DiaryRepository, type DiaryRecord, type DiaryEditorCapture } from './di
 import { reactToAdvice, type DiaryNote } from './diary-model';
 import type { DailyAdvice } from './daily-advice';
 import { DEFAULT_DREAM_SETTINGS, type DreamSettings } from './dream-journal-model';
+import {usePersonalMigrationSource} from './use-personal-migration-source';
 
 type State = { records: DiaryRecord[]; loading: boolean; error: boolean; offline: boolean; syncEnabled: boolean; pendingUploads: number; dreamSettings: DreamSettings;localHistory:'present'|'not-on-this-device'|null };
 type Context = State & { busy: boolean;privateContent:boolean; refresh: () => Promise<void>; save: (note: DiaryNote, record?: DiaryRecord) => Promise<void>;
@@ -26,6 +27,10 @@ export function DiaryProvider({ userId, ready, children, repositoryOverride }: {
   const repositoryLifetime=useRef(0);
   const activeRepository=useRef(repository);activeRepository.current=repository;
   const current=()=>{if(!repository||activeRepository.current!==repository)throw new Error('DIARY_SESSION_CLOSED');};
+  usePersonalMigrationSource(repository&&!usesPrivateProductStorage(userId)?userId:null,'diary',()=>{
+    if(!repository)throw new Error('DIARY_UNAVAILABLE');
+    return{...repository.captureMigration(state.records),settled:!busy&&!state.loading&&!state.error};
+  },repository);
   useEffect(()=>{const lifetime=++repositoryLifetime.current;++request.current;setBusy(false);setState({records:[],loading:true,error:false,offline:false,syncEnabled:true,pendingUploads:0,dreamSettings:DEFAULT_DREAM_SETTINGS,localHistory:null});
     return()=>{++request.current;queueMicrotask(()=>{if(!repositoryOverride&&(activeRepository.current!==repository||repositoryLifetime.current===lifetime))repository?.dispose();});};},[repository,repositoryOverride]);
   const registerMigrationEditor=useCallback((read:()=>DiaryEditorCapture)=>{if(!repository)return()=>{};return repository.registerMigrationEditor(read);},[repository]);

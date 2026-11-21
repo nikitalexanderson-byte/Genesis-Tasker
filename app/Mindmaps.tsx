@@ -2,7 +2,8 @@
 import { DialogCloseButton } from "./DialogCloseButton";
 import { Fragment, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { GenesisProject, GenesisTask } from "./cloud-sync";
-import { GenesisApiError, LOCAL_SESSION_ENDED_EVENT } from "./cloud-sync";
+import { GenesisApiError, LOCAL_SESSION_ENDED_EVENT, usesPrivateProductStorage } from "./cloud-sync";
+import {usePersonalMigrationSource} from './use-personal-migration-source';
 import { useDialogAccessibility } from "./use-dialog-accessibility";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import { IconActionButton } from "./IconActionButton";
@@ -121,6 +122,9 @@ export default function Mindmaps(props: Props) {
     selected,selectedLink,view:latestView.current,dialog,title,template,text,preview,versions,history:editHistory.captureMigration(),parent,linkTo,linkLabel,tagDraft,
     pickerQuery,pickerTask,pickerDate,importAsIdeas,journal,nodeDialogBaseline:nodeDialogBaseline.current}});});
   useLayoutEffect(()=>repository.registerMigrationEditor(()=>migrationCapture.current()),[repository]);
+  usePersonalMigrationSource(!props.spaceId&&!usesPrivateProductStorage(props.userId)?props.userId:null,'mindmaps',()=>({
+    ...repository.captureMigration(records),settled:!loading&&!busy,
+  }),repository);
   const onStatus = (state: SaveState, message?: string) => { if (alive.current) { setStatus(state); if (message) setError(message === "MAP_REVISION_CONFLICT" ? "Другая вкладка изменила карту. Ваш текст сохранён отдельно. Откройте историю или сохраните этот вариант отдельной картой." : message); } };
   const fail = (e: unknown) => { if (alive.current) setError(e instanceof Error ? e.message : "Не удалось выполнить действие."); };
   const refresh = async () => { setLoading(true); try { const list = await repository.list(); if (alive.current) setRecords(list); } catch (e) { fail(e); } finally { if (alive.current) setLoading(false); } };

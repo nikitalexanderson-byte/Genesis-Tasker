@@ -1446,10 +1446,32 @@ export function GenesisCalendar() {
   const categoriesRef = useRef<GenesisCategory[]>(DEFAULT_CATEGORIES);
   const taskListLinksRef = useRef<TaskListProjectLink[]>([]);
   const habitWorkspaceRef = useRef<HabitWorkspace>(normalizeHabitWorkspace(EMPTY_HABIT_WORKSPACE));
+  // Read the latest render, rather than the render that installed the source.
+  // These are inert inputs: migration must never resume a delete, transfer,
+  // provider copy or map conversion just because its form was still open.
+  const workspaceMigrationForms = useRef<unknown>(null);
+  workspaceMigrationForms.current = {
+    taskComposer, composerTab, newEntryType, dayTaskCreatorOpen, mindmapConversion,
+    taskTitle, taskDescription, taskFormCalendar, taskScope, taskDueDate, taskUndated,
+    taskEndDate, taskTime, taskProject, taskTaskListId, taskNewListTitle, taskNewListAccountId,
+    taskTags, taskReminders, taskRecurrenceConfig, taskDependsOn, taskPriority, taskSyncAccountIds,
+    yandexEntryType, yandexEndTime, yandexLocation, yandexTelemostUrl, yandexAttendees,
+    yandexOptionalAttendees, yandexBusy, yandexVisibility, yandexReminders,
+    newProjectTitle, newProjectDescription, newProjectParent, newProjectCategory, newProjectTags,
+    newCategoryTitle, newTaskListTitle, taskListScope, newTaskListProject, newTaskListAccountId,
+    newTaskListDrafts, taskListBatchTitles, taskListBatchDates, editingCategoryId,
+    editingCategoryTitle, editingCategoryColor, editingProject, editingProjectTags,
+    editingTask, editingTaskTags, editingTaskScope, editingOccurrenceDate, editingTaskList,
+    transferTask, transferProject, pendingTaskDeletion, projectToComplete,
+  };
   useEffect(() => {
     if (!cloudUser?.uid) return;
     return registerBackupSource('workspace', { owner:cloudUser.uid, capture:() => ({tasks:tasksRef.current,projects:projectsRef.current,
-      categories:categoriesRef.current,taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current}) });
+      categories:categoriesRef.current,taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current}),
+      captureMigration:() => ({format:'genesis-workspace-editor-v1',
+        workspace:{tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
+          taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current},
+        forms:workspaceMigrationForms.current,execution:'history-only'}) });
   }, [cloudUser?.uid]);
   const cloudUserRef = useRef<GenesisUser | null>(null);
   const displayCalendarSaveRef = useRef<Promise<void>>(Promise.resolve());

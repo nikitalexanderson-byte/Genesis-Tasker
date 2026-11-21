@@ -3,6 +3,7 @@ import { MAX_PHYSIS_PLAINTEXT_BYTES, openPhysis, sealPhysis, toBase64, type Phys
 import type { PhysisRecord, PhysisStore, SaveState } from './types';
 import { validatePhysisRecord } from './validation';
 import { registerBackupSource } from '../backup-sources.ts';
+import {assertLegacyLocalWriteAllowed} from '../e2ee/web-local-migration-fence.ts';
 
 export type WireRecord = { id: string; revision: number; sequence: number; updatedAt: string; deletedAt: string | null; envelope: PhysisEnvelope | null };
 type Acknowledgement = Omit<WireRecord, 'envelope'> & { envelope?: PhysisEnvelope | null };
@@ -154,6 +155,7 @@ export class PhysisMemoryStore {
   }
   private checkEditable() {
     this.check();
+    assertLegacyLocalWriteAllowed(this.owner);
     if (this.rotation) throw new Error('Дождитесь подтверждения смены ключа. При сбое повторите её с сохранённым кодом восстановления.');
   }
   private async readWire(transport:Transport): Promise<{ records: WireRecord[]; cursor: number }> {

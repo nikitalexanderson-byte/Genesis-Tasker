@@ -61,6 +61,7 @@ internal class DiaryRepository(private val owner: String, private val gateway: D
     val state = mutable.asStateFlow()
     private fun check() = gateway.check()
     val privateContent get()=NativePrivateProducts.isProtected(accountScope)
+    val migrationOwner:String? get()=if(privateContent)null else owner
     private val editorPointers=java.util.concurrent.ConcurrentHashMap<String,String>()
     fun sealEditorState(value: String): String {
         check();if(!privateContent)return cacheCipher.encrypt(value)

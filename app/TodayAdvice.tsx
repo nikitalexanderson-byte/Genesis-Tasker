@@ -2,7 +2,8 @@
 /* eslint-disable @next/next/no-img-element -- Decorative account-specific artwork uses native lazy loading in both web builds. */
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
-import { loadDailyAdvice,loadSavedAdvice, recordDailyAdvice, type GenesisUser } from "./cloud-sync";
+import { loadDailyAdvice,loadSavedAdvice, recordDailyAdvice, usesPrivateProductStorage, type GenesisUser } from "./cloud-sync";
+import {usePersonalMigrationSource} from './use-personal-migration-source';
 import { ADVICE_CATEGORIES, ADVICE_TOPICS, adviceHabitScores, adviceHabitTopicScores, adviceTaskContext, advicePreferences, todayAdviceHistory, adviceCardVisible, type AdviceScores, type AdviceTopicScores, type AdvicePersonalTask, type DailyAdviceResponse } from "./daily-advice";
 import type { Habit } from "./habits";
 import labels from "./daily-advice-copy.json";
@@ -61,6 +62,11 @@ function TodayAdviceBody({ user, habits, tasks, day, ready, onOpenDiary,operatio
   const container = useRef<HTMLElement>(null);
   const copy = labels[user.language];
   const result = saved?.key === requestKey ? saved.result : null;
+  usePersonalMigrationSource(!usesPrivateProductStorage(user.uid)?user.uid:null,'advice',()=>({
+    preferences:{base:preferences,value:preferences},
+    mounted:result?{language:user.language,result,selection:selection?.key===requestKey?selection.id:null}:null,
+    state:{saved,selection,openedAdvice},settled:!busy,
+  }));
   const cards = result ? todayAdviceHistory(result, preferences) : [];
   const advice = cards.find(card => selection?.key === requestKey && card.id === selection.id)
     ?? cards.find(card => card.id === result?.advice?.id) ?? cards.at(-1) ?? null;

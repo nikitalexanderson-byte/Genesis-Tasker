@@ -30,12 +30,14 @@ import {chooseSphragis,ritualInstructions} from './sphragis';
 import './gno.css';
 import {samePrimaryDraw} from './draw-policy';
 import drawAccessCopy from '../draw-access-copy.json';
+import {usePersonalMigrationSource} from '../use-personal-migration-source';
 
 const stamp=()=>new Date().toISOString();
 const localDay=()=>{const date=new Date();return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;};
 function Field({label,children}:{label:string;children:ReactNode}){return <label className="gno-field"><span>{label}</span>{children}</label>;}
-function AnswerQuestion({title,answer,onAnswer,c,g}:{title:string;answer?:Answer;onAnswer:(answer:Answer)=>void;c:GnoCopy;g:GuidedCopy}){
+function AnswerQuestion({title,answer,onAnswer,c,g,migrationOwner}:{title:string;answer?:Answer;onAnswer:(answer:Answer)=>void;c:GnoCopy;g:GuidedCopy;migrationOwner:string|null}){
  const [value,setValue]=useState<Answer['value']>(answer?.value??'unknown'),[basis,setBasis]=useState<NonNullable<Answer['basis']>|''>(answer?.basis??'');
+ usePersonalMigrationSource(migrationOwner,'aurora',()=>({current:null,state:{form:'gno-answer',title,value,basis,answer},settled:true}));
  const bases=['observed','checked','assumed','obstacle'] as const;
  return <fieldset className="gno-question"><legend>{title}</legend><div className="gno-answer-buttons">{(['yes','no','unknown'] as const).map(id=><label key={id}><input type="radio" name={'answer-'+title} checked={value===id} onChange={()=>{setValue(id);setBasis('');}}/><span>{c[id]}</span></label>)}</div>
   <Field label={c.evidence}><select aria-label={c.evidence} value={basis} onChange={e=>setBasis(e.target.value as typeof basis)}><option value="">{g.select}</option>{bases.map((id,i)=><option value={id} key={id} disabled={value==='yes'&&id==='obstacle'}>{g.bases[i]}</option>)}</select></Field>
@@ -52,6 +54,11 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
  const [inspected,setInspected]=useState<SectorId>('center'),[pickingSupport,setPickingSupport]=useState(false),[detailOpen,setDetailOpen]=useState(false),[more,setMore]=useState(false),[editingQuestion,setEditingQuestion]=useState<string|null>(null),[taskAdded,setTaskAdded]=useState(false);
  const [execution,setExecution]=useState<GnoObservation['execution']>('not_done'),[outcome,setOutcome]=useState<GnoObservation['outcome']>('unknown'),[note,setNote]=useState(''),[wordError,setWordError]=useState(false);
  const timer=useRef<ReturnType<typeof setTimeout>|null>(null),saving=useRef<Promise<boolean>|null>(null),mounted=useRef(true),body=useRef<HTMLDivElement|null>(null),title=useRef<HTMLHeadingElement|null>(null);
+ const migrationOwner=host.client==='web'&&host.captureMigration?host.ownerId:null;
+ usePersonalMigrationSource(migrationOwner,'aurora',()=>({current:host.captureMigration?.(docRef.current)??null,
+  state:{document:docRef.current,active,legacy,inspected,pickingSupport,detailOpen,more,editingQuestion,taskAdded,execution,outcome,note},
+  settled:!busy&&status!=='loading'&&status!=='saving',
+ }),host);
  const t=oldTranslate?.language===language?oldTranslate.t:(s:string)=>s;
  const visible=document?.sessions.filter(s=>s.gno)??[];
  const session=visible.find(s=>s.id===active),d=session?.gno;
@@ -161,19 +168,19 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
      <button type="button" className="secondary-button gno-mobile" onClick={()=>setDetailOpen(false)}>{c.spread}</button>
      {insight&&letter&&card?<><h3>{sourceName(inspected)} · {insight.name}</h3><p>{catalogText(SOURCE_CIRCLE_REFERENCE.find(row=>row.id===inspected)!.meaning,language)}</p><p className="gno-note">{insight.focus}</p>
       <h4>{c.letterApplication}</h4><p>{restorationLocal(RESTORATION_LETTER_FOCI[card.cardId].needs[d.blocker==='overload'?'excess':d.blocker==='conflict'?'conflict':'deficit'].action,language)}</p><details className="gno-reading"><summary>{g.reading}</summary><div className="gno-reading-art"><StoicheionCardFace letter={letter} reversed={insight.reversed} variant="dialog" language={language}/></div><h4>{insight.heading}</h4>{insight.lines.map((line,i)=><p key={i}>{line}</p>)}</details>
-      <AnswerQuestion key={`reading:${inspected}:${answerContext}`} title={`${g.cardFit} ${insight.focus}`} answer={d.answers[`reading:${inspected}`]} onAnswer={a=>answer(`reading:${inspected}`,a)} c={c} g={g}/>
+      <AnswerQuestion migrationOwner={migrationOwner} key={`reading:${inspected}:${answerContext}`} title={`${g.cardFit} ${insight.focus}`} answer={d.answers[`reading:${inspected}`]} onAnswer={a=>answer(`reading:${inspected}`,a)} c={c} g={g}/>
      </>:null}
      <h3>{c.bridge}</h3><p className="gno-muted">{c.chooseSupport}</p><div className="gno-bridge-suggestions">{suggestedBridges(session.primary,d).map(row=><button type="button" className="secondary-button" key={row.source} aria-pressed={d.support===row.source} onClick={()=>{edit({support:row.source});setInspected(row.source);}}>{sourceName(row.source)} → {sourceName(d.focus)}</button>)}</div>{support&&source?<><p className="gno-link-line">{catalogText(support.patrons,language)} → {d.object} → {catalogText(source.patrons,language)}</p>
-      <AnswerQuestion key={`resource:2026:${d.support}:${answerContext}`} title={`${g.resource} ${restorationLocal(RESTORATION_LETTER_FOCI[session.primary.cards.find(row=>row.sourcePositionId===d.support)!.cardId].needs[d.blocker==='overload'?'excess':d.blocker==='conflict'?'conflict':'deficit'].action,language)}`} answer={d.answers[`resource:2026:${d.support}`]} onAnswer={a=>answer(`resource:2026:${d.support}`,a)} c={c} g={g}/>
-      <AnswerQuestion key={bridgeKey(d)+answerContext} title={g.fit+' «'+d.object+'». '+d.criterion} answer={d.answers[bridgeKey(d)]} onAnswer={a=>answer(bridgeKey(d),a)} c={c} g={g}/>
-      <AnswerQuestion key={limitKey(d)+answerContext} title={g.risk} answer={d.answers[limitKey(d)]} onAnswer={a=>answer(limitKey(d),a)} c={c} g={g}/>
+      <AnswerQuestion migrationOwner={migrationOwner} key={`resource:2026:${d.support}:${answerContext}`} title={`${g.resource} ${restorationLocal(RESTORATION_LETTER_FOCI[session.primary.cards.find(row=>row.sourcePositionId===d.support)!.cardId].needs[d.blocker==='overload'?'excess':d.blocker==='conflict'?'conflict':'deficit'].action,language)}`} answer={d.answers[`resource:2026:${d.support}`]} onAnswer={a=>answer(`resource:2026:${d.support}`,a)} c={c} g={g}/>
+      <AnswerQuestion migrationOwner={migrationOwner} key={bridgeKey(d)+answerContext} title={g.fit+' «'+d.object+'». '+d.criterion} answer={d.answers[bridgeKey(d)]} onAnswer={a=>answer(bridgeKey(d),a)} c={c} g={g}/>
+      <AnswerQuestion migrationOwner={migrationOwner} key={limitKey(d)+answerContext} title={g.risk} answer={d.answers[limitKey(d)]} onAnswer={a=>answer(limitKey(d),a)} c={c} g={g}/>
       <p className="gno-note">{bridgeStrength(d)>0?c.confirmed:c.conditional}</p>
      </>:<p>{c.resourceUnknown}</p>}
      <GnoModelLinks draft={d} source={d.support??inspected} language={language} onTarget={externalFocus=>edit({externalFocus})}/>
      <details><summary>{c.math}</summary><p>{g.math}</p><p>{c.symbolicNote}</p></details>
     </div></div>:null}
     {d.step===2?<div className="gno-choice"><p className="gno-situation-line">{d.goal}</p><h3>{c.questions}</h3><p>{c.questionContext}: «{d.episode}»</p>
-     {question?<AnswerQuestion key={`${question}:${answerContext}`} title={fillGno(c[question as keyof GnoCopy] as string,values)} answer={d.answers[question]} onAnswer={a=>answer(question,a)} c={c} g={g}/>:<p>{c.answered}</p>}
+     {question?<AnswerQuestion migrationOwner={migrationOwner} key={`${question}:${answerContext}`} title={fillGno(c[question as keyof GnoCopy] as string,values)} answer={d.answers[question]} onAnswer={a=>answer(question,a)} c={c} g={g}/>:<p>{c.answered}</p>}
      <details><summary>{c.reviewAnswers}</summary>{CORE_QUESTIONS.filter(key=>d.answers[key]).map(key=><div className="gno-answer-review" key={key}><p>{fillGno(c[key],values)} <strong>{c[d.answers[key].value]}</strong></p><p>{d.answers[key].detail}</p><button type="button" className="secondary-button" onClick={()=>{setEditingQuestion(key);body.current?.scrollTo({top:0});}}>{c.reviewAnswers}</button></div>)}</details>
      <h3>{c.options}</h3><p>{c.optionsHelp}</p><p className="gno-note">{g.concrete[DOMAINS.indexOf(d.domain)]}</p>{options.length?<ol className="gno-options">{options.map(row=>{const i=MECHANISMS.indexOf(row.mechanism);return <li key={row.id}><div className="gno-option-heading"><h4>{c.actionTitles[i]}</h4><span>{row.minutes} {c.minuteUnit}</span></div><p className="gno-muted">{routeLabel(row)}</p><p>{actionBody(row)}</p>{row.routeMode==='staged'?<p>{g.prepare}</p>:row.routeMode==='supported'?<p>{fillGno(c.actionBodies[5],values)}</p>:null}<details><summary>{c.why}</summary><p>{row.quality>=0.55?c.fit:c.alternative}</p><p>{c.cost}: {row.minutes} {c.minuteUnit} · {c.blocker}: {c.blockers[BLOCKERS.indexOf(d.blocker)]}</p></details>{row.missing.length?<div className="gno-conditions"><strong>{c.conditions}</strong><ul>{row.missing.map(key=><li key={key}>{key==='people'?c.people:fillGno(c[key as keyof GnoCopy] as string,values)}</li>)}</ul></div>:null}<button type="button" className="secondary-button" disabled={Boolean(row.missing.length)||Boolean(nextQuestion(d))||d.plans.length>=100} onClick={()=>choose(row)}>{nextQuestion(d)?c.questions:row.missing.length?c.conditional:c.choose}</button></li>;})}</ol>:<p className="gno-note">{c.noOptions}</p>}
      <button type="button" className="secondary-button" onClick={()=>setMore(!more)}>{more?c.fewer:c.more}</button>

@@ -63,6 +63,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var trialTickerJob: Job? = null
     private val trialActivationMutex = Mutex()
     private val privateVaultLifecycle=java.util.concurrent.atomic.AtomicLong()
+    private val privateMigration=java.util.concurrent.atomic.AtomicReference<ru.genesis.calendar.security.E2eeProductMigrationController?>()
+    private val privateMigrationSetupMutex=Mutex()
     private val planGuidanceLeases = java.util.concurrent.ConcurrentHashMap<String, Pair<String, Long>>()
 
     private fun liveAccountSettings(response: JSONObject): AccountSettings? {
@@ -95,6 +97,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
 
     fun onTrialBackground() {
         privateVaultLifecycle.incrementAndGet()
+        privateMigration.getAndSet(null)?.close()
         ru.genesis.calendar.security.NativePrivateProducts.lock()
         client.setTrialForeground(false)
         trialRefreshJob?.cancel()
@@ -228,6 +231,47 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 && !mutableState.value.requiresSignIn && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "E2EE_ACCOUNT_CHANGED" }
         }
     }
+    internal fun e2eeScopeSetupTransport(uid:String,device:ru.genesis.calendar.security.UnlockedE2eeDevice):ru.genesis.calendar.security.E2eeScopeSetupTransport{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get()
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();device.requireOpen()
+            check(device.ownerId==uid&&client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+                &&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)){"E2EE_ACCOUNT_CHANGED"}}
+        return object:ru.genesis.calendar.security.E2eeScopeSetupTransport{
+            override suspend fun bootstrap(packet:JSONObject):JSONObject=withContext(Dispatchers.IO){current();check(packet.getJSONObject("command").getString("ownerId")==uid){"E2EE_SCOPE_BINDING_MISMATCH"};client.e2ee(generation,"/bootstrap",packet).also{current()}}
+            override suspend fun directory(scopeId:String):JSONObject=withContext(Dispatchers.IO){current();client.e2ee(generation,"/directory",JSONObject().put("scopeId",scopeId)).also{current()}}
+        }
+    }
+    internal suspend fun privateMigrationStatus():JSONObject{
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val generation=client.currentGeneration();val epoch=app.workspaceEpoch
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+            &&client.isTrialForeground()&&app.workspaceEpoch==epoch&&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)){"E2EE_ACCOUNT_CHANGED"}}
+        return withContext(Dispatchers.IO){current();client.e2ee(generation,"/status").also{current()}}
+    }
+    internal suspend fun preparePrivateMigration(secret:ByteArray,kit:JSONObject,assertEditorsFrozen:()->Unit):ru.genesis.calendar.security.E2eeProductMigrationController=privateMigrationSetupMutex.withLock{
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get()
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+            &&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)){"E2EE_ACCOUNT_CHANGED"}}
+        current();assertEditorsFrozen();check(privateMigration.get()==null){"E2EE_MIGRATION_BUSY"}
+        val account=object:ru.genesis.calendar.security.E2eeAccountTransport{
+            private fun call(path:String,body:JSONObject?=null):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
+            override fun status()=call("/status")
+            override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
+            override fun command(packet:JSONObject)=call("/command",packet)
+            override fun read(packet:JSONObject)=call("/read",packet)
+            override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
+        }
+        val sourceGeneration=withContext(Dispatchers.IO){current();NativeBackupEpochStore(app).accepted(CloudAccountSnapshot.scopeFor(uid))}
+        var opened:ru.genesis.calendar.security.E2eeProductMigrationController?=null
+        try{
+            val controller=ru.genesis.calendar.security.E2eeProductMigrationController.open(app,uid,secret,kit,sourceGeneration,
+                ru.genesis.calendar.security.E2eeProductMigrationController.Ports(account,{device->e2eeScopeSetupTransport(uid,device)},
+                    {_,directory,ports->e2eeMountedPersonalSources(uid,directory,ports)},
+                    {device,directory,sources,planning->e2eeMigrationTransport(uid,device,directory,sources,planning)},
+                    {device,directory->e2eePersonalLocalFence(uid,device,directory)},::current,assertEditorsFrozen))
+            opened=controller;current();check(privateMigration.compareAndSet(null,controller)){"E2EE_MIGRATION_BUSY"};current();controller
+        }catch(error:Throwable){opened?.let{privateMigration.compareAndSet(it,null);it.close()};throw error}
+    }
+    internal fun closePrivateMigration(controller:ru.genesis.calendar.security.E2eeProductMigrationController){privateMigration.compareAndSet(controller,null);controller.close()}
     internal fun e2eeMigrationTransport(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource,
         planning:ru.genesis.calendar.security.E2eeMigrationSession?=null): ru.genesis.calendar.security.E2eeSignedMigrationTransport {
@@ -497,6 +541,28 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val registry=ru.genesis.calendar.security.E2eeMigrationSources(uid,directory.scopeId,directory.kind,inventory)
         for(adapter in all)registry.registerIntegrated(adapter,::current)
         registry.stagedCapture();registry.stagedReconciliation();return registry
+    }
+    internal fun e2eeMountedPersonalSources(uid:String,directory:ru.genesis.calendar.security.E2eeDirectory.Verified,
+        transport:ru.genesis.calendar.security.E2eeLegacyReadTransport,
+        independentPhysisUnlock:suspend(JSONObject)->E2eePhysisCredential?={null}):ru.genesis.calendar.security.E2eeMigrationSources{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get()
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(directory.kind=="personal"&&directory.ownerId==uid&&directory.resourceId==uid
+            &&client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn&&client.isTrialForeground()
+            &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)){"E2EE_ACCOUNT_CHANGED"}}
+        current()
+        suspend fun mounted(kind:String)=ru.genesis.calendar.security.NativeMigrationMemory.content(uid,kind,::current)
+        val adapters=listOf<ru.genesis.calendar.security.E2eePrivatePathAdapter>(
+            e2eeWorkspaceSource(uid,directory,transport),
+            e2eeTasksSource(uid,directory,transport,ru.genesis.calendar.ui.NativeTasksSourceRuntime(app)){mounted("tasks")},
+            e2eeDiarySource(uid,directory,transport,ru.genesis.calendar.ui.NativeDiarySourceRuntime(app)){mounted("diary")},
+            e2eeMindmapsSource(uid,directory,transport,ru.genesis.calendar.ui.NativeMindmapsSourceRuntime(app)){mounted("mindmaps")},
+            e2eePhysisSource(uid,directory,transport,ru.genesis.calendar.ui.NativePhysisSourceRuntime(app),independentPhysisUnlock),
+            e2eeRemindersSource(uid,directory,transport,ru.genesis.calendar.ui.NativeRemindersSourceRuntime(app)){mounted("reminders")},
+            e2eeAuroraSource(uid,directory,transport,ru.genesis.calendar.ui.NativeAuroraSourceRuntime(app)){mounted("aurora")},
+            e2eeStoicheionSource(uid,directory,transport,ru.genesis.calendar.ui.NativeStoicheionSourceRuntime(app)){mounted("stoicheion")},
+            e2eeAdviceSource(uid,directory,transport,ru.genesis.calendar.ui.NativeAdviceSourceRuntime(app)){mounted("advice")},
+        )
+        return e2eeCompleteSources(uid,directory,transport,adapters,{ru.genesis.calendar.security.NativeMigrationMemory.localWork(uid,::current)},independentPhysisUnlock)
     }
     fun privateVaultDeviceExists(uid:String):Boolean=ru.genesis.calendar.security.E2eeDeviceVault(app,uid).exists()
     /** Called after Android's credential confirmation. Recovery input is kept
@@ -2304,6 +2370,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
 
     fun logout() = start("Закрываем серверную сессию…") { generation ->
         privateVaultLifecycle.incrementAndGet()
+        privateMigration.getAndSet(null)?.close()
+        mutableState.value.user?.uid?.let{ru.genesis.calendar.security.NativeMigrationMemory.clearOwner(it)}
         ru.genesis.calendar.security.NativePrivateProducts.lock()
         val previousScope = app.workspaceScope
         // begin() has already invalidated every in-flight response before touching stored credentials.

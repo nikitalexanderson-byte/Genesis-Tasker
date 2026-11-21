@@ -87,6 +87,10 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
             .put("occurrenceTask",occurrenceTask?.let{JSONObject(it.json())}?:JSONObject.NULL).put("occurrenceDate",occurrenceDate)
             .put("view",JSONObject(view.toString())).put("undo",org.json.JSONArray(undo.map{it.json()})).put("history",history?.let{org.json.JSONArray(it.map{row->row.json()})}?:JSONObject.NULL))})
     DisposableEffect(repo){val release=repo.registerMigrationEditor{migrationCapture()};onDispose{release()}}
+    RememberMigrationInput(repo.migrationOwner,if(repo.personalMigrationSource)"mindmaps"else"local-work",repo){
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(if(repo.personalMigrationSource)repo.captureMigration()else null,
+            migrationCapture(),!busy&&!loadFailed)
+    }
     if (map != null && !readOnly) NativeGuidanceBlockingSurface()
     fun run(action:suspend ()->Unit) { if(busy)return;busy=true;error=null;loadFailed=false;scope.launch {try { action() }catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=mindmapFailureMessage(e)}finally{busy=false} } }
     suspend fun refreshMaps() {

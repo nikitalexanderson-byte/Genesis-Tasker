@@ -58,6 +58,8 @@ import { RESTORATION_SECTORS } from "./stoicheion-restoration-data";
 import { restorationCopy, restorationLocal } from "./stoicheion-restoration-copy";
 import { readLocalTimelineDraw, saveLocalTimelineDraw, stoicheionWeekStart, receiveTimeline, timelineCardSeconds, timelineCardCanReroll, stoicheionTimelineCopy, type ClientTimelineRecord, type StoicheionTimePosition } from "./stoicheion-timeline";
 import "./stoicheion-timeline.css";
+import {usePersonalMigrationSource} from './use-personal-migration-source';
+import {usesPrivateProductStorage} from './cloud-sync';
 import { FutureModelingGuide, FutureModelingGuideTrigger } from "./FutureModelingGuide";
 import { snapshotFromSavedDraw, createTemporalTriad } from "./aurora/draw-policy";
 import type { AuroraTaskRequest } from "./aurora/host";
@@ -560,6 +562,10 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
   const [drawErrorKind, setDrawErrorKind] = useState<MotionMode>("daily");
   const [privateOperationRevision,setPrivateOperationRevision]=useState(0);
   const [clock, setClock] = useState(() => Date.now());
+  usePersonalMigrationSource(userId&&!usesPrivateProductStorage(userId)?userId:null,'stoicheion-draws',()=>({
+    draws:[dailyDraw,spreadDraw,timelineDraw].filter(value=>value!==null),timeline:timelineSession,
+    settled:drawsReady&&savingKind===null&&motion===null,
+  }));
   const today = useMemo(() => new Date(), []);
   const dayKey = useMemo(() => localDayKey(today), [today]);
   const dateLabel = useMemo(
