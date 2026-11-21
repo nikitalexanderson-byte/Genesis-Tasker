@@ -25,6 +25,21 @@ export class IndexedDbE2eeStorage implements E2eeRecordStorage {
   constructor(factory: IDBFactory = indexedDB) {
     this.#database = openE2eeDatabase(factory);
   }
+  /** Provider-wide counts only; all accounts/scopes and protected key bundles
+   * are included without opening their contents or granting read authority. */
+  async providerCounts():Promise<Readonly<{records:number;keyRecords:number}>> {
+    const db=await this.#database;
+    return new Promise((resolve,reject)=>{
+      const transaction=db.transaction(['records','keyMaterial'],'readonly');let records:number|undefined,keyRecords:number|undefined;
+      const entries=transaction.objectStore('records').count(),keys=transaction.objectStore('keyMaterial').count();
+      entries.onsuccess=()=>{records=entries.result;};keys.onsuccess=()=>{keyRecords=keys.result;};
+      transaction.oncomplete=()=>{
+        if(typeof records!=='number'||typeof keyRecords!=='number'||!Number.isSafeInteger(records)||!Number.isSafeInteger(keyRecords)||records<0||keyRecords<0){reject(new Error('E2EE_STORAGE_USAGE_UNAVAILABLE'));return;}
+        resolve(Object.freeze({records,keyRecords}));
+      };
+      transaction.onerror=transaction.onabort=()=>reject(new Error('E2EE_STORAGE_USAGE_UNAVAILABLE'));
+    });
+  }
   async get(key: string) {
     const db = await this.#database;
     return new Promise<SealedLocalRecord|null>((resolve, reject) => {

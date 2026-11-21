@@ -3,9 +3,11 @@ package ru.genesis.calendar.security
 import android.content.Context
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
+import android.os.StatFs
 import org.json.JSONObject
 import java.io.Closeable
 import java.io.File
+import java.nio.file.Files
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.UUID
@@ -28,10 +30,12 @@ interface E2eeRecordStorage {
  * replaced during unlock, background work or recovery of an existing device. */
 class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRecordStorage, Closeable {
     private val database: SQLiteDatabase
+    private val folder=context.applicationContext.noBackupFilesDir
+    private val databaseFile=File(folder,"e2ee-records-v1.sqlite")
     companion object { private val openLock = Any() }
     init {
         database = synchronized(openLock) {
-            val file = File(context.applicationContext.noBackupFilesDir, "e2ee-records-v1.sqlite")
+            val file = databaseFile
             val existed = file.exists()
             if (!existed && !allowCreate) throw IllegalStateException("E2EE_STORAGE_MISSING")
             val handler = DatabaseErrorHandler { db ->
@@ -65,6 +69,33 @@ class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRe
         "SELECT record_key FROM records WHERE substr(record_key,1,?)=? ORDER BY record_key LIMIT 10001", arrayOf(prefix.length.toString(),prefix)).use { cursor ->
         buildList { while (cursor.moveToNext()) { check(size < 10000) { "E2EE_LOCAL_RECORD_LIMIT" }; add(cursor.getString(0)) } }
     }
+    /** All namespace rows and encrypted device bundles are counted without
+     * reading/decrypting their contents. Physical free space is provider state,
+     * not permission to read another namespace or a durable reservation. */
+    @Synchronized internal fun providerUsage():E2eeStorageAdmission.Usage {
+        try{
+            val base=folder.canonicalFile
+            fun length(file:File):Long {
+                check(file.isFile&&file.canonicalFile.parentFile==base){"E2EE_STORAGE_USAGE_UNAVAILABLE"}
+                return file.length().also{check(it in 0..9007199254740991L){"E2EE_STORAGE_USAGE_UNAVAILABLE"}}
+            }
+            var bytes=length(databaseFile)
+            for(suffix in listOf("-journal","-wal","-shm")){
+                val file=File(folder,databaseFile.name+suffix);if(file.exists())bytes=E2eeStorageAdmission.add(bytes,length(file))
+            }
+            val names=mutableSetOf<String>();val pattern=Regex("e2ee-device-([a-f0-9]{64})\\.vault(?:\\.(?:bak|new))?")
+            Files.newDirectoryStream(folder.toPath(),"e2ee-device-*").use{files->for(path in files){
+                val file=path.toFile();val match=pattern.matchEntire(file.name)?:error("E2EE_STORAGE_USAGE_UNAVAILABLE")
+                names+=match.groupValues[1];check(names.size<=1000){"E2EE_STORAGE_CAPACITY"}
+                bytes=E2eeStorageAdmission.add(bytes,length(file))
+            }
+            }
+            val records=database.rawQuery("SELECT COUNT(*) FROM records",null).use{cursor->check(cursor.moveToFirst());cursor.getLong(0)}
+            check(records in 0..9007199254740991L){"E2EE_STORAGE_USAGE_UNAVAILABLE"}
+            val available=StatFs(folder.absolutePath).availableBytes
+            return E2eeStorageAdmission.Usage(records,names.size.toLong(),bytes,E2eeStorageAdmission.add(bytes,available))
+        }catch(error:Exception){throw IllegalStateException(if(error.message=="E2EE_STORAGE_CAPACITY")"E2EE_STORAGE_CAPACITY"else"E2EE_STORAGE_USAGE_UNAVAILABLE")}
+    }
     @Synchronized override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
         require(changes.size in 1..10000 && changes.map { it.key }.toSet().size == changes.size) { "E2EE_INVALID_LOCAL_BATCH" }
         requireOpen(); database.beginTransaction()
@@ -92,6 +123,10 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
     private val scope = AtomicReference<Scope?>(value)
     private val lifecycle = AtomicLong(0)
     fun requireOpen():Scope = scope.get() ?: throw IllegalStateException("E2EE_UNLOCK_REQUIRED")
+    internal fun providerUsage():E2eeStorageAdmission.Usage {
+        requireOpen();val provider=storage as? E2eeSqliteStorage?:error("E2EE_STORAGE_PROVIDER_REQUIRED")
+        val usage=provider.providerUsage();requireOpen();return usage
+    }
     override fun assertOpen() { requireOpen() }
     fun lock() { lifecycle.incrementAndGet();scope.set(null) }
     data class LocalIdentity(val ownerId: String, val scopeId: String, val deviceId: String)

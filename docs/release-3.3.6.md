@@ -2604,3 +2604,28 @@ adapter. Следующие этапы: обязательные HTTP factories 
 полный state4 content plan/common reader/custody и11 remaining categories.
 Coverage9/20 и все gates сохраняются. APK до3.3.5 исключены владельцем;
 поддерживаемый upgrade начинается с3.3.5/149.
+
+## 21 ноября: общая ёмкость защищённого provider
+
+Принято измерение всех namespaces и encrypted key bundles без открытия чужих
+bodies: web использует COUNT двух IDB stores и настоящую origin storage estimate,
+native — COUNT SQLite, размеры DB/journal/WAL/SHM, device vault/atomic backups и
+StatFs. Ограниченная JS/Kotlin арифметика учитывает запись, rewrite и reserve;
+unknown quota, shrinking quota, overflow и превышение counts отказывают.
+Snapshot свободного места не объявляется физической резервацией или proof EOF.
+
+Full JS2033/2033, Chromium15715/15/console0, owned TSC/scoped ESLint и web build
+PASS. Native build11м19с, JVM1397 PASS/0 failure/8 existing opt-in HTTP skips.
+API26/API34 каждый19/19,0 failure/skip, exact source/APK hashes сверены, временные
+PIN двух owned AVD возвращены в NONE. API34 credential-UI setup failures и
+keyguard precondition attempt сохранены отдельно; финальный08 использует
+системную проверку известного synthetic PIN и наблюдаемый SystemUI pinEntry.
+Это не продуктовая приёмка системного dialog, process kill или recovery.
+Native lint14м21с:0 errors/208 warnings/8 hints, без новых issue/file pairs
+и увеличения counts. После lint/web build hashes source/APK/prompt проверены.
+Точные hashes, evidence и ограничения — `docs/e2ee-336-provider-admission.md`.
+
+Следующий этап — обязательная admission реальных записей source/plan/coordinator/
+remote-original и capture factories. Пока growth передаётся вызывающим кодом;
+это не готовая обязательная интеграция. Coverage9/20, production3.3.5/149,
+floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false сохраняются.
