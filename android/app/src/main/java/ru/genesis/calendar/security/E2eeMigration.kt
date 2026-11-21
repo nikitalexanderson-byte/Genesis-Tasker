@@ -133,11 +133,13 @@ class E2eeMigration(
             if(number(state,"protocol")!=1L)state.getBoolean("planned")else state.getJSONArray("plan").length()>0,
             if(number(state,"protocol")>=3L)"source-stage-v1" else "legacy",number(state,"protocol").toInt())
     }
-    private fun save(loaded: Loaded, extra: List<UnlockedE2eeVault.Write> = emptyList()) {
+    private fun save(loaded: Loaded, extra: List<UnlockedE2eeVault.Write> = emptyList(),current:()->Unit=vault::requireOpen) {
+        current()
         val bytes = encoded(loaded.state)
         try {
             if(number(loaded.state,"protocol")==4L)decode(bytes)
-            vault.write(extra + UnlockedE2eeVault.Write("local-snapshot",stateId,bytes,loaded.serial.takeIf { it > 0 }))
+            vault.write(extra + UnlockedE2eeVault.Write("local-snapshot",stateId,bytes,loaded.serial.takeIf { it > 0 }),current)
+            current()
             loaded.serial++;loaded.rawHash=hash(bytes)
         } finally { bytes.fill(0) }
     }
@@ -194,7 +196,7 @@ class E2eeMigration(
             val totals=E2eeMigrationStage.verify(vault,source,target,required,current);current()
             changes+=E2eeMigrationStage.publicationGuard(vault,source,target,required,current);current()
             options.admit(E2eeSourceStage.Admission(totals.first,totals.second,bytes.size+changes.sumOf{it.bytes.size}));current()
-            save(Loaded(state,old?.serial?:0),changes);current()
+            save(Loaded(state,old?.serial?:0),changes,current);current()
         }finally{bytes.fill(0);changes.forEach{it.bytes.fill(0)}}
     }
     private fun snapshot(state: JSONObject): ByteArray {
@@ -343,7 +345,7 @@ class E2eeMigration(
                         val metadata=totals.metadataBytes.toLong()+raw.bytes.size+bytes.size+guard.bytes.size
                         check(metadata<=options.capacity.maximumMetadataBytes){"E2EE_SOURCE_HISTORY_CAPACITY"}
                         options.admit(E2eeMigrationHistory.Admission(totals.bytes,totals.parts,metadata.toInt(),totals.sources));current()
-                        save(Loaded(next,loaded.serial),listOf(guard,UnlockedE2eeVault.Write("local-snapshot",originalId,raw.bytes,null)));current()
+                        save(Loaded(next,loaded.serial),listOf(guard,UnlockedE2eeVault.Write("local-snapshot",originalId,raw.bytes,null)),current);current()
                     }finally{bytes.fill(0);guard.bytes.fill(0)}
                 }finally{raw?.bytes?.fill(0)}
                 loaded=load();current()
@@ -382,7 +384,7 @@ class E2eeMigration(
             try{
                 check(bytes.size.toLong()+guard.bytes.size<=policy.options.capacity.maximumMetadataBytes){"E2EE_SOURCE_HISTORY_CAPACITY"}
                 policy.options.admit(E2eeMigrationHistory.Admission(0,0,bytes.size+guard.bytes.size,1));current();policy.options.device.ensureDurableKeys();current()
-                save(Loaded(next,loaded.serial),listOf(guard));current()
+                save(Loaded(next,loaded.serial),listOf(guard),current);current()
             }finally{guard.bytes.fill(0);bytes.fill(0)}
         }
     }
@@ -392,7 +394,7 @@ class E2eeMigration(
             .put("securityEpoch",securityEpoch).put("operationId",operationId).put("payload",payload),signingKey)
     private fun lease(state: JSONObject) = nullable(state,"lease") ?: throw IllegalStateException("E2EE_CORRUPT_MIGRATION")
     private suspend fun send(loaded: Loaded, packet: JSONObject,current:()->Unit=vault::requireOpen) {
-        current();loaded.state.put("pending",JSONObject(packet.toString())); save(loaded);current(); replay(loaded,current)
+        current();loaded.state.put("pending",JSONObject(packet.toString())); save(loaded,current=current);current(); replay(loaded,current)
     }
     private suspend fun replay(loaded: Loaded,current:()->Unit=vault::requireOpen) {
         val state = loaded.state; val pending = nullable(state,"pending") ?: error("E2EE_CORRUPT_MIGRATION")
@@ -431,7 +433,7 @@ class E2eeMigration(
             "migration-cancel" -> { receipt(result.get("state") == "preparing"); state.put("phase","cancelled") }
             else -> error("E2EE_CORRUPT_MIGRATION")
         }
-        current();state.put("pending",JSONObject.NULL); save(loaded);current()
+        current();state.put("pending",JSONObject.NULL); save(loaded,current=current);current()
     }
     private suspend fun resume(loaded: Loaded,current:()->Unit=vault::requireOpen) {
         current()
@@ -441,7 +443,7 @@ class E2eeMigration(
             state.put("resuming",packet(state,"migration-resume",JSONObject().put("migrationId",state.get("migrationId"))
                 .put("fence",lease.get("fence")).put("sourceHash",state.get("sourceHash"))
                 .put("pendingOperationId",pending?.get("operationId") ?: JSONObject.NULL).put("pendingHash",pending?.let(E2eeCommands::hash) ?: JSONObject.NULL)))
-            current();save(loaded);current()
+            current();save(loaded,current=current);current()
         }
         current();vault.requireOpen(); val result = transport.command(JSONObject(state.getJSONObject("resuming").toString()));current(); vault.requireOpen()
         receipt(number(result,"fence",1) == number(lease,"fence",1)+1 && number(result,"generation",1) == number(lease,"generation",1))
@@ -455,7 +457,7 @@ class E2eeMigration(
             val renewed = JSONObject(previous.toString()); renewed.getJSONObject("payload").put("fence",result.get("fence"))
             state.put("pending",E2eeCommands.sign(renewed,signingKey))
         }
-        current();state.put("resuming",JSONObject.NULL); save(loaded);current()
+        current();state.put("resuming",JSONObject.NULL); save(loaded,current=current);current()
     }
     private suspend fun plan(loaded: Loaded) {
         val state = loaded.state; val local = snapshot(state); val previous = mutableListOf<ByteArray>(); var content = emptyList<E2eeMigrationContent>();var localContent=emptyList<E2eeMigrationContent>()

@@ -117,7 +117,7 @@ async function inventory(options:RemoteOriginalReadOptions):Promise<Inventory>{
 function within(usage:RemoteOriginalAdmission,limit:RemoteOriginalCapacity){if(usage.bytes>limit.maximumBytes||usage.parts>limit.maximumParts||usage.observations>limit.maximumObservations||usage.records>limit.maximumRecords||usage.metadataBytes>limit.maximumMetadataBytes)throw new Error('E2EE_REMOTE_ORIGINAL_CAPACITY');}
 async function stable(options:RemoteOriginalReadOptions,previous:Inventory){if((await inventory(options)).stamp!==previous.stamp)throw new Error('E2EE_REMOTE_ORIGINAL_BUSY');}
 function write(id:string,value:unknown,expected:number|null):LocalWrite{return{domain:'local-snapshot',objectId:id,value:encoded(value),expected};}
-async function commit(options:RemoteOriginalOptions,changes:LocalWrite[]){try{check(options);await options.vault.write(changes);check(options);}finally{changes.forEach(row=>row.value.fill(0));}}
+async function commit(options:RemoteOriginalOptions,changes:LocalWrite[]){try{check(options);await options.vault.write(changes,()=>check(options));check(options);}finally{changes.forEach(row=>row.value.fill(0));}}
 async function packetBinding(packet:SignedE2eeCommand,signer:CryptoKey,scope:Context,generation:number):Promise<Binding>{
  const command=await verifyE2eeCommand(packet,signer);if(command.ownerId!==scope.ownerId||command.scopeId!==scope.scopeId||command.deviceId!==scope.deviceId||!actions.has(command.action))throw new Error('E2EE_REMOTE_ORIGINAL_CONTEXT');
  const payload=command.payload;const names=['migrationId','fence','sourceHash',...(Object.hasOwn(payload,'table')?['table','offset']:[]),...(Object.hasOwn(payload,'byteOffset')?['byteOffset']:[])];exactKeys(payload,names);
@@ -151,7 +151,7 @@ export class ProtectedRemoteOriginal implements E2eeHttpObservation {
    await this.#options.ensureDurableKeys();this.#current();const previous=await inventory(this.#options),j:Journal={protocol:1,purpose:PURPOSE,id:this.#id,context:this.#scope,binding:this.#binding,request:{size:bytes.length,hash:bytesHash(bytes)},response:null,phase:'registered',size:0,parts:[],rawHash:null,manifestHash:null};
    const index={...previous.catalog,ids:[...previous.catalog.ids,this.#id]},jbytes=encoded(j),cbytes=encoded(index),oldCatalog=encoded(previous.catalog);
    try{await this.#admit(previous,{...previous.usage,observations:previous.usage.observations+1,records:previous.usage.records+2+(previous.serial===null?1:0),metadataBytes:previous.usage.metadataBytes+jbytes.length+bytes.length+cbytes.length-(previous.serial===null?0:oldCatalog.length)});
-    await commit(this.#options,[write(catalogKey(previous.hash),index,previous.serial),{domain:'local-snapshot',objectId:key(previous.hash,this.#id,'r'),value:bytes,expected:null},write(key(previous.hash,this.#id,'j'),j,null)]);this.#current();this.#journal=j;this.#serial=1;
+    await commit({...this.#options,assertCurrent:()=>this.#current()},[write(catalogKey(previous.hash),index,previous.serial),{domain:'local-snapshot',objectId:key(previous.hash,this.#id,'r'),value:bytes,expected:null},write(key(previous.hash,this.#id,'j'),j,null)]);this.#current();this.#journal=j;this.#serial=1;
    }finally{jbytes.fill(0);cbytes.fill(0);oldCatalog.fill(0);}
   }finally{bytes.fill(0);}
  });}
@@ -160,7 +160,7 @@ export class ProtectedRemoteOriginal implements E2eeHttpObservation {
   const body=encoded(j),oldBody=encoded(this.#journal),m=finished?encoded(manifest(j)):null;
   try{await this.#admit(previous,{...previous.usage,bytes:previous.usage.bytes+(part?.length??0),parts:previous.usage.parts+(part?1:0),records:previous.usage.records+(part?1:0)+(m?1:0),metadataBytes:previous.usage.metadataBytes+body.length-oldBody.length+(m?.length??0)});
    const changes=[write(key(previous.hash,this.#id,'j'),j,this.#serial)];if(part)changes.push({domain:'local-snapshot',objectId:key(previous.hash,this.#id,'p',j.parts.length-1),value:part,expected:null});if(m)changes.push({domain:'local-snapshot',objectId:key(previous.hash,this.#id,'m'),value:m,expected:null});
-   await commit(this.#options,changes);this.#current();this.#journal=j;this.#serial++;
+   await commit({...this.#options,assertCurrent:()=>this.#current()},changes);this.#current();this.#journal=j;this.#serial++;
   }finally{body.fill(0);oldBody.fill(0);m?.fill(0);}
  }
  begin(value:Response){const saved=snapshotE2eeValue(value);return this.#operation(async()=>{response(saved);if(!this.#journal||this.#journal.phase!=='registered')invalid();await this.#publish({...this.#journal,response:saved,phase:'receiving'});});}

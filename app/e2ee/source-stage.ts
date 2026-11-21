@@ -124,7 +124,7 @@ async function knownCatalog(vault:SourceStageReadVault,scope:Context,hash:string
 }
 function write(id:string,value:unknown,expected:number|null):LocalWrite{return{domain:'local-snapshot',objectId:id,value:canonical(value),expected};}
 async function commit(vault:UnlockedE2eeVault,changes:LocalWrite[],check:()=>void){
- try{current(vault,check);await vault.write(changes);current(vault,check);}finally{changes.forEach(row=>row.value.fill(0));}
+ try{current(vault,check);await vault.write(changes,()=>current(vault,check));current(vault,check);}finally{changes.forEach(row=>row.value.fill(0));}
 }
 
 /** Local signed-AEAD quarantine only. A complete stage is still inert until the

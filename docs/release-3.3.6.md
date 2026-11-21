@@ -2661,3 +2661,24 @@ input1AD0 не объявляется lint нового2979. Данные и о�
 Coverage9/20 и все rollout gates сохраняются. Далее — mandatory capture factories,
 awaited/revocable planning session и durable complete-original binding; затем
 state4 content plan/common reader/custody и11 remaining real categories.
+
+## 21 ноября: scoped guard до физической transaction
+
+Исправляется подтверждённая browser RED гонка: правильный отказ операции
+после quota await сопровождался поздней публикацией трёх служебных rows при
+всё ещё открытом vault. Source/plan/raw/coordinator guard теперь проходит до
+actual provider commit. Web73/73 и JS2044/2044 PASS, включая отдельные state3/
+state4 retirement; ciphertext остаётся неизменным. Final native inputD57549
+прошёл JVM1398 PASS/8 existing opt-in HTTP skips, API26/API34 каждый27/27 и full
+lint0 errors/208 warnings/8 hints без regressions. Все methods/source/APK/prompt
+identities и PIN NONE проверены; API34 credential dialog не принят этим run.
+Первый device run26/27 имел ошибку параметров нового теста; исправленный test APK
+повторно прошёл27/27 на каждом API с побайтно прежним main APK. `build:web` PASS,
+принятая галерея и disclosures сохранены. Результаты старого APK2979 к этому
+input не относятся. Точный ход и ограничения —
+`docs/e2ee-336-current-write-guards.md`.
+
+Следующий awaited capture/session разрабатывается отдельным runtime-черновиком,
+не меняя frozen input текущей сборки. Его6 component и21 coordinator/transport
+model cases не заменяют приёмку реальных authenticated web/native factories.
+Coverage9/20,3.3.5/149 production и все rollout gates сохраняются.

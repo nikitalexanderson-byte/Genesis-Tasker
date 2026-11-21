@@ -30,9 +30,14 @@ class E2eeContentPlanDeviceTest {
         val alias="genesis.qa.content-plan.${UUID.randomUUID()}";val legacy=LocalCipher(alias);val secret=E2eeKeys.freshSecret()
         val localRaw=E2eeKeys.freshSecret();val contentRaw=E2eeKeys.freshSecret();val localRoot=E2eeEnvelope.importRoot(localRaw);val contentRoot=E2eeEnvelope.importRoot(contentRaw);val keys=E2eeKeys.generateDeviceKeys()
         val publicSpki=E2eeKeys.publicKeys(keys).getString("signingKey");val localKeyId="plan-local-root";val actor=UnlockedE2eeVault.LocalIdentity("plan-actor","device:plan-source","plan-device")
-        var storage=E2eeSqliteStorage(context,true);var live=true;var originalComplete=true
+        var storage=E2eeSqliteStorage(context,true);var live=true;var originalComplete=true;var beforeCommit:(()->Unit)?=null
         val current:()->Unit={check(live){"E2EE_ACCOUNT_CHANGED"}}
-        val vault=UnlockedE2eeVault(storage,UnlockedE2eeVault.Scope(actor.ownerId,actor.scopeId,actor.deviceId,1,1,1,localKeyId,keys.signing.private,mapOf(localKeyId to localRoot)){if(it==actor.deviceId)keys.signing.public else null})
+        private val port=object:E2eeRecordStorage {
+            override fun get(key:String)=storage.get(key)
+            override fun list(prefix:String)=storage.list(prefix)
+            override fun commit(changes:List<E2eeStorageChange>,requireOpen:()->Unit){beforeCommit?.invoke();storage.commit(changes,requireOpen)}
+        }
+        val vault=UnlockedE2eeVault(port,UnlockedE2eeVault.Scope(actor.ownerId,actor.scopeId,actor.deviceId,1,1,1,localKeyId,keys.signing.private,mapOf(localKeyId to localRoot)){if(it==actor.deviceId)keys.signing.public else null})
         val inventory=E2eePrivatePaths.load(app);val paths=inventory.required("personal").map{it.id};val target=E2eeSourceStage.Target("content-owner","personal:content-plan","personal")
         val base=E2eeEnvelope.Context.fromJson(JSONObject().put("cryptoProtocol",1).put("suite",E2eeEnvelope.SUITE).put("ownerId",target.ownerId).put("scopeId",target.scopeId)
             .put("domain","workspace").put("objectId","plan-context").put("schemaVersion",1).put("dataGeneration",2).put("writerProtocol",9).put("cryptoEpoch",1).put("securityEpoch",1)
@@ -76,6 +81,15 @@ class E2eeContentPlanDeviceTest {
         override fun read():Int {val one=ByteArray(1);return try{if(read(one,0,1)<0)-1 else one[0].toInt() and 255}finally{one.fill(0)}}
         override fun read(bytes:ByteArray,offset:Int,length:Int):Int {if(at==size){eof=true;return -1};val count=minOf(length,65536,size-at);for(index in 0 until count)bytes[offset+index]=((at+index)*31+path*17).toByte();at+=count;return count}}
     companion object {private fun save(file:File,value:JSONObject){file.outputStream().use{out->out.write(value.toString().toByteArray());out.fd.sync()}}}
+    @Test fun retiredPlanCreationCannotCommitWhileTheVaultRemainsOpen(){
+        Rig().use{f->
+            f.vault.write(listOf(UnlockedE2eeVault.Write("draft","accepted-original","SYNTHETIC ACCEPTED ORIGINAL".toByteArray(),null)))
+            fun snapshot()=f.storage.list("").sorted().map{key->val row=requireNotNull(f.storage.get(key));"$key:${row.serial}:${row.envelope.toJson()}"}
+            val before=snapshot();f.beforeCommit={f.beforeCommit=null;f.live=false}
+            val error=assertThrows(IllegalStateException::class.java){E2eeContentPlan.create(f.options())}
+            assertEquals("E2EE_ACCOUNT_CHANGED",error.message);f.vault.assertOpen();assertEquals(before,snapshot())
+        }
+    }
     @Test fun boundedPlanColdReadChecksAllEightyMiBAfterOnlyTheSyntheticOldAliasIsDeleted(){
         Rig().use{f->val started=SystemClock.elapsedRealtime();val writer=E2eeContentPlan.create(f.options());val size=40*1024*1024;val sources=mutableListOf<Generated>()
             for(path in 0..1){val source=Generated(size,path);sources+=source;writer.append("personal.workspace",E2eeContentPlan.Record("remote","workspace","payload-$path",size,source,"\uFEFF\uD800-\uDFFF-α/$path","application/octet-stream"));assertTrue(source.eof)}

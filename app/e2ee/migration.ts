@@ -124,7 +124,7 @@ export class E2eeMigration {
   }
   async #save(state: MigrationState, serial: number|null, extra: LocalWrite[] = [],current:()=>void=()=>this.#vault.assertUnlocked()) {
     const value=encoder.encode(JSON.stringify(state));
-    try {if(state.protocol===4){if(value.length>4*1024*1024)throw new Error('E2EE_STREAMED_METADATA_LIMIT');this.#localEntries(decodeState(value));}const objectId=await this.#stateId;current();await this.#vault.write([...extra,{domain:'local-snapshot',objectId,value,expected:serial}]);current(); }
+    try {if(state.protocol===4){if(value.length>4*1024*1024)throw new Error('E2EE_STREAMED_METADATA_LIMIT');this.#localEntries(decodeState(value));}const objectId=await this.#stateId;current();await this.#vault.write([...extra,{domain:'local-snapshot',objectId,value,expected:serial}],current);current(); }
     finally { value.fill(0); }
     return serial === null ? 1 : serial+1;
   }
@@ -179,7 +179,7 @@ export class E2eeMigration {
       const totals=await verifyStagedMigrationSnapshot(this.#vault,source,current);current();
       changes.push(await stagedMigrationPublicationGuard(this.#vault,source,current));current();
       await options.admit({...totals,metadataBytes:encoded.length+changes.reduce((total,row)=>total+row.value.length,0)});current();
-      await this.#save(state,old?.serial??null,changes);current();
+      await this.#save(state,old?.serial??null,changes,current);current();
     }finally{encoded.fill(0);changes.forEach(row=>row.value.fill(0));}
   }
   async #snapshot(state: MigrationState) {

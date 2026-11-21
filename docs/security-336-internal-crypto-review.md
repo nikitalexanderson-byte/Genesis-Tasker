@@ -218,3 +218,21 @@ bundle, плюс15 regression cases на каждом. Точные identities/�
 не выполненный для нового input полный native lint —
 `e2ee-336-provider-write-admission.md`. Это внутреннее продолжение review того
 же исполнителя, не независимое заключение и не полнота source coverage/recovery.
+
+## Продолжение21 ноября: scoped lifetime внутри actual write
+
+Actual Chromium RED показал, что producer guard перед `vault.write` не покрывал
+новую quota await: операция уже retired, ошибка ACCOUNT_CHANGED возвращается,
+но три служебные rows всё же публикуются. Открытый vault сам по себе не означает
+актуальную операцию. Guard теперь передаётся через scoped source/plan/raw/state
+writers до настоящей IDB/SQLite transaction; `.close()` raw observer учитывается
+тем же путём. Trusted cancellation identity не подменяется provider sanitation.
+
+Web GREEN проверяет неизменный ciphertext inventory, state3/state4 pointers и
+cursor AbortError. Final native inputD57549 принят: API26/API34 каждый27/27,
+JVM1398 PASS/8 existing HTTP opt-in skips, full lint без новых issue/file pairs
+или count increases. Native fixture callback исправлен и все device cases
+повторены на свежем test APK с прежним main APK; ошибочный run не считается PASS.
+Точные доказательства и пределы — `e2ee-336-current-write-guards.md`.
+Это внутренний review исполнителя; полный coverage/recovery и все обычные
+writers/account sessions этим изменением не объявляются завершёнными.

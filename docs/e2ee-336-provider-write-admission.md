@@ -1,5 +1,12 @@
 # Обязательная admission реальных защищённых записей
 
+Дополнение21 ноября: отложенный полный native lint выполнен на следующем
+inputD57549, включающем эти provider writes и scoped current guards.0 errors/
+208 warnings/8 hints, без новых issue/file pairs/count increases; API26/API34
+каждый27/27. Точные identities и пределы — `e2ee-336-current-write-guards.md`.
+Ниже сохранён исходный результат input2979; его deferred-lint формулировки
+относятся к тому checkpoint и не являются текущим незакрытым блокером.
+
 21 ноября 2026. Функциональная приёмка web/native границы записи пройдена.
 Полный native lint нового input отложен до следующего интеграционного checkpoint;
 этот результат не означает полную релизную приёмку или выпуск3.3.6.

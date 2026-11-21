@@ -333,6 +333,6 @@ private object StageCodec {
     }
     fun write(id: String, value: Any, expected: Long?) = UnlockedE2eeVault.Write(DOMAIN, id, canonical(value), expected)
     fun commit(vault: UnlockedE2eeVault, changes: List<UnlockedE2eeVault.Write>, check: () -> Unit) {
-        try { current(vault, check); vault.write(changes); current(vault, check) } finally { changes.forEach { it.bytes.fill(0) } }
+        try { current(vault, check); vault.write(changes){current(vault,check)}; current(vault, check) } finally { changes.forEach { it.bytes.fill(0) } }
     }
 }

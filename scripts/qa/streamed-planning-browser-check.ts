@@ -43,10 +43,32 @@ try{
  const stateId='migration:'+hash(encoder.encode(scopeId));
  const readState=async()=>{const row=await device.vault.read('local-snapshot',stateId);if(!row)throw new Error('E2EE_STATE_MISSING');try{return JSON.parse(new TextDecoder().decode(row.value));}finally{row.value.fill(0);}};
  const cold=async()=>{device.lock();storage=new IndexedDbE2eeStorage();keys=new IndexedDbDeviceKeyStorage();device=await UnlockedWebDevice.unlock(ownerId,recovery.secret,storage,keys);migration=make();};
- await migration.prepareStaged({target,paths,async capturePath(path,write){
+ const staged={target,paths,async capturePath(path:string,write:(bytes:Uint8Array)=>Promise<void>){
   const size=path===paths[0]?1024*1024+7:31;for(let at=0;at<size;at+=65536){const part=Uint8Array.from({length:Math.min(65536,size-at)},(_,offset)=>(at+offset+paths.indexOf(path))&255);try{await write(part);}finally{part.fill(0);}}
- }},{capacity:{maximumBytes:16*1024*1024,maximumParts:1000},assertCurrent:current,admit:async()=>{}});
+ }},stagedOptions={capacity:{maximumBytes:16*1024*1024,maximumParts:1000},assertCurrent:current,admit:async()=>{}};
+ const originalCommit=storage.commit.bind(storage),initialEstimate=navigator.storage.estimate.bind(navigator.storage);
+ let pointerEntered!:()=>void,pointerRelease!:(estimate:StorageEstimate)=>void,beforePointer='';
+ const pointerWaiting=new Promise<void>(resolve=>{pointerEntered=resolve;}),pointerQuota=new Promise<StorageEstimate>(resolve=>{pointerRelease=resolve;});
+ storage.commit=async(...args:Parameters<IndexedDbE2eeStorage['commit']>)=>{
+  if(args[0].some(change=>change.value?.envelope.context.objectId===stateId)){
+   beforePointer=await inventoryHash();navigator.storage.estimate=async()=>{pointerEntered();return pointerQuota;};
+  }
+  return originalCommit(...args);
+ };
+ const retiredPointer=refuses(()=>migration.prepareStaged(staged,stagedOptions));
+ await pointerWaiting;live=false;pointerRelease({usage:0,quota:Number.MAX_SAFE_INTEGER});const pointerRefused=await retiredPointer;
+ storage.commit=originalCommit;navigator.storage.estimate=initialEstimate;live=true;
+ check('retired state3 publication keeps its complete orphan source and creates no migration pointer',pointerRefused&&beforePointer===await inventoryHash()&&await migration.status()===null&&trace.length===0);
+ await migration.prepareStaged(staged,stagedOptions);
  const state3=(await device.vault.read('local-snapshot',stateId))!;
+ const beforeRetiredWrite=await inventoryHash(),actualEstimate=navigator.storage.estimate.bind(navigator.storage);
+ let quotaEntered!:()=>void,quotaRelease!:(estimate:StorageEstimate)=>void;
+ const quotaWaiting=new Promise<void>(resolve=>{quotaEntered=resolve;}),quotaResult=new Promise<StorageEstimate>(resolve=>{quotaRelease=resolve;});
+ navigator.storage.estimate=async()=>{quotaEntered();return quotaResult;};
+ const retiredWrite=refuses(()=>migration.prepareStreamedPlanning(options()));
+ await quotaWaiting;live=false;quotaRelease({usage:0,quota:Number.MAX_SAFE_INTEGER});const retiredRefused=await retiredWrite;
+ navigator.storage.estimate=actualEstimate;live=true;
+ check('retired state4 pointer write refuses at actual quota boundary with state3 and transport untouched',retiredRefused&&beforeRetiredWrite===await inventoryHash()&&(await readState()).protocol===3&&trace.length===0);
  check('lost real loopback acknowledgement preserves a durable exact signed start',await refuses(()=>migration.prepareStreamedPlanning(options())));
  const prepared=await readState(),pending=prepared.pending;check('state4 has no adopted content plan or activation',prepared.protocol===4&&prepared.phase==='preparing'&&prepared.planned===false&&prepared.lease===null);
  const original=(await device.vault.read('local-snapshot',prepared.ownership.sourceState.objectId))!;

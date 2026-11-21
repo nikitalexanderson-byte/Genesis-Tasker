@@ -68,7 +68,7 @@ class E2eeRemoteOriginalDeviceTest {
         val scope = UnlockedE2eeVault.Scope("remote-native-owner", "device:remote-native", "remote-native-device", 1, 1, 1, "local-root", keys.signing.private, mapOf("local-root" to root)) { if (it == "remote-native-device") keys.signing.public else null }
         val target = E2eeRemoteOriginal.Target(scope.ownerId, "personal:${scope.ownerId}", "personal")
         var storage = E2eeSqliteStorage(context, true); var failAfter: Int? = null; var commits = 0
-        var bodyGets=0;var bodyTransform:((E2eeLocalRecord)->E2eeLocalRecord)?=null
+        var bodyGets=0;var bodyTransform:((E2eeLocalRecord)->E2eeLocalRecord)?=null;var beforeCommit:(()->Unit)?=null
         private val port = object : E2eeRecordStorage {
             override fun get(key: String):E2eeLocalRecord? {
                 val row=storage.get(key);if(!key.contains(":p:"))return row
@@ -77,6 +77,7 @@ class E2eeRemoteOriginalDeviceTest {
             override fun list(prefix: String) = storage.list(prefix)
             override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
                 if (failAfter?.let { commits >= it } == true) throw IOException("SYNTHETIC-PRIVATE-QUOTA-CANARY")
+                beforeCommit?.invoke()
                 storage.commit(changes, requireOpen); commits++
             }
         }
@@ -142,6 +143,24 @@ class E2eeRemoteOriginalDeviceTest {
             f.admission = { f.live = false }; val next = E2eeRemoteOriginal.create(f.options())
             try { f.call(next); fail("Retired admission accepted") } catch (_: CancellationException) { }
             assertEquals(0, f.calls); f.live = true; assertEquals(before, f.snapshot()); assertEquals("registered", E2eeRemoteOriginal.listOriginals(f.read()).single().phase)
+        }
+    }
+    @Test fun retirementAtPhysicalCommitLeavesEarlierOriginalAndOpenVaultUntouched() {
+        Rig().use { f ->
+            val old=E2eeRemoteOriginal.create(f.options());old.prepare(E2eeHttpObservation.Request("/e2ee/v1/read","POST",f.packet.toString()));old.close()
+            val before=f.snapshot();val next=E2eeRemoteOriginal.create(f.options())
+            f.beforeCommit={f.beforeCommit=null;f.live=false}
+            try{f.call(next);fail("Retired physical commit accepted")}catch(_:CancellationException){}
+            f.vault.assertOpen();assertEquals(0,f.calls);assertEquals(before,f.snapshot())
+        }
+    }
+    @Test fun observerClosedAtPhysicalCommitCannotPublishOrOpenHttpConnection() {
+        Rig().use { f ->
+            val old=E2eeRemoteOriginal.create(f.options());old.prepare(E2eeHttpObservation.Request("/e2ee/v1/read","POST",f.packet.toString()));old.close()
+            val before=f.snapshot();val next=E2eeRemoteOriginal.create(f.options())
+            f.beforeCommit={f.beforeCommit=null;next.close()}
+            try{f.call(next);fail("Closed physical commit accepted")}catch(error:AuthApiError){assertEquals("E2EE_REMOTE_ORIGINAL_CLOSED",error.code)}
+            f.vault.assertOpen();assertEquals(0,f.calls);assertEquals(before,f.snapshot())
         }
     }
     @Test fun inertRegistrationAndPartialDescriptorSurviveColdSqliteReadWithoutBodyAccess() {

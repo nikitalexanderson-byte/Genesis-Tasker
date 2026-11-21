@@ -43,7 +43,7 @@ function current(options:Common){options.assertCurrent();options.vault.assertUnl
 function captured<T extends Common>(input:T):T{return{...input,context:snapshotE2eeValue(input.context),target:{...input.target},paths:[...input.paths]};}
 function equal(left:unknown,right:unknown){return JSON.stringify(left)===JSON.stringify(right);}
 function fields(value:unknown,expected:Record<string,unknown>){exactKeys(value,Object.keys(expected));return Object.keys(expected).every(key=>value[key]===expected[key]);}
-async function commit(options:Common&{vault:UnlockedE2eeVault},changes:LocalWrite[]){try{current(options);await options.vault.write(changes);current(options);}finally{changes.forEach(row=>row.value.fill(0));}}
+async function commit(options:Common&{vault:UnlockedE2eeVault},changes:LocalWrite[]){try{current(options);await options.vault.write(changes,()=>current(options));current(options);}finally{changes.forEach(row=>row.value.fill(0));}}
 function write(objectId:string,value:unknown,expected:number|null):LocalWrite{return{domain:'local-snapshot',objectId,value:encode(value),expected};}
 async function metadata(options:Common,objectId:string){
  current(options);const row=await options.vault.read('local-snapshot',objectId);if(!row)invalid();
@@ -150,7 +150,7 @@ export class ProtectedMigrationContentPlan {
    changes.push(write(id(next.attemptId,'journal'),next,initial?null:this.#serial));
    const metadataBytes=changes.at(-1)!.value.length,newBytes=changes.reduce((total,row)=>total+row.value.length,0);
    await this.#options.admit({bytes:next.bytes,envelopes:next.plan.length,localParts:next.localParts,metadataBytes,additionalStorageBytes:newBytes*2+8192*changes.length});this.#current();
-   await commit(this.#options,changes);this.#journal=next;if(!initial)this.#serial++;
+   await commit({...this.#options,assertCurrent:()=>this.#current()},changes);this.#journal=next;if(!initial)this.#serial++;
   }finally{changes.forEach(row=>row.value.fill(0));}
  }
  async #remote(envelope:E2eeEnvelope){
@@ -225,7 +225,7 @@ export class ProtectedMigrationContentPlan {
     const manifestHash=await digest(bytes);this.#current();const complete={protocol:1,attemptId:this.attemptId,phase:'complete',manifestHash};
     const changes=[{domain:'local-snapshot' as const,objectId:id(this.attemptId,'manifest'),value:bytes,expected:null},write(id(this.attemptId,'journal'),complete,this.#serial)];
     try{await this.#options.admit({bytes:this.#journal.bytes,envelopes:manifest.plan.length,localParts:this.#journal.localParts,metadataBytes:bytes.length+changes[1].value.length,
-     additionalStorageBytes:(bytes.length+changes[1].value.length)*2+16384});this.#current();await this.#options.assertSourceComplete();this.#current();await commit(this.#options,changes);this.#finished=true;
+     additionalStorageBytes:(bytes.length+changes[1].value.length)*2+16384});this.#current();await this.#options.assertSourceComplete();this.#current();await commit({...this.#options,assertCurrent:()=>this.#current()},changes);this.#finished=true;
     }finally{changes.forEach(row=>row.value.fill(0));}
     return Object.freeze({attemptId:this.attemptId,manifestHash});
    }finally{bytes.fill(0);}

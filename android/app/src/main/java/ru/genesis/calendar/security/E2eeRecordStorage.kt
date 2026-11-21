@@ -171,8 +171,10 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
         val bytes=E2eeEnvelope.open(root,signer,record.envelope.context,record.envelope)
         try { alive(captured);return Opened(record.serial,bytes) }catch(error:Exception){bytes.fill(0);throw error}
     }
-    fun write(changes:List<Write>) {
+    fun write(changes:List<Write>,assertCurrent:()->Unit={}) {
+        assertCurrent()
         val captured=lifecycle.get();val current=requireOpen();val root=current.roots[current.keyId]?:throw IllegalStateException("E2EE_KEY_UNAVAILABLE")
+        val requireCurrent={assertCurrent();alive(captured);Unit}
         require(changes.size in 1..10000 && changes.all {it.expected==null||it.expected in 1..9007199254740990L}) { "E2EE_INVALID_LOCAL_BATCH" }
         val copies=changes.map { Write(it.domain,it.objectId,it.bytes.copyOf(),it.expected) }
         try {
@@ -184,7 +186,7 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
                     .put("securityEpoch",current.securityEpoch).put("revision",serial).put("keyId",current.keyId).put("deviceId",current.deviceId).put("operationId",UUID.randomUUID().toString()))
                 E2eeStorageChange(recordKey(current,change.domain,change.objectId),change.expected,E2eeLocalRecord(serial,E2eeEnvelope.seal(root,current.signingKey,ctx,change.bytes)))
             }
-            alive(captured);storage.commit(sealed) {alive(captured)};alive(captured)
+            requireCurrent();storage.commit(sealed,requireCurrent);requireCurrent()
         } finally {copies.forEach {it.bytes.fill(0)}}
     }
 }

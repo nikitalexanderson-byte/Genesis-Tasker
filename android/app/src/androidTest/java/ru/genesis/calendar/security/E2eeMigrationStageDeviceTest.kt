@@ -31,7 +31,7 @@ class E2eeMigrationStageDeviceTest {
         val owner="device-actor";val device="staged-device";val scope="device:staged-publication"
         val expectedBundleHash:String;var storage=E2eeSqliteStorage(context,true);lateinit var vault:UnlockedE2eeVault
         lateinit var keys:E2eeKeys.DeviceKeys;lateinit var root:SecretKey;val directory:E2eeDirectory.Verified
-        var live=true;var pointerFailure:String?=null;var transportCalls=0;var produced=0;var raceCatalogue=false
+        var live=true;var pointerFailure:String?=null;var transportCalls=0;var produced=0;var raceCatalogue=false;var beforeCommit:(()->Unit)?=null
         val current:()->Unit={check(live){"E2EE_ACCOUNT_CHANGED"};vault.requireOpen()}
         private val port=object:E2eeRecordStorage {
             override fun get(key:String)=storage.get(key)
@@ -40,6 +40,7 @@ class E2eeMigrationStageDeviceTest {
                 val pointer=changes.any{it.value?.envelope?.context?.toJson()?.getString("objectId")?.startsWith("migration:")==true}
                 val failure=if(pointer)pointerFailure else null
                 if(failure=="before"){pointerFailure=null;error("E2EE_LOCAL_CONFLICT")}
+                beforeCommit?.invoke()
                 storage.commit(changes,requireOpen)
                 if(failure=="after"){pointerFailure=null;error("SYNTHETIC_POINTER_DEATH")}
             }
@@ -103,6 +104,16 @@ class E2eeMigrationStageDeviceTest {
         }
     }
     private suspend fun refuses(code:String,work:suspend()->Unit){try{work()}catch(error:Exception){assertEquals(code,error.message);return};fail("Forbidden staged operation accepted")}
+    @Test fun retiredStageCreationCannotCommitWhileTheVaultRemainsOpen() {
+        Rig().use{f->
+            f.vault.write(listOf(UnlockedE2eeVault.Write("draft","accepted-original","SYNTHETIC ACCEPTED ORIGINAL".toByteArray(),null)))
+            fun snapshot()=f.storage.list("").sorted().map{key->val row=requireNotNull(f.storage.get(key));"$key:${row.serial}:${row.envelope.toJson()}"}
+            val before=snapshot();f.beforeCommit={f.beforeCommit=null;f.live=false}
+            val paths=E2eePrivatePaths.load(f.context).required(f.target.kind).map{it.id}
+            val error=assertThrows(IllegalStateException::class.java){E2eeSourceStage.create(E2eeSourceStage.Options(f.vault,f.target,paths,E2eeSourceStage.Capacity(80L*1024*1024,512),ensureDurableKeys={},assertCurrent=f.current,admit={}))}
+            assertEquals("E2EE_ACCOUNT_CHANGED",error.message);f.vault.assertOpen();assertEquals(before,snapshot());assertEquals(0,f.transportCalls)
+        }
+    }
     @Test fun seventyMiBFullRegistryPublishesAndColdReadsWithoutAggregateOrNetwork()=runBlocking {
         val start=SystemClock.elapsedRealtime();Rig().use{f->
             val size=70L*1024*1024+7;val primary=E2eePrivatePaths.load(f.context).required("project").first().id

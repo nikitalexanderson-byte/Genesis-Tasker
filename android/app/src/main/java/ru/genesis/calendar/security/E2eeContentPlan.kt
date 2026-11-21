@@ -71,7 +71,7 @@ internal object E2eeContentPlan {
         val bytes=safe.toByteArray(Charsets.UTF_8);if(bytes.size>MAX_METADATA){bytes.fill(0);error("E2EE_CONTENT_PLAN_METADATA_LIMIT")};return bytes
     }
     private fun write(objectId:String,value:JSONObject,expected:Long?)=UnlockedE2eeVault.Write("local-snapshot",objectId,encoded(value),expected)
-    private fun commit(binding:Binding,vault:UnlockedE2eeVault,writes:List<UnlockedE2eeVault.Write>){try{binding.current();vault.write(writes);binding.current()}finally{writes.forEach{it.bytes.fill(0)}}}
+    private fun commit(vault:UnlockedE2eeVault,writes:List<UnlockedE2eeVault.Write>,assertCurrent:()->Unit){try{assertCurrent();vault.write(writes,assertCurrent);assertCurrent()}finally{writes.forEach{it.bytes.fill(0)}}}
     private fun metadata(binding:Binding,objectId:String):Pair<Long,Pair<ByteArray,JSONObject>> {
         binding.current();val row=binding.vault.read("local-snapshot",objectId)?:invalid()
         try{binding.current();if(row.bytes.size>MAX_METADATA)invalid();val value=try{E2eeFileManifestJson.readContentPlan(row.bytes)}catch(_:Exception){invalid()};return row.serial to(row.bytes.copyOf() to value)}
@@ -223,7 +223,7 @@ internal object E2eeContentPlan {
             val writes=extra.toMutableList()
             try{writes+=write(id(attemptId,"journal"),next,if(initial)null else serial)
                 val metadataBytes=writes.last().bytes.size;admit(Admission(integer(next,"bytes"),next.getJSONArray("plan").length(),integer(next,"localParts").toInt(),metadataBytes,writes.sumOf{it.bytes.size.toLong()}*2+8192L*writes.size));current()
-                commit(binding,vault,writes);journal=next;if(!initial)serial++
+                commit(vault,writes,::current);journal=next;if(!initial)serial++
             }finally{writes.forEach{it.bytes.fill(0)}}
         }
         internal fun initialize(){store(journal,initial=true)}
@@ -290,7 +290,7 @@ internal object E2eeContentPlan {
                 val bytes=encoded(manifest);try{
                     val manifestHash=hash(bytes);current();val marker=JSONObject().put("protocol",1).put("attemptId",attemptId).put("phase","complete").put("manifestHash",manifestHash)
                     val writes=listOf(UnlockedE2eeVault.Write("local-snapshot",id(attemptId,"manifest"),bytes,null),write(id(attemptId,"journal"),marker,serial))
-                    try{val metadataBytes=writes.sumOf{it.bytes.size};admit(Admission(integer(journal,"bytes"),manifest.getJSONArray("plan").length(),integer(journal,"localParts").toInt(),metadataBytes,metadataBytes*2L+16384));current();assertSourceComplete();current();commit(binding,vault,writes);finished=true}finally{writes.forEach{it.bytes.fill(0)}}
+                    try{val metadataBytes=writes.sumOf{it.bytes.size};admit(Admission(integer(journal,"bytes"),manifest.getJSONArray("plan").length(),integer(journal,"localParts").toInt(),metadataBytes,metadataBytes*2L+16384));current();assertSourceComplete();current();commit(vault,writes,::current);finished=true}finally{writes.forEach{it.bytes.fill(0)}}
                     return Reference(attemptId,manifestHash)
                 }finally{bytes.fill(0)}
             }catch(error:Exception){broken=true;throw error}finally{busy=false}

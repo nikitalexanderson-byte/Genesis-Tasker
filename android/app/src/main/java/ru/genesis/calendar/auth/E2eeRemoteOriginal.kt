@@ -101,7 +101,7 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
             try {
                 admit(previous, previous.usage.copy(observations = previous.usage.observations + 1, records = previous.usage.records + 2 + if (previous.serial == null) 1 else 0,
                     metadataBytes = previous.usage.metadataBytes + jbytes.size + bytes.size + cbytes.size - if (previous.serial == null) 0 else old.size))
-                RemoteOriginalCodec.commit(options, listOf(RemoteOriginalCodec.write(RemoteOriginalCodec.catalogKey(previous.hash), index, previous.serial),
+                RemoteOriginalCodec.commit(options.copy(assertCurrent=::current), listOf(RemoteOriginalCodec.write(RemoteOriginalCodec.catalogKey(previous.hash), index, previous.serial),
                     UnlockedE2eeVault.Write("local-snapshot", RemoteOriginalCodec.key(previous.hash, id, "r"), bytes, null), RemoteOriginalCodec.write(RemoteOriginalCodec.key(previous.hash, id, "j"), next, null)))
                 current(); state = next; serial = 1
             } finally { jbytes.fill(0); cbytes.fill(0); old.fill(0) }
@@ -119,7 +119,7 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
             val changes = mutableListOf(RemoteOriginalCodec.write(RemoteOriginalCodec.key(previous.hash, id, "j"), next, serial))
             if (part != null) changes += UnlockedE2eeVault.Write("local-snapshot", RemoteOriginalCodec.key(previous.hash, id, "p", next.getJSONArray("parts").length() - 1), part, null)
             if (manifest != null) changes += UnlockedE2eeVault.Write("local-snapshot", RemoteOriginalCodec.key(previous.hash, id, "m"), manifest, null)
-            RemoteOriginalCodec.commit(options, changes); current(); state = next; serial++
+            RemoteOriginalCodec.commit(options.copy(assertCurrent=::current), changes); current(); state = next; serial++
         } finally { bytes.fill(0); oldBytes.fill(0); manifest?.fill(0) }
     }
     override fun begin(response: E2eeHttpBodyObservation.Response) = operation {
@@ -335,7 +335,7 @@ private object RemoteOriginalCodec {
     }
     fun stable(options: E2eeRemoteOriginal.ReadOptions, previous: Inventory) { check(inventory(options).stamp == previous.stamp) { "E2EE_REMOTE_ORIGINAL_BUSY" } }
     fun write(id: String, value: Any, expected: Long?) = UnlockedE2eeVault.Write("local-snapshot", id, encoded(value), expected)
-    fun commit(options: E2eeRemoteOriginal.Options, changes: List<UnlockedE2eeVault.Write>) { try { options.assertCurrent(); options.vault.assertOpen(); options.vault.write(changes); options.assertCurrent(); options.vault.assertOpen() } finally { changes.forEach { it.bytes.fill(0) } } }
+    fun commit(options: E2eeRemoteOriginal.Options, changes: List<UnlockedE2eeVault.Write>) { try { options.assertCurrent(); options.vault.assertOpen(); options.vault.write(changes,options.assertCurrent); options.assertCurrent(); options.vault.assertOpen() } finally { changes.forEach { it.bytes.fill(0) } } }
     fun packetBinding(packet: JSONObject, signer: PublicKey, context: JSONObject, generation: Long): JSONObject {
         val command = E2eeCommands.verify(packet, signer)
         check(command.get("ownerId") == context.get("ownerId") && command.get("scopeId") == context.get("scopeId") && command.get("deviceId") == context.get("deviceId") && command.get("action") in actions) { "E2EE_REMOTE_ORIGINAL_CONTEXT" }
