@@ -15,9 +15,30 @@ import {withOwnedContentPlanning,type MigrationContentPlanningSession} from './c
 import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemoteOriginals,withRemoteOriginal,type RemoteOriginalReadOptions,type RemoteOriginalRegistration,type RemoteOriginalReference} from './remote-original.ts';
 import {withOwnedMigrationPlanning,type MigrationPlanningSession} from './migration-session.ts';
 import {UnlockedWebDevice} from './device-vault.ts';
+import {requiredPrivatePaths} from './private-paths.ts';
 
 export type MigrationPhase = 'preparing'|'uploading'|'verified'|'active'|'cancelled';
 export type MigrationContent = { domain: E2eeContext['domain']; objectId: string; bytes: Uint8Array; filename?: string; mediaType?: string };
+/** Product history reader requires no migration writer/legacy-key capability.
+ * A clean device is explicit; a present but malformed journal never becomes an
+ * empty local diary, map view or import history. */
+export async function readActiveMigrationLocalContent(device:UnlockedWebDevice,directory:VerifiedDirectory,domain:E2eeContext['domain'],objectId:string):Promise<
+ {availability:'not-on-this-device';content:null}|{availability:'present';content:MigrationContent|null}>{
+ device.requireOpen();assertTechnical(objectId);if(directory.state!=='active')throw new Error('E2EE_MIGRATION_UNVERIFIED');
+ const paths=requiredPrivatePaths(directory.kind),allowed=[...new Set(paths.flatMap(path=>path.domains))] as E2eeContext['domain'][];
+ if(!allowed.includes(domain))throw new Error('E2EE_LOCAL_CONTENT_FORBIDDEN');
+ const record=await device.vault.read('local-snapshot',`migration:${await digest(encoder.encode(directory.scopeId))}`);device.requireOpen();
+ if(!record)return{availability:'not-on-this-device',content:null};
+ try{
+  const state=decodeState(record.value);if(state.phase!=='active'||state.protocol<3||!('source' in state))throw new Error('E2EE_MIGRATION_UNVERIFIED');
+  validateStagedMigrationSnapshot(state.source,{ownerId:directory.ownerId,scopeId:directory.scopeId,kind:directory.kind},device.vault.localIdentity(),paths.map(path=>path.id));
+  if(state.protocol===4||state.protocol===5)validateStreamedPlanningOwnership(state.ownership,{migrationId:state.migrationId,target:state.source.target,actor:device.vault.localIdentity(),
+   sourceHash:state.sourceHash,lease:state.lease,checkpointHash:state.protocol===5?state.adopted.checkpointHash:state.checkpointHash,directoryRevision:state.protocol===5?state.adopted.directoryRevision:state.directoryRevision});
+  if(state.lease?.generation!==directory.generation)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const entries=validateMigrationLocalEntries(state.local,state.protocol===5?state.adopted.reference.attemptId:state.migrationId,allowed),entry=entries.find(row=>row.domain===domain&&row.objectId===objectId);
+  const content=entry?await openMigrationLocalContent(device.vault,entry):null;device.requireOpen();return{availability:'present',content};
+ }finally{record.value.fill(0);}
+}
 export type MigrationCoverage = { domain: string; complete: boolean };
 export const E2EE_MIGRATION_BYTE_BUDGET = 128 * 1024 * 1024;
 /** Supplied only after the local snapshot and server lease have committed. */

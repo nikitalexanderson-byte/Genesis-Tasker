@@ -101,7 +101,7 @@ change the9/20 accepted boundary, production3.3.5/149 or any activation gate.
   from an empty journal; it does not replay old conversion receipts.
 
 Remaining implementation includes: complete setup/migration/resume UI wiring,
-offline cold unlock, expired enrollment challenge renewal, invalidated-keystore
+offline/expired-identity acceptance, expired enrollment challenge renewal, invalidated-keystore
 recovery/custody integration, explicit conflict review, the other feature editor
 routes (including diary/Physis/Aurora/stoicheion/advice), shared transaction and
 approval/role/rotation semantics, external-copy consent, content-only backup /
@@ -114,3 +114,35 @@ asserted to pass those scenarios or to replace shared multi-table semantics.
 No tests, typecheck/lint, builds, push/CI, device installation or publication were
 run for these additions. Compilation and the complete acceptance matrix remain
 deferred until the full implementation pass, as the owner requested.
+
+Local checkpoint `ddaa43e3` saved the foreground/product integration above. It
+was not pushed. Subsequent candidate code adds explicit saved-copy offline unlock
+on both clients. The locator is encrypted in the device vault; cached identity
+is display metadata, not a recreated HTTP session or authority. Online errors do
+not select the offline path automatically. Pending edits remain in the existing
+new-root queues until an explicit online unlock. New offline labels/explanations
+were added to the same14-language catalogue; their acceptance is still pending.
+
+The native foreground entry now starts private queue flushing independently of
+the old Room outbox/Google connection. The web task poll likewise runs for a
+private GENESIS account without external-calendar sync. Vault-ready events refresh
+existing observers. Device-unlock attempts are bound to a native lifecycle epoch:
+backgrounding cancels even an in-progress, not-yet-registered capability.
+
+Product writers reload the durable editor queue after acknowledgement rather
+than retaining its pre-ack serial. Divergent local content is an explicit conflict.
+The native domain codecs use a separate contentRevision; a network receipt's
+journal update must not make an unchanged project form appear edited. Context
+object revision, directory epochs and local journal serial stay distinct.
+
+Added a product-only reader for active migration local contents, validating the
+exact staged scope, owner/device, generation and planning ownership. It distinguishes
+a clean device from a corrupt/missing part of an existing journal. Diary and other
+history consumers still need composition with this reader.
+
+Until private reminder projections are composed, native startup/resume scheduling
+does not open the retired protected workspace. This is a temporary unaccepted
+implementation boundary, not a claim that private reminders are complete. Also
+finish the remaining optimistic web editor closures so that acknowledgement
+requires durable encryption before dismissal/backgrounding. No additional category
+is marked accepted by these edits. No tests/builds/CI/deploy were started.

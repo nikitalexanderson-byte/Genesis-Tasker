@@ -132,6 +132,7 @@ import {
   GENESIS_LEGACY_WORKSPACE_STORAGE_KEY,
   GENESIS_USER_WORKSPACE_STORAGE_PREFIX,
   usesPrivateProductStorage,
+  restoreOfflinePrivateWorkspace,
   connectAdditionalGoogleAccount,
   connectGoogleServices,
   consumeGoogleAuthError,
@@ -2383,7 +2384,7 @@ export function GenesisCalendar() {
             setSyncError(error.message);
             setSyncStatus(navigator.onLine ? "error" : "offline");
           });
-        } else if (loadedCalendarConnected && !user.calendarConnected) {
+        } else if (loadedCalendarConnected && !user.calendarConnected&&!usesPrivateProductStorage(user.uid)) {
           loadedCalendarConnected = false;
           stopTasks?.();
           stopTasks = undefined;
@@ -2457,20 +2458,20 @@ export function GenesisCalendar() {
           ));
           setNewProjectCategory(nextCategories[0]?.id ?? "");
           setSyncError(workspace.syncWarning ?? "");
-          setSyncStatus(workspace.user.calendarConnected ? (workspace.syncWarning ? "offline" : "synced") : "local");
+          setSyncStatus(workspace.user.calendarConnected||encryptedAccount ? (workspace.syncWarning ? "offline" : "synced") : "local");
           stopWorkspace = observeCloudWorkspace((error) => {
             if (!active) return;
             setSyncError(error.message);
             setSyncStatus(navigator.onLine ? "error" : "offline");
           });
-          if (workspace.user.calendarConnected) startCloudTasks(user);
+          if (workspace.user.calendarConnected||encryptedAccount) startCloudTasks(user);
         })
         .catch((error: Error) => {
           if (!active) return;
           setSyncError(error.message);
           setSyncStatus(navigator.onLine ? "error" : "offline");
         });
-    }, (error) => {
+    }, async (error) => {
       if (!active) return;
       setSyncError(error.message);
       try {
@@ -2484,9 +2485,8 @@ export function GenesisCalendar() {
         if(cloudUserRef.current?.uid){setAuthResolved(true);setSyncStatus(navigator.onLine ? "error" : "offline");return;}
         const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
         if (cached?.uid) {
-          if(Object.hasOwn(cached,'privatePreferencesMode'))throw new Error('E2EE_OFFLINE_UNLOCK_REQUIRED');
-          restoreOfflineWorkspaceSession(cached.uid,
-            cached.authProvider === "yandex" ? "yandex" : "google");
+          if(Object.hasOwn(cached,'privatePreferencesMode')){await restoreOfflinePrivateWorkspace(cached);if(!active)return;}
+          else restoreOfflineWorkspaceSession(cached.uid,cached.authProvider === "yandex" ? "yandex" : "google");
           const cachedLanguage = normalizeLanguage(cached.language);
           const local = loadLocalWorkspace(`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cached.uid}`);
           if (!local) return;

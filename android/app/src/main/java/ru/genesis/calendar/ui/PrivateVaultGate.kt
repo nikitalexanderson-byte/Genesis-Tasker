@@ -20,6 +20,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.withResumed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,16 +35,18 @@ import ru.genesis.calendar.security.E2eeFileManifestJson
  * chosen kit are deliberately not rememberSaveable or placed in a ViewModel. */
 @Composable
 internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
-    val context=LocalContext.current;val language=state.accountSettings?.language?:"en"
+    val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val language=state.accountSettings?.language?:"en"
     val copy=remember(language){context.assets.open("vault-copy-v1.json").use{input->val bytes=input.readBytes()
         try{check(bytes.size<=128*1024);val all=JSONObject(bytes.toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}finally{bytes.fill(0)}}}
     var secret by remember(state.user?.uid){mutableStateOf("")};var kit by remember(state.user?.uid){mutableStateOf<JSONObject?>(null)}
     var busy by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)};val scope=rememberCoroutineScope()
+    var offlineMode by remember{mutableStateOf(false)}
+    var needsRecovery by remember(state.user?.uid){mutableStateOf(false)}
     val hasDevice=state.user?.uid?.let(controller::privateVaultDeviceExists)?:false
     val keyguard=context.getSystemService(KeyguardManager::class.java)
     val credential=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()){result->
         if(result.resultCode==Activity.RESULT_OK){busy=true;failed=false;scope.launch{
-            try{controller.unlockPrivateVault(secret,kit)}catch(cancelled:kotlinx.coroutines.CancellationException){throw cancelled}catch(_:Exception){failed=true}
+            try{lifecycle.withResumed{};controller.unlockPrivateVault(secret,kit,offlineMode)}catch(cancelled:kotlinx.coroutines.CancellationException){throw cancelled}catch(error:Exception){if(error.message=="E2EE_RECOVERY_KIT_REQUIRED")needsRecovery=true;failed=true}
             finally{secret="";busy=false}
         }}else{secret="";failed=true}
     }
@@ -62,7 +66,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
             Column(Modifier.widthIn(max=560.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(20.dp)){
                 Text(copy.getString("title"),style=MaterialTheme.typography.headlineMedium,modifier=Modifier.semantics{heading()})
                 Text(copy.getString("description"),style=MaterialTheme.typography.bodyLarge)
-                if(!hasDevice&&state.user!=null){
+                if((!hasDevice||needsRecovery)&&state.user!=null){
                     OutlinedTextField(value=secret,onValueChange={secret=it.take(64)},label={Text(copy.getString("secret"))},singleLine=true,
                         visualTransformation=PasswordVisualTransformation(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),enabled=!busy,modifier=Modifier.fillMaxWidth())
                     TextButton(onClick={selectedFile.launch(arrayOf("application/json","application/octet-stream"))},enabled=!busy,modifier=Modifier.heightIn(min=48.dp)){Text(copy.getString("kit"))}
@@ -72,9 +76,15 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
                 if(state.user==null||state.requiresSignIn){Button(onClick={context.activity()?.let{controller.signIn(it,language)}},enabled=!busy&&!state.busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("signIn"))}}
                 else if(!keyguard.isDeviceSecure){Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("screenLock"))}}
                 else Button(onClick={
+                    offlineMode=false
                     @Suppress("DEPRECATION") val intent=keyguard.createConfirmDeviceCredentialIntent(copy.getString("title"),copy.getString("description"))
                     if(intent!=null)credential.launch(intent)else failed=true
-                },enabled=!busy&&!state.busy&&(hasDevice||secret.isNotBlank()&&kit!=null),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString(if(busy)"busy"else "unlock"))}
+                },enabled=!busy&&!state.busy&&(hasDevice&&!needsRecovery||secret.isNotBlank()&&kit!=null),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString(if(busy)"busy"else "unlock"))}
+                if(hasDevice&&state.user!=null&&keyguard.isDeviceSecure)TextButton(onClick={
+                    offlineMode=true
+                    @Suppress("DEPRECATION") val intent=keyguard.createConfirmDeviceCredentialIntent(copy.getString("title"),copy.getString("offline"))
+                    if(intent!=null)credential.launch(intent)else failed=true
+                },enabled=!busy&&!state.busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("offline"))}
                 TextButton(onClick={secret="";kit=null;controller.logout()},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("exit"))}
                 Text(copy.getString("privacy"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }

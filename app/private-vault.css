@@ -11,6 +11,7 @@
 .private-vault-dialog input[type=file]{font:inherit;color:var(--ink);padding:8px 0;}
 .private-vault-dialog input::file-selector-button{font:inherit;min-height:44px;margin-inline-end:12px;padding:8px 12px;border:0;border-radius:var(--ui-surface-radius);background:var(--surface-raised,var(--surface));color:var(--ink);}
 .private-vault-dialog .workspace-recovery-privacy{font-size:13px;line-height:1.55;text-align:start;}
+.private-vault-offline{grid-column:1 / -1;min-height:44px;white-space:normal;}
 .private-vault-dialog .workspace-recovery-actions{display:flex;flex-wrap:wrap;}
 .private-vault-dialog .workspace-recovery-actions button{min-height:44px;white-space:normal;}
 .private-vault-dialog :is(input,button):focus-visible{outline:2px solid var(--teal);outline-offset:3px;}

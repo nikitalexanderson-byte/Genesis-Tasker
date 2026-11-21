@@ -5,7 +5,7 @@ import type {WebPrivateAccount} from './product-session.ts';
 
 type Row=Record<string,unknown>;
 export type PrivatePersonalTasks={protocol:1;ownerId:string;tasks:{id:string;value:Row|null;deleted:boolean}[];externalCopy:'requires-new-consent'};
-type PersonalState={protocol:1;ownerId:string;workspace:Row;tasks:PrivatePersonalTasks};
+type PersonalState={protocol:1;ownerId:string;contentRevision:number;workspace:Row;tasks:PrivatePersonalTasks};
 export function validatePrivatePersonalTasks(input:unknown,ownerId:string):PrivatePersonalTasks{
  exactKeys(input,['protocol','ownerId','tasks','externalCopy']);
  if(input.protocol!==1||input.ownerId!==ownerId||input.externalCopy!=='requires-new-consent'||!Array.isArray(input.tasks)||input.tasks.length>10000)throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
@@ -30,8 +30,9 @@ export class E2eePersonalProduct{
   const current=()=>account.requireOpen(),write=()=>{current();const device=account.personal().directory.devices.get(account.device.deviceId);
    if(!device||device.revoked||device.userId!==account.ownerId||device.role!=='owner')throw new Error('E2EE_SCOPE_FORBIDDEN');};
   this.#document=new E2eePrivateDocument({device:account.device,client,scopeId:directory.scopeId,domain:'workspace',objectId:'personal-product-live-v1',assertCurrent:current,assertWrite:write,
-   validate:(input:unknown)=>{exactKeys(input,['protocol','ownerId','workspace','tasks']);if(input.protocol!==1||input.ownerId!==this.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-    return{protocol:1,ownerId:this.ownerId,workspace:workspace(input.workspace),tasks:validatePrivatePersonalTasks(input.tasks,this.ownerId)};}});
+   validate:(input:unknown)=>{exactKeys(input,['protocol','ownerId','contentRevision','workspace','tasks']);if(input.protocol!==1||input.ownerId!==this.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    if(!Number.isSafeInteger(input.contentRevision)||(input.contentRevision as number)<1)throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
+    return{protocol:1,ownerId:this.ownerId,contentRevision:input.contentRevision as number,workspace:workspace(input.workspace),tasks:validatePrivatePersonalTasks(input.tasks,this.ownerId)};}});
  }
  #operation<T>(run:()=>Promise<T>):Promise<T>{const work=this.#serial.catch(()=>undefined).then(async()=>{this.#account.requireOpen();return run();});this.#serial=work;return work;}
  #state(){this.#account.requireOpen();if(!this.#view||this.#view.conflict)throw new Error(this.#view?.conflict?'E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED':'E2EE_PRODUCT_READ_REQUIRED');return this.#view;}
@@ -45,20 +46,24 @@ export class E2eePersonalProduct{
     try{
      if(!original||!tasks)throw new Error('E2EE_PRODUCT_MIGRATION_CONTENT_REQUIRED');
      const {parseLegacyMigrationJson}=await import('./legacy-json.ts'),decode=(bytes:Uint8Array)=>parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024);
-     const value:PersonalState={protocol:1,ownerId:this.ownerId,workspace:workspace(decode(original.bytes)),tasks:validatePrivatePersonalTasks(decode(tasks.bytes),this.ownerId)};
+     const value:PersonalState={protocol:1,ownerId:this.ownerId,contentRevision:1,workspace:workspace(decode(original.bytes)),tasks:validatePrivatePersonalTasks(decode(tasks.bytes),this.ownerId)};
      // Persist the exact seed before sending. A concurrent initializer loses
      // its CAS; it retains its draft and must explicitly reload/reconcile.
      const serial=await this.#document.save(value,{serial:null,remoteRevision:0});this.#view={value,serial,remoteRevision:0,pending:true,conflict:null};
-     const revision=await this.#document.flush();this.#view={...this.#view,remoteRevision:revision,pending:false};
+     await this.#document.flush();this.#view=await this.#document.load('offline');
+     if(this.#view.pending||JSON.stringify(this.#view.value)!==JSON.stringify(value))throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');
     }finally{original?.bytes.fill(0);tasks?.bytes.fill(0);}
    }
    const value=this.#state();return{workspace:structuredClone(value.value.workspace),tasks:this.snapshot().tasks,
     deletedTaskIds:value.value.tasks.tasks.filter(row=>row.deleted).map(row=>row.id),pending:value.pending};
   });
  }
- async #stage(next:PersonalState,onQueued?:()=>void){const prior=this.#state();const serial=await this.#document.save(next,prior);
+ async #stage(next:PersonalState,onQueued?:()=>void){const prior=this.#state();next={...next,contentRevision:prior.value.contentRevision+1};if(!Number.isSafeInteger(next.contentRevision))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');const serial=await this.#document.save(next,prior);
   this.#view={...prior,value:next,serial,pending:true};onQueued?.();}
- async #flush(){const prior=this.#state();if(prior.pending){const revision=await this.#document.flush();this.#view={...prior,remoteRevision:revision,pending:false};}return this.#state().remoteRevision;}
+ async #flush(){const prior=this.#state();if(this.#account.mode==='offline')return prior.remoteRevision;if(prior.pending){
+  await this.#document.flush();this.#view=await this.#document.load('offline');
+  if(this.#view.pending||JSON.stringify(this.#view.value)!==JSON.stringify(prior.value))throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');
+ }return this.#state().remoteRevision;}
  /** Used by real UI persistence, including timers and offline task edits.
   * Every acknowledged snapshot is encrypted before the returned promise ends. */
  stageSnapshot(input:unknown){

@@ -4,6 +4,7 @@ import {privateAccountView,subscribePrivateAccount,type PrivateAccountView} from
 import {unlockCurrentPrivateAccount,signOutFromGoogle} from './cloud-sync';
 import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import type {RecoveryKit} from './e2ee/keys';
+import {IndexedDbDeviceKeyStorage} from './e2ee/device-vault';
 import {isLanguage} from './i18n';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {useDialogAccessibility} from './use-dialog-accessibility';
@@ -16,9 +17,10 @@ export function PrivateVaultGate(){
  return state.phase==='locked'||state.phase==='unlocking'?<PrivateVaultForm key={state.ownerId} state={state}/>:null;
 }
 function PrivateVaultForm({state}:{state:PrivateAccountView}){
- const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[error,setError]=useState(false),[fileBusy,setFileBusy]=useState(false);
+ const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[error,setError]=useState(false),[fileBusy,setFileBusy]=useState(false),[canOffline,setCanOffline]=useState(false);
  const copy=PRIVATE_VAULT_COPY[isLanguage(state.language)?state.language:'en'],busy=state.phase==='unlocking'||fileBusy;
  const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{});
+ useEffect(()=>{let active=true;if(state.ownerId)void new IndexedDbDeviceKeyStorage().get(state.ownerId).then(row=>{if(active)setCanOffline(row!==null);}).catch(()=>{if(active)setCanOffline(false);});return()=>{active=false;};},[state.ownerId]);
  useEffect(()=>{
   const content=document.getElementById('genesis-app-content'),overflow=document.body.style.overflow;
   const previousInert=content?.inert,previousHidden=content?.getAttribute('aria-hidden');
@@ -43,6 +45,7 @@ function PrivateVaultForm({state}:{state:PrivateAccountView}){
    }}/></label>
    <p id="private-vault-hint" className="workspace-recovery-hint">{copy.kitHint}</p>
    {error?<p role="alert" className="workspace-recovery-error">{copy.error}</p>:null}
+   {canOffline?<button type="button" className="text-button private-vault-offline" disabled={busy||!secret.trim()} onClick={async()=>{setError(false);try{await unlockCurrentPrivateAccount(secret,undefined,'offline');}catch{setError(true);}finally{setSecret('');}}}>{copy.offline}</button>:null}
    <div className="workspace-recovery-actions"><button type="button" className="text-button" disabled={busy} onClick={()=>{setSecret('');setKit(undefined);void signOutFromGoogle().catch(()=>setError(true));}}>{copy.exit}</button><button type="submit" className="primary-button" disabled={busy||!secret.trim()}>{busy?copy.busy:copy.unlock}</button></div>
    <small className="workspace-recovery-privacy">{copy.privacy}</small>
   </form>

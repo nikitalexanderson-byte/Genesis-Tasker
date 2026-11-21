@@ -12,6 +12,7 @@ import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,type PrivateAccountTransport} from './e2ee/product-session';
+import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
 import { apiUnavailableMessage, billingApiErrorMessage, isTemporaryApiStatus } from "./api-availability";
@@ -507,6 +508,7 @@ const LAST_USER_CACHE = "genesis-last-user-v2";
 let sessionGeneration = 0;
 let confirmedTransportOwnerId:string|null=null;
 const serverProtectedTransportOwners=new Set<string>();
+let privateIdentityCache:GenesisUser|null=null;
 let personalTransportGate:WebLegacyTransportGate|null=null;
 function legacyTransportGate() {
   if(!personalTransportGate) {
@@ -774,6 +776,7 @@ function sharedMindmapAccess(local:PersonalDocumentAccess,userId:string,spaceId:
 function endLocalSession() {
   closePrivateAccount();
   retirePrivateWorkspaceStorage();
+  privateIdentityCache=null;
   confirmedTransportOwnerId=null;
   cancelWorkspaceConflict?.();
   dismissedWorkspaceConflict = "";
@@ -1126,7 +1129,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
       rememberFeatureAccess(profile.uid, profile.featureAccess);
       // This server hint only denies legacy IO. It cannot approve a device or
       // open keys, and an absent later hint never reopens this owner's writer.
-      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);}
+      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);privateIdentityCache=profile;}
     }
     else if(path !== '/session' && profile===null) {
       endLocalSession();
@@ -1821,15 +1824,16 @@ async function loadGenesisWorkspaceSnapshot(): Promise<GenesisWorkspace> {
   requireActiveLocalSession(generation);
   const protectedOwner=confirmedTransportOwnerId;
   if(protectedOwner&&serverProtectedTransportOwners.has(protectedOwner)){
-    const identity=await loadGenesisSession();requireActiveLocalSession(generation);
+    const account=requirePrivateAccount(protectedOwner);
+    const identity=account.mode==='offline'?privateIdentityCache:await loadGenesisSession();requireActiveLocalSession(generation);
     if(!identity||identity.uid!==protectedOwner)throw new Error('E2EE_ACCOUNT_CHANGED');
     await waitForPrivateAccount(protectedOwner,identity.language);requireActiveLocalSession(generation);
-    const product=await privatePersonalProduct(protectedOwner),snapshot=await product.load(navigator.onLine?'online':'offline');requireActiveLocalSession(generation);
+    const product=await privatePersonalProduct(protectedOwner),snapshot=await product.load(account.mode);requireActiveLocalSession(generation);
     const structure=structureFromDocument(snapshot.workspace as SyncableWorkspaceDocument);
     workspaceUserId=protectedOwner;backupDataGeneration=requirePrivateAccount(protectedOwner).personal().directory.generation;
     workspaceVersion=0;workspaceKey='';workspaceBase=null;workspaceBaseMetadata=null;workspaceSyncMetadata=null;
     return{...structure,user:identity,csrf:csrfToken,tasks:snapshot.tasks.map(task=>normalizeTask(task as Partial<GenesisTask>&Pick<GenesisTask,'id'|'title'>)),deletedTaskIds:snapshot.deletedTaskIds,
-      hasRemoteStructure:true,syncWarning:null,workspaceKeyMode:'e2ee'};
+      hasRemoteStructure:true,syncWarning:account.mode==='offline'?PRIVATE_VAULT_COPY[identity.language??'en'].offlineDescription:null,workspaceKeyMode:'e2ee'};
   }
   const payload = await api<BootstrapPayload>("/bootstrap");
   backupTransportSupported = payload.user.dataGeneration !== undefined;
@@ -1964,6 +1968,7 @@ const readGenesisSession = sessionReader(async () => {
       rememberFeatureAccess(user.uid,user.featureAccess);
       if(Object.hasOwn(user,'privatePreferencesMode')){
         serverProtectedTransportOwners.add(user.uid);protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
+        privateIdentityCache=user;
       }
     } else invalidateTrialAccess();
     csrfToken=result.csrf;
@@ -3119,7 +3124,7 @@ export function observeCloudTasks(
   listener: (tasks: GenesisTask[], taskLists: GoogleTaskList[], fromCache: boolean, warning: string | null) => void,
   onError: (error: Error) => void,
 ) {
-  if(serverProtectedTransportOwners.has(_uid))return observePrivateProduct(_uid,workspace=>listener(workspace.tasks,workspace.taskLists,!navigator.onLine,workspace.syncWarning),onError);
+  if(serverProtectedTransportOwners.has(_uid))return observePrivateProduct(_uid,workspace=>listener(workspace.tasks,workspace.taskLists,requirePrivateAccount(_uid).mode==='offline',workspace.syncWarning),onError);
   const check=personalDocumentAccess(_uid).check;
   let active = true;
   let polling = false;
@@ -3638,10 +3643,19 @@ function observePrivateProduct(ownerId:string,listener:(workspace:GenesisWorkspa
       const workspace=await loadGenesisWorkspace();current();if(active)listener(workspace);
     }catch(error){if(active)onError?.(error instanceof Error?error:new Error('E2EE_PRIVATE_CONTENT_UNAVAILABLE'));}finally{busy=false;}
   };
-  const refresh=()=>{void poll();},timer=window.setInterval(refresh,30000);window.addEventListener('focus',refresh);window.addEventListener('online',refresh);
-  return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);};
+  const refresh=()=>{void poll();},timer=window.setInterval(refresh,30000);window.addEventListener('focus',refresh);window.addEventListener('online',refresh);window.addEventListener(PERSONAL_DOCUMENT_READY_EVENT,refresh);
+  return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);window.removeEventListener(PERSONAL_DOCUMENT_READY_EVENT,refresh);};
 }
 export function usesPrivateProductStorage(ownerId:string){return serverProtectedTransportOwners.has(ownerId);}
+/** Cached identity supplies display metadata only. Offline access still needs
+ * the independent device secret and verified saved directory; no HTTP session,
+ * device enrollment, billing or ACL is restored from this profile. */
+export async function restoreOfflinePrivateWorkspace(user:GenesisUser){
+  if(localSessionEnded||privateDeviceAccessBlocked()||!Object.hasOwn(user,'privatePreferencesMode')||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  confirmedTransportOwnerId=user.uid;privateIdentityCache=user;serverProtectedTransportOwners.add(user.uid);
+  protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
+  await waitForPrivateAccount(user.uid,user.language);requirePrivateAccount(user.uid).requireOpen();
+}
 async function privatePersonalProduct(ownerId:string){
   const check=captureAccountSessionGuard();check();if(confirmedTransportOwnerId!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
   const account=requirePrivateAccount(ownerId);let product=privatePersonalProducts.get(account);
@@ -3652,15 +3666,16 @@ export function privateAccountHttpTransport():PrivateAccountTransport{
   return{status:()=>e2eeRequest('/status'),directory:scopeId=>e2eeRequest('/directory',{scopeId}),command:packet=>e2eeRequest('/command',packet),
     read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys})};
 }
-export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit){
+export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
   if(!owner||!serverProtectedTransportOwners.has(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
   await unlockPrivateAccount(secret,privateAccountHttpTransport(),()=>{check();if(confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');},kit,async account=>{
     const {E2eePersonalProduct}=await import('./e2ee/personal-product');check();account.requireOpen();
-    const product=new E2eePersonalProduct(account);await product.load(navigator.onLine?'online':'offline');check();account.requireOpen();
+    const product=new E2eePersonalProduct(account);await product.load(account.mode);check();account.requireOpen();
     privatePersonalProducts.set(account,product);installPrivateWorkspaceStorage(owner,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${owner}`,{
       assertCurrent:()=>{check();account.requireOpen();},read:()=>product.snapshot(),write:value=>product.stageSnapshot(value)});
-  });
+  },mode);
+  if(typeof window!=='undefined')window.dispatchEvent(new Event(PERSONAL_DOCUMENT_READY_EVENT));
 }
 export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
   try{

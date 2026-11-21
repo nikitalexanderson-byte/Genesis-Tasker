@@ -62,6 +62,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var trialRefreshJob: Job? = null
     private var trialTickerJob: Job? = null
     private val trialActivationMutex = Mutex()
+    private val privateVaultLifecycle=java.util.concurrent.atomic.AtomicLong()
     private val planGuidanceLeases = java.util.concurrent.ConcurrentHashMap<String, Pair<String, Long>>()
 
     private fun liveAccountSettings(response: JSONObject): AccountSettings? {
@@ -80,6 +81,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     fun onTrialBackground() {
+        privateVaultLifecycle.incrementAndGet()
         ru.genesis.calendar.security.NativePrivateProducts.lock()
         client.setTrialForeground(false)
         trialRefreshJob?.cancel()
@@ -486,15 +488,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     fun privateVaultDeviceExists(uid:String):Boolean=ru.genesis.calendar.security.E2eeDeviceVault(app,uid).exists()
     /** Called after Android's credential confirmation. Recovery input is kept
      * in this call only; the server receives signed public enrollment proofs. */
-    suspend fun unlockPrivateVault(secretText:String?=null,recoveryKit:JSONObject?=null){
+    suspend fun unlockPrivateVault(secretText:String?=null,recoveryKit:JSONObject?=null,offline:Boolean=false){
         val identity=mutableState.value.user?:error("E2EE_ACCOUNT_BINDING_REQUIRED")
-        check(identity.privateVault&&!mutableState.value.requiresSignIn){"E2EE_ACCOUNT_BINDING_REQUIRED"}
+        check(identity.privateVault&&(offline||!mutableState.value.requiresSignIn)){"E2EE_ACCOUNT_BINDING_REQUIRED"}
         val uid=identity.uid;val epoch=app.workspaceEpoch;var opened:ru.genesis.calendar.security.E2eeProductAccount?=null
-        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+        val lifecycle=privateVaultLifecycle.get()
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&mutableState.value.user?.uid==uid&&(offline||!mutableState.value.requiresSignIn)
             &&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
         val secret=secretText?.takeIf{it.isNotBlank()}?.let{ru.genesis.calendar.security.E2eeEnvelope.decode(it.trim(),32)}
         val transport=object:ru.genesis.calendar.security.E2eeAccountTransport{
-            private fun call(path:String,body:JSONObject?=null):JSONObject{current();return client.e2ee(client.currentGeneration(),path,body).also{current()}}
+            private fun call(path:String,body:JSONObject?=null):JSONObject{current();check(!offline){"E2EE_REFRESH_REQUIRED"};return client.e2ee(client.currentGeneration(),path,body).also{current()}}
             override fun status()=call("/status")
             override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
             override fun command(packet:JSONObject)=call("/command",packet)
@@ -502,8 +505,9 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
         }
         try{withContext(Dispatchers.IO){
-            current();val account=ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit);opened=account
-            val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load();current()
+            current();val account=if(offline)ru.genesis.calendar.security.E2eeProductAccount.openOffline(app,uid,transport,::current)
+                else ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit);opened=account
+            val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load(offline);current()
             ru.genesis.calendar.security.NativePrivateProducts.attach(account,product)
         };current();mutableState.value=mutableState.value.copy(ready=true,busy=false,outgoingSyncIssue=null)
         }catch(error:Throwable){opened?.close();throw error}finally{secret?.fill(0)}
@@ -2197,6 +2201,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     fun logout() = start("Закрываем серверную сессию…") { generation ->
+        privateVaultLifecycle.incrementAndGet()
         ru.genesis.calendar.security.NativePrivateProducts.lock()
         val previousScope = app.workspaceScope
         // begin() has already invalidated every in-flight response before touching stored credentials.
@@ -2455,7 +2460,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         inBackground: Boolean = false) {
         val identity = mutableState.value.user ?: return
         if(identity.privateVault){
-            if(inBackground||syncJob?.isActive==true||mutableState.value.requiresSignIn)return
+            if(inBackground||syncJob?.isActive==true||mutableState.value.requiresSignIn||ru.genesis.calendar.security.NativePrivateProducts.isOffline(CloudAccountSnapshot.scopeFor(identity.uid)))return
             syncJob=scope.launch{
                 try{ru.genesis.calendar.security.NativePrivateProducts.flush(CloudAccountSnapshot.scopeFor(identity.uid))}
                 catch(error:CancellationException){throw error}

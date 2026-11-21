@@ -120,8 +120,13 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}
     val privateProtected=privateAuth.user?.privateVault==true||ru.genesis.calendar.security.NativePrivateProducts.isProtected(activeScope)
     val privateUnlocked=remember(activeScope,privateRevision){ru.genesis.calendar.security.NativePrivateProducts.isOpen(activeScope)}
+    LaunchedEffect(privateRevision,privateUnlocked,privateAuth.ready,privateAuth.busy){
+        if(!testWorkspace&&privateProtected&&privateUnlocked&&privateAuth.ready&&!privateAuth.busy)privateController.syncPending()
+    }
     if(!testWorkspace&&privateProtected&&!privateUnlocked){
-        MaterialTheme(typography=GenesisTypography,shapes=GenesisShapes){PrivateVaultGate(privateController,privateAuth)};return
+        val unlockNight=rememberEveningTheme(AppearanceSettings.read("{}",privateAuth.accountSettings?.theme?:"auto"))
+        val unlockPalette=privateAuth.accountSettings?.darkPalette?:"green"
+        MaterialTheme(colorScheme=if(unlockNight)eveningPalette(unlockPalette)else daylightPalette(unlockPalette),typography=GenesisTypography,shapes=GenesisShapes){PrivateVaultGate(privateController,privateAuth)};return
     }
     key(activeScope) { GenesisWorkspaceContent(app, openedTask, openedSection, activeScope, testWorkspace, openedHabit, openedAdvice) }
 }

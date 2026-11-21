@@ -51,7 +51,7 @@ class GenesisApplication : Application() {
             activeScope.value = next
             if (featureSnapshot?.first != next) featureSnapshot = null
         }
-        appScope.launch { runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(this@GenesisApplication) } }
+        appScope.launch { if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(workspaceScope))runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(this@GenesisApplication) } }
     }
     val database by lazy {
         Room.databaseBuilder(this, GenesisDatabase::class.java, "genesis.db")
@@ -73,6 +73,7 @@ class GenesisApplication : Application() {
         ru.genesis.calendar.auth.CloudSyncWorker.enqueue(this)
         appScope.launch {
             if (ru.genesis.calendar.security.UpdateGate.blocked.value) return@launch
+            if (ru.genesis.calendar.security.NativePrivateProducts.isProtected(workspaceScope)) return@launch
             scheduler.restore(recoverOverdue = true)
             scheduler.restoreHabitNotifications()
             ru.genesis.calendar.reminders.MoonReminderScheduler.restore(this@GenesisApplication)

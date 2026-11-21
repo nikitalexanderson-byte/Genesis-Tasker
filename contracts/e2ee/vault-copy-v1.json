@@ -11,7 +11,9 @@
     "exit": "Sign out",
     "privacy": "The recovery secret is processed on this device and is never sent to the server.",
     "screenLock": "Set a screen lock",
-    "signIn": "Sign in with Google"
+    "signIn": "Sign in with Google",
+    "offline": "Open saved offline copy",
+    "offlineDescription": "Working with the encrypted copy on this device. Changes remain queued until you unlock online."
   },
   "ru": {
     "title": "Разблокировать данные",
@@ -25,7 +27,9 @@
     "exit": "Выйти",
     "privacy": "Секрет восстановления обрабатывается на этом устройстве и не передаётся серверу.",
     "screenLock": "Настроить блокировку экрана",
-    "signIn": "Войти через Google"
+    "signIn": "Войти через Google",
+    "offline": "Открыть сохранённую копию без сети",
+    "offlineDescription": "Работаем с зашифрованной копией на устройстве. Изменения останутся в очереди до разблокировки с подключением к сети."
   },
   "el": {
     "title": "Ξεκλείδωμα δεδομένων",
@@ -39,7 +43,9 @@
     "exit": "Αποσύνδεση",
     "privacy": "Το μυστικό ανάκτησης υποβάλλεται σε επεξεργασία σε αυτή τη συσκευή και δεν αποστέλλεται στον διακομιστή.",
     "screenLock": "Ρύθμιση κλειδώματος οθόνης",
-    "signIn": "Σύνδεση με Google"
+    "signIn": "Σύνδεση με Google",
+    "offline": "Άνοιγμα αποθηκευμένου αντιγράφου εκτός σύνδεσης",
+    "offlineDescription": "Χρησιμοποιείται το κρυπτογραφημένο αντίγραφο αυτής της συσκευής. Οι αλλαγές περιμένουν ξεκλείδωμα με σύνδεση."
   },
   "de": {
     "title": "Daten entsperren",
@@ -53,7 +59,9 @@
     "exit": "Abmelden",
     "privacy": "Das Wiederherstellungsgeheimnis wird auf diesem Gerät verarbeitet und niemals an den Server gesendet.",
     "screenLock": "Displaysperre einrichten",
-    "signIn": "Mit Google anmelden"
+    "signIn": "Mit Google anmelden",
+    "offline": "Gespeicherte Offlinekopie öffnen",
+    "offlineDescription": "Du arbeitest mit der verschlüsselten Kopie auf diesem Gerät. Änderungen bleiben bis zum Online-Entsperren in der Warteschlange."
   },
   "fr": {
     "title": "Déverrouiller vos données",
@@ -67,7 +75,9 @@
     "exit": "Se déconnecter",
     "privacy": "Le secret de récupération est traité sur cet appareil et ne quitte jamais celui-ci pour le serveur.",
     "screenLock": "Configurer le verrouillage de l’écran",
-    "signIn": "Se connecter avec Google"
+    "signIn": "Se connecter avec Google",
+    "offline": "Ouvrir la copie hors ligne enregistrée",
+    "offlineDescription": "Vous utilisez la copie chiffrée de cet appareil. Les modifications restent en attente du déverrouillage en ligne."
   },
   "es": {
     "title": "Desbloquear tus datos",
@@ -81,7 +91,9 @@
     "exit": "Cerrar sesión",
     "privacy": "El secreto de recuperación se procesa en este dispositivo y nunca se envía al servidor.",
     "screenLock": "Configurar bloqueo de pantalla",
-    "signIn": "Iniciar sesión con Google"
+    "signIn": "Iniciar sesión con Google",
+    "offline": "Abrir copia guardada sin conexión",
+    "offlineDescription": "Usas la copia cifrada de este dispositivo. Los cambios quedan en cola hasta que desbloquees con conexión."
   },
   "it": {
     "title": "Sblocca i tuoi dati",
@@ -95,7 +107,9 @@
     "exit": "Esci",
     "privacy": "Il segreto di recupero viene elaborato su questo dispositivo e non viene mai inviato al server.",
     "screenLock": "Imposta il blocco schermo",
-    "signIn": "Accedi con Google"
+    "signIn": "Accedi con Google",
+    "offline": "Apri la copia offline salvata",
+    "offlineDescription": "Stai usando la copia cifrata su questo dispositivo. Le modifiche restano in coda fino allo sblocco online."
   },
   "pt": {
     "title": "Desbloquear os dados",
@@ -109,7 +123,9 @@
     "exit": "Terminar sessão",
     "privacy": "O segredo de recuperação é processado neste dispositivo e nunca é enviado para o servidor.",
     "screenLock": "Configurar bloqueio de ecrã",
-    "signIn": "Entrar com Google"
+    "signIn": "Entrar com Google",
+    "offline": "Abrir cópia offline guardada",
+    "offlineDescription": "Está a usar a cópia cifrada neste dispositivo. As alterações ficam em espera até desbloquear com ligação à rede."
   },
   "pl": {
     "title": "Odblokuj dane",
@@ -123,7 +139,9 @@
     "exit": "Wyloguj się",
     "privacy": "Sekret odzyskiwania jest przetwarzany na tym urządzeniu i nigdy nie jest wysyłany na serwer.",
     "screenLock": "Ustaw blokadę ekranu",
-    "signIn": "Zaloguj się przez Google"
+    "signIn": "Zaloguj się przez Google",
+    "offline": "Otwórz zapisaną kopię offline",
+    "offlineDescription": "Pracujesz z zaszyfrowaną kopią na tym urządzeniu. Zmiany czekają w kolejce na odblokowanie online."
   },
   "sr": {
     "title": "Откључајте податке",
@@ -137,7 +155,9 @@
     "exit": "Одјави се",
     "privacy": "Тајна за опоравак се обрађује на овом уређају и никада се не шаље серверу.",
     "screenLock": "Подеси закључавање екрана",
-    "signIn": "Пријави се преко Google-а"
+    "signIn": "Пријави се преко Google-а",
+    "offline": "Отвори сачувану копију без мреже",
+    "offlineDescription": "Користите шифровану копију на овом уређају. Измене остају на чекању до откључавања уз мрежну везу."
   },
   "uk": {
     "title": "Розблокувати дані",
@@ -151,7 +171,9 @@
     "exit": "Вийти",
     "privacy": "Секрет відновлення обробляється на цьому пристрої та не передається серверу.",
     "screenLock": "Налаштувати блокування екрана",
-    "signIn": "Увійти через Google"
+    "signIn": "Увійти через Google",
+    "offline": "Відкрити збережену копію без мережі",
+    "offlineDescription": "Працюємо із зашифрованою копією на пристрої. Зміни залишаться в черзі до розблокування з підключенням до мережі."
   },
   "zh": {
     "title": "解锁数据",
@@ -165,7 +187,9 @@
     "exit": "退出登录",
     "privacy": "恢复密钥仅在此设备上处理，绝不会发送到服务器。",
     "screenLock": "设置屏幕锁定",
-    "signIn": "使用 Google 登录"
+    "signIn": "使用 Google 登录",
+    "offline": "打开已保存的离线副本",
+    "offlineDescription": "正在使用此设备上的加密副本。更改将留在队列中，直到您联网解锁。"
   },
   "tr": {
     "title": "Verilerin kilidini aç",
@@ -179,7 +203,9 @@
     "exit": "Oturumu kapat",
     "privacy": "Kurtarma sırrı bu cihazda işlenir ve sunucuya hiçbir zaman gönderilmez.",
     "screenLock": "Ekran kilidini ayarla",
-    "signIn": "Google ile oturum aç"
+    "signIn": "Google ile oturum aç",
+    "offline": "Kaydedilmiş çevrimdışı kopyayı aç",
+    "offlineDescription": "Bu cihazdaki şifreli kopya kullanılıyor. Değişiklikler çevrimiçi kilit açılana kadar kuyrukta kalır."
   },
   "ja": {
     "title": "データのロックを解除",
@@ -193,6 +219,8 @@
     "exit": "ログアウト",
     "privacy": "復旧用シークレットはこの端末上で処理され、サーバーには送信されません。",
     "screenLock": "画面ロックを設定",
-    "signIn": "Google でログイン"
+    "signIn": "Google でログイン",
+    "offline": "保存したオフラインコピーを開く",
+    "offlineDescription": "この端末の暗号化されたコピーを使用中です。オンラインでロックを解除するまで変更は送信待ちになります。"
   }
 }

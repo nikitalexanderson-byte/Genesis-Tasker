@@ -32,8 +32,9 @@ export class E2eeMindmapRepository{
  #operation<T>(run:()=>Promise<T>):Promise<T>{const result=this.#serial.catch(()=>undefined).then(async()=>{this.check();return run();});this.#serial=result;return result;}
  async #load(refresh=false){
   this.check();if(this.#view&&!refresh)return this.#state();
-  try{this.#view=await this.#document.load(navigator.onLine?'online':'offline');}
-  catch(error){if(!navigator.onLine||!(error instanceof Error)||error.message!=='E2EE_PRIVATE_DOCUMENT_MISSING')throw error;
+  const online=this.#account.mode==='online'&&navigator.onLine;
+  try{this.#view=await this.#document.load(online?'online':'offline');}
+  catch(error){if(!online||!(error instanceof Error)||error.message!=='E2EE_PRIVATE_DOCUMENT_MISSING')throw error;
    const client=this.#account.personal().client,read=async(domain:'mindmap',id:string)=>{const row=await client.read(domain,id);this.check();if(!row)throw new Error('E2EE_MINDMAPS_SOURCE_INVALID');
     try{return parseLegacyMigrationJson(decoder.decode(row.bytes),'E2EE_MINDMAPS_SOURCE_INVALID',64*1024*1024);}finally{row.bytes.fill(0);}};
    const seed=await readMigratedMindmaps(read,id=>client.read('attachment',id),null,this.#owner);this.check();
@@ -45,7 +46,10 @@ export class E2eeMindmapRepository{
  }
  #state(){this.check();if(!this.#view)throw new Error('E2EE_PRODUCT_READ_REQUIRED');if(this.#view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');return this.#view;}
  async #stage(value:State){const prior=this.#state(),serial=await this.#document.save(value,prior);this.#view={...prior,value,serial,pending:true};}
- async #flush(){const view=this.#state();if(!view.pending)return;const revision=await this.#document.flush();this.#view={...view,remoteRevision:revision,pending:false};}
+ async #flush(){const view=this.#state();if(!view.pending||this.#account.mode==='offline')return;
+  await this.#document.flush();this.#view=await this.#document.load('offline');
+  if(this.#view.pending||JSON.stringify(this.#view.value)!==JSON.stringify(view.value))throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');
+ }
  list():Promise<MapRecord[]>{return this.#operation(async()=>{const state=await this.#load(true);return state.value.records.filter(row=>!row.deleted).map(row=>({document:structuredClone(row.document!),revision:row.revision,updatedAt:row.updatedAt,pending:state.pending}));});}
  adopt(record:MapRecord){this.check();this.#adopted.set(record.document.id,record.revision);}
  save(input:Mindmap,status:(state:SaveState,message?:string)=>void){
@@ -56,10 +60,10 @@ export class E2eeMindmapRepository{
    const updatedAt=new Date().toISOString(),revision=(old?.revision??0)+1;
    const next:State={...prior,records:[...prior.records.filter(row=>row.id!==snapshot.id),{id:snapshot.id,document:snapshot,revision,deleted:false,updatedAt}],
     versions:[...prior.versions,{document:snapshot,revision,updatedAt}]};
-   await this.#stage(next);this.#adopted.set(snapshot.id,revision);status('device');status('pending');await this.#flush();status('synced');
+   await this.#stage(next);this.#adopted.set(snapshot.id,revision);status('device');status('pending');await this.#flush();if(this.#account.mode==='online')status('synced');
   }).catch(error=>{status(error instanceof Error&&error.message.includes('CONFLICT')?'conflict':'error');throw error;});
  }
- retry(_record:MapRecord,status:(state:SaveState,message?:string)=>void){return this.#operation(async()=>{await this.#load();status('pending');await this.#flush();status('synced');}).catch(error=>{status('error');throw error;});}
+ retry(_record:MapRecord,status:(state:SaveState,message?:string)=>void){return this.#operation(async()=>{await this.#load();status('pending');await this.#flush();if(this.#account.mode==='online')status('synced');}).catch(error=>{status('error');throw error;});}
  remove(record:MapRecord){return this.#operation(async()=>{await this.#load();const prior=this.#state().value,old=prior.records.find(row=>row.id===record.document.id);
   if(!old||old.deleted)return;if(old.revision!==record.revision)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');
   await this.#stage({...prior,records:prior.records.map(row=>row.id===old.id?{...row,document:null,deleted:true,revision:row.revision+1,updatedAt:new Date().toISOString()}:row)});await this.#flush();

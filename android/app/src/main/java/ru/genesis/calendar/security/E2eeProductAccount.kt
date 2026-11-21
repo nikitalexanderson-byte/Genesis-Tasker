@@ -13,7 +13,7 @@ internal interface E2eeAccountTransport:E2eeScopeTransport{
 /** Foreground capability, independent of Google identity. Existing hardware
  * bundles are never replaced on an unlock or enrollment failure. */
 internal class E2eeProductAccount private constructor(val ownerId:String,val device:UnlockedE2eeDevice,
-    val client:E2eeScopeClient,val directory:E2eeDirectory.Verified,private val assertCurrent:()->Unit){
+    val client:E2eeScopeClient,val directory:E2eeDirectory.Verified,private val assertCurrent:()->Unit,val offline:Boolean=false){
     private var closed=false
     fun requireOpen(){check(!closed){"E2EE_UNLOCK_REQUIRED"};assertCurrent();device.requireOpen()}
     fun close(){if(!closed){closed=true;device.lock()}}
@@ -31,11 +31,25 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                 val personal=(0 until scopes.length()).map{scopes.getJSONObject(it)}.filter{it.getString("kind")=="personal"&&it.getString("resourceId")==owner}
                 check(personal.size==1){"E2EE_PERSONAL_SCOPE_REQUIRED"};val scope=personal.single().getString("scopeId");E2eeKeys.technical(scope)
                 val candidate=requireNotNull(device)
-                if(!existed||kit!=null&&candidate.savedDirectory(scope)==null){check(held?.size==32&&kit!=null){"E2EE_RECOVERY_KIT_REQUIRED"};recoverEnrollment(owner,scope,candidate,transport,requireNotNull(held),requireNotNull(kit),current)}
+                if(!existed||candidate.savedDirectory(scope)==null){check(held?.size==32&&kit!=null){"E2EE_RECOVERY_KIT_REQUIRED"};recoverEnrollment(owner,scope,candidate,transport,requireNotNull(held),requireNotNull(kit),current)}
                 val client=E2eeScopeClient(candidate,owner,scope,candidate.authorityPin,transport);val directory=client.refresh();current()
                 check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_MIGRATION_RESUME_REQUIRED"}
+                val old=candidate.vault.read("key-check","product-account-index-v1");val bytes=JSONObject().put("protocol",1).put("ownerId",owner).put("personal",personal.single()).toString().toByteArray(Charsets.UTF_8)
+                try{candidate.vault.write(listOf(UnlockedE2eeVault.Write("key-check","product-account-index-v1",bytes,old?.serial)));current()}finally{old?.bytes?.fill(0);bytes.fill(0)}
                 return E2eeProductAccount(owner,candidate,client,directory,current)
             }catch(error:Throwable){device?.lock();throw error}finally{held?.fill(0)}
+        }
+        fun openOffline(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit):E2eeProductAccount{
+            current();val device=UnlockedE2eeDevice.unlock(context,owner)
+            try{
+                val row=device.vault.read("key-check","product-account-index-v1")?:error("E2EE_OFFLINE_CONTENT_UNAVAILABLE");val scope:String
+                try{val value=E2eeFileManifestJson.readPrivateDocument(row.bytes);E2eeKeys.exact(value,setOf("protocol","ownerId","personal"));check(value.getInt("protocol")==1&&value.getString("ownerId")==owner){"E2EE_SCOPE_BINDING_MISMATCH"}
+                    val personal=value.getJSONObject("personal");E2eeKeys.exact(personal,setOf("scopeId","kind","resourceId","state"));check(personal.getString("kind")=="personal"&&personal.getString("resourceId")==owner){"E2EE_SCOPE_BINDING_MISMATCH"};scope=E2eeKeys.technical(personal.getString("scopeId"))
+                }finally{row.bytes.fill(0)}
+                val client=E2eeScopeClient(device,owner,scope,device.authorityPin,transport);val directory=client.hydrateOffline();current()
+                check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"}
+                return E2eeProductAccount(owner,device,client,directory,current,offline=true)
+            }catch(error:Throwable){device.lock();throw error}
         }
         private fun recoverEnrollment(owner:String,scope:String,device:UnlockedE2eeDevice,transport:E2eeAccountTransport,secret:ByteArray,kit:JSONObject,current:()->Unit){
             val authority=E2eeKeys.recoverAuthority(owner,secret,kit);current()

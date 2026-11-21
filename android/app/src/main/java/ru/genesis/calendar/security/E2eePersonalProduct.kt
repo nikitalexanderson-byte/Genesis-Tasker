@@ -22,18 +22,19 @@ internal class E2eePersonalProduct(private val account:E2eeProductAccount){
             if(row.getBoolean("deleted"))check(row.isNull("value")){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}else check(row.getJSONObject("value").getString("id")==id&&row.getJSONObject("value").get("title") is String){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}}
         return value
     }
-    private fun validate(value:JSONObject):JSONObject{E2eeKeys.exact(value,setOf("protocol","ownerId","workspace","tasks"));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"};workspace(value.getJSONObject("workspace"));tasks(value.getJSONObject("tasks"));return value}
+    private fun validate(value:JSONObject):JSONObject{E2eeKeys.exact(value,setOf("protocol","ownerId","contentRevision","workspace","tasks"));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"};E2eeCommands.integer(value.get("contentRevision"),1);workspace(value.getJSONObject("workspace"));tasks(value.getJSONObject("tasks"));return value}
     private fun current():E2eePrivateDocument.Opened{account.requireOpen();val value=requireNotNull(view){"E2EE_PRODUCT_READ_REQUIRED"};check(value.conflict==null){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};return value}
-    @Synchronized fun localRevision():Long=current().serial
+    @Synchronized fun contentRevision():Long=current().value.getLong("contentRevision")
     @Synchronized fun load(offline:Boolean=false):JSONObject{
         account.requireOpen()
         try{view=document.load(offline)}catch(error:IllegalStateException){
             if(offline||error.message!="E2EE_PRIVATE_DOCUMENT_MISSING")throw error
             val workspace=account.client.read("workspace","personal-workspace-v1");val tasks=account.client.read("workspace","personal-tasks-live-v1")
             try{check(workspace!=null&&tasks!=null){"E2EE_PRODUCT_MIGRATION_CONTENT_REQUIRED"}
-                val value=validate(JSONObject().put("protocol",1).put("ownerId",account.ownerId).put("workspace",E2eeFileManifestJson.readPrivateDocument(workspace.bytes))
+                val value=validate(JSONObject().put("protocol",1).put("ownerId",account.ownerId).put("contentRevision",1).put("workspace",E2eeFileManifestJson.readPrivateDocument(workspace.bytes))
                     .put("tasks",E2eeFileManifestJson.readPrivateDocument(tasks.bytes)))
-                val serial=document.save(value,null,0);view=E2eePrivateDocument.Opened(value,serial,0,true);val revision=document.flush();view=E2eePrivateDocument.Opened(value,serial,revision,false)
+                val serial=document.save(value,null,0);view=E2eePrivateDocument.Opened(value,serial,0,true);document.flush();view=document.load(offline=true)
+                check(view?.pending==false&&view?.value?.toString()==value.toString()){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"}
             }finally{workspace?.bytes?.fill(0);tasks?.bytes?.fill(0)}
         }
         return snapshot()
@@ -43,13 +44,14 @@ internal class E2eePersonalProduct(private val account:E2eeProductAccount){
         for(i in 0 until rows.length()){val row=rows.getJSONObject(i);if(!row.getBoolean("deleted"))selected.put(JSONObject(row.getJSONObject("value").toString()).put("syncToGoogle",false).put("syncAccountIds",JSONArray()))}
         return result.put("tasks",selected)
     }
-    private fun stage(value:JSONObject){val previous=current();val serial=document.save(validate(value),previous.serial,previous.remoteRevision);view=E2eePrivateDocument.Opened(value,serial,previous.remoteRevision,true)}
+    private fun stage(value:JSONObject){val previous=current();value.put("contentRevision",previous.value.getLong("contentRevision")+1);val serial=document.save(validate(value),previous.serial,previous.remoteRevision);view=E2eePrivateDocument.Opened(value,serial,previous.remoteRevision,true)}
     @Synchronized fun stageSnapshot(input:JSONObject){
         val copy=JSONObject(input.toString());val submitted=copy.getJSONArray("tasks");copy.remove("tasks");workspace(copy);val previous=current().value;val prior=previous.getJSONObject("tasks");val rows=prior.getJSONArray("tasks");val incoming=mutableSetOf<String>();val next=JSONArray()
         for(i in 0 until submitted.length()){val value=submitted.getJSONObject(i);val id=value.getString("id");check(incoming.add(id)){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};next.put(JSONObject().put("id",id).put("value",value).put("deleted",false))}
         for(i in 0 until rows.length()){val row=rows.getJSONObject(i);val id=row.getString("id");check(!row.getBoolean("deleted")||id !in incoming){"TASK_DELETED"};if(id !in incoming)next.put(JSONObject().put("id",id).put("value",JSONObject.NULL).put("deleted",true))}
         stage(JSONObject(previous.toString()).put("workspace",copy).put("tasks",JSONObject(prior.toString()).put("tasks",next)))
     }
-    @Synchronized fun flush():Long{val previous=current();if(!previous.pending)return previous.remoteRevision;val revision=document.flush();view=E2eePrivateDocument.Opened(previous.value,previous.serial,revision,false);return revision}
+    @Synchronized fun flush():Long{val previous=current();if(!previous.pending||account.offline)return previous.remoteRevision;document.flush();view=document.load(offline=true)
+        check(view?.pending==false&&view?.value?.toString()==previous.value.toString()){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};return current().remoteRevision}
     override fun toString()="E2eePersonalProduct([redacted])"
 }

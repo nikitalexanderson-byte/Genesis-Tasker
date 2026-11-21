@@ -20,12 +20,12 @@ internal object PrivatePersonalDocuments{
     }
     @OptIn(ExperimentalCoroutinesApi::class)
     fun <T> observe(scope:String,kind:String,legacy:Flow<T>,decode:(String,Long)->T):Flow<T> =
-        NativePrivateProducts.revision.flatMapLatest{if(isProtected(scope))flowOf(decode(fragment(NativePrivateProducts.snapshot(scope),kind),NativePrivateProducts.localRevision(scope)))else legacy}
+        NativePrivateProducts.revision.flatMapLatest{if(isProtected(scope))flowOf(decode(fragment(NativePrivateProducts.snapshot(scope),kind),NativePrivateProducts.contentRevision(scope)))else legacy}
     @OptIn(ExperimentalCoroutinesApi::class)
     fun <T> observeSnapshot(scope:String,legacy:Flow<T>,decode:(JSONObject)->T):Flow<T> =
         NativePrivateProducts.revision.flatMapLatest{if(isProtected(scope))flowOf(decode(NativePrivateProducts.snapshot(scope)))else legacy}
     suspend fun <T> mutate(scope:String,kind:String,change:suspend(String,Long)->Pair<String,T>):T=NativePrivateProducts.mutate(scope){snapshot->
-        val (raw,result)=change(fragment(snapshot,kind),NativePrivateProducts.localRevision(scope));val next=JSONObject(raw)
+        val (raw,result)=change(fragment(snapshot,kind),NativePrivateProducts.contentRevision(scope));val next=JSONObject(raw)
         WorkspacePatch.localDocument(snapshot,if(kind=="structure")next else null,if(kind=="habits")next else null,if(kind=="trackers")next else null) to result
     }
 }

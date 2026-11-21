@@ -52,11 +52,11 @@ function validateStatus(input:unknown):PrivateAccountStatus{
  * independently entered recovery material or the durable device bundle, and
  * verifies the complete signed directory before opening any product object. */
 export class WebPrivateAccount{
- readonly ownerId:string;readonly device:UnlockedWebDevice;
+ readonly ownerId:string;readonly device:UnlockedWebDevice;readonly mode:'online'|'offline';
  #transport:PrivateAccountTransport;#current:()=>void;#closed=false;
  #clients=new Map<string,{client:E2eeScopeClient;directory:VerifiedDirectory}>();#cleanup:(()=>void)|null=null;
- private constructor(ownerId:string,device:UnlockedWebDevice,transport:PrivateAccountTransport,current:()=>void){
-  this.ownerId=ownerId;this.device=device;this.#transport=transport;this.#current=current;
+ private constructor(ownerId:string,device:UnlockedWebDevice,transport:PrivateAccountTransport,current:()=>void,mode:'online'|'offline'='online'){
+  this.ownerId=ownerId;this.device=device;this.#transport=transport;this.#current=current;this.mode=mode;
  }
  static async open(ownerId:string,secret:Uint8Array,transport:PrivateAccountTransport,current:()=>void,recoveryKit?:RecoveryKit){
   assertTechnical(ownerId);if(secret.length!==32)throw new Error('E2EE_UNLOCK_REQUIRED');const held=new Uint8Array(secret),storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();
@@ -74,16 +74,35 @@ export class WebPrivateAccount{
    }
    current();account=new WebPrivateAccount(ownerId,device,transport,current);
    if(!record)await account.#recoverEnrollment(personal[0].scopeId,held,recoveryKit!);
-   else if(recoveryKit){
+   else{
     // A previous enrollment may have died after provisioning. Retrying uses
     // its durable packet, not a new identity or a replacement local root.
     const saved=await device.savedDirectory(personal[0].scopeId);current();
-    if(!saved)await account.#recoverEnrollment(personal[0].scopeId,held,recoveryKit);
+    if(!saved){if(!recoveryKit)throw new Error('E2EE_RECOVERY_KIT_REQUIRED');await account.#recoverEnrollment(personal[0].scopeId,held,recoveryKit);}
    }
    const personalClient=await account.openScope(personal[0],device.authorityPin,ownerId);current();
    if(personalClient.directory.state!=='active')throw new Error('E2EE_MIGRATION_RESUME_REQUIRED');
+   const prior=await device.vault.read('key-check','product-account-index-v1');current();
+   const index=new TextEncoder().encode(JSON.stringify({protocol:1,ownerId,personal:personal[0]}));
+   try{await device.vault.write([{domain:'key-check',objectId:'product-account-index-v1',value:index,expected:prior?.serial??null}]);current();}finally{index.fill(0);prior?.value.fill(0);}
    return account;
   }catch(error){account?.close();device?.lock();throw error;}finally{held.fill(0);}
+ }
+ static async openOffline(ownerId:string,secret:Uint8Array,transport:PrivateAccountTransport,current:()=>void){
+  assertTechnical(ownerId);const held=new Uint8Array(secret);let device:UnlockedWebDevice|undefined;
+  try{
+   current();device=await UnlockedWebDevice.unlock(ownerId,held,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage());current();
+   const row=await device.vault.read('key-check','product-account-index-v1');current();if(!row)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');
+   let scope:PrivateScopeSummary;
+   try{const value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(row.value));exactKeys(value,['protocol','ownerId','personal']);
+    if(value.protocol!==1||value.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const status=validateStatus({pilotAllowed:false,cryptoProtocol:1,scopes:[value.personal]});scope=status.scopes[0];
+    if(scope.kind!=='personal'||scope.resourceId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   }finally{row.value.fill(0);}
+   const account=new WebPrivateAccount(ownerId,device,transport,current,'offline'),client=new E2eeScopeClient(device,ownerId,scope.scopeId,device.authorityPin,transport),directory=await client.hydrateOffline();current();
+   if(directory.kind!=='personal'||directory.resourceId!==ownerId||directory.state!=='active')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   account.#clients.set(scope.scopeId,{client,directory});return account;
+  }catch(error){device?.lock();throw error;}finally{held.fill(0);}
  }
  requireOpen(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.#current();this.device.requireOpen();}
  close(){if(this.#closed)return;this.#closed=true;this.#cleanup?.();this.#cleanup=null;this.#clients.clear();this.device.lock();}
@@ -132,13 +151,13 @@ export class WebPrivateAccount{
   }finally{previous?.value.fill(0);}
  }
 }
-export async function unlockPrivateAccount(secretText:string,transport:PrivateAccountTransport,current:()=>void,kit?:RecoveryKit,onOpen?:(account:WebPrivateAccount)=>Promise<void>){
+export async function unlockPrivateAccount(secretText:string,transport:PrivateAccountTransport,current:()=>void,kit?:RecoveryKit,onOpen?:(account:WebPrivateAccount)=>Promise<void>,mode:'online'|'offline'='online'){
  const expected=view;if(!expected.ownerId||expected.phase!=='locked')throw new Error('E2EE_UNLOCK_REQUIRED');
  const secret=decodeE2eeBytes(secretText.trim(),32);view=Object.freeze({...expected,phase:'unlocking'});notify();
  let account:WebPrivateAccount|undefined;
  try{
   const check=()=>{current();if(view.ownerId!==expected.ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');};
-  account=await WebPrivateAccount.open(expected.ownerId,secret,transport,check,kit);check();account.bindLifecycle();account.requireOpen();
+  account=mode==='offline'?await WebPrivateAccount.openOffline(expected.ownerId,secret,transport,check):await WebPrivateAccount.open(expected.ownerId,secret,transport,check,kit);check();account.bindLifecycle();account.requireOpen();
   await onOpen?.(account);check();account.requireOpen();active=account;
   view=Object.freeze({...expected,phase:'ready'});for(const waiter of [...waiters])if(waiter.ownerId===expected.ownerId){waiters.delete(waiter);waiter.resolve();}notify();
  }catch(error){account?.close();if(active===account)active=null;if(view.ownerId===expected.ownerId){view=Object.freeze({...expected,phase:'locked',reason:error instanceof Error&&error.message==='E2EE_RECOVERY_KIT_REQUIRED'?'recovery':expected.reason});notify();}throw error;}

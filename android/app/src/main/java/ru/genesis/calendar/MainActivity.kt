@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
         // immediately, even when no habit or account data changed.
         lifecycleScope.launch {
             val app = application as GenesisApplication
+            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return@launch
             app.scheduler.restore(recoverOverdue = true); app.scheduler.restoreHabitNotifications()
             runCatching { ru.genesis.calendar.reminders.SleepReminderScheduler.restore(app) }
             runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(app) }
