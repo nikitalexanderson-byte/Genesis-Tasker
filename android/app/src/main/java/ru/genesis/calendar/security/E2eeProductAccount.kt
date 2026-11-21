@@ -41,6 +41,7 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     }
     @Synchronized fun sharedScope(scopeId:String,kind:String,resourceId:String):SharedScope{requireOpen();val value=shared[scopeId]?:error("E2EE_SHARED_SCOPE_UNLOCK_REQUIRED")
         check(value.directory.kind==kind&&value.directory.resourceId==resourceId){"E2EE_SCOPE_BINDING_MISMATCH"};return value}
+    @Synchronized fun contentScopes():List<SharedScope>{requireOpen();return listOf(SharedScope(client,directory))+shared.values.toList()}
     @Synchronized fun membership():E2eeMembershipProduct{
         requireOpen();check(!offline){"E2EE_REFRESH_REQUIRED"};val channel=transport.membership?:error("E2EE_MEMBERSHIP_TRANSPORT_REQUIRED")
         return E2eeMembershipProduct(device,client,channel,{scopeId->requireOpen();val scope=shared[scopeId]?:error("E2EE_SHARED_SCOPE_UNLOCK_REQUIRED");scope.client.refresh();requireOpen();scope.client},::requireOpen)

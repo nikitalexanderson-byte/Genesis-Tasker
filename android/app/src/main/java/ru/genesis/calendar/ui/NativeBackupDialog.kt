@@ -266,7 +266,11 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
     val language=LocalGenesisLanguage.current
     val title=remember(language){if(language=="ru")"Резервные копии и восстановление" else context.assets.open("originals/i18n/backup-locales/$language.json").bufferedReader().use { JSONObject(it.readText()).getString("Резервные копии и восстановление") }}
     if(state.user!=null)OutlinedButton(onClick={opened=true},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("open-native-backup")){UntranslatedText(title)}
-    if(opened&&state.user!=null)NativeBackupDialog(state.user!!.uid,title,onClose={opened=false})
+    if(opened&&state.user!=null){
+        val app=context.applicationContext as GenesisApplication
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))PrivateBackupDialog(state.user!!.uid,title,onClose={opened=false})
+        else NativeBackupDialog(state.user!!.uid,title,onClose={opened=false})
+    }
 }
 
 @SuppressLint("SetJavaScriptEnabled")

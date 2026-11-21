@@ -76,7 +76,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     }
     /** Per-object protected checkpoints include confirmed chunks and all heads
      * observed since the last retired manifest, without a lossy mutable index. */
-    private fun assertKnownHeads(objects:JSONArray){
+    private fun assertKnownHeads(objects:JSONArray,requireSettled:Boolean=true){
         val value=current();val prefix=knownPrefix(value.generation);val byId=mutableMapOf<String,JSONObject>()
         for(at in 0 until objects.length()){val row=objects.getJSONObject(at);val key=prefix+id(row.getString("domain"),row.getString("objectId"));check(byId.put(key,row)==null){"E2EE_MANIFEST_MISMATCH"}}
         for(key in device.vault.listLocal("key-check",prefix)){val saved=device.vault.read("key-check",key)?:error("E2EE_CORRUPT_CHECKPOINT")
@@ -89,7 +89,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         // their exact immutable writer plans. Never rotate past an unfinished job.
         for(key in device.vault.listLocal("outbox","job:")){val saved=device.vault.read("outbox",key)?:error("E2EE_CORRUPT_OUTBOX")
             try{val job=E2eeFileManifestJson.readPrivateDocument(saved.bytes);if(job.getString("scopeId")!=scopeId||job.getLong("generation")!=value.generation)continue
-                check(job.getBoolean("complete")){"E2EE_PENDING_SAVE_REQUIRED"};val plan=job.getJSONArray("plan")
+                if(!job.getBoolean("complete")){check(!requireSettled){"E2EE_PENDING_SAVE_REQUIRED"};continue};val plan=job.getJSONArray("plan")
                 for(at in 0 until plan.length()){val item=plan.getJSONObject(at);val bytes=device.vault.read("outbox",item.getString("recordId"))?:error("E2EE_CORRUPT_OUTBOX")
                     try{val envelope=E2eeEnvelope.Envelope.fromJson(E2eeFileManifestJson.readPrivateDocument(bytes.bytes));val context=envelope.context.toJson()
                         val head=byId[prefix+id(context.getString("domain"),context.getString("objectId"))]?:error("E2EE_REMOTE_ROLLBACK")
@@ -467,6 +467,22 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         };error("E2EE_DIRECTORY_CONFLICT")
     }
     @Synchronized fun readProductIndex(after:String="",limit:Int=50):JSONObject{if(after.isNotEmpty())E2eeKeys.technical(after);check(limit in 1..50){"E2EE_INVALID_LIMIT"};return readPacket("product-index",JSONObject().put("after",after).put("limit",limit))}
+    @Synchronized fun contentHeads():JSONObject{
+        val value=current();check(refreshed&&value.state in setOf("active","retirement")){"E2EE_REFRESH_REQUIRED"}
+        val objects=JSONArray();var manifestHash:String?=null;var count=-1L
+        do{val response=readPacket("content-heads",JSONObject().put("offset",objects.length()).put("manifestHash",manifestHash?:JSONObject.NULL));device.requireOpen()
+            val rows=response.getJSONArray("objects");val nextCount=E2eeCommands.integer(response.get("objectCount"));val nextHash=response.getString("manifestHash");E2eeEnvelope.decode(nextHash,32)
+            check(nextCount in 0..10000L&&rows.length()<=50&&(manifestHash==null||manifestHash==nextHash&&count==nextCount)){"E2EE_MANIFEST_MISMATCH"};manifestHash=nextHash;count=nextCount
+            for(at in 0 until rows.length()){val row=rows.getJSONObject(at);E2eeKeys.exact(row,setOf("domain","objectId","revision","payloadHash"));E2eeKeys.technical(row.getString("objectId"));E2eeEnvelope.decode(row.getString("payloadHash"),32);E2eeCommands.integer(row.get("revision"),1)
+                check(row.getString("domain") in setOf("workspace","diary","dream-journal","mindmap","physis","aurora","stoicheion","shared-project","shared-comment","attachment","local-snapshot","outbox","draft","key-check")){"E2EE_MANIFEST_MISMATCH"};objects.put(JSONObject(row.toString()))}
+            check(objects.length()<=count&&(rows.length()!=0||objects.length()>=count)){"E2EE_MANIFEST_MISMATCH"}
+        }while(objects.length()<count)
+        check(E2eeFiles.objectManifestHash(objects)==manifestHash){"E2EE_MANIFEST_MISMATCH"};assertKnownHeads(objects,false)
+        val heads=(0 until objects.length()).associate{val row=objects.getJSONObject(it);(row.getString("domain")+"\u0000"+row.getString("objectId")) to row}
+        sealedHeads()?.let{floors->for(at in 0 until floors.length()){val floor=floors.getJSONObject(at);val row=heads[floor.getString("domain")+"\u0000"+floor.getString("objectId")]?:error("E2EE_REMOTE_ROLLBACK")
+            check(row.getLong("revision")>floor.getLong("revision")||row.getLong("revision")==floor.getLong("revision")&&row.get("payloadHash")==floor.get("payloadHash")){"E2EE_REMOTE_ROLLBACK"}}}
+        device.requireOpen();check(current()===value){"E2EE_DIRECTORY_CONFLICT"};return JSONObject().put("objects",objects).put("manifestHash",manifestHash).put("objectCount",count)
+    }
     @Synchronized fun readStoicheionState():JSONObject=readPacket("stoicheion-state",JSONObject())
     @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..255){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",afterPart))}
     @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject())

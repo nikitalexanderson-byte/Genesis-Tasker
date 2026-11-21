@@ -1,0 +1,156 @@
+{
+ "en": {
+  "title": "Local content and retained versions",
+  "notice": "This snapshot contains content and versions already opened on this device. Server-only records and unopened scopes are not included. Imports are retained as history and do not restore sign-in, permissions or previous actions.",
+  "import": "Keep imported content as history",
+  "saved": "The encrypted content archive is retained on this device.",
+  "history": "Retained content",
+  "error": "Could not complete the operation. The original file and existing data are preserved.",
+  "retry": "Choose the file again",
+  "cancel": "Cancel",
+  "remoteNotice": "The server snapshot includes content and retained versions from every trusted, unlocked scope, plus local content from this device. Unlock every scope first. Concurrent changes or exceeding the file limit stop the export without truncating it."
+ },
+ "ru": {
+  "title": "Локальное содержимое и сохранённые варианты",
+  "notice": "Снимок содержит содержимое и варианты, уже открытые на этом устройстве. Записи только на сервере и неоткрытые области в него не входят. Импорт сохраняется как история и не восстанавливает вход, права или прежние действия.",
+  "import": "Сохранить импорт как историю",
+  "saved": "Зашифрованный архив содержимого сохранён на этом устройстве.",
+  "history": "Сохранённое содержимое",
+  "error": "Не удалось завершить действие. Исходный файл и прежние данные сохранены.",
+  "retry": "Выбрать файл ещё раз",
+  "cancel": "Отмена",
+  "remoteNotice": "Снимок сервера включает содержимое и сохранённые варианты всех доверенных разблокированных областей, а также локальное содержимое этого устройства. Сначала разблокируйте все области. Одновременные изменения или превышение размера файла останавливают экспорт без обрезания данных."
+ },
+ "de": {
+  "title": "Lokale Inhalte und gespeicherte Versionen",
+  "notice": "Dieser Schnappschuss enthält bereits auf diesem Gerät geöffnete Inhalte und Versionen. Nur auf dem Server vorhandene Daten und ungeöffnete Bereiche sind nicht enthalten. Importe bleiben Verlauf und stellen weder Anmeldung, Berechtigungen noch frühere Aktionen wieder her.",
+  "import": "Import als Verlauf speichern",
+  "saved": "Das verschlüsselte Inhaltsarchiv ist auf diesem Gerät gespeichert.",
+  "history": "Gespeicherte Inhalte",
+  "error": "Der Vorgang konnte nicht abgeschlossen werden. Originaldatei und Daten bleiben erhalten.",
+  "retry": "Datei erneut auswählen",
+  "cancel": "Abbrechen",
+  "remoteNotice": "Der Server-Schnappschuss enthält Inhalte und gespeicherte Versionen aller vertrauenswürdigen, entsperrten Bereiche sowie lokale Inhalte dieses Geräts. Entsperren Sie zuerst alle Bereiche. Gleichzeitige Änderungen oder das Dateilimit stoppen den Export ohne Kürzung."
+ },
+ "el": {
+  "title": "Τοπικό περιεχόμενο και διατηρημένες εκδόσεις",
+  "notice": "Το στιγμιότυπο περιέχει περιεχόμενο και εκδόσεις που έχουν ήδη ανοιχτεί σε αυτήν τη συσκευή. Δεν περιλαμβάνει εγγραφές μόνο στον διακομιστή ή μη ανοιγμένες περιοχές. Οι εισαγωγές διατηρούνται ως ιστορικό και δεν επαναφέρουν σύνδεση, δικαιώματα ή παλιές ενέργειες.",
+  "import": "Διατήρηση εισαγωγής ως ιστορικού",
+  "saved": "Το κρυπτογραφημένο αρχείο περιεχομένου διατηρείται στη συσκευή.",
+  "history": "Διατηρημένο περιεχόμενο",
+  "error": "Η ενέργεια δεν ολοκληρώθηκε. Το αρχικό αρχείο και τα δεδομένα διατηρούνται.",
+  "retry": "Επιλογή αρχείου ξανά",
+  "cancel": "Ακύρωση",
+  "remoteNotice": "Το στιγμιότυπο διακομιστή περιλαμβάνει περιεχόμενο και διατηρημένες εκδόσεις όλων των έμπιστων, ξεκλείδωτων περιοχών και τοπικό περιεχόμενο αυτής της συσκευής. Ξεκλειδώστε πρώτα όλες τις περιοχές. Ταυτόχρονες αλλαγές ή υπέρβαση ορίου διακόπτουν την εξαγωγή χωρίς περικοπή."
+ },
+ "es": {
+  "title": "Contenido local y versiones guardadas",
+  "notice": "Esta instantánea contiene contenido y versiones ya abiertos en este dispositivo. No incluye registros solo del servidor ni ámbitos sin abrir. Las importaciones se guardan como historial y no restauran el inicio de sesión, los permisos ni acciones anteriores.",
+  "import": "Guardar importación como historial",
+  "saved": "El archivo cifrado de contenido se guarda en este dispositivo.",
+  "history": "Contenido guardado",
+  "error": "No se pudo completar la operación. El archivo original y los datos se conservan.",
+  "retry": "Elegir el archivo de nuevo",
+  "cancel": "Cancelar",
+  "remoteNotice": "La instantánea del servidor incluye contenido y versiones guardadas de todos los ámbitos de confianza desbloqueados, además del contenido local de este dispositivo. Desbloquee antes todos los ámbitos. Los cambios simultáneos o el límite de archivo detienen la exportación sin recortarla."
+ },
+ "fr": {
+  "title": "Contenu local et versions conservées",
+  "notice": "Cet instantané contient le contenu et les versions déjà ouverts sur cet appareil. Les données uniquement sur le serveur et les espaces non ouverts en sont exclus. Les imports restent un historique et ne rétablissent ni connexion, ni autorisations, ni anciennes actions.",
+  "import": "Conserver l’import comme historique",
+  "saved": "L’archive chiffrée du contenu est conservée sur cet appareil.",
+  "history": "Contenu conservé",
+  "error": "L’opération n’a pas abouti. Le fichier original et les données sont conservés.",
+  "retry": "Choisir à nouveau le fichier",
+  "cancel": "Annuler",
+  "remoteNotice": "L’instantané du serveur inclut le contenu et les versions conservées de tous les espaces de confiance déverrouillés, ainsi que le contenu local de cet appareil. Déverrouillez d’abord tous les espaces. Les modifications simultanées ou la limite du fichier arrêtent l’export sans troncature."
+ },
+ "it": {
+  "title": "Contenuti locali e versioni conservate",
+  "notice": "L’istantanea include contenuti e versioni già aperti su questo dispositivo. Esclude i dati presenti solo sul server e gli ambiti non aperti. Le importazioni restano nella cronologia e non ripristinano accesso, permessi o azioni precedenti.",
+  "import": "Conserva importazione come cronologia",
+  "saved": "L’archivio cifrato dei contenuti è conservato su questo dispositivo.",
+  "history": "Contenuti conservati",
+  "error": "Impossibile completare l’operazione. Il file originale e i dati sono conservati.",
+  "retry": "Scegli di nuovo il file",
+  "cancel": "Annulla",
+  "remoteNotice": "L’istantanea del server include contenuti e versioni conservate di tutti gli ambiti attendibili sbloccati, oltre ai contenuti locali di questo dispositivo. Sblocca prima tutti gli ambiti. Modifiche simultanee o limiti del file interrompono l’esportazione senza troncare i dati."
+ },
+ "ja": {
+  "title": "ローカル内容と保存済みの版",
+  "notice": "このスナップショットには、この端末で開いた内容と保存済みの版が含まれます。サーバーにしかない記録や未開封の範囲は含まれません。インポートは履歴として保存され、ログイン、権限、以前の操作は復元しません。",
+  "import": "インポートを履歴として保存",
+  "saved": "暗号化された内容のアーカイブをこの端末に保存しました。",
+  "history": "保存済みの内容",
+  "error": "操作を完了できませんでした。元のファイルと既存のデータは保持されています。",
+  "retry": "ファイルを再選択",
+  "cancel": "キャンセル",
+  "remoteNotice": "サーバーのスナップショットには、信頼してロック解除したすべての領域の内容と保存済みの版、およびこの端末のローカル内容が含まれます。先にすべての領域をロック解除してください。同時変更やファイル容量の上限により、データを切り詰めずにエクスポートを中止します。"
+ },
+ "pl": {
+  "title": "Lokalna treść i zachowane wersje",
+  "notice": "Migawka zawiera treść i wersje już otwarte na tym urządzeniu. Nie obejmuje danych wyłącznie na serwerze ani nieotwartych zakresów. Importy pozostają historią i nie przywracają logowania, uprawnień ani dawnych działań.",
+  "import": "Zachowaj import jako historię",
+  "saved": "Zaszyfrowane archiwum treści zostało zachowane na tym urządzeniu.",
+  "history": "Zachowana treść",
+  "error": "Nie udało się zakończyć operacji. Plik źródłowy i dane zostały zachowane.",
+  "retry": "Wybierz plik ponownie",
+  "cancel": "Anuluj",
+  "remoteNotice": "Migawka serwera obejmuje treść i zachowane wersje wszystkich zaufanych, odblokowanych zakresów oraz lokalną treść tego urządzenia. Najpierw odblokuj wszystkie zakresy. Równoczesne zmiany lub limit pliku zatrzymują eksport bez obcinania danych."
+ },
+ "pt": {
+  "title": "Conteúdo local e versões guardadas",
+  "notice": "Este instantâneo inclui conteúdo e versões já abertos neste dispositivo. Não inclui registos apenas no servidor nem âmbitos por abrir. As importações ficam como histórico e não restauram início de sessão, permissões ou ações anteriores.",
+  "import": "Guardar importação como histórico",
+  "saved": "O arquivo cifrado de conteúdo está guardado neste dispositivo.",
+  "history": "Conteúdo guardado",
+  "error": "Não foi possível concluir a operação. O ficheiro original e os dados são preservados.",
+  "retry": "Escolher o arquivo novamente",
+  "cancel": "Cancelar",
+  "remoteNotice": "A cópia do servidor inclui conteúdo e versões guardadas de todos os âmbitos confiáveis desbloqueados, além do conteúdo local deste dispositivo. Desbloqueie todos os âmbitos primeiro. Alterações simultâneas ou o limite do arquivo interrompem a exportação sem truncar dados."
+ },
+ "sr": {
+  "title": "Локални садржај и сачуване верзије",
+  "notice": "Снимак садржи садржај и верзије већ отворене на овом уређају. Записи само на серверу и неотворене области нису укључени. Увоз се чува као историја и не враћа пријаву, права или старе радње.",
+  "import": "Сачувај увоз као историју",
+  "saved": "Шифрована архива садржаја је сачувана на овом уређају.",
+  "history": "Сачувани садржај",
+  "error": "Радња није завршена. Изворна датотека и постојећи подаци су сачувани.",
+  "retry": "Поново изабери датотеку",
+  "cancel": "Откажи",
+  "remoteNotice": "Снимак сервера садржи садржај и сачуване верзије свих поузданих откључаних области, као и локални садржај овог уређаја. Прво откључајте све области. Истовремене измене или ограничење величине заустављају извоз без скраћивања података."
+ },
+ "tr": {
+  "title": "Yerel içerik ve saklanan sürümler",
+  "notice": "Bu anlık görüntü bu cihazda açılmış içerik ve sürümleri içerir. Yalnızca sunucudaki kayıtlar ve açılmamış kapsamlar dahil değildir. İçe aktarmalar geçmiş olarak saklanır; oturum, izinler veya önceki eylemleri geri yüklemez.",
+  "import": "İçe aktarmayı geçmiş olarak sakla",
+  "saved": "Şifreli içerik arşivi bu cihazda saklandı.",
+  "history": "Saklanan içerik",
+  "error": "İşlem tamamlanamadı. Kaynak dosya ve mevcut veriler korundu.",
+  "retry": "Dosyayı yeniden seç",
+  "cancel": "İptal",
+  "remoteNotice": "Sunucu anlık görüntüsü, güvenilen ve kilidi açık tüm kapsamların içeriğini ve saklanan sürümlerini ve bu cihazın yerel içeriğini içerir. Önce tüm kapsamların kilidini açın. Eşzamanlı değişiklikler veya dosya sınırı, verileri kesmeden dışa aktarmayı durdurur."
+ },
+ "uk": {
+  "title": "Локальний вміст і збережені варіанти",
+  "notice": "Знімок містить вміст і варіанти, уже відкриті на цьому пристрої. Записи лише на сервері та невідкриті області не входять до нього. Імпорт зберігається як історія та не відновлює вхід, права чи попередні дії.",
+  "import": "Зберегти імпорт як історію",
+  "saved": "Зашифрований архів вмісту збережено на цьому пристрої.",
+  "history": "Збережений вміст",
+  "error": "Не вдалося завершити дію. Початковий файл і попередні дані збережено.",
+  "retry": "Вибрати файл ще раз",
+  "cancel": "Скасувати",
+  "remoteNotice": "Знімок сервера містить вміст і збережені варіанти всіх довірених розблокованих областей та локальний вміст цього пристрою. Спочатку розблокуйте всі області. Одночасні зміни або перевищення розміру файлу зупиняють експорт без обрізання даних."
+ },
+ "zh": {
+  "title": "本地内容和保留的版本",
+  "notice": "此快照包含已在本设备上打开的内容和版本，不包含仅在服务器上的记录或尚未打开的范围。导入内容作为历史保留，不会恢复登录、权限或以前的操作。",
+  "import": "将导入内容保留为历史",
+  "saved": "加密内容归档已保存在本设备上。",
+  "history": "保留的内容",
+  "error": "无法完成操作。原文件和现有数据已保留。",
+  "retry": "重新选择文件",
+  "cancel": "取消",
+  "remoteNotice": "服务器快照包含所有受信任且已解锁范围的内容和保留版本，以及此设备的本地内容。请先解锁所有范围。同时发生的更改或超出文件大小限制会停止导出，不会截断数据。"
+ }
+}

@@ -145,6 +145,7 @@ export class WebPrivateAccount{
  }
  personal(){this.requireOpen();const values=[...this.#clients.values()].filter(value=>value.directory.kind==='personal'&&value.directory.resourceId===this.ownerId);
   if(values.length!==1||values[0].directory.state!=='active')throw new Error('E2EE_MIGRATION_RESUME_REQUIRED');return values[0];}
+ contentScopes(){this.requireOpen();return[...this.#clients.values()].map(value=>({client:value.client,scopeId:value.directory.scopeId,ownerId:value.directory.ownerId,kind:value.directory.kind,resourceId:value.directory.resourceId}));}
  shared(scopeId:string,kind:'project'|'space',resourceId:string){this.requireOpen();const value=this.#clients.get(scopeId);
   if(!value||value.directory.kind!==kind||value.directory.resourceId!==resourceId||value.directory.state!=='active')throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');return value;}
  async sharedRecords(scopeId:string,kind:'project'|'space',resourceId:string){this.shared(scopeId,kind,resourceId);const existing=this.#sharedRecords.get(scopeId);if(existing)return existing;

@@ -8,6 +8,28 @@ never call it independent human assurance. Historical human-review gates below
 are superseded. Full coverage/recovery/upgrade and all technical acceptance stay.
 Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
+## Content archives and native SAF continuation (candidate, no QA)
+
+Added a web/native content-only archive codec with read-back verified new-root
+safety copies, inert import retention and reopening retained archives. Local
+snapshots remain explicitly partial. A separate remote capture enumerates every
+active trusted/unlocked scope, materializes full file bytes rather than exporting
+DEK-bearing manifests, retains immutable migrated/product histories, compares
+catalogues before/after capture and refuses format overflow without truncation.
+The catalogue is checked against protected observations and retirement floors;
+it does not solve unseen-object omission on a fresh device. Other devices' unsent
+drafts and migration input custody are not a portable content archive.
+
+Native backup UI now uses a host above the vault gate. SAF persists only an
+opaque selected URI or an already independently encrypted backup. Picker results
+bind exact jobs; encrypted exports resume only against an exact destination
+prefix and require full readback. Recovery keys/plaintext inputs are not spooled.
+Process-death/provider permissions, size/capacity, account changes, parser parity,
+all histories and local-capture concurrency remain consolidated QA targets.
+Typed normal-repository restore, binary history browsing and Google Drive are
+still unfinished. No tests/typecheck/lint/build/CI/push/deploy/device action ran.
+Accepted coverage remains9/20;3.3.5/149 and all rollout gates are unchanged.
+
 ## Shared history, exact completion review and real files (candidate, no QA)
 
 After ac386416, added a signed bounded product-history read on PHP/web/native,

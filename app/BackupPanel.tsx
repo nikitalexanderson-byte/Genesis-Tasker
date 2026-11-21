@@ -10,6 +10,8 @@ import {BackupJournalChoicesPanel} from './BackupJournalChoices';
 import {registerBackupMigrationEditor,withBackupEditorTask,type BackupMigrationForm} from './backup-migration-memory';
 import {withWebBackupRuntime} from './backup-web-operations';
 import {backupPanelMirror} from './backup-panel-mirror';
+import {PrivateBackupPanel} from './PrivateBackupPanel';
+import {usesPrivateProductStorage} from './cloud-sync';
 type Stage={stageId:string;digest:string;counts:Record<string,number>;expiresIn:number};
 type Status={enabled:boolean;noticeVersion:string;generation:number;driveEnabled:false;serverSigningConfigured:boolean};
 const names={workspace:['Дела, проекты, привычки и прогресс','Tasks, projects, habits and progress'],mindmaps:['Карты мыслей','Mind maps'],diary:['Дневник и сны','Diary and dreams'],stoicheion:['Практики','Practices'],aurora:['Гно Метэр Басилея','Gno Meter Basileia'],physis:['Фюзис','Physis'],'shared-drafts':['Общие дела','Shared affairs']} as const;
@@ -36,6 +38,9 @@ function useBackupPanelState<T>(mirror:ReturnType<typeof backupPanelMirror>,name
  return[value,action=>setValue(mirror.update(name,action))];
 }
 export function BackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?:BackupPanelRuntime}){
+ return usesPrivateProductStorage(user.uid)?<PrivateBackupPanel key={user.uid} ownerId={user.uid} language={user.language}/>:<LegacyBackupPanel user={user} runtime={runtime}/>;
+}
+function LegacyBackupPanel({user,runtime=webRuntime}:{user:GenesisUser;runtime?:BackupPanelRuntime}){
   const {backupNeedsReconciliation,backupRequest,captureAccountSessionGuard}=runtime;
   const {c,ready,failed,retry}=useBackupCopy(user.language);
   const live=useRef(true),guard=useRef(captureAccountSessionGuard()),running=useRef(false);

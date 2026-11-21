@@ -116,6 +116,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     val activeScope by app.scopeFlow.collectAsStateWithLifecycle()
     val privateController=remember(app){ru.genesis.calendar.auth.AuthController.get(app)}
     val privateAuth by privateController.state.collectAsStateWithLifecycle()
+    if(!testWorkspace)PrivateBackupHandoffHost(privateAuth.user?.uid)
     val privateRevision by ru.genesis.calendar.security.NativePrivateProducts.revision.collectAsStateWithLifecycle()
     val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
     LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}

@@ -503,7 +503,7 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','content-heads','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
@@ -522,10 +522,11 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
     if($c['action']==='stoicheion-state'){
         genesisE2eeExactFields($c['payload'],[]);require_once __DIR__.'/e2ee-stoicheion-product.php';return genesisE2eeStoicheionState(genesisDb(),$actor,$scope);
     }
-    if($c['action']==='active-heads') {
+    if(in_array($c['action'],['active-heads','content-heads'],true)) {
         // A bounded, checkpoint-bound read for an owner-reviewed rotation. The
         // hash is a CAS binding, not a server assertion of cryptographic trust.
-        genesisE2eeRequireDirectoryAuthority($scope,$device,false);
+        if($c['action']==='active-heads')genesisE2eeRequireDirectoryAuthority($scope,$device,false);
+        elseif(!in_array($scope['state'],['active','retirement'],true))throw new DomainException('E2EE_NOT_ACTIVE');
         genesisE2eeExactFields($c['payload'],['offset','manifestHash']);
         $offset=genesisE2eeInteger($c['payload']['offset']);
         $objects=genesisE2eeObjectHeads(genesisDb(),$scope);$manifest=genesisE2eeManifest(genesisDb(),$scope);

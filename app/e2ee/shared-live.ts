@@ -116,7 +116,7 @@ export class SharedLiveModel{
   const previousOptions=prior?.options as {id:string;title:string;archived:boolean}[]|undefined,options=draft.options as {id:string;title:string;archived:boolean}[];
   if(options.filter(row=>!row.archived).length>200||options.length>Math.max(200,replaceType?0:previousOptions?.length??0))throw new Error('CUSTOM_FIELD_OPTIONS_LIMIT');
   if(!replaceType&&previousOptions?.some(option=>!options.some(row=>row.id===option.id)))throw new Error('CUSTOM_FIELD_OPTIONS_RETAIN_REQUIRED');
-  const field={...draft,spaceId:context.spaceId,predecessorId:replaceType?draft.id:prior?.predecessorId??null};delete field.expectedRevision;
+  const field:ObjectValue={...draft,spaceId:context.spaceId,predecessorId:replaceType?draft.id:prior?.predecessorId??null};delete field.expectedRevision;
   return{field,fingerprint:await this.#fingerprint(versions,draft),valueCount:versions.filter(row=>!row.deleted&&row.kind==='task'&&(plain(row).related.shared_custom_field_values??[]).some(value=>value.field_id===draft.id)).length,replaceType,previousRevision:old?.revision??0,preservesPreviousValues:true};
  }
  #task(version:ProductVersion,versions:ProductVersion[],context:SharedLiveContext){
