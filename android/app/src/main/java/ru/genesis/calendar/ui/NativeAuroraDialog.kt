@@ -109,6 +109,11 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                 }
                 check()
                 suspend fun execute():Any=when(method){
+                    "privateDocument"->store.privateDocument(payload.getString("action"),payload)
+                    "privateSealResult"->store.privateSealResult(payload.getString("id"),payload.getJSONObject("value"))
+                    "privateLocalResult"->store.privateLocalResult(payload.getJSONObject("manifest"))
+                    "privatePublishResult"->store.privatePublishResult(payload.getString("id"),payload.getString("methodVersion"))
+                    "privateOpenResult"->store.privateOpenResult(payload.getString("id"),payload.getJSONObject("reference"))
                     "operationBegin"->{
                         val token=payload.getString("operationId");require(token.matches(Regex("[a-f0-9-]{36}")))
                         synchronized(operationMonitor) {
@@ -183,6 +188,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
     val theme=JSONObject().put("dark",dark).put("palette",palette).put("colors",colors)
     fun encoded(value:JSONObject)=Base64.getEncoder().encodeToString(value.toString().toByteArray(Charsets.UTF_8))
     val boot=remember(owner){JSONObject().put("ownerId",owner).put("language",language)
+        .put("privateMode",store.privateMode)
         .put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android").put("source",source?:JSONObject.NULL)
         .put("temporal",temporal?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}

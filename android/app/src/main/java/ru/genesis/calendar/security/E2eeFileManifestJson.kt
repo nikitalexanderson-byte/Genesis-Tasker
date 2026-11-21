@@ -18,6 +18,9 @@ internal object E2eeFileManifestJson {
      * Keep file/plan string limits unchanged; this is a separate bounded role. */
     fun readMigrationHistory(bytes:ByteArray):JSONObject=readBounded(bytes,4*1024*1024,250000,4*1024*1024)
     fun readPrivateDocument(bytes:ByteArray):JSONObject=readBounded(bytes,64*1024*1024,1000000,64*1024*1024,100,4096,100000)
+    fun readPrivateValue(bytes:ByteArray):Any{check(bytes.size<=64*1024*1024-16){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
+        val wrapped="{\"value\":".toByteArray(Charsets.UTF_8)+bytes+"}".toByteArray(Charsets.UTF_8)
+        try{val parsed=readPrivateDocument(wrapped);E2eeKeys.exact(parsed,setOf("value"));return parsed.get("value")}finally{wrapped.fill(0)}}
     private fun readBounded(bytes:ByteArray,maximumBytes:Int,maximumNodes:Int,maximumString:Int=512,maximumDepth:Int=16,maximumName:Int=64,maximumMembers:Int=128):JSONObject {
         if (bytes.size !in 1..maximumBytes) invalid()
         try {

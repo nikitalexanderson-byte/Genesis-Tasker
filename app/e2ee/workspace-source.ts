@@ -156,7 +156,9 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
       if(json(old.entries)!==json(snapshot.entries)||json(old.memory)!==json(snapshot.memory))throw new Error('E2EE_WORKSPACE_HISTORY_REVIEW_REQUIRED');}
     for(const key of ['genesis-calendar-v1','genesis-pending-mutations-v2'])if(values.get(key)!==null)throw new Error('E2EE_WORKSPACE_ATTRIBUTION_REQUIRED');
     const remote=await this.#ports.legacyWorkspace(context);this.#ports.assertCurrent();
-    exactKeys(remote,['protocol','ownerId','scopeId','migrationId','fence','sourceHash','legacyGeneration','checkpointHash','directoryRevision','workspace','projects','categories']);
+    exactKeys(remote,['protocol','ownerId','scopeId','migrationId','fence','sourceHash','legacyGeneration','checkpointHash','directoryRevision','workspace','projects','categories','privatePreferences']);
+    exactKeys(remote.privatePreferences,['categoryMapJson','visibilityJson','routingMode','routingTargetsJson']);
+    for(const field of ['categoryMapJson','visibilityJson','routingMode','routingTargetsJson'])if(remote.privatePreferences[field]!==null&&typeof remote.privatePreferences[field]!=='string')throw new Error('E2EE_WORKSPACE_SOURCE_INVALID');
     if(remote.protocol!==1||remote.ownerId!==this.#owner||remote.scopeId!==this.#scope||remote.migrationId!==context.migrationId
       ||remote.fence!==context.fence||remote.sourceHash!==context.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
     integer(remote.legacyGeneration);integer(remote.directoryRevision,1);decodeE2eeBytes(remote.checkpointHash,32);
@@ -224,7 +226,8 @@ export class PersonalWorkspaceSource implements PrivatePathAdapter{
         combined=await this.#merge(variant,combined,`queue:${index}`);
       }
       this.#ports.assertCurrent();const content:MigrationContent[]=[{domain:'workspace',objectId:'personal-workspace-v1',bytes:encoder.encode(json(combined.document))},
-        {domain:'workspace',objectId:'personal-workspace-legacy-relational-v1',bytes:encoder.encode(json({protocol:1,projects:remote.projects,categories:remote.categories}))}];
+        {domain:'workspace',objectId:'personal-workspace-legacy-relational-v1',bytes:encoder.encode(json({protocol:1,projects:remote.projects,categories:remote.categories}))},
+        {domain:'workspace',objectId:'personal-private-preferences-v1',bytes:encoder.encode(json({protocol:1,ownerId:this.#owner,original:remote.privatePreferences}))}];
       return{complete:true,content};
     }finally{rawKeys.fill('');keys.length=0;}
   }

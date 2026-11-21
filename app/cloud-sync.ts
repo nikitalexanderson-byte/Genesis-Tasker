@@ -11,7 +11,7 @@ import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
 import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
-import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,type PrivateAccountTransport} from './e2ee/product-session';
+import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
@@ -1832,7 +1832,8 @@ async function loadGenesisWorkspaceSnapshot(): Promise<GenesisWorkspace> {
     const structure=structureFromDocument(snapshot.workspace as SyncableWorkspaceDocument);
     workspaceUserId=protectedOwner;backupDataGeneration=requirePrivateAccount(protectedOwner).personal().directory.generation;
     workspaceVersion=0;workspaceKey='';workspaceBase=null;workspaceBaseMetadata=null;workspaceSyncMetadata=null;
-    return{...structure,user:identity,csrf:csrfToken,tasks:snapshot.tasks.map(task=>normalizeTask(task as Partial<GenesisTask>&Pick<GenesisTask,'id'|'title'>)),deletedTaskIds:snapshot.deletedTaskIds,
+    const {privatePreferences}=await import('./e2ee/preferences-product');const user=await privatePreferences(protectedOwner).apply(identity);requireActiveLocalSession(generation);
+    return{...structure,user,csrf:csrfToken,tasks:snapshot.tasks.map(task=>normalizeTask(task as Partial<GenesisTask>&Pick<GenesisTask,'id'|'title'>)),deletedTaskIds:snapshot.deletedTaskIds,
       hasRemoteStructure:true,syncWarning:account.mode==='offline'?PRIVATE_VAULT_COPY[identity.language??'en'].offlineDescription:null,workspaceKeyMode:'e2ee'};
   }
   const payload = await api<BootstrapPayload>("/bootstrap");
@@ -1987,7 +1988,10 @@ const readGenesisSession = sessionReader(async () => {
 export async function loadGenesisSession(signal?: AbortSignal) {
   const result = await readGenesisSession(signal);
   if(result.generation!==sessionGeneration)throw new DOMException("Session check superseded", "AbortError");
-  return result.user;
+  if(result.user&&Object.hasOwn(result.user,'privatePreferencesMode')&&privateAccountView().phase==='ready'&&privateAccountView().ownerId===result.user.uid){
+    const {privatePreferences}=await import('./e2ee/preferences-product');const user=await privatePreferences(result.user.uid).apply(result.user);
+    if(result.generation!==sessionGeneration)throw new DOMException('Session check superseded','AbortError');return user;
+  }return result.user;
 }
 
 export async function signInWithGoogle() {
@@ -2235,6 +2239,16 @@ export async function updateAccountPreferences(preferences: Partial<{
   syncRouting: SyncRouting;
 }>, signal?: AbortSignal) {
   try {
+    if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+      const privateNames=['advicePreferences','uiVisibility','uiLayout','syncRouting'] as const,privatePatch:Record<string,unknown>={},publicPatch:Record<string,unknown>={};
+      for(const [key,value]of Object.entries(preferences)){if((privateNames as readonly string[]).includes(key))privatePatch[key]=value;else publicPatch[key]=value;}
+      if(Object.keys(privatePatch).length){
+        const owner=confirmedTransportOwnerId,current=captureAccountSessionGuard(),{privatePreferences}=await import('./e2ee/preferences-product');current();
+        await privatePreferences(owner).update(privatePatch);current();
+        const user=Object.keys(publicPatch).length?(await api<{user:GenesisUser}>('/account/preferences',{method:'PUT',body:JSON.stringify(publicPatch),signal})).user:await loadGenesisSession(signal);
+        current();if(!user||user.uid!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');return{user:await privatePreferences(owner).apply(user)};
+      }
+    }
     return await api<{ user: GenesisUser }>("/account/preferences", {
       method: "PUT",
       body: JSON.stringify(preferences),
@@ -3647,6 +3661,13 @@ function observePrivateProduct(ownerId:string,listener:(workspace:GenesisWorkspa
   return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);window.removeEventListener(PERSONAL_DOCUMENT_READY_EVENT,refresh);};
 }
 export function usesPrivateProductStorage(ownerId:string){return serverProtectedTransportOwners.has(ownerId);}
+/** Public reference entries are not the user's private health records. The
+ * server independently enforces the existing catalogue administrator role. */
+export async function privatePhysisCatalogueRequest<T>(ownerId:string,init:RequestInit={}):Promise<T>{
+  const current=captureAccountSessionGuard();current();requirePrivateAccount(ownerId).requireOpen();
+  const method=init.method??'GET';if(!['GET','PUT'].includes(method))throw new Error('PHYSIS_ROUTE_INVALID');
+  const result=await api<T>('/private-services/physis-catalog',init);current();requirePrivateAccount(ownerId).requireOpen();return result;
+}
 /** Read-only service metadata. These routes accept no diary text or old key and
  * remain separate from the retired diary content transport. */
 export async function privateServiceRequest<T>(ownerId:string,service:'dream-clock'|'dream-voice',timeZone?:string,signal?:AbortSignal):Promise<T>{

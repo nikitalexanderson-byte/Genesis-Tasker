@@ -124,7 +124,11 @@ data class AccountSettings(
                     provider = item.optString("provider", provider),
                 )
             }
-            val route = user.getJSONObject("syncRouting")
+            // A locked private profile contains no private routing. This
+            // temporary public-account projection is replaced after unlock.
+            val route = user.optJSONObject("syncRouting") ?: if(user.has("privatePreferencesMode"))JSONObject().put("mode","fixed")
+                .put("defaultAccountIds",JSONArray(listOf(accounts.firstOrNull{it.isPrimary}?.id?:accounts.first().id))).put("categoryAccountIds",JSONObject())
+                else throw IllegalArgumentException("Missing account routing")
             val categoryValue = route.opt("categoryAccountIds")
             val categoryMap = when (categoryValue) {
                 is JSONObject -> categoryValue

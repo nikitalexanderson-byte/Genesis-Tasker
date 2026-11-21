@@ -3,6 +3,8 @@ package ru.genesis.calendar.security
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
+import java.security.KeyFactory
+import java.security.spec.X509EncodedKeySpec
 import java.util.UUID
 import javax.crypto.SecretKey
 
@@ -41,6 +43,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     private var roots = mutableMapOf<String, SecretKey>()
     private val sealedCache = mutableMapOf<String, JSONArray>()
     private var refreshed = false
+    private var directoryFrames=mutableMapOf<Long,E2eeDirectory.Verified>()
     init { E2eeKeys.technical(ownerId); E2eeKeys.technical(scopeId) }
     fun assertBinding(candidate: E2eeScopeDevice, candidateScope: String) {
         check(candidate === device && candidateScope == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
@@ -62,19 +65,19 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         device.requireOpen()
         val response = transport.directory(scopeId)
         device.requireOpen()
-        val frames = mutableMapOf<String, E2eeDirectory.Verified>()
-        val verified = device.rememberDirectory(scopeId, pin, response.getJSONArray("events"), ownerId) { frames[epochKey(it)] = it }
+        val frames = mutableMapOf<String, E2eeDirectory.Verified>();val revisions=mutableMapOf<Long,E2eeDirectory.Verified>()
+        val verified = device.rememberDirectory(scopeId, pin, response.getJSONArray("events"), ownerId) { frames[epochKey(it)] = it;revisions[it.checkpoint.revision]=it }
         installDirectory(verified, frames)
-        refreshed = true
+        directoryFrames=revisions;refreshed = true
         try { loadSealedHeads(true) } catch (error: Exception) { refreshed = false; throw error }
         // Do not hand a mutable authorization roster to product code.
         return E2eeDirectory.verify(ownerId, scopeId, pin, response.getJSONArray("events"), verified.checkpoint)
     }
     @Synchronized fun hydrateOffline(): E2eeDirectory.Verified {
         refreshed = false; device.requireOpen()
-        val frames = mutableMapOf<String, E2eeDirectory.Verified>()
-        val verified = device.savedDirectory(scopeId) { frames[epochKey(it)] = it } ?: throw IllegalStateException("E2EE_DIRECTORY_REQUIRED")
-        installDirectory(verified, frames); loadSealedHeads(false)
+        val frames = mutableMapOf<String, E2eeDirectory.Verified>();val revisions=mutableMapOf<Long,E2eeDirectory.Verified>()
+        val verified = device.savedDirectory(scopeId) { frames[epochKey(it)] = it;revisions[it.checkpoint.revision]=it } ?: throw IllegalStateException("E2EE_DIRECTORY_REQUIRED")
+        installDirectory(verified, frames);directoryFrames=revisions; loadSealedHeads(false)
         // Reconstruct a separate copy for callers through the saved signed events.
         return requireNotNull(device.savedDirectory(scopeId))
     }
@@ -379,6 +382,64 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             device.requireOpen(); return Opened(opened.bytes, opened.filename, opened.mediaType, context.getLong("revision"))
         } catch (error: Exception) { opened.bytes.fill(0); throw error } finally { encoded.fill(0) }
     }
-    @Synchronized fun close() { refreshed = false; directory = null; history.clear(); roots.clear(); sealedCache.clear() }
+    @Synchronized fun assertObjectReference(domain:String,objectId:String,revision:Long,payloadHash:String){
+        val value=current();val item=envelope(domain,objectId);device.requireOpen();val context=item?.context?.toJson()
+        check(item!=null&&context!=null&&context.get("ownerId")==ownerId&&context.get("scopeId")==scopeId&&context.getLong("dataGeneration")==value.generation
+            &&context.get("domain")==domain&&context.get("objectId")==objectId&&context.getLong("revision")==revision&&E2eeEnvelope.payloadHash(item)==payloadHash){"E2EE_OBJECT_REFERENCE_MISMATCH"}
+    }
+    @Synchronized fun prepareAuroraResult(resultId:String,methodVersion:String){
+        check(resultId.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))&&methodVersion=="aurora-two-circles-v2"){"AURORA_RESULT_MISMATCH"}
+        val value=current();check(value.kind=="personal"&&value.ownerId==device.ownerId&&value.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val objectId="aurora-result-live:$resultId";val item=envelope("aurora",objectId)?:error("E2EE_AURORA_RESULT_MISSING")
+        val payloadHash=E2eeEnvelope.payloadHash(item);assertObjectReference("aurora",objectId,1,payloadHash)
+        val payload=JSONObject().put("id",resultId).put("methodVersion",methodVersion).put("objectId",objectId).put("payloadHash",payloadHash)
+        val key="aurora-manifest:$resultId";val previous=device.vault.read("outbox",key)
+        try{
+            var signed=previous?.let{E2eeFileManifestJson.readPrivateDocument(it.bytes)}
+            if(signed!=null){val command=signed.getJSONObject("command");check(command.get("action")=="aurora-result"&&command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId
+                &&command.get("deviceId")==device.deviceId&&E2eeProductJson.same(command.getJSONObject("payload"),payload)){"E2EE_CORRUPT_OUTBOX"}
+                if(command.getLong("expectedRevision")!=value.checkpoint.revision||command.getLong("securityEpoch")!=value.securityEpoch||command.get("checkpointHash")!=value.checkpoint.hash)signed=null
+            }
+            if(signed==null){signed=packet("aurora-result",payload);val bytes=signed.toString().toByteArray(Charsets.UTF_8)
+                try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox",key,bytes,previous?.serial)))}finally{bytes.fill(0)}}
+            device.requireOpen();val receipt=transport.command(requireNotNull(signed));device.requireOpen();check(receipt.get("id")==resultId&&receipt.get("ready")==true){"AURORA_RESULT_MISMATCH"}
+        }finally{previous?.bytes?.fill(0)}
+    }
+    @Synchronized fun executeService(action:String,payload:JSONObject,intentId:String):JSONObject{
+        check(action in setOf("product-commit","product-approve","stoicheion-grant")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
+        val held=JSONObject(payload.toString()).put("intentId",intentId);val key="service:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest("$action\u0000$intentId".toByteArray(Charsets.UTF_8)))
+        for(attempt in 0..1){val value=current();val prior=device.vault.read("outbox",key)
+            try{val old=prior?.let{E2eeFileManifestJson.readPrivateDocument(it.bytes)};val command=old?.getJSONObject("command")
+                if(command!=null)check(command.get("action")==action&&command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId&&command.get("deviceId")==device.deviceId
+                    &&E2eeCommands.canonical(command.getJSONObject("payload")).contentEquals(E2eeCommands.canonical(held))){"E2EE_CORRUPT_OUTBOX"}
+                val reusable=command!=null&&command.getLong("expectedRevision")==value.checkpoint.revision&&command.getLong("securityEpoch")==value.securityEpoch&&command.get("checkpointHash")==value.checkpoint.hash
+                val signed=if(reusable)requireNotNull(old)else packet(action,held)
+                if(!reusable){val bytes=signed.toString().toByteArray(Charsets.UTF_8);try{val writes=mutableListOf<UnlockedE2eeVault.Write>()
+                    if(prior!=null)writes+=UnlockedE2eeVault.Write("local-snapshot","$key:attempt:${prior.serial}",prior.bytes,null)
+                    writes+=UnlockedE2eeVault.Write("outbox",key,bytes,prior?.serial);device.vault.write(writes)}finally{bytes.fill(0)}}
+                device.requireOpen();return transport.command(signed).also{device.requireOpen()}
+            }catch(error:Exception){if(attempt!=0||error.message !in setOf("E2EE_STALE_EPOCH","E2EE_DIRECTORY_CONFLICT","E2EE_CHECKPOINT_MISMATCH"))throw error}
+            finally{prior?.bytes?.fill(0)}
+            refresh();device.requireOpen()
+        };error("E2EE_DIRECTORY_CONFLICT")
+    }
+    @Synchronized fun readProductIndex(after:String="",limit:Int=50):JSONObject{if(after.isNotEmpty())E2eeKeys.technical(after);check(limit in 1..50){"E2EE_INVALID_LIMIT"};return readPacket("product-index",JSONObject().put("after",after).put("limit",limit))}
+    @Synchronized fun objectReference(domain:String,objectId:String):JSONObject{
+        val value=current();val item=envelope(domain,objectId)?:error("E2EE_PRIVATE_DOCUMENT_MISSING");device.requireOpen();val context=item.context.toJson();val frame=history[epochKey(context)]
+        check(frame!=null&&context.get("ownerId")==ownerId&&context.get("scopeId")==scopeId&&context.get("domain")==domain&&context.get("objectId")==objectId&&context.getLong("dataGeneration")==value.generation){"E2EE_CONTEXT_MISMATCH"}
+        val root=roots[context.getString("keyId")]?:error("E2EE_KEY_UNAVAILABLE");historicalHead(item);val bytes=E2eeEnvelope.open(root,E2eeDirectory.contentSigningKey(frame,context),item.context,item);bytes.fill(0);device.requireOpen()
+        return JSONObject().put("scopeId",scopeId).put("generation",context.get("dataGeneration")).put("revision",context.get("revision")).put("payloadHash",E2eeEnvelope.payloadHash(item))
+    }
+    @Synchronized fun verifyServiceProof(input:JSONObject):JSONObject{
+        current();val packet=JSONObject(input.toString());val command=packet.getJSONObject("command");val frame=directoryFrames[command.getLong("expectedRevision")]?:error("E2EE_PRODUCT_PROOF_INVALID")
+        check(command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId&&command.get("checkpointHash")==frame.checkpoint.hash&&command.getLong("securityEpoch")==frame.securityEpoch
+            &&command.getString("action") in setOf("product-commit","product-approve")){"E2EE_PRODUCT_PROOF_INVALID"}
+        val signer=frame.devices[command.getString("deviceId")]?:error("E2EE_PRODUCT_PROOF_INVALID");check(!signer.revoked){"E2EE_PRODUCT_PROOF_INVALID"}
+        if(command.getString("action")=="product-commit"){val rows=command.getJSONObject("payload").getJSONArray("operations");check(rows.length() in 1..100){"E2EE_PRODUCT_PROOF_INVALID"}
+            for(at in 0 until rows.length()){val comment=rows.getJSONObject(at).getString("kind") in setOf("comment","project-comment");check(signer.role in if(comment)setOf("owner","writer","commenter")else setOf("owner","writer")){"E2EE_PRODUCT_PROOF_INVALID"}}}
+        val key=KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(E2eeEnvelope.decode(signer.signingKey,91)));E2eeEnvelope.assertP256(key)
+        val verified=E2eeCommands.verify(packet,key);device.requireOpen();return JSONObject().put("actorId",signer.userId).put("command",verified).put("proofHash",E2eeCommands.hash(verified))
+    }
+    @Synchronized fun close() { refreshed = false; directory = null; history.clear();directoryFrames.clear(); roots.clear(); sealedCache.clear() }
     override fun toString() = "E2eeScopeClient([redacted])"
 }

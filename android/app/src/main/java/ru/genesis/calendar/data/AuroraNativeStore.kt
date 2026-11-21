@@ -28,6 +28,14 @@ internal class AuroraNativeStore(private val app: GenesisApplication, private va
     private val memoryMonitor = Any()
     @Volatile private var closed = false
     private var memoryKey: ByteArray? = null
+    val privateMode get()=ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)
+    private var privateProduct:NativePrivateAurora?=null
+    @Synchronized private fun product():NativePrivateAurora{check();check(privateMode){"E2EE_SCOPE_BINDING_MISMATCH"};return privateProduct?:NativePrivateAurora(scope,owner).also{privateProduct=it}}
+    suspend fun privateDocument(method:String,payload:JSONObject)=product().document(method,payload).also{check()}
+    suspend fun privateSealResult(id:String,value:JSONObject)=product().sealResult(id,value).also{check()}
+    suspend fun privateLocalResult(manifest:JSONObject)=product().localResult(manifest).also{check()}
+    suspend fun privatePublishResult(id:String,method:String)=product().publishResult(id,method).also{check()}
+    suspend fun privateOpenResult(id:String,reference:JSONObject)=product().openResult(id,reference).also{check()}
     private fun check() { check(!closed) { "AURORA_VIEW_CLOSED" };mutation.check();gateway.check(); check(app.workspaceScope == scope) { "AURORA_ACCOUNT_CHANGED" } }
     private fun aad(kind: String) = "$scope/aurora/$owner/$kind"
     suspend fun beginLegacyOperation(): NativeLegacyOperationPermit =
@@ -91,5 +99,5 @@ internal class AuroraNativeStore(private val app: GenesisApplication, private va
     suspend fun billing(method: String, path: String, body: JSONObject?): JSONObject {
         check(); require(AuroraProtocol.allowedBilling(method, path)); return gateway.billing(method, path, body).also { check() }
     }
-    override fun close() { synchronized(memoryMonitor) { closed = true;memoryKey?.fill(0);memoryKey = null } }
+    override fun close() { synchronized(memoryMonitor) { closed = true;memoryKey?.fill(0);memoryKey = null;privateProduct=null } }
 }

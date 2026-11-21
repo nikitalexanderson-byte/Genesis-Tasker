@@ -6,22 +6,29 @@ import type {E2eeContext} from './envelope.ts';
 
 type State<T>={protocol:1;ownerId:string;document:T;base:T};
 export type FeatureDocumentView<T>={document:T;base:T;pending:boolean;remoteRevision:number;conflict:{document:T;revision:number}|null};
+export interface FeatureDocumentPort<T>{
+ read(refresh?:boolean):Promise<FeatureDocumentView<T>>;
+ write(input:T):Promise<FeatureDocumentView<T>>;
+ resolve(input:T,expectedConflictRevision:number):Promise<FeatureDocumentView<T>>;
+ flush():Promise<FeatureDocumentView<T>>;
+}
 type Binding<T>={account:WebPrivateAccount;document:E2eePrivateDocument<State<T>>;view:PrivateDocumentView<State<T>>|null};
 /** Domain editors retain the exact baseline of their first pending edit inside
  * the encrypted document. Offline edits/reloads therefore preserve a real merge
  * base. The object supplies no legacy fallback, entitlement or executable import. */
-export class E2eeFeatureDocument<T>{
+export class E2eeFeatureDocument<T> implements FeatureDocumentPort<T>{
  #binding:Binding<T>|null=null;#serial:Promise<unknown>=Promise.resolve();
- constructor(private readonly options:{ownerId:string;domain:E2eeContext['domain'];objectId:string;validate:(value:unknown)=>T;
+ constructor(private readonly options:{ownerId:string;domain:E2eeContext['domain'];objectId:string;validate:(value:unknown)=>T|Promise<T>;
   seed:(read:(id:string)=>Promise<unknown>)=>Promise<T>}){}
  #current(binding:Binding<T>){binding.account.requireOpen();if(requirePrivateAccount(this.options.ownerId)!==binding.account)throw new Error('E2EE_ACCOUNT_CHANGED');}
  #bind(account:WebPrivateAccount){
   if(this.#binding?.account===account)return this.#binding;const {client,directory}=account.personal();
   const binding={} as Binding<T>;binding.account=account;binding.view=null;
   binding.document=new E2eePrivateDocument({device:account.device,client,scopeId:directory.scopeId,domain:this.options.domain,objectId:this.options.objectId,
-   assertCurrent:()=>this.#current(binding),assertWrite:()=>this.#current(binding),validate:value=>{exactKeys(value,['protocol','ownerId','document','base']);
+   assertCurrent:()=>this.#current(binding),assertWrite:()=>this.#current(binding),validate:async value=>{exactKeys(value,['protocol','ownerId','document','base']);
     if(value.protocol!==1||value.ownerId!==this.options.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-    return{protocol:1,ownerId:this.options.ownerId,document:this.options.validate(value.document),base:this.options.validate(value.base)};}});
+    const document=await this.options.validate(value.document),base=await this.options.validate(value.base);this.#current(binding);
+    return{protocol:1,ownerId:this.options.ownerId,document,base};}});
   return this.#binding=binding;
  }
  #operation<R>(run:(binding:Binding<T>)=>Promise<R>):Promise<R>{
@@ -35,18 +42,18 @@ export class E2eeFeatureDocument<T>{
   if(binding.view&&!refresh)return this.#view(binding);
   try{binding.view=await binding.document.load(binding.account.mode);}
   catch(error){if(binding.account.mode!=='online'||!(error instanceof Error)||error.message!=='E2EE_PRIVATE_DOCUMENT_MISSING')throw error;
-   const document=this.options.validate(await this.options.seed(async id=>{const row=await binding.account.personal().client.read(this.options.domain,id);this.#current(binding);if(!row)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');
+   const document=await this.options.validate(await this.options.seed(async id=>{const row=await binding.account.personal().client.read(this.options.domain,id);this.#current(binding);if(!row)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');
     try{return parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(row.bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024);}finally{row.bytes.fill(0);}}));
    this.#current(binding);const value:State<T>={protocol:1,ownerId:this.options.ownerId,document,base:structuredClone(document)},serial=await binding.document.save(value,{serial:null,remoteRevision:0});
    binding.view={value,serial,remoteRevision:0,pending:true,conflict:null};
   }return this.#view(binding);
  }
  read(refresh=true){return this.#operation(binding=>this.#load(binding,refresh));}
- write(input:T){const document=this.options.validate(structuredClone(input));return this.#operation(async binding=>{await this.#load(binding);const prior=binding.view!;
+ write(input:T){const snapshot=structuredClone(input);return this.#operation(async binding=>{const document=await this.options.validate(snapshot);this.#current(binding);await this.#load(binding);const prior=binding.view!;
   const value:State<T>={protocol:1,ownerId:this.options.ownerId,document,base:structuredClone(prior.pending?prior.value.base:prior.value.document)},serial=await binding.document.save(value,prior);
   binding.view={...prior,value,serial,pending:true};return this.#view(binding);
  });}
- resolve(input:T,expectedConflictRevision:number){const document=this.options.validate(structuredClone(input));return this.#operation(async binding=>{
+ resolve(input:T,expectedConflictRevision:number){const snapshot=structuredClone(input);return this.#operation(async binding=>{const document=await this.options.validate(snapshot);this.#current(binding);
   if(binding.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');await this.#load(binding,true);const prior=binding.view!;
   if(!prior.conflict||prior.conflict.revision!==expectedConflictRevision)throw new Error('E2EE_CONFLICT_REVIEW_STALE');
   const value:State<T>={protocol:1,ownerId:this.options.ownerId,document,base:structuredClone(prior.conflict.value.document)};

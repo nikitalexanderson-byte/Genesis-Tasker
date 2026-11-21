@@ -44,7 +44,7 @@ const GENESIS_E2EE_LEGACY_TABLES = [
 // These fields contain private preferences/references, while the same users row
 // also contains independent identity/billing authority which must keep working.
 const GENESIS_E2EE_PRIVATE_USER_FIELDS = ['advice_preferences_json','advice_collections_json','advice_notifications_json',
-    'advice_psychopompia_json','advice_philosophers_per_day','category_sync_map','ui_visibility_json'];
+    'advice_psychopompia_json','advice_philosophers_per_day','category_sync_map','ui_visibility_json','sync_routing_mode','sync_target_account_ids'];
 
 /** SQL expressions are compile-time constants from the inventory, not requests.
  * A many-valued reference never chooses an arbitrary first project. */
@@ -190,9 +190,10 @@ function genesisE2eeLegacyInventory(PDO $db): array
 }
 function genesisE2eeInitializeGuards(PDO $db): void
 {
+    require_once __DIR__.'/e2ee-membership.php';genesisE2eeRegisterAclGuard($db);
     // Persistent triggers protect CLI/jobs and an older server binary too. Replacing these
     // guards is an additive schema operation; this version marker avoids per-request DDL.
-    $marker='e2ee-fence-v4';
+    $marker='e2ee-fence-v6';
     $q=$db->prepare('SELECT 1 FROM schema_migrations WHERE name=?');$q->execute([$marker]);$exists=$q->fetchColumn();$q->closeCursor();if($exists)return;
     genesisBeginWriteTransaction($db);
     try {
@@ -234,7 +235,8 @@ function genesisE2eeInitializeGuards(PDO $db): void
                   AND (s.state IN ('active','retirement') OR EXISTS(SELECT 1 FROM e2ee_migrations m WHERE m.scope_id=s.scope_id AND m.lease_until>=CAST(strftime('%s','now') AS INTEGER))))";
             }
             $name='e2ee_acl_'.$table.'_'.strtolower($verb);$db->exec('DROP TRIGGER IF EXISTS "'.$name.'"');
-            $db->exec('CREATE TRIGGER "'.$name.'" BEFORE '.$verb.' ON "'.$table.'" WHEN '.implode(' OR ',$checks)." BEGIN SELECT RAISE(ABORT,'E2EE_ACL_ROTATION_REQUIRED'); END");
+            $old=$verb==='INSERT'?'NULL':genesisE2eeAclTriggerJson($db,$table,'OLD');$new=$verb==='DELETE'?'NULL':genesisE2eeAclTriggerJson($db,$table,'NEW');
+            $db->exec('CREATE TRIGGER "'.$name.'" BEFORE '.$verb.' ON "'.$table.'" WHEN ('.implode(' OR ',$checks).") AND genesis_e2ee_acl_allowed('$table','$verb',$old,$new)=0 BEGIN SELECT RAISE(ABORT,'E2EE_ACL_ROTATION_REQUIRED'); END");
         }
         $db->prepare('INSERT OR IGNORE INTO schema_migrations VALUES(?,?)')->execute([$marker,genesisNow()]);
         $db->commit();
@@ -325,6 +327,7 @@ function genesisE2eeEnforceLegacyRoute(string $method,string $path,?string $user
     $expectedOwner=$_SERVER['HTTP_X_GENESIS_ACCOUNT_ID']??null;
     if($expectedOwner!==null && (!is_string($expectedOwner)||$expectedOwner!==$userId))throw new DomainException('E2EE_ACCOUNT_CHANGED');
     if(str_starts_with($path,'e2ee/v1/'))return;
+    if($path==='private-services/physis-catalog'&&in_array($method,['GET','PUT'],true))return;
     // The existing messenger has a separate ciphertext protocol and history.
     // Keep both read and write routes, including its scoped conversation creation.
     if(preg_match('~^shared/(?:private-conversations|messenger|messaging)(?:/|$)|^shared/spaces/[^/]+/private-conversations$~D',$path))return;

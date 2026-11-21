@@ -98,7 +98,9 @@ internal class E2eeNativeWorkspaceSource(
         for(old in previous.map(::snapshot))check(same(old.get("documents"),captured.get("documents")) && same(old.get("outbox"),captured.get("outbox")) && old.get("legacyGeneration") == captured.get("legacyGeneration")) { "E2EE_WORKSPACE_HISTORY_REVIEW_REQUIRED" }
         val remote=legacyWorkspace(lease); assertCurrent()
         check(bytes(remote).size <= maximum) { "E2EE_SOURCE_TOO_LARGE" }
-        E2eeKeys.exact(remote,setOf("protocol","ownerId","scopeId","migrationId","fence","sourceHash","legacyGeneration","checkpointHash","directoryRevision","workspace","projects","categories"))
+        E2eeKeys.exact(remote,setOf("protocol","ownerId","scopeId","migrationId","fence","sourceHash","legacyGeneration","checkpointHash","directoryRevision","workspace","projects","categories","privatePreferences"))
+        val privatePreferences=remote.getJSONObject("privatePreferences");E2eeKeys.exact(privatePreferences,setOf("categoryMapJson","visibilityJson","routingMode","routingTargetsJson"))
+        for(name in listOf("categoryMapJson","visibilityJson","routingMode","routingTargetsJson"))check(privatePreferences.isNull(name)||privatePreferences.get(name) is String){"E2EE_WORKSPACE_SOURCE_INVALID"}
         check(E2eeCommands.integer(remote.get("protocol")) == 1L && remote.get("ownerId") == ownerId && remote.get("scopeId") == scopeId
             && remote.get("migrationId") == lease.migrationId && E2eeCommands.integer(remote.get("fence"),1) == lease.fence && remote.get("sourceHash") == lease.sourceHash) { "E2EE_SCOPE_BINDING_MISMATCH" }
         E2eeCommands.integer(remote.get("legacyGeneration")); E2eeCommands.integer(remote.get("directoryRevision"),1); E2eeEnvelope.decode(remote.getString("checkpointHash"),32)
@@ -161,7 +163,8 @@ internal class E2eeNativeWorkspaceSource(
         canonicalAchievementMetadata(merged,listOf(base,current,remoteDocument));validate(merged); assertCurrent()
         val history=JSONObject().put("protocol",1).put("projects",remote.getJSONArray("projects")).put("categories",remote.getJSONArray("categories"))
         return E2eePathReconciliation(true,listOf(E2eeMigrationContent("workspace","personal-workspace-v1",bytes(merged)),
-            E2eeMigrationContent("workspace","personal-workspace-legacy-relational-v1",bytes(history))))
+            E2eeMigrationContent("workspace","personal-workspace-legacy-relational-v1",bytes(history)),
+            E2eeMigrationContent("workspace","personal-private-preferences-v1",bytes(JSONObject().put("protocol",1).put("ownerId",ownerId).put("original",privatePreferences)))))
     }
     private val collections=setOf("projects","categories","taskListLinks","taskLists","habits","habitCompletions","habitMeasurements","habitTimers","habitHistory",
         "sleepPlans","sleepEntries","moodEntries","addictionTrackers","addictionEntries","analyticsSnapshots","dailyGoalRecords","quests","achievementUnlocks","rewardTransactions","streakFreezeTransactions")

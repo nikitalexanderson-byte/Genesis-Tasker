@@ -1,17 +1,19 @@
 import {LOCAL_SESSION_ENDED_EVENT} from '../cloud-sync';
 import type {VaultState} from './account-session';
-import type {PhysisMemoryStore} from './store';
+import type {PhysisEditorModel} from './store';
+import {privateAccountView,subscribePrivateAccount} from '../e2ee/product-session';
 
-type Session={model:PhysisMemoryStore;vaultState:VaultState};
+type Session={model:PhysisEditorModel;vaultState:VaultState};
 const sessions=new Map<string,Session>();let listening=false;
 function listen(){
  if(listening||typeof window==='undefined')return;listening=true;
  window.addEventListener(LOCAL_SESSION_ENDED_EVENT,clearPhysisSessionMemory);
+ subscribePrivateAccount(()=>{if(privateAccountView().phase!=='ready')for(const [owner,value]of [...sessions])if(value.model.privateStorage){sessions.delete(owner);value.model.destroy();}});
  window.addEventListener('beforeunload',event=>{if([...sessions.values()].some(({model})=>model.hasPending||model.rotationPending)){event.preventDefault();event.returnValue='';}});
 }
 /** Page navigation is not logout. Keep unsent records and detached forms in the
  * same unlocked account session; no disk cache or background transport is added. */
-export function rememberPhysisSession(ownerId:string,model:PhysisMemoryStore,vaultState:VaultState){
+export function rememberPhysisSession(ownerId:string,model:PhysisEditorModel,vaultState:VaultState){
  model.assertCurrent();if(model.owner!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
  const previous=sessions.get(ownerId);if(previous&&previous.model!==model)throw new Error('E2EE_PHYSIS_SESSION_EXISTS');
  listen();sessions.set(ownerId,{model,vaultState:structuredClone(vaultState)});
@@ -20,7 +22,7 @@ export function retainedPhysisSession(ownerId:string):Session|null{
  const value=sessions.get(ownerId);if(!value)return null;value.model.assertCurrent();return{model:value.model,vaultState:structuredClone(value.vaultState)};
 }
 export async function capturePhysisSessionMemory(ownerId:string){
- const value=sessions.get(ownerId);if(!value)return[];value.model.assertCurrent();
+ const value=sessions.get(ownerId);if(!value)return[];value.model.assertCurrent();if(value.model.privateStorage)return[];
  const state=await value.model.captureMigrationMemory();value.model.assertCurrent();
  if(sessions.get(ownerId)!==value)throw new Error('E2EE_PHYSIS_CAPTURE_CHANGED');
  if(!value.vaultState.vault)throw new Error('E2EE_PHYSIS_SOURCE_INVALID');

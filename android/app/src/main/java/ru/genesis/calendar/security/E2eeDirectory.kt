@@ -15,7 +15,7 @@ object E2eeDirectory {
     data class Checkpoint(val revision: Long, val hash: String)
     data class SealedHeads(val cryptoEpoch:Long,val hash:String,val count:Int)
     class HistoricalRoot(val cryptoEpoch:Long,val keyId:String,val capsule:JSONObject)
-    class Device(val deviceId: String, val userId: String, val role: String, val signingKey: String, val receivingKey: String,
+    class Device(val deviceId: String, val userId: String, var role: String, val signingKey: String, val receivingKey: String,
         var revoked: Boolean, var capsule: JSONObject,val historyCapsules:MutableList<HistoricalRoot> = mutableListOf()) {
         override fun toString() = "E2eeDirectory.Device([redacted])"
     }
@@ -105,7 +105,7 @@ object E2eeDirectory {
                         trust(Signature.getInstance("SHA256withECDSA").run {initVerify(signingKey(signing));update(proof);verify(E2eeEnvelope.p1363ToDer(E2eeEnvelope.decode(payload.getString("selfProof"),64)))})
                         current.devices[deviceId]=Device(deviceId,userId,role,signing,receiving,false,payload.getJSONObject("capsule"),history)
                     }
-                    "rotate" -> {
+                    "rotate", "rotate-membership" -> {
                         val retiredHash=payload.getString("retiredManifestHash");E2eeEnvelope.decode(retiredHash,32)
                         val retiredCount=E2eeCommands.integer(payload.get("retiredObjectCount"));trust(retiredCount<=10000)
                         current.sealedHeads=SealedHeads(current.cryptoEpoch,retiredHash,retiredCount.toInt())
@@ -119,6 +119,11 @@ object E2eeDirectory {
                             trust(target!=null&&!target.revoked&&updated.add(id));target!!.historyCapsules.add(HistoricalRoot(current.cryptoEpoch,current.keyId,target.capsule));target.capsule=entry.getJSONObject("capsule")
                         }
                         trust(current.devices.values.all {it.revoked || it.deviceId in updated})
+                        if(command.getString("action")=="rotate-membership"){
+                            E2eeEnvelope.decode(payload.getString("membershipHash"),32);val changes=payload.getJSONArray("roleChanges");trust(changes.length()==updated.size);val changed=mutableSetOf<String>()
+                            for(at in 0 until changes.length()){val row=changes.getJSONObject(at);E2eeKeys.exact(row,setOf("deviceId","role"));val id=technical(row,"deviceId");val target=current.devices[id];val role=row.getString("role")
+                                trust(id in updated&&changed.add(id)&&target!=null&&role in setOf("owner","writer","commenter","reader")&&(role=="owner")== (target!!.userId==ownerId));target!!.role=role}
+                        }
                         current.cryptoEpoch=cryptoEpoch;current.securityEpoch=securityEpoch;current.keyId=keyId;current.recoveryCapsule=payload.getJSONObject("recoveryCapsule")
                         epochs[cryptoEpoch]=keyId
                     }

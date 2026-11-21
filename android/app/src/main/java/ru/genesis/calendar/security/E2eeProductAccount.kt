@@ -13,10 +13,20 @@ internal interface E2eeAccountTransport:E2eeScopeTransport{
 /** Foreground capability, independent of Google identity. Existing hardware
  * bundles are never replaced on an unlock or enrollment failure. */
 internal class E2eeProductAccount private constructor(val ownerId:String,val device:UnlockedE2eeDevice,
-    val client:E2eeScopeClient,val directory:E2eeDirectory.Verified,private val assertCurrent:()->Unit,val offline:Boolean=false){
+    val client:E2eeScopeClient,val directory:E2eeDirectory.Verified,private val assertCurrent:()->Unit,private val transport:E2eeAccountTransport,val offline:Boolean=false){
     private var closed=false
+    class SharedScope(val client:E2eeScopeClient,val directory:E2eeDirectory.Verified){override fun toString()="E2eeProductAccount.SharedScope([redacted])"}
+    private val shared=mutableMapOf<String,SharedScope>()
     fun requireOpen(){check(!closed){"E2EE_UNLOCK_REQUIRED"};assertCurrent();device.requireOpen()}
-    fun close(){if(!closed){closed=true;device.lock()}}
+    @Synchronized fun close(){if(!closed){closed=true;shared.values.forEach{it.client.close()};shared.clear();client.close();device.lock()}}
+    @Synchronized fun openSharedScope(scopeId:String,kind:String,resourceId:String,scopeOwner:String,pin:JSONObject):SharedScope{
+        requireOpen();check(kind in setOf("project","space")){"E2EE_SCOPE_BINDING_MISMATCH"};E2eeKeys.technical(scopeId);E2eeKeys.technical(resourceId);E2eeKeys.technical(scopeOwner)
+        val peer=E2eeScopeClient(device,scopeOwner,scopeId,pin,transport);val verified=if(offline)peer.hydrateOffline()else peer.refresh();requireOpen()
+        check(verified.scopeId==scopeId&&verified.kind==kind&&verified.resourceId==resourceId&&verified.ownerId==scopeOwner&&verified.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"}
+        return SharedScope(peer,verified).also{shared.remove(scopeId)?.client?.close();shared[scopeId]=it}
+    }
+    @Synchronized fun sharedScope(scopeId:String,kind:String,resourceId:String):SharedScope{requireOpen();val value=shared[scopeId]?:error("E2EE_SHARED_SCOPE_UNLOCK_REQUIRED")
+        check(value.directory.kind==kind&&value.directory.resourceId==resourceId){"E2EE_SCOPE_BINDING_MISMATCH"};return value}
     override fun toString()="E2eeProductAccount([redacted])"
     companion object{
         fun open(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit,secret:ByteArray?=null,kit:JSONObject?=null):E2eeProductAccount{
@@ -36,7 +46,7 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                 check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_MIGRATION_RESUME_REQUIRED"}
                 val old=candidate.vault.read("key-check","product-account-index-v1");val bytes=JSONObject().put("protocol",1).put("ownerId",owner).put("personal",personal.single()).toString().toByteArray(Charsets.UTF_8)
                 try{candidate.vault.write(listOf(UnlockedE2eeVault.Write("key-check","product-account-index-v1",bytes,old?.serial)));current()}finally{old?.bytes?.fill(0);bytes.fill(0)}
-                return E2eeProductAccount(owner,candidate,client,directory,current)
+                return E2eeProductAccount(owner,candidate,client,directory,current,transport)
             }catch(error:Throwable){device?.lock();throw error}finally{held?.fill(0)}
         }
         fun openOffline(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit):E2eeProductAccount{
@@ -48,7 +58,7 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                 }finally{row.bytes.fill(0)}
                 val client=E2eeScopeClient(device,owner,scope,device.authorityPin,transport);val directory=client.hydrateOffline();current()
                 check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"}
-                return E2eeProductAccount(owner,device,client,directory,current,offline=true)
+                return E2eeProductAccount(owner,device,client,directory,current,transport,offline=true)
             }catch(error:Throwable){device.lock();throw error}
         }
         private fun recoverEnrollment(owner:String,scope:String,device:UnlockedE2eeDevice,transport:E2eeAccountTransport,secret:ByteArray,kit:JSONObject,current:()->Unit){
@@ -56,12 +66,15 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
             check(E2eeCommands.canonical(kit.getJSONObject("authority")).contentEquals(E2eeCommands.canonical(device.authorityPin))){"E2EE_AUTHORITY_CHANGED"}
             val id="enrollment:$scope";val saved=device.vault.read("outbox",id)
             try{
-                val packet=if(saved!=null){val parsed=E2eeFileManifestJson.readPrivateDocument(saved.bytes);val command=parsed.getJSONObject("command")
-                    check(command.getString("action")=="enroll"&&command.getString("deviceId")=="recovery"&&command.getString("ownerId")==owner&&command.getString("scopeId")==scope){"E2EE_CORRUPT_OUTBOX"};parsed
-                }else{
+                val packet=run{
                     val frames=linkedMapOf<Long,E2eeDirectory.Verified>();val response=transport.directory(scope);current()
                     val directory=E2eeDirectory.verify(owner,scope,device.authorityPin,response.getJSONArray("events"),onVerified={frame->frames[frame.cryptoEpoch]=frame});current()
-                    val keys=E2eeKeys.publicKeys(device.keys());val challenge=transport.challenge(scope,device.deviceId,keys);current()
+                    val keys=E2eeKeys.publicKeys(device.keys());val known=directory.devices[device.deviceId]
+                    if(known!=null){check(!known.revoked){"E2EE_REVOKED_DEVICE"};check(known.userId==owner&&known.signingKey==keys.getString("signingKey")&&known.receivingKey==keys.getString("receivingKey")){"E2EE_UNTRUSTED_DEVICE"}
+                        device.rememberDirectory(scope,device.authorityPin,response.getJSONArray("events"));current();return}
+                    if(saved!=null){val command=E2eeFileManifestJson.readPrivateDocument(saved.bytes).getJSONObject("command")
+                        check(command.getString("action")=="enroll"&&command.getString("deviceId")=="recovery"&&command.getString("ownerId")==owner&&command.getString("scopeId")==scope){"E2EE_CORRUPT_OUTBOX"}}
+                    val challenge=transport.challenge(scope,device.deviceId,keys);current()
                     E2eeKeys.exact(challenge,setOf("id","scopeId","userId","role","sessionHash","deviceId","signingKey","receivingKey","nonce","expiresAt"))
                     check(challenge.getString("scopeId")==scope&&challenge.getString("userId")==owner&&challenge.getString("role")=="owner"&&challenge.getString("deviceId")==device.deviceId
                         &&challenge.getString("signingKey")==keys.getString("signingKey")&&challenge.getString("receivingKey")==keys.getString("receivingKey")&&challenge.getLong("expiresAt")*1000>System.currentTimeMillis()){"E2EE_CHALLENGE_INVALID"}
@@ -76,11 +89,12 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                         .put("expectedRevision",directory.checkpoint.revision).put("checkpointHash",directory.checkpoint.hash).put("securityEpoch",directory.securityEpoch).put("operationId",UUID.randomUUID().toString())
                         .put("payload",JSONObject().put("challenge",challenge).put("capsule",grant(directory)).put("historyCapsules",histories).put("selfProof",selfProof))
                     val signed=E2eeCommands.sign(command,authority.signing.private);current();val bytes=signed.toString().toByteArray(Charsets.UTF_8)
-                    try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox",id,bytes,null)))}finally{bytes.fill(0)};signed
+                    try{val writes=mutableListOf<UnlockedE2eeVault.Write>();if(saved!=null)writes+=UnlockedE2eeVault.Write("local-snapshot","$id:attempt:${saved.serial}",saved.bytes,null)
+                        writes+=UnlockedE2eeVault.Write("outbox",id,bytes,saved?.serial);device.vault.write(writes)}finally{bytes.fill(0)};signed
                 }
-                current();transport.command(packet);current();val response=transport.directory(scope);current()
+                current();var deliveryFailure:Exception?=null;try{transport.command(packet)}catch(error:Exception){if(error is kotlinx.coroutines.CancellationException)throw error;deliveryFailure=error};current();val response=transport.directory(scope);current()
                 val directory=device.rememberDirectory(scope,device.authorityPin,response.getJSONArray("events"));current();val enrolled=directory.devices[device.deviceId];val keys=E2eeKeys.publicKeys(device.keys())
-                check(enrolled!=null&&!enrolled.revoked&&enrolled.userId==owner&&enrolled.signingKey==keys.getString("signingKey")&&enrolled.receivingKey==keys.getString("receivingKey")){"E2EE_UNTRUSTED_DEVICE"}
+                if(enrolled==null||enrolled.revoked||enrolled.userId!=owner||enrolled.signingKey!=keys.getString("signingKey")||enrolled.receivingKey!=keys.getString("receivingKey"))throw deliveryFailure?:IllegalStateException("E2EE_UNTRUSTED_DEVICE")
             }finally{saved?.bytes?.fill(0)}
         }
     }

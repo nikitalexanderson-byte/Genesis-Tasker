@@ -68,7 +68,20 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private fun liveAccountSettings(response: JSONObject): AccountSettings? {
         val receipt = client.liveReceipt(response)
         if (receipt?.isCurrent() == false) throw CancellationException("Authenticated profile superseded")
-        return AccountSettings.fromResponse(response, receipt?.proof, receipt)
+        val user=response.optJSONObject("user");val uid=user?.optString("uid");val accountScope=uid?.let(CloudAccountSnapshot::scopeFor)
+        val settings=AccountSettings.fromResponse(response,receipt?.proof,receipt)?:return null
+        return if(user?.has("privatePreferencesMode")==true&&accountScope!=null&&ru.genesis.calendar.security.NativePrivateProducts.isOpen(accountScope))
+            ru.genesis.calendar.security.NativePrivateProducts.preferences(accountScope).project(settings) else settings
+    }
+    /** Only the independently authoritative public fields use account HTTP.
+     * Category mappings, advice and layout remain inside the private vault. */
+    private fun updatePreferencePayload(generation:Long,body:JSONObject):JSONObject{
+        val uid=mutableState.value.user?.uid?:throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED);val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(accountScope))return client.updatePreferences(generation,body)
+        val privateNames=setOf("advicePreferences","uiVisibility","uiLayout","syncRouting");val privatePatch=JSONObject();val publicPatch=JSONObject()
+        for(key in body.keys())(if(key in privateNames)privatePatch else publicPatch).put(key,body.get(key))
+        if(privatePatch.length()>0)ru.genesis.calendar.security.NativePrivateProducts.preferences(accountScope).update(privatePatch)
+        return if(publicPatch.length()>0)client.updatePreferences(generation,publicPatch)else client.session(generation)
     }
 
     /** Activity foreground sessions are separate from persisted account entry. */
@@ -508,8 +521,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             current();val account=if(offline)ru.genesis.calendar.security.E2eeProductAccount.openOffline(app,uid,transport,::current)
                 else ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit);opened=account
             val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load(offline);current()
-            ru.genesis.calendar.security.NativePrivateProducts.attach(account,product)
-        };current();mutableState.value=mutableState.value.copy(ready=true,busy=false,outgoingSyncIssue=null)
+            val preferences=ru.genesis.calendar.security.E2eePrivatePreferences(app,account);preferences.load();current()
+            ru.genesis.calendar.security.NativePrivateProducts.attach(account,product,preferences)
+        };current();val prior=mutableState.value;val settings=prior.accountSettings?:withContext(Dispatchers.IO){CachedAccountEntry(app).read(app.workspaceScope)?.settings}
+        current();mutableState.value=prior.copy(ready=true,busy=false,outgoingSyncIssue=null,accountSettings=settings?.let{ru.genesis.calendar.security.NativePrivateProducts.preferences(app.workspaceScope).project(it)})
         }catch(error:Throwable){opened?.close();throw error}finally{secret?.fill(0)}
     }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
@@ -981,7 +996,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         require(patch.length() > 0 && patch.keys().asSequence().all { it in setOf("enabled", "smart", "categories", "aphrodisiaAdult", "collections", "philosophersPerDay", "notifications", "psychopompia") })
         patch.optJSONObject("notifications")?.let { AdviceNotificationPreferences.fromJson(it) }
         val generation = client.currentGeneration()
-        val response = withContext(Dispatchers.IO) { client.updatePreferences(generation, JSONObject().put("advicePreferences", patch)) }
+        val response = withContext(Dispatchers.IO) { updatePreferencePayload(generation, JSONObject().put("advicePreferences", patch)) }
         checkAdviceAccount(uid)
         val identity = AuthProtocol.identity(response) ?: throw AuthFailure(AuthFailure.Kind.PROTOCOL)
         val settings = liveAccountSettings(response) ?: throw AuthFailure(AuthFailure.Kind.PROTOCOL)
@@ -2157,7 +2172,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val previous = mutableState.value
         previous.accountSettings ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         require(visibility.enabledCalendars.isNotEmpty())
-        val payload = withContext(Dispatchers.IO) { client.updatePreferences(generation,
+        val payload = withContext(Dispatchers.IO) { updatePreferencePayload(generation,
             JSONObject().put("uiVisibility", visibility.toJson())) }
         val settings = liveAccountSettings(payload) ?: throw AuthFailure(AuthFailure.Kind.PROTOCOL)
         val identity = AuthProtocol.identity(payload) ?: throw AuthFailure(AuthFailure.Kind.PROTOCOL)
@@ -2558,7 +2573,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val changes = preferences.pending.first()
         if (changes.isEmpty()) return null
         val body = PreferencePatch.request(changes)
-        val payload = withContext(Dispatchers.IO) { client.updatePreferences(generation, body) }
+        val payload = withContext(Dispatchers.IO) { updatePreferencePayload(generation, body) }
         if (AuthProtocol.identity(payload)?.uid != uid || !client.isCurrent(generation)) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         val settings = liveAccountSettings(payload) ?: throw AuthFailure(AuthFailure.Kind.PROTOCOL)
         preferences.acknowledge(changes)

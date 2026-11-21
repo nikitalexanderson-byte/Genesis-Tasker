@@ -12,10 +12,14 @@ function genesisE2eeLegacyWorkspace(PDO $db,string $actor,array $scope,array $c)
     $context=genesisE2eeLegacyPersonalContext($db,$actor,$scope,$c);
     $blob=genesisE2eeRow($db,'SELECT ciphertext,iv,version,updated_at,minimum_writer_protocol FROM workspace_blobs WHERE user_id=?',[$actor]);
     $key=genesisE2eeLegacyAccountKey($context['user'],(bool)$blob);
+    $preferences=genesisE2eeRow($db,'SELECT category_sync_map,ui_visibility_json,sync_routing_mode,sync_target_account_ids FROM users WHERE id=?',[$actor]);
+    if(!$preferences)throw new DomainException('E2EE_SOURCE_UNAVAILABLE');
     $result=genesisE2eeLegacyPersonalHeader($actor,$scope,$context)+[
         'workspace'=>$key+['envelope'=>$blob?[
             'ciphertext'=>$blob['ciphertext'],'iv'=>$blob['iv'],'version'=>(int)$blob['version'],
             'updatedAt'=>$blob['updated_at'],'minimumWriterProtocol'=>(int)$blob['minimum_writer_protocol']]:null],
+        'privatePreferences'=>['categoryMapJson'=>$preferences['category_sync_map'],'visibilityJson'=>$preferences['ui_visibility_json'],
+            'routingMode'=>$preferences['sync_routing_mode'],'routingTargetsJson'=>$preferences['sync_target_account_ids']],
         'projects'=>[],'categories'=>[]];
     $bytes=strlen(genesisE2eeJson($result));$rows=0;
     // Explicit historical row fields. Identity, billing, tokens and ACL are not

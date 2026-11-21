@@ -29,6 +29,11 @@ function genesisE2eeRoute(string $method,string $path): never
     }
     $binding=(string)($_SESSION['auth_login_id']??'');
     if(strlen($binding)<16)throw new GenesisResourceLimitException(401,'E2EE_REAUTH_REQUIRED');
+    if(in_array($path,['e2ee/v1/membership-state','e2ee/v1/membership-preview','e2ee/v1/membership'],true)){
+        require_once __DIR__.'/e2ee-membership.php';
+        genesisJson(match($path){'e2ee/v1/membership-state'=>genesisE2eeMembershipState($owner,$body),'e2ee/v1/membership-preview'=>genesisE2eeMembershipPreview($owner,$body),
+            'e2ee/v1/membership'=>genesisE2eeMembershipBatch($owner,$body,$binding)});
+    }
     if($path==='e2ee/v1/command') {
         $command=genesisE2eeCommand($body['command']??null);$scope=genesisE2eeScope($owner,$command['scopeId']);
         if(!in_array($scope['state'],['active','retirement'],true)&&$command['action']!=='migration-cancel'&&!genesisE2eePilotAllowed($owner))

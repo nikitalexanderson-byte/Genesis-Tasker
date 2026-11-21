@@ -1,6 +1,6 @@
-import { e2eeCommandHash, signE2eeCommand, snapshotE2eeValue, type SignedE2eeCommand, type WireValue } from './commands.ts';
+import { canonicalE2eeValue, e2eeCommandHash, signE2eeCommand, snapshotE2eeValue,verifyE2eeCommand, type SignedE2eeCommand, type WireValue } from './commands.ts';
 import { contentSigningKey, type VerifiedDirectory } from './directory.ts';
-import { E2EE_SUITE, encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
+import { E2EE_SUITE, decodeE2eeBytes,encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES, envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile } from './files.ts';
 import { assertTechnical, openRoot, type PublicDeviceKeys } from './keys.ts';
 import { UnlockedWebDevice } from './device-vault.ts';
@@ -10,7 +10,7 @@ export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
   command(packet:SignedE2eeCommand):Promise<Record<string,WireValue>>;
   read(packet:SignedE2eeCommand):Promise<{envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
-    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;checkpointHash:string;directoryRevision:number}>;
+    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];checkpointHash:string;directoryRevision:number}>;
 }
 type PlanItem={recordId:string;hash:string;expected:number};
 type UploadJob={protocol:1;scopeId:string;domain:E2eeContext['domain'];objectId:string;generation:number;cryptoEpoch:number;keyId:string;
@@ -27,6 +27,7 @@ export class E2eeScopeClient {
   #directory:VerifiedDirectory|null=null;#history=new Map<string,VerifiedDirectory>();#roots=new Map<string,CryptoKey>();
   #sealedCache=new Map<string,Map<string,{revision:number;payloadHash:string}>>();
   #refreshed=false;
+  #directoryFrames=new Map<number,VerifiedDirectory>();
   constructor(device:UnlockedWebDevice,ownerId:string,scopeId:string,pin:PublicDeviceKeys,transport:ScopeTransport){
     assertTechnical(ownerId);assertTechnical(scopeId);this.#device=device;this.#owner=ownerId;this.#scopeId=scopeId;
     this.#pin=snapshotE2eeValue(pin);this.#transport=transport;
@@ -36,19 +37,19 @@ export class E2eeScopeClient {
   async refresh():Promise<VerifiedDirectory> {
     this.#refreshed=false;
     this.#device.requireOpen();const response=await this.#transport.directory(this.#scopeId);this.#device.requireOpen();
-    const frames=new Map<string,VerifiedDirectory>();
-    const directory=await this.#device.rememberDirectory(this.#scopeId,this.#pin,response.events,this.#owner,frame=>frames.set(epochKey(frame),frame));
+    const frames=new Map<string,VerifiedDirectory>(),revisions=new Map<number,VerifiedDirectory>();
+    const directory=await this.#device.rememberDirectory(this.#scopeId,this.#pin,response.events,this.#owner,frame=>{frames.set(epochKey(frame),frame);revisions.set(frame.checkpoint.revision,frame);});
     await this.#installDirectory(directory,frames);
-    this.#refreshed=true;
+    this.#directoryFrames=revisions;this.#refreshed=true;
     try{await this.#loadSealedHeads(true);}catch(error){this.#refreshed=false;throw error;}
     return structuredClone(directory);
   }
   /** Explicit offline unlock. No network fallback is performed after a failed refresh. */
   async hydrateOffline():Promise<VerifiedDirectory> {
-    this.#refreshed=false;this.#device.requireOpen();const frames=new Map<string,VerifiedDirectory>();
-    const directory=await this.#device.savedDirectory(this.#scopeId,frame=>frames.set(epochKey(frame),frame));
+    this.#refreshed=false;this.#device.requireOpen();const frames=new Map<string,VerifiedDirectory>(),revisions=new Map<number,VerifiedDirectory>();
+    const directory=await this.#device.savedDirectory(this.#scopeId,frame=>{frames.set(epochKey(frame),frame);revisions.set(frame.checkpoint.revision,frame);});
     if(!directory)throw new Error('E2EE_DIRECTORY_REQUIRED');
-    await this.#installDirectory(directory,frames);await this.#loadSealedHeads(false);return structuredClone(directory);
+    await this.#installDirectory(directory,frames);this.#directoryFrames=revisions;await this.#loadSealedHeads(false);return structuredClone(directory);
   }
   async #installDirectory(directory:VerifiedDirectory,frames:Map<string,VerifiedDirectory>) {
     if(directory.ownerId!==this.#owner||directory.recoveryKit.authority.signingKey!==this.#pin.signingKey
@@ -303,4 +304,81 @@ export class E2eeScopeClient {
     try{await this.#device.vault.write([{domain:'key-check',objectId:`floor:${id}`,value:encoded,expected:floorRecord?.serial??null}]);this.#device.requireOpen();return{...opened,revision:context.revision};}
     catch(error){opened.bytes.fill(0);throw error;}finally{encoded.fill(0);}
   }
+  async assertObjectReference(domain:E2eeContext['domain'],objectId:string,revision:number,payloadHash:unknown){
+    const directory=this.#open(),envelope=await this.#getEnvelope(domain,objectId);this.#device.requireOpen();
+    if(!envelope||envelope.context.ownerId!==this.#owner||envelope.context.scopeId!==this.#scopeId||envelope.context.dataGeneration!==directory.generation
+      ||envelope.context.domain!==domain||envelope.context.objectId!==objectId||envelope.context.revision!==revision
+      ||typeof payloadHash!=='string'||await envelopePayloadHash(envelope)!==payloadHash)throw new Error('E2EE_OBJECT_REFERENCE_MISMATCH');
+    this.#device.requireOpen();
+  }
+  /** Business intent is durable independently of a checkpoint-bound transport
+   * packet. Renewal never changes the intended mutation or replays an import. */
+  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant',payload:Record<string,WireValue>,intentId:string){
+    assertTechnical(intentId);const held=snapshotE2eeValue({...payload,intentId}),id=`service:${await hash(`${action}\0${intentId}`)}`;
+    for(let attempt=0;attempt<2;attempt++){
+      const directory=this.#open(),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();let packet:SignedE2eeCommand;
+      try{
+        let old:SignedE2eeCommand|undefined;if(prior){old=JSON.parse(decoder.decode(prior.value));const command=old!.command;
+          const actual=canonicalE2eeValue(command.payload),expected=canonicalE2eeValue(held);
+          if(command?.action!==action||command.ownerId!==this.#owner||command.scopeId!==this.#scopeId||command.deviceId!==this.#device.deviceId
+            ||actual.length!==expected.length||actual.some((byte,index)=>byte!==expected[index]))throw new Error('E2EE_CORRUPT_OUTBOX');}
+        const current=old?.command.expectedRevision===directory.checkpoint.revision&&old.command.securityEpoch===directory.securityEpoch&&old.command.checkpointHash===directory.checkpoint.hash;
+        packet=current?old!:await this.#packet(action,held);
+        if(!current){const bytes=encoder.encode(JSON.stringify(packet));try{await this.#device.vault.write([
+          ...(prior?[{domain:'local-snapshot' as const,objectId:`${id}:attempt:${prior.serial}`,value:prior.value,expected:null}]:[]),
+          {domain:'outbox',objectId:id,value:bytes,expected:prior?.serial??null}]);}finally{bytes.fill(0);}}
+        this.#device.requireOpen();const result=await this.#transport.command(packet);this.#device.requireOpen();return result;
+      }catch(error){if(attempt!==0||!(error instanceof Error)||!['E2EE_STALE_EPOCH','E2EE_DIRECTORY_CONFLICT','E2EE_CHECKPOINT_MISMATCH'].includes(error.message))throw error;}
+      finally{prior?.value.fill(0);}
+      await this.refresh();this.#device.requireOpen();
+    }throw new Error('E2EE_DIRECTORY_CONFLICT');
+  }
+  async readProductIndex(after='',limit=50){if(after)assertTechnical(after);if(!Number.isSafeInteger(limit)||limit<1||limit>50)throw new Error('E2EE_INVALID_LIMIT');
+    return this.#readPacket('product-index',{after,limit});}
+  async objectReference(domain:E2eeContext['domain'],objectId:string){
+    const directory=this.#open(),envelope=await this.#getEnvelope(domain,objectId);this.#device.requireOpen();if(!envelope)throw new Error('E2EE_PRIVATE_DOCUMENT_MISSING');
+    const context=envelope.context,frame=this.#history.get(epochKey({cryptoEpoch:context.cryptoEpoch,securityEpoch:context.securityEpoch,keyId:context.keyId,generation:context.dataGeneration}));
+    if(!frame||context.ownerId!==this.#owner||context.scopeId!==this.#scopeId||context.domain!==domain||context.objectId!==objectId||context.dataGeneration!==directory.generation)throw new Error('E2EE_CONTEXT_MISMATCH');
+    const root=this.#roots.get(context.keyId);if(!root)throw new Error('E2EE_KEY_UNAVAILABLE');await this.#historicalHead(envelope);
+    const bytes=await openE2eeEnvelope(root,await contentSigningKey(frame,context),context,envelope);bytes.fill(0);this.#device.requireOpen();
+    return{scopeId:this.#scopeId,generation:context.dataGeneration,revision:context.revision,payloadHash:await envelopePayloadHash(envelope)};
+  }
+  async verifyServiceProof(input:SignedE2eeCommand){
+    this.#open();const packet=snapshotE2eeValue(input),command=packet.command,frame=this.#directoryFrames.get(command.expectedRevision);
+    if(!frame||command.ownerId!==this.#owner||command.scopeId!==this.#scopeId||command.checkpointHash!==frame.checkpoint.hash||command.securityEpoch!==frame.securityEpoch
+      ||!['product-commit','product-approve'].includes(command.action))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+    const signer=frame.devices.get(command.deviceId);if(!signer||signer.revoked)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+    if(command.action==='product-commit'){
+      const operations=command.payload.operations;if(!Array.isArray(operations)||operations.length<1||operations.length>100)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+      for(const row of operations){if(!row||typeof row!=='object'||Array.isArray(row))throw new Error('E2EE_PRODUCT_PROOF_INVALID');const comment=['comment','project-comment'].includes(String(row.kind));
+        if(!(comment?['owner','writer','commenter']:['owner','writer']).includes(signer.role))throw new Error('E2EE_PRODUCT_PROOF_INVALID');}
+    }
+    const key=await crypto.subtle.importKey('spki',decodeE2eeBytes(signer.signingKey,91),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+    const verified=await verifyE2eeCommand(packet,key);this.#device.requireOpen();return{command:verified,actorId:signer.userId,proofHash:await e2eeCommandHash(verified)};
+  }
+  async prepareAuroraResult(resultId:string,methodVersion:string){
+    if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(resultId)||methodVersion!=='aurora-two-circles-v2')throw new Error('AURORA_RESULT_MISMATCH');
+    const directory=this.#open();if(directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const objectId=`aurora-result-live:${resultId}`,envelope=await this.#getEnvelope('aurora',objectId);this.#device.requireOpen();
+    if(!envelope||envelope.context.revision!==1)throw new Error('E2EE_AURORA_RESULT_MISSING');
+    const payloadHash=await envelopePayloadHash(envelope);await this.assertObjectReference('aurora',objectId,1,payloadHash);
+    const payload={id:resultId,methodVersion,objectId,payloadHash},id=`aurora-manifest:${resultId}`,previous=await this.#device.vault.read('outbox',id);this.#device.requireOpen();
+    try{
+      let packet:SignedE2eeCommand;
+      if(previous){packet=JSON.parse(decoder.decode(previous.value));const command=packet.command;
+        if(command?.action!=='aurora-result'||command.ownerId!==this.#owner||command.scopeId!==this.#scopeId||command.deviceId!==this.#device.deviceId
+          ||JSON.stringify(command.payload)!==JSON.stringify(payload))throw new Error('E2EE_CORRUPT_OUTBOX');
+        // A new checkpoint may supersede an unaccepted command. Both requests
+        // can only bind this identical immutable object/result identity.
+        if(command.expectedRevision!==directory.checkpoint.revision||command.securityEpoch!==directory.securityEpoch||command.checkpointHash!==directory.checkpoint.hash){
+          packet=await this.#packet('aurora-result',payload);const bytes=encoder.encode(JSON.stringify(packet));
+          try{await this.#device.vault.write([{domain:'outbox',objectId:id,value:bytes,expected:previous.serial}]);}finally{bytes.fill(0);}
+        }
+      }else{packet=await this.#packet('aurora-result',payload);const bytes=encoder.encode(JSON.stringify(packet));
+        try{await this.#device.vault.write([{domain:'outbox',objectId:id,value:bytes,expected:null}]);}finally{bytes.fill(0);}}
+      this.#device.requireOpen();const receipt=await this.#transport.command(packet);this.#device.requireOpen();
+      if(receipt.id!==resultId||receipt.ready!==true)throw new Error('AURORA_RESULT_MISMATCH');
+    }finally{previous?.value.fill(0);}
+  }
+  close(){this.#refreshed=false;this.#directory=null;this.#history.clear();this.#directoryFrames.clear();this.#roots.clear();this.#sealedCache.clear();}
 }

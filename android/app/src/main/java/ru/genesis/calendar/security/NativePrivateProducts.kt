@@ -13,7 +13,7 @@ import ru.genesis.calendar.auth.CloudAccountSnapshot
 /** Registry holds foreground capabilities only. Its persisted marker is a
  * hashed local scope, not a credential, private content or decryption key. */
 internal object NativePrivateProducts{
-    private class Entry(val account:E2eeProductAccount,val product:E2eePersonalProduct){val mutex=Mutex()}
+    private class Entry(val account:E2eeProductAccount,val product:E2eePersonalProduct,val preferences:E2eePrivatePreferences?){val mutex=Mutex()}
     private val entries=mutableMapOf<String,Entry>();private val protectedScopes=mutableSetOf<String>()
     private var inventory:E2eePrivatePaths?=null
     val revision=MutableStateFlow(0L)
@@ -28,12 +28,13 @@ internal object NativePrivateProducts{
     @Synchronized fun isProtected(scope:String)=scope in protectedScopes
     @Synchronized fun isOpen(scope:String):Boolean=entries[scope]?.let{try{it.account.requireOpen();true}catch(_:IllegalStateException){false}}?:false
     @Synchronized fun isOffline(scope:String):Boolean=entries[scope]?.account?.offline==true
-    @Synchronized fun attach(account:E2eeProductAccount,product:E2eePersonalProduct){
-        account.requireOpen();val scope=CloudAccountSnapshot.scopeFor(account.ownerId);check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};entries.remove(scope)?.account?.close();entries[scope]=Entry(account,product);revision.value++
+    @Synchronized fun attach(account:E2eeProductAccount,product:E2eePersonalProduct,preferences:E2eePrivatePreferences?=null){
+        account.requireOpen();val scope=CloudAccountSnapshot.scopeFor(account.ownerId);check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};entries.remove(scope)?.account?.close();entries[scope]=Entry(account,product,preferences);revision.value++
     }
     @Synchronized fun lock(){for(entry in entries.values)entry.account.close();entries.clear();revision.value++}
     @Synchronized private fun entry(scope:String):Entry{check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};val value=entries[scope]?:error("E2EE_UNLOCK_REQUIRED");value.account.requireOpen();return value}
     fun account(scope:String,owner:String):E2eeProductAccount=entry(scope).account.also{check(it.ownerId==owner){"E2EE_SCOPE_BINDING_MISMATCH"}}
+    fun preferences(scope:String):E2eePrivatePreferences=checkNotNull(entry(scope).preferences){"E2EE_PRODUCT_READ_REQUIRED"}
     fun history(scope:String,owner:String,domain:String,id:String):E2eeMigrationProductHistory.Result{val account=account(scope,owner)
         return E2eeMigrationProductHistory.read(account.device,account.directory,requireNotNull(inventory){"E2EE_INVALID_COVERAGE_REGISTRY"},domain,id)}
     fun snapshot(scope:String):JSONObject=entry(scope).product.snapshot()
@@ -42,6 +43,6 @@ internal object NativePrivateProducts{
     suspend fun <T> mutate(scope:String,change:suspend(JSONObject)->Pair<JSONObject,T>):T=withContext(Dispatchers.IO){val value=entry(scope)
         value.mutex.withLock{value.account.requireOpen();val before=value.product.snapshot();val original=before.toString();val (next,result)=change(before);value.account.requireOpen();
             if(next.toString()!=original){value.product.stageSnapshot(next);value.account.requireOpen();revision.value++};result}}
-    suspend fun flush(scope:String)=withContext(Dispatchers.IO){val value=entry(scope);value.mutex.withLock{value.account.requireOpen();val before=value.product.contentRevision();value.product.flush();value.account.requireOpen();if(value.product.contentRevision()!=before)revision.value++}}
+    suspend fun flush(scope:String)=withContext(Dispatchers.IO){val value=entry(scope);value.mutex.withLock{value.account.requireOpen();val before=value.product.contentRevision();value.product.flush();value.preferences?.flush();value.account.requireOpen();if(value.product.contentRevision()!=before)revision.value++}}
     override fun toString()="NativePrivateProducts([redacted])"
 }

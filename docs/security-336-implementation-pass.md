@@ -1,5 +1,68 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Resumed implementation in the continuation chat, 21 November
+
+Owner resumed after the handoff and a short pause and reaffirmed the full original
+prompt: complete all infrastructure/product code first, consolidated testing and
+repairs second, then the authorized releases. No subagents, Daybreak, tests,
+typecheck, native/web builds, push or deployment have been started in this pass.
+All additions below are candidate code, not new accepted coverage.
+
+- Async domain validators now finish before a document is stored or returned.
+  The aggregate baseline/explicit-review format has a native counterpart.
+- Web and bundled native Aurora use that format and the same async session/result
+  validation. New paid results use immutable signed client-ciphertext references;
+  independent server payment/plan checks remain in the billing path. Migration128
+  adds the reference table without reopening the retired legacy-result endpoint.
+- Web Physis has a foreground private model using existing health validators,
+  durable queues/tombstones and device-root form history. Its existing page opens
+  through the private account instead of the account-key vault. Independently
+  keyed local content export reuses the existing backup codec and consent/key UI.
+  Public reference catalogue administration has a separate narrow service route.
+- Workspace sources on both clients now retain the previously omitted private
+  visibility/category-routing fields. Raw originals are preserved. New private
+  preference projections cover advice, layout and routing without changing
+  identity, subscription or linked-account authority. Persistent server fence v5
+  includes all routing fields. The native public profile cache uses a separate
+  metadata scope and excludes these decrypted preferences.
+- Enrollment renewal verifies the signed directory first, renews login-bound
+  challenges and retains prior exact packets. A lost successful receipt is
+  recovered by checking the same enrolled device keys; device/local-root identity
+  is not regenerated. Cancellation remains cancellation.
+
+These paths have NOT been compiled, tested or release accepted. The9/20 accepted
+boundary, production3.3.5/149 and disabled gates remain unchanged. The remaining
+implementation still includes shared authorization/CRUD/rotation/automations,
+Stoicheion/advice live paths, setup/migration/resume UI, external-copy consent,
+message-key lifecycle, content-only import/backup/Drive, reminders/background,
+native-key invalidation recovery and the retained-history/archive growth policy.
+
+Further candidate infrastructure in this continuation (still NO QA/build):
+
+- Shared business versions now have an immutable ciphertext namespace, a durable
+  local multi-entity intent and an independently authorized server commit.
+  Migration129 contains technical indices/history/proposals/attestations/intent
+  receipts. Completion approvers sign the proposed exact ciphertext version.
+  Both clients verify the index against historical signed directory checkpoints,
+  original business commands and all required approval signatures. This still
+  needs real per-domain readers/editors, source-to-index initialization, full
+  review-policy/quota behavior, automation and cross-scope operation composition.
+- Explicit group-authority fingerprint decisions live inside the member's
+  personal vault and can open only that verified group. Native account scope
+  capabilities and web clients clear their retained roots on lifecycle lock.
+- Editor state2 replaces the fixed total1024-snapshot stop with authenticated
+  linked history pages. Every potential prepared upload has a durable origin
+  claim before crypto. Coalesced intermediate content remains accessible through
+  history pages; no old draft bytes are pruned. This is a growing retained history,
+  bounded by actual provider storage, not a promise of infinite disk space.
+- Membership infrastructure is being composed: exact-row SQL guard capabilities,
+  owner metadata preview, signed complete affected-scope batches and a distinct
+  rotate-membership directory event. Persistent fence v6 includes this stricter
+  path and the private routing fields. Client generation/custody/entrypoints,
+  device recovery and end-to-end role/rotation acceptance remain required.
+
+The source prompt, accepted coverage and production state have not changed.
+
 21 November 2026. Owner instruction: finish the remaining code across web, API
 and Android first, then run consolidated acceptance, then repair its findings.
 Do not restart a complete test/build cycle for each helper or small edit.

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { physisRequest } from '../cloud-sync';
+import { physisRequest,privatePhysisCatalogueRequest,usesPrivateProductStorage } from '../cloud-sync';
 import { mergeCatalog, type CatalogOverride, type CatalogItem, type ReferenceCatalog } from './reference-catalog-domain';
 type Transport = <T>(path:string, init?:RequestInit)=>Promise<T>;
-export function useReferenceCatalog(owner: string, request: Transport = physisRequest): ReferenceCatalog {
+export function useReferenceCatalog(owner: string, transport?: Transport): ReferenceCatalog {
+  const productRequest=useCallback(<T,>(path:string,init?:RequestInit):Promise<T>=>{if(path!=='/catalog')throw new Error('PHYSIS_ROUTE_INVALID');
+    return usesPrivateProductStorage(owner)?privatePhysisCatalogueRequest<T>(owner,init):physisRequest<T>(path,init);},[owner]);
+  const request=transport??productRequest;
   const [overrides,setOverrides]=useState<CatalogOverride[]>([]);
   const [canEdit,setCanEdit]=useState(false);const[loading,setLoading]=useState(true);const[error,setError]=useState('');
   const [loadedOwner,setLoadedOwner]=useState('');

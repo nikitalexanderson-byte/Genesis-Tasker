@@ -21,7 +21,8 @@ import {validateTransformation,type TransformationDraft} from './transformation'
 import {validatePersonalLearning,type PersonalLearning} from './personal-learning';
 import {validateGno,assertGnoHistory,type GnoDraft} from './gno-engine';
 export type ContextSnapshot={id:string;profile:SituationProfile;createdAt:string;hash:string};
-export type PreparedAuroraResult={id:string;methodVersion:string;forecastHashes:string[];contextHash:string;iv:string;ciphertext:string};
+export type AuroraResultSeal={iv:string;ciphertext:string}|{kind:'aurora-e2ee-reference-v1';objectId:string};
+export type PreparedAuroraResult={id:string;methodVersion:string;forecastHashes:string[];contextHash:string}&AuroraResultSeal;
 export type ObservationDraft={occurred:string;conditions:string;occurredAt:string;conditionAt:string;anchorAt:string;complete:boolean;contradictory:boolean;description:string};
 export type ActionExecution={id:string;forecastId:string|null;actionId:string;minutes:ActionDuration;startCondition:string;plannedAt:string;
  ritualCompleted:boolean;actionCompleted:boolean;completedAt:string|null;actualDescription:string;withoutRitual:boolean;taskId:string|null;practiceSnapshot?:PracticeSnapshot};
@@ -176,7 +177,8 @@ export async function validateDocument(value:AuroraDocument,ownerId:string):Prom
    ||resolution.outcomeEvidenceIds.some(id=>!session.context.answerEvidence.some(e=>e.id===id)))throw new Error('AURORA_RESOLUTION_REFERENCE');
   const resultIds=new Set<string>();for(const result of session.preparedResults){
    if(resultIds.has(result.id)||result.methodVersion!==MODEL_VERSION||!session.contextSnapshots.some(c=>c.hash===result.contextHash)
-    ||!result.forecastHashes.length||result.forecastHashes.some(hash=>!session.forecasts.some(f=>f.payloadHash===hash))||!result.iv||!result.ciphertext)throw new Error('AURORA_RESULT_MANIFEST_INVALID');resultIds.add(result.id);
+    ||!result.forecastHashes.length||result.forecastHashes.some(hash=>!session.forecasts.some(f=>f.payloadHash===hash))
+    ||('kind'in result?result.kind!=='aurora-e2ee-reference-v1'||result.objectId!==`aurora-result-live:${result.id}`:!result.iv||!result.ciphertext))throw new Error('AURORA_RESULT_MANIFEST_INVALID');resultIds.add(result.id);
   }
   if(session.resultId&&!resultIds.has(session.resultId))throw new Error('AURORA_RESULT_REFERENCE');
  }

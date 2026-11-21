@@ -1,8 +1,8 @@
 import {createContext,useCallback,useContext,useLayoutEffect,useRef,type ReactNode} from 'react';
-import type {PhysisMemoryStore} from './store';
+import type {PhysisEditorModel} from './store';
 
-const PhysisMigrationContext=createContext<PhysisMemoryStore|null>(null);
-export function PhysisMigrationProvider({model,children}:{model:PhysisMemoryStore;children:ReactNode}){
+const PhysisMigrationContext=createContext<PhysisEditorModel|null>(null);
+export function PhysisMigrationProvider({model,children}:{model:PhysisEditorModel;children:ReactNode}){
  return <PhysisMigrationContext.Provider value={model}>{children}</PhysisMigrationContext.Provider>;
 }
 /** Capture committed form state, including intermediate numeric strings. A

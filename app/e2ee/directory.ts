@@ -88,7 +88,7 @@ export async function verifyDeviceDirectory(ownerId: string, scopeId: string, pi
           decodeE2eeBytes(payload.selfProof,64),proofBytes));
         directory.devices.set(challenge.deviceId, { deviceId: challenge.deviceId, userId: challenge.userId, role: challenge.role as DeviceRole, signingKey: challenge.signingKey,
           receivingKey: challenge.receivingKey, revoked: false, capsule: payload.capsule as unknown as RootCapsule, historyCapsules:payload.historyCapsules as unknown as HistoricalRoot[] });
-      } else if (command.action === 'rotate') {
+      } else if (command.action === 'rotate'||command.action==='rotate-membership') {
         decodeE2eeBytes(payload.retiredManifestHash,32);
         requireState(Number.isSafeInteger(payload.retiredObjectCount)&&(payload.retiredObjectCount as number)>=0&&(payload.retiredObjectCount as number)<=10000);
         directory.sealedHeads={cryptoEpoch:directory.cryptoEpoch,hash:payload.retiredManifestHash as string,count:payload.retiredObjectCount as number};
@@ -108,6 +108,12 @@ export async function verifyDeviceDirectory(ownerId: string, scopeId: string, pi
           device.capsule = entry.capsule as unknown as RootCapsule; updated.add(entry.deviceId);
         }
         requireState([...directory.devices.values()].every(device => device.revoked || updated.has(device.deviceId)));
+        if(command.action==='rotate-membership'){
+          decodeE2eeBytes(payload.membershipHash,32);requireState(Array.isArray(payload.roleChanges)&&payload.roleChanges.length===updated.size);const changed=new Set<string>();
+          for(const raw of payload.roleChanges){const change=objectPayload(raw);requireState(Object.keys(change).length===2&&typeof change.deviceId==='string'&&updated.has(change.deviceId)&&!changed.has(change.deviceId));
+            const device=directory.devices.get(change.deviceId)!;requireState(['owner','writer','commenter','reader'].includes(String(change.role))&&(change.role==='owner')===(device.userId===ownerId));
+            device.role=change.role as DeviceRole;changed.add(change.deviceId);}
+        }
         directory.cryptoEpoch++; directory.securityEpoch++; directory.keyId = payload.keyId;
         epochs.set(directory.cryptoEpoch,directory.keyId);
         directory.recoveryCapsule = payload.recoveryCapsule as unknown as RootCapsule;

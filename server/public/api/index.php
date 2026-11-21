@@ -1320,6 +1320,11 @@ try {
 
     // Read-only metadata/entitlement tools for the private client. No content,
     // settings, keys, or legacy mutation path is accepted on this surface.
+    if($path==='private-services/physis-catalog'&&in_array($method,['GET','PUT'],true)){
+        $userId=genesisRequireUserId();header('Cache-Control: no-store');require_once $serverRoot.'/src/physis-catalog.php';
+        if($method==='GET')genesisJson(genesisPhysisCatalog($userId));
+        genesisRequireCsrf();genesisJson(genesisPhysisCatalogSave($userId,genesisReadJson()));
+    }
     if (count($segments) === 2 && $segments[0] === 'private-services' && $method === 'GET') {
         $userId=genesisRequireUserId(); header('Cache-Control: no-store');
         if ($segments[1] === 'dream-clock') genesisJson(genesisDreamClock((string)($_GET['timeZone']??'UTC')));

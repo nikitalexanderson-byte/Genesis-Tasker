@@ -1,15 +1,17 @@
 import type {E2eeContext} from './envelope.ts';
-import {encodeE2eeBytes} from './envelope.ts';
+import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES} from './files.ts';
-import {assertTechnical} from './keys.ts';
+import {assertTechnical,exactKeys} from './keys.ts';
+import {parseLegacyMigrationJson} from './legacy-json.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import type {LocalWrite,UnlockedE2eeVault} from './storage.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 
 type Metadata={filename:string;mediaType:string};
 type Draft={id:string;size:number;parts:number;metadata:Metadata};
-type EditorState={protocol:1;scopeId:string;domain:E2eeContext['domain'];objectId:string;remoteRevision:number;latest:Draft;
-  pending:string[];history:Draft[];review?:{originId:string;remoteRevision:number}};
+export type EditorHistoryCursor={id:string;hash:string};
+type EditorState={protocol:1|2;scopeId:string;domain:E2eeContext['domain'];objectId:string;remoteRevision:number;latest:Draft;
+  pending:string[];history:Draft[];review?:{originId:string;remoteRevision:number};preparing?:string;historyHead?:EditorHistoryCursor};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 const MAX_RETAINED_DRAFTS=1024;
 
@@ -29,7 +31,7 @@ export class E2eeEditorQueue {
     const row=await this.#vault.read('draft',await this.#stateId);if(!row)return null;
     try {
       const state=JSON.parse(decoder.decode(row.value)) as EditorState;
-      if(state.protocol!==1||state.scopeId!==this.#scopeId||state.domain!==this.#domain||state.objectId!==this.#objectId
+      if(![1,2].includes(state.protocol)||state.scopeId!==this.#scopeId||state.domain!==this.#domain||state.objectId!==this.#objectId
         ||!Number.isSafeInteger(state.remoteRevision)||state.remoteRevision<0||!Array.isArray(state.pending)||!Array.isArray(state.history)
         ||state.history.length<1||state.history.length>MAX_RETAINED_DRAFTS||new Set(state.history.map(item=>item.id)).size!==state.history.length
         ||new Set(state.pending).size!==state.pending.length||state.pending.some(id=>!state.history.some(item=>item.id===id))
@@ -40,6 +42,8 @@ export class E2eeEditorQueue {
           ||typeof draft.metadata?.filename!=='string'||draft.metadata.filename.length>512||typeof draft.metadata.mediaType!=='string'||draft.metadata.mediaType.length>128)throw new Error('E2EE_CORRUPT_EDITOR');
       }
       if(state.review&&(typeof state.review!=='object'||Object.keys(state.review).length!==2||state.review.remoteRevision!==state.remoteRevision||!state.pending.includes(state.review.originId)))throw new Error('E2EE_CORRUPT_EDITOR');
+      if(state.preparing!==undefined&&!state.pending.includes(state.preparing))throw new Error('E2EE_CORRUPT_EDITOR');
+      if(state.historyHead){exactKeys(state.historyHead,['id','hash']);assertTechnical(state.historyHead.id);decodeE2eeBytes(state.historyHead.hash,32);}
       return {state,serial:row.serial};
     }finally{row.value.fill(0);}
   }
@@ -91,11 +95,22 @@ export class E2eeEditorQueue {
       if((previous?.serial??null)!==expectedSerial)throw new Error('E2EE_LOCAL_CONFLICT');
       if(previous&&(mode==='edit'?previous.state.remoteRevision!==baseRevision:baseRevision<previous.state.remoteRevision)
         ||mode==='cache'&&previous?.state.pending.length||previous?.state.review&&mode!=='edit'&&mode!=='review')throw new Error('E2EE_EDITOR_CONFLICT');
-      if((previous?.state.history.length??0)>=MAX_RETAINED_DRAFTS)throw new Error('E2EE_EDITOR_HISTORY_LIMIT');
+      let history=[...previous?.state.history??[]],pending=[...previous?.state.pending??[]],historyHead=previous?.state.historyHead;
+      if(history.length>=MAX_RETAINED_DRAFTS){
+        // Every possible upload origin has a durable preparing claim before
+        // crypto starts. Coalescing keeps that origin, the current job/review
+        // and latest version; older content remains in authenticated pages.
+        const job=await this.#client.localJob(this.#domain,this.#objectId),keep=new Set([previous!.state.latest.id,previous!.state.preparing,previous!.state.review?.originId,job?.originId]);
+        const archived=history.filter(row=>!keep.has(row.id));history=history.filter(row=>keep.has(row.id));pending=pending.filter(id=>keep.has(id));
+        if(!archived.length)throw new Error('E2EE_EDITOR_BUSY');
+        const id=`editor-history:${crypto.randomUUID()}`,value=encoder.encode(JSON.stringify({protocol:1,scopeId:this.#scopeId,domain:this.#domain,objectId:this.#objectId,previous:historyHead??null,drafts:archived}));
+        historyHead={id,hash:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',value)))};changes.push({domain:'local-snapshot',objectId:id,value,expected:null});
+      }
       const draft:Draft={id:`edit:${crypto.randomUUID()}`,size:bytes.length,parts:Math.ceil(bytes.length/E2EE_CHUNK_BYTES),metadata};
       for(let part=0;part<draft.parts;part++)changes.push({domain:'draft',objectId:`${draft.id}:${part}`,value:bytes.slice(part*E2EE_CHUNK_BYTES,(part+1)*E2EE_CHUNK_BYTES),expected:null});
-      const state:EditorState={protocol:1,scopeId:this.#scopeId,domain:this.#domain,objectId:this.#objectId,remoteRevision:baseRevision,
-        latest:draft,pending:mode==='cache'?[]:[...previous?.state.pending??[],draft.id],history:[...previous?.state.history??[],draft],
+      const state:EditorState={protocol:2,scopeId:this.#scopeId,domain:this.#domain,objectId:this.#objectId,remoteRevision:baseRevision,
+        latest:draft,pending:mode==='cache'?[]:[...pending,draft.id],history:[...history,draft],
+        ...(historyHead?{historyHead}:{}),...(previous?.state.preparing&&mode!=='cache'?{preparing:previous.state.preparing}:{}),
         ...(mode==='review'?{review:{originId:draft.id,remoteRevision:baseRevision}}:previous?.state.review?{review:previous.state.review}:{})};
       return await this.#save(state,expectedSerial,changes);
     }finally{bytes.fill(0);changes.forEach(change=>change.value.fill(0));}
@@ -110,6 +125,7 @@ export class E2eeEditorQueue {
       if(state.review&&state.review.originId!==originId&&revision>state.review.remoteRevision)throw new Error('E2EE_CONFLICT_REVIEW_STALE');
       state.remoteRevision=Math.max(state.remoteRevision,revision);state.pending=state.pending.slice(index+1);
       if(state.review&&!state.pending.includes(state.review.originId))delete state.review;
+      if(state.preparing&&!state.pending.includes(state.preparing))delete state.preparing;
       try{await this.#save(state,saved.serial);return;}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT'||attempt===3)throw error;}
     }
   }
@@ -122,7 +138,7 @@ export class E2eeEditorQueue {
         const job=await this.#client.localJob(this.#domain,this.#objectId);
         if(job?.originId!==review.originId){const bytes=await this.#bytes(draft);try{await this.#client.replaceReviewed(this.#domain,this.#objectId,bytes,review.remoteRevision,review.originId,draft.metadata);}finally{bytes.fill(0);}}
         const current=await this.#load();if(!current)throw new Error('E2EE_CORRUPT_EDITOR');
-        if(current.state.review?.originId===review.originId){delete current.state.review;try{await this.#save(current.state,current.serial);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT')throw error;}}continue;
+        if(current.state.review?.originId===review.originId){delete current.state.review;delete current.state.preparing;try{await this.#save(current.state,current.serial);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT')throw error;}}continue;
       }
       const job=await this.#client.localJob(this.#domain,this.#objectId);
       if(job&&!job.complete){
@@ -130,8 +146,9 @@ export class E2eeEditorQueue {
         const revision=await this.#client.flush(this.#domain,this.#objectId,job.originId);await this.#confirm(job.originId,revision);continue;
       }
       if(job?.complete&&job.originId&&saved.state.pending.includes(job.originId)){await this.#confirm(job.originId,job.expectedRevision+1);continue;}
-      const selectedId=saved.state.pending.at(-1);if(!selectedId)return saved.state.remoteRevision;
+      const selectedId=saved.state.preparing??saved.state.pending.at(-1);if(!selectedId)return saved.state.remoteRevision;
       const selected=saved.state.history.find(draft=>draft.id===selectedId);if(!selected)throw new Error('E2EE_CORRUPT_EDITOR');
+      if(!saved.state.preparing){saved.state.preparing=selectedId;try{await this.#save(saved.state,saved.serial);}catch(error){if(error instanceof Error&&error.message==='E2EE_LOCAL_CONFLICT')continue;throw error;}}
       const bytes=await this.#bytes(selected);
       try{await this.#client.prepare(this.#domain,this.#objectId,bytes,saved.state.remoteRevision,selected.metadata,selected.id);}
       finally{bytes.fill(0);}
@@ -161,4 +178,19 @@ export class E2eeEditorQueue {
     }
     return outcome;
   }
+  async #history(cursor?:EditorHistoryCursor):Promise<{drafts:Draft[];cursor:EditorHistoryCursor|null}>{
+    if(!cursor){const saved=await this.#load();return saved?{drafts:structuredClone(saved.state.history),cursor:saved.state.historyHead??null}:{drafts:[],cursor:null};}
+    exactKeys(cursor,['id','hash']);assertTechnical(cursor.id);decodeE2eeBytes(cursor.hash,32);const row=await this.#vault.read('local-snapshot',cursor.id);if(!row)throw new Error('E2EE_EDITOR_HISTORY_MISSING');
+    try{if(encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',row.value)))!==cursor.hash)throw new Error('E2EE_EDITOR_HISTORY_CORRUPT');
+      const value=parseLegacyMigrationJson(decoder.decode(row.value),'E2EE_EDITOR_HISTORY_CORRUPT',4*1024*1024);exactKeys(value,['protocol','scopeId','domain','objectId','previous','drafts']);
+      if(value.protocol!==1||value.scopeId!==this.#scopeId||value.domain!==this.#domain||value.objectId!==this.#objectId||!Array.isArray(value.drafts)||value.drafts.length<1||value.drafts.length>MAX_RETAINED_DRAFTS)throw new Error('E2EE_EDITOR_HISTORY_CORRUPT');
+      if(value.previous!==null){exactKeys(value.previous,['id','hash']);assertTechnical(value.previous.id);decodeE2eeBytes(value.previous.hash,32);}
+      const seen=new Set<string>();for(const raw of value.drafts){exactKeys(raw,['id','size','parts','metadata']);assertTechnical(raw.id);exactKeys(raw.metadata,['filename','mediaType']);
+        if(seen.has(raw.id)||!Number.isSafeInteger(raw.size)||Number(raw.size)<0||Number(raw.size)>E2EE_MAX_FILE_BYTES||raw.parts!==Math.ceil(Number(raw.size)/E2EE_CHUNK_BYTES)
+          ||typeof raw.metadata.filename!=='string'||raw.metadata.filename.length>512||typeof raw.metadata.mediaType!=='string'||raw.metadata.mediaType.length>128)throw new Error('E2EE_EDITOR_HISTORY_CORRUPT');seen.add(raw.id);}
+      this.#vault.assertUnlocked();return{drafts:value.drafts as Draft[],cursor:value.previous as EditorHistoryCursor|null};
+    }finally{row.value.fill(0);}
+  }
+  historyPage(cursor?:EditorHistoryCursor){return this.#history(cursor?structuredClone(cursor):undefined);}
+  async openHistory(id:string,cursor?:EditorHistoryCursor){assertTechnical(id);const page=await this.#history(cursor?structuredClone(cursor):undefined),draft=page.drafts.find(row=>row.id===id);if(!draft)throw new Error('E2EE_EDITOR_HISTORY_MISSING');return{bytes:await this.#bytes(draft),metadata:{...draft.metadata}};}
 }

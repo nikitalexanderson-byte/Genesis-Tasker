@@ -29,7 +29,7 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
         val row = vault.read("draft", stateId) ?: return null
         try {
             val value = JSONObject(row.bytes.toString(Charsets.UTF_8)); val history = drafts(value.getJSONArray("history")); val pending = strings(value.getJSONArray("pending"))
-            check(E2eeCommands.integer(value.get("protocol")) == 1L && value.get("scopeId") == scopeId && value.get("domain") == domain && value.get("objectId") == objectId
+            check(E2eeCommands.integer(value.get("protocol")) in 1L..2L && value.get("scopeId") == scopeId && value.get("domain") == domain && value.get("objectId") == objectId
                 && E2eeCommands.integer(value.get("remoteRevision")) >= 0 && history.size in 1..MAX_HISTORY
                 && history.map { it.getString("id") }.toSet().size == history.size && pending.toSet().size == pending.size
                 && pending.all { id -> history.any { it.getString("id") == id } } && value.getJSONObject("latest").get("id") == history.last().get("id")) { "E2EE_CORRUPT_EDITOR" }
@@ -39,6 +39,8 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
                     && draft.getJSONObject("metadata").getString("filename").length <= 512 && draft.getJSONObject("metadata").getString("mediaType").length <= 128) { "E2EE_CORRUPT_EDITOR" }
             }
             if(value.has("review")){val review=value.getJSONObject("review");E2eeKeys.exact(review,setOf("originId","remoteRevision"));check(review.getLong("remoteRevision")==value.getLong("remoteRevision")&&review.getString("originId") in pending){"E2EE_CORRUPT_EDITOR"}}
+            if(value.has("preparing"))check(value.getString("preparing") in pending){"E2EE_CORRUPT_EDITOR"}
+            value.optJSONObject("historyHead")?.let{E2eeKeys.exact(it,setOf("id","hash"));E2eeKeys.technical(it.getString("id"));E2eeEnvelope.decode(it.getString("hash"),32)}
             return State(value, row.serial)
         } finally { row.bytes.fill(0) }
     }
@@ -85,13 +87,20 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
             check((previous == null || if(mode=="edit")previous.value.getLong("remoteRevision")==baseRevision else previous.value.getLong("remoteRevision")<=baseRevision)
                 && (mode!="cache" || previous?.value?.getJSONArray("pending")?.length().let{it==null||it==0})
                 &&(previous?.value?.has("review")!=true||mode in setOf("edit","review"))) { "E2EE_EDITOR_CONFLICT" }
-            val history = previous?.value?.getJSONArray("history") ?: JSONArray(); check(history.length() < MAX_HISTORY) { "E2EE_EDITOR_HISTORY_LIMIT" }
+            var history = previous?.value?.getJSONArray("history") ?: JSONArray();var pending=previous?.value?.getJSONArray("pending")?:JSONArray();var historyHead=previous?.value?.optJSONObject("historyHead")
+            if(history.length()>=MAX_HISTORY){
+                val job=client.localJob(domain,objectId);val keep=setOf(previous!!.value.getJSONObject("latest").getString("id"),previous.value.optString("preparing"),previous.value.optJSONObject("review")?.optString("originId"),job?.originId)
+                val archived=drafts(history).filter{it.getString("id") !in keep};history=JSONArray(drafts(history).filter{it.getString("id") in keep});pending=JSONArray(strings(pending).filter{it in keep});check(archived.isNotEmpty()){"E2EE_EDITOR_BUSY"}
+                val archiveId="editor-history:${UUID.randomUUID()}";val bytes=JSONObject().put("protocol",1).put("scopeId",scopeId).put("domain",domain).put("objectId",objectId)
+                    .put("previous",historyHead?:JSONObject.NULL).put("drafts",JSONArray(archived)).toString().toByteArray(Charsets.UTF_8)
+                historyHead=JSONObject().put("id",archiveId).put("hash",E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes)));changes+=UnlockedE2eeVault.Write("local-snapshot",archiveId,bytes,null)
+            }
             val id = "edit:${UUID.randomUUID()}"; val parts = (copy.size + E2eeFiles.CHUNK_BYTES - 1) / E2eeFiles.CHUNK_BYTES
             val draft = JSONObject().put("id", id).put("size", copy.size).put("parts", parts).put("metadata", JSONObject().put("filename", filename).put("mediaType", mediaType))
             for (part in 0 until parts) changes += UnlockedE2eeVault.Write("draft", "$id:$part", copy.copyOfRange(part * E2eeFiles.CHUNK_BYTES, minOf((part + 1) * E2eeFiles.CHUNK_BYTES, copy.size)), null)
-            val pending = previous?.value?.getJSONArray("pending") ?: JSONArray()
-            val value = JSONObject().put("protocol", 1).put("scopeId", scopeId).put("domain", domain).put("objectId", objectId)
+            val value = JSONObject().put("protocol", 2).put("scopeId", scopeId).put("domain", domain).put("objectId", objectId)
                 .put("remoteRevision", baseRevision).put("latest", draft).put("history", history.put(draft)).put("pending", if(mode=="cache")JSONArray() else pending.put(id))
+            historyHead?.let{value.put("historyHead",it)};previous?.value?.optString("preparing")?.takeIf{it.isNotEmpty()&&mode!="cache"}?.let{value.put("preparing",it)}
             if(mode=="review")value.put("review",JSONObject().put("originId",id).put("remoteRevision",baseRevision))else previous?.value?.optJSONObject("review")?.let{value.put("review",JSONObject(it.toString()))}
             return save(value, expectedSerial, changes)
         } finally { copy.fill(0); changes.forEach { it.bytes.fill(0) } }
@@ -104,6 +113,7 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
             value.optJSONObject("review")?.let{check(it.getString("originId")==originId||revision<=it.getLong("remoteRevision")){"E2EE_CONFLICT_REVIEW_STALE"}}
             value.put("remoteRevision", maxOf(revision,value.getLong("remoteRevision"))).put("pending", JSONArray(pending.drop(index + 1)))
             value.optJSONObject("review")?.let{if(it.getString("originId") !in pending.drop(index+1))value.remove("review")}
+            if(value.has("preparing")&&value.getString("preparing") !in pending.drop(index+1))value.remove("preparing")
             try { save(value, saved.serial); return } catch (error: IllegalStateException) { if (error.message != "E2EE_LOCAL_CONFLICT" || attempt == 3) throw error }
         }
     }
@@ -114,7 +124,7 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
                 val origin=review.getString("originId");val draft=drafts(saved.value.getJSONArray("history")).firstOrNull{it.getString("id")==origin}?:error("E2EE_CORRUPT_EDITOR")
                 if(client.localJob(domain,objectId)?.originId!=origin){val content=bytes(draft);val metadata=draft.getJSONObject("metadata")
                     try{client.replaceReviewed(domain,objectId,content,review.getLong("remoteRevision"),origin,metadata.getString("filename"),metadata.getString("mediaType"))}finally{content.fill(0)}}
-                val current=loadState()?:error("E2EE_CORRUPT_EDITOR");if(current.value.optJSONObject("review")?.getString("originId")==origin){current.value.remove("review")
+                val current=loadState()?:error("E2EE_CORRUPT_EDITOR");if(current.value.optJSONObject("review")?.getString("originId")==origin){current.value.remove("review");current.value.remove("preparing")
                     try{save(current.value,current.serial)}catch(error:IllegalStateException){if(error.message!="E2EE_LOCAL_CONFLICT")throw error}}
                 return@repeat
             }
@@ -124,8 +134,9 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
                 val revision = client.flush(domain, objectId, job.originId); confirm(job.originId, revision)
             } else if (job?.complete == true && job.originId != null && job.originId in pending) confirm(job.originId, job.expectedRevision + 1)
             else {
-                val selectedId = pending.lastOrNull() ?: return saved.value.getLong("remoteRevision")
+                val selectedId = saved.value.optString("preparing").takeIf{it.isNotEmpty()}?:pending.lastOrNull() ?: return saved.value.getLong("remoteRevision")
                 val selected = drafts(saved.value.getJSONArray("history")).firstOrNull { it.getString("id") == selectedId } ?: throw IllegalStateException("E2EE_CORRUPT_EDITOR")
+                if(!saved.value.has("preparing")){saved.value.put("preparing",selectedId);try{save(saved.value,saved.serial)}catch(error:IllegalStateException){if(error.message=="E2EE_LOCAL_CONFLICT")return@repeat;throw error}}
                 val content = bytes(selected); val metadata = selected.getJSONObject("metadata")
                 try { client.prepare(domain, objectId, content, saved.value.getLong("remoteRevision"), metadata.getString("filename"), metadata.getString("mediaType"), selectedId) }
                 finally { content.fill(0) }
@@ -151,5 +162,18 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
         }
         return outcome
     }
+    fun historyPage(cursor:JSONObject?=null):JSONObject{
+        if(cursor==null){val value=loadState()?.value;return JSONObject().put("drafts",value?.getJSONArray("history")?:JSONArray()).put("cursor",value?.optJSONObject("historyHead")?:JSONObject.NULL)}
+        E2eeKeys.exact(cursor,setOf("id","hash"));val id=E2eeKeys.technical(cursor.getString("id"));val expected=cursor.getString("hash");E2eeEnvelope.decode(expected,32);val row=vault.read("local-snapshot",id)?:error("E2EE_EDITOR_HISTORY_MISSING")
+        try{check(E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(row.bytes))==expected){"E2EE_EDITOR_HISTORY_CORRUPT"};val value=E2eeFileManifestJson.readPrivateDocument(row.bytes)
+            E2eeKeys.exact(value,setOf("protocol","scopeId","domain","objectId","previous","drafts"));check(value.get("protocol")==1&&value.get("scopeId")==scopeId&&value.get("domain")==domain&&value.get("objectId")==objectId){"E2EE_EDITOR_HISTORY_CORRUPT"}
+            val rows=drafts(value.getJSONArray("drafts"));check(rows.size in 1..MAX_HISTORY&&rows.map{it.getString("id")}.toSet().size==rows.size){"E2EE_EDITOR_HISTORY_CORRUPT"}
+            for(draft in rows){E2eeKeys.exact(draft,setOf("id","size","parts","metadata"));E2eeKeys.technical(draft.getString("id"));val size=E2eeCommands.integer(draft.get("size"));E2eeKeys.exact(draft.getJSONObject("metadata"),setOf("filename","mediaType"))
+                check(size<=E2eeFiles.MAX_FILE_BYTES&&E2eeCommands.integer(draft.get("parts"))==(size+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES&&draft.getJSONObject("metadata").getString("filename").length<=512&&draft.getJSONObject("metadata").getString("mediaType").length<=128){"E2EE_EDITOR_HISTORY_CORRUPT"}}
+            value.optJSONObject("previous")?.let{E2eeKeys.exact(it,setOf("id","hash"));E2eeKeys.technical(it.getString("id"));E2eeEnvelope.decode(it.getString("hash"),32)};vault.requireOpen();return JSONObject().put("drafts",value.getJSONArray("drafts")).put("cursor",value.get("previous"))
+        }finally{row.bytes.fill(0)}
+    }
+    fun openHistory(id:String,cursor:JSONObject?=null):Opened{E2eeKeys.technical(id);val page=historyPage(cursor);val draft=drafts(page.getJSONArray("drafts")).singleOrNull{it.get("id")==id}?:error("E2EE_EDITOR_HISTORY_MISSING");val metadata=draft.getJSONObject("metadata")
+        return Opened(bytes(draft),metadata.getString("filename"),metadata.getString("mediaType"),0,0,false)}
     override fun toString() = "E2eeEditorQueue([redacted])"
 }

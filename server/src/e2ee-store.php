@@ -178,10 +178,12 @@ function genesisE2eeExecute(string $actor, mixed $source, string $sessionBinding
     if(str_starts_with($command['action'],'migration-'))return genesisE2eeWithPersonalIo($actor,true,static fn():array=>genesisE2eeExecuteLocked($actor,$source,$sessionBinding));
     return genesisE2eeExecuteLocked($actor,$source,$sessionBinding);
 }
-function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBinding): array
+function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBinding,?string $membershipHash=null): array
 {
     $packet = genesisE2eeExactFields($source, ['command','signature']); $c = genesisE2eeCommand($packet['command']);
-    $db = genesisDb(); genesisBeginWriteTransaction($db);
+    $db = genesisDb();$owns=!$db->inTransaction();if(($membershipHash!==null)===$owns)throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');
+    if($c['action']==='rotate-membership'&&$membershipHash===null)throw new DomainException('E2EE_MEMBERSHIP_BATCH_REQUIRED');
+    if($owns)genesisBeginWriteTransaction($db);
     try {
         $scope = genesisE2eeScope($actor, $c['scopeId']);
         if ($c['ownerId'] !== $scope['owner_id']) throw new DomainException('E2EE_CONTEXT_MISMATCH');
@@ -189,13 +191,13 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
         $device = $recovery ? false : genesisE2eeRow($db, 'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?', [$c['scopeId'],$c['deviceId']]);
         if (!$recovery && (!$device || $device['revoked'] || ($device['user_id'] !== $actor && $c['action'] !== 'enroll'))) throw new DomainException('E2EE_REVOKED_DEVICE');
         if ($recovery && $actor !== $scope['owner_id'] && $c['action']!=='enroll') throw new GenesisResourceLimitException(403,'E2EE_SCOPE_FORBIDDEN');
-        if(!in_array($c['action'],['put','cancel-put'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
+        if(!in_array($c['action'],['put','cancel-put','product-commit','product-approve','stoicheion-grant'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
         genesisE2eeVerifyCommand($packet, $recovery ? $scope['recovery_signing_key'] : $device['signing_key']);
         $fingerprint = genesisE2eeCommandHash($c);
         $receipt = genesisE2eeRow($db, 'SELECT * FROM e2ee_receipts WHERE scope_id=? AND operation_id=?', [$c['scopeId'],$c['operationId']]);
         if ($receipt) {
             if (!hash_equals($receipt['payload_hash'],$fingerprint)) throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');
-            $result=json_decode($receipt['result'],true,512,JSON_THROW_ON_ERROR); $db->commit(); return $result;
+            $result=json_decode($receipt['result'],true,512,JSON_THROW_ON_ERROR);if($owns)$db->commit(); return $result;
         }
         if ($c['securityEpoch'] !== (int)$scope['security_epoch']) throw new DomainException('E2EE_STALE_EPOCH');
         if ($c['expectedRevision'] !== (int)$scope['directory_revision']) throw new DomainException('E2EE_DIRECTORY_CONFLICT');
@@ -226,10 +228,12 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
             $db->prepare('UPDATE e2ee_challenges SET consumed=1 WHERE id=?')->execute([$stored['id']]);
             genesisE2eeCheckpointEvent($db,$scope,$packet);
             $result=['directoryRevision'=>$scope['directory_revision'],'checkpointHash'=>$scope['checkpoint_hash']];
-        } elseif ($c['action'] === 'rotate') {
+        } elseif (in_array($c['action'],['rotate','rotate-membership'],true)) {
             genesisE2eeAccess($actor,$scope['kind'],$scope['resource_id'],'manage');
             if (!in_array($scope['state'],['active','retirement'],true)) throw new DomainException('E2EE_NOT_ACTIVE');
-            genesisE2eeExactFields($p,['revokedDeviceIds','cryptoEpoch','securityEpoch','keyId','capsules','recoveryCapsule','retiredManifestHash','retiredObjectCount']);
+            $fields=['revokedDeviceIds','cryptoEpoch','securityEpoch','keyId','capsules','recoveryCapsule','retiredManifestHash','retiredObjectCount'];
+            if($c['action']==='rotate-membership')$fields=[...$fields,'membershipHash','roleChanges'];genesisE2eeExactFields($p,$fields);
+            if($c['action']==='rotate-membership'&&($membershipHash===null||$p['membershipHash']!==$membershipHash))throw new DomainException('E2EE_MEMBERSHIP_BATCH_REQUIRED');
             $retired=genesisE2eeManifest($db,$scope);genesisE2eeDecode($p['retiredManifestHash'],32);genesisE2eeInteger($p['retiredObjectCount']);
             if($retired['manifestHash']!==$p['retiredManifestHash']||$retired['objectCount']!==$p['retiredObjectCount'])throw new DomainException('E2EE_MANIFEST_MISMATCH');
             $heads=genesisE2eeObjectHeads($db,$scope);
@@ -243,6 +247,14 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
             foreach($p['revokedDeviceIds'] as $id) { genesisE2eeIdentifier($id);if(isset($revoked[$id]))genesisE2eeInvalid();$revoked[$id]=true; }
             $q=$db->prepare('SELECT * FROM e2ee_devices WHERE scope_id=? AND revoked=0 ORDER BY device_id');$q->execute([$c['scopeId']]);$current=$q->fetchAll();$q->closeCursor();
             $known=array_column($current,null,'device_id');foreach($revoked as $id=>$_)if(!isset($known[$id]))genesisE2eeInvalid();
+            $roles=[];
+            if($c['action']==='rotate-membership'){
+                if(!is_array($p['roleChanges'])||!array_is_list($p['roleChanges'])||count($p['roleChanges'])>256)throw new InvalidArgumentException('E2EE_MEMBERSHIP_ROLE_INVALID');
+                foreach($p['roleChanges'] as $change){genesisE2eeExactFields($change,['deviceId','role']);$id=genesisE2eeIdentifier($change['deviceId']);if(isset($roles[$id])||!isset($known[$id])||isset($revoked[$id])||!in_array($change['role'],['owner','writer','commenter','reader'],true))throw new DomainException('E2EE_MEMBERSHIP_ROLE_INVALID');$roles[$id]=$change['role'];}
+                foreach($known as $id=>$entry){$role=null;try{$role=genesisE2eeDeviceRole($entry['user_id'],$scope);}catch(GenesisSharedAccessException|GenesisResourceLimitException $error){if(!in_array($error->status,[403,404],true))throw$error;}
+                    if($role===null){if(!isset($revoked[$id]))throw new DomainException('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');}
+                    elseif(isset($revoked[$id])||($roles[$id]??null)!==$role)throw new DomainException('E2EE_MEMBERSHIP_ROLE_INVALID');}
+            }
             $capsules=[];
             foreach($p['capsules'] as $entry) {
                 genesisE2eeExactFields($entry,['deviceId','capsule']);$id=genesisE2eeIdentifier($entry['deviceId']);genesisE2eeCapsule($entry['capsule']);
@@ -257,7 +269,7 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
                     // Invalidate every account session for this device's owner; surviving devices
                     // reauthenticate but retain their independently wrapped new root.
                     $db->prepare('UPDATE users SET security_epoch=security_epoch+1 WHERE id=?')->execute([$entry['user_id']]);
-                } else $db->prepare('UPDATE e2ee_devices SET root_capsule=? WHERE scope_id=? AND device_id=?')->execute([genesisE2eeJson($capsules[$id]),$c['scopeId'],$id]);
+                } else $db->prepare('UPDATE e2ee_devices SET root_capsule=?,role=? WHERE scope_id=? AND device_id=?')->execute([genesisE2eeJson($capsules[$id]),$roles[$id]??$entry['role'],$c['scopeId'],$id]);
             }
             $db->prepare('UPDATE e2ee_scopes SET crypto_epoch=?,security_epoch=?,key_id=?,recovery_capsule=?,seal_count=0 WHERE scope_id=?')
                 ->execute([$p['cryptoEpoch'],$p['securityEpoch'],$p['keyId'],genesisE2eeJson($p['recoveryCapsule']),$c['scopeId']]);
@@ -281,10 +293,24 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
                 $oldResult=['cancelled'=>true];$db->prepare('INSERT INTO e2ee_receipts VALUES(?,?,?,?)')->execute([$c['scopeId'],$old['operationId'],$oldHash,genesisE2eeJson($oldResult)]);
             }
             $result=['operationReceipt'=>['payloadHash'=>$oldHash,'result'=>$oldResult]];
+        } elseif(in_array($c['action'],['product-commit','product-approve'],true)){
+            if($recovery)throw new DomainException('E2EE_DEVICE_REQUIRED');
+            if($c['action']==='product-commit'){
+                if(!is_array($p['operations']??null))throw new InvalidArgumentException('E2EE_PRODUCT_BATCH_INVALID');
+                foreach($p['operations'] as $operation){$comment=in_array($operation['kind']??null,['comment','project-comment'],true);
+                    if(!in_array($device['role'],$comment?['owner','writer','commenter']:['owner','writer'],true))throw new GenesisResourceLimitException(403,'E2EE_WRITE_FORBIDDEN');}
+            }
+            require_once __DIR__.'/e2ee-product.php';$result=genesisE2eeProductService($db,$actor,$scope,$c,$packet);
+        } elseif ($c['action'] === 'aurora-result') {
+            if($recovery)throw new DomainException('E2EE_DEVICE_REQUIRED');
+            require_once __DIR__.'/e2ee-aurora.php';
+            $result=genesisE2eeAuroraResult($db,$actor,$scope,$p);
         } elseif ($c['action'] === 'put') {
             if ($recovery) throw new DomainException('E2EE_DEVICE_REQUIRED');
             genesisE2eeExactFields($p,['envelope','expectedObjectRevision','migrationId','fence']);
             $expected=genesisE2eeInteger($p['expectedObjectRevision']); $envelope=genesisE2eeValidateEnvelope($p['envelope']); $ctx=$envelope['context'];
+            if($ctx['domain']==='aurora'&&str_starts_with($ctx['objectId'],'aurora-result-live:')&&$expected!==0)throw new DomainException('AURORA_RESULT_IMMUTABLE');
+            if(str_starts_with($ctx['objectId'],'product-version:')&&$expected!==0)throw new DomainException('E2EE_PRODUCT_VERSION_IMMUTABLE');
             $comment=$ctx['domain']==='shared-comment';
             if($comment && $expected!==0)throw new GenesisResourceLimitException(403,'E2EE_COMMENT_IMMUTABLE');
             genesisE2eeAccess($actor,$scope['kind'],$scope['resource_id'],$comment?'comment':'write');
@@ -317,8 +343,8 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
             $result=genesisE2eeMigrationCommand($db,$scope,$c,$packet);
         } else throw new InvalidArgumentException('E2EE_UNKNOWN_ACTION');
         $db->prepare('INSERT INTO e2ee_receipts VALUES(?,?,?,?)')->execute([$c['scopeId'],$c['operationId'],$fingerprint,genesisE2eeJson($result)]);
-        $db->commit(); return $result;
-    } catch (Throwable $error) { if ($db->inTransaction()) $db->rollBack(); throw $error; }
+        if($owns)$db->commit(); return $result;
+    } catch (Throwable $error) { if ($owns&&$db->inTransaction()) $db->rollBack(); throw $error; }
 }
 
 function genesisE2eeRequireLease(PDO $db,array $scope,string $device): array
@@ -466,11 +492,15 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','product-index','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
     genesisE2eeVerifyCommand($packet,$device['signing_key']);
+    if($c['action']==='product-index'){
+        if(!in_array($scope['kind'],['project','space'],true)||$scope['state']!=='active')throw new DomainException('E2EE_NOT_ACTIVE');
+        require_once __DIR__.'/e2ee-product.php';return genesisE2eeProductIndex(genesisDb(),$scope,$c['payload']);
+    }
     if($c['action']==='legacy-private-path') {
         require_once __DIR__.'/e2ee-legacy-private-path.php';
         return genesisE2eeLegacyPrivatePath(genesisDb(),$actor,$scope,$c);

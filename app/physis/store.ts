@@ -24,6 +24,7 @@ export type PhysisMigrationStoreMemory = {
 };
 export type Transport = <T>(path: string, init?: RequestInit) => Promise<T>;
 export type PhysisOperation = <T>(operation:(transport:Transport)=>Promise<T>)=>Promise<T>;
+export type PhysisEditorModel=Pick<PhysisMemoryStore,'owner'|'subscribe'|'getSnapshot'|'hasPending'|'rotationPending'|'assertCurrent'|'withEditorTask'|'registerMigrationEditor'|'flush'|'reload'|'discardAndReload'|'exportWire'|'captureMigrationMemory'|'destroy'>&{readonly privateStorage?:boolean};
 const errorCode = (error: unknown) => error instanceof Error ? error.message : 'PHYSIS_REQUEST_FAILED';
 const MAX_BATCH_BYTES = 2 * 1024 * 1024;
 const encodedBytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).byteLength;

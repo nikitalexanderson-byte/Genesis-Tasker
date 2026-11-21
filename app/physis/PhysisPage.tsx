@@ -3,7 +3,7 @@ import { usePhysisMigrationCapture, PhysisMigrationProvider } from './migration-
 import { Fragment, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import webHeaderCopy from './web-header-copy.json';
-import { LOCAL_SESSION_ENDED_EVENT, PERSONAL_DOCUMENT_READY_EVENT, captureAccountSessionGuard, withPhysisAccountOperation } from '../cloud-sync';
+import { LOCAL_SESSION_ENDED_EVENT, PERSONAL_DOCUMENT_READY_EVENT, captureAccountSessionGuard, withPhysisAccountOperation,usesPrivateProductStorage } from '../cloud-sync';
 import { calendarContext } from '../calendar-context';
 import type { CalendarMode } from '../calendar-data';
 import { IconActionButton } from '../IconActionButton';
@@ -11,7 +11,9 @@ import { DialogCloseButton } from '../DialogCloseButton';
 import { useDialogAccessibility } from '../use-dialog-accessibility';
 import { translateText, type Language } from '../i18n';
 import { openPhysisAccount, type VaultState } from './account-session';
-import { PhysisMemoryStore } from './store';
+import { PhysisMemoryStore,type PhysisEditorModel } from './store';
+import {E2eePhysisMemoryStore} from '../e2ee/physis-product';
+import {PrivateContentExport} from '../PrivateContentExport';
 import { rememberPhysisSession, retainedPhysisSession, forgetPhysisSession } from './session-memory';
 import { editPhysisRecord, newPhysisRecord, physisRecords, type PhysisFeatureProps, type PhysisSettings } from './types';
 import { METRICS, type Measurement } from './care-domain';
@@ -32,7 +34,7 @@ import { Field, NumberField, usePhysisAction } from './fields';
 import './physis.css';
 
 type PageName = 'overview' | 'today' | 'programs' | 'control' | 'exercises' | 'diary' | 'foods' | 'intakes' | 'drugs';
-type KeyState = { model: PhysisMemoryStore };
+type KeyState = { model: PhysisEditorModel };
 type Props = { owner: string; language: string; calendarMode: CalendarMode; inputCalendarMode: CalendarMode; timeZone: string; settingsRequest?: number; weekStart?: 'sunday' | 'monday'; webHeaderEnabled?: boolean; webHeaderTarget?: HTMLElement | null };
 type Area = 'training' | 'nutrition' | 'care' | 'monitoring';
 const GROUPS: { id: Area; title: string; subtitle: string; icon: HealthIconName; pages: [PageName, string][] }[] = [
@@ -69,8 +71,14 @@ export function PhysisPage(props: Props) {
     const epoch = generation.current; const active = captureAccountSessionGuard();
     const check = () => { active(); if (epoch !== generation.current) throw new Error('PHYSIS_SESSION_ENDED'); };
     pending.current = true; setBusy(true); setError('');
-    let model: PhysisMemoryStore | undefined;
-    try { await withPhysisAccountOperation(props.owner, async ({account,request,permit}) => {
+    let model: PhysisEditorModel | undefined;
+    try {
+      if(usesPrivateProductStorage(props.owner)){
+        const retained=retainedPhysisSession(props.owner);if(retained){check();keyRef.current={model:retained.model};setKeys(keyRef.current);setVaultState(retained.vaultState);return;}
+        model=new E2eePhysisMemoryStore(props.owner);await model.reload();check();const state:VaultState={vault:null,revision:0};rememberPhysisSession(props.owner,model,state);
+        keyRef.current={model};setKeys(keyRef.current);setVaultState(state);setSecret('');return;
+      }
+      await withPhysisAccountOperation(props.owner, async ({account,request,permit}) => {
       const retained = retainedPhysisSession(props.owner);
       if (retained) {
         check(); keyRef.current = { model: retained.model }; setKeys(keyRef.current); setVaultState(retained.vaultState); setSecret(''); return;
@@ -126,6 +134,7 @@ function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState 
   const [settingsOpen, setSettingsOpen] = useState(Boolean(props.settingsRequest));
   const [personalOpen, setPersonalOpen] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(0);
+  const [privateExportOpen,setPrivateExportOpen]=useState(false);
   useEffect(() => { if (!settingsSaved) return; const timer = setTimeout(() => setSettingsSaved(0), 2300); return () => clearTimeout(timer); }, [settingsSaved]);
   const page = pages[area]; const group = GROUPS.find(item => item.id === area) ?? { title: 'Мониторинг показателей', pages: [] };
   const setPage = (next: PageName) => setPages(current => ({ ...current, [area]: next }));
@@ -150,6 +159,7 @@ function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState 
     return () => { clearInterval(timer); window.removeEventListener('online', retry); window.removeEventListener('beforeunload', beforeUnload); };
   }, [model]);
   const exportEncrypted = async () => {
+    if(model instanceof E2eePhysisMemoryStore){setPrivateExportOpen(true);return;}
     const records = await model.exportWire();
     downloadPhysis('physis-encrypted.json', JSON.stringify({ format: 'physis-encrypted', version: 1, owner: props.owner, exportedAt: new Date().toISOString(), vault: vaultState.vault, records }));
   };
@@ -176,6 +186,7 @@ function UnlockedPhysis(props: Props & { keys: KeyState; vaultState: VaultState 
     </div>
     </Fragment>
     </div>
+    {privateExportOpen&&model instanceof E2eePhysisMemoryStore?<PrivateContentExport owner={props.owner} language={props.language} capture={()=>model.captureBackup()}/>:null}
     {personalOpen && <PhysisPersonalProfile {...feature} onClose={() => setPersonalOpen(false)} />}
     <PhysisSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} language={props.language}>
       <PhysisSettingsForm onSaved={() => setSettingsSaved(Date.now())} key={settingsRecord?.updatedAt ?? 'general-settings'} {...feature} /><section className="physis-panel"><h2>Данные и резервные копии</h2><p>Фюзис использует ваш общий аккаунт GENESIS. Данные сохраняются в зашифрованном виде и доступны после входа на сайт. Зашифрованная копия открывается в том же аккаунте.</p><PhysisExchange store={store} exportEncrypted={exportEncrypted} /><p className="physis-muted">Удалённое содержимое убирается из активного хранилища. Журнал удалений и повторных запросов: 90 дней; минимальный реестр использованных ID сохраняется для защиты от восстановления старыми устройствами. Время удаления из резервных копий зависит от политики хранения оператора.</p></section><section className="physis-panel"><h2>Будущие подключения</h2><ul><li>Google Health API — планируется</li><li>Health Connect — планируется через отдельный Android-клиент</li><li>HealthKit — планируется через Apple-клиент</li><li>Garmin и Health Services — планируется</li></ul><p>Ни одно подключение не включено. Сейчас работают ручной учет и импорт/экспорт; данные не отправляются этим поставщикам.</p></section>

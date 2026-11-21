@@ -105,7 +105,7 @@ export class WebPrivateAccount{
   }catch(error){device?.lock();throw error;}finally{held.fill(0);}
  }
  requireOpen(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.#current();this.device.requireOpen();}
- close(){if(this.#closed)return;this.#closed=true;this.#cleanup?.();this.#cleanup=null;this.#clients.clear();this.device.lock();}
+ close(){if(this.#closed)return;this.#closed=true;this.#cleanup?.();this.#cleanup=null;for(const value of this.#clients.values())value.client.close();this.#clients.clear();this.device.lock();}
  bindLifecycle(target:Window=window){
   this.requireOpen();const channel=typeof BroadcastChannel==='undefined'?null:new BroadcastChannel(`genesis-e2ee-lock:${this.ownerId}`);
   const lock=()=>{if(this.#closed)return;this.close();if(active===this){active=null;view=Object.freeze({...view,phase:'locked'});notify();}};
@@ -115,23 +115,32 @@ export class WebPrivateAccount{
   this.#cleanup=()=>{target.removeEventListener('pagehide',lock);target.removeEventListener('genesis-local-session-ended',lock);target.document.removeEventListener('visibilitychange',hidden);channel?.close();};hidden();
  }
  async openScope(scope:PrivateScopeSummary,pin:RecoveryKit['authority'],scopeOwner:string){
-  this.requireOpen();const client=new E2eeScopeClient(this.device,scopeOwner,scope.scopeId,pin,this.#transport),directory=await client.refresh();this.requireOpen();
+  this.requireOpen();const client=new E2eeScopeClient(this.device,scopeOwner,scope.scopeId,pin,this.#transport),directory=this.mode==='offline'?await client.hydrateOffline():await client.refresh();this.requireOpen();
   if(directory.kind!==scope.kind||directory.resourceId!==scope.resourceId||directory.ownerId!==scopeOwner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-  this.#clients.set(scope.scopeId,{client,directory});return{client,directory};
+  this.#clients.get(scope.scopeId)?.client.close();this.#clients.set(scope.scopeId,{client,directory});return{client,directory};
  }
  personal(){this.requireOpen();const values=[...this.#clients.values()].filter(value=>value.directory.kind==='personal'&&value.directory.resourceId===this.ownerId);
   if(values.length!==1||values[0].directory.state!=='active')throw new Error('E2EE_MIGRATION_RESUME_REQUIRED');return values[0];}
+ shared(scopeId:string,kind:'project'|'space',resourceId:string){this.requireOpen();const value=this.#clients.get(scopeId);
+  if(!value||value.directory.kind!==kind||value.directory.resourceId!==resourceId||value.directory.state!=='active')throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');return value;}
  async #recoverEnrollment(scopeId:string,secret:Uint8Array,kit:RecoveryKit){
   this.requireOpen();const authority=await recoverAuthority(this.ownerId,secret,kit);this.requireOpen();
   if(kit.authority.signingKey!==this.device.authorityPin.signingKey||kit.authority.receivingKey!==this.device.authorityPin.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');
   const id=`enrollment:${scopeId}`,previous=await this.device.vault.read('outbox',id);this.requireOpen();let packet:SignedE2eeCommand;
   try{
-   if(previous){packet=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(previous.value));
-    if(packet.command?.action!=='enroll'||packet.command.deviceId!=='recovery'||packet.command.ownerId!==this.ownerId||packet.command.scopeId!==scopeId)throw new Error('E2EE_CORRUPT_OUTBOX');
-   }else{
     const response=await this.#transport.directory(scopeId);this.requireOpen();
     const frames=new Map<number,VerifiedDirectory>();const directory=await verifyDeviceDirectory(this.ownerId,scopeId,kit.authority,response.events,undefined,frame=>frames.set(frame.cryptoEpoch,frame));this.requireOpen();
-    const publicKeys=await publicDeviceKeys(this.device.keys()),challenge=await this.#transport.challenge(scopeId,this.device.deviceId,publicKeys);this.requireOpen();
+    const publicKeys=await publicDeviceKeys(this.device.keys());this.requireOpen();
+    const known=directory.devices.get(this.device.deviceId);
+    if(known){if(known.revoked)throw new Error('E2EE_REVOKED_DEVICE');
+     if(known.userId!==this.ownerId||known.signingKey!==publicKeys.signingKey||known.receivingKey!==publicKeys.receivingKey)throw new Error('E2EE_UNTRUSTED_DEVICE');
+     await this.device.rememberDirectory(scopeId,kit.authority,response.events,this.ownerId);this.requireOpen();return;
+    }
+    if(previous){const old=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(previous.value)) as SignedE2eeCommand;
+     if(old.command?.action!=='enroll'||old.command.deviceId!=='recovery'||old.command.ownerId!==this.ownerId||old.command.scopeId!==scopeId)throw new Error('E2EE_CORRUPT_OUTBOX');}
+    // Challenges bind a particular login and expire. Renew after a restart,
+    // retaining the exact prior packet; never regenerate the device/local root.
+    const challenge=await this.#transport.challenge(scopeId,this.device.deviceId,publicKeys);this.requireOpen();
     exactKeys(challenge,['id','scopeId','userId','role','sessionHash','deviceId','signingKey','receivingKey','nonce','expiresAt']);
     if(challenge.scopeId!==scopeId||challenge.userId!==this.ownerId||challenge.role!=='owner'||challenge.deviceId!==this.device.deviceId
      ||challenge.signingKey!==publicKeys.signingKey||challenge.receivingKey!==publicKeys.receivingKey||typeof challenge.expiresAt!=='number'||challenge.expiresAt*1000<=Date.now())throw new Error('E2EE_CHALLENGE_INVALID');
@@ -142,12 +151,14 @@ export class WebPrivateAccount{
     const historyCapsules=[];for(const frame of frames.values())if(frame.cryptoEpoch<directory.cryptoEpoch)historyCapsules.push({cryptoEpoch:frame.cryptoEpoch,keyId:frame.keyId,capsule:await grant(frame)});
     packet=await signE2eeCommand({protocol:1,ownerId:this.ownerId,scopeId,deviceId:'recovery',action:'enroll',expectedRevision:directory.checkpoint.revision,
      checkpointHash:directory.checkpoint.hash,securityEpoch:directory.securityEpoch,operationId:crypto.randomUUID(),payload:{challenge,capsule:await grant(directory),historyCapsules,selfProof} as unknown as Record<string,WireValue>},authority.signing.privateKey);this.requireOpen();
-    const bytes=new TextEncoder().encode(JSON.stringify(packet));try{await this.device.vault.write([{domain:'outbox',objectId:id,value:bytes,expected:null}]);}finally{bytes.fill(0);}
-   }
-   await this.#transport.command(packet);this.requireOpen();
+    const bytes=new TextEncoder().encode(JSON.stringify(packet));try{await this.device.vault.write([
+     ...(previous?[{domain:'local-snapshot' as const,objectId:`${id}:attempt:${previous.serial}`,value:previous.value,expected:null}]:[]),
+     {domain:'outbox',objectId:id,value:bytes,expected:previous?.serial??null}]);}finally{bytes.fill(0);}
+   let deliveryFailure:unknown;
+   try{await this.#transport.command(packet);}catch(error){if(error instanceof Error&&error.name==='AbortError')throw error;deliveryFailure=error;}this.requireOpen();
    const response=await this.#transport.directory(scopeId);this.requireOpen();const directory=await this.device.rememberDirectory(scopeId,kit.authority,response.events,this.ownerId);this.requireOpen();
    const enrolled=directory.devices.get(this.device.deviceId),keys=await publicDeviceKeys(this.device.keys());
-   if(!enrolled||enrolled.revoked||enrolled.userId!==this.ownerId||enrolled.signingKey!==keys.signingKey||enrolled.receivingKey!==keys.receivingKey)throw new Error('E2EE_UNTRUSTED_DEVICE');
+   if(!enrolled||enrolled.revoked||enrolled.userId!==this.ownerId||enrolled.signingKey!==keys.signingKey||enrolled.receivingKey!==keys.receivingKey){if(deliveryFailure)throw deliveryFailure;throw new Error('E2EE_UNTRUSTED_DEVICE');}
   }finally{previous?.value.fill(0);}
  }
 }

@@ -16,30 +16,30 @@ const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
  * Online errors never trigger a legacy read or an implicit offline fallback. */
 export class E2eePrivateDocument<T>{
  #queue:E2eeEditorQueue;#client:E2eeScopeClient;#domain:E2eeContext['domain'];#id:string;
- #validate:(input:unknown)=>T;#current:()=>void;#write:()=>void;
+ #validate:(input:unknown)=>T|Promise<T>;#current:()=>void;#write:()=>void;
  constructor(options:{device:UnlockedWebDevice;client:E2eeScopeClient;scopeId:string;domain:E2eeContext['domain'];objectId:string;
-  validate:(input:unknown)=>T;assertCurrent:()=>void;assertWrite:()=>void}){
+  validate:(input:unknown)=>T|Promise<T>;assertCurrent:()=>void;assertWrite:()=>void}){
   assertTechnical(options.scopeId);assertTechnical(options.objectId);options.assertCurrent();
   this.#queue=new E2eeEditorQueue(options.device,options.client,options.scopeId,options.domain,options.objectId);
   this.#client=options.client;this.#domain=options.domain;this.#id=options.objectId;this.#validate=options.validate;this.#current=options.assertCurrent;this.#write=options.assertWrite;
  }
- #decode(bytes:Uint8Array){return this.#validate(parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024));}
+ async #decode(bytes:Uint8Array){const value=await this.#validate(parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024));this.#current();return value;}
  async load(mode:'online'|'offline'='online'):Promise<PrivateDocumentView<T>>{
   this.#current();if(mode==='online')try{await this.#queue.recoverAcknowledgement();}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_CONFLICT_REVIEW_STALE')throw error;}
   this.#current();const local=await this.#queue.load();this.#current();
   try{
    if(mode==='offline'){
     if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');
-    return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:local.pending,conflict:null};
+    return{value:await this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:local.pending,conflict:null};
    }
    const remote=await this.#client.read(this.#domain,this.#id);this.#current();
    if(!remote){
-    if(local?.pending&&local.remoteRevision===0)return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:0,pending:true,conflict:null};
+    if(local?.pending&&local.remoteRevision===0)return{value:await this.#decode(local.bytes),serial:local.serial,remoteRevision:0,pending:true,conflict:null};
     throw new Error('E2EE_PRIVATE_DOCUMENT_MISSING');
    }
    try{
-    const value=this.#decode(remote.bytes);this.#current();
-    if(local?.pending)return{value:this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:true,
+    const value=await this.#decode(remote.bytes);this.#current();
+    if(local?.pending)return{value:await this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:true,
      conflict:remote.revision===local.remoteRevision?null:{value,revision:remote.revision}};
     if(local&&remote.revision===local.remoteRevision){
      if(local.bytes.length!==remote.bytes.length||local.bytes.some((byte,index)=>byte!==remote.bytes[index]))throw new Error('E2EE_PRIVATE_DOCUMENT_DIVERGED');
@@ -51,17 +51,17 @@ export class E2eePrivateDocument<T>{
   }finally{local?.bytes.fill(0);}
  }
  async save(input:T,expected:{serial:number|null;remoteRevision:number}):Promise<number>{
-  this.#current();this.#write();const value=this.#validate(structuredClone(input)),bytes=encoder.encode(JSON.stringify(value));
+  this.#current();this.#write();const value=await this.#validate(structuredClone(input));this.#current();this.#write();const bytes=encoder.encode(JSON.stringify(value));
   try{const serial=await this.#queue.stage(bytes,expected.serial,expected.remoteRevision);this.#current();return serial;}finally{bytes.fill(0);}
  }
  async merge(input:T,expected:{serial:number|null;remoteRevision:number}){
-  this.#current();this.#write();const bytes=encoder.encode(JSON.stringify(this.#validate(structuredClone(input))));
+  this.#current();this.#write();const value=await this.#validate(structuredClone(input));this.#current();this.#write();const bytes=encoder.encode(JSON.stringify(value));
   try{const serial=await this.#queue.reconcile(bytes,expected.serial,expected.remoteRevision);this.#current();return serial;}finally{bytes.fill(0);}
  }
  async flush(){this.#current();this.#write();const revision=await this.#queue.flush();this.#current();return revision;}
  async rebasePending(revision:number){this.#current();this.#write();return this.#queue.rebasePending(revision);}
  async reviewConflict(input:T,expected:{serial:number;remoteRevision:number}){
-  this.#current();this.#write();const bytes=encoder.encode(JSON.stringify(this.#validate(structuredClone(input))));
+  this.#current();this.#write();const value=await this.#validate(structuredClone(input));this.#current();this.#write();const bytes=encoder.encode(JSON.stringify(value));
   try{const serial=await this.#queue.reviewConflict(bytes,expected.serial,expected.remoteRevision);this.#current();return serial;}finally{bytes.fill(0);}
  }
 }
