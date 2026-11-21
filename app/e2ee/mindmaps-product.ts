@@ -30,8 +30,8 @@ export class E2eeMindmapRepository{
  check(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.#account.requireOpen();}
  dispose(){this.#closed=true;this.#view=null;this.#adopted.clear();this.#listeners.clear();}
  #operation<T>(run:()=>Promise<T>):Promise<T>{const result=this.#serial.catch(()=>undefined).then(async()=>{this.check();return run();});this.#serial=result;return result;}
- async #load(refresh=false){
-  this.check();if(this.#view&&!refresh)return this.#state();
+ async #load(refresh=false,allowConflict=false){
+  this.check();if(this.#view&&!refresh)return this.#state(!allowConflict);
   const online=this.#account.mode==='online'&&navigator.onLine;
   try{this.#view=await this.#document.load(online?'online':'offline');}
   catch(error){if(!online||!(error instanceof Error)||error.message!=='E2EE_PRIVATE_DOCUMENT_MISSING')throw error;
@@ -42,15 +42,15 @@ export class E2eeMindmapRepository{
     versions:seed.versions.map(row=>({document:validateMindmap(row.document),revision:Number(row.revision),updatedAt:String(row.updatedAt)}))};
    const serial=await this.#document.save(value,{serial:null,remoteRevision:0});this.#view={value,serial,remoteRevision:0,pending:true,conflict:null};
    await this.#flush();
-  }return this.#state();
+  }return this.#state(!allowConflict);
  }
- #state(){this.check();if(!this.#view)throw new Error('E2EE_PRODUCT_READ_REQUIRED');if(this.#view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');return this.#view;}
+ #state(requireClean=true){this.check();if(!this.#view)throw new Error('E2EE_PRODUCT_READ_REQUIRED');if(requireClean&&this.#view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');return this.#view;}
  async #stage(value:State){const prior=this.#state(),serial=await this.#document.save(value,prior);this.#view={...prior,value,serial,pending:true};}
  async #flush(){const view=this.#state();if(!view.pending||this.#account.mode==='offline')return;
   await this.#document.flush();this.#view=await this.#document.load('offline');
   if(this.#view.pending||JSON.stringify(this.#view.value)!==JSON.stringify(view.value))throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');
  }
- list():Promise<MapRecord[]>{return this.#operation(async()=>{const state=await this.#load(true);return state.value.records.filter(row=>!row.deleted).map(row=>({document:structuredClone(row.document!),revision:row.revision,updatedAt:row.updatedAt,pending:state.pending}));});}
+ list():Promise<MapRecord[]>{return this.#operation(async()=>{const state=await this.#load(true,true);return state.value.records.filter(row=>!row.deleted).map(row=>({document:structuredClone(row.document!),revision:row.revision,updatedAt:row.updatedAt,pending:state.pending||Boolean(state.conflict)}));});}
  adopt(record:MapRecord){this.check();this.#adopted.set(record.document.id,record.revision);}
  save(input:Mindmap,status:(state:SaveState,message?:string)=>void){
   const snapshot=validateMindmap(structuredClone(input));status('saving');return this.#operation(async()=>{
@@ -69,7 +69,20 @@ export class E2eeMindmapRepository{
   await this.#stage({...prior,records:prior.records.map(row=>row.id===old.id?{...row,document:null,deleted:true,revision:row.revision+1,updatedAt:new Date().toISOString()}:row)});await this.#flush();
  });}
  history(id:string){return this.#operation(async()=>{await this.#load();return this.#state().value.versions.filter(row=>row.document.id===id).map(row=>structuredClone(row));});}
- async forkDraft(input:Mindmap,status:(state:SaveState,message?:string)=>void){const copy=validateMindmap({...input,id:mapId(),title:`${input.title.slice(0,1900)} — сохранённый вариант`});await this.save(copy,status);return copy;}
+ async forkDraft(input:Mindmap,status:(state:SaveState,message?:string)=>void){
+  const copy=validateMindmap({...structuredClone(input),id:mapId(),title:`${input.title.slice(0,1900)} — сохранённый вариант`});status('saving');
+  return this.#operation(async()=>{await this.#load(true,true);const prior=this.#state(false),base=prior.conflict?.value??prior.value,updatedAt=new Date().toISOString();
+   const copies=[copy];if(prior.conflict)for(const row of prior.value.records){
+    if(row.deleted||row.id===input.id||base.records.some(remote=>JSON.stringify(remote)===JSON.stringify(row)))continue;
+    copies.push(validateMindmap({...row.document!,id:mapId(),title:`${row.document!.title.slice(0,1900)} — сохранённый вариант`}));
+   }
+   const count=base.records.filter(row=>!row.deleted).length;requireQuotaGrowth(currentFeatureAccess(this.#owner),'mindmaps',count,count+copies.length);
+   const value:State={...base,records:[...base.records,...copies.map(document=>({id:document.id,document,revision:1,deleted:false,updatedAt}))],
+    versions:[...base.versions,...copies.map(document=>({document,revision:1,updatedAt}))]};
+   const serial=prior.conflict?await this.#document.reviewConflict(value,{serial:prior.serial,remoteRevision:prior.conflict.revision}):await this.#document.save(value,prior);
+   this.#view={value,serial,remoteRevision:prior.conflict?.revision??prior.remoteRevision,pending:true,conflict:null};this.#adopted.set(copy.id,1);status('device');status('pending');await this.#flush();if(this.#account.mode==='online')status('synced');return copy;
+  }).catch(error=>{status('error');throw error;});
+ }
  async #local<T>(id:string,change?:(prior:T|null)=>T){
   this.check();assertTechnical(id);const row=await this.#account.device.vault.read('draft',id);this.check();
   try{const prior=row?parseLegacyMigrationJson(decoder.decode(row.value),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024) as T:null;

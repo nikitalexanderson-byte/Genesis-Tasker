@@ -9,7 +9,7 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 type Metadata={filename:string;mediaType:string};
 type Draft={id:string;size:number;parts:number;metadata:Metadata};
 type EditorState={protocol:1;scopeId:string;domain:E2eeContext['domain'];objectId:string;remoteRevision:number;latest:Draft;
-  pending:string[];history:Draft[]};
+  pending:string[];history:Draft[];review?:{originId:string;remoteRevision:number}};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 const MAX_RETAINED_DRAFTS=1024;
 
@@ -39,6 +39,7 @@ export class E2eeEditorQueue {
         if(!Number.isSafeInteger(draft.size)||draft.size<0||draft.size>E2EE_MAX_FILE_BYTES||draft.parts!==Math.ceil(draft.size/E2EE_CHUNK_BYTES)
           ||typeof draft.metadata?.filename!=='string'||draft.metadata.filename.length>512||typeof draft.metadata.mediaType!=='string'||draft.metadata.mediaType.length>128)throw new Error('E2EE_CORRUPT_EDITOR');
       }
+      if(state.review&&(typeof state.review!=='object'||Object.keys(state.review).length!==2||state.review.remoteRevision!==state.remoteRevision||!state.pending.includes(state.review.originId)))throw new Error('E2EE_CORRUPT_EDITOR');
       return {state,serial:row.serial};
     }finally{row.value.fill(0);}
   }
@@ -80,7 +81,7 @@ export class E2eeEditorQueue {
       return await this.#stage(bytes,expectedSerial,remoteRevision,metadata,mode);
     }finally{bytes.fill(0);}
   }
-  async #stage(source:Uint8Array,expectedSerial:number|null,baseRevision:number,metadata:Metadata,mode:'edit'|'merge'|'cache'):Promise<number>{
+  async #stage(source:Uint8Array,expectedSerial:number|null,baseRevision:number,metadata:Metadata,mode:'edit'|'merge'|'cache'|'review'):Promise<number>{
     if(!Number.isSafeInteger(baseRevision)||baseRevision<0||source.length>E2EE_MAX_FILE_BYTES
       ||typeof metadata.filename!=='string'||metadata.filename.length>512||typeof metadata.mediaType!=='string'||metadata.mediaType.length>128)throw new Error('E2EE_INVALID_EDITOR_INPUT');
     const bytes=new Uint8Array(source),changes:LocalWrite[]=[];metadata={filename:metadata.filename,mediaType:metadata.mediaType};
@@ -89,12 +90,13 @@ export class E2eeEditorQueue {
       const previous=await this.#load();
       if((previous?.serial??null)!==expectedSerial)throw new Error('E2EE_LOCAL_CONFLICT');
       if(previous&&(mode==='edit'?previous.state.remoteRevision!==baseRevision:baseRevision<previous.state.remoteRevision)
-        ||mode==='cache'&&previous?.state.pending.length)throw new Error('E2EE_EDITOR_CONFLICT');
+        ||mode==='cache'&&previous?.state.pending.length||previous?.state.review&&mode!=='edit'&&mode!=='review')throw new Error('E2EE_EDITOR_CONFLICT');
       if((previous?.state.history.length??0)>=MAX_RETAINED_DRAFTS)throw new Error('E2EE_EDITOR_HISTORY_LIMIT');
       const draft:Draft={id:`edit:${crypto.randomUUID()}`,size:bytes.length,parts:Math.ceil(bytes.length/E2EE_CHUNK_BYTES),metadata};
       for(let part=0;part<draft.parts;part++)changes.push({domain:'draft',objectId:`${draft.id}:${part}`,value:bytes.slice(part*E2EE_CHUNK_BYTES,(part+1)*E2EE_CHUNK_BYTES),expected:null});
       const state:EditorState={protocol:1,scopeId:this.#scopeId,domain:this.#domain,objectId:this.#objectId,remoteRevision:baseRevision,
-        latest:draft,pending:mode==='cache'?[]:[...previous?.state.pending??[],draft.id],history:[...previous?.state.history??[],draft]};
+        latest:draft,pending:mode==='cache'?[]:[...previous?.state.pending??[],draft.id],history:[...previous?.state.history??[],draft],
+        ...(mode==='review'?{review:{originId:draft.id,remoteRevision:baseRevision}}:previous?.state.review?{review:previous.state.review}:{})};
       return await this.#save(state,expectedSerial,changes);
     }finally{bytes.fill(0);changes.forEach(change=>change.value.fill(0));}
   }
@@ -105,7 +107,9 @@ export class E2eeEditorQueue {
       if(index<0){if(state.remoteRevision>=revision)return;throw new Error('E2EE_CORRUPT_EDITOR');}
       // A verified remote reconciliation may already have advanced past this
       // accepted local write. Acknowledge its origin without lowering the base.
+      if(state.review&&state.review.originId!==originId&&revision>state.review.remoteRevision)throw new Error('E2EE_CONFLICT_REVIEW_STALE');
       state.remoteRevision=Math.max(state.remoteRevision,revision);state.pending=state.pending.slice(index+1);
+      if(state.review&&!state.pending.includes(state.review.originId))delete state.review;
       try{await this.#save(state,saved.serial);return;}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT'||attempt===3)throw error;}
     }
   }
@@ -113,6 +117,13 @@ export class E2eeEditorQueue {
     // Bounded even when another editor keeps producing changes during network I/O.
     for(let iteration=0;iteration<MAX_RETAINED_DRAFTS;iteration++){
       const saved=await this.#load();if(!saved)throw new Error('E2EE_EDITOR_EMPTY');
+      if(saved.state.review){
+        const review=saved.state.review,draft=saved.state.history.find(row=>row.id===review.originId);if(!draft)throw new Error('E2EE_CORRUPT_EDITOR');
+        const job=await this.#client.localJob(this.#domain,this.#objectId);
+        if(job?.originId!==review.originId){const bytes=await this.#bytes(draft);try{await this.#client.replaceReviewed(this.#domain,this.#objectId,bytes,review.remoteRevision,review.originId,draft.metadata);}finally{bytes.fill(0);}}
+        const current=await this.#load();if(!current)throw new Error('E2EE_CORRUPT_EDITOR');
+        if(current.state.review?.originId===review.originId){delete current.state.review;try{await this.#save(current.state,current.serial);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT')throw error;}}continue;
+      }
       const job=await this.#client.localJob(this.#domain,this.#objectId);
       if(job&&!job.complete){
         if(!job.originId||!saved.state.pending.includes(job.originId))throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
@@ -131,6 +142,12 @@ export class E2eeEditorQueue {
     const saved=await this.#load();if(!saved?.state.pending.length)return;
     const receipt=await this.#client.recoverReceipt(this.#domain,this.#objectId);
     if(receipt&&saved.state.pending.includes(receipt.originId))await this.#confirm(receipt.originId,receipt.revision);
+  }
+  /** Explicit reviewed merge. Its intent is durable before cancel/replace I/O;
+   * retry cannot send the superseded old packet after a process interruption. */
+  async reviewConflict(source:Uint8Array,expectedSerial:number,remoteRevision:number,metadata:Metadata={filename:'',mediaType:'application/json'}){
+    const bytes=new Uint8Array(source);try{await this.#client.assertVerifiedRevision(this.#domain,this.#objectId,remoteRevision);
+      return await this.#stage(bytes,expectedSerial,remoteRevision,metadata,'review');}finally{bytes.fill(0);}
   }
   /** Epoch/concurrency conflicts are explicit; every later local edit stays queued. */
   async rebasePending(expectedRemoteRevision:number){

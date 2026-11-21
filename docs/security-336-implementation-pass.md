@@ -193,3 +193,27 @@ authorization, external-copy consent, content-only backup/Drive/import, remainin
 per-scope local-work attribution, reminders/background/deep links and enrollment /
 invalidated-keystore recovery. Do not treat the new diary route or metadata tools
 as accepted scenarios before the consolidated end-to-end review and repair pass.
+
+## Explicit pause and handoff, 21 November
+
+The owner asked to stop work and continue in a new chat. Implementation is paused;
+no background work, testing, builds, push, activation or release was started.
+Resume only after a new instruction. Handoff: `docs/security-336-handoff-2026-11-21.md`.
+
+Local checkpoint `cbd1cef9` contains the diary continuation above. The subsequent
+untested code checkpoint adds native personal mindmap routing (current documents,
+authenticated migrated image bytes, versions, views and new conversion drafts),
+explicit preservation of conflicting maps as copies, and durable reviewed-merge
+intent in both editor queues. Cancel/replace retains the old packet identity;
+read-only receipt recovery does not upload an unsent edit. These new conflict
+and migration paths still need consolidated concurrency/process-death review.
+
+Also added `E2eeFeatureDocument`, storing the exact baseline of the first pending
+edit within its encrypted document, and connected the actual web restoration
+repository to its migrated stoicheion workspace seed. Aurora integration was
+only inspected when the owner paused: no Aurora/private-result bridge was added.
+`validateDocument` for Aurora is async; do not pass it as the current generic
+feature driver's synchronous validator without adapting the implementation.
+
+The code remains uncompiled and untested. No additional category is accepted;
+production remains3.3.5/149, accepted coverage9/20, activation gates unchanged.

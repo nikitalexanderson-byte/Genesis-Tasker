@@ -18,7 +18,7 @@ internal class E2eePrivateDocument(private val device:E2eeScopeDevice,private va
         return validate(parsed)
     }
     fun load(offline:Boolean=false):Opened{
-        assertCurrent();device.requireOpen();if(!offline)queue.recoverAcknowledgement();assertCurrent();val local=queue.load();assertCurrent()
+        assertCurrent();device.requireOpen();if(!offline)try{queue.recoverAcknowledgement()}catch(error:IllegalStateException){if(error.message!="E2EE_CONFLICT_REVIEW_STALE")throw error};assertCurrent();val local=queue.load();assertCurrent()
         try{
             if(offline){check(local!=null){"E2EE_OFFLINE_CONTENT_UNAVAILABLE"};return Opened(decode(local.bytes),local.serial,local.remoteRevision,local.pending)}
             val remote=client.read(domain,objectId)
@@ -41,5 +41,9 @@ internal class E2eePrivateDocument(private val device:E2eeScopeDevice,private va
     }
     fun flush():Long{assertCurrent();assertWrite();return queue.flush().also{assertCurrent()}}
     fun rebasePending(remoteRevision:Long):String{assertCurrent();assertWrite();return queue.rebasePending(remoteRevision).also{assertCurrent()}}
+    fun reviewConflict(value:JSONObject,serial:Long,remoteRevision:Long):Long{
+        assertCurrent();assertWrite();val bytes=validate(JSONObject(value.toString())).toString().toByteArray(Charsets.UTF_8)
+        try{return queue.reviewConflict(bytes,serial,remoteRevision).also{assertCurrent()}}finally{bytes.fill(0)}
+    }
     override fun toString()="E2eePrivateDocument([redacted])"
 }

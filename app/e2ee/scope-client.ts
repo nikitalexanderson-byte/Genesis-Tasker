@@ -102,7 +102,7 @@ export class E2eeScopeClient {
     if(originId!==null)assertTechnical(originId);
     return this.#prepare(domain,objectId,source,expectedRevision,metadata,undefined,originId);
   }
-  async #prepare(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,metadata:{filename:string;mediaType:string},replacement?:{serial:number;job:UploadJob},originId:string|null=null):Promise<void> {
+  async #prepare(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,metadata:{filename:string;mediaType:string},replacement?:{serial:number;job:UploadJob;originId?:string},originId:string|null=null):Promise<void> {
     const directory=this.#open();if(directory.state!=='active')throw new Error('E2EE_NOT_ACTIVE');
     if(!Number.isSafeInteger(expectedRevision)||expectedRevision<0||expectedRevision>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_INVALID_REVISION');
     if(source.length>E2EE_MAX_FILE_BYTES||domain==='shared-comment'&&(source.length>65536||expectedRevision!==0))throw new Error('E2EE_FILE_TOO_LARGE');
@@ -135,7 +135,7 @@ export class E2eeScopeClient {
         plan.push({recordId,hash:await envelopePayloadHash(envelope),expected:envelope===sealed.manifest?expectedRevision:0});
       }
       const job:UploadJob={protocol:1,scopeId:this.#scopeId,domain,objectId,generation:directory.generation,cryptoEpoch:directory.cryptoEpoch,keyId:directory.keyId,
-        expected:expectedRevision,size:bytes.length,metadata,originId:replacement?.job.originId??originId,draftId,draftParts,plan,uploaded:0,pending:null,cancelling:null,complete:false};
+        expected:expectedRevision,size:bytes.length,metadata,originId:replacement?.originId??replacement?.job.originId??originId,draftId,draftParts,plan,uploaded:0,pending:null,cancelling:null,complete:false};
       await this.#saveJob(id,job,previous?.serial??null,changes);
     }finally{bytes.fill(0);changes.forEach(change=>change.value.fill(0));}
   }
@@ -212,11 +212,19 @@ export class E2eeScopeClient {
   /** Resolves the old request under a server writer lock before replacing its
    * ciphertext. Every old draft/job remains encrypted locally for recovery. */
   async rebase(domain:E2eeContext['domain'],objectId:string,expectedRevision:number,metadata?:{filename:string;mediaType:string},originId?:string):Promise<'rebased'|'already-confirmed'> {
+    return this.#rebase(domain,objectId,expectedRevision,metadata,originId);
+  }
+  async replaceReviewed(domain:E2eeContext['domain'],objectId:string,source:Uint8Array,expectedRevision:number,originId:string,metadata:{filename:string;mediaType:string}){
+    assertTechnical(originId);const bytes=new Uint8Array(source);
+    try{return await this.#rebase(domain,objectId,expectedRevision,metadata,undefined,{bytes,originId});}finally{bytes.fill(0);}
+  }
+  async #rebase(domain:E2eeContext['domain'],objectId:string,expectedRevision:number,metadata?:{filename:string;mediaType:string},originId?:string,replacement?:{bytes:Uint8Array;originId:string}):Promise<'rebased'|'already-confirmed'> {
     if(!this.#refreshed)throw new Error('E2EE_REFRESH_REQUIRED');
-    this.#open();const id=await this.#id(domain,objectId),loaded=await this.#loadJob(id);if(!loaded)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
+    this.#open();const id=await this.#id(domain,objectId),loaded=await this.#loadJob(id);
+    if(!loaded){if(!replacement)throw new Error('E2EE_PENDING_SAVE_REQUIRED');await this.prepare(domain,objectId,replacement.bytes,expectedRevision,metadata,replacement.originId);return'rebased';}
     const {job}=loaded;let serial=loaded.serial;
     if(originId!==undefined&&job.originId!==originId)throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
-    if(job.complete)return 'already-confirmed';
+    if(job.complete&&!replacement)return 'already-confirmed';
     if(job.pending) {
       if(!job.cancelling) {
         const value=encoder.encode(JSON.stringify(job));
@@ -236,10 +244,11 @@ export class E2eeScopeClient {
       job.cancelling=null;
       if(receipt.result.cancelled===true){job.pending=null;serial=await this.#saveJob(id,job,serial);}
       else serial=await this.#acknowledge(id,job,serial,receipt.result);
-      if(job.complete)return 'already-confirmed';
+      if(job.complete&&!replacement)return 'already-confirmed';
     }
-    const bytes=await this.readDraft(domain,objectId);if(!bytes)throw new Error('E2EE_CORRUPT_OUTBOX');
-    try{await this.#prepare(domain,objectId,bytes,expectedRevision,metadata??job.metadata,{job,serial});return 'rebased';}finally{bytes.fill(0);}
+    if(replacement&&job.complete&&job.expected+1>expectedRevision)throw new Error('E2EE_CONFLICT_REVIEW_STALE');
+    const bytes=replacement?new Uint8Array(replacement.bytes):await this.readDraft(domain,objectId);if(!bytes)throw new Error('E2EE_CORRUPT_OUTBOX');
+    try{await this.#prepare(domain,objectId,bytes,expectedRevision,metadata??job.metadata,{job,serial,...(replacement?{originId:replacement.originId}:{})});return 'rebased';}finally{bytes.fill(0);}
   }
   async #getEnvelope(domain:E2eeContext['domain'],objectId:string) {
     const response=await this.#readPacket('get',{domain,objectId});

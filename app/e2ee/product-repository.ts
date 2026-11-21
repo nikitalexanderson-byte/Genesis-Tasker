@@ -25,7 +25,8 @@ export class E2eePrivateDocument<T>{
  }
  #decode(bytes:Uint8Array){return this.#validate(parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024));}
  async load(mode:'online'|'offline'='online'):Promise<PrivateDocumentView<T>>{
-  this.#current();if(mode==='online')await this.#queue.recoverAcknowledgement();this.#current();const local=await this.#queue.load();this.#current();
+  this.#current();if(mode==='online')try{await this.#queue.recoverAcknowledgement();}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_CONFLICT_REVIEW_STALE')throw error;}
+  this.#current();const local=await this.#queue.load();this.#current();
   try{
    if(mode==='offline'){
     if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');
@@ -59,6 +60,10 @@ export class E2eePrivateDocument<T>{
  }
  async flush(){this.#current();this.#write();const revision=await this.#queue.flush();this.#current();return revision;}
  async rebasePending(revision:number){this.#current();this.#write();return this.#queue.rebasePending(revision);}
+ async reviewConflict(input:T,expected:{serial:number;remoteRevision:number}){
+  this.#current();this.#write();const bytes=encoder.encode(JSON.stringify(this.#validate(structuredClone(input))));
+  try{const serial=await this.#queue.reviewConflict(bytes,expected.serial,expected.remoteRevision);this.#current();return serial;}finally{bytes.fill(0);}
+ }
 }
 
 /** Client queries over one authenticated table snapshot. Domain-specific

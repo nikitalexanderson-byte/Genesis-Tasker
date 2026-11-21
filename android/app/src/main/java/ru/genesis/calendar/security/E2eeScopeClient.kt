@@ -184,7 +184,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             val job = JSONObject().put("protocol", 1).put("scopeId", scopeId).put("domain", domain).put("objectId", objectId)
                 .put("generation", value.generation).put("cryptoEpoch", value.cryptoEpoch).put("keyId", value.keyId).put("expected", expectedRevision)
                 .put("size", bytes.size).put("metadata", JSONObject().put("filename", filename).put("mediaType", mediaType))
-                .put("originId", if(replacement!=null)replacement.value.opt("originId") ?: JSONObject.NULL else originId ?: JSONObject.NULL)
+                .put("originId", originId?:replacement?.value?.opt("originId")?:JSONObject.NULL)
                 .put("draftId", draftId).put("draftParts", draftParts).put("plan", plan).put("uploaded", 0)
                 .put("pending", JSONObject.NULL).put("cancelling", JSONObject.NULL).put("complete", false)
             saveJob(key, job, previous?.serial, changes)
@@ -272,11 +272,19 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         try { return saveJob(id, job, serial, confirmed) } finally { confirmed.forEach { it.bytes.fill(0) } }
     }
     @Synchronized fun rebase(domain: String, objectId: String, expectedRevision: Long, filename: String? = null, mediaType: String? = null, originId: String? = null): String {
+        return rebaseInternal(domain,objectId,expectedRevision,filename,mediaType,originId)
+    }
+    @Synchronized fun replaceReviewed(domain:String,objectId:String,source:ByteArray,expectedRevision:Long,originId:String,filename:String,mediaType:String):String{
+        E2eeKeys.technical(originId);val bytes=source.copyOf()
+        try{return rebaseInternal(domain,objectId,expectedRevision,filename,mediaType,null,bytes,originId)}finally{bytes.fill(0)}
+    }
+    private fun rebaseInternal(domain:String,objectId:String,expectedRevision:Long,filename:String?,mediaType:String?,originId:String?,replacementBytes:ByteArray?=null,replacementOrigin:String?=null):String{
         check(refreshed) { "E2EE_REFRESH_REQUIRED" }
-        current(); val key = id(domain, objectId); val loaded = loadJob(key) ?: throw IllegalStateException("E2EE_PENDING_SAVE_REQUIRED")
+        current(); val key = id(domain, objectId); val loaded = loadJob(key)
+        if(loaded==null){check(replacementBytes!=null&&replacementOrigin!=null){"E2EE_PENDING_SAVE_REQUIRED"};prepare(domain,objectId,replacementBytes,expectedRevision,filename?:"",mediaType?:"application/json",replacementOrigin);return "rebased"}
         val job = loaded.value; var serial = loaded.serial
         check(originId == null || job.opt("originId") == originId) { "E2EE_PENDING_EDITOR_MISMATCH" }
-        if (job.getBoolean("complete")) return "already-confirmed"
+        if (job.getBoolean("complete")&&replacementBytes==null) return "already-confirmed"
         if (!job.isNull("pending")) {
             if (job.isNull("cancelling")) {
                 val bytes = job.toString().toByteArray()
@@ -301,11 +309,12 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             job.put("cancelling", JSONObject.NULL)
             if (receipt.getJSONObject("result").opt("cancelled") == true) { job.put("pending", JSONObject.NULL); serial = saveJob(key, job, serial) }
             else serial = acknowledge(key, job, serial, receipt.getJSONObject("result"))
-            if (job.getBoolean("complete")) return "already-confirmed"
+            if (job.getBoolean("complete")&&replacementBytes==null) return "already-confirmed"
         }
-        val bytes = readDraft(domain, objectId) ?: throw IllegalStateException("E2EE_CORRUPT_OUTBOX")
+        check(replacementBytes==null||!job.getBoolean("complete")||job.getLong("expected")+1<=expectedRevision){"E2EE_CONFLICT_REVIEW_STALE"}
+        val bytes = replacementBytes?.copyOf()?:readDraft(domain, objectId) ?: throw IllegalStateException("E2EE_CORRUPT_OUTBOX")
         try { prepareInternal(domain, objectId, bytes, expectedRevision, filename ?: job.getJSONObject("metadata").getString("filename"),
-            mediaType ?: job.getJSONObject("metadata").getString("mediaType"), Job(job, serial)) }
+            mediaType ?: job.getJSONObject("metadata").getString("mediaType"), Job(job, serial),replacementOrigin) }
         finally { bytes.fill(0) }
         return "rebased"
     }
