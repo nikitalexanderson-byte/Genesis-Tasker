@@ -8,6 +8,21 @@ never call it independent human assurance. Historical human-review gates below
 are superseded. Full coverage/recovery/upgrade and all technical acceptance stay.
 Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
+## Explicit Google copy path (candidate, no QA)
+
+Added web/native new-root retained copy intents, exact content/account/provider
+review and one-use external consent for Tasks/Calendar. Personal editors and
+shared task details use the separate copy path. Added a bounded backend service
+and metadata-only receipts (migration133), independent of private-content reads
+and legacy Google product IO. Calendar uses one deterministic external event ID;
+uncertain Tasks outcomes reconcile the saved marker and never blindly insert
+again. No real provider call/grant/config change was performed. Full boundaries
+and unresolved provider/semantic/UI/translation acceptance:
+`e2ee-336-external-google-copies.md`.
+
+No tests/typecheck/lint/build/CI/push/deploy/device actions ran. This is candidate
+code, not completed external integration, accepted coverage or a release.
+
 ## Shared aggregate queries, histories and maps (candidate, no QA)
 
 Added a common web/native aggregate model for global task queries, saved-view

@@ -31,6 +31,7 @@ internal fun allowedAuthSessionRoute(method: String, path: String): Boolean =
     (path == "/account/support-notice" && method == "POST") ||
     (path == "/donations/cloudtips/checkout" && method == "POST") ||
     (path == "/weather/v1/current" && method == "POST") ||
+    (path == "/private-services/google/copy" && method == "POST") ||
     (path == "/account/plan-guidance" && method == "GET") ||
     (method=="GET"&&(path=="/private-services/dream-voice"||path.matches(Regex("/private-services/dream-clock\\?timeZone=[A-Za-z0-9_%+./-]{1,384}")))) ||
     (path in setOf("/account/plan-guidance/claim", "/account/plan-guidance/shown", "/account/plan-guidance/read", "/account/plan-guidance/release") && method == "POST") ||
@@ -722,6 +723,7 @@ internal class AuthSessionClient(context: Context,
     fun assistant(expected: Long, body: JSONObject? = null): JSONObject =
         request(expected, if (body == null) "/assistant/status" else "/assistant/plan", body)
     fun privateAssistant(expected:Long,body:JSONObject):JSONObject=request(expected,"/private-services/assistant/plan",body)
+    fun privateGoogleCopy(expected:Long,body:JSONObject):JSONObject=request(expected,"/private-services/google/copy",body)
 
     fun messaging(expected: Long, method: String, path: String, body: JSONObject?): JSONObject {
         require(MessagingProtocol.allowedRoute(method, path))

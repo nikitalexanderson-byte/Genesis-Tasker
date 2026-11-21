@@ -3605,6 +3605,11 @@ export async function saveStoicheionDraw(kind: StoicheionDrawKind, seed: number)
   });
 }
 
+export async function requestPrivateGoogleCopy(owner:string,input:import('./e2ee/google-copy-product').GoogleCopyPayload,consent:import('./e2ee/external-copy').ExternalCopyConsent){
+  if(confirmedTransportOwnerId!==owner||!usesPrivateProductStorage(owner))throw new Error('E2EE_ACCOUNT_CHANGED');const account=requirePrivateAccount(owner),{consumeExternalCopy,EXTERNAL_COPY_NOTICE_VERSION}=await import('./e2ee/external-copy');
+  const snapshot=await consumeExternalCopy(account,consent,input.provider,`google-copy:${input.accountId}`,input);account.requireOpen();
+  const result=await api<import('./e2ee/google-copy-product').GoogleCopyReceipt>('/private-services/google/copy',{method:'POST',body:JSON.stringify({...snapshot,consentVersion:EXTERNAL_COPY_NOTICE_VERSION})});account.requireOpen();if(requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');return result;
+}
 export type AssistantPlanInput={
   command: string;
   audio: { data: string; mimeType: string } | null;

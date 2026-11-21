@@ -680,6 +680,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     }
+    internal suspend fun privateGoogleCopy(uid:String,input:JSONObject,consent:ru.genesis.calendar.security.ExternalCopyConsent):JSONObject{
+        val scope=CloudAccountSnapshot.scopeFor(uid);val account=ru.genesis.calendar.security.NativePrivateProducts.account(scope,uid);val epoch=app.workspaceEpoch;val generation=client.currentGeneration()
+        fun current(){account.requireOpen();check(client.isCurrent(generation)&&app.workspaceEpoch==epoch&&app.workspaceScope==scope&&mutableState.value.user?.uid==uid&&ru.genesis.calendar.security.NativePrivateProducts.account(scope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
+        current();val payload=consent.consume(account,input.getString("provider"),"google-copy:${input.getString("accountId")}",input).put("consentVersion",ru.genesis.calendar.security.ExternalCopyConsent.NOTICE_VERSION)
+        return withContext(Dispatchers.IO){current();client.privateGoogleCopy(generation,payload).also{current()}}
+    }
     internal fun assistantGateway(uid: String): AssistantGateway = object : AssistantGateway {
         override fun check() {
             val state = mutableState.value

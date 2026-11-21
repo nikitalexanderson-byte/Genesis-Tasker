@@ -1,4 +1,5 @@
 "use client";
+import {PrivateGoogleCopy} from './PrivateGoogleCopy';
 import release319Copy from "./release-319-copy.json";
 import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
 import { PaletteArtFilter } from "./PaletteArtFilter";
@@ -7203,7 +7204,7 @@ export function GenesisCalendar() {
               {view === "projects" && (sharedProjectsVisible || personalProjectsVisible) ? <>
                 {!experimentalThemeActive ? <div className="view-calendar-toolbar">{renderDisplayCalendarChoice(language === "en" ? "Project date display" : "Отображение дат в проектах")}</div> : null}
                 {!sharedProjectsVisible || activeProjectsArea === "personal" ? renderProjects() : <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening shared projects…" : "Открываем общие проекты…"} />}>
-                  <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive}
+                  <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive} googleAccounts={cloudUser?.googleAccounts??[]}
                     writeEnabled={sharedProjectsAvailable}
                     projectViewOrder={accountLayout.sharedProjectViewOrder} onProjectViewOrder={sharedProjectViewOrder => saveLayout({ sharedProjectViewOrder })}
                     calendarScale={accountLayout.sharedCalendarScale} onCalendarScale={sharedCalendarScale => saveLayout({ sharedCalendarScale })}
@@ -7801,6 +7802,7 @@ export function GenesisCalendar() {
               </div>
             ) : null}
             </details>
+            {cloudUser&&usesPrivateProductStorage(cloudUser.uid)?<PrivateGoogleCopy ownerId={cloudUser.uid} language={language} accounts={cloudUser.googleAccounts} source={editingTask}/>:null}
             <div className="editor-actions task-editor-actions">
               <button type="button" className="task-editor-action task-editor-action-delete personal-action-hint" aria-label={translateText("Удалить", language)} data-action-hint={translateText("Удалить", language)} onClick={() => { const id = editingTask.id; const occurrence = editingOccurrenceDate || editingTask.dueDate; setEditingTask(null); deleteTask(id, occurrence); }}><ExperimentalIcon name="delete" /><span className="task-editor-action-label">{translateText("Удалить", language)}</span></button>
               {sharedProjectsAvailable && editingTask.entryType !== "birthday" ? <button type="button" className="task-editor-action task-editor-action-transfer personal-action-hint" aria-label={translateText("Переместить в общие", language)} data-action-hint={translateText("Переместить в общие", language)} onClick={() => { setTransferTask(tasks.find((task) => task.id === editingTask.id) ?? editingTask); setEditingTask(null); }}><ExperimentalIcon name="move" /><span className="task-editor-action-label">{translateText("Переместить в общие", language)}</span></button> : null}

@@ -61,4 +61,8 @@ private val LocalSharedTaskEditControl = compositionLocalOf<SharedTaskEditContro
                 outlined = false, modifier = Modifier.testTag("shared-task-edit"))
         }
     }
+    fun value(key:String)=task.opt(key)?.takeUnless{it===JSONObject.NULL}?:JSONObject.NULL
+    PrivateGoogleCopyEntry(JSONObject().put("title",task.getString("title")).put("description",task.optString("description"))
+        .put("dueDate",value("dueDate")).put("startDate",task.opt("startDate")?.takeUnless{it===JSONObject.NULL}?:value("dueDate"))
+        .put("startTime",value("startTime")).put("endTime",value("endTime")).put("timeZone",java.util.TimeZone.getDefault().id).put("completedAt",value("completedAt")))
 }

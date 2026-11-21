@@ -329,6 +329,7 @@ function genesisE2eeEnforceLegacyRoute(string $method,string $path,?string $user
     if(str_starts_with($path,'e2ee/v1/'))return;
     if($path==='private-services/physis-catalog'&&in_array($method,['GET','PUT'],true))return;
     if($path==='private-services/assistant/plan'&&$method==='POST')return;
+    if($path==='private-services/google/copy'&&$method==='POST')return;
     // The existing messenger has a separate ciphertext protocol and history.
     // Keep both read and write routes, including its scoped conversation creation.
     if(preg_match('~^shared/(?:private-conversations|messenger|messaging)(?:/|$)|^shared/spaces/[^/]+/private-conversations$~D',$path))return;

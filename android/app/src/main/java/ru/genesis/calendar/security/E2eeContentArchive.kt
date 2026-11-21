@@ -14,7 +14,7 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
         private const val MAX=GenesisBackupContainer.MAX_PLAIN
         private val modules=listOf("workspace","mindmaps","diary","stoicheion","aurora","physis","shared-drafts")
         private val domains=setOf("workspace","mindmap","diary","dream-journal","physis","aurora","stoicheion","advice","attachment","shared-project","shared-comment","local-snapshot")
-        private fun deviceContent(id:String)=id in setOf("personal-diary-device-live-v1","personal-physis-editor-forms-v1")||listOf("shared-request:","product-tx:","product-approval:","mindmap-view:","mindmap-conversions:","shared-map-draft:","shared-map-local:","shared-map-conversion-journal:","imported-legacy-content:").any(id::startsWith)
+        private fun deviceContent(id:String)=id in setOf("personal-diary-device-live-v1","personal-physis-editor-forms-v1")||listOf("shared-request:","product-tx:","product-approval:","mindmap-view:","mindmap-conversions:","shared-map-draft:","shared-map-local:","shared-map-conversion-journal:","external-google-copy:","imported-legacy-content:").any(id::startsWith)
         private fun hash(bytes:ByteArray)=E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))
         private fun rows(value:JSONArray)=(0 until value.length()).map{value.getJSONObject(it)}
         private fun snapshot(id:String,bytes:ByteArray,filename:String="",mediaType:String="application/json")=JSONObject().put("id",id).put("encoding","base64url").put("bytes",E2eeEnvelope.encode(bytes)).put("sha256",hash(bytes)).put("size",bytes.size).put("filename",filename).put("mediaType",mediaType)

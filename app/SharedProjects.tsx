@@ -139,8 +139,10 @@ function watchSharedRead(operation: (signal: AbortSignal) => Promise<unknown>, s
     window.removeEventListener(SHARED_RETRY_EVENT, trigger); document.removeEventListener("visibilitychange", trigger); };
 }
 import type { SharedInvitationDestination } from "./SharedInvitationNotices";
+import {PrivateGoogleCopy} from './PrivateGoogleCopy';
 
 type Props = { userId: string; language: string; writeEnabled: boolean; enabledCalendars: CalendarMode[]; experimentalTheme?: boolean; timeFormat?: TimeFormat; weekStart?: 'sunday' | 'monday';
+  googleAccounts?:import('./cloud-sync').GoogleAccount[];
   projectViewOrder: ProjectView[] | null; onProjectViewOrder: (views: ProjectView[]) => void;
   calendarScale: CalendarScale; onCalendarScale: (scale: CalendarScale) => void;
   inboxWidth: number; onInboxWidth: (width: number) => void; inboxPosition: InboxPosition; inboxHidden: boolean; inboxCompact: boolean; onInboxPosition: (position: InboxPosition) => void; onInboxHidden: (hidden: boolean) => void; onInboxCompact: (compact: boolean) => void;
@@ -157,7 +159,7 @@ function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", weekStart = 'monday', destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale }: Props) {
+export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", weekStart = 'monday', destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale,googleAccounts=[] }: Props) {
   const english = language === "en";
   const [privateApprovalTask,setPrivateApprovalTask]=useState<SharedTask|null>(null);
   const sacredFeaturesEnabled = useSacredFeaturesEnabled();
@@ -1793,6 +1795,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
           <SharedTaskDetailsEditor key={selectedTask.id} task={selectedTask} value={taskDetailsDraft(selectedTask)} onChange={() => undefined} members={taskSnapshot.members} mode={editTaskCalendarMode} disabled={busy} readOnly saved
           onConvert={() => undefined} onCreateChild={async () => undefined} onOpen={(projectId, taskId) => void run(async () => { const [context, task] = await Promise.all([loadSharedProject(projectId), loadSharedTask(projectId, taskId, true)]); openTask(task, context); })}/></>}
 
+          {usesPrivateProductStorage(userId)?<PrivateGoogleCopy ownerId={userId} language={language as import('./i18n').Language} accounts={googleAccounts} source={selectedTask}/>:null}
           {selectedTask.seriesId || taskEditing && canEditTask && taskSnapshot.project.canOrganizeTasks ? <Suspense fallback={null}><SharedTaskSeries key={selectedTask.id} task={selectedTask} mode={editTaskCalendarMode}
             readOnly={!taskEditing || !canEditTask || !taskSnapshot.project.canOrganizeTasks || Boolean(selectedTask.archivedAt)} disabled={busy || taskEditing && !taskFieldsSaved}
             onDirtyChange={setSeriesDirty} onSaved={async () => { await refreshTaskProject(selectedTask.projectId); await refreshProject(selectedTask.projectId); }}

@@ -202,7 +202,13 @@ function genesisRevokeGoogleToken(array $user): void
 
 function genesisGoogleAccessToken(array $user, bool $forceRefresh = false): string
 {
-    return genesisGoogleWithLegacyOperation($user,static function(array $user)use($forceRefresh):string{
+    return genesisGoogleWithLegacyOperation($user,static fn(array $current):string=>genesisGoogleStoredAccessToken($current,$forceRefresh));
+}
+/** Identity/OAuth credential operation only. Private external-copy code uses
+ * this after its independent owner/account/consent binding. Legacy product IO
+ * must keep using genesisGoogleAccessToken and its migration fence. */
+function genesisGoogleStoredAccessToken(array $user,bool $forceRefresh=false):string
+{
     $current = genesisDecrypt($user['access_token_enc'] ?? null);
     if (!$forceRefresh && $current && (int)($user['token_expires_at'] ?? 0) > time() + 60) {
         return $current;
@@ -237,7 +243,6 @@ function genesisGoogleAccessToken(array $user, bool $forceRefresh = false): stri
     ]);
     genesisLogError('[AuthFlow] TOKEN_REFRESH_SUCCESS');
     return $access;
-    });
 }
 
 function genesisClearGoogleAuthorization(array $user): void

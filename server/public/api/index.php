@@ -414,6 +414,9 @@ try {
         }
         genesisJson(genesisCreateAssistantPlan(genesisReadJson()));
     }
+    if($method==='POST'&&$path==='private-services/google/copy'){
+        $userId=genesisRequireUserId();genesisRequireCsrf();require_once __DIR__.'/../../src/private-google-copy.php';genesisJson(genesisPrivateGoogleCopy($userId,genesisReadJson()));
+    }
     if ($method === 'POST' && $path === 'private-services/assistant/plan') {
         $userId=genesisRequireUserId();genesisRequireCsrf();$user=genesisFindUser($userId);
         if($user===null)genesisJson(['error'=>'AUTH_REQUIRED'],401);

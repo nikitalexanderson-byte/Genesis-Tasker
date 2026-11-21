@@ -1592,6 +1592,11 @@ internal fun TaskEditor(task:LocalTask?,selected:String,prefs:UiPreferences,stru
                 saveError?.let { Text(it, color=MaterialTheme.colorScheme.error,
                     modifier=Modifier.testTag("task-save-error"), style=MaterialTheme.typography.bodySmall) }
                 validation?.let { Text(it,color=MaterialTheme.colorScheme.error) }
+                PrivateGoogleCopyEntry(JSONObject().put("title",title).put("description",description)
+                    .put("dueDate",yandexEndDate.takeIf{entryType in setOf("meeting","event")&&it.isNotBlank()}?:date.ifBlank{null}?:JSONObject.NULL)
+                    .put("startDate",date.ifBlank{null}?:JSONObject.NULL).put("startTime",time.ifBlank{null}?:JSONObject.NULL)
+                    .put("endTime",yandexEndTime.ifBlank{null}?:JSONObject.NULL).put("timeZone",java.util.TimeZone.getDefault().id)
+                    .put("completedAt",yandexFields.optString("completedAt").takeUnless{it.isBlank()||it=="null"}?:JSONObject.NULL))
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
                     TextButton(onClick={ requestExit(onDismiss) },enabled=!saving){Text("Отмена")}
                     Button(enabled=!saving && title.isNotBlank() && (routing?.mode!="choose" ||
