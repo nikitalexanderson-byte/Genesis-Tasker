@@ -35,6 +35,7 @@ internal object NativeMigrationMemory{
     }
     suspend fun localWork(owner:String,current:()->Unit):JSONObject=withContext(Dispatchers.Main.immediate){
         current();val before=rows(owner);current();val after=rows(owner);check(E2eeProductJson.same(before,after)){"E2EE_SOURCE_CAPTURE_CHANGED"}
+        check((0 until before.length()).none{val row=before.getJSONObject(it);row.getBoolean("mounted")&&!row.getBoolean("settled")}){"E2EE_SOURCE_NOT_SETTLED"}
         JSONObject().put("editors",before)
     }
     suspend fun content(owner:String,kind:String,current:()->Unit):JSONObject?=withContext(Dispatchers.Main.immediate){

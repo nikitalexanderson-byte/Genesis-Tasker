@@ -34,6 +34,7 @@ internal class DictationPatches {
     }
 
     fun contains(ticket: Ticket) = pending.containsKey(ticket.id)
+    fun hasPending() = pending.isNotEmpty()
     fun discard(ticket: Ticket) { pending.remove(ticket.id) }
     fun clear() { pending.clear() }
 

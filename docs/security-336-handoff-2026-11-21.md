@@ -252,3 +252,18 @@ or activate pilot/floors/cutover. Remaining code includes full native captures,
 SAF generation/lifecycle custody, streamed cancellation, revoked-device recovery,
 shared domain composition/authorization and the other pending items above.
 
+### Native input continuation while public CI runs
+
+Added dream journal/editor and all sleep/mood/abstinence forms to native
+in-memory capture. Preserve raw input, original typed records/revisions and UI
+state as inert personal.local-work history. Mounted loading/saving/voice,
+spelling and slider activity must settle; detached originals do not execute.
+Owner comes from the authenticated UID plus an exact hashed-scope match, and
+sleep/mood repository/form state is keyed to that account lifetime.
+
+Code review/diff hygiene only; no private security tests/builds/CI ran. Coverage
+remains9/20. Consolidated acceptance needs account switches/disposal, raw invalid
+input, pending voice/spelling, save/loading races, slider interruption and
+SOURCE_NOT_SETTLED retry/cancel UX. Embedded Aurora/Gno/shared advanced forms,
+SAF custody and streamed cancellation remain unfinished.
+

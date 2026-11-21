@@ -33,19 +33,20 @@ import ru.genesis.calendar.domain.trackers.*
 
 @Composable
 internal fun TrackersScreen(app: GenesisApplication, experimental: Boolean = false, diaryRepository: DiaryRepository? = null) {
-    val repository=remember(app) { TrackersRepository(app) }
-    val preferences=remember(app) { LocalPreferences(app,app.workspaceScope) }
+    val repository=remember(app,app.workspaceScope) { TrackersRepository(app) }
+    val preferences=remember(app,app.workspaceScope) { LocalPreferences(app,app.workspaceScope) }
+    val migrationOwner=rememberLegacyMigrationOwner(app.workspaceScope)
     val prefs by preferences.values.collectAsStateWithLifecycle(initialValue=UiPreferences())
     val scope=rememberCoroutineScope()
     val emojiCategories=remember(app) { fullEmojiCatalog(app) }
-    var workspace by remember { mutableStateOf<LocalTrackersWorkspace?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var storageError by remember { mutableStateOf(false) }
-    var busy by remember { mutableStateOf(false) }
-    var dateValue by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
-    var planEditor by remember { mutableStateOf<SleepPlan?>(null) }
-    var sleepEditor by remember { mutableStateOf<Pair<SleepPlan,SleepEntry?>?>(null) }
-    var moodEditor by remember { mutableStateOf(false) }
+    var workspace by remember(repository) { mutableStateOf<LocalTrackersWorkspace?>(null) }
+    var error by remember(repository) { mutableStateOf<String?>(null) }
+    var storageError by remember(repository) { mutableStateOf(false) }
+    var busy by remember(repository) { mutableStateOf(false) }
+    var dateValue by rememberSaveable(app.workspaceScope) { mutableStateOf(LocalDate.now().toString()) }
+    var planEditor by remember(repository) { mutableStateOf<SleepPlan?>(null) }
+    var sleepEditor by remember(repository) { mutableStateOf<Pair<SleepPlan,SleepEntry?>?>(null) }
+    var moodEditor by remember(repository) { mutableStateOf(false) }
     val date=LocalDate.parse(dateValue)
     val enabledCalendars = LocalEnabledCalendars.current
     val viewMode = prefs.display.takeIf { it in enabledCalendars }
@@ -74,7 +75,13 @@ internal fun TrackersScreen(app: GenesisApplication, experimental: Boolean = fal
     }
     val suggestedSleepTitle = genesisTranslate("Сон и пробуждение")
     val availablePlans = current?.sleepPlans.orEmpty()
-    var planChoiceOpen by remember { mutableStateOf(false) }
+    var planChoiceOpen by remember(repository) { mutableStateOf(false) }
+    RememberMigrationForm(migrationOwner,repository,"sleep-mood-view",{!busy&&workspace!=null&&!storageError}){
+        org.json.JSONObject().put("workspace",workspace?.let{org.json.JSONObject(TrackersDocument.encode(it))}?:org.json.JSONObject.NULL)
+            .put("revision",workspace?.revision?:org.json.JSONObject.NULL).put("date",dateValue)
+            .put("planEditor",planEditor?.id?:org.json.JSONObject.NULL).put("sleepEditor",sleepEditor?.first?.id?:org.json.JSONObject.NULL)
+            .put("moodEditor",moodEditor).put("planChoiceOpen",planChoiceOpen).put("busy",busy).put("storageError",storageError)
+    }
     fun openSleepPlan() {
         val availablePlans = workspace?.sleepPlans.orEmpty()
         if (workspace == null || busy || storageError) return
@@ -296,17 +303,17 @@ internal fun TrackersScreen(app: GenesisApplication, experimental: Boolean = fal
             }
         }
     }
-    planEditor?.let { plan -> SleepPlanEditor(plan,prefs.use24,busy,error,onDismiss={if(!busy)planEditor=null}) { next ->
+    planEditor?.let { plan -> SleepPlanEditor(plan,prefs.use24,busy,error,onDismiss={if(!busy)planEditor=null},migrationOwner=migrationOwner) { next ->
         scope.launch { action { repository.savePlan(next);planEditor=null } }
     } }
-    sleepEditor?.let { (plan,entry) -> SleepObservationEditor(plan,entry,date,prefs.use24,busy,error,onDismiss={if(!busy)sleepEditor=null}) { bed,wake,quality,note ->
+    sleepEditor?.let { (plan,entry) -> SleepObservationEditor(plan,entry,date,prefs.use24,busy,error,onDismiss={if(!busy)sleepEditor=null},migrationOwner=migrationOwner) { bed,wake,quality,note ->
         scope.launch { action { repository.saveSleep(plan.id,date,bed,wake,quality,note,entry?.entity?.version ?: 0);sleepEditor=null } }
     } }
     if(moodEditor) {
         val existing=workspace?.moodEntries?.firstOrNull { it.date==date }
         MoodObservationEditor(workspace?.moodEntries.orEmpty(),if(existing!=null)date else LocalDate.now(),viewMode,
             prefs.language,emojiCategories,busy,error,
-            onDismiss={if(!busy)moodEditor=false}) { chosenDate,value,note,customLabel,customEmoji ->
+            onDismiss={if(!busy)moodEditor=false},migrationOwner=migrationOwner) { chosenDate,value,note,customLabel,customEmoji ->
             val target=workspace?.moodEntries?.firstOrNull { it.date==chosenDate }
             scope.launch { action {
                 repository.saveMood(chosenDate,value,note,target?.tags ?: emptyList(),target?.entity?.version ?: 0,
@@ -359,7 +366,7 @@ private fun TrackerLightMetric(label: String, value: String, modifier: Modifier 
 }
 
 @Composable
-internal fun SleepPlanEditor(plan: SleepPlan,use24: Boolean,busy: Boolean,error: String?,onDismiss: () -> Unit,onSave: (SleepPlan) -> Unit) {
+internal fun SleepPlanEditor(plan: SleepPlan,use24: Boolean,busy: Boolean,error: String?,onDismiss: () -> Unit,migrationOwner:String?,onSave: (SleepPlan) -> Unit) {
     var title by rememberSaveable(plan.id) { mutableStateOf(plan.title) }
     var bed by rememberSaveable(plan.id) { mutableStateOf(plan.targetBedtime.toString()) }
     var wake by rememberSaveable(plan.id) { mutableStateOf(plan.targetWakeTime.toString()) }
@@ -371,6 +378,13 @@ internal fun SleepPlanEditor(plan: SleepPlan,use24: Boolean,busy: Boolean,error:
     var reminderMinutesBefore by rememberSaveable(plan.id) { mutableIntStateOf(plan.reminderMinutesBefore) }
     var rules by remember(plan.id) { mutableStateOf(plan.rules) }
     var schedule by remember(plan.id) { mutableStateOf(plan.schedule) }
+    RememberMigrationForm(migrationOwner,plan.id,"sleep-plan",{!busy}){
+        org.json.JSONObject().put("baseline",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(sleepPlans=listOf(plan)))))
+            .put("workingPlan",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(sleepPlans=listOf(plan.copy(schedule=schedule,rules=rules))))))
+            .put("title",title).put("bed",bed).put("wake",wake).put("zone",zone).put("active",active)
+            .put("qualityEnabled",qualityEnabled).put("scoringEnabled",scoringEnabled).put("reminderEnabled",reminderEnabled)
+            .put("reminderMinutesBefore",reminderMinutesBefore).put("use24",use24).put("busy",busy)
+    }
     val mode=when(schedule.recurrence.mode) { "classic" -> CalendarMode.PROFANE; "lunar" -> CalendarMode.LUNAR; else -> CalendarMode.SACRED }
     val english=LocalGenesisLanguage.current=="en"
     Dialog(onDismissRequest=onDismiss) { Surface(shape=MaterialTheme.shapes.large) {
@@ -514,12 +528,17 @@ internal fun dailySleepSchedule(date: LocalDate,mode: CalendarMode): TrackerSche
 
 @Composable
 internal fun SleepObservationEditor(plan: SleepPlan,entry: SleepEntry?,date: LocalDate,use24: Boolean,busy: Boolean,error: String?,onDismiss: () -> Unit,
-    onSave: (LocalTime?,LocalTime?,Double?,String) -> Unit) {
+    migrationOwner:String?,onSave: (LocalTime?,LocalTime?,Double?,String) -> Unit) {
     val key="${plan.id}:$date"
     var bed by rememberSaveable(key) { mutableStateOf(entry?.fellAsleepAt?.toString() ?: "") }
     var wake by rememberSaveable(key) { mutableStateOf(entry?.wokeAt?.toString() ?: "") }
     var quality by rememberSaveable(key) { mutableStateOf(entry?.quality) }
     var note by rememberSaveable(key) { mutableStateOf(entry?.note ?: "") }
+    RememberMigrationForm(migrationOwner,key,"sleep-observation",{!busy}){
+        org.json.JSONObject().put("baseline",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(sleepPlans=listOf(plan),sleepEntries=listOfNotNull(entry)))))
+            .put("date",date.toString()).put("bed",bed).put("wake",wake).put("quality",quality?:org.json.JSONObject.NULL)
+            .put("note",note).put("use24",use24).put("busy",busy)
+    }
     val bedtime=bed.takeIf { it.isNotEmpty() }?.let(LocalTime::parse)
     val wakeTime=wake.takeIf { it.isNotEmpty() }?.let(LocalTime::parse)
     Dialog(onDismissRequest=onDismiss) { Surface(shape=MaterialTheme.shapes.large) {
@@ -557,7 +576,7 @@ internal fun SleepObservationEditor(plan: SleepPlan,entry: SleepEntry?,date: Loc
 @Composable
 internal fun MoodObservationEditor(entries: List<MoodEntry>,initialDate: LocalDate,mode: CalendarMode,
     language: String,emojiCategories: List<FullEmojiCategory>,busy: Boolean,error: String?,
-    onDismiss: () -> Unit,fixedDate: Boolean = false,onSave: (LocalDate,Int,String,String,String) -> Unit) {
+    onDismiss: () -> Unit,fixedDate: Boolean = false,migrationOwner:String?,onSave: (LocalDate,Int,String,String,String) -> Unit) {
     var dateValue by rememberSaveable(initialDate.toString()) { mutableStateOf(initialDate.toString()) }
     val date=LocalDate.parse(dateValue)
     val entry=entries.firstOrNull { it.date==date }
@@ -568,6 +587,13 @@ internal fun MoodObservationEditor(entries: List<MoodEntry>,initialDate: LocalDa
     var customEmoji by rememberSaveable(dateValue) { mutableStateOf(entry?.customEmoji ?: "") }
     var emojiCategory by rememberSaveable(dateValue) { mutableStateOf("smileys-emotion") }
     var visibleEmojiCount by rememberSaveable(dateValue) { mutableIntStateOf(120) }
+    RememberMigrationForm(migrationOwner,initialDate.toString(),"mood-observation",{!busy}){
+        org.json.JSONObject().put("baseline",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(moodEntries=entries))))
+            .put("date",dateValue).put("initialDate",initialDate.toString()).put("selected",selected?:org.json.JSONObject.NULL)
+            .put("note",note).put("custom",custom).put("customLabel",customLabel).put("customEmoji",customEmoji)
+            .put("emojiCategory",emojiCategory).put("visibleEmojiCount",visibleEmojiCount).put("fixedDate",fixedDate)
+            .put("calendarMode",mode.wireValue).put("language",language).put("busy",busy)
+    }
     val dateDescription = genesisTranslate("Дата настроения") + ": " + dateValue
     Dialog(onDismissRequest=onDismiss) { Surface(shape=MaterialTheme.shapes.large) {
         Column(Modifier.padding(16.dp).imePadding().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {

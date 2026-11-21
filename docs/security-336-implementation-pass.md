@@ -10,6 +10,32 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Native dream and tracker input continuation (uncompiled candidate)
+
+Dream journal/list and editor now register the current records, raw form,
+baseline/revision, voice partial and pending final phrase, spelling state and
+view controls. Dictation exposes whether patches are still pending. Mounted
+unsettled inputs refuse local-work capture; detached originals remain inert
+history even if a gesture or asynchronous operation was interrupted.
+
+Sleep/mood and abstinence screens now capture their loaded workspace/revision,
+open editor/action state and all five editor forms. Raw time/zone/score strings,
+custom mood/emoji input, schedules/rules, original records and the in-progress
+Today craving slider are retained. These forms use personal.local-work with
+`execution: history-only`; they are not replayed as saves, deletes, scores or
+reminders. Saving/loading or an active slider gesture blocks a mounted capture.
+The owner is resolved from the authenticated UID and checked against the exact
+hashed repository scope; it is never inferred from that hash. Sleep/mood state
+is now keyed to the repository lifetime so an account switch cannot attribute
+the preceding account's forms to the next owner.
+
+This is source implementation only. No private-candidate tests, compilation,
+CI or deployment ran. Accepted coverage stays9/20. Later consolidated QA must
+check owner switches/disposal, raw invalid input, voice callbacks, loading/save
+races, slider interruption and retry/cancel after E2EE_SOURCE_NOT_SETTLED.
+Remaining native inventory includes embedded Aurora/Gno and advanced shared
+forms; SAF lifecycle/generation custody and streamed cancellation remain open.
+
 The separate urgent public website release is prepared in the
 `paddle-web-20261122` worktree, PR42. Its CI checks the stable public/main source,
 not this uncommitted security candidate. Do not credit those results to3.3.6
