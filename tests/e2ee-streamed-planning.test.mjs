@@ -1,0 +1,220 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {UnlockedWebDevice} from '../app/e2ee/device-vault.ts';
+import {E2eeMigration} from '../app/e2ee/migration.ts';
+import {requiredPrivatePaths} from '../app/e2ee/migration-sources.ts';
+import {verifyDeviceDirectory} from '../app/e2ee/directory.ts';
+import {createRecoveryKit,freshSecret,publicDeviceKeys,sealRoot,generateDeviceKeys} from '../app/e2ee/keys.ts';
+import {importE2eeRoot,encodeE2eeBytes} from '../app/e2ee/envelope.ts';
+import {signE2eeCommand,verifyE2eeCommand,e2eeCommandHash,canonicalE2eeValue} from '../app/e2ee/commands.ts';
+import {validateStreamedPlanningOwnership} from '../app/e2ee/migration-ownership.ts';
+import {ProtectedRemoteOriginal,listRemoteOriginals,withRemoteOriginal} from '../app/e2ee/remote-original.ts';
+
+const bytes=value=>new TextEncoder().encode(value),hash=value=>createHash('sha256').update(value).digest('base64url');
+test('public state4 ownership vector agrees with native canonical bytes and trusted request signature',async()=>{
+ const vector=JSON.parse(readFileSync(new URL('./fixtures/e2ee-streamed-ownership-v1.json',import.meta.url),'utf8'));
+ const checked=validateStreamedPlanningOwnership(vector.ownership,vector.expected);
+ assert.equal(hash(canonicalE2eeValue(checked)),vector.ownershipCanonicalHash);
+ const signer=await crypto.subtle.importKey('spki',Buffer.from(checked.signer,'base64url'),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+ await verifyE2eeCommand(checked.originals[0].packet,signer);
+ for(const field of ['sourceHash','checkpointHash','migrationId']){
+  const invalid=structuredClone(vector.expected);invalid[field]=field==='migrationId'?'50000000-0000-4000-8000-000000000005':hash('different');
+  assert.throws(()=>validateStreamedPlanningOwnership(vector.ownership,invalid));
+ }
+});
+class Records{
+ rows=new Map();fail=false;
+ async get(key){return structuredClone(this.rows.get(key)??null);}
+ async list(prefix){return [...this.rows.keys()].filter(key=>key.startsWith(prefix));}
+ async commit(changes){
+  if(this.fail)throw new Error('SYNTHETIC_DISK_FULL');
+  for(const change of changes)if((this.rows.get(change.key)?.serial??null)!==change.expected)throw new Error('E2EE_LOCAL_CONFLICT');
+  const next=new Map(this.rows);for(const change of changes){if(change.value===null)next.delete(change.key);else next.set(change.key,structuredClone(change.value));}this.rows=next;
+  await this.afterCommit?.(changes);
+ }
+}
+class Keys{
+ rows=new Map();async get(id){return structuredClone(this.rows.get(id)??null);}
+ async create(id,bundle){assert.equal(this.rows.has(id),false);this.rows.set(id,{serial:1,bundle:structuredClone(bundle)});}
+}
+async function fixture(t,options={}){
+ const ownerId='streamed-owner',scopeId=`personal:${ownerId}`,recovery=await createRecoveryKit(ownerId),records=new Records(),keys=new Keys();
+ let device=await UnlockedWebDevice.provision(ownerId,recovery.secret,recovery.kit,records,keys);
+ const deviceId=device.deviceId,publicKeys=await publicDeviceKeys(device.keys()),publicKey=device.keys().signing.publicKey,raw=freshSecret(),root=await importE2eeRoot(raw);
+ const recipient={ownerId,scopeId,cryptoEpoch:1,keyId:'content-root',recipientId:deviceId};
+ const bootstrap={protocol:1,ownerId,scopeId,deviceId,action:'bootstrap',expectedRevision:0,checkpointHash:'genesis',securityEpoch:1,operationId:'streamed-bootstrap',payload:{
+  kind:'personal',resourceId:ownerId,keyId:'content-root',generation:1,recoveryKit:recovery.kit,deviceKeys:publicKeys,
+  deviceCapsule:await sealRoot(raw,publicKeys.receivingKey,recipient),recoveryCapsule:await sealRoot(raw,recovery.kit.authority.receivingKey,{...recipient,recipientId:'recovery'})}};
+ raw.fill(0);
+ bootstrap.payload.selfProof=(await signE2eeCommand(bootstrap,device.keys().signing.privateKey)).signature;
+ const directory=await verifyDeviceDirectory(ownerId,scopeId,recovery.kit.authority,[await signE2eeCommand(bootstrap,recovery.keys.signing.privateKey)]);
+ const required=requiredPrivatePaths('personal').map(value=>value.id),sourceHash=encodeE2eeBytes(new Uint8Array(32).fill(29)),trace=[],server={fence:1,generation:2,receipts:new Map(),lost:false};
+ const transport={async sourceHash(){trace.push('source');assert.equal((await coordinator.status()).protocol,4);await options.onSource?.();return sourceHash;},
+  async command(packet){
+   const command=await verifyE2eeCommand(packet,publicKey);trace.push(structuredClone(packet));const identity=await e2eeCommandHash(command),known=server.receipts.get(command.operationId);await options.onCommand?.(command,packet);
+   if(known){assert.equal(known.hash,identity);return structuredClone(known.result);}
+   if(options.loss==='before'&&!server.lost){server.lost=true;throw new Error('SYNTHETIC_PROCESS_DEATH');}
+   let result;if(command.action==='migration-start')result={fence:server.fence,generation:server.generation,leaseUntil:Math.floor(Date.now()/1000)+(options.expired?-1:3600)};
+   else if(command.action==='migration-resume'){
+    if(options.sourceChanged)throw new Error('E2EE_SOURCE_CHANGED');assert.equal(command.payload.fence,server.fence);server.fence++;
+    result={fence:server.fence,generation:server.generation,leaseUntil:Math.floor(Date.now()/1000)+3600,pendingReceipt:null};
+   }else throw new Error('UNEXPECTED_UPLOAD_OR_ACTIVATION');
+   server.receipts.set(command.operationId,{hash:identity,result});if(options.loss==='after'&&!server.lost){server.lost=true;throw new Error('SYNTHETIC_PROCESS_DEATH');}
+   return structuredClone(result);
+  },async readAll(){throw new Error('AGGREGATE_READ_FORBIDDEN');}};
+ const sources={requiredCoverage:required,allowedContentDomains:['workspace','diary','mindmap','physis','aurora','stoicheion','attachment','draft','outbox','local-snapshot'],
+  async captureLocal(){throw new Error('AGGREGATE_CAPTURE_FORBIDDEN');},async reconcile(){throw new Error('AGGREGATE_RECONCILIATION_FORBIDDEN');}};
+ const make=()=>new E2eeMigration({vault:device.vault,directory,deviceId,signingKey:device.keys().signing.privateKey,signer:device.keys().signing.publicKey,root,transport,sources,
+  ensureDurableKeys:()=>device.ensureDurableKeys(),withLocalWriteFence:operation=>operation(),verifyRecovery:async()=>{throw new Error('RECOVERY_NOT_PART_OF_PREPARATION');}});
+ let coordinator=make();const target={ownerId,scopeId,kind:'personal'},stage={target,paths:required,async capturePath(path,write){await write(bytes('SYNTHETIC LOCAL ORIGINAL '+path));}};
+ const stagePolicy={capacity:{maximumBytes:16*1024*1024,maximumParts:1000},assertCurrent(){},async admit(){}};
+ const originalCapacity={maximumBytes:8*1024*1024,maximumParts:1000,maximumObservations:100,maximumRecords:4000,maximumMetadataBytes:4*1024*1024};
+ const policy=()=>({device,capacity:{maximumBytes:32*1024*1024,maximumParts:2000,maximumMetadataBytes:8*1024*1024},originalCapacity,assertCurrent(){},async admit(){}});
+ const readOriginal=()=>({vault:device.vault,target,capacity:originalCapacity,assertCurrent(){}});
+ const stateId='migration:'+hash(bytes(scopeId));
+ const readState=async()=>{const row=await device.vault.read('local-snapshot',stateId);assert.ok(row);try{return{state:JSON.parse(new TextDecoder().decode(row.value)),serial:row.serial,raw:row.value.slice()};}finally{row.value.fill(0);}};
+ const capture=async(ticket,action='legacy-workspace',signing=device.keys())=>{
+  const packet=await signE2eeCommand({protocol:1,ownerId,scopeId,deviceId,action,expectedRevision:directory.checkpoint.revision,checkpointHash:directory.checkpoint.hash,securityEpoch:directory.securityEpoch,
+   operationId:crypto.randomUUID(),payload:{migrationId:ticket.migrationId,fence:ticket.fence,sourceHash:ticket.sourceHash}},signing.signing.privateKey);
+  const observation=await ProtectedRemoteOriginal.create({...readOriginal(),packet,signer:signing.signing.publicKey,generation:ticket.generation,ensureDurableKeys:()=>device.ensureDurableKeys(),async admit(){}});
+  return{packet,observation,registration:observation.registration()};
+ };
+ t.after(()=>{device.lock();recovery.secret.fill(0);});
+ await coordinator.prepareStaged(stage,stagePolicy);
+ return{records,keys,directory,server,trace,stage,stagePolicy,policy,readOriginal,readState,capture,make,get coordinator(){return coordinator;},get device(){return device;},
+  async reopen(){device.lock();device=await UnlockedWebDevice.unlock(ownerId,recovery.secret,records,keys);coordinator=make();return coordinator;}};
+}
+
+test('state4 atomically retains exact state3 bytes and obtains only a signed preparation lease',async t=>{
+ const f=await fixture(t),before=await f.readState(),ticket=await f.coordinator.prepareStreamedPlanning(f.policy()),after=await f.readState();
+ assert.equal(after.state.protocol,4);assert.equal(after.state.phase,'preparing');assert.equal(after.state.planned,false);assert.equal(after.state.ownership.attemptId,ticket.attemptId);
+ const original=await f.device.vault.read('local-snapshot',after.state.ownership.sourceState.objectId);
+ try{assert.deepEqual(original.value,before.raw);assert.equal(hash(original.value),after.state.ownership.sourceState.hash);}finally{original.value.fill(0);before.raw.fill(0);after.raw.fill(0);}
+ assert.deepEqual(f.trace.filter(value=>typeof value==='object').map(value=>value.command.action),['migration-start']);
+ const stored=new Map(f.records.rows),calls=f.trace.length;
+ await assert.rejects(f.coordinator.run(),/STREAMED_PLANNER_REQUIRED/);await assert.rejects(f.coordinator.cancel(),/STREAMED_PLANNER_REQUIRED/);
+ await assert.rejects(f.coordinator.restart(),/STREAMED_SOURCE_REQUIRED/);await assert.rejects(f.coordinator.restartStaged(f.stage,f.stagePolicy),/STREAMED_PLANNER_REQUIRED/);
+ await assert.rejects(f.coordinator.withStagedSourceHistory(async()=>{},f.policy()),/STAGED_SOURCE_REQUIRED/);
+ assert.deepEqual(f.records.rows,stored);assert.equal(f.trace.length,calls);
+});
+
+test('cold preparation resumes the same owned attempt and exact lost start command before and after acknowledgement',async t=>{
+ for(const loss of ['before','after']){
+  const f=await fixture(t,{loss});await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/SYNTHETIC_PROCESS_DEATH/);
+  const prior=await f.readState(),packet=structuredClone(prior.state.pending),attempt=prior.state.ownership.attemptId;await f.reopen();
+  const ticket=await f.coordinator.prepareStreamedPlanning(f.policy());assert.equal(ticket.attemptId,attempt);assert.equal(ticket.migrationId,prior.state.migrationId);
+  const commands=f.trace.filter(value=>typeof value==='object');assert.deepEqual(commands,[packet,packet]);assert.equal((await f.coordinator.status()).pending,null);prior.raw.fill(0);
+ }
+});
+
+test('commit-then-process-death keeps the state3 original and does not send a request until cold verification',async t=>{
+ const f=await fixture(t),original=await f.readState();let crashed=false;
+ f.records.afterCommit=changes=>{if(!crashed&&changes.some(value=>value.value?.envelope.context.objectId.endsWith(':preparation:3'))){crashed=true;throw new Error('SYNTHETIC_COMMITTED_DEATH');}};
+ await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/SYNTHETIC_COMMITTED_DEATH/);assert.equal(f.trace.length,0);assert.equal((await f.readState()).state.protocol,4);
+ await f.reopen();const ticket=await f.coordinator.prepareStreamedPlanning(f.policy());assert.ok(ticket.fence);const state=await f.readState();
+ const kept=await f.device.vault.read('local-snapshot',state.state.ownership.sourceState.objectId);assert.deepEqual(kept.value,original.raw);kept.value.fill(0);original.raw.fill(0);state.raw.fill(0);
+});
+
+test('failed key/admission/storage checks preserve prepared source bytes and refuse before networking',async t=>{
+ for(const mode of ['keys','admission','disk']){
+  const f=await fixture(t),before=new Map(f.records.rows),policy=f.policy();
+  if(mode==='keys')f.keys.rows.get(f.device.ownerId).bundle.ciphertext='corrupt';
+  if(mode==='admission')policy.admit=async()=>{throw new Error('SYNTHETIC_ADMISSION_REFUSAL');};if(mode==='disk')f.records.fail=true;
+  await assert.rejects(f.coordinator.prepareStreamedPlanning(policy));assert.equal(f.trace.length,0);assert.deepEqual(f.records.rows,before);
+ }
+});
+
+test('inert originals are owned before prepare and cold partial captures remain retained without body proof',async t=>{
+ const f=await fixture(t),ticket=await f.coordinator.prepareStreamedPlanning(f.policy()),capture=await f.capture(ticket),calls=f.trace.length;
+ await f.coordinator.reserveStreamedRemoteOriginal(capture.registration,capture.packet,f.policy());assert.equal(f.trace.length,calls);assert.deepEqual(await listRemoteOriginals(f.readOriginal()),[]);
+ const owned=await f.readState();assert.deepEqual(owned.state.ownership.originals[0],structuredClone({registration:capture.registration,packet:capture.packet}));owned.raw.fill(0);
+ await capture.observation.prepare({path:'/e2ee/v1/read',method:'POST',body:JSON.stringify(capture.packet)});
+ await capture.observation.begin({path:'/e2ee/v1/read',status:200,contentType:'application/json',contentLength:null});await capture.observation.append(bytes('ONLY ORIGINAL PREFIX'));capture.observation.close();
+ const stored=new Map(f.records.rows);await f.reopen();const resumed=await f.coordinator.prepareStreamedPlanning(f.policy());assert.deepEqual(resumed,ticket);assert.deepEqual(f.records.rows,stored);
+ const markers=await listRemoteOriginals(f.readOriginal());assert.equal(markers[0].phase,'receiving');await assert.rejects(withRemoteOriginal(f.readOriginal(),capture.registration.id,async()=>{}),/INCOMPLETE/);
+});
+
+test('unowned originals and foreign request signers cannot gain ownership or reach networking',async t=>{
+ for(const mode of ['unowned','signer']){
+  const f=await fixture(t),ticket=await f.coordinator.prepareStreamedPlanning(f.policy()),capture=await f.capture(ticket,'legacy-workspace',mode==='signer'?await generateDeviceKeys():f.device.keys());
+  if(mode==='unowned')await capture.observation.prepare({path:'/e2ee/v1/read',method:'POST',body:JSON.stringify(capture.packet)});
+  const before=new Map(f.records.rows),calls=f.trace.length;
+  if(mode==='signer')await assert.rejects(f.coordinator.reserveStreamedRemoteOriginal(capture.registration,capture.packet,f.policy()),/UNTRUSTED_COMMAND/);
+  else await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/ORIGINAL_REVIEW_REQUIRED/);
+  capture.observation.close();assert.deepEqual(f.records.rows,before);assert.equal(f.trace.length,calls);
+ }
+});
+
+test('request rebinding, duplicate reservation and late caller mutation cannot change an owned original',async t=>{
+ const f=await fixture(t),ticket=await f.coordinator.prepareStreamedPlanning(f.policy()),capture=await f.capture(ticket);
+ const bad=structuredClone(capture.registration);bad.binding.fence++;
+ await assert.rejects(f.coordinator.reserveStreamedRemoteOriginal(bad,capture.packet,f.policy()));
+ const supplied=structuredClone(capture.registration),packet=structuredClone(capture.packet),pending=f.coordinator.reserveStreamedRemoteOriginal(supplied,packet,f.policy());
+ supplied.binding.sourceHash=encodeE2eeBytes(new Uint8Array(32).fill(4));packet.command.payload.fence=999;await pending;
+ const before=new Map(f.records.rows);await assert.rejects(f.coordinator.reserveStreamedRemoteOriginal(capture.registration,capture.packet,f.policy()),/ALREADY_RESERVED/);assert.deepEqual(f.records.rows,before);
+ const state=await f.readState();assert.deepEqual(state.state.ownership.originals[0],structuredClone({registration:capture.registration,packet:capture.packet}));state.raw.fill(0);capture.observation.close();
+});
+
+test('missing or corrupt raw preparation metadata cannot become an empty resumed source',async t=>{
+ for(const mode of ['missing','corrupt']){
+  const f=await fixture(t);await f.coordinator.prepareStreamedPlanning(f.policy());const state=await f.readState(),id=state.state.ownership.sourceState.objectId;
+  const key=[...f.records.rows.keys()].find(value=>value.endsWith(id));assert.ok(key);if(mode==='missing')f.records.rows.delete(key);else{const old=structuredClone(f.records.rows.get(key));old.envelope.ciphertext=(old.envelope.ciphertext[0]==='A'?'B':'A')+old.envelope.ciphertext.slice(1);f.records.rows.set(key,old);}
+  const before=new Map(f.records.rows),calls=f.trace.length;await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()));assert.equal(f.trace.length,calls);assert.deepEqual(f.records.rows,before);state.raw.fill(0);
+ }
+});
+
+test('retirement during preparation and reservation cannot publish or send a late continuation',async t=>{
+ for(const mode of ['prepare','reserve']){
+  const f=await fixture(t);const ticket=mode==='reserve'?await f.coordinator.prepareStreamedPlanning(f.policy()):null,capture=ticket?await f.capture(ticket):null;
+  const before=new Map(f.records.rows),calls=f.trace.length,policy=f.policy();let retired=false;
+  policy.assertCurrent=()=>{if(retired)throw new Error('SYNTHETIC_RETIRED');};policy.admit=async()=>{retired=true;};
+  const operation=capture?f.coordinator.reserveStreamedRemoteOriginal(capture.registration,capture.packet,policy):f.coordinator.prepareStreamedPlanning(policy);
+  await assert.rejects(operation,/SYNTHETIC_RETIRED/);assert.equal(f.trace.length,calls);assert.deepEqual(f.records.rows,before);capture?.observation.close();
+ }
+});
+
+test('source-changed lease renewal retains the exact signed renewal and never replaces original tokens',async t=>{
+ const f=await fixture(t,{expired:true,sourceChanged:true});await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/SOURCE_CHANGED/);
+ const before=await f.readState(),saved=new Map(f.records.rows);await f.reopen();await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/SOURCE_CHANGED/);
+ assert.deepEqual(f.records.rows,saved);const renewals=f.trace.filter(value=>typeof value==='object'&&value.command.action==='migration-resume');assert.deepEqual(renewals[0],renewals[1]);before.raw.fill(0);
+});
+
+test('a provisioned device vault is mandatory and a changed verified directory refuses before publication',async t=>{
+ const f=await fixture(t),before=new Map(f.records.rows),policy=f.policy();policy.device={vault:f.device.vault,deviceId:f.device.deviceId,ownerId:f.device.ownerId,requireOpen(){},async ensureDurableKeys(){}};
+ await assert.rejects(f.coordinator.prepareStreamedPlanning(policy),/DEVICE_VAULT_REQUIRED/);assert.equal(f.trace.length,0);assert.deepEqual(f.records.rows,before);
+ const existing=f.coordinator;f.directory.checkpoint.hash=encodeE2eeBytes(new Uint8Array(32).fill(17));
+ await assert.rejects(f.make().prepareStreamedPlanning(f.policy()),/DIRECTORY_CONFLICT/);assert.deepEqual(f.records.rows,before);
+ const ticket=await existing.prepareStreamedPlanning(f.policy());assert.ok(ticket.attemptId,'constructor owns its directory snapshot');
+});
+
+test('retirement during remote source discovery preserves local preparation without signing or applying a late continuation',async t=>{
+ const options={},f=await fixture(t,options),policy=f.policy();let retired=false,before;
+ policy.assertCurrent=()=>{if(retired)throw new Error('SYNTHETIC_RETIRED');};
+ options.onSource=()=>{before=new Map(f.records.rows);retired=true;};
+ await assert.rejects(f.coordinator.prepareStreamedPlanning(policy),/SYNTHETIC_RETIRED/);
+ assert.deepEqual(f.records.rows,before);assert.deepEqual(f.trace,['source']);const saved=await f.readState();
+ assert.equal(saved.state.sourceHash,null);assert.equal(saved.state.pending,null);assert.equal(saved.state.lease,null);saved.raw.fill(0);
+});
+
+test('late start and renewal receipts cannot advance a retired attempt and cold retry uses the exact signed command',async t=>{
+ for(const action of ['migration-start','migration-resume']){
+  const options={expired:action==='migration-resume'},f=await fixture(t,options),policy=f.policy();let retired=false,before;
+  policy.assertCurrent=()=>{if(retired)throw new Error('SYNTHETIC_RETIRED');};
+  options.onCommand=command=>{if(command.action===action){before=new Map(f.records.rows);retired=true;}};
+  await assert.rejects(f.coordinator.prepareStreamedPlanning(policy),/SYNTHETIC_RETIRED/);assert.deepEqual(f.records.rows,before);
+  const saved=await f.readState(),pending=structuredClone(action==='migration-start'?saved.state.pending:saved.state.resuming);
+  assert.equal(pending.command.action,action);saved.raw.fill(0);delete options.onCommand;retired=false;await f.reopen();
+  const ticket=await f.coordinator.prepareStreamedPlanning(f.policy());assert.ok(ticket.fence);
+  const repeats=f.trace.filter(value=>typeof value==='object'&&value.command.action===action);assert.deepEqual(repeats,[pending,pending]);
+ }
+});
+
+test('a mutable transport cannot rewrite the durably retained signed start packet',async t=>{
+ const options={loss:'after'},f=await fixture(t,options);
+ options.onCommand=(_command,packet)=>{assert.throws(()=>{packet.command.payload.sourceHash='MUTATED';},TypeError);assert.throws(()=>{packet.signature='MUTATED';},TypeError);};
+ await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/SYNTHETIC_PROCESS_DEATH/);const saved=await f.readState();
+ assert.deepEqual(saved.state.pending,f.trace.find(value=>typeof value==='object'));saved.raw.fill(0);delete options.onCommand;await f.reopen();
+ await f.coordinator.prepareStreamedPlanning(f.policy());const packets=f.trace.filter(value=>typeof value==='object');assert.deepEqual(packets[0],packets[1]);
+});

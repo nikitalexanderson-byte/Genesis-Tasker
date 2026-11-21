@@ -41,6 +41,18 @@ function bytesHash(bytes:Uint8Array){return encodeE2eeBytes(sha256(bytes));}
 function encoded(value:unknown){const bytes=canonicalE2eeValue(value as WireValue);if(bytes.length>MAX_META){bytes.fill(0);throw new Error('E2EE_REMOTE_ORIGINAL_METADATA_LIMIT');}return bytes;}
 function identity(value:unknown){const bytes=encoded(value);try{return bytesHash(bytes);}finally{bytes.fill(0);}}
 function registration(id:string,scope:Context,binding:Binding):RemoteOriginalRegistration{return Object.freeze({protocol:1,purpose:PURPOSE,id,context:Object.freeze({...scope}),binding:Object.freeze({...binding})});}
+/** Authenticate an INERT pre-prepare identity against an independently trusted
+ * signer and the actual local actor. This performs no storage or body proof. */
+export async function authenticateRemoteOriginalRegistration(value:unknown,packet:SignedE2eeCommand,signer:CryptoKey,
+ source:Pick<RemoteOriginalReadOptions,'vault'|'target'|'assertCurrent'>&{generation:number}):Promise<RemoteOriginalRegistration>{
+ const options={...source,target:snapshotE2eeValue(source.target)},saved=snapshotE2eeValue(value),request=snapshotE2eeValue(packet);
+ exactKeys(saved,['protocol','purpose','id','context','binding']);
+ if(saved.protocol!==1||saved.purpose!==PURPOSE||typeof saved.id!=='string'||!uuid.test(saved.id))invalid();
+ options.assertCurrent();options.vault.assertUnlocked();const scope=context(options.vault,options.target);
+ const binding=await packetBinding(request,signer,scope,options.generation);
+ options.assertCurrent();options.vault.assertUnlocked();same(context(options.vault,options.target),scope);same(saved.context,scope);validateBinding(saved.binding);if(identity(saved.binding)!==identity(binding))invalid();
+ return registration(saved.id,scope,binding);
+}
 function parse(bytes:Uint8Array){const value=decodeCanonicalE2eeValue(bytes,MAX_META),canonical=encoded(value);try{if(canonical.length!==bytes.length||canonical.some((byte,at)=>byte!==bytes[at]))invalid();return value;}finally{canonical.fill(0);}}
 function capacity(source:RemoteOriginalCapacity){
  const result=snapshotE2eeValue(source);exactKeys(result,['maximumBytes','maximumParts','maximumObservations','maximumRecords','maximumMetadataBytes']);

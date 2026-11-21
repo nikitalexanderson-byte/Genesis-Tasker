@@ -24,10 +24,16 @@ internal object E2eeMigrationHistory {
     }
     private fun strings(value:JSONObject,name:String)=value.getJSONArray(name).let{list->(0 until list.length()).map{list.getString(it)}}
     fun open(vault:UnlockedE2eeVault,target:E2eeSourceStage.Target,required:List<String>,stateId:String,inventory:E2eePrivatePaths,
-        decode:(ByteArray)->JSONObject,options:Options):Handle=Handle(vault,target.copy(),required.toList(),stateId,inventory,decode,options)
+        decode:(ByteArray)->JSONObject,options:Options):Handle=Handle(vault,target.copy(),required.toList(),stateId,inventory,decode,options,vault::listMigrationOriginalParts,vault::listMigrationHistoryCopies)
+    /** An exact, authenticated prepared-metadata view. No prefix filtering or
+     * writer/signing capability is added to the old source reader. */
+    fun openPrepared(vault:E2eeSourceReadVault,target:E2eeSourceStage.Target,required:List<String>,stateId:String,inventory:E2eePrivatePaths,
+        decode:(ByteArray)->JSONObject,options:Options,originalParts:()->List<String>,historyCopies:()->List<String>):Handle=
+        Handle(vault,target.copy(),required.toList(),stateId,inventory,decode,options,originalParts,historyCopies)
 
-    class Handle internal constructor(private val vault:UnlockedE2eeVault,private val target:E2eeSourceStage.Target,private val paths:List<String>,
-        private val stateId:String,private val inventory:E2eePrivatePaths,private val decode:(ByteArray)->JSONObject,inputOptions:Options):Closeable {
+    class Handle internal constructor(private val vault:E2eeSourceReadVault,private val target:E2eeSourceStage.Target,private val paths:List<String>,
+        private val stateId:String,private val inventory:E2eePrivatePaths,private val decode:(ByteArray)->JSONObject,inputOptions:Options,
+        private val originalParts:()->List<String>,private val historyCopies:()->List<String>):Closeable {
         private val capacity=inputOptions.capacity.copy();private val guard=inputOptions.assertCurrent;private val admit=inputOptions.admit
         private val closed=AtomicBoolean(false);private val failed=AtomicBoolean(false);private val checking=AtomicBoolean(false)
         private val active=mutableSetOf<Reader>();private val completed=mutableSetOf<String>();private val metadata=mutableListOf<Metadata>()
@@ -36,7 +42,7 @@ internal object E2eeMigrationHistory {
         private var copies:List<String> = emptyList()
         private var metadataBytes=0;private val serial:Long;private val snapshot:JSONObject
         private val totals:Admission;val input:E2eeStagedSourceInput
-        private fun current(){guard();vault.requireOpen();check(!closed.get()){"E2EE_SOURCE_HISTORY_CLOSED"}}
+        private fun current(){guard();vault.assertOpen();check(!closed.get()){"E2EE_SOURCE_HISTORY_CLOSED"}}
         private fun readState(id:String,remember:Boolean=true):State {
             current();E2eeKeys.technical(id);val row=vault.read("local-snapshot",id)?:invalid()
             try{
@@ -49,9 +55,9 @@ internal object E2eeMigrationHistory {
         }
         private fun inspectLegacy(){
             current();val expected=originals.flatMap{ref->(0 until ref.snapshotParts).map{"${ref.migrationId}:source:$it"}}.toSet()
-            val ids=vault.listMigrationOriginalParts();current()
+            val ids=originalParts();current()
             check(ids.none{it !in expected}){"E2EE_SOURCE_HISTORY_REVIEW_REQUIRED"}
-            val actualCopies=vault.listMigrationHistoryCopies().sorted();current();check(actualCopies==copies){"E2EE_SOURCE_HISTORY_CHANGED"}
+            val actualCopies=historyCopies().sorted();current();check(actualCopies==copies){"E2EE_SOURCE_HISTORY_CHANGED"}
             val plans=vault.listLocal("local-snapshot","content-plan:");current();check(plans.isEmpty()){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}
             for(id in knownMigrations){val uploads=vault.listLocal("outbox","$id:");current();val local=vault.listLocal("local-snapshot","$id:private:");current()
                 check(uploads.isEmpty()&&local.isEmpty()){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}}
@@ -90,7 +96,7 @@ internal object E2eeMigrationHistory {
                         E2eeCommands.integer(old.get("snapshotParts")).also{if(it>256)invalid()}.toInt(),old.getString("snapshotHash")))
                 }
                 // Preflight all original metadata roles before any copy body.
-                copies=vault.listMigrationHistoryCopies().sorted();current();val counts=mutableMapOf<String,Int>();val cancelled=mutableListOf<Pair<String,String>>()
+                copies=historyCopies().sorted();current();val counts=mutableMapOf<String,Int>();val cancelled=mutableListOf<Pair<String,String>>()
                 for(id in copies){
                     if(id in ancestors)continue
                     val at=id.lastIndexOf(":cancel:");if(at<1)error("E2EE_SOURCE_HISTORY_REVIEW_REQUIRED")

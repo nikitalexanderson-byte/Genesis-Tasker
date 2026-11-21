@@ -16,6 +16,7 @@ export type MigrationHistoryState={protocol:1|2|3;migrationId:string;phase:strin
 export type MigrationHistoryAdmission=Readonly<{bytes:number;parts:number;metadataBytes:number;sources:number}>;
 export type MigrationHistoryOptions={capacity:Readonly<{maximumBytes:number;maximumParts:number;maximumMetadataBytes:number}>;
  admit:(request:MigrationHistoryAdmission)=>Promise<void>;assertCurrent:()=>void};
+export type MigrationHistoryReadVault=Pick<UnlockedE2eeVault,'assertUnlocked'|'localIdentity'|'read'|'listLocal'|'listMigrationOriginalParts'|'listMigrationHistoryCopies'>;
 type Metadata={id:string;serial:number;hash:string};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),MAX_METADATA=4*1024*1024;
 function invalid():never{throw new Error('E2EE_SOURCE_HISTORY_INVALID');}
@@ -29,7 +30,7 @@ async function cleanup(close:()=>Promise<void>,rejected:boolean){try{await close
 /** Same-original-actor coordinator history. No key recovery/handoff, remote
  * source, plan publication or transport. Unknown legacy source prefixes REFUSE;
  * a different scope needs an authenticated locator, never an ignore-list. */
-export async function openMigrationSourceHistory(input:{vault:UnlockedE2eeVault;target:SourceStageTarget;paths:readonly string[];stateId:string;
+export async function openMigrationSourceHistory(input:{vault:MigrationHistoryReadVault;target:SourceStageTarget;paths:readonly string[];stateId:string;
  decode:(bytes:Uint8Array)=>MigrationHistoryState;options:MigrationHistoryOptions}){
  const vault=input.vault,target={...input.target},paths=[...input.paths],stateId=input.stateId,decode=input.decode,
   capacity={...input.options.capacity},admit=input.options.admit,guard=input.options.assertCurrent;

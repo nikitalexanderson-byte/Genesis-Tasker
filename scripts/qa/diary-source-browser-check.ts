@@ -39,7 +39,7 @@ try{
  const objects=new Map<string,E2eeEnvelope>(),receipts=new Map<string,{hash:string;result:Record<string,WireValue>}>(),packets:unknown[]=[];
  let sourceReads=0,reconciliations=0,captures=0,recoveryChecks=0,interrupted=false,state='legacy';
  const source=new PersonalDiarySource(owner,scopeId,{storage:localStorage,memory:()=>memory,assertCurrent:()=>device!.requireOpen(),legacyDiary:async context=>{
-  sourceReads++;const state=await make().status();check('diary source follows the protected local capture',!!state&&state.protocol!==3&&state.snapshotParts>0);
+  sourceReads++;const state=await make().status();check('diary source follows the protected local capture',!!state&&(state.protocol===1||state.protocol===2)&&state.snapshotParts>0);
   return{protocol:1,ownerId:owner,scopeId,migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,legacyGeneration:0,checkpointHash:directory.checkpoint.hash,directoryRevision:1,
    notes:[{id:serverNote.id,revision:1,schema_version:1,...serverEnvelope,payload_hash:'a'.repeat(64),updated_at:now}],deletions:[],settings:[],dreams:[],dreamSettings:[],adviceReferences:[],legacyKey:{keyMode:'account',key:memory.legacyKey}};
  }});

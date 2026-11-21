@@ -2575,3 +2575,32 @@ original-key custody/new-device recovery, normal writers, shared ACL+rotation,
 files/Drive, direct upgrades и полная системная/языковая приёмка ещё впереди.
 Coverage9/20, production3.3.5/149, floors0/pilot/cutover off и Android deploy false
 сохраняются. Это принятый компонент, не выпуск3.3.6.
+
+## 21 ноября: state4 preparation и владение original requests
+
+Принят отдельный web/native компонент: настоящий provisioned device и durable
+keys, полный source/history EOF, атомарная копия точных raw state3 bytes и
+state4 pointer/catalogue CAS до source discovery/подписанного lease. Инертная
+registration и полный signed packet резервируются до observation.prepare.
+Чужие/неучтённые captures, изменённая история и поздние ответы retired операции
+отвергаются; точные pending/resuming операции сохраняются для холодного повтора.
+Normal run/upload/plan adoption/cancel/activation state4 остаются закрыты.
+
+Полный JS2015/2015, Chromium15715/15 console0, scoped ESLint/owned TSC и
+build:web PASS. Web-публикация не запускалась;98 HTML/14 языков/280 gallery
+images/disclosures/offline precache сохранены. Native build12м38с, полный
+JVM1394 PASS/0 failure/8 существующих opt-in HTTP skips; новые5 ownership cases
+прошли. API26/API34 каждый15/15 с настоящими Keystore/SQLite,0 failure/skip.
+Temporary PIN обоих owned AVD возвращён в NONE. Lint12м20с:0 errors/208 warnings/
+8 hints, XML побайтно равен registration baseline, новых issue/file pairs нет.
+После device/lint/web-build повторно проверены exact input/APK identities.
+
+Границы, hashes, конкретные tests и сохранённые failed drafts:
+`docs/e2ee-336-streamed-ownership.md`;
+`output/release-3.3.6/runtime/streamed-ownership-final-identity-01.json`.
+Это same-device cold reopen и synthetic signed loopback lease, не настоящий
+OS process kill, production server journey, полный recovery или новый source
+adapter. Следующие этапы: обязательные HTTP factories и provider-wide admission,
+полный state4 content plan/common reader/custody и11 remaining categories.
+Coverage9/20 и все gates сохраняются. APK до3.3.5 исключены владельцем;
+поддерживаемый upgrade начинается с3.3.5/149.

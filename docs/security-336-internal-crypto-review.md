@@ -175,3 +175,19 @@ web report02 не подтверждают финальное состояние
 Production сохраняет3.3.5/149, floors0, pilot/cutover off,
 `GENESIS_DEPLOY_ANDROID=false`. Результат review не разрешает включение E2EE
 и не является публикацией3.3.6.
+
+## Продолжение21 ноября: retirement после сетевого ожидания
+
+При композиции state4 проверено различие между открытым vault и актуальной
+операцией аккаунта. Проверки только vault после transport await недостаточно,
+если owner operation уже retired, а сам vault ещё открыт. Planning guard теперь
+проходит через send/replay/resume/applyReceipt на обеих платформах; он проверяется
+после сетевого ожидания, перед записью и после неё. Late reply не очищает
+pending/resuming и не продвигает состояние. Transport получает отдельный snapshot
+signed packet, поэтому mutable callback не меняет durable retry.
+
+Доказательства: web late source/start/resume и mutation cases, actual
+Keystore/SQLite late source/start/resume на API26/API34, Chromium157 с real
+IndexedDB и signed loopback lease. Точная приёмка и пределы:
+`e2ee-336-streamed-ownership.md`. Это проверка разработчиком композиции нового
+компонента, не независимый человеческий review, полный recovery или активация.

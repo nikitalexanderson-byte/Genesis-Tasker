@@ -42,6 +42,12 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
     data class Registration(val id:String,val context:OriginalContext,val binding:RequestBinding) {
         val protocol:Int get()=1
         val purpose:String get()=RemoteOriginalCodec.PURPOSE
+        fun toJson():JSONObject=JSONObject().put("protocol",protocol).put("purpose",purpose).put("id",id)
+            .put("context",JSONObject().put("ownerId",context.ownerId).put("scopeId",context.scopeId).put("kind",context.kind)
+                .put("actorId",context.actorId).put("actorScopeId",context.actorScopeId).put("deviceId",context.deviceId))
+            .put("binding",JSONObject().put("packetHash",binding.packetHash).put("signer",binding.signer).put("generation",binding.generation)
+                .put("migrationId",binding.migrationId).put("fence",binding.fence).put("sourceHash",binding.sourceHash).put("action",binding.action)
+                .put("directoryRevision",binding.directoryRevision).put("checkpointHash",binding.checkpointHash).put("securityEpoch",binding.securityEpoch))
         override fun toString()="E2eeRemoteOriginal.Registration([redacted])"
     }
     data class RequestDigest(val size:Int,val hash:String) {
@@ -145,6 +151,18 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
     fun reference(): Reference { check(!broken.get()) { "E2EE_REMOTE_ORIGINAL_INCOMPLETE" }; return reference ?: error("E2EE_REMOTE_ORIGINAL_INCOMPLETE") }
     override fun close() { if (closed.compareAndSet(false, true)) digest.reset() }
     companion object {
+        /** Inert pre-prepare identity, checked against an independently trusted
+         * signer and actual local actor. No storage, IO or body proof. */
+        fun authenticateRegistration(value:JSONObject,packet:JSONObject,signer:PublicKey,options:ReadOptions,generation:Long):Registration {
+            val saved=RemoteOriginalCodec.copy(value);val request=RemoteOriginalCodec.copy(packet)
+            RemoteOriginalCodec.current(options);val context=RemoteOriginalCodec.context(options);val id=saved.getString("id")
+            check(RemoteOriginalCodec.uuid.matches(id)){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+            val binding=RemoteOriginalCodec.packetBinding(request,signer,context,generation)
+            RemoteOriginalCodec.current(options);RemoteOriginalCodec.same(RemoteOriginalCodec.context(options),context)
+            val expected=RemoteOriginalCodec.registration(id,context,binding)
+            check(RemoteOriginalCodec.identity(saved)==RemoteOriginalCodec.identity(expected.toJson())){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+            return expected
+        }
         private val localCodes = setOf("E2EE_ACCOUNT_CHANGED", "E2EE_UNLOCK_REQUIRED", "E2EE_KEY_UNAVAILABLE", "E2EE_LOCAL_CONFLICT", "E2EE_LOCAL_RECORD_LIMIT", "E2EE_CORRUPT_LOCAL_RECORD", "E2EE_CORRUPT_LOCAL_DATABASE", "E2EE_OBSERVATION_REQUEST_INVALID", "E2EE_CORRUPT_REMOTE_ORIGINAL", "E2EE_REMOTE_ORIGINAL_METADATA_LIMIT", "E2EE_REMOTE_ORIGINAL_CONTEXT", "E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT", "E2EE_REMOTE_ORIGINAL_CAPACITY", "E2EE_REMOTE_ORIGINAL_BUSY", "E2EE_REMOTE_ORIGINAL_CLOSED", "E2EE_REMOTE_ORIGINAL_INCOMPLETE_READ")
         fun create(source: Options): E2eeRemoteOriginal {
             RemoteOriginalCodec.capacity(source.capacity); val options = source.copy(packet = RemoteOriginalCodec.copy(source.packet))

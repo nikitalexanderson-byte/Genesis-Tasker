@@ -56,7 +56,7 @@ async function acceptance(){
   const objects=new Map<string,E2eeEnvelope>(),receipts=new Map<string,{hash:string;result:Record<string,WireValue>}>(),packets:unknown[]=[];
   let captures=0,reconciliations=0,sourceReads=0,recoveryChecks=0,interrupted=false,state='legacy';
   const source=new PersonalPhysisSource(owner,scopeId,{assertCurrent:current,memory:async()=>({ownerId:owner,generation:0,reconciliationRequired:false,legacyKey,stores:await capturePhysisSessionMemory(owner)}),
-   legacyPhysis:async context=>{sourceReads++;const state=await make().status();check('server source follows a complete new-root-protected local capture',!!state&&state.protocol!==3&&state.snapshotParts>0);
+   legacyPhysis:async context=>{sourceReads++;const state=await make().status();check('server source follows a complete new-root-protected local capture',!!state&&(state.protocol===1||state.protocol===2)&&state.snapshotParts>0);
     return{protocol:1,ownerId:owner,scopeId,migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,legacyGeneration:0,checkpointHash:directory.checkpoint.hash,directoryRevision:1,
      owners:[{current_cursor:1,min_cursor:0,vault_json:JSON.stringify(oldVault.vault),vault_revision:1,key_version:1}],records:[{id:wire.id,revision:1,sequence:1,envelope_json:JSON.stringify(envelope),updated_at:wire.updatedAt,deleted_at:null}],usedIds:[{id:wire.id}],receipts:[],legacyKey:{keyMode:'client',key:null}};
    },review:async conflicts=>Object.fromEntries(conflicts.map(row=>[row.id,'store:0:current']))});

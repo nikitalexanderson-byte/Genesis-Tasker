@@ -1,0 +1,84 @@
+{
+  "description": "Public synthetic signed metadata only. No private key, content, body proof, replay authority or activation.",
+  "expected": {
+    "migrationId": "10000000-0000-4000-8000-000000000001",
+    "target": {
+      "ownerId": "synthetic-owner",
+      "scopeId": "personal:synthetic-owner",
+      "kind": "personal"
+    },
+    "actor": {
+      "ownerId": "synthetic-owner",
+      "scopeId": "device:synthetic-device",
+      "deviceId": "synthetic-device"
+    },
+    "sourceHash": "NLjhC8a2ho4hSnERwvE2EXqz8YmlYtknfkzpgqNAMaA",
+    "lease": {
+      "fence": 6,
+      "generation": 2,
+      "leaseUntil": 2000000000
+    },
+    "checkpointHash": "8AqtkOHJi79a5VklVpvvrzDB2dW9pRWEYL-uf2dznzc",
+    "directoryRevision": 7
+  },
+  "ownership": {
+    "protocol": 1,
+    "attemptId": "20000000-0000-4000-8000-000000000002",
+    "sourceState": {
+      "objectId": "10000000-0000-4000-8000-000000000001:preparation:3",
+      "hash": "GjAgimaLByLx7dmLoiJcneNiP3SkLU6O0jt9wxC1hWE",
+      "originalSerial": 1
+    },
+    "signer": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVU90D5zoliBNBADIn7kXsZaKqXpWpEGJJv8xVN-uFuZ90CqRCa7vyn5o1PVtygGW0HseoOtSvz9Zq3EHF1LMKA",
+    "securityEpoch": 3,
+    "originals": [
+      {
+        "registration": {
+          "protocol": 1,
+          "purpose": "remote-original/v1",
+          "id": "40000000-0000-4000-8000-000000000004",
+          "context": {
+            "ownerId": "synthetic-owner",
+            "scopeId": "personal:synthetic-owner",
+            "kind": "personal",
+            "actorId": "synthetic-owner",
+            "actorScopeId": "device:synthetic-device",
+            "deviceId": "synthetic-device"
+          },
+          "binding": {
+            "packetHash": "DBWDfYMGz3j1sRD2kw0hK7zr1NIDaLYhfmdqTPyJbuw",
+            "signer": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVU90D5zoliBNBADIn7kXsZaKqXpWpEGJJv8xVN-uFuZ90CqRCa7vyn5o1PVtygGW0HseoOtSvz9Zq3EHF1LMKA",
+            "generation": 2,
+            "migrationId": "10000000-0000-4000-8000-000000000001",
+            "fence": 6,
+            "sourceHash": "NLjhC8a2ho4hSnERwvE2EXqz8YmlYtknfkzpgqNAMaA",
+            "action": "legacy-workspace",
+            "directoryRevision": 7,
+            "checkpointHash": "8AqtkOHJi79a5VklVpvvrzDB2dW9pRWEYL-uf2dznzc",
+            "securityEpoch": 3
+          }
+        },
+        "packet": {
+          "command": {
+            "protocol": 1,
+            "ownerId": "synthetic-owner",
+            "scopeId": "personal:synthetic-owner",
+            "deviceId": "synthetic-device",
+            "action": "legacy-workspace",
+            "expectedRevision": 7,
+            "checkpointHash": "8AqtkOHJi79a5VklVpvvrzDB2dW9pRWEYL-uf2dznzc",
+            "securityEpoch": 3,
+            "operationId": "30000000-0000-4000-8000-000000000003",
+            "payload": {
+              "migrationId": "10000000-0000-4000-8000-000000000001",
+              "fence": 6,
+              "sourceHash": "NLjhC8a2ho4hSnERwvE2EXqz8YmlYtknfkzpgqNAMaA"
+            }
+          },
+          "signature": "zcCec7LNVFf4Vfx8zQFkY2_5ZOfNgB2ueq-ZHno4PxMk-TPhlDUiuBFOfQ_-5BLQAFRDyo01WdVJL_8FK1d9mQ"
+        }
+      }
+    ]
+  },
+  "ownershipCanonicalHash": "LHLqIp1AD6QTnB4Qk9Ua1tqlL13hB92qpc4CafU8Abk"
+}

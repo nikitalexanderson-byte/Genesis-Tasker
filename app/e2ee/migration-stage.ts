@@ -1,6 +1,6 @@
 import {decodeE2eeBytes} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
-import {ProtectedSourceStage,inspectSourceStages,openSourceStage,sourceStagePublicationGuard,type SourceStageTarget,type SourceStageReference,type SourceStageCapacity,type SourceStageAdmission} from './source-stage.ts';
+import {ProtectedSourceStage,inspectSourceStages,openSourceStage,sourceStagePublicationGuard,type SourceStageReadVault,type SourceStageTarget,type SourceStageReference,type SourceStageCapacity,type SourceStageAdmission} from './source-stage.ts';
 import type {UnlockedE2eeVault} from './storage.ts';
 
 /** A preflighted registry, never a mounted-screen inventory. No network port. */
@@ -32,7 +32,7 @@ export async function stagedMigrationPublicationGuard(vault:UnlockedE2eeVault,sn
 }
 /** Authenticate every current/orphan complete stage, including actual path EOF.
  * An incomplete marker blocks reconciliation; a prefix is never omitted. */
-export async function verifyStagedMigrationSnapshot(vault:UnlockedE2eeVault,snapshot:StagedMigrationSnapshot,check:()=>void){
+export async function verifyStagedMigrationSnapshot(vault:SourceStageReadVault,snapshot:StagedMigrationSnapshot,check:()=>void){
  const current=()=>{check();vault.assertUnlocked();};current();
  const value=validateStagedMigrationSnapshot(snapshot,snapshot.target,vault.localIdentity(),snapshot.paths);
  const refs=[...value.history,value.reference],known=await inspectSourceStages(vault,value.target,current);current();

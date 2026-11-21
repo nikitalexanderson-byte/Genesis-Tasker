@@ -1,5 +1,10 @@
 # Streamed coordinator integration: remaining design constraints
 
+21 November: local state4 preparation/request ownership is accepted
+separately in `e2ee-336-streamed-ownership.md`. It keeps run/upload/activation
+closed and does not close this remaining full-integration plan. The owner has
+removed pre-3.3.5 APKs from support/upgrade acceptance; test3.3.5/149 →3.3.6.
+
 20 November2026. Design for the next increment, not implemented/accepted
 functionality. Current v3 `run()` still refuses before transport. Source
 coverage remains9/20 and every release/recovery/human-review gate remains.
@@ -111,9 +116,10 @@ generation. Complete quarantine references become available only after raw EOF.
 An explicit inert registration identity/request binding before prepare and
 request-authenticated metadata discovery now exist separately on both platforms;
 see `e2ee-336-remote-registration.md` for exact acceptance. Every descriptor has
-`bodyVerified:false`, including complete journals. State4 still needs to reserve
-and own these exact identities before networking; the APIs do not perform that
-CAS, provider-wide reservation or authenticated key custody. A post-success-only
+`bodyVerified:false`, including complete journals. Local state4 preparation now
+reserves and owns these exact identities before networking; see the separately
+accepted `e2ee-336-streamed-ownership.md`. Mandatory real HTTP factories,
+provider-wide admission and authenticated key custody remain unfinished. A post-success-only
 callback remains insufficient: it loses the ownership link on a crash or a
 rejected JSON reply. Descriptors contain technical ids/hashes, never private
 response bytes or key material.
@@ -126,6 +132,23 @@ captures have registered/receiving references and cannot claim EOF. Every retry
 retains the earlier originals. The factory must cover all existing ten legacy
 actions and page/record/byte-offset forms; future project/space source readers
 need explicit authorized roles, not a caller-provided arbitrary action string.
+
+Compose the factory inside one revocable, awaited planning session under the
+existing whole-job fence. Do not call the public fence-taking reservation
+method recursively from a reconciler already holding that fence: native Mutex
+and browser locks are not reentrant. Use the same checked private locked core
+through narrow session ports. Drain in-flight operations before releasing the
+fence, keep caught/unawaited failures sticky and revoke escaped callbacks.
+Current lease/source/directory and actual device checks must surround both
+observation admission and transport waits. A caller-provided context alone is
+not a current planning permit. No upload or activation is added by that session.
+
+The standalone reservation API verifies the complete original history for each
+call. A multi-page factory must not multiply a whole large-source read by every
+page. Retain only a revocable checked-history capability inside that same fence,
+guard its exact metadata/catalogue and still authenticate bodies/actual EOF
+through the common reader before content-plan publication. Never cache a
+server boolean, skip unknown history roles or carry this capability across jobs.
 
 State4 must reserve and bind those exact owned observation/plan identities with
 the source catalogue/history in a local CAS. The current strict history reader
