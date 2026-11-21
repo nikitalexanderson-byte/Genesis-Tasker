@@ -16,6 +16,8 @@ import {RelationalPrivatePathSource} from '../e2ee/relational-path-source';
 import {normalizeNativePrivatePathRemote} from '../e2ee/private-path-fragments';
 import {streamNativeSourceResults} from '../e2ee/native-source-stream';
 import {PublicAdviceCatalogues} from '../e2ee/advice-catalogue';
+import {E2eeAdviceProduct,type AdviceProductPorts} from '../e2ee/advice-product';
+import type {FeatureDocumentPort,FeatureDocumentView} from '../e2ee/feature-document';
 import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
 import {canonicalJson} from './forecast';
 import {decodeE2eeBytes,encodeE2eeBytes} from '../e2ee/envelope';
@@ -42,6 +44,32 @@ async function run(encoded:string){
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    if(value.mode==='advice-product-v1'){
+      exactKeys(value,['protocol','mode','ownerId','scopeId','offline','language','preferences','action','args']);
+      if(value.protocol!==1||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.offline!=='boolean')throw new Error('E2EE_ADVICE_CONTENT_INVALID');
+      const invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'advice-product-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
+      const ports:AdviceProductPorts={ownerId:value.ownerId,scopeId:value.scopeId,mode:value.offline?'offline':'online',current,
+        preferences:async()=>value.preferences as Awaited<ReturnType<AdviceProductPorts['preferences']>>,language:()=>value.language as ReturnType<AdviceProductPorts['language']>,
+        publicBytes:async path=>{const result=await invoke('publicBytes',{path});if(typeof result!=='string')throw new Error('E2EE_ADVICE_CATALOGUE_INVALID');return decodeE2eeBytes(result,2,8*1024*1024);},
+        feature:<T,>(id:string,validate:(value:unknown)=>T,seed:()=>Promise<T>):FeatureDocumentPort<T>=>{
+          const validateView=(value:unknown)=>{exactKeys(value,['document','base','pending','remoteRevision','conflict']);const view=value as FeatureDocumentView<T>;view.document=validate(view.document);view.base=validate(view.base);if(view.conflict)view.conflict.document=validate(view.conflict.document);return view;};
+          const call=async(action:string,payload:Record<string,unknown>={})=>validateView(await invoke('feature',{id,action,...payload}));
+          return{read:async(refresh=true)=>{try{return await call('read',{refresh});}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_PRIVATE_SEED_REQUIRED')throw error;return call('read',{refresh,seed:validate(await seed())});}},
+            write:input=>call('write',{document:validate(input)}),resolve:(input,revision)=>call('resolve',{document:validate(input),revision}),flush:()=>call('flush')};
+        },
+        original:id=>invoke('original',{id}),readPolicy:()=>invoke('policy'),readIssue:ref=>invoke('readIssue',{reference:ref}),
+        prepareIssue:async issue=>await invoke('prepareIssue',{issue}) as Awaited<ReturnType<AdviceProductPorts['prepareIssue']>>,
+        publishIssue:async(issue,reference)=>await invoke('publishIssue',{issue,reference}) as Awaited<ReturnType<AdviceProductPorts['publishIssue']>>,
+        localRead:async id=>await invoke('localRead',{id}) as Awaited<ReturnType<AdviceProductPorts['localRead']>>,
+        localWrite:async(id,value,expected)=>{await invoke('localWrite',{id,value,expected});},archivePending:async(intentId,value)=>{await invoke('archivePending',{intentId,value});},
+      };
+      const product=new E2eeAdviceProduct(ports),args=value.args as Record<string,unknown>;let result:unknown;
+      if(value.action==='today')result=await product.today(args.scores as Parameters<E2eeAdviceProduct['today']>[0],args.topics as Parameters<E2eeAdviceProduct['today']>[1],args.from as Parameters<E2eeAdviceProduct['today']>[2]);
+      else if(value.action==='record')result=await product.record(args.id as string,args.dayKey as string,args.dismiss as boolean);
+      else if(value.action==='saved')result=await product.saved(args.id as string,args.dayKey as string,args.collection as Parameters<E2eeAdviceProduct['saved']>[2]);
+      else if(value.action==='resume'){await product.resume();result={ok:true};}else throw new Error('E2EE_ADVICE_METHOD_INVALID');
+      current();send({job,kind:'advice-product-complete',value:result});return;
+    }
     exactKeys(value,['protocol','source','ownerId','scopeId','local','previous','context','remote']);
     if(value.protocol!==1||!['aurora','stoicheion','advice','tasks','diary','mindmaps','physis','reminders','archives','relational'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
       ||!Array.isArray(value.previous)||value.previous.length>32)throw new Error('E2EE_AURORA_SOURCE_INVALID');

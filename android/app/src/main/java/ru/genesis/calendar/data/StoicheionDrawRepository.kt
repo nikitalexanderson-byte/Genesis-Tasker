@@ -7,6 +7,8 @@ import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.combine
+import ru.genesis.calendar.security.NativePrivateProducts
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -97,10 +99,18 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         if (app.workspaceScope != scope) throw CancellationException("Draw account changed")
     }
 
-    val today = dao.observeDocument(scope, kind).map { record ->
-        if (record == null) StoicheionDraws() else read(
-            JSONObject(cipher.decrypt(record.encrypted, associatedData)), LocalDate.now().toString())
+    val today = combine(dao.observeDocument(scope, kind),NativePrivateProducts.revision) { record, _ ->
+        if(NativePrivateProducts.isProtected(scope)){
+            if(!NativePrivateProducts.isOpen(scope))StoicheionDraws()else try{privateSnapshot()}catch(error:IllegalStateException){if(!NativePrivateProducts.isOpen(scope))StoicheionDraws()else throw error}
+        }else if (record == null) StoicheionDraws() else read(JSONObject(cipher.decrypt(record.encrypted, associatedData)), LocalDate.now().toString())
     }.flowOn(Dispatchers.IO)
+
+    private fun privateSnapshot():StoicheionDraws{
+        checkScope();val product=NativePrivateProducts.stoicheion(scope);if(!product.hasLocalState())return StoicheionDraws()
+        val (_,draws)=StoicheionDrawWire.snapshot(product.loadDraws(true))
+        val timeline=if(app.featureAccess(scope).allows("stoicheion-timeline"))StoicheionTimelineWire.parse(product.loadTimeline(true))else null
+        return StoicheionDraws(draws.find{it.kind=="daily"},draws.find{it.kind=="spread"},timeline?.asDraw(),timeline)
+    }
 
     suspend fun refreshFromServer(): StoicheionDraws = accountLock.withLock {
         checkScope()
@@ -108,6 +118,10 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         val payload = AuthController.get(app).loadStoicheionDraws()
         StoicheionDrawWire.snapshot(payload)
         checkScope()
+        if(NativePrivateProducts.isProtected(scope)){
+            if(app.featureAccess(scope).allows("stoicheion-timeline"))AuthController.get(app).loadStoicheionTimeline()
+            checkScope();return@withLock privateSnapshot()
+        }
         replaceFromServer(payload)
         // A paid timeline must never prevent the daily/nine-card snapshot from syncing.
         if (app.featureAccess(scope).allows("stoicheion-timeline")) {
@@ -123,19 +137,22 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         checkScope()
         require(scope.startsWith("account-"))
         require(app.featureAccess(scope).allows("stoicheion-timeline")) { "FEATURE_SUBSCRIPTION_REQUIRED" }
-        val cached = currentRoot().optJSONObject("timelineSession")?.let { StoicheionTimelineWire.parse(it, it.getLong("receivedAt")) }
+        val cached = if(NativePrivateProducts.isProtected(scope))StoicheionTimelineWire.parse(NativePrivateProducts.stoicheion(scope).loadTimeline(true))
+            else currentRoot().optJSONObject("timelineSession")?.let { StoicheionTimelineWire.parse(it, it.getLong("receivedAt")) }
         val payload = AuthController.get(app).changeStoicheionTimeline(position, action, cached?.revision ?: 0L)
         checkScope()
+        if(NativePrivateProducts.isProtected(scope))return@withLock requireNotNull(StoicheionTimelineWire.parse(payload))
         app.database.withTransaction { replaceTimeline(payload) }
         requireNotNull(StoicheionTimelineWire.parse(payload))
     }
 
     suspend fun changeSpreadCard(position: Int): StoicheionDraw = accountLock.withLock {
         checkScope(); require(scope.startsWith("account-"))
-        val draw = requireNotNull(read(currentRoot(), LocalDate.now().toString()).spread)
+        val draw = requireNotNull(if(NativePrivateProducts.isProtected(scope))privateSnapshot().spread else read(currentRoot(), LocalDate.now().toString()).spread)
         require(draw.unlimited && position in 0..8)
         val result = AuthController.get(app).changeStoicheionSpreadCard(position, draw.cardRevision, draw.seed, draw.dayKey)
         checkScope()
+        if(NativePrivateProducts.isProtected(scope))return@withLock StoicheionDrawWire.fromServerJson(result.getJSONObject("draw"))
         mergeServerDraw(result.getJSONObject("draw"))
     }
 
@@ -154,6 +171,7 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
             require(drawKind != "timeline") { "TIMELINE_CARD_PROTOCOL_REQUIRED" }
             val payload = AuthController.get(app).saveStoicheionDraw(drawKind, seed)
             checkScope()
+            if(NativePrivateProducts.isProtected(scope))return@withLock StoicheionDrawWire.fromServerJson(payload.getJSONObject("draw"))
             return@withLock mergeServerDraw(payload.getJSONObject("draw"))
         }
         app.database.withTransaction {
@@ -176,6 +194,7 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
 
     internal suspend fun replaceFromServer(payload: JSONObject): StoicheionDraws = app.database.withTransaction {
         checkScope()
+        check(!NativePrivateProducts.isProtected(scope)){"E2EE_LEGACY_STOICHEION_RETIRED"}
         val (dayKey, draws) = StoicheionDrawWire.snapshot(payload)
         val root = currentRoot()
         val days = root.optJSONObject("days") ?: JSONObject().also { root.put("days", it) }

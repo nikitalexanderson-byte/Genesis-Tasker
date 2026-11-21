@@ -1,8 +1,8 @@
 import { canonicalE2eeValue, e2eeCommandHash, signE2eeCommand, snapshotE2eeValue,verifyE2eeCommand, type SignedE2eeCommand, type WireValue } from './commands.ts';
 import { contentSigningKey, type VerifiedDirectory } from './directory.ts';
-import { E2EE_SUITE, decodeE2eeBytes,encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
+import { E2EE_SUITE, decodeE2eeBytes,encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, verifyE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES, envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile } from './files.ts';
-import { assertTechnical, openRoot, type PublicDeviceKeys } from './keys.ts';
+import { assertTechnical, exactKeys, freshSecret, openRoot, sealRoot, type PublicDeviceKeys } from './keys.ts';
 import { UnlockedWebDevice } from './device-vault.ts';
 import type { LocalWrite } from './storage.ts';
 
@@ -10,8 +10,10 @@ export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
   command(packet:SignedE2eeCommand):Promise<Record<string,WireValue>>;
   read(packet:SignedE2eeCommand):Promise<{envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
-    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];checkpointHash:string;directoryRevision:number}>;
+    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];checkpointHash:string;directoryRevision:number}>;
 }
+
+export type ReviewedDeviceRole={deviceId:string;role:'owner'|'writer'|'commenter'|'reader'|null};
 type PlanItem={recordId:string;hash:string;expected:number};
 type UploadJob={protocol:1;scopeId:string;domain:E2eeContext['domain'];objectId:string;generation:number;cryptoEpoch:number;keyId:string;
   expected:number;size:number;metadata:{filename:string;mediaType:string};originId:string|null;draftId:string;draftParts:number;plan:PlanItem[];uploaded:number;pending:SignedE2eeCommand|null;cancelling:SignedE2eeCommand|null;complete:boolean};
@@ -313,7 +315,7 @@ export class E2eeScopeClient {
   }
   /** Business intent is durable independently of a checkpoint-bound transport
    * packet. Renewal never changes the intended mutation or replays an import. */
-  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant',payload:Record<string,WireValue>,intentId:string){
+  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue',payload:Record<string,WireValue>,intentId:string){
     assertTechnical(intentId);const held=snapshotE2eeValue({...payload,intentId}),id=`service:${await hash(`${action}\0${intentId}`)}`;
     for(let attempt=0;attempt<2;attempt++){
       const directory=this.#open(),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();let packet:SignedE2eeCommand;
@@ -335,6 +337,74 @@ export class E2eeScopeClient {
   }
   async readProductIndex(after='',limit=50){if(after)assertTechnical(after);if(!Number.isSafeInteger(limit)||limit<1||limit>50)throw new Error('E2EE_INVALID_LIMIT');
     return this.#readPacket('product-index',{after,limit});}
+  async readStoicheionState():Promise<unknown>{return this.#readPacket('stoicheion-state',{});}
+  async readAdvicePolicy():Promise<unknown>{return this.#readPacket('advice-policy',{});}
+  async authorizeMembership(intentId:string,changeHash:string){
+    assertTechnical(intentId);decodeE2eeBytes(changeHash,32);const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
+    if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
+    return this.#packet('membership-authorize',{intentId,changeHash});
+  }
+  async confirmMembershipRotation(packet:SignedE2eeCommand){
+    const command=packet.command;if(command.scopeId!==this.#scopeId||command.ownerId!==this.#owner||command.action!=='rotate-membership')throw new Error('E2EE_CONTEXT_MISMATCH');
+    await this.refresh();const frame=this.#directoryFrames.get(command.expectedRevision+1);
+    const expected=await hash(`${command.checkpointHash}\0${await e2eeCommandHash(command)}`);
+    if(!frame||frame.checkpoint.hash!==expected||frame.cryptoEpoch!==command.payload.cryptoEpoch||frame.keyId!==command.payload.keyId)throw new Error('E2EE_INVALID_RECEIPT');
+    this.#device.requireOpen();
+  }
+  /** The caller supplies an explicitly reviewed COMPLETE recipient roster. A
+   * server preview may propose it, but may never silently approve recipients.
+   * Only public HPKE capsules enter the durable retry record or the network. */
+  async prepareMembershipRotation(changeHash:string,reviewed:ReviewedDeviceRole[],manifest:{manifestHash:string;objectCount:number},expected:{directoryRevision:number;checkpointHash:string;cryptoEpoch:number;securityEpoch:number;ownerId:string;kind:string;resourceId:string}):Promise<SignedE2eeCommand>{
+    decodeE2eeBytes(changeHash,32);decodeE2eeBytes(manifest.manifestHash,32);const roles=snapshotE2eeValue(reviewed),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
+    if(!this.#refreshed||directory.kind==='personal'||directory.ownerId!==this.#device.ownerId||own?.role!=='owner'||own.revoked||!['active','retirement'].includes(directory.state))throw new Error('E2EE_OWNER_REQUIRED');
+    const live=[...directory.devices.values()].filter(row=>!row.revoked),seen=new Set<string>();
+    if(!Array.isArray(roles)||roles.length!==live.length||roles.length>256)throw new Error('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');
+    for(const row of roles){exactKeys(row,['deviceId','role']);assertTechnical(row.deviceId);const known=directory.devices.get(row.deviceId);
+      if(!known||known.revoked||seen.has(row.deviceId)||row.role!==null&&!['owner','writer','commenter','reader'].includes(row.role)
+        ||known.userId===directory.ownerId&&row.role!=='owner'||known.userId!==directory.ownerId&&row.role==='owner')throw new Error('E2EE_MEMBERSHIP_ROLE_INVALID');seen.add(row.deviceId);}
+    const key=`rotation:${await hash(`${this.#scopeId}\0${changeHash}`)}`,previous=await this.#device.vault.read('outbox',key);this.#device.requireOpen();
+    try{
+      if(previous){const saved=JSON.parse(decoder.decode(previous.value));exactKeys(saved,['protocol','roles','manifest','packet']);
+        if(saved.protocol!==1||encodeE2eeBytes(canonicalE2eeValue(saved.roles))!==encodeE2eeBytes(canonicalE2eeValue(roles))
+          ||saved.manifest.manifestHash!==manifest.manifestHash||saved.manifest.objectCount!==manifest.objectCount||saved.packet.command?.payload?.membershipHash!==changeHash
+          ||saved.packet.command.scopeId!==this.#scopeId||saved.packet.command.ownerId!==this.#owner||saved.packet.command.deviceId!==this.#device.deviceId||saved.packet.command.action!=='rotate-membership')throw new Error('E2EE_CORRUPT_OUTBOX');
+        await verifyE2eeCommand(saved.packet,this.#device.keys().signing.publicKey);return snapshotE2eeValue(saved.packet) as SignedE2eeCommand;
+      }
+      if(expected.directoryRevision!==directory.checkpoint.revision||expected.checkpointHash!==directory.checkpoint.hash||expected.cryptoEpoch!==directory.cryptoEpoch||expected.securityEpoch!==directory.securityEpoch
+        ||expected.ownerId!==this.#owner||expected.kind!==directory.kind||expected.resourceId!==directory.resourceId)throw new Error('E2EE_MEMBERSHIP_STALE');
+      if(!Number.isSafeInteger(manifest.objectCount)||manifest.objectCount<0||manifest.objectCount>10000)throw new Error('E2EE_MANIFEST_MISMATCH');
+      const objects:NonNullable<Awaited<ReturnType<ScopeTransport['read']>>['objects']>=[];
+      do{const response=await this.#readPacket('active-heads',{offset:objects.length,manifestHash:objects.length===0?null:manifest.manifestHash});
+        if(response.manifestHash!==manifest.manifestHash||response.objectCount!==manifest.objectCount||!Array.isArray(response.objects)||response.objects.length>50
+          ||objects.length+response.objects.length>manifest.objectCount||response.objects.length===0&&objects.length<manifest.objectCount)throw new Error('E2EE_MANIFEST_MISMATCH');
+        objects.push(...response.objects);
+      }while(objects.length<manifest.objectCount);
+      if(await objectManifestHash(objects)!==manifest.manifestHash)throw new Error('E2EE_MANIFEST_MISMATCH');
+      const heads=new Map(objects.map(row=>[`${row.domain}\0${row.objectId}`,row]));
+      for(const [id,floor] of await this.#sealedHeads()??[]){const head=heads.get(id);if(!head||head.revision<floor.revision||head.revision===floor.revision&&head.payloadHash!==floor.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');}
+      // Each current head must prove its historical device authority. The final
+      // rotation CAS rejects a concurrent object change after this readback.
+      for(const head of objects){exactKeys(head,['domain','objectId','revision','payloadHash']);assertTechnical(head.objectId);decodeE2eeBytes(head.payloadHash,32);
+        const envelope=await this.#getEnvelope(head.domain as E2eeContext['domain'],head.objectId);if(!envelope||envelope.context.revision!==head.revision||await envelopePayloadHash(envelope)!==head.payloadHash)throw new Error('E2EE_MANIFEST_MISMATCH');
+        const context=envelope.context,frame=this.#history.get(epochKey({cryptoEpoch:context.cryptoEpoch,securityEpoch:context.securityEpoch,keyId:context.keyId,generation:context.dataGeneration}));
+        if(!frame||context.ownerId!==this.#owner||context.scopeId!==this.#scopeId||context.domain!==head.domain||context.objectId!==head.objectId||context.dataGeneration!==directory.generation)throw new Error('E2EE_CONTEXT_MISMATCH');
+        await verifyE2eeEnvelope(envelope,context,await contentSigningKey(frame,context));await this.#historicalHead(envelope);
+        const floor=await this.#device.vault.read('key-check',`floor:${await this.#id(context.domain,context.objectId)}`);
+        try{if(floor){const prior=JSON.parse(decoder.decode(floor.value));if(head.revision<prior.revision||head.revision===prior.revision&&head.payloadHash!==prior.hash)throw new Error('E2EE_REMOTE_ROLLBACK');}}finally{floor?.value.fill(0);}
+      }
+      this.#device.requireOpen();if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');
+      const root=freshSecret(),keyId=crypto.randomUUID(),capsules:WireValue[]=[],cryptoEpoch=directory.cryptoEpoch+1;
+      try{
+        for(const row of roles)if(row.role!==null){const recipient=directory.devices.get(row.deviceId)!;capsules.push({deviceId:row.deviceId,capsule:await sealRoot(root,recipient.receivingKey,{ownerId:this.#owner,scopeId:this.#scopeId,cryptoEpoch,keyId,recipientId:row.deviceId}) as unknown as WireValue});}
+        const recoveryCapsule=await sealRoot(root,directory.recoveryKit.authority.receivingKey,{ownerId:this.#owner,scopeId:this.#scopeId,cryptoEpoch,keyId,recipientId:'recovery'});
+        this.#device.requireOpen();if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');
+        const packet=await this.#packet('rotate-membership',{membershipHash:changeHash,revokedDeviceIds:roles.filter(row=>row.role===null).map(row=>row.deviceId),
+          roleChanges:roles.filter(row=>row.role!==null) as unknown as WireValue,cryptoEpoch,securityEpoch:directory.securityEpoch+1,keyId,capsules,recoveryCapsule:recoveryCapsule as unknown as WireValue,retiredManifestHash:manifest.manifestHash,retiredObjectCount:manifest.objectCount});
+        const bytes=encoder.encode(JSON.stringify({protocol:1,roles,manifest,packet}));try{await this.#device.vault.write([{domain:'outbox',objectId:key,value:bytes,expected:null}]);}finally{bytes.fill(0);}
+        return packet;
+      }finally{root.fill(0);}
+    }finally{previous?.value.fill(0);}
+  }
   async objectReference(domain:E2eeContext['domain'],objectId:string){
     const directory=this.#open(),envelope=await this.#getEnvelope(domain,objectId);this.#device.requireOpen();if(!envelope)throw new Error('E2EE_PRIVATE_DOCUMENT_MISSING');
     const context=envelope.context,frame=this.#history.get(epochKey({cryptoEpoch:context.cryptoEpoch,securityEpoch:context.securityEpoch,keyId:context.keyId,generation:context.dataGeneration}));

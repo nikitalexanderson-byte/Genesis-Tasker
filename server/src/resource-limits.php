@@ -19,7 +19,8 @@ function genesisBeginWriteTransaction(PDO $db): void
 
 function genesisJsonBodyLimit(string $path): int
 {
-    if (in_array($path, ['e2ee/v1/command','e2ee/v1/bootstrap'], true)) return 6 * 1024 * 1024;
+    if (in_array($path, ['e2ee/v1/command','e2ee/v1/bootstrap','e2ee/v1/membership'], true)) return 6 * 1024 * 1024;
+    if(in_array($path,['e2ee/v1/membership-state','e2ee/v1/membership-preview'],true))return 512*1024;
     if (str_starts_with($path, 'partners/') || str_starts_with($path, 'admin/partners')) return 8192;
     if ($path === 'weather/v1/current') return 1024;
     if (str_starts_with($path, 'account/plan-guidance/')) return 1024;

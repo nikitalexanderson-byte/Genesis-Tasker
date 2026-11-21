@@ -22,7 +22,8 @@ private val publicAdviceLanguages=setOf("ru","en","el","de","fr","es","it","pt",
  * Paths come from the signed APK's edition pins, never an owner/id or arbitrary
  * URL. No account client, cookie jar, device ID, quota or private API is used. */
 internal class NativeAdvicePublicCatalogues(private val manifestBytes:()->ByteArray,
-    private val download:(String,Int,()->Unit)->ByteArray={path,maximum,current->downloadAdvicePublicBytes(path,maximum,current)}) {
+    private val download:(String,Int,()->Unit)->ByteArray={path,maximum,current->downloadAdvicePublicBytes(path,maximum,current)},
+    private val metadataPinBytes:(()->ByteArray)?=null) {
     private data class Pin(val bytes:Int,val sha256:String)
     private data class Editions(val raw:ByteArray,val paths:Map<String,Pin>)
     private val editions:Editions by lazy{
@@ -48,7 +49,12 @@ internal class NativeAdvicePublicCatalogues(private val manifestBytes:()->ByteAr
         val job=currentCoroutineContext()[Job];fun current(){job?.ensureActive();assertCurrent()};current()
         val pinned=editions;current()
         if(path=="advice-catalogues/v1/manifest.json")return@withContext pinned.raw.copyOf()
-        val pin=pinned.paths[path]?:error("E2EE_ADVICE_CATALOGUE_UNAVAILABLE")
+        val pin=pinned.paths[path]?:metadataPinBytes?.invoke()?.let{raw->
+            val value=JSONObject(Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(raw)).toString());E2eeKeys.exact(value,setOf("protocol","sha256","bytes","path"))
+            check(value.getInt("protocol")==1&&value.getString("sha256").matches(Regex("[a-f0-9]{64}"))&&value.getString("path")=="advice-catalogues/v1/metadata.${value.getString("sha256")}.json"
+                &&value.getInt("bytes") in 2..PUBLIC_ADVICE_MAXIMUM){"E2EE_ADVICE_CATALOGUE_INVALID"}
+            if(path==value.getString("path"))Pin(value.getInt("bytes"),value.getString("sha256"))else null
+        }?:error("E2EE_ADVICE_CATALOGUE_UNAVAILABLE")
         val bytes=download(path,pin.bytes,::current);current()
         check(bytes.size==pin.bytes){"E2EE_ADVICE_CATALOGUE_INVALID"}
         val hash=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString(""){"%02x".format(it)}
@@ -62,7 +68,7 @@ internal class NativeAdvicePublicCatalogues(private val manifestBytes:()->ByteAr
  * The app's authenticated native jar is independent and is never consulted. */
 internal fun downloadAdvicePublicBytes(path:String,maximum:Int,assertCurrent:()->Unit,
     open:(URL)->HttpsURLConnection={it.openConnection() as HttpsURLConnection}):ByteArray {
-    check(path.matches(Regex("advice-catalogues/v1/(?:daily|philosophers)/[-a-z0-9]{1,80}/[a-z]{2}\\.[a-f0-9]{64}\\.json"))
+    check(path.matches(Regex("advice-catalogues/v1/(?:(?:daily|philosophers)/[-a-z0-9]{1,80}/[a-z]{2}\\.[a-f0-9]{64}|metadata\\.[a-f0-9]{64})\\.json"))
         &&maximum in 2..PUBLIC_ADVICE_MAXIMUM){"E2EE_ADVICE_CATALOGUE_INVALID"}
     assertCurrent();check(CookieHandler.getDefault()==null){"E2EE_ADVICE_PUBLIC_COOKIE_CONTEXT_FORBIDDEN"}
     val url=URL(AUTH_ORIGIN.trimEnd('/')+"/"+path);check(url.protocol=="https"){"E2EE_ADVICE_CATALOGUE_INVALID"}

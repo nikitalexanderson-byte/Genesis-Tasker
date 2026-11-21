@@ -87,7 +87,7 @@ export function publicAdviceCatalogueReader(base:URL,assertCurrent:()=>void,requ
  if(base.protocol!=='https:'&&!(base.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(base.hostname)))invalid();
  const directory=new URL(base.href.endsWith('/')?base.href:base.href+'/');
  return async(path:string):Promise<Uint8Array>=>{
-  assertCurrent();if(!/^advice-catalogues\/v1\/(?:manifest\.json|(?:daily|philosophers)\/[-a-z0-9]{1,80}\/[a-z]{2}\.[a-f0-9]{64}\.json)$/.test(path))invalid();
+  assertCurrent();if(!/^advice-catalogues\/v1\/(?:manifest\.json|metadata\.[a-f0-9]{64}\.json|(?:daily|philosophers)\/[-a-z0-9]{1,80}\/[a-z]{2}\.[a-f0-9]{64}\.json)$/.test(path))invalid();
   const limit=path.endsWith('/manifest.json')?1024*1024:MAX;
   const response=await request(new URL(path,directory),{credentials:'omit',referrerPolicy:'no-referrer',redirect:'error',cache:path.endsWith('/manifest.json')?'no-cache':'force-cache'});assertCurrent();
   if(response.status!==200||!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??''))throw new Error('E2EE_ADVICE_CATALOGUE_UNAVAILABLE');

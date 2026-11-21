@@ -205,6 +205,7 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
                 icon = GenesisPageIcon.STOICHEION)
         }
         val loaded = letters
+        item(span = { GridItemSpan(maxLineSpan) }) {PrivatePendingOperations(app.workspaceScope,"stoicheion",language,listOf(drawError,drawRefresh,saving)){drawRefresh++}}
         when {
             loaded == null -> item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {

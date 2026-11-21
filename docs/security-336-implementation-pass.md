@@ -1,5 +1,58 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Second continuation, 21 November — candidate infrastructure, no acceptance
+
+Owner resumed the paused task and required continuation to the authorized3.3.6
+release. Implementation-first ordering remains in force. No tests, typecheck,
+lint, web/native builds, push, CI, deployments or real-device actions were run.
+The public editorial metadata pin was authored from existing public sources;
+that generation is not a build or an acceptance check.
+
+- Added bounded checkpoint-bound active-head reads and web/native owner rotation
+  builders. Each builder verifies the immutable current heads, signed historical
+  device authority, remembered floors and the explicitly reviewed FULL recipient
+  roster. Future roots are random, HPKE-wrapped only to survivors/recovery, zeroed
+  after preparation, and never sent raw. Old capsules/history remain intact.
+- Added web/native membership coordinators and real authenticated transports.
+  Plans precede preview/crypto, complete expected scope sets are caller supplied,
+  previews cannot silently approve recipients, and all affected rotations plus
+  the owner's authorization are persisted before a membership mutation. Unknown
+  outcomes repeat the exact batch; receipt confirmation follows the signed
+  directory chain. This still needs the real shared membership review UI,
+  multi-owner signature collection and complete trusted ACL/scope composition.
+- Added technical Stoicheion state/grant service and migration130. Seeds/cards
+  stay in immutable client ciphertext; the server separately checks feature
+  access, original periods/attempts, per-card reveal windows and Elite+ rights.
+  Existing legacy rows seed only existing technical limits, while their content
+  opens from migrated encrypted history. Both web and native actual draw/timeline
+  entrypoints now use the private product. Native avoids writing new private
+  seeds/cards into the old Room draw document. Prepared intents survive unknown
+  outcomes and have an explicit saved-operation retry.
+- Added the public editorial metadata asset/pin, shared local advice selector,
+  technical advice policy/issue service and migration131. Selection runs locally
+  with category/topic affinity, lunar preparation, source/theme alternation,
+  unseen rounds and existing editorial/age rules. The server enforces day/slot/
+  collection caps against immutable ciphertext references, including existing
+  usage; no private score, selected advice ID or body enters those commands.
+- Added common web/native Advice product ports and actual gateway composition.
+  Native uses the bundled common engine in a newly constructed network-disabled
+  WebView with domain-limited native ports. Keys remain native. The UI cache and
+  advice preference save path now use new-root storage after activation rather
+  than being blocked by the retired legacy wrapper. Historical caches are kept.
+- Added explicit pending-operation banners on web/native Advice and Stoicheion,
+  using a shared14-language catalogue. Their discovery reads local protected
+  plans; only a click retries a saved operation. No new independent reroll is
+  inferred from a network failure.
+
+All of this is UNCOMPILED/UNTESTED candidate code. Required consolidated acceptance
+includes quota/time/translation parity, source/history projection, full lifecycle
+lock behavior, the native headless runtime/bridge, lost receipts/process death,
+membership CAS and real product entrypoints. New metadata is3.45MiB public data,
+downloaded without account credentials; only its pin is added to the APK.
+The9/20 accepted coverage boundary,3.3.5/149 production, disabled pilot/cutover,
+update floors0 and GENESIS_DEPLOY_ANDROID=false are unchanged. Independent human
+crypto review remains outstanding. The original prompt has not changed.
+
 ## Resumed implementation in the continuation chat, 21 November
 
 Owner resumed after the handoff and a short pause and reaffirmed the full original

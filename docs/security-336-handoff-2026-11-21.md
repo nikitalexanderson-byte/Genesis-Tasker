@@ -182,3 +182,27 @@ $env:OPENSSL_CONF='C:/Users/mrdeu/AppData/Local/Temp/genesis-remote-original-php
 
 Остановка владельцем не является окончанием релиза или разрешением публикации
 непроверенного кандидата.
+## Latest continuation checkpoint (21 November, candidate code only)
+
+After c90ef091, web/native membership preparation/coordinators/transports were
+added, plus live private Stoicheion and common local Advice selection/products,
+technical quota services/migrations130–131, native isolated Advice runtime,
+new-root native cache/preference routing and explicit saved-operation retries.
+See the new leading section of `security-336-implementation-pass.md`.
+
+No QA/typecheck/lint/build/CI/push/deploy was run in this continuation. Public
+metadata pin generation was authoring only. Do NOT increase accepted coverage
+from9/20 or claim release readiness. Re-read git status before editing; do not
+read/stage `demo-output/`. Do not spawn agents or run Daybreak. The next code
+stage is real shared domain CRUD/source-to-index composition, membership/review
+UI and policies/quotas/cross-scope operations, then backup/import/Drive,
+external-copy consent, message-key lifecycle and native lifecycle/reminders/
+invalidated-key recovery. All prior candidate code awaits consolidated QA.
+
+Known implementation areas to revisit during that composition: rotation's
+complete active-set verification must account for all locally confirmed newer
+heads/chunks, not just the last signed retired manifest; source-to-scope trust
+and multi-owner rotations need real UI approval. Advice/Timeline cache and
+clock-boundary behavior and translated snapshot parity need consolidated QA.
+Content-only backup must never replay these new issue/membership receipts.
+

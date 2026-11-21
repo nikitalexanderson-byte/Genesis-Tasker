@@ -516,6 +516,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun command(packet:JSONObject)=call("/command",packet)
             override fun read(packet:JSONObject)=call("/read",packet)
             override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
+            override val membership=object:ru.genesis.calendar.security.E2eeMembershipTransport{
+                override fun membershipState(targets:JSONArray)=call("/membership-state",JSONObject().put("targets",targets))
+                override fun membershipPreview(intentId:String,changes:JSONArray)=call("/membership-preview",JSONObject().put("intentId",intentId).put("changes",changes))
+                override fun membershipCommit(batch:JSONObject)=call("/membership",batch)
+            }
         }
         try{withContext(Dispatchers.IO){
             current();val account=if(offline)ru.genesis.calendar.security.E2eeProductAccount.openOffline(app,uid,transport,::current)
@@ -897,8 +902,31 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             if(!client.isCurrent(generation))throw AuthApiError("E2EE_ACCOUNT_CHANGED")
         },operation)
     }
+    private suspend fun <T> withAdvicePreferenceScope(uid:String,operation:suspend ()->T):T{
+        val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(accountScope))return withLegacyAdviceScope(accountScope,operation)
+        val account=ru.genesis.calendar.security.NativePrivateProducts.account(accountScope,uid);checkAdviceAccount(uid);account.requireOpen();return operation().also{checkAdviceAccount(uid);account.requireOpen()}
+    }
 
-    internal fun dailyAdviceTransport(uid: String): DailyAdviceGateway = object : DailyAdviceGateway {
+    private fun privateAdviceTransport(uid:String):DailyAdviceGateway=object:DailyAdviceGateway{
+        private suspend fun execute(action:String,args:JSONObject):JSONObject{checkAdviceAccount(uid);val accountScope=CloudAccountSnapshot.scopeFor(uid)
+            check(app.workspaceScope==accountScope){"E2EE_ACCOUNT_CHANGED"};val products=ru.genesis.calendar.security.NativePrivateProducts
+            val account=products.account(accountScope,uid);val settings=mutableState.value.accountSettings?:error("E2EE_PRODUCT_READ_REQUIRED")
+            val prefs=products.preferences(accountScope).snapshot().getJSONObject("advicePreferences")
+            val result=products.advice(accountScope).execute(action,args,settings.language,prefs);account.requireOpen();checkAdviceAccount(uid);return result
+        }
+        override suspend fun today(context:JSONObject)=execute("today",JSONObject().put("scores",context.optJSONObject("scores")?:JSONObject()).put("topics",context.optJSONObject("topics")?:JSONObject()))
+        override suspend fun next(context:JSONObject,id:String,day:String)=execute("today",JSONObject().put("scores",context.optJSONObject("scores")?:JSONObject()).put("topics",context.optJSONObject("topics")?:JSONObject()).put("from",JSONObject().put("id",id).put("dayKey",day)))
+        override suspend fun saved(id:String,day:String,collection:String):JSONObject{DailyAdviceProtocol.savedPath(id,day,collection);return execute("saved",JSONObject().put("id",id).put("dayKey",day).put("collection",collection))}
+        override suspend fun share(id:String,day:String,collection:String)=saved(id,day,collection).also{require(DailyAdviceProtocol.parse(it).advice!=null)}
+        override suspend fun pending()=ru.genesis.calendar.security.NativePrivateProducts.advice(CloudAccountSnapshot.scopeFor(uid)).hasPending()
+        override suspend fun resume(){resumePrivateAdvice(uid)}
+        override suspend fun record(id:String,day:String,dismiss:Boolean){DailyAdviceProtocol.record(id,day);execute("record",JSONObject().put("id",id).put("dayKey",day).put("dismiss",dismiss));if(dismiss)ru.genesis.calendar.reminders.AdviceReminderScheduler.cancelDay(app,CloudAccountSnapshot.scopeFor(uid),day)}
+    }
+    internal suspend fun resumePrivateAdvice(uid:String):JSONObject{checkAdviceAccount(uid);val accountScope=CloudAccountSnapshot.scopeFor(uid);val products=ru.genesis.calendar.security.NativePrivateProducts
+        return products.advice(accountScope).execute("resume",JSONObject(),mutableState.value.accountSettings?.language?:"en",products.preferences(accountScope).snapshot().getJSONObject("advicePreferences"))}
+
+    internal fun dailyAdviceTransport(uid: String): DailyAdviceGateway = if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid)))privateAdviceTransport(uid)else object : DailyAdviceGateway {
         override suspend fun today(context: JSONObject): JSONObject = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
             checkAdviceAccount(uid)
             val generation = client.currentGeneration()
@@ -990,7 +1018,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         return verification
     }
 
-    internal suspend fun saveAdvicePreferences(uid: String, patch: JSONObject): AdvicePreferences = withLegacyAdviceScope(CloudAccountSnapshot.scopeFor(uid)) {
+    internal suspend fun saveAdvicePreferences(uid: String, patch: JSONObject): AdvicePreferences = withAdvicePreferenceScope(uid) {
         val savedPreferences=advicePreferencesMutex.withLock {
         checkAdviceAccount(uid)
         require(patch.length() > 0 && patch.keys().asSequence().all { it in setOf("enabled", "smart", "categories", "aphrodisiaAdult", "collections", "philosophersPerDay", "notifications", "psychopompia") })
@@ -2424,6 +2452,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     internal suspend fun loadStoicheionDraws(): JSONObject {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return withContext(Dispatchers.IO){ru.genesis.calendar.security.NativePrivateProducts.stoicheion(app.workspaceScope).loadDraws().also{ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
         val generation = client.currentGeneration()
         return try { stoicheionReadWithRetry { withContext(Dispatchers.IO) { client.stoicheionDraws(generation) } } }
         catch (error: CancellationException) { throw error }
@@ -2434,6 +2463,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     internal suspend fun loadStoicheionTimeline(): JSONObject {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return withContext(Dispatchers.IO){ru.genesis.calendar.security.NativePrivateProducts.stoicheion(app.workspaceScope).loadTimeline().also{ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
         val generation = client.currentGeneration()
         return try { stoicheionReadWithRetry { withContext(Dispatchers.IO) { client.stoicheionTimeline(generation) } } }
         catch (error: CancellationException) { throw error }
@@ -2441,6 +2471,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     internal suspend fun changeStoicheionTimeline(position: Int, action: String, revision: Long): JSONObject {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return withContext(Dispatchers.IO){ru.genesis.calendar.security.NativePrivateProducts.stoicheion(app.workspaceScope).timelineCard(position,action,revision).also{ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
         val generation = client.currentGeneration()
         return try { withContext(Dispatchers.IO) { client.changeStoicheionTimeline(generation, position, action, revision) } }
         catch (error: CancellationException) { throw error }
@@ -2448,17 +2479,21 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
 
     internal suspend fun saveStoicheionDraw(kind: String, seed: Long): JSONObject {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return withContext(Dispatchers.IO){ru.genesis.calendar.security.NativePrivateProducts.stoicheion(app.workspaceScope).saveDraw(kind,seed).also{ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
         val generation = client.currentGeneration()
         return try { withContext(Dispatchers.IO) { client.saveStoicheionDraw(generation, kind, seed) } }
         catch (error: CancellationException) { throw error }
         catch (error: AuthFailure) { throw IllegalStateException(stoicheionFailureMessage(error.kind)) }
     }
     internal suspend fun changeStoicheionSpreadCard(position: Int, revision: Long, seed: Long, dayKey: String): JSONObject {
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return withContext(Dispatchers.IO){ru.genesis.calendar.security.NativePrivateProducts.stoicheion(app.workspaceScope).spreadCard(position,revision,seed,dayKey).also{ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
         val generation = client.currentGeneration()
         return try { withContext(Dispatchers.IO) { client.changeStoicheionSpreadCard(generation, position, revision, seed, dayKey) } }
         catch (error: CancellationException) { throw error }
         catch (error: AuthFailure) { throw IllegalStateException(stoicheionFailureMessage(error.kind)) }
     }
+
+    internal suspend fun resumePrivateStoicheion(kind:String):JSONObject{val scope=app.workspaceScope;return withContext(Dispatchers.IO){ru.genesis.calendar.security.NativePrivateProducts.stoicheion(scope).resume(kind).also{ru.genesis.calendar.security.NativePrivateProducts.changed(scope)}}}
 
     private fun stoicheionFailureMessage(kind: AuthFailure.Kind) = when (kind) {
         AuthFailure.Kind.UNAUTHORIZED -> "Сессия аккаунта завершилась. Повторите вход и выбор карты."

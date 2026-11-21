@@ -1,0 +1,16 @@
+{
+ "ru":{"message":"Операция сохранена. Повторите отправку, чтобы получить подтверждение результата.","retry":"Повторить сохранённую операцию","error":"Подтверждение не получено. Сохранённая операция остаётся доступной."},
+ "en":{"message":"The operation is saved. Send it again to confirm the result.","retry":"Retry saved operation","error":"Confirmation was not received. The saved operation is still available."},
+ "el":{"message":"Η ενέργεια αποθηκεύτηκε. Στείλτε την ξανά για να επιβεβαιώσετε το αποτέλεσμα.","retry":"Επανάληψη αποθηκευμένης ενέργειας","error":"Δεν ελήφθη επιβεβαίωση. Η αποθηκευμένη ενέργεια παραμένει διαθέσιμη."},
+ "de":{"message":"Der Vorgang ist gespeichert. Senden Sie ihn erneut, um das Ergebnis zu bestätigen.","retry":"Gespeicherten Vorgang erneut senden","error":"Keine Bestätigung erhalten. Der gespeicherte Vorgang ist weiterhin verfügbar."},
+ "fr":{"message":"L’opération est enregistrée. Renvoyez-la pour confirmer le résultat.","retry":"Réessayer l’opération enregistrée","error":"La confirmation n’a pas été reçue. L’opération enregistrée reste disponible."},
+ "es":{"message":"La operación está guardada. Vuelva a enviarla para confirmar el resultado.","retry":"Reintentar la operación guardada","error":"No se recibió confirmación. La operación guardada sigue disponible."},
+ "it":{"message":"L’operazione è salvata. Inviala di nuovo per confermare il risultato.","retry":"Riprova l’operazione salvata","error":"Conferma non ricevuta. L’operazione salvata è ancora disponibile."},
+ "pt":{"message":"A operação está guardada. Envie-a novamente para confirmar o resultado.","retry":"Repetir a operação guardada","error":"A confirmação não foi recebida. A operação guardada continua disponível."},
+ "pl":{"message":"Operacja została zapisana. Wyślij ją ponownie, aby potwierdzić wynik.","retry":"Ponów zapisaną operację","error":"Nie otrzymano potwierdzenia. Zapisana operacja jest nadal dostępna."},
+ "sr":{"message":"Радња је сачувана. Пошаљите је поново да потврдите резултат.","retry":"Понови сачувану радњу","error":"Потврда није примљена. Сачувана радња је и даље доступна."},
+ "uk":{"message":"Операцію збережено. Надішліть її повторно, щоб підтвердити результат.","retry":"Повторити збережену операцію","error":"Підтвердження не отримано. Збережена операція залишається доступною."},
+ "zh":{"message":"操作已保存。请重新发送以确认结果。","retry":"重试已保存的操作","error":"未收到确认。已保存的操作仍然可用。"},
+ "tr":{"message":"İşlem kaydedildi. Sonucu doğrulamak için yeniden gönderin.","retry":"Kaydedilen işlemi yeniden dene","error":"Onay alınamadı. Kaydedilen işlem hâlâ kullanılabilir."},
+ "ja":{"message":"操作は保存されています。結果を確認するため、もう一度送信してください。","retry":"保存した操作を再試行","error":"確認を受信できませんでした。保存した操作は引き続き利用できます。"}
+}

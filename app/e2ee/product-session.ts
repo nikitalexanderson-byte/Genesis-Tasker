@@ -5,10 +5,12 @@ import {assertTechnical,exactKeys,recoverAuthority,publicDeviceKeys,forwardRoot,
 import {canonicalE2eeValue,signE2eeCommand,type SignedE2eeCommand,type WireValue} from './commands.ts';
 import {verifyDeviceDirectory,type VerifiedDirectory} from './directory.ts';
 import {encodeE2eeBytes,decodeE2eeBytes} from './envelope.ts';
+import {E2eeMembershipProduct,type MembershipTransport} from './membership-product.ts';
 
 export type PrivateScopeSummary={scopeId:string;kind:'personal'|'project'|'space';resourceId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement'};
 export type PrivateAccountStatus={pilotAllowed:boolean;cryptoProtocol:1;scopes:PrivateScopeSummary[]};
 export type PrivateAccountTransport=ScopeTransport&{
+ membership?:MembershipTransport;
  status:()=>Promise<unknown>;
  challenge:(scopeId:string,deviceId:string,keys:Awaited<ReturnType<typeof publicDeviceKeys>>)=>Promise<Record<string,WireValue>>;
 };
@@ -123,6 +125,12 @@ export class WebPrivateAccount{
   if(values.length!==1||values[0].directory.state!=='active')throw new Error('E2EE_MIGRATION_RESUME_REQUIRED');return values[0];}
  shared(scopeId:string,kind:'project'|'space',resourceId:string){this.requireOpen();const value=this.#clients.get(scopeId);
   if(!value||value.directory.kind!==kind||value.directory.resourceId!==resourceId||value.directory.state!=='active')throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');return value;}
+ membership(){this.requireOpen();if(this.mode!=='online'||!this.#transport.membership)throw new Error('E2EE_REFRESH_REQUIRED');
+  return new E2eeMembershipProduct(this.device,this.personal().client,this.#transport.membership,async scopeId=>{
+   this.requireOpen();const value=this.#clients.get(scopeId);if(!value||value.directory.kind==='personal')throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');
+   await value.client.refresh();this.requireOpen();return value.client;
+  },()=>this.requireOpen());
+ }
  async #recoverEnrollment(scopeId:string,secret:Uint8Array,kit:RecoveryKit){
   this.requireOpen();const authority=await recoverAuthority(this.ownerId,secret,kit);this.requireOpen();
   if(kit.authority.signingKey!==this.device.authorityPin.signingKey||kit.authority.receivingKey!==this.device.authorityPin.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');

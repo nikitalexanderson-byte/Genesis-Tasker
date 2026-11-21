@@ -65,6 +65,8 @@ data class AdvicePreferences(val enabled: Boolean = true, val smart: Boolean = t
 }
 
 internal interface DailyAdviceGateway {
+    suspend fun pending():Boolean=false
+    suspend fun resume():Unit=throw UnsupportedOperationException("E2EE_PENDING_SAVE_REQUIRED")
     suspend fun today(context: JSONObject): JSONObject
     suspend fun next(context: JSONObject, id: String, day: String): JSONObject = throw UnsupportedOperationException("ADVICE_ROTATION_UNAVAILABLE")
     suspend fun saved(id: String, day: String, collection: String): JSONObject = throw UnsupportedOperationException("ADVICE_SAVED_UNAVAILABLE")

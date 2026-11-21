@@ -7,6 +7,7 @@ import java.security.Signature
 import java.util.UUID
 
 internal interface E2eeAccountTransport:E2eeScopeTransport{
+    val membership:E2eeMembershipTransport? get()=null
     fun status():JSONObject
     fun challenge(scopeId:String,deviceId:String,keys:JSONObject):JSONObject
 }
@@ -27,6 +28,10 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     }
     @Synchronized fun sharedScope(scopeId:String,kind:String,resourceId:String):SharedScope{requireOpen();val value=shared[scopeId]?:error("E2EE_SHARED_SCOPE_UNLOCK_REQUIRED")
         check(value.directory.kind==kind&&value.directory.resourceId==resourceId){"E2EE_SCOPE_BINDING_MISMATCH"};return value}
+    @Synchronized fun membership():E2eeMembershipProduct{
+        requireOpen();check(!offline){"E2EE_REFRESH_REQUIRED"};val channel=transport.membership?:error("E2EE_MEMBERSHIP_TRANSPORT_REQUIRED")
+        return E2eeMembershipProduct(device,client,channel,{scopeId->requireOpen();val scope=shared[scopeId]?:error("E2EE_SHARED_SCOPE_UNLOCK_REQUIRED");scope.client.refresh();requireOpen();scope.client},::requireOpen)
+    }
     override fun toString()="E2eeProductAccount([redacted])"
     companion object{
         fun open(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit,secret:ByteArray?=null,kit:JSONObject?=null):E2eeProductAccount{

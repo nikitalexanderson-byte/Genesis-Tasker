@@ -5,12 +5,13 @@ import ru.genesis.calendar.security.E2eeScopeTransport
 
 /** Exact route allowlist, shared by the real authenticated channel and tests. */
 internal object E2eeTransportProtocol {
-    private val posts = setOf("/bootstrap", "/command", "/read", "/challenge", "/directory", "/source")
+    private val posts = setOf("/bootstrap", "/command", "/read", "/challenge", "/directory", "/source", "/membership-state", "/membership-preview", "/membership")
     fun allowedRoute(method: String, path: String): Boolean =
         method == "GET" && path == "/e2ee/v1/status" || method == "POST" && posts.any { path == "/e2ee/v1$it" }
     fun responseLimit(path: String): Int = when (path) {
         "/e2ee/v1/directory" -> 32 * 1024 * 1024
         "/e2ee/v1/read" -> 16 * 1024 * 1024
+        "/e2ee/v1/membership-preview" -> 4 * 1024 * 1024
         else -> 256 * 1024
     }
     fun errorCode(status: Int, payload: JSONObject): String? = payload.optString("error").takeIf {

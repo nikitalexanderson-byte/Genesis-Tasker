@@ -4,6 +4,7 @@ import {guidedCopy} from './aurora/gno-guided';
 import "./stoicheion-card-surfaces.css";
 import { currentFeatureAccess,featureAllowed } from './feature-access';
 import {FeatureAccessUI} from './FeatureAccessUI';
+import {PrivatePendingOperations} from './PrivatePendingOperations';
 import { DialogCloseButton } from "./DialogCloseButton";
 
 import {
@@ -557,6 +558,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
   const [savingKind, setSavingKind] = useState<MotionMode | null>(null);
   const [drawError, setDrawError] = useState("");
   const [drawErrorKind, setDrawErrorKind] = useState<MotionMode>("daily");
+  const [privateOperationRevision,setPrivateOperationRevision]=useState(0);
   const [clock, setClock] = useState(() => Date.now());
   const today = useMemo(() => new Date(), []);
   const dayKey = useMemo(() => localDayKey(today), [today]);
@@ -606,7 +608,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
     };
     void load();
     return () => { active = false; };
-  }, [dayKey, divinationDisabled, userId, timelineAllowed, acceptTimeline]);
+  }, [dayKey, divinationDisabled, userId, timelineAllowed, acceptTimeline,privateOperationRevision]);
 
   useEffect(() => {
     if (![dailyDraw, spreadDraw].some((draw) => draw?.attempts === 1 && draw.localDeadline > Date.now())
@@ -861,6 +863,7 @@ export function StoicheionView({ divinationDisabled = false, onOpenTheokyklosSec
 
 
       <div className="stoicheion-inner">
+        {userId?<PrivatePendingOperations ownerId={userId} language={language} feature="stoicheion" onResolved={()=>setPrivateOperationRevision(value=>value+1)}/>:null}
         {divinationDisabled ? (
           <section className="stoicheion-divination-disabled" aria-labelledby="stoicheion-divination-disabled-title">
             <span aria-hidden="true">⊘</span>

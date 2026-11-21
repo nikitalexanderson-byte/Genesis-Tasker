@@ -14,6 +14,9 @@ import ru.genesis.calendar.data.DocumentRecord
 import ru.genesis.calendar.data.LocalCipher
 import ru.genesis.calendar.data.NativeLegacyOperationPermit
 import ru.genesis.calendar.security.UpdateGate
+import ru.genesis.calendar.security.NativePrivateProducts
+import ru.genesis.calendar.security.E2eeDeviceDocument
+import ru.genesis.calendar.security.E2eeProductJson
 import java.security.MessageDigest
 import java.time.LocalDate
 
@@ -31,8 +34,9 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
     private val dao=app.database.dao()
     private val mutex get()=locks.getOrPut(scope){Mutex()}
     private fun check(){UpdateGate.requireOpen();check(app.workspaceScope==scope&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
-    private suspend fun <T> operation(action:suspend ()->T):T=NativeLegacyOperationPermit.run(app.database,scope,::check){
-        mutex.withLock{withContext(Dispatchers.IO){check();verifyExistingKey();action().also{check()}}}
+    private suspend fun <T> operation(action:suspend ()->T):T{
+        if(NativePrivateProducts.isProtected(scope))return mutex.withLock{withContext(Dispatchers.IO){check();val account=NativePrivateProducts.account(scope,user);account.requireOpen();action().also{check();account.requireOpen()}}}
+        return NativeLegacyOperationPermit.run(app.database,scope,::check){mutex.withLock{withContext(Dispatchers.IO){check();verifyExistingKey();action().also{check()}}}}
     }
     /** New preferences/day/view markers cannot replace a missing key while any
      * existing cache or older owner-bound advice snapshot needs that same key. */
@@ -51,13 +55,18 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
     private fun entry(value:JSONObject):JSONObject=try{
         LocalDate.parse(value.getString("deviceDay"));validate(value.getJSONObject("response"));value
     }catch(_:Exception){throw IllegalStateException("ADVICE_CACHE_CONTENT_INVALID")}
+    private fun privateDocument(id:String="advice-ui-cache-live-v1")=E2eeDeviceDocument(NativePrivateProducts.account(scope,user).device,id,{value->
+        check(value.getInt("protocol")==2&&value.getString("ownerId")==user){"E2EE_SCOPE_BINDING_MISMATCH"};value},{check();NativePrivateProducts.account(scope,user).requireOpen()})
     private suspend fun load():JSONObject {
-        check();val row=dao.document(scope,KIND)
-        if(row==null){
-            check(dao.documentKinds(scope).none{it.startsWith(HISTORY)}){"ADVICE_CACHE_PRIMARY_MISSING"}
-            return JSONObject().put("protocol",2).put("ownerId",user).put("profiles",JSONObject())
+        check();val raw=if(NativePrivateProducts.isProtected(scope)){
+            val saved=privateDocument().load()
+            if(saved==null)return JSONObject().put("protocol",2).put("ownerId",user).put("profiles",JSONObject())
+            saved.value.toString()
+        }else{
+            val row=dao.document(scope,KIND)
+            if(row==null){check(dao.documentKinds(scope).none{it.startsWith(HISTORY)}){"ADVICE_CACHE_PRIMARY_MISSING"};return JSONObject().put("protocol",2).put("ownerId",user).put("profiles",JSONObject())}
+            open(row)
         }
-        val raw=open(row)
         return try{
             check(raw.toByteArray(Charsets.UTF_8).size<=4*1024*1024)
             val value=JSONObject(raw);check(value.keys().asSequence().toSet()==setOf("protocol","ownerId","profiles")&&value.getInt("protocol")==2&&value.getString("ownerId")==user)
@@ -90,6 +99,13 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
     }
     private suspend fun saveBlob(value:JSONObject){
         check();val raw=value.toString();check(raw.toByteArray(Charsets.UTF_8).size<=4*1024*1024){"ADVICE_CACHE_CONTENT_LIMIT"}
+        if(NativePrivateProducts.isProtected(scope)){
+            val document=privateDocument();val old=document.load()
+            if(old!=null){if(E2eeProductJson.same(old.value,value))return
+                val archive=privateDocument("advice-ui-cache-copy:"+hash(old.value.toString()));val retained=archive.load()
+                if(retained==null)archive.save(old.value,null)else check(E2eeProductJson.same(retained.value,old.value)){"E2EE_CORRUPT_OUTBOX"}}
+            document.save(value,old?.serial);return
+        }
         val encrypted=cipher.encrypt(raw,"$scope/$KIND");check()
         check(cipher.decrypt(encrypted,"$scope/$KIND")==raw){"ADVICE_CACHE_CONTENT_INVALID"}
         app.database.withTransaction{
@@ -106,6 +122,7 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
     }
     private suspend fun cached(blob:JSONObject):JSONObject? {
         val saved=profile(blob)?.optJSONObject("current");if(saved!=null)return entry(saved)
+        if(NativePrivateProducts.isProtected(scope))return null
         // This exact hash is reproducible from the supplied owner and the same
         // historical serialization. Never enumerate another owner's v1 values.
         val raw=legacy.getString(key,null)?:return null
@@ -119,7 +136,7 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
     }
     suspend fun today(day:String,fetch:suspend ()->JSONObject):JSONObject=operation{
         LocalDate.parse(day);val blob=load();val current=cached(blob)
-        if(current?.getString("deviceDay")==day)return@operation current.getJSONObject("response")
+        if(current?.getString("deviceDay")==day&&!NativePrivateProducts.isProtected(scope))return@operation current.getJSONObject("response")
         val value=fetch();check();validate(value);saveCurrent(blob,day,value);value
     }
     suspend fun save(day:String,value:JSONObject)=operation{val blob=load();cached(blob);saveCurrent(blob,day,value)}
@@ -138,7 +155,7 @@ internal class DailyAdviceCache(context:Context,private val user:String,private 
         val blob=load();val marker=hash("$id\u0000$day");val saved=profile(blob)?.getJSONObject("seen")?.optJSONObject(marker)
         if(saved!=null){check(saved.getString("day")==day&&saved.getString("id")==id){"ADVICE_CACHE_CONTENT_INVALID"};return@operation}
         check((profile(blob)?.getJSONObject("seen")?.length()?:0)<10000){"ADVICE_CACHE_CONTENT_LIMIT"}
-        if(legacy.getString("$key:seen:$id",null)!=day){record();check()}
+        if(NativePrivateProducts.isProtected(scope)||legacy.getString("$key:seen:$id",null)!=day){record();check()}
         requireNotNull(profile(blob,true)).getJSONObject("seen").put(marker,JSONObject().put("day",day).put("id",id));saveBlob(blob)
     }
     override fun toString()="DailyAdviceCache([redacted])"

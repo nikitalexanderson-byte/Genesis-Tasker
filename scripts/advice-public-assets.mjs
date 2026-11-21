@@ -5,6 +5,28 @@ import {createHash} from 'node:crypto';
 export const advicePublicLanguages=Object.freeze(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']);
 const roots={daily:'server/content/daily-advice',philosophers:'server/content/philosopher-aphorisms-locales'};
 
+/** Public editorial metadata for LOCAL selection. This input contains no
+ * account, profile, selected card, metric, score or private history. */
+export function collectAdviceSelectionMetadata(root){
+ const read=path=>JSON.parse(readFileSync(join(root,path),'utf8'));
+ const artwork=read('server/content/philosopher-aphorisms-artwork.json').images;
+ const policy=read('server/resources/advice-age-access-policy.json');const items=[],seen=new Set();
+ for(const [collection,path]of Object.entries({aurora:'server/content/daily-advice.json',philosophers:'server/content/philosopher-aphorisms.json'})){
+  const source=read(path);if(source.version!==1||!Array.isArray(source.items))throw new Error('ADVICE_PUBLIC_CONTENT_INVALID');
+  for(const raw of source.items){if(!/^advice-[a-f0-9]{24}$/.test(raw.id)||seen.has(raw.id))throw new Error('ADVICE_PUBLIC_CONTENT_INVALID');seen.add(raw.id);
+   if((raw.status??'published')==='draft'||collection==='philosophers'&&!artwork[raw.id])continue;
+   if(raw.categories.includes('psychopompia')&&(!policy.corpusEnabled||raw.status!=='published'||raw.review?.status!=='cleared'))continue;
+   const entry={...raw,collection,...(raw.categories.includes('psychopompia')?{psychopompiaPublished:raw.status==='published'}:{}),...(collection==='philosophers'?{image:artwork[raw.id],translationVersion:raw.translationVersion??source.translationVersion}:{} )};
+   const allowed=['id','collection','categories','title','body','language','sources','image','aphrodisiaTheme','requiresAdult','subcategories','containsAlcohol','review','editorialContext','psychopompiaPublished','contentVersion','translationVersion','topics','schedule','status','timeOfDay','priority'];
+   items.push(Object.fromEntries(allowed.filter(key=>entry[key]!==undefined).map(key=>[key,entry[key]])));
+  }
+ }
+ const source=Buffer.from(JSON.stringify({protocol:1,policyVersion:policy.policyVersion,items}));
+ if(source.length>8*1024*1024)throw new Error('ADVICE_PUBLIC_SIZE_INVALID');
+ const sha256=createHash('sha256').update(source).digest('hex'),path=`advice-catalogues/v1/metadata.${sha256}.json`;
+ return{source,pin:{protocol:1,sha256,bytes:source.length,path}};
+}
+
 export function verifyAdvicePublicPins(actual,pins){
  const names=['bytes','kind','language','path','sha256','version'];
  const rows=value=>{
@@ -49,6 +71,9 @@ export function collectAdvicePublicAssets(root){
  const manifest={protocol:1,catalogues};
  verifyAdvicePublicPins(manifest,JSON.parse(readFileSync(join(root,'contracts/public-advice-editions-v1.json'),'utf8')));
  assets.push({fileName:'advice-catalogues/v1/manifest.json',source:JSON.stringify(manifest)});
+ const metadata=collectAdviceSelectionMetadata(root),pin=JSON.parse(readFileSync(join(root,'contracts/public-advice-metadata-v1.json'),'utf8'));
+ if(JSON.stringify(pin)!==JSON.stringify(metadata.pin))throw new Error('ADVICE_PUBLIC_METADATA_CHANGED_UPDATE_PIN');
+ assets.push({fileName:metadata.pin.path,source:metadata.source});
  return{assets,manifest};
 }
 

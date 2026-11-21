@@ -17,6 +17,7 @@ import { AdviceShareButton } from './AdviceShareButton';
 import { translateText } from './i18n';
 import {adviceTargetFromUrl,type AdviceTarget} from './advice-notifications';
 import notificationLabels from './advice-notification-copy.json';
+import {PrivatePendingOperations} from './PrivatePendingOperations';
 
 function adviceLinkTarget():AdviceTarget|false|null {
   if(typeof window==='undefined')return null;
@@ -24,7 +25,11 @@ function adviceLinkTarget():AdviceTarget|false|null {
   return ['advice','adviceDay','adviceCollection'].some(key=>url.searchParams.has(key))?adviceTargetFromUrl(url)??false:null;
 }
 
-export function TodayAdvice({ user, habits, tasks, day, ready, onOpenDiary }: { user: GenesisUser; habits: readonly Habit[]; tasks: readonly AdvicePersonalTask[]; day: string; ready: boolean; onOpenDiary?: () => void }) {
+export function TodayAdvice(props:Parameters<typeof TodayAdviceBody>[0]){const [revision,setRevision]=useState(0);return <>
+  <PrivatePendingOperations ownerId={props.user.uid} language={props.user.language} feature="advice" onResolved={()=>setRevision(value=>value+1)}/>
+  <TodayAdviceBody {...props} operationRevision={revision}/>
+</>;}
+function TodayAdviceBody({ user, habits, tasks, day, ready, onOpenDiary,operationRevision=0 }: { user: GenesisUser; habits: readonly Habit[]; tasks: readonly AdvicePersonalTask[]; day: string; ready: boolean; onOpenDiary?: () => void;operationRevision?:number }) {
   const diary = useDiary(); const diaryText = diaryLabels[user.language];
   const [reactionError, setReactionError] = useState(false);
   const preferences = advicePreferences(user.advicePreferences);
@@ -100,7 +105,7 @@ export function TodayAdvice({ user, habits, tasks, day, ready, onOpenDiary }: { 
       }
     }).catch(() => {if(openedAdvice&&!controller.signal.aborted&&serial===requestSerial.current)setFailedOpen(requestKey); /* Never fall back to a draw when a saved notification target cannot be opened. */ });
     return () => controller.abort();
-  }, [ready, preferences.enabled, context, requestKey, retry, busy,openedAdvice]);
+  }, [ready, preferences.enabled, context, requestKey, retry, busy,openedAdvice,operationRevision]);
 
   useEffect(()=>{
     if(shown&&openedAdvice&&container.current){container.current.scrollIntoView({block:'start',behavior:'auto'});container.current.focus({preventScroll:true});}

@@ -191,7 +191,7 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
         $device = $recovery ? false : genesisE2eeRow($db, 'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?', [$c['scopeId'],$c['deviceId']]);
         if (!$recovery && (!$device || $device['revoked'] || ($device['user_id'] !== $actor && $c['action'] !== 'enroll'))) throw new DomainException('E2EE_REVOKED_DEVICE');
         if ($recovery && $actor !== $scope['owner_id'] && $c['action']!=='enroll') throw new GenesisResourceLimitException(403,'E2EE_SCOPE_FORBIDDEN');
-        if(!in_array($c['action'],['put','cancel-put','product-commit','product-approve','stoicheion-grant'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
+        if(!in_array($c['action'],['put','cancel-put','product-commit','product-approve','stoicheion-grant','advice-issue'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
         genesisE2eeVerifyCommand($packet, $recovery ? $scope['recovery_signing_key'] : $device['signing_key']);
         $fingerprint = genesisE2eeCommandHash($c);
         $receipt = genesisE2eeRow($db, 'SELECT * FROM e2ee_receipts WHERE scope_id=? AND operation_id=?', [$c['scopeId'],$c['operationId']]);
@@ -301,6 +301,12 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
                     if(!in_array($device['role'],$comment?['owner','writer','commenter']:['owner','writer'],true))throw new GenesisResourceLimitException(403,'E2EE_WRITE_FORBIDDEN');}
             }
             require_once __DIR__.'/e2ee-product.php';$result=genesisE2eeProductService($db,$actor,$scope,$c,$packet);
+        } elseif ($c['action'] === 'advice-issue') {
+            if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
+            require_once __DIR__.'/e2ee-advice-product.php';$result=genesisE2eeAdviceIssue($db,$actor,$scope,$p);
+        } elseif ($c['action'] === 'stoicheion-grant') {
+            if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
+            require_once __DIR__.'/e2ee-stoicheion-product.php';$result=genesisE2eeStoicheionGrant($db,$actor,$scope,$p);
         } elseif ($c['action'] === 'aurora-result') {
             if($recovery)throw new DomainException('E2EE_DEVICE_REQUIRED');
             require_once __DIR__.'/e2ee-aurora.php';
@@ -311,6 +317,8 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
             $expected=genesisE2eeInteger($p['expectedObjectRevision']); $envelope=genesisE2eeValidateEnvelope($p['envelope']); $ctx=$envelope['context'];
             if($ctx['domain']==='aurora'&&str_starts_with($ctx['objectId'],'aurora-result-live:')&&$expected!==0)throw new DomainException('AURORA_RESULT_IMMUTABLE');
             if(str_starts_with($ctx['objectId'],'product-version:')&&$expected!==0)throw new DomainException('E2EE_PRODUCT_VERSION_IMMUTABLE');
+            if($ctx['domain']==='stoicheion'&&str_starts_with($ctx['objectId'],'stoicheion-live:')&&$expected!==0)throw new DomainException('E2EE_STOICHEION_IMMUTABLE');
+            if($ctx['domain']==='workspace'&&str_starts_with($ctx['objectId'],'advice-live:')&&$expected!==0)throw new DomainException('E2EE_ADVICE_IMMUTABLE');
             $comment=$ctx['domain']==='shared-comment';
             if($comment && $expected!==0)throw new GenesisResourceLimitException(403,'E2EE_COMMENT_IMMUTABLE');
             genesisE2eeAccess($actor,$scope['kind'],$scope['resource_id'],$comment?'comment':'write');
@@ -492,11 +500,30 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','product-index','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','stoicheion-state','advice-policy','product-index','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
     genesisE2eeVerifyCommand($packet,$device['signing_key']);
+    if($c['action']==='advice-policy'){
+        genesisE2eeExactFields($c['payload'],[]);require_once __DIR__.'/e2ee-advice-product.php';return genesisE2eeAdvicePolicy(genesisDb(),$actor,$scope);
+    }
+    if($c['action']==='stoicheion-state'){
+        genesisE2eeExactFields($c['payload'],[]);require_once __DIR__.'/e2ee-stoicheion-product.php';return genesisE2eeStoicheionState(genesisDb(),$actor,$scope);
+    }
+    if($c['action']==='active-heads') {
+        // A bounded, checkpoint-bound read for an owner-reviewed rotation. The
+        // hash is a CAS binding, not a server assertion of cryptographic trust.
+        genesisE2eeRequireDirectoryAuthority($scope,$device,false);
+        genesisE2eeExactFields($c['payload'],['offset','manifestHash']);
+        $offset=genesisE2eeInteger($c['payload']['offset']);
+        $objects=genesisE2eeObjectHeads(genesisDb(),$scope);$manifest=genesisE2eeManifest(genesisDb(),$scope);
+        if($offset>count($objects))genesisE2eeInvalid();
+        if($c['payload']['manifestHash']!==null){genesisE2eeDecode($c['payload']['manifestHash'],32);
+            if($c['payload']['manifestHash']!==$manifest['manifestHash'])throw new DomainException('E2EE_MANIFEST_MISMATCH');}
+        elseif($offset!==0)genesisE2eeInvalid();
+        return $manifest+['objects'=>array_slice($objects,$offset,50),'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
+    }
     if($c['action']==='product-index'){
         if(!in_array($scope['kind'],['project','space'],true)||$scope['state']!=='active')throw new DomainException('E2EE_NOT_ACTIVE');
         require_once __DIR__.'/e2ee-product.php';return genesisE2eeProductIndex(genesisDb(),$scope,$c['payload']);

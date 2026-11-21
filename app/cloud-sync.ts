@@ -2262,15 +2262,18 @@ export async function updateAccountPreferences(preferences: Partial<{
   }
 }
 
-export function loadDailyAdvice(scores: import("./daily-advice").AdviceScores, signal?: AbortSignal, topics?: import("./daily-advice").AdviceTopicScores,
+export async function loadDailyAdvice(scores: import("./daily-advice").AdviceScores, signal?: AbortSignal, topics?: import("./daily-advice").AdviceTopicScores,
   from?: Pick<import("./daily-advice").DailyAdvice, "id" | "dayKey">) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId)){signal?.throwIfAborted();return(await privateAdviceProduct(confirmedTransportOwnerId)).today(scores,topics,from);}
   return api<import("./daily-advice").DailyAdviceResponse>(from ? "/advice/next" : "/advice/today", {
     method: "POST", body: JSON.stringify({ scores, topics, maxDailyCards: 9, ...(from ? { fromId: from.id, dayKey: from.dayKey } : {}) }), signal });
 }
-export function recordDailyAdvice(advice: Pick<import("./daily-advice").DailyAdvice, "id" | "dayKey">, dismiss = false) {
+export async function recordDailyAdvice(advice: Pick<import("./daily-advice").DailyAdvice, "id" | "dayKey">, dismiss = false) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateAdviceProduct(confirmedTransportOwnerId)).record(advice.id,advice.dayKey,dismiss);
   return api<{ ok: true }>(dismiss ? "/advice/dismiss" : "/advice/view", { method: "POST", body: JSON.stringify({ id: advice.id, dayKey: advice.dayKey }) });
 }
-export function loadSavedAdvice(target:AdviceTarget,signal?:AbortSignal) {
+export async function loadSavedAdvice(target:AdviceTarget,signal?:AbortSignal) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId)){signal?.throwIfAborted();return(await privateAdviceProduct(confirmedTransportOwnerId)).saved(target.id,target.dayKey,target.collection);}
   return api<import('./daily-advice').DailyAdviceResponse>('/advice/saved?'+new URLSearchParams({...target,maxDailyCards:'9'}),{signal});
 }
 export type AdviceNotificationStatus={capabilities:{available:boolean;publicKey?:string;blocker?:string};devices:{id:string}[]};
@@ -3566,10 +3569,12 @@ export async function deleteAdminUser(userId: string, blacklist: boolean) {
 }
 
 export async function loadStoicheionDraws() {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).loadDraws();
   return api<{ dayKey: string; draws: Partial<Record<StoicheionDrawKind, StoicheionDrawRecord>>; testingAccess?:boolean }>("/stoicheion/draws");
 }
 
 export async function saveStoicheionDraw(kind: StoicheionDrawKind, seed: number) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).saveDraw(kind,seed);
   return api<{ draw: StoicheionDrawRecord }>("/stoicheion/draws", {
     method: "POST",
     body: JSON.stringify({ kind, seed: seed >>> 0 }),
@@ -3650,6 +3655,20 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
 /** Shares authenticated transport/CSRF/cancellation only. No root or private key
  * is accepted by this boundary; E2EE clients send signed commands/ciphertext. */
 const privatePersonalProducts=new WeakMap<import('./e2ee/product-session').WebPrivateAccount,import('./e2ee/personal-product').E2eePersonalProduct>();
+const privateStoicheionProducts=new WeakMap<import('./e2ee/product-session').WebPrivateAccount,import('./e2ee/stoicheion-product').E2eeStoicheionProduct>();
+const privateAdviceProducts=new WeakMap<import('./e2ee/product-session').WebPrivateAccount,import('./e2ee/advice-product').E2eeAdviceProduct>();
+async function privateAdviceProduct(ownerId:string){const session=captureAccountSessionGuard(),account=requirePrivateAccount(ownerId);let product=privateAdviceProducts.get(account);
+  if(!product){const [{webAdviceProduct},{publicAdviceCatalogueReader}]=await Promise.all([import('./e2ee/advice-product'),import('./e2ee/advice-catalogue')]);session();account.requireOpen();
+    const base=new URL('.',new URL(API_BASE,window.location.href));if(base.origin!==window.location.origin)throw new Error('E2EE_ORIGIN_MISMATCH');
+    product=webAdviceProduct(account,()=>{session();account.requireOpen();return(privateIdentityCache?.language??'en') as import('./e2ee/advice-catalogue').AdviceCatalogueLanguage;},publicAdviceCatalogueReader(base,()=>{session();account.requireOpen();}));privateAdviceProducts.set(account,product);
+  }return product;
+}
+export async function resumePrivateAdvice(){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');return(await privateAdviceProduct(owner)).resume();}
+export async function hasPendingPrivateAdvice(){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))return false;return(await privateAdviceProduct(owner)).hasPending();}
+async function privateStoicheionProduct(ownerId:string){const current=captureAccountSessionGuard(),account=requirePrivateAccount(ownerId);let product=privateStoicheionProducts.get(account);
+  if(!product){const {E2eeStoicheionProduct}=await import('./e2ee/stoicheion-product');current();account.requireOpen();product=new E2eeStoicheionProduct(account);privateStoicheionProducts.set(account,product);}current();account.requireOpen();return product;}
+export async function resumePrivateStoicheion(kind:StoicheionDrawKind){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');return(await privateStoicheionProduct(owner)).resume(kind);}
+export async function pendingPrivateStoicheion(){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))return[];return(await privateStoicheionProduct(owner)).pending();}
 function observePrivateProduct(ownerId:string,listener:(workspace:GenesisWorkspace)=>void,onError?:(error:Error)=>void){
   let active=true,busy=false;const current=captureAccountSessionGuard();
   const poll=async()=>{if(busy||document.visibilityState!=='visible')return;busy=true;
@@ -3694,7 +3713,8 @@ async function privatePersonalProduct(ownerId:string){
 }
 export function privateAccountHttpTransport():PrivateAccountTransport{
   return{status:()=>e2eeRequest('/status'),directory:scopeId=>e2eeRequest('/directory',{scopeId}),command:packet=>e2eeRequest('/command',packet),
-    read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys})};
+    read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys}),
+    membership:{membershipState:targets=>e2eeRequest('/membership-state',{targets}),membershipPreview:(intentId,changes)=>e2eeRequest('/membership-preview',{intentId,changes}),membershipCommit:batch=>e2eeRequest('/membership',batch)}};
 }
 export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
@@ -3707,7 +3727,7 @@ export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e
   },mode);
   if(typeof window!=='undefined')window.dispatchEvent(new Event(PERSONAL_DOCUMENT_READY_EVENT));
 }
-export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
+export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source'|'/membership-state'|'/membership-preview'|'/membership',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
   try{
     if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
     return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
@@ -3939,14 +3959,17 @@ export async function createPersonalAdviceMigrationSource(userId:string,scopeId:
 }
 
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).spreadCard(draw,position);
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
 }
 
 export async function loadStoicheionTimelineCards() {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).loadTimeline();
   return api<{timeline:StoicheionTimelineRecord|null;serverNow:string}>("/stoicheion/timeline/cards", {cache:"no-store"});
 }
 
 export async function changeStoicheionTimelineCard(position:number, action:"reveal"|"reroll", revision:number) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).timelineCard(position,action,revision);
   return api<{timeline:StoicheionTimelineRecord;serverNow:string}>("/stoicheion/timeline/cards", {
     method:"POST", cache:"no-store", body:JSON.stringify({position,action,revision}),
   });

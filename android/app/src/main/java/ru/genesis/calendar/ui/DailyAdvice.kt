@@ -130,6 +130,7 @@ import kotlin.math.min
             finally { loading = false }
         }
         val cards = response?.history.orEmpty().filter { DailyAdviceProtocol.visible(it, preferences) }
+        PrivatePendingOperations(CloudAccountSnapshot.scopeFor(userId),"advice",language,listOf(failed,changing,attempt,response?.advice?.id)){attempt++}
         if (failed) Row(Modifier.fillMaxWidth().testTag("daily-advice-load-error").semantics { liveRegion = LiveRegionMode.Polite },
             horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
