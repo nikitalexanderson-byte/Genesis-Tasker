@@ -1,15 +1,18 @@
 # GENESIS 3.3.6: brief for independent cryptographic review
 
 Prepared 19 November 2026, updated 20 November. **Draft review material, not an audit result or release
-approval.** No reviewer has been appointed or contacted through this task. The
-owner must arrange a qualified independent human or organization; model review,
-unit tests and dependency scanners do not satisfy this gate.
+approval.** No reviewer has been appointed or contacted through this task.
+Latest owner instruction,21 November: the implementing agent must perform the
+final crypto review itself after finishing code, consolidated acceptance and
+repairs. An external human/organization report is no longer a release/activation
+gate for this version. This brief remains optional reference material; the
+required final internal review is tracked in `security-336-final-review.md`.
 
 21 November: the owner asked the implementing agent to perform the review
 itself. A separate adversarial internal pass, reproducible findings/fixes and
 its exact scope are recorded in `security-336-internal-crypto-review.md`.
-It is not independent of the implementer and does not satisfy the independent
-human-review gate. No reviewer has been selected and nothing has been sent.
+It is not independent of the implementer and does not cover subsequent changes.
+No reviewer has been selected and nothing has been sent.
 The preliminary `faa7d1eb` ZIP predates those fixes and needs a delta review.
 
 ## Candidate and activation boundary

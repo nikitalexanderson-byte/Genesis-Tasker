@@ -1,5 +1,13 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+Latest owner instruction,21 November: final crypto review is performed by this
+implementing agent after completing code, consolidated QA and repairs. The owner
+explicitly removed a separate external report as a release/activation gate.
+Record the result as internal AI review of the exact final commit/artifact;
+never call it independent human assurance. Historical human-review gates below
+are superseded. Full coverage/recovery/upgrade and all technical acceptance stay.
+Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
+
 ## Shared history, exact completion review and real files (candidate, no QA)
 
 After ac386416, added a signed bounded product-history read on PHP/web/native,
@@ -71,7 +79,7 @@ client automation and cross-scope transactions; compose setup/migration/resume
 with all captures; full content-only backup/import/Drive; private reminders and
 background/deep-link behavior; explicit revoked-device replacement with retained
 original custody; remaining Google-copy consent. Only then consolidated QA and
-repairs. The independent human crypto review remains an activation requirement.
+repairs and the final internal crypto review required by the owner's latest decision.
 
 ## Continued shared composition (21 November, uncompiled candidate)
 
