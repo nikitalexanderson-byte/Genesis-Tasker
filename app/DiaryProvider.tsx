@@ -29,7 +29,7 @@ export function DiaryProvider({ userId, ready, children, repositoryOverride }: {
   const current=()=>{if(!repository||activeRepository.current!==repository)throw new Error('DIARY_SESSION_CLOSED');};
   usePersonalMigrationSource(repository&&!usesPrivateProductStorage(userId)?userId:null,'diary',()=>{
     if(!repository)throw new Error('DIARY_UNAVAILABLE');
-    return{...repository.captureMigration(state.records),settled:!busy&&!state.loading&&!state.error};
+    return{...repository.captureMigration(state.records),settled:!busy&&!state.loading};
   },repository);
   useEffect(()=>{const lifetime=++repositoryLifetime.current;++request.current;setBusy(false);setState({records:[],loading:true,error:false,offline:false,syncEnabled:true,pendingUploads:0,dreamSettings:DEFAULT_DREAM_SETTINGS,localHistory:null});
     return()=>{++request.current;queueMicrotask(()=>{if(!repositoryOverride&&(activeRepository.current!==repository||repositoryLifetime.current===lifetime))repository?.dispose();});};},[repository,repositoryOverride]);

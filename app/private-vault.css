@@ -15,4 +15,9 @@
 .private-vault-dialog .workspace-recovery-actions{display:flex;flex-wrap:wrap;}
 .private-vault-dialog .workspace-recovery-actions button{min-height:44px;white-space:normal;}
 .private-vault-dialog :is(input,button):focus-visible{outline:2px solid var(--teal);outline-offset:3px;}
+.private-migration-dialog{grid-template-columns:minmax(0,1fr);}
+.private-migration-dialog :is(p,label,button,small){min-width:0;word-break:normal;overflow-wrap:normal;hyphens:none;}
+.private-migration-dialog>p{margin:0;font-size:16px;line-height:1.6;}
+.private-migration-dialog>button{min-height:44px;white-space:normal;}
 @media(max-width:480px){.private-vault-dialog{padding:12px 0;grid-template-columns:24px minmax(0,1fr);gap:16px 12px;}.private-vault-icon{width:24px;height:24px;}.private-vault-dialog .workspace-recovery-actions{flex-direction:column-reverse;}.private-vault-dialog .workspace-recovery-actions button{width:100%;}}
+@media(max-width:480px){.private-migration-dialog{grid-template-columns:minmax(0,1fr);}}

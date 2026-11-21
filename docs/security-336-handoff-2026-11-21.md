@@ -232,3 +232,23 @@ setup/resume screens, complete native mounted input, streamed cancellation and
 revoked-device replacement still need implementation. The original prompt is
 unchanged. Accepted coverage remains 9/20. Do not read/stage `demo-output/`.
 
+## Separate public release and migration UX continuation
+
+The urgent website-only changes are in `paddle-web-20261122`, PR42, head
+`503267a7f171e1038f82d636037698029803334c`. They must publish first and contain
+no new E2EE/security source. Preserve their accepted public storefront and `/ru/`
+when later integrating main into this security branch. Website CI (including
+its unchanged native debug check) is not acceptance of this security candidate.
+
+The current local UX code adds the shared14-language setup/resume gate and real
+static `web/main.tsx` composition, with owner-bound vault suppression and product
+remount after verified cutover. Native system-credential return uses one-shot,
+owner/view/attempt-bound, memory-only recovery material with an elapsed-time
+validity limit, foreground guards, cancellation and disposal. See the leading
+section of `security-336-implementation-pass.md` for guarantees and limitations.
+
+This increment remains uncompiled and untested. Do not increase9/20 acceptance
+or activate pilot/floors/cutover. Remaining code includes full native captures,
+SAF generation/lifecycle custody, streamed cancellation, revoked-device recovery,
+shared domain composition/authorization and the other pending items above.
+

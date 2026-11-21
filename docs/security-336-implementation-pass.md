@@ -10,6 +10,38 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+The separate urgent public website release is prepared in the
+`paddle-web-20261122` worktree, PR42. Its CI checks the stable public/main source,
+not this uncommitted security candidate. Do not credit those results to3.3.6
+and do not publish this security diff with the public release. Preserve the
+accepted international storefront and `/ru/` when integrating the new main.
+
+The static `web/main.tsx` now mounts the same product boundary, vault gate and
+migration host as the alternative runtime. The explicit `genesis-app-content`
+container allows the migration dialog to fence legacy editors and remount the
+product only after successful cutover. This fixes missing real entrypoint
+composition; it does not activate a pilot or a scope.
+Only a migration for the same owner can suppress the web vault gate. The native
+host remains a separate secure Dialog above the existing locked Surface; the
+locked product tree stays unmounted during cold resume.
+
+Native credential delegation now owns a one-shot in-memory request bound to
+owner, UI instance and attempt, with an elapsed-time admission limit of two
+minutes. It captures an independent recovery-kit copy and32-byte secret before
+launching the system activity; no secret is placed in Intent or saved state.
+ON_STOP clears editor input and active migration material while the explicit
+system-credential request can return once. Expiry, cancellation/disposal and
+owner changes revoke pending bytes. A resumed callback must claim the same
+request and pass the foreground guard; stale callbacks cannot close a newer
+controller. Memory wiping is best effort, not a guarantee about JVM copies or
+execution while the OS suspends a process.
+
+These changes are code candidates only. Consolidated acceptance still needs
+credential cancellation/expiry, callback-before-resume, process death, same-owner
+relogin, background during preparation/run and concurrent UI attempts, plus SAF
+save/read lifecycle and generation attribution. No private-branch tests, builds,
+CI, device actions or security publication were run. Accepted coverage stays9/20.
+
 Added paired initial-scope setup with a durable immutable bootstrap packet,
 independent recovery-authority verification, device self-proof, signed-directory
 readback and preserved cancellation on native directory requests. Added a real

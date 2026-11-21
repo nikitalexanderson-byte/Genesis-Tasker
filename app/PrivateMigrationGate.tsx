@@ -1,0 +1,101 @@
+'use client';
+import {useEffect,useRef,useState,useSyncExternalStore,type FormEvent} from 'react';
+import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,type GenesisUser} from './cloud-sync';
+import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration,closePrivateMigrationUi,type PrivateMigrationUi} from './private-migration-ui';
+import {PRIVATE_VAULT_COPY} from './private-vault-copy';
+import migrationCopy from '../contracts/e2ee/migration-copy-v1.json' with {type:'json'};
+import {isLanguage} from './i18n';
+import {createRecoveryKit,type RecoveryKit} from './e2ee/keys';
+import {decodeE2eeBytes,encodeE2eeBytes} from './e2ee/envelope';
+import {parseLegacyMigrationJson} from './e2ee/legacy-json';
+import {IndexedDbDeviceKeyStorage} from './e2ee/device-vault';
+import {privateAccountRequired} from './e2ee/product-session';
+import {useDialogAccessibility} from './use-dialog-accessibility';
+import type {WebProductMigration} from './e2ee/web-product-migration';
+
+function download(name:string,value:string,type:string){
+ const url=URL.createObjectURL(new Blob([value],{type})),link=document.createElement('a');link.href=url;link.download=name;link.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+export function PrivateMigrationEntry({user}:{user:GenesisUser}){
+ const [available,setAvailable]=useState(false),[resume,setResume]=useState(false);
+ const language=isLanguage(user.language)?user.language:'en',copy=migrationCopy[language];
+ useEffect(()=>{let live=true;void currentPrivateMigrationStatus().then(status=>{
+  if(!live||status.ownerId!==user.uid)return;const pending=status.scopes.some(row=>row.kind==='personal'&&row.resourceId===user.uid&&!['active','retirement'].includes(row.state));
+  setAvailable(!user.privateVault&&(status.pilotAllowed||pending));setResume(pending);
+ }).catch(()=>{if(live)setAvailable(false);});return()=>{live=false;};},[user.uid,user.privateVault]);
+ return available?<section className="account-preferences" data-no-translate><h3>{copy.entry}</h3><p>{copy.intro}</p><button type="button" onClick={()=>showPrivateMigration(user.uid,language,resume?'resume':'setup')}>{resume?copy.resume:copy.title}</button></section>:null;
+}
+export function PrivateMigrationGate(){
+ const state=useSyncExternalStore(subscribePrivateMigrationUi,privateMigrationUi,()=>null);
+ return state?<MigrationForm key={state.id} state={state}/>:null;
+}
+function MigrationForm({state}:{state:PrivateMigrationUi}){
+ const language=isLanguage(state.language)?state.language:'en',copy=migrationCopy[language],vaultCopy=PRIVATE_VAULT_COPY[language];
+ const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'>(state.reason==='resume'?'confirm':'loading');
+ const [generated,setGenerated]=useState<{secret:string;kit:RecoveryKit}|null>(null),[savedFile,setSavedFile]=useState(false),[savedSecret,setSavedSecret]=useState(false);
+ const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[fileBusy,setFileBusy]=useState(false),[busy,setBusy]=useState(false);
+ const [error,setError]=useState(''),[progress,setProgress]=useState<'snapshot'|'sources'|'reconciliation'|'uploading'|'active'>('snapshot');
+ const controller=useRef<WebProductMigration|null>(null),alive=useRef(true),started=useRef(false),fileRequest=useRef(0),ownerId=state.ownerId;
+ const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{});
+ const current=()=>{if(!alive.current||privateMigrationUi()?.id!==state.id)throw new Error('E2EE_ACCOUNT_CHANGED');};
+ const frozen=()=>{current();const content=document.getElementById('genesis-app-content');if(!content?.inert||!document.contains(dialogRef.current)||document.visibilityState!=='visible')throw new Error('E2EE_EDITOR_FENCE_REQUIRED');};
+ useEffect(()=>{
+  alive.current=true;const content=document.getElementById('genesis-app-content'),inert=content?.inert,hidden=content?.getAttribute('aria-hidden'),overflow=document.body.style.overflow;
+  if(content){content.inert=true;content.setAttribute('aria-hidden','true');}document.body.style.overflow='hidden';
+  const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setPhase(started.current?'confirm':'intro');setError(copy.error);};
+  document.addEventListener('visibilitychange',clearSecrets);
+  return()=>{alive.current=false;fileRequest.current++;controller.current?.close();controller.current=null;document.removeEventListener('visibilitychange',clearSecrets);
+   if(content){content.inert=inert??false;if(hidden===null)content.removeAttribute('aria-hidden');else if(hidden!==undefined)content.setAttribute('aria-hidden',hidden);}document.body.style.overflow=overflow;};
+ },[copy.error]);
+ useEffect(()=>{let live=true;if(state.reason==='setup')void new IndexedDbDeviceKeyStorage().get(ownerId).then(record=>{if(live)setPhase(record?'confirm':'intro');}).catch(()=>{if(live){setError(copy.error);setPhase('confirm');}});return()=>{live=false;};},[ownerId,state.reason,copy.error]);
+ const failure=(reason:unknown)=>{
+  const code=reason instanceof Error?reason.message:'';
+  return code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
+ };
+ const submit=async(event:FormEvent)=>{
+  event.preventDefault();if(busy||fileBusy||!kit)return;setBusy(true);setError('');started.current=true;let held:Uint8Array|undefined;
+  try{
+   frozen();held=decodeE2eeBytes(secret.trim(),32);setSecret('');setPhase('running');
+   const opened=await prepareCurrentPrivateMigration(held,kit,frozen);current();controller.current=opened;
+   await opened.run(held,kit,value=>{current();setProgress(value);});current();opened.close();controller.current=null;
+   setPhase('done');const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
+   privateAccountRequired(ownerId,language);await unlockCurrentPrivateAccount(encodeE2eeBytes(held),kit);current();
+   setKit(undefined);window.dispatchEvent(new Event('genesis-private-migration-complete'));closePrivateMigrationUi(state.id);
+  }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){setError(failure(reason));setPhase('confirm');}}
+  finally{held?.fill(0);controller.current?.close();controller.current=null;if(alive.current)setBusy(false);}
+ };
+ return <div className="private-vault-gate" data-no-translate lang={language}>
+  <form ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="private-migration-title" aria-describedby="private-migration-description" tabIndex={-1} onSubmit={submit}>
+   <div className="workspace-recovery-heading"><h2 id="private-migration-title">{copy.title}</h2><p id="private-migration-description">{copy.intro}</p></div>
+   {phase==='loading'?<p role="status">{vaultCopy.busy}</p>:null}
+   {phase==='intro'?<button type="button" className="primary-button" disabled={busy} onClick={async()=>{if(busy)return;setBusy(true);setError('');let bytes:Uint8Array|undefined;
+    try{current();const recovery=await createRecoveryKit(ownerId);bytes=recovery.secret;current();setGenerated({kit:recovery.kit,secret:encodeE2eeBytes(bytes)});setSavedFile(false);setSavedSecret(false);setPhase('generated');}
+    catch(reason){if(alive.current)setError(failure(reason));}finally{bytes?.fill(0);if(alive.current)setBusy(false);}
+   }}>{copy.generate}</button>:null}
+   {phase==='generated'&&generated?<>
+    <p>{copy.generated}</p><p>{copy.secretNote}</p>
+    <div className="workspace-recovery-actions"><button type="button" className="text-button" onClick={()=>{download('genesis-recovery.json',JSON.stringify(generated.kit,null,2),'application/json');setSavedFile(true);}}>{copy.saveFile}</button>
+     <button type="button" className="text-button" onClick={()=>{download('genesis-recovery-secret.txt',generated.secret+'\n','text/plain');setSavedSecret(true);}}>{copy.saveSecret}</button></div>
+    <button type="button" className="primary-button" disabled={!savedFile||!savedSecret} onClick={()=>{setGenerated(null);setSecret('');setKit(undefined);setPhase('confirm');}}>{copy.saved}</button>
+   </>:null}
+   {phase==='confirm'?<>
+    <p>{copy.confirm}</p>
+    <label className="workspace-recovery-field"><span>{vaultCopy.kit}</span><input type="file" accept=".json,application/json" disabled={busy||fileBusy} required={!kit} onChange={async event=>{
+     const input=event.currentTarget,file=input.files?.[0],request=++fileRequest.current;setKit(undefined);setError('');if(!file)return;setFileBusy(true);
+     try{if(file.size<1||file.size>65536)throw new Error('E2EE_INVALID_RECOVERY_KIT');const value=parseLegacyMigrationJson(await file.text(),'E2EE_INVALID_RECOVERY_KIT',65536) as RecoveryKit;
+      current();if(request!==fileRequest.current)return;if(value.protocol!==1||value.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');setKit(value);
+     }catch(reason){if(alive.current&&request===fileRequest.current){setError(failure(reason));input.value='';}}finally{if(alive.current&&request===fileRequest.current)setFileBusy(false);}
+    }}/></label>
+    <label className="workspace-recovery-field"><span>{vaultCopy.secret}</span><div><input data-dialog-initial-focus type="password" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={64} value={secret} onChange={event=>setSecret(event.target.value)} disabled={busy||fileBusy} required/></div></label>
+    <button type="submit" className="primary-button" disabled={busy||fileBusy||!kit||!secret.trim()}>{state.reason==='resume'||started.current?copy.resume:copy.begin}</button>
+   </>:null}
+   {phase==='running'||phase==='done'?<p role="status" aria-live="polite">{phase==='done'||progress==='active'?copy.done:copy[progress]}</p>:null}
+   {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
+   <p className="workspace-recovery-hint">{copy.kept}</p>
+   <div className="workspace-recovery-actions">
+    {state.reason==='setup'&&!started.current?<button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
+    <button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);void signOutFromGoogle().catch(()=>{if(alive.current)setError(copy.error);});}}>{vaultCopy.exit}</button>
+   </div><small className="workspace-recovery-privacy">{vaultCopy.privacy}</small>
+  </form>
+ </div>;
+}

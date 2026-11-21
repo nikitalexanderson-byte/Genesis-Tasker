@@ -5,6 +5,9 @@ import { AppUrlCleaner } from "../app/AppUrlCleaner";
 import { ButtonTooltips } from "../app/ButtonTooltips";
 import { DialogDismissal } from "../app/DialogDismissal";
 import { DialogHeaderActions } from "../app/DialogHeaderActions";
+import { PrivateProductBoundary } from "../app/PrivateProductBoundary";
+import { PrivateVaultGate } from "../app/PrivateVaultGate";
+import { PrivateMigrationGate } from "../app/PrivateMigrationGate";
 import { installWebBrandIcon } from "./web-brand-icon";
 import "./visual-refinements.css";
 import "../app/globals.css";
@@ -24,6 +27,7 @@ import "./habit-header.css";
 import "./celestial-colors.css";
 import "./header-brand.css";
 import '../app/public-product.css';
+import '../app/private-vault.css';
 
 const APP_BASE = (process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim() || "").replace(/\/$/, "");
 document.documentElement.dataset.genesisWeb = "true";
@@ -53,7 +57,11 @@ createRoot(root).render(
     <ButtonTooltips />
     <DialogDismissal />
     <DialogHeaderActions />
-    <GenesisCalendar />
+    <div id="genesis-app-content">
+      <PrivateProductBoundary><GenesisCalendar /></PrivateProductBoundary>
+    </div>
+    <PrivateVaultGate />
+    <PrivateMigrationGate />
   </StrictMode>,
 );
 

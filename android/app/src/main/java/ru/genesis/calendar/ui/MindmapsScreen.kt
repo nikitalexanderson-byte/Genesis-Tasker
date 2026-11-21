@@ -89,7 +89,7 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     DisposableEffect(repo){val release=repo.registerMigrationEditor{migrationCapture()};onDispose{release()}}
     RememberMigrationInput(repo.migrationOwner,if(repo.personalMigrationSource)"mindmaps"else"local-work",repo){
         ru.genesis.calendar.security.NativeMigrationMemory.Capture(if(repo.personalMigrationSource)repo.captureMigration()else null,
-            migrationCapture(),!busy&&!loadFailed)
+            migrationCapture(),!busy)
     }
     if (map != null && !readOnly) NativeGuidanceBlockingSurface()
     fun run(action:suspend ()->Unit) { if(busy)return;busy=true;error=null;loadFailed=false;scope.launch {try { action() }catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=mindmapFailureMessage(e)}finally{busy=false} } }

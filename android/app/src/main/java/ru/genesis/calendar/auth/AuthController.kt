@@ -2371,7 +2371,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     fun logout() = start("Закрываем серверную сессию…") { generation ->
         privateVaultLifecycle.incrementAndGet()
         privateMigration.getAndSet(null)?.close()
-        mutableState.value.user?.uid?.let{ru.genesis.calendar.security.NativeMigrationMemory.clearOwner(it)}
+        mutableState.value.user?.uid?.let{ru.genesis.calendar.security.NativeMigrationMemory.clearOwner(it);ru.genesis.calendar.security.NativeMigrationUiState.clearOwner(it)}
         ru.genesis.calendar.security.NativePrivateProducts.lock()
         val previousScope = app.workspaceScope
         // begin() has already invalidated every in-flight response before touching stored credentials.

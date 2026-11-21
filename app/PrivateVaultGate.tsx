@@ -2,6 +2,7 @@
 import {useEffect,useState,useSyncExternalStore,type FormEvent} from 'react';
 import {privateAccountView,subscribePrivateAccount,type PrivateAccountView} from './e2ee/product-session';
 import {unlockCurrentPrivateAccount,signOutFromGoogle} from './cloud-sync';
+import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration} from './private-migration-ui';
 import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import type {RecoveryKit} from './e2ee/keys';
 import {IndexedDbDeviceKeyStorage} from './e2ee/device-vault';
@@ -14,7 +15,8 @@ const initial:PrivateAccountView=Object.freeze({ownerId:null,phase:'closed',reas
  * this gate waits. Dismissal never grants access; sign-out retires capabilities. */
 export function PrivateVaultGate(){
  const state=useSyncExternalStore(subscribePrivateAccount,privateAccountView,()=>initial);
- return state.phase==='locked'||state.phase==='unlocking'?<PrivateVaultForm key={state.ownerId} state={state}/>:null;
+ const migration=useSyncExternalStore(subscribePrivateMigrationUi,privateMigrationUi,()=>null);
+ return migration?.ownerId!==state.ownerId&&(state.phase==='locked'||state.phase==='unlocking')?<PrivateVaultForm key={state.ownerId} state={state}/>:null;
 }
 function PrivateVaultForm({state}:{state:PrivateAccountView}){
  const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[error,setError]=useState(false),[fileBusy,setFileBusy]=useState(false),[canOffline,setCanOffline]=useState(false);
@@ -29,7 +31,9 @@ function PrivateVaultForm({state}:{state:PrivateAccountView}){
  },[]);
  const submit=async(event:FormEvent)=>{
   event.preventDefault();if(busy)return;setError(false);
-  try{await unlockCurrentPrivateAccount(secret,kit);}catch{setError(true);}finally{setSecret('');}
+  try{await unlockCurrentPrivateAccount(secret,kit);}catch(reason){
+   if(reason instanceof Error&&reason.message==='E2EE_MIGRATION_RESUME_REQUIRED'&&state.ownerId)showPrivateMigration(state.ownerId,state.language,'resume');else setError(true);
+  }finally{setSecret('');}
  };
  return <div className="private-vault-gate">
   <form ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog" role="dialog" aria-modal="true" aria-labelledby="private-vault-title" aria-describedby="private-vault-description" tabIndex={-1} onSubmit={submit} lang={isLanguage(state.language)?state.language:'en'}>

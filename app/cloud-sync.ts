@@ -11,7 +11,8 @@ import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
 import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
-import {assertLegacyLocalWriteAllowed} from './e2ee/web-local-migration-fence';
+import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-local-migration-fence';
+import {showPrivateMigration} from './private-migration-ui';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
@@ -1053,6 +1054,10 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: ApiFeedbac
     const send=()=>apiOverHttp<T>(path,{...init,signal:waiting.signal},feedback,owner);
     return await (permit?legacyTransportGate().borrow(permit,owner,current,send):legacyTransportGate().request(owner,current,send,waiting.signal));
   }
+  catch(error){
+    if(error instanceof Error&&error.message==='E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN'&&confirmedTransportOwnerId===owner)showPrivateMigration(owner,privateIdentityCache?.language??'en','resume');
+    throw error;
+  }
   finally { accountRequests.delete(waiting);init.signal?.removeEventListener('abort',abort); }
 }
 
@@ -1984,6 +1989,8 @@ const readGenesisSession = sessionReader(async () => {
     localSessionEnded=user===null;
     confirmedTransportOwnerId=user?.uid??null;
     if(user) {
+      try{if(localMigrationMarker(user.uid)?.phase==='preparing')showPrivateMigration(user.uid,user.language??'en','resume');}
+      catch{showPrivateMigration(user.uid,user.language??'en','resume');}
       if(!acceptTrialTransport(user.uid,user.featureAccess,beginTrialTransport()))throw new DOMException('Superseded account profile','AbortError');
       rememberFeatureAccess(user.uid,user.featureAccess);
       if(Object.hasOwn(user,'privatePreferencesMode')){

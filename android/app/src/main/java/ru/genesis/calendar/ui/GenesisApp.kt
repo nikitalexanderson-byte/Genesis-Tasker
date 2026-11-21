@@ -117,6 +117,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     val privateController=remember(app){ru.genesis.calendar.auth.AuthController.get(app)}
     val privateAuth by privateController.state.collectAsStateWithLifecycle()
     if(!testWorkspace)PrivateBackupHandoffHost(privateAuth.user?.uid)
+    if(!testWorkspace)PrivateMigrationHost(privateController,privateAuth)
     val privateRevision by ru.genesis.calendar.security.NativePrivateProducts.revision.collectAsStateWithLifecycle()
     val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
     LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}
@@ -1955,6 +1956,7 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
         }
             ru.genesis.calendar.auth.AuthPanel(app, prefs.language)
             NativeBackupEntry()
+            PrivateMigrationEntry()
             PrivateSharedSecurityEntry()
             onOpenAssistant?.let { open ->
                 OutlinedButton(onClick = open, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)

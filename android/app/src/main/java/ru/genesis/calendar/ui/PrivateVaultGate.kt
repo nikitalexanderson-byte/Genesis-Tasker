@@ -50,6 +50,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
     val credential=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()){result->
         if(result.resultCode==Activity.RESULT_OK){busy=true;failed=false;scope.launch{
             try{lifecycle.withResumed{};controller.unlockPrivateVault(secret,kit,offlineMode,hardwareRecovery&&recoveryConfirmed&&!offlineMode)}catch(cancelled:kotlinx.coroutines.CancellationException){throw cancelled}catch(error:Exception){
+                if(error.message=="E2EE_MIGRATION_RESUME_REQUIRED")state.user?.uid?.let{ru.genesis.calendar.security.NativeMigrationUiState.show(it,language,true)}
                 if(error.message=="E2EE_RECOVERY_KIT_REQUIRED")needsRecovery=true
                 if(error.message in setOf("E2EE_DEVICE_KEY_UNAVAILABLE","E2EE_DEVICE_KEY_INVALIDATED","E2EE_CORRUPT_DEVICE_VAULT")){hardwareRecovery=true;needsRecovery=true;recoveryConfirmed=false}
                 failed=true}
