@@ -3,7 +3,7 @@ import {assertTechnical} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {requiredPrivatePaths} from './private-paths.ts';
 import {openLegacyMigrationSnapshot,captureLegacyMigrationSnapshotReference,type LegacyMigrationSnapshotReference} from './legacy-snapshot-stream.ts';
-import {openSourceStage,type SourceStageReference,type SourceStageTarget} from './source-stage.ts';
+import {openSourceStage,inspectSourceStages,type SourceStageReference,type SourceStageTarget} from './source-stage.ts';
 import {validateStagedMigrationSnapshot,verifyStagedMigrationSnapshot,type StagedMigrationSnapshot} from './migration-stage.ts';
 import type {StagedPathReader,StagedSourceHistory,StagedSourceInput} from './staged-reconciliation.ts';
 import type {UnlockedE2eeVault} from './storage.ts';
@@ -137,7 +137,18 @@ export async function openMigrationSourceHistory(input:{vault:MigrationHistoryRe
   const last=stages.at(-1)!;const sources:StagedSourceInput=Object.freeze({current:source('stage:'+last.ref.stageId,path=>last.opened.openPath(path)),previous:Object.freeze(previous)});
   const verifyMetadata=async()=>{for(const expected of metadata){const actual=await readState(expected.id,false);if(actual.serial!==expected.serial||actual.hash!==expected.hash)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');}};
   await verifyMetadata();await inspectLegacy();current();
-  return Object.freeze({input:sources,close,async assertCompleteAndUnchanged(){
+  return Object.freeze({input:sources,close,async assertMetadataUnchanged(){
+   current();if(reading)throw new Error('E2EE_SOURCE_INPUT_BUSY');reading=true;
+   try{
+    // This is deliberately metadata only. It retains the checked body/EOF
+    // capability inside this one fence; it never grants a new body proof.
+    if(failed||active.size)throw new Error('E2EE_SOURCE_INPUT_EOF_REQUIRED');
+    await verifyMetadata();await inspectLegacy();
+    const known=await inspectSourceStages(vault,target,current);current();
+    if(known.length!==refs.length||known.some((row,index)=>!row.complete||row.id!==refs[index].stageId||row.manifestHash!==refs[index].manifestHash))throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
+    current();return totals;
+   }catch(error){failed=true;throw error;}finally{reading=false;}
+  },async assertCompleteAndUnchanged(){
    current();if(reading)throw new Error('E2EE_SOURCE_INPUT_BUSY');reading=true;
    try{
     if(failed||active.size||[sources.current,...sources.previous].some(source=>paths.some(path=>!completed.has(source.id+'\0'+path))))throw new Error('E2EE_SOURCE_INPUT_EOF_REQUIRED');

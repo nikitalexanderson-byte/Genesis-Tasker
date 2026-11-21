@@ -1,20 +1,26 @@
 package ru.genesis.calendar.security
 
 import org.json.JSONObject
+import ru.genesis.calendar.auth.E2eeHttpObservation
 import java.util.UUID
 
 /** Authenticated requests are supplied by AuthController, not a second HTTP/session stack. */
-class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, directory: E2eeDirectory.Verified, domains: Set<String>,
-    private val request: suspend (String, JSONObject) -> JSONObject) : E2eeMigrationTransport, E2eeBoundedMigrationReadback {
+class E2eeSignedMigrationTransport private constructor(private val device: E2eeScopeDevice, directory: E2eeDirectory.Verified, domains: Set<String>,
+    private val request: suspend (String, JSONObject,E2eeHttpObservation?) -> JSONObject,private val planning:E2eeMigrationPlanningPort?) : E2eeMigrationTransport, E2eeBoundedMigrationReadback {
+    constructor(device:E2eeScopeDevice,directory:E2eeDirectory.Verified,domains:Set<String>,request:suspend(String,JSONObject)->JSONObject):
+        this(device,directory,domains,{path,body,_->request(path,body)},null)
+    internal constructor(device:E2eeScopeDevice,directory:E2eeDirectory.Verified,domains:Set<String>,planning:E2eeMigrationPlanningPort,
+        request:suspend(String,JSONObject,E2eeHttpObservation?)->JSONObject):this(device,directory,domains,request,planning)
     private val ownerId = directory.ownerId
     private val scopeId = directory.scopeId
     private val securityEpoch = directory.securityEpoch
     private val revision = directory.checkpoint.revision
     private val checkpoint = directory.checkpoint.hash
     private val domains = (domains + "attachment").toList()
-    init { E2eeKeys.technical(ownerId); E2eeKeys.technical(scopeId); check(domains.isNotEmpty() && domains.all(E2eeEnvelope::supportsDomain)) { "E2EE_COVERAGE_REQUIRED" } }
-    private suspend fun call(path: String, body: JSONObject): JSONObject {
-        device.requireOpen(); val response = request(path,body); device.requireOpen(); return response
+    init { E2eeKeys.technical(ownerId); E2eeKeys.technical(scopeId); check(domains.isNotEmpty() && domains.all(E2eeEnvelope::supportsDomain)) { "E2EE_COVERAGE_REQUIRED" }
+        planning?.assertBinding(E2eeMigrationPlanningBinding(ownerId,scopeId,device.deviceId,checkpoint,revision,securityEpoch)) }
+    private suspend fun call(path: String, body: JSONObject,observation:E2eeHttpObservation?=null): JSONObject {
+        device.requireOpen(); val response = request(path,body,observation); device.requireOpen(); return response
     }
     override suspend fun sourceHash(): String = call("/source",JSONObject().put("scopeId",scopeId)).getString("sourceHash").also { E2eeEnvelope.decode(it,32) }
     override suspend fun command(packet: JSONObject): JSONObject {
@@ -30,30 +36,24 @@ class E2eeSignedMigrationTransport(private val device: E2eeScopeDevice, director
     suspend fun legacyDiary(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-diary",context)
     suspend fun legacyMindmaps(context: E2eeMigrationSourceContext): JSONObject = legacyPersonal("legacy-mindmaps",context)
     suspend fun legacyMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
-        check(table in setOf("maps","versions","receipts","deletions")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
-        return legacyPersonal("legacy-mindmaps",context,JSONObject().put("table",table).put("offset",offset))
+        return legacyPersonal("legacy-mindmaps",context,JSONObject().put("table",table).put("offset",offset)){check(table in setOf("maps","versions","receipts","deletions")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}}
     }
     suspend fun legacyPhysisPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
-        check(table in setOf("owners","records","usedIds","receipts")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
-        return legacyPersonal("legacy-physis",context,JSONObject().put("table",table).put("offset",offset))
+        return legacyPersonal("legacy-physis",context,JSONObject().put("table",table).put("offset",offset)){check(table in setOf("owners","records","usedIds","receipts")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}}
     }
     suspend fun legacyRemindersPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject {
-        check(table in setOf("habitProfiles","habitDevices","habitDeliveries","adviceDays","adviceDeliveries","sharedPreferences")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}
-        return legacyPersonal("legacy-reminders",context,JSONObject().put("table",table).put("offset",offset))
+        return legacyPersonal("legacy-reminders",context,JSONObject().put("table",table).put("offset",offset)){check(table in setOf("habitProfiles","habitDevices","habitDeliveries","adviceDays","adviceDeliveries","sharedPreferences")&&offset in 0..9007199254740990L){"E2EE_LEGACY_PAGE_INVALID"}}
     }
     suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long):JSONObject {
-        check(table in setOf("stages","safety","receipts")&&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_ARCHIVE_TRANSPORT_INVALID"}
-        return legacyPersonal("legacy-archives",context,JSONObject().put("table",table).put("offset",offset).put("byteOffset",byteOffset))
+        return legacyPersonal("legacy-archives",context,JSONObject().put("table",table).put("offset",offset).put("byteOffset",byteOffset)){check(table in setOf("stages","safety","receipts")&&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_ARCHIVE_TRANSPORT_INVALID"}}
     }
-    private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null): JSONObject {
-        check(context.ownerId == ownerId && context.scopeId == scopeId) { "E2EE_SCOPE_BINDING_MISMATCH" }
-        val packet = E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId",ownerId).put("scopeId",scopeId).put("deviceId",device.deviceId)
-            .put("action",action).put("expectedRevision",revision).put("checkpointHash",checkpoint).put("securityEpoch",securityEpoch)
-            .put("operationId",UUID.randomUUID().toString()).put("payload",JSONObject().put("migrationId",context.migrationId)
-                .put("fence",context.fence).put("sourceHash",context.sourceHash).apply{page?.let{put("table",it.get("table"));put("offset",it.get("offset"));if(it.has("byteOffset"))put("byteOffset",it.get("byteOffset"))}}),device.keys().signing.private)
-        val result = call("/read",packet)
-        check(result.get("checkpointHash") == checkpoint && E2eeCommands.integer(result.get("directoryRevision"),1) == revision) { "E2EE_DIRECTORY_CONFLICT" }
-        return result
+    private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null,validate:()->Unit={}): JSONObject {
+        val preflight:()->Unit={check(context.ownerId==ownerId&&context.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};validate()}
+        val session=planning?:run{preflight();error("E2EE_STREAMED_CAPTURE_REQUIRED")}
+        return session.requestLegacyChecked(context,action,page,preflight){packet,observation->
+            val result=call("/read",packet,observation)
+            check(result.get("checkpointHash")==checkpoint&&E2eeCommands.integer(result.get("directoryRevision"),1)==revision){"E2EE_DIRECTORY_CONFLICT"};result
+        }
     }
     private suspend fun read(action:String,payload:JSONObject):JSONObject {
         device.requireOpen()

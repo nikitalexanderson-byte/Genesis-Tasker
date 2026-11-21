@@ -146,6 +146,18 @@ internal object E2eeMigrationHistory {
             override fun close(){revoked.set(true);synchronized(this){release()}}
         }
         private fun verifyMetadata(){for(expected in metadata){val actual=readState(expected.id,false);check(actual.serial==expected.serial&&actual.hash==expected.hash){"E2EE_SOURCE_HISTORY_CHANGED"}}}
+        /** Metadata only, within this same checked history/fence. This does not
+         * grant a new body/EOF proof or permission to skip any history role. */
+        fun assertMetadataUnchanged():Admission {
+            current();check(checking.compareAndSet(false,true)){"E2EE_SOURCE_INPUT_BUSY"}
+            try{
+                check(!failed.get()&&synchronized(active){active.isEmpty()}){"E2EE_SOURCE_INPUT_EOF_REQUIRED"}
+                verifyMetadata();inspectLegacy()
+                val references=refs(snapshot);val known=E2eeSourceStage.inspect(vault,target,::current);current()
+                check(known.size==references.size&&known.indices.all{known[it].complete&&known[it].id==references[it].stageId&&known[it].manifestHash==references[it].manifestHash}){"E2EE_SOURCE_HISTORY_CHANGED"}
+                current();return totals
+            }catch(error:Throwable){failed.set(true);throw error}finally{checking.set(false)}
+        }
         fun assertCompleteAndUnchanged():Receipt {
             current();check(checking.compareAndSet(false,true)){"E2EE_SOURCE_INPUT_BUSY"}
             try{

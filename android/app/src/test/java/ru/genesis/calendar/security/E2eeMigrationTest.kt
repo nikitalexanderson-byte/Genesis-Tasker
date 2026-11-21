@@ -500,9 +500,28 @@ class E2eeMigrationTest {
         f.badPage = "directory"; reject("E2EE_DIRECTORY_CONFLICT") { transport.readAll() }
         f.badPage = "lock"; reject("E2EE_UNLOCK_REQUIRED") { transport.readAll() }
     }
-    @Test fun emitActualNativeReadbackPacketsForPhpSqliteContract() = runBlocking {
+    @Test fun emitSignedReadbackAndFixtureOnlyLegacyPacketsForPhpSqliteContract() = runBlocking {
         val f = Fixture(); val reads = JSONArray(); var legacyRead: JSONObject? = null; var auroraRead: JSONObject? = null; var stoicheionRead: JSONObject? = null; var adviceRead: JSONObject? = null; var tasksRead: JSONObject? = null; var diaryRead: JSONObject? = null; var mindmapsRead: JSONObject? = null; var mindmapsPageRead:JSONObject?=null;var physisPageRead:JSONObject?=null;var archiveRead:JSONObject?=null
-        val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace")) { path, packet ->
+        // Packet generation for the PHP contract only; no HTTP/custody claim.
+        val planning=object:E2eeMigrationPlanningPort {
+            override val context=E2eeMigrationSourceContext("owner",f.scope,"native-migration-transport",1,E2eeEnvelope.encode(ByteArray(32)),1)
+            override fun assertBinding(value:E2eeMigrationPlanningBinding){assertEquals("owner",value.ownerId);assertEquals(f.scope,value.scopeId)}
+            override suspend fun requestLegacy(source:E2eeMigrationSourceContext,action:String,page:JSONObject?,send:suspend(JSONObject,ru.genesis.calendar.auth.E2eeHttpObservation)->JSONObject):JSONObject {
+                val packet=E2eeCommands.sign(JSONObject().put("protocol",1).put("ownerId","owner").put("scopeId",f.scope).put("deviceId",f.device.deviceId)
+                    .put("action",action).put("expectedRevision",f.directory.checkpoint.revision).put("checkpointHash",f.directory.checkpoint.hash).put("securityEpoch",f.directory.securityEpoch)
+                    .put("operationId",java.util.UUID.randomUUID().toString()).put("payload",JSONObject().put("migrationId",source.migrationId).put("fence",source.fence).put("sourceHash",source.sourceHash)
+                        .apply{page?.let{value->value.keys().forEach{put(it,value.get(it))}}}),f.device.keys().signing.private)
+                val noHttp=object:ru.genesis.calendar.auth.E2eeHttpObservation {
+                    override fun prepare(request:ru.genesis.calendar.auth.E2eeHttpObservation.Request):Unit=error("FIXTURE_NO_HTTP")
+                    override fun begin(response:ru.genesis.calendar.auth.E2eeHttpBodyObservation.Response):Unit=error("FIXTURE_NO_HTTP")
+                    override fun append(bytes:ByteArray):Unit=error("FIXTURE_NO_HTTP")
+                    override fun finish():Unit=error("FIXTURE_NO_HTTP")
+                    override fun close():Unit=error("FIXTURE_NO_HTTP")
+                }
+                return send(packet,noHttp)
+            }
+        }
+        val transport = E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace"),planning) { path, packet, _ ->
             assertEquals("/read",path)
             if(packet.getJSONObject("command").getString("action") == "legacy-workspace") legacyRead = packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-aurora") auroraRead = packet

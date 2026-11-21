@@ -19,6 +19,7 @@ class RecordStore{
 test('recovery secret unlocks ciphertext-only durable device vault across process restart; login alone does not',async()=>{
   const owner='fixture-owner',recovery=await createRecoveryKit(owner),keys=new KeyStore(),records=new RecordStore();
   const device=await UnlockedWebDevice.provision(owner,recovery.secret,recovery.kit,records,keys);await device.ensureDurableKeys();
+  assert.throws(()=>device.requireDurableProvider(),/STORAGE_PROVIDER_REQUIRED/,'memory component ports cannot become a product capture provider');
   const privateBytes=new TextEncoder().encode('PRIVATE DRAFT + QUEUED DATA');
   await device.vault.write([{domain:'draft',objectId:'draft',value:privateBytes,expected:null}]);device.lock();
   assert.throws(()=>device.keys(),/UNLOCK_REQUIRED/);

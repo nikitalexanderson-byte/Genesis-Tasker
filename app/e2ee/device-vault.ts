@@ -3,7 +3,7 @@ import { snapshotE2eeValue, type SignedE2eeCommand } from './commands.ts';
 import { assertTechnical, exactKeys, freshSecret, generateDeviceKeys, exportPrivateDeviceKeys, importDeviceKeys,
   openBundle, protectBundle, recoverAuthority, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
 import { verifyDeviceDirectory, type VerifiedDirectory } from './directory.ts';
-import { openE2eeDatabase, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
+import { openE2eeDatabase, IndexedDbE2eeStorage, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
 import {commitE2eeIndexedDb} from './indexeddb-write.ts';
 
 export type ProtectedDeviceRecord = { serial: number; bundle: ProtectedBundle };
@@ -74,6 +74,12 @@ export class UnlockedWebDevice {
     }finally{held.fill(0);bytes?.fill(0);raw?.fill(0);}
   }
   requireOpen(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');}
+  /** Product authenticated capture requires the real durable providers.
+   * Memory ports remain useful for component fixtures, never custody proof. */
+  requireDurableProvider(){
+    this.requireOpen();
+    if(!(this.vault.storage instanceof IndexedDbE2eeStorage)||!(this.#keyStorage instanceof IndexedDbDeviceKeyStorage))throw new Error('E2EE_STORAGE_PROVIDER_REQUIRED');
+  }
   keys(){this.requireOpen();return this.#keys!;}
   lock(){this.#closed=true;this.vault.lock();this.#keys=null;}
   async ensureDurableKeys(){

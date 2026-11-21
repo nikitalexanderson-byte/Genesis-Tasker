@@ -651,9 +651,19 @@ test('signed shadow readback continues past short pages and rejects loops, direc
   malformed='directory';await assert.rejects(transport.readAll(),/DIRECTORY_CONFLICT/);
   malformed='lock';await assert.rejects(transport.readAll(),/UNLOCK_REQUIRED/);
 });
-test('emit real web migration readback packets for the PHP SQLite contract fixture',async()=>{
+test('emit signed readback and fixture-only legacy protocol packets for the PHP SQLite contract',async()=>{
   const f=await fixture(),directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),reads=[];let legacyRead,auroraRead,stoicheionRead,adviceRead,tasksRead,diaryRead,mindmapsRead,mindmapsPageRead,physisPageRead,archiveRead;
   const device={deviceId:'device',requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys};
+  // The legacy packet port below is protocol-fixture generation only. Actual
+  // coordinator/session/capture acceptance is in e2ee-streamed-planning; this
+  // synthetic callback grants no durable original or production permit.
+  const planning={context:null,assertBinding(){},async requestLegacy(context,action,page,send,validate){
+    validate?.();
+    const packet=await signE2eeCommand({protocol:1,ownerId:'owner',scopeId:f.scopeId,deviceId:'device',action,
+      expectedRevision:directory.checkpoint.revision,checkpointHash:directory.checkpoint.hash,securityEpoch:directory.securityEpoch,operationId:crypto.randomUUID(),
+      payload:{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,...page}},f.keys.signing.privateKey);
+    return send(packet,undefined,new AbortController().signal);
+  }};
   const transport=new SignedMigrationTransport(device,directory,['workspace'],async(path,packet)=>{
     assert.equal(path,'/read');
     if(packet.command.action==='legacy-workspace')legacyRead=packet;
@@ -668,7 +678,7 @@ test('emit real web migration readback packets for the PHP SQLite contract fixtu
     else if(packet.command.action==='legacy-archives')archiveRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
-  });
+  },planning);
   assert.deepEqual(await transport.readAll(),[]);assert.equal(reads.length,2);
   const context={ownerId:'owner',scopeId:f.scopeId,migrationId:'web-migration-transport',fence:1,sourceHash:encodeE2eeBytes(new Uint8Array(32)),generation:1};
   await transport.legacyWorkspace(context);assert.equal((await verifyE2eeCommand(legacyRead,f.keys.signing.publicKey)).action,'legacy-workspace');

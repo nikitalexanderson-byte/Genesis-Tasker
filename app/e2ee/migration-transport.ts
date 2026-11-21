@@ -4,22 +4,25 @@ import {assertTechnical} from './keys.ts';
 import type {VerifiedDirectory} from './directory.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 import type {MigrationTransport,MigrationSourceContext} from './migration.ts';
+import type {E2eeHttpObservation} from './http-observation.ts';
+import type {MigrationPlanningSession} from './migration-session.ts';
 
-export type E2eeMigrationRequest=(path:'/source'|'/command'|'/read',body:unknown)=>Promise<Record<string,WireValue>>;
+export type E2eeMigrationRequest=(path:'/source'|'/command'|'/read',body:unknown,observation?:E2eeHttpObservation,signal?:AbortSignal)=>Promise<Record<string,WireValue>>;
 /** Signed, paginated shadow readback through the real authenticated channel.
  * The source request must only be reached by the coordinator after prepare(). */
 export class SignedMigrationTransport implements MigrationTransport {
   #device:UnlockedWebDevice;#owner:string;#scope:string;#securityEpoch:number;#revision:number;#checkpoint:string;
-  #domains:readonly E2eeContext['domain'][];#request:E2eeMigrationRequest;
-  constructor(device:UnlockedWebDevice,directory:VerifiedDirectory,domains:readonly E2eeContext['domain'][],request:E2eeMigrationRequest){
+  #domains:readonly E2eeContext['domain'][];#request:E2eeMigrationRequest;#planning:MigrationPlanningSession|undefined;
+  constructor(device:UnlockedWebDevice,directory:VerifiedDirectory,domains:readonly E2eeContext['domain'][],request:E2eeMigrationRequest,planning?:MigrationPlanningSession){
     this.#device=device;this.#owner=directory.ownerId;this.#scope=directory.scopeId;this.#securityEpoch=directory.securityEpoch;
     this.#revision=directory.checkpoint.revision;this.#checkpoint=directory.checkpoint.hash;this.#request=request;
     assertTechnical(this.#owner);assertTechnical(this.#scope);
     if(domains.length<1||domains.some(domain=>!E2EE_DOMAINS.includes(domain)))throw new Error('E2EE_COVERAGE_REQUIRED');
     this.#domains=Object.freeze([...new Set([...domains,'attachment' as const])]);
+    this.#planning=planning;planning?.assertBinding({ownerId:this.#owner,scopeId:this.#scope,deviceId:device.deviceId,checkpointHash:this.#checkpoint,directoryRevision:this.#revision,securityEpoch:this.#securityEpoch});
   }
-  async #call(path:'/source'|'/command'|'/read',body:unknown){
-    this.#device.requireOpen();const response=await this.#request(path,body);this.#device.requireOpen();return response;
+  async #call(path:'/source'|'/command'|'/read',body:unknown,observation?:E2eeHttpObservation,signal?:AbortSignal){
+    this.#device.requireOpen();const response=await this.#request(path,body,observation,signal);this.#device.requireOpen();return response;
   }
   async sourceHash(){const result=await this.#call('/source',{scopeId:this.#scope});decodeE2eeBytes(result.sourceHash,32);return result.sourceHash as string;}
   async command(packet:SignedE2eeCommand){
@@ -48,29 +51,24 @@ export class SignedMigrationTransport implements MigrationTransport {
     return this.#legacyPersonal('legacy-mindmaps',context);
   }
   async legacyMindmapsPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
-    if(!['maps','versions','receipts','deletions'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
-    return this.#legacyPersonal('legacy-mindmaps',context,{table,offset});
+    return this.#legacyPersonal('legacy-mindmaps',context,{table,offset},()=>{if(!['maps','versions','receipts','deletions'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');});
   }
   async legacyPhysisPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
-    if(!['owners','records','usedIds','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
-    return this.#legacyPersonal('legacy-physis',context,{table,offset});
+    return this.#legacyPersonal('legacy-physis',context,{table,offset},()=>{if(!['owners','records','usedIds','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');});
   }
   async legacyRemindersPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
-    if(!['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
-    return this.#legacyPersonal('legacy-reminders',context,{table,offset});
+    return this.#legacyPersonal('legacy-reminders',context,{table,offset},()=>{if(!['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');});
   }
   async legacyArchiveFragment(context:MigrationSourceContext,table:string,offset:number,byteOffset:number):Promise<unknown>{
-    if(!['stages','safety','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER||!Number.isSafeInteger(byteOffset)||byteOffset<0||byteOffset>64*1024*1024)throw new Error('E2EE_ARCHIVE_TRANSPORT_INVALID');
-    return this.#legacyPersonal('legacy-archives',context,{table,offset,byteOffset});
+    return this.#legacyPersonal('legacy-archives',context,{table,offset,byteOffset},()=>{if(!['stages','safety','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER||!Number.isSafeInteger(byteOffset)||byteOffset<0||byteOffset>64*1024*1024)throw new Error('E2EE_ARCHIVE_TRANSPORT_INVALID');});
   }
-  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis'|'legacy-reminders'|'legacy-archives',context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number}):Promise<unknown>{
-    if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-    const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action,
-      expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),
-      payload:{migrationId:context.migrationId,fence:context.fence,sourceHash:context.sourceHash,...page}},this.#device.keys().signing.privateKey);
-    const response=await this.#call('/read',packet);
-    if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');
-    return response;
+  async #legacyPersonal(action:'legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis'|'legacy-reminders'|'legacy-archives',context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number},validate:()=>void=()=>{}):Promise<unknown>{
+    const preflight=()=>{if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');validate();};
+    if(!this.#planning){preflight();throw new Error('E2EE_STREAMED_CAPTURE_REQUIRED');}
+    return this.#planning.requestLegacy(context,action,page,async(packet,observation,signal)=>{
+      const response=await this.#call('/read',packet,observation,signal);
+      if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');return response;
+    },preflight);
   }
   async #read(action:'read'|'get',payload:Record<string,WireValue>){
     this.#device.requireOpen();

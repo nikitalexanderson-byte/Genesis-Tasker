@@ -236,3 +236,21 @@ JVM1398 PASS/8 existing HTTP opt-in skips, full lint без новых issue/fil
 Точные доказательства и пределы — `e2ee-336-current-write-guards.md`.
 Это внутренний review исполнителя; полный coverage/recovery и все обычные
 writers/account sessions этим изменением не объявляются завершёнными.
+
+## Продолжение21 ноября: caught validation внутри owned request
+
+При сборке mandatory capture session обнаружено, что directory response check
+и public page preflight могли выбросить ошибку вне failure tracker. Consumer
+перехватывал её, и session завершалась успешно, хотя соответствующий request
+port отказал. Это подтверждено двумя сохранёнными JS RED с missing rejection.
+Оба этапа теперь выполняются внутри tracked операции: failures sticky,
+полный error response остаётся bound original, invalid input не открывает HTTP.
+
+Web GREEN: оба focused regression cases, full JS2058/2058 и actual browser15/15,
+с mandatory pre-network ownership и реальным IDB. Native input04 EDD7D47 прошёл
+JVM1407 PASS/8 existing opt-in skips, API26/API34 каждый32/32 и full lint без
+новых issue/file pairs/count increases. Три ошибочных JVM assertSame исправлены
+для штатной coroutine stack-trace recovery с проверкой точного original cause;
+failed XML сохранён, failed build02 не считается PASS. Scope и evidence —
+`e2ee-336-planning-session.md`. Это внутренний review разработчика; активация,
+полный data coverage и новый recovery остаются отдельными gate.

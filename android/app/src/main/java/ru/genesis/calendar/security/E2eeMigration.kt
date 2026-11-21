@@ -2,6 +2,9 @@ package ru.genesis.calendar.security
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.genesis.calendar.auth.E2eeRemoteOriginal
@@ -38,6 +41,12 @@ internal class E2eeStreamedPlanningOptions(val device:UnlockedE2eeDevice,val inv
 internal data class E2eeStreamedPlanningTicket(val migrationId:String,val attemptId:String,val sourceHash:String,val fence:Long,val generation:Long) {
     override fun toString()="E2eeStreamedPlanningTicket([redacted])"
 }
+internal data class E2eeStreamedPlanningOriginal(val registration:E2eeRemoteOriginal.Registration,val completion:E2eeRemoteOriginal.Reference?) {
+    override fun toString()="E2eeStreamedPlanningOriginal([redacted])"
+}
+internal data class E2eeStreamedPlanningReceipt(val ticket:E2eeStreamedPlanningTicket,val originals:List<E2eeStreamedPlanningOriginal>) {
+    override fun toString()="E2eeStreamedPlanningReceipt([redacted])"
+}
 
 /** Native parity with app/e2ee/migration.ts. Snapshot and new keys must be durable
  * before any network operation. Shadow objects, prior attempts and local work
@@ -54,7 +63,7 @@ class E2eeMigration(
         val ancestors: List<String>, val pendingAction: String?, val resuming: Boolean, val fence: Long?,val localObjects:Int=0,val planReady:Boolean=false,val sourceFormat:String="legacy",val protocol:Int=2) {
         override fun toString() = "E2eeMigration.Status([redacted])"
     }
-    private class Loaded(val state: JSONObject, var serial: Long,var rawHash:String="")
+    private class Loaded(var state: JSONObject, var serial: Long,var rawHash:String="")
     private data class PlanningDevice(val userId:String,val role:String,val revoked:Boolean,val signingKey:String)
     private val planningDevices=directory.devices.mapValues{(_,device)->PlanningDevice(device.userId,device.role,device.revoked,device.signingKey)}
     private val ownerId = directory.ownerId
@@ -310,18 +319,27 @@ class E2eeMigration(
             val entry=list.getJSONObject(index);val registration=entry.getJSONObject("registration")
             E2eeRemoteOriginal.authenticateRegistration(registration,entry.getJSONObject("packet"),publicKey,options,number(lease(state),"generation",1));policy.current()
             owned[registration.getString("id")]=entry
+            if(number(state.getJSONObject("ownership"),"protocol")==2L&&!entry.isNull("completion"))check(markers.any{it.id==registration.getString("id")}){"E2EE_REMOTE_ORIGINAL_MISSING"}
         }
         for(marker in markers){
             val entry=owned[marker.id]?:error("E2EE_STREAMED_ORIGINAL_REVIEW_REQUIRED")
             val found=E2eeRemoteOriginal.describeOriginal(options,marker.id);policy.current()
             check(sameTechnical(found.registration.toJson(),entry.getJSONObject("registration"))){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+            if(number(state.getJSONObject("ownership"),"protocol")==2L&&!entry.isNull("completion")){
+                val ref=entry.getJSONObject("completion");val buffer=ByteArray(65536)
+                val proof=try{E2eeRemoteOriginal.withOriginal(options,marker.id){input->while(true){policy.current();val count=input.read(buffer);if(count<0)break;buffer.fill(0,0,count)}}}finally{buffer.fill(0)}
+                policy.current();check(proof.complete&&proof.manifestHash==ref.get("manifestHash")&&proof.rawHash==ref.get("rawHash")&&proof.size==number(ref,"size")){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+            }
         }
     }
     /** State4 preparation only: protected source publication precedes a signed
      * lease; normal run, upload, plan adoption and activation remain closed. */
     internal suspend fun prepareStreamedPlanning(input:E2eeStreamedPlanningOptions):E2eeStreamedPlanningTicket {
-        val policy=planningPolicy(input);val current=policy.current;val options=policy.options
-        return fenced {
+        val policy=planningPolicy(input)
+        return fenced{prepareStreamedPlanningLocked(policy).first}
+    }
+    private suspend fun prepareStreamedPlanningLocked(policy:PlanningPolicy):Pair<E2eeStreamedPlanningTicket,Loaded> {
+            val current=policy.current;val options=policy.options
             current();options.device.ensureDurableKeys();current();ensureDurableKeys();current();val publicKey=planningSigner(policy)
             var loaded=load();current()
             if(number(loaded.state,"protocol")==3L){
@@ -363,7 +381,111 @@ class E2eeMigration(
             check(!state.isNull("sourceHash")&&!state.isNull("lease")){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
             if(number(lease(state),"leaseUntil",1)<=System.currentTimeMillis()/1000+30)resume(loaded,current)
             current();options.device.ensureDurableKeys();current()
-            E2eeStreamedPlanningTicket(state.getString("migrationId"),state.getJSONObject("ownership").getString("attemptId"),state.getString("sourceHash"),number(lease(state),"fence",1),number(lease(state),"generation",1))
+            val ticket=E2eeStreamedPlanningTicket(state.getString("migrationId"),state.getJSONObject("ownership").getString("attemptId"),state.getString("sourceHash"),number(lease(state),"fence",1),number(lease(state),"generation",1))
+            val bytes=encoded(state);val expected=try{hash(bytes)}finally{bytes.fill(0)};val actual=load();current()
+            check(actual.serial==loaded.serial&&actual.rawHash==expected){"E2EE_SOURCE_HISTORY_CHANGED"}
+            return ticket to actual
+    }
+    private fun assertPlanningCell(cell:Loaded,current:()->Unit){
+        current();val actual=load();current();check(actual.serial==cell.serial&&actual.rawHash==cell.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"}
+    }
+    private fun advancePlanningCell(cell:Loaded,expected:Loaded,current:()->Unit){
+        current();val actual=load();current();check(actual.serial==expected.serial&&actual.rawHash==expected.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"}
+        cell.state=actual.state;cell.serial=actual.serial;cell.rawHash=actual.rawHash
+    }
+    private fun savePlanningCell(cell:Loaded,next:JSONObject,policy:PlanningPolicy,history:E2eeMigrationHistory.Handle,current:()->Unit){
+        current();assertPlanningCell(cell,current);val totals=history.assertMetadataUnchanged();current()
+        val guard=E2eeMigrationStage.publicationGuard(vault,next.getJSONObject("source"),E2eeSourceStage.Target(ownerId,scopeId,kind),required,current)
+        val bytes=encoded(next)
+        try{
+            val metadata=totals.metadataBytes.toLong()+bytes.size+guard.bytes.size
+            check(metadata<=policy.options.capacity.maximumMetadataBytes){"E2EE_SOURCE_HISTORY_CAPACITY"}
+            policy.options.admit(E2eeMigrationHistory.Admission(totals.bytes,totals.parts,metadata.toInt(),totals.sources));current();policy.options.device.ensureDurableKeys();current()
+            val expected=Loaded(next,cell.serial);save(expected,listOf(guard),current);current();advancePlanningCell(cell,expected,current)
+        }finally{bytes.fill(0);guard.bytes.fill(0)}
+    }
+    private fun completionJson(value:E2eeRemoteOriginal.Reference)=JSONObject().put("id",value.id).put("manifestHash",value.manifestHash).put("rawHash",value.rawHash).put("size",value.size)
+    private fun sessionState(cell:Loaded,current:()->Unit):JSONObject {
+        current();val state=cell.state;check(number(state,"protocol")==4L&&!state.isNull("sourceHash")&&!state.isNull("lease")
+            &&number(state.getJSONObject("ownership"),"protocol")==2L){"E2EE_STREAMED_PLANNING_REQUIRED"};return state
+    }
+    /** One nonreentrant whole-job fence owns capture and all awaited children.
+     * No content plan, upload, ordinary writer or activation is adopted here. */
+    internal suspend fun withStreamedPlanning(input:E2eeStreamedPlanningOptions,consume:suspend(E2eeMigrationSession)->Unit):E2eeStreamedPlanningReceipt {
+        val ownerJob=currentCoroutineContext().job;val base=planningPolicy(input)
+        val current:()->Unit={ownerJob.ensureActive();base.current()};val policy=PlanningPolicy(base.options,current)
+        return fenced {
+            val (ticket,cell)=prepareStreamedPlanningLocked(policy);current();val history=preparedHistory(cell,policy)
+            var rejected:Throwable?=null;val buffer=ByteArray(E2eeFiles.CHUNK_BYTES)
+            try{
+                for(source in listOf(history.input.current)+history.input.previous)for(path in source.paths){
+                    val reader=source.openPath(path);reader.input.use{stream->while(true){current();val count=stream.read(buffer);if(count<0)break;buffer.fill(0,0,count)};reader.assertComplete();current()}
+                }
+                history.assertCompleteAndUnchanged();current()
+                if(number(cell.state.getJSONObject("ownership"),"protocol")==1L){
+                    val next=JSONObject(cell.state.toString());val ownership=next.getJSONObject("ownership").put("protocol",2);val originals=ownership.getJSONArray("originals")
+                    for(index in 0 until originals.length())originals.getJSONObject(index).put("completion",JSONObject.NULL)
+                    savePlanningCell(cell,next,policy,history,current)
+                }
+                val publicKey=planningSigner(policy)
+                fun read(guard:()->Unit)=originalRead(PlanningPolicy(policy.options,guard))
+                fun complete(registration:E2eeRemoteOriginal.Registration,packet:JSONObject,reference:E2eeRemoteOriginal.Reference,guard:()->Unit){
+                    guard();val state=sessionState(cell,guard);val originals=state.getJSONObject("ownership").getJSONArray("originals")
+                    val index=(0 until originals.length()).firstOrNull{originals.getJSONObject(it).getJSONObject("registration").get("id")==registration.id}
+                        ?:error("E2EE_CORRUPT_STREAMED_OWNERSHIP")
+                    val owned=originals.getJSONObject(index);val value=completionJson(reference)
+                    check(sameTechnical(owned.getJSONObject("registration"),registration.toJson())&&sameTechnical(owned.getJSONObject("packet"),packet)&&reference.id==registration.id){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+                    if(!owned.isNull("completion")){check(sameTechnical(owned.getJSONObject("completion"),value)){"E2EE_CORRUPT_STREAMED_OWNERSHIP"};assertPlanningCell(cell,guard);return}
+                    val descriptor=E2eeRemoteOriginal.describeOriginal(read(guard),registration.id);guard()
+                    check(descriptor.registration==registration&&descriptor.phase=="complete"&&descriptor.manifestHash==reference.manifestHash&&descriptor.rawHash==reference.rawHash&&descriptor.size==reference.size){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+                    val next=JSONObject(state.toString());next.getJSONObject("ownership").getJSONArray("originals").getJSONObject(index).put("completion",value)
+                    savePlanningCell(cell,next,policy,history,guard)
+                }
+                val prior=sessionState(cell,current).getJSONObject("ownership").getJSONArray("originals").length()
+                for(index in 0 until prior){
+                    val owned=sessionState(cell,current).getJSONObject("ownership").getJSONArray("originals").getJSONObject(index)
+                    if(!owned.isNull("completion"))continue
+                    val id=owned.getJSONObject("registration").getString("id");val marker=E2eeRemoteOriginal.listOriginals(read(current)).firstOrNull{it.id==id};current()
+                    if(marker?.phase!="complete")continue
+                    val proof=E2eeRemoteOriginal.withOriginal(read(current),id){stream->while(true){current();val count=stream.read(buffer);if(count<0)break;buffer.fill(0,0,count)}};current()
+                    check(proof.complete&&proof.manifestHash!=null){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+                    val registration=E2eeRemoteOriginal.authenticateRegistration(owned.getJSONObject("registration"),owned.getJSONObject("packet"),publicKey,read(current),number(lease(cell.state),"generation",1))
+                    complete(registration,owned.getJSONObject("packet"),E2eeRemoteOriginal.Reference(id,requireNotNull(proof.manifestHash),proof.rawHash,proof.size),current)
+                }
+                suspend fun refresh(guard:()->Unit){
+                    assertPlanningCell(cell,guard);history.assertMetadataUnchanged();guard();val state=sessionState(cell,guard)
+                    if(number(lease(state),"leaseUntil",1)<=System.currentTimeMillis()/1000+30){
+                        val next=Loaded(JSONObject(state.toString()),cell.serial,cell.rawHash);resume(next,guard);guard();advancePlanningCell(cell,next,guard)
+                    }
+                }
+                val context=E2eeMigrationSourceContext(ownerId,scopeId,ticket.migrationId,ticket.fence,ticket.sourceHash,ticket.generation)
+                E2eeMigrationSession.use(E2eeMigrationSession.Hooks(context,E2eeMigrationPlanningBinding(ownerId,scopeId,deviceId,initialCheckpoint.hash,initialCheckpoint.revision,securityEpoch),current,
+                    packet={action,page,guard->
+                        refresh(guard);val state=sessionState(cell,guard)
+                        packet(state,action,JSONObject().put("migrationId",state.get("migrationId")).put("fence",lease(state).get("fence")).put("sourceHash",state.get("sourceHash"))
+                            .apply{page?.let{value->value.keys().forEach{key->put(key,value.get(key))}}})
+                    },
+                    original={request,guard->E2eeRemoteOriginal.Options(vault,E2eeRemoteOriginal.Target(ownerId,scopeId,kind),policy.options.originalCapacity,request,publicKey,number(lease(sessionState(cell,guard)),"generation",1),guard,
+                        policy.options.device::ensureDurableKeys,{usage->policy.options.admit(E2eeMigrationHistory.Admission(usage.bytes,usage.parts,usage.metadataBytes,usage.observations));guard()})},
+                    reserve={registration,request,guard->
+                        val state=sessionState(cell,guard);val authenticated=E2eeRemoteOriginal.authenticateRegistration(registration.toJson(),request,publicKey,read(guard),number(lease(state),"generation",1));guard()
+                        check(authenticated.binding.fence==number(lease(state),"fence",1)&&authenticated.binding.migrationId==state.get("migrationId")&&authenticated.binding.sourceHash==state.get("sourceHash")){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+                        val known=state.getJSONObject("ownership").getJSONArray("originals")
+                        check(known.length()<1000&&(0 until known.length()).none{known.getJSONObject(it).getJSONObject("registration").get("id")==registration.id}){"E2EE_STREAMED_ORIGINAL_ALREADY_RESERVED"}
+                        val next=JSONObject(state.toString());next.getJSONObject("ownership").getJSONArray("originals").put(JSONObject().put("registration",authenticated.toJson()).put("packet",JSONObject(request.toString())).put("completion",JSONObject.NULL))
+                        savePlanningCell(cell,next,policy,history,guard)
+                    },complete={registration,request,reference,guard->complete(registration,request,reference,guard)},
+                    finish={
+                        history.assertCompleteAndUnchanged();current();assertPlanningCell(cell,current);val state=sessionState(cell,current)
+                        checkOwnedOriginals(state,policy,publicKey);policy.options.device.ensureDurableKeys();current()
+                        val originals=state.getJSONObject("ownership").getJSONArray("originals");val values=(0 until originals.length()).map{index->val item=originals.getJSONObject(index)
+                            val registration=E2eeRemoteOriginal.authenticateRegistration(item.getJSONObject("registration"),item.getJSONObject("packet"),publicKey,read(current),number(lease(state),"generation",1))
+                            val ref=if(item.isNull("completion"))null else item.getJSONObject("completion").let{E2eeRemoteOriginal.Reference(it.getString("id"),it.getString("manifestHash"),it.getString("rawHash"),number(it,"size"))}
+                            E2eeStreamedPlanningOriginal(registration,ref)}
+                        E2eeStreamedPlanningReceipt(ticket.copy(fence=number(lease(state),"fence",1)),java.util.Collections.unmodifiableList(values))
+                    }),consume)
+            }catch(error:Throwable){rejected=error;throw error}
+            finally{buffer.fill(0);try{history.close()}catch(error:Throwable){if(rejected==null)throw error else if(rejected!==error)rejected.addSuppressed(error)}}
         }
     }
     /** Durable exact request reservation precedes observation.prepare/network.
@@ -378,7 +500,8 @@ class E2eeMigration(
             check(authenticated.binding.fence==number(lease(state),"fence",1)&&authenticated.binding.migrationId==state.get("migrationId")&&authenticated.binding.sourceHash==state.get("sourceHash")){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
             val originals=state.getJSONObject("ownership").getJSONArray("originals")
             check(originals.length()<1000&&(0 until originals.length()).none{originals.getJSONObject(it).getJSONObject("registration").get("id")==authenticated.id}){"E2EE_STREAMED_ORIGINAL_ALREADY_RESERVED"}
-            val next=JSONObject(state.toString());next.getJSONObject("ownership").getJSONArray("originals").put(JSONObject().put("registration",authenticated.toJson()).put("packet",request))
+            val next=JSONObject(state.toString());next.getJSONObject("ownership").getJSONArray("originals").put(JSONObject().put("registration",authenticated.toJson()).put("packet",request)
+                .apply{if(number(state.getJSONObject("ownership"),"protocol")==2L)put("completion",JSONObject.NULL)})
             drainHistory(preparedHistory(loaded,policy),current);current()
             val guard=E2eeMigrationStage.publicationGuard(vault,state.getJSONObject("source"),E2eeSourceStage.Target(ownerId,scopeId,kind),required,current);val bytes=encoded(next)
             try{

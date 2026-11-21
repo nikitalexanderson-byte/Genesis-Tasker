@@ -10,7 +10,8 @@ import {openMigrationSourceHistory,type MigrationHistoryOptions,type MigrationHi
 import type {StagedSourceInput} from './staged-reconciliation.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {validateStreamedPlanningOwnership,type StreamedPlanningOwnership} from './migration-ownership.ts';
-import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemoteOriginals,type RemoteOriginalReadOptions,type RemoteOriginalRegistration} from './remote-original.ts';
+import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemoteOriginals,withRemoteOriginal,type RemoteOriginalReadOptions,type RemoteOriginalRegistration,type RemoteOriginalReference} from './remote-original.ts';
+import {withOwnedMigrationPlanning,type MigrationPlanningSession} from './migration-session.ts';
 import {UnlockedWebDevice} from './device-vault.ts';
 
 export type MigrationPhase = 'preparing'|'uploading'|'verified'|'active'|'cancelled';
@@ -46,6 +47,10 @@ type MigrationState = { migrationId: string; phase: MigrationPhase; ancestors:st
   local?:MigrationLocalEntry[];planned?:boolean } & ({protocol:1|2;snapshotParts:number;snapshotSize:number;snapshotHash:string}|{protocol:3;source:StagedMigrationSnapshot}|{protocol:4;source:StagedMigrationSnapshot;ownership:StreamedPlanningOwnership});
 export type StreamedPlanningOptions=MigrationHistoryOptions&{device:UnlockedWebDevice;originalCapacity:RemoteOriginalReadOptions['capacity']};
 export type StreamedPlanningTicket=Readonly<{migrationId:string;attemptId:string;sourceHash:string;fence:number;generation:number}>;
+export type {MigrationPlanningSession};
+type LoadedMigration={state:MigrationState;serial:number;hash:string};
+type SessionState=Extract<MigrationState,{protocol:4}>&{ownership:Extract<StreamedPlanningOwnership,{protocol:2}>;sourceHash:string;lease:NonNullable<MigrationState['lease']>};
+export type StreamedPlanningReceipt=Readonly<{ticket:StreamedPlanningTicket;originals:readonly Readonly<{registration:RemoteOriginalRegistration;completion:RemoteOriginalReference|null}>[]}>;
 const encoder = new TextEncoder(), decoder = new TextDecoder('utf-8',{fatal:true});
 async function digest(bytes: Uint8Array) { return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))); }
 function decodeState(bytes: Uint8Array): MigrationState {
@@ -284,11 +289,18 @@ export class E2eeMigration {
     for(const original of state.ownership.originals){
       await authenticateRemoteOriginalRegistration(original.registration,original.packet,signer,{...options,generation:state.lease!.generation});current();
     }
+    const completions=new Map(state.ownership.protocol===2?state.ownership.originals.map(row=>[row.registration.id,row.completion] as const):[]);
+    for(const [id,completion]of completions)if(completion!==null&&!known.some(marker=>marker.id===id))throw new Error('E2EE_REMOTE_ORIGINAL_MISSING');
     for(const marker of known){
       const original=owned.get(marker.id);if(!original)throw new Error('E2EE_STREAMED_ORIGINAL_REVIEW_REQUIRED');
       const found=await describeRemoteOriginal(options,marker.id);current();
       const left=canonicalE2eeValue(found.registration as unknown as WireValue),right=canonicalE2eeValue(original.registration as unknown as WireValue);
       try{if(left.length!==right.length||left.some((byte,index)=>byte!==right[index]))throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');}finally{left.fill(0);right.fill(0);}
+      const completion=completions.get(marker.id);
+      if(completion){
+        const proof=await withRemoteOriginal(options,marker.id,async input=>{for await(const bytes of input)bytes.fill(0);});current();
+        if(!proof.complete||proof.manifestHash!==completion.manifestHash||proof.rawHash!==completion.rawHash||proof.size!==completion.size)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
+      }
     }
   }
   /** Explicit state4 PREPARATION, not a content planner. It authenticates all
@@ -296,7 +308,9 @@ export class E2eeMigration {
    * a durable signed lease. Normal run/upload/activation remain fail-closed. */
   async prepareStreamedPlanning(options:StreamedPlanningOptions):Promise<StreamedPlanningTicket>{
     const {policy,current}=this.#planningPolicy(options);
-    return this.#localFence(async()=>{
+    return this.#localFence(async()=>(await this.#prepareStreamedPlanningLocked(policy,current)).ticket);
+  }
+  async #prepareStreamedPlanningLocked(policy:StreamedPlanningOptions,current:()=>void){
       current();await policy.device.ensureDurableKeys();current();await this.#durableKeys();current();const {spki,signer}=await this.#planningSigner(current);
       let loaded=await this.#load();current();
       if(loaded.state.protocol===3){
@@ -335,7 +349,104 @@ export class E2eeMigration {
       if(state.lease.leaseUntil<=Math.floor(Date.now()/1000)+30){({state,serial}=await this.#resume(state,serial,current));current();}
       if(state.protocol!==4||!state.lease||!state.sourceHash)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
       await policy.device.ensureDurableKeys();current();
-      return Object.freeze({migrationId:state.migrationId,attemptId:state.ownership.attemptId,sourceHash:state.sourceHash,fence:state.lease.fence,generation:state.lease.generation});
+      const ticket=Object.freeze({migrationId:state.migrationId,attemptId:state.ownership.attemptId,sourceHash:state.sourceHash,fence:state.lease.fence,generation:state.lease.generation});
+      const expected=await digest(encoder.encode(JSON.stringify(state))),saved=await this.#load();current();
+      if(saved.serial!==serial||saved.hash!==expected)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
+      return{ticket,loaded:saved};
+  }
+  async #assertPlanningCell(cell:LoadedMigration,current:()=>void){
+    current();const actual=await this.#load();current();
+    if(actual.serial!==cell.serial||actual.hash!==cell.hash)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
+  }
+  async #advancePlanningCell(cell:LoadedMigration,state:MigrationState,serial:number,current:()=>void){
+    const bytes=encoder.encode(JSON.stringify(state));let expected:string;
+    try{expected=await digest(bytes);}finally{bytes.fill(0);}current();const actual=await this.#load();current();
+    if(actual.serial!==serial||actual.hash!==expected)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
+    cell.state=actual.state;cell.serial=actual.serial;cell.hash=actual.hash;
+  }
+  async #savePlanningCell(cell:LoadedMigration,next:Extract<MigrationState,{protocol:4}>,policy:StreamedPlanningOptions,
+    history:Awaited<ReturnType<typeof openMigrationSourceHistory>>,current:()=>void){
+    current();this.#localEntries(next);await this.#assertPlanningCell(cell,current);
+    const totals=await history.assertMetadataUnchanged();current();
+    const guard=await stagedMigrationPublicationGuard(this.#vault,next.source,current),bytes=encoder.encode(JSON.stringify(next));
+    try{
+      const metadataBytes=totals.metadataBytes+bytes.length+guard.value.length;
+      if(metadataBytes>policy.capacity.maximumMetadataBytes)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
+      await policy.admit({...totals,metadataBytes});current();await policy.device.ensureDurableKeys();current();
+      const serial=await this.#save(next,cell.serial,[guard],current);current();
+      await this.#advancePlanningCell(cell,next,serial,current);
+    }finally{bytes.fill(0);guard.value.fill(0);}
+  }
+  /** One real whole-job fence owns the complete capture session. Public
+   * reserve/prepare methods are never recursively called from its callbacks.
+   * This still publishes no content plan and opens no run/upload/activation. */
+  async withStreamedPlanning(consume:(session:MigrationPlanningSession)=>Promise<void>,options:StreamedPlanningOptions):Promise<StreamedPlanningReceipt>{
+    const {policy,current}=this.#planningPolicy(options);
+    return this.#localFence(async()=>{
+      const {ticket,loaded:cell}=await this.#prepareStreamedPlanningLocked(policy,current);current();
+      const history=await this.#preparedHistory(cell,policy,current);let rejected=false;
+      const close=async()=>{try{await history.close();}catch(error){if(!rejected)throw error;}};
+      try{
+        for(const source of [history.input.current,...history.input.previous])for(const path of source.paths){
+          const reader=await source.openPath(path);for await(const bytes of reader.chunks){current();bytes.fill(0);}reader.assertComplete();current();
+        }
+        await history.assertCompleteAndUnchanged();current();
+        if(cell.state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
+        if(cell.state.ownership.protocol===1){
+          const next:Extract<MigrationState,{protocol:4}>={...cell.state,ownership:{...cell.state.ownership,protocol:2,originals:cell.state.ownership.originals.map(row=>({...row,completion:null}))}};
+          await this.#savePlanningCell(cell,next,policy,history,current);
+        }
+        const state4=():SessionState=>{current();if(cell.state.protocol!==4||!cell.state.lease||!cell.state.sourceHash||cell.state.ownership.protocol!==2)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');return cell.state as SessionState;};
+        const same=(left:unknown,right:unknown)=>{const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);try{return a.length===b.length&&a.every((value,index)=>value===b[index]);}finally{a.fill(0);b.fill(0);}};
+        const {signer}=await this.#planningSigner(current),read=(guard:()=>void)=>this.#originalRead(policy,guard);
+        const complete=async(registration:RemoteOriginalRegistration,packet:SignedE2eeCommand,reference:RemoteOriginalReference,guard:()=>void)=>{
+          guard();const state=state4(),index=state.ownership.originals.findIndex(row=>row.registration.id===registration.id),owned=state.ownership.originals[index];
+          if(index<0||!same(owned.registration,registration)||!same(owned.packet,packet)||reference.id!==registration.id)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
+          if(owned.completion!==null){if(!same(owned.completion,reference))throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');await this.#assertPlanningCell(cell,guard);return;}
+          const descriptor=await describeRemoteOriginal(read(guard),registration.id);guard();
+          if(!same(descriptor.registration,registration)||descriptor.phase!=='complete'||descriptor.manifestHash!==reference.manifestHash||descriptor.rawHash!==reference.rawHash||descriptor.size!==reference.size)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
+          const originals=state.ownership.originals.map((row,at)=>at===index?{...row,completion:snapshotE2eeValue(reference)}:row);
+          await this.#savePlanningCell(cell,{...state,ownership:{...state.ownership,originals}},policy,history,guard);
+        };
+        // A completed response can outlive a lost ownership acknowledgement.
+        // Cold repair authenticates its full bytes before adding a binding;
+        // a missing/partial capture stays explicitly unbound and is retained.
+        for(const owned of state4().ownership.originals){
+          if(owned.completion!==null)continue;
+          const markers=await listRemoteOriginals(read(current));current();const marker=markers.find(value=>value.id===owned.registration.id);
+          if(marker?.phase!=='complete')continue;
+          const proof=await withRemoteOriginal(read(current),marker.id,async source=>{for await(const bytes of source)bytes.fill(0);});current();
+          if(!proof.complete||proof.manifestHash===null)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
+          await complete(owned.registration,owned.packet,{id:proof.id,manifestHash:proof.manifestHash,rawHash:proof.rawHash,size:proof.size},current);
+        }
+        const refresh=async()=>{
+          await this.#assertPlanningCell(cell,current);await history.assertMetadataUnchanged();current();const state=state4();
+          if(state.lease!.leaseUntil<=Math.floor(Date.now()/1000)+30){
+            const next=snapshotE2eeValue(state),renewed=await this.#resume(next,cell.serial,current);current();
+            await this.#advancePlanningCell(cell,renewed.state,renewed.serial,current);
+          }
+        };
+        const context:MigrationSourceContext=Object.freeze({ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,migrationId:ticket.migrationId,sourceHash:ticket.sourceHash,fence:ticket.fence,generation:ticket.generation});
+        return await withOwnedMigrationPlanning({context,binding:{ownerId:context.ownerId,scopeId:context.scopeId,deviceId:this.#deviceId,checkpointHash:this.#directory.checkpoint.hash,directoryRevision:this.#directory.checkpoint.revision,securityEpoch:this.#directory.securityEpoch},assertCurrent:current,
+          packet:async(action,page)=>{await refresh();current();const state=state4();return this.#packet(state,action,{migrationId:state.migrationId,fence:state.lease!.fence,sourceHash:state.sourceHash!,...page});},
+          original:(packet,guard)=>({...read(guard),vault:this.#vault,packet,signer,generation:state4().lease!.generation,ensureDurableKeys:()=>policy.device.ensureDurableKeys(),
+            admit:async usage=>{await policy.admit({bytes:usage.bytes,parts:usage.parts,metadataBytes:usage.metadataBytes,sources:usage.observations});guard();}}),
+          reserve:async(registration,packet,guard)=>{
+            guard();const state=state4(),authenticated=await authenticateRemoteOriginalRegistration(registration,packet,signer,{...read(guard),generation:state.lease!.generation});guard();
+            if(authenticated.binding.fence!==state.lease!.fence||authenticated.binding.migrationId!==state.migrationId||authenticated.binding.sourceHash!==state.sourceHash)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
+            if(state.ownership.originals.length>=1000||state.ownership.originals.some(row=>row.registration.id===authenticated.id))throw new Error('E2EE_STREAMED_ORIGINAL_ALREADY_RESERVED');
+            const next:Extract<MigrationState,{protocol:4}>={...state,ownership:{...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:snapshotE2eeValue(packet),completion:null}]}};
+            await this.#savePlanningCell(cell,next,policy,history,guard);
+          },complete,
+          finish:async()=>{
+            await history.assertCompleteAndUnchanged();current();await this.#assertPlanningCell(cell,current);const state=state4();
+            await this.#checkOwnedOriginals(state,policy,signer,current);await policy.device.ensureDurableKeys();current();
+            return Object.freeze({ticket:Object.freeze({...ticket,fence:state.lease!.fence}),originals:Object.freeze(state.ownership.originals.map(row=>Object.freeze({
+              registration:Object.freeze({...row.registration,context:Object.freeze({...row.registration.context}),binding:Object.freeze({...row.registration.binding})}),
+              completion:row.completion===null?null:Object.freeze({...row.completion})})))});
+          }
+        },consume);
+      }catch(error){rejected=true;throw error;}finally{await close();}
     });
   }
   /** Reserve the exact inert request BEFORE observation.prepare / any network.
@@ -351,7 +462,9 @@ export class E2eeMigration {
       const authenticated=await authenticateRemoteOriginalRegistration(saved,request,signer,{...this.#originalRead(policy,current),generation:state.lease.generation});current();
       if(authenticated.binding.fence!==state.lease.fence||authenticated.binding.migrationId!==state.migrationId||authenticated.binding.sourceHash!==state.sourceHash)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
       if(state.ownership.originals.some(value=>value.registration.id===authenticated.id)||state.ownership.originals.length===1000)throw new Error('E2EE_STREAMED_ORIGINAL_ALREADY_RESERVED');
-      const next:MigrationState={...state,ownership:{...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:request}]}};
+      const ownership:StreamedPlanningOwnership=state.ownership.protocol===2?{...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:request,completion:null}]}:
+        {...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:request}]};
+      const next:MigrationState={...state,ownership};
       this.#localEntries(next);
       // Reauthenticate the exact original metadata and all source EOFs before
       // the owner CAS. No empty/foreign history can authorize a request.
@@ -362,7 +475,7 @@ export class E2eeMigration {
       }finally{guard.value.fill(0);bytes.fill(0);}
     });
   }
-  #packet(state: MigrationState, action: string, payload: Record<string,WireValue>, operationId=crypto.randomUUID()) {
+  #packet(state: MigrationState, action: string, payload: Record<string,WireValue>, operationId:string=crypto.randomUUID()) {
     const command:E2eeCommand={protocol:1,ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,deviceId:this.#deviceId,action,
       expectedRevision:state.directoryRevision,checkpointHash:state.checkpointHash,securityEpoch:this.#directory.securityEpoch,operationId,payload};
     return signE2eeCommand(command,this.#signingKey);

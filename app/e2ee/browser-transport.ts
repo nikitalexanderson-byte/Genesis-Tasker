@@ -1,6 +1,7 @@
 import {e2eeRequest} from '../cloud-sync';
 import type {ScopeTransport} from './scope-client.ts';
 import {SignedMigrationTransport} from './migration-transport.ts';
+import type {MigrationPlanningSession} from './migration-session.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 import type {VerifiedDirectory} from './directory.ts';
 import type {MigrationSources} from './migration.ts';
@@ -14,7 +15,13 @@ export function authenticatedScopeTransport(signal?:AbortSignal):ScopeTransport 
   };
 }
 
-export function authenticatedMigrationTransport(device:UnlockedWebDevice,directory:VerifiedDirectory,sources:MigrationSources,signal?:AbortSignal){
+export function authenticatedMigrationTransport(device:UnlockedWebDevice,directory:VerifiedDirectory,sources:MigrationSources,signal?:AbortSignal,planning?:MigrationPlanningSession){
   sources.assertBinding?.(directory.ownerId,directory.scopeId,directory.kind);
-  return new SignedMigrationTransport(device,directory,sources.allowedContentDomains,(path,body)=>e2eeRequest(path,body,signal));
+  if(planning)device.requireDurableProvider();
+  return new SignedMigrationTransport(device,directory,sources.allowedContentDomains,async(path,body,observation,operationSignal)=>{
+    if(!operationSignal)return e2eeRequest(path,body,signal,observation);
+    const controller=new AbortController(),abort=()=>controller.abort(),signals=[signal,operationSignal].filter((value):value is AbortSignal=>value!==undefined);
+    for(const candidate of signals){candidate.addEventListener('abort',abort,{once:true});if(candidate.aborted)abort();}
+    try{return await e2eeRequest(path,body,controller.signal,observation);}finally{for(const candidate of signals)candidate.removeEventListener('abort',abort);}
+  },planning);
 }

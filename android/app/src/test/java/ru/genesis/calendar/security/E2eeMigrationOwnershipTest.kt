@@ -21,6 +21,25 @@ class E2eeMigrationOwnershipTest {
     }
     private fun hash(bytes:ByteArray)=E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))
     private fun refused(operation:()->Unit){try{operation();fail("Unbound ownership accepted")}catch(error:Exception){assertTrue(error.message.orEmpty(),error.message.orEmpty().startsWith("E2EE_"))}}
+    @Test fun v2RequiresExplicitCompletionWithoutChangingTheStrictV1Reader(){
+        val source=vector();val expected=expected(source.getJSONObject("expected"));val value=source.getJSONObject("ownership")
+        E2eeMigrationOwnership.validate(value,expected);value.put("protocol",2)
+        val entry=value.getJSONArray("originals").getJSONObject(0);refused{E2eeMigrationOwnership.validate(value,expected)}
+        entry.put("completion",JSONObject.NULL);assertTrue(E2eeMigrationOwnership.validate(value,expected).getJSONArray("originals").getJSONObject(0).isNull("completion"))
+        val ref=JSONObject().put("id",entry.getJSONObject("registration").get("id")).put("manifestHash",E2eeEnvelope.encode(ByteArray(32)))
+            .put("rawHash",E2eeEnvelope.encode(ByteArray(32){1})).put("size",0)
+        entry.put("completion",ref);E2eeMigrationOwnership.validate(value,expected)
+        value.put("protocol",1);refused{E2eeMigrationOwnership.validate(value,expected)}
+    }
+    @Test fun v2CompletionIsExactMetadataAndNeverSubstitutesForAnOriginalBodyProof(){
+        for(mode in listOf("id","size","hash","unknown")){
+            val source=vector();val value=source.getJSONObject("ownership").put("protocol",2);val entry=value.getJSONArray("originals").getJSONObject(0)
+            val ref=JSONObject().put("id",entry.getJSONObject("registration").get("id")).put("manifestHash",E2eeEnvelope.encode(ByteArray(32)))
+                .put("rawHash",E2eeEnvelope.encode(ByteArray(32){1})).put("size",0)
+            when(mode){"id"->ref.put("id",java.util.UUID.randomUUID().toString());"size"->ref.put("size",-1);"hash"->ref.put("rawHash","invalid");else->ref.put("bodyVerified",true)}
+            entry.put("completion",ref);refused{E2eeMigrationOwnership.validate(value,expected(source.getJSONObject("expected")))}
+        }
+    }
     @Test fun canonicalPublicVectorAndRequestSignatureMatchWeb(){
         val source=vector();val value=E2eeMigrationOwnership.validate(source.getJSONObject("ownership"),expected(source.getJSONObject("expected")))
         assertEquals(source.get("ownershipCanonicalHash"),hash(E2eeCommands.canonical(value)))

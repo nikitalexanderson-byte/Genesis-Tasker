@@ -2682,3 +2682,33 @@ input не относятся. Точный ход и ограничения —
 не меняя frozen input текущей сборки. Его6 component и21 coordinator/transport
 model cases не заменяют приёмку реальных authenticated web/native factories.
 Coverage9/20,3.3.5/149 production и все rollout gates сохраняются.
+
+## 21 ноября: обязательный capture и единая awaited planning session
+
+Web/native legacy transport теперь требует session: exact signed request
+резервируется CAS до сети, complete original повторно проверяется по EOF/hash
+и закрепляется до выдачи derived response, включая полный ошибочный HTTP/JSON.
+Lost binding acknowledgment восстанавливается из сохранённого original при
+cold reopen. Частичные captures остаются unbound, caught validation failures
+блокируют весь job; escaped ports отозваны, pending children завершены до
+освобождения одного whole-job fence. State4 upload/plan/activation ещё закрыты.
+
+Full JS2058/2058, actual Chromium15715/15, owned types/scoped lint и current
+web build02 PASS. Console содержит один ожидаемый resource409,0 warnings.
+Native input04 EDD7D47: JVM1407 PASS/8 existing opt-in HTTP skips, API26/API34
+каждый32/32 и full lint0 errors/208 warnings/8 hints без новых issue/file pairs
+или count increases. Отдельно WebCrypto проверил оба свежих native wire2 artifacts,
+все11 signatures и полные host raw hashes. Actual `AuthSessionClient` использует
+synthetic connection; production TLS/backend/OAuth UI этим не проверены.
+
+Ошибочный JVM assertSame для штатной coroutine recovery исправлен с сохранением
+проверки ТОЧНОГО original cause; failed build02 не считается PASS. После чистки
+только web line endings новый input05 9C754E8 прошёл fresh23s build refresh:
+оба APK и lint XML побайтно равны принятым04. Runtime tests принадлежат04,
+а их привязка к05 записана отдельно. PIN двух owned AVD возвращены в NONE;
+API34 использует system credential verify, не product dialog acceptance.
+Полный scope, hashes и evidence — `docs/e2ee-336-planning-session.md`.
+
+Это принятая граница capture/session, не новая source category или выпуск.
+Coverage9/20 и3.3.5/149 сохраняются. Далее: mixed-provenance content-plan/run,
+original-key custody/recovery,11 реальных sources и продуктовая приёмка.

@@ -213,7 +213,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
     }
     internal fun e2eeMigrationTransport(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
-        directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource): ru.genesis.calendar.security.E2eeSignedMigrationTransport {
+        directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource,
+        planning:ru.genesis.calendar.security.E2eeMigrationSession?=null): ru.genesis.calendar.security.E2eeSignedMigrationTransport {
         val generation = client.currentGeneration()
         sources.assertBinding(directory.ownerId,directory.scopeId,directory.kind)
         check(device.ownerId == uid && directory.ownerId == uid) { "E2EE_SCOPE_BINDING_MISMATCH" }
@@ -221,10 +222,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             check(client.isCurrent(generation) && mutableState.value.user?.uid == uid && !mutableState.value.requiresSignIn
                 && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "E2EE_ACCOUNT_CHANGED" }
         }
-        return ru.genesis.calendar.security.E2eeSignedMigrationTransport(device,directory,sources.allowedContentDomains) { path, body ->
+        suspend fun request(path:String,body:JSONObject,observation:E2eeHttpObservation?):JSONObject {
             current()
-            withContext(Dispatchers.IO) { current(); client.e2ee(generation,path,body).also { current() } }.also { current() }
+            return withContext(Dispatchers.IO) { current(); client.e2ee(generation,path,body,observation).also { current() } }.also { current() }
         }
+        if(planning==null)return ru.genesis.calendar.security.E2eeSignedMigrationTransport(device,directory,sources.allowedContentDomains){path,body->request(path,body,null)}
+        check(device is ru.genesis.calendar.security.UnlockedE2eeDevice){"E2EE_DEVICE_VAULT_REQUIRED"}
+        return ru.genesis.calendar.security.E2eeSignedMigrationTransport(device,directory,sources.allowedContentDomains,planning,::request)
     }
     internal fun e2eeWorkspaceSource(uid: String, directory: ru.genesis.calendar.security.E2eeDirectory.Verified,
         transport: ru.genesis.calendar.security.E2eeSignedMigrationTransport,

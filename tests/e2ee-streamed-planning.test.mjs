@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {SignedMigrationTransport} from '../app/e2ee/migration-transport.ts';
 import {UnlockedWebDevice} from '../app/e2ee/device-vault.ts';
 import {E2eeMigration} from '../app/e2ee/migration.ts';
 import {requiredPrivatePaths} from '../app/e2ee/migration-sources.ts';
@@ -11,6 +12,14 @@ import {importE2eeRoot,encodeE2eeBytes} from '../app/e2ee/envelope.ts';
 import {signE2eeCommand,verifyE2eeCommand,e2eeCommandHash,canonicalE2eeValue} from '../app/e2ee/commands.ts';
 import {validateStreamedPlanningOwnership} from '../app/e2ee/migration-ownership.ts';
 import {ProtectedRemoteOriginal,listRemoteOriginals,withRemoteOriginal} from '../app/e2ee/remote-original.ts';
+
+async function sessionReply(f,packet,observation,_signal,status=200,raw=' {"rows":"SYNTHETIC ORIGINAL"} '){
+ const saved=await f.readState();try{const owned=saved.state.ownership.originals.find(row=>row.packet.command.operationId===packet.command.operationId);assert.ok(owned);assert.deepEqual(owned.packet,JSON.parse(JSON.stringify(packet)));assert.equal(owned.completion,null);}finally{saved.raw.fill(0);}
+ await observation.prepare({path:'/e2ee/v1/read',method:'POST',body:JSON.stringify(packet)});
+ await observation.begin({path:'/e2ee/v1/read',status,contentType:'application/json',contentLength:null});
+ await observation.append(bytes(raw));await observation.finish();observation.close();
+ return{checkpointHash:f.directory.checkpoint.hash,directoryRevision:f.directory.checkpoint.revision,rows:'SYNTHETIC ORIGINAL'};
+}
 
 const bytes=value=>new TextEncoder().encode(value),hash=value=>createHash('sha256').update(value).digest('base64url');
 test('public state4 ownership vector agrees with native canonical bytes and trusted request signature',async()=>{
@@ -28,8 +37,8 @@ class Records{
  rows=new Map();fail=false;
  async get(key){return structuredClone(this.rows.get(key)??null);}
  async list(prefix){return [...this.rows.keys()].filter(key=>key.startsWith(prefix));}
- async commit(changes){
-  if(this.fail)throw new Error('SYNTHETIC_DISK_FULL');
+ async commit(changes,signal,current=()=>{}){
+  current();if(signal?.aborted)throw new Error('E2EE_UNLOCK_REQUIRED');if(this.fail)throw new Error('SYNTHETIC_DISK_FULL');
   for(const change of changes)if((this.rows.get(change.key)?.serial??null)!==change.expected)throw new Error('E2EE_LOCAL_CONFLICT');
   const next=new Map(this.rows);for(const change of changes){if(change.value===null)next.delete(change.key);else next.set(change.key,structuredClone(change.value));}this.rows=next;
   await this.afterCommit?.(changes);
@@ -67,7 +76,7 @@ async function fixture(t,options={}){
  const sources={requiredCoverage:required,allowedContentDomains:['workspace','diary','mindmap','physis','aurora','stoicheion','attachment','draft','outbox','local-snapshot'],
   async captureLocal(){throw new Error('AGGREGATE_CAPTURE_FORBIDDEN');},async reconcile(){throw new Error('AGGREGATE_RECONCILIATION_FORBIDDEN');}};
  const make=()=>new E2eeMigration({vault:device.vault,directory,deviceId,signingKey:device.keys().signing.privateKey,signer:device.keys().signing.publicKey,root,transport,sources,
-  ensureDurableKeys:()=>device.ensureDurableKeys(),withLocalWriteFence:operation=>operation(),verifyRecovery:async()=>{throw new Error('RECOVERY_NOT_PART_OF_PREPARATION');}});
+  ensureDurableKeys:()=>device.ensureDurableKeys(),withLocalWriteFence:options.withLocalWriteFence??(operation=>operation()),verifyRecovery:async()=>{throw new Error('RECOVERY_NOT_PART_OF_PREPARATION');}});
  let coordinator=make();const target={ownerId,scopeId,kind:'personal'},stage={target,paths:required,async capturePath(path,write){await write(bytes('SYNTHETIC LOCAL ORIGINAL '+path));}};
  const stagePolicy={capacity:{maximumBytes:16*1024*1024,maximumParts:1000},assertCurrent(){},async admit(){}};
  const originalCapacity={maximumBytes:8*1024*1024,maximumParts:1000,maximumObservations:100,maximumRecords:4000,maximumMetadataBytes:4*1024*1024};
@@ -217,4 +226,89 @@ test('a mutable transport cannot rewrite the durably retained signed start packe
  await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/SYNTHETIC_PROCESS_DEATH/);const saved=await f.readState();
  assert.deepEqual(saved.state.pending,f.trace.find(value=>typeof value==='object'));saved.raw.fill(0);delete options.onCommand;await f.reopen();
  await f.coordinator.prepareStreamedPlanning(f.policy());const packets=f.trace.filter(value=>typeof value==='object');assert.deepEqual(packets[0],packets[1]);
+});
+
+
+test('coordinator owns two sequential captures under one nonreentrant fence and binds every complete byte reference',async t=>{
+ let inside=false,entries=0;const f=await fixture(t,{withLocalWriteFence:async operation=>{assert.equal(inside,false);inside=true;entries++;try{return await operation();}finally{inside=false;}}});
+ const before=entries;let calls=0;
+ const receipt=await f.coordinator.withStreamedPlanning(async session=>{
+  for(const action of ['legacy-workspace','legacy-tasks'])await session.requestLegacy(session.context,action,undefined,async(...args)=>{calls++;return sessionReply(f,...args);});
+ },f.policy());
+ assert.equal(entries,before+1);assert.equal(inside,false);assert.equal(calls,2);assert.equal(receipt.originals.length,2);
+ for(const row of receipt.originals){assert.equal(row.completion.id,row.registration.id);assert.equal(row.completion.rawHash,hash(bytes(' {"rows":"SYNTHETIC ORIGINAL"} ')));}
+ const saved=await f.readState();try{assert.equal(saved.state.ownership.protocol,2);assert.equal(saved.state.planned,false);}finally{saved.raw.fill(0);}
+ await f.reopen();assert.equal((await f.coordinator.prepareStreamedPlanning(f.policy())).attemptId,receipt.ticket.attemptId);
+ await assert.rejects(f.coordinator.run(),/STREAMED_PLANNER_REQUIRED/);
+});
+
+test('coordinator binds a complete original despite JSON refusal and keeps that failure sticky',async t=>{
+ const f=await fixture(t),failure=new Error('SYNTHETIC_JSON_REFUSED');
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{
+  try{await session.requestLegacy(session.context,'legacy-workspace',undefined,async(...args)=>{await sessionReply(f,...args);throw failure;});}catch(error){assert.equal(error,failure);}
+ },f.policy()),error=>error===failure);
+ const saved=await f.readState();try{assert.ok(saved.state.ownership.originals[0].completion);}finally{saved.raw.fill(0);}
+ await f.reopen();await f.coordinator.prepareStreamedPlanning(f.policy());
+});
+
+test('coordinator withholds a result after failed binding and cold repairs its exact retained original',async t=>{
+ const f=await fixture(t);let adopted=false;
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{
+  await session.requestLegacy(session.context,'legacy-workspace',undefined,async(...args)=>{const response=await sessionReply(f,...args);f.records.fail=true;return response;});adopted=true;
+ },f.policy()),/SYNTHETIC_DISK_FULL/);
+ assert.equal(adopted,false);const saved=await f.readState();try{assert.equal(saved.state.ownership.originals.length,1);assert.equal(saved.state.ownership.originals[0].completion,null);}finally{saved.raw.fill(0);}
+ const originals=new Map([...f.records.rows].filter(([key])=>key.includes('remote-original:')));f.records.fail=false;await f.reopen();
+ const receipt=await f.coordinator.withStreamedPlanning(async()=>{},f.policy());assert.equal(receipt.originals.length,1);assert.ok(receipt.originals[0].completion);
+ assert.deepEqual(new Map([...f.records.rows].filter(([key])=>key.includes('remote-original:'))),originals);
+});
+
+test('coordinator rejects an altered completion reference before another HTTP request and preserves its ciphertext',async t=>{
+ const f=await fixture(t);await f.coordinator.withStreamedPlanning(async session=>{await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));},f.policy());
+ const saved=await f.readState();saved.state.ownership.originals[0].completion.rawHash=hash('changed-reference');
+ const stateId='migration:'+hash(bytes(f.directory.scopeId));await f.device.vault.write([{domain:'local-snapshot',objectId:stateId,expected:saved.serial,value:bytes(JSON.stringify(saved.state))}]);saved.raw.fill(0);
+ const retained=structuredClone(f.records.rows);let called=false;
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{called=true;await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));},f.policy()),/CORRUPT_STREAMED_OWNERSHIP/);
+ assert.equal(called,false);assert.deepEqual(f.records.rows,retained);
+});
+
+test('signed transport routes all ten legacy actions and page/fragment forms through the live owned session',async t=>{
+ const f=await fixture(t),actions=[];let escaped,context;
+ const receipt=await f.coordinator.withStreamedPlanning(async session=>{
+  context=session.context;
+  const transport=new SignedMigrationTransport(f.device,f.directory,['workspace'],async(path,packet,observation,signal)=>{
+   assert.equal(path,'/read');assert.ok(observation);assert.equal(signal.aborted,false);actions.push(packet.command.action);await verifyE2eeCommand(packet,f.device.keys().signing.publicKey);return sessionReply(f,packet,observation,signal);
+  },session);escaped=transport;
+  for(const method of ['legacyWorkspace','legacyAurora','legacyStoicheion','legacyAdvice','legacyTasks','legacyDiary','legacyMindmaps'])await transport[method](context);
+  await transport.legacyMindmapsPage(context,'maps',1);await transport.legacyPhysisPage(context,'records',2);await transport.legacyRemindersPage(context,'habitDevices',3);await transport.legacyArchiveFragment(context,'safety',4,17);
+ },f.policy());
+ assert.equal(actions.length,11);assert.equal(new Set(actions).size,10);assert.equal(receipt.originals.length,11);assert.ok(receipt.originals.every(row=>row.completion!==null));
+ const retained=structuredClone(f.records.rows);await assert.rejects(escaped.legacyTasks(context),/SESSION_CLOSED/);assert.equal(actions.length,11);assert.deepEqual(f.records.rows,retained);
+});
+
+test('signed transport refuses legacy HTTP without a current planning session while keeping bounded shadow reads separate',async t=>{
+ const f=await fixture(t);let calls=0;
+ const transport=new SignedMigrationTransport(f.device,f.directory,['workspace'],async()=>{calls++;return{};});
+ const context={ownerId:f.directory.ownerId,scopeId:f.directory.scopeId,migrationId:crypto.randomUUID(),fence:1,sourceHash:encodeE2eeBytes(new Uint8Array(32)),generation:2};
+ await assert.rejects(transport.legacyWorkspace(context),/STREAMED_CAPTURE_REQUIRED/);await assert.rejects(transport.legacyArchiveFragment(context,'safety',0,0),/STREAMED_CAPTURE_REQUIRED/);assert.equal(calls,0);
+});
+
+
+test('caught directory refusal poisons the whole owned session after retaining its complete raw response',async t=>{
+ const f=await fixture(t);let caught=false;
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{
+  const port=new SignedMigrationTransport(f.device,f.directory,['workspace'],async(path,packet,observation,signal)=>{
+   const value=await sessionReply(f,packet,observation,signal);return{...value,directoryRevision:f.directory.checkpoint.revision+1};
+  },session);
+  try{await port.legacyWorkspace(session.context);}catch(error){assert.match(error.message,/DIRECTORY_CONFLICT/);caught=true;}
+ },f.policy()),/DIRECTORY_CONFLICT/);
+ assert.equal(caught,true);const saved=await f.readState();try{assert.ok(saved.state.ownership.originals[0].completion);}finally{saved.raw.fill(0);}
+});
+
+test('caught public legacy page preflight refusal remains sticky without fetching or storing an original',async t=>{
+ const f=await fixture(t);let calls=0,caught=false;
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{
+  const port=new SignedMigrationTransport(f.device,f.directory,['workspace'],async()=>{calls++;return{};},session);
+  try{await port.legacyMindmapsPage(session.context,'users',0);}catch(error){assert.match(error.message,/LEGACY_PAGE_INVALID/);caught=true;}
+ },f.policy()),/LEGACY_PAGE_INVALID/);
+ assert.equal(caught,true);assert.equal(calls,0);assert.equal((await f.readState()).state.ownership.originals.length,0);
 });

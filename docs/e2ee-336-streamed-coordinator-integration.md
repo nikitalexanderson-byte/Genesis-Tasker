@@ -1,5 +1,12 @@
 # Streamed coordinator integration: remaining design constraints
 
+21 November follow-up: mandatory owned capture/session is implemented in the
+working tree and undergoing platform acceptance, tracked separately in
+`e2ee-336-planning-session.md`. It retains state4 preparation gates; the complete
+source/content-plan/run composition below remains pending. The earlier proposed
+factory/session paragraphs are historical design constraints, not additional
+claims that the new component has already completed product routing or recovery.
+
 21 November: local state4 preparation/request ownership is accepted
 separately in `e2ee-336-streamed-ownership.md`. It keeps run/upload/activation
 closed and does not close this remaining full-integration plan. The owner has

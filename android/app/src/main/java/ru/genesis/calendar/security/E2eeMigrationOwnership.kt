@@ -20,7 +20,8 @@ internal object E2eeMigrationOwnership {
     fun validate(source:JSONObject,expected:Expected):JSONObject {
         val value=JSONObject(source.toString())
         E2eeKeys.exact(value,setOf("protocol","attemptId","sourceState","signer","securityEpoch","originals"))
-        if(value.get("protocol")!=1||!uuid.matches(value.getString("attemptId"))||!uuid.matches(expected.migrationId))invalid()
+        val protocol=E2eeCommands.integer(value.get("protocol"),1)
+        if(protocol !in 1L..2L||!uuid.matches(value.getString("attemptId"))||!uuid.matches(expected.migrationId))invalid()
         val original=value.getJSONObject("sourceState");E2eeKeys.exact(original,setOf("objectId","hash","originalSerial"))
         if(original.get("objectId")!="${expected.migrationId}:preparation:3")invalid()
         E2eeEnvelope.decode(original.getString("hash"),32);positive(original.get("originalSerial"))
@@ -34,11 +35,16 @@ internal object E2eeMigrationOwnership {
         val originals=value.getJSONArray("originals");if(originals.length()>1000||originals.length()>0&&(expected.lease==null||expected.sourceHash==null))invalid()
         val seen=mutableSetOf<String>()
         for(index in 0 until originals.length()){
-            val owned=originals.getJSONObject(index);E2eeKeys.exact(owned,setOf("registration","packet"))
+            val owned=originals.getJSONObject(index);E2eeKeys.exact(owned,setOf("registration","packet")+(if(protocol==2L)setOf("completion")else emptySet()))
             val reg=owned.getJSONObject("registration");E2eeKeys.exact(reg,setOf("protocol","purpose","id","context","binding"))
             if(reg.get("protocol")!=1||reg.get("purpose")!="remote-original/v1"||!uuid.matches(reg.getString("id"))||!seen.add(reg.getString("id")))invalid()
             fields(reg.getJSONObject("context"),mapOf("ownerId" to expected.target.ownerId,"scopeId" to expected.target.scopeId,"kind" to expected.target.kind,
                 "actorId" to expected.actor.ownerId,"actorScopeId" to expected.actor.scopeId,"deviceId" to expected.actor.deviceId))
+            if(protocol==2L&&!owned.isNull("completion")){
+                val ref=owned.getJSONObject("completion");E2eeKeys.exact(ref,setOf("id","manifestHash","rawHash","size"))
+                if(ref.get("id")!=reg.get("id")||E2eeCommands.integer(ref.get("size"))>128L*1024*1024)invalid()
+                E2eeEnvelope.decode(ref.getString("manifestHash"),32);E2eeEnvelope.decode(ref.getString("rawHash"),32)
+            }
             val binding=reg.getJSONObject("binding");E2eeKeys.exact(binding,setOf("packetHash","signer","generation","migrationId","fence","sourceHash","action","directoryRevision","checkpointHash","securityEpoch"))
             val lease=expected.lease?:invalid()
             if(binding.get("signer")!=value.get("signer")||positive(binding.get("generation"))!=positive(lease.get("generation"))
