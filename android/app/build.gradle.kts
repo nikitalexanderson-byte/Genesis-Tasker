@@ -239,6 +239,7 @@ val genesisAuroraAssets = tasks.register<GenesisAuroraAssetsTask>("genesisAurora
     inputs.files(rootProject.fileTree("../app") { include("aurora/**", "e2ee/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "BackupJournalChoices.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
     inputs.file(rootProject.file("../scripts/aurora/build-native.mjs"))
     inputs.file(rootProject.file("../contracts/native-web-runtime-v1.json"))
+    inputs.files(rootProject.fileTree("../contracts/e2ee") { include("*.json") })
     inputs.file(rootProject.file("../pnpm-lock.yaml"))
 }
 androidComponents.onVariants { variant ->

@@ -17,7 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger
 private fun adviceRuntimeCode(error:Throwable)=error.message?.takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_ADVICE_RUNTIME_FAILED"
 /** Executes the bundled common product/selection engine. Network/storage and
  * navigation are blocked in WebView. Narrow native content ports own all keys. */
-internal class NativeAdviceProductRuntime(private val context:Context){
+internal class NativeAdviceProductRuntime(private val context:Context,private val channel:String="advice-product"){
+    init{require(channel in setOf("advice-product","shared-product"))}
     @SuppressLint("SetJavaScriptEnabled")
     suspend fun execute(input:JSONObject,current:()->Unit,call:suspend(String,JSONObject)->Any):JSONObject=coroutineScope{
         current();val id=UUID.randomUUID().toString();val outcome=CompletableDeferred<JSONObject>();val active=AtomicBoolean(true)
@@ -27,7 +28,7 @@ internal class NativeAdviceProductRuntime(private val context:Context){
             withContext(Dispatchers.Main.immediate){if(!active.get()||outcome.isCompleted)return@withContext;current();val target=requireNotNull(view);check(target.url==AuroraSourceOrigin.ENTRY){"E2EE_ADVICE_RUNTIME_CLOSED"}
                 val chunks=encoded.chunked(131072);chunks.forEachIndexed{at,chunk->target.evaluateJavascript("window.GenesisAuroraSourceRuntime.resolveChunk('$id','$request',$at,${at==chunks.lastIndex},'$chunk')",null)}}
         }
-        val bridge=AdviceProductRuntimeBridge(id,active,operations,outcome,current,call,::deliver)
+        val bridge=AdviceProductRuntimeBridge(id,active,operations,outcome,current,call,::deliver,channel)
         try{withTimeout(120000){val bytes=input.toString().toByteArray(Charsets.UTF_8);val encoded=try{check(bytes.size<=12*1024*1024){"E2EE_ADVICE_CONTENT_TOO_LARGE"};E2eeEnvelope.encode(bytes)}finally{bytes.fill(0)}
             withContext(Dispatchers.Main.immediate){current();check(nativeWebRuntimeProblem(context,"en")==null){"E2EE_WEB_RUNTIME_UPDATE_REQUIRED"};val started=AtomicBoolean(false)
                 view=WebView(context).apply{
@@ -55,17 +56,17 @@ internal class NativeAdviceProductRuntime(private val context:Context){
 }
 @Keep
 private class AdviceProductRuntimeBridge(private val job:String,private val active:AtomicBoolean,private val operations:CoroutineScope,private val outcome:CompletableDeferred<JSONObject>,
-    private val current:()->Unit,private val call:suspend(String,JSONObject)->Any,private val deliver:suspend(String,JSONObject)->Unit){
+    private val current:()->Unit,private val call:suspend(String,JSONObject)->Any,private val deliver:suspend(String,JSONObject)->Unit,private val channel:String){
     private val transfers=BackupTransfer(24*1024*1024);private val inflight=AtomicInteger()
     @JavascriptInterface fun postChunk(id:String,index:Int,last:Boolean,text:String){if(!active.get()||outcome.isCompleted)return;try{transfers.append(id,index,last,text)?.let(::postMessage)}catch(error:Throwable){outcome.completeExceptionally(IllegalStateException("E2EE_ADVICE_RUNTIME_FAILED"))}}
     @JavascriptInterface fun postMessage(raw:String){if(!active.get()||outcome.isCompleted)return
         if(raw.length>24*1024*1024||inflight.incrementAndGet()>4){outcome.completeExceptionally(IllegalStateException("E2EE_ADVICE_RUNTIME_FAILED"));return}
         operations.launch{try{current();val value=ru.genesis.calendar.security.E2eeFileManifestJson.readPrivateDocument(raw.toByteArray(Charsets.UTF_8));check(value.getString("job")==job){"E2EE_SCOPE_BINDING_MISMATCH"}
             when(value.getString("kind")){
-                "advice-product-call"->{E2eeKeys.exact(value,setOf("job","id","kind","method","payload"));val request=value.getString("id");check(request.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_ADVICE_RUNTIME_FAILED"}
+                "$channel-call"->{E2eeKeys.exact(value,setOf("job","id","kind","method","payload"));val request=value.getString("id");check(request.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_ADVICE_RUNTIME_FAILED"}
                     val response=try{JSONObject().put("value",call(value.getString("method"),value.getJSONObject("payload")))}catch(error:CancellationException){throw error}catch(error:Throwable){JSONObject().put("error",adviceRuntimeCode(error))}
                     current();if(active.get()&&!outcome.isCompleted)deliver(request,response)}
-                "advice-product-complete"->{E2eeKeys.exact(value,setOf("job","kind","value"));current();outcome.complete(value.getJSONObject("value"))}
+                "$channel-complete"->{E2eeKeys.exact(value,setOf("job","kind","value"));current();outcome.complete(value.getJSONObject("value"))}
                 "error"->{E2eeKeys.exact(value,setOf("job","kind","code"));outcome.completeExceptionally(IllegalStateException(value.getString("code").takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_ADVICE_RUNTIME_FAILED"))}
                 else->error("E2EE_ADVICE_RUNTIME_FAILED")
             }

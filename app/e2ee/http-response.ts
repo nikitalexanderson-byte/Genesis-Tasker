@@ -7,7 +7,7 @@ export function isE2eeResponsePath(path:string){return path.startsWith(prefix)&&
 export function e2eeResponseLimit(path:string,status:number){
  if(!isE2eeResponsePath(path))throw new Error('E2EE_ROUTE_FORBIDDEN');
  if(status<200||status>=300)return 8192;
- return path===prefix+'directory'?32*1024*1024:path===prefix+'read'?16*1024*1024:path===prefix+'membership-preview'?4*1024*1024:256*1024;
+ return path===prefix+'directory'?32*1024*1024:path===prefix+'read'?16*1024*1024:path===prefix+'command'?8*1024*1024:path===prefix+'membership-preview'?4*1024*1024:256*1024;
 }
 /** Same bounded technical-code grammar as native E2eeTransportProtocol. Raw
  * error bodies and arbitrary private strings are never exception payloads. */

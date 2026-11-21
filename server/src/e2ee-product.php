@@ -2,6 +2,27 @@
 declare(strict_types=1);
 
 const GENESIS_E2EE_PRODUCT_KINDS=['project','space','task','comment','project-comment','status','category','label','mindmap','file','workflow','review-policy','planning','sprint','series','automation','template','custom-field','custom-field-value','view','history','trash','import'];
+/** Live authorization/profile metadata only. Private titles, task bodies,
+ * custom-field definitions, file names and policy documents are never projected
+ * through this read. It is a display context, not a device/group trust grant. */
+function genesisE2eeProductContext(PDO $db,string $actor,array $scope):array
+{
+    genesisSharedRequireEnabled($actor);if(!in_array($scope['kind'],['project','space'],true)||$scope['state']!=='active')throw new DomainException('E2EE_NOT_ACTIVE');
+    $project=$scope['kind']==='project'?genesisSharedProjectAccess($scope['resource_id'],$actor,'read',true):null;
+    $spaceId=$project?$project['space_id']:$scope['resource_id'];$space=genesisSharedSpaceAccess($spaceId,$actor);
+    $permissions=$project?$project['permissions']:genesisSharedPermissions($space['member_role'],$space['permissions_json'],(int)$space['can_organize_tasks']===1,null,(bool)$space['project_access_restricted']);
+    if($project){$q=$db->prepare('SELECT m.user_id AS userId,m.role,sm.role AS spaceRole,sm.permissions_json,sm.can_organize_tasks,sm.project_access_restricted,u.display_name AS displayName FROM shared_project_members m JOIN shared_space_members sm ON sm.user_id=m.user_id AND sm.space_id=? JOIN users u ON u.id=m.user_id WHERE m.project_id=? ORDER BY m.user_id LIMIT 201');$q->execute([$spaceId,$scope['resource_id']]);}
+    else{$q=$db->prepare('SELECT m.user_id AS userId,m.role,m.role AS spaceRole,m.permissions_json,m.can_organize_tasks,m.project_access_restricted,m.member_category_id AS categoryId,u.display_name AS displayName FROM shared_space_members m JOIN users u ON u.id=m.user_id WHERE m.space_id=? ORDER BY m.user_id LIMIT 201');$q->execute([$spaceId]);}
+    $members=$q->fetchAll();$q->closeCursor();if(count($members)>200)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_CONTEXT_TOO_LARGE');
+    foreach($members as &$member){$member['permissions']=genesisSharedPermissions($member['spaceRole'],$member['permissions_json'],(int)$member['can_organize_tasks']===1,$project?$member['role']:null,(bool)$member['project_access_restricted']);$member['canOrganizeTasks']=(int)$member['can_organize_tasks'];unset($member['permissions_json'],$member['can_organize_tasks'],$member['project_access_restricted']);}unset($member);
+    $invitations=[];
+    if($permissions['inviteMembers']){
+        $table=$project?'shared_invitations':'shared_space_invitations';$column=$project?'project_id':'space_id';
+        $q=$db->prepare('SELECT id,email,role,expires_at AS expiresAt FROM '.$table.' WHERE '.$column.'=? AND consumed_at IS NULL AND revoked_at IS NULL AND expires_at>? ORDER BY id LIMIT 101');$q->execute([$scope['resource_id'],genesisNow()]);$invitations=$q->fetchAll();$q->closeCursor();
+        if(count($invitations)>100)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_CONTEXT_TOO_LARGE');
+    }
+    return ['ownerId'=>$scope['owner_id'],'spaceId'=>$spaceId,'role'=>$project?$project['member_role']:$space['member_role'],'spaceRole'=>$space['member_role'],'permissions'=>$permissions,'members'=>$members,'invitations'=>$invitations];
+}
 function genesisE2eeProductDomain(string $kind): string
 {
     return match($kind){'comment','project-comment'=>'shared-comment','mindmap'=>'mindmap','file'=>'attachment',default=>'shared-project'};
@@ -17,7 +38,7 @@ function genesisE2eeProductMetadata(string $kind,mixed $input): array
     $value=genesisE2eeExactFields($input,$fields);if($value['protocol']!==1)throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
     if($kind==='task'){
         if($value['statusId']!==null)genesisE2eeIdentifier($value['statusId']);if(!is_bool($value['completed']))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
-        genesisE2eeProductIds($value['approverIds']);genesisE2eeProductIds($value['dependsOnIds'],1000);genesisE2eeProductIds($value['presentFields']);
+        genesisE2eeProductIds($value['approverIds']);genesisE2eeProductIds($value['dependsOnIds'],1000);genesisE2eeProductIds($value['presentFields'],512);
     }
     if($kind==='workflow'){
         if(!is_bool($value['enabled'])||!is_array($value['statuses'])||!array_is_list($value['statuses'])||count($value['statuses'])>200
@@ -40,6 +61,7 @@ function genesisE2eeProductPublic(array $row): array
 }
 function genesisE2eeProductIndex(PDO $db,array $scope,array $payload): array
 {
+    require_once __DIR__.'/e2ee-product-bootstrap.php';$bootstrap=genesisE2eeProductBootstrapReady($db,$scope);
     genesisE2eeExactFields($payload,['after','limit']);$after=$payload['after'];if($after!=='')genesisE2eeIdentifier($after);$limit=genesisE2eeInteger($payload['limit'],1);if($limit>50)throw new InvalidArgumentException('E2EE_INVALID_LIMIT');
     $q=$db->prepare('SELECT * FROM e2ee_product_entities WHERE scope_id=? AND generation=? AND entity_id>? ORDER BY entity_id LIMIT ?');
     $q->bindValue(1,$scope['scope_id']);$q->bindValue(2,(int)$scope['generation'],PDO::PARAM_INT);$q->bindValue(3,$after);$q->bindValue(4,$limit,PDO::PARAM_INT);$q->execute();$rows=[];$usage=0;
@@ -48,6 +70,7 @@ function genesisE2eeProductIndex(PDO $db,array $scope,array $payload): array
     $entities=array_map('genesisE2eeProductPublic',$rows);$proposals=[];$attestations=[];$proofs=[];$heads=[];
     $proof=static function(string $raw)use(&$proofs,$consume):string{if(strlen($raw)>4*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_PAGE_TOO_LARGE');
         $packet=json_decode($raw,true,512,JSON_THROW_ON_ERROR);$hash=genesisE2eeCommandHash($packet['command']);if(!isset($proofs[$hash])){$consume(strlen($raw)+100);$proofs[$hash]=['proofHash'=>$hash,'packet'=>$raw];}return$hash;};
+    $bootstrapProof=$proof($bootstrap['commit_packet']);
     foreach($rows as $row){
         $history=genesisE2eeRow($db,'SELECT signed_command FROM e2ee_product_history WHERE scope_id=? AND generation=? AND entity_id=? AND revision=?',[$scope['scope_id'],$scope['generation'],$row['entity_id'],$row['revision']]);
         if(!$history)throw new DomainException('E2EE_PRODUCT_HISTORY_MISSING');$heads[]=['entityId'=>$row['entity_id'],'revision'=>(int)$row['revision'],'proofHash'=>$proof($history['signed_command'])];
@@ -58,7 +81,7 @@ function genesisE2eeProductIndex(PDO $db,array $scope,array $payload): array
             $a->execute([$scope['scope_id'],$scope['generation'],$item['proposalId']]);try{while($approval=$a->fetch()){$approval['proofHash']=$proof($approval['signedCommand']);unset($approval['signedCommand']);$consume(strlen(genesisE2eeJson($approval)));$attestations[]=$approval;}}finally{$a->closeCursor();}
         }}finally{$p->closeCursor();}
     }
-    return ['entities'=>$entities,'heads'=>$heads,'proofs'=>array_values($proofs),'proposals'=>$proposals,'attestations'=>$attestations,'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
+    return ['entities'=>$entities,'heads'=>$heads,'proofs'=>array_values($proofs),'proposals'=>$proposals,'attestations'=>$attestations,'bootstrapProofHash'=>$bootstrapProof,'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
 }
 /** No content field can enter this boundary. The staged signed version is
  * immutable; only an authorized transaction can make its reference active. */
@@ -160,6 +183,7 @@ function genesisE2eeProductApprove(PDO $db,string $actor,array $scope,array $pay
 }
 function genesisE2eeProductService(PDO $db,string $actor,array $scope,array $command,array $packet): array
 {
+    require_once __DIR__.'/e2ee-product-bootstrap.php';genesisE2eeProductBootstrapReady($db,$scope);
     $payload=$command['payload'];$id=genesisE2eeIdentifier($payload['intentId']??null);$hash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical($payload),true)),'+/','-_'),'=');
     $old=genesisE2eeRow($db,'SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action=? AND intent_id=?',[$scope['scope_id'],$actor,$command['action'],$id]);
     if($old){if(!hash_equals($old['payload_hash'],$hash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');return json_decode($old['result_json'],true,512,JSON_THROW_ON_ERROR);}

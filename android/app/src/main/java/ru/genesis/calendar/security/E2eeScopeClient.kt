@@ -59,6 +59,45 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         E2eeKeys.technical(domain); E2eeKeys.technical(objectId)
         return hash("$scopeId\u0000$domain\u0000$objectId")
     }
+    private fun knownPrefix(generation:Long)="confirmed:${hash(scopeId)}:$generation:"
+    private fun confirmed(envelope:E2eeEnvelope.Envelope):UnlockedE2eeVault.Write?{
+        val context=envelope.context.toJson();val value=current()
+        check(context.getString("scopeId")==scopeId&&context.getString("ownerId")==ownerId&&context.getLong("dataGeneration")==value.generation){"E2EE_CONTEXT_MISMATCH"}
+        val key=knownPrefix(value.generation)+id(context.getString("domain"),context.getString("objectId"));val prior=device.vault.read("key-check",key)
+        val head=JSONObject().put("scopeId",scopeId).put("generation",value.generation).put("domain",context.get("domain")).put("objectId",context.get("objectId"))
+            .put("revision",context.get("revision")).put("payloadHash",E2eeEnvelope.payloadHash(envelope))
+        try{if(prior!=null){val old=E2eeFileManifestJson.readPrivateDocument(prior.bytes);E2eeKeys.exact(old,setOf("scopeId","generation","domain","objectId","revision","payloadHash"))
+                check(old.get("scopeId")==scopeId&&old.getLong("generation")==value.generation&&old.get("domain")==head.get("domain")&&old.get("objectId")==head.get("objectId")&&E2eeCommands.integer(old.get("revision"))>=1){"E2EE_CORRUPT_CHECKPOINT"}
+                E2eeEnvelope.decode(old.getString("payloadHash"),32)
+                check(old.getLong("revision")<head.getLong("revision")||old.getLong("revision")==head.getLong("revision")&&old.get("payloadHash")==head.get("payloadHash")){"E2EE_REMOTE_ROLLBACK"}
+                if(old.getLong("revision")==head.getLong("revision"))return null}
+            return UnlockedE2eeVault.Write("key-check",key,head.toString().toByteArray(Charsets.UTF_8),prior?.serial)
+        }finally{prior?.bytes?.fill(0)}
+    }
+    /** Per-object protected checkpoints include confirmed chunks and all heads
+     * observed since the last retired manifest, without a lossy mutable index. */
+    private fun assertKnownHeads(objects:JSONArray){
+        val value=current();val prefix=knownPrefix(value.generation);val byId=mutableMapOf<String,JSONObject>()
+        for(at in 0 until objects.length()){val row=objects.getJSONObject(at);val key=prefix+id(row.getString("domain"),row.getString("objectId"));check(byId.put(key,row)==null){"E2EE_MANIFEST_MISMATCH"}}
+        for(key in device.vault.listLocal("key-check",prefix)){val saved=device.vault.read("key-check",key)?:error("E2EE_CORRUPT_CHECKPOINT")
+            try{val old=E2eeFileManifestJson.readPrivateDocument(saved.bytes);E2eeKeys.exact(old,setOf("scopeId","generation","domain","objectId","revision","payloadHash"))
+                check(old.get("scopeId")==scopeId&&old.getLong("generation")==value.generation&&E2eeCommands.integer(old.get("revision"))>=1&&key==prefix+id(old.getString("domain"),old.getString("objectId"))){"E2EE_CORRUPT_CHECKPOINT"}
+                E2eeEnvelope.decode(old.getString("payloadHash"),32);val head=byId[key]?:error("E2EE_REMOTE_ROLLBACK")
+                check(head.getLong("revision")>old.getLong("revision")||head.getLong("revision")==old.getLong("revision")&&head.get("payloadHash")==old.get("payloadHash")){"E2EE_REMOTE_ROLLBACK"}
+            }finally{saved.bytes.fill(0)}}
+        // Candidate devices predating the checkpoint catalogue still retain
+        // their exact immutable writer plans. Never rotate past an unfinished job.
+        for(key in device.vault.listLocal("outbox","job:")){val saved=device.vault.read("outbox",key)?:error("E2EE_CORRUPT_OUTBOX")
+            try{val job=E2eeFileManifestJson.readPrivateDocument(saved.bytes);if(job.getString("scopeId")!=scopeId||job.getLong("generation")!=value.generation)continue
+                check(job.getBoolean("complete")){"E2EE_PENDING_SAVE_REQUIRED"};val plan=job.getJSONArray("plan")
+                for(at in 0 until plan.length()){val item=plan.getJSONObject(at);val bytes=device.vault.read("outbox",item.getString("recordId"))?:error("E2EE_CORRUPT_OUTBOX")
+                    try{val envelope=E2eeEnvelope.Envelope.fromJson(E2eeFileManifestJson.readPrivateDocument(bytes.bytes));val context=envelope.context.toJson()
+                        val head=byId[prefix+id(context.getString("domain"),context.getString("objectId"))]?:error("E2EE_REMOTE_ROLLBACK")
+                        check(E2eeEnvelope.payloadHash(envelope)==item.getString("hash")&&(head.getLong("revision")>context.getLong("revision")||head.getLong("revision")==context.getLong("revision")&&head.get("payloadHash")==item.get("hash"))){"E2EE_REMOTE_ROLLBACK"}
+                    }finally{bytes.bytes.fill(0)}}
+            }finally{saved.bytes.fill(0)}}
+        device.requireOpen();check(current()===value){"E2EE_DIRECTORY_CONFLICT"}
+    }
 
     @Synchronized fun refresh(): E2eeDirectory.Verified {
         refreshed = false
@@ -265,6 +304,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         job.put("uploaded", job.getInt("uploaded") + 1).put("pending", JSONObject.NULL)
             .put("complete", job.getInt("uploaded") == job.getJSONArray("plan").length())
         val confirmed = mutableListOf<UnlockedE2eeVault.Write>()
+        this.confirmed(envelope)?.let{confirmed+=it}
         if (job.getBoolean("complete")) {
             val floor = device.vault.read("key-check", "floor:$id")
             val previous = try { floor?.let { JSONObject(it.bytes.toString(Charsets.UTF_8)) } } finally { floor?.bytes?.fill(0) }
@@ -372,15 +412,18 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             || context.getLong("revision") == previous.getLong("revision") && payloadHash == previous.get("hash")) { "E2EE_REMOTE_ROLLBACK" }
         val root = roots[context.getString("keyId")] ?: throw IllegalStateException("E2EE_KEY_UNAVAILABLE")
         historicalHead(envelope); val signer = E2eeDirectory.contentSigningKey(frame, context)
+        val chunks=mutableListOf<E2eeEnvelope.Envelope>()
         val opened = if (domain == "shared-comment") E2eeFiles.Opened(E2eeEnvelope.open(root, signer, envelope.context, envelope), "", "application/json")
             else E2eeFiles.open(root, signer, envelope.context, envelope) { chunkId ->
-                (envelope("attachment", chunkId) ?: throw IllegalStateException("E2EE_CORRUPT_FILE")).also { historicalHead(it) }
+                (envelope("attachment", chunkId) ?: throw IllegalStateException("E2EE_CORRUPT_FILE")).also { historicalHead(it);chunks+=it }
             }
         val encoded = JSONObject().put("revision", context.get("revision")).put("hash", payloadHash).toString().toByteArray()
+        val writes=mutableListOf(UnlockedE2eeVault.Write("key-check","floor:$key",encoded,floor?.serial))
         try {
-            device.vault.write(listOf(UnlockedE2eeVault.Write("key-check", "floor:$key", encoded, floor?.serial)))
+            for(item in chunks+envelope)confirmed(item)?.let{writes+=it}
+            device.vault.write(writes)
             device.requireOpen(); return Opened(opened.bytes, opened.filename, opened.mediaType, context.getLong("revision"))
-        } catch (error: Exception) { opened.bytes.fill(0); throw error } finally { encoded.fill(0) }
+        } catch (error: Exception) { opened.bytes.fill(0); throw error } finally { writes.forEach{it.bytes.fill(0)} }
     }
     @Synchronized fun assertObjectReference(domain:String,objectId:String,revision:Long,payloadHash:String){
         val value=current();val item=envelope(domain,objectId);device.requireOpen();val context=item?.context?.toJson()
@@ -406,7 +449,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         }finally{previous?.bytes?.fill(0)}
     }
     @Synchronized fun executeService(action:String,payload:JSONObject,intentId:String):JSONObject{
-        check(action in setOf("product-commit","product-approve","stoicheion-grant","advice-issue")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
+        check(action in setOf("product-commit","product-approve","stoicheion-grant","advice-issue","product-bootstrap-start","product-bootstrap-stage","product-bootstrap-complete")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
         val held=JSONObject(payload.toString()).put("intentId",intentId);val key="service:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest("$action\u0000$intentId".toByteArray(Charsets.UTF_8)))
         for(attempt in 0..1){val value=current();val prior=device.vault.read("outbox",key)
             try{val old=prior?.let{E2eeFileManifestJson.readPrivateDocument(it.bytes)};val command=old?.getJSONObject("command")
@@ -425,7 +468,14 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     }
     @Synchronized fun readProductIndex(after:String="",limit:Int=50):JSONObject{if(after.isNotEmpty())E2eeKeys.technical(after);check(limit in 1..50){"E2EE_INVALID_LIMIT"};return readPacket("product-index",JSONObject().put("after",after).put("limit",limit))}
     @Synchronized fun readStoicheionState():JSONObject=readPacket("stoicheion-state",JSONObject())
+    @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..255){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",afterPart))}
+    @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject())
     @Synchronized fun readAdvicePolicy():JSONObject=readPacket("advice-policy",JSONObject())
+    @Synchronized fun originalMigrationManifest():JSONObject{
+        current();val sealed=directoryFrames.values.firstOrNull{it.state=="active"&&it.sealedHeads?.cryptoEpoch==0L}?.sealedHeads?:error("E2EE_MIGRATION_PROOF_REQUIRED")
+        val response=readPacket("sealed-heads",JSONObject().put("cryptoEpoch",0));val objects=response.getJSONArray("objects");check(objects.length()==sealed.count&&E2eeFiles.objectManifestHash(objects)==sealed.hash){"E2EE_MANIFEST_MISMATCH"};device.requireOpen()
+        return JSONObject().put("manifestHash",sealed.hash).put("objectCount",sealed.count)
+    }
     @Synchronized fun authorizeMembership(intentId:String,changeHash:String):JSONObject{
         E2eeKeys.technical(intentId);E2eeEnvelope.decode(changeHash,32);val value=current();val own=value.devices[device.deviceId]
         check(refreshed&&value.kind=="personal"&&value.ownerId==device.ownerId&&value.state=="active"&&own?.role=="owner"&&!own.revoked){"E2EE_OWNER_REQUIRED"}
@@ -459,6 +509,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
                 for(at in 0 until rows.length())objects.put(rows.getJSONObject(at))
             }while(objects.length()<count)
             check(E2eeFiles.objectManifestHash(objects)==manifest.getString("manifestHash")){"E2EE_MANIFEST_MISMATCH"}
+            assertKnownHeads(objects)
             val heads=(0 until objects.length()).associate{val row=objects.getJSONObject(it);(row.getString("domain")+"\u0000"+row.getString("objectId")) to row}
             val sealed=sealedHeads();if(sealed!=null)for(at in 0 until sealed.length()){val floor=sealed.getJSONObject(at);val head=heads[floor.getString("domain")+"\u0000"+floor.getString("objectId")]?:error("E2EE_REMOTE_ROLLBACK")
                 check(head.getLong("revision")>floor.getLong("revision")||head.getLong("revision")==floor.getLong("revision")&&head.get("payloadHash")==floor.get("payloadHash")){"E2EE_REMOTE_ROLLBACK"}}
@@ -474,7 +525,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
                 for(at in 0 until roles.length()){val row=roles.getJSONObject(at);val id=row.getString("deviceId")
                     if(row.isNull("role"))revoked.put(id)else{changes.put(row);capsules.put(JSONObject().put("deviceId",id).put("capsule",E2eeKeys.sealRoot(root,requireNotNull(value.devices[id]).receivingKey,E2eeKeys.RootRecipient(ownerId,scopeId,nextEpoch,keyId,id))))}}
                 val recovery=E2eeKeys.sealRoot(root,value.recoveryKit.getJSONObject("authority").getString("receivingKey"),E2eeKeys.RootRecipient(ownerId,scopeId,nextEpoch,keyId,"recovery"))
-                check(current()===value){"E2EE_DIRECTORY_CONFLICT"};val signed=packet("rotate-membership",JSONObject().put("membershipHash",changeHash).put("revokedDeviceIds",revoked).put("roleChanges",changes)
+                check(current()===value){"E2EE_DIRECTORY_CONFLICT"};assertKnownHeads(objects);val signed=packet("rotate-membership",JSONObject().put("membershipHash",changeHash).put("revokedDeviceIds",revoked).put("roleChanges",changes)
                     .put("cryptoEpoch",nextEpoch).put("securityEpoch",value.securityEpoch+1).put("keyId",keyId).put("capsules",capsules).put("recoveryCapsule",recovery)
                     .put("retiredManifestHash",manifest.get("manifestHash")).put("retiredObjectCount",count))
                 val bytes=JSONObject().put("protocol",1).put("roles",roles).put("manifest",manifest).put("packet",signed).toString().toByteArray(Charsets.UTF_8)
@@ -497,8 +548,9 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     @Synchronized fun verifyServiceProof(input:JSONObject):JSONObject{
         current();val packet=JSONObject(input.toString());val command=packet.getJSONObject("command");val frame=directoryFrames[command.getLong("expectedRevision")]?:error("E2EE_PRODUCT_PROOF_INVALID")
         check(command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId&&command.get("checkpointHash")==frame.checkpoint.hash&&command.getLong("securityEpoch")==frame.securityEpoch
-            &&command.getString("action") in setOf("product-commit","product-approve")){"E2EE_PRODUCT_PROOF_INVALID"}
+            &&command.getString("action") in setOf("product-commit","product-approve","product-bootstrap-stage","product-bootstrap-complete")){"E2EE_PRODUCT_PROOF_INVALID"}
         val signer=frame.devices[command.getString("deviceId")]?:error("E2EE_PRODUCT_PROOF_INVALID");check(!signer.revoked){"E2EE_PRODUCT_PROOF_INVALID"}
+        if(command.getString("action").startsWith("product-bootstrap-"))check(signer.role=="owner"&&signer.userId==frame.ownerId){"E2EE_PRODUCT_PROOF_INVALID"}
         if(command.getString("action")=="product-commit"){val rows=command.getJSONObject("payload").getJSONArray("operations");check(rows.length() in 1..100){"E2EE_PRODUCT_PROOF_INVALID"}
             for(at in 0 until rows.length()){val comment=rows.getJSONObject(at).getString("kind") in setOf("comment","project-comment");check(signer.role in if(comment)setOf("owner","writer","commenter")else setOf("owner","writer")){"E2EE_PRODUCT_PROOF_INVALID"}}}
         val key=KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(E2eeEnvelope.decode(signer.signingKey,91)));E2eeEnvelope.assertP256(key)

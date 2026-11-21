@@ -25,6 +25,9 @@ import {backupJson} from '../backup-format';
 import {exactKeys} from '../e2ee/keys';
 import type {MigrationSourceContext} from '../e2ee/migration';
 import type {PrivatePathAdapter} from '../e2ee/migration-sources';
+import {SharedLiveModel,validateSharedLiveContext,type SavedSharedRequest} from '../e2ee/shared-live';
+import type {ProductEdit,ProductVersion} from '../e2ee/shared-product';
+import type {SharedDomainBinding} from '../e2ee/shared-domain';
 
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
@@ -44,6 +47,23 @@ async function run(encoded:string){
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    if(value.mode==='shared-product-v1'){
+      exactKeys(value,['protocol','mode','binding','actorId','online','method','path','body','resumeId']);
+      if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.method!=='string'||typeof value.path!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');
+      const invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'shared-product-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
+      if(typeof value.online!=='boolean')throw new Error('E2EE_SHARED_REQUEST_INVALID');
+      const model=new SharedLiveModel({binding:value.binding as SharedDomainBinding,actorId:value.actorId,online:value.online,current,
+        context:async()=>validateSharedLiveContext(await invoke('context')),
+        versions:async()=>{const heads=await invoke('heads');if(!Array.isArray(heads)||heads.length>10000)throw new Error('E2EE_PRODUCT_INDEX_INVALID');const rows:ProductVersion[]=[];let size=0;
+          for(const head of heads){exactKeys(head,['entityId']);const row=await invoke('version',{entityId:head.entityId}) as ProductVersion;size+=JSON.stringify(row).length;if(size>128*1024*1024)throw new Error('E2EE_PRODUCT_CONTENT_TOO_LARGE');rows.push(row);}return rows;},
+        stage:async(edits:ProductEdit[],intentId:string)=>await invoke('stage',{edits,intentId}) as string,
+        flush:intentId=>invoke('flush',{intentId}),
+        loadRequest:async id=>await invoke('requestLoad',{id}) as {value:SavedSharedRequest;serial:number}|null,
+        saveRequest:async(document,expected)=>await invoke('requestSave',{document,expected}) as number,
+      });
+      const result=value.resumeId===null?await model.request(value.method,value.path,value.body as Record<string,unknown>):await model.resume(value.resumeId as string);
+      current();send({job,kind:'shared-product-complete',value:result});return;
+    }
     if(value.mode==='advice-product-v1'){
       exactKeys(value,['protocol','mode','ownerId','scopeId','offline','language','preferences','action','args']);
       if(value.protocol!==1||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.offline!=='boolean')throw new Error('E2EE_ADVICE_CONTENT_INVALID');

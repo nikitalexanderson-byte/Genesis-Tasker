@@ -528,6 +528,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load(offline);current()
             val preferences=ru.genesis.calendar.security.E2eePrivatePreferences(app,account);preferences.load();current()
             ru.genesis.calendar.security.NativePrivateProducts.attach(account,product,preferences)
+            client.bindPrivateProduct(client.currentGeneration(),uid)
         };current();val prior=mutableState.value;val settings=prior.accountSettings?:withContext(Dispatchers.IO){CachedAccountEntry(app).read(app.workspaceScope)?.settings}
         current();mutableState.value=prior.copy(ready=true,busy=false,outgoingSyncIssue=null,accountSettings=settings?.let{ru.genesis.calendar.security.NativePrivateProducts.preferences(app.workspaceScope).project(it)})
         }catch(error:Throwable){opened?.close();throw error}finally{secret?.fill(0)}
@@ -1151,6 +1152,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private suspend fun sharedCachedCall(path: String,
         action: (AuthSessionClient, Long) -> JSONObject): JSONObject {
         val local = mutableState.value
+        val privateOwner=local.user?.uid
+        if(privateOwner!=null&&ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(privateOwner))){
+            check(local.ready&&local.accountSettings?.sharedProjectsEnabled==true){"E2EE_SCOPE_FORBIDDEN"};val generation=client.currentGeneration()
+            return withContext(Dispatchers.IO){fun current(){check(client.isCurrent(generation)&&mutableState.value.user?.uid==privateOwner&&app.workspaceScope==CloudAccountSnapshot.scopeFor(privateOwner)){"E2EE_ACCOUNT_CHANGED"};ru.genesis.calendar.security.NativePrivateProducts.account(app.workspaceScope,privateOwner).requireOpen()}
+                current();action(client,generation).also{current()}}
+        }
         if (local.ready && local.requiresSignIn && local.user != null &&
             local.accountSettings?.sharedProjectsEnabled == true &&
             local.accountSettings.featureAccess.allows("shared-projects")) {
@@ -1180,7 +1187,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         check(local.ready && local.user != null && local.accountSettings?.sharedProjectsEnabled == true)
         val generation = client.currentGeneration()
         return withContext(Dispatchers.IO) {
-            action(client.takeUnless { local.requiresSignIn }, generation)
+            action(client.takeUnless { local.requiresSignIn&&!ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(local.user.uid)) }, generation)
         }
     }
 
@@ -1749,6 +1756,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         createSharedTask(projectId, JSONObject().put("title", title).put("statusId", statusId)
             .put("categoryId", categoryId ?: JSONObject.NULL))
     override suspend fun createSharedTask(projectId: String, fields: JSONObject): JSONObject = sharedTaskCall { api, generation ->
+        val privateOwner=mutableState.value.user?.uid?:throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(privateOwner)))return@sharedTaskCall (api?:error("E2EE_UNLOCK_REQUIRED")).createSharedTask(generation,projectId,JSONObject(fields.toString()).put("requestId",UUID.randomUUID().toString()))
         if (fields.has("sourceTaskId") || fields.has("mindmapSource")) return@sharedTaskCall api?.createSharedTask(generation, projectId, fields)
             ?: throw AuthFailure(AuthFailure.Kind.NETWORK)
         val userId = mutableState.value.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
@@ -1774,11 +1783,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     override suspend fun queuedSharedTasks(projectId: String): List<JSONObject> = withContext(Dispatchers.IO) {
         val userId = mutableState.value.user?.uid ?: return@withContext emptyList()
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(userId)))return@withContext ru.genesis.calendar.security.NativePrivateProducts.sharedPending(CloudAccountSnapshot.scopeFor(userId),projectId).map{item->val request=item.getJSONObject("request");val body=request.getJSONObject("body");JSONObject().put("requestId",request.get("id")).put("projectId",item.get("resourceId")).put("kind",if(request.getString("method")=="POST")"create"else"update").put("title",body.optString("title")).put("body",body).put("queuedAt",java.time.Instant.parse(request.getString("createdAt")).toEpochMilli())}
         sharedOffline.queued(userId).filter { it.optString("projectId") == projectId }
     }
-    fun pendingSharedMutationsCount(): Int = mutableState.value.user?.uid?.let { sharedOffline.queued(it).size } ?: 0
+    fun pendingSharedMutationsCount(): Int = mutableState.value.user?.uid?.let { if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(it))) {if(ru.genesis.calendar.security.NativePrivateProducts.isOpen(CloudAccountSnapshot.scopeFor(it)))ru.genesis.calendar.security.NativePrivateProducts.sharedPendingCount(CloudAccountSnapshot.scopeFor(it))else 0}else sharedOffline.queued(it).size } ?: 0
     override suspend fun discardFailedSharedMutation(requestId: String): Unit = withContext(Dispatchers.IO) {
         val userId = mutableState.value.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        check(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(userId))){"E2EE_SHARED_PENDING_REVIEW_REQUIRED"}
         check(sharedOffline.queued(userId).any {
             it.optString("requestId") == requestId && it.optString("error").isNotBlank()
         }) { "SHARED_DRAFT_NOT_FOUND" }
@@ -1786,6 +1797,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     override suspend fun retryFailedSharedMutation(requestId: String): JSONObject = sharedTaskCall { api, generation ->
         val userId = mutableState.value.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(userId)))return@sharedTaskCall kotlinx.coroutines.runBlocking{ru.genesis.calendar.security.NativePrivateProducts.resumeShared(CloudAccountSnapshot.scopeFor(userId),requestId)}
         val item = sharedOffline.queued(userId).firstOrNull {
             it.optString("requestId") == requestId && it.optString("error").isNotBlank()
         } ?: throw IllegalStateException("SHARED_DRAFT_NOT_FOUND")
@@ -1807,6 +1819,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     override suspend fun flushSharedOfflineTasks(): Int = sharedCall { api, generation ->
         val userId = mutableState.value.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(userId)))return@sharedCall JSONObject().put("synced",kotlinx.coroutines.runBlocking{ru.genesis.calendar.security.NativePrivateProducts.flushShared(CloudAccountSnapshot.scopeFor(userId))})
         var synced = 0
         for (item in sharedOffline.queued(userId)) {
             if (item.optString("error").isNotBlank()) continue
@@ -1838,6 +1851,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private suspend fun sendSharedTaskChange(projectId: String, taskId: String, changes: JSONObject,
         kind: String): JSONObject = sharedTaskCall { api, generation ->
         val userId = mutableState.value.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(userId))){
+            val endpoint=api?:error("E2EE_UNLOCK_REQUIRED");val body=JSONObject(changes.toString()).put("requestId",UUID.randomUUID().toString())
+            return@sharedTaskCall if(kind=="move")endpoint.moveSharedTask(generation,projectId,taskId,body)else endpoint.updateSharedTask(generation,projectId,taskId,body)
+        }
         check(sharedOffline.queued(userId).none {
             it.optString("taskId") == taskId
         }) { "SHARED_TASK_PENDING" }

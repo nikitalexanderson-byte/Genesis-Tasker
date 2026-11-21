@@ -11,6 +11,7 @@ internal object E2eeTransportProtocol {
     fun responseLimit(path: String): Int = when (path) {
         "/e2ee/v1/directory" -> 32 * 1024 * 1024
         "/e2ee/v1/read" -> 16 * 1024 * 1024
+        "/e2ee/v1/command" -> 8 * 1024 * 1024
         "/e2ee/v1/membership-preview" -> 4 * 1024 * 1024
         else -> 256 * 1024
     }

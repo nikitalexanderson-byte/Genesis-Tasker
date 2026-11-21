@@ -18,10 +18,14 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     private var closed=false
     class SharedScope(val client:E2eeScopeClient,val directory:E2eeDirectory.Verified){override fun toString()="E2eeProductAccount.SharedScope([redacted])"}
     private val shared=mutableMapOf<String,SharedScope>()
-    fun requireOpen(){check(!closed){"E2EE_UNLOCK_REQUIRED"};assertCurrent();device.requireOpen()}
+    fun requireOpen(){UpdateGate.requireOpen();check(!closed){"E2EE_UNLOCK_REQUIRED"};assertCurrent();device.requireOpen()}
+    fun scopeSummaries():JSONArray{requireOpen();check(!offline){"E2EE_ONLINE_REQUIRED"};val value=transport.status();requireOpen();E2eeKeys.exact(value,setOf("pilotAllowed","cryptoProtocol","scopes"));check(value.get("pilotAllowed") is Boolean&&value.getInt("cryptoProtocol")==1){"E2EE_INVALID_RESPONSE"};val scopes=value.getJSONArray("scopes");check(scopes.length()<=4096){"E2EE_INVALID_RESPONSE"};val seen=mutableSetOf<String>()
+        for(at in 0 until scopes.length()){val row=scopes.getJSONObject(at);E2eeKeys.exact(row,setOf("scopeId","kind","resourceId","state"));check(seen.add(E2eeKeys.technical(row.getString("scopeId")))&&row.getString("kind") in setOf("personal","project","space")&&row.getString("state") in setOf("preparing","uploading","verified","active","retirement")){"E2EE_INVALID_RESPONSE"};E2eeKeys.technical(row.getString("resourceId"))};return JSONArray(scopes.toString())}
     @Synchronized fun close(){if(!closed){closed=true;shared.values.forEach{it.client.close()};shared.clear();client.close();device.lock()}}
     @Synchronized fun openSharedScope(scopeId:String,kind:String,resourceId:String,scopeOwner:String,pin:JSONObject):SharedScope{
         requireOpen();check(kind in setOf("project","space")){"E2EE_SCOPE_BINDING_MISMATCH"};E2eeKeys.technical(scopeId);E2eeKeys.technical(resourceId);E2eeKeys.technical(scopeOwner)
+        shared[scopeId]?.let{existing->val known=existing.directory;check(known.kind==kind&&known.resourceId==resourceId&&known.ownerId==scopeOwner&&E2eeProductJson.same(known.recoveryKit.getJSONObject("authority"),pin)){"E2EE_SCOPE_BINDING_MISMATCH"}
+            val directory=if(offline)existing.client.hydrateOffline()else existing.client.refresh();requireOpen();return SharedScope(existing.client,directory).also{shared[scopeId]=it}}
         val peer=E2eeScopeClient(device,scopeOwner,scopeId,pin,transport);val verified=if(offline)peer.hydrateOffline()else peer.refresh();requireOpen()
         check(verified.scopeId==scopeId&&verified.kind==kind&&verified.resourceId==resourceId&&verified.ownerId==scopeOwner&&verified.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"}
         return SharedScope(peer,verified).also{shared.remove(scopeId)?.client?.close();shared[scopeId]=it}

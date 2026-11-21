@@ -13,7 +13,7 @@ export function productMetadata(kind:ProductKind,input:unknown):ProductMetadata{
  const fields=kind==='task'?['protocol','statusId','completed','approverIds','dependsOnIds','presentFields']:kind==='workflow'?['protocol','enabled','statuses','transitions']:['protocol'];exactKeys(input,fields);
  if(input.protocol!==1)throw new Error('E2EE_PRODUCT_METADATA_INVALID');
  const ids=(value:unknown,max=200):string[]=>{if(!Array.isArray(value)||value.length>max||new Set(value).size!==value.length)throw new Error('E2EE_PRODUCT_METADATA_INVALID');for(const id of value)assertTechnical(id);return value;};
- if(kind==='task'){if(input.statusId!==null)assertTechnical(input.statusId);if(typeof input.completed!=='boolean')throw new Error('E2EE_PRODUCT_METADATA_INVALID');ids(input.approverIds);ids(input.dependsOnIds,1000);ids(input.presentFields);}
+ if(kind==='task'){if(input.statusId!==null)assertTechnical(input.statusId);if(typeof input.completed!=='boolean')throw new Error('E2EE_PRODUCT_METADATA_INVALID');ids(input.approverIds);ids(input.dependsOnIds,1000);ids(input.presentFields,512);}
  if(kind==='workflow'){
   if(typeof input.enabled!=='boolean'||!Array.isArray(input.statuses)||input.statuses.length>200||!Array.isArray(input.transitions)||input.transitions.length>10000)throw new Error('E2EE_PRODUCT_METADATA_INVALID');
   const statuses=new Set<string>();for(const row of input.statuses){exactKeys(row,['statusId','wipLimit','requiredFields']);assertTechnical(row.statusId);if(statuses.has(row.statusId)||row.wipLimit!==null&&(!Number.isSafeInteger(row.wipLimit)||Number(row.wipLimit)<1||Number(row.wipLimit)>100000))throw new Error('E2EE_PRODUCT_METADATA_INVALID');statuses.add(row.statusId);ids(row.requiredFields);}

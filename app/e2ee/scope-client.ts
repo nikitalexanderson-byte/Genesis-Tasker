@@ -10,7 +10,7 @@ export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
   command(packet:SignedE2eeCommand):Promise<Record<string,WireValue>>;
   read(packet:SignedE2eeCommand):Promise<{envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
-    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];checkpointHash:string;directoryRevision:number}>;
+    receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;context?:unknown;bootstrap?:unknown;part?:unknown;bootstrapProofHash?:string;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];checkpointHash:string;directoryRevision:number}>;
 }
 
 export type ReviewedDeviceRole={deviceId:string;role:'owner'|'writer'|'commenter'|'reader'|null};
@@ -66,6 +66,49 @@ export class E2eeScopeClient {
     this.#device.requireOpen();this.#directory=directory;this.#history=frames;this.#roots=roots;
   }
   async #id(domain:E2eeContext['domain'],objectId:string){assertTechnical(objectId);return hash(`${this.#scopeId}\0${domain}\0${objectId}`);}
+  async #knownPrefix(generation:number){return `confirmed:${await hash(this.#scopeId)}:${generation}:`;}
+  async #confirmed(envelope:E2eeEnvelope):Promise<LocalWrite|null>{
+    const context=envelope.context,directory=this.#open();
+    if(context.scopeId!==this.#scopeId||context.ownerId!==this.#owner||context.dataGeneration!==directory.generation)throw new Error('E2EE_CONTEXT_MISMATCH');
+    const objectId=(await this.#knownPrefix(directory.generation))+await this.#id(context.domain,context.objectId),prior=await this.#device.vault.read('key-check',objectId);
+    const head={scopeId:this.#scopeId,generation:directory.generation,domain:context.domain,objectId:context.objectId,revision:context.revision,payloadHash:await envelopePayloadHash(envelope)};
+    try{
+      if(prior){const old=JSON.parse(decoder.decode(prior.value));exactKeys(old,['scopeId','generation','domain','objectId','revision','payloadHash']);
+        if(old.scopeId!==head.scopeId||old.generation!==head.generation||old.domain!==head.domain||old.objectId!==head.objectId||!Number.isSafeInteger(old.revision)||old.revision<1)throw new Error('E2EE_CORRUPT_CHECKPOINT');
+        decodeE2eeBytes(old.payloadHash,32);
+        if(old.revision>head.revision||old.revision===head.revision&&old.payloadHash!==head.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');
+        if(old.revision===head.revision)return null;
+      }
+      return{domain:'key-check',objectId,value:encoder.encode(JSON.stringify(head)),expected:prior?.serial??null};
+    }finally{prior?.value.fill(0);}
+  }
+  /** Includes confirmed chunks and objects added after the last signed retired
+   * manifest. A server cannot omit a newer locally observed object during rekey.
+   * Per-object CAS avoids a shared mutable index losing concurrent additions. */
+  async #assertKnownHeads(objects:{domain:string;objectId:string;revision:number;payloadHash:string}[]){
+    const directory=this.#open(),prefix=await this.#knownPrefix(directory.generation),byId=new Map<string,typeof objects[number]>();
+    for(const row of objects){const id=prefix+await this.#id(row.domain as E2eeContext['domain'],row.objectId);if(byId.has(id))throw new Error('E2EE_MANIFEST_MISMATCH');byId.set(id,row);}
+    const ids=await this.#device.vault.listLocal('key-check',prefix);this.#device.requireOpen();
+    for(const id of ids){const saved=await this.#device.vault.read('key-check',id);if(!saved)throw new Error('E2EE_CORRUPT_CHECKPOINT');
+      try{const old=JSON.parse(decoder.decode(saved.value));exactKeys(old,['scopeId','generation','domain','objectId','revision','payloadHash']);
+        if(old.scopeId!==this.#scopeId||old.generation!==directory.generation||!Number.isSafeInteger(old.revision)||old.revision<1||id!==prefix+await this.#id(old.domain,old.objectId))throw new Error('E2EE_CORRUPT_CHECKPOINT');
+        decodeE2eeBytes(old.payloadHash,32);const head=byId.get(id);if(!head||head.revision<old.revision||head.revision===old.revision&&head.payloadHash!==old.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');
+      }finally{saved.value.fill(0);}
+    }
+    // Adopt the durable pre-index writer history too. This is necessary for
+    // candidate devices created before confirmed-head records were introduced.
+    for(const id of await this.#device.vault.listLocal('outbox','job:')){const record=await this.#device.vault.read('outbox',id);if(!record)throw new Error('E2EE_CORRUPT_OUTBOX');
+      try{const job=JSON.parse(decoder.decode(record.value)) as UploadJob;if(job.scopeId!==this.#scopeId||job.generation!==directory.generation)continue;
+        if(!job.complete)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
+        for(const item of job.plan){const bytes=await this.#device.vault.read('outbox',item.recordId);if(!bytes)throw new Error('E2EE_CORRUPT_OUTBOX');
+          try{const envelope=validateE2eeEnvelope(JSON.parse(decoder.decode(bytes.value))),head=byId.get(prefix+await this.#id(envelope.context.domain,envelope.context.objectId));
+            if(await envelopePayloadHash(envelope)!==item.hash||!head||head.revision<envelope.context.revision||head.revision===envelope.context.revision&&head.payloadHash!==item.hash)throw new Error('E2EE_REMOTE_ROLLBACK');
+          }finally{bytes.value.fill(0);}
+        }
+      }finally{record.value.fill(0);}
+    }
+    this.#device.requireOpen();if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');
+  }
   async #packet(action:string,payload:Record<string,WireValue>,operationId=crypto.randomUUID()) {
     const directory=this.#open();return signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scopeId,deviceId:this.#device.deviceId,action,
       expectedRevision:directory.checkpoint.revision,checkpointHash:directory.checkpoint.hash,securityEpoch:directory.securityEpoch,operationId,payload},this.#device.keys().signing.privateKey);
@@ -200,6 +243,7 @@ export class E2eeScopeClient {
       if(await envelopePayloadHash(envelope)!==item.hash||result.revision!==envelope.context.revision||result.payloadHash!==item.hash||result.generation!==job.generation)throw new Error('E2EE_INVALID_RECEIPT');
       job.uploaded++;job.pending=null;job.complete=job.uploaded===job.plan.length;
       const confirmed:LocalWrite[]=[];
+      const observed=await this.#confirmed(envelope);if(observed)confirmed.push(observed);
       if(job.complete) {
         const floor=await this.#device.vault.read('key-check',`floor:${id}`);let previous:{revision:number;hash:string}|null=null;
         try{if(floor)previous=JSON.parse(decoder.decode(floor.value));}finally{floor?.value.fill(0);}
@@ -300,11 +344,14 @@ export class E2eeScopeClient {
     const root=this.#roots.get(context.keyId);if(!root)throw new Error('E2EE_KEY_UNAVAILABLE');
     await this.#historicalHead(envelope);
     const signer=await contentSigningKey(directory,context);
+    const chunks:E2eeEnvelope[]=[];
     const opened=domain==='shared-comment'?{bytes:await openE2eeEnvelope(root,signer,context,envelope),filename:'',mediaType:'application/json'}
-      :await openE2eeFile(root,signer,context,envelope,async chunkId=>{const chunk=await this.#getEnvelope('attachment',chunkId);if(!chunk)throw new Error('E2EE_CORRUPT_FILE');await this.#historicalHead(chunk);return chunk;});
+      :await openE2eeFile(root,signer,context,envelope,async chunkId=>{const chunk=await this.#getEnvelope('attachment',chunkId);if(!chunk)throw new Error('E2EE_CORRUPT_FILE');await this.#historicalHead(chunk);chunks.push(chunk);return chunk;});
     const encoded=encoder.encode(JSON.stringify({revision:context.revision,hash:payloadHash}));
-    try{await this.#device.vault.write([{domain:'key-check',objectId:`floor:${id}`,value:encoded,expected:floorRecord?.serial??null}]);this.#device.requireOpen();return{...opened,revision:context.revision};}
-    catch(error){opened.bytes.fill(0);throw error;}finally{encoded.fill(0);}
+    const writes:LocalWrite[]=[{domain:'key-check',objectId:`floor:${id}`,value:encoded,expected:floorRecord?.serial??null}];
+    try{for(const record of [...chunks,envelope]){const observed=await this.#confirmed(record);if(observed)writes.push(observed);}
+      await this.#device.vault.write(writes);this.#device.requireOpen();return{...opened,revision:context.revision};}
+    catch(error){opened.bytes.fill(0);throw error;}finally{writes.forEach(write=>write.value.fill(0));}
   }
   async assertObjectReference(domain:E2eeContext['domain'],objectId:string,revision:number,payloadHash:unknown){
     const directory=this.#open(),envelope=await this.#getEnvelope(domain,objectId);this.#device.requireOpen();
@@ -315,7 +362,7 @@ export class E2eeScopeClient {
   }
   /** Business intent is durable independently of a checkpoint-bound transport
    * packet. Renewal never changes the intended mutation or replays an import. */
-  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue',payload:Record<string,WireValue>,intentId:string){
+  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue'|'product-bootstrap-start'|'product-bootstrap-stage'|'product-bootstrap-complete',payload:Record<string,WireValue>,intentId:string){
     assertTechnical(intentId);const held=snapshotE2eeValue({...payload,intentId}),id=`service:${await hash(`${action}\0${intentId}`)}`;
     for(let attempt=0;attempt<2;attempt++){
       const directory=this.#open(),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();let packet:SignedE2eeCommand;
@@ -338,7 +385,15 @@ export class E2eeScopeClient {
   async readProductIndex(after='',limit=50){if(after)assertTechnical(after);if(!Number.isSafeInteger(limit)||limit<1||limit>50)throw new Error('E2EE_INVALID_LIMIT');
     return this.#readPacket('product-index',{after,limit});}
   async readStoicheionState():Promise<unknown>{return this.#readPacket('stoicheion-state',{});}
+  async readBootstrapState(afterPart=-1){if(!Number.isInteger(afterPart)||afterPart< -1||afterPart>255)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-bootstrap-state',{afterPart});}
+  async readProductContext(){return this.#readPacket('product-context',{});}
   async readAdvicePolicy():Promise<unknown>{return this.#readPacket('advice-policy',{});}
+  async originalMigrationManifest(){
+    this.#open();const frame=[...this.#directoryFrames.values()].find(frame=>frame.state==='active'&&frame.sealedHeads?.cryptoEpoch===0),sealed=frame?.sealedHeads;
+    if(!sealed)throw new Error('E2EE_MIGRATION_PROOF_REQUIRED');const response=await this.#readPacket('sealed-heads',{cryptoEpoch:0});
+    if(!response.objects||response.objects.length!==sealed.count||await objectManifestHash(response.objects)!==sealed.hash)throw new Error('E2EE_MANIFEST_MISMATCH');
+    this.#device.requireOpen();return{manifestHash:sealed.hash,objectCount:sealed.count};
+  }
   async authorizeMembership(intentId:string,changeHash:string){
     assertTechnical(intentId);decodeE2eeBytes(changeHash,32);const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
@@ -380,6 +435,7 @@ export class E2eeScopeClient {
         objects.push(...response.objects);
       }while(objects.length<manifest.objectCount);
       if(await objectManifestHash(objects)!==manifest.manifestHash)throw new Error('E2EE_MANIFEST_MISMATCH');
+      await this.#assertKnownHeads(objects);
       const heads=new Map(objects.map(row=>[`${row.domain}\0${row.objectId}`,row]));
       for(const [id,floor] of await this.#sealedHeads()??[]){const head=heads.get(id);if(!head||head.revision<floor.revision||head.revision===floor.revision&&head.payloadHash!==floor.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');}
       // Each current head must prove its historical device authority. The final
@@ -398,6 +454,7 @@ export class E2eeScopeClient {
         for(const row of roles)if(row.role!==null){const recipient=directory.devices.get(row.deviceId)!;capsules.push({deviceId:row.deviceId,capsule:await sealRoot(root,recipient.receivingKey,{ownerId:this.#owner,scopeId:this.#scopeId,cryptoEpoch,keyId,recipientId:row.deviceId}) as unknown as WireValue});}
         const recoveryCapsule=await sealRoot(root,directory.recoveryKit.authority.receivingKey,{ownerId:this.#owner,scopeId:this.#scopeId,cryptoEpoch,keyId,recipientId:'recovery'});
         this.#device.requireOpen();if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');
+        await this.#assertKnownHeads(objects);
         const packet=await this.#packet('rotate-membership',{membershipHash:changeHash,revokedDeviceIds:roles.filter(row=>row.role===null).map(row=>row.deviceId),
           roleChanges:roles.filter(row=>row.role!==null) as unknown as WireValue,cryptoEpoch,securityEpoch:directory.securityEpoch+1,keyId,capsules,recoveryCapsule:recoveryCapsule as unknown as WireValue,retiredManifestHash:manifest.manifestHash,retiredObjectCount:manifest.objectCount});
         const bytes=encoder.encode(JSON.stringify({protocol:1,roles,manifest,packet}));try{await this.#device.vault.write([{domain:'outbox',objectId:key,value:bytes,expected:null}]);}finally{bytes.fill(0);}
@@ -416,8 +473,9 @@ export class E2eeScopeClient {
   async verifyServiceProof(input:SignedE2eeCommand){
     this.#open();const packet=snapshotE2eeValue(input),command=packet.command,frame=this.#directoryFrames.get(command.expectedRevision);
     if(!frame||command.ownerId!==this.#owner||command.scopeId!==this.#scopeId||command.checkpointHash!==frame.checkpoint.hash||command.securityEpoch!==frame.securityEpoch
-      ||!['product-commit','product-approve'].includes(command.action))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+      ||!['product-commit','product-approve','product-bootstrap-stage','product-bootstrap-complete'].includes(command.action))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
     const signer=frame.devices.get(command.deviceId);if(!signer||signer.revoked)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+    if(command.action.startsWith('product-bootstrap-')&&(signer.role!=='owner'||signer.userId!==frame.ownerId))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
     if(command.action==='product-commit'){
       const operations=command.payload.operations;if(!Array.isArray(operations)||operations.length<1||operations.length>100)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
       for(const row of operations){if(!row||typeof row!=='object'||Array.isArray(row))throw new Error('E2EE_PRODUCT_PROOF_INVALID');const comment=['comment','project-comment'].includes(String(row.kind));

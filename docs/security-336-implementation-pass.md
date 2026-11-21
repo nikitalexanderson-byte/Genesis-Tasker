@@ -1,5 +1,80 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Continued shared composition (21 November, uncompiled candidate)
+
+- Added the actual common web/native shared content model and foreground
+  gateways for project/space snapshots, tasks, comments, statuses, categories,
+  labels, project lists and task lists. Authenticated product-context reads
+  contain only identity/ACL metadata, independently of encrypted bodies.
+- Complete user requests and prepared edits are retained under the new device
+  root before upload. Repeated staging verifies the existing transaction rather
+  than replacing its ciphertext identity. Explicit offline saves retain these
+  requests. Shared API/cache/queue routing bypasses retired legacy storage;
+  automatic flushing never interprets the captured old shared queue as new work.
+- Shared baseline discovery/resumption can adopt already signed parts on a
+  different trusted owner device. Each part is checked against the immutable
+  migration sources and its actual encrypted version. An active baseline also
+  requires its owner's signed complete manifest. Partial/missing/out-of-order
+  sources remain explicit errors, without deleting local or remote originals.
+- Space sources now include member-category titles. Historical permission JSON
+  remains inert content; actual policy changes still require the independent
+  signed membership/rotation transaction. The source catalogue has 62 tables.
+- Rotation checks now include protected per-object observations of new objects
+  and chunks, plus retained writer plans predating that catalogue. An unfinished
+  writer plan blocks rotation. This concurrency boundary remains a QA target.
+
+No tests, typecheck, lint, browser/native builds, CI, push, deploy or device
+actions were run. Accepted coverage remains9/20; this section is code inventory,
+not acceptance evidence. Production remains3.3.5/149 and all rollout gates stay off.
+
+Remaining shared integration includes advanced filters/saved views, membership
+and fingerprint UI, group creation, completion/review UI/policies, real file
+previews, shared maps, planning/sprints/reports/templates/custom fields, bulk and
+cross-scope transactions and client automations. Finish these and the remaining
+backup/import/Drive, external-copy/message-key and lifecycle/recovery paths
+before consolidated QA. Check offline read overlays, lost receipts/process death,
+scope revocation, large inputs, native bridge and context freshness during QA.
+
+## Shared domain/baseline composition following9d05e2f3 (candidate, no QA)
+
+- A shared web/native record-body contract now binds exact source columns,
+  project/space lineage, related task/comment records, file references and
+  business metadata. Domain constraints cover tasks/checklists/statuses, custom
+  fields, map parsing, dates and workflow metadata. History/import/standalone
+  custom-field-value source rows do not become executable imports. Task custom
+  values remain part of the validated task body. These parsers still need the
+  full consolidated semantic/parity review across ALL advanced feature models.
+- Added actual encrypted shared record repositories and source-to-index readers
+  on both platforms. Every declared source table must be present with exact count
+  and revision1; absence is an error. Existing source authors and trash state are
+  retained; baseline deleted records are tombstones, not resurrected live tasks.
+- Migration132 and the signed bootstrap protocol now stage bounded owner parts
+  and atomically activate their complete technical index. Only a signed complete
+  part manifest authorizes baseline heads. Both clients verify the corresponding
+  historical owner signatures. Normal business mutation/index reads require a
+  completed baseline. Historical completions are baseline content; new actions
+  still use current roles/policies and fresh exact-version approvals.
+- Web/native baseline coordinators retain all local parts before mutation,
+  upload immutable ciphertext, verify real stage receipts, and commit only the
+  complete expected count/part list. Preparation can resume from protected parts;
+  no source or older plan bytes are deleted. Account factories cache the same
+  scoped record/baseline capabilities and reopening a trusted scope no longer
+  invalidates existing editors' scope clients.
+- Reserved migrated table/path/file originals are now immutable. The original
+  signed migration manifest has a verified client read capability; a new server
+  list is not independently promoted into a trust anchor. Command response
+  budgets now accommodate bounded signed bootstrap receipts on both platforms.
+
+Still required before shared coverage can be accepted: actual legacy-compatible
+UI/gateway CRUD composition across the full shared surface; dedicated shared-map
+source bootstrap (its lineage source is not an ordinary relational table);
+member-category private titles/source inventory; detailed review/policy/quota,
+file preview, client automation and cross-scope transaction behavior; source
+capacity/preflight and proof-storage growth; resumed baseline recovery from a
+lost originating device. Owner/multi-owner membership review UI is still pending.
+No tests/typecheck/lint/build/CI/push/deploy or device actions were run.9/20 is
+still the accepted coverage, and production is still3.3.5/149 with gates off.
+
 ## Second continuation, 21 November — candidate infrastructure, no acceptance
 
 Owner resumed the paused task and required continuation to the authorized3.3.6

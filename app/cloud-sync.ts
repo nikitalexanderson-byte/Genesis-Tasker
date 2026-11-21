@@ -1018,6 +1018,10 @@ export class GenesisApiError extends Error {
 
 type ApiFeedback={upgradePrompt?:boolean;e2eeObservation?:E2eeHttpObservation};
 async function api<T>(path: string, init: RequestInit = {}, feedback: ApiFeedback = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
+  if(path.startsWith('/shared/')&&confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    if(permit)throw new Error('E2EE_LEGACY_WRITE_FORBIDDEN');const owner=confirmedTransportOwnerId,current=captureAccountSessionGuard();current();
+    const {privateSharedRequest}=await import('./e2ee/shared-web-live');current();const result=await privateSharedRequest(owner,path,init);current();return result as T;
+  }
   const method=(init.method??'GET').toUpperCase();let body:unknown=undefined;
   if(path.replace(/^\/+/, '').split('?',1)[0]==='account/preferences'&&!['GET','HEAD','OPTIONS'].includes(method)) {
     try { if(typeof init.body!=='string')throw new Error();body=JSON.parse(init.body); }
@@ -2610,6 +2614,7 @@ export function canRestoreOfflineSession(error: unknown) {
 }
 
 async function sharedCachedRequest<T>(path: string, signal?: AbortSignal): Promise<T> {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))return api<T>(path,{signal});
   const generation = sessionGeneration;
   let owner = workspaceUserId;
   // Session UI can mount before the first bootstrap assigns the private workspace owner.
@@ -2673,6 +2678,9 @@ async function sharedCachedRequest<T>(path: string, signal?: AbortSignal): Promi
 export function sharedDataCameFromOfflineCache() { return sharedReadAvailability().size > 0; }
 
 export async function queuedSharedMutations(projectId: string) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const {privateSharedPending}=await import('./e2ee/shared-web-live');return(await privateSharedPending(confirmedTransportOwnerId,projectId)).map(({request})=>({requestId:request.id,kind:request.method==='POST'?'create' as const:'update' as const,title:typeof request.body.title==='string'?request.body.title:'',dueDate:typeof request.body.dueDate==='string'?request.body.dueDate:null,queuedAt:request.createdAt,error:undefined,draft:null}));
+  }
   return (await readSharedOfflineStore()).queue.filter((item) => item.projectId === projectId)
     .map(({ requestId, kind, title, dueDate, queuedAt, error, body }) => ({
       requestId, kind, title, dueDate, queuedAt, error, draft: error ? body : null,
@@ -2680,11 +2688,13 @@ export async function queuedSharedMutations(projectId: string) {
 }
 
 export async function pendingSharedMutationCount() {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){const {privateSharedPending}=await import('./e2ee/shared-web-live');return(await privateSharedPending(confirmedTransportOwnerId)).length;}
   if (!workspaceUserId || !workspaceKey) return 0;
   return (await readSharedOfflineStore()).queue.length;
 }
 
 export async function discardSharedMutation(requestId: string) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))throw new Error('E2EE_SHARED_PENDING_REVIEW_REQUIRED');
   await changeSharedOfflineStore((store) => {
     const item = store.queue.find((queued) => queued.requestId === requestId);
     if (!item || !item.error) throw new Error("SHARED_DRAFT_NOT_FOUND");
@@ -2699,6 +2709,11 @@ export function flushSharedMutations() {
 }
 
 async function flushSharedMutationQueue() {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const owner=confirmedTransportOwnerId,account=requirePrivateAccount(owner);if(account.mode==='offline')return;
+    const {privateSharedPending,resumePrivateSharedRequest}=await import('./e2ee/shared-web-live');
+    for(const row of await privateSharedPending(owner)){account.requireOpen();await resumePrivateSharedRequest(owner,row.resourceId,row.request.id,row.kind);}return;
+  }
   if (!workspaceUserId || !workspaceKey || !navigator.onLine) return;
   const owner = workspaceUserId;
   const queued = (await readSharedOfflineStore()).queue;
@@ -2729,6 +2744,7 @@ async function flushSharedMutationQueue() {
 }
 
 async function sendSharedMutation<T extends { pending?: boolean }>(item: SharedQueuedMutation, pending: T): Promise<T> {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))return(await api<{task:T}>(item.path,{method:item.method,body:item.body})).task;
   if (!workspaceUserId || !workspaceKey) {
     return (await api<{ task: T }>(item.path, { method: item.method, body: item.body })).task;
   }

@@ -33,12 +33,14 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
         };JSONObject(value.toString())},::check)
     @Synchronized fun index(offline:Boolean=false):JSONArray{
         check();val prior=index.load();if(offline)return JSONArray((prior?.value?:error("E2EE_OFFLINE_CONTENT_UNAVAILABLE")).getJSONArray("entities").toString())
-        client.refresh();check();val rows=JSONArray();val seen=mutableSetOf<String>();var after="";var eof=false;var limit=50;val reviewed=mutableMapOf<String,JSONObject>()
+        client.refresh();check();val rows=JSONArray();val seen=mutableSetOf<String>();var after="";var eof=false;var limit=50;var baseline:JSONObject?=null;val reviewed=mutableMapOf<String,JSONObject>()
         for(page in 0..10032){val response=try{client.readProductIndex(after,limit)}catch(error:Exception){if(limit>1&&error.message=="E2EE_PRODUCT_PAGE_TOO_LARGE"){limit=maxOf(1,limit/2);continue};throw error}
             val verified=E2eeProductProofs.verifyPage(response,client::verifyServiceProof);check();val values=verified.entities;check(values.length()<=limit){"E2EE_PRODUCT_INDEX_INVALID"}
+            check(baseline==null||baseline!!.get("proofHash")==verified.bootstrap.get("proofHash")){"E2EE_PRODUCT_PROOF_INVALID"};baseline=verified.bootstrap
             for(at in 0 until values.length()){val value=E2eeProductContract.entity(values.getJSONObject(at));val id=value.getString("entityId");check(id>after&&seen.add(id)&&rows.length()<10000){"E2EE_PRODUCT_INDEX_INVALID"};rows.put(value)}
             for(at in 0 until verified.proposals.length()){val proposal=verified.proposals.getJSONObject(at);val id=proposal.getString("proposalId");check(id !in reviewed){"E2EE_PRODUCT_PROOF_INVALID"};reviewed[id]=proposal}
             if(values.length()<limit){eof=true;break};after=rows.getJSONObject(rows.length()-1).getString("entityId")};check(eof){"E2EE_PRODUCT_INDEX_INVALID"}
+        check(baseline!=null&&rows.length()>=baseline!!.getInt("expectedCount")){"E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE"}
         val lookup=(0 until rows.length()).associate{rows.getJSONObject(it).let{row->row.getString("entityId") to row}};val old=prior?.value?.getJSONArray("entities")?:JSONArray()
         for(at in 0 until old.length()){val value=old.getJSONObject(at);val remote=lookup[value.getString("entityId")]?:error("E2EE_REMOTE_ROLLBACK");check(remote.getLong("revision")>=value.getLong("revision")&&(remote.getLong("revision")!=value.getLong("revision")||E2eeProductJson.same(remote,value))){"E2EE_REMOTE_ROLLBACK"}}
         if(!E2eeProductJson.same(old,rows))index.save(JSONObject().put("protocol",1).put("scopeId",scopeId).put("entities",rows),prior?.serial);check();proposals.clear();proposals.putAll(reviewed);return JSONArray(rows.toString())
@@ -51,6 +53,13 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     }
     @Synchronized fun stage(edits:JSONArray,intentId:String=UUID.randomUUID().toString()):String{
         check();E2eeKeys.technical(intentId);check(edits.length() in 1..100){"E2EE_PRODUCT_BATCH_INVALID"};val drafts=JSONArray()
+        val previous=transaction(prefix+intentId).load()
+        if(previous!=null){val held=previous.value.getJSONArray("drafts");check(held.length()==edits.length()){"E2EE_IDEMPOTENCY_CONFLICT"}
+            for(at in 0 until edits.length()){val edit=edits.getJSONObject(at);val prior=held.getJSONObject(at);val operation=prior.getJSONObject("operation");val content=version(prior.getJSONObject("version"))
+                check(operation.get("action")==edit.get("action")&&operation.get("entityId")==edit.get("entityId")&&operation.get("kind")==edit.get("kind")&&operation.getLong("expectedRevision")==edit.getLong("expectedRevision")&&operation.get("parentId")==edit.get("parentId")
+                    &&(!edit.has("proposalId")||edit.get("proposalId")==operation.get("proposalId"))&&E2eeProductJson.same(operation.get("metadata"),edit.get("metadata"))&&E2eeProductJson.same(content.get("body"),edit.get("body"))){"E2EE_IDEMPOTENCY_CONFLICT"}}
+            return intentId
+        }
         for(at in 0 until edits.length()){val edit=edits.getJSONObject(at);val action=edit.getString("action");val kind=edit.getString("kind");val revision=E2eeCommands.integer(edit.get("expectedRevision"));check(revision<9_007_199_254_740_991L){"E2EE_INVALID_REVISION"}
             val header=version(JSONObject().put("protocol",1).put("scopeId",scopeId).put("entityId",edit.get("entityId")).put("kind",kind).put("revision",revision+1).put("parentId",edit.get("parentId")).put("deleted",action=="delete").put("metadata",edit.getJSONObject("metadata")).put("body",edit.get("body")))
             val operation=JSONObject().put("action",action).put("entityId",edit.get("entityId")).put("kind",kind).put("expectedRevision",revision).put("domain",E2eeProductContract.domain(kind)).put("objectId","product-version:${UUID.randomUUID()}")

@@ -15,6 +15,7 @@ internal class E2eePrivatePathCatalogue(context:Context){
     fun tables(kind:String,pathId:String):List<String>{val rows=value.getJSONArray("paths")
         for(i in 0 until rows.length()){val row=rows.getJSONObject(i);if(row.get("id")==pathId&&row.get("scope")==kind){val names=row.getJSONArray("server");return(0 until names.length()).map{names.getString(it)}}}
         error("E2EE_SOURCE_PATH_FORBIDDEN")}
+    fun columns(table:String):List<String>{val rows=value.getJSONArray("tables");for(at in 0 until rows.length()){val row=rows.getJSONObject(at);if(row.getString("table")==table){val columns=row.getJSONArray("columns");return(0 until columns.length()).map{columns.getString(it)}}};error("E2EE_SOURCE_PATH_FORBIDDEN")}
 }
 
 /** Framing/completeness only. Original row JSON strings are passed to the common

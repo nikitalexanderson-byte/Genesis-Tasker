@@ -149,6 +149,7 @@
         "shared_spaces",
         "shared_space_labels",
         "shared_space_project_categories",
+        "shared_member_categories",
         "shared_templates",
         "shared_custom_fields",
         "shared_custom_field_versions",
@@ -193,6 +194,10 @@
     }
   ],
   "tables": [
+    {
+      "table": "shared_member_categories",
+      "columns": ["id", "space_id", "title", "permissions_json", "revision"]
+    },
     {
       "table": "shared_audit_events",
       "columns": [

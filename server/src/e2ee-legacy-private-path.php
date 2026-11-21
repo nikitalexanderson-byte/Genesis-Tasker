@@ -45,7 +45,7 @@ function genesisE2eePrivatePathWhere(string $kind,string $table):string
     if($table==='shared_data_imports')return!$project?'r.space_id=:resource AND r.actor_id=:actor':throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
     if($table==='shared_data_import_records')return$project?'r.project_id=:resource':
         'r.project_id IS NULL AND EXISTS(SELECT 1 FROM shared_data_imports i WHERE i.id=r.import_id AND i.space_id=:resource AND i.actor_id=:actor)';
-    if(in_array($table,['shared_space_labels','shared_space_project_categories'],true))return!$project?'r.space_id=:resource':throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
+    if(in_array($table,['shared_space_labels','shared_space_project_categories','shared_member_categories'],true))return!$project?'r.space_id=:resource':throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
     if($table==='shared_custom_field_receipts')return!$project?'r.space_id=:resource AND r.actor_id=:actor':
         "r.actor_id=:actor AND (json_extract(genesis_content_decrypt(r.receipt_json),'$.projectId')=:resource OR EXISTS(SELECT 1 FROM shared_custom_fields f WHERE f.id=json_extract(genesis_content_decrypt(r.receipt_json),'$.id') AND f.project_id=:resource))";
     if($table==='shared_mutation_receipts')return$project?

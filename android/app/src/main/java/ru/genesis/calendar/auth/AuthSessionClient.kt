@@ -205,6 +205,12 @@ internal class AuthSessionClient(context: Context,
     }
     fun currentGeneration(): Long = synchronized(guard) { generation }
     fun isCurrent(expected: Long): Boolean = synchronized(guard) { generation == expected && transportEpoch==NativeBackupEpoch.current() }
+    /** An independently unlocked, owner-bound local capability may establish
+     * offline content routing. This grants neither an HTTP session nor keys. */
+    fun bindPrivateProduct(expected:Long,owner:String){
+        val capability=ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(owner),owner);capability.requireOpen()
+        synchronized(guard){check(expected);capability.requireOpen();check(confirmedPersonalOwnerId==null||confirmedPersonalOwnerId==owner){"E2EE_ACCOUNT_CHANGED"};confirmedPersonalOwnerId=owner;serverProtectedOwners+=owner}
+    }
 
     private fun check(expected: Long) {
         ru.genesis.calendar.security.UpdateGate.requireOpen()
@@ -787,6 +793,14 @@ internal class AuthSessionClient(context: Context,
         // JSONObject supplied by a controller may still be mutated on another
         // thread while this blocking transport waits for a scope permit.
         val requestBody=try { body?.let { JSONObject(it.toString()) } }catch(_: Exception){throw AuthFailure(AuthFailure.Kind.PROTOCOL)}
+        if(path.startsWith("/shared/")){
+            val privateOwner=synchronized(guard){check(expected);confirmedPersonalOwnerId?.takeIf{it in serverProtectedOwners}}
+            if(privateOwner!=null){
+                ru.genesis.calendar.security.UpdateGate.requireOpen()
+                val result=kotlinx.coroutines.runBlocking{ru.genesis.calendar.security.NativePrivateProducts.sharedRequest(CloudAccountSnapshot.scopeFor(privateOwner),method,path,requestBody)}
+                synchronized(guard){check(expected);check(confirmedPersonalOwnerId==privateOwner){"E2EE_ACCOUNT_CHANGED"}};return result
+            }
+        }
         val owner=if(legacyTransportPolicy.protected(method,path,requestBody)) synchronized(guard) {
             check(expected);val bound=confirmedPersonalOwnerId ?: throw AuthApiError("E2EE_ACCOUNT_BINDING_REQUIRED")
             if(bound in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED");bound

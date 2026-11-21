@@ -13,7 +13,8 @@ import ru.genesis.calendar.auth.CloudAccountSnapshot
 /** Registry holds foreground capabilities only. Its persisted marker is a
  * hashed local scope, not a credential, private content or decryption key. */
 internal object NativePrivateProducts{
-    private class Entry(context:Context,val account:E2eeProductAccount,val product:E2eePersonalProduct,val preferences:E2eePrivatePreferences?){val mutex=Mutex();val stoicheion by lazy{E2eeStoicheionProduct(account)};val advice by lazy{E2eeNativeAdviceProduct(context,account)}}
+    private class Entry(val context:Context,val account:E2eeProductAccount,val product:E2eePersonalProduct,val preferences:E2eePrivatePreferences?){val mutex=Mutex();val stoicheion by lazy{E2eeStoicheionProduct(account)};val advice by lazy{E2eeNativeAdviceProduct(context,account)};val sharedLive by lazy{E2eeNativeSharedLive(context,account)};val shared=mutableMapOf<String,SharedRecords>()}
+    class SharedRecords(val records:E2eeSharedRecords,val bootstrap:E2eeSharedBootstrap){override fun toString()="NativePrivateProducts.SharedRecords([redacted])"}
     private val entries=mutableMapOf<String,Entry>();private val protectedScopes=mutableSetOf<String>()
     private var inventory:E2eePrivatePaths?=null
     private var applicationContext:Context?=null
@@ -39,6 +40,13 @@ internal object NativePrivateProducts{
     fun preferences(scope:String):E2eePrivatePreferences=checkNotNull(entry(scope).preferences){"E2EE_PRODUCT_READ_REQUIRED"}
     fun stoicheion(scope:String):E2eeStoicheionProduct=entry(scope).stoicheion
     fun advice(scope:String):E2eeNativeAdviceProduct=entry(scope).advice
+    suspend fun sharedRequest(scope:String,method:String,path:String,body:JSONObject?):JSONObject=entry(scope).sharedLive.request(method,path,body)
+    suspend fun sharedPending(scope:String,projectId:String?=null)=entry(scope).sharedLive.pending(projectId)
+    suspend fun resumeShared(scope:String,id:String)=entry(scope).sharedLive.resume(id)
+    suspend fun flushShared(scope:String)=entry(scope).sharedLive.flush()
+    fun sharedPendingCount(scope:String)=entry(scope).sharedLive.cachedPendingCount
+    @Synchronized fun sharedRecords(scope:String,scopeId:String,kind:String,resourceId:String):SharedRecords{val owner=entry(scope);owner.account.sharedScope(scopeId,kind,resourceId)
+        return owner.shared.getOrPut(scopeId){val records=E2eeSharedRecords(owner.context,owner.account,scopeId,kind,resourceId);SharedRecords(records,E2eeSharedBootstrap(owner.account,records))}}
     fun changed(scope:String){entry(scope).account.requireOpen();revision.value++}
     fun history(scope:String,owner:String,domain:String,id:String):E2eeMigrationProductHistory.Result{val account=account(scope,owner)
         return E2eeMigrationProductHistory.read(account.device,account.directory,requireNotNull(inventory){"E2EE_INVALID_COVERAGE_REGISTRY"},domain,id)}
