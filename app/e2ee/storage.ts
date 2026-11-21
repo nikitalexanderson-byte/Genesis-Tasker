@@ -1,6 +1,7 @@
 import { E2EE_SUITE, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope,
   type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { assertTechnical } from './keys.ts';
+import {commitE2eeIndexedDb} from './indexeddb-write.ts';
 
 export type SealedLocalRecord = { serial: number; envelope: E2eeEnvelope };
 export type StorageChange = { key: string; expected: number | null; value: SealedLocalRecord | null };
@@ -66,28 +67,7 @@ export class IndexedDbE2eeStorage implements E2eeRecordStorage {
     });
   }
   async commit(changes: StorageChange[], signal?: AbortSignal) {
-    if (changes.length < 1 || changes.length > 10000 || new Set(changes.map(change => change.key)).size !== changes.length) throw new Error('E2EE_INVALID_LOCAL_BATCH');
-    const db = await this.#database;
-    if(signal?.aborted)throw new Error('E2EE_UNLOCK_REQUIRED');
-    return new Promise<void>((resolve, reject) => {
-      let conflict = false;
-      const transaction = db.transaction('records', 'readwrite', { durability: 'strict' }), store = transaction.objectStore('records');
-      const abort=()=>{try{transaction.abort();}catch{/* transaction already completed */}};
-      const cleanup=()=>signal?.removeEventListener('abort',abort);
-      signal?.addEventListener('abort',abort,{once:true});
-      // Request callbacks execute inside the transaction, so no async gap can release the lock.
-      for (const change of changes) {
-        const request = store.get(change.key);
-        request.onsuccess = () => {
-          if (conflict || signal?.aborted) { abort(); return; }
-          const current: SealedLocalRecord|undefined = request.result;
-          if ((current?.serial ?? null) !== change.expected) { conflict = true; transaction.abort(); return; }
-          if (change.value === null) store.delete(change.key); else store.put(change.value, change.key);
-        };
-      }
-      transaction.oncomplete = () => {cleanup();if(signal?.aborted)reject(new Error('E2EE_UNLOCK_REQUIRED'));else resolve();};
-      transaction.onerror = transaction.onabort = () => {cleanup();reject(new Error(signal?.aborted?'E2EE_UNLOCK_REQUIRED':conflict ? 'E2EE_LOCAL_CONFLICT' : 'E2EE_STORAGE_UNAVAILABLE'));};
-    });
+    return commitE2eeIndexedDb(this.#database,'records',changes,signal);
   }
 }
 

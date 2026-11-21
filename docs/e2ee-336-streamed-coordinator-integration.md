@@ -143,6 +143,29 @@ Current lease/source/directory and actual device checks must surround both
 observation admission and transport waits. A caller-provided context alone is
 not a current planning permit. No upload or activation is added by that session.
 
+Own the entire awaited `send(observation)` operation in that factory, rather
+than returning an observer for a post-success callback. A complete original
+must be verified and bound durably even when the HTTP result is an error or its
+JSON parser refuses it. A binding/CAS/quota failure must withhold the derived
+result, keep registration/capture and remain sticky if the consumer catches it.
+The session returns technical references only. Revoke escaped ports and drain
+every outstanding operation before releasing the original whole-job fence.
+
+The existing prepared-history view pins the active state4 serial/hash. A session
+that appends its first owned request therefore cannot reuse that view unchanged
+for a second request: its own successful CAS has advanced the active pointer.
+Use a private current-state cell advanced only after the exact owned CAS and
+readback; retain the independently pinned raw state3 hash/reference. An unrelated
+replacement still refuses. An acknowledgement lost after commit does not update
+the cell optimistically and cannot grant another request; cold reopen must
+reconstruct and authenticate the saved state. This is not permission to adopt an
+arbitrary freshly loaded state or cache a body-EOF boolean outside the fence.
+
+Provider-wide mandatory writes are being checked separately in
+`e2ee-336-provider-write-admission.md`. They calculate actual serialized rows
+and preserve all retained attempts. That physical boundary does not replace
+the session/ownership/current-source checks above or complete a source adapter.
+
 The standalone reservation API verifies the complete original history for each
 call. A multi-page factory must not multiply a whole large-source read by every
 page. Retain only a revocable checked-history capability inside that same fence,

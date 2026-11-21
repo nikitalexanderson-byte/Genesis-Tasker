@@ -4,6 +4,7 @@ import { assertTechnical, exactKeys, freshSecret, generateDeviceKeys, exportPriv
   openBundle, protectBundle, recoverAuthority, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
 import { verifyDeviceDirectory, type VerifiedDirectory } from './directory.ts';
 import { openE2eeDatabase, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
+import {commitE2eeIndexedDb} from './indexeddb-write.ts';
 
 export type ProtectedDeviceRecord = { serial: number; bundle: ProtectedBundle };
 export interface DeviceKeyStorage {
@@ -22,15 +23,7 @@ export class IndexedDbDeviceKeyStorage implements DeviceKeyStorage {
     });
   }
   async create(ownerId:string,bundle:ProtectedBundle){
-    assertTechnical(ownerId);const db=await this.#database;
-    return new Promise<void>((resolve,reject)=>{
-      const transaction=db.transaction('keyMaterial','readwrite',{durability:'strict'}),store=transaction.objectStore('keyMaterial');let conflict=false;
-      const request=store.get(ownerId);request.onsuccess=()=>{
-        if(request.result!==undefined){conflict=true;transaction.abort();return;}
-        store.add({serial:1,bundle},ownerId);
-      };
-      transaction.oncomplete=()=>resolve();transaction.onabort=transaction.onerror=()=>reject(new Error(conflict?'E2EE_DEVICE_ALREADY_EXISTS':'E2EE_STORAGE_UNAVAILABLE'));
-    });
+    assertTechnical(ownerId);return commitE2eeIndexedDb(this.#database,'keyMaterial',[{key:ownerId,expected:null,value:{serial:1,bundle}}]);
   }
 }
 type PrivateDeviceBundle = {protocol:1;ownerId:string;deviceId:string;localKeyId:string;localRoot:string;deviceKeys:Awaited<ReturnType<typeof exportPrivateDeviceKeys>>;authorityPin:PublicDeviceKeys};

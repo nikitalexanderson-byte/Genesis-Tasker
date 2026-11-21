@@ -42,15 +42,26 @@ class E2eeDeviceVault(context: Context, ownerId: String) {
         else @Suppress("DEPRECATION") builder.setUserAuthenticationValidityDurationSeconds(300)
         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply { init(builder.build()) }.generateKey()
     }
-    fun exists(): Boolean = synchronized(mutationLock) { file.baseFile.exists() || File(file.baseFile.path + ".bak").exists() }
+    fun exists(): Boolean = synchronized(mutationLock) { file.baseFile.exists() || File(file.baseFile.path + ".bak").exists() || File(file.baseFile.path + ".new").exists() }
     fun save(value: ByteArray, create: Boolean = false) = synchronized(mutationLock) {
         if(create && exists())throw IllegalStateException("E2EE_DEVICE_ALREADY_EXISTS")
         if (value.size > MAX_PRIVATE) throw IllegalArgumentException("E2EE_INVALID_KEY_BUNDLE")
         val copy = value.copyOf()
         try {
+            val database=File(app.noBackupFilesDir,"e2ee-records-v1.sqlite")
+            val usage=if(database.exists())E2eeSqliteStorage(app).use{it.providerUsage()}
+                else E2eeStorageAdmission.providerFiles(app.noBackupFilesDir,0,firstKeyProvision=create)
+            val previous=if(create)null else maxOf(file.baseFile.length(),File(file.baseFile.path+".bak").length()).takeIf{it>0}
+            val expectedBytes=copy.size+29 // version + 12-byte GCM IV + 16-byte tag
+            val growth=E2eeStorageAdmission.writeGrowth(listOf(E2eeStorageAdmission.WriteSize(expectedBytes.toLong(),previous)))
+            E2eeStorageAdmission.admit(usage,E2eeStorageAdmission.Growth(0,if(create)1 else 0,growth.writeBytes,growth.rewriteBytes),E2eeStorageAdmission.providerBudget)
+            // Capacity refusal cannot create a new hardware alias or replace
+            // any accepted encrypted bundle. Keystore authentication remains
+            // mandatory before the first AtomicFile mutation.
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.ENCRYPT_MODE, key(create)); cipher.updateAAD(aad())
             val bytes = byteArrayOf(1) + cipher.iv + cipher.doFinal(copy)
+            check(cipher.iv.size==12&&bytes.size==expectedBytes){"E2EE_INVALID_KEY_BUNDLE"}
             val output = file.startWrite()
             try { output.write(bytes); file.finishWrite(output) }
             catch (error: Exception) { file.failWrite(output); throw error }

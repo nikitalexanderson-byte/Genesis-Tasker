@@ -3,11 +3,9 @@ package ru.genesis.calendar.security
 import android.content.Context
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
-import android.os.StatFs
 import org.json.JSONObject
 import java.io.Closeable
 import java.io.File
-import java.nio.file.Files
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.UUID
@@ -74,38 +72,39 @@ class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRe
      * not permission to read another namespace or a durable reservation. */
     @Synchronized internal fun providerUsage():E2eeStorageAdmission.Usage {
         try{
-            val base=folder.canonicalFile
-            fun length(file:File):Long {
-                check(file.isFile&&file.canonicalFile.parentFile==base){"E2EE_STORAGE_USAGE_UNAVAILABLE"}
-                return file.length().also{check(it in 0..9007199254740991L){"E2EE_STORAGE_USAGE_UNAVAILABLE"}}
-            }
-            var bytes=length(databaseFile)
-            for(suffix in listOf("-journal","-wal","-shm")){
-                val file=File(folder,databaseFile.name+suffix);if(file.exists())bytes=E2eeStorageAdmission.add(bytes,length(file))
-            }
-            val names=mutableSetOf<String>();val pattern=Regex("e2ee-device-([a-f0-9]{64})\\.vault(?:\\.(?:bak|new))?")
-            Files.newDirectoryStream(folder.toPath(),"e2ee-device-*").use{files->for(path in files){
-                val file=path.toFile();val match=pattern.matchEntire(file.name)?:error("E2EE_STORAGE_USAGE_UNAVAILABLE")
-                names+=match.groupValues[1];check(names.size<=1000){"E2EE_STORAGE_CAPACITY"}
-                bytes=E2eeStorageAdmission.add(bytes,length(file))
-            }
-            }
             val records=database.rawQuery("SELECT COUNT(*) FROM records",null).use{cursor->check(cursor.moveToFirst());cursor.getLong(0)}
-            check(records in 0..9007199254740991L){"E2EE_STORAGE_USAGE_UNAVAILABLE"}
-            val available=StatFs(folder.absolutePath).availableBytes
-            return E2eeStorageAdmission.Usage(records,names.size.toLong(),bytes,E2eeStorageAdmission.add(bytes,available))
+            return E2eeStorageAdmission.providerFiles(folder,records)
         }catch(error:Exception){throw IllegalStateException(if(error.message=="E2EE_STORAGE_CAPACITY")"E2EE_STORAGE_CAPACITY"else"E2EE_STORAGE_USAGE_UNAVAILABLE")}
     }
     @Synchronized override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
         require(changes.size in 1..10000 && changes.map { it.key }.toSet().size == changes.size) { "E2EE_INVALID_LOCAL_BATCH" }
+        class Planned(val key:String,val expected:Long?,val serial:Long?,val envelope:String?,val bytes:Long?)
+        val planned=changes.map{change->
+            require(change.key.length in 1..2048&& (change.expected==null||change.expected in 1..9007199254740991L)){"E2EE_INVALID_LOCAL_BATCH"}
+            val value=change.value;val text=value?.envelope?.toJson()?.toString()
+            if(value!=null)require(value.serial in 1..9007199254740991L){"E2EE_INVALID_LOCAL_BATCH"}
+            Planned(change.key,change.expected,value?.serial,text,if(value!=null)E2eeStorageAdmission.rowBytes(change.key,value.serial,requireNotNull(text))else null)
+        }
         requireOpen(); database.beginTransaction()
         try {
-            for (change in changes) {
+            val sizes=planned.map{change->
                 requireOpen()
-                val current = database.rawQuery("SELECT serial FROM records WHERE record_key=?", arrayOf(change.key)).use { if(it.moveToFirst())it.getLong(0) else null }
-                check(current == change.expected) { "E2EE_LOCAL_CONFLICT" }
-                if(change.value==null)database.execSQL("DELETE FROM records WHERE record_key=?",arrayOf(change.key))
-                else database.execSQL("INSERT OR REPLACE INTO records VALUES(?,?,?)",arrayOf<Any>(change.key,change.value.serial,change.value.envelope.toJson().toString()))
+                database.rawQuery("SELECT serial,envelope FROM records WHERE record_key=?",arrayOf(change.key)).use{cursor->
+                    val exists=cursor.moveToFirst();val serial=if(exists)cursor.getLong(0)else null
+                    check(serial==change.expected){"E2EE_LOCAL_CONFLICT"}
+                    E2eeStorageAdmission.WriteSize(change.bytes,if(exists)E2eeStorageAdmission.rowBytes(change.key,requireNotNull(serial),cursor.getString(1))else null)
+                }
+            }
+            // Global counts, exact affected-row rewrite sizes and writes share
+            // this transaction. Other owners' bodies/keys are never opened.
+            val usage=providerUsage();val growth=E2eeStorageAdmission.writeGrowth(sizes)
+            E2eeStorageAdmission.admit(E2eeStorageAdmission.Usage(usage.records-growth.removed,usage.keyRecords,usage.usageBytes,usage.quotaBytes),
+                E2eeStorageAdmission.Growth(growth.added,0,growth.writeBytes,growth.rewriteBytes),E2eeStorageAdmission.providerBudget)
+            requireOpen()
+            for(change in planned){
+                requireOpen()
+                if(change.envelope==null)database.execSQL("DELETE FROM records WHERE record_key=?",arrayOf(change.key))
+                else database.execSQL("INSERT OR REPLACE INTO records VALUES(?,?,?)",arrayOf<Any>(change.key,requireNotNull(change.serial),change.envelope))
             }
             requireOpen();database.setTransactionSuccessful()
         } finally { database.endTransaction() }

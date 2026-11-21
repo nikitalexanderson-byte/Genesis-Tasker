@@ -191,3 +191,30 @@ Keystore/SQLite late source/start/resume на API26/API34, Chromium157 с real
 IndexedDB и signed loopback lease. Точная приёмка и пределы:
 `e2ee-336-streamed-ownership.md`. Это проверка разработчиком композиции нового
 компонента, не независимый человеческий review, полный recovery или активация.
+
+## Продолжение21 ноября: physical presence записи и admission
+
+При проверке реальной границы записи найдена неоднозначность IDB CAS:
+`current?.serial ?? null` могло считать повреждённый существующий record
+отсутствующим; `get(...) === undefined` не различало отсутствие key row и
+существующий row со значением undefined. Такой случай нельзя использовать
+для новой provision или замены ciphertext. Теперь проверяется cursor presence,
+невалидный serial отказывает, а существующий key row блокирует create.
+Дополнительно native `.new` key bundle блокирует новую provision, сохраняя
+незавершённый original вместо неявной замены.
+
+Web/native provider writes учитывают фактические сериализованные данные,
+перезапись и общие counts до записи; native отказ по месту предшествует новому
+alias AndroidKeyStore и AtomicFile mutation. Все COUNT/CAS и record writes находятся
+в одной transaction. Key creates сериализованы на provider; квота по байтам
+остаётся snapshot, не физическим резервированием. Новые fixed capacity/usage
+errors проходят quarantine без provider paths/private exception text.
+
+Есть отдельный browser RED отсутствовавшей обязательной quota admission и
+GREEN14/14 с настоящими IDB/vault writes, включая обе malformed-row проверки
+и конкурентные slots; console0. Новый native input2979 прошёл8 provider cases
+на каждом owned API26/API34, включая конкурентные record/key caps и partial
+bundle, плюс15 regression cases на каждом. Точные identities/приёмка и ещё
+не выполненный для нового input полный native lint —
+`e2ee-336-provider-write-admission.md`. Это внутреннее продолжение review того
+же исполнителя, не независимое заключение и не полнота source coverage/recovery.

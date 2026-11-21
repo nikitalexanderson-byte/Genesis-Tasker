@@ -2629,3 +2629,35 @@ Native lint14м21с:0 errors/208 warnings/8 hints, без новых issue/file 
 remote-original и capture factories. Пока growth передаётся вызывающим кодом;
 это не готовая обязательная интеграция. Coverage9/20, production3.3.5/149,
 floors0/pilot/cutover off и GENESIS_DEPLOY_ANDROID=false сохраняются.
+
+## 21 ноября: обязательная граница protected writes
+
+Физическая admission теперь вызывается всеми настоящими IDB records/key writes,
+ciphertext SQLite и AtomicFile device bundles. Рост берётся из реальной
+serialization, counts/CAS/deletion credits/record writes объединены в transaction;
+key creates сериализованы. Browser quota неизвестна/сократилась или общий count
+исчерпан — запись отказывает, сохраняя originals. Native `.new` bundle блокирует
+новую provision; quota refusal предшествует новому alias AndroidKeyStore.
+
+Внутренний review дополнительно закрыл IDB ambiguity: повреждённый serial либо
+существующее undefined key value не являются отсутствием row. Cursor presence
+не позволяет их заменить через create/expected=null. Входные ciphertext rows
+принадлежат provider до первого await; поздний lock отменяет pending commit.
+
+Есть отдельный реальный browser RED, затем65/65 Chromium157 checks/console0
+(14 writes,15 preparation,23 raw originals,13 content plan). Full JS2044/2044,
+owned TSC03/scoped ESLint02 и web build PASS. Новый native build10м11с;
+JVM1398 PASS,0 failure,8 existing opt-in HTTP skips. API26/API34 каждый23/23,
+0 failure/skip, все8 provider methods, exact source/APK identities и PIN NONE
+подтверждены. На API34 используется system locksettings verify; продуктовый
+credential dialog и физический OEM/Keystore backing не проверены этим прогоном.
+Полный native lint текущего input пока не выполнен: объединяется со следующим
+интеграционным checkpoint, перед выпуском остаётся обязательным. Lint предыдущего
+input1AD0 не объявляется lint нового2979. Данные и ограничения:
+`docs/e2ee-336-provider-write-admission.md`; общий финальный record —
+`runtime/provider-write-final-identity-01.json`.
+
+Это функционально проверенная provider boundary, без Deploy/Play/личных устройств.
+Coverage9/20 и все rollout gates сохраняются. Далее — mandatory capture factories,
+awaited/revocable planning session и durable complete-original binding; затем
+state4 content plan/common reader/custody и11 remaining real categories.

@@ -80,7 +80,9 @@ Build/unit/browser/types/lint evidence — `output/release-3.3.6/runtime/`
 общая сверка — `runtime/provider-admission-post-device-identity-01.json`.
 Эти проверки ещё не являются полной продуктовой или релизной приёмкой.
 
-Не завершены: обязательное подключение к source/plan/coordinator/remote-original
-admission, вычисление prospective роста из настоящих записей/serialization,
-session/factory lifecycle и полный product отказ/повтор/recovery при нехватке
-места. Произвольный callback с вымышленными цифрами не является такой интеграцией.
+На момент самостоятельной приёмки этого компонента обязательное подключение
+к source/plan/coordinator/remote-original ещё отсутствовало. Следующий отдельно
+проверенный этап общей границы writes, вычисление роста из реальной serialization
+и его ограничения — `e2ee-336-provider-write-admission.md`. Session/factory
+lifecycle и полный product отказ/повтор/recovery при нехватке места остаются
+незавершёнными; одни числовые callbacks не являются такой интеграцией.

@@ -6,9 +6,9 @@ import org.junit.Test
 import java.io.File
 
 class E2eeStorageAdmissionTest {
-    private fun vector():JSONObject {
+    private fun vector(name:String="e2ee-storage-admission-v1.json"):JSONObject {
         val file=generateSequence(File(requireNotNull(System.getProperty("user.dir")))){it.parentFile}
-            .map{File(it,"tests/fixtures/e2ee-storage-admission-v1.json")}.first{it.isFile}
+            .map{File(it,"tests/fixtures/$name")}.first{it.isFile}
         return JSONObject(file.readText())
     }
     @Test fun allCapacityVectorsAgreeWithWebIncludingOverflowAndKnownFullProvider(){
@@ -27,6 +27,18 @@ class E2eeStorageAdmissionTest {
     @Test fun arithmeticNeverWrapsLongOrProducesAnUnsafeJsInteger(){
         for(values in listOf(longArrayOf(Long.MAX_VALUE),longArrayOf(9007199254740991,1),longArrayOf(-1))){
             try{E2eeStorageAdmission.add(*values);fail("Invalid byte budget accepted")}catch(error:Exception){assertEquals("E2EE_STORAGE_ADMISSION_INVALID",error.message)}
+        }
+    }
+    @Test fun realSerializedWriteGrowthVectorsAgreeWithWebIncludingOldRowRewriteCost(){
+        val rows=vector("e2ee-storage-write-growth-v1.json").getJSONArray("cases")
+        for(index in 0 until rows.length()){
+            val row=rows.getJSONObject(index);val input=row.getJSONArray("rows")
+            val sizes=(0 until input.length()).map{val value=input.getJSONObject(it);E2eeStorageAdmission.WriteSize(
+                if(value.isNull("nextBytes"))null else value.getLong("nextBytes"),if(value.isNull("previousBytes"))null else value.getLong("previousBytes"))}
+            try{val actual=E2eeStorageAdmission.writeGrowth(sizes);assertFalse(row.getString("id"),row.has("error"));val expected=row.getJSONObject("expected")
+                assertEquals(expected.getLong("added"),actual.added);assertEquals(expected.getLong("removed"),actual.removed)
+                assertEquals(expected.getLong("writeBytes"),actual.writeBytes);assertEquals(expected.getLong("rewriteBytes"),actual.rewriteBytes)
+            }catch(error:Exception){assertEquals(row.getString("id"),row.getString("error"),error.message)}
         }
     }
     @Test fun alternateMemoryStorageCannotGrantProviderCapacity(){

@@ -1,6 +1,7 @@
 package ru.genesis.calendar.security
 
 import android.content.ContextWrapper
+import android.database.sqlite.SQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
@@ -9,6 +10,10 @@ import org.junit.runner.RunWith
 import ru.genesis.calendar.BuildConfig
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.security.MessageDigest
 
 /** Actual provider metadata and filesystem space. No other namespace's body
  * or private key is decrypted by measurement. Only the QA package is used. */
@@ -62,6 +67,70 @@ class E2eeStorageAdmissionDeviceTest {
             assertEquals(2,guards);assertEquals(before,f.snapshot());f.first.lock()
             refused("E2EE_UNLOCK_REQUIRED"){E2eeStorageAdmission.measure(f.first){}}
             assertEquals(before,f.snapshot())
+        }
+    }
+    @Test fun concurrentVaultWritersCannotBothConsumeTheFinalProviderRecordSlot(){
+        Rig().use{f->
+            E2eeSqliteStorage(f.context).use{store->
+                val row=requireNotNull(store.get(store.list("").first()))
+                // Existing ciphertext count fixture, as in the browser IDB
+                // harness. It grants no decrypt/read authority for these keys.
+                SQLiteDatabase.openDatabase(File(f.folder,"e2ee-records-v1.sqlite").absolutePath,null,SQLiteDatabase.OPEN_READWRITE).use{db->
+                    db.beginTransaction()
+                    try{db.compileStatement("INSERT INTO records VALUES(?,?,?)").use{insert->
+                        val envelope=row.envelope.toJson().toString()
+                        for(index in 3 until 9999){insert.bindString(1,"synthetic-other-namespace:$index");insert.bindLong(2,row.serial);insert.bindString(3,envelope);insert.executeInsert();insert.clearBindings()}
+                    };db.setTransactionSuccessful()}finally{db.endTransaction()}
+                }
+                assertEquals(9999L,store.providerUsage().records)
+            }
+            val executor=Executors.newFixedThreadPool(2);val start=CountDownLatch(1)
+            try{
+                val attempts=listOf(f.first,f.second).mapIndexed{index,device->executor.submit(Callable{
+                    start.await()
+                    try{device.vault.write(listOf(UnlockedE2eeVault.Write("draft","last-row-$index","SYNTHETIC LAST RECORD".toByteArray(),null)));"PASS"}
+                    catch(error:Exception){error.message}
+                })}
+                start.countDown();val outcomes=attempts.map{it.get()}
+                assertEquals(1,outcomes.count{it=="PASS"});assertEquals(1,outcomes.count{it=="E2EE_STORAGE_CAPACITY"})
+                E2eeSqliteStorage(f.context).use{assertEquals(10000L,it.providerUsage().records)}
+                assertNotNull(f.first.vault.read("draft","first-only"));assertNotNull(f.second.vault.read("outbox","second-only"))
+            }finally{executor.shutdownNow()}
+        }
+    }
+    @Test fun concurrentProtectedKeyCreatesCannotExceedGlobalBundleCount(){
+        Rig().use{f->
+            val source=f.folder.listFiles()!!.first{it.name.matches(Regex("e2ee-device-[a-f0-9]{64}\\.vault"))}
+            for(index in 2 until 999)source.copyTo(File(f.folder,"e2ee-device-${index.toString(16).padStart(64,'0')}.vault"))
+            assertEquals(999L,E2eeStorageAdmission.measure(f.first){}.keyRecords)
+            val kits=(1..2).map{E2eeKeys.createRecoveryKit("last-capacity-owner-$it-${UUID.randomUUID()}")}
+            val executor=Executors.newFixedThreadPool(2);val start=CountDownLatch(1)
+            try{
+                val attempts=kits.map{kit->executor.submit(Callable{
+                    start.await()
+                    try{UnlockedE2eeDevice.provision(f.context,kit.kit.getString("ownerId"),kit.secret,kit.kit).also{it.lock()};"PASS"}
+                    catch(error:Exception){error.message}
+                })}
+                start.countDown();val outcomes=attempts.map{it.get()}
+                assertEquals(1,outcomes.count{it=="PASS"});assertEquals(1,outcomes.count{it=="E2EE_STORAGE_CAPACITY"})
+                assertEquals(1000L,E2eeStorageAdmission.measure(f.first){}.keyRecords)
+            }finally{executor.shutdownNow();kits.forEach{it.secret.fill(0)}}
+        }
+    }
+    @Test fun providerMetadataFailureBlocksAnActualVaultWriteAndPreservesOriginals(){
+        Rig().use{f->val before=f.snapshot();val malformed=File(f.folder,"e2ee-device-unknown.vault");malformed.writeText("SYNTHETIC INVALID ROLE")
+            try{refused("E2EE_STORAGE_USAGE_UNAVAILABLE"){f.first.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","prospective-source",ByteArray(65536),null)))}}
+            finally{check(malformed.delete())}
+            assertEquals(before,f.snapshot());assertNull(f.first.vault.read("local-snapshot","prospective-source"))
+        }
+    }
+    @Test fun partialFirstKeyBundleCannotBeReplacedByFreshProvisioning(){
+        Rig().use{f->val kit=E2eeKeys.createRecoveryKit("partial-key-owner-${UUID.randomUUID()}")
+            val hash=MessageDigest.getInstance("SHA-256").digest(kit.kit.getString("ownerId").toByteArray()).joinToString(""){"%02x".format(it)}
+            val partial=File(f.folder,"e2ee-device-$hash.vault.new");partial.writeBytes(byteArrayOf(1,2,3));val before=f.snapshot()
+            try{refused("E2EE_DEVICE_ALREADY_EXISTS"){UnlockedE2eeDevice.provision(f.context,kit.kit.getString("ownerId"),kit.secret,kit.kit)}
+                assertArrayEquals(byteArrayOf(1,2,3),partial.readBytes());assertEquals(before,f.snapshot())
+            }finally{kit.secret.fill(0);check(partial.delete())}
         }
     }
 }
