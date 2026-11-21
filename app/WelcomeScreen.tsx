@@ -1,6 +1,5 @@
 "use client";
 import { AccountRecoveryPanel } from './AccountSecurityPanels';
-/* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable @next/next/no-img-element -- Google requires the official, unmodified sign-in asset. */
 
 import { LANGUAGES, LANGUAGE_LABELS, translateText, type Language } from "./i18n";
@@ -10,6 +9,8 @@ import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
 import { useEffect, useState } from 'react';
 import { PartnerInvitation } from './PartnerInvitation';
+import {publicPagePath} from './public-route';
+import pageCopy from './public-page-copy.json';
 
 type WelcomeScreenProps = {
   nativeAndroidApkUrl: string | null;
@@ -25,14 +26,6 @@ const FLAG_COUNTRIES: Record<Language, string> = {
   ru: "ru", en: "gb", el: "gr", de: "de", fr: "fr", es: "es", it: "it", pt: "pt",
   pl: "pl", sr: "rs", uk: "ua", zh: "cn", tr: "tr", ja: "jp",
 };
-const WELCOME_TITLES: Partial<Record<Language, string>> = {
-  el: "Ημερολόγιο εργασιών και έργων", de: "Aufgaben- und Projektkalender",
-  fr: "Calendrier des tâches et des projets", es: "Calendario de tareas y proyectos",
-  it: "Calendario di attività e progetti", pt: "Calendário de tarefas e projetos",
-  pl: "Kalendarz zadań i projektów", sr: "Календар задатака и пројеката",
-  uk: "Календар завдань і проєктів", zh: "任务与项目日历",
-  tr: "Görev ve Proje Takvimi", ja: "タスクとプロジェクトのカレンダー",
-};
 
 export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle }: WelcomeScreenProps) {
   useEffect(() => {
@@ -43,7 +36,10 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
   }, []);
   const [invitationBusy, setInvitationBusy] = useState(()=>typeof window!=='undefined'&&['invite','ref'].some(key=>new URL(window.location.href).searchParams.has(key)));
   const product = publicProductCopy(language);
-  const languageColumns = [7, 6, 5, 4, 3, 2, 1].find((count) => LANGUAGES.length % count === 0) ?? 1;
+  const home=publicPagePath(language,'home',APP_BASE),login=`${publicPagePath(language,'login',APP_BASE)}#sign-in`;
+  const terms=publicPagePath(language,'terms',APP_BASE),privacy=publicPagePath(language,'privacy',APP_BASE);
+  const visibleLanguages = LANGUAGES.filter(code=>code!=='ru'||language==='ru');
+  const languageColumns = 7;
   const copy = language === "en" ? {
     home: "GENESIS — home",
     tagline: "calendar of clear action",
@@ -69,7 +65,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
     googleLabel: "Sign in with Google",
     secureSignIn: "Secure Google sign-in",
     passwordNote: "GENESIS never asks for your Google password. Authentication takes place only on the secure accounts.google.com page.",
-    agreement: <>By continuing, you accept the <a href="/terms">Terms of Service</a> and acknowledge the <a href="/privacy">Privacy Policy</a>.</>,
+    agreement: <>By continuing, you accept the <a href={terms}>Terms of Service</a> and acknowledge the <a href={privacy}>Privacy Policy</a>.</>,
     deleteAccount: "Delete account",
   } : {
     home: "GENESIS — главная",
@@ -96,7 +92,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
     googleLabel: "Войти через Google",
     secureSignIn: "Безопасный вход через Google",
     passwordNote: "GENESIS никогда не запрашивает пароль от Google. Авторизация выполняется только на защищённой странице accounts.google.com.",
-    agreement: <>Продолжая, вы принимаете <a href="/terms">пользовательское соглашение</a> и подтверждаете ознакомление с <a href="/privacy">политикой конфиденциальности</a>.</>,
+    agreement: <>Продолжая, вы принимаете <a href={terms}>пользовательское соглашение</a> и подтверждаете ознакомление с <a href={privacy}>политикой конфиденциальности</a>.</>,
     deleteAccount: "Удаление аккаунта",
   };
 
@@ -105,23 +101,23 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
       <div className="welcome-orbit orbit-one" aria-hidden="true" />
       <div className="welcome-orbit orbit-two" aria-hidden="true" />
       <header className="welcome-nav">
-        <a className="welcome-brand" href="/" aria-label={copy.home}>
+        <a className="welcome-brand" href={home} aria-label={copy.home}>
           <span className="solar-mark"><i /></span>
           <span><strong data-no-translate>GENESIS</strong><small>{copy.tagline}</small></span>
         </a>
         <nav aria-label="GENESIS" data-no-translate>
           <a href="#features">{product.features}</a>
           <a href="#pricing">{product.pricing}</a>
-          <a href="/login#sign-in">{product.signIn}</a>
+          <a href={login}>{product.signIn}</a>
         </nav>
       </header>
 
       <section className="welcome-grid">
         <div className="welcome-copy">
           <span className="welcome-kicker">{copy.kicker}</span>
-          <h1><span data-no-translate>Genesis Tasker</span><em data-no-translate>{WELCOME_TITLES[language] ?? copy.title}</em></h1>
+          <h1><span data-no-translate>Genesis Tasker</span><em data-no-translate>{language==='ru'||language==='en'?copy.title:pageCopy[language].title}</em></h1>
           <p className="welcome-purpose">{copy.purpose}</p>
-          <div className="public-hero-actions" data-no-translate><a className="public-action" href="#pricing">{product.pricing}</a><a href="/login#sign-in">{product.getStarted}</a></div>
+          <div className="public-hero-actions" data-no-translate><a className="public-action" href="#pricing">{product.pricing}</a><a href={login}>{product.getStarted}</a></div>
           <section className="google-data-purpose" aria-labelledby="google-purpose-title">
             <h2 id="google-purpose-title">{copy.googlePurposeTitle}</h2>
             <p>{copy.googlePurpose}</p>
@@ -159,7 +155,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
             <span>{copy.chooseLanguage}</span>
             <div className="language-choice welcome-language-flags" role="radiogroup" aria-label={copy.languageGroup}
               style={{ gridTemplateColumns: `repeat(${languageColumns}, minmax(0, 1fr))` }}>
-              {LANGUAGES.map((code) => (
+              {visibleLanguages.map((code) => (
                 <button key={code} type="button" role="radio" aria-checked={language === code}
                   className={language === code ? "active" : ""} onClick={() => onLanguageChange(code)}
                   aria-label={LANGUAGE_LABELS[code].name} title={LANGUAGE_LABELS[code].name} data-no-translate>
