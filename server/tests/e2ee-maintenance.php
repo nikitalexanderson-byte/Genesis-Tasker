@@ -61,7 +61,7 @@ storeCheck(genesisE2eeSourceHash($db,$scope)===$protected);
 $db->exec('DROP TRIGGER e2ee_fence_shared_mutation_receipts_insert');
 $db->prepare('INSERT INTO shared_mutation_receipts(user_id,request_id,action,resource_id,response_json,created_at,payload_hash) VALUES(?,?,?,?,?,?,?)')
     ->execute([$outsider,'corrupt-historical-view','view.update','legacy-view','{broken','2000-01-01T00:00:00Z',hash('sha256','corrupt')]);
-$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v3'");genesisE2eeInitializeGuards($db);
+$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v4'");genesisE2eeInitializeGuards($db);
 $result=genesisSharedSyncGoogleCron();
 storeCheck($result['projectsChecked']===0);
 foreach(['former-view','copy-mutation','corrupt-historical-view'] as $id)storeCheck(genesisE2eeRow($db,'SELECT request_id FROM shared_mutation_receipts WHERE request_id=?',[$id])!==false);

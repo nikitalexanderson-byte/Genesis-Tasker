@@ -62,7 +62,9 @@ function storePut(string $objectId,int $expected,array $lease,string $domain='wo
 $db->exec('DROP TRIGGER e2ee_fence_task_links_update');
 $db->exec("CREATE TRIGGER e2ee_fence_task_links_update BEFORE UPDATE ON task_links WHEN 0 BEGIN SELECT RAISE(ABORT,'STALE_GUARD'); END");
 $db->prepare('INSERT OR IGNORE INTO schema_migrations VALUES(?,?)')->execute(['e2ee-fence-v1',genesisNow()]);
-$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v3'");genesisE2eeInitializeGuards($db);
+$db->prepare('INSERT OR IGNORE INTO schema_migrations VALUES(?,?)')->execute(['e2ee-fence-v3',genesisNow()]);
+$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v4'");genesisE2eeInitializeGuards($db);
+storeCheck($db->query("SELECT 1 FROM schema_migrations WHERE name='e2ee-fence-v4'")->fetchColumn()!==false);
 $runtime=json_decode((string)file_get_contents(dirname(__DIR__,2).'/tests/fixtures/e2ee/v1-runtime.json'),true,64,JSON_THROW_ON_ERROR);
 storeCheck(storeB64(genesisE2eeCommandBytes($runtime['signedCommand']['command']))===$runtime['commandBytes']);
 storeCheck(genesisE2eeCommandHash($runtime['signedCommand']['command'])===$runtime['commandHash']);

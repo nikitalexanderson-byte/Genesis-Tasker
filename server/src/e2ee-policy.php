@@ -129,9 +129,16 @@ function genesisE2eeLegacyInventory(PDO $db): array
         'shared_project_imports'=>[['project','{row}.root_project_id'],['personal','{row}.source_user_id']],
         'shared_task_transfers'=>[['project','{row}.target_project_id'],['personal','{row}.source_user_id']],
         'shared_mindmap_deletion_scopes'=>[['project','{row}.project_id']],
-        'shared_mindmap_conversions'=>[['project','{row}.project_id']],
+        // Original map owners remain part of the deny/hash fence after a map
+        // move or cross-project conversion. These predicates confer no read
+        // permission; legacy export uses its own exact lineage-aware grants.
+        'shared_mindmap_conversions'=>[['project','{row}.project_id'],
+            ['project','(SELECT project_id FROM shared_mindmaps WHERE space_id={row}.space_id AND id={row}.map_id)'],
+            ['project','(SELECT project_id FROM shared_mindmap_deletion_scopes WHERE space_id={row}.space_id AND map_id={row}.map_id)'],
+            ['project','(SELECT json_group_array(project_id) FROM shared_mindmap_versions WHERE space_id={row}.space_id AND map_id={row}.map_id)','many']],
         'shared_mindmap_deletions'=>[['project','COALESCE((SELECT project_id FROM shared_mindmaps WHERE space_id={row}.space_id AND id={row}.map_id),(SELECT project_id FROM shared_mindmap_deletion_scopes WHERE space_id={row}.space_id AND map_id={row}.map_id))']],
-        'shared_mindmap_receipts'=>[['project','COALESCE((SELECT project_id FROM shared_mindmaps WHERE space_id={row}.space_id AND id={row}.map_id),(SELECT project_id FROM shared_mindmap_deletion_scopes WHERE space_id={row}.space_id AND map_id={row}.map_id))']],
+        'shared_mindmap_receipts'=>[['project','COALESCE((SELECT project_id FROM shared_mindmaps WHERE space_id={row}.space_id AND id={row}.map_id),(SELECT project_id FROM shared_mindmap_deletion_scopes WHERE space_id={row}.space_id AND map_id={row}.map_id))'],
+            ['project','(SELECT project_id FROM shared_mindmap_versions WHERE space_id={row}.space_id AND map_id={row}.map_id AND revision={row}.revision)']],
         'shared_bulk_operations'=>[['project',genesisE2eeLegacyCopyProjects('{row}.actor_id',[
             'SELECT project_id FROM shared_bulk_items WHERE operation_id={row}.id',
             "SELECT json_extract(genesis_content_decrypt({row}.payload),'$.action.projectId')",
@@ -185,7 +192,7 @@ function genesisE2eeInitializeGuards(PDO $db): void
 {
     // Persistent triggers protect CLI/jobs and an older server binary too. Replacing these
     // guards is an additive schema operation; this version marker avoids per-request DDL.
-    $marker='e2ee-fence-v3';
+    $marker='e2ee-fence-v4';
     $q=$db->prepare('SELECT 1 FROM schema_migrations WHERE name=?');$q->execute([$marker]);$exists=$q->fetchColumn();$q->closeCursor();if($exists)return;
     genesisBeginWriteTransaction($db);
     try {

@@ -254,3 +254,25 @@ JVM1407 PASS/8 existing opt-in skips, API26/API34 каждый32/32 и full lint
 failed XML сохранён, failed build02 не считается PASS. Scope и evidence —
 `e2ee-336-planning-session.md`. Это внутренний review разработчика; активация,
 полный data coverage и новый recovery остаются отдельными gate.
+
+## Продолжение21 ноября: source lineage общих карт и persistent fence
+
+При подготовке отдельного shared reader непринятый draft использовал destination
+project conversion как source-map grant. RED02 воспроизвёл неверный отбор
+metadata. Reader теперь требует конкретную source lineage, различает явный null
+space owner и отсутствие evidence, сохраняет исходную revision каждой версии
+и не использует OR-based deny inventory как read permission.
+
+RED04 отдельно подтвердил дефект действовавшего v3 write/hash fence: receipt
+исходной версии перенесённой карты можно было изменить во время lease её прежнего
+проекта; conversion также учитывал лишь destination. Исправлены оба predicates;
+v4 marker обновляет persistent guards атомарно, сохраняя предыдущие markers и
+данные. Новый source hash не даёт продолжить старый attempt при изменённом input.
+
+Все25 серверных E2EE suites PASS, full JS2058/2058 и web build PASS. Реальный
+fresh SQLite проверяет запрет UPDATE, изменение source token после expiry,
+upgrade stale guards и bounded read всех retained versions. Это серверная
+компонентная приёмка; shared client adapters/capture/custody не приняты.
+Evidence, точные ограничения и сохранённые RED —
+`e2ee-336-shared-mindmap-source.md`. Review выполняет тот же AI-разработчик;
+независимая человеческая экспертиза и полный переход продукта не заявляются.

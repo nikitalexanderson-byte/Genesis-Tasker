@@ -2712,3 +2712,20 @@ API34 использует system credential verify, не product dialog accepta
 Это принятая граница capture/session, не новая source category или выпуск.
 Coverage9/20 и3.3.5/149 сохраняются. Далее: mixed-provenance content-plan/run,
 original-key custody/recovery,11 реальных sources и продуктовая приёмка.
+
+## 21 ноября: shared mindmap read grants и fence v4
+
+Добавлен отдельный signed server reader shared maps/versions/receipts/deletions/
+scope sidecars/conversions. Проверяет live owner/manage, exact migration lease
+и source под одним SQLite writer. Project bodies, space-owned bodies и
+исторические revisions разделены точными grants; неизвестная lineage отказывает
+до content. Новый action ещё не подключён к web/native source adapters.
+
+Внутренний RED выявил destination/source путаницу conversion draft и пробел
+существующего v3 fence для retained receipts/conversions. Исправлены grant и
+deny/hash predicates; marker v4 атомарно обновляет persistent triggers, не удаляя
+историю/данные. Все25 E2EE PHP suites, JS2058/2058 и web build PASS. Точная
+приёмка, stale-guard upgrade, limits, RED и оставшийся scope:
+`docs/e2ee-336-shared-mindmap-source.md`. Нового UI copy/Android input нет.
+Coverage9/20 и все release gates сохраняются; этот reader не закрывает ни одну
+полную source category и не является Deploy3.3.6.
