@@ -31,6 +31,33 @@ class E2eeContentPlanTest {
         fun record(bytes:ByteArray,id:String="record",placement:String="remote",source:InputStream=bytes.inputStream())=E2eeContentPlan.Record(placement,"workspace",id,bytes.size,source,"\uFEFF\uD800-\uDFFF-α","application/json")
     }
     private fun refuses(body:()->Unit){try{body()}catch(error:Exception){assertTrue(error.message.orEmpty().contains("E2EE_"));return};fail("Incomplete or foreign content plan accepted")}
+    @Test fun exactReservedInspectionAccountsMissingWritingAndCompleteAttemptsWithoutWrites(){
+        val f=Rig();val attempt=UUID.randomUUID().toString();assertEquals("missing",E2eeContentPlan.inspect(f.read,attempt,null).phase)
+        val writer=E2eeContentPlan.create(f.options(),attempt);val writes=f.memory.writes;val empty=E2eeContentPlan.inspect(f.read,attempt,null)
+        assertEquals("writing",empty.phase);assertEquals(1,empty.records);assertEquals(writes,f.memory.writes)
+        writer.append("personal.local-work",f.record(byteArrayOf(3,4),"local","local"));val partial=E2eeContentPlan.inspect(f.read,attempt,null)
+        assertEquals("writing",partial.phase);assertEquals(2,partial.records);assertTrue(partial.bytes>2)
+        val reference=writer.finish(f.coverage);val kept=f.memory.rows.toMap();val complete=E2eeContentPlan.inspect(f.read,attempt,reference)
+        assertEquals("complete",complete.phase);assertEquals(reference,complete.reference);assertEquals(3,complete.records);assertEquals(kept,f.memory.rows)
+        refuses{E2eeContentPlan.inspect(f.read,attempt,E2eeContentPlan.Reference(attempt,E2eeEnvelope.encode(ByteArray(32))))}
+    }
+    @Test fun partialRemoteAndLocalSuffixesRemainAuthenticatedInertMaterial(){
+        for(placement in listOf("remote","local")){
+            val f=Rig();val writer=E2eeContentPlan.create(f.options());val bytes=ByteArray(E2eeFiles.CHUNK_BYTES*2+1){8};val delegate=bytes.inputStream()
+            val source=object:InputStream(){override fun read():Int=error("UNUSED_READ");override fun read(out:ByteArray,offset:Int,length:Int):Int{val count=delegate.read(out,offset,length);if(count<0)error("E2EE_LOST_SOURCE_EOF");return count}}
+            refuses{writer.append("personal.workspace",f.record(bytes,"partial",placement,source))};val kept=f.memory.rows.toMap()
+            val found=E2eeContentPlan.inspect(f.read,writer.attemptId,null);assertEquals("writing",found.phase);assertNull(found.reference);assertTrue(found.records>=3);assertEquals(kept,f.memory.rows)
+            refuses{E2eeContentPlan.inspect(f.read,writer.attemptId,E2eeContentPlan.Reference(writer.attemptId,E2eeEnvelope.encode(ByteArray(32))))};bytes.fill(0)
+        }
+    }
+    @Test fun missingJournalCannotLegitimizeOrphanOutputsOrExtraRoles(){
+        for(mode in listOf("missing","extra")){
+            val f=Rig();val writer=E2eeContentPlan.create(f.options());writer.append("personal.workspace",f.record(byteArrayOf(1,2)))
+            if(mode=="missing")f.memory.rows.remove(f.memory.rows.keys.single{it.endsWith("content-plan:${writer.attemptId}:journal")})
+            else f.vault.write(listOf(UnlockedE2eeVault.Write("outbox","${writer.attemptId}:unknown",byteArrayOf(9),null)))
+            val kept=f.memory.rows.toMap();refuses{E2eeContentPlan.inspect(f.read,writer.attemptId,null)};assertEquals(kept,f.memory.rows)
+        }
+    }
     @Test fun completeRemoteAndLocalStreamsReadBackBeforePublishingAnInertManifest(){
         val f=Rig();val writer=E2eeContentPlan.create(f.options());val bytes=ByteArray(E2eeFiles.CHUNK_BYTES*3+17){(it*37).toByte()};val local=byteArrayOf(9,8,7)
         writer.append("personal.workspace",f.record(bytes));writer.append("personal.local-work",f.record(local,"local-record","local"));val reference=writer.finish(f.coverage);val writes=f.memory.writes

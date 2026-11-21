@@ -104,6 +104,11 @@ export class UnlockedE2eeVault {
   async listMigrationOriginalParts(){return this.#localIds('local-snapshot',id=>id.includes(':source:')||id.endsWith(':source'));}
   /** Reserved original archive/cancel roles, including malformed remnants. */
   async listMigrationHistoryCopies(){return this.#localIds('local-snapshot',id=>id.endsWith(':archive')||id.includes(':archive:')||id.endsWith(':cancel')||id.includes(':cancel:'));}
+  /** Coordinator role inventory only; orphan plan outputs cannot disappear
+   * merely because their journal was lost. This opens no corresponding body. */
+  async listMigrationPlanOutputs(){
+    return Object.freeze({remote:await this.#localIds('outbox',()=>true),local:await this.#localIds('local-snapshot',id=>id.includes(':private:')||id.endsWith(':private'))});
+  }
   async #localIds(domain:E2eeContext['domain'],include:(id:string)=>boolean){
     const scope=this.#open(),lifecycle=this.#lifecycle;
     const prefix=[scope.ownerId,scope.scopeId,domain].map(part=>`${part.length}:${part}`).join('');

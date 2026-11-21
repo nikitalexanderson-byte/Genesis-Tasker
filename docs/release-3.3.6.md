@@ -2748,3 +2748,28 @@ clean run. Оба PIN восстановлены в NONE. Fresh full lint14m18s 
 file pairs/count increases,0 errors/208 warnings/8 hints. Личные устройства и
 Play не менялись. Scope, hashes, неизменный prompt и evidence —
 `docs/e2ee-336-shared-capture.md`. Coverage9/20 и3.3.5/149 production сохраняются.
+
+## 21 ноября: точный ownership bounded content plans
+
+Текущий state4 получает durable plan reservation до journal и exact manifest
+binding через source/coordinator CAS. Missing/partial attempts сохраняются;
+cold recovery завершённого inert binding аутентифицирует полный plan. Все local
+paths и remote originals требуют actual EOF, caught failures остаются sticky,
+borrowed ports отзываются и pending work дожидается завершения. Source-only
+v1/v2/v3 не получает prefix ignore-list; unknown plan/output roles отказывают.
+
+Full JS2072/2072 PASS. Внутренний RED дополнительно выявил frozen-state ошибку
+долгого session renewal; исправлена mutable own copy. Устранён новый registry
+runtime cycle, ошибочный full01 не считается приёмкой. Исправлен compiler-only
+consumer argument в native build01; новый input02 A3D8007B зафиксирован для build.
+Project TSC01/owned core TSC04 и scoped ESLint03 PASS; provider/browser приёмка выполняется. Полный scope,
+проверенные пределы и последующие результаты — `docs/e2ee-336-owned-content-plans.md`.
+Run/upload/activation и coverage9/20 пока сохраняют прежние gates.
+
+Дополнение: JVM1413 PASS/8 existing opt-in HTTP skips, итоговый unit BLOCKED.
+Build02 отказал только на test export helper; build03 исправил JCA digest.
+Затем device19/20 выявил ошибочный64KiB fixture вместо существующего256KiB file
+chunk. Input04 A2381E7D сохраняет тот же exact main APK7AEE8744, новый test3E1BDDF5;
+API26/API34 каждый44 distinct PASS в трёх свежих credential groups,0 failures/skips.
+Personal browser21/21 PASS с одним ожидаемым console409/0 warnings; project/space
+и full native lint ещё проверяются. Failed runs не переименованы в PASS.

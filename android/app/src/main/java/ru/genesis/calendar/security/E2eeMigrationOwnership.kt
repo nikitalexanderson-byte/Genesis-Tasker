@@ -19,9 +19,9 @@ internal object E2eeMigrationOwnership {
     }
     fun validate(source:JSONObject,expected:Expected):JSONObject {
         val value=JSONObject(source.toString())
-        E2eeKeys.exact(value,setOf("protocol","attemptId","sourceState","signer","securityEpoch","originals"))
         val protocol=E2eeCommands.integer(value.get("protocol"),1)
-        if(protocol !in 1L..2L||!uuid.matches(value.getString("attemptId"))||!uuid.matches(expected.migrationId))invalid()
+        E2eeKeys.exact(value,setOf("protocol","attemptId","sourceState","signer","securityEpoch","originals")+(if(protocol==3L)setOf("plans")else emptySet()))
+        if(protocol !in 1L..3L||!uuid.matches(value.getString("attemptId"))||!uuid.matches(expected.migrationId))invalid()
         val original=value.getJSONObject("sourceState");E2eeKeys.exact(original,setOf("objectId","hash","originalSerial"))
         if(original.get("objectId")!="${expected.migrationId}:preparation:3")invalid()
         E2eeEnvelope.decode(original.getString("hash"),32);positive(original.get("originalSerial"))
@@ -35,12 +35,12 @@ internal object E2eeMigrationOwnership {
         val originals=value.getJSONArray("originals");if(originals.length()>1000||originals.length()>0&&(expected.lease==null||expected.sourceHash==null))invalid()
         val seen=mutableSetOf<String>()
         for(index in 0 until originals.length()){
-            val owned=originals.getJSONObject(index);E2eeKeys.exact(owned,setOf("registration","packet")+(if(protocol==2L)setOf("completion")else emptySet()))
+            val owned=originals.getJSONObject(index);E2eeKeys.exact(owned,setOf("registration","packet")+(if(protocol!=1L)setOf("completion")else emptySet()))
             val reg=owned.getJSONObject("registration");E2eeKeys.exact(reg,setOf("protocol","purpose","id","context","binding"))
             if(reg.get("protocol")!=1||reg.get("purpose")!="remote-original/v1"||!uuid.matches(reg.getString("id"))||!seen.add(reg.getString("id")))invalid()
             fields(reg.getJSONObject("context"),mapOf("ownerId" to expected.target.ownerId,"scopeId" to expected.target.scopeId,"kind" to expected.target.kind,
                 "actorId" to expected.actor.ownerId,"actorScopeId" to expected.actor.scopeId,"deviceId" to expected.actor.deviceId))
-            if(protocol==2L&&!owned.isNull("completion")){
+            if(protocol!=1L&&!owned.isNull("completion")){
                 val ref=owned.getJSONObject("completion");E2eeKeys.exact(ref,setOf("id","manifestHash","rawHash","size"))
                 if(ref.get("id")!=reg.get("id")||E2eeCommands.integer(ref.get("size"))>128L*1024*1024)invalid()
                 E2eeEnvelope.decode(ref.getString("manifestHash"),32);E2eeEnvelope.decode(ref.getString("rawHash"),32)
@@ -62,6 +62,31 @@ internal object E2eeMigrationOwnership {
                 ||payload.get("migrationId")!=binding.get("migrationId")||positive(payload.get("fence"))!=positive(binding.get("fence"))||payload.get("sourceHash")!=binding.get("sourceHash"))invalid()
             val bytes=E2eeCommands.canonical(packet)
             try{if(bytes.size>128*1024||E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))!=binding.get("packetHash"))invalid()}finally{bytes.fill(0)}
+        }
+        if(protocol==3L){
+            val plans=value.getJSONArray("plans");if(plans.length()>64||plans.length()>0&&(expected.lease==null||expected.sourceHash==null))invalid()
+            val attempts=mutableSetOf<String>()
+            for(index in 0 until plans.length()){
+                val plan=plans.getJSONObject(index);E2eeKeys.exact(plan,setOf("attemptId","context","fence","generation","originals","completion"))
+                val attempt=plan.getString("attemptId");if(!uuid.matches(attempt)||!attempts.add(attempt))invalid()
+                val lease=expected.lease?:invalid();if(positive(plan.get("fence"))>positive(lease.get("fence"))||positive(plan.get("generation"))!=positive(lease.get("generation")))invalid()
+                val context=E2eeEnvelope.Context.fromJson(plan.getJSONObject("context")).toJson()
+                if(context.get("ownerId")!=expected.target.ownerId||context.get("scopeId")!=expected.target.scopeId||context.get("deviceId")!=expected.actor.deviceId
+                    ||positive(context.get("dataGeneration"))!=positive(plan.get("generation"))||positive(context.get("securityEpoch"))!=positive(value.get("securityEpoch"))
+                    ||positive(context.get("schemaVersion"))!=1L||positive(context.get("revision"))!=1L)invalid()
+                val references=plan.getJSONArray("originals");if(references.length()>originals.length())invalid()
+                for(at in 0 until references.length()){
+                    val original=originals.getJSONObject(at);if(original.isNull("completion"))invalid()
+                    val reference=references.getJSONObject(at);val completion=original.getJSONObject("completion")
+                    E2eeKeys.exact(reference,setOf("id","manifestHash","rawHash","size"))
+                    if(reference.get("id")!=completion.get("id")||reference.get("manifestHash")!=completion.get("manifestHash")||reference.get("rawHash")!=completion.get("rawHash")
+                        ||E2eeCommands.integer(reference.get("size"))!=E2eeCommands.integer(completion.get("size")))invalid()
+                }
+                if(!plan.isNull("completion")){
+                    val completion=plan.getJSONObject("completion");E2eeKeys.exact(completion,setOf("attemptId","manifestHash"))
+                    if(completion.get("attemptId")!=attempt)invalid();E2eeEnvelope.decode(completion.getString("manifestHash"),32)
+                }
+            }
         }
         return value
     }

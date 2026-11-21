@@ -1,5 +1,8 @@
 import {sha256} from '@noble/hashes/sha2.js';
-import {E2eeMigration,type MigrationSources,type StreamedPlanningOptions,type MigrationSourceContext} from '../../app/e2ee/migration.ts';
+import {E2eeMigration,type MigrationSources,type StreamedPlanningOptions,type StreamedContentPlanningOptions,type MigrationSourceContext} from '../../app/e2ee/migration.ts';
+import type {MigrationContentPlanningSession} from '../../app/e2ee/content-planning-session.ts';
+import {openMigrationContentPlan} from '../../app/e2ee/content-plan.ts';
+import {E2EE_CHUNK_BYTES} from '../../app/e2ee/files.ts';
 import {UnlockedWebDevice,IndexedDbDeviceKeyStorage} from '../../app/e2ee/device-vault.ts';
 import {IndexedDbE2eeStorage} from '../../app/e2ee/storage.ts';
 import {requiredPrivatePaths} from '../../app/e2ee/private-paths.ts';
@@ -100,6 +103,46 @@ try{
  check('caught page preflight failure remains sticky without another HTTP request',caught&&failed&&ownedBeforeFetch===beforeInvalid);
  const finalMetrics=await(await nativeFetch('/metrics.json?kind='+scopeKind)).json() as {reads:{operationId:string;rawHash:string;size:number}[]},finalState=await readState();
  check('refused response original references match exact host body hashes',finalMetrics.reads.every(row=>{const owned=finalState.ownership.originals.find((value:{packet:SignedE2eeCommand})=>value.packet.command.operationId===row.operationId);return owned.completion.rawHash===row.rawHash&&owned.completion.size===row.size;}));
+ const planOptions=():StreamedContentPlanningOptions=>({...options(),planCapacity:{maximumBytes:32*1024*1024,maximumEnvelopes:256,maximumLocalParts:256},admitPlan:async()=>current()});
+ const drainLocal=async(session:MigrationContentPlanningSession)=>{
+  for(const source of [session.sources.current,...session.sources.previous])for(const path of source.paths){const reader=await source.openPath(path);for await(const bytes of reader.chunks)bytes.fill(0);reader.assertComplete();}
+ };
+ const planBuild=async(session:MigrationContentPlanningSession)=>{
+  await drainLocal(session);
+  for(const[index,original]of session.originals.entries())await session.withOriginal(original.completion.id,async source=>{
+   await session.emit(paths[0],{placement:'remote',domain:scopeKind==='personal'?'workspace':'shared-project',objectId:'synthetic-raw:'+index,size:original.completion.size,source});
+  });
+  return paths.map(domain=>({domain,complete:true}));
+ };
+ const planEntries=fenceEntries,planCalls=ownedBeforeFetch,planned=await migration.planStreamedContent(planBuild,planOptions()),plannedState=await readState();
+ check('actual coordinator reserves and binds a complete plan in one fence without legacy HTTP or upload',fenceEntries===planEntries+1&&ownedBeforeFetch===planCalls
+  &&plannedState.ownership.protocol===3&&plannedState.ownership.plans.length===1&&plannedState.ownership.plans[0].completion.manifestHash===planned.plan.manifestHash&&!plannedState.planned&&plannedState.plan.length===0);
+ const manifest=await openMigrationContentPlan({vault:device.vault,root,signer:device.keys().signing.publicKey,context:plannedState.ownership.plans[0].context,target,
+  migrationId:planned.ticket.migrationId,sourceHash:planned.ticket.sourceHash,paths,assertCurrent:current,reference:planned.plan});
+ check('every generated plan stream has the exact complete raw-original digest including refused HTTP and JSON',manifest.logical.length===plannedState.ownership.originals.length
+  &&manifest.logical.every((row,index)=>row.plaintextHash===plannedState.ownership.originals[index].completion.rawHash));
+ let plannedSnapshot=await snapshot();device.lock();storage=new IndexedDbE2eeStorage();keys=new IndexedDbDeviceKeyStorage();device=await UnlockedWebDevice.unlock(ownerId,recovery.secret,storage,keys);fixtureDevice=device;migration=make();
+ const reopened=await migration.planStreamedContent(async()=>{throw new Error('E2EE_SYNTHETIC_REBUILD_FORBIDDEN');},planOptions());
+ check('cold actual IndexedDB reopens the exact complete plan without rewriting source or plan ciphertext',reopened.plan.manifestHash===planned.plan.manifestHash&&plannedSnapshot===await snapshot());
+ await nativeFetch('/control?mode=normal');await migration.withStreamedPlanning(async session=>{await readOne(authenticatedMigrationTransport(device,directory,sources,undefined,session),session.context);},options());
+ let caughtPrefix=false,prefixFailure=false;
+ try{await migration.planStreamedContent(async session=>{
+  await drainLocal(session);for(const original of session.originals)await session.withOriginal(original.completion.id,async input=>{for await(const bytes of input)bytes.fill(0);});
+  try{await session.emit(paths[0],{placement:'remote',domain:scopeKind==='personal'?'workspace':'shared-project',objectId:'synthetic-partial',size:E2EE_CHUNK_BYTES+1,source:(async function*(){yield new Uint8Array(E2EE_CHUNK_BYTES).fill(9);throw new Error('E2EE_SYNTHETIC_LATE_TAG');})()});}
+  catch(error){if(!(error instanceof Error)||error.message!=='E2EE_SYNTHETIC_LATE_TAG')throw error;caughtPrefix=true;}
+  return paths.map(domain=>({domain,complete:true}));
+ },planOptions());}catch(error){prefixFailure=error instanceof Error&&error.message==='E2EE_SYNTHETIC_LATE_TAG';}
+ const partialState=await readState(),partialId=partialState.ownership.plans[1].attemptId;
+ const partialSnapshot=async()=>{const rows=[];for(const key of(await storage.list('')).filter(key=>key.includes(partialId)).sort())rows.push([key,await storage.get(key)]);return digest(encoder.encode(JSON.stringify(rows)));};
+ const keptPartial=await partialSnapshot();
+ check('a caught late stream failure preserves an owned inert partial attempt in actual IndexedDB',caughtPrefix&&prefixFailure&&partialState.ownership.plans[1].completion===null
+  &&(await device.vault.listLocal('outbox',partialId+':upload:')).length>0);
+ device.lock();storage=new IndexedDbE2eeStorage();keys=new IndexedDbDeviceKeyStorage();device=await UnlockedWebDevice.unlock(ownerId,recovery.secret,storage,keys);fixtureDevice=device;migration=make();
+ const retry=await migration.planStreamedContent(planBuild,planOptions());
+ check('cold retry uses a fresh attempt and retains every failed-prefix ciphertext row',retry.plan.attemptId!==partialId&&(await readState()).ownership.plans.length===3&&keptPartial===await partialSnapshot());
+ plannedSnapshot=await snapshot();const noNetwork=ownedBeforeFetch;refused=false;
+ try{await migration.run();}catch(error){refused=error instanceof Error&&error.message==='E2EE_STREAMED_PLANNER_REQUIRED';}
+ check('complete local plan adoption keeps run and activation gated',refused&&noNetwork===ownedBeforeFetch&&plannedSnapshot===await snapshot());
  live=false;report.status='PASS';document.title='PASS GENESIS owned migration capture';
 }catch(error){report.status='FAIL';report.error=error instanceof Error?error.stack:String(error);document.title='FAIL GENESIS owned migration capture';}
 finally{globalThis.fetch=nativeFetch;fixtureDevice?.lock();fixtureSecret?.fill(0);}

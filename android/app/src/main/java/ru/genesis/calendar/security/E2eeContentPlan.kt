@@ -19,6 +19,9 @@ internal object E2eeContentPlan {
     data class Capacity(val maximumBytes:Long,val maximumEnvelopes:Int,val maximumLocalParts:Int)
     data class Admission(val bytes:Long,val envelopes:Int,val localParts:Int,val metadataBytes:Int,val additionalStorageBytes:Long)
     data class Reference(val attemptId:String,val manifestHash:String)
+    class Inspection(val phase:String,val reference:Reference?,val records:Int,val bytes:Long,val metadataBytes:Int,val metadataIds:List<String>) {
+        override fun toString()="E2eeContentPlan.Inspection([redacted])"
+    }
     class ReadbackReceipt(val reference:Reference,val envelopes:Int,val remoteRecords:Int,val localRecords:Int) {
         override fun toString()="E2eeContentPlan.ReadbackReceipt([redacted])"
     }
@@ -86,7 +89,7 @@ internal object E2eeContentPlan {
             if(!fields(ctx,expected))invalid();binding.current();return value
         }finally{row.bytes.fill(0)}
     }
-    private fun validate(binding:Binding,value:JSONObject,attempt:String):JSONObject {
+    private fun validate(binding:Binding,value:JSONObject,attempt:String,allowEmpty:Boolean=false):JSONObject {
         E2eeKeys.exact(value,setOf("protocol","attemptId","migrationId","sourceHash","target","actor","context","paths","coverage","plan","logical","local"))
         if(integer(value,"protocol",1)!=1L||text(value,"attemptId")!=attempt||runCatching{UUID.fromString(attempt).toString()==attempt}.getOrDefault(false)!=true
             ||text(value,"migrationId")!=binding.migrationId||text(value,"sourceHash")!=binding.sourceHash||!fields(value.getJSONObject("target"),target(binding))
@@ -95,7 +98,7 @@ internal object E2eeContentPlan {
         val coverage=value.getJSONArray("coverage");if(coverage.length()!=binding.paths.size)invalid()
         for(index in binding.paths.indices){val row=coverage.getJSONObject(index);E2eeKeys.exact(row,setOf("domain","complete"));if(row.get("domain")!=binding.paths[index]||row.get("complete")!=true)invalid()}
         val plan=value.getJSONArray("plan");val logical=value.getJSONArray("logical");val local=value.getJSONArray("local")
-        if(plan.length()>8000||logical.length()+local.length() !in 1..10000)invalid()
+        if(plan.length()>8000||logical.length()+local.length() !in (if(allowEmpty)0 else 1)..10000)invalid()
         val envelopes=mutableSetOf<String>();val identities=mutableSetOf<String>();val byRecord=mutableMapOf<String,JSONObject>()
         for(index in 0 until plan.length()){
             val row=plan.getJSONObject(index);E2eeKeys.exact(row,setOf("recordId","domain","objectId","hash"));val domain=text(row,"domain");val objectId=E2eeKeys.technical(text(row,"objectId"));E2eeEnvelope.decode(text(row,"hash"),32)
@@ -151,6 +154,70 @@ internal object E2eeContentPlan {
             inventory(binding,value,true);verifyRecords(binding,value);inventory(binding,value,true);binding.current();return Opened(copy(value))
         }finally{stored.second.first.fill(0)}
     }
+    /** Exact reserved-role discovery. Interrupted file suffixes authenticate the
+     * envelope/signature and outer vault; absence of a final per-file-key
+     * manifest never becomes plaintext completeness or a transport permit. */
+    fun inspect(input:ReadOptions,attempt:String,reference:Reference?):Inspection {
+        val binding=Binding(input)
+        if(runCatching{UUID.fromString(attempt).toString()==attempt}.getOrDefault(false)!=true)invalid()
+        reference?.let{if(it.attemptId!=attempt)invalid();E2eeEnvelope.decode(it.manifestHash,32)}
+        val names=binding.vault.listLocal("local-snapshot","content-plan:$attempt:");binding.current()
+        if(id(attempt,"journal") !in names){
+            if(reference!=null||names.isNotEmpty())invalid()
+            for(domain in listOf("outbox","local-snapshot")){val outputs=binding.vault.listLocal(domain,"$attempt:");binding.current();if(outputs.isNotEmpty())invalid()}
+            return Inspection("missing",null,0,0,0,emptyList())
+        }
+        val marker=metadata(binding,id(attempt,"journal"));var complete:Reference?=null
+        try{
+            val value=marker.second.second
+            if(value.opt("phase")=="complete"){
+                E2eeKeys.exact(value,setOf("protocol","attemptId","phase","manifestHash"))
+                if(integer(value,"protocol",1)!=1L||text(value,"attemptId")!=attempt||marker.first<2)invalid()
+                complete=Reference(attempt,text(value,"manifestHash"));E2eeEnvelope.decode(complete.manifestHash,32)
+                if(reference!=null&&reference!=complete)invalid();open(input,complete);binding.current()
+            }else{
+                if(reference!=null)invalid()
+                E2eeKeys.exact(value,setOf("protocol","attemptId","migrationId","sourceHash","target","actor","context","paths","phase","pending","bytes","localParts","plan","logical","local"))
+                if(value.get("phase")!="writing")invalid()
+                val manifest=copy(value);for(key in listOf("phase","pending","bytes","localParts"))manifest.remove(key)
+                manifest.put("coverage",JSONArray(binding.paths.map{JSONObject().put("domain",it).put("complete",true)}));validate(binding,manifest,attempt,true)
+                val plan=value.getJSONArray("plan");val logical=value.getJSONArray("logical");val local=value.getJSONArray("local")
+                val pending=if(value.isNull("pending"))null else value.getJSONObject("pending")
+                val countedLocal=JSONArray(local.toString());var expectedBytes=0L;var expectedParts=0L
+                for(rows in listOf(logical,local))for(index in 0 until rows.length())expectedBytes+=integer(rows.getJSONObject(index),"size")
+                for(index in 0 until local.length())expectedParts+=integer(local.getJSONObject(index),"parts")
+                if(pending!=null){
+                    E2eeKeys.exact(pending,setOf("path","placement","domain","objectId","size","filename","mediaType","recordId","parts"))
+                    val domain=text(pending,"domain");val objectId=E2eeKeys.technical(text(pending,"objectId"));val size=integer(pending,"size");val parts=integer(pending,"parts")
+                    if(domain !in(binding.allowed[text(pending,"path")]?:emptySet())||text(pending,"placement") !in setOf("remote","local")||size>E2eeFiles.MAX_FILE_BYTES
+                        ||domain=="shared-comment"&&size>65536||text(pending,"filename").length>512||text(pending,"mediaType").length>128||parts>8000
+                        ||listOf(logical,local).any{rows->(0 until rows.length()).any{rows.getJSONObject(it).let{row->row.get("domain")==domain&&row.get("objectId")==objectId}}})invalid()
+                    if(pending.get("placement")=="remote"){if(pending.get("recordId")!=""||parts!=0L)invalid()}
+                    else{
+                        if(pending.get("recordId")!="$attempt:private:${local.length()}"||parts>(size+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES)invalid()
+                        countedLocal.put(copy(pending).put("plaintextHash",E2eeEnvelope.encode(ByteArray(32))));expectedParts+=parts
+                    };expectedBytes+=size
+                }
+                if(integer(value,"bytes")!=expectedBytes||integer(value,"localParts")!=expectedParts||expectedParts>8000)invalid()
+                inventory(binding,copy(value).put("local",countedLocal),false);binding.current()
+                val end=if(logical.length()==0)0 else (0 until plan.length()).single{plan.getJSONObject(it).get("recordId")==logical.getJSONObject(logical.length()-1).get("manifestRecordId")}+1
+                if((pending==null||pending.get("placement")!="remote")&&end!=plan.length())invalid()
+                verifyRecords(binding,copy(value).put("plan",JSONArray((0 until end).map{plan.getJSONObject(it)})));binding.current()
+                for(index in end until plan.length()){val envelope=sealed(binding,plan.getJSONObject(index));E2eeEnvelope.verify(envelope,envelope.context,binding.signer);binding.current()}
+                if(pending?.get("placement")=="local")for(part in 0 until integer(pending,"parts").toInt()){
+                    val row=binding.vault.read("local-snapshot","${text(pending,"recordId")}:$part")?:invalid()
+                    try{binding.current();if(row.serial!=1L||row.bytes.size.toLong()!=minOf(E2eeFiles.CHUNK_BYTES.toLong(),integer(pending,"size")-part.toLong()*E2eeFiles.CHUNK_BYTES))invalid()}finally{row.bytes.fill(0)}
+                }
+            }
+            var records=0;var bytes=0L;var metadataBytes=0
+            fun count(domain:String,ids:List<String>,metadata:Boolean=false){for(objectId in ids){
+                val row=binding.vault.read(domain,objectId)?:invalid();try{binding.current();records++;bytes+=row.bytes.size;if(metadata)metadataBytes+=row.bytes.size}finally{row.bytes.fill(0)}
+            }}
+            val outbox=binding.vault.listLocal("outbox","$attempt:");val local=binding.vault.listLocal("local-snapshot","$attempt:");binding.current()
+            count("outbox",outbox);count("local-snapshot",local);count("local-snapshot",names,true);binding.current()
+            return Inspection(if(complete==null)"writing"else"complete",complete,records,bytes,metadataBytes,names.toList())
+        }finally{marker.second.first.fill(0)}
+    }
     /** Full expected inventory/signature and original-byte readback, with no
      * aggregate ciphertext or file buffer. The coordinator supplies the pinned
      * generation transport and still owns source/lease/CAS and activation. */
@@ -205,10 +272,11 @@ internal object E2eeContentPlan {
         // every protected local-only part. No success if quarantine disappeared.
         open(read,reference);binding.current();return ReadbackReceipt(reference,plan.length(),logical.length(),value.getJSONArray("local").length())
     }
-    fun create(input:Options):Writer {
+    fun create(input:Options,attemptId:String=UUID.randomUUID().toString()):Writer {
         val binding=Binding(input.read);val vault=binding.vault as? UnlockedE2eeVault?:error("E2EE_CONTENT_PLAN_WRITE_REQUIRED");val capacity=input.capacity.copy()
         check(capacity.maximumBytes in 1..9007199254740991L&&capacity.maximumEnvelopes in 1..8000&&capacity.maximumLocalParts in 1..8000){"E2EE_CONTENT_PLAN_CAPACITY"}
-        val attempt=UUID.randomUUID().toString();val journal=JSONObject().put("protocol",1).put("attemptId",attempt).put("migrationId",binding.migrationId).put("sourceHash",binding.sourceHash)
+        check(runCatching{UUID.fromString(attemptId).toString()==attemptId}.getOrDefault(false)){"E2EE_CORRUPT_CONTENT_PLAN"}
+        val attempt=attemptId;val journal=JSONObject().put("protocol",1).put("attemptId",attempt).put("migrationId",binding.migrationId).put("sourceHash",binding.sourceHash)
             .put("target",target(binding)).put("actor",actor(binding)).put("context",binding.context.toJson()).put("paths",JSONArray(binding.paths)).put("phase","writing").put("pending",JSONObject.NULL)
             .put("bytes",0).put("localParts",0).put("plan",JSONArray()).put("logical",JSONArray()).put("local",JSONArray())
         val writer=Writer(binding,vault,input.signingKey,capacity,input.admit,input.assertSourceComplete,journal)
@@ -295,6 +363,7 @@ internal object E2eeContentPlan {
                 }finally{bytes.fill(0)}
             }catch(error:Exception){broken=true;throw error}finally{busy=false}
         }
+        @Synchronized fun close(){broken=true}
         override fun toString()="E2eeContentPlan.Writer([redacted])"
     }
 }

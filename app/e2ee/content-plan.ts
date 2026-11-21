@@ -6,7 +6,7 @@ import {assertTechnical,exactKeys} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {parseE2eeContentPlanJson} from './file-manifest-json.ts';
 import {validateMigrationLocalEntries,type MigrationLocalEntry} from './migration-local.ts';
-import {requiredPrivatePaths,type PrivateScopeKind} from './migration-sources.ts';
+import {requiredPrivatePaths,type PrivateScopeKind} from './private-paths.ts';
 import type {MigrationCoverage} from './migration.ts';
 import type {UnlockedE2eeVault,LocalWrite} from './storage.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
@@ -24,7 +24,7 @@ export type MigrationContentPlanCapacity=Readonly<{maximumBytes:number;maximumEn
 export type MigrationContentPlanAdmission=Readonly<{bytes:number;envelopes:number;localParts:number;metadataBytes:number;additionalStorageBytes:number}>;
 type Common={vault:SourceStageReadVault;root:CryptoKey;signer:CryptoKey;context:E2eeContext;target:Target;migrationId:string;sourceHash:string;paths:readonly string[];assertCurrent:()=>void};
 export type MigrationContentPlanOptions=Common&{vault:UnlockedE2eeVault;signingKey:CryptoKey;capacity:MigrationContentPlanCapacity;admit:(request:MigrationContentPlanAdmission)=>Promise<void>;
- ensureDurableKeys:()=>Promise<void>;assertSourceComplete:()=>Promise<void>};
+ ensureDurableKeys:()=>Promise<void>;assertSourceComplete:()=>Promise<void>;attemptId?:string};
 export type MigrationContentStream={placement:Placement;domain:E2eeContext['domain'];objectId:string;size:number;source:AsyncIterable<Uint8Array>;filename?:string;mediaType?:string};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),MAX_METADATA=4*1024*1024;
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
@@ -65,13 +65,13 @@ async function sealed(options:Common,item:PlanEnvelope){
   return value;
  }finally{row.value.fill(0);}
 }
-function validate(options:Common,value:unknown,attempt:string):Manifest{
+function validate(options:Common,value:unknown,attempt:string,allowEmpty=false):Manifest{
  exactKeys(value,['protocol','attemptId','migrationId','sourceHash','target','actor','context','paths','coverage','plan','logical','local']);
  const row=value as unknown as Manifest;
  if(row.protocol!==1||row.attemptId!==attempt||!uuid.test(attempt)||row.migrationId!==options.migrationId||row.sourceHash!==options.sourceHash
   ||!fields(row.target,options.target)||!fields(row.actor,options.vault.localIdentity())||!equal(row.paths,options.paths))invalid();
  exactKeys(row.context,Object.keys(options.context));for(const key of Object.keys(options.context) as (keyof E2eeContext)[])if(row.context[key]!==options.context[key])invalid();
- if(!Array.isArray(row.plan)||row.plan.length>8000||!Array.isArray(row.logical)||!Array.isArray(row.local)||row.logical.length+row.local.length<1||row.logical.length+row.local.length>10000)invalid();
+ if(!Array.isArray(row.plan)||row.plan.length>8000||!Array.isArray(row.logical)||!Array.isArray(row.local)||!allowEmpty&&row.logical.length+row.local.length<1||row.logical.length+row.local.length>10000)invalid();
  if(!Array.isArray(row.coverage)||row.coverage.length!==options.paths.length||row.coverage.some((entry,index)=>{exactKeys(entry,['domain','complete']);return entry.domain!==options.paths[index]||entry.complete!==true;}))invalid();
  const seen=new Set<string>(),envelopes=new Set<string>(),records=new Set<string>();
  for(const[itemIndex,item]of row.plan.entries()){
@@ -139,7 +139,8 @@ export class ProtectedMigrationContentPlan {
   const options={...captured(input),capacity:{...input.capacity}};current(options);context(options);
   const limit=options.capacity;if(!Number.isSafeInteger(limit.maximumBytes)||limit.maximumBytes<1||!Number.isSafeInteger(limit.maximumEnvelopes)||limit.maximumEnvelopes<1||limit.maximumEnvelopes>8000
    ||!Number.isSafeInteger(limit.maximumLocalParts)||limit.maximumLocalParts<1||limit.maximumLocalParts>8000)throw new Error('E2EE_CONTENT_PLAN_CAPACITY');
-  const journal:Journal={protocol:1,attemptId:crypto.randomUUID(),migrationId:options.migrationId,sourceHash:options.sourceHash,target:options.target,actor:options.vault.localIdentity(),
+  const attemptId=options.attemptId??crypto.randomUUID();if(!uuid.test(attemptId))invalid();
+  const journal:Journal={protocol:1,attemptId,migrationId:options.migrationId,sourceHash:options.sourceHash,target:options.target,actor:options.vault.localIdentity(),
    context:options.context,paths:[...options.paths],phase:'writing',pending:null,bytes:0,localParts:0,plan:[],logical:[],local:[]};
   const result=new ProtectedMigrationContentPlan(options,journal);await options.ensureDurableKeys();current(options);await result.#store(journal,[],true);return result;
  }
@@ -231,6 +232,82 @@ export class ProtectedMigrationContentPlan {
    }finally{bytes.fill(0);}
   }catch(error){this.#broken=true;throw error;}finally{this.#busy=false;}
  }
+ close(){this.#broken=true;}
+}
+
+export type MigrationContentPlanInspection=Readonly<{phase:'missing'|'writing'|'complete';reference:MigrationContentPlanReference|null;
+ records:number;bytes:number;metadataBytes:number;metadataIds:readonly string[]}>;
+/** Discover only an EXACT coordinator-reserved attempt. Partial outputs remain
+ * inert; all their rows are authenticated and accounted, never silently ignored.
+ * This does not grant a source/plan publication, resume, upload or activation. */
+export async function inspectMigrationContentPlanAttempt(input:Common&{attemptId:string;reference:MigrationContentPlanReference|null}):Promise<MigrationContentPlanInspection>{
+ const options=captured(input),attempt=input.attemptId,expectedReference=input.reference===null?null:{...input.reference};current(options);context(options);if(!uuid.test(attempt))invalid();
+ if(expectedReference){exactKeys(expectedReference,['attemptId','manifestHash']);if(expectedReference.attemptId!==attempt)invalid();decodeE2eeBytes(expectedReference.manifestHash,32);}
+ let records=0,bytes=0,metadataBytes=0;
+ const count=async(domain:E2eeContext['domain'],names:readonly string[],isMetadata=false)=>{
+  for(const objectId of names){current(options);const row=await options.vault.read(domain,objectId);if(!row)invalid();
+   try{current(options);records++;bytes+=row.value.length;if(isMetadata)metadataBytes+=row.value.length;}finally{row.value.fill(0);}}
+ };
+ const names=await options.vault.listLocal('local-snapshot',`content-plan:${attempt}:`);current(options);
+ if(!names.includes(id(attempt,'journal'))){
+  if(expectedReference||names.length)invalid();
+  for(const domain of ['outbox','local-snapshot'] as const){const found=await options.vault.listLocal(domain,attempt+':');current(options);if(found.length)invalid();}
+  return Object.freeze({phase:'missing',reference:null,records,bytes,metadataBytes,metadataIds:Object.freeze([])});
+ }
+ const marker=await metadata(options,id(attempt,'journal'));let reference:MigrationContentPlanReference|null=null;
+ try{
+  if((marker.value as {phase?:unknown}|null)?.phase==='complete'){
+   exactKeys(marker.value,['protocol','attemptId','phase','manifestHash']);
+   const row=marker.value as unknown as {protocol:number;attemptId:string;manifestHash:string};
+   if(row.protocol!==1||row.attemptId!==attempt||marker.serial<2)invalid();decodeE2eeBytes(row.manifestHash,32);
+   reference=Object.freeze({attemptId:attempt,manifestHash:row.manifestHash});
+   if(expectedReference&&reference.manifestHash!==expectedReference.manifestHash)invalid();await openMigrationContentPlan({...options,reference});current(options);
+  }else{
+   const value=marker.value as unknown as Journal;
+   if(expectedReference)invalid();
+   exactKeys(value,['protocol','attemptId','migrationId','sourceHash','target','actor','context','paths','phase','pending','bytes','localParts','plan','logical','local']);
+   if(value.phase!=='writing')invalid();
+   const {pending,bytes:total,localParts}=value,common={protocol:value.protocol,attemptId:value.attemptId,migrationId:value.migrationId,sourceHash:value.sourceHash,
+    target:value.target,actor:value.actor,context:value.context,paths:value.paths,plan:value.plan,logical:value.logical,local:value.local};
+   validate(options,{...common,coverage:options.paths.map(domain=>({domain,complete:true}))},attempt,true);
+   if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(localParts)||localParts<0||localParts>8000)invalid();
+   const local=[...value.local];let expectedBytes=[...value.logical,...local].reduce((sum,row)=>sum+row.size,0),expectedParts=local.reduce((sum,row)=>sum+row.parts,0);
+   if(pending!==null){
+    exactKeys(pending,['path','placement','domain','objectId','size','filename','mediaType','recordId','parts']);assertTechnical(pending.objectId);
+    const path=requiredPrivatePaths(options.target.kind).find(row=>row.id===pending.path);
+    if(!path?.domains.includes(pending.domain)||!['remote','local'].includes(pending.placement)||!Number.isSafeInteger(pending.size)||pending.size<0||pending.size>E2EE_MAX_FILE_BYTES
+     ||pending.domain==='shared-comment'&&pending.size>65536||typeof pending.filename!=='string'||pending.filename.length>512||typeof pending.mediaType!=='string'||pending.mediaType.length>128
+     ||!Number.isSafeInteger(pending.parts)||pending.parts<0||pending.parts>8000||[...value.logical,...local].some(row=>row.domain===pending.domain&&row.objectId===pending.objectId))invalid();
+    if(pending.placement==='remote'){if(pending.recordId!==''||pending.parts!==0)invalid();}
+    else{
+     if(pending.recordId!==`${attempt}:private:${local.length}`||pending.parts>Math.ceil(pending.size/E2EE_CHUNK_BYTES))invalid();
+     local.push({...pending,plaintextHash:encodeE2eeBytes(new Uint8Array(32))});expectedParts+=pending.parts;
+    }
+    expectedBytes+=pending.size;
+   }
+   if(total!==expectedBytes||localParts!==expectedParts)invalid();
+   await inventory(options,{attemptId:attempt,plan:value.plan,local},false);current(options);
+   const last=value.logical.at(-1),end=last?value.plan.findIndex(row=>row.recordId===last.manifestRecordId)+1:0;
+   if(!pending||pending.placement!=='remote'){if(end!==value.plan.length)invalid();}
+   await verifyRecords(options,{attemptId:attempt,plan:value.plan.slice(0,end),logical:value.logical,local:value.local});current(options);
+   // An interrupted file can lack its final per-file-key manifest. Authenticate
+   // the retained envelope/signature and outer vault, but never claim plaintext
+   // completeness for that pending suffix.
+   for(const item of value.plan.slice(end)){
+    const envelope=await sealed(options,item);await verifyE2eeEnvelope(envelope,envelope.context,options.signer);current(options);
+   }
+   if(pending?.placement==='local')for(let part=0;part<pending.parts;part++){
+    const row=await options.vault.read('local-snapshot',`${pending.recordId}:${part}`);if(!row)invalid();
+    try{current(options);if(row.serial!==1||row.value.length!==Math.min(E2EE_CHUNK_BYTES,pending.size-part*E2EE_CHUNK_BYTES))invalid();}finally{row.value.fill(0);}
+   }
+  }
+  // Count the actual retained rows, including encrypted-prefix outputs whose
+  // logical record has not completed. Physical ciphertext overhead is separately
+  // charged by the mandatory provider admission.
+  const outbox=await options.vault.listLocal('outbox',attempt+':'),local=await options.vault.listLocal('local-snapshot',attempt+':');current(options);
+  await count('outbox',outbox);await count('local-snapshot',local);await count('local-snapshot',names,true);current(options);
+  return Object.freeze({phase:reference?'complete':'writing',reference,records,bytes,metadataBytes,metadataIds:Object.freeze([...names])});
+ }finally{marker.bytes.fill(0);}
 }
 
 /** Reads/authenticates an inert complete local plan; never uploads or grants

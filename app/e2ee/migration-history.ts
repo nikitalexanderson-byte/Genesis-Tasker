@@ -31,7 +31,10 @@ async function cleanup(close:()=>Promise<void>,rejected:boolean){try{await close
  * source, plan publication or transport. Unknown legacy source prefixes REFUSE;
  * a different scope needs an authenticated locator, never an ignore-list. */
 export async function openMigrationSourceHistory(input:{vault:MigrationHistoryReadVault;target:SourceStageTarget;paths:readonly string[];stateId:string;
- decode:(bytes:Uint8Array)=>MigrationHistoryState;options:MigrationHistoryOptions}){
+ decode:(bytes:Uint8Array)=>MigrationHistoryState;options:MigrationHistoryOptions;
+ /** State4 supplies exact reserved-role authentication, never a prefix filter.
+  * Omission preserves the strict v1/v2/v3 source-only refusal. */
+ inspectContentPlans?:(metadataIds:readonly string[])=>Promise<MigrationHistoryAdmission>}){
  const vault=input.vault,target={...input.target},paths=[...input.paths],stateId=input.stateId,decode=input.decode,
   capacity={...input.options.capacity},admit=input.options.admit,guard=input.options.assertCurrent;
  let closed=false,failed=false,reading=false;const active=new Set<{close:()=>Promise<void>}>(),legacy:Awaited<ReturnType<typeof openLegacyMigrationSnapshot>>[]=[],completed=new Set<string>();
@@ -41,6 +44,7 @@ export async function openMigrationSourceHistory(input:{vault:MigrationHistoryRe
  if(paths.length!==requiredPrivatePaths(target.kind).length||paths.some((path,index)=>path!==requiredPrivatePaths(target.kind)[index].id))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
  if(stateId!=='migration:'+await digest(encoder.encode(target.scopeId)))invalid();current();
  const metadata:Metadata[]=[],originals:LegacyMigrationSnapshotReference[]=[];let metadataBytes=0;
+ const inspectContentPlans=input.inspectContentPlans;let derived:MigrationHistoryAdmission={bytes:0,parts:0,metadataBytes:0,sources:0};
  const readState=async(id:string,remember=true)=>{
   current();assertTechnical(id);const row=await vault.read('local-snapshot',id);
   try{
@@ -99,7 +103,8 @@ export async function openMigrationSourceHistory(input:{vault:MigrationHistoryRe
    const actualCopies=(await vault.listMigrationHistoryCopies()).sort();current();
    if(actualCopies.length!==copies.length||actualCopies.some((id,index)=>id!==copies[index]))throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
    const plans=await vault.listLocal('local-snapshot','content-plan:');current();
-   if(plans.length)throw new Error('E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED');
+   if(inspectContentPlans){derived=await inspectContentPlans(plans);current();for(const value of Object.values(derived))if(!Number.isSafeInteger(value)||value<0)invalid();}
+   else if(plans.length)throw new Error('E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED');
    for(const id of seen){
     const uploads=await vault.listLocal('outbox',id+':');current();const local=await vault.listLocal('local-snapshot',id+':private:');current();
     if(uploads.length||local.length)throw new Error('E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED');
@@ -109,8 +114,11 @@ export async function openMigrationSourceHistory(input:{vault:MigrationHistoryRe
   const stages=[];let bytes=originals.reduce((total,ref)=>total+ref.snapshotSize,0),parts=originals.reduce((total,ref)=>total+ref.snapshotParts,0);
   for(const ref of refs){const opened=await openSourceStage(vault,target,ref,current);current();if(opened.paths.length!==paths.length||opened.paths.some((path,index)=>path!==paths[index]))invalid();
    bytes+=opened.storageUsage.bytes;parts+=opened.storageUsage.parts;stages.push({ref,opened});}
-  if(bytes>capacity.maximumBytes||parts>capacity.maximumParts||stages.length+originals.length>96)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
-  const totals=Object.freeze({bytes,parts,metadataBytes,sources:stages.length+originals.length});await admit(totals);current();
+  const totals=()=>{
+   const value={bytes:bytes+derived.bytes,parts:parts+derived.parts,metadataBytes:metadataBytes+derived.metadataBytes,sources:stages.length+originals.length+derived.sources};
+   if(value.bytes>capacity.maximumBytes||value.parts>capacity.maximumParts||value.metadataBytes>capacity.maximumMetadataBytes||value.sources>96)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
+   return Object.freeze(value);
+  };await admit(totals());current();
   await verifyStagedMigrationSnapshot(vault,snapshot,current);current();
   for(const ref of originals){legacy.push(await openLegacyMigrationSnapshot({vault,target,paths,reference:ref,assertCurrent:current}));current();}
   const source=(id:string,open:(path:string)=>StagedPathReader):StagedSourceHistory=>Object.freeze({id,target:Object.freeze({...target}),paths:Object.freeze([...paths]),openPath(path:string){
@@ -146,7 +154,7 @@ export async function openMigrationSourceHistory(input:{vault:MigrationHistoryRe
     await verifyMetadata();await inspectLegacy();
     const known=await inspectSourceStages(vault,target,current);current();
     if(known.length!==refs.length||known.some((row,index)=>!row.complete||row.id!==refs[index].stageId||row.manifestHash!==refs[index].manifestHash))throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
-    current();return totals;
+    const usage=totals();await admit(usage);current();return usage;
    }catch(error){failed=true;throw error;}finally{reading=false;}
   },async assertCompleteAndUnchanged(){
    current();if(reading)throw new Error('E2EE_SOURCE_INPUT_BUSY');reading=true;
@@ -154,7 +162,7 @@ export async function openMigrationSourceHistory(input:{vault:MigrationHistoryRe
     if(failed||active.size||[sources.current,...sources.previous].some(source=>paths.some(path=>!completed.has(source.id+'\0'+path))))throw new Error('E2EE_SOURCE_INPUT_EOF_REQUIRED');
     await verifyStagedMigrationSnapshot(vault,snapshot,current);current();
     for(const ref of originals){const reopened=await openLegacyMigrationSnapshot({vault,target,paths,reference:ref,assertCurrent:current});reopened.close();current();}
-    await inspectLegacy();await verifyMetadata();current();return Object.freeze({stateId,serial:initial.serial,...totals});
+    await inspectLegacy();await verifyMetadata();const usage=totals();await admit(usage);current();return Object.freeze({stateId,serial:initial.serial,...usage});
    }catch(error){failed=true;throw error;}finally{reading=false;}
   }});
  }catch(error){try{await close();}catch{/* Preserve the primary validation failure. */}throw error;}

@@ -28,12 +28,12 @@ internal object E2eeMigrationHistory {
     /** An exact, authenticated prepared-metadata view. No prefix filtering or
      * writer/signing capability is added to the old source reader. */
     fun openPrepared(vault:E2eeSourceReadVault,target:E2eeSourceStage.Target,required:List<String>,stateId:String,inventory:E2eePrivatePaths,
-        decode:(ByteArray)->JSONObject,options:Options,originalParts:()->List<String>,historyCopies:()->List<String>):Handle=
-        Handle(vault,target.copy(),required.toList(),stateId,inventory,decode,options,originalParts,historyCopies)
+        decode:(ByteArray)->JSONObject,options:Options,originalParts:()->List<String>,historyCopies:()->List<String>,inspectContentPlans:((List<String>)->Admission)?=null):Handle=
+        Handle(vault,target.copy(),required.toList(),stateId,inventory,decode,options,originalParts,historyCopies,inspectContentPlans)
 
     class Handle internal constructor(private val vault:E2eeSourceReadVault,private val target:E2eeSourceStage.Target,private val paths:List<String>,
         private val stateId:String,private val inventory:E2eePrivatePaths,private val decode:(ByteArray)->JSONObject,inputOptions:Options,
-        private val originalParts:()->List<String>,private val historyCopies:()->List<String>):Closeable {
+        private val originalParts:()->List<String>,private val historyCopies:()->List<String>,private val inspectContentPlans:((List<String>)->Admission)?=null):Closeable {
         private val capacity=inputOptions.capacity.copy();private val guard=inputOptions.assertCurrent;private val admit=inputOptions.admit
         private val closed=AtomicBoolean(false);private val failed=AtomicBoolean(false);private val checking=AtomicBoolean(false)
         private val active=mutableSetOf<Reader>();private val completed=mutableSetOf<String>();private val metadata=mutableListOf<Metadata>()
@@ -42,6 +42,12 @@ internal object E2eeMigrationHistory {
         private var copies:List<String> = emptyList()
         private var metadataBytes=0;private val serial:Long;private val snapshot:JSONObject
         private val totals:Admission;val input:E2eeStagedSourceInput
+        private var derived=Admission(0,0,0,0)
+        private fun usage(base:Admission=totals):Admission {
+            val value=Admission(base.bytes+derived.bytes,base.parts+derived.parts,base.metadataBytes+derived.metadataBytes,base.sources+derived.sources)
+            check(value.bytes<=capacity.maximumBytes&&value.parts<=capacity.maximumParts&&value.metadataBytes<=capacity.maximumMetadataBytes&&value.sources<=96){"E2EE_SOURCE_HISTORY_CAPACITY"}
+            return value
+        }
         private fun current(){guard();vault.assertOpen();check(!closed.get()){"E2EE_SOURCE_HISTORY_CLOSED"}}
         private fun readState(id:String,remember:Boolean=true):State {
             current();E2eeKeys.technical(id);val row=vault.read("local-snapshot",id)?:invalid()
@@ -58,7 +64,9 @@ internal object E2eeMigrationHistory {
             val ids=originalParts();current()
             check(ids.none{it !in expected}){"E2EE_SOURCE_HISTORY_REVIEW_REQUIRED"}
             val actualCopies=historyCopies().sorted();current();check(actualCopies==copies){"E2EE_SOURCE_HISTORY_CHANGED"}
-            val plans=vault.listLocal("local-snapshot","content-plan:");current();check(plans.isEmpty()){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}
+            val plans=vault.listLocal("local-snapshot","content-plan:");current()
+            if(inspectContentPlans==null)check(plans.isEmpty()){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}
+            else{derived=inspectContentPlans.invoke(plans);current();check(derived.bytes>=0&&derived.parts>=0&&derived.metadataBytes>=0&&derived.sources>=0){"E2EE_SOURCE_HISTORY_INVALID"}}
             for(id in knownMigrations){val uploads=vault.listLocal("outbox","$id:");current();val local=vault.listLocal("local-snapshot","$id:private:");current()
                 check(uploads.isEmpty()&&local.isEmpty()){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}}
         }
@@ -111,7 +119,7 @@ internal object E2eeMigrationHistory {
                 val bytes=originals.sumOf{it.snapshotSize.toLong()}+stages.sumOf{it.second.storageUsage.first}
                 val parts=originals.sumOf{it.snapshotParts}+stages.sumOf{it.second.storageUsage.second}
                 check(bytes<=capacity.maximumBytes&&parts<=capacity.maximumParts&&stages.size+originals.size<=96){"E2EE_SOURCE_HISTORY_CAPACITY"}
-                totals=Admission(bytes,parts,metadataBytes,stages.size+originals.size);admit(totals);current()
+                totals=Admission(bytes,parts,metadataBytes,stages.size+originals.size);admit(usage());current()
                 E2eeMigrationStage.verify(vault,snapshot,target,paths,::current);current()
                 for(ref in originals){legacy+=E2eeLegacySnapshotStream.open(E2eeLegacySnapshotStream.Options(vault,target,paths,ref,inventory,::current));current()}
                 val previous=mutableListOf<E2eeStagedHistory>()
@@ -155,7 +163,7 @@ internal object E2eeMigrationHistory {
                 verifyMetadata();inspectLegacy()
                 val references=refs(snapshot);val known=E2eeSourceStage.inspect(vault,target,::current);current()
                 check(known.size==references.size&&known.indices.all{known[it].complete&&known[it].id==references[it].stageId&&known[it].manifestHash==references[it].manifestHash}){"E2EE_SOURCE_HISTORY_CHANGED"}
-                current();return totals
+                val value=usage();admit(value);current();return value
             }catch(error:Throwable){failed.set(true);throw error}finally{checking.set(false)}
         }
         fun assertCompleteAndUnchanged():Receipt {
@@ -164,7 +172,7 @@ internal object E2eeMigrationHistory {
                 check(!failed.get()&&synchronized(active){active.isEmpty()}&&(listOf(input.current)+input.previous).all{source->paths.all{path->synchronized(completed){"${source.id}\u0000$path" in completed}}}){"E2EE_SOURCE_INPUT_EOF_REQUIRED"}
                 E2eeMigrationStage.verify(vault,snapshot,target,paths,::current);current()
                 for(ref in originals){E2eeLegacySnapshotStream.open(E2eeLegacySnapshotStream.Options(vault,target,paths,ref,inventory,::current)).close();current()}
-                inspectLegacy();verifyMetadata();current();return Receipt(stateId,serial,totals)
+                inspectLegacy();verifyMetadata();val value=usage();admit(value);current();return Receipt(stateId,serial,value)
             }catch(error:Throwable){failed.set(true);throw error}finally{checking.set(false)}
         }
         override fun close(){

@@ -9,7 +9,9 @@ import {captureStagedMigrationSnapshot,validateStagedMigrationSnapshot,verifySta
 import {openMigrationSourceHistory,type MigrationHistoryOptions,type MigrationHistoryReadVault} from './migration-history.ts';
 import type {StagedSourceInput} from './staged-reconciliation.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
-import {validateStreamedPlanningOwnership,type StreamedPlanningOwnership} from './migration-ownership.ts';
+import {validateStreamedPlanningOwnership,type StreamedPlanningOwnership,type OwnedMigrationContentPlan} from './migration-ownership.ts';
+import {ProtectedMigrationContentPlan,inspectMigrationContentPlanAttempt,openMigrationContentPlan,type MigrationContentPlanCapacity,type MigrationContentPlanAdmission,type MigrationContentPlanReference} from './content-plan.ts';
+import {withOwnedContentPlanning,type MigrationContentPlanningSession} from './content-planning-session.ts';
 import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemoteOriginals,withRemoteOriginal,type RemoteOriginalReadOptions,type RemoteOriginalRegistration,type RemoteOriginalReference} from './remote-original.ts';
 import {withOwnedMigrationPlanning,type MigrationPlanningSession} from './migration-session.ts';
 import {UnlockedWebDevice} from './device-vault.ts';
@@ -49,8 +51,10 @@ export type StreamedPlanningOptions=MigrationHistoryOptions&{device:UnlockedWebD
 export type StreamedPlanningTicket=Readonly<{migrationId:string;attemptId:string;sourceHash:string;fence:number;generation:number}>;
 export type {MigrationPlanningSession};
 type LoadedMigration={state:MigrationState;serial:number;hash:string};
-type SessionState=Extract<MigrationState,{protocol:4}>&{ownership:Extract<StreamedPlanningOwnership,{protocol:2}>;sourceHash:string;lease:NonNullable<MigrationState['lease']>};
+type SessionState=Extract<MigrationState,{protocol:4}>&{ownership:Exclude<StreamedPlanningOwnership,{protocol:1}>;sourceHash:string;lease:NonNullable<MigrationState['lease']>};
 export type StreamedPlanningReceipt=Readonly<{ticket:StreamedPlanningTicket;originals:readonly Readonly<{registration:RemoteOriginalRegistration;completion:RemoteOriginalReference|null}>[]}>;
+export type StreamedContentPlanningOptions=StreamedPlanningOptions&{planCapacity:MigrationContentPlanCapacity;admitPlan:(usage:MigrationContentPlanAdmission)=>Promise<void>};
+export type StreamedContentPlanningReceipt=Readonly<{ticket:StreamedPlanningTicket;plan:MigrationContentPlanReference}>;
 const encoder = new TextEncoder(), decoder = new TextDecoder('utf-8',{fatal:true});
 async function digest(bytes: Uint8Array) { return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))); }
 function decodeState(bytes: Uint8Array): MigrationState {
@@ -272,7 +276,29 @@ export class E2eeMigration {
     const view:MigrationHistoryReadVault={read,assertUnlocked:current,localIdentity:()=>this.#vault.localIdentity(),listLocal:(domain,prefix)=>this.#vault.listLocal(domain,prefix),
       listMigrationOriginalParts:()=>this.#vault.listMigrationOriginalParts(),listMigrationHistoryCopies:()=>this.#vault.listMigrationHistoryCopies()};
     return openMigrationSourceHistory({vault:view,target:state.source.target,paths:this.#required,stateId:id,
-      decode:bytes=>{const old=decodeState(bytes);this.#localEntries(old);if(old.protocol===4)throw new Error('E2EE_SOURCE_HISTORY_INVALID');return old;},options:{...policy,assertCurrent:current}});
+      decode:bytes=>{const old=decodeState(bytes);this.#localEntries(old);if(old.protocol===4)throw new Error('E2EE_SOURCE_HISTORY_INVALID');return old;},options:{...policy,assertCurrent:current},
+      inspectContentPlans:async ids=>{await this.#assertPlanningCell(loaded,current);return this.#inspectOwnedContentPlans(loaded.state,ids,current);}});
+  }
+  #contentPlanRead(state:Extract<MigrationState,{protocol:4}>,plan:OwnedMigrationContentPlan,current:()=>void){
+    const context=plan.context;
+    if(context.cryptoEpoch!==this.#directory.cryptoEpoch||context.keyId!==this.#directory.keyId||context.securityEpoch!==this.#directory.securityEpoch)throw new Error('E2EE_DIRECTORY_CONFLICT');
+    return{vault:this.#vault,root:this.#root,signer:this.#signer,context,target:state.source.target,migrationId:state.migrationId,sourceHash:state.sourceHash!,paths:this.#required,assertCurrent:current};
+  }
+  async #inspectOwnedContentPlans(state:MigrationState,ids:readonly string[],current:()=>void){
+    if(state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');this.#localEntries(state);
+    const plans=state.ownership.protocol===3?state.ownership.plans:[],known=new Set<string>();let bytes=0,parts=0,metadataBytes=0;
+    // Preflight ALL locator roles before opening their bodies. A journal prefix
+    // by itself is not authority; only a durable exact state4 reservation is.
+    for(const id of ids)if(!plans.some(plan=>id===`content-plan:${plan.attemptId}:journal`||id===`content-plan:${plan.attemptId}:manifest`))throw new Error('E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED');
+    for(const plan of plans){
+      const found=await inspectMigrationContentPlanAttempt({...this.#contentPlanRead(state,plan,current),attemptId:plan.attemptId,reference:plan.completion});current();
+      for(const id of found.metadataIds)known.add(id);bytes+=found.bytes;parts+=found.records;metadataBytes+=found.metadataBytes;
+    }
+    if(known.size!==ids.length||ids.some(id=>!known.has(id)))throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
+    const outputs=await this.#vault.listMigrationPlanOutputs();current();
+    if(outputs.remote.some(id=>!plans.some(plan=>id.startsWith(plan.attemptId+':upload:')))
+      ||outputs.local.some(id=>!plans.some(plan=>id.startsWith(plan.attemptId+':private:'))))throw new Error('E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED');
+    return Object.freeze({bytes,parts,metadataBytes,sources:plans.length});
   }
   async #drainPreparedHistory(history:Awaited<ReturnType<typeof openMigrationSourceHistory>>,current:()=>void){
     let rejected=false;const close=async()=>{try{await history.close();}catch(error){if(!rejected)throw error;}};
@@ -289,7 +315,7 @@ export class E2eeMigration {
     for(const original of state.ownership.originals){
       await authenticateRemoteOriginalRegistration(original.registration,original.packet,signer,{...options,generation:state.lease!.generation});current();
     }
-    const completions=new Map(state.ownership.protocol===2?state.ownership.originals.map(row=>[row.registration.id,row.completion] as const):[]);
+    const completions=new Map(state.ownership.protocol!==1?state.ownership.originals.map(row=>[row.registration.id,row.completion] as const):[]);
     for(const [id,completion]of completions)if(completion!==null&&!known.some(marker=>marker.id===id))throw new Error('E2EE_REMOTE_ORIGINAL_MISSING');
     for(const marker of known){
       const original=owned.get(marker.id);if(!original)throw new Error('E2EE_STREAMED_ORIGINAL_REVIEW_REQUIRED');
@@ -396,7 +422,7 @@ export class E2eeMigration {
           const next:Extract<MigrationState,{protocol:4}>={...cell.state,ownership:{...cell.state.ownership,protocol:2,originals:cell.state.ownership.originals.map(row=>({...row,completion:null}))}};
           await this.#savePlanningCell(cell,next,policy,history,current);
         }
-        const state4=():SessionState=>{current();if(cell.state.protocol!==4||!cell.state.lease||!cell.state.sourceHash||cell.state.ownership.protocol!==2)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');return cell.state as SessionState;};
+        const state4=():SessionState=>{current();if(cell.state.protocol!==4||!cell.state.lease||!cell.state.sourceHash||cell.state.ownership.protocol===1)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');return cell.state as SessionState;};
         const same=(left:unknown,right:unknown)=>{const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);try{return a.length===b.length&&a.every((value,index)=>value===b[index]);}finally{a.fill(0);b.fill(0);}};
         const {signer}=await this.#planningSigner(current),read=(guard:()=>void)=>this.#originalRead(policy,guard);
         const complete=async(registration:RemoteOriginalRegistration,packet:SignedE2eeCommand,reference:RemoteOriginalReference,guard:()=>void)=>{
@@ -422,7 +448,7 @@ export class E2eeMigration {
         const refresh=async()=>{
           await this.#assertPlanningCell(cell,current);await history.assertMetadataUnchanged();current();const state=state4();
           if(state.lease!.leaseUntil<=Math.floor(Date.now()/1000)+30){
-            const next=snapshotE2eeValue(state),renewed=await this.#resume(next,cell.serial,current);current();
+            const next=structuredClone(state),renewed=await this.#resume(next,cell.serial,current);current();
             await this.#advancePlanningCell(cell,renewed.state,renewed.serial,current);
           }
         };
@@ -449,6 +475,91 @@ export class E2eeMigration {
       }catch(error){rejected=true;throw error;}finally{await close();}
     });
   }
+  /** Local plan adoption under the same coordinator/source CAS. This consumes
+   * authenticated local history and already captured remote originals; it never
+   * performs a legacy read, upload, run or activation. A retry retains every
+   * missing/partial/complete attempt and only reuses an exact complete binding. */
+  async planStreamedContent(build:(session:MigrationContentPlanningSession)=>Promise<readonly MigrationCoverage[]>,options:StreamedContentPlanningOptions):Promise<StreamedContentPlanningReceipt>{
+    if(typeof build!=='function'||typeof options.admitPlan!=='function')throw new Error('E2EE_STREAMED_PLANNER_REQUIRED');
+    const planCapacity={...options.planCapacity},admitPlan=options.admitPlan,{policy,current}=this.#planningPolicy(options);
+    if(!Number.isSafeInteger(planCapacity.maximumBytes)||planCapacity.maximumBytes<1||!Number.isSafeInteger(planCapacity.maximumEnvelopes)||planCapacity.maximumEnvelopes<1||planCapacity.maximumEnvelopes>8000
+      ||!Number.isSafeInteger(planCapacity.maximumLocalParts)||planCapacity.maximumLocalParts<1||planCapacity.maximumLocalParts>8000)throw new Error('E2EE_CONTENT_PLAN_CAPACITY');
+    return this.#localFence(async()=>{
+      const {ticket,loaded:cell}=await this.#prepareStreamedPlanningLocked(policy,current);current();
+      const history=await this.#preparedHistory(cell,policy,current);let writer:ProtectedMigrationContentPlan|undefined,rejected=false;
+      const close=async()=>{try{await history.close();}catch(error){if(!rejected)throw error;}};
+      const state4=()=>{current();if(cell.state.protocol!==4||!cell.state.lease||!cell.state.sourceHash)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');return cell.state;};
+      try{
+        let state=state4();
+        if(state.ownership.protocol!==3){
+          if(state.ownership.protocol===1&&state.ownership.originals.length)throw new Error('E2EE_STREAMED_CAPTURE_REQUIRED');
+          const next:Extract<MigrationState,{protocol:4}>={...state,ownership:{...state.ownership,protocol:3,originals:state.ownership.originals as Extract<StreamedPlanningOwnership,{protocol:2}>['originals'],plans:[]}};
+          await this.#savePlanningCell(cell,next,policy,history,current);state=state4();
+        }
+        if(state.ownership.protocol!==3)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
+        const originals=state.ownership.originals.map(row=>{
+          if(row.completion===null)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE');
+          return Object.freeze({registration:Object.freeze({...row.registration,context:Object.freeze({...row.registration.context}),binding:Object.freeze({...row.registration.binding})}),completion:Object.freeze({...row.completion})});
+        }),references=originals.map(row=>row.completion),{signer}=await this.#planningSigner(current);
+        const same=(left:unknown,right:unknown)=>{const a=canonicalE2eeValue(left as WireValue),b=canonicalE2eeValue(right as WireValue);try{return a.length===b.length&&a.every((byte,index)=>byte===b[index]);}finally{a.fill(0);b.fill(0);}};
+        const plans=state.ownership.plans;
+        // Recover only the inert completion binding after a lost final CAS/ack.
+        // This never turns a partial journal into a complete reference.
+        for(const reserved of plans){
+          const found=await inspectMigrationContentPlanAttempt({...this.#contentPlanRead(state4(),reserved,current),attemptId:reserved.attemptId,reference:reserved.completion});current();
+          if(found.reference&&reserved.completion===null){
+            const saved=snapshotE2eeValue(state4());if(saved.ownership.protocol!==3)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
+            const next={...saved,ownership:{...saved.ownership,plans:saved.ownership.plans.map(row=>row.attemptId===reserved.attemptId?{...row,completion:found.reference}:row)}};
+            await this.#savePlanningCell(cell,next,policy,history,current);
+          }
+        }
+        state=state4();if(state.ownership.protocol!==3)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
+        const reusable=[...state.ownership.plans].reverse().find(row=>row.completion&&same(row.originals,references));
+        if(reusable?.completion){
+          for(const source of [history.input.current,...history.input.previous])for(const path of source.paths){const reader=await source.openPath(path);for await(const bytes of reader.chunks)bytes.fill(0);reader.assertComplete();}
+          await history.assertCompleteAndUnchanged();await this.#checkOwnedOriginals(state,policy,signer,current);await this.#assertPlanningCell(cell,current);
+          await policy.device.ensureDurableKeys();current();await this.#durableKeys();current();await this.#assertPlanningCell(cell,current);
+          return Object.freeze({ticket:Object.freeze({...ticket,fence:state.lease!.fence}),plan:Object.freeze({...reusable.completion})});
+        }
+        if(state.ownership.plans.length>=64)throw new Error('E2EE_CONTENT_PLAN_CAPACITY');
+        const attemptId=crypto.randomUUID(),context:E2eeContext={cryptoProtocol:1,suite:E2EE_SUITE,ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,
+          domain:'local-snapshot',objectId:'migration-content-plan',schemaVersion:1,dataGeneration:state.lease!.generation,writerProtocol:9,cryptoEpoch:this.#directory.cryptoEpoch,
+          securityEpoch:this.#directory.securityEpoch,revision:1,keyId:this.#directory.keyId,deviceId:this.#deviceId,operationId:crypto.randomUUID()};
+        const plan:OwnedMigrationContentPlan={attemptId,context,fence:state.lease!.fence,generation:state.lease!.generation,originals:references,completion:null};
+        await this.#savePlanningCell(cell,{...state,ownership:{...state.ownership,plans:[...state.ownership.plans,plan]}},policy,history,current);
+        // The reservation above is durable BEFORE even the first plan journal.
+        // A failed initial write leaves a discoverable missing reservation.
+        const consumed=new Set<string>();
+        const sourceComplete=async()=>{
+          await history.assertCompleteAndUnchanged();current();await this.#assertPlanningCell(cell,current);
+          if(originals.some(row=>!consumed.has(row.completion.id)))throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE_READ');
+          await this.#checkOwnedOriginals(state4(),policy,signer,current);current();
+          await policy.device.ensureDurableKeys();current();await this.#durableKeys();current();
+        };
+        writer=await ProtectedMigrationContentPlan.create({...this.#contentPlanRead(state4(),plan,current),vault:this.#vault,signingKey:this.#signingKey,attemptId,capacity:planCapacity,
+          ensureDurableKeys:async()=>{await policy.device.ensureDurableKeys();current();await this.#durableKeys();current();},
+          admit:async usage=>{await this.#assertPlanningCell(cell,current);await admitPlan(usage);current();},assertSourceComplete:sourceComplete});
+        return await withOwnedContentPlanning({sources:history.input,originals:Object.freeze(originals),assertCurrent:current,
+          withOriginal:async(id,consume,guard)=>{
+            const owned=originals.find(row=>row.completion.id===id);if(!owned)throw new Error('E2EE_STREAMED_ORIGINAL_REVIEW_REQUIRED');
+            await this.#assertPlanningCell(cell,guard);
+            const proof=await withRemoteOriginal(this.#originalRead(policy,guard),id,consume);guard();
+            if(!proof.complete||!same({id:proof.id,manifestHash:proof.manifestHash,rawHash:proof.rawHash,size:proof.size},owned.completion))throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
+            consumed.add(id);
+          },emit:async(path,record,guard)=>{guard();await writer!.append(path,record);guard();},
+          finish:async coverage=>{
+            const reference=await writer!.finish(coverage);current();
+            await openMigrationContentPlan({...this.#contentPlanRead(state4(),plan,current),reference});current();await sourceComplete();
+            const saved=snapshotE2eeValue(state4());if(saved.ownership.protocol!==3)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
+            const next={...saved,ownership:{...saved.ownership,plans:saved.ownership.plans.map(row=>row.attemptId===attemptId?{...row,completion:reference}:row)}};
+            await this.#savePlanningCell(cell,next,policy,history,current);
+            await this.#assertPlanningCell(cell,current);await history.assertCompleteAndUnchanged();current();
+            return Object.freeze({ticket:Object.freeze({...ticket,fence:next.lease!.fence}),plan:Object.freeze({...reference})});
+          }
+        },build);
+      }catch(error){rejected=true;throw error;}finally{writer?.close();await close();}
+    });
+  }
   /** Reserve the exact inert request BEFORE observation.prepare / any network.
    * Every earlier reservation/capture remains owned, including missing/partial
    * originals. This is not a content/body proof or a plan publication. */
@@ -462,7 +573,7 @@ export class E2eeMigration {
       const authenticated=await authenticateRemoteOriginalRegistration(saved,request,signer,{...this.#originalRead(policy,current),generation:state.lease.generation});current();
       if(authenticated.binding.fence!==state.lease.fence||authenticated.binding.migrationId!==state.migrationId||authenticated.binding.sourceHash!==state.sourceHash)throw new Error('E2EE_CORRUPT_STREAMED_OWNERSHIP');
       if(state.ownership.originals.some(value=>value.registration.id===authenticated.id)||state.ownership.originals.length===1000)throw new Error('E2EE_STREAMED_ORIGINAL_ALREADY_RESERVED');
-      const ownership:StreamedPlanningOwnership=state.ownership.protocol===2?{...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:request,completion:null}]}:
+      const ownership:StreamedPlanningOwnership=state.ownership.protocol!==1?{...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:request,completion:null}]}:
         {...state.ownership,originals:[...state.ownership.originals,{registration:authenticated,packet:request}]};
       const next:MigrationState={...state,ownership};
       this.#localEntries(next);

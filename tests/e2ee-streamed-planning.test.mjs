@@ -12,6 +12,8 @@ import {importE2eeRoot,encodeE2eeBytes} from '../app/e2ee/envelope.ts';
 import {signE2eeCommand,verifyE2eeCommand,e2eeCommandHash,canonicalE2eeValue} from '../app/e2ee/commands.ts';
 import {validateStreamedPlanningOwnership} from '../app/e2ee/migration-ownership.ts';
 import {ProtectedRemoteOriginal,listRemoteOriginals,withRemoteOriginal} from '../app/e2ee/remote-original.ts';
+import {openMigrationContentPlan} from '../app/e2ee/content-plan.ts';
+import {E2EE_CHUNK_BYTES} from '../app/e2ee/files.ts';
 
 async function sessionReply(f,packet,observation,_signal,status=200,raw=' {"rows":"SYNTHETIC ORIGINAL"} '){
  const saved=await f.readState();try{const owned=saved.state.ownership.originals.find(row=>row.packet.command.operationId===packet.command.operationId);assert.ok(owned);assert.deepEqual(owned.packet,JSON.parse(JSON.stringify(packet)));assert.equal(owned.completion,null);}finally{saved.raw.fill(0);}
@@ -92,7 +94,7 @@ async function fixture(t,options={}){
  };
  t.after(()=>{device.lock();recovery.secret.fill(0);});
  await coordinator.prepareStaged(stage,stagePolicy);
- return{records,keys,directory,server,trace,stage,stagePolicy,policy,readOriginal,readState,capture,make,get coordinator(){return coordinator;},get device(){return device;},
+ return{records,keys,directory,server,trace,stage,stagePolicy,policy,readOriginal,readState,capture,make,root,get coordinator(){return coordinator;},get device(){return device;},
   async reopen(){device.lock();device=await UnlockedWebDevice.unlock(ownerId,recovery.secret,records,keys);coordinator=make();return coordinator;}};
 }
 
@@ -340,4 +342,111 @@ test('personal planning cannot request a shared map original even when the publi
   try{await port.legacySharedMindmapsPage(session.context,'maps',0);}catch(error){assert.match(error.message,/SCOPE_BINDING_MISMATCH/);caught=true;}
  },f.policy()),/SCOPE_BINDING_MISMATCH/);
  assert.equal(calls,0);assert.equal(caught,true);const row=await f.readState();try{assert.equal(row.state.ownership.originals.length,0);}finally{row.raw.fill(0);}
+});
+
+const contentPolicy=f=>({...f.policy(),planCapacity:{maximumBytes:16*1024*1024,maximumEnvelopes:200,maximumLocalParts:200},async admitPlan(){}});
+async function buildSyntheticPlan(f,session,options={}){
+ for(const source of [session.sources.current,...session.sources.previous])for(const path of source.paths){
+  const reader=await source.openPath(path);for await(const part of reader.chunks)part.fill(0);reader.assertComplete();
+ }
+ if(!options.skipOriginals)for(const original of session.originals)await session.withOriginal(original.completion.id,async source=>{
+  await session.emit('personal.workspace',{domain:'workspace',objectId:'synthetic-remote-original',placement:'remote',size:original.completion.size,source});
+ });
+ if(!session.originals.length){
+  const value=bytes('SYNTHETIC NORMALIZED CONTENT');await session.emit(f.stage.paths[0],{domain:f.directory.kind==='personal'?'workspace':'shared-project',objectId:'synthetic-content',placement:'remote',size:value.length,source:(async function*(){yield value;})()});
+ }
+ return f.stage.paths.map(domain=>({domain,complete:true}));
+}
+async function openOwnedPlan(f,receipt){
+ const saved=await f.readState();try{
+  const plan=saved.state.ownership.plans.find(row=>row.attemptId===receipt.plan.attemptId);
+  return await openMigrationContentPlan({vault:f.device.vault,root:f.root,signer:f.device.keys().signing.publicKey,context:plan.context,target:f.stage.target,
+   migrationId:saved.state.migrationId,sourceHash:saved.state.sourceHash,paths:f.stage.paths,assertCurrent(){},reference:receipt.plan});
+ }finally{saved.raw.fill(0);}
+}
+
+test('state4 reserves exact plan provenance before its first journal and adopts bounded content without upload',async t=>{
+ let fenced=false,count=0;
+ const f=await fixture(t,{withLocalWriteFence:async run=>{assert.equal(fenced,false);fenced=true;count++;try{return await run();}finally{fenced=false;}}});
+ await f.coordinator.withStreamedPlanning(async session=>{await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));},f.policy());
+ const before=await f.readState(),calls=f.trace.length,priorFences=count;
+ f.records.afterCommit=async changes=>{
+  const journal=changes.find(row=>row.value?.envelope.context.objectId.startsWith('content-plan:'));if(!journal)return;
+  const state=await f.readState();try{assert.equal(fenced,true);const attempt=journal.value.envelope.context.objectId.split(':')[1],owned=state.state.ownership.plans.find(row=>row.attemptId===attempt);
+   assert.ok(owned);assert.deepEqual(owned.originals,before.state.ownership.originals.map(row=>row.completion));assert.equal(owned.context.dataGeneration,state.state.lease.generation);
+  }finally{state.raw.fill(0);}
+ };
+ const receipt=await f.coordinator.planStreamedContent(session=>buildSyntheticPlan(f,session),contentPolicy(f)),after=await f.readState(),opened=await openOwnedPlan(f,receipt);
+ assert.equal(count-priorFences,1);assert.equal(f.trace.length,calls);assert.equal(after.state.phase,'preparing');assert.equal(after.state.planned,false);assert.deepEqual(after.state.plan,[]);
+ assert.deepEqual(after.state.ownership.plans[0].completion,receipt.plan);assert.equal(opened.logical.length,1);assert.equal(opened.logical[0].plaintextHash,before.state.ownership.originals[0].completion.rawHash);
+ const kept=structuredClone(f.records.rows);await f.reopen();const reused=await f.coordinator.planStreamedContent(async()=>{throw new Error('EXACT_COMPLETE_PLAN_MUST_REOPEN');},contentPolicy(f));
+ assert.deepEqual(reused,receipt);assert.deepEqual(f.records.rows,kept);
+ await assert.rejects(f.coordinator.run(),/STREAMED_PLANNER_REQUIRED/);assert.equal(f.trace.length,calls);before.raw.fill(0);after.raw.fill(0);
+});
+
+test('lost plan binding preserves the complete manifest and cold repairs only its exact reserved reference',async t=>{
+ const f=await fixture(t);let stopped=false;
+ f.records.afterCommit=async changes=>{
+  for(const row of changes)if(row.value?.envelope.context.objectId.startsWith('content-plan:')&&row.value.envelope.context.objectId.endsWith(':manifest')&&!stopped){stopped=true;f.records.fail=true;}
+ };
+ await assert.rejects(f.coordinator.planStreamedContent(session=>buildSyntheticPlan(f,session),contentPolicy(f)),/SYNTHETIC_DISK_FULL/);
+ const prior=await f.readState(),reservation=prior.state.ownership.plans[0];assert.equal(reservation.completion,null);
+ const manifest=await f.device.vault.read('local-snapshot',`content-plan:${reservation.attemptId}:manifest`);assert.ok(manifest);const manifestHash=hash(manifest.value);manifest.value.fill(0);
+ f.records.fail=false;await f.reopen();const receipt=await f.coordinator.planStreamedContent(async()=>{throw new Error('REBUILD_FORBIDDEN');},contentPolicy(f));
+ assert.deepEqual(receipt.plan,{attemptId:reservation.attemptId,manifestHash});assert.equal((await f.coordinator.status()).ownership.plans.length,1);prior.raw.fill(0);
+});
+
+test('a caught late output error is sticky and its authenticated partial attempt survives a successful retry',async t=>{
+ const f=await fixture(t);let attempted=false;
+ await assert.rejects(f.coordinator.planStreamedContent(async session=>{
+  for(const source of [session.sources.current,...session.sources.previous])for(const path of source.paths){const reader=await source.openPath(path);for await(const part of reader.chunks)part.fill(0);reader.assertComplete();}
+  try{await session.emit('personal.workspace',{domain:'workspace',objectId:'partial',placement:'remote',size:E2EE_CHUNK_BYTES+1,source:(async function*(){yield new Uint8Array(E2EE_CHUNK_BYTES).fill(4);attempted=true;throw new Error('SYNTHETIC_LATE_TAG');})()});}catch{/* The session must retain this caught failure. */}
+  return f.stage.paths.map(domain=>({domain,complete:true}));
+ },contentPolicy(f)),/SYNTHETIC_LATE_TAG/);assert.equal(attempted,true);
+ const prior=await f.readState(),attempt=prior.state.ownership.plans[0].attemptId,kept=new Map([...f.records.rows].filter(([id])=>id.includes(attempt)));
+ assert.ok(kept.size>1);assert.ok((await f.device.vault.listLocal('outbox',attempt+':upload:')).length>0);
+ await f.reopen();const receipt=await f.coordinator.planStreamedContent(session=>buildSyntheticPlan(f,session),contentPolicy(f));assert.notEqual(receipt.plan.attemptId,attempt);
+ for(const[id,row]of kept)assert.deepEqual(f.records.rows.get(id),row);assert.equal((await f.coordinator.status()).ownership.plans.length,2);prior.raw.fill(0);
+});
+
+test('a complete plan requires actual local and remote EOF and never adopts an omitted original',async t=>{
+ for(const mode of ['local','remote']){
+  const f=await fixture(t);await f.coordinator.withStreamedPlanning(async session=>{await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));},f.policy());
+  await assert.rejects(f.coordinator.planStreamedContent(async session=>{
+   if(mode==='remote'){
+    await buildSyntheticPlan(f,session,{skipOriginals:true});
+    await session.emit('personal.workspace',{domain:'workspace',objectId:'other',placement:'local',size:0,source:(async function*(){})()});
+   }else await session.withOriginal(session.originals[0].completion.id,async source=>{await session.emit('personal.workspace',{domain:'workspace',objectId:'other',placement:'remote',size:session.originals[0].completion.size,source});});
+   return f.stage.paths.map(domain=>({domain,complete:true}));
+  },contentPolicy(f)),mode==='local'?/SOURCE_INPUT_EOF_REQUIRED/:/REMOTE_ORIGINAL_INCOMPLETE_READ/);
+  const saved=await f.readState();assert.equal(saved.state.ownership.plans[0].completion,null);assert.equal(saved.state.planned,false);saved.raw.fill(0);
+ }
+});
+
+test('unknown plan metadata and journal-free outputs refuse before a later request and preserve every row',async t=>{
+ for(const mode of ['journal','remote','local']){
+  const f=await fixture(t);await f.coordinator.prepareStreamedPlanning(f.policy());
+  const id=crypto.randomUUID(),objectId=mode==='journal'?`content-plan:${id}:journal`:mode==='remote'?`${id}:upload:0`:`${id}:private:0:0`;
+  await f.device.vault.write([{domain:mode==='remote'?'outbox':'local-snapshot',objectId,value:bytes('SYNTHETIC UNKNOWN ROLE'),expected:null}]);
+  const kept=structuredClone(f.records.rows),calls=f.trace.length;
+  await assert.rejects(f.coordinator.withStreamedPlanning(async()=>{throw new Error('CONSUMER_MUST_NOT_RUN');},f.policy()),/PLAN_REVIEW_REQUIRED/);
+  assert.deepEqual(f.records.rows,kept);assert.equal(f.trace.length,calls);
+ }
+});
+
+test('a multi-request session durably renews an expired lease while retaining earlier original bindings',async t=>{
+ const f=await fixture(t),now=Date.now;let elapsed=0;Date.now=()=>now()+elapsed;
+ try{
+  const receipt=await f.coordinator.withStreamedPlanning(async session=>{
+   await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));elapsed=3600*1000;
+   await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));
+  },f.policy());
+  assert.equal(receipt.ticket.fence,2);assert.equal(receipt.originals.length,2);assert.ok(receipt.originals.every(row=>row.completion));
+  assert.deepEqual(f.trace.filter(row=>typeof row==='object').map(row=>row.command.action),['migration-start','migration-resume']);
+ }finally{Date.now=now;}
+});
+
+test('invalid plan capacity refuses before source discovery or a plan reservation',async t=>{
+ const f=await fixture(t),kept=structuredClone(f.records.rows),policy=contentPolicy(f);policy.planCapacity.maximumEnvelopes=0;
+ await assert.rejects(f.coordinator.planStreamedContent(session=>buildSyntheticPlan(f,session),policy),/CONTENT_PLAN_CAPACITY/);assert.equal(f.trace.length,0);assert.deepEqual(f.records.rows,kept);
 });

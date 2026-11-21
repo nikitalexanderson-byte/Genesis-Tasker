@@ -124,6 +124,22 @@ class E2eeStreamedPlanningDeviceTest {
         fun options()=E2eeStreamedPlanningOptions(device,inventory,E2eeMigrationHistory.Capacity(32L*1024*1024,2000,8*1024*1024),
             E2eeRemoteOriginal.Capacity(8L*1024*1024,1000,100,4000,4*1024*1024),{check(live){"SYNTHETIC_RETIRED"}},{onAdmission?.invoke();check(!refusedAdmission){"SYNTHETIC_ADMISSION_REFUSAL"}})
         fun readOptions()=E2eeRemoteOriginal.ReadOptions(device.vault,E2eeRemoteOriginal.Target(owner,scope,kind),options().originalCapacity,{check(live){"SYNTHETIC_RETIRED"}})
+        fun contentOptions(admit:(E2eeContentPlan.Admission)->Unit={})=E2eeStreamedContentPlanningOptions(options(),E2eeContentPlan.Capacity(16L*1024*1024,200,200),admit)
+        fun openPlan(receipt:E2eeStreamedContentPlanningReceipt):JSONObject {
+            val state=state();val plans=state.getJSONObject("ownership").getJSONArray("plans");val plan=(0 until plans.length()).map{plans.getJSONObject(it)}.single{it.get("attemptId")==receipt.plan.attemptId}
+            return E2eeContentPlan.open(E2eeContentPlan.ReadOptions(device.vault,root,device.keys().signing.public,E2eeEnvelope.Context.fromJson(plan.getJSONObject("context")),target,
+                state.getString("migrationId"),state.getString("sourceHash"),required,inventory,{}),receipt.plan).manifest
+        }
+        fun exportPlan(receipt:E2eeStreamedContentPlanningReceipt){
+            val state=state();val ownership=state.getJSONObject("ownership");val canonical=E2eeCommands.canonical(ownership);val actor=device.vault.localIdentity()
+            val raw=requireNotNull(device.vault.read("local-snapshot","content-plan:${receipt.plan.attemptId}:manifest"))
+            try{File(app.getExternalFilesDir(null),"content-planning336-native-$kind.json").writeText(JSONObject().put("synthetic",true).put("metadataOnly",true)
+                .put("ownership",ownership).put("ownershipCanonicalHash",E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(canonical))).put("manifestBytes",E2eeEnvelope.encode(raw.bytes))
+                .put("expected",JSONObject().put("migrationId",state.get("migrationId")).put("target",JSONObject().put("ownerId",owner).put("scopeId",scope).put("kind",kind))
+                    .put("actor",JSONObject().put("ownerId",actor.ownerId).put("scopeId",actor.scopeId).put("deviceId",actor.deviceId)).put("sourceHash",state.get("sourceHash"))
+                    .put("lease",state.get("lease")).put("checkpointHash",state.get("checkpointHash")).put("directoryRevision",state.get("directoryRevision"))).toString(2))
+            }finally{raw.bytes.fill(0);canonical.fill(0)}
+        }
         suspend fun stage(){migration.prepareStaged(E2eeStagedMigrationCapture(target,required){path,out->out.write("SYNTHETIC LOCAL ORIGINAL $path".toByteArray())},
             E2eeStagedMigrationOptions(E2eeSourceStage.Capacity(16L*1024*1024,1000),{},{}))}
         private fun stateId()="migration:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(scope.toByteArray()))
@@ -149,6 +165,82 @@ class E2eeStreamedPlanningDeviceTest {
     private suspend fun refused(code:String,operation:suspend()->Unit){try{operation();fail("Unprotected continuation accepted")}catch(error:Exception){assertTrue(error.message.orEmpty(),error.message.orEmpty().contains(code))}}
     private fun response(f:Rig,large:Boolean=false):ByteArray=("\uFEFF {\r\n\"checkpointHash\":\"${f.directory.checkpoint.hash}\",\"directoryRevision\":${f.directory.checkpoint.revision},\"rows\":[],\"private\":\"SYNTHETIC ORIGINAL α😀"+
         "a".repeat(if(large)512*1024+7 else 17)+"\"}\r\n").toByteArray()
+    private fun consumeLocal(session:E2eeContentPlanningSession){
+        val buffer=ByteArray(65536);try{for(source in listOf(session.sources.current)+session.sources.previous)for(path in source.paths){
+            val reader=source.openPath(path);reader.input.use{input->while(true){val count=input.read(buffer);if(count<0)break;buffer.fill(0,0,count)};reader.assertComplete()}
+        }}finally{buffer.fill(0)}
+    }
+    private fun buildPlan(f:Rig,session:E2eeContentPlanningSession):List<Pair<String,Boolean>> {
+        consumeLocal(session)
+        for((index,original)in session.originals.withIndex()){val ref=requireNotNull(original.completion);session.withOriginal(ref.id){input->
+            session.emit(f.required.first(),E2eeContentPlan.Record("remote",if(f.kind=="personal")"workspace"else"shared-project","synthetic-original:$index",ref.size.toInt(),input))
+        }}
+        if(session.originals.isEmpty()){val bytes="SYNTHETIC NORMALIZED CONTENT".toByteArray();try{session.emit(f.required.first(),E2eeContentPlan.Record("remote",if(f.kind=="personal")"workspace"else"shared-project","synthetic-content",bytes.size,bytes.inputStream()))}finally{bytes.fill(0)}}
+        return f.required.map{it to true}
+    }
+    private suspend fun captureOne(f:Rig){f.migration.withStreamedPlanning(f.options()){session->
+        val port=E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace","mindmap"),session){_,packet,observation->val bytes=response(f);try{withContext(Dispatchers.IO){f.http(packet,observation,bytes)}}finally{bytes.fill(0)}}
+        if(f.kind=="personal")port.legacyWorkspace(session.context)else port.legacySharedMindmapsPage(session.context,"maps",0)
+    }}
+    @Test fun actualContentPlanBindsExactOriginalsAndColdReopensOnAllThreeScopeKinds()=runBlocking {
+        for(kind in listOf("personal","project","space"))Rig(kind).use{f->
+            f.stage();captureOne(f);val entries=f.fenceEntries;val calls=f.httpCalls;var escaped:E2eeContentPlanningSession?=null
+            val receipt=f.migration.planStreamedContent(f.contentOptions()){session->escaped=session;buildPlan(f,session)}
+            assertEquals(entries+1,f.fenceEntries);assertEquals(calls,f.httpCalls);val state=f.state();assertFalse(state.getBoolean("planned"));assertEquals("preparing",state.get("phase"));assertEquals(0,state.getJSONArray("plan").length())
+            val plan=state.getJSONObject("ownership").getJSONArray("plans").getJSONObject(0);assertEquals(3,state.getJSONObject("ownership").getInt("protocol"));assertEquals(receipt.plan.manifestHash,plan.getJSONObject("completion").get("manifestHash"))
+            val manifest=f.openPlan(receipt);assertEquals(1,manifest.getJSONArray("logical").length());assertEquals(state.getJSONObject("ownership").getJSONArray("originals").getJSONObject(0).getJSONObject("completion").get("rawHash"),manifest.getJSONArray("logical").getJSONObject(0).get("plaintextHash"));f.exportPlan(receipt)
+            val kept=f.snapshot();refused("E2EE_CONTENT_SESSION_CLOSED"){requireNotNull(escaped).emit(f.required.first(),E2eeContentPlan.Record("local","workspace","late",0,byteArrayOf().inputStream()))};assertEquals(kept,f.snapshot())
+            f.cold();assertEquals(receipt,f.migration.planStreamedContent(f.contentOptions()){error("COMPLETE_PLAN_MUST_REOPEN")});assertEquals(kept,f.snapshot())
+        }
+    }
+    @Test fun actualLatePlanCasRaceWithholdsReceiptAndColdRepairsItsRetainedCompleteReference()=runBlocking {
+        Rig().use{f->f.stage();var raced=false;var adopted=false
+            f.onAdmission={
+                val state=f.state();val plans=state.optJSONObject("ownership")?.optJSONArray("plans")
+                if(!raced&&plans!=null&&plans.length()>0){val plan=plans.getJSONObject(plans.length()-1)
+                    val marker=f.device.vault.read("local-snapshot","content-plan:${plan.getString("attemptId")}:journal")
+                    if(marker!=null)try{if(JSONObject(marker.bytes.toString(Charsets.UTF_8)).opt("phase")=="complete"&&plan.isNull("completion")){
+                        raced=true;val row=f.row();try{f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","migration:"+hash(f.scope.toByteArray()),row.bytes,row.serial)))}finally{row.bytes.fill(0)}
+                    }}finally{marker.bytes.fill(0)}
+                }
+            }
+            refused("E2EE_SOURCE_HISTORY_CHANGED"){f.migration.planStreamedContent(f.contentOptions()){buildPlan(f,it)};adopted=true}
+            assertTrue(raced);assertFalse(adopted);val prior=f.state().getJSONObject("ownership").getJSONArray("plans").getJSONObject(0);assertTrue(prior.isNull("completion"))
+            val kept=f.snapshot().filter{it.contains("content-plan:")||it.contains(prior.getString("attemptId")+":")};f.onAdmission=null;f.cold()
+            val repaired=f.migration.planStreamedContent(f.contentOptions()){error("REBUILD_FORBIDDEN")};assertEquals(prior.getString("attemptId"),repaired.plan.attemptId)
+            assertEquals(kept,f.snapshot().filter{it.contains("content-plan:")||it.contains(prior.getString("attemptId")+":")});assertEquals(1,f.commands.size);assertEquals(0,f.httpCalls)
+        }
+    }
+    @Test fun actualPartialRemoteAndLocalAttemptsRemainInertAcrossColdRetry()=runBlocking {
+        for(placement in listOf("remote","local"))Rig().use{f->f.stage();var caught=false
+            refused("E2EE_SYNTHETIC_LATE_TAG"){f.migration.planStreamedContent(f.contentOptions()){session->
+                consumeLocal(session);val bytes=ByteArray(E2eeFiles.CHUNK_BYTES+1){4};val delegate=bytes.inputStream()
+                val source=object:java.io.InputStream(){override fun read():Int=error("UNUSED_READ");override fun read(out:ByteArray,offset:Int,length:Int):Int{val count=delegate.read(out,offset,length);if(count<0)error("E2EE_SYNTHETIC_LATE_TAG");return count}}
+                try{session.emit("personal.workspace",E2eeContentPlan.Record(placement,"workspace","partial",bytes.size,source))}catch(_:Exception){caught=true}finally{bytes.fill(0)}
+                f.required.map{it to true}
+            }};assertTrue(caught);val attempt=f.state().getJSONObject("ownership").getJSONArray("plans").getJSONObject(0).getString("attemptId")
+            val kept=f.snapshot().filter{it.contains(attempt)};assertTrue(kept.size>1);f.cold();val receipt=f.migration.planStreamedContent(f.contentOptions()){buildPlan(f,it)}
+            assertNotEquals(attempt,receipt.plan.attemptId);assertEquals(kept,f.snapshot().filter{it.contains(attempt)});assertEquals(2,f.state().getJSONObject("ownership").getJSONArray("plans").length())
+        }
+    }
+    @Test fun actualPlanRequiresEveryLocalAndRemoteOriginalEof()=runBlocking {
+        for(mode in listOf("local","remote"))Rig().use{f->f.stage();captureOne(f)
+            refused(if(mode=="local")"E2EE_SOURCE_INPUT_EOF_REQUIRED"else"E2EE_REMOTE_ORIGINAL_INCOMPLETE_READ"){f.migration.planStreamedContent(f.contentOptions()){session->
+                if(mode=="remote"){
+                    consumeLocal(session);session.emit("personal.workspace",E2eeContentPlan.Record("local","workspace","other",0,byteArrayOf().inputStream()))
+                }else{val ref=requireNotNull(session.originals.single().completion);session.withOriginal(ref.id){input->session.emit("personal.workspace",E2eeContentPlan.Record("remote","workspace","other",ref.size.toInt(),input))}}
+                f.required.map{it to true}
+            }};assertTrue(f.state().getJSONObject("ownership").getJSONArray("plans").getJSONObject(0).isNull("completion"));assertFalse(f.state().getBoolean("planned"))
+        }
+    }
+    @Test fun actualUnknownPlanRolesAndJournalFreeOutputsRefuseBeforeAnotherRequest()=runBlocking {
+        for(role in listOf("journal","remote","local"))Rig().use{f->f.stage();f.migration.prepareStreamedPlanning(f.options());val attempt=UUID.randomUUID().toString()
+            val id=when(role){"journal"->"content-plan:$attempt:journal";"remote"->"$attempt:upload:0";else->"$attempt:private:0:0"}
+            f.device.vault.write(listOf(UnlockedE2eeVault.Write(if(role=="remote")"outbox"else"local-snapshot",id,"UNKNOWN ROLE".toByteArray(),null)));val kept=f.snapshot();val commands=f.commands.size
+            refused("E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"){f.migration.withStreamedPlanning(f.options()){error("UNKNOWN_ROLE_REACHED_CONSUMER")}}
+            assertEquals(kept,f.snapshot());assertEquals(commands,f.commands.size);assertEquals(0,f.httpCalls)
+        }
+    }
     @Test fun actualSharedClientCapturesSixRolesForProjectAndSpaceAndColdReadsEveryOriginal()=runBlocking {
         val tables=listOf("maps","versions","receipts","deletions","deletionScopes","conversions")
         for(kind in listOf("project","space"))Rig(kind).use{f->

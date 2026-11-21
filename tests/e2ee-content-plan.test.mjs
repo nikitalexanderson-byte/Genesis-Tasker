@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
-import {ProtectedMigrationContentPlan,openMigrationContentPlan} from '../app/e2ee/content-plan.ts';
+import {ProtectedMigrationContentPlan,openMigrationContentPlan,inspectMigrationContentPlanAttempt} from '../app/e2ee/content-plan.ts';
 import {UnlockedE2eeVault} from '../app/e2ee/storage.ts';
 import {freshSecret,generateDeviceKeys} from '../app/e2ee/keys.ts';
 import {E2EE_SUITE,encodeE2eeBytes,importE2eeRoot} from '../app/e2ee/envelope.ts';
@@ -38,7 +38,40 @@ async function fixture(kind='personal'){
 }
 const record=(bytes,objectId='record',placement='remote')=>({placement,domain:'workspace',objectId,size:bytes.length,source:source(bytes),filename:'\ufeff\ud800-\udfff-α',mediaType:'application/json'});
 const reopen=(f,reference)=>openMigrationContentPlan({...f.options,reference});
+const inspect=(f,attemptId,reference=null)=>inspectMigrationContentPlanAttempt({...f.options,attemptId,reference});
 async function envelope(vault,id){const row=await vault.read('outbox',id);assert.ok(row);try{return JSON.parse(new TextDecoder().decode(row.value));}finally{row.value.fill(0);}}
+
+test('reserved plan discovery authenticates missing partial and complete roles without changing retained rows',async()=>{
+ const f=await fixture(),attemptId=crypto.randomUUID();assert.equal((await inspect(f,attemptId)).phase,'missing');
+ const stage=await ProtectedMigrationContentPlan.create({...f.options,attemptId});assert.equal(stage.attemptId,attemptId);
+ const before=structuredClone(f.storage.rows),empty=await inspect(f,attemptId);assert.equal(empty.phase,'writing');assert.equal(empty.records,1);assert.deepEqual(f.storage.rows,before);
+ await stage.append('personal.local-work',record(new Uint8Array([3,4]),'local','local'));
+ const partial=await inspect(f,attemptId);assert.equal(partial.phase,'writing');assert.equal(partial.records,2);assert.ok(partial.bytes>2);
+ const reference=await stage.finish(f.coverage),saved=structuredClone(f.storage.rows),complete=await inspect(f,attemptId,reference);
+ assert.equal(complete.phase,'complete');assert.deepEqual(complete.reference,reference);assert.equal(complete.records,3);assert.deepEqual(f.storage.rows,saved);
+ await assert.rejects(inspect(f,attemptId,{...reference,manifestHash:await digest(new Uint8Array([0]))}),/CORRUPT_CONTENT_PLAN/);
+});
+
+test('interrupted encrypted remote and local prefixes stay discoverable but cannot provide a complete plan',async()=>{
+ for(const placement of ['remote','local']){
+  const f=await fixture(),stage=await ProtectedMigrationContentPlan.create(f.options),value=new Uint8Array(E2EE_CHUNK_BYTES*2+1).fill(8);
+  await assert.rejects(stage.append('personal.workspace',{...record(value,'partial',placement),source:source(value,'SYNTHETIC_LOST_SOURCE_EOF')}),/LOST_SOURCE_EOF/);
+  const saved=structuredClone(f.storage.rows),found=await inspect(f,stage.attemptId);assert.equal(found.phase,'writing');assert.ok(found.records>=3);assert.equal(found.reference,null);assert.deepEqual(f.storage.rows,saved);
+  await assert.rejects(inspect(f,stage.attemptId,{attemptId:stage.attemptId,manifestHash:await digest(value)}));value.fill(0);
+ }
+});
+
+test('missing journal never legitimizes orphan outputs and partial roles reject wrong source or extra records',async()=>{
+ for(const mode of ['orphan','extra','source','serial']){
+  const f=await fixture(),stage=await ProtectedMigrationContentPlan.create(f.options);await stage.append('personal.workspace',record(new Uint8Array([1,2])));
+  if(mode==='orphan')f.storage.rows.delete([...f.storage.rows.keys()].find(key=>key.endsWith(`content-plan:${stage.attemptId}:journal`)));
+  if(mode==='extra')await f.vault.write([{domain:'outbox',objectId:stage.attemptId+':unknown',value:new Uint8Array([9]),expected:null}]);
+  if(mode==='serial'){const key=[...f.storage.rows.keys()].find(key=>key.endsWith(stage.attemptId+':upload:0'));f.storage.rows.get(key).serial++;}
+  const saved=structuredClone(f.storage.rows);
+  await assert.rejects(inspectMigrationContentPlanAttempt({...f.options,sourceHash:mode==='source'?await digest(new Uint8Array([8])):f.options.sourceHash,attemptId:stage.attemptId,reference:null}));
+  assert.deepEqual(f.storage.rows,saved);
+ }
+});
 
 test('content plan encrypts records as bounded streams and publishes only after complete remote/local readback',async()=>{
  const f=await fixture(),stage=await ProtectedMigrationContentPlan.create(f.options),bytes=new Uint8Array(E2EE_CHUNK_BYTES*3+17);for(let i=0;i<bytes.length;i++)bytes[i]=(i*37)&255;
