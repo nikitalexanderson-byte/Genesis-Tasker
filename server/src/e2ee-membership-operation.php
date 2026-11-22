@@ -13,6 +13,7 @@ function genesisMembershipOperation(mixed $input,bool $header=false):array
 {
     if(!is_array($input)||array_is_list($input))throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID');$kind=$input['kind']??null;
     $fields=match($kind){
+        'invitation-admit'=>['kind','spaceId','resourceId','invitationId','invitationKind','userId','role','permissions','createdBy','acceptedAt'],
         'project-role'=>['kind','projectId','userId','role'],'project-remove'=>['kind','projectId','userId'],
         'space-role'=>['kind','spaceId','userId','role',...(array_key_exists('permissions',$input)?['permissions']:[]),...(array_key_exists('canOrganizeTasks',$input)?['canOrganizeTasks']:[])],
         'member-permissions'=>['kind','spaceId','userId','categoryId','permissions'],
@@ -20,6 +21,11 @@ function genesisMembershipOperation(mixed $input,bool $header=false):array
         'category-permissions'=>['kind','spaceId','categoryId','expectedRevision','permissions',...(array_key_exists('rename',$input)?['rename']:[])],
         default=>throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID')};
     genesisE2eeExactFields($input,$fields);foreach(['projectId','spaceId','userId'] as $name)if(array_key_exists($name,$input))genesisE2eeIdentifier($input[$name]);
+    if($kind==='invitation-admit'){
+        foreach(['resourceId','invitationId','createdBy']as $key)genesisE2eeIdentifier($input[$key]);
+        if(!in_array($input['invitationKind'],['space','project'],true)||!in_array($input['role'],$input['invitationKind']==='space'?['admin','member','guest']:['manager','member','commenter','viewer'],true)
+            ||$input['invitationKind']==='project'&&$input['permissions']!==null||!is_string($input['acceptedAt'])||!preg_match('/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/D',$input['acceptedAt'])||strtotime($input['acceptedAt'])===false||$input['invitationKind']==='space'&&$input['resourceId']!==$input['spaceId'])throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID');
+    }
     if(array_key_exists('categoryId',$input)&&($kind==='category-permissions'||$input['categoryId']!==null))genesisE2eeIdentifier($input['categoryId']);
     if($kind==='project-role'&&!in_array($input['role'],['manager','member','commenter','viewer'],true)
         ||$kind==='space-role'&&!in_array($input['role'],['admin','member','guest'],true))throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID');
@@ -55,7 +61,9 @@ function genesisMembershipProductIndexHash(PDO $db,array $scope):string
 }
 function genesisMembershipOperationSnapshot(PDO $db,string $actor,string $space,array $operation):array
 {
-    if(!$db->inTransaction())throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');$graph=genesisE2eeMembershipGraph($actor,['spaceId'=>$space]);
+    if(!$db->inTransaction())throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');
+    if($operation['kind']==='invitation-admit'){require_once __DIR__.'/e2ee-invitation-responses.php';genesisE2eeInvitationAdmission($db,$actor,$operation);}
+    $graph=genesisE2eeMembershipGraph($actor,['spaceId'=>$space]);
     $scopeRoot=static function(string $kind,string $resource,?string $id)use($db):array{
         if($id===null)throw new DomainException('E2EE_SHARED_TRANSITION_REQUIRED');$scope=genesisE2eeRow($db,'SELECT * FROM e2ee_scopes WHERE scope_id=?',[$id]);
         if(!$scope||$scope['kind']!==$kind||$scope['resource_id']!==$resource||!in_array($scope['state'],['active','retirement'],true))throw new DomainException('E2EE_SHARED_TRANSITION_REQUIRED');
@@ -81,10 +89,11 @@ function genesisMembershipOperationSnapshot(PDO $db,string $actor,string $space,
         $rows[]=['table'=>$table,'key'=>$key,'before'=>$before?genesisE2eeAclTechnical($before,$spec):null,'beforeHash'=>genesisE2eeAclBeforeHash($before,$spec)];
     };
     foreach($graph['spaceUserIds'] as $user)$read('shared_space_members',['space_id'=>$space,'user_id'=>$user]);
+    if($operation['kind']==='invitation-admit'&&!in_array($operation['userId'],$graph['spaceUserIds'],true))$read('shared_space_members',['space_id'=>$space,'user_id'=>$operation['userId']]);
     $complete=[$actor=>true];if(array_key_exists('userId',$operation))$complete[$operation['userId']]=true;
     if($operation['kind']==='category-permissions')foreach($rows as $row)if(($row['before']['member_category_id']??null)===$operation['categoryId']&&($row['before']['role']??null)!=='owner')$complete[$row['key']['user_id']]=true;
     if(array_key_exists('categoryId',$operation)&&$operation['categoryId']!==null)$read('shared_member_categories',['id'=>$operation['categoryId'],'space_id'=>$space]);
-    $users=array_keys($complete);sort($users,SORT_STRING);foreach($users as $user){if(!in_array($user,$graph['spaceUserIds'],true))throw new DomainException('E2EE_MEMBERSHIP_STALE');foreach($projects as $project){
+    $users=array_keys($complete);sort($users,SORT_STRING);foreach($users as $user){if(!in_array($user,$graph['spaceUserIds'],true)&&!($operation['kind']==='invitation-admit'&&$operation['userId']===$user))throw new DomainException('E2EE_MEMBERSHIP_STALE');foreach($projects as $project){
         $read('shared_project_members',['project_id'=>$project['id'],'user_id'=>$user]);$read('shared_member_project_grants',['space_id'=>$space,'user_id'=>$user,'project_id'=>$project['id']]);
     }}
     return ['format'=>'genesis-membership-operation-snapshot-v1','actorId'=>$actor,'spaceId'=>$space,'spaceScope'=>$opened['scope'],'projects'=>$projects,'spaceUserIds'=>$graph['spaceUserIds'],'completeUserIds'=>$users,'rows'=>$rows];
@@ -135,7 +144,22 @@ function genesisMembershipOperationPlan(array $snapshot,array $rawOperation):arr
         }
     };
     $actorSpace=$sm($snapshot['actorId']);if(!$actorSpace)throw new DomainException('E2EE_OWNER_REQUIRED');
-    if(in_array($operation['kind'],['project-role','project-remove'],true)){
+    if($operation['kind']==='invitation-admit'){
+        if($actorSpace['role']!=='owner')throw new DomainException('E2EE_OWNER_REQUIRED');$user=$operation['userId'];$complete($user);$spaceMember=$sm($user);
+        if($operation['invitationKind']==='space'){
+            if($operation['resourceId']!==$space)throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');
+            if(($spaceMember['role']??null)!=='owner'){$role=$spaceMember&&in_array($spaceMember['role'],['admin','member'],true)?$spaceMember['role']:$operation['role'];
+                $put('shared_space_members',['space_id'=>$space,'user_id'=>$user],['role'=>$role,'can_organize_tasks'=>$spaceMember['can_organize_tasks']??0,'all_projects'=>1,'permissions_json'=>$spaceMember['permissions_json']??($operation['permissions']===null?null:genesisE2eeJson($operation['permissions'])),'member_category_id'=>$spaceMember['member_category_id']??null,'project_access_restricted'=>$spaceMember['project_access_restricted']??0,'project_access_revision'=>$spaceMember['project_access_revision']??1]);}
+            $projectRole=$operation['role']==='guest'?'viewer':($operation['role']==='admin'?'manager':'member');
+            foreach($projects as $project)if(!$project['archived']&&!$project['inTrash']){$old=$member($project['id'],$user);if(!$old||!in_array($old['role'],['owner','manager','member','commenter'],true))$setMember($project['id'],$user,$projectRole);}
+        }else{
+            $project=$projects[$operation['resourceId']]??null;if(!$project||$project['archived']||$project['inTrash']||$project['isInbox'])throw new DomainException('E2EE_MEMBERSHIP_STALE');
+            if(!$spaceMember)$put('shared_space_members',['space_id'=>$space,'user_id'=>$user],['role'=>'guest','can_organize_tasks'=>0,'all_projects'=>0,'permissions_json'=>null,'member_category_id'=>null,'project_access_restricted'=>0,'project_access_revision'=>1]);
+            if(!$member($project['id'],$user))$setMember($project['id'],$user,$operation['role']);
+            if(($spaceMember['project_access_restricted']??null)===1){if(!in_array($operation['role'],['member','commenter','viewer'],true))throw new DomainException('PROJECT_ACCESS_MANAGER_UNRESTRICTED');$old=$grant($project['id'],$user);$put('shared_member_project_grants',['space_id'=>$space,'user_id'=>$user,'project_id'=>$project['id']],['role'=>$operation['role'],'include_descendants'=>$old['include_descendants']??0,'excluded'=>0]);}
+            if($spaceMember&&$spaceMember['role']!=='guest')foreach($projects as $row)if($row['isInbox']&&!$member($row['id'],$user))$setMember($row['id'],$user,'member');$recompute($user);
+        }
+    }elseif(in_array($operation['kind'],['project-role','project-remove'],true)){
         $project=$projects[$operation['projectId']];$user=$operation['userId'];if($project['isInbox'])throw new DomainException('INBOX_MEMBERSHIP_MANAGED_BY_SPACE');$complete($user);
         $actor=$member($project['id'],$snapshot['actorId']);$target=$member($project['id'],$user);$spaceMember=$sm($user);
         if(!$target||!$spaceMember)throw new DomainException('E2EE_MEMBERSHIP_STALE');if(($actor['role']??null)!=='owner')throw new DomainException('E2EE_OWNER_REQUIRED');
@@ -188,6 +212,7 @@ function genesisMembershipOperationPlan(array $snapshot,array $rawOperation):arr
     $changes=[];foreach($original as $id=>$source){$next=$after[$id];if(genesisE2eeAclRow($source['before'])!==genesisE2eeAclRow($next))$changes[]=['table'=>$source['table'],'key'=>$source['key'],'expectedHash'=>$source['beforeHash'],'after'=>$next===null?null:$fields($source['table'],$next)];}
     $required=[];$add=static function(?array $scope)use(&$required):void{if(!$scope||!in_array($scope['state'],['active','retirement'],true))throw new DomainException('E2EE_SHARED_TRANSITION_REQUIRED');$old=$required[$scope['scopeId']]??null;if($old&&$old!==$scope)throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');$required[$scope['scopeId']]=$scope;};
     $addSpace=static function()use($snapshot,$projects,$add):void{$add($snapshot['spaceScope']);foreach($projects as $project)$add($project['scope']);};
+    if($operation['kind']==='invitation-admit')$addSpace();
     foreach($changes as $row)if($row['table']==='shared_project_members')$add($projects[$row['key']['project_id']]['scope']);else $addSpace();
     foreach($assignments as $row)$add($projects[$row['projectId']]['scope']);foreach($events as $row)$add($projects[$row['projectId']]['scope']);foreach($revokes as $row)if($row['kind']==='project')$add($projects[$row['resourceId']]['scope']);else $addSpace();
     ksort($required,SORT_STRING);return ['format'=>'genesis-membership-operation-plan-v1','operation'=>$operation,'changes'=>$changes,'scopeIds'=>array_keys($required),'requiredScopes'=>array_values($required),

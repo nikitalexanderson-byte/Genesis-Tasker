@@ -97,6 +97,7 @@ internal object E2eeRetainedProductCustody {
                         if(!ids.add(E2eeKeys.technical(row.getString("id")))||email.length>320||!Regex(pattern,RegexOption.IGNORE_CASE).matches(email)||!emails.add(email.lowercase(java.util.Locale.ROOT))||row.get("role") !in roles)invalid()
                         if(space&&!row.isNull("permissions")){val permissions=row.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}}
                 }
+                "shared-invitation-respond"->{E2eeKeys.exact(payload,setOf("intentId","id","accept"));E2eeKeys.technical(payload.getString("id"));if(frame.kind!="personal"||frame.ownerId!=actor.ownerId||payload.get("accept") !is Boolean)invalid()}
                 "shared-invitation-revoke"->{E2eeKeys.exact(payload,setOf("intentId","id"));E2eeKeys.technical(payload.getString("id"))}
                 "resource-create-prepare","resource-create-resolve"->{
                     val original=if(action=="resource-create-resolve"){

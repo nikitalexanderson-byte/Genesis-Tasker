@@ -138,6 +138,7 @@ function watchSharedRead(operation: (signal: AbortSignal) => Promise<unknown>, s
   return () => { refresh.stop(); window.removeEventListener("focus", trigger); window.removeEventListener("online", trigger);
     window.removeEventListener(SHARED_RETRY_EVENT, trigger); document.removeEventListener("visibilitychange", trigger); };
 }
+import {invitationSecurityCopy} from './invitation-security-copy';
 import type { SharedInvitationDestination } from "./SharedInvitationNotices";
 import {PrivateGoogleCopy} from './PrivateGoogleCopy';
 
@@ -1875,11 +1876,14 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
             : !invitations.length ? <p>{english ? "No invitations yet." : "Приглашений пока нет."}</p>
               : invitations.map((invitation) => <article key={invitation.id}><h3>{invitation.spaceTitle}</h3>
                 <p>{invitation.inviterName}{invitation.projectTitle ? ` · ${invitation.projectTitle}` : ""}</p>
-                <div><button type="button" className="primary-button" disabled={busy} onClick={() => void run(async () => {
-                  const result = await acceptSharedInvitation(invitation.id); await refreshSpaces();
+                {invitation.pendingApproval || invitation.admitted ? <p role="status" data-no-translate>{invitationSecurityCopy(language)[invitation.admitted ? 'device' : 'saved']}</p> : null}
+                <div><button type="button" className="primary-button" disabled={busy || invitation.pendingApproval || invitation.admitted} onClick={() => void run(async () => {
+                  const result = await acceptSharedInvitation(invitation.id);
+                  if (result.pendingApproval || result.deviceApprovalRequired) { setInvitations(await listSharedInvitations()); setMessage(invitationSecurityCopy(language)[result.pendingApproval ? 'saved' : 'device']); return; }
+                  await refreshSpaces();
                   setSpaceId(result.spaceId); setCreateModal(null);
                 })}>{english ? "Join" : "Присоединиться"}</button>
-                <button type="button" className="secondary-button" disabled={busy} onClick={() => void run(async () => {
+                <button type="button" className="secondary-button" disabled={busy || invitation.admitted} onClick={() => void run(async () => {
                   await rejectSharedInvitation(invitation.id); setInvitations(await listSharedInvitations());
                 })}>{english ? "Decline" : "Отклонить"}</button></div></article>)}
         </div> : null}

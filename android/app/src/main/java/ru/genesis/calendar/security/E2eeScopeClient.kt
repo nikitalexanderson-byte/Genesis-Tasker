@@ -455,7 +455,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         }finally{previous?.bytes?.fill(0)}
     }
     @Synchronized fun executeService(action:String,payload:JSONObject,intentId:String):JSONObject{
-        check(action in setOf("product-commit","product-approve","stoicheion-grant","advice-issue","product-bootstrap-start","product-bootstrap-stage","product-bootstrap-complete","resource-create-prepare","resource-create-resolve","shared-invitations-issue","shared-invitation-revoke")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
+        check(action in setOf("product-commit","product-approve","stoicheion-grant","advice-issue","product-bootstrap-start","product-bootstrap-stage","product-bootstrap-complete","resource-create-prepare","resource-create-resolve","shared-invitations-issue","shared-invitation-revoke","shared-invitation-respond")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
         val held=JSONObject(payload.toString()).put("intentId",intentId);val key="service:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest("$action\u0000$intentId".toByteArray(Charsets.UTF_8)))
         for(attempt in 0..1){val value=current();val prior=device.vault.read("outbox",key)
             try{val old=prior?.let{E2eeFileManifestJson.readPrivateDocument(it.bytes)};val command=old?.getJSONObject("command")
@@ -502,6 +502,9 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         check(E2eeProductJson.same(selected,JSONObject(topology.toString()).apply{remove("reviewedMembers")})){"E2EE_PROJECT_TOPOLOGY_CHANGED"}
         device.requireOpen();return topology
     }
+    @Synchronized fun readSharedInvitationPage(after:String="",limit:Int=50):JSONObject{if(after.isNotEmpty())E2eeKeys.technical(after);check(limit in 1..50){"E2EE_INVALID_LIMIT"};return readPacket("shared-invitations-page",JSONObject().put("after",after).put("limit",limit))}
+    @Synchronized fun readSharedInvitationResponse(id:String):JSONObject{E2eeKeys.technical(id);return readPacket("shared-invitation-response-state",JSONObject().put("id",id))}
+    @Synchronized fun readPendingInvitationPage(after:String="",limit:Int=50):JSONObject{if(after.isNotEmpty())E2eeKeys.technical(after);check(limit in 1..50){"E2EE_INVALID_LIMIT"};return readPacket("shared-invitation-pending",JSONObject().put("after",after).put("limit",limit))}
     @Synchronized fun readInvitationState(ids:List<String>):JSONObject{check(ids.size<=20&&ids.toSet().size==ids.size){"E2EE_INVALID_LIMIT"};ids.forEach{E2eeKeys.technical(it)};return readPacket("shared-invitation-state",JSONObject().put("ids",JSONArray(ids)))}
     @Synchronized fun sharedReadHistory():JSONObject{val result=readPacket("shared-read-history",JSONObject());E2eeKeys.exact(result,setOf("history","checkpointHash","directoryRevision"));return result.getJSONObject("history")}
     @Synchronized fun readProductHistory(entityId:String,before:Long,limit:Int=5):JSONObject{E2eeKeys.technical(entityId);check(before in 1..9_007_199_254_740_991L&&limit in 1..10){"E2EE_INVALID_LIMIT"};return readPacket("product-history",JSONObject().put("entityId",entityId).put("before",before).put("limit",limit))}

@@ -376,7 +376,7 @@ export class E2eeScopeClient {
   }
   /** Business intent is durable independently of a checkpoint-bound transport
    * packet. Renewal never changes the intended mutation or replays an import. */
-  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue'|'product-bootstrap-start'|'product-bootstrap-stage'|'product-bootstrap-complete'|'resource-create-prepare'|'resource-create-resolve'|'shared-invitations-issue'|'shared-invitation-revoke',payload:Record<string,WireValue>,intentId:string){
+  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue'|'product-bootstrap-start'|'product-bootstrap-stage'|'product-bootstrap-complete'|'resource-create-prepare'|'resource-create-resolve'|'shared-invitations-issue'|'shared-invitation-revoke'|'shared-invitation-respond',payload:Record<string,WireValue>,intentId:string){
     assertTechnical(intentId);const held=snapshotE2eeValue({...payload,intentId}),id=`service:${await hash(`${action}\0${intentId}`)}`;
     for(let attempt=0;attempt<2;attempt++){
       const directory=this.#open(),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();let packet:SignedE2eeCommand;
@@ -433,6 +433,9 @@ export class E2eeScopeClient {
     try{if(left.length!==right.length||left.some((byte,at)=>byte!==right[at]))throw new Error('E2EE_PROJECT_TOPOLOGY_CHANGED');}finally{left.fill(0);right.fill(0);}
     this.#device.requireOpen();return topology;
   }
+  async readSharedInvitationPage(after='',limit=50){if(after)assertTechnical(after);if(!Number.isSafeInteger(limit)||limit<1||limit>50)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('shared-invitations-page',{after,limit});}
+  async readSharedInvitationResponse(id:string){assertTechnical(id);return this.#readPacket('shared-invitation-response-state',{id});}
+  async readPendingInvitationPage(after='',limit=50){if(after)assertTechnical(after);if(!Number.isSafeInteger(limit)||limit<1||limit>50)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('shared-invitation-pending',{after,limit});}
   async readInvitationState(ids:string[]){if(ids.length>20||new Set(ids).size!==ids.length)throw new Error('E2EE_INVALID_LIMIT');for(const id of ids)assertTechnical(id);return this.#readPacket('shared-invitation-state',{ids});}
   async sharedReadHistory(){const result=await this.#readPacket('shared-read-history',{});exactKeys(result,['history','checkpointHash','directoryRevision']);return result.history;}
   async readProductHistory(entityId:string,before:number,limit=5){assertTechnical(entityId);if(!Number.isSafeInteger(before)||before<1||!Number.isInteger(limit)||limit<1||limit>10)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-history',{entityId,before,limit});}

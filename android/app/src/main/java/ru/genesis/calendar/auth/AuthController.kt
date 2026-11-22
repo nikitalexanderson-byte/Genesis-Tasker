@@ -475,6 +475,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun acceptPrivateAtomicOwnerApproval(fingerprint:String,input:String):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.acceptApproval(fingerprint,privateMembershipInput(input)).also{value.current()}}
     internal suspend fun exportPrivateAtomicOwnerApproval(fingerprint:String,scopeId:String):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.exportApproval(fingerprint,scopeId).also{value.current()}}
     internal suspend fun preparePrivateAtomicReview(intentId:String,productPackets:JSONArray,createdAt:String):JSONObject=privateMembershipSession{value->ru.genesis.calendar.security.E2eeNativeMembershipAtomicReview.prepare(value.stager,value.atomicOwnerReview,intentId,productPackets,value.current,createdAt).also{value.current()}}
+    internal suspend fun pendingPrivateInvitationAdmissions():JSONArray=privateMembershipSession{value->val account=ru.genesis.calendar.security.NativePrivateProducts.currentAccount(app.workspaceScope);value.current();ru.genesis.calendar.security.E2eeInvitationAdmission(app,account,value.current).list().also{value.current()}}
     internal suspend fun createPrivateMembershipOperation(input:JSONObject):JSONObject=privateMembershipSession{value->val created=value.operations.execute("create",JSONObject().put("operation",JSONObject(input.toString())));value.current();value.operations.execute("preview",JSONObject().put("id",created.getString("id"))).also{value.current()}}
     internal suspend fun pendingPrivateMembershipOperations():JSONObject=privateMembershipSession{value->value.operations.execute("pending").also{value.current()}}
     internal suspend fun loadPrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->value.operations.execute("inspect",JSONObject().put("id",id)).getJSONObject("state").also{value.current()}}
@@ -2415,7 +2416,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         // The server enables shared projects on acceptance. Enable the same local gate
         // before the destination screen makes its first workspace request.
         val current = mutableState.value
-        if (current.user?.uid == userId && !current.requiresSignIn) {
+        if (current.user?.uid == userId && !current.requiresSignIn && !result.optBoolean("pendingApproval") && !result.optBoolean("deviceApprovalRequired")) {
             mutableState.value = current.copy(accountSettings = current.accountSettings?.copy(sharedProjectsEnabled = true))
         }
         return result

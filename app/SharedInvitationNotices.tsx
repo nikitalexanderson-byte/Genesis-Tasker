@@ -3,14 +3,15 @@ import { DialogCloseButton } from "./DialogCloseButton";
 
 import { useEffect, useRef, useState } from "react";
 import { acceptSharedInvitation, rejectSharedInvitation, listSharedInvitations, type SharedInvitation } from "./cloud-sync";
+import {invitationSecurityCopy} from './invitation-security-copy';
 import type { NoticeActivity } from "./notification-dock-model";
 import "./shared-invitation-notices.css";
 
 export type SharedInvitationDestination = { spaceId: string; projectId: string };
 
 /** Mounted per account so a late response cannot appear in another account. */
-export function SharedInvitationNotices({userId, english, onAccepted, persistent = false, onActivity}: {
-  userId: string; english: boolean; onAccepted: (destination: SharedInvitationDestination) => void;
+export function SharedInvitationNotices({userId, english, language = english ? 'en' : 'ru', onAccepted, persistent = false, onActivity}: {
+  userId: string; english: boolean; language?: string; onAccepted: (destination: SharedInvitationDestination) => void;
   persistent?: boolean;
   onActivity?: (activity: NoticeActivity) => void;
 }) {
@@ -68,6 +69,10 @@ export function SharedInvitationNotices({userId, english, onAccepted, persistent
     try {
       const destination = await acceptSharedInvitation(id);
       if (!alive.current) return;
+      if (destination.pendingApproval || destination.deviceApprovalRequired) {
+        setInvitations(items => items.map(item => item.id === id ? {...item, pendingApproval: destination.pendingApproval, admitted: destination.admitted, deviceApprovalRequired: destination.deviceApprovalRequired} : item));
+        window.dispatchEvent(new Event("genesis:shared-updates")); return;
+      }
       hide(id, true); onAccepted(destination); window.dispatchEvent(new Event("genesis:shared-updates"));
     } catch { if (alive.current) setErrorId(id); }
     finally { accepting.current = false; if (alive.current) setPending(""); }
@@ -83,8 +88,9 @@ export function SharedInvitationNotices({userId, english, onAccepted, persistent
       <p><span data-no-translate>{invitation.inviterName}</span> · {english ? "invites you to join" : "приглашает присоединиться"}</p>
       {invitation.projectTitle ? <p data-no-translate>{invitation.projectTitle}</p> : null}
       {errorId===invitation.id ? <p role="alert">{english ? "Could not accept the invitation. Try again." : "Не удалось принять приглашение. Повторите попытку."}</p> : null}
-      <button type="button" className="primary-button" disabled={Boolean(pending)} onClick={() => void accept(invitation.id)}>{pending===invitation.id ? (english ? "Accepting…" : "Принимаем…") : (english ? "Accept" : "Принять")}</button>
-      {persistent ? <button type="button" className="secondary-button" disabled={Boolean(pending)} onClick={() => { if(accepting.current)return; accepting.current=true;setPending(invitation.id);void rejectSharedInvitation(invitation.id).then(()=>{if(alive.current)hide(invitation.id,true);}).catch(()=>{if(alive.current)setErrorId(invitation.id);}).finally(()=>{accepting.current=false;if(alive.current)setPending("");}); }}>{english ? "Decline" : "Отклонить"}</button> : null}
+      {invitation.pendingApproval || invitation.admitted ? <p role="status" data-no-translate>{invitationSecurityCopy(language)[invitation.admitted ? 'device' : 'saved']}</p> : null}
+      <button type="button" className="primary-button" disabled={Boolean(pending) || invitation.pendingApproval || invitation.admitted} onClick={() => void accept(invitation.id)}>{pending===invitation.id ? (english ? "Accepting…" : "Принимаем…") : (english ? "Accept" : "Принять")}</button>
+      {persistent ? <button type="button" className="secondary-button" disabled={Boolean(pending) || invitation.admitted} onClick={() => { if(accepting.current)return; accepting.current=true;setPending(invitation.id);void rejectSharedInvitation(invitation.id).then(()=>{if(alive.current)hide(invitation.id,true);}).catch(()=>{if(alive.current)setErrorId(invitation.id);}).finally(()=>{accepting.current=false;if(alive.current)setPending("");}); }}>{english ? "Decline" : "Отклонить"}</button> : null}
     </section>)}
   </aside>;
 }

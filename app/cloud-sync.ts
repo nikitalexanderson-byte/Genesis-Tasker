@@ -3071,6 +3071,7 @@ export function deleteSharedTask(projectId: string, taskId: string, expectedRevi
 export type SharedInvitation = {
   id: string; inviterName: string; spaceTitle: string; projectTitle: string;
   role: string; expiresAt: string;
+  encrypted?: boolean; pendingApproval?: boolean; admitted?: boolean; deviceApprovalRequired?: boolean;
 };
 export async function listSharedInvitations(signal?: AbortSignal) {
   return (await api<{ invitations: SharedInvitation[] }>("/shared/invitations", {signal})).invitations;
@@ -3141,7 +3142,7 @@ export async function readSharedNotifications(eventIds: string[]) {
   return result;
 }
 export async function acceptSharedInvitation(id: string) {
-  return api<{ projectId: string; spaceId: string }>("/shared/invitations/accept", {
+  return api<{ projectId: string; spaceId: string; pendingApproval?: boolean; admitted?: boolean; deviceApprovalRequired?: boolean }>("/shared/invitations/accept", {
     method: "POST", body: JSON.stringify({ id }),
   });
 }
@@ -3937,6 +3938,7 @@ export async function approveCurrentPrivateAtomicOwner(fingerprint:string,scopeI
 export async function acceptCurrentPrivateAtomicOwnerApproval(fingerprint:string,input:import('./e2ee/membership-atomic-review').MembershipAtomicOwnerApproval){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.acceptApproval(fingerprint,input);current();return value;}
 export async function exportCurrentPrivateAtomicOwnerApproval(fingerprint:string,scopeId:string){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.exportApproval(fingerprint,scopeId);current();return value;}
 export async function prepareCurrentPrivateAtomicReview(intentId:string,productPackets:import('./e2ee/commands').SignedE2eeCommand[],createdAt:string){const {account,atomicOwnerReview,current}=await privateMembershipSession(),{prepareMembershipAtomicReview}=await import('./e2ee/membership-atomic-review-prepare');current();const value=await prepareMembershipAtomicReview(account.membershipAtomic(),atomicOwnerReview,intentId,productPackets,current,createdAt);current();return value;}
+export async function pendingCurrentPrivateInvitationAdmissions(){const {account,current}=await privateMembershipSession(),{webInvitationAdmissions}=await import('./e2ee/invitation-admission');current();return webInvitationAdmissions(account,current);}
 export async function createCurrentPrivateMembershipOperation(operation:import('./e2ee/membership-operation-plan').MembershipOperation){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const drafts=privateMembershipOperationDrafts(account.ownerId),id=await drafts.create(operation);current();const state=await drafts.preview(id);current();return state;}
 export async function pendingCurrentPrivateMembershipOperations(){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const value=await privateMembershipOperationDrafts(account.ownerId).pending();current();return value;}
 export async function loadCurrentPrivateMembershipOperation(id:string){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const value=await privateMembershipOperationDrafts(account.ownerId).inspect(id);current();return value;}

@@ -36,12 +36,18 @@ internal object E2eeMembershipAtomicContract {
         .put("items",if(input.get("kind")=="acl")E2eeMembershipContract.projection(input.getJSONArray("items"))else input.getJSONArray("items"))
     private fun operationHeader(input:JSONObject){
         val kind=input.getString("kind");val fields=when(kind){
+            "invitation-admit"->setOf("kind","spaceId","resourceId","invitationId","invitationKind","userId","role","permissions","createdBy","acceptedAt")
             "project-role"->setOf("kind","projectId","userId","role");"project-remove"->setOf("kind","projectId","userId")
             "space-role"->setOf("kind","spaceId","userId","role")+(if(input.has("permissions"))setOf("permissions")else emptySet())+(if(input.has("canOrganizeTasks"))setOf("canOrganizeTasks")else emptySet())
             "member-permissions"->setOf("kind","spaceId","userId","categoryId","permissions");"project-grants"->setOf("kind","spaceId","userId","allProjects")
             "category-permissions"->setOf("kind","spaceId","categoryId","expectedRevision","permissions")+(if(input.has("rename"))setOf("rename")else emptySet());else->invalid()
         };E2eeKeys.exact(input,fields)
         for(key in listOf("projectId","spaceId","userId"))if(input.has(key))E2eeKeys.technical(input.getString(key))
+        if(kind=="invitation-admit"){
+            for(key in listOf("resourceId","invitationId","createdBy"))E2eeKeys.technical(input.getString(key))
+            val target=input.getString("invitationKind");if(target !in setOf("space","project")||input.get("role") !in (if(target=="space")setOf("admin","member","guest")else setOf("manager","member","commenter","viewer"))||target=="project"&&!input.isNull("permissions")||target=="space"&&input.get("resourceId")!=input.get("spaceId"))invalid()
+            val at=input.getString("acceptedAt");if(!Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z").matches(at))invalid();java.time.Instant.parse(at)
+        }
         if(input.has("categoryId")&&(kind=="category-permissions"||!input.isNull("categoryId")))E2eeKeys.technical(input.getString("categoryId"))
         if(kind=="project-role"&&input.get("role") !in setOf("manager","member","commenter","viewer")||kind=="space-role"&&input.get("role") !in setOf("admin","member","guest"))invalid()
         if(input.has("canOrganizeTasks")&&input.get("canOrganizeTasks") !is Boolean||kind=="project-grants"&&input.get("allProjects") !is Boolean)invalid()

@@ -5,7 +5,7 @@ import {SharedLiveModel,validateSharedLiveContext,validateSharedLiveRequest,type
 import {encodeE2eeBytes} from './envelope.ts';
 import type {SharedDomainBinding} from './shared-domain.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
-import {exactKeys} from './keys.ts';
+import {exactKeys,assertTechnical} from './keys.ts';
 import {E2eeEditorQueue} from './editor-queue.ts';
 import {E2eeFeatureDocument} from './feature-document.ts';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState} from './shared-aggregate.ts';
@@ -96,6 +96,11 @@ export async function privateSharedRequest(ownerId:string,path:string,init:Reque
  const url=new URL(path,'https://private.invalid'),method=(init.method??'GET').toUpperCase();init.signal?.throwIfAborted();
  let body:Record<string,unknown>={};if(init.body!==undefined&&init.body!==null){if(typeof init.body!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const value=JSON.parse(init.body);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_REQUEST_INVALID');body=value;}
  const segments=url.pathname.split('/').filter(Boolean).map(value=>decodeURIComponent(value));if(segments[0]!=='shared')throw new Error('E2EE_SHARED_REQUEST_INVALID');
+ if(segments[1]==='invitations'){const account=requirePrivateAccount(ownerId),{webInvitationRecipient}=await import('./invitation-recipient.ts');account.requireOpen();const recipient=webInvitationRecipient(account);
+  if(method==='GET'&&segments.length===2){const invitations=await recipient.list();account.requireOpen();init.signal?.throwIfAborted();return{invitations};}
+  if(method==='POST'&&segments.length===3){if(segments[2]==='accept'){exactKeys(body,['id']);assertTechnical(body.id);return recipient.respond(body.id,true);}exactKeys(body,[]);return recipient.respond(segments[2],false);}
+  throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+ }
  if(['views','overview','inbox','notifications'].includes(segments[1])||segments[1]==='spaces'&&segments[3]==='mindmaps'||segments[1]==='projects'&&segments.length===6&&segments[3]==='tasks'&&['read','watch'].includes(segments[5])||method==='GET'&&(segments[1]==='tasks'&&segments.length===2||segments[1]==='spaces'&&segments[3]==='search'&&segments.length===4)){
   const result=await aggregate(ownerId).request(method,path,body);requirePrivateAccount(ownerId).requireOpen();init.signal?.throwIfAborted();return result;
  }

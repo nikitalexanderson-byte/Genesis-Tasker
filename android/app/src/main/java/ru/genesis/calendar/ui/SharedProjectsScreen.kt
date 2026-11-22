@@ -98,6 +98,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
     destination: SharedInvitationDestination?, preferences: UiPreferences, onPrivateMessages: ((String) -> Unit)?,
     onProjectChat: ((String) -> Unit)?, teamActivity: (@Composable () -> Unit)?) {
     val en = language == "en"
+    val invitationCopy = invitationSecurityCopy(language)
     val canExchangeData = LocalFeatureAccess.current.allows("data-export")
     val scope = rememberCoroutineScope()
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
@@ -844,15 +845,19 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                         invitations.forEach { invitation ->
                             Text(invitation.optString("spaceTitle"), style = MaterialTheme.typography.titleMedium)
                             Text(invitation.optString("inviterName"), style = MaterialTheme.typography.bodySmall)
+                            if (invitation.optBoolean("pendingApproval") || invitation.optBoolean("admitted")) UntranslatedText(invitationCopy.getString(if (invitation.optBoolean("admitted")) "device" else "saved"))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = { run {
                                     val joined = controller.acceptSharedInvitation(invitation.getString("id"))
-                                    refreshSpaces(); spaceId = joined.optString("spaceId"); createModal = null
-                                } }, enabled = !busy) { Text(if (en) "Join" else "Присоединиться") }
+                                    if (joined.optBoolean("pendingApproval") || joined.optBoolean("deviceApprovalRequired")) {
+                                        invitations = controller.sharedInvitations().getJSONArray("invitations").rows()
+                                        message = invitationCopy.getString(if (joined.optBoolean("pendingApproval")) "saved" else "device")
+                                    } else { refreshSpaces(); spaceId = joined.optString("spaceId"); createModal = null }
+                                } }, enabled = !busy && !invitation.optBoolean("pendingApproval") && !invitation.optBoolean("admitted")) { Text(if (en) "Join" else "Присоединиться") }
                                 OutlinedButton(onClick = { run {
                                     controller.rejectSharedInvitation(invitation.getString("id"))
                                     invitations = controller.sharedInvitations().getJSONArray("invitations").rows()
-                                } }, enabled = !busy) { Text(if (en) "Decline" else "Отклонить") }
+                                } }, enabled = !busy && !invitation.optBoolean("admitted")) { Text(if (en) "Decline" else "Отклонить") }
                             }
                         }
                     }

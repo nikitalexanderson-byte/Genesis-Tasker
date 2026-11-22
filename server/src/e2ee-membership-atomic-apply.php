@@ -173,6 +173,7 @@ function genesisMembershipAtomicCommit(string $actor,array $input,string $sessio
             $scopeResults[]=['scopeId'=>$id,'ownerId'=>$scope['owner_id'],'result'=>$result];if(count($scopeResults)===200){genesisMembershipAtomicStoreReceiptPages($db,$actor,$intent,'scopes',$scopeResults,$receiptRefs);$scopeResults=[];}
         }
         genesisMembershipAtomicStoreReceiptPages($db,$actor,$intent,'scopes',$scopeResults,$receiptRefs);
+        if($prepared['operation']['kind']==='invitation-admit'){require_once __DIR__.'/e2ee-invitation-responses.php';genesisE2eeInvitationAdmissionCommit($db,$prepared['operation']);}
         $result=['format'=>'genesis-membership-atomic-receipt-v2','actorId'=>$actor,'intentId'=>$intent,'planHash'=>$hash,'batchHash'=>$batch,'changeHash'=>$changeHash,'pages'=>$receiptRefs,'signInRequired'=>true];
         $db->prepare("UPDATE e2ee_membership_atomic_plans SET state='committed',batch_hash=?,commit_hash=?,result_json=?,updated_at=? WHERE actor_id=? AND intent_id=? AND state='staged'")
             ->execute([$batch,$requestHash,genesisE2eeJson($result),genesisNow(),$actor,$intent]);$db->commit();return $result;

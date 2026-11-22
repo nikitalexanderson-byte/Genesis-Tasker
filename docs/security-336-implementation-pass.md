@@ -1,5 +1,27 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 22 ноября: полный код пути приглашений (без приёмки)
+
+Добавлены signed personal recipient consent, ограниченные страницы входящих и
+ожидающих запросов, durable request до IO и exact receipt/state readback.
+Приём получателем не выдаёт membership/keys. Owner admission входит в существующий
+полный membership planner/atomic apply с revalidation приглашения, текущих прав
+пригласившего и recipient consent. Consume/response admitted/ACL/rotations — одна
+транзакция. Верификация устройства/выдача ключей остаётся отдельной.
+
+Web/native показывают pending owner и pending device после reload, не переходят
+в недоступный scope и не предлагают повторный Join/decline после admission.
+Owner panel открывает существующий полный review; общий контракт14lang.
+Новая migration139 и новые local recipient documents добавлены. Их typed custody
+вместе с personal-device-entry marker ещё нужно подключить следующим кодовым блоком.
+Никаких compiler/typecheck/lint/tests/build/CI security; coverage9/20.
+
+Строгий порядок владельца22 ноября записан в AGENTS: сначала целые блоки кода,
+затем общий analysis/QA/review, затем исправления. Остаток: custody новых markers,
+very-wide bounds, advanced forms/automation/series/bulk/cross-scope, typed restore,
+revoked replacement/background и оставшаяся интеграция исходного prompt.
+
+
 ## Mounted personal trusted-device entry (22 November; source-only)
 
 Both locked gates and foreground account adapters now compose the candidate core

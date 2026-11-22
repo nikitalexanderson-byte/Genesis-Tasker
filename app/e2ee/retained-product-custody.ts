@@ -365,12 +365,13 @@ export async function inspectRetainedProductCustody(options:Options){
   if(domain==='local-snapshot'&&(!/:[1-9][0-9]*$/.test(id)||baseId===id))invalid();
   const {command,directory}=await packet(value),payload=command.payload;
   if(baseId.startsWith('service:')){
-   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare','resource-create-resolve','shared-invitations-issue','shared-invitation-revoke'].includes(command.action))invalid();
+   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare','resource-create-resolve','shared-invitations-issue','shared-invitation-revoke','shared-invitation-respond'].includes(command.action))invalid();
    assertTechnical(payload.intentId);if(baseId!=='service:'+digest(encoder.encode(`${command.action}\0${payload.intentId}`))||command.deviceId!==options.actor.deviceId)invalid();
    if(command.action==='shared-invitations-issue'){
     exactKeys(payload,['intentId','invitations']);if(!Array.isArray(payload.invitations)||payload.invitations.length<1||payload.invitations.length>20)invalid();const ids=new Set<string>(),emails=new Set<string>();
     if(!['space','project'].includes(directory.kind))invalid();for(const row of payload.invitations){const space=directory.kind==='space';exactKeys(row,['id','email','role',...(space?['permissions']:[])]);assertTechnical(row.id);if(ids.has(row.id)||typeof row.email!=='string'||row.email.length>320||!(space?/^\S+@(?:gmail|googlemail)\.com$/i:/^\S+@\S+\.\S+$/).test(row.email)||emails.has(row.email.toLowerCase())||!(space?['admin','member','guest']:['manager','member','commenter','viewer']).includes(String(row.role)))invalid();ids.add(row.id);emails.add(row.email.toLowerCase());
      if(space&&row.permissions!==null){exactKeys(row.permissions,['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers']);if(Object.values(row.permissions).some(value=>typeof value!=='boolean'))invalid();}}
+   }else if(command.action==='shared-invitation-respond'){exactKeys(payload,['intentId','id','accept']);assertTechnical(payload.id);if(directory.kind!=='personal'||directory.ownerId!==options.actor.ownerId||typeof payload.accept!=='boolean')invalid();
    }else if(command.action==='shared-invitation-revoke'){exactKeys(payload,['intentId','id']);assertTechnical(payload.id);
    }else if(['resource-create-prepare','resource-create-resolve'].includes(command.action)){
     let request=payload;if(command.action==='resource-create-resolve'){

@@ -68,6 +68,7 @@ export async function captureMembershipOperationSnapshot(raw:unknown,ports:Membe
   for(const [at,row]of response.rows.entries()){exactKeys(row,['table','key','before','beforeHash']);if(row.table!==targets[at].table||!same(row.key,targets[at].key)||row.beforeHash!==membershipBeforeHash(targets[at].table,row.before))changed();rows.push(structuredClone(row) as MembershipOperationSnapshot['rows'][number]);}
  };
  for(let offset=0;offset<graph.spaceUserIds.length;offset+=200)await read(graph.spaceUserIds.slice(offset,offset+200).map(userId=>({table:'shared_space_members',key:{space_id:spaceId,user_id:userId}})));
+ if(operation.kind==='invitation-admit'&&!graph.spaceUserIds.includes(operation.userId))await read([{table:'shared_space_members',key:{space_id:spaceId,user_id:operation.userId}}]);
  const complete=new Set<string>([ports.actorId]);if('userId'in operation)complete.add(operation.userId);
  if(operation.kind==='category-permissions')for(const row of rows)if(row.before?.member_category_id===operation.categoryId&&row.before.role!=='owner')complete.add(row.key.user_id);
  if('categoryId'in operation&&operation.categoryId!==null)await read([{table:'shared_member_categories',key:{id:operation.categoryId,space_id:spaceId}}]);

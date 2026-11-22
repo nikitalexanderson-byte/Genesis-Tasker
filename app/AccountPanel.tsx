@@ -26,6 +26,7 @@ import { sharedNotificationLabel } from "./notification-settings-model";
 
 import { useEffect, useRef, useState } from "react";
 import type { CalendarMode } from "./calendar-data";
+import {invitationSecurityCopy} from './invitation-security-copy';
 import type { GenesisCategory, GenesisUser, SharedInvitation, SharedNotification, SyncRouting } from "./cloud-sync";
 import { acceptSharedInvitation, deleteGenesisAccount, disconnectGoogleServices, listSharedInvitations, listSharedNotifications, readSharedNotifications, rejectSharedInvitation, removeAdditionalGoogleAccount, updateAccountPreferences, recordFeatureUsage } from "./cloud-sync";
 import { LANGUAGES, LANGUAGE_LABELS, localizeCategoryName, runtimeLocale, translateText, type Language } from "./i18n";
@@ -229,7 +230,12 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
     setInvitationBusy(id); setInvitationMessage("");
     try {
       if (accept) {
-        await acceptSharedInvitation(id);
+        const accepted = await acceptSharedInvitation(id);
+        if (accepted.pendingApproval || accepted.deviceApprovalRequired) {
+          setInvitations(await listSharedInvitations());
+          setInvitationMessage(invitationSecurityCopy(user.language)[accepted.pendingApproval ? 'saved' : 'device']);
+          return;
+        }
         const result = await updateAccountPreferences({ sharedProjectsEnabled: true });
         onUserChange(result.user);
       }
@@ -1104,9 +1110,10 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
               ? `${invitation.inviterName} invites you to workspace «${invitation.spaceTitle}», project «${invitation.projectTitle}».`
               : `Вас ${invitation.inviterName} приглашает присоединиться к пространству «${invitation.spaceTitle}», проекту «${invitation.projectTitle}».`}</p>
             <div className="shared-invitation-actions">
-              <button type="button" disabled={Boolean(invitationBusy)} onClick={() => void respondToInvitation(invitation.id, true)}>
+              {invitation.pendingApproval || invitation.admitted ? <p role="status" data-no-translate>{invitationSecurityCopy(user.language)[invitation.admitted ? 'device' : 'saved']}</p> : null}
+              <button type="button" disabled={Boolean(invitationBusy) || invitation.pendingApproval || invitation.admitted} onClick={() => void respondToInvitation(invitation.id, true)}>
                 {user.language === "en" ? "Accept" : "Принять"}</button>
-              <button type="button" disabled={Boolean(invitationBusy)} onClick={() => void respondToInvitation(invitation.id, false)}>
+              <button type="button" disabled={Boolean(invitationBusy) || invitation.admitted} onClick={() => void respondToInvitation(invitation.id, false)}>
                 {user.language === "en" ? "Decline" : "Отклонить"}</button>
             </div>
           </div>)}

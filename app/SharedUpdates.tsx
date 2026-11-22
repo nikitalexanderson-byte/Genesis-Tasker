@@ -72,7 +72,7 @@ export function SharedWorkspaceSummary({ userId, english, language, workspaceAct
         <button type="button" disabled={busy || !newCount} onClick={() => void read([], true)}>{english ? "Mark all as read" : "Прочитать всё"}</button></div>
       <p className="shared-updates-counts">{english ? "New tasks" : "Новых задач"}: {overview?.newTasks ?? "…"} · {english ? "New projects" : "Новых проектов"}: {overview?.newProjects ?? "…"} · {english ? "Comments" : "Комментариев"}: {overview?.newComments ?? "…"}</p>
       {failed ? <p role="alert">{english ? "Could not update notifications. Try again." : "Не удалось обновить уведомления. Повторите попытку."} <button type="button" disabled={busy} onClick={() => setReload(value => value + 1)}>{english ? "Retry" : "Повторить"}</button></p> : null}
-      {open ? <SharedInvitationNotices userId={userId} english={english} persistent onAccepted={place => { setOpen(false); refresh(); onOpen(place); window.dispatchEvent(new Event("genesis:shared-updates")); }}/>:null}
+      {open ? <SharedInvitationNotices userId={userId} english={english} language={language} persistent onAccepted={place => { setOpen(false); refresh(); onOpen(place); window.dispatchEvent(new Event("genesis:shared-updates")); }}/>:null}
       <ul className="shared-updates-list">{items.map(item => <li key={item.id} data-unread={!item.isRead || undefined}>
         <button type="button" className="shared-update-open" disabled={busy} onClick={() => void read([item.id], false, notificationDestination(item))}>
           <ExperimentalIcon name={item.action === "project.created" ? "projects" : item.action === "comment.created" ? "comment" : "plus"} />

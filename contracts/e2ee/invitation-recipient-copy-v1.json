@@ -1,0 +1,128 @@
+{
+  "en": {
+    "pending": "Awaiting owner approval",
+    "saved": "Request saved. An owner must approve access, then approve your device before encrypted data can be opened.",
+    "device": "Access approved. Ask an owner to approve your device before opening encrypted data.",
+    "ownerTitle": "Invitation requests",
+    "ownerReview": "Review access request",
+    "ownerNotice": "Verify the recipient’s account independently. Approval changes membership; a device still needs separate approval to receive keys.",
+    "inviter": "Invited by"
+  },
+  "ru": {
+    "pending": "Ожидается подтверждение владельца",
+    "saved": "Запрос сохранён. Владелец должен подтвердить доступ, а затем отдельно подтвердить ваше устройство для открытия зашифрованных данных.",
+    "device": "Доступ подтверждён. Попросите владельца подтвердить ваше устройство для открытия зашифрованных данных.",
+    "ownerTitle": "Запросы по приглашениям",
+    "ownerReview": "Проверить запрос доступа",
+    "ownerNotice": "Независимо проверьте аккаунт получателя. Подтверждение меняет состав участников; для получения ключей устройство нужно подтвердить отдельно.",
+    "inviter": "Пригласил"
+  },
+  "el": {
+    "pending": "Αναμένεται έγκριση κατόχου",
+    "saved": "Το αίτημα αποθηκεύτηκε. Ο κάτοχος πρέπει να εγκρίνει την πρόσβαση και έπειτα τη συσκευή σας για να ανοίξετε τα κρυπτογραφημένα δεδομένα.",
+    "device": "Η πρόσβαση εγκρίθηκε. Ζητήστε από τον κάτοχο να εγκρίνει τη συσκευή σας για να ανοίξετε τα κρυπτογραφημένα δεδομένα.",
+    "ownerTitle": "Αιτήματα προσκλήσεων",
+    "ownerReview": "Έλεγχος αιτήματος πρόσβασης",
+    "ownerNotice": "Επαληθεύστε ανεξάρτητα τον λογαριασμό του παραλήπτη. Η έγκριση αλλάζει τα μέλη· η συσκευή χρειάζεται ξεχωριστή έγκριση για να λάβει κλειδιά.",
+    "inviter": "Πρόσκληση από"
+  },
+  "de": {
+    "pending": "Freigabe durch den Eigentümer ausstehend",
+    "saved": "Anfrage gespeichert. Ein Eigentümer muss den Zugriff und danach Ihr Gerät freigeben, bevor Sie verschlüsselte Daten öffnen können.",
+    "device": "Zugriff freigegeben. Bitten Sie einen Eigentümer, Ihr Gerät zum Öffnen verschlüsselter Daten freizugeben.",
+    "ownerTitle": "Einladungsanfragen",
+    "ownerReview": "Zugriffsanfrage prüfen",
+    "ownerNotice": "Überprüfen Sie das Konto des Empfängers unabhängig. Die Freigabe ändert die Mitgliedschaft; ein Gerät benötigt eine separate Freigabe, um Schlüssel zu erhalten.",
+    "inviter": "Eingeladen von"
+  },
+  "fr": {
+    "pending": "En attente de l’accord du propriétaire",
+    "saved": "Demande enregistrée. Un propriétaire doit approuver l’accès, puis votre appareil, avant que vous puissiez ouvrir les données chiffrées.",
+    "device": "Accès approuvé. Demandez à un propriétaire d’approuver votre appareil pour ouvrir les données chiffrées.",
+    "ownerTitle": "Demandes d’invitation",
+    "ownerReview": "Examiner la demande d’accès",
+    "ownerNotice": "Vérifiez indépendamment le compte du destinataire. L’approbation modifie les membres ; un appareil doit être approuvé séparément pour recevoir les clés.",
+    "inviter": "Invité par"
+  },
+  "es": {
+    "pending": "Pendiente de aprobación del propietario",
+    "saved": "Solicitud guardada. Un propietario debe aprobar el acceso y después tu dispositivo para que puedas abrir los datos cifrados.",
+    "device": "Acceso aprobado. Pide a un propietario que apruebe tu dispositivo para abrir los datos cifrados.",
+    "ownerTitle": "Solicitudes de invitación",
+    "ownerReview": "Revisar solicitud de acceso",
+    "ownerNotice": "Verifica la cuenta del destinatario por un medio independiente. La aprobación cambia los miembros; el dispositivo necesita otra aprobación para recibir las claves.",
+    "inviter": "Invitado por"
+  },
+  "it": {
+    "pending": "In attesa dell’approvazione del proprietario",
+    "saved": "Richiesta salvata. Un proprietario deve approvare l’accesso e poi il tuo dispositivo prima che tu possa aprire i dati cifrati.",
+    "device": "Accesso approvato. Chiedi a un proprietario di approvare il tuo dispositivo per aprire i dati cifrati.",
+    "ownerTitle": "Richieste di invito",
+    "ownerReview": "Esamina richiesta di accesso",
+    "ownerNotice": "Verifica l’account del destinatario in modo indipendente. L’approvazione modifica i membri; il dispositivo deve essere approvato separatamente per ricevere le chiavi.",
+    "inviter": "Invitato da"
+  },
+  "pt": {
+    "pending": "A aguardar aprovação do proprietário",
+    "saved": "Pedido guardado. Um proprietário tem de aprovar o acesso e depois o seu dispositivo antes de poder abrir os dados encriptados.",
+    "device": "Acesso aprovado. Peça a um proprietário que aprove o seu dispositivo para abrir os dados encriptados.",
+    "ownerTitle": "Pedidos de convite",
+    "ownerReview": "Rever pedido de acesso",
+    "ownerNotice": "Verifique a conta do destinatário por um meio independente. A aprovação altera os membros; o dispositivo precisa de aprovação separada para receber as chaves.",
+    "inviter": "Convidado por"
+  },
+  "pl": {
+    "pending": "Oczekiwanie na zgodę właściciela",
+    "saved": "Prośba została zapisana. Właściciel musi zatwierdzić dostęp, a następnie Twoje urządzenie, zanim otworzysz zaszyfrowane dane.",
+    "device": "Dostęp zatwierdzony. Poproś właściciela o zatwierdzenie Twojego urządzenia, aby otworzyć zaszyfrowane dane.",
+    "ownerTitle": "Prośby z zaproszeń",
+    "ownerReview": "Sprawdź prośbę o dostęp",
+    "ownerNotice": "Zweryfikuj konto odbiorcy niezależnym kanałem. Zatwierdzenie zmienia członkostwo; urządzenie wymaga osobnej zgody na otrzymanie kluczy.",
+    "inviter": "Zaproszenie od"
+  },
+  "sr": {
+    "pending": "Чека се одобрење власника",
+    "saved": "Захтев је сачуван. Власник мора да одобри приступ, а затим и ваш уређај, пре него што отворите шифроване податке.",
+    "device": "Приступ је одобрен. Затражите од власника да одобри ваш уређај за отварање шифрованих података.",
+    "ownerTitle": "Захтеви по позивницама",
+    "ownerReview": "Прегледај захтев за приступ",
+    "ownerNotice": "Независно проверите налог примаоца. Одобрење мења чланство; уређај мора бити посебно одобрен да би добио кључеве.",
+    "inviter": "Позвао је"
+  },
+  "uk": {
+    "pending": "Очікується підтвердження власника",
+    "saved": "Запит збережено. Власник має підтвердити доступ, а потім окремо підтвердити ваш пристрій для відкриття зашифрованих даних.",
+    "device": "Доступ підтверджено. Попросіть власника підтвердити ваш пристрій для відкриття зашифрованих даних.",
+    "ownerTitle": "Запити за запрошеннями",
+    "ownerReview": "Перевірити запит доступу",
+    "ownerNotice": "Незалежно перевірте акаунт одержувача. Підтвердження змінює склад учасників; для отримання ключів пристрій потрібно підтвердити окремо.",
+    "inviter": "Запросив"
+  },
+  "zh": {
+    "pending": "等待所有者批准",
+    "saved": "请求已保存。所有者需要先批准访问权限，再单独批准您的设备，您才能打开加密数据。",
+    "device": "访问权限已获批准。请让所有者批准您的设备，以便打开加密数据。",
+    "ownerTitle": "邀请请求",
+    "ownerReview": "审核访问请求",
+    "ownerNotice": "请通过独立渠道验证接收者的账号。批准会更改成员资格；设备仍需单独批准才能接收密钥。",
+    "inviter": "邀请人"
+  },
+  "tr": {
+    "pending": "Sahibin onayı bekleniyor",
+    "saved": "İstek kaydedildi. Şifreli verileri açabilmeniz için bir sahip önce erişimi, ardından cihazınızı onaylamalıdır.",
+    "device": "Erişim onaylandı. Şifreli verileri açmak için bir sahipten cihazınızı onaylamasını isteyin.",
+    "ownerTitle": "Davet istekleri",
+    "ownerReview": "Erişim isteğini incele",
+    "ownerNotice": "Alıcının hesabını bağımsız bir yoldan doğrulayın. Onay üyeliği değiştirir; anahtar alabilmesi için cihazın ayrıca onaylanması gerekir.",
+    "inviter": "Davet eden"
+  },
+  "ja": {
+    "pending": "所有者の承認を待っています",
+    "saved": "リクエストを保存しました。暗号化データを開くには、所有者がアクセス権を承認し、その後お使いの端末を個別に承認する必要があります。",
+    "device": "アクセス権が承認されました。暗号化データを開くために、所有者に端末の承認を依頼してください。",
+    "ownerTitle": "招待リクエスト",
+    "ownerReview": "アクセス申請を確認",
+    "ownerNotice": "別の手段で受信者のアカウントを確認してください。承認するとメンバー構成が変わります。鍵を受け取るには端末を別途承認する必要があります。",
+    "inviter": "招待者"
+  }
+}

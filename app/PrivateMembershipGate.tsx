@@ -1,4 +1,5 @@
 'use client';
+import {invitationSecurityCopy} from './invitation-security-copy';
 import {useEffect,useId,useRef,useState,useSyncExternalStore} from 'react';
 import copy from '../contracts/e2ee/membership-review-copy-v2.json';
 import rolesCopy from '../contracts/e2ee/device-access-copy-v1.json';
@@ -85,6 +86,7 @@ function MembershipReview({state}:{state:PrivateMembershipUi}){
   {operation?<section aria-label={c.review}><h3>{c.actions[operation.kind]}</h3>{detail?.title?<p>{detail.title}</p>:null}
    {'userId'in operation?<p>{name(operation.userId)}{name(operation.userId)!==operation.userId?<small>{displayFingerprint(operation.userId)}</small>:null}</p>:null}
    {'role'in operation?<p>{roleName(operation.role)}</p>:null}
+   {operation.kind==='invitation-admit'?<><p>{invitationSecurityCopy(language).ownerNotice}</p><p>{invitationSecurityCopy(language).inviter}: {name(operation.createdBy)} {displayFingerprint(operation.createdBy)}</p>{displayFingerprint(operation.invitationId)}{displayFingerprint(operation.resourceId)}</>:null}
    {operation.kind==='category-permissions'&&operation.rename&&operation.privateTitle!==undefined?<p><strong>{c.categoryTitle}: </strong>{operation.privateTitle}</p>:null}
    {review?.privateEffects.flatMap(row=>row.effects.renames.map(value=><section key={row.scopeId+':'+value.entityId} aria-label={c.categoryTitle}><h4>{c.categoryTitle}</h4><dl><div><dt>{c.beforeValue}</dt><dd>{value.before}</dd></div><div><dt>{c.afterValue}</dt><dd>{value.after}</dd></div></dl></section>))}
    {permissions?<PermissionChecks language={language} value={permissions} onChange={()=>{}} disabled/>:null}

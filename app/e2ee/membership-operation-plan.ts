@@ -6,7 +6,9 @@ import {samePrivateJson as same} from './product-json.ts';
 import {MEMBERSHIP_SPECS,membershipBeforeHash,membershipFields,membershipChangesProjection,validateMembershipChanges,type MembershipChange} from './membership-contract.ts';
 
 export type MembershipPermissions=Record<'createProjects'|'editTasks'|'organizeTasks'|'comment'|'manageProjects'|'inviteMembers',boolean>;
+export type MembershipInvitationAdmission={kind:'invitation-admit';spaceId:string;resourceId:string;invitationId:string;invitationKind:'space'|'project';userId:string;role:'admin'|'member'|'guest'|'manager'|'commenter'|'viewer';permissions:MembershipPermissions|null;createdBy:string;acceptedAt:string};
 export type MembershipOperation=
+ |MembershipInvitationAdmission
  |{kind:'project-role';projectId:string;userId:string;role:'manager'|'member'|'commenter'|'viewer'}
  |{kind:'project-remove';projectId:string;userId:string}
  |{kind:'space-role';spaceId:string;userId:string;role:'admin'|'member'|'guest';permissions?:MembershipPermissions|null;canOrganizeTasks?:boolean}
@@ -42,6 +44,10 @@ function coordinate(table:MembershipChange['table'],key:Record<string,string>){r
 export function validateMembershipOperation(input:unknown):MembershipOperation{
  if(!input||typeof input!=='object'||Array.isArray(input))invalid();const value=input as Record<string,unknown>;
  switch(value.kind){
+  case'invitation-admit':exactKeys(value,["kind","spaceId","resourceId","invitationId","invitationKind","userId","role","permissions","createdBy","acceptedAt"]);
+   for(const key of ['resourceId','invitationId','createdBy'])assertTechnical(value[key]);
+   if(!['space','project'].includes(String(value.invitationKind))||!(value.invitationKind==='space'?['admin','member','guest']:['manager','member','commenter','viewer']).includes(String(value.role))||value.invitationKind==='project'&&value.permissions!==null||typeof value.acceptedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value.acceptedAt)||!Number.isFinite(Date.parse(value.acceptedAt)))invalid();
+   if(value.permissions!==null)permissions(value.permissions);if(value.invitationKind==='space'&&value.resourceId!==value.spaceId)invalid();break;
   case'project-role':exactKeys(value,['kind','projectId','userId','role']);if(!['manager','member','commenter','viewer'].includes(String(value.role)))invalid();break;
   case'project-remove':exactKeys(value,['kind','projectId','userId']);break;
   case'space-role':exactKeys(value,['kind','spaceId','userId','role',...(Object.hasOwn(value,'permissions')?['permissions']:[]),...(Object.hasOwn(value,'canOrganizeTasks')?['canOrganizeTasks']:[])]);
@@ -77,7 +83,7 @@ export function validateMembershipOperationSnapshot(input:unknown):MembershipOpe
  // stack growth and rejects cycles before any role/index calculation.
  const done=new Set<string>();for(const row of projects.values()){let id:string|null=row.id;const path=new Set<string>();while(id!==null&&!done.has(id)){if(path.has(id))invalid();path.add(id);id=projects.get(id)!.parentId;}for(const id of path)done.add(id);}
  for(const key of ['spaceUserIds','completeUserIds'] as const){for(const id of input[key])assertTechnical(id);if(!same([...new Set(input[key])].sort(),input[key]))invalid();}
- if(!input.spaceUserIds.includes(input.actorId)||!input.completeUserIds.includes(input.actorId)||input.completeUserIds.some(id=>!input.spaceUserIds.includes(id)))invalid();
+ if(!input.spaceUserIds.includes(input.actorId)||!input.completeUserIds.includes(input.actorId) )invalid();
  const seen=new Set<string>();for(const row of input.rows){exactKeys(row,['table','key','before','beforeHash']);if(typeof row.table!=='string'||!Object.hasOwn(MEMBERSHIP_SPECS,row.table))invalid();
   const table=row.table as MembershipChange['table'],spec=MEMBERSHIP_SPECS[table];exactKeys(row.key,spec.keys);for(const id of Object.values(row.key))assertTechnical(id);
   if(Object.hasOwn(row.key,'space_id')&&row.key.space_id!==input.spaceId||Object.hasOwn(row.key,'project_id')&&!projects.has(String(row.key.project_id)))invalid();
@@ -87,6 +93,7 @@ export function validateMembershipOperationSnapshot(input:unknown):MembershipOpe
  }
  const has=(table:MembershipChange['table'],key:Record<string,string>)=>seen.has(coordinate(table,key));
  for(const id of input.spaceUserIds)if(!has('shared_space_members',{space_id:input.spaceId as string,user_id:id}))invalid();
+ for(const userId of input.completeUserIds){const row=input.rows.find(row=>row.table==='shared_space_members'&&row.key.space_id===input.spaceId&&row.key.user_id===userId);if(!row||!input.spaceUserIds.includes(userId)&&row.before!==null)invalid();}
  for(const userId of input.completeUserIds)for(const projectId of projects.keys())if(!has('shared_project_members',{project_id:projectId,user_id:userId})||!has('shared_member_project_grants',{space_id:input.spaceId as string,user_id:userId,project_id:projectId}))invalid();
  return structuredClone(input) as MembershipOperationSnapshot;
 }
@@ -126,7 +133,22 @@ export function planMembershipOperation(raw:unknown,rawOperation:unknown):Member
    for(const child of children.get(id)??[])stack.push({id:child,inherited:next});}
  };
  const actorSpace=space(snapshot.actorId);if(!actorSpace)throw new Error('E2EE_OWNER_REQUIRED');
- if(operation.kind==='project-role'||operation.kind==='project-remove'){
+ if(operation.kind==='invitation-admit'){
+  if(actorSpace.role!=='owner')throw new Error('E2EE_OWNER_REQUIRED');const userId=operation.userId;complete(userId);const sm=space(userId);
+  if(operation.invitationKind==='space'){
+   if(operation.resourceId!==spaceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   if(sm?.role!=='owner'){const role=sm&&['admin','member'].includes(String(sm.role))?String(sm.role):operation.role;
+    put('shared_space_members',{space_id:spaceId,user_id:userId},{role,can_organize_tasks:sm?.can_organize_tasks??0,all_projects:1,permissions_json:sm?.permissions_json??(operation.permissions===null?null:JSON.stringify(operation.permissions)),member_category_id:sm?.member_category_id??null,project_access_restricted:sm?.project_access_restricted??0,project_access_revision:sm?.project_access_revision??1});}
+   const projectRole=operation.role==='guest'?'viewer':operation.role==='admin'?'manager':'member';
+   for(const project of projects.values())if(!project.archived&&!project.inTrash){const old=member(project.id,userId);if(!old||!['owner','manager','member','commenter'].includes(String(old.role)))setMember(project.id,userId,projectRole);}
+  }else{
+   const project=projects.get(operation.resourceId);if(!project||project.archived||project.inTrash||project.isInbox)throw new Error('E2EE_MEMBERSHIP_STALE');
+   if(!sm)put('shared_space_members',{space_id:spaceId,user_id:userId},{role:'guest',can_organize_tasks:0,all_projects:0,permissions_json:null,member_category_id:null,project_access_restricted:0,project_access_revision:1});
+   if(!member(project.id,userId))setMember(project.id,userId,operation.role);
+   if(sm?.project_access_restricted===1){if(!['member','commenter','viewer'].includes(operation.role))throw new Error('PROJECT_ACCESS_MANAGER_UNRESTRICTED');const old=grant(project.id,userId);put('shared_member_project_grants',{space_id:spaceId,user_id:userId,project_id:project.id},{role:operation.role,include_descendants:old?.include_descendants??0,excluded:0});}
+   if(sm&&sm.role!=='guest')for(const row of projects.values())if(row.isInbox&&member(row.id,userId)===null)setMember(row.id,userId,'member');recompute(userId);
+  }
+ }else if(operation.kind==='project-role'||operation.kind==='project-remove'){
   const project=projects.get(operation.projectId)!;if(project.isInbox)throw new Error('INBOX_MEMBERSHIP_MANAGED_BY_SPACE');complete(operation.userId);
   const actor=member(project.id,snapshot.actorId),target=member(project.id,operation.userId),sm=space(operation.userId);
   if(!target||!sm)throw new Error('E2EE_MEMBERSHIP_STALE');if(actor?.role!=='owner')throw new Error('E2EE_OWNER_REQUIRED');
@@ -188,6 +210,7 @@ export function planMembershipOperation(raw:unknown,rawOperation:unknown):Member
  // the complete result, including large legacy grant sets, without truncation.
  for(let at=0;at<changes.length;at+=200)validateMembershipChanges(changes.slice(at,at+200));
  const required=new Map<string,MembershipGraphScope>();const add=(scope:MembershipGraphScope|null)=>{if(!scope||!['active','retirement'].includes(scope.state))throw new Error('E2EE_SHARED_TRANSITION_REQUIRED');const old=required.get(scope.scopeId);if(old&&!same(old,scope))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');required.set(scope.scopeId,scope);};
+ if(operation.kind==='invitation-admit'){add(snapshot.spaceScope);for(const project of projects.values())add(project.scope);}
  for(const change of changes)if(change.table==='shared_project_members')add(projects.get(change.key.project_id)!.scope);else{add(snapshot.spaceScope);for(const project of projects.values())add(project.scope);}
   // Intermediate removal followed by inherited re-addition can have no final
   // ACL diff while still clearing assignments/revoking old invitations. Those
