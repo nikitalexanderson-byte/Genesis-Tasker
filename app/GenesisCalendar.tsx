@@ -1290,6 +1290,7 @@ export function GenesisCalendar() {
     setCloudUser(current => current?.uid === userId ? { ...current, calendarExplorationPending: false } : current);
   }, []);
   const [projectsArea, setProjectsAreaState] = useState<"personal" | "shared">("personal");
+  const [sharedDiscoveryOpenUserId,setSharedDiscoveryOpenUserId]=useState<string|null>(null);
   const setProjectsArea = (area: "personal" | "shared") => {
     setProjectsAreaState(area);
     if (cloudUser?.uid) saveAffairsArea(cloudUser.uid, area);
@@ -1823,9 +1824,25 @@ export function GenesisCalendar() {
   const personalProjectsVisible = !visibility.hiddenSubmenus.includes("projects.personal");
   const invitedWorkspaceOpen = Boolean(invitationDestination && cloudUser && view==="projects" && projectsArea==="shared" && invitationDestination.userId===cloudUser.uid);
   // Existing shared data remains readable after expiry; creating/changing it still needs paid access.
+  const sharedAccessActivationAttempted = useRef<string | null>(null);
+  const ensureSharedProjectsEnabled = useCallback(async():Promise<void> => {
+    const user=cloudUser,guard=captureAccountSessionGuard();
+    if(!user||!user.sharedProjectsEligible||!featureAllowed(user.featureAccess,'shared-projects'))throw new Error('SHARED_PROJECTS_DISABLED');
+    guard();if(user.sharedProjectsEnabled)return;
+    const result=await updateAccountPreferences({sharedProjectsEnabled:true});guard();
+    if(result.user.uid!==user.uid)throw new Error('AUTH_REQUIRED');
+    if(!result.user.sharedProjectsEnabled)throw new Error('SHARED_PROJECTS_DISABLED');
+    setCloudUser(value=>value?.uid===user.uid?{...value,sharedProjectsEnabled:true}:value);
+  },[cloudUser]);
+  useEffect(()=>{
+    if(!cloudUser?.uid){sharedAccessActivationAttempted.current=null;return;}
+    if(cloudUser.sharedProjectsEnabled||!cloudUser.sharedProjectsEligible||!featureAllowed(cloudUser.featureAccess,'shared-projects')||sharedAccessActivationAttempted.current===cloudUser.uid)return;
+    sharedAccessActivationAttempted.current=cloudUser.uid;
+    void ensureSharedProjectsEnabled().catch(()=>{/* The visible discovery action can retry without an automatic request loop. */});
+  },[cloudUser?.uid,cloudUser?.sharedProjectsEnabled,cloudUser?.sharedProjectsEligible,cloudUser?.featureAccess,ensureSharedProjectsEnabled]);
   const sharedProjectsReadable = Boolean(cloudUser?.sharedProjectsEnabled);
   const sharedProjectsAvailable = featureAllowed(cloudUser?.featureAccess,'shared-projects') && sharedProjectsReadable;
-  const sharedProjectsVisible = sharedProjectsReadable && (!visibility.hiddenSubmenus.includes("projects.shared") || invitedWorkspaceOpen);
+  const sharedProjectsVisible = sharedProjectsReadable && (!visibility.hiddenSubmenus.includes("projects.shared") || invitedWorkspaceOpen || sharedDiscoveryOpenUserId===cloudUser?.uid);
   const activeProjectsArea = projectsArea === "shared" && sharedProjectsVisible ? "shared"
     : projectsArea === "personal" && personalProjectsVisible ? "personal"
       : personalProjectsVisible ? "personal" : "shared";
@@ -6185,10 +6202,9 @@ export function GenesisCalendar() {
             <span><strong>{projects.length - rootProjects}</strong> {language === "en" ? "subprojects" : "подпроектов"}</span>
           </div>
         </WorkspaceHeader>
-        {featureAllowed(cloudUser?.featureAccess,'shared-projects') && cloudUser?.sharedProjectsEligible && !sharedProjectsVisible ? <Suspense fallback={null}><SharedAffairsHint language={language} onGuide={() => {
-          setAccountGuideUserId(cloudUser.uid);
-          setAccountMenuOpen(false);
-          setAccountOpen(true);
+        {featureAllowed(cloudUser?.featureAccess,'shared-projects') && cloudUser?.sharedProjectsEligible ? <Suspense fallback={null}><SharedAffairsHint key={cloudUser.uid} ownerId={cloudUser.uid} language={language} onGuide={async() => {
+          const uid=cloudUser.uid,guard=captureAccountSessionGuard();await ensureSharedProjectsEnabled();guard();
+          setSharedDiscoveryOpenUserId(uid);setProjectsArea('shared');navigateTo('projects',false,undefined,true);
         }} /></Suspense> : null}
         <div className="project-toolbar" data-has-completed={completedCount > 0}>
         {completedCount > 0 ? <div className="affairs-actions">
