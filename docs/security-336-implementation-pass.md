@@ -10,6 +10,25 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Personal encrypted Drive backup composition (candidate, no compilation/QA)
+
+Replaced the disabled web adapter stub with actual independent Drive web/native
+OAuth, ciphertext-only service, immutable encrypted device intents, allocated
+provider IDs, bounded small/resumable uploads, server and client full readback,
+clean-client listing/download and exact-source disconnect. Native Google handoff
+retains no keys, expires after two minutes and uses the original owner/session/
+restore admission; downloaded ciphertext uses the existing bounded SAF custody.
+Pending originals can be saved locally even if their connection was replaced.
+Local export fields also clear recovery material on web hide.
+
+The fourteen-language Drive copy contract is shared with native. Schema disposition
+now explicitly covers earlier migrations128–133 and the new separate credentials/
+technical Drive operation tables134. No classification drift check was weakened.
+Details, provider references and required failure scenarios:
+`security-336-drive-backups.md`. No tests/compiler/lint/build/CI/push/publication or
+provider configuration was performed. Drive rollout stays off, accepted coverage
+stays9/20, and typed restore/full release acceptance remain required.
+
 ### Independent message-key lifetimes (candidate, no compilation/QA)
 
 Native message repositories now permanently retire their memory capability on

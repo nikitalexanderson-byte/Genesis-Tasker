@@ -1086,7 +1086,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
   const timeout = globalThis.setTimeout(() => {
     timedOut = true;
     requestController.abort();
-  }, API_TIMEOUT_MS);
+  }, path.startsWith('/private-drive/v1/')?120_000:API_TIMEOUT_MS);
   let response: Response;
   try {
     if(feedback.e2eeObservation){
@@ -1167,6 +1167,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
     }
     return payload as T;
   } catch (error) {
+    if (timedOut&&path.startsWith('/private-drive/v1/')) throw new Error('DRIVE_CONNECTION_UNCERTAIN');
     if (timedOut) throw new GenesisNetworkTimeoutError("Сервер GENESIS не ответил за 20 секунд. Изменения сохранены на устройстве и будут синхронизированы позже.");
     throw error;
   } finally {
@@ -3827,6 +3828,15 @@ export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/re
     return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
   }catch(error){const code=error instanceof GenesisApiError?e2eeHttpErrorCode(error.status,error.payload):null;if(code)throw new Error(code);throw error;}
   finally{observation?.close();}
+}
+
+/** Independent encrypted-file transport. No legacy backup, identity publication
+ * or provider URL is accepted through this API. */
+export async function privateDriveRequest(ownerId:string,path:'status'|'web-connect'|'disconnect'|'prepare'|'commit'|'list'|'download',body?:unknown,signal?:AbortSignal):Promise<unknown>{
+  const current=captureMessagingSessionGuard(ownerId);current();
+  if(!isE2eeResponsePath(`/private-drive/v1/${path}`)||(path==='status')!==(body===undefined))throw new Error('DRIVE_ROUTE_FORBIDDEN');
+  const result=await apiOverHttp<unknown>(`/private-drive/v1/${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,headers:{'X-Genesis-Account-Id':ownerId},...(body===undefined?{}:{body:JSON.stringify(body)})});
+  current();return result;
 }
 
 /** Transport exclusion only. The product must combine this with every mounted

@@ -385,6 +385,10 @@ internal class AuthSessionClient(context: Context,
     fun challenge(expected: Long): JSONObject = request(expected, "/auth/google/native/challenge", JSONObject())
     fun googleServicesConfig(expected: Long): JSONObject =
         request(expected, "/auth/google/native/services/config", JSONObject())
+    fun privateDrive(expected:Long,owner:String,path:String,body:JSONObject?,call:ForegroundAccountCall?):JSONObject{
+        require(E2eeTransportProtocol.driveRoute(if(body==null)"GET" else "POST",path))
+        return request(expected,path,body,foregroundCall=call,boundOwner=owner)
+    }
     fun authorizeGoogleServices(expected: Long, serverAuthCode: String): JSONObject {
         require(serverAuthCode.length in 1..8192)
         return request(expected, "/auth/google/native/services",
@@ -790,7 +794,7 @@ internal class AuthSessionClient(context: Context,
     private fun request(expected: Long, path: String, body: JSONObject?, secret: SessionSecret? = null,
         persist: Boolean = true, method: String = if (body == null) "GET" else "POST",
         responseReader: ((java.io.InputStream) -> JSONObject)? = null, importBody: DataImportBody? = null,
-        timeZone: String? = null, foregroundCall: ForegroundAccountCall? = null, e2eeObservation: E2eeHttpObservation? = null): JSONObject {
+        timeZone: String? = null, foregroundCall: ForegroundAccountCall? = null, e2eeObservation: E2eeHttpObservation? = null, boundOwner:String?=null): JSONObject {
         require(allowedAuthSessionRoute(method,path))
         // Classification and transmitted bytes must refer to the same snapshot.
         // JSONObject supplied by a controller may still be mutated on another
@@ -813,15 +817,17 @@ internal class AuthSessionClient(context: Context,
             if(owner!=null && confirmedPersonalOwnerId!=owner) throw CancellationException("Authentication operation superseded")
             if(owner!=null && owner in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED")
         }
-        val operation={ requestOverHttps(expected,path,requestBody,secret,persist,method,responseReader,importBody,timeZone,foregroundCall,owner,e2eeObservation) }
+        if(boundOwner!=null)require(E2eeTransportProtocol.driveRoute(method,path))
+        val operation={ requestOverHttps(expected,path,requestBody,secret,persist,method,responseReader,importBody,timeZone,foregroundCall,owner,e2eeObservation,boundOwner) }
         return if(owner==null)operation() else legacyTransportGate.request(CloudAccountSnapshot.scopeFor(owner),::current,operation)
     }
 
     private fun requestOverHttps(expected: Long,path: String,body: JSONObject?,secret: SessionSecret?,persist: Boolean,
         method: String,responseReader: ((java.io.InputStream) -> JSONObject)?,importBody: DataImportBody?,
-        timeZone: String?,foregroundCall: ForegroundAccountCall?,legacyOwner: String?,e2eeObservation: E2eeHttpObservation?): JSONObject {
+        timeZone: String?,foregroundCall: ForegroundAccountCall?,legacyOwner: String?,e2eeObservation: E2eeHttpObservation?,boundOwner:String?): JSONObject {
         fun currentRequest() = synchronized(guard) {
             check(expected)
+            if(boundOwner!=null&&confirmedPersonalOwnerId!=boundOwner)throw CancellationException("Authentication operation superseded")
             if(legacyOwner!=null && confirmedPersonalOwnerId!=legacyOwner) throw CancellationException("Authentication operation superseded")
             if(legacyOwner!=null && legacyOwner in serverProtectedOwners)throw AuthApiError("E2EE_UPGRADE_REQUIRED")
         }
@@ -844,7 +850,7 @@ internal class AuthSessionClient(context: Context,
             foregroundCall?.attach(connection)
             connection.instanceFollowRedirects = false
             connection.connectTimeout = 15_000
-            connection.readTimeout = if (path == "/bootstrap" || path == "/assistant/plan" || path.startsWith("/shared/data/") || path.startsWith("/shared/reports") || path.startsWith("/shared/") && path.contains("/templates")) 120_000 else 30_000
+            connection.readTimeout = if (path.startsWith("/private-drive/v1/") || path == "/bootstrap" || path == "/assistant/plan" || path.startsWith("/shared/data/") || path.startsWith("/shared/reports") || path.startsWith("/shared/") && path.contains("/templates")) 120_000 else 30_000
             connection.useCaches = false
             connection.requestMethod = method
             connection.setRequestProperty("Accept", "application/json")
@@ -855,6 +861,7 @@ internal class AuthSessionClient(context: Context,
             NativeActivityVisit.headers().forEach { (name, value) -> connection.setRequestProperty(name, value) }
             connection.setRequestProperty("X-Genesis-Data-Generation",backupEpoch.accepted().toString())
             if(legacyOwner!=null)connection.setRequestProperty("X-Genesis-Account-Id",legacyOwner)
+            if(boundOwner!=null)connection.setRequestProperty("X-Genesis-Account-Id",boundOwner)
             connection.setRequestProperty("X-Genesis-Installation-Id", installationId)
             if (current.cookie.isNotBlank()) connection.setRequestProperty("Cookie", "$SESSION_COOKIE=${current.cookie}")
             if (body != null) {

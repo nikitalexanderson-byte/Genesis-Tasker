@@ -643,6 +643,15 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     private val mutableTaskSync = MutableStateFlow(AccountTaskSyncState())
     val taskSync = mutableTaskSync.asStateFlow()
+    internal fun privateDriveGateway(uid:String):PrivateDriveGateway{
+        val generation=client.currentGeneration();val ownerGuard=privateUiOwnerGuard(uid)
+        return object:PrivateDriveGateway{
+            override fun current(){ownerGuard();check(client.isCurrent(generation)){"E2EE_ACCOUNT_CHANGED"}}
+            override fun request(path:String,body:JSONObject?,call:ForegroundAccountCall?):JSONObject{
+                current();return client.privateDrive(generation,uid,"/private-drive/v1/$path",body,call).also{current()}
+            }
+        }
+    }
     internal fun backupGateway(uid: String): ru.genesis.calendar.data.BackupGateway = object : ru.genesis.calendar.data.BackupGateway {
         private val capturedGeneration=client.currentGeneration()
         private val capturedEpoch=app.workspaceEpoch

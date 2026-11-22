@@ -56,25 +56,26 @@ function genesisGoogleAuthUrl(string $state, string $challenge, string $purpose 
     if (empty($config['google_client_id'])) {
         throw new RuntimeException('Google OAuth client is not configured.');
     }
-    if (!in_array($purpose, ['login', 'services', 'link', 'reauth', 'recovery'], true)) {
+    if (!in_array($purpose, ['login', 'services', 'link', 'reauth', 'recovery', 'drive'], true)) {
         throw new InvalidArgumentException('Google OAuth purpose is invalid.');
     }
     $connectServices = $purpose === 'services' || $purpose === 'link' && !genesisGoogleIdentityManagementEnabled();
+    $drive = $purpose === 'drive';
     $parameters = [
         'client_id' => (string)$config['google_client_id'],
         'redirect_uri' => genesisGoogleRedirectUri(),
         'response_type' => 'code',
-        'scope' => implode(' ', $connectServices ? GENESIS_GOOGLE_SCOPES : GENESIS_GOOGLE_IDENTITY_SCOPES),
-        'access_type' => $connectServices ? 'offline' : 'online',
-        'include_granted_scopes' => 'true',
-        'prompt' => $purpose === 'link' ? 'consent select_account' : ($connectServices ? 'consent' : 'select_account'),
+        'scope' => implode(' ', $drive ? ['openid','email',GENESIS_DRIVE_SCOPE] : ($connectServices ? GENESIS_GOOGLE_SCOPES : GENESIS_GOOGLE_IDENTITY_SCOPES)),
+        'access_type' => $connectServices || $drive ? 'offline' : 'online',
+        'include_granted_scopes' => $drive ? 'false' : 'true',
+        'prompt' => $drive || $purpose === 'link' ? 'consent select_account' : ($connectServices ? 'consent' : 'select_account'),
         'state' => $state,
         'code_challenge' => $challenge,
         'code_challenge_method' => 'S256',
     ];
     if ($nonce !== null) $parameters['nonce']=$nonce;
     if (in_array($purpose,['reauth','recovery'],true)) $parameters['max_age']='0';
-    if ($purpose === 'services' && is_string($loginHint) && $loginHint !== '') {
+    if (($purpose === 'services' || $drive) && is_string($loginHint) && $loginHint !== '') {
         $parameters['login_hint'] = $loginHint;
     }
     return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);

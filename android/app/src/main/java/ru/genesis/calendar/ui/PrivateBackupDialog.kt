@@ -30,6 +30,7 @@ import ru.genesis.calendar.security.*
  * Only ciphertext delivery and opaque URI selection survive that transition. */
 @Composable internal fun PrivateBackupHandoffHost(owner:String?){
     PrivateBackupFileActivity(owner)
+    PrivateDriveConnectionActivity(owner)
 }
 
 @Composable internal fun PrivateBackupDialog(owner:String,title:String,onClose:()->Unit){
@@ -47,13 +48,14 @@ import ru.genesis.calendar.security.*
     val active=remember(account,lifecycle){java.util.concurrent.atomic.AtomicBoolean(true)}
     val foreground=remember(account,lifecycle){java.util.concurrent.atomic.AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
     val fileAccess=remember(account){java.util.concurrent.atomic.AtomicReference<NativeBackupFileAccess?>(null)}
+    val driveCall=remember(account){java.util.concurrent.atomic.AtomicReference<ru.genesis.calendar.auth.ForegroundAccountCall?>(null)}
     val operationJob=remember(account){java.util.concurrent.atomic.AtomicReference<Job?>(null)}
     DisposableEffect(account,lifecycle){
         val observer=LifecycleEventObserver{_,event->
             if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
-            if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);fileAccess.getAndSet(null)?.close();operationJob.get()?.cancel();recovery="";importKey="";content=null}
+            if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);fileAccess.getAndSet(null)?.close();driveCall.getAndSet(null)?.cancel();operationJob.get()?.cancel();recovery="";importKey="";content=null}
         };lifecycle.addObserver(observer)
-        onDispose{active.set(false);lifecycle.removeObserver(observer);fileAccess.getAndSet(null)?.close();operationJob.get()?.cancel();recovery="";importKey="";content=null}
+        onDispose{active.set(false);lifecycle.removeObserver(observer);fileAccess.getAndSet(null)?.close();driveCall.getAndSet(null)?.cancel();operationJob.get()?.cancel();recovery="";importKey="";content=null}
     }
     fun current(){account.requireOpen();check(active.get()&&foreground.get()&&app.workspaceScope==storageScope&&NativePrivateProducts.account(storageScope,owner)===account){"E2EE_ACCOUNT_CHANGED"}}
     fun <T> run(operation:()->T,complete:(T)->Unit={}){
@@ -63,6 +65,20 @@ import ru.genesis.calendar.security.*
             catch(cancel:CancellationException){throw cancel}catch(_:Exception){if(active.get())error=true}
             finally{operationJob.compareAndSet(job,null);if(active.get())busy=false}
         }
+    }
+    val auth=remember(context){ru.genesis.calendar.auth.AuthController.get(context)}
+    val driveText=remember(language){context.assets.open("drive-backup-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    var driveStatus by remember(account){mutableStateOf<E2eeDriveBackup.Status?>(null)};var driveConsent by remember(account){mutableStateOf(false)}
+    var driveFiles by remember(account){mutableStateOf<List<E2eeDriveBackup.File>>(emptyList())};var driveNext by remember(account){mutableStateOf<String?>(null)}
+    var drivePending by remember(account){mutableStateOf<List<String>>(emptyList())};var driveSaved by remember(account){mutableStateOf(false)}
+    val drivePages=remember(account){mutableSetOf<String>()};val driveConnection by ru.genesis.calendar.auth.PrivateDriveConnection.state.collectAsStateWithLifecycle()
+    val driveConnecting=driveConnection?.let{it.owner==owner&&it.phase !in setOf("complete","failed")}==true
+    fun <T> runDrive(operation:(E2eeDriveBackup)->T,complete:(T)->Unit={}){
+        driveSaved=false
+        run({current();val call=ru.genesis.calendar.auth.ForegroundAccountCall(requireNotNull(ru.genesis.calendar.auth.NativeActivityVisit.foregroundVisitId()){"E2EE_FOREGROUND_REQUIRED"})
+            check(driveCall.compareAndSet(null,call)){call.cancel();"DRIVE_BUSY"}
+            try{operation(E2eeDriveBackup(account,auth.privateDriveGateway(owner),call,::current)).also{current()}}finally{driveCall.compareAndSet(call,null);call.cancel()}
+        },complete)
     }
     val unfinished=currentJob?.phase?.let{it !in setOf("complete","cancelled")}==true
     Dialog(onDismissRequest={if(!busy)onClose()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,securePolicy=SecureFlagPolicy.SecureOn)){
@@ -84,6 +100,34 @@ import ru.genesis.calendar.security.*
                     TextButton(onClick={uriHandler.openUri("https://genesiscalendar.com/terms")},modifier=Modifier.heightIn(min=48.dp)){Text(c("соглашении"))}
                 }
                 Button(onClick={val supplied=recovery;val fromServer=remote;recovery="";keySaved=false;run({val payload=if(fromServer)archive.captureRemote()else archive.capture();current();PrivateBackupHandoff.prepareExport(context,account,payload,supplied,::current)})},enabled=!busy&&!unfinished&&keySaved&&consent&&recovery.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(c(if(remote)"Снимок сервера"else"Снимок устройства"))}
+                HorizontalDivider()
+                Text(driveText.getString("title"),style=MaterialTheme.typography.titleMedium);Text(driveText.getString("notice"))
+                OutlinedButton(onClick={runDrive({drive->drive.status() to drive.pending()},{(status,pending)->driveStatus=status;drivePending=pending;driveFiles=emptyList();driveNext=null;drivePages.clear()})},enabled=!busy&&!driveConnecting&&!account.offline,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("check"))}
+                if(driveStatus?.enabled==false)Text(driveText.getString("disabled"))
+                if(driveStatus?.enabled==true&&driveStatus?.connectionId==null){
+                    Row{Checkbox(checked=driveConsent,onCheckedChange={driveConsent=it},enabled=!busy&&!driveConnecting);Text(driveText.getString("consent"))}
+                    Button(onClick={current();ru.genesis.calendar.auth.PrivateDriveConnection.request(owner);driveConsent=false;driveStatus=null},enabled=!busy&&!driveConnecting&&driveConsent,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("connect"))}
+                }
+                if(driveStatus?.connectionId!=null){
+                    OutlinedButton(onClick={runDrive({drive->drive.disconnect();drive.status()},{driveStatus=it;driveFiles=emptyList();driveNext=null;})},enabled=!busy&&!driveConnecting,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("disconnect"))}
+                    if(driveStatus?.enabled==true){
+                        Button(onClick={val supplied=recovery;val fromServer=remote;recovery="";keySaved=false;runDrive({drive->
+                            val payload=if(fromServer)archive.captureRemote()else archive.capture();current();val sealed=GenesisBackupContainer.seal(payload,supplied);current();val id=drive.stage(sealed);drive.retry(id);drive.pending()
+                        },{drivePending=it;driveSaved=true})},enabled=!busy&&!driveConnecting&&!unfinished&&keySaved&&consent&&recovery.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString(if(remote)"saveServer"else"saveDevice"))}
+                        OutlinedButton(onClick={runDrive({it.list()},{driveFiles=it.files;driveNext=it.next;drivePages.clear()})},enabled=!busy&&!driveConnecting,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("files"))}
+                        driveFiles.forEach{file->UntranslatedText("${file.createdAt} · ${file.bytes} B")
+                            OutlinedButton(onClick={runDrive({drive->val sealed=drive.download(file);current();PrivateBackupHandoff.prepareEncryptedExport(context,account,sealed,::current)})},enabled=!busy&&!driveConnecting&&!unfinished,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("download"))}}
+                        driveNext?.let{token->OutlinedButton(onClick={runDrive({drive->check(token !in drivePages){"DRIVE_INVALID_RESPONSE"};drive.list(token)},{page->
+                            val combined=driveFiles+page.files;check(combined.map{it.fileId}.distinct().size==combined.size&&page.next !in drivePages&&page.next!=token){"DRIVE_INVALID_RESPONSE"};drivePages.add(token);driveFiles=combined;driveNext=page.next
+                        })},enabled=!busy&&!driveConnecting,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("more"))}}
+                    }
+                }
+                drivePending.forEach{id->
+                    OutlinedButton(onClick={runDrive({drive->drive.retry(id);drive.pending()},{drivePending=it;driveSaved=true})},enabled=!busy&&!driveConnecting&&driveStatus?.enabled==true&&driveStatus?.connectionId!=null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("retry"));UntranslatedText(" · $id")}
+                    OutlinedButton(onClick={runDrive({drive->val sealed=drive.stagedFile(id);PrivateBackupHandoff.prepareEncryptedExport(context,account,sealed,::current)})},enabled=!busy&&!driveConnecting&&!unfinished,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("download"))}
+                }
+                if(driveSaved)Text(driveText.getString("saved"))
+                if(driveConnection?.owner==owner&&driveConnection?.phase=="failed")Text(driveText.getString("error"),color=MaterialTheme.colorScheme.error)
                 HorizontalDivider()
                 Button(onClick={run({PrivateBackupHandoff.prepareImport(context,account)},{importKey="";content=null})},enabled=!busy&&!unfinished,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("import"))}
                 currentJob?.let{pending->

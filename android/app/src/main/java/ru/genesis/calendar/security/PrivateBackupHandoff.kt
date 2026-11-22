@@ -91,6 +91,25 @@ internal object PrivateBackupHandoff{
             return synchronized(this){current();job.copy(phase="pick",sha256=expected).also{save(context,it)}}
         }catch(error:Exception){failed(context,job);throw error}finally{sealed?.fill(0)}
     }
+    /** An already verified encrypted cloud file enters the same bounded SAF
+     * custody. A fresh delivery ID avoids replacing an earlier local artifact. */
+    fun prepareEncryptedExport(context:Context,account:E2eeProductAccount,text:String,assertCurrent:()->Unit):Job{
+        assertCurrent();account.requireOpen();val bytes=text.toByteArray(Charsets.UTF_8)
+        try{
+            check(bytes.size in 1..GenesisBackupContainer.MAX_FILE){"BACKUP_TOO_LARGE"};val header=E2eeFileManifestJson.readPrivateDocument(bytes)
+            E2eeKeys.exact(header,setOf("format","schema","backupId","algorithm","wrappedKey","iv","ciphertext","sha256"))
+            check(header.getString("format")=="genesisbackup"&&header.get("schema")==1&&header.getString("algorithm")=="A256GCM+A256KW"){"BACKUP_INVALID"};uuid(header.getString("backupId"))
+            val id=UUID.randomUUID().toString();val job=reserve(context,account,id,"export","sealing");val file=artifact(context,id)
+            fun current(){assertCurrent();assertAccount(job,account);requireCurrent(job)}
+            try{
+                current();check(android.os.StatFs(context.noBackupFilesDir.absolutePath).availableBytes>bytes.size+1024*1024L){"E2EE_STORAGE_CAPACITY"}
+                val output=file.startWrite();try{var at=0;while(at<bytes.size){current();val count=minOf(8192,bytes.size-at);output.write(bytes,at,count);at+=count};current();file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}
+                val expected=hash(bytes);val copied=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)}
+                try{current();check(copied.size==bytes.size&&hash(copied)==expected){"BACKUP_HANDOFF_UNVERIFIED"}}finally{copied.fill(0)}
+                return synchronized(this){current();job.copy(phase="pick",sha256=expected).also{save(context,it)}}
+            }catch(error:Exception){failed(context,job);throw error}
+        }finally{bytes.fill(0)}
+    }
     fun prepareImport(context:Context,account:E2eeProductAccount)=reserve(context,account,UUID.randomUUID().toString(),"import","pick")
     @Synchronized fun beginPicker(context:Context,job:Job):Job{
         initialize(context);requireCurrent(job);check(job.phase=="pick"){"BACKUP_HANDOFF_CHANGED"};return job.copy(phase="picking").also{save(context,it)}

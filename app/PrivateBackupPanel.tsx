@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import {PrivateContentExport} from './PrivateContentExport';
+import {PrivateDrivePanel} from './PrivateDrivePanel';
 import {BACKUP_MAX_FILE,openBackup,type BackupPayload} from './backup-format';
 import {useBackupCopy} from './use-backup-copy';
 import {useDataTransferGuard} from './FeatureAccessContext';
@@ -31,6 +32,7 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
   <PrivateContentExport owner={ownerId} language={language} capture={()=>captureLocalContentArchive(requirePrivateAccount(ownerId))}/>
   <section className="backup-panel"><p>{text.remoteNotice}</p></section>
   <PrivateContentExport owner={ownerId} language={language} label={c('Снимок сервера','Server snapshot')} capture={()=>captureRemoteContentArchive(requirePrivateAccount(ownerId))}/>
+  <PrivateDrivePanel ownerId={ownerId} language={language}/>
   <section className="backup-panel"><h3>{text.import}</h3><fieldset disabled={busy}>
    <label>{c('Файл копии','Backup file')}<input type="file" accept=".genesisbackup,application/octet-stream,application/json" onChange={event=>{setFile(event.target.files?.[0]??null);setPayload(null);setContent('');}}/></label>
    <label>{c('Ключ копии','Backup key')}<input type="password" autoComplete="off" value={key} maxLength={64} onChange={event=>setKey(event.target.value)}/></label>

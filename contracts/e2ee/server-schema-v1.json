@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "schemaThrough": 127,
+  "schemaThrough": 134,
   "productionEnabled": false,
   "meaning": "Complete schema disposition is not complete E2EE product integration. New tables or columns require deliberate reclassification before acceptance.",
   "groups": [
@@ -54,6 +54,19 @@
     }
   ],
   "tables": [
+    {"table":"e2ee_aurora_results","columns":["id","user_id","scope_id","generation","object_id","payload_hash","method_version","created_at"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_product_entities","columns":["scope_id","generation","entity_id","kind","revision","domain","object_id","payload_hash","parent_id","author_id","deleted","metadata_json","updated_at"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_product_history","columns":["scope_id","generation","entity_id","revision","object_id","payload_hash","metadata_json","actor_id","signed_command","created_at"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_product_proposals","columns":["scope_id","generation","proposal_id","entity_id","base_revision","object_id","payload_hash","metadata_json","actor_id","signed_command","created_at"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_product_attestations","columns":["scope_id","generation","proposal_id","user_id","device_id","payload_hash","signed_command","created_at"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_service_intents","columns":["scope_id","actor_id","action","intent_id","payload_hash","result_json"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_stoicheion_heads","columns":["scope_id","kind","period_key","state_json"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_advice_issues","columns":["scope_id","day_key","slot","collection","object_id","payload_hash"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_product_bootstraps","columns":["scope_id","generation","bootstrap_id","source_manifest_hash","expected_count","state","commit_packet"],"disposition":"e2ee-contract"},
+    {"table":"e2ee_product_bootstrap_parts","columns":["scope_id","generation","bootstrap_id","part_index","proof_hash","signed_command"],"disposition":"e2ee-contract"},
+    {"table":"private_external_copies","columns":["user_id","operation_id","provider","account_id","payload_hash","state","external_id","created_at","updated_at"],"disposition":"technical-metadata"},
+    {"table":"private_drive_connections","columns":["user_id","connection_id","google_sub","active","access_token_enc","refresh_token_enc","expires_at","created_at"],"disposition":"identity-security"},
+    {"table":"private_drive_operations","columns":["user_id","operation_id","connection_id","file_id","backup_id","file_hash","file_bytes","upload_uri_enc","verified_at","created_at"],"disposition":"identity-security"},
     {"table":"account_email_outbox","columns":["id","user_id","kind","unique_key","payload","state","attempts","available_at","lease_until","lease_token","error_code","created_at","updated_at"],"disposition":"identity-security"},
     {"table":"account_recovery_codes","columns":["user_id","code_hash","security_epoch","used_at","created_at"],"disposition":"identity-security"},
     {"table":"account_recovery_requests","columns":["id","user_id","candidate_sub","candidate_email","security_epoch","proof_kind","proof_hash","state","reviewer_id","reason","expires_at","created_at"],"disposition":"identity-security"},

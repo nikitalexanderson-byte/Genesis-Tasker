@@ -327,6 +327,8 @@ function genesisE2eeEnforceLegacyRoute(string $method,string $path,?string $user
     $expectedOwner=$_SERVER['HTTP_X_GENESIS_ACCOUNT_ID']??null;
     if($expectedOwner!==null && (!is_string($expectedOwner)||$expectedOwner!==$userId))throw new DomainException('E2EE_ACCOUNT_CHANGED');
     if(str_starts_with($path,'e2ee/v1/'))return;
+    // Separate ciphertext-only service; never dispatch to legacy backup restore.
+    if(str_starts_with($path,'private-drive/v1/'))return;
     if($path==='private-services/physis-catalog'&&in_array($method,['GET','PUT'],true))return;
     if($path==='private-services/assistant/plan'&&$method==='POST')return;
     if($path==='private-services/google/copy'&&$method==='POST')return;

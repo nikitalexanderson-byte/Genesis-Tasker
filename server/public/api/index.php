@@ -50,6 +50,7 @@ require $serverRoot . '/src/shared-projects.php';
 require $serverRoot . '/src/shared-google.php';
 require $serverRoot . '/src/physis.php';
 require $serverRoot . '/src/backups.php';
+require $serverRoot . '/src/private-drive.php';
 require $serverRoot . '/src/weather.php';
 require $serverRoot . '/src/partner-api.php';
 require $serverRoot . '/src/e2ee-api.php';
@@ -207,6 +208,7 @@ try {
         if($method==='POST'&&array_keys($body)===['requestId','approve','reason']&&is_bool($body['approve'])){genesisGoogleReviewRecovery($reviewer,(string)$body['requestId'],$body['approve'],(string)$body['reason']);genesisJson(['ok'=>true]);}
         genesisJson(['error'=>'RECOVERY_REQUEST_INVALID'],400);
     }
+    if (str_starts_with($path, 'private-drive/v1/')) genesisDriveRoute($method,$path);
     if (str_starts_with($path, 'backup/v1/')) {
         $owner = genesisRequireUserId();
         header('Cache-Control: no-store');
@@ -751,9 +753,19 @@ try {
         }
 
         try {
-            $tokens = genesisExchangeGoogleCode($code, (string)($request['verifier'] ?? ''));
+            $tokens = ($request['purpose']??'')==='drive'
+                ? genesisDriveTokenRequest(['code'=>$code,'client_id'=>(string)genesisConfig()['google_client_id'],'client_secret'=>(string)genesisConfig()['google_client_secret'],'redirect_uri'=>genesisGoogleRedirectUri(),'grant_type'=>'authorization_code','code_verifier'=>(string)$request['verifier']])
+                : genesisExchangeGoogleCode($code, (string)($request['verifier'] ?? ''));
             if (empty($tokens['access_token'])) {
                 throw new RuntimeException('Google did not return an access token.');
+            }
+            if(($request['purpose']??'')==='drive'){
+                $owner=genesisRequireUserId();$attempt=$_SESSION['drive_oauth_request']??null;
+                if(!is_array($attempt))throw new DomainException('DRIVE_AUTH_STALE');
+                foreach($attempt as$key=>$value)if(!array_key_exists($key,$request)||$request[$key]!==$value)throw new DomainException('DRIVE_AUTH_STALE');
+                $profile=genesisVerifyNativeGoogleToken((string)($tokens['id_token']??''),(string)genesisConfig()['google_client_id'],['hash'=>hash('sha256',$request['nonce']),'issuedAt'=>$request['issued_at']],time(),static fn():array=>genesisNativeGoogleCertificates($_SESSION,time()));
+                genesisDriveAuthorize($owner,$attempt,$tokens,$profile);
+                genesisOAuthRedirect($returnTo);
             }
             $profile = genesisGoogleUserInfo((string)$tokens['access_token']);
             if (empty($profile['sub']) || empty($profile['email'])) {

@@ -22,6 +22,9 @@ return [
     ],
     // 3.2.2 preparation. Activate only after acceptance, legal review and an approved release.
     'backup_v1_enabled' => false,
+    // Separate appDataFolder grant. Enable only after Drive OAuth/API readiness
+    // and encrypted upload/readback + clean-device restore acceptance.
+    'private_drive_enabled' => false,
     'google_identity_management_enabled' => false,
     'account_recovery_enabled' => false,
     'account_recovery_reviewers' => [], // Internal admin user IDs with the separate recovery permission.
