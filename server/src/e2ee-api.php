@@ -38,6 +38,12 @@ function genesisE2eeRoute(string $method,string $path): never
     }
     $binding=(string)($_SESSION['auth_login_id']??'');
     if(strlen($binding)<16)throw new GenesisResourceLimitException(401,'E2EE_REAUTH_REQUIRED');
+    if(in_array($path,['e2ee/v1/membership-atomic-begin','e2ee/v1/membership-atomic-page','e2ee/v1/membership-atomic-status','e2ee/v1/membership-atomic-cancel'],true)){
+        require_once __DIR__.'/e2ee-membership-atomic-stage.php';
+        genesisJson(match($path){'e2ee/v1/membership-atomic-begin'=>genesisMembershipAtomicBegin($owner,$body),
+            'e2ee/v1/membership-atomic-page'=>genesisMembershipAtomicStagePage($owner,$body),'e2ee/v1/membership-atomic-status'=>genesisMembershipAtomicStatus($owner,$body),
+            'e2ee/v1/membership-atomic-cancel'=>genesisMembershipAtomicCancel($owner,$body)});
+    }
     if(in_array($path,['e2ee/v1/membership-state','e2ee/v1/membership-graph','e2ee/v1/membership-preview','e2ee/v1/membership'],true)){
         require_once __DIR__.'/e2ee-membership.php';
         genesisJson(match($path){'e2ee/v1/membership-state'=>genesisE2eeMembershipState($owner,$body),'e2ee/v1/membership-graph'=>genesisE2eeMembershipGraph($owner,$body),'e2ee/v1/membership-preview'=>genesisE2eeMembershipPreview($owner,$body),

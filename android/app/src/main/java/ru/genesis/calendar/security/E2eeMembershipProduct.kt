@@ -10,6 +10,10 @@ internal interface E2eeMembershipTransport{
     fun membershipState(targets:JSONArray):JSONObject
     fun membershipPreview(intentId:String,changes:JSONArray):JSONObject
     fun membershipCommit(batch:JSONObject):JSONObject
+    fun membershipAtomicBegin(input:JSONObject):JSONObject=error("E2EE_MEMBERSHIP_ATOMIC_REQUIRED")
+    fun membershipAtomicPage(input:JSONObject):JSONObject=error("E2EE_MEMBERSHIP_ATOMIC_REQUIRED")
+    fun membershipAtomicStatus(input:JSONObject):JSONObject=error("E2EE_MEMBERSHIP_ATOMIC_REQUIRED")
+    fun membershipAtomicCancel(input:JSONObject):JSONObject=error("E2EE_MEMBERSHIP_ATOMIC_REQUIRED")
 }
 /** Durable, owner-reviewed membership intent. No network retry implicitly
  * generates another root or adopts a server-provided recipient roster. */

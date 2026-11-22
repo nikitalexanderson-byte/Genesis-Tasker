@@ -1143,3 +1143,7 @@ All additions remain uncompiled and untested under the owner's code-first order.
 No coverage category is promoted. The full membership/device/advanced/automation/
 restore/background work remains.
 
+
+## Atomic v2 staging — source-only, 22 ноября
+
+Добавлены immutable pages/manifest, TS/PHP canonical hashes, SQL stage, current-device signed begin/page/status/cancel и permanent cancellation до begin. Web/native HTTP adapters и shared pure native manifest builder подключены. Final atomic writer/client coordinator/owner exchange/normal UI и streaming большого snapshot остаются; см. security-336-membership-atomic.md. Security QA и generated assets не запускались, coverage9/20.

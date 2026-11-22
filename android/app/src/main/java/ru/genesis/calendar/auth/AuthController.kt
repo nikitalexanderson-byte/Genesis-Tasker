@@ -404,6 +404,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun membershipState(targets:JSONArray)=call("/membership-state",JSONObject().put("targets",targets))
             override fun membershipPreview(intentId:String,changes:JSONArray)=call("/membership-preview",JSONObject().put("intentId",intentId).put("changes",changes))
             override fun membershipCommit(batch:JSONObject)=call("/membership",batch)
+            override fun membershipAtomicBegin(input:JSONObject)=call("/membership-atomic-begin",input)
+            override fun membershipAtomicPage(input:JSONObject)=call("/membership-atomic-page",input)
+            override fun membershipAtomicStatus(input:JSONObject)=call("/membership-atomic-status",input)
+            override fun membershipAtomicCancel(input:JSONObject)=call("/membership-atomic-cancel",input)
         }
         val peers=object:ru.genesis.calendar.security.E2eeMembershipPeerPorts{
             override fun current()=current.invoke()
@@ -827,6 +831,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 override fun membershipState(targets:JSONArray)=call("/membership-state",JSONObject().put("targets",targets))
                 override fun membershipPreview(intentId:String,changes:JSONArray)=call("/membership-preview",JSONObject().put("intentId",intentId).put("changes",changes))
                 override fun membershipCommit(batch:JSONObject)=call("/membership",batch)
+                override fun membershipAtomicBegin(input:JSONObject)=call("/membership-atomic-begin",input)
+                override fun membershipAtomicPage(input:JSONObject)=call("/membership-atomic-page",input)
+                override fun membershipAtomicStatus(input:JSONObject)=call("/membership-atomic-status",input)
+                override fun membershipAtomicCancel(input:JSONObject)=call("/membership-atomic-cancel",input)
             }
         }
         try{val loaded=withContext(Dispatchers.IO){

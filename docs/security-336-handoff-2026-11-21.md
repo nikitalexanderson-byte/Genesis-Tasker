@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: atomic v2 pages/staging/cancellation (source-only)
+
+После31f967ed добавлены TS/PHP page/manifest hashes, immutable SQL stage и
+begin/page/status/cancel API с подписью текущего personal owner device. Веб и
+оба native HTTP-адаптера подключены; pure native planner собирает общий manifest
+с проверкой review fingerprint. Есть permanent cancellation tombstone, в том
+числе до begin, и bounded hash-only status. Подробности и обязательный остаток:
+`security-336-membership-atomic.md`. Это ещё не atomic apply: final graph/effects/
+product/ACL/invitation/Google/owner rotations, paged receipts/readback, durable
+client coordinator и normal UI не написаны. Очень большой snapshot ещё требует
+streaming capture; не выдавать общий native input bound за wide E2E.
+
+Security compiler/lint/tests/build/CI не запускались; generated assets не
+обновлялись. Coverage9/20, cutover off/floors0, Android149 сохранены. Чужой
+demo-output/ не читать/stage. Срочный web PR43 живёт отдельно и пока проходит
+последний browser CI; затем штатный отдельный Deploy и перенос main сюда.
+
 ## 22 ноября: common membership planner/drafts/graph и bound product foundations
 
 После120a6736 написан и подключён в isolated native runtime общий pure planner

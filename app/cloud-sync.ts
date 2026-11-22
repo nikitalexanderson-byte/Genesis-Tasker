@@ -3797,7 +3797,9 @@ async function privatePersonalProduct(ownerId:string){
 export function privateAccountHttpTransport():PrivateAccountTransport{
   return{status:()=>e2eeRequest('/status'),directory:scopeId=>e2eeRequest('/directory',{scopeId}),command:packet=>e2eeRequest('/command',packet),
     read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys}),
-    membership:{membershipGraph:spaceId=>e2eeRequest('/membership-graph',{spaceId}),membershipState:targets=>e2eeRequest('/membership-state',{targets}),membershipPreview:(intentId,changes)=>e2eeRequest('/membership-preview',{intentId,changes}),membershipCommit:batch=>e2eeRequest('/membership',batch)}};
+    membership:{membershipGraph:spaceId=>e2eeRequest('/membership-graph',{spaceId}),membershipState:targets=>e2eeRequest('/membership-state',{targets}),membershipPreview:(intentId,changes)=>e2eeRequest('/membership-preview',{intentId,changes}),membershipCommit:batch=>e2eeRequest('/membership',batch),
+      membershipAtomicBegin:input=>e2eeRequest('/membership-atomic-begin',input),membershipAtomicPage:input=>e2eeRequest('/membership-atomic-page',input),
+      membershipAtomicStatus:input=>e2eeRequest('/membership-atomic-status',input),membershipAtomicCancel:input=>e2eeRequest('/membership-atomic-cancel',input)}};
 }
 export function privateScopeSetupHttpTransport():import('./e2ee/scope-setup').ScopeSetupTransport{
  const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;

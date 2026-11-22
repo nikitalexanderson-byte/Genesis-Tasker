@@ -29,7 +29,8 @@ import {SharedLiveModel,validateSharedLiveContext,type SavedSharedRequest} from 
 import type {ProductEdit,ProductVersion} from '../e2ee/shared-product';
 import type {SharedDomainBinding} from '../e2ee/shared-domain';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState,type PersonalSharedState} from '../e2ee/shared-aggregate';
-import {planMembershipOperation} from '../e2ee/membership-operation-plan';
+import {planMembershipOperation,membershipOperationFingerprint,validateMembershipOperationSnapshot} from '../e2ee/membership-operation-plan';
+import {membershipAtomicOperationPlan,type MembershipAtomicProducts} from '../e2ee/membership-atomic-contract';
 import {MembershipOperationDrafts,type MembershipOperationDraft} from '../e2ee/membership-operation-drafts';
 import {captureMembershipOperationSnapshot,type MembershipOpenedScope} from '../e2ee/membership-operation-selection';
 
@@ -51,6 +52,15 @@ async function run(encoded:string){
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    if(value.mode==='membership-atomic-plan-v2'){
+      exactKeys(value,['protocol','mode','actorId','intentId','spaceId','reviewFingerprint','snapshot','operation','products']);
+      if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.intentId!=='string'||typeof value.spaceId!=='string'||typeof value.reviewFingerprint!=='string'||!Array.isArray(value.products))throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
+      const snapshot=validateMembershipOperationSnapshot(value.snapshot);
+      if(snapshot.actorId!==value.actorId||snapshot.spaceId!==value.spaceId||membershipOperationFingerprint(snapshot,value.operation)!==value.reviewFingerprint)throw new Error('E2EE_MEMBERSHIP_STALE');
+      const operation=planMembershipOperation(snapshot,value.operation);
+      const result=membershipAtomicOperationPlan(value.actorId,value.intentId,value.spaceId,value.reviewFingerprint,operation,value.products as MembershipAtomicProducts[]);
+      current();send({job,kind:'membership-operation-complete',value:result});return;
+    }
     if(value.mode==='membership-operation-v1'){
       exactKeys(value,['protocol','mode','snapshot','operation']);if(value.protocol!==1)throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
       const result=planMembershipOperation(value.snapshot,value.operation);current();send({job,kind:'membership-operation-complete',value:result});return;

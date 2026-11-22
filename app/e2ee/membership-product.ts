@@ -6,12 +6,13 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 import {MEMBERSHIP_HASH_FORMAT,MEMBERSHIP_SPECS,validateMembershipChanges,membershipChangeHashValue,membershipBeforeHash,membershipGrantReviewRequired,type MembershipChange} from './membership-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {validateMembershipReviewRequest,membershipReviewFingerprint,validateMembershipOwnerApproval,verifyMembershipOwnerApproval,type MembershipReviewRequest,type MembershipOwnerApproval,type MembershipPeerPorts} from './membership-exchange.ts';
+import type {MembershipAtomicTransport} from './membership-atomic-contract.ts';
 
 export type {MembershipChange} from './membership-contract.ts';
 export type MembershipScopePlan={scopeId:string;ownerId:string;kind:'project'|'space';resourceId:string;directoryRevision:number;checkpointHash:string;cryptoEpoch:number;securityEpoch:number;roles:ReviewedDeviceRole[];manifest:{manifestHash:string;objectCount:number}};
 export type MembershipPreview={intentId:string;changeHash:string;scopePlans:MembershipScopePlan[]};
 export type MembershipReview={scopeId:string;roles:ReviewedDeviceRole[]};
-export interface MembershipTransport{
+export interface MembershipTransport extends Partial<MembershipAtomicTransport>{
  membershipGraph?(spaceId:string):Promise<unknown>;
  membershipState(targets:Pick<MembershipChange,'table'|'key'>[]):Promise<unknown>;
  membershipPreview(intentId:string,changes:MembershipChange[]):Promise<MembershipPreview>;
