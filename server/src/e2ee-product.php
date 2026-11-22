@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-product-graph.php';
 
 const GENESIS_E2EE_PRODUCT_KINDS=['project','space','task','comment','project-comment','status','category','label','mindmap','file','workflow','review-policy','planning','sprint','series','series-instance','automation','automation-run','template','custom-field','custom-field-value','view','history','trash','import'];
 /** Live authorization/profile metadata only. Private titles, task bodies,
@@ -202,7 +203,7 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
         if($operation['kind']==='project'){
             require_once __DIR__.'/e2ee-project-topology.php';genesisE2eeProjectRootMutation($db,$actor,$scope,$operation,$old);
         }
-        if(!$old){$count=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_entities WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);if((int)$count['n']>=10000)throw new GenesisResourceLimitException(413,'E2EE_SCOPE_OBJECT_LIMIT');}
+        if(!$old){$count=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_entities WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);if((int)$count['n']>=100000)throw new GenesisResourceLimitException(413,'E2EE_SCOPE_OBJECT_LIMIT');}
         if($operation['action']==='propose-complete'){
             if(!$old||$old['kind']!=='task'||!$metadata['completed']||!$metadata['approverIds']||$operation['parentId']!==$old['parent_id'])throw new DomainException('E2EE_PRODUCT_APPROVAL_INVALID');genesisE2eeIdentifier($operation['proposalId']);
             $prior=genesisE2eeRow($db,'SELECT * FROM e2ee_product_proposals WHERE scope_id=? AND generation=? AND proposal_id=?',[$scope['scope_id'],$scope['generation'],$operation['proposalId']]);
@@ -211,14 +212,9 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
             $results[]=['entityId'=>$id,'proposalId'=>$operation['proposalId'],'revision'=>(int)$old['revision'],'payloadHash'=>$operation['payloadHash']];
         }else{if($operation['proposalId']!==null)throw new InvalidArgumentException('E2EE_PRODUCT_BATCH_INVALID');$results[]=genesisE2eeProductSave($db,$scope,$operation,$old?$old['author_id']:$actor,$actor,$packet);}
     }
-    // Parent/dependency cycles are checked against the transaction's final
-    // projection, so a partially applied multi-row operation never escapes.
-    $q=$db->prepare("SELECT entity_id,parent_id,metadata_json FROM e2ee_product_entities WHERE scope_id=? AND generation=? AND deleted=0 AND kind<>'history'");$q->execute([$scope['scope_id'],$scope['generation']]);$rows=$q->fetchAll();$q->closeCursor();$edges=[];
-    foreach($rows as $row){$meta=json_decode($row['metadata_json'],true,32,JSON_THROW_ON_ERROR);$edges[$row['entity_id']]=array_merge($row['parent_id']===null?[]:[$row['parent_id']],$meta['dependsOnIds']??[]);}
-    $degrees=[];$reverse=[];$ready=[];foreach($edges as $id=>$links){$links=array_values(array_unique($links));$degrees[$id]=count($links);if(!$links)$ready[]=$id;
-        foreach($links as $next){if(!isset($edges[$next]))throw new DomainException('E2EE_PRODUCT_DEPENDENCY_INVALID');$reverse[$next][]=$id;}}
-    $visited=0;for($index=0;$index<count($ready);$index++){$visited++;foreach($reverse[$ready[$index]]??[] as $id)if(--$degrees[$id]===0)$ready[]=$id;}
-    if($visited!==count($edges))throw new DomainException('E2EE_PRODUCT_DEPENDENCY_CYCLE');return ['intentId'=>$payload['intentId'],'results'=>$results];
+    // Validate the transaction's complete final graph without collecting it
+    // in PHP. A failure rolls back the ordinary signed product transaction.
+    genesisE2eeProductValidateGraph($db,$scope);return ['intentId'=>$payload['intentId'],'results'=>$results];
 }
 function genesisE2eeProductApprove(PDO $db,string $actor,array $scope,array $payload,array $packet): array
 {

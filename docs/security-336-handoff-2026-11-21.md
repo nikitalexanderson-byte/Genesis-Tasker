@@ -1,5 +1,25 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: wide provider/product capacity — код
+
+Physical provider admission и точный namespace inventory согласованы на web/native:
+до1000000 encrypted record cells и65536 key containers, при реальной физической
+квоте и прежней атомарности CAS. Лимиты отдельного запроса/батча/AEAD не увеличены.
+Native prefix discovery использует индексный диапазон вместо substr scan.
+Product index/bootstrap/proofs на web/API/native допускают100000 entities и4096
+подписанных частей. Новая migration140 сохраняет принятые bootstrap parts/packets.
+PHP bootstrap читает parts по одной; граф зависимостей обычной transaction и
+bootstrap проверяет SQLite temp graph с bounded PHP ready pages, без fetchAll
+целого графа. Web rollback comparison использует Map вместо квадратичного поиска.
+
+Это ещё НЕ весь very-wide блок: private-path fragment transport requests,
+table sharding/normal table readers, 128MiB planning/source limits и широкий
+content-only backup/restore ещё требуют кода. Никаких compiler/tests/CI/review.
+Security не опубликована, coverage9/20, cutover/floors off. Отдельный сайт PR45
+cc52b46a: targeted region browser5/5 + startup4/4 PASS; full CI45079650977 и
+45079645821 всё ещё выполняются. Старые414c4791 runs упали только из-за hash-only
+fixture login; исправлено reload в QA, product code для этого не менялся.
+
 ## 23 ноября: background lock fencing — код
 
 Private CloudSyncWorker/два reminder workers больше не входят в legacy sync,

@@ -22,7 +22,7 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     }
     private fun document(id:String,kind:String)=E2eePrivateDocument(device,client,scopeId,E2eeProductContract.domain(kind),id,::version,::check,::check)
     private val index=E2eeDeviceDocument(device,"product-index:$scopeId",{value->
-        E2eeKeys.exact(value,setOf("protocol","scopeId","entities"));check(value.get("protocol")==1&&value.get("scopeId")==scopeId){"E2EE_PRODUCT_INDEX_INVALID"};val rows=value.getJSONArray("entities");check(rows.length()<=10000){"E2EE_PRODUCT_INDEX_INVALID"};val ids=mutableSetOf<String>()
+        E2eeKeys.exact(value,setOf("protocol","scopeId","entities"));check(value.get("protocol")==1&&value.get("scopeId")==scopeId){"E2EE_PRODUCT_INDEX_INVALID"};val rows=value.getJSONArray("entities");check(rows.length()<=100000){"E2EE_PRODUCT_INDEX_INVALID"};val ids=mutableSetOf<String>()
         for(at in 0 until rows.length()){val row=E2eeProductContract.entity(rows.getJSONObject(at));check(ids.add(row.getString("entityId"))){"E2EE_PRODUCT_INDEX_INVALID"}};JSONObject(value.toString())},::check)
     private fun transaction(id:String)=E2eeDeviceDocument(device,id,{value->
         E2eeKeys.exact(value,setOf("format","scopeId","intentId","drafts","acknowledged","receipt")+(if(value.has("membershipIntentId"))setOf("membershipIntentId")else emptySet()));check(value.get("format")=="genesis-product-transaction-v1"&&value.get("scopeId")==scopeId&&value.get("acknowledged") is Boolean){"E2EE_PRODUCT_TRANSACTION_INVALID"};E2eeKeys.technical(value.getString("intentId"));if(value.has("membershipIntentId"))E2eeKeys.technical(value.getString("membershipIntentId"))
@@ -35,11 +35,11 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     @Synchronized fun index(offline:Boolean=false):JSONArray{
         check();val prior=index.load();if(offline)return JSONArray((prior?.value?:error("E2EE_OFFLINE_CONTENT_UNAVAILABLE")).getJSONArray("entities").toString())
         client.refresh();check();val rows=JSONArray();val seen=mutableSetOf<String>();var after="";var eof=false;var limit=50;var baseline:JSONObject?=null;val reviewed=mutableMapOf<String,JSONObject>();val currentProofs=mutableMapOf<String,String>()
-        for(page in 0..10032){val response=try{client.readProductIndex(after,limit)}catch(error:Exception){if(limit>1&&error.message=="E2EE_PRODUCT_PAGE_TOO_LARGE"){limit=maxOf(1,limit/2);continue};throw error}
+        for(page in 0..100032){val response=try{client.readProductIndex(after,limit)}catch(error:Exception){if(limit>1&&error.message=="E2EE_PRODUCT_PAGE_TOO_LARGE"){limit=maxOf(1,limit/2);continue};throw error}
             val verified=E2eeProductProofs.verifyPage(response,client::verifyServiceProof);check();val values=verified.entities;check(values.length()<=limit){"E2EE_PRODUCT_INDEX_INVALID"}
             check(baseline==null||baseline!!.get("proofHash")==verified.bootstrap.get("proofHash")){"E2EE_PRODUCT_PROOF_INVALID"};baseline=verified.bootstrap
             val heads=response.getJSONArray("heads");for(at in 0 until heads.length()){val head=heads.getJSONObject(at);E2eeKeys.exact(head,setOf("entityId","revision","proofHash"));currentProofs[head.getString("entityId")]=head.getString("proofHash")}
-            for(at in 0 until values.length()){val value=E2eeProductContract.entity(values.getJSONObject(at));val id=value.getString("entityId");check(id>after&&seen.add(id)&&rows.length()<10000){"E2EE_PRODUCT_INDEX_INVALID"};rows.put(value)}
+            for(at in 0 until values.length()){val value=E2eeProductContract.entity(values.getJSONObject(at));val id=value.getString("entityId");check(id>after&&seen.add(id)&&rows.length()<100000){"E2EE_PRODUCT_INDEX_INVALID"};rows.put(value)}
             for(at in 0 until verified.proposals.length()){val proposal=verified.proposals.getJSONObject(at);val id=proposal.getString("proposalId");check(id !in reviewed){"E2EE_PRODUCT_PROOF_INVALID"};reviewed[id]=proposal}
             if(values.length()<limit){eof=true;break};after=rows.getJSONObject(rows.length()-1).getString("entityId")};check(eof){"E2EE_PRODUCT_INDEX_INVALID"}
         check(baseline!=null&&rows.length()>=baseline!!.getInt("expectedCount")){"E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE"}
@@ -141,7 +141,7 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
                 val draft=drafts.getJSONObject(at);val header=version(draft.getJSONObject("version"));val operation=draft.getJSONObject("operation")
                 check(header.get("entityId")==operation.get("entityId")&&header.get("kind")==operation.get("kind")&&header.getLong("revision")==operation.getLong("expectedRevision")+1&&header.get("parentId")==operation.get("parentId")&&header.getBoolean("deleted")== (operation.getString("action")=="delete")&&E2eeProductJson.same(header.get("metadata"),operation.get("metadata"))){"E2EE_PRODUCT_TRANSACTION_INVALID"}
                 result.put(JSONObject().put("intentId",saved.value.get("intentId")).put("action",operation.get("action")).put("expectedRevision",operation.get("expectedRevision")).put("version",header))
-                check(result.length()<=10000){"E2EE_SCOPE_OBJECT_LIMIT"}
+                check(result.length()<=100000){"E2EE_SCOPE_OBJECT_LIMIT"}
             }
         };return result
     }

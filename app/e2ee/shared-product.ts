@@ -30,7 +30,7 @@ export class E2eeSharedProduct{
  constructor(private readonly options:SharedProductOptions){assertTechnical(options.scopeId);options.client.assertBinding(options.device,options.scopeId);
   this.#prefix=crypto.subtle.digest('SHA-256',encoder.encode(options.scopeId)).then(bytes=>`product-tx:${encodeE2eeBytes(new Uint8Array(bytes))}:`);
   this.#index=new E2eeDeviceDocument(options.device,`product-index:${options.scopeId}`,value=>{exactKeys(value,['protocol','scopeId','entities']);
-   if(value.protocol!==1||value.scopeId!==options.scopeId||!Array.isArray(value.entities)||value.entities.length>10000)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
+   if(value.protocol!==1||value.scopeId!==options.scopeId||!Array.isArray(value.entities)||value.entities.length>100000)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
    const entities=value.entities.map(productEntity);if(new Set(entities.map(row=>row.entityId)).size!==entities.length)throw new Error('E2EE_PRODUCT_INDEX_INVALID');return{protocol:1,scopeId:options.scopeId,entities};},()=>this.#current());
  }
  #current(){this.options.device.requireOpen();this.options.assertCurrent();}
@@ -57,17 +57,17 @@ export class E2eeSharedProduct{
  },()=>this.#current());}
  async #readIndex(offline:boolean){const local=await this.#index.load();this.#current();if(offline){if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return local.value.entities;}
   await this.options.client.refresh();this.#current();const entities:ProductEntity[]=[];let after='',limit=50,bootstrap:{proofHash:string;expectedCount:number}|null=null;const seen=new Set<string>(),proposals=new Map<string,VerifiedProductProposal>(),headProofs=new Map<string,string>();
-  for(let page=0;page<=10032;page++){
+  for(let page=0;page<=100032;page++){
    let response;try{response=await this.options.client.readProductIndex(after,limit);}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}
    this.#current();const verified=await verifyProductPage(response,packet=>this.options.client.verifyServiceProof(packet));this.#current();if(verified.entities.length>limit)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
    if(bootstrap&&bootstrap.proofHash!==verified.bootstrap.proofHash)throw new Error('E2EE_PRODUCT_PROOF_INVALID');bootstrap=verified.bootstrap;
    if(!Array.isArray(response.heads))throw new Error('E2EE_PRODUCT_PROOF_INVALID');for(const head of response.heads){exactKeys(head,['entityId','revision','proofHash']);headProofs.set(head.entityId as string,head.proofHash as string);}
-   for(const row of verified.entities){if(row.entityId<=after||seen.has(row.entityId))throw new Error('E2EE_PRODUCT_INDEX_INVALID');seen.add(row.entityId);entities.push(row);if(entities.length>10000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');}
+   for(const row of verified.entities){if(row.entityId<=after||seen.has(row.entityId))throw new Error('E2EE_PRODUCT_INDEX_INVALID');seen.add(row.entityId);entities.push(row);if(entities.length>100000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');}
    for(const proposal of verified.proposals){if(proposals.has(proposal.proposalId))throw new Error('E2EE_PRODUCT_PROOF_INVALID');proposals.set(proposal.proposalId,proposal);}
-   if(verified.entities.length<limit)break;after=entities.at(-1)!.entityId;if(page===10032)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
+   if(verified.entities.length<limit)break;after=entities.at(-1)!.entityId;if(page===100032)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
   }
   if(!bootstrap||entities.length<bootstrap.expectedCount)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
-  for(const old of local?.value.entities??[]){const row=entities.find(item=>item.entityId===old.entityId);if(!row||row.revision<old.revision||row.revision===old.revision&&!same(row,old))throw new Error('E2EE_REMOTE_ROLLBACK');}
+  const byId=new Map(entities.map(row=>[row.entityId,row]));for(const old of local?.value.entities??[]){const row=byId.get(old.entityId);if(!row||row.revision<old.revision||row.revision===old.revision&&!same(row,old))throw new Error('E2EE_REMOTE_ROLLBACK');}
   if(!same(entities,local?.value.entities))await this.#index.save({protocol:1,scopeId:this.options.scopeId,entities},local?.serial??null);this.#current();this.#proposals=proposals;this.#headProofs=headProofs;return entities;
  }
  index(offline=false){return this.#operation(()=>this.#readIndex(offline));}
@@ -163,7 +163,7 @@ export class E2eeSharedProduct{
   for(const id of ids){const saved=await this.#transaction(id).load();if(!saved)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');if(saved.value.acknowledged)continue;
    for(const draft of saved.value.drafts){const version=await this.#version(draft.version),operation=draft.operation;
     if(version.entityId!==operation.entityId||version.kind!==operation.kind||version.revision!==operation.expectedRevision+1||version.parentId!==operation.parentId||version.deleted!==(operation.action==='delete')||!same(version.metadata,operation.metadata))throw new Error('E2EE_PRODUCT_TRANSACTION_INVALID');
-    rows.push({intentId:saved.value.intentId,action:operation.action,expectedRevision:operation.expectedRevision,version});if(rows.length>10000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');
+    rows.push({intentId:saved.value.intentId,action:operation.action,expectedRevision:operation.expectedRevision,version});if(rows.length>100000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');
    }
   }return rows;
  });}

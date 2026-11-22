@@ -21,7 +21,7 @@ function genesisE2eeProductBootstrapReady(PDO $db,array $scope): array
 function genesisE2eeProductBootstrapRead(PDO $db,string $actor,array $scope,array $payload): array
 {
     genesisE2eeProductBootstrapOwner($actor,$scope);genesisE2eeExactFields($payload,['afterPart']);
-    $after=$payload['afterPart'];if(!is_int($after)||$after < -1||$after>255)genesisE2eeInvalid();
+    $after=$payload['afterPart'];if(!is_int($after)||$after < -1||$after>4095)genesisE2eeInvalid();
     $state=genesisE2eeProductBootstrapState($db,$scope);
     if(!$state)return ['bootstrap'=>null,'part'=>null];
     $count=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_bootstrap_parts WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);
@@ -39,7 +39,7 @@ function genesisE2eeProductBootstrap(PDO $db,string $actor,array $scope,array $c
     if($receipt){if($receipt['payload_hash']!==$hash)throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');return json_decode($receipt['result_json'],true,512,JSON_THROW_ON_ERROR);}
     $state=genesisE2eeProductBootstrapState($db,$scope);
     if($action==='product-bootstrap-start'){
-        genesisE2eeExactFields($payload,['intentId','bootstrapId','sourceManifestHash','expectedCount']);genesisE2eeDecode($payload['sourceManifestHash'],32);$count=genesisE2eeInteger($payload['expectedCount'],1);if($count>10000)genesisE2eeInvalid();
+        genesisE2eeExactFields($payload,['intentId','bootstrapId','sourceManifestHash','expectedCount']);genesisE2eeDecode($payload['sourceManifestHash'],32);$count=genesisE2eeInteger($payload['expectedCount'],1);if($count>100000)genesisE2eeInvalid();
         $source=genesisE2eeRow($db,'SELECT manifest_hash FROM e2ee_retired_manifests WHERE scope_id=? AND crypto_epoch=0 AND generation=?',[$scope['scope_id'],$scope['generation']]);
         if(!$source||$source['manifest_hash']!==$payload['sourceManifestHash'])throw new DomainException('E2EE_MANIFEST_MISMATCH');
         if($state&&($state['bootstrap_id']!==$bootstrap||$state['source_manifest_hash']!==$payload['sourceManifestHash']||(int)$state['expected_count']!==$count))throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');
@@ -47,7 +47,7 @@ function genesisE2eeProductBootstrap(PDO $db,string $actor,array $scope,array $c
             $db->prepare("INSERT INTO e2ee_product_bootstraps VALUES(?,?,?,?,?,'staging',NULL)")->execute([$scope['scope_id'],$scope['generation'],$bootstrap,$payload['sourceManifestHash'],$count]);}
         $result=['bootstrapId'=>$bootstrap,'state'=>$state['state']??'staging'];
     }elseif($action==='product-bootstrap-stage'){
-        genesisE2eeExactFields($payload,['intentId','bootstrapId','partIndex','items']);$index=genesisE2eeInteger($payload['partIndex']);if($index>255||!is_array($payload['items'])||!array_is_list($payload['items'])||count($payload['items'])<1||count($payload['items'])>100)genesisE2eeInvalid();
+        genesisE2eeExactFields($payload,['intentId','bootstrapId','partIndex','items']);$index=genesisE2eeInteger($payload['partIndex']);if($index>4095||!is_array($payload['items'])||!array_is_list($payload['items'])||count($payload['items'])<1||count($payload['items'])>100)genesisE2eeInvalid();
         if(!$state||$state['bootstrap_id']!==$bootstrap||$state['state']!=='staging')throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');
         $previous=genesisE2eeRow($db,'SELECT * FROM e2ee_product_bootstrap_parts WHERE scope_id=? AND generation=? AND part_index=?',[$scope['scope_id'],$scope['generation'],$index]);
         if($previous)throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');$seen=[];
@@ -62,18 +62,19 @@ function genesisE2eeProductBootstrap(PDO $db,string $actor,array $scope,array $c
         $result=['bootstrapId'=>$bootstrap,'partIndex'=>$index,'proofHash'=>$proofHash,'proofPacket'=>$raw];
     }elseif($action==='product-bootstrap-complete'){
         genesisE2eeExactFields($payload,['intentId','bootstrapId','parts','expectedCount']);if(!$state||$state['bootstrap_id']!==$bootstrap||$state['state']!=='staging'||$payload['expectedCount']!==(int)$state['expected_count'])throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');
-        if(!is_array($payload['parts'])||!array_is_list($payload['parts'])||count($payload['parts'])<1||count($payload['parts'])>256)genesisE2eeInvalid();
-        $q=$db->prepare('SELECT * FROM e2ee_product_bootstrap_parts WHERE scope_id=? AND generation=? ORDER BY part_index');$q->execute([$scope['scope_id'],$scope['generation']]);$parts=$q->fetchAll();$q->closeCursor();
-        if(count($parts)!==count($payload['parts']))throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');$items=[];$seen=[];$edges=[];
-        foreach($parts as $index=>$part){$claimed=genesisE2eeExactFields($payload['parts'][$index],['partIndex','proofHash']);if($claimed['partIndex']!==$index||(int)$part['part_index']!==$index||$claimed['proofHash']!==$part['proof_hash'])throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
-            $signed=json_decode($part['signed_command'],true,512,JSON_THROW_ON_ERROR);foreach($signed['command']['payload']['items'] as $item){$operation=$item['operation'];$entity=$operation['entityId'];if(isset($seen[$entity]))throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');$seen[$entity]=$operation;
-                genesisE2eeProductReference($db,$scope,$operation);$edges[$entity]=array_merge($operation['parentId']===null?[]:[$operation['parentId']],$operation['metadata']['dependsOnIds']??[]);$items[]=['operation'=>$operation,'authorId'=>$item['authorId'],'packet'=>$signed];}}
-        if(count($items)!==(int)$state['expected_count']||!isset($seen[$scope['kind'].':'.$scope['resource_id']]))throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
-        $degrees=[];$reverse=[];$ready=[];foreach($edges as $entity=>$links){$links=array_values(array_unique($links));$degrees[$entity]=count($links);if(!$links)$ready[]=$entity;foreach($links as $link){if(!isset($edges[$link]))throw new DomainException('E2EE_PRODUCT_DEPENDENCY_INVALID');$reverse[$link][]=$entity;}}
-        $visited=0;for($index=0;$index<count($ready);$index++){$visited++;foreach($reverse[$ready[$index]]??[] as $entity)if(--$degrees[$entity]===0)$ready[]=$entity;}if($visited!==count($edges))throw new DomainException('E2EE_PRODUCT_DEPENDENCY_CYCLE');
-        // Existing completion/review history is a baseline, not a new completion
-        // request. Future mutations use normal live rules and fresh approvals.
-        foreach($items as $item)genesisE2eeProductSave($db,$scope,$item['operation'],$item['authorId'],$actor,$item['packet']);
+        if(!is_array($payload['parts'])||!array_is_list($payload['parts'])||count($payload['parts'])<1||count($payload['parts'])>4096)genesisE2eeInvalid();
+        $count=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_bootstrap_parts WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);
+        if((int)$count['n']!==count($payload['parts']))throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
+        $existing=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_entities WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);if((int)$existing['n']!==0)throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');
+        $q=$db->prepare('SELECT * FROM e2ee_product_bootstrap_parts WHERE scope_id=? AND generation=? ORDER BY part_index');$q->execute([$scope['scope_id'],$scope['generation']]);$index=0;$items=0;$root=false;
+        while($part=$q->fetch(PDO::FETCH_ASSOC)){
+            $claimed=genesisE2eeExactFields($payload['parts'][$index],['partIndex','proofHash']);if($claimed['partIndex']!==$index||(int)$part['part_index']!==$index||$claimed['proofHash']!==$part['proof_hash'])throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
+            $signed=json_decode($part['signed_command'],true,512,JSON_THROW_ON_ERROR);foreach($signed['command']['payload']['items'] as $item){$operation=$item['operation'];$entity=$operation['entityId'];if(genesisE2eeProductRow($db,$scope,$entity))throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');
+                if(++$items>(int)$state['expected_count'])throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');genesisE2eeProductReference($db,$scope,$operation);genesisE2eeProductSave($db,$scope,$operation,$item['authorId'],$actor,$signed);if($entity===$scope['kind'].':'.$scope['resource_id'])$root=true;
+            }$index++;
+        }$q->closeCursor();
+        if($items!==(int)$state['expected_count']||$index!==count($payload['parts'])||!$root)throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
+        genesisE2eeProductValidateGraph($db,$scope,true);
         $db->prepare("UPDATE e2ee_product_bootstraps SET state='active',commit_packet=? WHERE scope_id=? AND generation=?")->execute([genesisE2eeJson($packet),$scope['scope_id'],$scope['generation']]);
         $result=['bootstrapId'=>$bootstrap,'state'=>'active','count'=>count($items)];
     }else throw new InvalidArgumentException('E2EE_UNKNOWN_ACTION');

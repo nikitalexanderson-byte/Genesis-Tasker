@@ -64,8 +64,8 @@ class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRe
         if (!cursor.moveToFirst()) null else E2eeLocalRecord(cursor.getLong(0), E2eeEnvelope.Envelope.fromJson(JSONObject(cursor.getString(1))))
     }
     @Synchronized override fun list(prefix: String): List<String> = database.rawQuery(
-        "SELECT record_key FROM records WHERE substr(record_key,1,?)=? ORDER BY record_key LIMIT 10001", arrayOf(prefix.length.toString(),prefix)).use { cursor ->
-        buildList { while (cursor.moveToNext()) { check(size < 10000) { "E2EE_LOCAL_RECORD_LIMIT" }; add(cursor.getString(0)) } }
+        "SELECT record_key FROM records WHERE record_key>=? AND record_key<? ORDER BY record_key LIMIT 1000001", arrayOf(prefix,prefix+"\uffff")).use { cursor ->
+        buildList { while (cursor.moveToNext()) { check(size < E2eeStorageAdmission.providerBudget.maximumRecords) { "E2EE_LOCAL_RECORD_LIMIT" }; add(cursor.getString(0)) } }
     }
     /** All namespace rows and encrypted device bundles are counted without
      * reading/decrypting their contents. Physical free space is provider state,
@@ -148,7 +148,7 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
         val captured = lifecycle.get(); val current = requireOpen()
         val prefix = listOf(current.ownerId, current.scopeId, domain).joinToString("") { E2eeKeys.technical(it); "${it.length}:$it" }
         val keys = storage.list(prefix); alive(captured)
-        check(keys.size <= 10000 && keys.toSet().size == keys.size) { "E2EE_LOCAL_RECORD_LIMIT" }
+        check(keys.size <= E2eeStorageAdmission.providerBudget.maximumRecords && keys.toSet().size == keys.size) { "E2EE_LOCAL_RECORD_LIMIT" }
         return keys.mapNotNull { key ->
             check(key.startsWith(prefix)) { "E2EE_CORRUPT_LOCAL_RECORD" }
             val rest = key.substring(prefix.length); val colon = rest.indexOf(':')

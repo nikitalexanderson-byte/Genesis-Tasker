@@ -11,14 +11,14 @@ function add(...values:number[]){let sum=0;for(const value of values){integer(va
 
 /** No arbitrary new byte cap: producers retain their existing content limits.
  * Physical quota, all provider counts and a one-MiB reserve apply to every write. */
-export const E2EE_PROVIDER_STORAGE_BUDGET:E2eeStorageBudget=Object.freeze({maximumRecords:10000,maximumKeyRecords:1000,maximumUsageBytes:MAX,safetyBytes:1024*1024});
+export const E2EE_PROVIDER_STORAGE_BUDGET:E2eeStorageBudget=Object.freeze({maximumRecords:1000000,maximumKeyRecords:65536,maximumUsageBytes:MAX,safetyBytes:1024*1024});
 
 export function admitE2eeStorage(usageInput:E2eeProviderUsage,growthInput:E2eeStorageGrowth,budgetInput:E2eeStorageBudget):Readonly<{records:number;keyRecords:number;peakBytes:number}>{
  const usage=snapshotE2eeValue(usageInput),growth=snapshotE2eeValue(growthInput),budget=snapshotE2eeValue(budgetInput);
  exactKeys(usage,['records','keyRecords','usageBytes','quotaBytes']);exactKeys(growth,['records','keyRecords','writeBytes','rewriteBytes']);
  exactKeys(budget,['maximumRecords','maximumKeyRecords','maximumUsageBytes','safetyBytes']);
  for(const value of Object.values(usage))integer(value);for(const value of Object.values(growth))integer(value);for(const value of Object.values(budget))integer(value,1);
- if(budget.maximumRecords>10000||budget.maximumKeyRecords>1000)throw new Error('E2EE_STORAGE_ADMISSION_INVALID');
+ if(budget.maximumRecords>1000000||budget.maximumKeyRecords>65536)throw new Error('E2EE_STORAGE_ADMISSION_INVALID');
  const records=add(usage.records,growth.records),keyRecords=add(usage.keyRecords,growth.keyRecords);
  const peakBytes=add(usage.usageBytes,growth.writeBytes,growth.rewriteBytes,budget.safetyBytes);
  if(records>budget.maximumRecords||keyRecords>budget.maximumKeyRecords||peakBytes>budget.maximumUsageBytes||peakBytes>usage.quotaBytes)throw new Error('E2EE_STORAGE_CAPACITY');

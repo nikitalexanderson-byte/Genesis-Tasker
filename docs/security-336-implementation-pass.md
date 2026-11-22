@@ -1,5 +1,14 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: wide provider and shared product bounds (source-only)
+
+Provider admission/discovery now share the one-million-cell/65536-container bound
+on web/native, keeping quota/CAS and bounded individual writes. Shared product
+bootstrap/index/proofs allow100000 entities/4096 parts; migration140 retains all
+existing rows. PHP consumes bootstrap parts incrementally and validates dependency
+graphs in temporary SQLite tables with bounded worker memory. Source fragmentation,
+table shards, aggregate planning limits and wide backups remain; no execution QA.
+
 ## 23 November: explicit revoked-device replacement and historical reader
 
 Separate append-only web identities/native hardware slots retain original roots,

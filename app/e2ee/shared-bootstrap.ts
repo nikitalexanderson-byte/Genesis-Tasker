@@ -26,7 +26,7 @@ export class E2eeSharedBootstrap{
  #scope(){this.#current();return this.account.shared(this.records.binding.scopeId,this.records.binding.kind,this.records.binding.resourceId);}
  #run<T>(fn:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.#current();return fn();});this.#serial=task;return task;}
  #plan(id:string){return new E2eeDeviceDocument<Plan>(this.account.device,id,value=>{exactKeys(value,['protocol','scopeId','bootstrapId','sourceManifestHash','expectedCount','startIntentId','completeIntentId','parts','phase']);
-  if(value.protocol!==1||value.scopeId!==this.records.binding.scopeId||!Number.isSafeInteger(value.expectedCount)||Number(value.expectedCount)<1||Number(value.expectedCount)>10000||!Array.isArray(value.parts)||value.parts.length<1||value.parts.length>256||!['preparing','ready','active'].includes(String(value.phase)))throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');
+  if(value.protocol!==1||value.scopeId!==this.records.binding.scopeId||!Number.isSafeInteger(value.expectedCount)||Number(value.expectedCount)<1||Number(value.expectedCount)>100000||!Array.isArray(value.parts)||value.parts.length<1||value.parts.length>4096||!['preparing','ready','active'].includes(String(value.phase)))throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');
   for(const key of ['bootstrapId','startIntentId','completeIntentId'] as const)assertTechnical(value[key]);decodeE2eeBytes(value.sourceManifestHash,32);let count=0;const seen=new Set<string>();
   for(const row of value.parts){exactKeys(row,['id','count']);assertTechnical(row.id);if(seen.has(row.id)||!Number.isSafeInteger(row.count)||Number(row.count)<1||Number(row.count)>100)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');seen.add(row.id);count+=Number(row.count);}
   if(count!==value.expectedCount)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');return value as Plan;
@@ -44,15 +44,15 @@ export class E2eeSharedBootstrap{
  async #recoverParts(source:SharedBootstrapItem[],manifestHash:string){
   const client=this.#scope().client,remaining=new Map(source.map(item=>[item.edit.entityId,item])),parts:Part[]=[],groups:SharedBootstrapItem[][]=[];
   let state:{bootstrapId:string;sourceManifestHash:string;expectedCount:number;state:'staging'|'active';partCount:number}|null=null,after=-1;
-  for(let page=0;page<=256;page++){
+  for(let page=0;page<=4096;page++){
    const response=await client.readBootstrapState(after);this.#current();exactKeys(response,['bootstrap','part','checkpointHash','directoryRevision']);
    if(response.bootstrap===null){if(page!==0||response.part!==null)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');return{state:null,parts,groups,remaining:[...remaining.values()]};}
    exactKeys(response.bootstrap,['bootstrapId','sourceManifestHash','expectedCount','state','partCount']);const header=response.bootstrap;
    assertTechnical(header.bootstrapId);decodeE2eeBytes(header.sourceManifestHash,32);
-   if(header.sourceManifestHash!==manifestHash||header.expectedCount!==source.length||!['staging','active'].includes(String(header.state))||!Number.isInteger(header.partCount)||Number(header.partCount)<0||Number(header.partCount)>256)throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');
+   if(header.sourceManifestHash!==manifestHash||header.expectedCount!==source.length||!['staging','active'].includes(String(header.state))||!Number.isInteger(header.partCount)||Number(header.partCount)<0||Number(header.partCount)>4096)throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');
    if(state&&!samePrivateJson(header,state))throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');state=header as typeof state;
    if(response.part===null){if(parts.length!==header.partCount)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');break;}
-   if(page===256)throw new Error('E2EE_PRODUCT_BOOTSTRAP_TOO_LARGE');
+   if(page===4096)throw new Error('E2EE_PRODUCT_BOOTSTRAP_TOO_LARGE');
    exactKeys(response.part,['partIndex','proofHash','packet']);const remote=response.part;
    if(remote.partIndex!==after+1||typeof remote.packet!=='string')throw new Error('E2EE_PRODUCT_BOOTSTRAP_REVIEW_REQUIRED');decodeE2eeBytes(remote.proofHash,32);
    const proof=await client.verifyServiceProof(parseLegacyMigrationJson(remote.packet,'E2EE_PRODUCT_PROOF_INVALID',4*1024*1024) as SignedE2eeCommand);this.#current();
@@ -76,12 +76,12 @@ export class E2eeSharedBootstrap{
  prepare(){return this.#run(async()=>{
   if(this.account.mode!=='online'||this.#scope().directory.ownerId!==this.account.ownerId)throw new Error('E2EE_OWNER_REQUIRED');
   const journal=this.#plan(await this.#key);let old=await journal.load();if(old&&old.value.phase!=='preparing')return old.value;
-  const items=await this.records.collectBootstrap();this.#current();if(items.length<1||items.length>10000)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');
+  const items=await this.records.collectBootstrap();this.#current();if(items.length<1||items.length>100000)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');
   const original=await this.#scope().client.originalMigrationManifest(),recovery=await this.#recoverParts(items,original.manifestHash);
   if(old&&recovery.state&&old.value.bootstrapId!==recovery.state.bootstrapId)throw new Error('E2EE_PRODUCT_BOOTSTRAP_CONFLICT');
   const batches:SharedBootstrapItem[][]=recovery?.groups??[];let batch:SharedBootstrapItem[]=[],bytes=0;
   for(const item of recovery?.remaining??items){const size=encoder.encode(JSON.stringify(item)).length;if(batch.length&&(batch.length===100||bytes+size>8*1024*1024)){batches.push(batch);batch=[];bytes=0;}batch.push(item);bytes+=size;}if(batch.length)batches.push(batch);
-  if(batches.length>256)throw new Error('E2EE_PRODUCT_BOOTSTRAP_TOO_LARGE');
+  if(batches.length>4096)throw new Error('E2EE_PRODUCT_BOOTSTRAP_TOO_LARGE');
   if(!old){const bootstrapId=recovery?.state?.bootstrapId??crypto.randomUUID();old=await journal.save({protocol:1,scopeId:this.records.binding.scopeId,bootstrapId,sourceManifestHash:original.manifestHash,expectedCount:items.length,startIntentId:crypto.randomUUID(),completeIntentId:crypto.randomUUID(),parts:batches.map((rows,index)=>({id:`bootstrap-part:${bootstrapId}:${index}`,count:rows.length})),phase:'preparing'},null);}
   const plan=old.value;if(plan.expectedCount!==items.length||plan.parts.length!==batches.length)throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');
   for(const [index,rows]of batches.entries()){const part=this.#part(plan.parts[index].id,plan,index),prior=await part.load();

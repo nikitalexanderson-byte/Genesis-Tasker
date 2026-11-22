@@ -2,6 +2,7 @@ import { E2EE_SUITE, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope,
   type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { assertTechnical } from './keys.ts';
 import {commitE2eeIndexedDb} from './indexeddb-write.ts';
+import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
 
 export type SealedLocalRecord = { serial: number; envelope: E2eeEnvelope };
 export type StorageChange = { key: string; expected: number | null; value: SealedLocalRecord | null };
@@ -59,7 +60,7 @@ export class IndexedDbE2eeStorage implements E2eeRecordStorage {
       const request = transaction.objectStore('records').openKeyCursor(IDBKeyRange.bound(prefix, prefix + '\uffff'));
       request.onsuccess = () => { const cursor = request.result; if (cursor) {
         if (typeof cursor.key !== 'string') { transaction.abort(); return; }
-        if (keys.length===10000) { limit=true;transaction.abort();return; }
+        if (keys.length===E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords) { limit=true;transaction.abort();return; }
         keys.push(cursor.key);cursor.continue();
       } };
       transaction.oncomplete = () => resolve(keys);
@@ -119,7 +120,7 @@ export class UnlockedE2eeVault {
     const scope=this.#open(),lifecycle=this.#lifecycle;
     const prefix=[scope.ownerId,scope.scopeId,domain].map(part=>`${part.length}:${part}`).join('');
     const keys=await this.storage.list(prefix);if(lifecycle!==this.#lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');
-    if(keys.length>10000||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
+    if(keys.length>E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
     for(const key of keys){
       if(typeof key!=='string'||!key.startsWith(prefix))throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
       const rest=key.slice(prefix.length),colon=rest.indexOf(':');if(colon<1||!/^[1-9][0-9]{0,2}$/.test(rest.slice(0,colon)))throw new Error('E2EE_CORRUPT_LOCAL_RECORD');

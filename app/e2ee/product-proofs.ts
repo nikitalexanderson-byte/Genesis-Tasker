@@ -25,11 +25,11 @@ export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeC
    if(!Number.isSafeInteger(command.payload.baseRevision)||Number(command.payload.baseRevision)<1)invalid();
   }else if(command.action==='product-bootstrap-stage'){
    exactKeys(command.payload,['intentId','bootstrapId','partIndex','items']);assertTechnical(command.payload.intentId);assertTechnical(command.payload.bootstrapId);
-   if(!Number.isSafeInteger(command.payload.partIndex)||Number(command.payload.partIndex)<0||Number(command.payload.partIndex)>255||!Array.isArray(command.payload.items)||command.payload.items.length<1||command.payload.items.length>100)invalid();
+   if(!Number.isSafeInteger(command.payload.partIndex)||Number(command.payload.partIndex)<0||Number(command.payload.partIndex)>4095||!Array.isArray(command.payload.items)||command.payload.items.length<1||command.payload.items.length>100)invalid();
    const seen=new Set<string>();for(const item of command.payload.items){exactKeys(item,['operation','authorId']);assertTechnical(item.authorId);const operation=productMutation(item.operation);if(!['create','delete'].includes(operation.action)||operation.expectedRevision!==0||seen.has(operation.entityId))invalid();seen.add(operation.entityId);}
   }else if(command.action==='product-bootstrap-complete'){
    exactKeys(command.payload,['intentId','bootstrapId','parts','expectedCount']);assertTechnical(command.payload.intentId);assertTechnical(command.payload.bootstrapId);
-   if(!Number.isSafeInteger(command.payload.expectedCount)||Number(command.payload.expectedCount)<1||Number(command.payload.expectedCount)>10000||!Array.isArray(command.payload.parts)||command.payload.parts.length<1||command.payload.parts.length>256)invalid();
+   if(!Number.isSafeInteger(command.payload.expectedCount)||Number(command.payload.expectedCount)<1||Number(command.payload.expectedCount)>100000||!Array.isArray(command.payload.parts)||command.payload.parts.length<1||command.payload.parts.length>4096)invalid();
    for(const [index,part]of command.payload.parts.entries()){exactKeys(part,['partIndex','proofHash']);if(part.partIndex!==index)invalid();decodeE2eeBytes(part.proofHash,32);}
   }else invalid();
  }

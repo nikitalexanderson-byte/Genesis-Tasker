@@ -1,3 +1,4 @@
+import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
 import {openE2eeEnvelope,validateE2eeEnvelope,type E2eeContext} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {localRecordKey,type E2eeRecordStorage} from './storage.ts';
@@ -52,7 +53,7 @@ class OriginalSourceVault implements SourceStageReadVault {
  async listLocal(domain:E2eeContext['domain'],objectPrefix:string){
   this.assertUnlocked();if(domain!=='local-snapshot'||objectPrefix!==this.#prefix)throw new Error('E2EE_ORIGINAL_SOURCE_READ_FORBIDDEN');
   const prefix=[this.#original.ownerId,this.#original.scopeId,domain].map(part=>`${part.length}:${part}`).join(''),keys=await this.#list(prefix);this.assertUnlocked();
-  if(keys.length>10000||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
+  if(keys.length>E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords||new Set(keys).size!==keys.length)throw new Error('E2EE_LOCAL_RECORD_LIMIT');const ids:string[]=[];
   for(const key of keys){
    if(typeof key!=='string'||!key.startsWith(prefix))throw new Error('E2EE_CORRUPT_ORIGINAL_SOURCE');const rest=key.slice(prefix.length),colon=rest.indexOf(':');
    if(colon<1||!/^[1-9][0-9]{0,2}$/.test(rest.slice(0,colon)))throw new Error('E2EE_CORRUPT_ORIGINAL_SOURCE');const id=rest.slice(colon+1);assertTechnical(id);

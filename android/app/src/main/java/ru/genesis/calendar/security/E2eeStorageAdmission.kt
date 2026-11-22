@@ -18,7 +18,7 @@ internal object E2eeStorageAdmission {
     class WriteSize(val nextBytes:Long?,val previousBytes:Long?)
     class WriteGrowth(val added:Long,val removed:Long,val writeBytes:Long,val rewriteBytes:Long)
     private const val MAX=9007199254740991L
-    val providerBudget=Budget(10000,1000,MAX,1024*1024)
+    val providerBudget=Budget(1000000,65536,MAX,1024*1024)
     private fun valid(value:Long,minimum:Long=0){check(value in minimum..MAX){"E2EE_STORAGE_ADMISSION_INVALID"}}
     internal fun add(vararg values:Long):Long {
         var result=0L
@@ -31,7 +31,7 @@ internal object E2eeStorageAdmission {
     fun admit(usage:Usage,growth:Growth,budget:Budget):Admission {
         listOf(usage.records,usage.keyRecords,usage.usageBytes,usage.quotaBytes,growth.records,growth.keyRecords,growth.writeBytes,growth.rewriteBytes).forEach{valid(it)}
         listOf(budget.maximumRecords,budget.maximumKeyRecords,budget.maximumUsageBytes,budget.safetyBytes).forEach{valid(it,1)}
-        check(budget.maximumRecords<=10000&&budget.maximumKeyRecords<=1000){"E2EE_STORAGE_ADMISSION_INVALID"}
+        check(budget.maximumRecords<=1000000&&budget.maximumKeyRecords<=65536){"E2EE_STORAGE_ADMISSION_INVALID"}
         val records=add(usage.records,growth.records);val keys=add(usage.keyRecords,growth.keyRecords)
         val peak=add(usage.usageBytes,growth.writeBytes,growth.rewriteBytes,budget.safetyBytes)
         check(records<=budget.maximumRecords&&keys<=budget.maximumKeyRecords&&peak<=budget.maximumUsageBytes&&peak<=usage.quotaBytes){"E2EE_STORAGE_CAPACITY"}
@@ -77,7 +77,7 @@ internal object E2eeStorageAdmission {
             Files.newDirectoryStream(folder.toPath(),"e2ee-*").use{files->for(path in files){
                 val file=path.toFile();if(!file.name.startsWith("e2ee-device-")&&!file.name.startsWith("e2ee-recovery-")&&!file.name.startsWith("e2ee-original-custody-"))continue
                 val match=pattern.matchEntire(file.name)?:error("E2EE_STORAGE_USAGE_UNAVAILABLE")
-                names+=match.groupValues[1];check(names.size<=1000){"E2EE_STORAGE_CAPACITY"}
+                names+=match.groupValues[1];check(names.size<=65536){"E2EE_STORAGE_CAPACITY"}
                 bytes=add(bytes,length(file))
             }}
             check(!missing||records==0L&&names.isEmpty()){"E2EE_STORAGE_USAGE_UNAVAILABLE"};valid(records)
