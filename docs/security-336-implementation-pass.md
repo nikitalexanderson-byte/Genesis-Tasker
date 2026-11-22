@@ -1,5 +1,22 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Срочный веб-запрос владельца — 22 ноября, текущее продолжение
+
+Сохранён код client automation/series commit0cc1e3ca; после него добавлены private
+bulk model и web/native routing, encrypted recovery pointer/custody/export,
+перенос whole-tree с durable capture/copy/readback/retirement state machine.
+Перенос ЕЩЁ НЕ подключён к web/native ports (move/copyFile/transferLoad/transferSave),
+raw form attribution также не завершена. Не объявлять advanced block завершённым.
+Новое копирование хранит source до проверенного destination readback; пока это
+source-only незавершённая реализация. General QA/compiler/tests/build не запускались.
+
+Новый срочный запрос: отдельный международный веб-выпуск для Paddle (оператор
+Iurii/поддержка, нейтральная pricing copy, author/hreflang metadata и legal pages).
+Работа выполняется в upgrade-currency-20261122 от свежего publish/main отдельно
+от security. После веб-выпуска вернуться к подключению transfer ports, bulk raw
+attribution, затем прежнему остатку. Goal active; E2EE/floors выключены.
+
+
 ## 22 ноября: клиентские автоматизации и серии — реализация
 
 Добавлены общий client planner и normal-product routing web/native: определения

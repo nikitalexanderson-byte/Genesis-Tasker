@@ -1,7 +1,6 @@
 import catalogue from '../../contracts/e2ee/private-path-sources-v1.json' with {type:'json'};
 import contract from '../../contracts/e2ee/shared-record-bodies-v1.json' with {type:'json'};
 import {assertTechnical,exactKeys} from './keys.ts';
-import {decodeE2eeBytes} from './envelope.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {samePrivateJson} from './product-json.ts';
 import {productMetadata,type ProductKind,type ProductMetadata} from './product-contract.ts';
@@ -84,7 +83,6 @@ function record(table:string,input:unknown,binding:SharedDomainBinding):SharedCo
 export function sharedBodyMetadata(body:SharedRecordBody):ProductMetadata{
  if(body.kind==='automation'&&body.record.owner_id!==null)return productMetadata('automation',{protocol:2,ownerId:body.record.owner_id});
  if(body.kind==='automation-run'){const payload=json(body.record.payload_json);object(payload);return productMetadata('automation-run',{protocol:2,ruleId:body.record.rule_id,ruleRevision:body.record.rule_revision,executorId:payload.executedBy,triggerKey:body.record.trigger_key});}
- if(body.kind==='series-instance'){const key=String(body.record.occurrence_key).split('.');if(key.length!==3)invalid();return productMetadata('series-instance',{protocol:2,seriesId:body.record.series_id,seriesRevision:Number(key[1]),executorId:decoder.decode(decodeE2eeBytes(key[0],1,512)),occurrenceKey:key[2]});}
  if(body.kind==='project'){
   const raw=body.record;
   return productMetadata('project',{protocol:2,spaceId:raw.space_id,parentProjectId:raw.parent_id,projectCategoryId:raw.category_id,

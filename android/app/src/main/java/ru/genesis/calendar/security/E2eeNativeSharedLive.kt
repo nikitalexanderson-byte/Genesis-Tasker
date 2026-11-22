@@ -95,6 +95,19 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         val rows=trust.list();val candidate=(0 until rows.length()).map{rows.getJSONObject(it)}.singleOrNull{it.getString("kind")==kind&&it.getString("resourceId")==resourceId}?:error("E2EE_SHARED_FINGERPRINT_REQUIRED")
         val id=candidate.getString("scopeId");trust.open(id);current();return opened.getOrPut(id){Live(E2eeSharedRecords(context,account,id,kind,resourceId))}
     }
+    private val bulkRuntime=NativeAdviceProductRuntime(context,"shared-bulk")
+    private fun bulkDocument(id:String):E2eeDeviceDocument{E2eeKeys.technical(id);return E2eeDeviceDocument(account.device,"shared-bulk-private:$id",{value->E2eeKeys.exact(value,setOf("format","ownerId","id","input","createdAt","expiresAt","planned","state","items","errorCode"));check(value.get("format")=="genesis-private-bulk-v1"&&value.get("ownerId")==account.ownerId&&value.get("id")==id&&value.get("planned") is Boolean&&value.getJSONArray("items").length()<=100000){"E2EE_PRIVATE_BULK_INVALID"};JSONObject(value.toString())},::current)}
+    private suspend fun bulk(method:String,path:String,input:JSONObject):JSONObject{
+        suspend fun call(name:String,payload:JSONObject):Any{current();return when(name){
+            "load"->{E2eeKeys.exact(payload,setOf("id"));bulkDocument(payload.getString("id")).load()?.let{JSONObject().put("value",it.value).put("serial",it.serial)}?:JSONObject.NULL}
+            "save"->{E2eeKeys.exact(payload,setOf("document","expected"));val value=payload.getJSONObject("document");bulkDocument(value.getString("id")).save(value,if(payload.isNull("expected"))null else payload.getLong("expected")).serial}
+            "list"->{E2eeKeys.exact(payload,emptySet());JSONArray(account.device.vault.listLocal("draft","shared-bulk-private:").map{it.removePrefix("shared-bulk-private:")})}
+            "projects"->{E2eeKeys.exact(payload,emptySet());val all=JSONArray();for(scope in bindings())if(scope.getString("kind")=="project"){val value=open("project",scope.getString("resourceId")).execute("GET","",JSONObject());current();all.put(JSONObject().put("project",value.get("project")).put("tasks",value.get("tasks")).put("statuses",value.get("statuses")))};all}
+            "query"->{E2eeKeys.exact(payload,setOf("filter","sort","cursor"));aggregate("GET","/shared/tasks?filter="+Uri.encode(payload.getJSONObject("filter").toString())+"&sort="+Uri.encode(payload.getString("sort"))+(if(payload.isNull("cursor"))""else"&cursor="+Uri.encode(payload.getString("cursor"))),JSONObject())}
+            "request"->{E2eeKeys.exact(payload,setOf("projectId","method","path","body"));open("project",payload.getString("projectId")).execute(payload.getString("method"),payload.getString("path"),payload.getJSONObject("body"))}
+            else->error("E2EE_PRIVATE_BULK_INVALID")}}
+        return bulkRuntime.execute(JSONObject().put("protocol",1).put("mode","shared-bulk-v1").put("ownerId",account.ownerId).put("method",method).put("path",path).put("body",input),::current,::call)
+    }
     private suspend fun aggregate(method:String,path:String,body:JSONObject):JSONObject{
         suspend fun call(name:String,payload:JSONObject):Any{current();return when(name){
             "bindings"->{E2eeKeys.exact(payload,emptySet());val result=JSONArray();for(row in bindings())result.put(JSONObject().put("scopeId",row.get("scopeId")).put("kind",row.get("kind")).put("resourceId",row.get("resourceId")));result}
@@ -128,6 +141,7 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         for(item in pendingLocked()){val request=item.getJSONObject("request");val result=open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),request.getString("id"));current();if(!result.optBoolean("membershipReviewRequired",false)){count++;cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}};count+advanceLocked()}}
     suspend fun request(method:String,path:String,body:JSONObject?):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
         current();val uri=Uri.parse(path);val parts=uri.pathSegments;check(parts.firstOrNull()=="shared"){"E2EE_SHARED_REQUEST_INVALID"};val query=uri.encodedQuery?.let{"?$it"}?:"";val input=body?.let{JSONObject(it.toString())}?:JSONObject()
+        if(parts.getOrNull(1)=="bulk")return@withLock bulk(method,path,input)
         if(parts.getOrNull(1)=="invitations"){val recipient=E2eeInvitationRecipient(account,::current);if(method=="GET"&&parts.size==2)return@withLock JSONObject().put("invitations",recipient.list());if(method=="POST"&&parts.size==3){if(parts[2]=="accept"){E2eeKeys.exact(input,setOf("id"));return@withLock recipient.respond(E2eeKeys.technical(input.getString("id")),true)};E2eeKeys.exact(input,emptySet());return@withLock recipient.respond(E2eeKeys.technical(parts[2]),false)};error("E2EE_SHARED_OPERATION_REVIEW_REQUIRED")}
         if(parts.getOrNull(1) in setOf("views","overview","inbox","notifications")||parts.getOrNull(1)=="spaces"&&parts.getOrNull(3)=="mindmaps"||parts.size==6&&parts[1]=="projects"&&parts[3]=="tasks"&&parts[5] in setOf("read","watch")||method=="GET"&&(parts.size==2&&parts[1]=="tasks"||parts.size==4&&parts[1]=="spaces"&&parts[3]=="search"))return@withLock aggregate(method,path,input)
         if(method=="GET"&&parts.getOrNull(1)=="tasks"&&(parts.size==4&&parts[3]=="image"||parts.size==5&&parts[3]=="attachments")){

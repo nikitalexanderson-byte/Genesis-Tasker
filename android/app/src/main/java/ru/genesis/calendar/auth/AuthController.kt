@@ -1932,6 +1932,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private fun bulkDraftSession() = BulkDraftSession(mutableState.value.user?.uid, client.currentGeneration())
     private suspend fun <T> bulkDraftCall(session: BulkDraftSession = bulkDraftSession(), action: (SharedBulkDraftService) -> T): T {
         val initial = mutableState.value; val account = session.account ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+        requireSharedDraftVault(account)
         if (!initial.ready || initial.accountSettings?.sharedProjectsEnabled != true) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         val generation = session.generation; val caller = currentCoroutineContext()
         fun current() {

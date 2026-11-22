@@ -28,6 +28,7 @@ import {exactKeys} from '../e2ee/keys';
 import type {MigrationSourceContext} from '../e2ee/migration';
 import type {PrivatePathAdapter} from '../e2ee/migration-sources';
 import {SharedLiveModel,validateSharedLiveContext,type SavedSharedRequest} from '../e2ee/shared-live';
+import {SharedPrivateBulk,validatePrivateBulkJournal,type PrivateBulkJournal} from '../e2ee/shared-private-bulk';
 import type {ProductEdit,ProductVersion} from '../e2ee/shared-product';
 import type {SharedDomainBinding} from '../e2ee/shared-domain';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState,type PersonalSharedState} from '../e2ee/shared-aggregate';
@@ -138,6 +139,12 @@ async function run(encoded:string){
         else if(value.action==='start')result={state:await model.start(args.id as string)};
         else throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');}
       current();send({job,kind:'membership-drafts-complete',value:result});return;
+    }
+    if(value.mode==='shared-bulk-v1'){
+      exactKeys(value,['protocol','mode','ownerId','method','path','body']);if(value.protocol!==1||typeof value.ownerId!=='string'||typeof value.method!=='string'||typeof value.path!=='string')throw new Error('E2EE_PRIVATE_BULK_INVALID');const ownerId=value.ownerId;
+      const invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'shared-bulk-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
+      const model=new SharedPrivateBulk({ownerId,current,load:async id=>{const result=await invoke('load',{id});if(result===null)return null;exactKeys(result,['value','serial']);return{value:validatePrivateBulkJournal(result.value,ownerId),serial:result.serial as number};},save:async(document,expected)=>await invoke('save',{document:validatePrivateBulkJournal(document,ownerId),expected}) as number,list:async()=>await invoke('list') as string[],projects:async()=>await invoke('projects') as {project:Record<string,unknown>;tasks:Record<string,unknown>[];statuses:Record<string,unknown>[]}[],query:async(filter,sort,cursor)=>await invoke('query',{filter,sort,cursor}) as import('../cloud-sync').SharedTaskPage,request:async(projectId,method,path,body)=>await invoke('request',{projectId,method,path,body}) as Record<string,unknown>});
+      const result=await model.request(value.method,value.path,value.body as Record<string,unknown>);current();send({job,kind:'shared-bulk-complete',value:result});return;
     }
     if(value.mode==='shared-aggregate-v1'){
       exactKeys(value,['protocol','mode','actorId','method','path','body']);if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.method!=='string'||typeof value.path!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');

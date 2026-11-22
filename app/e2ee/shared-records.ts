@@ -55,7 +55,7 @@ export class E2eeSharedRecords{
   const items:SharedBootstrapItem[]=[],seen=new Set<string>(),deleted=new Set((tables.get('shared_trash')??[]).map(row=>`${row.kind}:${row.object_id}`));
   for(const [kind,roots]of Object.entries(contract.roots) as [ProductKind,string[]][]){
    if(contract.historyOnlyKinds.includes(kind)||kind==='automation-run')continue;
-   for(const table of roots)for(const sourceRow of tables.get(table)??[]){const row=structuredClone(sourceRow);if(kind==='series-instance'){const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(row.occurrence_key)));row.occurrence_key=`${encodeE2eeBytes(new TextEncoder().encode(directory.ownerId))}.1.${encodeE2eeBytes(new Uint8Array(hash))}`;}const related:Record<string,SharedContentRecord[]>={};for(const name of contract.related[kind]){
+   for(const table of roots)for(const sourceRow of tables.get(table)??[]){const row=structuredClone(sourceRow);if(kind==='series-instance'){const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(row.occurrence_key)));row.occurrence_key=encodeE2eeBytes(new Uint8Array(hash));}const related:Record<string,SharedContentRecord[]>={};for(const name of contract.related[kind]){
      if(!tables.has(name))throw new Error('E2EE_PRIVATE_SEED_REQUIRED');const key=kind==='comment'?'comment_id':kind==='project'?'project_id':'task_id';related[name]=tables.get(name)!.filter(value=>value[key]===row.id);
     }
     const body=validateSharedRecordBody(this.binding,kind,{format:'genesis-shared-record-v1',kind,scopeId:this.binding.scopeId,scopeKind:this.binding.kind,resourceId:this.binding.resourceId,table,record:row,related,execution:'live'}),entityId=sharedRecordKey(kind,row);

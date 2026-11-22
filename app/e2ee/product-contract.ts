@@ -11,12 +11,12 @@ export type ProductMutation={action:'create'|'update'|'delete'|'restore'|'propos
  domain:E2eeContext['domain'];objectId:string;payloadHash:string;parentId:string|null;metadata:ProductMetadata;proposalId:string|null};
 export function productDomain(kind:ProductKind):E2eeContext['domain']{return kind==='comment'||kind==='project-comment'?'shared-comment':kind==='mindmap'?'mindmap':kind==='file'?'attachment':'shared-project';}
 export function productMetadata(kind:ProductKind,input:unknown):ProductMetadata{
- const project=kind==='project'&&(input as {protocol?:unknown}|null)?.protocol===2,automation=kind==='automation'&&(input as {protocol?:unknown}|null)?.protocol===2,run=kind==='automation-run',instance=kind==='series-instance';
+ const project=kind==='project'&&(input as {protocol?:unknown}|null)?.protocol===2,automation=kind==='automation'&&(input as {protocol?:unknown}|null)?.protocol===2,run=kind==='automation-run',instance=false;
  const fields=project?['protocol','spaceId','parentProjectId','projectCategoryId','boardStatusId','projectType','layout','isInbox','archived']:
-  automation?['protocol','ownerId']:run?['protocol','ruleId','ruleRevision','executorId','triggerKey']:instance?['protocol','seriesId','seriesRevision','executorId','occurrenceKey']:kind==='task'?['protocol','statusId','completed','approverIds','dependsOnIds','presentFields']:kind==='workflow'?['protocol','enabled','statuses','transitions']:['protocol'];exactKeys(input,fields);
+  automation?['protocol','ownerId']:run?['protocol','ruleId','ruleRevision','executorId','triggerKey']:kind==='task'?['protocol','statusId','completed','approverIds','dependsOnIds','presentFields']:kind==='workflow'?['protocol','enabled','statuses','transitions']:['protocol'];exactKeys(input,fields);
  if(input.protocol!==(project||automation||run||instance?2:1))throw new Error('E2EE_PRODUCT_METADATA_INVALID');
  if(automation)assertTechnical(input.ownerId);
- if(run||instance){for(const name of run?['ruleId','executorId','triggerKey']:['seriesId','executorId','occurrenceKey'])assertTechnical(input[name]);const revision=input[run?'ruleRevision':'seriesRevision'];if(!Number.isSafeInteger(revision)||Number(revision)<1)throw new Error('E2EE_PRODUCT_METADATA_INVALID');}
+ if(run){for(const name of ['ruleId','executorId','triggerKey'])assertTechnical(input[name]);const revision=input.ruleRevision;if(!Number.isSafeInteger(revision)||Number(revision)<1)throw new Error('E2EE_PRODUCT_METADATA_INVALID');}
  if(project){
   assertTechnical(input.spaceId);for(const key of ['parentProjectId','projectCategoryId','boardStatusId'])if(input[key]!==null)assertTechnical(input[key]);
   if(!['project','task-list'].includes(String(input.projectType))||!['list','board'].includes(String(input.layout))||typeof input.isInbox!=='boolean'||typeof input.archived!=='boolean'

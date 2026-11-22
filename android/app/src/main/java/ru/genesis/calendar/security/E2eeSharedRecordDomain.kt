@@ -62,7 +62,6 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
         val kind=body.getString("kind");val row=body.getJSONObject("record");val related=body.getJSONObject("related")
         if(kind=="automation"&&!row.isNull("owner_id"))return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("ownerId",row.get("owner_id")))
         if(kind=="automation-run"){val payload=parsed(row.get("payload_json")) as JSONObject;return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("ruleId",row.get("rule_id")).put("ruleRevision",row.get("rule_revision")).put("executorId",payload.get("executedBy")).put("triggerKey",row.get("trigger_key")))}
-        if(kind=="series-instance"){val key=row.getString("occurrence_key").split('.');check(key.size==3);return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("seriesId",row.get("series_id")).put("seriesRevision",key[1].toLong()).put("executorId",String(E2eeEnvelope.decode(key[0],1,512),Charsets.UTF_8)).put("occurrenceKey",key[2]))}
         if(kind=="project")return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("spaceId",row.get("space_id"))
             .put("parentProjectId",row.get("parent_id")).put("projectCategoryId",row.get("category_id")).put("boardStatusId",row.get("board_status_id"))
             .put("projectType",row.get("kind")).put("layout",row.get("layout")).put("isInbox",row.getInt("is_inbox")==1).put("archived",!row.isNull("archived_at")))

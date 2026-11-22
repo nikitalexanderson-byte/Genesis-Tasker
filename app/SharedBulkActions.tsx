@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {loadBulkRecovery,saveBulkRecovery} from './e2ee/shared-bulk-recovery';
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { calendarContext, civilDateCarrier } from "./calendar-context";
 import type { CalendarMode } from "./calendar-data";
@@ -9,7 +10,7 @@ import { SharedTaskPageControls } from "./SharedTaskPageControls";
 import { runtimeLocale, translateText as t } from "./i18n";
 import { privateDeviceAccessBlocked } from "./local-sign-out";
 import { sharedPriorityLabel, sharedTaskDetailsError } from "./shared-task-details";
-import { bulkActionLabels, bulkErrorLabels, bulkItemLabels, bulkPreviewRequest, bulkRecoveryKey, bulkStateLabels, readBulkRecovery,
+import { bulkActionLabels, bulkErrorLabels, bulkItemLabels, bulkPreviewRequest, bulkStateLabels,
   type BulkPreviewRequest, type BulkRecovery } from "./shared-bulk-model";
 import { commandSharedBulk, listSharedBulkOperations, loadSharedBulkReport, loadSharedBulkScope, loadSharedBulkTask, loadSharedViewOptions, previewSharedBulk,
   type SharedBulkAction, type SharedBulkOperations, type SharedBulkReport, type SharedBulkScope, type SharedBulkSelection, type SharedTask,
@@ -127,10 +128,10 @@ export function SharedBulkActions({userId,filter,page,sort,mode,online,loading,q
   const canAccept=useCallback(()=>alive.current&&!privateDeviceAccessBlocked(),[]);
   const persist=useCallback((next:BulkRecovery)=>{
     if(!canAccept())return;setRecovery(next);request.current=next.pending;
-    try{if(Object.keys(next).length)localStorage.setItem(bulkRecoveryKey(userId),JSON.stringify(next));else localStorage.removeItem(bulkRecoveryKey(userId));}catch{/* Server history still recovers confirmed operations. */}
+    void saveBulkRecovery(userId,next).catch(error=>{if(canAccept())setError(errorText(error));});
   },[userId,canAccept]);
   useEffect(()=>{
-    alive.current=true;const timer=window.setTimeout(()=>{if(!canAccept())return;const saved=readBulkRecovery(localStorage,userId);request.current=saved.pending;setRecovery(saved);if(saved.operationId)setView({id:saved.operationId,trail:[0]});},0);
+    alive.current=true;const timer=window.setTimeout(()=>{if(!canAccept())return;void loadBulkRecovery(userId).then(saved=>{if(!canAccept())return;request.current=saved.pending;setRecovery(saved);if(saved.operationId)setView({id:saved.operationId,trail:[0]});}).catch(error=>{if(canAccept())setError(errorText(error));});},0);
     return()=>{alive.current=false;window.clearTimeout(timer);watchController.current?.abort();mutationController.current?.abort();};
   },[userId,canAccept]);
   useEffect(()=>{

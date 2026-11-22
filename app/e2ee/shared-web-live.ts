@@ -16,9 +16,14 @@ import type {SharedProjectAccessDraft} from '../shared-project-access.ts';
 import {waitForPrivateMembershipOperation} from '../private-membership-ui.ts';
 import {privateAccountView} from './product-session.ts';
 import {samePrivateJson} from './product-json.ts';
+import {SharedPrivateBulk,validatePrivateBulkJournal,type PrivateBulkJournal} from './shared-private-bulk.ts';
 
 const models=new WeakMap<WebPrivateAccount,Map<string,WebSharedLive>>();
 const aggregates=new WeakMap<WebPrivateAccount,SharedAggregateModel>();
+const bulkModels=new WeakMap<WebPrivateAccount,SharedPrivateBulk>();
+function privateBulk(ownerId:string){const account=requirePrivateAccount(ownerId),prior=bulkModels.get(account);if(prior)return prior;const current=()=>account.requireOpen(),document=(id:string)=>new E2eeDeviceDocument<PrivateBulkJournal>(account.device,'shared-bulk-private:'+id,value=>{const parsed=validatePrivateBulkJournal(value,ownerId);if(parsed.id!==id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return parsed;},current);
+ const model=new SharedPrivateBulk({ownerId,current,load:id=>document(id).load(),save:async(value,serial)=>(await document(value.id).save(value,serial)).serial,list:async()=>(await account.device.vault.listLocal('draft','shared-bulk-private:')).map(v=>v.slice('shared-bulk-private:'.length)),projects:async()=>{const all=[];for(const scope of await bindings(ownerId))if(scope.kind==='project'){const value=await(await open(ownerId,'project',scope.resourceId)).model.request('GET','');current();all.push({project:value.project as Record<string,unknown>,tasks:value.tasks as Record<string,unknown>[],statuses:value.statuses as Record<string,unknown>[]});}return all;},query:async(filter,sort,cursor)=>await aggregate(ownerId).request('GET',`/shared/tasks?filter=${encodeURIComponent(JSON.stringify(filter))}&sort=${encodeURIComponent(sort)}${cursor?`&cursor=${encodeURIComponent(cursor)}`:''}`) as unknown as import('../cloud-sync.ts').SharedTaskPage,request:async(projectId,method,path,body)=>{const live=await open(ownerId,'project',projectId);current();return live.model.request(method,path,body);}});bulkModels.set(account,model);return model;
+}
 function aggregate(ownerId:string){const account=requirePrivateAccount(ownerId);let value=aggregates.get(account);if(value)return value;
  const personal=new E2eeFeatureDocument({ownerId,domain:'workspace',objectId:'personal-shared-views-live-v1',validate:input=>validatePersonalSharedState(input,ownerId),seed:async()=>{
   const original=await account.personal().client.readMigrationOriginal('local-snapshot','private-table:personal.local-work:shared_saved_views');account.requireOpen();
@@ -96,6 +101,7 @@ export async function privateSharedRequest(ownerId:string,path:string,init:Reque
  const url=new URL(path,'https://private.invalid'),method=(init.method??'GET').toUpperCase();init.signal?.throwIfAborted();
  let body:Record<string,unknown>={};if(init.body!==undefined&&init.body!==null){if(typeof init.body!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const value=JSON.parse(init.body);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_REQUEST_INVALID');body=value;}
  const segments=url.pathname.split('/').filter(Boolean).map(value=>decodeURIComponent(value));if(segments[0]!=='shared')throw new Error('E2EE_SHARED_REQUEST_INVALID');
+ if(segments[1]==='bulk')return await privateBulk(ownerId).request(method,path,body) as unknown as Record<string,unknown>;
  if(segments[1]==='invitations'){const account=requirePrivateAccount(ownerId),{webInvitationRecipient}=await import('./invitation-recipient.ts');account.requireOpen();const recipient=webInvitationRecipient(account);
   if(method==='GET'&&segments.length===2){const invitations=await recipient.list();account.requireOpen();init.signal?.throwIfAborted();return{invitations};}
   if(method==='POST'&&segments.length===3){if(segments[2]==='accept'){exactKeys(body,['id']);assertTechnical(body.id);return recipient.respond(body.id,true);}exactKeys(body,[]);return recipient.respond(segments[2],false);}
