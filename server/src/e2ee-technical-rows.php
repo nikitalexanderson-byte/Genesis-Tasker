@@ -7,7 +7,7 @@ declare(strict_types=1);
 function genesisE2eeTechnicalBindings(): WeakMap {static $bindings;return $bindings??=new WeakMap();}
 function genesisE2eeTechnicalTable(string $table): void
 {
-    if(!in_array($table,['shared_projects','shared_project_statuses'],true))throw new LogicException('E2EE_TECHNICAL_TABLE_FORBIDDEN');
+    if(!in_array($table,['shared_projects','shared_project_statuses','shared_space_project_categories'],true))throw new LogicException('E2EE_TECHNICAL_TABLE_FORBIDDEN');
 }
 function genesisE2eeTechnicalColumns(PDO $db,string $table): array
 {

@@ -194,14 +194,14 @@ function genesisE2eeInitializeGuards(PDO $db): void
     require_once __DIR__.'/e2ee-technical-rows.php';genesisE2eeRegisterTechnicalGuard($db);
     // Persistent triggers protect CLI/jobs and an older server binary too. Replacing these
     // guards is an additive schema operation; this version marker avoids per-request DDL.
-    $marker='e2ee-fence-v7';
+    $marker='e2ee-fence-v8';
     $q=$db->prepare('SELECT 1 FROM schema_migrations WHERE name=?');$q->execute([$marker]);$exists=$q->fetchColumn();$q->closeCursor();if($exists)return;
     genesisBeginWriteTransaction($db);
     try {
         foreach(genesisE2eeLegacyInventory($db) as $table=>$predicates) {
             foreach(['INSERT'=>['NEW'],'UPDATE'=>['OLD','NEW'],'DELETE'=>['OLD']] as $verb=>$rows) {
                 $condition=genesisE2eeLegacyFenceCondition($predicates,$rows);
-                if(in_array($table,['shared_projects','shared_project_statuses'],true)){
+                if(in_array($table,['shared_projects','shared_project_statuses','shared_space_project_categories'],true)){
                     $old=$verb==='INSERT'?'NULL':genesisE2eeTechnicalTriggerJson($db,$table,'OLD');
                     $new=$verb==='DELETE'?'NULL':genesisE2eeTechnicalTriggerJson($db,$table,'NEW');
                     $condition="($condition) AND genesis_e2ee_technical_allowed('$table','$verb',$old,$new)=0";

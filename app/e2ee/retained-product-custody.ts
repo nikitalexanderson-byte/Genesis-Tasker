@@ -7,6 +7,7 @@ import {contentSigningKey,signingPublicKey,verifyDeviceDirectory,type VerifiedDi
 import {requiredPrivatePaths} from './private-paths.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {productMutation} from './product-contract.ts';
+import {validatePrivateProjectTopology} from './project-create-contract.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
 
 type Options={vault:SourceStageReadVault;actor:{ownerId:string;deviceId:string};receivingKey:CryptoKey;selfKeys:{signingKey:string;receivingKey:string};assertCurrent:()=>void;
@@ -179,10 +180,12 @@ export async function inspectRetainedProductCustody(options:Options){
      exactKeys(row.permissions,['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers']);if(Object.values(row.permissions).some(value=>typeof value!=='boolean'))invalid();}
    }else if(command.action==='shared-invitation-revoke'){exactKeys(payload,['intentId','id']);assertTechnical(payload.id);
    }else if(command.action==='resource-create-prepare'){
-    exactKeys(payload,['intentId','bootstrap']);exactKeys(payload.bootstrap,['command','signature']);const initial=payload.bootstrap as unknown as SignedE2eeCommand;
-    if(initial.command.action!=='bootstrap'||initial.command.ownerId!==options.actor.ownerId||initial.command.deviceId!==options.actor.deviceId||initial.command.payload.kind!=='space'||initial.command.expectedRevision!==0||initial.command.checkpointHash!=='genesis'||initial.command.securityEpoch!==1)invalid();
+    exactKeys(payload,Object.hasOwn(payload,'topology')?['intentId','bootstrap','topology']:['intentId','bootstrap']);exactKeys(payload.bootstrap,['command','signature']);const initial=payload.bootstrap as unknown as SignedE2eeCommand;
+    const kind=initial.command.payload.kind;
+    if(initial.command.action!=='bootstrap'||initial.command.ownerId!==options.actor.ownerId||initial.command.deviceId!==options.actor.deviceId||!['space','project'].includes(String(kind))||(kind==='project')!==Object.hasOwn(payload,'topology')||initial.command.expectedRevision!==0||initial.command.checkpointHash!=='genesis'||initial.command.securityEpoch!==1)invalid();
+    if(kind==='project')validatePrivateProjectTopology(payload.topology,options.actor.ownerId);
     const fresh=await verifyDeviceDirectory(options.actor.ownerId,initial.command.scopeId,directory.recoveryKit.authority,[initial]);current();
-    const own=fresh.devices.get(options.actor.deviceId);if(fresh.generation!==1||fresh.kind!=='space'||!own||own.signingKey!==options.selfKeys.signingKey||own.receivingKey!==options.selfKeys.receivingKey)invalid();
+    const own=fresh.devices.get(options.actor.deviceId);if(fresh.generation!==1||fresh.kind!==kind||!own||own.signingKey!==options.selfKeys.signingKey||own.receivingKey!==options.selfKeys.receivingKey)invalid();
    }
    else if(command.action==='product-commit'){exactKeys(payload,['intentId','operations']);if(!Array.isArray(payload.operations)||payload.operations.length<1||payload.operations.length>100)invalid();payload.operations.forEach(productMutation);}
    else if(command.action==='product-approve'){exactKeys(payload,['intentId','proposalId','entityId','baseRevision','payloadHash']);assertTechnical(payload.proposalId);assertTechnical(payload.entityId);integer(payload.baseRevision);decodeE2eeBytes(payload.payloadHash,32);}

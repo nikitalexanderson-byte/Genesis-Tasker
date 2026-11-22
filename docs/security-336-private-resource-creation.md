@@ -4,6 +4,58 @@
 coverage remains9/20. Existing production3.3.5/149/Paddle website, floors0, cutover
 off and GENESIS_DEPLOY_ANDROID=false are unchanged.
 
+## Signed project preparation/factory (subsequent candidate pass)
+
+`resource-create-prepare` now has a project branch with the same active personal
+owner/device/recovery/bootstrap proof and semantic intent receipt as spaces.
+Its extra `topology` is technical only: space/parent/category/board IDs,
+project/task-list kind, layout, current space/parent/category/status anchors and
+the exact sorted reviewed inherited user/role list. Anchors bind scope, entity,
+generation, directory checkpoint, root revision and payload hash. No user name,
+title, description, tags, cover, key or content definition enters preparation.
+
+`GenesisE2eeProjectCreation` can be minted only after that topology is checked
+inside the caller's writer transaction. Space create permission, parent write
+access, current undeleted metadata2 ancestor topology, no cycle/inbox/archive,
+private category/status lineage and the exact inherited-role review are required.
+Only technical ancestor routing is inspected internally; this adds no route for
+unread ancestor content or keys. The existing project factory still enforces
+feature/space-owner quota, creator ownership, parent/kind rules and defaults.
+The internal capability is tied to the same PDO connection and consumed after
+fresh inheritance; ordinary request input cannot pass it to the legacy factory.
+
+Restricted inheritance follows nearest explicitly enabled descendant grants
+and exclusions for this new child. Existing project memberships, assignments
+and projection links are untouched. The creator stays the new owner; inherited
+space owners/admins are managers as in the factory. Neither these routing rows
+nor the reviewed list approves a device or issues a root capsule.
+
+The project, three normal status rows, two technical chaos statuses, fresh
+memberships, independent bootstrap and preparation receipt share the enclosing
+transaction. All user-facing technical row labels are placeholders. A lost
+response repeats the same signed semantic intent. The project receipt binds
+the topology hash, reviewed members, exact status IDs/isDone/isChaos, project
+placement, first checkpoint and created time. Negative status positions are
+not inserted into the technical control wire; ordered status entries preserve
+their distinct roles.
+
+Fencev8 adds the space project-category table to exact row admission. Current
+private category/status heads can materialize missing relational-ID placeholder
+rows, preserving FKs without publishing their actual title/colour/order.
+Existing rows must have the same lineage and are retained untouched. This is
+not legacy plaintext creation or a general ACL exception.
+
+Matching web/native technical topology contracts and service-custody readers
+are added. This is still NOT the ordinary project create/resume UI: the next
+client work must retain full project input before IO, obtain/independently verify
+anchors and a read-only recipient preview, require explicit review, preserve the
+fixed preparation packet across response loss, migrate the project, finish its
+real baseline, write/read back intended root and localized status values, and
+only then return a normal project. Add the pending project journal/UI/account
+resume path alongside spaces. The read-only preview endpoint is not yet added.
+Remaining normal invitation/member/device review and multi-scope reparent/
+delete/restore lifecycle also remain code work. No compilation/QA ran.
+
 ## Project topology and exact physical-row foundation (candidate)
 
 Added matching web/native/API project metadata2: space, parent project, project

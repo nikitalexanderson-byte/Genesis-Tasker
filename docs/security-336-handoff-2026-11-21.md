@@ -1,5 +1,39 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: signed fresh-project server preparation (кандидат)
+
+После95e140a5 добавлена project-ветка resource-create-prepare:
+GenesisE2eeProjectCreation проверяет current space/parent/category/status anchors,
+metadata2 ancestor topology, create/write permissions, отсутствие цикла/inbox/
+archive и exact sorted reviewed inherited members. Capability привязана к PDO/
+transaction и потребляется после fresh inheritance. Существующий factory
+сохраняет feature/space-owner quotas/creator owner/defaults; теперь получает
+только технические placeholders. Scoped restricted inheritance не переиндексирует
+и не изменяет старые проекты/назначения. Это routing rows, не device/capsule trust.
+Rows + independent bootstrap + semantic receipt атомарны. Project receipt содержит
+topologyHash, placement, exact statuses{id,isDone,isChaos}, reviewedMembers иcp1.
+
+Fencev8 разрешает exact rows ещё для shared_space_project_categories. Current
+private category/status heads создают недостающие FK placeholder rows без
+вывода title/colour/order. Старые строки сохраняются и проверяются по lineage.
+Web/native project-create-contract / E2eeProjectCreationContract и service custody
+теперь явно понимают новый payload; bootstrap keys/authority всё ещё проверяются.
+
+**Точный следующий код**: read-only recipient/topology preview пока отсутствует;
+нужны обе durable private-project creation journals, независимая проверка anchors
+и явный review до подготовки, fixed payload/receipt, migration + actual product
+baseline, private intended root и localized status values с readback, normal
+create/resume buttons/account pending list. Не переподключать обычный project
+create к plaintext API после personal cutover. Space journal уже работает как
+кандидат; его нужно расширить/сочинить project counterpart, сохраняя original input.
+Документ и точная форма серверного payload:
+security-336-private-resource-creation.md, server/src/e2ee-project-create.php.
+
+Никаких compiler/typecheck/lint/tests/build/CI/push/release/device actions;
+coverage9/20, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false.3.3.5/149/Paddle-сайт
+сохранены. Остальной большой кодовый остаток ниже остаётся. Не читать/stage чужой
+demo-output/, не использовать субагентов/Daybreak.
+
 ## 22 ноября: foundation fresh project topology / exact row capability
 
 После07dd5e35 добавлены совпадающие web/native/API project metadata2

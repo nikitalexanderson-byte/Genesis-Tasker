@@ -10,6 +10,21 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Signed fresh-project preparation and inherited routing (candidate)
+
+The resource preparation service now verifies current technical anchors and
+an exact reviewed inherited-user/role list, mints a same-connection transaction
+capability and invokes the existing project factory with placeholder content.
+Only the fresh child receives restricted inherited grants; old projects and
+assignments stay untouched. Space-owner quota and creator ownership remain.
+Bootstrap/rows/receipt are atomic. Fencev8 admits exact private category/status
+reference placeholders, preserving FKs. Web/native topology custody contracts
+understand this service branch. No device/capsule authority follows from the
+inherited routing list. Read-only preview and both durable ordinary project
+create/resume clients are the concrete next composition, including localized
+private status/root values. Details: `security-336-private-resource-creation.md`.
+No compiler/typecheck/lint/tests/build/CI/push/release; coverage9/20.
+
 ### Fresh project topology and exact row admission (foundation candidate)
 
 New project metadata2 binds the current technical space/parent/category/board/

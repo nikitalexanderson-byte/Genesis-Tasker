@@ -11,11 +11,35 @@ function genesisE2eeSameProjectTopology(array $left,array $right): bool
 {
     return genesisE2eeCanonical($left)===genesisE2eeCanonical($right);
 }
+/** Preserve relational IDs for a private category/status created after cutover.
+ * Only current private heads authorize these technical placeholders. Their
+ * actual title/colour/order/body is never copied out of encrypted versions. */
+function genesisE2eeEnsurePrivateProjectReference(PDO $db,array $scope,string $kind,string $id,array $head): void
+{
+    if(!$db->inTransaction()||$scope['state']!=='active'||$head['kind']!==$kind||$head['deleted']||$head['entity_id']!==$kind.':'.$id
+      ||$head['parent_id']!==$scope['kind'].':'.$scope['resource_id'])throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');
+    if($kind==='category'&&$scope['kind']==='space'){$table='shared_space_project_categories';$column='space_id';
+        $values=['id'=>$id,'space_id'=>$scope['resource_id'],'title'=>'[encrypted]','color'=>'#2d6c68','position'=>0,'revision'=>(int)$head['revision']];}
+    elseif($kind==='status'&&$scope['kind']==='project'&&!str_starts_with($id,'chaos-open:')&&!str_starts_with($id,'chaos-done:')){$table='shared_project_statuses';$column='project_id';
+        $values=['id'=>$id,'project_id'=>$scope['resource_id'],'title'=>'[encrypted]','position'=>0,'is_done'=>0,'is_chaos'=>0,'revision'=>(int)$head['revision']];}
+    else throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');
+    $old=genesisE2eeRow($db,'SELECT * FROM "'.$table.'" WHERE id=?',[$id]);
+    if($old){if($old[$column]!==$scope['resource_id']||$kind==='status'&&(int)$old['is_chaos']!==0)throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');return;}
+    genesisE2eeInsertTechnicalRow($db,$table,$values);
+}
 /** A current private root is mandatory authority for technical child placement.
  * A legacy row or old metadata1 content header is never substituted for it. */
 function genesisE2eeLiveProjectTopology(PDO $db,string $actor,string $projectId): array
 {
-    $project=genesisSharedProjectAccess($projectId,$actor,'read',true);
+    genesisSharedProjectAccess($projectId,$actor,'read',true);
+    return genesisE2eeProjectTopologyAt($db,$projectId);
+}
+/** Internal routing proof only. Callers authorize their own operation; this
+ * does not expose an unread ancestor's body, identity, key or download route. */
+function genesisE2eeProjectTopologyAt(PDO $db,string $projectId): array
+{
+    $project=genesisE2eeRow($db,'SELECT * FROM shared_projects WHERE id=?',[$projectId]);
+    if(!$project)throw new DomainException('E2EE_SOURCE_UNAVAILABLE');
     $scope=genesisE2eeRow($db,"SELECT * FROM e2ee_scopes WHERE kind='project' AND resource_id=?",[$projectId]);
     if(!$scope||$scope['state']!=='active')throw new DomainException('E2EE_PROJECT_TOPOLOGY_REQUIRED');
     require_once __DIR__.'/e2ee-product-bootstrap.php';genesisE2eeProductBootstrapReady($db,$scope);
@@ -48,6 +72,7 @@ function genesisE2eeProjectRootMutation(PDO $db,string $actor,array $scope,array
             $category=genesisE2eeProductRow($db,$space,'category:'.$metadata['projectCategoryId']);
             if(!$category||$category['deleted']||$category['kind']!=='category'||$category['parent_id']!=='space:'.$current['spaceId'])throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');
             genesisSharedSpaceAccess($current['spaceId'],$actor);
+            genesisE2eeEnsurePrivateProjectReference($db,$space,'category',$metadata['projectCategoryId'],$category);
         }else genesisSharedValidateProjectCategory($current['spaceId'],$metadata['projectCategoryId'],$current['projectType']);
     }
     if($metadata['boardStatusId']!==$current['boardStatusId']&&$metadata['boardStatusId']!==null){
@@ -60,6 +85,7 @@ function genesisE2eeProjectRootMutation(PDO $db,string $actor,array $scope,array
             if(!$status||$status['deleted']||$status['kind']!=='status'||$status['parent_id']!=='project:'.$current['parentProjectId']
                 ||str_starts_with($metadata['boardStatusId'],'chaos-open:')||str_starts_with($metadata['boardStatusId'],'chaos-done:'))
                 throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');
+            genesisE2eeEnsurePrivateProjectReference($db,$authority['scope'],'status',$metadata['boardStatusId'],$status);
         }else genesisSharedBoardPlacement($actor,$current['spaceId'],$current['parentProjectId'],$metadata['boardStatusId']);
     }
     if($metadata['archived']!==$current['archived']){
