@@ -21,6 +21,14 @@ type Kind=keyof PersonalMigrationMemory;
 type Reading<K extends Kind=Kind>={sourceId:string;kind:K;mounted:boolean;value:PersonalMigrationMemory[K]};
 type Entry={ownerId:string;kind:Kind;read:()=>PersonalMigrationMemory[Kind]};
 const live=new Map<string,Entry>(),retained=new Map<string,{ownerId:string;reading:Reading|null}>();
+const observers=new Map<string,Set<()=>void>>();
+/** Only an in-memory renderer mirror subscribes here. No observer may save,
+ * flush a queue or acquire a legacy writer permit while reading a source. */
+export function observePersonalMigrationSources(ownerId:string,changed:()=>void){
+ assertTechnical(ownerId);let listeners=observers.get(ownerId);if(!listeners)observers.set(ownerId,listeners=new Set());listeners.add(changed);
+ const held=listeners;return()=>{held.delete(changed);if(!held.size&&observers.get(ownerId)===held)observers.delete(ownerId);};
+}
+export function personalMigrationSourcesChanged(ownerId:string){for(const listener of observers.get(ownerId)??[])listener();}
 let revision=0,listening=false;
 function clear(){live.clear();retained.clear();revision++;}
 export function registerPersonalMigrationSource<K extends Kind>(ownerId:string,kind:K,read:()=>PersonalMigrationMemory[K]){
@@ -34,7 +42,7 @@ export function registerPersonalMigrationSource<K extends Kind>(ownerId:string,k
   // turn an unsuccessful capture into a conveniently empty category.
   let reading:Reading|null=null;
   try{reading={sourceId,kind,mounted:false,value:structuredClone(entry.read())};}catch{/* Block below when this owner's originals are requested. */}
-  live.delete(sourceId);retained.set(sourceId,{ownerId,reading});revision++;
+  live.delete(sourceId);retained.set(sourceId,{ownerId,reading});revision++;personalMigrationSourcesChanged(ownerId);
  };
 }
 export function capturePersonalMigrationSources<K extends Kind>(ownerId:string,kind:K):Reading<K>[];

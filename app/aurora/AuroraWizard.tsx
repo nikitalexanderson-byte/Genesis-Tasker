@@ -86,7 +86,7 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
     const cancelDelete=useRef<HTMLButtonElement|null>(null);
     useEffect(()=>{if(deleteId)cancelDelete.current?.focus();},[deleteId]);
     const documentRef = useRef<AuroraDocument | null>(null), timer = useRef<ReturnType<typeof setTimeout> | null>(null), alive = useRef(true), heading = useRef<HTMLHeadingElement | null>(null);
-    usePersonalMigrationSource(host.client==='web'&&host.captureMigration?host.ownerId:null,'aurora',()=>({
+    usePersonalMigrationSource(host.captureMigration?host.ownerId:null,'aurora',()=>({
         current:host.captureMigration?.(documentRef.current)??null,
         state:{document:documentRef.current,activeId,unlockedId,conflict,archivedSolution,deleteId,historyEdit},
         settled:!busy&&documentRef.current!==null,

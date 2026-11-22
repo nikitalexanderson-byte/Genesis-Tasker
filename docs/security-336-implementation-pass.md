@@ -10,6 +10,35 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Embedded native Aurora/Gno input (candidate, no compilation/QA)
+
+Connected the bundled native Gno/Aurora runtime to the same real repository/form
+capture hooks as web, including the separate unrecorded answer selection. The
+local Java bridge mirrors raw controls, current/base/revision, active form choices,
+conflicts and detached JS inputs in memory only. Native source capture additionally
+requires a nonce-bound asynchronous JS read barrier on Main, a matching original
+owner/session/restore lifetime and a settled frozen renderer. Pending RPC/IME/
+file input or unsettled mounted forms refuse completeness. Raw input remains
+inert personal.local-work history; the typed current document separately enters
+the Aurora source adapter. The hidden Gno parent no longer competes with its
+active retained Aurora child as a second current document.
+
+The migration memory registry waits outside its monitor for embedded preparation.
+An admitted renderer blocks input/new RPC work until the whole migration attempt
+ends; failed unsettled admission thaws immediately. Controller cleanup thaws the
+renderer while the persistent account fence continues to authorize/deny actual
+writes. Renderer failure/missing mirror blocks capture rather than substituting
+an empty source. Gateway/view/store are bound to owner/scope/restore lifetime;
+native Aurora HTTP pins the original session generation for the entire operation.
+The native private-content dialog also uses FLAG_SECURE.
+
+This is uncompiled source, not full editor coverage/acceptance. Still required:
+render/bridge ordering, process death, detached last-input retention, same-UID
+relogin/restore, nested editor switches, IME, delayed RPC/analysis/autosave, freeze/
+thaw and timeout races, 8MiB refusal, shared advanced forms and all remaining
+domain integrations. No tests/compiler/build/CI/push/device action/publication
+ran; accepted coverage remains9/20 and activation gates stay unchanged.
+
 ### Content-backup file custody (candidate, no compilation/QA)
 
 Native content-backup handoff now has separate durable job and picker-attempt

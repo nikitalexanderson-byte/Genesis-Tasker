@@ -54,8 +54,8 @@ export function GnoWizard({host,primary,temporal=null}:{host:AuroraHost;primary:
  const [inspected,setInspected]=useState<SectorId>('center'),[pickingSupport,setPickingSupport]=useState(false),[detailOpen,setDetailOpen]=useState(false),[more,setMore]=useState(false),[editingQuestion,setEditingQuestion]=useState<string|null>(null),[taskAdded,setTaskAdded]=useState(false);
  const [execution,setExecution]=useState<GnoObservation['execution']>('not_done'),[outcome,setOutcome]=useState<GnoObservation['outcome']>('unknown'),[note,setNote]=useState(''),[wordError,setWordError]=useState(false);
  const timer=useRef<ReturnType<typeof setTimeout>|null>(null),saving=useRef<Promise<boolean>|null>(null),mounted=useRef(true),body=useRef<HTMLDivElement|null>(null),title=useRef<HTMLHeadingElement|null>(null);
- const migrationOwner=host.client==='web'&&host.captureMigration?host.ownerId:null;
- usePersonalMigrationSource(migrationOwner,'aurora',()=>({current:host.captureMigration?.(docRef.current)??null,
+ const migrationOwner=host.captureMigration?host.ownerId:null;
+ usePersonalMigrationSource(migrationOwner,'aurora',()=>({current:legacy?null:host.captureMigration?.(docRef.current)??null,
   state:{document:docRef.current,active,legacy,inspected,pickingSupport,detailOpen,more,editingQuestion,taskAdded,execution,outcome,note},
   settled:!busy&&status!=='loading'&&status!=='saving',
  }),host);

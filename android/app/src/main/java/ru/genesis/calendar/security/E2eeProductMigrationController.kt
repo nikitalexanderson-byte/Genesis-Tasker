@@ -3,6 +3,7 @@ package ru.genesis.calendar.security
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -66,7 +67,7 @@ internal class E2eeProductMigrationController private constructor(private val co
                 },progress)
             E2eeProductMigration.run(options,E2eePrivatePathCatalogue(context));current()
             }finally{operation.compareAndSet(job,null)}
-        }}finally{held.fill(0);running.set(false)}
+        }}finally{held.fill(0);try{withContext(NonCancellable+Dispatchers.Main.immediate){NativeMigrationMemory.finishPrepared(device.ownerId)}}finally{running.set(false)}}
     }
     companion object{
         private fun status(value:JSONObject,owner:String):Pair<Boolean,List<JSONObject>>{

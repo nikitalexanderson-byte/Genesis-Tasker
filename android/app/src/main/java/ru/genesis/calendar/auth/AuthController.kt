@@ -685,17 +685,19 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     internal fun auroraGateway(uid: String): ru.genesis.calendar.data.AuroraGateway = object : ru.genesis.calendar.data.AuroraGateway {
         private val capturedGeneration=client.currentGeneration()
+        private val capturedEpoch=app.workspaceEpoch
         override fun check() {
-            check(client.currentGeneration()==capturedGeneration && !mutableState.value.requiresSignIn
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            check(client.isCurrent(capturedGeneration)&&app.workspaceEpoch==capturedEpoch && !mutableState.value.requiresSignIn
                 && mutableState.value.user?.uid == uid && app.workspaceScope == CloudAccountSnapshot.scopeFor(uid)) { "AURORA_ACCOUNT_CHANGED" }
         }
-        override suspend fun workspace(): JSONObject { check(); val generation=client.currentGeneration(); return withContext(Dispatchers.IO) { client.workspace(generation) }.also { check() } }
+        override suspend fun workspace(): JSONObject { check(); return withContext(Dispatchers.IO) { check();client.workspace(capturedGeneration) }.also { check() } }
         override suspend fun request(method: String, path: String, body: JSONObject?): JSONObject {
-            check(); val generation=client.currentGeneration(); return withContext(Dispatchers.IO) { client.aurora(generation, method, path, body) }.also { check() }
+            check(); return withContext(Dispatchers.IO) { check();client.aurora(capturedGeneration, method, path, body) }.also { check() }
         }
         override suspend fun billing(method: String, path: String, body: JSONObject?): JSONObject {
-            check(); require(AuroraProtocol.allowedBilling(method,path)); val generation=client.currentGeneration()
-            return withContext(Dispatchers.IO) { client.billing(generation,method,path,body) }.also { check() }
+            check(); require(AuroraProtocol.allowedBilling(method,path))
+            return withContext(Dispatchers.IO) { check();client.billing(capturedGeneration,method,path,body) }.also { check() }
         }
     }
 

@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import ru.genesis.calendar.BuildConfig
@@ -68,7 +70,8 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
     private val scope: CoroutineScope, private val deliver: (String,JSONObject)->Unit,
     private val onTask: (AuroraTaskDraft)->Unit, private val onCheckout: (String)->Unit,
     private val onSpeak: (String)->Unit, private val onClose: ()->Unit,
-    private val onContentSize: (Int,Int,Boolean)->Unit, private val onLoadFailed: ()->Unit) {
+    private val onContentSize: (Int,Int,Boolean)->Unit, private val onLoadFailed: ()->Unit,
+    private val migration:NativeEmbeddedMigrationCapture?=null) {
     @Volatile private var active=true
     private val operationMonitor=Any()
     private val operations=ConcurrentHashMap<String,NativeLegacyOperationPermit>()
@@ -79,6 +82,10 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
         scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width, fillViewport) }
     }
     private fun check(){check(active){"AURORA_VIEW_CLOSED"};gateway.check()}
+    @JavascriptInterface fun migrationState(requestId:String,raw:String){
+        if(!active)return
+        try{check();migration?.accept(requestId,raw)}catch(_:Exception){migration?.failed()}
+    }
     private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
     private fun endOperation(id:String)=synchronized(operationMonitor) { endedOperations.add(id);operations.remove(id) }
     @JavascriptInterface fun checkSession(operationId:String){check();if(operationId.isNotEmpty())operation(operationId).check()}
@@ -173,9 +180,10 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
 @Composable internal fun NativeAuroraDialog(owner:String,source:JSONObject?,onClose:()->Unit,onTask:(AuroraTaskDraft)->Unit,
     testGateway:AuroraGateway?=null, temporal:JSONObject?=null) {
     val context=LocalContext.current;val app=context.applicationContext as GenesisApplication
+    val storageScope=app.workspaceScope;val workspaceEpoch=app.workspaceEpoch
     val controller=remember(context){AuthController.get(context)}
-    val gateway=remember(owner,testGateway){testGateway?:controller.auroraGateway(owner)}
-    val scope=rememberCoroutineScope();val store=remember(owner,gateway){AuroraNativeStore(app,owner,app.workspaceScope,gateway)}
+    val gateway=remember(owner,storageScope,workspaceEpoch,testGateway){testGateway?:controller.auroraGateway(owner)}
+    val scope=rememberCoroutineScope();val store=remember(owner,storageScope,gateway){AuroraNativeStore(app,owner,storageScope,gateway)}
     val dark=LocalEveningTheme.current;val palette=LocalDarkPalette.current;val language=LocalGenesisLanguage.current
     val runtimeProblem=rememberNativeWebRuntimeProblem(language)
     val entryCopy=remember(context,language){context.assets.open("originals/i18n/aurora-availability.json").bufferedReader(Charsets.UTF_8).use{JSONObject(it.readText()).getJSONObject(language)}}
@@ -187,12 +195,26 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
         .put("--ui-accent",hex(scheme.primary)).put("--ui-on-accent",hex(scheme.onPrimary)).put("--teal",hex(scheme.primary))
     val theme=JSONObject().put("dark",dark).put("palette",palette).put("colors",colors)
     fun encoded(value:JSONObject)=Base64.getEncoder().encodeToString(value.toString().toByteArray(Charsets.UTF_8))
-    val boot=remember(owner){JSONObject().put("ownerId",owner).put("language",language)
+    val boot=remember(owner,store){JSONObject().put("ownerId",owner).put("language",language)
         .put("privateMode",store.privateMode)
         .put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android").put("source",source?:JSONObject.NULL)
         .put("temporal",temporal?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}
-    var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(runtimeProblem!=null)}
+    var web by remember(store){mutableStateOf<WebView?>(null)};var ready by remember(store){mutableStateOf(false)};var failed by remember(store){mutableStateOf(runtimeProblem!=null)}
+    val migrationOwner=rememberLegacyMigrationOwner(storageScope)?.takeIf{it==owner&&!controller.state.value.requiresSignIn}
+    val migration=remember(store,migrationOwner){migrationOwner?.let{uid->
+        val guard=controller.privateUiOwnerGuard(uid)
+        NativeEmbeddedMigrationCapture(uid,boot){guard();gateway.check()}
+    }}
+    DisposableEffect(store,migrationOwner,migration){
+        val release=if(migrationOwner!=null&&migration!=null)ru.genesis.calendar.security.NativeMigrationMemory.register(migrationOwner,"aurora",
+            prepare={check(ready&&!failed){"E2EE_EMBEDDED_SOURCE_CAPTURE_REQUIRED"};migration.prepare(requireNotNull(web){"E2EE_EMBEDDED_SOURCE_CAPTURE_REQUIRED"})},
+            finish={migration.thaw(web)},read=migration::capture)else null
+        onDispose{release?.invoke();migration?.close()}
+    }
+    DisposableEffect(store){onDispose{store.close()}}
+    val migrationView by ru.genesis.calendar.security.NativeMigrationUiState.state.collectAsStateWithLifecycle()
+    LaunchedEffect(web,ready,migrationView?.id){if(ready&&migrationView?.owner!=owner)migration?.thaw(web)}
     val density = LocalDensity.current.density
     var contentHeight by remember { mutableStateOf(160.dp) }
     var fillsViewport by remember { mutableStateOf(true) }
@@ -211,7 +233,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
         scope.launch {delay(1500);if(!answered)onClose()}
     }
     LaunchedEffect(web) {if(web!=null){delay(15000);if(!ready)failed=true}}
-    Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false)){
+    Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false,securePolicy=SecureFlagPolicy.SecureOn)){
         Surface(Modifier.fillMaxWidth(),color=scheme.surface){
           BoxWithConstraints(Modifier.fillMaxWidth()) {
             val viewportHeight = (maxHeight - headerHeight - 8.dp).coerceAtLeast(48.dp)
@@ -225,7 +247,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                     EditorDialogHeader("Метод моделирования будущего","aurora-native-close"){close()}
                 }
                 if(failed)UntranslatedText(runtimeProblem?:entryCopy.getString("loadError"),Modifier.padding(16.dp).testTag("aurora-native-error"),color=scheme.error)
-                if(!failed)AndroidView(factory={ctx->WebView(ctx).apply{
+                if(!failed)key(store){AndroidView(factory={ctx->WebView(ctx).apply{
                     web=this;setBackgroundColor(scheme.surface.toArgb())
                     settings.javaScriptEnabled=true;settings.allowFileAccess=false;settings.allowContentAccess=false
                     settings.domStorageEnabled=false;settings.databaseEnabled=false;settings.javaScriptCanOpenWindowsAutomatically=false
@@ -239,7 +261,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                             contentHeight = (height.toFloat() * this.width / width / density).dp
                             fillsViewport = fill
                         } },
-                        {failed=true;ready=false})
+                        {failed=true;ready=false;migration?.failed()},migration)
                     tag=bridge;addJavascriptInterface(bridge,"GenesisAuroraBridge")
                     webViewClient=object:WebViewClient(){
                         override fun shouldOverrideUrlLoading(view:WebView,request:WebResourceRequest)=true
@@ -257,6 +279,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                         override fun onRenderProcessGone(view:WebView,detail:RenderProcessGoneDetail):Boolean {
                             android.util.Log.w("GenesisAurora","Local renderer terminated; crashed=${detail.didCrash()}")
                             failed=true;ready=false
+                            migration?.failed()
                             return true
                         }
                     }
@@ -264,7 +287,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
                 }},update={view->if(ready)view.evaluateJavascript("window.GenesisAuroraRuntime.theme('${encoded(theme)}')",null)},
                     modifier=Modifier.fillMaxWidth().height(webHeight).testTag("aurora-native-webview"),onRelease={view->
                         (view.tag as? AuroraJavascriptBridge)?.stop();view.removeJavascriptInterface("GenesisAuroraBridge");view.stopLoading();view.destroy();web=null
-                    })
+                    })}
                 if(!ready&&!failed)LinearProgressIndicator(Modifier.fillMaxWidth())
             }
           }

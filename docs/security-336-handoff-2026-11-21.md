@@ -225,6 +225,15 @@ Content-only backup must never replay these new issue/membership receipts.
 
 # Continuation checkpoint: 22 November 2026
 
+The latest input increment connects embedded native Aurora/Gno to real JS form/
+repository capture, a local in-memory bridge mirror and a nonce-bound asynchronous
+freeze/read barrier. NativeMigrationMemory supports prepared renderer reads
+without holding its monitor across await. Whole-attempt cleanup thaws the view;
+the persistent fence still controls writes. Native Aurora HTTP/session/restore
+lifetimes are pinned. New file: NativeEmbeddedMigrationCapture.kt. This code is
+uncompiled and unaccepted. Shared advanced forms and the other pending categories
+remain unfinished; do not raise coverage above9/20.
+
 Native content-backup SAF custody was subsequently rewritten around an exact
 job/attempt and scope/generation binding, resumed two-minute picker admission,
 five-minute cancellable foreground file access and streamed encrypted readback.

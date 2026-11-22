@@ -10,13 +10,13 @@ import java.util.UUID
  * execute its content; detached inputs remain inert originals until sign-out. */
 internal object NativeMigrationMemory{
     class Capture(val content:JSONObject?,val state:JSONObject,val settled:Boolean=true)
-    private class Entry(val owner:String,val kind:String,val read:()->Capture)
+    private class Entry(val owner:String,val kind:String,val prepare:(suspend()->Unit)?,val finish:(()->Unit)?,val read:()->Capture)
     private class Retained(val owner:String,val value:JSONObject?)
     private val live=linkedMapOf<String,Entry>();private val retained=linkedMapOf<String,Retained>();private var revision=0L
     private val kinds=setOf("tasks","diary","mindmaps","aurora","stoicheion","advice","reminders","local-work")
-    @Synchronized fun register(owner:String,kind:String,read:()->Capture):()->Unit{
+    @Synchronized fun register(owner:String,kind:String,prepare:(suspend()->Unit)?=null,finish:(()->Unit)?=null,read:()->Capture):()->Unit{
         E2eeKeys.technical(owner);check(kind in kinds&&live.size+retained.size<1000){"E2EE_SOURCE_TOO_LARGE"}
-        val id=UUID.randomUUID().toString();live[id]=Entry(owner,kind,read);revision++
+        val id=UUID.randomUUID().toString();live[id]=Entry(owner,kind,prepare,finish,read);revision++
         return{synchronized(this){val entry=live.remove(id);if(entry!=null){
             val copy=try{encode(id,entry,false)}catch(_:Exception){null};retained[id]=Retained(owner,copy);revision++
         }};Unit}
@@ -26,6 +26,18 @@ internal object NativeMigrationMemory{
             .put("content",value.content?.let{JSONObject(it.toString())}?:JSONObject.NULL).put("state",JSONObject(value.state.toString())).put("settled",value.settled)
     }
     @Synchronized fun clearOwner(owner:String){live.entries.removeAll{it.value.owner==owner};retained.entries.removeAll{it.value.owner==owner};revision++}
+    /** Embedded renderers need an asynchronous Main-thread read barrier. Never
+     * hold the registry monitor while waiting for their JavaScript callback. */
+    private suspend fun prepare(owner:String,kind:String?,current:()->Unit){
+        current();val (before,entries)=synchronized(this){revision to live.values.filter{it.owner==owner&&(kind==null||it.kind==kind)}.toList()}
+        for(entry in entries){current();entry.prepare?.invoke();current();synchronized(this){check(revision==before){"E2EE_SOURCE_CAPTURE_CHANGED"}}}
+    }
+    suspend fun finishPrepared(owner:String)=withContext(Dispatchers.Main.immediate){
+        val entries=synchronized(this@NativeMigrationMemory){live.values.filter{it.owner==owner}.toList()}
+        // Thawing an inert renderer grants no legacy writer/transport authority.
+        // The persistent account fence still decides whether it may write.
+        entries.forEach{runCatching{it.finish?.invoke()}}
+    }
     @Synchronized private fun rows(owner:String):JSONArray{
         E2eeKeys.technical(owner);val before=revision;val result=JSONArray()
         for(value in retained.values)if(value.owner==owner)result.put(value.value?.let{JSONObject(it.toString())}?:error("E2EE_DETACHED_SOURCE_CAPTURE_FAILED"))
@@ -34,12 +46,12 @@ internal object NativeMigrationMemory{
         check(result.toString().toByteArray(Charsets.UTF_8).size<=64*1024*1024){"E2EE_SOURCE_TOO_LARGE"};return result
     }
     suspend fun localWork(owner:String,current:()->Unit):JSONObject=withContext(Dispatchers.Main.immediate){
-        current();val before=rows(owner);current();val after=rows(owner);check(E2eeProductJson.same(before,after)){"E2EE_SOURCE_CAPTURE_CHANGED"}
+        current();prepare(owner,null,current);val before=rows(owner);current();val after=rows(owner);check(E2eeProductJson.same(before,after)){"E2EE_SOURCE_CAPTURE_CHANGED"}
         check((0 until before.length()).none{val row=before.getJSONObject(it);row.getBoolean("mounted")&&!row.getBoolean("settled")}){"E2EE_SOURCE_NOT_SETTLED"}
         JSONObject().put("editors",before)
     }
     suspend fun content(owner:String,kind:String,current:()->Unit):JSONObject?=withContext(Dispatchers.Main.immediate){
-        current();check(kind in kinds){"E2EE_SOURCE_ADAPTER_REQUIRED"};val rows=rows(owner)
+        current();check(kind in kinds){"E2EE_SOURCE_ADAPTER_REQUIRED"};prepare(owner,kind,current);val rows=rows(owner)
         val values=(0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")==kind&&it.getBoolean("mounted")}
         check(values.none{!it.getBoolean("settled")}){"E2EE_SOURCE_NOT_SETTLED"}
         val content=values.mapNotNull{it.optJSONObject("content")}
