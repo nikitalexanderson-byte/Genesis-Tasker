@@ -10,6 +10,22 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Web original file bytes from retained history (candidate, no compilation/QA)
+
+The real private backup panel now distinguishes non-JSON/large content from an
+invalid archive and can save the exact selected current or historical file.
+It rechecks size/SHA-256, the original payload's unlocked account capability,
+foreground/session/restore lifetime and live data-exchange entitlement. File
+output is an explicit user download, served as octet-stream with a bounded safe
+filename; no untrusted HTML/image/document is executed in the application. A
+fourteen-language notice states that this output is decrypted and unencrypted
+outside GENESIS. Owned byte buffers are cleared and Blob URLs revoked; browser/
+downloaded-file/string erasure is not claimed. Payload/key/preview state clears
+on hide and account changes. This does not execute an archive command or grant
+rights, and is not the separate typed normal-repository restore implementation.
+Native binary history composition and consolidated rendering/meaning/byte tests
+remain. No tests/compiler/lint/build/CI/push/release ran; coverage stays9/20.
+
 ### Native independent message-key file handoff (candidate, no compilation/QA)
 
 Replaced the actual key-file pickers' raw repository/provider callback with a

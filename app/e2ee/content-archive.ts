@@ -17,6 +17,15 @@ const moduleFor=(domain:string,scope:ArchiveScope|null):BackupModuleId=>scope&&s
 async function value(id:string,bytes:Uint8Array,metadata={filename:'',mediaType:'application/json'}):Promise<ContentArchiveValue>{
  return{id,encoding:'base64url',bytes:encodeE2eeBytes(bytes),sha256:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))),size:bytes.length,...metadata};
 }
+/** Explicit file output is separate from restore: original bytes/metadata,
+ * checked again at the selected version, with no command or authority replay. */
+export async function openContentArchiveValue(input:ContentArchiveValue,current:()=>void){
+ current();const row=structuredClone(input);exactKeys(row,['id','encoding','bytes','sha256','size','filename','mediaType']);assertTechnical(row.id);
+ if(row.encoding!=='base64url'||!Number.isSafeInteger(row.size)||row.size<0||row.size>BACKUP_MAX_PLAIN||typeof row.filename!=='string'||row.filename.length>512||typeof row.mediaType!=='string'||row.mediaType.length>128)throw new Error('BACKUP_INVALID');
+ const bytes=row.size===0&&row.bytes===''?new Uint8Array():decodeE2eeBytes(row.bytes,row.size);
+ try{if(encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)))!==row.sha256)throw new Error('BACKUP_INVALID');current();return{bytes,filename:row.filename,mediaType:row.mediaType};}
+ catch(reason){bytes.fill(0);throw reason;}
+}
 /** Only semantic editor values and explicitly declared device-content cells
  * can enter this portable archive. Key bundles, directory pins, source-opening
  * material, enrollment/membership packets and service outboxes are excluded.
