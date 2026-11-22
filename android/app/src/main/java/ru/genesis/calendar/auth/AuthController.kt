@@ -65,6 +65,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private val privateVaultLifecycle=java.util.concurrent.atomic.AtomicLong()
     private val privateMigration=java.util.concurrent.atomic.AtomicReference<ru.genesis.calendar.security.E2eeProductMigrationController?>()
     private val privateMigrationSetupMutex=Mutex()
+    private val privateVaultUnlockMutex=Mutex()
     private val planGuidanceLeases = java.util.concurrent.ConcurrentHashMap<String, Pair<String, Long>>()
 
     private fun liveAccountSettings(response: JSONObject): AccountSettings? {
@@ -222,6 +223,20 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var pendingServicesUserId: String? = null
     private val mutableState = MutableStateFlow(AuthPanelState())
     val state = mutableState.asStateFlow()
+
+    /** Owner/session admission for a bounded trip to a system activity. This
+     * deliberately survives ordinary background vault locking; it grants no
+     * vault or transport capability. The caller must require foreground again
+     * before using returned material. Session/restore epochs still invalidate it. */
+    internal fun privateUiOwnerGuard(uid:String,allowOffline:Boolean=false):()->Unit{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val accountScope=CloudAccountSnapshot.scopeFor(uid)
+        val current={
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&(allowOffline||!mutableState.value.requiresSignIn)
+                &&app.workspaceEpoch==epoch&&app.workspaceScope==accountScope){"E2EE_ACCOUNT_CHANGED"}
+        }
+        current();return current
+    }
 
     /** Captures the account generation once; it cannot follow a later account switch. */
     internal fun e2eeScopeTransport(uid: String): ru.genesis.calendar.security.E2eeScopeTransport {
@@ -568,15 +583,22 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     /** Called after Android's credential confirmation. Recovery input is kept
      * in this call only; the server receives signed public enrollment proofs. */
     suspend fun unlockPrivateVault(secretText:String?=null,recoveryKit:JSONObject?=null,offline:Boolean=false,restoreHardware:Boolean=false){
+        val secret=secretText?.takeIf{it.isNotBlank()}?.let{ru.genesis.calendar.security.E2eeEnvelope.decode(it.trim(),32)}
+        try{unlockPrivateVaultMaterial(secret,recoveryKit,offline,restoreHardware){}}finally{secret?.fill(0)}
+    }
+    internal suspend fun unlockPrivateVaultMaterial(recoverySecret:ByteArray?,recoveryKit:JSONObject?,offline:Boolean,restoreHardware:Boolean,assertAdmission:()->Unit)=privateVaultUnlockMutex.withLock{
+        assertAdmission();check(recoverySecret==null||recoverySecret.size==32){"E2EE_RECOVERY_KIT_REQUIRED"}
         val identity=mutableState.value.user?:error("E2EE_ACCOUNT_BINDING_REQUIRED")
         check(identity.privateVault&&(offline||!mutableState.value.requiresSignIn)&&(!restoreHardware||!offline)){"E2EE_ACCOUNT_BINDING_REQUIRED"}
-        val uid=identity.uid;val epoch=app.workspaceEpoch;var opened:ru.genesis.calendar.security.E2eeProductAccount?=null
+        val uid=identity.uid;val epoch=app.workspaceEpoch;val generation=client.currentGeneration();var opened:ru.genesis.calendar.security.E2eeProductAccount?=null
+        val adopted=java.util.concurrent.atomic.AtomicBoolean(false)
+        val admission=java.util.concurrent.atomic.AtomicReference<(() -> Unit)?>(assertAdmission)
         val lifecycle=privateVaultLifecycle.get()
-        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&mutableState.value.user?.uid==uid&&(offline||!mutableState.value.requiresSignIn)
+        fun current(){admission.get()?.invoke();ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&mutableState.value.user?.uid==uid&&(offline||!mutableState.value.requiresSignIn)
             &&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
-        val secret=secretText?.takeIf{it.isNotBlank()}?.let{ru.genesis.calendar.security.E2eeEnvelope.decode(it.trim(),32)}
+        val secret=recoverySecret?.copyOf()
         val transport=object:ru.genesis.calendar.security.E2eeAccountTransport{
-            private fun call(path:String,body:JSONObject?=null):JSONObject{current();check(!offline){"E2EE_REFRESH_REQUIRED"};return client.e2ee(client.currentGeneration(),path,body).also{current()}}
+            private fun call(path:String,body:JSONObject?=null):JSONObject{current();check(!offline){"E2EE_REFRESH_REQUIRED"};return client.e2ee(generation,path,body).also{current()}}
             override fun status()=call("/status")
             override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
             override fun command(packet:JSONObject)=call("/command",packet)
@@ -588,16 +610,26 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 override fun membershipCommit(batch:JSONObject)=call("/membership",batch)
             }
         }
-        try{withContext(Dispatchers.IO){
+        try{val loaded=withContext(Dispatchers.IO){
             current();val account=if(offline)ru.genesis.calendar.security.E2eeProductAccount.openOffline(app,uid,transport,::current)
                 else ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit,restoreHardware);opened=account
             val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load(offline);current()
             val preferences=ru.genesis.calendar.security.E2eePrivatePreferences(app,account);preferences.load();current()
-            ru.genesis.calendar.security.NativePrivateProducts.attach(account,product,preferences)
-            client.bindPrivateProduct(client.currentGeneration(),uid)
-        };current();val prior=mutableState.value;val settings=prior.accountSettings?:withContext(Dispatchers.IO){CachedAccountEntry(app).read(app.workspaceScope)?.settings}
-        current();mutableState.value=prior.copy(ready=true,busy=false,outgoingSyncIssue=null,accountSettings=settings?.let{ru.genesis.calendar.security.NativePrivateProducts.preferences(app.workspaceScope).project(it)})
-        }catch(error:Throwable){opened?.close();throw error}finally{secret?.fill(0)}
+            Triple(account,product,preferences)
+        };current();val settings=mutableState.value.accountSettings?:withContext(Dispatchers.IO){current();CachedAccountEntry(app).read(CloudAccountSnapshot.scopeFor(uid))?.settings.also{current()}}
+        withContext(Dispatchers.Main.immediate){
+            current();val projected=settings?.let(loaded.third::project);current();val prior=mutableState.value
+            // No suspension between adoption and final UI publication: attaching
+            // may unmount the unlock view and cancel its composition scope.
+            ru.genesis.calendar.security.NativePrivateProducts.attach(loaded.first,loaded.second,loaded.third)
+            client.bindPrivateProduct(generation,uid)
+            mutableState.value=prior.copy(ready=true,busy=false,outgoingSyncIssue=null,accountSettings=projected)
+            // Subsequent account use keeps its owner/session/lifecycle guards,
+            // independent of the now-retired unlock view and one-shot request.
+            adopted.set(true)
+            admission.set(null)
+        }
+        }catch(error:Throwable){if(!adopted.get())opened?.close();throw error}finally{secret?.fill(0)}
     }
     internal fun e2eePersonalLocalFence(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified): ru.genesis.calendar.data.NativeLegacyScopeFence {

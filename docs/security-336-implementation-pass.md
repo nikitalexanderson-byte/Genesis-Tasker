@@ -10,6 +10,45 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Recovery file and credential lifetimes (candidate, no compilation/QA)
+
+Added one memory-only recovery generation with a ten-minute lifetime and bounded
+two-minute SAF requests. Kit and secret saves use separate generation-named files,
+reject reuse of the same known URI and require complete readback before issuing
+either saved receipt. Selected recovery kits are bounded/strictly parsed and
+bound to the original owner/session/workspace epoch. Neither the URI nor secret
+is placed in saved state, Intent, preferences, Room or an application temp file.
+The explicitly selected secret file remains plaintext, as before; the user must
+store it separately. Different provider URI aliases cannot prove physical storage
+separation. Provider writes may be partial after interruption and are not treated
+as successful; readback does not guarantee future provider immutability.
+
+Migration and vault unlock now use common request-keyed SAF/credential hosts.
+Each launcher/callback captures its own request; stale callbacks cannot consume
+a later request. Results wait for RESUMED admission. Expiry, account/session/restore
+epoch changes, disposal and active-operation background cancel provider opens,
+close descriptors and clear owned byte arrays. Only an explicit pending system
+trip may retain bounded material. Process death does not restore that material.
+The two-minute credential limit applies to admission, not a long admitted migration.
+Memory wiping is best effort for owned buffers; JVM/parser copies and a suspended
+process cannot be promised immediate erasure.
+
+Native unlock also pins the HTTP generation for all requests and serializes
+attempts. Product loading remains guarded before a final non-suspending main-thread
+adoption/publication. Cancellation caused by that successful adoption must not
+close the adopted account. The transient UI admission reference is released;
+the account keeps its original owner/session/workspace/lifecycle checks and does
+not depend on the disposed unlock view. Offline unlock keeps the cached-device
+path; hardware replacement still requires explicit recovery and online admission.
+
+This is source implementation, not accepted lifecycle behavior. No private tests,
+compiler/build, CI, device actions or publication ran; accepted coverage stays9/20.
+Consolidated QA must cover before-resume callbacks, timeout/process death, same-UID
+relogin and restore epoch, cancellation/background during IO/unlock, provider errors,
+generation mixing/URI reuse, successful-adoption unmount and subsequent account use.
+Content-backup SAF custody, embedded Aurora/Gno captures and streamed migration
+cancellation remain separate unfinished work.
+
 ### Native dream and tracker input continuation (uncompiled candidate)
 
 Dream journal/list and editor now register the current records, raw form,

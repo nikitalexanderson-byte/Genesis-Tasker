@@ -225,6 +225,17 @@ Content-only backup must never replay these new issue/membership receipts.
 
 # Continuation checkpoint: 22 November 2026
 
+Latest code continuation adds shared request-keyed recovery SAF and device
+credential hosts, ten-minute generated-material custody, two-minute system-trip
+admission, generation-bound saved receipts and complete file readback. Session/
+restore epochs and UI lifetimes are bound; active background IO closes descriptors.
+Native unlock pins its HTTP generation and publishes/adopts the account without
+tying subsequent use to a disposed UI request. Details and limitations are in the
+leading recovery-lifetimes section of `security-336-implementation-pass.md`.
+This code is uncompiled and untested; accepted coverage remains9/20. Continue
+remaining infrastructure, including streamed cancellation and content-backup SAF,
+before consolidated acceptance. No security publication or rollout activation.
+
 Continue code first, then consolidated acceptance/repairs, then release. The new
 scope-setup/editor-source/product-controller increment is documented at the top
 of `security-336-implementation-pass.md`; it is not compiled or accepted. Actual

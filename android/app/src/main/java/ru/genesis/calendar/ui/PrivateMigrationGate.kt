@@ -1,13 +1,9 @@
 package ru.genesis.calendar.ui
 
-import android.app.Activity
 import android.app.KeyguardManager
-import android.net.Uri
 import android.os.SystemClock
 import android.provider.Settings
 import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +24,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.withResumed
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
@@ -65,7 +60,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             if(marker?.phase=="preparing")NativeMigrationUiState.show(owner,auth.accountSettings?.language?:"en",true)
         }catch(cancel:CancellationException){throw cancel}catch(_:Exception){/* Existing SQL/transport denial remains in force. */}
     }
-    view?.takeIf{it.owner==auth.user?.uid}?.let{saved->key(saved.id){
+    view?.takeIf{it.owner==auth.user?.uid}?.let{saved->key(saved.id,LocalLifecycleOwner.current.lifecycle){
         val night=rememberEveningTheme(AppearanceSettings.read("{}",auth.accountSettings?.theme?:"auto"));val palette=auth.accountSettings?.darkPalette?:"green"
         MaterialTheme(colorScheme=if(night)eveningPalette(palette)else daylightPalette(palette),typography=GenesisTypography,shapes=GenesisShapes){PrivateMigrationDialog(controller,auth,saved)}
     }}
@@ -74,72 +69,85 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val scope=rememberCoroutineScope()
     val text=remember(view.language){migrationText(context,view.language,"migration-copy-v1.json")};val vault=remember(view.language){migrationText(context,view.language,"vault-copy-v1.json")}
     var phase by remember{mutableStateOf(if(view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
-    var generatedKit by remember{mutableStateOf<JSONObject?>(null)};var generatedSecret by remember{mutableStateOf("")}
+    val generatedMaterial=remember{AtomicReference<NativeRecoveryMaterial?>(null)}
+    var generatedId by remember{mutableStateOf<String?>(null)}
     var savedFile by remember{mutableStateOf(false)};var savedSecret by remember{mutableStateOf(false)}
     var secret by remember{mutableStateOf("")};var kit by remember{mutableStateOf<JSONObject?>(null)};var busy by remember{mutableStateOf(false)}
     var error by remember{mutableStateOf("")};var progress by remember{mutableStateOf("snapshot")};var started by remember{mutableStateOf(view.resume)}
     val alive=remember{AtomicBoolean(true)};val prepared=remember{AtomicReference<E2eeProductMigrationController?>(null)}
-    val pendingSave=remember{AtomicReference<Pair<String,ByteArray>?>(null)}
+    val pendingFile=remember{AtomicReference<NativeRecoveryFileRequest?>(null)}
+    var fileActivity by remember{mutableStateOf<NativeRecoveryFileRequest?>(null)}
+    val fileAttempt=remember{AtomicLong(0)}
     val pendingCredential=remember{AtomicReference<NativeMigrationCredential?>(null)}
-    val credentialOutstanding=remember{AtomicBoolean(false)};val credentialAttempt=remember{AtomicLong(0)}
-    val credentialTimeout=remember{AtomicReference<Job?>(null)};val activeSecret=remember{AtomicReference<ByteArray?>(null)}
-    fun current(){check(alive.get()&&NativeMigrationUiState.state.value?.id==view.id&&controller.state.value.user?.uid==view.owner){"E2EE_ACCOUNT_CHANGED"}}
-    fun foreground(){current();check(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)){"E2EE_FOREGROUND_REQUIRED"}}
+    var credentialActivity by remember{mutableStateOf<NativeMigrationCredential?>(null)}
+    val credentialAttempt=remember{AtomicLong(0)};val activeSecret=remember{AtomicReference<ByteArray?>(null)}
+    val foregroundState=remember{AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
+    fun current(){check(alive.get()&&NativeMigrationUiState.state.value?.id==view.id&&controller.state.value.user?.uid==view.owner&&!controller.state.value.requiresSignIn){"E2EE_ACCOUNT_CHANGED"}}
+    fun foreground(){current();check(foregroundState.get()){"E2EE_FOREGROUND_REQUIRED"}}
+    fun clearGenerated(){generatedMaterial.getAndSet(null)?.close();generatedId=null;savedFile=false;savedSecret=false}
+    fun fileGuard(attempt:Long):()->Unit{
+        val owner=controller.privateUiOwnerGuard(view.owner)
+        return{current();owner();check(fileAttempt.get()==attempt){"E2EE_RECOVERY_REQUEST_CHANGED"}}
+    }
+    fun startFile(request:NativeRecoveryFileRequest){
+        check(pendingFile.compareAndSet(null,request)){request.close();"E2EE_RECOVERY_REQUEST_CHANGED"}
+        busy=true;error="";fileActivity=request
+    }
     fun message(reason:Exception):String=if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
     DisposableEffect(view.id,lifecycle){
-        val observer=LifecycleEventObserver{_,event->if(event==Lifecycle.Event.ON_STOP){
+        val observer=LifecycleEventObserver{_,event->
+          if(event==Lifecycle.Event.ON_RESUME)foregroundState.set(true)
+          if(event==Lifecycle.Event.ON_PAUSE)foregroundState.set(false)
+          if(event==Lifecycle.Event.ON_STOP){
             prepared.getAndSet(null)?.let(controller::closePrivateMigration);secret="";kit=null
             activeSecret.getAndSet(null)?.fill(0)
-            if(pendingSave.get()==null){generatedSecret="";generatedKit=null;if(phase=="generated")phase=if(started)"confirm"else"intro"}
+            if(pendingFile.get()?.waitingForPicker!=true){clearGenerated();if(phase=="generated")phase=if(started)"confirm"else"intro"}
         }};lifecycle.addObserver(observer)
-        onDispose{alive.set(false);lifecycle.removeObserver(observer);prepared.getAndSet(null)?.let(controller::closePrivateMigration);pendingSave.getAndSet(null)?.second?.fill(0)
-            credentialTimeout.getAndSet(null)?.cancel();pendingCredential.getAndSet(null)?.close();activeSecret.getAndSet(null)?.fill(0)}
+        onDispose{alive.set(false);lifecycle.removeObserver(observer);prepared.getAndSet(null)?.let(controller::closePrivateMigration);pendingFile.getAndSet(null)?.close();generatedMaterial.getAndSet(null)?.close()
+            pendingCredential.getAndSet(null)?.close();activeSecret.getAndSet(null)?.fill(0)}
     }
-    val export=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")){uri->
-        val request=pendingSave.getAndSet(null)
-        if(uri!=null&&request!=null){busy=true;scope.launch{try{
-            current();withContext(Dispatchers.IO){
-                val output=context.contentResolver.openOutputStream(uri,"wt")?:error("E2EE_STORAGE_UNAVAILABLE");output.use{it.write(request.second);it.flush()}
-                val read=context.contentResolver.openInputStream(uri)?:error("E2EE_STORAGE_UNAVAILABLE")
-                val bytes=read.use{it.readBytesAtMost(request.second.size+1)};try{check(bytes.contentEquals(request.second)){"E2EE_RECOVERY_UNVERIFIED"}}finally{bytes.fill(0)}
-            };current();if(request.first=="kit")savedFile=true else savedSecret=true
-        }catch(cancel:CancellationException){throw cancel}catch(reason:Exception){if(alive.get())error=message(reason)}finally{request.second.fill(0);if(alive.get())busy=false}}}
-        else request?.second?.fill(0)
-    }
-    val select=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){uri->
-        kit=null;if(uri!=null){busy=true;scope.launch{try{
-            val parsed=withContext(Dispatchers.IO){val input=context.contentResolver.openInputStream(uri)?:error("E2EE_INVALID_RECOVERY_KIT")
-                val bytes=input.use{it.readBytesAtMost(65537)};try{check(bytes.size in 1..65536){"E2EE_INVALID_RECOVERY_KIT"};E2eeFileManifestJson.readPrivateDocument(bytes)}finally{bytes.fill(0)}}
-            current();check(parsed.getString("ownerId")==view.owner&&parsed.getInt("protocol")==1){"E2EE_SCOPE_BINDING_MISMATCH"};kit=parsed;error=""
-        }catch(cancel:CancellationException){throw cancel}catch(reason:Exception){if(alive.get())error=message(reason)}finally{if(alive.get())busy=false}}}
-    }
-    val credential=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()){result->
-        credentialOutstanding.set(false)
-        val request=pendingCredential.get()
-        if(request==null){if(alive.get())busy=false}
-        else if(result.resultCode!=Activity.RESULT_OK){
-            pendingCredential.compareAndSet(request,null);request.close();credentialTimeout.getAndSet(null)?.cancel()
-            if(alive.get()&&credentialAttempt.get()==request.attempt){secret="";busy=false;error=text.getString("error")}
-        }else scope.launch{
-            var opened:NativeMigrationCredential.Opened?=null;var migration:E2eeProductMigrationController?=null
-            fun owns(){foreground();check(credentialAttempt.get()==request.attempt){"E2EE_CREDENTIAL_REVOKED"}}
-            try{
-                lifecycle.withResumed{};owns();check(pendingCredential.compareAndSet(request,null)){"E2EE_CREDENTIAL_REVOKED"}
-                credentialTimeout.getAndSet(null)?.cancel()
-                val material=request.claim(view.owner,view.id,request.attempt,SystemClock.elapsedRealtime());opened=material;activeSecret.set(material.secret)
-                started=true;phase="running";error=""
-                val next=controller.preparePrivateMigration(material.secret,material.kit,::owns);migration=next;owns();prepared.set(next)
-                next.run(material.secret,material.kit){value->owns();progress=value};owns()
-                prepared.compareAndSet(next,null);controller.closePrivateMigration(next);migration=null;kit=null;phase="done";controller.checkSession()
-            }catch(cancel:CancellationException){throw cancel}catch(reason:Exception){if(alive.get()&&credentialAttempt.get()==request.attempt){error=message(reason);phase="confirm"}}
-            finally{
-                pendingCredential.compareAndSet(request,null);request.close()
-                opened?.let{activeSecret.compareAndSet(it.secret,null);it.close()}
-                migration?.let{prepared.compareAndSet(it,null);controller.closePrivateMigration(it)}
-                if(credentialAttempt.get()==request.attempt){credentialTimeout.getAndSet(null)?.cancel();if(alive.get()){secret="";busy=false}}
-            }
+    LaunchedEffect(generatedId){val material=generatedMaterial.get()?:return@LaunchedEffect;delay(NativeRecoveryMaterial.LIFETIME_MILLIS)
+        if(generatedMaterial.compareAndSet(material,null)){material.close();generatedId=null;savedFile=false;savedSecret=false;if(phase=="generated")phase=if(started)"confirm"else"intro"}}
+    LaunchedEffect(auth.user?.uid,auth.requiresSignIn,auth.checkedAt,auth.busy){
+        if(phase!="done"&&runCatching{generatedMaterial.get()?.current();pendingFile.get()?.current();pendingCredential.get()?.current()}.isFailure){
+            pendingFile.getAndSet(null)?.close();pendingCredential.getAndSet(null)?.close();fileActivity=null;credentialActivity=null
+            prepared.getAndSet(null)?.let(controller::closePrivateMigration);activeSecret.getAndSet(null)?.fill(0);clearGenerated()
+            secret="";kit=null;busy=false;error=text.getString("error");phase=if(started)"confirm"else"intro"
         }
     }
+    RecoveryFileActivity(fileActivity){request,result->
+        if(pendingFile.compareAndSet(request,null)&&alive.get()){
+            fileActivity=null
+            try{current();when(result){
+                is RecoveryFileResult.Saved->{foreground();val material=generatedMaterial.get()?:error("E2EE_RECOVERY_REQUEST_CHANGED")
+                    check(material.id==request.materialId){"E2EE_RECOVERY_REQUEST_CHANGED"};material.saved(request.kind,result.uri)
+                    if(request.kind=="kit")savedFile=true else savedSecret=true}
+                is RecoveryFileResult.Loaded->{foreground();kit=result.kit;error=""}
+                RecoveryFileResult.Cancelled->Unit
+                RecoveryFileResult.Failed->{if(request.writing){clearGenerated();phase=if(started)"confirm"else"intro"};error=text.getString("error")}
+            }}catch(reason:Exception){error=message(reason)}finally{busy=false}
+        }
+    }
+    RecoveryCredentialActivity(credentialActivity,text.getString("title"),text.getString("confirm"),operation={request,material,admit->
+            var migration:E2eeProductMigrationController?=null
+            fun owns(){foreground();admit();check(pendingCredential.get()===request&&credentialAttempt.get()==request.attempt){"E2EE_CREDENTIAL_REVOKED"}}
+            try{
+                owns();activeSecret.set(material.secret)
+                started=true;phase="running";error=""
+                val suppliedKit=requireNotNull(material.kit){"E2EE_RECOVERY_KIT_REQUIRED"}
+                val next=controller.preparePrivateMigration(material.secret,suppliedKit,::owns);migration=next;owns();prepared.set(next)
+                next.run(material.secret,suppliedKit){value->owns();progress=value};owns()
+                prepared.compareAndSet(next,null);controller.closePrivateMigration(next);migration=null;kit=null;phase="done";controller.checkSession()
+            }finally{
+                activeSecret.compareAndSet(material.secret,null)
+                migration?.let{prepared.compareAndSet(it,null);controller.closePrivateMigration(it)}
+            }
+    },finished={request,reason->
+        if(pendingCredential.compareAndSet(request,null)&&alive.get()){
+            credentialActivity=null;secret="";kit=null;busy=false
+            if(reason!=null){error=message(reason);phase="confirm"}
+        }
+    })
     LaunchedEffect(phase,auth.user?.privateVault,auth.busy){if(phase=="done"&&auth.user?.privateVault==true&&!auth.busy)NativeMigrationUiState.close(view.id)}
     val keyguard=context.getSystemService(KeyguardManager::class.java)
     Dialog(onDismissRequest={},properties=DialogProperties(dismissOnBackPress=false,dismissOnClickOutside=false,usePlatformDefaultWidth=false,securePolicy=SecureFlagPolicy.SecureOn)){
@@ -147,30 +155,32 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             Column(Modifier.widthIn(max=560.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(20.dp)){
                 Text(text.getString("title"),style=MaterialTheme.typography.headlineMedium,modifier=Modifier.semantics{heading()});Text(text.getString("intro"))
                 if(phase=="intro")Button(onClick={if(!busy){busy=true;scope.launch{try{
-                    val generated=withContext(Dispatchers.IO){E2eeKeys.createRecoveryKit(view.owner)}
-                    try{current();generatedKit=generated.kit;generatedSecret=E2eeEnvelope.encode(generated.secret);savedFile=false;savedSecret=false;phase="generated"}finally{generated.secret.fill(0)}
+                    foreground();val owner=controller.privateUiOwnerGuard(view.owner)
+                    val createdSecret=AtomicReference<ByteArray?>(null)
+                    try{val generated=withContext(Dispatchers.IO){owner();val created=E2eeKeys.createRecoveryKit(view.owner);createdSecret.set(created.secret)
+                            try{owner();foreground();created}catch(reason:Throwable){created.secret.fill(0);throw reason}}
+                        foreground();owner();val material=NativeRecoveryMaterial.capture(view.owner,view.id,generated.kit,generated.secret){current();owner()}
+                        clearGenerated();generatedMaterial.set(material);generatedId=material.id;savedFile=false;savedSecret=false;phase="generated"
+                    }finally{createdSecret.getAndSet(null)?.fill(0)}
                 }catch(cancel:CancellationException){throw cancel}catch(reason:Exception){if(alive.get())error=message(reason)}finally{if(alive.get())busy=false}}}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("generate"))}
-                if(phase=="generated"&&generatedKit!=null){
+                if(phase=="generated"&&generatedId!=null){
                     Text(text.getString("generated"));Text(text.getString("secretNote"))
-                    OutlinedButton(onClick={pendingSave.set(Pair("kit",requireNotNull(generatedKit).toString(2).toByteArray(Charsets.UTF_8)));export.launch("genesis-recovery.json")},enabled=!busy&&pendingSave.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("saveFile"))}
-                    OutlinedButton(onClick={pendingSave.set(Pair("secret",(generatedSecret+"\n").toByteArray(Charsets.UTF_8)));export.launch("genesis-recovery-secret.txt")},enabled=!busy&&pendingSave.get()==null&&generatedSecret.isNotEmpty(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("saveSecret"))}
-                    Button(onClick={generatedKit=null;generatedSecret="";secret="";kit=null;phase="confirm"},enabled=savedFile&&savedSecret&&!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("saved"))}
+                    for(kind in listOf("kit","secret"))OutlinedButton(onClick={try{
+                        foreground();val material=generatedMaterial.get()?:error("E2EE_RECOVERY_REQUEST_CHANGED");val guard=fileGuard(fileAttempt.incrementAndGet())
+                        startFile(NativeRecoveryFileRequest.write(material,kind){guard();check(generatedMaterial.get()===material){"E2EE_RECOVERY_REQUEST_CHANGED"}})
+                    }catch(reason:Exception){error=message(reason)}},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(kind=="kit")"saveFile"else"saveSecret"))}
+                    Button(onClick={try{foreground();check(generatedMaterial.get()?.complete()==true){"E2EE_RECOVERY_UNVERIFIED"};clearGenerated();secret="";kit=null;phase="confirm"}catch(reason:Exception){error=message(reason)}},enabled=savedFile&&savedSecret&&!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("saved"))}
                 }
                 if(phase=="confirm"){
-                    Text(text.getString("confirm"));TextButton(onClick={select.launch(arrayOf("application/json","application/octet-stream"))},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("kit"))}
+                    Text(text.getString("confirm"));TextButton(onClick={try{foreground();kit=null;val guard=fileGuard(fileAttempt.incrementAndGet());startFile(NativeRecoveryFileRequest.read(view.owner,view.id,guard))}catch(reason:Exception){error=message(reason)}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("kit"))}
                     OutlinedTextField(secret,{secret=it.take(64)},label={Text(vault.getString("secret"))},visualTransformation=PasswordVisualTransformation(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
                     if(!keyguard.isDeviceSecure)Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("screenLock"))}
                     else Button(onClick={
-                        if(!busy&&!credentialOutstanding.get())try{
-                            foreground();@Suppress("DEPRECATION") val intent=keyguard.createConfirmDeviceCredentialIntent(text.getString("title"),text.getString("confirm"))?:error("E2EE_CREDENTIAL_UNAVAILABLE")
-                            val request=NativeMigrationCredential.capture(view.owner,view.id,credentialAttempt.incrementAndGet(),secret,requireNotNull(kit){"E2EE_RECOVERY_KIT_REQUIRED"},SystemClock.elapsedRealtime())
+                        if(!busy&&pendingCredential.get()==null)try{
+                            foreground()
+                            val request=NativeMigrationCredential.capture(view.owner,view.id,credentialAttempt.incrementAndGet(),secret,requireNotNull(kit){"E2EE_RECOVERY_KIT_REQUIRED"},SystemClock.elapsedRealtime(),controller.privateUiOwnerGuard(view.owner))
                             check(pendingCredential.compareAndSet(null,request)){request.close();"E2EE_CREDENTIAL_PENDING"}
-                            secret="";kit=null;busy=true;credentialOutstanding.set(true)
-                            credentialTimeout.getAndSet(scope.launch{
-                                delay(NativeMigrationCredential.TIMEOUT_MILLIS)
-                                if(pendingCredential.compareAndSet(request,null)){request.close();if(alive.get()&&credentialAttempt.get()==request.attempt){error=text.getString("error");if(!credentialOutstanding.get())busy=false}}
-                            })?.cancel()
-                            try{credential.launch(intent)}catch(reason:Exception){credentialOutstanding.set(false);pendingCredential.compareAndSet(request,null);request.close();credentialTimeout.getAndSet(null)?.cancel();throw reason}
+                            secret="";kit=null;busy=true;credentialActivity=request
                         }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=message(reason)}}
                     },enabled=!busy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
                 }
@@ -178,15 +188,10 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 if(phase=="done"&&!auth.busy)TextButton(onClick={controller.checkSession()},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("unlock"))}
                 if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error)
                 Text(text.getString("kept"),style=MaterialTheme.typography.bodyMedium)
-                if(!started)TextButton(onClick={secret="";kit=null;generatedSecret="";generatedKit=null;NativeMigrationUiState.close(view.id)},enabled=!busy&&pendingSave.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
-                TextButton(onClick={secret="";kit=null;generatedSecret="";generatedKit=null;controller.logout()},enabled=!busy&&pendingSave.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("exit"))}
+                if(!started)TextButton(onClick={secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id)},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
+                TextButton(onClick={secret="";kit=null;clearGenerated();controller.logout()},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("exit"))}
                 Text(vault.getString("privacy"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }}
     }
-}
-private fun java.io.InputStream.readBytesAtMost(maximum:Int):ByteArray{
-    val output=java.io.ByteArrayOutputStream();val buffer=ByteArray(8192)
-    try{while(output.size()<maximum){val count=read(buffer,0,minOf(buffer.size,maximum-output.size()));if(count<0)break;check(count>0){"E2EE_STORAGE_UNAVAILABLE"};output.write(buffer,0,count)};return output.toByteArray()}
-    finally{buffer.fill(0);output.reset()}
 }
