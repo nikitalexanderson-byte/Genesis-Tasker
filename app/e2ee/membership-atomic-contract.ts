@@ -86,8 +86,9 @@ export function membershipAtomicPages(kind:MembershipAtomicPage['kind'],items:un
   catch(error){if(!(error instanceof Error)||!['E2EE_MEMBERSHIP_PAGE_TOO_LARGE','E2EE_COMMAND_TOO_LARGE'].includes(error.message)||size<=1)throw error;size=Math.max(1,Math.floor(size/2));}
  }return pages;
 }
-/** The full effects/anchor manifest is frozen before ciphertext or rotations
- * are prepared. Raw user input remains in its separate protected draft. */
+/** Freeze the full effects/anchor manifest after intent-bound immutable product
+ * versions were prepared, before owner rotations or final authorization. The
+ * raw input and membership-bound product drafts already precede that upload. */
 export function membershipAtomicOperationPlan(actorId:string,intentId:string,spaceId:string,reviewFingerprint:string,operation:MembershipOperationPlan,products:MembershipAtomicProducts[]){
  assertTechnical(actorId);assertTechnical(intentId);assertTechnical(spaceId);decodeE2eeBytes(reviewFingerprint,32);
  if('spaceId'in operation.operation&&operation.operation.spaceId!==spaceId)invalid();
