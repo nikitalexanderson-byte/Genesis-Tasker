@@ -41,7 +41,7 @@ export function advicePreferences(value?: Partial<AdvicePreferences> | null): Ad
   const collections = ADVICE_COLLECTIONS.filter(id => Array.isArray(value?.collections) && value.collections.includes(id));
   const count = value?.philosophersPerDay;
   const philosophersPerDay = typeof count === "number" && Number.isInteger(count) && count >= 1 && count <= 3 ? count : 1;
-  return { enabled: value?.enabled !== false, smart: value?.smart !== false, categories: categories.length ? categories : ADVICE_CATEGORIES.filter(id => id !== "aphrodisia"), collections: collections.length ? collections : ["aurora"],
+  return { enabled: value?.enabled !== false, smart: value?.smart !== false, categories: categories.length ? categories : ADVICE_CATEGORIES.filter(id => id !== "aphrodisia"), collections: collections.length ? collections : ["philosophers"],
     aphrodisiaAdult: typeof value?.aphrodisiaAdult === "boolean" ? value.aphrodisiaAdult : null, philosophersPerDay, notifications:adviceNotificationPreferences(value?.notifications),psychopompia:advicePsychopompiaPreferences(value?.psychopompia) };
 }
 
