@@ -65,6 +65,16 @@ internal class E2eeMembershipAtomicStager(private val device:UnlockedE2eeDevice,
         intent
     }}}
     suspend fun stagePlan(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{stagePlanLocked(intent)}}
+    suspend fun previewPage(intent:String,after:Int=0):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
+        check(after in 0..5001){"E2EE_MEMBERSHIP_ATOMIC_INVALID"};val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash);val plan=state.getJSONObject("plan");val anchors=mutableMapOf<String,JSONObject>()
+        for(index in 0 until plan.getJSONArray("pages").length()){
+            val page=page(state,index);if(page.get("kind")=="anchors"){val rows=page.getJSONArray("items");for(at in 0 until rows.length()){val row=rows.getJSONObject(at);check(anchors.put(row.getString("scopeId"),row)==null){"E2EE_MEMBERSHIP_ATOMIC_INVALID"}}}
+        }
+        val scopes=plan.getJSONArray("scopeIds");check(after<=scopes.length()&&anchors.size==scopes.length()&&(0 until scopes.length()).all{anchors.containsKey(scopes.getString(it))}){"E2EE_MEMBERSHIP_ATOMIC_INVALID"}
+        if(after==0)stagePlanLocked(intent);val authorization=request("membership-atomic-preview",JSONObject().put("intentId",intent).put("planHash",hash).put("after",after));staging(intent,hash)
+        val response=transport.membershipAtomicPreview(JSONObject().put("intentId",intent).put("planHash",hash).put("after",after).put("authorization",authorization));current()
+        E2eeMembershipAtomicPreview.page(response,plan,hash,after,anchors)
+    }}
     private fun stagePlanLocked(intent:String):JSONObject {
         val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash);val plan=state.getJSONObject("plan");val refs=plan.getJSONArray("pages")
         for(at in 0 until refs.length())page(state,at)

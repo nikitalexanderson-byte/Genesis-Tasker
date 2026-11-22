@@ -7,7 +7,7 @@ import java.security.MessageDigest
 /** Matching technical codec for membership-atomic-contract/local.ts. This
  * validates inert originals; it neither trusts a directory nor executes them. */
 internal object E2eeMembershipAtomicContract {
-    val actions=setOf("membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel","membership-atomic-seal")
+    val actions=setOf("membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel","membership-atomic-seal","membership-atomic-preview")
     private val planKinds=setOf("operation","operation-grants","acl","anchors","clear-assignments","revoke-invitations","role-events","product-operations")
     private val packetKinds=setOf("rotation-packets","product-packets")
     private fun invalid():Nothing=error("E2EE_MEMBERSHIP_ATOMIC_INVALID")
@@ -15,12 +15,13 @@ internal object E2eeMembershipAtomicContract {
     private fun number(value:Any,min:Long=0,max:Long=9007199254740990L)=E2eeCommands.integer(value,min).also{if(it>max)invalid()}
     fun digest(value:Any):String {val bytes=E2eeCommands.canonical(value);return try{E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))}finally{bytes.fill(0)}}
     fun stagingPayload(action:String,input:JSONObject):JSONObject {
-        if(action !in actions)invalid();val extra=when(action){"membership-atomic-page"->setOf("phase","index","pageHash");"membership-atomic-status"->setOf("phase","after");"membership-atomic-seal"->setOf("batchHash");else->emptySet()}
+        if(action !in actions)invalid();val extra=when(action){"membership-atomic-page"->setOf("phase","index","pageHash");"membership-atomic-status"->setOf("phase","after");"membership-atomic-seal"->setOf("batchHash");"membership-atomic-preview"->setOf("after");else->emptySet()}
         E2eeKeys.exact(input,setOf("intentId","planHash")+extra);E2eeKeys.technical(input.getString("intentId"));E2eeEnvelope.decode(input.getString("planHash"),32)
         if(action in setOf("membership-atomic-page","membership-atomic-status")&&input.get("phase") !in setOf("plan","packets"))invalid()
         if(action=="membership-atomic-page"){number(input.get("index"),0,9999);E2eeEnvelope.decode(input.getString("pageHash"),32)}
         if(action=="membership-atomic-status")number(input.get("after"),0,10000)
         if(action=="membership-atomic-seal")E2eeEnvelope.decode(input.getString("batchHash"),32)
+        if(action=="membership-atomic-preview")number(input.get("after"),0,5001)
         return JSONObject(input.toString())
     }
     private fun anchor(value:JSONObject){

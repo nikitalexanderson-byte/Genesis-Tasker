@@ -9,6 +9,7 @@ import type { LocalWrite } from './storage.ts';
 import {validatePrivateProjectSelection,validatePrivateProjectTopology,type PrivateProjectSelection} from './project-create-contract.ts';
 import {productMutation,type ProductMutation} from './product-contract.ts';
 import {membershipAtomicStagingPayload,type MembershipAtomicStagingAction} from './membership-atomic-contract.ts';
+import {membershipAtomicApplyPayload,type MembershipAtomicApplyAction} from './membership-atomic-receipts.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
@@ -455,6 +456,11 @@ export class E2eeScopeClient {
   }
   async authorizeMembershipAtomic(action:MembershipAtomicStagingAction,input:Record<string,WireValue>){
     const payload=membershipAtomicStagingPayload(action,input),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
+    if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
+    return this.#packet(action,payload);
+  }
+  async authorizeMembershipAtomicApply(action:MembershipAtomicApplyAction,input:Record<string,WireValue>){
+    const payload=membershipAtomicApplyPayload(action,input),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
     return this.#packet(action,payload);
   }

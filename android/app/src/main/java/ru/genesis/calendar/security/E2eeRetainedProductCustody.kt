@@ -186,7 +186,7 @@ internal object E2eeRetainedProductCustody {
                 E2eeCommands.verify(signed,E2eeDirectory.signingKey(signer.signingKey));current()
                 if(kind=="product-packets"){
                     E2eeKeys.exact(payload,setOf("intentId","membershipHash","operations"));E2eeKeys.technical(payload.getString("intentId"));val operations=rows(payload.getJSONArray("operations"))
-                    if(signer.userId!=actor.ownerId||signer.role !in setOf("owner","writer")||operations.size !in 1..100)invalid();for(operation in operations)if(E2eeProductContract.operation(operation).get("action")=="propose-complete")invalid();continue
+                    if(signer.role !in setOf("owner","writer")||operations.size !in 1..100)invalid();for(operation in operations)if(E2eeProductContract.operation(operation).get("action")=="propose-complete")invalid();continue
                 }
                 if(signer.userId!=frame.ownerId||signer.role!="owner")invalid();E2eeKeys.exact(payload,setOf("membershipHash","revokedDeviceIds","roleChanges","cryptoEpoch","securityEpoch","keyId","capsules","recoveryCapsule","retiredManifestHash","retiredObjectCount"))
                 E2eeKeys.technical(payload.getString("keyId"));E2eeEnvelope.decode(payload.getString("retiredManifestHash"),32);number(payload,"retiredObjectCount",0,10000)
@@ -225,7 +225,8 @@ internal object E2eeRetainedProductCustody {
                         if(!state.getBoolean("ready")||manifest!=null&&!manifest.getBoolean("ready")||index>=refs.length()||refs.getJSONObject(index).get("pageHash")!=payload.get("pageHash"))invalid()
                     }else if(action=="membership-atomic-seal"){
                         val manifest=atomicPackets(state);if(!manifest.getBoolean("ready")||payload.get("batchHash")!=manifest.get("batchHash"))invalid()
-                    }else if(action=="membership-atomic-begin"&&!state.getBoolean("ready")||action=="membership-atomic-cancel"&&!state.getBoolean("cancelRequested"))invalid()
+                    }else if(action=="membership-atomic-preview"&&(!state.getBoolean("ready")||number(payload,"after")>state.getJSONObject("plan").getJSONArray("scopeIds").length())
+                        ||action=="membership-atomic-begin"&&!state.getBoolean("ready")||action=="membership-atomic-cancel"&&!state.getBoolean("cancelRequested"))invalid()
                     val checked=packet(request.getJSONObject("packet"));current()
                     if(checked.command.get("deviceId")!=actor.deviceId||checked.frame.scopeId!=scope||checked.frame.kind!="personal"||checked.frame.ownerId!=actor.ownerId||checked.frame.devices[actor.deviceId]?.role!="owner")invalid()
                     claim("outbox",id,scope,"membership-atomic-control")

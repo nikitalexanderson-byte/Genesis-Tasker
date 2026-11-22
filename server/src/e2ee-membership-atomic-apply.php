@@ -61,6 +61,33 @@ function genesisMembershipAtomicPreflight(PDO $db,string $actor,array $plan):arr
     $prepared=[];foreach(array_chunk($expected['changes'],200)as $page)$prepared=[...$prepared,...genesisE2eeAclChanges($db,$actor,$page)['rows']];
     return ['operation'=>$operation,'effects'=>$expected,'scopes'=>$scopes,'aclRows'=>$prepared,'products'=>$products];
 }
+/** Simulate only the exact verified ACL rows, obtain bounded technical owner
+ * review pages, and always roll back. This never grants access or rotates keys. */
+function genesisMembershipAtomicPreview(string $actor,array $input):array
+{
+    genesisE2eeExactFields($input,['intentId','planHash','after','authorization']);$intent=genesisE2eeIdentifier($input['intentId']);$hash=$input['planHash'];genesisE2eeDecode($hash,32);$after=genesisMembershipAtomicInteger($input['after']);
+    if($after>5001)throw new InvalidArgumentException('E2EE_MEMBERSHIP_ATOMIC_INVALID');$db=genesisDb();genesisBeginWriteTransaction($db);
+    try{
+        $authorized=genesisMembershipAtomicAuthorization($db,$actor,$input['authorization'],'membership-atomic-preview',['intentId'=>$intent,'planHash'=>$hash,'after'=>$after]);
+        genesisMembershipAtomicNotCancelled($db,$actor,$intent);$stored=genesisMembershipAtomicStoredPlan($db,$actor,$intent,$hash,$authorized['scope']['scope_id']);
+        if($stored['state']!=='staged')throw new DomainException('E2EE_MEMBERSHIP_OUTCOME_REVIEW_REQUIRED');$plan=genesisMembershipAtomicPlan(json_decode($stored['manifest_json'],true,64,JSON_THROW_ON_ERROR));
+        if($after>count($plan['scopeIds']))throw new InvalidArgumentException('E2EE_MEMBERSHIP_ATOMIC_INVALID');
+        $prepared=genesisMembershipAtomicPreflight($db,$actor,$plan);genesisE2eeApplyAclRows($db,$prepared['aclRows']);$plans=[];$next=null;
+        for($at=$after;$at<count($plan['scopeIds'])&&count($plans)<200;$at++){
+            $id=$plan['scopeIds'][$at];$scope=$prepared['scopes'][$id];genesisE2eeAccess($scope['owner_id'],$scope['kind'],$scope['resource_id'],'manage');
+            $q=$db->prepare('SELECT device_id,user_id FROM e2ee_devices WHERE scope_id=? AND revoked=0 ORDER BY device_id');$q->execute([$id]);$devices=$q->fetchAll();$q->closeCursor();$roles=[];
+            foreach($devices as $device){$role=null;try{$role=genesisE2eeDeviceRole($device['user_id'],$scope);}catch(GenesisSharedAccessException|GenesisResourceLimitException $error){if(!in_array($error->status,[403,404],true))throw $error;}
+                $roles[]=['deviceId'=>$device['device_id'],'userId'=>$device['user_id'],'role'=>$role];
+            }
+            $row=['scopeId'=>$id,'ownerId'=>$scope['owner_id'],'kind'=>$scope['kind'],'resourceId'=>$scope['resource_id'],'generation'=>(int)$scope['generation'],
+                'directoryRevision'=>(int)$scope['directory_revision'],'checkpointHash'=>$scope['checkpoint_hash'],'cryptoEpoch'=>(int)$scope['crypto_epoch'],'securityEpoch'=>(int)$scope['security_epoch'],
+                'roles'=>$roles,'manifest'=>genesisE2eeManifest($db,$scope)];$plans[]=$row;
+            if(strlen(genesisE2eeCanonical($plans))>512*1024){array_pop($plans);if(!$plans)throw new GenesisResourceLimitException(413,'E2EE_MEMBERSHIP_PAGE_TOO_LARGE');break;}
+        }
+        if($after+count($plans)<count($plan['scopeIds']))$next=$after+count($plans);
+        return ['intentId'=>$intent,'planHash'=>$hash,'changeHash'=>genesisMembershipAtomicChangeHash($plan),'scopePlans'=>$plans,'next'=>$next];
+    }finally{if($db->inTransaction())$db->rollBack();}
+}
 function genesisMembershipAtomicPacket(PDO $db,array $scope,array $packet,string $action,string $changeHash):array
 {
     genesisE2eeExactFields($packet,['command','signature']);$command=genesisE2eeCommand($packet['command']);

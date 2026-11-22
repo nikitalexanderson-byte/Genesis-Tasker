@@ -2,11 +2,12 @@ import {commandBytes,type SignedE2eeCommand,type WireValue} from './commands.ts'
 import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
+import {validateMembershipAtomicPreviewPage} from './membership-atomic-preview.ts';
 import {membershipAtomicLocalId,membershipAtomicLocalPageId,membershipAtomicLocalRequestId,validateMembershipAtomicLocalState,
  validateMembershipAtomicLocalRequest,membershipAtomicLocalPageMatches,membershipAtomicLocalPacketsId,membershipAtomicLocalPacketPageId,
  validateMembershipAtomicLocalPackets,membershipAtomicLocalPacketPageMatches,type MembershipAtomicLocalState as State,type MembershipAtomicLocalPackets} from './membership-atomic-local.ts';
 import {validateMembershipAtomicPlan,validateMembershipAtomicPage,membershipAtomicPageRef,membershipAtomicPlanHash,membershipAtomicStagingPayload,membershipAtomicBatchHash,MembershipAtomicPacketBindings,
- type MembershipAtomicPlan,type MembershipAtomicPage,type MembershipAtomicStagingAction,type MembershipAtomicTransport} from './membership-atomic-contract.ts';
+ type MembershipAtomicPlan,type MembershipAtomicPage,type MembershipAtomicAnchor,type MembershipAtomicStagingAction,type MembershipAtomicTransport} from './membership-atomic-contract.ts';
 
 type Stored={value:unknown;serial:number};
 export interface MembershipAtomicStagingPorts{
@@ -75,6 +76,14 @@ export class MembershipAtomicStager{
   if(state.planHash!==planHash)throw new Error('E2EE_IDEMPOTENCY_CONFLICT');if(state.cancelRequested)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(!state.ready)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');
  }
  stagePlan(intentId:string){return this.#run(()=>this.#stagePlan(intentId));}
+ previewPage(intentId:string,after=0){if(!Number.isSafeInteger(after)||after<0||after>5001)throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');return this.#run(async()=>{
+  const {state}=await this.#load(intentId);if(after>state.plan.scopeIds.length)throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');await this.#staging(intentId,state.planHash);const anchors=new Map<string,MembershipAtomicAnchor>();
+  for(let index=0;index<state.plan.pages.length;index++){const page=await this.#page(state,index);if(page.kind==='anchors')for(const anchor of page.items){if(anchors.has(anchor.scopeId))throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');anchors.set(anchor.scopeId,anchor);}}
+  if(anchors.size!==state.plan.scopeIds.length||state.plan.scopeIds.some(id=>!anchors.has(id)))throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');
+  if(after===0)await this.#stagePlan(intentId);const authorization=await this.#request('membership-atomic-preview',{intentId,planHash:state.planHash,after});await this.#staging(intentId,state.planHash);
+  const response=await this.ports.transport.membershipAtomicPreview({intentId,planHash:state.planHash,after,authorization});this.ports.current();
+  return validateMembershipAtomicPreviewPage(response,state.plan,state.planHash,after,anchors);
+ });}
  async #stagePlan(intentId:string){
   const {state}=await this.#load(intentId);if(state.cancelRequested)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(!state.ready)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');
   // Verify every local page before the first external request. Large pages are

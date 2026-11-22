@@ -3799,7 +3799,8 @@ export function privateAccountHttpTransport():PrivateAccountTransport{
     read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys}),
     membership:{membershipGraph:spaceId=>e2eeRequest('/membership-graph',{spaceId}),membershipState:targets=>e2eeRequest('/membership-state',{targets}),membershipPreview:(intentId,changes)=>e2eeRequest('/membership-preview',{intentId,changes}),membershipCommit:batch=>e2eeRequest('/membership',batch),
       membershipAtomicBegin:input=>e2eeRequest('/membership-atomic-begin',input),membershipAtomicPage:input=>e2eeRequest('/membership-atomic-page',input),
-      membershipAtomicStatus:input=>e2eeRequest('/membership-atomic-status',input),membershipAtomicCancel:input=>e2eeRequest('/membership-atomic-cancel',input),membershipAtomicSeal:input=>e2eeRequest('/membership-atomic-seal',input)}};
+      membershipAtomicStatus:input=>e2eeRequest('/membership-atomic-status',input),membershipAtomicCancel:input=>e2eeRequest('/membership-atomic-cancel',input),membershipAtomicSeal:input=>e2eeRequest('/membership-atomic-seal',input),
+      membershipAtomicCommit:input=>e2eeRequest('/membership-atomic-commit',input),membershipAtomicReceipt:input=>e2eeRequest('/membership-atomic-receipt',input),membershipAtomicReceiptPage:input=>e2eeRequest('/membership-atomic-receipt-page',input),membershipAtomicPreview:input=>e2eeRequest('/membership-atomic-preview',input)}};
 }
 export function privateScopeSetupHttpTransport():import('./e2ee/scope-setup').ScopeSetupTransport{
  const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;

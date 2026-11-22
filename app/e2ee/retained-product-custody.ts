@@ -127,7 +127,7 @@ export async function inspectRetainedProductCustody(options:Options){
    const signer=frame.devices.get(c.deviceId);if(frame.ownerId!==c.ownerId||!state.plan.scopeIds.includes(frame.scopeId)||!signer||signer.revoked||p.membershipHash!==membershipAtomicChangeHash(state.plan))invalid();
    await verifyE2eeCommand(signed,await signingPublicKey(signer.signingKey));current();
    if(page.kind==='product-packets'){
-    exactKeys(p,['intentId','membershipHash','operations']);assertTechnical(p.intentId);if(signer.userId!==options.actor.ownerId||!['owner','writer'].includes(signer.role)||!Array.isArray(p.operations)||p.operations.length<1||p.operations.length>100)invalid();
+    exactKeys(p,['intentId','membershipHash','operations']);assertTechnical(p.intentId);if(!['owner','writer'].includes(signer.role)||!Array.isArray(p.operations)||p.operations.length<1||p.operations.length>100)invalid();
     for(const operation of p.operations)if(productMutation(operation).action==='propose-complete')invalid();continue;
    }
    if(signer.userId!==frame.ownerId||signer.role!=='owner')invalid();
@@ -182,7 +182,8 @@ export async function inspectRetainedProductCustody(options:Options){
     if(!state.ready||manifest&&!manifest.ready||!ref||ref.pageHash!==request.payload.pageHash)invalid();
    }else if(request.action==='membership-atomic-seal'){
     const manifest=await atomicPackets(state);if(!manifest.ready||request.payload.batchHash!==manifest.batchHash)invalid();
-   }else if(request.action==='membership-atomic-begin'&&!state.ready||request.action==='membership-atomic-cancel'&&!state.cancelRequested)invalid();
+   }else if(request.action==='membership-atomic-preview'&&(!state.ready||Number(request.payload.after)>state.plan.scopeIds.length)
+    ||request.action==='membership-atomic-begin'&&!state.ready||request.action==='membership-atomic-cancel'&&!state.cancelRequested)invalid();
    const checked=await packet(request.packet),own=checked.directory.devices.get(options.actor.deviceId);current();
    if(checked.command.deviceId!==options.actor.deviceId||checked.directory.scopeId!==options.personalScopeId||checked.directory.kind!=='personal'
     ||checked.directory.ownerId!==options.actor.ownerId||own?.role!=='owner')invalid();

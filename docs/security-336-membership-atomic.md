@@ -18,13 +18,13 @@ ACL, не применяет product command и не принимает чужо
 Идемпотентный повтор допускает только прежний hash; другой content того же индекса
 отклоняется. Status читает только страницы hash/count, до 200 за запрос.
 
-Cancel сериализуется тем же SQLite writer lock, что и будущее применение. Tombstone
+Cancel сериализуется тем же SQLite writer lock, что и final применение. Tombstone
 может быть записан до begin, чтобы поздний begin/page не восстановил отменённый
 intent. Изменённый plan hash не может занять тот же actor/intent. Оригиналы страниц
 при отмене не удаляются. Завершённая операция должна возвращать прежний receipt,
 а не объявляться отменённой после применения.
 
-## Ещё не подключено
+## Текущее состояние кода
 
 Добавлен исходниковый server atomic writer и migration138 с immutable paged
 receipts. Manifest теперь также содержит operation header и paged grants; старый
@@ -36,8 +36,9 @@ PHP независимо собирает текущий graph/root/ACL snapshot
 старых Google projection links и owner rotations; ошибка откатывает всю операцию.
 Подписанный foreign writer может передать bound product packet как relayed
 operation; его фактический user/device остаётся в product proof/receipt. Это
-требует matching client custody/attribution и полного v2 review, которые ещё
-нужно подключить. Legacy audit/automation/notification mutation helpers не
+требует полного v2 review и verified client attribution, которые ещё нужно
+подключить. Retained packet readers принимают подтверждённого pinned writer;
+они не выполняют его packet. Legacy audit/automation/notification mutation helpers не
 вызываются; role events сохранены в подписанном manifest, normal private history
 и readback должны быть подключены на клиенте.
 
@@ -60,7 +61,7 @@ cancelRequested. Cancel сохраняет намерение до HTTP, точ�
 directory, сохраняя interrupted ready=false страницы как inert originals.
 Старые membership packets остаются отдельным v1 форматом.
 
-Следующий исходниковый проход добавляет packet-page coordinator на web/native,
+Добавлен packet-page coordinator на web/native,
 immutable packet manifest в migration137 и storage-only seal endpoint. Полные
 local packet pages сохраняются/readback до HTTP; bind collector проверяет exact
 plan hash, все scope rotations и declared product operations/anchors. Сервер
@@ -70,15 +71,27 @@ packet. Retained custody читает также packet manifests/pages, про�
 binding и подписи по существующим pinned history; foreign owner не превращается
 в доверенную authority из одного paste. Ни seal, ни custody команды не применяют.
 
-Это пока **staging/cancel/seal**, без final apply, receipt/readback, v2 owner
-review и normal role/invitation UI. Native codec/stager написан как
+Клиентский stager пока выполняет **staging/cancel/seal/preview**, без final
+apply coordinator, verified receipt/readback, v2 owner review и normal UI.
+Native codec/stager написан как
 matching Kotlin implementation общего wire/local формата; differential acceptance
 ещё предстоит. Pure atomic planner по-прежнему использует общий runtime. Новые
 control outboxes не добавлены в content-only export и не исполняются при restore.
 
+Web/native получили строгие matching receipt/page codecs, отдельные apply/read
+authorization actions и HTTP routes. Это не acknowledgement: сохраняющий exact
+request apply coordinator и normal repository readback ещё не подключены.
+Server preview применяет только verified ACL rows внутри временного writer,
+возвращает bounded страницы с user/device/role и всегда rollback. Клиенты
+сверяют полное отсутствие пропусков индексов, hashes и исходные anchors; такая
+страница сама не выдаёт trust/pin или согласие владельца. Native/web custody
+также понимает точный saved preview request.
+
+## Остаток подключения
+
 - Клиентские paged receipt/readback и полный durable apply coordinator;
   server writer/planner ещё не проверены.
-  owner review/exchange полного v2 effects manifest и проверенная attribution.
+- Owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.
 - Потоковый capture очень больших graph/ACL input без ограничения общим размером
   одного native runtime input; существующий bounded runtime не считается такой

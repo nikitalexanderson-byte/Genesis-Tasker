@@ -1,5 +1,15 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: native/web receipt codecs и bounded attributed preview
+
+После3b3b26a6 added strict receipt/header/page codecs, apply/read authorization
+actions и оба native/web HTTP adapters. Server temporary ACL preview всегда
+rollback; bounded pages include real userId/deviceId/desired role и hashes.
+Web/native stagers читают страницы без пропуска scope indices, проверяют anchors;
+retained custody понимает preview originals и valid foreign product writers.
+Это всё ещё НЕ durable final apply coordinator или normal repository readback.
+V2 all-owner effects review и обычные UI ещё нужны. Source-only/no QA/coverage9/20.
+
 ## 22 ноября: source-only server atomic writer / operation semantic preflight
 
 После1f89c64c added operation/operation-grants manifest pages, matching TS/Kotlin
