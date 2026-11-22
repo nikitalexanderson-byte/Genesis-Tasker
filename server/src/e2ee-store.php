@@ -104,14 +104,16 @@ function genesisE2eeBootstrap(string $actor, mixed $source): array
     $selfCommand = $command; unset($selfCommand['payload']['selfProof']);
     if (openssl_verify(genesisE2eeCommandBytes($selfCommand), genesisE2eeSignatureDer(genesisE2eeDecode($p['selfProof'], 64)),
         genesisE2eePublicPem($keys['signingKey']), OPENSSL_ALGO_SHA256) !== 1) throw new DomainException('E2EE_UNTRUSTED_DEVICE');
-    $db = genesisDb(); genesisBeginWriteTransaction($db);
+    // A new private resource must create its technical rows and bootstrap in
+    // one authorized transaction. This component never commits its caller.
+    $db = genesisDb(); $owns=!$db->inTransaction();if($owns)genesisBeginWriteTransaction($db);
     try {
         $existing=genesisE2eeRow($db, 'SELECT * FROM e2ee_scopes WHERE scope_id=? OR (kind=? AND resource_id=?)', [$command['scopeId'],$p['kind'],$p['resourceId']]);
         if($existing) {
             $receipt=genesisE2eeRow($db,'SELECT * FROM e2ee_receipts WHERE scope_id=? AND operation_id=?',[$command['scopeId'],$command['operationId']]);
             if($existing['scope_id']===$command['scopeId'] && $existing['owner_id']===$actor && $receipt
                 && hash_equals($receipt['payload_hash'],genesisE2eeCommandHash($command))) {
-                $result=json_decode($receipt['result'],true,512,JSON_THROW_ON_ERROR);$db->commit();return$result;
+                $result=json_decode($receipt['result'],true,512,JSON_THROW_ON_ERROR);if($owns)$db->commit();return$result;
             }
             throw new DomainException('E2EE_SCOPE_ALREADY_INITIALIZED');
         }
@@ -129,8 +131,8 @@ function genesisE2eeBootstrap(string $actor, mixed $source): array
         $db->prepare('INSERT INTO e2ee_events VALUES(?,1,?,?,?)')->execute([$command['scopeId'],'genesis',$hash,genesisE2eeJson($packet)]);
         $result = ['directoryRevision'=>1,'checkpointHash'=>$hash,'state'=>'preparing'];
         $db->prepare('INSERT INTO e2ee_receipts VALUES(?,?,?,?)')->execute([$command['scopeId'],$command['operationId'],$hash,genesisE2eeJson($result)]);
-        $db->commit(); return $result;
-    } catch (Throwable $error) { if ($db->inTransaction()) $db->rollBack(); throw $error; }
+        if($owns)$db->commit(); return $result;
+    } catch (Throwable $error) { if ($owns&&$db->inTransaction()) $db->rollBack(); throw $error; }
 }
 
 /** A challenge never approves a key. A live trusted/recovery key must sign its exact contents. */
@@ -303,6 +305,9 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
                     if(!in_array($device['role'],$comment?['owner','writer','commenter']:['owner','writer'],true))throw new GenesisResourceLimitException(403,'E2EE_WRITE_FORBIDDEN');}
             }
             require_once __DIR__.'/e2ee-product.php';$result=genesisE2eeProductService($db,$actor,$scope,$c,$packet);
+        } elseif ($c['action'] === 'resource-create-prepare') {
+            if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
+            require_once __DIR__.'/e2ee-resource-create.php';$result=genesisE2eePreparePrivateResource($db,$actor,$scope,$c);
         } elseif ($c['action'] === 'advice-issue') {
             if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
             require_once __DIR__.'/e2ee-advice-product.php';$result=genesisE2eeAdviceIssue($db,$actor,$scope,$p);

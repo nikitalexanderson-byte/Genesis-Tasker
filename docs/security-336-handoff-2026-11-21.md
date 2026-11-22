@@ -1,5 +1,31 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Следующий участок: общие migration controllers и создание ресурсов
+
+Retained-history код сохранён локальным коммитом **9990d744** (32 files,1841
+insertions). Проверки по порядку владельца ещё не запускались, coverage9/20.
+Затем добавлен новый кандидатный код подготовки свежего private space:
+`server/src/e2ee-resource-create.php`, web/native `E2eePrivateResourceCreation`,
+новый signed service `resource-create-prepare`, транзакционная композиция
+существующих shared-space factory/bootstrap и проверка этой роли в обоих custody
+readers. Исходный prompt SHA256 по-прежнему
+5540A407041626A2ED9263F7C97DCDF6B90985375CC0E78063F7BDD2A384B338.
+
+Новый код пока не является работающим create UI: он сохраняет полный input
+зашифрованно до сети и атомарно создаёт только технические space/inbox/status
+rows и preparing scope, без передачи названия/описания/обложки/приглашений.
+Реальные shared migration controllers, обе миграции space+inbox, private initial
+values, участники и project topology — следующая конкретная реализация.
+Подробный разбор уже существующих функций, persistent SQL fences и допустимого
+направления: **security-336-private-resource-creation.md**. Не повторять поиск
+с нуля и не пытаться обойти active-space fence обычным legacy-create.
+
+No tests/compiler/lint/build/CI/push/release/device actions. Floors0/cutover off,
+GENESIS_DEPLOY_ANDROID=false;3.3.5/149 и Paddle-сайт сохранены. Не использовать
+субагентов/Daybreak; не читать/не stage чужой demo-output/. Разрешение на полный
+раздельный выпуск уже дано, внешний аудитор не нужен; итоговый внутренний review
+точного финального кандидата остаётся после всего кода, QA и исправлений.
+
 ## Продолжение22 ноября: retained ownership и повтор перехода
 
 Поверх HEAD485acdfd добавлен новый непроверенный код web/native: общий реестр

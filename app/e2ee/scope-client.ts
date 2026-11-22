@@ -371,7 +371,7 @@ export class E2eeScopeClient {
   }
   /** Business intent is durable independently of a checkpoint-bound transport
    * packet. Renewal never changes the intended mutation or replays an import. */
-  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue'|'product-bootstrap-start'|'product-bootstrap-stage'|'product-bootstrap-complete',payload:Record<string,WireValue>,intentId:string){
+  async executeService(action:'product-commit'|'product-approve'|'stoicheion-grant'|'advice-issue'|'product-bootstrap-start'|'product-bootstrap-stage'|'product-bootstrap-complete'|'resource-create-prepare',payload:Record<string,WireValue>,intentId:string){
     assertTechnical(intentId);const held=snapshotE2eeValue({...payload,intentId}),id=`service:${await hash(`${action}\0${intentId}`)}`;
     for(let attempt=0;attempt<2;attempt++){
       const directory=this.#open(),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();let packet:SignedE2eeCommand;

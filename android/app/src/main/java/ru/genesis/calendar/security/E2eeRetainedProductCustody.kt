@@ -84,9 +84,15 @@ internal object E2eeRetainedProductCustody {
             (if(value.isNull("cancelling"))null else value.getJSONObject("cancelling"))?.let{val cancel=packet(it);val payload=cancel.command.getJSONObject("payload");E2eeKeys.exact(payload,setOf("original"));if(value.isNull("pending")||cancel.command.get("action")!="cancel-put"||cancel.command.get("scopeId")!=value.get("scopeId")||!same(payload.getJSONObject("original"),value.getJSONObject("pending")))invalid()}
             claim(domain,id,value.getString("scopeId"),"product-job")
         }
-        private fun service(command:JSONObject){
+        private fun service(command:JSONObject,frame:E2eeDirectory.Verified){
             val action=command.getString("action");val payload=command.getJSONObject("payload")
             when(action){
+                "resource-create-prepare"->{
+                    E2eeKeys.exact(payload,setOf("intentId","bootstrap"));val initial=payload.getJSONObject("bootstrap");val child=initial.getJSONObject("command")
+                    if(child.get("action")!="bootstrap"||child.get("ownerId")!=actor.ownerId||child.get("deviceId")!=actor.deviceId||number(child,"expectedRevision")!=0L||child.get("checkpointHash")!="genesis"||number(child,"securityEpoch",1)!=1L)invalid()
+                    val fresh=E2eeDirectory.verify(actor.ownerId,child.getString("scopeId"),frame.recoveryKit.getJSONObject("authority"),JSONArray().put(initial));current();val own=fresh.devices[actor.deviceId]?:invalid();val keys=E2eeKeys.publicKeys(device.keys())
+                    if(fresh.kind!="space"||fresh.generation!=1L||own.signingKey!=keys.get("signingKey")||own.receivingKey!=keys.get("receivingKey"))invalid()
+                }
                 "product-commit"->{E2eeKeys.exact(payload,setOf("intentId","operations"));val operations=rows(payload.getJSONArray("operations"));if(operations.size !in 1..100)invalid();operations.forEach{E2eeProductContract.operation(it)}}
                 "product-approve"->{E2eeKeys.exact(payload,setOf("intentId","proposalId","entityId","baseRevision","payloadHash"));listOf("proposalId","entityId").forEach{E2eeKeys.technical(payload.getString(it))};number(payload,"baseRevision");E2eeEnvelope.decode(payload.getString("payloadHash"),32)}
                 "product-bootstrap-start"->{E2eeKeys.exact(payload,setOf("intentId","bootstrapId","sourceManifestHash","expectedCount"));E2eeKeys.technical(payload.getString("bootstrapId"));E2eeEnvelope.decode(payload.getString("sourceManifestHash"),32);number(payload,"expectedCount",0,10000)}
@@ -101,7 +107,7 @@ internal object E2eeRetainedProductCustody {
             val base=if(domain=="outbox")id else id.substringBeforeLast(":attempt:",id);if(domain!="outbox"&&(base==id||!Regex("[1-9][0-9]*").matches(id.substringAfterLast(':'))))invalid()
             val checked=packet(value);val command=checked.command;val frame=checked.frame;val payload=command.getJSONObject("payload")
             when{
-                base.startsWith("service:")->{E2eeKeys.technical(payload.getString("intentId"));if(command.get("deviceId")!=actor.deviceId||base!="service:"+hash(command.getString("action")+"\u0000"+payload.getString("intentId")))invalid();service(command)}
+                base.startsWith("service:")->{E2eeKeys.technical(payload.getString("intentId"));if(command.get("deviceId")!=actor.deviceId||base!="service:"+hash(command.getString("action")+"\u0000"+payload.getString("intentId")))invalid();service(command,frame)}
                 base.startsWith("aurora-manifest:")->{E2eeKeys.exact(payload,setOf("id","methodVersion","objectId","payloadHash"));E2eeKeys.technical(payload.getString("id"));E2eeKeys.technical(payload.getString("objectId"));E2eeEnvelope.decode(payload.getString("payloadHash"),32);payload.getString("methodVersion");if(base!="aurora-manifest:"+payload.getString("id")||command.get("action")!="aurora-result"||command.get("deviceId")!=actor.deviceId)invalid()}
                 base.startsWith("enrollment:")->{
                     if(base!="enrollment:"+command.getString("scopeId")||command.get("action")!="enroll"||command.get("deviceId")!="recovery")invalid();E2eeKeys.exact(payload,setOf("challenge","capsule","historyCapsules","selfProof"));val challenge=payload.getJSONObject("challenge")

@@ -10,6 +10,24 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Fresh private space preparation (candidate, composition still in progress)
+
+Added a signed active-personal-owner preparation service which atomically creates
+only fresh technical space/inbox/status rows and the existing signed bootstrap.
+No user title/description/cover/invitation enters that request. The existing
+factory retains feature/quota/owner invariants; nested factory/bootstrap calls
+respect the caller's transaction. Web/native now have protected pre-network
+creation intents and exact preparation-receipt persistence; recovery material
+stays transient. Normal custody explicitly understands this service; inert
+archives can preserve its user-input document. Fixed frozen-object deletion in
+the existing bootstrap self-proof verifier while composing this path.
+
+Actual shared/inbox migration controllers, final private initial-value writes,
+project topology/inheritance, recipients and create/resume UI remain code work.
+No completed-resource flag or plaintext legacy shortcut was added. Details and
+next code constraints: `security-336-private-resource-creation.md`. No tests,
+compiler, lint, build, CI, push or release ran; coverage stays9/20.
+
 ### Account-wide retained ownership and cancelled restart (candidate, no compilation/QA)
 
 Added actual web/native ownership catalogues for source/original/plan/history

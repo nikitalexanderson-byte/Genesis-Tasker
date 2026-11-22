@@ -3,7 +3,7 @@ import {canonicalE2eeValue,verifyE2eeCommand,type SignedE2eeCommand,type WireVal
 import {decodeE2eeBytes,encodeE2eeBytes,openE2eeEnvelope,validateE2eeEnvelope,type E2eeContext} from './envelope.ts';
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES,envelopePayloadHash,openE2eeFileStream} from './files.ts';
 import {HPKE_SUITE,assertTechnical,exactKeys,openRoot} from './keys.ts';
-import {contentSigningKey,signingPublicKey,type VerifiedDirectory} from './directory.ts';
+import {contentSigningKey,signingPublicKey,verifyDeviceDirectory,type VerifiedDirectory} from './directory.ts';
 import {requiredPrivatePaths} from './private-paths.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {productMutation} from './product-contract.ts';
@@ -171,9 +171,15 @@ export async function inspectRetainedProductCustody(options:Options){
   if(domain==='local-snapshot'&&(!/:[1-9][0-9]*$/.test(id)||baseId===id))invalid();
   const {command,directory}=await packet(value),payload=command.payload;
   if(baseId.startsWith('service:')){
-   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete'].includes(command.action))invalid();
+   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare'].includes(command.action))invalid();
    assertTechnical(payload.intentId);if(baseId!=='service:'+digest(encoder.encode(`${command.action}\0${payload.intentId}`))||command.deviceId!==options.actor.deviceId)invalid();
-   if(command.action==='product-commit'){exactKeys(payload,['intentId','operations']);if(!Array.isArray(payload.operations)||payload.operations.length<1||payload.operations.length>100)invalid();payload.operations.forEach(productMutation);}
+   if(command.action==='resource-create-prepare'){
+    exactKeys(payload,['intentId','bootstrap']);exactKeys(payload.bootstrap,['command','signature']);const initial=payload.bootstrap as unknown as SignedE2eeCommand;
+    if(initial.command.action!=='bootstrap'||initial.command.ownerId!==options.actor.ownerId||initial.command.deviceId!==options.actor.deviceId||initial.command.payload.kind!=='space'||initial.command.expectedRevision!==0||initial.command.checkpointHash!=='genesis'||initial.command.securityEpoch!==1)invalid();
+    const fresh=await verifyDeviceDirectory(options.actor.ownerId,initial.command.scopeId,directory.recoveryKit.authority,[initial]);current();
+    const own=fresh.devices.get(options.actor.deviceId);if(fresh.generation!==1||fresh.kind!=='space'||!own||own.signingKey!==options.selfKeys.signingKey||own.receivingKey!==options.selfKeys.receivingKey)invalid();
+   }
+   else if(command.action==='product-commit'){exactKeys(payload,['intentId','operations']);if(!Array.isArray(payload.operations)||payload.operations.length<1||payload.operations.length>100)invalid();payload.operations.forEach(productMutation);}
    else if(command.action==='product-approve'){exactKeys(payload,['intentId','proposalId','entityId','baseRevision','payloadHash']);assertTechnical(payload.proposalId);assertTechnical(payload.entityId);integer(payload.baseRevision);decodeE2eeBytes(payload.payloadHash,32);}
    else if(command.action==='product-bootstrap-start'){exactKeys(payload,['intentId','bootstrapId','sourceManifestHash','expectedCount']);assertTechnical(payload.bootstrapId);decodeE2eeBytes(payload.sourceManifestHash,32);integer(payload.expectedCount,0,10000);}
    else if(command.action==='product-bootstrap-stage'){exactKeys(payload,['intentId','bootstrapId','partIndex','items']);assertTechnical(payload.bootstrapId);integer(payload.partIndex,0,9999);if(!Array.isArray(payload.items)||payload.items.length<1||payload.items.length>100)invalid();for(const item of payload.items){exactKeys(item,['operation','authorId']);productMutation(item.operation);assertTechnical(item.authorId);}}

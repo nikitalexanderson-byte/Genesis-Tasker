@@ -184,7 +184,7 @@ function genesisSharedSpaces(string $userId): array
     }, $query->fetchAll());
 }
 
-function genesisSharedCreateSpace(string $userId, array $input): array
+function genesisSharedCreateSpace(string $userId, array $input,?string $preparedId=null): array
 {
     genesisSharedRequireEnabled($userId);
     $title = genesisSharedTitle($input['title'] ?? null);
@@ -192,10 +192,12 @@ function genesisSharedCreateSpace(string $userId, array $input): array
     $cover = genesisSharedCoverInput($input);
     $invitations = $input['invitations'] ?? [];
     if (!is_array($invitations) || !array_is_list($invitations) || count($invitations) > 20) throw new InvalidArgumentException('INVALID_SPACE_INVITATIONS');
-    $id = genesisUuid();
+    // Only an internal verified private-resource operation supplies this ID;
+    // legacy route input never selects an existing resource or crypto scope.
+    $id = $preparedId===null?genesisUuid():genesisE2eeIdentifier($preparedId);
     $now = genesisNow();
     $db = genesisDb();
-    genesisBeginWriteTransaction($db);
+    $ownsTransaction=!$db->inTransaction();if($ownsTransaction)genesisBeginWriteTransaction($db);
     try {
         // A space creates only an excluded inbox, but cannot be created once the root pool is full.
         genesisRequireSharedUserQuota($userId,'shared-projects');
@@ -228,9 +230,9 @@ function genesisSharedCreateSpace(string $userId, array $input): array
             $emails[] = $email;
             genesisSharedSpaceInvite($userId, $id, $invitation);
         }
-        $db->commit();
+        if($ownsTransaction)$db->commit();
     } catch (Throwable $error) {
-        $db->rollBack();
+        if($ownsTransaction&&$db->inTransaction())$db->rollBack();
         throw $error;
     }
     return ['id' => $id, 'title' => $title, 'role' => 'owner', 'description' => $description, 'revision' => 1, 'updatedAt' => $now,

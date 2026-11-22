@@ -29,7 +29,7 @@ export class E2eeScopeSetup{
   const command=await verifyE2eeCommand(packet,await signingPublicKey(this.device.authorityPin.signingKey));this.#check();const payload=command.payload;
   if(command.action!=='bootstrap'||command.ownerId!==this.target.ownerId||command.scopeId!==this.target.scopeId||command.deviceId!==this.device.deviceId||command.expectedRevision!==0||command.checkpointHash!=='genesis'||command.securityEpoch!==1||payload.kind!==this.target.kind||payload.resourceId!==this.target.resourceId)throw new Error('E2EE_SCOPE_SETUP_INVALID');
   if(!samePrivateJson(payload.deviceKeys,await publicDeviceKeys(this.device.keys()))||!samePrivateJson((payload.recoveryKit as unknown as RecoveryKit).authority,this.device.authorityPin))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-  const self=snapshotE2eeValue(command);delete self.payload.selfProof;await verifyE2eeCommand({command:self,signature:String(payload.selfProof)},this.device.keys().signing.publicKey);this.#check();return command;
+  const self={...command,payload:{...command.payload}};delete self.payload.selfProof;await verifyE2eeCommand({command:self,signature:String(payload.selfProof)},this.device.keys().signing.publicKey);this.#check();return command;
  }
  prepare(secret:Uint8Array,savedKit:RecoveryKit,sourceGeneration:number){const held=new Uint8Array(secret);let kit:RecoveryKit;
   try{kit=snapshotE2eeValue(savedKit);}catch(error){held.fill(0);throw error;}return this.#run(async()=>{
