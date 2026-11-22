@@ -422,12 +422,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         return try{check(bytes.size<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};ru.genesis.calendar.security.E2eeFileManifestJson.readMigrationHistory(bytes)}finally{bytes.fill(0)}
     }
     internal suspend fun pendingPrivateMembership():JSONObject=privateMembershipCall{product,review,current->
-        val intents=JSONArray();for(id in product.pending()){val row=product.inspect(id);current();intents.put(JSONObject().put("id",id).put("scopeIds",row.get("scopeIds")).put("complete",!row.isNull("result")).put("reviewRequired",!row.has("hashFormat")))}
+        val intents=JSONArray();for(id in product.pending()){val row=product.inspect(id);current();intents.put(JSONObject().put("id",id).put("scopeIds",row.get("scopeIds")).put("complete",!row.isNull("result")).put("reviewRequired",!row.has("hashFormat")||ru.genesis.calendar.security.E2eeMembershipContract.grantReviewRequired(row.getJSONArray("changes"))))}
         val reviews=JSONArray();for(row in review.list()){current();reviews.put(JSONObject().put("id",row.get("id")).put("scopeId",row.get("scopeId")).put("complete",!row.isNull("packet")))}
         JSONObject().put("intents",intents).put("ownerReviews",reviews)
     }
     internal suspend fun startPrivateMembership(changes:JSONArray,scopeIds:List<String>):JSONObject=privateMembershipCall{product,_,current->val id=product.create(changes,scopeIds);current();product.preview(id);current();product.exportReview(id)}
-    internal suspend fun loadPrivateMembership(id:String):JSONObject=privateMembershipCall{product,_,current->val state=product.inspect(id);current();JSONObject().put("state",state).put("review",if(!state.isNull("preview")&&state.has("hashFormat"))product.exportReview(id)else JSONObject.NULL)}
+    internal suspend fun loadPrivateMembership(id:String):JSONObject=privateMembershipCall{product,_,current->val state=product.inspect(id);current();JSONObject().put("state",state).put("review",if(!state.isNull("preview")&&state.has("hashFormat")&&!ru.genesis.calendar.security.E2eeMembershipContract.grantReviewRequired(state.getJSONArray("changes")))product.exportReview(id)else JSONObject.NULL)}
     internal suspend fun previewPrivateMembership(id:String):JSONObject=privateMembershipCall{product,_,current->product.preview(id);current();product.exportReview(id)}
     internal suspend fun preparePrivateMembership(id:String,displayedFingerprint:String):JSONObject=privateMembershipCall{product,_,current->val view=product.exportReview(id);current();check(view.get("fingerprint")==displayedFingerprint){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"}
         val plans=view.getJSONObject("request").getJSONObject("preview").getJSONArray("scopePlans");val reviews=JSONArray();for(at in 0 until plans.length()){val plan=plans.getJSONObject(at);reviews.put(JSONObject().put("scopeId",plan.get("scopeId")).put("roles",plan.get("roles")))}

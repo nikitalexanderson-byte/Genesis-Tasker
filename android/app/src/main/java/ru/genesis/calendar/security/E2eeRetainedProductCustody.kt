@@ -136,8 +136,8 @@ internal object E2eeRetainedProductCustody {
         private fun membership(value:JSONObject,id:String){
             E2eeKeys.exact(value,setOf("protocol","ownerId","intentId","scopeIds","changes","preview","review","batch","result")+(if(value.has("hashFormat"))setOf("hashFormat")else emptySet())+(if(value.has("ownerApprovals"))setOf("ownerApprovals")else emptySet()));val intent=E2eeKeys.technical(value.getString("intentId"));val scopes=strings(value.getJSONArray("scopeIds"));scopes.forEach{E2eeKeys.technical(it)};val changes=rows(value.getJSONArray("changes"))
             if(value.getInt("protocol")!=1||value.get("ownerId")!=actor.ownerId||id!="membership:$intent"||scopes.size>256||scopes!=scopes.toSet().sorted()||changes.size !in 1..200)invalid()
-            E2eeMembershipContract.changes(value.getJSONArray("changes"))
-            if(!value.has("hashFormat")){if(listOf("preview","review","batch","result").any{!value.isNull(it)}||value.has("ownerApprovals")&&value.getJSONArray("ownerApprovals").length()!=0)invalid();claim("outbox",id,options.personalScopeId?:invalid(),"membership-plan");return}
+            E2eeMembershipContract.changes(value.getJSONArray("changes"),true)
+            if(!value.has("hashFormat")||E2eeMembershipContract.grantReviewRequired(value.getJSONArray("changes"))){if(listOf("preview","review","batch","result").any{!value.isNull(it)}||value.has("ownerApprovals")&&value.getJSONArray("ownerApprovals").length()!=0)invalid();claim("outbox",id,options.personalScopeId?:invalid(),"membership-plan");return}
             if(value.get("hashFormat")!=E2eeMembershipContract.HASH_FORMAT)invalid()
             val changeHash=E2eeMembershipContract.changeHash(actor.ownerId,intent,value.getJSONArray("changes"),value.getJSONArray("scopeIds"))
             fun request()=E2eeMembershipExchange.request(JSONObject().put("format","genesis-membership-review-v1").put("hashFormat",E2eeMembershipContract.HASH_FORMAT).put("actorId",value.get("ownerId")).put("intentId",intent).put("scopeIds",value.get("scopeIds")).put("changes",value.get("changes")).put("preview",value.get("preview")))

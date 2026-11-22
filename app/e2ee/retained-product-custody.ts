@@ -8,7 +8,7 @@ import {requiredPrivatePaths} from './private-paths.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {productMutation} from './product-contract.ts';
 import {validatePrivateProjectTopology} from './project-create-contract.ts';
-import {MEMBERSHIP_HASH_FORMAT,validateMembershipChanges,membershipChangesProjection,membershipChangeHashValue} from './membership-contract.ts';
+import {MEMBERSHIP_HASH_FORMAT,validateMembershipChanges,membershipChangesProjection,membershipChangeHashValue,membershipGrantReviewRequired} from './membership-contract.ts';
 import {validateMembershipReviewRequest,validateMembershipOwnerApproval,type MembershipReviewRequest} from './membership-exchange.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
 
@@ -66,8 +66,8 @@ export async function inspectRetainedProductCustody(options:Options){
   object(input);exactKeys(input,['protocol',...(Object.hasOwn(input,'hashFormat')?['hashFormat']:[]),...(Object.hasOwn(input,'ownerApprovals')?['ownerApprovals']:[]),'ownerId','intentId','scopeIds','changes','preview','review','batch','result']);
   if(input.protocol!==1||input.ownerId!==options.actor.ownerId||id!=='membership:'+input.intentId||!Array.isArray(input.scopeIds)||input.scopeIds.length>256||!Array.isArray(input.changes)||input.changes.length<1||input.changes.length>200)invalid();
   assertTechnical(input.intentId);for(const scope of input.scopeIds)assertTechnical(scope);if(!equal(input.scopeIds,[...new Set(input.scopeIds)].sort()))invalid();
-  validateMembershipChanges(input.changes);
-  if(!Object.hasOwn(input,'hashFormat')){if([input.preview,input.review,input.batch,input.result].some(value=>value!==null)||Object.hasOwn(input,'ownerApprovals')&&(!Array.isArray(input.ownerApprovals)||input.ownerApprovals.length!==0)||!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');return;}
+  validateMembershipChanges(input.changes,true);
+  if(!Object.hasOwn(input,'hashFormat')||membershipGrantReviewRequired(input.changes)){if([input.preview,input.review,input.batch,input.result].some(value=>value!==null)||Object.hasOwn(input,'ownerApprovals')&&(!Array.isArray(input.ownerApprovals)||input.ownerApprovals.length!==0)||!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');return;}
   if(input.hashFormat!==MEMBERSHIP_HASH_FORMAT)invalid();
   const changeHash=digest(canonicalE2eeValue(membershipChangeHashValue(options.actor.ownerId,input.intentId,input.changes,input.scopeIds as string[])));
   const request=()=>validateMembershipReviewRequest({format:'genesis-membership-review-v1',hashFormat:MEMBERSHIP_HASH_FORMAT,actorId:input.ownerId,intentId:input.intentId,scopeIds:input.scopeIds,changes:input.changes,preview:input.preview});

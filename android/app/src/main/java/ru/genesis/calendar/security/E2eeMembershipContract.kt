@@ -10,7 +10,7 @@ internal object E2eeMembershipContract {
         "shared_project_members" to Pair(setOf("project_id","user_id"),setOf("role")),
         "shared_space_members" to Pair(setOf("space_id","user_id"),setOf("role","can_organize_tasks","all_projects","permissions_json","member_category_id","project_access_restricted","project_access_revision")),
         "shared_member_categories" to Pair(setOf("id","space_id"),setOf("permissions_json","revision")),
-        "shared_member_project_grants" to Pair(setOf("space_id","user_id","project_id"),setOf("role","include_descendants"))
+        "shared_member_project_grants" to Pair(setOf("space_id","user_id","project_id"),setOf("role","include_descendants","excluded"))
     )
     private fun invalid():Nothing=error("E2EE_MEMBERSHIP_BATCH_INVALID")
     fun fields(value:JSONObject):JSONArray=JSONArray().apply{
@@ -21,16 +21,17 @@ internal object E2eeMembershipContract {
             put(JSONObject().put("name",name).put("value",projected))
         }
     }
-    fun changes(input:JSONArray):JSONArray {
+    fun grantReviewRequired(input:JSONArray)=(0 until input.length()).any{val row=input.getJSONObject(it);row.get("table")=="shared_member_project_grants"&&!row.isNull("after")&&!row.getJSONObject("after").has("excluded")}
+    fun changes(input:JSONArray,allowMissingExcluded:Boolean=false):JSONArray {
         if(input.length() !in 1..200)invalid();val seen=mutableSetOf<String>()
         for(at in 0 until input.length()){
             val row=input.getJSONObject(at);E2eeKeys.exact(row,setOf("table","key","expectedHash","after"));val table=row.getString("table");val spec=specs[table]?:invalid();val key=row.getJSONObject("key")
             E2eeKeys.exact(key,spec.first);for(name in spec.first)E2eeKeys.technical(key.getString(name))
             val identity=E2eeEnvelope.encode(E2eeCommands.canonical(JSONObject().put("table",table).put("key",fields(key))));if(!seen.add(identity))invalid()
             if(row.get("expectedHash")!="absent")E2eeEnvelope.decode(row.getString("expectedHash"),32);if(row.isNull("after"))continue
-            val after=row.getJSONObject("after");E2eeKeys.exact(after,spec.second)
-            for(name in spec.second){val value=after.get(name)
-                if(name in setOf("can_organize_tasks","all_projects","project_access_restricted","include_descendants")&&E2eeCommands.integer(value) !in 0L..1L)invalid()
+            val after=row.getJSONObject("after");val fields=if(allowMissingExcluded&&table=="shared_member_project_grants"&&!after.has("excluded"))spec.second-"excluded" else spec.second;E2eeKeys.exact(after,fields)
+            for(name in fields){val value=after.get(name)
+                if(name in setOf("can_organize_tasks","all_projects","project_access_restricted","include_descendants","excluded")&&E2eeCommands.integer(value) !in 0L..1L)invalid()
                 if(name in setOf("revision","project_access_revision"))E2eeCommands.integer(value,1)
                 if(name=="member_category_id"&&!after.isNull(name))E2eeKeys.technical(after.getString(name))
                 if(name=="role"&&value !in when(table){"shared_space_members"->setOf("owner","admin","member","guest");"shared_project_members"->setOf("owner","manager","member","commenter","viewer");else->setOf("member","commenter","viewer")})invalid()

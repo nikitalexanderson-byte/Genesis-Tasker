@@ -20,7 +20,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
         E2eeKeys.technical(intentId);current();val row=device.vault.read("outbox","membership:$intentId")?:error("E2EE_MEMBERSHIP_PLAN_REQUIRED");current()
         try{val value=E2eeFileManifestJson.readPrivateDocument(row.bytes);E2eeKeys.exact(value,setOf("protocol","ownerId","intentId","scopeIds","changes","preview","review","batch","result")+(if(value.has("hashFormat"))setOf("hashFormat")else emptySet())+(if(value.has("ownerApprovals"))setOf("ownerApprovals")else emptySet()))
             check(value.getInt("protocol")==1&&value.getString("ownerId")==device.ownerId&&value.getString("intentId")==intentId&&value.getJSONArray("scopeIds").length()<=256){"E2EE_CORRUPT_OUTBOX"}
-            check(!value.has("hashFormat")||value.get("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_CORRUPT_OUTBOX"};E2eeMembershipContract.changes(value.getJSONArray("changes"))
+            check(!value.has("hashFormat")||value.get("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_CORRUPT_OUTBOX"};E2eeMembershipContract.changes(value.getJSONArray("changes"),true)
             val scopes=scopeIds(value.getJSONArray("scopeIds"),false);scopes.forEach{E2eeKeys.technical(it)}
             check(scopes.distinct().size==scopes.size&&(0 until value.getJSONArray("scopeIds").length()).map{value.getJSONArray("scopeIds").getString(it)}==scopes){"E2EE_CORRUPT_OUTBOX"}
             if(value.has("ownerApprovals")){val rows=value.getJSONArray("ownerApprovals");check(rows.length()<=256){"E2EE_CORRUPT_OUTBOX"};val seen=mutableSetOf<String>()
@@ -33,6 +33,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
         try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox","membership:${value.getString("intentId")}",bytes,serial)));current()}finally{bytes.fill(0)};return(serial?:0)+1}
     private fun scopeIds(rows:JSONArray,objects:Boolean)= (0 until rows.length()).map{if(objects)rows.getJSONObject(it).getString("scopeId")else rows.getString(it)}.sorted()
     private fun request(state:JSONObject):JSONObject {
+        check(!E2eeMembershipContract.grantReviewRequired(state.getJSONArray("changes"))){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"}
         check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT&&!state.isNull("preview")){"E2EE_MEMBERSHIP_PREVIEW_REQUIRED"}
         return E2eeMembershipExchange.request(JSONObject().put("format","genesis-membership-review-v1").put("hashFormat",E2eeMembershipContract.HASH_FORMAT).put("actorId",state.get("ownerId")).put("intentId",state.get("intentId"))
             .put("scopeIds",state.get("scopeIds")).put("changes",state.get("changes")).put("preview",state.get("preview")))
@@ -65,7 +66,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
             .put("preview",JSONObject.NULL).put("review",JSONObject.NULL).put("batch",JSONObject.NULL).put("result",JSONObject.NULL),null);return id
     }
     @Synchronized fun preview(intentId:String):JSONObject{
-        val loaded=load(intentId);val state=loaded.value;check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"};if(!state.isNull("preview"))return JSONObject(state.getJSONObject("preview").toString())
+        val loaded=load(intentId);val state=loaded.value;check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT&&!E2eeMembershipContract.grantReviewRequired(state.getJSONArray("changes"))){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"};if(!state.isNull("preview"))return JSONObject(state.getJSONObject("preview").toString())
         val preview=transport.membershipPreview(intentId,state.getJSONArray("changes"));current();E2eeKeys.exact(preview,setOf("intentId","changeHash","scopePlans"));val plans=preview.getJSONArray("scopePlans")
         check(preview.getString("intentId")==intentId&&scopeIds(plans,true)==scopeIds(state.getJSONArray("scopeIds"),false)){"E2EE_MEMBERSHIP_ROTATION_INCOMPLETE"}
         val hash=E2eeMembershipContract.changeHash(device.ownerId,intentId,state.getJSONArray("changes"),state.getJSONArray("scopeIds"))
@@ -77,7 +78,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
     }
     @Synchronized fun prepare(intentId:String,explicitReview:JSONArray):JSONObject{
         val held=JSONArray(explicitReview.toString());val loaded=load(intentId);val state=loaded.value;var serial=loaded.serial
-        check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"}
+        check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT&&!E2eeMembershipContract.grantReviewRequired(state.getJSONArray("changes"))){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"}
         check(!state.isNull("preview")){"E2EE_MEMBERSHIP_PREVIEW_REQUIRED"};val plans=state.getJSONObject("preview").getJSONArray("scopePlans")
         check(scopeIds(held,true)==scopeIds(state.getJSONArray("scopeIds"),false)&&scopeIds(held,true).distinct().size==held.length()){"E2EE_MEMBERSHIP_ROTATION_INCOMPLETE"}
         val reviews=(0 until held.length()).associate{val row=held.getJSONObject(it);E2eeKeys.exact(row,setOf("scopeId","roles"));row.getString("scopeId") to row.getJSONArray("roles")}
@@ -95,7 +96,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
         state.put("batch",batch);save(state,serial);return JSONObject(batch.toString())
     }
     @Synchronized fun submit(intentId:String):JSONObject{
-        val loaded=load(intentId);val state=loaded.value;check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"};check(!state.isNull("batch")){"E2EE_MEMBERSHIP_PLAN_REQUIRED"}
+        val loaded=load(intentId);val state=loaded.value;check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT&&!E2eeMembershipContract.grantReviewRequired(state.getJSONArray("changes"))){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"};check(!state.isNull("batch")){"E2EE_MEMBERSHIP_PLAN_REQUIRED"}
         if(!state.isNull("result"))return JSONObject(state.getJSONObject("result").toString())
         val batch=state.getJSONObject("batch");val result=transport.membershipCommit(batch);current()
         E2eeKeys.exact(result,setOf("intentId","changeHash","scopes","signInRequired"));val scopeResults=result.getJSONObject("scopes")

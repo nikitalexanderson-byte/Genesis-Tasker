@@ -10,7 +10,7 @@ export const MEMBERSHIP_SPECS={
  shared_project_members:{keys:['project_id','user_id'],fields:['role']},
  shared_space_members:{keys:['space_id','user_id'],fields:['role','can_organize_tasks','all_projects','permissions_json','member_category_id','project_access_restricted','project_access_revision']},
  shared_member_categories:{keys:['id','space_id'],fields:['permissions_json','revision']},
- shared_member_project_grants:{keys:['space_id','user_id','project_id'],fields:['role','include_descendants']}
+ shared_member_project_grants:{keys:['space_id','user_id','project_id'],fields:['role','include_descendants','excluded']}
 } as const;
 const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');};
 /** SQL names are values in this projection, never new canonical object keys.
@@ -21,14 +21,16 @@ export function membershipFields(value:Record<string,unknown>):WireValue[]{
   if(typeof raw==='string'){const bytes=new TextEncoder().encode(raw);try{return{name,value:{utf8:encodeE2eeBytes(bytes)}};}finally{bytes.fill(0);}}return invalid();
  });
 }
-export function validateMembershipChanges(input:unknown):MembershipChange[]{
+export function membershipGrantReviewRequired(input:unknown){return Array.isArray(input)&&input.some(row=>row&&typeof row==='object'&&row.table==='shared_member_project_grants'&&row.after!==null&&typeof row.after==='object'&&!Object.hasOwn(row.after,'excluded'));}
+export function validateMembershipChanges(input:unknown,allowMissingExcluded=false):MembershipChange[]{
  if(!Array.isArray(input)||input.length<1||input.length>200)invalid();const seen=new Set<string>();
  for(const row of input){exactKeys(row,['table','key','expectedHash','after']);if(typeof row.table!=='string'||!Object.hasOwn(MEMBERSHIP_SPECS,row.table))invalid();
   const table=row.table as keyof typeof MEMBERSHIP_SPECS,spec=MEMBERSHIP_SPECS[table];exactKeys(row.key,spec.keys);for(const value of Object.values(row.key))assertTechnical(value);
   const key=encodeE2eeBytes(canonicalE2eeValue({table,key:membershipFields(row.key)}));if(seen.has(key))invalid();seen.add(key);
-  if(row.expectedHash!=='absent')decodeE2eeBytes(row.expectedHash,32);if(row.after===null)continue;exactKeys(row.after,spec.fields);
+  if(row.expectedHash!=='absent')decodeE2eeBytes(row.expectedHash,32);if(row.after===null)continue;
+  const fields=allowMissingExcluded&&table==='shared_member_project_grants'&&row.after&&typeof row.after==='object'&&!Object.hasOwn(row.after,'excluded')?spec.fields.filter(field=>field!=='excluded'):spec.fields;exactKeys(row.after,fields);
   for(const [field,value]of Object.entries(row.after)){
-   if(['can_organize_tasks','all_projects','project_access_restricted','include_descendants'].includes(field)&&value!==0&&value!==1)invalid();
+   if(['can_organize_tasks','all_projects','project_access_restricted','include_descendants','excluded'].includes(field)&&value!==0&&value!==1)invalid();
    if(['revision','project_access_revision'].includes(field)&&(!Number.isSafeInteger(value)||Number(value)<1))invalid();
    if(field==='member_category_id'&&value!==null)assertTechnical(value);
    if(field==='role'&&!(table==='shared_space_members'?['owner','admin','member','guest']:table==='shared_project_members'?['owner','manager','member','commenter','viewer']:['member','commenter','viewer']).includes(String(value)))invalid();

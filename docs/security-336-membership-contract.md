@@ -30,3 +30,11 @@ duplicate coordinates, order changes, stale beforeHash, malformed types and old
 journal preservation. Normal invitation/member UI, all-owner rotation exchange,
 exact receipt/readback and interrupted plan resolution still need composition.
 Coverage remains9/20 and activation stays disabled.
+
+Normal-route source inspection found the existing project-grant `excluded` flag
+was missing from the initial candidate spec. It is now an explicit0/1 field in
+all three specs/hashes, so deny rules and descendant exceptions cannot silently
+become grants. This contract is still unpublished. Old input-only drafts missing
+the field remain typed/readable inert input; no default is invented and live
+preview/preparation/submission require a fresh reviewed plan. Pending/load views
+mark them for review. Old non-input states require explicit custody review.

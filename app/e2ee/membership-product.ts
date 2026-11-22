@@ -3,7 +3,7 @@ import {encodeE2eeBytes,decodeE2eeBytes} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import type {E2eeScopeClient,ReviewedDeviceRole} from './scope-client.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
-import {MEMBERSHIP_HASH_FORMAT,MEMBERSHIP_SPECS,validateMembershipChanges,membershipChangeHashValue,membershipBeforeHash,type MembershipChange} from './membership-contract.ts';
+import {MEMBERSHIP_HASH_FORMAT,MEMBERSHIP_SPECS,validateMembershipChanges,membershipChangeHashValue,membershipBeforeHash,membershipGrantReviewRequired,type MembershipChange} from './membership-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {validateMembershipReviewRequest,membershipReviewFingerprint,validateMembershipOwnerApproval,verifyMembershipOwnerApproval,type MembershipReviewRequest,type MembershipOwnerApproval,type MembershipPeerPorts} from './membership-exchange.ts';
 
@@ -31,7 +31,7 @@ export class E2eeMembershipProduct{
  async #load(intentId:string){assertTechnical(intentId);this.current();const row=await this.device.vault.read('outbox',`membership:${intentId}`);this.current();if(!row)throw new Error('E2EE_MEMBERSHIP_PLAN_REQUIRED');
   try{const state=JSON.parse(decoder.decode(row.value));exactKeys(state,['protocol',...(Object.hasOwn(state,'hashFormat')?['hashFormat']:[]),...(Object.hasOwn(state,'ownerApprovals')?['ownerApprovals']:[]),'ownerId','intentId','scopeIds','changes','preview','review','batch','result']);
    if(state.protocol!==1||state.ownerId!==this.device.ownerId||state.intentId!==intentId||!Array.isArray(state.scopeIds)||state.scopeIds.length>256||!Array.isArray(state.changes))throw new Error('E2EE_CORRUPT_OUTBOX');
-   if(Object.hasOwn(state,'hashFormat')&&state.hashFormat!==MEMBERSHIP_HASH_FORMAT)throw new Error('E2EE_CORRUPT_OUTBOX');validateMembershipChanges(state.changes);
+   if(Object.hasOwn(state,'hashFormat')&&state.hashFormat!==MEMBERSHIP_HASH_FORMAT)throw new Error('E2EE_CORRUPT_OUTBOX');validateMembershipChanges(state.changes,true);
    for(const id of state.scopeIds)assertTechnical(id);if(!same([...new Set(state.scopeIds)].sort(),state.scopeIds))throw new Error('E2EE_CORRUPT_OUTBOX');
    if(Object.hasOwn(state,'ownerApprovals')){
     if(!Array.isArray(state.ownerApprovals)||state.ownerApprovals.length>256)throw new Error('E2EE_CORRUPT_OUTBOX');const scopes=new Set<string>();
@@ -41,7 +41,7 @@ export class E2eeMembershipProduct{
   }finally{row.value.fill(0);}
  }
  async #save(state:State,serial:number|null){this.current();const bytes=encoder.encode(JSON.stringify(state));try{await this.device.vault.write([{domain:'outbox',objectId:`membership:${state.intentId}`,value:bytes,expected:serial}]);this.current();}finally{bytes.fill(0);}return(serial??0)+1;}
- #request(state:State):MembershipReviewRequest{if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT||!state.preview)throw new Error('E2EE_MEMBERSHIP_PREVIEW_REQUIRED');return validateMembershipReviewRequest({format:'genesis-membership-review-v1',hashFormat:MEMBERSHIP_HASH_FORMAT,actorId:state.ownerId,intentId:state.intentId,scopeIds:state.scopeIds,changes:state.changes,preview:state.preview});}
+ #request(state:State):MembershipReviewRequest{if(membershipGrantReviewRequired(state.changes))throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT||!state.preview)throw new Error('E2EE_MEMBERSHIP_PREVIEW_REQUIRED');return validateMembershipReviewRequest({format:'genesis-membership-review-v1',hashFormat:MEMBERSHIP_HASH_FORMAT,actorId:state.ownerId,intentId:state.intentId,scopeIds:state.scopeIds,changes:state.changes,preview:state.preview});}
  async exportReview(intentId:string){const {state}=await this.#load(intentId),request=this.#request(state);this.current();return{request,fingerprint:membershipReviewFingerprint(request)};}
  importOwnerApproval(intentId:string,input:MembershipOwnerApproval){const held=snapshotE2eeValue(input);return this.#run(async()=>{
   const loaded=await this.#load(intentId),state=loaded.state,request=this.#request(state),approval=validateMembershipOwnerApproval(held,request);let serial=loaded.serial;
@@ -62,7 +62,7 @@ export class E2eeMembershipProduct{
   this.current();if(held.length<1||held.length>200||scopes.length>256||new Set(scopes).size!==scopes.length)throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');for(const id of scopes)assertTechnical(id);
   const intentId=crypto.randomUUID();await this.#save({protocol:1,hashFormat:MEMBERSHIP_HASH_FORMAT,ownerApprovals:[],ownerId:this.device.ownerId,intentId,scopeIds:scopes,changes:held,preview:null,review:null,batch:null,result:null},null);return intentId;
  });}
- preview(intentId:string){return this.#run(async()=>{const {state,serial}=await this.#load(intentId);if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT)throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(state.preview)return snapshotE2eeValue(state.preview);
+ preview(intentId:string){return this.#run(async()=>{const {state,serial}=await this.#load(intentId);if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT||membershipGrantReviewRequired(state.changes))throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(state.preview)return snapshotE2eeValue(state.preview);
   const preview=await this.transport.membershipPreview(intentId,state.changes);this.current();exactKeys(preview,['intentId','changeHash','scopePlans']);
   if(preview.intentId!==intentId||!Array.isArray(preview.scopePlans)||!same(preview.scopePlans.map(row=>row.scopeId).sort(),state.scopeIds))throw new Error('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');
   const changeHash=await digest(membershipChangeHashValue(this.device.ownerId,intentId,state.changes,state.scopeIds));
@@ -74,7 +74,7 @@ export class E2eeMembershipProduct{
   state.preview=snapshotE2eeValue(preview);await this.#save(state,serial);return snapshotE2eeValue(preview);
  });}
  prepare(intentId:string,explicitReview:MembershipReview[]){const held=snapshotE2eeValue(explicitReview);return this.#run(async()=>{
-  const loaded=await this.#load(intentId),{state}=loaded;let serial=loaded.serial;if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT)throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(!state.preview)throw new Error('E2EE_MEMBERSHIP_PREVIEW_REQUIRED');
+  const loaded=await this.#load(intentId),{state}=loaded;let serial=loaded.serial;if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT||membershipGrantReviewRequired(state.changes))throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(!state.preview)throw new Error('E2EE_MEMBERSHIP_PREVIEW_REQUIRED');
   if(!same(held.map(row=>row.scopeId).sort(),state.scopeIds)||new Set(held.map(row=>row.scopeId)).size!==held.length)throw new Error('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');
   for(const row of held){exactKeys(row,['scopeId','roles']);if(!same(row.roles,state.preview.scopePlans.find(plan=>plan.scopeId===row.scopeId)!.roles))throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');}
   if(state.review&&!same(state.review,held))throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');
@@ -89,7 +89,7 @@ export class E2eeMembershipProduct{
   await this.personal.refresh();this.current();const authorization=await this.personal.authorizeMembership(intentId,state.preview.changeHash);this.current();
   state.batch={intentId,changes:state.changes,authorization,rotations};await this.#save(state,serial);return snapshotE2eeValue(state.batch);
  });}
- submit(intentId:string){return this.#run(async()=>{const {state,serial}=await this.#load(intentId);if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT)throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(!state.batch)throw new Error('E2EE_MEMBERSHIP_PLAN_REQUIRED');
+ submit(intentId:string){return this.#run(async()=>{const {state,serial}=await this.#load(intentId);if(state.hashFormat!==MEMBERSHIP_HASH_FORMAT||membershipGrantReviewRequired(state.changes))throw new Error('E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED');if(!state.batch)throw new Error('E2EE_MEMBERSHIP_PLAN_REQUIRED');
   if(state.result)return snapshotE2eeValue(state.result);
   // Never refresh/re-sign/rekey on a failed POST. Exact idempotent retry also
   // covers a successful transaction whose HTTP response was lost.

@@ -35,7 +35,7 @@ function genesisE2eeAclSpec(string $table): array
         'shared_project_members'=>['keys'=>['project_id','user_id'],'fields'=>['role'],'space'=>false],
         'shared_space_members'=>['keys'=>['space_id','user_id'],'fields'=>['role','can_organize_tasks','all_projects','permissions_json','member_category_id','project_access_restricted','project_access_revision'],'space'=>true],
         'shared_member_categories'=>['keys'=>['id','space_id'],'fields'=>['permissions_json','revision'],'space'=>true],
-        'shared_member_project_grants'=>['keys'=>['space_id','user_id','project_id'],'fields'=>['role','include_descendants'],'space'=>true],
+        'shared_member_project_grants'=>['keys'=>['space_id','user_id','project_id'],'fields'=>['role','include_descendants','excluded'],'space'=>true],
         default=>throw new InvalidArgumentException('E2EE_ACL_TABLE_FORBIDDEN')};
 }
 function genesisE2eeAclTechnical(array $row,array $spec): array
@@ -60,7 +60,7 @@ function genesisE2eeAclChanges(PDO $db,string $actor,array $changes): array
         if($change['after']!==null){$fields=genesisE2eeExactFields($change['after'],$spec['fields']);$after=$before?:$change['key'];foreach($fields as $name=>$value)$after[$name]=$value;
             if(isset($fields['role'])){if(!in_array($fields['role'],$table==='shared_space_members'?['owner','admin','member','guest']:($table==='shared_project_members'?['owner','manager','member','commenter','viewer']:['member','commenter','viewer']),true))throw new InvalidArgumentException('E2EE_MEMBERSHIP_ROLE_INVALID');
                 if(($before['role']??null)==='owner'||$fields['role']==='owner')throw new DomainException('E2EE_OWNER_TRANSFER_REQUIRES_RECOVERY_PLAN');}
-            foreach(['can_organize_tasks','all_projects','project_access_restricted','include_descendants'] as $field)if(array_key_exists($field,$fields)&&!in_array($fields[$field],[0,1],true))throw new InvalidArgumentException('E2EE_MEMBERSHIP_PERMISSION_INVALID');
+            foreach(['can_organize_tasks','all_projects','project_access_restricted','include_descendants','excluded'] as $field)if(array_key_exists($field,$fields)&&!in_array($fields[$field],[0,1],true))throw new InvalidArgumentException('E2EE_MEMBERSHIP_PERMISSION_INVALID');
             foreach(['revision','project_access_revision'] as $field)if(array_key_exists($field,$fields)&&genesisE2eeInteger($fields[$field],1)!==(int)($before[$field]??0)+1)throw new DomainException('E2EE_MEMBERSHIP_STALE');
             if(array_key_exists('member_category_id',$fields)&&$fields['member_category_id']!==null){genesisE2eeIdentifier($fields['member_category_id']);$category=genesisE2eeRow($db,'SELECT id FROM shared_member_categories WHERE id=? AND space_id=?',[$fields['member_category_id'],$space]);if(!$category)throw new InvalidArgumentException('E2EE_MEMBERSHIP_CATEGORY_INVALID');}
             if(array_key_exists('permissions_json',$fields)){

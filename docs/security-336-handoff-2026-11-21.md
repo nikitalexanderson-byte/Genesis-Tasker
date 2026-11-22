@@ -1,5 +1,44 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: обычные ACL semantics исследованы; excluded сохранён
+
+После9bd8caf0 добавлен фактический `excluded`0/1 в project-grant specs/hashes
+web/native/API. Старый input без этого поля читается inert и показывается как
+reviewRequired; live operations не подставляют0. Non-input старые состояния
+требуют custody review. Нет compiler/tests/build/CI/push/deploy.
+
+Прочитаны реальные normal routes (не начинать их аудит заново):
+- shared-projects.php1016: project role меняет row, отзывает приглашения target,
+  RememberDirectProjectAccess и RefreshRestrictedProjectAccess; запрещён inbox.
+- 1051: space role/permissions сбрасывают member category при manual change,
+  default permissions при смене role, manager rows для admin/owner, inbox member
+  для non-guest; guest удаляет inbox membership и clears private task assignees.
+- 1127: removal clears task assignees + external Google projection links,
+  отзывает invitations; последний guest без проектов теряет space/inbox; direct
+  grant удаляется/становится excluded, затем restricted inheritance recompute.
+- shared-project-access.php: pure nearest-explicit ProjectAccessRoles(projects,
+  grants), includeDescendants и excluded→none. SaveProjectAccess обновляет space
+  access revision, весь набор grants, derived project member rows, assignments,
+  приглашения и audit. Legacy max grants5000, current batch200changes/256scopes;
+  широкий atomic protocol ещё требует отдельного bounded/staged решения.
+- shared-member-categories.php: category permissions распространяются на всех
+  прикреплённых non-owner members; AssignMemberPermissions copies permissions и
+  organizer flag. Это тоже ACL/rotation, не обычный private title write.
+
+Central intercepts: web e2ee/shared-web-live.ts privateSharedRequest до run/model;
+native NativePrivateProducts.sharedRequest до sharedLive.request. Здесь можно
+сохранить полный encrypted raw role/remove/grants input ДО IO и открыть новый
+membership review host. Пока обычные кнопки ещё идут в неподдерживаемую private
+ветку. Не временно возвращать их в plaintext API и не запускать legacy functions
+с generic SQL bypass. Нужен pure planner с теми же semantics и независимо
+проверенным decrypted project topology/affected-scope closure, product changes
+для private assignees и full atomic owner signatures. Затем normal UI14lang,
+invitation request/consumption, stale-plan semantic resolution.
+
+Большой остаток и ограничения ниже сохраняются. Coverage9/20; production3.3.5/149/
+Paddle/floors0/cutover off/GENESIS_DEPLOY_ANDROID=false неизменны. QA только после
+всего кода; demo-output/ не читать/stage, субагенты/Daybreak запрещены. Progress.
+
 ## 22 ноября: matching multi-owner membership exchange foundation (кандидат)
 
 После39d98061/efaa701a добавлены membership-exchange / owner-review web/native:

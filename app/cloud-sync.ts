@@ -3910,7 +3910,7 @@ async function privateDeviceAccessSession(){
  };return{access:new E2eeDeviceAccess(account,ports,current),current,account,ports};
 }
 async function privateMembershipSession(){
- const {account,ports,current}=await privateDeviceAccessSession(),{E2eeMembershipProduct}=await import('./e2ee/membership-product'),{E2eeMembershipOwnerReview}=await import('./e2ee/membership-owner-review');current();
+ const {account,ports,current}=await privateDeviceAccessSession(),{E2eeMembershipProduct}=await import('./e2ee/membership-product'),{E2eeMembershipOwnerReview}=await import('./e2ee/membership-owner-review'),{membershipGrantReviewRequired}=await import('./e2ee/membership-contract');current();
  const peers:import('./e2ee/membership-exchange').MembershipPeerPorts={target:ports.target,directory:ports.directory,current,
   checkpoint:async scopeId=>{current();const value=await account.device.savedDirectory(scopeId);current();return value?.checkpoint;},
   remember:async(target,events)=>{current();const directory=await account.device.rememberDirectory(target.scopeId,target.authority,events,target.ownerId);current();
@@ -3921,14 +3921,14 @@ async function privateMembershipSession(){
  };
  const transport=privateAccountHttpTransport().membership;if(!transport)throw new Error('E2EE_MEMBERSHIP_TRANSPORT_REQUIRED');
  const product=new E2eeMembershipProduct(account.device,account.personal().client,transport,async scopeId=>{const target=await ports.target(scopeId);current();if(target.ownerId!==account.ownerId)throw new Error('E2EE_OWNER_REQUIRED');return ports.client(target);},current,peers);
- return{product,ownerReview:new E2eeMembershipOwnerReview(account,openOwned,current),current};
+ return{product,ownerReview:new E2eeMembershipOwnerReview(account,openOwned,current),current,needsReview:(state:{hashFormat?:string;changes:unknown})=>!state.hashFormat||membershipGrantReviewRequired(state.changes)};
 }
-export async function pendingCurrentPrivateMembership(){const {product,ownerReview,current}=await privateMembershipSession(),ids=await product.pending(),intents=[];current();
- for(const id of ids){const row=await product.inspect(id);current();intents.push({id,scopeIds:row.scopeIds,complete:Boolean(row.result),reviewRequired:!row.hashFormat});}
+export async function pendingCurrentPrivateMembership(){const {product,ownerReview,current,needsReview}=await privateMembershipSession(),ids=await product.pending(),intents=[];current();
+ for(const id of ids){const row=await product.inspect(id);current();intents.push({id,scopeIds:row.scopeIds,complete:Boolean(row.result),reviewRequired:needsReview(row)});}
  const reviews=await ownerReview.list();current();return{intents,ownerReviews:reviews.map(row=>({id:row.id,scopeId:row.scopeId,complete:Boolean(row.packet)}))};
 }
 export async function startCurrentPrivateMembership(changes:import('./e2ee/membership-product').MembershipChange[],scopeIds:string[]){const {product,current}=await privateMembershipSession();const id=await product.create(changes,scopeIds);current();await product.preview(id);current();return product.exportReview(id);}
-export async function loadCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();const state=await product.inspect(id);current();return{state,review:state.preview&&state.hashFormat?await product.exportReview(id):null};}
+export async function loadCurrentPrivateMembership(id:string){const {product,current,needsReview}=await privateMembershipSession();const state=await product.inspect(id);current();return{state,review:state.preview&&!needsReview(state)?await product.exportReview(id):null};}
 export async function previewCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();await product.preview(id);current();return product.exportReview(id);}
 export async function prepareCurrentPrivateMembership(id:string,displayedFingerprint:string){const {product,current}=await privateMembershipSession(),view=await product.exportReview(id);current();
  if(view.fingerprint!==displayedFingerprint)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');const reviews=view.request.preview.scopePlans.map(plan=>({scopeId:plan.scopeId,roles:structuredClone(plan.roles)}));
