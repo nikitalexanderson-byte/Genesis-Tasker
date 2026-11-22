@@ -1,5 +1,27 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: read-only project preview и реальные scope-client ports
+
+После8836bb1c added signed personal-owner project-create-preview + реальные
+web/native E2eeScopeClient.readProjectCreationPreview. Server inspect выделен
+из verify: preview не создаёт placeholders/receipts/membership/scope/capability.
+Actual prepare заново проверяет exact reviewedMembers и только после сравнения
+материализует FK/capability. Client ports проверяют cp личной области, resource,
+shape, same-scope anchors и неизменность selection. Контракты теперь отдельно
+читают selection и proposal topology. Подчёркнуто: response reviewedMembers —
+предложение routing, не согласие пользователя; UI должен хранить отдельный review.
+Уточнены metadata2 ограничения task-list/inbox category, совпадающие в3 клиентах.
+
+**Продолжать с project creation journals + actual UI**: оба encrypted input до IO,
+независимо pinned/decrypted space/parent/category/status anchor composition,
+read-only preview → explicit durable review → fixed signed preparation/receipt →
+project migration + actual baseline → intended private root и localized statuses
+с readback → complete/normal result. Подключить обычные web/native create buttons
+и account pending/resume. Existing private-space journal/controller — рабочий
+образец кандидата, не надо заново исследовать весь migration engine.
+Подробности: security-336-private-resource-creation.md. Все предыдущие ограничения/
+остаток сохраняются, no tests/compiler/lint/build/CI/push/release/device, coverage9/20.
+
 ## 22 ноября: signed fresh-project server preparation (кандидат)
 
 После95e140a5 добавлена project-ветка resource-create-prepare:

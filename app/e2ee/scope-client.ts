@@ -5,6 +5,7 @@ import { E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES, envelopePayloadHash, objectManif
 import { assertTechnical, exactKeys, freshSecret, openRoot, sealRoot, type PublicDeviceKeys } from './keys.ts';
 import { UnlockedWebDevice } from './device-vault.ts';
 import type { LocalWrite } from './storage.ts';
+import {validatePrivateProjectSelection,validatePrivateProjectTopology,type PrivateProjectSelection} from './project-create-contract.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
@@ -416,6 +417,18 @@ export class E2eeScopeClient {
   async readBootstrapState(afterPart=-1){if(!Number.isInteger(afterPart)||afterPart< -1||afterPart>255)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-bootstrap-state',{afterPart});}
   async readProductContext(){return this.#readPacket('product-context',{});}
   async readTransitionCandidates(){return this.#readPacket('resource-transition-candidates',{});}
+  /** Routing proposal only. The UI must separately obtain explicit consent,
+   * and the creation journal must independently verify its pinned anchors. */
+  async readProjectCreationPreview(resourceId:string,input:PrivateProjectSelection){
+    assertTechnical(resourceId);const selected=validatePrivateProjectSelection(input);
+    const response=await this.#readPacket('project-create-preview',{resourceId,topology:selected as unknown as WireValue});
+    exactKeys(response,['resourceId','topology','checkpointHash','directoryRevision']);if(response.resourceId!==resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const topology=validatePrivateProjectTopology(response.topology,this.#device.ownerId);
+    const actual=Object.fromEntries((Object.keys(selected) as (keyof PrivateProjectSelection)[]).map(key=>[key,topology[key]]));
+    const left=canonicalE2eeValue(selected as unknown as WireValue),right=canonicalE2eeValue(actual as WireValue);
+    try{if(left.length!==right.length||left.some((byte,at)=>byte!==right[at]))throw new Error('E2EE_PROJECT_TOPOLOGY_CHANGED');}finally{left.fill(0);right.fill(0);}
+    this.#device.requireOpen();return topology;
+  }
   async readInvitationState(ids:string[]){if(ids.length>20||new Set(ids).size!==ids.length)throw new Error('E2EE_INVALID_LIMIT');for(const id of ids)assertTechnical(id);return this.#readPacket('shared-invitation-state',{ids});}
   async sharedReadHistory(){const result=await this.#readPacket('shared-read-history',{});exactKeys(result,['history','checkpointHash','directoryRevision']);return result.history;}
   async readProductHistory(entityId:string,before:number,limit=5){assertTechnical(entityId);if(!Number.isSafeInteger(before)||before<1||!Number.isInteger(limit)||limit<1||limit>10)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-history',{entityId,before,limit});}

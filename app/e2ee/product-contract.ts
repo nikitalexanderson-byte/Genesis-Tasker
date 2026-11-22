@@ -18,8 +18,8 @@ export function productMetadata(kind:ProductKind,input:unknown):ProductMetadata{
  if(project){
   assertTechnical(input.spaceId);for(const key of ['parentProjectId','projectCategoryId','boardStatusId'])if(input[key]!==null)assertTechnical(input[key]);
   if(!['project','task-list'].includes(String(input.projectType))||!['list','board'].includes(String(input.layout))||typeof input.isInbox!=='boolean'||typeof input.archived!=='boolean'
-   ||input.boardStatusId!==null&&input.parentProjectId===null||input.projectType==='task-list'&&input.parentProjectId===null
-   ||input.isInbox&&(input.parentProjectId!==null||input.projectType!=='project'))throw new Error('E2EE_PRODUCT_METADATA_INVALID');
+   ||input.boardStatusId!==null&&input.parentProjectId===null||input.projectType==='task-list'&&(input.parentProjectId===null||input.projectCategoryId!==null)
+   ||input.isInbox&&(input.parentProjectId!==null||input.projectType!=='project'||input.projectCategoryId!==null))throw new Error('E2EE_PRODUCT_METADATA_INVALID');
  }
  const ids=(value:unknown,max=200):string[]=>{if(!Array.isArray(value)||value.length>max||new Set(value).size!==value.length)throw new Error('E2EE_PRODUCT_METADATA_INVALID');for(const id of value)assertTechnical(id);return value;};
  if(kind==='task'){if(input.statusId!==null)assertTechnical(input.statusId);if(typeof input.completed!=='boolean')throw new Error('E2EE_PRODUCT_METADATA_INVALID');ids(input.approverIds);ids(input.dependsOnIds,1000);ids(input.presentFields,512);}

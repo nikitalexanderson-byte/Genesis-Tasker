@@ -41,8 +41,8 @@ function genesisE2eeProductMetadata(string $kind,mixed $input): array
     if($project){
         genesisE2eeIdentifier($value['spaceId']);foreach(['parentProjectId','projectCategoryId','boardStatusId'] as $key)if($value[$key]!==null)genesisE2eeIdentifier($value[$key]);
         if(!in_array($value['projectType'],['project','task-list'],true)||!in_array($value['layout'],['list','board'],true)||!is_bool($value['isInbox'])||!is_bool($value['archived'])
-          ||$value['boardStatusId']!==null&&$value['parentProjectId']===null||$value['projectType']==='task-list'&&$value['parentProjectId']===null
-          ||$value['isInbox']&&($value['parentProjectId']!==null||$value['projectType']!=='project'))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
+          ||$value['boardStatusId']!==null&&$value['parentProjectId']===null||$value['projectType']==='task-list'&&($value['parentProjectId']===null||$value['projectCategoryId']!==null)
+          ||$value['isInbox']&&($value['parentProjectId']!==null||$value['projectType']!=='project'||$value['projectCategoryId']!==null))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
     }
     if($kind==='task'){
         if($value['statusId']!==null)genesisE2eeIdentifier($value['statusId']);if(!is_bool($value['completed']))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');

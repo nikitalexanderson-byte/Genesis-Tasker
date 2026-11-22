@@ -7,6 +7,7 @@ require_once __DIR__.'/e2ee-project-topology.php';
  * It authorizes technical fresh rows, never existing ACL rotation or capsules. */
 final class GenesisE2eeProjectCreation
 {
+    private const SELECTION=['spaceId','parentId','categoryId','boardStatusId','kind','layout','spaceAnchor','parentAnchor','categoryAnchor','statusAnchor'];
     private bool $consumed=false;
     private function __construct(private readonly PDO $db,public readonly string $actor,public readonly string $resourceId,public readonly array $topology,private readonly array $members) {}
     private static function same(mixed $left,mixed $right): bool {return genesisE2eeCanonical($left)===genesisE2eeCanonical($right);}
@@ -19,9 +20,25 @@ final class GenesisE2eeProjectCreation
     }
     public static function verify(PDO $db,string $actor,string $resourceId,mixed $input): self
     {
+        $value=genesisE2eeExactFields($input,[...self::SELECTION,'reviewedMembers']);$reviewed=$value['reviewedMembers'];unset($value['reviewedMembers']);
+        $proof=self::inspect($db,$actor,$resourceId,$value);
+        if(!is_array($reviewed)||!array_is_list($reviewed)||!self::same($proof['review'],$reviewed))throw new DomainException('E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED');
+        foreach(['category','status'] as $kind)if($proof[$kind]!==null){$reference=$proof[$kind];
+            genesisE2eeEnsurePrivateProjectReference($db,$reference['scope'],$kind,$reference['id'],$reference['head']);}
+        $value['reviewedMembers']=$reviewed;return new self($db,$actor,$resourceId,$value,$proof['members']);
+    }
+    /** Pure routing/anchor preview. It mints no factory capability, writes no
+     * placeholder, accepts no review and returns no user body or device key. */
+    public static function preview(PDO $db,string $actor,string $resourceId,mixed $input): array
+    {
+        $proof=self::inspect($db,$actor,$resourceId,$input);
+        return ['resourceId'=>$resourceId,'topology'=>$proof['value']+['reviewedMembers'=>$proof['review']]];
+    }
+    private static function inspect(PDO $db,string $actor,string $resourceId,mixed $input): array
+    {
         if(!$db->inTransaction())throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');
         genesisE2eeIdentifier($resourceId);
-        $value=genesisE2eeExactFields($input,['spaceId','parentId','categoryId','boardStatusId','kind','layout','spaceAnchor','parentAnchor','categoryAnchor','statusAnchor','reviewedMembers']);
+        $value=genesisE2eeExactFields($input,self::SELECTION);
         genesisE2eeIdentifier($value['spaceId']);foreach(['parentId','categoryId','boardStatusId'] as $key)if($value[$key]!==null)genesisE2eeIdentifier($value[$key]);
         if(!in_array($value['kind'],['project','task-list'],true)||!in_array($value['layout'],['list','board'],true)||$value['kind']==='task-list'&&($value['parentId']===null||$value['categoryId']!==null)
           ||$value['boardStatusId']!==null&&$value['parentId']===null)throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
@@ -47,14 +64,12 @@ final class GenesisE2eeProjectCreation
             $category=genesisE2eeProductRow($db,$space,'category:'.$value['categoryId']);
             if(!$category||$category['deleted']||$category['kind']!=='category'||$category['parent_id']!=='space:'.$value['spaceId'])throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');
             self::anchor($value['categoryAnchor'],$space,$category);
-            genesisE2eeEnsurePrivateProjectReference($db,$space,'category',$value['categoryId'],$category);
         }elseif($value['categoryAnchor']!==null)throw new DomainException('E2EE_CONTEXT_MISMATCH');
         if($value['boardStatusId']!==null){
             $status=genesisE2eeProductRow($db,$parent['scope'],'status:'.$value['boardStatusId']);
             if(!$status||$status['deleted']||$status['kind']!=='status'||$status['parent_id']!=='project:'.$value['parentId']
                 ||str_starts_with($value['boardStatusId'],'chaos-open:')||str_starts_with($value['boardStatusId'],'chaos-done:'))throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');
             self::anchor($value['statusAnchor'],$parent['scope'],$status);
-            genesisE2eeEnsurePrivateProjectReference($db,$parent['scope'],'status',$value['boardStatusId'],$status);
         }elseif($value['statusAnchor']!==null)throw new DomainException('E2EE_CONTEXT_MISMATCH');
         // Reuse nearest-explicit-grant semantics, scoped to this new child only.
         // No old project memberships/assignments/projections are rewritten.
@@ -72,8 +87,9 @@ final class GenesisE2eeProjectCreation
             if($role!==null)$members[$user]=$role;
         }
         ksort($members,SORT_STRING);$review=[];foreach($members as $user=>$role)$review[]=['userId'=>(string)$user,'role'=>$role];
-        if(!is_array($value['reviewedMembers'])||!array_is_list($value['reviewedMembers'])||!self::same($review,$value['reviewedMembers']))throw new DomainException('E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED');
-        return new self($db,$actor,$resourceId,$value,$members);
+        return ['value'=>$value,'members'=>$members,'review'=>$review,
+            'category'=>$value['categoryId']===null?null:['scope'=>$space,'id'=>$value['categoryId'],'head'=>$category],
+            'status'=>$value['boardStatusId']===null?null:['scope'=>$parent['scope'],'id'=>$value['boardStatusId'],'head'=>$status]];
     }
     public function assertFactory(string $actor,string $spaceId,array $input): void
     {

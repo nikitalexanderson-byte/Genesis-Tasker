@@ -4,6 +4,25 @@
 coverage remains9/20. Existing production3.3.5/149/Paddle website, floors0, cutover
 off and GENESIS_DEPLOY_ANDROID=false are unchanged.
 
+## Read-only project recipient preview (subsequent candidate)
+
+Added signed personal-owner `project-create-preview` and both real scope-client
+ports. They validate a technical selection separately from its proposed members.
+The same pure server inspection verifies current pinned-head coordinates,
+placement permissions, ancestor graph and inherited roles for preview and for
+actual preparation. Preview creates no placeholder, receipt, membership, scope
+or capability. It carries no body or device key. The client verifies its
+personal checkpoint, exact fresh resource ID, complete shape, same-scope anchor
+coordinates and unchanged selection; it returns only the proposed topology.
+
+Only later explicit preparation compares the reviewed list again under the
+writer lock and may mint the technical factory capability/materialize FKs.
+The response property name `reviewedMembers` is a wire proposal, **not UI
+consent**: the pending project journal/UI must store an independent explicit
+review step. Both actual create/resume journals, independently pinned/decrypted
+anchor composition, private root/status writes and normal UI remain next.
+No compiler/typecheck/lint/tests/build/CI ran.
+
 ## Signed project preparation/factory (subsequent candidate pass)
 
 `resource-create-prepare` now has a project branch with the same active personal
@@ -48,11 +67,12 @@ not legacy plaintext creation or a general ACL exception.
 Matching web/native technical topology contracts and service-custody readers
 are added. This is still NOT the ordinary project create/resume UI: the next
 client work must retain full project input before IO, obtain/independently verify
-anchors and a read-only recipient preview, require explicit review, preserve the
+anchors and the read-only recipient preview, require explicit review, preserve the
 fixed preparation packet across response loss, migrate the project, finish its
 real baseline, write/read back intended root and localized status values, and
 only then return a normal project. Add the pending project journal/UI/account
-resume path alongside spaces. The read-only preview endpoint is not yet added.
+resume path alongside spaces. The preview endpoint/low-level ports now exist;
+the normal creation journal/UI has not yet composed them.
 Remaining normal invitation/member/device review and multi-scope reparent/
 delete/restore lifecycle also remain code work. No compilation/QA ran.
 

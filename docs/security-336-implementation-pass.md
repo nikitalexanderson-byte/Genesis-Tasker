@@ -10,6 +10,18 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Pure project-recipient preview and matching client ports (candidate)
+
+Signed active-personal-owner read now reuses the same pure topology/inheritance
+inspection as preparation and returns a proposed technical member list without
+creating rows/capabilities. Real web/native scope-client ports validate complete
+shape, personal checkpoint, resource ID, same-scope anchors and unchanged
+selection. Only actual preparation can accept the explicitly reviewed list and
+mint the factory capability. UI consent must remain a separate durable step;
+the wire property reviewedMembers is not consent. Creation journals/normal UI,
+decrypted independently pinned anchor composition and root/status values are
+still next. No compilation/QA/coverage increase.
+
 ### Signed fresh-project preparation and inherited routing (candidate)
 
 The resource preparation service now verifies current technical anchors and

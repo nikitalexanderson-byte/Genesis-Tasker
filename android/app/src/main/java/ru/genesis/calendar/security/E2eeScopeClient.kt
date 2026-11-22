@@ -493,6 +493,15 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..255){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",afterPart))}
     @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject())
     @Synchronized fun readTransitionCandidates():JSONObject=readPacket("resource-transition-candidates",JSONObject())
+    /** Proposed routing only: no consent, journal advancement or trust grant. */
+    @Synchronized fun readProjectCreationPreview(resourceId:String,input:JSONObject):JSONObject{
+        E2eeKeys.technical(resourceId);val selected=E2eeProjectCreationContract.selection(input)
+        val response=readPacket("project-create-preview",JSONObject().put("resourceId",resourceId).put("topology",selected))
+        E2eeKeys.exact(response,setOf("resourceId","topology","checkpointHash","directoryRevision"));check(response.get("resourceId")==resourceId){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val topology=E2eeProjectCreationContract.topology(response.getJSONObject("topology"),device.ownerId)
+        check(E2eeProductJson.same(selected,JSONObject(topology.toString()).apply{remove("reviewedMembers")})){"E2EE_PROJECT_TOPOLOGY_CHANGED"}
+        device.requireOpen();return topology
+    }
     @Synchronized fun readInvitationState(ids:List<String>):JSONObject{check(ids.size<=20&&ids.toSet().size==ids.size){"E2EE_INVALID_LIMIT"};ids.forEach{E2eeKeys.technical(it)};return readPacket("shared-invitation-state",JSONObject().put("ids",JSONArray(ids)))}
     @Synchronized fun sharedReadHistory():JSONObject{val result=readPacket("shared-read-history",JSONObject());E2eeKeys.exact(result,setOf("history","checkpointHash","directoryRevision"));return result.getJSONObject("history")}
     @Synchronized fun readProductHistory(entityId:String,before:Long,limit:Int=5):JSONObject{E2eeKeys.technical(entityId);check(before in 1..9_007_199_254_740_991L&&limit in 1..10){"E2EE_INVALID_LIMIT"};return readPacket("product-history",JSONObject().put("entityId",entityId).put("before",before).put("limit",limit))}

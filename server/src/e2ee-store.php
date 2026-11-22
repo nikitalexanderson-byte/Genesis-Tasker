@@ -549,13 +549,21 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','content-heads','shared-read-history','resource-transition-candidates','shared-invitation-state','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','content-heads','shared-read-history','resource-transition-candidates','project-create-preview','shared-invitation-state','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
     genesisE2eeVerifyCommand($packet,$device['signing_key']);
     if($c['action']==='resource-transition-candidates'){
         require_once __DIR__.'/e2ee-resource-transition.php';return genesisE2eeResourceTransitionCandidates(genesisDb(),$actor,$scope,$device,$c['payload']);
+    }
+    if($c['action']==='project-create-preview'){
+        genesisE2eeExactFields($c['payload'],['resourceId','topology']);genesisE2eeIdentifier($c['payload']['resourceId']);
+        if($scope['kind']!=='personal'||$scope['resource_id']!==$actor||$scope['owner_id']!==$actor||$scope['state']!=='active'||$device['role']!=='owner')
+            throw new DomainException('E2EE_OWNER_REQUIRED');
+        require_once __DIR__.'/shared-projects.php';require_once __DIR__.'/e2ee-project-create.php';
+        return GenesisE2eeProjectCreation::preview(genesisDb(),$actor,$c['payload']['resourceId'],$c['payload']['topology'])
+            +['checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
     }
     if($c['action']==='shared-invitation-state'){
         require_once __DIR__.'/e2ee-shared-invitations.php';return genesisE2eeSharedInvitationsRead(genesisDb(),$actor,$scope,$c['payload']);

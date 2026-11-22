@@ -15,8 +15,8 @@ internal object E2eeProductContract{
         if(project){
             E2eeKeys.technical(input.getString("spaceId"));for(key in listOf("parentProjectId","projectCategoryId","boardStatusId"))if(!input.isNull(key))E2eeKeys.technical(input.getString(key))
             check(input.get("projectType") in setOf("project","task-list")&&input.get("layout") in setOf("list","board")&&input.get("isInbox") is Boolean&&input.get("archived") is Boolean
-                &&(input.isNull("boardStatusId")||!input.isNull("parentProjectId"))&&(input.get("projectType")!="task-list"||!input.isNull("parentProjectId"))
-                &&(!input.getBoolean("isInbox")||input.isNull("parentProjectId")&&input.get("projectType")=="project")){"E2EE_PRODUCT_METADATA_INVALID"}
+                &&(input.isNull("boardStatusId")||!input.isNull("parentProjectId"))&&(input.get("projectType")!="task-list"||!input.isNull("parentProjectId")&&input.isNull("projectCategoryId"))
+                &&(!input.getBoolean("isInbox")||input.isNull("parentProjectId")&&input.get("projectType")=="project"&&input.isNull("projectCategoryId"))){"E2EE_PRODUCT_METADATA_INVALID"}
         }
         if(kind=="task"){if(!input.isNull("statusId"))E2eeKeys.technical(input.getString("statusId"));check(input.get("completed") is Boolean){"E2EE_PRODUCT_METADATA_INVALID"};ids(input.getJSONArray("approverIds"));ids(input.getJSONArray("dependsOnIds"),1000);ids(input.getJSONArray("presentFields"),512)}
         if(kind=="workflow"){check(input.get("enabled") is Boolean){"E2EE_PRODUCT_METADATA_INVALID"};val rows=input.getJSONArray("statuses");val transitions=input.getJSONArray("transitions");check(rows.length()<=200&&transitions.length()<=10000){"E2EE_PRODUCT_METADATA_INVALID"};val statuses=mutableSetOf<String>()
