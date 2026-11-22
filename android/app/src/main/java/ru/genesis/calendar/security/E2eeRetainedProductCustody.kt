@@ -27,6 +27,7 @@ internal object E2eeRetainedProductCustody {
         private val device=options.device;private val vault=options.vault;private val actor=vault.localIdentity();private val groups=mutableMapOf<String,MutableList<String>>();private val proofs=mutableMapOf<String,Group>()
         private val atomicStates=mutableMapOf<String,JSONObject>()
         private val atomicPacketManifests=mutableMapOf<String,JSONObject>()
+        private val atomicApplies=mutableMapOf<String,JSONObject>()
         private fun current(){options.current();device.requireOpen();if(vault.localIdentity()!=actor)invalid()}
         private fun claim(domain:String,id:String,scope:String,role:String)=options.claim(domain,id,scope,role)
         private fun metadata(domain:String,id:String,immutable:Boolean=false):JSONObject {
@@ -211,6 +212,43 @@ internal object E2eeRetainedProductCustody {
                 };binding.complete()
             };return manifest
         }
+        private fun atomicReceiptId(intent:String,index:Int)="membership-atomic-receipt-page:"+E2eeMembershipAtomicContract.stem(actor.ownerId,intent)+":"+index
+        private fun atomicReceipt(value:JSONObject,id:String,apply:JSONObject):JSONObject {
+            E2eeKeys.exact(value,setOf("format","ownerId","intentId","planHash","batchHash","index","page"));val index=number(value,"index",0,9999).toInt();val page=E2eeMembershipAtomicReceipts.page(value.getJSONObject("page"))
+            if(apply.isNull("receipt"))invalid();val refs=apply.getJSONObject("receipt").getJSONArray("pages")
+            if(value.get("format")!="genesis-membership-local-receipt-page-v2"||value.get("ownerId")!=actor.ownerId||listOf("intentId","planHash","batchHash").any{value.get(it)!=apply.get(it)}||id!=atomicReceiptId(apply.getString("intentId"),index)||index>=refs.length()||!same(E2eeMembershipAtomicReceipts.ref(index,page),refs.getJSONObject(index)))invalid()
+            claim("outbox",id,options.personalScopeId?:invalid(),"membership-atomic-receipt-page");return page
+        }
+        private fun atomicApply(intent:String):JSONObject {
+            atomicApplies[intent]?.let{return it};val scope=options.personalScopeId?:invalid();val id=E2eeMembershipAtomicApply.localId(actor.ownerId,intent)
+            val apply=E2eeMembershipAtomicApply.validate(metadata("outbox",id),actor.ownerId);val state=atomicState(intent);val manifest=atomicPackets(state);val plan=state.getJSONObject("plan")
+            if(apply.get("intentId")!=intent||apply.get("planHash")!=state.get("planHash")||apply.get("batchHash")!=manifest.get("batchHash")||!manifest.getBoolean("ready"))invalid()
+            if(!apply.isNull("receipt"))E2eeMembershipAtomicReceipts.header(apply.getJSONObject("receipt"),plan,manifest.getJSONArray("pages"));atomicApplies[intent]=apply;claim("outbox",id,scope,"membership-atomic-apply")
+            if(apply.getBoolean("complete")){
+                if(apply.isNull("receipt")||state.getBoolean("cancelled"))invalid();val rotations=mutableMapOf<String,JSONObject>();val products=mutableMapOf<String,JSONObject>()
+                for(index in 0 until manifest.getJSONArray("pages").length()){
+                    val page=E2eeMembershipAtomicContract.localPacketPageMatches(manifest,metadata("outbox",E2eeMembershipAtomicContract.packetPageId(actor.ownerId,intent,index),true)).getJSONObject("page")
+                    if(page.get("kind") !in setOf("rotation-packets","product-packets"))invalid();for(packet in rows(page.getJSONArray("items"))){val command=packet.getJSONObject("command");if(page.get("kind")=="rotation-packets")rotations[command.getString("scopeId")]=packet else products[command.getString("scopeId")+"\u0000"+command.getJSONObject("payload").getString("intentId")]=packet}
+                }
+                val scopes=mutableSetOf<String>();val seenProducts=mutableSetOf<String>();val receiptRefs=apply.getJSONObject("receipt").getJSONArray("pages")
+                for(index in 0 until receiptRefs.length()){
+                    val pageId=atomicReceiptId(intent,index);val page=atomicReceipt(metadata("outbox",pageId,true),pageId,apply)
+                    for(row in rows(page.getJSONArray("items")))if(page.get("kind")=="scopes"){
+                        val scopeId=row.getString("scopeId");val signed=rotations[scopeId]?:invalid();if(!scopes.add(scopeId))invalid();val command=signed.getJSONObject("command");val payload=command.getJSONObject("payload");val result=row.getJSONObject("result");val checkpoint=hash(command.getString("checkpointHash")+"\u0000"+E2eeCommands.hash(command))
+                        val frame=options.directory(scopeId){it.checkpoint.revision==number(command,"expectedRevision")+1&&it.checkpoint.hash==checkpoint&&it.membershipHash==payload.get("membershipHash")};current()
+                        if(row.get("ownerId")!=command.get("ownerId")||number(result,"directoryRevision",1)!=number(command,"expectedRevision")+1||result.get("checkpointHash")!=checkpoint||number(result,"cryptoEpoch",1)!=number(payload,"cryptoEpoch",1)
+                            ||number(result,"securityEpoch",1)!=number(payload,"securityEpoch",1)||frame.cryptoEpoch!=number(payload,"cryptoEpoch",1)||frame.securityEpoch!=number(payload,"securityEpoch",1)||result.getBoolean("signInRequired")!=(payload.getJSONArray("revokedDeviceIds").length()>0))invalid()
+                    }else{
+                        val key=row.getString("scopeId")+"\u0000"+row.getString("intentId");val signed=products[key]?:invalid();if(!seenProducts.add(key))invalid();val command=signed.getJSONObject("command");val scopeId=command.getString("scopeId")
+                        val frame=options.directory(scopeId){it.checkpoint.revision==number(command,"expectedRevision")&&it.checkpoint.hash==command.get("checkpointHash")&&it.securityEpoch==number(command,"securityEpoch",1)};current()
+                        if(frame.devices[command.getString("deviceId")]?.userId!=row.get("actorId"))invalid();val accepted=options.directory(scopeId){it.checkpoint.revision==number(command,"expectedRevision")+1&&it.membershipHash==command.getJSONObject("payload").get("membershipHash")};current();if(accepted.cryptoEpoch!=frame.cryptoEpoch+1)invalid()
+                        val operations=rows(command.getJSONObject("payload").getJSONArray("operations"));val results=rows(row.getJSONObject("result").getJSONArray("results"));if(operations.size!=results.size)invalid()
+                        for(operation in operations){val result=results.singleOrNull{it.get("entityId")==operation.get("entityId")}?:invalid();if(number(result,"revision",1)!=number(operation,"expectedRevision")+1||result.get("payloadHash")!=operation.get("payloadHash"))invalid()}
+                    }
+                }
+                if(scopes.sorted()!=strings(plan.getJSONArray("scopeIds"))||seenProducts.size!=products.size)invalid()
+            };return apply
+        }
         private fun atomic(value:JSONObject,id:String){
             val scope=options.personalScopeId?:invalid()
             when{
@@ -218,6 +256,14 @@ internal object E2eeRetainedProductCustody {
                 id.startsWith("membership-atomic-page:")->{val row=E2eeMembershipAtomicContract.localPage(value,actor.ownerId);val intent=row.getString("intentId");val state=atomicState(intent);if(id!=E2eeMembershipAtomicContract.pageId(actor.ownerId,intent,number(row,"index",0,9999).toInt()))invalid();E2eeMembershipAtomicContract.localPageMatches(state,value);E2eeMembershipAtomicContract.localPageMatches(state,metadata("outbox",id,true));claim("outbox",id,scope,"membership-atomic-page")}
                 id.startsWith("membership-atomic-packets:")->{val intent=E2eeKeys.technical(value.getString("intentId"));val state=atomicState(intent);if(id!=E2eeMembershipAtomicContract.packetsId(actor.ownerId,intent))invalid();atomicPackets(state)}
                 id.startsWith("membership-atomic-packet-page:")->{val intent=E2eeKeys.technical(value.getString("intentId"));val state=atomicState(intent);val manifest=atomicPackets(state);val checked=E2eeMembershipAtomicContract.localPacketPageMatches(manifest,metadata("outbox",id,true));if(id!=E2eeMembershipAtomicContract.packetPageId(actor.ownerId,intent,number(checked,"index",0,9999).toInt()))invalid();atomicSigned(state,checked.getJSONObject("page"));claim("outbox",id,scope,"membership-atomic-packet-page")}
+                id.startsWith("membership-atomic-apply:")->{val apply=E2eeMembershipAtomicApply.validate(value,actor.ownerId);val intent=apply.getString("intentId");if(id!=E2eeMembershipAtomicApply.localId(actor.ownerId,intent))invalid();atomicApply(intent)}
+                id.startsWith("membership-atomic-apply-request:")->{E2eeKeys.exact(value,setOf("format","ownerId","action","payload","packet"));val action=value.getString("action");val payload=E2eeMembershipAtomicReceipts.payload(action,value.getJSONObject("payload"));val apply=atomicApply(payload.getString("intentId"))
+                    if(value.get("format")!="genesis-membership-apply-request-v2"||value.get("ownerId")!=actor.ownerId||payload.get("planHash")!=apply.get("planHash")||payload.get("batchHash")!=apply.get("batchHash")||id!=E2eeMembershipAtomicApply.requestId(actor.ownerId,action,payload)||!same(metadata("outbox",id,true),value))invalid()
+                    if(action=="membership-atomic-commit"&&!apply.getBoolean("started")||action=="membership-atomic-receipt-page"&&(apply.isNull("receipt")||number(payload,"index",0,9999)>=apply.getJSONObject("receipt").getJSONArray("pages").length()))invalid()
+                    val checked=packet(value.getJSONObject("packet"));current();if(checked.command.get("deviceId")!=actor.deviceId||checked.frame.scopeId!=scope||checked.frame.kind!="personal"||checked.frame.ownerId!=actor.ownerId||checked.frame.devices[actor.deviceId]?.role!="owner"||checked.command.get("action")!=action||!same(checked.command.getJSONObject("payload"),payload))invalid()
+                    claim("outbox",id,scope,"membership-atomic-apply-control")
+                }
+                id.startsWith("membership-atomic-receipt-page:")->{val intent=E2eeKeys.technical(value.getString("intentId"));val apply=atomicApply(intent);atomicReceipt(metadata("outbox",id,true),id,apply)}
                 else->{val request=E2eeMembershipAtomicContract.localRequest(value,actor.ownerId);val action=request.getString("action");val payload=request.getJSONObject("payload");val state=atomicState(payload.getString("intentId"))
                     if(id!=E2eeMembershipAtomicContract.requestId(actor.ownerId,action,payload)||payload.get("planHash")!=state.get("planHash")||!same(metadata("outbox",id,true),value))invalid()
                     if(action=="membership-atomic-page"){
@@ -246,7 +292,7 @@ internal object E2eeRetainedProductCustody {
                     id.startsWith("service:")||id.startsWith("membership-product:")||id.startsWith("enrollment:")||id.startsWith("aurora-manifest:")->control(value,id,"outbox")
                     id in setOf("advice-pending-v1","advice-policy-v1")->{val scope=options.personalScopeId?:invalid();val frame=options.directory(scope){true};if(frame.kind!="personal")invalid();E2eeProductCustodyCells.advice(id,value,actor.ownerId,scope);claim("outbox",id,scope,"advice-job")}
                     Regex("stoicheion-job:(daily|spread|timeline)").matches(id)->{val scope=value.getJSONObject("content").getString("scopeId");val frame=options.directory(scope){true};if(frame.kind!="personal")invalid();E2eeProductCustodyCells.stoicheion(value,actor.ownerId,scope,id.substringAfter(':'));claim("outbox",id,scope,"stoicheion-job")}
-                    listOf("membership-atomic-v2:","membership-atomic-page:","membership-atomic-request:","membership-atomic-packets:","membership-atomic-packet-page:").any{id.startsWith(it)}->atomic(value,id)
+                    listOf("membership-atomic-v2:","membership-atomic-page:","membership-atomic-request:","membership-atomic-packets:","membership-atomic-packet-page:","membership-atomic-apply:","membership-atomic-apply-request:","membership-atomic-receipt-page:").any{id.startsWith(it)}->atomic(value,id)
                     id.startsWith("membership:")->membership(value,id)
                     id.startsWith("rotation:")->{E2eeKeys.exact(value,setOf("protocol","roles","manifest","packet"));if(value.getInt("protocol")!=1)invalid();val checked=rotation(value.getJSONObject("packet"));val payload=checked.command.getJSONObject("payload");if(id!="rotation:"+hash(checked.frame.scopeId+"\u0000"+payload.getString("membershipHash")))invalid()
                         val expected=rows(payload.getJSONArray("roleChanges"))+strings(payload.getJSONArray("revokedDeviceIds")).map{JSONObject().put("deviceId",it).put("role",JSONObject.NULL)}

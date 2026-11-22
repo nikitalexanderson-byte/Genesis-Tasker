@@ -1,5 +1,5 @@
 import {sha256} from '@noble/hashes/sha2.js';
-import {canonicalE2eeValue,verifyE2eeCommand,type SignedE2eeCommand,type WireValue} from './commands.ts';
+import {canonicalE2eeValue,verifyE2eeCommand,e2eeCommandHash,type SignedE2eeCommand,type WireValue} from './commands.ts';
 import {decodeE2eeBytes,encodeE2eeBytes,openE2eeEnvelope,validateE2eeEnvelope,type E2eeContext} from './envelope.ts';
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES,envelopePayloadHash,openE2eeFileStream} from './files.ts';
 import {HPKE_SUITE,assertTechnical,exactKeys,openRoot} from './keys.ts';
@@ -14,6 +14,8 @@ import {membershipAtomicLocalId,membershipAtomicLocalPageId,membershipAtomicLoca
  validateMembershipAtomicLocalPage,validateMembershipAtomicLocalRequest,membershipAtomicLocalPageMatches,membershipAtomicLocalPacketsId,membershipAtomicLocalPacketPageId,
  validateMembershipAtomicLocalPackets,membershipAtomicLocalPacketPageMatches,type MembershipAtomicLocalState,type MembershipAtomicLocalPackets} from './membership-atomic-local.ts';
 import {MembershipAtomicPacketBindings,membershipAtomicChangeHash,type MembershipAtomicPage} from './membership-atomic-contract.ts';
+import {membershipAtomicApplyId,membershipAtomicApplyRequestId,validateMembershipAtomicApplyState,type MembershipAtomicApplyState} from './membership-atomic-apply.ts';
+import {membershipAtomicApplyPayload,validateMembershipAtomicReceipt,validateMembershipAtomicReceiptPage,membershipAtomicReceiptPageRef,type MembershipAtomicApplyAction} from './membership-atomic-receipts.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
 
 type Options={vault:SourceStageReadVault;actor:{ownerId:string;deviceId:string};receivingKey:CryptoKey;selfKeys:{signingKey:string;receivingKey:string};assertCurrent:()=>void;
@@ -157,6 +159,45 @@ export async function inspectRetainedProductCustody(options:Options){
    }binding.complete();
   }return manifest;
  };
+ const atomicApplies=new Map<string,MembershipAtomicApplyState>();
+ const atomicReceiptId=(intentId:string,index:number)=>'membership-atomic-receipt-page:'+membershipAtomicLocalId(options.actor.ownerId,intentId).slice('membership-atomic-v2:'.length)+':'+index;
+ const atomicReceipt=async(value:unknown,id:string,apply:MembershipAtomicApplyState)=>{
+  exactKeys(value,['format','ownerId','intentId','planHash','batchHash','index','page']);integer(value.index,0,9999);
+  const index=value.index as number,page=validateMembershipAtomicReceiptPage(value.page);
+  if(!apply.receipt||value.format!=='genesis-membership-local-receipt-page-v2'||value.ownerId!==options.actor.ownerId||value.intentId!==apply.intentId||value.planHash!==apply.planHash||value.batchHash!==apply.batchHash
+   ||id!==atomicReceiptId(apply.intentId,index)||!equal(membershipAtomicReceiptPageRef(index,page),apply.receipt.pages[index]))invalid();
+  if(!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-atomic-receipt-page');return page;
+ };
+ const atomicApply=async(intentId:string)=>{
+  const cached=atomicApplies.get(intentId);if(cached)return cached;if(!options.personalScopeId)invalid();
+  const id=membershipAtomicApplyId(options.actor.ownerId,intentId),apply=validateMembershipAtomicApplyState(await metadata('outbox',id),options.actor.ownerId),state=await atomicState(intentId),manifest=await atomicPackets(state);
+  if(apply.intentId!==intentId||apply.planHash!==state.planHash||apply.batchHash!==manifest.batchHash||!manifest.ready)invalid();
+  if(apply.receipt)validateMembershipAtomicReceipt(apply.receipt,state.plan,manifest.pages);atomicApplies.set(intentId,apply);claim('outbox',id,options.personalScopeId,'membership-atomic-apply');
+  if(apply.complete){
+   if(!apply.receipt||state.cancelled)invalid();const rotations=new Map<string,SignedE2eeCommand>(),products=new Map<string,SignedE2eeCommand>();
+   for(let index=0;index<manifest.pages.length;index++){
+    const page=membershipAtomicLocalPacketPageMatches(manifest,await metadata('outbox',membershipAtomicLocalPacketPageId(options.actor.ownerId,intentId,index),true)).page;
+    if(page.kind!=='rotation-packets'&&page.kind!=='product-packets')invalid();for(const signed of page.items)if(page.kind==='rotation-packets')rotations.set(signed.command.scopeId,signed);else products.set(signed.command.scopeId+'\0'+signed.command.payload.intentId,signed);
+   }
+   const scopes=new Set<string>(),seenProducts=new Set<string>();
+   for(let index=0;index<apply.receipt.pages.length;index++){
+    const pageId=atomicReceiptId(intentId,index),page=await atomicReceipt(await metadata('outbox',pageId,true),pageId,apply);
+    for(const row of page.items)if(page.kind==='scopes'){
+     const scopeRow=row as import('./membership-atomic-receipts.ts').MembershipAtomicScopeReceipt,signed=rotations.get(scopeRow.scopeId);if(!signed||scopes.has(scopeRow.scopeId))invalid();scopes.add(scopeRow.scopeId);
+     const c=signed.command,p=c.payload,checkpoint=digest(encoder.encode(c.checkpointHash+'\0'+await e2eeCommandHash(c)));
+     const frame=await options.directory(c.scopeId,value=>value.checkpoint.revision===c.expectedRevision+1&&value.checkpoint.hash===checkpoint&&value.membershipHash===p.membershipHash);current();
+     if(scopeRow.ownerId!==c.ownerId||scopeRow.result.directoryRevision!==c.expectedRevision+1||scopeRow.result.checkpointHash!==checkpoint||scopeRow.result.cryptoEpoch!==p.cryptoEpoch||scopeRow.result.securityEpoch!==p.securityEpoch
+      ||frame.cryptoEpoch!==p.cryptoEpoch||frame.securityEpoch!==p.securityEpoch||!Array.isArray(p.revokedDeviceIds)||scopeRow.result.signInRequired!==(p.revokedDeviceIds.length>0))invalid();
+    }else{
+     const productRow=row as import('./membership-atomic-receipts.ts').MembershipAtomicProductReceipt,key=productRow.scopeId+'\0'+productRow.intentId,signed=products.get(key);if(!signed||seenProducts.has(key))invalid();seenProducts.add(key);
+     const c=signed.command,frame=await options.directory(c.scopeId,value=>value.checkpoint.revision===c.expectedRevision&&value.checkpoint.hash===c.checkpointHash&&value.securityEpoch===c.securityEpoch);current();
+     if(frame.devices.get(c.deviceId)?.userId!==productRow.actorId)invalid();const accepted=await options.directory(c.scopeId,value=>value.checkpoint.revision===c.expectedRevision+1&&value.membershipHash===c.payload.membershipHash);current();if(accepted.cryptoEpoch!==frame.cryptoEpoch+1)invalid();
+     const operations=(c.payload.operations as unknown[]).map(productMutation);if(operations.length!==productRow.result.results.length)invalid();for(const operation of operations){const result=productRow.result.results.find(value=>value.entityId===operation.entityId);if(!result||result.revision!==operation.expectedRevision+1||result.payloadHash!==operation.payloadHash)invalid();}
+    }
+   }
+   if(!equal([...scopes].sort(),state.plan.scopeIds)||seenProducts.size!==products.size)invalid();
+  }return apply;
+ };
  const atomic=async(value:unknown,id:string)=>{
   if(!options.personalScopeId)invalid();
   if(id.startsWith('membership-atomic-v2:')){
@@ -174,6 +215,16 @@ export async function inspectRetainedProductCustody(options:Options){
    object(value);assertTechnical(value.intentId);const state=await atomicState(value.intentId),manifest=await atomicPackets(state);
    const checked=membershipAtomicLocalPacketPageMatches(manifest,await metadata('outbox',id,true));
    if(id!==membershipAtomicLocalPacketPageId(options.actor.ownerId,value.intentId,checked.index))invalid();await atomicSigned(state,checked.page);claim('outbox',id,options.personalScopeId,'membership-atomic-packet-page');
+  }else if(id.startsWith('membership-atomic-apply:')){
+   const apply=validateMembershipAtomicApplyState(value,options.actor.ownerId);if(id!==membershipAtomicApplyId(options.actor.ownerId,apply.intentId))invalid();await atomicApply(apply.intentId);
+  }else if(id.startsWith('membership-atomic-apply-request:')){
+   exactKeys(value,['format','ownerId','action','payload','packet']);const action=value.action as MembershipAtomicApplyAction,payload=membershipAtomicApplyPayload(action,value.payload),apply=await atomicApply(payload.intentId as string);
+   if(value.format!=='genesis-membership-apply-request-v2'||value.ownerId!==options.actor.ownerId||payload.planHash!==apply.planHash||payload.batchHash!==apply.batchHash||id!==membershipAtomicApplyRequestId(options.actor.ownerId,action,payload)||!equal(await metadata('outbox',id,true),value))invalid();
+   if(action==='membership-atomic-commit'&&!apply.started||action==='membership-atomic-receipt-page'&&(!apply.receipt||!apply.receipt.pages[payload.index as number]))invalid();
+   const checked=await packet(value.packet);current();if(checked.command.deviceId!==options.actor.deviceId||checked.directory.scopeId!==options.personalScopeId||checked.directory.kind!=='personal'||checked.directory.ownerId!==options.actor.ownerId||checked.directory.devices.get(options.actor.deviceId)?.role!=='owner'||checked.command.action!==action||!equal(checked.command.payload,payload))invalid();
+   claim('outbox',id,options.personalScopeId,'membership-atomic-apply-control');
+  }else if(id.startsWith('membership-atomic-receipt-page:')){
+   object(value);assertTechnical(value.intentId);const apply=await atomicApply(value.intentId);await atomicReceipt(await metadata('outbox',id,true),id,apply);
   }else{
    const request=validateMembershipAtomicLocalRequest(value,options.actor.ownerId),state=await atomicState(request.payload.intentId as string);
    if(id!==membershipAtomicLocalRequestId(options.actor.ownerId,request.action,request.payload)||request.payload.planHash!==state.planHash||!equal(await metadata('outbox',id,true),value))invalid();
@@ -323,7 +374,7 @@ export async function inspectRetainedProductCustody(options:Options){
   }else if(/^stoicheion-job:(daily|spread|timeline)$/.test(id)){
    object(value);object(value.content);assertTechnical(value.content.scopeId);const directory=await options.directory(value.content.scopeId,()=>true);if(directory.kind!=='personal')invalid();
    const {inspectStoicheionLocalJob}=await import('./stoicheion-product.ts');inspectStoicheionLocalJob(value,options.actor.ownerId,directory.scopeId,id.slice('stoicheion-job:'.length) as 'daily'|'spread'|'timeline');current();claim('outbox',id,directory.scopeId,'stoicheion-job');
-  }else if(['membership-atomic-v2:','membership-atomic-page:','membership-atomic-request:','membership-atomic-packets:','membership-atomic-packet-page:'].some(prefix=>id.startsWith(prefix)))await atomic(value,id);
+  }else if(['membership-atomic-v2:','membership-atomic-page:','membership-atomic-request:','membership-atomic-packets:','membership-atomic-packet-page:','membership-atomic-apply:','membership-atomic-apply-request:','membership-atomic-receipt-page:'].some(prefix=>id.startsWith(prefix)))await atomic(value,id);
   else if(id.startsWith('membership:'))await membership(value,id);
   else if(id.startsWith('rotation:')){
    exactKeys(value,['protocol','roles','manifest','packet']);if(value.protocol!==1)invalid();const checked=await rotation(value.packet),payload=checked.command.payload;

@@ -154,4 +154,7 @@ export class MembershipAtomicStager{
   const fresh=await this.#load(intentId);await this.#save(this.#id(intentId),{...fresh.state,cancelRequested:true,cancelled:true},fresh.serial);return structuredClone(response);
  });}
  async inspect(intentId:string){return structuredClone((await this.#load(intentId)).state);}
+ readPlanPage(intentId:string,index:number){return this.#run(async()=>this.#page((await this.#load(intentId)).state,index));}
+ readPacketManifest(intentId:string){return this.#run(async()=>structuredClone((await this.#packetManifest((await this.#load(intentId)).state)).manifest));}
+ readPacketPage(intentId:string,index:number){return this.#run(async()=>{const {manifest}=await this.#packetManifest((await this.#load(intentId)).state);return this.#packetPage(manifest,index);});}
 }

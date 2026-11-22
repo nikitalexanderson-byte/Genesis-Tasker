@@ -1,5 +1,30 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: durable final apply / реальные web и native readback adapters
+
+Послеbd6a5c9c added matching TS/Kotlin final apply coordinators, separate v2
+final-consent fingerprints, immutable signed requests/receipt pages и exact
+unknown-outcome retry без повторного staging committed плана. CancelRequested
+идёт только в read-only reconciliation. Real WebPrivateAccount/AuthController
+bridges используют pinned normal scopes/index/decrypted products и итоговый
+ACL readback до complete; receipt сохраняется раньше. Typed retained readers
+сохраняют partial originals и связывают complete pages с observed signed frames
+и actual foreign writer. Новые controls не входят в content-only import/replay.
+
+Next: v2 all-owner full effects review/exchange и ordinary role/remove/grants/
+category/invitation UI, input/effects-to-private-product composer. Также
+confirmPrepared всё ещё требует точный текущий head: нужен historical receipt
+readback / explicit divergence для законной более новой правки, без overwrite
+или автоматического rebase. Very-wide streaming/native/local-record bounds и
+остальные категории исходного prompt остаются. Не считать этот path normal E2E
+готовым. Source review/diff only; никаких security compiler/lint/tests/build/CI.
+Coverage9/20, production149/floors0/cutover off неизменны. demo-output/ не читался.
+
+Urgent PR43 head45ad2e22, required CI45034742687: Android success, PHP backend
+success после исправления race, браузерные сценарии ещё выполняются. Сайт пока
+не опубликован; дождаться required checks, merge expected head с [skip ci],
+exact-main website_only CI и штатный Deploy. Сохранить APK/manifest149.
+
 ## 22 ноября: signed-origin/complete receipt verifier (source-only)
 
 Послеa7ed0822 added matching atomic-proofs TS/Kotlin: independently pinned

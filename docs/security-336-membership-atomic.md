@@ -79,8 +79,7 @@ matching Kotlin implementation общего wire/local формата; different
 control outboxes не добавлены в content-only export и не исполняются при restore.
 
 Web/native получили строгие matching receipt/page codecs, отдельные apply/read
-authorization actions и HTTP routes. Это не acknowledgement: сохраняющий exact
-request apply coordinator и normal repository readback ещё не подключены.
+authorization actions и HTTP routes.
 Server preview применяет только verified ACL rows внутри временного writer,
 возвращает bounded страницы с user/device/role и всегда rollback. Клиенты
 сверяют полное отсутствие пропусков индексов, hashes и исходные anchors; такая
@@ -93,14 +92,32 @@ complete plan/packet hashes и следующим signed membership event. Hypot
 approval не сохраняется как observed history. Receipt collector требует все
 страницы, exact command/actor/revision/hash/checkpoint и обязательные callbacks
 normal scope/product repository readback; partial response не даёт finish.
-Это отдельный verifier без signer/POST/keys, но его реальные adapters и durable
-coordinator ещё не скомпонованы. Не считать наличие интерфейса callback за
-прошедшую normal readback-проверку.
+Это отдельный verifier без signer/POST/keys. Не считать наличие интерфейса
+callback за прошедшую normal readback-проверку.
+
+Добавлены durable apply coordinators и реальные foreground web/AuthController
+adapters. Final consent имеет отдельный v2 fingerprint от planHash/batchHash и
+сохраняется до первого final signer/POST. Signed requests и receipt pages имеют
+immutable local records/readback. Unknown final outcome повторяет сохранённый
+POST без повторного begin/staging уже committed плана; cancelRequested допускает
+только read-only reconciliation. Receipt сохраняется до readback, complete —
+после всех signed proofs, normal pinned root/index/decrypted product reads и
+точного readback итоговых ACL. Закрытие account/session/foreground отзывает
+capability; поздний ответ не создаёт новый intent. Retained readers понимают
+apply/request/partial receipt originals, а complete evidence связывают с observed
+signed membership frame и фактическим foreign writer. Они не исполняют outboxes.
+
+Новые ordinary role/member UI и v2 owner full effects review пока не соединены
+с этим path. Не принимать прежнее v1 review за новое согласие. Также текущий
+confirmPrepared требует точный текущий head: законная последующая правка во время
+потерянного ответа ещё требует historical proof/divergence handling, без overwrite,
+автоматического rebase или ложного acknowledgement. Код не компилировался и не
+тестировался; эти модули не повышают accepted coverage.
 
 ## Остаток подключения
 
-- Композиция paged receipt verifier с normal repositories и durable apply coordinator;
-  server writer/planner ещё не проверены.
+- Historical receipt readback при законном более новом head и semantic resolution;
+  normal adapters, coordinator и server writer/planner ещё не проверены.
 - Owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.
 - Потоковый capture очень больших graph/ACL input без ограничения общим размером

@@ -147,5 +147,8 @@ internal class E2eeMembershipAtomicStager(private val device:UnlockedE2eeDevice,
         JSONObject(result.toString())
     }}
     suspend fun inspect(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{JSONObject(load(intent).value.toString())}}
+    suspend fun readPlanPage(intent:String,index:Int):JSONObject=withContext(Dispatchers.IO){mutex.withLock{page(load(intent).value,index)}}
+    suspend fun readPacketManifest(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{JSONObject(packetManifest(load(intent).value).value.toString())}}
+    suspend fun readPacketPage(intent:String,index:Int):JSONObject=withContext(Dispatchers.IO){mutex.withLock{packetPage(packetManifest(load(intent).value).value,index)}}
     override fun toString()="E2eeMembershipAtomicStager([redacted])"
 }

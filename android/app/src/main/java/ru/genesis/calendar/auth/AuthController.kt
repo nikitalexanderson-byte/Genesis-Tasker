@@ -396,7 +396,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun loadPrivateDeviceAccess(id:String):JSONObject=privateDeviceAccessCall{access->val state=access.inspect(id);privateDeviceAccessView(if(state.get("mode")=="request"&&state.isNull("request"))access.request(id)else state)}
     internal suspend fun approvePrivateDeviceAccess(input:String,comparedFingerprint:String):JSONObject=privateDeviceAccessCall{access->privateDeviceAccessView(access.approve(privateDeviceAccessInput(input),comparedFingerprint))}
     internal suspend fun submitPrivateDeviceAccess(id:String,input:String):JSONObject=privateDeviceAccessCall{access->if(input.isNotBlank())access.stageApproval(id,privateDeviceAccessInput(input));privateDeviceAccessView(access.submit(id))}
-    private suspend fun <T> privateMembershipCall(operation:(ru.genesis.calendar.security.E2eeMembershipProduct,ru.genesis.calendar.security.E2eeMembershipOwnerReview,()->Unit)->T):T=withContext(Dispatchers.IO){
+    private class AtomicMembershipSession(val product:ru.genesis.calendar.security.E2eeMembershipProduct,val review:ru.genesis.calendar.security.E2eeMembershipOwnerReview,val atomic:ru.genesis.calendar.security.E2eeMembershipAtomicApply,val current:()->Unit)
+    private suspend fun <T> privateMembershipSession(operation:suspend(AtomicMembershipSession)->T):T=withContext(Dispatchers.IO){
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val job=currentCoroutineContext().job;val(account,ports,current)=privateDeviceAccessPorts(uid){job.ensureActive()};val generation=client.currentGeneration()
         val channel=object:ru.genesis.calendar.security.E2eeMembershipTransport{
             private fun call(path:String,body:JSONObject):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
@@ -425,8 +426,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val product=ru.genesis.calendar.security.E2eeMembershipProduct(account.device,account.client,channel,{scopeId->val target=ports.target(scopeId);current();check(target.get("ownerId")==uid){"E2EE_OWNER_REQUIRED"};ports.client(target)},current,peers)
         val review=ru.genesis.calendar.security.E2eeMembershipOwnerReview(account,{plan->val target=ports.target(plan.getString("scopeId"));current()
             check(plan.get("ownerId")==uid&&listOf("ownerId","kind","resourceId").all{target.get(it)==plan.get(it)}){"E2EE_OWNER_REQUIRED"};ports.client(target)},current)
-        operation(product,review,current).also{current()}
+        val atomic=ru.genesis.calendar.security.E2eeNativeMembershipAtomicApply.create(app,account,channel,peers,current)
+        operation(AtomicMembershipSession(product,review,atomic,current)).also{current()}
     }
+    private suspend fun <T> privateMembershipCall(operation:(ru.genesis.calendar.security.E2eeMembershipProduct,ru.genesis.calendar.security.E2eeMembershipOwnerReview,()->Unit)->T):T=privateMembershipSession{value->operation(value.product,value.review,value.current)}
+    private suspend fun <T> privateAtomicMembershipCall(operation:suspend(ru.genesis.calendar.security.E2eeMembershipAtomicApply,()->Unit)->T):T=privateMembershipSession{value->operation(value.atomic,value.current)}
+    internal suspend fun pendingPrivateAtomicMembership():JSONArray=privateAtomicMembershipCall{atomic,current->atomic.pending().also{current()}}
+    internal suspend fun describePrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.describe(id).also{current()}}
+    internal suspend fun confirmPrivateAtomicMembership(id:String,displayedFingerprint:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.confirm(id,displayedFingerprint).also{current()}}
+    internal suspend fun submitPrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.submit(id).also{current();ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
+    internal suspend fun reconcilePrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.reconcile(id).also{current();ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
     private fun privateMembershipInput(input:String):JSONObject{
         check(input.length<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};val bytes=input.toByteArray(Charsets.UTF_8)
         return try{check(bytes.size<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};ru.genesis.calendar.security.E2eeFileManifestJson.readMigrationHistory(bytes)}finally{bytes.fill(0)}

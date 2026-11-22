@@ -3924,8 +3924,14 @@ async function privateMembershipSession(){
  };
  const transport=privateAccountHttpTransport().membership;if(!transport)throw new Error('E2EE_MEMBERSHIP_TRANSPORT_REQUIRED');
  const product=new E2eeMembershipProduct(account.device,account.personal().client,transport,async scopeId=>{const target=await ports.target(scopeId);current();if(target.ownerId!==account.ownerId)throw new Error('E2EE_OWNER_REQUIRED');return ports.client(target);},current,peers);
- return{product,ownerReview:new E2eeMembershipOwnerReview(account,openOwned,current),current,needsReview:(state:{hashFormat?:string;changes:unknown})=>!state.hashFormat||membershipGrantReviewRequired(state.changes)};
+ const {webMembershipAtomicApply}=await import('./e2ee/membership-atomic-web-apply');current();const atomic=webMembershipAtomicApply(account,transport,peers,current);
+ return{product,atomic,ownerReview:new E2eeMembershipOwnerReview(account,openOwned,current),current,needsReview:(state:{hashFormat?:string;changes:unknown})=>!state.hashFormat||membershipGrantReviewRequired(state.changes)};
 }
+export async function pendingCurrentPrivateAtomicMembership(){const {atomic,current}=await privateMembershipSession();const values=await atomic.pending();current();return values;}
+export async function describeCurrentPrivateAtomicMembership(id:string){const {atomic,current}=await privateMembershipSession();const view=await atomic.describe(id);current();return view;}
+export async function confirmCurrentPrivateAtomicMembership(id:string,displayedFingerprint:string){const {atomic,current}=await privateMembershipSession();const state=await atomic.confirm(id,displayedFingerprint);current();return state;}
+export async function submitCurrentPrivateAtomicMembership(id:string){const {atomic,current}=await privateMembershipSession();const receipt=await atomic.submit(id);current();window.dispatchEvent(new Event('genesis:shared-updates'));return receipt;}
+export async function reconcileCurrentPrivateAtomicMembership(id:string){const {atomic,current}=await privateMembershipSession();const receipt=await atomic.reconcile(id);current();window.dispatchEvent(new Event('genesis:shared-updates'));return receipt;}
 export async function pendingCurrentPrivateMembership(){const {product,ownerReview,current,needsReview}=await privateMembershipSession(),ids=await product.pending(),intents=[];current();
  for(const id of ids){const row=await product.inspect(id);current();intents.push({id,scopeIds:row.scopeIds,complete:Boolean(row.result),reviewRequired:needsReview(row)});}
  const reviews=await ownerReview.list();current();return{intents,ownerReviews:reviews.map(row=>({id:row.id,scopeId:row.scopeId,complete:Boolean(row.packet)}))};
