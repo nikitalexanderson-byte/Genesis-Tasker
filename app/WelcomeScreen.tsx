@@ -9,11 +9,12 @@ import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
 import { useEffect, useState } from 'react';
 import { PartnerInvitation } from './PartnerInvitation';
-import {publicPagePath,currentPublicEdition} from './public-route';
+import {publicPagePath,currentPublicEdition,type PublicEdition} from './public-route';
 import {PublicEditionRouting,PublicRegionControl} from './PublicRegionControl';
 import pageCopy from './public-page-copy.json';
 
 type WelcomeScreenProps = {
+  edition?:PublicEdition;
   nativeAndroidApkUrl: string | null;
   busy: boolean;
   error: string;
@@ -28,7 +29,7 @@ const FLAG_COUNTRIES: Record<Language, string> = {
   pl: "pl", sr: "rs", uk: "ua", zh: "cn", tr: "tr", ja: "jp",
 };
 
-export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle }: WelcomeScreenProps) {
+export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle,edition=currentPublicEdition() }: WelcomeScreenProps) {
   useEffect(() => {
     const anchor = window.location.hash.slice(1);
     if (!['features', 'pricing', 'sign-in'].includes(anchor)) return;
@@ -36,10 +37,9 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
     return () => window.cancelAnimationFrame(frame);
   }, []);
   const [invitationBusy, setInvitationBusy] = useState(()=>typeof window!=='undefined'&&['invite','ref'].some(key=>new URL(window.location.href).searchParams.has(key)));
-  const edition=currentPublicEdition();
   const product=publicProductCopy(language,edition);
-  const home=publicPagePath(language,'home',APP_BASE),login=`${publicPagePath(language,'login',APP_BASE)}#sign-in`;
-  const terms=publicPagePath(language,'terms',APP_BASE),privacy=publicPagePath(language,'privacy',APP_BASE);
+  const home=publicPagePath(language,'home',APP_BASE,edition),login=`${publicPagePath(language,'login',APP_BASE,edition)}#sign-in`;
+  const terms=publicPagePath(language,'terms',APP_BASE,edition),privacy=publicPagePath(language,'privacy',APP_BASE,edition);
   const visibleLanguages=LANGUAGES;
   const languageColumns=7;
   const copy = language === "en" ? {
