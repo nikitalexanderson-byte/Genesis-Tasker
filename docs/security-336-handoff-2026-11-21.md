@@ -1,5 +1,31 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: membership ACL hash projection исправлен (кандидат)
+
+После3f97d92f/291238ee matching JS/Kotlin/PHP contract `acl-name-value-v1`
+исправляет beforeHash/changeHash/batch hash/duplicate keys без расширения общей
+canonical grammar. SQL column names становятся sorted name/value records;
+строки сохраняют точные UTF8 bytes в utf8/base64url wrapper. Typed changes и
+readState сверяют значения/coordinates/hashes. Новые membership journals имеют
+hashFormat; старые input-only originals доступны как inert history, но старый
+план не может автоматически получить новый hash или новую подпись. Retained
+custody readers подключены. Подробности: security-336-membership-contract.md.
+
+Код не компилировался/не тестировался. Следующий конкретный участок остаётся
+normal membership/invitation UI и all-owner rotation exchange: нынешний
+E2eeMembershipProduct.prepare всё ещё сам готовит все scopes, а scope client
+требует собственника; импорт подписанной чужим owner rotation ещё не подключён.
+Нужны полные before/change/scope/device reviews, durable input до state/preview IO,
+обычные role/remove/project grants handlers, потом invitation request/consumption
+и exact receipt/readback/resume/semantic stale-plan resolution. First personal
+trusted-device entry, advanced/form/automation/bulk/cross-scope, typed restore,
+revoked replacement/background и source/divergence review остаются.
+
+Производство3.3.5/149/Paddle-сайт/floors0/cutover off/GENESIS_DEPLOY_ANDROID=false
+сохранены; coverage9/20. Общая QA только после всего кода; никаких tests/compiler/
+lint/build/CI/push/deploy/device/Play. demo-output/ не читать/stage, субагенты/
+Daybreak запрещены. Состояние progress, не blocker.
+
 ## 22 ноября: signed device-access exchange в обычном Account (кандидат)
 
 После11ff51d3 добавлены matching device-access contracts/journals и Account UI

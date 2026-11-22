@@ -10,6 +10,16 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Matching ACL hash projection (candidate after291238ee)
+
+`acl-name-value-v1` now projects SQL column names as sorted name/value records
+and preserves exact string bytes in a base64url UTF8 wrapper. Before-row/change/
+batch hashes and duplicate coordinates use it without expanding canonical wire
+keys. New journals mark hashFormat; old inputs remain inert and never acquire a
+replacement signature automatically. Both readState and retained custody ports
+use the same contract. See `security-336-membership-contract.md`. No QA was run;
+normal membership/invitation and multi-owner exchange composition is next.
+
 ### Device access in Account (candidate, after11ff51d3)
 
 Both clients now compose protected request/grant custody, signed candidate

@@ -8,6 +8,7 @@ import {requiredPrivatePaths} from './private-paths.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {productMutation} from './product-contract.ts';
 import {validatePrivateProjectTopology} from './project-create-contract.ts';
+import {MEMBERSHIP_HASH_FORMAT,validateMembershipChanges,membershipChangesProjection,membershipChangeHashValue} from './membership-contract.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
 
 type Options={vault:SourceStageReadVault;actor:{ownerId:string;deviceId:string};receivingKey:CryptoKey;selfKeys:{signingKey:string;receivingKey:string};assertCurrent:()=>void;
@@ -61,23 +62,13 @@ export async function inspectRetainedProductCustody(options:Options){
   return checked;
  };
  const membership=async(input:unknown,id:string)=>{
-  exactKeys(input,['protocol','ownerId','intentId','scopeIds','changes','preview','review','batch','result']);
+  object(input);exactKeys(input,['protocol',...(Object.hasOwn(input,'hashFormat')?['hashFormat']:[]),'ownerId','intentId','scopeIds','changes','preview','review','batch','result']);
   if(input.protocol!==1||input.ownerId!==options.actor.ownerId||id!=='membership:'+input.intentId||!Array.isArray(input.scopeIds)||input.scopeIds.length>256||!Array.isArray(input.changes)||input.changes.length<1||input.changes.length>200)invalid();
   assertTechnical(input.intentId);for(const scope of input.scopeIds)assertTechnical(scope);if(!equal(input.scopeIds,[...new Set(input.scopeIds)].sort()))invalid();
-  const seen=new Set<string>();
-  const specs:Record<string,{keys:string[];fields:string[]}>=Object.freeze({shared_project_members:{keys:['project_id','user_id'],fields:['role']},shared_space_members:{keys:['space_id','user_id'],fields:['role','can_organize_tasks','all_projects','permissions_json','member_category_id','project_access_restricted','project_access_revision']},shared_member_categories:{keys:['id','space_id'],fields:['permissions_json','revision']},shared_member_project_grants:{keys:['space_id','user_id','project_id'],fields:['role','include_descendants']}});
-  for(const change of input.changes){
-   exactKeys(change,['table','key','expectedHash','after']);if(typeof change.table!=='string'||!Object.hasOwn(specs,change.table))invalid();const spec=specs[change.table];exactKeys(change.key,spec.keys);Object.values(change.key).forEach(assertTechnical);
-   const coordinate=digest(canonicalE2eeValue([change.table,change.key] as WireValue));if(seen.has(coordinate))invalid();seen.add(coordinate);if(change.expectedHash!=='absent')decodeE2eeBytes(change.expectedHash,32);
-   if(change.after!==null){exactKeys(change.after,spec.fields);
-    for(const field of ['can_organize_tasks','all_projects','project_access_restricted','include_descendants'])if(Object.hasOwn(change.after,field)&&![0,1].includes(change.after[field] as number))invalid();
-    for(const field of ['revision','project_access_revision'])if(Object.hasOwn(change.after,field))integer(change.after[field],1);
-    if(Object.hasOwn(change.after,'member_category_id')&&change.after.member_category_id!==null)assertTechnical(change.after.member_category_id);
-    if(Object.hasOwn(change.after,'role')){const allowed=change.table==='shared_space_members'?['owner','admin','member','guest']:change.table==='shared_project_members'?['owner','manager','member','commenter','viewer']:['member','commenter','viewer'];if(!allowed.includes(String(change.after.role)))invalid();}
-    if(Object.hasOwn(change.after,'permissions_json')&&change.after.permissions_json!==null){if(typeof change.after.permissions_json!=='string')invalid();const permissions=parseLegacyMigrationJson(change.after.permissions_json,'E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED',65536);exactKeys(permissions,['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers']);if(Object.values(permissions).some(value=>typeof value!=='boolean'))invalid();}
-   }
-  }
-  const changeHash=digest(canonicalE2eeValue({protocol:1,actorId:options.actor.ownerId,intentId:input.intentId,changes:input.changes,scopeIds:input.scopeIds} as WireValue));
+  validateMembershipChanges(input.changes);
+  if(!Object.hasOwn(input,'hashFormat')){if([input.preview,input.review,input.batch,input.result].some(value=>value!==null)||!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');return;}
+  if(input.hashFormat!==MEMBERSHIP_HASH_FORMAT)invalid();
+  const changeHash=digest(canonicalE2eeValue(membershipChangeHashValue(options.actor.ownerId,input.intentId,input.changes,input.scopeIds as string[])));
   if(input.preview!==null){exactKeys(input.preview,['intentId','changeHash','scopePlans']);if(input.preview.intentId!==input.intentId||input.preview.changeHash!==changeHash||!Array.isArray(input.preview.scopePlans)||!equal(input.preview.scopePlans.map(plan=>{object(plan);return plan.scopeId;}).sort(),input.scopeIds))invalid();
    for(const plan of input.preview.scopePlans){exactKeys(plan,['scopeId','ownerId','kind','resourceId','directoryRevision','checkpointHash','cryptoEpoch','securityEpoch','roles','manifest']);assertTechnical(plan.scopeId);const directory=await options.directory(plan.scopeId,frame=>frame.checkpoint.revision===plan.directoryRevision&&frame.checkpoint.hash===plan.checkpointHash&&frame.cryptoEpoch===plan.cryptoEpoch&&frame.securityEpoch===plan.securityEpoch);current();
     if(directory.ownerId!==plan.ownerId||directory.kind!==plan.kind||directory.resourceId!==plan.resourceId)invalid();roles(plan.roles);exactKeys(plan.manifest,['manifestHash','objectCount']);decodeE2eeBytes(plan.manifest.manifestHash,32);integer(plan.manifest.objectCount,0,10000);}
@@ -85,7 +76,7 @@ export async function inspectRetainedProductCustody(options:Options){
   if(input.review!==null){if(!input.preview||!Array.isArray(input.review)||!equal(input.review.map(row=>{exactKeys(row,['scopeId','roles']);roles(row.roles);return row.scopeId;}).sort(),input.scopeIds))invalid();
    for(const row of input.review)if(!equal(row.roles,(input.preview.scopePlans as Record<string,unknown>[]).find(plan=>plan.scopeId===row.scopeId)?.roles))invalid();}
   if(input.batch!==null){
-   exactKeys(input.batch,['intentId','changes','authorization','rotations']);if(!input.review||input.batch.intentId!==input.intentId||!equal(input.batch.changes,input.changes)||!Array.isArray(input.batch.rotations))invalid();
+   exactKeys(input.batch,['intentId','changes','authorization','rotations']);if(!input.review||input.batch.intentId!==input.intentId||!equal(membershipChangesProjection(input.batch.changes),membershipChangesProjection(input.changes))||!Array.isArray(input.batch.rotations))invalid();
    const authority=await packet(input.batch.authorization);exactKeys(authority.command.payload,['intentId','changeHash']);
    if(authority.command.action!=='membership-authorize'||authority.directory.kind!=='personal'||authority.directory.ownerId!==options.actor.ownerId||authority.command.payload.intentId!==input.intentId||authority.command.payload.changeHash!==changeHash)invalid();
    const scopeIds:string[]=[];for(const value of input.batch.rotations){const checked=await rotation(value);if(checked.command.payload.membershipHash!==changeHash)invalid();scopeIds.push(checked.directory.scopeId);}

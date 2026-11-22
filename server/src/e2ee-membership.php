@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-membership-hash.php';
 
 function genesisE2eeAclBindings(): WeakMap {static $bindings;return $bindings??=new WeakMap();}
 function genesisE2eeAclRow(mixed $value): mixed
@@ -43,13 +44,13 @@ function genesisE2eeAclTechnical(array $row,array $spec): array
 }
 function genesisE2eeAclBeforeHash(array|false $row,array $spec): string
 {
-    if(!$row)return'absent';return rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(genesisE2eeAclTechnical($row,$spec)),true)),'+/','-_'),'=');
+    if(!$row)return'absent';return rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(['hashFormat'=>'acl-name-value-v1','fields'=>genesisE2eeMembershipFields(genesisE2eeAclTechnical($row,$spec))]),true)),'+/','-_'),'=');
 }
 function genesisE2eeAclChanges(PDO $db,string $actor,array $changes): array
 {
     if(!array_is_list($changes)||count($changes)<1||count($changes)>200)throw new InvalidArgumentException('E2EE_MEMBERSHIP_BATCH_INVALID');$prepared=[];$spaces=[];$projects=[];$seen=[];
     foreach($changes as $change){genesisE2eeExactFields($change,['table','key','expectedHash','after']);$table=$change['table'];$spec=genesisE2eeAclSpec($table);genesisE2eeExactFields($change['key'],$spec['keys']);
-        foreach($change['key'] as $id)genesisE2eeIdentifier($id);$keyHash=hash('sha256',genesisE2eeCanonical([$table,$change['key']]));if(isset($seen[$keyHash]))throw new InvalidArgumentException('E2EE_MEMBERSHIP_BATCH_INVALID');$seen[$keyHash]=true;
+        foreach($change['key'] as $id)genesisE2eeIdentifier($id);$keyHash=hash('sha256',genesisE2eeCanonical([$table,genesisE2eeMembershipFields($change['key'])]));if(isset($seen[$keyHash]))throw new InvalidArgumentException('E2EE_MEMBERSHIP_BATCH_INVALID');$seen[$keyHash]=true;
         $where=implode(' AND ',array_map(static fn(string $name):string=>'"'.$name.'"=?',$spec['keys']));$parameters=array_map(static fn(string $name)=>$change['key'][$name],$spec['keys']);$before=genesisE2eeRow($db,'SELECT * FROM "'.$table.'" WHERE '.$where,$parameters);
         if($change['expectedHash']!==genesisE2eeAclBeforeHash($before,$spec))throw new DomainException('E2EE_MEMBERSHIP_STALE');
         if($spec['space']){$space=$change['key']['space_id'];$access=genesisSharedSpaceAccess($space,$actor);if($access['member_role']!=='owner')throw new GenesisResourceLimitException(403,'E2EE_SCOPE_FORBIDDEN');$spaces[$space]=true;}
@@ -102,12 +103,12 @@ function genesisE2eeMembershipBatch(string $actor,array $input,string $sessionBi
         if($anchor['kind']!=='personal'||$anchor['owner_id']!==$actor||$anchor['resource_id']!==$actor||$anchor['state']!=='active'||$command['ownerId']!==$actor||$command['action']!=='membership-authorize')throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');
         $device=genesisE2eeRow($db,'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$anchor['scope_id'],$command['deviceId']]);if(!$device||$device['revoked']||$device['user_id']!==$actor||$device['role']!=='owner')throw new DomainException('E2EE_REVOKED_DEVICE');genesisE2eeVerifyCommand($authorization,$device['signing_key']);
         genesisE2eeExactFields($command['payload'],['intentId','changeHash']);if($command['payload']['intentId']!==$input['intentId'])throw new DomainException('E2EE_CONTEXT_MISMATCH');genesisE2eeDecode($command['payload']['changeHash'],32);
-        $requestHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(['intentId'=>$input['intentId'],'changes'=>$input['changes'],'authorization'=>$authorization,'rotations'=>$input['rotations']]),true)),'+/','-_'),'=');
+        $requestHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(['hashFormat'=>'acl-name-value-v1','intentId'=>$input['intentId'],'changes'=>genesisE2eeMembershipChangesProjection($input['changes']),'authorization'=>$authorization,'rotations'=>$input['rotations']]),true)),'+/','-_'),'=');
         $old=genesisE2eeRow($db,"SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action='membership-change' AND intent_id=?",[$anchor['scope_id'],$actor,$input['intentId']]);
         if($old){if(!hash_equals($old['payload_hash'],$requestHash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');$result=json_decode($old['result_json'],true,512,JSON_THROW_ON_ERROR);$db->commit();return$result;}
         if($command['securityEpoch']!==(int)$anchor['security_epoch']||$command['expectedRevision']!==(int)$anchor['directory_revision']||$command['checkpointHash']!==$anchor['checkpoint_hash'])throw new DomainException('E2EE_STALE_EPOCH');
         $prepared=genesisE2eeAclChanges($db,$actor,$input['changes']);$scopes=genesisE2eeMembershipScopes($db,$prepared);
-        $changeHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(['protocol'=>1,'actorId'=>$actor,'intentId'=>$input['intentId'],'changes'=>$input['changes'],'scopeIds'=>array_keys($scopes)]),true)),'+/','-_'),'=');
+        $changeHash=genesisE2eeMembershipChangeHash($actor,$input['intentId'],$input['changes'],array_keys($scopes));
         if(!hash_equals($command['payload']['changeHash'],$changeHash)||count($input['rotations'])!==count($scopes))throw new DomainException('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');
         $rotations=[];foreach($input['rotations'] as $packet){$rotation=genesisE2eeCommand($packet['command']??null);$id=$rotation['scopeId'];if(isset($rotations[$id])||!isset($scopes[$id])||$rotation['action']!=='rotate-membership'||($rotation['payload']['membershipHash']??null)!==$changeHash)throw new DomainException('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');$rotations[$id]=$packet;}
         genesisE2eeApplyAclRows($db,$prepared['rows']);$results=[];
@@ -130,7 +131,7 @@ function genesisE2eeMembershipPreview(string $actor,array $input): array
 {
     genesisE2eeExactFields($input,['intentId','changes']);genesisE2eeIdentifier($input['intentId']);if(!is_array($input['changes']))throw new InvalidArgumentException('E2EE_MEMBERSHIP_BATCH_INVALID');$db=genesisDb();genesisBeginWriteTransaction($db);
     try{$prepared=genesisE2eeAclChanges($db,$actor,$input['changes']);$scopes=genesisE2eeMembershipScopes($db,$prepared);genesisE2eeApplyAclRows($db,$prepared['rows']);
-        $hash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(['protocol'=>1,'actorId'=>$actor,'intentId'=>$input['intentId'],'changes'=>$input['changes'],'scopeIds'=>array_keys($scopes)]),true)),'+/','-_'),'=');$plans=[];
+        $hash=genesisE2eeMembershipChangeHash($actor,$input['intentId'],$input['changes'],array_keys($scopes));$plans=[];
         foreach($scopes as $id=>$scope){genesisE2eeAccess($scope['owner_id'],$scope['kind'],$scope['resource_id'],'manage');$q=$db->prepare('SELECT device_id,user_id FROM e2ee_devices WHERE scope_id=? AND revoked=0 ORDER BY device_id');$q->execute([$id]);$devices=$q->fetchAll();$q->closeCursor();$roles=[];
             foreach($devices as $device){$role=null;try{$role=genesisE2eeDeviceRole($device['user_id'],$scope);}catch(GenesisSharedAccessException|GenesisResourceLimitException $error){if(!in_array($error->status,[403,404],true))throw$error;}$roles[]=['deviceId'=>$device['device_id'],'role'=>$role];}
             $manifest=genesisE2eeManifest($db,$scope);$plans[]=['scopeId'=>$id,'ownerId'=>$scope['owner_id'],'kind'=>$scope['kind'],'resourceId'=>$scope['resource_id'],'directoryRevision'=>(int)$scope['directory_revision'],
