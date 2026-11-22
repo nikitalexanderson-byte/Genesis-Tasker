@@ -1,6 +1,6 @@
 {
   "en": {
-    "title": "Restore personal content",
+    "title": "Restore private content",
     "notice": "Add missing personal records from this archive version. Current versions and deletion markers stay in place. Google copies require separate consent.",
     "prepare": "Prepare restore",
     "ack": "I have reviewed the counts and want to add the missing records.",
@@ -9,10 +9,12 @@
     "added": "To add",
     "skipped": "Kept or skipped",
     "done": "Content restored",
-    "localDiary": "Restored diary notes stay on this device. Uploading them requires a separate action in diary privacy settings."
+    "localDiary": "Restored diary notes stay on this device. Uploading them requires a separate action in diary privacy settings.",
+    "sharedNotice": "Shared content can be added only to the same project or space with your current access. Permissions and past approvals are not restored; automation rules start disabled.",
+    "sharedTarget": "Restore destination"
   },
   "ru": {
-    "title": "Восстановить личное содержимое",
+    "title": "Восстановить приватное содержимое",
     "notice": "Добавить отсутствующие личные записи из этой версии архива. Текущие версии и отметки удаления сохраняются. Копии в Google требуют отдельного согласия.",
     "prepare": "Подготовить восстановление",
     "ack": "Я проверил(а) количество записей и хочу добавить отсутствующие.",
@@ -21,10 +23,12 @@
     "added": "Будет добавлено",
     "skipped": "Сохранено или пропущено",
     "done": "Содержимое восстановлено",
-    "localDiary": "Восстановленные заметки дневника остаются на этом устройстве. Для их загрузки требуется отдельное действие в настройках приватности дневника."
+    "localDiary": "Восстановленные заметки дневника остаются на этом устройстве. Для их загрузки требуется отдельное действие в настройках приватности дневника.",
+    "sharedNotice": "Общее содержимое можно добавить только в тот же проект или пространство с вашим текущим доступом. Права и прежние подтверждения не восстанавливаются; автоматизации остаются выключенными.",
+    "sharedTarget": "Куда восстановить"
   },
   "el": {
-    "title": "Επαναφορά προσωπικού περιεχομένου",
+    "title": "Επαναφορά ιδιωτικού περιεχομένου",
     "notice": "Προσθέστε προσωπικές εγγραφές που λείπουν από αυτή την έκδοση του αρχείου. Οι τρέχουσες εκδόσεις και οι ενδείξεις διαγραφής διατηρούνται. Τα αντίγραφα Google απαιτούν ξεχωριστή συγκατάθεση.",
     "prepare": "Προετοιμασία επαναφοράς",
     "ack": "Έλεγξα τα πλήθη και θέλω να προσθέσω τις εγγραφές που λείπουν.",
@@ -33,10 +37,12 @@
     "added": "Θα προστεθούν",
     "skipped": "Διατηρήθηκαν ή παραλείφθηκαν",
     "done": "Το περιεχόμενο επαναφέρθηκε",
-    "localDiary": "Οι αποκατεστημένες σημειώσεις ημερολογίου παραμένουν σε αυτή τη συσκευή. Η μεταφόρτωσή τους απαιτεί ξεχωριστή ενέργεια στις ρυθμίσεις απορρήτου του ημερολογίου."
+    "localDiary": "Οι αποκατεστημένες σημειώσεις ημερολογίου παραμένουν σε αυτή τη συσκευή. Η μεταφόρτωσή τους απαιτεί ξεχωριστή ενέργεια στις ρυθμίσεις απορρήτου του ημερολογίου.",
+    "sharedNotice": "Το κοινόχρηστο περιεχόμενο προστίθεται μόνο στο ίδιο έργο ή χώρο με την τρέχουσα πρόσβασή σας. Δικαιώματα και παλιές εγκρίσεις δεν επαναφέρονται· οι αυτοματισμοί παραμένουν ανενεργοί.",
+    "sharedTarget": "Προορισμός επαναφοράς"
   },
   "de": {
-    "title": "Persönliche Inhalte wiederherstellen",
+    "title": "Private Inhalte wiederherstellen",
     "notice": "Fehlende persönliche Einträge aus dieser Archivversion hinzufügen. Aktuelle Versionen und Löschmarkierungen bleiben erhalten. Google-Kopien erfordern eine separate Zustimmung.",
     "prepare": "Wiederherstellung vorbereiten",
     "ack": "Ich habe die Anzahl geprüft und möchte die fehlenden Einträge hinzufügen.",
@@ -45,10 +51,12 @@
     "added": "Hinzuzufügen",
     "skipped": "Beibehalten oder übersprungen",
     "done": "Inhalte wiederhergestellt",
-    "localDiary": "Wiederhergestellte Tagebuchnotizen bleiben auf diesem Gerät. Zum Hochladen ist eine separate Aktion in den Datenschutzeinstellungen des Tagebuchs erforderlich."
+    "localDiary": "Wiederhergestellte Tagebuchnotizen bleiben auf diesem Gerät. Zum Hochladen ist eine separate Aktion in den Datenschutzeinstellungen des Tagebuchs erforderlich.",
+    "sharedNotice": "Geteilte Inhalte können nur mit Ihrem aktuellen Zugriff zum selben Projekt oder Bereich hinzugefügt werden. Rechte und frühere Genehmigungen werden nicht wiederhergestellt; Automatisierungen bleiben deaktiviert.",
+    "sharedTarget": "Wiederherstellungsziel"
   },
   "fr": {
-    "title": "Restaurer le contenu personnel",
+    "title": "Restaurer le contenu privé",
     "notice": "Ajouter les données personnelles manquantes depuis cette version de l’archive. Les versions actuelles et les marques de suppression sont conservées. Les copies Google nécessitent un accord distinct.",
     "prepare": "Préparer la restauration",
     "ack": "J’ai vérifié les nombres et souhaite ajouter les données manquantes.",
@@ -57,10 +65,12 @@
     "added": "À ajouter",
     "skipped": "Conservés ou ignorés",
     "done": "Contenu restauré",
-    "localDiary": "Les notes du journal restaurées restent sur cet appareil. Leur envoi nécessite une action distincte dans les paramètres de confidentialité du journal."
+    "localDiary": "Les notes du journal restaurées restent sur cet appareil. Leur envoi nécessite une action distincte dans les paramètres de confidentialité du journal.",
+    "sharedNotice": "Le contenu partagé peut être ajouté uniquement au même projet ou espace avec vos accès actuels. Les droits et anciennes approbations ne sont pas restaurés ; les automatisations restent désactivées.",
+    "sharedTarget": "Destination de restauration"
   },
   "es": {
-    "title": "Restaurar contenido personal",
+    "title": "Restaurar contenido privado",
     "notice": "Añade los registros personales que faltan desde esta versión del archivo. Se conservan las versiones actuales y las marcas de eliminación. Las copias en Google requieren otro consentimiento.",
     "prepare": "Preparar restauración",
     "ack": "He revisado las cantidades y quiero añadir los registros que faltan.",
@@ -69,10 +79,12 @@
     "added": "Se añadirán",
     "skipped": "Conservados u omitidos",
     "done": "Contenido restaurado",
-    "localDiary": "Las notas del diario restauradas permanecen en este dispositivo. Para subirlas se requiere una acción aparte en los ajustes de privacidad del diario."
+    "localDiary": "Las notas del diario restauradas permanecen en este dispositivo. Para subirlas se requiere una acción aparte en los ajustes de privacidad del diario.",
+    "sharedNotice": "El contenido compartido solo se puede añadir al mismo proyecto o espacio con su acceso actual. No se restauran permisos ni aprobaciones anteriores; las automatizaciones permanecen desactivadas.",
+    "sharedTarget": "Destino de restauración"
   },
   "it": {
-    "title": "Ripristina contenuti personali",
+    "title": "Ripristina contenuti privati",
     "notice": "Aggiungi i dati personali mancanti da questa versione dell’archivio. Le versioni attuali e i contrassegni di eliminazione vengono mantenuti. Le copie Google richiedono un consenso separato.",
     "prepare": "Prepara ripristino",
     "ack": "Ho verificato i conteggi e desidero aggiungere i dati mancanti.",
@@ -81,10 +93,12 @@
     "added": "Da aggiungere",
     "skipped": "Mantenuti o saltati",
     "done": "Contenuto ripristinato",
-    "localDiary": "Le note del diario ripristinate restano su questo dispositivo. Per caricarle serve un’azione separata nelle impostazioni di privacy del diario."
+    "localDiary": "Le note del diario ripristinate restano su questo dispositivo. Per caricarle serve un’azione separata nelle impostazioni di privacy del diario.",
+    "sharedNotice": "I contenuti condivisi possono essere aggiunti solo allo stesso progetto o spazio con gli accessi attuali. Permessi e approvazioni precedenti non vengono ripristinati; le automazioni restano disattivate.",
+    "sharedTarget": "Destinazione del ripristino"
   },
   "pt": {
-    "title": "Restaurar conteúdo pessoal",
+    "title": "Restaurar conteúdo privado",
     "notice": "Adicione os registos pessoais em falta desta versão do arquivo. As versões atuais e as marcas de eliminação são mantidas. As cópias no Google exigem consentimento separado.",
     "prepare": "Preparar restauro",
     "ack": "Verifiquei as quantidades e quero adicionar os registos em falta.",
@@ -93,10 +107,12 @@
     "added": "A adicionar",
     "skipped": "Mantidos ou ignorados",
     "done": "Conteúdo restaurado",
-    "localDiary": "As notas do diário restauradas ficam neste dispositivo. O envio exige uma ação separada nas definições de privacidade do diário."
+    "localDiary": "As notas do diário restauradas ficam neste dispositivo. O envio exige uma ação separada nas definições de privacidade do diário.",
+    "sharedNotice": "O conteúdo partilhado só pode ser adicionado ao mesmo projeto ou espaço com o seu acesso atual. As permissões e aprovações anteriores não são restauradas; as automações ficam desativadas.",
+    "sharedTarget": "Destino da restauração"
   },
   "pl": {
-    "title": "Przywróć treści osobiste",
+    "title": "Przywróć prywatne treści",
     "notice": "Dodaj brakujące wpisy osobiste z tej wersji archiwum. Obecne wersje i znaczniki usunięcia zostaną zachowane. Kopie w Google wymagają osobnej zgody.",
     "prepare": "Przygotuj przywracanie",
     "ack": "Sprawdzono liczby i chcę dodać brakujące wpisy.",
@@ -105,10 +121,12 @@
     "added": "Do dodania",
     "skipped": "Zachowane lub pominięte",
     "done": "Treści przywrócone",
-    "localDiary": "Przywrócone notatki dziennika pozostają na tym urządzeniu. Ich przesłanie wymaga osobnego działania w ustawieniach prywatności dziennika."
+    "localDiary": "Przywrócone notatki dziennika pozostają na tym urządzeniu. Ich przesłanie wymaga osobnego działania w ustawieniach prywatności dziennika.",
+    "sharedNotice": "Wspólne treści można dodać tylko do tego samego projektu lub przestrzeni przy obecnych uprawnieniach. Uprawnienia i wcześniejsze zatwierdzenia nie są przywracane; automatyzacje pozostają wyłączone.",
+    "sharedTarget": "Miejsce przywracania"
   },
   "sr": {
-    "title": "Врати лични садржај",
+    "title": "Врати приватни садржај",
     "notice": "Додајте недостајуће личне записе из ове верзије архиве. Тренутне верзије и ознаке брисања се чувају. Копије у Google-у захтевају посебну сагласност.",
     "prepare": "Припреми враћање",
     "ack": "Проверио/ла сам бројеве и желим да додам недостајуће записе.",
@@ -117,10 +135,12 @@
     "added": "За додавање",
     "skipped": "Сачувано или прескочено",
     "done": "Садржај је враћен",
-    "localDiary": "Враћене белешке дневника остају на овом уређају. За отпремање је потребна посебна радња у подешавањима приватности дневника."
+    "localDiary": "Враћене белешке дневника остају на овом уређају. За отпремање је потребна посебна радња у подешавањима приватности дневника.",
+    "sharedNotice": "Заједнички садржај може се додати само у исти пројекат или простор уз ваш тренутни приступ. Дозволе и претходна одобрења се не враћају; аутоматизације остају искључене.",
+    "sharedTarget": "Одредиште враћања"
   },
   "uk": {
-    "title": "Відновити особистий вміст",
+    "title": "Відновити приватний вміст",
     "notice": "Додати відсутні особисті записи з цієї версії архіву. Поточні версії та позначки видалення зберігаються. Копії в Google потребують окремої згоди.",
     "prepare": "Підготувати відновлення",
     "ack": "Я перевірив(ла) кількість записів і хочу додати відсутні.",
@@ -129,10 +149,12 @@
     "added": "Буде додано",
     "skipped": "Збережено або пропущено",
     "done": "Вміст відновлено",
-    "localDiary": "Відновлені нотатки щоденника залишаються на цьому пристрої. Для їх завантаження потрібна окрема дія в налаштуваннях приватності щоденника."
+    "localDiary": "Відновлені нотатки щоденника залишаються на цьому пристрої. Для їх завантаження потрібна окрема дія в налаштуваннях приватності щоденника.",
+    "sharedNotice": "Спільний вміст можна додати лише до того самого проєкту чи простору з вашим поточним доступом. Права та попередні підтвердження не відновлюються; автоматизації залишаються вимкненими.",
+    "sharedTarget": "Куди відновити"
   },
   "zh": {
-    "title": "恢复个人内容",
+    "title": "恢复私密内容",
     "notice": "从此存档版本添加缺失的个人记录。保留当前版本和删除标记。创建 Google 副本需要单独同意。",
     "prepare": "准备恢复",
     "ack": "我已核对数量，并希望添加缺失的记录。",
@@ -141,10 +163,12 @@
     "added": "将添加",
     "skipped": "保留或跳过",
     "done": "内容已恢复",
-    "localDiary": "恢复的日记保留在此设备上。上传这些日记需要在日记隐私设置中单独操作。"
+    "localDiary": "恢复的日记保留在此设备上。上传这些日记需要在日记隐私设置中单独操作。",
+    "sharedNotice": "共享内容只能凭当前访问权限添加到原项目或空间。权限和以前的批准不会恢复；自动化规则保持关闭。",
+    "sharedTarget": "恢复目标"
   },
   "tr": {
-    "title": "Kişisel içeriği geri yükle",
+    "title": "Özel içeriği geri yükle",
     "notice": "Bu arşiv sürümünden eksik kişisel kayıtları ekleyin. Mevcut sürümler ve silme işaretleri korunur. Google kopyaları için ayrıca onay gerekir.",
     "prepare": "Geri yüklemeyi hazırla",
     "ack": "Sayıları inceledim ve eksik kayıtları eklemek istiyorum.",
@@ -153,10 +177,12 @@
     "added": "Eklenecek",
     "skipped": "Korunan veya atlanan",
     "done": "İçerik geri yüklendi",
-    "localDiary": "Geri yüklenen günlük notları bu cihazda kalır. Bunları yüklemek için günlük gizlilik ayarlarında ayrı bir işlem gerekir."
+    "localDiary": "Geri yüklenen günlük notları bu cihazda kalır. Bunları yüklemek için günlük gizlilik ayarlarında ayrı bir işlem gerekir.",
+    "sharedNotice": "Paylaşılan içerik yalnızca mevcut erişiminizle aynı projeye veya alana eklenebilir. İzinler ve geçmiş onaylar geri yüklenmez; otomasyonlar devre dışı kalır.",
+    "sharedTarget": "Geri yükleme hedefi"
   },
   "ja": {
-    "title": "個人コンテンツを復元",
+    "title": "非公開コンテンツを復元",
     "notice": "このアーカイブの版から不足している個人記録を追加します。現在の版と削除マークは保持されます。Google へのコピーには別途同意が必要です。",
     "prepare": "復元を準備",
     "ack": "件数を確認し、不足している記録の追加を希望します。",
@@ -165,6 +191,8 @@
     "added": "追加予定",
     "skipped": "保持またはスキップ",
     "done": "コンテンツを復元しました",
-    "localDiary": "復元した日記はこの端末に保存されます。アップロードするには、日記のプライバシー設定で別途操作が必要です。"
+    "localDiary": "復元した日記はこの端末に保存されます。アップロードするには、日記のプライバシー設定で別途操作が必要です。",
+    "sharedNotice": "共有コンテンツは、現在のアクセス権で元のプロジェクトまたはスペースにのみ追加できます。権限と過去の承認は復元されず、自動化は無効のままです。",
+    "sharedTarget": "復元先"
   }
 }

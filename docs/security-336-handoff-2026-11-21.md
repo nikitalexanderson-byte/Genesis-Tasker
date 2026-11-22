@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: typed shared content restore — код
+
+Добавлен общий durable journal и web/native backup UI для выбранных типизированных
+shared record versions. Target — тот же существующий project/space, открытый через
+текущий trust/membership; чужой архивный scope ID не выбирает writer. Preview,
+consent, bounded add-only операции и независимый normal product readback сохраняют
+существующие версии/tombstones. Вложения берутся только из аутентифицированных
+записей архива, пишутся обычной immutable queue и читаются обратно до записи задачи.
+ACL/member-category policies, root topology, approvals, receipts и история jobs
+не становятся authority. Automation definitions выключены, series paused; завершённые
+задачи требуют нового действующего подтверждения. Original bytes/journals остаются
+в custody и inert export. Copy14lang добавлена. Legacy table originals сохраняются
+как content-only: этот adapter принимает типизированные normal records, не угадывает
+их из произвольной старой таблицы. Весь блок source-only, без compiler/tests/review.
+Далее: revoked-device replacement/background, very-wide bounds, остальная интеграция
+исходного prompt; затем один общий QA/исправления/внутреннее review. Coverage9/20.
+
 ## 23 ноября: typed restore практик Стоихейона — код
 
 Практики добавлены в общий add-only journal, preview/consent/resume, оба backup UI

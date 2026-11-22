@@ -3951,6 +3951,14 @@ export async function currentPrivateDomainRestore(action:'pending'|'inspect'|'pr
  const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{webDomainContentRestore}=await import('./e2ee/domain-content-restore-web');current();const restore=webDomainContentRestore(account,current);
  if(action==='pending')return restore.pending();if(!id)throw new Error('E2EE_RESTORE_REQUIRED');if(action==='inspect')return restore.inspect(id);if(action==='preview')return restore.preview(id);if(action==='confirm'){if(!fingerprint)throw new Error('E2EE_RESTORE_REVIEW_REQUIRED');return restore.confirm(id,fingerprint);}return restore.apply(id);
 }
+export async function currentPrivateSharedRestore(action:'pending'|'inspect'|'preview'|'confirm'|'apply',id?:string,fingerprint?:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{webSharedContentRestore}=await import('./e2ee/shared-content-restore-web');current();const restore=webSharedContentRestore(account,current);
+ if(action==='pending')return restore.pending();if(!id)throw new Error('E2EE_RESTORE_REQUIRED');if(action==='inspect')return restore.inspect(id);if(action==='preview')return restore.preview(id);if(action==='confirm'){if(!fingerprint)throw new Error('E2EE_RESTORE_REVIEW_REQUIRED');return restore.confirm(id,fingerprint);}return restore.apply(id);
+}
+export async function prepareCurrentPrivateSharedRestore(payload:unknown,sectionIndex:number,entryIndex:number,versionId:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{sharedRestoreArchiveSource}=await import('./e2ee/shared-content-restore-archive'),{webSharedContentRestore}=await import('./e2ee/shared-content-restore-web');current();
+ const value=await sharedRestoreArchiveSource(account.ownerId,payload,sectionIndex,entryIndex,versionId,current);current();const restore=webSharedContentRestore(account,current),id=await restore.create(value.backupId,value.source);current();return restore.preview(id);
+}
 export async function prepareCurrentPrivateDomainRestore(payload:unknown,sectionIndex:number,entryIndex:number,versionId:string,guard:()=>void=()=>{}){
  const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{domainRestoreArchiveSource}=await import('./e2ee/domain-content-restore-archive'),{webDomainContentRestore}=await import('./e2ee/domain-content-restore-web');current();
  const value=await domainRestoreArchiveSource(account.ownerId,payload,sectionIndex,entryIndex,versionId,current);current();const restore=webDomainContentRestore(account,current),id=await restore.create(value.backupId,value.source);current();return restore.preview(id);

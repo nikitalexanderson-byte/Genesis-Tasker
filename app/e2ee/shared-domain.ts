@@ -14,6 +14,7 @@ export type SharedContentRecord=Record<string,RecordValue|{objectId:string;size:
 export type SharedRecordBody={format:'genesis-shared-record-v1';kind:ProductKind;scopeId:string;scopeKind:'project'|'space';resourceId:string;table:string;record:SharedContentRecord;
  related:Record<string,SharedContentRecord[]>;execution:'live'|'history-only'};
 export type SharedDomainBinding={scopeId:string;kind:'project'|'space';resourceId:string};
+export function sharedRestoreContentAllowed(body:SharedRecordBody){return ['task','comment','project-comment','status','category','label','mindmap','sprint','template','custom-field','view','automation','series'].includes(body.kind)&&body.table!=='shared_member_categories';}
 const decoder=new TextDecoder('utf-8',{fatal:true});
 function invalid():never{throw new Error('E2EE_SHARED_DOMAIN_INVALID');}
 function object(value:unknown):asserts value is Record<string,unknown>{if(!value||typeof value!=='object'||Array.isArray(value))invalid();}

@@ -1,5 +1,16 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: typed shared record restore (source-only)
+
+Web/native backup interfaces use a common retained source/review/consent journal,
+current resource trust/membership and ordinary signed add-only product writes.
+Attachments require authenticated archive bytes plus immutable upload/readback.
+Existing content/deletion markers remain; imported ACL, approvals, jobs and root
+topology have no authority. Rules start disabled and series paused. New journals
+participate in typed custody and inert archive export. All 14 languages include
+the shared restore notice. Legacy table originals remain readable archival content,
+not automatically inferred commands. No compiler, test, build, CI or general review.
+
 ## 23 November: typed Stoicheion practice restore (source-only)
 
 The shared durable add-only restore engine now includes practices in both backup

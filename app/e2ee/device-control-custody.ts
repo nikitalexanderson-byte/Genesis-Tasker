@@ -8,6 +8,7 @@ import {validatePrivateBulkRecovery} from './shared-bulk-recovery.ts';
 import {inspectPrivateSharedWorkDraft} from './shared-work-private-journal.ts';
 import {validatePersonalRestoreJournal} from './personal-content-restore.ts';
 import {validateDomainRestoreJournal} from './domain-content-restore.ts';
+import {validateSharedRestoreJournal} from './shared-content-restore.ts';
 import {validateRecipientRequest,validateRecipientResponse} from './invitation-recipient.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {encodeE2eeBytes,type E2eeContext} from './envelope.ts';
@@ -41,6 +42,7 @@ export async function inspectDeviceControlCustody(options:{device:UnlockedWebDev
  for(const prefix of ['shared-bulk-private:','shared-bulk-recovery:','shared-bulk-recovery-history:']){const ids=await vault.listLocal('draft',prefix);current();for(const id of ids){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(id,value=>{if(prefix==='shared-bulk-private:'){const parsed=validatePrivateBulkJournal(value,device.ownerId);if(id!==prefix+parsed.id)throw new Error('E2EE_PRIVATE_BULK_INVALID');return parsed;}if(prefix==='shared-bulk-recovery:'?id!==prefix+'v1':!/^[1-9][0-9]*$/.test(id.slice(prefix.length)))throw new Error('E2EE_PRIVATE_BULK_INVALID');return validatePrivateBulkRecovery(value,device.ownerId);},()=>options.personalScopeId!);}}
  for(const id of await vault.listLocal('draft','shared-transfer-private:')){current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(id,value=>{const parsed=validatePrivateTransferJournal(value,device.ownerId);if(id!=='shared-transfer-private:'+parsed.input.requestId)throw new Error('E2EE_TRANSFER_INVALID');return parsed;},()=>options.personalScopeId!);}
  const restores=await vault.listLocal('draft','personal-content-restore:');current();for(const id of restores){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('personal-content-restore:'.length);await document(id,value=>validatePersonalRestoreJournal(value,device.ownerId,intentId),()=>options.personalScopeId!);}
+ for(const id of await vault.listLocal('draft','shared-content-restore:')){current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('shared-content-restore:'.length);await document(id,value=>validateSharedRestoreJournal(value,device.ownerId,intentId),()=>options.personalScopeId!);}
  for(const id of await vault.listLocal('draft','domain-content-restore:')){current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('domain-content-restore:'.length);await document(id,value=>validateDomainRestoreJournal(value,device.ownerId,intentId),()=>options.personalScopeId!);}
  const requests=await vault.listLocal('draft','invitation-recipient:');current();
  for(const id of requests){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('invitation-recipient:'.length);

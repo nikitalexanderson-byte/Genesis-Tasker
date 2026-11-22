@@ -98,6 +98,11 @@ async function open(ownerId:string,kind:'project'|'space',resourceId:string){
  const existing=cache.get(candidate.scopeId);if(existing)return existing;const {records}=await account.sharedRecords(candidate.scopeId,kind,resourceId);account.requireOpen();
  const concurrent=cache.get(candidate.scopeId);if(concurrent)return concurrent;const value=new WebSharedLive(account,records);cache.set(candidate.scopeId,value);return value;
 }
+/** Resolve the actual CURRENT resource through normal trust and membership.
+ * Archive scope IDs never select a cached writer or supply authorization. */
+export async function privateSharedRestoreRequest(ownerId:string,binding:SharedDomainBinding,method:string,path:string,input:Record<string,unknown>,guard:()=>void){
+ guard();const live=await open(ownerId,binding.kind,binding.resourceId);guard();live.account.requireOpen();const result=await live.model.request(method,path,input);guard();live.account.requireOpen();return result;
+}
 async function bindings(ownerId:string){const account=requirePrivateAccount(ownerId),trust=await new E2eeSharedTrust(ownerId).list();account.requireOpen();
  if(account.mode==='online'){const scopes=(await account.scopeSummaries()).filter(row=>row.kind!=='personal');
   for(const scope of scopes)if(scope.state!=='active'||!trust.some(row=>row.scopeId===scope.scopeId&&row.kind===scope.kind&&row.resourceId===scope.resourceId))throw new Error('E2EE_SHARED_FINGERPRINT_REQUIRED');

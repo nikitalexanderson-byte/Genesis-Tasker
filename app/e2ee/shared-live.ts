@@ -1,5 +1,5 @@
 import catalogue from '../../contracts/e2ee/private-path-sources-v1.json' with {type:'json'};
-import {sharedBodyMetadata,sharedBodyParent,sharedRecordKey,validateSharedRecordBody,type SharedDomainBinding,type SharedRecordBody,type SharedContentRecord} from './shared-domain.ts';
+import {sharedBodyMetadata,sharedBodyParent,sharedRecordKey,sharedRestoreContentAllowed,validateSharedRecordBody,type SharedDomainBinding,type SharedRecordBody,type SharedContentRecord} from './shared-domain.ts';
 import {samePrivateJson} from './product-json.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
@@ -8,7 +8,7 @@ import type {ProductKind} from './product-contract.ts';
 import {overlayPendingSharedVersions} from './shared-local-overlay.ts';
 import {calendarContext,isCivilDate} from '../calendar-context.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
-import {encodeE2eeBytes} from './envelope.ts';
+import {encodeE2eeBytes,decodeE2eeBytes} from './envelope.ts';
 import type {VerifiedProductProposal,VerifiedProductOrigin} from './product-proofs.ts';
 import {prepareSharedTaskFiles,sharedRequestFileInputs,sharedFileReference,type SharedFileReference} from './shared-file-values.ts';
 import {privateSharedTaskPage,privateSharedCustomFieldMatch} from './shared-query.ts';
@@ -273,6 +273,16 @@ export class SharedLiveModel{
  #taskOrRow(version:ProductVersion,versions:ProductVersion[],context:SharedLiveContext){return version.kind==='task'?this.#task(version,versions,context):this.#row(version,context);}
  async #prepare(request:SavedRequest,observed?:{context:SharedLiveContext;versions:ProductVersion[]},forcedTaskId?:string):Promise<{edits:ProductEdit[];result:ObjectValue}>{
   const {context,versions}=observed??await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
+  if(request.method==='POST'&&request.path==='content-restore/records'){
+   if(!this.ports.online)throw new Error('E2EE_ONLINE_REQUIRED');exactKeys(input,['requestId','records']);if(!Array.isArray(input.records)||input.records.length<1||input.records.length>100)throw new Error('E2EE_RESTORE_CONTENT_INVALID');
+   const seen=new Set<string>();for(const raw of input.records){object(raw);const content=validateSharedRecordBody(this.ports.binding,raw.kind as ProductKind,raw),id=sharedRecordKey(content.kind,content.record);
+    if(!sharedRestoreContentAllowed(content)||content.execution!=='live'||versions.some(row=>row.entityId===id)||seen.has(id))throw new Error('E2EE_RESTORE_OUTCOME_REQUIRED');seen.add(id);
+    const comment=['comment','project-comment'].includes(content.kind),task=content.kind==='task',map=content.kind==='mindmap';if(comment?!context.permissions.comment:task||map?!context.permissions.editTasks||!context.permissions.organizeTasks:!context.permissions.manageProjects)throw new Error('SHARED_NOT_ALLOWED');
+    if(content.kind==='automation'&&(content.record.enabled!==0||content.record.owner_id!==this.ports.actorId)||content.kind==='series'&&(content.record.paused!==1||content.record.owner_id!==this.ports.actorId||content.record.generated_count!==0))throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');
+    if(task){if(content.record.completed_at!==null||content.record.completed_by!==null||(content.related.shared_task_approvals??[]).length||(content.related.shared_task_reviews??[]).length)throw new Error('TASK_APPROVAL_REQUIRED');const status=versions.find(row=>!row.deleted&&row.kind==='status'&&plain(row).record.id===content.record.status_id);if(!status||plain(status).record.is_done===1)throw new Error('INVALID_STATUS');}
+    edits.push(this.#edit(content,0,'create'));
+   }return{edits,result:{ok:true,entityIds:edits.map(row=>row.entityId)}};
+  }
   if(parts[0]==='execution'&&['import-records','retire-records'].includes(parts[1])&&parts.length===2&&request.method==='POST')return this.#prepareTransferRecords(request,context,versions);
   if(parts[0]==='tasks'&&parts.length===3&&parts[2]==='move'&&request.method==='POST'){
    const extras=['startDate','dueDate','startTime','endTime'].filter(key=>Object.hasOwn(input,key));exactKeys(input,['destinationProjectId','statusId','expectedRevision','position','requestId',...extras]);
@@ -465,6 +475,12 @@ export class SharedLiveModel{
   if(saved){request=validateSharedLiveRequest(this.ports.binding,saved.value);if(request.method!==method||request.path!==path||!samePrivateJson(request.body,held))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}
   else{request={protocol:1,scopeId:this.ports.binding.scopeId,id,method,path,body:held,createdAt:new Date().toISOString(),edits:null,result:null,complete:false};saved={value:request,serial:await this.ports.saveRequest(request,null)};}
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
+  if(method==='POST'&&path==='content-restore/file'){
+   if(!this.ports.online||!this.ports.stageFile||!this.ports.readFile)throw new Error('E2EE_ONLINE_REQUIRED');exactKeys(held,['requestId','reference','data']);const {context}=await this.#snapshot();if(!context.permissions.editTasks||!context.permissions.organizeTasks)throw new Error('SHARED_NOT_ALLOWED');
+   exactKeys(held.reference,['objectId','size','filename','mediaType']);const reference=held.reference as SharedFileReference;assertTechnical(reference.objectId);if(!reference.objectId.startsWith('shared-file:')||!Number.isSafeInteger(reference.size)||reference.size<1||reference.size>64*1024*1024||typeof reference.filename!=='string'||reference.filename.length>512||typeof reference.mediaType!=='string'||reference.mediaType.length>128||typeof held.data!=='string')throw new Error('E2EE_RESTORE_CONTENT_INVALID');const bytes=decodeE2eeBytes(held.data,reference.size);
+   try{await this.ports.stageFile(reference,bytes);this.ports.current();const readback=await this.ports.readFile(reference);this.ports.current();try{if(readback.bytes.length!==bytes.length||readback.bytes.some((value,at)=>value!==bytes[at])||readback.filename!==reference.filename||readback.mediaType!==reference.mediaType)throw new Error('E2EE_PRIVATE_FILE_CORRUPT');}finally{readback.bytes.fill(0);}}finally{bytes.fill(0);}
+   const result={ok:true};await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;
+  }
   const invitation=sharedInvitationService(this.ports.binding,this.ports.actorId,method,path,held,id);
   if(invitation){if(!this.ports.online||!this.ports.invitationService)throw new Error('E2EE_ONLINE_REQUIRED');const observed=await this.ports.invitationService(invitation);this.ports.current();
    const result=verifySharedInvitationResult(invitation,this.ports.actorId,observed.result,observed.state);await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;}

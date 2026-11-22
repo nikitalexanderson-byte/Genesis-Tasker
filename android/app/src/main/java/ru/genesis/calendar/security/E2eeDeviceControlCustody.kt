@@ -28,6 +28,7 @@ internal object E2eeDeviceControlCustody{
         if(markers.isNotEmpty())document(E2eePersonalDeviceEntry.MARKER,{E2eePersonalDeviceEntry.validateMarker(it,device.ownerId)},{marker->
             val target=marker.getJSONObject("target");if(!E2eeProductJson.same(target.getJSONObject("authority"),device.authorityPin)||personalScopeId!=null&&target.get("scopeId")!=personalScopeId)invalid();target.getString("scopeId")
         })
+        for(id in vault.listLocal("draft","shared-content-restore:")){current();val scopeId=personalScopeId?:invalid();val intentId=id.removePrefix("shared-content-restore:");E2eeKeys.technical(intentId);document(id,{value->E2eeNativeSharedContentRestore.validate(value,device.ownerId,intentId)},{scopeId})}
         val restores=vault.listLocal("draft","personal-content-restore:");current();for(id in restores){val scopeId=personalScopeId?:invalid();val intentId=id.removePrefix("personal-content-restore:");E2eeKeys.technical(intentId)
             document(id,{value->E2eeKeys.exact(value,setOf("format","ownerId","intentId","backupId","source","proposal","confirmed","started","complete"));if(value.get("format")!="genesis-personal-content-restore-v1"||value.get("ownerId")!=device.ownerId||value.get("intentId")!=intentId||value.get("started") !is Boolean||value.get("complete") !is Boolean)invalid();E2eeKeys.technical(value.getString("backupId"));E2eeKeys.exact(value.getJSONObject("source"),setOf("workspace","tasks"));JSONObject(value.toString())},{scopeId})
         }
