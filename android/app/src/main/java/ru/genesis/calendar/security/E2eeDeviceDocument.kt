@@ -6,9 +6,9 @@ import java.security.MessageDigest
 
 /** Device-only content has no transport/flush capability. Absence and corruption
  * are different results; CAS preserves edits made by another repository. */
-internal class E2eeDeviceDocument(private val device:E2eeScopeDevice,private val id:String,
+internal class E2eeDeviceDocument(private val device:E2eeScopeDevice?,private val id:String,
     private val validate:(JSONObject)->JSONObject,private val current:()->Unit,
-    private val read:(String,String)->UnlockedE2eeVault.Opened?={domain,objectId->device.vault.read(domain,objectId)}){
+    private val read:(String,String)->UnlockedE2eeVault.Opened?={domain,objectId->(device?:error("E2EE_HISTORY_NOT_EXECUTABLE")).vault.read(domain,objectId)}){
     class Opened(val value:JSONObject,val serial:Long){override fun toString()="E2eeDeviceDocument.Opened([redacted])"}
     private val prefix="device-doc:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(id.toByteArray(Charsets.UTF_8)))
     init{E2eeKeys.technical(id)}
@@ -32,7 +32,7 @@ internal class E2eeDeviceDocument(private val device:E2eeScopeDevice,private val
         }finally{row.bytes.fill(0)}
     }
     fun save(input:JSONObject,expected:Long?):Opened{
-        current();val value=validate(JSONObject(input.toString()));val bytes=value.toString().toByteArray(Charsets.UTF_8)
+        current();val device=this.device?:error("E2EE_HISTORY_NOT_EXECUTABLE");val value=validate(JSONObject(input.toString()));val bytes=value.toString().toByteArray(Charsets.UTF_8)
         val writes=mutableListOf<UnlockedE2eeVault.Write>()
         try{check(bytes.size in 1..E2eeFiles.MAX_FILE_BYTES){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};device.ensureDurableKeys();current()
             val old=device.vault.read("draft",id);val slots=try{check(old?.serial==expected){"E2EE_LOCAL_CONFLICT"};old?.let{manifest(E2eeFileManifestJson.readPrivateDocument(it.bytes))?.getJSONArray("slots")}?.let{JSONArray(it.toString())}?:JSONArray()}finally{old?.bytes?.fill(0)}

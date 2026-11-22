@@ -5,14 +5,15 @@ import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES} from './files.ts';
 import type {LocalWrite} from './storage.ts';
 
+const readOnly=():never=>{throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 export type DeviceDocumentView<T>={value:T;serial:number};
 /** Device-only content has no transport or flush method. CAS protects drafts
  * from other tabs; an absent record is distinct from corrupt ciphertext. */
 export class E2eeDeviceDocument<T>{
  private readonly partPrefix:Promise<string>;
- constructor(private readonly device:UnlockedWebDevice,private readonly id:string,
-  private readonly validate:(input:unknown)=>T,private readonly current:()=>void,private readonly reader:Pick<UnlockedWebDevice['vault'],'read'>=device.vault){assertTechnical(id);this.partPrefix=crypto.subtle.digest('SHA-256',encoder.encode(id)).then(bytes=>'device-doc:'+encodeE2eeBytes(new Uint8Array(bytes)));}
+ constructor(private readonly device:UnlockedWebDevice|null,private readonly id:string,
+  private readonly validate:(input:unknown)=>T,private readonly current:()=>void,private readonly reader:Pick<UnlockedWebDevice['vault'],'read'>=device!.vault){assertTechnical(id);this.partPrefix=crypto.subtle.digest('SHA-256',encoder.encode(id)).then(bytes=>'device-doc:'+encodeE2eeBytes(new Uint8Array(bytes)));}
  private decode(bytes:Uint8Array){return parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',E2EE_MAX_FILE_BYTES);}
  private manifest(value:unknown):{format:'genesis-device-document-v1';size:number;hash:string;slots:number[]}|null{
   if(!value||typeof value!=='object'||!('format' in value)||value.format!=='genesis-device-document-v1')return null;
@@ -37,14 +38,14 @@ export class E2eeDeviceDocument<T>{
  async save(input:T,expected:number|null):Promise<DeviceDocumentView<T>>{
   this.current();const value=this.validate(structuredClone(input)),bytes=encoder.encode(JSON.stringify(value));
   const writes:LocalWrite[]=[];
-  try{if(bytes.length<1||bytes.length>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_SOURCE_TOO_LARGE');await this.device.ensureDurableKeys();this.current();
-   const previous=await this.device.vault.read('draft',this.id);this.current();let slots:number[];
+  try{if(bytes.length<1||bytes.length>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_SOURCE_TOO_LARGE');await (this.device??readOnly()).ensureDurableKeys();this.current();
+   const previous=await (this.device??readOnly()).vault.read('draft',this.id);this.current();let slots:number[];
    try{if((previous?.serial??null)!==expected)throw new Error('E2EE_LOCAL_CONFLICT');slots=previous?[...this.manifest(this.decode(previous.value))?.slots??[]]:[];}finally{previous?.value.fill(0);}
    const prefix=await this.partPrefix;for(let part=0;part<Math.ceil(bytes.length/E2EE_CHUNK_BYTES);part++){
     const serial=slots[part]??null;writes.push({domain:'draft',objectId:`${prefix}:${part}`,value:bytes.slice(part*E2EE_CHUNK_BYTES,(part+1)*E2EE_CHUNK_BYTES),expected:serial});slots[part]=(serial??0)+1;
    }
    const manifest=encoder.encode(JSON.stringify({format:'genesis-device-document-v1',size:bytes.length,hash:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))),slots}));
-   writes.push({domain:'draft',objectId:this.id,value:manifest,expected});this.current();await this.device.vault.write(writes,this.current);this.current();
+   writes.push({domain:'draft',objectId:this.id,value:manifest,expected});this.current();await (this.device??readOnly()).vault.write(writes,this.current);this.current();
    return{value,serial:(expected??0)+1};
   }finally{bytes.fill(0);writes.forEach(write=>write.value.fill(0));}
  }

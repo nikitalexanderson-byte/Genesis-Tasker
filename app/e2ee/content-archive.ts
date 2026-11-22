@@ -13,8 +13,8 @@ export type ContentArchiveEntry={placement:'editor'|'device'|'remote';scope:Arch
 export type ContentArchiveSection={format:'genesis-content-only-v1';execution:'history-only';entries:ContentArchiveEntry[]};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 const domains=new Set(['workspace','mindmap','diary','dream-journal','physis','aurora','stoicheion','advice','attachment','shared-project','shared-comment','local-snapshot']);
-const deviceContent=(id:string)=>id==='personal-diary-device-live-v1'||id==='personal-physis-editor-forms-v1'||['shared-transfer-private:','shared-bulk-private:','shared-bulk-recovery:','shared-bulk-recovery-history:','shared-request:','shared-work-private:','shared-work-history:','product-tx:','product-approval:','mindmap-view:','mindmap-conversions:','shared-map-draft:','shared-map-local:','shared-map-conversion-journal:','shared-resource-create:','shared-project-create:','shared-project-resolution:','membership-operation:','personal-content-restore:','domain-content-restore:','shared-content-restore:','external-google-copy:','imported-legacy-content:'].some(prefix=>id.startsWith(prefix));
-const moduleFor=(domain:string,scope:ArchiveScope|null):BackupModuleId=>scope&&scope.kind!=='personal'||domain==='shared-project'||domain==='shared-comment'?'shared-drafts':domain==='mindmap'?'mindmaps':domain==='diary'?'diary':domain==='physis'?'physis':domain==='aurora'?'aurora':domain==='stoicheion'?'stoicheion':'workspace';
+export const contentArchiveDeviceId=(id:string)=>id==='personal-diary-device-live-v1'||id==='personal-physis-editor-forms-v1'||['shared-transfer-private:','shared-bulk-private:','shared-bulk-recovery:','shared-bulk-recovery-history:','shared-request:','shared-work-private:','shared-work-history:','product-tx:','product-approval:','mindmap-view:','mindmap-conversions:','shared-map-draft:','shared-map-local:','shared-map-conversion-journal:','shared-resource-create:','shared-project-create:','shared-project-resolution:','membership-operation:','personal-content-restore:','domain-content-restore:','shared-content-restore:','external-google-copy:','imported-legacy-content:'].some(prefix=>id.startsWith(prefix));
+export const contentArchiveModuleFor=(domain:string,scope:ArchiveScope|null):BackupModuleId=>scope&&scope.kind!=='personal'||domain==='shared-project'||domain==='shared-comment'?'shared-drafts':domain==='mindmap'?'mindmaps':domain==='diary'?'diary':domain==='physis'?'physis':domain==='aurora'?'aurora':domain==='stoicheion'?'stoicheion':'workspace';
 async function value(id:string,bytes:Uint8Array,metadata={filename:'',mediaType:'application/json'}):Promise<ContentArchiveValue>{
  return{id,encoding:'base64url',bytes:encodeE2eeBytes(bytes),sha256:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))),size:bytes.length,...metadata};
 }
@@ -56,7 +56,7 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
   }finally{record.value.fill(0);}
  }
  const localKeys=await account.device.vault.listLocal('draft');account.requireOpen();
- for(const key of localKeys.filter(deviceContent)){
+ for(const key of localKeys.filter(contentArchiveDeviceId)){
   const document=new E2eeDeviceDocument(account.device,key,input=>input,()=>account.requireOpen()),before=await document.load();account.requireOpen();if(!before)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');
   const bytes=encoder.encode(JSON.stringify(before.value));try{const content=await value('current',bytes);account.requireOpen();const after=await document.load();if(!after||after.serial!==before.serial)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');append({placement:'device',scope:null,domain:'draft',objectId:key,pending:true,current:content,history:[]});}finally{bytes.fill(0);}
  }
@@ -78,7 +78,7 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
   await retained.assertUnchanged();account.requireOpen();
  }finally{retained.close();}
  const at=new Date().toISOString(),payload:BackupPayload={schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:account.ownerId,createdAt:at,client:'web',billingEvidence:null,sections:[]};
- for(const id of ['workspace','mindmaps','diary','stoicheion','aurora','physis','shared-drafts'] as BackupModuleId[]){const rows=entries.filter(row=>moduleFor(row.domain,row.scope)===id);if(!rows.length)continue;
+ for(const id of ['workspace','mindmaps','diary','stoicheion','aurora','physis','shared-drafts'] as BackupModuleId[]){const rows=entries.filter(row=>contentArchiveModuleFor(row.domain,row.scope)===id);if(!rows.length)continue;
   payload.sections.push({id,source:'device',completeness:'partial',capturedAt:at,revision:null,count:rows.length,pending:rows.filter(row=>row.pending).length,notices:['CONTENT_ONLY_HISTORY_NOT_EXECUTABLE','LOCAL_OPENED_CONTENT_ONLY'],data:{format:'genesis-content-only-v1',execution:'history-only',entries:rows} satisfies ContentArchiveSection});
  }
  const size=encoder.encode(JSON.stringify(payload)).length;if(size>BACKUP_MAX_PLAIN)throw new Error('BACKUP_TOO_LARGE');account.requireOpen();
@@ -91,7 +91,7 @@ export async function validateContentArchivePayload(input:unknown){
   for(const entry of data.entries){exactKeys(entry,['placement','scope','domain','objectId','pending','current','history']);assertTechnical(entry.objectId);
    if(!['editor','device','remote'].includes(String(entry.placement))||typeof entry.pending!=='boolean'||!Array.isArray(entry.history)||entry.history.length>10000)throw new Error('BACKUP_INVALID');
    if(entry.placement==='editor'||entry.placement==='remote'){exactKeys(entry.scope,['scopeId','ownerId','kind','resourceId']);for(const key of ['scopeId','ownerId','resourceId'])assertTechnical(entry.scope[key]);if(!['personal','project','space'].includes(String(entry.scope.kind))||!domains.has(String(entry.domain)))throw new Error('BACKUP_INVALID');}
-   else if(entry.scope!==null||entry.domain!=='draft'||!deviceContent(String(entry.objectId)))throw new Error('BACKUP_INVALID');
+   else if(entry.scope!==null||entry.domain!=='draft'||!contentArchiveDeviceId(String(entry.objectId)))throw new Error('BACKUP_INVALID');
    const identity=JSON.stringify([entry.placement,entry.scope,entry.domain,entry.objectId]);if(identities.has(identity))throw new Error('BACKUP_INVALID');identities.add(identity);
    const ids=new Set<string>();for(const record of [entry.current,...entry.history]){exactKeys(record,['id','encoding','bytes','sha256','size','filename','mediaType']);assertTechnical(record.id);if(ids.has(record.id)||record.encoding!=='base64url'||!Number.isSafeInteger(record.size)||Number(record.size)<0||Number(record.size)>BACKUP_MAX_PLAIN||typeof record.filename!=='string'||record.filename.length>512||typeof record.mediaType!=='string'||record.mediaType.length>128)throw new Error('BACKUP_INVALID');ids.add(record.id);
     const bytes=record.size===0&&record.bytes===''?new Uint8Array():decodeE2eeBytes(record.bytes,Number(record.size));try{total+=bytes.length;if(total>BACKUP_MAX_PLAIN||encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)))!==record.sha256)throw new Error('BACKUP_INVALID');}finally{bytes.fill(0);}
@@ -151,7 +151,7 @@ export async function captureRemoteContentArchive(account:WebPrivateAccount):Pro
    await client.assertObjectReference(row.domain as E2eeContext['domain'],row.objectId,row.revision,row.payloadHash);account.requireOpen();
    const entry:ContentArchiveEntry={placement:'remote',scope:coordinates,domain:row.domain,objectId:row.objectId,pending:false,current,history:[]};
    used+=encoder.encode(JSON.stringify(entry)).length;if(used>BACKUP_MAX_PLAIN-65536)throw new Error('BACKUP_TOO_LARGE');
-   const id=moduleFor(row.domain,coordinates);let section=payload.sections.find(section=>section.id===id);
+   const id=contentArchiveModuleFor(row.domain,coordinates);let section=payload.sections.find(section=>section.id===id);
    if(!section){section={id,source:'server',completeness:'available',capturedAt:payload.createdAt,revision:null,count:0,pending:0,notices:[],data:{format:'genesis-content-only-v1',execution:'history-only',entries:[]} satisfies ContentArchiveSection};payload.sections.push(section);}
    (section.data as ContentArchiveSection).entries.push(entry);section.count++;
   }

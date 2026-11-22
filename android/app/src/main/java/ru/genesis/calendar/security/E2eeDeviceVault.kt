@@ -49,6 +49,7 @@ class E2eeDeviceVault(context: Context, ownerId: String, slotId: String? = null)
         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply { init(builder.build()) }.generateKey()
     }
     fun exists(): Boolean = synchronized(mutationLock) { file.baseFile.exists() || File(file.baseFile.path + ".bak").exists() || File(file.baseFile.path + ".new").exists() }
+    internal fun requireCurrentSlot(){check(slots.getString(ownerHash,"").orEmpty()==slot){"E2EE_DEVICE_KEY_UNAVAILABLE"}}
     fun save(value: ByteArray, create: Boolean = false) = synchronized(mutationLock) {
         if(create && exists())throw IllegalStateException("E2EE_DEVICE_ALREADY_EXISTS")
         if (value.size > MAX_PRIVATE) throw IllegalArgumentException("E2EE_INVALID_KEY_BUNDLE")
@@ -153,4 +154,17 @@ class E2eeDeviceVault(context: Context, ownerId: String, slotId: String? = null)
         finally { buffer.fill(0); output.reset() }
     }
     internal fun originalCustodyStorage():E2eeOriginalCustodyStorage=E2eeOriginalCustodyFiles(app)
+    internal fun retainedSlots():List<Pair<String,String>> = synchronized(mutationLock){
+        val rows=org.json.JSONArray(slots.getString("$ownerHash:retained","[]"));check(rows.length()<=64){"E2EE_SOURCE_HISTORY_CAPACITY"};val seen=mutableSetOf<String>();(0 until rows.length()).map{val row=rows.getJSONObject(it);E2eeKeys.exact(row,setOf("slot","deviceId"));val id=row.getString("slot");check((id.isEmpty()||Regex("[a-f0-9-]{36}").matches(id))&&seen.add(id)&&id!=slot){"E2EE_CORRUPT_DEVICE_VAULT"};id to E2eeKeys.technical(row.getString("deviceId"))}
+    }
+    /** Persist/read back a separate candidate slot, then atomically select it.
+     * Original hardware aliases, recovery containers and database rows remain. */
+    internal fun replaceIdentity(expectedDeviceId:String,current:()->Unit,create:()->ByteArray)=synchronized(mutationLock){
+        current();check(slots.getString(ownerHash,"").orEmpty()==slot){"E2EE_ACCOUNT_CHANGED"};val old=unlock();try{val original=E2eeFileManifestJson.readPrivateDocument(old);check(original.getString("deviceId")==expectedDeviceId){"E2EE_DEVICE_KEY_UNAVAILABLE"}
+            val history=org.json.JSONArray(slots.getString("$ownerHash:retained","[]"));check(history.length()<64){"E2EE_SOURCE_HISTORY_CAPACITY"};val pendingKey="$ownerHash:replacement:$slot";val pending=slots.getString(pendingKey,null)?:java.util.UUID.randomUUID().toString().also{check(slots.edit().putString(pendingKey,it).commit()){"E2EE_STORAGE_UNAVAILABLE"}}
+            val destination=E2eeDeviceVault(app,owner,pending);if(!destination.exists()){val bytes=create();try{current();destination.save(bytes,true)}finally{bytes.fill(0)}}
+            val readback=destination.unlock();try{current();val next=E2eeFileManifestJson.readPrivateDocument(readback);check(next.getString("ownerId")==owner&&next.getInt("protocol")==1&&next.getString("deviceId")!=expectedDeviceId&&E2eeProductJson.same(next.getJSONObject("authorityPin"),original.getJSONObject("authorityPin"))){"E2EE_DEVICE_KEY_UNAVAILABLE"};E2eeKeys.importDeviceKeys(next.getJSONObject("deviceKeys"));E2eeEnvelope.decode(next.getString("localRoot"),32).fill(0)}finally{readback.fill(0)}
+            current();check(slots.getString(ownerHash,"").orEmpty()==slot){"E2EE_ACCOUNT_CHANGED"};history.put(JSONObject().put("slot",slot).put("deviceId",expectedDeviceId));check(slots.edit().putString("$ownerHash:retained",history.toString()).putString(ownerHash,pending).remove(pendingKey).commit()){"E2EE_STORAGE_UNAVAILABLE"};current()
+        }finally{old.fill(0)}
+    }
 }

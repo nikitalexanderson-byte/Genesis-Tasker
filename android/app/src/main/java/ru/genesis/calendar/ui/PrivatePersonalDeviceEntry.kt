@@ -25,6 +25,7 @@ private data class PersonalEntryInput(val action:String,val target:String,val co
     val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle
     fun copy(name:String)=context.assets.open(name).use{input->val bytes=input.readBytes();try{check(bytes.size<=512*1024);val all=JSONObject(bytes.toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}finally{bytes.fill(0)}}
     val c=remember(language){copy("personal-device-entry-copy-v1.json")};val d=remember(language){copy("device-access-copy-v1.json")};val common=remember(language){copy("shared-security-copy-v1.json")}
+    var replaceAck by remember(owner){mutableStateOf(false)}
     var target by remember(owner){mutableStateOf("")};var compared by remember(owner){mutableStateOf("")};var fingerprint by remember(owner){mutableStateOf("")};var approval by remember(owner){mutableStateOf("")}
     var view by remember(owner){mutableStateOf<JSONObject?>(null)};var busy by remember(owner){mutableStateOf(false)};var message by remember(owner){mutableStateOf("")}
     val alive=remember(owner){AtomicBoolean(true)};val foreground=remember(owner,lifecycle){AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))};val attempt=remember(owner){AtomicLong()};val viewId=remember(owner){UUID.randomUUID().toString()}
@@ -36,7 +37,7 @@ private data class PersonalEntryInput(val action:String,val target:String,val co
     DisposableEffect(owner,lifecycle){val observer=LifecycleEventObserver{_,event->
         if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
         if(event==Lifecycle.Event.ON_PAUSE)foreground.set(false)
-        if(event==Lifecycle.Event.ON_STOP){target="";compared="";fingerprint="";approval="";view=null;message=""}
+        if(event==Lifecycle.Event.ON_STOP){target="";compared="";fingerprint="";approval="";view=null;message="";replaceAck=false}
     };lifecycle.addObserver(observer);onDispose{alive.set(false);attempt.incrementAndGet();pending.getAndSet(null)?.close();captured.set(null);output.set(null);lifecycle.removeObserver(observer)}}
     fun start(action:String){if(busy)return;try{resumed();val ownerGuard=controller.privateUiOwnerGuard(owner);val number=attempt.incrementAndGet();val input=PersonalEntryInput(action,target,compared,approval)
         val request=NativeMigrationCredential.captureVault(owner,viewId,number,"",null,false,false,SystemClock.elapsedRealtime()){current();ownerGuard();check(attempt.get()==number){"E2EE_CREDENTIAL_REVOKED"}}
@@ -50,11 +51,16 @@ private data class PersonalEntryInput(val action:String,val target:String,val co
         if(reason==null){view=result;approval="";message=""}else message=if(reason.message=="E2EE_CHALLENGE_EXPIRED")d.getString("expired")else common.getString("error")
     }})
     Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)){
+        PrivateRetiredDeviceContentPanel(controller,owner,language)
         UntranslatedText(c.getString("title"),style=MaterialTheme.typography.titleMedium);UntranslatedText(c.getString("notice"))
         OutlinedTextField(target,{if(it.length<=8192){target=it;fingerprint="";compared=""}},enabled=!busy&&view==null,minLines=3,maxLines=6,label={UntranslatedText(c.getString("target"))},modifier=Modifier.fillMaxWidth())
         OutlinedButton({try{resumed();val value=E2eeDeviceAccessContract.target(parse(target));check(value.get("kind")=="personal"&&value.get("ownerId")==owner){"E2EE_SCOPE_BINDING_MISMATCH"};fingerprint=E2eeComparedPersonalDeviceTarget.fingerprint(value);compared="";message=""}catch(_:Exception){message=common.getString("error")}},enabled=!busy&&view==null&&target.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(c.getString("inspect"))}
         if(fingerprint.isNotEmpty()){OutlinedTextField(fingerprint,{},readOnly=true,singleLine=true,label={UntranslatedText(c.getString("targetFingerprint"))},modifier=Modifier.fillMaxWidth());OutlinedTextField(compared,{if(it.length<=64)compared=it.trim()},enabled=!busy&&view==null,singleLine=true,label={UntranslatedText(d.getString("compare"))},modifier=Modifier.fillMaxWidth())}
         Button({start("begin")},enabled=!busy&&view==null&&fingerprint.isNotEmpty()&&compared==fingerprint,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(d.getString("create"))}
+        if(controller.privateVaultDeviceExists(owner)&&view==null){
+            UntranslatedText(c.getString("replaceNotice"));Row(Modifier.fillMaxWidth()){Checkbox(replaceAck,{replaceAck=it},enabled=!busy);UntranslatedText(c.getString("replaceAck"),modifier=Modifier.weight(1f))}
+            OutlinedButton({start("replace")},enabled=!busy&&replaceAck&&fingerprint.isNotEmpty()&&compared==fingerprint,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(c.getString("replace"))}
+        }
         if(controller.privateVaultDeviceExists(owner))OutlinedButton({start("resume")},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(c.getString("resume"))}
         view?.let{result->val state=result.getJSONObject("state");if(!state.isNull("request")){
             OutlinedTextField(state.getJSONObject("request").toString(),{},readOnly=true,minLines=3,maxLines=6,label={UntranslatedText(d.getString("request"))},modifier=Modifier.fillMaxWidth())

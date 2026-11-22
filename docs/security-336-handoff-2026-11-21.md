@@ -1,5 +1,26 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: revoked-device replacement и отдельный reader — код
+
+Web key storage получил append-only цепочку новых identity slots; native — новый
+hardware slot с durable pending/readback и атомарным выбором. Старые namespaces,
+encrypted bundles, hardware aliases и recovery containers не удаляются. Замена
+явная: независимо сравненный personal target, подписанный revoke именно прежних
+ключей, новый deviceId/root/keypair и обычный enrollment с новым approval. Ошибка
+unlock/Keystore не запускает замену автоматически. Старые активные native handles
+отсекаются указателем slot; web рассылает обычный cross-tab lock.
+
+Web/native отдельные read-only readers не импортируют старый signingPrivate.
+Typed ownership catalogue переведён на read-only device contract; проверочные
+и receiving keys достаточны для custody/дешифрования. Original editor history,
+разрешённые semantic device documents и retained migration user content можно
+экспортировать отдельным independently keyed content-only backup из locked UI.
+Native использует свежий credential и существующий ciphertext SAF handoff.
+Никакие старые commands/grants не исполняются; writer/transport у reader отсутствуют.
+Copy14lang добавлена. Текущие лимиты64MiB/10000 остаются частью следующего wide
+блока, не заявлены как его решение. Код без compiler/lint/tests/build/CI/review.
+Далее background writers/уведомления, very-wide bounds и остаток исходного задания.
+
 ## 23 ноября: typed shared content restore — код
 
 Добавлен общий durable journal и web/native backup UI для выбранных типизированных

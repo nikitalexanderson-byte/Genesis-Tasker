@@ -130,6 +130,11 @@ export async function openDeviceRetainedMigrationHistory(device:UnlockedWebDevic
   originalCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumObservations:1000,maximumRecords:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},
   admit:async()=>{const usage=await measureE2eeDeviceStorage(device,current);current();admitE2eeStorage(usage,{records:0,keyRecords:0,writeBytes:0,rewriteBytes:0},E2EE_PROVIDER_STORAGE_BUDGET);}});
 }
+/** Same typed ownership catalogue for a historical read-only device. Its
+ * caller supplies physical provider admission, never a network writer. */
+export async function openReadOnlyDeviceRetainedMigrationHistory(device:import('./migration-ownership-catalogue.ts').MigrationReadDevice,assertCurrent:()=>void,admit:()=>Promise<void>){
+ const current=()=>{assertCurrent();device.requireOpen();};current();return openMigrationOwnershipCatalogue({device,decode:decodeState,assertCurrent:current,capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},originalCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumObservations:1000,maximumRecords:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},admit});
+}
 
 /** Cold product resume may inspect the authenticated journal without restoring
  * legacy runtime keys or issuing a legacy bootstrap. This metadata grants no

@@ -8,10 +8,10 @@ import java.time.Instant
  * membership authority can be reconstructed from these local originals. */
 internal object E2eeDeviceControlCustody{
     private fun invalid():Nothing=error("E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED")
-    fun inspect(device:UnlockedE2eeDevice,vault:E2eeSourceReadVault,personalScopeId:String?,current:()->Unit,claim:(String,String,String,String)->Unit){
+    fun inspect(device:E2eeDeviceReadView,vault:E2eeSourceReadVault,personalScopeId:String?,current:()->Unit,claim:(String,String,String,String)->Unit){
         fun document(id:String,validate:(JSONObject)->JSONObject,scope:(JSONObject)->String):JSONObject{
             val readIds=mutableSetOf<String>()
-            val opened=E2eeDeviceDocument(device,id,validate,current,{domain,objectId->vault.read(domain,objectId).also{current();if(it!=null)readIds.add(objectId)}}).load()?:invalid();current()
+            val opened=E2eeDeviceDocument(null,id,validate,current,{domain,objectId->vault.read(domain,objectId).also{current();if(it!=null)readIds.add(objectId)}}).load()?:invalid();current()
             val scopeId=scope(opened.value);val row=vault.read("draft",id)?:invalid()
             try{current();if(row.serial!=opened.serial)error("E2EE_SOURCE_HISTORY_CHANGED");val descriptor=E2eeFileManifestJson.readPrivateDocument(row.bytes)
                 if(descriptor.opt("format")=="genesis-device-document-v1"){

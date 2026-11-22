@@ -9,20 +9,23 @@ import java.util.UUID
  * Intermediate snapshots are retained locally even when their uploads coalesce.
  * Caller serials protect edits against another editor/account instance.
  */
-class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E2eeScopeClient,
-    private val scopeId: String, private val domain: String, private val objectId: String) {
+class E2eeEditorQueue private constructor(private val device:E2eeScopeDevice?,private val client:E2eeScopeClient?,
+    private val scopeId:String,private val domain:String,private val objectId:String,private val vault:UnlockedE2eeVault){
+    constructor(device:E2eeScopeDevice,client:E2eeScopeClient,scopeId:String,domain:String,objectId:String):this(device,client,scopeId,domain,objectId,device.vault)
     class Opened(val bytes: ByteArray, val filename: String, val mediaType: String, val serial: Long, val remoteRevision: Long, val pending: Boolean) {
         override fun toString() = "E2eeEditorQueue.Opened([redacted])"
     }
     private class State(val value: JSONObject, val serial: Long)
-    private val vault = device.vault
     private val stateId: String
     init {
-        client.assertBinding(device, scopeId)
+        if(client!=null)client.assertBinding(requireNotNull(device),scopeId)
         listOf(scopeId, domain, objectId).forEach(E2eeKeys::technical)
         stateId = "editor:" + E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest("$scopeId\u0000$domain\u0000$objectId".toByteArray()))
     }
-    companion object { private const val MAX_HISTORY = 1024 }
+    companion object { private const val MAX_HISTORY = 1024
+        internal fun readOnly(vault:UnlockedE2eeVault,scopeId:String,domain:String,objectId:String)=E2eeEditorQueue(null,null,scopeId,domain,objectId,vault)
+    }
+    private fun writer():E2eeScopeClient=client?:error("E2EE_HISTORY_NOT_EXECUTABLE")
     private fun strings(values: JSONArray) = (0 until values.length()).map { values.getString(it) }
     private fun drafts(values: JSONArray) = (0 until values.length()).map { values.getJSONObject(it) }
     private fun loadState(): State? {
@@ -73,8 +76,8 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
     fun reconcile(source: ByteArray, expectedSerial: Long?, remoteRevision: Long, filename: String = "", mediaType: String = "application/json", cache: Boolean = false): Long {
         val copy=source.copyOf()
         try {
-            val job=client.localJob(domain,objectId);check(job==null||job.complete){"E2EE_PENDING_SAVE_REQUIRED"}
-            client.assertVerifiedRevision(domain,objectId,remoteRevision)
+            val job=writer().localJob(domain,objectId);check(job==null||job.complete){"E2EE_PENDING_SAVE_REQUIRED"}
+            writer().assertVerifiedRevision(domain,objectId,remoteRevision)
             return stageInternal(copy,expectedSerial,remoteRevision,filename,mediaType,if(cache)"cache" else "merge")
         } finally {copy.fill(0)}
     }
@@ -82,14 +85,14 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
         require(baseRevision in 0..9007199254740991L && source.size <= E2eeFiles.MAX_FILE_BYTES && filename.length <= 512 && mediaType.length <= 128) { "E2EE_INVALID_EDITOR_INPUT" }
         val copy = source.copyOf(); val changes = mutableListOf<UnlockedE2eeVault.Write>()
         try {
-            device.ensureDurableKeys()
+            (device?:error("E2EE_HISTORY_NOT_EXECUTABLE")).ensureDurableKeys()
             val previous = loadState(); check(previous?.serial == expectedSerial) { "E2EE_LOCAL_CONFLICT" }
             check((previous == null || if(mode=="edit")previous.value.getLong("remoteRevision")==baseRevision else previous.value.getLong("remoteRevision")<=baseRevision)
                 && (mode!="cache" || previous?.value?.getJSONArray("pending")?.length().let{it==null||it==0})
                 &&(previous?.value?.has("review")!=true||mode in setOf("edit","review"))) { "E2EE_EDITOR_CONFLICT" }
             var history = previous?.value?.getJSONArray("history") ?: JSONArray();var pending=previous?.value?.getJSONArray("pending")?:JSONArray();var historyHead=previous?.value?.optJSONObject("historyHead")
             if(history.length()>=MAX_HISTORY){
-                val job=client.localJob(domain,objectId);val keep=setOf(previous!!.value.getJSONObject("latest").getString("id"),previous.value.optString("preparing"),previous.value.optJSONObject("review")?.optString("originId"),job?.originId)
+                val job=writer().localJob(domain,objectId);val keep=setOf(previous!!.value.getJSONObject("latest").getString("id"),previous.value.optString("preparing"),previous.value.optJSONObject("review")?.optString("originId"),job?.originId)
                 val archived=drafts(history).filter{it.getString("id") !in keep};history=JSONArray(drafts(history).filter{it.getString("id") in keep});pending=JSONArray(strings(pending).filter{it in keep});check(archived.isNotEmpty()){"E2EE_EDITOR_BUSY"}
                 val archiveId="editor-history:${UUID.randomUUID()}";val bytes=JSONObject().put("protocol",1).put("scopeId",scopeId).put("domain",domain).put("objectId",objectId)
                     .put("previous",historyHead?:JSONObject.NULL).put("drafts",JSONArray(archived)).toString().toByteArray(Charsets.UTF_8)
@@ -122,23 +125,23 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
             val saved = loadState() ?: throw IllegalStateException("E2EE_EDITOR_EMPTY"); val pending = strings(saved.value.getJSONArray("pending"))
             saved.value.optJSONObject("review")?.let{review->
                 val origin=review.getString("originId");val draft=drafts(saved.value.getJSONArray("history")).firstOrNull{it.getString("id")==origin}?:error("E2EE_CORRUPT_EDITOR")
-                if(client.localJob(domain,objectId)?.originId!=origin){val content=bytes(draft);val metadata=draft.getJSONObject("metadata")
-                    try{client.replaceReviewed(domain,objectId,content,review.getLong("remoteRevision"),origin,metadata.getString("filename"),metadata.getString("mediaType"))}finally{content.fill(0)}}
+                if(writer().localJob(domain,objectId)?.originId!=origin){val content=bytes(draft);val metadata=draft.getJSONObject("metadata")
+                    try{writer().replaceReviewed(domain,objectId,content,review.getLong("remoteRevision"),origin,metadata.getString("filename"),metadata.getString("mediaType"))}finally{content.fill(0)}}
                 val current=loadState()?:error("E2EE_CORRUPT_EDITOR");if(current.value.optJSONObject("review")?.getString("originId")==origin){current.value.remove("review");current.value.remove("preparing")
                     try{save(current.value,current.serial)}catch(error:IllegalStateException){if(error.message!="E2EE_LOCAL_CONFLICT")throw error}}
                 return@repeat
             }
-            val job = client.localJob(domain, objectId)
+            val job = writer().localJob(domain, objectId)
             if (job != null && !job.complete) {
                 check(job.originId != null && job.originId in pending) { "E2EE_PENDING_EDITOR_MISMATCH" }
-                val revision = client.flush(domain, objectId, job.originId); confirm(job.originId, revision)
+                val revision = writer().flush(domain, objectId, job.originId); confirm(job.originId, revision)
             } else if (job?.complete == true && job.originId != null && job.originId in pending) confirm(job.originId, job.expectedRevision + 1)
             else {
                 val selectedId = saved.value.optString("preparing").takeIf{it.isNotEmpty()}?:pending.lastOrNull() ?: return saved.value.getLong("remoteRevision")
                 val selected = drafts(saved.value.getJSONArray("history")).firstOrNull { it.getString("id") == selectedId } ?: throw IllegalStateException("E2EE_CORRUPT_EDITOR")
                 if(!saved.value.has("preparing")){saved.value.put("preparing",selectedId);try{save(saved.value,saved.serial)}catch(error:IllegalStateException){if(error.message=="E2EE_LOCAL_CONFLICT")return@repeat;throw error}}
                 val content = bytes(selected); val metadata = selected.getJSONObject("metadata")
-                try { client.prepare(domain, objectId, content, saved.value.getLong("remoteRevision"), metadata.getString("filename"), metadata.getString("mediaType"), selectedId) }
+                try { writer().prepare(domain, objectId, content, saved.value.getLong("remoteRevision"), metadata.getString("filename"), metadata.getString("mediaType"), selectedId) }
                 finally { content.fill(0) }
             }
         }
@@ -146,17 +149,17 @@ class E2eeEditorQueue(private val device: E2eeScopeDevice, private val client: E
     }
     fun recoverAcknowledgement(){
         val saved=loadState()?:return;val pending=strings(saved.value.getJSONArray("pending"));if(pending.isEmpty())return
-        val receipt=client.recoverReceipt(domain,objectId)?:return;if(receipt.first in pending)confirm(receipt.first,receipt.second)
+        val receipt=writer().recoverReceipt(domain,objectId)?:return;if(receipt.first in pending)confirm(receipt.first,receipt.second)
     }
     fun reviewConflict(source:ByteArray,expectedSerial:Long,remoteRevision:Long):Long{
-        val content=source.copyOf();try{client.assertVerifiedRevision(domain,objectId,remoteRevision);return stageInternal(content,expectedSerial,remoteRevision,"","application/json","review")}finally{content.fill(0)}
+        val content=source.copyOf();try{writer().assertVerifiedRevision(domain,objectId,remoteRevision);return stageInternal(content,expectedSerial,remoteRevision,"","application/json","review")}finally{content.fill(0)}
     }
     fun rebasePending(expectedRemoteRevision: Long): String {
-        val job = client.localJob(domain, objectId); val saved = loadState()
+        val job = writer().localJob(domain, objectId); val saved = loadState()
         check(job?.originId != null && saved != null && job.originId in strings(saved.value.getJSONArray("pending"))) { "E2EE_PENDING_EDITOR_MISMATCH" }
-        val outcome = client.rebase(domain, objectId, expectedRemoteRevision, originId = job.originId)
+        val outcome = writer().rebase(domain, objectId, expectedRemoteRevision, originId = job.originId)
         if (outcome == "already-confirmed") {
-            val confirmed = client.localJob(domain, objectId)
+            val confirmed = writer().localJob(domain, objectId)
             check(confirmed?.complete == true && confirmed.originId == job.originId) { "E2EE_PENDING_EDITOR_MISMATCH" }
             confirm(requireNotNull(job.originId), confirmed.expectedRevision + 1)
         }

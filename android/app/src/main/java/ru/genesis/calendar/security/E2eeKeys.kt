@@ -40,6 +40,13 @@ object E2eeKeys {
     class DeviceKeys(val signing: KeyPair, val receiving: AsymmetricCipherKeyPair) {
         override fun toString() = "E2eeKeys.DeviceKeys([redacted])"
     }
+    class ReadKeys(val publicKeys:JSONObject,val receiving:AsymmetricCipherKeyPair,val signer:java.security.PublicKey){override fun toString()="E2eeKeys.ReadKeys([redacted])"}
+    /** Deliberately does not accept or import signingPrivate. */
+    fun importReadKeys(source:JSONObject):ReadKeys{
+        exact(source,setOf("signingKey","receivingKey","receivingPrivate"));val signer=KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(decode(source,"signingKey",91)));E2eeEnvelope.assertP256(signer)
+        val scalar=decode(source,"receivingPrivate",32);val receiving=try{hpke.deserializePrivateKey(scalar,decode(source,"receivingKey",65))}finally{scalar.fill(0)}
+        val keys=JSONObject().put("signingKey",source.get("signingKey")).put("receivingKey",source.get("receivingKey"));return ReadKeys(keys,receiving,signer)
+    }
     fun generateDeviceKeys(): DeviceKeys = DeviceKeys(
         KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1"), random) }.generateKeyPair(),
         hpke.generatePrivateKey())

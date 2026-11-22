@@ -46,6 +46,9 @@ export class WebPersonalDeviceEntry{
    if(target.kind!=='personal'||target.ownerId!==ownerId||!same(target.authority,device.authorityPin))throw new Error('E2EE_AUTHORITY_CHANGED');const entry=new WebPersonalDeviceEntry(device,target,ports,current);await entry.#document.load();entry.current();return entry;
   }catch(error){device?.lock();throw error;}
  }
+ static async replaceRevoked(compared:ComparedPersonalDeviceTarget,oldSecret:Uint8Array,newSecret:Uint8Array,ports:PersonalDeviceEntryPorts,current:()=>void){
+  const target=ComparedPersonalDeviceTarget.require(compared);current();const response=await ports.transport.directory(target.scopeId);current();const candidate=await UnlockedWebDevice.replaceRevoked(compared,oldSecret,newSecret,response.events,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage(),current);candidate.lock();current();return this.begin(compared,newSecret,ports,current);
+ }
  async #active(){const marker=await this.#document.load();this.current();if(!marker)throw new Error('E2EE_DEVICE_ACCESS_REQUIRED');const id=marker.value.attemptIds.at(-1)!;await this.#access.create(this.target.scopeId,id);this.current();return{id,marker};}
  request(){return this.#run(async()=>{const {id}=await this.#active();return this.#access.request(id);});}
  /** Only an explicit foreground retry creates a new challenge. Old requests,

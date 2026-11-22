@@ -12,18 +12,20 @@ import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import {encodeE2eeBytes,decodeE2eeBytes} from './e2ee/envelope';
 import {IndexedDbDeviceKeyStorage} from './e2ee/device-vault';
 import {freshSecret} from './e2ee/keys';
-import {beginCurrentPrivatePersonalDeviceEntry,resumeCurrentPrivatePersonalDeviceEntry,unlockCurrentPrivateAccount} from './cloud-sync';
+import {beginCurrentPrivatePersonalDeviceEntry,resumeCurrentPrivatePersonalDeviceEntry,replaceCurrentPrivatePersonalDeviceEntry,unlockCurrentPrivateAccount} from './cloud-sync';
 import type {WebPersonalDeviceEntry} from './e2ee/personal-device-entry';
 import type {SignedE2eeCommand} from './e2ee/commands';
+import {PrivateRetiredDeviceContent} from './PrivateRetiredDeviceContent';
 
 export function PrivatePersonalDeviceEntry({ownerId,language}:{ownerId:string;language:string}){
  const lang=isLanguage(language)?language:'en',c=copy[lang],d=deviceCopy[lang],common=commonCopy[lang];
  const [target,setTarget]=useState(''),[compared,setCompared]=useState(''),[preview,setPreview]=useState(''),[code,setCode]=useState(''),[saved,setSaved]=useState(false),[approval,setApproval]=useState('');
  const [generated,setGenerated]=useState(false),[hasLocal,setHasLocal]=useState(false);
+ const [previousCode,setPreviousCode]=useState(''),[replaceAck,setReplaceAck]=useState(false);
  const [view,setView]=useState<{state:DeviceAccessState;fingerprint:string}|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const entry=useRef<WebPersonalDeviceEntry|null>(null),alive=useRef(true),epoch=useRef(0),locked=useRef(false);
  const lifetime=()=>{if(!alive.current||privateAccountView().ownerId!==ownerId||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};
- const clear=()=>{epoch.current++;entry.current?.close();entry.current=null;setCode('');setGenerated(false);setSaved(false);setApproval('');setView(null);setPreview('');setCompared('');setTarget('');setMessage('');setBusy(false);locked.current=false;};
+ const clear=()=>{epoch.current++;entry.current?.close();entry.current=null;setCode('');setPreviousCode('');setReplaceAck(false);setGenerated(false);setSaved(false);setApproval('');setView(null);setPreview('');setCompared('');setTarget('');setMessage('');setBusy(false);locked.current=false;};
  useEffect(()=>{let current=true;void new IndexedDbDeviceKeyStorage().get(ownerId).then(value=>{if(current)setHasLocal(value!==null);}).catch(()=>{if(current)setHasLocal(false);});return()=>{current=false;};},[ownerId]);
  useEffect(()=>{alive.current=true;const background=()=>{if(document.visibilityState!=='visible')clear();};document.addEventListener('visibilitychange',background);window.addEventListener('pagehide',clear);return()=>{alive.current=false;epoch.current++;entry.current?.close();entry.current=null;document.removeEventListener('visibilitychange',background);window.removeEventListener('pagehide',clear);};},[ownerId]);
  const run=async(work:(current:()=>void)=>Promise<void>)=>{if(locked.current)return;locked.current=true;setBusy(true);setMessage('');const token=++epoch.current,current=()=>{lifetime();if(epoch.current!==token)throw new Error('E2EE_ACCOUNT_CHANGED');};
@@ -41,11 +43,15 @@ export function PrivatePersonalDeviceEntry({ownerId,language}:{ownerId:string;la
    <button type="button" disabled={busy||!target.trim()} onClick={()=>void run(async current=>{const value=validateDeviceAccessTarget(parseLegacyMigrationJson(target,'E2EE_DEVICE_ACCESS_INVALID',8192));if(value.kind!=='personal'||value.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const fingerprint=personalDeviceTargetFingerprint(value);current();setPreview(fingerprint);setCompared('');})}>{c.inspect}</button>
    {preview?<><code className="private-shared-fingerprint">{preview}</code><label className="workspace-recovery-field"><span>{d.compare}</span><input value={compared} maxLength={64} disabled={busy} autoComplete="off" spellCheck={false} onChange={event=>setCompared(event.target.value.trim())}/></label></>:null}
    <div className="workspace-recovery-actions"><button type="button" disabled={busy||!code.trim()||!saved||!generated&&!hasLocal||!preview||compared!==preview} onClick={()=>void run(current=>open(false,current))}>{d.create}</button><button type="button" disabled={busy||!code.trim()} onClick={()=>void run(current=>open(true,current))}>{c.resume}</button></div>
+   {hasLocal?<><p>{c.replaceNotice}</p><label className="workspace-recovery-field"><span>{c.previousCode}</span><input type="password" value={previousCode} disabled={busy} autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={64} onChange={event=>{setPreviousCode(event.target.value);setReplaceAck(false);}}/></label>
+    <label className="backup-check"><input type="checkbox" checked={replaceAck} disabled={busy} onChange={event=>setReplaceAck(event.target.checked)}/>{c.replaceAck}</label>
+    <button type="button" disabled={busy||!replaceAck||!generated||!saved||!previousCode.trim()||!code.trim()||!preview||compared!==preview} onClick={()=>void run(async current=>{const oldSecret=decodeE2eeBytes(previousCode.trim(),32),newSecret=decodeE2eeBytes(code.trim(),32);let candidate:WebPersonalDeviceEntry|undefined;try{candidate=await replaceCurrentPrivatePersonalDeviceEntry(oldSecret,newSecret,target,compared,lifetime);current();const state=await candidate.request();current();entry.current?.close();entry.current=candidate;setPreviousCode('');setReplaceAck(false);await display(state,current);}catch(error){if(candidate!==entry.current)candidate?.close();throw error;}finally{oldSecret.fill(0);newSecret.fill(0);}})}>{c.replace}</button>
+   </>:null}
   </>:null}
   {view?.state.request?<><label className="workspace-recovery-field"><span>{d.request}</span><textarea rows={4} readOnly value={JSON.stringify(view.state.request)}/></label><code className="private-shared-fingerprint">{view.fingerprint}</code>
    <label className="workspace-recovery-field"><span>{d.approval}</span><textarea rows={4} value={view.state.approval?JSON.stringify(view.state.approval):approval} maxLength={128*1024} disabled={busy||Boolean(view.state.approval)} onChange={event=>setApproval(event.target.value)}/></label>
    <div className="workspace-recovery-actions"><button type="button" disabled={busy||!entry.current||!view.state.approval&&!approval.trim()} onClick={()=>void run(async current=>{const candidate=entry.current;if(!candidate)throw new Error('E2EE_DEVICE_ACCESS_REQUIRED');const packet=approval.trim()?parseLegacyMigrationJson(approval,'E2EE_DEVICE_ACCESS_INVALID',128*1024) as SignedE2eeCommand:undefined;await candidate.submit(packet);current();candidate.close();entry.current=null;const held=code;setCode('');setApproval('');await unlockCurrentPrivateAccount(held);})}>{c.finish}</button>
     <button type="button" disabled={busy||!entry.current||Boolean(view.state.approval)} onClick={()=>void run(async current=>{const candidate=entry.current;if(!candidate)throw new Error('E2EE_DEVICE_ACCESS_REQUIRED');const state=await candidate.newRequest();current();await display(state,current);})}>{c.newRequest}</button></div>
-  </>:null}{message?<p role="alert">{message}</p>:null}
+  </>:null}<PrivateRetiredDeviceContent ownerId={ownerId} language={lang} guard={lifetime}/>{message?<p role="alert">{message}</p>:null}
  </section>;
 }

@@ -111,6 +111,16 @@ internal object PrivateBackupHandoff{
         }finally{bytes.fill(0)}
     }
     fun prepareImport(context:Context,account:E2eeProductAccount)=reserve(context,account,UUID.randomUUID().toString(),"import","pick")
+    /** Historical content is already authenticated by the read-only catalogue.
+     * Only independently encrypted bytes survive the credential/SAF transition. */
+    fun prepareRetiredExport(context:Context,ownerId:String,deviceId:String,payload:JSONObject,recovery:String,guard:()->Unit):Job{
+        guard();E2eeKeys.technical(ownerId);E2eeKeys.technical(deviceId);val verified=E2eeContentArchive.validate(payload);check(verified.getString("ownerId")==ownerId&&verified.isNull("billingEvidence")){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val job=synchronized(this){guard();available(context);Job(UUID.randomUUID().toString(),ownerId,"export","sealing",attemptId=UUID.randomUUID().toString(),scopeId="device:$deviceId",generation=1).also{save(context,it)}};val file=artifact(context,job.id)
+        fun current(){guard();requireCurrent(job)}
+        var bytes:ByteArray?=null;try{current();val sealed=GenesisBackupContainer.seal(verified,recovery).toByteArray(Charsets.UTF_8);bytes=sealed;current();check(android.os.StatFs(context.noBackupFilesDir.absolutePath).availableBytes>sealed.size+1024*1024L){"E2EE_STORAGE_CAPACITY"};val output=file.startWrite();try{var at=0;while(at<sealed.size){current();val size=minOf(8192,sealed.size-at);output.write(sealed,at,size);at+=size};current();file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}
+            val digest=hash(sealed);val readback=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)};try{current();check(readback.size==sealed.size&&hash(readback)==digest){"BACKUP_HANDOFF_UNVERIFIED"}}finally{readback.fill(0)};return synchronized(this){current();job.copy(phase="pick",sha256=digest).also{save(context,it)}}
+        }catch(error:Exception){failed(context,job);throw error}finally{bytes?.fill(0)}
+    }
     @Synchronized fun beginPicker(context:Context,job:Job):Job{
         initialize(context);requireCurrent(job);check(job.phase=="pick"){"BACKUP_HANDOFF_CHANGED"};return job.copy(phase="picking").also{save(context,it)}
     }

@@ -88,6 +88,14 @@ export async function importDeviceKeys(source: unknown): Promise<DeviceKeys> {
     return { signing, receiving };
   } catch { return invalid(); }
 }
+/** Recovery reader: import the receiving key and verification key only. The
+ * historical signing private key is never imported or exposed. */
+export async function importDeviceReadKeys(source:unknown){
+ const saved=keyFields(source,['signingKey','receivingKey','receivingPrivate']) as PublicDeviceKeys&{receivingPrivate:string};
+ const signer=await crypto.subtle.importKey('spki',decodeE2eeBytes(saved.signingKey,91),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+ const receiving={publicKey:await hpke.kem.deserializePublicKey(decodeE2eeBytes(saved.receivingKey,65).buffer),privateKey:await hpke.kem.deserializePrivateKey(decodeE2eeBytes(saved.receivingPrivate,32).buffer)};
+ const probe=freshSecret();let opened:Uint8Array|undefined;try{const sender=await hpke.createSenderContext({recipientPublicKey:receiving.publicKey,info:probe.buffer}),recipient=await hpke.createRecipientContext({recipientKey:receiving.privateKey,enc:sender.enc,info:probe.buffer});opened=new Uint8Array(await recipient.open(await sender.seal(probe.buffer)));if(opened.length!==probe.length||opened.some((value,at)=>value!==probe[at]))invalid();return{signer,receivingKey:receiving.privateKey,publicKeys:{signingKey:saved.signingKey,receivingKey:saved.receivingKey}};}finally{probe.fill(0);opened?.fill(0);}
+}
 
 /** Only accepts a CSPRNG-generated 256-bit secret, never a password or identity token. */
 async function secretKey(secret: Uint8Array, salt: Uint8Array<ArrayBuffer>, ownerId: string, purpose: string) {

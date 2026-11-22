@@ -8,7 +8,7 @@ import java.io.Closeable
 /** Account-wide read-only ownership proof. Namespace membership is discovery,
  * never admission; every discovered owner/role must have its own full proof. */
 internal object E2eeMigrationOwnershipCatalogue {
-    class Options(val device:UnlockedE2eeDevice,val inventory:E2eePrivatePaths,val originalCapacity:E2eeRemoteOriginal.Capacity,
+    class Options(val device:E2eeDeviceReadView,val inventory:E2eePrivatePaths,val originalCapacity:E2eeRemoteOriginal.Capacity,
         val assertCurrent:()->Unit,val admit:(E2eeMigrationHistory.Admission)->Unit)
     class Scope(val target:E2eeSourceStage.Target,val resourceId:String,val stateId:String,val root:JSONObject?,val ancestors:List<JSONObject>,val serial:Long?,val hash:String?) {
         fun sourceScope()=E2eeRetainedSourceHistory.Scope(target,stateId,root?:error("E2EE_SNAPSHOT_REQUIRED"),ancestors)
@@ -34,7 +34,7 @@ internal object E2eeMigrationOwnershipCatalogue {
         private val states=mutableMapOf<String,Pair<Scope,JSONObject>>();private val frames=mutableMapOf<String,E2eeDirectory.Verified>();private val originals=mutableMapOf<String,MutableSet<String>>()
         private lateinit var copyIds:List<String>;private lateinit var sourceIds:List<String>;private lateinit var outputIds:Pair<List<String>,List<String>>;private lateinit var stateRoles:List<String>
         private lateinit var jobHistory:List<String>;private lateinit var controlHistory:List<String>
-        private fun current(){options.assertCurrent();device.requireOpen();base.requireOpen();check(!closed){"E2EE_MIGRATION_HISTORY_CLOSED"};if(base.localIdentity()!=actor)invalid()}
+        private fun current(){options.assertCurrent();device.requireOpen();base.assertOpen();check(!closed){"E2EE_MIGRATION_HISTORY_CLOSED"};if(base.localIdentity()!=actor)invalid()}
         private fun claim(domain:String,id:String,scope:String,role:String){
             E2eeKeys.technical(id);E2eeKeys.technical(scope);val coordinate=domain to id;val old=roles[coordinate]
             if(old!=null&&(old.scopeId!=scope||old.name!=role&&old.name!="authenticated-source"&&role!="authenticated-source"))invalid()
@@ -74,7 +74,7 @@ internal object E2eeMigrationOwnershipCatalogue {
             return try{current();val paths=options.inventory.required(target.kind);State(E2eeMigrationStateCodec.read(row.bytes,view,target,paths.map{it.id},paths.flatMap{it.domains}.toSet()),row.serial,hash(row.bytes))}finally{row.bytes.fill(0)}
         }
         private fun originalRead(scope:Scope)=E2eeRemoteOriginal.ReadOptions(view,E2eeRemoteOriginal.Target(scope.target.ownerId,scope.target.scopeId,scope.target.kind),options.originalCapacity,::current)
-        private fun root(scope:Scope,frame:E2eeDirectory.Verified)=E2eeKeys.openRoot((frame.devices[actor.deviceId]?:invalid()).capsule,device.keys().receiving,
+        private fun root(scope:Scope,frame:E2eeDirectory.Verified)=E2eeKeys.openRoot((frame.devices[actor.deviceId]?:invalid()).capsule,device.readKeys().receiving,
             E2eeKeys.RootRecipient(scope.target.ownerId,scope.target.scopeId,frame.cryptoEpoch,frame.keyId,actor.deviceId)).also{current()}
         private fun legacy(scope:Scope,value:JSONObject,frame:E2eeDirectory.Verified){
             val secret=root(scope,frame);val own=frame.devices[actor.deviceId]?:invalid();val signer=E2eeDirectory.signingKey(own.signingKey)
@@ -135,7 +135,7 @@ internal object E2eeMigrationOwnershipCatalogue {
                 for((scopeId,saved)in directories){
                     val id="migration:"+hash(scopeId.toByteArray(Charsets.UTF_8));val initial=currentStates[id];val rawRoot=initial?.value;val ancestorIds=rawRoot?.let{strings(it.getJSONArray("ancestors"))}?:emptyList();if(ancestorIds.size>32)invalid()
                     val rawAncestors=ancestorIds.map{raw(it)};val needed=(rawAncestors.map{E2eeRetainedMigrationProof.anchor(it.value).revision}+listOfNotNull(rawRoot?.let{E2eeRetainedMigrationProof.anchor(it).revision})).toSet();val retainedFrames=mutableMapOf<Long,E2eeDirectory.Verified>()
-                    val latest=device.savedDirectory(scopeId){frame->if(frame.checkpoint.revision in needed)retainedFrames[frame.checkpoint.revision]=frame}?:invalid();current();if(latest.ownerId!=saved.second)invalid()
+                    val latest=device.readSavedDirectory(scopeId){frame->if(frame.checkpoint.revision in needed)retainedFrames[frame.checkpoint.revision]=frame}?:invalid();current();if(latest.ownerId!=saved.second)invalid()
                     val target=E2eeSourceStage.Target(latest.ownerId,scopeId,latest.kind);val root=initial?.let{state(id,target)};val ancestors=ancestorIds.map{state(it,target).also{old->if(old.serial!=1L)invalid()}.value}
                     for((index,old)in ancestors.withIndex())if(old.get("phase")!="cancelled"||ancestorIds[index]!="${old.getString("migrationId")}:archive"||strings(old.getJSONArray("ancestors"))!=ancestorIds.take(index))invalid()
                     val scope=Scope(target,latest.resourceId,id,root?.value,ancestors,root?.serial,root?.hash);scopeRows[scopeId]=scope;claim("key-check",saved.first,scopeId,"directory");if(root!=null)claim("local-snapshot",id,scopeId,"current")
@@ -166,7 +166,7 @@ internal object E2eeMigrationOwnershipCatalogue {
                 val personal=scopeRows.values.filter{it.target.kind=="personal"&&it.target.ownerId==actor.ownerId}.singleOrNull()?.target?.scopeId
                 E2eeRetainedProductCustody.inspect(E2eeRetainedProductCustody.Options(device,view,options.inventory,outputIds.first,copyIds,jobHistory,controlHistory,personal,::current,
                     {domain,id->roles.containsKey(domain to id)},::claim,{scopeId,select->val expected=directories[scopeId]?:invalid();var found:E2eeDirectory.Verified?=null
-                        val latest=device.savedDirectory(scopeId){if(select(it))found=it}?:invalid();current();if(latest.ownerId!=expected.second)invalid();found?:invalid()}))
+                        val latest=device.readSavedDirectory(scopeId){if(select(it))found=it}?:invalid();current();if(latest.ownerId!=expected.second)invalid();found?:invalid()}))
                 E2eeDeviceControlCustody.inspect(device,view,personal,::current,::claim)
                 val counts=mutableMapOf<String,Int>()
                 for(id in copyIds){if(roles["local-snapshot" to id]?.name in setOf("archive","product-job"))continue;val at=id.lastIndexOf(":cancel:");if(at<1)invalid();val migration=id.substring(0,at);val known=states[migration]?:invalid();if(!uuid.matches(id.substring(at+8)))invalid()

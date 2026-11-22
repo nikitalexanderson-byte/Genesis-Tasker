@@ -1,7 +1,7 @@
 import { encodeE2eeBytes, decodeE2eeBytes, importE2eeRoot } from './envelope.ts';
 import { snapshotE2eeValue, type SignedE2eeCommand } from './commands.ts';
 import { assertTechnical, exactKeys, freshSecret, generateDeviceKeys, exportPrivateDeviceKeys, importDeviceKeys,
-  openBundle, protectBundle, recoverAuthority, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
+  openBundle, protectBundle, recoverAuthority,publicDeviceKeys, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
 import { verifyDeviceDirectory, type VerifiedDirectory } from './directory.ts';
 import { openE2eeDatabase, IndexedDbE2eeStorage, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
 import {ComparedPersonalDeviceTarget} from './personal-device-target.ts';
@@ -17,20 +17,27 @@ export interface DeviceKeyStorage {
 export class IndexedDbDeviceKeyStorage implements DeviceKeyStorage {
   #database:Promise<IDBDatabase>;
   constructor(factory:IDBFactory=indexedDB){this.#database=openE2eeDatabase(factory);}
-  async get(ownerId:string){
+  async history(ownerId:string){
     assertTechnical(ownerId);const db=await this.#database;
-    return new Promise<ProtectedDeviceRecord|null>((resolve,reject)=>{
-      const transaction=db.transaction('keyMaterial','readonly'),request=transaction.objectStore('keyMaterial').get(ownerId);let row:ProtectedDeviceRecord|null=null;
-      request.onsuccess=()=>{row=request.result??null;};transaction.oncomplete=()=>resolve(row);
-      transaction.onabort=transaction.onerror=()=>reject(new Error('E2EE_STORAGE_UNAVAILABLE'));
+    return new Promise<ProtectedDeviceRecord[]>((resolve,reject)=>{
+      const transaction=db.transaction('keyMaterial','readonly'),store=transaction.objectStore('keyMaterial'),request=store.get(ownerId),prefix='replacement:'+ownerId+':',cursor=store.openCursor(IDBKeyRange.bound(prefix,prefix+'\uffff'));let first:ProtectedDeviceRecord|null=null;const replacements:ProtectedDeviceRecord[]=[];let invalid=false;
+      request.onsuccess=()=>{first=request.result??null;};cursor.onsuccess=()=>{const row=cursor.result;if(!row)return;const value=row.value as ProtectedDeviceRecord;if(replacements.length>=63||typeof row.key!=='string'||!value||row.key!==prefix+value.serial||!Number.isSafeInteger(value.serial)||value.serial<2){invalid=true;transaction.abort();return;}replacements.push(value);row.continue();};transaction.oncomplete=()=>{const rows=[...(first?[first]:[]),...replacements.sort((a,b)=>a.serial-b.serial)];if(rows.some((row,at)=>row.serial!==at+1)){reject(new Error('E2EE_CORRUPT_DEVICE_VAULT'));return;}resolve(rows);};
+      transaction.onabort=transaction.onerror=()=>reject(new Error(invalid?'E2EE_CORRUPT_DEVICE_VAULT':'E2EE_STORAGE_UNAVAILABLE'));
     });
+  }
+  async get(ownerId:string){return(await this.history(ownerId)).at(-1)??null;}
+  /** Append-only active identity chain. All previous bundles and record
+   * namespaces stay intact; the unique next slot also resolves concurrent CAS. */
+  async appendReplacement(ownerId:string,expected:ProtectedDeviceRecord,bundle:ProtectedBundle,current:()=>void){
+    current();const actual=await this.get(ownerId);current();if(!actual||JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('E2EE_LOCAL_CONFLICT');if(actual.serial>=64)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
+    await commitE2eeIndexedDb(this.#database,'keyMaterial',[{key:'replacement:'+ownerId+':'+(actual.serial+1),expected:null,value:{serial:actual.serial+1,bundle}}],undefined,current);current();
   }
   async create(ownerId:string,bundle:ProtectedBundle){
     assertTechnical(ownerId);return commitE2eeIndexedDb(this.#database,'keyMaterial',[{key:ownerId,expected:null,value:{serial:1,bundle}}]);
   }
   originalCustodyStorage(){return new IndexedDbOriginalCustodyStorage(undefined,this.#database);}
 }
-type PrivateDeviceBundle = {protocol:1;ownerId:string;deviceId:string;localKeyId:string;localRoot:string;deviceKeys:Awaited<ReturnType<typeof exportPrivateDeviceKeys>>;authorityPin:PublicDeviceKeys};
+type PrivateDeviceBundle = {protocol:1|2;ownerId:string;deviceId:string;localKeyId:string;localRoot:string;deviceKeys:Awaited<ReturnType<typeof exportPrivateDeviceKeys>>;authorityPin:PublicDeviceKeys;previous?:{serial:number;deviceId:string;bundleHash:string}};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 function retainedSecret(source:Uint8Array){
   if(!(source instanceof Uint8Array)||source.length!==32)throw new Error('E2EE_INVALID_KEY_BUNDLE');
@@ -80,8 +87,9 @@ export class UnlockedWebDevice {
       if(!Number.isSafeInteger(record.serial)||record.serial<1)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');
       bytes=await openBundle(ownerId,'device-vault',held,record.bundle);
       const bundle:PrivateDeviceBundle=JSON.parse(decoder.decode(bytes));
-      exactKeys(bundle,['protocol','ownerId','deviceId','localKeyId','localRoot','deviceKeys','authorityPin']);
-      if(bundle.protocol!==1||bundle.ownerId!==ownerId)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');
+      exactKeys(bundle,['protocol','ownerId','deviceId','localKeyId','localRoot','deviceKeys','authorityPin',...(bundle.protocol===2?['previous']:[])]);
+      if(![1,2].includes(bundle.protocol)||bundle.ownerId!==ownerId)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');
+      if(bundle.protocol===2){if(!(keyStorage instanceof IndexedDbDeviceKeyStorage))throw new Error('E2EE_STORAGE_PROVIDER_REQUIRED');exactKeys(bundle.previous,['serial','deviceId','bundleHash']);assertTechnical(bundle.previous.deviceId);const prior=(await keyStorage.history(ownerId))[record.serial-2];if(!prior||bundle.previous.serial!==record.serial-1||await protectedDeviceHash(prior.bundle)!==bundle.previous.bundleHash)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');}
       assertTechnical(bundle.deviceId);assertTechnical(bundle.localKeyId);exactKeys(bundle.authorityPin,['signingKey','receivingKey']);
       raw=decodeE2eeBytes(bundle.localRoot,32);const root=await importE2eeRoot(raw),keys=await importDeviceKeys(bundle.deviceKeys);
       return new UnlockedWebDevice(ownerId,bundle,keys,root,storage,keyStorage,record);
@@ -95,6 +103,17 @@ export class UnlockedWebDevice {
     if(!(this.vault.storage instanceof IndexedDbE2eeStorage)||!(this.#keyStorage instanceof IndexedDbDeviceKeyStorage))throw new Error('E2EE_STORAGE_PROVIDER_REQUIRED');
   }
   keys(){this.requireOpen();return this.#keys!;}
+  async readKeys(){this.requireOpen();const publicKeys=await publicDeviceKeys(this.#keys!);this.requireOpen();return{publicKeys,receivingKey:this.#keys!.receiving.privateKey};}
+  /** Explicit revoked-identity replacement, never an unlock-error fallback.
+   * New keys stay a candidate until the ordinary enrollment is approved. */
+  static async replaceRevoked(compared:ComparedPersonalDeviceTarget,oldSecret:Uint8Array,newSecret:Uint8Array,events:SignedE2eeCommand[],storage:E2eeRecordStorage,keys:IndexedDbDeviceKeyStorage,current:()=>void){
+    const target=ComparedPersonalDeviceTarget.require(compared),old=await this.unlock(target.ownerId,oldSecret,storage,keys),held=retainedSecret(newSecret);let raw:Uint8Array|undefined,bytes:Uint8Array|undefined;
+    try{current();if(JSON.stringify(old.authorityPin)!==JSON.stringify(target.authority))throw new Error('E2EE_AUTHORITY_CHANGED');const saved=await old.savedDirectory(target.scopeId);current();const directory=await verifyDeviceDirectory(target.ownerId,target.scopeId,target.authority,events,saved?.checkpoint);current();const prior=directory.devices.get(old.deviceId),publicKeys=await publicDeviceKeys(old.keys());current();
+      if(directory.kind!=='personal'||directory.resourceId!==target.ownerId||directory.state!=='active'||!prior?.revoked||prior.userId!==target.ownerId||prior.signingKey!==publicKeys.signingKey||prior.receivingKey!==publicKeys.receivingKey)throw new Error('E2EE_REVOKED_REPLACEMENT_REQUIRED');await old.ensureDurableKeys();current();
+      const deviceKeys=await generateDeviceKeys(),deviceId=crypto.randomUUID();raw=freshSecret();const bundle:PrivateDeviceBundle={protocol:2,ownerId:target.ownerId,deviceId,localKeyId:'local:'+deviceId,localRoot:encodeE2eeBytes(raw),deviceKeys:await exportPrivateDeviceKeys(deviceKeys),authorityPin:target.authority,previous:{serial:old.#record.serial,deviceId:old.deviceId,bundleHash:await protectedDeviceHash(old.#record.bundle)}};
+      bytes=encoder.encode(JSON.stringify(bundle));const sealed=await protectBundle(target.ownerId,'device-vault',held,bytes);current();await old.ensureDurableKeys();current();await keys.appendReplacement(target.ownerId,old.#record,sealed,current);if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('genesis-e2ee-lock:'+target.ownerId);channel.postMessage({locked:true});channel.close();}return await this.unlock(target.ownerId,held,storage,keys);
+    }finally{old.lock();held.fill(0);raw?.fill(0);bytes?.fill(0);}
+  }
   lock(){this.#closed=true;this.vault.lock();this.#keys=null;}
   async ensureDurableKeys(){
     this.requireOpen();const stored=await this.#keyStorage.get(this.ownerId);this.requireOpen();
@@ -140,6 +159,7 @@ export class UnlockedWebDevice {
     finally{record.value.fill(0);}
   }
 }
+export async function protectedDeviceHash(bundle:ProtectedBundle){const bytes=encoder.encode(JSON.stringify(bundle));try{return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)));}finally{bytes.fill(0);}}
 
 /** Background tabs, account switches and cross-tab lock never retain an unlocked capability. */
 export function bindWebVaultLifecycle(device:UnlockedWebDevice,target:Window=window){

@@ -75,6 +75,7 @@ export type VaultScope = { ownerId: string; scopeId: string; deviceId: string; g
   securityEpoch: number; keyId: string; signingKey: CryptoKey; roots: ReadonlyMap<string, CryptoKey>;
   trustedSigner: (deviceId: string) => CryptoKey | undefined };
 export type LocalWrite = { domain: E2eeContext['domain']; objectId: string; value: Uint8Array; expected: number | null };
+export type E2eeDeviceReadVault=Pick<UnlockedE2eeVault,'read'|'listLocal'|'localIdentity'|'assertUnlocked'|'listMigrationOriginalParts'|'listMigrationHistoryCopies'|'listMigrationStateRoles'|'listProductJobHistory'|'listProductControlHistory'|'listMigrationPlanOutputs'>;
 export function localRecordKey(scope: Pick<VaultScope,'ownerId'|'scopeId'>, domain: E2eeContext['domain'], objectId: string) {
   assertTechnical(scope.ownerId); assertTechnical(scope.scopeId); assertTechnical(objectId);
   // Length encoding avoids collisions when IDs contain ':', '/' or other technical delimiters.

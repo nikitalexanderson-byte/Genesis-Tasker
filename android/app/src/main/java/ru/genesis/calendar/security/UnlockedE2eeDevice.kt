@@ -10,11 +10,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** Portable format matches the browser device bundle. Hardware presence protects
  * the Android copy; independent recovery never grants an account session. */
 class UnlockedE2eeDevice private constructor(override val ownerId:String,private val bundle:JSONObject,
-    private var privateKeys:E2eeKeys.DeviceKeys?,override val vault:UnlockedE2eeVault,private val persistence:E2eeDeviceVault,private val storage:E2eeSqliteStorage) : E2eeScopeDevice {
+    private var privateKeys:E2eeKeys.DeviceKeys?,override val vault:UnlockedE2eeVault,private val persistence:E2eeDeviceVault,private val storage:E2eeSqliteStorage) : E2eeScopeDevice, E2eeDeviceReadView {
     override val deviceId:String=bundle.getString("deviceId")
-    val authorityPin:JSONObject get()=JSONObject(bundle.getJSONObject("authorityPin").toString())
+    override val authorityPin:JSONObject get()=JSONObject(bundle.getJSONObject("authorityPin").toString())
     private val closed=AtomicBoolean(false)
-    override fun requireOpen(){check(!closed.get()){"E2EE_UNLOCK_REQUIRED"};vault.requireOpen()}
+    override fun requireOpen(){check(!closed.get()){"E2EE_UNLOCK_REQUIRED"};persistence.requireCurrentSlot();vault.requireOpen()}
+    override fun readSavedDirectory(scopeId:String,onVerified:((E2eeDirectory.Verified)->Unit)?)=savedDirectory(scopeId,onVerified)
+    override fun readKeys():E2eeKeys.ReadKeys{requireOpen();val keys=requireNotNull(privateKeys);return E2eeKeys.ReadKeys(E2eeKeys.publicKeys(keys),keys.receiving,keys.signing.public)}
     override fun keys():E2eeKeys.DeviceKeys {requireOpen();return requireNotNull(privateKeys)}
     fun lock(){if(!closed.compareAndSet(false,true))return;vault.lock();privateKeys=null;bundle.remove("localRoot");bundle.remove("deviceKeys");storage.close()}
     override fun ensureDurableKeys() {
@@ -98,6 +100,14 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
             try{current();persistence.save(bytes,create=true);current();return openDevice(context,owner,allowCreateRecords=true).also{current()}}finally{bytes.fill(0);root.fill(0);bundle.remove("localRoot");bundle.remove("deviceKeys")}
         }
         fun unlock(context:Context,ownerId:String):UnlockedE2eeDevice = openDevice(context,ownerId,false)
+        internal fun replaceRevoked(context:Context,compared:E2eeComparedPersonalDeviceTarget,events:JSONArray,current:()->Unit):UnlockedE2eeDevice{
+            current();val target=compared.target();val owner=target.getString("ownerId");val old=unlock(context,owner)
+            try{current();check(E2eeProductJson.same(old.authorityPin,target.getJSONObject("authority"))){"E2EE_AUTHORITY_CHANGED"};val prior=old.savedDirectory(target.getString("scopeId"));val directory=E2eeDirectory.verify(owner,target.getString("scopeId"),old.authorityPin,events,prior?.checkpoint);current();val revoked=directory.devices[old.deviceId];val keys=E2eeKeys.publicKeys(old.keys())
+                check(directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"&&revoked!=null&&revoked.revoked&&revoked.userId==owner&&revoked.signingKey==keys.get("signingKey")&&revoked.receivingKey==keys.get("receivingKey")){"E2EE_REVOKED_REPLACEMENT_REQUIRED"};old.ensureDurableKeys();current()
+                E2eeDeviceVault(context,owner).replaceIdentity(old.deviceId,current){val nextKeys=E2eeKeys.generateDeviceKeys();val root=E2eeKeys.freshSecret();val id=UUID.randomUUID().toString();try{JSONObject().put("protocol",1).put("ownerId",owner).put("deviceId",id).put("localKeyId","local:$id").put("localRoot",E2eeEnvelope.encode(root)).put("deviceKeys",E2eeKeys.exportPrivateKeys(nextKeys)).put("authorityPin",target.get("authority")).toString().toByteArray(Charsets.UTF_8)}finally{root.fill(0)}}
+                current();return unlock(context,owner).also{current()}
+            }finally{old.lock()}
+        }
         private fun openDevice(context:Context,ownerId:String,allowCreateRecords:Boolean):UnlockedE2eeDevice {
             val persistence=E2eeDeviceVault(context,ownerId);val bytes=persistence.unlock()
             try {

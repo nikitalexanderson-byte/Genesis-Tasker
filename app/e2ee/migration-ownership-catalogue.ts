@@ -1,7 +1,7 @@
 import {sha256} from '@noble/hashes/sha2.js';
 import {canonicalE2eeValue,type SignedE2eeCommand,type WireValue} from './commands.ts';
 import {encodeE2eeBytes,type E2eeContext} from './envelope.ts';
-import {assertTechnical,exactKeys,openRoot,publicDeviceKeys} from './keys.ts';
+import {assertTechnical,exactKeys,openRoot} from './keys.ts';
 import {signingPublicKey} from './directory.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {requiredPrivatePaths} from './private-paths.ts';
@@ -17,7 +17,7 @@ import {inspectDeviceControlCustody} from './device-control-custody.ts';
 import {inspectRetainedProductCustody} from './retained-product-custody.ts';
 import {retainedMigrationValueCollector} from './retained-migration-values.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
-import type {UnlockedE2eeVault} from './storage.ts';
+import type {UnlockedE2eeVault,E2eeDeviceReadVault} from './storage.ts';
 import type {MigrationState} from './migration.ts';
 
 type Identity=Readonly<{ownerId:string;scopeId:string;deviceId:string}>;
@@ -26,7 +26,8 @@ type Frame=RetainedMigrationFrame;
 type Scope=Readonly<{target:SourceStageTarget;resourceId:string;stateId:string;root:MigrationState|null;ancestors:readonly MigrationState[]}>;
 type Role=Readonly<{scopeId:string;role:string}>;
 export type MigrationOwnershipUsage=Readonly<{bytes:number;records:number;metadataBytes:number;scopes:number}>;
-type Options={device:UnlockedWebDevice;decode:(bytes:Uint8Array)=>MigrationState;assertCurrent:()=>void;
+export type MigrationReadDevice=Pick<UnlockedWebDevice,'ownerId'|'deviceId'|'authorityPin'|'requireOpen'|'savedDirectory'|'readKeys'>&{vault:E2eeDeviceReadVault};
+type Options={device:MigrationReadDevice;decode:(bytes:Uint8Array)=>MigrationState;assertCurrent:()=>void;
  capacity:Readonly<{maximumBytes:number;maximumParts:number;maximumMetadataBytes:number}>;
  originalCapacity:RemoteOriginalReadOptions['capacity'];admit:(usage:MigrationOwnershipUsage)=>Promise<void>};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true});
@@ -166,8 +167,8 @@ export async function openMigrationOwnershipCatalogue(source:Options){
  if(scopes.filter(scope=>scope.root!==null).length!==currentIds.length)invalid();
  const sourceParts=await base.listMigrationOriginalParts(),outputs=await base.listMigrationPlanOutputs(),stateRoles=await base.listMigrationStateRoles(),jobHistory=await base.listProductJobHistory(),controlHistory=await base.listProductControlHistory();current();
  const personal=scopes.filter(scope=>scope.target.kind==='personal'&&scope.target.ownerId===identity.ownerId);
- const selfKeys=await publicDeviceKeys(device.keys());current();
- await inspectRetainedProductCustody({vault,actor:identity,receivingKey:device.keys().receiving.privateKey,selfKeys,assertCurrent:current,outbox:outputs.remote,copies:copyIds,jobHistory,controlHistory,
+ const readKeys=await device.readKeys();current();const selfKeys=readKeys.publicKeys;
+ await inspectRetainedProductCustody({vault,actor:identity,receivingKey:readKeys.receivingKey,selfKeys,assertCurrent:current,outbox:outputs.remote,copies:copyIds,jobHistory,controlHistory,
   personalScopeId:personal.length===1?personal[0].target.scopeId:null,claimed:(domain,id)=>roles.has(key(domain,id)),claim,
   directory:async(scopeId,select)=>{
    const known=savedDirectories.get(scopeId);if(!known)invalid();let found:import('./directory.ts').VerifiedDirectory|undefined;
@@ -201,7 +202,7 @@ export async function openMigrationOwnershipCatalogue(source:Options){
  await options.admit(Object.freeze({bytes:totalBytes,records:rows.size,metadataBytes,scopes:scopes.length}));current();
  async function legacy(scope:Scope,state:Extract<MigrationState,{protocol:1|2}>,frame:Frame){
   const own=frame.own;if(!own)invalid();
-  const root=await openRoot(own.capsule,device.keys().receiving.privateKey,{ownerId:scope.target.ownerId,scopeId:scope.target.scopeId,cryptoEpoch:frame.cryptoEpoch,keyId:frame.keyId,recipientId:identity.deviceId});current();
+  const root=await openRoot(own.capsule,readKeys.receivingKey,{ownerId:scope.target.ownerId,scopeId:scope.target.scopeId,cryptoEpoch:frame.cryptoEpoch,keyId:frame.keyId,recipientId:identity.deviceId});current();
   await asSource(scope.target.scopeId,()=>inspectRetainedLegacyPlan({vault,target:scope.target,state,frame,root,assertCurrent:current}));current();
   values.add({scope:{...scope.target,resourceId:scope.resourceId},migrationId:state.migrationId,attemptId:state.migrationId,root,signer:await signingPublicKey(own.signingKey),plan:state.plan,logical:state.logical,local:state.local??[]});current();
  }
@@ -236,7 +237,7 @@ export async function openMigrationOwnershipCatalogue(source:Options){
   let adoptedPlanFound=state.protocol!==5;
   if(state.ownership.protocol===3)for(const plan of state.ownership.plans){
    if(plan.context.cryptoEpoch!==frame.cryptoEpoch||plan.context.keyId!==frame.keyId||plan.context.securityEpoch!==frame.securityEpoch||!state.sourceHash)invalid();
-   const root=await openRoot(own.capsule,device.keys().receiving.privateKey,{ownerId:scope.target.ownerId,scopeId:scope.target.scopeId,cryptoEpoch:frame.cryptoEpoch,keyId:frame.keyId,recipientId:identity.deviceId});current();
+   const root=await openRoot(own.capsule,readKeys.receivingKey,{ownerId:scope.target.ownerId,scopeId:scope.target.scopeId,cryptoEpoch:frame.cryptoEpoch,keyId:frame.keyId,recipientId:identity.deviceId});current();
    const inspected=await asSource(scope.target.scopeId,()=>inspectMigrationContentPlanAttempt({vault,root,signer,context:plan.context,target:scope.target,migrationId:state.migrationId,sourceHash:state.sourceHash!,paths,assertCurrent:current,attemptId:plan.attemptId,reference:plan.completion}));current();
    for(const id of inspected.metadataIds)claim('local-snapshot',id,scope.target.scopeId,'content-plan');
    const retained=await asSource(scope.target.scopeId,()=>retainedMigrationPlanValues({vault,root,signer,context:plan.context,target:scope.target,migrationId:state.migrationId,sourceHash:state.sourceHash!,paths,assertCurrent:current,attemptId:plan.attemptId,reference:plan.completion}));current();

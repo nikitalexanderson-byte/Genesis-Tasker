@@ -1,5 +1,16 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: explicit revoked-device replacement and historical reader
+
+Separate append-only web identities/native hardware slots retain original roots,
+records, queues and recovery containers. Only a verified signed revocation and
+compared personal target admit fresh candidate keys; ordinary approval still
+controls enrollment. Historical reader imports no signing private key, uses the
+typed ownership catalogue and exports semantic content with a separate backup key.
+Both locked interfaces are connected; native uses fresh credentials and ciphertext
+SAF handoff. No compiler/tests/build/review. Existing bounded archive limits remain;
+very-wide and background integration are still pending, coverage9/20 unchanged.
+
 ## 23 November: typed shared record restore (source-only)
 
 Web/native backup interfaces use a common retained source/review/consent journal,

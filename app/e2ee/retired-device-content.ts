@@ -1,0 +1,26 @@
+import {IndexedDbDeviceKeyStorage} from './device-vault.ts';
+import {IndexedDbE2eeStorage,UnlockedE2eeVault,type E2eeDeviceReadVault} from './storage.ts';
+import {assertTechnical,exactKeys,openBundle,importDeviceReadKeys} from './keys.ts';
+import {decodeE2eeBytes,encodeE2eeBytes,importE2eeRoot} from './envelope.ts';
+import {verifyDeviceDirectory} from './directory.ts';
+import {openReadOnlyDeviceRetainedMigrationHistory} from './migration.ts';
+import {admitE2eeStorage,E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
+import type {MigrationReadDevice} from './migration-ownership-catalogue.ts';
+import {captureRetiredContentArchive} from './retired-content-archive.ts';
+
+/** No historical signing identity, storage mutation, server transport or
+ * enrollment capability escapes this function. Typed custody still owns every
+ * discovered role; raw storage enumeration is not treated as user content. */
+export async function openRetiredDeviceContent(ownerId:string,serial:number,secret:Uint8Array,guard:()=>void){
+ assertTechnical(ownerId);if(!Number.isSafeInteger(serial)||serial<1)throw new Error('E2EE_RESTORE_CONTENT_INVALID');const keys=new IndexedDbDeviceKeyStorage(),storage=new IndexedDbE2eeStorage(),records=await keys.history(ownerId);guard();if(serial>=records.length)throw new Error('E2EE_RETIRED_DEVICE_REQUIRED');
+ const held=new Uint8Array(secret);let bytes:Uint8Array|undefined,raw:Uint8Array|undefined,vault:UnlockedE2eeVault|undefined,closed=false,readKeys:Awaited<ReturnType<typeof importDeviceReadKeys>>|null=null;
+ const current=()=>{guard();if(closed)throw new Error('E2EE_UNLOCK_REQUIRED');vault?.assertUnlocked();},close=()=>{closed=true;vault?.lock();readKeys=null;};
+ try{current();bytes=await openBundle(ownerId,'device-vault',held,records[serial-1].bundle);current();const saved=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));exactKeys(saved,['protocol','ownerId','deviceId','localKeyId','localRoot','deviceKeys','authorityPin',...(saved.protocol===2?['previous']:[])]);if(![1,2].includes(saved.protocol as number)||saved.ownerId!==ownerId)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');assertTechnical(saved.deviceId);if(saved.localKeyId!=='local:'+saved.deviceId)throw new Error('E2EE_CORRUPT_DEVICE_VAULT');exactKeys(saved.deviceKeys,['signingKey','receivingKey','signingPrivate','receivingPrivate']);delete saved.deviceKeys.signingPrivate;
+  readKeys=await importDeviceReadKeys(saved.deviceKeys);delete saved.deviceKeys;current();raw=decodeE2eeBytes(saved.localRoot,32);delete saved.localRoot;const root=await importE2eeRoot(raw);raw.fill(0);current();
+  vault=new UnlockedE2eeVault({get:key=>storage.get(key),list:prefix=>storage.list(prefix),commit:async()=>{throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');}},{ownerId,scopeId:'device:'+saved.deviceId,deviceId:saved.deviceId,generation:1,cryptoEpoch:1,securityEpoch:1,keyId:saved.localKeyId as string,signingKey:readKeys.signer,roots:new Map([[saved.localKeyId as string,root]]),trustedSigner:id=>id===saved.deviceId?readKeys!.signer:undefined});
+  const readVault:E2eeDeviceReadVault={read:(domain,id)=>{current();return vault!.read(domain,id);},listLocal:(domain,prefix)=>{current();return vault!.listLocal(domain,prefix);},localIdentity:()=>vault!.localIdentity(),assertUnlocked:current,listMigrationOriginalParts:()=>vault!.listMigrationOriginalParts(),listMigrationHistoryCopies:()=>vault!.listMigrationHistoryCopies(),listMigrationStateRoles:()=>vault!.listMigrationStateRoles(),listProductJobHistory:()=>vault!.listProductJobHistory(),listProductControlHistory:()=>vault!.listProductControlHistory(),listMigrationPlanOutputs:()=>vault!.listMigrationPlanOutputs()};
+  const device:MigrationReadDevice={ownerId,deviceId:saved.deviceId,authorityPin:saved.authorityPin as MigrationReadDevice['authorityPin'],vault:Object.freeze(readVault),requireOpen:current,readKeys:async()=>{current();return{publicKeys:readKeys!.publicKeys,receivingKey:readKeys!.receivingKey};},savedDirectory:async(scopeId,onVerified)=>{current();assertTechnical(scopeId);const id='directory-'+encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(scopeId)))),row=await readVault.read('key-check',id);current();if(!row)return null;try{const value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(row.value));return await verifyDeviceDirectory(value.ownerId,scopeId,value.pin,value.events,value.checkpoint,onVerified);}finally{row.value.fill(0);}}};
+  const catalogue=await openReadOnlyDeviceRetainedMigrationHistory(device,current,async()=>{current();const counts=await storage.providerCounts(),estimate=await navigator.storage.estimate();current();admitE2eeStorage({...counts,usageBytes:estimate.usage!,quotaBytes:estimate.quota!},{records:0,keyRecords:0,writeBytes:0,rewriteBytes:0},E2EE_PROVIDER_STORAGE_BUDGET);});current();
+  return Object.freeze({deviceId:device.deviceId,contents:catalogue.contents,readContent:catalogue.readContent,assertUnchanged:catalogue.assertUnchanged,capture:()=>captureRetiredContentArchive(ownerId,vault!,catalogue,current),close(){catalogue.close();close();}});
+ }catch(error){close();throw error;}finally{held.fill(0);bytes?.fill(0);raw?.fill(0);}
+}

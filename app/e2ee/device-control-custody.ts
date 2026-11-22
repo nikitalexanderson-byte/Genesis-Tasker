@@ -18,11 +18,11 @@ import {E2EE_CHUNK_BYTES} from './files.ts';
 
 /** Read-only typed retention. No marker/receipt is imported as enrollment,
  * membership, retry, restored device keys or an executable archive command. */
-export async function inspectDeviceControlCustody(options:{device:UnlockedWebDevice;vault:Pick<UnlockedE2eeVault,'read'|'listLocal'>;personalScopeId:string|null;current:()=>void;claim:(domain:E2eeContext['domain'],id:string,scopeId:string,role:string)=>void}){
+export async function inspectDeviceControlCustody(options:{device:Pick<UnlockedWebDevice,'ownerId'|'authorityPin'>;vault:Pick<UnlockedE2eeVault,'read'|'listLocal'>;personalScopeId:string|null;current:()=>void;claim:(domain:E2eeContext['domain'],id:string,scopeId:string,role:string)=>void}){
  const {device,vault,current,claim}=options,encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
  async function document<T>(id:string,validate:(value:unknown)=>T,scope:(value:T)=>string){
   const ids=new Set<string>(),reader={read:async(domain:E2eeContext['domain'],objectId:string)=>{const value=await vault.read(domain,objectId);current();if(value)ids.add(objectId);return value;}};
-  const opened=await new E2eeDeviceDocument(device,id,validate,current,reader).load();current();if(!opened)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
+  const opened=await new E2eeDeviceDocument(null,id,validate,current,reader).load();current();if(!opened)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
   const scopeId=scope(opened.value),row=await vault.read('draft',id);current();if(!row||row.serial!==opened.serial)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
   try{const descriptor=parseLegacyMigrationJson(decoder.decode(row.value),'E2EE_PRIVATE_DOCUMENT_CORRUPT',4*1024*1024) as Record<string,unknown>;
    if(descriptor.format==='genesis-device-document-v1'){

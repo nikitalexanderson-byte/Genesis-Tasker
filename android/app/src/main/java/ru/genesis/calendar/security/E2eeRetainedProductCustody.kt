@@ -8,7 +8,7 @@ import java.security.Signature
 /** Explicit read-only decoders for the normal product outboxes encountered
  * while migrating another scope. There is no transport or command executor. */
 internal object E2eeRetainedProductCustody {
-    class Options(val device:UnlockedE2eeDevice,val vault:E2eeSourceReadVault,val inventory:E2eePrivatePaths,val outbox:List<String>,val copies:List<String>,
+    class Options(val device:E2eeDeviceReadView,val vault:E2eeSourceReadVault,val inventory:E2eePrivatePaths,val outbox:List<String>,val copies:List<String>,
         val jobHistory:List<String>,val controlHistory:List<String>,val personalScopeId:String?,val current:()->Unit,
         val claimed:(String,String)->Boolean,val claim:(String,String,String,String)->Unit,
         val directory:(String,(E2eeDirectory.Verified)->Boolean)->E2eeDirectory.Verified)
@@ -53,14 +53,14 @@ internal object E2eeRetainedProductCustody {
             val capsules=rows(payload.getJSONArray("capsules"));if(changes.any{it.isNull("role")}||capsules.size!=changes.size)invalid();val recipients=mutableSetOf<String>()
             for(entry in capsules){E2eeKeys.exact(entry,setOf("deviceId","capsule"));val id=E2eeKeys.technical(entry.getString("deviceId"));if(!recipients.add(id)||changes.none{it.get("deviceId")==id})invalid();capsule(entry.getJSONObject("capsule"))}
             capsule(payload.getJSONObject("recoveryCapsule"));val own=capsules.singleOrNull{it.get("deviceId")==actor.deviceId}?:invalid()
-            E2eeKeys.openRoot(own.getJSONObject("capsule"),device.keys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,number(payload,"cryptoEpoch",1),payload.getString("keyId"),actor.deviceId));current();return checked
+            E2eeKeys.openRoot(own.getJSONObject("capsule"),device.readKeys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,number(payload,"cryptoEpoch",1),payload.getString("keyId"),actor.deviceId));current();return checked
         }
         private fun group(id:String):Group {
             proofs[id]?.let{return it};val names=groups[id]?.sortedBy{it.substringAfterLast(':').toInt()}?:invalid();if(names.isEmpty()||names.withIndex().any{it.value!="$id:cipher:${it.index}"})invalid()
             val headers=names.map{name->val envelope=E2eeEnvelope.Envelope.fromJson(metadata("outbox",name,true));Header(name,envelope.context.toJson(),E2eeEnvelope.payloadHash(envelope))};val last=headers.last();val context=last.context
             val frame=options.directory(context.getString("scopeId")){it.cryptoEpoch==number(context,"cryptoEpoch",1)&&it.securityEpoch==number(context,"securityEpoch",1)&&it.keyId==context.get("keyId")&&it.generation==number(context,"dataGeneration",1)};current()
             val own=frame.devices[actor.deviceId]?:invalid();if(own.userId!=actor.ownerId||context.get("ownerId")!=frame.ownerId||context.get("deviceId")!=actor.deviceId||number(context,"writerProtocol",1)!=9L||number(context,"schemaVersion",1)!=1L||options.inventory.required(frame.kind).none{context.get("domain") in it.domains})invalid()
-            val signer=E2eeDirectory.contentSigningKey(frame,context);val root=E2eeKeys.openRoot(own.capsule,device.keys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,frame.cryptoEpoch,frame.keyId,actor.deviceId));current()
+            val signer=E2eeDirectory.contentSigningKey(frame,context);val root=E2eeKeys.openRoot(own.capsule,device.readKeys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,frame.cryptoEpoch,frame.keyId,actor.deviceId));current()
             val byId=mutableMapOf<String,Header>();val used=mutableSetOf<String>()
             for(header in headers){val c=header.context;if(listOf("ownerId","scopeId","deviceId","cryptoEpoch","securityEpoch","keyId","dataGeneration","writerProtocol","schemaVersion").any{c.get(it)!=context.get(it)}||header!==last&&(c.get("domain")!="attachment"||number(c,"revision",1)!=1L)||byId.put(c.getString("domain")+"\u0000"+c.getString("objectId"),header)!=null)invalid()}
             fun load(header:Header):E2eeEnvelope.Envelope {val envelope=E2eeEnvelope.Envelope.fromJson(metadata("outbox",header.id,true));if(!same(envelope.context.toJson(),header.context)||E2eeEnvelope.payloadHash(envelope)!=header.hash)invalid();claim("outbox",header.id,frame.scopeId,"product-cipher");current();return envelope}
@@ -108,7 +108,7 @@ internal object E2eeRetainedProductCustody {
                     if(kind !in setOf("space","project")||(kind=="project")!=original.has("topology")||action=="resource-create-resolve"&&kind!="project")invalid()
                     if(kind=="project")E2eeProjectCreationContract.topology(original.getJSONObject("topology"),actor.ownerId)
                     if(child.get("action")!="bootstrap"||child.get("ownerId")!=actor.ownerId||child.get("deviceId")!=actor.deviceId||number(child,"expectedRevision")!=0L||child.get("checkpointHash")!="genesis"||number(child,"securityEpoch",1)!=1L)invalid()
-                    val fresh=E2eeDirectory.verify(actor.ownerId,child.getString("scopeId"),frame.recoveryKit.getJSONObject("authority"),JSONArray().put(initial));current();val own=fresh.devices[actor.deviceId]?:invalid();val keys=E2eeKeys.publicKeys(device.keys())
+                    val fresh=E2eeDirectory.verify(actor.ownerId,child.getString("scopeId"),frame.recoveryKit.getJSONObject("authority"),JSONArray().put(initial));current();val own=fresh.devices[actor.deviceId]?:invalid();val keys=device.readKeys().publicKeys
                     if(fresh.kind!=kind||fresh.generation!=1L||own.signingKey!=keys.get("signingKey")||own.receivingKey!=keys.get("receivingKey"))invalid()
                 }
                 "product-commit"->{E2eeKeys.exact(payload,setOf("intentId","operations"));val operations=rows(payload.getJSONArray("operations"));if(operations.size !in 1..100)invalid();operations.forEach{E2eeProductContract.operation(it)}}
@@ -132,12 +132,12 @@ internal object E2eeRetainedProductCustody {
                 base.startsWith("aurora-manifest:")->{E2eeKeys.exact(payload,setOf("id","methodVersion","objectId","payloadHash"));E2eeKeys.technical(payload.getString("id"));E2eeKeys.technical(payload.getString("objectId"));E2eeEnvelope.decode(payload.getString("payloadHash"),32);payload.getString("methodVersion");if(base!="aurora-manifest:"+payload.getString("id")||command.get("action")!="aurora-result"||command.get("deviceId")!=actor.deviceId)invalid()}
                 base.startsWith("enrollment:")->{
                     if(base!="enrollment:"+command.getString("scopeId")||command.get("action")!="enroll"||command.get("deviceId")!="recovery")invalid();E2eeKeys.exact(payload,setOf("challenge","capsule","historyCapsules","selfProof"));val challenge=payload.getJSONObject("challenge")
-                    E2eeKeys.exact(challenge,setOf("id","scopeId","userId","role","sessionHash","deviceId","signingKey","receivingKey","nonce","expiresAt"));val ownKeys=E2eeKeys.publicKeys(device.keys())
+                    E2eeKeys.exact(challenge,setOf("id","scopeId","userId","role","sessionHash","deviceId","signingKey","receivingKey","nonce","expiresAt"));val ownKeys=device.readKeys().publicKeys
                     if(challenge.get("scopeId")!=command.get("scopeId")||challenge.get("userId")!=actor.ownerId||challenge.get("deviceId")!=actor.deviceId||challenge.get("signingKey")!=ownKeys.get("signingKey")||challenge.get("receivingKey")!=ownKeys.get("receivingKey")||challenge.get("role") !in setOf("owner","writer","commenter","reader"))invalid();number(challenge,"expiresAt",1);if(!Regex("[a-f0-9]{64}").matches(challenge.getString("sessionHash")))invalid()
                     val prefix="GENESIS-E2EE-ENROLLMENT\u0000v1\u0000".toByteArray(Charsets.UTF_8);val body=E2eeCommands.canonical(challenge);val proof=prefix+body
-                    try{val signature=E2eeEnvelope.decode(payload.getString("selfProof"),64);val verifier=Signature.getInstance("SHA256withECDSA");verifier.initVerify(device.keys().signing.public);verifier.update(proof);if(!verifier.verify(E2eeEnvelope.p1363ToDer(signature)))invalid();current()}finally{body.fill(0);proof.fill(0)}
-                    E2eeKeys.openRoot(payload.getJSONObject("capsule"),device.keys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,frame.cryptoEpoch,frame.keyId,actor.deviceId));current()
-                    for(history in rows(payload.getJSONArray("historyCapsules"))){E2eeKeys.exact(history,setOf("cryptoEpoch","keyId","capsule"));val epoch=number(history,"cryptoEpoch",1,frame.cryptoEpoch-1);E2eeKeys.technical(history.getString("keyId"));E2eeKeys.openRoot(history.getJSONObject("capsule"),device.keys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,epoch,history.getString("keyId"),actor.deviceId));current()}
+                    try{val signature=E2eeEnvelope.decode(payload.getString("selfProof"),64);val verifier=Signature.getInstance("SHA256withECDSA");verifier.initVerify(device.readKeys().signer);verifier.update(proof);if(!verifier.verify(E2eeEnvelope.p1363ToDer(signature)))invalid();current()}finally{body.fill(0);proof.fill(0)}
+                    E2eeKeys.openRoot(payload.getJSONObject("capsule"),device.readKeys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,frame.cryptoEpoch,frame.keyId,actor.deviceId));current()
+                    for(history in rows(payload.getJSONArray("historyCapsules"))){E2eeKeys.exact(history,setOf("cryptoEpoch","keyId","capsule"));val epoch=number(history,"cryptoEpoch",1,frame.cryptoEpoch-1);E2eeKeys.technical(history.getString("keyId"));E2eeKeys.openRoot(history.getJSONObject("capsule"),device.readKeys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,epoch,history.getString("keyId"),actor.deviceId));current()}
                 }
                 else->invalid()
             };claim(domain,id,frame.scopeId,"product-control")

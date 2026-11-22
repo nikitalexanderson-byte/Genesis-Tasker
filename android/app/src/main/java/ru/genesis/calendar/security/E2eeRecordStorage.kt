@@ -114,9 +114,9 @@ class E2eeSqliteStorage(context: Context, allowCreate: Boolean = false) : E2eeRe
 }
 
 /** Memory capability with the same record/context/CAS format as the web vault. */
-class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : E2eeSourceReadVault {
+class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : E2eeDeviceReadVault {
     class Scope(val ownerId:String,val scopeId:String,val deviceId:String,val generation:Long,val cryptoEpoch:Long,val securityEpoch:Long,
-        val keyId:String,val signingKey:PrivateKey,val roots:Map<String,SecretKey>,val trustedSigner:(String)->PublicKey?)
+        val keyId:String,val signingKey:PrivateKey?,val roots:Map<String,SecretKey>,val trustedSigner:(String)->PublicKey?)
     class Write(val domain:String,val objectId:String,val bytes:ByteArray,val expected:Long?)
     class Opened(val serial:Long,val bytes:ByteArray) { override fun toString()="UnlockedE2eeVault.Opened([redacted])" }
     private val scope = AtomicReference<Scope?>(value)
@@ -136,12 +136,12 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
     }
     /** Dedicated locator role; the public read-only source interfaces retain
      * their narrow prefix rules and do not gain a general empty-prefix read. */
-    internal fun listMigrationOriginalParts():List<String> = localIds("local-snapshot"){it.contains(":source:")||it.endsWith(":source")}
-    internal fun listMigrationHistoryCopies():List<String> = localIds("local-snapshot"){it.endsWith(":archive")||it.contains(":archive:")||it.endsWith(":cancel")||it.contains(":cancel:")}
-    internal fun listMigrationStateRoles():List<String> = localIds("local-snapshot"){it.contains(":preparation")||it.contains(":adoption")}
-    internal fun listProductJobHistory():List<String> = localIds("local-snapshot"){it.contains(":rebase:")||it.contains(":completed:")}
-    internal fun listProductControlHistory():List<String> = localIds("local-snapshot"){it.contains(":attempt:")}
-    internal fun listMigrationPlanOutputs():Pair<List<String>,List<String>> =
+    override fun listMigrationOriginalParts():List<String> = localIds("local-snapshot"){it.contains(":source:")||it.endsWith(":source")}
+    override fun listMigrationHistoryCopies():List<String> = localIds("local-snapshot"){it.endsWith(":archive")||it.contains(":archive:")||it.endsWith(":cancel")||it.contains(":cancel:")}
+    override fun listMigrationStateRoles():List<String> = localIds("local-snapshot"){it.contains(":preparation")||it.contains(":adoption")}
+    override fun listProductJobHistory():List<String> = localIds("local-snapshot"){it.contains(":rebase:")||it.contains(":completed:")}
+    override fun listProductControlHistory():List<String> = localIds("local-snapshot"){it.contains(":attempt:")}
+    override fun listMigrationPlanOutputs():Pair<List<String>,List<String>> =
         localIds("outbox"){true} to localIds("local-snapshot"){it.contains(":private:")||it.endsWith(":private")}
     private fun localIds(domain:String,include:(String)->Boolean):List<String> {
         E2eeKeys.technical(domain)
@@ -178,7 +178,7 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
     }
     fun write(changes:List<Write>,assertCurrent:()->Unit={}) {
         assertCurrent()
-        val captured=lifecycle.get();val current=requireOpen();val root=current.roots[current.keyId]?:throw IllegalStateException("E2EE_KEY_UNAVAILABLE")
+        val captured=lifecycle.get();val current=requireOpen();val signer=current.signingKey?:error("E2EE_HISTORY_NOT_EXECUTABLE");val root=current.roots[current.keyId]?:throw IllegalStateException("E2EE_KEY_UNAVAILABLE")
         val requireCurrent={assertCurrent();alive(captured);Unit}
         require(changes.size in 1..10000 && changes.all {it.expected==null||it.expected in 1..9007199254740990L}) { "E2EE_INVALID_LOCAL_BATCH" }
         val copies=changes.map { Write(it.domain,it.objectId,it.bytes.copyOf(),it.expected) }
@@ -189,7 +189,7 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
                     .put("ownerId",current.ownerId).put("scopeId",current.scopeId).put("domain",change.domain).put("objectId",change.objectId)
                     .put("schemaVersion",1).put("dataGeneration",current.generation).put("writerProtocol",9).put("cryptoEpoch",current.cryptoEpoch)
                     .put("securityEpoch",current.securityEpoch).put("revision",serial).put("keyId",current.keyId).put("deviceId",current.deviceId).put("operationId",UUID.randomUUID().toString()))
-                E2eeStorageChange(recordKey(current,change.domain,change.objectId),change.expected,E2eeLocalRecord(serial,E2eeEnvelope.seal(root,current.signingKey,ctx,change.bytes)))
+                E2eeStorageChange(recordKey(current,change.domain,change.objectId),change.expected,E2eeLocalRecord(serial,E2eeEnvelope.seal(root,signer,ctx,change.bytes)))
             }
             requireCurrent();storage.commit(sealed,requireCurrent);requireCurrent()
         } finally {copies.forEach {it.bytes.fill(0)}}

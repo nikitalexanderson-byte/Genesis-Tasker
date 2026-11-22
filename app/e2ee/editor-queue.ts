@@ -20,13 +20,15 @@ const MAX_RETAINED_DRAFTS=1024;
  * of intermediate edits, but preserves their snapshots for explicit recovery.
  */
 export class E2eeEditorQueue {
-  #vault:UnlockedE2eeVault;#client:E2eeScopeClient;#scopeId:string;#domain:E2eeContext['domain'];#objectId:string;#stateId:Promise<string>;
+  #vault:UnlockedE2eeVault;#client:E2eeScopeClient|null;#scopeId:string;#domain:E2eeContext['domain'];#objectId:string;#stateId:Promise<string>;
   #device:Pick<UnlockedWebDevice,'vault'|'ensureDurableKeys'>;
-  constructor(device:Pick<UnlockedWebDevice,'vault'|'ensureDurableKeys'>,client:E2eeScopeClient,scopeId:string,domain:E2eeContext['domain'],objectId:string){
-    client.assertBinding(device,scopeId);
+  constructor(device:Pick<UnlockedWebDevice,'vault'|'ensureDurableKeys'>,client:E2eeScopeClient|null,scopeId:string,domain:E2eeContext['domain'],objectId:string){
+    if(client)client.assertBinding(device,scopeId);
     [scopeId,domain,objectId].forEach(assertTechnical);this.#device=device;this.#vault=device.vault;this.#client=client;this.#scopeId=scopeId;this.#domain=domain;this.#objectId=objectId;
     this.#stateId=crypto.subtle.digest('SHA-256',encoder.encode(`${scopeId}\0${domain}\0${objectId}`)).then(hash=>`editor:${encodeE2eeBytes(new Uint8Array(hash))}`);
   }
+  #writerClient(){if(!this.#client)throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');return this.#client;}
+  static readOnly(vault:UnlockedE2eeVault,scopeId:string,domain:E2eeContext['domain'],objectId:string){return new E2eeEditorQueue({vault,ensureDurableKeys:async()=>{throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');}},null,scopeId,domain,objectId);}
   async #load(){
     const row=await this.#vault.read('draft',await this.#stateId);if(!row)return null;
     try {
@@ -80,8 +82,8 @@ export class E2eeEditorQueue {
   async reconcile(source:Uint8Array,expectedSerial:number|null,remoteRevision:number,metadata:Metadata={filename:'',mediaType:'application/json'},mode:'merge'|'cache'='merge'){
     const bytes=new Uint8Array(source);metadata={filename:metadata.filename,mediaType:metadata.mediaType};
     try{
-      const job=await this.#client.localJob(this.#domain,this.#objectId);if(job&&!job.complete)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
-      await this.#client.assertVerifiedRevision(this.#domain,this.#objectId,remoteRevision);
+      const job=await this.#writerClient().localJob(this.#domain,this.#objectId);if(job&&!job.complete)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
+      await this.#writerClient().assertVerifiedRevision(this.#domain,this.#objectId,remoteRevision);
       return await this.#stage(bytes,expectedSerial,remoteRevision,metadata,mode);
     }finally{bytes.fill(0);}
   }
@@ -100,7 +102,7 @@ export class E2eeEditorQueue {
         // Every possible upload origin has a durable preparing claim before
         // crypto starts. Coalescing keeps that origin, the current job/review
         // and latest version; older content remains in authenticated pages.
-        const job=await this.#client.localJob(this.#domain,this.#objectId),keep=new Set([previous!.state.latest.id,previous!.state.preparing,previous!.state.review?.originId,job?.originId]);
+        const job=await this.#writerClient().localJob(this.#domain,this.#objectId),keep=new Set([previous!.state.latest.id,previous!.state.preparing,previous!.state.review?.originId,job?.originId]);
         const archived=history.filter(row=>!keep.has(row.id));history=history.filter(row=>keep.has(row.id));pending=pending.filter(id=>keep.has(id));
         if(!archived.length)throw new Error('E2EE_EDITOR_BUSY');
         const id=`editor-history:${crypto.randomUUID()}`,value=encoder.encode(JSON.stringify({protocol:1,scopeId:this.#scopeId,domain:this.#domain,objectId:this.#objectId,previous:historyHead??null,drafts:archived}));
@@ -135,44 +137,44 @@ export class E2eeEditorQueue {
       const saved=await this.#load();if(!saved)throw new Error('E2EE_EDITOR_EMPTY');
       if(saved.state.review){
         const review=saved.state.review,draft=saved.state.history.find(row=>row.id===review.originId);if(!draft)throw new Error('E2EE_CORRUPT_EDITOR');
-        const job=await this.#client.localJob(this.#domain,this.#objectId);
-        if(job?.originId!==review.originId){const bytes=await this.#bytes(draft);try{await this.#client.replaceReviewed(this.#domain,this.#objectId,bytes,review.remoteRevision,review.originId,draft.metadata);}finally{bytes.fill(0);}}
+        const job=await this.#writerClient().localJob(this.#domain,this.#objectId);
+        if(job?.originId!==review.originId){const bytes=await this.#bytes(draft);try{await this.#writerClient().replaceReviewed(this.#domain,this.#objectId,bytes,review.remoteRevision,review.originId,draft.metadata);}finally{bytes.fill(0);}}
         const current=await this.#load();if(!current)throw new Error('E2EE_CORRUPT_EDITOR');
         if(current.state.review?.originId===review.originId){delete current.state.review;delete current.state.preparing;try{await this.#save(current.state,current.serial);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT')throw error;}}continue;
       }
-      const job=await this.#client.localJob(this.#domain,this.#objectId);
+      const job=await this.#writerClient().localJob(this.#domain,this.#objectId);
       if(job&&!job.complete){
         if(!job.originId||!saved.state.pending.includes(job.originId))throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
-        const revision=await this.#client.flush(this.#domain,this.#objectId,job.originId);await this.#confirm(job.originId,revision);continue;
+        const revision=await this.#writerClient().flush(this.#domain,this.#objectId,job.originId);await this.#confirm(job.originId,revision);continue;
       }
       if(job?.complete&&job.originId&&saved.state.pending.includes(job.originId)){await this.#confirm(job.originId,job.expectedRevision+1);continue;}
       const selectedId=saved.state.preparing??saved.state.pending.at(-1);if(!selectedId)return saved.state.remoteRevision;
       const selected=saved.state.history.find(draft=>draft.id===selectedId);if(!selected)throw new Error('E2EE_CORRUPT_EDITOR');
       if(!saved.state.preparing){saved.state.preparing=selectedId;try{await this.#save(saved.state,saved.serial);}catch(error){if(error instanceof Error&&error.message==='E2EE_LOCAL_CONFLICT')continue;throw error;}}
       const bytes=await this.#bytes(selected);
-      try{await this.#client.prepare(this.#domain,this.#objectId,bytes,saved.state.remoteRevision,selected.metadata,selected.id);}
+      try{await this.#writerClient().prepare(this.#domain,this.#objectId,bytes,saved.state.remoteRevision,selected.metadata,selected.id);}
       finally{bytes.fill(0);}
     }
     throw new Error('E2EE_EDITOR_BUSY');
   }
   async recoverAcknowledgement(){
     const saved=await this.#load();if(!saved?.state.pending.length)return;
-    const receipt=await this.#client.recoverReceipt(this.#domain,this.#objectId);
+    const receipt=await this.#writerClient().recoverReceipt(this.#domain,this.#objectId);
     if(receipt&&saved.state.pending.includes(receipt.originId))await this.#confirm(receipt.originId,receipt.revision);
   }
   /** Explicit reviewed merge. Its intent is durable before cancel/replace I/O;
    * retry cannot send the superseded old packet after a process interruption. */
   async reviewConflict(source:Uint8Array,expectedSerial:number,remoteRevision:number,metadata:Metadata={filename:'',mediaType:'application/json'}){
-    const bytes=new Uint8Array(source);try{await this.#client.assertVerifiedRevision(this.#domain,this.#objectId,remoteRevision);
+    const bytes=new Uint8Array(source);try{await this.#writerClient().assertVerifiedRevision(this.#domain,this.#objectId,remoteRevision);
       return await this.#stage(bytes,expectedSerial,remoteRevision,metadata,'review');}finally{bytes.fill(0);}
   }
   /** Epoch/concurrency conflicts are explicit; every later local edit stays queued. */
   async rebasePending(expectedRemoteRevision:number){
-    const job=await this.#client.localJob(this.#domain,this.#objectId),saved=await this.#load();
+    const job=await this.#writerClient().localJob(this.#domain,this.#objectId),saved=await this.#load();
     if(!job?.originId||!saved?.state.pending.includes(job.originId))throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
-    const outcome=await this.#client.rebase(this.#domain,this.#objectId,expectedRemoteRevision,undefined,job.originId);
+    const outcome=await this.#writerClient().rebase(this.#domain,this.#objectId,expectedRemoteRevision,undefined,job.originId);
     if(outcome==='already-confirmed'){
-      const confirmed=await this.#client.localJob(this.#domain,this.#objectId);
+      const confirmed=await this.#writerClient().localJob(this.#domain,this.#objectId);
       if(!confirmed?.complete||confirmed.originId!==job.originId)throw new Error('E2EE_PENDING_EDITOR_MISMATCH');
       await this.#confirm(job.originId,confirmed.expectedRevision+1);
     }

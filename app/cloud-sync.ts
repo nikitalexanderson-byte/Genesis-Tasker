@@ -4084,6 +4084,10 @@ export async function beginCurrentPrivatePersonalDeviceEntry(secret:Uint8Array,i
 export async function resumeCurrentPrivatePersonalDeviceEntry(secret:Uint8Array,assertForeground:()=>void){
  const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry');current();const entry=await WebPersonalDeviceEntry.resume(owner,secret,ports,current);current();if(entry.target.scopeId!==scopeId){entry.close();throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}return entry;
 }
+export async function replaceCurrentPrivatePersonalDeviceEntry(oldSecret:Uint8Array,newSecret:Uint8Array,input:string,comparedFingerprint:string,assertForeground:()=>void){
+ const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{ComparedPersonalDeviceTarget}=await import('./e2ee/personal-device-target'),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry'),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();
+ const target=ComparedPersonalDeviceTarget.compare(parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',8192),comparedFingerprint,owner);if(target.target.scopeId!==scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return WebPersonalDeviceEntry.replaceRevoked(target,oldSecret,newSecret,ports,current);
+}
 export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
   if(!owner||!serverProtectedTransportOwners.has(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');

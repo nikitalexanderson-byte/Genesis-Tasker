@@ -13,7 +13,16 @@
     "finish": "Применить разрешение и открыть данные",
     "targetExport": "Показать личные данные доступа",
     "targetFingerprint": "Отпечаток данных доступа",
-    "back": "Использовать восстановление"
+    "back": "Использовать восстановление",
+    "replace": "Заменить отозванное устройство",
+    "replaceNotice": "Замена требует подтверждённого отзыва и нового одобрения. Прежние данные и защищённые контейнеры сохраняются отдельно для восстановления.",
+    "previousCode": "Прежний локальный код открытия",
+    "replaceAck": "Я хочу создать новые ключи устройства и сохраню доступ к прежним локальным данным.",
+    "retainedTitle": "Содержимое прежнего устройства",
+    "retainedNotice": "Открыть прежнее локальное содержимое только для чтения и экспорта. Это не восстанавливает доступ устройства и не отправляет ожидающие операции. Сохраните прежний код открытия.",
+    "retainedSlot": "Версия прежнего устройства",
+    "retainedAck": "Я хочу зашифрованную копию только содержимого. Она не восстанавливает права и не повторяет прежние операции.",
+    "retainedExport": "Экспорт прежнего содержимого"
   },
   "en": {
     "title": "Use a trusted device",
@@ -29,7 +38,16 @@
     "finish": "Apply approval and unlock",
     "targetExport": "Show personal access details",
     "targetFingerprint": "Access details fingerprint",
-    "back": "Use recovery"
+    "back": "Use recovery",
+    "replace": "Replace revoked device",
+    "replaceNotice": "Replacement requires verified revocation and fresh approval. Previous data and protected containers remain available separately for recovery.",
+    "previousCode": "Previous local unlock code",
+    "replaceAck": "I want fresh device keys and will preserve access to my previous local data.",
+    "retainedTitle": "Previous device content",
+    "retainedNotice": "Open previous local content for reading and export only. This does not restore device access or send pending operations. Keep the old unlock code.",
+    "retainedSlot": "Previous device version",
+    "retainedAck": "I want an encrypted content-only copy. This will not restore permissions or replay old operations.",
+    "retainedExport": "Export previous content"
   },
   "el": {
     "title": "Χρήση έμπιστης συσκευής",
@@ -45,7 +63,16 @@
     "finish": "Εφαρμογή έγκρισης και ξεκλείδωμα",
     "targetExport": "Εμφάνιση προσωπικών στοιχείων πρόσβασης",
     "targetFingerprint": "Αποτύπωμα στοιχείων πρόσβασης",
-    "back": "Χρήση ανάκτησης"
+    "back": "Χρήση ανάκτησης",
+    "replace": "Αντικατάσταση ανακλημένης συσκευής",
+    "replaceNotice": "Η αντικατάσταση απαιτεί επαληθευμένη ανάκληση και νέα έγκριση. Τα προηγούμενα δεδομένα και προστατευμένα αρχεία διατηρούνται χωριστά για ανάκτηση.",
+    "previousCode": "Προηγούμενος τοπικός κωδικός",
+    "replaceAck": "Θέλω νέα κλειδιά συσκευής και θα διατηρήσω πρόσβαση στα προηγούμενα τοπικά δεδομένα.",
+    "retainedTitle": "Περιεχόμενο προηγούμενης συσκευής",
+    "retainedNotice": "Ανοίξτε παλιό τοπικό περιεχόμενο μόνο για ανάγνωση και εξαγωγή. Δεν επαναφέρει πρόσβαση συσκευής ούτε αποστέλλει εκκρεμείς ενέργειες. Κρατήστε τον παλιό κωδικό.",
+    "retainedSlot": "Έκδοση προηγούμενης συσκευής",
+    "retainedAck": "Θέλω κρυπτογραφημένο αντίγραφο μόνο περιεχομένου, χωρίς δικαιώματα ή επανάληψη ενεργειών.",
+    "retainedExport": "Εξαγωγή προηγούμενου περιεχομένου"
   },
   "de": {
     "title": "Vertrauenswürdiges Gerät verwenden",
@@ -61,7 +88,16 @@
     "finish": "Genehmigung anwenden und entsperren",
     "targetExport": "Persönliche Zugangsdaten anzeigen",
     "targetFingerprint": "Fingerabdruck der Zugangsdaten",
-    "back": "Wiederherstellung verwenden"
+    "back": "Wiederherstellung verwenden",
+    "replace": "Widerrufenes Gerät ersetzen",
+    "replaceNotice": "Der Ersatz erfordert einen bestätigten Widerruf und eine neue Genehmigung. Frühere Daten und geschützte Container bleiben separat zur Wiederherstellung erhalten.",
+    "previousCode": "Bisheriger lokaler Entsperrcode",
+    "replaceAck": "Ich möchte neue Geräteschlüssel und bewahre den Zugriff auf meine bisherigen lokalen Daten.",
+    "retainedTitle": "Inhalte des bisherigen Geräts",
+    "retainedNotice": "Frühere lokale Inhalte nur lesen und exportieren. Dies stellt keinen Gerätezugriff wieder her und sendet keine ausstehenden Vorgänge. Bewahren Sie den bisherigen Code auf.",
+    "retainedSlot": "Bisherige Geräteversion",
+    "retainedAck": "Ich möchte eine verschlüsselte Inhaltskopie ohne Berechtigungswiederherstellung oder Wiederholung alter Vorgänge.",
+    "retainedExport": "Frühere Inhalte exportieren"
   },
   "fr": {
     "title": "Utiliser un appareil de confiance",
@@ -77,7 +113,16 @@
     "finish": "Appliquer l’autorisation et déverrouiller",
     "targetExport": "Afficher les informations d’accès personnelles",
     "targetFingerprint": "Empreinte des informations d’accès",
-    "back": "Utiliser la récupération"
+    "back": "Utiliser la récupération",
+    "replace": "Remplacer un appareil révoqué",
+    "replaceNotice": "Le remplacement exige une révocation vérifiée et une nouvelle approbation. Les anciennes données et conteneurs protégés restent disponibles séparément pour la récupération.",
+    "previousCode": "Ancien code de déverrouillage local",
+    "replaceAck": "Je souhaite de nouvelles clés et conserverai l’accès à mes anciennes données locales.",
+    "retainedTitle": "Contenu de l’ancien appareil",
+    "retainedNotice": "Ouvrez les anciens contenus locaux uniquement pour les lire et les exporter. Cela ne rétablit pas l’accès de l’appareil et n’envoie aucune opération en attente. Conservez l’ancien code.",
+    "retainedSlot": "Version de l’ancien appareil",
+    "retainedAck": "Je souhaite une copie chiffrée du contenu, sans restaurer les droits ni rejouer les anciennes opérations.",
+    "retainedExport": "Exporter l’ancien contenu"
   },
   "es": {
     "title": "Usar un dispositivo de confianza",
@@ -93,7 +138,16 @@
     "finish": "Aplicar autorización y desbloquear",
     "targetExport": "Mostrar datos de acceso personales",
     "targetFingerprint": "Huella de los datos de acceso",
-    "back": "Usar recuperación"
+    "back": "Usar recuperación",
+    "replace": "Reemplazar dispositivo revocado",
+    "replaceNotice": "El reemplazo requiere revocación verificada y una nueva aprobación. Los datos y contenedores protegidos anteriores se conservan por separado para recuperarlos.",
+    "previousCode": "Código local anterior",
+    "replaceAck": "Quiero claves nuevas y conservaré el acceso a mis datos locales anteriores.",
+    "retainedTitle": "Contenido del dispositivo anterior",
+    "retainedNotice": "Abra el contenido local anterior solo para lectura y exportación. No restaura el acceso del dispositivo ni envía operaciones pendientes. Guarde el código anterior.",
+    "retainedSlot": "Versión del dispositivo anterior",
+    "retainedAck": "Quiero una copia cifrada del contenido, sin restaurar permisos ni repetir operaciones anteriores.",
+    "retainedExport": "Exportar contenido anterior"
   },
   "it": {
     "title": "Usa un dispositivo attendibile",
@@ -109,7 +163,16 @@
     "finish": "Applica autorizzazione e sblocca",
     "targetExport": "Mostra dati di accesso personali",
     "targetFingerprint": "Impronta dei dati di accesso",
-    "back": "Usa il recupero"
+    "back": "Usa il recupero",
+    "replace": "Sostituisci dispositivo revocato",
+    "replaceNotice": "La sostituzione richiede revoca verificata e nuova approvazione. Dati e contenitori protetti precedenti restano separati per il recupero.",
+    "previousCode": "Codice locale precedente",
+    "replaceAck": "Voglio nuove chiavi e conserverò l’accesso ai dati locali precedenti.",
+    "retainedTitle": "Contenuti del dispositivo precedente",
+    "retainedNotice": "Apri i contenuti locali precedenti solo per lettura ed esportazione. Non ripristina l’accesso e non invia operazioni in attesa. Conserva il codice precedente.",
+    "retainedSlot": "Versione del dispositivo precedente",
+    "retainedAck": "Voglio una copia cifrata dei soli contenuti, senza ripristinare permessi o ripetere vecchie operazioni.",
+    "retainedExport": "Esporta contenuti precedenti"
   },
   "pt": {
     "title": "Usar um dispositivo de confiança",
@@ -125,7 +188,16 @@
     "finish": "Aplicar autorização e desbloquear",
     "targetExport": "Mostrar dados de acesso pessoais",
     "targetFingerprint": "Impressão digital dos dados de acesso",
-    "back": "Usar recuperação"
+    "back": "Usar recuperação",
+    "replace": "Substituir dispositivo revogado",
+    "replaceNotice": "A substituição exige revogação verificada e nova aprovação. Os dados e contentores protegidos anteriores ficam separados para recuperação.",
+    "previousCode": "Código local anterior",
+    "replaceAck": "Quero novas chaves e conservarei o acesso aos meus dados locais anteriores.",
+    "retainedTitle": "Conteúdo do dispositivo anterior",
+    "retainedNotice": "Abra o conteúdo local anterior apenas para leitura e exportação. Isto não restaura o acesso nem envia operações pendentes. Guarde o código anterior.",
+    "retainedSlot": "Versão do dispositivo anterior",
+    "retainedAck": "Quero uma cópia cifrada apenas do conteúdo, sem restaurar permissões nem repetir operações antigas.",
+    "retainedExport": "Exportar conteúdo anterior"
   },
   "pl": {
     "title": "Użyj zaufanego urządzenia",
@@ -141,7 +213,16 @@
     "finish": "Zastosuj zgodę i odblokuj",
     "targetExport": "Pokaż osobiste dane dostępu",
     "targetFingerprint": "Odcisk danych dostępu",
-    "back": "Użyj odzyskiwania"
+    "back": "Użyj odzyskiwania",
+    "replace": "Zastąp odwołane urządzenie",
+    "replaceNotice": "Zastąpienie wymaga zweryfikowanego odwołania i nowego zatwierdzenia. Poprzednie dane i chronione kontenery pozostają osobno do odzyskania.",
+    "previousCode": "Poprzedni lokalny kod",
+    "replaceAck": "Chcę nowych kluczy i zachowam dostęp do poprzednich danych lokalnych.",
+    "retainedTitle": "Treści poprzedniego urządzenia",
+    "retainedNotice": "Otwórz poprzednie lokalne treści tylko do odczytu i eksportu. Nie przywraca to dostępu ani nie wysyła oczekujących operacji. Zachowaj poprzedni kod.",
+    "retainedSlot": "Wersja poprzedniego urządzenia",
+    "retainedAck": "Chcę zaszyfrowanej kopii treści bez przywracania uprawnień i ponawiania starych operacji.",
+    "retainedExport": "Eksportuj poprzednie treści"
   },
   "sr": {
     "title": "Користи поуздан уређај",
@@ -157,7 +238,16 @@
     "finish": "Примени одобрење и откључај",
     "targetExport": "Прикажи личне податке за приступ",
     "targetFingerprint": "Отисак података за приступ",
-    "back": "Користи опоравак"
+    "back": "Користи опоравак",
+    "replace": "Замени опозвани уређај",
+    "replaceNotice": "Замена захтева проверен опозив и ново одобрење. Претходни подаци и заштићени контејнери остају засебно за опоравак.",
+    "previousCode": "Претходни локални код",
+    "replaceAck": "Желим нове кључеве и сачуваћу приступ претходним локалним подацима.",
+    "retainedTitle": "Садржај претходног уређаја",
+    "retainedNotice": "Отворите претходни локални садржај само за читање и извоз. Ово не враћа приступ нити шаље радње на чекању. Сачувајте претходни код.",
+    "retainedSlot": "Верзија претходног уређаја",
+    "retainedAck": "Желим шифровану копију садржаја без враћања дозвола или понављања старих радњи.",
+    "retainedExport": "Извези претходни садржај"
   },
   "uk": {
     "title": "Підтвердити на довіреному пристрої",
@@ -173,7 +263,16 @@
     "finish": "Застосувати дозвіл і відкрити дані",
     "targetExport": "Показати особисті дані доступу",
     "targetFingerprint": "Відбиток даних доступу",
-    "back": "Скористатися відновленням"
+    "back": "Скористатися відновленням",
+    "replace": "Замінити відкликаний пристрій",
+    "replaceNotice": "Заміна потребує перевіреного відкликання та нового схвалення. Попередні дані й захищені контейнери зберігаються окремо для відновлення.",
+    "previousCode": "Попередній локальний код",
+    "replaceAck": "Я хочу нові ключі пристрою та збережу доступ до попередніх локальних даних.",
+    "retainedTitle": "Вміст попереднього пристрою",
+    "retainedNotice": "Відкрийте попередній локальний вміст лише для читання й експорту. Це не відновлює доступ і не надсилає операції, що очікують. Збережіть попередній код.",
+    "retainedSlot": "Версія попереднього пристрою",
+    "retainedAck": "Я хочу зашифровану копію лише вмісту без відновлення прав або повторення старих операцій.",
+    "retainedExport": "Експорт попереднього вмісту"
   },
   "zh": {
     "title": "使用可信设备",
@@ -189,7 +288,16 @@
     "finish": "应用批准并解锁",
     "targetExport": "显示个人访问资料",
     "targetFingerprint": "访问资料指纹",
-    "back": "使用恢复方式"
+    "back": "使用恢复方式",
+    "replace": "替换已撤销的设备",
+    "replaceNotice": "替换需要验证撤销状态并重新批准。以前的数据和受保护容器将单独保留以供恢复。",
+    "previousCode": "以前的本地解锁码",
+    "replaceAck": "我希望生成新的设备密钥，并会保留对以前本地数据的访问方式。",
+    "retainedTitle": "以前设备的内容",
+    "retainedNotice": "仅以只读方式打开并导出以前的本地内容。不会恢复设备访问权，也不会发送待处理操作。请保留旧解锁码。",
+    "retainedSlot": "以前的设备版本",
+    "retainedAck": "我要创建仅包含内容的加密副本，不恢复权限或重放旧操作。",
+    "retainedExport": "导出以前的内容"
   },
   "tr": {
     "title": "Güvenilen bir cihaz kullan",
@@ -205,7 +313,16 @@
     "finish": "Onayı uygula ve kilidi aç",
     "targetExport": "Kişisel erişim bilgilerini göster",
     "targetFingerprint": "Erişim bilgileri parmak izi",
-    "back": "Kurtarmayı kullan"
+    "back": "Kurtarmayı kullan",
+    "replace": "İptal edilen cihazı değiştir",
+    "replaceNotice": "Değiştirme, doğrulanmış iptal ve yeni onay gerektirir. Önceki veriler ve korunan kapsayıcılar kurtarma için ayrı tutulur.",
+    "previousCode": "Önceki yerel açma kodu",
+    "replaceAck": "Yeni cihaz anahtarları istiyorum ve önceki yerel verilerime erişimi koruyacağım.",
+    "retainedTitle": "Önceki cihazın içeriği",
+    "retainedNotice": "Önceki yerel içeriği yalnızca okumak ve dışa aktarmak için açın. Cihaz erişimini geri yüklemez veya bekleyen işlemleri göndermez. Eski kodu saklayın.",
+    "retainedSlot": "Önceki cihaz sürümü",
+    "retainedAck": "İzinleri geri yüklemeyen veya eski işlemleri yinelemeyen, yalnızca içerik içeren şifreli bir kopya istiyorum.",
+    "retainedExport": "Önceki içeriği dışa aktar"
   },
   "ja": {
     "title": "信頼できる端末を使う",
@@ -221,6 +338,15 @@
     "finish": "承認を適用してロック解除",
     "targetExport": "個人用アクセス情報を表示",
     "targetFingerprint": "アクセス情報の指紋",
-    "back": "復旧を使う"
+    "back": "復旧を使う",
+    "replace": "失効した端末を置き換える",
+    "replaceNotice": "置き換えには失効の検証と新しい承認が必要です。以前のデータと保護されたコンテナは復旧用に別途保持されます。",
+    "previousCode": "以前のローカル解除コード",
+    "replaceAck": "新しい端末鍵を作成し、以前のローカルデータへのアクセス方法を保持します。",
+    "retainedTitle": "以前の端末のコンテンツ",
+    "retainedNotice": "以前のローカルコンテンツを読み取りとエクスポート専用で開きます。端末のアクセス権を復元したり保留中の操作を送信したりしません。古い解除コードを保管してください。",
+    "retainedSlot": "以前の端末バージョン",
+    "retainedAck": "権限の復元や古い操作の再実行を含まない、コンテンツのみの暗号化コピーを作成します。",
+    "retainedExport": "以前のコンテンツをエクスポート"
   }
 }

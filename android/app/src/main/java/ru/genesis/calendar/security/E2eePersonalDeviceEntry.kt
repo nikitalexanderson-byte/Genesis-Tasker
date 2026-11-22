@@ -52,5 +52,8 @@ internal class E2eePersonalDeviceEntry private constructor(private val device:Un
             try{current();val marker=E2eeDeviceDocument(device,MARKER,{validateMarker(it,owner)},{current();device.requireOpen()}).load()?:error("E2EE_DEVICE_ACCESS_REQUIRED");current();val target=marker.value.getJSONObject("target");check(E2eeProductJson.same(target.getJSONObject("authority"),device.authorityPin)){"E2EE_AUTHORITY_CHANGED"};return E2eePersonalDeviceEntry(device,target,ports,current).also{it.current()}
             }catch(error:Throwable){device.lock();throw error}
         }
+        fun replaceRevoked(context:Context,compared:E2eeComparedPersonalDeviceTarget,ports:E2eePersonalDeviceEntryPorts,current:()->Unit):E2eePersonalDeviceEntry{
+            current();val response=ports.transport.directory(compared.target().getString("scopeId"));current();val candidate=UnlockedE2eeDevice.replaceRevoked(context,compared,response.getJSONArray("events"),current);candidate.lock();current();return begin(context,compared,ports,current)
+        }
     }
 }
