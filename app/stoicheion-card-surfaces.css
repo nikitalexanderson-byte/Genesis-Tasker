@@ -1,19 +1,10 @@
+/* The orientation surface is shared by daily, three-card and nine-card draws.
+ * Its foreground belongs to the dark red surface, not the surrounding theme. */
 html[data-genesis-theme] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed {
-  background:#f1d8d2;
-  color:var(--ink);
-  border-color:color-mix(in srgb,#a5543f 45%,var(--line));
-}
-html[data-genesis-theme$="-dark"] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed {
   background:var(--palette-reversed, #38201f);
-  border-color:var(--palette-reversed-border, color-mix(in srgb,#a5543f 45%,var(--line)));
+  color:#f0eee7;
+  border-color:var(--palette-reversed-border, #a5543f);
 }
-html[data-genesis-theme] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed > :is(strong,small,em,b) {
+html[data-genesis-theme] .genesis-app :is(.stoicheion-sector,.stoicheion-revealed-card,.stoicheion-timeline-card).is-reversed > :is(strong,small,em,b,span:not(.stoicheion-card-visual)) {
   color:inherit;
-}
-/* Reversed cards share the night-red surface throughout the light nine-card spread. */
-html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .stoicheion-timeline-card.is-reversed {
-  background:var(--palette-reversed,#38201f); color:#f0eee7; border-color:#a5543f;
-}
-html[data-genesis-theme="standart"] .genesis-app .stoicheion-nine-section :is(.stoicheion-sector,.stoicheion-revealed-card).is-reversed {
-  background:var(--palette-reversed,#38201f); color:#f0eee7; border-color:#a5543f;
 }
