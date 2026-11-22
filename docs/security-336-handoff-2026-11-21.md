@@ -1,5 +1,27 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: first personal trusted-device entry core (source-only)
+
+Добавлены personal-device-target/entry и matching Native E2eePersonalDeviceTarget/
+Entry. Неизменяемая comparison capability создаётся из независимо сверенного
+public personal target. Candidate provisioning хранит только новые local root и
+device keys, не root личного scope. Existing bundle сохраняется. Signed directory
+с заранее сравненной authority проверяется до provision. E2eeDeviceAccess принимает
+узкий candidate context, прежний product account constructor совместим.
+
+Protected chunked marker до challenge IO, stable attempts, explicit fresh request
+с сохранением предыдущего; staged approval требует reconcile вместо abandonment.
+Submit использует прежние challenge/selfProof/owner approval/exact receipt/normal
+directory readback. Это ЕЩЁ НЕ UI: нужны foreground cloud/AuthController factories,
+trusted target export, оба locked gates,14lang, lifecycle/credential handoff и
+typed custody нового marker. Не объявлять first entry готовым.
+
+Source review/diff check; compiler/lint/tests/build/CI не запускались. Coverage9/20.
+Другие остатки: recipient invitations, very-wide bounds, advanced/forms/automation/
+series/bulk/cross-scope attribution, typed restore, revoked replacement/background.
+PR44 head0ca81bed ещё web browser QA, оба Android jobs success; Deploy не запускался.
+
+
 ## 22 ноября: foreign bound-product writer readback (source-only)
 
 Web/native confirmPrepared теперь проверяет исходный подписанный packet и exact

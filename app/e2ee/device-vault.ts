@@ -4,6 +4,7 @@ import { assertTechnical, exactKeys, freshSecret, generateDeviceKeys, exportPriv
   openBundle, protectBundle, recoverAuthority, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
 import { verifyDeviceDirectory, type VerifiedDirectory } from './directory.ts';
 import { openE2eeDatabase, IndexedDbE2eeStorage, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
+import {ComparedPersonalDeviceTarget} from './personal-device-target.ts';
 import {commitE2eeIndexedDb} from './indexeddb-write.ts';
 import {sealOriginalCustody,persistOriginalCustody} from './original-custody.ts';
 import {IndexedDbOriginalCustodyStorage} from './original-custody-storage.ts';
@@ -60,6 +61,16 @@ export class UnlockedWebDevice {
       // Read/decrypt the persisted copy rather than accepting an in-memory successful seal.
       return await this.unlock(ownerId,held,storage,keyStorage);
     }finally{held.fill(0);bytes?.fill(0);localRoot?.fill(0);}
+  }
+  /** Creates local keys only after independent target comparison. This stores
+   * no personal root and grants no remote scope access. The separate local
+   * unlock secret is unrelated to account recovery or Google identity. */
+  static async provisionCandidate(compared:ComparedPersonalDeviceTarget,secret:Uint8Array,storage:E2eeRecordStorage,keyStorage:DeviceKeyStorage){
+    const target=ComparedPersonalDeviceTarget.require(compared),ownerId=target.ownerId,held=retainedSecret(secret);let raw:Uint8Array|undefined,bytes:Uint8Array|undefined;
+    try{if(await keyStorage.get(ownerId))throw new Error('E2EE_DEVICE_ALREADY_EXISTS');const keys=await generateDeviceKeys(),deviceId=crypto.randomUUID();raw=freshSecret();
+      const bundle:PrivateDeviceBundle={protocol:1,ownerId,deviceId,localKeyId:'local:'+deviceId,localRoot:encodeE2eeBytes(raw),deviceKeys:await exportPrivateDeviceKeys(keys),authorityPin:target.authority};
+      bytes=encoder.encode(JSON.stringify(bundle));await keyStorage.create(ownerId,await protectBundle(ownerId,'device-vault',held,bytes));return await this.unlock(ownerId,held,storage,keyStorage);
+    }finally{held.fill(0);raw?.fill(0);bytes?.fill(0);}
   }
   static async unlock(ownerId:string,secret:Uint8Array,storage:E2eeRecordStorage,keyStorage:DeviceKeyStorage){
     assertTechnical(ownerId);const held=retainedSecret(secret);let bytes:Uint8Array|undefined,raw:Uint8Array|undefined;

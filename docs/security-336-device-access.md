@@ -51,3 +51,28 @@ composition remain required. Native/web snapshots,14-language semantic review,
 API26+, process death, session replacement, expiry, key substitution, wrong scope,
 concurrent directory changes, lost response, replay, revoked signer/recipient and
 complete history forwarding must be included in later acceptance.
+
+
+## Personal candidate entry core,22 November (source-only)
+
+ComparedPersonalDeviceTarget/E2eeComparedPersonalDeviceTarget require the exact
+independently exchanged personal authority fingerprint; the capability retains
+an immutable snapshot and never accepts a status response as a pin. Candidate
+provisioning creates only a new local root and device keys. No personal-content
+root, recovery authority or entitlement is created. Existing local bundles are
+unlocked and compared, never replaced. The pinned signed directory must already
+be a matching active personal scope before candidate creation.
+
+Matching WebPersonalDeviceEntry/E2eePersonalDeviceEntry reuse existing challenge,
+self-proof, external approval, exact submit and normal directory readback without
+constructing an unlocked product account. The chunked protected marker precedes
+challenge IO, keeps stable attempt IDs and preserves all previous requests. An
+explicit new request cannot abandon a staged approval with unknown outcome.
+The candidate client closes temporary root capabilities after enrollment. Browser
+local unlock material is separate from recovery; native requires the caller to
+admit foreground device-credential use.
+
+This core is not a mounted first-entry flow yet: cloud-sync/AuthController
+foreground factories, trusted-device target export, both locked gates,14-language
+copy, lifecycle/credential handoff and typed custody of the new marker are next.
+No compilation/QA; accepted coverage remains9/20.

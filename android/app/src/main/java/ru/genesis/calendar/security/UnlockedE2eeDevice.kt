@@ -89,6 +89,14 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
             // Open the persisted copy. An interrupted provisioning never replaces it.
             return openDevice(context,ownerId,allowCreateRecords=true)
         }
+        /** Local candidate material only. Caller already verified the pinned
+         * directory and admitted a foreground device-credential action. */
+        internal fun provisionCandidate(context:Context,compared:E2eeComparedPersonalDeviceTarget,current:()->Unit):UnlockedE2eeDevice {
+            current();val target=compared.target();val owner=target.getString("ownerId");val persistence=E2eeDeviceVault(context,owner);check(!persistence.exists()){"E2EE_DEVICE_ALREADY_EXISTS"}
+            val keys=E2eeKeys.generateDeviceKeys();val root=E2eeKeys.freshSecret();val id=UUID.randomUUID().toString();val bundle=JSONObject().put("protocol",1).put("ownerId",owner).put("deviceId",id).put("localKeyId","local:$id")
+                .put("localRoot",E2eeEnvelope.encode(root)).put("deviceKeys",E2eeKeys.exportPrivateKeys(keys)).put("authorityPin",target.get("authority"));val bytes=bundle.toString().toByteArray(Charsets.UTF_8)
+            try{current();persistence.save(bytes,create=true);current();return openDevice(context,owner,allowCreateRecords=true).also{current()}}finally{bytes.fill(0);root.fill(0);bundle.remove("localRoot");bundle.remove("deviceKeys")}
+        }
         fun unlock(context:Context,ownerId:String):UnlockedE2eeDevice = openDevice(context,ownerId,false)
         private fun openDevice(context:Context,ownerId:String,allowCreateRecords:Boolean):UnlockedE2eeDevice {
             val persistence=E2eeDeviceVault(context,ownerId);val bytes=persistence.unlock()

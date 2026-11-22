@@ -30,7 +30,7 @@ function approvalShape(input:unknown,request:DeviceAccessRequest):SignedE2eeComm
  * HTTP response becomes an independent authority pin or a user's comparison. */
 export class E2eeDeviceAccess{
  #serial:Promise<unknown>=Promise.resolve();
- constructor(private readonly account:WebPrivateAccount,private readonly ports:DeviceAccessPorts,private readonly guard:()=>void=()=>{}){}
+ constructor(private readonly account:Pick<WebPrivateAccount,'ownerId'|'device'|'mode'|'requireOpen'>,private readonly ports:DeviceAccessPorts,private readonly guard:()=>void=()=>{}){}
  #current(){this.guard();this.account.requireOpen();}
  #run<T>(work:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.#current();if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return work();});this.#serial=task;return task;}
  #store(id:string){assertTechnical(id);return new E2eeDeviceDocument<DeviceAccessState>(this.account.device,prefix+id,value=>{
@@ -45,8 +45,8 @@ export class E2eeDeviceAccess{
  },()=>this.#current());}
  async inspect(id:string){this.#current();const row=await this.#store(id).load();this.#current();if(!row)throw new Error('E2EE_DEVICE_ACCESS_REQUIRED');return structuredClone(row.value);}
  async pending(){this.#current();const keys=await this.account.device.vault.listLocal('draft',prefix),rows:DeviceAccessState[]=[];this.#current();for(const key of keys){const row=await this.inspect(key.slice(prefix.length));if(!row.complete||row.mode==='grant')rows.push(row);}return rows;}
- create(scopeId:string){return this.#run(async()=>{
-  const target=validateDeviceAccessTarget(await this.ports.target(scopeId));this.#current();const id=crypto.randomUUID();
+ create(scopeId:string,id=crypto.randomUUID()){assertTechnical(id);return this.#run(async()=>{
+  const target=validateDeviceAccessTarget(await this.ports.target(scopeId));this.#current();const old=await this.#store(id).load();this.#current();if(old){if(old.value.mode!=='request'||!same(old.value.target,target))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');return id;}
   await this.#store(id).save({format:'genesis-device-access-v1',ownerId:this.account.ownerId,id,mode:'request',target,request:null,reviewedFingerprint:null,approval:null,complete:false},null);this.#current();return id;
  });}
  request(id:string){return this.#run(async()=>{
