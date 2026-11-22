@@ -1348,3 +1348,12 @@ manifest и полный APK149 SHA-256 проверены. Живое окно 
 RUB/ЮKassa отсутствуют, screenshots360/390/768/1440 dark без переполнения.
 Подробные пределы read-only QA записаны в web-pricing-region. Следом merge этого
 main в security checkout с сохранением расширенного security AGENTS.md.
+# 23 ноября — завершение transfer ports и raw bulk input (код)
+
+Web/native direct и bulk move подключены к durable copy/readback/soft-retirement
+state machine; file copies проходят независимую проверку содержимого. Положение,
+явные schedule changes, pending/resume и typed retained custody подключены.
+Bulk forms сохраняют raw ввод/selection/origin/calendar/baselines в migration
+memory до IO; unbound cross-project selection хранится только в personal recovery.
+Execution checks не запускались по порядку владельца; это не новый QA PASS.
+

@@ -97,8 +97,14 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
     }
     private val bulkRuntime=NativeAdviceProductRuntime(context,"shared-bulk")
     private fun bulkDocument(id:String):E2eeDeviceDocument{E2eeKeys.technical(id);return E2eeDeviceDocument(account.device,"shared-bulk-private:$id",{value->E2eeKeys.exact(value,setOf("format","ownerId","id","input","createdAt","expiresAt","planned","state","items","errorCode"));check(value.get("format")=="genesis-private-bulk-v1"&&value.get("ownerId")==account.ownerId&&value.get("id")==id&&value.get("planned") is Boolean&&value.getJSONArray("items").length()<=100000){"E2EE_PRIVATE_BULK_INVALID"};JSONObject(value.toString())},::current)}
+    private fun transferDocument(id:String):E2eeDeviceDocument{E2eeKeys.technical(id);return E2eeDeviceDocument(account.device,"shared-transfer-private:$id",{value->E2eePrivateTransferValues.validate(context,value,account.ownerId,id)},::current)}
     private suspend fun bulk(method:String,path:String,input:JSONObject):JSONObject{
         suspend fun call(name:String,payload:JSONObject):Any{current();return when(name){
+            "transferLoad"->{E2eeKeys.exact(payload,setOf("id"));transferDocument(payload.getString("id")).load()?.let{JSONObject().put("value",it.value).put("serial",it.serial)}?:JSONObject.NULL}
+            "transferSave"->{E2eeKeys.exact(payload,setOf("document","expected"));val value=payload.getJSONObject("document");transferDocument(value.getJSONObject("input").getString("requestId")).save(value,if(payload.isNull("expected"))null else payload.getLong("expected")).serial}
+            "copyTransferFile"->{E2eeKeys.exact(payload,setOf("sourceProjectId","destinationProjectId","source","destination"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};val source=payload.getJSONObject("source");val target=payload.getJSONObject("destination");for(ref in listOf(source,target))E2eeKeys.exact(ref,setOf("objectId","size","filename","mediaType"));val fromLive=open("project",payload.getString("sourceProjectId"));val toLive=open("project",payload.getString("destinationProjectId"));current();val from=account.sharedScope(fromLive.binding.scopeId,"project",fromLive.binding.resourceId).client;val to=account.sharedScope(toLive.binding.scopeId,"project",toLive.binding.resourceId).client
+                check(from.objectReference("attachment",source.getString("objectId")).getLong("revision")==1L){"E2EE_PRIVATE_FILE_IMMUTABLE"};val file=from.read("attachment",source.getString("objectId"))?:error("E2EE_PRIVATE_FILE_UNAVAILABLE");val queue=E2eeEditorQueue(account.device,to,toLive.binding.scopeId,"attachment",target.getString("objectId"));val saved=queue.load()
+                try{current();check(file.bytes.size.toLong()==source.getLong("size")&&file.filename==source.getString("filename")&&file.mediaType==source.getString("mediaType")&&listOf("size","filename","mediaType").all{source.get(it)==target.get(it)}){"E2EE_PRIVATE_FILE_CORRUPT"};if(saved!=null)check(saved.remoteRevision<=1&&saved.bytes.contentEquals(file.bytes)&&saved.filename==file.filename&&saved.mediaType==file.mediaType){"E2EE_IDEMPOTENCY_CONFLICT"}else queue.stage(file.bytes,null,0,file.filename,file.mediaType);current();queue.flush();current();val readback=to.read("attachment",target.getString("objectId"))?:error("E2EE_TRANSFER_READBACK_CHANGED");try{current();check(to.objectReference("attachment",target.getString("objectId")).getLong("revision")==1L&&readback.bytes.contentEquals(file.bytes)&&readback.filename==file.filename&&readback.mediaType==file.mediaType){"E2EE_TRANSFER_READBACK_CHANGED"}}finally{readback.bytes.fill(0)}}finally{file.bytes.fill(0);saved?.bytes?.fill(0)};JSONObject().put("verified",true)}
             "load"->{E2eeKeys.exact(payload,setOf("id"));bulkDocument(payload.getString("id")).load()?.let{JSONObject().put("value",it.value).put("serial",it.serial)}?:JSONObject.NULL}
             "save"->{E2eeKeys.exact(payload,setOf("document","expected"));val value=payload.getJSONObject("document");bulkDocument(value.getString("id")).save(value,if(payload.isNull("expected"))null else payload.getLong("expected")).serial}
             "list"->{E2eeKeys.exact(payload,emptySet());JSONArray(account.device.vault.listLocal("draft","shared-bulk-private:").map{it.removePrefix("shared-bulk-private:")})}
@@ -127,11 +133,18 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         for(binding in bindings())if(projectId==null||binding.getString("kind")=="project"&&binding.getString("resourceId")==projectId){val live=open(binding.getString("kind"),binding.getString("resourceId"))
             for(key in account.device.vault.listLocal("draft",live.prefix)){val request=live.request(key.removePrefix(live.prefix)).load()?.value?:error("E2EE_SHARED_REQUEST_MISSING")
                 if(!request.getBoolean("complete"))result+=JSONObject().put("scopeId",binding.get("scopeId")).put("scopeKind",binding.get("kind")).put("resourceId",binding.get("resourceId")).put("request",request)}}
-        if(projectId==null)cachedPendingCount=result.size;return result
+        val known=bindings();for(key in account.device.vault.listLocal("draft","shared-transfer-private:")){
+            val id=key.removePrefix("shared-transfer-private:");val transfer=transferDocument(id).load()?.value?:continue;val input=transfer.getJSONObject("input");if(transfer.getBoolean("complete")||projectId!=null&&input.getString("sourceProjectId")!=projectId)continue
+            val binding=known.singleOrNull{it.get("kind")=="project"&&it.get("resourceId")==input.get("sourceProjectId")}?:error("E2EE_SHARED_SCOPE_REVALIDATION_REQUIRED")
+            val request=JSONObject().put("protocol",1).put("scopeId",binding.get("scopeId")).put("id","transfer:$id").put("method","POST").put("path","tasks/${input.getString("rootTaskId")}/move")
+                .put("body",JSONObject(input.toString())).put("createdAt",transfer.get("createdAt")).put("edits",JSONObject.NULL).put("result",JSONObject.NULL).put("complete",false)
+            result+=JSONObject().put("scopeId",binding.get("scopeId")).put("scopeKind","project").put("resourceId",binding.get("resourceId")).put("request",request)
+        };if(projectId==null)cachedPendingCount=result.size;return result
     }
     suspend fun pending(projectId:String?=null):List<JSONObject> = withContext(Dispatchers.IO){mutex.withLock{current();pendingLocked(projectId)}}
     suspend fun resume(id:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{current();val item=pendingLocked().singleOrNull{it.getJSONObject("request").getString("id")==id}?:error("E2EE_SHARED_REQUEST_MISSING")
-        open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),id).also{if(!account.offline&&!it.optBoolean("membershipReviewRequired",false))cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}}}
+        if(id.startsWith("transfer:"))bulk("POST","/shared/bulk/resume-transfer",JSONObject().put("id",id.removePrefix("transfer:"))).also{cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}
+        else open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),id).also{if(!account.offline&&!it.optBoolean("membershipReviewRequired",false))cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}}}
     private var advancedAt=0L
     private suspend fun advanceLocked():Int{current();if(account.offline||android.os.SystemClock.elapsedRealtime()-advancedAt<30_000)return 0;advancedAt=android.os.SystemClock.elapsedRealtime();var changed=0
         for(binding in bindings()){current();if(binding.getString("kind")!="project")continue;val live=open("project",binding.getString("resourceId"))
@@ -152,6 +165,8 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         }
         if(parts.size>=3&&parts[1] in setOf("projects","spaces")){
             val kind=if(parts[1]=="projects")"project"else"space";val id=E2eeKeys.technical(parts[2])
+            if(method=="POST"&&kind=="project"&&parts.size==6&&parts[3]=="tasks"&&parts[5]=="move"&&input.optString("destinationProjectId")!=id)
+                return@withLock bulk("POST","/shared/bulk/transfer-task",JSONObject().put("projectId",id).put("taskId",parts[4]).put("input",JSONObject(input.toString())))
             if(method=="GET"&&kind=="space"&&parts.size==4&&parts[3] in setOf("projects","archived-projects")){
                 val projects=JSONArray();for(scope in bindings())if(scope.getString("kind")=="project"){val result=open("project",scope.getString("resourceId")).execute("GET","",JSONObject()).getJSONObject("project")
                     if(result.getString("spaceId")==id&&(!result.isNull("archivedAt"))==(parts[3]=="archived-projects"))projects.put(result)}

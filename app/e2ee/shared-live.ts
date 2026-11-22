@@ -207,7 +207,7 @@ export class SharedLiveModel{
   await this.ports.eventCache.save(events);this.ports.current();return events;
  }
  async #get(path:string){const url=new URL(path,'https://private.invalid'),{context,versions}=await this.#snapshot(),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
-  if(segments[0]==='execution'&&segments[1]==='capture'&&segments.length===2)return{binding:structuredClone(this.ports.binding),context:structuredClone(context),versions:structuredClone(versions)};
+  if(segments[0]==='execution'&&segments[1]==='capture'&&segments.length===2){if(this.#pendingEntities.size)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');return{binding:structuredClone(this.ports.binding),context:structuredClone(context),versions:structuredClone(versions)};}
   if(segments[0]==='execution'&&segments[1]==='ready'&&segments.length===2)return this.#execution(context,versions).ready(url.searchParams.get('now')??new Date().toISOString());
   if(segments[0]==='tasks'&&segments[2]==='series'&&segments.length===3)return{series:this.#execution(context,versions).seriesForTask(segments[1])};
   if(segments[0]==='automations'&&segments[2]==='runs'&&segments.length===3)return this.#execution(context,versions).automationRuns(segments[1]);
@@ -274,6 +274,12 @@ export class SharedLiveModel{
  async #prepare(request:SavedRequest,observed?:{context:SharedLiveContext;versions:ProductVersion[]},forcedTaskId?:string):Promise<{edits:ProductEdit[];result:ObjectValue}>{
   const {context,versions}=observed??await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
   if(parts[0]==='execution'&&['import-records','retire-records'].includes(parts[1])&&parts.length===2&&request.method==='POST')return this.#prepareTransferRecords(request,context,versions);
+  if(parts[0]==='tasks'&&parts.length===3&&parts[2]==='move'&&request.method==='POST'){
+   const extras=['startDate','dueDate','startTime','endTime'].filter(key=>Object.hasOwn(input,key));exactKeys(input,['destinationProjectId','statusId','expectedRevision','position','requestId',...extras]);
+   if(input.destinationProjectId!==this.ports.binding.resourceId)throw new Error('E2EE_SHARED_CROSS_SCOPE_REVIEW_REQUIRED');if(!context.permissions.editTasks||!context.permissions.organizeTasks)throw new Error('BULK_NOT_ALLOWED');
+   const old=this.#find(versions,'task',parts[1]),status=input.statusId===''?plain(old).record.status_id:input.statusId;
+   return this.#prepare({...request,method:'PATCH',path:`tasks/${parts[1]}`,body:{expectedRevision:input.expectedRevision,requestId:input.requestId,statusId:status,position:input.position,...Object.fromEntries(extras.map(key=>[key,input[key]]))}},context,versions);
+  }
   if(parts[0]==='automations'&&parts.length===2&&parts[1]==='preview'&&request.method==='POST')return this.#execution(context,versions).preview(input,request);
   if(parts[0]==='automations'&&request.method==='POST'&&(parts.length===2&&parts[1]==='advance'||parts.length===5&&parts[2]==='runs'&&parts[4]==='retry'))return this.#execution(context,versions).automation(request);
   if(parts[0]==='series'&&parts[1]==='advance'&&parts.length===2&&request.method==='POST')return this.#execution(context,versions).advanceSeries(request);

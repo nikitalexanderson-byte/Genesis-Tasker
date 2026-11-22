@@ -2,6 +2,7 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 import type {UnlockedE2eeVault} from './storage.ts';
 import {E2eeDeviceDocument} from './device-document.ts';
 import {PERSONAL_DEVICE_ENTRY_ID,validatePersonalDeviceEntryMarker} from './personal-device-entry.ts';
+import {validatePrivateTransferJournal} from './shared-private-transfer.ts';
 import {validatePrivateBulkJournal} from './shared-private-bulk.ts';
 import {validatePrivateBulkRecovery} from './shared-bulk-recovery.ts';
 import {inspectPrivateSharedWorkDraft} from './shared-work-private-journal.ts';
@@ -37,6 +38,7 @@ export async function inspectDeviceControlCustody(options:{device:UnlockedWebDev
  });
  for(const prefix of ['shared-work-private:','shared-work-history:']){const ids=await vault.listLocal('draft',prefix);current();if(ids.length>10000)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');for(const id of ids){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(id,input=>{const value=inspectPrivateSharedWorkDraft(input,device.ownerId),base=prefix+value.projectId+':'+value.purpose+':'+value.id;if(prefix==='shared-work-private:'?id!==base:!id.startsWith(base+':')||!/^[1-9][0-9]*$/.test(id.slice(base.length+1)))throw new Error('E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED');return value;},()=>options.personalScopeId!);}}
  for(const prefix of ['shared-bulk-private:','shared-bulk-recovery:','shared-bulk-recovery-history:']){const ids=await vault.listLocal('draft',prefix);current();for(const id of ids){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(id,value=>{if(prefix==='shared-bulk-private:'){const parsed=validatePrivateBulkJournal(value,device.ownerId);if(id!==prefix+parsed.id)throw new Error('E2EE_PRIVATE_BULK_INVALID');return parsed;}if(prefix==='shared-bulk-recovery:'?id!==prefix+'v1':!/^[1-9][0-9]*$/.test(id.slice(prefix.length)))throw new Error('E2EE_PRIVATE_BULK_INVALID');return validatePrivateBulkRecovery(value,device.ownerId);},()=>options.personalScopeId!);}}
+ for(const id of await vault.listLocal('draft','shared-transfer-private:')){current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(id,value=>{const parsed=validatePrivateTransferJournal(value,device.ownerId);if(id!=='shared-transfer-private:'+parsed.input.requestId)throw new Error('E2EE_TRANSFER_INVALID');return parsed;},()=>options.personalScopeId!);}
  const restores=await vault.listLocal('draft','personal-content-restore:');current();for(const id of restores){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('personal-content-restore:'.length);await document(id,value=>validatePersonalRestoreJournal(value,device.ownerId,intentId),()=>options.personalScopeId!);}
  const requests=await vault.listLocal('draft','invitation-recipient:');current();
  for(const id of requests){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('invitation-recipient:'.length);

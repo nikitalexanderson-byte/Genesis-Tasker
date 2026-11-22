@@ -1,5 +1,33 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: переносы и raw bulk input — код подключён
+
+Private transfer ports подключены к web/native нормальным product adapters:
+durable input до IO, immutable file copy с независимым readback, destination
+readback до soft retirement точных source versions. Direct task moves используют
+тот же перенос между проектами; положение и явные изменения расписания сохранены.
+Внутри проекта move проходит через обычную подписанную task transaction.
+Незавершённые переносы входят в обе очереди pending/resume и retained custody/
+content archive; никакого возврата к читаемым legacy endpoints.
+
+Web bulk action/selection и native bulk form зарегистрированы для migration
+capture до асинхронной записи: raw strings/selection/origin/calendar/baselines
+и pending receipts. Cross-project ввод относится к personal.local-work с null
+верхними координатами; реальные project/space IDs остаются в selection и исходных
+снимках. Фиктивные scope IDs не создаются, формы остаются history-only.
+
+Это завершение кодового блока без compiler/lint/tests/build/CI или общего source
+review безопасности. Coverage9/20, floors0/cutover off. Далее: остальные typed
+restore domains (diary/maps/physis/Aurora/Стоихейон/shared), very-wide bounds,
+revoked-device replacement/background и оставшаяся интеграция исходного задания;
+затем один общий QA/исправления/внутреннее крипторевью и выпуск.
+
+Срочный веб-кандидат PR45 в отдельном upgrade-currency-20261122, HEAD9437513e.
+Обе региональные редакции ×14 языков, GPS priority/VPN, disabled donation вне RU.
+Локальная сборка196 HTML, i18n, targeted unit/render и browser matrix PASS;
+required CI45074216964/45074213353 ещё выполняется. До live Deploy не переносить
+неопубликованные веб-правки в эту security ветку и не объявлять их выпущенными.
+
 ## Срочный веб-запрос владельца — 22 ноября, текущее продолжение
 
 Сохранён код client automation/series commit0cc1e3ca; после него добавлены private

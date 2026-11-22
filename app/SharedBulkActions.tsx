@@ -1,5 +1,7 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {registerLocalWorkMigrationEditor} from './local-work-migration-memory';
+import {usesPrivateProductStorage} from './cloud-sync';
 import {loadBulkRecovery,saveBulkRecovery} from './e2ee/shared-bulk-recovery';
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { calendarContext, civilDateCarrier } from "./calendar-context";
@@ -50,12 +52,15 @@ function BulkChoice({kind,filter,label,value,onChange,multiple=false,online}:{ki
   </div>;
 }
 
-function BulkActionForm({selection,mode,online,busy,onPreview}:{selection:SharedBulkSelection;mode:CalendarMode;online:boolean;busy:boolean;onPreview:(action:SharedBulkAction)=>void}) {
+function BulkActionForm({userId,selection,mode,online,busy,onPreview}:{userId:string;selection:SharedBulkSelection;mode:CalendarMode;online:boolean;busy:boolean;onPreview:(action:SharedBulkAction)=>void}) {
   const selectionKey=JSON.stringify(selection),[scope,setScope]=useState<{key:string;data:SharedBulkScope}|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false);
   const [kind,setKind]=useState<SharedBulkAction["kind"]>("priority"),[priority,setPriority]=useState(0),[assignees,setAssignees]=useState<string[]>([]),[labels,setLabels]=useState<string[]>([]),[labelMode,setLabelMode]=useState<"add"|"remove">("add");
   const [statuses,setStatuses]=useState<Record<string,string>>({}),[destination,setDestination]=useState<string[]>([]),[destinationStatus,setDestinationStatus]=useState<string[]>([]);
   const [dueMode,setDueMode]=useState<"set"|"shift"|"clear">("set"),[date,setDate]=useState(""),[days,setDays]=useState("1"),[calendar,setCalendar]=useState(mode),[retention,setRetention]=useState(30);
   const generation=useRef(0),moreController=useRef<AbortController|null>(null);
+  const migrationOwner=usesPrivateProductStorage(userId)?null:userId,migrationInput=useMemo(()=>({value:null as unknown}),[userId]);
+  migrationInput.value={form:'shared-bulk-action',execution:'history-only',selection,mode,kind,priority,assignees,labels,labelMode,statuses,destination,destinationStatus,dueMode,date,days,calendar,retention,scope,calculationContext:calendarContext()};
+  useLayoutEffect(()=>migrationOwner?registerLocalWorkMigrationEditor({ownerId:migrationOwner,spaceId:null,projectId:null,source:'bulk-action'},()=>structuredClone(migrationInput.value)):undefined,[migrationOwner,migrationInput]);
   useEffect(()=>{
     const current=++generation.current;if(!online)return;const controller=new AbortController();
     void loadSharedBulkScope(JSON.parse(selectionKey),null,controller.signal).then(data=>{if(current===generation.current&&!controller.signal.aborted){setScope({key:selectionKey,data});setError("");setLoading(false);}})
@@ -125,6 +130,9 @@ export function SharedBulkActions({userId,filter,page,sort,mode,online,loading,q
   const selectionKey=JSON.stringify([filter,page?.queryVersion]),after=view?.trail.at(-1)??0,viewKey=JSON.stringify([view?.id,after]);
   const report=result?.key===viewKey?result.report:null;
   const selection:SharedBulkSelection|null=filter&&page&&picked.key===selectionKey?(picked.all?{mode:"all",filter,sort,queryVersion:page.queryVersion}:picked.ids.length?{mode:"page",items:page.tasks.filter(task=>picked.ids.includes(task.id)).map(task=>({id:task.id,projectId:task.projectId,revision:task.revision}))}:null):null;
+  const migrationOwner=usesPrivateProductStorage(userId)?null:userId,migrationInput=useMemo(()=>({read:()=>({}) as unknown}),[userId]);
+  migrationInput.read=()=>({form:'shared-bulk-selection',execution:'history-only',filter,sort,mode,page,picked,selection,selecting,recovery,view,result,history,historyOpen,historyTrail,pending:request.current??null,busy:mutating.current});
+  useLayoutEffect(()=>migrationOwner?registerLocalWorkMigrationEditor({ownerId:migrationOwner,spaceId:null,projectId:null,source:'bulk-selection'},()=>structuredClone(migrationInput.read())):undefined,[migrationOwner,migrationInput]);
   const canAccept=useCallback(()=>alive.current&&!privateDeviceAccessBlocked(),[]);
   const persist=useCallback((next:BulkRecovery)=>{
     if(!canAccept())return;setRecovery(next);request.current=next.pending;
@@ -204,7 +212,7 @@ export function SharedBulkActions({userId,filter,page,sort,mode,online,loading,q
     </div>{page&&page.tasks.length>1000?<p>{t("Для выбора более 1000 задач используйте все результаты фильтра.")}</p>:null}
       {picked.key!==selectionKey&&(picked.all||picked.ids.length)?<p role="status">{t("Выдача изменилась. Выберите задачи заново.")}</p>:null}
       {selection?<><p className="bulk-selection-count" role="status">{t(selection.mode==="all"?"Все результаты фильтра":"Выбрано среди показанных")} · <strong>{number(selection.mode==="all"?page!.total:selection.items.length)}</strong></p>
-        <BulkActionForm selection={selection} mode={mode} online={online} busy={busy} onPreview={action=>void preview(action)}/></>:null}
+        <BulkActionForm userId={userId} selection={selection} mode={mode} online={online} busy={busy} onPreview={action=>void preview(action)}/></>:null}
     </div>:null}
     {recovery.pending?<div className="bulk-recovery"><p role="status">{t("Ответ о просмотре не получен. Повтор безопасен; задачи ещё не изменены.")}</p><div className="bulk-buttons"><button type="button" className="primary-button" disabled={busy||!online} onClick={()=>void preview()}>{t("Повторить запрос")}</button><button type="button" className="secondary-button" disabled={busy} onClick={()=>persist({})}>{t("Отменить")}</button></div></div>:null}
     {error?<div role="alert"><p>{error}</p>{view?<button type="button" className="secondary-button" disabled={busy||!online} onClick={()=>setViewReload(previous=>previous+1)}>{t("Обновить отчёт")}</button>:null}</div>:null}{!online&&view?<p role="status">{t("Операция сохранена на сервере. Подключитесь к интернету, чтобы получить отчёт.")}</p>:null}

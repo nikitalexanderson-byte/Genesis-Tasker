@@ -2709,7 +2709,7 @@ export function sharedDataCameFromOfflineCache() { return sharedReadAvailability
 
 export async function queuedSharedMutations(projectId: string) {
   if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
-    const {privateSharedPending}=await import('./e2ee/shared-web-live');return(await privateSharedPending(confirmedTransportOwnerId,projectId)).map(({request})=>({requestId:request.id,kind:request.method==='POST'?'create' as const:'update' as const,title:typeof request.body.title==='string'?request.body.title:'',dueDate:typeof request.body.dueDate==='string'?request.body.dueDate:null,queuedAt:request.createdAt,error:undefined,draft:null}));
+    const {privateSharedPending}=await import('./e2ee/shared-web-live');return(await privateSharedPending(confirmedTransportOwnerId,projectId)).map(({request})=>({requestId:request.id,kind:request.path.endsWith('/move')?'move' as const:request.method==='POST'?'create' as const:'update' as const,title:typeof request.body.title==='string'?request.body.title:'',dueDate:typeof request.body.dueDate==='string'?request.body.dueDate:null,queuedAt:request.createdAt,error:undefined,draft:null}));
   }
   return (await readSharedOfflineStore()).queue.filter((item) => item.projectId === projectId)
     .map(({ requestId, kind, title, dueDate, queuedAt, error, body }) => ({
