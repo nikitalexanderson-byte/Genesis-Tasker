@@ -8,7 +8,7 @@ import { accountRetentionDeleteSection, accountRetentionPrivacySection, accountR
 import { dictationSpellingLegalSection } from './dictation-legal';
 import { weatherSolarLegalSection, weatherAndroidSolarLegalSection, weatherSourcesLegalSection } from './weather-legal';
 
-export const LEGAL_UPDATED = "2026-11-17";
+export const LEGAL_UPDATED = "2026-11-22";
 
 const sharedDataDeletionNotice = "После удаления аккаунта общие задачи и их вложения могут сохраняться для других участников, в том числе при передаче владения проектом. Если у вас есть право редактирования задачи, на сайте откройте её, нажмите «Редактировать», затем «Убрать файл» у вложения и «Сохранить задачу». В Android откройте «Файлы задачи», выберите «Убрать файл», подтвердите «Убрать» и нажмите «Сохранить». Закрытые резервные копии удаляются по штатной ротации; мгновенное стирание отдельных записей и файлов из них не гарантируется.";
 

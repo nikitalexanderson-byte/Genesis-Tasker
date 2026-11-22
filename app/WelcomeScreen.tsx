@@ -123,7 +123,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
             <p>{copy.googlePurpose}</p>
           </section>
           <section className="google-data-purpose" aria-labelledby="service-owner-title">
-            <h2 id="service-owner-title">{language === "en" ? "GENESIS service and domain" : "Сервис GENESIS и домен"}</h2>
+            <h2 id="service-owner-title">{publicProductCopy(language).merchantTitle}</h2>
             <div dangerouslySetInnerHTML={{__html:publicMerchantHtml(language, 'home')}} />
             <p>{language === "en"
               ? "GENESIS uses AI assistance only to interpret commands and prepare task plans. It does not generate non-consensual intimate imagery (AI NCII) or use Google APIs for that purpose."

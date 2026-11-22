@@ -24,13 +24,13 @@ export function publicHomeHtml(language:RegionLanguage,translate:Translate,base=
       <p class="public-hero-actions"><a class="public-action" href="#pricing">${escape(c.pricing)}</a><a href="${login}">${escape(c.getStarted)}</a></p>
       <section class="google-data-purpose" aria-labelledby="fallback-google-purpose"><h2 id="fallback-google-purpose">${t('Как GENESIS использует Google Calendar и Google Tasks')}</h2>
       <p>${t('Сначала Google передаёт только подтверждённый адрес, имя и изображение профиля для безопасного входа. Уже после входа вы сами решаете, подключать ли синхронизацию: GENESIS создаёт отдельный календарь GENESIS, а доступ к Google Tasks использует для показа и двустороннего изменения ваших списков и задач. Разрешения не применяются для рекламы, профилирования или обучения моделей.')}</p></section>
-      <section class="google-data-purpose" aria-labelledby="fallback-service-owner"><h2 id="fallback-service-owner">${t('Сервис GENESIS и домен')}</h2>${publicMerchantHtml(language,'home',base)}
+      <section class="google-data-purpose" aria-labelledby="fallback-service-owner"><h2 id="fallback-service-owner">${escape(c.merchantTitle)}</h2>${publicMerchantHtml(language,'home',base)}
       <p>${t('Нейросетевой помощник GENESIS разбирает команды и готовит план задач. GENESIS не создаёт интимные изображения без согласия (AI NCII) и не использует Google API для этой цели.')}</p></section>
       ${publicLanguageLinks(language,'home',translate,base)}
     </section><div class="public-product">${publicProductHtml(language,base)}</div></div></main>`;
 }
 
-/** Keep all existing disclosures and named parties in every localization. */
+/** Both renderers share the applicable service edition and complete processing disclosures. */
 export function publicLegalHtml(page:Exclude<PublicPage,'home'|'login'>,language:RegionLanguage,translate:Translate,backup:Translate,base='') {
   const c=publicProductCopy(language),document=legalPresentation(page,language,translate,backup),home=publicPagePath(language,'home',base);
   const sections=document.sections.map(([title,body])=>`<section><h2>${escape(title)}</h2><p>${escape(body)}</p></section>`).join('\n');

@@ -69,7 +69,7 @@ function publicLegalDocuments(): Plugin {
           const markup=legal?.markup??publicHomeHtml(language,translate,base);
           const title=legal?.title??publicPageCopy[language].title;
           const description=legal?.description??translate('GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks.');
-          const alternates=publicPageAlternates(page,base).map(row=>`<link rel="alternate" hreflang="${row.language}" href="${PUBLIC_ORIGIN}${row.path}" />`).join('\n');
+          const alternates=publicPageAlternates(page,base).filter(row=>row.language!=='ru'||language==='ru').map(row=>`<link rel="alternate" hreflang="${row.language}" href="${PUBLIC_ORIGIN}${row.path}" />`).join('\n');
           const source=template.replace(root,`<div id="root">${markup}</div>`)
             .replace(/<html lang="[^"]+"/,`<html lang="${language}"`)
             .replace(/<title>[^<]*<\/title>/,`<title>${escape(title)} · Genesis Tasker</title>`)

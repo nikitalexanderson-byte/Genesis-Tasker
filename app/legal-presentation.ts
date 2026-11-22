@@ -1,4 +1,6 @@
 import {legalPageContent} from './legal-content';
+import publicCopy from './public-product-copy.json';
+import internationalCopy from './public-international-copy.json';
 import {localizedAccountRetentionSections} from './account-retention-legal';
 import {localizedDictationLegalSections} from './dictation-legal';
 import {localizedWeatherLegalSections} from './weather-legal';
@@ -21,9 +23,15 @@ export function legalPresentation(page:LegalPageName,language:string,translate:T
   sections.set(adviceCopy.ru.dataTitle,[advice.dataTitle,`${advice.dataNotice} ${advice.ageData}`]);
   sections.set(adviceCopy.ru.ageLegalTitle,[advice.ageLegalTitle,advice.ageLegal]);
   const authored=new Map(Object.entries(releaseCopy.ru).map(([key,value])=>[value,release[key as keyof typeof release]]));
+  const international=language!=='ru',c=publicCopy[language as keyof typeof publicCopy]??publicCopy.en,external=internationalCopy[language as keyof typeof internationalCopy]??internationalCopy.en;
+  const present=(text:string)=>international?text.replace(/nikitalexanderson@gmail\.com/gi,'demiurge.soft@gmail.com').replace(/GigaChat|ГигаЧат|Гигачат|Гига Чат/gi,external.aiProvider).replace(/CloudTips/g,external.paymentProvider).replace('a signed the external payment provider notification','a signed notification from the external payment provider').replace(/(^|[.!?]\s+)the external payment provider/g,(_,prefix:string)=>prefix+'The external payment provider'):text;
   return {title:translate(source.title),intro:translate(source.intro),sections:source.sections.map(([title,body])=>{
-    const complete=sections.get(title);if(complete)return complete;
-    if(backupTitles.has(title))return [backup(title),backup(body)] as const;
-    return [translate(title),authored.get(body)??translate(body)] as const;
+    if(international&&page==='support'&&title==='Связаться')return[translate(title),external.supportBody] as const;
+    if(international&&body===releaseCopy.ru.identity)return[c.merchantTitle,`${c.creator} ${c.infrastructure}`] as const;
+    if(international&&body===releaseCopy.ru.performer)return[c.merchantTitle,`${c.merchant} ${c.paymentRoles}`] as const;
+    if(international&&body===releaseCopy.ru.paymentData)return[c.merchantTitle,`${c.merchantPrivacy} ${c.paymentRoles}`] as const;
+    const complete=sections.get(title);if(complete)return [present(complete[0]),present(complete[1])] as const;
+    if(backupTitles.has(title))return [present(backup(title)),present(backup(body))] as const;
+    return [present(translate(title)),present(authored.get(body)??translate(body))] as const;
   })};
 }
