@@ -12,6 +12,8 @@ import {encodeE2eeBytes} from './envelope.ts';
 import type {VerifiedProductProposal,VerifiedProductOrigin} from './product-proofs.ts';
 import {prepareSharedTaskFiles,sharedRequestFileInputs,sharedFileReference,type SharedFileReference} from './shared-file-values.ts';
 import {privateSharedTaskPage,privateSharedCustomFieldMatch} from './shared-query.ts';
+import {membershipOperationForSharedRequest} from './membership-operation-request.ts';
+import type {MembershipOperation} from './membership-operation-plan.ts';
 
 type ObjectValue=Record<string,unknown>;
 export type SharedLiveContext={ownerId:string;spaceId:string;role:string;spaceRole:string;permissions:Record<string,boolean>;members:ObjectValue[];invitations:ObjectValue[]};
@@ -32,6 +34,7 @@ export interface SharedLivePorts{
  stage:(edits:ProductEdit[],intentId:string)=>Promise<string>;flush:(intentId:string)=>Promise<unknown>;
  loadRequest:(id:string)=>Promise<{value:SavedRequest;serial:number}|null>;
  saveRequest:(value:SavedRequest,expected:number|null)=>Promise<number>;
+ membership?:(operation:MembershipOperation,intentId:string)=>Promise<ObjectValue>;
 }
 const camel=(key:string)=>key.replace(/_([a-z])/g,(_,letter:string)=>letter.toUpperCase());
 function object(value:unknown):asserts value is ObjectValue{if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_DOMAIN_INVALID');}
@@ -424,6 +427,10 @@ export class SharedLiveModel{
   if(saved){request=validateSharedLiveRequest(this.ports.binding,saved.value);if(request.method!==method||request.path!==path||!samePrivateJson(request.body,held))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}
   else{request={protocol:1,scopeId:this.ports.binding.scopeId,id,method,path,body:held,createdAt:new Date().toISOString(),edits:null,result:null,complete:false};saved={value:request,serial:await this.ports.saveRequest(request,null)};}
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
+  const membership=membershipOperationForSharedRequest(this.ports.binding,method,path,held);
+  if(membership){if(!this.ports.online||!this.ports.membership)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
+   const result=await this.ports.membership(membership,id);this.ports.current();await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;
+  }
   if(!request.edits){const prepared=await this.#prepare(request);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}
   if(request.edits!.length===0){const taskId=(request.result?.task as ObjectValue|undefined)?.id;if(typeof taskId!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',taskId),result={task:this.#task(task,versions,context)};
    if(this.#pendingEntities.has(task.entityId))return{task:{...result.task,pending:true},pending:true};await this.ports.saveRequest({...request,result,complete:true},saved.serial);this.ports.current();return result;

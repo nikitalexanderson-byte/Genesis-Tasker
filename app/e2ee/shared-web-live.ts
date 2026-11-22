@@ -10,6 +10,10 @@ import {E2eeEditorQueue} from './editor-queue.ts';
 import {E2eeFeatureDocument} from './feature-document.ts';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState} from './shared-aggregate.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
+import {privateMembershipOperationDrafts} from './membership-web-operations.ts';
+import {waitForPrivateMembershipOperation} from '../private-membership-ui.ts';
+import {privateAccountView} from './product-session.ts';
+import {samePrivateJson} from './product-json.ts';
 
 const models=new WeakMap<WebPrivateAccount,Map<string,WebSharedLive>>();
 const aggregates=new WeakMap<WebPrivateAccount,SharedAggregateModel>();
@@ -54,6 +58,10 @@ class WebSharedLive{
     const file=await client.read('attachment',reference.objectId);account.requireOpen();if(!file)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');return file;
    },
    stage:(edits,id)=>records.product.stage(edits,id),flush:async id=>{if(account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return records.flush(id);},
+   membership:async(operation,id)=>{account.requireOpen();const drafts=privateMembershipOperationDrafts(account.ownerId);let existing;
+    try{existing=await drafts.inspect(id);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_MEMBERSHIP_OPERATION_REQUIRED')throw error;}
+    account.requireOpen();if(existing){if(!samePrivateJson(existing.operation,operation))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}else await drafts.create(operation,id);account.requireOpen();
+    const result=await waitForPrivateMembershipOperation(account.ownerId,privateAccountView().language,id);account.requireOpen();return result;},
    loadRequest:async id=>(await this.requestDocument(id)).load(),saveRequest:async(value,expected)=>(await(await this.requestDocument(value.id)).save(value,expected)).serial,
   });
  }

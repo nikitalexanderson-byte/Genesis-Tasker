@@ -1,5 +1,40 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: ordinary shared-request bridge / streamed owner-review file
+
+После8f779f90 добавлены common membershipOperationForSharedRequest и nullable
+SharedLivePorts.membership. Normal request целиком сохраняется ДО map/review;
+role/remove/space-role/permissions/grants идут в новый durable operation, а не
+legacy endpoint или display-only ACL edit. Web broker хранит только UI intent,
+не authority; pause/restart сохраняет encrypted original, logout снимает waiter.
+Это ЕЩЁ НЕ mounted review UI: next создать PrivateMembershipGate, pending entry
+и matching NativeMembershipUi/Gate, 14lang copy; до этого новый source path
+не считать рабочим обычным UI. Native callback membership ещё не подключён.
+
+Добавлены matching TS/Kotlin framed review file reader/writer и foreground
+cloud-sync/AuthController APIs. 6MiB max на frame, полный ordered header→plan→
+preview→products→end, exact EOF/count/fingerprint. Import сохраняет header/parts
+как inert originals до проверки pinned signatures/private effects. Отсутствующий
+suffix/duplicate/reorder/truncation не даёт complete. Никаких trust/consent/apply
+из одного файла. Native SAF streaming и browser async generator не собирают
+пакет в один giant JSON. UI file picker/download ещё требуется.
+
+Combined member-category rename+permissions намеренно fail-closed с сохранённым
+raw input: нельзя выбросить title или изменить только private display ACL. Нужно
+подключить full private input attribution (либо нормальный отдельный review таких
+полей) до завершения этого UI. Project-access GET/preview из verified normal
+records, display names/private root titles, ordinary invitation flows тоже нужны.
+
+Impeccable context успешно выполнен; harden.md/craft-floor.md прочитаны. Existing
+security UI authority: app/PrivateSharedSecurityPanel.tsx, Native PrivateSharedSecurity.kt
+и PrivateMigrationGate.tsx/layout.tsx. Сохранять оформление; все screenshots/detector
+и security compiler/lint/tests/build/CI отложены до окончания code phase владельцем.
+
+Urgent exact-main checks45042239234: website job running, Android skipped, main
+6672bbefd65abc4b9c3268800d02c57bd82ed967; PR43 merged. Live всё ещё c29b76e3,
+Deploy не запускался. После green выполнить existing Deploy свежего main со fresh
+incumbent, затем live QA и merge main в security сохраняя AGENTS/security source.
+
 ## 22 ноября: durable cancel / explicit fresh semantic review
 
 Operation drafts теперь сохраняют optional cancelled/resolves, понимают прежние
