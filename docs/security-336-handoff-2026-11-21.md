@@ -1,5 +1,62 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Кодовое продолжение22 ноября — поверх исторических срезов
+
+Локальная ветка `codex/security-336`, кодовый HEAD `4f4bfd5f`. Добавлены пять
+кандидатных коммитов после `4a87de8e`: `e8c581a8` (личные Drive-копии web/API/
+Android), `66582ed1` (явная проверяемая отмена перехода в обоих интерфейсах),
+`c933e9f0` (transient SAF для независимого ключа сообщений), `434c919e` (web
+выгрузка текущих/исторических файлов), `4f4bfd5f` (native выбор назначения,
+повторное разблокирование и проверенная выгрузка выбранных версий).
+Все изменения сохранены локально. `demo-output/` чужой: не читать и не stage.
+Новые security-коммиты не отправлялись и не публиковались.
+
+Это **не проверенный релиз**: по порядку владельца общий тестовый этап ещё не
+начинался; compiler/typecheck/lint/tests/build/CI не запускались. Coverage остаётся
+9/20. Drive rollout выключен, действующая3.3.5/149 и принятая Paddle-витрина
+`c29b76e33cc42160616b2df6f5eca61af94f6c63` сохранены. Floors0/cutover off,
+GENESIS_DEPLOY_ANDROID=false. Оригинальный prompt по-прежнему имеет SHA256
+`5540A407041626A2ED9263F7C97DCDF6B90985375CC0E78063F7BDD2A384B338`.
+
+Новые документы: `security-336-drive-backups.md`,
+`security-336-native-message-key-files.md`, `security-336-content-file-output.md`.
+Новые секции общего журнала находятся сверху в implementation-pass.
+
+Точный следующий кодовый остаток:
+
+- Cancelled state4 пока нельзя безопасно передать в новый state3/source history:
+  `prepareStagedLocked` и старый source-only reader его намеренно отвергают.
+  Нужны полный аутентифицированный граф прежних владельцев/ролей оригиналов и
+  планов и их чтение с EOF, включая все scopes. Не исправлять фильтром префиксов,
+  ignore-list, удалением оригиналов или трактовкой отсутствующего/corrupt journal
+  как «не начинали». UI отмены использует существующий signed cancel и оставляет
+  барьер при любой неясности; полноценный restart этим не реализован.
+- Полная shared domain/advanced parity, создание новых закрытых spaces/projects,
+  membership/inheritance/roles/quotas и multi-owner rotation. Существующий server
+  bootstrap требует уже существующий управляемый resource; нельзя вернуть
+  plaintext legacy-create как обход после personal cutover. Общие контроллеры
+  перехода и межобластная история требуют завершения до активации.
+- Client automation/series, bulk/cross-scope transactions, advanced shared input
+  attribution, typed normal-repository content restore, revoked-device replacement
+  с сохранением originals и remaining reminder/background/deep-link paths.
+- Native message attachment pickers/plaintext callbacks и полное durable staging
+  черновиков/файлов, exact-command recovery старого shared-message UI. Новый
+  NativeUserFileOutput уже даёт bounded cancellable prefix/readback writer, но
+  эти пути пока к нему не подключены. Transient key-file handoff не является
+  durable draft/file queue.
+
+Известная адаптация тестового API для будущего общего этапа: из
+MessagingRepository удалён старый raw `writeBackup`; существующие JVM случаи
+MessagingRepositoryTest около190/204/214 ещё ссылаются на него. Перенести их на
+фактическую новую handoff-приёмку с сохранением live-entitlement/late callback/
+owner/lifecycle assertions. Не выдавать старые PASS за этот код.
+
+После всего кода: общая приёмка и исправления (48 исходных сценариев,14 языков,
+web размеры/темы, API26+,3.3.5/149 upgrade/recovery/concurrency/process death),
+затем внутреннее крипторевью точного финального кандидата и уже разрешённый
+штатный раздельный web/API и подписанный APK выпуск. Внешнее человеческое
+заключение больше не требуется; не запрашивать разрешение выпуска повторно.
+
 ## Последнее уточнение21 ноября — приоритет над историческими gates
 
 Владелец сообщил, что внешнего заключения нет, и поручил: «сделай ты этот ревью
