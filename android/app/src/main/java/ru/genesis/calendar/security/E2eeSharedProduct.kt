@@ -11,6 +11,7 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     private val assertCurrent:()->Unit,private val validateBody:(String,Any,JSONObject)->Any){
     private val prefix="product-tx:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(scopeId.toByteArray(Charsets.UTF_8)))+":"
     private val proposals=mutableMapOf<String,JSONObject>()
+    private val headProofs=mutableMapOf<String,String>()
     init{E2eeKeys.technical(scopeId);client.assertBinding(device,scopeId)}
     private fun check(){device.requireOpen();assertCurrent()}
     private fun version(input:JSONObject):JSONObject{
@@ -33,17 +34,18 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
         };JSONObject(value.toString())},::check)
     @Synchronized fun index(offline:Boolean=false):JSONArray{
         check();val prior=index.load();if(offline)return JSONArray((prior?.value?:error("E2EE_OFFLINE_CONTENT_UNAVAILABLE")).getJSONArray("entities").toString())
-        client.refresh();check();val rows=JSONArray();val seen=mutableSetOf<String>();var after="";var eof=false;var limit=50;var baseline:JSONObject?=null;val reviewed=mutableMapOf<String,JSONObject>()
+        client.refresh();check();val rows=JSONArray();val seen=mutableSetOf<String>();var after="";var eof=false;var limit=50;var baseline:JSONObject?=null;val reviewed=mutableMapOf<String,JSONObject>();val currentProofs=mutableMapOf<String,String>()
         for(page in 0..10032){val response=try{client.readProductIndex(after,limit)}catch(error:Exception){if(limit>1&&error.message=="E2EE_PRODUCT_PAGE_TOO_LARGE"){limit=maxOf(1,limit/2);continue};throw error}
             val verified=E2eeProductProofs.verifyPage(response,client::verifyServiceProof);check();val values=verified.entities;check(values.length()<=limit){"E2EE_PRODUCT_INDEX_INVALID"}
             check(baseline==null||baseline!!.get("proofHash")==verified.bootstrap.get("proofHash")){"E2EE_PRODUCT_PROOF_INVALID"};baseline=verified.bootstrap
+            val heads=response.getJSONArray("heads");for(at in 0 until heads.length()){val head=heads.getJSONObject(at);E2eeKeys.exact(head,setOf("entityId","revision","proofHash"));currentProofs[head.getString("entityId")]=head.getString("proofHash")}
             for(at in 0 until values.length()){val value=E2eeProductContract.entity(values.getJSONObject(at));val id=value.getString("entityId");check(id>after&&seen.add(id)&&rows.length()<10000){"E2EE_PRODUCT_INDEX_INVALID"};rows.put(value)}
             for(at in 0 until verified.proposals.length()){val proposal=verified.proposals.getJSONObject(at);val id=proposal.getString("proposalId");check(id !in reviewed){"E2EE_PRODUCT_PROOF_INVALID"};reviewed[id]=proposal}
             if(values.length()<limit){eof=true;break};after=rows.getJSONObject(rows.length()-1).getString("entityId")};check(eof){"E2EE_PRODUCT_INDEX_INVALID"}
         check(baseline!=null&&rows.length()>=baseline!!.getInt("expectedCount")){"E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE"}
         val lookup=(0 until rows.length()).associate{rows.getJSONObject(it).let{row->row.getString("entityId") to row}};val old=prior?.value?.getJSONArray("entities")?:JSONArray()
         for(at in 0 until old.length()){val value=old.getJSONObject(at);val remote=lookup[value.getString("entityId")]?:error("E2EE_REMOTE_ROLLBACK");check(remote.getLong("revision")>=value.getLong("revision")&&(remote.getLong("revision")!=value.getLong("revision")||E2eeProductJson.same(remote,value))){"E2EE_REMOTE_ROLLBACK"}}
-        if(!E2eeProductJson.same(old,rows))index.save(JSONObject().put("protocol",1).put("scopeId",scopeId).put("entities",rows),prior?.serial);check();proposals.clear();proposals.putAll(reviewed);return JSONArray(rows.toString())
+        if(!E2eeProductJson.same(old,rows))index.save(JSONObject().put("protocol",1).put("scopeId",scopeId).put("entities",rows),prior?.serial);check();proposals.clear();proposals.putAll(reviewed);headProofs.clear();headProofs.putAll(currentProofs);return JSONArray(rows.toString())
     }
     @Synchronized fun read(input:JSONObject,offline:Boolean=false):JSONObject{
         check();val entity=E2eeProductContract.entity(input);val value=document(entity.getString("objectId"),entity.getString("kind")).load(offline);val body=version(value.value)
@@ -101,13 +103,21 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     }
     /** A containing atomic membership transaction already applied these heads.
      * Verify signed index and decrypted versions; no network mutation here. */
-    @Synchronized fun confirmPrepared(intentId:String,receipt:JSONObject):JSONObject{
-        check();E2eeKeys.technical(intentId);val saved=transaction(prefix+intentId).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");val drafts=saved.value.getJSONArray("drafts");val operations=JSONArray();val entities=index()
+    @Synchronized fun confirmPrepared(intentId:String,receipt:JSONObject,expectedPacket:JSONObject):JSONObject{
+        check();E2eeKeys.technical(intentId);val packet=JSONObject(expectedPacket.toString());val saved=transaction(prefix+intentId).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");val drafts=saved.value.getJSONArray("drafts");val operations=JSONArray();val entities=index();val proof=client.verifyServiceProof(packet);check();val command=proof.getJSONObject("command")
+        check(saved.value.has("membershipIntentId")&&command.get("action")=="product-commit-bound"&&command.getJSONObject("payload").get("intentId")==intentId){"E2EE_PRODUCT_RECEIPT_INVALID"}
         for(at in 0 until drafts.length()){val draft=drafts.getJSONObject(at);check(!draft.isNull("payloadHash")){"E2EE_PRODUCT_TRANSACTION_MISSING"};val operation=JSONObject(draft.getJSONObject("operation").toString()).put("payloadHash",draft.get("payloadHash"));operations.put(operation)
-            val entity=(0 until entities.length()).map{entities.getJSONObject(it)}.singleOrNull{it.get("entityId")==operation.get("entityId")}?:error("E2EE_PRODUCT_RECEIPT_INVALID")
-            check(operation.getString("action")!="propose-complete"&&entity.getLong("revision")==operation.getLong("expectedRevision")+1&&entity.get("objectId")==operation.get("objectId")&&entity.get("payloadHash")==operation.get("payloadHash")){"E2EE_PRODUCT_RECEIPT_INVALID"}
+            var entity=(0 until entities.length()).map{entities.getJSONObject(it)}.singleOrNull{it.get("entityId")==operation.get("entityId")}?:error("E2EE_PRODUCT_RECEIPT_INVALID");val revision=operation.getLong("expectedRevision")+1
+            check(operation.getString("action")!="propose-complete"&&entity.getLong("revision")>=revision){"E2EE_PRODUCT_RECEIPT_INVALID"}
+            if(entity.getLong("revision")==revision)check(headProofs[entity.getString("entityId")]==proof.get("proofHash")){"E2EE_PRODUCT_RECEIPT_INVALID"}
+            else{
+                val response=client.readProductHistory(operation.getString("entityId"),revision+1,1);check();E2eeKeys.exact(response,setOf("pages","checkpointHash","directoryRevision"));val pages=response.getJSONArray("pages");check(pages.length()==1){"E2EE_PRODUCT_RECEIPT_INVALID"}
+                val raw=pages.getJSONObject(0);val historical=E2eeProductProofs.verifyPage(raw,client::verifyServiceProof);check();check(historical.entities.length()==1){"E2EE_PRODUCT_RECEIPT_INVALID"};entity=historical.entities.getJSONObject(0)
+                val heads=raw.getJSONArray("heads");check(heads.length()==1&&heads.getJSONObject(0).get("proofHash")==proof.get("proofHash")){"E2EE_PRODUCT_RECEIPT_INVALID"}
+            }
+            check(entity.get("entityId")==operation.get("entityId")&&entity.getLong("revision")==revision&&listOf("kind","domain","objectId","payloadHash","parentId","metadata").all{E2eeProductJson.same(entity.get(it),operation.get(it))}&&entity.getBoolean("deleted")== (operation.getString("action")=="delete")){"E2EE_PRODUCT_RECEIPT_INVALID"}
             check(E2eeProductJson.same(read(entity),version(draft.getJSONObject("version")))){"E2EE_PRODUCT_RECEIPT_INVALID"}
-        };return acknowledge(intentId,operations,JSONObject(receipt.toString()))
+        };check(E2eeProductJson.same(command.getJSONObject("payload").getJSONArray("operations"),operations)){"E2EE_PRODUCT_RECEIPT_INVALID"};return acknowledge(intentId,operations,JSONObject(receipt.toString()))
     }
     @Synchronized fun pending():List<String>{check();return device.vault.listLocal("draft",prefix).mapNotNull{id->val value=transaction(id).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");if(value.value.getBoolean("acknowledged")||value.value.has("membershipIntentId"))null else value.value.getString("intentId")}}
     @Synchronized fun history(entityId:String,before:Long=9_007_199_254_740_991L,requestedLimit:Int=5):JSONObject{

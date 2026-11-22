@@ -71,8 +71,9 @@ packet. Retained custody читает также packet manifests/pages, про�
 binding и подписи по существующим pinned history; foreign owner не превращается
 в доверенную authority из одного paste. Ни seal, ни custody команды не применяют.
 
-Клиентский stager пока выполняет **staging/cancel/seal/preview**, без final
-apply coordinator, verified receipt/readback, v2 owner review и normal UI.
+Клиентский stager выполняет **staging/cancel/seal/preview**; отдельный durable
+apply coordinator и normal readback adapters описаны ниже. V2 owner review и
+normal UI ещё требуют подключения.
 Native codec/stager написан как
 matching Kotlin implementation общего wire/local формата; differential acceptance
 ещё предстоит. Pure atomic planner по-прежнему использует общий runtime. Новые
@@ -108,16 +109,19 @@ apply/request/partial receipt originals, а complete evidence связывают
 signed membership frame и фактическим foreign writer. Они не исполняют outboxes.
 
 Новые ordinary role/member UI и v2 owner full effects review пока не соединены
-с этим path. Не принимать прежнее v1 review за новое согласие. Также текущий
-confirmPrepared требует точный текущий head: законная последующая правка во время
-потерянного ответа ещё требует historical proof/divergence handling, без overwrite,
-автоматического rebase или ложного acknowledgement. Код не компилировался и не
+с этим path. Не принимать прежнее v1 review за новое согласие. ConfirmPrepared получает исходный signed bound packet и проверяет его hash
+в normal signed index. При законном более новом head он запрашивает ровно исходную
+историческую revision, проверяет её signed proofHash и immutable encrypted body
+против сохранённого draft. Новый head не перезаписывается и не rebased. Итоговый
+ACL всё ещё требует ожидаемое текущее состояние; поздние ACL-изменения должны
+показываться как explicit divergence и пока требуют отдельного resolution. Код не компилировался и не
 тестировался; эти модули не повышают accepted coverage.
 
 ## Остаток подключения
 
-- Historical receipt readback при законном более новом head и semantic resolution;
-  normal adapters, coordinator и server writer/planner ещё не проверены.
+- Приёмка historical receipt readback при законном более новом head и semantic
+  resolution поздних ACL-изменений; normal adapters, coordinator и server
+  writer/planner ещё не проверены.
 - Owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.
 - Потоковый capture очень больших graph/ACL input без ограничения общим размером

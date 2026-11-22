@@ -30,7 +30,7 @@ export function webMembershipAtomicApply(account:WebPrivateAccount,transport:Mem
   transport:{membershipAtomicCommit:input=>commit.call(transport,input),membershipAtomicReceipt:input=>receipt.call(transport,input),membershipAtomicReceiptPage:input=>page.call(transport,input)},
   scope:async(packet,item)=>{const {target,opened,records}=await open(item.scopeId,packet.command.ownerId);await opened.client.confirmMembershipRotation(packet);current();
    await records.get(target.kind as 'space'|'project',target.resourceId);current();},
-  product:async(packet,item)=>{const {records}=await open(item.scopeId,packet.command.ownerId);await records.product.confirmPrepared(item.intentId,item.result as unknown as Record<string,WireValue>);current();},
+  product:async(packet,item)=>{const {records}=await open(item.scopeId,packet.command.ownerId);await records.product.confirmPrepared(item.intentId,item.result as unknown as Record<string,WireValue>,packet);current();},
   acl:async intentId=>{const stager=account.membershipAtomic(),state=await stager.inspect(intentId);current();
    for(let index=0;index<state.plan.pages.length;index++){const page=await stager.readPlanPage(intentId,index);current();if(page.kind!=='acl')continue;
     const response=await transport.membershipState(page.items.map(({table,key})=>({table,key})));current();exactKeys(response,['rows']);

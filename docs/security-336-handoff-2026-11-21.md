@@ -1,5 +1,17 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: historical bound-product readback (source-only)
+
+Web/native confirmPrepared теперь получает исходный signed packet. Exact current
+head сверяется с его proofHash; при более новой revision normal history читает
+ровно исходную immutable version, verifyProductPage/client.verifyServiceProof
+проверяют подписи, actual writer и точный command hash. Entity metadata, parent,
+deleted, payload/object и decrypted body должны совпасть с сохранённым draft.
+Более новый head сохраняется. Точный current ACL readback остаётся обязательным;
+поздние ACL changes пока требуют explicit divergence/resolution. Все четыре
+call sites/declarations сверены чтением; source-only, без compiler/tests/CI.
+Coverage9/20 и production149/floors0/cutover off остаются.
+
 ## 22 ноября: durable final apply / реальные web и native readback adapters
 
 Послеbd6a5c9c added matching TS/Kotlin final apply coordinators, separate v2
@@ -12,10 +24,9 @@ ACL readback до complete; receipt сохраняется раньше. Typed r
 и actual foreign writer. Новые controls не входят в content-only import/replay.
 
 Next: v2 all-owner full effects review/exchange и ordinary role/remove/grants/
-category/invitation UI, input/effects-to-private-product composer. Также
-confirmPrepared всё ещё требует точный текущий head: нужен historical receipt
-readback / explicit divergence для законной более новой правки, без overwrite
-или автоматического rebase. Very-wide streaming/native/local-record bounds и
+category/invitation UI, input/effects-to-private-product composer. Historical receipt
+readback добавлен ниже; explicit divergence/resolution для поздних ACL-изменений
+ещё нужен, без overwrite или автоматического rebase. Very-wide streaming/native/local-record bounds и
 остальные категории исходного prompt остаются. Не считать этот path normal E2E
 готовым. Source review/diff only; никаких security compiler/lint/tests/build/CI.
 Coverage9/20, production149/floors0/cutover off неизменны. demo-output/ не читался.

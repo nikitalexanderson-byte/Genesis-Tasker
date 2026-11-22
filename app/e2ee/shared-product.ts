@@ -5,7 +5,7 @@ import {samePrivateJson as same} from './product-json.ts';
 import {verifyProductPage,type VerifiedProductProposal} from './product-proofs.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {encodeE2eeBytes} from './envelope.ts';
-import type {WireValue} from './commands.ts';
+import {type SignedE2eeCommand,type WireValue} from './commands.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 
@@ -26,6 +26,7 @@ const encoder=new TextEncoder();
 export class E2eeSharedProduct{
  #serial:Promise<unknown>=Promise.resolve();#prefix:Promise<string>;#index:E2eeDeviceDocument<Index>;
  #proposals=new Map<string,VerifiedProductProposal>();
+ #headProofs=new Map<string,string>();
  constructor(private readonly options:SharedProductOptions){assertTechnical(options.scopeId);options.client.assertBinding(options.device,options.scopeId);
   this.#prefix=crypto.subtle.digest('SHA-256',encoder.encode(options.scopeId)).then(bytes=>`product-tx:${encodeE2eeBytes(new Uint8Array(bytes))}:`);
   this.#index=new E2eeDeviceDocument(options.device,`product-index:${options.scopeId}`,value=>{exactKeys(value,['protocol','scopeId','entities']);
@@ -55,18 +56,19 @@ export class E2eeSharedProduct{
   }return value as Transaction;
  },()=>this.#current());}
  async #readIndex(offline:boolean){const local=await this.#index.load();this.#current();if(offline){if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return local.value.entities;}
-  await this.options.client.refresh();this.#current();const entities:ProductEntity[]=[];let after='',limit=50,bootstrap:{proofHash:string;expectedCount:number}|null=null;const seen=new Set<string>(),proposals=new Map<string,VerifiedProductProposal>();
+  await this.options.client.refresh();this.#current();const entities:ProductEntity[]=[];let after='',limit=50,bootstrap:{proofHash:string;expectedCount:number}|null=null;const seen=new Set<string>(),proposals=new Map<string,VerifiedProductProposal>(),headProofs=new Map<string,string>();
   for(let page=0;page<=10032;page++){
    let response;try{response=await this.options.client.readProductIndex(after,limit);}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}
    this.#current();const verified=await verifyProductPage(response,packet=>this.options.client.verifyServiceProof(packet));this.#current();if(verified.entities.length>limit)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
    if(bootstrap&&bootstrap.proofHash!==verified.bootstrap.proofHash)throw new Error('E2EE_PRODUCT_PROOF_INVALID');bootstrap=verified.bootstrap;
+   if(!Array.isArray(response.heads))throw new Error('E2EE_PRODUCT_PROOF_INVALID');for(const head of response.heads){exactKeys(head,['entityId','revision','proofHash']);headProofs.set(head.entityId as string,head.proofHash as string);}
    for(const row of verified.entities){if(row.entityId<=after||seen.has(row.entityId))throw new Error('E2EE_PRODUCT_INDEX_INVALID');seen.add(row.entityId);entities.push(row);if(entities.length>10000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');}
    for(const proposal of verified.proposals){if(proposals.has(proposal.proposalId))throw new Error('E2EE_PRODUCT_PROOF_INVALID');proposals.set(proposal.proposalId,proposal);}
    if(verified.entities.length<limit)break;after=entities.at(-1)!.entityId;if(page===10032)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
   }
   if(!bootstrap||entities.length<bootstrap.expectedCount)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
   for(const old of local?.value.entities??[]){const row=entities.find(item=>item.entityId===old.entityId);if(!row||row.revision<old.revision||row.revision===old.revision&&!same(row,old))throw new Error('E2EE_REMOTE_ROLLBACK');}
-  if(!same(entities,local?.value.entities))await this.#index.save({protocol:1,scopeId:this.options.scopeId,entities},local?.serial??null);this.#current();this.#proposals=proposals;return entities;
+  if(!same(entities,local?.value.entities))await this.#index.save({protocol:1,scopeId:this.options.scopeId,entities},local?.serial??null);this.#current();this.#proposals=proposals;this.#headProofs=headProofs;return entities;
  }
  index(offline=false){return this.#operation(()=>this.#readIndex(offline));}
  async #read(entity:ProductEntity,offline:boolean){const view=await this.#document(entity.objectId,entity.kind).load(offline?'offline':'online');this.#current();
@@ -130,11 +132,22 @@ export class E2eeSharedProduct{
   }
   /** Checks the signed normal repository readback before acknowledging a commit
    * performed inside a containing membership transaction. Never sends a POST. */
-  confirmPrepared(intentId:string,receipt:Record<string,WireValue>){const held=structuredClone(receipt);assertTechnical(intentId);return this.#operation(async()=>{
+  confirmPrepared(intentId:string,receipt:Record<string,WireValue>,expectedPacket:SignedE2eeCommand){const held=structuredClone(receipt),packet=structuredClone(expectedPacket);assertTechnical(intentId);return this.#operation(async()=>{
    const saved=await this.#transaction((await this.#prefix)+intentId).load();if(!saved)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');
    const operations=saved.value.drafts.map(row=>{if(!row.payloadHash)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');return{...row.operation,payloadHash:row.payloadHash};});
-   const index=await this.#readIndex(false);for(const operation of operations){const entity=index.find(row=>row.entityId===operation.entityId);
-    if(!entity||operation.action==='propose-complete'||entity.revision!==operation.expectedRevision+1||entity.objectId!==operation.objectId||entity.payloadHash!==operation.payloadHash)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   const index=await this.#readIndex(false),proof=await this.options.client.verifyServiceProof(packet);this.#current();
+   if(!saved.value.membershipIntentId||proof.command.action!=='product-commit-bound'||proof.command.payload.intentId!==intentId||!same(proof.command.payload.operations,operations))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   for(const operation of operations){let entity=index.find(row=>row.entityId===operation.entityId);const revision=operation.expectedRevision+1;
+    if(!entity||operation.action==='propose-complete'||entity.revision<revision)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+    if(entity.revision===revision){if(this.#headProofs.get(entity.entityId)!==proof.proofHash)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');}
+    else{
+     const response=await this.options.client.readProductHistory(operation.entityId,revision+1,1);this.#current();exactKeys(response,['pages','checkpointHash','directoryRevision']);
+     if(!Array.isArray(response.pages)||response.pages.length!==1)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');const raw=response.pages[0],historical=await verifyProductPage(raw,value=>this.options.client.verifyServiceProof(value));this.#current();
+     if(historical.entities.length!==1)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');entity=historical.entities[0];const heads=(raw as {heads:unknown[]}).heads;
+     if(!Array.isArray(heads)||heads.length!==1)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');exactKeys(heads[0],['entityId','revision','proofHash']);if(heads[0].proofHash!==proof.proofHash)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+    }
+    if(entity.entityId!==operation.entityId||entity.revision!==revision||entity.kind!==operation.kind||entity.domain!==operation.domain||entity.objectId!==operation.objectId||entity.payloadHash!==operation.payloadHash
+     ||entity.parentId!==operation.parentId||entity.deleted!==(operation.action==='delete')||!same(entity.metadata,operation.metadata))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
     const value=await this.#read(entity,false),draft=saved.value.drafts.find(row=>row.operation.entityId===operation.entityId)!;if(!same(value,await this.#version(draft.version)))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
    }return this.#acknowledge(intentId,operations,held);
   });}

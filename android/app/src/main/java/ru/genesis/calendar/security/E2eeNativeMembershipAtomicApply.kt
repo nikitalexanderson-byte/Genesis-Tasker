@@ -24,7 +24,7 @@ internal object E2eeNativeMembershipAtomicApply {
                 opened.records.get(opened.target.getString("kind"),opened.target.getString("resourceId"));current()
             }
             override fun product(packet:JSONObject,receipt:JSONObject){
-                val opened=open(receipt.getString("scopeId"),packet.getJSONObject("command").getString("ownerId"));opened.records.product.confirmPrepared(receipt.getString("intentId"),receipt.getJSONObject("result"));current()
+                val opened=open(receipt.getString("scopeId"),packet.getJSONObject("command").getString("ownerId"));opened.records.product.confirmPrepared(receipt.getString("intentId"),receipt.getJSONObject("result"),packet);current()
             }
             override suspend fun acl(intentId:String){
                 val stager=account.membershipAtomic();val state=stager.inspect(intentId);current();val refs=state.getJSONObject("plan").getJSONArray("pages")
