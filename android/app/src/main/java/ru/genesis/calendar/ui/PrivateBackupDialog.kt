@@ -65,7 +65,7 @@ import ru.genesis.calendar.security.*
     val contentFileText=remember(language){context.assets.open("content-file-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val sectionNames=remember(context){context.assets.open("backup-section-names-v1.json").use{JSONObject(it.readBytes().toString(Charsets.UTF_8))}}
     val selectedDestination by NativeContentFileDestination.state.collectAsStateWithLifecycle()
-    val ownDestination=selectedDestination?.takeIf{it.request.owner==owner}
+    val ownDestination=selectedDestination?.takeIf{it.request.owner==owner&&it.request.purpose=="archive"}
     fun <T> run(operation:()->T,complete:(T)->Unit={}){
         if(busy||operationJob.get()!=null)return;busy=true;error=false;coroutine.launch{
             val job=currentCoroutineContext()[Job]

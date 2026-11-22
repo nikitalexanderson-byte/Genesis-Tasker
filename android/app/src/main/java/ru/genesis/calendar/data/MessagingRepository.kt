@@ -31,7 +31,8 @@ internal data class MessagingState(val initialized: Boolean = false, val keyRead
     val contactsCursor: String? = null, val contactsQuery: String = "", val participants: List<MessagingPeer> = emptyList(), val selected: MessagingNotice? = null,
     val accepted: Boolean = false, val declined: Boolean = false, val accessBlocked: Boolean = false, val offline: Boolean = false,
     val initiator: String? = null, val securityCode: String? = null, val messages: List<MessagingRow> = emptyList(),
-    val before: Long? = null, val draft: MessagingDraft? = null, val pending: Boolean = false, val pendingDelete: Boolean = false, val keyChanged: Boolean = false)
+    val before: Long? = null, val draft: MessagingDraft? = null, val pending: Boolean = false, val pendingDelete: Boolean = false, val keyChanged: Boolean = false,
+    val fileIntakes:List<MessagingFileIntakeInfo> = emptyList(),val draftRestoreEpoch:Long=0)
 
 /** Account-scoped identity, trust pins and durable exact-ciphertext command journal. No plaintext on disk. */
 internal class MessagingRepository(private val owner: String, private val gateway: MessagingGateway, private val store: MessagingStore) {
@@ -50,6 +51,7 @@ internal class MessagingRepository(private val owner: String, private val gatewa
     val state = mutable.asStateFlow()
     val ownerUid get() = owner
     private fun check(){custody.check();gateway.check();custody.check()}
+    private fun fileIntake(guard:()->Unit={})=MessagingFileIntake(owner,store){guard();check()}
     private suspend fun request(method: String, path: String, body: JSONObject? = null): JSONObject {
         check(); require(MessagingProtocol.allowedRoute(method, path)) { "MESSAGING_ROUTE_BLOCKED" }
         return gateway.request(method, path, body).also { check() }
@@ -149,7 +151,7 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         val pending = read("pending/${notice.id}")?.let(::JSONObject)
         publish(mutable.value.copy(selected = notice, accepted = accepted, declined = declined, accessBlocked = false, offline = false, initiator = initiator, keyChanged = changed,
             securityCode = if (identity != null && peer.keyId != null) MessagingCrypto.securityCode(listOf(identity!!.keyId, peer.keyId)) else null,
-            messages = emptyList(), before = null, draft = draft, pending = pending != null, pendingDelete = pending?.optString("method") == "DELETE"))
+            messages = emptyList(), before = null, draft = draft, pending = pending != null, pendingDelete = pending?.optString("method") == "DELETE",fileIntakes=fileIntake().pending(notice.id)))
         if (accepted && currentKey != null) messagesLocked(0)
     }
     suspend fun respond(accept: Boolean) = mutex.withLock {
@@ -209,12 +211,8 @@ internal class MessagingRepository(private val owner: String, private val gatewa
             } else throw failure
         }
     }
-    private fun draftJson(draft: MessagingDraft) = JSONObject().put("version", 1).put("id", draft.id).put("text", draft.text).put("files", JSONArray(draft.files.map { it.json() })).put("revision", draft.revision).put("seq", draft.seq)
-    private fun parseDraft(json: JSONObject): MessagingDraft {
-        require(json.getInt("version") == 1 && json.getLong("revision") >= 0 && json.getLong("seq") >= 0)
-        val files = json.getJSONArray("files"); require(files.length() <= 5)
-        return MessagingDraft(uuid(json.getString("id")), json.getString("text"), (0 until files.length()).map { MessagingCrypto.file(files.getJSONObject(it)) }, json.getLong("revision"), json.getLong("seq"))
-    }
+    private fun draftJson(draft:MessagingDraft)=MessagingDraftValues.encode(draft)
+    private fun parseDraft(json:JSONObject)=MessagingDraftValues.read(json)
     private suspend fun draftLocked(draft: MessagingDraft) {
         val current = requireNotNull(mutable.value.selected); require(!mutable.value.pending) { "MESSAGING_PENDING_COMMAND" }
         require(draft.text.toByteArray(Charsets.UTF_8).size <= 30000)
@@ -237,7 +235,7 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         draftLocked(MessagingDraft(row.id, row.content.text, row.content.files, row.revision, row.seq))
     }
     private suspend fun removeChunks(files: List<PrivateFileMetadata>) {
-        files.forEach { file -> repeat(file.chunks) { delete("file/${file.id}/$it") } }
+        files.forEach { file -> if(!fileIntake().retainsFile(file.id))repeat(file.chunks) { delete("file/${file.id}/$it") } }
     }
     suspend fun cancelEdit() = mutex.withLock {
         val previous = mutable.value.draft
@@ -251,11 +249,49 @@ internal class MessagingRepository(private val owner: String, private val gatewa
     }
     suspend fun attach(name: String, type: String, data: ByteArray) = mutex.withLock {
         val draft = requireNotNull(mutable.value.draft); require(draft.files.size < 5 && !mutable.value.pending)
-        val file = MessagingCrypto.encryptFile(requireNotNull(currentKey), context(draft.id, owner, draft.revision + 1), UUID.randomUUID().toString(), name, type, data)
-        // Persist chunks first; filenames and all metadata are also encrypted by the Room adapter.
-        file.second.forEachIndexed { index, chunk -> write("file/${file.first.id}/$index", chunk) }
-        draftLocked(draft.copy(files = draft.files + file.first))
+        val intake=fileIntake();val selected=requireNotNull(mutable.value.selected);val id=intake.create(selected,draft,ids());intake.begin(id,1,draft)
+        val key=requireNotNull(currentKey).copyOf();try{intake.stage(id,0,name,type,data,key,draft,::draftLocked)}finally{key.fill(0)}
+        publish(mutable.value.copy(fileIntakes=intake.pending(selected.id)))
     }
+    suspend fun prepareFileIntake(conversationId:String,draftId:String,revision:Long):String=mutex.withLock{
+        check();val conversation=requireNotNull(mutable.value.selected);val draft=requireNotNull(mutable.value.draft)
+        check(conversation.id==conversationId&&draft.id==draftId&&draft.revision==revision&&mutable.value.accepted&&!mutable.value.pending&&!mutable.value.keyChanged&&currentKey!=null){"MESSAGING_FILE_DRAFT_CHANGED"}
+        val saved=read("draft/${conversation.id}")?.let{parseDraft(JSONObject(it))};check(saved!=null&&MessagingDraftValues.same(saved,draft)){"MESSAGING_FILE_DRAFT_CHANGED"}
+        val id=fileIntake().create(conversation,draft,ids());publish(mutable.value.copy(fileIntakes=fileIntake().pending(conversation.id)));id
+    }
+    private suspend fun openFileIntakeLocked(id:String,guard:()->Unit):MessagingFileIntake{
+        guard();check();val intake=fileIntake(guard);val target=intake.target(id);initializeLocked();guard()
+        val conversationId=target.getString("conversationId");val spaceId=target.getString("spaceId");val peerId=target.getString("peerId")
+        if(mutable.value.selected?.id!=conversationId){
+            val peer=peersLocked(spaceId).singleOrNull{it.id==peerId}?:error("MESSAGING_PEER_UNAVAILABLE");guard()
+            val response=request("POST","/shared/spaces/${uuid(spaceId)}/private-conversations",JSONObject().put("userId",peerId));guard()
+            check(response.getString("id")==conversationId&&response.getString("status")=="accepted"){"MESSAGING_FILE_SOURCE_CHANGED"}
+            selectLocked(MessagingNotice(conversationId,spaceId,peerId,peer.name),true,response.opt("initiatorId") as? String,peer,false);guard()
+        }
+        check(mutable.value.accepted&&!mutable.value.pending&&!mutable.value.keyChanged&&currentKey!=null){"MESSAGING_PENDING_COMMAND"}
+        verifyPeerLocked();guard();intake.assertBinding(target,requireNotNull(mutable.value.selected),ids());guard();return intake
+    }
+    suspend fun beginFileIntake(id:String,count:Int,guard:()->Unit)=mutex.withLock{
+        val intake=openFileIntakeLocked(id,guard);intake.begin(id,count,requireNotNull(mutable.value.draft));guard()
+    }
+    suspend fun stageFileIntake(id:String,index:Int,name:String,type:String,data:ByteArray,guard:()->Unit)=mutex.withLock{
+        val intake=openFileIntakeLocked(id,guard);val key=requireNotNull(currentKey).copyOf()
+        try{intake.stage(id,index,name,type,data,key,requireNotNull(mutable.value.draft)){next->guard();draftLocked(next);guard()};guard()
+            publish(mutable.value.copy(fileIntakes=intake.pending(requireNotNull(mutable.value.selected).id)))
+        }finally{key.fill(0)}
+    }
+    suspend fun retainFileIntake(id:String)=mutex.withLock{
+        check();val intake=fileIntake();val target=intake.target(id);val selected=requireNotNull(mutable.value.selected);check(target.getString("conversationId")==selected.id){"MESSAGING_FILE_DRAFT_CHANGED"}
+        intake.retain(id);publish(mutable.value.copy(fileIntakes=intake.pending(selected.id)))
+    }
+    suspend fun resumeFileIntake(id:String)=mutex.withLock{
+        val intake=openFileIntakeLocked(id){};intake.resume(id,requireNotNull(mutable.value.draft));publish(mutable.value.copy(fileIntakes=intake.pending(requireNotNull(mutable.value.selected).id)))
+    }
+    suspend fun restoreFileIntakeDraft(id:String,savedId:String?=null)=mutex.withLock{
+        val intake=openFileIntakeLocked(id){};intake.restoreDraft(id,requireNotNull(mutable.value.draft),savedId,::draftLocked)
+        publish(mutable.value.copy(fileIntakes=intake.pending(requireNotNull(mutable.value.selected).id),draftRestoreEpoch=mutable.value.draftRestoreEpoch+1))
+    }
+    suspend fun refreshFileIntakes()=mutex.withLock{check();mutable.value.selected?.let{publish(mutable.value.copy(fileIntakes=fileIntake().pending(it.id)))}}
     private suspend fun acknowledge(current: MessagingNotice, command: JSONObject) {
         // A durable done marker makes disk-cleanup failures safe to replay without re-uploading bound files.
         write("pending/${current.id}", JSONObject(command.toString()).put("done", true).toString())
@@ -267,10 +303,10 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         val files = command.optJSONArray("uploads") ?: JSONArray()
         for (index in 0 until files.length()) {
             val file = MessagingCrypto.file(files.getJSONObject(index))
-            repeat(file.chunks) { delete("file/${file.id}/$it") }
+            if(!fileIntake().retainsFile(file.id))repeat(file.chunks) { delete("file/${file.id}/$it") }
         }
     }
-    private fun samePayload(a: JSONObject, b: JSONObject): Boolean = a.optInt("version") == b.optInt("version") && a.optString("iv") == b.optString("iv") && a.optString("ciphertext") == b.optString("ciphertext") && a.getJSONObject("keyIds").keys().asSequence().all { a.getJSONObject("keyIds").getString(it) == b.getJSONObject("keyIds").optString(it) }
+    private fun samePayload(a:JSONObject,b:JSONObject)=E2eeProductJson.same(a,b)
     private suspend fun commandRow(current: MessagingNotice, command: JSONObject): JSONObject? {
         val seq = command.getLong("seq")
         var before = if (seq == 0L) 0 else seq + 1
@@ -392,6 +428,7 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         if (read("pending/${current.id}") != null) { publish(mutable.value.copy(pending = true)); sendPendingLocked(); return@withLock }
         if (text != null) draftLocked(requireNotNull(mutable.value.draft).copy(text = text))
         val draft = requireNotNull(mutable.value.draft)
+        check(fileIntake().pending(current.id).none{it.draftId==draft.id&&!it.retained}){"MESSAGING_FILE_INTAKE_PENDING"}
         val content = MessagingCrypto.encodeContent(PrivateMessageContent(draft.text, draft.files))
         val payload = MessagingCrypto.encryptMessage(currentKey!!, context(draft.id, owner, draft.revision + 1), content, ids())
         val body = JSONObject().put("id", draft.id).put("payload", payload).put("attachmentIds", JSONArray(draft.files.map { it.id }))
@@ -411,6 +448,35 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         verifyPeerLocked()
         val chunks = (0 until file.chunks).map { request("GET", "/shared/private-conversations/${current.id}/files/${uuid(file.id)}/$it").getString("ciphertext") }
         MessagingCrypto.decryptFile(requireNotNull(currentKey), context(row.id, row.senderId, row.revision), file, chunks).also { check() }
+    }
+    fun requireFileOwner(){check()}
+    suspend fun prepareFileOutput(conversationId:String,row:MessagingRow,file:PrivateFileMetadata):String=mutex.withLock{
+        requireDataExchange();val selected=requireNotNull(mutable.value.selected)
+        check(selected.id==conversationId&&mutable.value.messages.any{it.id==row.id&&it.seq==row.seq&&it.revision==row.revision&&it.senderId==row.senderId&&!it.deleted&&!it.failed&&it.content?.files?.contains(file)==true}){"MESSAGING_FILE_SOURCE_CHANGED"}
+        val id=UUID.randomUUID().toString();val value=JSONObject().put("protocol",1).put("ownerId",owner).put("spaceId",selected.spaceId).put("conversationId",selected.id).put("peerId",selected.peerId)
+            .put("messageId",row.id).put("seq",row.seq).put("revision",row.revision).put("senderId",row.senderId).put("file",file.json())
+        write("file-output/$id",value.toString());requireDataExchange();check(read("file-output/$id")?.let{E2eeProductJson.same(JSONObject(it),value)}==true){"MESSAGING_FILE_INTAKE_UNVERIFIED"};id
+    }
+    suspend fun openFileOutput(id:String,guard:()->Unit):ByteArray=mutex.withLock{
+        fun current(){guard();requireDataExchange()};current();val value=JSONObject(read("file-output/${uuid(id)}")?:error("MESSAGING_FILE_INTAKE_REQUIRED"));current()
+        E2eeKeys.exact(value,setOf("protocol","ownerId","spaceId","conversationId","peerId","messageId","seq","revision","senderId","file"))
+        check(value.get("protocol")==1&&value.get("ownerId")==owner){"MESSAGING_FILE_SOURCE_CHANGED"};val conversation=uuid(value.getString("conversationId"));val space=uuid(value.getString("spaceId"));val peerId=value.getString("peerId")
+        initializeLocked();current()
+        if(mutable.value.selected?.id!=conversation){
+            val peer=peersLocked(space).singleOrNull{it.id==peerId}?:error("MESSAGING_PEER_UNAVAILABLE");current()
+            val response=request("POST","/shared/spaces/$space/private-conversations",JSONObject().put("userId",peerId));current()
+            check(response.getString("id")==conversation&&response.getString("status")=="accepted"){"MESSAGING_FILE_SOURCE_CHANGED"}
+            selectLocked(MessagingNotice(conversation,space,peerId,peer.name),true,response.opt("initiatorId") as? String,peer,false);current()
+        }
+        check(mutable.value.accepted&&!mutable.value.keyChanged&&mutable.value.selected?.spaceId==space&&mutable.value.selected?.peerId==peerId){"MESSAGING_FILE_SOURCE_CHANGED"};verifyPeerLocked();current()
+        val file=MessagingCrypto.file(value.getJSONObject("file"));val selection=JSONObject().put("id",uuid(value.getString("messageId"))).put("seq",E2eeCommands.integer(value.get("seq"),1))
+        val remote=commandRow(requireNotNull(mutable.value.selected),selection);current()
+        check(remote!=null&&remote.getLong("seq")==value.getLong("seq")&&remote.getString("senderId")==value.getString("senderId")&&remote.getLong("revision")==E2eeCommands.integer(value.get("revision"),1)&&remote.opt("deletedAt") !is String){"MESSAGING_FILE_SOURCE_CHANGED"}
+        val frame=MessageContext(space,conversation,value.getString("messageId"),value.getString("senderId"),value.getLong("revision"));val key=requireNotNull(currentKey).copyOf()
+        try{val content=MessagingCrypto.content(MessagingCrypto.decryptMessage(key,frame,requireNotNull(remote).getJSONObject("payload"),ids()));current();check(content.files.any{it==file}){"MESSAGING_FILE_SOURCE_CHANGED"}
+            val chunks=mutableListOf<String>();repeat(file.chunks){part->current();chunks+=request("GET","/shared/private-conversations/$conversation/files/${uuid(file.id)}/$part").getString("ciphertext");current()}
+            val bytes=MessagingCrypto.decryptFile(key,frame,file,chunks);try{current();check(bytes.size==file.size){"MESSAGING_FILE_SOURCE_CHANGED"};bytes}catch(reason:Throwable){bytes.fill(0);throw reason}
+        }finally{key.fill(0)}
     }
     suspend fun clear() = mutex.withLock {
         val current = requireNotNull(mutable.value.selected); require(!mutable.value.pending)
@@ -443,7 +509,7 @@ internal class MessagingRepository(private val owner: String, private val gatewa
     }
     suspend fun closeConversation() = mutex.withLock {
         currentKey?.fill(0); currentKey = null; currentPeer = null
-        publish(mutable.value.copy(selected = null, messages = emptyList(), draft = null, securityCode = null, accepted = false, declined = false, accessBlocked = false, offline = false, pending = false, pendingDelete = false, keyChanged = false))
+        publish(mutable.value.copy(selected = null, messages = emptyList(), draft = null, securityCode = null, accepted = false, declined = false, accessBlocked = false, offline = false, pending = false, pendingDelete = false, keyChanged = false,fileIntakes=emptyList()))
         inboxLocked()
     }
     companion object {

@@ -10,6 +10,19 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Native shared-message attachments and fresh-capability output (candidate)
+
+The actual picker callbacks now use protected intake/output selections plus the
+above-vault transient handoff. A fresh unlocked repository revalidates the exact
+conversation/draft/participant pins. Intake retains full source/part hashes,
+immutable IDs/nonces and the original composition before chunk IO; reselecting
+the same sources resumes exact ciphertext. Unfinished/deferred work and saved
+displaced drafts are exposed in the UI. Normal cleanup keeps their referenced
+chunks. Explicit file output rechecks the immutable message/file and uses the
+bounded prefix/readback writer. New14-language copy is shared by contracts.
+Details, explicit bounds and remaining message/background work:
+`security-336-native-message-attachments.md`. No compilation/QA/coverage increase.
+
 ### Composed fresh-space create/resume path (candidate, no compilation/QA)
 
 Normal web/native create-space actions now retain input before IO, invoke the

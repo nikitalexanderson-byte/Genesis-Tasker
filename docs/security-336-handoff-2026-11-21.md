@@ -1,5 +1,26 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: native shared-message файлы переведены на новый handoff
+
+После6e88a5b9 добавлен непроверенный код реального native MessagingScreen:
+protected intake/output selection до picker, transient URI-only handoff над
+vault gate, свежий repository после unlock, строгие conversation/draft/key pins,
+source/part hashes до chunk IO, same-source/nonce/ciphertext resume, сохранение
+оригиналов и displaced drafts, явные defer/restore/copy UI и14-language copy.
+Сохранение файла проверяет исходный message seq/revision/file и использует общий
+bounded prefix/readback writer. Archive/message input/message output разделены
+purpose; старые прямые plaintext provider callbacks удалены из этого экрана.
+Описание и реальные границы: `security-336-native-message-attachments.md`.
+
+Ещё остаются normal Messenger durable edit/exact-command recovery и детали
+старого shared-message conflict recovery, а также общий прежний остаток:
+fresh project topology/inheritance, membership/invitation/device UI, advanced
+parity/automation/bulk/cross-scope, typed restore/revoked replacement, background
+и interrupted-stage/legacy-cancel/divergence. Общий кодовый этап продолжается;
+QA/compiler/lint/build/CI не запускались. Coverage9/20, floors0/cutover off,
+GENESIS_DEPLOY_ANDROID=false; production3.3.5/149 и Paddle-сайт сохранены.
+Субагенты/Daybreak запрещены, demo-output/ чужой — не читать и не stage.
+
 ## 22 ноября: fresh-space create/resume подключён (непроверенный код)
 
 После shared controllers2c1d3ba2 добавлена реальная web/native композиция обычной

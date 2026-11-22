@@ -25,9 +25,13 @@ import java.util.concurrent.atomic.AtomicBoolean
             try{lifecycle.withResumed{};check(live.get()){"E2EE_FOREGROUND_REQUIRED"};request.current();request.returned(uri)}
             catch(cancel:CancellationException){NativeContentFileDestination.failed(request);throw cancel}catch(_:Exception){NativeContentFileDestination.failed(request)}
         }}
+        val sources=rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()){uris->coroutine.launch{
+            try{lifecycle.withResumed{};check(live.get()){"E2EE_FOREGROUND_REQUIRED"};request.current();request.returnedSources(uris)}
+            catch(cancel:CancellationException){NativeContentFileDestination.failed(request);throw cancel}catch(_:Exception){NativeContentFileDestination.failed(request)}
+        }}
         LaunchedEffect(request.id){
             try{if(saved.phase=="ready")return@LaunchedEffect;check(saved.phase=="requested"){"E2EE_FILE_DESTINATION_CHANGED"}
-                lifecycle.withResumed{};check(live.get()){"E2EE_FOREGROUND_REQUIRED"};request.picking();picker.launch("genesis-content.bin")
+                lifecycle.withResumed{};check(live.get()){"E2EE_FOREGROUND_REQUIRED"};request.picking();if(request.purpose=="message-input")sources.launch(arrayOf("*/*"))else picker.launch("genesis-content.bin")
             }catch(cancel:CancellationException){NativeContentFileDestination.failed(request);throw cancel}catch(_:Exception){NativeContentFileDestination.failed(request)}
         }
     }}

@@ -1,0 +1,16 @@
+{
+ "en":{"restore":"Restore this draft","notice":"Your current draft will be saved separately before opening the selected draft. No message will be sent.","copy":"Saved draft"},
+ "ru":{"restore":"Открыть этот черновик","notice":"Перед открытием выбранного черновика текущий будет сохранён отдельно. Сообщение не отправится.","copy":"Сохранённый черновик"},
+ "el":{"restore":"Άνοιγμα αυτού του πρόχειρου","notice":"Το τρέχον πρόχειρο θα αποθηκευτεί χωριστά πριν ανοίξει το επιλεγμένο. Δεν θα σταλεί μήνυμα.","copy":"Αποθηκευμένο πρόχειρο"},
+ "de":{"restore":"Diesen Entwurf öffnen","notice":"Ihr aktueller Entwurf wird vor dem Öffnen des ausgewählten Entwurfs separat gespeichert. Es wird keine Nachricht gesendet.","copy":"Gespeicherter Entwurf"},
+ "fr":{"restore":"Ouvrir ce brouillon","notice":"Votre brouillon actuel sera enregistré séparément avant l’ouverture du brouillon choisi. Aucun message ne sera envoyé.","copy":"Brouillon enregistré"},
+ "es":{"restore":"Abrir este borrador","notice":"El borrador actual se guardará por separado antes de abrir el seleccionado. No se enviará ningún mensaje.","copy":"Borrador guardado"},
+ "it":{"restore":"Apri questa bozza","notice":"La bozza attuale verrà salvata separatamente prima di aprire quella selezionata. Nessun messaggio verrà inviato.","copy":"Bozza salvata"},
+ "pt":{"restore":"Abrir este rascunho","notice":"O rascunho atual será guardado separadamente antes de abrir o selecionado. Nenhuma mensagem será enviada.","copy":"Rascunho guardado"},
+ "pl":{"restore":"Otwórz ten szkic","notice":"Bieżący szkic zostanie zapisany osobno przed otwarciem wybranego szkicu. Żadna wiadomość nie zostanie wysłana.","copy":"Zapisany szkic"},
+ "sr":{"restore":"Отвори овај нацрт","notice":"Тренутни нацрт ће бити сачуван одвојено пре отварања изабраног. Ниједна порука неће бити послата.","copy":"Сачувани нацрт"},
+ "uk":{"restore":"Відкрити цю чернетку","notice":"Перед відкриттям вибраної чернетки поточну буде збережено окремо. Повідомлення не буде надіслано.","copy":"Збережена чернетка"},
+ "zh":{"restore":"打开此草稿","notice":"打开所选草稿前，将单独保存当前草稿。不会发送任何消息。","copy":"已保存的草稿"},
+ "tr":{"restore":"Bu taslağı aç","notice":"Seçilen taslak açılmadan önce geçerli taslağınız ayrı olarak kaydedilir. Hiçbir mesaj gönderilmez.","copy":"Kaydedilen taslak"},
+ "ja":{"restore":"この下書きを開く","notice":"選択した下書きを開く前に、現在の下書きを別に保存します。メッセージは送信されません。","copy":"保存済みの下書き"}
+}

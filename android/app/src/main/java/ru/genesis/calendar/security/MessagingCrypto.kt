@@ -137,20 +137,32 @@ internal object MessagingCrypto {
     fun encryptFile(key: ByteArray, context: MessageContext, id: String, name: String, type: String, data: ByteArray): Pair<PrivateFileMetadata, List<String>> {
         require(data.size <= FILE_LIMIT) { "PRIVATE_FILE_TOO_LARGE" }
         val iv = ByteArray(12).also(random::nextBytes)
-        val cipher = crypt(Cipher.ENCRYPT_MODE, key, iv, fileAad(context, id), data)
-        val chunks = (cipher.indices step CHUNK_SIZE).map { offset -> base64(cipher.copyOfRange(offset, (offset + CHUNK_SIZE).coerceAtMost(cipher.size))) }
-        return PrivateFileMetadata(id, name.take(255), type, data.size, base64(iv), chunks.size).also { file(it.json()) } to chunks
+        try{val chunks=encryptedFileChunks(key,context,id,iv,data)
+            return PrivateFileMetadata(id,name.take(255),type,data.size,base64(iv),chunks.size).also{file(it.json())} to chunks
+        }finally{iv.fill(0)}
+    }
+    private fun encryptedFileChunks(key:ByteArray,context:MessageContext,id:String,iv:ByteArray,data:ByteArray):List<String>{
+        val cipher=crypt(Cipher.ENCRYPT_MODE,key,iv,fileAad(context,id),data)
+        try{return (cipher.indices step CHUNK_SIZE).map{offset->val part=cipher.copyOfRange(offset,(offset+CHUNK_SIZE).coerceAtMost(cipher.size));try{base64(part)}finally{part.fill(0)}}}finally{cipher.fill(0)}
+    }
+    /** Exact replay only: the protected source digest must match BEFORE reusing
+     * the saved nonce. A different source cannot resume an incomplete file. */
+    fun replayFile(key:ByteArray,context:MessageContext,original:PrivateFileMetadata,plaintextHash:String,data:ByteArray):List<String>{
+        file(original.json());require(data.size==original.size&&base64(sha(data))==plaintextHash){"MESSAGING_FILE_SOURCE_CHANGED"}
+        val iv=unbase64(original.iv);try{return encryptedFileChunks(key,context,original.id,iv,data)}finally{iv.fill(0)}
     }
     fun decryptFile(key: ByteArray, context: MessageContext, file: PrivateFileMetadata, chunks: List<String>): ByteArray {
         file(file.json()); require(chunks.size == file.chunks) { "INVALID_PRIVATE_FILE" }
         val cipher = ByteArray(file.size + 16); var offset = 0
-        chunks.forEachIndexed { index, chunk ->
+        try{chunks.forEachIndexed { index, chunk ->
             val part = unbase64(chunk)
-            require(part.size == if (index == chunks.lastIndex) cipher.size - offset else CHUNK_SIZE) { "INVALID_PRIVATE_FILE" }
-            part.copyInto(cipher, offset); offset += part.size
+            try{require(part.size == if (index == chunks.lastIndex) cipher.size - offset else CHUNK_SIZE) { "INVALID_PRIVATE_FILE" }
+                part.copyInto(cipher, offset); offset += part.size
+            }finally{part.fill(0)}
         }
         require(offset == cipher.size) { "INVALID_PRIVATE_FILE" }
-        return crypt(Cipher.DECRYPT_MODE, key, unbase64(file.iv), fileAad(context, file.id), cipher)
+        val iv=unbase64(file.iv);try{return crypt(Cipher.DECRYPT_MODE,key,iv,fileAad(context,file.id),cipher)}finally{iv.fill(0)}
+        }finally{cipher.fill(0)}
     }
     private fun backupKey(password: String, salt: ByteArray): ByteArray {
         require(password.length >= 12 && salt.size == 16) { "BACKUP_PASSWORD_REQUIRED" }
