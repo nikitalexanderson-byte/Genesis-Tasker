@@ -202,7 +202,7 @@ export async function inspectRetainedProductCustody(options:Options){
    if(baseId!=='enrollment:'+command.scopeId||command.action!=='enroll'||command.deviceId!=='recovery')invalid();
    exactKeys(payload,['challenge','capsule','historyCapsules','selfProof']);exactKeys(payload.challenge,['id','scopeId','userId','role','sessionHash','deviceId','signingKey','receivingKey','nonce','expiresAt']);const challenge=payload.challenge;
    if(challenge.scopeId!==command.scopeId||challenge.userId!==options.actor.ownerId||challenge.deviceId!==options.actor.deviceId||challenge.signingKey!==options.selfKeys.signingKey||challenge.receivingKey!==options.selfKeys.receivingKey
-    ||!['owner','writer','commenter','reader'].includes(String(challenge.role))||!Array.isArray(payload.historyCapsules))invalid();integer(challenge.expiresAt,1);decodeE2eeBytes(challenge.sessionHash,32);
+    ||!['owner','writer','commenter','reader'].includes(String(challenge.role))||!Array.isArray(payload.historyCapsules))invalid();integer(challenge.expiresAt,1);if(typeof challenge.sessionHash!=='string'||!/^[a-f0-9]{64}$/.test(challenge.sessionHash))invalid();
    const prefix=encoder.encode('GENESIS-E2EE-ENROLLMENT\0v1\0'),body=canonicalE2eeValue(challenge),proof=new Uint8Array(prefix.length+body.length);proof.set(prefix);proof.set(body,prefix.length);
    try{if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},await signingPublicKey(challenge.signingKey as string),decodeE2eeBytes(payload.selfProof,64),proof))invalid();current();}finally{body.fill(0);proof.fill(0);}
    await openRoot(payload.capsule,options.receivingKey,{ownerId:directory.ownerId,scopeId:directory.scopeId,cryptoEpoch:directory.cryptoEpoch,keyId:directory.keyId,recipientId:options.actor.deviceId});current();

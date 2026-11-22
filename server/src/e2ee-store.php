@@ -139,12 +139,16 @@ function genesisE2eeBootstrap(string $actor, mixed $source): array
 function genesisE2eeCreateChallenge(string $actor, string $scopeId, string $sessionBinding, array $input): array
 {
     genesisE2eeScope($actor, $scopeId);
-    genesisE2eeExactFields($input, ['deviceId','keys']); genesisE2eeIdentifier($input['deviceId']);
+    genesisE2eeExactFields($input, array_key_exists('requestId',$input)?['deviceId','keys','requestId']:['deviceId','keys']); genesisE2eeIdentifier($input['deviceId']);
     if ($input['deviceId'] === 'recovery') genesisE2eeInvalid();
     $keys = genesisE2eePublicKeys($input['keys']);
     if (strlen($sessionBinding) < 16 || strlen($sessionBinding) > 256) genesisE2eeInvalid();
     $db = genesisDb(); genesisBeginWriteTransaction($db);
     try {
+        $requestId=array_key_exists('requestId',$input)?genesisE2eeIdentifier($input['requestId']):null;
+        $requestHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical(['scopeId'=>$scopeId,'deviceId'=>$input['deviceId'],'keys'=>$keys,'sessionHash'=>hash('sha256',$sessionBinding)]),true)),'+/','-_'),'=');
+        if($requestId!==null){$previous=genesisE2eeRow($db,"SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action='device-challenge' AND intent_id=?",[$scopeId,$actor,$requestId]);
+            if($previous){if(!hash_equals($previous['payload_hash'],$requestHash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');$result=json_decode($previous['result_json'],true,512,JSON_THROW_ON_ERROR);$db->commit();return$result;}}
         $db->prepare('DELETE FROM e2ee_challenges WHERE expires_at<?')->execute([time()]);
         $count = genesisE2eeRow($db, 'SELECT COUNT(*) AS amount FROM e2ee_challenges WHERE scope_id=? AND user_id=? AND consumed=0', [$scopeId,$actor]);
         if ((int)$count['amount'] >= 10) throw new GenesisResourceLimitException(429, 'E2EE_CHALLENGE_LIMIT');
@@ -154,6 +158,7 @@ function genesisE2eeCreateChallenge(string $actor, string $scopeId, string $sess
             'nonce'=>bin2hex(random_bytes(32)),'expiresAt'=>time()+300];
         $db->prepare('INSERT INTO e2ee_challenges(id,scope_id,user_id,role,session_hash,device_id,signing_key,receiving_key,nonce,expires_at) VALUES(?,?,?,?,?,?,?,?,?,?)')
             ->execute(array_values($row));
+        if($requestId!==null)$db->prepare("INSERT INTO e2ee_service_intents VALUES(?,?,'device-challenge',?,?,?)")->execute([$scopeId,$actor,$requestId,$requestHash,genesisE2eeJson($row)]);
         $db->commit(); return $row;
     } catch (Throwable $error) { if ($db->inTransaction()) $db->rollBack(); throw $error; }
 }

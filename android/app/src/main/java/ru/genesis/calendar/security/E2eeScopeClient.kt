@@ -586,6 +586,22 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         val root=roots[context.getString("keyId")]?:error("E2EE_KEY_UNAVAILABLE");historicalHead(item);val bytes=E2eeEnvelope.open(root,E2eeDirectory.contentSigningKey(frame,context),item.context,item);bytes.fill(0);device.requireOpen()
         return JSONObject().put("scopeId",scopeId).put("generation",context.get("dataGeneration")).put("revision",context.get("revision")).put("payloadHash",E2eeEnvelope.payloadHash(item))
     }
+    @Synchronized internal fun prepareDeviceAccess(input:JSONObject,comparedFingerprint:String):JSONObject{
+        val request=E2eeDeviceAccessContract.verify(input);val value=current();val own=value.devices[device.deviceId];val target=request.getJSONObject("target");val challenge=request.getJSONObject("challenge")
+        check(refreshed&&value.state=="active"&&value.ownerId==device.ownerId&&own!=null&&!own.revoked&&own.role=="owner"
+            &&target.get("scopeId")==scopeId&&target.get("ownerId")==ownerId&&target.get("kind")==value.kind&&target.get("resourceId")==value.resourceId
+            &&E2eeProductJson.same(target.getJSONObject("authority"),pin)){"E2EE_SCOPE_BINDING_MISMATCH"}
+        check(E2eeDeviceAccessContract.fingerprint(request)==comparedFingerprint){"E2EE_DEVICE_FINGERPRINT_REQUIRED"}
+        check(E2eeCommands.integer(challenge.get("expiresAt"),1)>System.currentTimeMillis()/1000){"E2EE_CHALLENGE_EXPIRED"};check(challenge.getString("deviceId") !in value.devices){"E2EE_DEVICE_ALREADY_KNOWN"}
+        fun forward(epoch:Long,keyId:String,capsule:JSONObject):JSONObject {
+            val result=E2eeKeys.forwardRoot(capsule,device.keys().receiving,E2eeKeys.RootRecipient(ownerId,scopeId,epoch,keyId,device.deviceId),challenge.getString("receivingKey"),
+                E2eeKeys.RootRecipient(ownerId,scopeId,epoch,keyId,challenge.getString("deviceId")))
+            device.requireOpen();check(current()===value){"E2EE_DIRECTORY_CONFLICT"};return result
+        }
+        val history=JSONArray();for(grant in requireNotNull(own).historyCapsules)history.put(JSONObject().put("cryptoEpoch",grant.cryptoEpoch).put("keyId",grant.keyId).put("capsule",forward(grant.cryptoEpoch,grant.keyId,grant.capsule)))
+        val capsule=forward(value.cryptoEpoch,value.keyId,own.capsule);check(current()===value){"E2EE_DIRECTORY_CONFLICT"}
+        return packet("enroll",JSONObject().put("challenge",challenge).put("selfProof",request.get("selfProof")).put("historyCapsules",history).put("capsule",capsule))
+    }
     @Synchronized fun verifyServiceProof(input:JSONObject):JSONObject{
         current();val packet=JSONObject(input.toString());val command=packet.getJSONObject("command");val frame=directoryFrames[command.getLong("expectedRevision")]?:error("E2EE_PRODUCT_PROOF_INVALID")
         check(command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId&&command.get("checkpointHash")==frame.checkpoint.hash&&command.getLong("securityEpoch")==frame.securityEpoch

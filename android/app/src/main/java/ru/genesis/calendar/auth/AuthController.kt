@@ -353,6 +353,46 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope&&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
         current();return ru.genesis.calendar.security.E2eePrivateProjectCreation(app,account,{scope->current();e2eeScopeSetupTransport(uid,account.device).directory(scope).also{current()}},::current)
     }
+    private fun privateDeviceAccess(uid:String,guard:()->Unit):ru.genesis.calendar.security.E2eeDeviceAccess{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get();val storageScope=CloudAccountSnapshot.scopeFor(uid)
+        val account=ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid);val trust=ru.genesis.calendar.security.E2eeSharedTrust(account)
+        fun current(){guard();account.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn&&client.isTrialForeground()
+            &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope&&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
+        current();val ports=object:ru.genesis.calendar.security.E2eeDeviceAccessPorts{
+            private fun call(path:String,body:JSONObject):JSONObject{current();return this@AuthController.client.e2ee(generation,path,body).also{current()}}
+            override fun target(scopeId:String):JSONObject{
+                current();val personal=account.directory
+                if(scopeId==personal.scopeId)return JSONObject().put("scopeId",scopeId).put("ownerId",uid).put("kind","personal").put("resourceId",uid).put("authority",account.device.authorityPin)
+                val rows=trust.list();current();val pin=(0 until rows.length()).map{rows.getJSONObject(it)}.singleOrNull{it.get("scopeId")==scopeId}?:error("E2EE_SHARED_FINGERPRINT_REQUIRED")
+                return JSONObject().put("scopeId",scopeId).put("ownerId",pin.get("ownerId")).put("kind",pin.get("kind")).put("resourceId",pin.get("resourceId")).put("authority",pin.get("authority"))
+            }
+            override fun client(target:JSONObject):ru.genesis.calendar.security.E2eeScopeClient{
+                current();check(ru.genesis.calendar.security.E2eeProductJson.same(this.target(target.getString("scopeId")),target)){"E2EE_AUTHORITY_CHANGED"}
+                if(target.get("kind")=="personal")return account.client
+                val opened=trust.open(target.getString("scopeId"));current();val directory=opened.directory
+                check(directory.ownerId==target.get("ownerId")&&directory.kind==target.get("kind")&&directory.resourceId==target.get("resourceId")&&ru.genesis.calendar.security.E2eeProductJson.same(directory.recoveryKit.getJSONObject("authority"),target.get("authority"))){"E2EE_AUTHORITY_CHANGED"};return opened.client
+            }
+            override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
+            override fun challenge(target:JSONObject,deviceId:String,keys:JSONObject,requestId:String)=call("/challenge",JSONObject().put("scopeId",target.get("scopeId")).put("deviceId",deviceId).put("keys",keys).put("requestId",requestId))
+            override fun command(packet:JSONObject)=call("/command",packet)
+            override fun open(target:JSONObject){client(target).refresh();current();ru.genesis.calendar.security.NativePrivateProducts.changed(storageScope)}
+        }
+        return ru.genesis.calendar.security.E2eeDeviceAccess(account,ports,::current)
+    }
+    private suspend fun <T> privateDeviceAccessCall(operation:(ru.genesis.calendar.security.E2eeDeviceAccess)->T):T=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val operationJob=currentCoroutineContext().job
+        operation(privateDeviceAccess(uid){operationJob.ensureActive()})
+    }
+    private fun privateDeviceAccessView(state:JSONObject)=JSONObject().put("state",state).put("fingerprint",if(state.isNull("request"))JSONObject.NULL else ru.genesis.calendar.security.E2eeDeviceAccessContract.fingerprint(state.getJSONObject("request")))
+    private fun privateDeviceAccessInput(input:String):JSONObject{
+        check(input.length<=128*1024){"E2EE_DEVICE_ACCESS_INVALID"};val bytes=input.toByteArray(Charsets.UTF_8)
+        return try{check(bytes.size<=128*1024){"E2EE_DEVICE_ACCESS_INVALID"};ru.genesis.calendar.security.E2eeFileManifestJson.read(bytes)}finally{bytes.fill(0)}
+    }
+    internal suspend fun pendingPrivateDeviceAccess():List<JSONObject> = privateDeviceAccessCall{access->access.pending().map{row->JSONObject().put("id",row.get("id")).put("mode",row.get("mode")).put("scopeId",row.getJSONObject("target").get("scopeId")).put("complete",row.get("complete"))}}
+    internal suspend fun createPrivateDeviceAccess(scopeId:String):JSONObject=privateDeviceAccessCall{access->privateDeviceAccessView(access.request(access.create(scopeId)))}
+    internal suspend fun loadPrivateDeviceAccess(id:String):JSONObject=privateDeviceAccessCall{access->val state=access.inspect(id);privateDeviceAccessView(if(state.get("mode")=="request"&&state.isNull("request"))access.request(id)else state)}
+    internal suspend fun approvePrivateDeviceAccess(input:String,comparedFingerprint:String):JSONObject=privateDeviceAccessCall{access->privateDeviceAccessView(access.approve(privateDeviceAccessInput(input),comparedFingerprint))}
+    internal suspend fun submitPrivateDeviceAccess(id:String,input:String):JSONObject=privateDeviceAccessCall{access->if(input.isNotBlank())access.stageApproval(id,privateDeviceAccessInput(input));privateDeviceAccessView(access.submit(id))}
     internal fun pendingPrivateCreations(uid:String):List<JSONObject> = (privateSpaceCreation(uid).pending()+privateProjectCreation(uid).pending()).map{row->
         JSONObject().put("intentId",row.get("intentId")).put("scopeId",row.get("scopeId")).put("resourceId",row.get("resourceId")).put("kind",row.get("kind"))
             .put("input",JSONObject().put("title",row.getJSONObject("input").get("title")))

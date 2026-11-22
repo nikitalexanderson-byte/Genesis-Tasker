@@ -10,6 +10,18 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Device access in Account (candidate, after11ff51d3)
+
+Both clients now compose protected request/grant custody, signed candidate
+challenge proof, manual independent fingerprint review, owner-only current/
+historical HPKE capsule forwarding, candidate submission and exact directory/
+normal-scope readback. Challenge requestId receipts resolve lost responses.
+Existing authority pins can be saved before the candidate is enrolled. This
+does not replace the first personal recovery entry or finish membership/invite
+flows. See `security-336-device-access.md`. No compilation/tests/build/CI ran;
+coverage remains9/20. The next membership code must also correct canonical hash
+projection of SQL field names without widening the global canonical format.
+
 ### Pure project-recipient preview and matching client ports (candidate)
 
 Signed active-personal-owner read now reuses the same pure topology/inheritance

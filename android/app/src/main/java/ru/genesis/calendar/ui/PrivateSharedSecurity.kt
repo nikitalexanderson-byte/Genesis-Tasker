@@ -77,7 +77,7 @@ import ru.genesis.calendar.auth.AuthController
             },enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(migration.getString("transfer"))}
             if(!accepted&&selected?.getString("state")=="active"){
                 OutlinedTextField(value=compared,onValueChange={compared=it.trim().take(64)},label={Text(text.getString("compare"))},enabled=!busy,singleLine=true,modifier=Modifier.fillMaxWidth())
-                Button(onClick={val submitted=compared;run({val trust=E2eeSharedTrust(account);trust.accept(proposal,submitted);trust.open(proposal.getString("scopeId"))},{accepted=true;message=text.getString("saved")})},enabled=!busy&&compared==fingerprint,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("accept"))}
+                Button(onClick={val submitted=compared;run({val trust=E2eeSharedTrust(account);trust.accept(proposal,submitted)},{accepted=true;message=text.getString("saved")})},enabled=!busy&&compared==fingerprint,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("accept"))}
             }
             if(accepted&&proposal.getString("ownerId")==account.ownerId)Button(onClick={run({
                 val scopeId=proposal.getString("scopeId");E2eeSharedTrust(account).open(scopeId)
@@ -85,5 +85,6 @@ import ru.genesis.calendar.auth.AuthController
             },{message=text.getString("complete")})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("baseline"))}
         }
         if(message.isNotEmpty())Text(message,style=MaterialTheme.typography.bodyMedium)
+        PrivateDeviceAccessEntry()
     }
 }

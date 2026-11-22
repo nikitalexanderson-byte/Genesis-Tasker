@@ -3890,6 +3890,41 @@ async function privateProjectCreationSession(guard:()=>void=()=>{}){
  const {E2eePrivateProjectCreation}=await import('./e2ee/private-project-create');current();
  return{owner,account,current,creation:new E2eePrivateProjectCreation(account,privateScopeSetupHttpTransport(),current)};
 }
+async function privateDeviceAccessSession(){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eeDeviceAccess}=await import('./e2ee/device-access'),{E2eeSharedTrust}=await import('./e2ee/shared-trust'),{validateDeviceAccessTarget}=await import('./e2ee/device-access-contract');current();
+ const trust=new E2eeSharedTrust(owner),target=async(scopeId:string)=>{
+  current();const personal=account.personal().directory;if(scopeId===personal.scopeId)return validateDeviceAccessTarget({scopeId,ownerId:owner,kind:'personal',resourceId:owner,authority:account.device.authorityPin});
+  const pins=await trust.list();current();const matches=pins.filter(row=>row.scopeId===scopeId);if(matches.length!==1)throw new Error('E2EE_SHARED_FINGERPRINT_REQUIRED');
+  const pin=matches[0];return validateDeviceAccessTarget({scopeId,ownerId:pin.ownerId,kind:pin.kind,resourceId:pin.resourceId,authority:pin.authority});
+ };
+ const client=async(binding:import('./e2ee/device-access-contract').DeviceAccessTarget)=>{current();const actual=await target(binding.scopeId);current();
+  if(actual.ownerId!==binding.ownerId||actual.kind!==binding.kind||actual.resourceId!==binding.resourceId||actual.authority.signingKey!==binding.authority.signingKey||actual.authority.receivingKey!==binding.authority.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');
+  if(binding.kind==='personal')return account.personal().client;const opened=await trust.open(binding.scopeId);current();const directory=opened.directory;
+  if(directory.ownerId!==binding.ownerId||directory.kind!==binding.kind||directory.resourceId!==binding.resourceId||directory.recoveryKit.authority.signingKey!==binding.authority.signingKey||directory.recoveryKit.authority.receivingKey!==binding.authority.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');return opened.client;
+ };
+ const access=new E2eeDeviceAccess(account,{target,client,directory:async scopeId=>{current();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});current();return result;},
+  challenge:async(binding,deviceId,keys,requestId)=>{current();const result=await e2eeRequest('/challenge',{scopeId:binding.scopeId,deviceId,keys,requestId});current();return result;},
+  command:async packet=>{current();const result=await e2eeRequest('/command',packet);current();return result;},open:async binding=>{await client(binding);current();if(binding.kind==='personal')await account.personal().client.refresh();current();window.dispatchEvent(new Event('genesis:shared-updates'));}
+ },current);return{access,current};
+}
+async function privateDeviceAccessView(state:import('./e2ee/device-access').DeviceAccessState,current:()=>void){
+ const {deviceAccessFingerprint}=await import('./e2ee/device-access-contract');current();const fingerprint=state.request?await deviceAccessFingerprint(state.request):null;current();return{state,fingerprint};
+}
+export async function pendingCurrentPrivateDeviceAccess(){const {access,current}=await privateDeviceAccessSession();const rows=await access.pending();current();return rows.map(row=>({id:row.id,mode:row.mode,scopeId:row.target.scopeId,complete:row.complete}));}
+export async function createCurrentPrivateDeviceAccess(scopeId:string){const {access,current}=await privateDeviceAccessSession();const id=await access.create(scopeId);current();const state=await access.request(id);current();return privateDeviceAccessView(state,current);}
+export async function loadCurrentPrivateDeviceAccess(id:string){const {access,current}=await privateDeviceAccessSession();let state=await access.inspect(id);current();if(state.mode==='request'&&!state.request){state=await access.request(id);current();}return privateDeviceAccessView(state,current);}
+export async function approveCurrentPrivateDeviceAccess(input:string,comparedFingerprint:string){
+ const {access,current}=await privateDeviceAccessSession(),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json'),{validateDeviceAccessRequest}=await import('./e2ee/device-access-contract');current();
+ const state=await access.approve(validateDeviceAccessRequest(parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',128*1024)),comparedFingerprint);current();return privateDeviceAccessView(state,current);
+}
+export async function submitCurrentPrivateDeviceAccess(id:string,input:string){
+ const {access,current}=await privateDeviceAccessSession();if(input.trim()){
+  const {parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();await access.stageApproval(id,parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',128*1024) as import('./e2ee/commands').SignedE2eeCommand);current();
+ }
+ const state=await access.submit(id);current();return privateDeviceAccessView(state,current);
+}
 export async function previewCurrentPrivateProjectCreation(id:string,refresh=false,guard:()=>void=()=>{}){
  const {account,creation,current}=await privateProjectCreationSession(guard);let intent=await creation.inspect(id);current();
  if(!intent.started&&(!intent.topology||refresh)){intent=await creation.preview(id);current();}

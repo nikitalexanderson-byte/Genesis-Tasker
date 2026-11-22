@@ -9,6 +9,7 @@ import {sharedTransitionTargets} from './e2ee/shared-transition-targets';
 import type {WebSharedMigrationTarget} from './e2ee/web-product-migration';
 import creationCopy from '../contracts/e2ee/private-resource-copy-v1.json';
 import {pendingCurrentPrivateCreations} from './cloud-sync';
+import {PrivateDeviceAccessPanel} from './PrivateDeviceAccessPanel';
 
 export function PrivateSharedSecurityPanel({ownerId,language}:{ownerId:string;language:string}){
  const migration=migrationCopy[language as keyof typeof migrationCopy]??migrationCopy.en;
@@ -32,8 +33,9 @@ export function PrivateSharedSecurityPanel({ownerId,language}:{ownerId:string;la
   {scopes.length?<label>{text.select}<select value={selected} disabled={busy} onChange={event=>choose(event.target.value)}><option value="">—</option>{scopes.map(row=><option key={row.scopeId} value={row.scopeId}>{row.resourceId}</option>)}</select></label>:null}
   {candidate?<><code className="private-shared-fingerprint">{candidate.fingerprint}</code>
    {candidate.proposal.ownerId===ownerId&&scopes.find(row=>row.scopeId===selected)?.state!=='retirement'?<button type="button" disabled={busy} onClick={()=>showPrivateMigration(ownerId,language,'resume',{scopeId:selected,kind:candidate.proposal.kind,resourceId:candidate.proposal.resourceId})}>{migration.transfer}</button>:null}
-   {!accepted&&scopes.find(row=>row.scopeId===selected)?.state==='active'?<><label>{text.compare}<input autoComplete="off" spellCheck={false} value={compared} maxLength={64} disabled={busy} onChange={event=>setCompared(event.target.value.trim())}/></label><button type="button" disabled={busy||compared!==candidate.fingerprint} onClick={()=>void run(async current=>{await new E2eeSharedTrust(ownerId).accept(candidate.proposal,compared);current();await new E2eeSharedTrust(ownerId).open(selected);current();setAccepted(true);setMessage(text.saved);})}>{text.accept}</button></>:null}
+   {!accepted&&scopes.find(row=>row.scopeId===selected)?.state==='active'?<><label>{text.compare}<input autoComplete="off" spellCheck={false} value={compared} maxLength={64} disabled={busy} onChange={event=>setCompared(event.target.value.trim())}/></label><button type="button" disabled={busy||compared!==candidate.fingerprint} onClick={()=>void run(async current=>{await new E2eeSharedTrust(ownerId).accept(candidate.proposal,compared);current();setAccepted(true);setMessage(text.saved);})}>{text.accept}</button></>:null}
    {accepted&&candidate.proposal.ownerId===ownerId?<button type="button" disabled={busy} onClick={()=>void run(async current=>{const account=requirePrivateAccount(ownerId);await new E2eeSharedTrust(ownerId).open(selected);current();const {bootstrap}=await account.sharedRecords(selected,candidate.proposal.kind,candidate.proposal.resourceId);await bootstrap.prepare();current();await bootstrap.flush();current();setMessage(text.complete);})}>{text.baseline}</button>:null}
   </>:null}{message?<p role="status">{message}</p>:null}
+  <PrivateDeviceAccessPanel ownerId={ownerId} language={language}/>
  </section>;
 }

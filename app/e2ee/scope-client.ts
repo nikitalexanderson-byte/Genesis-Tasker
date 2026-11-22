@@ -2,7 +2,8 @@ import { canonicalE2eeValue, e2eeCommandHash, signE2eeCommand, snapshotE2eeValue
 import { contentSigningKey, type VerifiedDirectory } from './directory.ts';
 import { E2EE_SUITE, E2EE_DOMAINS, decodeE2eeBytes,encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope, verifyE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES, envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile } from './files.ts';
-import { assertTechnical, exactKeys, freshSecret, openRoot, sealRoot, type PublicDeviceKeys } from './keys.ts';
+import { assertTechnical, exactKeys, freshSecret, openRoot, sealRoot, forwardRoot, type PublicDeviceKeys } from './keys.ts';
+import {verifyDeviceAccessRequest,deviceAccessFingerprint,type DeviceAccessRequest} from './device-access-contract.ts';
 import { UnlockedWebDevice } from './device-vault.ts';
 import type { LocalWrite } from './storage.ts';
 import {validatePrivateProjectSelection,validatePrivateProjectTopology,type PrivateProjectSelection} from './project-create-contract.ts';
@@ -449,6 +450,23 @@ export class E2eeScopeClient {
     assertTechnical(intentId);decodeE2eeBytes(changeHash,32);const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
     return this.#packet('membership-authorize',{intentId,changeHash});
+  }
+  async prepareDeviceAccess(input:DeviceAccessRequest,comparedFingerprint:string){
+    const request=await verifyDeviceAccessRequest(input),directory=this.#open();this.#device.requireOpen();
+    const own=directory.devices.get(this.#device.deviceId),target=request.target,challenge=request.challenge;
+    if(!this.#refreshed||directory.state!=='active'||directory.ownerId!==this.#device.ownerId||!own||own.revoked||own.role!=='owner'
+      ||target.scopeId!==this.#scopeId||target.ownerId!==this.#owner||target.kind!==directory.kind||target.resourceId!==directory.resourceId
+      ||target.authority.signingKey!==this.#pin.signingKey||target.authority.receivingKey!==this.#pin.receivingKey)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    if(await deviceAccessFingerprint(request)!==comparedFingerprint)throw new Error('E2EE_DEVICE_FINGERPRINT_REQUIRED');
+    if(challenge.expiresAt*1000<=Date.now())throw new Error('E2EE_CHALLENGE_EXPIRED');if(directory.devices.has(challenge.deviceId))throw new Error('E2EE_DEVICE_ALREADY_KNOWN');
+    const forward=async(grant:{cryptoEpoch:number;keyId:string;capsule:unknown})=>{
+      const context={ownerId:this.#owner,scopeId:this.#scopeId,cryptoEpoch:grant.cryptoEpoch,keyId:grant.keyId};
+      const capsule=await forwardRoot(grant.capsule,this.#device.keys().receiving.privateKey,{...context,recipientId:this.#device.deviceId},challenge.receivingKey,{...context,recipientId:challenge.deviceId});
+      this.#device.requireOpen();if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');return capsule;
+    };
+    const historyCapsules:WireValue[]=[];for(const grant of own.historyCapsules)historyCapsules.push({cryptoEpoch:grant.cryptoEpoch,keyId:grant.keyId,capsule:await forward(grant) as unknown as WireValue});
+    const capsule=await forward({cryptoEpoch:directory.cryptoEpoch,keyId:directory.keyId,capsule:own.capsule});
+    if(this.#open()!==directory)throw new Error('E2EE_DIRECTORY_CONFLICT');return this.#packet('enroll',{challenge:challenge as unknown as WireValue,selfProof:request.selfProof,historyCapsules,capsule:capsule as unknown as WireValue});
   }
   async confirmMembershipRotation(packet:SignedE2eeCommand){
     const command=packet.command;if(command.scopeId!==this.#scopeId||command.ownerId!==this.#owner||command.action!=='rotate-membership')throw new Error('E2EE_CONTEXT_MISMATCH');

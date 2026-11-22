@@ -138,6 +138,14 @@ object E2eeKeys {
             try { return E2eeEnvelope.importRoot(root) } finally { root.fill(0) }
         } catch (_: Exception) { throw IllegalStateException("E2EE_CORRUPT_ROOT") }
     }
+    fun forwardRoot(capsule:JSONObject,privateKeys:AsymmetricCipherKeyPair,source:RootRecipient,receivingKey:String,target:RootRecipient):JSONObject {
+        if(source.ownerId!=target.ownerId||source.scopeId!=target.scopeId||source.cryptoEpoch!=target.cryptoEpoch||source.keyId!=target.keyId)invalid()
+        exact(capsule,setOf("suite","enc","ciphertext"));if(capsule.get("suite")!=HPKE_SUITE)invalid()
+        val enc=decode(capsule,"enc",65);val ciphertext=decode(capsule,"ciphertext",48)
+        try{val recipient=hpke.setupBaseR(enc,privateKeys,source.info());val root=recipient.open(ByteArray(0),ciphertext)
+            try{return sealRoot(root,receivingKey,target)}finally{root.fill(0)}
+        }catch(_:Exception){error("E2EE_CORRUPT_ROOT")}
+    }
     class RecoveryState(val secret: ByteArray, val keys: DeviceKeys, val kit: JSONObject) {
         override fun toString() = "E2eeKeys.RecoveryState([redacted])"
     }

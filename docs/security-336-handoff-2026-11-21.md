@@ -1,5 +1,32 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: signed device-access exchange в обычном Account (кандидат)
+
+После11ff51d3 добавлены matching device-access contracts/journals и Account UI
+web/native: durable request до challenge IO, exact optional requestId receipts,
+self-proof, manual independent fingerprint, owner-only HPKE forwarding текущих/
+исторических roots, durable signed grant до export, candidate-only submit и
+exact receipt/directory/normal-scope readback. Pins сохраняются отдельно от open,
+чтобы новое устройство могло запросить доступ.14-language copy включена штатным
+assets path. Request/grant originals не удаляются; background/session/lifecycle
+guards сохранены. Retained recovery enrollment теперь читает фактический
+hex64 sessionHash сервера. Подробности: security-336-device-access.md.
+
+Код ещё НЕ компилировался/не тестировался. Это shared enrollment внутри уже
+разблокированного personal product account; начальный personal entry по-прежнему
+использует независимый recovery. Следующий код: normal invitation/member editing,
+multi-owner membership/rotation и first-device trusted entry. При чтении найден
+ещё не исправленный блокер membership hashing: raw ACL keys/after содержат
+underscores, запрещённые canonical technical object keys. Нужна отдельная
+совпадающая wire-hash projection (sorted name/value arrays) в API/web/native,
+включая beforeHash/changeHash/batch requestHash/custody; не расширять глобально
+canonical format и не менять старые подписанные packets.
+
+Остальной large remainder ниже сохраняется. QA только после всего кода;
+coverage9/20,3.3.5/149/Paddle-сайт/floors0/cutover off/GENESIS_DEPLOY_ANDROID=false
+сохранены. Никаких push/deploy/device/Play. demo-output/ не читать/stage,
+субагенты/Daybreak запрещены.
+
 ## 22 ноября: semantic resolution locked project preparation (кандидат)
 
 После d682118c добавлен resource-create-resolve: под тем же SQLite writer lock
