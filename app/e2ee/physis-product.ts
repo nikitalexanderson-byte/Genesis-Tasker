@@ -17,6 +17,12 @@ function validate(input:unknown,owner:string):State{
   if(row.deleted?row.record!==null:!validatePhysisRecord(row.record)||row.record.id!==row.id)throw new Error('E2EE_PHYSIS_SOURCE_INVALID');
  }return input as State;
 }
+/** Shared normal aggregate writer for the Physis editor and explicit restore. */
+export function physisFeatureDocument(owner:string){return new E2eeFeatureDocument({ownerId:owner,domain:'physis',objectId:'personal-physis-live-v1',validate:value=>validate(value,owner),seed:async read=>{
+ const index=await read('personal-physis-index-v1');exactKeys(index,['protocol','ownerId','records']);if(index.protocol!==1||index.ownerId!==owner||!Array.isArray(index.records))throw new Error('E2EE_PHYSIS_SOURCE_INVALID');const records:State['records']=[],objects=new Set<string>();
+ for(const item of index.records){exactKeys(item,['id','objectId','deleted']);if(typeof item.objectId!=='string'||!/^personal-physis-record:[a-f0-9-]{36}$/.test(item.objectId)||objects.has(item.objectId))throw new Error('E2EE_PHYSIS_SOURCE_INVALID');objects.add(item.objectId);const row=await read(item.objectId);exactKeys(row,['protocol','ownerId','id','record','revision','deleted']);if(row.protocol!==1||row.ownerId!==owner||row.id!==item.id||row.deleted!==item.deleted)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');records.push({id:row.id as string,record:row.record as PhysisRecord|null,revision:row.revision as number,deleted:row.deleted as boolean});}
+ return validate({version:1,ownerId:owner,records},owner);
+ }});}
 /** A real Physis store over the foreground private account. Existing health
  * validators remain authoritative. Pending edits, deletions and form drafts are
  * durable before the editor acknowledges a save; no account-key vault is used. */
@@ -26,14 +32,7 @@ export class E2eePhysisMemoryStore{
  #editors=new Map<string,()=>unknown>();#detached=new Map<string,unknown>();#unregister:()=>void;#forms:E2eeDeviceDocument<{version:1;ownerId:string;editors:{id:string;value:unknown}[]}>;
  constructor(readonly owner:string){
   this.#account=requirePrivateAccount(owner);
-  this.#document=new E2eeFeatureDocument({ownerId:owner,domain:'physis',objectId:'personal-physis-live-v1',validate:value=>validate(value,owner),seed:async read=>{
-   const index=await read('personal-physis-index-v1');exactKeys(index,['protocol','ownerId','records']);if(index.protocol!==1||index.ownerId!==owner||!Array.isArray(index.records))throw new Error('E2EE_PHYSIS_SOURCE_INVALID');
-   const records:State['records']=[];const objects=new Set<string>();
-   for(const item of index.records){exactKeys(item,['id','objectId','deleted']);if(typeof item.objectId!=='string'||!/^personal-physis-record:[a-f0-9-]{36}$/.test(item.objectId)||objects.has(item.objectId))throw new Error('E2EE_PHYSIS_SOURCE_INVALID');objects.add(item.objectId);
-    const row=await read(item.objectId);exactKeys(row,['protocol','ownerId','id','record','revision','deleted']);if(row.protocol!==1||row.ownerId!==owner||row.id!==item.id||row.deleted!==item.deleted)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-    records.push({id:row.id as string,record:row.record as PhysisRecord|null,revision:row.revision as number,deleted:row.deleted as boolean});}
-   return validate({version:1,ownerId:owner,records},owner);
-  }});
+  this.#document=physisFeatureDocument(owner);
   this.#forms=new E2eeDeviceDocument(this.#account.device,'personal-physis-editor-forms-v1',value=>{exactKeys(value,['version','ownerId','editors']);
    if(value.version!==1||value.ownerId!==owner||!Array.isArray(value.editors)||value.editors.length>10000)throw new Error('E2EE_PHYSIS_SOURCE_INVALID');
    const ids=new Set<string>();for(const row of value.editors){exactKeys(row,['id','value']);if(typeof row.id!=='string'||ids.has(row.id))throw new Error('E2EE_PHYSIS_SOURCE_INVALID');ids.add(row.id);}

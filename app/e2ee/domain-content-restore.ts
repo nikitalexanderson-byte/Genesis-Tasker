@@ -5,9 +5,10 @@ import {samePrivateJson as same} from './product-json.ts';
 import {backupJson} from '../backup-format.ts';
 import {validateDiaryNote} from '../diary-model.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
+import {validatePhysisRecord} from '../physis/validation.ts';
 
 type Row=Record<string,unknown>;
-export type RestoreDomain='diary'|'mindmap';
+export type RestoreDomain='diary'|'mindmap'|'physis';
 export type DomainRestoreSource={domain:RestoreDomain;records:Row[]};
 export type DomainRestoreRecord={id:string;revision:number;deleted:boolean;value:Row|null;localOnly:boolean};
 export type DomainRestoreView={checkpoint:string;pending:boolean;records:DomainRestoreRecord[]};
@@ -19,10 +20,11 @@ const hash=(value:unknown)=>{const bytes=new TextEncoder().encode(backupJson(val
 export function domainRestoreRecord(domain:RestoreDomain,input:unknown):Row{
  if(domain==='diary')return validateDiaryNote(structuredClone(input)) as unknown as Row;
  if(domain==='mindmap'){const map=validateMindmap(structuredClone(input));if(map.projectId!==null&&map.projectId!==undefined)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');return map as unknown as Row;}
+ if(domain==='physis'){const record=structuredClone(input);if(!validatePhysisRecord(record))return invalid();return record as unknown as Row;}
  return invalid();
 }
 export function validateDomainRestoreSource(input:unknown):DomainRestoreSource{
- exactKeys(input,['domain','records']);if(!['diary','mindmap'].includes(String(input.domain))||!Array.isArray(input.records)||!input.records.length||input.records.length>10000)invalid();
+ exactKeys(input,['domain','records']);if(!['diary','mindmap','physis'].includes(String(input.domain))||!Array.isArray(input.records)||!input.records.length||input.records.length>10000)invalid();
  const domain=input.domain as RestoreDomain,records=input.records.map(row=>domainRestoreRecord(domain,row));if(new Set(records.map(row=>row.id)).size!==records.length)invalid();return{domain,records};
 }
 export function validateDomainRestoreView(input:unknown,domain:RestoreDomain):DomainRestoreView{
@@ -67,6 +69,6 @@ export class DomainContentRestore{
 
 export function domainRestoreSourceFromJson(domain:RestoreDomain,raw:unknown):DomainRestoreSource{
  let value=object(raw);if(Object.hasOwn(value,'document')&&value.document&&typeof value.document==='object'&&Object.hasOwn(value,'base'))value=object(value.document);
- const input=Array.isArray(value.records)?value.records:domain==='diary'&&Object.hasOwn(value,'note')?[value]:domain==='mindmap'&&Object.hasOwn(value,'nodes')?[value]:null;if(!input)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');
- const records=input.filter(row=>object(row).deleted!==true).map(row=>{const item=object(row);return domain==='diary'?item.note??item:item.document??item;});return validateDomainRestoreSource({domain,records});
+ const input=Array.isArray(value.records)?value.records:domain==='diary'&&Object.hasOwn(value,'note')?[value]:domain==='mindmap'&&Object.hasOwn(value,'nodes')?[value]:domain==='physis'&&Object.hasOwn(value,'record')?[value]:null;if(!input)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');
+ const records=input.filter(row=>object(row).deleted!==true).map(row=>{const item=object(row);return domain==='diary'?item.note??item:domain==='physis'?item.record??item:item.document??item;});return validateDomainRestoreSource({domain,records});
 }

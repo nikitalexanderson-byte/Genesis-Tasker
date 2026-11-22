@@ -1364,3 +1364,9 @@ diary и mindmap writers. Add-only, текущие tombstones/версии не 
 восстановленные заметки device-only. Оба backup UI, local custody, content archive
 и предупреждение14lang подключены. Проверки исполнения отложены до всего кода.
 
+# 23 ноября — typed Physis restore (код)
+
+Общий bounded restore journal/consent/readback включён для Physis на web/native.
+Нормальный aggregate format и deep health validators, current feature access,
+add-only IDs, tombstones, backup UI и typed custody/export. Execution QA не запускался.
+

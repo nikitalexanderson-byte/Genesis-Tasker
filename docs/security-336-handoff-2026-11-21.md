@@ -1,5 +1,15 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: typed Physis restore — код
+
+Physis добавлен к общему add-only restore на web/native, включая backup UI,
+typed custody/export и текущую проверку feature access. Web редактор и restore
+используют один normal aggregate factory/validator; native пишет тот же aggregate
+формат через E2eeFeatureDocument, common bundled engine проверяет полный health
+schema source и readback. ID текущих записей и tombstones не заменяются.
+Код без compiler/tests/build/review; исходные архивы/journals сохраняются.
+Следующие typed domains: Aurora/Стоихейон/shared; прочий остаток ниже остаётся.
+
 ## 23 ноября: typed diary/mindmap restore — код
 
 Добавлен общий domain restore journal: семантический source до сети, add-only
