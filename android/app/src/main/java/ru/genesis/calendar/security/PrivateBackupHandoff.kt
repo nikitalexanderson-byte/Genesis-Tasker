@@ -1,84 +1,158 @@
 package ru.genesis.calendar.security
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.util.AtomicFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
 import java.io.File
+import java.io.InputStream
 import java.security.MessageDigest
 import java.util.UUID
 import ru.genesis.calendar.data.GenesisBackupContainer
 
-/** SAF survives vault lock/process death using only an already encrypted export
- * or a chosen input URI. No recovery key, plaintext input, unlocked device or
- * account authority is persisted in this handoff. Late picker results bind an
- * exact job identity; they cannot select another account's new operation. */
+/** Durable ciphertext/technical locator only. Every picker attempt has its own
+ * identity; active provider IO additionally needs a transient foreground owner
+ * capability. Neither a persisted URI nor a matching UID recreates that grant. */
 internal object PrivateBackupHandoff{
-    data class Job(val id:String,val ownerId:String,val kind:String,val phase:String,val sha256:String?=null,val uri:String?=null)
-    private val mutable=MutableStateFlow<Job?>(null);val state=mutable.asStateFlow();private var initialized=false
+    data class Job(val id:String,val ownerId:String,val kind:String,val phase:String,val sha256:String?=null,val uri:String?=null,
+        val attemptId:String,val scopeId:String?,val generation:Long?)
+    private val mutable=MutableStateFlow<Job?>(null);val state=mutable.asStateFlow();private var initialized=false;private var usable=true
+    private fun uuid(value:String)=value.also{check(UUID.fromString(it).toString()==it){"BACKUP_INVALID"}}
     private fun manifest(context:Context)=AtomicFile(File(context.noBackupFilesDir,"private-backup-handoff-v1.json"))
     private fun artifact(context:Context,id:String):AtomicFile{
-        check(UUID.fromString(id).toString()==id){"BACKUP_INVALID"};val folder=context.noBackupFilesDir.canonicalFile;val file=File(folder,"private-backup-$id.genesisbackup")
+        uuid(id);val folder=context.noBackupFilesDir.canonicalFile;val file=File(folder,"private-backup-$id.genesisbackup")
         check(file.canonicalFile.parentFile==folder){"BACKUP_INVALID"};return AtomicFile(file)
     }
-    private fun json(job:Job)=JSONObject().put("protocol",1).put("id",job.id).put("ownerId",job.ownerId).put("kind",job.kind).put("phase",job.phase).put("sha256",job.sha256?:JSONObject.NULL).put("uri",job.uri?:JSONObject.NULL)
+    private fun json(job:Job)=JSONObject().put("protocol",2).put("id",job.id).put("ownerId",job.ownerId).put("kind",job.kind).put("phase",job.phase)
+        .put("sha256",job.sha256?:JSONObject.NULL).put("uri",job.uri?:JSONObject.NULL).put("attemptId",job.attemptId)
+        .put("scopeId",job.scopeId?:JSONObject.NULL).put("generation",job.generation?:JSONObject.NULL)
     private fun parse(value:JSONObject):Job{
-        E2eeKeys.exact(value,setOf("protocol","id","ownerId","kind","phase","sha256","uri"));check(value.getInt("protocol")==1){"BACKUP_INVALID"};val id=value.getString("id");check(UUID.fromString(id).toString()==id){"BACKUP_INVALID"};val owner=E2eeKeys.technical(value.getString("ownerId"))
-        val kind=value.getString("kind");val phase=value.getString("phase");check(kind in setOf("export","import")&&phase in setOf("pick","picking","writing","ready","complete","failed","cancelled")){"BACKUP_INVALID"}
-        val hash=value.optString("sha256").takeUnless{value.isNull("sha256")};if(hash!=null)E2eeEnvelope.decode(hash,32)
-        val uri=value.optString("uri").takeUnless{value.isNull("uri")};if(uri!=null)check(uri.length<=8192&&Uri.parse(uri).scheme=="content"){"BACKUP_INVALID"}
-        check(kind!="export"||hash!=null){"BACKUP_INVALID"};return Job(id,owner,kind,phase,hash,uri)
+        val protocol=value.getInt("protocol");check(protocol in setOf(1,2)){"BACKUP_INVALID"}
+        E2eeKeys.exact(value,setOf("protocol","id","ownerId","kind","phase","sha256","uri")+(if(protocol==2)setOf("attemptId","scopeId","generation")else emptySet()))
+        val id=uuid(value.getString("id"));val owner=E2eeKeys.technical(value.getString("ownerId"))
+        val kind=value.getString("kind");val phase=value.getString("phase")
+        check(kind in setOf("export","import")&&phase in setOf("sealing","pick","picking","writing","ready","complete","failed","cancelled")){"BACKUP_INVALID"}
+        val hash=if(value.isNull("sha256"))null else value.getString("sha256").also{E2eeEnvelope.decode(it,32).fill(0)}
+        val uri=if(value.isNull("uri"))null else value.getString("uri").also{check(it.length<=8192&&Uri.parse(it).scheme=="content"){"BACKUP_INVALID"}}
+        check(kind!="export"||hash!=null||phase in setOf("sealing","failed","cancelled")){"BACKUP_INVALID"}
+        check(kind!="import"||hash==null&&phase !in setOf("sealing","writing")){"BACKUP_INVALID"}
+        check(kind!="export"||phase!="ready"){"BACKUP_INVALID"}
+        check(phase !in setOf("ready","writing")||uri!=null){"BACKUP_INVALID"}
+        if(protocol==1)return Job(id,owner,kind,if(phase in setOf("complete","cancelled"))phase else "failed",hash,uri,id,null,null)
+        val scope=if(value.isNull("scopeId"))null else E2eeKeys.technical(value.getString("scopeId"))
+        val generation=if(value.isNull("generation"))null else E2eeCommands.integer(value.get("generation"),1)
+        check((scope==null)==(generation==null)&&(scope!=null||phase in setOf("failed","complete","cancelled"))){"BACKUP_INVALID"}
+        return Job(id,owner,kind,phase,hash,uri,uuid(value.getString("attemptId")),scope,generation)
     }
     private fun read(context:Context):Job?{
         val file=manifest(context);if(!file.baseFile.exists()&&!File(file.baseFile.path+".bak").exists()&&!File(file.baseFile.path+".new").exists())return null
-        val bytes=file.openRead().use{input->readBounded(input,16384)};return try{parse(E2eeFileManifestJson.readPrivateDocument(bytes))}finally{bytes.fill(0)}
+        val bytes=file.openRead().use{readBounded(it,16384)};return try{parse(E2eeFileManifestJson.readPrivateDocument(bytes))}finally{bytes.fill(0)}
     }
-    @Synchronized fun initialize(context:Context){if(!initialized){mutable.value=read(context);initialized=true}}
+    @Synchronized fun initialize(context:Context){if(!initialized){
+        check(usable){"BACKUP_HANDOFF_UNVERIFIED"};val saved=read(context)
+        // No provider operation resumes automatically from durable metadata.
+        // A fresh unlocked retry rotates the attempt before another picker.
+        if(saved?.phase in setOf("sealing","pick","picking","writing"))save(context,requireNotNull(saved).copy(phase="failed"))else mutable.value=saved
+        initialized=true
+    }}
     private fun save(context:Context,job:Job){
-        val bytes=json(job).toString().toByteArray(Charsets.UTF_8);val file=manifest(context);val output=file.startWrite()
-        try{output.write(bytes);file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}finally{bytes.fill(0)}
-        check(read(context)==job){"BACKUP_HANDOFF_UNVERIFIED"};mutable.value=job
+        check(usable){"BACKUP_HANDOFF_UNVERIFIED"}
+        try{
+            val bytes=json(job).toString().toByteArray(Charsets.UTF_8);val file=manifest(context);val output=file.startWrite()
+            try{output.write(bytes);file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}finally{bytes.fill(0)}
+            check(read(context)==job){"BACKUP_HANDOFF_UNVERIFIED"};mutable.value=job
+        }catch(error:Exception){usable=false;throw error}
     }
-    private fun available(context:Context){initialize(context);check(mutable.value?.phase.let{it==null||it in setOf("complete","cancelled")}){"BACKUP_HANDOFF_BUSY"}}
-    @Synchronized fun prepareExport(context:Context,account:E2eeProductAccount,payload:JSONObject,recovery:String):Job{
-        account.requireOpen();available(context);check(payload.getString("ownerId")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"}
-        val id=payload.getString("backupId");val file=artifact(context,id);check(!file.baseFile.exists()&&!File(file.baseFile.path+".bak").exists()&&!File(file.baseFile.path+".new").exists()){"BACKUP_HANDOFF_BUSY"}
-        val sealed=GenesisBackupContainer.seal(payload,recovery).toByteArray(Charsets.UTF_8)
-        try{account.requireOpen();check(android.os.StatFs(context.noBackupFilesDir.absolutePath).availableBytes>sealed.size+1024*1024L){"E2EE_STORAGE_CAPACITY"};val output=file.startWrite()
-            try{output.write(sealed);file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}
-            val expected=hash(sealed);val copied=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)};try{check(hash(copied)==expected){"BACKUP_HANDOFF_UNVERIFIED"}}finally{copied.fill(0)}
-            account.requireOpen();return Job(id,account.ownerId,"export","pick",expected).also{save(context,it)}
-        }finally{sealed.fill(0)}
+    private fun available(context:Context){initialize(context);check(usable){"BACKUP_HANDOFF_UNVERIFIED"};check(mutable.value?.phase.let{it==null||it in setOf("complete","cancelled")}){"BACKUP_HANDOFF_BUSY"}}
+    @Synchronized fun requireCurrent(job:Job){check(initialized&&usable&&mutable.value==job){"BACKUP_HANDOFF_CHANGED"}}
+    @Synchronized fun isPicking(job:Job):Boolean=usable&&mutable.value==job.copy(phase="picking")
+    private fun assertAccount(job:Job,account:E2eeProductAccount){account.requireOpen();check(job.ownerId==account.ownerId&&job.scopeId==account.directory.scopeId&&job.generation==account.directory.generation){"BACKUP_HANDOFF_CHANGED"}}
+    private fun reserve(context:Context,account:E2eeProductAccount,id:String,kind:String,phase:String):Job=synchronized(this){
+        account.requireOpen();available(context)
+        Job(uuid(id),account.ownerId,kind,phase,attemptId=UUID.randomUUID().toString(),scopeId=account.directory.scopeId,generation=account.directory.generation).also{save(context,it)}
     }
-    @Synchronized fun prepareImport(context:Context,account:E2eeProductAccount):Job{account.requireOpen();available(context);return Job(UUID.randomUUID().toString(),account.ownerId,"import","pick").also{save(context,it)}}
-    @Synchronized fun beginPicker(context:Context,id:String):Job?{initialize(context);val job=mutable.value?.takeIf{it.id==id&&it.phase=="pick"}?:return null;return job.copy(phase="picking").also{save(context,it)}}
-    @Synchronized fun selected(context:Context,id:String,uri:Uri?):Job?{
-        initialize(context);val job=mutable.value?.takeIf{it.id==id&&it.phase=="picking"}?:return null
-        if(uri==null)return job.copy(phase="cancelled").also{save(context,it);if(job.kind=="export")artifact(context,id).delete()}
+    fun prepareExport(context:Context,account:E2eeProductAccount,payload:JSONObject,recovery:String,assertCurrent:()->Unit):Job{
+        assertCurrent();account.requireOpen();check(payload.getString("ownerId")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"}
+        val file=artifact(context,payload.getString("backupId"))
+        check(!file.baseFile.exists()&&!File(file.baseFile.path+".bak").exists()&&!File(file.baseFile.path+".new").exists()){"BACKUP_HANDOFF_BUSY"}
+        val job=reserve(context,account,payload.getString("backupId"),"export","sealing")
+        fun current(){assertCurrent();assertAccount(job,account);requireCurrent(job)}
+        var sealed:ByteArray?=null
+        try{
+            current();val bytes=GenesisBackupContainer.seal(payload,recovery).toByteArray(Charsets.UTF_8);sealed=bytes;current()
+            check(android.os.StatFs(context.noBackupFilesDir.absolutePath).availableBytes>bytes.size+1024*1024L){"E2EE_STORAGE_CAPACITY"}
+            val output=file.startWrite()
+            try{var offset=0;while(offset<bytes.size){current();val count=minOf(8192,bytes.size-offset);output.write(bytes,offset,count);offset+=count};current();file.finishWrite(output)}
+            catch(error:Exception){file.failWrite(output);throw error}
+            val expected=hash(bytes);val copied=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)}
+            try{current();check(copied.size==bytes.size&&hash(copied)==expected){"BACKUP_HANDOFF_UNVERIFIED"}}finally{copied.fill(0)}
+            return synchronized(this){current();job.copy(phase="pick",sha256=expected).also{save(context,it)}}
+        }catch(error:Exception){failed(context,job);throw error}finally{sealed?.fill(0)}
+    }
+    fun prepareImport(context:Context,account:E2eeProductAccount)=reserve(context,account,UUID.randomUUID().toString(),"import","pick")
+    @Synchronized fun beginPicker(context:Context,job:Job):Job{
+        initialize(context);requireCurrent(job);check(job.phase=="pick"){"BACKUP_HANDOFF_CHANGED"};return job.copy(phase="picking").also{save(context,it)}
+    }
+    @Synchronized fun selected(context:Context,job:Job,uri:Uri?):Job{
+        check(isPicking(job)){"BACKUP_HANDOFF_CHANGED"};val picking=job.copy(phase="picking")
+        if(uri==null)return picking.copy(phase="cancelled",uri=null).also{save(context,it);if(job.kind=="export")artifact(context,job.id).delete()}
         check(uri.scheme=="content"&&uri.toString().length<=8192){"BACKUP_INVALID"}
-        runCatching{context.contentResolver.takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION or if(job.kind=="export")Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)}
-        return job.copy(phase=if(job.kind=="import")"ready"else"writing",uri=uri.toString()).also{save(context,it)}
+        return picking.copy(phase=if(job.kind=="import")"ready"else"writing",uri=uri.toString()).also{save(context,it)}
     }
-    /** Resume only an exact prefix of this official encrypted artifact. A
-     * differently edited destination is never overwritten after a crash. */
-    @Synchronized fun deliver(context:Context,id:String){
-        initialize(context);val job=mutable.value?.takeIf{it.id==id&&it.kind=="export"&&it.phase=="writing"}?:return;val uri=Uri.parse(checkNotNull(job.uri));val file=artifact(context,id)
-        val bytes=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)}
-        try{check(hash(bytes)==job.sha256){"BACKUP_HANDOFF_UNVERIFIED"};val prior=context.contentResolver.openInputStream(uri)?.use{readBounded(it,GenesisBackupContainer.MAX_FILE)}?:error("BACKUP_HANDOFF_UNVERIFIED")
-            val complete=try{check(prior.size<=bytes.size&&prior.indices.all{prior[it]==bytes[it]}){"BACKUP_DESTINATION_CHANGED"};prior.size==bytes.size}finally{prior.fill(0)}
-            if(!complete)context.contentResolver.openOutputStream(uri,"wt")?.use{it.write(bytes);it.flush()}?:error("BACKUP_HANDOFF_UNVERIFIED")
-            val copied=context.contentResolver.openInputStream(uri)?.use{readBounded(it,GenesisBackupContainer.MAX_FILE)}?:error("BACKUP_HANDOFF_UNVERIFIED")
-            try{check(copied.size==bytes.size&&hash(copied)==job.sha256){"BACKUP_HANDOFF_UNVERIFIED"}}finally{copied.fill(0)}
-            save(context,job.copy(phase="complete"));file.delete()
-        }catch(error:Exception){save(context,job.copy(phase="failed"));throw error}finally{bytes.fill(0)}
+    /** Exact same-attempt failure is deny-only metadata. It neither deletes the
+     * artifact nor changes a later attempt/account's current operation. */
+    @Synchronized fun failed(context:Context,job:Job){val current=mutable.value
+        if(usable&&current?.id==job.id&&current.attemptId==job.attemptId&&current.phase !in setOf("complete","cancelled","failed"))save(context,current.copy(phase="failed"))
     }
-    @Synchronized fun imported(context:Context,id:String,account:E2eeProductAccount){account.requireOpen();val job=mutable.value?.takeIf{it.id==id&&it.ownerId==account.ownerId&&it.kind=="import"&&it.phase=="ready"}?:error("BACKUP_HANDOFF_CHANGED");save(context,job.copy(phase="complete"))}
-    @Synchronized fun retry(context:Context,id:String,account:E2eeProductAccount){account.requireOpen();val job=mutable.value?.takeIf{it.id==id&&it.ownerId==account.ownerId&&it.phase in setOf("failed","picking","ready")}?:error("BACKUP_HANDOFF_CHANGED");save(context,job.copy(phase="pick",uri=null))}
-    @Synchronized fun cancel(context:Context,id:String,account:E2eeProductAccount){account.requireOpen();val job=mutable.value?.takeIf{it.id==id&&it.ownerId==account.ownerId&&it.phase!="writing"}?:error("BACKUP_HANDOFF_CHANGED");save(context,job.copy(phase="cancelled"));if(job.kind=="export")artifact(context,id).delete()}
-    fun readBounded(input:java.io.InputStream,maximum:Int):ByteArray{val output=java.io.ByteArrayOutputStream();val buffer=ByteArray(8192)
-        try{while(true){val count=input.read(buffer);if(count<0)break;check(count>0&&output.size()+count<=maximum){"BACKUP_TOO_LARGE"};output.write(buffer,0,count)};return output.toByteArray()}finally{buffer.fill(0);output.reset()}}
+    /** Stream the encrypted artifact and authenticate full readback. A retry
+     * accepts only an exact existing prefix, never an unrelated destination. */
+    fun deliver(context:Context,job:Job,access:NativeBackupFileAccess){
+        check(job.kind=="export"&&job.phase=="writing"&&access.job==job){"BACKUP_HANDOFF_CHANGED"};access.current()
+        val file=artifact(context,job.id)
+        try{
+            fun scan(input:InputStream):Pair<Int,String>{val digest=MessageDigest.getInstance("SHA-256");var size=0
+                access.buffer(8192){buffer->while(true){access.current();val count=input.read(buffer);access.current();if(count<0)break
+                    check(count>0&&size<=GenesisBackupContainer.MAX_FILE-count){"BACKUP_TOO_LARGE"};size+=count;digest.update(buffer,0,count);buffer.fill(0,0,count)}}
+                return Pair(size,E2eeEnvelope.encode(digest.digest()))
+            }
+            val expected=access.local(file.openRead()){scan(it)};check(expected.first>0&&expected.second==job.sha256){"BACKUP_HANDOFF_UNVERIFIED"}
+            val prefix=access.local(file.openRead()){source->access.input(context){prior->access.buffer(8192){buffer->access.buffer(8192){original->
+                var size=0
+                while(true){access.current();val count=prior.read(buffer);access.current();if(count<0)break
+                    check(count>0&&size<=expected.first-count){"BACKUP_DESTINATION_CHANGED"};var offset=0
+                    while(offset<count){access.current();val read=source.read(original,offset,count-offset);access.current();check(read>0){"BACKUP_HANDOFF_UNVERIFIED"};offset+=read}
+                    check((0 until count).all{buffer[it]==original[it]}){"BACKUP_DESTINATION_CHANGED"};size+=count;buffer.fill(0,0,count);original.fill(0,0,count)
+                };size
+            }}}}
+            if(prefix<expected.first)access.local(file.openRead()){source->access.output(context){output->access.buffer(8192){buffer->
+                var size=0
+                while(true){access.current();val count=source.read(buffer);access.current();if(count<0)break
+                    check(count>0&&size<=expected.first-count){"BACKUP_HANDOFF_UNVERIFIED"};output.write(buffer,0,count);access.current();size+=count;buffer.fill(0,0,count)}
+                check(size==expected.first){"BACKUP_HANDOFF_UNVERIFIED"};output.flush();access.current()
+            }}}
+            val copied=access.input(context){scan(it)};check(copied==expected){"BACKUP_HANDOFF_UNVERIFIED"}
+            synchronized(this){access.current();save(context,job.copy(phase="complete"))};file.delete()
+        }catch(error:Exception){failed(context,job);throw error}
+    }
+    @Synchronized fun requireImport(job:Job,account:E2eeProductAccount){assertAccount(job,account);requireCurrent(job);check(job.kind=="import"&&job.phase=="ready"){"BACKUP_HANDOFF_CHANGED"}}
+    @Synchronized fun imported(context:Context,job:Job,account:E2eeProductAccount){requireImport(job,account);save(context,job.copy(phase="complete"))}
+    @Synchronized fun retry(context:Context,job:Job,account:E2eeProductAccount){
+        requireCurrent(job);check(job.phase in setOf("failed","picking","ready")){"BACKUP_HANDOFF_CHANGED"};assertAccount(job,account)
+        check(job.kind!="export"||job.sha256!=null){"BACKUP_HANDOFF_UNVERIFIED"}
+        save(context,job.copy(phase="pick",uri=null,attemptId=UUID.randomUUID().toString()))
+    }
+    @Synchronized fun cancel(context:Context,job:Job,account:E2eeProductAccount){
+        account.requireOpen();requireCurrent(job);check(job.ownerId==account.ownerId&&job.phase !in setOf("sealing","writing","complete","cancelled")){"BACKUP_HANDOFF_CHANGED"}
+        // Cancellation grants no content authority, including for a failed old
+        // generation. It only retires this exact technical job and ciphertext.
+        save(context,job.copy(phase="cancelled",uri=null));if(job.kind=="export")artifact(context,job.id).delete()
+    }
+    private fun readBounded(input:InputStream,maximum:Int):ByteArray{
+        val bytes=ByteArray(maximum+1);var size=0
+        try{while(size<bytes.size){val count=input.read(bytes,size,minOf(8192,bytes.size-size));if(count<0)break;check(count>0){"BACKUP_INVALID"};size+=count}
+            check(size<=maximum){"BACKUP_TOO_LARGE"};return bytes.copyOf(size)}finally{bytes.fill(0)}
+    }
     private fun hash(bytes:ByteArray)=E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))
 }

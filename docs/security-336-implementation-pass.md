@@ -10,6 +10,38 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Content-backup file custody (candidate, no compilation/QA)
+
+Native content-backup handoff now has separate durable job and picker-attempt
+identities, bound to the personal scope/data generation. Retrying rotates the
+attempt; picker callbacks, import completion, retry and cancel require the exact
+saved operation. The request-keyed host captures the original session/restore
+guard, waits for RESUMED, admits one return within two minutes and does not obtain
+account authority from a UID/URI. A persisted `writing` row cannot start provider
+IO after recreation/process death: an explicit unlocked retry is required. Old
+unbound handoffs fail closed and can be explicitly cancelled without deleting any
+product content. Corrupt/unverified metadata cannot be treated as an empty job.
+
+Added bounded five-minute foreground file access with CancellationSignal,
+registered provider descriptors/streams, owned buffers and expiry/background/
+disposal cleanup. Export compares an existing destination against the exact
+ciphertext prefix before writing, streams the immutable encrypted artifact and
+requires complete length/hash readback. Provider IO no longer holds the handoff
+monitor. A failed delivery retains its encrypted artifact and exact job. Import
+checks the current unlocked scope/generation before opening/decrypting, retains
+only content and acknowledges the same attempt. Keys and displayed plaintext are
+cleared from UI state on background; the backup dialog uses FLAG_SECURE. The
+persisted handoff still contains only ciphertext/technical metadata, never a key,
+plaintext payload, unlocked device or imported authority.
+
+This remains uncompiled source. Full lifecycle/provider/process-death/restore and
+cross-account acceptance is pending, including same-UID relogin, stale results,
+prefix changes, short writes, partial artifacts, timeout and permission loss.
+Readback is not a guarantee of provider immutability or physical storage; memory
+wiping covers owned arrays, not JVM/parser copies or an OS-suspended process.
+No tests, typecheck/compiler, lint, build, CI, device action or publication ran.
+Coverage stays9/20. Backup/Drive/import composition elsewhere is still pending.
+
 ### Streamed cancellation and pause/drain (candidate, no compilation/QA)
 
 Added streamed state4 cancellation under the existing whole-job fence. Signed

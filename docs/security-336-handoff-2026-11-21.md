@@ -225,6 +225,14 @@ Content-only backup must never replay these new issue/membership receipts.
 
 # Continuation checkpoint: 22 November 2026
 
+Native content-backup SAF custody was subsequently rewritten around an exact
+job/attempt and scope/generation binding, resumed two-minute picker admission,
+five-minute cancellable foreground file access and streamed encrypted readback.
+No automatic provider write resumes from disk; explicit unlocked retry rotates
+the picker identity. Import/retry/cancel acknowledge the exact saved job, and
+background clears UI keys/plaintext. New source files: NativeBackupFileAccess.kt
+and PrivateBackupFileActivity.kt. No compilation or QA ran; coverage remains9/20.
+
 Streamed cancellation and pause/drain code now follows the recovery checkpoint.
 The two real migration screens can pause and await the prior attempt before retry;
 pause preserves pending signed packets and never grants legacy write authority.
