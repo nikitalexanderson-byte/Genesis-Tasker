@@ -115,6 +115,7 @@ export async function verifyCalendarVisual317({context,page,tier,output,check,sn
         await page.setViewportSize({width,height:1000});await visit('#today');await theme(scheme);
         await page.locator('.account-open:visible').first().click();
         const account=page.locator('.account-panel');await account.waitFor();await account.locator('[data-settings-tab="appearance"]').click();
+        await account.locator('#advice-source-tab-aurora').click();
         const trigger=account.locator('.daily-advice-age-setting button');await trigger.scrollIntoViewIfNeeded();
         item.scrolledParents=await trigger.evaluate(el=>{
           const parents=[];for(let p=el.parentElement;p;p=p.parentElement)if(p.scrollHeight>p.clientHeight+1&&['auto','scroll'].includes(getComputedStyle(p).overflowY))parents.push({className:p.className,scrollTop:p.scrollTop});return parents;
