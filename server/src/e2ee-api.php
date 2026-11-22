@@ -14,9 +14,18 @@ function genesisE2eeRoute(string $method,string $path): never
     header('Cache-Control: no-store');
     genesisConsumeApiBudget($owner,'e2ee-v1',600,128*1024*1024,(int)($_SERVER['CONTENT_LENGTH']??0));
     if($method==='GET'&&$path==='e2ee/v1/status') {
-        $q=genesisDb()->prepare("SELECT scope_id AS scopeId,kind,resource_id AS resourceId,state FROM e2ee_scopes s WHERE
-          owner_id=? OR EXISTS(SELECT 1 FROM e2ee_devices d WHERE d.scope_id=s.scope_id AND d.user_id=? AND d.revoked=0) ORDER BY scope_id");
-        $q->execute([$owner,$owner]);$scopes=$q->fetchAll();$q->closeCursor();
+        // ACL-only candidates need technical discovery before their first
+        // approved device exists. This grants neither a pin nor a key capsule.
+        $known="(s.owner_id=:actor OR EXISTS(SELECT 1 FROM e2ee_devices d WHERE d.scope_id=s.scope_id AND d.user_id=:actor AND d.revoked=0))";
+        $q=genesisDb()->prepare("SELECT scope_id AS scopeId,kind,resource_id AS resourceId,state,$known AS known FROM e2ee_scopes s WHERE $known
+          OR (s.kind='space' AND EXISTS(SELECT 1 FROM shared_space_members m WHERE m.space_id=s.resource_id AND m.user_id=:actor))
+          OR (s.kind='project' AND (EXISTS(SELECT 1 FROM shared_project_members m WHERE m.project_id=s.resource_id AND m.user_id=:actor)
+            OR EXISTS(SELECT 1 FROM shared_projects p JOIN shared_space_members m ON m.space_id=p.space_id WHERE p.id=s.resource_id AND m.user_id=:actor))) ORDER BY scope_id");
+        $q->execute(['actor'=>$owner]);$candidates=$q->fetchAll();$q->closeCursor();$scopes=[];
+        foreach($candidates as $row){if(!(int)$row['known'])try{genesisE2eeAccess($owner,$row['kind'],$row['resourceId'],'read');}
+            catch(GenesisSharedAccessException|GenesisResourceLimitException $error){if(in_array($error->status,[403,404],true))continue;throw$error;}
+            unset($row['known']);$scopes[]=$row;}
+        if(count($scopes)>4096)throw new GenesisResourceLimitException(409,'E2EE_SCOPE_DIRECTORY_LIMIT');
         genesisJson(['pilotAllowed'=>genesisE2eePilotAllowed($owner),'scopes'=>$scopes,'cryptoProtocol'=>1]);
     }
     if($method!=='POST')genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);

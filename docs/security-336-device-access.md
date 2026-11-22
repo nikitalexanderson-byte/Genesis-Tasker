@@ -24,6 +24,13 @@ Requests/grants survive restart; grants can be exported again. Foreground,
 session/workspace/lifecycle guards fence callbacks; UI clears exchange buffers
 on background. The14-language catalogue is shared by web/native assets.
 
+Follow-up source composition adds ACL-only technical discovery to status: an
+eligible member without an enrolled device can discover the scope, independently
+compare its authority, and create a request. Existing owner/enrolled listings are
+preserved. Newly discovered scopes must pass the same effective read ACL used by
+directory/challenge access; restricted grants are respected. Discovery still
+contains only scope kind/IDs/state, no key, approval or private content.
+
 Source inspection also corrected retained recovery-enrollment sessionHash shape:
 the existing API emits64 hexadecimal characters, not32 base64url bytes. Neither
 the server wire shape nor old signed packets were rewritten.
