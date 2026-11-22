@@ -1,19 +1,21 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import {requirePrivateAccount,subscribePrivateAccount,type PrivateScopeSummary} from './e2ee/product-session';
-import {pendingCurrentPrivateDeviceAccess,createCurrentPrivateDeviceAccess,loadCurrentPrivateDeviceAccess,approveCurrentPrivateDeviceAccess,submitCurrentPrivateDeviceAccess} from './cloud-sync';
+import {currentPrivatePersonalDeviceTarget,pendingCurrentPrivateDeviceAccess,createCurrentPrivateDeviceAccess,loadCurrentPrivateDeviceAccess,approveCurrentPrivateDeviceAccess,submitCurrentPrivateDeviceAccess} from './cloud-sync';
 import {verifyDeviceAccessRequest,deviceAccessFingerprint,type DeviceAccessRequest} from './e2ee/device-access-contract';
 import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import copy from '../contracts/e2ee/device-access-copy-v1.json';
+import personalCopy from '../contracts/e2ee/personal-device-entry-copy-v1.json';
 import sharedCopy from '../contracts/e2ee/shared-security-copy-v1.json';
 
 export function PrivateDeviceAccessPanel({ownerId,language}:{ownerId:string;language:string}){
  const text=copy[language as keyof typeof copy]??copy.en,common=sharedCopy[language as keyof typeof sharedCopy]??sharedCopy.en;
+ const [exportedTarget,setExportedTarget]=useState<Awaited<ReturnType<typeof currentPrivatePersonalDeviceTarget>>|null>(null);
  const [scopes,setScopes]=useState<PrivateScopeSummary[]>([]),[selected,setSelected]=useState(''),[pending,setPending]=useState<Awaited<ReturnType<typeof pendingCurrentPrivateDeviceAccess>>>([]);
  const [view,setView]=useState<Awaited<ReturnType<typeof loadCurrentPrivateDeviceAccess>>|null>(null),[incoming,setIncoming]=useState(''),[approval,setApproval]=useState('');
  const [preview,setPreview]=useState<{request:DeviceAccessRequest;fingerprint:string}|null>(null),[compared,setCompared]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const epoch=useRef(0);
- useEffect(()=>{const clear=()=>{epoch.current++;setView(null);setIncoming('');setApproval('');setPreview(null);setCompared('');setBusy(false);setMessage('');};
+ useEffect(()=>{const clear=()=>{epoch.current++;setExportedTarget(null);setView(null);setIncoming('');setApproval('');setPreview(null);setCompared('');setBusy(false);setMessage('');};
   const changed=()=>{if(document.visibilityState!=='visible')clear();},unsubscribe=subscribePrivateAccount(()=>{clear();setScopes([]);setPending([]);setSelected('');});
   document.addEventListener('visibilitychange',changed);return()=>{epoch.current++;unsubscribe();document.removeEventListener('visibilitychange',changed);};
  },[ownerId]);
@@ -22,6 +24,8 @@ export function PrivateDeviceAccessPanel({ownerId,language}:{ownerId:string;lang
    current();await work(current);current();}catch(reason){if(epoch.current===token)setMessage(reason instanceof Error&&reason.message==='E2EE_CHALLENGE_EXPIRED'?text.expired:common.error);}finally{if(epoch.current===token)setBusy(false);}
  };
  return <section className="account-preferences" data-no-translate><h4>{text.title}</h4><p>{text.notice}</p>
+  <button type="button" disabled={busy} onClick={()=>void run(async current=>{const value=await currentPrivatePersonalDeviceTarget();current();setExportedTarget(value);})}>{(personalCopy[language as keyof typeof personalCopy]??personalCopy.en).targetExport}</button>
+  {exportedTarget?<><label className="workspace-recovery-field"><span>{(personalCopy[language as keyof typeof personalCopy]??personalCopy.en).target}</span><textarea rows={4} readOnly value={JSON.stringify(exportedTarget.target)}/></label><code className="private-shared-fingerprint">{exportedTarget.fingerprint}</code></>:null}
   <button type="button" disabled={busy} onClick={()=>void run(async current=>{const rows=await requirePrivateAccount(ownerId).scopeSummaries();current();const saved=await pendingCurrentPrivateDeviceAccess();current();setScopes(rows.filter(row=>row.state==='active'));setPending(saved);})}>{common.load}</button>
   {scopes.length?<><label className="workspace-recovery-field"><span>{text.scope}</span><select value={selected} disabled={busy} onChange={event=>setSelected(event.target.value)}><option value="">—</option>{scopes.map(row=><option key={row.scopeId} value={row.scopeId}>{row.resourceId}</option>)}</select></label>
    <button type="button" disabled={busy||!selected} onClick={()=>void run(async current=>{const result=await createCurrentPrivateDeviceAccess(selected);current();setView(result);setApproval('');setPending(await pendingCurrentPrivateDeviceAccess());current();})}>{text.create}</button></>:null}

@@ -1,5 +1,15 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Mounted personal trusted-device entry (22 November; source-only)
+
+Both locked gates and foreground account adapters now compose the candidate core
+and existing exact enrollment. Existing devices export public personal-target
+material; new browsers generate a separate local code. Native uses fresh bounded
+system-credential admission for every step and closes candidates on IO. Shared
+copy14lang is connected. Marker custody review and consolidated QA still remain;
+no compiler/tests/lint/build/CI or coverage increase.
+
+
 ## Foreign bound-product readback (22 November; source-only)
 
 Both normal repositories verify exact signed packet, receipt, current/historical

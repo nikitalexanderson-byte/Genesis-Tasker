@@ -1,5 +1,29 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: mounted first personal trusted-device entry (source-only)
+
+Cloud-sync/AuthController foreground factories + trusted personal-target export
+подключены к новым core modules. Web PrivateVaultGate предлагает separate trusted
+route: случайный local code, explicit save, independently compared target, saved
+request/approval/retry; visibility/pagehide/unmount очищают UI и закрывают candidate.
+Native locked gate получает новый bounded system credential на каждый шаг;
+public intent захвачен до Activity, IO candidate закрывается перед возвратом.
+Submit открывает normal product account из того же bundle/saved directory.
+14lang shared copy добавлена, Android sourceSet уже включает contracts/e2ee.
+
+Перед дальнейшим source work просмотреть новый UI/bridge diff. Никаких compiler/
+lint/tests/build/CI security; coverage9/20. Ещё нужны typed marker custody/source
+review и последующая общая functional/i18n/visual acceptance; это не QA PASS.
+Остатки: recipient invitations/list/accept/decline + pending key-access/activity;
+very-wide transport/local records; advanced/forms/automation/series/bulk/cross-scope
+attribution; typed restore; revoked replacement/background и остальное prompt.
+
+Срочный PR44 MERGED: mainac8ccf604bb42f7b7b19411f8703b88cd7dce8d2. Оба required
+runs45053598174/45053630523 success. Exact-main website-only Source checks
+45057471114 running; Android skipped. Deploy НЕ запускался, production6672bbef.
+После success штатный Deploy с fresh incumbent, live QA и merge main в security.
+
+
 ## 22 ноября: first personal trusted-device entry core (source-only)
 
 Добавлены personal-device-target/entry и matching Native E2eePersonalDeviceTarget/

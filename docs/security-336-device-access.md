@@ -76,3 +76,27 @@ This core is not a mounted first-entry flow yet: cloud-sync/AuthController
 foreground factories, trusted-device target export, both locked gates,14-language
 copy, lifecycle/credential handoff and typed custody of the new marker are next.
 No compilation/QA; accepted coverage remains9/20.
+
+
+## Mounted first-personal-entry path,22 November (source-only)
+
+The next source increment connects foreground cloud-sync/AuthController factories,
+trusted-device personal-target export, both locked gates and shared14-language
+copy. Web generates a separate local code for a new browser bundle, requires
+explicit saving and independent public-target comparison; an existing bundle
+can only be unlocked with its saved code. Visibility/pagehide/unmount clear UI
+exchange material and close candidate capabilities. Exact saved approvals can
+be retried after restart; old requests remain.
+
+Native captures public intent with a bounded NativeMigrationCredential before
+launching the existing system-credential activity. Every begin/resume/new/submit
+step obtains fresh admission, session/workspace/lifecycle checks and an IO-scoped
+candidate closed before returning public exchange values. Successful submit
+opens the normal product account with the same device bundle and verified saved
+directory. No recovery authority/root is synthesized, no identity/billing grant
+is restored and no local bundle is replaced. Android assets consume the shared
+contract directory through the existing sourceSet.
+
+This is source composition only, not functional/i18n/visual/crypto acceptance.
+Typed marker custody/source review, process-death/handoff/expiry/race tests and
+the full original prompt remain; no compiler/lint/tests/build/CI ran here.

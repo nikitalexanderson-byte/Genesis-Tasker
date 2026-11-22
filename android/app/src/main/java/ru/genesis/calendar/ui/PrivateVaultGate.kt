@@ -44,7 +44,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
     val copy=remember(language){context.assets.open("vault-copy-v1.json").use{input->val bytes=input.readBytes()
         try{check(bytes.size<=128*1024);val all=JSONObject(bytes.toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}finally{bytes.fill(0)}}}
     var secret by remember(state.user?.uid){mutableStateOf("")};var kit by remember(state.user?.uid){mutableStateOf<JSONObject?>(null)}
-    val owner=state.user?.uid;val viewId=remember(owner){UUID.randomUUID().toString()}
+    val owner=state.user?.uid;var trusted by remember(owner){mutableStateOf(false)};val personalCopy=remember(language){context.assets.open("personal-device-entry-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}};val viewId=remember(owner){UUID.randomUUID().toString()}
     val alive=remember(owner){AtomicBoolean(true)}
     val foreground=remember(owner,lifecycle){AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
     var busy by remember(owner){mutableStateOf(false)};var failed by remember(owner){mutableStateOf(false)}
@@ -110,6 +110,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
         }
     }})
     BackHandler{}
+    if(trusted&&owner!=null){Surface(modifier=Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background){Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(20.dp)){PrivatePersonalDeviceEntry(controller,owner,language);TextButton({trusted=false},modifier=Modifier.heightIn(min=48.dp)){UntranslatedText(personalCopy.getString("back"))}}};return}
     Surface(modifier=Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background){
         Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.Center){
             Column(Modifier.widthIn(max=560.dp).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(20.dp)){
@@ -121,6 +122,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
                     OutlinedTextField(value=secret,onValueChange={secret=it.take(64)},label={Text(copy.getString("secret"))},singleLine=true,
                         visualTransformation=PasswordVisualTransformation(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),enabled=!busy,modifier=Modifier.fillMaxWidth())
                 }
+                TextButton(onClick={secret="";kit=null;trusted=true},enabled=!busy,modifier=Modifier.heightIn(min=48.dp)){UntranslatedText(personalCopy.getString("title"))}
                 if(failed)Text(copy.getString("error"),color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodyMedium)
                 if(hardwareRecovery){
                     Text(recoveryCopy.getString("notice"),style=MaterialTheme.typography.bodyMedium)

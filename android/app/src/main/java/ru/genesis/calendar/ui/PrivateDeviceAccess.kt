@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong
     val account=remember(storageScope){NativePrivateProducts.currentAccount(storageScope)};val auth=remember(context){AuthController.get(context)}
     val language=LocalGenesisLanguage.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val coroutine=rememberCoroutineScope()
     fun copy(name:String)=context.assets.open(name).use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}
+    val personalCopy=remember(language){copy("personal-device-entry-copy-v1.json")};var exportedTarget by remember{mutableStateOf<JSONObject?>(null)}
     val text=remember(language){copy("device-access-copy-v1.json")};val common=remember(language){copy("shared-security-copy-v1.json")}
     var scopes by remember{mutableStateOf<List<JSONObject>>(emptyList())};var selected by remember{mutableStateOf("")};var pending by remember{mutableStateOf<List<JSONObject>>(emptyList())}
     var view by remember{mutableStateOf<JSONObject?>(null)};var incoming by remember{mutableStateOf("")};var approval by remember{mutableStateOf("")}
@@ -33,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong
     DisposableEffect(lifecycle,storageScope){val observer=LifecycleEventObserver{_,event->
         if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
         if(event==Lifecycle.Event.ON_PAUSE)foreground.set(false)
-        if(event==Lifecycle.Event.ON_STOP){epoch.incrementAndGet();view=null;incoming="";approval="";preview=null;compared="";busy=false;message=""}
+        if(event==Lifecycle.Event.ON_STOP){epoch.incrementAndGet();exportedTarget=null;view=null;incoming="";approval="";preview=null;compared="";busy=false;message=""}
     };lifecycle.addObserver(observer);onDispose{alive.set(false);epoch.incrementAndGet();lifecycle.removeObserver(observer)}}
     fun run(work:suspend(()->Unit)->Unit){if(busy)return;val token=epoch.incrementAndGet();busy=true;message=""
         fun current(){account.requireOpen();check(alive.get()&&foreground.get()&&epoch.get()==token&&app.workspaceScope==storageScope&&NativePrivateProducts.currentAccount(storageScope)===account){"E2EE_ACCOUNT_CHANGED"}}
@@ -43,6 +44,8 @@ import java.util.concurrent.atomic.AtomicLong
     fun parse(input:String):JSONObject{val bytes=input.toByteArray(Charsets.UTF_8);return try{check(bytes.size<=128*1024){"E2EE_DEVICE_ACCESS_INVALID"};E2eeFileManifestJson.read(bytes)}finally{bytes.fill(0)}}
     Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)){
         Text(text.getString("title"),style=MaterialTheme.typography.titleMedium);Text(text.getString("notice"))
+        OutlinedButton(onClick={run{current->val value=auth.personalDeviceTarget();current();exportedTarget=value}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(personalCopy.getString("targetExport"))}
+        exportedTarget?.let{value->OutlinedTextField(value.getJSONObject("target").toString(),{},readOnly=true,minLines=3,maxLines=6,label={UntranslatedText(personalCopy.getString("target"))},modifier=Modifier.fillMaxWidth());UntranslatedText(value.getString("fingerprint"))}
         OutlinedButton(onClick={run{current->val rows=withContext(Dispatchers.IO){current();account.scopeSummaries().also{current()}};val saved=auth.pendingPrivateDeviceAccess();current()
             scopes=(0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.get("state")=="active"};pending=saved
         }},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(common.getString("load"))}

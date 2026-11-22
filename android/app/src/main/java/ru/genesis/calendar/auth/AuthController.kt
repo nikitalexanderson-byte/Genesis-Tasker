@@ -396,6 +396,36 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun loadPrivateDeviceAccess(id:String):JSONObject=privateDeviceAccessCall{access->val state=access.inspect(id);privateDeviceAccessView(if(state.get("mode")=="request"&&state.isNull("request"))access.request(id)else state)}
     internal suspend fun approvePrivateDeviceAccess(input:String,comparedFingerprint:String):JSONObject=privateDeviceAccessCall{access->privateDeviceAccessView(access.approve(privateDeviceAccessInput(input),comparedFingerprint))}
     internal suspend fun submitPrivateDeviceAccess(id:String,input:String):JSONObject=privateDeviceAccessCall{access->if(input.isNotBlank())access.stageApproval(id,privateDeviceAccessInput(input));privateDeviceAccessView(access.submit(id))}
+    internal suspend fun personalDeviceTarget():JSONObject=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val owner=privateUiOwnerGuard(uid);val account=ru.genesis.calendar.security.NativePrivateProducts.currentAccount(app.workspaceScope);owner();account.requireOpen();check(account.ownerId==uid){"E2EE_ACCOUNT_CHANGED"}
+        val directory=account.directory;check(directory.kind=="personal"&&directory.resourceId==uid&&directory.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"};val target=ru.genesis.calendar.security.E2eeDeviceAccessContract.target(JSONObject().put("ownerId",uid).put("scopeId",directory.scopeId).put("kind","personal").put("resourceId",uid).put("authority",account.device.authorityPin));owner();account.requireOpen()
+        JSONObject().put("target",target).put("fingerprint",ru.genesis.calendar.security.E2eeComparedPersonalDeviceTarget.fingerprint(target))
+    }
+    /** Caller obtains a fresh system credential admission for every step. The
+     * candidate is always closed before returning public exchange material. */
+    internal suspend fun personalDeviceEntry(action:String,targetInput:String,compared:String,approvalInput:String,assertAdmission:()->Unit):JSONObject{
+        val result=withContext(Dispatchers.IO){
+            check(action in setOf("begin","resume","new","submit")){"E2EE_DEVICE_ACCESS_INVALID"};val identity=mutableState.value.user?:error("E2EE_ACCOUNT_BINDING_REQUIRED");check(identity.privateVault){"E2EE_ACCOUNT_BINDING_REQUIRED"}
+            val uid=identity.uid;val owner=privateUiOwnerGuard(uid);val generation=client.currentGeneration();val lifecycle=privateVaultLifecycle.get();val job=currentCoroutineContext().job
+            fun current(){assertAdmission();owner();job.ensureActive();check(client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle){"E2EE_FOREGROUND_REQUIRED"}}
+            current();val status=client.e2ee(generation,"/status",null);current();val scopes=status.getJSONArray("scopes");val personal=(0 until scopes.length()).map{scopes.getJSONObject(it)}.filter{it.get("kind")=="personal"&&it.get("resourceId")==uid&&it.get("state")=="active"};check(personal.size==1){"E2EE_PERSONAL_SCOPE_REQUIRED"};val scopeId=personal.single().getString("scopeId")
+            val entryTransport=object:ru.genesis.calendar.security.E2eeScopeTransport{
+                private fun call(path:String,body:JSONObject):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
+                override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
+                override fun command(packet:JSONObject)=call("/command",packet)
+                override fun read(packet:JSONObject)=call("/read",packet)
+            }
+            val ports=object:ru.genesis.calendar.security.E2eePersonalDeviceEntryPorts{
+                override val transport:ru.genesis.calendar.security.E2eeScopeTransport=entryTransport
+                override fun challenge(target:JSONObject,deviceId:String,keys:JSONObject,requestId:String):JSONObject{current();return client.e2ee(generation,"/challenge",JSONObject().put("scopeId",target.get("scopeId")).put("deviceId",deviceId).put("keys",keys).put("requestId",requestId)).also{current()}}
+            }
+            val entry=if(action=="begin"){
+                val target=ru.genesis.calendar.security.E2eeComparedPersonalDeviceTarget.compare(privateDeviceAccessInput(targetInput),compared,uid);check(target.target().get("scopeId")==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};ru.genesis.calendar.security.E2eePersonalDeviceEntry.begin(app,target,ports,::current)
+            }else ru.genesis.calendar.security.E2eePersonalDeviceEntry.resume(app,uid,ports,::current)
+            try{check(entry.target().get("scopeId")==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};val state=when(action){"new"->entry.newRequest();"submit"->entry.submit(approvalInput.takeIf{it.isNotBlank()}?.let(::privateDeviceAccessInput));else->entry.request()};current();privateDeviceAccessView(state)}finally{entry.close()}
+        }
+        if(action=="submit")unlockPrivateVaultMaterial(null,null,false,false,assertAdmission);return result
+    }
     private class AtomicMembershipSession(val product:ru.genesis.calendar.security.E2eeMembershipProduct,val review:ru.genesis.calendar.security.E2eeMembershipOwnerReview,val atomic:ru.genesis.calendar.security.E2eeMembershipAtomicApply,val atomicOwnerReview:ru.genesis.calendar.security.E2eeMembershipAtomicOwnerReviews,val stager:ru.genesis.calendar.security.E2eeMembershipAtomicStager,val operations:ru.genesis.calendar.security.E2eeNativeMembershipOperations,val composer:ru.genesis.calendar.security.E2eeNativeMembershipOperationComposer,val current:()->Unit)
     private suspend fun <T> privateMembershipSession(operation:suspend(AtomicMembershipSession)->T):T=withContext(Dispatchers.IO){
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val job=currentCoroutineContext().job;val(account,ports,current)=privateDeviceAccessPorts(uid){job.ensureActive()};val generation=client.currentGeneration()

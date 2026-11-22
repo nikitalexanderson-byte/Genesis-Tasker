@@ -4039,6 +4039,25 @@ export async function pendingCurrentPrivateCreations(){
  const projects=await new E2eePrivateProjectCreation(account,privateScopeSetupHttpTransport(),current).pending();current();
  return [...spaces,...projects].map(row=>({intentId:row.intentId,scopeId:row.scopeId,resourceId:row.resourceId,kind:row.kind,input:{title:row.input.title}}));
 }
+/** Public personal authority export for an independently compared new device. */
+export async function currentPrivatePersonalDeviceTarget(){const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_CHANGED');const account=requirePrivateAccount(owner),scope=account.personal();account.requireOpen();session();
+ const {validateDeviceAccessTarget}=await import('./e2ee/device-access-contract'),{personalDeviceTargetFingerprint}=await import('./e2ee/personal-device-target');session();account.requireOpen();
+ const target=validateDeviceAccessTarget({ownerId:owner,scopeId:scope.directory.scopeId,kind:'personal',resourceId:owner,authority:account.device.authorityPin});return{target,fingerprint:personalDeviceTargetFingerprint(target)};
+}
+async function personalDeviceEntryForeground(assertForeground:()=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const current=()=>{session();assertForeground();if(!owner||!serverProtectedTransportOwners.has(owner)||confirmedTransportOwnerId!==owner||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {validatePrivateAccountStatus}=await import('./e2ee/product-session');current();const status=validatePrivateAccountStatus(await e2eeRequest('/status'));current();const personal=status.scopes.filter(row=>row.kind==='personal'&&row.resourceId===owner&&row.state==='active');if(personal.length!==1)throw new Error('E2EE_PERSONAL_SCOPE_REQUIRED');
+ const transport=privateAccountHttpTransport(),ports:import('./e2ee/personal-device-entry').PersonalDeviceEntryPorts={transport,challenge:async(target,deviceId,keys,requestId)=>{current();const value=await e2eeRequest('/challenge',{scopeId:target.scopeId,deviceId,keys,requestId});current();return value;}};
+ return{owner:owner!,scopeId:personal[0].scopeId,ports,current};
+}
+export async function beginCurrentPrivatePersonalDeviceEntry(secret:Uint8Array,input:string,comparedFingerprint:string,assertForeground:()=>void){
+ const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{ComparedPersonalDeviceTarget}=await import('./e2ee/personal-device-target'),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry'),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();
+ const target=ComparedPersonalDeviceTarget.compare(parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',8192),comparedFingerprint,owner);if(target.target.scopeId!==scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return WebPersonalDeviceEntry.begin(target,secret,ports,current);
+}
+export async function resumeCurrentPrivatePersonalDeviceEntry(secret:Uint8Array,assertForeground:()=>void){
+ const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry');current();const entry=await WebPersonalDeviceEntry.resume(owner,secret,ports,current);current();if(entry.target.scopeId!==scopeId){entry.close();throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}return entry;
+}
 export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
   if(!owner||!serverProtectedTransportOwners.has(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
