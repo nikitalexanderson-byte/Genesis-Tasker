@@ -1,5 +1,14 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Ordinary signed invitation routing (22 November; source-only)
+
+Normal space/project issue and revoke now preserve raw requests, use stable IDs
+and verify receipts plus fresh state on both clients. Server keeps ordinary
+invite permissions and grants no keys/membership/directory authority. Matching
+retained custody is connected. Recipient acceptance/list/pending UI remains next.
+No compiler/tests/lint/build/CI; coverage stays9/20.
+
+
 ## Complete category name and permission operation (22 November; source-only)
 
 The ordinary request preserves the full private input, uses title-free network

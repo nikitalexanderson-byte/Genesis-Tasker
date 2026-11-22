@@ -12,6 +12,7 @@ import {encodeE2eeBytes} from './envelope.ts';
 import type {VerifiedProductProposal,VerifiedProductOrigin} from './product-proofs.ts';
 import {prepareSharedTaskFiles,sharedRequestFileInputs,sharedFileReference,type SharedFileReference} from './shared-file-values.ts';
 import {privateSharedTaskPage,privateSharedCustomFieldMatch} from './shared-query.ts';
+import {sharedInvitationService,verifySharedInvitationResult,type SharedInvitationService} from './shared-invitation-request.ts';
 import {membershipOperationForSharedRequest} from './membership-operation-request.ts';
 import type {MembershipOperation} from './membership-operation-plan.ts';
 
@@ -36,6 +37,7 @@ export interface SharedLivePorts{
  saveRequest:(value:SavedRequest,expected:number|null)=>Promise<number>;
  membership?:(operation:MembershipOperation,intentId:string,expectedFingerprint:string|null)=>Promise<ObjectValue>;
  membershipView?:(userId:string,desired:ObjectValue|null)=>Promise<ObjectValue>;
+ invitationService?:(plan:SharedInvitationService)=>Promise<{result:unknown;state:unknown}>;
 }
 const camel=(key:string)=>key.replace(/_([a-z])/g,(_,letter:string)=>letter.toUpperCase());
 function object(value:unknown):asserts value is ObjectValue{if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_DOMAIN_INVALID');}
@@ -431,6 +433,9 @@ export class SharedLiveModel{
   if(saved){request=validateSharedLiveRequest(this.ports.binding,saved.value);if(request.method!==method||request.path!==path||!samePrivateJson(request.body,held))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}
   else{request={protocol:1,scopeId:this.ports.binding.scopeId,id,method,path,body:held,createdAt:new Date().toISOString(),edits:null,result:null,complete:false};saved={value:request,serial:await this.ports.saveRequest(request,null)};}
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
+  const invitation=sharedInvitationService(this.ports.binding,this.ports.actorId,method,path,held,id);
+  if(invitation){if(!this.ports.online||!this.ports.invitationService)throw new Error('E2EE_ONLINE_REQUIRED');const observed=await this.ports.invitationService(invitation);this.ports.current();
+   const result=verifySharedInvitationResult(invitation,this.ports.actorId,observed.result,observed.state);await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;}
   const membership=membershipOperationForSharedRequest(this.ports.binding,method,path,held);
   if(membership){if(!this.ports.online||!this.ports.membership)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
    let result=await this.ports.membership(membership,id,membership.kind==='project-grants'?held.expectedFingerprint as string:null);this.ports.current();

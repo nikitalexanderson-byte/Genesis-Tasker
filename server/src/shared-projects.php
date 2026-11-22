@@ -1261,7 +1261,7 @@ function genesisSharedRequireInvitationGrant(string $userId, string $projectId, 
     }
 }
 
-function genesisSharedInvite(string $userId, string $projectId, array $input): array
+function genesisSharedInvite(string $userId, string $projectId, array $input,?string $preparedId=null): array
 {
     genesisSharedRequireEnabled($userId);
     genesisSharedProjectAccess($projectId, $userId, 'invite');
@@ -1284,11 +1284,11 @@ function genesisSharedInvite(string $userId, string $projectId, array $input): a
         throw new GenesisSharedAccessException('INVITEE_ACCOUNT_UNSUPPORTED', 403);
     }
     $token = bin2hex(random_bytes(32));
-    $id = genesisUuid();
+    $id = $preparedId===null?genesisUuid():genesisE2eeIdentifier($preparedId);
     $now = genesisNow();
     $expires = gmdate('Y-m-d\TH:i:s\Z', time() + 7 * 86400);
     $db = genesisDb();
-    genesisBeginWriteTransaction($db);
+    $ownsTransaction=!$db->inTransaction();if($ownsTransaction)genesisBeginWriteTransaction($db);
     try {
         genesisSharedRequireInvitationGrant($userId, $projectId, $role);
         $db->prepare('UPDATE shared_invitations SET revoked_at = :now
@@ -1302,10 +1302,10 @@ function genesisSharedInvite(string $userId, string $projectId, array $input): a
                 'id' => $id, 'project' => $projectId, 'email' => $email, 'role' => $role,
                 'hash' => hash('sha256', $token), 'expires' => $expires, 'user' => $userId, 'now' => $now,
             ]);
-        genesisSharedAudit($projectId, $userId, 'invitation.created', $id);
-        $db->commit();
+        if($preparedId===null)genesisSharedAudit($projectId, $userId, 'invitation.created', $id);
+        if($ownsTransaction)$db->commit();
     } catch (Throwable $error) {
-        $db->rollBack();
+        if($ownsTransaction&&$db->inTransaction())$db->rollBack();
         throw $error;
     }
     return ['id' => $id, 'expiresAt' => $expires];

@@ -92,8 +92,10 @@ internal object E2eeRetainedProductCustody {
             when(action){
                 "shared-invitations-issue"->{
                     E2eeKeys.exact(payload,setOf("intentId","invitations"));val invitations=rows(payload.getJSONArray("invitations"));if(invitations.size !in 1..20)invalid();val ids=mutableSetOf<String>();val emails=mutableSetOf<String>()
-                    for(row in invitations){E2eeKeys.exact(row,setOf("id","email","role","permissions"));val email=row.getString("email");if(!ids.add(E2eeKeys.technical(row.getString("id")))||email.length>320||!Regex("\\S+@(?:gmail|googlemail)\\.com",RegexOption.IGNORE_CASE).matches(email)||!emails.add(email.lowercase(java.util.Locale.ROOT))||row.get("role") !in setOf("admin","member","guest"))invalid()
-                        val permissions=row.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}
+                    if(frame.kind !in setOf("space","project"))invalid();val space=frame.kind=="space"
+                    for(row in invitations){E2eeKeys.exact(row,setOf("id","email","role")+(if(space)setOf("permissions")else emptySet()));val email=row.getString("email");val pattern=if(space)"\\S+@(?:gmail|googlemail)\\.com"else"\\S+@\\S+\\.\\S+";val roles=if(space)setOf("admin","member","guest")else setOf("manager","member","commenter","viewer")
+                        if(!ids.add(E2eeKeys.technical(row.getString("id")))||email.length>320||!Regex(pattern,RegexOption.IGNORE_CASE).matches(email)||!emails.add(email.lowercase(java.util.Locale.ROOT))||row.get("role") !in roles)invalid()
+                        if(space&&!row.isNull("permissions")){val permissions=row.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}}
                 }
                 "shared-invitation-revoke"->{E2eeKeys.exact(payload,setOf("intentId","id"));E2eeKeys.technical(payload.getString("id"))}
                 "resource-create-prepare","resource-create-resolve"->{

@@ -161,6 +161,7 @@ async function run(encoded:string){
         stage:async(edits:ProductEdit[],intentId:string)=>await invoke('stage',{edits,intentId}) as string,
         flush:intentId=>invoke('flush',{intentId}),
         membership:async(operation,intentId,expectedFingerprint)=>await invoke('membership',{operation,intentId,expectedFingerprint}) as Record<string,unknown>,
+        invitationService:async plan=>await invoke('invitationService',{plan}) as {result:unknown;state:unknown},
         membershipView:async(userId,desired)=>await invoke('membershipView',{userId,desired}) as Record<string,unknown>,
         loadRequest:async id=>await invoke('requestLoad',{id}) as {value:SavedSharedRequest;serial:number}|null,
         saveRequest:async(document,expected)=>await invoke('requestSave',{document,expected}) as number,

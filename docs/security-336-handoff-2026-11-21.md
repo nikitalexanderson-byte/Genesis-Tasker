@@ -1,5 +1,26 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: ordinary invitation issue/revoke (source-only)
+
+Новый shared-invitation-request связывает обычные space/project POST invitations
+и DELETE invitations/id с существующим signed service. Полный raw input сохранён
+до IO, UUID/intent стабильны без email/content hash. Web/native проверяют точную
+квитанцию и fresh state: email/role/permissions/creator. Retained custody JS/Kotlin
+понимает оба вида и null defaults. Server сохраняет business invite permissions/
+escalation, транзакцию и prepared ID; эти действия не меняют membership/directory
+и не передают ключи. Текущий подписывающий device + business permission допускают
+routing без выдачи directory authority.
+
+ОСТАТОК invitations: получатель/list/accept/decline и pending-key-access UI;
+private activity presentation. Затем foreign product writer readback, very-wide
+bounds, first personal trusted entry, advanced/forms/automation/series/bulk/cross-
+scope attribution, typed restore, revoked replacement/background и прочее prompt.
+Compiler/lint/tests/build/CI security не запускались. Coverage9/20.
+
+PR44 head0ca81bed: оба Android required jobs success, оба web-and-api ещё выполняют
+browser QA. Пока не merged/Deploy, production6672bbef.
+
+
 ## 22 ноября: combined category name+permissions (source-only)
 
 Обычный PATCH member-category теперь целиком сохраняет title+permissions.

@@ -60,6 +60,7 @@ class WebSharedLive{
     const file=await client.read('attachment',reference.objectId);account.requireOpen();if(!file)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');return file;
    },
    stage:(edits,id)=>records.product.stage(edits,id),flush:async id=>{if(account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return records.flush(id);},
+   invitationService:async plan=>{const {client}=account.shared(binding.scopeId,binding.kind,binding.resourceId);account.requireOpen();const result=await client.executeService(plan.action,plan.payload,plan.intentId);account.requireOpen();const state=await client.readInvitationState(plan.ids);account.requireOpen();return{result,state};},
    membershipView:async(userId,desired)=>await webPrivateProjectAccess(account.ownerId,binding.resourceId,userId,desired as SharedProjectAccessDraft|null) as unknown as Record<string,unknown>,
    membership:async(operation,id,expectedFingerprint)=>{account.requireOpen();const drafts=privateMembershipOperationDrafts(account.ownerId);let existing;
     try{existing=await drafts.inspect(id);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_MEMBERSHIP_OPERATION_REQUIRED')throw error;}

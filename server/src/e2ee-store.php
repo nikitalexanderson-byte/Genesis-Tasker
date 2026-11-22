@@ -199,7 +199,7 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
         $device = $recovery ? false : genesisE2eeRow($db, 'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?', [$c['scopeId'],$c['deviceId']]);
         if (!$recovery && (!$device || $device['revoked'] || ($device['user_id'] !== $actor && $c['action'] !== 'enroll'))) throw new DomainException('E2EE_REVOKED_DEVICE');
         if ($recovery && $actor !== $scope['owner_id'] && $c['action']!=='enroll') throw new GenesisResourceLimitException(403,'E2EE_SCOPE_FORBIDDEN');
-        if(!in_array($c['action'],['put','cancel-put','product-commit','product-commit-bound','product-approve','stoicheion-grant','advice-issue'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
+        if(!in_array($c['action'],['put','cancel-put','product-commit','product-commit-bound','product-approve','stoicheion-grant','advice-issue','shared-invitations-issue','shared-invitation-revoke'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
         genesisE2eeVerifyCommand($packet, $recovery ? $scope['recovery_signing_key'] : $device['signing_key']);
         $fingerprint = genesisE2eeCommandHash($c);
         $receipt = genesisE2eeRow($db, 'SELECT * FROM e2ee_receipts WHERE scope_id=? AND operation_id=?', [$c['scopeId'],$c['operationId']]);
@@ -318,7 +318,9 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
             if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
             require_once __DIR__.'/e2ee-resource-create.php';$result=genesisE2eeResolvePrivateProjectCreation($db,$actor,$scope,$c);
         } elseif (in_array($c['action'],['shared-invitations-issue','shared-invitation-revoke'],true)) {
-            if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
+            // Routing requires a current device plus current business invitation
+            // permission. It never changes the directory or grants content keys.
+            if($recovery)throw new DomainException('E2EE_DEVICE_REQUIRED');
             require_once __DIR__.'/e2ee-shared-invitations.php';$result=genesisE2eeSharedInvitationsService($db,$actor,$scope,$c);
         } elseif ($c['action'] === 'advice-issue') {
             if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');

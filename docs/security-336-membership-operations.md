@@ -83,3 +83,23 @@ original operation, including title. Text labels exist on all14 languages.
 No compiler/typecheck/lint/tests/build/CI were run. This is source integration,
 not acceptance; coverage9/20, cutover/floors off. Pending: ordinary invitations,
 foreign-writer readback, very-wide transport/local records, then remaining prompt.
+
+
+## 22 November: ordinary invitation issue/revoke (source-only)
+
+Ordinary space/project invitations now use the existing signed service from the
+normal web/native model. The complete raw request precedes all IO; a stable
+technical UUID, fixed service intent and exact readback prevent reissuing after
+an unknown response. Receipt plus fresh invitation state must match recipient,
+role, permissions and creator. Retained custody understands space defaults/null
+and project roles. Issuance/revocation grant no membership or keys.
+
+The service checks the same current business invite permission and escalation
+rules as the original routes. A current authenticated directory device may issue
+routing metadata; it gains no directory-authority capability. Project issuance
+respects the caller transaction and uses its prepared UUID. Legacy callers retain
+their original behavior. Signed service history records the private-mode routing
+event instead of writing a new legacy audit content row.
+
+Acceptance/listing/pending key-access UI and private activity presentation still
+need integration. No compiler/lint/tests/build/CI were run; coverage remains9/20.
