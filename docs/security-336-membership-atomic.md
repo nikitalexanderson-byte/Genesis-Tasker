@@ -87,9 +87,19 @@ Server preview применяет только verified ACL rows внутри в
 страница сама не выдаёт trust/pin или согласие владельца. Native/web custody
 также понимает точный saved preview request.
 
+Добавлены matching signed-origin/receipt verifiers: каждый rotation/product
+packet сверяется с independently pinned directory frame и реальным user/device,
+complete plan/packet hashes и следующим signed membership event. Hypothetical
+approval не сохраняется как observed history. Receipt collector требует все
+страницы, exact command/actor/revision/hash/checkpoint и обязательные callbacks
+normal scope/product repository readback; partial response не даёт finish.
+Это отдельный verifier без signer/POST/keys, но его реальные adapters и durable
+coordinator ещё не скомпонованы. Не считать наличие интерфейса callback за
+прошедшую normal readback-проверку.
+
 ## Остаток подключения
 
-- Клиентские paged receipt/readback и полный durable apply coordinator;
+- Композиция paged receipt verifier с normal repositories и durable apply coordinator;
   server writer/planner ещё не проверены.
 - Owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.

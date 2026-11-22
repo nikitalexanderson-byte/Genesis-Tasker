@@ -31,6 +31,7 @@ internal object E2eeMembershipAtomicContract {
         for(key in listOf("generation","directoryRevision","revision"))number(value.get(key),1)
         E2eeEnvelope.decode(value.getString("checkpointHash"),32);E2eeEnvelope.decode(value.getString("payloadHash"),32)
     }
+    fun checkedAnchor(input:JSONObject)=JSONObject(input.toString()).also{anchor(it)}
     private fun pageProjection(input:JSONObject)=JSONObject().put("format","genesis-membership-page-v2").put("kind",input.get("kind"))
         .put("items",if(input.get("kind")=="acl")E2eeMembershipContract.projection(input.getJSONArray("items"))else input.getJSONArray("items"))
     private fun operationHeader(input:JSONObject){

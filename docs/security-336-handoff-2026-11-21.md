@@ -1,5 +1,29 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: signed-origin/complete receipt verifier (source-only)
+
+Послеa7ed0822 added matching atomic-proofs TS/Kotlin: independently pinned
+historical directory frames, actual foreign writer attribution, exact next
+signed membership event, complete plan/packet page binding и paged receipt
+collector. Receipt pages/counts/actors/versions/checkpoints checked before
+mandatory normal scope/product readback callbacks; only all pages can finish.
+Observed history remains separate from hypothetical append. No signer/POST/key
+capability in verifier. Actual adapters + durable apply coordinator remain;
+do not claim an interface callback as completed normal readback. V2 full effects
+owner review, normal UI and the remaining original prompt still required.
+
+Urgent PR43: required CI45033064903 Android PASS, web PHP130/131. Found existing
+post-COMMIT activity UPDATE race in genesisChangeSpreadCard. Fixed in isolated
+urgent checkout; existing full concurrency suite20/20 local repeats + PHP syntax
+PASS. New urgent head45ad2e22a60468d68af9982fa0a2b918062b9f89, required PR CI
+45034742687 running; duplicate push45034738601 cancelled. Nothing published.
+When green, merge via expected head/[skip ci], run exact main website_only CI,
+then existing Deploy with fresh live incumbent. Preserve APK149 and manifest.
+
+Security source/compiler/lint/tests/build/CI still NOT run. Only source review/
+diff hygiene. Coverage9/20, floors0/cutover off, GENESIS_DEPLOY_ANDROID=false.
+No security push/deploy/devices/Play. demo-output/ remains unread/unstaged.
+
 ## 22 ноября: native/web receipt codecs и bounded attributed preview
 
 После3b3b26a6 added strict receipt/header/page codecs, apply/read authorization
