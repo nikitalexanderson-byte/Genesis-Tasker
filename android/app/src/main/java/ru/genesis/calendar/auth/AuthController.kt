@@ -754,28 +754,31 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun sharedMindmapDocument(space: String, path: String, body: JSONObject?, method: String): JSONObject =
         sharedOnlineCall { api, generation -> api.sharedMindmapDocument(generation, space, path, body, method) }
 
+    internal fun messagingLifetime()=client.currentGeneration() to app.workspaceEpoch
     internal fun messagingGateway(uid: String): MessagingGateway {
       val epoch=ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.value
+      val generation=client.currentGeneration();val restore=app.workspaceEpoch;val scope=CloudAccountSnapshot.scopeFor(uid)
+      val protected=ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)
+      val account=if(protected)ru.genesis.calendar.security.NativePrivateProducts.account(scope,uid)else null
       return object : MessagingGateway {
         override val custodyEpoch=epoch
-        override fun featureAccess(): FeatureAccess = mutableState.value.accountSettings?.featureAccess ?: FeatureAccess()
+        override val sessionGeneration=generation
+        override val restoreEpoch=restore
+        override fun featureAccess(): FeatureAccess {check();return mutableState.value.accountSettings?.featureAccess ?: FeatureAccess()}
         override fun check() {
-            if (mutableState.value.user?.uid != uid || app.workspaceScope != CloudAccountSnapshot.scopeFor(uid)) throw CancellationException()
+            if (!client.isCurrent(generation)||app.workspaceEpoch!=restore||mutableState.value.user?.uid != uid || app.workspaceScope != scope) throw CancellationException()
             ru.genesis.calendar.security.UpdateGate.requireOpen()
-            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid))&&ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.value!=epoch)throw CancellationException()
-            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(uid)))ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(uid),uid).requireOpen()
+            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)!=protected||ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.value!=epoch)throw CancellationException()
+            account?.let{it.requireOpen();if(ru.genesis.calendar.security.NativePrivateProducts.account(scope,uid)!==it)throw CancellationException()}
         }
         override suspend fun request(method: String, path: String, body: JSONObject?): JSONObject {
-            check()
-            if (path.startsWith("/shared/messenger/")) {
-                val generation = client.currentGeneration()
-                if (!mutableState.value.ready || mutableState.value.requiresSignIn) throw AuthFailure(AuthFailure.Kind.NETWORK)
-                return withContext(Dispatchers.IO) {
-                    check(); val result = client.messaging(generation, method, path, body)
-                    check(); if (!client.isCurrent(generation)) throw CancellationException(); result
-                }
+            check();check(MessagingProtocol.allowedRoute(method,path)){"MESSAGING_ROUTE_BLOCKED"}
+            if(!path.startsWith("/shared/messenger/")&&mutableState.value.accountSettings?.sharedProjectsEnabled!=true)throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
+            if(!mutableState.value.ready||mutableState.value.requiresSignIn)throw AuthFailure(AuthFailure.Kind.NETWORK)
+            return withContext(Dispatchers.IO){
+                currentCoroutineContext().ensureActive();check();val result=client.messaging(generation,method,path,body)
+                currentCoroutineContext().ensureActive();check();result
             }
-            return sharedOnlineCall { api, generation -> api.messaging(generation, method, path, body) }.also { check() }
         }
     }
 

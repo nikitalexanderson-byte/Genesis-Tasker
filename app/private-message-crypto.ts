@@ -49,18 +49,24 @@ const fileAad = (context: MessageContext, id: string) => bytes(JSON.stringify(['
 export async function encryptPrivateFile(key: CryptoKey, context: MessageContext, file: File, id = crypto.randomUUID()): Promise<{ metadata: PrivateFile; chunks: string[] }> {
   if (file.size > PRIVATE_FILE_LIMIT) throw new Error('PRIVATE_FILE_TOO_LARGE');
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: fileAad(context, id) }, key, await file.arrayBuffer()));
-  const chunks: string[] = [];
-  for (let offset = 0; offset < cipher.length; offset += PRIVATE_CHUNK_SIZE) chunks.push(base64(cipher.subarray(offset, offset + PRIVATE_CHUNK_SIZE)));
-  return { metadata: { id, name: file.name.slice(0, 255), type: file.type, size: file.size, iv: base64(iv), chunks: chunks.length }, chunks };
+  const plain=new Uint8Array(await file.arrayBuffer());let cipher:Uint8Array|undefined;
+  try{
+    cipher=new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: fileAad(context, id) }, key, plain));
+    const chunks: string[] = [];
+    for (let offset = 0; offset < cipher.length; offset += PRIVATE_CHUNK_SIZE) chunks.push(base64(cipher.subarray(offset, offset + PRIVATE_CHUNK_SIZE)));
+    return { metadata: { id, name: file.name.slice(0, 255), type: file.type, size: file.size, iv: base64(iv), chunks: chunks.length }, chunks };
+  }finally{plain.fill(0);cipher?.fill(0);}
 }
 export async function decryptPrivateFile(key: CryptoKey, context: MessageContext, file: PrivateFile, chunks: string[]): Promise<Blob> {
   if (file.size < 0 || file.size > PRIVATE_FILE_LIMIT || chunks.length !== file.chunks || file.chunks !== Math.ceil((file.size + 16) / PRIVATE_CHUNK_SIZE)) throw new Error('INVALID_PRIVATE_FILE');
   const cipher = new Uint8Array(file.size + 16); let offset = 0;
-  for (const chunk of chunks) { const part = unbase64(chunk); cipher.set(part, offset); offset += part.length; }
-  if (offset !== cipher.length) throw new Error('INVALID_PRIVATE_FILE');
-  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unbase64(file.iv), additionalData: fileAad(context, file.id) }, key, cipher);
-  return new Blob([plain], { type: 'application/octet-stream' });
+  let plain:ArrayBuffer|undefined;
+  try{
+    for (const chunk of chunks) { const part = unbase64(chunk);try{if(part.length>cipher.length-offset)throw new Error('INVALID_PRIVATE_FILE');cipher.set(part, offset);offset += part.length;}finally{part.fill(0);} }
+    if (offset !== cipher.length) throw new Error('INVALID_PRIVATE_FILE');
+    plain=await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unbase64(file.iv), additionalData: fileAad(context, file.id) }, key, cipher);
+    return new Blob([plain], { type: 'application/octet-stream' });
+  }finally{cipher.fill(0);if(plain)new Uint8Array(plain).fill(0);}
 }
 export function decodePrivateContent(source: string): PrivateContent {
   // Legacy messages remain plain strings inside the encrypted envelope.
@@ -70,15 +76,17 @@ export function decodePrivateContent(source: string): PrivateContent {
   return content;
 }
 export async function encryptPrivateMessage(key: CryptoKey, context: MessageContext, text: string, keyIds: Record<string,string>): Promise<MessagePayload> {
-  if (!text.trim() || bytes(text).length > 32000) throw new Error('INVALID_MESSAGE');
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv, additionalData:aad(context) }, key, bytes(text));
-  return { version:1, iv:base64(iv), ciphertext:base64(ciphertext), keyIds };
+  const plain=bytes(text);
+  try{if (!text.trim() || plain.length > 32000) throw new Error('INVALID_MESSAGE');
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv, additionalData:aad(context) }, key, plain);
+    return { version:1, iv:base64(iv), ciphertext:base64(ciphertext), keyIds };
+  }finally{plain.fill(0);}
 }
 export async function decryptPrivateMessage(key: CryptoKey, context: MessageContext, payload: MessagePayload, expectedKeyIds: Record<string,string>): Promise<string> {
   if (payload.version!==1 || Object.keys(payload.keyIds).length!==2 || Object.entries(expectedKeyIds).some(([id,value])=>payload.keyIds[id]!==value)) throw new Error('MESSAGE_KEY_MISMATCH');
   const plain = await crypto.subtle.decrypt({ name:'AES-GCM', iv:unbase64(payload.iv), additionalData:aad(context) },key,unbase64(payload.ciphertext));
-  return new TextDecoder('utf-8',{fatal:true}).decode(plain);
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(plain);}finally{new Uint8Array(plain).fill(0);}
 }
 export async function securityCode(keyIds: string[]): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes(JSON.stringify([...keyIds].sort())));

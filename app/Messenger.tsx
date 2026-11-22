@@ -11,6 +11,7 @@ import copy from './messenger-copy.json';
 import {GenesisApiError} from './cloud-sync';
 import './messenger.css';
 import {privateAccountIsRequired,privateAccountView,subscribePrivateAccount} from './e2ee/product-session';
+import {captureMessagingAccess} from './e2ee/message-lifetime';
 const Legacy = lazy(() => import('./SharedSpaceCollaboration').then(m => ({ default: m.SharedPrivateNotices })));
 type CopyKey = keyof typeof copy.ru;
 type DisplayMessage = MessengerMessage & {
@@ -70,7 +71,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
     function failure(e: unknown) { const msg = e instanceof Error ? e.message : ''; return msg.includes('CONTACT_UNAVAILABLE') ? c('contactUnavailable') : msg.includes('RATE_LIMIT') ? c('requestLimit') : c('failure'); }
     async function run(action: () => Promise<void>) { if (working.current)
         return; working.current = true; setBusy(true); setError(''); try {
-        await action();
+        const current=captureMessagingAccess(userId);current();await action();current();
     }
     catch (e) {
         if (e instanceof GenesisApiError && e.status === 409) setPendingConflict(true);
@@ -82,8 +83,8 @@ export default function Messenger({ userId, language, active = true, view = 'con
         if (alive.current)
             setBusy(false);
     } }
-    const refresh = useCallback(async () => { const result = await messengerInbox(); if (alive.current) {
-        setChats(result.conversations);setHiddenChats(result.hiddenConversations??[]); } }, []);
+    const refresh = useCallback(async () => { const current=captureMessagingAccess(userId),result = await messengerInbox();current();if (alive.current) {
+        setChats(result.conversations);setHiddenChats(result.hiddenConversations??[]); } }, [userId]);
     async function visibility(chat:MessengerChat,action:'hide'|'show'|'delete') {
         await messengerRequest(path(chat.id,'/visibility'),'POST',{action});
         await refresh();
@@ -101,13 +102,14 @@ export default function Messenger({ userId, language, active = true, view = 'con
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId, refresh]);
     useEffect(() => { const unread = chats.filter(chat => chat.unread > 0 || chat.members.some(m => m.userId === userId && m.status === 'pending')); onActivity?.({ count: unread.reduce((n, chat) => n + Math.max(1, chat.unread), 0), tokens: unread.map(chat => 'private:messenger:' + chat.id + ':' + chat.updatedAt), title: c('title') }); }, [chats, userId, language, onActivity]); // eslint-disable-line react-hooks/exhaustive-deps
-    async function localDevice() { return device.current ?? (device.current = await messengerDevice(userId)); }
+    async function localDevice() {const current=captureMessagingAccess(userId),version=generation.current;if(device.current){current();return device.current;}
+        const opened=await messengerDevice(userId);current();if(!alive.current||version!==generation.current)throw new Error('E2EE_MESSAGE_CUSTODY_RETIRED');device.current=opened;return opened;}
     async function load(id: string, before = 0) {
         try { await loadChecked(id,before); }
         catch(e) { if(e instanceof GenesisApiError && [401,403,404].includes(e.status) && selection.current===id) { setMessages([]);setSecretError(c('failure')); } throw e; }
     }
     async function loadChecked(id: string, before = 0) {
-        const version = generation.current, fresh = await messengerChat(id);
+        const current=captureMessagingAccess(userId),version = generation.current, fresh = await messengerChat(id);current();
         if (version !== generation.current || selection.current !== id)
             return;
         setSelected(fresh);
@@ -118,6 +120,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
         if (fresh.kind === 'secret') {
             try {
                 secret = await messengerSecret(userId, fresh, await localDevice());
+                current();
                 if (version !== generation.current)
                     return;
                 setCode(secret.code);
@@ -137,6 +140,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
             nextCursor: number | null;
             clearedThrough?: number;
         }>(path(id, '/messages?' + params));
+        current();
         const rows: DisplayMessage[] = await Promise.all(result.messages.map(async (row) => {
             if (row.deletedAt)
                 return { ...row, displayText: c('deleted') };
@@ -147,7 +151,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
                 return { ...row, displayText: c('decryptError'), failed: true };
             }
         }));
-        if (version !== generation.current || selection.current !== id)
+        current();if (version !== generation.current || selection.current !== id||!alive.current)
             return;
         const follow = !list.current || list.current.scrollHeight - list.current.scrollTop - list.current.clientHeight < 80;
         setMessages(previous => {const old=previous.filter(row=>row.seq>(result.clearedThrough??0));return before ? [...rows, ...old].filter((m, i, a) => a.findIndex(x => x.id === m.id) === i) : [...old.filter(m => rows[0] && m.seq < rows[0].seq), ...rows];});
@@ -159,6 +163,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
             await messengerRequest(path(id, '/read'), 'POST', { seq: rows.at(-1)!.seq, ...(secret ? { deviceId: device.current!.id } : {}) });
     }
     async function choose(chat: MessengerChat) {
+        const current=captureMessagingAccess(userId);
         generation.current++;
         earlierLoaded.current=false;
         selection.current = chat.id;
@@ -177,11 +182,13 @@ export default function Messenger({ userId, language, active = true, view = 'con
         setLoading(true);
         try {
             const saved = await messengerPending(userId, chat.id);
+            current();
             if (selection.current !== chat.id)
                 return;
             if (saved)
                 setPending(JSON.parse(saved));
             const recovered = await messengerPending(userId, 'draft:' + chat.id);
+            current();
             if (selection.current !== chat.id) return;
             if (recovered) setDraft(recovered);
             await load(chat.id);
@@ -202,30 +209,35 @@ export default function Messenger({ userId, language, active = true, view = 'con
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selected?.id, active, view, language]);
     const back = () => { generation.current++; selection.current = null; setSelected(null); setMessages([]); setDraft(''); setEditing(null); setPending(null); setSecretError(''); setError(''); };
-    async function selectContacts() { setTab('contacts');const result=await messengerContacts();setContacts(result.contacts);setBlocked(result.blocked); }
+    async function selectContacts() {const current=captureMessagingAccess(userId);setTab('contacts');const result=await messengerContacts();current();if(alive.current){setContacts(result.contacts);setBlocked(result.blocked);}}
     async function submit() {
         if (!selected)
             return;
         const id = selected.id;
+        const owner=captureMessagingAccess(userId),current=()=>{owner();if(!alive.current||selection.current!==id)throw new Error('E2EE_MESSAGE_CUSTODY_RETIRED');};current();
         let command = pending;
         if (!command) {
             const fresh = await messengerChat(id), mid = editing?.id ?? crypto.randomUUID(), body: Record<string, unknown> = { id: mid };
+            current();
             if (editing)
                 body.expectedRevision = editing.revision;
             if (fresh.kind === 'secret') {
                 const d = await localDevice(), secret = await messengerSecret(userId, fresh, d);
+                current();
                 body.deviceId = d.id;
                 body.payload = await encryptPrivateMessage(secret.key, { spaceId: 'messenger-secret-v1', conversationId: id, id: mid, senderId: userId, revision: (editing?.revision ?? 0) + 1 }, draft, secret.keyIds);
+                current();
             }
             else
                 body.text = draft;
             command = { method: editing ? 'PATCH' : 'POST', path: path(id, '/messages' + (editing ? '/' + mid : '')), body };
             await messengerPending(userId, id, JSON.stringify(command));
+            current();
             setPending(command);
         }
-        await messengerRequest(command.path, command.method, command.body);
-        await messengerPending(userId, id, null);
-        await messengerPending(userId, 'draft:' + id, null);
+        current();await messengerRequest(command.path, command.method, command.body);current();
+        await messengerPending(userId, id, null);current();
+        await messengerPending(userId, 'draft:' + id, null);current();
         if (selection.current !== id)
             return;
         setPending(null);
@@ -238,33 +250,35 @@ export default function Messenger({ userId, language, active = true, view = 'con
     async function recoverPendingConflict() {
         if (!selected || !pending || !pendingConflict) return;
         const id = selected.id;
-        const fresh = await messengerChat(id);
+        const current=captureMessagingAccess(userId),fresh = await messengerChat(id);current();
         let text = draft;
         if (pending.method !== 'DELETE') {
             if (fresh.kind === 'secret') {
                 const secret = await messengerSecret(userId, fresh, await localDevice());
+                current();
                 text = await decryptPrivateMessage(secret.key, { spaceId: 'messenger-secret-v1', conversationId: id,
                     id: String(pending.body.id), senderId: userId, revision: Number(pending.body.expectedRevision ?? 0) + 1 },
                     pending.body.payload as Parameters<typeof decryptPrivateMessage>[2], secret.keyIds);
+                current();
             } else {
                 if (typeof pending.body.text !== 'string') throw new Error('INVALID_PENDING_TEXT');
                 text = pending.body.text;
             }
         }
         // Persist the recovered text before releasing the rejected command.
-        await messengerPending(userId, 'draft:' + id, text);
-        await messengerPending(userId, id, null);
+        current();await messengerPending(userId, 'draft:' + id, text);current();
+        await messengerPending(userId, id, null);current();
         if (selection.current !== id) return;
         setPending(null); setPendingConflict(false); setEditing(null); setDraft(text);
         await load(id);
     }
     async function membership(action: string, extra: Record<string, unknown> = {}) { if (!selected)
-        return; const id = selected.id; const deviceId = selected.kind === 'secret' && action === 'accept' ? (await localDevice()).id : undefined; await messengerRequest(path(id, '/membership'), 'POST', { action, ...extra, ...(deviceId ? { deviceId } : {}) }); if (action === 'decline' || action === 'leave')
+        return; const current=captureMessagingAccess(userId),id = selected.id; const deviceId = selected.kind === 'secret' && action === 'accept' ? (await localDevice()).id : undefined;current();await messengerRequest(path(id, '/membership'), 'POST', { action, ...extra, ...(deviceId ? { deviceId } : {}) });current();if (action === 'decline' || action === 'leave')
         back();
     else
         await load(id); await refresh(); }
-    async function create() { if (!createId.current)
-        createId.current = crypto.randomUUID(); const chat = await messengerRequest<MessengerChat>('/conversations', 'POST', { id: createId.current, kind, ...(kind === 'project' ? { projectId: project } : kind === 'group' ? { title, emails: email.split(',').map(x => x.trim()).filter(Boolean) } : { email }), ...(kind === 'secret' ? { deviceId: (await localDevice()).id } : {}) }); setModal(null); createId.current = ''; setEmail(''); setTitle(''); await refresh(); await choose(chat); }
+    async function create() {const current=captureMessagingAccess(userId);if (!createId.current)
+        createId.current = crypto.randomUUID();const deviceId=kind==='secret'?(await localDevice()).id:undefined;current();const chat = await messengerRequest<MessengerChat>('/conversations', 'POST', { id: createId.current, kind, ...(kind === 'project' ? { projectId: project } : kind === 'group' ? { title, emails: email.split(',').map(x => x.trim()).filter(Boolean) } : { email }), ...(deviceId?{deviceId}:{}) });current();setModal(null); createId.current = ''; setEmail(''); setTitle(''); await refresh();current();await choose(chat); }
     useEffect(() => {
         const open=(event:Event)=>{
             const detail=(event as CustomEvent<{userId?:string;projectId?:string}>).detail;

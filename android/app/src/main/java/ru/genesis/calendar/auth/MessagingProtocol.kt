@@ -4,6 +4,8 @@ import org.json.JSONObject
 
 internal interface MessagingGateway {
     val custodyEpoch:Long get()=0L
+    val sessionGeneration:Long get()=0L
+    val restoreEpoch:Long get()=0L
     fun check()
     fun featureAccess(): FeatureAccess = FeatureAccess()
     suspend fun request(method: String, path: String, body: JSONObject? = null): JSONObject

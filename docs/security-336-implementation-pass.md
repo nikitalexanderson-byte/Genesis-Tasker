@@ -10,6 +10,38 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Independent message-key lifetimes (candidate, no compilation/QA)
+
+Native message repositories now permanently retire their memory capability on
+account lock. Late key derivation/import cannot reinstall a key or publish rows
+into a retired repository. Owned symmetric arrays are wiped and Java private-key
+references released; physical erasure of provider/JVM copies is not claimed.
+Room/new-root local cells additionally check the original gateway's owner/session/
+restore/custody binding, including within document writes. The gateway holds one
+original private-account capability and pins HTTP generation for both message
+families. Cache keys/UI lifetimes distinguish session, restore and custody epochs
+without treating those values as message-key identity or crypto/data generations.
+
+Web message crypto/UI operations now capture owner/session/restore and original
+private-account lifetime. A hide or lock/unlock cycle retires the earlier grant,
+even after the same user becomes ready again. Actual identity creation/import/
+export, peer-key derivation, decrypted message publication, encrypted pending
+command handling and file transfer callbacks check that grant across awaits.
+Owned file/message crypto byte buffers are cleared in finally; strings and
+CryptoKey/provider copies cannot be promised erased. Shared legacy private-file
+cleanup no longer deletes attachments after an ambiguous message-commit response.
+The message wire format, independent identity keys, pins and history remain.
+No ratchet/forward-secrecy claim or new home-grown protocol was introduced.
+
+This is not full messaging acceptance. Remaining implementation includes native
+message-key SAF generation/foreground handoff, complete draft/file staging across
+background/unmount, complete shared legacy message exact-command recovery and
+the other lifecycle/reminder/deep-link paths. Consolidated QA must check lock
+during derive/import/HTTP/write, same-UID relogin/restore, custody replacement,
+read/write races, pending receipts, peer-key changes, old backups and cross-client
+history. No tests/compiler/lint/build/CI/push/device action/publication ran;
+accepted coverage remains9/20 and no activation gate changed.
+
 ### Embedded native Aurora/Gno input (candidate, no compilation/QA)
 
 Connected the bundled native Gno/Aurora runtime to the same real repository/form

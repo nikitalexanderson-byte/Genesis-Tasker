@@ -12,6 +12,7 @@ import ru.genesis.calendar.auth.MessagingProtocol
 import ru.genesis.calendar.auth.AuthFailure
 import ru.genesis.calendar.security.MessagingCrypto
 import ru.genesis.calendar.security.MessagingIdentity
+import ru.genesis.calendar.security.MessagingKeyMemory
 import ru.genesis.calendar.security.MessageContext
 import java.util.UUID
 
@@ -34,11 +35,16 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
     private val mutable = MutableStateFlow(MessengerState())
     val state = mutable.asStateFlow()
     private var deviceId: String? = null
-    private var identity: MessagingIdentity? = null
-    private var currentKey: ByteArray? = null
+    private val custody=MessagingKeyMemory()
+    private var identity:MessagingIdentity?
+        get()=custody.identity
+        set(value){custody.identity=value}
+    private var currentKey:ByteArray?
+        get()=custody.key
+        set(value){custody.key=value}
     private var currentIds = emptyMap<String, String>()
-    private fun check() = gateway.check()
-    private fun publish(value: MessengerState) { check(); mutable.value = value }
+    private fun check(){custody.check();gateway.check();custody.check()}
+    private fun publish(value: MessengerState) { check();custody.publish{mutable.value=value} }
     private suspend fun request(method: String, path: String, body: JSONObject? = null): JSONObject {
         check(); val full = "/shared/messenger$path"; require(MessagingProtocol.allowedRoute(method, full))
         return gateway.request(method, full, body).also { check() }
@@ -219,7 +225,7 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
     }
     companion object {
         private val instances=java.util.WeakHashMap<MessengerRepository,Unit>()
-        fun room(database:GenesisDatabase,scope:String,owner:String,gateway:MessagingGateway)=MessengerRepository(owner,gateway,MessagingRoomStore(database,scope,owner)).also{synchronized(instances){instances[it]=Unit}}
-        fun lockForOwner(owner:String)=synchronized(instances){for(repository in instances.keys.toList())if(repository.owner==owner){repository.currentKey?.fill(0);repository.currentKey=null;repository.currentIds=emptyMap();repository.identity=null;repository.deviceId=null;repository.mutable.value=MessengerState()}}
+        fun room(database:GenesisDatabase,scope:String,owner:String,gateway:MessagingGateway)=MessengerRepository(owner,gateway,MessagingRoomStore(database,scope,owner,gateway::check)).also{synchronized(instances){instances[it]=Unit}}
+        fun lockForOwner(owner:String)=synchronized(instances){for(repository in instances.keys.toList())if(repository.owner==owner){repository.custody.retire();repository.currentIds=emptyMap();repository.deviceId=null;repository.mutable.value=MessengerState()}}
     }
 }

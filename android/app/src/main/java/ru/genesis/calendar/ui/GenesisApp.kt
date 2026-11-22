@@ -770,10 +770,11 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         DiaryScreen(diary, onClose = ::navigateBack)
                     }
                     "Сообщения" -> authState.user?.uid?.let { uid ->
-                        val repository = remember(app, activeScope, uid,privateCustodyRevision) {
+                        val messagingLifetime=authController.messagingLifetime()
+                        val repository = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
                             ru.genesis.calendar.data.MessagingRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
-                        val messenger = remember(app, activeScope, uid,privateCustodyRevision) {
+                        val messenger = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
                             ru.genesis.calendar.data.MessengerRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
                         MessengerScreen(messenger, prefs.language, initialProjectId=messagingProjectId,

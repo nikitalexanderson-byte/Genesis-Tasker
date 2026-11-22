@@ -225,6 +225,16 @@ Content-only backup must never replay these new issue/membership receipts.
 
 # Continuation checkpoint: 22 November 2026
 
+Message-key lifetimes were then strengthened: permanently retired native key
+memory/repository publication, pinned owner/session/restore/custody gateway and
+local-cell guards, and web operation admission across lock/hide/crypto/network
+callbacks. Late same-UID unlocks cannot revive an earlier grant. Existing keys/
+wire/history remain; owned crypto buffers are cleared and ambiguous shared-file
+commit cleanup preserves ciphertext. New files: MessagingKeyMemory.kt and
+app/e2ee/message-lifetime.ts. Native messaging SAF, complete draft/file staging
+and exact-command recovery for the legacy shared UI remain unfinished. No QA or
+compilation ran; coverage stays9/20. Details are in implementation-pass.
+
 The latest input increment connects embedded native Aurora/Gno to real JS form/
 repository capture, a local in-memory bridge mirror and a nonce-bound asynchronous
 freeze/read barrier. NativeMigrationMemory supports prepared renderer reads

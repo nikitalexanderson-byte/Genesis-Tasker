@@ -536,6 +536,13 @@ export function captureAccountSessionGuard() {
   const generation = sessionGeneration;
   return () => requireActiveLocalSession(generation);
 }
+/** Independent messaging keeps its protocol, but may not follow a later login
+ * or restored account generation while an old key/attachment is in flight. */
+export function captureMessagingSessionGuard(ownerId:string){
+  const session=captureAccountSessionGuard(),generation=backupDataGeneration;
+  const current=()=>{session();if(confirmedTransportOwnerId!==ownerId||backupDataGeneration!==generation)throw new Error('E2EE_ACCOUNT_CHANGED');};
+  current();return current;
+}
 
 /** Owner-scoped Physis transport; account wrapping uses personalDocumentAccess, with no offline queue. */
 export async function physisRequest<T>(path: string, init: RequestInit = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {

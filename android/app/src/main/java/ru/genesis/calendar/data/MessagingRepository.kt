@@ -36,15 +36,20 @@ internal data class MessagingState(val initialized: Boolean = false, val keyRead
 /** Account-scoped identity, trust pins and durable exact-ciphertext command journal. No plaintext on disk. */
 internal class MessagingRepository(private val owner: String, private val gateway: MessagingGateway, private val store: MessagingStore) {
     private val mutex = Mutex()
-    private var identity: MessagingIdentity? = null
+    private val custody=MessagingKeyMemory()
+    private var identity:MessagingIdentity?
+        get()=custody.identity
+        set(value){custody.identity=value}
     private var initialized = false
     private var currentPeer: MessagingPeer? = null
-    private var currentKey: ByteArray? = null
+    private var currentKey:ByteArray?
+        get()=custody.key
+        set(value){custody.key=value}
     private var pins = JSONObject()
     private val mutable = MutableStateFlow(MessagingState())
     val state = mutable.asStateFlow()
     val ownerUid get() = owner
-    private fun check() = gateway.check()
+    private fun check(){custody.check();gateway.check();custody.check()}
     private suspend fun request(method: String, path: String, body: JSONObject? = null): JSONObject {
         check(); require(MessagingProtocol.allowedRoute(method, path)) { "MESSAGING_ROUTE_BLOCKED" }
         return gateway.request(method, path, body).also { check() }
@@ -52,7 +57,7 @@ internal class MessagingRepository(private val owner: String, private val gatewa
     private suspend fun read(key: String) = store.read(key).also { check() }
     private suspend fun write(key: String, value: String) { check(); store.write(key, value); check() }
     private suspend fun delete(key: String) { check(); store.delete(key); check() }
-    private fun publish(value: MessagingState) { check(); mutable.value = value }
+    private fun publish(value: MessagingState) { check();custody.publish{mutable.value=value} }
     private fun uuid(value: String): String = value.also { require(it.matches(Regex("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))) { "MESSAGING_INVALID_RESPONSE" } }
     private fun notices(rows: JSONArray): List<MessagingNotice> {
         require(rows.length() <= 2000)
@@ -449,11 +454,11 @@ internal class MessagingRepository(private val owner: String, private val gatewa
     companion object {
         private val instances = java.util.WeakHashMap<GenesisDatabase, MutableMap<String, java.lang.ref.WeakReference<MessagingRepository>>>()
         fun room(database: GenesisDatabase, scope: String, ownerUid: String, gateway: MessagingGateway): MessagingRepository = synchronized(instances) {
-            val key = "$scope:$ownerUid:${gateway.custodyEpoch}"
+            val key = "$scope:$ownerUid:${gateway.custodyEpoch}:${gateway.sessionGeneration}:${gateway.restoreEpoch}"
             val entries = instances.getOrPut(database) { mutableMapOf() }
-            entries.entries.removeAll{it.value.get()==null}
-            entries[key]?.get() ?: MessagingRepository(ownerUid, gateway, MessagingRoomStore(database, scope, ownerUid)).also { entries[key] = java.lang.ref.WeakReference(it) }
+            entries.entries.removeAll{it.value.get()?.custody?.retired!=false}
+            entries[key]?.get() ?: MessagingRepository(ownerUid, gateway, MessagingRoomStore(database, scope, ownerUid,gateway::check)).also { entries[key] = java.lang.ref.WeakReference(it) }
         }
-        fun lockForOwner(owner:String)=synchronized(instances){for(entries in instances.values)for(reference in entries.values)reference.get()?.takeIf{it.owner==owner}?.let{it.currentKey?.fill(0);it.currentKey=null;it.identity=null;it.currentPeer=null;it.pins=JSONObject();it.initialized=false;it.mutable.value=MessagingState()}}
+        fun lockForOwner(owner:String)=synchronized(instances){for(entries in instances.values)for(reference in entries.values)reference.get()?.takeIf{it.owner==owner}?.let{it.custody.retire();it.currentPeer=null;it.pins=JSONObject();it.initialized=false;it.mutable.value=MessagingState()}}
     }
 }
