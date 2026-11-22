@@ -4,6 +4,45 @@
 coverage remains9/20. Existing production3.3.5/149/Paddle website, floors0, cutover
 off and GENESIS_DEPLOY_ANDROID=false are unchanged.
 
+## Project topology and exact physical-row foundation (candidate)
+
+Added matching web/native/API project metadata2: space, parent project, project
+category, board placement, project/task-list kind, layout, inbox and archive
+state. New authenticated project bodies derive this exact metadata; readers
+compare body/header values. The existing protocol1 project header is an explicit
+historical reader with no topology assertion, so old retained jobs/versions
+stay readable. It must never be promoted to live topology authority merely
+because a legacy SQL row happens to exist.
+
+The persistent fence moves forward to v7. Only shared_projects and
+shared_project_statuses have a narrowly scoped exact physical-row admission.
+A dedicated connection-local WeakMap/SQL callback matches the complete table,
+verb and before/after values, including all real schema defaults/affinities.
+It is valid only inside the verified caller's existing transaction and is
+removed in finally. The SQL callback cannot query the database; it has no
+request boolean or namespace wildcard. No writer currently obtains permission
+merely from this helper's existence. All other legacy fences stay deny-only.
+
+The four-table membership request allowlist and its separate all-scope
+rotation capability are unchanged. Technical row admission does not grant
+membership, approve devices, distribute capsules or authorize reparenting.
+
+The actual normal project-root commit now validates this tuple and mirrors
+only signed category/board/layout/archive fields under exact full-row admission.
+It verifies private category/status heads, parent write access and restoration
+quota where applicable. A drifted metadata2/SQL projection is refused; changing
+parent/kind/inbox identity requires the complete affected-scope operation.
+Names/descriptions/tags are never mirrored into SQL. A current-root topology
+reader requires active product bootstrap, an undeleted exact root, metadata2
+and matching technical projection; it cannot substitute an old SQL row/header.
+
+This is foundation source, not completed project creation. Next: implement the
+signed preparation/factory/inheritance composition and both real create/resume
+clients. Parent changes still require complete affected-scope membership handling.
+Project delete/restore quota/trash semantics remain in the parity pass; this
+foundation does not claim that entire lifecycle is complete.
+No compiler/typecheck/lint/tests/build/CI ran and coverage remains9/20.
+
 ## Implemented preparation
 
 The subsequent composition below is now also candidate source: normal web/native

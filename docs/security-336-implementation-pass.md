@@ -10,6 +10,22 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Fresh project topology and exact row admission (foundation candidate)
+
+New project metadata2 binds the current technical space/parent/category/board/
+kind/layout/inbox/archive tuple on web/native/API; body/header equality is
+checked. Old metadata1 project headers remain explicit content-history readers
+without topology authority. Persistent fencev7 adds an exact complete physical-
+row capability for the two project/status tables only, scoped to the verified
+caller's transaction and cleared in finally. Normal root commits now mirror
+only authenticated technical placement/layout/archive values, enforce private
+references/parent access/restore quota and refuse one-scope reparent/kind changes.
+The live topology reader requires the matching current metadata2 root.
+Membership's request allowlist and complete rotation protocol are unchanged.
+Factory/signed preparation, inheritance and both create/resume clients remain
+the next composition. No compilation/QA;
+coverage9/20. See `security-336-private-resource-creation.md`.
+
 ### Lost-start resolution and permanent migration cancellation (candidate)
 
 Schema135/API now preserve explicit attempt tombstones, including SQL guards

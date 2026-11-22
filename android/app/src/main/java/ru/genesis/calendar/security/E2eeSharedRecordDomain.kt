@@ -51,6 +51,9 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
     }
     fun metadata(body:JSONObject):JSONObject{
         val kind=body.getString("kind");val row=body.getJSONObject("record");val related=body.getJSONObject("related")
+        if(kind=="project")return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("spaceId",row.get("space_id"))
+            .put("parentProjectId",row.get("parent_id")).put("projectCategoryId",row.get("category_id")).put("boardStatusId",row.get("board_status_id"))
+            .put("projectType",row.get("kind")).put("layout",row.get("layout")).put("isInbox",row.getInt("is_inbox")==1).put("archived",!row.isNull("archived_at")))
         if(kind=="task"){
             val present=mutableSetOf<String>();val fields=mapOf("title" to "title","description" to "description","assigneeId" to "assignee_id","dueDate" to "due_date","startDate" to "start_date","startTime" to "start_time","endTime" to "end_time","categoryId" to "category_id")
             for((name,column)in fields)if(!row.isNull(column)&&row.get(column)!="")present+=name
@@ -82,7 +85,11 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
             for(at in 0 until attachments.length())check(ids.add(attachments.getJSONObject(at).getString("id"))){"E2EE_SHARED_DOMAIN_INVALID"}
             for(rows in listOf(attachments,images))for(at in 0 until rows.length()){val item=rows.getJSONObject(at);val file=item.getJSONObject("file");check(file.getLong("size")==item.getLong("byte_size")&&file.getString("mediaType")==item.getString("mime_type")){"E2EE_SHARED_DOMAIN_INVALID"}}
         }
-        if(header!=null)check(header.getString("scopeId")==scopeId&&header.getString("kind")==kind&&header.getString("entityId")==recordKey(kind,root)&&header.get("parentId")==parent(value)&&E2eeProductJson.same(header.get("metadata"),metadata(value))){"E2EE_SHARED_HEADER_MISMATCH"}
+        if(header!=null){
+            val saved=E2eeProductContract.metadata(kind,header.getJSONObject("metadata"));val oldProject=kind=="project"&&saved.getInt("protocol")==1
+            check(header.getString("scopeId")==scopeId&&header.getString("kind")==kind&&header.getString("entityId")==recordKey(kind,root)&&header.get("parentId")==parent(value)&&
+                (oldProject||E2eeProductJson.same(saved,metadata(value)))){"E2EE_SHARED_HEADER_MISMATCH"}
+        }
         return JSONObject(value.toString())
     }
 }

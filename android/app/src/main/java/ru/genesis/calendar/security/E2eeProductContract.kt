@@ -9,8 +9,15 @@ internal object E2eeProductContract{
     fun domain(kind:String):String{check(kind in kinds){"E2EE_PRODUCT_ENTITY_INVALID"};return when(kind){"comment","project-comment"->"shared-comment";"mindmap"->"mindmap";"file"->"attachment";else->"shared-project"}}
     fun ids(value:JSONArray,maximum:Int=200):List<String>{check(value.length()<=maximum){"E2EE_PRODUCT_METADATA_INVALID"};val values=(0 until value.length()).map{E2eeKeys.technical(value.getString(it))};check(values.toSet().size==values.size){"E2EE_PRODUCT_METADATA_INVALID"};return values}
     fun metadata(kind:String,input:JSONObject):JSONObject{
-        domain(kind);val fields=when(kind){"task"->setOf("protocol","statusId","completed","approverIds","dependsOnIds","presentFields");"workflow"->setOf("protocol","enabled","statuses","transitions");else->setOf("protocol")}
-        E2eeKeys.exact(input,fields);check(input.get("protocol")==1){"E2EE_PRODUCT_METADATA_INVALID"}
+        domain(kind);val project=kind=="project"&&input.opt("protocol")==2
+        val fields=if(project)setOf("protocol","spaceId","parentProjectId","projectCategoryId","boardStatusId","projectType","layout","isInbox","archived")else when(kind){"task"->setOf("protocol","statusId","completed","approverIds","dependsOnIds","presentFields");"workflow"->setOf("protocol","enabled","statuses","transitions");else->setOf("protocol")}
+        E2eeKeys.exact(input,fields);check(input.get("protocol")==(if(project)2 else 1)){"E2EE_PRODUCT_METADATA_INVALID"}
+        if(project){
+            E2eeKeys.technical(input.getString("spaceId"));for(key in listOf("parentProjectId","projectCategoryId","boardStatusId"))if(!input.isNull(key))E2eeKeys.technical(input.getString(key))
+            check(input.get("projectType") in setOf("project","task-list")&&input.get("layout") in setOf("list","board")&&input.get("isInbox") is Boolean&&input.get("archived") is Boolean
+                &&(input.isNull("boardStatusId")||!input.isNull("parentProjectId"))&&(input.get("projectType")!="task-list"||!input.isNull("parentProjectId"))
+                &&(!input.getBoolean("isInbox")||input.isNull("parentProjectId")&&input.get("projectType")=="project")){"E2EE_PRODUCT_METADATA_INVALID"}
+        }
         if(kind=="task"){if(!input.isNull("statusId"))E2eeKeys.technical(input.getString("statusId"));check(input.get("completed") is Boolean){"E2EE_PRODUCT_METADATA_INVALID"};ids(input.getJSONArray("approverIds"));ids(input.getJSONArray("dependsOnIds"),1000);ids(input.getJSONArray("presentFields"),512)}
         if(kind=="workflow"){check(input.get("enabled") is Boolean){"E2EE_PRODUCT_METADATA_INVALID"};val rows=input.getJSONArray("statuses");val transitions=input.getJSONArray("transitions");check(rows.length()<=200&&transitions.length()<=10000){"E2EE_PRODUCT_METADATA_INVALID"};val statuses=mutableSetOf<String>()
             for(index in 0 until rows.length()){val row=rows.getJSONObject(index);E2eeKeys.exact(row,setOf("statusId","wipLimit","requiredFields"));check(statuses.add(E2eeKeys.technical(row.getString("statusId")))){"E2EE_PRODUCT_METADATA_INVALID"};if(!row.isNull("wipLimit"))check(E2eeCommands.integer(row.get("wipLimit"),1)<=100000){"E2EE_PRODUCT_METADATA_INVALID"};ids(row.getJSONArray("requiredFields"))}

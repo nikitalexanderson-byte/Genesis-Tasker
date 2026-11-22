@@ -1,5 +1,29 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: foundation fresh project topology / exact row capability
+
+После07dd5e35 добавлены совпадающие web/native/API project metadata2
+(space/parent/category/board/kind/layout/inbox/archive) и сравнение с decrypted
+body. Старый metadata1 project header явно читается как история без topology
+authority, старые originals/jobs не выбрасываются. Persistent fencev7 разрешает
+только exact full before/after row capability для shared_projects/statuses через
+отдельный connection-local WeakMap, в transaction и с finally cleanup; SQL
+callback не запрашивает БД и не принимает boolean request bypass. Четыре ACL
+таблицы/полный membership rotation protocol не расширены и не ослаблены.
+
+В actual normal root commit теперь подключён e2ee-project-topology.php:
+синхронизация только signed technical category/board/layout/archive, private
+category/status heads, parent access/restore quota; односторонняя смена parent/
+kind/inbox запрещена. Live topology reader требует exact undeleted metadata2
+root + active product bootstrap + совпадающий SQL tuple, без legacy fallback.
+Это foundation; factory/signed preparation/inheritance и обе обычные кнопки
+создания projects ЕЩЁ не подключены. Точный следующий участок и ограничения:
+security-336-private-resource-creation.md. Нужны all-scope parent operation и
+оставшиеся delete/restore quota/trash lifecycle semantics. Остальной остаток ниже.
+Код не компилировался/не тестировался; coverage9/20,3.3.5/149/Paddle/floors0/
+cutover off/GENESIS_DEPLOY_ANDROID=false сохранены. demo-output/ чужой, не читать/
+stage. Субагенты/Daybreak запрещены.
+
 ## 22 ноября: lost-start cancellation и постоянная отмена attempt (кандидат)
 
 После06103b46 добавлен новый code-only блок: schema135 permanent cancellation

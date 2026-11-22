@@ -72,6 +72,11 @@ function record(table:string,input:unknown,binding:SharedDomainBinding):SharedCo
  return input as SharedContentRecord;
 }
 export function sharedBodyMetadata(body:SharedRecordBody):ProductMetadata{
+ if(body.kind==='project'){
+  const raw=body.record;
+  return productMetadata('project',{protocol:2,spaceId:raw.space_id,parentProjectId:raw.parent_id,projectCategoryId:raw.category_id,
+   boardStatusId:raw.board_status_id,projectType:raw.kind,layout:raw.layout,isInbox:raw.is_inbox===1,archived:raw.archived_at!==null});
+ }
  if(body.kind==='task'){
   const raw=body.record,presentFields:string[]=[];
   for(const [name,field]of Object.entries({title:'title',description:'description',assigneeId:'assignee_id',dueDate:'due_date',startDate:'start_date',startTime:'start_time',endTime:'end_time',categoryId:'category_id'}))if(raw[field]!==null&&raw[field]!=='')presentFields.push(name);
@@ -107,7 +112,14 @@ export function validateSharedRecordBody(binding:SharedDomainBinding,kind:Produc
   const attachments=children.shared_task_attachments??[],images=children.shared_task_images??[];if(attachments.length>5||images.length>1||new Set(attachments.map(row=>row.id)).size!==attachments.length)invalid();
   for(const item of [...attachments,...images]){const file=item.file;if(!file||typeof file!=='object'||file.size!==item.byte_size||file.mediaType!==item.mime_type)invalid();}
  }
- if(header&&(header.scopeId!==binding.scopeId||header.kind!==kind||header.entityId!==sharedRecordKey(kind,row)||header.parentId!==sharedBodyParent(body)||!samePrivateJson(header.metadata,sharedBodyMetadata(body))))throw new Error('E2EE_SHARED_HEADER_MISMATCH');
+ if(header){
+  // Explicit historical reader for old project headers: protocol1 made no
+  // topology claim. It remains readable content, never live topology authority.
+  const oldProject=kind==='project'&&header.metadata.protocol===1;
+  productMetadata(kind,header.metadata);
+  if(header.scopeId!==binding.scopeId||header.kind!==kind||header.entityId!==sharedRecordKey(kind,row)||header.parentId!==sharedBodyParent(body)
+   ||!oldProject&&!samePrivateJson(header.metadata,sharedBodyMetadata(body)))throw new Error('E2EE_SHARED_HEADER_MISMATCH');
+ }
  return body;
 }
 export function parseSharedDomainBytes(bytes:Uint8Array){return parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_SHARED_DOMAIN_INVALID',64*1024*1024);}

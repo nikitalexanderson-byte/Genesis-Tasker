@@ -34,8 +34,16 @@ function genesisE2eeProductIds(mixed $value,int $maximum=200): array
 }
 function genesisE2eeProductMetadata(string $kind,mixed $input): array
 {
-    $fields=match($kind){'task'=>['protocol','statusId','completed','approverIds','dependsOnIds','presentFields'],'workflow'=>['protocol','enabled','statuses','transitions'],default=>['protocol']};
-    $value=genesisE2eeExactFields($input,$fields);if($value['protocol']!==1)throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
+    $project=$kind==='project'&&is_array($input)&&($input['protocol']??null)===2;
+    $fields=$project?['protocol','spaceId','parentProjectId','projectCategoryId','boardStatusId','projectType','layout','isInbox','archived']:
+        match($kind){'task'=>['protocol','statusId','completed','approverIds','dependsOnIds','presentFields'],'workflow'=>['protocol','enabled','statuses','transitions'],default=>['protocol']};
+    $value=genesisE2eeExactFields($input,$fields);if($value['protocol']!==($project?2:1))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
+    if($project){
+        genesisE2eeIdentifier($value['spaceId']);foreach(['parentProjectId','projectCategoryId','boardStatusId'] as $key)if($value[$key]!==null)genesisE2eeIdentifier($value[$key]);
+        if(!in_array($value['projectType'],['project','task-list'],true)||!in_array($value['layout'],['list','board'],true)||!is_bool($value['isInbox'])||!is_bool($value['archived'])
+          ||$value['boardStatusId']!==null&&$value['parentProjectId']===null||$value['projectType']==='task-list'&&$value['parentProjectId']===null
+          ||$value['isInbox']&&($value['parentProjectId']!==null||$value['projectType']!=='project'))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
+    }
     if($kind==='task'){
         if($value['statusId']!==null)genesisE2eeIdentifier($value['statusId']);if(!is_bool($value['completed']))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
         genesisE2eeProductIds($value['approverIds']);genesisE2eeProductIds($value['dependsOnIds'],1000);genesisE2eeProductIds($value['presentFields'],512);
@@ -177,6 +185,9 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
         $project=genesisE2eeProductPermission($actor,$scope,$operation['kind'],$operation['action'],$old);genesisE2eeProductReference($db,$scope,$operation);
         if($operation['parentId']!==null){$parent=genesisE2eeProductRow($db,$scope,genesisE2eeIdentifier($operation['parentId']));if(!$parent||$parent['deleted']||$operation['parentId']===$id)throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');}
         if($operation['kind']==='task')genesisE2eeProductTaskRules($db,$actor,$scope,$operation,$old,$project);
+        if($operation['kind']==='project'){
+            require_once __DIR__.'/e2ee-project-topology.php';genesisE2eeProjectRootMutation($db,$actor,$scope,$operation,$old);
+        }
         if(!$old){$count=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_entities WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);if((int)$count['n']>=10000)throw new GenesisResourceLimitException(413,'E2EE_SCOPE_OBJECT_LIMIT');}
         if($operation['action']==='propose-complete'){
             if(!$old||$old['kind']!=='task'||!$metadata['completed']||!$metadata['approverIds']||$operation['parentId']!==$old['parent_id'])throw new DomainException('E2EE_PRODUCT_APPROVAL_INVALID');genesisE2eeIdentifier($operation['proposalId']);

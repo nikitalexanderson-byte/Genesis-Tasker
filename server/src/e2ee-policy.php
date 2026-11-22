@@ -191,15 +191,21 @@ function genesisE2eeLegacyInventory(PDO $db): array
 function genesisE2eeInitializeGuards(PDO $db): void
 {
     require_once __DIR__.'/e2ee-membership.php';genesisE2eeRegisterAclGuard($db);
+    require_once __DIR__.'/e2ee-technical-rows.php';genesisE2eeRegisterTechnicalGuard($db);
     // Persistent triggers protect CLI/jobs and an older server binary too. Replacing these
     // guards is an additive schema operation; this version marker avoids per-request DDL.
-    $marker='e2ee-fence-v6';
+    $marker='e2ee-fence-v7';
     $q=$db->prepare('SELECT 1 FROM schema_migrations WHERE name=?');$q->execute([$marker]);$exists=$q->fetchColumn();$q->closeCursor();if($exists)return;
     genesisBeginWriteTransaction($db);
     try {
         foreach(genesisE2eeLegacyInventory($db) as $table=>$predicates) {
             foreach(['INSERT'=>['NEW'],'UPDATE'=>['OLD','NEW'],'DELETE'=>['OLD']] as $verb=>$rows) {
                 $condition=genesisE2eeLegacyFenceCondition($predicates,$rows);
+                if(in_array($table,['shared_projects','shared_project_statuses'],true)){
+                    $old=$verb==='INSERT'?'NULL':genesisE2eeTechnicalTriggerJson($db,$table,'OLD');
+                    $new=$verb==='DELETE'?'NULL':genesisE2eeTechnicalTriggerJson($db,$table,'NEW');
+                    $condition="($condition) AND genesis_e2ee_technical_allowed('$table','$verb',$old,$new)=0";
+                }
                 $name='e2ee_fence_'.$table.'_'.strtolower($verb);
                 $db->exec('DROP TRIGGER IF EXISTS "'.$name.'"');
                 $db->exec('CREATE TRIGGER "'.$name.'" BEFORE '.$verb.' ON "'.$table.'" WHEN '.$condition." BEGIN SELECT RAISE(ABORT,'E2EE_LEGACY_WRITE_FORBIDDEN'); END");
