@@ -9,10 +9,12 @@ import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
 import { useEffect, useState } from 'react';
 import { PartnerInvitation } from './PartnerInvitation';
-import {publicPagePath} from './public-route';
+import {publicPagePath,currentPublicEdition,type PublicEdition} from './public-route';
+import {PublicEditionRouting,PublicRegionControl} from './PublicRegionControl';
 import pageCopy from './public-page-copy.json';
 
 type WelcomeScreenProps = {
+  edition?:PublicEdition;
   nativeAndroidApkUrl: string | null;
   busy: boolean;
   error: string;
@@ -27,7 +29,7 @@ const FLAG_COUNTRIES: Record<Language, string> = {
   pl: "pl", sr: "rs", uk: "ua", zh: "cn", tr: "tr", ja: "jp",
 };
 
-export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle }: WelcomeScreenProps) {
+export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle,edition=currentPublicEdition() }: WelcomeScreenProps) {
   useEffect(() => {
     const anchor = window.location.hash.slice(1);
     if (!['features', 'pricing', 'sign-in'].includes(anchor)) return;
@@ -35,11 +37,11 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
     return () => window.cancelAnimationFrame(frame);
   }, []);
   const [invitationBusy, setInvitationBusy] = useState(()=>typeof window!=='undefined'&&['invite','ref'].some(key=>new URL(window.location.href).searchParams.has(key)));
-  const product = publicProductCopy(language);
-  const home=publicPagePath(language,'home',APP_BASE),login=`${publicPagePath(language,'login',APP_BASE)}#sign-in`;
-  const terms=publicPagePath(language,'terms',APP_BASE),privacy=publicPagePath(language,'privacy',APP_BASE);
-  const visibleLanguages = LANGUAGES.filter(code=>code!=='ru'||language==='ru');
-  const languageColumns = 7;
+  const product=publicProductCopy(language,edition);
+  const home=publicPagePath(language,'home',APP_BASE,edition),login=`${publicPagePath(language,'login',APP_BASE,edition)}#sign-in`;
+  const terms=publicPagePath(language,'terms',APP_BASE,edition),privacy=publicPagePath(language,'privacy',APP_BASE,edition);
+  const visibleLanguages=LANGUAGES;
+  const languageColumns=7;
   const copy = language === "en" ? {
     home: "GENESIS — home",
     tagline: "calendar of clear action",
@@ -97,7 +99,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
   };
 
   return (
-    <main className="welcome-shell">
+    <main className="welcome-shell"><PublicEditionRouting language={language}/>
       <div className="welcome-orbit orbit-one" aria-hidden="true" />
       <div className="welcome-orbit orbit-two" aria-hidden="true" />
       <header className="welcome-nav">
@@ -123,7 +125,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
             <p>{copy.googlePurpose}</p>
           </section>
           <section className="google-data-purpose" aria-labelledby="service-owner-title">
-            <h2 id="service-owner-title">{language === "en" ? "GENESIS service and domain" : "Сервис GENESIS и домен"}</h2>
+            <h2 id="service-owner-title">{edition==='domestic'&&language==='ru'?'Сервис GENESIS и домен':product.merchantTitle}</h2>
             <div dangerouslySetInnerHTML={{__html:publicMerchantHtml(language, 'home')}} />
             <p>{language === "en"
               ? "GENESIS uses AI assistance only to interpret commands and prepare task plans. It does not generate non-consensual intimate imagery (AI NCII) or use Google APIs for that purpose."
@@ -151,6 +153,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
           <h2 id="welcome-auth-title">{copy.signInTitle}</h2>
           <p>{translateText(copy.signInDescription, language)}</p>
 
+          <PublicRegionControl language={language}/>
           <div className="welcome-language-picker">
             <span>{copy.chooseLanguage}</span>
             <div className="language-choice welcome-language-flags" role="radiogroup" aria-label={copy.languageGroup}
@@ -160,7 +163,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
                   className={language === code ? "active" : ""} onClick={() => onLanguageChange(code)}
                   aria-label={LANGUAGE_LABELS[code].name} title={LANGUAGE_LABELS[code].name} data-no-translate>
                   <span className="language-flag" aria-hidden="true">
-                    <img src={`${APP_BASE}/language-flags/${FLAG_COUNTRIES[code]}.svg`} alt="" />
+                    {code==='ru'&&edition==='international'?<span>RU</span>:<img src={`${APP_BASE}/language-flags/${FLAG_COUNTRIES[code]}.svg`} alt="" />}
                   </span>
                 </button>
               ))}
@@ -184,7 +187,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
         </aside>
       </section>
 
-      <PublicProduct language={language} />
+      <PublicProduct language={language} edition={edition} />
     </main>
   );
 }

@@ -1040,7 +1040,7 @@ export function isLanguage(value: unknown): value is Language {
 
 export function browserLanguage(): Language {
   if (typeof window === "undefined") return "ru";
-  const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE);
+  const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
   if(publicRoute?.explicitLanguage)return publicRoute.language;
   const requested = new URLSearchParams(window.location.search).get("lang");
   if (requested && (LANGUAGES as readonly string[]).includes(requested)) return requested as Language;
@@ -1155,11 +1155,11 @@ export function useDocumentLanguage(language: Language) {
     runtimeLanguage = language;
     document.documentElement.lang = language;
     document.documentElement.dataset.language = language;
-    const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE);
+    const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
     if(publicRoute) {
       const canonical=document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-      if(canonical)canonical.href=`https://genesiscalendar.com${publicPagePath(language,publicRoute.page,APP_BASE)}`;
-      for(const row of publicPageAlternates(publicRoute.page,APP_BASE)) {
+      if(canonical)canonical.href=`https://genesiscalendar.com${publicPagePath(language,publicRoute.page,APP_BASE,publicRoute.edition)}`;
+      for(const row of publicPageAlternates(publicRoute.page,APP_BASE,publicRoute.edition)) {
         const alternate=document.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${row.language}"]`);
         if(alternate)alternate.href=`https://genesiscalendar.com${row.path}`;
       }

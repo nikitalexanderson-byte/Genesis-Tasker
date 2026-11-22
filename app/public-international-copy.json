@@ -1,0 +1,72 @@
+{
+  "en": {
+    "aiProvider": "the selected external AI provider",
+    "paymentProvider": "the external payment provider",
+    "supportBody": "Email demiurge.soft@gmail.com with your device model, browser or Android version, and the error message. Do not send passwords, sign-in codes, OAuth tokens or confidential task contents."
+  },
+  "el": {
+    "aiProvider": "ο επιλεγμένος εξωτερικός πάροχος τεχνητής νοημοσύνης",
+    "paymentProvider": "ο εξωτερικός πάροχος πληρωμών",
+    "supportBody": "Στείλτε email στο demiurge.soft@gmail.com με το μοντέλο της συσκευής, την έκδοση του προγράμματος περιήγησης ή του Android και το μήνυμα σφάλματος. Μη στέλνετε κωδικούς πρόσβασης, κωδικούς σύνδεσης, διακριτικά OAuth ή εμπιστευτικό περιεχόμενο εργασιών."
+  },
+  "de": {
+    "aiProvider": "der ausgewählte externe KI-Anbieter",
+    "paymentProvider": "der externe Zahlungsanbieter",
+    "supportBody": "Schreiben Sie an demiurge.soft@gmail.com und nennen Sie Gerätemodell, Browser- oder Android-Version und Fehlermeldung. Senden Sie keine Passwörter, Anmeldecodes, OAuth-Tokens oder vertraulichen Aufgabeninhalte."
+  },
+  "fr": {
+    "aiProvider": "le fournisseur externe d’IA sélectionné",
+    "paymentProvider": "le prestataire de paiement externe",
+    "supportBody": "Écrivez à demiurge.soft@gmail.com en précisant le modèle de l’appareil, la version du navigateur ou d’Android et le message d’erreur. N’envoyez ni mots de passe, codes de connexion, jetons OAuth ni contenu confidentiel des tâches."
+  },
+  "es": {
+    "aiProvider": "el proveedor externo de IA seleccionado",
+    "paymentProvider": "el proveedor de pagos externo",
+    "supportBody": "Escribe a demiurge.soft@gmail.com e indica el modelo del dispositivo, la versión del navegador o de Android y el mensaje de error. No envíes contraseñas, códigos de acceso, tokens OAuth ni contenido confidencial de tareas."
+  },
+  "it": {
+    "aiProvider": "il fornitore esterno di IA selezionato",
+    "paymentProvider": "il fornitore di pagamenti esterno",
+    "supportBody": "Scrivi a demiurge.soft@gmail.com indicando modello del dispositivo, versione del browser o di Android e messaggio di errore. Non inviare password, codici di accesso, token OAuth o contenuti riservati delle attività."
+  },
+  "pt": {
+    "aiProvider": "o fornecedor externo de IA selecionado",
+    "paymentProvider": "o prestador de pagamentos externo",
+    "supportBody": "Escreva para demiurge.soft@gmail.com e indique o modelo do dispositivo, a versão do navegador ou do Android e a mensagem de erro. Não envie palavras-passe, códigos de acesso, tokens OAuth nem conteúdo confidencial de tarefas."
+  },
+  "pl": {
+    "aiProvider": "wybrany zewnętrzny dostawca AI",
+    "paymentProvider": "zewnętrzny dostawca płatności",
+    "supportBody": "Napisz na demiurge.soft@gmail.com i podaj model urządzenia, wersję przeglądarki lub Androida oraz komunikat błędu. Nie wysyłaj haseł, kodów logowania, tokenów OAuth ani poufnej treści zadań."
+  },
+  "sr": {
+    "aiProvider": "изабрани спољни пружалац услуга вештачке интелигенције",
+    "paymentProvider": "спољни пружалац платних услуга",
+    "supportBody": "Пишите на demiurge.soft@gmail.com и наведите модел уређаја, верзију прегледача или Android-а и поруку о грешци. Не шаљите лозинке, кодове за пријаву, OAuth токене ни поверљив садржај задатака."
+  },
+  "uk": {
+    "aiProvider": "обраний зовнішній постачальник ШІ",
+    "paymentProvider": "зовнішній платіжний постачальник",
+    "supportBody": "Напишіть на demiurge.soft@gmail.com та вкажіть модель пристрою, версію браузера або Android і повідомлення про помилку. Не надсилайте паролі, коди входу, токени OAuth або конфіденційний вміст завдань."
+  },
+  "zh": {
+    "aiProvider": "所选的外部 AI 服务商",
+    "paymentProvider": "外部支付服务商",
+    "supportBody": "请发送邮件至 demiurge.soft@gmail.com，并注明设备型号、浏览器或 Android 版本以及错误消息。请勿发送密码、登录验证码、OAuth 令牌或任务中的机密内容。"
+  },
+  "tr": {
+    "aiProvider": "seçilen harici yapay zekâ sağlayıcısı",
+    "paymentProvider": "harici ödeme sağlayıcısı",
+    "supportBody": "demiurge.soft@gmail.com adresine cihaz modelini, tarayıcı veya Android sürümünü ve hata mesajını yazarak e-posta gönderin. Parolaları, giriş kodlarını, OAuth belirteçlerini veya gizli görev içeriklerini göndermeyin."
+  },
+  "ja": {
+    "aiProvider": "選択された外部 AI プロバイダー",
+    "paymentProvider": "外部決済プロバイダー",
+    "supportBody": "demiurge.soft@gmail.com まで、端末の機種、ブラウザーまたは Android のバージョン、エラーメッセージを添えてご連絡ください。パスワード、ログインコード、OAuth トークン、機密のタスク内容は送信しないでください。"
+  },
+  "ru": {
+    "aiProvider": "выбранный внешний поставщик ИИ",
+    "paymentProvider": "внешний платёжный поставщик",
+    "supportBody": "Напишите на demiurge.soft@gmail.com. Укажите модель устройства, версию браузера или Android и сообщение об ошибке. Не отправляйте пароли, коды входа, токены OAuth и конфиденциальное содержимое задач."
+  }
+}

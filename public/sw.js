@@ -441,15 +441,16 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          void caches.open(CACHE).then((cache) => cache.put(SCOPE, copy));
-          return response;
-        })
-        .catch(() => caches.match(SCOPE)),
-    );
+    const documentUrl=new URL(request.url),locale=documentUrl.searchParams.get("lang");
+    documentUrl.search="";documentUrl.hash="";
+    if(["ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"].includes(locale))documentUrl.searchParams.set("lang",locale);
+    const key=documentUrl.href,legal=/\/(?:privacy|terms|refund|support|delete-account)(?:\.html)?\/?$/.test(documentUrl.pathname);
+    // Edition and chosen language are separate cached documents. A legal page
+    // must never replace the offline app shell or a different seller edition.
+    event.respondWith(fetch(request).then(response=>{
+      if(response.ok){const copy=response.clone();void caches.open(CACHE).then(cache=>cache.put(key,copy));}
+      return response;
+    }).catch(async()=>await caches.match(key)||(!legal?await caches.match(SCOPE):undefined)||new Response("<!doctype html><meta charset=utf-8><title>GENESIS offline</title><p>This page is not available offline. Open it again when connected.</p>",{status:503,headers:{"Content-Type":"text/html; charset=utf-8"}})));
     return;
   }
 

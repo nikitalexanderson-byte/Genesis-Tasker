@@ -1,28 +1,40 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {PUBLIC_PAGES,publicRouteForPath,publicPagePath,publicPageAlternates} from '../app/public-route.ts';
+import {PUBLIC_PAGES,publicRouteForPath,publicPagePath,publicPageAlternates,publicDomesticDestination} from '../app/public-route.ts';
 import {REGION_LANGUAGES} from '../app/region-language.ts';
 
-test('public locale paths round-trip without changing the API or OAuth origin',()=>{
-  for(const base of ['', '/preview'])for(const page of PUBLIC_PAGES)for(const language of REGION_LANGUAGES){
-    const url=new URL(publicPagePath(language,page,base),'https://genesiscalendar.com');
+test('both editions round-trip all fourteen languages without changing the API or OAuth origin',()=>{
+  for(const edition of ['international','domestic'])for(const base of ['', '/preview'])for(const page of PUBLIC_PAGES)for(const language of REGION_LANGUAGES){
+    const url=new URL(publicPagePath(language,page,base,edition),'https://genesiscalendar.com');
     assert.equal(url.origin,'https://genesiscalendar.com');
-    const route=publicRouteForPath(url.pathname,base);
-    assert.equal(route.page,page);
-    assert.equal(route.language,language==='ru'?'ru':'en');
-    assert.equal(url.searchParams.get('lang'),['ru','en'].includes(language)?null:language);
+    const route=publicRouteForPath(url.pathname,base,url.search);
+    assert.equal(route.page,page);assert.equal(route.language,language);assert.equal(route.edition,edition);
+    assert.equal(url.searchParams.get('lang'),language===(edition==='domestic'?'ru':'en')?null:language);
   }
   for(const path of ['/api','/api/auth/google','/api/auth/google/callback','/ru/api','/_public-locales/en','/en/terms','/private','/preview-other/ru'])assert.equal(publicRouteForPath(path),null,path);
   assert.equal(publicRouteForPath('/ru/terms.html').page,'terms');
+  assert.equal(publicRouteForPath('/ru/index.html').edition,'domestic');
   assert.equal(publicRouteForPath('/preview/ru/login','/preview/').language,'ru');
   assert.equal(publicRouteForPath('/ru/login','/preview/'),null);
+  assert.equal(publicRouteForPath('/','', '?lang=ru').edition,'international');
+  assert.equal(publicRouteForPath('/ru/','', '?lang=en').edition,'domestic');
+  for(const language of ['unknown','__proto__','toString'])assert.equal(publicRouteForPath('/ru/','', '?lang='+language).language,'ru');
 });
 
-test('every public page exposes fourteen unique canonical alternates and an English default',()=>{
-  for(const page of PUBLIC_PAGES){
-    const rows=publicPageAlternates(page);
-    assert.equal(rows.length,15);
+test('each edition exposes fourteen unique language alternates within its own edition',()=>{
+  for(const edition of ['international','domestic'])for(const page of PUBLIC_PAGES){
+    const rows=publicPageAlternates(page,'',edition);
+    assert.equal(rows.length,15);assert.equal(new Set(rows.map(row=>row.path)).size,14);
     assert.equal(new Set(rows.map(row=>row.language)).size,15);
-    assert.equal(rows.find(row=>row.language==='x-default').path,publicPagePath('en',page));
+    assert.equal(rows.find(row=>row.language==='x-default').path,publicPagePath(edition==='domestic'?'ru':'en',page,'',edition));
+    for(const row of rows)assert.equal(publicRouteForPath(new URL(row.path,'https://genesiscalendar.com').pathname).edition,edition);
   }
+});
+
+test('a GPS redirect preserves a selected language, document, referral and anchor and avoids private or OAuth flows',()=>{
+  assert.equal(publicDomesticDestination('https://genesiscalendar.com/?ref=friend#pricing'),'https://genesiscalendar.com/ru/?ref=friend#pricing');
+  assert.equal(publicDomesticDestination('https://genesiscalendar.com/privacy?lang=en#data'),'https://genesiscalendar.com/ru/privacy?lang=en#data');
+  assert.equal(publicDomesticDestination('https://genesiscalendar.com/preview/support?lang=de','/preview'),'https://genesiscalendar.com/preview/ru/support?lang=de');
+  assert.equal(publicDomesticDestination('https://genesiscalendar.com/?lang=ru#sign-in'),'https://genesiscalendar.com/ru/#sign-in');
+  for(const path of ['/ru/','/ru/privacy?lang=en','/api/auth/google','/#today','/#settings','/?code=abc&state=def','/login?auth=callback','/?token=abc','/?error=denied'])assert.equal(publicDomesticDestination('https://genesiscalendar.com'+path),null,path);
 });

@@ -57,3 +57,5 @@
 @media(max-width:1000px) { .public-plans { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .welcome-shell .welcome-nav { flex-wrap:wrap; justify-content:center; gap:8px; padding:18px 0; } .welcome-shell .welcome-nav nav { justify-content:center; width:100%; } .public-features,.public-previews,.public-plans { grid-template-columns:1fr; } .public-section { padding:36px 0; } .public-features { gap:20px; } .public-footer nav { justify-content:center; gap:4px 14px; } .public-footer { text-align:center; } }
 @media(prefers-reduced-motion:reduce) { .welcome-shell * { scroll-behavior:auto; animation:none !important; transition:none !important; } }
+
+.genesis-donation-disabled{cursor:default;opacity:.55}.genesis-donation-disabled:hover{transform:none}.public-region-controls{margin-block:.75rem}

@@ -18,18 +18,16 @@ RewriteCond %{REQUEST_FILENAME} !-f [OR]
 RewriteCond %{REQUEST_URI} \.html$ [NC]
 RewriteRule ^ https://genesiscalendar.com%{REQUEST_URI} [R=302,L,NE]
 RewriteRule ^api(?:/|$) - [L]
-# Language selection changes public HTML only; sessions, API and OAuth keep
-# their existing origin. Russian has its own /ru section. Other locales stay
-# on the main URL, with a reproducible ?lang= selection even without JavaScript.
-RewriteCond %{QUERY_STRING} (^|&)lang=(el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
+# The edition is the path (/ or /ru); every language is available in both.
+# Language queries do not change the origin, API, session or OAuth callbacks.
+RewriteCond %{QUERY_STRING} (^|&)lang=(ru|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
 RewriteRule ^(?:index\.html)?$ _public-locales/%2/index.html [L]
-RewriteCond %{QUERY_STRING} (^|&)lang=(el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
+RewriteCond %{QUERY_STRING} (^|&)lang=(ru|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
 RewriteRule ^(login|privacy|terms|refund|support|delete-account)(?:\.html)?/?$ _public-locales/%2/$1.html [L]
-# Existing ?lang=ru bookmarks retain the same Russian content.
-RewriteCond %{QUERY_STRING} (^|&)lang=ru(&|$)
-RewriteRule ^(?:index\.html)?$ ru/index.html [L]
-RewriteCond %{QUERY_STRING} (^|&)lang=ru(&|$)
-RewriteRule ^(login|privacy|terms|refund|support|delete-account)(?:\.html)?/?$ ru/$1.html [L]
+RewriteCond %{QUERY_STRING} (^|&)lang=(en|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
+RewriteRule ^ru/(?:index\.html)?$ _domestic-locales/%2/index.html [L]
+RewriteCond %{QUERY_STRING} (^|&)lang=(en|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
+RewriteRule ^ru/(login|privacy|terms|refund|support|delete-account)(?:\.html)?/?$ _domestic-locales/%2/$1.html [L]
 # A missing immutable module is a real 404, never the SPA HTML document.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^assets/ - [R=404,L]

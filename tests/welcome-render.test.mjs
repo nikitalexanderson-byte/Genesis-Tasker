@@ -55,21 +55,22 @@ test("anonymous welcome renders Google-only sign-in in every supported language"
   await writeFile(bundlePath, chunk.code);
   try {
     const { WelcomeScreen, AndroidDownload, LANGUAGES } = await import(pathToFileURL(bundlePath).href);
-    for (const language of LANGUAGES) {
+    for(const edition of ['international','domestic'])for (const language of LANGUAGES) {
       const html = renderToStaticMarkup(createElement(WelcomeScreen, {
-        nativeAndroidApkUrl: null, busy: false, error: "", language,
+        nativeAndroidApkUrl: null, busy: false, error: "", language,edition,
         onLanguageChange() {}, onGoogle() {},
       }));
       assert.ok(html.includes("GENESIS"), `${language}: public purpose must render`);
       assert.ok(html.includes("google-signin-light-pill.svg"), `${language}: Google sign-in must render`);
-      const localePrefix=language==='ru'?'/ru':'';
-      const localeQuery=['ru','en'].includes(language)?'':`?lang=${language}`;
+      const localePrefix=edition==='domestic'?'/ru':'';
+      const localeQuery=language===(edition==='domestic'?'ru':'en')?'':`?lang=${language}`;
       assert.ok(html.includes(`href="${localePrefix}/privacy${localeQuery}"`) && html.includes(`href="${localePrefix}/terms${localeQuery}"`), `${language}: localized public documents must remain linked`);
-      if(language!=='ru')assert.doesNotMatch(html,/YooKassa|ЮKassa|RUB|Russian tax|for Russia|772495179010/i,`${language}: international storefront stays in USD without regional payment notices`);
+      if(edition==='international')assert.doesNotMatch(html,/YooKassa|ЮKassa|RUB|Russian tax|for Russia|772495179010/i,`${language}: international storefront stays in USD without regional payment notices`);
+      assert.equal((html.match(/role="radio"/g)??[]).length,14,`${edition}/${language}: every language remains selectable`);
       assert.doesNotMatch(html, /yandex|яндекс|genesiscalendar\.ru/i, `${language}: obsolete public auth must be absent`);
       assert.doesNotMatch(html, /android-install-welcome/, `${language}: other devices have no Android promotion`);
       const androidWelcome = renderToStaticMarkup(createElement(WelcomeScreen, {
-        nativeAndroidApkUrl: "/api/android/download", busy: false, error: "", language,
+        nativeAndroidApkUrl: "/api/android/download", busy: false, error: "", language,edition,
         onLanguageChange() {}, onGoogle() {},
       }));
       assert.match(androidWelcome, /href="\/api\/android\/download"/, `${language}: download uses the current published release`);

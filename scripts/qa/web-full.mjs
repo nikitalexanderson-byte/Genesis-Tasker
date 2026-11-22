@@ -13,6 +13,7 @@ import { verifyTrialWeb317 } from './web-trials317.mjs';
 import { runHeaderStartup } from './web-header-startup.mjs';
 import { chooseDisplayCalendar } from './display-calendar-control.mjs';
 import { verifyLatestMindmapSave } from './web-mindmap-save.mjs';
+import {verifyPublicRegions} from './web-public-region.mjs';
 
 const baseURL = process.env.GENESIS_QA_WEB_ORIGIN ?? 'http://127.0.0.1:4380';
 if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL)) throw new Error('Only isolated loopback web origin is allowed');
@@ -39,6 +40,7 @@ async function newContext(tier) {
 }
 
 try {
+  results.push(...await verifyPublicRegions({browser,baseURL,output}));
   for (const tier of tiers) {
     const context = await newContext(tier);
     await context.tracing.start({ screenshots: false, snapshots: true, sources: true });
