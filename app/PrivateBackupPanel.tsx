@@ -12,6 +12,7 @@ import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import {captureMessagingAccess} from './e2ee/message-lifetime';
 import copy from '../contracts/e2ee/content-archive-copy-v1.json';
 import fileCopy from '../contracts/e2ee/content-file-copy-v1.json';
+import sectionNames from '../contracts/e2ee/backup-section-names-v1.json';
 
 export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:string}){
  const text=copy[language as keyof typeof copy]??copy.en,{c,ready}=useBackupCopy(language),transfer=useDataTransferGuard(),[key,setKey]=useState(''),[file,setFile]=useState<File|null>(null),[payload,setPayload]=useState<BackupPayload|null>(null),[selected,setSelected]=useState(''),[content,setContent]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(false),generation=useRef(0),running=useRef(false);
@@ -28,7 +29,7 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
    else{const ids=await retainedContentArchives(account);account.requireOpen();if(token===generation.current)setArchives(ids);}
   }catch{if(token===generation.current)setError(true);}finally{running.current=false;setBusy(false);}
  };
- const rows=payload?.sections.flatMap(section=>(section.data as ContentArchiveSection).entries.flatMap((entry,index)=>[{key:`${section.id}:${index}:current`,title:`${entry.objectId} · ${c('Текущая версия','Current version')}`,value:entry.current},...entry.history.map((value,at)=>({key:`${section.id}:${index}:${at}`,title:`${entry.objectId} · ${at+1}`,value}))]))??[];
+ const rows=payload?.sections.flatMap(section=>{const name=c(sectionNames[section.id][0],sectionNames[section.id][1]);return(section.data as ContentArchiveSection).entries.flatMap((entry,index)=>[{key:`${section.id}:${index}:current`,title:`${name} · ${entry.current.filename||`${filesText.file} ${index+1}`} · ${filesText.current}`,value:entry.current},...entry.history.map((value,at)=>({key:`${section.id}:${index}:${at}`,title:`${name} · ${value.filename||`${filesText.file} ${index+1}`} · ${filesText.version} ${at+1}`,value}))]);})??[];
  const inspect=(id:string)=>{setSelected(id);setContent('');setBinary(false);setError(false);const row=rows.find(row=>row.key===id);if(!row)return;try{const account=requirePrivateAccount(ownerId);if(account!==payloadAccount.current)throw new Error('E2EE_ACCOUNT_CHANGED');account.requireOpen();
   if(row.value.size>2*1024*1024||row.value.mediaType&&!['application/json','text/json','application/octet-stream'].includes(row.value.mediaType)){setBinary(true);return;}
   const bytes=row.value.size===0?new Uint8Array():decodeE2eeBytes(row.value.bytes,row.value.size);try{const value=parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),'BACKUP_INVALID',2*1024*1024);setContent(JSON.stringify(value,null,2));}catch{setBinary(true);}finally{bytes.fill(0);}

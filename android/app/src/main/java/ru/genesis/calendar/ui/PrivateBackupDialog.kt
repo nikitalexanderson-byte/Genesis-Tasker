@@ -32,6 +32,7 @@ import ru.genesis.calendar.security.*
     PrivateBackupFileActivity(owner)
     PrivateDriveConnectionActivity(owner)
     MessageKeyFileActivity(owner)
+    ContentFileDestinationActivity(owner)
 }
 
 @Composable internal fun PrivateBackupDialog(owner:String,title:String,onClose:()->Unit){
@@ -49,16 +50,22 @@ import ru.genesis.calendar.security.*
     val active=remember(account,lifecycle){java.util.concurrent.atomic.AtomicBoolean(true)}
     val foreground=remember(account,lifecycle){java.util.concurrent.atomic.AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
     val fileAccess=remember(account){java.util.concurrent.atomic.AtomicReference<NativeBackupFileAccess?>(null)}
+    val userFileOutput=remember(account){java.util.concurrent.atomic.AtomicReference<NativeUserFileOutput?>(null)}
     val driveCall=remember(account){java.util.concurrent.atomic.AtomicReference<ru.genesis.calendar.auth.ForegroundAccountCall?>(null)}
     val operationJob=remember(account){java.util.concurrent.atomic.AtomicReference<Job?>(null)}
     DisposableEffect(account,lifecycle){
         val observer=LifecycleEventObserver{_,event->
             if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
-            if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);fileAccess.getAndSet(null)?.close();driveCall.getAndSet(null)?.cancel();operationJob.get()?.cancel();recovery="";importKey="";content=null}
+            if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);fileAccess.getAndSet(null)?.close();userFileOutput.getAndSet(null)?.close();driveCall.getAndSet(null)?.cancel();operationJob.get()?.cancel();recovery="";importKey="";content=null}
         };lifecycle.addObserver(observer)
-        onDispose{active.set(false);lifecycle.removeObserver(observer);fileAccess.getAndSet(null)?.close();driveCall.getAndSet(null)?.cancel();operationJob.get()?.cancel();recovery="";importKey="";content=null}
+        onDispose{active.set(false);lifecycle.removeObserver(observer);fileAccess.getAndSet(null)?.close();userFileOutput.getAndSet(null)?.close();driveCall.getAndSet(null)?.cancel();operationJob.get()?.cancel();recovery="";importKey="";content=null}
     }
     fun current(){account.requireOpen();check(active.get()&&foreground.get()&&app.workspaceScope==storageScope&&NativePrivateProducts.account(storageScope,owner)===account){"E2EE_ACCOUNT_CHANGED"}}
+    val contentFileOutput=remember(account){E2eeArchiveFileOutput(account,::current)}
+    val contentFileText=remember(language){context.assets.open("content-file-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val sectionNames=remember(context){context.assets.open("backup-section-names-v1.json").use{JSONObject(it.readBytes().toString(Charsets.UTF_8))}}
+    val selectedDestination by NativeContentFileDestination.state.collectAsStateWithLifecycle()
+    val ownDestination=selectedDestination?.takeIf{it.request.owner==owner}
     fun <T> run(operation:()->T,complete:(T)->Unit={}){
         if(busy||operationJob.get()!=null)return;busy=true;error=false;coroutine.launch{
             val job=currentCoroutineContext()[Job]
@@ -154,7 +161,40 @@ import ru.genesis.calendar.security.*
                 OutlinedButton(onClick={run({archive.retained()},{archives=it})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("history"))}
                 archives.forEach{id->OutlinedButton(onClick={run({archive.openRetained(id)},{content=it})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(id)}}
                 content?.let{retained->Text(text.getString("history"));val sections=retained.getJSONArray("sections")
-                    repeat(sections.length()){index->val section=sections.getJSONObject(index);UntranslatedText("${section.getString("id")}: ${section.getJSONObject("data").getJSONArray("entries").length()}")}
+                    repeat(sections.length()){index->val section=sections.getJSONObject(index);Text("${c(sectionNames.getJSONArray(section.getString("id")).getString(0))}: ${section.getJSONObject("data").getJSONArray("entries").length()}")}
+                    Text(contentFileText.getString("notice"))
+                    val versions=remember(retained){buildList{
+                        repeat(sections.length()){sectionIndex->val section=sections.getJSONObject(sectionIndex);val entries=section.getJSONObject("data").getJSONArray("entries")
+                            repeat(entries.length()){entryIndex->val entry=entries.getJSONObject(entryIndex);val head=entry.getJSONObject("current");add(Triple(section.getString("id"),entryIndex,0 to head))
+                                val history=entry.getJSONArray("history");repeat(history.length()){at->add(Triple(section.getString("id"),entryIndex,(at+1) to history.getJSONObject(at)))}}
+                        }
+                    }}
+                    androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth().height(260.dp)){
+                        items(versions.size){at->val (sectionId,entryIndex,selectedVersion)=versions[at];val (versionIndex,version)=selectedVersion
+                            Column(Modifier.fillMaxWidth().padding(vertical=6.dp)){
+                                Text(c(sectionNames.getJSONArray(sectionId).getString(0)),style=MaterialTheme.typography.labelMedium)
+                                Text(version.getString("filename").ifBlank{"${contentFileText.getString("file")} ${entryIndex+1}"})
+                                Text(if(versionIndex==0)contentFileText.getString("current")else "${contentFileText.getString("version")} $versionIndex")
+                                UntranslatedText("${version.getLong("size")} B")
+                                OutlinedButton(onClick={run({contentFileOutput.prepare(retained.getString("backupId"),sectionId,entryIndex,version.getString("id"))},{id->
+                                    current();NativeContentFileDestination.prepare(owner,id,auth.privateDataExchangeOwnerGuard(owner))
+                                })},enabled=!busy&&!unfinished&&ownDestination?.phase !in setOf("requested","picking"),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(contentFileText.getString("download"))}
+                            }
+                        }
+                    }
+                }
+                ownDestination?.takeIf{it.phase=="ready"}?.let{destination->
+                    Text(contentFileText.getString("notice"))
+                    Button(onClick={run({
+                        current();val request=destination.request;request.current();val guard=auth.privateDataExchangeOwnerGuard(owner);val bytes=contentFileOutput.open(request.intentId)
+                        var access:NativeUserFileOutput?=null
+                        try{
+                            val output=NativeUserFileOutput(bytes){current();guard();request.current()};access=output
+                            check(userFileOutput.compareAndSet(null,output)){"E2EE_FILE_DESTINATION_BUSY"};request.attach(output)
+                            output.write(context,request.uri());current();guard();request.current();NativeContentFileDestination.complete(request)
+                        }catch(reason:Throwable){NativeContentFileDestination.failed(request);throw reason}
+                        finally{access?.let{userFileOutput.compareAndSet(it,null);destination.request.detach(it);it.close()};bytes.fill(0)}
+                    })},enabled=!busy&&!unfinished,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(contentFileText.getString("download"))}
                 }
                 if(busy)LinearProgressIndicator(Modifier.fillMaxWidth())
                 if(error)Text(text.getString("error"),color=MaterialTheme.colorScheme.error)

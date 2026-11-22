@@ -10,6 +10,21 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Native retained binary file output (candidate, no compilation/QA)
+
+The actual native private-backup dialog now enumerates all retained current/
+historical file entries in a bounded-height lazy list. It saves an encrypted
+inert selection intent, obtains only a transient exact-attempt SAF destination
+above the vault gate, then requires a fresh unlocked explicit confirmation before
+materializing or writing plaintext. Selected bytes/size/hash are rechecked from
+the immutable retained archive. The reusable foreground writer performs bounded
+prefix/readback verification and cancels/wipes owned buffers on expiry, background,
+disposal or account change. No plaintext spool, stored URI or recreated IO grant
+was added. Web/native share current/version/file copy and existing module-name
+translations; explicit unencrypted output is disclosed. Limits and required QA:
+`security-336-content-file-output.md`. No tests/compiler/lint/build/CI/push/release
+ran; coverage stays9/20 and typed restore remains an implementation item.
+
 ### Web original file bytes from retained history (candidate, no compilation/QA)
 
 The real private backup panel now distinguishes non-JSON/large content from an
