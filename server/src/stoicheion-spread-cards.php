@@ -41,7 +41,7 @@ function genesisChangeSpreadCard(string $userId,array $input): array
         if(!$user||!genesisForecastUnlimitedDraws($user))throw new GenesisResourceLimitException(403,'SPREAD_CARD_ELITE_PLUS_REQUIRED');
         if(!empty($user['stoicheion_divination_disabled']))throw new DomainException('SPREAD_DISABLED');
         $day=genesisClientDayKey();$q=$db->prepare("SELECT * FROM stoicheion_draws WHERE user_id=? AND draw_kind='spread' AND day_key>=? AND day_key<=? ORDER BY day_key DESC LIMIT 1");
-        $q->execute([$userId,genesisStoicheionPeriodStart($day,'spread',genesisForecastTestingOwner($user)),$day]);$row=$q->fetch();
+        $q->execute([$userId,genesisStoicheionPeriodStart($day,'spread',genesisForecastTestingOwner($user)),$day]);$row=$q->fetch();$q->closeCursor();
         if(!$row)throw new DomainException('SPREAD_DRAW_REQUIRED');
         $current=genesisSpreadDrawForClient($row,true);
         if($current['cardRevision']!==$input['revision']||$current['seed']!==$input['seed']||$current['dayKey']!==$input['dayKey'])throw new GenesisResourceLimitException(409,'SPREAD_CARD_STALE');
@@ -52,6 +52,9 @@ function genesisChangeSpreadCard(string $userId,array $input): array
         $db->prepare('INSERT INTO stoicheion_spread_cards VALUES(?,?,?,?,?,?) ON CONFLICT(user_id,day_key)
             DO UPDATE SET source_seed=excluded.source_seed,revision=excluded.revision,cards_json=excluded.cards_json,updated_at=excluded.updated_at')
             ->execute([$userId,$row['day_key'],$row['seed_value'],$revision,json_encode($cards,JSON_THROW_ON_ERROR),$now]);
-        $result=genesisSpreadDrawForClient($row,true);$db->exec('COMMIT');genesisTouchUser($userId);return $result;
+        // Keep activity bookkeeping under the same writer. A second redraw
+        // may acquire SQLite immediately after COMMIT; a later UPDATE here
+        // could then fail despite the card having already been committed.
+        $result=genesisSpreadDrawForClient($row,true);genesisTouchUser($userId);$db->exec('COMMIT');return $result;
     }catch(Throwable $error){$db->exec('ROLLBACK');throw $error;}
 }
