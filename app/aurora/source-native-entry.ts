@@ -32,6 +32,8 @@ import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState
 import {planMembershipOperation,membershipOperationFingerprint,validateMembershipOperationSnapshot} from '../e2ee/membership-operation-plan';
 import {membershipOperationResult} from '../e2ee/membership-operation-result';
 import type {MembershipAtomicReceipt} from '../e2ee/membership-atomic-receipts';
+import {membershipProjectAccessProbe,membershipProjectAccessFingerprint,privateProjectAccessView,privateProjectAccessMembers} from '../e2ee/membership-project-access';
+import type {SharedProjectAccessDraft} from '../shared-project-access';
 import {membershipAtomicOperationPlan,type MembershipAtomicProducts} from '../e2ee/membership-atomic-contract';
 import {MembershipOperationDrafts,type MembershipOperationDraft} from '../e2ee/membership-operation-drafts';
 import {captureMembershipOperationSnapshot,type MembershipOpenedScope} from '../e2ee/membership-operation-selection';
@@ -43,6 +45,9 @@ import {verifyMembershipAtomicPrivateEffects,type MembershipAtomicEffectsInput} 
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
   resolveChunk:(job:string,id:string,index:number,last:boolean,value:string)=>void;close:()=>void}}}
+const privateAccessErrorCodes=new Set(['INVALID_PROJECT_ACCESS','PROJECT_ACCESS_CONFLICT','PROJECT_ACCESS_OPERATION_REUSED','LAST_OWNER','PROJECT_ACCESS_MANAGER_UNRESTRICTED','PROJECT_ACCESS_PERMISSION_CHANGED','PROJECT_ACCESS_REVIEW_REQUIRED','PROJECT_ACCESS_LOCAL_QUEUE','PROJECT_ACCESS_RECEIPT_INVALID']);
+const nativeProductErrorCode=(value:unknown)=>typeof value==='string'&&(/^E2EE_[A-Z_]{1,100}$/.test(value)||privateAccessErrorCodes.has(value))?value:'E2EE_AURORA_RECONCILIATION_FAILED';
+
 const MAX=128*1024*1024,CHUNK=131072,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const decoder=new TextDecoder('utf-8',{fatal:true});
 let job='',input='',started=false,closed=false,replyMaximum=16*1024*1024;
@@ -103,6 +108,16 @@ async function run(encoded:string){
       else if(value.action==='cancel'){exactKeys(args,['id']);result={state:await model.cancel(args.id as string)};}
       else if(value.action==='fork'){exactKeys(args,['id']);const id=await model.fork(args.id as string);result={id,state:await model.inspect(id)};}
       else if(value.action==='result'){exactKeys(args,['id','receipt']);result={result:membershipOperationResult(await model.inspect(args.id as string),args.receipt as MembershipAtomicReceipt|null)};}
+      else if(value.action==='snapshot'){exactKeys(args,['operation']);result={snapshot:await model.snapshot(args.operation as MembershipOperationDraft['operation'])};}
+      else if(value.action==='checkAccess'){exactKeys(args,['id','fingerprint']);const draft=await model.follow(args.id as string);if(draft.operation.kind!=='project-grants'||typeof args.fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(args.fingerprint))throw new Error('PROJECT_ACCESS_CONFLICT');if(!draft.resolves&&!draft.started){const snapshot=await model.snapshot(draft.operation);if(args.fingerprint!==membershipProjectAccessFingerprint(snapshot,draft.operation.userId))throw new Error('PROJECT_ACCESS_CONFLICT');}result={ok:true};}
+      else if(value.action==='access'){exactKeys(args,['spaceId','userId','desired']);const probe=membershipProjectAccessProbe(args.spaceId as string,args.userId as string),snapshot=await model.snapshot(probe);
+        result=await privateProjectAccessView(snapshot,probe.userId,args.desired as SharedProjectAccessDraft|null,{current,
+          open:async(scope,kind,resourceId)=>await invoke('accessOpen',{scope,kind,resourceId}) as import('../e2ee/product-contract').ProductEntity[],
+          read:async(scopeId,entity)=>await invoke('read',{scopeId,entity}) as ProductVersion,
+          history:async(scopeId,entityId,before)=>await invoke('accessHistory',{scopeId,entityId,before}) as {versions:ProductVersion[];nextBefore:number|null},
+        });const after=await model.snapshot(probe);if(membershipProjectAccessFingerprint(after,probe.userId)!==membershipProjectAccessFingerprint(snapshot,probe.userId))throw new Error('E2EE_MEMBERSHIP_STALE');
+      }
+      else if(value.action==='accessMembers'){exactKeys(args,['spaceId']);const probe=membershipProjectAccessProbe(args.spaceId as string,value.ownerId),snapshot=await model.snapshot(probe);const catalogue=await invoke('memberCatalogue',{scope:snapshot.spaceScope}) as {root:ProductVersion;members:{userId:string;displayName:string}[]};result=privateProjectAccessMembers(snapshot,catalogue.root,catalogue.members);const after=await model.snapshot(probe);if(membershipProjectAccessFingerprint(after,probe.userId)!==membershipProjectAccessFingerprint(snapshot,probe.userId))throw new Error('E2EE_MEMBERSHIP_STALE');}
       else if(value.action==='confirm'){exactKeys(args,['id','fingerprint']);result={state:await model.confirm(args.id as string,args.fingerprint as string)};}
       else{exactKeys(args,['id']);if(value.action==='inspect')result={state:await model.inspect(args.id as string)};
         else if(value.action==='follow')result={state:await model.follow(args.id as string)};
@@ -145,7 +160,8 @@ async function run(encoded:string){
           for(const head of heads){exactKeys(head,['entityId']);const row=await invoke('version',{entityId:head.entityId}) as ProductVersion;size+=JSON.stringify(row).length;if(size>128*1024*1024)throw new Error('E2EE_PRODUCT_CONTENT_TOO_LARGE');rows.push(row);}return rows;},
         stage:async(edits:ProductEdit[],intentId:string)=>await invoke('stage',{edits,intentId}) as string,
         flush:intentId=>invoke('flush',{intentId}),
-        membership:async(operation,intentId)=>await invoke('membership',{operation,intentId}) as Record<string,unknown>,
+        membership:async(operation,intentId,expectedFingerprint)=>await invoke('membership',{operation,intentId,expectedFingerprint}) as Record<string,unknown>,
+        membershipView:async(userId,desired)=>await invoke('membershipView',{userId,desired}) as Record<string,unknown>,
         loadRequest:async id=>await invoke('requestLoad',{id}) as {value:SavedSharedRequest;serial:number}|null,
         saveRequest:async(document,expected)=>await invoke('requestSave',{document,expected}) as number,
       });
@@ -274,7 +290,7 @@ async function run(encoded:string){
       current();send({job,kind:'complete-stream',protocol:1,complete:result.complete,...counts});
     }else{current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});}
   }catch(error){
-    if(!closed)send({job,kind:'error',code:error instanceof Error&&/^E2EE_[A-Z_]{1,100}$/.test(error.message)?error.message:'E2EE_AURORA_RECONCILIATION_FAILED'});
+    if(!closed)send({job,kind:'error',code:nativeProductErrorCode(error instanceof Error?error.message:null)});
   }finally{local.forEach(bytes=>bytes.fill(0));content.forEach(bytes=>bytes.fill(0));window.GenesisAuroraSourceRuntime.close();}
 }
 window.GenesisAuroraSourceRuntime={
@@ -290,7 +306,7 @@ window.GenesisAuroraSourceRuntime={
     call.chunks+=value;if(!last)return;pending.delete(request);
     const bytes=decodeE2eeBytes(call.chunks,1,replyMaximum);
     try{const response=backupJson(decoder.decode(bytes)) as {error?:unknown;value?:unknown};
-      if(response.error)call.reject(new Error(typeof response.error==='string'&&/^E2EE_[A-Z_]{1,100}$/.test(response.error)?response.error:'E2EE_AURORA_RECONCILIATION_FAILED'));
+      if(response.error)call.reject(new Error(nativeProductErrorCode(response.error)));
       else call.resolve(response.value);
     }catch(error){call.reject(error);}finally{bytes.fill(0);}
   },

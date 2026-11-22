@@ -66,10 +66,12 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 }
                 "stage"->{E2eeKeys.exact(payload,setOf("edits","intentId"));records.product.stage(payload.getJSONArray("edits"),payload.getString("intentId"))}
                 "flush"->{E2eeKeys.exact(payload,setOf("intentId"));records.flush(payload.getString("intentId"))}
-                "membership"->{E2eeKeys.exact(payload,setOf("operation","intentId"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};val id=E2eeKeys.technical(payload.getString("intentId"));val operations=E2eeNativeMembershipOperations(context,account,::current)
+                "membershipView"->{E2eeKeys.exact(payload,setOf("userId","desired"));check(binding.scopeKind=="space"&&!account.offline){"E2EE_ONLINE_REQUIRED"};E2eeNativeMembershipOperations(context,account,::current).execute("access",JSONObject().put("spaceId",binding.resourceId).put("userId",payload.get("userId")).put("desired",payload.get("desired")))}
+                "membership"->{E2eeKeys.exact(payload,setOf("operation","intentId","expectedFingerprint"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};val id=E2eeKeys.technical(payload.getString("intentId"));val operations=E2eeNativeMembershipOperations(context,account,::current)
                     val saved=try{operations.execute("inspect",JSONObject().put("id",id)).getJSONObject("state")}catch(error:Exception){if(error.message!="E2EE_MEMBERSHIP_OPERATION_REQUIRED")throw error;null}
                     if(saved!=null){check(E2eeProductJson.same(saved.get("operation"),payload.get("operation"))){"E2EE_IDEMPOTENCY_CONFLICT"}}
                     else operations.execute("create",JSONObject().put("id",id).put("operation",payload.get("operation")));current()
+                    if(payload.getJSONObject("operation").get("kind")=="project-grants"){operations.execute("checkAccess",JSONObject().put("id",id).put("fingerprint",payload.get("expectedFingerprint")));current()}else check(payload.isNull("expectedFingerprint")){"E2EE_MEMBERSHIP_OPERATION_INVALID"}
                     val auth=ru.genesis.calendar.auth.AuthController.get(context);val result=auth.completedPrivateMembershipOperation(id);current()
                     result?:JSONObject().put("membershipReviewRequired",true).put("intentId",operations.execute("follow",JSONObject().put("id",id)).getJSONObject("state").getString("intentId"))
                 }
@@ -114,9 +116,9 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
     }
     suspend fun pending(projectId:String?=null):List<JSONObject> = withContext(Dispatchers.IO){mutex.withLock{current();pendingLocked(projectId)}}
     suspend fun resume(id:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{current();val item=pendingLocked().singleOrNull{it.getJSONObject("request").getString("id")==id}?:error("E2EE_SHARED_REQUEST_MISSING")
-        open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),id).also{if(!account.offline)cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}}}
+        open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),id).also{if(!account.offline&&!it.optBoolean("membershipReviewRequired",false))cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}}}
     suspend fun flush():Int=withContext(Dispatchers.IO){mutex.withLock{current();if(account.offline)return@withLock 0;var count=0
-        for(item in pendingLocked()){val request=item.getJSONObject("request");open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),request.getString("id"));current();count++;cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)};count}}
+        for(item in pendingLocked()){val request=item.getJSONObject("request");val result=open(item.getString("scopeKind"),item.getString("resourceId")).execute("POST","",JSONObject(),request.getString("id"));current();if(!result.optBoolean("membershipReviewRequired",false)){count++;cachedPendingCount=(cachedPendingCount-1).coerceAtLeast(0)}};count}}
     suspend fun request(method:String,path:String,body:JSONObject?):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
         current();val uri=Uri.parse(path);val parts=uri.pathSegments;check(parts.firstOrNull()=="shared"){"E2EE_SHARED_REQUEST_INVALID"};val query=uri.encodedQuery?.let{"?$it"}?:"";val input=body?.let{JSONObject(it.toString())}?:JSONObject()
         if(parts.getOrNull(1) in setOf("views","overview","inbox","notifications")||parts.getOrNull(1)=="spaces"&&parts.getOrNull(3)=="mindmaps"||parts.size==6&&parts[1]=="projects"&&parts[3]=="tasks"&&parts[5] in setOf("read","watch")||method=="GET"&&(parts.size==2&&parts[1]=="tasks"||parts.size==4&&parts[1]=="spaces"&&parts[3]=="search"))return@withLock aggregate(method,path,input)

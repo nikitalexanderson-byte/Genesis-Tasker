@@ -1927,9 +1927,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun prepareSharedBulkDraft(projectId: String, stamp: String) = bulkDraftCall { it.prepare(projectId, stamp) }
     override suspend fun sendSharedBulkDraft(projectId: String, stamp: String) = bulkDraftCall { it.send(projectId, stamp) }
     override suspend fun removeSharedBulkDraft(projectId: String, stamp: String): Unit = bulkDraftCall { it.remove(projectId, stamp) }
-    override suspend fun sharedProjectAccessMembers(spaceId: String) = sharedOnlineCall { api, generation -> api.sharedProjectAccessMembers(generation, spaceId) }
+    override suspend fun sharedProjectAccessMembers(spaceId: String):JSONObject {
+        val snapshot=mutableState.value;val owner=snapshot.user?.uid
+        if(owner==null||!ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(owner)))return sharedOnlineCall{api,generation->api.sharedProjectAccessMembers(generation,spaceId)}
+        check(snapshot.ready&&!snapshot.requiresSignIn&&snapshot.accountSettings?.sharedProjectsEnabled==true&&snapshot.accountSettings.featureAccess.allows("shared-projects"))
+        return privateMembershipSession{value->val result=value.operations.execute("accessMembers",JSONObject().put("spaceId",spaceId));value.current();ProjectAccessProtocol.members(spaceId,result)}
+    }
     override suspend fun sharedProjectAccess(spaceId: String, userId: String) = sharedOnlineCall { api, generation -> api.sharedProjectAccess(generation, spaceId, userId) }
-    private suspend fun <T> projectAccessDraftCall(action: (ProjectAccessDraftService) -> T): T {
+    private suspend fun <T> projectAccessDraftCall(action: suspend (ProjectAccessDraftService) -> T): T {
         val initial = mutableState.value
         val account = initial.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         if (!initial.ready || initial.accountSettings?.sharedProjectsEnabled != true) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
@@ -1956,7 +1961,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun saveSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String?, edit: JSONObject) = projectAccessDraftCall { it.save(spaceId, userId, stamp, edit) }
     override suspend fun previewSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String) = projectAccessDraftCall { it.preview(spaceId, userId, stamp) }
     override suspend fun prepareSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String) = projectAccessDraftCall { it.prepare(spaceId, userId, stamp) }
-    override suspend fun sendSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String) = projectAccessDraftCall { it.send(spaceId, userId, stamp) }
+    override suspend fun sendSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String) = projectAccessDraftCall { service->
+        val owner=requireNotNull(mutableState.value.user?.uid);val storage=CloudAccountSnapshot.scopeFor(owner)
+        if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(storage))service.send(spaceId,userId,stamp)
+        else service.sendPrivate(spaceId,userId,stamp){command->
+            sharedCall{api,generation->api.saveSharedProjectAccess(generation,spaceId,userId,ProjectAccessProtocol.body(command))}
+            VerifiedPrivateProjectAccessReceipt.read(this@AuthController,spaceId,userId,command)
+        }
+    }
     override suspend fun rebaseSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String) = projectAccessDraftCall { it.rebase(spaceId, userId, stamp) }
     override suspend fun removeSharedProjectAccessDraft(spaceId: String, userId: String, stamp: String): Unit = projectAccessDraftCall { it.remove(spaceId, userId, stamp) }
     override suspend fun sharedProjectAccessCopies(spaceId: String, userId: String) = projectAccessDraftCall { it.copies(spaceId, userId) }

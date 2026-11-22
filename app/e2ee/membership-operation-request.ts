@@ -13,7 +13,7 @@ export function membershipOperationForSharedRequest(binding:SharedDomainBinding,
   if(parts.length===2){exactKeys(body,['role',...(Object.hasOwn(body,'permissions')?['permissions']:[]),...(Object.hasOwn(body,'canOrganizeTasks')?['canOrganizeTasks']:[]),...extra]);
    return validateMembershipOperation({kind:'space-role',spaceId:binding.resourceId,userId:parts[1],role:body.role,...(Object.hasOwn(body,'permissions')?{permissions:body.permissions}:{}),...(Object.hasOwn(body,'canOrganizeTasks')?{canOrganizeTasks:body.canOrganizeTasks}:{})});}
   if(parts.length===3&&parts[2]==='permissions'){exactKeys(body,['categoryId','permissions',...extra]);return validateMembershipOperation({kind:'member-permissions',spaceId:binding.resourceId,userId:parts[1],categoryId:body.categoryId,permissions:body.permissions});}
-  if(parts.length===3&&parts[2]==='project-access'){exactKeys(body,['allProjects','grants','expectedFingerprint','operationId']);return validateMembershipOperation({kind:'project-grants',spaceId:binding.resourceId,userId:parts[1],allProjects:body.allProjects,grants:body.grants});}
+   if(parts.length===3&&parts[2]==='project-access'){exactKeys(body,['allProjects','grants','expectedFingerprint','operationId']);if(typeof body.expectedFingerprint!=='string'||!/^[a-f0-9]{64}$/.test(body.expectedFingerprint))throw new Error('PROJECT_ACCESS_CONFLICT');return validateMembershipOperation({kind:'project-grants',spaceId:binding.resourceId,userId:parts[1],allProjects:body.allProjects,grants:body.grants});}
  }
  if(binding.kind==='space'&&parts[0]==='member-categories'&&parts.length===2&&method==='PATCH'){
   // A combined rename/permission edit needs its own complete private input;

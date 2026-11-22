@@ -34,7 +34,8 @@ export interface SharedLivePorts{
  stage:(edits:ProductEdit[],intentId:string)=>Promise<string>;flush:(intentId:string)=>Promise<unknown>;
  loadRequest:(id:string)=>Promise<{value:SavedRequest;serial:number}|null>;
  saveRequest:(value:SavedRequest,expected:number|null)=>Promise<number>;
- membership?:(operation:MembershipOperation,intentId:string)=>Promise<ObjectValue>;
+ membership?:(operation:MembershipOperation,intentId:string,expectedFingerprint:string|null)=>Promise<ObjectValue>;
+ membershipView?:(userId:string,desired:ObjectValue|null)=>Promise<ObjectValue>;
 }
 const camel=(key:string)=>key.replace(/_([a-z])/g,(_,letter:string)=>letter.toUpperCase());
 function object(value:unknown):asserts value is ObjectValue{if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_DOMAIN_INVALID');}
@@ -409,8 +410,11 @@ export class SharedLiveModel{
   return{edits,result:{sprint:this.#row({protocol:1,scopeId:this.ports.binding.scopeId,entityId:edit.entityId,kind:'sprint',revision:expected+1,parentId:edit.parentId,deleted:false,metadata:edit.metadata,body:validated},context)}};
  }
  async #execute(method:string,path:string,held:ObjectValue,intentId?:string){
-  if(method==='GET')return this.#get(path);
   const segments=path.split('?')[0].split('/').filter(Boolean);
+   if(this.ports.binding.kind==='space'&&segments.length===3&&segments[0]==='members'&&segments[2]==='project-access'&&(method==='GET'||method==='POST')){
+    if(!this.ports.online||!this.ports.membershipView)throw new Error('E2EE_ONLINE_REQUIRED');assertTechnical(segments[1]);if(method==='GET')exactKeys(held,[]);const result=await this.ports.membershipView(segments[1],method==='GET'?null:held);this.ports.current();return result;
+   }
+   if(method==='GET')return this.#get(path);
   if(method==='POST'&&segments.length===3&&segments[0]==='tasks'&&segments[2]==='approval-preview'){
    if(!this.ports.online||!this.ports.approvalPreview)throw new Error('E2EE_ONLINE_REQUIRED');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',segments[1]),proposals=await this.ports.approvalPreview(task.entityId);this.ports.current();
    return{current:this.#task(task,versions,context),proposals:proposals.map(row=>({...row,task:this.#task(row.version,versions,context)}))};
@@ -429,9 +433,10 @@ export class SharedLiveModel{
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
   const membership=membershipOperationForSharedRequest(this.ports.binding,method,path,held);
   if(membership){if(!this.ports.online||!this.ports.membership)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
-   let result=await this.ports.membership(membership,id);this.ports.current();
+   let result=await this.ports.membership(membership,id,membership.kind==='project-grants'?held.expectedFingerprint as string:null);this.ports.current();
    if(result.membershipReviewRequired===true){exactKeys(result,['membershipReviewRequired','intentId']);assertTechnical(result.intentId);return{...result,sharedRequestId:id};}
    if(membership.kind==='category-permissions'){const {context,versions}=await this.#snapshot(),category=versions.find(row=>row.kind==='category'&&!row.deleted&&plain(row).record.id===membership.categoryId);if(!category)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');result={...result,category:this.#row(category,context)};}
+   if(membership.kind==='project-grants')result={...result,operationId:held.operationId,allProjects:membership.allProjects,grants:membership.grants};
    await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;
   }
   if(!request.edits){const prepared=await this.#prepare(request);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}

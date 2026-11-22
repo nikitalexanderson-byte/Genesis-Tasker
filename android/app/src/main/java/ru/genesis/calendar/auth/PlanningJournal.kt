@@ -55,7 +55,7 @@ internal class PlanningJournal(private val storage: PlanningJournalStorage,
             "rejected" -> require(command != null && record.getInt("attempts") == 1 && failureCode in definitiveErrors && !hasReceipt)
             "received" -> {
                 require(command != null && record.getInt("attempts") > 0 && failureCode == null && hasReceipt)
-                val receipt = receipt(project, JSONObject(command as String), record.getJSONObject("receipt"))
+                val receipt = contract?.storedReceipt(JSONObject(command as String),record.getJSONObject("receipt")) ?: receipt(project, JSONObject(command as String), record.getJSONObject("receipt"))
                 require(PlanningLifecycle.canonical(receipt) == PlanningLifecycle.canonical(record.getJSONObject("receipt"))) { "PLANNING_DRAFT_INVALID" }
             }
             else -> error("PLANNING_DRAFT_INVALID")
@@ -171,6 +171,12 @@ internal class PlanningJournal(private val storage: PlanningJournalStorage,
         require(old.getString("phase") == "pending" && old.getInt("attempts") > 0) { "PLANNING_DRAFT_PENDING" }
         val receipt = receipt(project, JSONObject(old.getString("command")), response)
         persist(account, project, old.put("phase", "received").put("error", JSONObject.NULL).put("receipt", receipt))
+    }
+    fun succeededPrivateProjectAccess(account:String,project:String,stamp:String,result:VerifiedPrivateProjectAccessReceipt):JSONObject=storage.locked{
+        check(contract===ProjectAccessJournalContract){"PLANNING_DRAFT_SCOPE"};val old=requireNotNull(current(account,project,stamp))
+        check(old.getString("phase")=="pending"&&old.getInt("attempts")>0){"PLANNING_DRAFT_PENDING"}
+        val command=JSONObject(old.getString("command"));val receipt=ProjectAccessJournalContract.storedReceipt(command,result.forCommand(command))
+        persist(account,project,old.put("phase","received").put("error",JSONObject.NULL).put("receipt",receipt))
     }
     fun rebase(account: String, project: String, stamp: String, fresh: JSONObject, remaining: List<JSONObject>? = null): JSONObject = storage.locked {
         val old = requireNotNull(current(account, project, stamp))

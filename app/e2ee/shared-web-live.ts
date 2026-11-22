@@ -10,7 +10,9 @@ import {E2eeEditorQueue} from './editor-queue.ts';
 import {E2eeFeatureDocument} from './feature-document.ts';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState} from './shared-aggregate.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
-import {privateMembershipOperationDrafts} from './membership-web-operations.ts';
+import {privateMembershipOperationDrafts,webPrivateProjectAccess} from './membership-web-operations.ts';
+import {membershipProjectAccessFingerprint} from './membership-project-access.ts';
+import type {SharedProjectAccessDraft} from '../shared-project-access.ts';
 import {waitForPrivateMembershipOperation} from '../private-membership-ui.ts';
 import {privateAccountView} from './product-session.ts';
 import {samePrivateJson} from './product-json.ts';
@@ -58,9 +60,11 @@ class WebSharedLive{
     const file=await client.read('attachment',reference.objectId);account.requireOpen();if(!file)throw new Error('E2EE_PRIVATE_FILE_UNAVAILABLE');return file;
    },
    stage:(edits,id)=>records.product.stage(edits,id),flush:async id=>{if(account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return records.flush(id);},
-   membership:async(operation,id)=>{account.requireOpen();const drafts=privateMembershipOperationDrafts(account.ownerId);let existing;
+   membershipView:async(userId,desired)=>await webPrivateProjectAccess(account.ownerId,binding.resourceId,userId,desired as SharedProjectAccessDraft|null) as unknown as Record<string,unknown>,
+   membership:async(operation,id,expectedFingerprint)=>{account.requireOpen();const drafts=privateMembershipOperationDrafts(account.ownerId);let existing;
     try{existing=await drafts.inspect(id);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_MEMBERSHIP_OPERATION_REQUIRED')throw error;}
     account.requireOpen();if(existing){if(!samePrivateJson(existing.operation,operation))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}else await drafts.create(operation,id);account.requireOpen();
+    const observed=await drafts.follow(id);account.requireOpen();if(operation.kind==='project-grants'&&!observed.resolves&&!observed.started){const snapshot=await drafts.snapshot(operation);account.requireOpen();if(expectedFingerprint!==membershipProjectAccessFingerprint(snapshot,operation.userId))throw new Error('PROJECT_ACCESS_CONFLICT');}
     const api=await import('../cloud-sync');account.requireOpen();const completed=await api.completedCurrentPrivateMembershipOperation(id);account.requireOpen();if(completed)return completed;
     const active=await drafts.follow(id);account.requireOpen();await waitForPrivateMembershipOperation(account.ownerId,privateAccountView().language,active.intentId);account.requireOpen();
     const result=await api.completedCurrentPrivateMembershipOperation(id);account.requireOpen();if(!result)throw new Error('E2EE_MEMBERSHIP_OUTCOME_REVIEW_REQUIRED');return result;},

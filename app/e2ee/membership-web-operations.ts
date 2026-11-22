@@ -6,6 +6,8 @@ import {captureMembershipOperationSnapshot} from './membership-operation-selecti
 import type {E2eeSharedRecords} from './shared-records.ts';
 import {MembershipOperationComposer} from './membership-operation-compose.ts';
 import type {MembershipAtomicOwnerReviews} from './membership-atomic-owner.ts';
+import {membershipProjectAccessProbe,membershipProjectAccessFingerprint,privateProjectAccessView} from './membership-project-access.ts';
+import type {SharedProjectAccessDraft} from '../shared-project-access.ts';
 
 const drafts=new WeakMap<WebPrivateAccount,MembershipOperationDrafts>();
 export function privateMembershipOperationDrafts(ownerId:string){
@@ -39,4 +41,12 @@ export function webMembershipOperationComposer(account:WebPrivateAccount,owners:
   prepare:async(scopeId,id)=>{const result=await repository(scopeId).product.prepare(id);current();return result;},
   sign:async(scopeId,id,hash,operations)=>{const binding=repository(scopeId).binding,scope=account.shared(scopeId,binding.kind,binding.resourceId);current();const packet=await scope.client.prepareMembershipProduct(id,hash,operations);current();return packet;},
  });
+}
+export async function webPrivateProjectAccess(ownerId:string,spaceId:string,userId:string,desired:SharedProjectAccessDraft|null){
+ const account=requirePrivateAccount(ownerId),current=()=>{account.requireOpen();if(account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');},trust=new E2eeSharedTrust(ownerId),drafts=privateMembershipOperationDrafts(ownerId),probe=membershipProjectAccessProbe(spaceId,userId),snapshot=await drafts.snapshot(probe),records=new Map<string,E2eeSharedRecords>();current();
+ const result=await privateProjectAccessView(snapshot,userId,desired,{current,open:async(scope,kind,resourceId)=>{const opened=await trust.open(scope.scopeId);current();const directory=opened.directory,root=scope.root;
+  if(directory.ownerId!==scope.ownerId||directory.kind!==kind||directory.resourceId!==resourceId||directory.generation!==root.generation||directory.checkpoint.revision!==root.directoryRevision||directory.checkpoint.hash!==root.checkpointHash)throw new Error('E2EE_MEMBERSHIP_STALE');
+  const {records:value}=await account.sharedRecords(scope.scopeId,kind,resourceId);current();records.set(scope.scopeId,value);const entities=await value.index();current();return entities;
+ },read:async(scopeId,entity)=>{const record=records.get(scopeId);if(!record)throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');const value=await record.read(entity);current();return value;},history:async(scopeId,id,before)=>{const record=records.get(scopeId);if(!record)throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');const value=await record.product.history(id,before);current();return value;}});current();
+ const after=await drafts.snapshot(probe);current();if(membershipProjectAccessFingerprint(after,userId)!==membershipProjectAccessFingerprint(snapshot,userId))throw new Error('E2EE_MEMBERSHIP_STALE');return result;
 }

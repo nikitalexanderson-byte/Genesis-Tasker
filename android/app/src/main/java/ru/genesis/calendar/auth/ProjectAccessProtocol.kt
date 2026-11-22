@@ -149,4 +149,5 @@ internal object ProjectAccessJournalContract : CommandJournalContract {
         return JSONObject(edit.toString()).put("fingerprint", data.getString("fingerprint")).put("expectedRevision", data.getLong("revision")).put("review", JSONObject.NULL)
     }
     override fun receipt(command: JSONObject, response: JSONObject) = ProjectAccessProtocol.receipt(command, response)
+    override fun storedReceipt(command:JSONObject,response:JSONObject)=if(response.optString("format")=="genesis-private-project-access-result-v1")VerifiedPrivateProjectAccessReceipt.saved(command,response)else receipt(command,response)
 }

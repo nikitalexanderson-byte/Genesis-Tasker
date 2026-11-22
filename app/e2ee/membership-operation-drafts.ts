@@ -56,6 +56,7 @@ export class MembershipOperationDrafts{
   await this.#save({format:'genesis-membership-operation-draft-v1',ownerId:this.ports.ownerId,intentId:id,operation,createdAt:new Date().toISOString(),proposal:null,review:null,started:false,history:[]},null);return id;
  });}
  inspect(id:string){return this.#run(async()=>(await this.#load(id)).value);}
+  snapshot(input:MembershipOperation){const operation=validateMembershipOperation(input);return this.#run(async()=>{const value=validateMembershipOperationSnapshot(await this.ports.capture(operation));this.ports.current();if(value.actorId!==this.ports.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return value;});}
   async #successor(value:MembershipOperationDraft){const ids=await this.ports.list();this.ports.current();if(new Set(ids).size!==ids.length)invalid();let child:MembershipOperationDraft|null=null;
    for(const id of ids){const candidate=(await this.#load(id)).value;if(candidate.resolves!==value.intentId)continue;if(child||!same(candidate.operation,value.operation))throw new Error('E2EE_MEMBERSHIP_RESOLUTION_DIVERGED');child=candidate;}return child;
   }

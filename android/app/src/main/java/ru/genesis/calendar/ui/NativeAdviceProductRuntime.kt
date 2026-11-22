@@ -14,7 +14,8 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-private fun adviceRuntimeCode(error:Throwable)=error.message?.takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_ADVICE_RUNTIME_FAILED"
+private fun adviceRuntimeCode(code:String?)=code?.takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))||it in ru.genesis.calendar.auth.ProjectAccessProtocol.errors}?:"E2EE_ADVICE_RUNTIME_FAILED"
+private fun adviceRuntimeCode(error:Throwable)=adviceRuntimeCode(error.message)
 /** Executes the bundled common product/selection engine. Network/storage and
  * navigation are blocked in WebView. Narrow native content ports own all keys. */
 internal class NativeAdviceProductRuntime(private val context:Context,private val channel:String="advice-product"){
@@ -67,7 +68,7 @@ private class AdviceProductRuntimeBridge(private val job:String,private val acti
                     val response=try{JSONObject().put("value",call(value.getString("method"),value.getJSONObject("payload")))}catch(error:CancellationException){throw error}catch(error:Throwable){JSONObject().put("error",adviceRuntimeCode(error))}
                     current();if(active.get()&&!outcome.isCompleted)deliver(request,response)}
                 "$channel-complete"->{E2eeKeys.exact(value,setOf("job","kind","value"));current();outcome.complete(value.getJSONObject("value"))}
-                "error"->{E2eeKeys.exact(value,setOf("job","kind","code"));outcome.completeExceptionally(IllegalStateException(value.getString("code").takeIf{it.matches(Regex("E2EE_[A-Z_]{1,100}"))}?:"E2EE_ADVICE_RUNTIME_FAILED"))}
+                "error"->{E2eeKeys.exact(value,setOf("job","kind","code"));outcome.completeExceptionally(IllegalStateException(adviceRuntimeCode(value.getString("code"))))}
                 else->error("E2EE_ADVICE_RUNTIME_FAILED")
             }
         }catch(error:Throwable){outcome.completeExceptionally(IllegalStateException(adviceRuntimeCode(error)))}finally{inflight.decrementAndGet()}}

@@ -1,5 +1,40 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: private project-access view / typed native journal outcome (source-only)
+
+Добавлен common membership-project-access: normal state/preview читают полный
+pinned topology/ACL snapshot и normal decrypted project/task records. Catalogue
+не берётся из legacy SQL; title удалённого project читается из проверенной
+истории. Полный productIndexHash проверяется до/после чтения, snapshot после
+catalogue считывается заново. Fingerprint состоит из technical metadata и
+ciphertext refs; private titles/task values не хешируются для сети. Права,
+наследование grants и assignment counts сохраняют обычный формат экрана.
+
+Web/native ordinary GET/POST project-access подключены к этому view. Исходный
+confirmed expectedFingerprint проверяется до initial apply; explicit fresh
+resolution имеет отдельный preserved intent. Native members selector читает
+private space root и verified ACL roles; identity labels отделены от authority.
+Native planning journal send теперь ждёт foreground membership gate после
+завершения isolated runtime; Typed VerifiedPrivateProjectAccessReceipt заново
+читает original desired operation и completed durable cryptographic apply.
+Сохранённая квитанция может отражать actual newer revision после явного нового
+review; обычная network receipt по-прежнему требует exact+1. Raw HTTP/import не
+создаёт typed receipt. Все commands/attempt markers и старые originals сохранены.
+Pending background counters не считают waiting-for-review завершённым запросом.
+Native runtime передаёт только safelisted typed project-access error codes.
+
+Source review и git diff --check; compiler/lint/tests/build/CI security НЕ
+запускались, coverage9/20 без изменения. Далее: combined category title+permissions
+с полным сохранением private intent, ordinary invitations, foreign writer readback,
+very-wide bounds; затем оставшиеся категории полного исходного prompt.
+
+Срочный сайт ОПУБЛИКОВАН: main6672bbefd65abc4b9c3268800d02c57bd82ed967,
+Source checks45042239234 success, Deploy45048236052 success. Live meta/health,
+manifest и полный APK149 SHA-256 проверены. Живое окно тарифов показывает USD,
+RUB/ЮKassa отсутствуют, screenshots360/390/768/1440 dark без переполнения.
+Подробные пределы read-only QA записаны в web-pricing-region. Следом merge этого
+main в security checkout с сохранением расширенного security AGENTS.md.
+
 ## 22 ноября: mounted membership review UI / durable normal outcome (source-only)
 
 Web PrivateMembershipGate смонтирован в layout; Native PrivateMembershipHost — рядом
