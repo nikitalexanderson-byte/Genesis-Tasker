@@ -2810,3 +2810,7 @@ PASS после отдельного durable-reference RED. Native build01/JVM c
 inputs, архитектура, ограничения и evidence — `docs/e2ee-336-original-root-custody.md`.
 Nested legacy materialization, mixed state4/history/plan composition и11 real
 sources остаются обязательными. Coverage9/20,3.3.5/149 production и gates сохраняются.
+
+### 22 ноября: источники советов
+
+По отдельному поручению владельца native preferences без сохранённого collections получают только philosophers, а подменю философов стоит и открывается первым. Явный выбор источников и canonical normalization order сохранены; readiness/legacy card.collection не изменяются. Веб/API правки этого же поведения готовятся отдельным PR43 без security-кода. Native source-only: сборка/приёмка остаются на общем этапе после всего кода.

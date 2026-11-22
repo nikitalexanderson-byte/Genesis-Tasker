@@ -38,7 +38,7 @@ data class AdviceNotificationPreferences(val enabled: Boolean = false, val time:
 
 data class AdvicePreferences(val enabled: Boolean = true, val smart: Boolean = true,
     val categories: List<String> = adviceCategories.filter { it != "aphrodisia" }, val aphrodisiaAdult: Boolean? = null,
-    val collections: List<String> = listOf("aurora"), val notifications: AdviceNotificationPreferences = AdviceNotificationPreferences(),
+    val collections: List<String> = listOf("philosophers"), val notifications: AdviceNotificationPreferences = AdviceNotificationPreferences(),
     val psychopompia: AdvicePsychopompiaPreferences = AdvicePsychopompiaPreferences(), val philosophersPerDay: Int = 1) {
     init { require(philosophersPerDay in 1..3) }
     fun toJson(): JSONObject = JSONObject().put("enabled", enabled).put("smart", smart).put("categories", JSONArray(categories))
@@ -52,7 +52,7 @@ data class AdvicePreferences(val enabled: Boolean = true, val smart: Boolean = t
             val selected = value?.optJSONArray("categories")
             val adult = value?.opt("aphrodisiaAdult") as? Boolean
             val requestedCollections = value?.optJSONArray("collections")
-            val collections = adviceCollections.filter { id -> requestedCollections != null && (0 until requestedCollections.length()).any { requestedCollections.optString(it) == id } }.ifEmpty { listOf("aurora") }
+            val collections = adviceCollections.filter { id -> requestedCollections != null && (0 until requestedCollections.length()).any { requestedCollections.optString(it) == id } }.ifEmpty { listOf("philosophers") }
             val categories = adviceCategories.filter { id -> (selected == null || (0 until selected.length()).any { selected.optString(it) == id }) &&
                 (id != "aphrodisia" || adult != null) }
             return AdvicePreferences(value?.optBoolean("enabled", true) != false,
