@@ -63,3 +63,23 @@ replacing grants advances it. Category revisions still require an increment.
 
 All production/Paddle/3.3.5/149 state is unchanged. Floors0, cutover off,
 GENESIS_DEPLOY_ANDROID=false. No push/deploy/device/Play operations occurred.
+
+
+## 22 November: complete category rename and permissions (source-only)
+
+Ordinary category PATCH now preserves its title with permissions as one durable
+operation. A local privateTitle is mandatory when rename is declared. Both review
+fingerprints and all atomic operation pages use an explicit technical projection;
+private titles and their hashes do not enter the network plan. JS/PHP/Kotlin
+wire codecs admit only the rename flag and reject the private field. The actual
+new name lives in the encrypted immutable category version. Other fields remain
+byte-equivalent under the normal effect verifier.
+
+The owner independently decrypts old/proposed category versions, verifies the
+complete declared effects and returns local before/after text for explicit review.
+Web/native initial review shows the saved intended name; owner review shows the
+verified change before approval. A restart/cancel/fresh review preserves the whole
+original operation, including title. Text labels exist on all14 languages.
+No compiler/typecheck/lint/tests/build/CI were run. This is source integration,
+not acceptance; coverage9/20, cutover/floors off. Pending: ordinary invitations,
+foreign-writer readback, very-wide transport/local records, then remaining prompt.

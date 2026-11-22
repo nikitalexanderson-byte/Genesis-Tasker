@@ -5,7 +5,7 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {validateMembershipChanges,membershipChangesProjection,type MembershipChange} from './membership-contract.ts';
 import {productMutation,type ProductMutation} from './product-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
-import {validateMembershipOperation,type MembershipOperation,type MembershipOperationPlan} from './membership-operation-plan.ts';
+import {validateMembershipOperation,membershipOperationWire,type MembershipOperation,type MembershipOperationPlan} from './membership-operation-plan.ts';
 
 export type MembershipAtomicAnchor={scopeId:string;ownerId:string;kind:'space'|'project';resourceId:string;generation:number;directoryRevision:number;checkpointHash:string;entityId:string;revision:number;payloadHash:string;productIndexHash?:string};
 export type MembershipAtomicProducts={scopeId:string;intentId:string;operations:ProductMutation[]};
@@ -60,7 +60,7 @@ export function membershipAtomicDigest(value:unknown){const bytes=canonicalE2eeV
 export function membershipAtomicOperationHeader(input:unknown):MembershipAtomicOperationHeader{
  if(input&&typeof input==='object'&&!Array.isArray(input)&&(input as Record<string,unknown>).kind==='project-grants'){
   exactKeys(input,['kind','spaceId','userId','allProjects']);const value=validateMembershipOperation({...input,grants:[]}) as GrantOperation;return {kind:value.kind,spaceId:value.spaceId,userId:value.userId,allProjects:value.allProjects};
- }return validateMembershipOperation(input) as MembershipAtomicOperationHeader;
+ }if(input&&typeof input==='object'&&Object.hasOwn(input,'privateTitle'))invalid();return validateMembershipOperation(input) as MembershipAtomicOperationHeader;
 }
 export function validateMembershipAtomicAnchor(input:unknown):MembershipAtomicAnchor{
  exactKeys(input,['scopeId','ownerId','kind','resourceId','generation','directoryRevision','checkpointHash','entityId','revision','payloadHash',...(input&&typeof input==='object'&&Object.hasOwn(input,'productIndexHash')?['productIndexHash']:[])]);
@@ -145,7 +145,7 @@ export function membershipAtomicOperationPlan(actorId:string,intentId:string,spa
   kind:scope.root.entityId.startsWith('space:')?'space':'project',resourceId:scope.root.entityId.slice(scope.root.entityId.indexOf(':')+1),
   generation:scope.root.generation,directoryRevision:scope.root.directoryRevision,checkpointHash:scope.root.checkpointHash,
   entityId:scope.root.entityId,revision:scope.root.revision,payloadHash:scope.root.payloadHash,productIndexHash:scope.root.productIndexHash})).sort((a,b)=>a.scopeId<b.scopeId?-1:a.scopeId>b.scopeId?1:0);
- const raw=validateMembershipOperation(operation.operation),header=raw.kind==='project-grants'?{kind:raw.kind,spaceId:raw.spaceId,userId:raw.userId,allProjects:raw.allProjects}:raw;
+ const raw=membershipOperationWire(operation.operation),header=raw.kind==='project-grants'?{kind:raw.kind,spaceId:raw.spaceId,userId:raw.userId,allProjects:raw.allProjects}:raw;
  const pages=[...membershipAtomicPages('operation',[header]),...membershipAtomicPages('operation-grants',raw.kind==='project-grants'?raw.grants:[]),
   ...membershipAtomicPages('acl',operation.changes),...membershipAtomicPages('anchors',anchors),
   ...membershipAtomicPages('clear-assignments',operation.clearAssignments),...membershipAtomicPages('revoke-invitations',operation.revokeInvitations),

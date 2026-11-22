@@ -2,7 +2,7 @@ import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
 import {sha256} from '@noble/hashes/sha2.js';
 import {samePrivateJson as same} from './product-json.ts';
-import {validateMembershipOperation,validateMembershipOperationSnapshot,planMembershipOperation,membershipOperationFingerprint,membershipOperationPlanFingerprint,
+import {validateMembershipOperation,localMembershipOperation,validateMembershipOperationSnapshot,planMembershipOperation,membershipOperationFingerprint,membershipOperationPlanFingerprint,
  type MembershipOperation,type MembershipOperationSnapshot,type MembershipOperationPlan} from './membership-operation-plan.ts';
 
 export const MEMBERSHIP_OPERATION_DRAFT_PREFIX='membership-operation:';
@@ -33,7 +33,7 @@ function validateReview(input:unknown,proposal:Proposal):Review{
 export function validateMembershipOperationDraft(input:unknown,ownerId:string,intentId:string):MembershipOperationDraft{
  exactKeys(input,['format','ownerId','intentId','operation','createdAt','proposal','review','started','history',...(input&&typeof input==='object'&&Object.hasOwn(input,'cancelled')?['cancelled']:[]),...(input&&typeof input==='object'&&Object.hasOwn(input,'resolves')?['resolves']:[])]);
  if(input.format!=='genesis-membership-operation-draft-v1'||input.ownerId!==ownerId||input.intentId!==intentId||typeof input.started!=='boolean'||!Array.isArray(input.history)||input.history.length>64)invalid();
- assertTechnical(ownerId);assertTechnical(intentId);validDate(input.createdAt);const operation=validateMembershipOperation(input.operation);
+ assertTechnical(ownerId);assertTechnical(intentId);validDate(input.createdAt);const operation=localMembershipOperation(input.operation);
  if(Object.hasOwn(input,'cancelled')&&typeof input.cancelled!=='boolean')invalid();if(Object.hasOwn(input,'resolves')){assertTechnical(input.resolves);if(input.resolves===intentId)invalid();}
  for(const old of input.history){exactKeys(old,['proposal','review']);const proposal=validateProposal(old.proposal,operation);if(proposal.snapshot.actorId!==ownerId)invalid();if(old.review!==null)validateReview(old.review,proposal);}
  if(input.proposal===null){if(input.review!==null||input.started||input.history.length)invalid();}
@@ -52,7 +52,7 @@ export class MembershipOperationDrafts{
  async #save(value:MembershipOperationDraft,expected:number|null){const held=validateMembershipOperationDraft(value,this.ports.ownerId,value.intentId);this.ports.current();
   const serial=await this.ports.save(held.intentId,held,expected);this.ports.current();if(serial!==(expected??0)+1)throw new Error('E2EE_LOCAL_CONFLICT');
   const after=await this.#load(held.intentId);if(after.serial!==serial||!same(after.value,held))throw new Error('E2EE_LOCAL_CONFLICT');return after.value;}
- create(input:MembershipOperation,id=crypto.randomUUID()){const operation=validateMembershipOperation(input);assertTechnical(id);return this.#run(async()=>{
+ create(input:MembershipOperation,id=crypto.randomUUID()){const operation=localMembershipOperation(input);assertTechnical(id);return this.#run(async()=>{
   await this.#save({format:'genesis-membership-operation-draft-v1',ownerId:this.ports.ownerId,intentId:id,operation,createdAt:new Date().toISOString(),proposal:null,review:null,started:false,history:[]},null);return id;
  });}
  inspect(id:string){return this.#run(async()=>(await this.#load(id)).value);}

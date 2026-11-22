@@ -16,10 +16,7 @@ export function membershipOperationForSharedRequest(binding:SharedDomainBinding,
    if(parts.length===3&&parts[2]==='project-access'){exactKeys(body,['allProjects','grants','expectedFingerprint','operationId']);if(typeof body.expectedFingerprint!=='string'||!/^[a-f0-9]{64}$/.test(body.expectedFingerprint))throw new Error('PROJECT_ACCESS_CONFLICT');return validateMembershipOperation({kind:'project-grants',spaceId:binding.resourceId,userId:parts[1],allProjects:body.allProjects,grants:body.grants});}
  }
  if(binding.kind==='space'&&parts[0]==='member-categories'&&parts.length===2&&method==='PATCH'){
-  // A combined rename/permission edit needs its own complete private input;
-  // never silently drop a title or update only the display copy of the ACL.
-  if(Object.keys(body).some(key=>!['permissions','expectedRevision','requestId'].includes(key)))throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
-  exactKeys(body,['permissions','expectedRevision',...extra]);return validateMembershipOperation({kind:'category-permissions',spaceId:binding.resourceId,categoryId:parts[1],expectedRevision:body.expectedRevision,permissions:body.permissions});
+  exactKeys(body,['permissions','expectedRevision',...(Object.hasOwn(body,'title')?['title']:[]),...extra]);return validateMembershipOperation({kind:'category-permissions',spaceId:binding.resourceId,categoryId:parts[1],expectedRevision:body.expectedRevision,permissions:body.permissions,...(Object.hasOwn(body,'title')?{rename:true,privateTitle:body.title}:{})});
  }
  return null;
 }

@@ -8,6 +8,7 @@ import {verifyMembershipAtomicPacket} from './membership-atomic-proofs.ts';
 import {membershipAtomicDigest} from './membership-atomic-contract.ts';
 import type {MembershipPeerPorts} from './membership-exchange.ts';
 import type {MembershipAtomicScopePreview} from './membership-atomic-preview.ts';
+import type {MembershipPrivateEffects} from './membership-atomic-effects.ts';
 import type {SignedE2eeCommand} from './commands.ts';
 
 export const MEMBERSHIP_ATOMIC_OWNER_PREFIXES=['membership-atomic-owner-review:','membership-atomic-owner-part:','membership-atomic-owner-consent:','membership-atomic-owner-approval:'] as const;
@@ -21,7 +22,7 @@ export interface MembershipAtomicOwnerPorts{
  read:(id:string)=>Promise<Stored|null>;write:(id:string,value:unknown,expected:number|null)=>Promise<number>;list:(prefix:string)=>Promise<string[]>;
  /** This adapter opens only the authenticated current owner's actual scope. */
  rotate:(scope:MembershipAtomicScopePreview,changeHash:string)=>Promise<SignedE2eeCommand>;
- reviewEffects:(request:MembershipAtomicReview,scope:MembershipAtomicScopePreview,page:(index:number)=>Promise<MembershipAtomicPage>)=>Promise<void>;
+ reviewEffects:(request:MembershipAtomicReview,scope:MembershipAtomicScopePreview,page:(index:number)=>Promise<MembershipAtomicPage>)=>Promise<MembershipPrivateEffects>;
 }
 const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');};
 export function membershipAtomicOwnerId(ownerId:string,fingerprint:string,kind:0|1|2|3=0,suffix=''){
@@ -75,7 +76,7 @@ export class MembershipAtomicOwnerReviews{
   for(const kind of ['plan','preview','products'] as const){const refs=kind==='plan'?request.plan.pages:kind==='preview'?request.previewPages:request.productPages;for(let index=0;index<refs.length;index++)await collector.consume(await this.#part(request,kind,index));}
   return collector.finish();}
  review(fingerprint:string){return this.#run(async()=>{const request=await this.#request(fingerprint),value=await this.#complete(request);
-  for(const scope of value.scopes)if(scope.ownerId===this.ports.ownerId){await this.ports.reviewEffects(request,scope,async index=>(await this.#part(request,'plan',index)).page as MembershipAtomicPage);this.ports.current();}return value;
+  const privateEffects:{scopeId:string;effects:MembershipPrivateEffects}[]=[];for(const scope of value.scopes)if(scope.ownerId===this.ports.ownerId){const effects=await this.ports.reviewEffects(request,scope,async index=>(await this.#part(request,'plan',index)).page as MembershipAtomicPage);this.ports.current();privateEffects.push({scopeId:scope.scopeId,effects});}return{...value,privateEffects};
  });}
  approve(fingerprint:string,scopeId:string,displayedFingerprint:string,explicitRoles:MembershipAtomicScopePreview['roles']){const held=structuredClone(explicitRoles);return this.#run(async()=>{
   if(displayedFingerprint!==fingerprint)throw new Error('E2EE_MEMBERSHIP_FINGERPRINT_REQUIRED');const request=await this.#request(fingerprint),review=await this.#complete(request),scope=review.scopes.find(row=>row.scopeId===scopeId);

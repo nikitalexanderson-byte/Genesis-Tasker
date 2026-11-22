@@ -54,7 +54,10 @@
     "finalReview": "Review the final plan",
     "allProjects": "All workspace projects, including future projects",
     "includeDescendants": "Include existing and future subprojects",
-    "onlyProject": "Only this project"
+    "onlyProject": "Only this project",
+    "categoryTitle": "Category name",
+    "beforeValue": "Before",
+    "afterValue": "After"
   },
   "ru": {
     "title": "Проверка изменений доступа",
@@ -111,7 +114,10 @@
     "finalReview": "Проверить итоговый план",
     "allProjects": "Все проекты пространства, включая будущие",
     "includeDescendants": "Включая существующие и будущие подпроекты",
-    "onlyProject": "Только этот проект"
+    "onlyProject": "Только этот проект",
+    "categoryTitle": "Название категории",
+    "beforeValue": "Было",
+    "afterValue": "Будет"
   },
   "de": {
     "title": "Zugriffsänderungen prüfen",
@@ -168,7 +174,10 @@
     "finalReview": "Endgültigen Plan prüfen",
     "allProjects": "Alle Projekte des Arbeitsbereichs, auch zukünftige",
     "includeDescendants": "Bestehende und zukünftige Unterprojekte einbeziehen",
-    "onlyProject": "Nur dieses Projekt"
+    "onlyProject": "Nur dieses Projekt",
+    "categoryTitle": "Kategoriename",
+    "beforeValue": "Vorher",
+    "afterValue": "Nachher"
   },
   "el": {
     "title": "Έλεγχος αλλαγών πρόσβασης",
@@ -225,7 +234,10 @@
     "finalReview": "Έλεγχος τελικού σχεδίου",
     "allProjects": "Όλα τα έργα του χώρου, μαζί με τα μελλοντικά",
     "includeDescendants": "Συμπερίληψη υπαρχόντων και μελλοντικών υποέργων",
-    "onlyProject": "Μόνο αυτό το έργο"
+    "onlyProject": "Μόνο αυτό το έργο",
+    "categoryTitle": "Όνομα κατηγορίας",
+    "beforeValue": "Πριν",
+    "afterValue": "Μετά"
   },
   "es": {
     "title": "Revisar cambios de acceso",
@@ -282,7 +294,10 @@
     "finalReview": "Revisar el plan final",
     "allProjects": "Todos los proyectos del espacio, incluidos los futuros",
     "includeDescendants": "Incluir subproyectos existentes y futuros",
-    "onlyProject": "Solo este proyecto"
+    "onlyProject": "Solo este proyecto",
+    "categoryTitle": "Nombre de la categoría",
+    "beforeValue": "Antes",
+    "afterValue": "Después"
   },
   "fr": {
     "title": "Vérifier les changements d’accès",
@@ -339,7 +354,10 @@
     "finalReview": "Vérifier le plan final",
     "allProjects": "Tous les projets de l’espace, y compris les futurs",
     "includeDescendants": "Inclure les sous-projets existants et futurs",
-    "onlyProject": "Ce projet uniquement"
+    "onlyProject": "Ce projet uniquement",
+    "categoryTitle": "Nom de la catégorie",
+    "beforeValue": "Avant",
+    "afterValue": "Après"
   },
   "it": {
     "title": "Verifica le modifiche agli accessi",
@@ -396,7 +414,10 @@
     "finalReview": "Verifica il piano finale",
     "allProjects": "Tutti i progetti dello spazio, inclusi quelli futuri",
     "includeDescendants": "Includi sottoprogetti esistenti e futuri",
-    "onlyProject": "Solo questo progetto"
+    "onlyProject": "Solo questo progetto",
+    "categoryTitle": "Nome della categoria",
+    "beforeValue": "Prima",
+    "afterValue": "Dopo"
   },
   "ja": {
     "title": "アクセス変更の確認",
@@ -453,7 +474,10 @@
     "finalReview": "最終プランを確認",
     "allProjects": "今後作成されるものを含む、スペース内のすべてのプロジェクト",
     "includeDescendants": "既存および今後作成されるサブプロジェクトを含む",
-    "onlyProject": "このプロジェクトのみ"
+    "onlyProject": "このプロジェクトのみ",
+    "categoryTitle": "カテゴリ名",
+    "beforeValue": "変更前",
+    "afterValue": "変更後"
   },
   "pl": {
     "title": "Sprawdź zmiany dostępu",
@@ -510,7 +534,10 @@
     "finalReview": "Sprawdź końcowy plan",
     "allProjects": "Wszystkie projekty przestrzeni, także przyszłe",
     "includeDescendants": "Uwzględnij istniejące i przyszłe podprojekty",
-    "onlyProject": "Tylko ten projekt"
+    "onlyProject": "Tylko ten projekt",
+    "categoryTitle": "Nazwa kategorii",
+    "beforeValue": "Przed",
+    "afterValue": "Po"
   },
   "pt": {
     "title": "Rever alterações de acesso",
@@ -567,7 +594,10 @@
     "finalReview": "Rever o plano final",
     "allProjects": "Todos os projetos do espaço, incluindo os futuros",
     "includeDescendants": "Incluir subprojetos existentes e futuros",
-    "onlyProject": "Apenas este projeto"
+    "onlyProject": "Apenas este projeto",
+    "categoryTitle": "Nome da categoria",
+    "beforeValue": "Antes",
+    "afterValue": "Depois"
   },
   "sr": {
     "title": "Провера измена приступа",
@@ -624,7 +654,10 @@
     "finalReview": "Провери коначни план",
     "allProjects": "Сви пројекти простора, укључујући будуће",
     "includeDescendants": "Укључи постојеће и будуће потпројекте",
-    "onlyProject": "Само овај пројекат"
+    "onlyProject": "Само овај пројекат",
+    "categoryTitle": "Назив категорије",
+    "beforeValue": "Пре",
+    "afterValue": "После"
   },
   "tr": {
     "title": "Erişim değişikliklerini inceleyin",
@@ -681,7 +714,10 @@
     "finalReview": "Son planı incele",
     "allProjects": "Gelecektekiler dahil çalışma alanındaki tüm projeler",
     "includeDescendants": "Mevcut ve gelecekteki alt projeleri dahil et",
-    "onlyProject": "Yalnızca bu proje"
+    "onlyProject": "Yalnızca bu proje",
+    "categoryTitle": "Kategori adı",
+    "beforeValue": "Önce",
+    "afterValue": "Sonra"
   },
   "uk": {
     "title": "Перевірка змін доступу",
@@ -738,7 +774,10 @@
     "finalReview": "Перевірити остаточний план",
     "allProjects": "Усі проєкти простору, включно з майбутніми",
     "includeDescendants": "Включно з наявними та майбутніми підпроєктами",
-    "onlyProject": "Лише цей проєкт"
+    "onlyProject": "Лише цей проєкт",
+    "categoryTitle": "Назва категорії",
+    "beforeValue": "Було",
+    "afterValue": "Буде"
   },
   "zh": {
     "title": "检查访问权限更改",
@@ -795,6 +834,9 @@
     "finalReview": "检查最终方案",
     "allProjects": "工作区的所有项目，包括未来的项目",
     "includeDescendants": "包括现有和未来的子项目",
-    "onlyProject": "仅此项目"
+    "onlyProject": "仅此项目",
+    "categoryTitle": "类别名称",
+    "beforeValue": "更改前",
+    "afterValue": "更改后"
   }
 }

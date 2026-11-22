@@ -9,7 +9,7 @@ import kotlinx.coroutines.sync.withLock
  * and read back before network verification or key rotation, never applied. */
 internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductAccount,private val peers:E2eeMembershipPeerPorts,
     private val openOwned:(JSONObject)->E2eeScopeClient,private val guard:()->Unit,
-    private val reviewEffects:suspend (JSONObject,JSONObject,(Int)->JSONObject)->Unit){
+    private val reviewEffects:suspend (JSONObject,JSONObject,(Int)->JSONObject)->JSONObject){
     companion object {
         val prefixes=listOf("membership-atomic-owner-review:","membership-atomic-owner-part:","membership-atomic-owner-consent:","membership-atomic-owner-approval:")
         fun id(owner:String,fingerprint:String,kind:Int=0,suffix:String=""):String {
@@ -69,7 +69,7 @@ internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductA
     }
     suspend fun review(fingerprint:String):JSONObject=reviewMutex.withLock{
         val request=request(fingerprint);val result=complete(request)
-        for(scope in rows(result.getJSONArray("scopes")))if(scope.get("ownerId")==account.ownerId){reviewEffects(request,scope){index->part(request,"plan",index).getJSONObject("page")};current()};result
+        val privateEffects=JSONArray();for(scope in rows(result.getJSONArray("scopes")))if(scope.get("ownerId")==account.ownerId){val effects=reviewEffects(request,scope){index->part(request,"plan",index).getJSONObject("page")};current();privateEffects.put(JSONObject().put("scopeId",scope.get("scopeId")).put("effects",effects))};result.put("privateEffects",privateEffects)
     }
     private fun anchor(request:JSONObject,scope:String):JSONObject {
         val refs=request.getJSONObject("plan").getJSONArray("pages")

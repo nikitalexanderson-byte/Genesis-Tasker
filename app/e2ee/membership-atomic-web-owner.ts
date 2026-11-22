@@ -27,7 +27,7 @@ export function webMembershipAtomicOwnerReviews(account:WebPrivateAccount,peers:
    const {records}=await account.sharedRecords(scope.scopeId,scope.kind,scope.resourceId);current();const entities=await records.index();current();const versions:ProductVersion[]=[],candidates:ProductVersion[]=[];
    for(const entity of membershipOperationEffectEntities(binding,effects.plan,entities)){versions.push(await records.read(entity));current();}
    for(const product of effects.products.filter(row=>row.scopeId===scope.scopeId))for(const operation of product.operations){candidates.push(await records.product.read(membershipAtomicCandidate(operation,request.plan.actorId,request.createdAt)));current();}
-   verifyMembershipAtomicPrivateEffects({request,scope,pages,entities,versions,candidates});const after=await records.index();current();if(membershipProductIndexHash(scope.scopeId,after)!==membershipProductIndexHash(scope.scopeId,entities))throw new Error('E2EE_MEMBERSHIP_STALE');
+   const result=verifyMembershipAtomicPrivateEffects({request,scope,pages,entities,versions,candidates});const after=await records.index();current();if(membershipProductIndexHash(scope.scopeId,after)!==membershipProductIndexHash(scope.scopeId,entities))throw new Error('E2EE_MEMBERSHIP_STALE');return result;
   },
  });
 }

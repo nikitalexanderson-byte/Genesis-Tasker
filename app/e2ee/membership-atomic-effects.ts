@@ -1,3 +1,4 @@
+import {validateSharedRecordBody} from './shared-domain.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {validateMembershipOperation,type MembershipOperationPlan} from './membership-operation-plan.ts';
 import {validateMembershipAtomicPage,membershipAtomicPageRef,type MembershipAtomicPage,type MembershipAtomicPlan,type MembershipAtomicProducts} from './membership-atomic-contract.ts';
@@ -30,6 +31,7 @@ export function membershipAtomicEffects(plan:MembershipAtomicPlan,input:Membersh
  const operation=validateMembershipOperation(header.kind==='project-grants'?{...header,grants}:header);if(operation.kind!=='project-grants'&&grants.length)invalid();
  return{plan:{...result,operation} as MembershipOperationPlan,products};
 }
+export type MembershipPrivateEffects={taskCount:number;categoryCount:number;eventCount:number;renames:{entityId:string;before:string;after:string}[]};
 export type MembershipAtomicEffectsInput={request:MembershipAtomicReview;scope:MembershipAtomicScopePreview;pages:MembershipAtomicPage[];entities:ProductEntity[];versions:ProductVersion[];candidates:ProductVersion[]};
 /** An owner independently decrypts the old normal records and every proposed
  * immutable version. Only the exact normal effects may receive a new root.
@@ -37,12 +39,22 @@ export type MembershipAtomicEffectsInput={request:MembershipAtomicReview;scope:M
 export function verifyMembershipAtomicPrivateEffects(input:MembershipAtomicEffectsInput){
  const {request,scope,entities,versions,candidates}=input,header=validateMembershipAtomicReview(request);if(!header.createdAt)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
  const effects=membershipAtomicEffects(header.plan,input.pages),anchor=effects.plan.requiredScopes.find(row=>row.scopeId===scope.scopeId);if(!anchor||anchor.ownerId!==scope.ownerId||anchor.root.entityId!==scope.kind+':'+scope.resourceId)invalid();
- const binding={scopeId:scope.scopeId,kind:scope.kind,resourceId:scope.resourceId},expected=membershipOperationEdits({binding,actorId:header.plan.actorId,intentId:header.plan.intentId,createdAt:header.createdAt,plan:effects.plan,snapshot:{actorId:header.plan.actorId},entities,versions});
+ const binding={scopeId:scope.scopeId,kind:scope.kind,resourceId:scope.resourceId},renames:MembershipPrivateEffects['renames']=[];
+ const operation=effects.plan.operation;
+ if(operation.kind==='category-permissions'&&operation.rename&&scope.kind==='space'&&scope.resourceId===operation.spaceId){
+  const id='category:'+operation.categoryId,previous=versions.find(row=>row.entityId===id),proposed=candidates.find(row=>row.entityId===id);if(!previous||!proposed)invalid();
+  const oldBody=validateSharedRecordBody(binding,'category',previous.body,previous),nextBody=validateSharedRecordBody(binding,'category',proposed.body,proposed);
+  if(oldBody.table!=='shared_member_categories'||nextBody.table!==oldBody.table||nextBody.record.id!==operation.categoryId||typeof nextBody.record.title!=='string'||typeof oldBody.record.title!=='string')invalid();
+  // The complete ciphertext and independently verified writer bind this value.
+  // The owning user sees these decrypted before/after values before approval.
+  effects.plan.operation={...operation,privateTitle:nextBody.record.title};renames.push({entityId:id,before:oldBody.record.title,after:nextBody.record.title});
+ }
+ const expected=membershipOperationEdits({binding,actorId:header.plan.actorId,intentId:header.plan.intentId,createdAt:header.createdAt,plan:effects.plan,snapshot:{actorId:header.plan.actorId},entities,versions});
  const operations=effects.products.filter(row=>row.scopeId===scope.scopeId).flatMap(row=>row.operations);if(expected.length!==operations.length||candidates.length!==operations.length||new Set(candidates.map(row=>row.entityId)).size!==operations.length)invalid();
  for(const edit of expected){const operation=operations.find(row=>row.entityId===edit.entityId),version=candidates.find(row=>row.entityId===edit.entityId);
   if(!operation||!version||operation.action!==edit.action||operation.kind!==edit.kind||operation.expectedRevision!==edit.expectedRevision||operation.parentId!==edit.parentId||!same(operation.metadata,edit.metadata))invalid();
   if(version.scopeId!==scope.scopeId||version.entityId!==edit.entityId||version.kind!==edit.kind||version.revision!==edit.expectedRevision+1||version.parentId!==edit.parentId||version.deleted!==(edit.action==='delete')||!same(version.metadata,edit.metadata)||!same(version.body,edit.body))invalid();
- }return{taskCount:expected.filter(row=>row.kind==='task').length,categoryCount:expected.filter(row=>row.kind==='category').length,eventCount:expected.filter(row=>row.kind==='history').length};
+ }return{taskCount:expected.filter(row=>row.kind==='task').length,categoryCount:expected.filter(row=>row.kind==='category').length,eventCount:expected.filter(row=>row.kind==='history').length,renames};
 }
 /** Explicit uncommitted review reference. Reading it validates the signed
  * envelope/reference, and never installs a business head or marks a commit. */

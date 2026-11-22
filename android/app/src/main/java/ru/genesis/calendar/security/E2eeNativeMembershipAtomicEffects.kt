@@ -11,7 +11,7 @@ internal class E2eeNativeMembershipAtomicEffects(private val context:Context,pri
     private val runtime=NativeAdviceProductRuntime(context,"membership-operation")
     private fun current(){guard();account.requireOpen();check(!account.offline){"E2EE_ONLINE_REQUIRED"}}
     private fun rows(value:JSONArray)=(0 until value.length()).map{value.getJSONObject(it)}
-    suspend fun verify(request:JSONObject,scope:JSONObject,load:(Int)->JSONObject){
+    suspend fun verify(request:JSONObject,scope:JSONObject,load:(Int)->JSONObject):JSONObject{
         current();check(scope.get("ownerId")==account.ownerId&&request.has("createdAt")){"E2EE_OWNER_REQUIRED"};val scopeId=scope.getString("scopeId");val kind=scope.getString("kind");val resource=scope.getString("resourceId")
         val opened=E2eeSharedTrust(account).open(scopeId);current();check(opened.directory.ownerId==account.ownerId&&opened.directory.kind==kind&&opened.directory.resourceId==resource){"E2EE_SCOPE_BINDING_MISMATCH"}
         val pages=JSONArray();val changes=mutableListOf<JSONObject>();val clears=mutableListOf<JSONObject>();val products=mutableListOf<JSONObject>()
@@ -32,7 +32,7 @@ internal class E2eeNativeMembershipAtomicEffects(private val context:Context,pri
             candidates.put(repository.product.read(candidate));current()
         }
         val input=JSONObject().put("request",request).put("scope",scope).put("pages",pages).put("entities",entities).put("versions",versions).put("candidates",candidates)
-        runtime.execute(JSONObject().put("protocol",1).put("mode","membership-owner-effects-v2").put("input",input),::current){_,_->error("E2EE_MEMBERSHIP_EFFECTS_INCOMPLETE")};current()
-        check(E2eeMembershipProductIndex.hash(scopeId,repository.index())==hash){"E2EE_MEMBERSHIP_STALE"};current()
+        val result=runtime.execute(JSONObject().put("protocol",1).put("mode","membership-owner-effects-v2").put("input",input),::current){_,_->error("E2EE_MEMBERSHIP_EFFECTS_INCOMPLETE")};current()
+        check(E2eeMembershipProductIndex.hash(scopeId,repository.index())==hash){"E2EE_MEMBERSHIP_STALE"};current();return result
     }
 }

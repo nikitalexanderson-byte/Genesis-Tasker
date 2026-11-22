@@ -1,5 +1,14 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Complete category name and permission operation (22 November; source-only)
+
+The ordinary request preserves the full private input, uses title-free network
+projections and stages one bound category version with its ACL effects. Owners
+independently decrypt/verify complete before/after and both UIs display the name
+change. Matching JS/PHP/Kotlin codecs,14-language copy and retained resolution
+semantics are connected. No compiler/tests/lint/build/CI or coverage increase.
+
+
 Latest owner instruction,21 November: final crypto review is performed by this
 implementing agent after completing code, consolidated QA and repairs. The owner
 explicitly removed a separate external report as a release/activation gate.

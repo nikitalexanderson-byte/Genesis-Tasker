@@ -17,7 +17,7 @@ function genesisMembershipOperation(mixed $input,bool $header=false):array
         'space-role'=>['kind','spaceId','userId','role',...(array_key_exists('permissions',$input)?['permissions']:[]),...(array_key_exists('canOrganizeTasks',$input)?['canOrganizeTasks']:[])],
         'member-permissions'=>['kind','spaceId','userId','categoryId','permissions'],
         'project-grants'=>['kind','spaceId','userId','allProjects',...($header?[]:['grants'])],
-        'category-permissions'=>['kind','spaceId','categoryId','expectedRevision','permissions'],
+        'category-permissions'=>['kind','spaceId','categoryId','expectedRevision','permissions',...(array_key_exists('rename',$input)?['rename']:[])],
         default=>throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID')};
     genesisE2eeExactFields($input,$fields);foreach(['projectId','spaceId','userId'] as $name)if(array_key_exists($name,$input))genesisE2eeIdentifier($input[$name]);
     if(array_key_exists('categoryId',$input)&&($kind==='category-permissions'||$input['categoryId']!==null))genesisE2eeIdentifier($input['categoryId']);
@@ -27,7 +27,7 @@ function genesisMembershipOperation(mixed $input,bool $header=false):array
     if(array_key_exists('canOrganizeTasks',$input)&&!is_bool($input['canOrganizeTasks'])
         ||$kind==='member-permissions'&&$input['categoryId']===null&&$input['permissions']===null
         ||$kind==='category-permissions'&&$input['permissions']===null)throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID');
-    if($kind==='category-permissions')genesisE2eeInteger($input['expectedRevision']);
+    if($kind==='category-permissions'){genesisE2eeInteger($input['expectedRevision']);if(array_key_exists('rename',$input)&&$input['rename']!==true)throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID');}
     if($kind==='project-grants'){
         if(!is_bool($input['allProjects']))throw new InvalidArgumentException('E2EE_MEMBERSHIP_OPERATION_INVALID');
         if(!$header){

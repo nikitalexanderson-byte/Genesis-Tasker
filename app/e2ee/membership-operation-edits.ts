@@ -37,6 +37,7 @@ export function membershipOperationEdits(input:{binding:SharedDomainBinding;acto
   }else{
    if(body.table!=='shared_member_categories')throw new Error('E2EE_MEMBERSHIP_EFFECTS_INCOMPLETE');const change=categories.find(row=>row.key.id===body.record.id);if(!change||!change.after)throw new Error('E2EE_MEMBERSHIP_EFFECTS_INCOMPLETE');
    if(membershipBeforeHash('shared_member_categories',{id:body.record.id,space_id:body.record.space_id,permissions_json:body.record.permissions_json,revision:body.record.revision})!==change.expectedHash)throw new Error('E2EE_MEMBERSHIP_SOURCE_DIVERGED');
+   if(plan.operation.kind==='category-permissions'&&plan.operation.rename){if(plan.operation.spaceId!==binding.resourceId||plan.operation.categoryId!==change.key.id||plan.operation.privateTitle===undefined)throw new Error('E2EE_MEMBERSHIP_PRIVATE_INPUT_REQUIRED');body.record.title=plan.operation.privateTitle;}
    body.record.permissions_json=change.after.permissions_json as string;body.record.revision=change.after.revision as number;edit(body,version.revision);changedCategories.add(change.key.id);
   }
  }

@@ -96,6 +96,10 @@ private fun memberApproval(context:Context,uri:Uri,current:()->Unit):JSONObject=
                 val permissions=input.optJSONObject("permissions")?:desiredPermissions
                 if(permissions!=null){val names=listOf("Создавать проекты и списки","Создавать и редактировать задачи","Перемещать и удалять задачи","Комментировать","Управлять проектами и досками","Приглашать участников");for((at,key)in listOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers").withIndex())Row(Modifier.fillMaxWidth().heightIn(min=48.dp)){Checkbox(permissions.getBoolean(key),onCheckedChange=null,enabled=false);UntranslatedText(translateGenesisText(context,names[at],view.language),Modifier.weight(1f).padding(8.dp))}}
             }
+            if(operation?.optBoolean("rename",false)==true&&operation.has("privateTitle"))UntranslatedText(c.getString("categoryTitle")+": "+operation.getString("privateTitle"))
+            for(effect in reviewed?.optJSONArray("privateEffects")?.let(::memberRows)?:emptyList())for(rename in memberRows(effect.getJSONObject("effects").getJSONArray("renames"))){
+                UntranslatedText(c.getString("categoryTitle"),style=MaterialTheme.typography.titleSmall);UntranslatedText(c.getString("beforeValue")+": "+rename.getString("before"));UntranslatedText(c.getString("afterValue")+": "+rename.getString("after"))
+            }
             draft?.optJSONObject("proposal")?.getJSONObject("plan")?.let{plan->for(key in listOf("scopes","changes")){val count=if(key=="scopes")plan.getJSONArray("scopeIds").length()else plan.getJSONArray("changes").length();UntranslatedText(c.getString(key)+": "+java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag(view.language)).format(count))}}
             if(operation?.optString("kind")=="project-grants"){
                 Row(Modifier.fillMaxWidth().heightIn(min=48.dp)){Checkbox(operation.getBoolean("allProjects"),onCheckedChange=null,enabled=false);UntranslatedText(c.getString("allProjects"),Modifier.weight(1f).padding(8.dp))}

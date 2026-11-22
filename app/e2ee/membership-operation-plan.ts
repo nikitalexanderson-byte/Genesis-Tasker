@@ -12,7 +12,7 @@ export type MembershipOperation=
  |{kind:'space-role';spaceId:string;userId:string;role:'admin'|'member'|'guest';permissions?:MembershipPermissions|null;canOrganizeTasks?:boolean}
  |{kind:'member-permissions';spaceId:string;userId:string;categoryId:string|null;permissions:MembershipPermissions|null}
  |{kind:'project-grants';spaceId:string;userId:string;allProjects:boolean;grants:{projectId:string;role:'member'|'commenter'|'viewer'|'none';includeDescendants:boolean}[]}
- |{kind:'category-permissions';spaceId:string;categoryId:string;expectedRevision:number;permissions:MembershipPermissions};
+ |{kind:'category-permissions';spaceId:string;categoryId:string;expectedRevision:number;permissions:MembershipPermissions;rename?:true;privateTitle?:string};
 export type MembershipGraphScope={scopeId:string;ownerId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement';root:{scopeId:string;entityId:string;generation:number;directoryRevision:number;checkpointHash:string;revision:number;payloadHash:string;productIndexHash?:string}};
 export type MembershipGraphProject={id:string;parentId:string|null;isInbox:boolean;archived:boolean;inTrash:boolean;scope:MembershipGraphScope|null};
 export type MembershipOperationSnapshot={format:'genesis-membership-operation-snapshot-v1';actorId:string;spaceId:string;spaceScope:MembershipGraphScope|null;projects:MembershipGraphProject[];
@@ -28,11 +28,11 @@ const pageHashes=(items:unknown[])=>{const pages:string[]=[];for(let offset=0;of
 export function membershipOperationFingerprint(raw:unknown,rawOperation:unknown){
  const snapshot=validateMembershipOperationSnapshot(raw),operation=validateMembershipOperation(rawOperation),pages:string[]=[];
  for(let offset=0;offset<snapshot.rows.length;offset+=200)pages.push(digest(snapshot.rows.slice(offset,offset+200).map(row=>({table:row.table,key:membershipFields(row.key),beforeHash:row.beforeHash}))));
- return digest({format:'genesis-membership-operation-review-v1',operation,snapshot:{...snapshot,projects:pageHashes(snapshot.projects),rows:{count:snapshot.rows.length,pages}}});
+ return digest({format:'genesis-membership-operation-review-v1',operation:membershipOperationWire(operation),snapshot:{...snapshot,projects:pageHashes(snapshot.projects),rows:{count:snapshot.rows.length,pages}}});
 }
 export function membershipOperationPlanFingerprint(plan:MembershipOperationPlan){
  const pages:string[]=[];for(let offset=0;offset<plan.changes.length;offset+=200)pages.push(digest(membershipChangesProjection(plan.changes.slice(offset,offset+200))));
- return digest({...plan,changes:{count:plan.changes.length,pages},scopeIds:pageHashes(plan.scopeIds),requiredScopes:pageHashes(plan.requiredScopes),clearAssignments:pageHashes(plan.clearAssignments),revokeInvitations:pageHashes(plan.revokeInvitations),roleEvents:pageHashes(plan.roleEvents)});
+ return digest({...plan,operation:membershipOperationWire(plan.operation),changes:{count:plan.changes.length,pages},scopeIds:pageHashes(plan.scopeIds),requiredScopes:pageHashes(plan.requiredScopes),clearAssignments:pageHashes(plan.clearAssignments),revokeInvitations:pageHashes(plan.revokeInvitations),roleEvents:pageHashes(plan.roleEvents)});
 }
 const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');};
 const permissionsKeys=['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers'];
@@ -49,11 +49,15 @@ export function validateMembershipOperation(input:unknown):MembershipOperation{
   case'member-permissions':exactKeys(value,['kind','spaceId','userId','categoryId','permissions']);if(value.categoryId!==null)assertTechnical(value.categoryId);if(value.permissions!==null)permissions(value.permissions);if(value.categoryId===null&&value.permissions===null)invalid();break;
   case'project-grants':exactKeys(value,['kind','spaceId','userId','allProjects','grants']);if(typeof value.allProjects!=='boolean'||!Array.isArray(value.grants)||value.grants.length>5000||value.allProjects&&value.grants.length)invalid();
    {const ids=new Set<string>();for(const grant of value.grants){exactKeys(grant,['projectId','role','includeDescendants']);assertTechnical(grant.projectId);if(ids.has(grant.projectId)||!['member','commenter','viewer','none'].includes(String(grant.role))||typeof grant.includeDescendants!=='boolean')invalid();ids.add(grant.projectId);}}break;
-  case'category-permissions':exactKeys(value,['kind','spaceId','categoryId','expectedRevision','permissions']);assertTechnical(value.categoryId);if(!Number.isSafeInteger(value.expectedRevision)||Number(value.expectedRevision)<0)invalid();permissions(value.permissions);break;
+  case'category-permissions':exactKeys(value,['kind','spaceId','categoryId','expectedRevision','permissions',...(Object.hasOwn(value,'rename')?['rename']:[]),...(Object.hasOwn(value,'privateTitle')?['privateTitle']:[])]);if(Object.hasOwn(value,'rename')&&value.rename!==true)invalid();if(Object.hasOwn(value,'privateTitle')&&(value.rename!==true||typeof value.privateTitle!=='string'||!value.privateTitle.trim()||value.privateTitle.length>2000))invalid();assertTechnical(value.categoryId);if(!Number.isSafeInteger(value.expectedRevision)||Number(value.expectedRevision)<0)invalid();permissions(value.permissions);break;
   default:invalid();
  }
  for(const key of ['spaceId','projectId','userId'])if(Object.hasOwn(value,key))assertTechnical(value[key]);return structuredClone(value) as MembershipOperation;
 }
+/** Technical operation projection. The private title stays only in encrypted
+ * local input and encrypted category versions; no title hash reaches the API. */
+export function membershipOperationWire(input:MembershipOperation):MembershipOperation{const value=validateMembershipOperation(input);if(value.kind==='category-permissions')delete value.privateTitle;return value;}
+export function localMembershipOperation(input:unknown):MembershipOperation{const value=validateMembershipOperation(input);if(value.kind==='category-permissions'&&value.rename&&value.privateTitle===undefined)throw new Error('E2EE_MEMBERSHIP_PRIVATE_INPUT_REQUIRED');return value;}
 function validateScope(value:unknown,entityId:string):MembershipGraphScope|null{
  if(value===null)return null;exactKeys(value,['scopeId','ownerId','state','root']);assertTechnical(value.scopeId);assertTechnical(value.ownerId);
  if(!['preparing','uploading','verified','active','retirement'].includes(String(value.state)))invalid();

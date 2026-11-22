@@ -39,7 +39,7 @@ internal object E2eeMembershipAtomicContract {
             "project-role"->setOf("kind","projectId","userId","role");"project-remove"->setOf("kind","projectId","userId")
             "space-role"->setOf("kind","spaceId","userId","role")+(if(input.has("permissions"))setOf("permissions")else emptySet())+(if(input.has("canOrganizeTasks"))setOf("canOrganizeTasks")else emptySet())
             "member-permissions"->setOf("kind","spaceId","userId","categoryId","permissions");"project-grants"->setOf("kind","spaceId","userId","allProjects")
-            "category-permissions"->setOf("kind","spaceId","categoryId","expectedRevision","permissions");else->invalid()
+            "category-permissions"->setOf("kind","spaceId","categoryId","expectedRevision","permissions")+(if(input.has("rename"))setOf("rename")else emptySet());else->invalid()
         };E2eeKeys.exact(input,fields)
         for(key in listOf("projectId","spaceId","userId"))if(input.has(key))E2eeKeys.technical(input.getString(key))
         if(input.has("categoryId")&&(kind=="category-permissions"||!input.isNull("categoryId")))E2eeKeys.technical(input.getString("categoryId"))
@@ -47,7 +47,7 @@ internal object E2eeMembershipAtomicContract {
         if(input.has("canOrganizeTasks")&&input.get("canOrganizeTasks") !is Boolean||kind=="project-grants"&&input.get("allProjects") !is Boolean)invalid()
         if(kind=="member-permissions"&&input.isNull("categoryId")&&input.isNull("permissions")||kind=="category-permissions"&&input.isNull("permissions"))invalid()
         if(input.has("permissions")&&!input.isNull("permissions")){val permissions=input.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}
-        if(kind=="category-permissions")E2eeCommands.integer(input.get("expectedRevision"))
+        if(kind=="category-permissions"){E2eeCommands.integer(input.get("expectedRevision"));if(input.has("rename")&&input.get("rename")!=true)invalid()}
     }
     fun page(input:JSONObject):JSONObject {
         E2eeKeys.exact(input,setOf("kind","items"));val kind=input.getString("kind");val items=input.getJSONArray("items")

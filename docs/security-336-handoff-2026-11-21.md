@@ -1,5 +1,23 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: combined category name+permissions (source-only)
+
+Обычный PATCH member-category теперь целиком сохраняет title+permissions.
+privateTitle остаётся в protected local draft и encrypted category version;
+review/plan fingerprints и operation pages используют technical projection без
+названия или его hash. На сервер идёт только rename:true; PHP/Kotlin/JS отвергают
+privateTitle в wire header. Owner сам расшифровывает old/proposed values и
+проверяет все остальные поля как точные normal effects. Initial UI показывает
+сохранённое название, owner UI — проверенный before/after (web/native,14lang).
+
+Source review/diff --check; compiler/lint/tests/build/CI security не запускались.
+Coverage9/20. Следом ordinary invitations, foreign product writer readback, very-
+wide bounds; затем остальные original prompt categories. Срочный сайт PR44
+head0ca81bed проходит штатные required runs45053598174/45053630523; пока НЕ
+публиковался, production6672bbef. Локально automatic Business enable, announcement
+CTA, no Account toggle и desktop moon geometry проверены; см. web checkout.
+
+
 ## 22 ноября: private project-access view / typed native journal outcome (source-only)
 
 Добавлен common membership-project-access: normal state/preview читают полный
