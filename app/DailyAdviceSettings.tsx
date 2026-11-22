@@ -34,7 +34,7 @@ export function DailyAdviceSettings({ user, onUserChange }: { user: GenesisUser;
   const effective = selected.length ? selected : available.slice(0, 1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [collectionTab, setCollectionTab] = useState<AdviceCollection>(preferences.collections[0]);
+  const [collectionTab, setCollectionTab] = useState<AdviceCollection>('philosophers');
   const [ageCategories, setAgeCategories] = useState<AdvicePreferences["categories"] | null>(null);
   const [pushStatus,setPushStatus]=useState<AdviceNotificationStatus|null>(null);
   const [pushFailed,setPushFailed]=useState(false),[pushRevision,setPushRevision]=useState(0),[deviceId,setDeviceId]=useState('');
@@ -107,10 +107,10 @@ export function DailyAdviceSettings({ user, onUserChange }: { user: GenesisUser;
     <div><h3 id="advice-settings-title">{copy.title}</h3><p>{copy.tradition}</p></div>
     <div className="daily-advice-source-tabs" role="tablist" tabIndex={-1} aria-label={collectionsCopy.title} onKeyDown={event=>{
       if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-      event.preventDefault();const next=event.key==='Home'?'aurora':event.key==='End'?'philosophers':collectionTab==='aurora'?'philosophers':'aurora';
+      event.preventDefault();const next=event.key==='Home'?'philosophers':event.key==='End'?'aurora':collectionTab==='aurora'?'philosophers':'aurora';
       setCollectionTab(next);document.getElementById(`advice-source-tab-${next}`)?.focus();
     }}>
-      {ADVICE_COLLECTIONS.map(collection=><button type="button" role="tab" id={`advice-source-tab-${collection}`} key={collection}
+      {(['philosophers','aurora'] as const).map(collection=><button type="button" role="tab" id={`advice-source-tab-${collection}`} key={collection}
         aria-selected={collectionTab===collection} aria-controls="advice-source-settings" tabIndex={collectionTab===collection?0:-1}
         onClick={()=>setCollectionTab(collection)}>{collectionsCopy[collection]}</button>)}
     </div>

@@ -98,34 +98,53 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
       }
     });
   }
-  await check('release335-yookassa-prices-in-both-regions',async()=>{
+  await check('release336-region-gated-prices',async()=>{
     const catalog=await (await context.request.get('/api/billing/catalog')).json();assert.equal(catalog.foreignPricing.pricingModel,'fixed');assert.equal(catalog.checkoutEnabled,false,'QA checkout must remain disabled');
-    await context.grantPermissions(['geolocation']);
+    assert.deepEqual(catalog.providers.map(provider=>provider.id),['yookassa'],'Retired providers must not be offered');
+    // A stale Russia catalog cannot override the fresh anonymous location read.
+    const catalogRoute=async route=>route.fulfill({json:{...catalog,routing:{...catalog.routing,region:'RU',source:'ip'}}});
+    await context.route('**/api/billing/catalog',catalogRoute);
+    let currentRegion='unknown';
+    const locationRoute=async route=>route.fulfill({json:{region:currentRegion,source:currentRegion==='unknown'?'unknown':'ip',preferredProvider:'yookassa'}});
+    await context.route('**/api/billing/location',locationRoute);
     try {
-      assert.deepEqual(catalog.providers.map(provider=>provider.id),['yookassa'],'Retired providers must not be offered');
-      const currency='RUB',prices=[[333,555,777,12900],[3330,5550,7770,12900]];
-      for(const [region,coordinates] of [
-        ['US',{latitude:47.6062,longitude:-122.3321,accuracy:20}],
-        ['RU',{latitude:55.7558,longitude:37.6173,accuracy:20}]
-      ]){
-        await context.setGeolocation(coordinates);const account=await openAccount();await account.locator('.account-plan-upgrade button').click();await upgrade().waitFor();
-        await upgrade().locator('.upgrade-plan-premium input').check();
-        await upgrade().locator(`.upgrade-plan-standart .upgrade-plan-price`).filter({hasText:/₽/}).waitFor();
-        for(const [index,period] of [1,12].entries()){
-          await upgrade().locator('.upgrade-period-options input').nth(index).check();
-          const observed=[];
-          for(const [planIndex,plan] of ['standart','premium','business','premium4life'].entries()){
-            const text=(await upgrade().locator(`.upgrade-plan-${plan} .upgrade-plan-price`).innerText()).trim();
-            const amount=Number(text.replace(/[^\d.,-]/g,'').replace(',','.'));assert.equal(amount,prices[index][planIndex],`${currency} ${plan} ${period}`);
-            assert.match(text,/₽/);observed.push({plan,period,text,amount});
+      const cases=[
+        {region:'US',ip:'outside-RU',coordinates:{latitude:55.7558,longitude:37.6173,accuracy:20},currency:'USD',prices:[[4,7,10,160],[40,70,100,160]]},
+        {region:'RU',ip:'RU',coordinates:{latitude:55.7558,longitude:37.6173,accuracy:20},currency:'RUB',prices:[[333,555,777,12900],[3330,5550,7770,12900]]},
+        {region:'unknown',ip:'unknown',coordinates:null,currency:'USD',prices:[[4,7,10,160],[40,70,100,160]]}
+      ];
+      for(const scenario of cases){
+        currentRegion=scenario.ip;
+        await context.clearPermissions();await context.setGeolocation(scenario.coordinates);
+        if(scenario.coordinates)await context.grantPermissions(['geolocation']);
+        let quotes=0;const observe=request=>{if(new URL(request.url()).pathname==='/api/billing/quote')quotes++;};page.on('request',observe);
+        try{
+          const account=await openAccount(),freshLocation=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/billing/location');
+          await account.locator('.account-plan-upgrade button').click();await upgrade().waitFor();await freshLocation;
+          await upgrade().locator('.upgrade-plan-premium input').check();
+          await upgrade().locator('.upgrade-plan-standart .upgrade-plan-price').filter({hasText:scenario.currency==='RUB'?/₽/:/\$/}).waitFor();
+          if(scenario.currency==='RUB')await upgrade().locator('.upgrade-provider-options').waitFor();
+          else assert.equal(await upgrade().locator('.upgrade-provider-options').count(),0,'YooKassa must stay hidden outside positive Russia detection');
+          for(const [index,period] of [1,12].entries()){
+            await upgrade().locator('.upgrade-period-options input').nth(index).check();const observed=[];
+            for(const [planIndex,plan] of ['standart','premium','business','premium4life'].entries()){
+              const text=(await upgrade().locator('.upgrade-plan-'+plan+' .upgrade-plan-price').innerText()).trim();
+              const amount=Number(text.replace(/[^\d.,-]/g,'').replace(',','.'));assert.equal(amount,scenario.prices[index][planIndex],scenario.currency+' '+plan+' '+period);
+              assert.match(text,scenario.currency==='RUB'?/₽/:/\$/);observed.push({plan,period,text,amount});
+            }
+            assert.equal(await upgrade().locator('.upgrade-fx-note').count(),0,'Fixed prices must not show a numeric FX conversion note');
+            assert(await upgrade().locator('.upgrade-checkout-button').isDisabled(),'Synthetic checkout must remain disabled');
+            if(scenario.currency==='USD'){
+              assert.equal(quotes,0,'A disabled domestic method must not request a quote');
+              assert.equal(await upgrade().locator('.upgrade-checkout-button strong').count(),0,'No stale domestic quote amount may remain');
+              assert(!/₽/.test(await upgrade().locator('.upgrade-plan-grid').innerText()),'Foreign/unknown comparison must not contain rubles');
+            }
+            await snapshot('release336-prices-'+scenario.region+'-'+period);records.push({screen:'prices',region:scenario.region,currency:scenario.currency,period,observed,syntheticGeolocation:scenario.coordinates,syntheticIp:scenario.ip});
           }
-          assert.equal(await upgrade().locator('.upgrade-fx-note').count(),0,'Fixed prices must not show a numeric FX conversion note');
-          await snapshot(`release335-prices-${region}-${period}`);records.push({screen:'prices',region,currency,period,observed,syntheticGeolocation:coordinates});
-        }
-        await closeUpgrade();await account.getByRole('button',{name:'Закрыть',exact:true}).click();
+          await closeUpgrade();await account.getByRole('button',{name:'Закрыть',exact:true}).click();
+        }finally{page.off('request',observe);}
       }
-      await snapshot('release335-yookassa-prices-in-both-regions');
-    } finally {await context.clearPermissions();await context.setGeolocation(null);}
+    }finally{await context.unroute('**/api/billing/catalog',catalogRoute);await context.unroute('**/api/billing/location',locationRoute);await context.clearPermissions();await context.setGeolocation(null);}
   });
   await writeFile(`${output}/${tier}-release317-ui-details.json`,JSON.stringify({records,purchases:false,localCatalog:true,widths:[360,390,768,1440],schemes:['light','dark']},null,2));
 }

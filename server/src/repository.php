@@ -608,7 +608,7 @@ function genesisUpsertGoogleUser(array $profile, array $tokens, bool $persistGoo
     } else {
         $owns=!$db->inTransaction();if($owns)$db->beginTransaction();
         try{
-            $db->prepare("INSERT INTO users (id, google_sub, email, display_name, avatar_url, access_token_enc, refresh_token_enc, token_expires_at, granted_scopes, workspace_key_enc, workspace_key_mode, calendar_mode, task_calendar_mode, week_start, login_count, last_login_at, last_seen_at, created_at, updated_at) VALUES (:id, :sub, :email, :display_name, :avatar_url, :access_token_enc, :refresh_token_enc, :token_expires_at, :granted_scopes, :workspace_key_enc, :workspace_key_mode, 'profane', 'profane', 'monday', 1, :last_login_at, :last_seen_at, :created_at, :updated_at)")->execute($values);
+            $db->prepare("INSERT INTO users (id, google_sub, email, display_name, avatar_url, access_token_enc, refresh_token_enc, token_expires_at, granted_scopes, workspace_key_enc, workspace_key_mode, calendar_mode, task_calendar_mode, week_start, login_count, last_login_at, last_seen_at, created_at, updated_at, advice_collections_json) VALUES (:id, :sub, :email, :display_name, :avatar_url, :access_token_enc, :refresh_token_enc, :token_expires_at, :granted_scopes, :workspace_key_enc, :workspace_key_mode, 'profane', 'profane', 'monday', 1, :last_login_at, :last_seen_at, :created_at, :updated_at, :advice_collections_json)")->execute([...$values,'advice_collections_json'=>json_encode(['philosophers'],JSON_THROW_ON_ERROR)]);
             genesisEmailQueueRegistration($id,true);
             $db->prepare('UPDATE users SET calendar_exploration_pending = 1 WHERE id = ?')->execute([$id]);
             genesisPartnerBindRegistration($db, $id, $partnerInvitation);
@@ -683,11 +683,11 @@ function genesisUpsertYandexUser(array $profile): array
     $id = genesisUuid();
     $db->prepare("INSERT INTO users (id, google_sub, auth_provider, yandex_uid, email,
         display_name, avatar_url, workspace_key_mode, calendar_mode, task_calendar_mode,
-        week_start, login_count, last_login_at, last_seen_at, created_at, updated_at)
+        week_start, login_count, last_login_at, last_seen_at, created_at, updated_at, advice_collections_json)
         VALUES (:id, :sub, 'yandex', :uid, :email, :name, :avatar, 'account',
-        'profane', 'profane', 'monday', 1, :now, :now, :now, :now)")->execute([
+        'profane', 'profane', 'monday', 1, :now, :now, :now, :now, :advice_collections_json)")->execute([
             'id' => $id, 'sub' => $internalSub, 'uid' => $uid, 'email' => $email,
-            'name' => $name, 'avatar' => $avatar, 'now' => $now,
+            'name' => $name, 'avatar' => $avatar, 'now' => $now,'advice_collections_json'=>json_encode(['philosophers'],JSON_THROW_ON_ERROR),
         ]);
     $user = genesisFindUser($id);
     if ($user === null) throw new RuntimeException('Yandex profile could not be saved.');

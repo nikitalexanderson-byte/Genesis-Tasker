@@ -3,7 +3,7 @@ import copy from './modeling-service-copy.json';
 import type {Language} from './i18n';
 
 export type ModelingPaymentMethod = {provider:'yookassa';amountMinor:number;currency:'RUB'|'USD';available:boolean};
-export type ModelingPaymentCatalog = {service:string;methods:ModelingPaymentMethod[];routing:{preferredProvider:string};forecastElitePlus?:boolean;includedInPlan?:boolean;testingAccess?:boolean};
+export type ModelingPaymentCatalog = {service:string;methods:ModelingPaymentMethod[];routing:import('./billing-location').PaymentRouting;forecastElitePlus?:boolean;includedInPlan?:boolean;testingAccess?:boolean};
 export type ModelingPaymentOrder = {id:string;resultId:string;service:string;provider:ModelingPaymentMethod['provider'];amountMinor:number;currency:string;
   status:'pending'|'paid'|'cancelled'|'refunded';checkoutUrl:string|null};
 export function modelingServiceCopy(language:Language) {return copy[language];}

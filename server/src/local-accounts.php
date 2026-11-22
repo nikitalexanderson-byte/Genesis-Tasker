@@ -68,14 +68,14 @@ function genesisCreateLocalMember(string $provider, array $profile): array
     $uidColumn = 'yandex_uid';
     genesisDb()->prepare("INSERT INTO users (id, google_sub, auth_provider, $uidColumn, email,
         display_name, avatar_url, workspace_key_mode, calendar_mode, task_calendar_mode,
-        week_start, login_count, last_login_at, last_seen_at, created_at, updated_at)
+        week_start, login_count, last_login_at, last_seen_at, created_at, updated_at, advice_collections_json)
         VALUES (:id, :sub, :provider, :uid, :email, :name, :avatar, 'account',
-        'profane', 'profane', 'monday', 0, :now, :now, :now, :now)")->execute([
+        'profane', 'profane', 'monday', 0, :now, :now, :now, :now, :advice_collections_json)")->execute([
             'id' => $id, 'sub' => $sub, 'provider' => $provider, 'uid' => $uid,
             'email' => $syntheticEmail,
             'name' => mb_substr(trim((string)($profile['name'] ?? '')) ?: $provider, 0, 160),
             'avatar' => isset($profile['picture']) ? mb_substr((string)$profile['picture'], 0, 1000) : null,
-            'now' => $now,
+            'now' => $now,'advice_collections_json'=>json_encode(['philosophers'],JSON_THROW_ON_ERROR),
         ]);
     return genesisFindUser($id) ?? throw new RuntimeException('Linked identity could not be stored.');
 }

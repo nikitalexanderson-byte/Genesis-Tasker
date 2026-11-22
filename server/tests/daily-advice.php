@@ -73,7 +73,7 @@ try {
 // Rotation is additive: preserve today's pointer, all seen/dismissed history and account choices.
 $legacyEntry = adviceFixture('migration-81-current', 'aretology');
 $legacy->prepare('UPDATE users SET advice_preferences_json=? WHERE id=?')->execute([
-    json_encode(['enabled' => true, 'smart' => false, 'categories' => ['aretology', 'hestiology']]), 'advice-legacy']);
+    json_encode(['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['aretology', 'hestiology']]), 'advice-legacy']);
 $legacy->prepare('INSERT INTO daily_advice_days(user_id,day_key,advice_id,entry_json,created_at,viewed_at,dismissed_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['advice-legacy', '2026-10-23', $legacyEntry['id'], json_encode($legacyEntry), 'created', 'seen', 'hidden']);
 $rotationBackupPath = tempnam(sys_get_temp_dir(), 'genesis-advice-81-');
@@ -96,7 +96,8 @@ try {
     adviceExpect(!in_array('draw_limit', array_column($rotationBackup->query('PRAGMA table_info(daily_advice_days)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true), 'Rotation backup contains the later schema');
 } finally { $rotationBackup = null; if (is_file($rotationBackupPath)) unlink($rotationBackupPath); }
 
-$preferences = genesisAdvicePreferences([]);
+adviceExpect(genesisAdvicePreferences([])['collections'] === ['philosophers'], 'New preference defaults must enable only philosophers');
+$preferences = genesisAdvicePreferences(['collections' => ['aurora']]);
 adviceExpect($preferences['collections'] === ['aurora'], 'Legacy accounts must keep Aurora advice');
 foreach ([[], ['unknown'], 'philosophers', [true]] as $collections) adviceReject(fn() => genesisAdvicePreferences(['collections' => $collections]));
 $philosophers = genesisAdvicePreferences(['collections' => ['philosophers']]);
@@ -139,12 +140,12 @@ adviceExpect(genesisChooseAdvice([...$items, $newItem], $preferences, $scores, $
 array_unshift($history, ['advice_id' => $newItem['id'], 'day_key' => '2026-10-10', 'entry_json' => json_encode($newItem)]);
 adviceExpect(genesisChooseAdvice([...$items, $newItem], $preferences, $scores, $history, 'after-new')['id'] !== $newItem['id'],
     'A newly read post repeated while catching up with older exposure counts');
-$manual = ['enabled' => true, 'smart' => false, 'categories' => ['aretology']];
+$manual = ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['aretology']];
 adviceExpect(genesisChooseAdvice($items, $manual, $scores, [], 'manual')['id'] === $items[2]['id'], 'Manual categories ignored');
 adviceExpect(genesisChooseAdvice($items, $preferences, genesisAdviceScores(['aretology' => 1]), [], 'smart')['id'] === $items[2]['id'], 'Smart categories ignored');
 adviceExpect(genesisChooseAdvice([], $manual, $scores, [], 'empty') === null, 'Empty corpus produced a fallback');
-adviceExpect(genesisChooseAdvice($items, ['enabled' => true, 'smart' => false, 'categories' => ['kourotrophy']], $scores, [], 'legacy-manual')['id'] === $items[2]['id'], 'Unavailable manual selection disagreed with the settings fallback');
-adviceExpect(in_array(genesisChooseAdvice($items, ['enabled' => true, 'smart' => false, 'categories' => ['hermetica', 'kourotrophy']], $scores, [], 'mixed-manual')['id'], [$items[0]['id'], $items[1]['id']], true), 'Available manual choices were replaced by fallback content');
+adviceExpect(genesisChooseAdvice($items, ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['kourotrophy']], $scores, [], 'legacy-manual')['id'] === $items[2]['id'], 'Unavailable manual selection disagreed with the settings fallback');
+adviceExpect(in_array(genesisChooseAdvice($items, ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['hermetica', 'kourotrophy']], $scores, [], 'mixed-manual')['id'], [$items[0]['id'], $items[1]['id']], true), 'Available manual choices were replaced by fallback content');
 adviceExpect(genesisChooseAdvice($items, $preferences, genesisAdviceScores([]), [], 'fallback') !== null, 'No-habit fallback failed');
 
 // A habit in an unpublished category falls back to available content.
@@ -206,7 +207,7 @@ adviceExpect(genesisAdviceAvailableCategories() === ['aretology', 'hermetica', '
 adviceExpect(genesisAdviceDailyLimit($preferences, genesisAdviceCatalog()) === 4, 'Smart selection did not include the fourth published collection');
 $hermeticaPosts = array_values(array_filter(genesisAdviceCatalog(), static fn($entry) => in_array('hermetica', $entry['categories'], true)));
 adviceExpect(count($hermeticaPosts) === 151 && $hermeticaPosts[13]['timeOfDay'] === 'morning', 'Hermetica source count or morning practice is wrong');
-adviceExpect(genesisChooseAdvice($hermeticaPosts, ['enabled' => true, 'smart' => false, 'categories' => ['hermetica']], genesisAdviceScores([]), [], 'hermetica-manual') !== null, 'Manual Hermetica selection returned no content');
+adviceExpect(genesisChooseAdvice($hermeticaPosts, ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['hermetica']], genesisAdviceScores([]), [], 'hermetica-manual') !== null, 'Manual Hermetica selection returned no content');
 
 // Family interests adjust rank without changing category access, history or manual selection.
 $family = [...adviceFixture('family advice', 'kourotrophy'), 'topics' => ['parenting']];
@@ -219,7 +220,7 @@ adviceExpect(genesisAdviceFamilyAffinity(genesisAdviceTopicScores(['motherhood' 
 adviceExpect(genesisChooseAdvice($familyPool, $preferences, $neutralScores, [], 'family-smart', $fatherTopics, [])['id'] === $family['id'], 'Parent/sons context did not favour Kourotrophy');
 $familyHistory = [['advice_id' => $family['id'], 'day_key' => '2026-10-01', 'entry_json' => json_encode($family)]];
 adviceExpect(genesisChooseAdvice($familyPool, $preferences, $neutralScores, $familyHistory, 'family-round', $fatherTopics, [])['id'] === $workout['id'], 'Family interest bypassed unseen advice');
-$manualFamily = ['enabled' => true, 'smart' => false, 'categories' => ['kourotrophy']];
+$manualFamily = ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['kourotrophy']];
 adviceExpect(genesisChooseAdvice($familyPool, $manualFamily, $neutralScores, [], 'family-manual', $motherTopics, [])['id'] === $family['id'], 'Maternal interests overrode an explicit Kourotrophy selection');
 adviceExpect(genesisAdviceDailyLimit($manualFamily, $familyPool) === 3, 'Kourotrophy changed the one-category daily limit');
 
@@ -233,10 +234,10 @@ foreach ([18, 23, 0, 4] as $hour) adviceExpect(genesisChooseAdvice([$home, $morn
 foreach ([12, 17] as $hour) adviceExpect(genesisChooseAdvice([$home, $morning, $evening], $preferences, $smartHome, [], 'time', [], [], ['hour' => $hour])['id'] === $home['id'], 'A timed practice leaked into the wrong period');
 $allCategories = array_map(static fn($category) => adviceFixture('limit ' . $category, $category), GENESIS_ADVICE_CATEGORIES);
 // An unreviewed/unpublished Psychopompia placeholder does not increase the usable daily allowance.
-foreach ([1 => 3, 2 => 3, 3 => 3, 4 => 4, 5 => 5, 6 => 5] as $selected => $expectedLimit) adviceExpect(genesisAdviceDailyLimit(['smart' => false, 'categories' => array_slice(GENESIS_ADVICE_CATEGORIES, 0, $selected), 'aphrodisiaAdult' => true], $allCategories) === $expectedLimit, 'Wrong selected-category daily limit');
+foreach ([1 => 3, 2 => 3, 3 => 3, 4 => 4, 5 => 5, 6 => 5] as $selected => $expectedLimit) adviceExpect(genesisAdviceDailyLimit(['collections' => ['aurora'], 'smart' => false, 'categories' => array_slice(GENESIS_ADVICE_CATEGORIES, 0, $selected), 'aphrodisiaAdult' => true], $allCategories) === $expectedLimit, 'Wrong selected-category daily limit');
 $clothing = [...adviceFixture('home clothing', 'hestiology'), 'topics' => ['clothing']];
 $attributes = [...adviceFixture('home attributes', 'hestiology'), 'topics' => ['attributes']];
-$homeManual = ['enabled' => true, 'smart' => false, 'categories' => ['hestiology']];
+$homeManual = ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['hestiology']];
 $homeHistory = [['advice_id' => $home['id'], 'day_key' => '2026-10-01', 'entry_json' => json_encode($home)]];
 $rareUser = '';
 for ($i = 0; $i < 100; $i++) if (hexdec(substr(hash('sha256', 'rare-' . $i . ':2026-10-23:clothing'), 0, 4)) % 4 === 0) { $rareUser = 'rare-' . $i; break; }
@@ -277,10 +278,10 @@ adviceExpect(genesisChooseAdvice([$clothing, $food], $preferences, $smartHome, [
 $aphroAdult = [...adviceFixture('ADULT', 'aphrodisia'), 'requiresAdult' => true, 'aphrodisiaTheme' => 'love'];
 $aphroArt = [...adviceFixture('ART', 'aphrodisia'), 'requiresAdult' => false, 'aphrodisiaTheme' => 'aesthetics'];
 $aphroMind = [...adviceFixture('MIND', 'aphrodisia'), 'requiresAdult' => false, 'aphrodisiaTheme' => 'consciousness'];
-$minor = genesisAdvicePreferences(['smart' => false, 'categories' => ['aphrodisia'], 'aphrodisiaAdult' => false]);
+$minor = genesisAdvicePreferences(['collections' => ['aurora'], 'smart' => false, 'categories' => ['aphrodisia'], 'aphrodisiaAdult' => false]);
 $adult = genesisAdvicePreferences([...$minor, 'aphrodisiaAdult' => true]);
 adviceExpect(!in_array('aphrodisia', genesisAdvicePreferences([])['categories'], true), 'Aphrodisia was enabled by default');
-adviceExpect(genesisChooseAdvice([$aphroAdult, $aphroArt], genesisAdvicePreferences([]), $scores, [], 'off', [], []) === null, 'Smart mode silently opted into Aphrodisia');
+adviceExpect(genesisChooseAdvice([$aphroAdult, $aphroArt], genesisAdvicePreferences(['collections' => ['aurora']]), $scores, [], 'off', [], []) === null, 'Smart mode silently opted into Aphrodisia');
 for ($i=0;$i<20;$i++) {
     adviceExpect(genesisChooseAdvice([$aphroAdult,$aphroArt],$minor,$scores,[],'minor'.$i,[],[])['id']===$aphroArt['id'],'Adult advice leaked to a minor');
 }
@@ -298,6 +299,12 @@ for ($index = 0; $index < 3; $index++) {
 }
 try {
     [$alice, $bob, $charlie] = $ids;
+    $newProfile = ['sub' => 'advice-new-' . bin2hex(random_bytes(8)), 'email' => 'new-advice@example.invalid', 'email_verified' => true];
+    $newUser = genesisUpsertGoogleUser($newProfile, [], false); $ids[] = $newUser['id'];
+    adviceExpect(genesisUserAdvicePreferences($newUser)['collections'] === ['philosophers'], 'New Google account did not default to philosophers only');
+    genesisUpdateAccountPreferences($newUser['id'], ['advicePreferences' => ['collections' => ['aurora']]]);
+    $returningUser = genesisUpsertGoogleUser($newProfile, [], false);
+    adviceExpect(genesisUserAdvicePreferences($returningUser)['collections'] === ['aurora'], 'Returning Google login reset an explicit source choice');
     $legacyCatalog=array_values(array_filter(genesisAdviceCatalog(),static fn($entry)=>!in_array('psychopompia',$entry['categories'],true)));
     adviceExpect(!in_array('psychopompia', genesisAdviceAvailableCategories($legacyCatalog), true), 'Legacy fallback fixture must use an unpublished category');
     genesisUpdateAccountPreferences($bob, ['advicePreferences' => ['smart' => false, 'categories' => ['psychopompia']]]);
@@ -361,7 +368,7 @@ try {
     // The database owns one global limit, and stale/retried next requests cannot spend another slot.
     $db->prepare('DELETE FROM daily_advice_entries WHERE user_id=?')->execute([$bob]);
     $db->prepare('DELETE FROM daily_advice_days WHERE user_id=?')->execute([$bob]);
-    genesisUpdateAccountPreferences($bob, ['advicePreferences' => ['enabled' => true, 'smart' => false, 'categories' => ['aretology']]]);
+    genesisUpdateAccountPreferences($bob, ['advicePreferences' => ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => ['aretology']]]);
     $rotationPool = array_map(static fn($n) => adviceFixture('rotation ' . $n, 'aretology'), range(1, 6));
     $first = genesisDailyAdvice($bob, [], $rotationPool);
     adviceExpect($first['sequence'] === 1 && $first['dailyLimit'] === 3 && $first['canNext'], 'Rotation did not start at 1 of 3');
@@ -390,7 +397,7 @@ try {
     $db->prepare('DELETE FROM daily_advice_days WHERE user_id=?')->execute([$bob]);
     $fourCategories = ['aretology', 'hermetica', 'kourotrophy', 'hestiology'];
     $fourPool = array_map(static fn($category) => adviceFixture('four-category ' . $category, $category), $fourCategories);
-    genesisUpdateAccountPreferences($bob, ['advicePreferences' => ['enabled' => true, 'smart' => false, 'categories' => $fourCategories]]);
+    genesisUpdateAccountPreferences($bob, ['advicePreferences' => ['collections' => ['aurora'], 'enabled' => true, 'smart' => false, 'categories' => $fourCategories]]);
     $fourDraw = genesisDailyAdvice($bob, [], $fourPool); $drawnCategories = [];
     for ($slot = 1; $slot <= 4; $slot++) {
         adviceExpect($fourDraw['dailyLimit'] === 4 && $fourDraw['sequence'] === $slot, 'Four-category selection lost its persisted daily limit');

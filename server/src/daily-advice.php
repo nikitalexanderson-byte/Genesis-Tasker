@@ -30,7 +30,7 @@ function genesisAdvicePreferences(mixed $value): array
     if (array_key_exists('psychopompia',$value)&&!is_array($value['psychopompia'])) throw new InvalidArgumentException('INVALID_PSYCHOPOMPIA_PREFERENCES');
     $result = ['enabled' => $value['enabled'] ?? true, 'smart' => $value['smart'] ?? true,
         'categories' => $value['categories'] ?? array_values(array_diff(GENESIS_ADVICE_CATEGORIES, ['aphrodisia'])),
-        'aphrodisiaAdult' => $value['aphrodisiaAdult'] ?? null, 'collections' => $value['collections'] ?? ['aurora'],
+        'aphrodisiaAdult' => $value['aphrodisiaAdult'] ?? null, 'collections' => $value['collections'] ?? ['philosophers'],
         'philosophersPerDay' => $value['philosophersPerDay'] ?? 1,
         'notifications' => genesisAdviceNotificationPreferences($value['notifications'] ?? []),
         'psychopompia' => genesisPsychopompiaPreferences($value['psychopompia'] ?? [])];
@@ -56,7 +56,7 @@ function genesisAdvicePreferences(mixed $value): array
 function genesisUserAdvicePreferences(array $user): array
 {
     $preferences = genesisAdvicePreferences($user['advice_preferences_json'] ?? '{}');
-    $preferences = genesisAdvicePreferences([...$preferences, 'collections' => json_decode($user['advice_collections_json'] ?? '["aurora"]', true, 16, JSON_THROW_ON_ERROR)]);
+    $preferences = genesisAdvicePreferences([...$preferences, 'collections' => json_decode($user['advice_collections_json'] ?? '["philosophers"]', true, 16, JSON_THROW_ON_ERROR)]);
     $preferences['notifications'] = genesisAdviceNotificationPreferences($user['advice_notifications_json'] ?? '{}');
     $preferences['psychopompia'] = genesisPsychopompiaPreferences($user['advice_psychopompia_json'] ?? '{}');
     $preferences['philosophersPerDay'] = (int)($user['advice_philosophers_per_day'] ?? 1);
@@ -300,7 +300,7 @@ function genesisAdviceAgeAllowed(array $entry, array $preferences): bool
 function genesisAdviceCollectionAllowed(array $entry, array $preferences): bool
 {
     $collection = $entry['collection'] ?? 'aurora';
-    return in_array($collection, $preferences['collections'] ?? ['aurora'], true)
+    return in_array($collection, $preferences['collections'] ?? ['philosophers'], true)
         && ($collection !== 'philosophers' || isset(genesisPhilosopherArtwork()[$entry['id']]));
 }
 

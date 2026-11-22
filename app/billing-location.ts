@@ -49,14 +49,22 @@ export async function grantedDevicePaymentRegion(permissions:Pick<Permissions,'q
   } catch { return null; }
 }
 
-export function paymentProviderOrder(_region:PaymentRegion):BillingProvider[] {
-  void _region; // Preserve the call signature used by regional routing.
-  return ['yookassa'];
+/** A positive current Russia signal is required to offer the domestic method.
+ * A known foreign signal wins over a conflicting IP/device hint (for example a VPN). */
+export function resolvedPaymentRegion(ip:PaymentRegion,device:PaymentRegion|null):PaymentRegion {
+  if(ip==='outside-RU'||device==='outside-RU')return 'outside-RU';
+  return ip==='RU'||device==='RU'?'RU':'unknown';
+}
+export function billingPricingCurrency(region:PaymentRegion,language:string):'RUB'|'USD' {
+  return region==='RU'&&language==='ru'?'RUB':'USD';
+}
+export function paymentProviderOrder(region:PaymentRegion):BillingProvider[] {
+  return region==='RU'?['yookassa']:[];
 }
 
 /** Keep a deliberate user choice; otherwise prefer configured methods in the regional order. */
-export function preferredPaymentProvider(region:PaymentRegion,available:readonly BillingProvider[],manual?:BillingProvider|null):BillingProvider {
-  if(manual==='yookassa'&&available.includes(manual))return manual;
+export function preferredPaymentProvider(region:PaymentRegion,available:readonly BillingProvider[],manual?:BillingProvider|null):BillingProvider|null {
   const order=paymentProviderOrder(region);
-  return order.find(provider=>available.includes(provider))??order[0];
+  if(manual&&order.includes(manual)&&available.includes(manual))return manual;
+  return order.find(provider=>available.includes(provider))??order[0]??null;
 }

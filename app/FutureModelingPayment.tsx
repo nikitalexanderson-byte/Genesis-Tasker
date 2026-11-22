@@ -2,15 +2,18 @@
 import {useEffect,useRef,useState} from 'react';
 import {GenesisApiError,modelingServiceAccess,type GenesisUser} from './cloud-sync';
 import {billingMoney} from './billing';
+import {billingPricingCurrency,type PaymentRegion} from './billing-location';
+import {useAutomaticPaymentRegion} from './use-payment-region';
 import {MODELING_SERVICE_PRICES,modelingAvailableMethod,modelingCheckoutUrl,modelingServiceCopy,type ModelingPaymentCatalog,type ModelingPaymentMethod,type ModelingPaymentOrder} from './modeling-service';
 import type {Language} from './i18n';
 import {DialogCloseButton} from './DialogCloseButton';
 import {useDialogAccessibility} from './use-dialog-accessibility';
 
-export function FutureModelingPrice({language}:{language:Language}) {
-  const text=modelingServiceCopy(language);
+export function FutureModelingPrice({language,region}:{language:Language;region?:PaymentRegion}) {
+  const detected=useAutomaticPaymentRegion(undefined,'modeling-price',region!==undefined);
+  const text=modelingServiceCopy(language),currency=billingPricingCurrency(region??detected,language);
   return <aside className="future-modeling-price" data-testid="modeling-service-price" data-no-translate>
-    <strong>{text.title} · {billingMoney(MODELING_SERVICE_PRICES.RUB,language,'RUB')} / {billingMoney(MODELING_SERVICE_PRICES.USD,language,'USD')}</strong>
+    <strong>{text.title} · {billingMoney(MODELING_SERVICE_PRICES[currency],language,currency)}</strong>
     <p>{text.description}</p>
   </aside>;
 }
@@ -25,6 +28,9 @@ function ResultPayment({user,resultId,onUnlocked}:ResultPaymentProps) {
   const [catalog,setCatalog]=useState<ModelingPaymentCatalog|null>(null);const [method,setMethod]=useState<ModelingPaymentMethod|null>(null);
   const [order,setOrder]=useState<ModelingPaymentOrder|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const live=useRef(true);const pending=useRef(false);const key=useRef('');
+  const region=useAutomaticPaymentRegion(catalog?.routing,user.uid,busy);
+  const visibleMethods=region==='RU'?(catalog?.methods.filter(modelingAvailableMethod)??[]):[];
+  const effectiveMethod=visibleMethods.find(row=>row.provider===method?.provider)??visibleMethods[0]??null;
   useEffect(()=>{live.current=true;const api=modelingServiceAccess(user.uid);access.current=api;const controller=new AbortController();
     void api.request<ModelingPaymentCatalog>('/billing/modeling/catalog?client=web',{signal:controller.signal}).then(value=>{
       if(!live.current)return;setCatalog(value);setMethod(value.methods.find(row=>modelingAvailableMethod(row)&&row.provider===value.routing.preferredProvider)??value.methods.find(modelingAvailableMethod)??null);
@@ -41,10 +47,10 @@ function ResultPayment({user,resultId,onUnlocked}:ResultPaymentProps) {
     if(live.current&&result.id===resultId)onUnlocked(result);
   }
   const pay=async()=>{
-    if((!catalog?.forecastElitePlus&&!method?.available)||pending.current)return;pending.current=true;setBusy(true);setError('');
+    if((!catalog?.forecastElitePlus&&!effectiveMethod?.available)||pending.current)return;pending.current=true;setBusy(true);setError('');
     try {key.current ||= crypto.randomUUID();
       if(catalog?.forecastElitePlus){await openResult();return;}
-      const value=await access.current.request<ModelingPaymentOrder>('/billing/modeling/orders',{method:'POST',body:JSON.stringify({resultId,provider:method!.provider,client:'web',idempotencyKey:key.current})});
+      const value=await access.current.request<ModelingPaymentOrder>('/billing/modeling/orders',{method:'POST',body:JSON.stringify({resultId,provider:effectiveMethod!.provider,client:'web',idempotencyKey:key.current})});
       if(!live.current)return;if(value.resultId!==resultId)throw new Error('MODELING_RESULT_MISMATCH');setOrder(value);
       if(value.status==='paid')await check(value);
       else {const url=modelingCheckoutUrl(value);if(url)window.location.assign(url);else setError(text.pending);}
@@ -53,10 +59,10 @@ function ResultPayment({user,resultId,onUnlocked}:ResultPaymentProps) {
     }else if(live.current)setError(text.error);}finally{pending.current=false;if(live.current)setBusy(false);}
   };
   return <section className="future-modeling-checkout" data-no-translate>
-    {catalog?.forecastElitePlus?<p className="admin-elite-plus">{text.privileged}</p>:<FutureModelingPrice language={user.language}/>}
-    {!catalog?.forecastElitePlus&&catalog?.methods.filter(modelingAvailableMethod).map(row=><label key={row.provider}><input type="radio" name={`modeling-provider-${resultId}`} checked={row.provider===method?.provider} disabled={busy||!!order} onChange={()=>setMethod(row)}/>{'YooKassa'} · {billingMoney(row.amountMinor,user.language,row.currency)}</label>)}
-    <button type="button" className="primary-button" disabled={busy||(!catalog?.forecastElitePlus&&!method)||order?.status==='paid'} onClick={()=>void pay()}>{catalog?.forecastElitePlus?text.open:text.pay}{!catalog?.forecastElitePlus&&method?` · ${billingMoney(method.amountMinor,user.language,method.currency)}`:''}</button>
-    {catalog&&!catalog.forecastElitePlus&&!method?<p role="status">{text.unavailable}</p>:null}
+    {catalog?.forecastElitePlus?<p className="admin-elite-plus">{text.privileged}</p>:<FutureModelingPrice language={user.language} region={region}/>}
+    {!catalog?.forecastElitePlus&&visibleMethods.map(row=><label key={row.provider}><input type="radio" name={`modeling-provider-${resultId}`} checked={row.provider===effectiveMethod?.provider} disabled={busy||!!order} onChange={()=>setMethod(row)}/>{'YooKassa'} · {billingMoney(row.amountMinor,user.language,row.currency)}</label>)}
+    <button type="button" className="primary-button" disabled={busy||(!catalog?.forecastElitePlus&&!effectiveMethod)||order?.status==='paid'} onClick={()=>void pay()}>{catalog?.forecastElitePlus?text.open:text.pay}{!catalog?.forecastElitePlus&&effectiveMethod?` · ${billingMoney(effectiveMethod.amountMinor,user.language,effectiveMethod.currency)}`:''}</button>
+    {catalog&&!catalog.forecastElitePlus&&!effectiveMethod?<p role="status">{text.unavailable}</p>:null}
     {order?<button type="button" className="secondary-button" disabled={busy} onClick={()=>{if(pending.current)return;pending.current=true;setBusy(true);void check(order).catch(()=>{if(live.current)setError(text.error);}).finally(()=>{pending.current=false;if(live.current)setBusy(false);});}}>{text.check}</button>:null}
     {error?<p role="alert">{error}</p>:null}
   </section>;

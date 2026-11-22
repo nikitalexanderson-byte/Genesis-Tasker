@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {readFile} from 'node:fs/promises';
-import {paymentRegionFromPosition,paymentProviderOrder,preferredPaymentProvider,locatePaymentRegion,grantedDevicePaymentRegion} from '../app/billing-location.ts';
+import {billingPricingCurrency,resolvedPaymentRegion,paymentRegionFromPosition,paymentProviderOrder,preferredPaymentProvider,locatePaymentRegion,grantedDevicePaymentRegion} from '../app/billing-location.ts';
 import {billingDisplayPrice,billingCheckoutReady,billingForeignRate,billingMoney} from '../app/billing.ts';
 import catalog from '../server/resources/billing-catalog.json' with {type:'json'};
 import locationCopy from '../app/billing-location-copy.json' with {type:'json'};
@@ -9,11 +9,27 @@ const boundary=JSON.parse(await readFile(new URL('../app/billing-russia-boundary
 
 test('stale regional catalog and manual selections cannot restore disabled providers',()=>{
   assert.deepEqual(paymentProviderOrder('RU'),['yookassa']);
-  assert.deepEqual(paymentProviderOrder('outside-RU'),['yookassa']);
+  assert.deepEqual(paymentProviderOrder('outside-RU'),[]);
+  assert.deepEqual(paymentProviderOrder('unknown'),[]);
   assert.equal(preferredPaymentProvider('RU',['yookassa','paddle'],'paddle'),'yookassa');
-  assert.equal(preferredPaymentProvider('outside-RU',['yookassa','paddle'],'yookassa'),'yookassa');
+  assert.equal(preferredPaymentProvider('outside-RU',['yookassa','paddle'],'yookassa'),null);
   assert.equal(preferredPaymentProvider('RU',['paddle']),'yookassa');
-  assert.equal(preferredPaymentProvider('outside-RU',['yookassa']),'yookassa');
+  assert.equal(preferredPaymentProvider('outside-RU',['yookassa']),null);
+  assert.equal(preferredPaymentProvider('unknown',['yookassa'],'yookassa'),null);
+});
+test('foreign and unknown visitors see fixed USD comparison prices in every language',()=>{
+  for(const language of Object.keys(locationCopy))for(const region of ['outside-RU','unknown']){
+    const currency=billingPricingCurrency(region,language);
+    assert.equal(currency,'USD',`${language}/${region}`);
+    for(const [plan,amount]of [['free',0],['standart',400],['premium',700],['business',1000],['premium4life',16000]])
+      assert.deepEqual(billingDisplayPrice(plan,1,null,currency==='USD'?'paddle':'yookassa'),{currency:'USD',amountMinor:amount});
+  }
+  assert.equal(billingPricingCurrency('RU','ru'),'RUB');
+  for(const language of Object.keys(locationCopy).filter(value=>value!=='ru'))assert.equal(billingPricingCurrency('RU',language),'USD');
+});
+test('a foreign signal overrides a conflicting Russia hint; absence never implies Russia',()=>{
+  for(const [ip,device,wanted]of [['RU','outside-RU','outside-RU'],['outside-RU','RU','outside-RU'],['outside-RU',null,'outside-RU'],['unknown',null,'unknown'],['unknown','unknown','unknown'],['RU',null,'RU'],['unknown','RU','RU']])
+    assert.equal(resolvedPaymentRegion(ip,device),wanted);
 });
 test('local country geometry handles mainland, Kaliningrad, other countries and uncertainty',()=>{
   for(const [name,lat,lon]of [['Moscow',55.75,37.61],['Yekaterinburg',56.84,60.61],['Yakutsk',62.03,129.73],['Kaliningrad',54.71,20.51]])
