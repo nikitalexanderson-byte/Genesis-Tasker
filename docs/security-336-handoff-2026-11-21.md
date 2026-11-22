@@ -225,6 +225,14 @@ Content-only backup must never replay these new issue/membership receipts.
 
 # Continuation checkpoint: 22 November 2026
 
+Streamed cancellation and pause/drain code now follows the recovery checkpoint.
+The two real migration screens can pause and await the prior attempt before retry;
+pause preserves pending signed packets and never grants legacy write authority.
+Controllers/core retain a state4 cancellation receipt and reverify the directory
+before fence release. Remote-cancel UI, archived state4 restart/history and the
+unstarted/corrupt-journal distinction remain unfinished. See the leading section
+of implementation-pass. This is uncompiled code; accepted coverage remains9/20.
+
 Latest code continuation adds shared request-keyed recovery SAF and device
 credential hosts, ten-minute generated-material custody, two-minute system-trip
 admission, generation-bound saved receipts and complete file readback. Session/

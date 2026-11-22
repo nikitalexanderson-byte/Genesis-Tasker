@@ -10,6 +10,35 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Streamed cancellation and pause/drain (candidate, no compilation/QA)
+
+Added streamed state4 cancellation under the existing whole-job fence. Signed
+ownership/control packets, all local source EOFs and reserved original/plan roles
+are checked before cancellation and again after the durable receipt. Ambiguous
+start/renewal requests use exact replay; source-changed/fenced failures leave the
+barrier in place. A cancelled leased state retains the signed cancel packet and
+its result in the current header instead of writing an unsupported raw state4
+`:cancel:` copy. Original sources, failed captures and plans are not removed.
+Product controllers require a fresh verified preparing directory before releasing
+the persistent legacy barriers. Web crash recovery can recreate only DENY metadata
+using the existing local token; an active marker is never downgraded.
+
+Both migration screens now offer pause. Web aborts linked requests and waits for
+source observers/the whole-job fence; native cancels and joins the exact admitted
+coroutine. Preparation is included in the UI attempt lifetime. A new attempt is
+not admitted before the prior one drains. Pause retains the journal, remote lease
+and exact pending operation, and does not release a legacy barrier. Its new label
+is authored in all14 shared catalogue languages; visual/semantic acceptance has
+not run. Product plan limits now match the core8000-envelope/local-part contract.
+
+Remote cancellation is not yet exposed as a completed UI flow: restarting after
+a cancelled state4 still needs authenticated archived ownership and all historical
+original/plan roles. The source-only history reader must not bypass those via
+prefix filtering or deletion. Also pending is safe cancellation before first
+journal publication, without mistaking lost/corrupt state for an unstarted job.
+Those remain implementation work, not accepted behavior. No tests, compiler,
+lint, build, CI, push, device change or deployment ran. Coverage stays9/20.
+
 ### Recovery file and credential lifetimes (candidate, no compilation/QA)
 
 Added one memory-only recovery generation with a ten-minute lifetime and bounded

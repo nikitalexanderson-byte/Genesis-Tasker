@@ -3829,7 +3829,10 @@ export function createPersonalMigrationTransportFence(userId:string,directory:im
   const session=captureAccountSessionGuard();
   const check=()=>{session();device.requireOpen();if(confirmedTransportOwnerId!==userId||device.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
   if(directory.kind!=='personal'||directory.ownerId!==userId||directory.resourceId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-  return new WebMigrationTransportFence(legacyTransportGate(),userId,directory.scopeId,check,()=>requireLegacyTransportWorker());
+  return new WebMigrationTransportFence(legacyTransportGate(),userId,directory.scopeId,check,()=>requireLegacyTransportWorker(),()=>{
+    check();const prior=localMigrationMarker(userId);if(!prior)return null;
+    if(prior.scopeId!==directory.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return{token:prior.token,phase:prior.phase};
+  });
 }
 
 /** Real read-only workspace migration sources. The caller must still provide the

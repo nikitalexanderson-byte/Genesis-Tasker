@@ -10,7 +10,7 @@ import {MigrationSourceReadRouter,type LegacyReadPorts} from './source-replay.ts
 import {SignedMigrationTransport,type E2eeMigrationRequest} from './migration-transport.ts';
 import {migratePrivateProductScope} from './product-migration.ts';
 import {requireExclusiveMigrationWindow} from './legacy-worker-client.ts';
-import {retainLocalMigrationFence} from './web-local-migration-fence.ts';
+import {retainLocalMigrationFence,releaseCancelledLocalMigrationFence,localMigrationMarker} from './web-local-migration-fence.ts';
 import {measureE2eeDeviceStorage} from './storage-admission.ts';
 import {admitE2eeStorage,E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
 import type {VerifiedDirectory} from './directory.ts';
@@ -32,6 +32,7 @@ export type WebProductMigrationPorts={
 export class WebProductMigration{
  readonly target:Readonly<Target>;
  #closed=false;#running=false;#cleanup:()=>void;
+ #operation:{abort:AbortController;drained:Promise<void>}|null=null;
  private constructor(readonly device:UnlockedWebDevice,private directory:VerifiedDirectory,private readonly ports:WebProductMigrationPorts){
   this.target=Object.freeze({ownerId:device.ownerId,scopeId:directory.scopeId,kind:'personal',resourceId:device.ownerId});
   this.#cleanup=bindWebVaultLifecycle(device);
@@ -71,10 +72,18 @@ export class WebProductMigration{
   }catch(error){device?.lock();throw error;}finally{held.fill(0);}
  }
  #current(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.device.requireOpen();this.ports.assertCurrent();this.ports.assertEditorsFrozen();}
- close(){if(this.#closed)return;this.#closed=true;this.#cleanup();}
- async run(secret:Uint8Array,savedKit:RecoveryKit,progress?:(phase:Progress)=>void){
-  const held=new Uint8Array(secret),current=()=>this.#current();
+ close(){if(this.#closed)return;this.#closed=true;this.#operation?.abort.abort();this.#cleanup();}
+ /** Wait for source observers and local fences to drain before another attempt.
+  * A pause keeps the durable signed request for exact replay; it does not cancel
+  * the remote migration or grant permission to reopen legacy writers. */
+ async stop(){const operation=this.#operation;if(!operation)return;operation.abort.abort();await operation.drained;}
+ async run(secret:Uint8Array,savedKit:RecoveryKit,progress?:(phase:Progress)=>void){return this.#execute(secret,savedKit,progress,false);}
+ async cancel(secret:Uint8Array,savedKit:RecoveryKit){return this.#execute(secret,savedKit,undefined,true);}
+ async #execute(secret:Uint8Array,savedKit:RecoveryKit,progress:((phase:Progress)=>void)|undefined,cancelling:boolean){
+  const held=new Uint8Array(secret),abort=new AbortController();
+  const current=()=>{this.#current();if(abort.signal.aborted)throw new Error('E2EE_OPERATION_STOPPED');};
   if(this.#running){held.fill(0);throw new Error('E2EE_MIGRATION_BUSY');}this.#running=true;
+  let drained!:()=>void;const operation={abort,drained:new Promise<void>(resolve=>{drained=resolve;})};this.#operation=operation;
   try{
    const kit=snapshotE2eeValue(savedKit);
    current();const directory=structuredClone(this.directory),router=new MigrationSourceReadRouter();
@@ -85,12 +94,16 @@ export class WebProductMigration{
    await verifyScopeRecovery(this.device,directory,root,held,kit,current);current();
    const fence=this.ports.fence(this.device,directory),request:E2eeMigrationRequest=async(path,body,observation,signal)=>{
     current();if(path==='/command'&&(body as {command?:{action?:string}})?.command?.action==='migration-commit')await requireExclusiveMigrationWindow();current();
-    const result=await this.ports.request(path,body,observation,signal);current();return result;
+    const linked=new AbortController(),stop=()=>linked.abort();
+    abort.signal.addEventListener('abort',stop,{once:true});signal?.addEventListener('abort',stop,{once:true});
+    try{if(abort.signal.aborted||signal?.aborted)stop();current();const result=await this.ports.request(path,body,observation,linked.signal);current();return result;}
+    finally{abort.signal.removeEventListener('abort',stop);signal?.removeEventListener('abort',stop);}
    };
    const transport=new SignedMigrationTransport(this.device,directory,sources.allowedContentDomains,request);
    const withFence=<T>(operation:()=>Promise<T>)=>fence.withFence(async()=>{
     current();await requireExclusiveMigrationWindow();current();const token=await fence.token();current();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
-    retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'preparing');current();return operation();
+    const prior=localMigrationMarker(this.target.ownerId);
+    retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,directory.state==='active'||prior?.phase==='active'?'active':'preparing');current();return operation();
    });
    const migration=new E2eeMigration({vault:this.device.vault,directory,deviceId:this.device.deviceId,signingKey:this.device.keys().signing.privateKey,
     signer:this.device.keys().signing.publicKey,root,transport,sources,withLocalWriteFence:withFence,
@@ -103,7 +116,16 @@ export class WebProductMigration{
    const planning:StreamedPlanningOptions={device:this.device,assertCurrent:current,admit,
     capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},
     originalCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumObservations:1000,maximumRecords:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET}};
-   const content:StreamedContentPlanningOptions={...planning,planCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumEnvelopes:10000,maximumLocalParts:10000},admitPlan:admit};
+   if(cancelling){
+    await migration.cancelStreamed(planning);current();
+    const response=await this.ports.setup.directory(this.target.scopeId);current();
+    const cancelled=await this.device.rememberDirectory(this.target.scopeId,this.device.authorityPin,response.events,this.target.ownerId);current();
+    if(cancelled.state!=='preparing'||cancelled.kind!=='personal'||cancelled.resourceId!==this.target.resourceId)throw new Error('E2EE_DOWNGRADE_FORBIDDEN');
+    const token=await fence.token();current();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
+    await fence.releaseCancelled(token,cancelled,()=>migration.status());current();
+    releaseCancelledLocalMigrationFence(this.target.ownerId,this.target.scopeId,token);current();this.directory=cancelled;return;
+   }
+   const content:StreamedContentPlanningOptions={...planning,planCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumEnvelopes:8000,maximumLocalParts:8000},admitPlan:admit};
    await migratePrivateProductScope({target:this.target,migration,sources,router,assertCurrent:current,planning,content,
     staged:{capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000},admit,assertCurrent:current},
     network:session=>new SignedMigrationTransport(this.device,directory,sources.allowedContentDomains,request,session),progress,
@@ -114,6 +136,6 @@ export class WebProductMigration{
      await fence.activate(active);current();const token=await fence.token();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
      retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'active');this.directory=active;
     }});current();
-  }finally{held.fill(0);this.#running=false;}
+  }finally{held.fill(0);this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
  }
 }

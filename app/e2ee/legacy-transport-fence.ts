@@ -138,9 +138,10 @@ export class WebLegacyTransportGate {
 /** Transport half of a migration barrier. Combine with mounted-editor/local
  * writer exclusion before passing it as the coordinator's local-write fence. */
 export class WebMigrationTransportFence {
-  #gate:WebLegacyTransportGate;#ownerId:string;#scopeId:string;#current:()=>void;#preflight:()=>Promise<void>;
-  constructor(gate:WebLegacyTransportGate,ownerId:string,scopeId:string,assertCurrent:()=>void,preflight:()=>Promise<void>=async()=>{}) {
+  #gate:WebLegacyTransportGate;#ownerId:string;#scopeId:string;#current:()=>void;#preflight:()=>Promise<void>;#recover:()=>Pick<LegacyTransportMarker,'token'|'phase'>|null;
+  constructor(gate:WebLegacyTransportGate,ownerId:string,scopeId:string,assertCurrent:()=>void,preflight:()=>Promise<void>=async()=>{},recover:()=>Pick<LegacyTransportMarker,'token'|'phase'>|null=()=>null) {
     assertTechnical(ownerId);assertTechnical(scopeId);this.#gate=gate;this.#ownerId=ownerId;this.#scopeId=scopeId;this.#current=assertCurrent;this.#preflight=preflight;
+    this.#recover=recover;
   }
   #bound(row:LegacyTransportMarker) { if(row.ownerId!==this.#ownerId||row.scopeId!==this.#scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH'); }
   #directory(directory:VerifiedDirectory,state:'preparing'|'active') {
@@ -152,7 +153,13 @@ export class WebMigrationTransportFence {
     return this.#gate.locks.request(LEGACY_UNBOUND_TRANSPORT_LOCK,{mode:'exclusive'},()=>this.#gate.locks.request(legacyTransportLock(this.#ownerId),{mode:'exclusive'},async()=>{
       this.#current();const row=await this.#gate.markers.get(this.#ownerId);this.#current();
       if(row)this.#bound(row);
-      else await this.#gate.markers.commit(this.#ownerId,null,{protocol:1,ownerId:this.#ownerId,scopeId:this.#scopeId,phase:'preparing',token:crypto.randomUUID()});
+      else {
+        // Recreate only a DENY row after a crash between transport release and
+        // synchronous local-marker cleanup. Reusing this technical token grants
+        // no writer, account or crypto authority and never weakens an active row.
+        const prior=this.#recover();if(prior){assertTechnical(prior.token);if(!['preparing','active'].includes(prior.phase))throw new Error('E2EE_CORRUPT_LOCAL_FENCE');}
+        await this.#gate.markers.commit(this.#ownerId,null,{protocol:1,ownerId:this.#ownerId,scopeId:this.#scopeId,phase:prior?.phase??'preparing',token:prior?.token??crypto.randomUUID()});
+      }
       this.#current();const result=await operation();this.#current();return result;
     }));
   }

@@ -2,6 +2,9 @@ package ru.genesis.calendar.security
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -9,6 +12,7 @@ import ru.genesis.calendar.auth.E2eeRemoteOriginal
 import ru.genesis.calendar.data.NativeLegacyScopeFence
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /** Actual native owner/device composition; no activation flags or legacy
  * cleanup. The OS credential flow precedes access to E2eeDeviceVault. */
@@ -18,12 +22,21 @@ internal class E2eeProductMigrationController private constructor(private val co
         val sources:(UnlockedE2eeDevice,E2eeDirectory.Verified,E2eeLegacyReadTransport)->E2eeMigrationSources,
         val transport:(UnlockedE2eeDevice,E2eeDirectory.Verified,E2eeMigrationSources,E2eeMigrationSession?)->E2eeSignedMigrationTransport,
         val fence:(UnlockedE2eeDevice,E2eeDirectory.Verified)->NativeLegacyScopeFence,val assertCurrent:()->Unit,val assertEditorsFrozen:()->Unit)
-    private val closed=AtomicBoolean();private val running=AtomicBoolean()
+    private val closed=AtomicBoolean();private val running=AtomicBoolean();private val operation=AtomicReference<Job?>(null)
     private fun current(){check(!closed.get()){"E2EE_UNLOCK_REQUIRED"};device.requireOpen();ports.assertCurrent();ports.assertEditorsFrozen()}
-    override fun close(){if(closed.compareAndSet(false,true))device.lock()}
-    suspend fun run(secret:ByteArray,savedKit:JSONObject,progress:(String)->Unit={}){
+    override fun close(){if(closed.compareAndSet(false,true)){operation.get()?.cancel();device.lock()}}
+    /** A pause preserves the remote lease, journal and exact pending requests.
+     * Wait for the whole-job fence before admitting another operation. */
+    suspend fun stop(){operation.get()?.let{it.cancel();it.join()}}
+    suspend fun run(secret:ByteArray,savedKit:JSONObject,progress:(String)->Unit={})=execute(secret,savedKit,progress,false)
+    suspend fun cancel(secret:ByteArray,savedKit:JSONObject)=execute(secret,savedKit,{},true)
+    private suspend fun execute(secret:ByteArray,savedKit:JSONObject,progress:(String)->Unit,cancelling:Boolean){
         val held=secret.copyOf();check(running.compareAndSet(false,true)){held.fill(0);"E2EE_MIGRATION_BUSY"}
         try{val kit=JSONObject(savedKit.toString());withContext(Dispatchers.IO){
+            val job=currentCoroutineContext()[Job]?:error("E2EE_MIGRATION_JOB_REQUIRED")
+            check(operation.compareAndSet(null,job)){"E2EE_MIGRATION_BUSY"}
+            fun current(){job.ensureActive();this@E2eeProductMigrationController.current()}
+            try{
             current();val frame=directory;val router=E2eeMigrationSourceReadRouter();val sources=ports.sources(device,frame,router);current()
             val own=frame.devices[device.deviceId];check(own!=null&&!own.revoked&&own.userId==device.ownerId&&own.role=="owner"){"E2EE_REVOKED_DEVICE"}
             val root=E2eeKeys.openRoot(own.capsule,device.keys().receiving,E2eeKeys.RootRecipient(frame.ownerId,frame.scopeId,frame.cryptoEpoch,frame.keyId,device.deviceId));current()
@@ -35,7 +48,14 @@ internal class E2eeProductMigrationController private constructor(private val co
             val maximum=128L*1024*1024;val inventory=E2eePrivatePaths.load(context)
             val planning=E2eeStreamedPlanningOptions(device,inventory,E2eeMigrationHistory.Capacity(maximum,10000,maximum.toInt()),
                 E2eeRemoteOriginal.Capacity(maximum,10000,1000,10000,maximum.toInt()),::current,{admit()})
-            val content=E2eeStreamedContentPlanningOptions(planning,E2eeContentPlan.Capacity(maximum,10000,10000)){admit()}
+            if(cancelling){
+                migration.cancelStreamed(planning);current();val response=ports.setup(device).directory(frame.scopeId);current()
+                val cancelled=device.rememberDirectory(frame.scopeId,device.authorityPin,response.getJSONArray("events"),device.ownerId);current()
+                check(cancelled.state=="preparing"&&cancelled.kind=="personal"&&cancelled.resourceId==device.ownerId){"E2EE_DOWNGRADE_FORBIDDEN"}
+                val token=fence.token()?:error("E2EE_LOCAL_FENCE_REQUIRED");current()
+                fence.releaseCancelled(token,cancelled,migration::status);current();directory=cancelled;return@withContext
+            }
+            val content=E2eeStreamedContentPlanningOptions(planning,E2eeContentPlan.Capacity(maximum,8000,8000)){admit()}
             val options=E2eeProductMigration.Options(E2eeProductMigration.Target(device.ownerId,frame.scopeId,"personal",device.ownerId),migration,sources,router,
                 E2eeStagedMigrationOptions(E2eeSourceStage.Capacity(maximum,10000),::current){admit()},planning,content,
                 {session->ports.transport(device,frame,sources,session)},::current,{
@@ -45,6 +65,7 @@ internal class E2eeProductMigrationController private constructor(private val co
                     fence.activate(active);current();directory=active
                 },progress)
             E2eeProductMigration.run(options,E2eePrivatePathCatalogue(context));current()
+            }finally{operation.compareAndSet(job,null)}
         }}finally{held.fill(0);running.set(false)}
     }
     companion object{

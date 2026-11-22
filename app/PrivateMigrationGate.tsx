@@ -34,11 +34,13 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'>(state.reason==='resume'?'confirm':'loading');
  const [generated,setGenerated]=useState<{secret:string;kit:RecoveryKit}|null>(null),[savedFile,setSavedFile]=useState(false),[savedSecret,setSavedSecret]=useState(false);
  const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[fileBusy,setFileBusy]=useState(false),[busy,setBusy]=useState(false);
+ const [stopping,setStopping]=useState(false);
  const [error,setError]=useState(''),[progress,setProgress]=useState<'snapshot'|'sources'|'reconciliation'|'uploading'|'active'>('snapshot');
  const controller=useRef<WebProductMigration|null>(null),alive=useRef(true),started=useRef(false),fileRequest=useRef(0),ownerId=state.ownerId;
+ const attempt=useRef<{stopping:boolean;drained:Promise<void>}|null>(null);
  const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{});
  const current=()=>{if(!alive.current||privateMigrationUi()?.id!==state.id)throw new Error('E2EE_ACCOUNT_CHANGED');};
- const frozen=()=>{current();const content=document.getElementById('genesis-app-content');if(!content?.inert||!document.contains(dialogRef.current)||document.visibilityState!=='visible')throw new Error('E2EE_EDITOR_FENCE_REQUIRED');};
+ const frozen=()=>{current();if(attempt.current?.stopping)throw new Error('E2EE_OPERATION_STOPPED');const content=document.getElementById('genesis-app-content');if(!content?.inert||!document.contains(dialogRef.current)||document.visibilityState!=='visible')throw new Error('E2EE_EDITOR_FENCE_REQUIRED');};
  useEffect(()=>{
   alive.current=true;const content=document.getElementById('genesis-app-content'),inert=content?.inert,hidden=content?.getAttribute('aria-hidden'),overflow=document.body.style.overflow;
   if(content){content.inert=true;content.setAttribute('aria-hidden','true');}document.body.style.overflow='hidden';
@@ -53,7 +55,8 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
   return code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
  };
  const submit=async(event:FormEvent)=>{
-  event.preventDefault();if(busy||fileBusy||!kit)return;setBusy(true);setError('');started.current=true;let held:Uint8Array|undefined;
+  event.preventDefault();if(busy||fileBusy||!kit||attempt.current)return;setBusy(true);setError('');started.current=true;let held:Uint8Array|undefined;
+  let drained!:()=>void;const active={stopping:false,drained:new Promise<void>(resolve=>{drained=resolve;})};attempt.current=active;
   try{
    frozen();held=decodeE2eeBytes(secret.trim(),32);setSecret('');setPhase('running');
    const opened=await prepareCurrentPrivateMigration(held,kit,frozen);current();controller.current=opened;
@@ -61,8 +64,13 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    setPhase('done');const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
    privateAccountRequired(ownerId,language);await unlockCurrentPrivateAccount(encodeE2eeBytes(held),kit);current();
    setKit(undefined);window.dispatchEvent(new Event('genesis-private-migration-complete'));closePrivateMigrationUi(state.id);
-  }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){setError(failure(reason));setPhase('confirm');}}
-  finally{held?.fill(0);controller.current?.close();controller.current=null;if(alive.current)setBusy(false);}
+  }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){setError(active.stopping?'':failure(reason));setPhase('confirm');}}
+  finally{held?.fill(0);controller.current?.close();controller.current=null;if(attempt.current===active)attempt.current=null;drained();if(alive.current&&!active.stopping)setBusy(false);}
+ };
+ const pause=async()=>{
+  const active=attempt.current;if(!active||active.stopping)return;active.stopping=true;setStopping(true);
+  try{await controller.current?.stop();await active.drained;}
+  finally{if(alive.current&&privateMigrationUi()?.id===state.id){setStopping(false);setBusy(false);setSecret('');setKit(undefined);setPhase('confirm');}}
  };
  return <div className="private-vault-gate" data-no-translate lang={language}>
   <form ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="private-migration-title" aria-describedby="private-migration-description" tabIndex={-1} onSubmit={submit}>
@@ -90,6 +98,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
     <button type="submit" className="primary-button" disabled={busy||fileBusy||!kit||!secret.trim()}>{state.reason==='resume'||started.current?copy.resume:copy.begin}</button>
    </>:null}
    {phase==='running'||phase==='done'?<p role="status" aria-live="polite">{phase==='done'||progress==='active'?copy.done:copy[progress]}</p>:null}
+   {phase==='running'?<button type="button" className="text-button" disabled={stopping} onClick={()=>{void pause();}}>{stopping?vaultCopy.busy:copy.stop}</button>:null}
    {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
    <p className="workspace-recovery-hint">{copy.kept}</p>
    <div className="workspace-recovery-actions">

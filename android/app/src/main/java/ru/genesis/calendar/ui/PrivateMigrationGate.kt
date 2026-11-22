@@ -73,6 +73,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     var generatedId by remember{mutableStateOf<String?>(null)}
     var savedFile by remember{mutableStateOf(false)};var savedSecret by remember{mutableStateOf(false)}
     var secret by remember{mutableStateOf("")};var kit by remember{mutableStateOf<JSONObject?>(null)};var busy by remember{mutableStateOf(false)}
+    var stopping by remember{mutableStateOf(false)}
     var error by remember{mutableStateOf("")};var progress by remember{mutableStateOf("snapshot")};var started by remember{mutableStateOf(view.resume)}
     val alive=remember{AtomicBoolean(true)};val prepared=remember{AtomicReference<E2eeProductMigrationController?>(null)}
     val pendingFile=remember{AtomicReference<NativeRecoveryFileRequest?>(null)}
@@ -81,6 +82,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     val pendingCredential=remember{AtomicReference<NativeMigrationCredential?>(null)}
     var credentialActivity by remember{mutableStateOf<NativeMigrationCredential?>(null)}
     val credentialAttempt=remember{AtomicLong(0)};val activeSecret=remember{AtomicReference<ByteArray?>(null)}
+    val migrationJob=remember{AtomicReference<Job?>(null)}
     val foregroundState=remember{AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
     fun current(){check(alive.get()&&NativeMigrationUiState.state.value?.id==view.id&&controller.state.value.user?.uid==view.owner&&!controller.state.value.requiresSignIn){"E2EE_ACCOUNT_CHANGED"}}
     fun foreground(){current();check(foregroundState.get()){"E2EE_FOREGROUND_REQUIRED"}}
@@ -129,6 +131,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
         }
     }
     RecoveryCredentialActivity(credentialActivity,text.getString("title"),text.getString("confirm"),operation={request,material,admit->
+            val job=currentCoroutineContext().job;check(migrationJob.compareAndSet(null,job)){"E2EE_MIGRATION_BUSY"}
             var migration:E2eeProductMigrationController?=null
             fun owns(){foreground();admit();check(pendingCredential.get()===request&&credentialAttempt.get()==request.attempt){"E2EE_CREDENTIAL_REVOKED"}}
             try{
@@ -141,11 +144,12 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             }finally{
                 activeSecret.compareAndSet(material.secret,null)
                 migration?.let{prepared.compareAndSet(it,null);controller.closePrivateMigration(it)}
+                migrationJob.compareAndSet(job,null)
             }
     },finished={request,reason->
         if(pendingCredential.compareAndSet(request,null)&&alive.get()){
-            credentialActivity=null;secret="";kit=null;busy=false
-            if(reason!=null){error=message(reason);phase="confirm"}
+            credentialActivity=null;secret="";kit=null;if(!stopping)busy=false
+            if(reason!=null){if(!stopping)error=message(reason);phase="confirm"}
         }
     })
     LaunchedEffect(phase,auth.user?.privateVault,auth.busy){if(phase=="done"&&auth.user?.privateVault==true&&!auth.busy)NativeMigrationUiState.close(view.id)}
@@ -185,6 +189,15 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                     },enabled=!busy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
                 }
                 if(phase=="running"||phase=="done")Text(text.getString(if(phase=="done"||progress=="active")"done"else progress))
+                if(phase=="running")TextButton(onClick={if(!stopping){
+                    stopping=true;credentialAttempt.incrementAndGet();scope.launch{
+                        try{migrationJob.get()?.cancelAndJoin()}
+                        finally{if(alive.get()){
+                            prepared.getAndSet(null)?.let(controller::closePrivateMigration);pendingCredential.getAndSet(null)?.close();credentialActivity=null
+                            activeSecret.getAndSet(null)?.fill(0);secret="";kit=null;error="";phase="confirm";stopping=false;busy=false
+                        }}
+                    }
+                }},enabled=!stopping,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("stop"))}
                 if(phase=="done"&&!auth.busy)TextButton(onClick={controller.checkSession()},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("unlock"))}
                 if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error)
                 Text(text.getString("kept"),style=MaterialTheme.typography.bodyMedium)

@@ -21,7 +21,8 @@
     "error": "Could not complete the transfer. Check your recovery material and connection, then try again.",
     "kept": "Original data and unsent changes are preserved if the transfer stops.",
     "secretNote": "Store the secret separately from the recovery file and Google sign-in.",
-    "generated": "Save both items, then verify them from the saved copies."
+    "generated": "Save both items, then verify them from the saved copies.",
+    "stop": "Pause transfer"
   },
   "ru": {
     "title": "Зашифровать личные данные",
@@ -45,7 +46,8 @@
     "error": "Не удалось завершить перенос. Проверьте комплект восстановления и соединение и повторите попытку.",
     "kept": "При остановке переноса исходные данные и неотправленные изменения сохраняются.",
     "secretNote": "Храните секрет отдельно от файла восстановления и входа через Google.",
-    "generated": "Сохраните оба элемента, затем проверьте их из сохранённых копий."
+    "generated": "Сохраните оба элемента, затем проверьте их из сохранённых копий.",
+    "stop": "Приостановить перенос"
   },
   "el": {
     "title": "Κρυπτογράφηση προσωπικών δεδομένων",
@@ -69,7 +71,8 @@
     "error": "Η μεταφορά δεν ολοκληρώθηκε. Ελέγξτε το κιτ ανάκτησης και τη σύνδεση και δοκιμάστε ξανά.",
     "kept": "Τα αρχικά δεδομένα και οι μη απεσταλμένες αλλαγές διατηρούνται αν σταματήσει η μεταφορά.",
     "secretNote": "Φυλάξτε το μυστικό χωριστά από το αρχείο ανάκτησης και τη σύνδεση Google.",
-    "generated": "Αποθηκεύστε και τα δύο στοιχεία και ελέγξτε τα από τα αποθηκευμένα αντίγραφα."
+    "generated": "Αποθηκεύστε και τα δύο στοιχεία και ελέγξτε τα από τα αποθηκευμένα αντίγραφα.",
+    "stop": "Παύση μεταφοράς"
   },
   "de": {
     "title": "Persönliche Daten verschlüsseln",
@@ -93,7 +96,8 @@
     "error": "Die Übertragung konnte nicht abgeschlossen werden. Prüfen Sie das Wiederherstellungsset und die Verbindung und versuchen Sie es erneut.",
     "kept": "Originaldaten und nicht gesendete Änderungen bleiben bei einer Unterbrechung erhalten.",
     "secretNote": "Bewahren Sie das Geheimnis getrennt von der Wiederherstellungsdatei und der Google-Anmeldung auf.",
-    "generated": "Speichern Sie beide Elemente und prüfen Sie anschließend die gespeicherten Kopien."
+    "generated": "Speichern Sie beide Elemente und prüfen Sie anschließend die gespeicherten Kopien.",
+    "stop": "Übertragung pausieren"
   },
   "fr": {
     "title": "Chiffrer vos données personnelles",
@@ -117,7 +121,8 @@
     "error": "Le transfert n’a pas pu être terminé. Vérifiez votre kit de récupération et la connexion, puis réessayez.",
     "kept": "Les données originales et les modifications non envoyées sont conservées si le transfert s’arrête.",
     "secretNote": "Conservez le secret séparément du fichier de récupération et de la connexion Google.",
-    "generated": "Enregistrez les deux éléments, puis vérifiez les copies enregistrées."
+    "generated": "Enregistrez les deux éléments, puis vérifiez les copies enregistrées.",
+    "stop": "Mettre le transfert en pause"
   },
   "es": {
     "title": "Cifrar tus datos personales",
@@ -141,7 +146,8 @@
     "error": "No se pudo completar la transferencia. Comprueba el kit de recuperación y la conexión y vuelve a intentarlo.",
     "kept": "Los datos originales y los cambios sin enviar se conservan si se detiene la transferencia.",
     "secretNote": "Guarda el secreto separado del archivo de recuperación y del acceso con Google.",
-    "generated": "Guarda ambos elementos y después verifica las copias guardadas."
+    "generated": "Guarda ambos elementos y después verifica las copias guardadas.",
+    "stop": "Pausar la transferencia"
   },
   "it": {
     "title": "Crittografa i tuoi dati personali",
@@ -165,7 +171,8 @@
     "error": "Impossibile completare il trasferimento. Controlla il kit di recupero e la connessione e riprova.",
     "kept": "I dati originali e le modifiche non inviate restano conservati se il trasferimento si interrompe.",
     "secretNote": "Conserva il segreto separatamente dal file di recupero e dall’accesso Google.",
-    "generated": "Salva entrambi gli elementi, poi verifica le copie salvate."
+    "generated": "Salva entrambi gli elementi, poi verifica le copie salvate.",
+    "stop": "Metti in pausa il trasferimento"
   },
   "pt": {
     "title": "Cifrar os seus dados pessoais",
@@ -189,7 +196,8 @@
     "error": "Não foi possível concluir a transferência. Verifique o kit de recuperação e a ligação e tente novamente.",
     "kept": "Os dados originais e as alterações não enviadas são preservados se a transferência parar.",
     "secretNote": "Guarde o segredo separado do ficheiro de recuperação e do início de sessão Google.",
-    "generated": "Guarde os dois elementos e depois verifique as cópias guardadas."
+    "generated": "Guarde os dois elementos e depois verifique as cópias guardadas.",
+    "stop": "Pausar transferência"
   },
   "pl": {
     "title": "Zaszyfruj dane osobiste",
@@ -213,7 +221,8 @@
     "error": "Nie udało się zakończyć przenoszenia. Sprawdź zestaw odzyskiwania oraz połączenie i spróbuj ponownie.",
     "kept": "Dane źródłowe i niewysłane zmiany zostaną zachowane, jeśli przenoszenie się zatrzyma.",
     "secretNote": "Przechowuj sekret oddzielnie od pliku odzyskiwania i logowania Google.",
-    "generated": "Zapisz oba elementy, a następnie sprawdź zapisane kopie."
+    "generated": "Zapisz oba elementy, a następnie sprawdź zapisane kopie.",
+    "stop": "Wstrzymaj przesyłanie"
   },
   "sr": {
     "title": "Шифрујте личне податке",
@@ -237,7 +246,8 @@
     "error": "Пренос није завршен. Проверите комплет за опоравак и везу и покушајте поново.",
     "kept": "Изворни подаци и непослате измене остају сачувани ако се пренос прекине.",
     "secretNote": "Чувајте тајну одвојено од датотеке за опоравак и пријаве преко Google-а.",
-    "generated": "Сачувајте оба елемента, па проверите сачуване копије."
+    "generated": "Сачувајте оба елемента, па проверите сачуване копије.",
+    "stop": "Паузирај пренос"
   },
   "uk": {
     "title": "Зашифрувати особисті дані",
@@ -261,7 +271,8 @@
     "error": "Не вдалося завершити перенесення. Перевірте комплект відновлення та з’єднання й повторіть спробу.",
     "kept": "У разі зупинки перенесення вихідні дані та ненадіслані зміни зберігаються.",
     "secretNote": "Зберігайте секрет окремо від файлу відновлення та входу через Google.",
-    "generated": "Збережіть обидва елементи, потім перевірте їх зі збережених копій."
+    "generated": "Збережіть обидва елементи, потім перевірте їх зі збережених копій.",
+    "stop": "Призупинити перенесення"
   },
   "zh": {
     "title": "加密个人数据",
@@ -285,7 +296,8 @@
     "error": "无法完成转移。请检查恢复套件和网络连接，然后重试。",
     "kept": "转移停止时，原始数据和未发送的更改会保留。",
     "secretNote": "请将恢复密钥与恢复文件及 Google 登录信息分开保存。",
-    "generated": "保存这两个项目，然后使用已保存的副本进行验证。"
+    "generated": "保存这两个项目，然后使用已保存的副本进行验证。",
+    "stop": "暂停传输"
   },
   "tr": {
     "title": "Kişisel verilerinizi şifreleyin",
@@ -309,7 +321,8 @@
     "error": "Aktarım tamamlanamadı. Kurtarma kitinizi ve bağlantınızı kontrol edip yeniden deneyin.",
     "kept": "Aktarım durursa özgün veriler ve gönderilmemiş değişiklikler korunur.",
     "secretNote": "Sırrı, kurtarma dosyasından ve Google giriş bilgilerinden ayrı saklayın.",
-    "generated": "İki öğeyi de kaydedin, ardından kaydedilen kopyaları doğrulayın."
+    "generated": "İki öğeyi de kaydedin, ardından kaydedilen kopyaları doğrulayın.",
+    "stop": "Aktarımı duraklat"
   },
   "ja": {
     "title": "個人データを暗号化",
@@ -333,6 +346,7 @@
     "error": "移行を完了できませんでした。復旧キットと接続を確認して、もう一度お試しください。",
     "kept": "移行が停止しても、元のデータと未送信の変更は保持されます。",
     "secretNote": "シークレットは復旧ファイルや Google ログイン情報と分けて保管してください。",
-    "generated": "両方を保存し、保存したコピーから確認してください。"
+    "generated": "両方を保存し、保存したコピーから確認してください。",
+    "stop": "転送を一時停止"
   }
 }
