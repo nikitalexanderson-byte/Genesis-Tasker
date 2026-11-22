@@ -31,6 +31,7 @@ import ru.genesis.calendar.security.*
 @Composable internal fun PrivateBackupHandoffHost(owner:String?){
     PrivateBackupFileActivity(owner)
     PrivateDriveConnectionActivity(owner)
+    MessageKeyFileActivity(owner)
 }
 
 @Composable internal fun PrivateBackupDialog(owner:String,title:String,onClose:()->Unit){

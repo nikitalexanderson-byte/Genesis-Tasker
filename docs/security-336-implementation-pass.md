@@ -10,6 +10,22 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Native independent message-key file handoff (candidate, no compilation/QA)
+
+Replaced the actual key-file pickers' raw repository/provider callback with a
+transient ciphertext-only handoff above the private-vault gate. Exact original
+attempt/owner/session/restore and live entitlement, two-minute expiry, foreground
+readmission, bounded cancellable IO and complete export readback are required.
+Passwords clear before opening the picker and on background/disposal; imported
+keys need fresh entry after unlock. No persisted picker grant or password/key
+spool was added. The existing independent wire/key identity and old-file reader
+remain. Details and pending acceptance/API-test adaptation:
+`security-336-native-message-key-files.md`.
+
+Full durable message drafts/attachments and remaining message/background paths
+are still implementation work. No tests/compiler/lint/build/CI/push/release ran;
+accepted coverage remains9/20 and activation controls stay off.
+
 ### Explicit remote cancellation UI (candidate, no compilation/QA)
 
 The actual web/native migration gates now expose a distinct confirmed cancellation

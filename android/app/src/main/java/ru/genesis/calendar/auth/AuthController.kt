@@ -238,6 +238,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         current();return current
     }
 
+    internal fun privateDataExchangeOwnerGuard(uid:String):()->Unit{
+        val owner=privateUiOwnerGuard(uid)
+        val current={owner();(mutableState.value.accountSettings?.featureAccess?:FeatureAccess()).requireDataExchange()}
+        current();return current
+    }
+
     /** Captures the account generation once; it cannot follow a later account switch. */
     internal fun e2eeScopeTransport(uid: String): ru.genesis.calendar.security.E2eeScopeTransport {
         val generation = client.currentGeneration()

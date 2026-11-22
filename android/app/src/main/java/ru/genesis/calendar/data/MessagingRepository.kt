@@ -423,27 +423,22 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         requireDataExchange()
         MessagingCrypto.exportBackup(requireNotNull(identity), password).also { requireDataExchange() }
     }
-    /** Recheck after the system picker; an earlier prepared key must not retain an expired grant. */
-    fun writeBackup(source: String, open: () -> java.io.OutputStream) {
-        requireDataExchange()
-        open().use { it.write(source.toByteArray(Charsets.UTF_8)); it.flush() }
-    }
-    suspend fun importBackup(source: String, password: String) = mutex.withLock {
-        requireDataExchange()
-        val imported = MessagingCrypto.importBackup(source, password); requireDataExchange()
-        val registered = request("GET", "/shared/messaging/key"); val id = registered.opt("keyId") as? String
+    suspend fun importBackup(source: String, password: String,assertCurrent:()->Unit={}) = mutex.withLock {
+        fun current(){assertCurrent();requireDataExchange()};current()
+        val imported = MessagingCrypto.importBackup(source, password); current()
+        val registered = request("GET", "/shared/messaging/key");current(); val id = registered.opt("keyId") as? String
         require(id == null || id == imported.keyId) { "MESSAGING_KEY_MISMATCH" }
         require(identity == null || identity!!.keyId == imported.keyId) { "MESSAGING_KEY_MISMATCH" }
-        requireDataExchange()
-        write("identity", MessagingCrypto.privateJwk(imported)); identity = imported
+        current()
+        write("identity", MessagingCrypto.privateJwk(imported));current(); identity = imported
         if (id == null) {
-            requireDataExchange()
-            request("POST", "/shared/messaging/key", JSONObject().put("publicKey", JSONObject(imported.publicJson)))
+            current()
+            request("POST", "/shared/messaging/key", JSONObject().put("publicKey", JSONObject(imported.publicJson)));current()
         }
-        initialized = false; initializeLocked(); inboxLocked()
-        mutable.value.selected?.let { current ->
-            val peer = peersLocked(current.spaceId).first { it.id == current.peerId }
-            selectLocked(current, mutable.value.accepted, mutable.value.initiator, peer, mutable.value.declined)
+        initialized = false; initializeLocked();current(); inboxLocked();current()
+        mutable.value.selected?.let { selected ->
+            current();val peer = peersLocked(selected.spaceId).first { it.id == selected.peerId };current()
+            selectLocked(selected, mutable.value.accepted, mutable.value.initiator, peer, mutable.value.declined);current()
         }
     }
     suspend fun closeConversation() = mutex.withLock {

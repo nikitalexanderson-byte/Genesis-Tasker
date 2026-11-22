@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.genesis.calendar.data.*
 import ru.genesis.calendar.security.MessagingCrypto
+import ru.genesis.calendar.security.NativeMessageKeyTransfer
 import ru.genesis.calendar.security.PrivateFileMetadata
 import java.util.UUID
 import java.io.ByteArrayOutputStream
@@ -53,7 +54,6 @@ import java.io.InputStream
     var backup by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
     var backupSource by remember { mutableStateOf<String?>(null) }
-    var backupExport by remember { mutableStateOf<String?>(null) }
     var recoveryKeySaved by remember { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
     var security by remember { mutableStateOf(false) }
@@ -63,6 +63,18 @@ import java.io.InputStream
     var recoverConfirm by remember { mutableStateOf(false) }
     var download by remember { mutableStateOf<Pair<MessagingRow, PrivateFileMetadata>?>(null) }
     val client = remember { UUID.randomUUID().toString() }
+    val authController=remember(context){ru.genesis.calendar.auth.AuthController.get(context)}
+    val keyTransfer by NativeMessageKeyTransfer.state.collectAsStateWithLifecycle()
+    val ownKeyTransfer=keyTransfer?.takeIf{it.request.owner==repository.ownerUid}
+    val foreground=remember(repository,lifecycle){java.util.concurrent.atomic.AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
+    DisposableEffect(repository,lifecycle){
+        val observer=androidx.lifecycle.LifecycleEventObserver{_,event->
+            if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
+            if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);password="";backupSource=null;recoveryKeySaved=false}
+        };lifecycle.addObserver(observer)
+        onDispose{foreground.set(false);lifecycle.removeObserver(observer);password="";backupSource=null;recoveryKeySaved=false}
+    }
+    fun fileForeground(){check(foreground.get()){"E2EE_FOREGROUND_REQUIRED"};repository.requireDataExchange()}
     fun run(action: suspend () -> Unit) {
         if (busy) return
         busy = true; error = ""
@@ -112,22 +124,14 @@ import java.io.InputStream
             }
         }
     }
-    val exportKey = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val source = backupExport; backupExport = null
-        if (uri != null && source != null) run {
-            repository.writeBackup(source) { context.contentResolver.openOutputStream(uri) ?: error("FILE_WRITE_FAILED") }
-            backup = false; password = ""; backupSource = null
+    LaunchedEffect(repository,state.initialized,ownKeyTransfer?.request?.id,ownKeyTransfer?.phase){
+        val selected=ownKeyTransfer?:return@LaunchedEffect
+        if(selected.phase=="ready"&&selected.request.kind=="import"&&state.initialized){
+            try{fileForeground();backupSource=selected.request.encryptedSource(::fileForeground);backup=true;password="";recoveryKeySaved=false}
+            catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=messagingError("INVALID_BACKUP")}
         }
-    }
-    val importKey = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) run {
-            repository.requireDataExchange()
-            val source = context.contentResolver.openInputStream(uri)?.use { input ->
-                val bytes = messagingRead(input, 16384); bytes.toString(Charsets.UTF_8)
-            } ?: error("FILE_READ_FAILED")
-            repository.requireDataExchange()
-            backupSource = source
-        }
+        if(selected.phase=="complete"&&selected.request.kind=="export"){backup=false;password="";backupSource=null;recoveryKeySaved=false}
+        if(selected.phase=="failed"){password="";backupSource=null;recoveryKeySaved=false;error=messagingError("INVALID_BACKUP")}
     }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         val selected = download; download = null
@@ -345,7 +349,8 @@ import java.io.InputStream
         text = { Text("Сообщения и прикреплённые файлы будут удалены без возможности восстановления.") },
         confirmButton = { TextButton({ val row = deleteConfirm; val clear = clearConfirm; clearConfirm = false; deleteConfirm = null; run { if (clear) repository.clear() else if (row != null) repository.delete(row) } }, enabled = !busy) { Text("Удалить") } },
         dismissButton = { TextButton({ clearConfirm = false; deleteConfirm = null }) { Text("Отмена") } })
-    if (backup) AlertDialog(onDismissRequest = { if (!busy) { backup = false; password = ""; backupSource = null } },
+    if (backup) AlertDialog(onDismissRequest = { if (!busy) { ownKeyTransfer?.takeIf{it.phase=="ready"}?.request?.let(NativeMessageKeyTransfer::failed);backup = false; password = ""; backupSource = null } },
+        properties=androidx.compose.ui.window.DialogProperties(securePolicy=androidx.compose.ui.window.SecureFlagPolicy.SecureOn),
         title = { Text(if (state.keyReady && backupSource == null) "Резервная копия ключа" else "Импортировать ключ") }, text = {
         Column(Modifier.heightIn(max = (LocalConfiguration.current.screenHeightDp * .55f).dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -359,14 +364,20 @@ import java.io.InputStream
             }
             if (backupSource != null) Text("Файл ключа выбран. Введите его пароль и восстановите ключ.", style = MaterialTheme.typography.bodySmall)
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
-            OutlinedButton({ importKey.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }, enabled = !busy && canExchange) { Text("Выбрать копию ключа") }
+            OutlinedButton({try{fileForeground();val guard=authController.privateDataExchangeOwnerGuard(repository.ownerUid);password="";backupSource=null;recoveryKeySaved=false;NativeMessageKeyTransfer.prepareImport(repository.ownerUid,guard)}catch(_:Exception){error=messagingError("INVALID_BACKUP")}}, enabled = !busy && canExchange && ownKeyTransfer?.phase !in setOf("requested","picking","io")) { Text("Выбрать копию ключа") }
         }
     }, confirmButton = { Button({
-        if (backupSource != null) run { repository.importBackup(backupSource!!, password); backup = false; password = ""; backupSource = null }
-        else run { backupExport = repository.exportBackup(password); withContext(Dispatchers.Main) { exportKey.launch("genesis-messaging-key.json") } }
+        val supplied=password;password="";recoveryKeySaved=false
+        if (backupSource != null){val selected=ownKeyTransfer?.takeIf{it.phase=="ready"&&it.request.kind=="import"}?.request;run{
+            val request=requireNotNull(selected){"INVALID_BACKUP"};val source=request.encryptedSource(::fileForeground)
+            repository.importBackup(source,supplied){request.current();fileForeground()};request.current();NativeMessageKeyTransfer.consumed(request);backup=false;backupSource=null
+        }}
+        else{try{val guard=authController.privateDataExchangeOwnerGuard(repository.ownerUid);run{
+            val source=repository.exportBackup(supplied);withContext(Dispatchers.Main.immediate){fileForeground();guard();NativeMessageKeyTransfer.prepareExport(repository.ownerUid,source,guard)}
+        }}catch(_:Exception){error=messagingError("INVALID_BACKUP")}}
     }, enabled = !busy && canExchange && (if(backupSource!=null)password.length>=12 else state.keyReady&&recoveryKeySaved&&MessagingCrypto.isRecoveryKey(password))) {
         Text(if (backupSource != null || !state.keyReady) "Восстановить" else "Сохранить копию") } },
-        dismissButton = { TextButton({ backup = false; password = ""; backupSource = null }, enabled = !busy) { Text("Закрыть") } })
+        dismissButton = { TextButton({ ownKeyTransfer?.takeIf{it.phase=="ready"}?.request?.let(NativeMessageKeyTransfer::failed);backup = false; password = ""; backupSource = null }, enabled = !busy) { Text("Закрыть") } })
 }
 
 @Composable private fun MessagingNoticeRow(notice: MessagingNotice, busy: Boolean, onClick: () -> Unit) {
