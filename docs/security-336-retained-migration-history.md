@@ -6,6 +6,40 @@ release has run for this pass. Accepted coverage stays **9/20**. Production
 3.3.5/149, the accepted Paddle website, floors0, cutover off and
 GENESIS_DEPLOY_ANDROID=false are unchanged.
 
+## Exact interrupted capture replay (22 November continuation; candidate)
+
+Both source-stage implementations now reopen a capturing journal with its
+original actor, target and CAS serial. A separate custody proof authenticates
+every stored part, its size/hash/immutable serial and the unchanged journal and
+catalogue. It deliberately exposes no logical reader, content-restore port,
+raw portable JSON, invented suffix or path EOF.
+
+The actual staged capture first authenticates all existing complete/prefix
+material, then replays every recorded path from the current fenced producer.
+Completed paths must match exactly through real producer EOF. On an unfinished
+path, all old part hashes must match before appending new immutable parts.
+A recorded short final part may only be followed by EOF; it is never rewritten
+or followed by a new part that would break canonical chunking. Truncation,
+changed bytes, extra bytes on a completed path, missing roles, concurrent CAS
+or changed catalogue keep the barrier and originals.
+
+The account-wide catalogue now understands this explicit prefix-only custody
+role, allowing the real product prepare flow to reach resume. This is not a
+namespace exception or admission of a partial source to reconciliation. Every
+published source reference still requires the full ordered registry, real EOF
+of every path, complete manifests and the same transactional catalogue CAS.
+The last resumed journal is reused as the current full source, avoiding a
+duplicate full snapshot on each interruption. Earlier complete/orphan sources
+remain ordered history.
+
+This handles unchanged-source interruptions and the final-marker crash window.
+Changed-source prefixes still need explicit preservation/review rather than
+automatic completion; divergent-domain review and ambiguous legacy cancellation
+remain separate code work. No tests/compiler/typecheck/lint/build/CI ran.
+Required consolidated checks include every part/EOF/manifest crash boundary,
+complete-path extra/truncated input, stored short tails, wrong actor/target,
+quota/CAS/process death, multiple orphan journals and web/native byte parity.
+
 ## Account-wide proof
 
 Web `migration-ownership-catalogue.ts` and native

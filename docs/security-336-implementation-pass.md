@@ -10,6 +10,19 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Interrupted local source capture replay (candidate)
+
+Web/native source stages now authenticate the exact stored prefix separately
+from logical source EOF and reopen the original journal at its CAS serial.
+All completed paths and stored part hashes must replay exactly before append;
+short final parts cannot be extended/replaced. The normal account-wide custody
+proof understands this explicit quarantine role, so real prepare can resume.
+Publication/reconciliation still accept only complete full-registry sources
+and a transactionally guarded catalogue. A resumed final journal is reused,
+without duplicating the whole snapshot. Divergence/ambiguous legacy cancellation
+remain code work. Details: `security-336-retained-migration-history.md`.
+No compilation/QA/coverage increase; coverage9/20.
+
 ### Native normal-messenger durable edits and exact command recovery (candidate)
 
 Added a strict owner/conversation/kind journal, explicit legacy readers, durable

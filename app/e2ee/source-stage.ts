@@ -133,9 +133,10 @@ async function commit(vault:UnlockedE2eeVault,changes:LocalWrite[],check:()=>voi
  * from one fixture or a raised aggregate/heap limit. */
 export class ProtectedSourceStage {
  #vault:UnlockedE2eeVault;#context:Context;#hash:string;#journal:Journal;#serial=1;#capacity:SourceStageCapacity;
- #check:()=>void;#admit:SourceStageOptions['admit'];#busy=false;#broken=false;
- private constructor(options:SourceStageOptions,scope:Context,hash:string,journal:Journal){
+ #check:()=>void;#admit:SourceStageOptions['admit'];#busy=false;#broken=false;#position=0;
+ private constructor(options:SourceStageOptions,scope:Context,hash:string,journal:Journal,serial=1){
   this.#vault=options.vault;this.#context=scope;this.#hash=hash;this.#journal=journal;this.#capacity={...options.capacity};this.#check=options.assertCurrent;this.#admit=options.admit;
+  this.#serial=serial;
  }
  #current(){current(this.#vault,this.#check);if(this.#broken||this.#journal.phase!=='capturing')throw new Error('E2EE_SOURCE_STAGE_CLOSED');}
  static async create(options:SourceStageOptions){
@@ -153,6 +154,24 @@ export class ProtectedSourceStage {
   catch(error){changes.forEach(row=>row.value.fill(0));throw error;}
   return new ProtectedSourceStage(captured,scope,hash,journal);
  }
+ /** Reopen the SAME journal under its original actor and serial. The producer
+  * must replay every stored byte, including completed paths, before new bytes
+  * can be appended. No prefix is an EOF, new snapshot or permission to delete. */
+ static async resume(options:SourceStageOptions,id:string){
+  current(options.vault,options.assertCurrent);const paths=[...options.paths],capacity={...options.capacity};
+  if(paths.length<1||paths.length>20||new Set(paths).size!==paths.length)invalid();paths.forEach(assertTechnical);
+  if(!Number.isSafeInteger(capacity.maximumParts)||capacity.maximumParts<1||capacity.maximumParts>MAX_PARTS
+   ||!Number.isSafeInteger(capacity.maximumBytes)||capacity.maximumBytes<1||capacity.maximumBytes>capacity.maximumParts*E2EE_CHUNK_BYTES)
+   throw new Error('E2EE_SOURCE_STAGE_CAPACITY');
+  await options.ensureDurableKeys();current(options.vault,options.assertCurrent);
+  const stored=await interruptedStage(options.vault,options.target,id,options.assertCurrent),body=stored.body;
+  if(body.entries.length!==paths.length||body.entries.some((entry,at)=>entry.id!==paths[at]))throw new Error('E2EE_SOURCE_STAGE_CONTEXT');
+  const bytes=body.entries.reduce((sum,row)=>sum+row.size,0),parts=body.entries.reduce((sum,row)=>sum+row.parts.length,0);
+  if(bytes>capacity.maximumBytes||parts>capacity.maximumParts)throw new Error('E2EE_SOURCE_STAGE_CAPACITY');
+  const encoded=canonical(body);
+  try{await options.admit({bytes,parts,metadataBytes:encoded.length});current(options.vault,options.assertCurrent);}finally{encoded.fill(0);}
+  return new ProtectedSourceStage({...options,paths,capacity},stored.scope,stored.hash,body,stored.serial);
+ }
  async #append(index:number,bytes:Uint8Array){
   this.#current();const captured=new Uint8Array(bytes);let changes:LocalWrite[]=[];
   try{
@@ -167,16 +186,31 @@ export class ProtectedSourceStage {
  /** The caller retains originals until capture/whole-snapshot publication.
   * Buffer acceptance is not a durable-input or snapshot-completion receipt. */
  async capturePath(id:string,producer:(write:(chunk:Uint8Array)=>Promise<void>)=>Promise<void>){
-  this.#current();if(this.#busy)throw new Error('E2EE_SOURCE_STAGE_BUSY');const index=this.#journal.entries.findIndex(row=>!row.complete);
-  if(index<0||this.#journal.entries[index].id!==id)throw new Error('E2EE_SOURCE_STAGE_ORDER');this.#busy=true;
+  this.#current();if(this.#busy)throw new Error('E2EE_SOURCE_STAGE_BUSY');const index=this.#position;
+  if(index>=this.#journal.entries.length||this.#journal.entries[index].id!==id)throw new Error('E2EE_SOURCE_STAGE_ORDER');this.#busy=true;
+  const existing=structuredClone(this.#journal.entries[index]);let replayed=0,sealedEnd=false;
   const buffer=new Uint8Array(E2EE_CHUNK_BYTES);let count=0,writing=false,accepting=true,inFlight:Promise<void>|undefined;
+  const flush=async()=>{
+   this.#current();const expected=existing.parts[replayed];
+   if(expected){
+    if(count!==expected.size||await digest(buffer.subarray(0,count))!==expected.hash)throw new Error('E2EE_SOURCE_STAGE_REPLAY_CHANGED');
+    replayed++;if(expected.size<E2EE_CHUNK_BYTES)sealedEnd=true;
+   }else{
+    if(existing.complete||sealedEnd)throw new Error('E2EE_SOURCE_STAGE_REPLAY_CHANGED');
+    await this.#append(index,buffer.subarray(0,count));
+   }
+   buffer.fill(0);count=0;
+  };
   const accept=(value:Uint8Array)=>{
    let owns=false;
    const task=(async()=>{
     let input:Uint8Array|undefined,entered=false;
     try{this.#current();if(!accepting||writing||!(value instanceof Uint8Array)||value.length<1||value.length>E2EE_CHUNK_BYTES)throw new Error('E2EE_SOURCE_STAGE_INPUT');
-     writing=true;entered=true;owns=true;input=new Uint8Array(value);let offset=0;while(offset<input.length){this.#current();const size=Math.min(input.length-offset,buffer.length-count);buffer.set(input.subarray(offset,offset+size),count);count+=size;offset+=size;
-      if(count===buffer.length){await this.#append(index,buffer);buffer.fill(0);count=0;}}}
+     writing=true;entered=true;owns=true;input=new Uint8Array(value);let offset=0;while(offset<input.length){
+      this.#current();if(sealedEnd||existing.complete&&replayed===existing.parts.length)throw new Error('E2EE_SOURCE_STAGE_REPLAY_CHANGED');
+      const limit=existing.parts[replayed]?.size??buffer.length,size=Math.min(input.length-offset,limit-count);
+      buffer.set(input.subarray(offset,offset+size),count);count+=size;offset+=size;if(count===limit)await flush();
+     }}
     catch(error){this.#broken=true;throw error;}finally{input?.fill(0);if(entered)writing=false;}
    })();
    // Drain an outstanding write even if a faulty producer returns/throws early.
@@ -185,13 +219,18 @@ export class ProtectedSourceStage {
   };
   try{
    await producer(accept);
-   accepting=false;if(writing)throw new Error('E2EE_SOURCE_STAGE_INPUT');this.#current();if(count)await this.#append(index,buffer.subarray(0,count));
-   const next=structuredClone(this.#journal);if(next.entries[index].size===0)throw new Error('E2EE_SOURCE_STAGE_EMPTY');next.entries[index].complete=true;
-   await commit(this.#vault,[write(journalId(this.#hash,next.stageId),next,this.#serial)],()=>this.#current());this.#journal=next;this.#serial++;
+   accepting=false;if(writing)throw new Error('E2EE_SOURCE_STAGE_INPUT');this.#current();
+   if(replayed!==existing.parts.length)throw new Error('E2EE_SOURCE_STAGE_REPLAY_CHANGED');
+   if(count)await flush();
+   if(!existing.complete){
+    const next=structuredClone(this.#journal);if(next.entries[index].size===0)throw new Error('E2EE_SOURCE_STAGE_EMPTY');next.entries[index].complete=true;
+    await commit(this.#vault,[write(journalId(this.#hash,next.stageId),next,this.#serial)],()=>this.#current());this.#journal=next;this.#serial++;
+   }
+   this.#position++;
   }catch(error){this.#broken=true;throw error;}finally{accepting=false;await inFlight?.catch(()=>{});buffer.fill(0);this.#busy=false;}
  }
  async finish():Promise<SourceStageReference>{
-  this.#current();if(this.#busy||this.#journal.entries.some(row=>!row.complete))throw new Error('E2EE_SOURCE_STAGE_INCOMPLETE');this.#busy=true;
+  this.#current();if(this.#busy||this.#position!==this.#journal.entries.length||this.#journal.entries.some(row=>!row.complete))throw new Error('E2EE_SOURCE_STAGE_INCOMPLETE');this.#busy=true;
   try{
   const manifest:Manifest={protocol:1,stageId:this.#journal.stageId,context:this.#context,chunkSize:E2EE_CHUNK_BYTES,entries:structuredClone(this.#journal.entries)};
   // Read-back every sealed part before publishing even a local complete marker.
@@ -217,6 +256,27 @@ export class ProtectedSourceStage {
 export async function inspectSourceStages(vault:SourceStageReadVault,target:SourceStageTarget,check:()=>void){
  const scope=context(vault,target),hash=await identity(scope),old=await knownCatalog(vault,scope,hash,check);if(!old)return[];
  return old.value.stages.map(row=>Object.freeze({...row}));
+}
+
+/** Authenticated custody of a bounded stored prefix, deliberately NOT a
+ * logical path reader. Missing suffixes/paths never become empty JSON or EOF.
+ * Only exact producer replay may finish this existing journal. */
+async function interruptedStage(vault:SourceStageReadVault,target:SourceStageTarget,id:string,check:()=>void){
+ current(vault,check);stageId(id);const scope=context(vault,target),hash=await identity(scope),index=await knownCatalog(vault,scope,hash,check);
+ const marker=index?.value.stages.find(row=>row.id===id);if(!index||!marker||marker.complete||marker.manifestHash!==null)invalid();
+ const row=await metadata(vault,journalId(hash,id),check);if(!row)invalid();const body=journal(row.value,scope,id);
+ if(body.phase!=='capturing')invalid();const stamp=await identity(body);
+ for(const [path,entry]of body.entries.entries())for(const [part,expected]of entry.parts.entries()){
+  const opened=await vault.read('local-snapshot',partId(hash,id,path,part));
+  try{current(vault,check);if(!opened||opened.serial!==1||opened.value.length!==expected.size||await digest(opened.value)!==expected.hash)invalid();current(vault,check);}finally{opened?.value.fill(0);}
+ }
+ const after=await metadata(vault,journalId(hash,id),check),final=await knownCatalog(vault,scope,hash,check);current(vault,check);
+ if(!after||after.serial!==row.serial||await identity(after.value)!==stamp||final?.serial!==index.serial)throw new Error('E2EE_SOURCE_STAGE_BUSY');
+ return{scope,hash,body,serial:row.serial};
+}
+export async function authenticateInterruptedSourceStage(vault:SourceStageReadVault,target:SourceStageTarget,id:string,check:()=>void){
+ const stored=await interruptedStage(vault,target,id,check);
+ return Object.freeze({evidence:'stored-prefix-only' as const,paths:Object.freeze(stored.body.entries.map(row=>row.id))});
 }
 
 /** Compare AND re-seal this exact complete catalogue in the coordinator's own

@@ -6,7 +6,7 @@ import {signingPublicKey} from './directory.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {requiredPrivatePaths} from './private-paths.ts';
 import {validateStagedMigrationSnapshot} from './migration-stage.ts';
-import {inspectSourceStages,openSourceStage,type SourceStageTarget} from './source-stage.ts';
+import {inspectSourceStages,openSourceStage,authenticateInterruptedSourceStage,type SourceStageTarget} from './source-stage.ts';
 import {openLegacyMigrationSnapshot,captureLegacyMigrationSnapshotReference} from './legacy-snapshot-stream.ts';
 import {validateStreamedPlanningOwnership} from './migration-ownership.ts';
 import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemoteOriginals,withRemoteOriginal,type RemoteOriginalReadOptions} from './remote-original.ts';
@@ -136,11 +136,19 @@ export async function openMigrationOwnershipCatalogue(source:Options){
     await modern(scope,node,frame,paths);
    }else if(node.protocol===1||node.protocol===2)await legacy(scope,node,frame);
   }
-  // Every complete orphan in this authenticated target catalogue is retained
-  // original source material too. No incomplete capture is projected to empty.
+  // All saved parts have exact authenticated custody. Incomplete stages are
+  // prefix-only quarantine: they cannot enter a logical source/history reader,
+  // restore or publication until exact producer replay and full EOF succeeds.
   const stages=await asSource(coordinates.scopeId,async()=>{const found=await inspectSourceStages(vault,coordinates!,current);current();
    if(!root&&found.length){const own=latest.devices.get(identity.deviceId);if(!own||own.revoked||own.role!=='owner'||own.userId!==identity.ownerId)invalid();}
-   for(const stage of found){if(!stage.complete||!stage.manifestHash)throw new Error('E2EE_SOURCE_STAGE_INCOMPLETE');
+   for(const stage of found){
+    if(!stage.complete){
+     const partial=await authenticateInterruptedSourceStage(vault,coordinates!,stage.id,current);
+     const paths=requiredPrivatePaths(coordinates!.kind).map(path=>path.id);
+     if(partial.paths.length!==paths.length||partial.paths.some((path,at)=>path!==paths[at]))invalid();
+     continue;
+    }
+    if(!stage.manifestHash)invalid();
     const opened=await openSourceStage(vault,coordinates!,{stageId:stage.id,manifestHash:stage.manifestHash},current);
     const paths=requiredPrivatePaths(coordinates!.kind).map(path=>path.id);if(opened.paths.length!==paths.length||opened.paths.some((path,at)=>path!==paths[at]))invalid();
     for(const path of opened.paths){const input=opened.openPath(path);for await(const bytes of input.chunks){current();bytes.fill(0);}input.assertComplete();}

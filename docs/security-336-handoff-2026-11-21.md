@@ -1,5 +1,24 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: возобновление прерванного local source-stage (кандидат)
+
+Web/native теперь аутентифицируют все записанные prefix parts отдельно от
+логического EOF, открывают прежний journal с исходным actor/target/CAS serial и
+повторно сверяют producer со всеми сохранёнными байтами, включая complete paths.
+После совпавшего prefix дописываются только новые immutable parts; сохранённый
+короткий хвост нельзя расширить или заменить. Account-wide ownership proof
+признаёт эту точную quarantine-роль, не пропуская неизвестные remnant cells.
+В reconciliation/publication по-прежнему входят только полностью завершённые
+paths/manifests с transactional catalogue CAS. Последний resumed journal
+используется повторно без ещё одной полной копии.
+
+Документ: security-336-retained-migration-history.md. Это только код; общие
+QA/compiler/typecheck/lint/build/CI ещё не запускались, coverage9/20.
+Changed-source prefix/divergence review и ambiguous legacy cancel ещё требуют
+реализации, как и большой остаток fresh project/member/device/automation/restore/
+background ниже.3.3.5/149 и Paddle-сайт сохранены; никаких push/deploy/device
+действий. Не читать/stage чужой demo-output/.
+
 ## 22 ноября: normal native Messenger journal (кандидат кода)
 
 После3d411176 добавлен `data/MessengerJournal.kt` и подключён к обычному native

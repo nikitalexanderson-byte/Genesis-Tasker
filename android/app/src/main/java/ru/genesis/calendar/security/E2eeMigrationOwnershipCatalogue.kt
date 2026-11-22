@@ -147,7 +147,11 @@ internal object E2eeMigrationOwnershipCatalogue {
                         if(number(value,"protocol") in setOf(4L,5L))modern(scope,value,frame)else if(number(value,"protocol") in setOf(1L,2L))legacy(scope,value,frame)
                     }
                     asSource(scopeId){val stages=E2eeSourceStage.inspect(view,target,::current);current();if(root==null&&stages.isNotEmpty()){val own=latest.devices[actor.deviceId]?:invalid();if(own.revoked||own.role!="owner"||own.userId!=actor.ownerId)invalid()}
-                        for(stage in stages){if(!stage.complete||stage.manifestHash==null)error("E2EE_SOURCE_STAGE_INCOMPLETE");val opened=E2eeSourceStage.open(view,target,E2eeSourceStage.Reference(stage.id,stage.manifestHash),::current)
+                        for(stage in stages){
+                            // Custody of every sealed prefix part; this is
+                            // deliberately not a complete logical source.
+                            if(!stage.complete){if(E2eeSourceStage.authenticateInterrupted(view,target,stage.id,::current)!=options.inventory.required(target.kind).map{it.id})invalid();continue}
+                            val opened=E2eeSourceStage.open(view,target,E2eeSourceStage.Reference(stage.id,stage.manifestHash?:invalid()),::current)
                             if(opened.paths!=options.inventory.required(target.kind).map{it.id})invalid();for(path in opened.paths)opened.openPath(path).use{stream->E2eeRetainedMigrationProof.drain(stream,::current);stream.assertComplete()}
                         }
                         for(value in ancestors+listOfNotNull(root?.value))if(number(value,"protocol")>=3L){val snapshot=value.getJSONObject("source");val refs=rows(snapshot.getJSONArray("history"))+snapshot.getJSONObject("reference");if(refs.size>stages.size||refs.indices.any{refs[it].get("stageId")!=stages[it].id||refs[it].get("manifestHash")!=stages[it].manifestHash})invalid()}

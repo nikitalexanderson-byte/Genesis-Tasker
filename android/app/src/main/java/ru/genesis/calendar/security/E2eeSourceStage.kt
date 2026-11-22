@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock
  * The caller holds the original-source fence and retains originals until that
  * separate publication. No restore, network, ACL or replay capability exists. */
 class E2eeSourceStage private constructor(private val options: Options, private val context: JSONObject,
-    private val hash: String, private var journal: JSONObject) {
+    private val hash: String, private var journal: JSONObject, private var serial: Long = 1L) {
     data class Target(val ownerId: String, val scopeId: String, val kind: String)
     data class Reference(val stageId: String, val manifestHash: String)
     data class Capacity(val maximumBytes: Long, val maximumParts: Int)
@@ -21,7 +21,7 @@ class E2eeSourceStage private constructor(private val options: Options, private 
     data class Marker(val id: String, val complete: Boolean, val manifestHash: String?)
     data class Options(val vault: UnlockedE2eeVault, val target: Target, val paths: List<String>, val capacity: Capacity,
         val ensureDurableKeys: () -> Unit, val assertCurrent: () -> Unit, val admit: (Admission) -> Unit)
-    private var serial = 1L
+    private var position = 0
     private val busy = AtomicBoolean(false)
     private val broken = AtomicBoolean(false)
     private fun current() {
@@ -57,15 +57,32 @@ class E2eeSourceStage private constructor(private val options: Options, private 
         var count = 0; val accepting = AtomicBoolean(true)
         try {
             val rows = journal.getJSONArray("entries")
-            val path = (0 until rows.length()).firstOrNull { !rows.getJSONObject(it).getBoolean("complete") }
-            check(path != null && rows.getJSONObject(path).getString("id") == id) { "E2EE_SOURCE_STAGE_ORDER" }
+            val path = position
+            check(path < rows.length() && rows.getJSONObject(path).getString("id") == id) { "E2EE_SOURCE_STAGE_ORDER" }
+            val existing = StageCodec.copy(rows.getJSONObject(path)); val stored = existing.getJSONArray("parts")
+            val wasComplete = existing.getBoolean("complete"); var replayed = 0; var sealedEnd = false
+            val flush: () -> Unit = {
+                current()
+                if (replayed < stored.length()) {
+                    val expected = stored.getJSONObject(replayed); val bytes = buffer.copyOf(count)
+                    try { check(count == expected.getInt("size") && StageCodec.digest(bytes) == expected.getString("hash")) { "E2EE_SOURCE_STAGE_REPLAY_CHANGED" } }
+                    finally { bytes.fill(0) }
+                    replayed++; if (expected.getInt("size") < StageCodec.CHUNK) sealedEnd = true
+                } else {
+                    check(!wasComplete && !sealedEnd) { "E2EE_SOURCE_STAGE_REPLAY_CHANGED" }
+                    append(path, buffer, count)
+                }
+                buffer.fill(0); count = 0
+            }
             val output = object : OutputStream() {
                 override fun write(value: Int) {
                     var entered = false
                     try {
                         current(); check(accepting.get() && !gate.isHeldByCurrentThread && gate.tryLock()) { "E2EE_SOURCE_STAGE_INPUT" }; entered = true
+                        check(!sealedEnd && !(wasComplete && replayed == stored.length())) { "E2EE_SOURCE_STAGE_REPLAY_CHANGED" }
                         buffer[count++] = value.toByte()
-                        if (count == buffer.size) { append(path, buffer, count); buffer.fill(0); count = 0 }
+                        val limit = if (replayed < stored.length()) stored.getJSONObject(replayed).getInt("size") else buffer.size
+                        if (count == limit) flush()
                     } catch (error: Exception) { broken.set(true); throw error }
                     finally { if (entered) gate.unlock() }
                 }
@@ -78,9 +95,11 @@ class E2eeSourceStage private constructor(private val options: Options, private 
                         var at = offset; val end = offset + length
                         while (at < end) {
                             current(); check(accepting.get()) { "E2EE_SOURCE_STAGE_INPUT" }
-                            val take = minOf(end - at, buffer.size - count)
+                            check(!sealedEnd && !(wasComplete && replayed == stored.length())) { "E2EE_SOURCE_STAGE_REPLAY_CHANGED" }
+                            val limit = if (replayed < stored.length()) stored.getJSONObject(replayed).getInt("size") else buffer.size
+                            val take = minOf(end - at, limit - count)
                             bytes.copyInto(buffer, count, at, at + take); at += take; count += take
-                            if (count == buffer.size) { append(path, buffer, count); buffer.fill(0); count = 0 }
+                            if (count == limit) flush()
                         }
                     } catch (error: Exception) { broken.set(true); throw error }
                     finally { if (entered) gate.unlock() }
@@ -90,11 +109,15 @@ class E2eeSourceStage private constructor(private val options: Options, private 
             }
             producer(output); accepting.set(false)
             check(!gate.isLocked) { "E2EE_SOURCE_STAGE_INPUT" }; current()
-            if (count > 0) append(path, buffer, count)
-            val next = StageCodec.copy(journal); val entry = next.getJSONArray("entries").getJSONObject(path)
-            check(entry.getLong("size") > 0) { "E2EE_SOURCE_STAGE_EMPTY" }; entry.put("complete", true)
-            StageCodec.commit(options.vault, listOf(StageCodec.write(StageCodec.key(hash, next.getString("stageId"), "j"), next, serial)), ::current)
-            journal = next; serial++
+            check(replayed == stored.length()) { "E2EE_SOURCE_STAGE_REPLAY_CHANGED" }
+            if (count > 0) flush()
+            if (!wasComplete) {
+                val next = StageCodec.copy(journal); val entry = next.getJSONArray("entries").getJSONObject(path)
+                check(entry.getLong("size") > 0) { "E2EE_SOURCE_STAGE_EMPTY" }; entry.put("complete", true)
+                StageCodec.commit(options.vault, listOf(StageCodec.write(StageCodec.key(hash, next.getString("stageId"), "j"), next, serial)), ::current)
+                journal = next; serial++
+            }
+            position++
         } catch (error: Exception) { broken.set(true); throw error }
         finally { accepting.set(false); gate.lock(); try { buffer.fill(0) } finally { gate.unlock(); busy.set(false) } }
     }
@@ -102,7 +125,7 @@ class E2eeSourceStage private constructor(private val options: Options, private 
         current(); check(busy.compareAndSet(false, true)) { "E2EE_SOURCE_STAGE_BUSY" }
         try {
             val rows = journal.getJSONArray("entries")
-            check((0 until rows.length()).all { rows.getJSONObject(it).getBoolean("complete") }) { "E2EE_SOURCE_STAGE_INCOMPLETE" }
+            check(position == rows.length() && (0 until rows.length()).all { rows.getJSONObject(it).getBoolean("complete") }) { "E2EE_SOURCE_STAGE_INCOMPLETE" }
             val id = journal.getString("stageId")
             val manifest = JSONObject().put("protocol", 1).put("stageId", id).put("context", context).put("chunkSize", StageCodec.CHUNK)
                 .put("entries", StageCodec.copy(journal).getJSONArray("entries"))
@@ -131,6 +154,53 @@ class E2eeSourceStage private constructor(private val options: Options, private 
         } catch (error: Exception) { broken.set(true); throw error } finally { busy.set(false) }
     }
     companion object {
+        private data class Interrupted(val context: JSONObject, val hash: String, val journal: StageCodec.Metadata)
+        /** Stored-prefix custody only. This is not a logical JSON/restore reader
+         * and never reports missing suffixes or paths as authenticated EOF. */
+        private fun interrupted(vault: E2eeSourceReadVault, target: Target, id: String, check: () -> Unit): Interrupted {
+            StageCodec.current(vault, check); StageCodec.id(id)
+            val context = StageCodec.context(vault, target); val hash = StageCodec.identity(context)
+            val old = StageCodec.catalog(vault, context, hash, check) ?: StageCodec.invalid()
+            val stages = old.body.getJSONArray("stages")
+            val marker = (0 until stages.length()).map { stages.getJSONObject(it) }.singleOrNull { it.getString("id") == id } ?: StageCodec.invalid()
+            if (marker.getBoolean("complete") || !marker.isNull("manifestHash")) StageCodec.invalid()
+            val journal = StageCodec.metadata(vault, StageCodec.key(hash, id, "j"), check) ?: StageCodec.invalid()
+            val body = journal.body; if (body.getString("phase") != "capturing") StageCodec.invalid()
+            val stamp = StageCodec.identity(body); val rows = body.getJSONArray("entries")
+            for (path in 0 until rows.length()) {
+                val parts = rows.getJSONObject(path).getJSONArray("parts")
+                for (part in 0 until parts.length()) {
+                    val opened = vault.read(StageCodec.DOMAIN, StageCodec.key(hash, id, "p", path, part))
+                    try { StageCodec.current(vault, check); StageCodec.verifyPart(opened, parts.getJSONObject(part)) } finally { opened?.bytes?.fill(0) }
+                }
+            }
+            val after = StageCodec.metadata(vault, StageCodec.key(hash, id, "j"), check)
+            val final = StageCodec.catalog(vault, context, hash, check)
+            check(after != null && after.serial == journal.serial && StageCodec.identity(after.body) == stamp && final?.serial == old.serial) { "E2EE_SOURCE_STAGE_BUSY" }
+            StageCodec.current(vault, check); return Interrupted(context, hash, journal)
+        }
+        fun authenticateInterrupted(vault: E2eeSourceReadVault, target: Target, id: String, check: () -> Unit): List<String> {
+            val rows = interrupted(vault, target, id, check).journal.body.getJSONArray("entries")
+            return (0 until rows.length()).map { rows.getJSONObject(it).getString("id") }
+        }
+        /** Resume the original actor/serial. All stored paths are replayed
+         * exactly before appending, without replacing an immutable part. */
+        fun resume(input: Options, id: String): E2eeSourceStage {
+            val options = input.copy(paths = input.paths.toList())
+            StageCodec.current(options.vault, options.assertCurrent)
+            if (options.paths.size !in 1..20 || options.paths.toSet().size != options.paths.size) StageCodec.invalid()
+            options.paths.forEach(E2eeKeys::technical)
+            check(options.capacity.maximumParts in 1..10000 && options.capacity.maximumBytes in 1..options.capacity.maximumParts.toLong() * StageCodec.CHUNK) { "E2EE_SOURCE_STAGE_CAPACITY" }
+            options.ensureDurableKeys(); StageCodec.current(options.vault, options.assertCurrent)
+            val stored = interrupted(options.vault, options.target, id, options.assertCurrent)
+            val rows = stored.journal.body.getJSONArray("entries")
+            check((0 until rows.length()).map { rows.getJSONObject(it).getString("id") } == options.paths) { "E2EE_SOURCE_STAGE_CONTEXT" }
+            val totals = StageCodec.totals(rows)
+            check(totals.first <= options.capacity.maximumBytes && totals.second <= options.capacity.maximumParts) { "E2EE_SOURCE_STAGE_CAPACITY" }
+            val encoded = StageCodec.canonical(stored.journal.body)
+            try { options.admit(Admission(totals.first, totals.second, encoded.size)); StageCodec.current(options.vault, options.assertCurrent) } finally { encoded.fill(0) }
+            return E2eeSourceStage(options, stored.context, stored.hash, stored.journal.body, stored.journal.serial)
+        }
         fun create(input: Options): E2eeSourceStage {
             val options = input.copy(paths = input.paths.toList())
             StageCodec.current(options.vault, options.assertCurrent)

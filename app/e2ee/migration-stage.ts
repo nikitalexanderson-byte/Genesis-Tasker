@@ -1,6 +1,6 @@
 import {decodeE2eeBytes} from './envelope.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
-import {ProtectedSourceStage,inspectSourceStages,openSourceStage,sourceStagePublicationGuard,type SourceStageReadVault,type SourceStageTarget,type SourceStageReference,type SourceStageCapacity,type SourceStageAdmission} from './source-stage.ts';
+import {ProtectedSourceStage,inspectSourceStages,openSourceStage,authenticateInterruptedSourceStage,sourceStagePublicationGuard,type SourceStageReadVault,type SourceStageTarget,type SourceStageReference,type SourceStageCapacity,type SourceStageAdmission} from './source-stage.ts';
 import type {UnlockedE2eeVault} from './storage.ts';
 
 /** A preflighted registry, never a mounted-screen inventory. No network port. */
@@ -61,12 +61,33 @@ export async function captureStagedMigrationSnapshot(vault:UnlockedE2eeVault,inp
  capture.paths.forEach(assertTechnical);const actor=vault.localIdentity();
  await ensureDurableKeys();current();
  const old=await inspectSourceStages(vault,capture.target,current);current();
- if(old.some(row=>!row.complete))throw new Error('E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED');
- const history=old.map(row=>reference({stageId:row.id,manifestHash:row.manifestHash}));
- // A complete orphan is original history too. Verify it before any producer.
- if(history.length){const prior={format:'source-stage-v1' as const,target:capture.target,actor,paths:capture.paths,reference:history.at(-1)!,history:history.slice(0,-1)};
-  await verifyStagedMigrationSnapshot(vault,prior,current);current();}
- const stage=await ProtectedSourceStage.create({vault,target:capture.target,paths:capture.paths,capacity:limits,admit,assertCurrent:current,ensureDurableKeys:async()=>{current();}});
+ // Authenticate every saved record before invoking producers. An unfinished
+ // journal proves custody of its exact stored prefix, never logical path EOF.
+ for(const row of old){
+  if(!row.complete){
+   const partial=await authenticateInterruptedSourceStage(vault,capture.target,row.id,current);
+   if(partial.paths.length!==required.length||partial.paths.some((id,at)=>id!==required[at]))invalid();
+  }else{
+   const opened=await openSourceStage(vault,capture.target,reference({stageId:row.id,manifestHash:row.manifestHash}),current);
+   if(opened.paths.length!==required.length||opened.paths.some((id,at)=>id!==required[at]))invalid();
+   for(const id of opened.paths){const input=opened.openPath(id);for await(const bytes of input.chunks){current();bytes.fill(0);}input.assertComplete();}
+  }
+ }
+ const history:SourceStageReference[]=[],stageOptions={vault,target:capture.target,paths:capture.paths,capacity:limits,admit,assertCurrent:current,ensureDurableKeys:async()=>{current();}};
+ let resumed:SourceStageReference|undefined;
+ for(const row of old){
+  if(row.complete){history.push(reference({stageId:row.id,manifestHash:row.manifestHash}));resumed=undefined;continue;}
+  const stage=await ProtectedSourceStage.resume(stageOptions,row.id);
+  for(const id of capture.paths){current();await stage.capturePath(id,write=>capture.capturePath(id,write));current();}
+  resumed=await stage.finish();current();history.push(resumed);
+ }
+ // A resumed last journal has just captured the fresh full registry. Reuse its
+ // immutable reference; do not allocate another full snapshot on every crash.
+ if(resumed){
+  const result:StagedMigrationSnapshot={format:'source-stage-v1',target:capture.target,actor,paths:capture.paths,reference:resumed,history:history.slice(0,-1)};
+  await verifyStagedMigrationSnapshot(vault,result,current);current();return result;
+ }
+ const stage=await ProtectedSourceStage.create(stageOptions);
  for(const id of capture.paths){current();await stage.capturePath(id,write=>capture.capturePath(id,write));current();}
  const ref=await stage.finish();current();
  const result:StagedMigrationSnapshot={format:'source-stage-v1',target:capture.target,actor,paths:capture.paths,reference:ref,history};

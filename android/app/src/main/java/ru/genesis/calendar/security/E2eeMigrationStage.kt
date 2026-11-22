@@ -63,12 +63,27 @@ internal object E2eeMigrationStage {
         check(scope.kind in setOf("personal","project","space")&&required.size in 1..20&&required.toSet().size==required.size&&paths==required){"E2EE_SOURCE_ADAPTER_REQUIRED"}
         paths.forEach(E2eeKeys::technical);ensureDurableKeys();current()
         val known=E2eeSourceStage.inspect(vault,scope,current);current()
-        check(known.none{!it.complete}){"E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"}
-        val history=known.map{E2eeSourceStage.Reference(it.id,it.manifestHash?:invalid())}
+        for(marker in known){
+            if(!marker.complete){if(E2eeSourceStage.authenticateInterrupted(vault,scope,marker.id,current)!=paths)invalid()}
+            else{val opened=E2eeSourceStage.open(vault,scope,E2eeSourceStage.Reference(marker.id,marker.manifestHash?:invalid()),current)
+                if(opened.paths!=paths)invalid();for(path in paths)opened.openPath(path).use{stream->E2eeRetainedMigrationProof.drain(stream,current);stream.assertComplete()}
+            }
+        }
+        val history=mutableListOf<E2eeSourceStage.Reference>()
         fun snapshot(reference:E2eeSourceStage.Reference,previous:List<E2eeSourceStage.Reference>)=JSONObject().put("format","source-stage-v1").put("target",target(scope)).put("actor",actor(vault))
             .put("paths",JSONArray(paths)).put("reference",encoded(reference)).put("history",JSONArray().apply{previous.forEach{put(encoded(it))}})
-        if(history.isNotEmpty())verify(vault,snapshot(history.last(),history.dropLast(1)),scope,paths,current)
-        val stage=E2eeSourceStage.create(E2eeSourceStage.Options(vault,scope,paths,capacity,current,current,admit))
+        val stageOptions=E2eeSourceStage.Options(vault,scope,paths,capacity,current,current,admit)
+        var resumed:E2eeSourceStage.Reference?=null
+        for(marker in known){
+            if(marker.complete){history.add(E2eeSourceStage.Reference(marker.id,marker.manifestHash?:invalid()));resumed=null;continue}
+            val stage=E2eeSourceStage.resume(stageOptions,marker.id)
+            for(path in paths){current();stage.captureSuspendPath(path){capture(path,it)};current()}
+            val reference=stage.finish();current();resumed=reference;history.add(reference)
+        }
+        // Just replayed the entire fresh registry, with real producer EOF.
+        // Reuse this journal rather than duplicate every byte after each crash.
+        resumed?.let{val result=snapshot(it,history.dropLast(1));verify(vault,result,scope,paths,current);current();return result}
+        val stage=E2eeSourceStage.create(stageOptions)
         for(path in paths){current();stage.captureSuspendPath(path){capture(path,it)};current()}
         val result=snapshot(stage.finish(),history);verify(vault,result,scope,paths,current);current();return result
     }
