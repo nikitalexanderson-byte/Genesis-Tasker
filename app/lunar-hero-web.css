@@ -16,6 +16,12 @@ html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lun
   font:600 12px/1.2 var(--font-ui); letter-spacing:0; text-transform:none; text-align:center; white-space:nowrap;
 }
 
+/* Relative positioning must not inherit the old absolute top/right offsets. */
+@media (min-width: 761px) {
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-day-clock { justify-items:start; row-gap:18px; }
+  html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-number { inset:auto; margin:0; }
+}
+
 @media (max-width: 760px) {
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] {
     --lunar-orb-size:clamp(84px,24vw,96px);

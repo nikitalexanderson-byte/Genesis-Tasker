@@ -166,8 +166,6 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
   const [invitationBusy, setInvitationBusy] = useState("");
   const [invitationMessage, setInvitationMessage] = useState("");
   const [settingsTab, setSettingsTab] = useState<SettingsSectionId>(guideSolarPlace ? "region" : guideSharedProjects ? "shared" : "appearance");
-  const [sharedGuideVisible, setSharedGuideVisible] = useState(guideSharedProjects);
-  const sharedProjectsToggleRef = useRef<HTMLInputElement>(null);
   const settingsTouch = useRef<{ x: number; y: number } | null>(null);
   const [habitResetChallenge, setHabitResetChallenge] = useState<HabitResetChallenge | null>(null);
   const [habitResetAnswer, setHabitResetAnswer] = useState("");
@@ -292,20 +290,6 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
         : "Гадания снова доступны в Стойхейоне.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Не удалось сохранить настройку гаданий.");
-    } finally {
-      setPreferenceBusy(false);
-    }
-  };
-
-  const changeSharedProjectsPreference = async (enabled: boolean) => {
-    setPreferenceBusy(true);
-    setMessage("");
-    try {
-      const result = await updateAccountPreferences({ sharedProjectsEnabled: enabled });
-      onUserChange(result.user);
-      setMessage(user.language === "en" ? "Shared affairs setting saved." : "Настройка общих дел сохранена.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : user.language === "en" ? "Could not save setting." : "Не удалось сохранить настройку.");
     } finally {
       setPreferenceBusy(false);
     }
@@ -546,17 +530,6 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
 
   const accountDialogRef = useDialogAccessibility<HTMLElement>(onClose);
   const habitResetDialogRef = useDialogAccessibility<HTMLFormElement>(closeHabitReset, Boolean(habitResetChallenge));
-
-  useEffect(() => {
-    if (!guideSharedProjects) return;
-    const timer = window.setTimeout(() => setSharedGuideVisible(false), 5_000);
-    const frame = window.requestAnimationFrame(() => {
-      sharedProjectsToggleRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
-    });
-    return () => { window.clearTimeout(timer); window.cancelAnimationFrame(frame); };
-  }, [guideSharedProjects]);
-
-  const sharedGuideActive = sharedGuideVisible && settingsTab === "shared" && user.sharedProjectsEligible && !user.sharedProjectsEnabled;
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
@@ -1077,18 +1050,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
             <span className="eyebrow">GENESIS · {user.language === "en" ? "Together" : "Вместе"}</span>
             <h3 id="shared-projects-preference-title"><SettingsSectionIcon section="shared" />{user.language === "en" ? "Shared affairs" : "Общие дела"}</h3>
             <p>{user.language === "en" ? "Create projects with other GENESIS accounts. Personal data stays private." : "Создавайте проекты с другими аккаунтами GENESIS. Личные данные остаются приватными."}</p>
-            <small>{user.sharedProjectsLifetimeAccess
-              ? (user.language === "en" ? "Lifetime free access to Shared affairs." : "Пожизненный бесплатный открытый доступ к функциям «Общие дела».")
-              : (user.language === "en" ? "Open to all GENESIS accounts during testing." : "Открыто всем аккаунтам GENESIS на время тестирования.")}</small>
           </div>
-          <label htmlFor="shared-projects-toggle" aria-label={user.language === "en" ? "Enable shared affairs" : "Включить общие дела"} className={`account-switch-row${sharedGuideActive ? " shared-projects-guide" : ""}`} data-exp-ui="row">
-            <span><strong>{user.language === "en" ? "Enable shared affairs" : "Включить общие дела"}</strong></span>
-            <input ref={sharedProjectsToggleRef} id="shared-projects-toggle" type="checkbox" role="switch" data-exp-ui="switch" checked={Boolean(user.sharedProjectsEnabled)}
-              data-dialog-initial-focus={guideSharedProjects ? "" : undefined}
-              disabled={!user.sharedProjectsEligible || preferenceBusy}
-              onChange={(event) => { setSharedGuideVisible(false); void changeSharedProjectsPreference(event.target.checked); }} />
-            <i aria-hidden="true" />
-          </label>
         {user.sharedProjectsEnabled?<div className="notification-preference-buttons"><button type="button" className="secondary-button" onClick={()=>setSharedNotificationSettingsOpen(true)}>{translateText("Настройки уведомлений")}</button><button type="button" className="secondary-button" onClick={()=>{onClose();window.dispatchEvent(new Event("genesis:notification-inbox-open"));}}>{translateText("История уведомлений")}</button></div>:null}
         {user.sharedProjectsEligible ? <div className="shared-settings-subsection" role="group" aria-labelledby="shared-invitations-title">
           <div>
