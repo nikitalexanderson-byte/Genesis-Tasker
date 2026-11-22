@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import {registerLocalWorkMigrationEditor} from './local-work-migration-memory';
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { RecurrenceBuilder } from "./RecurrenceBuilder";
 import { RecordCalendarChoice } from "./RecordCalendarChoice";
@@ -18,8 +19,8 @@ function initialSettings(task: SharedTask, mode: CalendarMode): SharedSeriesSett
   return { timing: "schedule", delayDays: 1, limit: 30, cloneChildren: false, excludedDates: [], recurrence };
 }
 
-export default function SharedTaskSeries({task, mode, readOnly, disabled, onDirtyChange, onSaved, onOpen}: {
-  task: SharedTask; mode: CalendarMode; readOnly: boolean; disabled: boolean;
+export default function SharedTaskSeries({task, userId, spaceId, mode, readOnly, disabled, onDirtyChange, onSaved, onOpen}: {
+  userId:string; spaceId:string; task: SharedTask; mode: CalendarMode; readOnly: boolean; disabled: boolean;
   onDirtyChange: (dirty: boolean) => void; onSaved: () => Promise<void>;
   onOpen: (projectId: string, taskId: string) => void;
 }) {
@@ -38,6 +39,9 @@ export default function SharedTaskSeries({task, mode, readOnly, disabled, onDirt
   const [baseline, setBaseline] = useState(() => JSON.stringify({ settings, paused: false, zone }));
   const retry = useRef({ body: "", id: "" });
   const dirty = JSON.stringify({ settings, paused, zone }) !== baseline || refreshTemplate;
+  const migrationInput=useRef({taskId:task.id,taskRevision:task.revision,series,settings,paused,refreshTemplate,zone,excludeDate,baseline});
+  migrationInput.current={taskId:task.id,taskRevision:task.revision,series,settings,paused,refreshTemplate,zone,excludeDate,baseline};
+  useEffect(()=>registerLocalWorkMigrationEditor({ownerId:userId,spaceId,projectId:task.projectId,source:'series'},()=>({...structuredClone(migrationInput.current),retry:structuredClone(retry.current)})),[userId,spaceId,task.projectId,task.id]);
   const context = settings.recurrence.calendarContext!;
   const ruleMode = calendarModeForRecurrence(settings.recurrence.mode);
   const editable = !readOnly && (!series || series.projectId === task.projectId);

@@ -1797,7 +1797,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
           onConvert={() => undefined} onCreateChild={async () => undefined} onOpen={(projectId, taskId) => void run(async () => { const [context, task] = await Promise.all([loadSharedProject(projectId), loadSharedTask(projectId, taskId, true)]); openTask(task, context); })}/></>}
 
           {usesPrivateProductStorage(userId)?<PrivateGoogleCopy ownerId={userId} language={language as import('./i18n').Language} accounts={googleAccounts} source={selectedTask}/>:null}
-          {selectedTask.seriesId || taskEditing && canEditTask && taskSnapshot.project.canOrganizeTasks ? <Suspense fallback={null}><SharedTaskSeries key={selectedTask.id} task={selectedTask} mode={editTaskCalendarMode}
+          {selectedTask.seriesId || taskEditing && canEditTask && taskSnapshot.project.canOrganizeTasks ? <Suspense fallback={null}><SharedTaskSeries key={selectedTask.id} task={selectedTask} userId={userId} spaceId={taskSnapshot.project.spaceId} mode={editTaskCalendarMode}
             readOnly={!taskEditing || !canEditTask || !taskSnapshot.project.canOrganizeTasks || Boolean(selectedTask.archivedAt)} disabled={busy || taskEditing && !taskFieldsSaved}
             onDirtyChange={setSeriesDirty} onSaved={async () => { await refreshTaskProject(selectedTask.projectId); await refreshProject(selectedTask.projectId); }}
             onOpen={(projectId, taskId) => void run(async () => { const [context, task] = await Promise.all([loadSharedProject(projectId), loadSharedTask(projectId, taskId, true)]); openTask(task, context); })}/></Suspense> : null}

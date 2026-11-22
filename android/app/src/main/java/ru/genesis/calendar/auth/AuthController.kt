@@ -1807,6 +1807,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (!initial.ready || initial.accountSettings?.sharedProjectsEnabled != true) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         val generation = client.currentGeneration(); val caller = currentCoroutineContext()
         fun current() {
+            requireSharedDraftVault(account)
             caller.ensureActive(); val state = mutableState.value
             if (!client.isCurrent(generation) || !state.ready || state.user?.uid != account || state.accountSettings?.sharedProjectsEnabled != true ||
                 app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
@@ -1844,6 +1845,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (!initial.ready || initial.accountSettings?.sharedProjectsEnabled != true) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         val generation = client.currentGeneration(); val caller = currentCoroutineContext()
         fun current() {
+            requireSharedDraftVault(account)
             caller.ensureActive(); val state = mutableState.value
             if (!client.isCurrent(generation) || !state.ready || state.user?.uid != account || state.accountSettings?.sharedProjectsEnabled != true ||
                 app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
@@ -1863,11 +1865,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun prepareSharedAutomationDraft(projectId: String, stamp: String) = automationDraftCall { it.prepare(projectId, stamp) }
     override suspend fun sendSharedAutomationDraft(projectId: String, stamp: String) = automationDraftCall { it.send(projectId, stamp) }
     override suspend fun removeSharedAutomationDraft(projectId: String, stamp: String): Unit = automationDraftCall { it.remove(projectId, stamp) }
+    private fun requireSharedDraftVault(owner:String){
+        val scope=CloudAccountSnapshot.scopeFor(owner);check(app.workspaceScope==scope){"E2EE_ACCOUNT_CHANGED"}
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)){val account=ru.genesis.calendar.security.NativePrivateProducts.currentAccount(scope);account.requireOpen();check(account.ownerId==owner){"E2EE_ACCOUNT_CHANGED"}}
+    }
     private suspend fun <T> automationEditorCall(action: (SharedAutomationEditorService) -> T): T {
         val initial = mutableState.value; val account = initial.user?.uid ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         if (!initial.ready || initial.accountSettings?.sharedProjectsEnabled != true) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         val generation = client.currentGeneration(); val caller = currentCoroutineContext()
         fun current() {
+            requireSharedDraftVault(account)
             caller.ensureActive(); val state = mutableState.value
             if (!client.isCurrent(generation) || !state.ready || state.user?.uid != account || state.accountSettings?.sharedProjectsEnabled != true ||
                 app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
@@ -1971,6 +1978,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (!initial.ready || initial.accountSettings?.sharedProjectsEnabled != true) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
         val generation = client.currentGeneration()
         fun current() {
+            requireSharedDraftVault(account)
             val state = mutableState.value
             if (!client.isCurrent(generation) || !state.ready || state.accountSettings?.sharedProjectsEnabled != true || state.user?.uid != account ||
                 app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
@@ -2117,6 +2125,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         check(initial.ready && initial.accountSettings?.sharedProjectsEnabled == true)
         val generation = client.currentGeneration()
         fun current() {
+            requireSharedDraftVault(account)
             if (!client.isCurrent(generation) || mutableState.value.user?.uid != account ||
                 app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
         }
@@ -2155,6 +2164,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         check(initial.ready && initial.accountSettings?.sharedProjectsEnabled == true)
         val generation = client.currentGeneration()
         fun current() {
+            requireSharedDraftVault(account)
             if (!client.isCurrent(generation) || mutableState.value.user?.uid != account || app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
         }
         val access = object : SharedTemplateAccess {
@@ -2190,6 +2200,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         check(initial.ready && initial.accountSettings?.sharedProjectsEnabled == true)
         val generation = client.currentGeneration()
         fun current() {
+            requireSharedDraftVault(account)
             if (!client.isCurrent(generation) || mutableState.value.user?.uid != account ||
                 app.workspaceScope != CloudAccountSnapshot.scopeFor(account)) throw CancellationException()
         }

@@ -1,5 +1,20 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: advanced form storage и attribution — код
+
+Existing useSharedWorkDrafts теперь выбирает device-root journal после cutover
+для workflow/planning/fields/views/templates/automation/access/import forms.
+Текущие, заменённые и подтверждённые значения сохраняются отдельными encrypted
+documents; clear — soft retirement, старые значения/части остаются. Mode change
+подписан на private account; portable archive только inert content, typed custody
+подключена. Web series input имеет owner/space/project attribution.
+Native advanced journal helpers требуют открытый vault; automation и series
+UI включены в NativeMigrationMemory с полными raw input/base/retry coordinates.
+Код не проверялся исполнением. ОСТАТОК: bulk/cross-scope input attribution,
+client automation/series/bulk execution, остальные typed restore domains, wide
+bounds, revoked replacement/background и исходная полная интеграция.
+
+
 ## 22 ноября: typed personal workspace/task restore — код
 
 Общий durable restore journal + web/native normal personal repository adapters
