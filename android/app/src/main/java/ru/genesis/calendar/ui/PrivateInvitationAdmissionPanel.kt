@@ -35,7 +35,7 @@ import ru.genesis.calendar.security.NativeMembershipUiState
         if(loaded&&items.isEmpty())UntranslatedText(common.getString("empty"))
         Column(Modifier.heightIn(max=320.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
             for(item in items){val operation=item.getJSONObject("operation");UntranslatedText(item.getString("title"));UntranslatedText(operation.getString("userId"))
-                OutlinedButton({run{val draft=AuthController.get(context).createPrivateMembershipOperation(JSONObject(operation.toString()));current();NativeMembershipUiState.showOperation(account.ownerId,language,draft.getString("intentId"))}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(c.getString("ownerReview"))}
+                OutlinedButton({run{val draft=AuthController.get(context).createPrivateMembershipOperation(JSONObject(operation.toString()));current();NativeMembershipUiState.showOperation(account.ownerId,language,draft.getJSONObject("state").getString("intentId"))}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(c.getString("ownerReview"))}
             }
         }
         if(message.isNotEmpty())UntranslatedText(message)

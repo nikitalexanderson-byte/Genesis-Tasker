@@ -1,5 +1,9 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Срочный сайт опубликован22 ноября
+
+Mainac8ccf604bb42f7b7b19411f8703b88cd7dce8d2 / checks45057471114 / Deploy45061812677 success. Live desktop/Account и manifest149 подтверждены. Опубликованный main перенесён в security, strict block-first AGENTS сохранён. Security3.3.6 не публиковалась.
+
 ## 22 ноября: typed custody новых control documents (код)
 
 Оба migration ownership catalogue учитывают personal-device-entry и invitation-
