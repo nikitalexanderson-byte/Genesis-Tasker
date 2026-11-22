@@ -203,7 +203,11 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
                     && previous.value.isNull("pending") && previous.value.isNull("cancelling")) { "E2EE_LOCAL_CONFLICT" }
                 changes += UnlockedE2eeVault.Write("local-snapshot", "${replacement.value.getString("draftId")}:rebase:${UUID.randomUUID()}",
                     replacement.value.toString().toByteArray(), null)
-            } else check(previous == null || previous.value.getBoolean("complete")) { "E2EE_PENDING_SAVE_REQUIRED" }
+            } else if(previous!=null){
+                check(previous.value.getBoolean("complete")){"E2EE_PENDING_SAVE_REQUIRED"}
+                val raw=device.vault.read("outbox","job:$id")?:error("E2EE_LOCAL_CONFLICT")
+                try{check(raw.serial==previous.serial){"E2EE_LOCAL_CONFLICT"};changes+=UnlockedE2eeVault.Write("local-snapshot","${previous.value.getString("draftId")}:completed:${UUID.randomUUID()}",raw.bytes.copyOf(),null)}finally{raw.bytes.fill(0)}
+            }
             val root = roots[value.keyId] ?: throw IllegalStateException("E2EE_KEY_UNAVAILABLE")
             val context = E2eeEnvelope.Context.fromJson(JSONObject().put("cryptoProtocol", 1).put("suite", E2eeEnvelope.SUITE)
                 .put("ownerId", ownerId).put("scopeId", scopeId).put("domain", domain).put("objectId", objectId).put("schemaVersion", 1)
@@ -445,7 +449,8 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
                 if(command.getLong("expectedRevision")!=value.checkpoint.revision||command.getLong("securityEpoch")!=value.securityEpoch||command.get("checkpointHash")!=value.checkpoint.hash)signed=null
             }
             if(signed==null){signed=packet("aurora-result",payload);val bytes=signed.toString().toByteArray(Charsets.UTF_8)
-                try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox",key,bytes,previous?.serial)))}finally{bytes.fill(0)}}
+                try{device.vault.write((previous?.let{listOf(UnlockedE2eeVault.Write("local-snapshot","$key:attempt:${it.serial}",it.bytes,null))}?:emptyList())+
+                    UnlockedE2eeVault.Write("outbox",key,bytes,previous?.serial))}finally{bytes.fill(0)}}
             device.requireOpen();val receipt=transport.command(requireNotNull(signed));device.requireOpen();check(receipt.get("id")==resultId&&receipt.get("ready")==true){"AURORA_RESULT_MISMATCH"}
         }finally{previous?.bytes?.fill(0)}
     }

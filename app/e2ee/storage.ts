@@ -104,6 +104,11 @@ export class UnlockedE2eeVault {
   async listMigrationOriginalParts(){return this.#localIds('local-snapshot',id=>id.includes(':source:')||id.endsWith(':source'));}
   /** Reserved original archive/cancel roles, including malformed remnants. */
   async listMigrationHistoryCopies(){return this.#localIds('local-snapshot',id=>id.endsWith(':archive')||id.includes(':archive:')||id.endsWith(':cancel')||id.includes(':cancel:'));}
+  /** Discover all preparation/adoption roles, including malformed remnants.
+   * Their names alone never authenticate an owner or make them disposable. */
+  async listMigrationStateRoles(){return this.#localIds('local-snapshot',id=>id.includes(':preparation')||id.includes(':adoption'));}
+  async listProductJobHistory(){return this.#localIds('local-snapshot',id=>id.includes(':rebase:')||id.includes(':completed:'));}
+  async listProductControlHistory(){return this.#localIds('local-snapshot',id=>id.includes(':attempt:'));}
   /** Coordinator role inventory only; orphan plan outputs cannot disappear
    * merely because their journal was lost. This opens no corresponding body. */
   async listMigrationPlanOutputs(){

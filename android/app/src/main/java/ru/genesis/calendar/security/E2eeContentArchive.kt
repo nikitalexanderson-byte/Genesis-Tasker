@@ -6,6 +6,7 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.util.UUID
 import ru.genesis.calendar.data.GenesisBackupContainer
+import ru.genesis.calendar.auth.E2eeRemoteOriginal
 
 /** Same inert content archive as web. No key store, directory, grant, service
  * outbox or executable restore/retry capability is exposed by this codec. */
@@ -82,6 +83,20 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
         for(key in account.device.vault.listLocal("draft").filter(::deviceContent)){
             val store=E2eeDeviceDocument(account.device,key,{it},::current);val before=store.load()?:error("E2EE_BACKUP_CAPTURE_CHANGED");val bytes=before.value.toString().toByteArray(Charsets.UTF_8)
             try{val latest=snapshot("current",bytes);val after=store.load();check(after?.serial==before.serial){"E2EE_BACKUP_CAPTURE_CHANGED"};append(JSONObject().put("placement","device").put("scope",JSONObject.NULL).put("domain","draft").put("objectId",key).put("pending",true).put("current",latest).put("history",JSONArray()))}finally{bytes.fill(0)}
+        }
+        // Include old user values that are no longer in a mounted editor.
+        // Control packets, source-opening material and incomplete encrypted
+        // suffixes stay in protected custody; these entries are inert history.
+        E2eeMigrationOwnershipCatalogue.open(E2eeMigrationOwnershipCatalogue.Options(account.device,account.inventory,
+            E2eeRemoteOriginal.Capacity(128L*1024*1024,10000,1000,10000,128*1024*1024),::current,
+            {current();E2eeStorageAdmission.admit(E2eeStorageAdmission.measure(account.device,::current),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)})).use{retained->
+            for(item in retained.contents()){
+                current();val size=E2eeCommands.integer(item.get("size")).toInt();check(usage.toLong()+size.toLong()*4/3+8192<=MAX-65536){"BACKUP_TOO_LARGE"};val bytes=ByteArray(size);var offset=0
+                try{val metadata=retained.readContent(item.getString("id")){chunk->current();check(chunk.size<=bytes.size-offset){"BACKUP_INVALID"};chunk.copyInto(bytes,offset);offset+=chunk.size};current();check(offset==bytes.size&&hash(bytes)==item.get("sha256")){"BACKUP_INVALID"}
+                    val content=snapshot(item.getString("id"),bytes,metadata.getString("filename"),metadata.getString("mediaType"))
+                    append(JSONObject().put("placement","remote").put("scope",item.getJSONObject("scope")).put("domain",item.get("domain")).put("objectId",item.get("id")).put("pending",true).put("current",content).put("history",JSONArray()))
+                }finally{bytes.fill(0)}
+            };retained.assertUnchanged();current()
         }
         val at=Instant.now().toString();val sections=JSONArray();for(module in modules){val selected=entries.filter{group(it)==module};if(selected.isEmpty())continue
             sections.put(JSONObject().put("id",module).put("source","device").put("completeness","partial").put("capturedAt",at).put("revision",JSONObject.NULL).put("count",selected.size).put("pending",selected.count{it.getBoolean("pending")}).put("notices",JSONArray(listOf("CONTENT_ONLY_HISTORY_NOT_EXECUTABLE","LOCAL_OPENED_CONTENT_ONLY"))).put("data",JSONObject().put("format","genesis-content-only-v1").put("execution","history-only").put("entries",JSONArray(selected))))}

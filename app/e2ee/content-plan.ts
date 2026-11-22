@@ -327,6 +327,21 @@ export async function openMigrationContentPlan(input:Common&{reference:Migration
  }finally{stored.bytes.fill(0);}
 }
 
+/** Readable user values of an authenticated retained attempt. A writing
+ * journal contributes only its completed logical/local records; its unfinished
+ * cipher suffix remains protected evidence, never invented plaintext or a
+ * complete-plan/activation proof. Control/source-opening metadata is excluded. */
+export async function retainedMigrationPlanValues(input:Common&{attemptId:string;reference:MigrationContentPlanReference|null}){
+ const options=captured(input),inspection=await inspectMigrationContentPlanAttempt(options);current(options);
+ if(inspection.reference){const opened=await openMigrationContentPlan({...options,reference:inspection.reference});return{plan:opened.plan,logical:opened.logical,local:opened.local};}
+ if(inspection.phase==='missing')return{plan:[],logical:[],local:[]};
+ const raw=await metadata(options,id(input.attemptId,'journal'));
+ try{const journal=raw.value as unknown as Journal;
+  if(journal.phase!=='writing')invalid();const last=journal.logical.at(-1),end=last?journal.plan.findIndex(row=>row.recordId===last.manifestRecordId)+1:0;
+  return structuredClone({plan:journal.plan.slice(0,end),logical:journal.logical,local:journal.local});
+ }finally{raw.bytes.fill(0);}
+}
+
 export type MigrationContentPlanReadback=Readonly<{
  forEachEnvelope:(consume:(envelope:E2eeEnvelope)=>Promise<void>)=>Promise<number>;
  getEnvelope:(domain:E2eeContext['domain'],objectId:string)=>Promise<E2eeEnvelope|null>;

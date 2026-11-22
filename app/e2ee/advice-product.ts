@@ -55,6 +55,15 @@ function policy(input:unknown):Policy{
  const seen=new Set<number>();for(const [rows,live]of [[input.legacy,false],[input.issues,true]] as const)for(const row of rows){exactKeys(row,live?['slot','collection','objectId','payloadHash']:['slot','collection']);integer(row.slot,1,9);if(seen.has(row.slot)||!['aurora','philosophers'].includes(String(row.collection)))invalid();seen.add(row.slot);if(live)reference({objectId:row.objectId,payloadHash:row.payloadHash});}
  if([...seen].sort((a,b)=>a-b).some((slot,index)=>slot!==index+1))invalid();return input as Policy;
 }
+/** Authentication of a stored product cell never resumes or grants an issue. */
+export function inspectAdviceLocalCell(id:'advice-pending-v1'|'advice-policy-v1',input:unknown,ownerId:string,scopeId:string){
+ if(id==='advice-policy-v1')return policy(input);
+ exactKeys(input,['protocol','ownerId','issue','result','complete']);
+ if(input.protocol!==1||input.ownerId!==ownerId||typeof input.complete!=='boolean')invalid();const value=issue(input.issue,{ownerId,scopeId});
+ if(input.result!==null){object(input.result);const result=input.result;
+  if(result.intentId!==value.intentId||result.dayKey!==value.dayKey||result.slot!==value.slot||result.collection!==value.entry.collection||result.objectId!=='advice-live:'+value.intentId)invalid();decodeE2eeBytes(result.payloadHash,32);}
+ if(input.complete&&input.result===null)invalid();return input as unknown as Pending;
+}
 /** One common product engine for browser and the network-disabled native
  * runtime. Its ports expose domain content, never key material or arbitrary IO. */
 export class E2eeAdviceProduct{
@@ -116,8 +125,8 @@ export class E2eeAdviceProduct{
    ownerId:this.ports.ownerId,excludedCollections:exhausted,restricted:policy.restricted,...(advance&&previous?{previousCategories:previous.entry.categories}:{}),reservePhilosopher:limits.philosophers>0&&counts.philosophers===0},this.ports.current);
   return{chosen,limits,selected,previous,hour};
  }
- async #pending(){const row=await this.ports.localRead('advice-pending-v1');this.ports.current();if(!row)return null;exactKeys(row.value,['protocol','ownerId','issue','result','complete']);
-  if(row.value.protocol!==1||row.value.ownerId!==this.ports.ownerId||typeof row.value.complete!=='boolean')invalid();issue(row.value.issue,this.ports);return{serial:row.serial,value:row.value as Pending};}
+ async #pending(){const row=await this.ports.localRead('advice-pending-v1');this.ports.current();if(!row)return null;
+  const value=inspectAdviceLocalCell('advice-pending-v1',row.value,this.ports.ownerId,this.ports.scopeId) as Pending;return{serial:row.serial,value};}
  async #finish(value:Pending,serial:number){if(value.complete)return;const prepared=await this.ports.prepareIssue(value.issue);this.ports.current();const result=value.result??await this.ports.publishIssue(value.issue,prepared);this.ports.current();
   if(result.intentId!==value.issue.intentId||result.dayKey!==value.issue.dayKey||result.slot!==value.issue.slot||result.collection!==value.issue.entry.collection||result.objectId!==prepared.objectId||result.payloadHash!==prepared.payloadHash)invalid();
   if(!value.result){value.result=result;await this.ports.localWrite('advice-pending-v1',value,serial);serial++;}

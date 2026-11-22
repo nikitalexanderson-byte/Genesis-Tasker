@@ -138,6 +138,9 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
      * their narrow prefix rules and do not gain a general empty-prefix read. */
     internal fun listMigrationOriginalParts():List<String> = localIds("local-snapshot"){it.contains(":source:")||it.endsWith(":source")}
     internal fun listMigrationHistoryCopies():List<String> = localIds("local-snapshot"){it.endsWith(":archive")||it.contains(":archive:")||it.endsWith(":cancel")||it.contains(":cancel:")}
+    internal fun listMigrationStateRoles():List<String> = localIds("local-snapshot"){it.contains(":preparation")||it.contains(":adoption")}
+    internal fun listProductJobHistory():List<String> = localIds("local-snapshot"){it.contains(":rebase:")||it.contains(":completed:")}
+    internal fun listProductControlHistory():List<String> = localIds("local-snapshot"){it.contains(":attempt:")}
     internal fun listMigrationPlanOutputs():Pair<List<String>,List<String>> =
         localIds("outbox"){true} to localIds("local-snapshot"){it.contains(":private:")||it.endsWith(":private")}
     private fun localIds(domain:String,include:(String)->Boolean):List<String> {

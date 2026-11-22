@@ -92,54 +92,7 @@ class E2eeMigration(
     private fun encoded(value: JSONObject) = value.toString().toByteArray(Charsets.UTF_8)
     private fun number(value: JSONObject, key: String, minimum: Long = 0) = E2eeCommands.integer(value.get(key), minimum)
     private fun nullable(value: JSONObject, key: String) = if (value.isNull(key)) null else value.getJSONObject(key)
-    private fun decode(bytes: ByteArray): JSONObject {
-        val state = E2eeFileManifestJson.readMigrationHistory(bytes)
-        val phases = setOf("preparing", "uploading", "verified", "active", "cancelled")
-        val protocol=number(state,"protocol")
-        check(protocol in setOf(1L,2L,3L,4L,5L) && state.getString("phase") in phases) { "E2EE_CORRUPT_MIGRATION" }
-        E2eeKeys.exact(state,setOf("protocol","migrationId","phase","ancestors","sourceHash","lease","plan","logical","uploaded","manifestHash","verifiedCheckpoint","pending","resuming","checkpointHash","directoryRevision")+
-            (if(protocol>=3L)setOf("source")else setOf("snapshotParts","snapshotSize","snapshotHash"))+(if(protocol in setOf(4L,5L))setOf("ownership")else emptySet())+(if(protocol==5L)setOf("adopted")else emptySet())+(if(protocol==4L&&state.has("cancelReceipt"))setOf("cancelReceipt")else emptySet())+(if(protocol!=1L)setOf("local","planned")else emptySet()))
-        E2eeKeys.technical(state.getString("migrationId"))
-        val plan = state.getJSONArray("plan"); val logical = state.getJSONArray("logical"); val ancestors = state.getJSONArray("ancestors")
-        check(plan.length() <= 10000 && logical.length() <= 10000 && number(state,"uploaded") <= plan.length()
-            && (protocol>=3L||number(state,"snapshotParts") <= 256 && number(state,"snapshotSize") <= E2eeFiles.MAX_FILE_BYTES)
-            && ancestors.length() <= 32) { "E2EE_CORRUPT_MIGRATION" }
-        val seen = mutableSetOf<String>()
-        for (index in 0 until ancestors.length()) check(seen.add(E2eeKeys.technical(ancestors.getString(index)))) { "E2EE_CORRUPT_MIGRATION" }
-        if(protocol!=1L){
-            check(state.get("planned") is Boolean){"E2EE_CORRUPT_MIGRATION"}
-            val local=localEntries(state)
-            check(state.getBoolean("planned")||local.isEmpty()&&plan.length()==0&&logical.length()==0&&state.getString("phase") !in setOf("verified","active")){"E2EE_CORRUPT_MIGRATION"}
-        }
-        if(protocol>=3L)E2eeMigrationStage.validate(state.getJSONObject("source"),vault,E2eeSourceStage.Target(ownerId,scopeId,kind),required)
-        if(protocol==3L){
-            check(state.get("phase") in setOf("preparing","cancelled")&&!state.getBoolean("planned")&&number(state,"uploaded")==0L
-                &&listOf("sourceHash","lease","pending","resuming","manifestHash","verifiedCheckpoint").all{state.isNull(it)}){"E2EE_CORRUPT_MIGRATION"}
-        }
-        if(protocol==5L){
-            val adopted=state.getJSONObject("adopted");E2eeKeys.exact(adopted,setOf("reference","checkpointHash","directoryRevision","stateId","stateHash"));val reference=adopted.getJSONObject("reference");E2eeKeys.exact(reference,setOf("attemptId","manifestHash"))
-            E2eeKeys.technical(reference.getString("attemptId"));E2eeKeys.technical(adopted.getString("stateId"));E2eeEnvelope.decode(reference.getString("manifestHash"),32);E2eeEnvelope.decode(adopted.getString("checkpointHash"),32);E2eeEnvelope.decode(adopted.getString("stateHash"),32);number(adopted,"directoryRevision",1)
-            check(state.getBoolean("planned")&&state.get("phase")!="preparing"&&!state.isNull("sourceHash")&&!state.isNull("lease")&&number(state.getJSONObject("ownership"),"protocol")==3L){"E2EE_CORRUPT_MIGRATION"}
-        }
-        if(protocol==4L){
-            check(state.get("phase") in setOf("preparing","cancelled")&&!state.getBoolean("planned")&&plan.length()==0&&logical.length()==0&&state.getJSONArray("local").length()==0
-                &&number(state,"uploaded")==0L&&state.isNull("manifestHash")&&state.isNull("verifiedCheckpoint")
-                &&(state.isNull("pending")||state.getJSONObject("pending").getJSONObject("command").get("action") in setOf("migration-start","migration-cancel"))
-                &&(state.isNull("resuming")||state.getJSONObject("resuming").getJSONObject("command").get("action")=="migration-resume")){"E2EE_CORRUPT_MIGRATION"}
-            if(state.get("phase")=="cancelled")check(state.isNull("pending")&&state.isNull("resuming")&&(state.isNull("lease")||state.has("cancelReceipt"))){"E2EE_CORRUPT_MIGRATION"}
-            else check(!state.has("cancelReceipt")){"E2EE_CORRUPT_MIGRATION"}
-            if(state.has("cancelReceipt")){
-                check(!state.isNull("cancelReceipt")&&!state.isNull("lease")){"E2EE_CORRUPT_MIGRATION"};val saved=state.getJSONObject("cancelReceipt")
-                E2eeKeys.exact(saved,setOf("packet","result"));val result=saved.getJSONObject("result");E2eeKeys.exact(result,setOf("state"));check(result.get("state")=="preparing"){"E2EE_CORRUPT_MIGRATION"}
-            }
-        }
-        if(protocol in setOf(4L,5L)){
-            val pin=if(protocol==5L)state.getJSONObject("adopted")else state
-            E2eeMigrationOwnership.validate(state.getJSONObject("ownership"),E2eeMigrationOwnership.Expected(state.getString("migrationId"),
-                E2eeSourceStage.Target(ownerId,scopeId,kind),vault.localIdentity(),state.get("sourceHash") as? String,nullable(state,"lease"),pin.getString("checkpointHash"),number(pin,"directoryRevision",1)))
-        }
-        return state
-    }
+    private fun decode(bytes:ByteArray):JSONObject=E2eeMigrationStateCodec.read(bytes,vault,E2eeSourceStage.Target(ownerId,scopeId,kind),required,allowed)
     private fun localEntries(state:JSONObject)=if(number(state,"protocol")!=1L)E2eeMigrationLocal.validate(state.getJSONArray("local"),if(number(state,"protocol")==5L)state.getJSONObject("adopted").getJSONObject("reference").getString("attemptId")else state.getString("migrationId"),allowed)else emptyList()
     private fun verifyLocal(state:JSONObject){for(entry in localEntries(state))E2eeMigrationLocal.open(vault,entry).bytes.fill(0)}
     /** No network/legacy fallback for missing local-only content. */
@@ -204,11 +157,30 @@ class E2eeMigration(
         val captured=E2eeStagedMigrationCapture(capture.target,capture.paths,capture.capturePath)
         return fenced{prepareStagedLocked(captured,options)}
     }
-    private suspend fun prepareStagedLocked(capture:E2eeStagedMigrationCapture,options:E2eeStagedMigrationOptions) {
+    internal suspend fun prepareRetainedStaged(capture:E2eeStagedMigrationCapture,staged:E2eeStagedMigrationOptions,planning:E2eeStreamedPlanningOptions){
+        val policy=planningPolicy(planning);val job=currentCoroutineContext().job;val current:()->Unit={job.ensureActive();staged.assertCurrent();policy.current()}
+        val captured=E2eeStagedMigrationCapture(capture.target,capture.paths,capture.capturePath)
+        val stageOptions=E2eeStagedMigrationOptions(staged.capacity.copy(),current,staged.admit)
+        return fenced{
+            val expected=loadOrNull();current();check(expected==null||expected.state.get("phase")=="cancelled"){"E2EE_MIGRATION_ALREADY_PREPARED"}
+            val verify:(Loaded?)->Unit={old->
+                current();check(old?.serial==expected?.serial&&old?.rawHash==expected?.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"}
+                ownershipCatalogue(PlanningPolicy(policy.options,current)).use{catalogue->val root=catalogue.scope(scopeId)
+                    check((root.root==null)==(expected==null)){"E2EE_SOURCE_HISTORY_CHANGED"}
+                    if(expected!=null){assertPlanningCell(expected,current);val saved=root.root?:error("E2EE_SOURCE_HISTORY_CHANGED");check(root.serial==expected.serial&&root.hash==expected.rawHash&&saved.get("phase")=="cancelled"
+                        &&saved.isNull("pending")&&saved.isNull("resuming")){"E2EE_MIGRATION_CANCELLATION_PENDING"}}
+                    catalogue.assertUnchanged();current()
+                }
+            }
+            prepareStagedLocked(captured,stageOptions,verify);current()
+        }
+    }
+    private suspend fun prepareStagedLocked(capture:E2eeStagedMigrationCapture,options:E2eeStagedMigrationOptions,verifyRetained:((Loaded?)->Unit)?=null) {
         val target=E2eeSourceStage.Target(ownerId,scopeId,kind);check(capture.target==target){"E2EE_SCOPE_BINDING_MISMATCH"}
         val current:()->Unit={options.assertCurrent();vault.requireOpen()};current();val old=loadOrNull()
-        check(old==null||number(old.state,"protocol")!=4L){"E2EE_STREAMED_PLANNER_REQUIRED"}
+        check(old==null||verifyRetained!=null||number(old.state,"protocol") !in setOf(4L,5L)&&!old.state.optBoolean("planned",false)&&old.state.getJSONArray("plan").length()==0&&old.state.optJSONArray("local")?.length() in setOf(null,0)){"E2EE_STREAMED_PLANNER_REQUIRED"}
         check(old==null||old.state.get("phase")=="cancelled"){"E2EE_MIGRATION_ALREADY_PREPARED"}
+        verifyRetained?.invoke(old);current()
         val ancestors=old?.state?.getJSONArray("ancestors")?.let{JSONArray(it.toString())}?:JSONArray()
         if(old!=null)ancestors.put("${old.state.getString("migrationId")}:archive")
         check(ancestors.length()<=32){"E2EE_MIGRATION_HISTORY_LIMIT"}
@@ -218,9 +190,14 @@ class E2eeMigration(
             .put("uploaded",0).put("manifestHash",JSONObject.NULL).put("verifiedCheckpoint",JSONObject.NULL).put("pending",JSONObject.NULL).put("resuming",JSONObject.NULL)
             .put("checkpointHash",initialCheckpoint.hash).put("directoryRevision",initialCheckpoint.revision)
         val changes=mutableListOf<UnlockedE2eeVault.Write>()
-        if(old!=null)changes+=UnlockedE2eeVault.Write("local-snapshot",ancestors.getString(ancestors.length()-1),encoded(old.state),null)
         val bytes=encoded(state)
         try{
+            verifyRetained?.invoke(old);current()
+            if(old!=null){val raw=vault.read("local-snapshot",stateId)
+                try{current();check(raw!=null&&raw.serial==old.serial&&hash(raw.bytes)==old.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"};current()
+                    changes+=UnlockedE2eeVault.Write("local-snapshot",ancestors.getString(ancestors.length()-1),raw.bytes.copyOf(),null)
+                }finally{raw?.bytes?.fill(0)}
+            }
             val totals=E2eeMigrationStage.verify(vault,source,target,required,current);current()
             changes+=E2eeMigrationStage.publicationGuard(vault,source,target,required,current);current()
             options.admit(E2eeSourceStage.Admission(totals.first,totals.second,bytes.size+changes.sumOf{it.bytes.size}));current()
@@ -298,35 +275,31 @@ class E2eeMigration(
         val a=E2eeCommands.canonical(left);val b=E2eeCommands.canonical(right)
         return try{a.contentEquals(b)}finally{a.fill(0);b.fill(0)}
     }
-    /** Only the root metadata ID aliases the exact retained state3 bytes.
-     * All original/history/plan discovery remains unfiltered and fail-closed. */
-    private fun preparedHistory(loaded:Loaded,policy:PlanningPolicy):E2eeMigrationHistory.Handle {
-        val state=loaded.state;check(number(state,"protocol")==4L){"E2EE_STREAMED_PLANNING_REQUIRED"}
-        val original=state.getJSONObject("ownership").getJSONObject("sourceState");val current=policy.current
-        val view=object:E2eeSourceReadVault {
-            override fun assertOpen()=current()
-            override fun localIdentity()=vault.localIdentity()
-            override fun listLocal(domain:String,objectPrefix:String)=vault.listLocal(domain,objectPrefix)
-            override fun read(domain:String,objectId:String):UnlockedE2eeVault.Opened? {
-                current();if(domain!="local-snapshot"||objectId!=stateId)return vault.read(domain,objectId)
-                val active=vault.read(domain,stateId)
-                try{current();check(active!=null&&active.serial==loaded.serial&&hash(active.bytes)==loaded.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"};current()}finally{active?.bytes?.fill(0)}
-                val raw=vault.read(domain,original.getString("objectId"))
-                try{
-                    current();check(raw!=null&&raw.serial==1L&&hash(raw.bytes)==original.get("hash")){"E2EE_SOURCE_HISTORY_INVALID"};current()
-                    val old=decode(raw.bytes)
-                    check(number(old,"protocol")==3L&&old.get("phase")=="preparing"&&old.get("migrationId")==state.get("migrationId")
-                        &&old.get("checkpointHash")==state.get("checkpointHash")&&number(old,"directoryRevision",1)==number(state,"directoryRevision",1)
-                        &&sameTechnical(JSONObject().put("source",old.get("source")).put("ancestors",old.get("ancestors")),
-                            JSONObject().put("source",state.get("source")).put("ancestors",state.get("ancestors")))){"E2EE_SOURCE_HISTORY_INVALID"}
-                    return UnlockedE2eeVault.Opened(1,raw.bytes.copyOf())
-                }finally{raw?.bytes?.fill(0)}
+    private fun ownershipCatalogue(policy:PlanningPolicy)=E2eeMigrationOwnershipCatalogue.open(E2eeMigrationOwnershipCatalogue.Options(
+        policy.options.device,policy.options.inventory,policy.options.originalCapacity,policy.current,policy.options.admit))
+    internal suspend fun inspectRetainedOwnership(input:E2eeStreamedPlanningOptions):E2eeMigrationOwnershipCatalogue.Handle {
+        val policy=planningPolicy(input);return fenced{ownershipCatalogue(policy)}
+    }
+    /** Reauthenticate the real raw graph after each explicit coordinator CAS.
+     * Sources/ancestors stay fixed; no foreign role is omitted from discovery. */
+    private fun retainedHistory(loaded:Loaded,policy:PlanningPolicy):E2eeRetainedSourceHistory.Handle {
+        val current=policy.current;var initial:E2eeRetainedSourceHistory.Scope?=null
+        val verify:()->E2eeMigrationHistory.Admission={
+            assertPlanningCell(loaded,current)
+            ownershipCatalogue(policy).use{catalogue->
+                val scope=catalogue.scope(scopeId)
+                check(scope.root!=null&&scope.serial==loaded.serial&&scope.hash==loaded.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"}
+                val checked=scope.sourceScope();val before=initial
+                check(before==null||E2eeRetainedSourceHistory.sameSources(before,checked)){"E2EE_SOURCE_HISTORY_CHANGED"}
+                if(before==null)initial=checked
+                catalogue.assertUnchanged();assertPlanningCell(loaded,current);current();catalogue.usage()
             }
         }
-        return E2eeMigrationHistory.openPrepared(view,E2eeSourceStage.Target(ownerId,scopeId,kind),required,stateId,policy.options.inventory,
-            {bytes->decode(bytes).also{check(number(it,"protocol")!=4L){"E2EE_SOURCE_HISTORY_INVALID"}}},
-            E2eeMigrationHistory.Options(policy.options.capacity,current,policy.options.admit),vault::listMigrationOriginalParts,vault::listMigrationHistoryCopies,
-            {ids->assertPlanningCell(loaded,current);inspectOwnedContentPlans(loaded.state,ids,policy)})
+        verify();current()
+        return E2eeRetainedSourceHistory.Handle(vault,requireNotNull(initial),policy.options.inventory,current,{loaded.serial},verify)
+    }
+    private fun preparedHistory(loaded:Loaded,policy:PlanningPolicy):E2eeRetainedSourceHistory.Handle {
+        check(number(loaded.state,"protocol")==4L){"E2EE_STREAMED_PLANNING_REQUIRED"};return retainedHistory(loaded,policy)
     }
     private fun planReference(value:JSONObject)=E2eeContentPlan.Reference(value.getString("attemptId"),value.getString("manifestHash"))
     private fun planReferenceJson(value:E2eeContentPlan.Reference)=JSONObject().put("attemptId",value.attemptId).put("manifestHash",value.manifestHash)
@@ -335,21 +308,7 @@ class E2eeMigration(
         check(number(value,"cryptoEpoch",1)==cryptoEpoch&&value.get("keyId")==keyId&&number(value,"securityEpoch",1)==securityEpoch){"E2EE_DIRECTORY_CONFLICT"}
         return E2eeContentPlan.ReadOptions(vault,root,signer,context,E2eeSourceStage.Target(ownerId,scopeId,kind),state.getString("migrationId"),state.getString("sourceHash"),required,policy.options.inventory,policy.current)
     }
-    private fun inspectOwnedContentPlans(state:JSONObject,ids:List<String>,policy:PlanningPolicy):E2eeMigrationHistory.Admission {
-        val owned=state.getJSONObject("ownership");val plans=if(number(owned,"protocol")==3L)owned.getJSONArray("plans")else JSONArray()
-        val reserved=(0 until plans.length()).map{plans.getJSONObject(it)};val known=mutableSetOf<String>();var bytes=0L;var parts=0;var metadata=0
-        check(ids.all{id->reserved.any{plan->val attempt=plan.getString("attemptId");id=="content-plan:$attempt:journal"||id=="content-plan:$attempt:manifest"}}){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}
-        for(plan in reserved){
-            val found=E2eeContentPlan.inspect(contentPlanRead(state,plan,policy),plan.getString("attemptId"),if(plan.isNull("completion"))null else planReference(plan.getJSONObject("completion")));policy.current()
-            known+=found.metadataIds;bytes+=found.bytes;parts+=found.records;metadata+=found.metadataBytes
-        }
-        check(known.size==ids.size&&ids.all{it in known}){"E2EE_SOURCE_HISTORY_CHANGED"}
-        val outputs=vault.listMigrationPlanOutputs();policy.current()
-        check(outputs.first.all{id->reserved.any{id.startsWith(it.getString("attemptId")+":upload:")}}
-            &&outputs.second.all{id->reserved.any{id.startsWith(it.getString("attemptId")+":private:")}}){"E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"}
-        return E2eeMigrationHistory.Admission(bytes,parts,metadata,reserved.size)
-    }
-    private fun drainHistory(history:E2eeMigrationHistory.Handle,current:()->Unit):E2eeMigrationHistory.Receipt {
+    private fun drainHistory(history:E2eeRetainedSourceHistory.Handle,current:()->Unit):E2eeMigrationHistory.Receipt {
         var rejected:Throwable?=null;val buffer=ByteArray(E2eeFiles.CHUNK_BYTES)
         try{
             for(source in listOf(history.input.current)+history.input.previous)for(path in source.paths){
@@ -360,23 +319,14 @@ class E2eeMigration(
         finally{buffer.fill(0);try{history.close()}catch(error:Throwable){if(rejected==null)throw error else if(rejected!==error)rejected.addSuppressed(error)}}
     }
     private fun checkOwnedOriginals(state:JSONObject,policy:PlanningPolicy,publicKey:PublicKey){
-        val options=originalRead(policy);val markers=E2eeRemoteOriginal.listOriginals(options);policy.current()
-        val list=state.getJSONObject("ownership").getJSONArray("originals");val owned=mutableMapOf<String,JSONObject>()
-        for(index in 0 until list.length()){
-            val entry=list.getJSONObject(index);val registration=entry.getJSONObject("registration")
-            E2eeRemoteOriginal.authenticateRegistration(registration,entry.getJSONObject("packet"),publicKey,options,number(lease(state),"generation",1));policy.current()
-            owned[registration.getString("id")]=entry
-            if(number(state.getJSONObject("ownership"),"protocol")!=1L&&!entry.isNull("completion"))check(markers.any{it.id==registration.getString("id")}){"E2EE_REMOTE_ORIGINAL_MISSING"}
-        }
-        for(marker in markers){
-            val entry=owned[marker.id]?:error("E2EE_STREAMED_ORIGINAL_REVIEW_REQUIRED")
-            val found=E2eeRemoteOriginal.describeOriginal(options,marker.id);policy.current()
-            check(sameTechnical(found.registration.toJson(),entry.getJSONObject("registration"))){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
-            if(number(state.getJSONObject("ownership"),"protocol")!=1L&&!entry.isNull("completion")){
-                val ref=entry.getJSONObject("completion");val buffer=ByteArray(65536)
-                val proof=try{E2eeRemoteOriginal.withOriginal(options,marker.id){input->while(true){policy.current();val count=input.read(buffer);if(count<0)break;buffer.fill(0,0,count)}}}finally{buffer.fill(0)}
-                policy.current();check(proof.complete&&proof.manifestHash==ref.get("manifestHash")&&proof.rawHash==ref.get("rawHash")&&proof.size==number(ref,"size")){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+        ownershipCatalogue(policy).use{catalogue->
+            val root=catalogue.scope(scopeId).root?:error("E2EE_CORRUPT_STREAMED_OWNERSHIP")
+            check(number(root,"protocol") in setOf(4L,5L)&&root.get("migrationId")==state.get("migrationId")&&root.get("sourceHash")==state.get("sourceHash")
+                &&sameTechnical(root.getJSONObject("ownership"),state.getJSONObject("ownership"))){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+            for(entry in E2eeRetainedMigrationProof.rows(state.getJSONObject("ownership").getJSONArray("originals"))){
+                E2eeRemoteOriginal.authenticateRegistration(entry.getJSONObject("registration"),entry.getJSONObject("packet"),publicKey,originalRead(policy),number(lease(state),"generation",1));policy.current()
             }
+            catalogue.assertUnchanged();policy.current()
         }
     }
     /** State4 preparation only: protected source publication precedes a signed
@@ -392,12 +342,10 @@ class E2eeMigration(
             if(number(loaded.state,"protocol")==3L){
                 check(loaded.state.get("phase")=="preparing"){"E2EE_STAGED_SOURCE_REQUIRED"}
                 check(loaded.state.get("checkpointHash")==initialCheckpoint.hash&&number(loaded.state,"directoryRevision",1)==initialCheckpoint.revision){"E2EE_DIRECTORY_CONFLICT"}
-                check(E2eeRemoteOriginal.listOriginals(originalRead(policy)).isEmpty()){"E2EE_STREAMED_ORIGINAL_REVIEW_REQUIRED"};current()
                 val raw=vault.read("local-snapshot",stateId)
                 try{
                     current();check(raw!=null&&raw.serial==loaded.serial&&hash(raw.bytes)==loaded.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"};current()
-                    val history=E2eeMigrationHistory.open(vault,E2eeSourceStage.Target(ownerId,scopeId,kind),required,stateId,options.inventory,
-                        {bytes->decode(bytes).also{check(number(it,"protocol")!=4L){"E2EE_SOURCE_HISTORY_INVALID"}}},E2eeMigrationHistory.Options(options.capacity,current,options.admit))
+                    val history=retainedHistory(loaded,policy)
                     val totals=drainHistory(history,current).totals;current();val old=loaded.state
                     val originalId="${old.getString("migrationId")}:preparation:3"
                     val ownership=JSONObject().put("protocol",1).put("attemptId",UUID.randomUUID().toString())
@@ -441,7 +389,7 @@ class E2eeMigration(
         current();val actual=load();current();check(actual.serial==expected.serial&&actual.rawHash==expected.rawHash){"E2EE_SOURCE_HISTORY_CHANGED"}
         cell.state=actual.state;cell.serial=actual.serial;cell.rawHash=actual.rawHash
     }
-    private fun savePlanningCell(cell:Loaded,next:JSONObject,policy:PlanningPolicy,history:E2eeMigrationHistory.Handle,current:()->Unit){
+    private fun savePlanningCell(cell:Loaded,next:JSONObject,policy:PlanningPolicy,history:E2eeRetainedSourceHistory.Handle,current:()->Unit){
         current();assertPlanningCell(cell,current);val totals=history.assertMetadataUnchanged();current()
         val guard=E2eeMigrationStage.publicationGuard(vault,next.getJSONObject("source"),E2eeSourceStage.Target(ownerId,scopeId,kind),required,current)
         val bytes=encoded(next)
@@ -884,6 +832,7 @@ class E2eeMigration(
         return fenced{
             current();check(initialState !in setOf("active","retirement")){"E2EE_DOWNGRADE_FORBIDDEN"}
             val loaded=load();current();val state=loaded.state
+            ownershipCatalogue(policy).use{it.assertUnchanged();current()}
             if(number(state,"protocol")!=4L){cancelLocked();current();return@fenced}
             val publicKey=planningSigner(policy);assertPlanningPackets(state,publicKey,current);checkOwnedOriginals(state,policy,publicKey)
             val totals=drainHistory(preparedHistory(loaded,policy),current).totals;current()

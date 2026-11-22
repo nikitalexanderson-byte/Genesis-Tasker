@@ -1,5 +1,34 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Продолжение22 ноября: retained ownership и повтор перехода
+
+Поверх HEAD485acdfd добавлен новый непроверенный код web/native: общий реестр
+владельцев и ролей всех областей, полное чтение legacy v1/v2 plans, state4/5
+preparation/adoption и control packets, настоящая retained source history,
+подтверждаемая подготовка после отмены, явная проверка обычных product outboxes.
+При замене обычного завершённого job сохраняется его исходный header; при renewal
+Aurora сохраняется прежний packet. Оба content-only exporters теперь включают
+читаемые пользовательские значения прежних планов как inert history.
+
+Подробности: `security-336-retained-migration-history.md`. Это НЕ compilation/QA,
+НЕ финальное крипторевью и НЕ приёмка релиза. Coverage9/20;3.3.5/149 и принятый
+Paddle-сайт сохранены; floors0/cutover off/GENESIS_DEPLOY_ANDROID=false. Чужой
+demo-output/ не читать/не stage. Тесты/compiler/lint/build/CI/push не запускались.
+
+Точный остаток этого блока: legitimate incomplete source-stage capture пока
+удерживает барьер; unresolved legacy start/no-lease cancellation требует явного
+разрешения; divergent previous/current domain snapshots требуют review workflow.
+Не обходить это префиксным фильтром, удалением originals или пустой подстановкой.
+На общем QA проверить новую web/native композицию и стоимость повторного полного
+чтения графа. Typed restore/revoked-device replacement ещё не реализованы этим
+экспортом. Следующий кодовый участок — создание новых закрытых shared resources,
+затем shared migration controllers и остальная parity/automation/background работа.
+
+Историческое «cancelled state4 вообще не поддерживается» в нижних срезах заменено
+этим новым кандидатным кодом и перечисленными конкретными ограничениями. Общая
+приёмка всех 48 сценариев/14 языков/размеров/тем/API26+/149 upgrade, исправления,
+точное внутреннее крипторевью и уже разрешённые раздельные выпуски ещё впереди.
+
 ## Кодовое продолжение22 ноября — поверх исторических срезов
 
 Локальная ветка `codex/security-336`, кодовый HEAD `4f4bfd5f`. Добавлены пять

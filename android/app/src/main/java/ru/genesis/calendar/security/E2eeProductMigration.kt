@@ -26,7 +26,7 @@ internal object E2eeProductMigration{
         sources.assertBinding(target.ownerId,target.scopeId,target.kind);val local=sources.stagedCapture();val reconciliation=sources.stagedReconciliation();current()
         var status=migration.status();current()
         if(status?.phase=="active"){options.finalizeClientDeny();current();options.progress("active");return}
-        if(status==null){options.progress("snapshot");migration.prepareStaged(local,options.staged);current();status=migration.status()}
+        if(status==null||status.phase=="cancelled"){options.progress("snapshot");migration.prepareRetainedStaged(local,options.staged,options.planning);current();status=migration.status()}
         if(status?.protocol!=5){
             options.progress("sources");val captured=migration.withStreamedPlanning(options.planning){session->
                 val network=options.network(session);options.router.use(network){capture(target,session.context,network,options.planning.inventory,catalogue,current)}

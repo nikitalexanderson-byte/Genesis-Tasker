@@ -14,7 +14,7 @@ internal interface E2eeAccountTransport:E2eeScopeTransport{
 /** Foreground capability, independent of Google identity. Existing hardware
  * bundles are never replaced on an unlock or enrollment failure. */
 internal class E2eeProductAccount private constructor(val ownerId:String,val device:UnlockedE2eeDevice,
-    val client:E2eeScopeClient,val directory:E2eeDirectory.Verified,private val assertCurrent:()->Unit,private val transport:E2eeAccountTransport,val offline:Boolean=false){
+    val client:E2eeScopeClient,val directory:E2eeDirectory.Verified,private val assertCurrent:()->Unit,private val transport:E2eeAccountTransport,val inventory:E2eePrivatePaths,val offline:Boolean=false){
     private var closed=false
     class SharedScope(val client:E2eeScopeClient,val directory:E2eeDirectory.Verified){override fun toString()="E2eeProductAccount.SharedScope([redacted])"}
     private val shared=mutableMapOf<String,SharedScope>()
@@ -67,7 +67,7 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                 check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_MIGRATION_RESUME_REQUIRED"}
                 val old=candidate.vault.read("key-check","product-account-index-v1");val bytes=JSONObject().put("protocol",1).put("ownerId",owner).put("personal",personal.single()).toString().toByteArray(Charsets.UTF_8)
                 try{candidate.vault.write(listOf(UnlockedE2eeVault.Write("key-check","product-account-index-v1",bytes,old?.serial)));current()}finally{old?.bytes?.fill(0);bytes.fill(0)}
-                return E2eeProductAccount(owner,candidate,client,directory,current,transport)
+                return E2eeProductAccount(owner,candidate,client,directory,current,transport,E2eePrivatePaths.load(context))
             }catch(error:Throwable){device?.lock();throw error}finally{held?.fill(0)}
         }
         fun openOffline(context:Context,owner:String,transport:E2eeAccountTransport,current:()->Unit):E2eeProductAccount{
@@ -79,7 +79,7 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
                 }finally{row.bytes.fill(0)}
                 val client=E2eeScopeClient(device,owner,scope,device.authorityPin,transport);val directory=client.hydrateOffline();current()
                 check(directory.ownerId==owner&&directory.kind=="personal"&&directory.resourceId==owner&&directory.state=="active"){"E2EE_SCOPE_BINDING_MISMATCH"}
-                return E2eeProductAccount(owner,device,client,directory,current,transport,offline=true)
+                return E2eeProductAccount(owner,device,client,directory,current,transport,E2eePrivatePaths.load(context),offline=true)
             }catch(error:Throwable){device.lock();throw error}
         }
         private fun recoverEnrollment(owner:String,scope:String,device:UnlockedE2eeDevice,transport:E2eeAccountTransport,secret:ByteArray,kit:JSONObject,current:()->Unit){

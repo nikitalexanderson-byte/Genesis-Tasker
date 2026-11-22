@@ -26,6 +26,16 @@ function content(value:unknown,ownerId:string,scopeId:string):Content{
  assertTechnical(value.intentId);date(value.periodKey);integer(value.expectedRevision);integer(value.seed,0,0xffffffff);
  if(value.kind==='spread')cardList(value.cards);else if(value.cards!==null)invalid();return value as Content;
 }
+/** Read-only custody uses the same content parser as the live job reader. */
+export function inspectStoicheionLocalJob(input:unknown,ownerId:string,scopeId:string,kind:StoicheionDrawKind){
+ exactKeys(input,['protocol','ownerId','kind','content','position','complete','result']);
+ if(input.protocol!==1||input.ownerId!==ownerId||input.kind!==kind||typeof input.complete!=='boolean')invalid();
+ const value=content(input.content,ownerId,scopeId);
+ if(input.position!==null)integer(input.position,0,8);
+ if(input.result!==null){if(!input.result||typeof input.result!=='object'||Array.isArray(input.result))invalid();
+  if(input.result.intentId!==value.intentId||input.result.kind!==kind)invalid();head(input.result.head,kind);}
+ if(input.complete&&input.result===null)invalid();return input as unknown as Job;
+}
 function head(value:unknown,kind:StoicheionDrawKind):Head{
  if(!value||typeof value!=='object'||Array.isArray(value))invalid();const row=value as Head;
  if(row.kind!==kind||typeof row.legacy!=='boolean'||row.legacy!==(row.reference===null))invalid();date(row.dayKey);date(row.periodKey);time(row.firstDrawAt);integer(row.revision,1);
@@ -79,7 +89,7 @@ export class E2eeStoicheionProduct{
  loadTimeline(){return this.#run(async()=>{const current=await this.#state();return{timeline:current.timeline?await this.#timeline(current.timeline):null,serverNow:current.serverNow};});}
  async #saveJob(job:Job,serial:number|null){const bytes=encoder.encode(JSON.stringify(job));try{await this.account.device.vault.write([{domain:'outbox',objectId:`stoicheion-job:${job.kind}`,value:bytes,expected:serial}]);this.#current();if(typeof window!=='undefined')window.dispatchEvent(new Event('genesis-private-pending-change'));}finally{bytes.fill(0);}return(serial??0)+1;}
  async #pending(kind:StoicheionDrawKind){const row=await this.account.device.vault.read('outbox',`stoicheion-job:${kind}`);this.#current();if(!row)return null;
-  try{const value=JSON.parse(decoder.decode(row.value));exactKeys(value,['protocol','ownerId','kind','content','position','complete','result']);if(value.protocol!==1||value.ownerId!==this.account.ownerId||value.kind!==kind||typeof value.complete!=='boolean')invalid();content(value.content,this.account.ownerId,this.account.personal().directory.scopeId);return{job:value as Job,serial:row.serial};}finally{row.value.fill(0);}}
+  try{const value=inspectStoicheionLocalJob(JSON.parse(decoder.decode(row.value)),this.account.ownerId,this.account.personal().directory.scopeId,kind);return{job:value,serial:row.serial};}finally{row.value.fill(0);}}
  async #finish(job:Job,serial:number){if(job.complete)return job.result!;if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');const objectId=`stoicheion-live:${job.content.intentId}`,document=this.#document(objectId);
   let view;try{view=await document.load('online');}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_PRIVATE_DOCUMENT_MISSING')throw error;await document.save(job.content,{serial:null,remoteRevision:0});view=await document.load('offline');}
   if(view.conflict||JSON.stringify(view.value)!==JSON.stringify(job.content)||view.remoteRevision>1)throw new Error('E2EE_STOICHEION_CONTENT_INVALID');if(view.pending)await document.flush();

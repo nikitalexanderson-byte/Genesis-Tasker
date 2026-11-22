@@ -39,7 +39,9 @@ export async function migratePrivateProductScope(options:{target:Target;migratio
  const capture=sources.stagedCapture(),reconcile=sources.stagedReconciliation();assertCurrent();
  let status=await migration.status();assertCurrent();
  if(status?.phase==='active'){await options.finalizeClientDeny();assertCurrent();options.progress?.('active');return;}
- if(!status){options.progress?.('snapshot');await migration.prepareStaged(capture,options.staged);assertCurrent();status=await migration.status();}
+ if(!status||status.phase==='cancelled'){
+  options.progress?.('snapshot');await migration.prepareRetainedStaged(capture,options.staged,options.planning);assertCurrent();status=await migration.status();
+ }
  if(status?.protocol!==5){
   options.progress?.('sources');const captured=await migration.withStreamedPlanning(async session=>{
    const network=options.network(session);await router.use(network,()=>capturePrivateScopeServerSources(target,session.context,network,assertCurrent));

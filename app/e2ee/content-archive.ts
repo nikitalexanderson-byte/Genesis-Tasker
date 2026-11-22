@@ -4,6 +4,7 @@ import {E2eeDeviceDocument} from './device-document.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes,encodeE2eeBytes,type E2eeContext} from './envelope.ts';
+import {openDeviceRetainedMigrationHistory} from './migration.ts';
 import type {WebPrivateAccount} from './product-session.ts';
 
 type ArchiveScope={scopeId:string;ownerId:string;kind:'personal'|'project'|'space';resourceId:string};
@@ -59,6 +60,23 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
   const document=new E2eeDeviceDocument(account.device,key,input=>input,()=>account.requireOpen()),before=await document.load();account.requireOpen();if(!before)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');
   const bytes=encoder.encode(JSON.stringify(before.value));try{const content=await value('current',bytes);account.requireOpen();const after=await document.load();if(!after||after.serial!==before.serial)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');append({placement:'device',scope:null,domain:'draft',objectId:key,pending:true,current:content,history:[]});}finally{bytes.fill(0);}
  }
+ // Prior cancelled/completed migration plans can contain values no longer in
+ // a mounted editor. Include their authenticated user bytes as inert versions;
+ // their original requests/capsules and partial encrypted suffixes stay local.
+ const retained=await openDeviceRetainedMigrationHistory(account.device,()=>account.requireOpen());
+ try{
+  for(const item of retained.contents){
+   account.requireOpen();if(used+item.size*4/3+8192>BACKUP_MAX_PLAIN-65536)throw new Error('BACKUP_TOO_LARGE');
+   const bytes=new Uint8Array(item.size);let at=0;
+   try{
+    const metadata=await retained.readContent(item.id,async chunk=>{account.requireOpen();if(chunk.length>bytes.length-at)throw new Error('BACKUP_INVALID');bytes.set(chunk,at);at+=chunk.length;});account.requireOpen();
+    if(at!==bytes.length)throw new Error('BACKUP_INVALID');const content=await value(item.id,bytes,metadata);account.requireOpen();
+    if(content.sha256!==item.sha256)throw new Error('BACKUP_INVALID');
+    append({placement:'remote',scope:{scopeId:item.scope.scopeId,ownerId:item.scope.ownerId,kind:item.scope.kind,resourceId:item.scope.resourceId},domain:item.domain,objectId:item.id,pending:true,current:content,history:[]});
+   }finally{bytes.fill(0);}
+  }
+  await retained.assertUnchanged();account.requireOpen();
+ }finally{retained.close();}
  const at=new Date().toISOString(),payload:BackupPayload={schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:account.ownerId,createdAt:at,client:'web',billingEvidence:null,sections:[]};
  for(const id of ['workspace','mindmaps','diary','stoicheion','aurora','physis','shared-drafts'] as BackupModuleId[]){const rows=entries.filter(row=>moduleFor(row.domain,row.scope)===id);if(!rows.length)continue;
   payload.sections.push({id,source:'device',completeness:'partial',capturedAt:at,revision:null,count:rows.length,pending:rows.filter(row=>row.pending).length,notices:['CONTENT_ONLY_HISTORY_NOT_EXECUTABLE','LOCAL_OPENED_CONTENT_ONLY'],data:{format:'genesis-content-only-v1',execution:'history-only',entries:rows} satisfies ContentArchiveSection});

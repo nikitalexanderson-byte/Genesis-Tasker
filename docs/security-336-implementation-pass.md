@@ -10,6 +10,26 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Account-wide retained ownership and cancelled restart (candidate, no compilation/QA)
+
+Added actual web/native ownership catalogues for source/original/plan/history
+roles across all saved scopes, full legacy v1/v2 plan proof, action-specific
+control checks, real retained source-history readers and explicit typed normal
+outbox custody. Product first/repeated staged preparation now uses these proofs;
+cancelled state4/5 can become an authenticated retained ancestor rather than
+being projected into fabricated state3 bytes. Own coordinator CASes revalidate
+the live cell without letting source bindings move. Completed normal job headers
+and renewed Aurora controls are retained before replacement. Portable content-only
+capture on both clients now includes readable inert values of old plans, without
+keys, grants, raw HTTP originals or executable requests.
+
+This is source only. Interrupted local source-stage capture, ambiguous old legacy
+cancellation, divergent domain reconciliation and performance/acceptance are not
+silently treated as complete. Details: `security-336-retained-migration-history.md`.
+No tests/compiler/typecheck/lint/build/CI/push/release ran; coverage stays9/20.
+Next implementation area is private shared resource creation and shared controllers,
+followed by the remaining domain/automation/restore/background paths.
+
 ### Native retained binary file output (candidate, no compilation/QA)
 
 The actual native private-backup dialog now enumerates all retained current/

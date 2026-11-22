@@ -154,6 +154,19 @@ internal object E2eeContentPlan {
             inventory(binding,value,true);verifyRecords(binding,value);inventory(binding,value,true);binding.current();return Opened(copy(value))
         }finally{stored.second.first.fill(0)}
     }
+    /** User values of a retained attempt, without source-opening/control data.
+     * A writing journal contributes only its completed records. Its encrypted
+     * pending suffix is retained separately and never becomes invented EOF. */
+    fun retainedValues(input:ReadOptions,attempt:String,reference:Reference?):JSONObject {
+        val found=inspect(input,attempt,reference);val binding=Binding(input);binding.current()
+        val value=if(found.reference!=null)open(input,found.reference).manifest
+            else if(found.phase=="missing")return JSONObject().put("plan",JSONArray()).put("logical",JSONArray()).put("local",JSONArray())
+            else{val stored=metadata(binding,id(attempt,"journal"));try{val journal=copy(stored.second.second);if(journal.get("phase")!="writing")invalid();journal}finally{stored.second.first.fill(0)}}
+        val plan=value.getJSONArray("plan");val logical=value.getJSONArray("logical");val last=if(logical.length()==0)null else logical.getJSONObject(logical.length()-1)
+        val end=if(last==null)0 else (0 until plan.length()).firstOrNull{plan.getJSONObject(it).get("recordId")==last.get("manifestRecordId")}?.plus(1)?:invalid()
+        val complete=JSONArray();for(at in 0 until end)complete.put(JSONObject(plan.getJSONObject(at).toString()))
+        return JSONObject().put("plan",complete).put("logical",JSONArray(logical.toString())).put("local",JSONArray(value.getJSONArray("local").toString()))
+    }
     /** Exact reserved-role discovery. Interrupted file suffixes authenticate the
      * envelope/signature and outer vault; absence of a final per-file-key
      * manifest never becomes plaintext completeness or a transport permit. */

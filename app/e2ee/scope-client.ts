@@ -166,7 +166,15 @@ export class E2eeScopeClient {
       if(replacement) {
         if(!previous||previous.serial!==replacement.serial||previous.job.draftId!==replacement.job.draftId||previous.job.pending||previous.job.cancelling)throw new Error('E2EE_LOCAL_CONFLICT');
         changes.push({domain:'local-snapshot',objectId:`${replacement.job.draftId}:rebase:${crypto.randomUUID()}`,value:encoder.encode(JSON.stringify(replacement.job)),expected:null});
-      } else if(previous&&!previous.job.complete)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
+      } else if(previous){
+        if(!previous.job.complete)throw new Error('E2EE_PENDING_SAVE_REQUIRED');
+        // Completing a new save must not orphan the only ownership manifest
+        // for the preceding ciphertext/draft. Keep its exact raw job as history.
+        const raw=await this.#device.vault.read('outbox',`job:${id}`);
+        try{if(!raw||raw.serial!==previous.serial)throw new Error('E2EE_LOCAL_CONFLICT');
+          changes.push({domain:'local-snapshot',objectId:`${previous.job.draftId}:completed:${crypto.randomUUID()}`,value:new Uint8Array(raw.value),expected:null});
+        }finally{raw?.value.fill(0);}
+      }
       const root=this.#roots.get(directory.keyId);if(!root)throw new Error('E2EE_KEY_UNAVAILABLE');
       const context:E2eeContext={cryptoProtocol:1,suite:E2EE_SUITE,ownerId:this.#owner,scopeId:this.#scopeId,domain,objectId,schemaVersion:1,
         dataGeneration:directory.generation,writerProtocol:9,cryptoEpoch:directory.cryptoEpoch,securityEpoch:directory.securityEpoch,revision:expectedRevision+1,
@@ -528,7 +536,8 @@ export class E2eeScopeClient {
         // can only bind this identical immutable object/result identity.
         if(command.expectedRevision!==directory.checkpoint.revision||command.securityEpoch!==directory.securityEpoch||command.checkpointHash!==directory.checkpoint.hash){
           packet=await this.#packet('aurora-result',payload);const bytes=encoder.encode(JSON.stringify(packet));
-          try{await this.#device.vault.write([{domain:'outbox',objectId:id,value:bytes,expected:previous.serial}]);}finally{bytes.fill(0);}
+          try{await this.#device.vault.write([{domain:'local-snapshot',objectId:`${id}:attempt:${previous.serial}`,value:previous.value,expected:null},
+            {domain:'outbox',objectId:id,value:bytes,expected:previous.serial}]);}finally{bytes.fill(0);}
         }
       }else{packet=await this.#packet('aurora-result',payload);const bytes=encoder.encode(JSON.stringify(packet));
         try{await this.#device.vault.write([{domain:'outbox',objectId:id,value:bytes,expected:null}]);}finally{bytes.fill(0);}}
