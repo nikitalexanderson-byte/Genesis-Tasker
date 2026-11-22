@@ -1,5 +1,23 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: fresh-space create/resume подключён (непроверенный код)
+
+После shared controllers2c1d3ba2 добавлена реальная web/native композиция обычной
+кнопки create space: encrypted input до IO, независимый recovery dialog,
+space+inbox transitions, actual product baselines, immutable private initial
+root/revision2 с readback, фиксированные pending invitation IDs/receipts/readback.
+Незавершённые creation inputs перечисляются/возобновляются в account security.
+Приглашение не создаёт membership, device approval или key capsule; обычные
+member/invitation/device-review UI ещё требуют композиции. Подробности обновлены
+в `security-336-private-resource-creation.md` и implementation-pass.
+
+Далее: fresh project topology/inheritance и нормальная membership/invitation
+композиция; также остаются advanced parity/automation/bulk/cross-scope, typed
+restore, revoked-device replacement, native attachments/background и источники
+с interrupted-stage/legacy-cancel/divergence. QA/compiler/lint/build/CI пока не
+запускались по порядку владельца; coverage9/20.3.3.5/149 и Paddle-сайт сохранены,
+floors0/cutover off/GENESIS_DEPLOY_ANDROID=false. Не читать/stage demo-output/.
+
 ## 22 ноября: shared controllers подключены, далее полный create flow
 
 Поверх223891fb добавлен кандидатный код web/native shared owner transitions:

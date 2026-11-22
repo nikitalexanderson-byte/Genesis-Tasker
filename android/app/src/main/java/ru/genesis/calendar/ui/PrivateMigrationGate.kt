@@ -71,6 +71,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
         val shared=migrationText(context,view.language,"shared-migration-copy-v1.json");for(name in listOf("title","intro","done"))copy.put(name,shared.getString(name))
     }}};val vault=remember(view.language){migrationText(context,view.language,"vault-copy-v1.json")}
     val cancellation=remember(view.language){migrationText(context,view.language,"migration-cancel-copy-v1.json")}
+    val creationText=remember(view.language){migrationText(context,view.language,"private-resource-copy-v1.json")}
     var phase by remember{mutableStateOf(if(view.target!=null||view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
     val generatedMaterial=remember{AtomicReference<NativeRecoveryMaterial?>(null)}
     var generatedId by remember{mutableStateOf<String?>(null)}
@@ -110,7 +111,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             secret="";kit=null;busy=true;credentialActivity=request
         }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=text.getString("error")}}
     }
-    fun message(reason:Exception):String=if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
+    fun message(reason:Exception):String=if(reason.message=="E2EE_RECIPIENT_REVIEW_REQUIRED")creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
     DisposableEffect(view.id,lifecycle){
         val observer=LifecycleEventObserver{_,event->
           if(event==Lifecycle.Event.ON_RESUME)foregroundState.set(true)
@@ -153,6 +154,11 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 owns();activeSecret.set(material.secret)
                 started=true;phase="running";error=""
                 val suppliedKit=requireNotNull(material.kit){"E2EE_RECOVERY_KIT_REQUIRED"}
+                if(view.creationId!=null){
+                    check(cancellationAttempt.get()!=request.attempt){"E2EE_RESOURCE_CREATION_PAUSED"}
+                    val result=controller.completePrivateSpaceCreation(view.creationId,material.secret,suppliedKit,::owns,{value->owns();progress=value},{next->prepared.set(next)})
+                    owns();kit=null;NativeMigrationUiState.completeCreation(view.id,result);return@RecoveryCredentialActivity
+                }
                 val next=view.target?.let{controller.prepareSharedPrivateMigration(it,material.secret,suppliedKit,::owns)}?:controller.preparePrivateMigration(material.secret,suppliedKit,::owns);migration=next;owns();prepared.set(next)
                 val cancel=cancellationAttempt.get()==request.attempt
                 if(cancel)next.cancel(material.secret,suppliedKit)else next.run(material.secret,suppliedKit){value->owns();progress=value};owns()
@@ -199,7 +205,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                     if(!keyguard.isDeviceSecure)Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("screenLock"))}
                     else{
                         Button(onClick={startCredential(false)},enabled=!busy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
-                        if(started||view.resume){
+                        if(view.creationId==null&&(started||view.resume)){
                             Row{Checkbox(checked=cancelConfirmed,onCheckedChange={cancelConfirmed=it},enabled=!busy);Text(cancellation.getString("confirm"))}
                             OutlinedButton(onClick={startCredential(true)},enabled=!busy&&cancelConfirmed&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(cancellation.getString("action"))}
                         }
@@ -208,7 +214,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 if(phase=="running"||phase=="done")Text(if(cancelling)cancellation.getString("action")else text.getString(if(phase=="done"||progress=="active")"done"else progress))
                 if(phase=="cancelled"){
                     Text(cancellation.getString("done"))
-                    TextButton(onClick={NativeMigrationUiState.close(view.id)},enabled=!busy&&!auth.busy&&!auth.requiresSignIn&&auth.user?.uid==view.owner&&auth.user?.privateVault==false,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
+                    TextButton(onClick={NativeMigrationUiState.close(view.id)},enabled=!busy&&!auth.busy&&!auth.requiresSignIn&&auth.user?.uid==view.owner&&(view.target!=null||auth.user?.privateVault==false),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
                 }
                 if(phase=="running")TextButton(onClick={if(!stopping){
                     stopping=true;credentialAttempt.incrementAndGet();scope.launch{
@@ -222,7 +228,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 if(phase=="done"&&!auth.busy)TextButton(onClick={controller.checkSession()},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("unlock"))}
                 if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error)
                 Text(text.getString("kept"),style=MaterialTheme.typography.bodyMedium)
-                if(!started)TextButton(onClick={secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id)},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
+                if(view.target!=null||!started)TextButton(onClick={secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id)},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
                 TextButton(onClick={secret="";kit=null;clearGenerated();controller.logout()},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("exit"))}
                 Text(vault.getString("privacy"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }

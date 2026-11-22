@@ -20,6 +20,7 @@ import ru.genesis.calendar.security.E2eeSharedTrust
 import ru.genesis.calendar.security.E2eeProductMigration
 import ru.genesis.calendar.security.NativeMigrationUiState
 import ru.genesis.calendar.security.E2eeSharedTransitionTargets
+import ru.genesis.calendar.auth.AuthController
 
 /** The fingerprint is intentionally never prefilled into the comparison input.
  * A server discovery is not promoted into a cryptographic trust decision. */
@@ -30,9 +31,11 @@ import ru.genesis.calendar.security.E2eeSharedTransitionTargets
     val language=LocalGenesisLanguage.current
     val text=remember(language){context.assets.open("shared-security-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val migration=remember(language){context.assets.open("shared-migration-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val creationText=remember(language){context.assets.open("private-resource-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val coroutine=rememberCoroutineScope();var busy by remember{mutableStateOf(false)};var message by remember{mutableStateOf("")}
     var scopes by remember{mutableStateOf<List<JSONObject>?>(null)};var candidate by remember{mutableStateOf<JSONObject?>(null)}
     var targets by remember{mutableStateOf<List<E2eeProductMigration.Target>>(emptyList())}
+    var creations by remember{mutableStateOf<List<JSONObject>>(emptyList())}
     var compared by remember{mutableStateOf("")};var accepted by remember{mutableStateOf(false)}
     val alive=remember{java.util.concurrent.atomic.AtomicBoolean(true)};DisposableEffect(Unit){onDispose{alive.set(false)}}
     fun current(){account.requireOpen();check(alive.get()&&app.workspaceScope==storageScope&&NativePrivateProducts.currentAccount(storageScope)===account){"E2EE_ACCOUNT_CHANGED"}}
@@ -45,9 +48,17 @@ import ru.genesis.calendar.security.E2eeSharedTransitionTargets
         Text(text.getString("title"),style=MaterialTheme.typography.titleMedium)
         Text(text.getString("notice"),style=MaterialTheme.typography.bodyMedium)
         OutlinedButton(onClick={run({val rows=account.scopeSummaries();account.client.refresh();current();
-            Pair((0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")!="personal"},E2eeSharedTransitionTargets.read(account.client.readTransitionCandidates(),account.ownerId))
-        },{scopes=it.first;targets=it.second})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("load"))}
-        if(scopes?.isEmpty()==true&&targets.isEmpty())Text(text.getString("empty"))
+            Triple((0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")!="personal"},E2eeSharedTransitionTargets.read(account.client.readTransitionCandidates(),account.ownerId),AuthController.get(context).privateSpaceCreation(account.ownerId).pending())
+        },{scopes=it.first;targets=it.second;creations=it.third})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("load"))}
+        if(scopes?.isEmpty()==true&&targets.isEmpty()&&creations.isEmpty())Text(text.getString("empty"))
+        if(creations.isNotEmpty()){
+            Text(creationText.getString("pending"),style=MaterialTheme.typography.titleSmall)
+            Column(Modifier.heightIn(max=240.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
+                creations.forEach{row->OutlinedButton(onClick={current();NativeMigrationUiState.show(account.ownerId,language,true,
+                    E2eeProductMigration.Target(account.ownerId,row.getString("scopeId"),"space",row.getString("resourceId")),row.getString("intentId"))
+                },enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(creationText.getString("resume")+": "+row.getJSONObject("input").getString("title"))}}
+            }
+        }
         if(targets.isNotEmpty()){
             Text(migration.getString("transfer"),style=MaterialTheme.typography.titleSmall)
             Column(Modifier.heightIn(max=240.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){

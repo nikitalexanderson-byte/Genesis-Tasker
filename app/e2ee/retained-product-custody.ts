@@ -171,9 +171,14 @@ export async function inspectRetainedProductCustody(options:Options){
   if(domain==='local-snapshot'&&(!/:[1-9][0-9]*$/.test(id)||baseId===id))invalid();
   const {command,directory}=await packet(value),payload=command.payload;
   if(baseId.startsWith('service:')){
-   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare'].includes(command.action))invalid();
+   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare','shared-invitations-issue','shared-invitation-revoke'].includes(command.action))invalid();
    assertTechnical(payload.intentId);if(baseId!=='service:'+digest(encoder.encode(`${command.action}\0${payload.intentId}`))||command.deviceId!==options.actor.deviceId)invalid();
-   if(command.action==='resource-create-prepare'){
+   if(command.action==='shared-invitations-issue'){
+    exactKeys(payload,['intentId','invitations']);if(!Array.isArray(payload.invitations)||payload.invitations.length<1||payload.invitations.length>20)invalid();const ids=new Set<string>(),emails=new Set<string>();
+    for(const row of payload.invitations){exactKeys(row,['id','email','role','permissions']);assertTechnical(row.id);if(ids.has(row.id)||typeof row.email!=='string'||row.email.length>320||!/^\S+@(?:gmail|googlemail)\.com$/i.test(row.email)||emails.has(row.email.toLowerCase())||!['admin','member','guest'].includes(String(row.role)))invalid();ids.add(row.id);emails.add(row.email.toLowerCase());
+     exactKeys(row.permissions,['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers']);if(Object.values(row.permissions).some(value=>typeof value!=='boolean'))invalid();}
+   }else if(command.action==='shared-invitation-revoke'){exactKeys(payload,['intentId','id']);assertTechnical(payload.id);
+   }else if(command.action==='resource-create-prepare'){
     exactKeys(payload,['intentId','bootstrap']);exactKeys(payload.bootstrap,['command','signature']);const initial=payload.bootstrap as unknown as SignedE2eeCommand;
     if(initial.command.action!=='bootstrap'||initial.command.ownerId!==options.actor.ownerId||initial.command.deviceId!==options.actor.deviceId||initial.command.payload.kind!=='space'||initial.command.expectedRevision!==0||initial.command.checkpointHash!=='genesis'||initial.command.securityEpoch!==1)invalid();
     const fresh=await verifyDeviceDirectory(options.actor.ownerId,initial.command.scopeId,directory.recoveryKit.authority,[initial]);current();

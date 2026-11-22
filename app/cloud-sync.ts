@@ -13,7 +13,7 @@ import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTrans
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
 import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-local-migration-fence';
 import {showPrivateMigration} from './private-migration-ui';
-import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,type PrivateAccountTransport} from './e2ee/product-session';
+import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,privateAccountIsRequired,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
@@ -2817,6 +2817,15 @@ export function allowCurrentDataTransfer(): boolean {
   return allowDataTransfer(localSessionEnded || privateDeviceAccessBlocked() ? undefined : currentFeatureAccess(workspaceUserId));
 }
 export async function createSharedSpace(title: string, description = "", invitations: SharedSpaceInvitationInput[] = [], cover?:{coverImage?:string;coverPosition:{x:number;y:number}}) {
+  const owner=confirmedTransportOwnerId;
+  if(owner&&privateAccountIsRequired(owner)){
+    const session=captureAccountSessionGuard(),account=requirePrivateAccount(owner),current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+    const [{E2eePrivateResourceCreation},{waitForPrivateResourceCreation}]=await Promise.all([import('./e2ee/private-resource-create'),import('./private-migration-ui')]);current();
+    const creation=new E2eePrivateResourceCreation(account,privateScopeSetupHttpTransport(),current),id=await creation.create({title,description,invitations:invitations.map(row=>({...row,permissions:row.permissions??{createProjects:row.role!=='guest',editTasks:row.role!=='guest',organizeTasks:row.role==='admin',comment:row.role!=='guest',manageProjects:row.role==='admin',inviteMembers:row.role==='admin'}})),coverImage:cover?.coverImage??null,coverPosition:cover?.coverPosition??{x:50,y:50}});current();
+    const intent=await creation.inspect(id);current();
+    try{const result=await waitForPrivateResourceCreation(owner,privateIdentityCache?.language??'en',{scopeId:intent.scopeId,kind:'space',resourceId:intent.resourceId},id);current();return result.space as SharedSpace;}
+    catch(reason){if(reason instanceof Error&&reason.message==='E2EE_RESOURCE_CREATION_PAUSED'){const {default:copy}=await import('../contracts/e2ee/private-resource-copy-v1.json');const language=privateIdentityCache?.language as keyof typeof copy;throw new Error((copy[language]??copy.en).paused);}throw reason;}
+  }
   return (await api<{ space: SharedSpace }>("/shared/spaces", {
     method: "POST", body: JSON.stringify({ title, description, invitations, ...cover }),
   })).space;
@@ -3844,6 +3853,31 @@ export async function finishCurrentSharedPrivateMigration(target:import('./e2ee/
  const {bootstrap}=await account.sharedRecords(binding.scopeId,binding.kind,binding.resourceId);current();await bootstrap.prepare();current();await bootstrap.flush();current();
  const {E2eeSharedTrust}=await import('./e2ee/shared-trust');current();await new E2eeSharedTrust(owner).acceptOwned(scope.directory);current();
  window.dispatchEvent(new Event('genesis:shared-updates'));
+}
+export async function completeCurrentPrivateSpaceCreation(id:string,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void,
+  progress:(phase:'snapshot'|'sources'|'reconciliation'|'uploading'|'active')=>void,controller:(value:import('./e2ee/web-product-migration').WebProductMigration|null)=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();assertEditorsFrozen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eePrivateResourceCreation}=await import('./e2ee/private-resource-create');current();
+ const creation=new E2eePrivateResourceCreation(account,privateScopeSetupHttpTransport(),current),prepared=await creation.prepare(id,secret,kit);current();
+ const intent=prepared.intent,receipt=intent.preparation;if(!receipt)throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED');
+ for(const target of [{scopeId:intent.scopeId,kind:'space' as const,resourceId:intent.resourceId},{scopeId:`project:${receipt.inboxId}`,kind:'project' as const,resourceId:receipt.inboxId}]){
+   current();let opened:import('./e2ee/web-product-migration').WebProductMigration|null=null;
+   try{opened=await prepareCurrentSharedPrivateMigration(target,secret,kit,current);current();controller(opened);await opened.run(secret,kit,progress);current();opened.close();opened=null;controller(null);await finishCurrentSharedPrivateMigration(target);current();}
+   finally{opened?.close();controller(null);}
+ }
+ await creation.advance(id,'migrated');current();await creation.applyInitialValues(id);current();await creation.advance(id,'values');current();
+ await creation.issueInvitations(id);current();await creation.advance(id,'invitations');current();
+ // Invitation issuance grants no key or membership. Actual recipient access
+ // remains a separate approved-device and signed membership/rotation operation.
+ await creation.advance(id,'complete');current();
+ const {privateSharedRequest}=await import('./e2ee/shared-web-live');current();const result=await privateSharedRequest(owner,`/shared/spaces/${encodeURIComponent(intent.resourceId)}`);current();return result;
+}
+export async function pendingCurrentPrivateCreations(){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eePrivateResourceCreation}=await import('./e2ee/private-resource-create');current();return new E2eePrivateResourceCreation(account,privateScopeSetupHttpTransport(),current).pending();
 }
 export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;

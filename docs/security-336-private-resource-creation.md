@@ -6,6 +6,27 @@ off and GENESIS_DEPLOY_ANDROID=false are unchanged.
 
 ## Implemented preparation
 
+The subsequent composition below is now also candidate source: normal web/native
+create-space actions retain their complete input, open the existing independent
+recovery dialog, transition BOTH space and inbox, finish their actual repository
+baselines, write/read back the intended private root at immutable revision2 and
+issue/read back the explicitly requested pending invitations. Journal phases
+advance through `draft/prepared/migrated/values/invitations/complete`; response
+loss repeats the same protected IDs/commands. Account panels enumerate unfinished
+creation inputs and resume them after a process restart. Pausing preserves the
+input and existing barriers. Shared covers use decrypted values in the normal
+projection and accept the existing0..100 position range.
+
+New signed invitation issue/revoke services and state read operate on routing
+metadata only. Issued IDs are fixed in the signed payload; creation uses the same
+deterministic IDs on both clients. Semantic intent receipts and readback bind the
+email, requested role/permissions and creator. No membership row, approved device,
+root capsule or trust decision is created by sending an invitation. Consumed
+invitations cannot be disguised as revoked access: actual access revocation still
+requires the membership/rotation protocol. New service controls have explicit
+web/native custody validation. Normal standalone invitation/accept/member-edit
+UI composition remains separate code work.
+
 The signed personal-scope service `resource-create-prepare` accepts only an
 immutable owner/recovery-signed bootstrap and an intent ID. It requires an active
 personal owner scope, a live approved owner device, matching device keys and the
@@ -29,7 +50,8 @@ Scope setup retains its separate immutable signed bootstrap and independent
 random root. Independent recovery material is copied only for the operation and
 cleared afterwards; account/device lifetime checks surround local/network steps.
 The returned receipt binds the exact intent, resource, scope, inbox, statuses and
-first checkpoint. Its local phase is only `draft`/`prepared`, never completed.
+first checkpoint. Preparation alone leaves its local phase at `draft`/`prepared`;
+only the subsequent product composition advances the later phases.
 
 Read-only outbox custody explicitly verifies the new service and nested initial
 directory/self proof; it is not an ignored service prefix. Content-only archives
@@ -40,23 +62,19 @@ rather than attempting to delete a field of the deeply frozen snapshot.
 
 ## Required next composition
 
-This is **not wired as the finished create button**. Do not report a new space
-ready after preparation or route an active private account through legacy create.
+Create-space buttons now use the new composed path. It is still uncompiled and
+untested candidate code. Preparation alone is never reported as a finished space;
+an active private account is not routed through legacy plaintext creation.
 
-1. Generalize the existing personal migration controllers for shared targets and
-   the matching signed source catalogues, preserving each target/actor/fence.
-2. Migrate both the space and its technical inbox through the actual source,
-   recovery/readback and product-bootstrap sequence. The encrypted input supplies
-   the intended initial title/description/cover without overwriting sources.
-3. Write/read back initial private domain values; then apply the explicitly
-   intended invitation/membership workflow under current rights and quotas.
-   A keyless Google account is not an approved recipient.
-4. Add new **project** preparation under the real parent/space topology. Current
+1. Finish normal invitation acceptance/member-edit and recipient/device review
+   under the current all-scope membership/rotation protocol. A pending invitation
+   or keyless Google identity is not an approved content recipient.
+2. Add new **project** preparation under the real parent/space topology. Current
    source/body contracts bind each project to its own crypto resource. It cannot
    be stored as a different project inside a space or parent's crypto scope.
-5. Compose actual web/native create/resume UI and local pending-input registry,
-   with foreground/IO dispatch, lock/background clearing and current request
-   ownership. Preserve existing UI/defaults and all fourteen languages.
+3. Extend the composed web/native create/resume path to projects and inherited
+   recipients, preserving foreground/IO dispatch, process-death custody, existing
+   UI/defaults and all fourteen languages; then perform consolidated acceptance.
 
 Important existing constraints for project creation:
 

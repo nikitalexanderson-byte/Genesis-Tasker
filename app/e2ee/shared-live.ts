@@ -78,6 +78,7 @@ export class SharedLiveModel{
   }
   result.revision=version.revision;
   if(body.kind==='project'||body.kind==='space')Object.assign(result,{role:context.role,spaceRole:context.spaceRole,permissions:structuredClone(context.permissions),canOrganizeTasks:context.permissions.organizeTasks===true,canCreateBoards:context.permissions.manageProjects===true});
+  if(body.kind==='space')Object.assign(result,{coverPosition:{x:source.cover_x,y:source.cover_y},coverUrl:typeof source.cover_image==='string'&&source.cover_image?source.cover_image:null});
   if(body.kind==='status'){result.isDone=source.is_done;result.taskTitleLines=source.task_title_lines??(source.is_done===1?2:0);result.visibleTaskCount=source.visible_task_count??(source.is_done===1?5:0);}
   if(body.kind==='task'){
    const related=body.related;
@@ -326,8 +327,12 @@ export class SharedLiveModel{
     return this.#prepareAdvancedRecord(request,context,versions,body,expected,create);
    }
    const fields:Record<string,string>={title:'title',description:'description',color:'color',layout:'layout',parentId:'parent_id',boardStatusId:'board_status_id',categoryId:'category_id',imageUrl:'image_url',isDone:'is_done',taskTitleLines:'task_title_lines',visibleTaskCount:'visible_task_count'};
-   if(Object.keys(input).some(key=>!Object.hasOwn(fields,key)&&!['tags','labelIds','expectedRevision','requestId'].includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
+   if(Object.keys(input).some(key=>!Object.hasOwn(fields,key)&&!['tags','labelIds','expectedRevision','requestId',...(kind==='space'?['coverImage','coverPosition']:[])].includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
    for(const [name,column]of Object.entries(fields))if(Object.hasOwn(input,name)){if(!Object.hasOwn(body.record,column))throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record[column]=name==='isDone'?(input[name]===true?1:0):input[name] as SharedContentRecord[string];}
+   if(kind==='space'){
+    if(Object.hasOwn(input,'coverImage')){if(typeof input.coverImage!=='string'||input.coverImage.length>4*1024*1024||input.coverImage!==''&&!/^data:image\/(?:png|jpeg|webp);base64,/.test(input.coverImage))throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record.cover_image=input.coverImage;}
+    if(Object.hasOwn(input,'coverPosition')){exactKeys(input.coverPosition,['x','y']);for(const axis of ['x','y'] as const){const value=input.coverPosition[axis];if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>100)throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record[`cover_${axis}`]=value;}}
+   }
    if(Object.hasOwn(input,'labelIds')){if(kind!=='project'||!Array.isArray(input.labelIds)||input.labelIds.length>50||new Set(input.labelIds).size!==input.labelIds.length)throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.related.shared_project_labels=input.labelIds.map(id=>{assertTechnical(id);return{project_id:body.record.id,label_id:id};});}
    if(Object.hasOwn(input,'tags'))body.record.tags_json=JSON.stringify(input.tags);if(Object.hasOwn(body.record,'updated_at'))body.record.updated_at=request.createdAt;if(Object.hasOwn(body.record,'revision'))body.record.revision=expected+1;
    if(request.method==='DELETE'&&versions.some(row=>!row.deleted&&(row.parentId===old!.entityId||row.kind==='task'&&plain(row).record.status_id===body.record.id)))throw new Error('E2EE_SHARED_SUBTREE_REVIEW_REQUIRED');

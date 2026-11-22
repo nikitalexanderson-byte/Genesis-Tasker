@@ -10,6 +10,20 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Composed fresh-space create/resume path (candidate, no compilation/QA)
+
+Normal web/native create-space actions now retain input before IO, invoke the
+existing independent-recovery UI, transition space+inbox, finish their private
+baselines and write/read back intended root values with a stable product intent.
+Pending creation inputs are discoverable/resumable in account security settings.
+Explicit initial invitations use stable signed IDs, semantic receipt and state
+readback, as pending routing intents only; they grant no membership or root.
+Cover values/positions remain private and project into the existing normal UI.
+New service controls have typed custody handling. All14 languages have creation
+pause/resume copy. Project creation/topology and normal member/invitation/device
+review remain code work. See `security-336-private-resource-creation.md`.
+No tests/compiler/lint/build/CI/push/release ran; coverage remains9/20.
+
 ### Shared owner transition controllers and actual recovery UI (candidate)
 
 Web/native now attach project/space transitions to the live owner device, use

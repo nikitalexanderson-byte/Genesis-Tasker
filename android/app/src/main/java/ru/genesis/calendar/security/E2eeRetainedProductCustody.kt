@@ -87,6 +87,12 @@ internal object E2eeRetainedProductCustody {
         private fun service(command:JSONObject,frame:E2eeDirectory.Verified){
             val action=command.getString("action");val payload=command.getJSONObject("payload")
             when(action){
+                "shared-invitations-issue"->{
+                    E2eeKeys.exact(payload,setOf("intentId","invitations"));val invitations=rows(payload.getJSONArray("invitations"));if(invitations.size !in 1..20)invalid();val ids=mutableSetOf<String>();val emails=mutableSetOf<String>()
+                    for(row in invitations){E2eeKeys.exact(row,setOf("id","email","role","permissions"));val email=row.getString("email");if(!ids.add(E2eeKeys.technical(row.getString("id")))||email.length>320||!Regex("\\S+@(?:gmail|googlemail)\\.com",RegexOption.IGNORE_CASE).matches(email)||!emails.add(email.lowercase(java.util.Locale.ROOT))||row.get("role") !in setOf("admin","member","guest"))invalid()
+                        val permissions=row.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}
+                }
+                "shared-invitation-revoke"->{E2eeKeys.exact(payload,setOf("intentId","id"));E2eeKeys.technical(payload.getString("id"))}
                 "resource-create-prepare"->{
                     E2eeKeys.exact(payload,setOf("intentId","bootstrap"));val initial=payload.getJSONObject("bootstrap");val child=initial.getJSONObject("command")
                     if(child.get("action")!="bootstrap"||child.get("ownerId")!=actor.ownerId||child.get("deviceId")!=actor.deviceId||number(child,"expectedRevision")!=0L||child.get("checkpointHash")!="genesis"||number(child,"securityEpoch",1)!=1L)invalid()
