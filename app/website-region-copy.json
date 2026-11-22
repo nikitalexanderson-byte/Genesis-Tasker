@@ -1,0 +1,114 @@
+{
+  "ru": {
+    "title": "Регион и геолокация",
+    "locate": "Уточнить по геолокации",
+    "locating": "Определяем регион…",
+    "unavailable": "Не удалось определить регион. Выбор языка доступен вручную.",
+    "donationUnavailable": "Донаты пока доступны только из России.",
+    "privacy": "Для выбора региональной версии сайта и доступности донатов GENESIS проверяет страну IP-адреса и, с вашего разрешения, геолокацию устройства. При использовании VPN приоритет имеет геолокация устройства. Координаты сравниваются с границами страны на устройстве и не отправляются в GENESIS. Отказ или неопределённая геолокация не вызывают автоматический переход."
+  },
+  "en": {
+    "title": "Region and device location",
+    "locate": "Use device location",
+    "locating": "Checking region…",
+    "unavailable": "The region could not be determined. You can still choose a language manually.",
+    "donationUnavailable": "Donations are currently available only from Russia.",
+    "privacy": "To select the regional website and available donation options, GENESIS checks the IP country and, with your permission, device location. Device location takes priority when using a VPN. Coordinates are compared with country boundaries on your device and are not sent to GENESIS. Denied or uncertain device location does not cause automatic redirection."
+  },
+  "el": {
+    "title": "Περιοχή και τοποθεσία συσκευής",
+    "locate": "Χρήση τοποθεσίας συσκευής",
+    "locating": "Έλεγχος περιοχής…",
+    "unavailable": "Δεν ήταν δυνατός ο προσδιορισμός της περιοχής. Μπορείτε να επιλέξετε γλώσσα χειροκίνητα.",
+    "donationUnavailable": "Οι δωρεές είναι προς το παρόν διαθέσιμες μόνο από τη Ρωσία.",
+    "privacy": "Για την επιλογή της περιφερειακής έκδοσης και των διαθέσιμων δωρεών, το GENESIS ελέγχει τη χώρα της IP και, με την άδειά σας, την τοποθεσία της συσκευής. Με VPN προτεραιότητα έχει η τοποθεσία της συσκευής. Οι συντεταγμένες συγκρίνονται με τα σύνορα της χώρας στη συσκευή και δεν αποστέλλονται στο GENESIS. Η άρνηση ή αβέβαιη τοποθεσία δεν προκαλεί αυτόματη ανακατεύθυνση."
+  },
+  "de": {
+    "title": "Region und Gerätestandort",
+    "locate": "Gerätestandort verwenden",
+    "locating": "Region wird geprüft…",
+    "unavailable": "Die Region konnte nicht bestimmt werden. Die Sprache lässt sich weiterhin manuell wählen.",
+    "donationUnavailable": "Spenden sind derzeit nur aus Russland verfügbar.",
+    "privacy": "Zur Auswahl der regionalen Website und verfügbarer Spenden prüft GENESIS das IP-Land und mit Ihrer Erlaubnis den Gerätestandort. Bei einem VPN hat der Gerätestandort Vorrang. Koordinaten werden auf Ihrem Gerät mit Landesgrenzen verglichen und nicht an GENESIS gesendet. Ein verweigerter oder unklarer Standort führt nicht zur automatischen Weiterleitung."
+  },
+  "fr": {
+    "title": "Région et localisation de l’appareil",
+    "locate": "Utiliser la localisation de l’appareil",
+    "locating": "Vérification de la région…",
+    "unavailable": "La région n’a pas pu être déterminée. Vous pouvez toujours choisir la langue manuellement.",
+    "donationUnavailable": "Les dons sont actuellement disponibles uniquement depuis la Russie.",
+    "privacy": "Pour choisir la version régionale et les dons disponibles, GENESIS vérifie le pays de l’IP et, avec votre autorisation, la localisation de l’appareil. Avec un VPN, la localisation de l’appareil est prioritaire. Les coordonnées sont comparées aux frontières sur votre appareil et ne sont pas envoyées à GENESIS. Une localisation refusée ou incertaine ne déclenche aucune redirection automatique."
+  },
+  "es": {
+    "title": "Región y ubicación del dispositivo",
+    "locate": "Usar la ubicación del dispositivo",
+    "locating": "Comprobando región…",
+    "unavailable": "No se pudo determinar la región. Puedes seguir eligiendo el idioma manualmente.",
+    "donationUnavailable": "Las donaciones están disponibles actualmente solo desde Rusia.",
+    "privacy": "Para elegir la versión regional y las donaciones disponibles, GENESIS comprueba el país de la IP y, con tu permiso, la ubicación del dispositivo. Si usas una VPN, tiene prioridad la ubicación del dispositivo. Las coordenadas se comparan con los límites del país en el dispositivo y no se envían a GENESIS. Si se deniega la ubicación o es incierta, no hay redirección automática."
+  },
+  "it": {
+    "title": "Regione e posizione del dispositivo",
+    "locate": "Usa la posizione del dispositivo",
+    "locating": "Verifica della regione…",
+    "unavailable": "Impossibile determinare la regione. Puoi comunque scegliere la lingua manualmente.",
+    "donationUnavailable": "Le donazioni sono attualmente disponibili solo dalla Russia.",
+    "privacy": "Per scegliere la versione regionale e le donazioni disponibili, GENESIS verifica il paese dell’IP e, con il tuo consenso, la posizione del dispositivo. Con una VPN, la posizione del dispositivo ha priorità. Le coordinate vengono confrontate con i confini del paese sul dispositivo e non vengono inviate a GENESIS. Una posizione negata o incerta non causa reindirizzamenti automatici."
+  },
+  "pt": {
+    "title": "Região e localização do dispositivo",
+    "locate": "Usar a localização do dispositivo",
+    "locating": "A verificar a região…",
+    "unavailable": "Não foi possível determinar a região. Pode continuar a escolher o idioma manualmente.",
+    "donationUnavailable": "Os donativos estão atualmente disponíveis apenas a partir da Rússia.",
+    "privacy": "Para escolher a versão regional e os donativos disponíveis, o GENESIS verifica o país do IP e, com a sua autorização, a localização do dispositivo. Com uma VPN, a localização do dispositivo tem prioridade. As coordenadas são comparadas com as fronteiras do país no dispositivo e não são enviadas ao GENESIS. Uma localização recusada ou incerta não causa redirecionamento automático."
+  },
+  "pl": {
+    "title": "Region i lokalizacja urządzenia",
+    "locate": "Użyj lokalizacji urządzenia",
+    "locating": "Sprawdzanie regionu…",
+    "unavailable": "Nie udało się określić regionu. Nadal możesz wybrać język ręcznie.",
+    "donationUnavailable": "Darowizny są obecnie dostępne tylko z Rosji.",
+    "privacy": "Aby wybrać regionalną wersję witryny i dostępność darowizn, GENESIS sprawdza kraj adresu IP i za Twoją zgodą lokalizację urządzenia. Przy VPN lokalizacja urządzenia ma pierwszeństwo. Współrzędne są porównywane z granicami kraju na urządzeniu i nie są wysyłane do GENESIS. Odmowa lub niepewna lokalizacja nie powoduje automatycznego przekierowania."
+  },
+  "sr": {
+    "title": "Регион и локација уређаја",
+    "locate": "Користи локацију уређаја",
+    "locating": "Проверавамо регион…",
+    "unavailable": "Регион није утврђен. Језик и даље можете ручно да изаберете.",
+    "donationUnavailable": "Донације су тренутно доступне само из Русије.",
+    "privacy": "За избор регионалне верзије сајта и доступних донација GENESIS проверава земљу IP адресе и, уз вашу дозволу, локацију уређаја. Када користите VPN, локација уређаја има предност. Координате се пореде са границама земље на уређају и не шаљу се GENESIS-у. Одбијена или неодређена локација не изазива аутоматско преусмеравање."
+  },
+  "uk": {
+    "title": "Регіон і геолокація пристрою",
+    "locate": "Уточнити за геолокацією",
+    "locating": "Визначаємо регіон…",
+    "unavailable": "Не вдалося визначити регіон. Мову й далі можна вибрати вручну.",
+    "donationUnavailable": "Донати наразі доступні лише з Росії.",
+    "privacy": "Для вибору регіональної версії сайту та доступності донатів GENESIS перевіряє країну IP-адреси та, з вашого дозволу, геолокацію пристрою. Під час використання VPN геолокація пристрою має пріоритет. Координати порівнюються з кордонами країни на пристрої та не надсилаються в GENESIS. Відмова або невизначена геолокація не спричиняють автоматичного переходу."
+  },
+  "zh": {
+    "title": "地区与设备位置",
+    "locate": "使用设备位置",
+    "locating": "正在检查地区…",
+    "unavailable": "无法确定地区。您仍可手动选择语言。",
+    "donationUnavailable": "目前仅支持从俄罗斯捐赠。",
+    "privacy": "为选择地区版本和可用捐赠选项，GENESIS 会检查 IP 所属国家，并在获得许可后使用设备位置。使用 VPN 时以设备位置为准。坐标仅在设备上与国家边界进行比较，不会发送给 GENESIS。拒绝定位或位置不确定时不会自动跳转。"
+  },
+  "tr": {
+    "title": "Bölge ve cihaz konumu",
+    "locate": "Cihaz konumunu kullan",
+    "locating": "Bölge kontrol ediliyor…",
+    "unavailable": "Bölge belirlenemedi. Dili yine de elle seçebilirsiniz.",
+    "donationUnavailable": "Bağışlar şu anda yalnızca Rusya’dan kullanılabilir.",
+    "privacy": "GENESIS bölgesel siteyi ve bağış seçeneklerini seçmek için IP ülkesini ve izninizle cihaz konumunu kontrol eder. VPN kullanırken cihaz konumu önceliklidir. Koordinatlar cihazda ülke sınırlarıyla karşılaştırılır ve GENESIS’e gönderilmez. Konum izni reddedilirse veya konum belirsizse otomatik yönlendirme yapılmaz."
+  },
+  "ja": {
+    "title": "地域と端末の位置情報",
+    "locate": "端末の位置情報を使用",
+    "locating": "地域を確認中…",
+    "unavailable": "地域を判定できませんでした。言語は引き続き手動で選べます。",
+    "donationUnavailable": "寄付は現在ロシアからのみ利用できます。",
+    "privacy": "地域版サイトと利用可能な寄付方法を選ぶため、GENESIS は IP の国と、許可された場合に端末の位置情報を確認します。VPN 使用時は端末の位置情報を優先します。座標は端末内で国境と照合され、GENESIS へ送信されません。位置情報が拒否された場合や不確かな場合、自動転送は行いません。"
+  }
+}

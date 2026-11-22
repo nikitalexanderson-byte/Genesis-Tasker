@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks.",
     applicationName: "Genesis Tasker",
-    authors: [{ name: "nikitalexanderson" }],
+    authors: [{ name: "GENESIS" }],
     manifest: "/manifest.webmanifest",
     category: "productivity",
     keywords: ["календарь", "планировщик", "эллинизм", "лунный календарь", "Genesis Tasker"],

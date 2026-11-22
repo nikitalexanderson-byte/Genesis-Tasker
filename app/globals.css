@@ -5341,7 +5341,7 @@ html[data-language="en"] .inbox-card.drop-target::after {
   border-top: 1px solid var(--line);
 }
 
-.genesis-page-footer a,
+.genesis-page-footer :is(a, button.genesis-donation-disabled),
 .genesis-page-footer button {
   display: grid;
   min-width: 0;
@@ -5359,7 +5359,7 @@ html[data-language="en"] .inbox-card.drop-target::after {
   box-shadow: 0 12px 30px color-mix(in srgb, var(--palette-recessed, rgb(7 23 27)) 12%, transparent);
 }
 
-.genesis-page-footer a:hover { transform: translateY(-1px); }
+.genesis-page-footer :is(a, button.genesis-donation-disabled):hover { transform: translateY(-1px); }
 .genesis-page-footer button:disabled { color: #ded3bd; cursor: default; opacity: 1; }
 .genesis-page-footer > * > span:first-child { display: grid; width: 38px; height: 38px; place-items: center; color: #e0c47d; background: rgba(255, 255, 255, 0.06); border-radius: 50%; }
 .genesis-page-footer > * > span:last-child { display: grid; min-width: 0; gap: 3px; }

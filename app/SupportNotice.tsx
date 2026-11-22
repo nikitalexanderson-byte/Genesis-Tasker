@@ -5,6 +5,7 @@ import {DonationLink} from "./DonationLink";
 import {DialogCloseButton} from "./DialogCloseButton";
 import {useDialogAccessibility} from "./use-dialog-accessibility";
 import {guidanceElementVisible} from "./plan-guidance-model";
+import {useWebsiteRegion,websiteDonationsAvailable} from "./website-region";
 import copy from "./support-notice-copy.json";
 import "./support-notice.css";
 
@@ -19,9 +20,11 @@ function SupportDialog({language,onClose}:{language:GenesisUser["language"];onCl
 }
 export default function SupportNotice({user}:{user:GenesisUser}){
  const [open,setOpen]=useState(false),current=useRef(user);
+ const region=useWebsiteRegion(),regional=websiteDonationsAvailable(region);
  useEffect(()=>{current.current=user;},[user]);
  const plan=user.featureAccess?.effectivePlan??user.subscriptionPlan,elite=user.forecastElitePlus;
  useEffect(()=>{
+  if(!regional)return;
   let alive=true,pending=false,claimed=false;const guard=captureAccountSessionGuard(),controller=new AbortController();
   const key=`genesis-support-notice:${user.uid}`,cohort=`${plan}:${Boolean(elite)}`;
   const available=()=>{
@@ -43,6 +46,6 @@ export default function SupportNotice({user}:{user:GenesisUser}){
   const timer=window.setInterval(()=>void show(),60000);const resume=()=>void show();
   window.addEventListener("focus",resume);document.addEventListener("visibilitychange",resume);void show();
   return()=>{alive=false;controller.abort();window.clearInterval(timer);window.removeEventListener("focus",resume);document.removeEventListener("visibilitychange",resume);};
- },[user.uid,plan,elite]);
- return open?<SupportDialog language={user.language} onClose={()=>setOpen(false)}/>:null;
+ },[user.uid,plan,elite,regional]);
+ return open&&regional?<SupportDialog language={user.language} onClose={()=>setOpen(false)}/>:null;
 }
