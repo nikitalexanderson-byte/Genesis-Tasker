@@ -1,5 +1,18 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: immutable private table shards — код
+
+Relational source делит большие таблицы на bounded parts (обычно4MiB); прежний
+object ID становится encrypted v2 manifest с точными ID/count/size/hash частей.
+Small/v1 tables продолжают читаться. Normal web/native sourceTable, bootstrap и
+personal shared views seed используют общий проверяющий reader с exact EOF.
+Native output allowlist допускает только ожидаемые part IDs; original immutable
+server trigger уже покрывает эти ID. Ключи/ACL не переносятся. Никаких проверок
+исполнения. Следующим блоком начат batched signed fragment transport: незавершённые
+изменения сейчас в server e2ee-legacy-private-path.php, migration-session/transport
+и remote-original.ts; ещё нужны JS/native collectors и exact original replay.
+Не запускать security compiler/tests/CI и не объявлять wide блок завершённым.
+
 ## 23 ноября: wide provider/product capacity — код
 
 Physical provider admission и точный namespace inventory согласованы на web/native:

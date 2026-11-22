@@ -5,6 +5,7 @@ import {sharedEntityId,sharedRecordKey,sharedBodyMetadata,sharedBodyParent,valid
 import {requiredPrivatePaths,privatePathDocumentDomain} from './private-paths.ts';
 import {privatePathSource} from './private-path-source.ts';
 import {privateTableObjectId} from './relational-path-source.ts';
+import {readPrivateTable} from './private-table-reader.ts';
 import {exactKeys,assertTechnical} from './keys.ts';
 import {samePrivateJson} from './product-json.ts';
 import type {WebPrivateAccount} from './product-session.ts';
@@ -31,8 +32,8 @@ export class E2eeSharedRecords{
  flush(intentId:string){this.account.requireOpen();if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return this.product.flush(intentId);}
  async sourceTable(table:string){
   this.account.requireOpen();const paths=requiredPrivatePaths(this.binding.kind).filter(row=>row.server.includes(table));if(paths.length!==1)throw new Error('E2EE_SOURCE_PATH_FORBIDDEN');
-  const path=paths[0],domain=privatePathDocumentDomain(this.binding.kind,path.id),{client}=this.account.shared(this.binding.scopeId,this.binding.kind,this.binding.resourceId),opened=await client.readMigrationOriginal(domain,privateTableObjectId(path.id,table));this.account.requireOpen();
-  try{const value=parseSharedDomainBytes(opened.bytes);exactKeys(value,['format','pathId','table','rows','execution']);if(value.format!=='genesis-private-table-v1'||value.pathId!==path.id||value.table!==table||value.execution!=='content-only'||!Array.isArray(value.rows)||value.rows.length>1000000)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');return structuredClone(value.rows) as Record<string,unknown>[];}finally{opened.bytes.fill(0);}
+  const path=paths[0],domain=privatePathDocumentDomain(this.binding.kind,path.id),{client}=this.account.shared(this.binding.scopeId,this.binding.kind,this.binding.resourceId);
+  return readPrivateTable(async id=>{const value=await client.readMigrationOriginal(domain,id);this.account.requireOpen();return{bytes:value.bytes,revision:1};},privateTableObjectId(path.id,table),path.id,table,()=>this.account.requireOpen());
  }
  /** Reads each declared migrated source/index with exact EOF/count/schema
   * bindings. Missing tables cannot become empty categories. Old jobs/receipts
@@ -46,10 +47,8 @@ export class E2eeSharedRecords{
    let index:Record<string,unknown>;try{const value=parseSharedDomainBytes(indexRow.bytes);exactKeys(value,['format','pathId','tables','localHistory','execution']);if(indexRow.revision!==1||value.format!=='genesis-private-path-index-v1'||value.pathId!==path.id||value.execution!=='content-only'||!Array.isArray(value.tables)||value.tables.length!==path.server.length)throw new Error('E2EE_SHARED_BOOTSTRAP_SOURCE_INVALID');index=value;}finally{indexRow.bytes.fill(0);}
    const spec=privatePathSource(this.binding.kind,path.id);for(const table of spec.server){
     const reference=(index.tables as {table:string;objectId:string;count:number}[]).filter(row=>row.table===table);if(reference.length!==1||reference[0].objectId!==privateTableObjectId(path.id,table))throw new Error('E2EE_SHARED_BOOTSTRAP_SOURCE_INVALID');
-    const row=await client.read(domain,reference[0].objectId);this.account.requireOpen();if(!row)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');
-    try{const value=parseSharedDomainBytes(row.bytes);exactKeys(value,['format','pathId','table','rows','execution']);if(row.revision!==1||value.format!=='genesis-private-table-v1'||value.pathId!==path.id||value.table!==table||value.execution!=='content-only'||!Array.isArray(value.rows)||value.rows.length!==reference[0].count)throw new Error('E2EE_SHARED_BOOTSTRAP_SOURCE_INVALID');
-     const previous=tables.get(table);if(previous&&!samePrivateJson(previous,value.rows))throw new Error('E2EE_SHARED_BOOTSTRAP_SOURCE_DIVERGED');tables.set(table,value.rows as SharedContentRecord[]);
-    }finally{row.bytes.fill(0);}
+    const values=await readPrivateTable(async id=>{const row=await client.read(domain,id);this.account.requireOpen();if(!row)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');return row;},reference[0].objectId,path.id,table,()=>this.account.requireOpen(),reference[0].count);
+    const previous=tables.get(table);if(previous&&!samePrivateJson(previous,values))throw new Error('E2EE_SHARED_BOOTSTRAP_SOURCE_DIVERGED');tables.set(table,values as SharedContentRecord[]);
    }
   }
   const items:SharedBootstrapItem[]=[],seen=new Set<string>(),deleted=new Set((tables.get('shared_trash')??[]).map(row=>`${row.kind}:${row.object_id}`));

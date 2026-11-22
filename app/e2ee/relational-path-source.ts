@@ -85,8 +85,12 @@ export class RelationalPrivatePathSource implements PrivatePathAdapter{
      }
      rows.push(row);
     }
-    const objectId=privateTableObjectId(target.pathId,spec.table),document:PrivateTableDocument={format:'genesis-private-table-v1',pathId:target.pathId,table:spec.table,rows,execution:'content-only'};
-    add('remote',this.#domain,objectId,document);index.push({table:spec.table,objectId,count:rows.length});
+    const objectId=privateTableObjectId(target.pathId,spec.table),chunks:Row[][]=[];let chunk:Row[]=[],chunkBytes=1024;
+    for(const row of rows){const bytes=encoder.encode(JSON.stringify(row));const length=bytes.length;bytes.fill(0);if(chunk.length&&chunkBytes+length>4*1024*1024){chunks.push(chunk);chunk=[];chunkBytes=1024;}chunk.push(row);chunkBytes+=length+1;}if(chunk.length||!chunks.length)chunks.push(chunk);
+    if(chunks.length===1){const document:PrivateTableDocument={format:'genesis-private-table-v1',pathId:target.pathId,table:spec.table,rows:chunks[0],execution:'content-only'};add('remote',this.#domain,objectId,document);}
+    else{const parts:{objectId:string;count:number;size:number;sha256:string}[]=[];for(const [at,partRows]of chunks.entries()){this.#ports.assertCurrent();const partId=objectId+':part:'+at,bytes=encoder.encode(JSON.stringify({format:'genesis-private-table-v1',pathId:target.pathId,table:spec.table,rows:partRows,execution:'content-only'}));try{const sha256=encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes))));this.#ports.assertCurrent();add('remote',this.#domain,partId,bytes);parts.push({objectId:partId,count:partRows.length,size:bytes.length,sha256});}finally{bytes.fill(0);}}
+     add('remote',this.#domain,objectId,{format:'genesis-private-table-shards-v2',pathId:target.pathId,table:spec.table,count:rows.length,parts,execution:'content-only'});
+    }index.push({table:spec.table,objectId,count:rows.length});
    }
    // Historical operations are never shared remote commands. Every retained
    // capture and closed editor survives locally under the new device root.

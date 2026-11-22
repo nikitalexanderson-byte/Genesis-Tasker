@@ -18,6 +18,7 @@ import {privateAccountView} from './product-session.ts';
 import {samePrivateJson} from './product-json.ts';
 import {SharedPrivateBulk,validatePrivateBulkJournal,type PrivateBulkJournal} from './shared-private-bulk.ts';
 import {SharedPrivateTransfer,validatePrivateTransferJournal,privateTaskTransferInput,type PrivateTransferJournal} from './shared-private-transfer.ts';
+import {readPrivateTable} from './private-table-reader.ts';
 
 const models=new WeakMap<WebPrivateAccount,Map<string,WebSharedLive>>();
 const aggregates=new WeakMap<WebPrivateAccount,SharedAggregateModel>();
@@ -35,8 +36,8 @@ function privateBulk(ownerId:string){const account=requirePrivateAccount(ownerId
 }
 function aggregate(ownerId:string){const account=requirePrivateAccount(ownerId);let value=aggregates.get(account);if(value)return value;
  const personal=new E2eeFeatureDocument({ownerId,domain:'workspace',objectId:'personal-shared-views-live-v1',validate:input=>validatePersonalSharedState(input,ownerId),seed:async()=>{
-  const original=await account.personal().client.readMigrationOriginal('local-snapshot','private-table:personal.local-work:shared_saved_views');account.requireOpen();
-  try{return seedPersonalSharedState(parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(original.bytes),'E2EE_PRIVATE_SEED_REQUIRED',64*1024*1024),ownerId,await account.personal().client.sharedReadHistory());}finally{original.bytes.fill(0);}
+  const rows=await readPrivateTable(async id=>{const original=await account.personal().client.readMigrationOriginal('local-snapshot',id);account.requireOpen();return original;},'private-table:personal.local-work:shared_saved_views','personal.local-work','shared_saved_views',()=>account.requireOpen());
+  return seedPersonalSharedState({format:'genesis-private-table-v1',pathId:'personal.local-work',table:'shared_saved_views',rows,execution:'content-only'},ownerId,await account.personal().client.sharedReadHistory());
  }});
  value=new SharedAggregateModel({actorId:ownerId,current:()=>account.requireOpen(),personal,
   bindings:async()=>(await bindings(ownerId)).map(row=>({scopeId:row.scopeId,kind:row.kind,resourceId:row.resourceId})),

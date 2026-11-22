@@ -53,7 +53,7 @@ internal enum class PersonalSourceKind(val wire:String,val domain:String){
         REMINDERS->id in setOf("personal-reminders-preferences-v1","personal-reminders-history-index-v1")
             ||id.matches(Regex("personal-reminder-(?:history|capture):[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
         ARCHIVES->id=="personal-archive-index-v1"||id.matches(Regex("personal-archive:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
-        RELATIONAL->id.matches(Regex("private-table:(?:personal|project|space)\\.[a-z-]+:[a-z_]+"))
+        RELATIONAL->id.matches(Regex("private-table:(?:personal|project|space)\\.[a-z-]+:[a-z_]+(?::part:(?:0|[1-9][0-9]{0,3}))?"))
             ||id.matches(Regex("private-path:(?:personal|project|space)\\.[a-z-]+:index-v1"))
             ||id.matches(Regex("private-work:(?:personal|project|space)\\.[a-z-]+:[a-f0-9-]{36}"))||id.matches(Regex("private-file:[a-f0-9-]{36}"))
     }
