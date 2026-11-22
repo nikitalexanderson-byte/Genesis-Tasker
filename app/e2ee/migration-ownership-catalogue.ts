@@ -13,6 +13,7 @@ import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemote
 import {inspectMigrationContentPlanAttempt,openMigrationContentPlan,retainedMigrationPlanValues} from './content-plan.ts';
 import {authenticateRetainedMigrationControls,inspectRetainedLegacyPlan,type RetainedMigrationFrame} from './retained-migration-proof.ts';
 import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
+import {inspectDeviceControlCustody} from './device-control-custody.ts';
 import {inspectRetainedProductCustody} from './retained-product-custody.ts';
 import {retainedMigrationValueCollector} from './retained-migration-values.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
@@ -177,6 +178,7 @@ export async function openMigrationOwnershipCatalogue(source:Options){
    const saved=await metadata(known.id,32*1024*1024,'key-check');exactKeys(saved.value,['ownerId','pin','checkpoint','events']);if(saved.value.ownerId!==known.ownerId||!Array.isArray(saved.value.events))invalid();
    return{target:{ownerId:latest.ownerId,scopeId,kind:latest.kind,resourceId:latest.resourceId,authority:saved.value.pin as import('./keys.ts').PublicDeviceKeys},events:saved.value.events as SignedE2eeCommand[]};
   }});current();
+ await inspectDeviceControlCustody({device,vault,personalScopeId:personal.length===1?personal[0].target.scopeId:null,current,claim});current();
  const cancellationCounts=new Map<string,number>();
  for(const id of copyIds){
   const role=roles.get(key('local-snapshot',id))?.role;if(role==='archive'||role==='product-job')continue;

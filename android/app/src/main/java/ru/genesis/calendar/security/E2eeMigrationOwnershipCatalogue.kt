@@ -167,6 +167,7 @@ internal object E2eeMigrationOwnershipCatalogue {
                 E2eeRetainedProductCustody.inspect(E2eeRetainedProductCustody.Options(device,view,options.inventory,outputIds.first,copyIds,jobHistory,controlHistory,personal,::current,
                     {domain,id->roles.containsKey(domain to id)},::claim,{scopeId,select->val expected=directories[scopeId]?:invalid();var found:E2eeDirectory.Verified?=null
                         val latest=device.savedDirectory(scopeId){if(select(it))found=it}?:invalid();current();if(latest.ownerId!=expected.second)invalid();found?:invalid()}))
+                E2eeDeviceControlCustody.inspect(device,view,personal,::current,::claim)
                 val counts=mutableMapOf<String,Int>()
                 for(id in copyIds){if(roles["local-snapshot" to id]?.name in setOf("archive","product-job"))continue;val at=id.lastIndexOf(":cancel:");if(at<1)invalid();val migration=id.substring(0,at);val known=states[migration]?:invalid();if(!uuid.matches(id.substring(at+8)))invalid()
                     val raw=state(id,known.first.target);val value=raw.value;if(raw.serial!=1L||value.get("phase")=="active"||number(value,"protocol")!=number(known.second,"protocol")||!same(E2eeRetainedMigrationProof.binding(value),E2eeRetainedMigrationProof.binding(known.second)))invalid()

@@ -7,7 +7,8 @@ import java.security.MessageDigest
 /** Device-only content has no transport/flush capability. Absence and corruption
  * are different results; CAS preserves edits made by another repository. */
 internal class E2eeDeviceDocument(private val device:E2eeScopeDevice,private val id:String,
-    private val validate:(JSONObject)->JSONObject,private val current:()->Unit){
+    private val validate:(JSONObject)->JSONObject,private val current:()->Unit,
+    private val read:(String,String)->UnlockedE2eeVault.Opened?={domain,objectId->device.vault.read(domain,objectId)}){
     class Opened(val value:JSONObject,val serial:Long){override fun toString()="E2eeDeviceDocument.Opened([redacted])"}
     private val prefix="device-doc:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(id.toByteArray(Charsets.UTF_8)))
     init{E2eeKeys.technical(id)}
@@ -19,11 +20,11 @@ internal class E2eeDeviceDocument(private val device:E2eeScopeDevice,private val
         E2eeEnvelope.decode(value.getString("hash"),32);return value
     }
     fun load():Opened?{
-        current();val row=device.vault.read("draft",id)?:return null
+        current();val row=read("draft",id)?:return null
         try{current();val decoded=E2eeFileManifestJson.readPrivateDocument(row.bytes);val manifest=manifest(decoded)?:return Opened(validate(decoded),row.serial)
             val bytes=ByteArray(manifest.getInt("size"));try{
                 val parts=(bytes.size+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES;val slots=manifest.getJSONArray("slots")
-                for(part in 0 until parts){current();val value=device.vault.read("draft","$prefix:$part")?:error("E2EE_PRIVATE_DOCUMENT_CORRUPT")
+                for(part in 0 until parts){current();val value=read("draft","$prefix:$part")?:error("E2EE_PRIVATE_DOCUMENT_CORRUPT")
                     try{current();check(value.serial==slots.getLong(part)){"E2EE_LOCAL_CONFLICT"};check(value.bytes.size==minOf(E2eeFiles.CHUNK_BYTES,bytes.size-part*E2eeFiles.CHUNK_BYTES)){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};value.bytes.copyInto(bytes,part*E2eeFiles.CHUNK_BYTES)}finally{value.bytes.fill(0)}}
                 check(E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))==manifest.getString("hash")){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};current()
                 return Opened(validate(E2eeFileManifestJson.readPrivateDocument(bytes)),row.serial)

@@ -1,5 +1,15 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 22 ноября: typed custody новых control documents (код)
+
+Оба migration ownership catalogue учитывают personal-device-entry и invitation-
+recipient documents: typed input/receipt, owner/authority binding, все текущие
+chunks и сохранённые suffix parts. Чтение идёт через отслеживаемый read-only
+provider; данные не становятся restore/enrollment/membership authority.
+DeviceDocument получил optional read-only reader без изменения штатного writer.
+Общий анализ и исполнение отложены до завершения всего кода по порядку владельца.
+
+
 ## 22 ноября: полный код пути приглашений (без приёмки)
 
 Добавлены signed personal recipient consent, ограниченные страницы входящих и
