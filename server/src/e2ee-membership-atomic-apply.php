@@ -43,7 +43,7 @@ function genesisMembershipAtomicPreflight(PDO $db,string $actor,array $plan):arr
     $expected=genesisMembershipOperationPlan($snapshot,$operation);if($expected['scopeIds']!==$plan['scopeIds'])throw new DomainException('E2EE_MEMBERSHIP_ROTATION_INCOMPLETE');
     $anchors=[];$scopes=[];foreach($expected['requiredScopes'] as $scope){$root=$scope['root'];$kind=str_starts_with($root['entityId'],'space:')?'space':'project';$resource=substr($root['entityId'],strpos($root['entityId'],':')+1);
         $anchors[]=['scopeId'=>$scope['scopeId'],'ownerId'=>$scope['ownerId'],'kind'=>$kind,'resourceId'=>$resource,'generation'=>$root['generation'],'directoryRevision'=>$root['directoryRevision'],
-            'checkpointHash'=>$root['checkpointHash'],'entityId'=>$root['entityId'],'revision'=>$root['revision'],'payloadHash'=>$root['payloadHash']];
+            'checkpointHash'=>$root['checkpointHash'],'entityId'=>$root['entityId'],'revision'=>$root['revision'],'payloadHash'=>$root['payloadHash'],'productIndexHash'=>$root['productIndexHash']];
         $current=genesisE2eeRow($db,'SELECT * FROM e2ee_scopes WHERE scope_id=?',[$scope['scopeId']]);if(!$current)throw new DomainException('E2EE_MEMBERSHIP_STALE');$scopes[$scope['scopeId']]=$current;
     }
     $sections=['acl'=>$expected['changes'],'anchors'=>$anchors,'clear-assignments'=>$expected['clearAssignments'],'revoke-invitations'=>$expected['revokeInvitations'],'role-events'=>$expected['roleEvents']];

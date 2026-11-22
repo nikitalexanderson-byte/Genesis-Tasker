@@ -176,13 +176,18 @@ export class SharedLiveModel{
   if(!this.ports.online){const saved=await this.ports.eventCache.load();this.ports.current();if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved;}
   if(!this.ports.history||!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
   const old=await this.ports.sourceTable('shared_audit_events');this.ports.current();if(old.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');const events:ObjectValue[]=old.map(row=>({id:row.id,action:row.action,objectId:row.object_id,actorId:row.actor_id,createdAt:row.created_at,taskId:row.task_id,boardId:row.board_id,legacy:true}));
-  for(const entity of versions){if(!['project','task','comment','project-comment'].includes(entity.kind))continue;let before=Number.MAX_SAFE_INTEGER,last=before;
+  for(const entity of versions){if(!['project','task','comment','project-comment','history'].includes(entity.kind))continue;let before=Number.MAX_SAFE_INTEGER,last=before;
    do{const page=await this.ports.history(entity.entityId,before);this.ports.current();if(page.origins.length!==page.versions.length)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
     for(const [at,version]of page.versions.entries()){const origin=page.origins[at];if(origin.entityId!==version.entityId||origin.revision!==version.revision||version.revision>=last)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');last=version.revision;
      if(origin.bootstrap)continue;const body=version.deleted?null:plain(version),source=body?.record,time=source?.updated_at??source?.created_at;
      // A deletion's prior content remains in history, but a removed object is
      // never turned into a new navigable content preview.
      if(version.deleted)continue;if(typeof time!=='string'||!Number.isFinite(Date.parse(time)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');
+     if(version.kind==='history'){
+      if(origin.action!=='create'||version.revision!==1||body?.table!=='shared_audit_events'||!['member.removed','member.role_changed'].includes(String(source!.action)))throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+      events.push({id:source!.id,action:source!.action,objectId:source!.object_id,actorId:origin.actorId,initiatorId:source!.actor_id,createdAt:time,taskId:null,boardId:null,details:parse(source!.details_json),legacy:false});
+      if(events.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');continue;
+     }
      const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${this.ports.binding.scopeId}\0${version.entityId}\0${version.revision}\0${origin.operationId}`)));bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes.subarray(0,16),value=>value.toString(16).padStart(2,'0')).join(''),id=`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
      events.push({id,action:version.kind==='comment'?'comment.created':version.kind==='project-comment'?'project.comment_created':`${version.kind}.${origin.action==='create'?'created':origin.action==='complete'?'completed':'updated'}`,objectId:source!.id,actorId:origin.actorId,createdAt:time,taskId:version.kind==='task'?source!.id:source!.task_id??null,boardId:source!.board_id??null,legacy:false});
      if(events.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');

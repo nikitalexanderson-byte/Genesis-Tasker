@@ -33,6 +33,10 @@ import {planMembershipOperation,membershipOperationFingerprint,validateMembershi
 import {membershipAtomicOperationPlan,type MembershipAtomicProducts} from '../e2ee/membership-atomic-contract';
 import {MembershipOperationDrafts,type MembershipOperationDraft} from '../e2ee/membership-operation-drafts';
 import {captureMembershipOperationSnapshot,type MembershipOpenedScope} from '../e2ee/membership-operation-selection';
+import {membershipOperationEdits} from '../e2ee/membership-operation-edits';
+import {membershipOperationEditBatches} from '../e2ee/membership-operation-compose';
+import {samePrivateJson} from '../e2ee/product-json';
+import {verifyMembershipAtomicPrivateEffects,type MembershipAtomicEffectsInput} from '../e2ee/membership-atomic-effects';
 
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
@@ -52,6 +56,18 @@ async function run(encoded:string){
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    if(value.mode==='membership-owner-effects-v2'){
+      exactKeys(value,['protocol','mode','input']);if(value.protocol!==1)throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
+      exactKeys(value.input,['request','scope','pages','entities','versions','candidates']);const result=verifyMembershipAtomicPrivateEffects(value.input as MembershipAtomicEffectsInput);
+      current();send({job,kind:'membership-operation-complete',value:result});return;
+    }
+    if(value.mode==='membership-operation-edits-v2'){
+      exactKeys(value,['protocol','mode','input']);if(value.protocol!==1)throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
+      exactKeys(value.input,['binding','actorId','intentId','createdAt','plan','snapshot','entities','versions']);
+      const input=value.input as Parameters<typeof membershipOperationEdits>[0],snapshot=validateMembershipOperationSnapshot(input.snapshot),plan=planMembershipOperation(snapshot,input.plan.operation);
+      if(!samePrivateJson(plan,input.plan))throw new Error('E2EE_MEMBERSHIP_STALE');const edits=membershipOperationEdits({...input,snapshot,plan});
+      current();send({job,kind:'membership-operation-complete',value:{batches:membershipOperationEditBatches(edits)}});return;
+    }
     if(value.mode==='membership-atomic-plan-v2'){
       exactKeys(value,['protocol','mode','actorId','intentId','spaceId','reviewFingerprint','snapshot','operation','products']);
       if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.intentId!=='string'||typeof value.spaceId!=='string'||typeof value.reviewFingerprint!=='string'||!Array.isArray(value.products))throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');

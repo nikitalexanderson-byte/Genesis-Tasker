@@ -1,5 +1,46 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: ordinary-operation composer / complete private effects (source-only)
+
+После651def7e добавлены common MembershipOperationComposer, web factory/API и
+matching NativeMembershipOperationComposer. Frozen reviewed input → полный normal
+index + decrypted target versions → deterministic batches и ВСЕ local product
+drafts до первого upload → immutable versions → atomic plan → paged owner review.
+Ни composer, ни prepare не создают implicit owner/final consent. Packets собираются
+только из exact saved approvals и ещё раз pinned signature verification.
+
+Root snapshots/atomic anchors теперь содержат productIndexHash полного normal
+business index (с tombstones); PHP независимо рассчитывает тот же hash под lock.
+Параллельно появившаяся/изменённая задача больше не может быть пропущена при
+clear-assignments. Старые snapshot/anchor originals без hash остаются readable
+inert, но новый builder/foreground review/final preflight их не применяют.
+
+Common effects edits сохраняют related/files/body, снимают только assignee,
+обновляют category permissions и добавляют immutable private role-history.
+Normal history UI берёт actual writer из signed proof и отдельно хранит initiating
+actor. Server bounded maintenance для уже завершённой задачи не меняет status,
+completion, approvers/dependencies или иные presentFields; history create доступен
+только внутри bound membership transaction, не через ordinary direct command.
+
+Mandatory owner effects adapter теперь расшифровывает original normal records и
+все предложенные immutable versions собственной scope; common pure verifier
+требует ТОЧНО expected normal effects, включая complete task set. Подпись writer
+не заменяет эту проверку. Web использует реальные repositories; Native — те же
+pure edits/verifier в existing isolated runtime и настоящие JCA repositories.
+createdAt из исходного durable intent входит в v2 request/fingerprint; прежний
+source-only request без него сохраняется в retained mode, не даёт fresh consent.
+
+Остаток этого path: ordinary role/remove/grants/category/invitation UI14lang,
+durable stale semantic resolution/cancel, доступность foreign writer readback,
+very-wide streaming/runtime/local-record bounds. Затем остальные original prompt
+categories: first personal trusted entry, advanced/forms/automation attribution,
+typed restore и revoked-device replacement/background, source/divergence review.
+Compiler/lint/tests/build/CI security НЕ запускались; coverage9/20 не повышен.
+
+Urgent PR43 всё ещё head45ad2e22; rerun45034738601 Android success, browser running
+(начало browser15:37 UTC, снимок16:04 UTC). Не отменять этот required run. После
+green merge expected head, exact-main website_only checks, штатный Deploy и liveQA.
+
 ## 22 ноября: v2 paged all-owner effects review (source-only)
 
 Добавлены membership-atomic-review/owner/web-owner/review-prepare TS и matching

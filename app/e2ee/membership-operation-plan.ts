@@ -13,7 +13,7 @@ export type MembershipOperation=
  |{kind:'member-permissions';spaceId:string;userId:string;categoryId:string|null;permissions:MembershipPermissions|null}
  |{kind:'project-grants';spaceId:string;userId:string;allProjects:boolean;grants:{projectId:string;role:'member'|'commenter'|'viewer'|'none';includeDescendants:boolean}[]}
  |{kind:'category-permissions';spaceId:string;categoryId:string;expectedRevision:number;permissions:MembershipPermissions};
-export type MembershipGraphScope={scopeId:string;ownerId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement';root:{scopeId:string;entityId:string;generation:number;directoryRevision:number;checkpointHash:string;revision:number;payloadHash:string}};
+export type MembershipGraphScope={scopeId:string;ownerId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement';root:{scopeId:string;entityId:string;generation:number;directoryRevision:number;checkpointHash:string;revision:number;payloadHash:string;productIndexHash?:string}};
 export type MembershipGraphProject={id:string;parentId:string|null;isInbox:boolean;archived:boolean;inTrash:boolean;scope:MembershipGraphScope|null};
 export type MembershipOperationSnapshot={format:'genesis-membership-operation-snapshot-v1';actorId:string;spaceId:string;spaceScope:MembershipGraphScope|null;projects:MembershipGraphProject[];
  spaceUserIds:string[];completeUserIds:string[];rows:{table:MembershipChange['table'];key:Record<string,string>;before:Record<string,WireValue>|null;beforeHash:string}[]};
@@ -57,9 +57,9 @@ export function validateMembershipOperation(input:unknown):MembershipOperation{
 function validateScope(value:unknown,entityId:string):MembershipGraphScope|null{
  if(value===null)return null;exactKeys(value,['scopeId','ownerId','state','root']);assertTechnical(value.scopeId);assertTechnical(value.ownerId);
  if(!['preparing','uploading','verified','active','retirement'].includes(String(value.state)))invalid();
- exactKeys(value.root,['scopeId','entityId','generation','directoryRevision','checkpointHash','revision','payloadHash']);
+ exactKeys(value.root,['scopeId','entityId','generation','directoryRevision','checkpointHash','revision','payloadHash',...(value.root&&typeof value.root==='object'&&Object.hasOwn(value.root,'productIndexHash')?['productIndexHash']:[])]);
  if(value.root.scopeId!==value.scopeId||value.root.entityId!==entityId)invalid();for(const key of ['generation','directoryRevision','revision'])if(!Number.isSafeInteger(value.root[key])||Number(value.root[key])<1)invalid();
- decodeE2eeBytes(value.root.checkpointHash,32);decodeE2eeBytes(value.root.payloadHash,32);return structuredClone(value) as MembershipGraphScope;
+ decodeE2eeBytes(value.root.checkpointHash,32);decodeE2eeBytes(value.root.payloadHash,32);if(Object.hasOwn(value.root,'productIndexHash'))decodeE2eeBytes(value.root.productIndexHash,32);return structuredClone(value) as MembershipGraphScope;
 }
 export function validateMembershipOperationSnapshot(input:unknown):MembershipOperationSnapshot{
  exactKeys(input,['format','actorId','spaceId','spaceScope','projects','spaceUserIds','completeUserIds','rows']);

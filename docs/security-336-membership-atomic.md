@@ -160,3 +160,26 @@ helpers собирают bounded exchange parts из durable stager. Typed retai
 product edits ещё должны соединить этот path. Это не завершённый membership E2E.
 Very-wide/native/local-record bounds и поздние ACL divergence/resolution остаются.
 Никаких security compiler/lint/tests/build/CI не запускалось. Coverage9/20.
+
+## Ordinary composer и semantic private effects (source-only)
+
+Web/native ordinary composer now сохраняет reviewed draft, читает полный normal
+index и все затронутые domain versions, stage-ит все deterministic local batches
+до upload, готовит immutable versions и полный plan/owner exchange. Owner consent
+и final consent остаются отдельными действиями. Final packet assembly использует
+exact saved owner approvals и повторную проверку их подписей.
+
+productIndexHash полного verified business index добавлен в root snapshots и
+новые anchors; PHP пересчитывает его до final apply под тем же writer lock.
+Concurrent create/update/tombstone, включая новую назначенную задачу, требует
+нового review. Старый original без hash читается inert, но не достраивается до
+новой authority. Общий pure effects composer меняет только назначение, category
+permissions и immutable private role-history; related/files сохраняются.
+
+Mandatory owner adapter дополнительно открывает original и proposed encrypted
+versions своей scope через реальные normal repositories и сравнивает их с точными
+normal effects. Raw writer signature недостаточна. Native использует тот же pure
+validator через existing isolated runtime, без ключей/HTTP в renderer.
+Stable createdAt взят из исходного сохранённого intent и входит в owner request.
+Normal event UI показывает actual writer из signed proof; logical initiator
+остаётся отдельным полем. Source-only, без compiler/tests/CI; coverage9/20.

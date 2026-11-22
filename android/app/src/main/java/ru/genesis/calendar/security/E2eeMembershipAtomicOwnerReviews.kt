@@ -2,11 +2,14 @@ package ru.genesis.calendar.security
 
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** Matching encrypted paged owner review store. Requests and consent are saved
  * and read back before network verification or key rotation, never applied. */
 internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductAccount,private val peers:E2eeMembershipPeerPorts,
-    private val openOwned:(JSONObject)->E2eeScopeClient,private val guard:()->Unit){
+    private val openOwned:(JSONObject)->E2eeScopeClient,private val guard:()->Unit,
+    private val reviewEffects:suspend (JSONObject,JSONObject,(Int)->JSONObject)->Unit){
     companion object {
         val prefixes=listOf("membership-atomic-owner-review:","membership-atomic-owner-part:","membership-atomic-owner-consent:","membership-atomic-owner-approval:")
         fun id(owner:String,fingerprint:String,kind:Int=0,suffix:String=""):String {
@@ -16,6 +19,7 @@ internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductA
         fun scopeSuffix(scope:String):String {E2eeKeys.technical(scope);return ":"+E2eeMembershipAtomicContract.digest(scope)}
     }
     private data class Stored(val value:JSONObject,val serial:Long)
+    private val reviewMutex=Mutex()
     private fun current(){guard();account.requireOpen()}
     private fun invalid():Nothing=error("E2EE_MEMBERSHIP_REVIEW_MISMATCH")
     private fun same(a:Any,b:Any)=E2eeProductJson.same(a,b)
@@ -63,7 +67,10 @@ internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductA
             for(index in 0 until refs.length()){collector.consume(part(request,kind,index));current()}
         };return collector.finish()
     }
-    @Synchronized fun review(fingerprint:String)=complete(request(fingerprint))
+    suspend fun review(fingerprint:String):JSONObject=reviewMutex.withLock{
+        val request=request(fingerprint);val result=complete(request)
+        for(scope in rows(result.getJSONArray("scopes")))if(scope.get("ownerId")==account.ownerId){reviewEffects(request,scope){index->part(request,"plan",index).getJSONObject("page")};current()};result
+    }
     private fun anchor(request:JSONObject,scope:String):JSONObject {
         val refs=request.getJSONObject("plan").getJSONArray("pages")
         for(index in 0 until refs.length())if(refs.getJSONObject(index).get("kind")=="anchors")for(row in rows(part(request,"plan",index).getJSONObject("page").getJSONArray("items")))if(row.get("scopeId")==scope)return row
@@ -73,9 +80,10 @@ internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductA
         E2eeKeys.exact(raw,setOf("format","ownerId","fingerprint","scopeId","roles","packet"))
         if(raw.get("format")!="genesis-membership-atomic-owner-consent-local-v2"||raw.get("ownerId")!=account.ownerId||raw.get("fingerprint")!=fingerprint||raw.get("scopeId")!=scope||!same(raw.get("roles"),roles))invalid();return JSONObject(raw.toString())
     }
-    @Synchronized fun approve(fingerprint:String,scopeId:String,displayedFingerprint:String,explicitRoles:JSONArray):JSONObject {
+    suspend fun approve(fingerprint:String,scopeId:String,displayedFingerprint:String,explicitRoles:JSONArray):JSONObject=reviewMutex.withLock{
         current();if(displayedFingerprint!=fingerprint)error("E2EE_MEMBERSHIP_FINGERPRINT_REQUIRED");val request=request(fingerprint);val review=complete(request)
         val scope=rows(review.getJSONArray("scopes")).singleOrNull{it.get("scopeId")==scopeId}?:invalid();if(scope.get("ownerId")!=account.ownerId||!same(explicitRoles,scope.get("roles")))invalid()
+        reviewEffects(request,scope){index->part(request,"plan",index).getJSONObject("page")};current()
         val key=id(account.ownerId,fingerprint,2,scopeSuffix(scopeId));val old=read(key);val value:JSONObject;val serial:Long
         if(old!=null){value=consent(old.value,fingerprint,scopeId,explicitRoles);serial=old.serial;if(serial!=(if(value.isNull("packet"))1L else 2L))invalid()}
         else{value=JSONObject().put("format","genesis-membership-atomic-owner-consent-local-v2").put("ownerId",account.ownerId).put("fingerprint",fingerprint).put("scopeId",scopeId).put("roles",JSONArray(explicitRoles.toString())).put("packet",JSONObject.NULL);serial=save(key,value,null).serial}
@@ -85,7 +93,7 @@ internal class E2eeMembershipAtomicOwnerReviews(private val account:E2eeProductA
             save(key,JSONObject(value.toString()).put("packet",signed),serial);signed
         }else value.getJSONObject("packet")
         E2eeMembershipAtomicProofs.verify(request.getJSONObject("plan"),anchor(request,scopeId),packet,peers);current()
-        return E2eeMembershipAtomicReview.approval(JSONObject().put("format","genesis-membership-atomic-owner-approval-v2").put("requestFingerprint",fingerprint).put("scopeId",scopeId).put("packet",packet),request,scope)
+        E2eeMembershipAtomicReview.approval(JSONObject().put("format","genesis-membership-atomic-owner-approval-v2").put("requestFingerprint",fingerprint).put("scopeId",scopeId).put("packet",packet),request,scope)
     }
     @Synchronized fun acceptApproval(fingerprint:String,input:JSONObject):JSONObject {
         current();val request=request(fingerprint);if(request.getJSONObject("plan").get("actorId")!=account.ownerId)invalid();val reviewed=complete(request)

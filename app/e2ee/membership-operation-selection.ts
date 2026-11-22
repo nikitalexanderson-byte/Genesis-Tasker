@@ -5,6 +5,7 @@ import {validateMembershipOperation,validateMembershipOperationSnapshot,type Mem
 import {productEntity,type ProductEntity} from './product-contract.ts';
 import {sharedBodyMetadata,type SharedRecordBody} from './shared-domain.ts';
 import type {ProductVersion} from './shared-product.ts';
+import {membershipProductIndexHash} from './membership-product-index.ts';
 
 export type MembershipGraphDiscovery={spaceId:string;spaceScopeId:string|null;spaceUserIds:string[];projects:{id:string;parentId:string|null;isInbox:boolean;archived:boolean;inTrash:boolean;scopeId:string|null}[]};
 export type MembershipOpenedScope={scope:Omit<MembershipGraphScope,'root'>;generation:number;directoryRevision:number;checkpointHash:string;entities:ProductEntity[]};
@@ -38,7 +39,7 @@ export async function captureMembershipOperationSnapshot(raw:unknown,ports:Membe
   const pin=matches[0],old=opened.get(pin.scopeId);if(old)return old;const value=await ports.open(kind,resourceId,pin.scopeId);ports.current();
   if(value.scope.scopeId!==pin.scopeId||!['active','retirement'].includes(value.scope.state))throw new Error('E2EE_SHARED_TRANSITION_REQUIRED');
   const roots=value.entities.filter(row=>row.kind===kind&&row.entityId===kind+':'+resourceId);if(roots.length!==1)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');const root=productEntity(roots[0]);
-  const scope:MembershipGraphScope={...value.scope,root:{scopeId:pin.scopeId,entityId:root.entityId,generation:value.generation,directoryRevision:value.directoryRevision,checkpointHash:value.checkpointHash,revision:root.revision,payloadHash:root.payloadHash}};
+  const scope:MembershipGraphScope={...value.scope,root:{scopeId:pin.scopeId,entityId:root.entityId,generation:value.generation,directoryRevision:value.directoryRevision,checkpointHash:value.checkpointHash,revision:root.revision,payloadHash:root.payloadHash,productIndexHash:membershipProductIndexHash(pin.scopeId,value.entities)}};
   const result={kind,resourceId,value,root,scope};opened.set(pin.scopeId,result);return result;
  };
  const body=async(entry:Awaited<ReturnType<typeof open>>)=>{const value=await ports.read(entry.scope.scopeId,entry.root);ports.current();
@@ -76,7 +77,7 @@ export async function captureMembershipOperationSnapshot(raw:unknown,ports:Membe
  for(let offset=0;offset<targets.length;offset+=200)await read(targets.slice(offset,offset+200));
  if(!same(validateMembershipGraphDiscovery(await ports.graph(spaceId)),graph))changed();ports.current();
  for(const entry of opened.values()){const fresh=await ports.open(entry.kind,entry.resourceId,entry.scope.scopeId);ports.current();
-  const root=fresh.entities.find(row=>row.entityId===entry.root.entityId);if(!same(fresh.scope,entry.value.scope)||fresh.generation!==entry.value.generation||fresh.directoryRevision!==entry.value.directoryRevision||fresh.checkpointHash!==entry.value.checkpointHash||!same(root,entry.root))changed();
+  const root=fresh.entities.find(row=>row.entityId===entry.root.entityId);if(!same(fresh.scope,entry.value.scope)||fresh.generation!==entry.value.generation||fresh.directoryRevision!==entry.value.directoryRevision||fresh.checkpointHash!==entry.value.checkpointHash||!same(root,entry.root)||membershipProductIndexHash(entry.scope.scopeId,fresh.entities)!==entry.scope.root.productIndexHash)changed();
  }
  const after=await ports.bindings();ports.current();if(!same(after,pins))changed();
  return validateMembershipOperationSnapshot({format:'genesis-membership-operation-snapshot-v1',actorId:ports.actorId,spaceId,spaceScope:space.scope,projects,spaceUserIds:graph.spaceUserIds,completeUserIds:[...complete].sort(),rows});

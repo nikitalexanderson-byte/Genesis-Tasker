@@ -4,6 +4,11 @@ import type {WebPrivateAccount} from './product-session.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import type {MembershipPeerPorts} from './membership-exchange.ts';
 import type {MembershipAtomicScopePreview} from './membership-atomic-preview.ts';
+import {membershipAtomicEffects,verifyMembershipAtomicPrivateEffects,membershipAtomicCandidate} from './membership-atomic-effects.ts';
+import {membershipOperationEffectEntities} from './membership-operation-edits.ts';
+import {membershipProductIndexHash} from './membership-product-index.ts';
+import type {MembershipAtomicPage} from './membership-atomic-contract.ts';
+import type {ProductVersion} from './shared-product.ts';
 
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 export function webMembershipAtomicOwnerReviews(account:WebPrivateAccount,peers:MembershipPeerPorts,
@@ -17,5 +22,12 @@ export function webMembershipAtomicOwnerReviews(account:WebPrivateAccount,peers:
   list:async prefix=>{current();const ids=await account.device.vault.listLocal('outbox',prefix);current();return ids;},
   rotate:async(scope,changeHash)=>{current();if(scope.ownerId!==account.ownerId)throw new Error('E2EE_OWNER_REQUIRED');const client=await openOwned(scope);current();await client.refresh();current();
    const packet=await client.prepareMembershipRotation(changeHash,scope.roles.map(({deviceId,role})=>({deviceId,role})),scope.manifest,scope);current();return packet;},
+  reviewEffects:async(request,scope,page)=>{current();if(scope.ownerId!==account.ownerId||!request.createdAt)throw new Error('E2EE_OWNER_REQUIRED');await openOwned(scope);current();
+   const pages:MembershipAtomicPage[]=[];for(let index=0;index<request.plan.pages.length;index++){pages.push(await page(index));current();}const effects=membershipAtomicEffects(request.plan,pages),binding={scopeId:scope.scopeId,kind:scope.kind,resourceId:scope.resourceId};
+   const {records}=await account.sharedRecords(scope.scopeId,scope.kind,scope.resourceId);current();const entities=await records.index();current();const versions:ProductVersion[]=[],candidates:ProductVersion[]=[];
+   for(const entity of membershipOperationEffectEntities(binding,effects.plan,entities)){versions.push(await records.read(entity));current();}
+   for(const product of effects.products.filter(row=>row.scopeId===scope.scopeId))for(const operation of product.operations){candidates.push(await records.product.read(membershipAtomicCandidate(operation,request.plan.actorId,request.createdAt)));current();}
+   verifyMembershipAtomicPrivateEffects({request,scope,pages,entities,versions,candidates});const after=await records.index();current();if(membershipProductIndexHash(scope.scopeId,after)!==membershipProductIndexHash(scope.scopeId,entities))throw new Error('E2EE_MEMBERSHIP_STALE');
+  },
  });
 }

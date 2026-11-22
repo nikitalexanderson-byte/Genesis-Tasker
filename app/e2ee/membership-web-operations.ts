@@ -4,6 +4,8 @@ import {E2eeSharedTrust} from './shared-trust.ts';
 import {MembershipOperationDrafts,MEMBERSHIP_OPERATION_DRAFT_PREFIX,validateMembershipOperationDraft,type MembershipOperationDraft} from './membership-operation-drafts.ts';
 import {captureMembershipOperationSnapshot} from './membership-operation-selection.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
+import {MembershipOperationComposer} from './membership-operation-compose.ts';
+import type {MembershipAtomicOwnerReviews} from './membership-atomic-owner.ts';
 
 const drafts=new WeakMap<WebPrivateAccount,MembershipOperationDrafts>();
 export function privateMembershipOperationDrafts(ownerId:string){
@@ -23,4 +25,18 @@ export function privateMembershipOperationDrafts(ownerId:string){
    },read:async(scopeId,entity)=>{const repository=records.get(scopeId);if(!repository)throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');const result=await repository.read(entity);current();return result;},
   });},
  });drafts.set(account,value);return value;
+}
+export function webMembershipOperationComposer(account:WebPrivateAccount,owners:MembershipAtomicOwnerReviews,guard:()=>void){
+ const current=()=>{guard();account.requireOpen();if(account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');},trust=new E2eeSharedTrust(account.ownerId),records=new Map<string,E2eeSharedRecords>();
+ const repository=(scopeId:string)=>{current();const value=records.get(scopeId);if(!value)throw new Error('E2EE_SHARED_SCOPE_UNLOCK_REQUIRED');return value;};
+ return new MembershipOperationComposer({ownerId:account.ownerId,current,drafts:privateMembershipOperationDrafts(account.ownerId),stager:account.membershipAtomic(),owners,
+  open:async scope=>{current();const opened=await trust.open(scope.scopeId);current();const directory=opened.directory,own=directory.devices.get(account.device.deviceId),kind=directory.kind;
+   if(kind==='personal'||directory.ownerId!==scope.ownerId||!own||own.revoked||own.userId!==account.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   const {records:value}=await account.sharedRecords(scope.scopeId,kind,directory.resourceId);current();records.set(scope.scopeId,value);const entities=await value.index();current();
+   return{scopeId:scope.scopeId,ownerId:directory.ownerId,kind,resourceId:directory.resourceId,generation:directory.generation,directoryRevision:directory.checkpoint.revision,checkpointHash:directory.checkpoint.hash,entities};},
+  read:async(scopeId,entity)=>{const value=await repository(scopeId).read(entity);current();return value;},
+  stage:async(scopeId,edits,membershipIntentId,productIntentId)=>{await repository(scopeId).product.stageForMembership(edits,membershipIntentId,productIntentId);current();},
+  prepare:async(scopeId,id)=>{const result=await repository(scopeId).product.prepare(id);current();return result;},
+  sign:async(scopeId,id,hash,operations)=>{const binding=repository(scopeId).binding,scope=account.shared(scopeId,binding.kind,binding.resourceId);current();const packet=await scope.client.prepareMembershipProduct(id,hash,operations);current();return packet;},
+ });
 }

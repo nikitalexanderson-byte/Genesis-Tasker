@@ -140,14 +140,20 @@ function genesisE2eeProductPermission(string $actor,array $scope,string $kind,st
     if(in_array($kind,['comment','project-comment'],true)&&$old&&$old['author_id']!==$actor&&!$project['permissions']['manageProjects'])throw new GenesisResourceLimitException(403,'E2EE_PRODUCT_AUTHOR_REQUIRED');
     return$project;
 }
-function genesisE2eeProductTaskRules(PDO $db,string $actor,array $scope,array $operation,array|false $old,array $project): void
+function genesisE2eeProductTaskRules(PDO $db,string $actor,array $scope,array $operation,array|false $old,array $project,bool $bound=false): void
 {
     $metadata=$operation['metadata'];$before=$old?json_decode($old['metadata_json'],true,32,JSON_THROW_ON_ERROR):null;
     $approvers=$metadata['approverIds'];$oldApprovers=$before['approverIds']??[];$left=$approvers;$right=$oldApprovers;sort($left,SORT_STRING);sort($right,SORT_STRING);
     if($left!==$right&&$old&&($old['author_id']!==$actor&&!$project['permissions']['manageProjects']||($before['completed']??false)))throw new GenesisResourceLimitException(403,'E2EE_PRODUCT_APPROVERS_FORBIDDEN');
     foreach($approvers as $user)genesisSharedProjectAccess($scope['resource_id'],$user,'read',true);
     foreach($metadata['dependsOnIds'] as $id){$other=genesisE2eeProductRow($db,$scope,$id);if($id===$operation['entityId']||!$other||$other['deleted']||$other['kind']!=='task')throw new DomainException('E2EE_PRODUCT_DEPENDENCY_INVALID');}
-    if($metadata['completed']&&$approvers&&$operation['action']!=='propose-complete')throw new DomainException('E2EE_PRODUCT_APPROVAL_REQUIRED');
+    // A fully owner-reviewed membership transaction may clear a private
+    // assignee on an already completed task. It cannot change completion,
+    // status, approvers, dependencies or any other declared present field.
+    $maintenance=$bound&&$operation['action']==='update'&&$old&&($before['completed']??false)&&$metadata['completed']&&$left===$right
+        &&$metadata['statusId']===$before['statusId']&&$metadata['dependsOnIds']===$before['dependsOnIds']
+        &&array_values(array_diff($before['presentFields'],['assigneeId']))===$metadata['presentFields'];
+    if($metadata['completed']&&$approvers&&$operation['action']!=='propose-complete'&&!$maintenance)throw new DomainException('E2EE_PRODUCT_APPROVAL_REQUIRED');
     $q=$db->prepare("SELECT metadata_json FROM e2ee_product_entities WHERE scope_id=? AND generation=? AND kind='workflow' AND deleted=0 ORDER BY entity_id");$q->execute([$scope['scope_id'],$scope['generation']]);$workflows=$q->fetchAll();$q->closeCursor();
     foreach($workflows as $row){$workflow=json_decode($row['metadata_json'],true,32,JSON_THROW_ON_ERROR);if(!$workflow['enabled'])continue;
         $target=$metadata['statusId'];$prior=$before['statusId']??null;
@@ -183,8 +189,11 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
         if(($old?(int)$old['revision']:0)!==$operation['expectedRevision']||($old&&$old['kind']!==$operation['kind'])||($old===false)!==($operation['action']==='create'))throw new DomainException('E2EE_PRODUCT_REVISION_CONFLICT');
         if($old&&$old['deleted']&&$operation['action']!=='restore'||$old&&!$old['deleted']&&$operation['action']==='restore')throw new DomainException('E2EE_PRODUCT_DELETED');
         $project=genesisE2eeProductPermission($actor,$scope,$operation['kind'],$operation['action'],$old);genesisE2eeProductReference($db,$scope,$operation);
-        if($operation['parentId']!==null){$parent=genesisE2eeProductRow($db,$scope,genesisE2eeIdentifier($operation['parentId']));if(!$parent||$parent['deleted']||$operation['parentId']===$id)throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');}
-        if($operation['kind']==='task')genesisE2eeProductTaskRules($db,$actor,$scope,$operation,$old,$project);
+        if($operation['parentId']!==null){$parent=genesisE2eeProductRow($db,$scope,genesisE2eeIdentifier($operation['parentId']));
+            $retainedHistory=$bound&&$operation['kind']==='history'&&$operation['action']==='create'&&$scope['kind']==='project'&&$operation['parentId']==='project:'.$scope['resource_id'];
+            if(!$parent||$parent['deleted']&&!$retainedHistory||$operation['parentId']===$id)throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');}
+        if($operation['kind']==='history'&&(!$bound||$operation['action']!=='create'||$scope['kind']!=='project'||$operation['parentId']!=='project:'.$scope['resource_id']))throw new DomainException('E2EE_PRODUCT_HISTORY_FORBIDDEN');
+        if($operation['kind']==='task')genesisE2eeProductTaskRules($db,$actor,$scope,$operation,$old,$project,$bound);
         if($operation['kind']==='project'){
             require_once __DIR__.'/e2ee-project-topology.php';genesisE2eeProjectRootMutation($db,$actor,$scope,$operation,$old);
         }
@@ -199,7 +208,7 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
     }
     // Parent/dependency cycles are checked against the transaction's final
     // projection, so a partially applied multi-row operation never escapes.
-    $q=$db->prepare('SELECT entity_id,parent_id,metadata_json FROM e2ee_product_entities WHERE scope_id=? AND generation=? AND deleted=0');$q->execute([$scope['scope_id'],$scope['generation']]);$rows=$q->fetchAll();$q->closeCursor();$edges=[];
+    $q=$db->prepare("SELECT entity_id,parent_id,metadata_json FROM e2ee_product_entities WHERE scope_id=? AND generation=? AND deleted=0 AND kind<>'history'");$q->execute([$scope['scope_id'],$scope['generation']]);$rows=$q->fetchAll();$q->closeCursor();$edges=[];
     foreach($rows as $row){$meta=json_decode($row['metadata_json'],true,32,JSON_THROW_ON_ERROR);$edges[$row['entity_id']]=array_merge($row['parent_id']===null?[]:[$row['parent_id']],$meta['dependsOnIds']??[]);}
     $degrees=[];$reverse=[];$ready=[];foreach($edges as $id=>$links){$links=array_values(array_unique($links));$degrees[$id]=count($links);if(!$links)$ready[]=$id;
         foreach($links as $next){if(!isset($edges[$next]))throw new DomainException('E2EE_PRODUCT_DEPENDENCY_INVALID');$reverse[$next][]=$id;}}

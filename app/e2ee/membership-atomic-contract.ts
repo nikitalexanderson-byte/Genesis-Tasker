@@ -7,7 +7,7 @@ import {productMutation,type ProductMutation} from './product-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {validateMembershipOperation,type MembershipOperation,type MembershipOperationPlan} from './membership-operation-plan.ts';
 
-export type MembershipAtomicAnchor={scopeId:string;ownerId:string;kind:'space'|'project';resourceId:string;generation:number;directoryRevision:number;checkpointHash:string;entityId:string;revision:number;payloadHash:string};
+export type MembershipAtomicAnchor={scopeId:string;ownerId:string;kind:'space'|'project';resourceId:string;generation:number;directoryRevision:number;checkpointHash:string;entityId:string;revision:number;payloadHash:string;productIndexHash?:string};
 export type MembershipAtomicProducts={scopeId:string;intentId:string;operations:ProductMutation[]};
 type GrantOperation=Extract<MembershipOperation,{kind:'project-grants'}>;
 export type MembershipAtomicOperationHeader=Exclude<MembershipOperation,GrantOperation>|Omit<GrantOperation,'grants'>;
@@ -63,9 +63,9 @@ export function membershipAtomicOperationHeader(input:unknown):MembershipAtomicO
  }return validateMembershipOperation(input) as MembershipAtomicOperationHeader;
 }
 export function validateMembershipAtomicAnchor(input:unknown):MembershipAtomicAnchor{
- exactKeys(input,['scopeId','ownerId','kind','resourceId','generation','directoryRevision','checkpointHash','entityId','revision','payloadHash']);
+ exactKeys(input,['scopeId','ownerId','kind','resourceId','generation','directoryRevision','checkpointHash','entityId','revision','payloadHash',...(input&&typeof input==='object'&&Object.hasOwn(input,'productIndexHash')?['productIndexHash']:[])]);
  for(const key of ['scopeId','ownerId','resourceId','entityId'])assertTechnical(input[key]);if(!['space','project'].includes(String(input.kind))||input.entityId!==input.kind+':'+input.resourceId)invalid();
- for(const key of ['generation','directoryRevision','revision'])integer(input[key],1);decodeE2eeBytes(input.checkpointHash,32);decodeE2eeBytes(input.payloadHash,32);return structuredClone(input) as MembershipAtomicAnchor;
+ for(const key of ['generation','directoryRevision','revision'])integer(input[key],1);decodeE2eeBytes(input.checkpointHash,32);decodeE2eeBytes(input.payloadHash,32);if(Object.hasOwn(input,'productIndexHash'))decodeE2eeBytes(input.productIndexHash,32);return structuredClone(input) as MembershipAtomicAnchor;
 }
 export function validateMembershipAtomicPage(input:unknown):MembershipAtomicPage{
  exactKeys(input,['kind','items']);if(!Array.isArray(input.items)||input.items.length<1||input.items.length>200||![...planKinds,...packetKinds].includes(input.kind as never))invalid();
@@ -139,11 +139,12 @@ export function membershipAtomicPages(kind:MembershipAtomicPage['kind'],items:un
  * raw input and membership-bound product drafts already precede that upload. */
 export function membershipAtomicOperationPlan(actorId:string,intentId:string,spaceId:string,reviewFingerprint:string,operation:MembershipOperationPlan,products:MembershipAtomicProducts[]){
  assertTechnical(actorId);assertTechnical(intentId);assertTechnical(spaceId);decodeE2eeBytes(reviewFingerprint,32);
+ if(operation.requiredScopes.some(scope=>!scope.root.productIndexHash))throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
  if('spaceId'in operation.operation&&operation.operation.spaceId!==spaceId)invalid();
  const anchors=operation.requiredScopes.map(scope=>validateMembershipAtomicAnchor({scopeId:scope.scopeId,ownerId:scope.ownerId,
   kind:scope.root.entityId.startsWith('space:')?'space':'project',resourceId:scope.root.entityId.slice(scope.root.entityId.indexOf(':')+1),
   generation:scope.root.generation,directoryRevision:scope.root.directoryRevision,checkpointHash:scope.root.checkpointHash,
-  entityId:scope.root.entityId,revision:scope.root.revision,payloadHash:scope.root.payloadHash})).sort((a,b)=>a.scopeId<b.scopeId?-1:a.scopeId>b.scopeId?1:0);
+  entityId:scope.root.entityId,revision:scope.root.revision,payloadHash:scope.root.payloadHash,productIndexHash:scope.root.productIndexHash})).sort((a,b)=>a.scopeId<b.scopeId?-1:a.scopeId>b.scopeId?1:0);
  const raw=validateMembershipOperation(operation.operation),header=raw.kind==='project-grants'?{kind:raw.kind,spaceId:raw.spaceId,userId:raw.userId,allProjects:raw.allProjects}:raw;
  const pages=[...membershipAtomicPages('operation',[header]),...membershipAtomicPages('operation-grants',raw.kind==='project-grants'?raw.grants:[]),
   ...membershipAtomicPages('acl',operation.changes),...membershipAtomicPages('anchors',anchors),

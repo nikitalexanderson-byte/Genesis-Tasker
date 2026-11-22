@@ -25,11 +25,11 @@ internal object E2eeMembershipAtomicContract {
         return JSONObject(input.toString())
     }
     private fun anchor(value:JSONObject){
-        E2eeKeys.exact(value,setOf("scopeId","ownerId","kind","resourceId","generation","directoryRevision","checkpointHash","entityId","revision","payloadHash"))
+        E2eeKeys.exact(value,setOf("scopeId","ownerId","kind","resourceId","generation","directoryRevision","checkpointHash","entityId","revision","payloadHash")+(if(value.has("productIndexHash"))setOf("productIndexHash")else emptySet()))
         for(key in listOf("scopeId","ownerId","resourceId","entityId"))E2eeKeys.technical(value.getString(key))
         if(value.get("kind") !in setOf("space","project")||value.get("entityId")!=value.getString("kind")+":"+value.getString("resourceId"))invalid()
         for(key in listOf("generation","directoryRevision","revision"))number(value.get(key),1)
-        E2eeEnvelope.decode(value.getString("checkpointHash"),32);E2eeEnvelope.decode(value.getString("payloadHash"),32)
+        E2eeEnvelope.decode(value.getString("checkpointHash"),32);E2eeEnvelope.decode(value.getString("payloadHash"),32);if(value.has("productIndexHash"))E2eeEnvelope.decode(value.getString("productIndexHash"),32)
     }
     fun checkedAnchor(input:JSONObject)=JSONObject(input.toString()).also{anchor(it)}
     private fun pageProjection(input:JSONObject)=JSONObject().put("format","genesis-membership-page-v2").put("kind",input.get("kind"))

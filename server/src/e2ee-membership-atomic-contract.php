@@ -19,11 +19,11 @@ function genesisMembershipAtomicInteger(mixed $value,int $minimum=0):int
 }
 function genesisMembershipAtomicAnchor(mixed $input):array
 {
-    $row=genesisE2eeExactFields($input,['scopeId','ownerId','kind','resourceId','generation','directoryRevision','checkpointHash','entityId','revision','payloadHash']);
+    $row=genesisE2eeExactFields($input,['scopeId','ownerId','kind','resourceId','generation','directoryRevision','checkpointHash','entityId','revision','payloadHash',...(is_array($input)&&array_key_exists('productIndexHash',$input)?['productIndexHash']:[])]);
     foreach(['scopeId','ownerId','resourceId','entityId'] as $key)genesisE2eeIdentifier($row[$key]);
     if(!in_array($row['kind'],['space','project'],true)||$row['entityId']!==$row['kind'].':'.$row['resourceId'])throw new InvalidArgumentException('E2EE_MEMBERSHIP_ATOMIC_INVALID');
     foreach(['generation','directoryRevision','revision'] as $key)genesisMembershipAtomicInteger($row[$key],1);
-    genesisE2eeDecode($row['checkpointHash'],32);genesisE2eeDecode($row['payloadHash'],32);return $row;
+    genesisE2eeDecode($row['checkpointHash'],32);genesisE2eeDecode($row['payloadHash'],32);if(array_key_exists('productIndexHash',$row))genesisE2eeDecode($row['productIndexHash'],32);return $row;
 }
 /** Structural validation only. Applying a page still requires complete graph,
  * fresh ACL/root anchors and owner-authorized bound commands in the final lock. */

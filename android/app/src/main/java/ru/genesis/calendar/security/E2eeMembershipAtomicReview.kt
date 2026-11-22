@@ -17,7 +17,8 @@ internal object E2eeMembershipAtomicReview {
             .put("pageHash",digest(JSONObject().put("format","genesis-membership-atomic-preview-page-v2").put("after",after).put("page",page)))
     }
     fun request(input:JSONObject):JSONObject {
-        E2eeKeys.exact(input,setOf("format","plan","previewPages","productPages","authorization"));if(input.get("format")!="genesis-membership-atomic-review-v2")invalid()
+        E2eeKeys.exact(input,setOf("format","plan","previewPages","productPages","authorization")+(if(input.has("createdAt"))setOf("createdAt")else emptySet()));if(input.get("format")!="genesis-membership-atomic-review-v2")invalid()
+        if(input.has("createdAt")){val time=input.getString("createdAt");if(!time.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z")))invalid();java.time.Instant.parse(time)}
         val plan=E2eeMembershipAtomicContract.plan(input.getJSONObject("plan"));val previews=input.getJSONArray("previewPages");val size=plan.getJSONArray("scopeIds").length()
         val authorization=input.getJSONObject("authorization");E2eeKeys.exact(authorization,setOf("command","signature"));val command=authorization.getJSONObject("command");E2eeCommands.commandBytes(command).fill(0);E2eeEnvelope.decode(authorization.getString("signature"),64)
         val payload=command.getJSONObject("payload");E2eeKeys.exact(payload,setOf("intentId","planHash"));if(command.get("ownerId")!=plan.get("actorId")||command.get("action")!="membership-atomic-begin"||payload.get("intentId")!=plan.get("intentId")||payload.get("planHash")!=digest(plan))invalid()
@@ -69,7 +70,7 @@ internal object E2eeMembershipAtomicReview {
         };ports.remember(target,response.getJSONArray("events"));ports.current();return actorVerified
     }
     class Collector(rawHeader:JSONObject,private val peers:E2eeMembershipPeerPorts,private val retained:Boolean=false){
-        val header=request(rawHeader);val fingerprint=fingerprint(header);private val plan=header.getJSONObject("plan")
+        val header=request(rawHeader).also{if(!retained&&!it.has("createdAt"))error("E2EE_MEMBERSHIP_REVIEW_REQUIRED")};val fingerprint=fingerprint(header);private val plan=header.getJSONObject("plan")
         private var planAt=0;private var previewAt=0;private var productAt=0;private var finished=false;private var actorVerified=false
         private val anchors=mutableMapOf<String,JSONObject>();private val scopes=linkedMapOf<String,JSONObject>();private val products=mutableMapOf<String,JSONObject>();private val origins=linkedMapOf<String,JSONObject>()
         private var operation:JSONObject?=null;private val grants=mutableListOf<JSONObject>();private val unique=mutableSetOf<String>()
@@ -81,7 +82,7 @@ internal object E2eeMembershipAtomicReview {
                     val key=when(pageKind){
                         "operation"->{if(operation!=null)invalid();operation=JSONObject(row.toString());continue}
                         "operation-grants"->{grants.add(row);"grant:"+row.getString("projectId")}
-                        "anchors"->{val scope=row.getString("scopeId");if(scope !in strings(plan.getJSONArray("scopeIds")))invalid();anchors[scope]=row;"anchor:"+scope}
+                        "anchors"->{val scope=row.getString("scopeId");if(scope !in strings(plan.getJSONArray("scopeIds")))invalid();if(!retained&&!row.has("productIndexHash"))error("E2EE_MEMBERSHIP_REVIEW_REQUIRED");anchors[scope]=row;"anchor:"+scope}
                         "product-operations"->{val scope=row.getString("scopeId");if(scope !in strings(plan.getJSONArray("scopeIds")))invalid();val key="product:"+scope+"\u0000"+row.getString("intentId");products[key]=row
                             for(op in rows(row.getJSONArray("operations")))if(!unique.add("entity:"+scope+"\u0000"+op.getString("entityId")))invalid();key}
                         "acl"->"acl:"+row.getString("table")+"\u0000"+digest(E2eeMembershipContract.fields(row.getJSONObject("key")))

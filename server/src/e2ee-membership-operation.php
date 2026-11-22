@@ -47,6 +47,12 @@ function genesisMembershipOperationCoordinate(string $table,array $key):string
 }
 /** Caller holds a read/write transaction. SQL provides routing/technical
  * authority only; clients additionally pin/decrypt these normal root heads. */
+function genesisMembershipProductIndexHash(PDO $db,array $scope):string
+{
+    $q=$db->prepare('SELECT * FROM e2ee_product_entities WHERE scope_id=? AND generation=? ORDER BY entity_id');$q->execute([$scope['scope_id'],$scope['generation']]);$hashes=[];
+    try{while($row=$q->fetch()){if(count($hashes)>=10000)throw new DomainException('E2EE_SCOPE_OBJECT_LIMIT');$hashes[]=genesisMembershipAtomicDigest(genesisE2eeProductPublic($row));}}finally{$q->closeCursor();}
+    return genesisMembershipAtomicDigest(['format'=>'genesis-membership-product-index-v1','scopeId'=>$scope['scope_id'],'entities'=>$hashes]);
+}
 function genesisMembershipOperationSnapshot(PDO $db,string $actor,string $space,array $operation):array
 {
     if(!$db->inTransaction())throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');$graph=genesisE2eeMembershipGraph($actor,['spaceId'=>$space]);
@@ -55,7 +61,7 @@ function genesisMembershipOperationSnapshot(PDO $db,string $actor,string $space,
         if(!$scope||$scope['kind']!==$kind||$scope['resource_id']!==$resource||!in_array($scope['state'],['active','retirement'],true))throw new DomainException('E2EE_SHARED_TRANSITION_REQUIRED');
         $root=genesisE2eeProductRow($db,$scope,$kind.':'.$resource);if(!$root||$root['kind']!==$kind)throw new DomainException('E2EE_PRODUCT_ENTITY_MISSING');
         return ['scope'=>['scopeId'=>$id,'ownerId'=>$scope['owner_id'],'state'=>$scope['state'],'root'=>['scopeId'=>$id,'entityId'=>$root['entity_id'],'generation'=>(int)$scope['generation'],
-            'directoryRevision'=>(int)$scope['directory_revision'],'checkpointHash'=>$scope['checkpoint_hash'],'revision'=>(int)$root['revision'],'payloadHash'=>$root['payload_hash']]],'root'=>$root];
+            'directoryRevision'=>(int)$scope['directory_revision'],'checkpointHash'=>$scope['checkpoint_hash'],'revision'=>(int)$root['revision'],'payloadHash'=>$root['payload_hash'],'productIndexHash'=>genesisMembershipProductIndexHash($db,$scope)]],'root'=>$root];
     };
     $opened=$scopeRoot('space',$space,$graph['spaceScopeId']);if($opened['root']['deleted'])throw new DomainException('E2EE_MEMBERSHIP_STALE');$projects=[];
     foreach($graph['projects'] as $row){

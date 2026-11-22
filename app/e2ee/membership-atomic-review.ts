@@ -13,7 +13,7 @@ import {membershipAtomicDigest,membershipAtomicPlanHash,membershipAtomicChangeHa
 import {commandBytes,verifyE2eeCommand,type SignedE2eeCommand} from './commands.ts';
 
 export type MembershipAtomicPreviewRef={index:number;after:number;count:number;pageHash:string};
-export type MembershipAtomicReview={format:'genesis-membership-atomic-review-v2';plan:MembershipAtomicPlan;previewPages:MembershipAtomicPreviewRef[];productPages:MembershipAtomicPageRef[];authorization:SignedE2eeCommand};
+export type MembershipAtomicReview={format:'genesis-membership-atomic-review-v2';plan:MembershipAtomicPlan;previewPages:MembershipAtomicPreviewRef[];productPages:MembershipAtomicPageRef[];authorization:SignedE2eeCommand;createdAt?:string};
 export type MembershipAtomicReviewPart={format:'genesis-membership-atomic-review-part-v2';fingerprint:string;kind:'plan'|'preview'|'products';index:number;page:MembershipAtomicPage|MembershipAtomicPreviewPage};
 export type MembershipAtomicOwnerApproval={format:'genesis-membership-atomic-owner-approval-v2';requestFingerprint:string;scopeId:string;packet:SignedE2eeCommand};
 export type MembershipAtomicProductOrigin={scopeId:string;intentId:string;actorId:string;deviceId:string;commandHash:string};
@@ -25,7 +25,8 @@ export function membershipAtomicPreviewRef(index:number,page:MembershipAtomicPre
 /** The header commits to EVERY effects page and the complete attributed roster.
  * Individual parts are bounded; importing a prefix never enables approval. */
 export function validateMembershipAtomicReview(input:unknown):MembershipAtomicReview{
- exactKeys(input,['format','plan','previewPages','productPages','authorization']);if(input.format!=='genesis-membership-atomic-review-v2')invalid();const plan=validateMembershipAtomicPlan(input.plan);
+ exactKeys(input,['format','plan','previewPages','productPages','authorization',...(input&&typeof input==='object'&&Object.hasOwn(input,'createdAt')?['createdAt']:[])]);if(input.format!=='genesis-membership-atomic-review-v2')invalid();const plan=validateMembershipAtomicPlan(input.plan);
+ if(Object.hasOwn(input,'createdAt')&&(typeof input.createdAt!=='string'||input.createdAt.length!==24||!Number.isFinite(Date.parse(input.createdAt))||new Date(input.createdAt).toISOString()!==input.createdAt))invalid();
  exactKeys(input.authorization,['command','signature']);const authorization=input.authorization as SignedE2eeCommand;commandBytes(authorization.command).fill(0);decodeE2eeBytes(authorization.signature,64);
  const command=authorization.command;exactKeys(command.payload,['intentId','planHash']);if(command.ownerId!==plan.actorId||command.action!=='membership-atomic-begin'||command.payload.intentId!==plan.intentId||command.payload.planHash!==membershipAtomicPlanHash(plan))invalid();
  if(!Array.isArray(input.previewPages)||input.previewPages.length<1||input.previewPages.length>plan.scopeIds.length)invalid();let next=0;
@@ -34,9 +35,9 @@ export function validateMembershipAtomicReview(input:unknown):MembershipAtomicRe
  return structuredClone(input) as MembershipAtomicReview;
 }
 export function membershipAtomicReviewFingerprint(input:MembershipAtomicReview){return membershipAtomicDigest(validateMembershipAtomicReview(input));}
-export function createMembershipAtomicReview(plan:MembershipAtomicPlan,previews:MembershipAtomicPreviewPage[],products:MembershipAtomicPage[],authorization:SignedE2eeCommand){
+export function createMembershipAtomicReview(plan:MembershipAtomicPlan,previews:MembershipAtomicPreviewPage[],products:MembershipAtomicPage[],authorization:SignedE2eeCommand,createdAt:string){
  let after=0;const refs=previews.map((page,index)=>{const ref=membershipAtomicPreviewRef(index,page,after);after+=page.scopePlans.length;return ref;});
- return validateMembershipAtomicReview({format:'genesis-membership-atomic-review-v2',plan,previewPages:refs,productPages:products.map((page,index)=>membershipAtomicPageRef(index,page)),authorization});
+ return validateMembershipAtomicReview({format:'genesis-membership-atomic-review-v2',plan,previewPages:refs,productPages:products.map((page,index)=>membershipAtomicPageRef(index,page)),authorization,createdAt});
 }
 export function validateMembershipAtomicReviewPart(input:unknown,request:MembershipAtomicReview):MembershipAtomicReviewPart{
  const header=validateMembershipAtomicReview(request);exactKeys(input,['format','fingerprint','kind','index','page']);
@@ -79,7 +80,7 @@ export class MembershipAtomicReviewCollector{
  readonly header:MembershipAtomicReview;readonly fingerprint:string;
  #planAt=0;#previewAt=0;#productAt=0;#sealed=false;#actorVerified=false;#anchors=new Map<string,MembershipAtomicAnchor>();#scopes=new Map<string,MembershipAtomicScopePreview>();
  #products=new Map<string,MembershipAtomicProducts>();#origins=new Map<string,MembershipAtomicProductOrigin>();#operation:Record<string,unknown>|null=null;#grants:unknown[]=[];#unique=new Set<string>();
- constructor(input:MembershipAtomicReview,private readonly peers:MembershipPeerPorts,private readonly retained=false){this.header=validateMembershipAtomicReview(input);this.fingerprint=membershipAtomicReviewFingerprint(this.header);}
+ constructor(input:MembershipAtomicReview,private readonly peers:MembershipPeerPorts,private readonly retained=false){this.header=validateMembershipAtomicReview(input);if(!retained&&!this.header.createdAt)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');this.fingerprint=membershipAtomicReviewFingerprint(this.header);}
  async consume(input:MembershipAtomicReviewPart){this.peers.current();if(this.#sealed)invalid();const part=validateMembershipAtomicReviewPart(input,this.header);
   if(part.kind==='plan'){
    if(part.index!==this.#planAt||this.#previewAt||this.#productAt)invalid();const page=part.page as MembershipAtomicPage;
@@ -87,7 +88,7 @@ export class MembershipAtomicReviewCollector{
     switch(page.kind){
      case'operation':if(this.#operation)invalid();this.#operation=structuredClone(row) as Record<string,unknown>;continue;
      case'operation-grants':this.#grants.push(row);key='grant:'+String((row as {projectId:string}).projectId);break;
-     case'anchors':{const anchor=row as MembershipAtomicAnchor;if(!this.header.plan.scopeIds.includes(anchor.scopeId))invalid();this.#anchors.set(anchor.scopeId,anchor);key='anchor:'+anchor.scopeId;break;}
+     case'anchors':{const anchor=row as MembershipAtomicAnchor;if(!this.header.plan.scopeIds.includes(anchor.scopeId))invalid();if(!this.retained&&!anchor.productIndexHash)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');this.#anchors.set(anchor.scopeId,anchor);key='anchor:'+anchor.scopeId;break;}
      case'product-operations':{const product=row as MembershipAtomicProducts;if(!this.header.plan.scopeIds.includes(product.scopeId))invalid();key='product:'+product.scopeId+'\0'+product.intentId;this.#products.set(key,product);for(const op of product.operations){const entity='entity:'+product.scopeId+'\0'+op.entityId;if(this.#unique.has(entity))invalid();this.#unique.add(entity);}break;}
      case'acl':{const change=row as {table:string;key:Record<string,unknown>};key='acl:'+change.table+'\0'+membershipAtomicDigest(membershipFields(change.key));break;}
      case'clear-assignments':case'role-events':{const effect=row as {projectId:string;userId:string};key=page.kind+':'+effect.projectId+'\0'+effect.userId;break;}

@@ -21,6 +21,7 @@ export interface MembershipAtomicOwnerPorts{
  read:(id:string)=>Promise<Stored|null>;write:(id:string,value:unknown,expected:number|null)=>Promise<number>;list:(prefix:string)=>Promise<string[]>;
  /** This adapter opens only the authenticated current owner's actual scope. */
  rotate:(scope:MembershipAtomicScopePreview,changeHash:string)=>Promise<SignedE2eeCommand>;
+ reviewEffects:(request:MembershipAtomicReview,scope:MembershipAtomicScopePreview,page:(index:number)=>Promise<MembershipAtomicPage>)=>Promise<void>;
 }
 const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');};
 export function membershipAtomicOwnerId(ownerId:string,fingerprint:string,kind:0|1|2|3=0,suffix=''){
@@ -73,10 +74,14 @@ export class MembershipAtomicOwnerReviews{
  async #complete(request:MembershipAtomicReview){const collector=new MembershipAtomicReviewCollector(request,this.ports.peers);
   for(const kind of ['plan','preview','products'] as const){const refs=kind==='plan'?request.plan.pages:kind==='preview'?request.previewPages:request.productPages;for(let index=0;index<refs.length;index++)await collector.consume(await this.#part(request,kind,index));}
   return collector.finish();}
- review(fingerprint:string){return this.#run(async()=>this.#complete(await this.#request(fingerprint)));}
+ review(fingerprint:string){return this.#run(async()=>{const request=await this.#request(fingerprint),value=await this.#complete(request);
+  for(const scope of value.scopes)if(scope.ownerId===this.ports.ownerId){await this.ports.reviewEffects(request,scope,async index=>(await this.#part(request,'plan',index)).page as MembershipAtomicPage);this.ports.current();}return value;
+ });}
  approve(fingerprint:string,scopeId:string,displayedFingerprint:string,explicitRoles:MembershipAtomicScopePreview['roles']){const held=structuredClone(explicitRoles);return this.#run(async()=>{
   if(displayedFingerprint!==fingerprint)throw new Error('E2EE_MEMBERSHIP_FINGERPRINT_REQUIRED');const request=await this.#request(fingerprint),review=await this.#complete(request),scope=review.scopes.find(row=>row.scopeId===scopeId);
-  if(!scope||scope.ownerId!==this.ports.ownerId||!same(held,scope.roles))invalid();const id=membershipAtomicOwnerId(this.ports.ownerId,fingerprint,2,membershipAtomicOwnerScopeSuffix(scopeId)),old=await this.#read(id);
+  if(!scope||scope.ownerId!==this.ports.ownerId||!same(held,scope.roles))invalid();
+  await this.ports.reviewEffects(request,scope,async index=>(await this.#part(request,'plan',index)).page as MembershipAtomicPage);this.ports.current();
+  const id=membershipAtomicOwnerId(this.ports.ownerId,fingerprint,2,membershipAtomicOwnerScopeSuffix(scopeId)),old=await this.#read(id);
   let consent:MembershipAtomicOwnerConsent,serial:number;
   if(old){const checked=validateMembershipAtomicOwnerLocal(old.value,this.ports.ownerId,request);if(checked.format!=='genesis-membership-atomic-owner-consent-local-v2')invalid();consent=checked;serial=old.serial;if(consent.scopeId!==scopeId||!same(consent.roles,held)||serial!==(consent.packet?2:1))invalid();}
   else{consent={format:'genesis-membership-atomic-owner-consent-local-v2',ownerId:this.ports.ownerId,fingerprint,scopeId,roles:held,packet:null};serial=(await this.#save(id,consent,null)).serial;}
