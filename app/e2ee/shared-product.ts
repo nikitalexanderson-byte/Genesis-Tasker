@@ -1,6 +1,6 @@
 import {E2eePrivateDocument} from './product-repository.ts';
 import {E2eeDeviceDocument} from './device-document.ts';
-import {PRODUCT_KINDS,productDomain,productEntity,productMetadata,type ProductEntity,type ProductKind,type ProductMetadata,type ProductMutation} from './product-contract.ts';
+import {PRODUCT_KINDS,productDomain,productEntity,productMetadata,productMutation,type ProductEntity,type ProductKind,type ProductMetadata,type ProductMutation} from './product-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {verifyProductPage,type VerifiedProductProposal} from './product-proofs.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
@@ -133,10 +133,15 @@ export class E2eeSharedProduct{
   /** Checks the signed normal repository readback before acknowledging a commit
    * performed inside a containing membership transaction. Never sends a POST. */
   confirmPrepared(intentId:string,receipt:Record<string,WireValue>,expectedPacket:SignedE2eeCommand){const held=structuredClone(receipt),packet=structuredClone(expectedPacket);assertTechnical(intentId);return this.#operation(async()=>{
-   const saved=await this.#transaction((await this.#prefix)+intentId).load();if(!saved)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');
-   const operations=saved.value.drafts.map(row=>{if(!row.payloadHash)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');return{...row.operation,payloadHash:row.payloadHash};});
-   const index=await this.#readIndex(false),proof=await this.options.client.verifyServiceProof(packet);this.#current();
-   if(!saved.value.membershipIntentId||proof.command.action!=='product-commit-bound'||proof.command.payload.intentId!==intentId||!same(proof.command.payload.operations,operations))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   const saved=await this.#transaction((await this.#prefix)+intentId).load(),proof=await this.options.client.verifyServiceProof(packet);this.#current();
+   if(proof.command.action!=='product-commit-bound'||proof.command.payload.intentId!==intentId||!Array.isArray(proof.command.payload.operations))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   const own=proof.command.deviceId===this.options.device.deviceId;
+   if(own&&!saved)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');if(saved&&(!own||!saved.value.membershipIntentId))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   const operations=proof.command.payload.operations.map(productMutation);if(operations.length<1||operations.length>100||new Set(operations.map(row=>row.entityId)).size!==operations.length)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   if(saved&&!same(saved.value.drafts.map(row=>{if(!row.payloadHash)throw new Error('E2EE_PRODUCT_TRANSACTION_MISSING');return{...row.operation,payloadHash:row.payloadHash};}),operations))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   if(held.intentId!==intentId||!Array.isArray(held.results)||held.results.length!==operations.length)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
+   for(const operation of operations){const result=held.results.filter(row=>row&&typeof row==='object'&&!Array.isArray(row)&&row.entityId===operation.entityId) as Record<string,WireValue>[];if(result.length!==1||result[0].revision!==operation.expectedRevision+1||result[0].payloadHash!==operation.payloadHash)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');}
+   const index=await this.#readIndex(false);this.#current();
    for(const operation of operations){let entity=index.find(row=>row.entityId===operation.entityId);const revision=operation.expectedRevision+1;
     if(!entity||operation.action==='propose-complete'||entity.revision<revision)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
     if(entity.revision===revision){if(this.#headProofs.get(entity.entityId)!==proof.proofHash)throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');}
@@ -148,8 +153,8 @@ export class E2eeSharedProduct{
     }
     if(entity.entityId!==operation.entityId||entity.revision!==revision||entity.kind!==operation.kind||entity.domain!==operation.domain||entity.objectId!==operation.objectId||entity.payloadHash!==operation.payloadHash
      ||entity.parentId!==operation.parentId||entity.deleted!==(operation.action==='delete')||!same(entity.metadata,operation.metadata))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
-    const value=await this.#read(entity,false),draft=saved.value.drafts.find(row=>row.operation.entityId===operation.entityId)!;if(!same(value,await this.#version(draft.version)))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');
-   }return this.#acknowledge(intentId,operations,held);
+    const value=await this.#read(entity,false);if(saved){const draft=saved.value.drafts.find(row=>row.operation.entityId===operation.entityId)!;if(!same(value,await this.#version(draft.version)))throw new Error('E2EE_PRODUCT_RECEIPT_INVALID');}
+   }return saved?this.#acknowledge(intentId,operations,held):held;
   });}
  flush(intentId:string){assertTechnical(intentId);return this.#operation(()=>this.#flush(intentId));}
  pending(){return this.#operation(async()=>{const prefix=await this.#prefix,ids=await this.options.device.vault.listLocal('draft',prefix);this.#current();const pending:string[]=[];

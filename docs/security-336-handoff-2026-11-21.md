@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: foreign bound-product writer readback (source-only)
+
+Web/native confirmPrepared теперь проверяет исходный подписанный packet и exact
+receipt, нормальный текущий index либо точную historical version/proofHash и
+расшифрованное тело. Чужой доверенный writer не обязан иметь локальный draft
+на устройстве инициатора: readback не создаёт чужой journal и не пишет чужой ack.
+Для собственного writer отсутствие original draft остаётся ошибкой; совпадение
+чужого intent с локальным journal отвергается. Actual writer сохраняется из
+проверенного signed proof, не подменяется initiating actor.
+
+Compiler/lint/tests/build/CI security не запускались, coverage9/20. Остаток:
+получатель/list/accept/decline invitations + pending key-access/activity UI; very-
+wide transport/local records; first personal trusted entry; advanced/forms/
+automation/series/bulk/cross-scope attribution; typed restore; revoked replacement/
+background и оставшаяся source/divergence review исходного prompt.
+
+
 ## 22 ноября: ordinary invitation issue/revoke (source-only)
 
 Новый shared-invitation-request связывает обычные space/project POST invitations

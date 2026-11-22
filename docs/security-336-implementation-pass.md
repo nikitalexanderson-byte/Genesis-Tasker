@@ -1,5 +1,13 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## Foreign bound-product readback (22 November; source-only)
+
+Both normal repositories verify exact signed packet, receipt, current/historical
+head proof and decrypted normal version without requiring another writer’s local
+draft. Own missing input and colliding local journals still fail closed. Foreign
+readback creates no replacement draft or acknowledgement. No compilation/QA.
+
+
 ## Ordinary signed invitation routing (22 November; source-only)
 
 Normal space/project issue and revoke now preserve raw requests, use stable IDs
