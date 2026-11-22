@@ -89,6 +89,7 @@
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity-alias>
 
+        <receiver android:name=".reminders.PrivateReminderReceiver" android:exported="false" />
         <receiver android:name=".reminders.ReminderReceiver" android:exported="false" />
         <receiver android:name=".reminders.HabitNotificationReceiver" android:exported="false" />
         <receiver android:name=".reminders.HabitReminderActionReceiver" android:exported="false" />

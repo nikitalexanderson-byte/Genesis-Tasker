@@ -11,7 +11,7 @@ class ReminderMaintenanceWorker(context: Context, parameters: WorkerParameters) 
     override suspend fun doWork(): Result {
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return Result.success()
         val app = applicationContext as GenesisApplication
-        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return Result.success()
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return try { PrivateReminderProjection.deliver(applicationContext);PrivateReminderProjection.restore(applicationContext);Result.success() } catch(_:Exception){Result.retry()}
         return try {
             app.scheduler.restore(recoverOverdue = true)
             app.scheduler.restoreHabitNotifications()
@@ -50,7 +50,7 @@ class ReminderRecoveryWorker(context: Context, parameters: WorkerParameters) : C
     override suspend fun doWork(): Result {
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return Result.success()
         val app = applicationContext as GenesisApplication
-        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return Result.success()
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))return try { PrivateReminderProjection.deliver(applicationContext);PrivateReminderProjection.restore(applicationContext);Result.success() } catch(_:Exception){Result.retry()}
         return try {
             when (inputData.getString(KIND)) {
                 HABITS -> app.scheduler.restoreHabitNotifications()

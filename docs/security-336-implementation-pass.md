@@ -1,5 +1,15 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: foreground private alarm projection (source-only)
+
+Native task/habit rules compile a bounded8-day/2048-event encrypted technical
+projection. Its independent Keystore key cannot open vault content. Alarm, reboot
+and worker paths only consume opaque times/tokens and emit a generic foreground
+entry; no background task/habit write. Delivery receipt precedes notification,
+with the documented possible omitted alert after a crash. Expiry asks once to
+reopen; no unlimited recurrence promise while locked. Scope changes reschedule.
+Failure uses the existing localized error surface. No compilation/QA/review yet.
+
 ## 23 November: signed fragment batches and aggregate original custody
 
 Signed maxFragments<=50 binds web/API/native requests and exact original replay.

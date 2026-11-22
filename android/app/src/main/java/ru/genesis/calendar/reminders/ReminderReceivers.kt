@@ -117,7 +117,9 @@ class RestoreReceiver : BroadcastReceiver() {
             android.app.AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
-        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)){pending.finish();return}
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)){
+            app.appScope.launch { try { runCatching { PrivateReminderProjection.restore(context) } } finally { pending.finish() } };return
+        }
         ReminderMaintenanceWorker.enqueueImmediate(context)
         app.appScope.launch {
             try {

@@ -1,5 +1,20 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: private reminder projection — код
+
+Foreground compiler использует настоящие task/habit codecs и recurrence/quiet-hour/
+frequency rules. Новый bounded rolling8-day/2048-event projection содержит только
+opaque tokens/times/delivery flags, зашифрован отдельным локальным Keystore key;
+он не открывает root, private content или writer. Receiver/maintenance/boot restore
+читают только эту проекцию и показывают generic GENESIS с foreground входом.
+Acknowledgement сохраняется до notify; возможна потеря одного generic alert при
+crash в этом промежутке, без replay storm. По истечении — один generic unlock
+alert; без нового foreground unlock новые дни не вычисляются. Account switch
+перепланирует технический wakeup, старые данные/очереди не удаляются. Ошибка
+компиляции видна в настройках на существующем14lang error copy. Частота private
+habit reminders меняется в device preferences без legacy writer. Никаких
+compiler/tests/CI/review; приёмка notifications ещё обязательна.
+
 ## 23 ноября: batched signed source transport — код
 
 Web/API/native используют подписанный maxFragments<=50 и bounded2MiB ответы,

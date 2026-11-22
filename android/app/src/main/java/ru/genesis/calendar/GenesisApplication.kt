@@ -6,6 +6,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import ru.genesis.calendar.data.*
 import ru.genesis.calendar.reminders.ReminderScheduler
 
@@ -51,7 +53,7 @@ class GenesisApplication : Application() {
             activeScope.value = next
             if (featureSnapshot?.first != next) featureSnapshot = null
         }
-        appScope.launch { if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(workspaceScope))runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(this@GenesisApplication) } }
+        appScope.launch { runCatching { ru.genesis.calendar.reminders.PrivateReminderProjection.restore(this@GenesisApplication) };if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(workspaceScope))runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(this@GenesisApplication) } }
     }
     val database by lazy {
         Room.databaseBuilder(this, GenesisDatabase::class.java, "genesis.db")
@@ -68,12 +70,26 @@ class GenesisApplication : Application() {
         ru.genesis.calendar.auth.NativeAdviceAgeAccess.load(this)
         val saved = getSharedPreferences("genesis.reminder.scope.v1", MODE_PRIVATE).getString("workspace", localScope)
         activeScope.value = saved?.takeIf { it == localScope || Regex("account-[a-f0-9]{32}").matches(it) } ?: localScope
+        appScope.launch {
+            combine(scopeFlow,ru.genesis.calendar.security.NativePrivateProducts.revision){scope,_->scope}.collectLatest { scope ->
+                if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)||!ru.genesis.calendar.security.NativePrivateProducts.isOpen(scope))return@collectLatest
+                try {
+                    val account=ru.genesis.calendar.security.NativePrivateProducts.currentAccount(scope)
+                    val revision=ru.genesis.calendar.security.NativePrivateProducts.contentRevision(scope)
+                    fun current(){account.requireOpen();check(workspaceScope==scope&&ru.genesis.calendar.security.NativePrivateProducts.contentRevision(scope)==revision){"E2EE_REMINDER_PROJECTION_STALE"}}
+                    current();val snapshot=ru.genesis.calendar.security.NativePrivateProducts.snapshot(scope);current()
+                    ru.genesis.calendar.reminders.PrivateReminderProjection.refresh(this@GenesisApplication,scope,snapshot,::current)
+                    ru.genesis.calendar.security.NativePrivateProducts.reminderProjectionFailed.value=false
+                } catch(error:CancellationException){throw error}
+                catch(_:Exception){ru.genesis.calendar.security.NativePrivateProducts.reminderProjectionFailed.value=true}
+            }
+        }
         scheduler.createChannels()
         ru.genesis.calendar.reminders.ReminderMaintenanceWorker.enqueue(this)
         ru.genesis.calendar.auth.CloudSyncWorker.enqueue(this)
         appScope.launch {
             if (ru.genesis.calendar.security.UpdateGate.blocked.value) return@launch
-            if (ru.genesis.calendar.security.NativePrivateProducts.isProtected(workspaceScope)) return@launch
+            if (ru.genesis.calendar.security.NativePrivateProducts.isProtected(workspaceScope)) { runCatching { ru.genesis.calendar.reminders.PrivateReminderProjection.restore(this@GenesisApplication) };return@launch }
             scheduler.restore(recoverOverdue = true)
             scheduler.restoreHabitNotifications()
             ru.genesis.calendar.reminders.MoonReminderScheduler.restore(this@GenesisApplication)

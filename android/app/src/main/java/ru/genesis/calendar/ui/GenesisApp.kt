@@ -1867,6 +1867,11 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
         }
         "habits" -> HabitSettingsPanel(app, prefs.use24, visibility.dreamJournalEnabled, accountSettings!=null) { onSetVisibility(visibility.copy(dreamJournalEnabled=it)) }
         "reminders" -> {
+        val privateReminderFailed by ru.genesis.calendar.security.NativePrivateProducts.reminderProjectionFailed.collectAsState()
+        if(privateReminderFailed&&ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)) {
+            val privateReminderCopy=remember(prefs.language){app.assets.open("shared-security-copy-v1.json").use { stream->val all=org.json.JSONObject(stream.readBytes().toString(Charsets.UTF_8));all.optJSONObject(prefs.language)?:all.getJSONObject("en") }}
+            UntranslatedText(privateReminderCopy.getString("error"),color=MaterialTheme.colorScheme.error)
+        }
         if (LocalSacredFeaturesEnabled.current) MoonReminderSettings(app, prefs, onSetLocal)
         sharedController?.let { EmailNotificationSettings(it,prefs.use24) }
         SettingsSection("◷", "Системные напоминания", "Проверка разрешений и точности Android",

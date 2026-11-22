@@ -20,6 +20,7 @@ internal object NativePrivateProducts{
     private var applicationContext:Context?=null
     val revision=MutableStateFlow(0L)
     val custodyRevision=MutableStateFlow(0L)
+    val reminderProjectionFailed=MutableStateFlow(false)
     @Synchronized fun initialize(context:Context){
         applicationContext=context.applicationContext
         inventory=E2eePrivatePaths.load(context)
