@@ -1,9 +1,21 @@
 import {useEffect,useState} from 'react';
-import {grantedDevicePaymentRegion,type PaymentRegion,type PaymentRouting} from './billing-location';
+import {grantedDevicePaymentRegion,resolvedPaymentRegion,type PaymentRegion,type PaymentRouting} from './billing-location';
 
-/** Region is an internal ordering hint. No settings or permission prompt is shown by this hook. */
+/** Fresh display/availability signals only, with no new location permission.
+ * Language, time zone and saved currency never establish a Russia location. */
 export function useAutomaticPaymentRegion(routing:PaymentRouting|undefined,userId:string,busy:boolean):PaymentRegion {
   const [device,setDevice]=useState<{userId:string;region:PaymentRegion|null}|null>(null);
+  const [ip,setIp]=useState<{userId:string;region:PaymentRegion}|null>(null);
+  useEffect(()=>{
+    if(busy)return;
+    const controller=new AbortController(),timeout=window.setTimeout(()=>controller.abort(),5000);
+    const base=(process.env.NEXT_PUBLIC_GENESIS_API_URL?.trim()||'/api').replace(/\/$/,'');
+    void fetch(`${base}/billing/location`,{credentials:'omit',cache:'no-store',signal:controller.signal})
+      .then(response=>response.ok?response.json():null).then(value=>{
+        if(!controller.signal.aborted)setIp({userId,region:value?.source==='ip'&&(value.region==='RU'||value.region==='outside-RU')?value.region:'unknown'});
+      }).catch(()=>{if(!controller.signal.aborted)setIp({userId,region:'unknown'});}).finally(()=>window.clearTimeout(timeout));
+    return()=>{controller.abort();window.clearTimeout(timeout);};
+  },[userId,busy]);
   useEffect(()=>{
     if(busy||device?.userId===userId)return;
     const controller=new AbortController();
@@ -12,5 +24,8 @@ export function useAutomaticPaymentRegion(routing:PaymentRouting|undefined,userI
     });
     return()=>controller.abort();
   },[userId,busy,device?.userId]);
-  return device?.userId===userId&&device.region?device.region:routing?.region??'unknown';
+  // Catalog routing may conservatively rule out domestic checkout while the
+  // fresh anonymous IP read is pending. It cannot positively enable it alone.
+  if(routing?.region==='outside-RU')return 'outside-RU';
+  return resolvedPaymentRegion(ip?.userId===userId?ip.region:'unknown',device?.userId===userId?device.region:null);
 }

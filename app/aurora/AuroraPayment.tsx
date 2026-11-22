@@ -3,6 +3,8 @@ import RU from './texts.ru.json';
 import { useEffect, useRef, useState } from 'react';
 import { MODELING_SERVICE_PRICES, modelingAvailableMethod, modelingCheckoutUrl, modelingServiceCopy, type ModelingPaymentCatalog, type ModelingPaymentMethod, type ModelingPaymentOrder } from '../modeling-service';
 import { billingMoney } from '../billing';
+import {billingPricingCurrency} from '../billing-location';
+import {useAutomaticPaymentRegion} from '../use-payment-region';
 import type { Language } from '../i18n';
 import type { AuroraHost } from './host';
 import drawAccessCopy from '../draw-access-copy.json';
@@ -14,6 +16,9 @@ export function AuroraPayment({ host, resultId, onUnlocked }: {
     const text = modelingServiceCopy(host.language as Language), [catalog, setCatalog] = useState<ModelingPaymentCatalog | null>(null), [method, setMethod] = useState<ModelingPaymentMethod | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const key = useRef(crypto.randomUUID()), live = useRef(true), pending = useRef(false);
     const [order, setOrder] = useState<ModelingPaymentOrder | null>(null);
+    const region=useAutomaticPaymentRegion(catalog?.routing,host.ownerId,busy),currency=billingPricingCurrency(region,host.language);
+    const visibleMethods=region==='RU'?(catalog?.methods.filter(modelingAvailableMethod)??[]):[];
+    const effectiveMethod=visibleMethods.find(value=>value.provider===method?.provider)??visibleMethods[0]??null;
     useEffect(() => {
         live.current = true;
         void host.billing<ModelingPaymentCatalog>(`/billing/modeling/catalog?client=${host.client}`).then(c => { if (live.current) {
@@ -51,9 +56,9 @@ export function AuroraPayment({ host, resultId, onUnlocked }: {
                     await open();
                 return;
             }
-            if (!method || !modelingAvailableMethod(method))
+            if (!effectiveMethod || !modelingAvailableMethod(effectiveMethod))
                 throw new Error('BILLING_NOT_CONFIGURED');
-            const value = await host.billing<ModelingPaymentOrder>('/billing/modeling/orders', { method: 'POST', body: JSON.stringify({ resultId, provider: method.provider, client: host.client, idempotencyKey: key.current }) });
+            const value = await host.billing<ModelingPaymentOrder>('/billing/modeling/orders', { method: 'POST', body: JSON.stringify({ resultId, provider: effectiveMethod.provider, client: host.client, idempotencyKey: key.current }) });
             if (value.resultId !== resultId)
                 throw new Error('AURORA_RESULT_MISMATCH');
             if (live.current)
@@ -81,11 +86,11 @@ export function AuroraPayment({ host, resultId, onUnlocked }: {
     return <section className="aurora-payment" aria-label={text.title}>
   <h3>{text.title}</h3><p>{text.description}</p>
   {(catalog?.includedInPlan || catalog?.forecastElitePlus || catalog?.testingAccess) ? <p className="admin-elite-plus">{catalog?.testingAccess ? text.testing : drawAccessCopy[host.language as Language].included}</p> : <>
-   <p className="aurora-price">{billingMoney(MODELING_SERVICE_PRICES.RUB, host.language as Language, 'RUB')} / {billingMoney(MODELING_SERVICE_PRICES.USD, host.language as Language, 'USD')}</p>
-   {catalog?.methods.filter(modelingAvailableMethod).map(m => <label className="aurora-choice" key={m.provider}><input type="radio" name="aurora-payment" checked={method?.provider === m.provider} onChange={() => setMethod(m)} disabled={busy || Boolean(order)}/>{'YooKassa'} · {billingMoney(m.amountMinor, host.language as Language, m.currency)}</label>)}
+   <p className="aurora-price">{billingMoney(MODELING_SERVICE_PRICES[currency], host.language as Language, currency)}</p>
+   {visibleMethods.map(m => <label className="aurora-choice" key={m.provider}><input type="radio" name="aurora-payment" checked={effectiveMethod?.provider === m.provider} onChange={() => setMethod(m)} disabled={busy || Boolean(order)}/>{'YooKassa'} · {billingMoney(m.amountMinor, host.language as Language, m.currency)}</label>)}
   </>}
-  <div className="aurora-actions"><button type="button" className="primary-button" disabled={busy || !catalog || !catalog.includedInPlan && !catalog.forecastElitePlus && !catalog.testingAccess && !method} onClick={() => void perform()}>{busy ? RU.text0001 : (catalog?.includedInPlan || catalog?.forecastElitePlus || catalog?.testingAccess) ? text.open : text.pay}</button>
+  <div className="aurora-actions"><button type="button" className="primary-button" disabled={busy || !catalog || !catalog.includedInPlan && !catalog.forecastElitePlus && !catalog.testingAccess && !effectiveMethod} onClick={() => void perform()}>{busy ? RU.text0001 : (catalog?.includedInPlan || catalog?.forecastElitePlus || catalog?.testingAccess) ? text.open : text.pay}</button>
    <button type="button" className="secondary-button" disabled={busy} onClick={() => void perform(true)}>{text.check}</button></div>
-  {catalog && !catalog.includedInPlan && !catalog.forecastElitePlus && !catalog.testingAccess && !method ? <p role="status">{text.unavailable}</p> : null}{error ? <p role="alert">{error}</p> : null}
+  {catalog && !catalog.includedInPlan && !catalog.forecastElitePlus && !catalog.testingAccess && !effectiveMethod ? <p role="status">{text.unavailable}</p> : null}{error ? <p role="alert">{error}</p> : null}
  </section>;
 }
