@@ -5,6 +5,16 @@ html[data-genesis-theme="standart-dark"] .genesis-app .today-view .hero-card.mod
 }
 html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [data-genesis-palette="blue"], [data-genesis-palette="violet"]) .genesis-app .today-view .hero-card.mode-lunar > .hero-palette-art { filter: url(#genesis-palette-art) brightness(.6); }
 
+/* The patron name belongs inside the moon on both desktop and mobile. */
+html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-number {
+  position:relative; display:grid; place-items:center;
+}
+html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-number small {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center; margin:0; max-width:none; padding:0;
+  color:#fff; mix-blend-mode:difference; background:transparent; border:0; border-radius:0; box-shadow:none; text-shadow:none;
+  font:600 12px/1.2 var(--font-ui); letter-spacing:0; text-transform:none; text-align:center; white-space:nowrap;
+}
+
 @media (max-width: 760px) {
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] {
     --lunar-orb-size:clamp(84px,24vw,96px);
@@ -19,9 +29,7 @@ html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [
   }
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-mode-moon { width:100%; height:100%; }
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-number small {
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; margin:0; max-width:none; padding:0;
-    color:#fff; mix-blend-mode:difference; background:transparent; border:0; border-radius:0; box-shadow:none; text-shadow:none;
-    font:600 clamp(10px,3vw,12px)/1.2 var(--font-ui); letter-spacing:0; text-transform:none; text-align:center; white-space:nowrap;
+    font-size:clamp(10px,3vw,12px);
   }
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .device-clock {
     position: static; grid-column: 2; grid-row: 1; justify-self: end; align-self: start; box-sizing: border-box;
