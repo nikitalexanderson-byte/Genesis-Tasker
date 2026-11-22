@@ -4,6 +4,7 @@ import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,loadGenesis
 import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration,closePrivateMigrationUi,type PrivateMigrationUi} from './private-migration-ui';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import migrationCopy from '../contracts/e2ee/migration-copy-v1.json' with {type:'json'};
+import cancelCopy from '../contracts/e2ee/migration-cancel-copy-v1.json';
 import {isLanguage} from './i18n';
 import {createRecoveryKit,type RecoveryKit} from './e2ee/keys';
 import {decodeE2eeBytes,encodeE2eeBytes} from './e2ee/envelope';
@@ -30,11 +31,12 @@ export function PrivateMigrationGate(){
  return state?<MigrationForm key={state.id} state={state}/>:null;
 }
 function MigrationForm({state}:{state:PrivateMigrationUi}){
- const language=isLanguage(state.language)?state.language:'en',copy=migrationCopy[language],vaultCopy=PRIVATE_VAULT_COPY[language];
- const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'>(state.reason==='resume'?'confirm':'loading');
+ const language=isLanguage(state.language)?state.language:'en',copy=migrationCopy[language],cancellation=cancelCopy[language],vaultCopy=PRIVATE_VAULT_COPY[language];
+ const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'|'cancelled'>(state.reason==='resume'?'confirm':'loading');
  const [generated,setGenerated]=useState<{secret:string;kit:RecoveryKit}|null>(null),[savedFile,setSavedFile]=useState(false),[savedSecret,setSavedSecret]=useState(false);
  const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[fileBusy,setFileBusy]=useState(false),[busy,setBusy]=useState(false);
  const [stopping,setStopping]=useState(false);
+ const [cancelConfirmed,setCancelConfirmed]=useState(false),[cancelling,setCancelling]=useState(false);
  const [error,setError]=useState(''),[progress,setProgress]=useState<'snapshot'|'sources'|'reconciliation'|'uploading'|'active'>('snapshot');
  const controller=useRef<WebProductMigration|null>(null),alive=useRef(true),started=useRef(false),fileRequest=useRef(0),ownerId=state.ownerId;
  const attempt=useRef<{stopping:boolean;drained:Promise<void>}|null>(null);
@@ -44,7 +46,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  useEffect(()=>{
   alive.current=true;const content=document.getElementById('genesis-app-content'),inert=content?.inert,hidden=content?.getAttribute('aria-hidden'),overflow=document.body.style.overflow;
   if(content){content.inert=true;content.setAttribute('aria-hidden','true');}document.body.style.overflow='hidden';
-  const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setPhase(started.current?'confirm':'intro');setError(copy.error);};
+  const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setCancelConfirmed(false);setPhase(started.current?'confirm':'intro');setError(copy.error);};
   document.addEventListener('visibilitychange',clearSecrets);
   return()=>{alive.current=false;fileRequest.current++;controller.current?.close();controller.current=null;document.removeEventListener('visibilitychange',clearSecrets);
    if(content){content.inert=inert??false;if(hidden===null)content.removeAttribute('aria-hidden');else if(hidden!==undefined)content.setAttribute('aria-hidden',hidden);}document.body.style.overflow=overflow;};
@@ -54,18 +56,23 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
   const code=reason instanceof Error?reason.message:'';
   return code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
  };
- const submit=async(event:FormEvent)=>{
-  event.preventDefault();if(busy||fileBusy||!kit||attempt.current)return;setBusy(true);setError('');started.current=true;let held:Uint8Array|undefined;
+ const submit=async(event:FormEvent,cancel=false)=>{
+  event.preventDefault();if(busy||fileBusy||!kit||attempt.current||cancel&&!cancelConfirmed)return;setBusy(true);setCancelling(cancel);setCancelConfirmed(false);setError('');started.current=true;let held:Uint8Array|undefined;
   let drained!:()=>void;const active={stopping:false,drained:new Promise<void>(resolve=>{drained=resolve;})};attempt.current=active;
   try{
    frozen();held=decodeE2eeBytes(secret.trim(),32);setSecret('');setPhase('running');
    const opened=await prepareCurrentPrivateMigration(held,kit,frozen);current();controller.current=opened;
+   if(cancel){
+    await opened.cancel(held,kit);current();opened.close();controller.current=null;
+    const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId||identity.privateVault)throw new Error('E2EE_ACCOUNT_CHANGED');
+    setKit(undefined);setPhase('cancelled');return;
+   }
    await opened.run(held,kit,value=>{current();setProgress(value);});current();opened.close();controller.current=null;
    setPhase('done');const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
    privateAccountRequired(ownerId,language);await unlockCurrentPrivateAccount(encodeE2eeBytes(held),kit);current();
    setKit(undefined);window.dispatchEvent(new Event('genesis-private-migration-complete'));closePrivateMigrationUi(state.id);
   }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){setError(active.stopping?'':failure(reason));setPhase('confirm');}}
-  finally{held?.fill(0);controller.current?.close();controller.current=null;if(attempt.current===active)attempt.current=null;drained();if(alive.current&&!active.stopping)setBusy(false);}
+  finally{held?.fill(0);controller.current?.close();controller.current=null;if(attempt.current===active)attempt.current=null;drained();if(alive.current){setCancelling(false);if(!active.stopping)setBusy(false);}}
  };
  const pause=async()=>{
   const active=attempt.current;if(!active||active.stopping)return;active.stopping=true;setStopping(true);
@@ -96,8 +103,11 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
     }}/></label>
     <label className="workspace-recovery-field"><span>{vaultCopy.secret}</span><div><input data-dialog-initial-focus type="password" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={64} value={secret} onChange={event=>setSecret(event.target.value)} disabled={busy||fileBusy} required/></div></label>
     <button type="submit" className="primary-button" disabled={busy||fileBusy||!kit||!secret.trim()}>{state.reason==='resume'||started.current?copy.resume:copy.begin}</button>
+    {state.reason==='resume'||started.current?<><label className="backup-check"><input type="checkbox" checked={cancelConfirmed} disabled={busy||fileBusy} onChange={event=>setCancelConfirmed(event.target.checked)}/>{cancellation.confirm}</label>
+     <button type="button" className="text-button" disabled={busy||fileBusy||!kit||!secret.trim()||!cancelConfirmed} onClick={event=>{void submit(event,true);}}>{cancellation.action}</button></>:null}
    </>:null}
-   {phase==='running'||phase==='done'?<p role="status" aria-live="polite">{phase==='done'||progress==='active'?copy.done:copy[progress]}</p>:null}
+   {phase==='running'||phase==='done'?<p role="status" aria-live="polite">{cancelling?cancellation.action:phase==='done'||progress==='active'?copy.done:copy[progress]}</p>:null}
+   {phase==='cancelled'?<><p role="status">{cancellation.done}</p><button type="button" className="text-button" disabled={busy} onClick={()=>closePrivateMigrationUi(state.id)}>{copy.close}</button></>:null}
    {phase==='running'?<button type="button" className="text-button" disabled={stopping} onClick={()=>{void pause();}}>{stopping?vaultCopy.busy:copy.stop}</button>:null}
    {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
    <p className="workspace-recovery-hint">{copy.kept}</p>

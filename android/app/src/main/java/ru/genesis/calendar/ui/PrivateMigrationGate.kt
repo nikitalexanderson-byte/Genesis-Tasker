@@ -68,12 +68,15 @@ private fun migrationText(context:android.content.Context,language:String,name:S
 @Composable private fun PrivateMigrationDialog(controller:AuthController,auth:AuthPanelState,view:NativeMigrationUiState.View){
     val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val scope=rememberCoroutineScope()
     val text=remember(view.language){migrationText(context,view.language,"migration-copy-v1.json")};val vault=remember(view.language){migrationText(context,view.language,"vault-copy-v1.json")}
+    val cancellation=remember(view.language){migrationText(context,view.language,"migration-cancel-copy-v1.json")}
     var phase by remember{mutableStateOf(if(view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
     val generatedMaterial=remember{AtomicReference<NativeRecoveryMaterial?>(null)}
     var generatedId by remember{mutableStateOf<String?>(null)}
     var savedFile by remember{mutableStateOf(false)};var savedSecret by remember{mutableStateOf(false)}
     var secret by remember{mutableStateOf("")};var kit by remember{mutableStateOf<JSONObject?>(null)};var busy by remember{mutableStateOf(false)}
     var stopping by remember{mutableStateOf(false)}
+    var cancelConfirmed by remember{mutableStateOf(false)};var cancelling by remember{mutableStateOf(false)}
+    val cancellationAttempt=remember{AtomicLong(-1)}
     var error by remember{mutableStateOf("")};var progress by remember{mutableStateOf("snapshot")};var started by remember{mutableStateOf(view.resume)}
     val alive=remember{AtomicBoolean(true)};val prepared=remember{AtomicReference<E2eeProductMigrationController?>(null)}
     val pendingFile=remember{AtomicReference<NativeRecoveryFileRequest?>(null)}
@@ -95,13 +98,23 @@ private fun migrationText(context:android.content.Context,language:String,name:S
         check(pendingFile.compareAndSet(null,request)){request.close();"E2EE_RECOVERY_REQUEST_CHANGED"}
         busy=true;error="";fileActivity=request
     }
+    fun startCredential(cancel:Boolean){
+        if(busy||pendingCredential.get()!=null||cancel&&!cancelConfirmed)return
+        try{
+            foreground()
+            val request=NativeMigrationCredential.capture(view.owner,view.id,credentialAttempt.incrementAndGet(),secret,requireNotNull(kit){"E2EE_RECOVERY_KIT_REQUIRED"},SystemClock.elapsedRealtime(),controller.privateUiOwnerGuard(view.owner))
+            check(pendingCredential.compareAndSet(null,request)){request.close();"E2EE_CREDENTIAL_PENDING"}
+            cancellationAttempt.set(if(cancel)request.attempt else -1);cancelling=cancel;cancelConfirmed=false
+            secret="";kit=null;busy=true;credentialActivity=request
+        }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=text.getString("error")}}
+    }
     fun message(reason:Exception):String=if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
     DisposableEffect(view.id,lifecycle){
         val observer=LifecycleEventObserver{_,event->
           if(event==Lifecycle.Event.ON_RESUME)foregroundState.set(true)
           if(event==Lifecycle.Event.ON_PAUSE)foregroundState.set(false)
           if(event==Lifecycle.Event.ON_STOP){
-            prepared.getAndSet(null)?.let(controller::closePrivateMigration);secret="";kit=null
+            prepared.getAndSet(null)?.let(controller::closePrivateMigration);secret="";kit=null;cancelConfirmed=false
             activeSecret.getAndSet(null)?.fill(0)
             if(pendingFile.get()?.waitingForPicker!=true){clearGenerated();if(phase=="generated")phase=if(started)"confirm"else"intro"}
         }};lifecycle.addObserver(observer)
@@ -139,8 +152,9 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 started=true;phase="running";error=""
                 val suppliedKit=requireNotNull(material.kit){"E2EE_RECOVERY_KIT_REQUIRED"}
                 val next=controller.preparePrivateMigration(material.secret,suppliedKit,::owns);migration=next;owns();prepared.set(next)
-                next.run(material.secret,suppliedKit){value->owns();progress=value};owns()
-                prepared.compareAndSet(next,null);controller.closePrivateMigration(next);migration=null;kit=null;phase="done";controller.checkSession()
+                val cancel=cancellationAttempt.get()==request.attempt
+                if(cancel)next.cancel(material.secret,suppliedKit)else next.run(material.secret,suppliedKit){value->owns();progress=value};owns()
+                prepared.compareAndSet(next,null);controller.closePrivateMigration(next);migration=null;kit=null;phase=if(cancel)"cancelled"else"done";controller.checkSession()
             }finally{
                 activeSecret.compareAndSet(material.secret,null)
                 migration?.let{prepared.compareAndSet(it,null);controller.closePrivateMigration(it)}
@@ -148,7 +162,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             }
     },finished={request,reason->
         if(pendingCredential.compareAndSet(request,null)&&alive.get()){
-            credentialActivity=null;secret="";kit=null;if(!stopping)busy=false
+            credentialActivity=null;secret="";kit=null;cancelling=false;if(!stopping)busy=false
             if(reason!=null){if(!stopping)error=message(reason);phase="confirm"}
         }
     })
@@ -179,16 +193,19 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                     Text(text.getString("confirm"));TextButton(onClick={try{foreground();kit=null;val guard=fileGuard(fileAttempt.incrementAndGet());startFile(NativeRecoveryFileRequest.read(view.owner,view.id,guard))}catch(reason:Exception){error=message(reason)}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("kit"))}
                     OutlinedTextField(secret,{secret=it.take(64)},label={Text(vault.getString("secret"))},visualTransformation=PasswordVisualTransformation(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
                     if(!keyguard.isDeviceSecure)Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("screenLock"))}
-                    else Button(onClick={
-                        if(!busy&&pendingCredential.get()==null)try{
-                            foreground()
-                            val request=NativeMigrationCredential.capture(view.owner,view.id,credentialAttempt.incrementAndGet(),secret,requireNotNull(kit){"E2EE_RECOVERY_KIT_REQUIRED"},SystemClock.elapsedRealtime(),controller.privateUiOwnerGuard(view.owner))
-                            check(pendingCredential.compareAndSet(null,request)){request.close();"E2EE_CREDENTIAL_PENDING"}
-                            secret="";kit=null;busy=true;credentialActivity=request
-                        }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=message(reason)}}
-                    },enabled=!busy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
+                    else{
+                        Button(onClick={startCredential(false)},enabled=!busy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
+                        if(started||view.resume){
+                            Row{Checkbox(checked=cancelConfirmed,onCheckedChange={cancelConfirmed=it},enabled=!busy);Text(cancellation.getString("confirm"))}
+                            OutlinedButton(onClick={startCredential(true)},enabled=!busy&&cancelConfirmed&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(cancellation.getString("action"))}
+                        }
+                    }
                 }
-                if(phase=="running"||phase=="done")Text(text.getString(if(phase=="done"||progress=="active")"done"else progress))
+                if(phase=="running"||phase=="done")Text(if(cancelling)cancellation.getString("action")else text.getString(if(phase=="done"||progress=="active")"done"else progress))
+                if(phase=="cancelled"){
+                    Text(cancellation.getString("done"))
+                    TextButton(onClick={NativeMigrationUiState.close(view.id)},enabled=!busy&&!auth.busy&&!auth.requiresSignIn&&auth.user?.uid==view.owner&&auth.user?.privateVault==false,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
+                }
                 if(phase=="running")TextButton(onClick={if(!stopping){
                     stopping=true;credentialAttempt.incrementAndGet();scope.launch{
                         try{migrationJob.get()?.cancelAndJoin()}

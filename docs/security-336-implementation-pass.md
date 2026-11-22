@@ -10,6 +10,24 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Explicit remote cancellation UI (candidate, no compilation/QA)
+
+The actual web/native migration gates now expose a distinct confirmed cancellation
+action after pausing/draining or re-entering a pending migration. It reopens the
+saved recovery kit, uses the existing exact credential attempt, invokes the
+controller's signed cancellation/replay path and only reports success after a
+fresh verified preparing directory and local-fence release. Already active scopes
+remain non-revertible. Confirmation/status copy is shared in fourteen languages;
+recovery material and confirmation clear on background. Native cancellation mode
+is pinned to the exact credential attempt rather than a later mutable button state.
+
+No missing-journal shortcut was added. A missing/corrupt local state, unknown
+ownership role, unresolved response or failed final verification still retains
+the barrier. Full state4 cancelled-ancestor restart/history and global previous
+original/plan ownership authentication remain implementation work; no prefix
+filter, ignore-list or source deletion was introduced. No tests/compiler/lint/
+build/CI/push/release ran; accepted coverage remains9/20.
+
 ### Personal encrypted Drive backup composition (candidate, no compilation/QA)
 
 Replaced the disabled web adapter stub with actual independent Drive web/native
