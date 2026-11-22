@@ -9,6 +9,7 @@ import {requiredPrivatePaths} from './private-paths.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import type {SourceStageReadVault,SourceStageTarget} from './source-stage.ts';
 import type {MigrationState} from './migration.ts';
+import {unresolvedMigrationStart,authenticateMigrationStartCancellation} from './migration-start-cancel.ts';
 
 export type RetainedMigrationFrame=Readonly<Pick<VerifiedDirectory,'ownerId'|'scopeId'|'resourceId'|'kind'|'cryptoEpoch'|'securityEpoch'|'keyId'|'checkpoint'>&{own:VerifiedDevice|null}>;
 const decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true});
@@ -54,7 +55,9 @@ export async function authenticateRetainedMigrationControls(state:MigrationState
   }else invalid();
   if(state.protocol===4&&name==='pending'&&!['migration-start','migration-cancel'].includes(command.action))invalid();
  }
- if(!state.lease&&(state.resuming||state.sourceHash!==null&&!state.pending)||['active','cancelled'].includes(state.phase)&&(state.pending||state.resuming))invalid();
+ const cancelledStart=await authenticateMigrationStartCancellation(state,frame,deviceId,current);
+ if(!state.lease&&(state.resuming||state.sourceHash!==null&&!state.pending&&!cancelledStart)
+  ||['active','cancelled'].includes(state.phase)&&(state.pending||state.resuming)&&!(state.phase==='cancelled'&&unresolvedMigrationStart(state)))invalid();
  if(state.protocol===4&&state.cancelReceipt){exactKeys(state.cancelReceipt.result,['state']);if(state.phase!=='cancelled'||state.cancelReceipt.result.state!=='preparing')invalid();}
  return signer;
 }

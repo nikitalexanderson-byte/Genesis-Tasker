@@ -70,6 +70,7 @@ class E2eeMigration(
     private class Loaded(var state: JSONObject, var serial: Long,var rawHash:String="")
     private data class PlanningDevice(val userId:String,val role:String,val revoked:Boolean,val signingKey:String)
     private val planningDevices=directory.devices.mapValues{(_,device)->PlanningDevice(device.userId,device.role,device.revoked,device.signingKey)}
+    private val initialDirectory=directory
     private val ownerId = directory.ownerId
     private val scopeId = directory.scopeId
     private val kind = directory.kind
@@ -269,7 +270,8 @@ class E2eeMigration(
                 check(if(pending==null)payload.isNull("pendingOperationId")&&payload.isNull("pendingHash")else payload.get("pendingOperationId")==pending.get("operationId")&&payload.get("pendingHash")==E2eeCommands.hash(pending)){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
             }
         }
-        check(!state.isNull("lease")||state.isNull("resuming")&&(state.isNull("sourceHash")||!state.isNull("pending"))){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
+        val cancelledStart=E2eeMigrationStartCancellation.authenticate(state,initialDirectory,deviceId,current)
+        check(!state.isNull("lease")||state.isNull("resuming")&&(state.isNull("sourceHash")||!state.isNull("pending")||cancelledStart)){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}
     }
     private fun sameTechnical(left:Any,right:Any):Boolean {
         val a=E2eeCommands.canonical(left);val b=E2eeCommands.canonical(right)
@@ -364,7 +366,7 @@ class E2eeMigration(
                 loaded=load();current()
             }
             val state=loaded.state;check(number(state,"protocol")==4L){"E2EE_STREAMED_PLANNING_REQUIRED"}
-            check(state.get("phase")=="preparing"&&nullable(state,"pending")?.getJSONObject("command")?.get("action")!="migration-cancel"){"E2EE_MIGRATION_CANCELLATION_PENDING"}
+            check(state.get("phase")=="preparing"&&nullable(state,"pending")?.getJSONObject("command")?.get("action")!="migration-cancel"&&!state.has("startCancellation")){"E2EE_MIGRATION_CANCELLATION_PENDING"}
             assertPlanningPackets(state,publicKey,current);checkOwnedOriginals(state,policy,publicKey)
             drainHistory(preparedHistory(loaded,policy),current);current()
             if(!state.isNull("resuming"))resume(loaded,current);current()
@@ -757,6 +759,7 @@ class E2eeMigration(
     private suspend fun runLocked(policy:PlanningPolicy?=null): String {
         val loaded = load(); val state = loaded.state
         val current=policy?.current?:vault::requireOpen;current()
+        check(!state.has("startCancellation")&&!(state.get("phase")=="cancelled"&&(!state.isNull("pending")||!state.isNull("resuming")))){"E2EE_MIGRATION_CANCELLATION_PENDING"}
         if(number(state,"protocol")==3L&&state.get("phase")=="cancelled")return "cancelled"
         check(number(state,"protocol")<3L||number(state,"protocol")==5L&&policy!=null){"E2EE_STREAMED_PLANNER_REQUIRED"}
         ensureDurableKeys()
@@ -833,9 +836,19 @@ class E2eeMigration(
             current();check(initialState !in setOf("active","retirement")){"E2EE_DOWNGRADE_FORBIDDEN"}
             val loaded=load();current();val state=loaded.state
             ownershipCatalogue(policy).use{it.assertUnchanged();current()}
-            if(number(state,"protocol")!=4L){cancelLocked();current();return@fenced}
+            if(number(state,"protocol")!=4L){
+                cancelLocked(current);current();ownershipCatalogue(policy).use{it.assertUnchanged();current()};return@fenced
+            }
             val publicKey=planningSigner(policy);assertPlanningPackets(state,publicKey,current);checkOwnedOriginals(state,policy,publicKey)
             val totals=drainHistory(preparedHistory(loaded,policy),current).totals;current()
+            if(E2eeMigrationStartCancellation.unresolved(state)||state.has("startCancellation")){
+                cancelUnresolvedStart(loaded,current){additional->
+                    val metadata=totals.metadataBytes.toLong()+additional
+                    check(metadata<=policy.options.capacity.maximumMetadataBytes){"E2EE_SOURCE_HISTORY_CAPACITY"}
+                    policy.options.admit(totals.copy(metadataBytes=metadata.toInt()));current()
+                }
+                ownershipCatalogue(policy).use{it.assertUnchanged();current()};return@fenced
+            }
             if(state.get("phase")=="cancelled")return@fenced
             if(!state.isNull("resuming"))resume(loaded,current);current()
             if(!state.isNull("pending"))replay(loaded,current);current()
@@ -857,20 +870,54 @@ class E2eeMigration(
         }
     }
     suspend fun cancel() = fenced { cancelLocked() }
-    private suspend fun cancelLocked() {
+    /** Save the resolver and its original start before IO. A timeout repeats
+     * that exact resolver, never a newly signed start or an inferred outcome. */
+    private suspend fun cancelUnresolvedStart(loaded:Loaded,current:()->Unit,admit:((Int)->Unit)?=null){
+        val state=loaded.state;current()
+        if(!state.has("startCancellation")){
+            check(E2eeMigrationStartCancellation.unresolved(state)){"E2EE_MIGRATION_CANCELLATION_PENDING"}
+            val original=JSONObject(state.getJSONObject("pending").toString());val raw=encoded(state)
+            try{
+                val request=packet(state,"migration-cancel-start",JSONObject().put("original",original));current()
+                state.put("startCancellation",JSONObject().put("packet",request).put("result",JSONObject.NULL));E2eeMigrationStartCancellation.validateShape(state)
+                val bytes=encoded(state)
+                try{check(bytes.size<=4*1024*1024){"E2EE_STREAMED_METADATA_LIMIT"};admit?.invoke(raw.size+bytes.size+65536);current()}finally{bytes.fill(0)}
+                ensureDurableKeys();current()
+                save(loaded,listOf(UnlockedE2eeVault.Write("local-snapshot","${state.getString("migrationId")}:cancel:${UUID.randomUUID()}",raw,null)),current)
+            }finally{raw.fill(0)}
+        }
+        if(E2eeMigrationStartCancellation.authenticate(state,initialDirectory,deviceId,current))return
+        val saved=state.getJSONObject("startCancellation")
+        check(saved.isNull("result")){"E2EE_MIGRATION_CANCELLATION_PENDING"}
+        val result=JSONObject(transport.command(JSONObject(saved.getJSONObject("packet").toString())).toString());current()
+        val next=JSONObject(state.toString()).put("phase","cancelled").put("pending",JSONObject.NULL).put("resuming",JSONObject.NULL)
+            .put("startCancellation",JSONObject().put("packet",saved.getJSONObject("packet")).put("result",result))
+        E2eeMigrationStartCancellation.validateShape(next);E2eeMigrationStartCancellation.authenticate(next,initialDirectory,deviceId,current);current()
+        val bytes=encoded(next)
+        try{
+            check(bytes.size<=4*1024*1024){"E2EE_STREAMED_METADATA_LIMIT"};admit?.invoke(bytes.size+65536);current()
+            loaded.state=next;save(loaded,current=current)
+        }finally{bytes.fill(0)}
+    }
+    private suspend fun cancelLocked(current:()->Unit={vault.requireOpen()}) {
         val loaded = load(); val state = loaded.state
-        if (state.get("phase") == "cancelled") return
+        current()
+        if(E2eeMigrationStartCancellation.unresolved(state)||state.has("startCancellation")){cancelUnresolvedStart(loaded,current);return}
+        if (state.get("phase") == "cancelled") {check(state.isNull("pending")&&state.isNull("resuming")){"E2EE_MIGRATION_CANCELLATION_PENDING"};return}
         check(number(state,"protocol")!=4L){"E2EE_STREAMED_PLANNER_REQUIRED"}
-        if (!state.isNull("resuming")) try { resume(loaded) } catch (error: Exception) { if (error.message != "E2EE_SOURCE_CHANGED") throw error }
-        if (nullable(state,"pending")?.getJSONObject("command")?.get("action") in setOf("migration-start","migration-commit")) try { replay(loaded) }
+        if (!state.isNull("resuming")) try { resume(loaded,current) } catch (error: Exception) { if (error.message != "E2EE_SOURCE_CHANGED") throw error }
+        if (nullable(state,"pending")?.getJSONObject("command")?.get("action") in setOf("migration-start","migration-commit")) try { replay(loaded,current) }
         catch (error: Exception) { if (error.message !in setOf("E2EE_SOURCE_CHANGED","E2EE_MIGRATION_FENCED")) throw error }
         check(state.get("phase") != "active") { "E2EE_DOWNGRADE_FORBIDDEN" }
         val bytes = encoded(state)
-        try { save(loaded,listOf(UnlockedE2eeVault.Write("local-snapshot","${state.getString("migrationId")}:cancel:${UUID.randomUUID()}",bytes,null))) }
+        try { save(loaded,listOf(UnlockedE2eeVault.Write("local-snapshot","${state.getString("migrationId")}:cancel:${UUID.randomUUID()}",bytes,null)),current) }
         finally { bytes.fill(0) }
         state.put("resuming",JSONObject.NULL)
-        if (!state.isNull("lease")) send(loaded,packet(state,"migration-cancel",JSONObject().put("migrationId",state.get("migrationId")).put("fence",lease(state).get("fence"))))
-        else { state.put("phase","cancelled"); save(loaded) }
+        if (!state.isNull("lease")) send(loaded,packet(state,"migration-cancel",JSONObject().put("migrationId",state.get("migrationId")).put("fence",lease(state).get("fence"))),current)
+        else {
+            check(state.isNull("pending")&&state.isNull("resuming")&&state.isNull("sourceHash")){"E2EE_MIGRATION_CANCELLATION_PENDING"}
+            state.put("phase","cancelled");save(loaded,current=current)
+        }
     }
     suspend fun restart() = fenced { check((loadOrNull()?.state?.let{number(it,"protocol")}?:0)<3L){"E2EE_STREAMED_SOURCE_REQUIRED"};cancelLocked(); prepareLocked() }
     suspend fun restartStaged(capture:E2eeStagedMigrationCapture,options:E2eeStagedMigrationOptions) {

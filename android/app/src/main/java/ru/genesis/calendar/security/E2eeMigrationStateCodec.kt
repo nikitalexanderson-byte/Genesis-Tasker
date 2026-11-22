@@ -13,7 +13,7 @@ internal object E2eeMigrationStateCodec {
         val protocol=number(state,"protocol")
         check(protocol in setOf(1L,2L,3L,4L,5L) && state.getString("phase") in phases) { "E2EE_CORRUPT_MIGRATION" }
         E2eeKeys.exact(state,setOf("protocol","migrationId","phase","ancestors","sourceHash","lease","plan","logical","uploaded","manifestHash","verifiedCheckpoint","pending","resuming","checkpointHash","directoryRevision")+
-            (if(protocol>=3L)setOf("source")else setOf("snapshotParts","snapshotSize","snapshotHash"))+(if(protocol in setOf(4L,5L))setOf("ownership")else emptySet())+(if(protocol==5L)setOf("adopted")else emptySet())+(if(protocol==4L&&state.has("cancelReceipt"))setOf("cancelReceipt")else emptySet())+(if(protocol!=1L)setOf("local","planned")else emptySet()))
+            (if(protocol>=3L)setOf("source")else setOf("snapshotParts","snapshotSize","snapshotHash"))+(if(protocol in setOf(4L,5L))setOf("ownership")else emptySet())+(if(protocol==5L)setOf("adopted")else emptySet())+(if(protocol==4L&&state.has("cancelReceipt"))setOf("cancelReceipt")else emptySet())+(if(state.has("startCancellation"))setOf("startCancellation")else emptySet())+(if(protocol!=1L)setOf("local","planned")else emptySet()))
         E2eeKeys.technical(state.getString("migrationId"))
         val plan = state.getJSONArray("plan"); val logical = state.getJSONArray("logical"); val ancestors = state.getJSONArray("ancestors")
         check(plan.length() <= 10000 && logical.length() <= 10000 && number(state,"uploaded") <= plan.length()
@@ -27,6 +27,7 @@ internal object E2eeMigrationStateCodec {
             check(state.getBoolean("planned")||local.isEmpty()&&plan.length()==0&&logical.length()==0&&state.getString("phase") !in setOf("verified","active")){"E2EE_CORRUPT_MIGRATION"}
         }
         if(protocol>=3L)E2eeMigrationStage.validate(state.getJSONObject("source"),vault,target,required)
+        E2eeMigrationStartCancellation.validateShape(state)
         if(protocol==3L){
             check(state.get("phase") in setOf("preparing","cancelled")&&!state.getBoolean("planned")&&number(state,"uploaded")==0L
                 &&listOf("sourceHash","lease","pending","resuming","manifestHash","verifiedCheckpoint").all{state.isNull(it)}){"E2EE_CORRUPT_MIGRATION"}

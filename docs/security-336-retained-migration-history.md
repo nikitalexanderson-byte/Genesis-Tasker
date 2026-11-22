@@ -40,6 +40,45 @@ Required consolidated checks include every part/EOF/manifest crash boundary,
 complete-path extra/truncated input, stored short tails, wrong actor/target,
 quota/CAS/process death, multiple orphan journals and web/native byte parity.
 
+## Lost-start cancellation and permanent attempt tombstones (candidate)
+
+Added schema135 and matching API/web/native source. Explicit cancellation now
+records the original scope/migration/device/source tuple permanently. Both new
+start/resume checks and persistent SQLite lease triggers prevent a delayed old
+packet from renewing an explicitly cancelled attempt. Ordinary expired leases
+remain renewable. Already accepted command receipts remain immutable; reading
+one cannot undo cancellation or mutate retained shadow objects.
+
+The new signed `migration-cancel-start` command contains the complete original
+signed start. Under the same migration IO gate and SQLite write lock, the server
+verifies both signatures/contexts, checks the exact original receipt, installs
+an original-operation tombstone if it was never accepted, and cancels only a
+matching migration/device/source lease. A different current attempt is left
+intact. Active/retirement scopes cannot downgrade. The response identifies the
+original operation/hash/source and whether it was unstarted, cancelled or
+superseded; it grants no writer or restored rights.
+
+Both clients atomically retain the old raw state and fixed resolver packet
+before IO. After a timeout/process death they repeat that exact packet. Only
+a fully matched response is saved as completed cancellation before clearing
+the live pending field. The original start and its source hash stay in protected
+evidence. A narrow authenticated old cancelled/no-lease/start-pending shape can
+be inspected for custody and resolved; it still cannot start a new migration,
+release a barrier or enter normal run. The graph is rechecked after resolution.
+
+This uses an explicit optional `startCancellation` control in existing1/2/4
+journals, with matching exact decoders and read-only control proof. It does not
+reinterpret an unknown journal, discard a pending packet from a phase label or
+replay a start merely to manufacture a lease for cancellation. Controllers still
+require a fresh preparing directory before releasing a permitted local fence;
+another active/current migration keeps that boundary.
+
+No tests/compiler/lint/build/CI ran. Consolidated QA must cover start vs cancel
+writer-lock order, lost start/resolver responses, retry after changed source,
+different current attempt, retained original/ancestor bytes, tampered signatures/
+result/hash, revoked devices, disabled pilot, old-backend SQL renewal, ordinary
+lease expiry and active cutover races. Coverage remains9/20.
+
 ## Account-wide proof
 
 Web `migration-ownership-catalogue.ts` and native
@@ -107,11 +146,11 @@ Typed restoration into normal repositories remains separate implementation work.
 
 ## Known remaining implementation and acceptance
 
-- A legitimately interrupted **source-stage capture** still retains its barrier.
-  Its missing EOF must not be invented. Implement explicit preservation/review of
-  partial local source material before treating that path as recoverable restart.
-- Old legacy cancellation with an unresolved start/no lease needs an explicit
-  resolved transition; a phase label must not silently discard its pending packet.
+- Changed-source interrupted **source-stage capture** still retains its barrier.
+  Exact replay now resumes unchanged sources; changed prefixes need explicit
+  preservation/review and must not acquire invented suffixes or EOF.
+- The new lost-start resolver and permanent cancellation need consolidated
+  compiler/integration/race acceptance; source inspection is not a PASS.
 - Some domain reconcilers still refuse divergent previous/current captures and
   require the intended explicit conflict/history workflow. This pass does not
   claim those domain decisions or typed restore are complete.

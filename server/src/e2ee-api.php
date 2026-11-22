@@ -36,7 +36,7 @@ function genesisE2eeRoute(string $method,string $path): never
     }
     if($path==='e2ee/v1/command') {
         $command=genesisE2eeCommand($body['command']??null);$scope=genesisE2eeScope($owner,$command['scopeId']);
-        if(!in_array($scope['state'],['active','retirement'],true)&&$command['action']!=='migration-cancel'&&!genesisE2eePilotAllowed($owner))
+        if(!in_array($scope['state'],['active','retirement'],true)&&!in_array($command['action'],['migration-cancel','migration-cancel-start'],true)&&!genesisE2eePilotAllowed($owner))
             throw new GenesisResourceLimitException(503,'E2EE_PILOT_DISABLED');
         genesisJson(genesisE2eeExecute($owner,$body,$binding));
     }

@@ -356,7 +356,7 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
                 ->execute([$c['scopeId'],$scope['generation'],$ctx['domain'],$ctx['objectId'],$ctx['revision'],genesisE2eeJson($envelope),$hash]);
             $db->prepare('UPDATE e2ee_scopes SET seal_count=seal_count+1 WHERE scope_id=?')->execute([$c['scopeId']]);
             $result=['revision'=>$ctx['revision'],'payloadHash'=>$hash,'generation'=>(int)$scope['generation']];
-        } elseif (in_array($c['action'],['migration-start','migration-resume','migration-verify','migration-commit','migration-cancel'],true)) {
+        } elseif (in_array($c['action'],['migration-start','migration-resume','migration-verify','migration-commit','migration-cancel','migration-cancel-start'],true)) {
             if ($recovery) throw new DomainException('E2EE_DEVICE_REQUIRED');
             genesisE2eeAccess($actor,$scope['kind'],$scope['resource_id'],'manage');
             $result=genesisE2eeMigrationCommand($db,$scope,$c,$packet);
@@ -371,6 +371,8 @@ function genesisE2eeRequireLease(PDO $db,array $scope,string $device): array
     $lease=genesisE2eeRow($db,'SELECT * FROM e2ee_migrations WHERE scope_id=?',[$scope['scope_id']]);
     if (!$lease || (int)$lease['lease_until']<time() || $lease['device_id']!==$device
         ||(int)$lease['target_generation']!==(int)$scope['generation']) throw new DomainException('E2EE_MIGRATION_FENCED');
+    if(genesisE2eeRow($db,'SELECT 1 FROM e2ee_migration_cancellations WHERE scope_id=? AND migration_id=?',[$scope['scope_id'],$lease['migration_id']]))
+        throw new DomainException('E2EE_MIGRATION_CANCELLED');
     if($scope['kind']==='personal') {
         $legacy=genesisE2eeRow($db,'SELECT data_generation FROM users WHERE id=?',[$scope['resource_id']]);
         if(!$legacy||(int)$scope['generation']<=(int)$legacy['data_generation'])throw new DomainException('E2EE_STALE_GENERATION');
@@ -392,6 +394,40 @@ function genesisE2eeMigrationCommand(PDO $db,array &$scope,array $c,array $packe
 {
     $p=$c['payload'];
     if (in_array($scope['state'],['active','retirement'],true)) throw new DomainException('E2EE_ALREADY_ACTIVE');
+    if($c['action']==='migration-cancel-start'){
+        // Resolve a start whose outcome was lost WITHOUT starting it afresh.
+        // Both the original operation tombstone and permanent attempt
+        // cancellation share this same write lock with starts/resumes/commits.
+        genesisE2eeExactFields($p,['original']);$original=genesisE2eeExactFields($p['original'],['command','signature']);
+        $old=genesisE2eeCommand($original['command']);
+        if($old['action']!=='migration-start'||$old['ownerId']!==$c['ownerId']||$old['scopeId']!==$c['scopeId']||$old['deviceId']!==$c['deviceId']
+          ||$old['operationId']===$c['operationId']||$old['expectedRevision']!==$c['expectedRevision']||$old['checkpointHash']!==$c['checkpointHash']||$old['securityEpoch']!==$c['securityEpoch'])
+            throw new DomainException('E2EE_CONTEXT_MISMATCH');
+        $device=genesisE2eeRow($db,'SELECT signing_key FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$scope['scope_id'],$c['deviceId']]);
+        if(!$device)throw new DomainException('E2EE_REVOKED_DEVICE');genesisE2eeVerifyCommand($original,$device['signing_key']);
+        $source=genesisE2eeExactFields($old['payload'],['migrationId','sourceHash']);genesisE2eeIdentifier($source['migrationId']);genesisE2eeDecode($source['sourceHash'],32);
+        $oldHash=genesisE2eeCommandHash($old);
+        $receipt=genesisE2eeRow($db,'SELECT * FROM e2ee_receipts WHERE scope_id=? AND operation_id=?',[$scope['scope_id'],$old['operationId']]);
+        if($receipt&&!hash_equals($receipt['payload_hash'],$oldHash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');
+        $prior=genesisE2eeRow($db,'SELECT * FROM e2ee_migration_cancellations WHERE scope_id=? AND migration_id=?',[$scope['scope_id'],$source['migrationId']]);
+        if($prior&&($prior['device_id']!==$c['deviceId']||!hash_equals($prior['source_hash'],$source['sourceHash'])))throw new DomainException('E2EE_CONTEXT_MISMATCH');
+        $lease=genesisE2eeRow($db,'SELECT * FROM e2ee_migrations WHERE scope_id=?',[$scope['scope_id']]);
+        $matches=$lease&&$lease['migration_id']===$source['migrationId'];
+        if($matches&&($lease['device_id']!==$c['deviceId']||!hash_equals($lease['source_hash'],$source['sourceHash'])))throw new DomainException('E2EE_CONTEXT_MISMATCH');
+        $outcome=$matches?'cancelled':($receipt?'superseded':'not-started');
+        if(!$receipt)$db->prepare('INSERT INTO e2ee_receipts VALUES(?,?,?,?)')->execute([$scope['scope_id'],$old['operationId'],$oldHash,genesisE2eeJson(['cancelled'=>true])]);
+        if(!$prior)$db->prepare('INSERT INTO e2ee_migration_cancellations VALUES(?,?,?,?,?)')->execute([$scope['scope_id'],$source['migrationId'],$c['deviceId'],$source['sourceHash'],genesisNow()]);
+        if($matches){
+            $db->prepare('UPDATE e2ee_migrations SET lease_until=0,manifest_hash=NULL,verified_checkpoint=NULL WHERE scope_id=?')->execute([$scope['scope_id']]);
+            $db->prepare("UPDATE e2ee_scopes SET state='preparing' WHERE scope_id=?")->execute([$scope['scope_id']]);
+        }
+        return ['migrationId'=>$source['migrationId'],'sourceHash'=>$source['sourceHash'],'startOperationId'=>$old['operationId'],'startHash'=>$oldHash,'outcome'=>$outcome];
+    }
+    if(in_array($c['action'],['migration-start','migration-resume'],true)){
+        genesisE2eeIdentifier($p['migrationId']??null);
+        if(genesisE2eeRow($db,'SELECT 1 FROM e2ee_migration_cancellations WHERE scope_id=? AND migration_id=?',[$scope['scope_id'],$p['migrationId']]))
+            throw new DomainException('E2EE_MIGRATION_CANCELLED');
+    }
     if($c['action']==='migration-resume') {
         genesisE2eeExactFields($p,['migrationId','fence','sourceHash','pendingOperationId','pendingHash']);
         genesisE2eeIdentifier($p['migrationId']);genesisE2eeInteger($p['fence'],1);genesisE2eeDecode($p['sourceHash'],32);
@@ -476,6 +512,8 @@ function genesisE2eeMigrationCommand(PDO $db,array &$scope,array $c,array $packe
         $result=['state'=>'preparing'];
     }
     if ($p['migrationId']!==$lease['migration_id'] || genesisE2eeInteger($p['fence'],1)!==(int)$lease['fence']) throw new DomainException('E2EE_MIGRATION_FENCED');
+    if($c['action']==='migration-cancel')$db->prepare('INSERT OR IGNORE INTO e2ee_migration_cancellations VALUES(?,?,?,?,?)')
+        ->execute([$scope['scope_id'],$lease['migration_id'],$c['deviceId'],$lease['source_hash'],genesisNow()]);
     return $result;
 }
 

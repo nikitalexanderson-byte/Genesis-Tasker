@@ -59,8 +59,10 @@ internal object E2eeRetainedMigrationProof {
             }else invalid()
             if(number(state,"protocol")==4L&&name=="pending"&&action !in setOf("migration-start","migration-cancel"))invalid()
         }
-        if(lease==null&&(!state.isNull("resuming")||!state.isNull("sourceHash")&&state.isNull("pending"))
-            ||state.get("phase") in setOf("active","cancelled")&&(!state.isNull("pending")||!state.isNull("resuming")))invalid()
+        val cancelledStart=E2eeMigrationStartCancellation.authenticate(state,frame,actor.deviceId,current)
+        if(lease==null&&(!state.isNull("resuming")||!state.isNull("sourceHash")&&state.isNull("pending")&&!cancelledStart)
+            ||state.get("phase") in setOf("active","cancelled")&&(!state.isNull("pending")||!state.isNull("resuming"))&&
+            !(state.get("phase")=="cancelled"&&E2eeMigrationStartCancellation.unresolved(state)))invalid()
         if(state.has("cancelReceipt")){val result=state.getJSONObject("cancelReceipt").getJSONObject("result");E2eeKeys.exact(result,setOf("state"));if(state.get("phase")!="cancelled"||result.get("state")!="preparing")invalid()}
         return signer
     }

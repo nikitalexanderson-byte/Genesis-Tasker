@@ -10,6 +10,19 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Lost-start resolution and permanent migration cancellation (candidate)
+
+Schema135/API now preserve explicit attempt tombstones, including SQL guards
+against delayed old-backend lease renewal. A signed resolver atomically checks/
+tombstones the exact original start and cancels only its matching lease. Actual
+web/native cancel flows retain raw state and the fixed resolver before IO, repeat
+it after unknown outcomes, verify its full result and preserve both signed
+packets as typed control evidence. Unresolved old cancelled/no-lease starts can
+be inspected and explicitly resolved; they cannot release a barrier or resume
+normal run. Active scopes/current foreign attempts retain their boundaries.
+Details/remaining QA: `security-336-retained-migration-history.md`.
+No tests/compiler/typecheck/lint/build/CI/push/release; coverage9/20.
+
 ### Interrupted local source capture replay (candidate)
 
 Web/native source stages now authenticate the exact stored prefix separately

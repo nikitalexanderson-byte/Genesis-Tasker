@@ -1,5 +1,28 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: lost-start cancellation и постоянная отмена attempt (кандидат)
+
+После06103b46 добавлен новый code-only блок: schema135 permanent cancellation
+tuples и SQL lease guards, signed migration-cancel-start с полным original
+подписанным start, атомарное разрешение/operation tombstone и отмена только
+matching lease. Новые start/resume не оживляют отменённый migrationId, обычный
+expired lease сохраняет renewal. Shadow objects/прежние receipts сохранены.
+
+В реальных web/native cancel flows raw state + fixed resolver сохраняются до
+IO. Timeout/process death повторяет тот же packet; только полностью проверенный
+результат позволяет clear live pending. Оба пакета остаются типизированной
+защищённой уликой startCancellation в прежних1/2/4 journals. Узкий старый
+cancelled/no-lease/start-pending допускает только custody/resolution, не restart/
+run/barrier release. После resolution перепроверяется ownership graph, затем
+existing controller требует fresh preparing directory. Active/другая текущая
+миграция сохраняет границу.
+
+Подробности/обязательные будущие races: security-336-retained-migration-history.md.
+Код ещё не компилировался/не тестировался; coverage9/20. Общий кодовый этап,
+fresh project/member/device/automation/restore/background и changed-prefix/domain
+divergence review остаются.3.3.5/149 и Paddle-сайт сохранены, floors0/cutover off,
+GENESIS_DEPLOY_ANDROID=false. Push/deploy/CI/build/device не запускались.
+
 ## 22 ноября: возобновление прерванного local source-stage (кандидат)
 
 Web/native теперь аутентифицируют все записанные prefix parts отдельно от
