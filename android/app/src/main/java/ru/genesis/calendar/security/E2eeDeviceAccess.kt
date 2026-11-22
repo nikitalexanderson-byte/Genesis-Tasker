@@ -3,6 +3,7 @@ package ru.genesis.calendar.security
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.Signature
+import java.security.MessageDigest
 import java.util.UUID
 
 internal interface E2eeDeviceAccessPorts {
@@ -85,7 +86,8 @@ internal class E2eeDeviceAccess(private val account:E2eeProductAccount,private v
             granted=E2eeDirectory.verify(target.getString("ownerId"),scopeId,target.getJSONObject("authority"),JSONArray(events.toString()).put(packet),directory.checkpoint);current()}
         val own=granted.devices[account.device.deviceId];val keys=E2eeKeys.publicKeys(account.device.keys());current()
         check(granted.kind==target.get("kind")&&granted.resourceId==target.get("resourceId")&&own!=null&&!own.revoked&&own.userId==account.ownerId&&own.signingKey==keys.get("signingKey")&&own.receivingKey==keys.get("receivingKey")){"E2EE_REVOKED_DEVICE"}
-        return Triple(packet,hash,target)
+        val checkpointBytes=(c.getString("checkpointHash")+"\u0000"+hash).toByteArray(Charsets.UTF_8)
+        return try{Triple(packet,E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(checkpointBytes)),target)}finally{checkpointBytes.fill(0)}
     }
     @Synchronized fun submit(id:String):JSONObject {
         online();val store=store(id);val before=store.load()?:invalid();current();if(before.value.get("mode")!="request")invalid();val(packet,hash,target)=verifyApproval(before.value);current()

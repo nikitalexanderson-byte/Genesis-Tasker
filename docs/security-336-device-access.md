@@ -31,6 +31,11 @@ preserved. Newly discovered scopes must pass the same effective read ACL used by
 directory/challenge access; restricted grants are respected. Discovery still
 contains only scope kind/IDs/state, no key, approval or private content.
 
+The source continuation matches enrollment receipts to the established chained
+directory checkpoint, SHA256(previous checkpoint + NUL + command hash). The raw
+command hash is used to identify the exact event; it is not confused with that
+event's directory checkpoint. Both native/web readback floors use the same chain.
+
 Source inspection also corrected retained recovery-enrollment sessionHash shape:
 the existing API emits64 hexadecimal characters, not32 base64url bytes. Neither
 the server wire shape nor old signed packets were rewritten.

@@ -84,7 +84,8 @@ export class E2eeDeviceAccess{
    granted=await verifyDeviceDirectory(target.ownerId,target.scopeId,target.authority,[...response.events,packet],directory.checkpoint);this.#current();}
   const own=granted.devices.get(this.account.device.deviceId),keys=await publicDeviceKeys(this.account.device.keys());this.#current();
   if(granted.kind!==target.kind||granted.resourceId!==target.resourceId||!own||own.revoked||own.userId!==this.account.ownerId||own.signingKey!==keys.signingKey||own.receivingKey!==keys.receivingKey)throw new Error('E2EE_REVOKED_DEVICE');
-  return{packet,hash,target};
+  const checkpointBytes=new TextEncoder().encode(packet.command.checkpointHash+'\0'+hash);
+  try{const checkpointHash=encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',checkpointBytes)));this.#current();return{packet,hash:checkpointHash,target};}finally{checkpointBytes.fill(0);}
  }
  submit(id:string){return this.#run(async()=>{
   const store=this.#store(id),before=await store.load();this.#current();if(!before||before.value.mode!=='request')invalid();const {packet,hash,target}=await this.#verifyApproval(before.value);this.#current();
