@@ -451,6 +451,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun confirmPrivateMembershipOperation(id:String,fingerprint:String):JSONObject=privateMembershipSession{value->value.operations.execute("confirm",JSONObject().put("id",id).put("fingerprint",fingerprint)).also{value.current()}}
     internal suspend fun composePrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->value.composer.compose(id).also{value.current()}}
     internal suspend fun preparePrivateMembershipPackets(id:String,fingerprint:String):JSONObject=privateMembershipSession{value->value.composer.packets(id,fingerprint).also{value.current()}}
+    internal suspend fun cancelPrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->ru.genesis.calendar.security.E2eeNativeMembershipOperationResolution.cancel(id,value.operations,value.stager,value.current).also{value.current()}}
+    internal suspend fun resolvePrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->ru.genesis.calendar.security.E2eeNativeMembershipOperationResolution.resolve(id,value.operations,value.stager,value.current).also{value.current()}}
     internal suspend fun pendingPrivateAtomicMembership():JSONArray=privateAtomicMembershipCall{atomic,current->atomic.pending().also{current()}}
     internal suspend fun describePrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.describe(id).also{current()}}
     internal suspend fun confirmPrivateAtomicMembership(id:String,displayedFingerprint:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.confirm(id,displayedFingerprint).also{current()}}

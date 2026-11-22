@@ -21,13 +21,15 @@ internal class E2eeNativeMembershipOperations(private val context:Context,privat
     private fun document(id:String):E2eeDeviceDocument{
         E2eeKeys.technical(id)
         return E2eeDeviceDocument(account.device,prefix+id,{value->
-            E2eeKeys.exact(value,setOf("format","ownerId","intentId","operation","createdAt","proposal","review","started","history"))
+            E2eeKeys.exact(value,setOf("format","ownerId","intentId","operation","createdAt","proposal","review","started","history")+(if(value.has("cancelled"))setOf("cancelled")else emptySet())+(if(value.has("resolves"))setOf("resolves")else emptySet()))
             check(value.get("format")=="genesis-membership-operation-draft-v1"&&value.get("ownerId")==account.ownerId&&value.get("intentId")==id&&value.get("started") is Boolean&&value.getJSONArray("history").length()<=64){"E2EE_MEMBERSHIP_OPERATION_INVALID"}
+            if(value.has("cancelled"))check(value.get("cancelled") is Boolean){"E2EE_MEMBERSHIP_OPERATION_INVALID"};if(value.has("resolves")){E2eeKeys.technical(value.getString("resolves"));check(value.get("resolves")!=id){"E2EE_MEMBERSHIP_OPERATION_INVALID"}}
             value.getJSONObject("operation");java.time.Instant.parse(value.getString("createdAt"));JSONObject(value.toString())
         },::current)
     }
+    fun isCancelled(id:String):Boolean{current();val row=document(id).load()?:error("E2EE_MEMBERSHIP_OPERATION_REQUIRED");current();return row.value.optBoolean("cancelled",false)}
     suspend fun execute(action:String,args:JSONObject=JSONObject()):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
-        current();check(action in setOf("create","inspect","pending","preview","confirm","start")){"E2EE_MEMBERSHIP_OPERATION_INVALID"}
+        current();check(action in setOf("create","inspect","pending","preview","confirm","start","cancel","fork")){"E2EE_MEMBERSHIP_OPERATION_INVALID"}
         val records=mutableMapOf<String,E2eeSharedRecords>();val membership=account.membership()
         suspend fun call(method:String,input:JSONObject):Any{
             current();val result:Any=when(method){

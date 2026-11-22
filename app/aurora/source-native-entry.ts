@@ -98,6 +98,8 @@ async function run(encoded:string){
       let result:unknown;const args=value.args;
       if(value.action==='create'){exactKeys(args,['operation']);const id=await model.create(args.operation as MembershipOperationDraft['operation']);result={id,state:await model.inspect(id)};}
       else if(value.action==='pending'){exactKeys(args,[]);result={items:await model.pending()};}
+      else if(value.action==='cancel'){exactKeys(args,['id']);result={state:await model.cancel(args.id as string)};}
+      else if(value.action==='fork'){exactKeys(args,['id']);const id=await model.fork(args.id as string);result={id,state:await model.inspect(id)};}
       else if(value.action==='confirm'){exactKeys(args,['id','fingerprint']);result={state:await model.confirm(args.id as string,args.fingerprint as string)};}
       else{exactKeys(args,['id']);if(value.action==='inspect')result={state:await model.inspect(args.id as string)};
         else if(value.action==='preview')result={state:await model.preview(args.id as string)};

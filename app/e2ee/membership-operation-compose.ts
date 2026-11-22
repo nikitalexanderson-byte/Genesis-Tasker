@@ -16,8 +16,8 @@ import type {ProductEntity,ProductMutation} from './product-contract.ts';
 export type MembershipCompositionScope=SharedDomainBinding&{ownerId:string;generation:number;directoryRevision:number;checkpointHash:string;entities:ProductEntity[]};
 export interface MembershipOperationComposerPorts{
  ownerId:string;current:()=>void;
- drafts:Pick<MembershipOperationDrafts,'start'>;
- stager:Pick<MembershipAtomicStager,'create'|'inspect'|'readPlanPage'|'previewPage'|'reviewAuthorization'|'createPackets'>;
+ drafts:Pick<MembershipOperationDrafts,'start'|'inspect'>;
+ stager:Pick<MembershipAtomicStager,'create'|'inspect'|'readPlanPage'|'previewPage'|'reviewAuthorization'|'createPackets'|'cancel'>;
  owners:Pick<MembershipAtomicOwnerReviews,'create'|'putPart'|'review'|'inspect'|'part'|'exportApproval'|'acceptApproval'>;
  open:(scope:MembershipGraphScope)=>Promise<MembershipCompositionScope>;
  read:(scopeId:string,entity:ProductEntity)=>Promise<ProductVersion>;
@@ -41,6 +41,10 @@ export class MembershipOperationComposer{
  #serial:Promise<unknown>=Promise.resolve();
  constructor(private readonly ports:MembershipOperationComposerPorts){assertTechnical(ports.ownerId);}
  #run<T>(action:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.ports.current();return action();});this.#serial=task;return task;}
+ async #active(id:string){const draft=await this.ports.drafts.inspect(id);this.ports.current();if(!draft.cancelled)return;
+  try{const state=await this.ports.stager.inspect(id);this.ports.current();if(!state.cancelRequested)await this.ports.stager.cancel(id);}
+  catch(error){if(!(error instanceof Error)||error.message!=='E2EE_MEMBERSHIP_PLAN_REQUIRED')throw error;}throw new Error('E2EE_MEMBERSHIP_CANCELLED');
+ }
  #scope(actual:MembershipCompositionScope,expected:MembershipGraphScope){const root=expected.root;
   if(actual.scopeId!==expected.scopeId||actual.ownerId!==expected.ownerId||root.entityId!==actual.kind+':'+actual.resourceId||actual.generation!==root.generation||actual.directoryRevision!==root.directoryRevision||actual.checkpointHash!==root.checkpointHash||!root.productIndexHash||membershipProductIndexHash(actual.scopeId,actual.entities)!==root.productIndexHash)throw new Error('E2EE_MEMBERSHIP_STALE');
   return actual;
@@ -52,26 +56,28 @@ export class MembershipOperationComposer{
   for(const scope of plan.requiredScopes){const opened=this.#scope(await this.ports.open(scope),scope);this.ports.current();const versions:ProductVersion[]=[];
    for(const entity of membershipOperationEffectEntities(opened,plan,opened.entities)){versions.push(await this.ports.read(scope.scopeId,entity));this.ports.current();}
    const edits=membershipOperationEdits({binding:opened,actorId:this.ports.ownerId,intentId,createdAt:draft.createdAt,plan,snapshot:proposal.snapshot,entities:opened.entities,versions});
+   await this.#active(intentId);
    for(const [batch,items]of membershipOperationEditBatches(edits).entries()){const productId=membershipAtomicDigest({format:'genesis-membership-product-batch-v2',actorId:this.ports.ownerId,intentId,scopeId:scope.scopeId,batch});
-    await this.ports.stage(scope.scopeId,items,intentId,productId);this.ports.current();staged.push({scopeId:scope.scopeId,intentId:productId});}
+    await this.ports.stage(scope.scopeId,items,intentId,productId);this.ports.current();await this.#active(intentId);staged.push({scopeId:scope.scopeId,intentId:productId});}
   }
   // Recheck the COMPLETE index set, including tasks created during local
   // staging. The server repeats these hashes in its final transaction lock.
   for(const scope of plan.requiredScopes){this.#scope(await this.ports.open(scope),scope);this.ports.current();}
   const products:MembershipAtomicProducts[]=[];
-  for(const row of staged){products.push({...row,operations:await this.ports.prepare(row.scopeId,row.intentId)});this.ports.current();}
+  for(const row of staged){await this.#active(intentId);products.push({...row,operations:await this.ports.prepare(row.scopeId,row.intentId)});this.ports.current();await this.#active(intentId);}
   const atomic=membershipAtomicOperationPlan(this.ports.ownerId,intentId,proposal.snapshot.spaceId,proposal.fingerprint,plan,products);
-  await this.ports.stager.create(atomic.plan,atomic.pages);this.ports.current();const packets:SignedE2eeCommand[]=[];
-  for(const row of products){packets.push(await this.ports.sign(row.scopeId,row.intentId,atomic.changeHash,row.operations));this.ports.current();}
-  const review=await prepareMembershipAtomicReview(this.ports.stager,this.ports.owners,intentId,packets,this.ports.current,draft.createdAt);this.ports.current();return{state:'review' as const,intentId,...review};
+  await this.#active(intentId);await this.ports.stager.create(atomic.plan,atomic.pages);this.ports.current();await this.#active(intentId);const packets:SignedE2eeCommand[]=[];
+  for(const row of products){packets.push(await this.ports.sign(row.scopeId,row.intentId,atomic.changeHash,row.operations));this.ports.current();await this.#active(intentId);}
+  const review=await prepareMembershipAtomicReview(this.ports.stager,this.ports.owners,intentId,packets,this.ports.current,draft.createdAt);this.ports.current();await this.#active(intentId);return{state:'review' as const,intentId,...review};
  });}
  packets(intentId:string,fingerprint:string){return this.#run(async()=>{
+  await this.#active(intentId);
   const state=await this.ports.stager.inspect(intentId),saved=await this.ports.owners.inspect(fingerprint);this.ports.current();
   if(state.cancelRequested||saved.request.plan.actorId!==this.ports.ownerId||saved.request.plan.intentId!==intentId||membershipAtomicPlanHash(saved.request.plan)!==state.planHash)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');
   const review=await this.ports.owners.review(fingerprint);this.ports.current();const rotations:SignedE2eeCommand[]=[];
   for(const scope of review.scopes){const approval=await this.ports.owners.exportApproval(fingerprint,scope.scopeId);this.ports.current();const checked=await this.ports.owners.acceptApproval(fingerprint,approval);this.ports.current();if(!same(approval,checked))throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');rotations.push(checked.packet);}
   const pages=membershipAtomicPages('rotation-packets',rotations);
   for(let index=0;index<saved.request.productPages.length;index++){const part=await this.ports.owners.part(fingerprint,'products',index);this.ports.current();pages.push(part.page as import('./membership-atomic-contract.ts').MembershipAtomicPage);}
-  const result=await this.ports.stager.createPackets(intentId,pages);this.ports.current();return result;
+  await this.#active(intentId);const result=await this.ports.stager.createPackets(intentId,pages);this.ports.current();await this.#active(intentId);return result;
  });}
 }

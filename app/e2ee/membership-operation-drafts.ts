@@ -8,7 +8,7 @@ export const MEMBERSHIP_OPERATION_DRAFT_PREFIX='membership-operation:';
 type Proposal={snapshot:MembershipOperationSnapshot;plan:MembershipOperationPlan;fingerprint:string;planFingerprint:string};
 type Review={fingerprint:string;planFingerprint:string;reviewedAt:string};
 export type MembershipOperationDraft={format:'genesis-membership-operation-draft-v1';ownerId:string;intentId:string;operation:MembershipOperation;createdAt:string;
- proposal:Proposal|null;review:Review|null;started:boolean;history:{proposal:Proposal;review:Review|null}[]};
+ proposal:Proposal|null;review:Review|null;started:boolean;cancelled?:boolean;resolves?:string;history:{proposal:Proposal;review:Review|null}[]};
 export interface MembershipOperationDraftPorts{
  ownerId:string;current:()=>void;
  load:(id:string)=>Promise<{value:unknown;serial:number}|null>;
@@ -30,9 +30,10 @@ function validateReview(input:unknown,proposal:Proposal):Review{
  if(input.fingerprint!==proposal.fingerprint||input.planFingerprint!==proposal.planFingerprint)invalid();return structuredClone(input) as Review;
 }
 export function validateMembershipOperationDraft(input:unknown,ownerId:string,intentId:string):MembershipOperationDraft{
- exactKeys(input,['format','ownerId','intentId','operation','createdAt','proposal','review','started','history']);
+ exactKeys(input,['format','ownerId','intentId','operation','createdAt','proposal','review','started','history',...(input&&typeof input==='object'&&Object.hasOwn(input,'cancelled')?['cancelled']:[]),...(input&&typeof input==='object'&&Object.hasOwn(input,'resolves')?['resolves']:[])]);
  if(input.format!=='genesis-membership-operation-draft-v1'||input.ownerId!==ownerId||input.intentId!==intentId||typeof input.started!=='boolean'||!Array.isArray(input.history)||input.history.length>64)invalid();
  assertTechnical(ownerId);assertTechnical(intentId);validDate(input.createdAt);const operation=validateMembershipOperation(input.operation);
+ if(Object.hasOwn(input,'cancelled')&&typeof input.cancelled!=='boolean')invalid();if(Object.hasOwn(input,'resolves')){assertTechnical(input.resolves);if(input.resolves===intentId)invalid();}
  for(const old of input.history){exactKeys(old,['proposal','review']);const proposal=validateProposal(old.proposal,operation);if(proposal.snapshot.actorId!==ownerId)invalid();if(old.review!==null)validateReview(old.review,proposal);}
  if(input.proposal===null){if(input.review!==null||input.started||input.history.length)invalid();}
  else{const proposal=validateProposal(input.proposal,operation);if(proposal.snapshot.actorId!==ownerId)invalid();if(input.review!==null)validateReview(input.review,proposal);else if(input.started)invalid();}
@@ -61,18 +62,25 @@ export class MembershipOperationDrafts{
   if(snapshot.actorId!==this.ports.ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const plan=planMembershipOperation(snapshot,operation);
   return{snapshot,plan,fingerprint:membershipOperationFingerprint(snapshot,operation),planFingerprint:membershipOperationPlanFingerprint(plan)};
  }
- preview(id:string){return this.#run(async()=>{const saved=await this.#load(id);if(saved.value.started)throw new Error('E2EE_MEMBERSHIP_PLAN_LOCKED');const proposal=await this.#proposal(saved.value.operation);
+ preview(id:string){return this.#run(async()=>{const saved=await this.#load(id);if(saved.value.cancelled)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(saved.value.started)throw new Error('E2EE_MEMBERSHIP_PLAN_LOCKED');const proposal=await this.#proposal(saved.value.operation);
   const after=await this.#load(id);if(after.serial!==saved.serial)throw new Error('E2EE_LOCAL_CONFLICT');if(same(after.value.proposal,proposal))return after.value;
   const history=[...after.value.history];if(after.value.proposal)history.push({proposal:after.value.proposal,review:after.value.review});if(history.length>64)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
   return this.#save({...after.value,proposal,review:null,history},after.serial);
  });}
  confirm(id:string,fingerprint:string){decodeE2eeBytes(fingerprint,32);return this.#run(async()=>{const saved=await this.#load(id),proposal=saved.value.proposal;
+  if(saved.value.cancelled)throw new Error('E2EE_MEMBERSHIP_CANCELLED');
   if(!proposal||proposal.fingerprint!==fingerprint||saved.value.started)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');
   if(!same(await this.#proposal(saved.value.operation),proposal))throw new Error('E2EE_MEMBERSHIP_STALE');
   const review=saved.value.review??{fingerprint,planFingerprint:proposal.planFingerprint,reviewedAt:new Date().toISOString()};return this.#save({...saved.value,review},saved.serial);
  });}
- start(id:string){return this.#run(async()=>{const saved=await this.#load(id),value=saved.value;if(value.started)return value;
+ start(id:string){return this.#run(async()=>{const saved=await this.#load(id),value=saved.value;if(value.cancelled)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(value.started)return value;
   if(!value.proposal||!value.review)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');if(!same(await this.#proposal(value.operation),value.proposal))throw new Error('E2EE_MEMBERSHIP_STALE');
   return this.#save({...value,started:true},saved.serial);
+ });}
+ cancel(id:string){return this.#run(async()=>{const saved=await this.#load(id);return saved.value.cancelled?saved.value:this.#save({...saved.value,cancelled:true},saved.serial);});}
+ /** A fresh intent requires explicit resolution after the containing server
+  * outcome is known. The old plan/consent/packets are never edited or re-keyed. */
+ fork(id:string,nextId=crypto.randomUUID()){assertTechnical(nextId);return this.#run(async()=>{const old=(await this.#load(id)).value;if(!old.cancelled||nextId===id)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
+  await this.#save({format:'genesis-membership-operation-draft-v1',ownerId:this.ports.ownerId,intentId:nextId,operation:old.operation,createdAt:new Date().toISOString(),resolves:id,proposal:null,review:null,started:false,history:[]},null);return nextId;
  });}
 }

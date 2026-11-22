@@ -1,5 +1,27 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: durable cancel / explicit fresh semantic review
+
+Operation drafts теперь сохраняют optional cancelled/resolves, понимают прежние
+originals и запрещают preview/confirm/start отменённого intent. TS/native resolver
+сначала сохраняет local cancellation, затем получает server tombstone; committed
+или unknown outcome требует read-only reconciliation и не создаёт duplicate.
+Fresh fork только после подтверждённой отмены сохраняет старые proposal/review/
+packets и начинает новый intent без переноса consent. Composers перечитывают
+cancellation между staging/upload/sign/packet steps; v2 cancel tombstone сохраняет
+late continuation inert. Native/web API добавлены. Source-only, без QA/compiler.
+
+Urgent PR43 MERGED: main6672bbefd65abc4b9c3268800d02c57bd82ed967. Оба required
+runs45034742687/45034738601 success. Exact-main website_only Source checks
+45042239234 запущен; сайт пока incumbentc29b76e3, Deploy ещё НЕ запускался.
+
+Следующий source шаг — подключить обычные роли/remove/grants/category/invitation
+UI к новому durable path14lang. Impeccable SKILL/context уже прочитаны/запущены
+успешно для app/PrivateSharedSecurityPanel.tsx; существующая система оформления
+разрешена как scoped refinement. Следует прочитать reference/harden.md и
+craft-floor.md до UI edits. Detector отложен до общей QA по прямому code-first
+порядку владельца; security compiler/tests/build/CI по-прежнему запрещены.
+
 ## 22 ноября: ordinary-operation composer / complete private effects (source-only)
 
 После651def7e добавлены common MembershipOperationComposer, web factory/API и
