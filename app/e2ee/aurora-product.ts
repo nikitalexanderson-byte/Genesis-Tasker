@@ -41,6 +41,8 @@ export class AuroraPrivateRepository{
   this.syncState=view.pending?'offline':'saved';return view;
  }
  load(){return this.#operation(async()=>{const view=await this.#settle();this.#last=await this.#validate(view.document);return structuredClone(this.#last);});}
+ restoreView(){return this.#operation(async()=>{const view=await this.#settle(),value=await this.#validate(view.document);return{checkpoint:'aurora:'+view.remoteRevision,pending:view.pending,records:[...value.sessions.map(session=>({id:session.id,revision:1,deleted:false,value:session,localOnly:false})),...value.removed.map(row=>({id:row.id,revision:1,deleted:true,value:null,localOnly:false}))]};});}
+ restoreAdd(input:unknown){return this.#operation(async()=>{const view=await this.document.read(false),before=await this.#validate(view.document);const session=structuredClone(input) as AuroraDocument['sessions'][number];if(view.pending||view.conflict||before.sessions.some(row=>row.id===session.id)||before.removed.some(row=>row.id===session.id))throw new Error('E2EE_RESTORE_OUTCOME_REQUIRED');const next=await this.#validate({...before,sessions:[...before.sessions,session]});this.#immutable(before,next);await this.document.write(next);const saved=await this.#settle();this.#last=await this.#validate(saved.document);});}
  save(input:AuroraDocument){const snapshot=structuredClone(input);return this.#operation(async()=>{
   const value=await this.#validate(snapshot),view=await this.document.read(false),before=this.#last??view.document;
   this.#immutable(before,value);

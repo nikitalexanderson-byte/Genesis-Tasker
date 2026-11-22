@@ -6,9 +6,10 @@ import {backupJson} from '../backup-format.ts';
 import {validateDiaryNote} from '../diary-model.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
 import {validatePhysisRecord} from '../physis/validation.ts';
+import {validateDocument as validateAuroraDocument,type AuroraSession} from '../aurora/session.ts';
 
 type Row=Record<string,unknown>;
-export type RestoreDomain='diary'|'mindmap'|'physis';
+export type RestoreDomain='diary'|'mindmap'|'physis'|'aurora';
 export type DomainRestoreSource={domain:RestoreDomain;records:Row[]};
 export type DomainRestoreRecord={id:string;revision:number;deleted:boolean;value:Row|null;localOnly:boolean};
 export type DomainRestoreView={checkpoint:string;pending:boolean;records:DomainRestoreRecord[]};
@@ -21,12 +22,14 @@ export function domainRestoreRecord(domain:RestoreDomain,input:unknown):Row{
  if(domain==='diary')return validateDiaryNote(structuredClone(input)) as unknown as Row;
  if(domain==='mindmap'){const map=validateMindmap(structuredClone(input));if(map.projectId!==null&&map.projectId!==undefined)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');return map as unknown as Row;}
  if(domain==='physis'){const record=structuredClone(input);if(!validatePhysisRecord(record))return invalid();return record as unknown as Row;}
+ if(domain==='aurora'){const record=object(structuredClone(input));assertTechnical(record.id);assertTechnical(record.ownerId);if(record.version!==1)invalid();return record;}
  return invalid();
 }
 export function validateDomainRestoreSource(input:unknown):DomainRestoreSource{
- exactKeys(input,['domain','records']);if(!['diary','mindmap','physis'].includes(String(input.domain))||!Array.isArray(input.records)||!input.records.length||input.records.length>10000)invalid();
+ exactKeys(input,['domain','records']);if(!['diary','mindmap','physis','aurora'].includes(String(input.domain))||!Array.isArray(input.records)||!input.records.length||input.records.length>10000)invalid();
  const domain=input.domain as RestoreDomain,records=input.records.map(row=>domainRestoreRecord(domain,row));if(new Set(records.map(row=>row.id)).size!==records.length)invalid();return{domain,records};
 }
+export async function validateDomainRestoreSourceDeep(source:DomainRestoreSource,ownerId:string){if(source.domain==='aurora')await validateAuroraDocument({version:1,ownerId,sessions:source.records as unknown as AuroraSession[],removed:[]},ownerId);}
 export function validateDomainRestoreView(input:unknown,domain:RestoreDomain):DomainRestoreView{
  exactKeys(input,['checkpoint','pending','records']);if(typeof input.checkpoint!=='string'||!input.checkpoint||input.checkpoint.length>4096||typeof input.pending!=='boolean'||!Array.isArray(input.records)||input.records.length>20000)invalid();
  const identities=new Set<string>();for(const row of input.records){exactKeys(row,['id','revision','deleted','value','localOnly']);assertTechnical(row.id);if(!Number.isSafeInteger(row.revision)||Number(row.revision)<0||typeof row.deleted!=='boolean'||typeof row.localOnly!=='boolean')invalid();const key=String(row.localOnly)+':'+row.id;if(identities.has(key))invalid();identities.add(key);if(row.deleted?row.value!==null:domainRestoreRecord(domain,row.value).id!==row.id)invalid();}
@@ -46,15 +49,16 @@ export interface DomainRestorePorts{ownerId:string;current:()=>void;load:(id:str
 export class DomainContentRestore{
  #serial:Promise<unknown>=Promise.resolve();constructor(private readonly ports:DomainRestorePorts){}
  #run<T>(operation:()=>Promise<T>){const next=this.#serial.catch(()=>undefined).then(async()=>{this.ports.current();return operation();});this.#serial=next;return next;}
- async #load(id:string){assertTechnical(id);const row=await this.ports.load(id);this.ports.current();if(!row)throw new Error('E2EE_RESTORE_REQUIRED');return{...row,value:validateDomainRestoreJournal(row.value,this.ports.ownerId,id)};}
+ async #load(id:string){assertTechnical(id);const row=await this.ports.load(id);this.ports.current();if(!row)throw new Error('E2EE_RESTORE_REQUIRED');const value=validateDomainRestoreJournal(row.value,this.ports.ownerId,id);await validateDomainRestoreSourceDeep(value.source,this.ports.ownerId);this.ports.current();return{...row,value};}
  async #save(value:DomainRestoreJournal,serial:number|null){validateDomainRestoreJournal(value,this.ports.ownerId,value.intentId);const next=await this.ports.save(value.intentId,value,serial);this.ports.current();const saved=await this.#load(value.intentId);if(next!==(serial??0)+1||saved.serial!==next||!same(saved.value,value))throw new Error('E2EE_LOCAL_CONFLICT');return saved;}
- create(backupId:string,input:unknown){const source=validateDomainRestoreSource(input);assertTechnical(backupId);return this.#run(async()=>{const intentId=crypto.randomUUID();await this.#save({format:'genesis-domain-content-restore-v1',ownerId:this.ports.ownerId,intentId,backupId,source,proposal:null,confirmed:null,started:false,complete:false,applied:[]},null);return intentId;});}
+ async #read(domain:RestoreDomain){const view=validateDomainRestoreView(await this.ports.read(domain),domain);this.ports.current();if(domain==='aurora'){const records=view.records.filter(row=>!row.deleted).map(row=>row.value!);if(records.length)await validateDomainRestoreSourceDeep({domain,records},this.ports.ownerId);}this.ports.current();return view;}
+ create(backupId:string,input:unknown){const source=validateDomainRestoreSource(input);assertTechnical(backupId);return this.#run(async()=>{await validateDomainRestoreSourceDeep(source,this.ports.ownerId);this.ports.current();const intentId=crypto.randomUUID();await this.#save({format:'genesis-domain-content-restore-v1',ownerId:this.ports.ownerId,intentId,backupId,source,proposal:null,confirmed:null,started:false,complete:false,applied:[]},null);return intentId;});}
  inspect(id:string){return this.#run(async()=>(await this.#load(id)).value);}
  pending(){return this.#run(async()=>{const result:DomainRestoreJournal[]=[];for(const id of await this.ports.list())result.push((await this.#load(id)).value);return result;});}
- preview(id:string){return this.#run(async()=>{const row=await this.#load(id);if(row.value.started)throw new Error('E2EE_RESTORE_OUTCOME_REQUIRED');const before=await this.ports.read(row.value.source.domain);this.ports.current();return(await this.#save({...row.value,proposal:proposal(row.value.source,before),confirmed:null},row.serial)).value;});}
- confirm(id:string,fingerprint:string){return this.#run(async()=>{const row=await this.#load(id);if(row.value.started||!row.value.proposal||row.value.proposal.fingerprint!==fingerprint)throw new Error('E2EE_RESTORE_REVIEW_STALE');const before=validateDomainRestoreView(await this.ports.read(row.value.source.domain),row.value.source.domain);this.ports.current();if(!same(before,row.value.proposal.before))throw new Error('E2EE_RESTORE_REVIEW_STALE');return(await this.#save({...row.value,confirmed:fingerprint},row.serial)).value;});}
+ preview(id:string){return this.#run(async()=>{const row=await this.#load(id);if(row.value.started)throw new Error('E2EE_RESTORE_OUTCOME_REQUIRED');const before=await this.#read(row.value.source.domain);return(await this.#save({...row.value,proposal:proposal(row.value.source,before),confirmed:null},row.serial)).value;});}
+ confirm(id:string,fingerprint:string){return this.#run(async()=>{const row=await this.#load(id);if(row.value.started||!row.value.proposal||row.value.proposal.fingerprint!==fingerprint)throw new Error('E2EE_RESTORE_REVIEW_STALE');const before=await this.#read(row.value.source.domain);if(!same(before,row.value.proposal.before))throw new Error('E2EE_RESTORE_REVIEW_STALE');return(await this.#save({...row.value,confirmed:fingerprint},row.serial)).value;});}
  apply(id:string){return this.#run(async()=>{let row=await this.#load(id);const review=row.value.proposal,source=row.value.source;if(!review||row.value.confirmed!==review.fingerprint)throw new Error('E2EE_RESTORE_REVIEW_REQUIRED');if(row.value.complete)return row.value;
-  const read=async()=>{const observed=validateDomainRestoreView(await this.ports.read(source.domain),source.domain);this.ports.current();return observed;};
+  const read=()=>this.#read(source.domain);
   if(!row.value.started){if(!same(await read(),review.before))throw new Error('E2EE_RESTORE_REVIEW_STALE');row=await this.#save({...row.value,started:true},row.serial);}
   for(const id of review.ids.filter(id=>!row.value.applied.includes(id)).slice(0,25)){
    const content=source.records.find(item=>item.id===id)!;let observed=await read(),matches=observed.records.filter(item=>item.id===id);
@@ -68,7 +72,7 @@ export class DomainContentRestore{
 }
 
 export function domainRestoreSourceFromJson(domain:RestoreDomain,raw:unknown):DomainRestoreSource{
- let value=object(raw);if(Object.hasOwn(value,'document')&&value.document&&typeof value.document==='object'&&Object.hasOwn(value,'base'))value=object(value.document);
- const input=Array.isArray(value.records)?value.records:domain==='diary'&&Object.hasOwn(value,'note')?[value]:domain==='mindmap'&&Object.hasOwn(value,'nodes')?[value]:domain==='physis'&&Object.hasOwn(value,'record')?[value]:null;if(!input)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');
+ let value=object(raw);if(Object.hasOwn(value,'document')&&value.document&&typeof value.document==='object'&&!Array.isArray(value.records))value=object(value.document);
+ const input=Array.isArray(value.records)?value.records:domain==='aurora'&&Array.isArray(value.sessions)?value.sessions:domain==='aurora'&&Object.hasOwn(value,'primary')?[value]:domain==='diary'&&Object.hasOwn(value,'note')?[value]:domain==='mindmap'&&Object.hasOwn(value,'nodes')?[value]:domain==='physis'&&Object.hasOwn(value,'record')?[value]:null;if(!input)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');
  const records=input.filter(row=>object(row).deleted!==true).map(row=>{const item=object(row);return domain==='diary'?item.note??item:domain==='physis'?item.record??item:item.document??item;});return validateDomainRestoreSource({domain,records});
 }

@@ -1370,3 +1370,10 @@ diary и mindmap writers. Add-only, текущие tombstones/версии не 
 Нормальный aggregate format и deep health validators, current feature access,
 add-only IDs, tombstones, backup UI и typed custody/export. Execution QA не запускался.
 
+# 23 ноября — typed Aurora sessions (код)
+
+Aurora source/current records проверяются полным общим async validator; отсутствующие
+sessions добавляются через normal web/native aggregate, без изменения active selection,
+removed или сервисных грантов. Journals/custody/export/backup UI подключены. Отдельные
+результаты и learning/history остаются в authenticated archive без grant replay.
+

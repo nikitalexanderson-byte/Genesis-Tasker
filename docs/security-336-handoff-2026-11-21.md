@@ -1,5 +1,16 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: typed Aurora session restore — код
+
+Aurora sessions добавлены в общий add-only journal/preview/consent/resume и оба
+backup UI. Полный async Aurora validator проверяет owner, source и current
+readback в общем движке; normal web/native aggregate writers сохраняют текущие
+sessions/removed/active selection. Никакие result grant, purchase, draw limits
+или серверные service receipts из архива не применяются. Отдельные result bytes
+и learning/history остаются в аутентифицированном архиве; открытие результата
+по-прежнему требует текущего серверного разрешения и reference этого поколения.
+Код без QA/compiler/review. Следующие restore domains: Стоихейон/shared.
+
 ## 23 ноября: typed Physis restore — код
 
 Physis добавлен к общему add-only restore на web/native, включая backup UI,
