@@ -1,5 +1,32 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: matching multi-owner membership exchange foundation (кандидат)
+
+После39d98061/efaa701a добавлены membership-exchange / owner-review web/native:
+полный typed request fingerprint, отдельный durable owner review до scope IO,
+fresh owner-signed rotations, staged unverified imports и независимая проверка
+pinned signed history/complete roster/manifest/epochs. Initiator product теперь
+собирает свои и импортированные verified signatures; отсутствующий owner не
+подменяется локальной подписью. Batch immutable; полный result сверяется с каждой
+chained directory checkpoint и реальным readback. Real foreground/session-bound
+cloud/AuthController bridges, normal-scope key readback для surviving recipient
+и typed retained custody подключены. Наблюдённая signed history хранится отдельно
+от hypothetical appended approval. Подробности: security-336-membership-exchange.md.
+
+Следующий кодовый шаг — реальные обычные role/remove/grants adapters + durable
+raw input до state/preview IO, full independent affected-scope closure, initiator/
+owner UI с verified user/device attribution и14 languages; затем invitation
+request/consumption и semantic resolution/cancellation stale partial plans.
+Не считать эти модули готовой normal membership. First personal trusted entry,
+advanced/form/automation/bulk/cross-scope, typed restore/revoked/background и
+source/divergence review остаются. Foreign directory proof не требует roots
+инициатора; independently accepted authority pin остаётся обязательным.
+
+Никаких compiler/typecheck/lint/tests/build/CI/push/deploy/device/Play. Code-first
+этап продолжается; coverage9/20, floors0/cutover off/GENESIS_DEPLOY_ANDROID=false,
+production3.3.5/149/Paddle сохранены. demo-output/ не читать/stage; субагенты/
+Daybreak запрещены. Текущий turn progress, не blocker.
+
 ## 22 ноября: membership ACL hash projection исправлен (кандидат)
 
 После3f97d92f/291238ee matching JS/Kotlin/PHP contract `acl-name-value-v1`

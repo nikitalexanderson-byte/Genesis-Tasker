@@ -3904,11 +3904,46 @@ async function privateDeviceAccessSession(){
   if(binding.kind==='personal')return account.personal().client;const opened=await trust.open(binding.scopeId);current();const directory=opened.directory;
   if(directory.ownerId!==binding.ownerId||directory.kind!==binding.kind||directory.resourceId!==binding.resourceId||directory.recoveryKit.authority.signingKey!==binding.authority.signingKey||directory.recoveryKit.authority.receivingKey!==binding.authority.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');return opened.client;
  };
- const access=new E2eeDeviceAccess(account,{target,client,directory:async scopeId=>{current();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});current();return result;},
+ const ports:import('./e2ee/device-access').DeviceAccessPorts={target,client,directory:async scopeId=>{current();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});current();return result;},
   challenge:async(binding,deviceId,keys,requestId)=>{current();const result=await e2eeRequest('/challenge',{scopeId:binding.scopeId,deviceId,keys,requestId});current();return result;},
   command:async packet=>{current();const result=await e2eeRequest('/command',packet);current();return result;},open:async binding=>{await client(binding);current();if(binding.kind==='personal')await account.personal().client.refresh();current();window.dispatchEvent(new Event('genesis:shared-updates'));}
- },current);return{access,current};
+ };return{access:new E2eeDeviceAccess(account,ports,current),current,account,ports};
 }
+async function privateMembershipSession(){
+ const {account,ports,current}=await privateDeviceAccessSession(),{E2eeMembershipProduct}=await import('./e2ee/membership-product'),{E2eeMembershipOwnerReview}=await import('./e2ee/membership-owner-review');current();
+ const peers:import('./e2ee/membership-exchange').MembershipPeerPorts={target:ports.target,directory:ports.directory,current,
+  checkpoint:async scopeId=>{current();const value=await account.device.savedDirectory(scopeId);current();return value?.checkpoint;},
+  remember:async(target,events)=>{current();const directory=await account.device.rememberDirectory(target.scopeId,target.authority,events,target.ownerId);current();
+   const own=directory.devices.get(account.device.deviceId);if(own&&!own.revoked&&own.userId===account.ownerId){await ports.open(target);current();}}
+ };
+ const openOwned=async(plan:import('./e2ee/membership-product').MembershipScopePlan)=>{current();const target=await ports.target(plan.scopeId);current();
+  if(plan.ownerId!==account.ownerId||target.ownerId!==plan.ownerId||target.kind!==plan.kind||target.resourceId!==plan.resourceId)throw new Error('E2EE_OWNER_REQUIRED');return ports.client(target);
+ };
+ const transport=privateAccountHttpTransport().membership;if(!transport)throw new Error('E2EE_MEMBERSHIP_TRANSPORT_REQUIRED');
+ const product=new E2eeMembershipProduct(account.device,account.personal().client,transport,async scopeId=>{const target=await ports.target(scopeId);current();if(target.ownerId!==account.ownerId)throw new Error('E2EE_OWNER_REQUIRED');return ports.client(target);},current,peers);
+ return{product,ownerReview:new E2eeMembershipOwnerReview(account,openOwned,current),current};
+}
+export async function pendingCurrentPrivateMembership(){const {product,ownerReview,current}=await privateMembershipSession(),ids=await product.pending(),intents=[];current();
+ for(const id of ids){const row=await product.inspect(id);current();intents.push({id,scopeIds:row.scopeIds,complete:Boolean(row.result),reviewRequired:!row.hashFormat});}
+ const reviews=await ownerReview.list();current();return{intents,ownerReviews:reviews.map(row=>({id:row.id,scopeId:row.scopeId,complete:Boolean(row.packet)}))};
+}
+export async function startCurrentPrivateMembership(changes:import('./e2ee/membership-product').MembershipChange[],scopeIds:string[]){const {product,current}=await privateMembershipSession();const id=await product.create(changes,scopeIds);current();await product.preview(id);current();return product.exportReview(id);}
+export async function loadCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();const state=await product.inspect(id);current();return{state,review:state.preview&&state.hashFormat?await product.exportReview(id):null};}
+export async function previewCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();await product.preview(id);current();return product.exportReview(id);}
+export async function prepareCurrentPrivateMembership(id:string,displayedFingerprint:string){const {product,current}=await privateMembershipSession(),view=await product.exportReview(id);current();
+ if(view.fingerprint!==displayedFingerprint)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');const reviews=view.request.preview.scopePlans.map(plan=>({scopeId:plan.scopeId,roles:structuredClone(plan.roles)}));
+ const batch=await product.prepare(id,reviews);current();return batch;
+}
+export async function importCurrentPrivateMembershipApproval(id:string,input:string){const {product,current}=await privateMembershipSession(),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();
+ const result=await product.importOwnerApproval(id,parseLegacyMigrationJson(input,'E2EE_MEMBERSHIP_REVIEW_MISMATCH',2*1024*1024) as import('./e2ee/membership-exchange').MembershipOwnerApproval);current();return result;
+}
+export async function approveCurrentPrivateMembershipOwner(input:string,scopeId:string,comparedFingerprint:string){
+ const {ownerReview,current}=await privateMembershipSession(),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json'),{validateMembershipReviewRequest}=await import('./e2ee/membership-exchange');current();
+ const request=validateMembershipReviewRequest(parseLegacyMigrationJson(input,'E2EE_MEMBERSHIP_REVIEW_MISMATCH',2*1024*1024)),plan=request.preview.scopePlans.find(row=>row.scopeId===scopeId);if(!plan)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');
+ const result=await ownerReview.approve(request,scopeId,comparedFingerprint,structuredClone(plan.roles));current();return result;
+}
+export async function exportCurrentPrivateMembershipOwner(id:string){const {ownerReview,current}=await privateMembershipSession();const result=await ownerReview.export(id);current();return result;}
+export async function submitCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();const result=await product.submit(id);current();window.dispatchEvent(new Event('genesis:shared-updates'));return result;}
 async function privateDeviceAccessView(state:import('./e2ee/device-access').DeviceAccessState,current:()=>void){
  const {deviceAccessFingerprint}=await import('./e2ee/device-access-contract');current();const fingerprint=state.request?await deviceAccessFingerprint(state.request):null;current();return{state,fingerprint};
 }

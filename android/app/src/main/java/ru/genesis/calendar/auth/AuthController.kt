@@ -353,7 +353,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope&&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
         current();return ru.genesis.calendar.security.E2eePrivateProjectCreation(app,account,{scope->current();e2eeScopeSetupTransport(uid,account.device).directory(scope).also{current()}},::current)
     }
-    private fun privateDeviceAccess(uid:String,guard:()->Unit):ru.genesis.calendar.security.E2eeDeviceAccess{
+    private fun privateDeviceAccessPorts(uid:String,guard:()->Unit):Triple<ru.genesis.calendar.security.E2eeProductAccount,ru.genesis.calendar.security.E2eeDeviceAccessPorts,()->Unit>{
         val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get();val storageScope=CloudAccountSnapshot.scopeFor(uid)
         val account=ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid);val trust=ru.genesis.calendar.security.E2eeSharedTrust(account)
         fun current(){guard();account.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn&&client.isTrialForeground()
@@ -377,7 +377,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun command(packet:JSONObject)=call("/command",packet)
             override fun open(target:JSONObject){client(target).refresh();current();ru.genesis.calendar.security.NativePrivateProducts.changed(storageScope)}
         }
-        return ru.genesis.calendar.security.E2eeDeviceAccess(account,ports,::current)
+        return Triple(account,ports,::current)
+    }
+    private fun privateDeviceAccess(uid:String,guard:()->Unit):ru.genesis.calendar.security.E2eeDeviceAccess{
+        val(account,ports,current)=privateDeviceAccessPorts(uid,guard);return ru.genesis.calendar.security.E2eeDeviceAccess(account,ports,current)
     }
     private suspend fun <T> privateDeviceAccessCall(operation:(ru.genesis.calendar.security.E2eeDeviceAccess)->T):T=withContext(Dispatchers.IO){
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val operationJob=currentCoroutineContext().job
@@ -393,6 +396,50 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun loadPrivateDeviceAccess(id:String):JSONObject=privateDeviceAccessCall{access->val state=access.inspect(id);privateDeviceAccessView(if(state.get("mode")=="request"&&state.isNull("request"))access.request(id)else state)}
     internal suspend fun approvePrivateDeviceAccess(input:String,comparedFingerprint:String):JSONObject=privateDeviceAccessCall{access->privateDeviceAccessView(access.approve(privateDeviceAccessInput(input),comparedFingerprint))}
     internal suspend fun submitPrivateDeviceAccess(id:String,input:String):JSONObject=privateDeviceAccessCall{access->if(input.isNotBlank())access.stageApproval(id,privateDeviceAccessInput(input));privateDeviceAccessView(access.submit(id))}
+    private suspend fun <T> privateMembershipCall(operation:(ru.genesis.calendar.security.E2eeMembershipProduct,ru.genesis.calendar.security.E2eeMembershipOwnerReview,()->Unit)->T):T=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val job=currentCoroutineContext().job;val(account,ports,current)=privateDeviceAccessPorts(uid){job.ensureActive()};val generation=client.currentGeneration()
+        val channel=object:ru.genesis.calendar.security.E2eeMembershipTransport{
+            private fun call(path:String,body:JSONObject):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
+            override fun membershipState(targets:JSONArray)=call("/membership-state",JSONObject().put("targets",targets))
+            override fun membershipPreview(intentId:String,changes:JSONArray)=call("/membership-preview",JSONObject().put("intentId",intentId).put("changes",changes))
+            override fun membershipCommit(batch:JSONObject)=call("/membership",batch)
+        }
+        val peers=object:ru.genesis.calendar.security.E2eeMembershipPeerPorts{
+            override fun current()=current.invoke()
+            override fun target(scopeId:String)=ports.target(scopeId).also{current()}
+            override fun directory(scopeId:String)=ports.directory(scopeId).also{current()}
+            override fun checkpoint(scopeId:String):ru.genesis.calendar.security.E2eeDirectory.Checkpoint?{current();return account.device.savedDirectory(scopeId)?.checkpoint.also{current()}}
+            override fun remember(target:JSONObject,events:JSONArray){current();val directory=account.device.rememberDirectory(target.getString("scopeId"),target.getJSONObject("authority"),events,target.getString("ownerId"));current()
+                val own=directory.devices[account.device.deviceId];if(own!=null&&!own.revoked&&own.userId==uid){ports.open(target);current()}}
+        }
+        val product=ru.genesis.calendar.security.E2eeMembershipProduct(account.device,account.client,channel,{scopeId->val target=ports.target(scopeId);current();check(target.get("ownerId")==uid){"E2EE_OWNER_REQUIRED"};ports.client(target)},current,peers)
+        val review=ru.genesis.calendar.security.E2eeMembershipOwnerReview(account,{plan->val target=ports.target(plan.getString("scopeId"));current()
+            check(plan.get("ownerId")==uid&&listOf("ownerId","kind","resourceId").all{target.get(it)==plan.get(it)}){"E2EE_OWNER_REQUIRED"};ports.client(target)},current)
+        operation(product,review,current).also{current()}
+    }
+    private fun privateMembershipInput(input:String):JSONObject{
+        check(input.length<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};val bytes=input.toByteArray(Charsets.UTF_8)
+        return try{check(bytes.size<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};ru.genesis.calendar.security.E2eeFileManifestJson.readMigrationHistory(bytes)}finally{bytes.fill(0)}
+    }
+    internal suspend fun pendingPrivateMembership():JSONObject=privateMembershipCall{product,review,current->
+        val intents=JSONArray();for(id in product.pending()){val row=product.inspect(id);current();intents.put(JSONObject().put("id",id).put("scopeIds",row.get("scopeIds")).put("complete",!row.isNull("result")).put("reviewRequired",!row.has("hashFormat")))}
+        val reviews=JSONArray();for(row in review.list()){current();reviews.put(JSONObject().put("id",row.get("id")).put("scopeId",row.get("scopeId")).put("complete",!row.isNull("packet")))}
+        JSONObject().put("intents",intents).put("ownerReviews",reviews)
+    }
+    internal suspend fun startPrivateMembership(changes:JSONArray,scopeIds:List<String>):JSONObject=privateMembershipCall{product,_,current->val id=product.create(changes,scopeIds);current();product.preview(id);current();product.exportReview(id)}
+    internal suspend fun loadPrivateMembership(id:String):JSONObject=privateMembershipCall{product,_,current->val state=product.inspect(id);current();JSONObject().put("state",state).put("review",if(!state.isNull("preview")&&state.has("hashFormat"))product.exportReview(id)else JSONObject.NULL)}
+    internal suspend fun previewPrivateMembership(id:String):JSONObject=privateMembershipCall{product,_,current->product.preview(id);current();product.exportReview(id)}
+    internal suspend fun preparePrivateMembership(id:String,displayedFingerprint:String):JSONObject=privateMembershipCall{product,_,current->val view=product.exportReview(id);current();check(view.get("fingerprint")==displayedFingerprint){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"}
+        val plans=view.getJSONObject("request").getJSONObject("preview").getJSONArray("scopePlans");val reviews=JSONArray();for(at in 0 until plans.length()){val plan=plans.getJSONObject(at);reviews.put(JSONObject().put("scopeId",plan.get("scopeId")).put("roles",plan.get("roles")))}
+        product.prepare(id,reviews).also{current()}
+    }
+    internal suspend fun importPrivateMembershipApproval(id:String,input:String):JSONObject=privateMembershipCall{product,_,current->product.importOwnerApproval(id,privateMembershipInput(input)).also{current()}}
+    internal suspend fun approvePrivateMembershipOwner(input:String,scopeId:String,comparedFingerprint:String):JSONObject=privateMembershipCall{_,review,current->
+        val request=ru.genesis.calendar.security.E2eeMembershipExchange.request(privateMembershipInput(input));val plans=request.getJSONObject("preview").getJSONArray("scopePlans");val plan=(0 until plans.length()).map{plans.getJSONObject(it)}.singleOrNull{it.get("scopeId")==scopeId}?:error("E2EE_MEMBERSHIP_REVIEW_MISMATCH")
+        review.approve(request,scopeId,comparedFingerprint,JSONArray(plan.getJSONArray("roles").toString())).also{current()}
+    }
+    internal suspend fun exportPrivateMembershipOwner(id:String):JSONObject=privateMembershipCall{_,review,current->review.export(id).also{current()}}
+    internal suspend fun submitPrivateMembership(id:String):JSONObject=privateMembershipCall{product,_,current->product.submit(id).also{current();ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
     internal fun pendingPrivateCreations(uid:String):List<JSONObject> = (privateSpaceCreation(uid).pending()+privateProjectCreation(uid).pending()).map{row->
         JSONObject().put("intentId",row.get("intentId")).put("scopeId",row.get("scopeId")).put("resourceId",row.get("resourceId")).put("kind",row.get("kind"))
             .put("input",JSONObject().put("title",row.getJSONObject("input").get("title")))

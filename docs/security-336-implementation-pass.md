@@ -10,6 +10,16 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Multi-owner review exchange foundation (candidate after39d98061/efaa701a)
+
+Matching full-plan fingerprints, independently pinned scope-owner rotation
+approval, staged unverified imports, immutable combined batch and full receipt/
+directory/key readback now have real web/native ports. Owner and initiator
+journals retain originals; foreign approvals are typed evidence, not this
+device's signer. Normal role/grant/invitation adapters, affected closure, review
+UI/attribution/localization and stale-plan resolution still need code. See
+`security-336-membership-exchange.md`. No compiler/tests/build/CI ran; coverage9/20.
+
 ### Matching ACL hash projection (candidate after291238ee)
 
 `acl-name-value-v1` now projects SQL column names as sorted name/value records

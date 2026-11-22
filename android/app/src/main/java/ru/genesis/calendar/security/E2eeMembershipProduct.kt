@@ -2,6 +2,7 @@ package ru.genesis.calendar.security
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.security.MessageDigest
 import java.util.UUID
 
 internal interface E2eeMembershipTransport{
@@ -12,22 +13,40 @@ internal interface E2eeMembershipTransport{
 /** Durable, owner-reviewed membership intent. No network retry implicitly
  * generates another root or adopts a server-provided recipient roster. */
 internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,private val personal:E2eeScopeClient,
-    private val transport:E2eeMembershipTransport,private val openScope:(String)->E2eeScopeClient,private val current:()->Unit){
+    private val transport:E2eeMembershipTransport,private val openScope:(String)->E2eeScopeClient,private val current:()->Unit,private val peers:E2eeMembershipPeerPorts?=null){
     private class Loaded(val value:JSONObject,val serial:Long)
     private fun same(a:Any,b:Any)=E2eeProductJson.same(a,b)
     private fun load(intentId:String):Loaded{
         E2eeKeys.technical(intentId);current();val row=device.vault.read("outbox","membership:$intentId")?:error("E2EE_MEMBERSHIP_PLAN_REQUIRED");current()
-        try{val value=E2eeFileManifestJson.readPrivateDocument(row.bytes);E2eeKeys.exact(value,setOf("protocol","ownerId","intentId","scopeIds","changes","preview","review","batch","result")+(if(value.has("hashFormat"))setOf("hashFormat")else emptySet()))
+        try{val value=E2eeFileManifestJson.readPrivateDocument(row.bytes);E2eeKeys.exact(value,setOf("protocol","ownerId","intentId","scopeIds","changes","preview","review","batch","result")+(if(value.has("hashFormat"))setOf("hashFormat")else emptySet())+(if(value.has("ownerApprovals"))setOf("ownerApprovals")else emptySet()))
             check(value.getInt("protocol")==1&&value.getString("ownerId")==device.ownerId&&value.getString("intentId")==intentId&&value.getJSONArray("scopeIds").length()<=256){"E2EE_CORRUPT_OUTBOX"}
             check(!value.has("hashFormat")||value.get("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_CORRUPT_OUTBOX"};E2eeMembershipContract.changes(value.getJSONArray("changes"))
             val scopes=scopeIds(value.getJSONArray("scopeIds"),false);scopes.forEach{E2eeKeys.technical(it)}
             check(scopes.distinct().size==scopes.size&&(0 until value.getJSONArray("scopeIds").length()).map{value.getJSONArray("scopeIds").getString(it)}==scopes){"E2EE_CORRUPT_OUTBOX"}
+            if(value.has("ownerApprovals")){val rows=value.getJSONArray("ownerApprovals");check(rows.length()<=256){"E2EE_CORRUPT_OUTBOX"};val seen=mutableSetOf<String>()
+                for(at in 0 until rows.length()){val row=rows.getJSONObject(at);E2eeKeys.exact(row,setOf("approval","verified"));check(row.get("verified") is Boolean){"E2EE_CORRUPT_OUTBOX"};val approval=E2eeMembershipExchange.approval(row.getJSONObject("approval"),request(value));check(seen.add(approval.getString("scopeId"))){"E2EE_CORRUPT_OUTBOX"}}
+            }
             return Loaded(value,row.serial)
         }finally{row.bytes.fill(0)}
     }
     private fun save(value:JSONObject,serial:Long?):Long{current();val bytes=value.toString().toByteArray(Charsets.UTF_8)
         try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox","membership:${value.getString("intentId")}",bytes,serial)));current()}finally{bytes.fill(0)};return(serial?:0)+1}
     private fun scopeIds(rows:JSONArray,objects:Boolean)= (0 until rows.length()).map{if(objects)rows.getJSONObject(it).getString("scopeId")else rows.getString(it)}.sorted()
+    private fun request(state:JSONObject):JSONObject {
+        check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT&&!state.isNull("preview")){"E2EE_MEMBERSHIP_PREVIEW_REQUIRED"}
+        return E2eeMembershipExchange.request(JSONObject().put("format","genesis-membership-review-v1").put("hashFormat",E2eeMembershipContract.HASH_FORMAT).put("actorId",state.get("ownerId")).put("intentId",state.get("intentId"))
+            .put("scopeIds",state.get("scopeIds")).put("changes",state.get("changes")).put("preview",state.get("preview")))
+    }
+    @Synchronized fun exportReview(intentId:String):JSONObject {val request=request(load(intentId).value);current();return JSONObject().put("request",request).put("fingerprint",E2eeMembershipExchange.fingerprint(request))}
+    @Synchronized fun importOwnerApproval(intentId:String,input:JSONObject):JSONObject {
+        val loaded=load(intentId);val state=loaded.value;val request=request(state);val approval=E2eeMembershipExchange.approval(JSONObject(input.toString()),request);var serial=loaded.serial
+        val ports=peers?:error("E2EE_MEMBERSHIP_OWNER_APPROVAL_REQUIRED");val rows=JSONArray(state.optJSONArray("ownerApprovals")?.toString()?:"[]")
+        val before=(0 until rows.length()).map{rows.getJSONObject(it)}.singleOrNull{it.getJSONObject("approval").get("scopeId")==approval.get("scopeId")}
+        if(before!=null){check(same(before.get("approval"),approval)){"E2EE_MEMBERSHIP_APPROVAL_CHANGED"};if(before.getBoolean("verified"))return JSONObject(before.getJSONObject("approval").toString())}
+        else{check(state.isNull("batch")){"E2EE_MEMBERSHIP_PLAN_LOCKED"};rows.put(JSONObject().put("approval",approval).put("verified",false));state.put("ownerApprovals",rows);serial=save(state,serial)}
+        E2eeMembershipExchange.verify(approval,request,ports);current();for(at in 0 until rows.length()){val row=rows.getJSONObject(at);if(row.getJSONObject("approval").get("scopeId")==approval.get("scopeId"))row.put("verified",true)}
+        state.put("ownerApprovals",rows);save(state,serial);return JSONObject(approval.toString())
+    }
     @Synchronized fun readState(targets:JSONArray):JSONArray {
         current();check(targets.length() in 1..200){"E2EE_MEMBERSHIP_BATCH_INVALID"};val held=JSONArray(targets.toString())
         for(at in 0 until held.length()){val row=held.getJSONObject(at);E2eeKeys.exact(row,setOf("table","key"));val spec=E2eeMembershipContract.specs[row.getString("table")]?:error("E2EE_MEMBERSHIP_BATCH_INVALID")
@@ -42,7 +61,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
     @Synchronized fun create(changes:JSONArray,expectedScopeIds:List<String>):String{
         val held=E2eeMembershipContract.changes(changes);val scopes=expectedScopeIds.sorted();current()
         check(held.length() in 1..200&&scopes.size<=256&&scopes.distinct().size==scopes.size){"E2EE_MEMBERSHIP_BATCH_INVALID"};scopes.forEach(E2eeKeys::technical)
-        val id=UUID.randomUUID().toString();save(JSONObject().put("protocol",1).put("hashFormat",E2eeMembershipContract.HASH_FORMAT).put("ownerId",device.ownerId).put("intentId",id).put("scopeIds",JSONArray(scopes)).put("changes",held)
+        val id=UUID.randomUUID().toString();save(JSONObject().put("protocol",1).put("hashFormat",E2eeMembershipContract.HASH_FORMAT).put("ownerApprovals",JSONArray()).put("ownerId",device.ownerId).put("intentId",id).put("scopeIds",JSONArray(scopes)).put("changes",held)
             .put("preview",JSONObject.NULL).put("review",JSONObject.NULL).put("batch",JSONObject.NULL).put("result",JSONObject.NULL),null);return id
     }
     @Synchronized fun preview(intentId:String):JSONObject{
@@ -67,17 +86,30 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
         if(!state.isNull("batch"))return JSONObject(state.getJSONObject("batch").toString())
         if(state.isNull("review")){state.put("review",held);serial=save(state,serial)}
         val rotations=JSONArray();val hash=state.getJSONObject("preview").getString("changeHash")
-        for(at in 0 until plans.length()){val plan=plans.getJSONObject(at);val client=openScope(plan.getString("scopeId"));current()
-            rotations.put(client.prepareMembershipRotation(hash,requireNotNull(reviews[plan.getString("scopeId")]),plan.getJSONObject("manifest"),plan));current()}
-        val authorization=personal.authorizeMembership(intentId,hash);current();val batch=JSONObject().put("intentId",intentId).put("changes",state.getJSONArray("changes")).put("authorization",authorization).put("rotations",rotations)
+        val request=request(state);val approvals=state.optJSONArray("ownerApprovals")?:JSONArray()
+        for(at in 0 until plans.length()){val plan=plans.getJSONObject(at);val imported=(0 until approvals.length()).map{approvals.getJSONObject(it)}.singleOrNull{it.getBoolean("verified")&&it.getJSONObject("approval").get("scopeId")==plan.get("scopeId")}
+            if(imported!=null){val approved=E2eeMembershipExchange.verify(imported.getJSONObject("approval"),request,peers?:error("E2EE_MEMBERSHIP_OWNER_APPROVAL_REQUIRED"));current();rotations.put(approved.get("packet"))}
+            else{check(plan.get("ownerId")==device.ownerId){"E2EE_MEMBERSHIP_OWNER_APPROVAL_REQUIRED"};val client=openScope(plan.getString("scopeId"));current()
+                rotations.put(client.prepareMembershipRotation(hash,requireNotNull(reviews[plan.getString("scopeId")]),plan.getJSONObject("manifest"),plan));current()}}
+        personal.refresh();current();val authorization=personal.authorizeMembership(intentId,hash);current();val batch=JSONObject().put("intentId",intentId).put("changes",state.getJSONArray("changes")).put("authorization",authorization).put("rotations",rotations)
         state.put("batch",batch);save(state,serial);return JSONObject(batch.toString())
     }
     @Synchronized fun submit(intentId:String):JSONObject{
         val loaded=load(intentId);val state=loaded.value;check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"};check(!state.isNull("batch")){"E2EE_MEMBERSHIP_PLAN_REQUIRED"}
         if(!state.isNull("result"))return JSONObject(state.getJSONObject("result").toString())
         val batch=state.getJSONObject("batch");val result=transport.membershipCommit(batch);current()
-        check(result.getString("intentId")==intentId&&result.getString("changeHash")==state.getJSONObject("preview").getString("changeHash")){"E2EE_INVALID_RECEIPT"}
-        val rotations=batch.getJSONArray("rotations");for(at in 0 until rotations.length()){val signed=rotations.getJSONObject(at);val client=openScope(signed.getJSONObject("command").getString("scopeId"));current();client.confirmMembershipRotation(signed);current()}
+        E2eeKeys.exact(result,setOf("intentId","changeHash","scopes","signInRequired"));val scopeResults=result.getJSONObject("scopes")
+        check(result.getString("intentId")==intentId&&result.getString("changeHash")==state.getJSONObject("preview").getString("changeHash")&&result.get("signInRequired")==true&&scopeResults.keys().asSequence().toList().sorted()==scopeIds(state.getJSONArray("scopeIds"),false)){"E2EE_INVALID_RECEIPT"}
+        val request=request(state);val rotations=batch.getJSONArray("rotations");for(at in 0 until rotations.length()){
+            val signed=rotations.getJSONObject(at);val command=signed.getJSONObject("command");val payload=command.getJSONObject("payload");val scopeId=command.getString("scopeId");val receipt=scopeResults.getJSONObject(scopeId)
+            E2eeKeys.exact(receipt,setOf("directoryRevision","checkpointHash","cryptoEpoch","securityEpoch","signInRequired"));val bytes=(command.getString("checkpointHash")+"\u0000"+E2eeCommands.hash(command)).toByteArray(Charsets.UTF_8)
+            val checkpoint=try{E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))}finally{bytes.fill(0)};current()
+            check(E2eeCommands.integer(receipt.get("directoryRevision"),1)==E2eeCommands.integer(command.get("expectedRevision"))+1&&receipt.get("checkpointHash")==checkpoint
+                &&E2eeCommands.integer(receipt.get("cryptoEpoch"),1)==E2eeCommands.integer(payload.get("cryptoEpoch"),1)&&E2eeCommands.integer(receipt.get("securityEpoch"),1)==E2eeCommands.integer(payload.get("securityEpoch"),1)
+                &&receipt.get("signInRequired")== (payload.getJSONArray("revokedDeviceIds").length()>0)){"E2EE_INVALID_RECEIPT"}
+            if(peers!=null){E2eeMembershipExchange.verify(JSONObject().put("format","genesis-membership-owner-approval-v1").put("requestFingerprint",E2eeMembershipExchange.fingerprint(request)).put("scopeId",scopeId).put("packet",signed),request,peers,true);current()}
+            else{val client=openScope(scopeId);current();client.confirmMembershipRotation(signed);current()}
+        }
         state.put("result",result);save(state,loaded.serial);return JSONObject(result.toString())
     }
     @Synchronized fun pending():List<String>{current();return device.vault.listLocal("outbox","membership:").map{it.removePrefix("membership:")}.also{current()}}

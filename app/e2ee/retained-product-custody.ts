@@ -9,6 +9,7 @@ import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {productMutation} from './product-contract.ts';
 import {validatePrivateProjectTopology} from './project-create-contract.ts';
 import {MEMBERSHIP_HASH_FORMAT,validateMembershipChanges,membershipChangesProjection,membershipChangeHashValue} from './membership-contract.ts';
+import {validateMembershipReviewRequest,validateMembershipOwnerApproval,type MembershipReviewRequest} from './membership-exchange.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
 
 type Options={vault:SourceStageReadVault;actor:{ownerId:string;deviceId:string};receivingKey:CryptoKey;selfKeys:{signingKey:string;receivingKey:string};assertCurrent:()=>void;
@@ -62,13 +63,29 @@ export async function inspectRetainedProductCustody(options:Options){
   return checked;
  };
  const membership=async(input:unknown,id:string)=>{
-  object(input);exactKeys(input,['protocol',...(Object.hasOwn(input,'hashFormat')?['hashFormat']:[]),'ownerId','intentId','scopeIds','changes','preview','review','batch','result']);
+  object(input);exactKeys(input,['protocol',...(Object.hasOwn(input,'hashFormat')?['hashFormat']:[]),...(Object.hasOwn(input,'ownerApprovals')?['ownerApprovals']:[]),'ownerId','intentId','scopeIds','changes','preview','review','batch','result']);
   if(input.protocol!==1||input.ownerId!==options.actor.ownerId||id!=='membership:'+input.intentId||!Array.isArray(input.scopeIds)||input.scopeIds.length>256||!Array.isArray(input.changes)||input.changes.length<1||input.changes.length>200)invalid();
   assertTechnical(input.intentId);for(const scope of input.scopeIds)assertTechnical(scope);if(!equal(input.scopeIds,[...new Set(input.scopeIds)].sort()))invalid();
   validateMembershipChanges(input.changes);
-  if(!Object.hasOwn(input,'hashFormat')){if([input.preview,input.review,input.batch,input.result].some(value=>value!==null)||!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');return;}
+  if(!Object.hasOwn(input,'hashFormat')){if([input.preview,input.review,input.batch,input.result].some(value=>value!==null)||Object.hasOwn(input,'ownerApprovals')&&(!Array.isArray(input.ownerApprovals)||input.ownerApprovals.length!==0)||!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');return;}
   if(input.hashFormat!==MEMBERSHIP_HASH_FORMAT)invalid();
   const changeHash=digest(canonicalE2eeValue(membershipChangeHashValue(options.actor.ownerId,input.intentId,input.changes,input.scopeIds as string[])));
+  const request=()=>validateMembershipReviewRequest({format:'genesis-membership-review-v1',hashFormat:MEMBERSHIP_HASH_FORMAT,actorId:input.ownerId,intentId:input.intentId,scopeIds:input.scopeIds,changes:input.changes,preview:input.preview});
+  const peer=async(raw:unknown,source:MembershipReviewRequest)=>{
+   const approval=validateMembershipOwnerApproval(raw,source),plan=source.preview.scopePlans.find(row=>row.scopeId===approval.scopeId)!,command=approval.packet.command;
+   const frame=await options.directory(plan.scopeId,value=>value.checkpoint.revision===plan.directoryRevision&&value.checkpoint.hash===plan.checkpointHash&&value.cryptoEpoch===plan.cryptoEpoch&&value.securityEpoch===plan.securityEpoch);current();
+   if(frame.ownerId!==plan.ownerId||frame.kind!==plan.kind||frame.resourceId!==plan.resourceId)invalid();const signer=frame.devices.get(command.deviceId);
+   if(!signer||signer.revoked||signer.userId!==plan.ownerId||signer.role!=='owner')invalid();await verifyE2eeCommand(approval.packet,await signingPublicKey(signer.signingKey));current();
+   const live=[...frame.devices.values()].filter(row=>!row.revoked);if(live.length!==plan.roles.length)invalid();
+   for(const device of live){const role=plan.roles.find(row=>row.deviceId===device.deviceId);if(!role||device.userId===plan.ownerId&&role.role!=='owner'||device.userId!==plan.ownerId&&role.role==='owner')invalid();}
+   return approval;
+  };
+  if(Object.hasOwn(input,'ownerApprovals')){if(!Array.isArray(input.ownerApprovals)||input.ownerApprovals.length>256)invalid();const scopes=new Set<string>();
+   for(const row of input.ownerApprovals){exactKeys(row,['approval','verified']);if(typeof row.verified!=='boolean')invalid();const approval=validateMembershipOwnerApproval(row.approval,request());if(scopes.has(approval.scopeId))invalid();scopes.add(approval.scopeId);
+    // An unverified paste stays typed inert local input; it grants no directory
+    // trust or scope ownership. Verified relays must prove the owner's signature.
+    if(row.verified)await peer(approval,request());}
+  }
   if(input.preview!==null){exactKeys(input.preview,['intentId','changeHash','scopePlans']);if(input.preview.intentId!==input.intentId||input.preview.changeHash!==changeHash||!Array.isArray(input.preview.scopePlans)||!equal(input.preview.scopePlans.map(plan=>{object(plan);return plan.scopeId;}).sort(),input.scopeIds))invalid();
    for(const plan of input.preview.scopePlans){exactKeys(plan,['scopeId','ownerId','kind','resourceId','directoryRevision','checkpointHash','cryptoEpoch','securityEpoch','roles','manifest']);assertTechnical(plan.scopeId);const directory=await options.directory(plan.scopeId,frame=>frame.checkpoint.revision===plan.directoryRevision&&frame.checkpoint.hash===plan.checkpointHash&&frame.cryptoEpoch===plan.cryptoEpoch&&frame.securityEpoch===plan.securityEpoch);current();
     if(directory.ownerId!==plan.ownerId||directory.kind!==plan.kind||directory.resourceId!==plan.resourceId)invalid();roles(plan.roles);exactKeys(plan.manifest,['manifestHash','objectCount']);decodeE2eeBytes(plan.manifest.manifestHash,32);integer(plan.manifest.objectCount,0,10000);}
@@ -79,7 +96,10 @@ export async function inspectRetainedProductCustody(options:Options){
    exactKeys(input.batch,['intentId','changes','authorization','rotations']);if(!input.review||input.batch.intentId!==input.intentId||!equal(membershipChangesProjection(input.batch.changes),membershipChangesProjection(input.changes))||!Array.isArray(input.batch.rotations))invalid();
    const authority=await packet(input.batch.authorization);exactKeys(authority.command.payload,['intentId','changeHash']);
    if(authority.command.action!=='membership-authorize'||authority.directory.kind!=='personal'||authority.directory.ownerId!==options.actor.ownerId||authority.command.payload.intentId!==input.intentId||authority.command.payload.changeHash!==changeHash)invalid();
-   const scopeIds:string[]=[];for(const value of input.batch.rotations){const checked=await rotation(value);if(checked.command.payload.membershipHash!==changeHash)invalid();scopeIds.push(checked.directory.scopeId);}
+   const scopeIds:string[]=[];for(const value of input.batch.rotations){exactKeys(value,['command','signature']);const c=value.command as unknown as SignedE2eeCommand['command'];
+    if(c.deviceId===options.actor.deviceId&&c.ownerId===options.actor.ownerId){const checked=await rotation(value);if(checked.command.payload.membershipHash!==changeHash)invalid();scopeIds.push(checked.directory.scopeId);}
+    else{const imported=(input.ownerApprovals as {approval:unknown;verified:boolean}[]|undefined)?.find(row=>{if(!row.verified)return false;const approval=validateMembershipOwnerApproval(row.approval,request());return approval.scopeId===c.scopeId&&equal(approval.packet,value);});if(!imported)invalid();
+     const approval=await peer(imported.approval,request());scopeIds.push(approval.scopeId);}}
    if(!equal(scopeIds.sort(),input.scopeIds))invalid();
   }
   if(input.result!==null){object(input.result);if(!input.batch||input.result.intentId!==input.intentId||input.result.changeHash!==changeHash)invalid();}
