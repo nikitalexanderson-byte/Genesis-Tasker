@@ -396,7 +396,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun loadPrivateDeviceAccess(id:String):JSONObject=privateDeviceAccessCall{access->val state=access.inspect(id);privateDeviceAccessView(if(state.get("mode")=="request"&&state.isNull("request"))access.request(id)else state)}
     internal suspend fun approvePrivateDeviceAccess(input:String,comparedFingerprint:String):JSONObject=privateDeviceAccessCall{access->privateDeviceAccessView(access.approve(privateDeviceAccessInput(input),comparedFingerprint))}
     internal suspend fun submitPrivateDeviceAccess(id:String,input:String):JSONObject=privateDeviceAccessCall{access->if(input.isNotBlank())access.stageApproval(id,privateDeviceAccessInput(input));privateDeviceAccessView(access.submit(id))}
-    private class AtomicMembershipSession(val product:ru.genesis.calendar.security.E2eeMembershipProduct,val review:ru.genesis.calendar.security.E2eeMembershipOwnerReview,val atomic:ru.genesis.calendar.security.E2eeMembershipAtomicApply,val current:()->Unit)
+    private class AtomicMembershipSession(val product:ru.genesis.calendar.security.E2eeMembershipProduct,val review:ru.genesis.calendar.security.E2eeMembershipOwnerReview,val atomic:ru.genesis.calendar.security.E2eeMembershipAtomicApply,val atomicOwnerReview:ru.genesis.calendar.security.E2eeMembershipAtomicOwnerReviews,val stager:ru.genesis.calendar.security.E2eeMembershipAtomicStager,val current:()->Unit)
     private suspend fun <T> privateMembershipSession(operation:suspend(AtomicMembershipSession)->T):T=withContext(Dispatchers.IO){
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val job=currentCoroutineContext().job;val(account,ports,current)=privateDeviceAccessPorts(uid){job.ensureActive()};val generation=client.currentGeneration()
         val channel=object:ru.genesis.calendar.security.E2eeMembershipTransport{
@@ -427,10 +427,21 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val review=ru.genesis.calendar.security.E2eeMembershipOwnerReview(account,{plan->val target=ports.target(plan.getString("scopeId"));current()
             check(plan.get("ownerId")==uid&&listOf("ownerId","kind","resourceId").all{target.get(it)==plan.get(it)}){"E2EE_OWNER_REQUIRED"};ports.client(target)},current)
         val atomic=ru.genesis.calendar.security.E2eeNativeMembershipAtomicApply.create(app,account,channel,peers,current)
-        operation(AtomicMembershipSession(product,review,atomic,current)).also{current()}
+        val atomicOwnerReview=ru.genesis.calendar.security.E2eeMembershipAtomicOwnerReviews(account,peers,{plan->val target=ports.target(plan.getString("scopeId"));current()
+            check(plan.get("ownerId")==uid&&listOf("ownerId","kind","resourceId").all{target.get(it)==plan.get(it)}){"E2EE_OWNER_REQUIRED"};ports.client(target)},current)
+        operation(AtomicMembershipSession(product,review,atomic,atomicOwnerReview,account.membershipAtomic(),current)).also{current()}
     }
     private suspend fun <T> privateMembershipCall(operation:(ru.genesis.calendar.security.E2eeMembershipProduct,ru.genesis.calendar.security.E2eeMembershipOwnerReview,()->Unit)->T):T=privateMembershipSession{value->operation(value.product,value.review,value.current)}
     private suspend fun <T> privateAtomicMembershipCall(operation:suspend(ru.genesis.calendar.security.E2eeMembershipAtomicApply,()->Unit)->T):T=privateMembershipSession{value->operation(value.atomic,value.current)}
+    internal suspend fun pendingPrivateAtomicOwnerReviews():JSONArray=privateMembershipSession{value->value.atomicOwnerReview.pending().also{value.current()}}
+    internal suspend fun importPrivateAtomicOwnerReview(input:String):String=privateMembershipSession{value->value.atomicOwnerReview.create(privateMembershipInput(input)).also{value.current()}}
+    internal suspend fun importPrivateAtomicOwnerPart(input:String):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.putPart(privateMembershipInput(input)).also{value.current()}}
+    internal suspend fun readPrivateAtomicOwnerPart(fingerprint:String,kind:String,index:Int):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.part(fingerprint,kind,index).also{value.current()}}
+    internal suspend fun reviewPrivateAtomicOwners(fingerprint:String):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.review(fingerprint).also{value.current()}}
+    internal suspend fun approvePrivateAtomicOwner(fingerprint:String,scopeId:String,displayedFingerprint:String,roles:JSONArray):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.approve(fingerprint,scopeId,displayedFingerprint,roles).also{value.current()}}
+    internal suspend fun acceptPrivateAtomicOwnerApproval(fingerprint:String,input:String):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.acceptApproval(fingerprint,privateMembershipInput(input)).also{value.current()}}
+    internal suspend fun exportPrivateAtomicOwnerApproval(fingerprint:String,scopeId:String):JSONObject=privateMembershipSession{value->value.atomicOwnerReview.exportApproval(fingerprint,scopeId).also{value.current()}}
+    internal suspend fun preparePrivateAtomicReview(intentId:String,productPackets:JSONArray):JSONObject=privateMembershipSession{value->ru.genesis.calendar.security.E2eeNativeMembershipAtomicReview.prepare(value.stager,value.atomicOwnerReview,intentId,productPackets,value.current).also{value.current()}}
     internal suspend fun pendingPrivateAtomicMembership():JSONArray=privateAtomicMembershipCall{atomic,current->atomic.pending().also{current()}}
     internal suspend fun describePrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.describe(id).also{current()}}
     internal suspend fun confirmPrivateAtomicMembership(id:String,displayedFingerprint:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.confirm(id,displayedFingerprint).also{current()}}

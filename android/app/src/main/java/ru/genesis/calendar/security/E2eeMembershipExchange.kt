@@ -33,10 +33,14 @@ internal object E2eeMembershipExchange {
     }
     fun fingerprint(input:JSONObject):String {val held=request(input);return digest(held.put("changes",E2eeMembershipContract.projection(held.getJSONArray("changes"))))}
     fun rotationShape(input:JSONObject,request:JSONObject,plan:JSONObject):JSONObject {
+        return rotationShapeForHash(input,request.getJSONObject("preview").getString("changeHash"),plan)
+    }
+    fun rotationShapeForHash(input:JSONObject,changeHash:String,plan:JSONObject):JSONObject {
+        E2eeEnvelope.decode(changeHash,32)
         E2eeKeys.exact(input,setOf("command","signature"));val c=input.getJSONObject("command");E2eeCommands.commandBytes(c);E2eeEnvelope.decode(input.getString("signature"),64)
         if(c.get("ownerId")!=plan.get("ownerId")||c.get("scopeId")!=plan.get("scopeId")||c.get("action")!="rotate-membership"||E2eeCommands.integer(c.get("expectedRevision"))!=E2eeCommands.integer(plan.get("directoryRevision"),1)||c.get("checkpointHash")!=plan.get("checkpointHash")||E2eeCommands.integer(c.get("securityEpoch"),1)!=E2eeCommands.integer(plan.get("securityEpoch"),1))invalid()
         val p=c.getJSONObject("payload");E2eeKeys.exact(p,setOf("membershipHash","revokedDeviceIds","roleChanges","cryptoEpoch","securityEpoch","keyId","capsules","recoveryCapsule","retiredManifestHash","retiredObjectCount"));val manifest=plan.getJSONObject("manifest")
-        if(p.get("membershipHash")!=request.getJSONObject("preview").get("changeHash")||E2eeCommands.integer(p.get("cryptoEpoch"),1)!=E2eeCommands.integer(plan.get("cryptoEpoch"),1)+1||E2eeCommands.integer(p.get("securityEpoch"),1)!=E2eeCommands.integer(plan.get("securityEpoch"),1)+1
+        if(p.get("membershipHash")!=changeHash||E2eeCommands.integer(p.get("cryptoEpoch"),1)!=E2eeCommands.integer(plan.get("cryptoEpoch"),1)+1||E2eeCommands.integer(p.get("securityEpoch"),1)!=E2eeCommands.integer(plan.get("securityEpoch"),1)+1
             ||p.get("retiredManifestHash")!=manifest.get("manifestHash")||E2eeCommands.integer(p.get("retiredObjectCount"))!=E2eeCommands.integer(manifest.get("objectCount")))invalid();E2eeKeys.technical(p.getString("keyId"))
         val actual=rows(p.getJSONArray("roleChanges"))+strings(p.getJSONArray("revokedDeviceIds")).map{JSONObject().put("deviceId",it).put("role",JSONObject.NULL)}
         for(role in actual){E2eeKeys.exact(role,setOf("deviceId","role"));E2eeKeys.technical(role.getString("deviceId"))}

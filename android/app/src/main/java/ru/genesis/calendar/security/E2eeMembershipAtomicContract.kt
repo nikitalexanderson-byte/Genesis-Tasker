@@ -68,6 +68,14 @@ internal object E2eeMembershipAtomicContract {
         return JSONObject(input.toString())
     }
     fun pageRef(index:Int,input:JSONObject):JSONObject {number(index);val value=page(input);return JSONObject().put("index",index).put("kind",value.get("kind")).put("count",value.getJSONArray("items").length()).put("pageHash",digest(pageProjection(value)))}
+    fun pages(kind:String,input:JSONArray):JSONArray {
+        val result=JSONArray();var offset=0;var size=minOf(200,input.length())
+        while(offset<input.length()){
+            val items=JSONArray();for(index in offset until offset+size)items.put(input.get(index))
+            try{result.put(page(JSONObject().put("kind",kind).put("items",items)));offset+=size;size=minOf(200,input.length()-offset)}
+            catch(error:Exception){if(size<=1||error.message !in setOf("E2EE_MEMBERSHIP_PAGE_TOO_LARGE","E2EE_COMMAND_TOO_LARGE"))throw error;size=maxOf(1,size/2)}
+        };return result
+    }
     fun refs(input:JSONArray,packets:Boolean):JSONArray {
         if(input.length()>10000||!packets&&input.length()<1)invalid();val kinds=if(packets)packetKinds else planKinds
         for((index,row)in rows(input).withIndex()){

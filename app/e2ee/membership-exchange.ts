@@ -37,10 +37,14 @@ export function validateMembershipReviewRequest(input:unknown):MembershipReviewR
 }
 export function membershipReviewFingerprint(input:MembershipReviewRequest){const request=validateMembershipReviewRequest(input);return digest({...request,changes:membershipChangesProjection(request.changes)} as unknown as WireValue);}
 export function membershipRotationShape(input:unknown,request:MembershipReviewRequest,plan:MembershipScopePlan):SignedE2eeCommand{
+ return membershipRotationShapeForHash(input,request.preview.changeHash,plan);
+}
+export function membershipRotationShapeForHash(input:unknown,changeHash:string,plan:MembershipScopePlan):SignedE2eeCommand{
+ decodeE2eeBytes(changeHash,32);
  exactKeys(input,['command','signature']);const packet=input as SignedE2eeCommand;commandBytes(packet.command);decodeE2eeBytes(packet.signature,64);const c=packet.command,p=c.payload;
  if(c.ownerId!==plan.ownerId||c.scopeId!==plan.scopeId||c.action!=='rotate-membership'||c.expectedRevision!==plan.directoryRevision||c.checkpointHash!==plan.checkpointHash||c.securityEpoch!==plan.securityEpoch)invalid();
  exactKeys(p,['membershipHash','revokedDeviceIds','roleChanges','cryptoEpoch','securityEpoch','keyId','capsules','recoveryCapsule','retiredManifestHash','retiredObjectCount']);
- if(p.membershipHash!==request.preview.changeHash||p.cryptoEpoch!==plan.cryptoEpoch+1||p.securityEpoch!==plan.securityEpoch+1||p.retiredManifestHash!==plan.manifest.manifestHash||p.retiredObjectCount!==plan.manifest.objectCount
+ if(p.membershipHash!==changeHash||p.cryptoEpoch!==plan.cryptoEpoch+1||p.securityEpoch!==plan.securityEpoch+1||p.retiredManifestHash!==plan.manifest.manifestHash||p.retiredObjectCount!==plan.manifest.objectCount
   ||!Array.isArray(p.revokedDeviceIds)||!Array.isArray(p.roleChanges)||!Array.isArray(p.capsules))invalid();assertTechnical(p.keyId);
  const order=(left:{deviceId:string},right:{deviceId:string})=>left.deviceId<right.deviceId?-1:left.deviceId>right.deviceId?1:0;
  const actual:{deviceId:string;role:unknown}[]=[];for(const role of [...p.roleChanges,...p.revokedDeviceIds.map(deviceId=>({deviceId,role:null}))]){exactKeys(role,['deviceId','role']);assertTechnical(role.deviceId);actual.push({deviceId:role.deviceId,role:role.role});}

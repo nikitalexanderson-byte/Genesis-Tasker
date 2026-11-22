@@ -76,6 +76,7 @@ export class MembershipAtomicStager{
   if(state.planHash!==planHash)throw new Error('E2EE_IDEMPOTENCY_CONFLICT');if(state.cancelRequested)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(!state.ready)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');
  }
  stagePlan(intentId:string){return this.#run(()=>this.#stagePlan(intentId));}
+ reviewAuthorization(intentId:string){return this.#run(async()=>{const {state}=await this.#load(intentId);await this.#staging(intentId,state.planHash);return this.#request('membership-atomic-begin',{intentId,planHash:state.planHash});});}
  previewPage(intentId:string,after=0){if(!Number.isSafeInteger(after)||after<0||after>5001)throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');return this.#run(async()=>{
   const {state}=await this.#load(intentId);if(after>state.plan.scopeIds.length)throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');await this.#staging(intentId,state.planHash);const anchors=new Map<string,MembershipAtomicAnchor>();
   for(let index=0;index<state.plan.pages.length;index++){const page=await this.#page(state,index);if(page.kind==='anchors')for(const anchor of page.items){if(anchors.has(anchor.scopeId))throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');anchors.set(anchor.scopeId,anchor);}}

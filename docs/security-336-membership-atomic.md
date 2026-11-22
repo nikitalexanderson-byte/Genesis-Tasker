@@ -133,3 +133,30 @@ ACL всё ещё требует ожидаемое текущее состоя�
 Новый security-код не опубликован. Production 3.3.5/149, floors0/cutover off и
 GENESIS_DEPLOY_ANDROID=false сохраняются. Срочный отдельный веб-кандидат #43
 проверяется в sibling checkout без этих исходников.
+
+## Постраничное owner review v2 (source-only)
+
+Добавлены matching TS/Kotlin header/part codecs, полные effects collectors и
+account/foreground encrypted owner stores. Header связывает все plan pages,
+все preview recipient pages и все product packets; пропущенный suffix, duplicate
+effect/entity, неполный scope set и v1 consent не дают approval. Подпись
+сохранённого personal begin packet инициатора проверяется ключом его устройства
+из независимо pinned shared directory; это не создаёт personal authority из paste.
+User/device каждого получателя сверяются с текущим signed frame, actual product
+writers — с signed bound commands. Для каждой owner scope отдельное согласие на
+полный fingerprint и явный roster сохраняется/readback до root rotation; результат
+сохраняется до export. Foreign approval paste сначала сохраняется unverified,
+а verified relay требует подписи реального scope owner. Export после restart
+возвращает исходный packet без повторной подписи или применения.
+
+Web cloud-sync и Native AuthController получили foreground API; matching prepare
+helpers собирают bounded exchange parts из durable stager. Typed retained custody
+читает также partial owner inputs, а consent/verified evidence — все страницы
+и independently saved directory histories. Исторический collector разрешён только
+для read-only custody, без signer/writer/новых pins; foreground approval требует
+текущих anchors. Новые control records не добавлены в content replay.
+
+Обычные role/remove/grants/category/invitation UI и composer effects → private
+product edits ещё должны соединить этот path. Это не завершённый membership E2E.
+Very-wide/native/local-record bounds и поздние ACL divergence/resolution остаются.
+Никаких security compiler/lint/tests/build/CI не запускалось. Coverage9/20.

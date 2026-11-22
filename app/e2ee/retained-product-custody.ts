@@ -17,11 +17,16 @@ import {MembershipAtomicPacketBindings,membershipAtomicChangeHash,type Membershi
 import {membershipAtomicApplyId,membershipAtomicApplyRequestId,validateMembershipAtomicApplyState,type MembershipAtomicApplyState} from './membership-atomic-apply.ts';
 import {membershipAtomicApplyPayload,validateMembershipAtomicReceipt,validateMembershipAtomicReceiptPage,membershipAtomicReceiptPageRef,type MembershipAtomicApplyAction} from './membership-atomic-receipts.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
+import {MEMBERSHIP_ATOMIC_OWNER_PREFIXES,membershipAtomicOwnerId,membershipAtomicOwnerScopeSuffix,validateMembershipAtomicOwnerLocal,
+ type MembershipAtomicOwnerState,type MembershipAtomicOwnerPart,type MembershipAtomicOwnerConsent,type MembershipAtomicOwnerRelay} from './membership-atomic-owner.ts';
+import {MembershipAtomicReviewCollector,membershipAtomicReviewFingerprint,membershipAtomicRotationShape,type MembershipAtomicReview,type MembershipAtomicReviewPart} from './membership-atomic-review.ts';
+import type {DeviceAccessTarget} from './device-access-contract.ts';
 
 type Options={vault:SourceStageReadVault;actor:{ownerId:string;deviceId:string};receivingKey:CryptoKey;selfKeys:{signingKey:string;receivingKey:string};assertCurrent:()=>void;
  outbox:readonly string[];copies:readonly string[];jobHistory:readonly string[];controlHistory:readonly string[];personalScopeId:string|null;
  claimed:(domain:E2eeContext['domain'],id:string)=>boolean;claim:(domain:E2eeContext['domain'],id:string,scopeId:string,role:string)=>void;
- directory:(scopeId:string,select:(frame:VerifiedDirectory)=>boolean)=>Promise<VerifiedDirectory>};
+ directory:(scopeId:string,select:(frame:VerifiedDirectory)=>boolean)=>Promise<VerifiedDirectory>;
+ directoryEvidence?:(scopeId:string)=>Promise<{target:DeviceAccessTarget;events:SignedE2eeCommand[]}>};
 type Job={protocol:1;scopeId:string;domain:E2eeContext['domain'];objectId:string;generation:number;cryptoEpoch:number;keyId:string;expected:number;size:number;
  metadata:{filename:string;mediaType:string};originId?:string|null;draftId:string;draftParts:number;plan:{recordId:string;hash:string;expected:number}[];
  uploaded:number;pending:SignedE2eeCommand|null;cancelling:SignedE2eeCommand|null;complete:boolean};
@@ -110,6 +115,47 @@ export async function inspectRetainedProductCustody(options:Options){
   }
   if(input.result!==null){object(input.result);if(!input.batch||input.result.intentId!==input.intentId||input.result.changeHash!==changeHash)invalid();}
   if(!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');
+ };
+ const ownerRequests=new Map<string,MembershipAtomicReview>();
+ const ownerRequest=async(fingerprint:string)=>{
+  const cached=ownerRequests.get(fingerprint);if(cached)return cached;if(!options.personalScopeId)invalid();const id=membershipAtomicOwnerId(options.actor.ownerId,fingerprint);
+  const state=validateMembershipAtomicOwnerLocal(await metadata('outbox',id,true),options.actor.ownerId) as MembershipAtomicOwnerState;
+  if(state.format!=='genesis-membership-atomic-owner-local-v2'||membershipAtomicReviewFingerprint(state.request)!==fingerprint)invalid();ownerRequests.set(fingerprint,state.request);claim('outbox',id,options.personalScopeId,'membership-atomic-owner-input');return state.request;
+ };
+ const ownerPart=async(request:MembershipAtomicReview,kind:MembershipAtomicReviewPart['kind'],index:number)=>{
+  if(!options.personalScopeId)invalid();const fingerprint=membershipAtomicReviewFingerprint(request),id=membershipAtomicOwnerId(options.actor.ownerId,fingerprint,1,':'+kind+':'+index);
+  const value=validateMembershipAtomicOwnerLocal(await metadata('outbox',id,true),options.actor.ownerId,request) as MembershipAtomicOwnerPart;
+  if(value.format!=='genesis-membership-atomic-owner-part-local-v2'||value.part.kind!==kind||value.part.index!==index)invalid();claim('outbox',id,options.personalScopeId,'membership-atomic-owner-input');return value.part;
+ };
+ const completeOwnerReview=async(request:MembershipAtomicReview)=>{
+  if(!options.directoryEvidence)invalid();const evidence=new Map<string,Awaited<ReturnType<NonNullable<Options['directoryEvidence']>>>>();
+  const at=async(scopeId:string)=>{const prior=evidence.get(scopeId);if(prior)return prior;const value=await options.directoryEvidence!(scopeId);current();if(value.target.scopeId!==scopeId)invalid();evidence.set(scopeId,value);return value;};
+  const collector=new MembershipAtomicReviewCollector(request,{current,target:async scopeId=>(await at(scopeId)).target,directory:async scopeId=>({events:(await at(scopeId)).events}),checkpoint:async()=>undefined,
+   // The archive reader has no writer: hypothetical events and fresh pins are
+   // never persisted. Existing authenticated saved history is the only input.
+   remember:async()=>{current();}},true);
+  for(const kind of ['plan','preview','products'] as const){const refs=kind==='plan'?request.plan.pages:kind==='preview'?request.previewPages:request.productPages;
+   for(let index=0;index<refs.length;index++){await collector.consume(await ownerPart(request,kind,index));current();}}
+  return collector.finish();
+ };
+ const ownerControl=async(input:unknown,id:string)=>{
+  object(input);if(!options.personalScopeId)invalid();
+  if(id.startsWith(MEMBERSHIP_ATOMIC_OWNER_PREFIXES[0])){const state=validateMembershipAtomicOwnerLocal(input,options.actor.ownerId) as MembershipAtomicOwnerState;
+   if(state.format!=='genesis-membership-atomic-owner-local-v2')invalid();const fingerprint=membershipAtomicReviewFingerprint(state.request);if(id!==membershipAtomicOwnerId(options.actor.ownerId,fingerprint))invalid();await ownerRequest(fingerprint);return;}
+  if(id.startsWith(MEMBERSHIP_ATOMIC_OWNER_PREFIXES[1])){object(input.part);const request=await ownerRequest(String(input.part.fingerprint)),value=validateMembershipAtomicOwnerLocal(input,options.actor.ownerId,request) as MembershipAtomicOwnerPart;
+   if(value.format!=='genesis-membership-atomic-owner-part-local-v2')invalid();const part=await ownerPart(request,value.part.kind,value.part.index);if(!equal(value.part,part))invalid();return;}
+  const request=await ownerRequest(String(input.fingerprint)),value=validateMembershipAtomicOwnerLocal(input,options.actor.ownerId,request),row=await vault.read('outbox',id);if(!row)invalid();let serial:number;try{serial=row.serial;}finally{row.value.fill(0);}current();
+  if(value.format!=='genesis-membership-atomic-owner-consent-local-v2'&&value.format!=='genesis-membership-atomic-owner-relay-local-v2')invalid();
+  const consent=value.format==='genesis-membership-atomic-owner-consent-local-v2'?value as MembershipAtomicOwnerConsent:null,relay=value.format==='genesis-membership-atomic-owner-relay-local-v2'?value as MembershipAtomicOwnerRelay:null;
+  const scopeId=consent?.scopeId??relay!.approval.scopeId,kind=consent?2:3;if(id!==membershipAtomicOwnerId(options.actor.ownerId,String(input.fingerprint),kind,membershipAtomicOwnerScopeSuffix(scopeId)))invalid();
+  if(serial!==(consent?(consent.packet?2:1):(relay!.verified?2:1)))invalid();
+  // Even an unverified paste is retained exactly, but supplies no authority.
+  if(relay&&!relay.verified){if(request.plan.actorId!==options.actor.ownerId)invalid();claim('outbox',id,options.personalScopeId,'membership-atomic-owner-input');return;}
+  const reviewed=await completeOwnerReview(request),scope=reviewed.scopes.find(item=>item.scopeId===scopeId);if(!scope||consent&&(scope.ownerId!==options.actor.ownerId||!equal(scope.roles,consent.roles))||relay&&request.plan.actorId!==options.actor.ownerId)invalid();
+  const signed=consent?.packet??relay?.approval.packet;if(signed){membershipAtomicRotationShape(signed,request,scope);
+   const frame=await options.directory(scopeId,frame=>frame.checkpoint.revision===scope.directoryRevision&&frame.checkpoint.hash===scope.checkpointHash&&frame.generation===scope.generation);current();const signer=frame.devices.get(signed.command.deviceId);
+   if(frame.ownerId!==scope.ownerId||!signer||signer.revoked||signer.role!=='owner'||signer.userId!==scope.ownerId||consent&&signer.deviceId!==options.actor.deviceId)invalid();await verifyE2eeCommand(signed,await signingPublicKey(signer.signingKey));current();
+  }claim('outbox',id,options.personalScopeId,'membership-atomic-owner-evidence');
  };
  const atomicStates=new Map<string,MembershipAtomicLocalState>();
  const atomicState=async(intentId:string)=>{
@@ -374,7 +420,8 @@ export async function inspectRetainedProductCustody(options:Options){
   }else if(/^stoicheion-job:(daily|spread|timeline)$/.test(id)){
    object(value);object(value.content);assertTechnical(value.content.scopeId);const directory=await options.directory(value.content.scopeId,()=>true);if(directory.kind!=='personal')invalid();
    const {inspectStoicheionLocalJob}=await import('./stoicheion-product.ts');inspectStoicheionLocalJob(value,options.actor.ownerId,directory.scopeId,id.slice('stoicheion-job:'.length) as 'daily'|'spread'|'timeline');current();claim('outbox',id,directory.scopeId,'stoicheion-job');
-  }else if(['membership-atomic-v2:','membership-atomic-page:','membership-atomic-request:','membership-atomic-packets:','membership-atomic-packet-page:','membership-atomic-apply:','membership-atomic-apply-request:','membership-atomic-receipt-page:'].some(prefix=>id.startsWith(prefix)))await atomic(value,id);
+  }else if(MEMBERSHIP_ATOMIC_OWNER_PREFIXES.some(prefix=>id.startsWith(prefix)))await ownerControl(value,id);
+  else if(['membership-atomic-v2:','membership-atomic-page:','membership-atomic-request:','membership-atomic-packets:','membership-atomic-packet-page:','membership-atomic-apply:','membership-atomic-apply-request:','membership-atomic-receipt-page:'].some(prefix=>id.startsWith(prefix)))await atomic(value,id);
   else if(id.startsWith('membership:'))await membership(value,id);
   else if(id.startsWith('rotation:')){
    exactKeys(value,['protocol','roles','manifest','packet']);if(value.protocol!==1)invalid();const checked=await rotation(value.packet),payload=checked.command.payload;

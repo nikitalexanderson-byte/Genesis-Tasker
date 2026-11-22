@@ -65,6 +65,9 @@ internal class E2eeMembershipAtomicStager(private val device:UnlockedE2eeDevice,
         intent
     }}}
     suspend fun stagePlan(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{stagePlanLocked(intent)}}
+    suspend fun reviewAuthorization(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
+        val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash);request("membership-atomic-begin",JSONObject().put("intentId",intent).put("planHash",hash))
+    }}
     suspend fun previewPage(intent:String,after:Int=0):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
         check(after in 0..5001){"E2EE_MEMBERSHIP_ATOMIC_INVALID"};val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash);val plan=state.getJSONObject("plan");val anchors=mutableMapOf<String,JSONObject>()
         for(index in 0 until plan.getJSONArray("pages").length()){

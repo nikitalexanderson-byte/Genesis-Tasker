@@ -1,5 +1,28 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: v2 paged all-owner effects review (source-only)
+
+Добавлены membership-atomic-review/owner/web-owner/review-prepare TS и matching
+Kotlin Review/OwnerReviews/NativeReview. Полный header/page collector связывает
+effects, scopes, actor begin signature, verified user/device recipient roster и
+actual bound-product writers. Durable owner inputs/consent/packets precede network
+verification/root rotation/export; v1 review не принимается. Foreign approval
+paste stays inert until independently pinned owner signature succeeds. Exact saved
+exports survive restart without re-sign/apply. Real web/AuthController foreground
+APIs and typed retained partial/complete custody добавлены. Retained mode rebuilds
+only existing saved signed history; foreground review requires current anchors.
+
+Next: ordinary-operation composer from frozen reviewed effects to private record
+edits, normal role/remove/grants/category/invitation UI14lang, stale semantic
+resolution/cancel; остальные original prompt categories и very-wide streaming.
+Source-only; compiler/lint/tests/build/CI запрещены до конца code phase.
+Coverage9/20, production149/floors0/cutover off; demo-output/ не читался.
+
+Urgent PR43 required CI45034742687 полностью success, но merge405: duplicate
+push CI45034738601 cancelled checks также считаются required. Его cancelled jobs
+перезапущены без ослабления защиты; не отменять повторно. После success merge
+expected head45ad2e22, exact-main website_only checks и штатный Deploy.
+
 ## 22 ноября: historical bound-product readback (source-only)
 
 Web/native confirmPrepared теперь получает исходный signed packet. Exact current

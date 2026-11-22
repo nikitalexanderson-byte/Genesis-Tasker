@@ -172,6 +172,10 @@ export async function openMigrationOwnershipCatalogue(source:Options){
    const known=savedDirectories.get(scopeId);if(!known)invalid();let found:import('./directory.ts').VerifiedDirectory|undefined;
    const latest=await device.savedDirectory(scopeId,frame=>{if(select(frame))found=structuredClone(frame);});current();
    if(!latest||latest.ownerId!==known.ownerId||!found)invalid();return found;
+  },directoryEvidence:async scopeId=>{
+   const known=savedDirectories.get(scopeId);if(!known)invalid();const latest=await device.savedDirectory(scopeId);current();if(!latest||latest.ownerId!==known.ownerId)invalid();
+   const saved=await metadata(known.id,32*1024*1024,'key-check');exactKeys(saved.value,['ownerId','pin','checkpoint','events']);if(saved.value.ownerId!==known.ownerId||!Array.isArray(saved.value.events))invalid();
+   return{target:{ownerId:latest.ownerId,scopeId,kind:latest.kind,resourceId:latest.resourceId,authority:saved.value.pin as import('./keys.ts').PublicDeviceKeys},events:saved.value.events as SignedE2eeCommand[]};
   }});current();
  const cancellationCounts=new Map<string,number>();
  for(const id of copyIds){
