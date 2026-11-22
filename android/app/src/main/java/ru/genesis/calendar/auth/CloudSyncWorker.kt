@@ -14,7 +14,8 @@ class CloudSyncWorker(context: Context, parameters: WorkerParameters) : Coroutin
                 .getBoolean("isolated", false)) Result.success()
         else {
             val controller=AuthController.get(applicationContext)
-            if(controller.synchronizeInBackground()){
+            if(ru.genesis.calendar.security.NativePrivateProducts.isProtected((applicationContext as ru.genesis.calendar.GenesisApplication).workspaceScope)) Result.success()
+            else if(controller.synchronizeInBackground()){
                 ru.genesis.calendar.reminders.SupportTipsNotifications.deliver(applicationContext,controller)
                 Result.success()
             }else Result.retry()

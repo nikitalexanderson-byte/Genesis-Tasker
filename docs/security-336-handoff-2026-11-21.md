@@ -1,5 +1,16 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: background lock fencing — код
+
+Private CloudSyncWorker/два reminder workers больше не входят в legacy sync,
+expireIdleHabits/Room scheduler и не получают фоновые ключи. Сохранённый private
+alarm/action показывает только GENESIS с открытием foreground; task/habit action
+не меняет данные без vault. RestoreReceiver также не восстанавливает legacy
+schedule защищённого аккаунта. Очереди и исходные расписания не очищаются.
+Остаток notifications: новый полноценный technical reminder projection для private
+режима ещё не подключён; generic wakeup старых PendingIntents не заменяет его.
+Никаких compiler/tests/review. Далее wide transport/provider/source integration.
+
 ## 23 ноября: revoked-device replacement и отдельный reader — код
 
 Web key storage получил append-only цепочку новых identity slots; native — новый

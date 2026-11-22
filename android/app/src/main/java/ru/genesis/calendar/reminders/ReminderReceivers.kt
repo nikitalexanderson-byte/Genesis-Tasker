@@ -18,6 +18,7 @@ import ru.genesis.calendar.R
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
+        if(privateReminderForegroundOnly(context,intent))return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
         val wakeLock = context.getSystemService(PowerManager::class.java)
@@ -40,6 +41,7 @@ class ReminderReceiver : BroadcastReceiver() {
 class ReminderActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
+        if(privateReminderForegroundOnly(context,intent))return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
         app.appScope.launch {
@@ -58,6 +60,7 @@ class ReminderActionReceiver : BroadcastReceiver() {
 class HabitNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
+        if(privateReminderForegroundOnly(context,intent))return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
         val wakeLock = context.getSystemService(PowerManager::class.java)
@@ -80,6 +83,7 @@ class HabitNotificationReceiver : BroadcastReceiver() {
 class HabitReminderActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
+        if(privateReminderForegroundOnly(context,intent))return
         if (intent.action != "ru.genesis.calendar.HABIT_SNOOZE") return
         val pending = goAsync(); val app = context.applicationContext as GenesisApplication
         app.appScope.launch {
@@ -113,6 +117,7 @@ class RestoreReceiver : BroadcastReceiver() {
             android.app.AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) return
         val pending = goAsync()
         val app = context.applicationContext as GenesisApplication
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)){pending.finish();return}
         ReminderMaintenanceWorker.enqueueImmediate(context)
         app.appScope.launch {
             try {
