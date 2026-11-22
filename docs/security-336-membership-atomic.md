@@ -26,6 +26,29 @@ intent. Изменённый plan hash не может занять тот же 
 
 ## Ещё не подключено
 
+Добавлен исходниковый server atomic writer и migration138 с immutable paged
+receipts. Manifest теперь также содержит operation header и paged grants; старый
+plan без operation final apply отклоняет, ничего не достраивает и не переподписывает.
+PHP независимо собирает текущий graph/root/ACL snapshot, сверяет review fingerprint
+и рассчитывает normal role/remove/grants/category effects по matching pure rules.
+Все ACL/effects/anchors и полное замыкание scopes должны совпасть с планом. Под
+одним writer выполняются точные product-bound commits, ACL, отзывы приглашений/
+старых Google projection links и owner rotations; ошибка откатывает всю операцию.
+Подписанный foreign writer может передать bound product packet как relayed
+operation; его фактический user/device остаётся в product proof/receipt. Это
+требует matching client custody/attribution и полного v2 review, которые ещё
+нужно подключить. Legacy audit/automation/notification mutation helpers не
+вызываются; role events сохранены в подписанном manifest, normal private history
+и readback должны быть подключены на клиенте.
+
+Lost-response commit возвращает только прежний outcome при точном commit request
+hash и ещё действующем personal owner device. Новое применение требует свежие
+anchors. Отдельные read-only receipt/page routes возвращают сохранённый результат,
+не применяют и не renew исходную операцию. Этот код не запускался; server planner
+parity, full rollback, multi-owner relay, lost response и все native/web paths
+ещё предстоит принять. Snapshot/native/local-record bounds всё ещё явные; их
+нельзя выдавать за завершённый streaming очень больших graphs.
+
 Добавлен account-scoped durable stager web/native: полный manifest и отдельные
 immutable local pages сохраняются и читаются обратно до первого HTTP. Каждый
 staging request получает один сохранённый signed packet; unknown outcome не
@@ -53,10 +76,8 @@ matching Kotlin implementation общего wire/local формата; different
 ещё предстоит. Pure atomic planner по-прежнему использует общий runtime. Новые
 control outboxes не добавлены в content-only export и не исполняются при restore.
 
-- Финальный atomic writer: полная сверка graph/root/ACL anchors и всех effects,
-  product-bound packets, приглашений/Google projection revocations, затем owner
-  rotations с manifest уже загруженного ciphertext, под одним lock.
-- Paged receipt/readback и полный durable apply coordinator;
+- Клиентские paged receipt/readback и полный durable apply coordinator;
+  server writer/planner ещё не проверены.
   owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.
 - Потоковый capture очень больших graph/ACL input без ограничения общим размером

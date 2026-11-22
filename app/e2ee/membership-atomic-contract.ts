@@ -5,11 +5,15 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {validateMembershipChanges,membershipChangesProjection,type MembershipChange} from './membership-contract.ts';
 import {productMutation,type ProductMutation} from './product-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
-import type {MembershipOperationPlan} from './membership-operation-plan.ts';
+import {validateMembershipOperation,type MembershipOperation,type MembershipOperationPlan} from './membership-operation-plan.ts';
 
 export type MembershipAtomicAnchor={scopeId:string;ownerId:string;kind:'space'|'project';resourceId:string;generation:number;directoryRevision:number;checkpointHash:string;entityId:string;revision:number;payloadHash:string};
 export type MembershipAtomicProducts={scopeId:string;intentId:string;operations:ProductMutation[]};
+type GrantOperation=Extract<MembershipOperation,{kind:'project-grants'}>;
+export type MembershipAtomicOperationHeader=Exclude<MembershipOperation,GrantOperation>|Omit<GrantOperation,'grants'>;
 export type MembershipAtomicPage=
+ |{kind:'operation';items:MembershipAtomicOperationHeader[]}
+ |{kind:'operation-grants';items:GrantOperation['grants']}
  |{kind:'acl';items:MembershipChange[]}
  |{kind:'anchors';items:MembershipAtomicAnchor[]}
  |{kind:'clear-assignments';items:{projectId:string;userId:string}[]}
@@ -34,7 +38,7 @@ export interface MembershipAtomicTransport{
  membershipAtomicCancel(input:MembershipAtomicCancelInput):Promise<unknown>;
  membershipAtomicSeal(input:MembershipAtomicSealInput):Promise<unknown>;
 }
-const planKinds=['acl','anchors','clear-assignments','revoke-invitations','role-events','product-operations'] as const;
+const planKinds=['operation','operation-grants','acl','anchors','clear-assignments','revoke-invitations','role-events','product-operations'] as const;
 const packetKinds=['rotation-packets','product-packets'] as const;
 const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');};
 const integer=(value:unknown,min=0)=>{if(!Number.isSafeInteger(value)||Number(value)<min||Number(value)>=Number.MAX_SAFE_INTEGER)invalid();};
@@ -50,6 +54,11 @@ export function membershipAtomicStagingPayload(action:MembershipAtomicStagingAct
  return structuredClone(input) as Record<string,WireValue>;
 }
 export function membershipAtomicDigest(value:unknown){const bytes=canonicalE2eeValue(value as WireValue);try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}}
+export function membershipAtomicOperationHeader(input:unknown):MembershipAtomicOperationHeader{
+ if(input&&typeof input==='object'&&!Array.isArray(input)&&(input as Record<string,unknown>).kind==='project-grants'){
+  exactKeys(input,['kind','spaceId','userId','allProjects']);const value=validateMembershipOperation({...input,grants:[]}) as GrantOperation;return {kind:value.kind,spaceId:value.spaceId,userId:value.userId,allProjects:value.allProjects};
+ }return validateMembershipOperation(input) as MembershipAtomicOperationHeader;
+}
 export function validateMembershipAtomicAnchor(input:unknown):MembershipAtomicAnchor{
  exactKeys(input,['scopeId','ownerId','kind','resourceId','generation','directoryRevision','checkpointHash','entityId','revision','payloadHash']);
  for(const key of ['scopeId','ownerId','resourceId','entityId'])assertTechnical(input[key]);if(!['space','project'].includes(String(input.kind))||input.entityId!==input.kind+':'+input.resourceId)invalid();
@@ -61,6 +70,9 @@ export function validateMembershipAtomicPage(input:unknown):MembershipAtomicPage
  if(input.kind==='acl')validateMembershipChanges(input.items);
  else for(const item of input.items){
   switch(input.kind){
+   case'operation':if(input.items.length!==1)invalid();membershipAtomicOperationHeader(item);break;
+   case'operation-grants':exactKeys(item,['projectId','role','includeDescendants']);assertTechnical(item.projectId);
+    if(!['member','commenter','viewer','none'].includes(String(item.role))||typeof item.includeDescendants!=='boolean')invalid();unique(item.projectId);break;
    case'anchors':{const row=validateMembershipAtomicAnchor(item);unique(row.scopeId);break;}
    case'clear-assignments':exactKeys(item,['projectId','userId']);assertTechnical(item.projectId);assertTechnical(item.userId);unique(item.projectId+'\0'+item.userId);break;
    case'revoke-invitations':exactKeys(item,['kind','resourceId','userId']);if(!['space','project'].includes(String(item.kind)))invalid();assertTechnical(item.resourceId);assertTechnical(item.userId);unique(item.kind+'\0'+item.resourceId+'\0'+item.userId);break;
@@ -129,7 +141,9 @@ export function membershipAtomicOperationPlan(actorId:string,intentId:string,spa
   kind:scope.root.entityId.startsWith('space:')?'space':'project',resourceId:scope.root.entityId.slice(scope.root.entityId.indexOf(':')+1),
   generation:scope.root.generation,directoryRevision:scope.root.directoryRevision,checkpointHash:scope.root.checkpointHash,
   entityId:scope.root.entityId,revision:scope.root.revision,payloadHash:scope.root.payloadHash})).sort((a,b)=>a.scopeId<b.scopeId?-1:a.scopeId>b.scopeId?1:0);
- const pages=[...membershipAtomicPages('acl',operation.changes),...membershipAtomicPages('anchors',anchors),
+ const raw=validateMembershipOperation(operation.operation),header=raw.kind==='project-grants'?{kind:raw.kind,spaceId:raw.spaceId,userId:raw.userId,allProjects:raw.allProjects}:raw;
+ const pages=[...membershipAtomicPages('operation',[header]),...membershipAtomicPages('operation-grants',raw.kind==='project-grants'?raw.grants:[]),
+  ...membershipAtomicPages('acl',operation.changes),...membershipAtomicPages('anchors',anchors),
   ...membershipAtomicPages('clear-assignments',operation.clearAssignments),...membershipAtomicPages('revoke-invitations',operation.revokeInvitations),
   ...membershipAtomicPages('role-events',operation.roleEvents),...membershipAtomicPages('product-operations',products)];
  const scopeIds=[...operation.scopeIds].sort();if(!same(anchors.map(row=>row.scopeId).sort(),scopeIds))invalid();

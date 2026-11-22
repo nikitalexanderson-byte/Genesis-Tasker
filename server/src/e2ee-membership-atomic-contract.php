@@ -2,8 +2,9 @@
 declare(strict_types=1);
 require_once __DIR__.'/e2ee-membership.php';
 require_once __DIR__.'/e2ee-product.php';
+require_once __DIR__.'/e2ee-membership-operation.php';
 
-const GENESIS_MEMBERSHIP_PLAN_KINDS=['acl','anchors','clear-assignments','revoke-invitations','role-events','product-operations'];
+const GENESIS_MEMBERSHIP_PLAN_KINDS=['operation','operation-grants','acl','anchors','clear-assignments','revoke-invitations','role-events','product-operations'];
 const GENESIS_MEMBERSHIP_PACKET_KINDS=['rotation-packets','product-packets'];
 
 function genesisMembershipAtomicDigest(mixed $value):string
@@ -35,6 +36,9 @@ function genesisMembershipAtomicPage(mixed $input):array
     foreach($page['items'] as $row){
         $key=null;
         switch($page['kind']){
+            case 'operation':
+                if(count($page['items'])!==1)throw new InvalidArgumentException('E2EE_MEMBERSHIP_ATOMIC_INVALID');genesisMembershipOperation($row,true);$key='operation';break;
+            case 'operation-grants':genesisMembershipOperationGrant($row);$key=$row['projectId'];break;
             case 'acl':
                 genesisE2eeExactFields($row,['table','key','expectedHash','after']);$spec=genesisE2eeAclSpec($row['table']);genesisE2eeExactFields($row['key'],$spec['keys']);
                 foreach($row['key'] as $id)genesisE2eeIdentifier($id);

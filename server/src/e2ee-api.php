@@ -38,6 +38,11 @@ function genesisE2eeRoute(string $method,string $path): never
     }
     $binding=(string)($_SESSION['auth_login_id']??'');
     if(strlen($binding)<16)throw new GenesisResourceLimitException(401,'E2EE_REAUTH_REQUIRED');
+    if(in_array($path,['e2ee/v1/membership-atomic-commit','e2ee/v1/membership-atomic-receipt','e2ee/v1/membership-atomic-receipt-page'],true)){
+        require_once __DIR__.'/e2ee-membership-atomic-apply.php';
+        genesisJson(match($path){'e2ee/v1/membership-atomic-commit'=>genesisMembershipAtomicCommit($owner,$body,$binding),
+            'e2ee/v1/membership-atomic-receipt'=>genesisMembershipAtomicReceipt($owner,$body),'e2ee/v1/membership-atomic-receipt-page'=>genesisMembershipAtomicReceipt($owner,$body,true)});
+    }
     if(in_array($path,['e2ee/v1/membership-atomic-begin','e2ee/v1/membership-atomic-page','e2ee/v1/membership-atomic-status','e2ee/v1/membership-atomic-cancel','e2ee/v1/membership-atomic-seal'],true)){
         require_once __DIR__.'/e2ee-membership-atomic-stage.php';
         genesisJson(match($path){'e2ee/v1/membership-atomic-begin'=>genesisMembershipAtomicBegin($owner,$body),

@@ -8,7 +8,7 @@ import java.security.MessageDigest
  * validates inert originals; it neither trusts a directory nor executes them. */
 internal object E2eeMembershipAtomicContract {
     val actions=setOf("membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel","membership-atomic-seal")
-    private val planKinds=setOf("acl","anchors","clear-assignments","revoke-invitations","role-events","product-operations")
+    private val planKinds=setOf("operation","operation-grants","acl","anchors","clear-assignments","revoke-invitations","role-events","product-operations")
     private val packetKinds=setOf("rotation-packets","product-packets")
     private fun invalid():Nothing=error("E2EE_MEMBERSHIP_ATOMIC_INVALID")
     private fun rows(value:JSONArray)=(0 until value.length()).map{value.getJSONObject(it)}
@@ -32,11 +32,28 @@ internal object E2eeMembershipAtomicContract {
     }
     private fun pageProjection(input:JSONObject)=JSONObject().put("format","genesis-membership-page-v2").put("kind",input.get("kind"))
         .put("items",if(input.get("kind")=="acl")E2eeMembershipContract.projection(input.getJSONArray("items"))else input.getJSONArray("items"))
+    private fun operationHeader(input:JSONObject){
+        val kind=input.getString("kind");val fields=when(kind){
+            "project-role"->setOf("kind","projectId","userId","role");"project-remove"->setOf("kind","projectId","userId")
+            "space-role"->setOf("kind","spaceId","userId","role")+(if(input.has("permissions"))setOf("permissions")else emptySet())+(if(input.has("canOrganizeTasks"))setOf("canOrganizeTasks")else emptySet())
+            "member-permissions"->setOf("kind","spaceId","userId","categoryId","permissions");"project-grants"->setOf("kind","spaceId","userId","allProjects")
+            "category-permissions"->setOf("kind","spaceId","categoryId","expectedRevision","permissions");else->invalid()
+        };E2eeKeys.exact(input,fields)
+        for(key in listOf("projectId","spaceId","userId"))if(input.has(key))E2eeKeys.technical(input.getString(key))
+        if(input.has("categoryId")&&(kind=="category-permissions"||!input.isNull("categoryId")))E2eeKeys.technical(input.getString("categoryId"))
+        if(kind=="project-role"&&input.get("role") !in setOf("manager","member","commenter","viewer")||kind=="space-role"&&input.get("role") !in setOf("admin","member","guest"))invalid()
+        if(input.has("canOrganizeTasks")&&input.get("canOrganizeTasks") !is Boolean||kind=="project-grants"&&input.get("allProjects") !is Boolean)invalid()
+        if(kind=="member-permissions"&&input.isNull("categoryId")&&input.isNull("permissions")||kind=="category-permissions"&&input.isNull("permissions"))invalid()
+        if(input.has("permissions")&&!input.isNull("permissions")){val permissions=input.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}
+        if(kind=="category-permissions")E2eeCommands.integer(input.get("expectedRevision"))
+    }
     fun page(input:JSONObject):JSONObject {
         E2eeKeys.exact(input,setOf("kind","items"));val kind=input.getString("kind");val items=input.getJSONArray("items")
         if(kind !in planKinds+packetKinds||items.length() !in 1..200)invalid();val seen=mutableSetOf<String>()
         fun unique(value:String){if(!seen.add(value))invalid()}
         if(kind=="acl")E2eeMembershipContract.changes(items)else for(row in rows(items))when(kind){
+            "operation"->{if(items.length()!=1)invalid();operationHeader(row)}
+            "operation-grants"->{E2eeKeys.exact(row,setOf("projectId","role","includeDescendants"));unique(E2eeKeys.technical(row.getString("projectId")));if(row.get("role") !in setOf("member","commenter","viewer","none")||row.get("includeDescendants") !is Boolean)invalid()}
             "anchors"->{anchor(row);unique(row.getString("scopeId"))}
             "clear-assignments"->{E2eeKeys.exact(row,setOf("projectId","userId"));for(key in listOf("projectId","userId"))E2eeKeys.technical(row.getString(key));unique(row.getString("projectId")+"\u0000"+row.getString("userId"))}
             "revoke-invitations"->{E2eeKeys.exact(row,setOf("kind","resourceId","userId"));if(row.get("kind") !in setOf("space","project"))invalid();for(key in listOf("resourceId","userId"))E2eeKeys.technical(row.getString(key));unique(row.getString("kind")+"\u0000"+row.getString("resourceId")+"\u0000"+row.getString("userId"))}

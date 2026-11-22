@@ -1,5 +1,32 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: source-only server atomic writer / operation semantic preflight
+
+После1f89c64c added operation/operation-grants manifest pages, matching TS/Kotlin
+header validators, PHP current technical snapshot/fingerprint/normal planner,
+full ACL/effects/anchor comparison и final transaction writer. New files:
+e2ee-membership-operation.php, e2ee-membership-atomic-apply.php, migration138.
+Products (including signed relayed writers), exact ACL, invitation/projection
+revocation, all-owner rotations и immutable paged receipts share one lock.
+Commit retry checks exact saved request hash; live personal signer is mandatory,
+fresh anchors only waived for immutable prior result/read-only receipts. No
+legacy audit/automation handlers execute. Private role history/readback are
+still client work. Code is uncompiled/untested; coverage remains9/20.
+
+Next: client apply signatures/coordinator/paged receipts + normal repository
+readback and retained custody for new controls; allow/attribute the actual
+foreign bound product signer consistently. V2 all-owner full effects review,
+normal UI, very-wide streaming and remaining original prompt categories follow.
+Do not treat v1 approval as v2. No security QA/push/deploy/device/Play. User's
+code-first order, production149/floors0/cutover off remain.
+
+Urgent web: branch CI45029384697 success; merge43 was rejected because GitHub
+did not count workflow_dispatch checks as required PR checks. No protection
+bypass. Empty source-identical commit9eaf74056d4d5dd34092727fd6b97ae0f0308158
+triggers ordinary PR CI45033064903 (both required jobs), duplicate push CI
+45033058071 cancelled. PR43 remains unmerged/unpublished; publish it first when
+required PR checks pass, then exact main website_only checks and штатный Deploy.
+
 ## 22 ноября: packet-page coordinator и storage-only seal (source-only)
 
 После9457c126 добавлены durable web/native packet manifests/pages и exact saved

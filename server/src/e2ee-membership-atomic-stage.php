@@ -4,7 +4,7 @@ require_once __DIR__.'/e2ee-membership-atomic-contract.php';
 
 /** A staging signature authorizes only immutable technical storage. It never
  * permits an ACL write, a product commit, an owner rotation or a trust grant. */
-function genesisMembershipAtomicAuthorization(PDO $db,string $actor,mixed $packet,string $action,array $payload):array
+function genesisMembershipAtomicAuthorization(PDO $db,string $actor,mixed $packet,string $action,array $payload,bool $fresh=true):array
 {
     $packet=genesisE2eeExactFields($packet,['command','signature']);$command=genesisE2eeCommand($packet['command']);$scope=genesisE2eeScope($actor,$command['scopeId']);
     if($scope['kind']!=='personal'||$scope['owner_id']!==$actor||$scope['resource_id']!==$actor||$scope['state']!=='active'
@@ -12,8 +12,8 @@ function genesisMembershipAtomicAuthorization(PDO $db,string $actor,mixed $packe
     $device=genesisE2eeRow($db,'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$scope['scope_id'],$command['deviceId']]);
     if(!$device||$device['revoked']||$device['user_id']!==$actor||$device['role']!=='owner')throw new DomainException('E2EE_REVOKED_DEVICE');
     genesisE2eeVerifyCommand($packet,$device['signing_key']);
-    if($command['securityEpoch']!==(int)$scope['security_epoch']||$command['expectedRevision']!==(int)$scope['directory_revision']
-        ||$command['checkpointHash']!==$scope['checkpoint_hash'])throw new DomainException('E2EE_STALE_EPOCH');
+    if($fresh&&($command['securityEpoch']!==(int)$scope['security_epoch']||$command['expectedRevision']!==(int)$scope['directory_revision']
+        ||$command['checkpointHash']!==$scope['checkpoint_hash']))throw new DomainException('E2EE_STALE_EPOCH');
     if(!hash_equals(genesisMembershipAtomicDigest($command['payload']),genesisMembershipAtomicDigest($payload)))throw new DomainException('E2EE_CONTEXT_MISMATCH');
     return ['scope'=>$scope,'command'=>$command];
 }
