@@ -37,8 +37,18 @@ cancelRequested. Cancel сохраняет намерение до HTTP, точ�
 directory, сохраняя interrupted ready=false страницы как inert originals.
 Старые membership packets остаются отдельным v1 форматом.
 
-Это пока **только plan staging/cancel**, без packet-page coordinator, final apply,
-receipt/readback и normal role/invitation UI. Native codec/stager написан как
+Следующий исходниковый проход добавляет packet-page coordinator на web/native,
+immutable packet manifest в migration137 и storage-only seal endpoint. Полные
+local packet pages сохраняются/readback до HTTP; bind collector проверяет exact
+plan hash, все scope rotations и declared product operations/anchors. Сервер
+перед seal заново читает все plan/packet pages по одной, сверяет индексы/count/
+hashes и закрывает insert новых страниц триггером. Retry сохраняет исходный
+packet. Retained custody читает также packet manifests/pages, проверяет full
+binding и подписи по существующим pinned history; foreign owner не превращается
+в доверенную authority из одного paste. Ни seal, ни custody команды не применяют.
+
+Это пока **staging/cancel/seal**, без final apply, receipt/readback, v2 owner
+review и normal role/invitation UI. Native codec/stager написан как
 matching Kotlin implementation общего wire/local формата; differential acceptance
 ещё предстоит. Pure atomic planner по-прежнему использует общий runtime. Новые
 control outboxes не добавлены в content-only export и не исполняются при restore.
@@ -46,7 +56,7 @@ control outboxes не добавлены в content-only export и не испо
 - Финальный atomic writer: полная сверка graph/root/ACL anchors и всех effects,
   product-bound packets, приглашений/Google projection revocations, затем owner
   rotations с manifest уже загруженного ciphertext, под одним lock.
-- Immutable packet manifest, paged receipt/readback и полный durable apply coordinator;
+- Paged receipt/readback и полный durable apply coordinator;
   owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.
 - Потоковый capture очень больших graph/ACL input без ограничения общим размером

@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: packet-page coordinator и storage-only seal (source-only)
+
+После9457c126 добавлены durable web/native packet manifests/pages и exact saved
+seal requests, matching binding collectors для всех rotations/products/anchors,
+native/web HTTP и migration137. Сервер seal сверяет complete persisted plan и
+packet pages по одной и блокирует insert после immutable manifest. Это не final
+ACL/product application. Retained custody теперь понимает также partial/ready
+packet sets и foreign owner signatures по независимо pinned history. Content-only
+restore не получил возможности исполнять control outboxes.
+
+Следующий шаг остаётся final atomic writer: full graph/root/ACL closure, complete
+effects, bound product commits, ACL/revocations/Google projection и owner rotations
+под одним lock; затем paged receipts/readback, v2 all-owner review и обычные UI.
+Не принять прежнее v1 согласие за review v2 effects manifest. Общая code-first
+очередь из исходного prompt сохраняется. Никаких security compiler/lint/tests/
+build/CI/push/deploy; coverage9/20, production149/floors0/cutover off неизменны.
+
 ## 22 ноября: durable atomic plan stager и retained custody (source-only)
 
 Добавлены account-scoped web/native stagers, общий strict local TS codec и

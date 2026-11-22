@@ -64,7 +64,8 @@ internal class E2eeMembershipAtomicStager(private val device:UnlockedE2eeDevice,
         if(!row.value.getBoolean("ready"))save(id,JSONObject(row.value.toString()).put("ready",true),row.serial)
         intent
     }}}
-    suspend fun stagePlan(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
+    suspend fun stagePlan(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{stagePlanLocked(intent)}}
+    private fun stagePlanLocked(intent:String):JSONObject {
         val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash);val plan=state.getJSONObject("plan");val refs=plan.getJSONArray("pages")
         for(at in 0 until refs.length())page(state,at)
         staging(intent,hash);val payload=JSONObject().put("intentId",intent).put("planHash",hash)
@@ -77,7 +78,54 @@ internal class E2eeMembershipAtomicStager(private val device:UnlockedE2eeDevice,
             val result=transport.membershipAtomicPage(body.put("page",page(state,at)).put("authorization",authorization));current()
             E2eeKeys.exact(result,setOf("intentId","planHash","phase","page"));check(result.get("intentId")==intent&&result.get("planHash")==hash&&result.get("phase")=="plan"&&same(result.getJSONObject("page"),ref)){"E2EE_INVALID_RECEIPT"}
         }
-        staging(intent,hash);JSONObject().put("intentId",intent).put("planHash",hash).put("pages",refs.length())
+        staging(intent,hash);return JSONObject().put("intentId",intent).put("planHash",hash).put("pages",refs.length())
+    }
+    private fun packetManifest(state:JSONObject):Stored {
+        val row=read(E2eeMembershipAtomicContract.packetsId(device.ownerId,state.getJSONObject("plan").getString("intentId")))?:error("E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED")
+        return Stored(E2eeMembershipAtomicContract.localPackets(row.value,state),row.serial)
+    }
+    private fun packetPage(manifest:JSONObject,index:Int):JSONObject {
+        val row=read(E2eeMembershipAtomicContract.packetPageId(device.ownerId,manifest.getString("intentId"),index))?:error("E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED")
+        check(row.serial==1L){"E2EE_CORRUPT_OUTBOX"};val value=E2eeMembershipAtomicContract.localPacketPageMatches(manifest,row.value);check(value.getInt("index")==index){"E2EE_CORRUPT_OUTBOX"};return value.getJSONObject("page")
+    }
+    private fun packetBindings(state:JSONObject,manifest:JSONObject,load:(Int)->JSONObject){
+        val plan=state.getJSONObject("plan");val binding=E2eeMembershipAtomicContract.PacketBindings(plan)
+        for(index in 0 until plan.getJSONArray("pages").length())binding.planPage(page(state,index))
+        for(index in 0 until manifest.getJSONArray("pages").length())binding.packetPage(load(index));binding.complete()
+    }
+    suspend fun createPackets(intent:String,inputPages:JSONArray):JSONObject {
+        current();E2eeKeys.technical(intent);val pages=JSONArray(inputPages.toString());val refs=JSONArray()
+        for(index in 0 until pages.length())refs.put(E2eeMembershipAtomicContract.pageRef(index,pages.getJSONObject(index)))
+        return withContext(Dispatchers.IO){mutex.withLock{
+            val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash)
+            val manifest=E2eeMembershipAtomicContract.localPackets(JSONObject().put("format","genesis-membership-local-packets-v2").put("ownerId",device.ownerId).put("intentId",intent)
+                .put("planHash",hash).put("batchHash",E2eeMembershipAtomicContract.batchHash(state.getJSONObject("plan"),refs)).put("pages",refs).put("ready",false),state)
+            packetBindings(state,manifest){pages.getJSONObject(it)};val id=E2eeMembershipAtomicContract.packetsId(device.ownerId,intent);val old=read(id);val stored:Stored
+            if(old!=null){val checked=E2eeMembershipAtomicContract.localPackets(old.value,state);check(checked.get("batchHash")==manifest.get("batchHash")){"E2EE_IDEMPOTENCY_CONFLICT"};stored=Stored(checked,old.serial)}
+            else stored=Stored(manifest,save(id,manifest,null))
+            for(index in 0 until pages.length()){
+                val key=E2eeMembershipAtomicContract.packetPageId(device.ownerId,intent,index);val value=JSONObject().put("format","genesis-membership-local-packet-page-v2").put("ownerId",device.ownerId).put("intentId",intent)
+                    .put("planHash",hash).put("batchHash",manifest.get("batchHash")).put("index",index).put("page",pages.getJSONObject(index));val prior=read(key)
+                if(prior!=null)check(prior.serial==1L&&same(prior.value,value)){"E2EE_IDEMPOTENCY_CONFLICT"}else save(key,value,null)
+            }
+            if(!stored.value.getBoolean("ready"))save(id,JSONObject(stored.value.toString()).put("ready",true),stored.serial)
+            JSONObject().put("intentId",intent).put("planHash",hash).put("batchHash",manifest.get("batchHash"))
+        }}
+    }
+    suspend fun stagePackets(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
+        val state=load(intent).value;val hash=state.getString("planHash");staging(intent,hash);val manifest=packetManifest(state).value
+        check(manifest.getBoolean("ready")){"E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED"};packetBindings(state,manifest){packetPage(manifest,it)}
+        stagePlanLocked(intent);val refs=manifest.getJSONArray("pages")
+        for(index in 0 until refs.length()){
+            staging(intent,hash);val ref=refs.getJSONObject(index);val body=JSONObject().put("intentId",intent).put("planHash",hash).put("phase","packets").put("index",index)
+            val authorization=request("membership-atomic-page",JSONObject(body.toString()).put("pageHash",ref.get("pageHash")));staging(intent,hash)
+            val response=transport.membershipAtomicPage(body.put("page",packetPage(manifest,index)).put("authorization",authorization));current()
+            E2eeKeys.exact(response,setOf("intentId","planHash","phase","page"));check(response.get("intentId")==intent&&response.get("planHash")==hash&&response.get("phase")=="packets"&&same(response.getJSONObject("page"),ref)){"E2EE_INVALID_RECEIPT"}
+        }
+        val authorization=request("membership-atomic-seal",JSONObject().put("intentId",intent).put("planHash",hash).put("batchHash",manifest.get("batchHash")));staging(intent,hash)
+        val response=transport.membershipAtomicSeal(JSONObject().put("intentId",intent).put("planHash",hash).put("packetPages",refs).put("authorization",authorization));current()
+        E2eeKeys.exact(response,setOf("intentId","planHash","batchHash","state"));check(response.get("intentId")==intent&&response.get("planHash")==hash&&response.get("batchHash")==manifest.get("batchHash")&&response.get("state")=="sealed"){"E2EE_INVALID_RECEIPT"}
+        JSONObject(response.toString())
     }}
     suspend fun cancel(intent:String):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
         val loaded=load(intent);val state=loaded.value;val hash=state.getString("planHash");val payload=JSONObject().put("intentId",intent).put("planHash",hash)

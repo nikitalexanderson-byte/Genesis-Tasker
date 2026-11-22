@@ -408,6 +408,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun membershipAtomicPage(input:JSONObject)=call("/membership-atomic-page",input)
             override fun membershipAtomicStatus(input:JSONObject)=call("/membership-atomic-status",input)
             override fun membershipAtomicCancel(input:JSONObject)=call("/membership-atomic-cancel",input)
+            override fun membershipAtomicSeal(input:JSONObject)=call("/membership-atomic-seal",input)
         }
         val peers=object:ru.genesis.calendar.security.E2eeMembershipPeerPorts{
             override fun current()=current.invoke()
@@ -835,6 +836,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 override fun membershipAtomicPage(input:JSONObject)=call("/membership-atomic-page",input)
                 override fun membershipAtomicStatus(input:JSONObject)=call("/membership-atomic-status",input)
                 override fun membershipAtomicCancel(input:JSONObject)=call("/membership-atomic-cancel",input)
+                override fun membershipAtomicSeal(input:JSONObject)=call("/membership-atomic-seal",input)
             }
         }
         try{val loaded=withContext(Dispatchers.IO){

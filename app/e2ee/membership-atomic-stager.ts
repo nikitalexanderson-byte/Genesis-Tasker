@@ -3,8 +3,9 @@ import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {membershipAtomicLocalId,membershipAtomicLocalPageId,membershipAtomicLocalRequestId,validateMembershipAtomicLocalState,
- validateMembershipAtomicLocalRequest,membershipAtomicLocalPageMatches,type MembershipAtomicLocalState as State} from './membership-atomic-local.ts';
-import {validateMembershipAtomicPlan,validateMembershipAtomicPage,membershipAtomicPageRef,membershipAtomicPlanHash,membershipAtomicStagingPayload,
+ validateMembershipAtomicLocalRequest,membershipAtomicLocalPageMatches,membershipAtomicLocalPacketsId,membershipAtomicLocalPacketPageId,
+ validateMembershipAtomicLocalPackets,membershipAtomicLocalPacketPageMatches,type MembershipAtomicLocalState as State,type MembershipAtomicLocalPackets} from './membership-atomic-local.ts';
+import {validateMembershipAtomicPlan,validateMembershipAtomicPage,membershipAtomicPageRef,membershipAtomicPlanHash,membershipAtomicStagingPayload,membershipAtomicBatchHash,MembershipAtomicPacketBindings,
  type MembershipAtomicPlan,type MembershipAtomicPage,type MembershipAtomicStagingAction,type MembershipAtomicTransport} from './membership-atomic-contract.ts';
 
 type Stored={value:unknown;serial:number};
@@ -73,7 +74,8 @@ export class MembershipAtomicStager{
  async #staging(intentId:string,planHash:string){const {state}=await this.#load(intentId);
   if(state.planHash!==planHash)throw new Error('E2EE_IDEMPOTENCY_CONFLICT');if(state.cancelRequested)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(!state.ready)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');
  }
- stagePlan(intentId:string){return this.#run(async()=>{
+ stagePlan(intentId:string){return this.#run(()=>this.#stagePlan(intentId));}
+ async #stagePlan(intentId:string){
   const {state}=await this.#load(intentId);if(state.cancelRequested)throw new Error('E2EE_MEMBERSHIP_CANCELLED');if(!state.ready)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');
   // Verify every local page before the first external request. Large pages are
   // loaded individually rather than concatenated into another wire document.
@@ -90,6 +92,47 @@ export class MembershipAtomicStager{
    const result=await this.ports.transport.membershipAtomicPage({intentId,planHash:state.planHash,phase:'plan',index,page,authorization});this.ports.current();
    exactKeys(result,['intentId','planHash','phase','page']);if(result.intentId!==intentId||result.planHash!==state.planHash||result.phase!=='plan'||!same(result.page,ref))throw new Error('E2EE_INVALID_RECEIPT');
   }await this.#staging(intentId,state.planHash);return {intentId,planHash:state.planHash,pages:state.plan.pages.length};
+ }
+ async #packetManifest(state:State){const row=await this.#read(membershipAtomicLocalPacketsId(this.ports.ownerId,state.plan.intentId));
+  if(!row)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');return {manifest:validateMembershipAtomicLocalPackets(row.value,state),serial:row.serial};
+ }
+ async #packetPage(manifest:MembershipAtomicLocalPackets,index:number){
+  const row=await this.#read(membershipAtomicLocalPacketPageId(this.ports.ownerId,manifest.intentId,index));if(!row)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');
+  if(row.serial!==1)throw new Error('E2EE_CORRUPT_OUTBOX');const checked=membershipAtomicLocalPacketPageMatches(manifest,row.value);if(checked.index!==index)throw new Error('E2EE_CORRUPT_OUTBOX');return checked.page;
+ }
+ async #packetBindings(state:State,manifest:MembershipAtomicLocalPackets,load:(index:number)=>Promise<MembershipAtomicPage>){
+  const binding=new MembershipAtomicPacketBindings(state.plan);for(let index=0;index<state.plan.pages.length;index++)binding.planPage(await this.#page(state,index));
+  for(let index=0;index<manifest.pages.length;index++)binding.packetPage(await load(index));binding.complete();
+ }
+ createPackets(intentId:string,inputPages:MembershipAtomicPage[]){
+  assertTechnical(intentId);const pages=inputPages.map(validateMembershipAtomicPage);return this.#run(async()=>{
+   const {state}=await this.#load(intentId);await this.#staging(intentId,state.planHash);const refs=pages.map((page,index)=>membershipAtomicPageRef(index,page));
+   const input={format:'genesis-membership-local-packets-v2',ownerId:this.ports.ownerId,intentId,planHash:state.planHash,batchHash:membershipAtomicBatchHash(state.plan,refs),pages:refs,ready:false};
+   const manifest=validateMembershipAtomicLocalPackets(input,state);await this.#packetBindings(state,manifest,async index=>pages[index]);
+   const id=membershipAtomicLocalPacketsId(this.ports.ownerId,intentId),old=await this.#read(id);let serial:number,stored:MembershipAtomicLocalPackets;
+   if(old){const checked=validateMembershipAtomicLocalPackets(old.value,state);if(checked.batchHash!==manifest.batchHash)throw new Error('E2EE_IDEMPOTENCY_CONFLICT');stored=checked;serial=old.serial;}
+   else{stored=manifest;serial=await this.#save(id,stored,null);}
+   for(const [index,page]of pages.entries()){
+    const key=membershipAtomicLocalPacketPageId(this.ports.ownerId,intentId,index),value={format:'genesis-membership-local-packet-page-v2',ownerId:this.ports.ownerId,intentId,planHash:state.planHash,batchHash:manifest.batchHash,index,page},prior=await this.#read(key);
+    if(prior){if(prior.serial!==1||!same(prior.value,value))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}else await this.#save(key,value,null);
+   }
+   if(!stored.ready)await this.#save(id,{...stored,ready:true},serial);return {intentId,planHash:state.planHash,batchHash:manifest.batchHash};
+  });
+ }
+ stagePackets(intentId:string){return this.#run(async()=>{
+  const {state}=await this.#load(intentId);await this.#staging(intentId,state.planHash);const {manifest}=await this.#packetManifest(state);
+  if(!manifest.ready)throw new Error('E2EE_MEMBERSHIP_LOCAL_PAGE_REQUIRED');await this.#packetBindings(state,manifest,index=>this.#packetPage(manifest,index));
+  await this.#stagePlan(intentId);
+  for(let index=0;index<manifest.pages.length;index++){
+   await this.#staging(intentId,state.planHash);const page=await this.#packetPage(manifest,index),ref=manifest.pages[index];
+   const authorization=await this.#request('membership-atomic-page',{intentId,planHash:state.planHash,phase:'packets',index,pageHash:ref.pageHash});await this.#staging(intentId,state.planHash);
+   const response=await this.ports.transport.membershipAtomicPage({intentId,planHash:state.planHash,phase:'packets',index,page,authorization});this.ports.current();
+   exactKeys(response,['intentId','planHash','phase','page']);if(response.intentId!==intentId||response.planHash!==state.planHash||response.phase!=='packets'||!same(response.page,ref))throw new Error('E2EE_INVALID_RECEIPT');
+  }
+  const authorization=await this.#request('membership-atomic-seal',{intentId,planHash:state.planHash,batchHash:manifest.batchHash});await this.#staging(intentId,state.planHash);
+  const response=await this.ports.transport.membershipAtomicSeal({intentId,planHash:state.planHash,packetPages:manifest.pages,authorization});this.ports.current();
+  exactKeys(response,['intentId','planHash','batchHash','state']);if(response.intentId!==intentId||response.planHash!==state.planHash||response.batchHash!==manifest.batchHash||response.state!=='sealed')throw new Error('E2EE_INVALID_RECEIPT');
+  return structuredClone(response);
  });}
  cancel(intentId:string){return this.#run(async()=>{
   const loaded=await this.#load(intentId),state=loaded.state;if(state.cancelled)return {intentId,planHash:state.planHash,state:'cancelled'};

@@ -28,6 +28,46 @@ function genesisMembershipAtomicStoredPlan(PDO $db,string $actor,string $intent,
     if(!hash_equals($row['plan_hash'],$hash)||$row['personal_scope_id']!==$personalScope)throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');
     return $row;
 }
+/** Verify complete persisted originals one page at a time. A hash-only status
+ * response does not establish that these pages form a complete manifest. */
+function genesisMembershipAtomicCompletePages(PDO $db,string $actor,string $intent,string $phase,array $refs):void
+{
+    $q=$db->prepare('SELECT page_index,kind,item_count,page_hash,payload_json FROM e2ee_membership_atomic_pages WHERE actor_id=? AND intent_id=? AND phase=? ORDER BY page_index');
+    $q->execute([$actor,$intent,$phase]);$index=0;
+    try{
+        while($row=$q->fetch()){
+            if(!isset($refs[$index])||(int)$row['page_index']!==$index)throw new DomainException('E2EE_MEMBERSHIP_PAGE_INCOMPLETE');
+            $page=genesisMembershipAtomicPage(json_decode($row['payload_json'],true,64,JSON_THROW_ON_ERROR));$ref=genesisMembershipAtomicPageRef($index,$page);
+            if($row['page_hash']!==$ref['pageHash']||$row['kind']!==$ref['kind']||(int)$row['item_count']!==$ref['count']
+                ||!hash_equals(genesisMembershipAtomicDigest($ref),genesisMembershipAtomicDigest($refs[$index])))throw new DomainException('E2EE_CONTEXT_MISMATCH');
+            $index++;
+        }
+        if($index!==count($refs))throw new DomainException('E2EE_MEMBERSHIP_PAGE_INCOMPLETE');
+    }finally{$q->closeCursor();}
+}
+/** Freeze the exact packet-page set under the same writer as page upload and
+ * cancellation. This is storage-only: no uploaded signature is executed here. */
+function genesisMembershipAtomicSeal(string $actor,array $input):array
+{
+    genesisE2eeExactFields($input,['intentId','planHash','packetPages','authorization']);$intent=genesisE2eeIdentifier($input['intentId']);$hash=$input['planHash'];genesisE2eeDecode($hash,32);
+    $refs=genesisMembershipAtomicRefs($input['packetPages'],true);if(!$refs)throw new InvalidArgumentException('E2EE_MEMBERSHIP_ATOMIC_INVALID');
+    $db=genesisDb();genesisBeginWriteTransaction($db);
+    try{
+        $stored=genesisE2eeRow($db,'SELECT * FROM e2ee_membership_atomic_plans WHERE actor_id=? AND intent_id=?',[$actor,$intent]);
+        if(!$stored)throw new DomainException('E2EE_MEMBERSHIP_PLAN_REQUIRED');$plan=genesisMembershipAtomicPlan(json_decode($stored['manifest_json'],true,64,JSON_THROW_ON_ERROR));$batch=genesisMembershipAtomicBatchHash($plan,$refs);
+        $authorized=genesisMembershipAtomicAuthorization($db,$actor,$input['authorization'],'membership-atomic-seal',['intentId'=>$intent,'planHash'=>$hash,'batchHash'=>$batch]);
+        genesisMembershipAtomicNotCancelled($db,$actor,$intent);genesisMembershipAtomicStoredPlan($db,$actor,$intent,$hash,$authorized['scope']['scope_id']);
+        $old=genesisE2eeRow($db,'SELECT * FROM e2ee_membership_atomic_packet_manifests WHERE actor_id=? AND intent_id=?',[$actor,$intent]);
+        if($old&&($old['plan_hash']!==$hash||!hash_equals($old['batch_hash'],$batch)))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');
+        if($stored['state']!=='staged')throw new DomainException('E2EE_MEMBERSHIP_OUTCOME_REVIEW_REQUIRED');
+        if(!$old){
+            genesisMembershipAtomicCompletePages($db,$actor,$intent,'plan',$plan['pages']);genesisMembershipAtomicCompletePages($db,$actor,$intent,'packets',$refs);
+            $db->prepare('INSERT INTO e2ee_membership_atomic_packet_manifests(actor_id,intent_id,plan_hash,batch_hash,manifest_json,created_at) VALUES(?,?,?,?,?,?)')
+                ->execute([$actor,$intent,$hash,$batch,genesisE2eeJson($refs),genesisNow()]);
+        }
+        $db->commit();return ['intentId'=>$intent,'planHash'=>$hash,'batchHash'=>$batch,'state'=>'sealed'];
+    }catch(Throwable $error){if($db->inTransaction())$db->rollBack();throw $error;}
+}
 function genesisMembershipAtomicBegin(string $actor,array $input):array
 {
     genesisE2eeExactFields($input,['plan','authorization']);$plan=genesisMembershipAtomicPlan($input['plan']);

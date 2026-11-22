@@ -25,12 +25,14 @@ export type MembershipAtomicBeginInput={plan:MembershipAtomicPlan;authorization:
 export type MembershipAtomicPageInput={intentId:string;planHash:string;phase:MembershipAtomicPhase;index:number;page:MembershipAtomicPage;authorization:SignedE2eeCommand};
 export type MembershipAtomicStatusInput={intentId:string;planHash:string;phase:MembershipAtomicPhase;after:number;authorization:SignedE2eeCommand};
 export type MembershipAtomicCancelInput={intentId:string;planHash:string;authorization:SignedE2eeCommand};
-export type MembershipAtomicStagingAction='membership-atomic-begin'|'membership-atomic-page'|'membership-atomic-status'|'membership-atomic-cancel';
+export type MembershipAtomicSealInput={intentId:string;planHash:string;packetPages:MembershipAtomicPageRef[];authorization:SignedE2eeCommand};
+export type MembershipAtomicStagingAction='membership-atomic-begin'|'membership-atomic-page'|'membership-atomic-status'|'membership-atomic-cancel'|'membership-atomic-seal';
 export interface MembershipAtomicTransport{
  membershipAtomicBegin(input:MembershipAtomicBeginInput):Promise<unknown>;
  membershipAtomicPage(input:MembershipAtomicPageInput):Promise<unknown>;
  membershipAtomicStatus(input:MembershipAtomicStatusInput):Promise<unknown>;
  membershipAtomicCancel(input:MembershipAtomicCancelInput):Promise<unknown>;
+ membershipAtomicSeal(input:MembershipAtomicSealInput):Promise<unknown>;
 }
 const planKinds=['acl','anchors','clear-assignments','revoke-invitations','role-events','product-operations'] as const;
 const packetKinds=['rotation-packets','product-packets'] as const;
@@ -38,12 +40,13 @@ const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');};
 const integer=(value:unknown,min=0)=>{if(!Number.isSafeInteger(value)||Number(value)<min||Number(value)>=Number.MAX_SAFE_INTEGER)invalid();};
 export function membershipAtomicStagingPayload(action:MembershipAtomicStagingAction,input:unknown):Record<string,WireValue>{
  const fields=action==='membership-atomic-page'?['intentId','planHash','phase','index','pageHash']:
-  action==='membership-atomic-status'?['intentId','planHash','phase','after']:['intentId','planHash'];
- if(!['membership-atomic-begin','membership-atomic-page','membership-atomic-status','membership-atomic-cancel'].includes(action))invalid();exactKeys(input,fields);
+  action==='membership-atomic-status'?['intentId','planHash','phase','after']:action==='membership-atomic-seal'?['intentId','planHash','batchHash']:['intentId','planHash'];
+ if(!['membership-atomic-begin','membership-atomic-page','membership-atomic-status','membership-atomic-cancel','membership-atomic-seal'].includes(action))invalid();exactKeys(input,fields);
  assertTechnical(input.intentId);decodeE2eeBytes(input.planHash,32);
  if(action==='membership-atomic-page'||action==='membership-atomic-status')if(!['plan','packets'].includes(String(input.phase)))invalid();
  if(action==='membership-atomic-page'){integer(input.index);if(Number(input.index)>=10000)invalid();decodeE2eeBytes(input.pageHash,32);}
  if(action==='membership-atomic-status'){integer(input.after);if(Number(input.after)>10000)invalid();}
+ if(action==='membership-atomic-seal')decodeE2eeBytes(input.batchHash,32);
  return structuredClone(input) as Record<string,WireValue>;
 }
 export function membershipAtomicDigest(value:unknown){const bytes=canonicalE2eeValue(value as WireValue);try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}}
@@ -90,6 +93,25 @@ export function validateMembershipAtomicPlan(input:unknown):MembershipAtomicPlan
 export function membershipAtomicPlanHash(input:MembershipAtomicPlan){return membershipAtomicDigest(validateMembershipAtomicPlan(input));}
 export function membershipAtomicChangeHash(input:MembershipAtomicPlan){const plan=validateMembershipAtomicPlan(input);return membershipAtomicDigest({protocol:2,actorId:plan.actorId,intentId:plan.intentId,planHash:membershipAtomicPlanHash(plan),scopeIds:plan.scopeIds});}
 export function membershipAtomicBatchHash(input:MembershipAtomicPlan,pages:MembershipAtomicPageRef[]){return membershipAtomicDigest({protocol:2,planHash:membershipAtomicPlanHash(input),packetPages:validateMembershipAtomicRefs(pages,true)});}
+/** Technical binding only. An imported owner packet still needs independent
+ * pinned-directory verification/review; this collector grants no trust. */
+export class MembershipAtomicPacketBindings{
+ #anchors=new Map<string,MembershipAtomicAnchor>();#products=new Map<string,string>();#rotations=new Set<string>();#seenProducts=new Set<string>();#changeHash:string;#plan:MembershipAtomicPlan;
+ constructor(plan:MembershipAtomicPlan){this.#plan=validateMembershipAtomicPlan(plan);this.#changeHash=membershipAtomicChangeHash(this.#plan);}
+ planPage(input:MembershipAtomicPage){const page=validateMembershipAtomicPage(input);
+  if(page.kind==='anchors')for(const row of page.items){if(this.#anchors.has(row.scopeId)||!this.#plan.scopeIds.includes(row.scopeId))invalid();this.#anchors.set(row.scopeId,row);}
+  if(page.kind==='product-operations')for(const row of page.items){const key=row.scopeId+'\0'+row.intentId;if(this.#products.has(key)||!this.#plan.scopeIds.includes(row.scopeId))invalid();this.#products.set(key,membershipAtomicDigest(row.operations));}
+ }
+ packetPage(input:MembershipAtomicPage){const page=validateMembershipAtomicPage(input);if(page.kind!=='rotation-packets'&&page.kind!=='product-packets')invalid();
+  for(const packet of page.items){const c=packet.command,anchor=this.#anchors.get(c.scopeId);
+   if(!anchor||c.ownerId!==anchor.ownerId||c.expectedRevision!==anchor.directoryRevision||c.checkpointHash!==anchor.checkpointHash||c.payload.membershipHash!==this.#changeHash)invalid();
+   if(page.kind==='rotation-packets'){if(this.#rotations.has(c.scopeId))invalid();this.#rotations.add(c.scopeId);}
+   else{const key=c.scopeId+'\0'+c.payload.intentId;exactKeys(c.payload,['intentId','membershipHash','operations']);assertTechnical(c.payload.intentId);
+    if(this.#seenProducts.has(key)||!this.#products.has(key)||this.#products.get(key)!==membershipAtomicDigest(c.payload.operations))invalid();this.#seenProducts.add(key);}
+  }
+ }
+ complete(){if(!same([...this.#anchors.keys()].sort(),this.#plan.scopeIds)||!same([...this.#rotations].sort(),this.#plan.scopeIds)||this.#seenProducts.size!==this.#products.size)invalid();}
+}
 /** Adaptive paging keeps the complete ordered result and never drops a suffix. */
 export function membershipAtomicPages(kind:MembershipAtomicPage['kind'],items:unknown[]):MembershipAtomicPage[]{
  const pages:MembershipAtomicPage[]=[];let size=Math.min(200,items.length);for(let offset=0;offset<items.length;){

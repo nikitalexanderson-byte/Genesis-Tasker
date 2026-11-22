@@ -7,7 +7,7 @@ import java.security.MessageDigest
 /** Matching technical codec for membership-atomic-contract/local.ts. This
  * validates inert originals; it neither trusts a directory nor executes them. */
 internal object E2eeMembershipAtomicContract {
-    val actions=setOf("membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel")
+    val actions=setOf("membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel","membership-atomic-seal")
     private val planKinds=setOf("acl","anchors","clear-assignments","revoke-invitations","role-events","product-operations")
     private val packetKinds=setOf("rotation-packets","product-packets")
     private fun invalid():Nothing=error("E2EE_MEMBERSHIP_ATOMIC_INVALID")
@@ -15,11 +15,12 @@ internal object E2eeMembershipAtomicContract {
     private fun number(value:Any,min:Long=0,max:Long=9007199254740990L)=E2eeCommands.integer(value,min).also{if(it>max)invalid()}
     fun digest(value:Any):String {val bytes=E2eeCommands.canonical(value);return try{E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))}finally{bytes.fill(0)}}
     fun stagingPayload(action:String,input:JSONObject):JSONObject {
-        if(action !in actions)invalid();val extra=when(action){"membership-atomic-page"->setOf("phase","index","pageHash");"membership-atomic-status"->setOf("phase","after");else->emptySet()}
+        if(action !in actions)invalid();val extra=when(action){"membership-atomic-page"->setOf("phase","index","pageHash");"membership-atomic-status"->setOf("phase","after");"membership-atomic-seal"->setOf("batchHash");else->emptySet()}
         E2eeKeys.exact(input,setOf("intentId","planHash")+extra);E2eeKeys.technical(input.getString("intentId"));E2eeEnvelope.decode(input.getString("planHash"),32)
         if(action in setOf("membership-atomic-page","membership-atomic-status")&&input.get("phase") !in setOf("plan","packets"))invalid()
         if(action=="membership-atomic-page"){number(input.get("index"),0,9999);E2eeEnvelope.decode(input.getString("pageHash"),32)}
         if(action=="membership-atomic-status")number(input.get("after"),0,10000)
+        if(action=="membership-atomic-seal")E2eeEnvelope.decode(input.getString("batchHash"),32)
         return JSONObject(input.toString())
     }
     private fun anchor(value:JSONObject){
@@ -86,5 +87,39 @@ internal object E2eeMembershipAtomicContract {
         E2eeCommands.commandBytes(command).fill(0);E2eeEnvelope.decode(signed.getString("signature"),64)
         if(command.get("ownerId")!=owner||command.get("action")!=action||!E2eeProductJson.same(command.getJSONObject("payload"),payload))invalid()
         return JSONObject(input.toString())
+    }
+    fun changeHash(rawPlan:JSONObject):String {val value=plan(rawPlan);return digest(JSONObject().put("protocol",2).put("actorId",value.get("actorId")).put("intentId",value.get("intentId")).put("planHash",digest(value)).put("scopeIds",value.get("scopeIds")))}
+    fun batchHash(rawPlan:JSONObject,pages:JSONArray)=digest(JSONObject().put("protocol",2).put("planHash",digest(plan(rawPlan))).put("packetPages",refs(pages,true)))
+    fun packetsId(owner:String,intent:String)="membership-atomic-packets:"+stem(owner,intent)
+    fun packetPageId(owner:String,intent:String,index:Int):String {number(index,0,9999);return "membership-atomic-packet-page:"+stem(owner,intent)+":"+index}
+    fun localPackets(input:JSONObject,state:JSONObject):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","intentId","planHash","batchHash","pages","ready"));val plan=state.getJSONObject("plan");val pages=refs(input.getJSONArray("pages"),true)
+        if(input.get("format")!="genesis-membership-local-packets-v2"||input.get("ownerId")!=state.get("ownerId")||input.get("intentId")!=plan.get("intentId")||input.get("planHash")!=state.get("planHash")||pages.length()<1||batchHash(plan,pages)!=input.get("batchHash")||input.get("ready") !is Boolean)invalid()
+        return JSONObject(input.toString())
+    }
+    fun localPacketPageMatches(manifest:JSONObject,input:JSONObject):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","intentId","planHash","batchHash","index","page"));val index=number(input.get("index"),0,9999).toInt();val page=page(input.getJSONObject("page"));val refs=manifest.getJSONArray("pages")
+        if(input.get("format")!="genesis-membership-local-packet-page-v2"||listOf("ownerId","intentId","planHash","batchHash").any{input.get(it)!=manifest.get(it)}||page.get("kind") !in packetKinds||index>=refs.length()||!E2eeProductJson.same(pageRef(index,page),refs.getJSONObject(index)))invalid()
+        return JSONObject(input.toString())
+    }
+    /** Binding only; pinned-directory verification and owner review remain
+     * separate. No imported packet becomes an authority pin here. */
+    class PacketBindings(input:JSONObject){
+        private val plan=E2eeMembershipAtomicContract.plan(input);private val change=changeHash(plan);private val scopes=(0 until plan.getJSONArray("scopeIds").length()).map{plan.getJSONArray("scopeIds").getString(it)}
+        private val anchors=mutableMapOf<String,JSONObject>();private val products=mutableMapOf<String,String>();private val rotations=mutableSetOf<String>();private val seenProducts=mutableSetOf<String>()
+        fun planPage(input:JSONObject){val page=page(input)
+            if(page.get("kind")=="anchors")for(row in rows(page.getJSONArray("items"))){val id=row.getString("scopeId");if(id !in scopes||anchors.put(id,row)!=null)invalid()}
+            if(page.get("kind")=="product-operations")for(row in rows(page.getJSONArray("items"))){val id=row.getString("scopeId");val key=id+"\u0000"+row.getString("intentId");if(id !in scopes||products.put(key,digest(row.getJSONArray("operations")))!=null)invalid()}
+        }
+        fun packetPage(input:JSONObject){val page=page(input);val kind=page.getString("kind");if(kind !in packetKinds)invalid()
+            for(packet in rows(page.getJSONArray("items"))){val command=packet.getJSONObject("command");val scope=command.getString("scopeId");val anchor=anchors[scope]?:invalid();val payload=command.getJSONObject("payload")
+                if(command.get("ownerId")!=anchor.get("ownerId")||number(command.get("expectedRevision"))!=number(anchor.get("directoryRevision"),1)||command.get("checkpointHash")!=anchor.get("checkpointHash")||payload.get("membershipHash")!=change)invalid()
+                if(kind=="rotation-packets"){if(!rotations.add(scope))invalid()}else{
+                    E2eeKeys.exact(payload,setOf("intentId","membershipHash","operations"));val key=scope+"\u0000"+E2eeKeys.technical(payload.getString("intentId"))
+                    if(!seenProducts.add(key)||products[key]!=digest(payload.getJSONArray("operations")))invalid()
+                }
+            }
+        }
+        fun complete(){if(anchors.keys.sorted()!=scopes||rotations.sorted()!=scopes||seenProducts.size!=products.size)invalid()}
     }
 }

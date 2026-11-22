@@ -3,9 +3,10 @@ import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {membershipAtomicDigest,membershipAtomicPlanHash,membershipAtomicPageRef,membershipAtomicStagingPayload,
- validateMembershipAtomicPlan,validateMembershipAtomicPage,type MembershipAtomicPlan,type MembershipAtomicStagingAction} from './membership-atomic-contract.ts';
+ validateMembershipAtomicPlan,validateMembershipAtomicPage,validateMembershipAtomicRefs,membershipAtomicBatchHash,type MembershipAtomicPlan,type MembershipAtomicStagingAction,type MembershipAtomicPageRef} from './membership-atomic-contract.ts';
 
 export type MembershipAtomicLocalState={format:'genesis-membership-local-stage-v2';ownerId:string;plan:MembershipAtomicPlan;planHash:string;ready:boolean;cancelRequested:boolean;cancelled:boolean};
+export type MembershipAtomicLocalPackets={format:'genesis-membership-local-packets-v2';ownerId:string;intentId:string;planHash:string;batchHash:string;pages:MembershipAtomicPageRef[];ready:boolean};
 const invalid=():never=>{throw new Error('E2EE_CORRUPT_OUTBOX');};
 export function membershipAtomicLocalStem(ownerId:string,intentId:string){
  assertTechnical(ownerId);assertTechnical(intentId);return membershipAtomicDigest({format:'genesis-membership-local-key-v2',ownerId,intentId});
@@ -16,6 +17,22 @@ export function membershipAtomicLocalPageId(ownerId:string,intentId:string,index
 }
 export function membershipAtomicLocalRequestId(ownerId:string,action:MembershipAtomicStagingAction,input:unknown){
  assertTechnical(ownerId);return 'membership-atomic-request:'+membershipAtomicDigest({ownerId,action,payload:membershipAtomicStagingPayload(action,input)});
+}
+export const membershipAtomicLocalPacketsId=(ownerId:string,intentId:string)=>'membership-atomic-packets:'+membershipAtomicLocalStem(ownerId,intentId);
+export function membershipAtomicLocalPacketPageId(ownerId:string,intentId:string,index:number){
+ if(!Number.isSafeInteger(index)||index<0||index>=10000)invalid();return 'membership-atomic-packet-page:'+membershipAtomicLocalStem(ownerId,intentId)+':'+index;
+}
+export function validateMembershipAtomicLocalPackets(input:unknown,state:MembershipAtomicLocalState){
+ exactKeys(input,['format','ownerId','intentId','planHash','batchHash','pages','ready']);const pages=validateMembershipAtomicRefs(input.pages,true);
+ if(input.format!=='genesis-membership-local-packets-v2'||input.ownerId!==state.ownerId||input.intentId!==state.plan.intentId||input.planHash!==state.planHash
+  ||!pages.length||membershipAtomicBatchHash(state.plan,pages)!==input.batchHash||typeof input.ready!=='boolean')invalid();
+ return structuredClone(input) as MembershipAtomicLocalPackets;
+}
+export function membershipAtomicLocalPacketPageMatches(manifest:MembershipAtomicLocalPackets,input:unknown){
+ exactKeys(input,['format','ownerId','intentId','planHash','batchHash','index','page']);const index=input.index as number,page=validateMembershipAtomicPage(input.page);
+ if(input.format!=='genesis-membership-local-packet-page-v2'||input.ownerId!==manifest.ownerId||input.intentId!==manifest.intentId||input.planHash!==manifest.planHash||input.batchHash!==manifest.batchHash
+  ||!Number.isSafeInteger(index)||index<0||index>=10000||!['rotation-packets','product-packets'].includes(page.kind)||!same(membershipAtomicPageRef(index,page),manifest.pages[index]))invalid();
+ return {index,page};
 }
 export function validateMembershipAtomicLocalState(input:unknown,ownerId:string){
  exactKeys(input,['format','ownerId','plan','planHash','ready','cancelRequested','cancelled']);const plan=validateMembershipAtomicPlan(input.plan);
