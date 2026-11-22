@@ -66,6 +66,13 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 }
                 "stage"->{E2eeKeys.exact(payload,setOf("edits","intentId"));records.product.stage(payload.getJSONArray("edits"),payload.getString("intentId"))}
                 "flush"->{E2eeKeys.exact(payload,setOf("intentId"));records.flush(payload.getString("intentId"))}
+                "membership"->{E2eeKeys.exact(payload,setOf("operation","intentId"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};val id=E2eeKeys.technical(payload.getString("intentId"));val operations=E2eeNativeMembershipOperations(context,account,::current)
+                    val saved=try{operations.execute("inspect",JSONObject().put("id",id)).getJSONObject("state")}catch(error:Exception){if(error.message!="E2EE_MEMBERSHIP_OPERATION_REQUIRED")throw error;null}
+                    if(saved!=null){check(E2eeProductJson.same(saved.get("operation"),payload.get("operation"))){"E2EE_IDEMPOTENCY_CONFLICT"}}
+                    else operations.execute("create",JSONObject().put("id",id).put("operation",payload.get("operation")));current()
+                    val auth=ru.genesis.calendar.auth.AuthController.get(context);val result=auth.completedPrivateMembershipOperation(id);current()
+                    result?:JSONObject().put("membershipReviewRequired",true).put("intentId",operations.execute("follow",JSONObject().put("id",id)).getJSONObject("state").getString("intentId"))
+                }
                 "requestLoad"->{E2eeKeys.exact(payload,setOf("id"));request(payload.getString("id")).load()?.let{JSONObject().put("value",it.value).put("serial",it.serial)}?:JSONObject.NULL}
                 "requestSave"->{E2eeKeys.exact(payload,setOf("document","expected"));val document=validateRequest(payload.getJSONObject("document"));val expected=if(payload.isNull("expected"))null else E2eeCommands.integer(payload.get("expected"),1);request(document.getString("id")).save(document,expected).serial}
                 else->error("E2EE_SHARED_REQUEST_INVALID")

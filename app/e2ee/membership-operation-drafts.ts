@@ -1,5 +1,6 @@
 import {assertTechnical,exactKeys} from './keys.ts';
-import {decodeE2eeBytes} from './envelope.ts';
+import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
+import {sha256} from '@noble/hashes/sha2.js';
 import {samePrivateJson as same} from './product-json.ts';
 import {validateMembershipOperation,validateMembershipOperationSnapshot,planMembershipOperation,membershipOperationFingerprint,membershipOperationPlanFingerprint,
  type MembershipOperation,type MembershipOperationSnapshot,type MembershipOperationPlan} from './membership-operation-plan.ts';
@@ -55,6 +56,15 @@ export class MembershipOperationDrafts{
   await this.#save({format:'genesis-membership-operation-draft-v1',ownerId:this.ports.ownerId,intentId:id,operation,createdAt:new Date().toISOString(),proposal:null,review:null,started:false,history:[]},null);return id;
  });}
  inspect(id:string){return this.#run(async()=>(await this.#load(id)).value);}
+  async #successor(value:MembershipOperationDraft){const ids=await this.ports.list();this.ports.current();if(new Set(ids).size!==ids.length)invalid();let child:MembershipOperationDraft|null=null;
+   for(const id of ids){const candidate=(await this.#load(id)).value;if(candidate.resolves!==value.intentId)continue;if(child||!same(candidate.operation,value.operation))throw new Error('E2EE_MEMBERSHIP_RESOLUTION_DIVERGED');child=candidate;}return child;
+  }
+  /** Follow only preserved explicit-resolution links. Multiple children or a
+   * changed original operation are divergence, never a last-writer choice. */
+  follow(id:string){return this.#run(async()=>{let value=(await this.#load(id)).value;const seen=new Set<string>();
+   for(let depth=0;depth<64;depth++){if(seen.has(value.intentId))throw new Error('E2EE_MEMBERSHIP_RESOLUTION_DIVERGED');seen.add(value.intentId);if(!value.cancelled)return value;
+    const next=await this.#successor(value);if(!next)return value;value=next;}throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
+  });}
  pending(){return this.#run(async()=>{const ids=await this.ports.list();this.ports.current();const values:MembershipOperationDraft[]=[];
   if(new Set(ids).size!==ids.length)invalid();for(const id of ids)values.push((await this.#load(id)).value);return values;
  });}
@@ -80,7 +90,9 @@ export class MembershipOperationDrafts{
  cancel(id:string){return this.#run(async()=>{const saved=await this.#load(id);return saved.value.cancelled?saved.value:this.#save({...saved.value,cancelled:true},saved.serial);});}
  /** A fresh intent requires explicit resolution after the containing server
   * outcome is known. The old plan/consent/packets are never edited or re-keyed. */
- fork(id:string,nextId=crypto.randomUUID()){assertTechnical(nextId);return this.#run(async()=>{const old=(await this.#load(id)).value;if(!old.cancelled||nextId===id)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
-  await this.#save({format:'genesis-membership-operation-draft-v1',ownerId:this.ports.ownerId,intentId:nextId,operation:old.operation,createdAt:new Date().toISOString(),resolves:id,proposal:null,review:null,started:false,history:[]},null);return nextId;
+  fork(id:string,nextId?:string){if(nextId!==undefined)assertTechnical(nextId);return this.#run(async()=>{const old=(await this.#load(id)).value;if(!old.cancelled||nextId===id)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
+   const child=await this.#successor(old);if(child){if(nextId!==undefined&&nextId!==child.intentId)throw new Error('E2EE_IDEMPOTENCY_CONFLICT');return child.intentId;}
+   const bytes=new TextEncoder().encode('genesis-membership-resolution-v1\0'+this.ports.ownerId+'\0'+id);let target:string;try{target=nextId??('membership-resolution:'+encodeE2eeBytes(sha256(bytes)));}finally{bytes.fill(0);}assertTechnical(target);
+   await this.#save({format:'genesis-membership-operation-draft-v1',ownerId:this.ports.ownerId,intentId:target,operation:old.operation,createdAt:new Date().toISOString(),resolves:id,proposal:null,review:null,started:false,history:[]},null);return target;
  });}
 }

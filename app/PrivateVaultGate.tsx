@@ -9,6 +9,7 @@ import {IndexedDbDeviceKeyStorage} from './e2ee/device-vault';
 import {isLanguage} from './i18n';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {useDialogAccessibility} from './use-dialog-accessibility';
+import {holdPrivateEditorFence} from './private-ui-fence';
 
 const initial:PrivateAccountView=Object.freeze({ownerId:null,phase:'closed',reason:'unlock',language:'en'});
 /** A protected account's workspace does not mount from legacy plaintext while
@@ -23,12 +24,7 @@ function PrivateVaultForm({state}:{state:PrivateAccountView}){
  const copy=PRIVATE_VAULT_COPY[isLanguage(state.language)?state.language:'en'],busy=state.phase==='unlocking'||fileBusy;
  const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{});
  useEffect(()=>{let active=true;if(state.ownerId)void new IndexedDbDeviceKeyStorage().get(state.ownerId).then(row=>{if(active)setCanOffline(row!==null);}).catch(()=>{if(active)setCanOffline(false);});return()=>{active=false;};},[state.ownerId]);
- useEffect(()=>{
-  const content=document.getElementById('genesis-app-content'),overflow=document.body.style.overflow;
-  const previousInert=content?.inert,previousHidden=content?.getAttribute('aria-hidden');
-  if(content){content.inert=true;content.setAttribute('aria-hidden','true');}document.body.style.overflow='hidden';
-  return()=>{if(content){content.inert=previousInert??false;if(previousHidden===null)content.removeAttribute('aria-hidden');else if(previousHidden!==undefined)content.setAttribute('aria-hidden',previousHidden);}document.body.style.overflow=overflow;};
- },[]);
+ useEffect(()=>holdPrivateEditorFence(),[]);
  const submit=async(event:FormEvent)=>{
   event.preventDefault();if(busy)return;setError(false);
   try{await unlockCurrentPrivateAccount(secret,kit);}catch(reason){

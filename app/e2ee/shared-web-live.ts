@@ -61,7 +61,9 @@ class WebSharedLive{
    membership:async(operation,id)=>{account.requireOpen();const drafts=privateMembershipOperationDrafts(account.ownerId);let existing;
     try{existing=await drafts.inspect(id);}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_MEMBERSHIP_OPERATION_REQUIRED')throw error;}
     account.requireOpen();if(existing){if(!samePrivateJson(existing.operation,operation))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}else await drafts.create(operation,id);account.requireOpen();
-    const result=await waitForPrivateMembershipOperation(account.ownerId,privateAccountView().language,id);account.requireOpen();return result;},
+    const api=await import('../cloud-sync');account.requireOpen();const completed=await api.completedCurrentPrivateMembershipOperation(id);account.requireOpen();if(completed)return completed;
+    const active=await drafts.follow(id);account.requireOpen();await waitForPrivateMembershipOperation(account.ownerId,privateAccountView().language,active.intentId);account.requireOpen();
+    const result=await api.completedCurrentPrivateMembershipOperation(id);account.requireOpen();if(!result)throw new Error('E2EE_MEMBERSHIP_OUTCOME_REVIEW_REQUIRED');return result;},
    loadRequest:async id=>(await this.requestDocument(id)).load(),saveRequest:async(value,expected)=>(await(await this.requestDocument(value.id)).save(value,expected)).serial,
   });
  }

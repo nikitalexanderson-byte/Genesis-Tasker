@@ -85,6 +85,7 @@ import ru.genesis.calendar.auth.AuthController
             },{message=text.getString("complete")})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("baseline"))}
         }
         if(message.isNotEmpty())Text(message,style=MaterialTheme.typography.bodyMedium)
+        PrivateMembershipEntry()
         PrivateDeviceAccessEntry()
     }
 }

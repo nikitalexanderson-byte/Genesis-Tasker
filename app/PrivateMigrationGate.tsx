@@ -16,6 +16,7 @@ import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import {IndexedDbDeviceKeyStorage} from './e2ee/device-vault';
 import {privateAccountRequired} from './e2ee/product-session';
 import {useDialogAccessibility} from './use-dialog-accessibility';
+import {holdPrivateEditorFence} from './private-ui-fence';
 import type {WebProductMigration} from './e2ee/web-product-migration';
 
 function download(name:string,value:string,type:string){
@@ -52,12 +53,11 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  const current=()=>{if(!alive.current||privateMigrationUi()?.id!==state.id)throw new Error('E2EE_ACCOUNT_CHANGED');};
  const frozen=()=>{current();if(attempt.current?.stopping)throw new Error('E2EE_OPERATION_STOPPED');const content=document.getElementById('genesis-app-content');if(!content?.inert||!document.contains(dialogRef.current)||document.visibilityState!=='visible')throw new Error('E2EE_EDITOR_FENCE_REQUIRED');};
  useEffect(()=>{
-  alive.current=true;const content=document.getElementById('genesis-app-content'),inert=content?.inert,hidden=content?.getAttribute('aria-hidden'),overflow=document.body.style.overflow;
-  if(content){content.inert=true;content.setAttribute('aria-hidden','true');}document.body.style.overflow='hidden';
+  alive.current=true;const releaseFence=holdPrivateEditorFence();
   const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setCancelConfirmed(false);setPhase(state.target||started.current?'confirm':'intro');setError(copy.error);};
   document.addEventListener('visibilitychange',clearSecrets);
   return()=>{alive.current=false;fileRequest.current++;controller.current?.close();controller.current=null;document.removeEventListener('visibilitychange',clearSecrets);
-   if(content){content.inert=inert??false;if(hidden===null)content.removeAttribute('aria-hidden');else if(hidden!==undefined)content.setAttribute('aria-hidden',hidden);}document.body.style.overflow=overflow;};
+   releaseFence();};
  },[copy.error]);
  useEffect(()=>{let live=true;if(!state.target&&state.reason==='setup')void new IndexedDbDeviceKeyStorage().get(ownerId).then(record=>{if(live)setPhase(record?'confirm':'intro');}).catch(()=>{if(live){setError(copy.error);setPhase('confirm');}});return()=>{live=false;};},[ownerId,state.reason,state.target,copy.error]);
  const failure=(reason:unknown)=>{

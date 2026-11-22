@@ -29,7 +29,7 @@ internal class E2eeNativeMembershipOperations(private val context:Context,privat
     }
     fun isCancelled(id:String):Boolean{current();val row=document(id).load()?:error("E2EE_MEMBERSHIP_OPERATION_REQUIRED");current();return row.value.optBoolean("cancelled",false)}
     suspend fun execute(action:String,args:JSONObject=JSONObject()):JSONObject=withContext(Dispatchers.IO){mutex.withLock{
-        current();check(action in setOf("create","inspect","pending","preview","confirm","start","cancel","fork")){"E2EE_MEMBERSHIP_OPERATION_INVALID"}
+        current();check(action in setOf("create","inspect","pending","preview","confirm","start","cancel","fork","follow","result")){"E2EE_MEMBERSHIP_OPERATION_INVALID"}
         val records=mutableMapOf<String,E2eeSharedRecords>();val membership=account.membership()
         suspend fun call(method:String,input:JSONObject):Any{
             current();val result:Any=when(method){

@@ -429,7 +429,10 @@ export class SharedLiveModel{
   if(request.complete){if(!request.result||!request.edits)throw new Error('E2EE_SHARED_REQUEST_INVALID');return structuredClone(request.result);}
   const membership=membershipOperationForSharedRequest(this.ports.binding,method,path,held);
   if(membership){if(!this.ports.online||!this.ports.membership)throw new Error('E2EE_MEMBERSHIP_REVIEW_REQUIRED');
-   const result=await this.ports.membership(membership,id);this.ports.current();await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;
+   let result=await this.ports.membership(membership,id);this.ports.current();
+   if(result.membershipReviewRequired===true){exactKeys(result,['membershipReviewRequired','intentId']);assertTechnical(result.intentId);return{...result,sharedRequestId:id};}
+   if(membership.kind==='category-permissions'){const {context,versions}=await this.#snapshot(),category=versions.find(row=>row.kind==='category'&&!row.deleted&&plain(row).record.id===membership.categoryId);if(!category)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');result={...result,category:this.#row(category,context)};}
+   await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;
   }
   if(!request.edits){const prepared=await this.#prepare(request);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}
   if(request.edits!.length===0){const taskId=(request.result?.task as ObjectValue|undefined)?.id;if(typeof taskId!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',taskId),result={task:this.#task(task,versions,context)};

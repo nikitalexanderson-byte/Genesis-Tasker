@@ -2,7 +2,7 @@ import type {MembershipOperationDrafts} from './membership-operation-drafts.ts';
 import type {MembershipAtomicStager} from './membership-atomic-stager.ts';
 
 export interface MembershipOperationResolutionPorts{
- current:()=>void;drafts:Pick<MembershipOperationDrafts,'cancel'|'fork'|'preview'>;stager:Pick<MembershipAtomicStager,'inspect'|'cancel'>;
+ current:()=>void;drafts:Pick<MembershipOperationDrafts,'cancel'|'fork'|'preview'|'inspect'>;stager:Pick<MembershipAtomicStager,'inspect'|'cancel'>;
 }
 /** Durable local cancellation precedes HTTP. A lost/committed outcome never
  * silently creates a new semantic operation or renews an old signature. */
@@ -15,5 +15,5 @@ export async function cancelMembershipOperation(id:string,ports:MembershipOperat
 }
 export async function resolveMembershipOperation(id:string,ports:MembershipOperationResolutionPorts){
  const outcome=await cancelMembershipOperation(id,ports);ports.current();if(outcome.outcome!=='cancelled')throw new Error('E2EE_MEMBERSHIP_OUTCOME_REVIEW_REQUIRED');
- const next=await ports.drafts.fork(id);ports.current();const draft=await ports.drafts.preview(next);ports.current();return{previousIntentId:id,intentId:next,draft};
+ const next=await ports.drafts.fork(id);ports.current();let draft=await ports.drafts.inspect(next);ports.current();if(!draft.proposal&&!draft.cancelled){draft=await ports.drafts.preview(next);ports.current();}return{previousIntentId:id,intentId:next,draft};
 }

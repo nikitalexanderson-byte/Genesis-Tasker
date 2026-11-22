@@ -1147,3 +1147,39 @@ restore/background work remains.
 ## Atomic v2 staging — source-only, 22 ноября
 
 Добавлены immutable pages/manifest, TS/PHP canonical hashes, SQL stage, current-device signed begin/page/status/cancel и permanent cancellation до begin. Web/native HTTP adapters и shared pure native manifest builder подключены. Final atomic writer/client coordinator/owner exchange/normal UI и streaming большого snapshot остаются; см. security-336-membership-atomic.md. Security QA и generated assets не запускались, coverage9/20.
+
+## 22 ноября: mounted membership review UI / durable normal outcome (source-only)
+
+Web PrivateMembershipGate смонтирован в layout; Native PrivateMembershipHost — рядом
+с migration host до vault early return. Pending/import entry подключён к существующим
+панелям безопасности. Initial plan, owner approval и final apply имеют отдельные
+подтверждения; grants/roles/permissions, scope/effects counts, actor/user IDs и
+key recipients видимы; длинные grant lists постраничные. Общая copy написана на14
+языках. SAF/browser framed review import/export и approval JSON подключены.
+
+Обычный native request выходит из isolated runtime до ожидания человека. После
+завершения host перечитывает durable atomic apply либо durable reviewed no-op;
+UI result не является authority. Common membershipOperationResult даёт normal
+revision/changed, no-op не создаёт signature/atomic state. Explicit resolution
+сохраняет связь с исходным shared request; повторный fork идемпотентен,
+разветвление/изменённый original — divergence. Старые packets/consent сохраняются.
+
+Async web entry callbacks проверяют тот же account/view generation после await;
+ошибка requirePrivateAccount не оставляет busy. Native ON_STOP отменяет UI jobs.
+Общий counted private-ui-fence устраняет конфликт восстановления inert/overflow
+при handoff между membership/migration/vault dialogs. Source review исправил
+nullable intents и shadowed Kotlin error. Это НЕ compiler/visual/i18n acceptance.
+
+git diff --check выполнен; compiler/typecheck/lint/tests/build/CI security не
+запускались. Coverage остаётся9/20; cutover/floors off; никаких security push/deploy.
+
+Следующее: verified private project-access GET/preview и Native planning-journal
+send; полноценный combined category rename+permissions; ordinary invitations;
+foreign product writer readback и very-wide transport/local records. Затем
+first personal trusted entry, advanced/forms attribution, automation/series/bulk/
+cross-scope, typed restore, revoked-device replacement/background и оставшийся
+source/divergence review исходного prompt. Общая QA/crypto review — после кода.
+
+Urgent main6672bbefd65abc4b9c3268800d02c57bd82ed967: exact-main checks45042239234
+пока выполняет browser scenarios; Deploy НЕ запускался. После success выполнить
+штатный website-only Deploy со fresh live incumbent, liveQA и merge main в security.

@@ -118,6 +118,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     val privateAuth by privateController.state.collectAsStateWithLifecycle()
     if(!testWorkspace)PrivateBackupHandoffHost(privateAuth.user?.uid)
     if(!testWorkspace)PrivateMigrationHost(privateController,privateAuth)
+    if(!testWorkspace)PrivateMembershipHost(privateController,privateAuth)
     val privateRevision by ru.genesis.calendar.security.NativePrivateProducts.revision.collectAsStateWithLifecycle()
     val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
     LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}

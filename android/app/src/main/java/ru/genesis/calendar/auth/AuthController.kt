@@ -447,6 +447,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun preparePrivateAtomicReview(intentId:String,productPackets:JSONArray,createdAt:String):JSONObject=privateMembershipSession{value->ru.genesis.calendar.security.E2eeNativeMembershipAtomicReview.prepare(value.stager,value.atomicOwnerReview,intentId,productPackets,value.current,createdAt).also{value.current()}}
     internal suspend fun createPrivateMembershipOperation(input:JSONObject):JSONObject=privateMembershipSession{value->val created=value.operations.execute("create",JSONObject().put("operation",JSONObject(input.toString())));value.current();value.operations.execute("preview",JSONObject().put("id",created.getString("id"))).also{value.current()}}
     internal suspend fun pendingPrivateMembershipOperations():JSONObject=privateMembershipSession{value->value.operations.execute("pending").also{value.current()}}
+    internal suspend fun loadPrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->value.operations.execute("inspect",JSONObject().put("id",id)).getJSONObject("state").also{value.current()}}
+    internal suspend fun describePrivateMembershipScope(scopeId:String):JSONObject=privateMembershipSession{value->
+        val account=ru.genesis.calendar.security.NativePrivateProducts.currentAccount(app.workspaceScope);value.current();val opened=ru.genesis.calendar.security.E2eeSharedTrust(account).open(scopeId);value.current();val directory=opened.directory
+        check(directory.kind in setOf("space","project")){"E2EE_SCOPE_BINDING_MISMATCH"};val records=ru.genesis.calendar.security.E2eeSharedRecords(app,account,scopeId,directory.kind,directory.resourceId);val root=records.get(directory.kind,directory.resourceId);value.current()
+        val context=account.sharedScope(scopeId,directory.kind,directory.resourceId).client.readProductContext().getJSONObject("context");value.current();val members=JSONArray();val rows=context.getJSONArray("members")
+        for(index in 0 until rows.length()){val row=rows.getJSONObject(index);members.put(JSONObject().put("userId",row.get("userId")).put("displayName",row.get("displayName")))}
+        JSONObject().put("scopeId",scopeId).put("ownerId",directory.ownerId).put("kind",directory.kind).put("resourceId",directory.resourceId).put("title",root.optJSONObject("body")?.getJSONObject("record")?.optString("title","")?:"").put("members",members)
+    }
     internal suspend fun previewPrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->value.operations.execute("preview",JSONObject().put("id",id)).also{value.current()}}
     internal suspend fun confirmPrivateMembershipOperation(id:String,fingerprint:String):JSONObject=privateMembershipSession{value->value.operations.execute("confirm",JSONObject().put("id",id).put("fingerprint",fingerprint)).also{value.current()}}
     internal suspend fun composePrivateMembershipOperation(id:String):JSONObject=privateMembershipSession{value->value.composer.compose(id).also{value.current()}}
@@ -460,6 +468,17 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal suspend fun confirmPrivateAtomicMembership(id:String,displayedFingerprint:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.confirm(id,displayedFingerprint).also{current()}}
     internal suspend fun submitPrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.submit(id).also{current();ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
     internal suspend fun reconcilePrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.reconcile(id).also{current();ru.genesis.calendar.security.NativePrivateProducts.changed(app.workspaceScope)}}
+    internal suspend fun inspectPrivateAtomicMembership(id:String):JSONObject=privateAtomicMembershipCall{atomic,current->atomic.inspect(id).also{current()}}
+    internal suspend fun completedPrivateMembershipOperation(id:String):JSONObject?=privateMembershipSession{value->
+        val draft=value.operations.execute("follow",JSONObject().put("id",id)).getJSONObject("state");value.current()
+        if(!draft.getBoolean("started")){check(!draft.optBoolean("cancelled",false)){"E2EE_MEMBERSHIP_CANCELLED"};return@privateMembershipSession null}
+        var receipt:JSONObject?=null
+        if(draft.getJSONObject("proposal").getJSONObject("plan").getJSONArray("scopeIds").length()>0){
+            val applied=try{value.atomic.inspect(draft.getString("intentId"))}catch(error:Exception){if(error.message=="E2EE_MEMBERSHIP_FINAL_REVIEW_REQUIRED")return@privateMembershipSession null;throw error};value.current()
+            if(!applied.getBoolean("complete"))return@privateMembershipSession null;receipt=applied.getJSONObject("receipt")
+        }
+        value.operations.execute("result",JSONObject().put("id",draft.getString("intentId")).put("receipt",receipt?:JSONObject.NULL)).getJSONObject("result").also{value.current()}
+    }
     private fun privateMembershipInput(input:String):JSONObject{
         check(input.length<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};val bytes=input.toByteArray(Charsets.UTF_8)
         return try{check(bytes.size<=2*1024*1024){"E2EE_MEMBERSHIP_REVIEW_MISMATCH"};ru.genesis.calendar.security.E2eeFileManifestJson.readMigrationHistory(bytes)}finally{bytes.fill(0)}
@@ -1535,7 +1554,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             snapshot.accountSettings?.sharedProjectsEnabled == true &&
             snapshot.accountSettings.featureAccess.allows("shared-projects"))
         val generation = client.currentGeneration()
-        return withContext(Dispatchers.IO) { action(client, generation) }
+        val result=withContext(Dispatchers.IO) { action(client, generation) }
+        val uid=snapshot.user.uid;val storageScope=CloudAccountSnapshot.scopeFor(uid)
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(storageScope)&&result.optBoolean("membershipReviewRequired",false)){
+            val guard=privateUiOwnerGuard(uid);guard();val intent=result.getString("intentId");val request=result.getString("sharedRequestId");ru.genesis.calendar.security.E2eeKeys.technical(intent);ru.genesis.calendar.security.E2eeKeys.technical(request)
+            ru.genesis.calendar.security.NativeMembershipUiState.waitForOperation(uid,snapshot.accountSettings.language,intent);guard()
+            return ru.genesis.calendar.security.NativePrivateProducts.resumeShared(storageScope,request).also{guard()}
+        }
+        return result
     }
 
     suspend fun recordFeatureUsage(features: List<String>) {

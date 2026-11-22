@@ -30,6 +30,8 @@ import type {ProductEdit,ProductVersion} from '../e2ee/shared-product';
 import type {SharedDomainBinding} from '../e2ee/shared-domain';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState,type PersonalSharedState} from '../e2ee/shared-aggregate';
 import {planMembershipOperation,membershipOperationFingerprint,validateMembershipOperationSnapshot} from '../e2ee/membership-operation-plan';
+import {membershipOperationResult} from '../e2ee/membership-operation-result';
+import type {MembershipAtomicReceipt} from '../e2ee/membership-atomic-receipts';
 import {membershipAtomicOperationPlan,type MembershipAtomicProducts} from '../e2ee/membership-atomic-contract';
 import {MembershipOperationDrafts,type MembershipOperationDraft} from '../e2ee/membership-operation-drafts';
 import {captureMembershipOperationSnapshot,type MembershipOpenedScope} from '../e2ee/membership-operation-selection';
@@ -96,12 +98,14 @@ async function run(encoded:string){
         }),
       });
       let result:unknown;const args=value.args;
-      if(value.action==='create'){exactKeys(args,['operation']);const id=await model.create(args.operation as MembershipOperationDraft['operation']);result={id,state:await model.inspect(id)};}
+      if(value.action==='create'){exactKeys(args,['operation',...(args&&typeof args==='object'&&Object.hasOwn(args,'id')?['id']:[])]);const id=await model.create(args.operation as MembershipOperationDraft['operation'],args.id as string|undefined);result={id,state:await model.inspect(id)};}
       else if(value.action==='pending'){exactKeys(args,[]);result={items:await model.pending()};}
       else if(value.action==='cancel'){exactKeys(args,['id']);result={state:await model.cancel(args.id as string)};}
       else if(value.action==='fork'){exactKeys(args,['id']);const id=await model.fork(args.id as string);result={id,state:await model.inspect(id)};}
+      else if(value.action==='result'){exactKeys(args,['id','receipt']);result={result:membershipOperationResult(await model.inspect(args.id as string),args.receipt as MembershipAtomicReceipt|null)};}
       else if(value.action==='confirm'){exactKeys(args,['id','fingerprint']);result={state:await model.confirm(args.id as string,args.fingerprint as string)};}
       else{exactKeys(args,['id']);if(value.action==='inspect')result={state:await model.inspect(args.id as string)};
+        else if(value.action==='follow')result={state:await model.follow(args.id as string)};
         else if(value.action==='preview')result={state:await model.preview(args.id as string)};
         else if(value.action==='start')result={state:await model.start(args.id as string)};
         else throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');}
@@ -141,6 +145,7 @@ async function run(encoded:string){
           for(const head of heads){exactKeys(head,['entityId']);const row=await invoke('version',{entityId:head.entityId}) as ProductVersion;size+=JSON.stringify(row).length;if(size>128*1024*1024)throw new Error('E2EE_PRODUCT_CONTENT_TOO_LARGE');rows.push(row);}return rows;},
         stage:async(edits:ProductEdit[],intentId:string)=>await invoke('stage',{edits,intentId}) as string,
         flush:intentId=>invoke('flush',{intentId}),
+        membership:async(operation,intentId)=>await invoke('membership',{operation,intentId}) as Record<string,unknown>,
         loadRequest:async id=>await invoke('requestLoad',{id}) as {value:SavedSharedRequest;serial:number}|null,
         saveRequest:async(document,expected)=>await invoke('requestSave',{document,expected}) as number,
       });

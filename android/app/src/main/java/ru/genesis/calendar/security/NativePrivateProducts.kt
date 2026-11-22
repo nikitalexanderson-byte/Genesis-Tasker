@@ -36,7 +36,7 @@ internal object NativePrivateProducts{
         account.requireOpen();val scope=CloudAccountSnapshot.scopeFor(account.ownerId);check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};entries.remove(scope)?.account?.close();clearMessageMemory(account.ownerId);entries[scope]=Entry(requireNotNull(applicationContext),account,product,preferences);custodyRevision.value++;revision.value++
     }
     @Synchronized fun lock(){val owners=entries.values.map{it.account.ownerId};for(entry in entries.values)entry.account.close();entries.clear();owners.forEach(::clearMessageMemory);if(owners.isNotEmpty())custodyRevision.value++;revision.value++}
-    private fun clearMessageMemory(owner:String){ru.genesis.calendar.data.MessagingRepository.lockForOwner(owner);ru.genesis.calendar.data.MessengerRepository.lockForOwner(owner)}
+    private fun clearMessageMemory(owner:String){ru.genesis.calendar.data.MessagingRepository.lockForOwner(owner);ru.genesis.calendar.data.MessengerRepository.lockForOwner(owner);NativeMembershipUiState.clearOwner(owner)}
     @Synchronized private fun entry(scope:String):Entry{check(scope in protectedScopes){"E2EE_SCOPE_BINDING_MISMATCH"};val value=entries[scope]?:error("E2EE_UNLOCK_REQUIRED");value.account.requireOpen();return value}
     fun account(scope:String,owner:String):E2eeProductAccount=entry(scope).account.also{check(it.ownerId==owner){"E2EE_SCOPE_BINDING_MISMATCH"}}
     fun currentAccount(scope:String):E2eeProductAccount=entry(scope).account

@@ -11,7 +11,8 @@ internal object E2eeNativeMembershipOperationResolution {
     }
     suspend fun resolve(id:String,operations:E2eeNativeMembershipOperations,stager:E2eeMembershipAtomicStager,current:()->Unit):JSONObject {
         val outcome=cancel(id,operations,stager,current);current();check(outcome.get("outcome")=="cancelled"){"E2EE_MEMBERSHIP_OUTCOME_REVIEW_REQUIRED"}
-        val fork=operations.execute("fork",JSONObject().put("id",id));current();val next=fork.getString("id");val preview=operations.execute("preview",JSONObject().put("id",next));current()
-        return JSONObject().put("previousIntentId",id).put("intentId",next).put("draft",preview.get("state"))
+        val fork=operations.execute("fork",JSONObject().put("id",id));current();val next=fork.getString("id");var draft=fork.getJSONObject("state")
+        if(draft.isNull("proposal")&&!draft.optBoolean("cancelled",false)){draft=operations.execute("preview",JSONObject().put("id",next)).getJSONObject("state");current()}
+        return JSONObject().put("previousIntentId",id).put("intentId",next).put("draft",draft)
     }
 }
