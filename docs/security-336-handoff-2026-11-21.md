@@ -234,6 +234,17 @@ unchanged. Accepted coverage remains 9/20. Do not read/stage `demo-output/`.
 
 ## Separate public release and migration UX continuation
 
+The urgent public release is now live: main
+`c29b76e33cc42160616b2df6f5eca61af94f6c63`, Source checks44962824697 success,
+Deploy44965877713 success. Live acceptance passed98 localized documents, two
+legacy Russian links and84 sitemap URLs. API health/privacyModel2, Google
+provider and anonymous session passed; APK149 URL/size/ETag and the complete
+Android update manifest are unchanged. Live public EN desktop and RU mobile
+screenshots were saved; temporary browser overrides were reset and the owned
+local QA server stopped. Personal Google sign-in, real payments and private
+security code were not tested in this website-only acceptance. Paddle checkout
+was not activated. The new accepted storefront must remain in later3.3.6 work.
+
 The urgent website-only changes are in `paddle-web-20261122`, PR42, head
 `503267a7f171e1038f82d636037698029803334c`. They must publish first and contain
 no new E2EE/security source. Preserve their accepted public storefront and `/ru/`
