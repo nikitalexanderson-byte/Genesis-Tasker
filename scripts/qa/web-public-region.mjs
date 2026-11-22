@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
+import {pathToFileURL} from 'node:url';
 
 /** Isolated browser scenarios use synthetic coordinates and local fixture accounts. */
 export async function verifyPublicRegions({browser,baseURL,output}) {
@@ -35,8 +36,11 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
       if(scenario.donation!==undefined){
         const login=await context.request.get('/api/qa/login?tier=free');
         assert(login.ok()&&(await login.json()).synthetic,'Use only a synthetic account');
+        await page.goto('/?lang=en#today');
+        // A hash-only navigation keeps the anonymous app instance alive after
+        // the fixture login. Start the authenticated document explicitly.
         const regionResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/billing/location');
-        await page.goto('/?lang=en#today');await regionResponse;
+        await page.reload();await regionResponse;
         await page.locator('.genesis-page-footer').waitFor();await page.waitForLoadState('networkidle');
         const footer=page.locator('.genesis-page-footer');
         if(scenario.donation)await footer.locator('a[href^="https://pay.cloudtips.ru/"]').waitFor();
@@ -53,8 +57,11 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
       await page.screenshot({path:evidence,fullPage:true,animations:'disabled'}).catch(()=>{});
       results.push({id:'web.public-region.'+scenario.id,platformId:'web',status:'FAIL',error:error.message,evidence:[evidence]});
     }finally{await context.close();}
-    console.log(results.at(-1).status+' public-region '+scenario.id);
+    console.log(results.at(-1).status+' public-region '+scenario.id+(results.at(-1).error?': '+results.at(-1).error:''));
   }
   writeFileSync(output+'/public-region-results.json',JSON.stringify(results,null,2));
   return results;
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+ const {chromium}=await import('playwright'),baseURL=process.env.GENESIS_QA_WEB_ORIGIN,output=process.env.GENESIS_QA_WEB_OUTPUT;if(!/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL??'')||!output)throw new Error('Owned isolated loopback services required');const browser=await chromium.launch({headless:true});try{const results=await verifyPublicRegions({browser,baseURL,output});if(results.some(row=>row.status!=='PASS'))process.exitCode=1;}finally{await browser.close();}
 }
