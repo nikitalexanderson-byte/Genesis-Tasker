@@ -62,7 +62,7 @@ fun StoicheionScreen(app: GenesisApplication, divinationDisabled: Boolean,
     val upgrade=LocalNativeUpgrade.current
     val restorationAllowed=access.allows("stoicheion-restoration")
     val repository = remember(app, app.workspaceScope) { StoicheionDrawRepository(app) }
-    val habitsRepository = remember(app) { HabitsRepository(app) }
+    val habitsRepository = remember(app,app.workspaceScope) { HabitsRepository(app) }
     val habitWorkspace by produceState<LocalHabitWorkspace?>(null, habitsRepository) {
         try { habitsRepository.workspace.collect { value = it } }
         catch (error: CancellationException) { throw error }

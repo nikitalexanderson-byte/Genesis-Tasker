@@ -65,6 +65,7 @@ class HabitsRepository(private val app: GenesisApplication) {
     private val dao=db.dao()
     private val cipher=LocalCipher()
     private val scope=app.workspaceScope
+    internal val migrationScope get()=scope
     private val backupMutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
     private fun engine()=HabitEngine(GenesisCalendar(ZoneId.systemDefault()))
     val workspace=PrivatePersonalDocuments.observe(scope,"habits",dao.observeDocument(scope,"habits").map { record ->

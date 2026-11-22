@@ -36,6 +36,15 @@ races, slider interruption and retry/cancel after E2EE_SOURCE_NOT_SETTLED.
 Remaining native inventory includes embedded Aurora/Gno and advanced shared
 forms; SAF lifecycle/generation custody and streamed cancellation remain open.
 
+Native Stoicheion restoration now also retains the journey's raw intention,
+action and choices, cycle reflection, source cards/seed, loaded habit workspace,
+original habit and pending delete/view state. The original repository's hashed
+scope binds the UID; the parent habit repository is recreated on account change.
+All entries are inert history, and mounted loading/saving refuses capture.
+No habit completion, reward, deletion or new cycle executes from this history.
+These additions are likewise uncompiled/untested; branch-switch and interrupted
+journey/reflection/save scenarios remain for consolidated acceptance.
+
 The separate urgent public website release is prepared in the
 `paddle-web-20261122` worktree, PR42. Its CI checks the stable public/main source,
 not this uncommitted security candidate. Do not credit those results to3.3.6

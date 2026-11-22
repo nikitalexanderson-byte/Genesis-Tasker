@@ -273,3 +273,9 @@ input, pending voice/spelling, save/loading races, slider interruption and
 SOURCE_NOT_SETTLED retry/cancel UX. Embedded Aurora/Gno/shared advanced forms,
 SAF custody and streamed cancellation remain unfinished.
 
+Stoicheion restoration journey/cycle inputs are now registered too: raw
+intention/action/reflection, choices, source cards/seed and original habit
+workspace are preserved as history. Owner binding follows the actual habit
+repository scope, with account-keyed repository lifetime. No private tests or
+compilation ran for this continuation; accepted coverage is still9/20.
+

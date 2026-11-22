@@ -28,7 +28,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.genesis.calendar.data.HabitsRepository
+import ru.genesis.calendar.data.HabitDocument
 import ru.genesis.calendar.data.LocalHabitWorkspace
+import org.json.JSONArray
+import org.json.JSONObject
 import ru.genesis.calendar.domain.*
 import ru.genesis.calendar.domain.habits.Habit
 import ru.genesis.calendar.domain.habits.HabitEngine
@@ -36,6 +39,8 @@ import ru.genesis.calendar.domain.habits.HabitPracticeGoal
 import ru.genesis.calendar.domain.habits.HabitPracticeGoals
 
 internal data class RestorationSource(val date: String, val seed: Long, val cards: List<RestorationDrawCard>)
+private fun RestorationSource.migrationJson()=JSONObject().put("date",date).put("seed",seed.toString())
+    .put("cards",JSONArray(cards.map{JSONObject().put("letterId",it.letterId).put("reversed",it.reversed)}))
 
 /** A native route with one scrolling surface. Back returns to the unchanged original draw. */
 @Composable
@@ -43,14 +48,22 @@ internal fun StoicheionRestorationScreen(source: RestorationSource?, letters: Li
     catalog: StoicheionRestorationCatalog, theokyklos: TheokyklosCatalog, workspace: LocalHabitWorkspace?,
     repository: HabitsRepository, initialSectorId: String?, initialHabitId: String?, inputCalendarMode: CalendarMode,
     onBack: () -> Unit, onOpenHabits: () -> Unit, onOpenTheokyklos: (String) -> Unit) {
+    val migrationOwner=rememberLegacyMigrationOwner(repository.migrationScope)
     val scope = rememberCoroutineScope()
     val today by produceState(LocalDate.now()) {
         while (true) { delay(60_000L); value = LocalDate.now() }
     }
-    var busy by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var deleteCycle by remember { mutableStateOf<Habit?>(null) }
-    var habitId by rememberSaveable(initialHabitId) { mutableStateOf(initialHabitId) }
+    var busy by remember(repository) { mutableStateOf(false) }
+    var error by remember(repository) { mutableStateOf<String?>(null) }
+    var deleteCycle by remember(repository) { mutableStateOf<Habit?>(null) }
+    var habitId by rememberSaveable(repository.migrationScope,initialHabitId) { mutableStateOf(initialHabitId) }
+    RememberMigrationForm(migrationOwner,repository,"stoicheion-restoration-view",{!busy&&workspace!=null}){
+        JSONObject().put("source",source?.migrationJson()?:JSONObject.NULL)
+            .put("workspace",workspace?.let{JSONObject(HabitDocument.encode(it))}?:JSONObject.NULL)
+            .put("revision",workspace?.revision?:JSONObject.NULL).put("habitId",habitId?:JSONObject.NULL)
+            .put("initialSectorId",initialSectorId?:JSONObject.NULL).put("initialHabitId",initialHabitId?:JSONObject.NULL)
+            .put("calendarMode",inputCalendarMode.wireValue).put("deleteCycle",deleteCycle?.id?:JSONObject.NULL).put("busy",busy)
+    }
     val savedHabit = StoicheionRestoration.habitById(workspace?.habits.orEmpty(), habitId)
     fun runAction(action: suspend () -> Unit) {
         scope.launch {
@@ -85,10 +98,10 @@ internal fun StoicheionRestorationScreen(source: RestorationSource?, letters: Li
                     onComplete = { runAction { repository.complete(savedHabit.id, true) } },
                     onReflection = { text -> runAction { repository.save(savedHabit.copy(
                         stoicheionRestoration = savedHabit.stoicheionRestoration!!.copy(reflection = text.trim()))) } },
-                    onOpenHabits = onOpenHabits)
+                    onOpenHabits = onOpenHabits,migrationOwner=migrationOwner)
             } else if (source != null) {
                 RestorationJourney(source, letters, catalog, theokyklos, workspace, initialSectorId,
-                    busy, error, onOpenTheokyklos, inputCalendarMode, onSave = { habit ->
+                    busy, error, onOpenTheokyklos, inputCalendarMode,migrationOwner=migrationOwner, onSave = { habit ->
                         runAction { repository.save(habit); habitId = habit.id }
                     })
             } else {
@@ -124,7 +137,7 @@ internal fun RestorationJourney(source: RestorationSource, letters: List<Stoiche
     catalog: StoicheionRestorationCatalog, theokyklos: TheokyklosCatalog, workspace: LocalHabitWorkspace?,
     initialSectorId: String?, busy: Boolean, error: String?, onOpenTheokyklos: (String) -> Unit,
     inputCalendarMode: CalendarMode = CalendarMode.SACRED,
-    onSave: (Habit) -> Unit) {
+    migrationOwner:String?=null,onSave: (Habit) -> Unit) {
     val english = LocalGenesisLanguage.current != "ru"
     val reversed = source.cards.mapIndexedNotNull { index, card ->
         if (card.reversed) StoicheionRestoration.positions[index] else null
@@ -134,6 +147,10 @@ internal fun RestorationJourney(source: RestorationSource, letters: List<Stoiche
     }
     var stage by rememberSaveable(source.date, source.seed, selectedId) { mutableIntStateOf(0) }
     var reached by rememberSaveable(source.date, source.seed, selectedId) { mutableIntStateOf(0) }
+    RememberMigrationForm(migrationOwner,"${source.date}:${source.seed}","stoicheion-restoration-selection",{!busy&&workspace!=null}){
+        JSONObject().put("source",source.migrationJson()).put("selectedId",selectedId?:JSONObject.NULL)
+            .put("stage",stage).put("reached",reached).put("busy",busy)
+    }
     BackHandler(enabled = stage > 0) { stage -= 1 }
     val sector = selectedId?.let { catalog.sectors.getValue(it) }
     if (sector == null) {
@@ -177,6 +194,13 @@ internal fun RestorationJourney(source: RestorationSource, letters: List<Stoiche
     val enabled = workspace?.settings?.enabled == true
     val uri = LocalUriHandler.current
     var supportDetails by rememberSaveable(source.date, source.seed, selectedId) { mutableStateOf<String?>(null) }
+    RememberMigrationForm(migrationOwner,"${source.date}:${source.seed}:$selectedId","stoicheion-restoration-journey",{!busy&&workspace!=null}){
+        JSONObject().put("source",source.migrationJson()).put("selectedId",selectedId?:JSONObject.NULL)
+            .put("stage",stage).put("reached",reached).put("needId",needId).put("supportIds",JSONArray(supportIds))
+            .put("resourceId",resourceId?:JSONObject.NULL).put("intention",intention).put("action",action)
+            .put("useExisting",useExisting).put("existingId",existingId?:JSONObject.NULL).put("supportDetails",supportDetails?:JSONObject.NULL)
+            .put("calendarMode",inputCalendarMode.wireValue).put("busy",busy)
+    }
     val stages = listOf("meaning", "myth", "equation", "practice")
     val scroll = rememberLazyListState()
     LaunchedEffect(stage) { scroll.scrollToItem(0) }
@@ -383,7 +407,7 @@ internal fun RestorationJourney(source: RestorationSource, letters: List<Stoiche
 @Composable
 internal fun RestorationCycle(habit: Habit, workspace: LocalHabitWorkspace, letters: List<StoicheionLetter>,
     catalog: StoicheionRestorationCatalog, today: LocalDate, busy: Boolean, error: String?,
-    onComplete: () -> Unit, onReflection: (String) -> Unit, onOpenHabits: () -> Unit) {
+    onComplete: () -> Unit, onReflection: (String) -> Unit, onOpenHabits: () -> Unit,migrationOwner:String?=null) {
     val snapshot = habit.stoicheionRestoration!!
     val dates = StoicheionRestoration.completionDates(snapshot, habit.id, workspace.completions, today)
     val finite = HabitPracticeGoals.progress(habit,workspace.completions,today)
@@ -395,6 +419,10 @@ internal fun RestorationCycle(habit: Habit, workspace: LocalHabitWorkspace, lett
     val simple = habit.scoringMode in listOf("none", "binary") && habit.measurement == null && habit.periodGoal == null && habit.intervalSchedule == null
     var reflection by rememberSaveable(habit.id, snapshot.reflection) { mutableStateOf(snapshot.reflection) }
     var sourceOpen by rememberSaveable(habit.id) { mutableStateOf(false) }
+    RememberMigrationForm(migrationOwner,habit.id,"stoicheion-restoration-cycle",{!busy}){
+        JSONObject().put("baseline",JSONObject(HabitDocument.encode(LocalHabitWorkspace(habits=listOf(habit)))))
+            .put("revision",workspace.revision).put("date",today.toString()).put("reflection",reflection).put("sourceOpen",sourceOpen).put("busy",busy)
+    }
     val sector = catalog.sectors.getValue(snapshot.sectorId)
     val letter = letters.first { it.id == snapshot.letterId }
     LazyColumn(Modifier.fillMaxSize().testTag("restoration-cycle-scroll"), contentPadding = PaddingValues(16.dp),
