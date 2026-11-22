@@ -9,7 +9,7 @@ import ru.genesis.calendar.auth.CloudAccountSnapshot
 import ru.genesis.calendar.security.E2eeDirectory
 import ru.genesis.calendar.security.E2eeKeys
 import ru.genesis.calendar.security.E2eeMigration
-import ru.genesis.calendar.security.E2eeMigrationFence
+import ru.genesis.calendar.security.E2eeProductMigrationFence
 import java.util.UUID
 
 /** Additive upgrade. All four original tables/rows, ciphertext, counters and
@@ -51,7 +51,7 @@ internal object LegacyScopeFenceSql {
  * Installing this barrier does not activate the product E2EE route by itself. */
 internal class NativeLegacyScopeFence(private val db: GenesisDatabase, private val ownerId: String,
     private val remoteScopeId: String, private val assertCurrent: () -> Unit,
-    private val storageScope: String = CloudAccountSnapshot.scopeFor(ownerId)) : E2eeMigrationFence {
+    private val storageScope: String = CloudAccountSnapshot.scopeFor(ownerId)) : E2eeProductMigrationFence {
     // App writers/controllers share one process; independent Room instances for
     // the same configured database must serialize migration/release too. SQLite
     // independently protects every old writer, including across connections.
@@ -77,8 +77,24 @@ internal class NativeLegacyScopeFence(private val db: GenesisDatabase, private v
         // death leave the barrier in place and every original row readable.
         operation().also { assertCurrent() }
     }
-    suspend fun token(): String? { assertCurrent();return db.dao().legacyScopeFence(storageScope)?.also(::bound)?.token }
-    suspend fun activate(directory: E2eeDirectory.Verified) = mutex.withLock {
+    override suspend fun token(): String? { assertCurrent();return db.dao().legacyScopeFence(storageScope)?.also(::bound)?.token }
+    /** A freshly verified active personal directory can establish an account
+     * deny row on a new device. It cannot replace a different binding/token,
+     * clear an old row, or release its descendants. */
+    suspend fun <T> withActivePersonalFence(directory:E2eeDirectory.Verified,operation:suspend()->T):T=mutex.withLock{
+        assertCurrent();check(directory.ownerId==ownerId&&directory.scopeId==remoteScopeId&&directory.kind=="personal"
+            &&directory.resourceId==ownerId&&directory.state=="active"&&storageScope==CloudAccountSnapshot.scopeFor(ownerId)){"E2EE_PERSONAL_SCOPE_REQUIRED"}
+        LegacyScopeLocks.freezeMemory(db,storageScope)
+        db.withTransaction{
+            LegacyScopeFenceSql.install(db.openHelper.writableDatabase)
+            val row=db.dao().legacyScopeFence(storageScope)
+            if(row==null)db.dao().insertLegacyScopeFence(LegacyScopeFenceRecord(storageScope,ownerId,remoteScopeId,"active",UUID.randomUUID().toString()))
+            else{bound(row);if(row.phase!="active")check(db.dao().activateLegacyScopeFence(storageScope,row.token)==1){"E2EE_LOCAL_CONFLICT"}}
+            assertCurrent()
+        }
+        operation().also{assertCurrent()}
+    }
+    override suspend fun activate(directory: E2eeDirectory.Verified) = mutex.withLock {
         assertCurrent();check(directory.ownerId == ownerId && directory.scopeId == remoteScopeId && directory.state == "active") { "E2EE_SCOPE_BINDING_MISMATCH" }
         db.withTransaction {
             val row=db.dao().legacyScopeFence(storageScope) ?: error("E2EE_LOCAL_FENCE_REQUIRED");bound(row)
@@ -90,7 +106,7 @@ internal class NativeLegacyScopeFence(private val db: GenesisDatabase, private v
      * accept an old cancelled Status captured before a subsequent restart.
      * Caller supplies a fresh signed directory and the bound migration::status.
      * Active barriers are irreversible; SQL independently enforces this. */
-    suspend fun releaseCancelled(token: String, directory: E2eeDirectory.Verified, currentStatus: () -> E2eeMigration.Status?) = mutex.withLock {
+    override suspend fun releaseCancelled(token: String, directory: E2eeDirectory.Verified, currentStatus: () -> E2eeMigration.Status?) = mutex.withLock {
         assertCurrent();check(directory.ownerId == ownerId && directory.scopeId == remoteScopeId && directory.state == "preparing") { "E2EE_LOCAL_DOWNGRADE_FORBIDDEN" }
         db.withTransaction {
             val row=db.dao().legacyScopeFence(storageScope) ?: error("E2EE_LOCAL_FENCE_REQUIRED");bound(row)

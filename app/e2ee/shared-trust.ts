@@ -3,6 +3,8 @@ import {requirePrivateAccount} from './product-session.ts';
 import {assertTechnical,exactKeys,type PublicDeviceKeys} from './keys.ts';
 import {canonicalE2eeValue,type WireValue} from './commands.ts';
 import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
+import {samePrivateJson} from './product-json.ts';
+import type {VerifiedDirectory} from './directory.ts';
 
 export type SharedScopeTrust={scopeId:string;ownerId:string;kind:'project'|'space';resourceId:string;authority:PublicDeviceKeys;fingerprint:string;acceptedAt:string};
 export type SharedTrustProposal=Omit<SharedScopeTrust,'fingerprint'|'acceptedAt'>;
@@ -26,6 +28,16 @@ export class E2eeSharedTrust{
   return value as State;
  },seed:async()=>({protocol:1,ownerId,scopes:[]})});}
  async list(){const view=await this.#document.read();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');return structuredClone(view.document.scopes);}
+ /** The owner already knows this authority independently from the device vault
+  * and re-entered recovery material used by migration. A server-discovered peer
+  * authority still requires the explicit comparison path below. */
+ async acceptOwned(directory:VerifiedDirectory){
+  const account=requirePrivateAccount(this.ownerId);account.requireOpen();const own=directory.devices.get(account.device.deviceId);
+  if(directory.ownerId!==this.ownerId||directory.kind==='personal'||directory.state!=='active'
+    ||!samePrivateJson(directory.recoveryKit.authority,account.device.authorityPin)||!own||own.revoked||own.userId!==this.ownerId||own.role!=='owner')throw new Error('E2EE_OWNER_REQUIRED');
+  const proposal:SharedTrustProposal={scopeId:directory.scopeId,kind:directory.kind,resourceId:directory.resourceId,ownerId:this.ownerId,authority:structuredClone(account.device.authorityPin)};
+  await this.accept(proposal,await sharedScopeFingerprint(proposal));account.requireOpen();
+ }
  accept(input:SharedTrustProposal,comparedFingerprint:string){const proposal=structuredClone(input),task=this.#serial.catch(()=>undefined).then(async()=>{const fingerprint=await sharedScopeFingerprint(proposal);requirePrivateAccount(this.ownerId).requireOpen();
   if(comparedFingerprint!==fingerprint)throw new Error('E2EE_SHARED_FINGERPRINT_MISMATCH');const view=await this.#document.read();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');
   const old=view.document.scopes.find(row=>row.scopeId===proposal.scopeId);if(old&&old.fingerprint!==fingerprint)throw new Error('E2EE_SHARED_AUTHORITY_CHANGED');

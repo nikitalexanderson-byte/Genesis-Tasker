@@ -31,6 +31,16 @@ internal class E2eeSharedTrust(private val account:E2eeProductAccount){
     private val document=E2eeFeatureDocument(account,"key-check","personal-shared-trust-live-v1",::validate,{
         JSONObject().put("protocol",1).put("ownerId",account.ownerId).put("scopes",JSONArray())},account::requireOpen)
     @Synchronized fun list():JSONArray{val view=document.read();check(view.isNull("conflict")){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};return JSONArray(view.getJSONObject("document").getJSONArray("scopes").toString())}
+    /** The owner's pin is already independent of this server's discovery. Peer
+     * scopes continue to require the separate fingerprint comparison below. */
+    @Synchronized fun acceptOwned(directory:E2eeDirectory.Verified){
+        account.requireOpen();val own=directory.devices[account.device.deviceId]
+        check(directory.ownerId==account.ownerId&&directory.kind in setOf("project","space")&&directory.state=="active"
+            &&E2eeProductJson.same(directory.recoveryKit.getJSONObject("authority"),account.device.authorityPin)
+            &&own!=null&&!own.revoked&&own.userId==account.ownerId&&own.role=="owner"){"E2EE_OWNER_REQUIRED"}
+        val proposal=JSONObject().put("scopeId",directory.scopeId).put("ownerId",account.ownerId).put("kind",directory.kind).put("resourceId",directory.resourceId).put("authority",account.device.authorityPin)
+        accept(proposal,fingerprint(proposal));account.requireOpen()
+    }
     @Synchronized fun accept(input:JSONObject,comparedFingerprint:String){account.requireOpen();val proposal=JSONObject(input.toString());val digest=fingerprint(proposal);check(digest==comparedFingerprint){"E2EE_SHARED_FINGERPRINT_MISMATCH"}
         val view=document.read();check(view.isNull("conflict")){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};val prior=view.getJSONObject("document");val rows=prior.getJSONArray("scopes");val output=JSONArray();var old:JSONObject?=null
         for(index in 0 until rows.length()){val row=rows.getJSONObject(index);if(row.get("scopeId")==proposal.get("scopeId"))old=row else output.put(row)}

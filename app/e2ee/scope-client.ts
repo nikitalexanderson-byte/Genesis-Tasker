@@ -415,6 +415,7 @@ export class E2eeScopeClient {
   async readStoicheionState():Promise<unknown>{return this.#readPacket('stoicheion-state',{});}
   async readBootstrapState(afterPart=-1){if(!Number.isInteger(afterPart)||afterPart< -1||afterPart>255)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-bootstrap-state',{afterPart});}
   async readProductContext(){return this.#readPacket('product-context',{});}
+  async readTransitionCandidates(){return this.#readPacket('resource-transition-candidates',{});}
   async sharedReadHistory(){const result=await this.#readPacket('shared-read-history',{});exactKeys(result,['history','checkpointHash','directoryRevision']);return result.history;}
   async readProductHistory(entityId:string,before:number,limit=5){assertTechnical(entityId);if(!Number.isSafeInteger(before)||before<1||!Number.isInteger(limit)||limit<1||limit>10)throw new Error('E2EE_INVALID_LIMIT');return this.#readPacket('product-history',{entityId,before,limit});}
   async readAdvicePolicy():Promise<unknown>{return this.#readPacket('advice-policy',{});}

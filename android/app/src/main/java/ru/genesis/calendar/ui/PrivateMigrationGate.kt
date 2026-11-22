@@ -67,9 +67,11 @@ private fun migrationText(context:android.content.Context,language:String,name:S
 }
 @Composable private fun PrivateMigrationDialog(controller:AuthController,auth:AuthPanelState,view:NativeMigrationUiState.View){
     val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val scope=rememberCoroutineScope()
-    val text=remember(view.language){migrationText(context,view.language,"migration-copy-v1.json")};val vault=remember(view.language){migrationText(context,view.language,"vault-copy-v1.json")}
+    val text=remember(view.language,view.target){migrationText(context,view.language,"migration-copy-v1.json").also{copy->if(view.target!=null){
+        val shared=migrationText(context,view.language,"shared-migration-copy-v1.json");for(name in listOf("title","intro","done"))copy.put(name,shared.getString(name))
+    }}};val vault=remember(view.language){migrationText(context,view.language,"vault-copy-v1.json")}
     val cancellation=remember(view.language){migrationText(context,view.language,"migration-cancel-copy-v1.json")}
-    var phase by remember{mutableStateOf(if(view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
+    var phase by remember{mutableStateOf(if(view.target!=null||view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
     val generatedMaterial=remember{AtomicReference<NativeRecoveryMaterial?>(null)}
     var generatedId by remember{mutableStateOf<String?>(null)}
     var savedFile by remember{mutableStateOf(false)};var savedSecret by remember{mutableStateOf(false)}
@@ -151,10 +153,12 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 owns();activeSecret.set(material.secret)
                 started=true;phase="running";error=""
                 val suppliedKit=requireNotNull(material.kit){"E2EE_RECOVERY_KIT_REQUIRED"}
-                val next=controller.preparePrivateMigration(material.secret,suppliedKit,::owns);migration=next;owns();prepared.set(next)
+                val next=view.target?.let{controller.prepareSharedPrivateMigration(it,material.secret,suppliedKit,::owns)}?:controller.preparePrivateMigration(material.secret,suppliedKit,::owns);migration=next;owns();prepared.set(next)
                 val cancel=cancellationAttempt.get()==request.attempt
                 if(cancel)next.cancel(material.secret,suppliedKit)else next.run(material.secret,suppliedKit){value->owns();progress=value};owns()
-                prepared.compareAndSet(next,null);controller.closePrivateMigration(next);migration=null;kit=null;phase=if(cancel)"cancelled"else"done";controller.checkSession()
+                prepared.compareAndSet(next,null);controller.closePrivateMigration(next);migration=null
+                if(!cancel&&view.target!=null){controller.finishSharedPrivateMigration(view.target);owns()}
+                kit=null;phase=if(cancel)"cancelled"else"done";if(view.target==null)controller.checkSession()
             }finally{
                 activeSecret.compareAndSet(material.secret,null)
                 migration?.let{prepared.compareAndSet(it,null);controller.closePrivateMigration(it)}

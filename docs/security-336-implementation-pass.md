@@ -10,6 +10,19 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Shared owner transition controllers and actual recovery UI (candidate)
+
+Web/native now attach project/space transitions to the live owner device, use
+the full matching source catalogue, retain the active personal deny boundary
+through child cancellation and finish the real private product bootstrap.
+Owner-only signed technical discovery includes legacy resources without a scope;
+recovery-signed setup and independently pinned directories still authorize the
+operation. Both account panels use the existing recovery/stop/cancel surface,
+with shared copy on all14 languages. Peer fingerprint requirements stay intact.
+Details and remaining creation/domain work:
+`security-336-shared-migration-controllers.md`. No compilation/QA or coverage
+increase is claimed. Fresh creation composition is the next implementation.
+
 ### Fresh private space preparation (candidate, composition still in progress)
 
 Added a signed active-personal-owner preparation service which atomically creates

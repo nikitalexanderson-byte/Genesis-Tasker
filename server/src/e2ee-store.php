@@ -508,11 +508,14 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
 {
     // Read identities are signed but do not create command receipts or change data.
     $c=genesisE2eeCommand($packet['command']??null);$scope=genesisE2eeScope($actor,$c['scopeId']);
-    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','content-heads','shared-read-history','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
+    if (!in_array($c['action'],['read','get','receipt','sealed-heads','active-heads','content-heads','shared-read-history','resource-transition-candidates','stoicheion-state','advice-policy','product-index','product-history','product-context','product-bootstrap-state','legacy-workspace','legacy-aurora','legacy-stoicheion','legacy-advice','legacy-tasks','legacy-diary','legacy-mindmaps','legacy-physis','legacy-reminders','legacy-archives','legacy-shared-mindmaps','legacy-private-path'],true) || $c['ownerId']!==$scope['owner_id'] || $c['securityEpoch']!==(int)$scope['security_epoch']
         || $c['expectedRevision']!==(int)$scope['directory_revision'] || !hash_equals($scope['checkpoint_hash'],$c['checkpointHash'])) throw new DomainException('E2EE_STALE_EPOCH');
     $device=genesisE2eeRow(genesisDb(),'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?',[$c['scopeId'],$c['deviceId']]);
     if (!$device || $device['revoked'] || $device['user_id']!==$actor) throw new DomainException('E2EE_REVOKED_DEVICE');
     genesisE2eeVerifyCommand($packet,$device['signing_key']);
+    if($c['action']==='resource-transition-candidates'){
+        require_once __DIR__.'/e2ee-resource-transition.php';return genesisE2eeResourceTransitionCandidates(genesisDb(),$actor,$scope,$device,$c['payload']);
+    }
     if($c['action']==='shared-read-history'){
         genesisE2eeExactFields($c['payload'],[]);
         if($scope['kind']!=='personal'||$scope['resource_id']!==$actor||$scope['state']!=='active')throw new DomainException('E2EE_SCOPE_FORBIDDEN');

@@ -2,8 +2,8 @@ import {UnlockedWebDevice,IndexedDbDeviceKeyStorage,bindWebVaultLifecycle} from 
 import {IndexedDbE2eeStorage} from './storage.ts';
 import {E2eeDeviceDocument} from './device-document.ts';
 import {E2eeScopeSetup,verifyScopeRecovery,type ScopeSetupTransport} from './scope-setup.ts';
-import {validatePrivateAccountStatus,type PrivateAccountTransport} from './product-session.ts';
-import {assertTechnical,exactKeys,openRoot,type RecoveryKit} from './keys.ts';
+import {validatePrivateAccountStatus,type PrivateAccountTransport,type WebPrivateAccount} from './product-session.ts';
+import {assertTechnical,exactKeys,openRoot,publicDeviceKeys,type RecoveryKit} from './keys.ts';
 import {snapshotE2eeValue} from './commands.ts';
 import {E2eeMigration,E2EE_MIGRATION_BYTE_BUDGET,type StreamedPlanningOptions,type StreamedContentPlanningOptions} from './migration.ts';
 import {MigrationSourceReadRouter,type LegacyReadPorts} from './source-replay.ts';
@@ -15,15 +15,16 @@ import {measureE2eeDeviceStorage} from './storage-admission.ts';
 import {admitE2eeStorage,E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
 import type {VerifiedDirectory} from './directory.ts';
 import type {E2eeMigrationSources} from './migration-sources.ts';
-import type {WebMigrationTransportFence} from './legacy-transport-fence.ts';
+import type {WebProductMigrationFence} from './legacy-transport-fence.ts';
 
-type Target={ownerId:string;scopeId:string;kind:'personal';resourceId:string};
+type Target={ownerId:string;scopeId:string;kind:'personal'|'space'|'project';resourceId:string};
+export type WebSharedMigrationTarget=Pick<Target,'scopeId'|'resourceId'>&{kind:'space'|'project'};
 type Intent={protocol:1;target:Target;sourceGeneration:number};
 type Progress='snapshot'|'sources'|'reconciliation'|'uploading'|'active';
 export type WebProductMigrationPorts={
  account:PrivateAccountTransport;setup:ScopeSetupTransport;request:E2eeMigrationRequest;
  sources:(device:UnlockedWebDevice,directory:VerifiedDirectory,ports:LegacyReadPorts)=>Promise<E2eeMigrationSources>;
- fence:(device:UnlockedWebDevice,directory:VerifiedDirectory)=>WebMigrationTransportFence;
+ fence:(device:UnlockedWebDevice,directory:VerifiedDirectory)=>WebProductMigrationFence;
  assertCurrent:()=>void;assertEditorsFrozen:()=>void;
 };
 /** Real owner/device composition. Recovery material is supplied again for each
@@ -33,9 +34,30 @@ export class WebProductMigration{
  readonly target:Readonly<Target>;
  #closed=false;#running=false;#cleanup:()=>void;
  #operation:{abort:AbortController;drained:Promise<void>}|null=null;
- private constructor(readonly device:UnlockedWebDevice,private directory:VerifiedDirectory,private readonly ports:WebProductMigrationPorts){
-  this.target=Object.freeze({ownerId:device.ownerId,scopeId:directory.scopeId,kind:'personal',resourceId:device.ownerId});
-  this.#cleanup=bindWebVaultLifecycle(device);
+ private constructor(readonly device:UnlockedWebDevice,private directory:VerifiedDirectory,private readonly ports:WebProductMigrationPorts,ownsDevice=true){
+  this.target=Object.freeze({ownerId:directory.ownerId,scopeId:directory.scopeId,kind:directory.kind,resourceId:directory.resourceId});
+  this.#cleanup=ownsDevice?bindWebVaultLifecycle(device):()=>{};
+ }
+ /** Attach an owner transition to the live private account, without unlocking a
+  * second device or taking ownership of the account's key-vault lifecycle. The
+  * HTTP summary locates the scope; only its independently pinned directory can
+  * authorize migration, and recovery is checked again by each run/cancel. */
+ static async attach(account:WebPrivateAccount,target:WebSharedMigrationTarget,ports:WebProductMigrationPorts){
+  const binding=Object.freeze({...target}),device=account.device;
+  for(const id of [binding.scopeId,binding.resourceId])assertTechnical(id);
+  if(!['space','project'].includes(binding.kind))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const current=()=>{ports.assertCurrent();ports.assertEditorsFrozen();account.requireOpen();
+   if(account.mode!=='online'||account.ownerId!==device.ownerId)throw new Error('E2EE_ONLINE_REQUIRED');account.personal();};
+  current();await requireExclusiveMigrationWindow();current();
+  const status=validatePrivateAccountStatus(await ports.account.status());current();
+  if(status.scopes.filter(row=>row.scopeId===binding.scopeId&&row.kind===binding.kind&&row.resourceId===binding.resourceId).length!==1)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const response=await ports.setup.directory(binding.scopeId);current();
+  const directory=await device.rememberDirectory(binding.scopeId,device.authorityPin,response.events,account.ownerId);current();
+  if(directory.kind!==binding.kind||directory.resourceId!==binding.resourceId||directory.ownerId!==account.ownerId
+    ||!['preparing','uploading','verified','active'].includes(directory.state))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const own=directory.devices.get(device.deviceId),keys=await publicDeviceKeys(device.keys());current();
+  if(!own||own.revoked||own.userId!==account.ownerId||own.role!=='owner'||own.signingKey!==keys.signingKey||own.receivingKey!==keys.receivingKey)throw new Error('E2EE_OWNER_REQUIRED');
+  return new WebProductMigration(device,directory,{...ports,assertCurrent:current},false);
  }
  static async open(ownerId:string,secret:Uint8Array,savedKit:RecoveryKit,sourceGeneration:number,ports:WebProductMigrationPorts){
   assertTechnical(ownerId);const held=new Uint8Array(secret);
@@ -102,8 +124,10 @@ export class WebProductMigration{
    const transport=new SignedMigrationTransport(this.device,directory,sources.allowedContentDomains,request);
    const withFence=<T>(operation:()=>Promise<T>)=>fence.withFence(async()=>{
     current();await requireExclusiveMigrationWindow();current();const token=await fence.token();current();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
-    const prior=localMigrationMarker(this.target.ownerId);
-    retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,directory.state==='active'||prior?.phase==='active'?'active':'preparing');current();return operation();
+    if(this.target.kind==='personal'){
+     const prior=localMigrationMarker(this.target.ownerId);
+     retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,directory.state==='active'||prior?.phase==='active'?'active':'preparing');
+    }current();return operation();
    });
    const migration=new E2eeMigration({vault:this.device.vault,directory,deviceId:this.device.deviceId,signingKey:this.device.keys().signing.privateKey,
     signer:this.device.keys().signing.publicKey,root,transport,sources,withLocalWriteFence:withFence,
@@ -120,10 +144,10 @@ export class WebProductMigration{
     await migration.cancelStreamed(planning);current();
     const response=await this.ports.setup.directory(this.target.scopeId);current();
     const cancelled=await this.device.rememberDirectory(this.target.scopeId,this.device.authorityPin,response.events,this.target.ownerId);current();
-    if(cancelled.state!=='preparing'||cancelled.kind!=='personal'||cancelled.resourceId!==this.target.resourceId)throw new Error('E2EE_DOWNGRADE_FORBIDDEN');
+    if(cancelled.state!=='preparing'||cancelled.kind!==this.target.kind||cancelled.resourceId!==this.target.resourceId)throw new Error('E2EE_DOWNGRADE_FORBIDDEN');
     const token=await fence.token();current();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
     await fence.releaseCancelled(token,cancelled,()=>migration.status());current();
-    releaseCancelledLocalMigrationFence(this.target.ownerId,this.target.scopeId,token);current();this.directory=cancelled;return;
+    if(this.target.kind==='personal')releaseCancelledLocalMigrationFence(this.target.ownerId,this.target.scopeId,token);current();this.directory=cancelled;return;
    }
    const content:StreamedContentPlanningOptions={...planning,planCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumEnvelopes:8000,maximumLocalParts:8000},admitPlan:admit};
    await migratePrivateProductScope({target:this.target,migration,sources,router,assertCurrent:current,planning,content,
@@ -132,9 +156,9 @@ export class WebProductMigration{
     finalizeClientDeny:async()=>{
      current();const response=await this.ports.setup.directory(this.target.scopeId);current();
      const active=await this.device.rememberDirectory(this.target.scopeId,this.device.authorityPin,response.events,this.target.ownerId);current();
-     if(active.state!=='active'||active.kind!=='personal'||active.resourceId!==this.target.resourceId)throw new Error('E2EE_MIGRATION_UNVERIFIED');
+     if(active.state!=='active'||active.kind!==this.target.kind||active.resourceId!==this.target.resourceId)throw new Error('E2EE_MIGRATION_UNVERIFIED');
      await fence.activate(active);current();const token=await fence.token();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
-     retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'active');this.directory=active;
+     if(this.target.kind==='personal')retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'active');this.directory=active;
     }});current();
   }finally{held.fill(0);this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
  }

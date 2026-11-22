@@ -9,7 +9,7 @@ import {advicePushDeviceKey,type AdviceTarget} from './advice-notifications';
 import { habitLifecycleState } from './habit-lifecycle';
 import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
 import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
-import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from './e2ee/legacy-transport-fence';
+import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence,WebSharedMigrationTransportFence} from './e2ee/legacy-transport-fence';
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
 import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-local-migration-fence';
 import {showPrivateMigration} from './private-migration-ui';
@@ -3810,6 +3810,40 @@ export async function prepareCurrentPrivateMigration(secret:Uint8Array,kit:impor
     return createMountedPersonalMigrationSources(owner!,directory,ports);
    },
    fence:(device,directory)=>createPersonalMigrationTransportFence(owner!,directory,device),assertCurrent:current,assertEditorsFrozen});
+}
+/** Shared owner migration uses the same frozen surface and source/recovery
+ * sequence as personal setup. It never creates a second unlocked device. */
+export async function prepareCurrentSharedPrivateMigration(target:import('./e2ee/web-product-migration').WebSharedMigrationTarget,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId,binding=Object.freeze({...target});
+ if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account
+   ||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();assertEditorsFrozen();
+ const {WebProductMigration}=await import('./e2ee/web-product-migration');current();
+ const setupTransport=privateScopeSetupHttpTransport(),known=(await account.scopeSummaries()).filter(row=>row.kind===binding.kind&&row.resourceId===binding.resourceId);current();
+ if(known.length>1||known.length&&known[0].scopeId!==binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ if(!known.length){const {E2eeScopeSetup}=await import('./e2ee/scope-setup');current();
+   const setup=new E2eeScopeSetup(account.device,{...binding,ownerId:owner},setupTransport,()=>{current();assertEditorsFrozen();});
+   await setup.prepare(secret,kit,0);current();await setup.submit();current();
+ }
+ return WebProductMigration.attach(account,binding,{account:privateAccountHttpTransport(),setup:setupTransport,
+   request:(path,body,observation,signal)=>{current();return e2eeRequest(path,body,signal,observation);},
+   sources:async(_device,directory,ports)=>{current();return createCompleteMigrationSourceRegistry(owner,directory,ports);},
+   fence:(_device,directory)=>new WebSharedMigrationTransportFence(legacyTransportGate(),owner,account.personal().directory.scopeId,
+     {scopeId:directory.scopeId,kind:binding.kind,resourceId:directory.resourceId},current,async()=>{
+       current();const personal=account.personal();
+       // openScope refreshes the directory cached by the product account too.
+       const fresh=await account.openScope({scopeId:personal.directory.scopeId,kind:'personal',resourceId:owner,state:'active'},account.device.authorityPin,owner);current();return fresh.directory;
+     },()=>requireLegacyTransportWorker()),assertCurrent:current,assertEditorsFrozen});
+}
+export async function finishCurrentSharedPrivateMigration(target:import('./e2ee/web-product-migration').WebSharedMigrationTarget){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId,binding=Object.freeze({...target});
+ if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const scope=await account.openScope({...binding,state:'active'},account.device.authorityPin,owner);current();
+ if(scope.directory.state!=='active')throw new Error('E2EE_MIGRATION_UNVERIFIED');
+ const {bootstrap}=await account.sharedRecords(binding.scopeId,binding.kind,binding.resourceId);current();await bootstrap.prepare();current();await bootstrap.flush();current();
+ const {E2eeSharedTrust}=await import('./e2ee/shared-trust');current();await new E2eeSharedTrust(owner).acceptOwned(scope.directory);current();
+ window.dispatchEvent(new Event('genesis:shared-updates'));
 }
 export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;

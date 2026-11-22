@@ -1,10 +1,11 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore,type FormEvent} from 'react';
-import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,type GenesisUser} from './cloud-sync';
+import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,prepareCurrentSharedPrivateMigration,finishCurrentSharedPrivateMigration,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,type GenesisUser} from './cloud-sync';
 import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration,closePrivateMigrationUi,type PrivateMigrationUi} from './private-migration-ui';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import migrationCopy from '../contracts/e2ee/migration-copy-v1.json' with {type:'json'};
 import cancelCopy from '../contracts/e2ee/migration-cancel-copy-v1.json';
+import sharedCopy from '../contracts/e2ee/shared-migration-copy-v1.json';
 import {isLanguage} from './i18n';
 import {createRecoveryKit,type RecoveryKit} from './e2ee/keys';
 import {decodeE2eeBytes,encodeE2eeBytes} from './e2ee/envelope';
@@ -31,8 +32,8 @@ export function PrivateMigrationGate(){
  return state?<MigrationForm key={state.id} state={state}/>:null;
 }
 function MigrationForm({state}:{state:PrivateMigrationUi}){
- const language=isLanguage(state.language)?state.language:'en',copy=migrationCopy[language],cancellation=cancelCopy[language],vaultCopy=PRIVATE_VAULT_COPY[language];
- const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'|'cancelled'>(state.reason==='resume'?'confirm':'loading');
+ const language=isLanguage(state.language)?state.language:'en',copy={...migrationCopy[language],...(state.target?sharedCopy[language]:{})},cancellation=cancelCopy[language],vaultCopy=PRIVATE_VAULT_COPY[language];
+ const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'|'cancelled'>(state.target||state.reason==='resume'?'confirm':'loading');
  const [generated,setGenerated]=useState<{secret:string;kit:RecoveryKit}|null>(null),[savedFile,setSavedFile]=useState(false),[savedSecret,setSavedSecret]=useState(false);
  const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[fileBusy,setFileBusy]=useState(false),[busy,setBusy]=useState(false);
  const [stopping,setStopping]=useState(false);
@@ -46,12 +47,12 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  useEffect(()=>{
   alive.current=true;const content=document.getElementById('genesis-app-content'),inert=content?.inert,hidden=content?.getAttribute('aria-hidden'),overflow=document.body.style.overflow;
   if(content){content.inert=true;content.setAttribute('aria-hidden','true');}document.body.style.overflow='hidden';
-  const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setCancelConfirmed(false);setPhase(started.current?'confirm':'intro');setError(copy.error);};
+  const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setCancelConfirmed(false);setPhase(state.target||started.current?'confirm':'intro');setError(copy.error);};
   document.addEventListener('visibilitychange',clearSecrets);
   return()=>{alive.current=false;fileRequest.current++;controller.current?.close();controller.current=null;document.removeEventListener('visibilitychange',clearSecrets);
    if(content){content.inert=inert??false;if(hidden===null)content.removeAttribute('aria-hidden');else if(hidden!==undefined)content.setAttribute('aria-hidden',hidden);}document.body.style.overflow=overflow;};
  },[copy.error]);
- useEffect(()=>{let live=true;if(state.reason==='setup')void new IndexedDbDeviceKeyStorage().get(ownerId).then(record=>{if(live)setPhase(record?'confirm':'intro');}).catch(()=>{if(live){setError(copy.error);setPhase('confirm');}});return()=>{live=false;};},[ownerId,state.reason,copy.error]);
+ useEffect(()=>{let live=true;if(!state.target&&state.reason==='setup')void new IndexedDbDeviceKeyStorage().get(ownerId).then(record=>{if(live)setPhase(record?'confirm':'intro');}).catch(()=>{if(live){setError(copy.error);setPhase('confirm');}});return()=>{live=false;};},[ownerId,state.reason,state.target,copy.error]);
  const failure=(reason:unknown)=>{
   const code=reason instanceof Error?reason.message:'';
   return code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
@@ -61,14 +62,15 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
   let drained!:()=>void;const active={stopping:false,drained:new Promise<void>(resolve=>{drained=resolve;})};attempt.current=active;
   try{
    frozen();held=decodeE2eeBytes(secret.trim(),32);setSecret('');setPhase('running');
-   const opened=await prepareCurrentPrivateMigration(held,kit,frozen);current();controller.current=opened;
+   const opened=state.target?await prepareCurrentSharedPrivateMigration(state.target,held,kit,frozen):await prepareCurrentPrivateMigration(held,kit,frozen);current();controller.current=opened;
    if(cancel){
     await opened.cancel(held,kit);current();opened.close();controller.current=null;
-    const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId||identity.privateVault)throw new Error('E2EE_ACCOUNT_CHANGED');
+    const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId||!state.target&&identity.privateVault)throw new Error('E2EE_ACCOUNT_CHANGED');
     setKit(undefined);setPhase('cancelled');return;
    }
    await opened.run(held,kit,value=>{current();setProgress(value);});current();opened.close();controller.current=null;
-   setPhase('done');const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
+   setPhase('done');if(state.target){await finishCurrentSharedPrivateMigration(state.target);current();setKit(undefined);closePrivateMigrationUi(state.id);return;}
+   const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
    privateAccountRequired(ownerId,language);await unlockCurrentPrivateAccount(encodeE2eeBytes(held),kit);current();
    setKit(undefined);window.dispatchEvent(new Event('genesis-private-migration-complete'));closePrivateMigrationUi(state.id);
   }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){setError(active.stopping?'':failure(reason));setPhase('confirm');}}
@@ -112,7 +114,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
    <p className="workspace-recovery-hint">{copy.kept}</p>
    <div className="workspace-recovery-actions">
-    {state.reason==='setup'&&!started.current?<button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
+    {state.target||state.reason==='setup'&&!started.current?<button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
     <button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);void signOutFromGoogle().catch(()=>{if(alive.current)setError(copy.error);});}}>{vaultCopy.exit}</button>
    </div><small className="workspace-recovery-privacy">{vaultCopy.privacy}</small>
   </form>

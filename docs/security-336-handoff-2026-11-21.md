@@ -1,5 +1,25 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: shared controllers подключены, далее полный create flow
+
+Поверх223891fb добавлен кандидатный код web/native shared owner transitions:
+повторное использование открытого owner device, active personal deny barrier
+без ослабления при отмене child scope, полный matching source registry,
+технический signed inventory старых ресурсов, recovery-signed shared setup,
+реальные recovery/stop/cancel UI и private product bootstrap/readback.
+Описание: `security-336-shared-migration-controllers.md`. Coverage всё ещё9/20;
+compiler/typecheck/lint/tests/build/CI не запускались по порядку владельца.
+
+Следующий кодовый участок — композиция сохранённого fresh-space intent со
+space+inbox transition, private initial values, адресатами и create/resume UI;
+затем project topology/inheritance, domain parity, automation/bulk/cross-scope,
+typed restore, revoked-device replacement, native message files/background и
+оставшиеся source-stage/cancel/divergence cases. Полная приёмка, исправления,
+точное итоговое внутреннее крипторевью и раздельные выпуски ещё впереди.
+Не читать/stage demo-output/, не использовать субагентов/Daybreak. Production
+3.3.5/149 и принятая Paddle-витрина сохранены, floors0/cutover off и
+GENESIS_DEPLOY_ANDROID=false. Разрешение полного выпуска уже есть.
+
 ## Следующий участок: общие migration controllers и создание ресурсов
 
 Retained-history код сохранён локальным коммитом **9990d744** (32 files,1841

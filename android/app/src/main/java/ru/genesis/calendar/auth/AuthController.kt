@@ -293,6 +293,52 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }catch(error:Throwable){opened?.let{privateMigration.compareAndSet(it,null);it.close()};throw error}
     }
     internal fun closePrivateMigration(controller:ru.genesis.calendar.security.E2eeProductMigrationController){privateMigration.compareAndSet(controller,null);controller.close()}
+    internal suspend fun prepareSharedPrivateMigration(target:ru.genesis.calendar.security.E2eeProductMigration.Target,secret:ByteArray,kit:JSONObject,assertEditorsFrozen:()->Unit):ru.genesis.calendar.security.E2eeProductMigrationController=privateMigrationSetupMutex.withLock{
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get()
+        val storageScope=CloudAccountSnapshot.scopeFor(uid);val account=ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)
+        fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();account.requireOpen();check(target.ownerId==uid&&client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
+            &&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope
+            &&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
+        current();assertEditorsFrozen();check(privateMigration.get()==null){"E2EE_MIGRATION_BUSY"}
+        val transport=object:ru.genesis.calendar.security.E2eeAccountTransport{
+            private fun call(path:String,body:JSONObject?=null):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
+            override fun status()=call("/status")
+            override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
+            override fun command(packet:JSONObject)=call("/command",packet)
+            override fun read(packet:JSONObject)=call("/read",packet)
+            override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
+        }
+        var opened:ru.genesis.calendar.security.E2eeProductMigrationController?=null
+        try{
+            withContext(Dispatchers.IO){
+                current();val rows=account.scopeSummaries();current();val known=(0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")==target.kind&&it.getString("resourceId")==target.resourceId}
+                check(known.size<=1&&(known.isEmpty()||known[0].getString("scopeId")==target.scopeId)){"E2EE_SCOPE_BINDING_MISMATCH"}
+                if(known.isEmpty()){
+                    val value=JSONObject().put("ownerId",uid).put("scopeId",target.scopeId).put("kind",target.kind).put("resourceId",target.resourceId)
+                    val setup=ru.genesis.calendar.security.E2eeScopeSetup(account.device,value,e2eeScopeSetupTransport(uid,account.device)){current();assertEditorsFrozen()}
+                    setup.prepare(secret,kit,0);current();setup.submit();current()
+                }
+            }
+            val controller=ru.genesis.calendar.security.E2eeProductMigrationController.attach(app,account,target,
+                ru.genesis.calendar.security.E2eeProductMigrationController.Ports(transport,{device->e2eeScopeSetupTransport(uid,device)},
+                    {_,directory,ports->e2eeCompleteSources(uid,directory,ports,emptyList(),{ru.genesis.calendar.security.NativeMigrationMemory.localWork(uid,::current)})},
+                    {device,directory,sources,planning->e2eeMigrationTransport(uid,device,directory,sources,planning)},
+                    {device,directory->ru.genesis.calendar.data.NativeSharedMigrationFence(e2eePersonalLocalFence(uid,device,account.directory),uid,
+                        directory.scopeId,directory.kind,directory.resourceId,{current();account.client.refresh().also{current()}},::current)},::current,assertEditorsFrozen))
+            opened=controller;current();check(privateMigration.compareAndSet(null,controller)){"E2EE_MIGRATION_BUSY"};current();controller
+        }catch(error:Throwable){opened?.let{privateMigration.compareAndSet(it,null);it.close()};throw error}
+    }
+    internal suspend fun finishSharedPrivateMigration(target:ru.genesis.calendar.security.E2eeProductMigration.Target)=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get()
+        val storageScope=CloudAccountSnapshot.scopeFor(uid);val account=ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)
+        fun current(){account.requireOpen();check(target.ownerId==uid&&client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn&&client.isTrialForeground()
+            &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope&&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
+        current();val scope=account.openSharedScope(target.scopeId,target.kind,target.resourceId,uid,account.device.authorityPin);current()
+        check(scope.directory.state=="active"){"E2EE_MIGRATION_UNVERIFIED"}
+        val products=ru.genesis.calendar.security.NativePrivateProducts.sharedRecords(storageScope,target.scopeId,target.kind,target.resourceId)
+        products.bootstrap.prepare();current();products.bootstrap.flush();current();ru.genesis.calendar.security.E2eeSharedTrust(account).acceptOwned(scope.directory);current()
+        ru.genesis.calendar.security.NativePrivateProducts.changed(storageScope)
+    }
     internal fun e2eeMigrationTransport(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource,
         planning:ru.genesis.calendar.security.E2eeMigrationSession?=null): ru.genesis.calendar.security.E2eeSignedMigrationTransport {

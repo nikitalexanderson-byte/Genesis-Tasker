@@ -1,5 +1,13 @@
 import {assertTechnical,exactKeys} from './keys.ts';
 import type {VerifiedDirectory} from './directory.ts';
+import {localMigrationMarker,retainLocalMigrationFence} from './web-local-migration-fence.ts';
+
+export interface WebProductMigrationFence {
+  withFence<T>(operation:()=>Promise<T>):Promise<T>;
+  token():Promise<string|null>;
+  activate(directory:VerifiedDirectory):Promise<void>;
+  releaseCancelled(token:string,directory:VerifiedDirectory,currentStatus:()=>Promise<{phase:string;pending:unknown;resuming:unknown}|null>):Promise<void>;
+}
 
 export type LegacyTransportMarker = Readonly<{protocol:1;ownerId:string;scopeId:string;phase:'preparing'|'active';token:string}>;
 export interface LegacyTransportMarkers {
@@ -137,7 +145,7 @@ export class WebLegacyTransportGate {
 
 /** Transport half of a migration barrier. Combine with mounted-editor/local
  * writer exclusion before passing it as the coordinator's local-write fence. */
-export class WebMigrationTransportFence {
+export class WebMigrationTransportFence implements WebProductMigrationFence {
   #gate:WebLegacyTransportGate;#ownerId:string;#scopeId:string;#current:()=>void;#preflight:()=>Promise<void>;#recover:()=>Pick<LegacyTransportMarker,'token'|'phase'>|null;
   constructor(gate:WebLegacyTransportGate,ownerId:string,scopeId:string,assertCurrent:()=>void,preflight:()=>Promise<void>=async()=>{},recover:()=>Pick<LegacyTransportMarker,'token'|'phase'>|null=()=>null) {
     assertTechnical(ownerId);assertTechnical(scopeId);this.#gate=gate;this.#ownerId=ownerId;this.#scopeId=scopeId;this.#current=assertCurrent;this.#preflight=preflight;
@@ -180,6 +188,60 @@ export class WebMigrationTransportFence {
       const status=await currentStatus();this.#current();
       if(status?.phase!=='cancelled'||status.pending!==null||status.resuming!==null)throw new Error('E2EE_LOCAL_DOWNGRADE_FORBIDDEN');
       await this.#gate.markers.commit(this.#ownerId,row,null);this.#current();
+    });
+  }
+}
+
+/** A shared transition borrows the already irreversible PERSONAL barrier.
+ * Neither activating nor cancelling a child may rewrite its scope/token or
+ * reopen account-wide local/legacy writers. A new/recovered device may install
+ * that same active deny boundary from the freshly verified personal directory. */
+export class WebSharedMigrationTransportFence implements WebProductMigrationFence {
+  readonly #target:Readonly<{scopeId:string;kind:'space'|'project';resourceId:string}>;
+  constructor(private readonly gate:WebLegacyTransportGate,private readonly ownerId:string,private readonly personalScopeId:string,
+    target:{scopeId:string;kind:'space'|'project';resourceId:string},private readonly current:()=>void,
+    private readonly personal:()=>Promise<VerifiedDirectory>,private readonly preflight:()=>Promise<void>){
+    for(const id of [ownerId,personalScopeId,target.scopeId,target.resourceId])assertTechnical(id);
+    if(!['space','project'].includes(target.kind)||target.scopeId===personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    this.#target=Object.freeze({...target});
+  }
+  async #active(adopt=false){
+    this.current();const directory=await this.personal();this.current();
+    if(directory.ownerId!==this.ownerId||directory.scopeId!==this.personalScopeId||directory.kind!=='personal'
+      ||directory.resourceId!==this.ownerId||directory.state!=='active')throw new Error('E2EE_PERSONAL_SCOPE_REQUIRED');
+    let row=await this.gate.markers.get(this.ownerId);this.current();const local=localMigrationMarker(this.ownerId);
+    if(adopt){
+      if(row&&row.scopeId!==this.personalScopeId||local&&local.scopeId!==this.personalScopeId||row&&local&&row.token!==local.token)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+      if(!row){const active:LegacyTransportMarker={protocol:1,ownerId:this.ownerId,scopeId:this.personalScopeId,phase:'active',token:local?.token??crypto.randomUUID()};
+        await this.gate.markers.commit(this.ownerId,null,active);row=active;
+      }else if(row.phase!=='active'){const active:LegacyTransportMarker={...row,phase:'active'};await this.gate.markers.commit(this.ownerId,row,active);row=active;}
+      this.current();retainLocalMigrationFence(this.ownerId,this.personalScopeId,row.token,'active');
+    }
+    const confirmed=localMigrationMarker(this.ownerId);
+    if(!row||!confirmed||row.ownerId!==this.ownerId||row.scopeId!==this.personalScopeId||row.phase!=='active'
+      ||confirmed.scopeId!==row.scopeId||confirmed.phase!=='active'||confirmed.token!==row.token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
+    return row;
+  }
+  #directory(directory:VerifiedDirectory,state:'preparing'|'active'){
+    if(directory.ownerId!==this.ownerId||directory.scopeId!==this.#target.scopeId||directory.kind!==this.#target.kind
+      ||directory.resourceId!==this.#target.resourceId||directory.state!==state)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  }
+  async withFence<T>(operation:()=>Promise<T>):Promise<T>{
+    this.current();await this.preflight();this.current();
+    return this.gate.locks.request(LEGACY_UNBOUND_TRANSPORT_LOCK,{mode:'exclusive'},()=>this.gate.locks.request(legacyTransportLock(this.ownerId),{mode:'exclusive'},async()=>{
+      await this.#active(true);const result=await operation();this.current();await this.#active();return result;
+    }));
+  }
+  async token(){return(await this.#active()).token;}
+  async activate(directory:VerifiedDirectory){
+    await this.gate.locks.request(legacyTransportLock(this.ownerId),{mode:'exclusive'},async()=>{this.current();this.#directory(directory,'active');await this.#active(true);});
+  }
+  async releaseCancelled(token:string,directory:VerifiedDirectory,currentStatus:()=>Promise<{phase:string;pending:unknown;resuming:unknown}|null>){
+    await this.gate.locks.request(legacyTransportLock(this.ownerId),{mode:'exclusive'},async()=>{
+      this.current();this.#directory(directory,'preparing');const row=await this.#active();
+      if(row.token!==token)throw new Error('E2EE_LOCAL_DOWNGRADE_FORBIDDEN');const status=await currentStatus();this.current();
+      if(status?.phase!=='cancelled'||status.pending!==null||status.resuming!==null)throw new Error('E2EE_LOCAL_DOWNGRADE_FORBIDDEN');
+      await this.#active();
     });
   }
 }

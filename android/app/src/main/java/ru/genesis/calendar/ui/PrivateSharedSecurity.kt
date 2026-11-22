@@ -17,6 +17,9 @@ import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.security.NativePrivateProducts
 import ru.genesis.calendar.security.E2eeSharedTrust
+import ru.genesis.calendar.security.E2eeProductMigration
+import ru.genesis.calendar.security.NativeMigrationUiState
+import ru.genesis.calendar.security.E2eeSharedTransitionTargets
 
 /** The fingerprint is intentionally never prefilled into the comparison input.
  * A server discovery is not promoted into a cryptographic trust decision. */
@@ -26,8 +29,10 @@ import ru.genesis.calendar.security.E2eeSharedTrust
     val account=remember(storageScope){NativePrivateProducts.currentAccount(storageScope)}
     val language=LocalGenesisLanguage.current
     val text=remember(language){context.assets.open("shared-security-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val migration=remember(language){context.assets.open("shared-migration-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val coroutine=rememberCoroutineScope();var busy by remember{mutableStateOf(false)};var message by remember{mutableStateOf("")}
     var scopes by remember{mutableStateOf<List<JSONObject>?>(null)};var candidate by remember{mutableStateOf<JSONObject?>(null)}
+    var targets by remember{mutableStateOf<List<E2eeProductMigration.Target>>(emptyList())}
     var compared by remember{mutableStateOf("")};var accepted by remember{mutableStateOf(false)}
     val alive=remember{java.util.concurrent.atomic.AtomicBoolean(true)};DisposableEffect(Unit){onDispose{alive.set(false)}}
     fun current(){account.requireOpen();check(alive.get()&&app.workspaceScope==storageScope&&NativePrivateProducts.currentAccount(storageScope)===account){"E2EE_ACCOUNT_CHANGED"}}
@@ -39,15 +44,27 @@ import ru.genesis.calendar.security.E2eeSharedTrust
     Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp)){
         Text(text.getString("title"),style=MaterialTheme.typography.titleMedium)
         Text(text.getString("notice"),style=MaterialTheme.typography.bodyMedium)
-        OutlinedButton(onClick={run({val rows=account.scopeSummaries();(0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")!="personal"}},{scopes=it})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("load"))}
-        if(scopes?.isEmpty()==true)Text(text.getString("empty"))
+        OutlinedButton(onClick={run({val rows=account.scopeSummaries();account.client.refresh();current();
+            Pair((0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")!="personal"},E2eeSharedTransitionTargets.read(account.client.readTransitionCandidates(),account.ownerId))
+        },{scopes=it.first;targets=it.second})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("load"))}
+        if(scopes?.isEmpty()==true&&targets.isEmpty())Text(text.getString("empty"))
+        if(targets.isNotEmpty()){
+            Text(migration.getString("transfer"),style=MaterialTheme.typography.titleSmall)
+            Column(Modifier.heightIn(max=240.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
+                targets.forEach{target->OutlinedButton(onClick={current();NativeMigrationUiState.show(account.ownerId,language,true,target)},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(target.resourceId)}}
+            }
+        }
         scopes?.takeIf{it.isNotEmpty()}?.let{rows->Column(Modifier.heightIn(max=240.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
             rows.forEach{row->OutlinedButton(onClick={candidate=null;compared="";accepted=false;run({val proposed=account.proposeSharedTrust(row.getString("scopeId"));val trust=E2eeSharedTrust(account).list();proposed.put("accepted",(0 until trust.length()).any{trust.getJSONObject(it).let{known->known.get("scopeId")==row.get("scopeId")&&known.get("fingerprint")==proposed.get("fingerprint")}})},{candidate=it;accepted=it.getBoolean("accepted")})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(row.getString("resourceId"))}}
         }}
         candidate?.let{value->
             val proposal=value.getJSONObject("proposal");val fingerprint=value.getString("fingerprint")
+            val selected=scopes?.find{it.getString("scopeId")==proposal.getString("scopeId")}
             UntranslatedText(fingerprint,modifier=Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),style=MaterialTheme.typography.bodyMedium)
-            if(!accepted){
+            if(proposal.getString("ownerId")==account.ownerId&&selected?.getString("state")!="retirement")OutlinedButton(onClick={
+                current();NativeMigrationUiState.show(account.ownerId,language,true,E2eeProductMigration.Target(account.ownerId,proposal.getString("scopeId"),proposal.getString("kind"),proposal.getString("resourceId")))
+            },enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(migration.getString("transfer"))}
+            if(!accepted&&selected?.getString("state")=="active"){
                 OutlinedTextField(value=compared,onValueChange={compared=it.trim().take(64)},label={Text(text.getString("compare"))},enabled=!busy,singleLine=true,modifier=Modifier.fillMaxWidth())
                 Button(onClick={val submitted=compared;run({val trust=E2eeSharedTrust(account);trust.accept(proposal,submitted);trust.open(proposal.getString("scopeId"))},{accepted=true;message=text.getString("saved")})},enabled=!busy&&compared==fingerprint,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("accept"))}
             }

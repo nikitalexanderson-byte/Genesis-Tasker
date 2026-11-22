@@ -492,6 +492,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     @Synchronized fun readStoicheionState():JSONObject=readPacket("stoicheion-state",JSONObject())
     @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..255){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",afterPart))}
     @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject())
+    @Synchronized fun readTransitionCandidates():JSONObject=readPacket("resource-transition-candidates",JSONObject())
     @Synchronized fun sharedReadHistory():JSONObject{val result=readPacket("shared-read-history",JSONObject());E2eeKeys.exact(result,setOf("history","checkpointHash","directoryRevision"));return result.getJSONObject("history")}
     @Synchronized fun readProductHistory(entityId:String,before:Long,limit:Int=5):JSONObject{E2eeKeys.technical(entityId);check(before in 1..9_007_199_254_740_991L&&limit in 1..10){"E2EE_INVALID_LIMIT"};return readPacket("product-history",JSONObject().put("entityId",entityId).put("before",before).put("limit",limit))}
     @Synchronized fun readAdvicePolicy():JSONObject=readPacket("advice-policy",JSONObject())

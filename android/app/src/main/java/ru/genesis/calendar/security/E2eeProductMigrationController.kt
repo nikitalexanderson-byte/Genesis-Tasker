@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.genesis.calendar.auth.E2eeRemoteOriginal
-import ru.genesis.calendar.data.NativeLegacyScopeFence
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -18,14 +17,15 @@ import java.util.concurrent.atomic.AtomicReference
 /** Actual native owner/device composition; no activation flags or legacy
  * cleanup. The OS credential flow precedes access to E2eeDeviceVault. */
 internal class E2eeProductMigrationController private constructor(private val context:Context,val device:UnlockedE2eeDevice,
-    private var directory:E2eeDirectory.Verified,private val ports:Ports):java.io.Closeable{
+    private var directory:E2eeDirectory.Verified,private val ports:Ports,private val ownsDevice:Boolean=true):java.io.Closeable{
     class Ports(val account:E2eeAccountTransport,val setup:(UnlockedE2eeDevice)->E2eeScopeSetupTransport,
         val sources:(UnlockedE2eeDevice,E2eeDirectory.Verified,E2eeLegacyReadTransport)->E2eeMigrationSources,
         val transport:(UnlockedE2eeDevice,E2eeDirectory.Verified,E2eeMigrationSources,E2eeMigrationSession?)->E2eeSignedMigrationTransport,
-        val fence:(UnlockedE2eeDevice,E2eeDirectory.Verified)->NativeLegacyScopeFence,val assertCurrent:()->Unit,val assertEditorsFrozen:()->Unit)
+        val fence:(UnlockedE2eeDevice,E2eeDirectory.Verified)->E2eeProductMigrationFence,val assertCurrent:()->Unit,val assertEditorsFrozen:()->Unit)
+    val target=E2eeProductMigration.Target(directory.ownerId,directory.scopeId,directory.kind,directory.resourceId)
     private val closed=AtomicBoolean();private val running=AtomicBoolean();private val operation=AtomicReference<Job?>(null)
     private fun current(){check(!closed.get()){"E2EE_UNLOCK_REQUIRED"};device.requireOpen();ports.assertCurrent();ports.assertEditorsFrozen()}
-    override fun close(){if(closed.compareAndSet(false,true)){operation.get()?.cancel();device.lock()}}
+    override fun close(){if(closed.compareAndSet(false,true)){operation.get()?.cancel();if(ownsDevice)device.lock()}}
     /** A pause preserves the remote lease, journal and exact pending requests.
      * Wait for the whole-job fence before admitting another operation. */
     suspend fun stop(){operation.get()?.let{it.cancel();it.join()}}
@@ -52,17 +52,17 @@ internal class E2eeProductMigrationController private constructor(private val co
             if(cancelling){
                 migration.cancelStreamed(planning);current();val response=ports.setup(device).directory(frame.scopeId);current()
                 val cancelled=device.rememberDirectory(frame.scopeId,device.authorityPin,response.getJSONArray("events"),device.ownerId);current()
-                check(cancelled.state=="preparing"&&cancelled.kind=="personal"&&cancelled.resourceId==device.ownerId){"E2EE_DOWNGRADE_FORBIDDEN"}
+                check(cancelled.state=="preparing"&&cancelled.kind==target.kind&&cancelled.resourceId==target.resourceId){"E2EE_DOWNGRADE_FORBIDDEN"}
                 val token=fence.token()?:error("E2EE_LOCAL_FENCE_REQUIRED");current()
                 fence.releaseCancelled(token,cancelled,migration::status);current();directory=cancelled;return@withContext
             }
             val content=E2eeStreamedContentPlanningOptions(planning,E2eeContentPlan.Capacity(maximum,8000,8000)){admit()}
-            val options=E2eeProductMigration.Options(E2eeProductMigration.Target(device.ownerId,frame.scopeId,"personal",device.ownerId),migration,sources,router,
+            val options=E2eeProductMigration.Options(target,migration,sources,router,
                 E2eeStagedMigrationOptions(E2eeSourceStage.Capacity(maximum,10000),::current){admit()},planning,content,
                 {session->ports.transport(device,frame,sources,session)},::current,{
                     current();val response=ports.setup(device).directory(frame.scopeId);current()
                     val active=device.rememberDirectory(frame.scopeId,device.authorityPin,response.getJSONArray("events"),device.ownerId);current()
-                    check(active.state=="active"&&active.kind=="personal"&&active.resourceId==device.ownerId){"E2EE_MIGRATION_UNVERIFIED"}
+                    check(active.state=="active"&&active.kind==target.kind&&active.resourceId==target.resourceId){"E2EE_MIGRATION_UNVERIFIED"}
                     fence.activate(active);current();directory=active
                 },progress)
             E2eeProductMigration.run(options,E2eePrivatePathCatalogue(context));current()
@@ -70,6 +70,21 @@ internal class E2eeProductMigrationController private constructor(private val co
         }}finally{held.fill(0);try{withContext(NonCancellable+Dispatchers.Main.immediate){NativeMigrationMemory.finishPrepared(device.ownerId)}}finally{running.set(false)}}
     }
     companion object{
+        /** Reuse the approved owner device. Identity/status alone cannot grant
+         * a migration capability; pin and device keys come from the open vault. */
+        suspend fun attach(context:Context,account:E2eeProductAccount,target:E2eeProductMigration.Target,ports:Ports):E2eeProductMigrationController=withContext(Dispatchers.IO){
+            fun current(){ports.assertCurrent();ports.assertEditorsFrozen();account.requireOpen();check(!account.offline&&target.ownerId==account.ownerId){"E2EE_ONLINE_REQUIRED"}}
+            listOf(target.ownerId,target.scopeId,target.resourceId).forEach{E2eeKeys.technical(it)};check(target.kind in setOf("space","project")){"E2EE_SCOPE_BINDING_MISMATCH"};current()
+            check(account.directory.state=="active"&&account.directory.kind=="personal"&&account.directory.ownerId==account.ownerId&&account.directory.resourceId==account.ownerId){"E2EE_PERSONAL_SCOPE_REQUIRED"}
+            val scopes=account.scopeSummaries();current();check((0 until scopes.length()).map{scopes.getJSONObject(it)}.count{it.getString("scopeId")==target.scopeId&&it.getString("kind")==target.kind&&it.getString("resourceId")==target.resourceId}==1){"E2EE_SCOPE_BINDING_MISMATCH"}
+            val device=account.device;val response=ports.setup(device).directory(target.scopeId);current()
+            val directory=device.rememberDirectory(target.scopeId,device.authorityPin,response.getJSONArray("events"),account.ownerId);current()
+            check(directory.ownerId==account.ownerId&&directory.kind==target.kind&&directory.resourceId==target.resourceId&&directory.state in setOf("preparing","uploading","verified","active")){"E2EE_SCOPE_BINDING_MISMATCH"}
+            val own=directory.devices[device.deviceId];val keys=E2eeKeys.publicKeys(device.keys());current()
+            check(own!=null&&!own.revoked&&own.userId==account.ownerId&&own.role=="owner"&&own.signingKey==keys.getString("signingKey")&&own.receivingKey==keys.getString("receivingKey")){"E2EE_OWNER_REQUIRED"}
+            val bound=Ports(ports.account,ports.setup,ports.sources,ports.transport,ports.fence,::current,ports.assertEditorsFrozen)
+            E2eeProductMigrationController(context.applicationContext,device,directory,bound,false)
+        }
         private fun status(value:JSONObject,owner:String):Pair<Boolean,List<JSONObject>>{
             E2eeKeys.exact(value,setOf("pilotAllowed","cryptoProtocol","scopes"));check(value.get("pilotAllowed") is Boolean&&value.getInt("cryptoProtocol")==1){"E2EE_INVALID_RESPONSE"}
             val scopes=value.getJSONArray("scopes");check(scopes.length()<=4096){"E2EE_INVALID_RESPONSE"};val seen=mutableSetOf<String>();val personal=mutableListOf<JSONObject>()
