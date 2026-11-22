@@ -565,8 +565,6 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
         onTouchStart={(event) => { settingsTouch.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }}
         onTouchEnd={onSettingsTouchEnd}>
         <DialogCloseButton type="button" className="modal-close" onClick={onClose} aria-label="Закрыть" />
-        <span className="eyebrow">Личный кабинет</span>
-        <small className="account-release-version" data-no-translate>3.2.9</small>
         <h2 id="account-title">{user.displayName || "Аккаунт GENESIS"}</h2>
         <div className="account-profile-details">
           <div className="account-profile-summary">

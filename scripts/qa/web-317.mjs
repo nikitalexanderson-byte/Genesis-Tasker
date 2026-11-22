@@ -2,9 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash,randomUUID} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
 import {verifyUi317} from './web-ui317.mjs';
-// The accepted website is released independently of Android. An APK-only
-// release must not require replacing the website's visible release label.
-const expectedVersion = '3.2.9';
+// Account identity and plan remain visible without an obsolete website version label.
 
 const canonical=value=>Array.isArray(value)?`[${value.map(canonical).join(',')}]`:value&&typeof value==='object'
   ?`{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`:JSON.stringify(value);
@@ -50,7 +48,8 @@ export async function verifyRelease317({context,page,tier,output,check,snapshot}
   try {
     await check('release317-comparison',async()=>{
       const account=await openAccount();
-      assert.equal((await account.locator('.account-release-version').innerText()).trim(),expectedVersion);
+      assert.equal(await account.locator('.account-release-version').count(),0,'The obsolete Account version label must stay removed');
+      assert((await account.locator('.account-plan').innerText()).trim(),'The current account plan must remain visible');
       await account.locator('.account-plan-upgrade button').click();await upgrade().waitFor();
       const features=await upgrade().locator('[data-feature]').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-feature')));
       assert(!features.includes('future-modeling'));assert(!features.includes('theokyklos'));

@@ -22,14 +22,16 @@ test("only unchanged saved advice is formatted; personal diary edits remain verb
   assert.equal(advice.body, "Первая строка.\n\nВторая строка.");
 });
 
-test("collections default to Aurora, accept either or both, and never substitute a disabled collection", async () => {
-  assert.deepEqual(advicePreferences().collections,["aurora"]);
+test("collections default to philosophers, preserve either or both, and never substitute a disabled collection", async () => {
+  assert.deepEqual(advicePreferences().collections,["philosophers"]);
+  assert.deepEqual(advicePreferences({collections:["aurora"]}).collections,["aurora"]);
   assert.deepEqual(advicePreferences({collections:["philosophers"]}).collections,["philosophers"]);
   assert.deepEqual(advicePreferences({collections:["philosophers","aurora","aurora"]}).collections,["aurora","philosophers"]);
-  assert.deepEqual(advicePreferences({collections:[]}).collections,["aurora"]);
+  assert.deepEqual(advicePreferences({collections:[]}).collections,["philosophers"]);
   const base={id:"a",dayKey:"2026-11-01",body:"Synthetic fixture",language:"ru",categories:[],dismissed:false,sources:[]};
   const result={dayKey:base.dayKey,state:"ready",advice:base,history:[base,{...base,id:"p",collection:"philosophers"}]};
-  assert.deepEqual(todayAdviceHistory(result,advicePreferences()).map(row=>row.id),["a"]);
+  assert.deepEqual(todayAdviceHistory(result,advicePreferences()).map(row=>row.id),["p"]);
+  assert.deepEqual(todayAdviceHistory(result,advicePreferences({collections:["aurora"]})).map(row=>row.id),["a"]);
   assert.deepEqual(todayAdviceHistory(result,advicePreferences({collections:["philosophers"]})).map(row=>row.id),["p"]);
   const corpus=JSON.parse(await readFile(new URL("../server/content/philosopher-aphorisms.json",import.meta.url),"utf8"));
   assert.equal(corpus.version,1);
@@ -51,11 +53,11 @@ test("today history preserves account draws through nine after the daily allowan
     const result = { dayKey: "2026-10-31", state: "ready", advice: history.at(-1), history,
       sequence: limit, dailyLimit: limit, remaining: 0, canNext: false };
     const original = structuredClone(result);
-    const browsable = todayAdviceHistory(result, advicePreferences());
+    const browsable = todayAdviceHistory(result, advicePreferences({collections:["aurora"]}));
     assert.deepEqual(browsable.map(card => card.sequence), Array.from({ length: limit }, (_, index) => index + 1));
     assert.equal(browsable[0].body, "Полный текст\nВторой абзац");
     assert.deepEqual(result, original, "Browsing must not change the account pointer or spend another draw");
-    assert.equal(todayAdviceHistory({ ...result, history: undefined }, advicePreferences())[0].id, result.advice.id);
+    assert.equal(todayAdviceHistory({ ...result, history: undefined }, advicePreferences({collections:["aurora"]}))[0].id, result.advice.id);
   }
 });
 
@@ -64,8 +66,8 @@ test("today history respects dismissal, the current date and the current adult c
   const result = { dayKey: base.dayKey, state: "ready", advice: base, history: [base,
     { ...base, id: "hidden", dismissed: true }, { ...base, id: "yesterday", dayKey: "2026-10-30" },
     { ...base, id: "adult", categories: ["aphrodisia"], requiresAdult: true }] };
-  assert.deepEqual(todayAdviceHistory(result, advicePreferences()).map(card => card.id), [base.id]);
-  const adult = advicePreferences({ categories: ["aretology", "aphrodisia"], aphrodisiaAdult: true });
+  assert.deepEqual(todayAdviceHistory(result, advicePreferences({collections:["aurora"]})).map(card => card.id), [base.id]);
+  const adult = advicePreferences({ collections:["aurora"], categories: ["aretology", "aphrodisia"], aphrodisiaAdult: true });
   assert.deepEqual(todayAdviceHistory(result, adult).map(card => card.id), [base.id, "adult"]);
 });
 
