@@ -219,3 +219,27 @@ exact semantic retry across checkpoint renewal, ID collision, key/authority
 mismatch, quota/billing changes, parent/inheritance concurrency, process death,
 same-UID relogin/restore, both clients and all required UI/language/device states.
 No test/compiler/lint/build/CI result is claimed by this document.
+# Normal project composition continuation, 22 November
+
+`private-project-create.ts` / `E2eePrivateProjectCreation.kt` now hold complete
+encrypted input before network activity, retained topology/review history and
+fixed setup/service intent. `project-create-selection.ts` and the native
+counterpart compose actual independently pinned scopes and decrypted chosen
+heads, verifying the directory frame, head hashes and pins again after reads.
+Normal web/native create and account resume open a participant/role review before
+recovery submission. Routing consent is separate from cryptographic device
+approval and capsule distribution. Both remain necessary before recipient access.
+
+Actual project migration/baseline precedes a single normal immutable transaction
+for the intended private root and all five localized statuses. Exact bodies and
+revision2 are read back, then the ordinary project result is loaded before the
+creation journal completes. Content-only exports preserve inputs as inert
+history, never as restored replay authority. A missing preparation receipt is
+replayed even when setup had already completed from a directory read after a
+lost response; its bootstrap hash must match the retained exact setup packet.
+
+This is candidate source, not acceptance. No compiler/tests/lint/build/CI ran.
+The started/preparation topology-change case still needs semantic resolution,
+permanent cancellation of the old attempt, and explicit fresh review without
+retargeting its packet. Full member/device/rotation integration is also pending.
+

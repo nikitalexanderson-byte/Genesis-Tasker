@@ -5,11 +5,17 @@ import org.json.JSONObject
 /** Shape/custody only, never an independent directory/recipient trust grant. */
 internal object E2eeProjectCreationContract {
     private val selectionFields=setOf("spaceId","parentId","categoryId","boardStatusId","kind","layout","spaceAnchor","parentAnchor","categoryAnchor","statusAnchor")
-    fun selection(input:JSONObject):JSONObject {
-        E2eeKeys.exact(input,selectionFields)
+    private val locationFields=setOf("spaceId","parentId","categoryId","boardStatusId","kind","layout")
+    fun location(input:JSONObject):JSONObject {
+        E2eeKeys.exact(input,locationFields)
         E2eeKeys.technical(input.getString("spaceId"));for(key in listOf("parentId","categoryId","boardStatusId"))if(!input.isNull(key))E2eeKeys.technical(input.getString(key))
         check(input.get("kind") in setOf("project","task-list")&&input.get("layout") in setOf("list","board")
             &&(input.get("kind")!="task-list"||!input.isNull("parentId")&&input.isNull("categoryId"))&&(input.isNull("boardStatusId")||!input.isNull("parentId"))){"E2EE_PROJECT_TOPOLOGY_REQUIRED"}
+        return JSONObject(input.toString())
+    }
+    fun selection(input:JSONObject):JSONObject {
+        E2eeKeys.exact(input,selectionFields)
+        location(JSONObject().apply{for(key in locationFields)put(key,input.get(key))})
         fun anchor(key:String,entity:String?){
             if(entity==null){check(input.isNull(key)){"E2EE_PROJECT_TOPOLOGY_REQUIRED"};return}
             val value=input.getJSONObject(key);E2eeKeys.exact(value,setOf("scopeId","entityId","generation","directoryRevision","checkpointHash","revision","payloadHash"));E2eeKeys.technical(value.getString("scopeId"))

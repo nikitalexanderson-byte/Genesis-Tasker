@@ -4,7 +4,7 @@ import {assertTechnical,exactKeys,type RecoveryKit} from './keys.ts';
 import {decodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson} from './product-json.ts';
 import type {WebPrivateAccount} from './product-session.ts';
-import {snapshotE2eeValue,type WireValue} from './commands.ts';
+import {snapshotE2eeValue,e2eeCommandHash,type WireValue} from './commands.ts';
 import {sharedBodyMetadata,sharedBodyParent,sharedRecordKey,type SharedRecordBody} from './shared-domain.ts';
 
 export type PrivateSpaceDraft={title:string;description:string;invitations:{email:string;role:'admin'|'member'|'guest';permissions:Record<'createProjects'|'editTasks'|'organizeTasks'|'comment'|'manageProjects'|'inviteMembers',boolean>}[];
@@ -97,13 +97,18 @@ export class E2eePrivateResourceCreation{
  prepare(id:string,secret:Uint8Array,kit:RecoveryKit){const held=new Uint8Array(secret);let retainedKit:RecoveryKit;try{retainedKit=snapshotE2eeValue(kit);}catch(reason){held.fill(0);throw reason;}return this.#run(async()=>{
   try{
    if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');const intent=await this.inspect(id),target={ownerId:this.account.ownerId,scopeId:intent.scopeId,kind:'space' as const,resourceId:intent.resourceId};
-   const setup=new E2eeScopeSetup(this.account.device,target,{directory:scope=>this.transport.directory(scope),bootstrap:async packet=>{
-    this.#current();const result=await this.account.personal().client.executeService('resource-create-prepare',{bootstrap:packet as unknown as WireValue},id);this.#current();
-    const preparation=validatePrivateSpacePreparation(result,intent),document=this.#document(id),before=await document.load();this.#current();if(!before||!samePrivateJson(before.value.input,intent.input))throw new Error('E2EE_LOCAL_CONFLICT');
+   let resolved=false,result:unknown;const bootstrap:ScopeSetupTransport['bootstrap']=async packet=>{
+    if(resolved)return result;
+    this.#current();result=await this.account.personal().client.executeService('resource-create-prepare',{bootstrap:packet as unknown as WireValue},id);this.#current();
+    const preparation=validatePrivateSpacePreparation(result,intent);if(preparation.bootstrapHash!==await e2eeCommandHash(packet.command))throw new Error('E2EE_INVALID_RECEIPT');
+    const document=this.#document(id),before=await document.load();this.#current();if(!before||!samePrivateJson(before.value.input,intent.input))throw new Error('E2EE_LOCAL_CONFLICT');
     if(before.value.preparation&&!samePrivateJson(before.value.preparation,preparation))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');
-    if(!before.value.preparation)await document.save({...before.value,preparation},before.serial);this.#current();return result;
-   }},()=>this.#current());
-   await setup.prepare(held,retainedKit,0);this.#current();const directory=await setup.submit();this.#current();
+    if(!before.value.preparation)await document.save({...before.value,preparation},before.serial);this.#current();resolved=true;return result;
+   };
+   const setup=new E2eeScopeSetup(this.account.device,target,{directory:scope=>this.transport.directory(scope),bootstrap},()=>this.#current());
+   const packet=await setup.prepare(held,retainedKit,0);this.#current();
+   if(!intent.preparation)await bootstrap(packet);else if(intent.preparation.bootstrapHash!==await e2eeCommandHash(packet.command))throw new Error('E2EE_INVALID_RECEIPT');
+   this.#current();const directory=await setup.submit();this.#current();
    const document=this.#document(id),before=await document.load();this.#current();if(!before?.value.preparation)throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED');
    if(!['preparing','uploading','verified','active'].includes(directory.state)||directory.kind!=='space'||directory.resourceId!==intent.resourceId)invalid();
    if(before.value.phase==='draft')await document.save({...before.value,phase:'prepared'},before.serial);this.#current();return{intent:await this.inspect(id),directory};

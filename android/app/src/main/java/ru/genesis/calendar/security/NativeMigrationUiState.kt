@@ -13,7 +13,7 @@ internal object NativeMigrationUiState{
     private val creations=mutableMapOf<String,CompletableDeferred<JSONObject>>()
     @Synchronized fun show(owner:String,language:String,resume:Boolean,target:E2eeProductMigration.Target?=null,creationId:String?=null){
         E2eeKeys.technical(owner);target?.let{listOf(it.scopeId,it.resourceId).forEach{value->E2eeKeys.technical(value)};check(it.ownerId==owner&&it.kind in setOf("space","project")){"E2EE_SCOPE_BINDING_MISMATCH"}}
-        creationId?.let{E2eeKeys.technical(it);check(target?.kind=="space"){"E2EE_SCOPE_BINDING_MISMATCH"}}
+        creationId?.let{E2eeKeys.technical(it);check(target?.kind in setOf("space","project")){"E2EE_SCOPE_BINDING_MISMATCH"}}
         if(mutable.value?.owner==owner)return;mutable.value=View(UUID.randomUUID().toString(),owner,language,resume,target,creationId)
     }
     @Synchronized fun close(id:String){if(mutable.value?.id==id){mutable.value?.creationId?.let{creations.remove(it)?.completeExceptionally(IllegalStateException("E2EE_RESOURCE_CREATION_PAUSED"))};mutable.value=null}}

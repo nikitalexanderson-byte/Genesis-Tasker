@@ -346,6 +346,38 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope&&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
         current();return ru.genesis.calendar.security.E2eePrivateResourceCreation(account,{scope->current();e2eeScopeSetupTransport(uid,account.device).directory(scope).also{current()}},::current)
     }
+    internal fun privateProjectCreation(uid:String,guard:()->Unit={}):ru.genesis.calendar.security.E2eePrivateProjectCreation{
+        val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get();val storageScope=CloudAccountSnapshot.scopeFor(uid)
+        val account=ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)
+        fun current(){guard();account.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn&&client.isTrialForeground()
+            &&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==storageScope&&ru.genesis.calendar.security.NativePrivateProducts.account(storageScope,uid)===account){"E2EE_ACCOUNT_CHANGED"}}
+        current();return ru.genesis.calendar.security.E2eePrivateProjectCreation(app,account,{scope->current();e2eeScopeSetupTransport(uid,account.device).directory(scope).also{current()}},::current)
+    }
+    internal fun pendingPrivateCreations(uid:String):List<JSONObject> = (privateSpaceCreation(uid).pending()+privateProjectCreation(uid).pending()).map{row->
+        JSONObject().put("intentId",row.get("intentId")).put("scopeId",row.get("scopeId")).put("resourceId",row.get("resourceId")).put("kind",row.get("kind"))
+            .put("input",JSONObject().put("title",row.getJSONObject("input").get("title")))
+    }
+    internal suspend fun previewPrivateProjectCreation(id:String,refresh:Boolean=false,guard:()->Unit={}):JSONObject=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val ownerGuard=privateUiOwnerGuard(uid);val operationJob=currentCoroutineContext().job
+        fun current(){operationJob.ensureActive();guard();ownerGuard()}
+        val creation=privateProjectCreation(uid,::current);var intent=creation.inspect(id);current()
+        if(!intent.getBoolean("started")&&(intent.isNull("topology")||refresh)){intent=creation.preview(id);current()}
+        val topology=intent.getJSONObject("topology");val account=ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(uid),uid)
+        val spaceId=intent.getJSONObject("input").getString("spaceId");val scopeId=topology.getJSONObject("spaceAnchor").getString("scopeId")
+        ru.genesis.calendar.security.E2eeSharedTrust(account).open(scopeId);current();val response=account.sharedScope(scopeId,"space",spaceId).client.readProductContext();current()
+        ru.genesis.calendar.security.E2eeKeys.exact(response,setOf("context","checkpointHash","directoryRevision"));val context=response.getJSONObject("context")
+        ru.genesis.calendar.security.E2eeKeys.exact(context,setOf("ownerId","spaceId","role","spaceRole","permissions","members","invitations"))
+        check(context.get("spaceId")==spaceId){"E2EE_SCOPE_BINDING_MISMATCH"};val names=mutableMapOf<String,String>();val members=context.getJSONArray("members")
+        check(members.length()<=200){"E2EE_SHARED_CONTEXT_INVALID"}
+        for(at in 0 until members.length()){val row=members.getJSONObject(at);val memberId=ru.genesis.calendar.security.E2eeKeys.technical(row.getString("userId"));val name=row.getString("displayName")
+            check(name.length<=2000&&names.put(memberId,name)==null){"E2EE_SHARED_CONTEXT_INVALID"}}
+        val reviewed=topology.getJSONArray("reviewedMembers");val display=JSONArray()
+        for(at in 0 until reviewed.length()){val row=reviewed.getJSONObject(at);display.put(JSONObject(row.toString()).put("displayName",names[row.getString("userId")].orEmpty()))}
+        current();JSONObject().put("intent",intent).put("topologyHash",ru.genesis.calendar.security.E2eePrivateProjectCreation.topologyHash(topology)).put("members",display)
+    }
+    internal suspend fun confirmPrivateProjectCreationReview(id:String,displayedHash:String,guard:()->Unit={}):JSONObject=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");privateProjectCreation(uid,guard).confirmReview(id,displayedHash);guard();previewPrivateProjectCreation(id,false,guard)
+    }
     internal suspend fun completePrivateSpaceCreation(id:String,secret:ByteArray,kit:JSONObject,assertEditorsFrozen:()->Unit,progress:(String)->Unit,
         controller:(ru.genesis.calendar.security.E2eeProductMigrationController?)->Unit):JSONObject=withContext(Dispatchers.IO){
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val creation=privateSpaceCreation(uid,assertEditorsFrozen)
@@ -360,8 +392,22 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         creation.advance(id,"migrated");assertEditorsFrozen();val scope=CloudAccountSnapshot.scopeFor(uid)
         val products=ru.genesis.calendar.security.NativePrivateProducts.sharedRecords(scope,intent.getString("scopeId"),"space",intent.getString("resourceId"))
         creation.applyInitialValues(id,products.records);assertEditorsFrozen();creation.advance(id,"values");assertEditorsFrozen();creation.issueInvitations(id);assertEditorsFrozen()
-        creation.advance(id,"invitations");assertEditorsFrozen();creation.advance(id,"complete");assertEditorsFrozen()
-        ru.genesis.calendar.security.NativePrivateProducts.sharedRequest(scope,"GET","/shared/spaces/${intent.getString("resourceId")}",null).also{assertEditorsFrozen()}
+        creation.advance(id,"invitations");assertEditorsFrozen()
+        val result=ru.genesis.calendar.security.NativePrivateProducts.sharedRequest(scope,"GET","/shared/spaces/${intent.getString("resourceId")}",null);assertEditorsFrozen()
+        creation.advance(id,"complete");assertEditorsFrozen();result
+    }
+    internal suspend fun completePrivateProjectCreation(id:String,secret:ByteArray,kit:JSONObject,assertEditorsFrozen:()->Unit,progress:(String)->Unit,
+        controller:(ru.genesis.calendar.security.E2eeProductMigrationController?)->Unit):JSONObject=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val creation=privateProjectCreation(uid,assertEditorsFrozen)
+        val intent=creation.prepare(id,secret,kit).first;assertEditorsFrozen()
+        val target=ru.genesis.calendar.security.E2eeProductMigration.Target(uid,intent.getString("scopeId"),"project",intent.getString("resourceId"))
+        var opened:ru.genesis.calendar.security.E2eeProductMigrationController?=null
+        try{val next=prepareSharedPrivateMigration(target,secret,kit,assertEditorsFrozen);opened=next;controller(next);assertEditorsFrozen()
+            next.run(secret,kit,progress);assertEditorsFrozen();closePrivateMigration(next);opened=null;controller(null);finishSharedPrivateMigration(target);assertEditorsFrozen()
+        }finally{opened?.let(::closePrivateMigration);controller(null)}
+        creation.markMigrated(id);assertEditorsFrozen();creation.applyInitialValues(id);assertEditorsFrozen()
+        val result=ru.genesis.calendar.security.NativePrivateProducts.sharedRequest(CloudAccountSnapshot.scopeFor(uid),"GET","/shared/projects/${intent.getString("resourceId")}",null);assertEditorsFrozen()
+        creation.complete(id);assertEditorsFrozen();result
     }
     internal fun e2eeMigrationTransport(uid: String, device: ru.genesis.calendar.security.E2eeScopeDevice,
         directory: ru.genesis.calendar.security.E2eeDirectory.Verified, sources: ru.genesis.calendar.security.E2eeMigrationSource,
@@ -1434,11 +1480,27 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun archivedSharedProjects(spaceId: String): JSONObject =
         sharedCachedCall("archived:$spaceId") { api, generation -> api.archivedSharedProjects(generation, spaceId) }
     override suspend fun createSharedProject(spaceId: String, title: String, description: String, layout: String,
-        parentId: String?, kind: String, boardStatusId: String?): JSONObject =
-        sharedCall { api, generation -> api.createSharedProject(generation, spaceId,
+        parentId: String?, kind: String, boardStatusId: String?): JSONObject {
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val storageScope=CloudAccountSnapshot.scopeFor(uid)
+        if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(storageScope)){
+            val guard=privateUiOwnerGuard(uid);val creation=privateProjectCreation(uid);val language=mutableState.value.accountSettings?.language?:"en"
+            val intent=withContext(Dispatchers.IO){guard();val all=app.assets.open("project-creation-copy-v1.json").use{JSONObject(it.readBytes().toString(Charsets.UTF_8))}
+                val statusTitles=(all.optJSONObject(language)?:all.getJSONObject("en")).getJSONObject("statusTitles")
+                val id=creation.create(JSONObject().put("spaceId",spaceId).put("title",title).put("description",description).put("layout",layout).put("kind",kind)
+                    .put("parentId",parentId?:JSONObject.NULL).put("categoryId",JSONObject.NULL).put("boardStatusId",boardStatusId?:JSONObject.NULL)
+                    .put("tags",JSONArray()).put("labelIds",JSONArray()).put("statusTitles",statusTitles));guard();creation.inspect(id)}
+            try{val result=ru.genesis.calendar.security.NativeMigrationUiState.waitForCreation(uid,language,
+                ru.genesis.calendar.security.E2eeProductMigration.Target(uid,intent.getString("scopeId"),"project",intent.getString("resourceId")),intent.getString("intentId"));guard();return result
+            }catch(reason:IllegalStateException){if(reason.message=="E2EE_RESOURCE_CREATION_PAUSED"){
+                val all=app.assets.open("private-resource-copy-v1.json").use{JSONObject(it.readBytes().toString(Charsets.UTF_8))}
+                throw IllegalStateException((all.optJSONObject(language)?:all.getJSONObject("en")).getString("paused"))
+            };throw reason}
+        }
+        return sharedCall { api, generation -> api.createSharedProject(generation, spaceId,
             JSONObject().put("title", title).put("description", description).put("layout", layout)
                 .put("parentId", parentId ?: JSONObject.NULL).put("kind", kind)
                 .put("boardStatusId", boardStatusId ?: JSONObject.NULL)) }
+    }
     suspend fun importSharedProject(spaceId: String, body: JSONObject): JSONObject =
         sharedCall { api, generation -> api.importSharedProject(generation, spaceId, body) }
     override suspend fun querySharedTasks(filter: JSONObject, cursor: String?): JSONObject =

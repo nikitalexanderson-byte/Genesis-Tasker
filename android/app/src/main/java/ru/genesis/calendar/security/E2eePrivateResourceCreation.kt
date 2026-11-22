@@ -88,16 +88,20 @@ internal class E2eePrivateResourceCreation(private val account:E2eeProductAccoun
     suspend fun prepare(id:String,secret:ByteArray,savedKit:JSONObject):Pair<JSONObject,E2eeDirectory.Verified>{
         val held=secret.copyOf();val kit=try{JSONObject(savedKit.toString())}catch(error:Throwable){held.fill(0);throw error}
         try{return mutex.withLock{current();check(!account.offline){"E2EE_ONLINE_REQUIRED"};val intent=inspect(id);val target=JSONObject().put("ownerId",account.ownerId).put("scopeId",intent.get("scopeId")).put("kind","space").put("resourceId",intent.get("resourceId"))
-            val setup=E2eeScopeSetup(account.device,target,object:E2eeScopeSetupTransport{
+            var resolved:JSONObject?=null;val transport=object:E2eeScopeSetupTransport{
                 override suspend fun directory(scopeId:String):JSONObject=this@E2eePrivateResourceCreation.directory(scopeId)
                 override suspend fun bootstrap(packet:JSONObject):JSONObject {
-                    current();val receipt=preparation(account.client.executeService("resource-create-prepare",JSONObject().put("bootstrap",packet),id),intent);current();val document=document(id);val before=document.load()?:error("E2EE_LOCAL_CONFLICT")
+                    resolved?.let{return JSONObject(it.toString())}
+                    current();val receipt=preparation(account.client.executeService("resource-create-prepare",JSONObject().put("bootstrap",packet),id),intent);current()
+                    check(receipt.get("bootstrapHash")==E2eeCommands.hash(packet.getJSONObject("command"))){"E2EE_INVALID_RECEIPT"};val document=document(id);val before=document.load()?:error("E2EE_LOCAL_CONFLICT")
                     check(E2eeProductJson.same(before.value.getJSONObject("input"),intent.getJSONObject("input"))){"E2EE_LOCAL_CONFLICT"}
                     if(!before.value.isNull("preparation"))check(E2eeProductJson.same(before.value.getJSONObject("preparation"),receipt)){"E2EE_IDEMPOTENCY_CONFLICT"}
-                    else document.save(JSONObject(before.value.toString()).put("preparation",receipt),before.serial);current();return receipt
+                    else document.save(JSONObject(before.value.toString()).put("preparation",receipt),before.serial);current();resolved=JSONObject(receipt.toString());return receipt
                 }
-            },::current)
-            setup.prepare(held,kit,0);current();val verified=setup.submit();current();val document=document(id);val before=document.load()?:error("E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED")
+            }
+            val setup=E2eeScopeSetup(account.device,target,transport,::current);val packet=setup.prepare(held,kit,0);current()
+            if(intent.isNull("preparation"))transport.bootstrap(packet)else check(intent.getJSONObject("preparation").get("bootstrapHash")==E2eeCommands.hash(packet.getJSONObject("command"))){"E2EE_INVALID_RECEIPT"}
+            current();val verified=setup.submit();current();val document=document(id);val before=document.load()?:error("E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED")
             if(before.value.isNull("preparation")||verified.state !in setOf("preparing","uploading","verified","active")||verified.kind!="space"||verified.resourceId!=intent.getString("resourceId"))invalid()
             if(before.value.get("phase")=="draft")document.save(JSONObject(before.value.toString()).put("phase","prepared"),before.serial);current();inspect(id) to verified
         }}finally{held.fill(0)}

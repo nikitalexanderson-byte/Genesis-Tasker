@@ -13,7 +13,7 @@ const notify=()=>{for(const listener of listeners)listener();};
 export function showPrivateMigration(ownerId:string,language:string,reason:PrivateMigrationUi['reason'],target?:WebSharedMigrationTarget,creationId?:string){
  assertTechnical(ownerId);
  if(target){assertTechnical(target.scopeId);assertTechnical(target.resourceId);if(!['space','project'].includes(target.kind))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}
- if(creationId){assertTechnical(creationId);if(!target||target.kind!=='space')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}
+ if(creationId){assertTechnical(creationId);if(!target||!['space','project'].includes(target.kind))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}
  if(!listening&&typeof window!=='undefined'){listening=true;window.addEventListener('genesis-local-session-ended',()=>{for(const waiting of creations.values())waiting.reject(new Error('E2EE_ACCOUNT_CHANGED'));creations.clear();state=null;notify();});}
  if(state?.ownerId===ownerId)return;
  state=Object.freeze({id:crypto.randomUUID(),ownerId,language,reason,...(target?{target:Object.freeze({...target})}:{}),...(creationId?{creationId}:{})});notify();

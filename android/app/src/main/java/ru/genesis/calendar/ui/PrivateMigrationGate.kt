@@ -72,6 +72,10 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     }}};val vault=remember(view.language){migrationText(context,view.language,"vault-copy-v1.json")}
     val cancellation=remember(view.language){migrationText(context,view.language,"migration-cancel-copy-v1.json")}
     val creationText=remember(view.language){migrationText(context,view.language,"private-resource-copy-v1.json")}
+    val projectText=remember(view.language){migrationText(context,view.language,"project-creation-copy-v1.json")}
+    val projectCreation=view.creationId!=null&&view.target?.kind=="project"
+    var projectReview by remember{mutableStateOf<JSONObject?>(null)};var reviewBusy by remember{mutableStateOf(false)}
+    val creationReady=!projectCreation||projectReview?.getJSONObject("intent")?.isNull("review")==false
     var phase by remember{mutableStateOf(if(view.target!=null||view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
     val generatedMaterial=remember{AtomicReference<NativeRecoveryMaterial?>(null)}
     var generatedId by remember{mutableStateOf<String?>(null)}
@@ -102,7 +106,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
         busy=true;error="";fileActivity=request
     }
     fun startCredential(cancel:Boolean){
-        if(busy||pendingCredential.get()!=null||cancel&&!cancelConfirmed)return
+        if(busy||reviewBusy||!creationReady||pendingCredential.get()!=null||cancel&&!cancelConfirmed)return
         try{
             foreground()
             val request=NativeMigrationCredential.capture(view.owner,view.id,credentialAttempt.incrementAndGet(),secret,requireNotNull(kit){"E2EE_RECOVERY_KIT_REQUIRED"},SystemClock.elapsedRealtime(),controller.privateUiOwnerGuard(view.owner))
@@ -111,7 +115,16 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             secret="";kit=null;busy=true;credentialActivity=request
         }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=text.getString("error")}}
     }
-    fun message(reason:Exception):String=if(reason.message=="E2EE_RECIPIENT_REVIEW_REQUIRED")creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
+    fun message(reason:Exception):String=if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectText.getString("changed")else if(reason.message in setOf("E2EE_RECIPIENT_REVIEW_REQUIRED","E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED"))creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
+    suspend fun reviewProject(confirm:Boolean=false,refresh:Boolean=true){
+        if(!projectCreation||busy||reviewBusy)return;reviewBusy=true;error=""
+        try{foreground();val id=requireNotNull(view.creationId);val result=if(confirm)controller.confirmPrivateProjectCreationReview(id,requireNotNull(projectReview).getString("topologyHash"),::foreground)
+            else controller.previewPrivateProjectCreation(id,refresh,::foreground);foreground();val intent=result.getJSONObject("intent")
+            check(intent.getString("scopeId")==view.target?.scopeId&&intent.getString("resourceId")==view.target?.resourceId){"E2EE_SCOPE_BINDING_MISMATCH"};projectReview=result
+        }catch(cancel:CancellationException){throw cancel}catch(reason:Exception){if(alive.get()){if(!confirm||reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectReview=null;error=message(reason)}}
+        finally{if(alive.get())reviewBusy=false}
+    }
+    LaunchedEffect(view.id){if(projectCreation)reviewProject(false,false)}
     DisposableEffect(view.id,lifecycle){
         val observer=LifecycleEventObserver{_,event->
           if(event==Lifecycle.Event.ON_RESUME)foregroundState.set(true)
@@ -156,7 +169,8 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 val suppliedKit=requireNotNull(material.kit){"E2EE_RECOVERY_KIT_REQUIRED"}
                 if(view.creationId!=null){
                     check(cancellationAttempt.get()!=request.attempt){"E2EE_RESOURCE_CREATION_PAUSED"}
-                    val result=controller.completePrivateSpaceCreation(view.creationId,material.secret,suppliedKit,::owns,{value->owns();progress=value},{next->prepared.set(next)})
+                    val result=if(projectCreation)controller.completePrivateProjectCreation(view.creationId,material.secret,suppliedKit,::owns,{value->owns();progress=value},{next->prepared.set(next)})
+                        else controller.completePrivateSpaceCreation(view.creationId,material.secret,suppliedKit,::owns,{value->owns();progress=value},{next->prepared.set(next)})
                     owns();kit=null;NativeMigrationUiState.completeCreation(view.id,result);return@RecoveryCredentialActivity
                 }
                 val next=view.target?.let{controller.prepareSharedPrivateMigration(it,material.secret,suppliedKit,::owns)}?:controller.preparePrivateMigration(material.secret,suppliedKit,::owns);migration=next;owns();prepared.set(next)
@@ -173,7 +187,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     },finished={request,reason->
         if(pendingCredential.compareAndSet(request,null)&&alive.get()){
             credentialActivity=null;secret="";kit=null;cancelling=false;if(!stopping)busy=false
-            if(reason!=null){if(!stopping)error=message(reason);phase="confirm"}
+            if(reason!=null){if(!stopping)error=message(reason);if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectReview=null;phase="confirm"}
         }
     })
     LaunchedEffect(phase,auth.user?.privateVault,auth.busy){if(phase=="done"&&auth.user?.privateVault==true&&!auth.busy)NativeMigrationUiState.close(view.id)}
@@ -200,15 +214,34 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                     Button(onClick={try{foreground();check(generatedMaterial.get()?.complete()==true){"E2EE_RECOVERY_UNVERIFIED"};clearGenerated();secret="";kit=null;phase="confirm"}catch(reason:Exception){error=message(reason)}},enabled=savedFile&&savedSecret&&!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("saved"))}
                 }
                 if(phase=="confirm"){
+                    if(projectCreation){
+                        Text(projectText.getString("title"),style=MaterialTheme.typography.titleMedium);Text(projectText.getString("intro"))
+                        if(reviewBusy)Text(vault.getString("busy"))
+                        projectReview?.let{review->
+                            UntranslatedText(review.getJSONObject("intent").getJSONObject("input").getString("title"))
+                            val members=review.getJSONArray("members");val roles=projectText.getJSONObject("roles")
+                            for(at in 0 until members.length()){val member=members.getJSONObject(at)
+                                Column(verticalArrangement=Arrangement.spacedBy(4.dp)){
+                                    UntranslatedText(listOf(member.getString("displayName"),roles.getString(member.getString("role"))).filter{it.isNotEmpty()}.joinToString(" · "))
+                                    UntranslatedText(member.getString("userId"),style=MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            if(!review.getJSONObject("intent").isNull("review"))Text(projectText.getString("reviewed"))
+                            else Button(onClick={scope.launch{reviewProject(true)}},enabled=!busy&&!reviewBusy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(projectText.getString("confirm"))}
+                        }
+                        if(projectReview?.getJSONObject("intent")?.getBoolean("started")!=true)OutlinedButton(onClick={scope.launch{reviewProject()}},enabled=!busy&&!reviewBusy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(projectText.getString(if(projectReview==null)"load"else"refresh"))}
+                    }
+                    if(creationReady){
                     Text(text.getString("confirm"));TextButton(onClick={try{foreground();kit=null;val guard=fileGuard(fileAttempt.incrementAndGet());startFile(NativeRecoveryFileRequest.read(view.owner,view.id,guard))}catch(reason:Exception){error=message(reason)}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("kit"))}
                     OutlinedTextField(secret,{secret=it.take(64)},label={Text(vault.getString("secret"))},visualTransformation=PasswordVisualTransformation(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),singleLine=true,enabled=!busy,modifier=Modifier.fillMaxWidth())
                     if(!keyguard.isDeviceSecure)Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("screenLock"))}
                     else{
-                        Button(onClick={startCredential(false)},enabled=!busy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
+                        Button(onClick={startCredential(false)},enabled=!busy&&!reviewBusy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
                         if(view.creationId==null&&(started||view.resume)){
                             Row{Checkbox(checked=cancelConfirmed,onCheckedChange={cancelConfirmed=it},enabled=!busy);Text(cancellation.getString("confirm"))}
                             OutlinedButton(onClick={startCredential(true)},enabled=!busy&&cancelConfirmed&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(cancellation.getString("action"))}
                         }
+                    }
                     }
                 }
                 if(phase=="running"||phase=="done")Text(if(cancelling)cancellation.getString("action")else text.getString(if(phase=="done"||progress=="active")"done"else progress))
@@ -228,8 +261,8 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 if(phase=="done"&&!auth.busy)TextButton(onClick={controller.checkSession()},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("unlock"))}
                 if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error)
                 Text(text.getString("kept"),style=MaterialTheme.typography.bodyMedium)
-                if(view.target!=null||!started)TextButton(onClick={secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id)},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
-                TextButton(onClick={secret="";kit=null;clearGenerated();controller.logout()},enabled=!busy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("exit"))}
+                if(view.target!=null||!started)TextButton(onClick={secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id)},enabled=!busy&&!reviewBusy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
+                TextButton(onClick={secret="";kit=null;clearGenerated();controller.logout()},enabled=!busy&&!reviewBusy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("exit"))}
                 Text(vault.getString("privacy"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }}

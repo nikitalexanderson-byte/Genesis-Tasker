@@ -7,15 +7,22 @@ export type PrivateProjectTopology={spaceId:string;parentId:string|null;category
  spaceAnchor:PrivateProjectAnchor;parentAnchor:PrivateProjectAnchor|null;categoryAnchor:PrivateProjectAnchor|null;statusAnchor:PrivateProjectAnchor|null;
  reviewedMembers:{userId:string;role:'owner'|'manager'|'member'|'commenter'|'viewer'}[]};
 export type PrivateProjectSelection=Omit<PrivateProjectTopology,'reviewedMembers'>;
+export type PrivateProjectLocation=Pick<PrivateProjectSelection,'spaceId'|'parentId'|'categoryId'|'boardStatusId'|'kind'|'layout'>;
+const locationFields=['spaceId','parentId','categoryId','boardStatusId','kind','layout'];
 const selectionFields=['spaceId','parentId','categoryId','boardStatusId','kind','layout','spaceAnchor','parentAnchor','categoryAnchor','statusAnchor'];
 const invalid=():never=>{throw new Error('E2EE_PROJECT_TOPOLOGY_REQUIRED');};
 /** Technical shape/custody only. Actual creation must independently verify
  * current pinned directories/decrypted heads and explicit recipient review. */
-export function validatePrivateProjectSelection(input:unknown):PrivateProjectSelection{
- exactKeys(input,selectionFields);
+export function validatePrivateProjectLocation(input:unknown):PrivateProjectLocation{
+ exactKeys(input,locationFields);
  assertTechnical(input.spaceId);for(const key of ['parentId','categoryId','boardStatusId'])if(input[key]!==null)assertTechnical(input[key]);
  if(!['project','task-list'].includes(String(input.kind))||!['list','board'].includes(String(input.layout))
   ||input.kind==='task-list'&&(input.parentId===null||input.categoryId!==null)||input.boardStatusId!==null&&input.parentId===null)invalid();
+ return snapshotE2eeValue(input) as PrivateProjectLocation;
+}
+export function validatePrivateProjectSelection(input:unknown):PrivateProjectSelection{
+ exactKeys(input,selectionFields);
+ validatePrivateProjectLocation(Object.fromEntries(locationFields.map(key=>[key,input[key]])));
  const anchor=(value:unknown,entityId:string|null)=>{
   if(entityId===null){if(value!==null)invalid();return;}
   exactKeys(value,['scopeId','entityId','generation','directoryRevision','checkpointHash','revision','payloadHash']);

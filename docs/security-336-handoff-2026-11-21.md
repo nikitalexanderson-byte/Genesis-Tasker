@@ -1,5 +1,33 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: обычное создание private project подключено (кандидат)
+
+После eb87df2b добавлены web/native encrypted project input journals и composers
+реально pinned/decrypted space/parent/category/status anchors. Обычные create
+buttons теперь сохраняют полный input до IO, открывают явный participant/role
+review, отдельно сохраняют consent и выполняют fixed preparation → migration →
+actual product baseline → immutable root/status revision2 transaction → readback.
+Обычный private project result читается до complete. Account pending/resume
+перечисляет space и project, content-only archives включают оба типа input.
+Общие copy/roles/default status titles добавлены на14 языках. Это routing review,
+не device approval: ни preview, ни кнопка согласия сами не выдают keys/capsules.
+
+Space/project preparation дополнительно разрешает потерянный response даже
+если scope-setup journal уже complete после directory read: повторяется тот же
+semantic service intent, receipt сверяется с exact bootstrap command hash.
+Завершение space creation также перенесено после actual normal result read.
+
+Код ещё НЕ компилировался/не тестировался. Coverage9/20 не повышен. Следующий
+кодовый участок: semantic resolution/cancellation locked project preparation
+после started=true, с сохранением original intent/packet, permanent tombstone
+против поздних retries и явным новым review перед новой попыткой. Не retarget
+старый bootstrap/ID. Затем остальные normal membership/invitation/device/rotation,
+advanced parity/automation/bulk/cross-scope, typed restore/revoked replacement,
+background и interrupted-source/divergence review. Не запускать общую QA до
+завершения всего кода. Production3.3.5/149/Paddle-сайт сохранены, floors0/cutover
+off/GENESIS_DEPLOY_ANDROID=false; никаких push/deploy/device/Play действий.
+Субагенты/Daybreak запрещены, чужой demo-output/ не читать/stage.
+
 ## 22 ноября: reserved chaos-status source positions
 
 После26070b3d при source inspection composition найден блокер старых/новых

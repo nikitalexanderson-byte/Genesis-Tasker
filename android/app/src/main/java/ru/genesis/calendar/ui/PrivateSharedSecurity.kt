@@ -48,14 +48,14 @@ import ru.genesis.calendar.auth.AuthController
         Text(text.getString("title"),style=MaterialTheme.typography.titleMedium)
         Text(text.getString("notice"),style=MaterialTheme.typography.bodyMedium)
         OutlinedButton(onClick={run({val rows=account.scopeSummaries();account.client.refresh();current();
-            Triple((0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")!="personal"},E2eeSharedTransitionTargets.read(account.client.readTransitionCandidates(),account.ownerId),AuthController.get(context).privateSpaceCreation(account.ownerId).pending())
+            Triple((0 until rows.length()).map{rows.getJSONObject(it)}.filter{it.getString("kind")!="personal"},E2eeSharedTransitionTargets.read(account.client.readTransitionCandidates(),account.ownerId),AuthController.get(context).pendingPrivateCreations(account.ownerId))
         },{scopes=it.first;targets=it.second;creations=it.third})},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("load"))}
         if(scopes?.isEmpty()==true&&targets.isEmpty()&&creations.isEmpty())Text(text.getString("empty"))
         if(creations.isNotEmpty()){
             Text(creationText.getString("pending"),style=MaterialTheme.typography.titleSmall)
             Column(Modifier.heightIn(max=240.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
                 creations.forEach{row->OutlinedButton(onClick={current();NativeMigrationUiState.show(account.ownerId,language,true,
-                    E2eeProductMigration.Target(account.ownerId,row.getString("scopeId"),"space",row.getString("resourceId")),row.getString("intentId"))
+                    E2eeProductMigration.Target(account.ownerId,row.getString("scopeId"),row.getString("kind"),row.getString("resourceId")),row.getString("intentId"))
                 },enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(creationText.getString("resume")+": "+row.getJSONObject("input").getString("title"))}}
             }
         }

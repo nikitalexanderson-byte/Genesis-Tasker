@@ -1,12 +1,13 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore,type FormEvent} from 'react';
-import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,prepareCurrentSharedPrivateMigration,finishCurrentSharedPrivateMigration,completeCurrentPrivateSpaceCreation,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,type GenesisUser} from './cloud-sync';
+import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,prepareCurrentSharedPrivateMigration,finishCurrentSharedPrivateMigration,completeCurrentPrivateSpaceCreation,completeCurrentPrivateProjectCreation,previewCurrentPrivateProjectCreation,confirmCurrentPrivateProjectCreationReview,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,type GenesisUser} from './cloud-sync';
 import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration,closePrivateMigrationUi,completePrivateResourceCreation,type PrivateMigrationUi} from './private-migration-ui';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import migrationCopy from '../contracts/e2ee/migration-copy-v1.json' with {type:'json'};
 import cancelCopy from '../contracts/e2ee/migration-cancel-copy-v1.json';
 import sharedCopy from '../contracts/e2ee/shared-migration-copy-v1.json';
 import creationCopy from '../contracts/e2ee/private-resource-copy-v1.json';
+import projectCreationCopy from '../contracts/e2ee/project-creation-copy-v1.json';
 import {isLanguage} from './i18n';
 import {createRecoveryKit,type RecoveryKit} from './e2ee/keys';
 import {decodeE2eeBytes,encodeE2eeBytes} from './e2ee/envelope';
@@ -40,6 +41,9 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  const [stopping,setStopping]=useState(false);
  const [cancelConfirmed,setCancelConfirmed]=useState(false),[cancelling,setCancelling]=useState(false);
  const [error,setError]=useState(''),[progress,setProgress]=useState<'snapshot'|'sources'|'reconciliation'|'uploading'|'active'>('snapshot');
+ const projectCreation=Boolean(state.creationId&&state.target?.kind==='project'),projectText=projectCreationCopy[language];
+ const [projectReview,setProjectReview]=useState<Awaited<ReturnType<typeof previewCurrentPrivateProjectCreation>>|null>(null),[reviewBusy,setReviewBusy]=useState(false);
+ const creationReady=!projectCreation||Boolean(projectReview?.intent.review);
  const controller=useRef<WebProductMigration|null>(null),alive=useRef(true),started=useRef(false),fileRequest=useRef(0),ownerId=state.ownerId;
  const attempt=useRef<{stopping:boolean;drained:Promise<void>}|null>(null);
  const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{});
@@ -56,15 +60,29 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  useEffect(()=>{let live=true;if(!state.target&&state.reason==='setup')void new IndexedDbDeviceKeyStorage().get(ownerId).then(record=>{if(live)setPhase(record?'confirm':'intro');}).catch(()=>{if(live){setError(copy.error);setPhase('confirm');}});return()=>{live=false;};},[ownerId,state.reason,state.target,copy.error]);
  const failure=(reason:unknown)=>{
   const code=reason instanceof Error?reason.message:'';
-  return code==='E2EE_RECIPIENT_REVIEW_REQUIRED'?creationCopy[language].recipients:code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
+  return code==='E2EE_PROJECT_TOPOLOGY_CHANGED'?projectText.changed:['E2EE_RECIPIENT_REVIEW_REQUIRED','E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED'].includes(code)?creationCopy[language].recipients:code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
  };
+ const reviewProject=async(confirm=false)=>{
+  if(!projectCreation||!state.creationId||busy||reviewBusy)return;setReviewBusy(true);setError('');
+  try{frozen();const review=confirm
+    ?await confirmCurrentPrivateProjectCreationReview(state.creationId,projectReview?.topologyHash??'',frozen)
+    :await previewCurrentPrivateProjectCreation(state.creationId,true,frozen);frozen();
+   if(review.intent.scopeId!==state.target?.scopeId||review.intent.resourceId!==state.target.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');setProjectReview(review);
+  }catch(reason){if(alive.current){if(!confirm||reason instanceof Error&&reason.message==='E2EE_PROJECT_TOPOLOGY_CHANGED')setProjectReview(null);setError(failure(reason));}}finally{if(alive.current)setReviewBusy(false);}
+ };
+ useEffect(()=>{if(!projectCreation||!state.creationId)return;let live=true;setReviewBusy(true);
+  void previewCurrentPrivateProjectCreation(state.creationId,false,frozen).then(review=>{if(!live)return;frozen();
+   if(review.intent.scopeId!==state.target?.scopeId||review.intent.resourceId!==state.target.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');setProjectReview(review);
+  }).catch(reason=>{if(live&&alive.current)setError(failure(reason));}).finally(()=>{if(live&&alive.current)setReviewBusy(false);});return()=>{live=false;};
+ },[state.id]);
  const submit=async(event:FormEvent,cancel=false)=>{
-  event.preventDefault();if(busy||fileBusy||!kit||attempt.current||cancel&&!cancelConfirmed)return;setBusy(true);setCancelling(cancel);setCancelConfirmed(false);setError('');started.current=true;let held:Uint8Array|undefined;
+  event.preventDefault();if(busy||fileBusy||reviewBusy||!creationReady||!kit||attempt.current||cancel&&!cancelConfirmed)return;setBusy(true);setCancelling(cancel);setCancelConfirmed(false);setError('');started.current=true;let held:Uint8Array|undefined;
   let drained!:()=>void;const active={stopping:false,drained:new Promise<void>(resolve=>{drained=resolve;})};attempt.current=active;
   try{
    frozen();held=decodeE2eeBytes(secret.trim(),32);setSecret('');setPhase('running');
    if(state.creationId&&!cancel){
-    const result=await completeCurrentPrivateSpaceCreation(state.creationId,held,kit,frozen,value=>{current();setProgress(value);},value=>{controller.current=value;});current();
+    const finish=projectCreation?completeCurrentPrivateProjectCreation:completeCurrentPrivateSpaceCreation;
+    const result=await finish(state.creationId,held,kit,frozen,value=>{current();setProgress(value);},value=>{controller.current=value;});current();
     setKit(undefined);completePrivateResourceCreation(state.id,result);return;
    }
    if(state.creationId&&cancel)throw new Error('E2EE_RESOURCE_CREATION_PAUSED');
@@ -79,7 +97,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    const identity=await loadGenesisSession();current();if(identity?.uid!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
    privateAccountRequired(ownerId,language);await unlockCurrentPrivateAccount(encodeE2eeBytes(held),kit);current();
    setKit(undefined);window.dispatchEvent(new Event('genesis-private-migration-complete'));closePrivateMigrationUi(state.id);
-  }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){setError(active.stopping?'':failure(reason));setPhase('confirm');}}
+  }catch(reason){if(alive.current&&privateMigrationUi()?.id===state.id){if(reason instanceof Error&&reason.message==='E2EE_PROJECT_TOPOLOGY_CHANGED')setProjectReview(null);setError(active.stopping?'':failure(reason));setPhase('confirm');}}
   finally{held?.fill(0);controller.current?.close();controller.current=null;if(attempt.current===active)attempt.current=null;drained();if(alive.current){setCancelling(false);if(!active.stopping)setBusy(false);}}
  };
  const pause=async()=>{
@@ -102,6 +120,15 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
     <button type="button" className="primary-button" disabled={!savedFile||!savedSecret} onClick={()=>{setGenerated(null);setSecret('');setKit(undefined);setPhase('confirm');}}>{copy.saved}</button>
    </>:null}
    {phase==='confirm'?<>
+    {projectCreation?<section className="account-preferences" aria-labelledby="project-creation-review-title">
+     <h3 id="project-creation-review-title">{projectText.title}</h3><p>{projectText.intro}</p>
+     {reviewBusy?<p role="status">{vaultCopy.busy}</p>:null}
+     {projectReview?<><p>{projectReview.intent.input.title}</p><ul>{projectReview.members.map(row=><li key={row.userId}>{row.displayName?<span>{row.displayName} · </span>:null}{projectText.roles[row.role]}<br/><small>{row.userId}</small></li>)}</ul>
+      {projectReview.intent.review?<p role="status">{projectText.reviewed}</p>:<button type="button" disabled={busy||reviewBusy||fileBusy} onClick={()=>{void reviewProject(true);}}>{projectText.confirm}</button>}
+     </>:null}
+     {!projectReview?.intent.started?<button type="button" disabled={busy||reviewBusy||fileBusy} onClick={()=>{void reviewProject();}}>{projectReview?projectText.refresh:projectText.load}</button>:null}
+    </section>:null}
+    {creationReady?<>
     <p>{copy.confirm}</p>
     <label className="workspace-recovery-field"><span>{vaultCopy.kit}</span><input type="file" accept=".json,application/json" disabled={busy||fileBusy} required={!kit} onChange={async event=>{
      const input=event.currentTarget,file=input.files?.[0],request=++fileRequest.current;setKit(undefined);setError('');if(!file)return;setFileBusy(true);
@@ -110,9 +137,10 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
      }catch(reason){if(alive.current&&request===fileRequest.current){setError(failure(reason));input.value='';}}finally{if(alive.current&&request===fileRequest.current)setFileBusy(false);}
     }}/></label>
     <label className="workspace-recovery-field"><span>{vaultCopy.secret}</span><div><input data-dialog-initial-focus type="password" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={64} value={secret} onChange={event=>setSecret(event.target.value)} disabled={busy||fileBusy} required/></div></label>
-    <button type="submit" className="primary-button" disabled={busy||fileBusy||!kit||!secret.trim()}>{state.reason==='resume'||started.current?copy.resume:copy.begin}</button>
+    <button type="submit" className="primary-button" disabled={busy||fileBusy||reviewBusy||!kit||!secret.trim()}>{state.reason==='resume'||started.current?copy.resume:copy.begin}</button>
     {!state.creationId&&(state.reason==='resume'||started.current)?<><label className="backup-check"><input type="checkbox" checked={cancelConfirmed} disabled={busy||fileBusy} onChange={event=>setCancelConfirmed(event.target.checked)}/>{cancellation.confirm}</label>
      <button type="button" className="text-button" disabled={busy||fileBusy||!kit||!secret.trim()||!cancelConfirmed} onClick={event=>{void submit(event,true);}}>{cancellation.action}</button></>:null}
+    </>:null}
    </>:null}
    {phase==='running'||phase==='done'?<p role="status" aria-live="polite">{cancelling?cancellation.action:phase==='done'||progress==='active'?copy.done:copy[progress]}</p>:null}
    {phase==='cancelled'?<><p role="status">{cancellation.done}</p><button type="button" className="text-button" disabled={busy} onClick={()=>closePrivateMigrationUi(state.id)}>{copy.close}</button></>:null}
@@ -120,8 +148,8 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
    <p className="workspace-recovery-hint">{copy.kept}</p>
    <div className="workspace-recovery-actions">
-    {state.target||state.reason==='setup'&&!started.current?<button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
-    <button type="button" className="text-button" disabled={busy||fileBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);void signOutFromGoogle().catch(()=>{if(alive.current)setError(copy.error);});}}>{vaultCopy.exit}</button>
+    {state.target||state.reason==='setup'&&!started.current?<button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
+    <button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);void signOutFromGoogle().catch(()=>{if(alive.current)setError(copy.error);});}}>{vaultCopy.exit}</button>
    </div><small className="workspace-recovery-privacy">{vaultCopy.privacy}</small>
   </form>
  </div>;
