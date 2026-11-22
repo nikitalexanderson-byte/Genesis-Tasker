@@ -10,6 +10,16 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Native normal-messenger durable edits and exact command recovery (candidate)
+
+Added a strict owner/conversation/kind journal, explicit legacy readers, durable
+edit targets, captured UI write/send bindings, complete receipt checks and
+done/recovery markers before cleanup. Original commands/draft transitions are
+retained as inert protected history. Independent DELETE compositions and changed
+drafts survive acknowledgement. Conflict-copy recovery needs fresh proof of an
+existing create ID or advanced CAS revision; a generic409 is insufficient.
+See `security-336-native-messenger-journal.md`. No compilation/QA/coverage claim.
+
 ### Native shared-message attachments and fresh-capability output (candidate)
 
 The actual picker callbacks now use protected intake/output selections plus the

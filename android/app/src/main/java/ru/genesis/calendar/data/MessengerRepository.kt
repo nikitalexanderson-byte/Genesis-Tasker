@@ -14,6 +14,8 @@ import ru.genesis.calendar.security.MessagingCrypto
 import ru.genesis.calendar.security.MessagingIdentity
 import ru.genesis.calendar.security.MessagingKeyMemory
 import ru.genesis.calendar.security.MessageContext
+import ru.genesis.calendar.security.E2eeCommands
+import ru.genesis.calendar.security.E2eeProductJson
 import java.util.UUID
 
 internal data class MessengerMember(val userId: String, val name: String, val role: String, val status: String,
@@ -27,7 +29,7 @@ internal data class MessengerState(val ready: Boolean = false, val chats: List<M
     val blocked: List<MessengerContact> = emptyList(),
     val selected: MessengerChat? = null, val rows: List<MessengerRow> = emptyList(), val before: Long? = null,
     val draft: String = "", val editing: MessengerRow? = null, val pending: Boolean = false, val pendingConflict: Boolean = false,
-    val secretError: String? = null, val securityCode: String? = null, val offline: Boolean = false)
+    val secretError: String? = null, val securityCode: String? = null, val offline: Boolean = false,val draftToken:String?=null)
 
 /** Same account session as the rest of GENESIS. Device keys and commands are Keystore-sealed Room cells. */
 internal class MessengerRepository(val owner: String, private val gateway: MessagingGateway, private val store: MessagingStore) {
@@ -43,6 +45,7 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
         get()=custody.key
         set(value){custody.key=value}
     private var currentIds = emptyMap<String, String>()
+    private val journal=MessengerJournal(owner,store,::check)
     private fun check(){custody.check();gateway.check();custody.check()}
     private fun publish(value: MessengerState) { check();custody.publish{mutable.value=value} }
     private suspend fun request(method: String, path: String, body: JSONObject? = null): JSONObject {
@@ -75,7 +78,8 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
     suspend fun visibility(chatId: String, action: String) = mutex.withLock {
         require(action in setOf("hide", "show", "delete"))
         request("POST", "/conversations/${id(chatId)}/visibility", JSONObject().put("action", action))
-        if (action == "delete") delete("draft/$chatId")
+        // Visibility is a server view preference. It cannot erase a local draft
+        // or a pending exact command whose outcome has not been established.
         inboxLocked()
     }
     private suspend fun deviceLocked(): String {
@@ -113,9 +117,10 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
     }
     suspend fun select(selected: MessengerChat) = mutex.withLock {
         val current = chat(request("GET", "/conversations/${id(selected.id)}"))
-        val draft = read("draft/${current.id}")?.let(::JSONObject)
-        publish(mutable.value.copy(selected = current, rows = emptyList(), before = null, editing = null, draft = draft?.optString("text") ?: "", pending = read("pending/${current.id}") != null, pendingConflict = false, secretError = null, securityCode = null, offline = false))
-        // Persisted edit target is restored only when its authoritative row is loaded.
+        val draft=journal.draft(current);val pending=journal.pending(current)
+        publish(mutable.value.copy(selected=current,rows=emptyList(),before=null,editing=draft.edit,draft=draft.text,draftToken=draft.token,pending=pending!=null,pendingConflict=false,secretError=null,securityCode=null,offline=false))
+        // The saved edit keeps its exact base revision. A fresh server CAS may
+        // reject it; it is never silently changed into a new POST after restart.
         secretLocked(current)
         if (current.members.none { it.userId == owner && it.status == "pending" } && mutable.value.secretError == null) messagesLocked()
     }
@@ -146,55 +151,96 @@ internal class MessengerRepository(val owner: String, private val gateway: Messa
         catch (error: Exception) { if(error is AuthFailure && error.httpStatus in setOf(401,403,404) || error.message?.contains("NOT_FOUND") == true || error.message?.contains("FORBIDDEN") == true) publish(mutable.value.copy(rows = emptyList(), secretError = "MESSENGER_NOT_FOUND")) else publish(mutable.value.copy(offline = true)); throw error }
     }
     suspend fun older() = mutex.withLock { mutable.value.before?.let { messagesLocked(it) } }
-    suspend fun close() = mutex.withLock { currentKey?.fill(0); currentKey = null; currentIds = emptyMap(); publish(mutable.value.copy(selected = null, rows = emptyList(), draft = "", editing = null, pending = false, pendingConflict = false, secretError = null, securityCode = null)); inboxLocked() }
-    suspend fun saveDraft(value: String) = mutex.withLock {
+    suspend fun close() = mutex.withLock { currentKey?.fill(0); currentKey = null; currentIds = emptyMap(); publish(mutable.value.copy(selected = null, rows = emptyList(), draft = "", editing = null, pending = false, pendingConflict = false, secretError = null, securityCode = null,draftToken=null)); inboxLocked() }
+    suspend fun saveDraft(value:String,conversationId:String?=null,draftToken:String?=null)=mutex.withLock{
         val current = mutable.value.selected ?: return@withLock
-        if (mutable.value.pending) return@withLock
-        require(value.toByteArray().size <= 30000)
-        write("draft/${current.id}",JSONObject().put("text", value).toString()); publish(mutable.value.copy(draft = value))
+        check();if(conversationId!=null&&current.id!=conversationId||mutable.value.pending)return@withLock
+        val saved=journal.draft(current);if(draftToken!=null&&saved.token!=draftToken)return@withLock
+        val next=MessengerSavedDraft(saved.token,value,saved.edit);journal.saveDraft(current,next);val pending=journal.pending(current)
+        publish(mutable.value.copy(draft=value,editing=next.edit,draftToken=next.token,pending=pending!=null))
     }
     suspend fun edit(row: MessengerRow?) = mutex.withLock {
         require(!mutable.value.pending)
-        if(row!=null)require(row.senderId==owner && !row.failed && !row.deleted)
-        publish(mutable.value.copy(editing = row, draft = row?.text ?: ""))
+        val current=requireNotNull(mutable.value.selected);val saved=journal.draft(current)
+        if(row!=null){require(row.senderId==owner&&!row.failed&&!row.deleted&&mutable.value.rows.any{it.id==row.id&&it.seq==row.seq&&it.revision==row.revision&&it.senderId==owner})
+            if(saved.edit?.id==row.id)return@withLock
+            check(saved.text.isEmpty()&&saved.edit==null){"MESSAGING_DRAFT_EXISTS"}}
+        val next=journal.fresh(row?.text?:"",row);journal.saveDraft(current,next);publish(mutable.value.copy(editing=next.edit,draft=next.text,draftToken=next.token))
+    }
+    private suspend fun commandRow(current:MessengerChat,command:MessengerSavedCommand):JSONObject?{
+        var before=if(command.seq>0)command.seq+1 else 0L
+        repeat(4096){
+            val response=request("GET","/conversations/${current.id}/messages?before=$before"+(if(current.kind=="secret")"&deviceId=${requireNotNull(deviceId)}"else""))
+            val rows=response.getJSONArray("messages");check(rows.length()<=50){"MESSENGER_JOURNAL_INVALID"}
+            for(at in 0 until rows.length()){val row=rows.getJSONObject(at);id(row.getString("id"));E2eeCommands.integer(row.get("seq"),1);E2eeCommands.integer(row.get("revision"),1)
+                if(row.getString("id")==command.messageId)return row}
+            val next=if(response.isNull("nextCursor"))null else E2eeCommands.integer(response.get("nextCursor"),1)
+            if(command.seq>0||next==null)return null;check(before==0L||next<before){"MESSENGER_JOURNAL_INVALID"};before=next
+        };error("MESSENGER_RECONCILIATION_LIMIT")
+    }
+    private fun proves(row:JSONObject?,command:MessengerSavedCommand):Boolean{
+        if(row==null||row.getString("senderId")!=owner||row.getLong("revision")!=command.revision+1)return false
+        return if(command.method=="DELETE")text(row,"deletedAt")!=null else text(row,"deletedAt")==null&&
+            (if(command.body.has("payload"))row.optJSONObject("payload")?.let{E2eeProductJson.same(it,command.body.getJSONObject("payload"))}==true else row.opt("text")==command.body.get("text"))
+    }
+    private fun stale(row:JSONObject?,command:MessengerSavedCommand)=row!=null&&row.getString("senderId")==owner&&(command.method=="POST"||row.getLong("revision")>command.revision)
+    private suspend fun finishRecordedCommand(current:MessengerChat,command:MessengerSavedCommand){
+        val saved=journal.draft(current)
+        val origin=command.draft
+        val next=command.recovery?:if(command.method=="DELETE"||origin==null||saved.token!=origin.token)saved
+            else if(journal.sameDraft(current,saved,origin))journal.fresh()else journal.fresh(saved.text,saved.edit)
+        journal.saveDraft(current,next);journal.clear(current,command)
+        publish(mutable.value.copy(pending=false,pendingConflict=false,draft=next.text,editing=next.edit,draftToken=next.token))
     }
     private suspend fun retryLocked() {
         val current = requireNotNull(mutable.value.selected)
-        val command = JSONObject(requireNotNull(read("pending/${current.id}")))
-        try { request(command.getString("method"), command.getString("path"), command.getJSONObject("body")) }
-        catch (failure: AuthFailure) {
-            if (failure.kind == AuthFailure.Kind.CONFLICT || failure.httpStatus == 409) publish(mutable.value.copy(pendingConflict = true))
-            throw failure
+        var command=journal.pending(current)?:error("MESSENGER_JOURNAL_INVALID")
+        if(!command.done&&command.recovery==null){
+            val fresh=chat(request("GET","/conversations/${current.id}"));check(fresh.id==current.id&&fresh.kind==current.kind){"MESSENGER_JOURNAL_INVALID"};secretLocked(fresh);check(mutable.value.secretError==null){"MESSENGER_SECRET_NOT_READY"}
+            val result=try{request(command.method,command.path,command.body).also{journal.receipt(it,command.messageId,command.revision)}}
+            catch(cancel:CancellationException){throw cancel}catch(failure:Exception){
+                val row=commandRow(current,command)
+                if(!proves(row,command)){publish(mutable.value.copy(pendingConflict=stale(row,command)));throw failure}
+                JSONObject().put("ok",true).put("id",command.messageId).put("revision",command.revision+1)
+            }
+            command=journal.done(current,command,result)
         }
-        delete("pending/${current.id}"); delete("draft/${current.id}")
-        publish(mutable.value.copy(pending = false, pendingConflict = false, draft = "", editing = null)); messagesLocked(); inboxLocked()
+        finishRecordedCommand(current,command);messagesLocked();inboxLocked()
     }
     /** Only a confirmed conflict unlocks this action; an uncertain network result must be retried verbatim. */
     suspend fun recoverPendingConflict() = mutex.withLock {
         require(mutable.value.pending && mutable.value.pendingConflict)
         val current = requireNotNull(mutable.value.selected)
-        messagesLocked() // Keep the journal intact if fresh state cannot be read.
-        val draft = mutable.value.draft
-        write("draft/${current.id}", JSONObject().put("text", draft).toString())
-        delete("pending/${current.id}")
-        publish(mutable.value.copy(pending = false, pendingConflict = false, editing = null, draft = draft))
+        val command=journal.pending(current)?:error("MESSENGER_JOURNAL_INVALID")
+        if(command.done||command.recovery!=null){finishRecordedCommand(current,command);return@withLock}
+        val fresh=chat(request("GET","/conversations/${current.id}"));check(fresh.kind==current.kind){"MESSENGER_JOURNAL_INVALID"};secretLocked(fresh);check(mutable.value.secretError==null){"MESSENGER_SECRET_NOT_READY"}
+        val row=commandRow(current,command)
+        if(proves(row,command)){finishRecordedCommand(current,journal.done(current,command,JSONObject().put("ok",true).put("id",command.messageId).put("revision",command.revision+1)));return@withLock}
+        check(stale(row,command)){"MESSENGER_PENDING_OUTCOME_UNCERTAIN"}
+        val text=if(command.method=="DELETE")journal.draft(current).text else if(current.kind=="secret"){
+            MessagingCrypto.decryptMessage(requireNotNull(currentKey),context(current,command.messageId,owner,(command.revision+1).toInt()),command.body.getJSONObject("payload"),currentIds)
+        }else command.body.getString("text")
+        val recovered=journal.fresh(text);finishRecordedCommand(current,journal.recover(current,command,recovered))
     }
-    suspend fun send() = mutex.withLock {
+    suspend fun send(conversationId:String?=null,draftToken:String?=null) = mutex.withLock {
         val current = requireNotNull(mutable.value.selected)
-        if(mutable.value.pending) { retryLocked(); return@withLock }
+        check(conversationId==null||current.id==conversationId){"MESSENGER_DRAFT_CHANGED"}
+        if(journal.pending(current)!=null){publish(mutable.value.copy(pending=true));retryLocked();return@withLock}
+        val saved=journal.draft(current);check(draftToken==null||saved.token==draftToken){"MESSENGER_DRAFT_CHANGED"}
         val fresh=chat(request("GET","/conversations/${current.id}"));secretLocked(fresh);require(mutable.value.secretError==null)
-        val draft = mutable.value.draft; require(draft.isNotBlank() && draft.toByteArray().size <= 30000)
-        val edit = mutable.value.editing; val mid = edit?.id ?: UUID.randomUUID().toString(); val body = JSONObject().put("id",mid)
+        check(fresh.kind==current.kind){"MESSENGER_JOURNAL_INVALID"};val draft=saved.text;require(draft.isNotBlank()&&draft.toByteArray(Charsets.UTF_8).size<=30000)
+        val edit=saved.edit;val mid=edit?.id?:saved.token;val body=JSONObject().put("id",mid)
         if(edit!=null)body.put("expectedRevision",edit.revision)
         if(current.kind=="secret")body.put("deviceId",deviceId).put("payload",MessagingCrypto.encryptMessage(requireNotNull(currentKey),context(current,mid,owner,(edit?.revision?:0)+1),draft,currentIds)) else body.put("text",draft)
-        val command=JSONObject().put("method",if(edit==null)"POST" else "PATCH").put("path","/conversations/${current.id}/messages"+(if(edit==null)"" else "/$mid")).put("body",body)
-        write("pending/${current.id}",command.toString());publish(mutable.value.copy(pending=true));retryLocked()
+        journal.create(current,if(edit==null)"POST"else"PATCH","/conversations/${current.id}/messages"+(if(edit==null)""else"/$mid"),body,saved,edit?.seq?:0)
+        publish(mutable.value.copy(pending=true));retryLocked()
     }
-    suspend fun deleteMessage(row: MessengerRow) = mutex.withLock {
+    suspend fun deleteMessage(row:MessengerRow,conversationId:String?=null) = mutex.withLock {
         val current=requireNotNull(mutable.value.selected);require(row.senderId==owner&&!mutable.value.pending)
+        check((conversationId==null||conversationId==current.id)&&mutable.value.rows.any{it.id==row.id&&it.seq==row.seq&&it.revision==row.revision&&it.senderId==owner}){"MESSENGER_DRAFT_CHANGED"}
         val body=JSONObject().put("expectedRevision",row.revision);if(current.kind=="secret")body.put("deviceId",deviceLocked())
-        val command=JSONObject().put("method","DELETE").put("path","/conversations/${current.id}/messages/${row.id}").put("body",body)
-        write("pending/${current.id}",command.toString());publish(mutable.value.copy(pending=true));retryLocked()
+        journal.create(current,"DELETE","/conversations/${current.id}/messages/${row.id}",body,journal.draft(current),row.seq)
+        publish(mutable.value.copy(pending=true));retryLocked()
     }
     suspend fun contacts() = mutex.withLock { contactsLocked() }
     private suspend fun contactsLocked() {

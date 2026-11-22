@@ -1,5 +1,23 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: normal native Messenger journal (кандидат кода)
+
+После3d411176 добавлен `data/MessengerJournal.kt` и подключён к обычному native
+MessengerRepository/Screen: owner/conversation/kind binding, stable draft token,
+durable edit target/base revision, explicit legacy draft/pending readers,
+строгое receipt/readback, done/recovery markers до cleanup и сохранённые inert
+originals. DELETE не очищает независимый текущий черновик. Explicit copy recovery
+требует fresh existing-create/advanced-CAS proof, а не любого409. UI write/send
+больше не используют необвязанный delayed draft callback.
+Документ: `security-336-native-messenger-journal.md`. Код не компилировался и не
+тестировался; coverage9/20, общая приёмка только после завершения кода.
+
+Следующий участок — interrupted source-stage capture/legacy-cancel/divergence
+review; остальной большой остаток ниже остаётся, особенно fresh project
+topology/inheritance, membership/device/invitation UI, automation/bulk/cross-scope,
+typed restore/revoked replacement/background. Никаких push/deploy/CI/build/device
+действий.3.3.5/149 и Paddle-сайт сохранены. demo-output/ не читать/stage.
+
 ## 22 ноября: native shared-message файлы переведены на новый handoff
 
 После6e88a5b9 добавлен непроверенный код реального native MessagingScreen:
