@@ -29,7 +29,7 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
             UUID.fromString(value.getString("backupId"));E2eeKeys.technical(value.getString("ownerId"));Instant.parse(value.getString("createdAt"));check(value.toString().toByteArray(Charsets.UTF_8).size<=MAX){"BACKUP_TOO_LARGE"}
             val sections=value.getJSONArray("sections");check(sections.length()<=7){"BACKUP_INVALID"};val seen=mutableSetOf<String>();val identities=mutableSetOf<String>();var total=0L
             for(section in rows(sections)){
-                val module=section.getString("id");check(module in modules&&seen.add(module)){"BACKUP_INVALID"};val data=section.getJSONObject("data");E2eeKeys.exact(data,setOf("format","execution","entries"));check(data.getString("format")=="genesis-content-only-v1"&&data.getString("execution")=="history-only"){"BACKUP_INVALID"};val entries=data.getJSONArray("entries");check(entries.length()<=10000){"BACKUP_INVALID"}
+                val module=section.getString("id");check(module in modules&&seen.add(module)){"BACKUP_INVALID"};val data=section.getJSONObject("data");E2eeKeys.exact(data,setOf("format","execution","entries"));check(data.getString("format")=="genesis-content-only-v1"&&data.getString("execution")=="history-only"){"BACKUP_INVALID"};val entries=data.getJSONArray("entries");check(entries.length()<=100000){"BACKUP_INVALID"}
                 for(entry in rows(entries)){
                     E2eeKeys.exact(entry,setOf("placement","scope","domain","objectId","pending","current","history"));E2eeKeys.technical(entry.getString("objectId"));check(entry.get("pending") is Boolean){"BACKUP_INVALID"}
                     if(entry.getString("placement") in setOf("editor","remote")){
@@ -37,7 +37,7 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
                         check(scope.getString("kind") in setOf("personal","project","space")&&entry.getString("domain") in domains){"BACKUP_INVALID"}
                     }else check(entry.getString("placement")=="device"&&entry.isNull("scope")&&entry.getString("domain")=="draft"&&deviceContent(entry.getString("objectId"))){"BACKUP_INVALID"}
                     val coordinates=entry.optJSONObject("scope");val identity=listOf(entry.getString("placement"),coordinates?.optString("scopeId"),entry.getString("domain"),entry.getString("objectId")).joinToString("\u0000");check(identities.add(identity)){"BACKUP_INVALID"}
-                    val history=entry.getJSONArray("history");check(history.length()<=10000){"BACKUP_INVALID"};val ids=mutableSetOf<String>()
+                    val history=entry.getJSONArray("history");check(history.length()<=100000){"BACKUP_INVALID"};val ids=mutableSetOf<String>()
                     for(record in listOf(entry.getJSONObject("current"))+rows(history)){
                         E2eeKeys.exact(record,setOf("id","encoding","bytes","sha256","size","filename","mediaType"));check(ids.add(E2eeKeys.technical(record.getString("id")))&&record.getString("encoding")=="base64url"&&record.getString("filename").length<=512&&record.getString("mediaType").length<=128){"BACKUP_INVALID"}
                         val size=E2eeCommands.integer(record.get("size"));check(size in 0..MAX.toLong()){"BACKUP_TOO_LARGE"};val bytes=if(size==0L&&record.getString("bytes")=="")ByteArray(0)else E2eeEnvelope.decode(record.getString("bytes"),size.toInt())
@@ -62,7 +62,7 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
     private fun document(id:String)=E2eeDeviceDocument(account.device,id,::validate,::current)
     fun capture():JSONObject{
         current();val scopes=account.contentScopes();val entries=mutableListOf<JSONObject>();var usage=0L
-        fun append(entry:JSONObject){usage+=entry.toString().toByteArray(Charsets.UTF_8).size;check(usage<=MAX-65536&&entries.size<10000){"BACKUP_TOO_LARGE"};entries+=entry}
+        fun append(entry:JSONObject){usage+=entry.toString().toByteArray(Charsets.UTF_8).size;check(usage<=MAX-65536&&entries.size<100000){"BACKUP_TOO_LARGE"};entries+=entry}
         for(key in account.device.vault.listLocal("draft","editor:")){
             val record=account.device.vault.read("draft",key)?:error("E2EE_BACKUP_CAPTURE_CHANGED")
             try{current();check(record.bytes.size<=4*1024*1024){"E2EE_CORRUPT_EDITOR"};val state=E2eeFileManifestJson.readPrivateDocument(record.bytes);val domain=state.getString("domain");if(domain !in domains)continue

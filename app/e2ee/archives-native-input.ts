@@ -9,7 +9,7 @@ export type NativeProtectedArchive=Readonly<{raw:string;scope:string;capturedAt:
  documents:readonly Readonly<{kind:string;encrypted:string;revision:number}>[];
  tasks:readonly Readonly<{id:string;encrypted:string;revision:number;deleted:boolean}>[];
  outbox:readonly Readonly<{entityId:string;revision:number;operationId:string;state:string}>[]}>;
-const MAX_PLAIN=64*1024*1024,MAX_TOTAL=128*1024*1024,CHUNK=256*1024;
+const MAX_PLAIN=64*1024*1024,MAX_TOTAL=512*1024*1024,CHUNK=256*1024;
 const MAX_CIPHER=Math.ceil((MAX_PLAIN+28)/3)*4,encoder=new TextEncoder();
 const chunkPattern=/^(backup-safety:[A-Za-z0-9_.:+-]{1,256})\/chunk\/(0|[1-9][0-9]{0,3})$/;
 const rootPattern=/^backup-safety:[A-Za-z0-9_.:+-]{1,256}$/;

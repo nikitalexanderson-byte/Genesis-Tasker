@@ -45,7 +45,7 @@ internal object E2eePrivatePathFragments {
                     val count=E2eeCommands.integer(totals.get(table));val length=E2eeCommands.integer(page.get("rowBytes"));check(length<=64L*1024*1024){"E2EE_SOURCE_TOO_LARGE"}
                     if(count==0L){check(offset==0L&&position==0&&length==0L&&page.isNull("rowHash")&&page.getString("chunk").isEmpty()&&page.isNull("nextByteOffset")&&page.isNull("nextOffset")){"E2EE_PRIVATE_PATH_TRANSPORT_INVALID"};last=true;break}
                     check(offset<count&&length>0){"E2EE_PRIVATE_PATH_TRANSPORT_INVALID"};val hash=page.getString("rowHash");E2eeEnvelope.decode(hash,32).fill(0)
-                    if(bytes==null){totalBytes+=length;check(totalBytes<=128L*1024*1024){"E2EE_SOURCE_TOO_LARGE"};bytes=ByteArray(length.toInt());expectedHash=hash}
+                    if(bytes==null){totalBytes+=length;check(totalBytes<=512L*1024*1024){"E2EE_SOURCE_TOO_LARGE"};bytes=ByteArray(length.toInt());expectedHash=hash}
                     val body=requireNotNull(bytes);check(length.toInt()==body.size&&hash==expectedHash){"E2EE_PRIVATE_PATH_TRANSPORT_INVALID"}
                     val part=E2eeEnvelope.decode(page.getString("chunk"),1,1024*1024)
                     try{val next=position+part.size;check(next<=body.size&&(if(next<body.size)E2eeCommands.integer(page.get("nextByteOffset"))==next.toLong()else page.isNull("nextByteOffset"))

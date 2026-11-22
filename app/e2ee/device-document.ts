@@ -2,7 +2,8 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {decodeE2eeBytes,encodeE2eeBytes} from './envelope.ts';
-import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES} from './files.ts';
+import {E2EE_CHUNK_BYTES} from './files.ts';
+export const E2EE_DEVICE_DOCUMENT_MAX_BYTES=256*1024*1024;
 import type {LocalWrite} from './storage.ts';
 
 const readOnly=():never=>{throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');};
@@ -14,11 +15,11 @@ export class E2eeDeviceDocument<T>{
  private readonly partPrefix:Promise<string>;
  constructor(private readonly device:UnlockedWebDevice|null,private readonly id:string,
   private readonly validate:(input:unknown)=>T,private readonly current:()=>void,private readonly reader:Pick<UnlockedWebDevice['vault'],'read'>=device!.vault){assertTechnical(id);this.partPrefix=crypto.subtle.digest('SHA-256',encoder.encode(id)).then(bytes=>'device-doc:'+encodeE2eeBytes(new Uint8Array(bytes)));}
- private decode(bytes:Uint8Array){return parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',E2EE_MAX_FILE_BYTES);}
+ private decode(bytes:Uint8Array){return parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',E2EE_DEVICE_DOCUMENT_MAX_BYTES);}
  private manifest(value:unknown):{format:'genesis-device-document-v1';size:number;hash:string;slots:number[]}|null{
   if(!value||typeof value!=='object'||!('format' in value)||value.format!=='genesis-device-document-v1')return null;
-  exactKeys(value,['format','size','hash','slots']);if(typeof value.size!=='number'||!Number.isSafeInteger(value.size)||value.size<1||value.size>E2EE_MAX_FILE_BYTES
-   ||typeof value.hash!=='string'||!Array.isArray(value.slots)||value.slots.length>256||value.slots.length<Math.ceil(value.size/E2EE_CHUNK_BYTES)||value.slots.some(serial=>!Number.isSafeInteger(serial)||serial<1||serial>=Number.MAX_SAFE_INTEGER))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
+  exactKeys(value,['format','size','hash','slots']);if(typeof value.size!=='number'||!Number.isSafeInteger(value.size)||value.size<1||value.size>E2EE_DEVICE_DOCUMENT_MAX_BYTES
+   ||typeof value.hash!=='string'||!Array.isArray(value.slots)||value.slots.length>1024||value.slots.length<Math.ceil(value.size/E2EE_CHUNK_BYTES)||value.slots.some(serial=>!Number.isSafeInteger(serial)||serial<1||serial>=Number.MAX_SAFE_INTEGER))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
   decodeE2eeBytes(value.hash,32);return value as {format:'genesis-device-document-v1';size:number;hash:string;slots:number[]};
  }
  async load():Promise<DeviceDocumentView<T>|null>{
@@ -38,7 +39,7 @@ export class E2eeDeviceDocument<T>{
  async save(input:T,expected:number|null):Promise<DeviceDocumentView<T>>{
   this.current();const value=this.validate(structuredClone(input)),bytes=encoder.encode(JSON.stringify(value));
   const writes:LocalWrite[]=[];
-  try{if(bytes.length<1||bytes.length>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_SOURCE_TOO_LARGE');await (this.device??readOnly()).ensureDurableKeys();this.current();
+  try{if(bytes.length<1||bytes.length>E2EE_DEVICE_DOCUMENT_MAX_BYTES)throw new Error('E2EE_SOURCE_TOO_LARGE');await (this.device??readOnly()).ensureDurableKeys();this.current();
    const previous=await (this.device??readOnly()).vault.read('draft',this.id);this.current();let slots:number[];
    try{if((previous?.serial??null)!==expected)throw new Error('E2EE_LOCAL_CONFLICT');slots=previous?[...this.manifest(this.decode(previous.value))?.slots??[]]:[];}finally{previous?.value.fill(0);}
    const prefix=await this.partPrefix;for(let part=0;part<Math.ceil(bytes.length/E2EE_CHUNK_BYTES);part++){

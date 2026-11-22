@@ -12,8 +12,8 @@ import org.json.JSONObject
 
 /** Portable schema 1. Uses JCA AEAD/key wrap; no Keystore or sign-in key enters a file. */
 internal object GenesisBackupContainer {
-    const val MAX_PLAIN = 16 * 1024 * 1024
-    const val MAX_FILE = 24 * 1024 * 1024
+    const val MAX_PLAIN = 128 * 1024 * 1024
+    const val MAX_FILE = 192 * 1024 * 1024
     private val encoder = Base64.getEncoder()
     private val decoder = Base64.getDecoder()
     fun newRecoveryKey(): String = encoder.encodeToString(ByteArray(32).also(SecureRandom()::nextBytes))
@@ -46,7 +46,7 @@ internal object GenesisBackupContainer {
         val root = JSONObject(text)
         val stack = ArrayDeque<Any>().apply { add(root) }; var objects = 0
         while (stack.isNotEmpty()) {
-            require(++objects <= 200_000) { "BACKUP_LIMIT" }
+            require(++objects <= 4_000_000) { "BACKUP_LIMIT" }
             when (val value = stack.removeLast()) {
                 is JSONObject -> value.keys().forEach { key -> require(key !in setOf("__proto__", "prototype", "constructor")); value.opt(key)?.let(stack::add) }
                 is JSONArray -> repeat(value.length()) { value.opt(it)?.let(stack::add) }

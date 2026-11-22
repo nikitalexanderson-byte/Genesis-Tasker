@@ -21,7 +21,7 @@ internal class E2eeDriveBackup(private val account:E2eeProductAccount,private va
         private fun uuid(value:String)=value.also{check(UUID.fromString(it).toString()==it){"DRIVE_INVALID_RESPONSE"}}
         private fun hash(value:String)=value.also{check(it.matches(Regex("[a-f0-9]{64}"))){"DRIVE_INVALID_RESPONSE"}}
         private fun fileId(value:String)=value.also{check(it.matches(Regex("[A-Za-z0-9_-]{10,200}"))){"DRIVE_INVALID_RESPONSE"}}
-        private fun size(value:Any):Int=E2eeCommands.integer(value,1).also{check(it<=GenesisBackupContainer.MAX_FILE){"DRIVE_INVALID_RESPONSE"}}.toInt()
+        private fun size(value:Any):Int=E2eeCommands.integer(value,1).also{check(it<=24*1024*1024){"DRIVE_INVALID_RESPONSE"}}.toInt()
         private fun digest(bytes:ByteArray)=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString(""){"%02x".format(it)}
         private fun receipt(value:JSONObject):JSONObject{
             E2eeKeys.exact(value,setOf("operationId","fileId","sha256","bytes","verified"));uuid(value.getString("operationId"));fileId(value.getString("fileId"));hash(value.getString("sha256"));size(value.get("bytes"));check(value.get("verified")==true){"DRIVE_INVALID_RESPONSE"};return value
@@ -46,7 +46,7 @@ internal class E2eeDriveBackup(private val account:E2eeProductAccount,private va
     fun disconnect(){status().connectionId?.let{id->request("disconnect",JSONObject().put("connectionId",id))}}
     fun stage(file:String):String{
         current();val bytes=file.toByteArray(Charsets.UTF_8)
-        try{check(bytes.size in 1..GenesisBackupContainer.MAX_FILE){"BACKUP_TOO_LARGE"};val header=E2eeFileManifestJson.readPrivateDocument(bytes)
+        try{check(bytes.size in 1..24*1024*1024){"BACKUP_TOO_LARGE"};val header=E2eeFileManifestJson.readPrivateDocument(bytes)
             E2eeKeys.exact(header,setOf("format","schema","backupId","algorithm","wrappedKey","iv","ciphertext","sha256"))
             check(header.getString("format")=="genesisbackup"&&header.get("schema")==1&&header.getString("algorithm")=="A256GCM+A256KW"){"DRIVE_INVALID_RESPONSE"}
             val state=status();check(state.enabled&&state.connectionId!=null){"DRIVE_CONNECTION_REQUIRED"};val id=UUID.randomUUID().toString()

@@ -8,7 +8,7 @@ import type {UnlockedE2eeVault,LocalWrite} from './storage.ts';
  * Neither private object IDs, filenames, plaintext hashes nor these chunks have
  * a transport representation. A local-only record cannot enter the upload plan. */
 export type MigrationLocalEntry={domain:E2eeContext['domain'];objectId:string;recordId:string;parts:number;size:number;plaintextHash:string;filename:string;mediaType:string};
-const MAX_TOTAL=128*1024*1024;
+const MAX_TOTAL=512*1024*1024;
 async function digest(bytes:Uint8Array){return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes))));}
 function invalid():never{throw new Error('E2EE_CORRUPT_LOCAL_CONTENT');}
 export function validateMigrationLocalEntries(value:unknown,migrationId:string,allowed:readonly E2eeContext['domain'][]):MigrationLocalEntry[]{

@@ -1,4 +1,5 @@
-import {BACKUP_MAX_FILE,backupDigest,backupJson} from './backup-format';
+import {backupDigest,backupJson} from './backup-format';
+const DRIVE_MAX_FILE=24*1024*1024;
 import {privateDriveRequest} from './cloud-sync';
 import {E2eeDeviceDocument} from './e2ee/device-document';
 import {exactKeys} from './e2ee/keys';
@@ -15,7 +16,7 @@ function invalid():never{throw new Error('DRIVE_INVALID_RESPONSE');}
 function uuid(value:unknown):asserts value is string{if(typeof value!=='string'||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(value))invalid();}
 function fileId(value:unknown):asserts value is string{if(typeof value!=='string'||!/^[A-Za-z0-9_-]{10,200}$/.test(value))invalid();}
 function hash(value:unknown):asserts value is string{if(typeof value!=='string'||!/^[a-f0-9]{64}$/.test(value))invalid();}
-function size(value:unknown):asserts value is number{if(typeof value!=='number'||!Number.isSafeInteger(value)||value<1||value>BACKUP_MAX_FILE)invalid();}
+function size(value:unknown):asserts value is number{if(typeof value!=='number'||!Number.isSafeInteger(value)||value<1||value>DRIVE_MAX_FILE)invalid();}
 function receipt(value:unknown):DriveReceipt{
  exactKeys(value,['operationId','fileId','sha256','bytes','verified']);uuid(value.operationId);fileId(value.fileId);hash(value.sha256);size(value.bytes);if(value.verified!==true)invalid();return value as DriveReceipt;
 }
@@ -51,8 +52,8 @@ export function backupDriveAdapter(account:WebPrivateAccount):BackupCloudAdapter
  const adapter:BackupCloudAdapter={provider:'google-drive',status,
   async connect(){const value=await request('web-connect',{consentVersion:DRIVE_BACKUP_CONSENT});exactKeys(value,['url']);if(typeof value.url!=='string')invalid();const url=new URL(value.url);if(url.origin!=='https://accounts.google.com'||url.pathname!=='/o/oauth2/v2/auth'||url.username||url.password||url.hash)invalid();return value.url;},
   async stage(file){
-   current();const bytes=encoder.encode(file);if(bytes.length<1||bytes.length>BACKUP_MAX_FILE)throw new Error('BACKUP_TOO_LARGE');
-   try{const header=backupJson(file,BACKUP_MAX_FILE);exactKeys(header,['format','schema','backupId','algorithm','wrappedKey','iv','ciphertext','sha256']);if(header.format!=='genesisbackup'||header.schema!==1||header.algorithm!=='A256GCM+A256KW')invalid();uuid(header.backupId);
+   current();const bytes=encoder.encode(file);if(bytes.length<1||bytes.length>DRIVE_MAX_FILE)throw new Error('BACKUP_TOO_LARGE');
+   try{const header=backupJson(file,DRIVE_MAX_FILE);exactKeys(header,['format','schema','backupId','algorithm','wrappedKey','iv','ciphertext','sha256']);if(header.format!=='genesisbackup'||header.schema!==1||header.algorithm!=='A256GCM+A256KW')invalid();uuid(header.backupId);
     const state=await status();if(!state.enabled||!state.connectionId)throw new Error('DRIVE_CONNECTION_REQUIRED');
     const row:DriveIntent={protocol:1,operationId:crypto.randomUUID(),connectionId:state.connectionId,backupId:header.backupId,sha256:await backupDigest(bytes),bytes:bytes.length,file,receipt:null};current();
     await documentFor(row.operationId).save(row,null);current();const saved=await read(row.operationId);if(saved.value.file!==file)throw new Error('E2EE_BACKUP_UNVERIFIED');return row.operationId;
@@ -78,7 +79,7 @@ export function backupDriveAdapter(account:WebPrivateAccount):BackupCloudAdapter
   async download(file){fileId(file.fileId);uuid(file.backupId);hash(file.sha256);size(file.bytes);const state=await status();if(!state.enabled||!state.connectionId)throw new Error('DRIVE_CONNECTION_REQUIRED');
    const value=await request('download',{connectionId:state.connectionId,fileId:file.fileId});exactKeys(value,['fileId','sha256','bytes','file']);
    if(value.fileId!==file.fileId||value.sha256!==file.sha256||value.bytes!==file.bytes||typeof value.file!=='string'||encoder.encode(value.file).length!==file.bytes||await backupDigest(value.file)!==file.sha256)invalid();
-   current();const header=backupJson(value.file,BACKUP_MAX_FILE);exactKeys(header,['format','schema','backupId','algorithm','wrappedKey','iv','ciphertext','sha256']);if(header.format!=='genesisbackup'||header.schema!==1||header.algorithm!=='A256GCM+A256KW'||header.backupId!==file.backupId)invalid();return value.file;
+   current();const header=backupJson(value.file,DRIVE_MAX_FILE);exactKeys(header,['format','schema','backupId','algorithm','wrappedKey','iv','ciphertext','sha256']);if(header.format!=='genesisbackup'||header.schema!==1||header.algorithm!=='A256GCM+A256KW'||header.backupId!==file.backupId)invalid();return value.file;
   },
   async disconnect(){const state=await status();if(state.connectionId)await request('disconnect',{connectionId:state.connectionId});},
  };current();return adapter;

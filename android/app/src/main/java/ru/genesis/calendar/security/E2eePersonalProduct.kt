@@ -17,7 +17,7 @@ internal class E2eePersonalProduct(private val account:E2eeProductAccount){
     }
     private fun tasks(value:JSONObject):JSONObject{
         E2eeKeys.exact(value,setOf("protocol","ownerId","tasks","externalCopy"));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId&&value.getString("externalCopy")=="requires-new-consent"){"E2EE_SCOPE_BINDING_MISMATCH"}
-        val rows=value.getJSONArray("tasks");check(rows.length()<=10000){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};val ids=mutableSetOf<String>()
+        val rows=value.getJSONArray("tasks");check(rows.length()<=100000){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};val ids=mutableSetOf<String>()
         for(i in 0 until rows.length()){val row=rows.getJSONObject(i);E2eeKeys.exact(row,setOf("id","value","deleted"));val id=row.getString("id");check(ids.add(id)&&id.length in 1..512){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
             if(row.getBoolean("deleted"))check(row.isNull("value")){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}else check(row.getJSONObject("value").getString("id")==id&&row.getJSONObject("value").get("title") is String){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}}
         return value

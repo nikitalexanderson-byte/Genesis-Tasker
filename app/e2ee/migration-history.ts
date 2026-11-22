@@ -18,7 +18,7 @@ export type MigrationHistoryOptions={capacity:Readonly<{maximumBytes:number;maxi
  admit:(request:MigrationHistoryAdmission)=>Promise<void>;assertCurrent:()=>void};
 export type MigrationHistoryReadVault=Pick<UnlockedE2eeVault,'assertUnlocked'|'localIdentity'|'read'|'listLocal'|'listMigrationOriginalParts'|'listMigrationHistoryCopies'>;
 type Metadata={id:string;serial:number;hash:string};
-const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),MAX_METADATA=4*1024*1024;
+const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),MAX_METADATA=16*1024*1024;
 function invalid():never{throw new Error('E2EE_SOURCE_HISTORY_INVALID');}
 async function digest(bytes:Uint8Array){const copy=new Uint8Array(bytes);try{return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',copy)));}finally{copy.fill(0);}}
 function sameRefs(left:readonly SourceStageReference[],right:readonly SourceStageReference[]){return left.length===right.length&&left.every((ref,index)=>ref.stageId===right[index].stageId&&ref.manifestHash===right[index].manifestHash);}

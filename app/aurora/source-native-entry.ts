@@ -56,7 +56,7 @@ declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAurora
 const privateAccessErrorCodes=new Set(['INVALID_PROJECT_ACCESS','PROJECT_ACCESS_CONFLICT','PROJECT_ACCESS_OPERATION_REUSED','LAST_OWNER','PROJECT_ACCESS_MANAGER_UNRESTRICTED','PROJECT_ACCESS_PERMISSION_CHANGED','PROJECT_ACCESS_REVIEW_REQUIRED','PROJECT_ACCESS_LOCAL_QUEUE','PROJECT_ACCESS_RECEIPT_INVALID']);
 const nativeProductErrorCode=(value:unknown)=>typeof value==='string'&&(/^E2EE_[A-Z_]{1,100}$/.test(value)||privateAccessErrorCodes.has(value))?value:'E2EE_AURORA_RECONCILIATION_FAILED';
 
-const MAX=128*1024*1024,CHUNK=131072,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
+const MAX=512*1024*1024,CHUNK=131072,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const decoder=new TextDecoder('utf-8',{fatal:true});
 let job='',input='',started=false,closed=false,replyMaximum=16*1024*1024;
 const pending=new Map<string,{resolve:(value:unknown)=>void;reject:(error:unknown)=>void;chunks:string}>();
@@ -70,7 +70,7 @@ async function run(encoded:string){
   const local:Uint8Array[]=[],content:Uint8Array[]=[];
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
-    try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    try{value=backupJson(decoder.decode(wire),MAX,8000000) as Record<string,unknown>;}finally{wire.fill(0);}
     if(value.mode==='membership-owner-effects-v2'){
       exactKeys(value,['protocol','mode','input']);if(value.protocol!==1)throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
       exactKeys(value.input,['request','scope','pages','entities','versions','candidates']);const result=verifyMembershipAtomicPrivateEffects(value.input as MembershipAtomicEffectsInput);
@@ -252,7 +252,7 @@ async function run(encoded:string){
     exactKeys(value,['protocol','source','ownerId','scopeId','local','previous','context','remote']);
     if(value.protocol!==1||!['aurora','stoicheion','advice','tasks','diary','mindmaps','physis','reminders','archives','relational'].includes(String(value.source))||typeof value.ownerId!=='string'||typeof value.scopeId!=='string'||typeof value.local!=='string'
       ||!Array.isArray(value.previous)||value.previous.length>32)throw new Error('E2EE_AURORA_SOURCE_INVALID');
-    const localMaximum=value.source==='archives'||value.source==='relational'?64*1024*1024:16*1024*1024;replyMaximum=localMaximum;
+    const localMaximum=value.source==='archives'||value.source==='relational'||value.source==='tasks'?64*1024*1024:16*1024*1024;replyMaximum=localMaximum;
     local.push(decodeE2eeBytes(value.local,1,localMaximum));for(const old of value.previous)local.push(decodeE2eeBytes(old,1,localMaximum));
     const ask=(kind:string,fields:Record<string,unknown>):Promise<unknown>=>new Promise((resolve,reject)=>{
       current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});
@@ -339,11 +339,8 @@ async function run(encoded:string){
     if(mindmapsMetadata!==undefined)(result.localContent??=[]).push({domain:'mindmap',objectId:'personal-mindmap-native-history-v1',bytes:new TextEncoder().encode(JSON.stringify(mindmapsMetadata))});
     if(physisMetadata!==undefined)(result.localContent??=[]).push({domain:'physis',objectId:'personal-physis-native-history-v1',bytes:new TextEncoder().encode(JSON.stringify(physisMetadata))});
     const localContent=result.localContent??[];content.push(...[...result.content,...localContent].map(row=>row.bytes));
-    const outputPackets=(rows:typeof result.content)=>rows.map(row=>({domain:row.domain,objectId:row.objectId,bytes:encodeE2eeBytes(row.bytes),filename:row.filename??'',mediaType:row.mediaType??'application/json'}));
-    if(value.source==='mindmaps'||value.source==='physis'||value.source==='reminders'||value.source==='archives'||value.source==='relational'){
-      const counts=await streamNativeSourceResults(result,part=>ask('result-part',{part}),current);
-      current();send({job,kind:'complete-stream',protocol:1,complete:result.complete,...counts});
-    }else{current();send({job,kind:'complete',complete:result.complete,content:outputPackets(result.content),localContent:outputPackets(localContent)});}
+    const counts=await streamNativeSourceResults(result,part=>ask('result-part',{part}),current);
+    current();send({job,kind:'complete-stream',protocol:1,complete:result.complete,...counts});
   }catch(error){
     if(!closed)send({job,kind:'error',code:nativeProductErrorCode(error instanceof Error?error.message:null)});
   }finally{local.forEach(bytes=>bytes.fill(0));content.forEach(bytes=>bytes.fill(0));window.GenesisAuroraSourceRuntime.close();}

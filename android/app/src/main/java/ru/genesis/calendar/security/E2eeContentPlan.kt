@@ -15,7 +15,7 @@ import kotlinx.coroutines.ensureActive
 /** Local encrypted quarantine only. A complete plan does not grant transport,
  * restore, enrollment or replay authority; the coordinator owns source/lease/CAS. */
 internal object E2eeContentPlan {
-    private const val MAX_METADATA=4*1024*1024
+    private const val MAX_METADATA=16*1024*1024
     data class Capacity(val maximumBytes:Long,val maximumEnvelopes:Int,val maximumLocalParts:Int)
     data class Admission(val bytes:Long,val envelopes:Int,val localParts:Int,val metadataBytes:Int,val additionalStorageBytes:Long)
     data class Reference(val attemptId:String,val manifestHash:String)

@@ -54,12 +54,15 @@ internal class NativeBackupFileAccess(val job:PrivateBackupHandoff.Job,private v
      * wiped on completion/background. No plaintext/provider spool is created. */
     fun <T> read(context:Context,maximum:Int,consume:(ByteArray,Int)->T):T{
         check(maximum in 1..ru.genesis.calendar.data.GenesisBackupContainer.MAX_FILE){"BACKUP_TOO_LARGE"}
-        return buffer(maximum+1){bytes->input(context){input->
-            var size=0
-            while(size<bytes.size){current();val count=input.read(bytes,size,minOf(8192,bytes.size-size));current()
-                if(count<0)break;check(count>0){"BACKUP_HANDOFF_UNVERIFIED"};size+=count}
-            check(size in 1..maximum){"BACKUP_TOO_LARGE"};current();consume(bytes,size).also{current()}
-        }}
+        current();var bytes=ByteArray(minOf(maximum+1,65536))
+        synchronized(buffers){if(closed.get()){bytes.fill(0);error("BACKUP_HANDOFF_CHANGED")};buffers+=bytes}
+        try{return input(context){input->var size=0
+            while(true){current()
+                if(size==bytes.size){check(size<=maximum){"BACKUP_TOO_LARGE"};val next=ByteArray(minOf(maximum+1,bytes.size*2))
+                    synchronized(buffers){if(closed.get()){next.fill(0);error("BACKUP_HANDOFF_CHANGED")};buffers+=next;bytes.copyInto(next);bytes.fill(0);buffers.remove(bytes);bytes=next}}
+                val count=input.read(bytes,size,minOf(8192,bytes.size-size));current();if(count<0)break;check(count>0){"BACKUP_HANDOFF_UNVERIFIED"};size+=count;check(size<=maximum){"BACKUP_TOO_LARGE"}
+            };check(size>0){"BACKUP_HANDOFF_UNVERIFIED"};current();consume(bytes,size).also{current()}
+        }}finally{bytes.fill(0);synchronized(buffers){buffers.remove(bytes)}}
     }
     override fun close(){if(closed.compareAndSet(false,true)){
         timer.removeCallbacks(expiry)

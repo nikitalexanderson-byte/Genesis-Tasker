@@ -43,7 +43,7 @@ internal enum class PersonalSourceKind(val wire:String,val domain:String){
         ADVICE->id in setOf("personal-advice-preferences-v1","personal-advice-local-history-v1","personal-advice-history-index-v1","personal-advice-native-metadata-v1")
             ||id.matches(Regex("personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
         TASKS->id in setOf("personal-task-index-v1","personal-task-history-v1","personal-tasks-live-v1")
-            ||id.matches(Regex("personal-task-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
+            ||id.matches(Regex("personal-task-(?:record|shard):[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
         DIARY->id in setOf("personal-diary-index-v1","personal-diary-local-index-v1","personal-diary-settings-v1","personal-diary-local-history-v1","personal-diary-native-history-v1")
             ||id.matches(Regex("personal-diary-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))
         MINDMAPS->id in setOf("personal-mindmap-index-v1","personal-mindmap-metadata-v1","personal-mindmap-local-work-v1","personal-mindmap-native-history-v1")
@@ -111,7 +111,7 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
                     .put("context",JSONObject().put("ownerId",owner).put("scopeId",scope).put("migrationId",context.migrationId).put("fence",context.fence).put("sourceHash",context.sourceHash).put("generation",context.generation))
                     .put("remote",remote)
                 val inputBytes=input.toString().toByteArray(Charsets.UTF_8)
-                val maximum:Long=if(source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS,PersonalSourceKind.REMINDERS,PersonalSourceKind.ARCHIVES,PersonalSourceKind.RELATIONAL))E2eeMigrationSources.BYTE_BUDGET.toLong() else 48L*1024*1024
+                val maximum=E2eeMigrationSources.BYTE_BUDGET.toLong()
                 val encoded=try{check(inputBytes.size.toLong()<=maximum){"E2EE_MIGRATION_TOO_LARGE"};E2eeEnvelope.encode(inputBytes)}finally{inputBytes.fill(0)}
                 withContext(Dispatchers.Main.immediate){
                     assertCurrent();check(nativeWebRuntimeProblem(this@NativePersonalSourceRuntime.context,"en")==null){"E2EE_WEB_RUNTIME_UPDATE_REQUIRED"}
@@ -133,11 +133,14 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
                             override fun onPageFinished(view:WebView,url:String){
                                 if(url!=AuroraSourceOrigin.ENTRY||!active.get()||outcome.isCompleted||!started.compareAndSet(false,true))return
                                 try{
-                                    assertCurrent();encoded.chunked(SOURCE_CHUNK).forEachIndexed{index,chunk->
-                                        view.evaluateJavascript("window.GenesisAuroraSourceRuntime.append('$id',$index,${index==((encoded.length-1)/SOURCE_CHUNK)},'$chunk')"){value->
-                                            if(value!="true"&&!outcome.isCompleted)outcome.completeExceptionally(IllegalStateException("E2EE_AURORA_RUNTIME_UNAVAILABLE"))
-                                        }
-                                    }
+                                    fun append(index:Int){
+                                        if(!active.get()||outcome.isCompleted)return
+                                        try{assertCurrent();val offset=index*SOURCE_CHUNK;val last=offset+SOURCE_CHUNK>=encoded.length;val chunk=encoded.substring(offset,minOf(encoded.length,offset+SOURCE_CHUNK))
+                                            view.evaluateJavascript("window.GenesisAuroraSourceRuntime.append('$id',$index,$last,'$chunk')"){value->
+                                                if(value!="true"&&!outcome.isCompleted)outcome.completeExceptionally(IllegalStateException("E2EE_AURORA_RUNTIME_UNAVAILABLE")) else if(!last)append(index+1)
+                                            }
+                                        }catch(error:Throwable){outcome.completeExceptionally(IllegalStateException(sourceCode(error)))}
+                                    };append(0)
                                 }catch(error:Throwable){outcome.completeExceptionally(IllegalStateException(sourceCode(error)))}
                             }
                             override fun onRenderProcessGone(view:WebView,detail:RenderProcessGoneDetail):Boolean{
@@ -165,7 +168,7 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
     private val openLegacy:suspend (JSONObject,String)->Any,private val publicBytes:(suspend (String,()->Unit)->ByteArray)?,
     private val deliver:suspend (String,JSONObject)->Unit){
     private val transfers=BackupTransfer(24*1024*1024);private val inflight=AtomicInteger()
-    private val stream=NativeSourceResultStream(accepts={domain,id->source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS,PersonalSourceKind.REMINDERS,PersonalSourceKind.ARCHIVES,PersonalSourceKind.RELATIONAL)&&source.accepts(id)
+    private val stream=NativeSourceResultStream(accepts={domain,id->source.accepts(id)
         &&domain==source.domainFor(id)},acceptsPlacement={placement,_,id->
         source!=PersonalSourceKind.REMINDERS||if(placement=="remote")id=="personal-reminders-preferences-v1" else id!="personal-reminders-preferences-v1"})
     @JavascriptInterface fun postChunk(id:String,index:Int,last:Boolean,text:String){
@@ -200,12 +203,12 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                         assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
                     }
                     "result-part"->{
-                        check(source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS,PersonalSourceKind.REMINDERS,PersonalSourceKind.ARCHIVES,PersonalSourceKind.RELATIONAL)){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","id","kind","part"));val id=value.getString("id")
+                        E2eeKeys.exact(value,setOf("job","id","kind","part"));val id=value.getString("id")
                         check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_AURORA_BRIDGE_INVALID"}
                         stream.part(value.getJSONObject("part"));assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,JSONObject().put("value",true))
                     }
                     "complete-stream"->{
-                        check(source in setOf(PersonalSourceKind.MINDMAPS,PersonalSourceKind.PHYSIS,PersonalSourceKind.REMINDERS,PersonalSourceKind.ARCHIVES,PersonalSourceKind.RELATIONAL)){"E2EE_AURORA_BRIDGE_INVALID"};E2eeKeys.exact(value,setOf("job","kind","protocol","complete","remoteCount","localCount"))
+                        E2eeKeys.exact(value,setOf("job","kind","protocol","complete","remoteCount","localCount"))
                         check(E2eeCommands.integer(value.get("protocol"))==1L&&value.get("complete") is Boolean){"E2EE_AURORA_BRIDGE_INVALID"};assertCurrent()
                         stream.finish(value.getBoolean("complete"),E2eeCommands.integer(value.get("remoteCount")),E2eeCommands.integer(value.get("localCount"))){reconciliation->
                             if(!active.get()||!completed.compareAndSet(null,reconciliation))false

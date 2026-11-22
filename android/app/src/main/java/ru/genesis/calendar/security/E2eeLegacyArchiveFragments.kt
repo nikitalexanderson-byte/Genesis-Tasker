@@ -16,7 +16,7 @@ internal object E2eeLegacyArchiveFragments {
     private val tables=listOf("stages","safety","receipts")
     private val headerFields=setOf("protocol","ownerId","scopeId","migrationId","fence","sourceHash","legacyGeneration","checkpointHash","directoryRevision")
     private const val MAX_ROW=64*1024*1024
-    private const val MAX_TOTAL=128L*1024*1024
+    private const val MAX_TOTAL=512L*1024*1024
     private const val MAX_WIRE=192L*1024*1024
     private const val MAX_CHUNK=1024*1024
     private fun invalid():Nothing=error("E2EE_ARCHIVE_TRANSPORT_INVALID")

@@ -15,7 +15,7 @@ internal class E2eeDeviceDocument(private val device:E2eeScopeDevice?,private va
     private fun manifest(value:JSONObject):JSONObject?{
         if(value.opt("format")!="genesis-device-document-v1")return null
         E2eeKeys.exact(value,setOf("format","size","hash","slots"));val size=E2eeCommands.integer(value.get("size"),1);val slots=value.getJSONArray("slots")
-        check(size<=E2eeFiles.MAX_FILE_BYTES&&slots.length() in ((size+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES).toInt()..256){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
+        check(size<=256*1024*1024&&slots.length() in ((size+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES).toInt()..1024){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
         for(index in 0 until slots.length())check(E2eeCommands.integer(slots.get(index),1)<9_007_199_254_740_991L){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
         E2eeEnvelope.decode(value.getString("hash"),32);return value
     }
@@ -34,7 +34,7 @@ internal class E2eeDeviceDocument(private val device:E2eeScopeDevice?,private va
     fun save(input:JSONObject,expected:Long?):Opened{
         current();val device=this.device?:error("E2EE_HISTORY_NOT_EXECUTABLE");val value=validate(JSONObject(input.toString()));val bytes=value.toString().toByteArray(Charsets.UTF_8)
         val writes=mutableListOf<UnlockedE2eeVault.Write>()
-        try{check(bytes.size in 1..E2eeFiles.MAX_FILE_BYTES){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};device.ensureDurableKeys();current()
+        try{check(bytes.size in 1..256*1024*1024){"E2EE_PRIVATE_DOCUMENT_CORRUPT"};device.ensureDurableKeys();current()
             val old=device.vault.read("draft",id);val slots=try{check(old?.serial==expected){"E2EE_LOCAL_CONFLICT"};old?.let{manifest(E2eeFileManifestJson.readPrivateDocument(it.bytes))?.getJSONArray("slots")}?.let{JSONArray(it.toString())}?:JSONArray()}finally{old?.bytes?.fill(0)}
             for(part in 0 until (bytes.size+E2eeFiles.CHUNK_BYTES-1)/E2eeFiles.CHUNK_BYTES){val serial=if(part<slots.length())slots.getLong(part)else null
                 writes+=UnlockedE2eeVault.Write("draft","$prefix:$part",bytes.copyOfRange(part*E2eeFiles.CHUNK_BYTES,minOf(bytes.size,(part+1)*E2eeFiles.CHUNK_BYTES)),serial);slots.put(part,(serial?:0L)+1)}

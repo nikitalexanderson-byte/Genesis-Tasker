@@ -8,7 +8,7 @@ export type PrivatePersonalTasks={protocol:1;ownerId:string;tasks:{id:string;val
 type PersonalState={protocol:1;ownerId:string;contentRevision:number;workspace:Row;tasks:PrivatePersonalTasks};
 export function validatePrivatePersonalTasks(input:unknown,ownerId:string):PrivatePersonalTasks{
  exactKeys(input,['protocol','ownerId','tasks','externalCopy']);
- if(input.protocol!==1||input.ownerId!==ownerId||input.externalCopy!=='requires-new-consent'||!Array.isArray(input.tasks)||input.tasks.length>10000)throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
+ if(input.protocol!==1||input.ownerId!==ownerId||input.externalCopy!=='requires-new-consent'||!Array.isArray(input.tasks)||input.tasks.length>100000)throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
  const ids=new Set<string>();for(const row of input.tasks){exactKeys(row,['id','value','deleted']);if(typeof row.id!=='string'||ids.has(row.id)||typeof row.deleted!=='boolean')throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');ids.add(row.id);
   if(row.deleted){if(row.value!==null)throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');}else if(validateMigrationTask(row.value).id!==row.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
  }return input as PrivatePersonalTasks;

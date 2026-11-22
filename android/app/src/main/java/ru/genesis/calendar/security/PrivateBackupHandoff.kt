@@ -86,8 +86,7 @@ internal object PrivateBackupHandoff{
             val output=file.startWrite()
             try{var offset=0;while(offset<bytes.size){current();val count=minOf(8192,bytes.size-offset);output.write(bytes,offset,count);offset+=count};current();file.finishWrite(output)}
             catch(error:Exception){file.failWrite(output);throw error}
-            val expected=hash(bytes);val copied=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)}
-            try{current();check(copied.size==bytes.size&&hash(copied)==expected){"BACKUP_HANDOFF_UNVERIFIED"}}finally{copied.fill(0)}
+            val expected=hash(bytes);val copied=file.openRead().use{scan(it,::current)};current();check(copied.first==bytes.size.toLong()&&copied.second==expected){"BACKUP_HANDOFF_UNVERIFIED"}
             return synchronized(this){current();job.copy(phase="pick",sha256=expected).also{save(context,it)}}
         }catch(error:Exception){failed(context,job);throw error}finally{sealed?.fill(0)}
     }
@@ -104,8 +103,7 @@ internal object PrivateBackupHandoff{
             try{
                 current();check(android.os.StatFs(context.noBackupFilesDir.absolutePath).availableBytes>bytes.size+1024*1024L){"E2EE_STORAGE_CAPACITY"}
                 val output=file.startWrite();try{var at=0;while(at<bytes.size){current();val count=minOf(8192,bytes.size-at);output.write(bytes,at,count);at+=count};current();file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}
-                val expected=hash(bytes);val copied=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)}
-                try{current();check(copied.size==bytes.size&&hash(copied)==expected){"BACKUP_HANDOFF_UNVERIFIED"}}finally{copied.fill(0)}
+                val expected=hash(bytes);val copied=file.openRead().use{scan(it,::current)};current();check(copied.first==bytes.size.toLong()&&copied.second==expected){"BACKUP_HANDOFF_UNVERIFIED"}
                 return synchronized(this){current();job.copy(phase="pick",sha256=expected).also{save(context,it)}}
             }catch(error:Exception){failed(context,job);throw error}
         }finally{bytes.fill(0)}
@@ -118,7 +116,7 @@ internal object PrivateBackupHandoff{
         val job=synchronized(this){guard();available(context);Job(UUID.randomUUID().toString(),ownerId,"export","sealing",attemptId=UUID.randomUUID().toString(),scopeId="device:$deviceId",generation=1).also{save(context,it)}};val file=artifact(context,job.id)
         fun current(){guard();requireCurrent(job)}
         var bytes:ByteArray?=null;try{current();val sealed=GenesisBackupContainer.seal(verified,recovery).toByteArray(Charsets.UTF_8);bytes=sealed;current();check(android.os.StatFs(context.noBackupFilesDir.absolutePath).availableBytes>sealed.size+1024*1024L){"E2EE_STORAGE_CAPACITY"};val output=file.startWrite();try{var at=0;while(at<sealed.size){current();val size=minOf(8192,sealed.size-at);output.write(sealed,at,size);at+=size};current();file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}
-            val digest=hash(sealed);val readback=file.openRead().use{readBounded(it,GenesisBackupContainer.MAX_FILE)};try{current();check(readback.size==sealed.size&&hash(readback)==digest){"BACKUP_HANDOFF_UNVERIFIED"}}finally{readback.fill(0)};return synchronized(this){current();job.copy(phase="pick",sha256=digest).also{save(context,it)}}
+            val digest=hash(sealed);val readback=file.openRead().use{scan(it,::current)};current();check(readback.first==sealed.size.toLong()&&readback.second==digest){"BACKUP_HANDOFF_UNVERIFIED"};return synchronized(this){current();job.copy(phase="pick",sha256=digest).also{save(context,it)}}
         }catch(error:Exception){failed(context,job);throw error}finally{bytes?.fill(0)}
     }
     @Synchronized fun beginPicker(context:Context,job:Job):Job{
@@ -172,11 +170,30 @@ internal object PrivateBackupHandoff{
         check(job.kind!="export"||job.sha256!=null){"BACKUP_HANDOFF_UNVERIFIED"}
         save(context,job.copy(phase="pick",uri=null,attemptId=UUID.randomUUID().toString()))
     }
+    /** Retry an already sealed historical export without reopening old keys.
+     * Identity/current UI admission and the exact retained device are required;
+     * only authenticated ciphertext can enter a fresh picker attempt. */
+    @Synchronized fun retryRetired(context:Context,job:Job,ownerId:String,deviceId:String,guard:()->Unit){
+        guard();requireCurrent(job);check(job.ownerId==ownerId&&job.kind=="export"&&job.scopeId=="device:$deviceId"&&job.generation==1L&&job.phase in setOf("failed","picking")&&job.sha256!=null){"BACKUP_HANDOFF_CHANGED"}
+        check(E2eeRetiredDeviceContent.list(context,ownerId).any{it.second==deviceId}){"E2EE_RETIRED_DEVICE_REQUIRED"}
+        val digest=MessageDigest.getInstance("SHA-256");var size=0L
+        artifact(context,job.id).openRead().use{input->val buffer=ByteArray(8192);try{while(true){guard();val count=input.read(buffer);if(count<0)break;check(count>0&&size+count<=GenesisBackupContainer.MAX_FILE){"BACKUP_HANDOFF_UNVERIFIED"};size+=count;digest.update(buffer,0,count);buffer.fill(0)}}finally{buffer.fill(0)}}
+        guard();check(size>0&&E2eeEnvelope.encode(digest.digest())==job.sha256){"BACKUP_HANDOFF_UNVERIFIED"};requireCurrent(job)
+        save(context,job.copy(phase="pick",uri=null,attemptId=UUID.randomUUID().toString()))
+    }
+    @Synchronized fun cancelRetired(context:Context,job:Job,ownerId:String,guard:()->Unit){
+        guard();requireCurrent(job);check(job.ownerId==ownerId&&job.kind=="export"&&job.scopeId?.startsWith("device:")==true&&job.phase in setOf("failed","pick","picking")){"BACKUP_HANDOFF_CHANGED"}
+        save(context,job.copy(phase="cancelled",uri=null));artifact(context,job.id).delete()
+    }
     @Synchronized fun cancel(context:Context,job:Job,account:E2eeProductAccount){
         account.requireOpen();requireCurrent(job);check(job.ownerId==account.ownerId&&job.phase !in setOf("sealing","writing","complete","cancelled")){"BACKUP_HANDOFF_CHANGED"}
         // Cancellation grants no content authority, including for a failed old
         // generation. It only retires this exact technical job and ciphertext.
         save(context,job.copy(phase="cancelled",uri=null));if(job.kind=="export")artifact(context,job.id).delete()
+    }
+    private fun scan(input:InputStream,current:()->Unit):Pair<Long,String>{
+        val buffer=ByteArray(8192);val digest=MessageDigest.getInstance("SHA-256");var size=0L
+        try{while(true){current();val count=input.read(buffer);current();if(count<0)break;check(count>0&&size+count<=GenesisBackupContainer.MAX_FILE){"BACKUP_HANDOFF_UNVERIFIED"};size+=count;digest.update(buffer,0,count);buffer.fill(0)};return size to E2eeEnvelope.encode(digest.digest())}finally{buffer.fill(0)}
     }
     private fun readBounded(input:InputStream,maximum:Int):ByteArray{
         val bytes=ByteArray(maximum+1);var size=0

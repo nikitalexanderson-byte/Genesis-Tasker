@@ -7,7 +7,7 @@ export type LegacyPersonalSource='mindmaps'|'physis'|'reminders';
 export type LegacyPersonalPagePorts={assertCurrent:()=>void;readPage:(context:MigrationSourceContext,table:string,offset:number)=>Promise<unknown>};
 const tables={mindmaps:['maps','versions','receipts','deletions'],physis:['owners','records','usedIds','receipts'],
  reminders:['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences']} as const;
-const encoder=new TextEncoder(),MAX_PAGE=16*1024*1024,MAX_TOTAL=128*1024*1024;
+const encoder=new TextEncoder(),MAX_PAGE=16*1024*1024,MAX_TOTAL=512*1024*1024;
 function invalid():never{throw new Error('E2EE_LEGACY_PAGE_INVALID');}
 function integer(value:unknown,min=0):asserts value is number{if(!Number.isSafeInteger(value)||(value as number)<min||(value as number)>Number.MAX_SAFE_INTEGER-1)invalid();}
 function object(value:unknown):asserts value is Row{if(!value||typeof value!=='object'||Array.isArray(value))invalid();}

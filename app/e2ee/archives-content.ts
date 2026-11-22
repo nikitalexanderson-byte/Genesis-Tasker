@@ -10,7 +10,7 @@ export type ArchiveContentReaderPorts={assertCurrent:()=>void;
 export type ArchivePlainEntry={source:string;metadata:Row;rawDocument:string|null;document:unknown};
 export type ArchivePlainContent={format:'genesis-archive-plaintext-v1';ownerId:string;kind:'operations'|'tables';execution:'history-only';entries:ArchivePlainEntry[]};
 type Plan={source:string;metadata:Row;envelope?:Envelope;purpose?:string;physis?:{id:string;envelope:unknown}};
-const MAX=64*1024*1024,TOTAL=128*1024*1024,encoder=new TextEncoder();
+const MAX=64*1024*1024,TOTAL=512*1024*1024,encoder=new TextEncoder();
 const tables={
  workspace_blobs:['ciphertext','iv','version','updated_at','minimum_writer_protocol','writer_protocol_version'],
  personal_mindmaps:['id','schema_version','revision','ciphertext','iv','updated_at'],

@@ -1,7 +1,7 @@
 /** Portable user-owned data, never an authentication or subscription credential. */
 export const BACKUP_SCHEMA = 1;
-export const BACKUP_MAX_PLAIN = 16 * 1024 * 1024;
-export const BACKUP_MAX_FILE = 24 * 1024 * 1024;
+export const BACKUP_MAX_PLAIN = 128 * 1024 * 1024;
+export const BACKUP_MAX_FILE = 192 * 1024 * 1024;
 export const BACKUP_MODULES = ['workspace', 'mindmaps', 'diary', 'stoicheion', 'aurora', 'physis', 'shared-drafts'] as const;
 export type BackupModuleId = typeof BACKUP_MODULES[number];
 export type BackupSection = { id: BackupModuleId; source: 'device' | 'server'; completeness: 'available' | 'partial' | 'unavailable'; capturedAt: string; revision: number | null; count: number; pending: number; notices: string[]; data: unknown };
@@ -33,13 +33,14 @@ export async function backupDigest(value: string | Uint8Array): Promise<string> 
   return Array.from(new Uint8Array(digest), n => n.toString(16).padStart(2, '0')).join('');
 }
 /** Bound nesting and total nodes before recursive application code sees untrusted JSON. */
-export function backupJson(text: string, maxBytes = BACKUP_MAX_PLAIN): unknown {
-  if (encoder.encode(text).length > maxBytes) return fail('BACKUP_TOO_LARGE');
+export function backupJson(text: string, maxBytes = BACKUP_MAX_PLAIN, maximumNodes = 4000000): unknown {
+  if (!Number.isSafeInteger(maxBytes)||maxBytes<1||maxBytes>512*1024*1024||!Number.isSafeInteger(maximumNodes)||maximumNodes<1||maximumNodes>8000000) return fail('BACKUP_LIMIT');
+  if (text.length>maxBytes||encoder.encode(text).length > maxBytes) return fail('BACKUP_TOO_LARGE');
   // JSON.parse itself is non-recursive in the supported engines; validation below is iterative.
   const root: unknown = JSON.parse(text); const stack = [{ value: root, depth: 0 }]; let count = 0;
   while (stack.length) {
     const { value, depth } = stack.pop()!;
-    if (++count > 200_000 || depth > 40) return fail('BACKUP_LIMIT');
+    if (++count > maximumNodes || depth > 40) return fail('BACKUP_LIMIT');
     if (value && typeof value === 'object') {
       for (const [key, child] of Object.entries(value)) {
         if (['__proto__', 'prototype', 'constructor'].includes(key)) return fail();
@@ -64,7 +65,7 @@ export function validateBackupPayload(value: unknown): BackupPayload {
     if (!BACKUP_MODULES.includes(section.id as BackupModuleId) || seen.has(String(section.id)) || !['device', 'server'].includes(String(section.source))
       || !['available', 'partial', 'unavailable'].includes(String(section.completeness)) || typeof section.capturedAt !== 'string' || !Number.isFinite(Date.parse(section.capturedAt))
       || !(section.revision === null || Number.isSafeInteger(section.revision) && Number(section.revision) >= 0)
-      || !Number.isSafeInteger(section.count) || Number(section.count) < 0 || Number(section.count) > 50_000 || !Number.isSafeInteger(section.pending) || Number(section.pending) < 0
+      || !Number.isSafeInteger(section.count) || Number(section.count) < 0 || Number(section.count) > 1_000_000 || !Number.isSafeInteger(section.pending) || Number(section.pending) < 0
       || !Array.isArray(section.notices) || section.notices.length > 100 || section.notices.some(n => typeof n !== 'string' || n.length > 2000)) return fail();
     seen.add(String(section.id));
   }

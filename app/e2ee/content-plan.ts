@@ -26,7 +26,7 @@ type Common={vault:SourceStageReadVault;root:CryptoKey;signer:CryptoKey;context:
 export type MigrationContentPlanOptions=Common&{vault:UnlockedE2eeVault;signingKey:CryptoKey;capacity:MigrationContentPlanCapacity;admit:(request:MigrationContentPlanAdmission)=>Promise<void>;
  ensureDurableKeys:()=>Promise<void>;assertSourceComplete:()=>Promise<void>;attemptId?:string};
 export type MigrationContentStream={placement:Placement;domain:E2eeContext['domain'];objectId:string;size:number;source:AsyncIterable<Uint8Array>;filename?:string;mediaType?:string};
-const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),MAX_METADATA=4*1024*1024;
+const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),MAX_METADATA=16*1024*1024;
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 function invalid():never{throw new Error('E2EE_CORRUPT_CONTENT_PLAN');}
 async function digest(bytes:Uint8Array){return encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes))));}

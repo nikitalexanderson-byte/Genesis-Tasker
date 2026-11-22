@@ -22,7 +22,7 @@ internal class E2eeNativeTasksSource(private val ownerId:String,private val scop
     private val legacyTasks:suspend (E2eeMigrationSourceContext)->JSONObject,private val reconciler:E2eePersonalSourceReconciler):E2eePrivatePathAdapter {
     override val id="personal.tasks"
     private val account=CloudAccountSnapshot.scopeFor(ownerId)
-    private val maximum=16*1024*1024
+    private val maximum=64*1024*1024
     private val workspaceOutbox=setOf("workspace-structure","habits","trackers")
     init{E2eeKeys.technical(ownerId);E2eeKeys.technical(scopeId)}
     private fun bytes(value:JSONObject)=value.toString().toByteArray(Charsets.UTF_8)
@@ -147,7 +147,7 @@ internal class E2eeNativeTasksSource(private val ownerId:String,private val scop
                 val pending=JSONArray();val operations=captured.getJSONArray("outbox");for(index in 0 until operations.length()){val row=operations.getJSONObject(index);if(row.getString("entityId") in taskIds)pending.put(row)}
                 val history=JSONObject().put("protocol",1).put("ownerId",ownerId).put("tasks",tasks).put("retainedOperations",pending).put("mounted",captured.get("mounted")).put("execution","history-only")
                 val bytes=bytes(history);if(bytes.size>maximum){bytes.fill(0);error("E2EE_SOURCE_TOO_LARGE")};output+=E2eeMigrationContent("workspace","personal-task-native-history-v1",bytes)
-                check((output+result.localContent).sumOf{it.bytes.size.toLong()}<=maximum){"E2EE_SOURCE_TOO_LARGE"};assertCurrent();E2eePathReconciliation(result.complete,output,result.localContent)
+                check((output+result.localContent).sumOf{it.bytes.size.toLong()}<=E2eeMigrationSources.BYTE_BUDGET){"E2EE_SOURCE_TOO_LARGE"};assertCurrent();E2eePathReconciliation(result.complete,output,result.localContent)
             }catch(error:Throwable){(output+result.localContent).forEach{it.bytes.fill(0)};throw error}
         }finally{keys.forEach{it.fill(0)}}
     }

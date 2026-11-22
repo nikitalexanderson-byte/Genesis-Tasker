@@ -1,5 +1,29 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: завершён основной кодовый проход, далее общая интеграционная приёмка
+
+Сохранён блок больших данных: semantic source/planning512MiB aggregate, отдельный
+logical file64MiB, metadata16MiB, custody metadata128MiB; API/AEAD batch/chunk limits
+не увеличены. Большие task histories пакуются в4MiB shards с exact ordered indexv2;
+reader поддерживаетv1/v2, проверяет границы и EOF. Native source result transport
+потоковый для всех10 domains, вход передаётся с acknowledgement по одному chunk,
+с прежним network-disabled bridge. Локальный content-only archive128MiB plain /
+192MiB file и100k entries/history; device document256MiB с bounded chunks. Drive
+сохраняет существующие16MiB plain/24MiB transport bounds, клиенты отказывают до
+сети; большие локальные файлы нельзя выдавать за уже отправленные в Drive.
+Избыточная заранее выделенная память SAF заменена ростом буфера по факту чтения;
+readback sealing проверяет hash потоково. Retired ciphertext export получил
+отдельные owner-bound retry/cancel без старых keys/writer. Старые данные не
+удаляются при admission failure. Все эти изменения пока source-only.
+
+Основные известные кодовые блоки текущего списка связаны; следующий этап — общий
+compiler/typecheck/lint/tests/build/CI, исправления реальных дефектов, приёмка
+по исходному prompt и итоговое внутреннее crypto review. Нельзя считать это
+готовностью выпуска или coverage20/20. Подтверждённое coverage9/20, cutover/floors
+off, production Android3.3.5/149. Личные устройства/Play не менять. Сайт PR45
+успешно merged в mainc1205c045862fcfbaa01b48a1fbd7f04d6693b75 после обоихCI;
+точный main source check45084250291 ещё выполняется до штатного Deploy.
+
 ## 23 ноября: private reminder projection — код
 
 Foreground compiler использует настоящие task/habit codecs и recurrence/quiet-hour/

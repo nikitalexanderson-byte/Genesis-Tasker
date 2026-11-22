@@ -1,5 +1,23 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: bounded wide integration and code-pass checkpoint
+
+Aggregate source/planning512MiB, logical64MiB, local archive128MiB plain/192MiB
+file, device-document256MiB; ordinary AEAD/HTTP/chunk sizes unchanged. Task
+history shards use an ordered v2 index with v1 compatibility and exact EOF.
+All10 native source domains use result streaming; input delivery acknowledges
+one chunk at a time. Admission always refuses without discarding originals.
+Drive remains explicitly bounded to the existing16MiB payload/24MiB transport;
+large local archives are not claimed as cloud uploads. SAF grows its buffer
+and sealing readback hashes by streaming. Retired encrypted exports have
+owner-bound retry/cancel independent of a historical key/writer.
+
+This source-only checkpoint closes the currently known implementation blocks
+for consolidated compiler/typecheck/lint/tests/build/integration acceptance,
+then defect fixes and final internal crypto review of the exact candidate.
+No new acceptance result or coverage increase is claimed. Coverage9/20 and
+activation gates remain unchanged.
+
 ## 23 November: foreground private alarm projection (source-only)
 
 Native task/habit rules compile a bounded8-day/2048-event encrypted technical

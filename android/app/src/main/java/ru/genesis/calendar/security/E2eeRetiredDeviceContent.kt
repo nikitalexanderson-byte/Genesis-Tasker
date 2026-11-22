@@ -23,7 +23,7 @@ internal class E2eeRetiredDeviceContent private constructor(private val storage:
         ru.genesis.calendar.auth.E2eeRemoteOriginal.readCapacity(),::requireOpen,{requireOpen();E2eeStorageAdmission.admit(storage.providerUsage(),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)}))}
     fun capture(inventory:E2eePrivatePaths):JSONObject=catalogue(inventory).use{catalogue->
         val maximum=ru.genesis.calendar.data.GenesisBackupContainer.MAX_PLAIN;val entries=mutableListOf<JSONObject>();var used=0L
-        fun append(entry:JSONObject){requireOpen();used+=entry.toString().toByteArray(Charsets.UTF_8).size;check(used<=maximum-65536&&entries.size<10000){"BACKUP_TOO_LARGE"};entries+=entry}
+        fun append(entry:JSONObject){requireOpen();used+=entry.toString().toByteArray(Charsets.UTF_8).size;check(used<=maximum-65536&&entries.size<100000){"BACKUP_TOO_LARGE"};entries+=entry}
         for(key in local.listLocal("draft","editor:")){
             requireOpen();val before=local.read("draft",key)?:error("E2EE_BACKUP_CAPTURE_CHANGED")
             try{val state=E2eeFileManifestJson.readPrivateDocument(before.bytes);val scopeId=state.getString("scopeId");val scope=catalogue.scope(scopeId);val domain=state.getString("domain");val objectId=state.getString("objectId")

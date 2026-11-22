@@ -4,7 +4,7 @@
 export function parseE2eeFileManifestJson(bytes:Uint8Array):unknown{return readPrivateJson(bytes,256*1024,10000,'E2EE_CORRUPT_FILE');}
 /** Separate encrypted technical plan metadata budget. This does not change
  * the existing file manifest's256KiB/10000-node admission. */
-export function parseE2eeContentPlanJson(bytes:Uint8Array):unknown{return readPrivateJson(bytes,4*1024*1024,250000,'E2EE_CORRUPT_CONTENT_PLAN');}
+export function parseE2eeContentPlanJson(bytes:Uint8Array):unknown{return readPrivateJson(bytes,16*1024*1024,1000000,'E2EE_CORRUPT_CONTENT_PLAN');}
 function readPrivateJson(bytes:Uint8Array,maximumBytes:number,maximumNodes:number,code:string):unknown{
  const invalid=():never=>{throw new Error(code);};
  if(!(bytes instanceof Uint8Array)||bytes.length<1||bytes.length>maximumBytes)invalid();

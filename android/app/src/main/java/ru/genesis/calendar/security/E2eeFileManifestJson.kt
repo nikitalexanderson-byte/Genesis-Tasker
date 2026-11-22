@@ -13,12 +13,12 @@ internal object E2eeFileManifestJson {
     fun read(bytes: ByteArray): JSONObject = readBounded(bytes,256 * 1024,10000)
     /** Separate encrypted technical plan metadata budget; file manifests keep
      * their original strict256KiB/10000-node admission above. */
-    fun readContentPlan(bytes:ByteArray):JSONObject=readBounded(bytes,4*1024*1024,250000)
+    fun readContentPlan(bytes:ByteArray):JSONObject=readBounded(bytes,16*1024*1024,1000000)
     /** Old coordinator metadata can contain an exact pending ciphertext packet.
      * Keep file/plan string limits unchanged; this is a separate bounded role. */
-    fun readMigrationHistory(bytes:ByteArray):JSONObject=readBounded(bytes,4*1024*1024,250000,4*1024*1024)
-    fun readPrivateDocument(bytes:ByteArray):JSONObject=readBounded(bytes,64*1024*1024,1000000,64*1024*1024,100,4096,100000)
-    fun readPrivateValue(bytes:ByteArray):Any{check(bytes.size<=64*1024*1024-16){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
+    fun readMigrationHistory(bytes:ByteArray):JSONObject=readBounded(bytes,16*1024*1024,1000000,16*1024*1024)
+    fun readPrivateDocument(bytes:ByteArray):JSONObject=readBounded(bytes,256*1024*1024,8000000,256*1024*1024,100,4096,100000)
+    fun readPrivateValue(bytes:ByteArray):Any{check(bytes.size<=256*1024*1024-16){"E2EE_PRIVATE_DOCUMENT_CORRUPT"}
         val wrapped="{\"value\":".toByteArray(Charsets.UTF_8)+bytes+"}".toByteArray(Charsets.UTF_8)
         try{val parsed=readPrivateDocument(wrapped);E2eeKeys.exact(parsed,setOf("value"));return parsed.get("value")}finally{wrapped.fill(0)}}
     private fun readBounded(bytes:ByteArray,maximumBytes:Int,maximumNodes:Int,maximumString:Int=512,maximumDepth:Int=16,maximumName:Int=64,maximumMembers:Int=128):JSONObject {

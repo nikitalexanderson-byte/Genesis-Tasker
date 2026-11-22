@@ -19,7 +19,7 @@ export type TasksSourcePorts={storage:Pick<Storage,'getItem'|'key'|'length'>;mem
  review?:(conflicts:readonly TaskMigrationConflict[])=>Promise<Record<string,string>>;
  reviewProviderHistory?:ProviderCacheReview};
 type Snapshot={protocol:1;ownerId:string;scopeId:string;capturedAt:string;entries:{key:string;value:string|null}[];memory:TasksMigrationMemory};
-const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true}),MAX=16*1024*1024;
+const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true}),MAX=64*1024*1024;
 const PENDING='genesis-pending-mutations-v2',RECORD=/^personal-task-record:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 function invalid():never{throw new Error('E2EE_TASK_SOURCE_INVALID');}
 function object(value:unknown):asserts value is Row{if(!value||typeof value!=='object'||Array.isArray(value))invalid();}
@@ -203,9 +203,13 @@ export class PersonalTasksSource implements PrivatePathAdapter{
     else{const merged=threeWay(base,next,current.deleted?null:current.value);const task=merged===null?null:validateMigrationTask(merged);add('editor',next,next===null,editor.id);selected.set(editor.id,{value:task,deleted:task===null,choice:'editor-three-way'});}
    }
    const push=(objectId:string,value:unknown)=>{const bytes=encoder.encode(JSON.stringify(value));size+=bytes.length;if(bytes.length>MAX||size>E2EE_MIGRATION_BYTE_BUDGET||content.length>=10000){bytes.fill(0);throw new Error('E2EE_SOURCE_TOO_LARGE');}content.push({domain:'workspace',objectId,bytes});};
-   const index:{id:string;objectId:string}[]=[];
-   for(const [id,current]of [...selected].sort(([a],[b])=>a.localeCompare(b,'en'))){const objectId='personal-task-record:'+crypto.randomUUID();index.push({id,objectId});push(objectId,{protocol:1,ownerId:this.#owner,id,...current,variants:variants.get(id),externalCopy:'requires-new-consent'});}
-   push('personal-task-index-v1',{protocol:1,ownerId:this.#owner,tasks:index});
+   const index:{id:string;objectId:string;recordIndex?:number}[]=[],ordered=[...selected].sort(([a],[b])=>a.localeCompare(b,'en')),packed=ordered.length>2000;
+   let shard:Row[]=[],shardBytes=1024,shardId='personal-task-shard:'+crypto.randomUUID();
+   const finishShard=()=>{if(!shard.length)return;push(shardId,{format:'genesis-private-task-records-v2',protocol:2,ownerId:this.#owner,rows:shard});shard=[];shardBytes=1024;shardId='personal-task-shard:'+crypto.randomUUID();};
+   for(const [id,current]of ordered){const row={protocol:1,ownerId:this.#owner,id,...current,variants:variants.get(id),externalCopy:'requires-new-consent'};
+    if(!packed){const objectId='personal-task-record:'+crypto.randomUUID();index.push({id,objectId});push(objectId,row);continue;}
+    const size=encoder.encode(JSON.stringify(row)).length;if(shard.length&&shardBytes+size>4*1024*1024)finishShard();index.push({id,objectId:shardId,recordIndex:shard.length});shard.push(row);shardBytes+=size+1;
+   }finishShard();push('personal-task-index-v1',{protocol:packed?2:1,ownerId:this.#owner,tasks:index});
    push('personal-tasks-live-v1',{protocol:1,ownerId:this.#owner,tasks:[...selected].sort(([a],[b])=>a.localeCompare(b,'en')).map(([id,row])=>({id,value:row.value,deleted:row.deleted})),externalCopy:'requires-new-consent'});
    // Raw HTTP queues/keys remain solely in the protected local capture. These
    // server receipts are inert private history and grant no external execution.
@@ -220,11 +224,17 @@ export class PersonalTasksSource implements PrivatePathAdapter{
  * Provider identities survive as history; these results cannot replay legacy IO. */
 export async function readMigratedPersonalTasks(ownerId:string,read:(objectId:string)=>Promise<Uint8Array|null>,assertCurrent:()=>void):Promise<{tasks:Row[];deletedIds:string[]}>{
  assertTechnical(ownerId);assertCurrent();const open=async(id:string)=>{const bytes=await read(id);assertCurrent();if(!bytes)throw new Error('E2EE_TASK_OBJECT_MISSING');try{return parse(decoder.decode(bytes));}finally{bytes.fill(0);}};
- const index=await open('personal-task-index-v1');exactKeys(index,['protocol','ownerId','tasks']);if(index.protocol!==1||index.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');list(index.tasks);
- const tasks:Row[]=[],deletedIds:string[]=[],ids=new Set<string>(),objects=new Set<string>();
- for(const entry of index.tasks){exactKeys(entry,['id','objectId']);identity(entry.id);if(typeof entry.objectId!=='string'||!RECORD.test(entry.objectId)||objects.has(entry.objectId)||ids.has(entry.id))invalid();ids.add(entry.id);objects.add(entry.objectId);
-  const row=await open(entry.objectId);exactKeys(row,['protocol','ownerId','id','value','deleted','choice','variants','externalCopy']);if(row.protocol!==1||row.ownerId!==ownerId||row.id!==entry.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ const index=await open('personal-task-index-v1');exactKeys(index,['protocol','ownerId','tasks']);if(![1,2].includes(Number(index.protocol))||index.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');list(index.tasks);
+ const tasks:Row[]=[],deletedIds:string[]=[],ids=new Set<string>(),objects=new Set<string>();let openedId='',openedRows:unknown[]=[],nextIndex=0;
+ for(const entry of index.tasks){exactKeys(entry,index.protocol===2?['id','objectId','recordIndex']:['id','objectId']);identity(entry.id);if(typeof entry.objectId!=='string'||ids.has(entry.id))invalid();ids.add(entry.id);
+  let row:Row;
+  if(index.protocol===1){if(!RECORD.test(entry.objectId)||objects.has(entry.objectId))invalid();objects.add(entry.objectId);row=await open(entry.objectId);}
+  else{if(!/^personal-task-shard:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(entry.objectId))invalid();integer(entry.recordIndex);
+   if(openedId!==entry.objectId){if(openedId&&nextIndex!==openedRows.length||objects.has(entry.objectId))invalid();objects.add(entry.objectId);const part=await open(entry.objectId);exactKeys(part,['format','protocol','ownerId','rows']);if(part.format!=='genesis-private-task-records-v2'||part.protocol!==2||part.ownerId!==ownerId)invalid();list(part.rows);if(!part.rows.length)invalid();openedId=entry.objectId;openedRows=part.rows;nextIndex=0;}
+   if(entry.recordIndex!==nextIndex||nextIndex>=openedRows.length)invalid();const candidate=openedRows[nextIndex++];object(candidate);row=candidate;
+  }
+  exactKeys(row,['protocol','ownerId','id','value','deleted','choice','variants','externalCopy']);if(row.protocol!==1||row.ownerId!==ownerId||row.id!==entry.id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
   if(typeof row.deleted!=='boolean'||row.externalCopy!=='requires-new-consent'||typeof row.choice!=='string')invalid();list(row.variants);
   if(row.deleted){if(row.value!==null)invalid();deletedIds.push(entry.id);}else{const value=validateMigrationTask(row.value);if(value.id!==entry.id)invalid();tasks.push({...value,syncToGoogle:false,syncAccountIds:[],mindmapCreateOnly:false,createOnly:false});}
- }assertCurrent();return{tasks,deletedIds};
+ }if(openedId&&nextIndex!==openedRows.length)invalid();assertCurrent();return{tasks,deletedIds};
 }

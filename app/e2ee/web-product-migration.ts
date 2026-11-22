@@ -139,7 +139,7 @@ export class WebProductMigration{
     admitE2eeStorage(usage,{records:0,keyRecords:0,writeBytes:0,rewriteBytes:0},E2EE_PROVIDER_STORAGE_BUDGET);
    };
    const planning:StreamedPlanningOptions={device:this.device,assertCurrent:current,admit,
-    capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},
+    capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:128*1024*1024},
     originalCapacity:REMOTE_ORIGINAL_READ_CAPACITY};
    if(cancelling){
     await migration.cancelStreamed(planning);current();

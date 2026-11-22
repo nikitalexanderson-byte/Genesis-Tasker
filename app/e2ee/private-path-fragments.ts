@@ -43,7 +43,7 @@ export async function collectPrivatePathFragments(context:MigrationSourceContext
      integer(page.rowBytes);if(page.rowBytes>MAX)throw new Error('E2EE_SOURCE_TOO_LARGE');const total=page.totals[table.table] as number;
      if(total===0){if(offset!==0||position!==0||page.rowBytes!==0||page.rowHash!==null||page.chunk!==''||page.nextByteOffset!==null||page.nextOffset!==null)invalid();last=true;break;}
      if(offset>=total||page.rowBytes<1||typeof page.rowHash!=='string')invalid();decodeE2eeBytes(page.rowHash,32).fill(0);
-     if(!buffer){expectedLength=page.rowBytes;expectedHash=page.rowHash;size+=page.rowBytes;if(size>128*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');buffer=new Uint8Array(page.rowBytes);}
+     if(!buffer){expectedLength=page.rowBytes;expectedHash=page.rowHash;size+=page.rowBytes;if(size>512*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');buffer=new Uint8Array(page.rowBytes);}
      if(page.rowBytes!==expectedLength||page.rowHash!==expectedHash)invalid();const bytes=decodeE2eeBytes(page.chunk,1,1024*1024);
      try{const next=position+bytes.length;if(next>buffer.length||page.nextByteOffset!==(next<buffer.length?next:null)||page.nextOffset!==(next<buffer.length?offset:offset+1<total?offset+1:null))invalid();buffer.set(bytes,position);position=next;}finally{bytes.fill(0);}
      if(position===buffer.length){
@@ -68,7 +68,7 @@ export function normalizeNativePrivatePathRemote(input:unknown,current:()=>void)
  const tables:Record<string,PrivatePathSourceRow[]>={};let size=0;
  for(const table of schema.tables){const source=input.tables[table.table];if(!Array.isArray(source)||source.length>1000000)invalid();const rows:PrivatePathSourceRow[]=[];
   for(const raw of source){current();if(typeof raw!=='string')invalid();const encoded=encoder.encode(raw);size+=encoded.length;const length=encoded.length;encoded.fill(0);
-   if(length>MAX||size>128*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');
+   if(length>MAX||size>512*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');
    const value=parseLegacyMigrationJson(raw,'E2EE_PRIVATE_PATH_TRANSPORT_INVALID',MAX);exactKeys(value,['original','content','execution']);exactKeys(value.original,table.columns);row(value.content);if(value.execution!=='history-only')invalid();rows.push(value as PrivatePathSourceRow);
   }tables[table.table]=rows;
  }

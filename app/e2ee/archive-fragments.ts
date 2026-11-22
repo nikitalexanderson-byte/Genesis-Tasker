@@ -11,7 +11,7 @@ export type ArchiveFragmentPorts={assertCurrent:()=>void;
 type OldKey={keyMode:'account'|'client'|'empty';key:string|null};
 const headerFields=['protocol','ownerId','scopeId','migrationId','fence','sourceHash','legacyGeneration','checkpointHash','directoryRevision'];
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
-const MAX_ROW=64*1024*1024,MAX_TOTAL=128*1024*1024,MAX_CHUNK=1024*1024,MAX_WIRE=192*1024*1024;
+const MAX_ROW=64*1024*1024,MAX_TOTAL=512*1024*1024,MAX_CHUNK=1024*1024,MAX_WIRE=2147483647;
 function invalid():never{throw new Error('E2EE_ARCHIVE_TRANSPORT_INVALID');}
 function integer(value:unknown,min=0):asserts value is number{if(!Number.isSafeInteger(value)||(value as number)<min||(value as number)>=Number.MAX_SAFE_INTEGER)invalid();}
 function object(value:unknown):asserts value is Row{if(!value||typeof value!=='object'||Array.isArray(value))invalid();}

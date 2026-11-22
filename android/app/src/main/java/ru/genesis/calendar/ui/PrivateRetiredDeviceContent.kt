@@ -10,10 +10,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import ru.genesis.calendar.auth.AuthController
 import ru.genesis.calendar.data.GenesisBackupContainer
 import ru.genesis.calendar.security.NativeMigrationCredential
+import ru.genesis.calendar.security.PrivateBackupHandoff
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -23,9 +28,11 @@ import java.util.concurrent.atomic.AtomicReference
  * historical reader survives a completed credential operation. */
 @Composable internal fun PrivateRetiredDeviceContentPanel(controller:AuthController,owner:String,language:String){
     val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle
+    val coroutine=rememberCoroutineScope();val handoff by PrivateBackupHandoff.state.collectAsStateWithLifecycle()
     val slots=remember(owner){runCatching{controller.retainedPrivateDeviceSlots(owner)}.getOrDefault(emptyList())};if(slots.isEmpty())return
     val copy=remember(language){context.assets.open("personal-device-entry-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val common=remember(language){context.assets.open("shared-security-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val exportCopy=remember(language){context.assets.open("content-archive-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val backup=remember(language){if(language=="ru")null else context.assets.open("originals/i18n/backup-locales/$language.json").bufferedReader().use{JSONObject(it.readText())}};fun text(ru:String)=backup?.getString(ru)?:ru
     var slot by remember(owner){mutableStateOf(slots.last().first)};var recovery by remember(owner){mutableStateOf("")};var saved by remember(owner){mutableStateOf(false)};var consent by remember(owner){mutableStateOf(false)};var busy by remember(owner){mutableStateOf(false)};var failed by remember(owner){mutableStateOf(false)}
     val alive=remember(owner){AtomicBoolean(true)};val attempt=remember(owner){AtomicLong()};val viewId=remember(owner){UUID.randomUUID().toString()};val pending=remember(owner){AtomicReference<NativeMigrationCredential?>(null)};val captured=remember(owner){AtomicReference<Pair<String,String>?>(null)};var activity by remember(owner){mutableStateOf<NativeMigrationCredential?>(null)}
@@ -44,5 +51,10 @@ import java.util.concurrent.atomic.AtomicReference
         Row(Modifier.fillMaxWidth()){Checkbox(consent,{consent=it},enabled=!busy);UntranslatedText(copy.getString("retainedAck"),modifier=Modifier.weight(1f))}
         OutlinedButton({try{current();val ownerGuard=controller.privateUiOwnerGuard(owner,allowOffline=true);val number=attempt.incrementAndGet();val input=slot to recovery;val request=NativeMigrationCredential.captureVault(owner,viewId,number,"",null,false,false,SystemClock.elapsedRealtime()){current();ownerGuard();check(attempt.get()==number){"E2EE_CREDENTIAL_REVOKED"}};check(pending.compareAndSet(null,request)){request.close();"E2EE_CREDENTIAL_PENDING"};captured.set(input);recovery="";saved=false;consent=false;busy=true;failed=false;activity=request}catch(_:Exception){failed=true;busy=false}},enabled=!busy&&saved&&consent&&recovery.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(copy.getString("retainedExport"))}
         if(failed)UntranslatedText(common.getString("error"),color=MaterialTheme.colorScheme.error)
+        handoff?.takeIf{it.ownerId==owner&&it.kind=="export"&&it.scopeId?.startsWith("device:")==true&&it.phase in setOf("failed","picking")}?.let{job->
+            UntranslatedText(common.getString("error"),color=MaterialTheme.colorScheme.error)
+            if(job.sha256!=null)OutlinedButton({coroutine.launch{busy=true;try{val guard=controller.privateUiOwnerGuard(owner,allowOffline=true);withContext(Dispatchers.IO){PrivateBackupHandoff.retryRetired(context,job,owner,requireNotNull(job.scopeId).removePrefix("device:")){current();guard();check(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)){"E2EE_FOREGROUND_REQUIRED"}}};failed=false}catch(_:Exception){failed=true}finally{busy=false}}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(exportCopy.getString("retry"))}
+            TextButton({coroutine.launch{busy=true;try{val guard=controller.privateUiOwnerGuard(owner,allowOffline=true);withContext(Dispatchers.IO){PrivateBackupHandoff.cancelRetired(context,job,owner){current();guard();check(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)){"E2EE_FOREGROUND_REQUIRED"}}};failed=false}catch(_:Exception){failed=true}finally{busy=false}}},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){UntranslatedText(exportCopy.getString("cancel"))}
+        }
     }
 }

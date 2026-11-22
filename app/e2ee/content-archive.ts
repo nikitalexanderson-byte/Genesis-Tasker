@@ -33,7 +33,7 @@ export async function openContentArchiveValue(input:ContentArchiveValue,current:
  * Imported entries have NO writer, session, grant or retry capability. */
 export async function captureLocalContentArchive(account:WebPrivateAccount):Promise<BackupPayload>{
  account.requireOpen();const scopes=account.contentScopes(),entries:ContentArchiveEntry[]=[];let used=0;
- const append=(entry:ContentArchiveEntry)=>{used+=encoder.encode(JSON.stringify(entry)).length;if(used>BACKUP_MAX_PLAIN-65536||entries.length>=10000)throw new Error('BACKUP_TOO_LARGE');entries.push(entry);};
+ const append=(entry:ContentArchiveEntry)=>{used+=encoder.encode(JSON.stringify(entry)).length;if(used>BACKUP_MAX_PLAIN-65536||entries.length>=100000)throw new Error('BACKUP_TOO_LARGE');entries.push(entry);};
  const keys=await account.device.vault.listLocal('draft','editor:');account.requireOpen();
  for(const key of keys){
   const record=await account.device.vault.read('draft',key);account.requireOpen();if(!record)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');
@@ -87,9 +87,9 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
 }
 export async function validateContentArchivePayload(input:unknown){
  const payload=validateBackupPayload(structuredClone(input));if(Object.hasOwn(payload,'serverEvidence'))throw new Error('BACKUP_INVALID');if(encoder.encode(JSON.stringify(payload)).length>BACKUP_MAX_PLAIN)throw new Error('BACKUP_TOO_LARGE');let total=0;const identities=new Set<string>();
- for(const section of payload.sections){exactKeys(section.data,['format','execution','entries']);const data=section.data;if(data.format!=='genesis-content-only-v1'||data.execution!=='history-only'||!Array.isArray(data.entries)||data.entries.length>10000)throw new Error('BACKUP_INVALID');
+ for(const section of payload.sections){exactKeys(section.data,['format','execution','entries']);const data=section.data;if(data.format!=='genesis-content-only-v1'||data.execution!=='history-only'||!Array.isArray(data.entries)||data.entries.length>100000)throw new Error('BACKUP_INVALID');
   for(const entry of data.entries){exactKeys(entry,['placement','scope','domain','objectId','pending','current','history']);assertTechnical(entry.objectId);
-   if(!['editor','device','remote'].includes(String(entry.placement))||typeof entry.pending!=='boolean'||!Array.isArray(entry.history)||entry.history.length>10000)throw new Error('BACKUP_INVALID');
+   if(!['editor','device','remote'].includes(String(entry.placement))||typeof entry.pending!=='boolean'||!Array.isArray(entry.history)||entry.history.length>100000)throw new Error('BACKUP_INVALID');
    if(entry.placement==='editor'||entry.placement==='remote'){exactKeys(entry.scope,['scopeId','ownerId','kind','resourceId']);for(const key of ['scopeId','ownerId','resourceId'])assertTechnical(entry.scope[key]);if(!['personal','project','space'].includes(String(entry.scope.kind))||!domains.has(String(entry.domain)))throw new Error('BACKUP_INVALID');}
    else if(entry.scope!==null||entry.domain!=='draft'||!contentArchiveDeviceId(String(entry.objectId)))throw new Error('BACKUP_INVALID');
    const identity=JSON.stringify([entry.placement,entry.scope,entry.domain,entry.objectId]);if(identities.has(identity))throw new Error('BACKUP_INVALID');identities.add(identity);

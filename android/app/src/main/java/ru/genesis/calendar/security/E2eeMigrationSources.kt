@@ -171,7 +171,7 @@ class E2eeMigrationSources(private val ownerId: String, private val scopeId: Str
             return decoded
         } catch (error: Exception) { decoded.values.forEach { it.fill(0) }; throw error }
     }
-    companion object { const val BYTE_BUDGET = 128 * 1024 * 1024 }
+    companion object { const val BYTE_BUDGET = 512 * 1024 * 1024 }
     override suspend fun reconcile(snapshot: ByteArray, previousSnapshots: List<ByteArray>): E2eeMigrationReconciliation {
         return reconcile(snapshot,previousSnapshots,null)
     }

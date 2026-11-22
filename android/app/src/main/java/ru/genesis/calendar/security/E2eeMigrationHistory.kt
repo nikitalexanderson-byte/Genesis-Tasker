@@ -52,7 +52,7 @@ internal object E2eeMigrationHistory {
         private fun readState(id:String,remember:Boolean=true):State {
             current();E2eeKeys.technical(id);val row=vault.read("local-snapshot",id)?:invalid()
             try{
-                current();if(row.serial<1||row.bytes.size !in 1..4*1024*1024)invalid()
+                current();if(row.serial<1||row.bytes.size !in 1..16*1024*1024)invalid()
                 if(remember){metadataBytes+=row.bytes.size;check(metadataBytes<=capacity.maximumMetadataBytes){"E2EE_SOURCE_HISTORY_CAPACITY"}}
                 E2eeFileManifestJson.readMigrationHistory(row.bytes)
                 val state=decode(row.bytes);val digest=hash(row.bytes);current();if(remember)metadata+=Metadata(id,row.serial,digest)
