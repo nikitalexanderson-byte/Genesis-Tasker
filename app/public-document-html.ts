@@ -10,7 +10,7 @@ export const PUBLIC_ORIGIN='https://genesiscalendar.com';
 
 export function publicLanguageLinks(language:RegionLanguage,page:PublicPage,translate:Translate,base='') {
   return `<nav class="public-language-links" aria-label="${escape(translate('Выбор языка'))}">${publicPageAlternates(page,base)
-    .filter(row=>row.language!=='x-default').map(row=>`<a href="${row.path}" lang="${row.language}" hreflang="${row.language}"${row.language===language?' aria-current="page"':''}>${row.language.toUpperCase()}</a>`).join('')}</nav>`;
+    .filter(row=>row.language!=='x-default'&&(row.language!=='ru'||language==='ru')).map(row=>`<a href="${row.path}" lang="${row.language}" hreflang="${row.language}"${row.language===language?' aria-current="page"':''}>${row.language.toUpperCase()}</a>`).join('')}</nav>`;
 }
 
 export function publicHomeHtml(language:RegionLanguage,translate:Translate,base='') {

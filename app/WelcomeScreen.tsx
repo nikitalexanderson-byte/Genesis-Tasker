@@ -38,7 +38,8 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
   const product = publicProductCopy(language);
   const home=publicPagePath(language,'home',APP_BASE),login=`${publicPagePath(language,'login',APP_BASE)}#sign-in`;
   const terms=publicPagePath(language,'terms',APP_BASE),privacy=publicPagePath(language,'privacy',APP_BASE);
-  const languageColumns = [7, 6, 5, 4, 3, 2, 1].find((count) => LANGUAGES.length % count === 0) ?? 1;
+  const visibleLanguages = LANGUAGES.filter(code=>code!=='ru'||language==='ru');
+  const languageColumns = 7;
   const copy = language === "en" ? {
     home: "GENESIS — home",
     tagline: "calendar of clear action",
@@ -154,7 +155,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
             <span>{copy.chooseLanguage}</span>
             <div className="language-choice welcome-language-flags" role="radiogroup" aria-label={copy.languageGroup}
               style={{ gridTemplateColumns: `repeat(${languageColumns}, minmax(0, 1fr))` }}>
-              {LANGUAGES.map((code) => (
+              {visibleLanguages.map((code) => (
                 <button key={code} type="button" role="radio" aria-checked={language === code}
                   className={language === code ? "active" : ""} onClick={() => onLanguageChange(code)}
                   aria-label={LANGUAGE_LABELS[code].name} title={LANGUAGE_LABELS[code].name} data-no-translate>

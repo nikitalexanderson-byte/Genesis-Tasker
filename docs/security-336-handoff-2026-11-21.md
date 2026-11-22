@@ -240,6 +240,12 @@ no new E2EE/security source. Preserve their accepted public storefront and `/ru/
 when later integrating main into this security branch. Website CI (including
 its unchanged native debug check) is not acceptance of this security candidate.
 
+The accepted public source from main `c29b76e33cc42160616b2df6f5eca61af94f6c63`
+has since been merged locally into this branch. Public routes/copy/footer are
+preserved, alongside the private security/recovery/runtime code. This combined
+branch is still uncompiled, untested and unpushed; do not publish it with the
+urgent website-only release.
+
 The current local UX code adds the shared14-language setup/resume gate and real
 static `web/main.tsx` composition, with owner-bound vault suppression and product
 remount after verified cutover. Native system-credential return uses one-shot,

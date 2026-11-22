@@ -1,4 +1,4 @@
-import {REGION_LANGUAGES,type RegionLanguage} from './region-language';
+import {REGION_LANGUAGES,type RegionLanguage} from './region-language.ts';
 
 export const PUBLIC_PAGES=['home','login','privacy','terms','refund','support','delete-account'] as const;
 export type PublicPage=typeof PUBLIC_PAGES[number];

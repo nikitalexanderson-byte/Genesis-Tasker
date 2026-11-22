@@ -43,11 +43,10 @@
 .public-hero-actions>a { display:inline-flex; min-height:44px; align-items:center; }
 .public-merchant p { font-size:13px; line-height:1.7; }
 .welcome-shell .public-merchant h2 { font-size:14px; line-height:1.5; }
-.public-footer { gap:12px 24px; flex-wrap:wrap; padding:24px 0; }
-.welcome-footer.public-footer span:nth-child(2) { display:inline; }
-.public-footer>span { flex-basis:100%; color:#c1ccc6; font-size:13px; line-height:1.7; letter-spacing:0; }
+.public-footer { gap:8px 24px; flex-wrap:wrap; align-items:center; padding:24px 0; }
+.public-footer>span { color:#c1ccc6; font-size:14px; line-height:1.7; letter-spacing:0; }
 .public-footer nav { display:flex; flex-wrap:wrap; gap:8px 24px; }
-.public-footer a { display:inline-flex; min-height:44px; align-items:center; font-size:13px; }
+.public-footer a { display:inline-flex; min-width:44px; min-height:44px; align-items:center; font-size:14px; }
 .welcome-shell .welcome-nav nav { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px 18px; }
 .welcome-nav nav a { display:inline-flex; min-height:44px; align-items:center; font-size:14px; letter-spacing:0; }
 .public-product,.public-product *,.public-hero-actions,.public-merchant { word-break:normal; overflow-wrap:normal; hyphens:none; }

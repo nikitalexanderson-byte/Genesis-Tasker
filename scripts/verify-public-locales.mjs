@@ -21,11 +21,12 @@ export async function verifyPublicLocales(output) {
     for(const alternate of Object.keys(copy))assert.ok(html.includes(`hreflang="${alternate}" href="https://genesiscalendar.com${route(alternate,page)}"`),`${label}: alternate ${alternate}`);
     assert.ok(html.includes('hreflang="x-default"'),`${label}: default locale`);
     assert.doesNotMatch(html,/https:\/\/(?:ru|en|de|fr)\.genesiscalendar\.com/,`${label}: one application origin`);
-    for(const text of [c.creator,c.infrastructure,c.paymentRoles])assert.ok(body.includes(escape(text)),`${label}: actual parties`);
+    for(const text of (page==='home'||page==='login'?[c.creator,c.infrastructure]:[c.creator,c.infrastructure,c.paymentRoles]))assert.ok(body.includes(escape(text)),`${label}: actual parties`);
     for(const name of ['terms','privacy','refund','support'])assert.ok(body.includes(`href="${route(language,name)}"`),`${label}: localized ${name}`);
     if(page==='home'||page==='login') {
+      if(language!=='ru')assert.doesNotMatch(body,/YooKassa|ЮKassa|RUB|Russian tax|for Russia|Россия|России|772495179010/i,`${label}: international storefront`);
       assert.ok(body.includes(escape(pageCopy[language].title)),`${label}: product title`);
-      assert.ok(body.includes('Google Calendar')&&body.includes('Google Tasks')&&body.includes('AI NCII'),`${label}: product description`);
+      assert.ok(body.includes('Google Calendar')&&body.includes('Google Tasks')&&/AI NCII|АИ НЦИИ/.test(body),`${label}: product description`);
     } else {
       assertPublicDocumentReferences(html,page,language);
       assert.ok(body.includes('2026-11-17'),`${label}: policy revision`);

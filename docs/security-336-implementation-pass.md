@@ -42,6 +42,13 @@ not this uncommitted security candidate. Do not credit those results to3.3.6
 and do not publish this security diff with the public release. Preserve the
 accepted international storefront and `/ru/` when integrating the new main.
 
+Main `c29b76e33cc42160616b2df6f5eca61af94f6c63` is now integrated locally
+into the security branch. Conflicts from the earlier public-language prototype
+were resolved in favor of the checked public storefront and its routes/copy;
+security entrypoints, recovery controls, service worker and bundled advice
+assets remain. The integration is uncompiled and is not published by the
+separate website Deploy. Its source checks do not validate this combined branch.
+
 The static `web/main.tsx` now mounts the same product boundary, vault gate and
 migration host as the alternative runtime. The explicit `genesis-app-content`
 container allows the migration dialog to fence legacy editors and remount the

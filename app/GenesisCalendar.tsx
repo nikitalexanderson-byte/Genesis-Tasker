@@ -88,7 +88,6 @@ import { EntryTypeChoice, entryTypeLabel, entryTypeTitlePlaceholder, type EntryT
 import { RecordCalendarChoice } from "./RecordCalendarChoice";
 import { IconActionButton } from "./IconActionButton";
 import { ThemeModeToggle } from "./ThemeModeToggle";
-import { SERVICE_IDENTITY } from "./public-service";
 import { DonationLink } from "./DonationLink";
 import { normalizeWebTheme } from "./web-theme";
 import { effectiveDarkPalette } from "./dark-palettes";
@@ -169,7 +168,7 @@ import {
   type WorkspaceRecoveryRequest,
 } from "./cloud-sync";
 import { currentLegalPage } from "./legal-route";
-import {publicRouteForPath,publicPagePath} from './public-route';
+import {publicRouteForPath,publicPagePath} from "./public-route";
 const LegalPage = lazy(() => import('./LegalPage').then(module => ({default: module.LegalPage})));
 import { TimeClockPicker, TimeClockFormatContext } from "./TimeClockPicker";
 import { CalendarDatePicker } from "./CalendarDatePicker";
@@ -2622,13 +2621,15 @@ export function GenesisCalendar() {
   const selectLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);
     storeLanguage(nextLanguage);
-    if(!cloudUser) {
-      const route=publicRouteForPath(window.location.pathname,APP_BASE);
-      if(route) {
-        const url=new URL(window.location.href),destination=new URL(publicPagePath(nextLanguage,route.page,APP_BASE),url.origin);
-        url.pathname=destination.pathname;
-        if(destination.searchParams.has('lang'))url.searchParams.set('lang',nextLanguage);else url.searchParams.delete('lang');
-        window.history.replaceState(window.history.state,'',`${url.pathname}${url.search}${url.hash}`);
+    if (!cloudUser) {
+      const route = publicRouteForPath(window.location.pathname, APP_BASE);
+      if (route) {
+        const url = new URL(window.location.href);
+        const destination = new URL(publicPagePath(nextLanguage, route.page, APP_BASE), url.origin);
+        url.pathname = destination.pathname;
+        if (destination.searchParams.has('lang')) url.searchParams.set('lang', nextLanguage);
+        else url.searchParams.delete('lang');
+        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
       }
     }
   };
@@ -7065,8 +7066,7 @@ export function GenesisCalendar() {
     return (
       <Suspense fallback={<main className="welcome-shell"><section className="welcome-card">
         <h1 data-no-translate>Genesis Tasker</h1><p>{language === "en" ? "Calendars, tasks and habits in one place." : "Календари, задачи и привычки в одном месте."}</p>
-        <p>{SERVICE_IDENTITY[language === "en" ? "en" : "ru"]}</p>
-        <a href="/privacy">{language === "en" ? "Privacy policy" : "Политика конфиденциальности"}</a>
+        <a href={publicPagePath(language,'privacy',APP_BASE)}>{translateText('Политика конфиденциальности',language)}</a>
       </section></main>}>
       <WelcomeScreen
         nativeAndroidApkUrl={nativeAndroidApkUrl}

@@ -59,7 +59,7 @@ for (const [slug, title] of Object.entries(pages)) {
 const homepage = await readFile(new URL("index.html", output), "utf8");
 assert.match(homepage, /GENESIS[\s\S]*Task and project calendar/);
 assert.doesNotMatch(homepage, /mc\.yandex|yandex\.ru|яндекс/i);
-assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes("nikitalexanderson@gmail.com"));
+assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes('href="/support"'));
 assert.ok(homepage.includes("AI NCII") && homepage.includes("Google Calendar") && homepage.includes("Google Tasks"));
 assert.doesNotMatch(homepage, /%GENESIS_SERVICE_IDENTITY%/, "public identity must resolve at build time");
 await verifyPublicLocales(output);

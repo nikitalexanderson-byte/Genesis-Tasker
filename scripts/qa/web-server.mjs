@@ -9,7 +9,6 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 /** Serve the actual release web bundle and proxy only to the isolated loopback API. */
 export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
   const directory = path.join(root, 'dist-web', 'public_html');
-  const languages=new Set(Object.keys(JSON.parse(readFileSync(path.join(root,'app/public-page-copy.json'),'utf8'))));
   if (!existsSync(path.join(directory, 'index.html'))) throw new Error('Build the web client with pnpm build:web first');
   // Browser permission checks must use the same policy as the published bundle.
   const permissionsPolicy = readFileSync(path.join(directory, '.htaccess'), 'utf8')
@@ -30,14 +29,16 @@ export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
     try { candidate = path.resolve(directory, `.${decodeURIComponent(url.pathname)}`); }
     catch { response.writeHead(400); response.end(); return; }
     if (candidate !== directory && !candidate.startsWith(directory + path.sep)) { response.writeHead(403); response.end(); return; }
-    // Match the production .htaccess documents before falling back to the SPA.
-    const language=url.searchParams.get('lang'),publicPage=url.pathname.match(/^\/(login|terms|privacy|refund|support|delete-account)?(?:\.html)?\/?$/);
-    if(language&&language!=='en'&&languages.has(language)&&publicPage) {
-      const filename=publicPage[1]?`${publicPage[1]}.html`:'index.html';
-      candidate=path.join(directory,language==='ru'?'ru':`_public-locales/${language}`,filename);
+    // Match public HTML rewrites in production, including queries without JS.
+    const publicDocument = url.pathname.match(/^\/(ru\/)?(login|terms|privacy|refund|support|delete-account)(?:\.html)?\/?$/);
+    const publicHome = /^\/(?:ru\/?|(?:ru\/)?index\.html)?$/.test(url.pathname);
+    if (publicDocument || publicHome) {
+      const requested = url.searchParams.get('lang');
+      const language = url.pathname.startsWith('/ru') ? 'ru' :
+        ['ru','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : 'en';
+      const localeDirectory = language === 'en' ? '' : language === 'ru' ? 'ru' : `_public-locales/${language}`;
+      candidate = path.join(directory, localeDirectory, `${publicDocument?.[2] ?? 'index'}.html`);
     }
-    else if (/^\/(?:ru\/)?(?:login|terms|privacy|refund|support|delete-account)\/?$/.test(url.pathname)) candidate = candidate.replace(/[\\/]$/, '') + '.html';
-    if(existsSync(candidate)&&statSync(candidate).isDirectory())candidate=path.join(candidate,'index.html');
     if (!existsSync(candidate) || !statSync(candidate).isFile()) {
       if (path.extname(candidate)) { response.writeHead(404); response.end(); return; }
       candidate = path.join(directory, 'index.html');
