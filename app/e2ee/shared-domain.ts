@@ -29,12 +29,18 @@ function record(table:string,input:unknown,binding:SharedDomainBinding):SharedCo
  object(input);const spec=catalogue.tables.find(row=>row.table===table);if(!spec)invalid();
  const file=['shared_task_attachments','shared_task_images'].includes(table),fields=file?[...spec.columns.filter(name=>!['ciphertext','filename_ciphertext'].includes(name)),'file']:spec.columns;
  exactKeys(input,fields);
+ const chaos=table==='shared_project_statuses'&&input.is_chaos===1;
+ if(table==='shared_project_statuses'){
+  if(![0,1].includes(input.is_chaos as number)||![0,1].includes(input.is_done as number))invalid();
+  if(chaos&&(binding.kind!=='project'||input.id!==(input.is_done===1?'chaos-done:':'chaos-open:')+binding.resourceId
+   ||input.position!==(input.is_done===1?-1:-2)))invalid();
+ }
  for(const [name,value]of Object.entries(input)){
   if(name==='file'&&file){exactKeys(value,['objectId','size','filename','mediaType']);assertTechnical(value.objectId);if(!value.objectId.startsWith('private-file:')&&!value.objectId.startsWith('shared-file:')||!Number.isSafeInteger(value.size)||Number(value.size)<1||Number(value.size)>64*1024*1024||typeof value.filename!=='string'||value.filename.length>512||typeof value.mediaType!=='string'||value.mediaType.length>128)invalid();continue;}
   if(value!==null&&typeof value!=='string'&&typeof value!=='number')invalid();
   if(typeof value==='number'&&!Number.isFinite(value)||typeof value==='string'&&value.length>16*1024*1024)invalid();
   if(value!==null&&(name==='id'||name.endsWith('_id'))&&(typeof value!=='string'&&typeof value!=='number'))invalid();
-  if(value!==null&&(name==='revision'||name==='position'||name==='byte_size')&&(!Number.isSafeInteger(value)||Number(value)<0))invalid();
+  if(value!==null&&(name==='revision'||name==='position'||name==='byte_size')&&(!Number.isSafeInteger(value)||Number(value)<(name==='position'&&chaos?-2:0)))invalid();
   if(value!==null&&(name.endsWith('_at')||['start_date','end_date','due_date','day_key','period_key'].includes(name))){if(typeof value!=='string')invalid();if(name.endsWith('_at')){if(!Number.isFinite(Date.parse(value)))invalid();}else if(!isCivilDate(value))invalid();}
   if(value!==null&&['start_time','end_time'].includes(name)&&(typeof value!=='string'||!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value)))invalid();
   if(typeof value==='string'&&(name.endsWith('_json')||['payload','content'].includes(name)))json(value);

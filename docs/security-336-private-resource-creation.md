@@ -4,6 +4,17 @@
 coverage remains9/20. Existing production3.3.5/149/Paddle website, floors0, cutover
 off and GENESIS_DEPLOY_ANDROID=false are unchanged.
 
+## Existing chaos-status source compatibility (candidate source fix)
+
+While composing fresh projects, source inspection found both fixed-row body
+readers rejected the existing system chaos status positions -2/-1. They now
+admit exactly the matching `chaos-open:<resource>` / `chaos-done:<resource>`
+project rows with is_chaos1, matching is_done and exact reserved position.
+All ordinary positions keep their nonnegative integer rule; all status flags
+must be0/1. No negative technical control number or arbitrary negative ordering
+was admitted. This is needed for both existing149 projects and new factory
+baselines. No compilation/QA result is claimed.
+
 ## Read-only project recipient preview (subsequent candidate)
 
 Added signed personal-owner `project-create-preview` and both real scope-client

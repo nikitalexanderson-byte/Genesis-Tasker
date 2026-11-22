@@ -24,10 +24,17 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
     private fun parsed(raw:Any):Any{check(raw is String){"E2EE_SHARED_DOMAIN_INVALID"};return E2eeFileManifestJson.readPrivateValue(raw.toByteArray(Charsets.UTF_8))}
     private fun row(table:String,value:JSONObject):JSONObject{
         val file=table in setOf("shared_task_attachments","shared_task_images");val columns=source.columns(table).filter{!file||it !in setOf("ciphertext","filename_ciphertext")}.toMutableSet();if(file)columns+="file";E2eeKeys.exact(value,columns)
+        var chaos=false
+        if(table=="shared_project_statuses"){
+            val hidden=E2eeCommands.integer(value.get("is_chaos"));val done=E2eeCommands.integer(value.get("is_done"))
+            check(hidden<=1&&done<=1){"E2EE_SHARED_DOMAIN_INVALID"};chaos=hidden==1L
+            if(chaos){val position=value.get("position") as? Number?:error("E2EE_SHARED_DOMAIN_INVALID")
+                check(scopeKind=="project"&&value.get("id")==(if(done==1L)"chaos-done:"else"chaos-open:")+resourceId&&position.toDouble()==(if(done==1L)-1.0 else -2.0)){"E2EE_SHARED_DOMAIN_INVALID"}}
+        }
         for(name in value.keys()){val item=value.get(name)
             if(name=="file"&&file){val ref=item as? JSONObject?:error("E2EE_SHARED_DOMAIN_INVALID");E2eeKeys.exact(ref,setOf("objectId","size","filename","mediaType"));val id=E2eeKeys.technical(ref.getString("objectId"));check((id.startsWith("private-file:")||id.startsWith("shared-file:"))&&E2eeCommands.integer(ref.get("size"),1)<=E2eeFiles.MAX_FILE_BYTES&&ref.getString("filename").length<=512&&ref.getString("mediaType").length<=128){"E2EE_SHARED_DOMAIN_INVALID"};continue}
             check(item===JSONObject.NULL||item is String||item is Number){"E2EE_SHARED_DOMAIN_INVALID"};if(item is Number)check(item.toDouble().isFinite()){"E2EE_SHARED_DOMAIN_INVALID"};if(item is String)check(item.length<=16*1024*1024){"E2EE_SHARED_DOMAIN_INVALID"}
-            if(item!==JSONObject.NULL&&name in setOf("revision","position","byte_size"))E2eeCommands.integer(item)
+            if(item!==JSONObject.NULL&&name in setOf("revision","position","byte_size")&&!(name=="position"&&chaos))E2eeCommands.integer(item)
             if(item!==JSONObject.NULL&&(name.endsWith("_at")||name in setOf("start_date","end_date","due_date","day_key","period_key"))){check(item is String){"E2EE_SHARED_DOMAIN_INVALID"};if(name.endsWith("_at"))Instant.parse(item)else check(LocalDate.parse(item).toString()==item){"E2EE_SHARED_DOMAIN_INVALID"}}
             if(item!==JSONObject.NULL&&name in setOf("start_time","end_time"))check(item is String&&item.matches(Regex("(?:[01][0-9]|2[0-3]):[0-5][0-9]"))){"E2EE_SHARED_DOMAIN_INVALID"}
             if(item is String&&(name.endsWith("_json")||name in setOf("payload","content")))parsed(item)

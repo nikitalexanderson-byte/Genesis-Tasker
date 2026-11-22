@@ -1,5 +1,25 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: reserved chaos-status source positions
+
+После26070b3d при source inspection composition найден блокер старых/новых
+project baseline: оба shared-domain readers запрещали position -2/-1 существующих
+system chaos statuses. Внесён узкий typed reader: только exact chaos-open/done:
+resourceId, project binding, is_chaos1, соответствующие is_done и positions.
+Обычные positions остаются nonnegative integers; flags0/1 проверяются явно.
+Это code-only fix, не QA. Следующий большой кодовый участок всё ещё project
+creation journals + independently verified anchors + normal UI, как ниже.
+
+Прочитано для следующего шага (не начинать заново): WebPrivateAccount имеет
+scopeSummaries/contentScopes/shared/sharedRecords; shared-web-live.ts open()
+ищет exact resource в E2eeSharedTrust.list(), вызывает trust.open(scopeId), затем
+account.sharedRecords. E2eeSharedRecords даёт product.index/read, get(kind,id),
+sourceTable и actual normal product writer. Space creation journal — образец в
+private-resource-create.ts; composition в cloud-sync.ts completeCurrentPrivateSpaceCreation.
+Native normal createSharedProject сейчас всё ещё sharedCall→legacy JSON API:
+AuthController.kt около1436. Web createSharedProject около2865. Project UI
+подключать только после encrypted pre-network input/preview/explicit review.
+
 ## 22 ноября: read-only project preview и реальные scope-client ports
 
 После8836bb1c added signed personal-owner project-create-preview + реальные
