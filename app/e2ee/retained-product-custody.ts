@@ -10,6 +10,8 @@ import {productMutation} from './product-contract.ts';
 import {validatePrivateProjectTopology} from './project-create-contract.ts';
 import {MEMBERSHIP_HASH_FORMAT,validateMembershipChanges,membershipChangesProjection,membershipChangeHashValue,membershipGrantReviewRequired} from './membership-contract.ts';
 import {validateMembershipReviewRequest,validateMembershipOwnerApproval,type MembershipReviewRequest} from './membership-exchange.ts';
+import {membershipAtomicLocalId,membershipAtomicLocalPageId,membershipAtomicLocalRequestId,validateMembershipAtomicLocalState,
+ validateMembershipAtomicLocalPage,validateMembershipAtomicLocalRequest,membershipAtomicLocalPageMatches,type MembershipAtomicLocalState} from './membership-atomic-local.ts';
 import type {SourceStageReadVault} from './source-stage.ts';
 
 type Options={vault:SourceStageReadVault;actor:{ownerId:string;deviceId:string};receivingKey:CryptoKey;selfKeys:{signingKey:string;receivingKey:string};assertCurrent:()=>void;
@@ -104,6 +106,40 @@ export async function inspectRetainedProductCustody(options:Options){
   }
   if(input.result!==null){object(input.result);if(!input.batch||input.result.intentId!==input.intentId||input.result.changeHash!==changeHash)invalid();}
   if(!options.personalScopeId)invalid();claim('outbox',id,options.personalScopeId,'membership-plan');
+ };
+ const atomicStates=new Map<string,MembershipAtomicLocalState>();
+ const atomicState=async(intentId:string)=>{
+  const cached=atomicStates.get(intentId);if(cached)return cached;
+  if(!options.personalScopeId)invalid();const id=membershipAtomicLocalId(options.actor.ownerId,intentId);
+  const state=validateMembershipAtomicLocalState(await metadata('outbox',id),options.actor.ownerId);
+  if(state.plan.intentId!==intentId)invalid();atomicStates.set(intentId,state);claim('outbox',id,options.personalScopeId,'membership-atomic-stage');
+  if(state.ready)for(let index=0;index<state.plan.pages.length;index++){
+   const pageId=membershipAtomicLocalPageId(options.actor.ownerId,intentId,index);
+   membershipAtomicLocalPageMatches(state,await metadata('outbox',pageId,true));current();claim('outbox',pageId,options.personalScopeId,'membership-atomic-page');
+  }return state;
+ };
+ const atomic=async(value:unknown,id:string)=>{
+  if(!options.personalScopeId)invalid();
+  if(id.startsWith('membership-atomic-v2:')){
+   const state=validateMembershipAtomicLocalState(value,options.actor.ownerId);
+   if(id!==membershipAtomicLocalId(options.actor.ownerId,state.plan.intentId))invalid();await atomicState(state.plan.intentId);
+  }else if(id.startsWith('membership-atomic-page:')){
+   const row=validateMembershipAtomicLocalPage(value,options.actor.ownerId),state=await atomicState(row.intentId);
+   if(id!==membershipAtomicLocalPageId(options.actor.ownerId,row.intentId,row.index))invalid();membershipAtomicLocalPageMatches(state,value);
+   // Even a page saved before ready=true must remain an immutable original.
+   membershipAtomicLocalPageMatches(state,await metadata('outbox',id,true));claim('outbox',id,options.personalScopeId,'membership-atomic-page');
+  }else{
+   const request=validateMembershipAtomicLocalRequest(value,options.actor.ownerId),state=await atomicState(request.payload.intentId as string);
+   if(id!==membershipAtomicLocalRequestId(options.actor.ownerId,request.action,request.payload)||request.payload.planHash!==state.planHash||!equal(await metadata('outbox',id,true),value))invalid();
+   if(request.action==='membership-atomic-page'){
+    const ref=state.plan.pages[request.payload.index as number];
+    if(!state.ready||request.payload.phase!=='plan'||!ref||ref.pageHash!==request.payload.pageHash)invalid();
+   }else if(request.action==='membership-atomic-begin'&&!state.ready||request.action==='membership-atomic-cancel'&&!state.cancelRequested)invalid();
+   const checked=await packet(request.packet),own=checked.directory.devices.get(options.actor.deviceId);current();
+   if(checked.command.deviceId!==options.actor.deviceId||checked.directory.scopeId!==options.personalScopeId||checked.directory.kind!=='personal'
+    ||checked.directory.ownerId!==options.actor.ownerId||own?.role!=='owner')invalid();
+   claim('outbox',id,options.personalScopeId,'membership-atomic-control');
+  }
  };
  const groups=new Map<string,string[]>();
  for(const id of options.outbox){
@@ -238,7 +274,8 @@ export async function inspectRetainedProductCustody(options:Options){
   }else if(/^stoicheion-job:(daily|spread|timeline)$/.test(id)){
    object(value);object(value.content);assertTechnical(value.content.scopeId);const directory=await options.directory(value.content.scopeId,()=>true);if(directory.kind!=='personal')invalid();
    const {inspectStoicheionLocalJob}=await import('./stoicheion-product.ts');inspectStoicheionLocalJob(value,options.actor.ownerId,directory.scopeId,id.slice('stoicheion-job:'.length) as 'daily'|'spread'|'timeline');current();claim('outbox',id,directory.scopeId,'stoicheion-job');
-  }else if(id.startsWith('membership:'))await membership(value,id);
+  }else if(['membership-atomic-v2:','membership-atomic-page:','membership-atomic-request:'].some(prefix=>id.startsWith(prefix)))await atomic(value,id);
+  else if(id.startsWith('membership:'))await membership(value,id);
   else if(id.startsWith('rotation:')){
    exactKeys(value,['protocol','roles','manifest','packet']);if(value.protocol!==1)invalid();const checked=await rotation(value.packet),payload=checked.command.payload;
    if(id!=='rotation:'+digest(encoder.encode(`${checked.directory.scopeId}\0${payload.membershipHash}`)))invalid();

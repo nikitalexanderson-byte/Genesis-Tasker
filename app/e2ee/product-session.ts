@@ -6,6 +6,8 @@ import {canonicalE2eeValue,signE2eeCommand,type SignedE2eeCommand,type WireValue
 import {verifyDeviceDirectory,type VerifiedDirectory} from './directory.ts';
 import {encodeE2eeBytes,decodeE2eeBytes} from './envelope.ts';
 import {E2eeMembershipProduct,type MembershipTransport} from './membership-product.ts';
+import {webMembershipAtomicStager} from './membership-atomic-web-stage.ts';
+import type {MembershipAtomicStager} from './membership-atomic-stager.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import type {E2eeSharedBootstrap} from './shared-bootstrap.ts';
 
@@ -63,6 +65,7 @@ export class WebPrivateAccount{
  readonly ownerId:string;readonly device:UnlockedWebDevice;readonly mode:'online'|'offline';
  #transport:PrivateAccountTransport;#current:()=>void;#closed=false;
  #clients=new Map<string,{client:E2eeScopeClient;directory:VerifiedDirectory}>();#cleanup:(()=>void)|null=null;
+ #membershipAtomic:MembershipAtomicStager|null=null;
  #sharedRecords=new Map<string,{records:E2eeSharedRecords;bootstrap:E2eeSharedBootstrap}>();
  private constructor(ownerId:string,device:UnlockedWebDevice,transport:PrivateAccountTransport,current:()=>void,mode:'online'|'offline'='online'){
   this.ownerId=ownerId;this.device=device;this.#transport=transport;this.#current=current;this.mode=mode;
@@ -127,7 +130,7 @@ export class WebPrivateAccount{
   const proposal={scopeId,ownerId:directory.ownerId,kind:scope.kind as 'project'|'space',resourceId:scope.resourceId,authority:structuredClone(directory.recoveryKit.authority)};
   const {sharedScopeFingerprint}=await import('./shared-trust.ts');const fingerprint=await sharedScopeFingerprint(proposal);this.requireOpen();return{proposal,fingerprint};
  }
- close(){if(this.#closed)return;this.#closed=true;this.#cleanup?.();this.#cleanup=null;for(const value of this.#clients.values())value.client.close();this.#clients.clear();this.#sharedRecords.clear();this.device.lock();}
+ close(){if(this.#closed)return;this.#closed=true;this.#cleanup?.();this.#cleanup=null;for(const value of this.#clients.values())value.client.close();this.#clients.clear();this.#sharedRecords.clear();this.#membershipAtomic=null;this.device.lock();}
  bindLifecycle(target:Window=window){
   this.requireOpen();const channel=typeof BroadcastChannel==='undefined'?null:new BroadcastChannel(`genesis-e2ee-lock:${this.ownerId}`);
   const lock=()=>{if(this.#closed)return;this.close();if(active===this){active=null;view=Object.freeze({...view,phase:'locked'});notify();}};
@@ -152,6 +155,9 @@ export class WebPrivateAccount{
  async sharedRecords(scopeId:string,kind:'project'|'space',resourceId:string){this.shared(scopeId,kind,resourceId);const existing=this.#sharedRecords.get(scopeId);if(existing)return existing;
   const [{E2eeSharedRecords},{E2eeSharedBootstrap}]=await Promise.all([import('./shared-records.ts'),import('./shared-bootstrap.ts')]);this.shared(scopeId,kind,resourceId);const ready=this.#sharedRecords.get(scopeId);if(ready)return ready;
   const records=new E2eeSharedRecords(this,{scopeId,kind,resourceId}),bootstrap=new E2eeSharedBootstrap(this,records),value={records,bootstrap};this.#sharedRecords.set(scopeId,value);return value;
+ }
+ membershipAtomic(){this.requireOpen();if(this.mode!=='online'||!this.#transport.membership)throw new Error('E2EE_REFRESH_REQUIRED');
+  return this.#membershipAtomic??=webMembershipAtomicStager(this.device,this.personal().client,this.#transport.membership,()=>this.requireOpen());
  }
  membership(){this.requireOpen();if(this.mode!=='online'||!this.#transport.membership)throw new Error('E2EE_REFRESH_REQUIRED');
   return new E2eeMembershipProduct(this.device,this.personal().client,this.#transport.membership,async scopeId=>{

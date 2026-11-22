@@ -25,6 +25,7 @@ internal object E2eeRetainedProductCustody {
     fun inspect(options:Options){Reader(options).run()}
     private class Reader(private val options:Options){
         private val device=options.device;private val vault=options.vault;private val actor=vault.localIdentity();private val groups=mutableMapOf<String,MutableList<String>>();private val proofs=mutableMapOf<String,Group>()
+        private val atomicStates=mutableMapOf<String,JSONObject>()
         private fun current(){options.current();device.requireOpen();if(vault.localIdentity()!=actor)invalid()}
         private fun claim(domain:String,id:String,scope:String,role:String)=options.claim(domain,id,scope,role)
         private fun metadata(domain:String,id:String,immutable:Boolean=false):JSONObject {
@@ -168,6 +169,31 @@ internal object E2eeRetainedProductCustody {
             }
             (if(value.isNull("result"))null else value.getJSONObject("result"))?.let{if(value.isNull("batch")||it.get("intentId")!=intent||it.get("changeHash")!=changeHash)invalid()};claim("outbox",id,options.personalScopeId?:invalid(),"membership-plan")
         }
+        private fun atomicState(intent:String):JSONObject {
+            atomicStates[intent]?.let{return it};val scope=options.personalScopeId?:invalid();val id=E2eeMembershipAtomicContract.localId(actor.ownerId,intent)
+            val state=E2eeMembershipAtomicContract.localState(metadata("outbox",id),actor.ownerId);val plan=state.getJSONObject("plan")
+            if(plan.get("intentId")!=intent)invalid();atomicStates[intent]=state;claim("outbox",id,scope,"membership-atomic-stage")
+            if(state.getBoolean("ready"))for(index in 0 until plan.getJSONArray("pages").length()){
+                val pageId=E2eeMembershipAtomicContract.pageId(actor.ownerId,intent,index);E2eeMembershipAtomicContract.localPageMatches(state,metadata("outbox",pageId,true));current();claim("outbox",pageId,scope,"membership-atomic-page")
+            };return state
+        }
+        private fun atomic(value:JSONObject,id:String){
+            val scope=options.personalScopeId?:invalid()
+            when{
+                id.startsWith("membership-atomic-v2:")->{val state=E2eeMembershipAtomicContract.localState(value,actor.ownerId);val intent=state.getJSONObject("plan").getString("intentId");if(id!=E2eeMembershipAtomicContract.localId(actor.ownerId,intent))invalid();atomicState(intent)}
+                id.startsWith("membership-atomic-page:")->{val row=E2eeMembershipAtomicContract.localPage(value,actor.ownerId);val intent=row.getString("intentId");val state=atomicState(intent);if(id!=E2eeMembershipAtomicContract.pageId(actor.ownerId,intent,number(row,"index",0,9999).toInt()))invalid();E2eeMembershipAtomicContract.localPageMatches(state,value);E2eeMembershipAtomicContract.localPageMatches(state,metadata("outbox",id,true));claim("outbox",id,scope,"membership-atomic-page")}
+                else->{val request=E2eeMembershipAtomicContract.localRequest(value,actor.ownerId);val action=request.getString("action");val payload=request.getJSONObject("payload");val state=atomicState(payload.getString("intentId"))
+                    if(id!=E2eeMembershipAtomicContract.requestId(actor.ownerId,action,payload)||payload.get("planHash")!=state.get("planHash")||!same(metadata("outbox",id,true),value))invalid()
+                    if(action=="membership-atomic-page"){
+                        val index=number(payload,"index",0,9999).toInt();val refs=state.getJSONObject("plan").getJSONArray("pages")
+                        if(!state.getBoolean("ready")||payload.get("phase")!="plan"||index>=refs.length()||refs.getJSONObject(index).get("pageHash")!=payload.get("pageHash"))invalid()
+                    }else if(action=="membership-atomic-begin"&&!state.getBoolean("ready")||action=="membership-atomic-cancel"&&!state.getBoolean("cancelRequested"))invalid()
+                    val checked=packet(request.getJSONObject("packet"));current()
+                    if(checked.command.get("deviceId")!=actor.deviceId||checked.frame.scopeId!=scope||checked.frame.kind!="personal"||checked.frame.ownerId!=actor.ownerId||checked.frame.devices[actor.deviceId]?.role!="owner")invalid()
+                    claim("outbox",id,scope,"membership-atomic-control")
+                }
+            }
+        }
         fun run(){
             current();for(id in options.outbox)if(!options.claimed("outbox",id)){val match=Regex("([a-f0-9-]{36}):cipher:(0|[1-9][0-9]*)").matchEntire(id)?:continue;val draft=match.groupValues[1];if(!uuid.matches(draft)||match.groupValues[2].toInt()>257)invalid();groups.getOrPut(draft){mutableListOf()}.add(id)}
             for(id in options.outbox)if(!options.claimed("outbox",id)&&id.startsWith("job:"))job(metadata("outbox",id),id,"outbox")
@@ -181,6 +207,7 @@ internal object E2eeRetainedProductCustody {
                     id.startsWith("service:")||id.startsWith("membership-product:")||id.startsWith("enrollment:")||id.startsWith("aurora-manifest:")->control(value,id,"outbox")
                     id in setOf("advice-pending-v1","advice-policy-v1")->{val scope=options.personalScopeId?:invalid();val frame=options.directory(scope){true};if(frame.kind!="personal")invalid();E2eeProductCustodyCells.advice(id,value,actor.ownerId,scope);claim("outbox",id,scope,"advice-job")}
                     Regex("stoicheion-job:(daily|spread|timeline)").matches(id)->{val scope=value.getJSONObject("content").getString("scopeId");val frame=options.directory(scope){true};if(frame.kind!="personal")invalid();E2eeProductCustodyCells.stoicheion(value,actor.ownerId,scope,id.substringAfter(':'));claim("outbox",id,scope,"stoicheion-job")}
+                    listOf("membership-atomic-v2:","membership-atomic-page:","membership-atomic-request:").any{id.startsWith(it)}->atomic(value,id)
                     id.startsWith("membership:")->membership(value,id)
                     id.startsWith("rotation:")->{E2eeKeys.exact(value,setOf("protocol","roles","manifest","packet"));if(value.getInt("protocol")!=1)invalid();val checked=rotation(value.getJSONObject("packet"));val payload=checked.command.getJSONObject("payload");if(id!="rotation:"+hash(checked.frame.scopeId+"\u0000"+payload.getString("membershipHash")))invalid()
                         val expected=rows(payload.getJSONArray("roleChanges"))+strings(payload.getJSONArray("revokedDeviceIds")).map{JSONObject().put("deviceId",it).put("role",JSONObject.NULL)}

@@ -522,6 +522,12 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         check(refreshed&&value.kind=="personal"&&value.ownerId==device.ownerId&&value.state=="active"&&own?.role=="owner"&&!own.revoked){"E2EE_OWNER_REQUIRED"}
         return packet("membership-authorize",JSONObject().put("intentId",intentId).put("changeHash",changeHash))
     }
+    @Synchronized fun authorizeMembershipAtomic(action:String,input:JSONObject):JSONObject{
+        val payload=E2eeMembershipAtomicContract.stagingPayload(action,input)
+        val value=current();val own=value.devices[device.deviceId]
+        check(refreshed&&value.kind=="personal"&&value.ownerId==device.ownerId&&value.state=="active"&&own?.role=="owner"&&!own.revoked){"E2EE_OWNER_REQUIRED"}
+        return packet(action,payload)
+    }
     @Synchronized fun prepareMembershipProduct(intentId:String,membershipHash:String,input:JSONArray):JSONObject{
         E2eeKeys.technical(intentId);E2eeEnvelope.decode(membershipHash,32);check(input.length() in 1..100){"E2EE_PRODUCT_BATCH_INVALID"};val operations=JSONArray();val ids=mutableSetOf<String>()
         for(at in 0 until input.length()){val operation=E2eeProductContract.operation(input.getJSONObject(at));check(ids.add(operation.getString("entityId"))){"E2EE_PRODUCT_BATCH_INVALID"};operations.put(operation)}

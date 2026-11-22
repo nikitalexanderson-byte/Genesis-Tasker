@@ -26,10 +26,27 @@ intent. Изменённый plan hash не может занять тот же 
 
 ## Ещё не подключено
 
+Добавлен account-scoped durable stager web/native: полный manifest и отдельные
+immutable local pages сохраняются и читаются обратно до первого HTTP. Каждый
+staging request получает один сохранённый signed packet; unknown outcome не
+порождает новую подпись или новый план. Перед следующим запросом перечитывается
+cancelRequested. Cancel сохраняет намерение до HTTP, точный cancelled outcome
+фиксируется локально; committed/неожиданный результат требует отдельного review.
+Закрытие account/session отзывает capability. Новые typed custody readers
+сверяют header/page/request связи и подпись по историческому pinned personal
+directory, сохраняя interrupted ready=false страницы как inert originals.
+Старые membership packets остаются отдельным v1 форматом.
+
+Это пока **только plan staging/cancel**, без packet-page coordinator, final apply,
+receipt/readback и normal role/invitation UI. Native codec/stager написан как
+matching Kotlin implementation общего wire/local формата; differential acceptance
+ещё предстоит. Pure atomic planner по-прежнему использует общий runtime. Новые
+control outboxes не добавлены в content-only export и не исполняются при restore.
+
 - Финальный atomic writer: полная сверка graph/root/ACL anchors и всех effects,
   product-bound packets, приглашений/Google projection revocations, затем owner
   rotations с manifest уже загруженного ciphertext, под одним lock.
-- Immutable packet manifest, paged receipt/readback и durable client coordinator;
+- Immutable packet manifest, paged receipt/readback и полный durable apply coordinator;
   owner review/exchange полного v2 effects manifest и проверенная attribution.
 - Обычные role/remove/grants/category/invitation UI и stale outcome/resolution.
 - Потоковый capture очень больших graph/ACL input без ограничения общим размером

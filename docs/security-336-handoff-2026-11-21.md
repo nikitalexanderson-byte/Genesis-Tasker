@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: durable atomic plan stager и retained custody (source-only)
+
+Добавлены account-scoped web/native stagers, общий strict local TS codec и
+matching Kotlin codec. Header/pages сохраняются/readback до IO, signed requests
+immutable и повторяются без re-sign при unknown outcome. Cancel намерение
+durable до запроса; между upload запросами перечитывается header. Typed custody
+проверяет все ready pages, orphan/mismatch, immutable serial и exact signed
+personal owner device request по pinned history. Input-only interrupted pages
+сохраняются inert. Account lock/session guard действуют на storage/sign/HTTP.
+
+Это ещё plan staging, не готовая normal membership: final atomic writer,
+packet coordinator, complete receipts/readback, v2 owner review и ordinary UI
+остаются. Новые outboxes не исполняются из content archives. Source diff/hygiene
+прочитан; compiler/lint/tests/build/CI не запускались. Coverage9/20, floors0/
+cutover off, production3.3.5/149 и GENESIS_DEPLOY_ANDROID=false сохранены.
+Срочный web PR43 всё ещё в отдельном browser CI45029384697; его публикация первая.
+
 ## 22 ноября: atomic v2 pages/staging/cancellation (source-only)
 
 После31f967ed добавлены TS/PHP page/manifest hashes, immutable SQL stage и

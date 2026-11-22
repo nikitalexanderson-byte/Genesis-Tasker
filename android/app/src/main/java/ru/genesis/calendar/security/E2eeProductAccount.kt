@@ -18,10 +18,11 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     private var closed=false
     class SharedScope(val client:E2eeScopeClient,val directory:E2eeDirectory.Verified){override fun toString()="E2eeProductAccount.SharedScope([redacted])"}
     private val shared=mutableMapOf<String,SharedScope>()
+    private var atomicMembership:E2eeMembershipAtomicStager?=null
     fun requireOpen(){UpdateGate.requireOpen();check(!closed){"E2EE_UNLOCK_REQUIRED"};assertCurrent();device.requireOpen()}
     fun scopeSummaries():JSONArray{requireOpen();check(!offline){"E2EE_ONLINE_REQUIRED"};val value=transport.status();requireOpen();E2eeKeys.exact(value,setOf("pilotAllowed","cryptoProtocol","scopes"));check(value.get("pilotAllowed") is Boolean&&value.getInt("cryptoProtocol")==1){"E2EE_INVALID_RESPONSE"};val scopes=value.getJSONArray("scopes");check(scopes.length()<=4096){"E2EE_INVALID_RESPONSE"};val seen=mutableSetOf<String>()
         for(at in 0 until scopes.length()){val row=scopes.getJSONObject(at);E2eeKeys.exact(row,setOf("scopeId","kind","resourceId","state"));check(seen.add(E2eeKeys.technical(row.getString("scopeId")))&&row.getString("kind") in setOf("personal","project","space")&&row.getString("state") in setOf("preparing","uploading","verified","active","retirement")){"E2EE_INVALID_RESPONSE"};E2eeKeys.technical(row.getString("resourceId"))};return JSONArray(scopes.toString())}
-    @Synchronized fun close(){if(!closed){closed=true;shared.values.forEach{it.client.close()};shared.clear();client.close();device.lock()}}
+    @Synchronized fun close(){if(!closed){closed=true;shared.values.forEach{it.client.close()};shared.clear();atomicMembership=null;client.close();device.lock()}}
     fun proposeSharedTrust(scopeId:String):JSONObject{
         requireOpen();val scopes=scopeSummaries();val scope=(0 until scopes.length()).map{scopes.getJSONObject(it)}.singleOrNull{it.getString("scopeId")==scopeId&&it.getString("kind")!="personal"}?:error("E2EE_SCOPE_BINDING_MISMATCH")
         val response=transport.directory(scopeId);requireOpen();val events=response.getJSONArray("events");check(events.length()>0){"E2EE_DIRECTORY_REQUIRED"}
@@ -45,6 +46,10 @@ internal class E2eeProductAccount private constructor(val ownerId:String,val dev
     @Synchronized fun membership():E2eeMembershipProduct{
         requireOpen();check(!offline){"E2EE_REFRESH_REQUIRED"};val channel=transport.membership?:error("E2EE_MEMBERSHIP_TRANSPORT_REQUIRED")
         return E2eeMembershipProduct(device,client,channel,{scopeId->requireOpen();val scope=shared[scopeId]?:error("E2EE_SHARED_SCOPE_UNLOCK_REQUIRED");scope.client.refresh();requireOpen();scope.client},::requireOpen)
+    }
+    @Synchronized fun membershipAtomic():E2eeMembershipAtomicStager{
+        requireOpen();check(!offline){"E2EE_REFRESH_REQUIRED"};val channel=transport.membership?:error("E2EE_MEMBERSHIP_TRANSPORT_REQUIRED")
+        return atomicMembership?:E2eeMembershipAtomicStager(device,client,channel,::requireOpen).also{atomicMembership=it}
     }
     override fun toString()="E2eeProductAccount([redacted])"
     companion object{

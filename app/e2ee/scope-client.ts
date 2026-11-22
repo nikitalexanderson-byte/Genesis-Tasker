@@ -8,6 +8,7 @@ import { UnlockedWebDevice } from './device-vault.ts';
 import type { LocalWrite } from './storage.ts';
 import {validatePrivateProjectSelection,validatePrivateProjectTopology,type PrivateProjectSelection} from './project-create-contract.ts';
 import {productMutation,type ProductMutation} from './product-contract.ts';
+import {membershipAtomicStagingPayload,type MembershipAtomicStagingAction} from './membership-atomic-contract.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
@@ -451,6 +452,11 @@ export class E2eeScopeClient {
     assertTechnical(intentId);decodeE2eeBytes(changeHash,32);const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
     return this.#packet('membership-authorize',{intentId,changeHash});
+  }
+  async authorizeMembershipAtomic(action:MembershipAtomicStagingAction,input:Record<string,WireValue>){
+    const payload=membershipAtomicStagingPayload(action,input),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
+    if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
+    return this.#packet(action,payload);
   }
   /** Frozen packet for the containing transaction. It cannot be executed by
    * the ordinary command route or renewed into a different directory frame. */
