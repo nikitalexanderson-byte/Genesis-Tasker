@@ -6,6 +6,7 @@ import java.security.MessageDigest
 import java.util.UUID
 
 internal interface E2eeMembershipTransport{
+    fun membershipGraph(spaceId:String):JSONObject=error("E2EE_MEMBERSHIP_GRAPH_REQUIRED")
     fun membershipState(targets:JSONArray):JSONObject
     fun membershipPreview(intentId:String,changes:JSONArray):JSONObject
     fun membershipCommit(batch:JSONObject):JSONObject
@@ -32,6 +33,7 @@ internal class E2eeMembershipProduct(private val device:UnlockedE2eeDevice,priva
     private fun save(value:JSONObject,serial:Long?):Long{current();val bytes=value.toString().toByteArray(Charsets.UTF_8)
         try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox","membership:${value.getString("intentId")}",bytes,serial)));current()}finally{bytes.fill(0)};return(serial?:0)+1}
     private fun scopeIds(rows:JSONArray,objects:Boolean)= (0 until rows.length()).map{if(objects)rows.getJSONObject(it).getString("scopeId")else rows.getString(it)}.sorted()
+    fun graph(spaceId:String):JSONObject{E2eeKeys.technical(spaceId);current();return transport.membershipGraph(spaceId).also{current()}}
     private fun request(state:JSONObject):JSONObject {
         check(!E2eeMembershipContract.grantReviewRequired(state.getJSONArray("changes"))){"E2EE_MEMBERSHIP_HASH_REVIEW_REQUIRED"}
         check(state.optString("hashFormat")==E2eeMembershipContract.HASH_FORMAT&&!state.isNull("preview")){"E2EE_MEMBERSHIP_PREVIEW_REQUIRED"}

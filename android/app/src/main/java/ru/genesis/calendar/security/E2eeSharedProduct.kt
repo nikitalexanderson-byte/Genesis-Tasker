@@ -24,7 +24,7 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
         E2eeKeys.exact(value,setOf("protocol","scopeId","entities"));check(value.get("protocol")==1&&value.get("scopeId")==scopeId){"E2EE_PRODUCT_INDEX_INVALID"};val rows=value.getJSONArray("entities");check(rows.length()<=10000){"E2EE_PRODUCT_INDEX_INVALID"};val ids=mutableSetOf<String>()
         for(at in 0 until rows.length()){val row=E2eeProductContract.entity(rows.getJSONObject(at));check(ids.add(row.getString("entityId"))){"E2EE_PRODUCT_INDEX_INVALID"}};JSONObject(value.toString())},::check)
     private fun transaction(id:String)=E2eeDeviceDocument(device,id,{value->
-        E2eeKeys.exact(value,setOf("format","scopeId","intentId","drafts","acknowledged","receipt"));check(value.get("format")=="genesis-product-transaction-v1"&&value.get("scopeId")==scopeId&&value.get("acknowledged") is Boolean){"E2EE_PRODUCT_TRANSACTION_INVALID"};E2eeKeys.technical(value.getString("intentId"))
+        E2eeKeys.exact(value,setOf("format","scopeId","intentId","drafts","acknowledged","receipt")+(if(value.has("membershipIntentId"))setOf("membershipIntentId")else emptySet()));check(value.get("format")=="genesis-product-transaction-v1"&&value.get("scopeId")==scopeId&&value.get("acknowledged") is Boolean){"E2EE_PRODUCT_TRANSACTION_INVALID"};E2eeKeys.technical(value.getString("intentId"));if(value.has("membershipIntentId"))E2eeKeys.technical(value.getString("membershipIntentId"))
         val rows=value.getJSONArray("drafts");check(rows.length() in 1..100){"E2EE_PRODUCT_TRANSACTION_INVALID"};val ids=mutableSetOf<String>();val objects=mutableSetOf<String>()
         for(at in 0 until rows.length()){val row=rows.getJSONObject(at);E2eeKeys.exact(row,setOf("operation","version","payloadHash"));val operation=row.getJSONObject("operation")
             E2eeKeys.exact(operation,setOf("action","entityId","kind","expectedRevision","domain","objectId","parentId","metadata","proposalId"));val id=E2eeKeys.technical(operation.getString("entityId"));val objectId=E2eeKeys.technical(operation.getString("objectId"))
@@ -51,10 +51,10 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
             &&body.get("parentId")==entity.get("parentId")&&body.get("deleted")==entity.get("deleted")&&E2eeProductJson.same(body.get("metadata"),entity.get("metadata"))){"E2EE_PRODUCT_VERSION_INVALID"}
         if(!offline)client.assertObjectReference(entity.getString("domain"),entity.getString("objectId"),1,entity.getString("payloadHash"));check();return JSONObject(body.toString())
     }
-    @Synchronized fun stage(edits:JSONArray,intentId:String=UUID.randomUUID().toString()):String{
-        check();E2eeKeys.technical(intentId);check(edits.length() in 1..100){"E2EE_PRODUCT_BATCH_INVALID"};val drafts=JSONArray()
+    @Synchronized fun stage(edits:JSONArray,intentId:String=UUID.randomUUID().toString(),membershipIntentId:String?=null):String{
+        check();E2eeKeys.technical(intentId);membershipIntentId?.let(E2eeKeys::technical);check(edits.length() in 1..100){"E2EE_PRODUCT_BATCH_INVALID"};val drafts=JSONArray()
         val previous=transaction(prefix+intentId).load()
-        if(previous!=null){val held=previous.value.getJSONArray("drafts");check(held.length()==edits.length()){"E2EE_IDEMPOTENCY_CONFLICT"}
+        if(previous!=null){val held=previous.value.getJSONArray("drafts");check(held.length()==edits.length()&&(if(previous.value.has("membershipIntentId"))previous.value.getString("membershipIntentId")else null)==membershipIntentId){"E2EE_IDEMPOTENCY_CONFLICT"}
             for(at in 0 until edits.length()){val edit=edits.getJSONObject(at);val prior=held.getJSONObject(at);val operation=prior.getJSONObject("operation");val content=version(prior.getJSONObject("version"))
                 check(operation.get("action")==edit.get("action")&&operation.get("entityId")==edit.get("entityId")&&operation.get("kind")==edit.get("kind")&&operation.getLong("expectedRevision")==edit.getLong("expectedRevision")&&operation.get("parentId")==edit.get("parentId")
                     &&(!edit.has("proposalId")||edit.get("proposalId")==operation.get("proposalId"))&&E2eeProductJson.same(operation.get("metadata"),edit.get("metadata"))&&E2eeProductJson.same(content.get("body"),edit.get("body"))){"E2EE_IDEMPOTENCY_CONFLICT"}}
@@ -66,10 +66,12 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
                 .put("parentId",edit.get("parentId")).put("metadata",header.get("metadata")).put("proposalId",if(action=="propose-complete")edit.optString("proposalId").ifEmpty{UUID.randomUUID().toString()}else JSONObject.NULL)
             drafts.put(JSONObject().put("operation",operation).put("version",header).put("payloadHash",JSONObject.NULL))
         }
-        transaction(prefix+intentId).save(JSONObject().put("format","genesis-product-transaction-v1").put("scopeId",scopeId).put("intentId",intentId).put("drafts",drafts).put("acknowledged",false).put("receipt",JSONObject.NULL),null);check();return intentId
+        val state=JSONObject().put("format","genesis-product-transaction-v1").put("scopeId",scopeId).put("intentId",intentId).put("drafts",drafts).put("acknowledged",false).put("receipt",JSONObject.NULL)
+        if(membershipIntentId!=null)state.put("membershipIntentId",membershipIntentId)
+        transaction(prefix+intentId).save(state,null);check();return intentId
     }
-    @Synchronized fun flush(intentId:String):JSONObject{
-        check();E2eeKeys.technical(intentId);val store=transaction(prefix+intentId);var saved=store.load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");val state=JSONObject(saved.value.toString());if(state.getBoolean("acknowledged"))return state.getJSONObject("receipt")
+    @Synchronized fun prepare(intentId:String):JSONArray{
+        check();E2eeKeys.technical(intentId);val store=transaction(prefix+intentId);var saved=store.load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");val state=JSONObject(saved.value.toString())
         val drafts=state.getJSONArray("drafts");for(at in 0 until drafts.length()){val draft=drafts.getJSONObject(at);val operation=draft.getJSONObject("operation");val header=version(draft.getJSONObject("version"))
             check(header.get("entityId")==operation.get("entityId")&&header.get("kind")==operation.get("kind")&&header.getLong("revision")==operation.getLong("expectedRevision")+1&&header.get("parentId")==operation.get("parentId")
                 &&header.getBoolean("deleted")== (operation.getString("action")=="delete")&&E2eeProductJson.same(header.get("metadata"),operation.get("metadata"))){"E2EE_PRODUCT_TRANSACTION_INVALID"}
@@ -79,12 +81,35 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
             if(draft.isNull("payloadHash")){draft.put("payloadHash",reference.get("payloadHash"));saved=store.save(state,saved.serial)}
         }
         val operations=JSONArray();for(at in 0 until drafts.length()){val draft=drafts.getJSONObject(at);operations.put(JSONObject(draft.getJSONObject("operation").toString()).put("payloadHash",draft.get("payloadHash")))}
-        val receipt=client.executeService("product-commit",JSONObject().put("operations",operations),intentId);check();check(receipt.get("intentId")==intentId&&receipt.getJSONArray("results").length()==operations.length()){"E2EE_PRODUCT_RECEIPT_INVALID"}
+        return operations
+    }
+    private fun acknowledge(intentId:String,operations:JSONArray,receipt:JSONObject):JSONObject{
+        check();val store=transaction(prefix+intentId);val saved=store.load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");val state=JSONObject(saved.value.toString())
+        check(receipt.get("intentId")==intentId&&receipt.getJSONArray("results").length()==operations.length()){"E2EE_PRODUCT_RECEIPT_INVALID"}
         val results=receipt.getJSONArray("results");for(at in 0 until operations.length()){val operation=operations.getJSONObject(at);val result=(0 until results.length()).map{results.getJSONObject(it)}.singleOrNull{it.get("entityId")==operation.get("entityId")}?:error("E2EE_PRODUCT_RECEIPT_INVALID")
             check(result.getLong("revision")==operation.getLong("expectedRevision")+(if(operation.getString("action")=="propose-complete")0 else 1)&&result.get("payloadHash")==operation.get("payloadHash")){"E2EE_PRODUCT_RECEIPT_INVALID"}}
+        val expected=JSONArray();val drafts=state.getJSONArray("drafts");for(at in 0 until drafts.length()){val draft=drafts.getJSONObject(at);expected.put(JSONObject(draft.getJSONObject("operation").toString()).put("payloadHash",draft.get("payloadHash")))}
+        check(E2eeProductJson.same(expected,operations)){"E2EE_PRODUCT_RECEIPT_INVALID"}
+        if(state.getBoolean("acknowledged")){check(E2eeProductJson.same(state.getJSONObject("receipt"),receipt)){"E2EE_PRODUCT_RECEIPT_INVALID"};return JSONObject(receipt.toString())}
         store.save(state.put("acknowledged",true).put("receipt",receipt),saved.serial);check();return JSONObject(receipt.toString())
     }
-    @Synchronized fun pending():List<String>{check();return device.vault.listLocal("draft",prefix).mapNotNull{id->val value=transaction(id).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");if(value.value.getBoolean("acknowledged"))null else value.value.getString("intentId")}}
+    @Synchronized fun flush(intentId:String):JSONObject{
+        check();E2eeKeys.technical(intentId);val saved=transaction(prefix+intentId).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING")
+        if(saved.value.getBoolean("acknowledged"))return JSONObject(saved.value.getJSONObject("receipt").toString())
+        check(!saved.value.has("membershipIntentId")){"E2EE_BOUND_TRANSACTION_REQUIRED"}
+        val operations=prepare(intentId);val receipt=client.executeService("product-commit",JSONObject().put("operations",operations),intentId);check();return acknowledge(intentId,operations,receipt)
+    }
+    /** A containing atomic membership transaction already applied these heads.
+     * Verify signed index and decrypted versions; no network mutation here. */
+    @Synchronized fun confirmPrepared(intentId:String,receipt:JSONObject):JSONObject{
+        check();E2eeKeys.technical(intentId);val saved=transaction(prefix+intentId).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");val drafts=saved.value.getJSONArray("drafts");val operations=JSONArray();val entities=index()
+        for(at in 0 until drafts.length()){val draft=drafts.getJSONObject(at);check(!draft.isNull("payloadHash")){"E2EE_PRODUCT_TRANSACTION_MISSING"};val operation=JSONObject(draft.getJSONObject("operation").toString()).put("payloadHash",draft.get("payloadHash"));operations.put(operation)
+            val entity=(0 until entities.length()).map{entities.getJSONObject(it)}.singleOrNull{it.get("entityId")==operation.get("entityId")}?:error("E2EE_PRODUCT_RECEIPT_INVALID")
+            check(operation.getString("action")!="propose-complete"&&entity.getLong("revision")==operation.getLong("expectedRevision")+1&&entity.get("objectId")==operation.get("objectId")&&entity.get("payloadHash")==operation.get("payloadHash")){"E2EE_PRODUCT_RECEIPT_INVALID"}
+            check(E2eeProductJson.same(read(entity),version(draft.getJSONObject("version")))){"E2EE_PRODUCT_RECEIPT_INVALID"}
+        };return acknowledge(intentId,operations,JSONObject(receipt.toString()))
+    }
+    @Synchronized fun pending():List<String>{check();return device.vault.listLocal("draft",prefix).mapNotNull{id->val value=transaction(id).load()?:error("E2EE_PRODUCT_TRANSACTION_MISSING");if(value.value.getBoolean("acknowledged")||value.value.has("membershipIntentId"))null else value.value.getString("intentId")}}
     @Synchronized fun history(entityId:String,before:Long=9_007_199_254_740_991L,requestedLimit:Int=5):JSONObject{
         check();E2eeKeys.technical(entityId);client.refresh();check();var limit=requestedLimit
         var response:JSONObject?=null;while(response==null){try{response=client.readProductHistory(entityId,before,limit)}catch(error:Exception){if(error.message!="E2EE_PRODUCT_PAGE_TOO_LARGE"||limit<=1)throw error;limit=(limit/2).coerceAtLeast(1)}}

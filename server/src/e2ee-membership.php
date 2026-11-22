@@ -61,7 +61,12 @@ function genesisE2eeAclChanges(PDO $db,string $actor,array $changes): array
             if(isset($fields['role'])){if(!in_array($fields['role'],$table==='shared_space_members'?['owner','admin','member','guest']:($table==='shared_project_members'?['owner','manager','member','commenter','viewer']:['member','commenter','viewer']),true))throw new InvalidArgumentException('E2EE_MEMBERSHIP_ROLE_INVALID');
                 if(($before['role']??null)==='owner'||$fields['role']==='owner')throw new DomainException('E2EE_OWNER_TRANSFER_REQUIRES_RECOVERY_PLAN');}
             foreach(['can_organize_tasks','all_projects','project_access_restricted','include_descendants','excluded'] as $field)if(array_key_exists($field,$fields)&&!in_array($fields[$field],[0,1],true))throw new InvalidArgumentException('E2EE_MEMBERSHIP_PERMISSION_INVALID');
-            foreach(['revision','project_access_revision'] as $field)if(array_key_exists($field,$fields)&&genesisE2eeInteger($fields[$field],1)!==(int)($before[$field]??0)+1)throw new DomainException('E2EE_MEMBERSHIP_STALE');
+            foreach(['revision','project_access_revision'] as $field)if(array_key_exists($field,$fields)){
+                $revision=genesisE2eeInteger($fields[$field],1);$oldRevision=(int)($before[$field]??0);
+                // Permission/role changes carry the current access revision.
+                // Replacing the grant set advances it; category revisions always advance.
+                if($revision!==$oldRevision+1&&($field!=='project_access_revision'||!$before||$revision!==$oldRevision))throw new DomainException('E2EE_MEMBERSHIP_STALE');
+            }
             if(array_key_exists('member_category_id',$fields)&&$fields['member_category_id']!==null){genesisE2eeIdentifier($fields['member_category_id']);$category=genesisE2eeRow($db,'SELECT id FROM shared_member_categories WHERE id=? AND space_id=?',[$fields['member_category_id'],$space]);if(!$category)throw new InvalidArgumentException('E2EE_MEMBERSHIP_CATEGORY_INVALID');}
             if(array_key_exists('permissions_json',$fields)){
                 if($fields['permissions_json']!==null){$permissions=json_decode($fields['permissions_json'],true,16,JSON_THROW_ON_ERROR);genesisE2eeExactFields($permissions,['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers']);foreach($permissions as $allowed)if(!is_bool($allowed))throw new InvalidArgumentException('E2EE_MEMBERSHIP_PERMISSION_INVALID');}
@@ -126,6 +131,29 @@ function genesisE2eeMembershipState(string $actor,array $input): array
         $where=implode(' AND ',array_map(static fn(string $name):string=>'"'.$name.'"=?',$spec['keys']));$row=genesisE2eeRow($db,'SELECT * FROM "'.$target['table'].'" WHERE '.$where,array_map(static fn(string $name)=>$target['key'][$name],$spec['keys']));
         $rows[]=['table'=>$target['table'],'key'=>$target['key'],'before'=>$row?genesisE2eeAclTechnical($row,$spec):null,'beforeHash'=>genesisE2eeAclBeforeHash($row,$spec)];
     }return['rows'=>$rows];
+}
+/** Routing and ACL identifiers only. A caller must independently verify pinned
+ * directories and decrypt normal root versions; this is not an authority pin. */
+function genesisE2eeMembershipGraph(string $actor,array $input): array
+{
+    genesisE2eeExactFields($input,['spaceId']);$space=genesisE2eeIdentifier($input['spaceId']);$db=genesisDb();$owns=!$db->inTransaction();if($owns)$db->beginTransaction();
+    try{
+        if(genesisSharedSpaceAccess($space,$actor)['member_role']!=='owner')throw new GenesisResourceLimitException(403,'E2EE_SCOPE_FORBIDDEN');
+        $q=$db->prepare('SELECT user_id FROM shared_space_members WHERE space_id=? ORDER BY user_id');$q->execute([$space]);$users=$q->fetchAll(PDO::FETCH_COLUMN);$q->closeCursor();
+        if(count($users)>200)throw new GenesisResourceLimitException(413,'E2EE_SCOPE_MEMBER_LIMIT');
+        $scope=genesisE2eeRow($db,"SELECT scope_id FROM e2ee_scopes WHERE kind='space' AND resource_id=?",[$space]);
+        $q=$db->prepare("SELECT p.id,p.parent_id,p.is_inbox,p.archived_at,s.scope_id,
+            COALESCE(pe.deleted,EXISTS(SELECT 1 FROM shared_trash t WHERE t.kind='project' AND t.object_id=p.id)) AS in_trash
+            FROM shared_projects p LEFT JOIN e2ee_scopes s ON s.kind='project' AND s.resource_id=p.id
+            LEFT JOIN e2ee_product_entities pe ON pe.scope_id=s.scope_id AND pe.generation=s.generation AND pe.entity_id='project:'||p.id
+            WHERE p.space_id=? ORDER BY p.id");
+        $q->execute([$space]);$projects=[];
+        while($row=$q->fetch()){
+            if(count($projects)>=5000)throw new GenesisResourceLimitException(413,'E2EE_SCOPE_PROJECT_LIMIT');
+            $projects[]=['id'=>$row['id'],'parentId'=>$row['parent_id'],'isInbox'=>(bool)$row['is_inbox'],'archived'=>$row['archived_at']!==null,'inTrash'=>(bool)$row['in_trash'],'scopeId'=>$row['scope_id']];
+        }$q->closeCursor();
+        $result=['spaceId'=>$space,'spaceScopeId'=>$scope?$scope['scope_id']:null,'spaceUserIds'=>$users,'projects'=>$projects];if($owns)$db->commit();return$result;
+    }catch(Throwable $error){if($owns&&$db->inTransaction())$db->rollBack();throw$error;}
 }
 function genesisE2eeMembershipPreview(string $actor,array $input): array
 {

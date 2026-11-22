@@ -1,5 +1,34 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: common membership planner/drafts/graph и bound product foundations
+
+После120a6736 написан и подключён в isolated native runtime общий pure planner
+normal role/remove/space permissions/category/grants. Исправлены from/null,
+actor complete rows, effect-only scope closure и сохранение промежуточных clears.
+Полный raw input сохраняется/readback до graph/state IO; proposals/history,
+explicit review, repeated real pinned/decrypted graph checks и freeze до crypto
+имеют общие web/native composers. Новый membership-graph — только technical
+идентификаторы и пока только space owner. Missing pins/roots не подменяются.
+
+Shared product получил prepare/confirmPrepared и binding в первой durable записи;
+ordinary flush не применяет такие transactions. Новый product-commit-bound нельзя
+выполнить вне containing membership writer context. Его proof требует следующий
+подписанный directory frame с тем же membershipHash. Custody readers сохранены.
+Пока этот action не используется normal handlers: complete effects/anchors hash,
+atomic product/ACL/revocation, wide staged protocol, owner effect exchange и UI
+ещё нужны. Полный объём: security-336-membership-operations.md.
+
+Продолжать с полного effects manifest и staged atomic membership применения,
+затем normal initiator/owner/invitation UI и stale semantic outcome/cancellation.
+Project-owner-only graph нельзя открывать через generic readState bypass: нужен
+проверяемый owner exchange. First personal trusted entry, advanced/form attribution,
+automation/series/bulk/cross-scope, typed restore, revoked replacement/background
+и source/divergence review остаются. Код ещё НЕ компилировался/тестировался;
+assets генерировать после всего кода. Никаких tests/compiler/lint/build/CI/push/
+deploy/device/Play. Coverage9/20, production/Paddle3.3.5/149/floors0/cutover off/
+GENESIS_DEPLOY_ANDROID=false сохранены. demo-output/ не читать/stage; субагенты/
+Daybreak запрещены. Этот turn — progress, не blocker.
+
 ## 22 ноября: обычные ACL semantics исследованы; excluded сохранён
 
 После9bd8caf0 добавлен фактический `excluded`0/1 в project-grant specs/hashes

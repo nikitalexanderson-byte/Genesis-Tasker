@@ -19,7 +19,7 @@ export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeC
  if(new Set(entities.map(row=>row.entityId)).size!==entities.length||heads.length!==entities.length)invalid();
  const proofs=new Map<string,Proof>();for(const row of rawProofs){exactKeys(row,['proofHash','packet']);decodeE2eeBytes(row.proofHash,32);if(typeof row.packet!=='string'||row.packet.length>4*1024*1024||proofs.has(row.proofHash as string))invalid();
   const packet=parseLegacyMigrationJson(row.packet,'E2EE_PRODUCT_PROOF_INVALID',4*1024*1024) as SignedE2eeCommand,proof=await verify(packet);if(proof.proofHash!==row.proofHash)invalid();proofs.set(proof.proofHash,proof);
-  const command=proof.command;if(command.action==='product-commit'){exactKeys(command.payload,['intentId','operations']);assertTechnical(command.payload.intentId);if(!Array.isArray(command.payload.operations)||command.payload.operations.length<1||command.payload.operations.length>100)invalid();
+   const command=proof.command;if(command.action==='product-commit'||command.action==='product-commit-bound'){exactKeys(command.payload,['intentId','operations',...(command.action==='product-commit-bound'?['membershipHash']:[])]);if(command.action==='product-commit-bound')decodeE2eeBytes(command.payload.membershipHash,32);assertTechnical(command.payload.intentId);if(!Array.isArray(command.payload.operations)||command.payload.operations.length<1||command.payload.operations.length>100)invalid();
    const ops=command.payload.operations.map(productMutation);if(new Set(ops.map(row=>row.entityId)).size!==ops.length)invalid();
   }else if(command.action==='product-approve'){exactKeys(command.payload,['intentId','proposalId','entityId','baseRevision','payloadHash']);for(const key of ['intentId','proposalId','entityId'] as const)assertTechnical(command.payload[key]);decodeE2eeBytes(command.payload.payloadHash,32);
    if(!Number.isSafeInteger(command.payload.baseRevision)||Number(command.payload.baseRevision)<1)invalid();
@@ -51,7 +51,7 @@ export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeC
  }
  const origins:VerifiedProductOrigin[]=[],seen=new Set<string>();for(const row of heads){exactKeys(row,['entityId','revision','proofHash']);const entity=entities.find(value=>value.entityId===row.entityId),proof=proofs.get(String(row.proofHash));
   if(!entity||!proof||seen.has(entity.entityId)||row.revision!==entity.revision)invalid();seen.add(entity.entityId);
-  if(proof.command.action==='product-commit'){
+  if(proof.command.action==='product-commit'||proof.command.action==='product-commit-bound'){
    const operation=(proof.command.payload.operations as WireValue[]).map(productMutation).find(row=>row.entityId===entity.entityId);if(!operation||operation.action==='propose-complete'||!matches(operation,entity))invalid();
    if(operation.action==='create'&&entity.authorId!==proof.actorId)invalid();
   }else if(proof.command.action==='product-bootstrap-stage'){
@@ -61,7 +61,7 @@ export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeC
    if(!item||!matches(item.operation,entity)||entity.authorId!==item.authorId)invalid();
   }else{const proposal=reviewed.get(String(proof.command.payload.proposalId));if(!proposal||proposal.entityId!==entity.entityId||!matches(proposal.operation,entity)
     ||!proposal.operation.metadata.completed||!proposal.operation.metadata.approverIds?.length||proposal.operation.metadata.approverIds.some(user=>!approvals.get(proposal.proposalId)?.has(user)))invalid();}
-  const action=proof.command.action==='product-commit'?(proof.command.payload.operations as unknown as ProductMutation[]).find(row=>row.entityId===entity.entityId)!.action:proof.command.action==='product-approve'?'complete':'baseline';
+  const action=['product-commit','product-commit-bound'].includes(proof.command.action)?(proof.command.payload.operations as unknown as ProductMutation[]).find(row=>row.entityId===entity.entityId)!.action:proof.command.action==='product-approve'?'complete':'baseline';
   origins.push({entityId:entity.entityId,revision:entity.revision,actorId:proof.actorId,bootstrap:proof.command.action==='product-bootstrap-stage',action,operationId:proof.command.operationId});
  }
  return{entities,origins,proposals:[...reviewed.values()].map(proposal=>({...proposal,approvals:attestations.filter(row=>row.proposalId===proposal.proposalId).map(row=>{if(typeof row.createdAt!=='string'||!Number.isFinite(Date.parse(row.createdAt)))invalid();return{userId:String(row.userId),createdAt:row.createdAt};})})),bootstrap:{bootstrapId:baseline.command.payload.bootstrapId as string,proofHash:baseline.proofHash,expectedCount:baseline.command.payload.expectedCount as number,parts:baseline.command.payload.parts as {partIndex:number;proofHash:string}[]}};

@@ -10,6 +10,18 @@ Plan: `security-336-final-review.md`. The original prompt bytes are unchanged.
 
 ## Scope setup, real editor capture and product controllers (22 November; candidate)
 
+### Ordinary membership planner, durable input and pinned graph (candidate)
+
+The common pure planner, input-before-IO journal and actual pinned/decrypted
+space/project capture now have web/native source composition. Bound product
+preparation cannot escape through ordinary flush. Frozen product signatures and
+read proofs are tied to a verified membership rotation; the full atomic effects
+manifest/application, wide batching and ordinary UI remain to be composed. The
+graph endpoint currently requires space-owner access; multi-owner/project-owner
+support must use verified exchange, not an ACL-read bypass. All raw inputs/history
+remain retained. See `security-336-membership-operations.md`. No compiler/tests/
+lint/build/assets/CI ran; this is source progress and coverage remains9/20.
+
 ### Multi-owner review exchange foundation (candidate after39d98061/efaa701a)
 
 Matching full-plan fingerprints, independently pinned scope-owner rotation

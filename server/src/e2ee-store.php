@@ -190,6 +190,7 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
     $packet = genesisE2eeExactFields($source, ['command','signature']); $c = genesisE2eeCommand($packet['command']);
     $db = genesisDb();$owns=!$db->inTransaction();if(($membershipHash!==null)===$owns)throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');
     if($c['action']==='rotate-membership'&&$membershipHash===null)throw new DomainException('E2EE_MEMBERSHIP_BATCH_REQUIRED');
+    if($c['action']==='product-commit-bound'&&($membershipHash===null||($c['payload']['membershipHash']??null)!==$membershipHash))throw new DomainException('E2EE_MEMBERSHIP_BATCH_REQUIRED');
     if($owns)genesisBeginWriteTransaction($db);
     try {
         $scope = genesisE2eeScope($actor, $c['scopeId']);
@@ -198,7 +199,7 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
         $device = $recovery ? false : genesisE2eeRow($db, 'SELECT * FROM e2ee_devices WHERE scope_id=? AND device_id=?', [$c['scopeId'],$c['deviceId']]);
         if (!$recovery && (!$device || $device['revoked'] || ($device['user_id'] !== $actor && $c['action'] !== 'enroll'))) throw new DomainException('E2EE_REVOKED_DEVICE');
         if ($recovery && $actor !== $scope['owner_id'] && $c['action']!=='enroll') throw new GenesisResourceLimitException(403,'E2EE_SCOPE_FORBIDDEN');
-        if(!in_array($c['action'],['put','cancel-put','product-commit','product-approve','stoicheion-grant','advice-issue'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
+        if(!in_array($c['action'],['put','cancel-put','product-commit','product-commit-bound','product-approve','stoicheion-grant','advice-issue'],true))genesisE2eeRequireDirectoryAuthority($scope,$device,$recovery);
         genesisE2eeVerifyCommand($packet, $recovery ? $scope['recovery_signing_key'] : $device['signing_key']);
         $fingerprint = genesisE2eeCommandHash($c);
         $receipt = genesisE2eeRow($db, 'SELECT * FROM e2ee_receipts WHERE scope_id=? AND operation_id=?', [$c['scopeId'],$c['operationId']]);
@@ -302,9 +303,9 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
             $result=['operationReceipt'=>['payloadHash'=>$oldHash,'result'=>$oldResult]];
         } elseif(in_array($c['action'],['product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete'],true)){
             if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_OWNER_REQUIRED');require_once __DIR__.'/e2ee-product-bootstrap.php';$result=genesisE2eeProductBootstrap($db,$actor,$scope,$c,$packet);
-        } elseif(in_array($c['action'],['product-commit','product-approve'],true)){
+        } elseif(in_array($c['action'],['product-commit','product-commit-bound','product-approve'],true)){
             if($recovery)throw new DomainException('E2EE_DEVICE_REQUIRED');
-            if($c['action']==='product-commit'){
+            if(in_array($c['action'],['product-commit','product-commit-bound'],true)){
                 if(!is_array($p['operations']??null))throw new InvalidArgumentException('E2EE_PRODUCT_BATCH_INVALID');
                 foreach($p['operations'] as $operation){$comment=in_array($operation['kind']??null,['comment','project-comment'],true);
                     if(!in_array($device['role'],$comment?['owner','writer','commenter']:['owner','writer'],true))throw new GenesisResourceLimitException(403,'E2EE_WRITE_FORBIDDEN');}

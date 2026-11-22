@@ -21,7 +21,7 @@ object E2eeDirectory {
     }
     class Verified(val ownerId: String, val scopeId: String, val resourceId: String, val kind: String,
         var cryptoEpoch: Long, var securityEpoch: Long, var keyId: String, var generation: Long, var state: String,
-        var checkpoint: Checkpoint, val recoveryKit: JSONObject, var recoveryCapsule: JSONObject, val devices: MutableMap<String,Device>,var sealedHeads:SealedHeads?=null) {
+        var checkpoint: Checkpoint, val recoveryKit: JSONObject, var recoveryCapsule: JSONObject, val devices: MutableMap<String,Device>,var sealedHeads:SealedHeads?=null,var membershipHash:String?=null) {
         override fun toString() = "E2eeDirectory.Verified([redacted])"
     }
     private fun trust(condition: Boolean) { if (!condition) throw IllegalStateException("E2EE_UNTRUSTED_DIRECTORY") }
@@ -30,7 +30,7 @@ object E2eeDirectory {
     private fun detachedFrame(value:Verified):Verified = Verified(value.ownerId,value.scopeId,value.resourceId,value.kind,value.cryptoEpoch,value.securityEpoch,
         value.keyId,value.generation,value.state,value.checkpoint,JSONObject(value.recoveryKit.toString()),JSONObject(value.recoveryCapsule.toString()),
         value.devices.mapValues{(_,device)->Device(device.deviceId,device.userId,device.role,device.signingKey,device.receivingKey,device.revoked,
-            JSONObject(device.capsule.toString()),device.historyCapsules.map{grant->HistoricalRoot(grant.cryptoEpoch,grant.keyId,JSONObject(grant.capsule.toString()))}.toMutableList())}.toMutableMap(),value.sealedHeads)
+            JSONObject(device.capsule.toString()),device.historyCapsules.map{grant->HistoricalRoot(grant.cryptoEpoch,grant.keyId,JSONObject(grant.capsule.toString()))}.toMutableList())}.toMutableMap(),value.sealedHeads,value.membershipHash)
     fun signingKey(spki: String): PublicKey = KeyFactory.getInstance("EC")
         .generatePublic(X509EncodedKeySpec(E2eeEnvelope.decode(spki,91))).also(E2eeEnvelope::assertP256)
     fun contentSigningKey(directory:Verified,context:JSONObject):PublicKey {
@@ -89,6 +89,7 @@ object E2eeDirectory {
                 val signerId=command.getString("deviceId");val device=current.devices[signerId]
                 trust(signerId=="recovery" || device!=null&&!device.revoked&&device.userId==ownerId&&device.role=="owner")
                 E2eeCommands.verify(packet,if(signerId=="recovery")authority else signingKey(requireNotNull(device).signingKey))
+                current.membershipHash=null
                 when(command.getString("action")) {
                     "enroll" -> {
                         val challenge=payload.getJSONObject("challenge");val deviceId=technical(challenge,"deviceId");val userId=technical(challenge,"userId")
@@ -120,6 +121,7 @@ object E2eeDirectory {
                         }
                         trust(current.devices.values.all {it.revoked || it.deviceId in updated})
                         if(command.getString("action")=="rotate-membership"){
+                            current.membershipHash=payload.getString("membershipHash")
                             E2eeEnvelope.decode(payload.getString("membershipHash"),32);val changes=payload.getJSONArray("roleChanges");trust(changes.length()==updated.size);val changed=mutableSetOf<String>()
                             for(at in 0 until changes.length()){val row=changes.getJSONObject(at);E2eeKeys.exact(row,setOf("deviceId","role"));val id=technical(row,"deviceId");val target=current.devices[id];val role=row.getString("role")
                                 trust(id in updated&&changed.add(id)&&target!=null&&role in setOf("owner","writer","commenter","reader")&&(role=="owner")== (target!!.userId==ownerId));target!!.role=role}

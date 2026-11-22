@@ -12,6 +12,7 @@ export type MembershipScopePlan={scopeId:string;ownerId:string;kind:'project'|'s
 export type MembershipPreview={intentId:string;changeHash:string;scopePlans:MembershipScopePlan[]};
 export type MembershipReview={scopeId:string;roles:ReviewedDeviceRole[]};
 export interface MembershipTransport{
+ membershipGraph?(spaceId:string):Promise<unknown>;
  membershipState(targets:Pick<MembershipChange,'table'|'key'>[]):Promise<unknown>;
  membershipPreview(intentId:string,changes:MembershipChange[]):Promise<MembershipPreview>;
  membershipCommit(batch:MembershipBatch):Promise<Record<string,WireValue>>;
@@ -58,6 +59,7 @@ export class E2eeMembershipProduct{
    if(row.before!==null){for(const [key,value]of Object.entries(held[at].key))if((row.before as Record<string,unknown>)[key]!==value)throw new Error('E2EE_MEMBERSHIP_STALE');}}
   return snapshotE2eeValue(result.rows) as {table:MembershipChange['table'];key:Record<string,string>;before:Record<string,WireValue>|null;beforeHash:string}[];
  }
+  async graph(spaceId:string){assertTechnical(spaceId);this.current();if(!this.transport.membershipGraph)throw new Error('E2EE_MEMBERSHIP_GRAPH_REQUIRED');const result=await this.transport.membershipGraph(spaceId);this.current();return result;}
  create(changes:MembershipChange[],expectedScopeIds:string[]){const held=validateMembershipChanges(changes),scopes=[...expectedScopeIds].sort();return this.#run(async()=>{
   this.current();if(held.length<1||held.length>200||scopes.length>256||new Set(scopes).size!==scopes.length)throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');for(const id of scopes)assertTechnical(id);
   const intentId=crypto.randomUUID();await this.#save({protocol:1,hashFormat:MEMBERSHIP_HASH_FORMAT,ownerApprovals:[],ownerId:this.device.ownerId,intentId,scopeIds:scopes,changes:held,preview:null,review:null,batch:null,result:null},null);return intentId;

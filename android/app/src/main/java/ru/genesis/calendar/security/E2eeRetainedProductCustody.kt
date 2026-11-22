@@ -120,6 +120,9 @@ internal object E2eeRetainedProductCustody {
             val checked=packet(value);val command=checked.command;val frame=checked.frame;val payload=command.getJSONObject("payload")
             when{
                 base.startsWith("service:")->{E2eeKeys.technical(payload.getString("intentId"));if(command.get("deviceId")!=actor.deviceId||base!="service:"+hash(command.getString("action")+"\u0000"+payload.getString("intentId")))invalid();service(command,frame)}
+                base.startsWith("membership-product:")->{E2eeKeys.exact(payload,setOf("intentId","membershipHash","operations"));E2eeKeys.technical(payload.getString("intentId"));E2eeEnvelope.decode(payload.getString("membershipHash"),32)
+                    if(command.get("action")!="product-commit-bound"||command.get("deviceId")!=actor.deviceId||base!="membership-product:"+hash(command.getString("scopeId")+"\u0000"+payload.getString("intentId")))invalid()
+                    val operations=rows(payload.getJSONArray("operations"));if(operations.size !in 1..100)invalid();operations.forEach{E2eeProductContract.operation(it)}}
                 base.startsWith("aurora-manifest:")->{E2eeKeys.exact(payload,setOf("id","methodVersion","objectId","payloadHash"));E2eeKeys.technical(payload.getString("id"));E2eeKeys.technical(payload.getString("objectId"));E2eeEnvelope.decode(payload.getString("payloadHash"),32);payload.getString("methodVersion");if(base!="aurora-manifest:"+payload.getString("id")||command.get("action")!="aurora-result"||command.get("deviceId")!=actor.deviceId)invalid()}
                 base.startsWith("enrollment:")->{
                     if(base!="enrollment:"+command.getString("scopeId")||command.get("action")!="enroll"||command.get("deviceId")!="recovery")invalid();E2eeKeys.exact(payload,setOf("challenge","capsule","historyCapsules","selfProof"));val challenge=payload.getJSONObject("challenge")
@@ -175,7 +178,7 @@ internal object E2eeRetainedProductCustody {
             for(id in options.controlHistory)if(!options.claimed("local-snapshot",id))control(metadata("local-snapshot",id,true),id,"local-snapshot")
             for(id in options.outbox){if(options.claimed("outbox",id))continue;val value=metadata("outbox",id)
                 when{
-                    id.startsWith("service:")||id.startsWith("enrollment:")||id.startsWith("aurora-manifest:")->control(value,id,"outbox")
+                    id.startsWith("service:")||id.startsWith("membership-product:")||id.startsWith("enrollment:")||id.startsWith("aurora-manifest:")->control(value,id,"outbox")
                     id in setOf("advice-pending-v1","advice-policy-v1")->{val scope=options.personalScopeId?:invalid();val frame=options.directory(scope){true};if(frame.kind!="personal")invalid();E2eeProductCustodyCells.advice(id,value,actor.ownerId,scope);claim("outbox",id,scope,"advice-job")}
                     Regex("stoicheion-job:(daily|spread|timeline)").matches(id)->{val scope=value.getJSONObject("content").getString("scopeId");val frame=options.directory(scope){true};if(frame.kind!="personal")invalid();E2eeProductCustodyCells.stoicheion(value,actor.ownerId,scope,id.substringAfter(':'));claim("outbox",id,scope,"stoicheion-job")}
                     id.startsWith("membership:")->membership(value,id)

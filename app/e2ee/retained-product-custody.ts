@@ -209,7 +209,10 @@ export async function inspectRetainedProductCustody(options:Options){
    else if(command.action==='product-bootstrap-complete'){exactKeys(payload,['intentId','bootstrapId','parts','expectedCount']);assertTechnical(payload.bootstrapId);integer(payload.expectedCount,0,10000);if(!Array.isArray(payload.parts)||payload.parts.length>10000)invalid();for(const part of payload.parts){exactKeys(part,['partIndex','proofHash']);integer(part.partIndex,0,9999);decodeE2eeBytes(part.proofHash,32);}}
    else if(command.action==='advice-issue'){exactKeys(payload,['intentId','dayKey','collection','expectedCount','objectId','payloadHash']);assertTechnical(payload.dayKey);assertTechnical(payload.objectId);decodeE2eeBytes(payload.payloadHash,32);integer(payload.expectedCount,0,8);if(!['aurora','philosophers'].includes(String(payload.collection))||payload.objectId!=='advice-live:'+payload.intentId)invalid();}
    else if(command.action==='stoicheion-grant'){exactKeys(payload,['intentId','kind','action','position','expectedRevision','periodKey','objectId','payloadHash']);integer(payload.expectedRevision);assertTechnical(payload.periodKey);decodeE2eeBytes(payload.payloadHash,32);if(payload.position!==null)integer(payload.position,0,8);if(!['daily','spread','timeline'].includes(String(payload.kind))||!['draw','spread-card','reveal','reroll'].includes(String(payload.action))||payload.objectId!=='stoicheion-live:'+payload.intentId)invalid();}
-  }else if(baseId.startsWith('enrollment:')){
+   }else if(baseId.startsWith('membership-product:')){
+    exactKeys(payload,['intentId','membershipHash','operations']);assertTechnical(payload.intentId);decodeE2eeBytes(payload.membershipHash,32);
+    if(command.action!=='product-commit-bound'||command.deviceId!==options.actor.deviceId||baseId!=='membership-product:'+digest(encoder.encode(`${command.scopeId}\0${payload.intentId}`))||!Array.isArray(payload.operations)||payload.operations.length<1||payload.operations.length>100)invalid();payload.operations.forEach(productMutation);
+   }else if(baseId.startsWith('enrollment:')){
    if(baseId!=='enrollment:'+command.scopeId||command.action!=='enroll'||command.deviceId!=='recovery')invalid();
    exactKeys(payload,['challenge','capsule','historyCapsules','selfProof']);exactKeys(payload.challenge,['id','scopeId','userId','role','sessionHash','deviceId','signingKey','receivingKey','nonce','expiresAt']);const challenge=payload.challenge;
    if(challenge.scopeId!==command.scopeId||challenge.userId!==options.actor.ownerId||challenge.deviceId!==options.actor.deviceId||challenge.signingKey!==options.selfKeys.signingKey||challenge.receivingKey!==options.selfKeys.receivingKey
@@ -228,7 +231,7 @@ export async function inspectRetainedProductCustody(options:Options){
  for(const id of options.outbox){
   if(claimed('outbox',id))continue;
   const value=await metadata('outbox',id);
-  if(id.startsWith('service:')||id.startsWith('enrollment:')||id.startsWith('aurora-manifest:'))await inspectControl(value,id,'outbox');
+   if(id.startsWith('service:')||id.startsWith('membership-product:')||id.startsWith('enrollment:')||id.startsWith('aurora-manifest:'))await inspectControl(value,id,'outbox');
   else if(id==='advice-pending-v1'||id==='advice-policy-v1'){
    if(!options.personalScopeId)invalid();const directory=await options.directory(options.personalScopeId,()=>true);if(directory.kind!=='personal')invalid();
    const {inspectAdviceLocalCell}=await import('./advice-product.ts');inspectAdviceLocalCell(id,value,options.actor.ownerId,directory.scopeId);current();claim('outbox',id,directory.scopeId,'advice-job');

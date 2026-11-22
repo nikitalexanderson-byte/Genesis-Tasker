@@ -18,7 +18,7 @@ private fun adviceRuntimeCode(error:Throwable)=error.message?.takeIf{it.matches(
 /** Executes the bundled common product/selection engine. Network/storage and
  * navigation are blocked in WebView. Narrow native content ports own all keys. */
 internal class NativeAdviceProductRuntime(private val context:Context,private val channel:String="advice-product"){
-    init{require(channel in setOf("advice-product","shared-product"))}
+    init{require(channel in setOf("advice-product","shared-product","shared-aggregate","membership-operation","membership-drafts"))}
     @SuppressLint("SetJavaScriptEnabled")
     suspend fun execute(input:JSONObject,current:()->Unit,call:suspend(String,JSONObject)->Any):JSONObject=coroutineScope{
         current();val id=UUID.randomUUID().toString();val outcome=CompletableDeferred<JSONObject>();val active=AtomicBoolean(true)

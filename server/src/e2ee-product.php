@@ -171,7 +171,7 @@ function genesisE2eeProductSave(PDO $db,array $scope,array $operation,string $au
 function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payload,array $packet): array
 {
     genesisSharedRequireEnabled($actor);
-    genesisE2eeExactFields($payload,['intentId','operations']);genesisE2eeIdentifier($payload['intentId']);
+    $bound=($packet['command']['action']??null)==='product-commit-bound';genesisE2eeExactFields($payload,['intentId','operations',...($bound?['membershipHash']:[])]);genesisE2eeIdentifier($payload['intentId']);if($bound)genesisE2eeDecode($payload['membershipHash'],32);
     if(!is_array($payload['operations'])||!array_is_list($payload['operations'])||count($payload['operations'])<1||count($payload['operations'])>100)throw new InvalidArgumentException('E2EE_PRODUCT_BATCH_INVALID');
     $seen=[];$results=[];
     foreach($payload['operations'] as $operation){
@@ -229,6 +229,6 @@ function genesisE2eeProductService(PDO $db,string $actor,array $scope,array $com
     $payload=$command['payload'];$id=genesisE2eeIdentifier($payload['intentId']??null);$hash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical($payload),true)),'+/','-_'),'=');
     $old=genesisE2eeRow($db,'SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action=? AND intent_id=?',[$scope['scope_id'],$actor,$command['action'],$id]);
     if($old){if(!hash_equals($old['payload_hash'],$hash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');return json_decode($old['result_json'],true,512,JSON_THROW_ON_ERROR);}
-    $result=match($command['action']){'product-commit'=>genesisE2eeProductCommit($db,$actor,$scope,$payload,$packet),'product-approve'=>genesisE2eeProductApprove($db,$actor,$scope,$payload,$packet),default=>throw new InvalidArgumentException('E2EE_UNKNOWN_ACTION')};
+    $result=match($command['action']){'product-commit','product-commit-bound'=>genesisE2eeProductCommit($db,$actor,$scope,$payload,$packet),'product-approve'=>genesisE2eeProductApprove($db,$actor,$scope,$payload,$packet),default=>throw new InvalidArgumentException('E2EE_UNKNOWN_ACTION')};
     $db->prepare('INSERT INTO e2ee_service_intents VALUES(?,?,?,?,?,?)')->execute([$scope['scope_id'],$actor,$command['action'],$id,$hash,genesisE2eeJson($result)]);return$result;
 }

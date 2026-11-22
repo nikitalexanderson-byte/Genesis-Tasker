@@ -400,6 +400,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val job=currentCoroutineContext().job;val(account,ports,current)=privateDeviceAccessPorts(uid){job.ensureActive()};val generation=client.currentGeneration()
         val channel=object:ru.genesis.calendar.security.E2eeMembershipTransport{
             private fun call(path:String,body:JSONObject):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
+            override fun membershipGraph(spaceId:String)=call("/membership-graph",JSONObject().put("spaceId",spaceId))
             override fun membershipState(targets:JSONArray)=call("/membership-state",JSONObject().put("targets",targets))
             override fun membershipPreview(intentId:String,changes:JSONArray)=call("/membership-preview",JSONObject().put("intentId",intentId).put("changes",changes))
             override fun membershipCommit(batch:JSONObject)=call("/membership",batch)
@@ -822,6 +823,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun read(packet:JSONObject)=call("/read",packet)
             override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
             override val membership=object:ru.genesis.calendar.security.E2eeMembershipTransport{
+                override fun membershipGraph(spaceId:String)=call("/membership-graph",JSONObject().put("spaceId",spaceId))
                 override fun membershipState(targets:JSONArray)=call("/membership-state",JSONObject().put("targets",targets))
                 override fun membershipPreview(intentId:String,changes:JSONArray)=call("/membership-preview",JSONObject().put("intentId",intentId).put("changes",changes))
                 override fun membershipCommit(batch:JSONObject)=call("/membership",batch)

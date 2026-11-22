@@ -522,6 +522,18 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         check(refreshed&&value.kind=="personal"&&value.ownerId==device.ownerId&&value.state=="active"&&own?.role=="owner"&&!own.revoked){"E2EE_OWNER_REQUIRED"}
         return packet("membership-authorize",JSONObject().put("intentId",intentId).put("changeHash",changeHash))
     }
+    @Synchronized fun prepareMembershipProduct(intentId:String,membershipHash:String,input:JSONArray):JSONObject{
+        E2eeKeys.technical(intentId);E2eeEnvelope.decode(membershipHash,32);check(input.length() in 1..100){"E2EE_PRODUCT_BATCH_INVALID"};val operations=JSONArray();val ids=mutableSetOf<String>()
+        for(at in 0 until input.length()){val operation=E2eeProductContract.operation(input.getJSONObject(at));check(ids.add(operation.getString("entityId"))){"E2EE_PRODUCT_BATCH_INVALID"};operations.put(operation)}
+        val payload=JSONObject().put("intentId",intentId).put("membershipHash",membershipHash).put("operations",operations);val key="membership-product:"+hash("$scopeId\u0000$intentId");val prior=device.vault.read("outbox",key);device.requireOpen()
+        try{
+            if(prior!=null){val signed=E2eeFileManifestJson.readPrivateDocument(prior.bytes);val command=signed.getJSONObject("command")
+                check(command.get("action")=="product-commit-bound"&&command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId&&command.get("deviceId")==device.deviceId&&E2eeCommands.canonical(command.getJSONObject("payload")).contentEquals(E2eeCommands.canonical(payload))){"E2EE_IDEMPOTENCY_CONFLICT"};return signed}
+            val value=current();val own=value.devices[device.deviceId];check(refreshed&&value.state=="active"&&own!=null&&!own.revoked&&own.role in setOf("owner","writer")){"E2EE_WRITE_FORBIDDEN"}
+            val signed=packet("product-commit-bound",payload);val bytes=signed.toString().toByteArray(Charsets.UTF_8)
+            try{device.vault.write(listOf(UnlockedE2eeVault.Write("outbox",key,bytes,null)));device.requireOpen()}finally{bytes.fill(0)};return signed
+        }finally{prior?.bytes?.fill(0)}
+    }
     /** A complete human-reviewed roster, never implicit consent to a preview.
      * The independent future root exists only while HPKE capsules are prepared. */
     @Synchronized fun prepareMembershipRotation(changeHash:String,reviewed:JSONArray,manifest:JSONObject,expected:JSONObject):JSONObject{
@@ -605,10 +617,11 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     @Synchronized fun verifyServiceProof(input:JSONObject):JSONObject{
         current();val packet=JSONObject(input.toString());val command=packet.getJSONObject("command");val frame=directoryFrames[command.getLong("expectedRevision")]?:error("E2EE_PRODUCT_PROOF_INVALID")
         check(command.get("ownerId")==ownerId&&command.get("scopeId")==scopeId&&command.get("checkpointHash")==frame.checkpoint.hash&&command.getLong("securityEpoch")==frame.securityEpoch
-            &&command.getString("action") in setOf("product-commit","product-approve","product-bootstrap-stage","product-bootstrap-complete")){"E2EE_PRODUCT_PROOF_INVALID"}
+            &&command.getString("action") in setOf("product-commit","product-commit-bound","product-approve","product-bootstrap-stage","product-bootstrap-complete")){"E2EE_PRODUCT_PROOF_INVALID"}
         val signer=frame.devices[command.getString("deviceId")]?:error("E2EE_PRODUCT_PROOF_INVALID");check(!signer.revoked){"E2EE_PRODUCT_PROOF_INVALID"}
         if(command.getString("action").startsWith("product-bootstrap-"))check(signer.role=="owner"&&signer.userId==frame.ownerId){"E2EE_PRODUCT_PROOF_INVALID"}
-        if(command.getString("action")=="product-commit"){val rows=command.getJSONObject("payload").getJSONArray("operations");check(rows.length() in 1..100){"E2EE_PRODUCT_PROOF_INVALID"}
+        if(command.getString("action")=="product-commit-bound"){val accepted=directoryFrames[command.getLong("expectedRevision")+1];check(accepted!=null&&accepted.membershipHash==command.getJSONObject("payload").get("membershipHash")&&accepted.cryptoEpoch==frame.cryptoEpoch+1){"E2EE_PRODUCT_PROOF_INVALID"}}
+        if(command.getString("action") in setOf("product-commit","product-commit-bound")){val rows=command.getJSONObject("payload").getJSONArray("operations");check(rows.length() in 1..100){"E2EE_PRODUCT_PROOF_INVALID"}
             for(at in 0 until rows.length()){val comment=rows.getJSONObject(at).getString("kind") in setOf("comment","project-comment");check(signer.role in if(comment)setOf("owner","writer","commenter")else setOf("owner","writer")){"E2EE_PRODUCT_PROOF_INVALID"}}}
         val key=KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(E2eeEnvelope.decode(signer.signingKey,91)));E2eeEnvelope.assertP256(key)
         val verified=E2eeCommands.verify(packet,key);device.requireOpen();return JSONObject().put("actorId",signer.userId).put("command",verified).put("proofHash",E2eeCommands.hash(verified))

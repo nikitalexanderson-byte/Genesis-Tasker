@@ -29,6 +29,9 @@ import {SharedLiveModel,validateSharedLiveContext,type SavedSharedRequest} from 
 import type {ProductEdit,ProductVersion} from '../e2ee/shared-product';
 import type {SharedDomainBinding} from '../e2ee/shared-domain';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState,type PersonalSharedState} from '../e2ee/shared-aggregate';
+import {planMembershipOperation} from '../e2ee/membership-operation-plan';
+import {MembershipOperationDrafts,type MembershipOperationDraft} from '../e2ee/membership-operation-drafts';
+import {captureMembershipOperationSnapshot,type MembershipOpenedScope} from '../e2ee/membership-operation-selection';
 
 type Bridge={postMessage:(value:string)=>void;postChunk:(id:string,index:number,last:boolean,value:string)=>void};
 declare global {interface Window {GenesisAuroraSourceBridge:Bridge;GenesisAuroraSourceRuntime:{append:(job:string,index:number,last:boolean,value:string)=>boolean;
@@ -48,6 +51,34 @@ async function run(encoded:string){
   try{
     const wire=decodeE2eeBytes(encoded,1,MAX);let value:Record<string,unknown>;
     try{value=backupJson(decoder.decode(wire),MAX) as Record<string,unknown>;}finally{wire.fill(0);}
+    if(value.mode==='membership-operation-v1'){
+      exactKeys(value,['protocol','mode','snapshot','operation']);if(value.protocol!==1)throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
+      const result=planMembershipOperation(value.snapshot,value.operation);current();send({job,kind:'membership-operation-complete',value:result});return;
+    }
+    if(value.mode==='membership-drafts-v1'){
+      exactKeys(value,['protocol','mode','ownerId','action','args']);if(value.protocol!==1||typeof value.ownerId!=='string')throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
+      const invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'membership-drafts-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
+      const model=new MembershipOperationDrafts({ownerId:value.ownerId,current,
+        load:async id=>await invoke('load',{id}) as {value:unknown;serial:number}|null,
+        save:async(id,document,expected)=>await invoke('save',{id,document,expected}) as number,
+        list:async()=>await invoke('list') as string[],
+        capture:operation=>captureMembershipOperationSnapshot(operation,{actorId:value.ownerId as string,current,
+          bindings:async()=>await invoke('bindings') as {kind:'space'|'project';resourceId:string;scopeId:string}[],
+          graph:spaceId=>invoke('graph',{spaceId}),state:targets=>invoke('state',{targets}),
+          open:async(kind,resourceId,scopeId)=>await invoke('open',{kind,resourceId,scopeId}) as MembershipOpenedScope,
+          read:async(scopeId,entity)=>await invoke('read',{scopeId,entity}) as ProductVersion,
+        }),
+      });
+      let result:unknown;const args=value.args;
+      if(value.action==='create'){exactKeys(args,['operation']);const id=await model.create(args.operation as MembershipOperationDraft['operation']);result={id,state:await model.inspect(id)};}
+      else if(value.action==='pending'){exactKeys(args,[]);result={items:await model.pending()};}
+      else if(value.action==='confirm'){exactKeys(args,['id','fingerprint']);result={state:await model.confirm(args.id as string,args.fingerprint as string)};}
+      else{exactKeys(args,['id']);if(value.action==='inspect')result={state:await model.inspect(args.id as string)};
+        else if(value.action==='preview')result={state:await model.preview(args.id as string)};
+        else if(value.action==='start')result={state:await model.start(args.id as string)};
+        else throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');}
+      current();send({job,kind:'membership-drafts-complete',value:result});return;
+    }
     if(value.mode==='shared-aggregate-v1'){
       exactKeys(value,['protocol','mode','actorId','method','path','body']);if(value.protocol!==1||typeof value.actorId!=='string'||typeof value.method!=='string'||typeof value.path!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');
       const actorId=value.actorId,invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'shared-aggregate-call',method,payload});}catch(error){pending.delete(id);reject(error);}});

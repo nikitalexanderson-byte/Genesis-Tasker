@@ -7,6 +7,7 @@ import {verifyDeviceAccessRequest,deviceAccessFingerprint,type DeviceAccessReque
 import { UnlockedWebDevice } from './device-vault.ts';
 import type { LocalWrite } from './storage.ts';
 import {validatePrivateProjectSelection,validatePrivateProjectTopology,type PrivateProjectSelection} from './project-create-contract.ts';
+import {productMutation,type ProductMutation} from './product-contract.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
@@ -451,6 +452,18 @@ export class E2eeScopeClient {
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
     return this.#packet('membership-authorize',{intentId,changeHash});
   }
+  /** Frozen packet for the containing transaction. It cannot be executed by
+   * the ordinary command route or renewed into a different directory frame. */
+  async prepareMembershipProduct(intentId:string,membershipHash:string,input:ProductMutation[]){
+    assertTechnical(intentId);decodeE2eeBytes(membershipHash,32);const operations=input.map(productMutation);
+    if(operations.length<1||operations.length>100||new Set(operations.map(row=>row.entityId)).size!==operations.length)throw new Error('E2EE_PRODUCT_BATCH_INVALID');
+    const payload=snapshotE2eeValue({intentId,membershipHash,operations}) as unknown as Record<string,WireValue>,id='membership-product:'+await hash(this.#scopeId+'\0'+intentId),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();
+    try{if(prior){const packet=JSON.parse(decoder.decode(prior.value)) as SignedE2eeCommand,c=packet.command;
+      const before=canonicalE2eeValue(c.payload),after=canonicalE2eeValue(payload);try{if(c.action!=='product-commit-bound'||c.ownerId!==this.#owner||c.scopeId!==this.#scopeId||c.deviceId!==this.#device.deviceId||before.length!==after.length||before.some((byte,index)=>byte!==after[index]))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}finally{before.fill(0);after.fill(0);}return snapshotE2eeValue(packet);}
+      const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);if(!this.#refreshed||directory.state!=='active'||!own||own.revoked||!['owner','writer'].includes(own.role))throw new Error('E2EE_WRITE_FORBIDDEN');
+      const packet=await this.#packet('product-commit-bound',payload),bytes=encoder.encode(JSON.stringify(packet));try{await this.#device.vault.write([{domain:'outbox',objectId:id,value:bytes,expected:null}]);this.#device.requireOpen();}finally{bytes.fill(0);}return snapshotE2eeValue(packet);
+    }finally{prior?.value.fill(0);}
+  }
   async prepareDeviceAccess(input:DeviceAccessRequest,comparedFingerprint:string){
     const request=await verifyDeviceAccessRequest(input),directory=this.#open();this.#device.requireOpen();
     const own=directory.devices.get(this.#device.deviceId),target=request.target,challenge=request.challenge;
@@ -542,10 +555,13 @@ export class E2eeScopeClient {
   async verifyServiceProof(input:SignedE2eeCommand){
     this.#open();const packet=snapshotE2eeValue(input),command=packet.command,frame=this.#directoryFrames.get(command.expectedRevision);
     if(!frame||command.ownerId!==this.#owner||command.scopeId!==this.#scopeId||command.checkpointHash!==frame.checkpoint.hash||command.securityEpoch!==frame.securityEpoch
-      ||!['product-commit','product-approve','product-bootstrap-stage','product-bootstrap-complete'].includes(command.action))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+      ||!['product-commit','product-commit-bound','product-approve','product-bootstrap-stage','product-bootstrap-complete'].includes(command.action))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
     const signer=frame.devices.get(command.deviceId);if(!signer||signer.revoked)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
     if(command.action.startsWith('product-bootstrap-')&&(signer.role!=='owner'||signer.userId!==frame.ownerId))throw new Error('E2EE_PRODUCT_PROOF_INVALID');
-    if(command.action==='product-commit'){
+    if(command.action==='product-commit-bound'){
+      const accepted=this.#directoryFrames.get(command.expectedRevision+1);if(!accepted||accepted.membershipHash!==command.payload.membershipHash||accepted.cryptoEpoch!==frame.cryptoEpoch+1)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
+    }
+    if(command.action==='product-commit'||command.action==='product-commit-bound'){
       const operations=command.payload.operations;if(!Array.isArray(operations)||operations.length<1||operations.length>100)throw new Error('E2EE_PRODUCT_PROOF_INVALID');
       for(const row of operations){if(!row||typeof row!=='object'||Array.isArray(row))throw new Error('E2EE_PRODUCT_PROOF_INVALID');const comment=['comment','project-comment'].includes(String(row.kind));
         if(!(comment?['owner','writer','commenter']:['owner','writer']).includes(signer.role))throw new Error('E2EE_PRODUCT_PROOF_INVALID');}

@@ -9,7 +9,7 @@ export type VerifiedDevice = PublicDeviceKeys & { deviceId: string; userId: stri
 export type VerifiedDirectory = { ownerId: string; scopeId: string; resourceId: string; kind: 'personal'|'project'|'space';
   cryptoEpoch: number; securityEpoch: number; keyId: string; generation: number; state: 'preparing'|'active';
   checkpoint: DirectoryCheckpoint; recoveryKit: RecoveryKit; recoveryCapsule: RootCapsule; devices: Map<string, VerifiedDevice>;
-  sealedHeads:{cryptoEpoch:number;hash:string;count:number}|null };
+  sealedHeads:{cryptoEpoch:number;hash:string;count:number}|null;membershipHash?:string };
 export async function signingPublicKey(spki: string): Promise<CryptoKey> {
   return crypto.subtle.importKey('spki', decodeE2eeBytes(spki, 91), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
 }
@@ -65,6 +65,7 @@ export async function verifyDeviceDirectory(ownerId: string, scopeId: string, pi
       // reader signature cannot delegate authority over future encryption keys.
       requireState(command.deviceId === 'recovery' || (!!signer && !signer.revoked && signer.userId === ownerId && signer.role === 'owner'));
       await verifyE2eeCommand(packet, command.deviceId === 'recovery' ? authority : await signingPublicKey(signer!.signingKey));
+      delete directory.membershipHash;
       const payload = command.payload;
       if (command.action === 'enroll') {
         const challenge = objectPayload(payload.challenge);
@@ -109,6 +110,7 @@ export async function verifyDeviceDirectory(ownerId: string, scopeId: string, pi
         }
         requireState([...directory.devices.values()].every(device => device.revoked || updated.has(device.deviceId)));
         if(command.action==='rotate-membership'){
+          directory.membershipHash=payload.membershipHash as string;
           decodeE2eeBytes(payload.membershipHash,32);requireState(Array.isArray(payload.roleChanges)&&payload.roleChanges.length===updated.size);const changed=new Set<string>();
           for(const raw of payload.roleChanges){const change=objectPayload(raw);requireState(Object.keys(change).length===2&&typeof change.deviceId==='string'&&updated.has(change.deviceId)&&!changed.has(change.deviceId));
             const device=directory.devices.get(change.deviceId)!;requireState(['owner','writer','commenter','reader'].includes(String(change.role))&&(change.role==='owner')===(device.userId===ownerId));
