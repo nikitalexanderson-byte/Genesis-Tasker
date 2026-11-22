@@ -18,7 +18,7 @@ internal object E2eeProductMigration{
             E2eeLegacyArchiveFragments.collect(context,current,ports::legacyArchiveFragment);current()
         }
         for(path in inventory.required(target.kind).filter{target.kind!="personal"||it.id=="personal.local-work"}){
-            E2eePrivatePathFragments.collect(context,target.kind,target.resourceId,path.id,catalogue.tables(target.kind,path.id),current,ports::legacyPrivatePathFragment);current()
+            E2eePrivatePathFragments.collect(context,target.kind,target.resourceId,path.id,catalogue.tables(target.kind,path.id),current,ports::legacyPrivatePathFragment,ports::legacyPrivatePathBatch);current()
         }
     }
     suspend fun run(options:Options,catalogue:E2eePrivatePathCatalogue){

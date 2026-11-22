@@ -4270,7 +4270,7 @@ export async function createPersonalArchivesMigrationSource(userId:string,scopeI
 /** Source factories for the remaining personal/project/space data paths. Local
  * originals are read without using a live legacy transport permit or key API. */
 export async function createRelationalMigrationSources(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
-  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathFragment'>){
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathFragment'|'legacyPrivatePathBatch'>){
   const session=captureAccountSessionGuard(),legacy=workspaceKey;
   const check=()=>{session();if(workspaceUserId!==userId||workspaceKey!==legacy||directory.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
   const [{RelationalPrivatePathSource},{captureWebPrivatePathLocal},{collectPrivatePathFragments},{requiredPrivatePaths}]=await Promise.all([
@@ -4292,7 +4292,7 @@ export async function createRelationalMigrationSources(userId:string,directory:i
       capture:()=>path.id.endsWith('.local-work')?captureWebPrivatePathLocal(target,{storage:localStorage,assertCurrent:check,open})
         :Promise.resolve({platform:'web' as const,inventoryVersion:1 as const,entries:[],editors:[]}),
       read:context=>collectPrivatePathFragments(context,target,{assertCurrent:check,
-        read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset)})});
+        read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset),readBatch:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathBatch(value,pathId,table,offset,byteOffset)})});
   });
 }
 

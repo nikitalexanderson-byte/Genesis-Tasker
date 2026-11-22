@@ -23,7 +23,7 @@ export async function capturePrivateScopeServerSources(target:Target,context:Mig
  }
  for(const path of requiredPrivatePaths(target.kind).filter(path=>target.kind!=='personal'||path.id==='personal.local-work')){
   await collectPrivatePathFragments(context,{kind:target.kind,resourceId:target.resourceId,pathId:path.id},{assertCurrent,
-   read:(value,pathId,table,offset,byteOffset)=>ports.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset)});assertCurrent();
+   read:(value,pathId,table,offset,byteOffset)=>ports.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset),...(ports.legacyPrivatePathBatch?{readBatch:(value:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number)=>ports.legacyPrivatePathBatch!(value,pathId,table,offset,byteOffset)}:{})});assertCurrent();
  }
 }
 

@@ -17,6 +17,7 @@ type Journal={protocol:1;purpose:'remote-original/v1';id:string;context:Context;
 type Catalog={protocol:1;context:Context;ids:string[]};
 type ReadVault=Pick<UnlockedE2eeVault,'localIdentity'|'assertUnlocked'|'read'|'listLocal'>;
 export type RemoteOriginalCapacity=Readonly<{maximumBytes:number;maximumParts:number;maximumObservations:number;maximumRecords:number;maximumMetadataBytes:number}>;
+export const REMOTE_ORIGINAL_READ_CAPACITY:RemoteOriginalCapacity=Object.freeze({maximumBytes:2147483647,maximumParts:65536,maximumObservations:8000,maximumRecords:1000000,maximumMetadataBytes:128*1024*1024});
 export type RemoteOriginalAdmission=Readonly<{bytes:number;parts:number;observations:number;records:number;metadataBytes:number}>;
 export type RemoteOriginalReadOptions={vault:ReadVault;target:Target;capacity:RemoteOriginalCapacity;assertCurrent:()=>void};
 export type RemoteOriginalOptions=Omit<RemoteOriginalReadOptions,'vault'>&{vault:UnlockedE2eeVault;packet:SignedE2eeCommand;signer:CryptoKey;generation:number;ensureDurableKeys:()=>Promise<void>;admit:(request:RemoteOriginalAdmission)=>Promise<void>};
@@ -57,7 +58,7 @@ export async function authenticateRemoteOriginalRegistration(value:unknown,packe
 function parse(bytes:Uint8Array){const value=decodeCanonicalE2eeValue(bytes,MAX_META),canonical=encoded(value);try{if(canonical.length!==bytes.length||canonical.some((byte,at)=>byte!==bytes[at]))invalid();return value;}finally{canonical.fill(0);}}
 function capacity(source:RemoteOriginalCapacity){
  const result=snapshotE2eeValue(source);exactKeys(result,['maximumBytes','maximumParts','maximumObservations','maximumRecords','maximumMetadataBytes']);
- integer(result.maximumBytes,1,128*1024*1024);integer(result.maximumParts,1,8000);integer(result.maximumObservations,1,1000);integer(result.maximumRecords,1,10000);integer(result.maximumMetadataBytes,1,16*1024*1024);return result;
+ integer(result.maximumBytes,1,REMOTE_ORIGINAL_READ_CAPACITY.maximumBytes);integer(result.maximumParts,1,65536);integer(result.maximumObservations,1,8000);integer(result.maximumRecords,1,1000000);integer(result.maximumMetadataBytes,1,128*1024*1024);return result;
 }
 function context(vault:ReadVault,target:Target):Context{
  exactKeys(target,['ownerId','scopeId','kind']);assertTechnical(target.ownerId);assertTechnical(target.scopeId);if(!['personal','project','space'].includes(target.kind))invalid();
@@ -82,7 +83,7 @@ function journal(value:unknown,scope:Context,id:string):Journal{
  if(value.protocol!==1||value.purpose!==PURPOSE||value.id!==id||!['registered','receiving','complete'].includes(value.phase as string))invalid();same(value.context,scope);validateBinding(value.binding);
  exactKeys(value.request,['size','hash']);integer(value.request.size,1,MAX_REQUEST);decodeE2eeBytes(value.request.hash,32);
  if(value.response!==null)response(value.response);if((value.phase==='registered')!==(value.response===null))invalid();integer(value.size,0,value.response===null?0:e2eeResponseLimit((value.response as Response).path,(value.response as Response).status));
- if(!Array.isArray(value.parts)||value.parts.length>8000)invalid();let size=0;
+ if(!Array.isArray(value.parts)||value.parts.length>65536)invalid();let size=0;
  for(const part of value.parts){exactKeys(part,['size','hash']);integer(part.size,1,MAX_PART);decodeE2eeBytes(part.hash,32);size+=part.size;}
  if(size!==value.size||value.phase==='registered'&&size!==0)invalid();
  if(value.phase==='complete'){decodeE2eeBytes(value.rawHash,32);decodeE2eeBytes(value.manifestHash,32);}else if(value.rawHash!==null||value.manifestHash!==null)invalid();
@@ -95,7 +96,7 @@ async function inventory(options:RemoteOriginalReadOptions):Promise<Inventory>{
  const owned:string[]=[];
  for(const id of all){const parts=id.split(':');if(!/^remote-original:[A-Za-z0-9_-]{43}:[a-f0-9-]{36}:[jrmp]:[0-9]{5}$/.test(id)||!uuid.test(parts[2])||Number(parts[4])>7999||parts[3]!=='p'&&parts[4]!=='00000')throw new Error('E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT');decodeE2eeBytes(parts[1],32);if(parts[1]===hash)owned.push(id);}
  let index:Catalog={protocol:1,context:scope,ids:[]};
- if(before){exactKeys(before.value,['protocol','context','ids']);if(before.value.protocol!==1||!Array.isArray(before.value.ids)||before.value.ids.length>1000)invalid();same(before.value.context,scope);const seen=new Set();for(const id of before.value.ids){if(typeof id!=='string'||!uuid.test(id)||seen.has(id))invalid();seen.add(id);}index=before.value as Catalog;}
+ if(before){exactKeys(before.value,['protocol','context','ids']);if(before.value.protocol!==1||!Array.isArray(before.value.ids)||before.value.ids.length>8000)invalid();same(before.value.context,scope);const seen=new Set();for(const id of before.value.ids){if(typeof id!=='string'||!uuid.test(id)||seen.has(id))invalid();seen.add(id);}index=before.value as Catalog;}
  else if(owned.length)throw new Error('E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT');
  const present=new Set(owned),expected=new Set<string>(),journals:Inventory['journals']=[];
  const usage={bytes:0,parts:0,observations:index.ids.length,records:before?1:0,metadataBytes:before?.bytes??0};
@@ -103,7 +104,7 @@ async function inventory(options:RemoteOriginalReadOptions):Promise<Inventory>{
   const jid=key(hash,id,'j'),rid=key(hash,id,'r');if(!present.has(jid)||!present.has(rid))invalid();expected.add(jid);expected.add(rid);
   const row=await metadata(options,jid);if(!row)invalid();const j=journal(row.value,scope,id);journals.push({value:j,serial:row.serial,hash:row.hash});
   usage.bytes+=j.size;usage.parts+=j.parts.length;usage.records+=2+j.parts.length;usage.metadataBytes+=row.bytes+j.request.size;
-  if(usage.parts>8000||usage.records>10000||usage.observations>1000||usage.metadataBytes>16*1024*1024)throw new Error('E2EE_REMOTE_ORIGINAL_CAPACITY');
+  if(usage.parts>65536||usage.records>1000000||usage.observations>8000||usage.metadataBytes>128*1024*1024)throw new Error('E2EE_REMOTE_ORIGINAL_CAPACITY');
   for(const part of j.parts.keys())expected.add(key(hash,id,'p',part));
   if(j.phase==='complete'){
    const mid=key(hash,id,'m');expected.add(mid);const m=await metadata(options,mid);if(!m||m.serial!==1||m.hash!==j.manifestHash||identity(m.value)!==identity(manifest(j)))invalid();usage.records++;usage.metadataBytes+=m.bytes;
@@ -122,7 +123,7 @@ async function commit(options:RemoteOriginalOptions,changes:LocalWrite[]){try{ch
 async function packetBinding(packet:SignedE2eeCommand,signer:CryptoKey,scope:Context,generation:number):Promise<Binding>{
  const command=await verifyE2eeCommand(packet,signer);if(command.ownerId!==scope.ownerId||command.scopeId!==scope.scopeId||command.deviceId!==scope.deviceId||!actions.has(command.action))throw new Error('E2EE_REMOTE_ORIGINAL_CONTEXT');
  if(command.action==='legacy-shared-mindmaps'&&(!['project','space'].includes(scope.kind)||!Object.hasOwn(command.payload,'table')))throw new Error('E2EE_REMOTE_ORIGINAL_CONTEXT');
- const payload=command.payload;const names=['migrationId','fence','sourceHash',...(Object.hasOwn(payload,'table')?['table','offset']:[]),...(Object.hasOwn(payload,'byteOffset')?['byteOffset']:[]),...(command.action==='legacy-private-path'?['pathId']:[])];exactKeys(payload,names);
+ const payload=command.payload;const names=['migrationId','fence','sourceHash',...(Object.hasOwn(payload,'table')?['table','offset']:[]),...(Object.hasOwn(payload,'byteOffset')?['byteOffset']:[]),...(command.action==='legacy-private-path'?['pathId']:[]),...(command.action==='legacy-private-path'&&Object.hasOwn(payload,'maxFragments')?['maxFragments']:[])];exactKeys(payload,names);if(Object.hasOwn(payload,'maxFragments'))integer(payload.maxFragments,1,50);
  if(command.action==='legacy-private-path'){
   if(typeof payload.pathId!=='string'||typeof payload.table!=='string'||typeof payload.offset!=='number'||typeof payload.byteOffset!=='number')invalid();
   validatePrivatePathPage(scope.kind,payload.pathId,payload.table,payload.offset,payload.byteOffset);

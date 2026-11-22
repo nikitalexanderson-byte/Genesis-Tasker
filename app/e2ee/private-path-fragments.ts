@@ -16,16 +16,22 @@ function row(value:unknown):asserts value is Record<string,unknown>{if(!value||t
 /** Exact table inventory, byte offsets, totals, EOF and complete-row hashes.
  * One response is at most1MiB of original row; no page length implies EOF. */
 export async function collectPrivatePathFragments(context:MigrationSourceContext,target:{kind:PrivateScopeKind;resourceId:string;pathId:string},ports:{assertCurrent:()=>void;
- read:(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number)=>Promise<unknown>}):Promise<PrivatePathRemote>{
+ read:(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number)=>Promise<unknown>;
+ readBatch?:(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number)=>Promise<unknown>}):Promise<PrivatePathRemote>{
  const scope=Object.freeze({...target}),lease=Object.freeze({...context}),schema=privatePathSource(scope.kind,scope.pathId),tables:Record<string,PrivatePathSourceRow[]>={};
  assertTechnical(scope.resourceId);assertTechnical(lease.ownerId);assertTechnical(lease.scopeId);assertTechnical(lease.migrationId);integer(lease.fence);decodeE2eeBytes(lease.sourceHash,32).fill(0);
  let totals:Record<string,unknown>|undefined,checkpoint:string|undefined,revision:number|undefined,requests=0,size=0,wire=0;
+ let buffered:unknown[]=[];
+ const read=async(table:string,offset:number,byteOffset:number)=>{ports.assertCurrent();if(!ports.readBatch)return ports.read(lease,scope.pathId,table,offset,byteOffset);
+  if(!buffered.length){const value=structuredClone(await ports.readBatch(lease,scope.pathId,table,offset,byteOffset));ports.assertCurrent();row(value);if(Object.hasOwn(value,'fragments')){exactKeys(value,['protocol','ownerId','scopeId','kind','resourceId','migrationId','fence','sourceHash','checkpointHash','directoryRevision','pathId','table','offset','byteOffset','fragments']);if(value.protocol!==1||value.ownerId!==lease.ownerId||value.scopeId!==lease.scopeId||value.kind!==scope.kind||value.resourceId!==scope.resourceId||value.migrationId!==lease.migrationId||value.fence!==lease.fence||value.sourceHash!==lease.sourceHash||value.pathId!==scope.pathId||value.table!==table||value.offset!==offset||value.byteOffset!==byteOffset||!Array.isArray(value.fragments)||value.fragments.length<1||value.fragments.length>50)invalid();buffered=value.fragments;}else buffered=[value];}
+  const value=buffered.shift();row(value);if(value.pathId!==scope.pathId||value.table!==table||value.offset!==offset||value.byteOffset!==byteOffset)invalid();return value;
+ };
  for(const table of schema.tables){const rows:PrivatePathSourceRow[]=[];tables[table.table]=rows;let offset=0;
   for(;;){let position=0,buffer:Uint8Array|undefined,expectedLength:number|undefined,expectedHash:string|undefined,last=false;
    try{
     for(;;){
-     ports.assertCurrent();if(++requests>10000)throw new Error('E2EE_SOURCE_TOO_LARGE');
-     const page=structuredClone(await ports.read(lease,scope.pathId,table.table,offset,position));ports.assertCurrent();
+     ports.assertCurrent();if(++requests>1000000)throw new Error('E2EE_SOURCE_TOO_LARGE');
+     const page=structuredClone(await read(table.table,offset,position));ports.assertCurrent();
      exactKeys(page,['protocol','ownerId','scopeId','kind','resourceId','migrationId','fence','sourceHash','checkpointHash','directoryRevision','pathId','table','offset','byteOffset','totals','rowBytes','rowHash','chunk','nextByteOffset','nextOffset']);
      if(page.protocol!==1||page.ownerId!==lease.ownerId||page.scopeId!==lease.scopeId||page.kind!==scope.kind||page.resourceId!==scope.resourceId||page.pathId!==scope.pathId
       ||page.migrationId!==lease.migrationId||page.fence!==lease.fence||page.sourceHash!==lease.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
@@ -33,7 +39,7 @@ export async function collectPrivatePathFragments(context:MigrationSourceContext
      exactKeys(page.totals,schema.server);let count=0;for(const name of schema.server){integer(page.totals[name]);count+=page.totals[name] as number;}if(count>1000000)throw new Error('E2EE_SOURCE_TOO_LARGE');
      if(!totals){totals=page.totals;checkpoint=page.checkpointHash as string;revision=page.directoryRevision;}
      else if(page.checkpointHash!==checkpoint||page.directoryRevision!==revision||schema.server.some(name=>totals![name]!==page.totals[name]))invalid();
-     const encoded=encoder.encode(JSON.stringify(page));wire+=encoded.length;const pageSize=encoded.length;encoded.fill(0);if(pageSize>2*1024*1024||wire>192*1024*1024)throw new Error('E2EE_SOURCE_TOO_LARGE');
+     const encoded=encoder.encode(JSON.stringify(page));wire+=encoded.length;const pageSize=encoded.length;encoded.fill(0);if(pageSize>2*1024*1024||wire>2147483647)throw new Error('E2EE_SOURCE_TOO_LARGE');
      integer(page.rowBytes);if(page.rowBytes>MAX)throw new Error('E2EE_SOURCE_TOO_LARGE');const total=page.totals[table.table] as number;
      if(total===0){if(offset!==0||position!==0||page.rowBytes!==0||page.rowHash!==null||page.chunk!==''||page.nextByteOffset!==null||page.nextOffset!==null)invalid();last=true;break;}
      if(offset>=total||page.rowBytes<1||typeof page.rowHash!=='string')invalid();decodeE2eeBytes(page.rowHash,32).fill(0);
@@ -51,7 +57,7 @@ export async function collectPrivatePathFragments(context:MigrationSourceContext
    if(last)break;offset++;
   }
  }
- ports.assertCurrent();return{protocol:1,ownerId:lease.ownerId,scopeId:lease.scopeId,kind:scope.kind,resourceId:scope.resourceId,pathId:scope.pathId,tables};
+ ports.assertCurrent();if(buffered.length)invalid();return{protocol:1,ownerId:lease.ownerId,scopeId:lease.scopeId,kind:scope.kind,resourceId:scope.resourceId,pathId:scope.pathId,tables};
 }
 
 export function normalizeNativePrivatePathRemote(input:unknown,current:()=>void):PrivatePathRemote{

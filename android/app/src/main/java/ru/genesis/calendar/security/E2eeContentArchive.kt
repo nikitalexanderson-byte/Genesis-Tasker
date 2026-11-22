@@ -88,7 +88,7 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
         // Control packets, source-opening material and incomplete encrypted
         // suffixes stay in protected custody; these entries are inert history.
         E2eeMigrationOwnershipCatalogue.open(E2eeMigrationOwnershipCatalogue.Options(account.device,account.inventory,
-            E2eeRemoteOriginal.Capacity(128L*1024*1024,10000,1000,10000,128*1024*1024),::current,
+            E2eeRemoteOriginal.readCapacity(),::current,
             {current();E2eeStorageAdmission.admit(E2eeStorageAdmission.measure(account.device,::current),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)})).use{retained->
             for(item in retained.contents()){
                 current();val size=E2eeCommands.integer(item.get("size")).toInt();check(usage.toLong()+size.toLong()*4/3+8192<=MAX-65536){"BACKUP_TOO_LARGE"};val bytes=ByteArray(size);var offset=0

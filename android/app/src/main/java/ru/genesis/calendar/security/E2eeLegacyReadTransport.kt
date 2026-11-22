@@ -17,4 +17,5 @@ interface E2eeLegacyReadTransport{
     suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long):JSONObject
     suspend fun legacySharedMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long):JSONObject
     suspend fun legacyPrivatePathFragment(context:E2eeMigrationSourceContext,pathId:String,table:String,offset:Long,byteOffset:Long):JSONObject
+    suspend fun legacyPrivatePathBatch(context:E2eeMigrationSourceContext,pathId:String,table:String,offset:Long,byteOffset:Long):JSONObject=legacyPrivatePathFragment(context,pathId,table,offset,byteOffset)
 }

@@ -72,7 +72,10 @@ export class SignedMigrationTransport implements MigrationTransport {
   async legacyPrivatePathFragment(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number):Promise<unknown>{
     return this.#legacyPersonal('legacy-private-path',context,{pathId,table,offset,byteOffset},()=>validatePrivatePathPage(this.#kind,pathId,table,offset,byteOffset));
   }
-  async #legacyPersonal(action:MigrationLegacyAction,context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number;pathId?:string},validate:()=>void=()=>{}):Promise<unknown>{
+  async legacyPrivatePathBatch(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-private-path',context,{pathId,table,offset,byteOffset,maxFragments:50},()=>validatePrivatePathPage(this.#kind,pathId,table,offset,byteOffset));
+  }
+  async #legacyPersonal(action:MigrationLegacyAction,context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number;pathId?:string;maxFragments?:number},validate:()=>void=()=>{}):Promise<unknown>{
     const preflight=()=>{if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');validate();};
     if(!this.#planning){preflight();throw new Error('E2EE_STREAMED_CAPTURE_REQUIRED');}
     return this.#planning.requestLegacy(context,action,page,async(packet,observation,signal)=>{

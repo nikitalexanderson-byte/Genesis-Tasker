@@ -59,6 +59,11 @@ class E2eeSignedMigrationTransport private constructor(private val device: E2eeS
             check(pathId.startsWith("$kind.")&&pathId.matches(Regex("(?:personal|project|space)\\.[a-z-]+"))&&table.matches(Regex("[a-z][a-z_]{0,99}"))
                 &&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_SOURCE_PATH_FORBIDDEN"}
         }
+    override suspend fun legacyPrivatePathBatch(context:E2eeMigrationSourceContext,pathId:String,table:String,offset:Long,byteOffset:Long):JSONObject =
+        legacyPersonal("legacy-private-path",context,JSONObject().put("pathId",pathId).put("table",table).put("offset",offset).put("byteOffset",byteOffset).put("maxFragments",50)){
+            check(pathId.startsWith("$kind.")&&pathId.matches(Regex("(?:personal|project|space)\\.[a-z-]+"))&&table.matches(Regex("[a-z][a-z_]{0,99}"))
+                &&offset in 0..9007199254740990L&&byteOffset in 0..64L*1024*1024){"E2EE_SOURCE_PATH_FORBIDDEN"}
+        }
     private suspend fun legacyPersonal(action: String, context: E2eeMigrationSourceContext,page:JSONObject?=null,validate:()->Unit={}): JSONObject {
         val preflight:()->Unit={check(context.ownerId==ownerId&&context.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"};validate()}
         val session=planning?:run{preflight();error("E2EE_STREAMED_CAPTURE_REQUIRED")}

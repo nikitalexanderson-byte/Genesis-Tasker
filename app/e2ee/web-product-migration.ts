@@ -1,3 +1,4 @@
+import {REMOTE_ORIGINAL_READ_CAPACITY} from './remote-original.ts';
 import {UnlockedWebDevice,IndexedDbDeviceKeyStorage,bindWebVaultLifecycle} from './device-vault.ts';
 import {IndexedDbE2eeStorage} from './storage.ts';
 import {E2eeDeviceDocument} from './device-document.ts';
@@ -139,7 +140,7 @@ export class WebProductMigration{
    };
    const planning:StreamedPlanningOptions={device:this.device,assertCurrent:current,admit,
     capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},
-    originalCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumObservations:1000,maximumRecords:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET}};
+    originalCapacity:REMOTE_ORIGINAL_READ_CAPACITY};
    if(cancelling){
     await migration.cancelStreamed(planning);current();
     const response=await this.ports.setup.directory(this.target.scopeId);current();

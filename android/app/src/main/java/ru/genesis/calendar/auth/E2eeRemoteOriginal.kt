@@ -151,6 +151,7 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
     fun reference(): Reference { check(!broken.get()) { "E2EE_REMOTE_ORIGINAL_INCOMPLETE" }; return reference ?: error("E2EE_REMOTE_ORIGINAL_INCOMPLETE") }
     override fun close() { if (closed.compareAndSet(false, true)) digest.reset() }
     companion object {
+        fun readCapacity() = Capacity(2147483647L, 65536, 8000, 1000000, 128 * 1024 * 1024)
         /** Inert pre-prepare identity, checked against an independently trusted
          * signer and actual local actor. No storage, IO or body proof. */
         fun authenticateRegistration(value:JSONObject,packet:JSONObject,signer:PublicKey,options:ReadOptions,generation:Long):Registration {
@@ -269,7 +270,7 @@ private object RemoteOriginalCodec {
         }finally{request?.bytes?.fill(0)}
     }
     fun capacity(value: E2eeRemoteOriginal.Capacity) {
-        check(value.maximumBytes in 1..128L * 1024 * 1024 && value.maximumParts in 1..8000 && value.maximumObservations in 1..1000 && value.maximumRecords in 1..10000 && value.maximumMetadataBytes in 1..16 * 1024 * 1024) { "E2EE_REMOTE_ORIGINAL_CAPACITY" }
+        check(value.maximumBytes in 1..2147483647L && value.maximumParts in 1..65536 && value.maximumObservations in 1..8000 && value.maximumRecords in 1..1000000 && value.maximumMetadataBytes in 1..128 * 1024 * 1024) { "E2EE_REMOTE_ORIGINAL_CAPACITY" }
     }
     fun within(value: E2eeRemoteOriginal.Admission, capacity: E2eeRemoteOriginal.Capacity) {
         check(value.bytes <= capacity.maximumBytes && value.parts <= capacity.maximumParts && value.observations <= capacity.maximumObservations && value.records <= capacity.maximumRecords && value.metadataBytes <= capacity.maximumMetadataBytes) { "E2EE_REMOTE_ORIGINAL_CAPACITY" }
@@ -301,7 +302,7 @@ private object RemoteOriginalCodec {
         if (number(value.get("protocol")) != 1L || value.get("purpose") != PURPOSE || value.get("id") != id || value.get("phase") !in setOf("registered", "receiving", "complete")) invalid()
         same(value.getJSONObject("context"), scope); binding(value.getJSONObject("binding")); val request = value.getJSONObject("request"); E2eeKeys.exact(request, setOf("size", "hash")); number(request.get("size"), 1, MAX_REQUEST.toLong()); E2eeEnvelope.decode(request.getString("hash"), 32)
         if (!value.isNull("response")) response(value.getJSONObject("response")); if ((value.get("phase") == "registered") != value.isNull("response")) invalid()
-        number(value.get("size"), 0, if (value.isNull("response")) 0 else responseLimit(value.getJSONObject("response"))); val parts = value.getJSONArray("parts"); if (parts.length() > 8000) invalid(); var size = 0L
+        number(value.get("size"), 0, if (value.isNull("response")) 0 else responseLimit(value.getJSONObject("response"))); val parts = value.getJSONArray("parts"); if (parts.length() > 65536) invalid(); var size = 0L
         for (index in 0 until parts.length()) { val part = parts.getJSONObject(index); E2eeKeys.exact(part, setOf("size", "hash")); size += number(part.get("size"), 1, MAX_PART.toLong()); E2eeEnvelope.decode(part.getString("hash"), 32) }
         if (size != value.getLong("size") || value.get("phase") == "registered" && size != 0L) invalid()
         if (value.get("phase") == "complete") { E2eeEnvelope.decode(value.getString("rawHash"), 32); E2eeEnvelope.decode(value.getString("manifestHash"), 32) } else if (!value.isNull("rawHash") || !value.isNull("manifestHash")) invalid()
@@ -314,7 +315,7 @@ private object RemoteOriginalCodec {
         current(options); val context = context(options); val hash = identity(context); val before = meta(options, catalogKey(hash)); val all = options.vault.listLocal("local-snapshot", "remote-original:"); current(options); val owned = mutableListOf<String>()
         for (id in all) { val parts = id.split(':'); if (!Regex("^remote-original:[A-Za-z0-9_-]{43}:[a-f0-9-]{36}:[jrmp]:[0-9]{5}$").matches(id) || !uuid.matches(parts[2]) || parts[4].toInt() > 7999 || parts[3] != "p" && parts[4] != "00000") error("E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT"); E2eeEnvelope.decode(parts[1], 32); if (parts[1] == hash) owned += id }
         val catalog = before?.value ?: JSONObject().put("protocol", 1).put("context", context).put("ids", JSONArray())
-        E2eeKeys.exact(catalog, setOf("protocol", "context", "ids")); if (number(catalog.get("protocol")) != 1L) invalid(); same(catalog.getJSONObject("context"), context); val ids = catalog.getJSONArray("ids"); if (ids.length() > 1000) invalid(); val seen = mutableSetOf<String>()
+        E2eeKeys.exact(catalog, setOf("protocol", "context", "ids")); if (number(catalog.get("protocol")) != 1L) invalid(); same(catalog.getJSONObject("context"), context); val ids = catalog.getJSONArray("ids"); if (ids.length() > 8000) invalid(); val seen = mutableSetOf<String>()
         for (index in 0 until ids.length()) { val id = ids.getString(index); if (!uuid.matches(id) || !seen.add(id)) invalid() }
         if (before == null && owned.isNotEmpty()) error("E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT")
         val present = owned.toSet(); val expected = mutableSetOf<String>(); val journals = mutableListOf<Meta>(); var bytes = 0L; var parts = 0; var records = if (before == null) 0 else 1; var metadata = before?.bytes ?: 0
@@ -322,7 +323,7 @@ private object RemoteOriginalCodec {
             val id = ids.getString(index); val jid = key(hash, id, "j"); val rid = key(hash, id, "r"); if (jid !in present || rid !in present) invalid(); expected += jid; expected += rid
             val row = meta(options, jid) ?: invalid(); val j = row.value; journal(j, context, id); journals += row; val count = j.getJSONArray("parts").length()
             bytes += j.getLong("size"); parts += count; records += 2 + count; metadata += row.bytes + j.getJSONObject("request").getInt("size")
-            if (parts > 8000 || records > 10000 || metadata > 16 * 1024 * 1024) error("E2EE_REMOTE_ORIGINAL_CAPACITY")
+            if (parts > 65536 || records > 1000000 || metadata > 128 * 1024 * 1024) error("E2EE_REMOTE_ORIGINAL_CAPACITY")
             repeat(count) { expected += key(hash, id, "p", it) }
             if (j.get("phase") == "complete") { val mid = key(hash, id, "m"); expected += mid; val m = meta(options, mid) ?: invalid(); if (m.serial != 1L || m.hash != j.getString("manifestHash") || identity(m.value) != identity(manifest(j))) invalid(); records++; metadata += m.bytes }
         }
@@ -341,7 +342,7 @@ private object RemoteOriginalCodec {
         check(command.get("ownerId") == context.get("ownerId") && command.get("scopeId") == context.get("scopeId") && command.get("deviceId") == context.get("deviceId") && command.get("action") in actions) { "E2EE_REMOTE_ORIGINAL_CONTEXT" }
         if(command.get("action")=="legacy-shared-mindmaps")check(context.get("kind") in setOf("project","space")&&command.getJSONObject("payload").has("table")){"E2EE_REMOTE_ORIGINAL_CONTEXT"}
         val privatePath=command.get("action")=="legacy-private-path"
-        val payload = command.getJSONObject("payload"); val names = mutableSetOf("migrationId", "fence", "sourceHash"); if (payload.has("table")) names += setOf("table", "offset"); if (payload.has("byteOffset")) names += "byteOffset";if(privatePath)names+="pathId"; E2eeKeys.exact(payload, names)
+        val payload = command.getJSONObject("payload"); val names = mutableSetOf("migrationId", "fence", "sourceHash"); if (payload.has("table")) names += setOf("table", "offset"); if (payload.has("byteOffset")) names += "byteOffset";if(privatePath)names+="pathId";if(privatePath&&payload.has("maxFragments"))names+="maxFragments"; E2eeKeys.exact(payload, names);if(payload.has("maxFragments"))number(payload.get("maxFragments"),1,50)
         if(privatePath)check(payload.getString("pathId").startsWith(context.getString("kind")+".")&&payload.getString("pathId").matches(Regex("(?:personal|project|space)\\.[a-z-]+"))
             &&payload.has("table")&&payload.has("byteOffset")&&payload.getString("table").matches(Regex("[a-z][a-z_]{0,99}"))){"E2EE_SOURCE_PATH_FORBIDDEN"}
         if (!uuid.matches(payload.getString("migrationId"))) invalid(); number(payload.get("fence"), 1); E2eeEnvelope.decode(payload.getString("sourceHash"), 32); number(command.get("expectedRevision"), 1); E2eeEnvelope.decode(command.getString("checkpointHash"), 32); number(generation, 1)

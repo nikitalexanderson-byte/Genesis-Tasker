@@ -4,7 +4,7 @@ import type {MigrationSourceContext} from './migration.ts';
 import type {E2eeHttpObservation} from './http-observation.ts';
 
 export type MigrationLegacyAction='legacy-workspace'|'legacy-aurora'|'legacy-stoicheion'|'legacy-advice'|'legacy-tasks'|'legacy-diary'|'legacy-mindmaps'|'legacy-physis'|'legacy-reminders'|'legacy-archives'|'legacy-shared-mindmaps'|'legacy-private-path';
-type Page=Readonly<{table:string;offset:number;byteOffset?:number;pathId?:string}>;
+type Page=Readonly<{table:string;offset:number;byteOffset?:number;pathId?:string;maxFragments?:number}>;
 type Response=Record<string,WireValue>;
 type Binding=Readonly<{ownerId:string;scopeId:string;deviceId:string;checkpointHash:string;directoryRevision:number;securityEpoch:number}>;
 export type MigrationPlanningSession=Readonly<{

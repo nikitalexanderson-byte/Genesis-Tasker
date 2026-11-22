@@ -27,7 +27,7 @@ internal class E2eeNativeRelationalSource(private val ownerId:String,private val
         assertCurrent();val lease=requireNotNull(context){"E2EE_SCOPE_BINDING_MISMATCH"};check(lease.ownerId==ownerId&&lease.scopeId==scopeId){"E2EE_SCOPE_BINDING_MISMATCH"}
         check(previous.size<=32&&local.size+previous.sumOf{it.size.toLong()}<=E2eeMigrationSources.BYTE_BUDGET){"E2EE_MIGRATION_HISTORY_LIMIT"}
         val current=snapshot(local);val ancestors=previous.map(::snapshot)
-        val remote=E2eePrivatePathFragments.collect(lease,kind,resourceId,id,tables,assertCurrent,transport::legacyPrivatePathFragment)
+        val remote=E2eePrivatePathFragments.collect(lease,kind,resourceId,id,tables,assertCurrent,transport::legacyPrivatePathFragment,transport::legacyPrivatePathBatch)
         val result=reconciler.reconcile(current,ancestors,lease,remote,assertCurrent){_,_->error("E2EE_KEY_BRIDGE_FORBIDDEN")}
         try{assertCurrent();val domain=if(kind=="personal")"local-snapshot"else if(id in setOf("project.mindmaps","space.mindmaps"))"mindmap"else "shared-project"
             for(row in result.content+result.localContent)check(row.domain==domain&&(row.objectId.startsWith("private-table:$id:")||row.objectId=="private-path:$id:index-v1"||row.objectId.startsWith("private-work:$id:"))

@@ -19,6 +19,7 @@ internal abstract class E2eeLegacyReadAdapter:E2eeLegacyReadTransport{
     override suspend fun legacyArchiveFragment(context:E2eeMigrationSourceContext,table:String,offset:Long,byteOffset:Long)=read("legacy-archives",context,JSONObject().put("table",table).put("offset",offset).put("byteOffset",byteOffset))
     override suspend fun legacySharedMindmapsPage(context:E2eeMigrationSourceContext,table:String,offset:Long)=read("legacy-shared-mindmaps",context,JSONObject().put("table",table).put("offset",offset))
     override suspend fun legacyPrivatePathFragment(context:E2eeMigrationSourceContext,pathId:String,table:String,offset:Long,byteOffset:Long)=read("legacy-private-path",context,JSONObject().put("pathId",pathId).put("table",table).put("offset",offset).put("byteOffset",byteOffset))
+    override suspend fun legacyPrivatePathBatch(context:E2eeMigrationSourceContext,pathId:String,table:String,offset:Long,byteOffset:Long)=read("legacy-private-path",context,JSONObject().put("pathId",pathId).put("table",table).put("offset",offset).put("byteOffset",byteOffset).put("maxFragments",50))
 }
 internal class E2eeMigrationSourceReadRouter:E2eeLegacyReadAdapter(){
     @Volatile private var active:E2eeLegacyReadTransport?=null
@@ -36,7 +37,7 @@ internal class E2eeMigrationSourceReadRouter:E2eeLegacyReadAdapter(){
             "legacy-reminders"->port.legacyRemindersPage(context,requireNotNull(page).getString("table"),page.getLong("offset"))
             "legacy-archives"->port.legacyArchiveFragment(context,requireNotNull(page).getString("table"),page.getLong("offset"),page.getLong("byteOffset"))
             "legacy-shared-mindmaps"->port.legacySharedMindmapsPage(context,requireNotNull(page).getString("table"),page.getLong("offset"))
-            "legacy-private-path"->port.legacyPrivatePathFragment(context,requireNotNull(page).getString("pathId"),page.getString("table"),page.getLong("offset"),page.getLong("byteOffset"))
+            "legacy-private-path"->if(requireNotNull(page).has("maxFragments"))port.legacyPrivatePathBatch(context,page.getString("pathId"),page.getString("table"),page.getLong("offset"),page.getLong("byteOffset"))else port.legacyPrivatePathFragment(context,page.getString("pathId"),page.getString("table"),page.getLong("offset"),page.getLong("byteOffset"))
             else->error("E2EE_SOURCE_PATH_FORBIDDEN")}
         check(active===port){"E2EE_SOURCE_READ_PHASE_REQUIRED"};return result
     }
@@ -48,12 +49,11 @@ internal class E2eeOriginalSourceReplay(private val session:E2eeContentPlanningS
     private val consumed=mutableSetOf<String>();private var closed=false
     private fun current(){assertCurrent();session.assertCurrent();check(!closed){"E2EE_SOURCE_REPLAY_CLOSED"}}
     override suspend fun read(action:String,context:E2eeMigrationSourceContext,page:JSONObject?):JSONObject{
-        current();val original=session.originals.asReversed().firstOrNull{row->
-            val command=row.packet?.optJSONObject("command");val payload=command?.optJSONObject("payload");val fields=page?:JSONObject()
-            command!=null&&payload!=null&&command.opt("action")==action&&command.opt("ownerId")==context.ownerId&&command.opt("scopeId")==context.scopeId
-                &&payload.opt("migrationId")==context.migrationId&&payload.opt("sourceHash")==context.sourceHash
-                &&fields.keys().asSequence().all{payload.opt(it)==fields.get(it)}&&listOf("pathId","table","offset","byteOffset").all{payload.has(it)==fields.has(it)}
-        }?:error("E2EE_CAPTURED_SOURCE_REQUIRED")
+        current();val fields=page?.let{JSONObject(it.toString())}?:JSONObject()
+        fun selected()=session.originals.asReversed().firstOrNull{row->val command=row.packet?.optJSONObject("command");val payload=command?.optJSONObject("payload")
+            command!=null&&payload!=null&&command.opt("action")==action&&command.opt("ownerId")==context.ownerId&&command.opt("scopeId")==context.scopeId&&payload.opt("migrationId")==context.migrationId&&payload.opt("sourceHash")==context.sourceHash
+                &&fields.keys().asSequence().all{payload.opt(it)==fields.get(it)}&&listOf("pathId","table","offset","byteOffset","maxFragments").all{payload.has(it)==fields.has(it)}}
+        var candidate=selected();if(candidate==null&&fields.has("maxFragments")){fields.remove("maxFragments");candidate=selected()};val original=candidate?:error("E2EE_CAPTURED_SOURCE_REQUIRED")
         val packet=requireNotNull(original.packet);val bytes=E2eeCommands.canonical(packet)
         try{check(E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))==original.registration.binding.packetHash){"E2EE_CORRUPT_STREAMED_OWNERSHIP"}}finally{bytes.fill(0)}
         val reference=requireNotNull(original.completion);var response:JSONObject?=null
@@ -61,6 +61,7 @@ internal class E2eeOriginalSourceReplay(private val session:E2eeContentPlanningS
         current();consumed+=reference.id;val value=requireNotNull(response){"E2EE_CAPTURED_SOURCE_CONTEXT"};val binding=original.registration.binding
         check(value.opt("protocol")==1&&value.opt("ownerId")==context.ownerId&&value.opt("scopeId")==context.scopeId&&value.opt("migrationId")==context.migrationId&&value.opt("sourceHash")==context.sourceHash
             &&E2eeCommands.integer(value.get("fence"),1)==binding.fence&&binding.fence<=context.fence&&value.opt("checkpointHash")==binding.checkpointHash&&E2eeCommands.integer(value.get("directoryRevision"),1)==binding.directoryRevision){"E2EE_CAPTURED_SOURCE_CONTEXT"}
+        val payload=packet.getJSONObject("command").getJSONObject("payload");if(payload.has("maxFragments")){val fragments=value.getJSONArray("fragments");check(fragments.length() in 1..payload.getInt("maxFragments")){"E2EE_CAPTURED_SOURCE_CONTEXT"};for(at in 0 until fragments.length()){val part=fragments.getJSONObject(at);for(key in listOf("protocol","ownerId","scopeId","kind","resourceId","migrationId","fence","sourceHash","checkpointHash","directoryRevision"))check(part.opt(key)==value.opt(key)){"E2EE_CAPTURED_SOURCE_CONTEXT"};part.put("fence",context.fence)}}
         return value.put("fence",context.fence)
     }
     fun drain(){current();val buffer=ByteArray(E2eeFiles.CHUNK_BYTES)

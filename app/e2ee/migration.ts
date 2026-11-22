@@ -1,3 +1,4 @@
+import {REMOTE_ORIGINAL_READ_CAPACITY} from './remote-original.ts';
 import { canonicalE2eeValue,e2eeCommandHash,signE2eeCommand,snapshotE2eeValue,verifyE2eeCommand,type E2eeCommand,type SignedE2eeCommand,type WireValue } from './commands.ts';
 import { E2EE_DOMAINS, E2EE_SUITE, decodeE2eeBytes, encodeE2eeBytes, openE2eeEnvelope, sealE2eeEnvelope, type E2eeContext, type E2eeEnvelope } from './envelope.ts';
 import { envelopePayloadHash, objectManifestHash, openE2eeFile, sealE2eeFile, E2EE_CHUNK_BYTES, E2EE_MAX_FILE_BYTES } from './files.ts';
@@ -127,13 +128,13 @@ export async function openDeviceRetainedMigrationHistory(device:UnlockedWebDevic
  const current=()=>{assertCurrent();device.requireOpen();};current();
  return openMigrationOwnershipCatalogue({device,decode:decodeState,assertCurrent:current,
   capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},
-  originalCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumObservations:1000,maximumRecords:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},
+  originalCapacity:REMOTE_ORIGINAL_READ_CAPACITY,
   admit:async()=>{const usage=await measureE2eeDeviceStorage(device,current);current();admitE2eeStorage(usage,{records:0,keyRecords:0,writeBytes:0,rewriteBytes:0},E2EE_PROVIDER_STORAGE_BUDGET);}});
 }
 /** Same typed ownership catalogue for a historical read-only device. Its
  * caller supplies physical provider admission, never a network writer. */
 export async function openReadOnlyDeviceRetainedMigrationHistory(device:import('./migration-ownership-catalogue.ts').MigrationReadDevice,assertCurrent:()=>void,admit:()=>Promise<void>){
- const current=()=>{assertCurrent();device.requireOpen();};current();return openMigrationOwnershipCatalogue({device,decode:decodeState,assertCurrent:current,capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},originalCapacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumObservations:1000,maximumRecords:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},admit});
+ const current=()=>{assertCurrent();device.requireOpen();};current();return openMigrationOwnershipCatalogue({device,decode:decodeState,assertCurrent:current,capacity:{maximumBytes:E2EE_MIGRATION_BYTE_BUDGET,maximumParts:10000,maximumMetadataBytes:E2EE_MIGRATION_BYTE_BUDGET},originalCapacity:REMOTE_ORIGINAL_READ_CAPACITY,admit});
 }
 
 /** Cold product resume may inspect the authenticated journal without restoring

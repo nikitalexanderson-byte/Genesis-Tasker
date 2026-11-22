@@ -48,7 +48,7 @@ internal class E2eeProductMigrationController private constructor(private val co
             fun admit(){current();E2eeStorageAdmission.admit(E2eeStorageAdmission.measure(device,::current),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)}
             val maximum=128L*1024*1024;val inventory=E2eePrivatePaths.load(context)
             val planning=E2eeStreamedPlanningOptions(device,inventory,E2eeMigrationHistory.Capacity(maximum,10000,maximum.toInt()),
-                E2eeRemoteOriginal.Capacity(maximum,10000,1000,10000,maximum.toInt()),::current,{admit()})
+                E2eeRemoteOriginal.readCapacity(),::current,{admit()})
             if(cancelling){
                 migration.cancelStreamed(planning);current();val response=ports.setup(device).directory(frame.scopeId);current()
                 val cancelled=device.rememberDirectory(frame.scopeId,device.authorityPin,response.getJSONArray("events"),device.ownerId);current()

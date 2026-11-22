@@ -107,6 +107,13 @@ function genesisE2eePrivatePathRow(string $table,array $row):array
  * This is read-only and never restores ACL/billing/sessions or executes jobs. */
 function genesisE2eeLegacyPrivatePath(PDO $db,string $actor,array $scope,array $c):array
 {
+    if(array_key_exists('maxFragments',$c['payload'])){
+        $p=genesisE2eeExactFields($c['payload'],['migrationId','fence','sourceHash','pathId','table','offset','byteOffset','maxFragments']);$limit=genesisE2eeInteger($p['maxFragments'],1);if($limit>50)genesisE2eeInvalid();unset($p['maxFragments']);$single=$c;$fragments=[];$size=16384;
+        for($at=0;$at<$limit;$at++){$single['payload']=$p;$fragment=genesisE2eeLegacyPrivatePath($db,$actor,$scope,$single);$length=strlen(genesisE2eeJson($fragment));if($fragments&&$size+$length>2*1024*1024)break;$fragments[]=$fragment;$size+=$length;
+            if($fragment['nextByteOffset']!==null){$p['offset']=$fragment['nextOffset'];$p['byteOffset']=$fragment['nextByteOffset'];}
+            elseif($fragment['nextOffset']!==null){$p['offset']=$fragment['nextOffset'];$p['byteOffset']=0;}else break;
+        }$header=array_intersect_key($fragments[0],array_flip(['protocol','ownerId','scopeId','kind','resourceId','migrationId','fence','sourceHash','checkpointHash','directoryRevision','pathId','table','offset','byteOffset']));return $header+['fragments'=>$fragments];
+    }
     $p=genesisE2eeExactFields($c['payload'],['migrationId','fence','sourceHash','pathId','table','offset','byteOffset']);
     $catalogue=genesisE2eePrivatePathCatalogue();$path=null;
     foreach($catalogue['paths']as$candidate)if($candidate['id']===$p['pathId']&&$candidate['scope']===$scope['kind'])$path=$candidate;

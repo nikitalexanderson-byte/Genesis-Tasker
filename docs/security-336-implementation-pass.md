@@ -1,5 +1,15 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: signed fragment batches and aggregate original custody
+
+Signed maxFragments<=50 binds web/API/native requests and exact original replay.
+The2MiB response/1MiB scalar limits remain; collectors validate every lease, row
+coordinate/hash, totals and EOF. Nested originals retain verified renewal fences.
+Read custody uses matching2GiB/65536parts/8000observations/1Mrecords/128MiB metadata
+bounds; native factory added. Native shard row count no longer shadows its parser.
+Source-only, no execution checks. Full wide source/archive and reminder integration
+remain; coverage9/20 unchanged.
+
 ## 23 November: wide provider and shared product bounds (source-only)
 
 Provider admission/discovery now share the one-million-cell/65536-container bound

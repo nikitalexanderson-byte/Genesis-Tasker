@@ -20,7 +20,7 @@ internal class E2eeRetiredDeviceContent private constructor(private val storage:
         try{requireOpen();val value=E2eeFileManifestJson.readPrivateDocument(row.bytes);val checkpoint=value.getJSONObject("checkpoint");return E2eeDirectory.verify(value.getString("ownerId"),scopeId,value.getJSONObject("pin"),value.getJSONArray("events"),E2eeDirectory.Checkpoint(checkpoint.getLong("revision"),checkpoint.getString("hash")),onVerified)}finally{row.bytes.fill(0)}
     }
     fun catalogue(inventory:E2eePrivatePaths):E2eeMigrationOwnershipCatalogue.Handle{requireOpen();return E2eeMigrationOwnershipCatalogue.open(E2eeMigrationOwnershipCatalogue.Options(this,inventory,
-        ru.genesis.calendar.auth.E2eeRemoteOriginal.Capacity(128L*1024*1024,10000,1000,10000,128*1024*1024),::requireOpen,{requireOpen();E2eeStorageAdmission.admit(storage.providerUsage(),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)}))}
+        ru.genesis.calendar.auth.E2eeRemoteOriginal.readCapacity(),::requireOpen,{requireOpen();E2eeStorageAdmission.admit(storage.providerUsage(),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)}))}
     fun capture(inventory:E2eePrivatePaths):JSONObject=catalogue(inventory).use{catalogue->
         val maximum=ru.genesis.calendar.data.GenesisBackupContainer.MAX_PLAIN;val entries=mutableListOf<JSONObject>();var used=0L
         fun append(entry:JSONObject){requireOpen();used+=entry.toString().toByteArray(Charsets.UTF_8).size;check(used<=maximum-65536&&entries.size<10000){"BACKUP_TOO_LARGE"};entries+=entry}

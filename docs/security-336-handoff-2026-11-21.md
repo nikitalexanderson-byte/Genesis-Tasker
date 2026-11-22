@@ -1,5 +1,19 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: batched signed source transport — код
+
+Web/API/native используют подписанный maxFragments<=50 и bounded2MiB ответы,
+с неизменными1MiB scalar chunks. Collectors проверяют каждую координату, lease,
+row hash, totals и EOF. Exact original replay сопоставляет batch packet; старый
+single original используется только при отсутствии batch. Renewal проверяет
+вложенные original fragments. Общая custody capacity согласована на2GiB/65536
+parts/8000 observations/1M records/128MiB aggregate metadata, без увеличения
+per-request limits или общего canonical command codec. Исправлено затенение
+счётчика rows в native immutable table reader. Это source-only; compiler/tests/
+CI/review не запускались. Остаток: semantic source/planning128MiB, bounded native
+bridge input, широкие content-only archives/restore, private reminder projection
+и завершение интеграции исходного промпта. Сайт PR45 ещё ожидает полный CI.
+
 ## 23 ноября: immutable private table shards — код
 
 Relational source делит большие таблицы на bounded parts (обычно4MiB); прежний
