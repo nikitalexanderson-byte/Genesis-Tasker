@@ -8,7 +8,7 @@ html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [
 @media (max-width: 760px) {
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] {
     --lunar-orb-size:clamp(84px,24vw,96px);
-    display: grid; grid-template-columns: minmax(104px, 1fr) minmax(0, 1fr); align-content: start; gap: 12px;
+    display: grid; grid-template-columns: minmax(104px, 1fr) auto; align-content: start; gap: 12px;
     padding: 16px; background-size: cover; background-position: right center;
   }
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-day-clock { display: contents; }
@@ -26,7 +26,7 @@ html[data-genesis-theme="standart-dark"]:is([data-genesis-palette="burgundy"], [
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .device-clock {
     position: static; grid-column: 2; grid-row: 1; justify-self: end; align-self: start; box-sizing: border-box;
     display:flex; flex-direction:column; justify-content:center; gap:2px;
-    width:100%; height:var(--lunar-orb-size); max-width:220px; min-width:0; margin:0; padding:8px;
+    width:fit-content; height:auto; max-width:148px; min-width:0; margin:0; padding:8px 10px;
   }
   html[data-genesis-theme] .genesis-app .today-view .hero-card.mode-lunar[data-lunar-patron] .hero-copy {
     grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: none; margin: 0; padding: 0; background: transparent; border-radius: 0;
