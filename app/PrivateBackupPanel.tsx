@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import {PrivateContentExport} from './PrivateContentExport';
+import {PrivatePersonalContentRestore} from './PrivatePersonalContentRestore';
 import {PrivateDrivePanel} from './PrivateDrivePanel';
 import {BACKUP_MAX_FILE,openBackup,type BackupPayload} from './backup-format';
 import {useBackupCopy} from './use-backup-copy';
@@ -29,7 +30,7 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
    else{const ids=await retainedContentArchives(account);account.requireOpen();if(token===generation.current)setArchives(ids);}
   }catch{if(token===generation.current)setError(true);}finally{running.current=false;setBusy(false);}
  };
- const rows=payload?.sections.flatMap(section=>{const name=c(sectionNames[section.id][0],sectionNames[section.id][1]);return(section.data as ContentArchiveSection).entries.flatMap((entry,index)=>[{key:`${section.id}:${index}:current`,title:`${name} · ${entry.current.filename||`${filesText.file} ${index+1}`} · ${filesText.current}`,value:entry.current},...entry.history.map((value,at)=>({key:`${section.id}:${index}:${at}`,title:`${name} · ${value.filename||`${filesText.file} ${index+1}`} · ${filesText.version} ${at+1}`,value}))]);})??[];
+ const rows=payload?.sections.flatMap((section,sectionIndex)=>{const name=c(sectionNames[section.id][0],sectionNames[section.id][1]);return(section.data as ContentArchiveSection).entries.flatMap((entry,index)=>[{key:`${section.id}:${index}:current`,sectionIndex,entryIndex:index,versionId:entry.current.id,title:`${name} · ${entry.current.filename||`${filesText.file} ${index+1}`} · ${filesText.current}`,value:entry.current},...entry.history.map((value,at)=>({key:`${section.id}:${index}:${at}`,sectionIndex,entryIndex:index,versionId:value.id,title:`${name} · ${value.filename||`${filesText.file} ${index+1}`} · ${filesText.version} ${at+1}`,value}))]);})??[];
  const inspect=(id:string)=>{setSelected(id);setContent('');setBinary(false);setError(false);const row=rows.find(row=>row.key===id);if(!row)return;try{const account=requirePrivateAccount(ownerId);if(account!==payloadAccount.current)throw new Error('E2EE_ACCOUNT_CHANGED');account.requireOpen();
   if(row.value.size>2*1024*1024||row.value.mediaType&&!['application/json','text/json','application/octet-stream'].includes(row.value.mediaType)){setBinary(true);return;}
   const bytes=row.value.size===0?new Uint8Array():decodeE2eeBytes(row.value.bytes,row.value.size);try{const value=parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),'BACKUP_INVALID',2*1024*1024);setContent(JSON.stringify(value,null,2));}catch{setBinary(true);}finally{bytes.fill(0);}
@@ -61,5 +62,6 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
    {binary?<p>{filesText.binary}</p>:null}
    {selected?<><p>{filesText.notice}</p><button type="button" disabled={busy} onClick={()=>void saveSelected()}>{filesText.download}</button></>:null}
   </section>
+  <PrivatePersonalContentRestore ownerId={ownerId} language={language} payload={payload} selection={(()=>{const row=rows.find(row=>row.key===selected);return row&&payload?.sections[row.sectionIndex]?.id==='workspace'?{sectionIndex:row.sectionIndex,entryIndex:row.entryIndex,versionId:row.versionId}:null;})()}/>
  </div>;
 }

@@ -51,6 +51,8 @@ internal class E2eePersonalProduct(private val account:E2eeProductAccount){
         for(i in 0 until rows.length()){val row=rows.getJSONObject(i);val id=row.getString("id");check(!row.getBoolean("deleted")||id !in incoming){"TASK_DELETED"};if(id !in incoming)next.put(JSONObject().put("id",id).put("value",JSONObject.NULL).put("deleted",true))}
         stage(JSONObject(previous.toString()).put("workspace",copy).put("tasks",JSONObject(prior.toString()).put("tasks",next)))
     }
+    @Synchronized fun restoreView():JSONObject{val state=current();val deleted=JSONArray();val rows=state.value.getJSONObject("tasks").getJSONArray("tasks");for(at in 0 until rows.length())if(rows.getJSONObject(at).getBoolean("deleted"))deleted.put(rows.getJSONObject(at).getString("id"));return JSONObject().put("snapshot",snapshot()).put("contentRevision",contentRevision()).put("deletedTaskIds",deleted).put("pending",state.pending)}
+    @Synchronized fun restoreSnapshot(input:JSONObject,expectedContentRevision:Long){check(contentRevision()==expectedContentRevision){"E2EE_RESTORE_REVIEW_STALE"};stageSnapshot(input);flush()}
     @Synchronized fun flush():Long{val previous=current();if(!previous.pending||account.offline)return previous.remoteRevision;document.flush();view=document.load(offline=true)
         check(view?.pending==false&&view?.value?.toString()==previous.value.toString()){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};return current().remoteRevision}
     override fun toString()="E2eePersonalProduct([redacted])"

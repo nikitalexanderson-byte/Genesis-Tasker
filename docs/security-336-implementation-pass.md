@@ -1,5 +1,17 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 22 ноября: typed personal workspace/task restore — код
+
+Общий durable restore journal + web/native normal personal repository adapters
+и оба backup UI: сохранённый source до сети, preview counts, explicit consent,
+CAS, проверка нормального readback, resume неопределённого результата. Только
+добавление отсутствующего личного workspace/task content; существующие записи
+и task tombstones не заменяются, внешние Google-копии выключены. 14lang copy.
+Original archive/journals/chunks сохраняются и экспортируются как inert content.
+Другие domain-specific restore adapters (diary/maps/physis/Aurora/Стоихейон/shared)
+ещё нужны; не считать весь typed restore завершённым. Общий анализ/тесты не запускались.
+
+
 ## 22 ноября: typed custody новых control documents (код)
 
 Оба migration ownership catalogue учитывают personal-device-entry и invitation-

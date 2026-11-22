@@ -1,0 +1,156 @@
+{
+  "en": {
+    "title": "Restore personal content",
+    "notice": "Add missing personal records from this archive version. Current versions and deletion markers stay in place. Google copies require separate consent.",
+    "prepare": "Prepare restore",
+    "ack": "I have reviewed the counts and want to add the missing records.",
+    "apply": "Restore content",
+    "resume": "Check or resume",
+    "added": "To add",
+    "skipped": "Kept or skipped",
+    "done": "Content restored"
+  },
+  "ru": {
+    "title": "Восстановить личное содержимое",
+    "notice": "Добавить отсутствующие личные записи из этой версии архива. Текущие версии и отметки удаления сохраняются. Копии в Google требуют отдельного согласия.",
+    "prepare": "Подготовить восстановление",
+    "ack": "Я проверил(а) количество записей и хочу добавить отсутствующие.",
+    "apply": "Восстановить содержимое",
+    "resume": "Проверить или продолжить",
+    "added": "Будет добавлено",
+    "skipped": "Сохранено или пропущено",
+    "done": "Содержимое восстановлено"
+  },
+  "el": {
+    "title": "Επαναφορά προσωπικού περιεχομένου",
+    "notice": "Προσθέστε προσωπικές εγγραφές που λείπουν από αυτή την έκδοση του αρχείου. Οι τρέχουσες εκδόσεις και οι ενδείξεις διαγραφής διατηρούνται. Τα αντίγραφα Google απαιτούν ξεχωριστή συγκατάθεση.",
+    "prepare": "Προετοιμασία επαναφοράς",
+    "ack": "Έλεγξα τα πλήθη και θέλω να προσθέσω τις εγγραφές που λείπουν.",
+    "apply": "Επαναφορά περιεχομένου",
+    "resume": "Έλεγχος ή συνέχεια",
+    "added": "Θα προστεθούν",
+    "skipped": "Διατηρήθηκαν ή παραλείφθηκαν",
+    "done": "Το περιεχόμενο επαναφέρθηκε"
+  },
+  "de": {
+    "title": "Persönliche Inhalte wiederherstellen",
+    "notice": "Fehlende persönliche Einträge aus dieser Archivversion hinzufügen. Aktuelle Versionen und Löschmarkierungen bleiben erhalten. Google-Kopien erfordern eine separate Zustimmung.",
+    "prepare": "Wiederherstellung vorbereiten",
+    "ack": "Ich habe die Anzahl geprüft und möchte die fehlenden Einträge hinzufügen.",
+    "apply": "Inhalte wiederherstellen",
+    "resume": "Prüfen oder fortsetzen",
+    "added": "Hinzuzufügen",
+    "skipped": "Beibehalten oder übersprungen",
+    "done": "Inhalte wiederhergestellt"
+  },
+  "fr": {
+    "title": "Restaurer le contenu personnel",
+    "notice": "Ajouter les données personnelles manquantes depuis cette version de l’archive. Les versions actuelles et les marques de suppression sont conservées. Les copies Google nécessitent un accord distinct.",
+    "prepare": "Préparer la restauration",
+    "ack": "J’ai vérifié les nombres et souhaite ajouter les données manquantes.",
+    "apply": "Restaurer le contenu",
+    "resume": "Vérifier ou reprendre",
+    "added": "À ajouter",
+    "skipped": "Conservés ou ignorés",
+    "done": "Contenu restauré"
+  },
+  "es": {
+    "title": "Restaurar contenido personal",
+    "notice": "Añade los registros personales que faltan desde esta versión del archivo. Se conservan las versiones actuales y las marcas de eliminación. Las copias en Google requieren otro consentimiento.",
+    "prepare": "Preparar restauración",
+    "ack": "He revisado las cantidades y quiero añadir los registros que faltan.",
+    "apply": "Restaurar contenido",
+    "resume": "Comprobar o continuar",
+    "added": "Se añadirán",
+    "skipped": "Conservados u omitidos",
+    "done": "Contenido restaurado"
+  },
+  "it": {
+    "title": "Ripristina contenuti personali",
+    "notice": "Aggiungi i dati personali mancanti da questa versione dell’archivio. Le versioni attuali e i contrassegni di eliminazione vengono mantenuti. Le copie Google richiedono un consenso separato.",
+    "prepare": "Prepara ripristino",
+    "ack": "Ho verificato i conteggi e desidero aggiungere i dati mancanti.",
+    "apply": "Ripristina contenuto",
+    "resume": "Verifica o riprendi",
+    "added": "Da aggiungere",
+    "skipped": "Mantenuti o saltati",
+    "done": "Contenuto ripristinato"
+  },
+  "pt": {
+    "title": "Restaurar conteúdo pessoal",
+    "notice": "Adicione os registos pessoais em falta desta versão do arquivo. As versões atuais e as marcas de eliminação são mantidas. As cópias no Google exigem consentimento separado.",
+    "prepare": "Preparar restauro",
+    "ack": "Verifiquei as quantidades e quero adicionar os registos em falta.",
+    "apply": "Restaurar conteúdo",
+    "resume": "Verificar ou continuar",
+    "added": "A adicionar",
+    "skipped": "Mantidos ou ignorados",
+    "done": "Conteúdo restaurado"
+  },
+  "pl": {
+    "title": "Przywróć treści osobiste",
+    "notice": "Dodaj brakujące wpisy osobiste z tej wersji archiwum. Obecne wersje i znaczniki usunięcia zostaną zachowane. Kopie w Google wymagają osobnej zgody.",
+    "prepare": "Przygotuj przywracanie",
+    "ack": "Sprawdzono liczby i chcę dodać brakujące wpisy.",
+    "apply": "Przywróć treści",
+    "resume": "Sprawdź lub wznów",
+    "added": "Do dodania",
+    "skipped": "Zachowane lub pominięte",
+    "done": "Treści przywrócone"
+  },
+  "sr": {
+    "title": "Врати лични садржај",
+    "notice": "Додајте недостајуће личне записе из ове верзије архиве. Тренутне верзије и ознаке брисања се чувају. Копије у Google-у захтевају посебну сагласност.",
+    "prepare": "Припреми враћање",
+    "ack": "Проверио/ла сам бројеве и желим да додам недостајуће записе.",
+    "apply": "Врати садржај",
+    "resume": "Провери или настави",
+    "added": "За додавање",
+    "skipped": "Сачувано или прескочено",
+    "done": "Садржај је враћен"
+  },
+  "uk": {
+    "title": "Відновити особистий вміст",
+    "notice": "Додати відсутні особисті записи з цієї версії архіву. Поточні версії та позначки видалення зберігаються. Копії в Google потребують окремої згоди.",
+    "prepare": "Підготувати відновлення",
+    "ack": "Я перевірив(ла) кількість записів і хочу додати відсутні.",
+    "apply": "Відновити вміст",
+    "resume": "Перевірити або продовжити",
+    "added": "Буде додано",
+    "skipped": "Збережено або пропущено",
+    "done": "Вміст відновлено"
+  },
+  "zh": {
+    "title": "恢复个人内容",
+    "notice": "从此存档版本添加缺失的个人记录。保留当前版本和删除标记。创建 Google 副本需要单独同意。",
+    "prepare": "准备恢复",
+    "ack": "我已核对数量，并希望添加缺失的记录。",
+    "apply": "恢复内容",
+    "resume": "检查或继续",
+    "added": "将添加",
+    "skipped": "保留或跳过",
+    "done": "内容已恢复"
+  },
+  "tr": {
+    "title": "Kişisel içeriği geri yükle",
+    "notice": "Bu arşiv sürümünden eksik kişisel kayıtları ekleyin. Mevcut sürümler ve silme işaretleri korunur. Google kopyaları için ayrıca onay gerekir.",
+    "prepare": "Geri yüklemeyi hazırla",
+    "ack": "Sayıları inceledim ve eksik kayıtları eklemek istiyorum.",
+    "apply": "İçeriği geri yükle",
+    "resume": "Kontrol et veya sürdür",
+    "added": "Eklenecek",
+    "skipped": "Korunan veya atlanan",
+    "done": "İçerik geri yüklendi"
+  },
+  "ja": {
+    "title": "個人コンテンツを復元",
+    "notice": "このアーカイブの版から不足している個人記録を追加します。現在の版と削除マークは保持されます。Google へのコピーには別途同意が必要です。",
+    "prepare": "復元を準備",
+    "ack": "件数を確認し、不足している記録の追加を希望します。",
+    "apply": "コンテンツを復元",
+    "resume": "確認または再開",
+    "added": "追加予定",
+    "skipped": "保持またはスキップ",
+    "done": "コンテンツを復元しました"
+  }
+}

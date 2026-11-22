@@ -66,17 +66,20 @@ export class E2eePersonalProduct{
  }return this.#state().remoteRevision;}
  /** Used by real UI persistence, including timers and offline task edits.
   * Every acknowledged snapshot is encrypted before the returned promise ends. */
- stageSnapshot(input:unknown){
+ stageSnapshot(input:unknown,expectedContentRevision?:number,flush=false){
   if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');const copy=structuredClone(input) as Row,tasks=copy.tasks;delete copy.tasks;const state=workspace(copy);
   if(!Array.isArray(tasks))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');const values=tasks.map(validateMigrationTask);
   if(new Set(values.map(value=>value.id)).size!==values.length)throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
   return this.#operation(async()=>{const previous=this.#state().value,ids=new Set(values.map(value=>value.id));
+   if(expectedContentRevision!==undefined&&previous.contentRevision!==expectedContentRevision)throw new Error('E2EE_RESTORE_REVIEW_STALE');
    if(previous.tasks.tasks.some(row=>row.deleted&&ids.has(row.id)))throw new Error('TASK_DELETED');
    const next:PersonalState={...previous,workspace:state,tasks:{...previous.tasks,tasks:[...values.map(value=>({id:String(value.id),value,deleted:false})),
     ...previous.tasks.tasks.filter(row=>!ids.has(row.id)).map(row=>({id:row.id,value:null,deleted:true}))]}};
-   await this.#stage(next);
+   await this.#stage(next);if(flush)await this.#flush();
   });
  }
+ restoreSnapshot(input:unknown,expectedContentRevision:number){return this.stageSnapshot(input,expectedContentRevision,true);}
+ restoreView(){const state=this.#state();return{snapshot:this.snapshot(),contentRevision:state.value.contentRevision,deletedTaskIds:state.value.tasks.tasks.filter(row=>row.deleted).map(row=>row.id),pending:state.pending};}
  saveWorkspace(input:Row,onQueued?:()=>void){const state=workspace(structuredClone(input));return this.#operation(async()=>{await this.#stage({...this.#state().value,workspace:state},onQueued);return this.#flush();});}
  saveTask(input:unknown,createOnly=false,onQueued?:()=>void){const value=validateMigrationTask(structuredClone(input));return this.#operation(async()=>{
   const prior=this.#state().value,previous=prior.tasks.tasks.find(row=>row.id===value.id);

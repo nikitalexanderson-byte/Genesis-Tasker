@@ -196,6 +196,7 @@ import ru.genesis.calendar.security.*
                         finally{access?.let{userFileOutput.compareAndSet(it,null);destination.request.detach(it);it.close()};bytes.fill(0)}
                     })},enabled=!busy&&!unfinished,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(contentFileText.getString("download"))}
                 }
+                PrivatePersonalContentRestorePanel(account,content,language,::current)
                 if(busy)LinearProgressIndicator(Modifier.fillMaxWidth())
                 if(error)Text(text.getString("error"),color=MaterialTheme.colorScheme.error)
             }

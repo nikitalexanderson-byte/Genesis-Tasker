@@ -2,6 +2,7 @@ import type {UnlockedWebDevice} from './device-vault.ts';
 import type {UnlockedE2eeVault} from './storage.ts';
 import {E2eeDeviceDocument} from './device-document.ts';
 import {PERSONAL_DEVICE_ENTRY_ID,validatePersonalDeviceEntryMarker} from './personal-device-entry.ts';
+import {validatePersonalRestoreJournal} from './personal-content-restore.ts';
 import {validateRecipientRequest,validateRecipientResponse} from './invitation-recipient.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {encodeE2eeBytes,type E2eeContext} from './envelope.ts';
@@ -31,6 +32,7 @@ export async function inspectDeviceControlCustody(options:{device:UnlockedWebDev
  if(markers.length)await document(PERSONAL_DEVICE_ENTRY_ID,value=>validatePersonalDeviceEntryMarker(value,device.ownerId),marker=>{
   if(!same(marker.target.authority,device.authorityPin)||options.personalScopeId!==null&&marker.target.scopeId!==options.personalScopeId)throw new Error('E2EE_AUTHORITY_CHANGED');return marker.target.scopeId;
  });
+ const restores=await vault.listLocal('draft','personal-content-restore:');current();for(const id of restores){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('personal-content-restore:'.length);await document(id,value=>validatePersonalRestoreJournal(value,device.ownerId,intentId),()=>options.personalScopeId!);}
  const requests=await vault.listLocal('draft','invitation-recipient:');current();
  for(const id of requests){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const intentId=id.slice('invitation-recipient:'.length);
   await document(id,input=>{const value=validateRecipientRequest(input,device.ownerId,intentId);if(value.result!==null){exactKeys(value.result,['intentId','response','pendingApproval']);const response=validateRecipientResponse(value.result.response,value.id);if(value.result.intentId!==intentId||value.result.pendingApproval!==value.accept||response.state!==(value.accept?'pending':'declined'))throw new Error('E2EE_INVITATION_RESPONSE_INVALID');}return value;},()=>options.personalScopeId!);
