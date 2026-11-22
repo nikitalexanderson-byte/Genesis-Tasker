@@ -1,0 +1,240 @@
+{
+  "en": {
+    "creator": "GENESIS founder and creator of the website and app: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Domain and hosting owner: Iurii Logvinov. Infrastructure contact: demiurge.soft@gmail.com.",
+    "paymentRoles": "Responsible for payments for the United States: Iurii Logvinov; for Russia: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Creator, infrastructure and payments",
+    "merchant": "Services paid through YooKassa are provided by Ляпин Никита Александрович (Lyapin Nikita Aleksandrovich), self-employed, Russian tax ID 772495179010. Payments and receipts: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa processes payment details within its own service. GENESIS stores the purchase reference, amount, currency, access period and verified payment status, but never full card details. The account data controller is Ляпин Никита Александрович (Lyapin Nikita Aleksandrovich), nikitalexanderson@gmail.com.",
+    "pending": "Payment is available through YooKassa. You can use the Free plan at no charge.",
+    "renew": "YooKassa purchases cover the selected period and do not renew automatically. Elite is a one-time purchase of lifetime access.",
+    "gno": "Gno Meter Basileia included, tied to your nine-card weekly spread",
+    "featureBodies": [
+      "Organize tasks, projects, subtasks, recurring work and reminders in one cloud planner.",
+      "Plan your day and view Gregorian, lunar and sacred calendars on your computer or phone.",
+      "Track habits, use timers and keep a journal. Paid plans increase your workspace limits.",
+      "Connect Google Calendar and Google Tasks for two-way synchronization. Google sign-in and calendar permissions are separate choices."
+    ]
+  },
+  "ru": {
+    "creator": "Создатель сайта и приложения, основатель GENESIS — Ляпин Никита Александрович.",
+    "infrastructure": "Владелец домена и хостинга — Юрий Логвинов (Iurii Logvinov). Контакт по инфраструктуре: demiurge.soft@gmail.com.",
+    "paymentRoles": "За приём платежей для США отвечает Юрий Логвинов; для России — Ляпин Никита Александрович.",
+    "merchantTitle": "Создатель, инфраструктура и оплата",
+    "merchant": "Услуги, оплаченные через ЮKassa, предоставляет Ляпин Никита Александрович, самозанятый, ИНН 772495179010. Вопросы об оплате и чеках: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "ЮKassa обрабатывает платёжные данные в своём сервисе. GENESIS хранит номер покупки, сумму, валюту, срок доступа и подтверждённый статус оплаты, но не полные данные карты. Ответственный за данные аккаунтов — Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Доступна оплата через ЮKassa. Тариф Free можно использовать бесплатно.",
+    "renew": "Оплата через ЮKassa покрывает выбранный срок без автоматического продления. Elite — разовая покупка бессрочного доступа.",
+    "gno": "Гно Метэр Басилея включён: расчёт по девяти картам недельного расклада",
+    "featureBodies": [
+      "Задачи, проекты, подзадачи, повторения и напоминания в одном облачном планировщике.",
+      "Планируйте день и используйте григорианский, лунный и сакральный календари на компьютере и телефоне.",
+      "Отмечайте привычки, используйте таймеры и ведите дневник. Платные тарифы увеличивают лимиты пространства.",
+      "Подключайте Google Calendar и Google Tasks для двусторонней синхронизации. Вход через Google и разрешения календаря подключаются отдельно."
+    ]
+  },
+  "el": {
+    "creator": "Ιδρυτής του GENESIS και δημιουργός του ιστοτόπου και της εφαρμογής: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Ιδιοκτήτης του domain και της φιλοξενίας: Iurii Logvinov. Επικοινωνία για την υποδομή: demiurge.soft@gmail.com.",
+    "paymentRoles": "Υπεύθυνος για τις πληρωμές για τις ΗΠΑ: Iurii Logvinov· για τη Ρωσία: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Δημιουργός, υποδομή και πληρωμές",
+    "merchant": "Πάροχος των υπηρεσιών που πληρώνονται μέσω YooKassa είναι ο Ляпин Никита Александрович, αυτοαπασχολούμενος, ρωσικός φορολογικός αριθμός 772495179010. Πληρωμές και αποδείξεις: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "Η YooKassa επεξεργάζεται τα στοιχεία πληρωμής στη δική της υπηρεσία. Το GENESIS αποθηκεύει τον αριθμό αγοράς, το ποσό, το νόμισμα, την περίοδο πρόσβασης και την επαληθευμένη κατάσταση πληρωμής, αλλά όχι πλήρη στοιχεία κάρτας. Υπεύθυνος επεξεργασίας δεδομένων λογαριασμών: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Η πληρωμή είναι διαθέσιμη μέσω YooKassa. Το πρόγραμμα Free είναι δωρεάν.",
+    "renew": "Οι αγορές μέσω YooKassa καλύπτουν την επιλεγμένη περίοδο και δεν ανανεώνονται αυτόματα. Το Elite είναι εφάπαξ αγορά ισόβιας πρόσβασης.",
+    "gno": "Το Gno Meter Basileia περιλαμβάνεται και συνδέεται με το εβδομαδιαίο σας άνοιγμα εννέα καρτών",
+    "featureBodies": [
+      "Οργανώστε εργασίες, έργα, υποεργασίες, επαναλαμβανόμενες εργασίες και υπενθυμίσεις σε έναν ενιαίο προγραμματιστή στο cloud.",
+      "Προγραμματίστε την ημέρα σας και δείτε το Γρηγοριανό, το σεληνιακό και το ιερό ημερολόγιο στον υπολογιστή ή στο τηλέφωνό σας.",
+      "Παρακολουθήστε συνήθειες, χρησιμοποιήστε χρονόμετρα και κρατήστε ημερολόγιο. Τα προγράμματα επί πληρωμή αυξάνουν τα όρια του χώρου εργασίας σας.",
+      "Συνδέστε το Google Calendar και το Google Tasks για αμφίδρομο συγχρονισμό. Η σύνδεση μέσω Google και οι άδειες πρόσβασης στο ημερολόγιο είναι ξεχωριστές επιλογές."
+    ]
+  },
+  "de": {
+    "creator": "Gründer von GENESIS und Entwickler der Website und App: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Inhaber von Domain und Hosting: Iurii Logvinov. Kontakt zur Infrastruktur: demiurge.soft@gmail.com.",
+    "paymentRoles": "Verantwortlich für Zahlungen für die USA: Iurii Logvinov; für Russland: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Entwickler, Infrastruktur und Zahlungen",
+    "merchant": "Über YooKassa bezahlte Leistungen erbringt Ляпин Никита Александрович, Selbstständiger, russische Steuernummer 772495179010. Zahlungen und Belege: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa verarbeitet Zahlungsdaten in seinem eigenen Dienst. GENESIS speichert Kaufreferenz, Betrag, Währung, Zugangszeitraum und bestätigten Zahlungsstatus, jedoch keine vollständigen Kartendaten. Verantwortlicher für Kontodaten: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Die Zahlung ist über YooKassa möglich. Der Tarif Free ist kostenlos.",
+    "renew": "Käufe über YooKassa gelten für den gewählten Zeitraum und verlängern sich nicht automatisch. Elite ist ein einmaliger Kauf mit lebenslangem Zugang.",
+    "gno": "Gno Meter Basileia inklusive, an deine wöchentliche Neun-Karten-Legung gebunden",
+    "featureBodies": [
+      "Organisiere Aufgaben, Projekte, Unteraufgaben, wiederkehrende Aufgaben und Erinnerungen in einem zentralen Cloud-Planer.",
+      "Plane deinen Tag und nutze den gregorianischen, den Mond- und den sakralen Kalender am Computer oder auf dem Smartphone.",
+      "Verfolge Gewohnheiten, nutze Timer und führe ein Tagebuch. Kostenpflichtige Tarife erhöhen die Limits deines Arbeitsbereichs.",
+      "Verbinde Google Calendar und Google Tasks für die Synchronisierung in beide Richtungen. Die Anmeldung mit Google und die Kalenderberechtigungen sind voneinander unabhängige Entscheidungen."
+    ]
+  },
+  "fr": {
+    "creator": "Fondateur de GENESIS et créateur du site et de l’application : Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Titulaire du domaine et de l’hébergement : Iurii Logvinov. Contact pour l’infrastructure : demiurge.soft@gmail.com.",
+    "paymentRoles": "Responsable des paiements pour les États-Unis : Iurii Logvinov ; pour la Russie : Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Créateur, infrastructure et paiements",
+    "merchant": "Les services payés via YooKassa sont fournis par Ляпин Никита Александрович, travailleur indépendant, numéro fiscal russe 772495179010. Paiements et reçus : nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa traite les données de paiement dans son propre service. GENESIS conserve la référence d’achat, le montant, la devise, la période d’accès et le statut de paiement vérifié, mais jamais les données complètes de la carte. Responsable des données des comptes : Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Le paiement est disponible via YooKassa. L’offre Free est gratuite.",
+    "renew": "Les achats via YooKassa couvrent la période choisie et ne se renouvellent pas automatiquement. Elite est un achat unique donnant un accès à vie.",
+    "gno": "Gno Meter Basileia inclus, lié à votre tirage hebdomadaire de neuf cartes",
+    "featureBodies": [
+      "Organisez tâches, projets, sous-tâches, tâches récurrentes et rappels dans un seul outil de planification en ligne.",
+      "Planifiez votre journée et consultez les calendriers grégorien, lunaire et sacré sur votre ordinateur ou votre téléphone.",
+      "Suivez vos habitudes, utilisez des minuteurs et tenez un journal. Les offres payantes augmentent les limites de votre espace de travail.",
+      "Connectez Google Calendar et Google Tasks pour une synchronisation bidirectionnelle. La connexion avec Google et les autorisations du calendrier sont deux choix distincts."
+    ]
+  },
+  "es": {
+    "creator": "Fundador de GENESIS y creador del sitio web y de la aplicación: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Titular del dominio y del alojamiento: Iurii Logvinov. Contacto de infraestructura: demiurge.soft@gmail.com.",
+    "paymentRoles": "Responsable de los pagos para Estados Unidos: Iurii Logvinov; para Rusia: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Creador, infraestructura y pagos",
+    "merchant": "Los servicios pagados a través de YooKassa los presta Ляпин Никита Александрович, trabajador autónomo, número fiscal ruso 772495179010. Pagos y recibos: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa procesa los datos de pago en su propio servicio. GENESIS guarda la referencia de compra, el importe, la moneda, el periodo de acceso y el estado de pago verificado, pero nunca los datos completos de la tarjeta. Responsable de los datos de las cuentas: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "El pago está disponible a través de YooKassa. El plan Free es gratuito.",
+    "renew": "Las compras a través de YooKassa cubren el periodo elegido y no se renuevan automáticamente. Elite es una compra de pago único con acceso de por vida.",
+    "gno": "Gno Meter Basileia incluido, vinculado a tu tirada semanal de nueve cartas",
+    "featureBodies": [
+      "Organiza tareas, proyectos, subtareas, trabajo recurrente y recordatorios en un único planificador en la nube.",
+      "Planifica tu día y consulta los calendarios gregoriano, lunar y sagrado en tu ordenador o teléfono.",
+      "Haz un seguimiento de tus hábitos, utiliza temporizadores y lleva un diario. Los planes de pago aumentan los límites de tu espacio de trabajo.",
+      "Conecta Google Calendar y Google Tasks para sincronizar en ambas direcciones. El inicio de sesión con Google y los permisos del calendario se eligen por separado."
+    ]
+  },
+  "it": {
+    "creator": "Fondatore di GENESIS e creatore del sito web e dell’app: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Titolare del dominio e dell’hosting: Iurii Logvinov. Contatto per l’infrastruttura: demiurge.soft@gmail.com.",
+    "paymentRoles": "Responsabile dei pagamenti per gli Stati Uniti: Iurii Logvinov; per la Russia: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Creatore, infrastruttura e pagamenti",
+    "merchant": "I servizi pagati tramite YooKassa sono forniti da Ляпин Никита Александрович, lavoratore autonomo, codice fiscale russo 772495179010. Pagamenti e ricevute: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa tratta i dati di pagamento nel proprio servizio. GENESIS conserva il riferimento dell’acquisto, l’importo, la valuta, il periodo di accesso e lo stato di pagamento verificato, ma mai i dati completi della carta. Titolare del trattamento dei dati degli account: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Il pagamento è disponibile tramite YooKassa. Il piano Free è gratuito.",
+    "renew": "Gli acquisti tramite YooKassa coprono il periodo scelto e non si rinnovano automaticamente. Elite è un acquisto unico con accesso a vita.",
+    "gno": "Gno Meter Basileia incluso, collegato alla tua stesa settimanale di nove carte",
+    "featureBodies": [
+      "Organizza attività, progetti, sottoattività, lavoro ricorrente e promemoria in un unico strumento di pianificazione sul cloud.",
+      "Pianifica la giornata e consulta i calendari gregoriano, lunare e sacro sul computer o sul telefono.",
+      "Monitora le abitudini, usa i timer e tieni un diario. I piani a pagamento aumentano i limiti del tuo spazio di lavoro.",
+      "Collega Google Calendar e Google Tasks per la sincronizzazione bidirezionale. L’accesso con Google e le autorizzazioni del calendario sono scelte separate."
+    ]
+  },
+  "pt": {
+    "creator": "Fundador do GENESIS e criador do site e da aplicação: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Titular do domínio e do alojamento: Iurii Logvinov. Contacto de infraestrutura: demiurge.soft@gmail.com.",
+    "paymentRoles": "Responsável pelos pagamentos para os Estados Unidos: Iurii Logvinov; para a Rússia: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Criador, infraestrutura e pagamentos",
+    "merchant": "Os serviços pagos pelo YooKassa são prestados por Ляпин Никита Александрович, trabalhador independente, número fiscal russo 772495179010. Pagamentos e recibos: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "O YooKassa processa os dados de pagamento no seu próprio serviço. GENESIS guarda a referência da compra, o valor, a moeda, o período de acesso e o estado de pagamento verificado, mas nunca os dados completos do cartão. Responsável pelos dados das contas: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "O pagamento está disponível pelo YooKassa. O plano Free é gratuito.",
+    "renew": "As compras pelo YooKassa cobrem o período escolhido e não são renovadas automaticamente. Elite é uma compra única com acesso vitalício.",
+    "gno": "Gno Meter Basileia incluído, associado à sua tiragem semanal de nove cartas",
+    "featureBodies": [
+      "Organize tarefas, projetos, subtarefas, trabalho recorrente e lembretes num único organizador na nuvem.",
+      "Planeie o seu dia e consulte os calendários gregoriano, lunar e sagrado no computador ou no telemóvel.",
+      "Acompanhe hábitos, use temporizadores e mantenha um diário. Os planos pagos aumentam os limites do seu espaço de trabalho.",
+      "Ligue o Google Calendar e o Google Tasks para sincronizar nos dois sentidos. O início de sessão com o Google e as permissões do calendário são escolhas independentes."
+    ]
+  },
+  "pl": {
+    "creator": "Założyciel GENESIS oraz twórca strony internetowej i aplikacji: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Właściciel domeny i hostingu: Iurii Logvinov. Kontakt w sprawie infrastruktury: demiurge.soft@gmail.com.",
+    "paymentRoles": "Za płatności dla USA odpowiada Iurii Logvinov, a dla Rosji — Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Twórca, infrastruktura i płatności",
+    "merchant": "Usługi opłacane przez YooKassa świadczy Ляпин Никита Александрович, osoba samozatrudniona, rosyjski numer podatkowy 772495179010. Płatności i rachunki: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa przetwarza dane płatnicze w swoim serwisie. GENESIS przechowuje identyfikator zakupu, kwotę, walutę, okres dostępu i zweryfikowany status płatności, ale nigdy pełne dane karty. Administrator danych kont: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Płatność jest dostępna przez YooKassa. Plan Free jest bezpłatny.",
+    "renew": "Zakupy przez YooKassa obejmują wybrany okres i nie odnawiają się automatycznie. Elite to jednorazowy zakup dożywotniego dostępu.",
+    "gno": "Gno Meter Basileia w cenie, powiązany z Twoim cotygodniowym rozkładem dziewięciu kart",
+    "featureBodies": [
+      "Organizuj zadania, projekty, podzadania, zadania cykliczne i przypomnienia w jednym planerze w chmurze.",
+      "Planuj dzień i korzystaj z kalendarza gregoriańskiego, księżycowego i sakralnego na komputerze lub telefonie.",
+      "Śledź nawyki, korzystaj z minutników i prowadź dziennik. Płatne plany zwiększają limity Twojej przestrzeni roboczej.",
+      "Połącz Google Calendar i Google Tasks, aby synchronizować dane w obu kierunkach. Logowanie przez Google i uprawnienia kalendarza to osobne wybory."
+    ]
+  },
+  "sr": {
+    "creator": "Оснивач GENESIS-а и аутор сајта и апликације — Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Власник домена и хостинга — Јуриј Логвинов (Iurii Logvinov). Контакт за инфраструктуру: demiurge.soft@gmail.com.",
+    "paymentRoles": "За пријем плаћања за САД одговоран је Јуриј Логвинов; за Русију — Ляпин Никита Александрович.",
+    "merchantTitle": "Аутор, инфраструктура и плаћања",
+    "merchant": "Услуге плаћене преко YooKassa пружа Ляпин Никита Александрович, самозапослени, руски порески број 772495179010. Плаћања и рачуни: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa обрађује податке за плаћање у сопственом сервису. GENESIS чува број куповине, износ, валуту, период приступа и потврђен статус плаћања, али никада пуне податке картице. Руковалац подацима налога: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Плаћање је доступно преко YooKassa. Пакет Free је бесплатан.",
+    "renew": "Куповине преко YooKassa важе за изабрани период и не обнављају се аутоматски. Elite је једнократна куповина доживотног приступа.",
+    "gno": "Gno Meter Basileia је укључен и везан за ваш недељни распоред од девет карата",
+    "featureBodies": [
+      "Организујте задатке, пројекте, подзадатке, понављајуће обавезе и подсетнике у једном планеру у облаку.",
+      "Планирајте дан и прегледајте грегоријански, лунарни и сакрални календар на рачунару или телефону.",
+      "Пратите навике, користите тајмере и водите дневник. Плаћени пакети повећавају лимите вашег радног простора.",
+      "Повежите Google Calendar и Google Tasks за двосмерну синхронизацију. Пријава преко Google налога и дозволе за календар бирају се одвојено."
+    ]
+  },
+  "uk": {
+    "creator": "Засновник GENESIS і творець сайту та застосунку — Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Власник домену та хостингу — Iurii Logvinov. Контакт з питань інфраструктури: demiurge.soft@gmail.com.",
+    "paymentRoles": "За приймання платежів для США відповідає Юрій Логвінов; для Росії — Ляпин Никита Александрович.",
+    "merchantTitle": "Творець, інфраструктура та оплата",
+    "merchant": "Послуги, оплачені через ЮKassa, надає Ляпин Никита Александрович, самозайнятий, російський податковий номер 772495179010. Оплата та чеки: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "ЮKassa обробляє платіжні дані у власному сервісі. GENESIS зберігає номер покупки, суму, валюту, строк доступу та підтверджений статус оплати, але не повні дані картки. Відповідальний за дані облікових записів — Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Доступна оплата через ЮKassa. Тариф Free можна використовувати безкоштовно.",
+    "renew": "Оплата через ЮKassa покриває вибраний строк без автоматичного продовження. Elite — разова купівля безстрокового доступу.",
+    "gno": "Gno Meter Basileia включено: розрахунок за дев’ятьма картами вашого тижневого розкладу",
+    "featureBodies": [
+      "Організовуйте завдання, проєкти, підзавдання, повторювані справи й нагадування в одному хмарному планувальнику.",
+      "Плануйте день і переглядайте григоріанський, місячний та сакральний календарі на комп’ютері або телефоні.",
+      "Відстежуйте звички, використовуйте таймери й ведіть щоденник. Платні тарифи збільшують ліміти вашого робочого простору.",
+      "Підключайте Google Calendar і Google Tasks для двосторонньої синхронізації. Вхід через Google та дозволи календаря налаштовуються окремо."
+    ]
+  },
+  "zh": {
+    "creator": "GENESIS 创始人及网站和应用的创建者：Nikita Aleksandrovich Lyapin。",
+    "infrastructure": "域名和托管服务所有者：Iurii Logvinov。基础设施联系邮箱：demiurge.soft@gmail.com。",
+    "paymentRoles": "美国付款负责人：Iurii Logvinov；俄罗斯付款负责人：Nikita Aleksandrovich Lyapin。",
+    "merchantTitle": "创建者、基础设施与付款",
+    "merchant": "通过 YooKassa 付款的服务由个体经营者 Ляпин Никита Александрович 提供，俄罗斯税号为 772495179010。付款和收据咨询：nikitalexanderson@gmail.com。",
+    "merchantPrivacy": "YooKassa 在其自身服务中处理付款信息。GENESIS 保存购买编号、金额、币种、访问期限和已验证的付款状态，但不保存完整的银行卡信息。账户数据负责人：Ляпин Никита Александрович，nikitalexanderson@gmail.com。",
+    "pending": "目前可通过 YooKassa 付款。Free 套餐可免费使用。",
+    "renew": "通过 YooKassa 购买的服务在所选期限内有效，不会自动续费。Elite 为一次性购买的终身访问权限。",
+    "gno": "包含 Gno Meter Basileia，与您每周抽取的九张牌阵绑定",
+    "featureBodies": [
+      "在同一个云端规划工具中管理任务、项目、子任务、重复事项和提醒。",
+      "在电脑或手机上规划每一天，并查看公历、月历和神圣历。",
+      "跟踪习惯、使用计时器并记录日记。付费方案可提高工作空间的使用限额。",
+      "连接 Google Calendar 和 Google Tasks，实现双向同步。使用 Google 登录与授予日历权限是两项独立选择。"
+    ]
+  },
+  "tr": {
+    "creator": "GENESIS’in kurucusu, web sitesinin ve uygulamanın geliştiricisi: Nikita Aleksandrovich Lyapin.",
+    "infrastructure": "Alan adı ve barındırma hizmetinin sahibi: Iurii Logvinov. Altyapı iletişim adresi: demiurge.soft@gmail.com.",
+    "paymentRoles": "ABD için ödemelerden sorumlu kişi: Iurii Logvinov; Rusya için: Nikita Aleksandrovich Lyapin.",
+    "merchantTitle": "Geliştirici, altyapı ve ödemeler",
+    "merchant": "YooKassa ile ödenen hizmetleri, Rusya vergi numarası 772495179010 olan serbest çalışan Ляпин Никита Александрович sağlar. Ödemeler ve makbuzlar: nikitalexanderson@gmail.com.",
+    "merchantPrivacy": "YooKassa ödeme bilgilerini kendi hizmetinde işler. GENESIS satın alma referansını, tutarı, para birimini, erişim süresini ve doğrulanmış ödeme durumunu saklar; kart bilgilerinin tamamını saklamaz. Hesap verilerinin sorumlusu: Ляпин Никита Александрович, nikitalexanderson@gmail.com.",
+    "pending": "Ödeme YooKassa üzerinden yapılabilir. Free planı ücretsizdir.",
+    "renew": "YooKassa üzerinden yapılan satın alımlar seçilen süreyi kapsar ve otomatik yenilenmez. Elite, ömür boyu erişim sağlayan tek seferlik bir satın alımdır.",
+    "gno": "Gno Meter Basileia dahildir ve haftalık dokuz kartlık açılımınıza bağlıdır",
+    "featureBodies": [
+      "Görevleri, projeleri, alt görevleri, yinelenen işleri ve hatırlatıcıları tek bir bulut planlayıcıda düzenleyin.",
+      "Gününüzü planlayın; bilgisayarınızda veya telefonunuzda Gregoryen, ay ve kutsal takvimleri görüntüleyin.",
+      "Alışkanlıklarınızı takip edin, zamanlayıcıları kullanın ve günlük tutun. Ücretli planlar çalışma alanınızın limitlerini artırır.",
+      "Çift yönlü senkronizasyon için Google Calendar ve Google Tasks’ı bağlayın. Google ile giriş yapmak ve takvim izinlerini vermek birbirinden bağımsız seçimlerdir."
+    ]
+  },
+  "ja": {
+    "creator": "GENESISの創設者、およびウェブサイトとアプリの制作者：Nikita Aleksandrovich Lyapin。",
+    "infrastructure": "ドメインとホスティングの所有者：Iurii Logvinov。インフラに関する連絡先：demiurge.soft@gmail.com。",
+    "paymentRoles": "米国向けの決済担当者：Iurii Logvinov。ロシア向けの決済担当者：Nikita Aleksandrovich Lyapin。",
+    "merchantTitle": "制作者、インフラ、決済",
+    "merchant": "YooKassaで支払われるサービスの提供者は、個人事業主Ляпин Никита Александрович（ロシア納税者番号772495179010）です。支払いと領収書のお問い合わせ：nikitalexanderson@gmail.com。",
+    "merchantPrivacy": "YooKassaは自社サービス内で支払い情報を処理します。GENESISは購入番号、金額、通貨、アクセス期間、確認済みの支払い状態を保存しますが、カード情報全体は保存しません。アカウントデータの管理責任者：Ляпин Никита Александрович、nikitalexanderson@gmail.com。",
+    "pending": "YooKassaでお支払いいただけます。Freeプランは無料で利用できます。",
+    "renew": "YooKassaでの購入は選択した期間に適用され、自動更新されません。Eliteは無期限のアクセス権を一度の支払いで購入できます。",
+    "gno": "Gno Meter Basileia を追加料金なしで利用でき、毎週引く 9 枚のカードのスプレッドに連動します",
+    "featureBodies": [
+      "タスク、プロジェクト、サブタスク、繰り返しの作業、リマインダーを一つのクラウドプランナーで整理できます。",
+      "パソコンやスマートフォンで一日の予定を立て、グレゴリオ暦、月の暦、神聖暦を確認できます。",
+      "習慣の記録、タイマーの利用、日記の作成ができます。有料プランではワークスペースの上限が増えます。",
+      "Google Calendar と Google Tasks を接続して双方向に同期できます。Google でのログインとカレンダーへのアクセス許可は、それぞれ個別に選択できます。"
+    ]
+  }
+}

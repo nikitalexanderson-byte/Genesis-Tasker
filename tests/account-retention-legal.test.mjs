@@ -13,7 +13,7 @@ import {calendarModule} from './helpers/calendar-modules.mjs';
 const languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
 const copy=JSON.parse(readFileSync(new URL('../app/account-retention-legal-copy.json',import.meta.url),'utf8'));
 const international=JSON.parse(readFileSync(new URL('../app/public-international-copy.json',import.meta.url),'utf8'));
-const publicRetentionText=(language,text)=>language==='ru'?text:text.replace(/nikitalexanderson@gmail\.com/gi,'demiurge.soft@gmail.com').replaceAll('CloudTips',international[language].paymentProvider).replace('a signed the external payment provider notification','a signed notification from the external payment provider').replace(/(^|[.!?]\s+)the external payment provider/g,(_match,prefix)=>prefix+'The external payment provider');
+const publicRetentionText=(language,text,edition)=>edition==='domestic'?text:text.replace(/nikitalexanderson@gmail\.com/gi,'demiurge.soft@gmail.com').replaceAll('CloudTips',international[language].paymentProvider).replace('a signed the external payment provider notification','a signed notification from the external payment provider').replace(/(^|[.!?]\s+)the external payment provider/g,(_match,prefix)=>prefix+'The external payment provider');
 const policy=calendarModule('app/account-retention-legal.ts');
 const fields=Object.keys(copy.ru).sort();
 const numbers=value=>value.match(/\d+/gu)??[];
@@ -81,14 +81,14 @@ test('real legal pages render every retention section in the chosen language wit
   try{
     const {LegalPage,legalPages,setRuntimeLanguage}=await import(pathToFileURL(fileURLToPath(file)).href);
     const pages={terms:['free','elite','donations','warning','data'],privacy:['privacy'],'delete-account':['deleteAccount']};
-    for(const language of languages){
+    for(const edition of ['international','domestic'])for(const language of languages){
       setRuntimeLanguage(language);
       for(const [page,prefixes]of Object.entries(pages)){
-        const html=renderToStaticMarkup(createElement(LegalPage,{page}));
+        const html=renderToStaticMarkup(createElement(LegalPage,{page,edition}));
         for(const prefix of prefixes){
           assert.ok(legalPages[page].sections.some(([title,body])=>title===copy.ru[`${prefix}Title`]&&body===copy.ru[`${prefix}Body`]),`${page}:${prefix}: static source missing`);
           const expected=renderToStaticMarkup(createElement('section',{'data-no-translate':true},
-            createElement('h2',null,publicRetentionText(language,copy[language][`${prefix}Title`])),createElement('p',null,publicRetentionText(language,copy[language][`${prefix}Body`]))));
+            createElement('h2',null,publicRetentionText(language,copy[language][`${prefix}Title`],edition)),createElement('p',null,publicRetentionText(language,copy[language][`${prefix}Body`],edition))));
           assert.ok(html.includes(expected),`${language}:${page}:${prefix}: actual LegalPage did not use complete localized copy`);
           if(language!=='ru')assert.ok(!html.includes(copy.ru[`${prefix}Body`]),`${language}:${page}:${prefix}: Russian body leaked`);
         }

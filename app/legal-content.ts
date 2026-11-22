@@ -1,4 +1,8 @@
 import publicCopy from './public-product-copy.json';
+import domesticServiceCopy from './public-domestic-service-copy.json';
+import {publicProductCopy} from './public-product';
+import {currentPublicEdition,type PublicEdition} from './public-route';
+import websiteRegionCopy from './website-region-copy.json';
 import releaseLegalCopy from "./release-318-legal-copy.json";
 import { SERVICE_IDENTITY } from "./public-service";
 import dailyAdviceCopy from "./daily-advice-copy.json";
@@ -8,7 +12,8 @@ import { accountRetentionDeleteSection, accountRetentionPrivacySection, accountR
 import { dictationSpellingLegalSection } from './dictation-legal';
 import { weatherSolarLegalSection, weatherAndroidSolarLegalSection, weatherSourcesLegalSection } from './weather-legal';
 
-export const LEGAL_UPDATED = "2026-11-22";
+export const LEGAL_UPDATED = "2026-11-23";
+export const publicLegalUpdated=()=>LEGAL_UPDATED;
 
 const sharedDataDeletionNotice = "После удаления аккаунта общие задачи и их вложения могут сохраняться для других участников, в том числе при передаче владения проектом. Если у вас есть право редактирования задачи, на сайте откройте её, нажмите «Редактировать», затем «Убрать файл» у вложения и «Сохранить задачу». В Android откройте «Файлы задачи», выберите «Убрать файл», подтвердите «Убрать» и нажмите «Сохранить». Закрытые резервные копии удаляются по штатной ротации; мгновенное стирание отдельных записей и файлов из них не гарантируется.";
 
@@ -16,13 +21,14 @@ export const legalPages = {
   refund: {
     title: publicCopy.ru.refund,
     intro: publicCopy.ru.refundSummary,
-    sections: [[publicCopy.ru.merchantTitle,publicCopy.ru.merchant],[publicCopy.ru.pricing,publicCopy.ru.renew]],
+    sections: [[domesticServiceCopy.ru.merchantTitle,domesticServiceCopy.ru.merchant],[publicCopy.ru.pricing,domesticServiceCopy.ru.renew]],
   },
   privacy: {
     title: "Политика конфиденциальности",
     intro: "Здесь простыми словами описано, какие данные получает GENESIS, зачем они нужны, где хранятся и как пользователь может удалить их или отозвать доступ к учётной записи.",
     sections: [
       ...backupPrivacySections,
+      [websiteRegionCopy.ru.title,websiteRegionCopy.ru.privacy],
       accountRetentionPrivacySection,
       ["Платежи ЮKassa", releaseLegalCopy.ru.paymentData],
       ["Дневник снов и диктовка", releaseLegalCopy.ru.dreamData],
@@ -120,8 +126,8 @@ export const legalPages = {
 } as const;
 
 
-export function legalPageContent(page: keyof typeof legalPages,language: string) {
+export function legalPageContent(page: keyof typeof legalPages,language:string,edition:PublicEdition=currentPublicEdition()) {
   if(page!=='refund')return legalPages[page];
-  const c=publicCopy[language as keyof typeof publicCopy]??publicCopy.en;
+  const c=publicProductCopy(language,edition);
   return {title:c.refund,intro:c.refundSummary,sections:[[c.merchantTitle,c.merchant],[c.pricing,c.renew]]};
 }

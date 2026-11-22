@@ -2612,13 +2612,12 @@ export function GenesisCalendar() {
     setLanguage(nextLanguage);
     storeLanguage(nextLanguage);
     if (!cloudUser) {
-      const route = publicRouteForPath(window.location.pathname, APP_BASE);
+      const route = publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
       if (route) {
         const url = new URL(window.location.href);
-        const destination = new URL(publicPagePath(nextLanguage, route.page, APP_BASE), url.origin);
+        const destination = new URL(publicPagePath(nextLanguage,route.page,APP_BASE,route.edition), url.origin);
         url.pathname = destination.pathname;
-        if (destination.searchParams.has('lang')) url.searchParams.set('lang', nextLanguage);
-        else url.searchParams.delete('lang');
+        url.searchParams.set('lang',nextLanguage);
         window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
       }
     }
@@ -7332,10 +7331,10 @@ export function GenesisCalendar() {
                 <span aria-hidden="true">✦</span>
                 <span><strong>{genesisTelegramLabel(language)}</strong><small>Telegram</small></span>
               </a>
-              <DonationLink language={language} authenticated={Boolean(cloudUser)}>
+              <DonationLink language={language} authenticated={Boolean(cloudUser)}>{available=><>
                 <span aria-hidden="true">♡</span>
-                <span><strong>{release319Copy[language].donation}</strong><small>CloudTips</small></span>
-              </DonationLink>
+                <span><strong>{release319Copy[language].donation}</strong>{available?<small>CloudTips</small>:null}</span>
+              </>}</DonationLink>
             </footer>
           </div>
         </div>

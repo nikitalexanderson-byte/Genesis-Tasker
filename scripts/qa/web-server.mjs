@@ -34,9 +34,9 @@ export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
     const publicHome = /^\/(?:ru\/?|(?:ru\/)?index\.html)?$/.test(url.pathname);
     if (publicDocument || publicHome) {
       const requested = url.searchParams.get('lang');
-      const language = url.pathname.startsWith('/ru') ? 'ru' :
-        ['ru','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : 'en';
-      const localeDirectory = language === 'en' ? '' : language === 'ru' ? 'ru' : `_public-locales/${language}`;
+      const domestic = url.pathname.startsWith('/ru');
+      const language = ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : domestic ? 'ru' : 'en';
+      const localeDirectory = domestic ? language === 'ru' ? 'ru' : `_domestic-locales/${language}` : language === 'en' ? '' : `_public-locales/${language}`;
       candidate = path.join(directory, localeDirectory, `${publicDocument?.[2] ?? 'index'}.html`);
     }
     if (!existsSync(candidate) || !statSync(candidate).isFile()) {

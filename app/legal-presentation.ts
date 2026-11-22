@@ -1,5 +1,7 @@
 import {legalPageContent} from './legal-content';
-import publicCopy from './public-product-copy.json';
+import {publicProductCopy} from './public-product';
+import {currentPublicEdition,type PublicEdition} from './public-route';
+import websiteRegionCopy from './website-region-copy.json';
 import internationalCopy from './public-international-copy.json';
 import {localizedAccountRetentionSections} from './account-retention-legal';
 import {localizedDictationLegalSections} from './dictation-legal';
@@ -14,8 +16,8 @@ type Translate=(source:string)=>string;
 
 /** Shared by React and the no-JavaScript build: authored disclosures always win
  * over generic UI translations, including the actual service/controller roles. */
-export function legalPresentation(page:LegalPageName,language:string,translate:Translate,backup:Translate=translate) {
-  const source=legalPageContent(page,language);
+export function legalPresentation(page:LegalPageName,language:string,translate:Translate,backup:Translate=translate,edition:PublicEdition=currentPublicEdition()) {
+  const source=legalPageContent(page,language,edition);
   if(page==='refund')return source;
   const sections=new Map([...localizedAccountRetentionSections(language),...localizedDictationLegalSections(language),...localizedWeatherLegalSections(language)]);
   const advice=adviceCopy[language as keyof typeof adviceCopy]??adviceCopy.en;
@@ -23,13 +25,14 @@ export function legalPresentation(page:LegalPageName,language:string,translate:T
   sections.set(adviceCopy.ru.dataTitle,[advice.dataTitle,`${advice.dataNotice} ${advice.ageData}`]);
   sections.set(adviceCopy.ru.ageLegalTitle,[advice.ageLegalTitle,advice.ageLegal]);
   const authored=new Map(Object.entries(releaseCopy.ru).map(([key,value])=>[value,release[key as keyof typeof release]]));
-  const international=language!=='ru',c=publicCopy[language as keyof typeof publicCopy]??publicCopy.en,external=internationalCopy[language as keyof typeof internationalCopy]??internationalCopy.en;
+  const international=edition==='international',c=publicProductCopy(language,edition),external=internationalCopy[language as keyof typeof internationalCopy]??internationalCopy.en;
   const present=(text:string)=>international?text.replace(/nikitalexanderson@gmail\.com/gi,'demiurge.soft@gmail.com').replace(/GigaChat|ГигаЧат|Гигачат|Гига Чат/gi,external.aiProvider).replace(/CloudTips/g,external.paymentProvider).replace('a signed the external payment provider notification','a signed notification from the external payment provider').replace(/(^|[.!?]\s+)the external payment provider/g,(_,prefix:string)=>prefix+'The external payment provider'):text;
   return {title:translate(source.title),intro:translate(source.intro),sections:source.sections.map(([title,body])=>{
     if(international&&page==='support'&&title==='Связаться')return[translate(title),external.supportBody] as const;
     if(international&&body===releaseCopy.ru.identity)return[c.merchantTitle,`${c.creator} ${c.infrastructure}`] as const;
     if(international&&body===releaseCopy.ru.performer)return[c.merchantTitle,`${c.merchant} ${c.paymentRoles}`] as const;
     if(international&&body===releaseCopy.ru.paymentData)return[c.merchantTitle,`${c.merchantPrivacy} ${c.paymentRoles}`] as const;
+    if(title===websiteRegionCopy.ru.title){const region=websiteRegionCopy[language as keyof typeof websiteRegionCopy]??websiteRegionCopy.en;return[region.title,region.privacy] as const;}
     const complete=sections.get(title);if(complete)return [present(complete[0]),present(complete[1])] as const;
     if(backupTitles.has(title))return [present(backup(title)),present(backup(body))] as const;
     return [present(translate(title)),present(authored.get(body)??translate(body))] as const;
