@@ -1357,3 +1357,10 @@ Bulk forms сохраняют raw ввод/selection/origin/calendar/baselines �
 memory до IO; unbound cross-project selection хранится только в personal recovery.
 Execution checks не запускались по порядку владельца; это не новый QA PASS.
 
+# 23 ноября — typed diary/mindmap restore (код)
+
+Общий source/preview/confirmation/journal/resume подключён к штатным web/native
+diary и mindmap writers. Add-only, текущие tombstones/версии не заменяются;
+восстановленные заметки device-only. Оба backup UI, local custody, content archive
+и предупреждение14lang подключены. Проверки исполнения отложены до всего кода.
+

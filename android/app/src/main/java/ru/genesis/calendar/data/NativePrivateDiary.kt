@@ -78,6 +78,15 @@ internal class NativePrivateDiary(private val scope:String,private val owner:Str
             PrivateDiaryState.rows(local.value.getJSONArray("records")).count{!it.getBoolean("deleted")},DreamSettings.parse(remote.value.getJSONObject("dreamSettings")),local.value.getString("migrationHistory"))
     }
     private fun ownKey(id:String)="diary-draft:$writer:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(id.toByteArray(Charsets.UTF_8)))
+    @Synchronized fun restoreView():JSONObject{load(true);flush();val (remote,local)=state();val records=JSONArray()
+        for((value,deviceOnly)in listOf(remote.value to false,local.value to true))for(row in PrivateDiaryState.rows(value.getJSONArray("records")))records.put(JSONObject().put("id",row.get("id")).put("revision",row.get("revision")).put("deleted",row.get("deleted")).put("value",row.get("note")).put("localOnly",deviceOnly))
+        return JSONObject().put("checkpoint",JSONArray().put(remote.serial).put(remote.remoteRevision).put(local.serial).toString()).put("pending",remote.pending||local.value.getJSONArray("promotions").length()>0).put("records",records)
+    }
+    @Synchronized fun restoreAdd(input:JSONObject,access:FeatureAccess){load();val note=DiaryNote.parse(input);val (remote,local)=state()
+        check((PrivateDiaryState.rows(remote.value.getJSONArray("records"))+PrivateDiaryState.rows(local.value.getJSONArray("records"))).none{it.getString("id")==note.id}&&PrivateDiaryState.rows(local.value.getJSONArray("drafts")).none{it.getJSONObject("note").getString("id")==note.id}){"E2EE_RESTORE_OUTCOME_REQUIRED"}
+        if(note.dreamDay!=null)check(access.allows("dream-journal")){"FEATURE_SUBSCRIPTION_REQUIRED"};if(note.adviceId==null)check(access.canCreate("diary",snapshot().records.count{!it.draft&&it.note.adviceId==null})){"FEATURE_SUBSCRIPTION_REQUIRED"}
+        stageLocal(JSONObject(local.value.toString()).put("records",PrivateDiaryState.array(PrivateDiaryState.rows(local.value.getJSONArray("records"))+PrivateDiaryState.entry(note,note.id,1))))
+    }
     private fun keep(note:DiaryNote,revision:Long,key:String?):DiaryRecord{
         val local=state().second.value;val draftKey=key?:ownKey(note.id);check(draftKey.startsWith("diary-draft:")){"DIARY_INVALID_DRAFT"}
         val drafts=PrivateDiaryState.rows(local.getJSONArray("drafts"));val old=drafts.firstOrNull{it.getString("key")==draftKey}

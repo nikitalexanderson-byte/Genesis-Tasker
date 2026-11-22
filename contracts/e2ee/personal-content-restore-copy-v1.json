@@ -8,7 +8,8 @@
     "resume": "Check or resume",
     "added": "To add",
     "skipped": "Kept or skipped",
-    "done": "Content restored"
+    "done": "Content restored",
+    "localDiary": "Restored diary notes stay on this device. Uploading them requires a separate action in diary privacy settings."
   },
   "ru": {
     "title": "Восстановить личное содержимое",
@@ -19,7 +20,8 @@
     "resume": "Проверить или продолжить",
     "added": "Будет добавлено",
     "skipped": "Сохранено или пропущено",
-    "done": "Содержимое восстановлено"
+    "done": "Содержимое восстановлено",
+    "localDiary": "Восстановленные заметки дневника остаются на этом устройстве. Для их загрузки требуется отдельное действие в настройках приватности дневника."
   },
   "el": {
     "title": "Επαναφορά προσωπικού περιεχομένου",
@@ -30,7 +32,8 @@
     "resume": "Έλεγχος ή συνέχεια",
     "added": "Θα προστεθούν",
     "skipped": "Διατηρήθηκαν ή παραλείφθηκαν",
-    "done": "Το περιεχόμενο επαναφέρθηκε"
+    "done": "Το περιεχόμενο επαναφέρθηκε",
+    "localDiary": "Οι αποκατεστημένες σημειώσεις ημερολογίου παραμένουν σε αυτή τη συσκευή. Η μεταφόρτωσή τους απαιτεί ξεχωριστή ενέργεια στις ρυθμίσεις απορρήτου του ημερολογίου."
   },
   "de": {
     "title": "Persönliche Inhalte wiederherstellen",
@@ -41,7 +44,8 @@
     "resume": "Prüfen oder fortsetzen",
     "added": "Hinzuzufügen",
     "skipped": "Beibehalten oder übersprungen",
-    "done": "Inhalte wiederhergestellt"
+    "done": "Inhalte wiederhergestellt",
+    "localDiary": "Wiederhergestellte Tagebuchnotizen bleiben auf diesem Gerät. Zum Hochladen ist eine separate Aktion in den Datenschutzeinstellungen des Tagebuchs erforderlich."
   },
   "fr": {
     "title": "Restaurer le contenu personnel",
@@ -52,7 +56,8 @@
     "resume": "Vérifier ou reprendre",
     "added": "À ajouter",
     "skipped": "Conservés ou ignorés",
-    "done": "Contenu restauré"
+    "done": "Contenu restauré",
+    "localDiary": "Les notes du journal restaurées restent sur cet appareil. Leur envoi nécessite une action distincte dans les paramètres de confidentialité du journal."
   },
   "es": {
     "title": "Restaurar contenido personal",
@@ -63,7 +68,8 @@
     "resume": "Comprobar o continuar",
     "added": "Se añadirán",
     "skipped": "Conservados u omitidos",
-    "done": "Contenido restaurado"
+    "done": "Contenido restaurado",
+    "localDiary": "Las notas del diario restauradas permanecen en este dispositivo. Para subirlas se requiere una acción aparte en los ajustes de privacidad del diario."
   },
   "it": {
     "title": "Ripristina contenuti personali",
@@ -74,7 +80,8 @@
     "resume": "Verifica o riprendi",
     "added": "Da aggiungere",
     "skipped": "Mantenuti o saltati",
-    "done": "Contenuto ripristinato"
+    "done": "Contenuto ripristinato",
+    "localDiary": "Le note del diario ripristinate restano su questo dispositivo. Per caricarle serve un’azione separata nelle impostazioni di privacy del diario."
   },
   "pt": {
     "title": "Restaurar conteúdo pessoal",
@@ -85,7 +92,8 @@
     "resume": "Verificar ou continuar",
     "added": "A adicionar",
     "skipped": "Mantidos ou ignorados",
-    "done": "Conteúdo restaurado"
+    "done": "Conteúdo restaurado",
+    "localDiary": "As notas do diário restauradas ficam neste dispositivo. O envio exige uma ação separada nas definições de privacidade do diário."
   },
   "pl": {
     "title": "Przywróć treści osobiste",
@@ -96,7 +104,8 @@
     "resume": "Sprawdź lub wznów",
     "added": "Do dodania",
     "skipped": "Zachowane lub pominięte",
-    "done": "Treści przywrócone"
+    "done": "Treści przywrócone",
+    "localDiary": "Przywrócone notatki dziennika pozostają na tym urządzeniu. Ich przesłanie wymaga osobnego działania w ustawieniach prywatności dziennika."
   },
   "sr": {
     "title": "Врати лични садржај",
@@ -107,7 +116,8 @@
     "resume": "Провери или настави",
     "added": "За додавање",
     "skipped": "Сачувано или прескочено",
-    "done": "Садржај је враћен"
+    "done": "Садржај је враћен",
+    "localDiary": "Враћене белешке дневника остају на овом уређају. За отпремање је потребна посебна радња у подешавањима приватности дневника."
   },
   "uk": {
     "title": "Відновити особистий вміст",
@@ -118,7 +128,8 @@
     "resume": "Перевірити або продовжити",
     "added": "Буде додано",
     "skipped": "Збережено або пропущено",
-    "done": "Вміст відновлено"
+    "done": "Вміст відновлено",
+    "localDiary": "Відновлені нотатки щоденника залишаються на цьому пристрої. Для їх завантаження потрібна окрема дія в налаштуваннях приватності щоденника."
   },
   "zh": {
     "title": "恢复个人内容",
@@ -129,7 +140,8 @@
     "resume": "检查或继续",
     "added": "将添加",
     "skipped": "保留或跳过",
-    "done": "内容已恢复"
+    "done": "内容已恢复",
+    "localDiary": "恢复的日记保留在此设备上。上传这些日记需要在日记隐私设置中单独操作。"
   },
   "tr": {
     "title": "Kişisel içeriği geri yükle",
@@ -140,7 +152,8 @@
     "resume": "Kontrol et veya sürdür",
     "added": "Eklenecek",
     "skipped": "Korunan veya atlanan",
-    "done": "İçerik geri yüklendi"
+    "done": "İçerik geri yüklendi",
+    "localDiary": "Geri yüklenen günlük notları bu cihazda kalır. Bunları yüklemek için günlük gizlilik ayarlarında ayrı bir işlem gerekir."
   },
   "ja": {
     "title": "個人コンテンツを復元",
@@ -151,6 +164,7 @@
     "resume": "確認または再開",
     "added": "追加予定",
     "skipped": "保持またはスキップ",
-    "done": "コンテンツを復元しました"
+    "done": "コンテンツを復元しました",
+    "localDiary": "復元した日記はこの端末に保存されます。アップロードするには、日記のプライバシー設定で別途操作が必要です。"
   }
 }

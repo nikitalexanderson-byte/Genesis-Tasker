@@ -1,4 +1,6 @@
 import {PersonalContentRestore} from '../e2ee/personal-content-restore';
+import {DomainContentRestore} from '../e2ee/domain-content-restore';
+import {domainRestoreArchiveSource} from '../e2ee/domain-content-restore-archive';
 import {personalRestoreArchiveSource} from '../e2ee/personal-content-restore-archive';
 import {PersonalAuroraSource} from '../e2ee/aurora-source';
 import {PersonalStoicheionSource} from '../e2ee/stoicheion-source';
@@ -91,6 +93,17 @@ async function run(encoded:string){
     if(value.mode==='membership-operation-v1'){
       exactKeys(value,['protocol','mode','snapshot','operation']);if(value.protocol!==1)throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');
       const result=planMembershipOperation(value.snapshot,value.operation);current();send({job,kind:'membership-operation-complete',value:result});return;
+    }
+    if(value.mode==='domain-restore-v1'){
+      exactKeys(value,['protocol','mode','ownerId','action','args']);if(value.protocol!==1||typeof value.ownerId!=='string')throw new Error('E2EE_RESTORE_CONTENT_INVALID');
+      const invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'personal-restore-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
+      const model=new DomainContentRestore({ownerId:value.ownerId,current,load:async id=>await invoke('load',{id}) as {value:unknown;serial:number}|null,save:async(id,document,expected)=>await invoke('save',{id,document,expected}) as number,list:async()=>await invoke('list') as string[],read:domain=>invoke('read',{domain}),add:async(domain,record)=>{await invoke('add',{domain,record});},flush:async domain=>{await invoke('flush',{domain});}});
+      let result:unknown;const args=value.args;
+      if(value.action==='create'){exactKeys(args,['payload','sectionIndex','entryIndex','versionId']);const source=await domainRestoreArchiveSource(value.ownerId,args.payload,args.sectionIndex as number,args.entryIndex as number,args.versionId as string,current),id=await model.create(source.backupId,source.source);result={state:await model.preview(id)};}
+      else if(value.action==='pending'){exactKeys(args,[]);result={items:await model.pending()};}
+      else if(value.action==='confirm'){exactKeys(args,['id','fingerprint']);result={state:await model.confirm(args.id as string,args.fingerprint as string)};}
+      else{exactKeys(args,['id']);if(value.action==='inspect')result={state:await model.inspect(args.id as string)};else if(value.action==='preview')result={state:await model.preview(args.id as string)};else if(value.action==='apply')result={state:await model.apply(args.id as string)};else throw new Error('E2EE_RESTORE_CONTENT_INVALID');}
+      current();send({job,kind:'personal-restore-complete',value:result});return;
     }
     if(value.mode==='personal-restore-v1'){
       exactKeys(value,['protocol','mode','ownerId','action','args']);if(value.protocol!==1||typeof value.ownerId!=='string')throw new Error('E2EE_RESTORE_CONTENT_INVALID');

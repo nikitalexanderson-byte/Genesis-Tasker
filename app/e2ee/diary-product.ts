@@ -87,6 +87,13 @@ export class E2eeDiaryRepository{
    ...local.value.records.filter(row=>!row.deleted).map(row=>({note:structuredClone(row.note!),revision:row.revision,localOnly:true})),
    ...local.value.drafts.map(row=>({note:structuredClone(row.note),revision:row.revision,draftKey:row.key,localOnly:row.localOnly||hidden}))];}
  list(){return this.#operation(async()=>{await this.#load(true);await this.#flush();return this.#records();});}
+ restoreView(){return this.#operation(async()=>{await this.#load(true);await this.#flush();const {remote,local}=this.#state();return{checkpoint:JSON.stringify([remote.serial,remote.remoteRevision,local.serial]),pending:remote.pending||local.value.promotions.length>0,records:[...remote.value.records.map(row=>({id:row.id,revision:row.revision,deleted:row.deleted,value:row.note,localOnly:false})),...local.value.records.map(row=>({id:row.id,revision:row.revision,deleted:row.deleted,value:row.note,localOnly:true}))]};});}
+ /** A restored note starts on this device. Import cannot turn on cloud sync. */
+ restoreAdd(input:unknown){const note=validateDiaryNote(structuredClone(input));return this.#operation(async()=>{await this.#load();const {remote,local}=this.#state();
+  if([...remote.value.records,...local.value.records].some(row=>row.id===note.id)||local.value.drafts.some(row=>row.note.id===note.id))throw new Error('E2EE_RESTORE_OUTCOME_REQUIRED');
+  const access=currentFeatureAccess(this.#owner);if(note.dream)requireFeature(access,'dream-journal');if(!note.advice){const count=this.#records().filter(row=>!row.draftKey&&!row.note.advice).length;requireQuotaGrowth(access,'diary',count,count+1);}
+  await this.#stageLocal({...local.value,records:[...local.value.records,entry(note,note.id,1)]});
+ });}
  async #ownKey(id:string){const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(id)));this.check();return`diary-draft:${this.#writer}:${encodeE2eeBytes(digest)}`;}
  async #keep(note:DiaryNote,record?:DiaryRecord){
   const key=record?.draftKey??await this.#ownKey(note.id),{local}=this.#state(),old=local.value.drafts.find(row=>row.key===key);

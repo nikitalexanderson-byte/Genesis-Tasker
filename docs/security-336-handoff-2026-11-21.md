@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: typed diary/mindmap restore — код
+
+Добавлен общий domain restore journal: семантический source до сети, add-only
+preview/consent, сохранённый fingerprint исходного состояния, bounded batches,
+CAS штатных repositories и независимый normal readback, resume после прерывания.
+Web/native панели backup подключены к дневнику и личным интеллект-картам; записи
+и tombstones текущего поколения не заменяются, квоты/доступ проверяет обычный
+repository. Заметки восстанавливаются сначала device-only, включение upload
+остаётся отдельным действием. Предупреждение переведено на все14 языков.
+Новые journals включены в typed custody и content-only export, они не служат
+restore authority после импорта архива. Никаких compiler/tests/build/review.
+
+Остаток typed restore: Physis, Aurora, Стоихейон и shared domains; затем very-wide
+bounds и revoked-device replacement/background. Сайт ожидает CI отдельной ветки
+414c4791; новый welcome render test проверяет обе редакции на всех14 языках.
+
+
 ## 23 ноября: переносы и raw bulk input — код подключён
 
 Private transfer ports подключены к web/native нормальным product adapters:
