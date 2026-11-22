@@ -127,6 +127,11 @@ export async function privateSharedRequest(ownerId:string,path:string,init:Reque
  }return{lists};}
  throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
 }
+export async function advancePrivateSharedExecution(ownerId:string,current:()=>void){const errors:string[]=[];let changed=0;current();
+ for(const binding of await bindings(ownerId)){current();if(binding.kind!=='project')continue;try{const live=await open(ownerId,'project',binding.resourceId);current();
+  for(let count=0;count<5;count++){const now=new Date().toISOString(),ready=await live.model.request('GET',`execution/ready?now=${encodeURIComponent(now)}`);current();const operation=ready.automation?'automations/advance':ready.series?'series/advance':null;if(!operation)break;const result=await live.model.request('POST',operation,{now});current();if(!result.advanced)break;changed++;}
+ }catch(error){current();errors.push(error instanceof Error&&/^[A-Z_]{1,100}$/.test(error.message)?error.message:'E2EE_PRIVATE_EXECUTION_PENDING');}}return{changed,errors};
+}
 export async function privateSharedPending(ownerId:string,projectId?:string){const rows=[];
  for(const scope of await bindings(ownerId))if(!projectId||scope.kind==='project'&&scope.resourceId===projectId){const live=await open(ownerId,scope.kind,scope.resourceId);for(const request of await live.pending())rows.push({scopeId:scope.scopeId,kind:scope.kind,resourceId:scope.resourceId,request});}return rows;
 }

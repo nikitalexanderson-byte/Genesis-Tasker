@@ -19,6 +19,7 @@ const initial:PrivateAccountView=Object.freeze({ownerId:null,phase:'closed',reas
 export function PrivateVaultGate(){
  const state=useSyncExternalStore(subscribePrivateAccount,privateAccountView,()=>initial);
  const migration=useSyncExternalStore(subscribePrivateMigrationUi,privateMigrationUi,()=>null);
+ useEffect(()=>{if(state.phase!=='ready'||!state.ownerId)return;let disposed=false,stop:(()=>void)|undefined;void import('./e2ee/shared-execution-pump').then(({startPrivateExecutionPump})=>{if(!disposed)stop=startPrivateExecutionPump(state.ownerId!);}).catch(()=>undefined);return()=>{disposed=true;stop?.();};},[state.phase,state.ownerId]);
  return migration?.ownerId!==state.ownerId&&(state.phase==='locked'||state.phase==='unlocking')?<PrivateVaultForm key={state.ownerId} state={state}/>:null;
 }
 function PrivateVaultForm({state}:{state:PrivateAccountView}){

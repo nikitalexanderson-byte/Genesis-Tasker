@@ -15,6 +15,8 @@ import {privateSharedTaskPage,privateSharedCustomFieldMatch} from './shared-quer
 import {sharedInvitationService,verifySharedInvitationResult,type SharedInvitationService} from './shared-invitation-request.ts';
 import {membershipOperationForSharedRequest} from './membership-operation-request.ts';
 import type {MembershipOperation} from './membership-operation-plan.ts';
+import {SharedClientExecution} from './shared-client-execution.ts';
+import {privateAutomationDefinition} from './shared-execution-values.ts';
 
 type ObjectValue=Record<string,unknown>;
 export type SharedLiveContext={ownerId:string;spaceId:string;role:string;spaceRole:string;permissions:Record<string,boolean>;members:ObjectValue[];invitations:ObjectValue[]};
@@ -205,6 +207,9 @@ export class SharedLiveModel{
   await this.ports.eventCache.save(events);this.ports.current();return events;
  }
  async #get(path:string){const url=new URL(path,'https://private.invalid'),{context,versions}=await this.#snapshot(),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
+  if(segments[0]==='execution'&&segments[1]==='ready'&&segments.length===2)return this.#execution(context,versions).ready(url.searchParams.get('now')??new Date().toISOString());
+  if(segments[0]==='tasks'&&segments[2]==='series'&&segments.length===3)return{series:this.#execution(context,versions).seriesForTask(segments[1])};
+  if(segments[0]==='automations'&&segments[2]==='runs'&&segments.length===3)return this.#execution(context,versions).automationRuns(segments[1]);
   const list=(kind:ProductKind,table?:string)=>live.filter(row=>row.kind===kind&&(!table||plain(row).table===table)).map(row=>this.#row(row,context));
   if(segments.length===0){const root=this.#find(versions,this.ports.binding.kind,this.ports.binding.resourceId);
    if(this.ports.binding.kind==='space')return{space:this.#row(root,context),members:context.members,invitations:context.invitations};
@@ -263,8 +268,14 @@ export class SharedLiveModel{
    if(Object.hasOwn(input,name))value=input[name];row[key]=value as SharedContentRecord[string];
   }return row;
  }
- async #prepare(request:SavedRequest){
-  const {context,versions}=await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
+ #execution(context:SharedLiveContext,versions:ProductVersion[]):SharedClientExecution{return new SharedClientExecution({binding:this.ports.binding,actorId:this.ports.actorId,context,versions,row:version=>this.#taskOrRow(version,versions,context),body:(kind,table,record)=>this.#body(kind,table,record),newRecord:(table,input,time,id)=>this.#newRecord(table,input,context,time,id),history:this.ports.history,task:(input,id,expected,request,rows)=>this.#prepare({...request,method:expected===null?'POST':'PATCH',path:expected===null?'tasks':`tasks/${id}`,body:input},{context,versions:rows},expected===null?id??undefined:undefined)});}
+ #taskOrRow(version:ProductVersion,versions:ProductVersion[],context:SharedLiveContext){return version.kind==='task'?this.#task(version,versions,context):this.#row(version,context);}
+ async #prepare(request:SavedRequest,observed?:{context:SharedLiveContext;versions:ProductVersion[]},forcedTaskId?:string):Promise<{edits:ProductEdit[];result:ObjectValue}>{
+  const {context,versions}=observed??await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
+  if(parts[0]==='automations'&&parts.length===2&&parts[1]==='preview'&&request.method==='POST')return this.#execution(context,versions).preview(input,request);
+  if(parts[0]==='automations'&&request.method==='POST'&&(parts.length===2&&parts[1]==='advance'||parts.length===5&&parts[2]==='runs'&&parts[4]==='retry'))return this.#execution(context,versions).automation(request);
+  if(parts[0]==='series'&&parts[1]==='advance'&&parts.length===2&&request.method==='POST')return this.#execution(context,versions).advanceSeries(request);
+  if(parts[0]==='tasks'&&parts[2]==='series'&&parts.length===3&&request.method==='POST')return this.#execution(context,versions).series(request,parts[1]);
   if(parts[0]==='mindmaps'&&parts.length===2&&['PUT','DELETE'].includes(request.method)){
    assertTechnical(parts[1]);const old=versions.find(row=>row.kind==='mindmap'&&row.entityId===`mindmap:${parts[1]}`),expected=old?.revision??0;
    if(old?.deleted||number(input.expectedRevision)!==expected||request.method==='DELETE'&&!old)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
@@ -285,7 +296,7 @@ export class SharedLiveModel{
    return{edits,result:{field:this.#row(version,context),previousFieldId:replace?draft.id:null}};
   }
   if(parts[0]==='tasks'&&(parts.length===1||parts.length===2)){
-   const create=parts.length===1&&request.method==='POST',old=create?null:this.#find(versions,'task',parts[1]),body=old?structuredClone(plain(old)):this.#draft('task','shared_tasks',this.#newRecord('shared_tasks',{},context,request.createdAt,crypto.randomUUID()),{shared_task_labels:[],shared_task_dependencies:[],shared_task_planning:[],shared_task_approvals:[],shared_task_reviews:[],shared_custom_field_values:[],shared_task_watchers:[]});
+   const create=parts.length===1&&request.method==='POST',old=create?null:this.#find(versions,'task',parts[1]),body=old?structuredClone(plain(old)):this.#draft('task','shared_tasks',this.#newRecord('shared_tasks',{},context,request.createdAt,forcedTaskId??crypto.randomUUID()),{shared_task_labels:[],shared_task_dependencies:[],shared_task_planning:[],shared_task_approvals:[],shared_task_reviews:[],shared_custom_field_values:[],shared_task_watchers:[]});
    const expected=old?.revision??0;if(old&&number(input.expectedRevision)!==expected)throw new Error('E2EE_PRODUCT_REVISION_CONFLICT');
    if(create&&input.mindmapSource!==undefined){exactKeys(input.mindmapSource,['mapId','nodeId']);assertTechnical(input.mindmapSource.mapId);assertTechnical(input.mindmapSource.nodeId);const source=input.mindmapSource;
     const converted=versions.find(row=>row.kind==='task'&&!row.deleted&&(plain(row).related.shared_mindmap_conversions??[]).some(reference=>reference.map_id===source.mapId&&reference.node_id===source.nodeId));
@@ -353,7 +364,7 @@ export class SharedLiveModel{
   return{edits,result:output};
  }
  #prepareAdvancedRecord(request:SavedRequest,context:SharedLiveContext,versions:ProductVersion[],body:SharedRecordBody,expected:number,create:boolean){
-  const {kind}=body,input=request.body,fields:Record<string,string>=kind==='automation'?{title:'title',definition:'definition_json',enabled:'enabled',deleted:'deleted_at'}:kind==='template'?{title:'title',manifest:'manifest_json',notices:'source_notices_json',deleted:'deleted_at'}:kind==='mindmap'?{document:'content'}:kind==='view'?{visibility:'visibility',definition:'payload'}:kind==='workflow'?{enabled:'enabled',statuses:'definition_json',transitions:'definition_json'}:kind==='planning'?{enabled:'enabled',estimateUnit:'estimate_unit'}:{body:'body',mentionIds:'mention_ids_json',boardId:'board_id'};
+  const {kind}=body,input=request.body,fields:Record<string,string>=kind==='automation'?{title:'title',definition:'definition_json',enabled:'enabled',deleted:'deleted_at',ownerId:'owner_id'}:kind==='template'?{title:'title',manifest:'manifest_json',notices:'source_notices_json',deleted:'deleted_at'}:kind==='mindmap'?{document:'content'}:kind==='view'?{visibility:'visibility',definition:'payload'}:kind==='workflow'?{enabled:'enabled',statuses:'definition_json',transitions:'definition_json'}:kind==='planning'?{enabled:'enabled',estimateUnit:'estimate_unit'}:{body:'body',mentionIds:'mention_ids_json',boardId:'board_id'};
   const allowed=[...Object.keys(fields),'expectedRevision','requestId','operationId',...(kind==='template'?['projectId']:[])];if(Object.keys(input).some(key=>!allowed.includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
   if(!['POST','PATCH','PUT','DELETE'].includes(request.method)||create&&!['POST','PUT'].includes(request.method)||request.method==='DELETE'&&['workflow','planning'].includes(kind))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
   if(kind==='workflow'){
@@ -366,7 +377,9 @@ export class SharedLiveModel{
    else body.record[column]=input[name] as SharedContentRecord[string];
   }
   if(kind==='automation'){
-   if(create){body.record.enabled=body.record.enabled??0;body.record.deleted_at=null;body.record.owner_id=this.ports.actorId;}
+   if(create){body.record.enabled=body.record.enabled??0;body.record.deleted_at=null;body.record.owner_id=input.ownerId as string??this.ports.actorId;}
+   assertTechnical(body.record.owner_id);if(!context.members.some(row=>row.userId===body.record.owner_id))throw new Error('INVALID_ASSIGNEE');
+   body.record.definition_json=JSON.stringify(privateAutomationDefinition(parse(body.record.definition_json),{projectId:this.ports.binding.resourceId,members:context.members,statuses:versions.filter(v=>!v.deleted&&v.kind==='status').map(v=>this.#row(v,context)),labels:versions.filter(v=>!v.deleted&&v.kind==='label').map(v=>this.#row(v,context)),fields:versions.filter(v=>!v.deleted&&v.kind==='custom-field').map(v=>this.#row(v,context)),templates:versions.filter(v=>!v.deleted&&v.kind==='template').map(v=>this.#row(v,context))}));
   }
   if(kind==='template'){
    const manifest=parse(body.record.manifest_json);object(manifest);if(!Array.isArray(manifest.projects)||!Array.isArray(manifest.tasks))throw new Error('E2EE_SHARED_DOMAIN_INVALID');body.record.kind=manifest.kind as string;body.record.project_count=manifest.projects.length;body.record.task_count=manifest.tasks.length;
@@ -411,6 +424,9 @@ export class SharedLiveModel{
   body.record.updated_at=request.createdAt;body.record.revision=expected+1;const validated=this.#body('sprint',body.table,body.record,body.related),edit=this.#edit(validated,expected,create?'create':'update');edits.push(edit);if(edits.length>100)throw new Error('E2EE_PRODUCT_BATCH_INVALID');
   return{edits,result:{sprint:this.#row({protocol:1,scopeId:this.ports.binding.scopeId,entityId:edit.entityId,kind:'sprint',revision:expected+1,parentId:edit.parentId,deleted:false,metadata:edit.metadata,body:validated},context)}};
  }
+ #orderedEdits(edits:ProductEdit[]){const created=new Set(edits.filter(v=>v.action==='create').map(v=>v.entityId)),done=new Set<string>(),pending=[...edits],ordered:ProductEdit[]=[];
+  while(pending.length){let progress=false;for(let at=0;at<pending.length;){const edit=pending[at],dependencies=[...(edit.parentId?[edit.parentId]:[]),...(edit.metadata.dependsOnIds??[])].filter(v=>created.has(v));if(dependencies.every(v=>done.has(v))){ordered.push(edit);done.add(edit.entityId);pending.splice(at,1);progress=true;}else at++;}if(!progress)throw new Error('E2EE_PRODUCT_DEPENDENCY_INVALID');}return ordered;
+ }
  async #execute(method:string,path:string,held:ObjectValue,intentId?:string){
   const segments=path.split('?')[0].split('/').filter(Boolean);
    if(this.ports.binding.kind==='space'&&segments.length===3&&segments[0]==='members'&&segments[2]==='project-access'&&(method==='GET'||method==='POST')){
@@ -444,8 +460,8 @@ export class SharedLiveModel{
    if(membership.kind==='project-grants')result={...result,operationId:held.operationId,allProjects:membership.allProjects,grants:membership.grants};
    await this.ports.saveRequest({...request,edits:[],result,complete:true},saved.serial);this.ports.current();return result;
   }
-  if(!request.edits){const prepared=await this.#prepare(request);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}
-  if(request.edits!.length===0){const taskId=(request.result?.task as ObjectValue|undefined)?.id;if(typeof taskId!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',taskId),result={task:this.#task(task,versions,context)};
+  if(!request.edits){const prepared=await this.#prepare(request);prepared.edits=this.#orderedEdits(prepared.edits);request={...request,...prepared};saved={value:request,serial:await this.ports.saveRequest(request,saved.serial)};}
+  if(request.edits!.length===0){if(!request.result)throw new Error('E2EE_SHARED_REQUEST_INVALID');if(!request.result.task){await this.ports.saveRequest({...request,complete:true},saved.serial);this.ports.current();return structuredClone(request.result);}const taskId=(request.result?.task as ObjectValue|undefined)?.id;if(typeof taskId!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',taskId),result={task:this.#task(task,versions,context)};
    if(this.#pendingEntities.has(task.entityId))return{task:{...result.task,pending:true},pending:true};await this.ports.saveRequest({...request,result,complete:true},saved.serial);this.ports.current();return result;
   }
   for(const edit of request.edits!)if(edit.kind==='task'&&edit.body!==null){const uploads=sharedRequestFileInputs(edit.body as SharedRecordBody,request.body,id);

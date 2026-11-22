@@ -1,6 +1,7 @@
 import catalogue from '../../contracts/e2ee/private-path-sources-v1.json' with {type:'json'};
 import contract from '../../contracts/e2ee/shared-record-bodies-v1.json' with {type:'json'};
 import {assertTechnical,exactKeys} from './keys.ts';
+import {decodeE2eeBytes} from './envelope.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {samePrivateJson} from './product-json.ts';
 import {productMetadata,type ProductKind,type ProductMetadata} from './product-contract.ts';
@@ -20,6 +21,7 @@ function object(value:unknown):asserts value is Record<string,unknown>{if(!value
 function json(value:unknown,maximum=16*1024*1024){if(typeof value!=='string')invalid();return parseLegacyMigrationJson(value,'E2EE_SHARED_DOMAIN_INVALID',maximum);}
 export function sharedEntityId(kind:ProductKind,id:string|number){const value=`${kind}:${id}`;assertTechnical(value);return value;}
 export function sharedRecordKey(kind:ProductKind,row:SharedContentRecord){
+ if(kind==='series-instance')return sharedEntityId(kind,`${row.series_id}:${row.occurrence_key}`);
  if(kind==='custom-field-value')return sharedEntityId(kind,`${row.task_id}:${row.field_id}`);
  if(kind==='file')return sharedEntityId(kind,row.id===undefined?`image:${row.task_id}`:`attachment:${row.id}`);
  if(kind==='trash')return sharedEntityId(kind,`${row.kind}:${row.object_id}`);
@@ -71,6 +73,8 @@ function record(table:string,input:unknown,binding:SharedDomainBinding):SharedCo
   for(const option of options){object(option);if(typeof option.id!=='string'||ids.has(option.id)||typeof option.title!=='string'||option.title.length>2000||typeof option.archived!=='boolean')invalid();ids.add(option.id);}
  }
  if(table==='shared_automation_rules'){if(![0,1].includes(Number(input.enabled))||typeof input.title!=='string'||!input.title.trim()||input.title.length>2000)invalid();validateSharedAutomation(json(input.definition_json));}
+ if(table==='shared_automation_runs'){const payload=json(input.payload_json);object(payload);assertTechnical(payload.executedBy);if(!['pending','succeeded','skipped','cancelled','failed'].includes(String(input.state))||!Number.isSafeInteger(input.rule_revision)||Number(input.rule_revision)<1||!Number.isSafeInteger(input.attempts)||Number(input.attempts)<0||!Number.isSafeInteger(input.retry_count)||Number(input.retry_count)<0)invalid();}
+ if(table==='shared_series_instances'&&(!['created','skipped'].includes(String(input.state))||!Number.isSafeInteger(input.ordinal)||Number(input.ordinal)<1||typeof input.original_date!=='string'||!isCivilDate(input.original_date)))invalid();
  if(table==='shared_templates'){const manifest=validateSharedTemplateManifest(json(input.manifest_json));if(manifest.kind!==input.kind||typeof input.title!=='string'||!input.title.trim()||manifest.projects.length!==input.project_count||manifest.tasks.length!==input.task_count)invalid();}
  if(table==='shared_project_review_policies')validateSharedReviewPolicy(json(input.policy_json));
  if(table==='shared_saved_views'){if(!['personal','shared'].includes(String(input.visibility)))invalid();validateSharedSavedDefinition(json(input.payload));}
@@ -78,6 +82,9 @@ function record(table:string,input:unknown,binding:SharedDomainBinding):SharedCo
  return input as SharedContentRecord;
 }
 export function sharedBodyMetadata(body:SharedRecordBody):ProductMetadata{
+ if(body.kind==='automation'&&body.record.owner_id!==null)return productMetadata('automation',{protocol:2,ownerId:body.record.owner_id});
+ if(body.kind==='automation-run'){const payload=json(body.record.payload_json);object(payload);return productMetadata('automation-run',{protocol:2,ruleId:body.record.rule_id,ruleRevision:body.record.rule_revision,executorId:payload.executedBy,triggerKey:body.record.trigger_key});}
+ if(body.kind==='series-instance'){const key=String(body.record.occurrence_key).split('.');if(key.length!==3)invalid();return productMetadata('series-instance',{protocol:2,seriesId:body.record.series_id,seriesRevision:Number(key[1]),executorId:decoder.decode(decodeE2eeBytes(key[0],1,512)),occurrenceKey:key[2]});}
  if(body.kind==='project'){
   const raw=body.record;
   return productMetadata('project',{protocol:2,spaceId:raw.space_id,parentProjectId:raw.parent_id,projectCategoryId:raw.category_id,
@@ -99,6 +106,8 @@ export function sharedBodyMetadata(body:SharedRecordBody):ProductMetadata{
 export function sharedBodyParent(body:SharedRecordBody){
  if(body.kind==='project'||body.kind==='space')return null;
  if(body.kind==='task')return body.record.parent_task_id===null?sharedEntityId('project',body.resourceId):sharedEntityId('task',String(body.record.parent_task_id));
+ if(body.kind==='automation-run')return sharedEntityId('automation',String(body.record.rule_id));
+ if(body.kind==='series-instance')return sharedEntityId('series',String(body.record.series_id));
  if(body.record.task_id!==undefined)return sharedEntityId('task',String(body.record.task_id));
  return sharedEntityId(body.scopeKind,body.resourceId);
 }
@@ -121,7 +130,7 @@ export function validateSharedRecordBody(binding:SharedDomainBinding,kind:Produc
  if(header){
   // Explicit historical reader for old project headers: protocol1 made no
   // topology claim. It remains readable content, never live topology authority.
-  const oldProject=kind==='project'&&header.metadata.protocol===1;
+  const oldProject=(kind==='project'||kind==='automation')&&header.metadata.protocol===1;
   productMetadata(kind,header.metadata);
   if(header.scopeId!==binding.scopeId||header.kind!==kind||header.entityId!==sharedRecordKey(kind,row)||header.parentId!==sharedBodyParent(body)
    ||!oldProject&&!samePrivateJson(header.metadata,sharedBodyMetadata(body)))throw new Error('E2EE_SHARED_HEADER_MISMATCH');

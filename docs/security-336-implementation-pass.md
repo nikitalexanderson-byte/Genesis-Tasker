@@ -1,5 +1,23 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 22 ноября: клиентские автоматизации и серии — реализация
+
+Добавлены общий client planner и normal-product routing web/native: определения
+и условия, preview, signed owner/executor metadata, deterministic run/effect IDs,
+история запусков, explicit retry, цепочки/лимиты и encrypted mentions. Серии:
+preview/save/refresh/skip, три календаря, snapshot дерева без файлов/обсуждений,
+материализация с CAS и постоянными occurrence IDs. Эффекты и run/series receipts
+входят в одну подписанную product transaction; сервер проверяет фактического
+исполнителя, актуальное правило/epoch и права. Foreground pumps используют только
+открытый vault; скрытая вкладка/фон не получают отдельного ключа. Старые jobs не
+возобновляются; исходники остаются content-only, instance baseline перепривязан.
+
+Код без compiler/lint/tests/build/CI и без общего source review. Это не QA PASS,
+не повышение coverage9/20 и не готовность активации. В этом блоке ещё остались
+bulk/cross-scope execution и их raw-input attribution/custody; далее остальные
+restore domains, very-wide bounds, revoked replacement/background и полный QA.
+
+
 ## 22 ноября: advanced form storage и attribution — код
 
 Existing useSharedWorkDrafts теперь выбирает device-root journal после cutover

@@ -1,9 +1,9 @@
 import {assertTechnical,exactKeys} from './keys.ts';
 import {decodeE2eeBytes,type E2eeContext} from './envelope.ts';
 
-export const PRODUCT_KINDS=['project','space','task','comment','project-comment','status','category','label','mindmap','file','workflow','review-policy','planning','sprint','series','automation','template','custom-field','custom-field-value','view','history','trash','import'] as const;
+export const PRODUCT_KINDS=['project','space','task','comment','project-comment','status','category','label','mindmap','file','workflow','review-policy','planning','sprint','series','series-instance','automation','automation-run','template','custom-field','custom-field-value','view','history','trash','import'] as const;
 export type ProductKind=typeof PRODUCT_KINDS[number];
-export type ProductMetadata={protocol:1|2;statusId?:string|null;completed?:boolean;approverIds?:string[];dependsOnIds?:string[];presentFields?:string[];
+export type ProductMetadata={protocol:1|2;ownerId?:string;ruleId?:string;ruleRevision?:number;executorId?:string;triggerKey?:string;seriesId?:string;seriesRevision?:number;occurrenceKey?:string;statusId?:string|null;completed?:boolean;approverIds?:string[];dependsOnIds?:string[];presentFields?:string[];
  spaceId?:string;parentProjectId?:string|null;projectCategoryId?:string|null;boardStatusId?:string|null;projectType?:'project'|'task-list';layout?:'list'|'board';isInbox?:boolean;archived?:boolean;
  enabled?:boolean;statuses?:{statusId:string;wipLimit:number|null;requiredFields:string[]}[];transitions?:{fromStatusId:string|null;toStatusId:string;roles:string[]}[]};
 export type ProductEntity={entityId:string;kind:ProductKind;revision:number;domain:E2eeContext['domain'];objectId:string;payloadHash:string;parentId:string|null;authorId:string;deleted:boolean;metadata:ProductMetadata;updatedAt:string};
@@ -11,10 +11,12 @@ export type ProductMutation={action:'create'|'update'|'delete'|'restore'|'propos
  domain:E2eeContext['domain'];objectId:string;payloadHash:string;parentId:string|null;metadata:ProductMetadata;proposalId:string|null};
 export function productDomain(kind:ProductKind):E2eeContext['domain']{return kind==='comment'||kind==='project-comment'?'shared-comment':kind==='mindmap'?'mindmap':kind==='file'?'attachment':'shared-project';}
 export function productMetadata(kind:ProductKind,input:unknown):ProductMetadata{
- const project=kind==='project'&&(input as {protocol?:unknown}|null)?.protocol===2;
+ const project=kind==='project'&&(input as {protocol?:unknown}|null)?.protocol===2,automation=kind==='automation'&&(input as {protocol?:unknown}|null)?.protocol===2,run=kind==='automation-run',instance=kind==='series-instance';
  const fields=project?['protocol','spaceId','parentProjectId','projectCategoryId','boardStatusId','projectType','layout','isInbox','archived']:
-  kind==='task'?['protocol','statusId','completed','approverIds','dependsOnIds','presentFields']:kind==='workflow'?['protocol','enabled','statuses','transitions']:['protocol'];exactKeys(input,fields);
- if(input.protocol!==(project?2:1))throw new Error('E2EE_PRODUCT_METADATA_INVALID');
+  automation?['protocol','ownerId']:run?['protocol','ruleId','ruleRevision','executorId','triggerKey']:instance?['protocol','seriesId','seriesRevision','executorId','occurrenceKey']:kind==='task'?['protocol','statusId','completed','approverIds','dependsOnIds','presentFields']:kind==='workflow'?['protocol','enabled','statuses','transitions']:['protocol'];exactKeys(input,fields);
+ if(input.protocol!==(project||automation||run||instance?2:1))throw new Error('E2EE_PRODUCT_METADATA_INVALID');
+ if(automation)assertTechnical(input.ownerId);
+ if(run||instance){for(const name of run?['ruleId','executorId','triggerKey']:['seriesId','executorId','occurrenceKey'])assertTechnical(input[name]);const revision=input[run?'ruleRevision':'seriesRevision'];if(!Number.isSafeInteger(revision)||Number(revision)<1)throw new Error('E2EE_PRODUCT_METADATA_INVALID');}
  if(project){
   assertTechnical(input.spaceId);for(const key of ['parentProjectId','projectCategoryId','boardStatusId'])if(input[key]!==null)assertTechnical(input[key]);
   if(!['project','task-list'].includes(String(input.projectType))||!['list','board'].includes(String(input.layout))||typeof input.isInbox!=='boolean'||typeof input.archived!=='boolean'

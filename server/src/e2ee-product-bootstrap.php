@@ -54,7 +54,7 @@ function genesisE2eeProductBootstrap(PDO $db,string $actor,array $scope,array $c
         foreach($payload['items'] as $item){genesisE2eeExactFields($item,['operation','authorId']);genesisE2eeIdentifier($item['authorId']);$operation=$item['operation'];
             genesisE2eeExactFields($operation,['action','entityId','kind','expectedRevision','domain','objectId','payloadHash','parentId','metadata','proposalId']);$entity=genesisE2eeIdentifier($operation['entityId']);
             if(isset($seen[$entity])||!in_array($operation['action'],['create','delete'],true)||$operation['expectedRevision']!==0||$operation['proposalId']!==null||!in_array($operation['kind'],GENESIS_E2EE_PRODUCT_KINDS,true)
-                ||$scope['kind']==='space'&&in_array($operation['kind'],['task','status','workflow','review-policy','planning','sprint','series','automation','custom-field-value'],true)||$scope['kind']==='project'&&$operation['kind']==='space')throw new DomainException('E2EE_PRODUCT_BATCH_INVALID');
+                ||$scope['kind']==='space'&&in_array($operation['kind'],['task','status','workflow','review-policy','planning','sprint','series','series-instance','automation','automation-run','custom-field-value'],true)||$scope['kind']==='project'&&$operation['kind']==='space')throw new DomainException('E2EE_PRODUCT_BATCH_INVALID');
             if($operation['parentId']!==null)genesisE2eeIdentifier($operation['parentId']);$seen[$entity]=true;genesisE2eeProductMetadata($operation['kind'],$operation['metadata']);genesisE2eeProductReference($db,$scope,$operation);
         }
         $raw=genesisE2eeJson($packet);if(strlen($raw)>2*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_PRODUCT_BOOTSTRAP_PART_TOO_LARGE');

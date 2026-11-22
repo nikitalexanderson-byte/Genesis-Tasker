@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const GENESIS_E2EE_PRODUCT_KINDS=['project','space','task','comment','project-comment','status','category','label','mindmap','file','workflow','review-policy','planning','sprint','series','automation','template','custom-field','custom-field-value','view','history','trash','import'];
+const GENESIS_E2EE_PRODUCT_KINDS=['project','space','task','comment','project-comment','status','category','label','mindmap','file','workflow','review-policy','planning','sprint','series','series-instance','automation','automation-run','template','custom-field','custom-field-value','view','history','trash','import'];
 /** Live authorization/profile metadata only. Private titles, task bodies,
  * custom-field definitions, file names and policy documents are never projected
  * through this read. It is a display context, not a device/group trust grant. */
@@ -35,9 +35,12 @@ function genesisE2eeProductIds(mixed $value,int $maximum=200): array
 function genesisE2eeProductMetadata(string $kind,mixed $input): array
 {
     $project=$kind==='project'&&is_array($input)&&($input['protocol']??null)===2;
+    $automation=$kind==='automation'&&is_array($input)&&($input['protocol']??null)===2;$run=$kind==='automation-run';$instance=$kind==='series-instance';
     $fields=$project?['protocol','spaceId','parentProjectId','projectCategoryId','boardStatusId','projectType','layout','isInbox','archived']:
-        match($kind){'task'=>['protocol','statusId','completed','approverIds','dependsOnIds','presentFields'],'workflow'=>['protocol','enabled','statuses','transitions'],default=>['protocol']};
-    $value=genesisE2eeExactFields($input,$fields);if($value['protocol']!==($project?2:1))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
+        ($automation?['protocol','ownerId']:($run?['protocol','ruleId','ruleRevision','executorId','triggerKey']:($instance?['protocol','seriesId','seriesRevision','executorId','occurrenceKey']:match($kind){'task'=>['protocol','statusId','completed','approverIds','dependsOnIds','presentFields'],'workflow'=>['protocol','enabled','statuses','transitions'],default=>['protocol']})));
+    $value=genesisE2eeExactFields($input,$fields);if($value['protocol']!==($project||$automation||$run||$instance?2:1))throw new InvalidArgumentException('E2EE_PRODUCT_METADATA_INVALID');
+    if($automation)genesisE2eeIdentifier($value['ownerId']);
+    if($run||$instance){foreach($run?['ruleId','executorId','triggerKey']:['seriesId','executorId','occurrenceKey'] as $key)genesisE2eeIdentifier($value[$key]);genesisE2eeInteger($value[$run?'ruleRevision':'seriesRevision'],1);}
     if($project){
         genesisE2eeIdentifier($value['spaceId']);foreach(['parentProjectId','projectCategoryId','boardStatusId'] as $key)if($value[$key]!==null)genesisE2eeIdentifier($value[$key]);
         if(!in_array($value['projectType'],['project','task-list'],true)||!in_array($value['layout'],['list','board'],true)||!is_bool($value['isInbox'])||!is_bool($value['archived'])
@@ -133,10 +136,11 @@ function genesisE2eeProductReference(PDO $db,array $scope,array $operation): voi
 function genesisE2eeProductPermission(string $actor,array $scope,string $kind,string $action,array|false $old): array
 {
     if(!in_array($scope['kind'],['project','space'],true)||$scope['state']!=='active')throw new DomainException('E2EE_NOT_ACTIVE');
-    $permission=in_array($kind,['project','space','status','category','label','workflow','review-policy','planning','sprint','series','automation','template','custom-field','import'],true)?'manage':
+    $permission=in_array($kind,['project','space','status','category','label','workflow','review-policy','planning','sprint','automation','template','custom-field','import'],true)?'manage':
         (in_array($kind,['comment','project-comment'],true)?'comment':'write');
     if($scope['kind']==='space'){genesisE2eeAccess($actor,'space',$scope['resource_id'],$permission);return ['member_role'=>'owner','permissions'=>['manageProjects'=>true,'editTasks'=>true,'organizeTasks'=>true,'comment'=>true]];}
     $project=genesisSharedProjectAccess($scope['resource_id'],$actor,$permission,true);
+    if(in_array($kind,['series','series-instance'],true))genesisSharedProjectAccess($scope['resource_id'],$actor,'organize',true);
     if(in_array($kind,['comment','project-comment'],true)&&$old&&$old['author_id']!==$actor&&!$project['permissions']['manageProjects'])throw new GenesisResourceLimitException(403,'E2EE_PRODUCT_AUTHOR_REQUIRED');
     return$project;
 }
@@ -183,7 +187,7 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
     foreach($payload['operations'] as $operation){
         genesisE2eeExactFields($operation,['action','entityId','kind','expectedRevision','domain','objectId','payloadHash','parentId','metadata','proposalId']);$id=genesisE2eeIdentifier($operation['entityId']);
         if(isset($seen[$id])||!in_array($operation['kind'],GENESIS_E2EE_PRODUCT_KINDS,true)||!in_array($operation['action'],['create','update','delete','restore','propose-complete'],true))throw new InvalidArgumentException('E2EE_PRODUCT_BATCH_INVALID');$seen[$id]=true;
-        if($scope['kind']==='space'&&in_array($operation['kind'],['task','status','workflow','review-policy','planning','sprint','series','automation','custom-field-value'],true)
+        if($scope['kind']==='space'&&in_array($operation['kind'],['task','status','workflow','review-policy','planning','sprint','series','series-instance','automation','automation-run','custom-field-value'],true)
             ||$scope['kind']==='project'&&$operation['kind']==='space')throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');
         genesisE2eeInteger($operation['expectedRevision']);$metadata=genesisE2eeProductMetadata($operation['kind'],$operation['metadata']);$old=genesisE2eeProductRow($db,$scope,$id);
         if(($old?(int)$old['revision']:0)!==$operation['expectedRevision']||($old&&$old['kind']!==$operation['kind'])||($old===false)!==($operation['action']==='create'))throw new DomainException('E2EE_PRODUCT_REVISION_CONFLICT');
@@ -193,6 +197,7 @@ function genesisE2eeProductCommit(PDO $db,string $actor,array $scope,array $payl
             $retainedHistory=$bound&&$operation['kind']==='history'&&$operation['action']==='create'&&$scope['kind']==='project'&&$operation['parentId']==='project:'.$scope['resource_id'];
             if(!$parent||$parent['deleted']&&!$retainedHistory||$operation['parentId']===$id)throw new DomainException('E2EE_PRODUCT_PARENT_INVALID');}
         if($operation['kind']==='history'&&(!$bound||$operation['action']!=='create'||$scope['kind']!=='project'||$operation['parentId']!=='project:'.$scope['resource_id']))throw new DomainException('E2EE_PRODUCT_HISTORY_FORBIDDEN');
+        require_once __DIR__.'/e2ee-client-execution.php';genesisE2eeClientExecutionOperation($db,$actor,$scope,$operation,$old,$project);
         if($operation['kind']==='task')genesisE2eeProductTaskRules($db,$actor,$scope,$operation,$old,$project,$bound);
         if($operation['kind']==='project'){
             require_once __DIR__.'/e2ee-project-topology.php';genesisE2eeProjectRootMutation($db,$actor,$scope,$operation,$old);

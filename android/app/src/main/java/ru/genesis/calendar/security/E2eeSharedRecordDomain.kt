@@ -20,7 +20,7 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
     fun related(kind:String)=strings(contract.getJSONObject("related").getJSONArray(kind))
     fun historyOnly(kind:String)=kind in strings(contract.getJSONArray("historyOnlyKinds"))
     fun entityId(kind:String,id:Any)=E2eeKeys.technical("$kind:$id")
-    fun recordKey(kind:String,row:JSONObject)=entityId(kind,when{kind=="custom-field-value"->"${row.get("task_id")}:${row.get("field_id")}";kind=="trash"->"${row.get("kind")}:${row.get("object_id")}";kind=="file"->if(row.has("id"))"attachment:${row.get("id")}"else"image:${row.get("task_id")}";else->row.opt("id")?:row.opt("project_id")?:row.get("task_id")})
+    fun recordKey(kind:String,row:JSONObject)=entityId(kind,when{kind=="series-instance"->"${row.get("series_id")}:${row.get("occurrence_key")}";kind=="custom-field-value"->"${row.get("task_id")}:${row.get("field_id")}";kind=="trash"->"${row.get("kind")}:${row.get("object_id")}";kind=="file"->if(row.has("id"))"attachment:${row.get("id")}"else"image:${row.get("task_id")}";else->row.opt("id")?:row.opt("project_id")?:row.get("task_id")})
     private fun parsed(raw:Any):Any{check(raw is String){"E2EE_SHARED_DOMAIN_INVALID"};return E2eeFileManifestJson.readPrivateValue(raw.toByteArray(Charsets.UTF_8))}
     private fun row(table:String,value:JSONObject):JSONObject{
         val file=table in setOf("shared_task_attachments","shared_task_images");val columns=source.columns(table).filter{!file||it !in setOf("ciphertext","filename_ciphertext")}.toMutableSet();if(file)columns+="file";E2eeKeys.exact(value,columns)
@@ -42,6 +42,8 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
         if(value.has("project_id"))check(if(scopeKind=="project")value.get("project_id")==resourceId else value.isNull("project_id")){"E2EE_SCOPE_BINDING_MISMATCH"}
         if(value.has("space_id")&&scopeKind=="space")check(value.get("space_id")==resourceId){"E2EE_SCOPE_BINDING_MISMATCH"}
         if(table in setOf("shared_projects","shared_spaces"))check(value.get("id")==resourceId&&(table=="shared_projects")== (scopeKind=="project")){"E2EE_SCOPE_BINDING_MISMATCH"}
+        if(table=="shared_automation_runs"){val payload=parsed(value.get("payload_json")) as? JSONObject?:error("E2EE_SHARED_DOMAIN_INVALID");E2eeKeys.technical(payload.getString("executedBy"));check(value.getString("state") in setOf("pending","succeeded","skipped","cancelled","failed")){"E2EE_SHARED_DOMAIN_INVALID"};E2eeCommands.integer(value.get("rule_revision"),1);E2eeCommands.integer(value.get("attempts"));E2eeCommands.integer(value.get("retry_count"))}
+        if(table=="shared_series_instances"){check(value.getString("state") in setOf("created","skipped")&&LocalDate.parse(value.getString("original_date")).toString()==value.getString("original_date")){"E2EE_SHARED_DOMAIN_INVALID"};E2eeCommands.integer(value.get("ordinal"),1)}
         if(table=="shared_mindmaps"){val map=MindmapDocument.parse(parsed(value.get("content")) as JSONObject);check(map.id==value.getString("id")&&map.projectId==if(scopeKind=="project")resourceId else null){"E2EE_SCOPE_BINDING_MISMATCH"}}
         if(table=="shared_tasks"){
             check(value.getString("title").isNotBlank()&&value.getString("title").length<=2000&&value.getString("description").length<=100000&&value.getString("entry_type") in setOf("task","meeting","birthday","event")&&E2eeCommands.integer(value.get("priority"))<=5){"E2EE_SHARED_DOMAIN_INVALID"}
@@ -58,6 +60,9 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
     }
     fun metadata(body:JSONObject):JSONObject{
         val kind=body.getString("kind");val row=body.getJSONObject("record");val related=body.getJSONObject("related")
+        if(kind=="automation"&&!row.isNull("owner_id"))return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("ownerId",row.get("owner_id")))
+        if(kind=="automation-run"){val payload=parsed(row.get("payload_json")) as JSONObject;return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("ruleId",row.get("rule_id")).put("ruleRevision",row.get("rule_revision")).put("executorId",payload.get("executedBy")).put("triggerKey",row.get("trigger_key")))}
+        if(kind=="series-instance"){val key=row.getString("occurrence_key").split('.');check(key.size==3);return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("seriesId",row.get("series_id")).put("seriesRevision",key[1].toLong()).put("executorId",String(E2eeEnvelope.decode(key[0],1,512),Charsets.UTF_8)).put("occurrenceKey",key[2]))}
         if(kind=="project")return E2eeProductContract.metadata(kind,JSONObject().put("protocol",2).put("spaceId",row.get("space_id"))
             .put("parentProjectId",row.get("parent_id")).put("projectCategoryId",row.get("category_id")).put("boardStatusId",row.get("board_status_id"))
             .put("projectType",row.get("kind")).put("layout",row.get("layout")).put("isInbox",row.getInt("is_inbox")==1).put("archived",!row.isNull("archived_at")))
@@ -78,6 +83,8 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
     fun parent(body:JSONObject):Any{val kind=body.getString("kind");val row=body.getJSONObject("record")
         if(kind in setOf("project","space"))return JSONObject.NULL
         if(kind=="task")return if(row.isNull("parent_task_id"))entityId("project",resourceId)else entityId("task",row.get("parent_task_id"))
+        if(kind=="automation-run")return entityId("automation",row.get("rule_id"))
+        if(kind=="series-instance")return entityId("series",row.get("series_id"))
         if(row.has("task_id"))return entityId("task",row.get("task_id"));return entityId(scopeKind,resourceId)
     }
     fun validate(kind:String,input:Any,header:JSONObject?=null):JSONObject{
@@ -93,7 +100,7 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
             for(rows in listOf(attachments,images))for(at in 0 until rows.length()){val item=rows.getJSONObject(at);val file=item.getJSONObject("file");check(file.getLong("size")==item.getLong("byte_size")&&file.getString("mediaType")==item.getString("mime_type")){"E2EE_SHARED_DOMAIN_INVALID"}}
         }
         if(header!=null){
-            val saved=E2eeProductContract.metadata(kind,header.getJSONObject("metadata"));val oldProject=kind=="project"&&saved.getInt("protocol")==1
+            val saved=E2eeProductContract.metadata(kind,header.getJSONObject("metadata"));val oldProject=kind in setOf("project","automation")&&saved.getInt("protocol")==1
             check(header.getString("scopeId")==scopeId&&header.getString("kind")==kind&&header.getString("entityId")==recordKey(kind,root)&&header.get("parentId")==parent(value)&&
                 (oldProject||E2eeProductJson.same(saved,metadata(value)))){"E2EE_SHARED_HEADER_MISMATCH"}
         }

@@ -132,6 +132,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
         val unlockPalette=privateAuth.accountSettings?.darkPalette?:"green"
         MaterialTheme(colorScheme=if(unlockNight)eveningPalette(unlockPalette)else daylightPalette(unlockPalette),typography=GenesisTypography,shapes=GenesisShapes){PrivateVaultGate(privateController,privateAuth)};return
     }
+    if(!testWorkspace&&privateProtected&&privateUnlocked&&privateAuth.user!=null)PrivateExecutionPump(privateController,privateAuth.user!!.uid,privateAuth.ready&&!privateAuth.busy&&!privateAuth.requiresSignIn)
     key(activeScope) { GenesisWorkspaceContent(app, openedTask, openedSection, activeScope, testWorkspace, openedHabit, openedAdvice) }
 }
 
