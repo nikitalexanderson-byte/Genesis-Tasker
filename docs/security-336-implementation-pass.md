@@ -1,5 +1,13 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: typed Stoicheion practice restore (source-only)
+
+The shared durable add-only restore engine now includes practices in both backup
+interfaces, device custody and inert content exports. Existing works/tombstones
+remain authoritative; service grants and draw counters are not imported. Web and
+native write the same normal private aggregate. No compiler, tests, build or
+general review has run; native functional integration remains for acceptance.
+
 ## Срочный веб-запрос владельца — 22 ноября, текущее продолжение
 
 Сохранён код client automation/series commit0cc1e3ca; после него добавлены private

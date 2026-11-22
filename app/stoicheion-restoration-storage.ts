@@ -9,6 +9,8 @@ type Envelope = Sealed & { revision: number };
 type Access = ReturnType<typeof personalDocumentAccess>;
 type Storage = EncryptedJournalStorage;
 const empty = (): RestorationDocument => ({ version: 1, works: [], removed: [] });
+export function privateRestorationDocument(ownerId:string){return new E2eeFeatureDocument({ownerId,domain:'stoicheion',objectId:'personal-stoicheion-live-v1',validate:validateRestorationDocument,
+ seed:async read=>{const value=await read('personal-stoicheion-workspace-v1');exactKeys(value,['protocol','ownerId','document']);if(value.protocol!==1||value.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return validateRestorationDocument(value.document);}});}
 import { mergeRestorationDocuments } from "./stoicheion-restoration-merge";
 export { mergeRestorationDocuments } from "./stoicheion-restoration-merge";
 
@@ -25,9 +27,7 @@ export class RestorationRepository {
   conflict = false;
   constructor(userId: string, private storage: Storage, access?: Access) {
     this.ownerId=userId;
-    this.product=new E2eeFeatureDocument({ownerId:userId,domain:'stoicheion',objectId:'personal-stoicheion-live-v1',validate:validateRestorationDocument,
-      seed:async read=>{const value=await read('personal-stoicheion-workspace-v1');exactKeys(value,['protocol','ownerId','document']);
-        if(value.protocol!==1||value.ownerId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return validateRestorationDocument(value.document);}});
+    this.product=privateRestorationDocument(userId);
     this.access = access ?? personalDocumentAccess(userId);
     this.journal = new EncryptedPendingJournal(`genesis-stoicheion-workspace-v1:${userId}:pending`);
   }

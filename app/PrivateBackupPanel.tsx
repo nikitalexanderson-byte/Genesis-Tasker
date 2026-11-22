@@ -62,6 +62,6 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
    {binary?<p>{filesText.binary}</p>:null}
    {selected?<><p>{filesText.notice}</p><button type="button" disabled={busy} onClick={()=>void saveSelected()}>{filesText.download}</button></>:null}
   </section>
-  <PrivatePersonalContentRestore ownerId={ownerId} language={language} payload={payload} selection={(()=>{const row=rows.find(row=>row.key===selected);return row&&['workspace','diary','mindmaps','physis','aurora'].includes(payload?.sections[row.sectionIndex]?.id??'')?{sectionIndex:row.sectionIndex,entryIndex:row.entryIndex,versionId:row.versionId}:null;})()}/>
+  <PrivatePersonalContentRestore ownerId={ownerId} language={language} payload={payload} selection={(()=>{const row=rows.find(row=>row.key===selected);return row&&['workspace','diary','mindmaps','physis','aurora','stoicheion'].includes(payload?.sections[row.sectionIndex]?.id??'')?{sectionIndex:row.sectionIndex,entryIndex:row.entryIndex,versionId:row.versionId}:null;})()}/>
  </div>;
 }

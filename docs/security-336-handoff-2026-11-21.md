@@ -1,5 +1,15 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: typed restore практик Стоихейона — код
+
+Практики добавлены в общий add-only journal, preview/consent/resume, оба backup UI
+и typed custody/export. Web editor/restore используют один normal aggregate;
+native writer сохраняет совместимый practice aggregate через E2eeFeatureDocument.
+Текущие works и tombstones не заменяются. Draw grants, reroll counters и другие
+серверные права из архива не восстанавливаются. Полная native интеграция и общий
+compiler/QA/review ещё не выполнялись. Далее: shared restore, very-wide bounds,
+revoked-device replacement/background и оставшийся охват исходного задания.
+
 ## 23 ноября: typed Aurora session restore — код
 
 Aurora sessions добавлены в общий add-only journal/preview/consent/resume и оба

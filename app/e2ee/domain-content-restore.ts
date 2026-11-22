@@ -7,9 +7,10 @@ import {validateDiaryNote} from '../diary-model.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
 import {validatePhysisRecord} from '../physis/validation.ts';
 import {validateDocument as validateAuroraDocument,type AuroraSession} from '../aurora/session.ts';
+import {normalizeRestorationWorks} from '../stoicheion-restoration-work.ts';
 
 type Row=Record<string,unknown>;
-export type RestoreDomain='diary'|'mindmap'|'physis'|'aurora';
+export type RestoreDomain='diary'|'mindmap'|'physis'|'aurora'|'stoicheion';
 export type DomainRestoreSource={domain:RestoreDomain;records:Row[]};
 export type DomainRestoreRecord={id:string;revision:number;deleted:boolean;value:Row|null;localOnly:boolean};
 export type DomainRestoreView={checkpoint:string;pending:boolean;records:DomainRestoreRecord[]};
@@ -23,10 +24,11 @@ export function domainRestoreRecord(domain:RestoreDomain,input:unknown):Row{
  if(domain==='mindmap'){const map=validateMindmap(structuredClone(input));if(map.projectId!==null&&map.projectId!==undefined)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');return map as unknown as Row;}
  if(domain==='physis'){const record=structuredClone(input);if(!validatePhysisRecord(record))return invalid();return record as unknown as Row;}
  if(domain==='aurora'){const record=object(structuredClone(input));assertTechnical(record.id);assertTechnical(record.ownerId);if(record.version!==1)invalid();return record;}
+ if(domain==='stoicheion')return normalizeRestorationWorks([structuredClone(input)])[0] as unknown as Row;
  return invalid();
 }
 export function validateDomainRestoreSource(input:unknown):DomainRestoreSource{
- exactKeys(input,['domain','records']);if(!['diary','mindmap','physis','aurora'].includes(String(input.domain))||!Array.isArray(input.records)||!input.records.length||input.records.length>10000)invalid();
+ exactKeys(input,['domain','records']);if(!['diary','mindmap','physis','aurora','stoicheion'].includes(String(input.domain))||!Array.isArray(input.records)||!input.records.length||input.records.length>10000)invalid();
  const domain=input.domain as RestoreDomain,records=input.records.map(row=>domainRestoreRecord(domain,row));if(new Set(records.map(row=>row.id)).size!==records.length)invalid();return{domain,records};
 }
 export async function validateDomainRestoreSourceDeep(source:DomainRestoreSource,ownerId:string){if(source.domain==='aurora')await validateAuroraDocument({version:1,ownerId,sessions:source.records as unknown as AuroraSession[],removed:[]},ownerId);}
@@ -73,6 +75,6 @@ export class DomainContentRestore{
 
 export function domainRestoreSourceFromJson(domain:RestoreDomain,raw:unknown):DomainRestoreSource{
  let value=object(raw);if(Object.hasOwn(value,'document')&&value.document&&typeof value.document==='object'&&!Array.isArray(value.records))value=object(value.document);
- const input=Array.isArray(value.records)?value.records:domain==='aurora'&&Array.isArray(value.sessions)?value.sessions:domain==='aurora'&&Object.hasOwn(value,'primary')?[value]:domain==='diary'&&Object.hasOwn(value,'note')?[value]:domain==='mindmap'&&Object.hasOwn(value,'nodes')?[value]:domain==='physis'&&Object.hasOwn(value,'record')?[value]:null;if(!input)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');
+ const input=Array.isArray(value.records)?value.records:domain==='stoicheion'&&Array.isArray(value.works)?value.works:domain==='stoicheion'&&Object.hasOwn(value,'snapshot')?[value]:domain==='aurora'&&Array.isArray(value.sessions)?value.sessions:domain==='aurora'&&Object.hasOwn(value,'primary')?[value]:domain==='diary'&&Object.hasOwn(value,'note')?[value]:domain==='mindmap'&&Object.hasOwn(value,'nodes')?[value]:domain==='physis'&&Object.hasOwn(value,'record')?[value]:null;if(!input)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');
  const records=input.filter(row=>object(row).deleted!==true).map(row=>{const item=object(row);return domain==='diary'?item.note??item:domain==='physis'?item.record??item:item.document??item;});return validateDomainRestoreSource({domain,records});
 }
