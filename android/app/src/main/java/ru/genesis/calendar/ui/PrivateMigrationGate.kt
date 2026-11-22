@@ -73,8 +73,10 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     val cancellation=remember(view.language){migrationText(context,view.language,"migration-cancel-copy-v1.json")}
     val creationText=remember(view.language){migrationText(context,view.language,"private-resource-copy-v1.json")}
     val projectText=remember(view.language){migrationText(context,view.language,"project-creation-copy-v1.json")}
+    val retryText=remember(view.language){migrationText(context,view.language,"project-creation-retry-copy-v1.json")}
     val projectCreation=view.creationId!=null&&view.target?.kind=="project"
     var projectReview by remember{mutableStateOf<JSONObject?>(null)};var reviewBusy by remember{mutableStateOf(false)}
+    var reviewReload by remember{mutableIntStateOf(0)};var resolving by remember{mutableStateOf(false)}
     val creationReady=!projectCreation||projectReview?.getJSONObject("intent")?.isNull("review")==false
     var phase by remember{mutableStateOf(if(view.target!=null||view.resume||controller.privateVaultDeviceExists(view.owner))"confirm"else"intro")}
     val generatedMaterial=remember{AtomicReference<NativeRecoveryMaterial?>(null)}
@@ -84,6 +86,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
     var stopping by remember{mutableStateOf(false)}
     var cancelConfirmed by remember{mutableStateOf(false)};var cancelling by remember{mutableStateOf(false)}
     val cancellationAttempt=remember{AtomicLong(-1)}
+    val resolutionAttempt=remember{AtomicLong(-1)}
     var error by remember{mutableStateOf("")};var progress by remember{mutableStateOf("snapshot")};var started by remember{mutableStateOf(view.resume)}
     val alive=remember{AtomicBoolean(true)};val prepared=remember{AtomicReference<E2eeProductMigrationController?>(null)}
     val pendingFile=remember{AtomicReference<NativeRecoveryFileRequest?>(null)}
@@ -105,17 +108,19 @@ private fun migrationText(context:android.content.Context,language:String,name:S
         check(pendingFile.compareAndSet(null,request)){request.close();"E2EE_RECOVERY_REQUEST_CHANGED"}
         busy=true;error="";fileActivity=request
     }
-    fun startCredential(cancel:Boolean){
+    fun startCredential(cancel:Boolean,resolve:Boolean=false){
         if(busy||reviewBusy||!creationReady||pendingCredential.get()!=null||cancel&&!cancelConfirmed)return
         try{
             foreground()
+            if(resolve)check(projectCreation&&projectReview?.getJSONObject("intent")?.let{it.getBoolean("started")&&it.isNull("preparation")}==true){"E2EE_RESOURCE_CREATION_LOCKED"}
             val request=NativeMigrationCredential.capture(view.owner,view.id,credentialAttempt.incrementAndGet(),secret,requireNotNull(kit){"E2EE_RECOVERY_KIT_REQUIRED"},SystemClock.elapsedRealtime(),controller.privateUiOwnerGuard(view.owner))
             check(pendingCredential.compareAndSet(null,request)){request.close();"E2EE_CREDENTIAL_PENDING"}
             cancellationAttempt.set(if(cancel)request.attempt else -1);cancelling=cancel;cancelConfirmed=false
+            resolutionAttempt.set(if(resolve)request.attempt else -1);resolving=resolve
             secret="";kit=null;busy=true;credentialActivity=request
         }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=text.getString("error")}}
     }
-    fun message(reason:Exception):String=if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectText.getString("changed")else if(reason.message in setOf("E2EE_RECIPIENT_REVIEW_REQUIRED","E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED"))creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
+    fun message(reason:Exception):String=if(reason.message=="E2EE_RESOURCE_CREATION_RESOLUTION_REQUIRED")retryText.getString("notice")else if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectText.getString("changed")else if(reason.message in setOf("E2EE_RECIPIENT_REVIEW_REQUIRED","E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED"))creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
     suspend fun reviewProject(confirm:Boolean=false,refresh:Boolean=true){
         if(!projectCreation||busy||reviewBusy)return;reviewBusy=true;error=""
         try{foreground();val id=requireNotNull(view.creationId);val result=if(confirm)controller.confirmPrivateProjectCreationReview(id,requireNotNull(projectReview).getString("topologyHash"),::foreground)
@@ -124,7 +129,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
         }catch(cancel:CancellationException){throw cancel}catch(reason:Exception){if(alive.get()){if(!confirm||reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectReview=null;error=message(reason)}}
         finally{if(alive.get())reviewBusy=false}
     }
-    LaunchedEffect(view.id){if(projectCreation)reviewProject(false,false)}
+    LaunchedEffect(view.id,reviewReload){if(projectCreation)reviewProject(false,false)}
     DisposableEffect(view.id,lifecycle){
         val observer=LifecycleEventObserver{_,event->
           if(event==Lifecycle.Event.ON_RESUME)foregroundState.set(true)
@@ -169,6 +174,8 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 val suppliedKit=requireNotNull(material.kit){"E2EE_RECOVERY_KIT_REQUIRED"}
                 if(view.creationId!=null){
                     check(cancellationAttempt.get()!=request.attempt){"E2EE_RESOURCE_CREATION_PAUSED"}
+                    if(resolutionAttempt.get()==request.attempt){val replacement=controller.resolvePrivateProjectCreation(view.creationId,material.secret,suppliedKit,::owns);owns();kit=null
+                        NativeMigrationUiState.replaceCreation(view.id,E2eeProductMigration.Target(view.owner,replacement.getString("scopeId"),"project",replacement.getString("resourceId")),replacement.getString("intentId"));return@RecoveryCredentialActivity}
                     val result=if(projectCreation)controller.completePrivateProjectCreation(view.creationId,material.secret,suppliedKit,::owns,{value->owns();progress=value},{next->prepared.set(next)})
                         else controller.completePrivateSpaceCreation(view.creationId,material.secret,suppliedKit,::owns,{value->owns();progress=value},{next->prepared.set(next)})
                     owns();kit=null;NativeMigrationUiState.completeCreation(view.id,result);return@RecoveryCredentialActivity
@@ -186,8 +193,8 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             }
     },finished={request,reason->
         if(pendingCredential.compareAndSet(request,null)&&alive.get()){
-            credentialActivity=null;secret="";kit=null;cancelling=false;if(!stopping)busy=false
-            if(reason!=null){if(!stopping)error=message(reason);if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectReview=null;phase="confirm"}
+            credentialActivity=null;secret="";kit=null;cancelling=false;resolving=false;if(!stopping)busy=false
+            if(reason!=null){if(!stopping)error=message(reason);if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectReview=null;phase="confirm";if(projectCreation)reviewReload++}
         }
     })
     LaunchedEffect(phase,auth.user?.privateVault,auth.busy){if(phase=="done"&&auth.user?.privateVault==true&&!auth.busy)NativeMigrationUiState.close(view.id)}
@@ -237,6 +244,9 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                     if(!keyguard.isDeviceSecure)Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("screenLock"))}
                     else{
                         Button(onClick={startCredential(false)},enabled=!busy&&!reviewBusy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(started)"resume"else"begin"))}
+                        if(projectReview?.getJSONObject("intent")?.let{it.getBoolean("started")&&it.isNull("preparation")}==true){
+                            Text(retryText.getString("notice"));OutlinedButton(onClick={startCredential(false,true)},enabled=!busy&&!reviewBusy&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(retryText.getString("action"))}
+                        }
                         if(view.creationId==null&&(started||view.resume)){
                             Row{Checkbox(checked=cancelConfirmed,onCheckedChange={cancelConfirmed=it},enabled=!busy);Text(cancellation.getString("confirm"))}
                             OutlinedButton(onClick={startCredential(true)},enabled=!busy&&cancelConfirmed&&kit!=null&&secret.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(cancellation.getString("action"))}
@@ -244,7 +254,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                     }
                     }
                 }
-                if(phase=="running"||phase=="done")Text(if(cancelling)cancellation.getString("action")else text.getString(if(phase=="done"||progress=="active")"done"else progress))
+                if(phase=="running"||phase=="done")Text(if(resolving)retryText.getString("action")else if(cancelling)cancellation.getString("action")else text.getString(if(phase=="done"||progress=="active")"done"else progress))
                 if(phase=="cancelled"){
                     Text(cancellation.getString("done"))
                     TextButton(onClick={NativeMigrationUiState.close(view.id)},enabled=!busy&&!auth.busy&&!auth.requiresSignIn&&auth.user?.uid==view.owner&&(view.target!=null||auth.user?.privateVault==false),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}

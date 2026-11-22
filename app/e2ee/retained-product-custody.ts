@@ -172,18 +172,22 @@ export async function inspectRetainedProductCustody(options:Options){
   if(domain==='local-snapshot'&&(!/:[1-9][0-9]*$/.test(id)||baseId===id))invalid();
   const {command,directory}=await packet(value),payload=command.payload;
   if(baseId.startsWith('service:')){
-   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare','shared-invitations-issue','shared-invitation-revoke'].includes(command.action))invalid();
+   if(!['product-commit','product-approve','stoicheion-grant','advice-issue','product-bootstrap-start','product-bootstrap-stage','product-bootstrap-complete','resource-create-prepare','resource-create-resolve','shared-invitations-issue','shared-invitation-revoke'].includes(command.action))invalid();
    assertTechnical(payload.intentId);if(baseId!=='service:'+digest(encoder.encode(`${command.action}\0${payload.intentId}`))||command.deviceId!==options.actor.deviceId)invalid();
    if(command.action==='shared-invitations-issue'){
     exactKeys(payload,['intentId','invitations']);if(!Array.isArray(payload.invitations)||payload.invitations.length<1||payload.invitations.length>20)invalid();const ids=new Set<string>(),emails=new Set<string>();
     for(const row of payload.invitations){exactKeys(row,['id','email','role','permissions']);assertTechnical(row.id);if(ids.has(row.id)||typeof row.email!=='string'||row.email.length>320||!/^\S+@(?:gmail|googlemail)\.com$/i.test(row.email)||emails.has(row.email.toLowerCase())||!['admin','member','guest'].includes(String(row.role)))invalid();ids.add(row.id);emails.add(row.email.toLowerCase());
      exactKeys(row.permissions,['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers']);if(Object.values(row.permissions).some(value=>typeof value!=='boolean'))invalid();}
    }else if(command.action==='shared-invitation-revoke'){exactKeys(payload,['intentId','id']);assertTechnical(payload.id);
-   }else if(command.action==='resource-create-prepare'){
-    exactKeys(payload,Object.hasOwn(payload,'topology')?['intentId','bootstrap','topology']:['intentId','bootstrap']);exactKeys(payload.bootstrap,['command','signature']);const initial=payload.bootstrap as unknown as SignedE2eeCommand;
+   }else if(['resource-create-prepare','resource-create-resolve'].includes(command.action)){
+    let request=payload;if(command.action==='resource-create-resolve'){
+     exactKeys(payload,['intentId','original']);exactKeys(payload.original,['intentId','bootstrap','topology']);request=payload.original as Record<string,WireValue>;
+     assertTechnical(request.intentId);if(payload.intentId!=='resource-create-resolve:'+request.intentId)invalid();
+    }
+    exactKeys(request,Object.hasOwn(request,'topology')?['intentId','bootstrap','topology']:['intentId','bootstrap']);exactKeys(request.bootstrap,['command','signature']);const initial=request.bootstrap as unknown as SignedE2eeCommand;
     const kind=initial.command.payload.kind;
-    if(initial.command.action!=='bootstrap'||initial.command.ownerId!==options.actor.ownerId||initial.command.deviceId!==options.actor.deviceId||!['space','project'].includes(String(kind))||(kind==='project')!==Object.hasOwn(payload,'topology')||initial.command.expectedRevision!==0||initial.command.checkpointHash!=='genesis'||initial.command.securityEpoch!==1)invalid();
-    if(kind==='project')validatePrivateProjectTopology(payload.topology,options.actor.ownerId);
+    if(initial.command.action!=='bootstrap'||initial.command.ownerId!==options.actor.ownerId||initial.command.deviceId!==options.actor.deviceId||!['space','project'].includes(String(kind))||(kind==='project')!==Object.hasOwn(request,'topology')||initial.command.expectedRevision!==0||initial.command.checkpointHash!=='genesis'||initial.command.securityEpoch!==1||command.action==='resource-create-resolve'&&kind!=='project')invalid();
+    if(kind==='project')validatePrivateProjectTopology(request.topology,options.actor.ownerId);
     const fresh=await verifyDeviceDirectory(options.actor.ownerId,initial.command.scopeId,directory.recoveryKit.authority,[initial]);current();
     const own=fresh.devices.get(options.actor.deviceId);if(fresh.generation!==1||fresh.kind!==kind||!own||own.signingKey!==options.selfKeys.signingKey||own.receivingKey!==options.selfKeys.receivingKey)invalid();
    }

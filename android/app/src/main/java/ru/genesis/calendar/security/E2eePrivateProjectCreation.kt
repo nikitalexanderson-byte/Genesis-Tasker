@@ -81,6 +81,27 @@ internal class E2eePrivateProjectCreation(context:Context,private val account:E2
         if(started&&value.isNull("review")||!value.isNull("preparation")&&!started||phase>=3&&value.isNull("preparation"))invalid()
         JSONObject(value.toString())
     },::current)}
+    private fun resolutionDocument(intent:JSONObject)=E2eeDeviceDocument(account.device,"shared-project-resolution:"+intent.getString("intentId"),{value->
+        E2eeKeys.exact(value,setOf("format","ownerId","creationIntentId","resolverId","requestHash","bootstrapHash","topologyHash","result","replacement"))
+        if(value.get("format")!="genesis-private-project-resolution-v1"||value.get("ownerId")!=intent.get("ownerId")||value.get("creationIntentId")!=intent.get("intentId")
+            ||value.get("resolverId")!="resource-create-resolve:"+intent.getString("intentId")||intent.isNull("topology")||value.get("topologyHash")!=topologyHash(intent.getJSONObject("topology")))invalid()
+        for(key in listOf("requestHash","bootstrapHash","topologyHash"))E2eeEnvelope.decode(value.getString(key),32)
+        if(!value.isNull("result")){val result=value.getJSONObject("result");E2eeKeys.exact(result,setOf("intentId","creationIntentId","kind","scopeId","resourceId","requestHash","bootstrapHash","topologyHash","status","preparation"))
+            if(result.get("intentId")!=value.get("resolverId")||result.get("creationIntentId")!=intent.get("intentId")||result.get("kind")!="project"
+                ||listOf("scopeId","resourceId").any{result.get(it)!=intent.get(it)}||listOf("requestHash","bootstrapHash","topologyHash").any{result.get(it)!=value.get(it)}||result.get("status") !in setOf("prepared","cancelled"))invalid()
+            if(result.get("status")=="prepared"){val receipt=preparation(result.getJSONObject("preparation"),intent);if(receipt.get("bootstrapHash")!=value.get("bootstrapHash"))invalid()}
+            else if(!result.isNull("preparation"))invalid()
+        }
+        if(!value.isNull("replacement")){val next=value.getJSONObject("replacement");E2eeKeys.exact(next,setOf("intentId","scopeId","resourceId","createdAt"))
+            if(value.isNull("result")||value.getJSONObject("result").get("status")!="cancelled"||!uuid.matches(next.getString("intentId"))||!uuid.matches(next.getString("resourceId"))
+                ||next.get("scopeId")!="project:"+next.getString("resourceId")||next.get("intentId")==intent.get("intentId")||next.get("resourceId")==intent.get("resourceId"))invalid()
+            Instant.parse(next.getString("createdAt"))
+        }
+        JSONObject(value.toString())
+    },::current)
+    private fun checkReplacement(original:JSONObject,next:JSONObject,expected:JSONObject){
+        check(listOf("intentId","scopeId","resourceId","createdAt").all{next.get(it)==expected.get(it)}&&E2eeProductJson.same(next.get("input"),original.get("input"))){"E2EE_LOCAL_CONFLICT"}
+    }
     suspend fun create(value:JSONObject):String {val held=input(value);return run{
         val id=UUID.randomUUID().toString();val document=document(id);val intent=JSONObject().put("format","genesis-private-project-create-v1").put("ownerId",account.ownerId).put("intentId",id)
             .put("scopeId","project:${UUID.randomUUID()}").put("resourceId",UUID.randomUUID().toString()).put("kind","project").put("input",held).put("createdAt",Instant.now().toString())
@@ -88,7 +109,13 @@ internal class E2eePrivateProjectCreation(context:Context,private val account:E2
         document.save(intent,null);current();check(E2eeProductJson.same(document.load()?.value,intent)){"E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED"};id
     }}
     fun inspect(id:String):JSONObject {current();val value=document(id).load()?.value?:error("E2EE_PRIVATE_RESOURCE_CREATE_REQUIRED");current();return JSONObject(value.toString())}
-    fun pending():List<JSONObject>{current();val ids=account.device.vault.listLocal("draft",PREFIX);current();return ids.map{inspect(it.removePrefix(PREFIX))}.filter{it.getString("phase")!="complete"}}
+    fun pending():List<JSONObject>{current();val ids=account.device.vault.listLocal("draft",PREFIX);current();val rows=mutableListOf<JSONObject>()
+        for(key in ids){val row=inspect(key.removePrefix(PREFIX));if(row.get("phase")=="complete")continue
+            val resolution=if(row.isNull("topology"))null else resolutionDocument(row).load();current();val replacement=resolution?.value?.optJSONObject("replacement")
+            if(replacement!=null){val next=document(replacement.getString("intentId")).load();current();if(next!=null){checkReplacement(row,next.value,replacement);continue}}
+            rows+=row
+        };return rows
+    }
     private fun proposal(intent:JSONObject):JSONObject{
         val selected=E2eeProjectCreationSelection.capture(context,account,location(intent.getJSONObject("input")),::current);current()
         account.client.refresh();current();return account.client.readProjectCreationPreview(intent.getString("resourceId"),selected).also{current()}
@@ -115,6 +142,8 @@ internal class E2eePrivateProjectCreation(context:Context,private val account:E2
         val held=secret.copyOf();val kit=try{JSONObject(savedKit.toString())}catch(error:Throwable){held.fill(0);throw error}
         try{return run{
             check(!account.offline){"E2EE_ONLINE_REQUIRED"};var intent=inspect(id);check(!intent.isNull("topology")&&!intent.isNull("review")){"E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED"}
+            val resolution=resolutionDocument(intent).load();current()
+            check(resolution==null||resolution.value.optJSONObject("result")?.optString("status")=="prepared"){"E2EE_RESOURCE_CREATION_RESOLUTION_REQUIRED"}
             if(!intent.getBoolean("started")){
                 check(E2eeProductJson.same(proposal(intent),intent.get("topology"))){"E2EE_PROJECT_TOPOLOGY_CHANGED"}
                 val document=document(id);val before=document.load()?:error("E2EE_LOCAL_CONFLICT");current();check(E2eeProductJson.same(before.value,intent)){"E2EE_LOCAL_CONFLICT"}
@@ -139,6 +168,39 @@ internal class E2eePrivateProjectCreation(context:Context,private val account:E2
             if(before.value.isNull("preparation")||verified.kind!="project"||verified.resourceId!=fixed.getString("resourceId")||verified.ownerId!=account.ownerId||verified.state !in setOf("preparing","uploading","verified","active"))invalid()
             if(phases.indexOf(before.value.getString("phase"))<phases.indexOf("prepared"))document.save(JSONObject(before.value.toString()).put("phase","prepared"),before.serial)
             current();inspect(id) to verified
+        }}finally{held.fill(0)}
+    }
+    suspend fun resolveAndRetry(id:String,secret:ByteArray,savedKit:JSONObject):JSONObject{
+        val held=secret.copyOf();val kit=try{JSONObject(savedKit.toString())}catch(error:Throwable){held.fill(0);throw error}
+        try{return run{
+            check(!account.offline){"E2EE_ONLINE_REQUIRED"};val intent=inspect(id)
+            check(intent.getBoolean("started")&&!intent.isNull("topology")&&!intent.isNull("review")){"E2EE_RESOURCE_CREATION_LOCKED"};if(!intent.isNull("preparation"))return@run intent
+            val target=JSONObject().put("ownerId",account.ownerId).put("scopeId",intent.get("scopeId")).put("kind","project").put("resourceId",intent.get("resourceId"))
+            val setup=E2eeScopeSetup(account.device,target,object:E2eeScopeSetupTransport{
+                override suspend fun directory(scopeId:String):JSONObject=this@E2eePrivateProjectCreation.directory(scopeId)
+                override suspend fun bootstrap(packet:JSONObject):JSONObject=error("E2EE_RESOURCE_CREATION_LOCKED")
+            },::current)
+            val bootstrap=setup.prepare(held,kit,0);current();val original=JSONObject().put("intentId",id).put("bootstrap",bootstrap).put("topology",intent.get("topology"))
+            val expected=JSONObject().put("requestHash",topologyHash(original)).put("bootstrapHash",E2eeCommands.hash(bootstrap.getJSONObject("command"))).put("topologyHash",topologyHash(intent.getJSONObject("topology")))
+            val resolverStore=resolutionDocument(intent);var before=resolverStore.load();current()
+            if(before==null){resolverStore.save(JSONObject(expected.toString()).put("format","genesis-private-project-resolution-v1").put("ownerId",account.ownerId).put("creationIntentId",id)
+                .put("resolverId","resource-create-resolve:$id").put("result",JSONObject.NULL).put("replacement",JSONObject.NULL),null);before=resolverStore.load();current()}
+            check(before!=null&&listOf("requestHash","bootstrapHash","topologyHash").all{before!!.value.get(it)==expected.get(it)}){"E2EE_LOCAL_CONFLICT"}
+            if(before!!.value.isNull("result")){val result=account.client.executeService("resource-create-resolve",JSONObject().put("original",original),before!!.value.getString("resolverId"));current()
+                resolverStore.save(JSONObject(before!!.value.toString()).put("result",result),before!!.serial);before=resolverStore.load();current()}
+            val result=requireNotNull(before).value.getJSONObject("result")
+            if(result.get("status")=="prepared"){
+                val receipt=result.getJSONObject("preparation");val creation=document(id);val saved=creation.load()?:error("E2EE_LOCAL_CONFLICT");current()
+                check(saved.value.getBoolean("started")&&listOf("input","topology","review").all{E2eeProductJson.same(saved.value.get(it),intent.get(it))}){"E2EE_LOCAL_CONFLICT"}
+                if(!saved.value.isNull("preparation"))check(E2eeProductJson.same(saved.value.get("preparation"),receipt)){"E2EE_IDEMPOTENCY_CONFLICT"}
+                else creation.save(JSONObject(saved.value.toString()).put("preparation",receipt).put("phase","prepared"),saved.serial);current();return@run inspect(id)
+            }
+            if(before!!.value.isNull("replacement")){val resource=UUID.randomUUID().toString();val replacement=JSONObject().put("intentId",UUID.randomUUID().toString()).put("scopeId","project:$resource").put("resourceId",resource).put("createdAt",Instant.now().toString())
+                resolverStore.save(JSONObject(before!!.value.toString()).put("replacement",replacement),before!!.serial);before=resolverStore.load();current()}
+            val next=before!!.value.getJSONObject("replacement");val creation=document(next.getString("intentId"));val saved=creation.load();current()
+            if(saved!=null)checkReplacement(intent,saved.value,next)else creation.save(JSONObject(next.toString()).put("format","genesis-private-project-create-v1").put("ownerId",account.ownerId).put("kind","project")
+                .put("input",JSONObject(intent.getJSONObject("input").toString())).put("topology",JSONObject.NULL).put("review",JSONObject.NULL).put("started",false).put("preparation",JSONObject.NULL).put("phase","draft").put("history",JSONArray()),null)
+            current();inspect(next.getString("intentId")).also{checkReplacement(intent,it,next)}
         }}finally{held.fill(0)}
     }
     suspend fun markMigrated(id:String):JSONObject=run{

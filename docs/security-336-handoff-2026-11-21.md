@@ -1,5 +1,34 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 22 ноября: semantic resolution locked project preparation (кандидат)
+
+После d682118c добавлен resource-create-resolve: под тем же SQLite writer lock
+возвращает прежнюю preparation или сохраняет permanent semantic cancellation
+receipt для original resource-create-prepare. Late original/renewed request с
+тем же semantic payload больше не создаёт проект. Проект/область/история не
+удаляются; отмена строго проверяет форму original topology, bootstrap authority
+и текущий personal device, но не требует прежних anchors быть текущими.
+
+Web/native journals сохраняют hashes/fixed resolver до IO и проверяют весь
+result. Только cancelled допускает новые intent/resource/scope IDs с независимым
+будущим root; coordinates сохраняются до нового input journal. Рестарт дописывает
+тот же child. Полный input сохраняется, consent/anchors не переносятся. Pending
+скрывает старую попытку только после проверки durable replacement. Recovery UI
+имеет явный resolve action с14-language explanation; waiters переносят только
+promise результата, не keys/secrets/input. После started обзор показывает IDs/
+roles из encrypted review без зависимости от доступа к прежнему space context.
+Content-only export сохраняет resolution hashes/receipt/lineage как inert data,
+не bootstrap packets. Retained service custody понимает resolver originals.
+
+Это исходники, без compiler/typecheck/lint/tests/build/CI/push/deploy/device/Play.
+Coverage9/20, floors0/cutover off, GENESIS_DEPLOY_ANDROID=false и production
+3.3.5/149/Paddle-сайт сохранены. Следующий большой участок: normal invitation
+acceptance/member editing/device approval и all-owner membership/rotation UI.
+Далее advanced shared/form attribution/automation/bulk/cross-scope, typed restore,
+revoked replacement/background и interrupted-source/divergence review. Общий
+кодовый этап продолжается; QA только после всего кода. demo-output/ не читать/
+stage, субагенты/Daybreak запрещены.
+
 ## 22 ноября: обычное создание private project подключено (кандидат)
 
 После eb87df2b добавлены web/native encrypted project input journals и composers

@@ -1080,6 +1080,12 @@ The code remains uncompiled and untested. No additional category is accepted;
 production remains3.3.5/149, accepted coverage9/20, activation gates unchanged.
 # Private project creation composition, 22 November (candidate code)
 
+Continuation after d682118c adds a signed semantic resolver, permanent original
+intent cancellation and protected exact result/replacement lineage on both
+clients. Recovery UI resolves the old attempt and requires a fresh participant
+review for a verified cancelled replacement. No scope/project or original packet
+is removed. This remains source without compiler/tests/build/CI.
+
 Both normal create routes now preserve complete encrypted input before IO and
 compose pinned/decrypted placement anchors, read-only roster preview, explicit
 durable role review, fixed preparation, actual migration/baseline, one immutable
@@ -1090,7 +1096,6 @@ Lost preparation responses are resolved from the same semantic service intent
 even after setup's directory read completed; exact bootstrap hash is checked.
 
 All additions remain uncompiled and untested under the owner's code-first order.
-No coverage category is promoted. Locked preparation semantic cancellation and
-explicit retry with preserved originals are the immediate remaining code item;
-the full membership/device/advanced/automation/restore/background work remains.
+No coverage category is promoted. The full membership/device/advanced/automation/
+restore/background work remains.
 

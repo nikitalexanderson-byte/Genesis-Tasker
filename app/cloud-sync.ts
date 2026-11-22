@@ -3895,6 +3895,7 @@ export async function previewCurrentPrivateProjectCreation(id:string,refresh=fal
  if(!intent.started&&(!intent.topology||refresh)){intent=await creation.preview(id);current();}
  if(!intent.topology)throw new Error('E2EE_PROJECT_TOPOLOGY_REQUIRED');
  const {validateSharedLiveContext}=await import('./e2ee/shared-live'),{privateProjectTopologyHash}=await import('./e2ee/private-project-create');current();
+ if(intent.started)return{intent,topologyHash:privateProjectTopologyHash(intent.topology),members:intent.topology.reviewedMembers.map(row=>({...row,displayName:''}))};
  const {E2eeSharedTrust}=await import('./e2ee/shared-trust');current();await new E2eeSharedTrust(account.ownerId).open(intent.topology.spaceAnchor.scopeId);current();
  const response=await account.shared(intent.topology.spaceAnchor.scopeId,'space',intent.input.spaceId).client.readProductContext();current();
  const context=validateSharedLiveContext(response.context);if(context.spaceId!==intent.input.spaceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
@@ -3904,6 +3905,10 @@ export async function previewCurrentPrivateProjectCreation(id:string,refresh=fal
 }
 export async function confirmCurrentPrivateProjectCreationReview(id:string,displayedHash:string,guard:()=>void=()=>{}){
  const {creation,current}=await privateProjectCreationSession(guard);await creation.confirmReview(id,displayedHash);current();return previewCurrentPrivateProjectCreation(id,false,current);
+}
+export async function resolveCurrentPrivateProjectCreation(id:string,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,guard:()=>void){
+ const {creation,current}=await privateProjectCreationSession(guard);const intent=await creation.resolveAndRetry(id,secret,kit);current();
+ return{creationId:intent.intentId,target:{scopeId:intent.scopeId,kind:'project' as const,resourceId:intent.resourceId}};
 }
 export async function completeCurrentPrivateProjectCreation(id:string,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void,
  progress:(phase:'snapshot'|'sources'|'reconciliation'|'uploading'|'active')=>void,controller:(value:import('./e2ee/web-product-migration').WebProductMigration|null)=>void){

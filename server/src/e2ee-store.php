@@ -308,6 +308,9 @@ function genesisE2eeExecuteLocked(string $actor,mixed $source,string $sessionBin
         } elseif ($c['action'] === 'resource-create-prepare') {
             if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
             require_once __DIR__.'/e2ee-resource-create.php';$result=genesisE2eePreparePrivateResource($db,$actor,$scope,$c);
+        } elseif ($c['action'] === 'resource-create-resolve') {
+            if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
+            require_once __DIR__.'/e2ee-resource-create.php';$result=genesisE2eeResolvePrivateProjectCreation($db,$actor,$scope,$c);
         } elseif (in_array($c['action'],['shared-invitations-issue','shared-invitation-revoke'],true)) {
             if($recovery||$device['role']!=='owner')throw new DomainException('E2EE_DEVICE_REQUIRED');
             require_once __DIR__.'/e2ee-shared-invitations.php';$result=genesisE2eeSharedInvitationsService($db,$actor,$scope,$c);

@@ -221,6 +221,15 @@ same-UID relogin/restore, both clients and all required UI/language/device state
 No test/compiler/lint/build/CI result is claimed by this document.
 # Normal project composition continuation, 22 November
 
+The subsequent code pass adds resource-create-resolve and protected resolution
+lineage. Its original technical request and resolver identity are immutable;
+the server either returns the previous preparation or stores a permanent
+cancellation under the original semantic intent. Late original retries cannot
+create a project. Only verified cancellation permits a new resource/scope/intent,
+retaining full input and requiring fresh roster review. Coordinates precede the
+new input write, so process death resumes that same child. Both normal recovery
+UIs expose this explicit operation. Original packets and data stay preserved.
+
 `private-project-create.ts` / `E2eePrivateProjectCreation.kt` now hold complete
 encrypted input before network activity, retained topology/review history and
 fixed setup/service intent. `project-create-selection.ts` and the native
@@ -239,7 +248,5 @@ replayed even when setup had already completed from a directory read after a
 lost response; its bootstrap hash must match the retained exact setup packet.
 
 This is candidate source, not acceptance. No compiler/tests/lint/build/CI ran.
-The started/preparation topology-change case still needs semantic resolution,
-permanent cancellation of the old attempt, and explicit fresh review without
-retargeting its packet. Full member/device/rotation integration is also pending.
+Full member/device/rotation integration is still pending.
 

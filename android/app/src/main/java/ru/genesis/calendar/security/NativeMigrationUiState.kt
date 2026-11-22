@@ -21,10 +21,16 @@ internal object NativeMigrationUiState{
     suspend fun waitForCreation(owner:String,language:String,target:E2eeProductMigration.Target,id:String):JSONObject{
         val pending=CompletableDeferred<JSONObject>()
         synchronized(this){check(mutable.value==null&&id !in creations){"E2EE_MIGRATION_BUSY"};show(owner,language,true,target,id);creations[id]=pending}
-        try{return pending.await()}finally{synchronized(this){if(creations[id]===pending)creations.remove(id)}}
+        try{return pending.await()}finally{synchronized(this){creations.entries.filter{it.value===pending}.map{it.key}.forEach{creations.remove(it)}}}
     }
     @Synchronized fun completeCreation(viewId:String,result:JSONObject){
         val view=requireNotNull(mutable.value){"E2EE_RESOURCE_CREATION_CHANGED"};check(view.id==viewId&&view.creationId!=null){"E2EE_RESOURCE_CREATION_CHANGED"}
         creations.remove(requireNotNull(view.creationId))?.complete(JSONObject(result.toString()));mutable.value=null
+    }
+    @Synchronized fun replaceCreation(viewId:String,target:E2eeProductMigration.Target,creationId:String){
+        val view=requireNotNull(mutable.value){"E2EE_RESOURCE_CREATION_CHANGED"};check(view.id==viewId&&view.creationId!=null&&target.ownerId==view.owner&&target.kind=="project"){"E2EE_RESOURCE_CREATION_CHANGED"}
+        listOf(target.scopeId,target.resourceId,creationId).forEach{E2eeKeys.technical(it)}
+        check(creationId==view.creationId||creationId !in creations){"E2EE_MIGRATION_BUSY"};val pending=creations.remove(requireNotNull(view.creationId));if(pending!=null)creations[creationId]=pending
+        mutable.value=view.copy(id=UUID.randomUUID().toString(),resume=true,target=target,creationId=creationId)
     }
 }

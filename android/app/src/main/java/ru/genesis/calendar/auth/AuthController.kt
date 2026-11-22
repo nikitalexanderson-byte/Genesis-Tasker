@@ -362,6 +362,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         fun current(){operationJob.ensureActive();guard();ownerGuard()}
         val creation=privateProjectCreation(uid,::current);var intent=creation.inspect(id);current()
         if(!intent.getBoolean("started")&&(intent.isNull("topology")||refresh)){intent=creation.preview(id);current()}
+        if(intent.getBoolean("started")){
+            val topology=intent.getJSONObject("topology");val reviewed=topology.getJSONArray("reviewedMembers");val display=JSONArray()
+            for(at in 0 until reviewed.length())display.put(JSONObject(reviewed.getJSONObject(at).toString()).put("displayName",""))
+            return@withContext JSONObject().put("intent",intent).put("topologyHash",ru.genesis.calendar.security.E2eePrivateProjectCreation.topologyHash(topology)).put("members",display)
+        }
         val topology=intent.getJSONObject("topology");val account=ru.genesis.calendar.security.NativePrivateProducts.account(CloudAccountSnapshot.scopeFor(uid),uid)
         val spaceId=intent.getJSONObject("input").getString("spaceId");val scopeId=topology.getJSONObject("spaceAnchor").getString("scopeId")
         ru.genesis.calendar.security.E2eeSharedTrust(account).open(scopeId);current();val response=account.sharedScope(scopeId,"space",spaceId).client.readProductContext();current()
@@ -377,6 +382,9 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     internal suspend fun confirmPrivateProjectCreationReview(id:String,displayedHash:String,guard:()->Unit={}):JSONObject=withContext(Dispatchers.IO){
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");privateProjectCreation(uid,guard).confirmReview(id,displayedHash);guard();previewPrivateProjectCreation(id,false,guard)
+    }
+    internal suspend fun resolvePrivateProjectCreation(id:String,secret:ByteArray,kit:JSONObject,guard:()->Unit):JSONObject=withContext(Dispatchers.IO){
+        val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");privateProjectCreation(uid,guard).resolveAndRetry(id,secret,kit).also{guard()}
     }
     internal suspend fun completePrivateSpaceCreation(id:String,secret:ByteArray,kit:JSONObject,assertEditorsFrozen:()->Unit,progress:(String)->Unit,
         controller:(ru.genesis.calendar.security.E2eeProductMigrationController?)->Unit):JSONObject=withContext(Dispatchers.IO){

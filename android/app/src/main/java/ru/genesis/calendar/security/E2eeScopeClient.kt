@@ -455,7 +455,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         }finally{previous?.bytes?.fill(0)}
     }
     @Synchronized fun executeService(action:String,payload:JSONObject,intentId:String):JSONObject{
-        check(action in setOf("product-commit","product-approve","stoicheion-grant","advice-issue","product-bootstrap-start","product-bootstrap-stage","product-bootstrap-complete","resource-create-prepare","shared-invitations-issue","shared-invitation-revoke")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
+        check(action in setOf("product-commit","product-approve","stoicheion-grant","advice-issue","product-bootstrap-start","product-bootstrap-stage","product-bootstrap-complete","resource-create-prepare","resource-create-resolve","shared-invitations-issue","shared-invitation-revoke")){"E2EE_UNKNOWN_ACTION"};E2eeKeys.technical(intentId)
         val held=JSONObject(payload.toString()).put("intentId",intentId);val key="service:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest("$action\u0000$intentId".toByteArray(Charsets.UTF_8)))
         for(attempt in 0..1){val value=current();val prior=device.vault.read("outbox",key)
             try{val old=prior?.let{E2eeFileManifestJson.readPrivateDocument(it.bytes)};val command=old?.getJSONObject("command")

@@ -17,6 +17,9 @@ export type PrivateProjectPreparation={intentId:string;kind:'project';resourceId
  projectType:'project'|'task-list';layout:'list'|'board';statuses:{id:string;isDone:0|1;isChaos:0|1}[];reviewedMembers:PrivateProjectTopology['reviewedMembers'];topologyHash:string;
  state:'preparing';bootstrapHash:string;directoryRevision:1;checkpointHash:string;createdAt:string};
 type Review={topologyHash:string;reviewedAt:string};
+type Replacement={intentId:string;scopeId:string;resourceId:string;createdAt:string};
+type ResolutionReceipt={intentId:string;creationIntentId:string;kind:'project';scopeId:string;resourceId:string;requestHash:string;bootstrapHash:string;topologyHash:string;status:'prepared'|'cancelled';preparation:PrivateProjectPreparation|null};
+type Resolution={format:'genesis-private-project-resolution-v1';ownerId:string;creationIntentId:string;resolverId:string;requestHash:string;bootstrapHash:string;topologyHash:string;result:ResolutionReceipt|null;replacement:Replacement|null};
 const phases=['draft','previewed','reviewed','prepared','migrated','values','complete'] as const;
 export type PrivateProjectCreationIntent={format:'genesis-private-project-create-v1';ownerId:string;intentId:string;scopeId:string;resourceId:string;kind:'project';input:PrivateProjectDraft;createdAt:string;
  topology:PrivateProjectTopology|null;review:Review|null;started:boolean;preparation:PrivateProjectPreparation|null;phase:typeof phases[number];history:{topology:PrivateProjectTopology;review:Review|null}[]};
@@ -36,6 +39,7 @@ export function validatePrivateProjectDraft(input:unknown):PrivateProjectDraft{
  return structuredClone(input) as PrivateProjectDraft;
 }
 export function privateProjectTopologyHash(value:PrivateProjectTopology){const bytes=canonicalE2eeValue(value as unknown as WireValue);try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}}
+function requestHash(value:Record<string,WireValue>){const bytes=canonicalE2eeValue(value);try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}}
 function review(value:unknown,topology:PrivateProjectTopology):Review{
  exactKeys(value,['topologyHash','reviewedAt']);decodeE2eeBytes(value.topologyHash,32);
  if(value.topologyHash!==privateProjectTopologyHash(topology)||typeof value.reviewedAt!=='string'||!Number.isFinite(Date.parse(value.reviewedAt)))invalid();return value as Review;
@@ -77,13 +81,37 @@ export class E2eePrivateProjectCreation {
   if(value.started&&value.review===null||value.preparation!==null&&!value.started||at>=3&&value.preparation===null)invalid();
   return value as PrivateProjectCreationIntent;
  },()=>this.#current());}
+ #resolutionDocument(intent:PrivateProjectCreationIntent){return new E2eeDeviceDocument<Resolution>(this.account.device,'shared-project-resolution:'+intent.intentId,value=>{
+  exactKeys(value,['format','ownerId','creationIntentId','resolverId','requestHash','bootstrapHash','topologyHash','result','replacement']);
+  if(value.format!=='genesis-private-project-resolution-v1'||value.ownerId!==intent.ownerId||value.creationIntentId!==intent.intentId||value.resolverId!=='resource-create-resolve:'+intent.intentId
+   ||!intent.topology||value.topologyHash!==privateProjectTopologyHash(intent.topology))invalid();
+  for(const key of ['requestHash','bootstrapHash','topologyHash'])decodeE2eeBytes(value[key],32);
+  if(value.result!==null){exactKeys(value.result,['intentId','creationIntentId','kind','scopeId','resourceId','requestHash','bootstrapHash','topologyHash','status','preparation']);const result=value.result;
+   if(result.intentId!==value.resolverId||result.creationIntentId!==intent.intentId||result.kind!=='project'||result.scopeId!==intent.scopeId||result.resourceId!==intent.resourceId
+    ||['requestHash','bootstrapHash','topologyHash'].some(key=>result[key]!==value[key])||!['prepared','cancelled'].includes(String(result.status)))invalid();
+   if(result.status==='prepared'){const receipt=validatePrivateProjectPreparation(result.preparation,intent);if(receipt.bootstrapHash!==value.bootstrapHash)invalid();}
+   else if(result.preparation!==null)invalid();
+  }
+  if(value.replacement!==null){exactKeys(value.replacement,['intentId','scopeId','resourceId','createdAt']);const next=value.replacement;
+   if(value.result===null||(value.result as ResolutionReceipt).status!=='cancelled'||!uuid.test(String(next.intentId))||!uuid.test(String(next.resourceId))
+    ||next.scopeId!=='project:'+next.resourceId||next.intentId===intent.intentId||next.resourceId===intent.resourceId||typeof next.createdAt!=='string'||!Number.isFinite(Date.parse(next.createdAt)))invalid();
+  }
+  return structuredClone(value) as Resolution;
+ },()=>this.#current());}
  create(input:PrivateProjectDraft){const held=validatePrivateProjectDraft(input);return this.#run(async()=>{
   const id=crypto.randomUUID(),value:PrivateProjectCreationIntent={format:'genesis-private-project-create-v1',ownerId:this.account.ownerId,intentId:id,scopeId:'project:'+crypto.randomUUID(),resourceId:crypto.randomUUID(),kind:'project',
    input:held,createdAt:new Date().toISOString(),topology:null,review:null,started:false,preparation:null,phase:'draft',history:[]};
   const document=this.#document(id);await document.save(value,null);this.#current();const after=await document.load();if(!after||!same(after.value,value))throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED');return id;
  });}
  async inspect(id:string){this.#current();const saved=await this.#document(id).load();this.#current();if(!saved)throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_REQUIRED');return structuredClone(saved.value);}
- async pending(){this.#current();const ids=await this.account.device.vault.listLocal('draft',prefix);this.#current();const rows:PrivateProjectCreationIntent[]=[];for(const key of ids){const row=await this.inspect(key.slice(prefix.length));if(row.phase!=='complete')rows.push(row);}return rows;}
+ async pending(){this.#current();const ids=await this.account.device.vault.listLocal('draft',prefix);this.#current();const rows:PrivateProjectCreationIntent[]=[];for(const key of ids){const row=await this.inspect(key.slice(prefix.length));if(row.phase==='complete')continue;
+  const resolution=row.topology?await this.#resolutionDocument(row).load():null;this.#current();const replacement=resolution?.value.replacement;
+  if(replacement){const next=await this.#document(replacement.intentId).load();this.#current();if(next){this.#checkReplacement(row,next.value,replacement);continue;}}
+  rows.push(row);
+ }return rows;}
+ #checkReplacement(original:PrivateProjectCreationIntent,next:PrivateProjectCreationIntent,expected:Replacement){
+  if(next.intentId!==expected.intentId||next.scopeId!==expected.scopeId||next.resourceId!==expected.resourceId||next.createdAt!==expected.createdAt||!same(next.input,original.input))throw new Error('E2EE_LOCAL_CONFLICT');
+ }
  async #proposal(intent:PrivateProjectCreationIntent){
   const selection=await capturePrivateProjectSelection(this.account,privateProjectLocation(intent.input),()=>this.#current());this.#current();
   await this.account.personal().client.refresh();this.#current();const topology=await this.account.personal().client.readProjectCreationPreview(intent.resourceId,selection);this.#current();return topology;
@@ -109,6 +137,8 @@ export class E2eePrivateProjectCreation {
   return this.#run(async()=>{try{
    if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');let intent=await this.inspect(id);
    if(!intent.topology||!intent.review)throw new Error('E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED');
+   const resolution=await this.#resolutionDocument(intent).load();this.#current();
+   if(resolution&&resolution.value.result?.status!=='prepared')throw new Error('E2EE_RESOURCE_CREATION_RESOLUTION_REQUIRED');
    if(!intent.started){
     const fresh=await this.#proposal(intent);if(!same(fresh,intent.topology))throw new Error('E2EE_PROJECT_TOPOLOGY_CHANGED');
     const document=this.#document(id),before=await document.load();this.#current();
@@ -135,6 +165,40 @@ export class E2eePrivateProjectCreation {
    if(!before?.value.preparation||directory.kind!=='project'||directory.resourceId!==fixed.resourceId||directory.ownerId!==this.account.ownerId||!['preparing','uploading','verified','active'].includes(directory.state))invalid();
    if(phases.indexOf(before.value.phase)<phases.indexOf('prepared'))await document.save({...before.value,phase:'prepared'},before.serial);
    this.#current();return{intent:await this.inspect(id),directory};
+  }finally{held.fill(0);}}).finally(()=>held.fill(0));
+ }
+ /** Explicit resolution freezes the old semantic request forever. Only a
+  * verified cancellation permits a fresh ID/root and another roster review. */
+ resolveAndRetry(id:string,secret:Uint8Array,kit:RecoveryKit){const held=new Uint8Array(secret);let savedKit:RecoveryKit;try{savedKit=snapshotE2eeValue(kit);}catch(reason){held.fill(0);throw reason;}
+  return this.#run(async()=>{try{
+   if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');const intent=await this.inspect(id);
+   if(!intent.started||!intent.topology||!intent.review)throw new Error('E2EE_RESOURCE_CREATION_LOCKED');if(intent.preparation)return intent;
+   const setup=new E2eeScopeSetup(this.account.device,{ownerId:intent.ownerId,scopeId:intent.scopeId,kind:'project',resourceId:intent.resourceId},
+    {directory:scope=>this.transport.directory(scope),bootstrap:async()=>{throw new Error('E2EE_RESOURCE_CREATION_LOCKED');}},()=>this.#current());
+   const bootstrap=await setup.prepare(held,savedKit,0);this.#current();const original={intentId:id,bootstrap:bootstrap as unknown as WireValue,topology:intent.topology as unknown as WireValue},
+    expected={requestHash:requestHash(original),bootstrapHash:await e2eeCommandHash(bootstrap.command),topologyHash:privateProjectTopologyHash(intent.topology)};
+   this.#current();const document=this.#resolutionDocument(intent);let before=await document.load();this.#current();
+   if(!before){await document.save({format:'genesis-private-project-resolution-v1',ownerId:intent.ownerId,creationIntentId:id,resolverId:'resource-create-resolve:'+id,...expected,result:null,replacement:null},null);before=await document.load();}
+   if(!before||Object.entries(expected).some(([key,value])=>before!.value[key as keyof Resolution]!==value))throw new Error('E2EE_LOCAL_CONFLICT');
+   if(!before.value.result){
+    const result=await this.account.personal().client.executeService('resource-create-resolve',{original},before.value.resolverId);this.#current();
+    await document.save({...before.value,result:result as ResolutionReceipt},before.serial);before=await document.load();this.#current();
+   }
+   if(!before?.value.result)throw new Error('E2EE_INVALID_RECEIPT');
+   if(before.value.result.status==='prepared'){
+    const receipt=before.value.result.preparation!,creation=this.#document(id),current=await creation.load();this.#current();
+    if(!current||!same(current.value.input,intent.input)||!same(current.value.topology,intent.topology)||!same(current.value.review,intent.review)||!current.value.started)throw new Error('E2EE_LOCAL_CONFLICT');
+    if(current.value.preparation&&!same(current.value.preparation,receipt))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');
+    if(!current.value.preparation)await creation.save({...current.value,preparation:receipt,phase:'prepared'},current.serial);this.#current();return this.inspect(id);
+   }
+   if(!before.value.replacement){const resourceId=crypto.randomUUID(),replacement={intentId:crypto.randomUUID(),resourceId,scopeId:'project:'+resourceId,createdAt:new Date().toISOString()};
+    await document.save({...before.value,replacement},before.serial);before=await document.load();this.#current();}
+   const next=before!.value.replacement!,creation=this.#document(next.intentId),saved=await creation.load();this.#current();
+   if(saved)this.#checkReplacement(intent,saved.value,next);else{
+    await creation.save({format:'genesis-private-project-create-v1',ownerId:intent.ownerId,...next,kind:'project',input:structuredClone(intent.input),topology:null,review:null,
+     started:false,preparation:null,phase:'draft',history:[]},null);this.#current();
+   }
+   const after=await this.inspect(next.intentId);this.#checkReplacement(intent,after,next);return after;
   }finally{held.fill(0);}}).finally(()=>held.fill(0));
  }
  markMigrated(id:string){return this.#run(async()=>{

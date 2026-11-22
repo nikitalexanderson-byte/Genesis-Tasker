@@ -2,6 +2,31 @@
 declare(strict_types=1);
 require_once __DIR__.'/e2ee-project-topology.php';
 
+/** Retained creation requests need shape validation without requiring their
+ * historical anchors or former membership to still be current. */
+function genesisE2eePrivateProjectTopologyShape(mixed $source,string $actor): array
+{
+    $value=genesisE2eeExactFields($source,['spaceId','parentId','categoryId','boardStatusId','kind','layout','spaceAnchor','parentAnchor','categoryAnchor','statusAnchor','reviewedMembers']);
+    genesisE2eeIdentifier($value['spaceId']);foreach(['parentId','categoryId','boardStatusId'] as $key)if($value[$key]!==null)genesisE2eeIdentifier($value[$key]);
+    if(!in_array($value['kind'],['project','task-list'],true)||!in_array($value['layout'],['list','board'],true)
+        ||$value['kind']==='task-list'&&($value['parentId']===null||$value['categoryId']!==null)||$value['boardStatusId']!==null&&$value['parentId']===null)genesisE2eeInvalid();
+    foreach(['spaceAnchor'=>['space',$value['spaceId']],'parentAnchor'=>['project',$value['parentId']],'categoryAnchor'=>['category',$value['categoryId']],'statusAnchor'=>['status',$value['boardStatusId']]] as $key=>[$kind,$id]){
+        if($id===null){if($value[$key]!==null)genesisE2eeInvalid();continue;}
+        $anchor=genesisE2eeExactFields($value[$key],['scopeId','entityId','generation','directoryRevision','checkpointHash','revision','payloadHash']);
+        genesisE2eeIdentifier($anchor['scopeId']);if($anchor['entityId']!==$kind.':'.$id)genesisE2eeInvalid();
+        foreach(['generation','directoryRevision','revision'] as $field)genesisE2eeInteger($anchor[$field],1);
+        genesisE2eeDecode($anchor['checkpointHash'],32);genesisE2eeDecode($anchor['payloadHash'],32);
+    }
+    foreach(['categoryAnchor'=>'spaceAnchor','statusAnchor'=>'parentAnchor'] as $child=>$parent)if($value[$child]!==null)
+        foreach(['scopeId','generation','directoryRevision','checkpointHash'] as $field)if($value[$child][$field]!==$value[$parent][$field])genesisE2eeInvalid();
+    $members=$value['reviewedMembers'];if(!is_array($members)||!array_is_list($members)||count($members)<1||count($members)>200)genesisE2eeInvalid();
+    $previous='';$owners=0;foreach($members as $row){genesisE2eeExactFields($row,['userId','role']);$id=genesisE2eeIdentifier($row['userId']);
+        if(strcmp($id,$previous)<=0||!in_array($row['role'],['owner','manager','member','commenter','viewer'],true)||($row['role']==='owner')!==($id===$actor))genesisE2eeInvalid();
+        $previous=$id;if($row['role']==='owner')$owners++;
+    }
+    if($owners!==1)genesisE2eeInvalid();return $value;
+}
+
 /** Minted only after the signed preparation's current topology/recipient review
  * is verified under its SQLite writer lock. No API boolean can construct it.
  * It authorizes technical fresh rows, never existing ACL rotation or capsules. */

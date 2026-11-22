@@ -31,3 +31,13 @@ export function completePrivateResourceCreation(id:string,result:Record<string,u
  if(state?.id!==id||!state.creationId)throw new Error('E2EE_RESOURCE_CREATION_CHANGED');const creationId=state.creationId;
  creations.get(creationId)?.resolve(structuredClone(result));creations.delete(creationId);state=null;notify();
 }
+/** A verified resolver may return the original project or a durable fresh
+ * attempt. The waiting editor keeps only its result promise; secrets and input
+ * are not carried into the replacement dialog. */
+export function replacePrivateResourceCreation(id:string,target:WebSharedMigrationTarget,creationId:string){
+ if(state?.id!==id||!state.creationId||target.kind!=='project')throw new Error('E2EE_RESOURCE_CREATION_CHANGED');
+ for(const value of [target.scopeId,target.resourceId,creationId])assertTechnical(value);
+ if(creationId!==state.creationId&&creations.has(creationId))throw new Error('E2EE_MIGRATION_BUSY');
+ const waiting=creations.get(state.creationId);creations.delete(state.creationId);if(waiting)creations.set(creationId,waiting);
+ state=Object.freeze({...state,id:crypto.randomUUID(),reason:'resume',target:Object.freeze({...target}),creationId});notify();
+}

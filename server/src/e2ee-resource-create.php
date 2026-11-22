@@ -5,16 +5,18 @@ declare(strict_types=1);
  * User titles, descriptions, covers and invitation content stay in the client's
  * protected intent until normal private repository operations can accept them.
  * This does not activate a scope or bypass migration/recovery/recipient review. */
-function genesisE2eePreparePrivateResource(PDO $db,string $actor,array $scope,array $command): array
+function genesisE2eePrivateResourceRequest(PDO $db,string $actor,array $scope,array $command,mixed $source): array
 {
     if(!$db->inTransaction())throw new LogicException('E2EE_TRANSACTION_CONTEXT_INVALID');
     if($scope['kind']!=='personal'||$scope['owner_id']!==$actor||$scope['resource_id']!==$actor||$scope['state']!=='active')
         throw new GenesisResourceLimitException(403,'E2EE_OWNER_REQUIRED');
-    $payload=genesisE2eeExactFields($command['payload'],array_key_exists('topology',$command['payload'])?['intentId','bootstrap','topology']:['intentId','bootstrap']);$intent=genesisE2eeIdentifier($payload['intentId']);
+    if(!is_array($source))throw new InvalidArgumentException('E2EE_RESOURCE_TOPOLOGY_REQUIRED');
+    $payload=genesisE2eeExactFields($source,array_key_exists('topology',$source)?['intentId','bootstrap','topology']:['intentId','bootstrap']);$intent=genesisE2eeIdentifier($payload['intentId']);
     $packet=genesisE2eeExactFields($payload['bootstrap'],['command','signature']);$bootstrap=genesisE2eeCommand($packet['command']);
     $fields=genesisE2eeExactFields($bootstrap['payload'],['kind','resourceId','keyId','generation','recoveryKit','recoveryCapsule','deviceKeys','deviceCapsule','selfProof']);
     if(!in_array($fields['kind'],['space','project'],true)||($fields['kind']==='project')!==array_key_exists('topology',$payload))
         throw new InvalidArgumentException('E2EE_RESOURCE_TOPOLOGY_REQUIRED');
+    if($fields['kind']==='project'){require_once __DIR__.'/e2ee-project-create.php';genesisE2eePrivateProjectTopologyShape($payload['topology'],$actor);}
     $resource=genesisE2eeIdentifier($fields['resourceId']);
     if(!preg_match('/\A[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\z/D',$resource)
         ||$bootstrap['action']!=='bootstrap'||$bootstrap['ownerId']!==$actor||$bootstrap['deviceId']!==$command['deviceId']
@@ -28,6 +30,12 @@ function genesisE2eePreparePrivateResource(PDO $db,string $actor,array $scope,ar
         throw new DomainException('E2EE_AUTHORITY_CHANGED');
     genesisE2eeVerifyCommand($packet,$scope['recovery_signing_key']);
     $semanticHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical($payload),true)),'+/','-_'),'=');
+    return compact('payload','intent','packet','bootstrap','fields','resource','semanticHash');
+}
+function genesisE2eePreparePrivateResource(PDO $db,string $actor,array $scope,array $command): array
+{
+    $request=genesisE2eePrivateResourceRequest($db,$actor,$scope,$command,$command['payload']);
+    ['payload'=>$payload,'intent'=>$intent,'packet'=>$packet,'bootstrap'=>$bootstrap,'fields'=>$fields,'resource'=>$resource,'semanticHash'=>$semanticHash]=$request;
     $previous=genesisE2eeRow($db,'SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action=? AND intent_id=?',
         [$scope['scope_id'],$actor,'resource-create-prepare',$intent]);
     if($previous){
@@ -70,5 +78,40 @@ function genesisE2eePreparePrivateResource(PDO $db,string $actor,array $scope,ar
         'statuses'=>$statuses,'state'=>'preparing','bootstrapHash'=>genesisE2eeCommandHash($bootstrap),'directoryRevision'=>1,'checkpointHash'=>$receipt['checkpointHash'],
         'createdAt'=>$created['updatedAt']];
     $db->prepare('INSERT INTO e2ee_service_intents VALUES(?,?,?,?,?,?)')->execute([$scope['scope_id'],$actor,'resource-create-prepare',$intent,$semanticHash,genesisE2eeJson($result)]);
+    return $result;
+}
+
+/** One writer lock decides whether the original semantic request committed.
+ * An absent request gets a permanent receipt, before any replacement can exist.
+ * A late renewed command with that ID/payload returns the same cancellation.
+ * Existing projects, scopes, migration originals and quotas are never deleted. */
+function genesisE2eeResolvePrivateProjectCreation(PDO $db,string $actor,array $scope,array $command): array
+{
+    $payload=genesisE2eeExactFields($command['payload'],['intentId','original']);$resolver=genesisE2eeIdentifier($payload['intentId']);
+    $request=genesisE2eePrivateResourceRequest($db,$actor,$scope,$command,$payload['original']);
+    ['intent'=>$intent,'bootstrap'=>$bootstrap,'fields'=>$fields,'resource'=>$resource,'semanticHash'=>$requestHash]=$request;
+    if($fields['kind']!=='project'||$resolver!=='resource-create-resolve:'.$intent)throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');
+    $topologyHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical($request['payload']['topology']),true)),'+/','-_'),'=');
+    $semanticHash=rtrim(strtr(base64_encode(hash('sha256',genesisE2eeCanonical($payload),true)),'+/','-_'),'=');
+    $prior=genesisE2eeRow($db,'SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action=? AND intent_id=?',
+        [$scope['scope_id'],$actor,'resource-create-resolve',$resolver]);
+    if($prior){if(!hash_equals($prior['payload_hash'],$semanticHash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');return json_decode($prior['result_json'],true,512,JSON_THROW_ON_ERROR);}
+    $old=genesisE2eeRow($db,'SELECT payload_hash,result_json FROM e2ee_service_intents WHERE scope_id=? AND actor_id=? AND action=? AND intent_id=?',
+        [$scope['scope_id'],$actor,'resource-create-prepare',$intent]);
+    $preparation=null;
+    if($old){
+        if(!hash_equals($old['payload_hash'],$requestHash))throw new DomainException('E2EE_IDEMPOTENCY_CONFLICT');
+        $saved=json_decode($old['result_json'],true,512,JSON_THROW_ON_ERROR);
+        if(($saved['cancelled']??false)!==true)$preparation=$saved;
+    }else{
+        if(genesisE2eeRow($db,'SELECT 1 FROM shared_spaces WHERE id=?',[$resource])||genesisE2eeRow($db,'SELECT 1 FROM shared_projects WHERE id=?',[$resource])
+            ||genesisE2eeRow($db,'SELECT 1 FROM e2ee_scopes WHERE scope_id=? OR resource_id=?',[$bootstrap['scopeId'],$resource]))throw new DomainException('E2EE_SCOPE_ALREADY_INITIALIZED');
+        $tombstone=['intentId'=>$intent,'kind'=>'project','scopeId'=>$bootstrap['scopeId'],'resourceId'=>$resource,'cancelled'=>true,
+            'bootstrapHash'=>genesisE2eeCommandHash($bootstrap),'topologyHash'=>$topologyHash];
+        $db->prepare('INSERT INTO e2ee_service_intents VALUES(?,?,?,?,?,?)')->execute([$scope['scope_id'],$actor,'resource-create-prepare',$intent,$requestHash,genesisE2eeJson($tombstone)]);
+    }
+    $result=['intentId'=>$resolver,'creationIntentId'=>$intent,'kind'=>'project','scopeId'=>$bootstrap['scopeId'],'resourceId'=>$resource,
+        'requestHash'=>$requestHash,'bootstrapHash'=>genesisE2eeCommandHash($bootstrap),'topologyHash'=>$topologyHash,'status'=>$preparation===null?'cancelled':'prepared','preparation'=>$preparation];
+    $db->prepare('INSERT INTO e2ee_service_intents VALUES(?,?,?,?,?,?)')->execute([$scope['scope_id'],$actor,'resource-create-resolve',$resolver,$semanticHash,genesisE2eeJson($result)]);
     return $result;
 }

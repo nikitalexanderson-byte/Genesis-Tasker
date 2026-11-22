@@ -93,11 +93,14 @@ internal object E2eeRetainedProductCustody {
                         val permissions=row.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}
                 }
                 "shared-invitation-revoke"->{E2eeKeys.exact(payload,setOf("intentId","id"));E2eeKeys.technical(payload.getString("id"))}
-                "resource-create-prepare"->{
-                    E2eeKeys.exact(payload,if(payload.has("topology"))setOf("intentId","bootstrap","topology")else setOf("intentId","bootstrap"));val initial=payload.getJSONObject("bootstrap");val child=initial.getJSONObject("command")
+                "resource-create-prepare","resource-create-resolve"->{
+                    val original=if(action=="resource-create-resolve"){
+                        E2eeKeys.exact(payload,setOf("intentId","original"));payload.getJSONObject("original").also{E2eeKeys.exact(it,setOf("intentId","bootstrap","topology"));E2eeKeys.technical(it.getString("intentId"));if(payload.get("intentId")!="resource-create-resolve:"+it.getString("intentId"))invalid()}
+                    }else payload
+                    E2eeKeys.exact(original,if(original.has("topology"))setOf("intentId","bootstrap","topology")else setOf("intentId","bootstrap"));val initial=original.getJSONObject("bootstrap");val child=initial.getJSONObject("command")
                     val kind=child.getJSONObject("payload").getString("kind")
-                    if(kind !in setOf("space","project")||(kind=="project")!=payload.has("topology"))invalid()
-                    if(kind=="project")E2eeProjectCreationContract.topology(payload.getJSONObject("topology"),actor.ownerId)
+                    if(kind !in setOf("space","project")||(kind=="project")!=original.has("topology")||action=="resource-create-resolve"&&kind!="project")invalid()
+                    if(kind=="project")E2eeProjectCreationContract.topology(original.getJSONObject("topology"),actor.ownerId)
                     if(child.get("action")!="bootstrap"||child.get("ownerId")!=actor.ownerId||child.get("deviceId")!=actor.deviceId||number(child,"expectedRevision")!=0L||child.get("checkpointHash")!="genesis"||number(child,"securityEpoch",1)!=1L)invalid()
                     val fresh=E2eeDirectory.verify(actor.ownerId,child.getString("scopeId"),frame.recoveryKit.getJSONObject("authority"),JSONArray().put(initial));current();val own=fresh.devices[actor.deviceId]?:invalid();val keys=E2eeKeys.publicKeys(device.keys())
                     if(fresh.kind!=kind||fresh.generation!=1L||own.signingKey!=keys.get("signingKey")||own.receivingKey!=keys.get("receivingKey"))invalid()
