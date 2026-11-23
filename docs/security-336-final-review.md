@@ -55,3 +55,16 @@ EN light360/dark1440, RU dark390, DE light360 и EL/PL/TR/JA light+dark360;
 но не полный ручной визуальный просмотр. Это только locked-vault states,
 не acceptance остальных security/recovery/shared экранов или font-scale1.3.
 Окончательный вывод этого review остаётся открытым до общей приёмки/исправлений.
+
+## Дополнительное доказательство системного восстановления
+
+`output/qa/security336-system-restore-native31-02/results.json`: PASS_LOCAL_SCOPE.
+Actual age envelope protects config/SQLite/metadata from controller30 with three
+ACTIVE scopes and25 E2EE tables. Wrong identity and tampered ciphertext refused;
+three recovered files byte-exact, SQLite integrity/schema/counts unchanged.
+Source controller hash E7B28B6E… and consumer31 hash663A4E01… are separately
+recorded. Consumer uses actual system PIN and normal workspace repository to read
+the retained edited project; background relocks. Synthetic login delivery is
+supplied separately and is not claimed as restored provider credentials. External
+fixture key destroyed; successful restore plaintext/runtime cleaned. This closes
+this bounded restore drill, not signed upgrade or the final entire crypto review.

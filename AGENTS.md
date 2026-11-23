@@ -1,5 +1,22 @@
 # Genesis Tasker: действующие правила
 
+- Новейшее продолжение: root67684489 включает guarded Retry-After a365c880/
+  09291e57 и optional personal projection c9cee41b. Build31 SUCCESS, JVM1452:
+  1444PASS/0failures/8 old opt-in skips. Build32 assemble-only SUCCESS; её
+  скопированные XML НЕ новый unit run. Full lint30 SUCCESS0errors/224warnings.
+  Controller30 PASS, UI31 PIN/fingerprint/cancel3PASS; background отдельно1PASS.
+  Restore31-02 PASS: age snapshot3ACTIVE scopes/25tables, wrong/tamper deny,
+  byte-exact restore и actual cold-PIN normal product read; runtime/plaintext
+  этого успешного restore очищены. Failed setup restore31-01 ещё очистить.
+  UI32 interrupted after observed Android background-launch denial (Home stayed
+  foreground). Instrumentation now uses actual system launcher and awaits resumed
+  MainActivity. Build33/session83796 assembling; root app/android/contracts/public
+  НЕ менять до identity/runtime33. No new product bypass or credential refresh.
+  Immutable web33 includes retry binding and72/72 scoped tests, typecheck/lint/
+  web build PASS. Retained58 reader still unresolved; diagnostics waits actual
+  HTTP429 Retry-After238s (no rate reset/limit increase). Runtime log web33-reader58-04.
+  CI79dc45273761078 SUCCESS both jobs. Production149 and activation gates unchanged.
+
 - Актуальнее всех freezes ниже: native30 SUCCESS4m43s на79dc383b,
   JVM1448:1440PASS/0failures/8 opt-in skips; source hash E7B28B6E…,
   APK EE918FA4…/test0B994D62…. Actual API26/API34 source30 по7/7 PASS.

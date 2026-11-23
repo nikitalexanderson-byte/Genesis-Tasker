@@ -1,5 +1,54 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Новейшее продолжение: восстановление PASS, reader и launcher acceptance
+
+Root67684489. Linked66eef7a4; root принял retry d4c22d1f/66eef7a4 как
+a365c880/09291e57. Один exact signed read повторяется после bounded actual
+Retry-After; account replacement, scope close и новая verified epoch прекращают
+повтор до RPC. Scoped72/72 PASS, tsc/scoped lint/build:web PASS. Immutable
+web-private-33/public_html готов, bundle hash db9db1e9d5d225795e46c1277034624df04c0dc7da22bd498871886a3b257943.
+
+Build31 c9cee41b SUCCESS: source663A4E012CC1EFCB94638EE1D790C3D8CAD33F70E97EB22731A64CA00CC8907A,
+JVM1452/1444PASS/0failures/8 old opt-in skips. UI31 on preserved controller30:
+cancel/PIN/fingerprint PASS, background case failed waiting for initial lock;
+same exact-source case passed alone. Neither aggregate is represented as4/4
+suite PASS. System restore31-02 actually age-encrypted3ACTIVE scopes/25E2EE
+tables, refused wrong key/tamper, restored3 byte-exact files, then actual native
+cold-PIN + normal workspace reader PASS. Evidence:
+output/qa/security336-system-restore-native31-02/results.json. That runtime and
+plaintext snapshot/restored dirs cleaned. Failed setup restore31-01 remains
+owned synthetic and must also be cleaned before release (no real-user input).
+
+Build32 b0ee358c assemble-only SUCCESS; copied XML32 are reused31 results,
+NOT a new unit run. Its UI launch after Home was denied by Android background
+policy: observed top activity remained NexusLauncher. Stopped only owned QA
+package, retained data, runner cleaned services/reverse. Fix67684489 uses actual
+system launcher and waits RESUMED MainActivity. Build33/session83796 now runs
+assembleDebug+assembleDebugAndroidTest, no unit suite. app/android/contracts/public
+inputs frozen until identity/runtime33. Focus runner33 still to create from
+focus-native32-ui.ps1 using fresh ui33 output. Announcement capture test was
+reviewed/copied from linked worktree and committed with b0ee358c; opt-in RU/EN
+captures pending and do not count as security acceptance.
+
+Full lint30 SUCCESS0errors/224warnings/9hints; CI79dc45273761078 SUCCESS both
+jobs. Web58 ultimately completed both migrations but failed normal shared task
+read. Owned retained runtime/client-state reused, NEVER inspect private.json.
+Resume33 first failed harness30s startup wait during actual Retry-After43s;
+second passed startup but timed out120s awaiting task. Third diagnostic preflight
+hit actual429 status; fourth/session72659 now waits actual Retry-After238s, then
+captures only technical caught exception codes/frames and read action counts.
+Logs runtime/web33-reader58-04.log and per-resume results.json. Do not reset rate
+tables or widen limits. Failure screenshot/tree from second attempt:
+output/playwright/security336-private-content-58-1124/resume-1795474265608/.
+Legacy shared route remains blocked; no files acceptance claimed.
+
+Remaining: finish this scoped read defect, native four-case acceptance and
+announcement captures, exact coverage/48-scenario reconciliation, final source/
+crypto review, signed149→150 and separate authorized web/API/APK publication.
+Existing149 upgrade baseline seeded8encrypted rows+1draft on owned API34 main
+package; retained probe is runtime/upgrade-149150/GenesisUpgradeProbe.java.
+Production149/floors0/cutover/pilot off/deployAndroid=false unchanged.
+
 ## Самое новое: native30 PASS и web58 с сохраняемым стендом
 
 Root latest source79dc383b, затем2062d986 cherry-picked (root git log уточняет
