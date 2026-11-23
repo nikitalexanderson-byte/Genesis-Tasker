@@ -163,7 +163,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
                   className={language === code ? "active" : ""} onClick={() => onLanguageChange(code)}
                   aria-label={LANGUAGE_LABELS[code].name} title={LANGUAGE_LABELS[code].name} data-no-translate>
                   <span className="language-flag" aria-hidden="true">
-                    {code==='ru'&&edition==='international'?<span>RU</span>:<img src={`${APP_BASE}/language-flags/${FLAG_COUNTRIES[code]}.svg`} alt="" />}
+                    <img src={`${APP_BASE}/language-flags/${FLAG_COUNTRIES[code]}.svg`} alt="" />
                   </span>
                 </button>
               ))}
