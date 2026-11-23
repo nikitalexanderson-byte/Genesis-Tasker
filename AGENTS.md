@@ -1,5 +1,15 @@
 # Genesis Tasker: действующие правила
 
+- Текущий срез23 ноября22:55: controller26 прошёл personal migration, private
+  identity, два real cold-PIN входа и edit/background reread; shared readback
+  остановился HTTP AuthFailure, status старым runner не сохранён. Build26 JVM
+  1437:1429 PASS/0failures/8 opt-in skips; actual cache cases26/34 по3/3 PASS.
+  Перенесены explicit archive inventory web/native, inline import и independent
+  public-profile namespace. Новые active-fence cache и bounded Retry-After read
+  corrections требуют build27 и runtime; это не готовая приёмка3.3.6. После запуска
+  build27 root app/android/contracts/public заморожены до её identity/runtime.
+  Старые freezes ниже исторические. Production149 и rollout gates прежние.
+
 - Последний срез23 ноября21:50: full lint24 SUCCESS0errors/224warnings/9hints,
   actual archives+relational source regression24 API26/API34 по4/4 PASS.
   Controller24 дошёл до personal ACTIVE за7m33s; затем test-only predicate ждал

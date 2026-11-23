@@ -43,14 +43,27 @@ class CachedAccountEntryDeviceTest {
         val owner=owner();val scope=CloudAccountSnapshot.scopeFor(owner);val cache=CachedAccountEntry(app);val body=profile(owner)
         val settings=requireNotNull(AccountSettings.fromResponse(body));cache.save(requireNotNull(AuthProtocol.identity(body)),settings)
         val original=requireNotNull(app.database.dao().document(scope,"account-entry"))
+        // Use the real active SQL fence, including its descendant deny triggers.
+        // Public identity metadata must remain independent without an exemption.
+        app.database.openHelper.writableDatabase.execSQL(
+            "INSERT INTO e2ee_legacy_fences(scope,ownerId,remoteScopeId,phase,token) VALUES(?,?,?,?,?)",
+            arrayOf(scope,owner,"cache-remote-${UUID.randomUUID()}","active",UUID.randomUUID().toString()))
         NativePrivateProducts.protect(app,owner);body.getJSONObject("user").put("privatePreferencesMode","e2ee")
         cache.save(requireNotNull(AuthProtocol.identity(body)),settings)
-        val record=requireNotNull(app.database.dao().document("$scope:public-profile-v1","account-entry"))
+        val record=requireNotNull(app.database.dao().document("public-profile-v1:$scope","account-entry"))
         val publicUser=JSONObject(LocalCipher().decrypt(record.encrypted,"${record.scope}/account-entry")).getJSONObject("user")
         assertEquals("e2ee",publicUser.getString("privatePreferencesMode"))
         for(name in listOf("advicePreferences","uiVisibility","syncRouting"))assertFalse(name,publicUser.has(name))
         assertTrue(requireNotNull(CachedAccountEntry(app).read(scope)).identity.privateVault)
         assertFalse(NativePrivateProducts.isOpen(scope));assertEquals(original,app.database.dao().document(scope,"account-entry"))
+        for(blockedScope in listOf(scope,"$scope:public-profile-v1")) {
+            val failure=runCatching {app.database.dao().putDocument(original.copy(scope=blockedScope,revision=2))}.exceptionOrNull()
+            assertNotNull("The private namespace remains fenced",failure)
+            assertTrue(generateSequence(failure){it.cause}.any{it.message?.contains("E2EE_LOCAL_LEGACY_WRITE_FORBIDDEN")==true})
+        }
+        cache.clear(scope)
+        assertNull(app.database.dao().document("public-profile-v1:$scope","account-entry"))
+        assertEquals(original,app.database.dao().document(scope,"account-entry"))
     }
 
     @Test fun privateMarkerCannotRebindAnotherOwnersEncryptedCache()=runBlocking(Dispatchers.IO) {

@@ -1,5 +1,30 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября,22:55 Москва: portable inventory и private profile corrections
+
+Build26 SUCCESS:1437 JVM,1429 PASS/0 failures/8 existing opt-in skips;
+actual cache cases API26/API34 по3/3 PASS. Controller26 прошёл personal ACTIVE,
+actual private identity, два production cold-PIN входа и edit/background reread.
+На shared readback остановился AuthFailure HTTP; точный status старый report
+не сохраняет.644 HTTP accepts совместимы с budget refusal, но429 ещё не доказан.
+Добавлена безопасная kind/status/Retry-After диагностика. Signed unobserved
+readback теперь ограниченно ждёт реальный Retry-After, проверяя lock/owner каждую
+секунду; observed legacy source и mutations этим retry не охватываются.
+
+Подготовленные linked fixes перенесены в root: f5c075f2/8b54954a/c73525f4/27ab540c.
+Это explicit portable-content inventory web/native, inline import/download
+actions и independent public-profile namespace вне private SQLite descendants.
+Actual cache regression теперь устанавливает active SQL fence и проверяет deny
+старой/child записи; main deny triggers не ослаблены. Все новые native changes
+требуют build27/actual repeat. Root209b privatePreferencesMode fix сохранён.
+
+Web47:14 checks PASS, включая настоящий encrypted device backup и независимый
+Node decrypt (6sections/44entries/472816bytes), затем import control hidden.
+Его UI correction уже в root; wrong/correct import и shared files ещё не приняты.
+Runner48 объединяет backup + shared +1.3MB attachment/photo, actual cold reload,
+rate retry и masks полей ключей на failure/backup screenshots. Далее immutable29.
+Production149, coverage9/20, cutover/floors off и deployAndroid=false сохраняются.
+
 ## 23 ноября, после22:06 Москва: переход private identity и portable backup
 
 HEADca02bd9e содержит test-only ready correction; build25 SUCCESS1m32s,

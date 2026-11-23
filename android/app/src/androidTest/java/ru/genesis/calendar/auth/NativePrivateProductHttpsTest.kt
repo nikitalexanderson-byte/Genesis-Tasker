@@ -211,7 +211,9 @@ class NativePrivateProductHttpsTest {
                 val sharedOwnerGuard=auth.privateUiOwnerGuard(owner)
                 val bound={check(NativeMigrationUiState.state.value?.id==transfer.id){"E2EE_SOURCE_CAPTURE_CHANGED"};sharedOwnerGuard()}
                 val shared=auth.prepareSharedPrivateMigration(target,material.secret,material.kit,bound)
-                try{withTimeout(1200000){shared.run(material.secret,material.kit,::progress)}}finally{auth.closePrivateMigration(shared)}
+                try{withTimeout(1200000){shared.run(material.secret,material.kit,::progress)}}
+                catch(error:AuthFailure){throw AssertionError("Shared controller HTTP refusal: kind=${error.kind}, status=${error.httpStatus}, retryAfterSeconds=${error.retryAfterSeconds}",error)}
+                finally{auth.closePrivateMigration(shared)}
                 auth.finishSharedPrivateMigration(target);NativeMigrationUiState.close(transfer.id)
             }
             val statusResponse=auth.privateMigrationStatus().getJSONArray("scopes")

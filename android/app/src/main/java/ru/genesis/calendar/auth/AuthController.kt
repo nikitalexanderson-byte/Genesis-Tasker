@@ -616,7 +616,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
         suspend fun request(path:String,body:JSONObject,observation:E2eeHttpObservation?):JSONObject {
             current()
-            return withContext(Dispatchers.IO) { current(); client.e2ee(generation,path,body,observation).also { current() } }.also { current() }
+            val send:suspend()->JSONObject={withContext(Dispatchers.IO) { current(); client.e2ee(generation,path,body,observation).also { current() } }.also { current() }}
+            return if(path=="/read"&&observation==null)e2eeReadWithRateRetry(current={current();device.requireOpen()},request=send)else send()
         }
         if(planning==null)return ru.genesis.calendar.security.E2eeSignedMigrationTransport(device,directory,sources.allowedContentDomains){path,body->request(path,body,null)}
         check(device is ru.genesis.calendar.security.UnlockedE2eeDevice){"E2EE_DEVICE_VAULT_REQUIRED"}

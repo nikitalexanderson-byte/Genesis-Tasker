@@ -13,13 +13,15 @@ assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
 const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],networkFailures:[],networkRetries:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
+report.keyBundleRefusals=[];
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit,backupKey;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
-const sharedJourney=['shared','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedJourney=['shared','shared-locales','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedFilesJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='content';
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
-const backupJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='backup';
+const backupJourney=['backup','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
 const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
@@ -118,6 +120,16 @@ try{
     await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+artifact,lineNumber,columnNumber,condition});
    }
   }
+  // Observe only source coordinates at the strict validator, without pausing
+  // live IDB transactions or inspecting any key, argument or decrypted value.
+  for(const artifact of readdirSync(assets).filter(name=>/^[\w-]+\.js$/.test(name))){
+   const source=readFileSync(path.join(assets,artifact),'utf8');
+   for(const match of source.matchAll(/throw (?:new )?Error\([`'"]E2EE_INVALID_KEY_BUNDLE[`'"]\)/g)){
+    const at=match.index,before=source.slice(0,at),lineNumber=before.split('\n').length-1,columnNumber=at-before.lastIndexOf('\n')-1;
+    const condition="(()=>{const frames=(new globalThis.Error()).stack.split(String.fromCharCode(10)).slice(1,10).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});console.info('GENESIS_QA_KEY_BUNDLE_REFUSAL '+JSON.stringify(frames));return false;})()";
+    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+artifact,lineNumber,columnNumber,condition});
+   }
+  }
   report.diagnosticLogpoint={artifacts:candidates.map(row=>row.file),pauses:false};
  }
  debug.on('Debugger.paused',event=>{
@@ -127,6 +139,7 @@ try{
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
+ page.on('console',message=>{const prefix='GENESIS_QA_KEY_BUNDLE_REFUSAL ';if(message.text().startsWith(prefix)){report.keyBundleRefusals.push(JSON.parse(message.text().slice(prefix.length)));console.log(message.text());save();}});
  page.on('requestfailed',request=>{const url=new URL(request.url());if(url.origin!==baseURL||!/^\/api\/e2ee\/v1\/[a-z-]+$/.test(url.pathname))return;
   const reason=request.failure()?.errorText??'';const code=/^net::ERR_[A-Z_]+$/.test(reason)?reason:'UNKNOWN_NETWORK_FAILURE';
   report.networkFailures.push({path:url.pathname,code});save();
@@ -173,8 +186,17 @@ try{
   const space=(await post('shared/spaces',{title:'PRIVATE SHARED SPACE '+canary})).space;
   const project=(await post(`shared/spaces/${space.id}/projects`,{title:'PRIVATE SHARED PROJECT '+canary,layout:'board'})).project;
   const body=await(await context.request.get(`/api/shared/projects/${project.id}`)).json(),status=body.statuses.find(row=>!row.isDone);assert(status);
-  const task=(await post(`shared/projects/${project.id}/tasks`,{title:'PRIVATE SHARED TASK '+canary,description:'Retained shared task body '+canary,statusId:status.id,requestId:crypto.randomUUID()})).task;
-  sharedFixture={space,project,task};
+  const file=sharedFilesJourney?Buffer.alloc(1300*1024,'SYNTHETIC PRIVATE FILE\n'):null;
+  if(file)file.write(canary+'\n');
+  const image=sharedFilesJourney?Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6lWQAAAAASUVORK5CYII=','base64'):null;
+  const task=(await post(`shared/projects/${project.id}/tasks`,{title:'PRIVATE SHARED TASK '+canary,description:'Retained shared task body '+canary,statusId:status.id,requestId:crypto.randomUUID(),
+   ...file?{attachments:[{name:'retained-private-file.txt',data:'data:text/plain;base64,'+file.toString('base64')}],imageData:'data:image/png;base64,'+image.toString('base64')}:{}})).task;
+  sharedFixture={space,project,task,file,image};
+  if(file){
+   assert.equal(task.attachments.length,1);const source=new URL(task.attachments[0].url,baseURL);assert.equal(source.origin,baseURL);
+   const response=await context.request.get(source.href);assert(response.ok());assert.deepEqual(await response.body(),file);
+   report.sharedFile={bytes:file.length,legacyReadback:true};
+  }
  });
  await check('mounted migration creates and requires both recovery downloads',async()=>{
   await page.evaluate(marker=>{
@@ -275,7 +297,7 @@ try{
    await other.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
    await other.screenshot({path:`${output}/clean-recovery.png`,fullPage:true,animations:'disabled'});
   }catch(error){
-   if(other){await other.screenshot({path:`${output}/clean-recovery-failure.png`,fullPage:true,animations:'disabled'}).catch(()=>{});writeFileSync(`${output}/clean-recovery-failure.txt`,redactPrivateText(await other.locator('body').ariaSnapshot().catch(()=>'')));}
+   if(other){await other.screenshot({path:`${output}/clean-recovery-failure.png`,fullPage:true,animations:'disabled',mask:[other.locator('input[type=password],textarea')]}).catch(()=>{});writeFileSync(`${output}/clean-recovery-failure.txt`,redactPrivateText(await other.locator('body').ariaSnapshot().catch(()=>'')));}
    throw error;
   }finally{await clean.close();}
  });
@@ -289,7 +311,8 @@ try{
    await openBackups();const panel=page.locator('section.backup-panel').filter({has:page.getByRole('heading',{name:copy.deviceSnapshot,exact:true})});
    await panel.getByRole('button',{name:'Создать ключ',exact:true}).click();backupKey=await panel.locator('textarea').inputValue();assert(backupKey.length>=43&&backupKey.length<=64);
    await panel.locator('input[type=checkbox]').nth(0).check();await panel.locator('input[type=checkbox]').nth(1).check();
-   const pending=page.waitForEvent('download');await panel.getByRole('button',{name:copy.deviceSnapshot,exact:true}).click();archive=(await downloadBytes(await pending)).toString('utf8');
+   const pending=page.waitForEvent('download',{timeout:120000}),refused=panel.getByRole('alert').waitFor({timeout:120000}).then(async()=>{const code=await panel.getByRole('alert').innerText();throw new Error(/^E2EE_[A-Z_]+$/.test(code)?code:'BACKUP_UI_REFUSAL');});
+   await panel.getByRole('button',{name:copy.deviceSnapshot,exact:true}).click();archive=(await downloadBytes(await Promise.race([pending,refused]))).toString('utf8');
    assert.equal(archive.includes(canary),false);assert.equal(archive.includes(secret),false);assert.equal(archive.includes(backupKey),false);
    const payload=await openBackup(archive,backupKey),owner=(await(await context.request.get('/api/session')).json()).user.uid;
    assert.equal(payload.ownerId,owner);assert.equal(payload.source,'device_snapshot');assert.equal(payload.billingEvidence,null);
@@ -313,7 +336,7 @@ try{
    });
    await openBackups();const panel=importPanel();await panel.getByRole('button',{name:copy.history,exact:true}).click();await panel.getByRole('button',{name:report.contentBackup.backupId,exact:true}).click();
    await panel.getByRole('combobox',{name:copy.history,exact:true}).selectOption(`${selection.section}:${selection.index}:current`);assert((await panel.locator('pre').innerText()).includes(canary));
-   await page.screenshot({path:`${output}/retained-private-backup.png`,fullPage:true,animations:'disabled'});
+   await page.screenshot({path:`${output}/retained-private-backup.png`,fullPage:true,animations:'disabled',mask:[page.locator('input[type=password],textarea')]});
   });
  }
  if(localeJourney)await check('real locked vault renders all fourteen languages in both themes at all required widths',async()=>{
@@ -417,12 +440,27 @@ try{
    });
    await page.screenshot({path:`${output}/private-shared-task-readback.png`,fullPage:true,animations:'disabled'});
   });
+  if(sharedFilesJourney)await check('migrated multi-chunk attachment and photo open through the normal authorized task interface',async()=>{
+   await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).click();
+   const dialog=page.getByRole('dialog',{name:sharedFixture.task.title,exact:true});await dialog.waitFor();
+   const image=dialog.getByRole('img',{name:'Фото, прикреплённое к задаче',exact:true});await image.waitFor();
+   await page.waitForFunction(()=>{const image=document.querySelector('.shared-task-modal[open] .shared-task-image img');return image?.complete&&image.naturalWidth>0;},null,{timeout:60000});
+   assert((await image.getAttribute('src')).startsWith('blob:'),'The task displays a locally decrypted image');
+   assert.deepEqual(Buffer.from(await image.evaluate(async element=>Array.from(new Uint8Array(await(await fetch(element.src)).arrayBuffer())))),sharedFixture.image);
+   const pending=page.waitForEvent('download',{timeout:60000});await dialog.locator('.shared-task-attachments button').filter({hasText:'retained-private-file.txt'}).click();
+   assert.deepEqual(await downloadBytes(await pending),sharedFixture.file);
+   const source=new URL(sharedFixture.task.attachments[0].url,baseURL);assert.equal(source.origin,baseURL);
+   const legacy=await context.request.get(source.href);assert.equal(legacy.status(),409);assert.equal((await legacy.json()).error,'E2EE_UPGRADE_REQUIRED');
+   const outsider=await browser.newContext({baseURL});try{const denied=await outsider.request.get(source.href);assert([401,403].includes(denied.status()));assert.equal((await denied.text()).includes(canary),false);}finally{await outsider.close();}
+   report.sharedFile={...report.sharedFile,encryptedReadback:true,legacyDownloadDenied:true,anonymousDownloadDenied:true};
+   await dialog.screenshot({path:`${output}/private-task-files.png`,animations:'disabled'});
+  });
  }
  }
  await check('no unhandled product errors',async()=>assert.deepEqual(report.pageErrors,[]));
  report.status='PASS';
 }catch(error){
  report.status='FAIL';report.error=redactPrivateText(error.message);process.exitCode=1;
- if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,redactPrivateText(await page.locator('body').ariaSnapshot().catch(()=>'')));}
+ if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true,mask:[page.locator('input[type=password],textarea')]}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,redactPrivateText(await page.locator('body').ariaSnapshot().catch(()=>'')));}
  console.error(redactPrivateText(error.message));
 }finally{secret=undefined;kit=undefined;backupKey=undefined;save();await context.close();await browser.close();}

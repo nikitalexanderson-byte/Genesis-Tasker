@@ -13,7 +13,7 @@ import java.util.TimeZone
 import java.util.UUID
 import javax.net.ssl.HttpsURLConnection
 
-internal open class AuthFailure(val kind: Kind, val httpStatus: Int? = null) : Exception("Authentication request failed") {
+internal open class AuthFailure(val kind: Kind, val httpStatus: Int? = null, val retryAfterSeconds: Int? = null) : Exception("Authentication request failed") {
     enum class Kind { NOT_DEPLOYED, UNAUTHORIZED, RATE_LIMIT, NETWORK, PROTOCOL, STORAGE, CONFLICT, SERVER }
 }
 internal class AuthApiError(val code: String) : Exception(code)
@@ -1003,7 +1003,8 @@ internal class AuthSessionClient(context: Context,
                     409 -> AuthFailure.Kind.CONFLICT
                     in 300..399 -> AuthFailure.Kind.PROTOCOL
                     else -> AuthFailure.Kind.SERVER
-                }, httpStatus = status)
+                }, httpStatus = status, retryAfterSeconds = if(status==429)
+                    connection.getHeaderField("Retry-After")?.toIntOrNull()?.takeIf{it in 1..600} else null)
             }
             if (!E2eeTransportProtocol.allowedRoute(method, path) && !connection.contentType.orEmpty().substringBefore(';').trim().equals("application/json", true))
                 throw AuthFailure(AuthFailure.Kind.PROTOCOL)
