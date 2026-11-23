@@ -136,6 +136,32 @@ class E2eeScopeClientTest {
         fun clearFloors() { storage.rows = storage.rows.filterValues { !it.envelope.context.toJson().getString("objectId").startsWith("floor:") }.toMutableMap() }
     }
     private fun reject(message: String, action: () -> Unit) { try { action() } catch (error: Exception) { assertEquals(message, error.message); return }; fail("Forbidden operation accepted") }
+    @Test fun retainedSharedTrustUploadIsReadOnlyAndUsesTheNormalDomainRegistry() {
+        val f=Fixture();val client=f.client();client.refresh()
+        val bytes=JSONObject().put("protocol",1).put("ownerId",f.owner).put("document",JSONObject().put("scopes",JSONArray())).put("base",JSONObject().put("scopes",JSONArray())).toString().toByteArray()
+        client.prepare("key-check","personal-shared-trust-live-v1",bytes,0)
+        val file=generateSequence(java.io.File(requireNotNull(System.getProperty("user.dir")))){it.parentFile}.map{java.io.File(it,"contracts/e2ee/private-paths-v1.json")}.first{it.isFile}
+        val inventory=E2eePrivatePaths(JSONObject(file.readText()));val claims=mutableMapOf<Pair<String,String>,String>()
+        val readOnly=object:E2eeDeviceReadView {
+            override val ownerId=f.owner
+            override val deviceId=f.device.deviceId
+            override val authorityPin=f.recovery.kit.getJSONObject("authority")
+            override val vault=f.device.vault
+            override fun requireOpen()=f.device.requireOpen()
+            override fun readKeys()=f.device.keys().let{E2eeKeys.ReadKeys(E2eeKeys.publicKeys(it),it.receiving,it.signing.public)}
+            override fun readSavedDirectory(scopeId:String,onVerified:((E2eeDirectory.Verified)->Unit)?)=f.device.savedDirectory(scopeId,onVerified)
+        }
+        f.storage.beforeCommit={error("READ_ONLY_CUSTODY_MUST_NOT_WRITE")}
+        try{
+            E2eeRetainedProductCustody.inspect(E2eeRetainedProductCustody.Options(readOnly,f.device.vault,inventory,
+                f.device.vault.listMigrationPlanOutputs().first,emptyList(),emptyList(),emptyList(),f.scope,f.device::requireOpen,
+                {domain,id->claims.containsKey(domain to id)}, {domain,id,scope,role->assertEquals(f.scope,scope);claims[domain to id]=role},
+                {scope,select->assertEquals(f.scope,scope);assertTrue(select(f.verified));f.verified}))
+            assertTrue(claims.values.contains("product-job"));assertTrue(claims.values.contains("product-cipher"));assertEquals(0,f.writes)
+            assertFalse(inventory.allowsProductDomain("project","diary"));assertFalse(inventory.allowsProductDomain("space","workspace"))
+        }finally{bytes.fill(0);f.device.vault.lock()}
+    }
+
     @Test fun parameterlessReadsAndBootstrapCursorsUseUnambiguousSignedPayloads() {
         val f=Fixture();val actions=setOf("stoicheion-state","product-context","resource-transition-candidates","shared-read-history","advice-policy")
         val seen=mutableListOf<String>();val cursors=mutableListOf<Any>()

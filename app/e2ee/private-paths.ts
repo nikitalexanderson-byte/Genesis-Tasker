@@ -19,3 +19,11 @@ export function requiredPrivatePaths(kind:PrivateScopeKind):readonly PrivatePath
    ||!registry.remoteDomains[path.scope as PrivateScopeKind].includes(domain))))throw new Error('E2EE_INVALID_COVERAGE_REGISTRY');
  return structuredClone(registry.paths.filter(path=>path.scope===kind));
 }
+
+/** Retained normal uploads also contain authenticated technical documents
+ * such as shared trust in key-check. Their allowed domains come from the
+ * writer registry, rather than just the legacy content categories. */
+export function privateProductDomainAllowed(kind:PrivateScopeKind,domain:typeof E2EE_DOMAINS[number]):boolean{
+ requiredPrivatePaths(kind);
+ return registry.remoteDomains[kind].includes(domain);
+}

@@ -9,13 +9,18 @@ import java.io.OutputStream
 class E2eePrivatePaths(source: JSONObject) {
     class Path(val id: String, val scope: String, val domains: Set<String>)
     private val paths: List<Path>
+    private val productDomains: Map<String,Set<String>>
     init {
         check(E2eeCommands.integer(source.get("version")) == 1L) { "E2EE_INVALID_COVERAGE_REGISTRY" }
+        productDomains=setOf("personal","project","space").associateWith { kind ->
+            val values=source.getJSONObject("remoteDomains").getJSONArray(kind)
+            (0 until values.length()).map { values.getString(it).also { domain -> check(E2eeEnvelope.supportsDomain(domain)){"E2EE_INVALID_COVERAGE_REGISTRY"} } }.toSet()
+        }
         val rows = source.getJSONArray("paths"); check(rows.length() in 1..128) { "E2EE_INVALID_COVERAGE_REGISTRY" }
         paths = (0 until rows.length()).map { index -> rows.getJSONObject(index).let { row ->
             val id = E2eeKeys.technical(row.getString("id")); val scope = row.getString("scope"); val domains = row.getJSONArray("domains")
             check(scope in setOf("personal", "project", "space") && domains.length() in 1..16) { "E2EE_INVALID_COVERAGE_REGISTRY" }
-            val remote = source.getJSONObject("remoteDomains").getJSONArray(scope).let { values -> (0 until values.length()).map { values.getString(it) }.toSet() }
+            val remote = productDomains.getValue(scope)
             val allowed = (0 until domains.length()).map { E2eeKeys.technical(domains.getString(it)) }.toSet()
             check(allowed.all { E2eeEnvelope.supportsDomain(it) && it in remote }) { "E2EE_INVALID_COVERAGE_REGISTRY" }
             Path(id, scope, allowed)
@@ -25,6 +30,12 @@ class E2eePrivatePaths(source: JSONObject) {
     fun required(kind: String): List<Path> {
         require(kind in setOf("personal", "project", "space")) { "E2EE_INVALID_COVERAGE_REGISTRY" }
         return paths.filter { it.scope == kind }
+    }
+    /** Normal uploads include technical key-check documents as well as legacy
+     * content categories. This is an allowlist, never a replay capability. */
+    fun allowsProductDomain(kind:String,domain:String):Boolean {
+        required(kind)
+        return domain in productDomains.getValue(kind)
     }
     companion object {
         fun load(context: Context): E2eePrivatePaths = context.assets.open("private-paths-v1.json").use { input ->

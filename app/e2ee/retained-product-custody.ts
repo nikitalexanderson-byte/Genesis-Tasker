@@ -4,7 +4,7 @@ import {decodeE2eeBytes,encodeE2eeBytes,openE2eeEnvelope,validateE2eeEnvelope,ty
 import {E2EE_CHUNK_BYTES,E2EE_MAX_FILE_BYTES,envelopePayloadHash,openE2eeFileStream} from './files.ts';
 import {HPKE_SUITE,assertTechnical,exactKeys,openRoot} from './keys.ts';
 import {contentSigningKey,signingPublicKey,verifyDeviceDirectory,type VerifiedDirectory} from './directory.ts';
-import {requiredPrivatePaths} from './private-paths.ts';
+import {privateProductDomainAllowed} from './private-paths.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {productMutation} from './product-contract.ts';
 import {validatePrivateProjectTopology} from './project-create-contract.ts';
@@ -303,7 +303,7 @@ export async function inspectRetainedProductCustody(options:Options){
   const last=headers.at(-1)!,context=last.context,frame=await options.directory(context.scopeId,dir=>dir.cryptoEpoch===context.cryptoEpoch&&dir.securityEpoch===context.securityEpoch&&dir.keyId===context.keyId&&dir.generation===context.dataGeneration);current();
   const own=frame.devices.get(options.actor.deviceId);
   if(!own||own.userId!==options.actor.ownerId||context.ownerId!==frame.ownerId||context.deviceId!==options.actor.deviceId||context.writerProtocol!==9||context.schemaVersion!==1
-   ||!requiredPrivatePaths(frame.kind).some(path=>path.domains.includes(context.domain)))invalid();
+   ||!privateProductDomainAllowed(frame.kind,context.domain))invalid();
   const signer=await contentSigningKey(frame,context),root=await openRoot(own.capsule,options.receivingKey,{ownerId:frame.ownerId,scopeId:frame.scopeId,cryptoEpoch:frame.cryptoEpoch,keyId:frame.keyId,recipientId:options.actor.deviceId});current();
   const byCoordinate=new Map<string,typeof headers[number]>(),used=new Set<string>();
   for(const header of headers){const c=header.context;
