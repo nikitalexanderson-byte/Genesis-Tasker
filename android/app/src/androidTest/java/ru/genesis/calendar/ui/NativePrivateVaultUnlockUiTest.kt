@@ -63,7 +63,9 @@ class NativePrivateVaultUnlockUiTest {
     }
     private fun waitFor(operation:()->Boolean)=runBlocking{withTimeout(90000){while(!operation())delay(100)}}
     private fun foregroundMain(){
-        app.startActivity(Intent(app,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+        // A user relaunches from the launcher. An app-originated start while
+        // Home is foreground can be denied by Android's background policy.
+        device.executeShellCommand("am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ${app.packageName}/${MainActivity::class.java.name}")
         waitFor{
             var resumed=false
             instrumentation.runOnMainSync{resumed=ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).any{it is MainActivity}}
