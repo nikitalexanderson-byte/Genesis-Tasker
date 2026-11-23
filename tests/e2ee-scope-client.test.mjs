@@ -11,6 +11,7 @@ import {verifyDeviceDirectory} from '../app/e2ee/directory.ts';
 import {showPrivateMigration,privateMigrationUi,closePrivateMigrationUi} from '../app/private-migration-ui.ts';
 import {holdPrivateProductMutations,requirePrivateProductMutation} from '../app/e2ee/product-mutation-fence.ts';
 import {inspectRetainedProductCustody} from '../app/e2ee/retained-product-custody.ts';
+import {WebPrivateAccount} from '../app/e2ee/product-session.ts';
 
 class Records {
   rows=new Map();fail=false;
@@ -73,12 +74,12 @@ test('nested migration holds release independently, tolerate repeated cleanup, a
   }finally{first();second();}
 });
 async function fixture(options={}){
-  const ownerId='scope-owner',scopeId='personal:scope-owner',recovery=await createRecoveryKit(ownerId),storage=new Records(),keyStorage=new Keys();
+  const ownerId='scope-owner',scopeId=options.kind?`${options.kind}:scope-resource`:'personal:scope-owner',recovery=await createRecoveryKit(ownerId),storage=new Records(),keyStorage=new Keys();
   let device=await UnlockedWebDevice.provision(ownerId,recovery.secret,recovery.kit,storage,keyStorage);
   const raw=freshSecret(),keyId='root-one',keys=device.keys(),pub=await publicDeviceKeys(keys);
   const rootContext={ownerId,scopeId,cryptoEpoch:1,keyId,recipientId:device.deviceId};
   const command={protocol:1,ownerId,scopeId,deviceId:device.deviceId,action:'bootstrap',expectedRevision:0,checkpointHash:'genesis',securityEpoch:1,operationId:'bootstrap',payload:{
-    kind:'personal',resourceId:ownerId,keyId,generation:1,recoveryKit:recovery.kit,deviceKeys:pub,
+    kind:options.kind??'personal',resourceId:options.kind?'scope-resource':ownerId,keyId,generation:1,recoveryKit:recovery.kit,deviceKeys:pub,
     deviceCapsule:await sealRoot(raw,pub.receivingKey,rootContext),recoveryCapsule:await sealRoot(raw,recovery.kit.authority.receivingKey,{...rootContext,recipientId:'recovery'})}};
   command.payload.selfProof=(await signE2eeCommand(command,keys.signing.privateKey)).signature;
   const events=[await signE2eeCommand(command,recovery.keys.signing.privateKey)];
@@ -190,6 +191,48 @@ test('concurrent authenticated reads reuse an identical durable floor without re
     finally{for(const result of opened)result.bytes.fill(0);}
     assert.equal(JSON.stringify([...f.storage.rows]),before,'identical reads must not publish fresh checkpoint revisions');
   }finally{release();f.device.lock();}
+});
+
+test('concurrent first opens share one authenticated scope client and keep the first reader usable',async()=>{
+  const f=await fixture({kind:'project'});await f.make().refresh();
+  const account=new WebPrivateAccount(f.device.ownerId,f.device,f.transport,()=>{}),directory=f.transport.directory;
+  let release,calls=0;const held=new Promise(resolve=>{release=resolve;});
+  f.transport.directory=async(...args)=>{calls++;await held;return directory(...args);};
+  const target={scopeId:f.rootContext.scopeId,kind:'project',resourceId:'scope-resource',state:'active'};
+  try{
+    const first=account.openScope(target,f.device.authorityPin,f.device.ownerId),second=account.openScope(target,f.device.authorityPin,f.device.ownerId);
+    release();const [left,right]=await Promise.all([first,second]);
+    assert.equal(calls,1);assert.equal(left.client,right.client);assert.equal(account.shared(target.scopeId,'project','scope-resource').client,left.client);
+    assert.equal(await left.client.read('shared-project','missing'),null);
+  }finally{release();account.close();}
+});
+
+test('a pending scope open cannot be joined under another resource or authority',async()=>{
+  const f=await fixture({kind:'project'});await f.make().refresh();
+  const account=new WebPrivateAccount(f.device.ownerId,f.device,f.transport,()=>{}),directory=f.transport.directory;
+  let release,calls=0;const held=new Promise(resolve=>{release=resolve;});
+  f.transport.directory=async(...args)=>{calls++;await held;return directory(...args);};
+  const target={scopeId:f.rootContext.scopeId,kind:'project',resourceId:'scope-resource',state:'active'},pin=f.device.authorityPin;
+  const first=account.openScope(target,pin,f.device.ownerId);
+  try{
+    const attempts=[account.openScope({...target,resourceId:'another-resource'},pin,f.device.ownerId),
+      account.openScope(target,{...pin,signingKey:'another-authority'},f.device.ownerId),
+      account.openScope(target,pin,'another-owner')].map(task=>assert.rejects(task,/E2EE_SCOPE_BINDING_MISMATCH/));
+    release();await Promise.all([...attempts,first]);assert.equal(calls,1);
+  }finally{release();await first.catch(()=>{});account.close();}
+});
+
+test('closing the account retires all callers waiting for the first verified scope',async()=>{
+  const f=await fixture({kind:'project'});await f.make().refresh();
+  const account=new WebPrivateAccount(f.device.ownerId,f.device,f.transport,()=>{}),directory=f.transport.directory;
+  let release;const held=new Promise(resolve=>{release=resolve;});
+  f.transport.directory=async(...args)=>{await held;return directory(...args);};
+  const target={scopeId:f.rootContext.scopeId,kind:'project',resourceId:'scope-resource',state:'active'};
+  const tasks=[account.openScope(target,f.device.authorityPin,f.device.ownerId),account.openScope(target,f.device.authorityPin,f.device.ownerId)];
+  try{
+    const refused=tasks.map(task=>assert.rejects(task,/E2EE_UNLOCK_REQUIRED/));account.close();release();await Promise.all(refused);
+    assert.throws(()=>account.shared(target.scopeId,'project',target.resourceId),/E2EE_UNLOCK_REQUIRED/);
+  }finally{release();account.close();}
 });
 
 test('two readers establish missing authenticated floors atomically and converge after CAS',async()=>{
