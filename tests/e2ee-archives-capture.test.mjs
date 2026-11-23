@@ -62,7 +62,9 @@ test('file read failures and oversize files are errors, never an empty staged ar
  reset();class BadFile extends File{async arrayBuffer(){throw new Error('selected file unavailable');}}
  let selected=new BadFile(['original'],'bad.genesisbackup');registerBackupMigrationEditor(owner,'backup-panel',()=>form({},selected));
  await assert.rejects(captureBackupMigrationEditors(owner,()=>{}),/selected file unavailable/);
- selected=new File([new Uint8Array(24*1024*1024+1)],'large.genesisbackup');await assert.rejects(captureBackupMigrationEditors(owner,()=>{}),/SOURCE_TOO_LARGE/);reset();
+ selected=new File(['original'],'large.genesisbackup');Object.defineProperty(selected,'size',{value:192*1024*1024+1});
+ selected.arrayBuffer=async()=>{throw new Error('Oversized file must refuse before reading');};
+ await assert.rejects(captureBackupMigrationEditors(owner,()=>{}),/SOURCE_TOO_LARGE/);reset();
 });
 
 test('local inventory preserves malformed raw originals and expired copies without pruning or reading another owner',async()=>{

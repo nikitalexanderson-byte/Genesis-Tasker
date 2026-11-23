@@ -103,7 +103,8 @@ class E2eeEditorQueue private constructor(private val device:E2eeScopeDevice?,pr
             for (part in 0 until parts) changes += UnlockedE2eeVault.Write("draft", "$id:$part", copy.copyOfRange(part * E2eeFiles.CHUNK_BYTES, minOf((part + 1) * E2eeFiles.CHUNK_BYTES, copy.size)), null)
             val value = JSONObject().put("protocol", 2).put("scopeId", scopeId).put("domain", domain).put("objectId", objectId)
                 .put("remoteRevision", baseRevision).put("latest", draft).put("history", history.put(draft)).put("pending", if(mode=="cache")JSONArray() else pending.put(id))
-            historyHead?.let{value.put("historyHead",it)};previous?.value?.optString("preparing")?.takeIf{it.isNotEmpty()&&mode!="cache"}?.let{value.put("preparing",it)}
+            // A verified merge must not replay a superseded, unmerged prepare origin.
+            historyHead?.let{value.put("historyHead",it)};previous?.value?.optString("preparing")?.takeIf{it.isNotEmpty()&&mode!="cache"&&mode!="merge"}?.let{value.put("preparing",it)}
             if(mode=="review")value.put("review",JSONObject().put("originId",id).put("remoteRevision",baseRevision))else previous?.value?.optJSONObject("review")?.let{value.put("review",JSONObject(it.toString()))}
             return save(value, expectedSerial, changes)
         } finally { copy.fill(0); changes.forEach { it.bytes.fill(0) } }

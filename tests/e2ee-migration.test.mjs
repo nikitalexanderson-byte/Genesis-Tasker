@@ -226,7 +226,13 @@ test('retained legacy output and partial content plans require explicit original
  for(const mode of ['legacy-output','orphan-upload','orphan-private','content-plan']){
   const f=await fixture({registrySources:true,registryKind:'project',crashBefore:2}),migration=f.make();await migration.prepare();
   if(mode==='legacy-output')await assert.rejects(migration.run(),/PROCESS_DEATH/);
-  const original=await migration.status();await migration.cancel();await migration.prepareStaged(stagedInput(f),stagedOptions());
+  const original=await migration.status();await migration.cancel();
+  if(mode==='legacy-output'){
+   const kept=structuredClone(f.storage.rows),calls=f.server.count;
+   await assert.rejects(migration.prepareStaged(stagedInput(f),stagedOptions()),/STREAMED_PLANNER_REQUIRED/);
+   assert.deepEqual(f.storage.rows,kept);assert.equal(f.server.count,calls);continue;
+  }
+  await migration.prepareStaged(stagedInput(f),stagedOptions());
   if(mode==='orphan-upload')await f.vault.write([{domain:'outbox',objectId:original.migrationId+':upload:unbound',value:bytes('UNIQUE OLD SERVER DATA'),expected:null}]);
   if(mode==='orphan-private')await f.vault.write([{domain:'local-snapshot',objectId:original.migrationId+':private:unbound',value:bytes('UNIQUE LOCAL DATA'),expected:null}]);
   if(mode==='content-plan')await f.vault.write([{domain:'local-snapshot',objectId:'content-plan:unbound:journal',value:bytes('UNIQUE REMOTE SOURCE'),expected:null}]);
@@ -274,8 +280,11 @@ test('crash after a part leaves explicit incomplete history and a future staged 
  await assert.rejects(f.make().prepareStaged(input,stagedOptions()),/SYNTHETIC_PART_DEATH/);assert.equal(await f.make().status(),null);
  const known=await inspectSourceStages(f.vault,input.target,()=>{});assert.equal(known.length,1);assert.equal(known[0].complete,false);
  const retained=structuredClone(f.storage.rows);let producers=0;f.storage.afterCommit=undefined;
- await assert.rejects(f.make().prepareStaged(stagedInput(f,async()=>{producers++;}),stagedOptions()),/HISTORY_REVIEW_REQUIRED/);
- assert.equal(producers,0);assert.deepEqual(f.storage.rows,retained);assert.equal(f.server.count,0);
+ await assert.rejects(f.make().prepareStaged(stagedInput(f,async()=>{producers++;}),stagedOptions()),/SOURCE_STAGE_REPLAY_CHANGED/);
+ assert.equal(producers,1);assert.deepEqual(f.storage.rows,retained);assert.equal(f.server.count,0);
+ await f.make().prepareStaged(input,stagedOptions());
+ const resumed=await f.make().status(),after=await inspectSourceStages(f.vault,input.target,()=>{});
+ assert.equal(resumed.source.reference.stageId,known[0].id);assert.equal(after.length,1);assert.equal(after[0].complete,true);
 });
 
 test('a complete stage orphaned at coordinator CAS is fully included in the next published source history',async()=>{
@@ -355,7 +364,10 @@ test('a catalogue change during publication admission atomically refuses the coo
  };
  await assert.rejects(f.make().prepareStaged(input,options),/E2EE_LOCAL_CONFLICT/);assert.equal(injected,true);assert.equal(await f.make().status(),null);
  const known=await inspectSourceStages(f.vault,input.target,()=>{});assert.equal(known.length,2);assert.equal(known[0].complete,true);assert.equal(known[1].complete,false);
- assert.equal(f.server.count,0);const retained=structuredClone(f.storage.rows);await assert.rejects(f.make().prepareStaged(input,stagedOptions()),/HISTORY_REVIEW_REQUIRED/);assert.deepEqual(f.storage.rows,retained);
+ assert.equal(f.server.count,0);await f.make().prepareStaged(input,stagedOptions());
+ const resumed=await f.make().status(),after=await inspectSourceStages(f.vault,input.target,()=>{});
+ assert.equal(after.length,2);assert.ok(after.every(row=>row.complete));assert.equal(resumed.source.reference.stageId,known[1].id);
+ assert.equal(resumed.source.history[0].stageId,known[0].id);assert.equal(f.server.count,0);
 });
 
 test('a locally injected v3 lease or planned flag cannot bypass the streamed-planner gate',async()=>{

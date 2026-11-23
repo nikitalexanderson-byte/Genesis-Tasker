@@ -254,6 +254,7 @@ class E2eeScopeClientTest {
             if(dirty){editor.stage("UNSENT".toByteArray(),saved.serial,1);saved=editor.load()!!}
             client.prepare("diary","one","REMOTE UPDATE".toByteArray(),1);client.flush("diary","one");client.read("diary","one")
             if(dirty)reject("E2EE_OBJECT_CONFLICT"){editor.flush()}
+            saved=editor.load()!! // Failed preparation still retains its durable origin.
             reject("E2EE_VERIFIED_REMOTE_REQUIRED"){editor.reconcile("UNVERIFIED".toByteArray(),saved.serial,3)}
             val retained=f.storage.rows.size
             editor.reconcile((if(dirty)"MERGED LOCAL AND REMOTE" else "REMOTE UPDATE").toByteArray(),saved.serial,2,cache=!dirty)

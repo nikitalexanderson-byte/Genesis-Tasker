@@ -1,5 +1,80 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, 01:23 UTC: второй блок общей приёмки
+
+Production сайта ужеc1205c045862fcfbaa01b48a1fbd7f04d6693b75,
+Deploy45088162015 success. После live-ошибки языка/рублёвых Terms отдельно
+подготовлен website-only PR46, commit41091fafb556d96b02e6db48a0d74093f1cdb97f
+в upgrade-currency-20261122, веткаcodex/public-document-currency-20261123.
+Локально1248/1248 unit/render, typecheck/lint0errors/4warnings, build:web196HTML,
+public-region5/5 + startup4/4 PASS. Исправленный live ещё НЕ опубликован;
+required CI45090567554/45090593699: Android jobs PASS, web browser ещё выполняется.
+Auto-merge в репозитории выключен; не менять настройку. После слияния обязательны
+exact-main website_only checks и Deploy с expected incumbentc1205c04.
+Production manifest149 SHA582a282682b23af7368efe3a1f61533731a1915135f8dbd25dda6fbc7be54f63
+не изменился. Browser liveWebsiteTab IAB2/tab9 остаётся на/terms?lang=en со старым
+русским документом; final browser marker ещё не выдан. Не выходить из аккаунта.
+
+Security послеd9ce2fb7 имеет локальные незакоммиченные исправления. TS Node runner
+теперь transform-types, concurrency2 и scoped app-module resolver; CommonJS helper
+кеширует модуль перед evaluation, устраняя циклическую рекурсию. Loader resolution
+проверен42/42 content plan/readback/legacy snapshot tests. Первый завершённый полный
+unit2:1864PASS/58FAIL/1cancelled из1923, не PASS. Большинство ошибок — устаревшие
+fixtures: streaming native result-part acknowledgements, workspace privatePreferences,
+provider bounds1M/65536, команда8MiB, отдельный технический local-write marker в
+Physis fixture. После исправлений targeted159:158PASS/1FAIL; последний реальный
+дефект editor queue устранён на web/native: merge снимает superseded preparing origin,
+чтобы старый неслитый текст не отправлялся перед итогом. Web editor22/22 PASS.
+JVM test получает свежий serial после failed prepare; новые Drive6 тестов проверяют
+настоящий adapter/device-document/vault с заменой только внешних transport/session
+ports: ciphertext download/readback, отказ при corruption/retirement/connection switch,
+24MiB limit и disconnect без удаления. Они уже PASS в полномunit2.
+
+Unit3 завершился2057PASS/33FAIL из2090. После него исправлены реальные TDZ
+readKeys в ownership catalogue и ошибочный запрет экспорта публичного verifier SPKI;
+signer остаётся verify-only, private signing key не открывается. Streamed planning
+targeted30/33 PASS;3 negative assertions обновлены под более ранний полный custody
+отказ, все3 затем прошли отдельными targeted cases. Новый fixture сохраняет настоящий
+подписанный directory через device.rememberDirectory. Migration coordinator/source
+81/81 PASS, включая exact replay незавершённого stage и CAS race с сохранением обоих
+attempts. Admission1M/65536/512MiB проверяется новыми верхними границами. Targeted
+lint всех изменённыхTS/JS —0errors/0warnings; полныйtypecheck PASS.
+
+Backend2:155PASS/1FAIL из156 (shared-bulk-large превысил budget при compiler).
+После освобождения compiler повторён только этот suite с тем же budget: PASS,
+10001 tasks/10000 writes/one conflict228.5s, ветка6000 nodes6.7s,22MiB peak.
+runtime/backend-bulk-idle.log и backend-bulk-idle-1123/logs/shared-bulk-large.log.
+Таким образом все156 suites проверены, но это не156PASS в одном прогоне.
+Полный HTTP API:402PASS/0FAIL, runtime/consolidated-api-1.log,
+output/release-3.3.6/api-full-fixed-1123/api-results.json. Серверный код после этого
+не менялся; повтор всего backend без новой причины не нужен.
+
+Native4 с heap6GiB скомпилировал ВЕСЬ основной Android-код; упал на compile tests
+из-за2 устаревших APIs. Native3/session65273 ранее остановлен Ctrl+C после явного
+Gradle heap-exhaustion warning4GiB. Native5 компилирует tests:1426completed,
+20FAIL/8opt-in skips. Исправлены fixture privatePreferences, philosopher default,
+новые archive bounds/exact stage replay и API message backup (canonical32byte key).
+Устаревший repository.writeBackup удалён из unit: его заменили real export/import
+и entitlement checks; новый SAF handoff всё ещё требует platform/UI acceptance.
+Ещё один РЕАЛЬНЫЙ native defect: retained intake сохраняет старые chunks, поэтому
+редактирование должно GET-проверять already-bound ciphertext до PUT. Исправлено;
+не ослаблять immutable file fixture. Messenger unknown-outcome fixture теперь
+явно теряет и POST reply, и следующий reconciliation read; подтверждённый conflict
+имеет реальную конфликтующую строку. Workflows checks/android-release используют
+6GiB вместо4 по фактическому compiler evidence; схема публикаций не менялась.
+
+Текущие running sessions:
+-55606: полный unit4, runtime/consolidated-unit-4.log; весь JS correction block.
+-55279: native6, runtime/consolidated-native-6.log; основной messaging fix и
+  актуальные JVM fixtures. Никаких параллельных Gradle.
+-82376/8909/23019/12977/96968 уже завершены, результаты выше.
+
+Далее: результаты этих прогонов, реальные дефекты блоком, merge опубликованного
+сайта в security с сохранением строгихAGENTS, browser/product recovery+upgrade149,
+полный20-path/48-scenario acceptance и внутреннее финальное crypto review.
+Security не push-илась, coverage9/20, floors0/cutoveroff, Android deployfalse.
+demo-output/ не читать/stage. Goal active; субагентов/Daybreak не использовать.
+
 ## 23 ноября: общая приёмка начата, исправлен первый блок
 
 Сайт PR45 merged в mainc1205c045862fcfbaa01b48a1fbd7f04d6693b75; required

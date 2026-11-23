@@ -8,8 +8,12 @@ const ts = require("typescript");
 const modules = new Map();
 export function calendarModule(path) {
   const file = resolve(root, path);
-  if (modules.has(file)) return modules.get(file);
+  if (modules.has(file)) return modules.get(file).exports;
   const loaded = {exports: {}};
+  // Publish the module before evaluation, like CommonJS, so cyclic imports
+  // share a single instance instead of recursively transpiling the same graph.
+  modules.set(file, loaded);
+  try {
   const js = ts.transpileModule(readFileSync(file, "utf8"), {compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
   }}).outputText;
@@ -19,6 +23,9 @@ export function calendarModule(path) {
     if (id.endsWith(".json")) return JSON.parse(readFileSync(resolve(dirname(file), id), "utf8"));
     return id.startsWith(".") ? calendarModule(resolve(dirname(file), id.endsWith(".ts") ? id : `${id}.ts`)) : require(id);
   }, loaded, loaded.exports);
-  modules.set(file, loaded.exports);
   return loaded.exports;
+  } catch (error) {
+    modules.delete(file);
+    throw error;
+  }
 }

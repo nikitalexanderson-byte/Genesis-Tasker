@@ -38,16 +38,17 @@ class DailyAdviceProtocolTest {
     }
     @Test fun aCachedNotificationCannotBypassTheMainSourceAdultOrDismissedControls() {
         val card = DailyAdviceProtocol.parse(response()).advice!!
-        assertTrue(DailyAdviceProtocol.visible(card, AdvicePreferences()))
+        assertFalse(DailyAdviceProtocol.visible(card, AdvicePreferences()))
+        assertTrue(DailyAdviceProtocol.visible(card, AdvicePreferences(collections = listOf("aurora"))))
         assertFalse(DailyAdviceProtocol.visible(card, AdvicePreferences(enabled = false)))
         assertFalse(DailyAdviceProtocol.visible(card, AdvicePreferences(collections = listOf("philosophers"))))
         assertFalse(DailyAdviceProtocol.visible(card.copy(dismissed = true), AdvicePreferences()))
         val adult = card.copy(categories = listOf("aphrodisia"), requiresAdult = true)
         assertFalse(DailyAdviceProtocol.visible(adult, AdvicePreferences(aphrodisiaAdult = false, categories = listOf("aphrodisia"))))
-        assertTrue(DailyAdviceProtocol.visible(adult, AdvicePreferences(aphrodisiaAdult = true, categories = listOf("aphrodisia"))))
+        assertTrue(DailyAdviceProtocol.visible(adult, AdvicePreferences(collections = listOf("aurora"),aphrodisiaAdult = true, categories = listOf("aphrodisia"))))
     }
     @Test fun collectionPreferencesRoundTripAndLegacyCardsRemainAurora() {
-        assertEquals(listOf("aurora"),AdvicePreferences.fromJson(null).collections)
+        assertEquals(listOf("philosophers"),AdvicePreferences.fromJson(null).collections)
         for(collections in listOf(listOf("aurora"),listOf("philosophers"),listOf("aurora","philosophers"))) {
             val original=AdvicePreferences(collections=collections)
             assertEquals(original,AdvicePreferences.fromJson(original.toJson()))

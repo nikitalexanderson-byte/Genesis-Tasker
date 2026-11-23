@@ -3621,8 +3621,8 @@ test("keeps Google OAuth consent, account binding, and token handling hardened",
   assert.match(api, /account\/google-services\/disconnect/);
   assert.match(cloudSync, /disconnectGoogleServices/);
   assert.match(cloudSync, /if \(!remote\.user\.calendarConnected\) return/);
-  assert.match(calendar, /if \(workspace\.user\.calendarConnected\)/);
-  assert.match(calendar, /if \(!cloudUser \|\| !cloudUser\.calendarConnected\) return/);
+  assert.match(calendar, /if \(workspace\.user\.calendarConnected\|\|encryptedAccount\)/);
+  assert.match(calendar, /if \(!cloudUser \|\| !cloudUser\.calendarConnected&&!usesPrivateProductStorage\(cloudUser\.uid\)\) return/);
   assert.doesNotMatch(api, /auth\/vk\/|genesisVkConfigured/);
   assert.match(accountPanel, /Отключить Calendar и Tasks/);
   assert.match(legal, /Google Tasks/);

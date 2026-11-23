@@ -36,6 +36,7 @@ import ru.genesis.calendar.security.NativeContentFileDestination
 import ru.genesis.calendar.security.NativeUserFileInput
 import ru.genesis.calendar.security.NativeUserFileOutput
 import ru.genesis.calendar.security.PrivateFileMetadata
+import org.json.JSONObject
 import java.util.UUID
 
 @Composable internal fun MessagingScreen(repository: MessagingRepository, initialSpaceId: String? = null, onClose: () -> Unit) {

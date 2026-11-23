@@ -75,13 +75,13 @@ class E2eeMigrationSourcesTest {
     }
     @Test fun aggregateInputAndAmplifiedOutputHavePreCopyBudgets()=runBlocking {
         val f=fixture("space");val snapshot=f.sources.captureLocal();val large=ByteArray(64*1024*1024)
-        reject("E2EE_MIGRATION_HISTORY_LIMIT"){f.sources.reconcile(snapshot,listOf(large,large))}
+        reject("E2EE_MIGRATION_HISTORY_LIMIT"){f.sources.reconcile(snapshot,List(9){large})}
         val sources=E2eeMigrationSources("owner","space:one","space",inventory);val content=ByteArray(4*1024*1024)
         for((index,path) in inventory.required("space").withIndex())sources.register(object:E2eePrivatePathAdapter{
             override val id=path.id
             override suspend fun captureLocal()="source".toByteArray()
             override suspend fun reconcile(local:ByteArray,previous:List<ByteArray>)=E2eePathReconciliation(true,
-                if(index==0)(0..32).map{E2eeMigrationContent(path.domains.first(),"object-$it",content)} else emptyList())
+                if(index==0)(0..128).map{E2eeMigrationContent(path.domains.first(),"object-$it",content)} else emptyList())
         })
         reject("E2EE_MIGRATION_TOO_LARGE"){sources.reconcile(sources.captureLocal(),emptyList())}
     }

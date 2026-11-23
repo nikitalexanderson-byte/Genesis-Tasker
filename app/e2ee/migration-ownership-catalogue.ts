@@ -100,6 +100,7 @@ export async function openMigrationOwnershipCatalogue(source:Options){
   if(!first?.command)invalid();const scopeId=first.command.scopeId;assertTechnical(scopeId);assertTechnical(saved.value.ownerId);
   if(id!=='directory-'+hash(encoder.encode(scopeId))||savedDirectories.has(scopeId))invalid();savedDirectories.set(scopeId,{id,ownerId:saved.value.ownerId,scopeId});
  }
+ const readKeys=await device.readKeys();current();const selfKeys=readKeys.publicKeys;
  const scopes:Scope[]=[],states=new Map<string,{scope:Scope;state:MigrationState}>(),ownerFrames=new Map<string,Frame>(),verifiedOriginals=new Map<string,Set<string>>(),copies=await base.listMigrationHistoryCopies();current();
  const copyIds=[...copies].sort(),currentById=new Map<string,Awaited<ReturnType<typeof stateAt>>>();
  for(const id of currentIds){if(!/^migration:[A-Za-z0-9_-]{43}$/.test(id))invalid();currentById.set(id,await stateAt(id));}
@@ -167,7 +168,6 @@ export async function openMigrationOwnershipCatalogue(source:Options){
  if(scopes.filter(scope=>scope.root!==null).length!==currentIds.length)invalid();
  const sourceParts=await base.listMigrationOriginalParts(),outputs=await base.listMigrationPlanOutputs(),stateRoles=await base.listMigrationStateRoles(),jobHistory=await base.listProductJobHistory(),controlHistory=await base.listProductControlHistory();current();
  const personal=scopes.filter(scope=>scope.target.kind==='personal'&&scope.target.ownerId===identity.ownerId);
- const readKeys=await device.readKeys();current();const selfKeys=readKeys.publicKeys;
  await inspectRetainedProductCustody({vault,actor:identity,receivingKey:readKeys.receivingKey,selfKeys,assertCurrent:current,outbox:outputs.remote,copies:copyIds,jobHistory,controlHistory,
   personalScopeId:personal.length===1?personal[0].target.scopeId:null,claimed:(domain,id)=>roles.has(key(domain,id)),claim,
   directory:async(scopeId,select)=>{
@@ -207,7 +207,9 @@ export async function openMigrationOwnershipCatalogue(source:Options){
   values.add({scope:{...scope.target,resourceId:scope.resourceId},migrationId:state.migrationId,attemptId:state.migrationId,root,signer:await signingPublicKey(own.signingKey),plan:state.plan,logical:state.logical,local:state.local??[]});current();
  }
  async function modern(scope:Scope,state:Extract<MigrationState,{protocol:4|5}>,frame:Frame,paths:string[]){
-  const own=frame.own!;const signer=await signingPublicKey(own.signingKey),readOptions={vault,target:scope.target,capacity:options.originalCapacity,assertCurrent:current};
+  // Registration checks compare the already public SPKI with its retained
+  // binding. The imported key remains verification-only; no signing key opens.
+  const own=frame.own!;const signer=await signingPublicKey(own.signingKey,true),readOptions={vault,target:scope.target,capacity:options.originalCapacity,assertCurrent:current};
   const expected=anchor(state);
   if(expected.hash!==frame.checkpoint.hash||expected.revision!==frame.checkpoint.revision)invalid();
   validateStagedMigrationSnapshot(state.source,scope.target,identity,paths);

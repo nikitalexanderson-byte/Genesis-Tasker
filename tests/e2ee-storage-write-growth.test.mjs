@@ -16,6 +16,6 @@ test('write headroom rejects accessors and unknown row fields without invoking c
  for(const nextBytes of [NaN,Infinity,0.5,'10',undefined])assert.throws(()=>e2eeStorageWriteGrowth([{nextBytes,previousBytes:null}]));
 });
 test('provider policy preserves bounded counts and a physical safety reserve',()=>{
- assert.ok(Object.isFrozen(E2EE_PROVIDER_STORAGE_BUDGET));assert.equal(E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords,10000);
- assert.equal(E2EE_PROVIDER_STORAGE_BUDGET.maximumKeyRecords,1000);assert.equal(E2EE_PROVIDER_STORAGE_BUDGET.safetyBytes,1024*1024);
+ assert.ok(Object.isFrozen(E2EE_PROVIDER_STORAGE_BUDGET));assert.equal(E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords,1000000);
+ assert.equal(E2EE_PROVIDER_STORAGE_BUDGET.maximumKeyRecords,65536);assert.equal(E2EE_PROVIDER_STORAGE_BUDGET.safetyBytes,1024*1024);
 });

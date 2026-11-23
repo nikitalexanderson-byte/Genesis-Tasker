@@ -6,7 +6,6 @@ import {SignedMigrationTransport} from '../app/e2ee/migration-transport.ts';
 import {UnlockedWebDevice} from '../app/e2ee/device-vault.ts';
 import {E2eeMigration} from '../app/e2ee/migration.ts';
 import {requiredPrivatePaths} from '../app/e2ee/migration-sources.ts';
-import {verifyDeviceDirectory} from '../app/e2ee/directory.ts';
 import {createRecoveryKit,freshSecret,publicDeviceKeys,sealRoot,generateDeviceKeys} from '../app/e2ee/keys.ts';
 import {importE2eeRoot,encodeE2eeBytes} from '../app/e2ee/envelope.ts';
 import {signE2eeCommand,verifyE2eeCommand,e2eeCommandHash,canonicalE2eeValue} from '../app/e2ee/commands.ts';
@@ -60,7 +59,7 @@ async function fixture(t,options={}){
   deviceCapsule:await sealRoot(raw,publicKeys.receivingKey,recipient),recoveryCapsule:await sealRoot(raw,recovery.kit.authority.receivingKey,{...recipient,recipientId:'recovery'})}};
  raw.fill(0);
  bootstrap.payload.selfProof=(await signE2eeCommand(bootstrap,device.keys().signing.privateKey)).signature;
- const directory=await verifyDeviceDirectory(ownerId,scopeId,recovery.kit.authority,[await signE2eeCommand(bootstrap,recovery.keys.signing.privateKey)]);
+ const directory=await device.rememberDirectory(scopeId,recovery.kit.authority,[await signE2eeCommand(bootstrap,recovery.keys.signing.privateKey)],ownerId);
  const required=requiredPrivatePaths(kind).map(value=>value.id),sourceHash=encodeE2eeBytes(new Uint8Array(32).fill(29)),trace=[],server={fence:1,generation:2,receipts:new Map(),lost:false};
  const transport={async sourceHash(){trace.push('source');assert.equal((await coordinator.status()).protocol,4);await options.onSource?.();return sourceHash;},
   async command(packet){
@@ -153,7 +152,7 @@ test('unowned originals and foreign request signers cannot gain ownership or rea
   if(mode==='unowned')await capture.observation.prepare({path:'/e2ee/v1/read',method:'POST',body:JSON.stringify(capture.packet)});
   const before=new Map(f.records.rows),calls=f.trace.length;
   if(mode==='signer')await assert.rejects(f.coordinator.reserveStreamedRemoteOriginal(capture.registration,capture.packet,f.policy()),/UNTRUSTED_COMMAND/);
-  else await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/ORIGINAL_REVIEW_REQUIRED/);
+  else await assert.rejects(f.coordinator.prepareStreamedPlanning(f.policy()),/MIGRATION_HISTORY_REVIEW_REQUIRED/);
   capture.observation.close();assert.deepEqual(f.records.rows,before);assert.equal(f.trace.length,calls);
  }
 });
@@ -269,7 +268,7 @@ test('coordinator rejects an altered completion reference before another HTTP re
  const saved=await f.readState();saved.state.ownership.originals[0].completion.rawHash=hash('changed-reference');
  const stateId='migration:'+hash(bytes(f.directory.scopeId));await f.device.vault.write([{domain:'local-snapshot',objectId:stateId,expected:saved.serial,value:bytes(JSON.stringify(saved.state))}]);saved.raw.fill(0);
  const retained=structuredClone(f.records.rows);let called=false;
- await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{called=true;await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));},f.policy()),/CORRUPT_STREAMED_OWNERSHIP/);
+ await assert.rejects(f.coordinator.withStreamedPlanning(async session=>{called=true;await session.requestLegacy(session.context,'legacy-workspace',undefined,(...args)=>sessionReply(f,...args));},f.policy()),/MIGRATION_HISTORY_REVIEW_REQUIRED/);
  assert.equal(called,false);assert.deepEqual(f.records.rows,retained);
 });
 
@@ -429,7 +428,7 @@ test('unknown plan metadata and journal-free outputs refuse before a later reque
   const id=crypto.randomUUID(),objectId=mode==='journal'?`content-plan:${id}:journal`:mode==='remote'?`${id}:upload:0`:`${id}:private:0:0`;
   await f.device.vault.write([{domain:mode==='remote'?'outbox':'local-snapshot',objectId,value:bytes('SYNTHETIC UNKNOWN ROLE'),expected:null}]);
   const kept=structuredClone(f.records.rows),calls=f.trace.length;
-  await assert.rejects(f.coordinator.withStreamedPlanning(async()=>{throw new Error('CONSUMER_MUST_NOT_RUN');},f.policy()),/PLAN_REVIEW_REQUIRED/);
+  await assert.rejects(f.coordinator.withStreamedPlanning(async()=>{throw new Error('CONSUMER_MUST_NOT_RUN');},f.policy()),mode==='remote'?/PRODUCT_CUSTODY_REVIEW_REQUIRED/:/MIGRATION_HISTORY_REVIEW_REQUIRED/);
   assert.deepEqual(f.records.rows,kept);assert.equal(f.trace.length,calls);
  }
 });

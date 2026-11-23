@@ -112,7 +112,9 @@ export class E2eeEditorQueue {
       for(let part=0;part<draft.parts;part++)changes.push({domain:'draft',objectId:`${draft.id}:${part}`,value:bytes.slice(part*E2EE_CHUNK_BYTES,(part+1)*E2EE_CHUNK_BYTES),expected:null});
       const state:EditorState={protocol:2,scopeId:this.#scopeId,domain:this.#domain,objectId:this.#objectId,remoteRevision:baseRevision,
         latest:draft,pending:mode==='cache'?[]:[...pending,draft.id],history:[...history,draft],
-        ...(historyHead?{historyHead}:{}),...(previous?.state.preparing&&mode!=='cache'?{preparing:previous.state.preparing}:{}),
+        // A verified merge supersedes an origin claimed before prepare failed.
+        // Replaying that old draft at the new base would publish unmerged text.
+        ...(historyHead?{historyHead}:{}),...(previous?.state.preparing&&mode!=='cache'&&mode!=='merge'?{preparing:previous.state.preparing}:{}),
         ...(mode==='review'?{review:{originId:draft.id,remoteRevision:baseRevision}}:previous?.state.review?{review:previous.state.review}:{})};
       return await this.#save(state,expectedSerial,changes);
     }finally{bytes.fill(0);changes.forEach(change=>change.value.fill(0));}

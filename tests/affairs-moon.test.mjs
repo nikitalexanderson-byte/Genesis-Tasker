@@ -4,6 +4,7 @@ import { matchesAffair } from "../app/affairs-search.ts";
 import { restoredSharedProject, sharedProjectTree, sharedProjectDestinations } from "../app/shared-expansion.ts";
 import { createMessagingIdentity, conversationKey, encryptPrivateMessage, decryptPrivateMessage, exportMessagingBackup, importMessagingBackup, securityCode, encryptPrivateFile, decryptPrivateFile, decodePrivateContent, PRIVATE_FILE_LIMIT } from "../app/private-message-crypto.ts";
 import { collaborationCopy, collaborationText } from "../app/collaboration-copy.ts";
+import {newBackupRecoveryKey} from '../app/backup-format.ts';
 
 test("private messages authenticate both peers, context, revisions and encrypted key recovery", async () => {
   const [alice,bob,eve]=await Promise.all([createMessagingIdentity(),createMessagingIdentity(),createMessagingIdentity()]);
@@ -18,9 +19,10 @@ test("private messages authenticate both peers, context, revisions and encrypted
   const revised=await encryptPrivateMessage(a,{...context,revision:2},'Исправлено',ids);assert.notEqual(revised.iv,payload.iv);
   assert.equal(await decryptPrivateMessage(b,{...context,revision:2},revised,ids),'Исправлено');
   assert.equal(await securityCode([alice.keyId,bob.keyId]),await securityCode([bob.keyId,alice.keyId]));
-  const backup=await exportMessagingBackup(alice,'correct horse battery staple');
-  assert.ok(!backup.includes('"d"'));await assert.rejects(()=>importMessagingBackup(backup,'wrong password longer than 12'));
-  const restored=await importMessagingBackup(backup,'correct horse battery staple');assert.equal(restored.keyId,alice.keyId);
+  await assert.rejects(()=>exportMessagingBackup(alice,'correct horse battery staple'),/BACKUP_RECOVERY_KEY/);
+  const recoveryKey=newBackupRecoveryKey(),backup=await exportMessagingBackup(alice,recoveryKey);
+  assert.ok(!backup.includes('"d"'));await assert.rejects(()=>importMessagingBackup(backup,newBackupRecoveryKey()));
+  const restored=await importMessagingBackup(backup,recoveryKey);assert.equal(restored.keyId,alice.keyId);
   const recovered=await conversationKey(restored,bob.publicKey,'conversation','space');assert.equal(await decryptPrivateMessage(recovered,context,payload,ids),'Только двое · 私信 · Ελληνικά');
 });
 test("collaboration copy explicitly covers all fourteen supported languages", () => {

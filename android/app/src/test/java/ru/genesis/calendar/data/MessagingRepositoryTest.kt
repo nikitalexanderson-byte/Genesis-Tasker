@@ -12,7 +12,6 @@ import ru.genesis.calendar.auth.FeatureAccess
 import ru.genesis.calendar.security.MessagingCrypto
 import ru.genesis.calendar.security.MessageContext
 import java.io.IOException
-import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.util.UUID
 
@@ -173,8 +172,9 @@ class MessagingRepositoryTest {
         val gateway = MessagingFixtureGateway().apply { access = messagingBackupPaidAccess() }
         val store = MessagingMemoryStore(); val repository = MessagingRepository("owner", gateway, store)
         repository.initialize(); val original = store.values["identity"]
-        val other = MessagingCrypto.exportBackup(MessagingCrypto.createIdentity(), "A sufficiently long password")
-        try { repository.importBackup(other, "A sufficiently long password"); fail("must block") } catch (_: IllegalArgumentException) { }
+        val recoveryKey=GenesisBackupContainer.newRecoveryKey()
+        val other = MessagingCrypto.exportBackup(MessagingCrypto.createIdentity(), recoveryKey)
+        try { repository.importBackup(other, recoveryKey); fail("must block") } catch (_: IllegalArgumentException) { }
         assertEquals(original, store.values["identity"]); assertEquals(1, gateway.keyPosts)
     }
     @Test fun freeAndExpiredPlansDenyKeyBackupsBeforeParsingNetworkOrStorage() = runBlocking {
@@ -185,39 +185,33 @@ class MessagingRepositoryTest {
             val before = store.values.toMap(); val requests = gateway.requests
             val imported = assertThrows(IllegalArgumentException::class.java) { runBlocking { repository.importBackup("{invalid", "bad") } }
             val exported = assertThrows(IllegalArgumentException::class.java) { runBlocking { repository.exportBackup("bad") } }
-            var opened = false
-            val saved = assertThrows(IllegalArgumentException::class.java) {
-                repository.writeBackup("prepared-before-expiry") { opened = true; ByteArrayOutputStream() }
-            }
-            for (failure in listOf(imported, exported, saved)) assertEquals("FEATURE_SUBSCRIPTION_REQUIRED", failure.message)
-            assertFalse(opened); assertEquals(requests, gateway.requests); assertEquals(before, store.values)
+            for (failure in listOf(imported, exported)) assertEquals("FEATURE_SUBSCRIPTION_REQUIRED", failure.message)
+            assertEquals(requests, gateway.requests); assertEquals(before, store.values)
             assertTrue(repository.state.value.keyReady)
         }
     }
-    @Test fun paidKeyBackupRoundtripWorksAndExpiryDuringPickerCannotOpenOutput() = runBlocking {
+    @Test fun paidKeyBackupRoundtripWorksAndExpiryBlocksExportWithoutChangingIdentity() = runBlocking {
         val gateway = MessagingFixtureGateway().apply { access = messagingBackupPaidAccess() }
         val store = MessagingMemoryStore(); val repository = MessagingRepository("owner", gateway, store)
         repository.initialize()
-        val password = "A sufficiently long password"
+        val password = GenesisBackupContainer.newRecoveryKey()
         val exported = repository.exportBackup(password)
-        val output = ByteArrayOutputStream()
-        repository.writeBackup(exported) { output }
-        assertEquals(MessagingCrypto.fingerprint(gateway.key!!), MessagingCrypto.importBackup(output.toString("UTF-8"), password).keyId)
+        assertEquals(MessagingCrypto.fingerprint(gateway.key!!), MessagingCrypto.importBackup(exported, password).keyId)
         val restoredStore = MessagingMemoryStore()
         val restored = MessagingRepository("owner", gateway, restoredStore)
         restored.importBackup(exported, password)
         assertTrue(restored.state.value.keyReady); assertNotNull(restoredStore.values["identity"])
         assertEquals(1, gateway.keyPosts)
         gateway.access = gateway.access.copy(validUntil = Instant.EPOCH)
-        var opened = false
+        val before=store.values.toMap()
         val failure = assertThrows(IllegalArgumentException::class.java) {
-            repository.writeBackup(exported) { opened = true; ByteArrayOutputStream() }
+            runBlocking { repository.exportBackup(password) }
         }
-        assertEquals("FEATURE_SUBSCRIPTION_REQUIRED", failure.message); assertFalse(opened)
+        assertEquals("FEATURE_SUBSCRIPTION_REQUIRED", failure.message);assertEquals(before,store.values)
         assertTrue(repository.state.value.keyReady)
     }
     @Test fun downgradeWhileCheckingAnImportedKeyCannotWriteOrRegisterIt() = runBlocking {
-        val identity = MessagingCrypto.createIdentity(); val password = "A sufficiently long password"
+        val identity = MessagingCrypto.createIdentity(); val password = GenesisBackupContainer.newRecoveryKey()
         val exported = MessagingCrypto.exportBackup(identity, password)
         val gateway = MessagingFixtureGateway().apply {
             access = messagingBackupPaidAccess()
@@ -237,7 +231,7 @@ class MessagingRepositoryTest {
         assertEquals(4, gateway.uploads); assertEquals(1, gateway.messages.size); assertFalse(repository.state.value.pending)
         assertEquals(fileId, repository.state.value.messages.single().content!!.files.single().id)
     }
-    @Test fun editingCannotOverwriteUnsentDraftAndRemovingFileDeletesLocalChunks() = runBlocking {
+    @Test fun editingCannotOverwriteUnsentDraftAndRemovingFileRetainsItsProtectedOriginal() = runBlocking {
         val gateway = MessagingFixtureGateway(); val store = MessagingMemoryStore(); val repository = MessagingRepository("owner", gateway, store)
         repository.initialize(); repository.open(gateway.space, "peer"); repository.send("Отправлено")
         val row = repository.state.value.messages.single()
@@ -245,7 +239,8 @@ class MessagingRepositoryTest {
         val file = repository.state.value.draft!!.files.single()
         try { repository.edit(row); fail("must retain") } catch (_: IllegalArgumentException) { }
         assertEquals("Незаконченная новая мысль", repository.state.value.draft!!.text)
-        repository.removeFile(file.id); assertFalse(store.values.keys.any { it.startsWith("file/${file.id}/") })
+        repository.removeFile(file.id);assertTrue(repository.state.value.draft!!.files.none{it.id==file.id})
+        assertTrue(store.values.keys.any { it.startsWith("file/${file.id}/") })
         assertEquals("Незаконченная новая мысль", repository.state.value.draft!!.text)
     }
     @Test fun failedIdentityPersistenceNeverRegistersAnEphemeralKey() = runBlocking {

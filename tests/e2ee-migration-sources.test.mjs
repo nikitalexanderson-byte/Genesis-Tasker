@@ -38,10 +38,10 @@ test('an incomplete private path remains incomplete and aliased decoded output s
 });
 test('resource budgets reject aggregate input and amplified output before making owned content copies',async()=>{
   const f=fixture('space'),snapshot=await f.sources.captureLocal(),oversized=new Uint8Array(64*1024*1024);
-  await assert.rejects(f.sources.reconcile(snapshot,[oversized,oversized]),/MIGRATION_HISTORY_LIMIT/);
+  await assert.rejects(f.sources.reconcile(snapshot,Array(9).fill(oversized)),/MIGRATION_HISTORY_LIMIT/);
   const sources=new E2eeMigrationSources('owner','space:one','space'),large=new Uint8Array(4*1024*1024);
   for(const [index,path] of requiredPrivatePaths('space').entries())sources.register({id:path.id,async captureLocal(){return bytes('source');},
-    async reconcile(){return{complete:true,content:index===0?Array.from({length:33},(_,i)=>({domain:path.domains[0],objectId:`object-${i}`,bytes:large})):[]};}});
+    async reconcile(){return{complete:true,content:index===0?Array.from({length:129},(_,i)=>({domain:path.domains[0],objectId:`object-${i}`,bytes:large})):[]};}});
   await assert.rejects(sources.reconcile(await sources.captureLocal(),[]),/MIGRATION_TOO_LARGE/);
   assert.equal(large.length,4*1024*1024);
 });

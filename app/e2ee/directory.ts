@@ -10,8 +10,8 @@ export type VerifiedDirectory = { ownerId: string; scopeId: string; resourceId: 
   cryptoEpoch: number; securityEpoch: number; keyId: string; generation: number; state: 'preparing'|'active';
   checkpoint: DirectoryCheckpoint; recoveryKit: RecoveryKit; recoveryCapsule: RootCapsule; devices: Map<string, VerifiedDevice>;
   sealedHeads:{cryptoEpoch:number;hash:string;count:number}|null;membershipHash?:string };
-export async function signingPublicKey(spki: string): Promise<CryptoKey> {
-  return crypto.subtle.importKey('spki', decodeE2eeBytes(spki, 91), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+export async function signingPublicKey(spki: string, exportable = false): Promise<CryptoKey> {
+  return crypto.subtle.importKey('spki', decodeE2eeBytes(spki, 91), { name: 'ECDSA', namedCurve: 'P-256' }, exportable, ['verify']);
 }
 function requireState(ok: boolean): asserts ok { if (!ok) throw new Error('E2EE_UNTRUSTED_DIRECTORY'); }
 function objectPayload(value: WireValue): Record<string, WireValue> {

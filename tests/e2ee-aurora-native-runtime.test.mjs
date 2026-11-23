@@ -32,11 +32,26 @@ async function fixture(count=1){
  return{input,rawKey,local,document,key,owner};
 }
 async function withRuntime(f,action,{hold=false,corrupt=false}={}){
- const oldWindow=globalThis.window,chunks=new Map(),messages=[],requests=[];let outgoingChunks=0,replyChunks=0;
+ const oldWindow=globalThis.window,chunks=new Map(),messages=[],requests=[],results=[];let outgoingChunks=0,replyChunks=0;
  let resolveOutcome;const outcome=new Promise(resolve=>resolveOutcome=resolve);const surface={};
  const consume=raw=>{
   const value=JSON.parse(raw);messages.push(value);
   assert.equal(value.job,job);
+  if(value.kind==='result-part'){
+   const part=value.part;assert.equal(part.protocol,1);assert.ok(['remote','local'].includes(part.placement));
+   if(part.index===0){assert.equal(part.sequence,results.length);results.push({header:{...part,bytes:undefined,index:undefined,last:undefined},parts:[],closed:false});}
+   const row=results[part.sequence];assert.ok(row&&!row.closed);assert.equal(part.index,row.parts.length);
+   assert.deepEqual({...part,bytes:undefined,index:undefined,last:undefined},row.header);
+   row.parts.push(part.bytes?decodeE2eeBytes(part.bytes,1,256*1024):new Uint8Array());
+   if(part.last){const bytes=Buffer.concat(row.parts);assert.equal(bytes.length,part.size);assert.equal(createHash('sha256').update(bytes).digest('base64url'),part.hash);row.closed=true;row.value={domain:part.domain,objectId:part.objectId,filename:part.filename,mediaType:part.mediaType,bytes:encodeE2eeBytes(bytes)};}
+   queueMicrotask(()=>surface.GenesisAuroraSourceRuntime.resolveChunk(job,value.id,0,true,encode({value:true})));return;
+  }
+  if(value.kind==='complete-stream'){
+   assert.equal(value.protocol,1);assert.ok(results.every(row=>row.closed));
+   const content=results.filter(row=>row.header.placement==='remote').map(row=>row.value),localContent=results.filter(row=>row.header.placement==='local').map(row=>row.value);
+   assert.equal(value.remoteCount,content.length);assert.equal(value.localCount,localContent.length);
+   resolveOutcome({...value,kind:'complete',content,localContent});return;
+  }
   if(value.kind==='public-catalogue'){
    requests.push(value);assert.deepEqual(Object.keys(value).sort(),['id','job','kind','path']);assert.ok(!value.path.includes(f.owner));
    if(hold)return;

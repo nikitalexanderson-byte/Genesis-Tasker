@@ -41,7 +41,7 @@ test('archive source capture retains the binary File and original native provide
 });
 
 test('malformed metadata refuses before allocating or requesting a chunk and still clears the identified transfer',async()=>{
- for(const change of [info=>info.length=-1,info=>info.length=24*1024*1024+1,info=>info.length=1.2,info=>info.protocol=2,
+ for(const change of [info=>info.length=-1,info=>info.length=192*1024*1024+1,info=>info.length=1.2,info=>info.protocol=2,
   info=>info.sha256='wrong',info=>info.name='x'.repeat(4097),info=>info.type=17,info=>info.lastModified=NaN,
   info=>info.declaredSize=Number.MAX_SAFE_INTEGER+1,info=>info.extra=true]){
   const f=await fixture();change(f.info);await assert.rejects(readNativeBackupFile(f.ports),/BACKUP_TRANSFER/);assert.deepEqual(f.calls,[['clear',id]]);

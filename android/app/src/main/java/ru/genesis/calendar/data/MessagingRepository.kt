@@ -416,7 +416,9 @@ internal class MessagingRepository(private val owner: String, private val gatewa
         if (command.optBoolean("uploaded")) {
             submit(current, command, path)
         } else {
-            uploadChunks(current, command)
+            // Retained intake/history can still hold chunks already attached
+            // to this message. Verify the bound ciphertext before any PUT.
+            uploadChunks(current, command, reconcileBound = true)
             command.put("uploaded", true); write("pending/${current.id}", command.toString())
             submit(current, command, path)
         }

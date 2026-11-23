@@ -13,6 +13,10 @@ const ts = require('typescript');
 export function physisModules(cryptoOverride = webcrypto) {
   const cache = new Map();
   const forbiddenStorage = new Proxy({}, { get() { throw new Error('Physis attempted persistent browser storage'); } });
+  const technicalStorage = {getItem(key){
+    if(key.startsWith('genesis-e2ee-local-write-fence-v1:'))return null;
+    throw new Error('Physis attempted persistent browser storage');
+  }};
   function load(path) {
     if (!extname(path)) path += '.ts';
     if (path === resolve(root, 'app/cloud-sync.ts')) return {
@@ -29,7 +33,7 @@ export function physisModules(cryptoOverride = webcrypto) {
       module: loaded, exports: loaded.exports, process: { env: {} }, Date, Math, Map, Set, Intl, URL,
       Error, TypeError, Uint8Array, ArrayBuffer, TextEncoder, TextDecoder, structuredClone,
       crypto: cryptoOverride, btoa: globalThis.btoa, atob: globalThis.atob,
-      localStorage: forbiddenStorage, sessionStorage: forbiddenStorage, indexedDB: forbiddenStorage,
+      localStorage: technicalStorage, sessionStorage: forbiddenStorage, indexedDB: forbiddenStorage,
       require: id => id.startsWith('.') && existsSync(resolve(dirname(path), id) + (extname(id) ? '' : '.ts'))
         ? load(resolve(dirname(path), id)) : require(id),
     }, { filename: path });

@@ -85,7 +85,7 @@ jobs:
             :app:assembleRelease :app:assemblePlay :app:bundlePlay \
             --no-daemon --console=plain --max-workers=1 \
             -Pkotlin.compiler.execution.strategy=in-process \
-            '-Dorg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8' \
+            '-Dorg.gradle.jvmargs=-Xmx6144m -Dfile.encoding=UTF-8' \
             '-Pandroid.builder.sdkDownload=false'
       - name: Verify certificates, package, version and Play permissions
         run: |

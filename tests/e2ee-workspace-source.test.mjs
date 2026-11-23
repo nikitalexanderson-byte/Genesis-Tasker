@@ -14,7 +14,8 @@ async function fixture(options={}){
     iv:Buffer.from(iv).toString('base64'),version,updatedAt:clock.updatedAt,minimumWriterProtocol:9};};
   const remoteDoc=options.remote??{projects:[],categories:[]},envelope=options.empty?null:await seal(remoteDoc);
   const remote={protocol:1,ownerId:'owner',scopeId:'personal:owner',migrationId:'migration',fence:7,sourceHash:context.sourceHash,legacyGeneration:0,
-    checkpointHash:'A'.repeat(43),directoryRevision:1,workspace:{keyMode:options.empty?'empty':'account',key:options.empty?null:rawKey,envelope},projects:[],categories:[]};
+    checkpointHash:'A'.repeat(43),directoryRevision:1,workspace:{keyMode:options.empty?'empty':'account',key:options.empty?null:rawKey,envelope},projects:[],categories:[],
+    privatePreferences:{categoryMapJson:null,visibilityJson:null,routingMode:null,routingTargetsJson:null}};
   const memory={ownerId:'owner',key:rawKey,version:options.empty?0:1,generation:0,reconciliationRequired:false,deviceId:'local-device',base:options.base??null,baseMetadata:options.base?.syncMetadata??null,
     metadata:options.local?.syncMetadata??null,current:options.current??null,draftSource:null};
   const rows=new Map(),storage={get length(){return rows.size;},key:index=>[...rows.keys()][index]??null,getItem:key=>rows.get(key)??null,

@@ -223,6 +223,7 @@ for(const dirty of [false,true])test(`editor reconciles a verified update from a
   if(dirty){await editor.stage(bytes('UNSENT LOCAL'),saved.serial,1);saved=await editor.load();}
   await client.prepare('diary','one',bytes('REMOTE UPDATE'),1);await client.flush('diary','one');await client.read('diary','one');
   if(dirty)await assert.rejects(editor.flush(),/OBJECT_CONFLICT/);
+  saved=await editor.load(); // A failed flush still durably records its upload origin.
   await assert.rejects(editor.reconcile(bytes('UNVERIFIED'),saved.serial,3),/VERIFIED_REMOTE_REQUIRED/);
   const retained=f.storage.rows.size;
   await editor.reconcile(bytes(dirty?'MERGED LOCAL AND REMOTE':'REMOTE UPDATE'),saved.serial,2,{filename:'',mediaType:'application/json'},dirty?'merge':'cache');

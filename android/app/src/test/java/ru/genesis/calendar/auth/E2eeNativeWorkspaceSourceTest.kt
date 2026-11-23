@@ -26,6 +26,7 @@ class E2eeNativeWorkspaceSourceTest {
             .put("directoryRevision",1).put("projects",JSONArray()).put("categories",JSONArray()).put("workspace",JSONObject().put("keyMode","account")
                 .put("key",Base64.getEncoder().encodeToString(rawKey)).put("envelope",JSONObject().put("ciphertext",encrypted.ciphertext).put("iv",encrypted.iv)
                     .put("version",1).put("updatedAt",Instant.now().toString()).put("minimumWriterProtocol",9)))
+            .put("privatePreferences",JSONObject().put("categoryMapJson",JSONObject.NULL).put("visibilityJson",JSONObject.NULL).put("routingMode",JSONObject.NULL).put("routingTargetsJson",JSONObject.NULL))
         var pending=emptyList<OutboxRecord>()
         init {
             val documents=mutableListOf(DocumentRecord(account,"cloud-base","original-base-ciphertext",1)); originals["cloud-base"]=old.toString()

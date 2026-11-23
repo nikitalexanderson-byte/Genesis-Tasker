@@ -11,7 +11,8 @@ function streamed(parts,options={}){let at=0,cancelled=false;const loans=[];
 }
 test('E2EE raw response limits match native routes and bound error bodies separately',()=>{
  assert.equal(e2eeResponseLimit('/e2ee/v1/read',200),16*1024*1024);assert.equal(e2eeResponseLimit('/e2ee/v1/directory',200),32*1024*1024);
- for(const suffix of ['source','status','bootstrap','command','challenge'])assert.equal(e2eeResponseLimit('/e2ee/v1/'+suffix,200),256*1024);
+ for(const suffix of ['source','status','bootstrap','challenge'])assert.equal(e2eeResponseLimit('/e2ee/v1/'+suffix,200),256*1024);
+ assert.equal(e2eeResponseLimit('/e2ee/v1/command',200),8*1024*1024);
  assert.equal(e2eeResponseLimit('/e2ee/v1/read',503),8192);assert.equal(isE2eeResponsePath('/e2ee/v1/read'),true);assert.equal(isE2eeResponsePath('/session'),false);
  assert.throws(()=>e2eeResponseLimit('/e2ee/v1/unknown',200),/E2EE_/);
 });

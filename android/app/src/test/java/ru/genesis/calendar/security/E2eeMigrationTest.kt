@@ -141,7 +141,13 @@ class E2eeMigrationTest {
         for(mode in listOf("legacy-output","orphan-upload","orphan-private","content-plan")){
             val f=Fixture(Options(before=2,registry="project"));val migration=f.make();migration.prepare()
             if(mode=="legacy-output")reject("SYNTHETIC_PROCESS_DEATH"){migration.run()}
-            val original=stagedState(f).getString("migrationId");migration.cancel();migration.prepareStaged(staged(f),stagedOptions())
+            val original=stagedState(f).getString("migrationId");migration.cancel()
+            if(mode=="legacy-output"){
+                val kept=f.storage.rows.toMap();val calls=f.calls
+                reject("E2EE_STREAMED_PLANNER_REQUIRED"){migration.prepareStaged(staged(f),stagedOptions())}
+                assertEquals(kept,f.storage.rows);assertEquals(calls,f.calls);continue
+            }
+            migration.prepareStaged(staged(f),stagedOptions())
             when(mode){
                 "orphan-upload"->f.device.vault.write(listOf(UnlockedE2eeVault.Write("outbox","$original:upload:unbound",byteArrayOf(1),null)))
                 "orphan-private"->f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","$original:private:unbound",byteArrayOf(1),null)))
@@ -191,9 +197,12 @@ class E2eeMigrationTest {
         val f=Fixture();val capture=staged(f){_,out->out.write(ByteArray(E2eeFiles.CHUNK_BYTES){47})};var died=false
         f.storage.afterCommit={changes->if(!died&&changes.any{it.key.contains("source-stage:")&&it.key.endsWith(":p:00:00000")}){died=true;error("SYNTHETIC_PART_DEATH")}}
         reject("SYNTHETIC_PART_DEATH"){f.make().prepareStaged(capture,stagedOptions())};assertNull(f.make().status())
-        assertFalse(E2eeSourceStage.inspect(f.device.vault,capture.target,{}).single().complete);val kept=f.storage.rows.toMap();var calls=0;f.storage.afterCommit=null
-        reject("E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"){f.make().prepareStaged(staged(f){_,_->calls++},stagedOptions())}
-        assertEquals(0,calls);assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        val known=E2eeSourceStage.inspect(f.device.vault,capture.target,{}).single();assertFalse(known.complete);val kept=f.storage.rows.toMap();var calls=0;f.storage.afterCommit=null
+        reject("E2EE_SOURCE_STAGE_REPLAY_CHANGED"){f.make().prepareStaged(staged(f){_,_->calls++},stagedOptions())}
+        assertEquals(1,calls);assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        f.make().prepareStaged(capture,stagedOptions())
+        val after=E2eeSourceStage.inspect(f.device.vault,capture.target,{});assertEquals(1,after.size);assertTrue(after.single().complete)
+        assertEquals(known.id,stagedState(f).getJSONObject("source").getJSONObject("reference").getString("stageId"))
     }
     @Test fun lostCoordinatorCasLeavesCompleteOrphanInTheNextSnapshotHistory()=runBlocking {
         val f=Fixture();val capture=staged(f);var refused=false
@@ -239,7 +248,9 @@ class E2eeMigrationTest {
         })
         reject("E2EE_LOCAL_CONFLICT"){f.make().prepareStaged(capture,options)};assertTrue(injected);assertNull(f.make().status())
         val known=E2eeSourceStage.inspect(f.device.vault,capture.target,{});assertEquals(2,known.size);assertTrue(known[0].complete);assertFalse(known[1].complete)
-        val kept=f.storage.rows.toMap();reject("E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"){f.make().prepareStaged(capture,stagedOptions())};assertEquals(kept,f.storage.rows);assertEquals(0,f.calls)
+        f.make().prepareStaged(capture,stagedOptions());val after=E2eeSourceStage.inspect(f.device.vault,capture.target,{})
+        assertEquals(2,after.size);assertTrue(after.all{it.complete});val source=stagedState(f).getJSONObject("source")
+        assertEquals(known[1].id,source.getJSONObject("reference").getString("stageId"));assertEquals(known[0].id,source.getJSONArray("history").getJSONObject(0).getString("stageId"));assertEquals(0,f.calls)
     }
     private class Fixture(val options: Options = Options()) : E2eeMigrationTransport {
         val storage = Memory(); val device = Device(storage); val trace = mutableListOf<String>()
