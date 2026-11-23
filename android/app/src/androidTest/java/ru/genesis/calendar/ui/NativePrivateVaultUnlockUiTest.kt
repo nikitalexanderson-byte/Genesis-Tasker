@@ -65,13 +65,12 @@ class NativePrivateVaultUnlockUiTest {
     private fun foregroundMain(){
         // A user relaunches from the launcher. An app-originated start while
         // Home is foreground can be denied by Android's background policy.
-        device.executeShellCommand("am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ${app.packageName}/${MainActivity::class.java.name}")
+        device.executeShellCommand("am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ${app.packageName}/${MainActivity::class.java.name}")
         waitFor{
             var resumed=false
             instrumentation.runOnMainSync{resumed=ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).any{it is MainActivity}}
             resumed&&device.hasObject(By.pkg(app.packageName))
         }
-        instrumentation.waitForIdleSync()
     }
     private fun showLock():JSONObject{
         check(InstrumentationRegistry.getArguments().getString("genesisFullQaHttps")=="true"&&BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug")
