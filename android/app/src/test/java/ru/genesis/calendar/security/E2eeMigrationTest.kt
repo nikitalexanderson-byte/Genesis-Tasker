@@ -545,7 +545,14 @@ class E2eeMigrationTest {
             else if(packet.getJSONObject("command").getString("action") == "legacy-physis")physisPageRead=packet
             else if(packet.getJSONObject("command").getString("action") == "legacy-archives")archiveRead=packet
             else { assertEquals("read",packet.getJSONObject("command").getString("action")); reads.put(packet) }
-            JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).put("envelopes",JSONArray())
+            val command=packet.getJSONObject("command")
+            JSONObject().put("checkpointHash",f.directory.checkpoint.hash).put("directoryRevision",f.directory.checkpoint.revision).apply{
+                if(command.getString("action").startsWith("legacy-")){
+                    val payload=command.getJSONObject("payload")
+                    put("protocol",1);put("ownerId",command.get("ownerId"));put("scopeId",command.get("scopeId"))
+                    put("migrationId",payload.get("migrationId"));put("fence",payload.get("fence"));put("sourceHash",payload.get("sourceHash"))
+                }else put("envelopes",JSONArray())
+            }
         }
         assertTrue(transport.readAll().isEmpty()); assertEquals(2,reads.length())
         val context = E2eeMigrationSourceContext("owner",f.scope,"native-migration-transport",1,E2eeEnvelope.encode(ByteArray(32)),1)

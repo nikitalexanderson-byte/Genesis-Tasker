@@ -4,10 +4,9 @@ import android.app.Activity
 import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.AuthenticationResultCallback
+import androidx.biometric.compose.rememberAuthenticationLauncher
 import androidx.compose.runtime.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -33,7 +32,6 @@ import org.json.JSONObject
         val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val scope=rememberCoroutineScope()
         val language=LocalGenesisLanguage.current
         val copy=remember(language){context.assets.open("native-unlock-copy-v1.json").use{input->val all=JSONObject(input.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
-        var fingerprintVisible by remember(held){mutableStateOf(false)};var fingerprintRetry by remember(held){mutableStateOf(false)}
         val authenticationRef=remember(held){AtomicReference<NativeDeviceAuthentication?>(null)}
         val ended=remember(held){AtomicBoolean(false)};val returned=remember(held){AtomicBoolean(false)}
         val active=remember(held){AtomicReference<NativeMigrationCredential.Opened?>(null)}
@@ -43,7 +41,7 @@ import org.json.JSONObject
         DisposableEffect(held,lifecycle){
             val observer=LifecycleEventObserver{_,event->
                 if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
-                if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);if(!held.waitingForCredential)finish(IllegalStateException("E2EE_FOREGROUND_REQUIRED"))}
+                if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);if(authenticationRef.get()?.systemCredentialPending!=true)finish(IllegalStateException("E2EE_FOREGROUND_REQUIRED"))}
                 if(event==Lifecycle.Event.ON_STOP&&authenticationRef.get()?.systemCredentialPending!=true)finish(IllegalStateException("E2EE_FOREGROUND_REQUIRED"))
                 if(event==Lifecycle.Event.ON_DESTROY)finish(IllegalStateException("E2EE_CREDENTIAL_REVOKED"))
             }
@@ -63,12 +61,9 @@ import org.json.JSONObject
             }
         }
         val launcher=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()){result->authenticationRef.get()?.credentialReturned(result.resultCode==Activity.RESULT_OK)}
-        val authentication=remember(held,context,lifecycle){NativeDeviceAuthentication(context,title,description,copy.getString("pin"),{launcher.launch(it)},
-            {visible,retry->fingerprintVisible=visible;fingerprintRetry=retry},::authenticated).also{authenticationRef.set(it)}}
-        if(fingerprintVisible)AlertDialog(onDismissRequest={authentication.cancel()},title={Text(title)},
-            text={Text(copy.getString(if(fingerprintRetry)"retry"else"hint"))},
-            confirmButton={TextButton(onClick={authentication.useCredential()}){Text(copy.getString("pin"))}},
-            dismissButton={TextButton(onClick={authentication.cancel()}){Text(copy.getString("cancel"))}})
+        val biometric=rememberAuthenticationLauncher(AuthenticationResultCallback{result->authenticationRef.get()?.biometricReturned(result)})
+        val authentication=remember(held,context,lifecycle,biometric){NativeDeviceAuthentication(context,title,description,copy.getString("pin"),{launcher.launch(it)},
+            biometric,::authenticated).also{authenticationRef.set(it)}}
         LaunchedEffect(held.id){
             try{
                 lifecycle.withResumed{};current();authentication.start()

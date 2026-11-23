@@ -1,5 +1,36 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: актуальное продолжение после подключения
+
+Ветка codex/security-336, pushed1921c7da, remote publish, draft PR48.
+Ниже сохранена история, её RUNNING-статусы не являются текущими.
+Native17 debug/test APK + lintDebug SUCCESS; full JVM16:1421 PASS/1 FAIL/8 skipped.
+Единственная старая packet-only fixture исправлена, затронутые34/34 JVM17 PASS;
+это ещё не свежий полный JVM-прогон. Native18 test-only build SUCCESS.
+Controller17/18 оба FAILED по20-minute timeout в sources, причина пока не закрыта.
+Добавлены ограниченные read-only method-only stacks для следующей диагностики.
+
+Core1.18 FingerprintManagerCompat bytecode — no-op, старое объяснение bridge
+неверно. Адаптер удалён; добавлен public biometric-compose1.4.0-rc01 launcher,
+Class3/STRONG, отдельный системный PIN и отмена при фоне/смене запроса.
+Реальный Keystore unlock остаётся обязательным. Build19 выполняется, нового
+biometric PASS пока нет. Component API26-18:0/5, исходный NONE/0 восстановлен
+finally и отдельно подтверждён dumpsys fingerprint + SID/SP Handle0. Для нового
+component19 API26 снова имеет synthetic PIN/fingerprint37 (enrollment-19.json);
+driver19 обязан восстановить NONE/0 в finally. Личные устройства не используются.
+
+Web34/35 активировали project; space отказал на retained product cipher guard.
+Web36 точно подтвердил: все actor/owner/device/writer/schema predicates true,
+только domainAllowed=false для personal/key-check. Короткая ScopeClient regression
+воспроизвела тот же отказ. Correction d155535d пока в linked window-worktree:
+retained jobs используют существующий remoteDomains allowlist, signature/root/
+owner/device guards сохранены. JS scope suite28/28, lint/types и web24 build PASS.
+Native mirror/test ещё требует сборки. Web37 запущен на immutable web24.
+Rate retries соблюдают
+настоящий Retry-After без очистки rate table/увеличения600/10min.
+Шесть анонсных PNG и ZIP уже переданы, это кадры кандидата, не приёмка релиза.
+Coverage9/20, cutover off, floors0, deployAndroid=false;3.3.6 не опубликована.
+
 ## 23 ноября, после 10:55 UTC: bounded batch и повтор33
 
 Native16/session23546 ещё RUNNING; app/android/contracts/public inputs не менять.

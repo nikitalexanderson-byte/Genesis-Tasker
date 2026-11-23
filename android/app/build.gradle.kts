@@ -257,6 +257,7 @@ dependencies {
 
     implementation(composeBom)
     implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.biometric:biometric-compose:1.4.0-rc01")
     implementation("androidx.core:core:1.18.0")
     implementation("androidx.browser:browser:1.10.0")
     implementation("androidx.compose.material3:material3")

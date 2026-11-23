@@ -2,17 +2,23 @@ package ru.genesis.calendar.auth
 
 import android.content.Context
 import android.os.Bundle
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.GenesisApplication
+import ru.genesis.calendar.PagerTestActivity
 import ru.genesis.calendar.data.GenesisProject
 import ru.genesis.calendar.data.LocalCipher
 import ru.genesis.calendar.data.WorkspaceStructureRepository
@@ -32,6 +38,12 @@ import javax.net.ssl.TrustManagerFactory
  * Credential presence is verified by the owned platform runner before this
  * case. This is controller acceptance, not a claim of SAF/Google-provider UI. */
 class NativePrivateProductHttpsTest {
+    @get:Rule val host=ActivityScenarioRule(PagerTestActivity::class.java)
+    @Before fun keepTheControllerFixtureVisible(){
+        // Keep actual WebView/application visibility during the long source
+        // transfer. The trial owner flag alone cannot resume renderer timers.
+        host.scenario.onActivity{it.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)}
+    }
     private val app get()=InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
     private var cookie=""
     private var csrf=""
@@ -110,11 +122,23 @@ class NativePrivateProductHttpsTest {
             fun progress(phase:String){
                 check(phase in setOf("snapshot","sources","reconciliation","uploading","active"))
                 android.util.Log.i("Genesis336QaPhase",phase)
+                InstrumentationRegistry.getInstrumentation().sendStatus(2,Bundle().apply{putString("stream","GENESIS_MIGRATION_PHASE:$phase\n")})
             }
             val guard={check(NativeMigrationUiState.state.value?.id==intent.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
             diagnose("before-personal")
             val migration=auth.preparePrivateMigration(material.secret,material.kit,guard)
-            try{withTimeout(1200000){migration.run(material.secret,material.kit,::progress)}}catch(error:Throwable){diagnose("personal-refusal");throw error}finally{auth.closePrivateMigration(migration)}
+            val sourceDiagnostic=launch(Dispatchers.IO){
+                // Bounded read-only stacks, with method names only. No heap,
+                // account state, URLs, arguments, keys or row values are logged.
+                repeat(3){
+                    delay(45000)
+                    val stacks=Thread.getAllStackTraces().entries.filter{(thread,frames)->thread.name=="main"||frames.any{it.className.startsWith("ru.genesis.calendar.")}}
+                        .map{(thread,frames)->JSONObject().put("main",thread.name=="main").put("state",thread.state.name)
+                            .put("methods",org.json.JSONArray(frames.take(18).map{it.className+"."+it.methodName}))}
+                    android.util.Log.i("Genesis336QaThreads",org.json.JSONArray(stacks).toString())
+                }
+            }
+            try{withTimeout(1200000){migration.run(material.secret,material.kit,::progress)}}catch(error:Throwable){diagnose("personal-refusal");throw error}finally{sourceDiagnostic.cancel();auth.closePrivateMigration(migration)}
             assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/bootstrap",expected=409).getString("error"))
             NativeMigrationUiState.close(intent.id);auth.checkSession()
             withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.user?.privateVault==true&&it.ready&&!it.busy}}
