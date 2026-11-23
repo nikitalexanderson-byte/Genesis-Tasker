@@ -13,13 +13,16 @@ import {validateStreamedPlanningOwnership} from '../app/e2ee/migration-ownership
 import {ProtectedRemoteOriginal,listRemoteOriginals,withRemoteOriginal} from '../app/e2ee/remote-original.ts';
 import {openMigrationContentPlan} from '../app/e2ee/content-plan.ts';
 import {E2EE_CHUNK_BYTES} from '../app/e2ee/files.ts';
+import {collectPrivatePathFragments} from '../app/e2ee/private-path-fragments.ts';
+import {privatePathSource} from '../app/e2ee/private-path-source.ts';
 
 async function sessionReply(f,packet,observation,_signal,status=200,raw=' {"rows":"SYNTHETIC ORIGINAL"} '){
  const saved=await f.readState();try{const owned=saved.state.ownership.originals.find(row=>row.packet.command.operationId===packet.command.operationId);assert.ok(owned);assert.deepEqual(owned.packet,JSON.parse(JSON.stringify(packet)));assert.equal(owned.completion,null);}finally{saved.raw.fill(0);}
  await observation.prepare({path:'/e2ee/v1/read',method:'POST',body:JSON.stringify(packet)});
  await observation.begin({path:'/e2ee/v1/read',status,contentType:'application/json',contentLength:null});
  await observation.append(bytes(raw));await observation.finish();observation.close();
- return{checkpointHash:f.directory.checkpoint.hash,directoryRevision:f.directory.checkpoint.revision,rows:'SYNTHETIC ORIGINAL'};
+ return{protocol:1,ownerId:packet.command.ownerId,scopeId:packet.command.scopeId,migrationId:packet.command.payload.migrationId,
+  fence:packet.command.payload.fence,sourceHash:packet.command.payload.sourceHash,checkpointHash:f.directory.checkpoint.hash,directoryRevision:f.directory.checkpoint.revision,rows:'SYNTHETIC ORIGINAL'};
 }
 
 const bytes=value=>new TextEncoder().encode(value),hash=value=>createHash('sha256').update(value).digest('base64url');
@@ -442,6 +445,30 @@ test('a multi-request session durably renews an expired lease while retaining ea
   },f.policy());
   assert.equal(receipt.ticket.fence,2);assert.equal(receipt.originals.length,2);assert.ok(receipt.originals.every(row=>row.completion));
   assert.deepEqual(f.trace.filter(row=>typeof row==='object').map(row=>row.command.action),['migration-start','migration-resume']);
+ }finally{Date.now=now;}
+});
+
+test('shared fragment collection survives a verified lease renewal and preserves the original signed fences',async t=>{
+ const f=await fixture(t,{kind:'project'}),schema=privatePathSource('project','project.content'),now=Date.now;let elapsed=0,calls=0;
+ Date.now=()=>now()+elapsed;
+ try{
+  const receipt=await f.coordinator.withStreamedPlanning(async session=>{
+   const transport=new SignedMigrationTransport(f.device,f.directory,['shared-project'],async(path,packet,observation,signal)=>{
+    assert.equal(path,'/read');await verifyE2eeCommand(packet,f.device.keys().signing.publicKey);
+    const payload=packet.command.payload,fragment={protocol:1,ownerId:session.context.ownerId,scopeId:session.context.scopeId,kind:'project',resourceId:f.directory.resourceId,
+     migrationId:payload.migrationId,fence:payload.fence,sourceHash:payload.sourceHash,checkpointHash:f.directory.checkpoint.hash,directoryRevision:f.directory.checkpoint.revision,
+     pathId:payload.pathId,table:payload.table,offset:payload.offset,byteOffset:payload.byteOffset,totals:Object.fromEntries(schema.server.map(name=>[name,0])),
+     rowBytes:0,rowHash:null,chunk:'',nextByteOffset:null,nextOffset:null};
+    const {totals,rowBytes,rowHash,chunk,nextByteOffset,nextOffset,...header}=fragment;void totals;void rowBytes;void rowHash;void chunk;void nextByteOffset;void nextOffset;
+    const response={...header,fragments:[fragment]};
+    await sessionReply(f,packet,observation,signal,200,JSON.stringify(response));calls++;elapsed=3600*1000;return response;
+   },session);
+   const result=await collectPrivatePathFragments(session.context,{kind:'project',resourceId:f.directory.resourceId,pathId:'project.content'},
+    {assertCurrent(){},read(){throw new Error('BATCH_REQUIRED');},readBatch:(...args)=>transport.legacyPrivatePathBatch(...args)});
+   assert.deepEqual(Object.keys(result.tables),schema.server);
+  },f.policy());
+  assert.equal(calls,schema.tables.length);assert.equal(receipt.ticket.fence,2);
+  assert.deepEqual(receipt.originals.map(row=>row.registration.binding.fence),[1,...schema.tables.slice(1).map(()=>2)]);
  }finally{Date.now=now;}
 });
 

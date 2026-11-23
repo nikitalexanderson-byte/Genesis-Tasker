@@ -1,5 +1,18 @@
 # Genesis Tasker: действующие правила
 
+- Legacy fingerprint для API26–29 использует зафиксированный AndroidX Core1.18
+  bridge, поскольку SDK37 удалил typed platform FingerprintManager. Исключение
+  RestrictedApi ограничено только методом адаптера; не переносить подавление
+  на весь файл или lint baseline. Реальная Keystore-проверка после UI обязательна.
+  Снимки кандидата для анонса не являются приёмкой безопасности или выпуском.
+
+- 23 ноября русский SVG-флаг опубликован отдельно от безопасности: main
+  4cc6750315ce115074f129239598d6673ae73cc6, Source checks45140708340 и штатный
+  Deploy45146768399 SUCCESS. Live meta, SVG200 и реальный radio «Русский» с
+  loaded /language-flags/ru.svg без текста RU подтверждены; Android manifest
+  3.3.5/149 неизменен. Принятая база включена в security ветку merge b5616c4c.
+  Дальнейшая работа только вперёд от неё; это не выпуск/активация3.3.6.
+
 - 23 ноября механизм PIN/отпечатка принят отдельным реальным component run на
   owned API34: RecoveryCredentialActivity + auth-required Android Keystore,
   4/4 (PIN, fingerprint37, отмена, фон). Это ещё не полная приёмка аккаунта или

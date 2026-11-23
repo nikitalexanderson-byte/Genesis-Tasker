@@ -182,6 +182,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
     val context=LocalContext.current;val app=context.applicationContext as GenesisApplication
     val storageScope=app.workspaceScope;val workspaceEpoch=app.workspaceEpoch
     val controller=remember(context){AuthController.get(context)}
+    val authState by controller.state.collectAsStateWithLifecycle()
     val gateway=remember(owner,storageScope,workspaceEpoch,testGateway){testGateway?:controller.auroraGateway(owner)}
     val scope=rememberCoroutineScope();val store=remember(owner,storageScope,gateway){AuroraNativeStore(app,owner,storageScope,gateway)}
     val dark=LocalEveningTheme.current;val palette=LocalDarkPalette.current;val language=LocalGenesisLanguage.current
@@ -201,7 +202,7 @@ internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, priv
         .put("temporal",temporal?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}
     var web by remember(store){mutableStateOf<WebView?>(null)};var ready by remember(store){mutableStateOf(false)};var failed by remember(store){mutableStateOf(runtimeProblem!=null)}
-    val migrationOwner=rememberLegacyMigrationOwner(storageScope)?.takeIf{it==owner&&!controller.state.value.requiresSignIn}
+    val migrationOwner=rememberLegacyMigrationOwner(storageScope)?.takeIf{it==owner&&!authState.requiresSignIn}
     val migration=remember(store,migrationOwner){migrationOwner?.let{uid->
         val guard=controller.privateUiOwnerGuard(uid)
         NativeEmbeddedMigrationCapture(uid,boot){guard();gateway.check()}

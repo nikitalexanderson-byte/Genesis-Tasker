@@ -80,7 +80,8 @@ export class SignedMigrationTransport implements MigrationTransport {
     if(!this.#planning){preflight();throw new Error('E2EE_STREAMED_CAPTURE_REQUIRED');}
     return this.#planning.requestLegacy(context,action,page,async(packet,observation,signal)=>{
       const response=await this.#call('/read',packet,observation,signal);
-      if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');return response;
+      if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');
+      return projectLegacyCaptureResponse(response,packet,context);
     },preflight);
   }
   async #read(action:'read'|'get',payload:Record<string,WireValue>){
@@ -127,4 +128,25 @@ export class SignedMigrationTransport implements MigrationTransport {
     await this.#walk(50,async envelope=>{bytes+=JSON.stringify(envelope).length;if(bytes>256*1024*1024)throw new Error('E2EE_MIGRATION_TOO_LARGE');result.push(envelope);});
     return result;
   }
+}
+
+// The coordinator may renew its server lease between source pages. Authenticate
+// each actual signed fence before projecting it into the collector's immutable
+// context. The HTTP observer retains the original bytes and renewed fence.
+function projectLegacyCaptureResponse(response:Record<string,WireValue>,packet:SignedE2eeCommand,context:MigrationSourceContext){
+ const payload=packet.command.payload,fence=payload.fence;
+ if(!Number.isSafeInteger(fence)||(fence as number)<context.fence||payload.migrationId!==context.migrationId||payload.sourceHash!==context.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ const expected={protocol:1,ownerId:context.ownerId,scopeId:context.scopeId,migrationId:context.migrationId,sourceHash:context.sourceHash,fence};
+ if(Object.entries(expected).some(([key,value])=>response[key]!==value))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ const value=structuredClone(response);
+ if(Object.hasOwn(value,'fragments')){
+  const maximum=payload.maxFragments;
+  if(!Number.isSafeInteger(maximum)||(maximum as number)<1||(maximum as number)>50||!Array.isArray(value.fragments)||!value.fragments.length||value.fragments.length>(maximum as number))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  value.fragments=value.fragments.map(fragment=>{
+   if(!fragment||typeof fragment!=='object'||Array.isArray(fragment))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   for(const key of [...Object.keys(expected),'kind','resourceId','checkpointHash','directoryRevision'])if(fragment[key]!==response[key])throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   return{...fragment,fence:context.fence};
+  });
+ }
+ return{...value,fence:context.fence};
 }

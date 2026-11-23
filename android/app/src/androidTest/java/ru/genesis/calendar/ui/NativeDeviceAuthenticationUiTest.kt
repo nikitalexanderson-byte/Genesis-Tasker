@@ -48,6 +48,7 @@ class NativeDeviceAuthenticationUiTest {
     @Before fun mountedRealCredentialComponent(){
         check(BuildConfig.DEBUG&&compose.activity.packageName=="ru.genesis.calendar.qa1103.debug")
         check(InstrumentationRegistry.getArguments().getString("genesisOwnedUnlockQa")=="true")
+        compose.activity.runOnUiThread{compose.activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)}
         owner="device-unlock-${UUID.randomUUID()}"
         vault=E2eeDeviceVault(compose.activity,owner)
         // The runner verifies the pre-existing owned device credential before
@@ -101,6 +102,16 @@ class NativeDeviceAuthenticationUiTest {
     }
     @Test fun d_hardwareFingerprintOpensTheRealProtectedRecord(){
         prompt();signal("fingerprint");waitOutcome()
+        assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
+    }
+    @Test fun e_expiredForegroundAuthenticationRequiresFreshSystemPin(){
+        instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_WAIT:expiry\n")})
+        val until=SystemClock.elapsedRealtime()+305000L
+        while(SystemClock.elapsedRealtime()<until)SystemClock.sleep(250)
+        assertTrue(compose.activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
+        val refused=runCatching{vault.unlock().also{it.fill(0)}}.exceptionOrNull()
+        assertEquals("E2EE_UNLOCK_REQUIRED",refused?.message);assertEquals(0,operations.get())
+        prompt();requireNotNull(device.findObject(By.text(pin))).click();signal("pin");waitOutcome()
         assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
     }
 }

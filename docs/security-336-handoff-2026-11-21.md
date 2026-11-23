@@ -1,5 +1,115 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: воспроизведён и исправлен отказ при продлении source lease
+
+Web32 FAILED:12 personal/recovery checks PASS, затем project source capture
+отказал E2EE_PRIVATE_PATH_TRANSPORT_INVALID сразу после migration-resume200.
+Обновлённый signed fence возвращался в collector с прежним immutable context.
+Новый regression воспроизвёл ТОТ ЖЕ отказ без полного browser journey. Теперь
+web/native SignedMigrationTransport сначала проверяют actual signed payload,
+owner/scope/migration/source/fence и каждый batch fragment, затем проецируют
+технический fence для category reader. Raw HTTP originals и их реальные fences
+не переписываются. JS streamed-planning34/34 PASS, включая новое продление;
+log runtime/renewed-source-regression-after.log. Parser/budgets не ослаблены.
+
+Mutation lease99ceef45 перенесена в основную ветку как24c42a38. Build15 остановлена
+до lint из-за найденного cross-platform дефекта; PASS ей не приписывать.
+Сейчас build16/session23546: full JVM + debug/test APK + lintDebug; inputs
+заморожены. Log runtime/native150-renewed-source-build16.log, input hash рядом.
+Добавлены3 native response-projection regressions и5-й component UI case:
+реальные305s foreground expiry, отказ Keystore, новый system PIN и открытие
+того же record. KEEP_SCREEN_ON действует только в test Activity, auth TTL300s
+не менялся. Результаты native16 и реального browser33 ещё НЕ получены.
+
+После identity16 запускать runtime/native150-unlock-component-api26-16.ps1
+и native150-unlock-component-api34-16.ps1 (с новым RunId): ожидаются5 cases,
+включая expiry без auth-refresh helper. API26 пока всё ещё synthetic PIN/37;
+driver26 в finally восстанавливает исходные NONE/0prints. Затем полный native
+controller/integrated account и остальные условия выпуска. Coverage9/20.
+
+## 23 ноября, после 10:30 UTC: анонсные кадры переданы, приёмка продолжается
+
+Просмотрены шесть реальных Compose-кадров кандидата с синтетическими данными:
+lock/recovery/device-entry, RU light/dark, 1080×2400. Пользователю переданы
+превью и output/announcement-3.3.6/GENESIS-3.3.6-screenshots-RU.zip с captions.txt.
+Чёрные защищённые system fingerprint frames исключены; FLAG_SECURE не обходился.
+Исходный QA test APK14 восстановлен поверх capture APK на owned API34.
+
+Web mutation lease correction проверена37/37, lint/types/build22 PASS и сохранена
+в linked worktree commit99ceef45 (codex/security-336-window-1123). После замороженной
+native build15 перенести этот commit в основную ветку и пересобрать/зафиксировать
+identity совмещённых inputs перед native acceptance. Web32/session65885 ещё
+RUNNING:12 personal/recovery checks PASS, shared controller journey pending.
+
+Build14 завершилась FAILED: JVM1419 PASS/8skipped, но lint13errors. В основной
+копии исправлены оба StateFlow composition reads через lifecycle collection;
+11 Core1.18 RestrictedApi usages изолированы в документированном API26–29
+fingerprint adapter с одной локальной аннотацией. Новых зависимостей/глобального
+baseline нет. Build15/session92159 (native150-lint-corrections-build15.log):
+assembleDebug/assembleDebugAndroidTest/lintDebug выполняются, inputs не менять.
+
+ВАЖНО: owned API26 emulator-5594 временно имеет synthetic PIN и fingerprint37
+для проверки legacy adapter. Исходное состояние NONE/0prints сохранено в
+runtime/api26-biometric-before-1123.json. Enrollment через настоящий Settings UI
+подтверждён. Подготовлен runtime/native150-unlock-component-api26-15.ps1: после
+актуальной build identity выполняет4 реальных component cases и в finally
+восстанавливает NONE/0prints. Если запуск откладывается, вызвать
+Clear-OwnedApi26Credential из owned-api26-auth-functions-1123.ps1 и проверить0prints.
+PIN/содержимое старых storage scripts не выводить. API34 PIN/fingerprint сохранены.
+
+CI exact b5616c4c: push45147148933 и PR45147580879 — оба Android и web-and-api
+SUCCESS, включая browser scenarios. Это не приёмка новых local corrections.
+Coverage9/20, floors0, cutover off; релиза/активации3.3.6 пока нет.
+
+## 23 ноября, после 09:30 UTC: checkpoint и отдельный флаг опубликованы
+
+Correction code committed df60ed7c, затем merge принятого main b5616c4c
+(полный b5616c4cec9946d2fda1a0cd3110219a1de1ccfd) и push в publish/codex/security-336.
+Remote называется publish, origin отсутствует. Draft PR48:
+https://github.com/nikitalexanderson-byte/Genesis-Tasker/pull/48 . Не merge до
+полной приёмки. Source checks push45147148933 RUNNING; web lint/types,
+translation/domain/render tests и web build уже SUCCESS. Android продолжается;
+PR run отдельный, group checks-${github.ref}, не отменять требуемые checks.
+
+Native build14/session72672 уже прошёл main Kotlin/JVM и assembleDebug; сейчас
+compileDebugAndroidTestKotlin, затем lintDebug; inputs до результата не менять.
+Scoped36/36 PASS и web21 lint/types/build PASS; immutable web-private-21/public_html
+готов. Web31/session90175 FAILED после actual migration-commit200: новый UI-based
+product mutation guard запретил собственный product seed при post-migration unlock
+(E2EE_MIGRATION_BUSY; historyGuards[]). Это НЕ успешный full personal/shared run.
+Следующий correction block: перенести owner-counted mutation lease в чистый
+app/e2ee/product-mutation-fence.ts, приобретать внутри WebProductMigration.#execute
+перед источниками и отпускать в finally после завершения/cancel-drain. ScopeClient
+и EditorQueue проверяют lease перед и внутри commit. Само открытое UI не должно
+продлевать lease после завершившейся миграции. Удалить зависимость core writer от
+private-migration-ui; обновить два regression cases на явную lease и проверить
+вложенное/double release. Затем build22 и actual shared32, не повторять31 без fix.
+Log runtime/consolidated-private-shared31.log, report output/playwright/
+security336-private-shared-31-1123/private-product-results.json.
+QA mapper logpoints теперь допускают все retained chunk URLs: сработать может
+только реально загруженный; все conditions false, event loop не останавливается.
+
+Отдельный флаг ПОЛНОСТЬЮ опубликован: main4cc6750315ce115074f129239598d6673ae73cc6,
+Source checks45140708340 SUCCESS, Deploy45146768399 SUCCESS. Live meta exact SHA,
+SVG200, весь Android manifest149 unchanged. Реальный radio «Русский» на EN `/`
+имеет loaded /language-flags/ru.svg и textContent пустой. Снимок
+output/playwright/ru-language-flag-live-1123.png просмотрен: единый стиль всех14.
+Playwright CLI сначала получил403 browser challenge, затем тот же session сам
+загрузил настоящий сайт; барьер не обходился. Browser session genesis-flag-1123
+закрыт (exec3149 SUCCESS); чужие/IAB/Paddle tabs не изменялись. Это дополняет прежние
+16 preview combinations, не новый полный accessibility audit. Security не deployed.
+
+Дополнительный пункт для финального native review: ensureDurableKeys повторно
+открывает auth-required аппаратный vault с300s window. Actual foreground write/
+long migration после300s БЕЗ helper reauthentication ещё не принят. Headless
+controller runner refresh90s нельзя выдавать за UX без повторного PIN; проверить
+реальный expiry/refusal/resume и понятность gate, не ослаблять presence TTL.
+
+Документация после b5616c4c dirty; новый push без кодовой необходимости сейчас
+отменит выполняющийся branch check, поэтому объединить её со следующим нужным
+checkpoint. Goal active; полный signed149→150/minified/API26/20paths/48scenarios/
+final internal review/release остаётся. demo-output не читать/stage.
+
 ## 23 ноября, после 09:18 UTC: PIN/отпечаток принят, исправлены гонки
 
 Actual component PASS4/4,0skipped на owned API34: output/qa/

@@ -1,5 +1,6 @@
 package ru.genesis.calendar.ui
 
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
@@ -48,22 +49,30 @@ internal class NativeDeviceAuthentication(
                         }
                     })
             }else{
-                // Pre-30 BiometricPrompt cannot constrain every modality to
-                // STRONG. Use the platform fingerprint service, then the system
-                // credential activity; never admit a weak face result.
-                val fingerprint=FingerprintManager.from(context)
-                if(!fingerprint.isHardwareDetected||!fingerprint.hasEnrolledFingerprints()){useCredential();return}
-                fingerprintUi(true,false)
-                fingerprint.authenticate(null,0,signal,object:FingerprintManager.AuthenticationCallback(){
-                    override fun onAuthenticationSucceeded(result:FingerprintManager.AuthenticationResult){biometricAccepted()}
-                    override fun onAuthenticationFailed(){if(phase.get()==Phase.BIOMETRIC)fingerprintUi(true,true)}
-                    override fun onAuthenticationError(code:Int,message:CharSequence){
-                        if(phase.get()!=Phase.BIOMETRIC)return
-                        if(code==BiometricPrompt.BIOMETRIC_ERROR_CANCELED)cancel() else useCredential()
-                    }
-                },Handler(Looper.getMainLooper()))
+                startLegacyFingerprint(signal)
             }
         }catch(_:Exception){if(phase.get()==Phase.BIOMETRIC)useCredential()}
+    }
+
+    // Pre-30 BiometricPrompt cannot require STRONG for every modality. The
+    // pinned Core 1.18 bridge retains fingerprint-only access for API26-29
+    // after SDK37 removed the typed platform FingerprintManager. Confine this
+    // library restriction exception to that adapter; successful UI confirmation
+    // still does not replace opening the authentication-required Keystore key.
+    @SuppressLint("RestrictedApi")
+    private fun startLegacyFingerprint(signal:CancellationSignal){
+        check(Build.VERSION.SDK_INT in 26..29)
+        val fingerprint=FingerprintManager.from(context)
+        if(!fingerprint.isHardwareDetected||!fingerprint.hasEnrolledFingerprints()){useCredential();return}
+        fingerprintUi(true,false)
+        fingerprint.authenticate(null,0,signal,object:FingerprintManager.AuthenticationCallback(){
+            override fun onAuthenticationSucceeded(result:FingerprintManager.AuthenticationResult){biometricAccepted()}
+            override fun onAuthenticationFailed(){if(phase.get()==Phase.BIOMETRIC)fingerprintUi(true,true)}
+            override fun onAuthenticationError(code:Int,message:CharSequence){
+                if(phase.get()!=Phase.BIOMETRIC)return
+                if(code==BiometricPrompt.BIOMETRIC_ERROR_CANCELED)cancel() else useCredential()
+            }
+        },Handler(Looper.getMainLooper()))
     }
     private fun biometricAccepted(){
         if(phase.compareAndSet(Phase.BIOMETRIC,Phase.FINISHED)){

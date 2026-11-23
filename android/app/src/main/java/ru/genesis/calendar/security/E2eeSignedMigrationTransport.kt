@@ -69,7 +69,8 @@ class E2eeSignedMigrationTransport private constructor(private val device: E2eeS
         val session=planning?:run{preflight();error("E2EE_STREAMED_CAPTURE_REQUIRED")}
         return session.requestLegacyChecked(context,action,page,preflight){packet,observation->
             val result=call("/read",packet,observation)
-            check(result.get("checkpointHash")==checkpoint&&E2eeCommands.integer(result.get("directoryRevision"),1)==revision){"E2EE_DIRECTORY_CONFLICT"};result
+            check(result.get("checkpointHash")==checkpoint&&E2eeCommands.integer(result.get("directoryRevision"),1)==revision){"E2EE_DIRECTORY_CONFLICT"}
+            projectLegacyCaptureResponse(result,packet,context)
         }
     }
     private suspend fun read(action:String,payload:JSONObject):JSONObject {
@@ -115,4 +116,27 @@ class E2eeSignedMigrationTransport private constructor(private val device: E2eeS
         walk(50){envelope->bytes+=envelope.toJson().toString().length;check(bytes<=256L*1024*1024){"E2EE_MIGRATION_TOO_LARGE"};result+=envelope};return result
     }
     override fun toString() = "E2eeSignedMigrationTransport([redacted])"
+}
+
+/** Project only a response authenticated against the actual signed renewed
+ * lease. The observer keeps original bytes/fences for custody and replay. */
+internal fun projectLegacyCaptureResponse(response:JSONObject,packet:JSONObject,context:E2eeMigrationSourceContext):JSONObject{
+    val payload=packet.getJSONObject("command").getJSONObject("payload")
+    val fence=E2eeCommands.integer(payload.get("fence"),1)
+    check(fence>=context.fence&&payload.get("migrationId")==context.migrationId&&payload.get("sourceHash")==context.sourceHash){"E2EE_SCOPE_BINDING_MISMATCH"}
+    check(E2eeCommands.integer(response.get("protocol"),1)==1L&&response.get("ownerId")==context.ownerId&&response.get("scopeId")==context.scopeId
+        &&response.get("migrationId")==context.migrationId&&response.get("sourceHash")==context.sourceHash&&E2eeCommands.integer(response.get("fence"),1)==fence){"E2EE_SCOPE_BINDING_MISMATCH"}
+    val value=JSONObject(response.toString())
+    if(value.has("fragments")){
+        val maximum=E2eeCommands.integer(payload.get("maxFragments"),1)
+        val fragments=value.getJSONArray("fragments")
+        check(maximum<=50&&fragments.length().toLong() in 1..maximum){"E2EE_SCOPE_BINDING_MISMATCH"}
+        for(at in 0 until fragments.length()){
+            val fragment=fragments.getJSONObject(at)
+            for(key in listOf("protocol","ownerId","scopeId","migrationId","sourceHash","fence","kind","resourceId","checkpointHash","directoryRevision"))
+                check(fragment.opt(key)==response.opt(key)){"E2EE_SCOPE_BINDING_MISMATCH"}
+            fragment.put("fence",context.fence)
+        }
+    }
+    return value.put("fence",context.fence)
 }

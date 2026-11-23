@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -61,7 +62,8 @@ internal fun SharedTaskSeriesPanel(gateway: SharedTaskSeriesGateway, task: JSONO
     val mode = when (rule.mode) { "classic" -> CalendarMode.PROFANE; "lunar" -> CalendarMode.LUNAR; else -> CalendarMode.SACRED }
     val dirty = settingsJson + ":$paused" != baseline || refreshTemplate || zoneDraft != rule.calendarContext!!.timeZone ||
         limitDraft != settings.getInt("limit").toString() || delayDraft != settings.getInt("delayDays").toString()
-    val migrationOwner=AuthController.get(LocalContext.current).state.value.user?.uid
+    val authState by AuthController.get(LocalContext.current).state.collectAsStateWithLifecycle()
+    val migrationOwner=authState.user?.uid
     val migrationInput=rememberUpdatedState { ru.genesis.calendar.security.NativeMigrationMemory.Capture(null,JSONObject().put("format","genesis-shared-series-editor-input-v1").put("projectId",project).put("taskId",taskId).put("taskRevision",baseTaskRevision).put("seriesRevision",baseSeriesRevision).put("settings",JSONObject(settingsJson)).put("paused",paused).put("refreshTemplate",refreshTemplate).put("baseline",baseline).put("zoneDraft",zoneDraft).put("excludedDate",excludedDate).put("limitDraft",limitDraft).put("delayDraft",delayDraft).put("dirty",dirty),!busy) }
     DisposableEffect(migrationOwner,project,taskId){val unregister=migrationOwner?.let{owner->ru.genesis.calendar.security.NativeMigrationMemory.register(owner,"local-work",read={migrationInput.value()})};onDispose{unregister?.invoke()}}
     val stale = initialized && ((series?.optLong("revision") ?: 0) != baseSeriesRevision || task.getLong("revision") != baseTaskRevision)
