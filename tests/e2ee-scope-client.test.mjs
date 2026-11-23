@@ -55,6 +55,16 @@ test('closing the scope during a pending refresh cannot reinstall an open channe
  const refresh=client.refresh();await begun;client.close();release();
  await assert.rejects(refresh,/E2EE_UNLOCK_REQUIRED/);await assert.rejects(client.recoverReceipt('diary','not-saved'),/E2EE_REFRESH_REQUIRED/);f.device.lock();
 });
+test('a multi-chunk file keeps its original bytes when a rate refusal interrupts upload and the same journal resumes',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();const input=new Uint8Array(1331200).map((_,i)=>i%251);
+ const command=f.transport.command;let puts=0,refused=false;
+ f.transport.command=async packet=>{if(packet.command.action==='put'&&++puts===2){refused=true;throw Error('E2EE_HTTP_ERROR');}return command(packet);};
+ await client.prepare('attachment','retained-file',input,0,{filename:'private.txt',mediaType:'text/plain'});
+ await assert.rejects(client.flush('attachment','retained-file'),/E2EE_HTTP_ERROR/);assert(refused);
+ await client.refresh();await client.flush('attachment','retained-file');
+ const reopened=await f.reopen();await reopened.refresh();const actual=await reopened.read('attachment','retained-file');
+ assert(actual);assert.deepEqual(actual.bytes,input);assert.equal(actual.filename,'private.txt');f.device.lock();
+});
 test('an active migration freezes encrypted uploads and editors, then permits initialization while its surface remains visible',async()=>{
   const f=await fixture(),client=f.make();await client.refresh();
   await client.prepare('diary','frozen-upload',bytes('retained pending input'),0);

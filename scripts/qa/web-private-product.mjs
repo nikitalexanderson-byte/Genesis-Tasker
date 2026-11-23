@@ -16,7 +16,7 @@ const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8'))
 const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],networkFailures:[],networkRetries:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
 report.keyBundleRefusals=[];
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
-let page,secret,kit,backupKey,deviceLocalCode;
+let page,secret,kit,backupKey,deviceLocalCode,fixtureOwnerId;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
 const sharedJourney=['shared','shared-locales','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
@@ -98,7 +98,7 @@ try{
   for(const {file,source,found} of candidates){
    const at=source.indexOf('return '+found[3]+'===`E2EE_REAUTH_REQUIRED`',found.index);
    const before=source.slice(0,at),lineNumber=before.split('\n').length-1,columnNumber=at-before.lastIndexOf('\n')-1;
-   const condition=`(()=>{const qaFailure=${found[2]},message=qaFailure instanceof Error?qaFailure.message:'',technical=/^E2EE_[A-Z_]+$/.test(message);console.info('GENESIS_QA_MIGRATION_REFUSAL '+(technical?message:'NON_TECHNICAL_ERROR'));if(message==='E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED'||!technical){const frames=(typeof qaFailure?.stack==='string'?qaFailure.stack:'').split(String.fromCharCode(10)).slice(1,9).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});if(technical)console.info('GENESIS_QA_MIGRATION_FRAMES '+JSON.stringify(frames));else console.info('GENESIS_QA_MIGRATION_ERROR '+JSON.stringify({name:typeof qaFailure?.name==='string'&&/^[A-Za-z]+$/.test(qaFailure.name)?qaFailure.name:typeof qaFailure,frames}));}return false;})()`;
+   const condition=`(()=>{const qaFailure=${found[2]},message=qaFailure instanceof Error?qaFailure.message:'',technical=/^E2EE_[A-Z_]+$/.test(message);console.info('GENESIS_QA_MIGRATION_REFUSAL '+(technical?message:'NON_TECHNICAL_ERROR'));if(message==='E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED'||message==='E2EE_CORRUPT_FILE'||!technical){const frames=(typeof qaFailure?.stack==='string'?qaFailure.stack:'').split(String.fromCharCode(10)).slice(1,9).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});if(technical)console.info('GENESIS_QA_MIGRATION_FRAMES '+JSON.stringify(frames));else console.info('GENESIS_QA_MIGRATION_ERROR '+JSON.stringify({name:typeof qaFailure?.name==='string'&&/^[A-Za-z]+$/.test(qaFailure.name)?qaFailure.name:typeof qaFailure,frames}));}return false;})()`;
    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+file,lineNumber,columnNumber,condition});
   }
   for(const artifact of readdirSync(assets).filter(name=>/^private-security-ui-[\w-]+\.js$/.test(name))){
@@ -162,7 +162,7 @@ try{
  });
  await check('synthetic pilot and ordinary account',async()=>{
   const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert.equal(status.pilotAllowed,true);assert.equal(status.scopes.length,0);
-  const session=await(await context.request.get('/api/session')).json();assert.equal(session.user.isAdmin,false);assert(session.user.email.endsWith('@example.invalid'));
+  const session=await(await context.request.get('/api/session')).json();assert.equal(session.user.isAdmin,false);assert(session.user.email.endsWith('@example.invalid'));assert(session.user.uid.startsWith('qa-'));fixtureOwnerId=session.user.uid;
  });
  await check('legacy personal task survives reload before transfer',async()=>{
   await page.goto('/?lang=ru#today');
@@ -468,5 +468,17 @@ try{
 }catch(error){
  report.status='FAIL';report.error=redactPrivateText(error.message);process.exitCode=1;
  if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true,mask:[page.locator('input[type=password],textarea')]}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,redactPrivateText(await page.locator('body').ariaSnapshot().catch(()=>'')));}
+ if(process.env.GENESIS_QA_PRESERVE_SYNTHETIC==='true'&&fixtureOwnerId&&secret&&kit){
+  // Explicitly owned throwaway inputs stay outside the backend dump boundary.
+  // This file must never be printed, staged or treated as a production design.
+  const directory=path.resolve(output,'client-state');mkdirSync(directory,{recursive:false,mode:0o700});
+  writeFileSync(path.join(directory,'owner.json'),JSON.stringify({synthetic:true,directory:directory.replaceAll('\\','/'),origin:baseURL}),{mode:0o600,flag:'wx'});
+  await context.storageState({path:path.join(directory,'browser.private.json'),indexedDB:true});
+  const digest=async bytes=>bytes?Buffer.from(await crypto.subtle.digest('SHA-256',bytes)).toString('hex'):null;
+  writeFileSync(path.join(directory,'recovery.private.json'),JSON.stringify({ownerId:fixtureOwnerId,secret,kit,backupKey,
+   shared:sharedFixture?{spaceId:sharedFixture.space.id,projectId:sharedFixture.project.id,taskId:sharedFixture.task.id,title:sharedFixture.task.title,
+    fileSha256:await digest(sharedFixture.file),imageSha256:await digest(sharedFixture.image)}:null}),{mode:0o600,flag:'wx'});
+  report.clientStatePreserved=true;
+ }
  console.error(redactPrivateText(error.message));
 }finally{secret=undefined;kit=undefined;backupKey=undefined;deviceLocalCode=undefined;save();await context.close();await browser.close();}
