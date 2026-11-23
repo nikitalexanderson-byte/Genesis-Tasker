@@ -689,6 +689,11 @@ test('emit signed readback and fixture-only legacy protocol packets for the PHP 
     else if(packet.command.action==='legacy-physis')physisPageRead=packet;
     else if(packet.command.action==='legacy-archives')archiveRead=packet;
     else{assert.equal(packet.command.action,'read');reads.push(packet);}
+    if(packet.command.action.startsWith('legacy-')){
+      const {ownerId,scopeId,payload}=packet.command;
+      return{protocol:1,ownerId,scopeId,migrationId:payload.migrationId,sourceHash:payload.sourceHash,fence:payload.fence,
+        checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision};
+    }
     return{checkpointHash:directory.checkpoint.hash,directoryRevision:directory.checkpoint.revision,envelopes:[]};
   },planning);
   assert.deepEqual(await transport.readAll(),[]);assert.equal(reads.length,2);

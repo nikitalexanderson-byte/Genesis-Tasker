@@ -23,10 +23,11 @@ const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-c
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
 const cacheCanary='PRIVATE-CACHE-'+crypto.randomUUID();
 let sharedFixture;
+const redactPrivateText=value=>secret?String(value).replaceAll(secret,'[redacted recovery secret]'):String(value);
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
- catch(error){report.checks.push({name,status:'FAIL',error:error.message});throw error;}
+ catch(error){report.checks.push({name,status:'FAIL',error:redactPrivateText(error.message)});throw error;}
 };
 const context=await browser.newContext({baseURL,viewport:{width:1440,height:1000},locale:'ru-RU',timezoneId:'Europe/Moscow',acceptDownloads:true});
 await context.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
@@ -95,7 +96,7 @@ try{
   if(!code&&event.data?.description){const message=event.data.description.split('\n')[0].slice(0,160);if(message!=='Promise'&&!message.startsWith('Error: Minified React error #460'))console.log('SYNTHETIC CAUGHT '+message);}
   void debug.send('Debugger.resume').catch(()=>{});
  });
- page.on('pageerror',error=>report.pageErrors.push(error.message));
+ page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
  page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ',frames='GENESIS_QA_MIGRATION_FRAMES ',predicates='GENESIS_QA_CUSTODY_PREDICATES ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}else if(message.text().startsWith(frames)){report.custodyFrames.push(JSON.parse(message.text().slice(frames.length)));console.log(message.text());save();}else if(message.text().startsWith(predicates)){report.custodyPredicates.push(JSON.parse(message.text().slice(predicates.length)));console.log(message.text());save();}});
  page.on('response',async response=>{
   if(response.url()===baseURL+'/api/bootstrap'){const body=await response.json().catch(()=>null);console.log('BOOTSTRAP '+JSON.stringify({status:response.status(),keyMode:body?.workspace?.keyMode,keyPresent:!!body?.workspace?.key}));}
@@ -360,7 +361,7 @@ try{
  await check('no unhandled product errors',async()=>assert.deepEqual(report.pageErrors,[]));
  report.status='PASS';
 }catch(error){
- report.status='FAIL';report.error=error.message;process.exitCode=1;
- if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,await page.locator('body').ariaSnapshot().catch(()=>''));}
- console.error(error.message);
+ report.status='FAIL';report.error=redactPrivateText(error.message);process.exitCode=1;
+ if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,redactPrivateText(await page.locator('body').ariaSnapshot().catch(()=>'')));}
+ console.error(redactPrivateText(error.message));
 }finally{secret=undefined;kit=undefined;save();await context.close();await browser.close();}

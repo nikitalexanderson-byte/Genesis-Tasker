@@ -1,5 +1,23 @@
 # Зависимости: повторный аудит для 3.3.6
 
+## Срез23 ноября2026, кандидат19e81519
+
+Повторный `pnpm audit --json`: exit0, critical/high/moderate/low/info —0.
+Evidence: `output/release-3.3.6/runtime/dependency-audit-1123-candidate20.json`.
+Результат относится к текущему advisory feed; это не замена крипторевью.
+
+Для системного отпечатка закреплён `androidx.biometric:biometric-compose:1.4.0-rc01`
+из официального Google Maven. Public Compose launcher поддерживает существующий
+ComponentActivity; смена Activity/UI-стека не потребовалась. Запрос Class3/STRONG,
+отдельный переход к системному PIN, фактический auth-required Keystore unlock
+и owner/lifecycle checks сохранены. AndroidX Core1.18 FingerprintManagerCompat
+по проверенному bytecode является no-op и из этого пути удалён; прежнее
+утверждение о рабочем legacy bridge отозвано. Источники/bytecode evidence —
+`output/release-3.3.6/runtime/biometric-1.4.0-rc01-sources.jar` и
+`core118-fingerprint-bytecode.txt`. Это RC-зависимость; окончательная приёмка
+должна включать реальные API26/API34 и minified startup финального кандидата.
+Native19 debug/test APK собраны, но сам факт сборки не засчитывается biometric PASS.
+
 ## Повторный срез19 ноября2026
 
 Новый `pnpm audit --json` завершился exit0: critical/high/moderate/low/info —0.

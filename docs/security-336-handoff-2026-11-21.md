@@ -1,5 +1,45 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, после17:13 Москва: JVM20 PASS, shared37 перенёс обе области
+
+Native20/session86184 SUCCESS22m25s: полный JVM1432 (1424 PASS/0 FAIL/8 opt-in
+skips), debug/test APK. Полные XML и JSON сохранены в runtime/native150-build20-unit/
+и native150-custody-performance-build20-unit.json; identity рядом. Это ещё не
+lint20 и не runtime biometric/normal migration acceptance.
+
+Web37/session56995 завершён FAIL после успешного mounted personal + project/space
+transfer: оба shared scopes ACTIVE,13 checks PASS. Следующий normal-reader case
+не нашёл RU кнопку: на RU vault form глобальный EN translator превратил только
+Unlock/Sign out в EN. Screenshot/body подтверждают; тест не обходил gate.
+Correction04d9c201 в window-worktree добавляет data-no-translate вокруг готового
+14-language vault copy; перенесено в main security branch. Нужны web25/full38.
+QA errors/snapshots теперь redact известный synthetic recovery secret; старый
+failure37.txt также очищен, остальные evidence сохранены. Не печатать raw snapshots.
+
+JS migration/streamed-planning108/108 PASS после packet fixture correction.
+Новые test/docs corrections ещё нужно committed/pushed совместным checkpoint,
+затем exact-head CI. В root не читать/stage demo-output. Owned AVDs только5580/5594.
+
+## 23 ноября, 17:05 Москва: активные проверки20/37
+
+Pushed main security branch HEAD19e81519f64f6b06f74b65687c46f3401a7e1dbe;
+build20/session86184: full unfiltered JVM + debug/test APK, log
+runtime/native150-custody-performance-build20.log. App/android/contracts/public
+inputs заморожены до identity20. Native19/API26-19/controller19 завершены;
+API26 восстановлен NONE/0, API34 исходный PIN/fingerprint37 сохранён.
+
+Web37/session56995 на immutable web24: personal12 checks PASS, project ACTIVE;
+space прошёл прежний custody guard и повторяется после реального Retry-After.
+Пока не full shared PASS. Log runtime/consolidated-private-shared37.log.
+
+CI PR45187776905, push45187762360 для19e81519. PR web получил2134 PASS/1 FAIL:
+старый packet-only JS fixture generator не возвращал binding fields, как ранее
+JVM fixture. Только tests/e2ee-migration.test.mjs исправлен локально; scoped
+migration + streamed-planning108/108 PASS, runtime/transport-fixture-and-streamed-planning-20.log.
+Production guards не менялись. Этот test-only correction ещё не committed/pushed;
+после связанного checkpoint нужен новый exact-head CI, не rerun старого SHA.
+Npm audit23 ноября0 advisories, dependency-audit-1123-candidate20.json.
+
 ## 23 ноября: correction block20
 
 Main HEAD27f0708e + custody correction806ca7cc (cherry-pick d155535d).
