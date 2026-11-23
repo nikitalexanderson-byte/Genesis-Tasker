@@ -154,6 +154,10 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
+            // Vault, migration and recovery controls stay mounted independently
+            // of the planner without inflating its initial application chunk.
+            { name: "private-security-ui", test: /app[\\/]+Private[^\\/]+\.tsx$/, maxSize: 280_000, priority: 16 },
+            { name: "planner-ui", test: /app[\\/]GenesisCalendar\.tsx$/, maxSize: 280_000, priority: 14 },
             // Preserve the eagerly mounted controls while keeping their independent
             // tooltip/dialog services out of the entry with production mindmaps enabled.
             { name: "dialog-chrome", test: /app[\\/](?:ButtonTooltips|DialogDismissal|DialogHeaderActions)\.tsx$/, priority: 14 },

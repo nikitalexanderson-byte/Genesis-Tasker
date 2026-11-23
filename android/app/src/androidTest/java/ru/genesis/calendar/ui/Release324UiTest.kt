@@ -222,7 +222,7 @@ class Release324UiTest {
         var selected: Int? = null
         compose.setContent { Frame(palette, language) { key(language) {
             MoodObservationEditor(emptyList(), LocalDate.now(), CalendarMode.PROFANE, language, emptyList(), false, null,
-                onDismiss = {}, fixedDate = true, onSave = { _, value, _, _, _ -> selected = value })
+                onDismiss = {}, fixedDate = true, migrationOwner = null, onSave = { _, value, _, _, _ -> selected = value })
         } } }
         for ((next, lang) in listOf("light" to "ru", "green" to "en", "burgundy" to "ru", "blue" to "en", "violet" to "ru")) {
             compose.runOnIdle { palette = next; language = lang }

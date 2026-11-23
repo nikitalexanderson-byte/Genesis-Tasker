@@ -36,7 +36,9 @@ class E2eeWorkspaceRoomSourceTest {
             val raw=E2eeKeys.freshSecret();val envelope=WorkspaceCipher.encrypt(old.toString().toByteArray(),raw)
             val response=JSONObject().put("protocol",1).put("ownerId",owner).put("scopeId",remote).put("migrationId","migration").put("fence",1)
                 .put("sourceHash",E2eeEnvelope.encode(ByteArray(32))).put("legacyGeneration",0).put("checkpointHash",E2eeEnvelope.encode(ByteArray(32))).put("directoryRevision",1)
-                .put("projects",JSONArray()).put("categories",JSONArray()).put("workspace",JSONObject().put("keyMode","account").put("key",Base64.getEncoder().encodeToString(raw))
+                .put("projects",JSONArray()).put("categories",JSONArray())
+                .put("privatePreferences",JSONObject().put("categoryMapJson",JSONObject.NULL).put("visibilityJson",JSONObject.NULL).put("routingMode",JSONObject.NULL).put("routingTargetsJson",JSONObject.NULL))
+                .put("workspace",JSONObject().put("keyMode","account").put("key",Base64.getEncoder().encodeToString(raw))
                     .put("envelope",JSONObject().put("ciphertext",envelope.ciphertext).put("iv",envelope.iv).put("version",1).put("minimumWriterProtocol",9)))
             val source=E2eeNativeWorkspaceSource(owner,remote,captureRows={ room.withTransaction { E2eeWorkspaceRows(room.dao().backupDocuments(scope),room.dao().outbox(scope)) } },
                 decrypt={ row -> cipher.decrypt(row.encrypted,"$scope/${row.kind}") },assertCurrent={},legacyWorkspace={ check(captured);calls++;JSONObject(response.toString()) })

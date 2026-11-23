@@ -65,7 +65,7 @@ class TrackerLibrary313Test {
                             var error by remember { mutableStateOf<String?>(null) }
                             when (screen) {
                                 "create-sleep" -> SleepPlanEditor(requireNotNull(initialPlan), true, busy, error,
-                                    onDismiss = { screen = "trackers" }) { next ->
+                                    onDismiss = { screen = "trackers" }, migrationOwner = null) { next ->
                                     scope.launch {
                                         busy = true
                                         try { TrackersRepository(app).savePlan(next); screen = "trackers" }

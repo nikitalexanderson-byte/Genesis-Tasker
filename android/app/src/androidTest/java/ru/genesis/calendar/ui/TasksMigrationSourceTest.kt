@@ -86,7 +86,8 @@ class TasksMigrationSourceTest {
     @Test fun actualTaskQueueDeletionsAndRecoveredHistoryRemainReadableUnderNewRootAfterOldKeysDisappear()=runBlocking{
         val f=Rig();try{
             f.seed();val before=f.originals();val operations=f.app.database.dao().outbox(f.account);val result=withTimeout(90000){f.run()}
-            assertTrue(result.complete);assertEquals(1,f.reads.get());assertEquals(1,f.opens.get());assertEquals(6,result.content.size)
+            assertTrue(result.complete);assertEquals(1,f.reads.get());assertEquals(1,f.opens.get());assertEquals(7,result.content.size)
+            assertTrue(result.content.any{it.objectId=="personal-tasks-live-v1"})
             for(row in result.content){assertEquals("workspace",row.domain);assertFalse(row.objectId.contains("2026-11-19"));assertFalse(row.bytes.toString(Charsets.UTF_8).contains(f.oldEncoded));f.vault.write(listOf(UnlockedE2eeVault.Write(row.domain,row.objectId,row.bytes,null)));row.bytes.fill(0)}
             f.oldKey.fill(0);f.eraseAlias();val index=requireNotNull(f.vault.read("workspace","personal-task-index-v1"));val entries=try{JSONObject(index.bytes.toString(Charsets.UTF_8)).getJSONArray("tasks")}finally{index.bytes.fill(0)}
             val records=mutableMapOf<String,JSONObject>();for(i in 0 until entries.length()){val row=entries.getJSONObject(i);val record=requireNotNull(f.vault.read("workspace",row.getString("objectId")));try{records[row.getString("id")]=JSONObject(record.bytes.toString(Charsets.UTF_8))}finally{record.bytes.fill(0)}}

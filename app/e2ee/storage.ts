@@ -55,14 +55,26 @@ export class IndexedDbE2eeStorage implements E2eeRecordStorage {
   async list(prefix: string) {
     const db = await this.#database;
     return new Promise<string[]>((resolve, reject) => {
-      const transaction = db.transaction('records', 'readonly'); const keys: string[] = [];
+      const transaction = db.transaction('records', 'readonly'); let keys: string[] = [];
       let limit=false;
-      const request = transaction.objectStore('records').openKeyCursor(IDBKeyRange.bound(prefix, prefix + '\uffff'));
-      request.onsuccess = () => { const cursor = request.result; if (cursor) {
-        if (typeof cursor.key !== 'string') { transaction.abort(); return; }
-        if (keys.length===E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords) { limit=true;transaction.abort();return; }
-        keys.push(cursor.key);cursor.continue();
-      } };
+      const store = transaction.objectStore('records'), range = IDBKeyRange.bound(prefix, prefix + '\uffff');
+      // One bounded request avoids an IPC round trip per key on every retained
+      // inventory check. The extra key detects overflow in the same snapshot.
+      if (typeof store.getAllKeys === 'function') {
+        const request = store.getAllKeys(range, E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords + 1);
+        request.onsuccess = () => {
+          if (request.result.length > E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords) { limit=true;transaction.abort();return; }
+          if (request.result.some(key => typeof key !== 'string')) { transaction.abort(); return; }
+          keys = request.result as string[];
+        };
+      } else {
+        const request = store.openKeyCursor(range);
+        request.onsuccess = () => { const cursor = request.result; if (cursor) {
+          if (typeof cursor.key !== 'string') { transaction.abort(); return; }
+          if (keys.length===E2EE_PROVIDER_STORAGE_BUDGET.maximumRecords) { limit=true;transaction.abort();return; }
+          keys.push(cursor.key);cursor.continue();
+        } };
+      }
       transaction.oncomplete = () => resolve(keys);
       transaction.onerror = transaction.onabort = () => reject(new Error(limit?'E2EE_LOCAL_RECORD_LIMIT':'E2EE_STORAGE_UNAVAILABLE'));
     });
@@ -76,6 +88,23 @@ export type VaultScope = { ownerId: string; scopeId: string; deviceId: string; g
   securityEpoch: number; keyId: string; signingKey: CryptoKey; roots: ReadonlyMap<string, CryptoKey>;
   trustedSigner: (deviceId: string) => CryptoKey | undefined };
 export type LocalWrite = { domain: E2eeContext['domain']; objectId: string; value: Uint8Array; expected: number | null };
+type VerifiedRead = { envelope: E2eeEnvelope; root: CryptoKey; signer: CryptoKey; value: Uint8Array<ArrayBuffer> };
+// Compare own data descriptors, without invoking accessors or accepting extra
+// fields. A cache hit is possible only for the exact previously opened envelope.
+function sameVerifiedValue(actual: unknown, expected: unknown): boolean {
+  if (expected === null || typeof expected !== 'object') return actual === expected;
+  if (actual === null || typeof actual !== 'object') return false;
+  try {
+    if (![Object.prototype, null].includes(Object.getPrototypeOf(actual))) return false;
+    const keys = Reflect.ownKeys(expected);
+    if (Reflect.ownKeys(actual).length !== keys.length) return false;
+    return keys.every(key => {
+      const field = Object.getOwnPropertyDescriptor(actual, key);
+      return !!field?.enumerable && Object.hasOwn(field, 'value')
+        && sameVerifiedValue(field.value, (expected as Record<PropertyKey, unknown>)[key]);
+    });
+  } catch { return false; }
+}
 export type E2eeDeviceReadVault=Pick<UnlockedE2eeVault,'read'|'listLocal'|'localIdentity'|'assertUnlocked'|'listMigrationOriginalParts'|'listMigrationHistoryCopies'|'listMigrationStateRoles'|'listProductJobHistory'|'listProductControlHistory'|'listMigrationPlanOutputs'>;
 export function localRecordKey(scope: Pick<VaultScope,'ownerId'|'scopeId'>, domain: E2eeContext['domain'], objectId: string) {
   assertTechnical(scope.ownerId); assertTechnical(scope.scopeId); assertTechnical(objectId);
@@ -88,9 +117,31 @@ export class UnlockedE2eeVault {
   #scope: VaultScope | null;
   #lifecycle = 0;
   #abort = new AbortController();
+  #verifiedReads = new Map<string, VerifiedRead>();
+  #verifiedBytes = 0;
   readonly storage: E2eeRecordStorage;
   constructor(storage: E2eeRecordStorage, scope: VaultScope) { this.storage = storage; this.#scope = scope; }
-  lock() { this.#lifecycle++; this.#scope = null; this.#abort.abort(); }
+  lock() {
+    this.#lifecycle++; this.#scope = null; this.#abort.abort();
+    for (const key of this.#verifiedReads.keys()) this.#forgetRead(key);
+  }
+  #forgetRead(key: string) {
+    const prior = this.#verifiedReads.get(key);
+    if (prior) { this.#verifiedBytes -= prior.value.length; prior.value.fill(0); this.#verifiedReads.delete(key); }
+  }
+  #rememberRead(key: string, envelope: E2eeEnvelope, root: CryptoKey, signer: CryptoKey, value: Uint8Array<ArrayBuffer>) {
+    this.#forgetRead(key);
+    // Unlocked memory only. Keep large file bodies out and bound both memory
+    // and entry count; every read still reads the current durable record first.
+    if (value.length > 256 * 1024) return;
+    while (this.#verifiedReads.size >= 256 || this.#verifiedBytes + value.length > 4 * 1024 * 1024) {
+      const oldest = this.#verifiedReads.keys().next().value;
+      if (oldest === undefined) break;
+      this.#forgetRead(oldest);
+    }
+    this.#verifiedReads.set(key, { envelope, root, signer, value: new Uint8Array(value) });
+    this.#verifiedBytes += value.length;
+  }
   assertUnlocked() { this.#open(); }
   /** Technical identity only; no roots, key material or signing capability. */
   localIdentity() {
@@ -132,19 +183,26 @@ export class UnlockedE2eeVault {
   #open() { if (!this.#scope) throw new Error('E2EE_UNLOCK_REQUIRED'); return this.#scope; }
   async read(domain: E2eeContext['domain'], objectId: string): Promise<{ serial: number; value: Uint8Array<ArrayBuffer> } | null> {
     const scope = this.#open(), lifecycle = this.#lifecycle;
-    const record = await this.storage.get(localRecordKey(scope, domain, objectId));
+    const key = localRecordKey(scope, domain, objectId), record = await this.storage.get(key);
     if (lifecycle !== this.#lifecycle) throw new Error('E2EE_UNLOCK_REQUIRED');
-    if (record === null) return null;
-    const envelope = validateE2eeEnvelope(record.envelope), context = envelope.context;
-    if (!Number.isSafeInteger(record.serial) || record.serial < 1 || context.revision !== record.serial
+    if (record === null) { this.#forgetRead(key); return null; }
+    const serial = record.serial, prior = this.#verifiedReads.get(key);
+    const envelope = prior && sameVerifiedValue(record.envelope, prior.envelope) ? prior.envelope : validateE2eeEnvelope(record.envelope), context = envelope.context;
+    if (!Number.isSafeInteger(serial) || serial < 1 || context.revision !== serial
       || context.ownerId !== scope.ownerId || context.scopeId !== scope.scopeId || context.domain !== domain || context.objectId !== objectId
       || context.dataGeneration !== scope.generation || context.cryptoEpoch > scope.cryptoEpoch || context.securityEpoch > scope.securityEpoch)
       throw new Error('E2EE_CORRUPT_LOCAL_RECORD');
     const root = scope.roots.get(context.keyId), signer = scope.trustedSigner(context.deviceId);
     if (!root || !signer) throw new Error('E2EE_KEY_UNAVAILABLE');
+    if (prior && envelope === prior.envelope && root === prior.root && signer === prior.signer) {
+      this.#verifiedReads.delete(key); this.#verifiedReads.set(key, prior);
+      return { serial, value: new Uint8Array(prior.value) };
+    }
+    this.#forgetRead(key);
     const value = await openE2eeEnvelope(root, signer, { ...context, ownerId: scope.ownerId, scopeId: scope.scopeId, domain, objectId }, envelope);
     if (lifecycle !== this.#lifecycle) { value.fill(0); throw new Error('E2EE_UNLOCK_REQUIRED'); }
-    return { serial: record.serial, value };
+    this.#rememberRead(key, envelope, root, signer, value);
+    return { serial, value };
   }
   async write(changes: LocalWrite[],assertCurrent:()=>void=()=>{}): Promise<void> {
     assertCurrent();
@@ -155,6 +213,7 @@ export class UnlockedE2eeVault {
     // Copy input bytes before the first await so caller mutations cannot change an acknowledged save.
     const captured = changes.map(change => ({ ...change, value: new Uint8Array(change.value) }));
     try {
+      for (const change of captured) this.#forgetRead(localRecordKey(scope, change.domain, change.objectId));
       const writes = await Promise.all(captured.map(async change => {
         const serial = (change.expected ?? 0) + 1;
         const context: E2eeContext = { cryptoProtocol: 1, suite: E2EE_SUITE, ownerId: scope.ownerId, scopeId: scope.scopeId, domain: change.domain,

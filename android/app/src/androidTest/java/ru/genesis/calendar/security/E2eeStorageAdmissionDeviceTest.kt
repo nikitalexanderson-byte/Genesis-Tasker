@@ -71,6 +71,7 @@ class E2eeStorageAdmissionDeviceTest {
     }
     @Test fun concurrentVaultWritersCannotBothConsumeTheFinalProviderRecordSlot(){
         Rig().use{f->
+            val limit=E2eeStorageAdmission.providerBudget.maximumRecords
             E2eeSqliteStorage(f.context).use{store->
                 val row=requireNotNull(store.get(store.list("").first()))
                 // Existing ciphertext count fixture, as in the browser IDB
@@ -79,10 +80,10 @@ class E2eeStorageAdmissionDeviceTest {
                     db.beginTransaction()
                     try{db.compileStatement("INSERT INTO records VALUES(?,?,?)").use{insert->
                         val envelope=row.envelope.toJson().toString()
-                        for(index in 3 until 9999){insert.bindString(1,"synthetic-other-namespace:$index");insert.bindLong(2,row.serial);insert.bindString(3,envelope);insert.executeInsert();insert.clearBindings()}
+                        for(index in 3L until limit-1){insert.bindString(1,"synthetic-other-namespace:$index");insert.bindLong(2,row.serial);insert.bindString(3,envelope);insert.executeInsert();insert.clearBindings()}
                     };db.setTransactionSuccessful()}finally{db.endTransaction()}
                 }
-                assertEquals(9999L,store.providerUsage().records)
+                assertEquals(limit-1,store.providerUsage().records)
             }
             val executor=Executors.newFixedThreadPool(2);val start=CountDownLatch(1)
             try{
@@ -93,16 +94,17 @@ class E2eeStorageAdmissionDeviceTest {
                 })}
                 start.countDown();val outcomes=attempts.map{it.get()}
                 assertEquals(1,outcomes.count{it=="PASS"});assertEquals(1,outcomes.count{it=="E2EE_STORAGE_CAPACITY"})
-                E2eeSqliteStorage(f.context).use{assertEquals(10000L,it.providerUsage().records)}
+                E2eeSqliteStorage(f.context).use{assertEquals(limit,it.providerUsage().records)}
                 assertNotNull(f.first.vault.read("draft","first-only"));assertNotNull(f.second.vault.read("outbox","second-only"))
             }finally{executor.shutdownNow()}
         }
     }
     @Test fun concurrentProtectedKeyCreatesCannotExceedGlobalBundleCount(){
         Rig().use{f->
+            val limit=E2eeStorageAdmission.providerBudget.maximumKeyRecords
             val source=f.folder.listFiles()!!.first{it.name.matches(Regex("e2ee-device-[a-f0-9]{64}\\.vault"))}
-            for(index in 2 until 999)source.copyTo(File(f.folder,"e2ee-device-${index.toString(16).padStart(64,'0')}.vault"))
-            assertEquals(999L,E2eeStorageAdmission.measure(f.first){}.keyRecords)
+            for(index in 2L until limit-1)source.copyTo(File(f.folder,"e2ee-device-${index.toString(16).padStart(64,'0')}.vault"))
+            assertEquals(limit-1,E2eeStorageAdmission.measure(f.first){}.keyRecords)
             val kits=(1..2).map{E2eeKeys.createRecoveryKit("last-capacity-owner-$it-${UUID.randomUUID()}")}
             val executor=Executors.newFixedThreadPool(2);val start=CountDownLatch(1)
             try{
@@ -113,7 +115,7 @@ class E2eeStorageAdmissionDeviceTest {
                 })}
                 start.countDown();val outcomes=attempts.map{it.get()}
                 assertEquals(1,outcomes.count{it=="PASS"});assertEquals(1,outcomes.count{it=="E2EE_STORAGE_CAPACITY"})
-                assertEquals(1000L,E2eeStorageAdmission.measure(f.first){}.keyRecords)
+                assertEquals(limit,E2eeStorageAdmission.measure(f.first){}.keyRecords)
             }finally{executor.shutdownNow();kits.forEach{it.secret.fill(0)}}
         }
     }

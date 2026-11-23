@@ -81,6 +81,8 @@ export function validateE2eeContext(value: unknown): E2eeContext {
 }
 
 export function encodeE2eeBytes(bytes: Uint8Array): string {
+  const native = bytes as Uint8Array & { toBase64?: (options: {alphabet:'base64url';omitPadding:true}) => string };
+  if (typeof native.toBase64 === 'function') return native.toBase64({alphabet:'base64url',omitPadding:true});
   let binary = '';
   for (let offset = 0; offset < bytes.length; offset += 8192) {
     binary += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
@@ -91,10 +93,24 @@ export function encodeE2eeBytes(bytes: Uint8Array): string {
 export function decodeE2eeBytes(value: unknown, min: number, max = min): Uint8Array<ArrayBuffer> {
   if (typeof value !== 'string' || value.length < Math.ceil(min * 4 / 3)
       || value.length > Math.ceil(max * 4 / 3) || !/^[A-Za-z0-9_-]+$/.test(value)) invalid();
+  // The alphabet, possible lengths and zero unused tail bits uniquely define
+  // canonical unpadded base64url. Avoid re-encoding each authenticated ciphertext
+  // just to prove this when a migration repeatedly reads its retained originals.
+  const remainder = value.length % 4;
+  const tail = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'.indexOf(value[value.length-1]);
+  if (remainder === 1 || remainder === 2 && (tail & 15) !== 0 || remainder === 3 && (tail & 3) !== 0) invalid();
   let bytes: Uint8Array<ArrayBuffer>;
-  try { bytes = Uint8Array.from(atob(value.replaceAll('-', '+').replaceAll('_', '/')), char => char.charCodeAt(0)); }
+  try {
+    const native = Uint8Array as typeof Uint8Array & {fromBase64?: (source:string,options:{alphabet:'base64url';lastChunkHandling:'loose'})=>Uint8Array<ArrayBuffer>};
+    if (typeof native.fromBase64 === 'function') bytes = native.fromBase64(value,{alphabet:'base64url',lastChunkHandling:'loose'});
+    else {
+      const binary = atob(value.replaceAll('-', '+').replaceAll('_', '/'));
+      bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+    }
+  }
   catch { return invalid(); }
-  if (bytes.length < min || bytes.length > max || encodeE2eeBytes(bytes) !== value) invalid();
+  if (bytes.length < min || bytes.length > max) {bytes.fill(0);invalid();}
   return bytes;
 }
 

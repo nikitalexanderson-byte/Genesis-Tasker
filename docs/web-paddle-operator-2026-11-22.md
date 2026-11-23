@@ -1,5 +1,15 @@
 # Международная публичная редакция для Paddle, 22 ноября 2026
 
+23 ноября: PR46 опубликован в main4c209a00356a0211a5a11a24580b458be3cf7bc3,
+required CI45090567554/45090593699, exact-main45094862291 и Deploy45099066004
+SUCCESS. Production deployedAt2026-11-23T02:15:47Z; live meta/health подтверждены.
+Авторизованный IAB readback: EN/USD в /terms?lang=en, международный RU/USD в
+/terms?lang=ru, российские роли и RUB в /ru/terms?lang=ru. Сессия сохранена.
+Manifest149 SHA256582a282682b23af7368efe3a1f61533731a1915135f8dbd25dda6fbc7be54f63
+не изменился; APK3.3.5 HEAD200/286545165bytes, без повторного полного скачивания.
+Before/after JPEG находятся в upgrade-currency-20261122/output/public-documents-20261123/.
+Security3.3.6 и новый Android сюда не входили, Paddle checkout не включён.
+
 23 ноября: PR45 опубликован в mainc1205c045862fcfbaa01b48a1fbd7f04d6693b75,
 Source checks45084250291 и Deploy45088162015 success. При live-проверке обнаружено,
 что язык сохранённого аккаунта заменял ?lang=en документа, а международные Terms

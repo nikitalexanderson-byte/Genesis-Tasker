@@ -1369,6 +1369,7 @@ export function GenesisCalendar() {
   const [legalPage] = useState<ReturnType<typeof currentLegalPage>>(() => currentLegalPage());
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("loading");
   const [syncError, setSyncError] = useState("");
+  const [workspaceReadyOwner, setWorkspaceReadyOwner] = useState<string | null>(null);
   const [workspaceRecoveryKey, setWorkspaceRecoveryKey] = useState<string | null>(null);
   const [notificationHeaderTarget, setNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
   const loadLocalWorkspace = (key: string) => {
@@ -2344,6 +2345,7 @@ export function GenesisCalendar() {
     let stopTasks: (() => void) | undefined;
     let stopWorkspace: (() => void) | undefined;
     let loadedUserId = "";
+    let workspaceReady = false;
     let loadedCalendarConnected = false;
     const startCloudTasks = (user: GenesisUser) => {
       stopTasks?.();
@@ -2374,6 +2376,9 @@ export function GenesisCalendar() {
       setSyncError("");
 
       if (!user) {
+        setAuthResolved(true);
+        workspaceReady = false;
+        setWorkspaceReadyOwner(null);
         setCloudUser(null);
         stopTasks?.();
         stopTasks = undefined;
@@ -2398,7 +2403,7 @@ export function GenesisCalendar() {
         if (pendingLanguage !== serverLanguage) {
           void updateAccountPreferences({ language: pendingLanguage })
             .then((result) => {
-              if (!active) return;
+              if (!active || !workspaceReady || loadedUserId !== user.uid) return;
               setCloudUser(result.user);
               if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(result.user));
             })
@@ -2409,6 +2414,7 @@ export function GenesisCalendar() {
         }
       }
       if (loadedUserId === user.uid) {
+        if (!workspaceReady) return;
         if (!loadedCalendarConnected && (user.calendarConnected)) {
           loadedCalendarConnected = true;
           setSyncStatus("syncing");
@@ -2435,6 +2441,8 @@ export function GenesisCalendar() {
       stopWorkspace?.();
       stopWorkspace = undefined;
       loadedUserId = user.uid;
+      workspaceReady = false;
+      setWorkspaceReadyOwner(null);
       loadedCalendarConnected = user.calendarConnected;
 
       const userKey = `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`;
@@ -2496,6 +2504,10 @@ export function GenesisCalendar() {
             workspace.user.taskCalendarMode ?? "sacred",
           ));
           setNewProjectCategory(nextCategories[0]?.id ?? "");
+          workspaceReady = true;
+          setWorkspaceReadyOwner(user.uid);
+          setCloudUser({ ...workspace.user, language: effectiveLanguage });
+          setAuthResolved(true);
           setSyncError(workspace.syncWarning ?? "");
           setSyncStatus(workspace.user.calendarConnected||encryptedAccount ? (workspace.syncWarning ? "offline" : "synced") : "local");
           stopWorkspace = observeCloudWorkspace((error) => {
@@ -2506,7 +2518,11 @@ export function GenesisCalendar() {
           if (workspace.user.calendarConnected||encryptedAccount) startCloudTasks(user);
         })
         .catch((error: Error) => {
-          if (!active) return;
+          if (!active || loadedUserId !== user.uid) return;
+          loadedUserId = "";
+          workspaceReady = false;
+          setAuthResolved(true);
+          setAuthError(error.message);
           setSyncError(error.message);
           setSyncStatus(navigator.onLine ? "error" : "offline");
         });
@@ -2542,6 +2558,9 @@ export function GenesisCalendar() {
           setLanguage(cachedLanguage);
           storeLanguage(cachedLanguage);
           setCloudUser({ ...cached, language: cachedLanguage });
+          workspaceReady = true;
+          loadedUserId = cached.uid;
+          setWorkspaceReadyOwner(cached.uid);
           setAuthResolved(true);
           setSyncStatus("offline");
           return;
@@ -7102,6 +7121,8 @@ export function GenesisCalendar() {
     <SacredFeaturesContext value={sacredFeaturesEnabled}>
     <DiaryProvider key={cloudUser?.uid || 'anonymous'} userId={cloudUser?.uid || ''} ready={hydrated && syncStatus !== 'syncing'}>
     <main
+      inert={Boolean(cloudUser && workspaceReadyOwner !== cloudUser.uid)}
+      aria-busy={Boolean(cloudUser && workspaceReadyOwner !== cloudUser.uid)}
       className={`genesis-app mode-${activeCalendarMode}${habitWorkspace.habitSettings.feedback.animations ? "" : " habit-animations-off"}`}
       data-exp-layout="app-shell"
       data-sacred-features={sacredFeaturesEnabled}
@@ -8048,6 +8069,12 @@ export function GenesisCalendar() {
       ) : null}
       {voiceLanguageEnabled && voiceControlActive ? <Suspense fallback={null}><WebVoiceControl language={language} onCommand={executeWebVoiceCommand} onStop={() => setVoiceControlActive(false)} /></Suspense> : null}
     </main>
+    {cloudUser && workspaceReadyOwner !== cloudUser.uid ? <div className="private-vault-gate workspace-startup-gate">
+      <section className="workspace-recovery-dialog" role="status" aria-live="polite">
+        <h2>{translateText(syncStatus === 'error' ? 'Не удалось загрузить данные' : 'Загрузка…', language)}</h2>
+        {syncStatus === 'error' ? <button type="button" onClick={() => window.dispatchEvent(new Event('focus'))}>{translateText('Повторить', language)}</button> : null}
+      </section>
+    </div> : null}
     </DiaryProvider>
     </SacredFeaturesContext>
     </SharedUpdatesProvider>

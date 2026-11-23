@@ -14,7 +14,7 @@ import { waitForQaBackend } from './backend-ready.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = Object.fromEntries(process.argv.slice(2).map(argument => { const [key, ...parts] = argument.replace(/^--/, '').split('='); return [key, parts.join('=')]; }));
 const suite = args.suite ?? 'full';
-if (!['full', 'followup317', 'trial317', 'history317', 'retention', 'header', 'dialog-focus', 'mindmap-save', 'public-region'].includes(suite)) throw new Error('Unknown web QA suite');
+if (!['full', 'followup317', 'trial317', 'history317', 'retention', 'header', 'dialog-focus', 'mindmap-save', 'public-region', 'private-product'].includes(suite)) throw new Error('Unknown web QA suite');
 const id = args['run-id'] ?? `web-${Date.now()}-${randomBytes(3).toString('hex')}`;
 if (!/^[a-zA-Z0-9-]{6,80}$/.test(id)) throw new Error('Invalid run ID');
 const output = path.resolve(root, args.output ?? `output/playwright/full-qa/${id}`);
@@ -22,7 +22,7 @@ if (existsSync(output)) throw new Error('Fresh run output required');
 mkdirSync(output, { recursive: true });
 const runtime = path.join(output, 'runtime');
 const php = await resolveBackendPhp(args.php);
-const bundleDirectory = path.join(root, 'dist-web/public_html');
+const bundleDirectory = path.resolve(root, args.bundle ?? 'dist-web/public_html');
 const bundleIdentity = () => {
   const files = filesBelow(bundleDirectory).sort().map(file => ({ path: path.relative(bundleDirectory, file).replaceAll('\\', '/'), sha256: hash(readFileSync(file)) }));
   if (!files.some(file => file.path === 'index.html')) throw new Error('Missing compiled web bundle');
@@ -38,7 +38,7 @@ async function freePort() {
 }
 const port = await freePort(), apiPort = await freePort();
 const origin = `http://127.0.0.1:${port}`;
-const prepared = spawnSync(php, ['-d', 'disable_functions=curl_exec,mail', 'scripts/qa/backend-fixture.php', `--dir=${runtime}`, `--origin=${origin}`, `--run-id=${id}`], { cwd: root, encoding: 'utf8', windowsHide: true });
+const prepared = spawnSync(php, ['-d', 'disable_functions=curl_exec,mail', 'scripts/qa/backend-fixture.php', `--dir=${runtime}`, `--origin=${origin}`, `--run-id=${id}`, ...(suite === 'private-product' ? ['--e2ee'] : [])], { cwd: root, encoding: 'utf8', windowsHide: true });
 if (prepared.status !== 0) throw new Error('Synthetic fixture preparation failed: ' + (prepared.stderr || prepared.error?.message));
 const apiLog = createWriteStream(path.join(output, 'local-api.log'));
 const api = spawn(php, ['-d', 'disable_functions=curl_exec,mail', '-S', `127.0.0.1:${apiPort}`, 'scripts/qa/backend-router.php'], { cwd: root, windowsHide: true, env: { ...process.env, GENESIS_FULL_QA: 'isolated', GENESIS_FULL_QA_DIR: runtime.replaceAll('\\', '/') }, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -47,10 +47,18 @@ api.stdout.pipe(apiLog); api.stderr.pipe(apiLog);
 let server, runError, startupGate, featureExitCode;
 try {
   await waitForQaBackend(api, `http://127.0.0.1:${apiPort}`, id);
-  server = await startWebServer({ port, apiPort });
-  startupGate = await runSharedStartup({ baseURL: origin, output });
+  server = await startWebServer({ port, apiPort, directory: bundleDirectory });
+  if(args['startup-report']) {
+    const prior=JSON.parse(readFileSync(path.resolve(root,args['startup-report']),'utf8'));
+    const proof=prior.startupGate?.report?readFileSync(path.resolve(root,prior.startupGate.report)):null;
+    const sources=proof?JSON.parse(proof.toString('utf8')).sources:null;
+    if(suite!=='private-product'||prior.build?.sha256!==build.sha256||prior.startupGate?.status!=='PASS'||!Array.isArray(sources)
+      ||!proof||hash(proof)!==prior.startupGate.sha256
+      ||sources.some(source=>hash(readFileSync(path.resolve(root,source.path)))!==source.sha256))throw new Error('Startup reuse requires the exact checked build and unchanged startup sources');
+    startupGate={...prior.startupGate,reusedFrom:args['startup-report']};
+  }else startupGate = await runSharedStartup({ baseURL: origin, output });
   const exitCode = await new Promise((resolve, reject) => {
-    const script = {full: 'scripts/qa/web-full.mjs', followup317: 'scripts/qa/web-followup317.mjs', trial317: 'scripts/qa/web-trial-only317.mjs', history317: 'scripts/qa/web-hidden-map-history317.mjs', retention: 'scripts/qa/web-retention.mjs', header: 'scripts/qa/web-header-startup.mjs', 'dialog-focus': 'scripts/qa/web-dialog-focus.mjs', 'mindmap-save': 'scripts/qa/web-mindmap-save.mjs', 'public-region':'scripts/qa/web-public-region.mjs'}[suite];
+    const script = {full: 'scripts/qa/web-full.mjs', followup317: 'scripts/qa/web-followup317.mjs', trial317: 'scripts/qa/web-trial-only317.mjs', history317: 'scripts/qa/web-hidden-map-history317.mjs', retention: 'scripts/qa/web-retention.mjs', header: 'scripts/qa/web-header-startup.mjs', 'dialog-focus': 'scripts/qa/web-dialog-focus.mjs', 'mindmap-save': 'scripts/qa/web-mindmap-save.mjs', 'public-region':'scripts/qa/web-public-region.mjs', 'private-product':'scripts/qa/web-private-product.mjs'}[suite];
     const child = spawn(process.execPath, [script], { cwd: root, windowsHide: true, env: { ...process.env, GENESIS_QA_WEB_ORIGIN: origin, GENESIS_QA_WEB_OUTPUT: output, GENESIS_QA_BACKEND_RUNTIME: runtime, GENESIS_QA_PHP: php, GENESIS_QA_PHASE: 'isolated', ...(args.focus ? { GENESIS_QA_FOLLOWUP_SCOPE: args.focus } : {}), ...(args.tiers ? { GENESIS_QA_TIERS: args.tiers } : {}) }, stdio: ['ignore', 'pipe', 'pipe'] });
     const log = createWriteStream(path.join(output, 'web.log'));
     child.stdout.on('data', data => { log.write(data); process.stdout.write(data); });

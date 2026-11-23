@@ -1,5 +1,93 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, 03:05 UTC: perf corrections и подготовка номера150
+
+Unit5:2115 PASS/2 FAIL из2117. Обе ошибки окружения: отсутствующий PHP в PATH
+и невыбранный pinned QA PHP; при явных GENESIS_QA_PHP/OPENSSL_CONF оба suite11/11
+PASS (unit-5-php-environment-1123.log). Это не2117PASS в одном запуске. После
+этого storage.list получил bounded getAllKeys(limit+1) с сохранённым cursor
+fallback, чтобы не делать отдельный IndexedDB IPC на каждый ключ. Scoped39/39,
+typecheck/lint PASS, generated legacy worker соответствует исходнику.
+
+Private11 остановлен как superseded до завершения; statusCANCELLED, owned cleanup
+PASS, hash bundle не менялся. Private12/session99017 использует cache+batch build12
+в output/release-3.3.6/web-cache-12/public_html; источники ещё читаются. Full3 на
+неизменном build10 прошёл free/standart/premium, выполняет business; итог не готов.
+
+Native main/JVM/test APK build завершён SUCCESS25m49s, но штатный fingerprint
+отказал из-за изменения web/storage во время compile. Нельзя подставлять новый
+hash к старому APK. Оба APK скопированы в native-frozen-149-1123/ с SHA и явным
+статусом partial pre-version-bump. На них raw instrumentation96 в session74614,
+runtime/consolidated-api34-sources-3.log; это не финальная приёмка3.3.6/150.
+
+Следующий номер подтверждён по существующим Android release runs и APK:149
+максимальный известный. Подготовлены3.3.6/150, current release-notes asset/copy14
+языков, version/package/artifact guards существующих android-release/publish.
+Никаких dispatch/publish/Play/device updates. После web fixes нужен один точный
+native150 build и его platform acceptance, включая signed direct-upgrade149.
+Все прежние gates/coverage9/20 сохраняются; release ещё НЕ готов.
+
+## 23 ноября, 02:50 UTC: текущая общая приёмка
+
+Сайт отдельно опубликован: main4c209a00, Deploy45099066004 SUCCESS; GPS/VPN,
+обе языковые редакции и региональные донаты уже в принятой базе. Security не
+публиковалась. HEAD e12b7c60 плюс локальный correction block; demo-output/ не трогать.
+
+Web build10 PASS и scoped typecheck/lint PASS. Native platform3 собрал оба QA APK;
+обновлены устаревшие androidTest fixtures, в том числе новые provider bounds.
+Старый source96 run:72 PASS/24 FAIL, не PASS. Новый android-full на emulator-5580
+(API34), session44205, output/qa/security336-native-sources-api34-1123-2/ ещё
+собирает основной код. После изменения web/storage во время compile source hash
+может отказаться: завершить build, затем повторить incremental build/identity,
+а не подменять сохранённый fingerprint. Личные устройства не использовать.
+
+Mounted private-product10 снова превысил10min на чтении источников (до archives),
+без activation. Зафиксирована повторная обработка тех же ciphertext. storage.ts
+теперь имеет bounded unlocked-only verified-read cache: каждый вызов заново читает
+durable cell, сравнивает ВСЕ own data descriptors envelope и текущие root/signer,
+scope/epoch/serial. Изменённый/чужой ciphertext, accessor, неизвестное поле и
+отозванный signer не проходят; значения возвращаются отдельной копией. Lock/write/
+eviction очищают owned bytes; <=256 entries/4MiB, body>256KiB не сохраняется.
+Targeted23/23, typecheck и scoped lint PASS; полный unit5/session53554 выполняется.
+
+Чтобы не менять проверяемый dist-web под действующим full3, cache build11 собран
+отдельно в output/release-3.3.6/web-cache-11/public_html. QA server/runner принимают
+явный --bundle и продолжают проверять его точный hash до/после. Private-product11
+проверяет этот bundle; full3/session71478 проверяет прежний build10. Full3 уже
+прошёл все free CRUD/backup/layout cases, выполняет standart; итог ещё неизвестен.
+Новый локальный cache не принят полным browser journey. Coverage9/20, floors0,
+cutoveroff/deployAndroidfalse. Далее: результаты, реальные fixes, весь20-path/
+48-scenario объём, direct upgrade149, финальное внутреннее crypto review и выпуск.
+
+## 23 ноября, 01:43 UTC: общая JS/JVM приёмка прошла
+
+Security HEAD e12b7c60 включает main4c209a00356a0211a5a11a24580b458be3cf7bc3
+(PR46 merged); строгие AGENTS сохранены. Exact-main website-only checks45094862291
+ещё выполняются; после них отдельный Deploy с incumbentc1205c04. Security не push.
+
+Полный unit4/session55606:2090/2090 PASS,0 fail/cancelled/skipped,
+runtime/consolidated-unit-4.log. Native6/session55279 BUILD SUCCESS14m4s:
+1426 tests,0 failures/errors,8 opt-in skipped,248 XML suites; т.е.1418 PASS,
+а не1426 пройденных. Новый native platform build/session8780 собрал основной
+debug APK, но instrumentation compile выявил6 устаревших вызовов редакторов
+(migrationOwner); исправлены4 androidTest файла. Lint этого run ещё выполняется,
+параллельный Gradle не запускать. Логconsolidated-native-platform-1.log.
+
+Web build6 PASS после обновления generated legacy worker и выделения planner/
+private-security-ui в самостоятельные chunks; прежний350000-byte gate сохранён.
+196 HTML/14languages/13 dictionaries,151 offline entry assets/433 visuals PASS.
+Первый full browser82166 остановлен: build ошибочно был без GENESIS_MINDMAPS=true,
+поэтому missing mindmap controls не считаются продуктовым дефектом/PASS.
+Перед его новым запуском нужен production-флаг и новый build. Но не менять
+dist-web до завершения текущего private-product run, который проверяет его hash.
+
+Новый mounted private-product suite использует настоящий built app/PHP/SQLite,
+отдельный explicit synthetic --e2ee opt-in. Session59102, логconsolidated-private-product-1.log,
+output/playwright/security336-private-1123/. Уже PASS: ordinary pilot identity,
+реальная task create/reload, обязательные2 recovery downloads, confirmation без
+horizontal overflow360/390/768/1440. Полный перенос/normal writers/clean recovery
+ещё выполняются. Coverage9/20 не повышено, gates прежние.
+
 ## 23 ноября, 01:23 UTC: второй блок общей приёмки
 
 Production сайта ужеc1205c045862fcfbaa01b48a1fbd7f04d6693b75,

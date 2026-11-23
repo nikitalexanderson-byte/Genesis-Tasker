@@ -107,7 +107,7 @@ class E2eeStreamedPlanningDeviceTest {
             val command=JSONObject().put("protocol",1).put("ownerId",owner).put("scopeId",scope).put("deviceId",device.deviceId).put("action","bootstrap")
                 .put("expectedRevision",0).put("checkpointHash","genesis").put("securityEpoch",1).put("operationId",UUID.randomUUID().toString()).put("payload",payload)
             payload.put("selfProof",E2eeCommands.sign(command,device.keys().signing.private).get("signature"))
-            directory=E2eeDirectory.verify(owner,scope,recovery.kit.getJSONObject("authority"),JSONArray().put(E2eeCommands.sign(command,recovery.keys.signing.private)))
+            directory=device.rememberDirectory(scope,recovery.kit.getJSONObject("authority"),JSONArray().put(E2eeCommands.sign(command,recovery.keys.signing.private)),owner)
             val session=JSONObject().put("cookie","syntheticCookie0123456789").put("csrf",AuthProtocol.csrf("a".repeat(48))).put("expiresAt",System.currentTimeMillis()+3600000)
             check(context.getSharedPreferences("genesis.native.auth.v1",Context.MODE_PRIVATE).edit().putString("session",LocalCipher().encrypt(session.toString(),"genesis.native.auth.v2")).commit())
             client=AuthSessionClient(context,openConnection={url->
