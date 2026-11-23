@@ -1025,12 +1025,14 @@ export class GenesisNetworkTimeoutError extends Error {}
 export class GenesisApiError extends Error {
   readonly status: number;
   readonly payload: Record<string, unknown> | null;
+  readonly retryAfterSeconds:number|null;
 
-  constructor(status: number, payload: Record<string, unknown> | null, message: string) {
+  constructor(status: number, payload: Record<string, unknown> | null, message: string,retryAfterSeconds:number|null=null) {
     super(message);
     this.name = "GenesisApiError";
     this.status = status;
     this.payload = payload;
+    this.retryAfterSeconds=retryAfterSeconds;
   }
 }
 
@@ -1128,7 +1130,8 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
     if (!response.ok) {
       if(isE2eeResponsePath(path)){
         const code=e2eeHttpErrorCode(response.status,payload);
-        throw new GenesisApiError(response.status,code?{error:code}:null,code??'E2EE_HTTP_ERROR');
+        const retry=response.headers.get('Retry-After'),seconds=retry!==null&&/^\d{1,3}$/.test(retry)?Number(retry):null;
+        throw new GenesisApiError(response.status,code?{error:code}:null,code??'E2EE_HTTP_ERROR',seconds!==null&&seconds<=600?seconds:null);
       }
       const message = isTemporaryApiStatus(response.status) ? apiUnavailableMessage()
         : response.status === 413 ? "Запрос превышает допустимый размер. Уменьшите объём данных или вложений."
@@ -4116,7 +4119,12 @@ export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/re
   try{
     if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
     return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
-  }catch(error){const code=error instanceof GenesisApiError?e2eeHttpErrorCode(error.status,error.payload):null;if(code)throw new Error(code);throw error;}
+  }catch(error){
+    if(path==='/read'&&!observation&&error instanceof GenesisApiError&&error.status===429&&error.retryAfterSeconds!==null){
+      const {E2eeReadRateError}=await import('./e2ee/read-rate-retry');throw new E2eeReadRateError(error.retryAfterSeconds);
+    }
+    const code=error instanceof GenesisApiError?e2eeHttpErrorCode(error.status,error.payload):null;if(code)throw new Error(code);throw error;
+  }
   finally{observation?.close();}
 }
 

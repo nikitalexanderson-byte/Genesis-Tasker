@@ -10,6 +10,7 @@ import {webMembershipAtomicStager} from './membership-atomic-web-stage.ts';
 import type {MembershipAtomicStager} from './membership-atomic-stager.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import type {E2eeSharedBootstrap} from './shared-bootstrap.ts';
+import {retryE2eeRead} from './read-rate-retry.ts';
 
 export type PrivateScopeSummary={scopeId:string;kind:'personal'|'project'|'space';resourceId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement'};
 export type PrivateAccountStatus={pilotAllowed:boolean;cryptoProtocol:1;scopes:PrivateScopeSummary[]};
@@ -69,7 +70,10 @@ export class WebPrivateAccount{
  #membershipAtomic:MembershipAtomicStager|null=null;
  #sharedRecords=new Map<string,{records:E2eeSharedRecords;bootstrap:E2eeSharedBootstrap}>();
  private constructor(ownerId:string,device:UnlockedWebDevice,transport:PrivateAccountTransport,current:()=>void,mode:'online'|'offline'='online'){
-  this.ownerId=ownerId;this.device=device;this.#transport=transport;this.#current=current;this.mode=mode;
+  this.ownerId=ownerId;this.device=device;this.#current=current;this.mode=mode;
+  this.#transport={status:()=>transport.status(),directory:id=>transport.directory(id),command:packet=>transport.command(packet),
+   challenge:(scope,device,keys)=>transport.challenge(scope,device,keys),...(transport.membership?{membership:transport.membership}:{}),
+   read:packet=>{const held=snapshotE2eeValue(packet),read=transport.read.bind(transport);return retryE2eeRead(()=>read(held),()=>this.requireOpen());}};
  }
  static async open(ownerId:string,secret:Uint8Array,transport:PrivateAccountTransport,current:()=>void,recoveryKit?:RecoveryKit){
   assertTechnical(ownerId);if(secret.length!==32)throw new Error('E2EE_UNLOCK_REQUIRED');const held=new Uint8Array(secret),storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();
