@@ -3,7 +3,7 @@
 import { publicLegalUpdated } from "./legal-content";
 import { BACKUP_LEGAL_READY, BACKUP_LEGAL_VERSION } from './backup-legal';
 import {useBackupCopy} from './use-backup-copy';
-import {getRuntimeLanguage,translateText} from './i18n';
+import {browserLanguage,getRuntimeLanguage,translateText} from './i18n';
 import {legalPresentation} from './legal-presentation';
 import {publicPagePath,currentPublicEdition,type PublicEdition} from './public-route';
 import {PublicEditionRouting} from './PublicRegionControl';
@@ -14,7 +14,7 @@ export {currentLegalPage} from './legal-route';
 export type {LegalPageName} from './legal-route';
 
 export function LegalPage({page,edition=currentPublicEdition()}:{page:LegalPageName;edition?:PublicEdition}) {
-  const language=getRuntimeLanguage();
+  const language=typeof window==='undefined'?getRuntimeLanguage():browserLanguage();
   const {c}=useBackupCopy(language);
   const content=legalPresentation(page,language,text=>translateText(text,language),text=>c(text,translateText(text,'en')),edition);
   const base=process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||'';
