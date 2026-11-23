@@ -114,7 +114,12 @@ class LocalPreferences(private val context: Context, private val scope: String) 
     val values=combine(context.genesisPreferences.data,ru.genesis.calendar.security.NativePrivateProducts.revision){legacy,_->
         if(!isPrivateScope())decode(legacy)
         else if(!ru.genesis.calendar.security.NativePrivateProducts.isOpen(scope))UiPreferences()
-        else {val state=privateState(legacy).getJSONObject("values"),projection=mutablePreferencesOf();for(name in state.keys())projection[key(name)]=state.getString(name);decode(projection)}
+        else {
+            val state=privateState(legacy).getJSONObject("values")
+            val projection=mutablePreferencesOf()
+            for(name in state.keys())projection[key(name)]=state.getString(name)
+            decode(projection)
+        }
     }.flowOn(Dispatchers.IO)
     suspend fun set(name: String, value: String) {
         if(isPrivateScope()){privateState(change={it.getJSONObject("values").put(name,value)});return}
