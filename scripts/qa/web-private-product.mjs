@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {mkdirSync, readFileSync, writeFileSync,readdirSync} from 'node:fs';
 import path from 'node:path';
 import {chromium} from 'playwright';
+import {openBackup} from '../../app/backup-format.ts';
 
 const baseURL=process.env.GENESIS_QA_WEB_ORIGIN;
 assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL??''));
@@ -13,17 +14,18 @@ const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json',
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
 const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],networkFailures:[],networkRetries:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
-let page,secret,kit;
+let page,secret,kit,backupKey;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
 const sharedJourney=['shared','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const backupJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='backup';
 const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
 const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
 const cacheCanary='PRIVATE-CACHE-'+crypto.randomUUID();
 let sharedFixture;
-const redactPrivateText=value=>secret?String(value).replaceAll(secret,'[redacted recovery secret]'):String(value);
+const redactPrivateText=value=>[secret,backupKey].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
@@ -277,6 +279,43 @@ try{
    throw error;
   }finally{await clean.close();}
  });
+ if(backupJourney){
+  const copy=JSON.parse(readFileSync('contracts/e2ee/content-archive-copy-v1.json','utf8')).ru;
+  let archive,selection;
+  const openBackups=async()=>{await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=backups]').click();};
+  const importPanel=()=>page.locator('section.backup-panel').filter({has:page.getByRole('heading',{name:copy.import,exact:true})});
+  const entries=payload=>payload.sections.flatMap(section=>section.data.entries.map((entry,index)=>({section:section.id,index,entry})));
+  await check('real device snapshot download decrypts independently and contains the edited private task',async()=>{
+   await openBackups();const panel=page.locator('section.backup-panel').filter({has:page.getByRole('heading',{name:copy.deviceSnapshot,exact:true})});
+   await panel.getByRole('button',{name:'Создать ключ',exact:true}).click();backupKey=await panel.locator('textarea').inputValue();assert(backupKey.length>=43&&backupKey.length<=64);
+   await panel.locator('input[type=checkbox]').nth(0).check();await panel.locator('input[type=checkbox]').nth(1).check();
+   const pending=page.waitForEvent('download');await panel.getByRole('button',{name:copy.deviceSnapshot,exact:true}).click();archive=(await downloadBytes(await pending)).toString('utf8');
+   assert.equal(archive.includes(canary),false);assert.equal(archive.includes(secret),false);assert.equal(archive.includes(backupKey),false);
+   const payload=await openBackup(archive,backupKey),owner=(await(await context.request.get('/api/session')).json()).user.uid;
+   assert.equal(payload.ownerId,owner);assert.equal(payload.source,'device_snapshot');assert.equal(payload.billingEvidence,null);
+   for(const section of payload.sections){assert.equal(section.data.format,'genesis-content-only-v1');assert.equal(section.data.execution,'history-only');}
+   selection=entries(payload).find(row=>row.entry.objectId==='personal-product-live-v1'&&Buffer.from(row.entry.current.bytes,'base64url').toString('utf8').includes(canary));
+   assert(selection,'The actual edited product document belongs to the encrypted archive');
+   report.contentBackup={backupId:payload.backupId,sections:payload.sections.length,entries:entries(payload).length,byteLength:Buffer.byteLength(archive),execution:'history-only'};
+   writeFileSync(`${output}/private-device-content.genesisbackup`,archive);
+  });
+  await check('wrong backup key refuses and the same original imports as encrypted history with the right key',async()=>{
+   const panel=importPanel();await panel.locator('input[type=file]').setInputFiles({name:'device-content.genesisbackup',mimeType:'application/octet-stream',buffer:Buffer.from(archive)});
+   await panel.locator('input[type=password]').fill('A'.repeat(43));await panel.getByRole('button',{name:copy.import,exact:true}).click();await panel.getByRole('alert').filter({hasText:copy.error}).waitFor();
+   await panel.locator('input[type=password]').fill(backupKey);await panel.getByRole('button',{name:copy.import,exact:true}).click();await panel.getByRole('status').filter({hasText:copy.saved}).waitFor();
+   await panel.getByRole('combobox',{name:copy.history,exact:true}).selectOption(`${selection.section}:${selection.index}:current`);
+   assert((await panel.locator('pre').innerText()).includes(canary));
+  });
+  await check('imported history survives cold unlock and leaves the current edited task intact',async()=>{
+   await withRateRetry('backup cold reader',async()=>{
+    await page.goto('/?lang=ru#today');await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
+   });
+   await openBackups();const panel=importPanel();await panel.getByRole('button',{name:copy.history,exact:true}).click();await panel.getByRole('button',{name:report.contentBackup.backupId,exact:true}).click();
+   await panel.getByRole('combobox',{name:copy.history,exact:true}).selectOption(`${selection.section}:${selection.index}:current`);assert((await panel.locator('pre').innerText()).includes(canary));
+   await page.screenshot({path:`${output}/retained-private-backup.png`,fullPage:true,animations:'disabled'});
+  });
+ }
  if(localeJourney)await check('real locked vault renders all fourteen languages in both themes at all required widths',async()=>{
   const locales=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8'));
   report.visualCases=[];
@@ -369,8 +408,11 @@ try{
   await check('normal shared reader opens transferred task content and refuses the legacy project route',async()=>{
    const legacy=await context.request.get(`/api/shared/projects/${sharedFixture.project.id}`);assert.equal(legacy.status(),409);assert.equal((await legacy.json()).error,'E2EE_UPGRADE_REQUIRED');
    const target=new URL('/',baseURL);target.searchParams.set('affairs','shared');target.searchParams.set('space',sharedFixture.space.id);target.searchParams.set('project',sharedFixture.project.id);target.searchParams.set('projectView','board');target.hash='projects';
+   await page.goto(target.href);
    await withRateRetry('normal shared reader',async()=>{
-    await page.goto(target.href);const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    // A goto to an identical URL with a hash may keep the same document.
+    // This check explicitly requires cold entry, including every rate retry.
+    await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
     await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
    });
    await page.screenshot({path:`${output}/private-shared-task-readback.png`,fullPage:true,animations:'disabled'});
@@ -383,4 +425,4 @@ try{
  report.status='FAIL';report.error=redactPrivateText(error.message);process.exitCode=1;
  if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,redactPrivateText(await page.locator('body').ariaSnapshot().catch(()=>'')));}
  console.error(redactPrivateText(error.message));
-}finally{secret=undefined;kit=undefined;save();await context.close();await browser.close();}
+}finally{secret=undefined;kit=undefined;backupKey=undefined;save();await context.close();await browser.close();}

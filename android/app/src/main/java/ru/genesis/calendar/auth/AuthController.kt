@@ -2465,7 +2465,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private fun checkSession(inBackground: Boolean) = start("Проверяем серверную сессию…", inBackground) { generation ->
         if (mutableState.value.user == null) {
             val cached = withContext(Dispatchers.IO) { CachedAccountEntry(app).read(app.workspaceScope) }
-            if (cached != null) publish(generation, AuthPanelState(busy = true, ready = true,
+            if (cached != null) publish(generation, AuthPanelState(busy = true,
+                ready = !cached.identity.privateVault || ru.genesis.calendar.security.NativePrivateProducts.isOpen(app.workspaceScope),
                 user = cached.identity, accountSettings = cached.settings,
                 message = "Открыта защищённая локальная копия. Проверяем связь с облаком…"))
         }
@@ -3210,9 +3211,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 // Cold startup may have opened the validated local cache after this operation began.
                 // A network failure must retain that account as well as an already visible account.
                 val retained = mutableState.value.takeIf { it.ready && it.user != null } ?: previous
-                publish(generation, AuthPanelState(ready = retained.ready && retainIdentity,
+                val identity=retained.user?.let{user->
+                    if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(CloudAccountSnapshot.scopeFor(user.uid))&&!user.privateVault)
+                        ServerIdentity(user.uid,user.displayName,user.email,true) else user
+                }
+                val contentReady=if(identity?.privateVault==true)ru.genesis.calendar.security.NativePrivateProducts.isOpen(CloudAccountSnapshot.scopeFor(identity.uid))else retained.ready
+                publish(generation, AuthPanelState(ready = contentReady && retainIdentity,
                     requiresSignIn = retained.requiresSignIn,
-                    user = retained.user.takeIf { retainIdentity },
+                    user = identity.takeIf { retainIdentity },
                     accountSettings = retained.accountSettings.takeIf { retainIdentity },
                     preview = retained.preview.takeIf { retainIdentity },
                     checkedAt = retained.checkedAt.takeIf { retainIdentity }, message = message))
@@ -3240,6 +3246,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             } catch (_: GoogleServicesAuthorizationException) {
                 failed("Google не завершил выдачу разрешений Calendar/Tasks. Повторите подключение и выберите тот же аккаунт.")
             } catch (error: AuthFailure) {
+                if(ru.genesis.calendar.BuildConfig.DEBUG)logCloudFailure("AUTH_OPERATION",error)
                 if (error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                 failed(when (error.kind) {
                     AuthFailure.Kind.NOT_DEPLOYED -> "Нативный вход ещё не опубликован на сервере. Локальные функции доступны."
@@ -3254,6 +3261,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             } catch (_: PreferenceNotPersistedException) {
                 failed("Сервер ещё не поддерживает эту настройку. Повторите после обновления сервиса GENESIS.")
             } catch (error: Exception) {
+                if(ru.genesis.calendar.BuildConfig.DEBUG)logCloudFailure("AUTH_OPERATION",error)
                 resetCredentialProvider()
                 val code = error.javaClass.simpleName.filter { it.isLetterOrDigit() }.take(32).ifBlank { "Unknown" }
                 failed("Не удалось безопасно завершить проверку. Состояние Google сброшено; повторите вход. Код: $code. Текущая сессия и локальные записи не изменены.")
@@ -3286,7 +3294,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val cached = withContext(Dispatchers.IO) { CachedAccountEntry(app).read(app.workspaceScope) }
         // A cached identity opens only this device's encrypted copy. Every cloud operation
         // still requires fresh server authentication; explicit logout revokes local access.
-        publish(generation, AuthPanelState(ready = cached != null, requiresSignIn = cached != null,
+        publish(generation, AuthPanelState(ready = cached != null && (!cached.identity.privateVault ||
+            ru.genesis.calendar.security.NativePrivateProducts.isOpen(app.workspaceScope)), requiresSignIn = cached != null,
             user = cached?.identity, accountSettings = cached?.settings,
             checkedAt = System.currentTimeMillis(),
             message = if (cached != null)

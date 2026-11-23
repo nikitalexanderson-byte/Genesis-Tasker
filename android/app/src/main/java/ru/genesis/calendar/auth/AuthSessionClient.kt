@@ -1082,9 +1082,11 @@ internal class AuthSessionClient(context: Context,
         } catch (error: AuthApiError) {
             throw error
         } catch (error: java.io.IOException) {
-            if (BuildConfig.DEBUG) Log.w("GenesisAuth", "HTTPS transport failed at $path/$phase: ${error.javaClass.simpleName}")
+            if (BuildConfig.DEBUG) Log.w("GenesisAuth", "HTTPS transport failed at $phase: ${error.javaClass.simpleName}")
             throw AuthFailure(AuthFailure.Kind.NETWORK)
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            if(BuildConfig.DEBUG){val location=error.stackTrace.firstOrNull{it.className.startsWith("ru.genesis.calendar.")}
+                Log.w("GenesisAuth","HTTPS response refused at $phase: ${error.javaClass.simpleName} at ${location?.fileName}:${location?.lineNumber}")}
             throw AuthFailure(AuthFailure.Kind.PROTOCOL)
         } finally {
             synchronized(guard) { connections -= connection }

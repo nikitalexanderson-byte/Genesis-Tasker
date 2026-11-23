@@ -1,5 +1,33 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, после22:06 Москва: переход private identity и portable backup
+
+HEADca02bd9e содержит test-only ready correction; build25 SUCCESS1m32s,
+main APK313D7572… прежний. Controller25 снова FAIL после personal ACTIVE за5m04s:
+новая диагностика показывает sameOwner=true/privateVault=false/ready=true/
+busy=false/requiresSignIn=false. Следовательно, прежний неверный ready predicate
+был не единственным препятствием. Нужен разбор именно profile adoption, не новый
+слепой full migration. Instrumentation теперь отдельно проверяет actual /session
+private mode и parser перед controller refresh; safe error type/location logs
+добавлены без paths/values. Найден отдельный реальный cache bug: persistent private
+marker добавлял privateVault, который AuthProtocol не читает, до identity decode.
+Исправлен privatePreferencesMode до decode, protected cache/failed-auth ready теперь
+требует реально открытого продукта. Добавлены3 actual Room/Keystore cache cases.
+Эти новые main changes пока НЕ собраны/приняты; следующая сборка26.
+
+Web43 FAIL после13 PASS и project+space ACTIVE: normal-reader rate retry ожидал
+новый vault dialog после goto к тому же hash URL, хотя документ оставался открыт.
+Runner теперь явно reload при каждом cold-entry retry. Это не product bypass;
+normal shared reader всё ещё не принят. Web44 завершён PASS13/13+112/112 visuals,
+bundle27 SHA32789ed4… и cleanup PASS. Web45 backup FAIL после12 PASS: настоящий
+device snapshot отказал E2EE_INVALID_KEY_BUNDLE, поэтому download не появился.
+Не увеличивать timeout вместо исправления: нужно короткое воспроизведение
+captureLocalContentArchive/offline retained history. Backup runner добавлен,
+включая независимый Node decrypt, неверный ключ, import history и cold reopen;
+эти новые проверки ещё не прошли. Native full lint24 SUCCESS0/224warnings/9hints
+и оба source regressions24 по4/4 PASS относятся к прежнему main APK, не к26.
+Production149, coverage9/20, cutover/floors off и deployAndroid=false сохраняются.
+
 ## 23 ноября,21:33 Москва: controller24 и проверка источников
 
 Controller24 без periodic HAT refresh прошёл личную миграцию до ACTIVE за7m33s:

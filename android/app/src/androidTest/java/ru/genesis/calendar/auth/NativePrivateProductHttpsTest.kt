@@ -181,6 +181,9 @@ class NativePrivateProductHttpsTest {
             }
             try{withTimeout(1200000){migration.run(material.secret,material.kit,::progress)}}catch(error:Throwable){diagnose("personal-refusal");throw error}finally{sourceDiagnostic.cancel();auth.closePrivateMigration(migration)}
             assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/bootstrap",expected=409).getString("error"))
+            val privateSession=request("/api/session")
+            assertTrue("The actual identity endpoint declares private routing",requireNotNull(AuthProtocol.identity(privateSession)).privateVault)
+            assertNotNull("The actual locked public profile is independently parseable",AccountSettings.fromResponse(privateSession))
             NativeMigrationUiState.close(intent.id);auth.checkSession()
             // Identity is adopted before unlocking. A locked private account is
             // deliberately not ready; waiting for ready here prevents the actual

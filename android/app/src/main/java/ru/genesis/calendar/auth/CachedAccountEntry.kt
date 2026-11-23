@@ -18,7 +18,10 @@ internal class CachedAccountEntry(private val app: GenesisApplication) {
         val record = (if(protected)app.database.dao().document(metadataScope(scope),kind)else null)?:app.database.dao().document(scope, kind) ?: return null
         return runCatching {
             val response = JSONObject(LocalCipher().decrypt(record.encrypted, "${record.scope}/$kind"))
-            if(protected)response.getJSONObject("user").put("privateVault",true)
+            // AuthProtocol derives private routing only from the explicit mode.
+            // Adopt the persisted deny marker before decoding an older cache;
+            // a stale identity must not expose legacy UI while the vault is locked.
+            if(protected)response.getJSONObject("user").put("privatePreferencesMode","e2ee")
             val identity = AuthProtocol.identity(response) ?: return null
             require(CloudAccountSnapshot.scopeFor(identity.uid) == scope)
             if(protected||identity.privateVault){val user=response.getJSONObject("user");user.remove("advicePreferences");user.remove("uiVisibility");user.remove("syncRouting");user.put("privatePreferencesMode","e2ee")}
