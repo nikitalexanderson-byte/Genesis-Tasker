@@ -134,6 +134,9 @@ class UnlockedE2eeVault(private val storage: E2eeRecordStorage, value: Scope) : 
     override fun listLocal(domain: String, objectPrefix: String): List<String> {
         E2eeKeys.technical(objectPrefix);return localIds(domain){it.startsWith(objectPrefix)}
     }
+    /** Portable content roles only. Restricted source interfaces deliberately
+     * retain their existing nonempty-prefix discovery contract. */
+    fun listContentArchiveDocuments():List<String> = localIds("draft"){E2eeContentArchive.deviceContent(it)}
     /** Dedicated locator role; the public read-only source interfaces retain
      * their narrow prefix rules and do not gain a general empty-prefix read. */
     override fun listMigrationOriginalParts():List<String> = localIds("local-snapshot"){it.contains(":source:")||it.endsWith(":source")}
