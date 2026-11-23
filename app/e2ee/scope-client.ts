@@ -10,7 +10,7 @@ import {validatePrivateProjectSelection,validatePrivateProjectTopology,type Priv
 import {productMutation,type ProductMutation} from './product-contract.ts';
 import {membershipAtomicStagingPayload,type MembershipAtomicStagingAction} from './membership-atomic-contract.ts';
 import {membershipAtomicApplyPayload,type MembershipAtomicApplyAction} from './membership-atomic-receipts.ts';
-import {requirePrivateProductMutation} from '../private-migration-ui.ts';
+import {requirePrivateProductMutation} from './product-mutation-fence.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;

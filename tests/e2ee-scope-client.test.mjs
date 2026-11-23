@@ -9,6 +9,7 @@ import {signE2eeCommand,verifyE2eeCommand,e2eeCommandHash} from '../app/e2ee/com
 import {envelopePayloadHash,objectManifestHash,sealE2eeFile} from '../app/e2ee/files.ts';
 import {verifyDeviceDirectory} from '../app/e2ee/directory.ts';
 import {showPrivateMigration,privateMigrationUi,closePrivateMigrationUi} from '../app/private-migration-ui.ts';
+import {holdPrivateProductMutations,requirePrivateProductMutation} from '../app/e2ee/product-mutation-fence.ts';
 
 class Records {
   rows=new Map();fail=false;
@@ -26,35 +27,49 @@ class Keys {
 }
 const bytes=text=>new TextEncoder().encode(text),text=value=>new TextDecoder().decode(value);
 
-test('a migration surface freezes ordinary encrypted uploads and editor publications without discarding pending work',async()=>{
+test('an active migration freezes encrypted uploads and editors, then permits initialization while its surface remains visible',async()=>{
   const f=await fixture(),client=f.make();await client.refresh();
   await client.prepare('diary','frozen-upload',bytes('retained pending input'),0);
   const queue=new E2eeEditorQueue(f.device,client,f.rootContext.scopeId,'diary','frozen-editor');
   showPrivateMigration(f.device.ownerId,'en','resume',{scopeId:'project:synthetic',kind:'project',resourceId:'synthetic'});
+  const release=holdPrivateProductMutations(f.device.ownerId);
   const retained=JSON.stringify([...f.storage.rows]);
   try{
     await assert.rejects(client.flush('diary','frozen-upload'),/E2EE_MIGRATION_BUSY/);
     await assert.rejects(queue.stage(bytes('new ordinary input'),null,0),/E2EE_MIGRATION_BUSY/);
     assert(JSON.stringify([...f.storage.rows])===retained,'the migration must see the same retained job and editor inventory');
     assert.equal(f.server.writes,0);
-  }finally{closePrivateMigrationUi(privateMigrationUi().id);}
-  await client.flush('diary','frozen-upload');assert.equal(f.server.writes,2,'one content chunk and its manifest are uploaded after admission resumes');f.device.lock();
+    release();assert(privateMigrationUi(),'completion UI remains mounted during product initialization');
+    await client.flush('diary','frozen-upload');assert.equal(f.server.writes,2,'one content chunk and its manifest are uploaded after admission resumes');
+  }finally{release();closePrivateMigrationUi(privateMigrationUi().id);f.device.lock();}
 });
 
 test('an upload committed as migration opens retains its exact pending packet until the surface closes',async()=>{
   const f=await fixture(),client=f.make();await client.refresh();
   await client.prepare('diary','race-upload',bytes('immutable pending input'),0);
-  const command=f.transport.command;let retained;
+  const command=f.transport.command;let retained,release=()=>{};
   f.transport.command=async packet=>{
     showPrivateMigration(f.device.ownerId,'en','resume',{scopeId:'project:synthetic',kind:'project',resourceId:'synthetic'});
+    release=holdPrivateProductMutations(f.device.ownerId);
     retained=JSON.stringify([...f.storage.rows]);return command(packet);
   };
   try{
     await assert.rejects(client.flush('diary','race-upload'),/E2EE_MIGRATION_BUSY/);
     assert.equal(f.server.writes,1);
     assert(JSON.stringify([...f.storage.rows])===retained,'a late receipt must not mutate the authenticated custody snapshot');
-  }finally{if(privateMigrationUi())closePrivateMigrationUi(privateMigrationUi().id);f.transport.command=command;}
-  await client.flush('diary','race-upload');assert.equal(f.server.writes,2,'retry recovers the first chunk receipt and adds only its manifest');f.device.lock();
+    release();f.transport.command=command;
+    await client.flush('diary','race-upload');assert.equal(f.server.writes,2,'retry recovers the first chunk receipt and adds only its manifest');
+  }finally{release();if(privateMigrationUi())closePrivateMigrationUi(privateMigrationUi().id);f.transport.command=command;f.device.lock();}
+});
+
+test('nested migration holds release independently, tolerate repeated cleanup, and do not block another owner',()=>{
+  const first=holdPrivateProductMutations('nested-owner'),second=holdPrivateProductMutations('nested-owner');
+  try{
+    assert.throws(()=>requirePrivateProductMutation('nested-owner'),/E2EE_MIGRATION_BUSY/);
+    requirePrivateProductMutation('other-owner');first();first();
+    assert.throws(()=>requirePrivateProductMutation('nested-owner'),/E2EE_MIGRATION_BUSY/);
+    second();requirePrivateProductMutation('nested-owner');
+  }finally{first();second();}
 });
 async function fixture(options={}){
   const ownerId='scope-owner',scopeId='personal:scope-owner',recovery=await createRecoveryKit(ownerId),storage=new Records(),keyStorage=new Keys();

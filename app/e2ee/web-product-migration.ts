@@ -18,6 +18,7 @@ import type {VerifiedDirectory} from './directory.ts';
 import type {E2eeMigrationSources} from './migration-sources.ts';
 import type {WebProductMigrationFence} from './legacy-transport-fence.ts';
 import {retainEncryptedUserCache} from './user-cache-retention.ts';
+import {holdPrivateProductMutations} from './product-mutation-fence.ts';
 
 type Target={ownerId:string;scopeId:string;kind:'personal'|'space'|'project';resourceId:string};
 export type WebSharedMigrationTarget=Pick<Target,'scopeId'|'resourceId'>&{kind:'space'|'project'};
@@ -108,9 +109,11 @@ export class WebProductMigration{
   const current=()=>{this.#current();if(abort.signal.aborted)throw new Error('E2EE_OPERATION_STOPPED');};
   if(this.#running){held.fill(0);throw new Error('E2EE_MIGRATION_BUSY');}this.#running=true;
   let drained!:()=>void;const operation={abort,drained:new Promise<void>(resolve=>{drained=resolve;})};this.#operation=operation;
+  let releaseMutations:(()=>void)|undefined;
   try{
    const kit=snapshotE2eeValue(savedKit);
-   current();const directory=structuredClone(this.directory),router=new MigrationSourceReadRouter();
+   current();releaseMutations=holdPrivateProductMutations(this.device.ownerId);
+   const directory=structuredClone(this.directory),router=new MigrationSourceReadRouter();
    const sources=await this.ports.sources(this.device,directory,router.port);current();
    const own=directory.devices.get(this.device.deviceId);if(!own||own.revoked||own.userId!==this.device.ownerId||own.role!=='owner')throw new Error('E2EE_REVOKED_DEVICE');
    const root=await openRoot(own.capsule,this.device.keys().receiving.privateKey,{ownerId:directory.ownerId,scopeId:directory.scopeId,
@@ -165,6 +168,6 @@ export class WebProductMigration{
       await retainEncryptedUserCache(this.device,current);current();
      }this.directory=active;
     }});current();
-  }finally{held.fill(0);this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
+  }finally{held.fill(0);releaseMutations?.();this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
  }
 }

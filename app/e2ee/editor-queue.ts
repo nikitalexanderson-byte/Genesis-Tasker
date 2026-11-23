@@ -6,7 +6,7 @@ import {parseLegacyMigrationJson} from './legacy-json.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import type {LocalWrite,UnlockedE2eeVault} from './storage.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
-import {requirePrivateProductMutation} from '../private-migration-ui.ts';
+import {requirePrivateProductMutation} from './product-mutation-fence.ts';
 
 type Metadata={filename:string;mediaType:string};
 type Draft={id:string;size:number;parts:number;metadata:Metadata};
