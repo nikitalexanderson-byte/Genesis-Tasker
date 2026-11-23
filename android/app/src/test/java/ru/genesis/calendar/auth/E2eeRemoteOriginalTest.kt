@@ -16,7 +16,7 @@ class E2eeRemoteOriginalTest {
         var rows = mutableMapOf<String, E2eeLocalRecord>(); var full = false
         var bodyGets=0;var metadataGets=0;var namespaceLists=0;var afterGet:((String)->Unit)?=null
         override fun get(key: String):E2eeLocalRecord? {val value=rows[key];if(key.contains(":p:"))bodyGets++;if(key.contains(":j:")||key.contains(":m:")||key.contains("remote-original-catalog:"))metadataGets++;afterGet?.invoke(key);return value}
-        override fun list(prefix: String):List<String> {if(prefix.endsWith("remote-original:"))namespaceLists++;return rows.keys.filter { it.startsWith(prefix) }}
+        override fun list(prefix: String):List<String> {namespaceLists++;return rows.keys.filter { it.startsWith(prefix) }}
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
             requireOpen(); check(!full) { "E2EE_SYNTHETIC_STORAGE_FULL" }; for (row in changes) check(rows[row.key]?.serial == row.expected) { "E2EE_LOCAL_CONFLICT" }
             val next = rows.toMutableMap(); for (row in changes) if (row.value == null) next.remove(row.key) else next[row.key] = row.value

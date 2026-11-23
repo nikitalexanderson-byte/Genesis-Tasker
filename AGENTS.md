@@ -1,5 +1,11 @@
 # Genesis Tasker: действующие правила
 
+- Build23 завершилась JVM1437:1428 PASS/1 FAIL/8 existing opt-in skips. Единственный
+  FAIL — новый fixture counter перечислений (реальный vault фильтрует objectPrefix
+  после storage.list), не crypto/body отказ. Counter исправлен без изменения main
+  кода; build24 повторяет весь RemoteOriginal suite и собирает QA APKs. До результата
+  build24 root app/android/contracts/public не менять. Full runtime ещё впереди.
+
 - Native22 full controller завершён20-minute timeout после перехода sources→
   reconciliation; PIN/HAT отказа больше нет. Его inputs разморожены. Web corrections
   перенесены commits83db5557/08851210. Текущая build23 проверяет linear bulk original

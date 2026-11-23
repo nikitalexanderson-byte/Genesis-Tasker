@@ -1,5 +1,22 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: JVM23 и test-only refresh24
+
+Build23 компилировала main/test и завершилась на JVM:1437 tests,1428 PASS/1 FAIL/
+8 existing opt-in skips. Полные XML сохранены в runtime/native150-build23-failed-unit/.
+Единственный FAIL — performance fixture ожидал3 enumerations, но считал0: он
+искал objectPrefix в storage.list, тогда как настоящий vault фильтрует этот prefix
+позже. Counter исправлен, exact3-pass и linear-read assertions сохранены; main код
+не менялся. Build24/session pending: полный RemoteOriginal suite и debug/test APK,
+runtime/native150-original-audit-build24.log. До identity24 root inputs заморожены.
+Не выдавать failed23 за PASS или ещё не собранные APK за новый runtime.
+Новые source corrections сохранены в9ea60d37, test counter пока dirty.
+
+Web42/session83483 идёт на immutable27 с безопасной сеть-диагностикой/explicit retry.
+Личный migration/recovery12 checks PASS, начат shared transfer, получен реальный
+Retry-After. Бюджет600/10min и rate tables не меняются. Повторная web сборка не нужна:
+app/web/contracts/public root побайтно совпадают с e78799c7 linked bundle source.
+
 ## 23 ноября: native23 bulk audit и возобновление сети
 
 Controller22 завершён timeout1200000ms: sources заняли около17 минут, затем
