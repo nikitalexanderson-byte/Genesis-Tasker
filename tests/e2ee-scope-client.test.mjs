@@ -261,3 +261,36 @@ test('durable cancel tombstone blocks a delayed original put; crash during cance
   assert.deepEqual(await f.transport.command(delayed),{cancelled:true});assert.equal(f.server.writes,0);
   await client.flush('diary','one');assert.equal(text((await client.read('diary','one')).bytes),'PRESERVED DURING REBASE');
 });
+
+test('parameterless product reads send a signed versioned payload without weakening the command codec',async()=>{
+  const f=await fixture(),client=f.make(),seen=[];
+  const methods=[['readTransitionCandidates','resource-transition-candidates'],['readProductContext','product-context'],
+    ['readStoicheionState','stoicheion-state'],['readAdvicePolicy','advice-policy'],['sharedReadHistory','shared-read-history']];
+  const original=f.transport.read.bind(f.transport);
+  f.transport.read=async packet=>{
+    const command=await verifyE2eeCommand(packet,f.keys.signing.publicKey);
+    if(!methods.some(([,action])=>command.action===action))return original(packet);
+    assert.deepEqual(command.payload,{protocol:1});seen.push(command.action);
+    const base={checkpointHash:command.checkpointHash,directoryRevision:command.expectedRevision};
+    return command.action==='shared-read-history'?{...base,history:{ownerId:command.ownerId,readFlags:{},watching:{}}}:base;
+  };
+  try{await client.refresh();for(const [method]of methods)await client[method]();
+    assert.deepEqual(seen,methods.map(([,action])=>action));assert.equal(f.server.writes,0);
+  }finally{f.device.lock();}
+});
+
+test('bootstrap discovery signs an initial null cursor and every supported nonnegative part index',async()=>{
+  const f=await fixture(),client=f.make(),seen=[],original=f.transport.read.bind(f.transport);
+  f.transport.read=async packet=>{
+    const command=await verifyE2eeCommand(packet,f.keys.signing.publicKey);
+    if(command.action!=='product-bootstrap-state')return original(packet);
+    seen.push(command.payload.afterPart);
+    return{checkpointHash:command.checkpointHash,directoryRevision:command.expectedRevision,bootstrap:null,part:null};
+  };
+  try{
+    await client.refresh();await client.readBootstrapState();for(const part of [-1,0,255,256,4095])await client.readBootstrapState(part);
+    assert.deepEqual(seen,[null,null,0,255,256,4095]);
+    for(const part of [-2,4096,1.5])await assert.rejects(client.readBootstrapState(part),/E2EE_INVALID_LIMIT/);
+    assert.equal(f.server.writes,0);
+  }finally{f.device.lock();}
+});

@@ -489,10 +489,10 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
             check(row.getLong("revision")>floor.getLong("revision")||row.getLong("revision")==floor.getLong("revision")&&row.get("payloadHash")==floor.get("payloadHash")){"E2EE_REMOTE_ROLLBACK"}}}
         device.requireOpen();check(current()===value){"E2EE_DIRECTORY_CONFLICT"};return JSONObject().put("objects",objects).put("manifestHash",manifestHash).put("objectCount",count)
     }
-    @Synchronized fun readStoicheionState():JSONObject=readPacket("stoicheion-state",JSONObject())
-    @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..255){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",afterPart))}
-    @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject())
-    @Synchronized fun readTransitionCandidates():JSONObject=readPacket("resource-transition-candidates",JSONObject())
+    @Synchronized fun readStoicheionState():JSONObject=readPacket("stoicheion-state",JSONObject().put("protocol",1))
+    @Synchronized fun readBootstrapState(afterPart:Int=-1):JSONObject{check(afterPart in -1..4095){"E2EE_INVALID_LIMIT"};return readPacket("product-bootstrap-state",JSONObject().put("afterPart",if(afterPart == -1)JSONObject.NULL else afterPart))}
+    @Synchronized fun readProductContext():JSONObject=readPacket("product-context",JSONObject().put("protocol",1))
+    @Synchronized fun readTransitionCandidates():JSONObject=readPacket("resource-transition-candidates",JSONObject().put("protocol",1))
     /** Proposed routing only: no consent, journal advancement or trust grant. */
     @Synchronized fun readProjectCreationPreview(resourceId:String,input:JSONObject):JSONObject{
         E2eeKeys.technical(resourceId);val selected=E2eeProjectCreationContract.selection(input)
@@ -506,9 +506,9 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
     @Synchronized fun readSharedInvitationResponse(id:String):JSONObject{E2eeKeys.technical(id);return readPacket("shared-invitation-response-state",JSONObject().put("id",id))}
     @Synchronized fun readPendingInvitationPage(after:String="",limit:Int=50):JSONObject{if(after.isNotEmpty())E2eeKeys.technical(after);check(limit in 1..50){"E2EE_INVALID_LIMIT"};return readPacket("shared-invitation-pending",JSONObject().put("after",after).put("limit",limit))}
     @Synchronized fun readInvitationState(ids:List<String>):JSONObject{check(ids.size<=20&&ids.toSet().size==ids.size){"E2EE_INVALID_LIMIT"};ids.forEach{E2eeKeys.technical(it)};return readPacket("shared-invitation-state",JSONObject().put("ids",JSONArray(ids)))}
-    @Synchronized fun sharedReadHistory():JSONObject{val result=readPacket("shared-read-history",JSONObject());E2eeKeys.exact(result,setOf("history","checkpointHash","directoryRevision"));return result.getJSONObject("history")}
+    @Synchronized fun sharedReadHistory():JSONObject{val result=readPacket("shared-read-history",JSONObject().put("protocol",1));E2eeKeys.exact(result,setOf("history","checkpointHash","directoryRevision"));return result.getJSONObject("history")}
     @Synchronized fun readProductHistory(entityId:String,before:Long,limit:Int=5):JSONObject{E2eeKeys.technical(entityId);check(before in 1..9_007_199_254_740_991L&&limit in 1..10){"E2EE_INVALID_LIMIT"};return readPacket("product-history",JSONObject().put("entityId",entityId).put("before",before).put("limit",limit))}
-    @Synchronized fun readAdvicePolicy():JSONObject=readPacket("advice-policy",JSONObject())
+    @Synchronized fun readAdvicePolicy():JSONObject=readPacket("advice-policy",JSONObject().put("protocol",1))
     @Synchronized fun originalMigrationManifest():JSONObject{
         current();val sealed=directoryFrames.values.firstOrNull{it.state=="active"&&it.sealedHeads?.cryptoEpoch==0L}?.sealedHeads?:error("E2EE_MIGRATION_PROOF_REQUIRED")
         val response=readPacket("sealed-heads",JSONObject().put("cryptoEpoch",0));val objects=response.getJSONArray("objects");check(objects.length()==sealed.count&&E2eeFiles.objectManifestHash(objects)==sealed.hash){"E2EE_MANIFEST_MISMATCH"};device.requireOpen()

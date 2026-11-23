@@ -1,6 +1,8 @@
 #genesis-app-content{display:contents;}
 .private-vault-gate{position:fixed;inset:0;z-index:11000;display:grid;place-items:center;overflow-y:auto;padding:clamp(16px,4vw,40px);background:var(--surface);color:var(--ink);}
 .private-vault-dialog{width:min(620px,100%);grid-template-columns:32px minmax(0,1fr);border:0;background:var(--surface);box-shadow:none;gap:20px;}
+.private-vault-gate>.private-vault-dialog:not(.private-membership-dialog){max-width:620px;min-width:0;}
+.private-vault-dialog>.text-button{grid-column:1 / -1;justify-self:start;min-height:44px;max-width:100%;font-size:16px;line-height:1.5;text-align:start;white-space:normal;word-break:normal;overflow-wrap:normal;}
 .private-vault-icon{width:30px;height:30px;margin-top:8px;color:var(--ink-soft);}
 .private-vault-dialog .workspace-recovery-heading{padding-right:0;}
 .private-vault-dialog .workspace-recovery-heading h2{font-size:clamp(26px,4.5vw,36px);line-height:1.15;}
@@ -13,7 +15,7 @@
 .private-vault-dialog .workspace-recovery-privacy{font-size:13px;line-height:1.55;text-align:start;}
 .private-vault-offline{grid-column:1 / -1;min-height:44px;white-space:normal;}
 .private-vault-dialog .workspace-recovery-actions{display:flex;flex-wrap:wrap;}
-.private-vault-dialog .workspace-recovery-actions button{min-height:44px;white-space:normal;}
+.private-vault-dialog .workspace-recovery-actions button{min-height:44px;white-space:normal;font-size:16px;line-height:1.5;}
 .private-vault-dialog :is(input,button):focus-visible{outline:2px solid var(--teal);outline-offset:3px;}
 .private-migration-dialog{grid-template-columns:minmax(0,1fr);}
 .private-migration-dialog :is(p,label,button,small){min-width:0;word-break:normal;overflow-wrap:normal;hyphens:none;}

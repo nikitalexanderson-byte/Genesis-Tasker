@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore,type FormEvent} from 'react';
-import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,prepareCurrentSharedPrivateMigration,finishCurrentSharedPrivateMigration,completeCurrentPrivateSpaceCreation,completeCurrentPrivateProjectCreation,previewCurrentPrivateProjectCreation,confirmCurrentPrivateProjectCreationReview,resolveCurrentPrivateProjectCreation,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,type GenesisUser} from './cloud-sync';
+import {currentPrivateMigrationStatus,prepareCurrentPrivateMigration,prepareCurrentSharedPrivateMigration,finishCurrentSharedPrivateMigration,completeCurrentPrivateSpaceCreation,completeCurrentPrivateProjectCreation,previewCurrentPrivateProjectCreation,confirmCurrentPrivateProjectCreationReview,resolveCurrentPrivateProjectCreation,loadGenesisSession,unlockCurrentPrivateAccount,signOutFromGoogle,signInWithGoogle,type GenesisUser} from './cloud-sync';
 import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration,closePrivateMigrationUi,completePrivateResourceCreation,replacePrivateResourceCreation,type PrivateMigrationUi} from './private-migration-ui';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import migrationCopy from '../contracts/e2ee/migration-copy-v1.json' with {type:'json'};
@@ -62,6 +62,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  useEffect(()=>{let live=true;if(!state.target&&state.reason==='setup')void new IndexedDbDeviceKeyStorage().get(ownerId).then(record=>{if(live)setPhase(record?'confirm':'intro');}).catch(()=>{if(live){setError(copy.error);setPhase('confirm');}});return()=>{live=false;};},[ownerId,state.reason,state.target,copy.error]);
  const failure=(reason:unknown)=>{
   const code=reason instanceof Error?reason.message:'';
+  if(code==='E2EE_REAUTH_REQUIRED')return copy.reauthRequired;
   return code==='E2EE_RESOURCE_CREATION_RESOLUTION_REQUIRED'?retryText.notice:code==='E2EE_PROJECT_TOPOLOGY_CHANGED'?projectText.changed:['E2EE_RECIPIENT_REVIEW_REQUIRED','E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED'].includes(code)?creationCopy[language].recipients:code==='E2EE_OTHER_WINDOWS_OPEN'?copy.otherWindows:/E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)/.test(code)?copy.reviewRequired:copy.error;
  };
  const reviewProject=async(confirm=false)=>{
@@ -151,6 +152,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    {phase==='cancelled'?<><p role="status">{cancellation.done}</p><button type="button" className="text-button" disabled={busy} onClick={()=>closePrivateMigrationUi(state.id)}>{copy.close}</button></>:null}
    {phase==='running'?<button type="button" className="text-button" disabled={stopping} onClick={()=>{void pause();}}>{stopping?vaultCopy.busy:copy.stop}</button>:null}
    {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
+   {error===copy.reauthRequired?<button type="button" className="primary-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);void signInWithGoogle().catch(()=>setError(copy.error));}}>{copy.reauth}</button>:null}
    <p className="workspace-recovery-hint">{copy.kept}</p>
    <div className="workspace-recovery-actions">
     {state.target||state.reason==='setup'&&!hasStarted?<button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}

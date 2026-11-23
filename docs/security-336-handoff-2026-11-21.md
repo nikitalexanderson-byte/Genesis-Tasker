@@ -1,5 +1,275 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, после 07:58 UTC: текущая точка
+
+Native build8 честно FAILED: SDK37 больше не содержит typed FingerprintManager.
+Legacy branch переведён на уже объявленный AndroidX Core1.18.0
+FingerprintManagerCompat; классы/overload с android.os.CancellationSignal проверены
+через фактический cached AAR/javap. Новых зависимостей/UI-библиотек нет.
+Сейчас build9/session12731 (runtime/native150-build-9.log): основной Kotlin уже
+скомпилирован, JVM/dex/test APK продолжаются. С запуска9 app/android/contracts/
+public inputs не менять. Build identity до success9 остаётся старой6.
+
+NativePrivateVaultUnlockUiTest.kt теперь находится в actual androidTest source,
+с TLS setup/restore для owned fixture. Runtime draft одноимённого файла устарел:
+не копировать его поверх android/. Четыре UI cases: cancel, system PIN, background,
+hardware fingerprint; читают настоящий EDITED NATIVE PRIVATE project после unlock.
+Готов runtime/native150-private-controller-and-unlock-api34-01.ps1 (syntax PASS,
+НЕ исполнен): после build9 success/identity запускает real controller, затем UI
+в SAME fixture/app data; background auth refresh остановлен до UI. Новый helper
+owned-api34-auth-functions-1123.ps1 читает прежний synthetic PIN внутри процесса,
+не печатает/не меняет его. На API34 через actual Settings добавлен ровно1 synthetic
+fingerprint37, original count0/PIN unchanged. Setup evidence
+runtime/native150-owned-api34-fingerprint-setup.json. Никаких биометрических
+PASS пока нет. API26 wrapper01 для controller03 отдельно остаётся доступен,
+его finally обязан вернуть original NONE. Личные устройства не трогать.
+
+Web25 дал112/112 actual visual captures на build20, но весь run INCOMPLETE:
+QA provider handler ошибочно считал return_to абсолютным URL и упал на относительном.
+Исходный report RUNNING не переписан; run.json exit1/cleanup PASS. Исправлен
+new URL(return_to,baseURL), origin check сохранён. Web26/session20469 затем FAIL
+при shared migration: реальная или debugger-induced IndexedDB transaction abort,
+E2EE_STORAGE_UNAVAILABLE. API bootstrap/read уже доходят до200. Нужна причина,
+не снимать atomic/current/fingerprint guards. Web27/session30001 идёт на SAME
+immutable build20, focus shared, без pause-on-all-exceptions в обычном прогоне;
+QA hook пишет только IDB store/mode/DOMException name в storageFailures. Log:
+runtime/consolidated-private-shared27.log, output/playwright/
+security336-private-shared-27-1123/. Никакого общего shared PASS пока нет.
+
+PR47 всё ещё НЕ merged/deployed. PR45121136850 attempt2 SUCCESS (Android12m10s,
+web54m58s), standalone45121051152 SUCCESS. Обычный merge GitHub отказал, потому
+required checks учитывают также отменённый push45121048967 на том же SHA. У main
+enforce_admins=true, reviews0, required web-and-api/android strict; политику не менять.
+Этот cancelled push повторён attempt2 (примерно07:48UTC), идёт. После green обычный
+merge47, дать main PUSH checks завершиться без website_only cancel-дубликата,
+затем штатный Deploy по exact main и live incumbent. Production4c209a00/APK149.
+
+git diff --check PASS после LF normalization Manifest/backend-router. Код ещё
+локальный correction checkpoint, исходный prompt не изменён, demo-output не читать
+и не stage. Signed1498rows+draft baseline сохраняется; signed150/upgrade, minified/
+lint, полная матрица20 paths/48 scenarios и итоговое internal review ещё нужны.
+Coverage9/20, floors/cutover off, deployAndroid=false; goal active.
+
+## 23 ноября, после 07:00 UTC: отпечаток/PIN и новые runs
+
+Новое прямое steering владельца: «интегрируй также туда в приложение экран
+блокировки с возможностью входа по отпечатку и пинкоду», «если еще не сделал».
+Найден existing fullscreen PrivateVaultGate + системный PIN и auth-required
+E2eeDeviceVault keys300s. Не создавать отдельный app PIN или копию recovery secret.
+Added NativeDeviceAuthentication.kt: API30+ system STRONG BiometricPrompt,
+negative action explicitly opens system credential; API26–29 FingerprintManager
+с Material dialog и credential fallback. Atomic phases ignore late/duplicate
+callbacks; cancel/stop/timeout/dispose close request. Keystore unwrap и все
+original owner/foreground/one-use guards остаются после callback. Main vault
+button явно называет fingerprint/PIN. Normal USE_BIOMETRIC/USE_FINGERPRINT
+permissions; five localized strings в native-unlock-copy-v1.json для всех14.
+Это CODE, не biometric/PIN acceptance или выпуск. Нужно проверить реальные
+fingerprint success, PIN, cancel/background и сохранение исходных данных.
+
+Build7/session30283 отменён Ctrl+C из-за этого нового native блока, НЕ PASS.
+Owned Gradle process после отмены не найден. Сейчас build8/session35002:
+full JVM + debug/test APK, runtime/native150-build-8.log; source snapshot/hash
+native150-build-8-input.*. С запуска8 не менять app/android/contracts/public.
+
+Web20/session69162 PASS: lint0errors/3 historical hook warnings, types/build;
+immutable output/release-3.3.6/web-private-20/public_html. Web24/session7222
+завершён FAIL после68 actual visual PASS: множество искусственных повторных
+unlock исчерпало реальный e2ee-v1 budget600/10min, затем429 и startup gate.
+Не повышать budget. Visual loop теперь между captures остаётся locked (это
+правильный scope, весь functional unlock/recovery уже отдельно выполняется).
+Desktop dialog по принятому universal CSS остаётся1020; локальное max620 не
+override-ит общий selector. Читаемость full-column actions и dark theme видны
+на actual screenshot vault-de-dark-1440; это не уменьшение общего modal frame.
+
+После завершения24 добавлен qa/identity-confirmation в backend-router.php:
+только owned CLI/loopback E2EE runtime, POST/CSRF, whitelist ordinary synthetic
+actor, boolean confirmed; моделирует лишь provider delivery, меняя authenticated_at.
+Prod E2EE300s guard не менялся. PHP syntax и QA JS lint PASS. Shared test специально
+проверяет server refusal и actual Google reconfirm action, whose provider delivery
+is fixture-only. Native headless также refresh-ит synthetic identity перед shared.
+
+Новый web25/session46044, runtime/consolidated-private-shared-locales25.log,
+output/playwright/security336-private-shared-locales-25-1123/: immutable build20,
+112 visual locked states + actual personal/shared/re-auth journey; RUNNING.
+После build8 запускать controller03 существующим runtime wrapper01 с новымRunId,
+actual API26 PIN helper/finally NONE. Старый build identity6 не переименовывать.
+
+PR47 флага всё ещё OPEN/BLOCKED, failed-job rerun45121136850 выполняется.
+Standalone45121051152 SUCCESS. Merge/main checks/deploy/live verification ещё
+обязательны; не включать security-код в этот срочный веб-выпуск. Goal active,
+coverage9/20, cutover/floors off, APK149 и deployAndroid=false сохраняются.
+
+## 23 ноября, продолжение после 06:53 UTC: reauth, сборка7 и signed149 baseline
+
+PR47 российского флага всё ещё НЕ опубликован. Website-only Source checks45121051152
+SUCCESS. PR checks45121136850 имел один FAIL premium mindmap-edit-second-client:
+сразу после открытия cold формы получено пустое поле вместо уже сохранённого
+описания. Все остальные scenarios, включая header, прошли; Android SUCCESS.
+Повторён только failed job этого run, он выполняется. Не менять required checks
+и не обходить blocked merge. После green — обычный merge, exact-main checks,
+Deploy с живым incumbent и live verification, без security/APK149 changes.
+
+Native build5/session30721 завершён SUCCESS. Build6/session51556 тоже SUCCESS:
+source hash0E8881A3943CCA185E1C63CB207BCD76A4D5C7052937C313551B8C4D2E709F59,
+APK9156BDC9725B280FA371284F13A521A008FFB7DC41BC02B77BB26188B26688A7.
+Controller acceptance01 и02 честно FAIL до миграции на двух ошибках QA fixture:
+POST creation возвращает201, isDone приходит integer0/1. Оба исправлены в actual
+androidTest. API26 original NONE восстановлен в finally каждого run; personal
+devices и API34 PIN не менялись.
+
+Web23/session60060 завершён FAIL после полного personal recovery: resource
+discovery теперь200, но bootstrap shared отказал E2EE_REAUTH_REQUIRED — за личный
+перенос истекли реальные300s подтверждения входа. TTL НЕ ослаблять. Added whole
+block: actionable Google re-confirm on web/native migration error, notice/action
+всех14 языков в migration-copy-v1.json. QA shared journey теперь специально
+проверяет expired confirmation refusal и реальную кнопку с synthetic provider
+delivery; для этого ещё НУЖНО добавить строго loopback-only fixture endpoint
+qa/identity-confirmation (boolean confirmed, CSRF, known synthetic owner,
+authenticated_at only; не production). Native headless fixture тоже вызывает
+этот endpoint перед каждым shared bootstrap. Google provider UI здесь не claim.
+
+Web22 был FAIL после4 visual cases: locked vault не принимал public theme, пока
+account observer ожидал unlock. Исправлено ограниченным accessor public appearance
+и gated layout effect; max dialog620 и full-column readable text actions.
+Lint/types/build19 PASS. Web24/session7222 на immutable web-private-19/public_html:
+output/playwright/security336-private-shared-locales-24-1123/, последний snapshot
+12 checks,20 visual PASS, run ещё RUNNING. Его loaded script старый: shared phase
+ещё без reauth, ожидаемый FAIL там НЕ превращать в PASS. Не менять backend-router
+пока этот run не завершит112 captures, чтобы не менять active fixture inputs.
+
+Текущие builds: native7/session30283, runtime/native150-build-7.log, full JVM +
+debug/test APK; источник app/android/contracts/public с запуска7 не менять.
+Web20/session69162, runtime/web-private-build20.log; lint0 errors/3 existing hook
+warnings, typecheck/build pending; после success immutable web-private-20/public_html.
+После готовности fixtures и builds — native controller03 и shared25 с reauth.
+
+На owned API34/emulator-5580 установлен официальный signed149, UID10194,
+firstInstall06:25:44. adbd root только у этого owned AVD, PIN неизменен. Подготовлен
+runtime/upgrade-149150/GenesisUpgradeProbe.java и readonly DEX probe-03.jar:
+он работает под настоящим UID10194, использует platform AndroidKeyStore alias
+genesis.local.v1 и фактический Room genesis.db schema1. Не подделывает login/ACL.
+Seed и повторный запуск именно official149 сохранили8 rows (3 tasks incl tombstone,
+3 outbox incl backup-held,1 reminder,1 structure) и1 encrypted planning draft;
+4 records +draft расшифрованы тем же UID key. Evidence baseline149-seed-03.log,
+baseline149-verify.log, clean startup errors log. Proof SHA256
+28a5ae3a54f7622f91d31fff63617725989c76e93af19c8567bbd3e8317367a5.
+Первые harness attempts до provider installation/readonly DEX не прошли и сохранены.
+Signed150 пока НЕ собран/установлен: после официальной сборки нужен именно adb
+install -r, тот же certificate/UID и schema2 actual startup, затем verify тем же
+readonly probe. Это storage-retention, не signed-in Google/SAF UI acceptance.
+
+HEAD всё ещё2057fdd6, correction block dirty, last pushed59adb64e. Не читать/stage
+demo-output/. Coverage9/20, cutover/floors off, deployAndroid=false; final review,
+точный CI и раздельные публикации остаются. Сохранённый исходный prompt не менять.
+
+## 23 ноября, 06:22 UTC: дополнительные результаты текущих runs
+
+Scoped lint и полный TypeScript read-marker01 PASS; web ScopeClient24/24 и PHP
+read-marker04 две actual signed suites PASS. Native build5/session30721 всё ещё
+compileDebugKotlin (owned Gradle PID12988). GC heap snapshot:3.67GiB used of6GiB,
+active compiler CPU, не объявлять зависшим/ошибкой без новых данных. Исходники
+app/android/contracts/public с начала build5 не менять. Web22/session69940 всё
+ещё читает legacy-private-path; это не пройденный shared/locale journey.
+
+Отдельный flag preview принят в16 combinations (две редакции × две CSS-схемы ×
+четыре ширины), реальный выбор русского сохраняет редакцию. Before с production
+показывает RU без img; after имеет loaded /language-flags/ru.svg, те же размеры,
+что остальные13 языков. Evidence output/playwright/ru-language-flag-1123/results.json
+и before/after PNG. Это PASS_FLAG_RENDERING; существующая сетка имеет узкие
+контролы35px, поэтому это НЕ полный accessibility PASS. Не расширяли эту срочную
+1-line замену изображения до переделки language layout. PR47 Android SUCCESS,
+web checks ещё идут. Auto-merge repository запрещает; настройки не менять,
+после green выполнить обычный merge вручную. Deploy флага всё ещё не был запущен.
+
+Смысловая вычитка дополнительно охватила critical device-entry/revocation,
+membership outcome/cancellation, Drive consent/disabled, shared restore,
+decrypted file warning и message-key backup notice на всех14 языках. Locale
+файлы не менялись. Это отдельная текстовая приёмка от pending112 visual captures.
+
+По прежнему mail request прочитан исходный screenshot2078b37e: Gmail показывает
+similarity/reputation spam banner, signed-by/mailed-by genesiscalendar.com/TLS.
+Точного письма в connected Gmail нет; публичные SPF/MX Hostinger, DMARC p=none.
+Конкретные доказательства/границы — docs/email-deliverability-2026-11-23.md.
+DNS/провайдер/labels не менялись, писем не отправляли. Не объявлять spam исправленным.
+
+## 23 ноября, 06:10 UTC: signed read correction, native base и отдельный RU flag
+
+Последнее steering владельца: ответить об остатке и продолжать, заменить буквы
+RU флагом России как остальные языки. Ответ дан:4 блока — shared corrections,
+native/direct149→150 acceptance, CI/14-language/final internal review, publication.
+Флаг исправлен отдельной1-line website branch от принятого main4c209a00:
+worktree upgrade-currency-20261122, branch codex/ru-language-flag-20261123,
+commit936e4aa6, PR47. Build:web PASS (196HTML/14languages), website-only
+Source checks45121051152 выполняется; PR создал ещё45121136850 с Android.
+Публикации этого флага пока НЕТ. После CI — merge, exact-main checks и штатный
+Deploy с проверенным incumbent SHA, сохраняя APK149 и security off. Не менять
+существующие workflows ради этой правки. Production до проверки остаётся4c209a00.
+Флаг cherry-picked в security как2057fdd6; это нынешний HEAD, ещё не pushed.
+Last pushed security59adb64e. demo-output/ не читать/stage/удалять.
+
+Native base finished: API34 methods10 and API26 methods09 each29/29 PASS_LOCAL_SCOPE,
+exact build4 hashAB1BFD65334CCF99E988672AACE5CD6AB87F2D78422358A96ABDDA131892656B.
+Reports output/qa/security336-native150-api34-methods-10/ и api26-methods-09/.
+Они явно переиспользуют только поимённые PASS из предыдущего того же installed
+APK, проверяют raw instrumentation logs/hashes, повторяют failed/missing cases.
+API34 old methods06 имел1 E2EE_UNLOCK_REQUIRED в длинном case; API26 methods07
+остановился после9 PASS на transient uiautomator/ADB shell error. Failed originals
+сохранены. Wrapper09 делает actual system credential refresh каждые90s во время
+длинного headless case; crypto/Keystore guards не менялись. Source regression26:
+67PASS/1authFAIL; этот KeyAudit затем вошёл в successful29. Relational10-path and
+archives sources04 each4/4 PASS on both platforms. Это component evidence, не
+повышение whole-product coverage9/20. API26 original NONE restored06:02:
+runtime/native150-api26-credential-restored-after-base-1123.json. API34 PIN unchanged.
+
+Shared21 дошёл до полного personal recovery и выявил реальный integration bug:
+пять parameterless signed reads передавали {}, а действующий общий command codec
+запрещает empty object/list ambiguity. Captured RED:
+runtime/empty-read-payload-red-01.log. Dirty correction целиком: web/native send
+{protocol:1}; PHP строго проверяет marker после подписи. Crypto codec НЕ изменён.
+Bootstrap initial cursor now null (internal -1), supported indices0..4095 on all
+three platforms; fixed actual PHP count(int) TypeError at bootstrap completion.
+Actual PHP signed start/stage/readback/complete/lost-ACK replay plus wrong marker,
+signature tamper and limits now2/2 suites PASS in security336-read-marker-04/.
+Web ScopeClient24/24 PASS including both regressions (runtime/read-marker-web-01).
+Lint/typecheck session90886 pending final poll; no source errors observed yet.
+
+Added actual native controller HTTPS test under android/.../auth/
+NativePrivateProductHttpsTest.kt: real AuthController + factories + Keystore/Room
+and isolated PHP, personal edit/lock/unlock + shared project/space transition.
+It is NOT compiled/accepted yet. Native build5/session30721 now compileDebugKotlin;
+runtime/native150-build-5.log. It builds affected ScopeClient JVM tests and both
+QA APKs, then saves exact native identity. Do not edit compiled input during it.
+Runtime draft of test is older copy after any later actual-source correction;
+android/ remains authoritative. Native minified/lint old run40724 was cancelled
+because a real source correction superseded it; NOT PASS. Rebuild/recheck latest.
+
+Web build18 PASS; immutable output/release-3.3.6/web-private-18/public_html contains
+flag and read correction. Shared+14-language real vault visual run22/session69940:
+output/playwright/security336-private-shared-locales-22-1123/,
+runtime/consolidated-private-shared-locales22.log. It captures112 actual locked
+vault combinations before shared transfer. It is still RUNNING; do not promote.
+Startup10 PASS, reading source data last observed. QA now catches shared load
+errors before waiting for absent selector. Source checks59 run45118054426 failed
+Android on unavailable Kotlin Compose plugin2.2.10 resolution, before compilation;
+web job still ran through backend/API into browser last observed. Saved raw job
+log ci-45118054426-android-failure.log. Do not rerun old candidate after next fix.
+
+Prepared runtime/native150-private-controller-https-01.ps1 for new native test
+on owned API26 only. Start AFTER build5 success/identity. It creates fresh local
+TLS/PHP E2EE fixture, exact ADB reverse, actual credential confirmation/refresh,
+then restores original NONE and cleans only marked owned runtime. Not executed.
+Check results and fix real failures, not mock endpoint claims. Baseline149 signed
+APK remains verified and direct signed149→150 still NOT performed. Main package
+absent on owned API34 (only isolated qa1103.debug and test installed).
+
+Playwright skill read and npx verified. Isolated CLI sessiongenesis-ru-flag-1123
+is at user preview localhost4392 (Vite in website worktree). It now rendered the
+full public page; radio/flag DOM eval session50613 pending poll. This is an owned
+anonymous browser, not the user account. Keep screenshots under output/playwright.
+emulator-5580/API34 and emulator-5594/API26 are the only authorized emulator serials; no personal
+devices/Play changes. Full final review, evidence consolidation and authorized
+separate release still remain. Goal active; no 3.3.6 release/activation claimed.
+
 ## 23 ноября, 05:28 UTC: corrected source acceptance и header PASS
 
 Native150 build4 SUCCESS, exact source hash

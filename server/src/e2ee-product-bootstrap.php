@@ -21,7 +21,8 @@ function genesisE2eeProductBootstrapReady(PDO $db,array $scope): array
 function genesisE2eeProductBootstrapRead(PDO $db,string $actor,array $scope,array $payload): array
 {
     genesisE2eeProductBootstrapOwner($actor,$scope);genesisE2eeExactFields($payload,['afterPart']);
-    $after=$payload['afterPart'];if(!is_int($after)||$after < -1||$after>4095)genesisE2eeInvalid();
+    // null is the initial cursor; signed technical integers are nonnegative.
+    $cursor=$payload['afterPart'];if($cursor!==null&&(!is_int($cursor)||$cursor<0||$cursor>4095))genesisE2eeInvalid();$after=$cursor??-1;
     $state=genesisE2eeProductBootstrapState($db,$scope);
     if(!$state)return ['bootstrap'=>null,'part'=>null];
     $count=genesisE2eeRow($db,'SELECT COUNT(*) AS n FROM e2ee_product_bootstrap_parts WHERE scope_id=? AND generation=?',[$scope['scope_id'],$scope['generation']]);
@@ -76,7 +77,7 @@ function genesisE2eeProductBootstrap(PDO $db,string $actor,array $scope,array $c
         if($items!==(int)$state['expected_count']||$index!==count($payload['parts'])||!$root)throw new DomainException('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
         genesisE2eeProductValidateGraph($db,$scope,true);
         $db->prepare("UPDATE e2ee_product_bootstraps SET state='active',commit_packet=? WHERE scope_id=? AND generation=?")->execute([genesisE2eeJson($packet),$scope['scope_id'],$scope['generation']]);
-        $result=['bootstrapId'=>$bootstrap,'state'=>'active','count'=>count($items)];
+        $result=['bootstrapId'=>$bootstrap,'state'=>'active','count'=>$items];
     }else throw new InvalidArgumentException('E2EE_UNKNOWN_ACTION');
     $db->prepare('INSERT INTO e2ee_service_intents VALUES(?,?,?,?,?,?)')->execute([$scope['scope_id'],$actor,$action,$id,$hash,genesisE2eeJson($result)]);return$result;
 }

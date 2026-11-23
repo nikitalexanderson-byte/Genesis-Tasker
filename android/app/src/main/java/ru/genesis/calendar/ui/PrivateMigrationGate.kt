@@ -37,6 +37,11 @@ import java.util.concurrent.atomic.AtomicLong
 
 private fun migrationText(context:android.content.Context,language:String,name:String)=context.assets.open(name).use{input->
     val bytes=input.readBytes();try{check(bytes.size<=128*1024);val all=JSONObject(bytes.toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}finally{bytes.fill(0)}}
+private fun migrationSignInActivity(context:android.content.Context):android.app.Activity?=when(context){
+    is android.app.Activity->context
+    is android.content.ContextWrapper->migrationSignInActivity(context.baseContext)
+    else->null
+}
 @Composable internal fun PrivateMigrationEntry(){
     val context=LocalContext.current;val auth=remember(context){AuthController.get(context)};val state by auth.state.collectAsStateWithLifecycle();val identity=state.user?:return
     if(identity.privateVault||state.requiresSignIn)return
@@ -120,7 +125,7 @@ private fun migrationText(context:android.content.Context,language:String,name:S
             secret="";kit=null;busy=true;credentialActivity=request
         }catch(reason:Exception){secret="";if(alive.get()){busy=false;error=text.getString("error")}}
     }
-    fun message(reason:Exception):String=if(reason.message=="E2EE_RESOURCE_CREATION_RESOLUTION_REQUIRED")retryText.getString("notice")else if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectText.getString("changed")else if(reason.message in setOf("E2EE_RECIPIENT_REVIEW_REQUIRED","E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED"))creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
+    fun message(reason:Exception):String=if(reason.message=="E2EE_REAUTH_REQUIRED")text.getString("reauthRequired")else if(reason.message=="E2EE_RESOURCE_CREATION_RESOLUTION_REQUIRED")retryText.getString("notice")else if(reason.message=="E2EE_PROJECT_TOPOLOGY_CHANGED")projectText.getString("changed")else if(reason.message in setOf("E2EE_RECIPIENT_REVIEW_REQUIRED","E2EE_PROJECT_RECIPIENT_REVIEW_REQUIRED"))creationText.getString("recipients")else if(Regex("E2EE_.*(?:CONFLICT|REVIEW_REQUIRED|ATTRIBUTION_REQUIRED)").matches(reason.message.orEmpty()))text.getString("reviewRequired")else text.getString("error")
     suspend fun reviewProject(confirm:Boolean=false,refresh:Boolean=true){
         if(!projectCreation||busy||reviewBusy)return;reviewBusy=true;error=""
         try{foreground();val id=requireNotNull(view.creationId);val result=if(confirm)controller.confirmPrivateProjectCreationReview(id,requireNotNull(projectReview).getString("topologyHash"),::foreground)
@@ -270,6 +275,10 @@ private fun migrationText(context:android.content.Context,language:String,name:S
                 }},enabled=!stopping,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("stop"))}
                 if(phase=="done"&&!auth.busy)TextButton(onClick={controller.checkSession()},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("unlock"))}
                 if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error)
+                if(error==text.getString("reauthRequired")){
+                    val activity=migrationSignInActivity(context)
+                    Button(onClick={activity?.let{secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id);controller.signIn(it,view.language)}},enabled=activity!=null&&!busy&&!reviewBusy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("reauth"))}
+                }
                 Text(text.getString("kept"),style=MaterialTheme.typography.bodyMedium)
                 if(view.target!=null||!started)TextButton(onClick={secret="";kit=null;clearGenerated();NativeMigrationUiState.close(view.id)},enabled=!busy&&!reviewBusy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString("close"))}
                 TextButton(onClick={secret="";kit=null;clearGenerated();controller.logout()},enabled=!busy&&!reviewBusy&&pendingFile.get()==null,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(vault.getString("exit"))}

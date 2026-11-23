@@ -10,12 +10,13 @@ const output=process.env.GENESIS_QA_WEB_OUTPUT;
 assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
-const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[]};
+const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[]};
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
-const sharedJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared';
+const sharedJourney=['shared','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
 const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
@@ -29,6 +30,17 @@ const check=async(name,operation)=>{
 const context=await browser.newContext({baseURL,viewport:{width:1440,height:1000},locale:'ru-RU',timezoneId:'Europe/Moscow',acceptDownloads:true});
 await context.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
 await context.addInitScript(()=>localStorage.setItem('genesis-language-v1','ru'));
+await context.addInitScript(()=>{
+ const original=IDBDatabase.prototype.transaction;
+ IDBDatabase.prototype.transaction=function(...args){
+  const transaction=original.apply(this,args);
+  for(const event of ['error','abort'])transaction.addEventListener(event,value=>{
+   const name=value.target?.error?.name??transaction.error?.name??null;
+   console.info('GENESIS_QA_IDB_FAILURE '+JSON.stringify({event,stores:Array.from(transaction.objectStoreNames),mode:transaction.mode,error:typeof name==='string'&&/^[A-Za-z]+Error$/.test(name)?name:null}));
+  });
+  return transaction;
+ };
+});
 const login=async target=>{const response=await target.request.get('/api/qa/login?tier=business');assert(response.ok()&&(await response.json()).synthetic);};
 const downloadBytes=async download=>{const stream=await download.createReadStream();assert(stream);const parts=[];for await(const chunk of stream)parts.push(chunk);return Buffer.concat(parts);};
 const recoveryInput=async(dialog,wrong=false)=>{
@@ -45,6 +57,7 @@ try{
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(error.message));
+ page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}});
  page.on('response',async response=>{
   if(response.url()===baseURL+'/api/bootstrap'){const body=await response.json().catch(()=>null);console.log('BOOTSTRAP '+JSON.stringify({status:response.status(),keyMode:body?.workspace?.keyMode,keyPresent:!!body?.workspace?.key}));}
   if(response.url().startsWith(baseURL+'/api/e2ee/v1/')){
@@ -189,18 +202,76 @@ try{
    throw error;
   }finally{await clean.close();}
  });
+ if(localeJourney)await check('real locked vault renders all fourteen languages in both themes at all required widths',async()=>{
+  const locales=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8'));
+  report.visualCases=[];
+  const preference=async data=>{
+   const session=await(await context.request.get('/api/session')).json();
+   const result=await context.request.put('/api/account/preferences',{headers:{Origin:baseURL,'X-CSRF-Token':session.csrf},
+    data:{...data,expectedThemeRevision:session.user.themeRevision}});
+   assert(result.ok(),'Synthetic public language/theme preference: '+result.status());
+  };
+  for(const [language,copy]of Object.entries(locales))for(const scheme of ['light','dark']){
+   const theme=scheme==='dark'?'standart-dark':'standart';await preference({language,theme});
+   await page.reload();const gate=page.locator('.private-vault-dialog');await gate.getByRole('heading',{name:copy.title,exact:true}).waitFor();
+   await page.waitForFunction(value=>document.documentElement.getAttribute('data-genesis-theme')===value,theme);
+   assert.equal(await page.getByText(canary,{exact:true}).count(),0,'Locked account must not render its private task');
+   for(const width of [360,390,768,1440]){
+    await page.setViewportSize({width,height:1000});await page.evaluate(()=>document.fonts.ready);
+    const bounds=await gate.evaluate(element=>({scroll:element.scrollWidth,width:element.clientWidth,documentScroll:document.documentElement.scrollWidth,documentWidth:document.documentElement.clientWidth}));
+    assert(bounds.scroll<=bounds.width+1&&bounds.documentScroll<=bounds.documentWidth+1,language+' '+scheme+' '+width+' horizontal overflow');
+    const artifact=`vault-${language}-${scheme}-${width}.png`;await page.screenshot({path:`${output}/${artifact}`,fullPage:true,animations:'disabled'});
+    report.visualCases.push({language,scheme,width,status:'PASS',bounds,artifact});save();
+   }
+   // This is a locked-vault visual check. Keep it locked between captures;
+   // repeated full workspace unlocks are a different acceptance scope and
+   // would needlessly consume the real 600-requests/10-minute API budget.
+  }
+  assert.equal(report.visualCases.length,112);await preference({language:'ru',theme:'standart-dark'});
+ });
  if(sharedJourney){
-  await check('owned project and space transfer through the mounted shared controller',async()=>{
-   // Return from the deliberately offline capability to an online unlocked one.
-   await page.reload();let gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);
-   await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
-   await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
-   await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=account]').click();
-   for(const [kind,resource]of [['project',sharedFixture.project],['space',sharedFixture.space]]){
-    const panel=page.locator('.private-shared-security');await panel.locator(':scope > button').filter({hasText:sharedCopy.load}).click();
+  await check('owner can reconfirm sign-in and transfer project and space through mounted controllers',async()=>{
+   const identityConfirmation=async confirmed=>{
+    const session=await(await context.request.get('/api/session')).json();
+    const response=await context.request.post('/api/qa/identity-confirmation',{headers:{Origin:baseURL,'X-CSRF-Token':session.csrf},data:{confirmed}});
+    assert(response.ok()&&(await response.json()).synthetic,'Owned synthetic provider confirmation');
+   };
+   const unlock=async()=>{
+    const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);
+    await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
+   };
+   const account=async()=>{await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=account]').click();};
+   const openTransfer=async(kind,resource)=>{
+    const panel=page.locator('.private-shared-security');await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
+    await panel.locator(':scope > button').filter({hasText:sharedCopy.load}).click();
+    await Promise.race([panel.getByRole('combobox',{name:sharedMigration.transfer,exact:true}).waitFor(),panel.locator(':scope > [role=status]').waitFor().then(async()=>{throw new Error('Shared discovery refused: '+report.caughtCodes.join(', ')+'; '+await panel.locator(':scope > [role=status]').innerText());})]);
     await panel.getByRole('combobox',{name:sharedMigration.transfer,exact:true}).selectOption(`${kind}:${resource.id}`);
     await panel.getByRole('button',{name:sharedMigration.transfer,exact:true}).first().click();
-    const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
+    const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);return dialog;
+   };
+   // Return from the deliberately offline capability to an online unlocked one.
+   await page.reload();await unlock();await account();
+   for(const [kind,resource]of [['project',sharedFixture.project],['space',sharedFixture.space]]){
+    let dialog=await openTransfer(kind,resource);
+    if(kind==='project'){
+     await identityConfirmation(false);await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
+     await dialog.getByRole('alert').filter({hasText:migration.reauthRequired}).waitFor();
+     const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(!status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
+     let delivered=false;const pattern='**/api/auth/google/start?*';
+     const provider=async route=>{
+      const url=new URL(route.request().url());assert.equal(url.searchParams.get('purpose'),'login');
+      const target=new URL(url.searchParams.get('return_to'),baseURL);assert.equal(target.origin,baseURL);
+      await identityConfirmation(true);delivered=true;await route.fulfill({status:302,headers:{location:target.href}});
+     };
+     await page.route(pattern,provider);
+     try{await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),dialog.getByRole('button',{name:migration.reauth,exact:true}).click()]);}
+     finally{await page.unroute(pattern,provider);}
+     assert(delivered,'The actual reconfirm action must reach the synthetic provider');
+     report.identityDelivery='Synthetic Google provider completion; no live provider UI claim';
+     await unlock();await account();dialog=await openTransfer(kind,resource);
+    }else await identityConfirmation(true);
+    await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
     await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
     await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}),dialog.getByRole('alert').waitFor({timeout:1200000}).then(async()=>{throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());})]);
     await debug.send('Debugger.setPauseOnExceptions',{state:'none'});

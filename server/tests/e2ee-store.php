@@ -142,6 +142,15 @@ storeReject(fn()=>genesisE2eeExecute($owner,storePut('late-write',0,$lease),$ses
 $commit=storeCommand('migration-commit',['migrationId'=>'migration-one','fence'=>1,'manifestHash'=>$manifest['manifestHash'],'verifiedCheckpoint'=>$verifiedCheckpoint,'generation'=>1,'objectCount'=>$manifest['objectCount']]);
 storeCheck(genesisE2eeExecute($owner,$commit,$session)['state']==='active');
 storeCheck(genesisE2eeExecute($owner,$commit,$session)['state']==='active');
+// Actual signed reads: empty-object/list ambiguity must never bypass the codec.
+foreach(['resource-transition-candidates','shared-read-history','advice-policy','stoicheion-state'] as $action){
+    $query=storeCommand($action,['protocol'=>1]);$result=genesisE2eeRead($owner,$query,$session);
+    storeCheck($result['checkpointHash']===$query['command']['checkpointHash']&&$result['directoryRevision']===$query['command']['expectedRevision']);
+    $tampered=$query;$tampered['command']['payload']['protocol']=2;
+    storeReject(fn()=>genesisE2eeRead($owner,$tampered,$session),'E2EE_UNTRUSTED_COMMAND');
+    storeReject(fn()=>genesisE2eeRead($owner,storeCommand($action,['protocol'=>2]),$session),'E2EE_INVALID_COMMAND');
+    storeReject(fn()=>genesisE2eeRead($owner,storeCommand($action,['protocol'=>1,'unexpected'=>true]),$session),'E2EE_INVALID_ENVELOPE');
+}
 storeCheck(base64_decode(genesisE2eeRow($db,'SELECT ciphertext FROM workspace_blobs WHERE user_id=?',[$owner])['ciphertext'])==='legacy-preserved');
 $user=genesisFindUser($owner);$exposed=genesisWorkspaceForClient($user);storeCheck($exposed['key']===null && $exposed['keyMode']==='e2ee');
 storeReject(fn()=>genesisSaveClientWorkspaceKey($owner,['key'=>base64_encode(random_bytes(32))]),'E2EE_UPGRADE_REQUIRED');

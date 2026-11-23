@@ -43,6 +43,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
     val context=LocalContext.current;val lifecycle=LocalLifecycleOwner.current.lifecycle;val language=state.accountSettings?.language?:"en"
     val copy=remember(language){context.assets.open("vault-copy-v1.json").use{input->val bytes=input.readBytes()
         try{check(bytes.size<=128*1024);val all=JSONObject(bytes.toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}finally{bytes.fill(0)}}}
+    val unlockCopy=remember(language){context.assets.open("native-unlock-copy-v1.json").use{input->val all=JSONObject(input.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     var secret by remember(state.user?.uid){mutableStateOf("")};var kit by remember(state.user?.uid){mutableStateOf<JSONObject?>(null)}
     val owner=state.user?.uid;var trusted by remember(owner){mutableStateOf(false)};val personalCopy=remember(language){context.assets.open("personal-device-entry-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}};val viewId=remember(owner){UUID.randomUUID().toString()}
     val alive=remember(owner){AtomicBoolean(true)}
@@ -133,7 +134,7 @@ internal fun PrivateVaultGate(controller:AuthController,state:AuthPanelState){
                 }
                 if(state.user==null||state.requiresSignIn){Button(onClick={context.activity()?.let{controller.signIn(it,language)}},enabled=!busy&&!state.busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("signIn"))}}
                 else if(!keyguard.isDeviceSecure){Button(onClick={context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("screenLock"))}}
-                else Button(onClick={unlock(false)},enabled=!busy&&!state.busy&&(hasDevice&&!needsRecovery||secret.isNotBlank()&&kit!=null)&&(!hardwareRecovery||recoveryConfirmed),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(if(hardwareRecovery&&!busy)recoveryCopy.getString("action")else copy.getString(if(busy)"busy"else "unlock"))}
+                else Button(onClick={unlock(false)},enabled=!busy&&!state.busy&&(hasDevice&&!needsRecovery||secret.isNotBlank()&&kit!=null)&&(!hardwareRecovery||recoveryConfirmed),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(if(hardwareRecovery&&!busy)recoveryCopy.getString("action")else if(hasDevice&&!needsRecovery&&!busy)unlockCopy.getString("unlock")else copy.getString(if(busy)"busy"else "unlock"))}
                 if(hasDevice&&state.user!=null&&keyguard.isDeviceSecure)TextButton(onClick={unlock(true)},enabled=!busy&&!state.busy&&!hardwareRecovery&&!needsRecovery,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("offline"))}
                 TextButton(onClick={secret="";kit=null;controller.logout()},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(copy.getString("exit"))}
                 Text(copy.getString("privacy"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)

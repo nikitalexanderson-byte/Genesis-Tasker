@@ -1,7 +1,7 @@
 'use client';
-import {useEffect,useState,useSyncExternalStore,type FormEvent} from 'react';
+import {useEffect,useLayoutEffect,useState,useSyncExternalStore,type FormEvent} from 'react';
 import {privateAccountView,subscribePrivateAccount,type PrivateAccountView} from './e2ee/product-session';
-import {unlockCurrentPrivateAccount,signOutFromGoogle} from './cloud-sync';
+import {unlockCurrentPrivateAccount,signOutFromGoogle,privateAccountAppearance} from './cloud-sync';
 import {privateMigrationUi,subscribePrivateMigrationUi,showPrivateMigration} from './private-migration-ui';
 import {parseLegacyMigrationJson} from './e2ee/legacy-json';
 import type {RecoveryKit} from './e2ee/keys';
@@ -12,6 +12,8 @@ import {useDialogAccessibility} from './use-dialog-accessibility';
 import {PrivatePersonalDeviceEntry} from './PrivatePersonalDeviceEntry';
 import personalEntryCopy from '../contracts/e2ee/personal-device-entry-copy-v1.json';
 import {holdPrivateEditorFence} from './private-ui-fence';
+import {normalizeWebTheme} from './web-theme';
+import {effectiveDarkPalette} from './dark-palettes';
 
 const initial:PrivateAccountView=Object.freeze({ownerId:null,phase:'closed',reason:'unlock',language:'en'});
 /** A protected account's workspace does not mount from legacy plaintext while
@@ -23,6 +25,21 @@ export function PrivateVaultGate(){
  return migration?.ownerId!==state.ownerId&&(state.phase==='locked'||state.phase==='unlocking')?<PrivateVaultForm key={state.ownerId} state={state}/>:null;
 }
 function PrivateVaultForm({state}:{state:PrivateAccountView}){
+ const appearance=state.ownerId?privateAccountAppearance(state.ownerId):null;
+ const theme=normalizeWebTheme(appearance?.theme),palette=effectiveDarkPalette(appearance?.darkPalette,appearance?.featureAccess);
+ useLayoutEffect(()=>{
+  // These are public display preferences. They grant no vault capability and
+  // must be painted while the ordinary account observer waits for unlock.
+  const root=document.documentElement,previousTheme=root.getAttribute('data-genesis-theme'),previousPalette=root.getAttribute('data-genesis-palette');
+  root.setAttribute('data-genesis-theme',theme);root.setAttribute('data-genesis-palette',palette);
+  return()=>{
+   if(privateAccountView().phase==='ready')return;
+   for(const [name,value,painted]of [['data-genesis-theme',previousTheme,theme],['data-genesis-palette',previousPalette,palette]] as const){
+    if(root.getAttribute(name)!==painted)continue;
+    if(value===null)root.removeAttribute(name);else root.setAttribute(name,value);
+   }
+  };
+ },[theme,palette]);
  const [trusted,setTrusted]=useState(false);
  const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[error,setError]=useState(false),[fileBusy,setFileBusy]=useState(false),[canOffline,setCanOffline]=useState(false);
  const copy=PRIVATE_VAULT_COPY[isLanguage(state.language)?state.language:'en'],busy=state.phase==='unlocking'||fileBusy;

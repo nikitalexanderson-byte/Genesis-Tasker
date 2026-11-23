@@ -1,0 +1,120 @@
+package ru.genesis.calendar.auth
+
+import android.content.Context
+import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import org.json.JSONObject
+import org.junit.Assert.*
+import org.junit.Test
+import ru.genesis.calendar.BuildConfig
+import ru.genesis.calendar.GenesisApplication
+import ru.genesis.calendar.data.GenesisProject
+import ru.genesis.calendar.data.LocalCipher
+import ru.genesis.calendar.data.WorkspaceStructureRepository
+import ru.genesis.calendar.security.*
+import java.io.ByteArrayInputStream
+import java.net.URL
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import java.util.Base64
+import java.util.UUID
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+
+/** Real native owner controller, actual feature adapters, Keystore/Room and
+ * loopback PHP/SQLite. Only identity delivery and the localhost CA are fixtures.
+ * Credential presence is verified by the owned platform runner before this
+ * case. This is controller acceptance, not a claim of SAF/Google-provider UI. */
+class NativePrivateProductHttpsTest {
+    private val app get()=InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
+    private var cookie=""
+    private var csrf=""
+    private fun request(path:String,method:String="GET",body:JSONObject?=null,expected:Int=200):JSONObject {
+        check(path.startsWith("/api/")&&!path.contains(".."))
+        val connection=URL("$AUTH_ORIGIN$path").openConnection() as HttpsURLConnection
+        try {
+            connection.instanceFollowRedirects=false;connection.connectTimeout=15000;connection.readTimeout=120000;connection.requestMethod=method
+            connection.setRequestProperty("Origin",AUTH_ORIGIN)
+            if(cookie.isNotEmpty())connection.setRequestProperty("Cookie","$SESSION_COOKIE=$cookie")
+            if(body!=null){connection.setRequestProperty("X-CSRF-Token",csrf);connection.setRequestProperty("Content-Type","application/json; charset=utf-8")
+                connection.doOutput=true;connection.outputStream.use{it.write(body.toString().toByteArray(Charsets.UTF_8))}}
+            assertEquals("Owned fixture HTTP $path",expected,connection.responseCode)
+            connection.getHeaderField("Set-Cookie")?.substringBefore(';')?.let{header->
+                check(header.startsWith("$SESSION_COOKIE="));cookie=header.substringAfter('=');check(cookie.matches(Regex("[A-Za-z0-9,-]{16,256}")))
+            }
+            return JSONObject((if(expected in 200..299)connection.inputStream else connection.errorStream).bufferedReader().use{it.readText()})
+        }finally{connection.disconnect()}
+    }
+    @Test fun personalAndSharedControllerMigrationRetainsNormalEditsThroughLockAndColdUnlock()=runBlocking {
+        val args=InstrumentationRegistry.getArguments()
+        check(args.getString("genesisFullQaHttps")=="true"&&BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug"&&AUTH_ORIGIN=="https://localhost:4443")
+        val certificate=CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(Base64.getDecoder().decode(requireNotNull(args.getString("genesisFixtureCa")))))
+        val trust=KeyStore.getInstance(KeyStore.getDefaultType()).apply{load(null);setCertificateEntry("owned-loopback",certificate)}
+        val managers=TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply{init(trust)}
+        val previous=HttpsURLConnection.getDefaultSSLSocketFactory()
+        HttpsURLConnection.setDefaultSSLSocketFactory(SSLContext.getInstance("TLS").apply{init(null,managers.trustManagers,null)}.socketFactory)
+        var recovery:E2eeKeys.RecoveryState?=null
+        var controller:AuthController?=null
+        try {
+            assertTrue(request("/api/qa/login?tier=business").getBoolean("synthetic"))
+            val session=request("/api/session");val user=session.getJSONObject("user");val owner=user.getString("uid")
+            assertTrue(user.getString("email").endsWith("@example.invalid"));assertFalse(user.optBoolean("isAdmin"));csrf=AuthProtocol.csrf(session.getString("csrf"))
+            val saved=JSONObject().put("cookie",cookie).put("csrf",csrf).put("expiresAt",System.currentTimeMillis()+3600000)
+            check(app.getSharedPreferences("genesis.native.auth.v1",Context.MODE_PRIVATE).edit().putString("session",LocalCipher().encrypt(saved.toString(),"genesis.native.auth.v2")).commit())
+            val canary="NATIVE PRIVATE ${UUID.randomUUID()}"
+            val space=request("/api/shared/spaces","POST",JSONObject().put("title","SPACE $canary"),expected=201).getJSONObject("space")
+            val project=request("/api/shared/spaces/${space.getString("id")}/projects","POST",JSONObject().put("title","PROJECT $canary").put("layout","board"),expected=201).getJSONObject("project")
+            val detail=request("/api/shared/projects/${project.getString("id")}")
+            val statuses=detail.getJSONArray("statuses");val status=(0 until statuses.length()).map{statuses.getJSONObject(it)}.first{it.getInt("isDone")==0}
+            val sharedTask=request("/api/shared/projects/${project.getString("id")}/tasks","POST",JSONObject().put("title","TASK $canary").put("description","Private shared body $canary")
+                .put("statusId",status.getString("id")).put("requestId",UUID.randomUUID().toString()),expected=201).getJSONObject("task")
+            val auth=AuthController.get(app);controller=auth;auth.onTrialForeground();auth.checkSession()
+            withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.ready&&!it.busy&&!it.requiresSignIn}}
+            val accountScope=CloudAccountSnapshot.scopeFor(owner);assertEquals(accountScope,app.workspaceScope)
+            val repository=WorkspaceStructureRepository(app)
+            val localProject=GenesisProject(UUID.randomUUID().toString(),null,"personal","LOCAL $canary","Retained offline input",emptyList(),"active",0)
+            repository.saveProject(localProject)
+            assertTrue(repository.workspace.first().projects.any{it.id==localProject.id})
+            val material=E2eeKeys.createRecoveryKit(owner);recovery=material
+            NativeMigrationUiState.show(owner,"en",false)
+            val intent=requireNotNull(NativeMigrationUiState.state.value)
+            val guard={check(NativeMigrationUiState.state.value?.id==intent.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
+            val migration=auth.preparePrivateMigration(material.secret,material.kit,guard)
+            try{withTimeout(1200000){migration.run(material.secret,material.kit)}}finally{auth.closePrivateMigration(migration)}
+            assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/bootstrap",expected=409).getString("error"))
+            NativeMigrationUiState.close(intent.id);auth.checkSession()
+            withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.user?.privateVault==true&&it.ready&&!it.busy}}
+            auth.unlockPrivateVault(E2eeEnvelope.encode(material.secret),material.kit)
+            withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title==localProject.title}}}
+            repository.saveProject(localProject.copy(title="EDITED $canary"));NativePrivateProducts.flush(accountScope)
+            auth.onTrialBackground();assertFalse(NativePrivateProducts.isOpen(accountScope));auth.onTrialForeground()
+            auth.unlockPrivateVault(E2eeEnvelope.encode(material.secret),material.kit)
+            withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title=="EDITED $canary"}}}
+            for((kind,resource)in listOf("project" to project,"space" to space)){
+                // Only provider delivery is synthetic. Refresh its confirmation
+                // before each new scope; the real five-minute server guard,
+                // signed bootstrap, keys, source adapters and storage remain live.
+                assertTrue(request("/api/qa/identity-confirmation","POST",JSONObject().put("confirmed",true)).getBoolean("synthetic"))
+                val resourceId=resource.getString("id");val target=E2eeProductMigration.Target(owner,"$kind:$resourceId",kind,resourceId)
+                NativeMigrationUiState.show(owner,"en",true,target);val transfer=requireNotNull(NativeMigrationUiState.state.value)
+                val bound={check(NativeMigrationUiState.state.value?.id==transfer.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
+                val shared=auth.prepareSharedPrivateMigration(target,material.secret,material.kit,bound)
+                try{withTimeout(1200000){shared.run(material.secret,material.kit)}}finally{auth.closePrivateMigration(shared)}
+                auth.finishSharedPrivateMigration(target);NativeMigrationUiState.close(transfer.id)
+            }
+            val statusResponse=auth.privateMigrationStatus().getJSONArray("scopes")
+            assertEquals(3,(0 until statusResponse.length()).count{statusResponse.getJSONObject(it).getString("state")=="active"})
+            assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/shared/projects/${project.getString("id")}",expected=409).getString("error"))
+            val opened=withContext(Dispatchers.IO){auth.sharedProject(project.getString("id"))}.getJSONArray("tasks")
+            assertTrue((0 until opened.length()).any{opened.getJSONObject(it).getString("id")==sharedTask.getString("id")&&opened.getJSONObject(it).getString("title")==sharedTask.getString("title")})
+        } finally {
+            NativeMigrationUiState.state.value?.let{NativeMigrationUiState.close(it.id)}
+            controller?.onTrialBackground();recovery?.secret?.fill(0);HttpsURLConnection.setDefaultSSLSocketFactory(previous)
+        }
+    }
+}

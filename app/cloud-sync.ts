@@ -3788,6 +3788,10 @@ export async function privateServiceRequest<T>(ownerId:string,service:'dream-clo
 /** Cached identity supplies display metadata only. Offline access still needs
  * the independent device secret and verified saved directory; no HTTP session,
  * device enrollment, billing or ACL is restored from this profile. */
+export function privateAccountAppearance(ownerId:string):Readonly<Pick<GenesisUser,'theme'|'darkPalette'|'featureAccess'>>|null {
+ const user=privateIdentityCache;
+ return confirmedTransportOwnerId===ownerId&&user?.uid===ownerId?{theme:user.theme,darkPalette:user.darkPalette,featureAccess:user.featureAccess}:null;
+}
 export async function restoreOfflinePrivateWorkspace(user:GenesisUser){
   if(localSessionEnded||privateDeviceAccessBlocked()||!privateUserCacheRequired(user)||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
   confirmedTransportOwnerId=user.uid;privateIdentityCache=privateUserProfile(user,true);serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);

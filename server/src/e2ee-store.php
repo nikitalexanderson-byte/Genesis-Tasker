@@ -586,7 +586,7 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
         require_once __DIR__.'/e2ee-shared-invitations.php';return genesisE2eeSharedInvitationsRead(genesisDb(),$actor,$scope,$c['payload']);
     }
     if($c['action']==='shared-read-history'){
-        genesisE2eeExactFields($c['payload'],[]);
+        genesisE2eeReadPayload($c['payload']);
         if($scope['kind']!=='personal'||$scope['resource_id']!==$actor||$scope['state']!=='active')throw new DomainException('E2EE_SCOPE_FORBIDDEN');
         $flags=[];$q=genesisDb()->prepare('SELECT event_id FROM shared_notification_reads WHERE user_id=? ORDER BY event_id LIMIT 100001');$q->execute([$actor]);
         try{while($row=$q->fetch()){$flags[$row['event_id']]=true;if(count($flags)>100000)throw new GenesisResourceLimitException(413,'E2EE_SHARED_QUERY_TOO_LARGE');}}finally{$q->closeCursor();}
@@ -595,7 +595,7 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
         return ['history'=>['ownerId'=>$actor,'readFlags'=>(object)$flags,'watching'=>(object)$watch],'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
     }
     if($c['action']==='product-context'){
-        genesisE2eeExactFields($c['payload'],[]);require_once __DIR__.'/e2ee-product.php';
+        genesisE2eeReadPayload($c['payload']);require_once __DIR__.'/e2ee-product.php';
         return ['context'=>genesisE2eeProductContext(genesisDb(),$actor,$scope),'checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
     }
     if($c['action']==='product-bootstrap-state'){
@@ -603,10 +603,10 @@ function genesisE2eeReadLocked(string $actor,array $packet,string $sessionBindin
         return genesisE2eeProductBootstrapRead(genesisDb(),$actor,$scope,$c['payload'])+['checkpointHash'=>$scope['checkpoint_hash'],'directoryRevision'=>(int)$scope['directory_revision']];
     }
     if($c['action']==='advice-policy'){
-        genesisE2eeExactFields($c['payload'],[]);require_once __DIR__.'/e2ee-advice-product.php';return genesisE2eeAdvicePolicy(genesisDb(),$actor,$scope);
+        genesisE2eeReadPayload($c['payload']);require_once __DIR__.'/e2ee-advice-product.php';return genesisE2eeAdvicePolicy(genesisDb(),$actor,$scope);
     }
     if($c['action']==='stoicheion-state'){
-        genesisE2eeExactFields($c['payload'],[]);require_once __DIR__.'/e2ee-stoicheion-product.php';return genesisE2eeStoicheionState(genesisDb(),$actor,$scope);
+        genesisE2eeReadPayload($c['payload']);require_once __DIR__.'/e2ee-stoicheion-product.php';return genesisE2eeStoicheionState(genesisDb(),$actor,$scope);
     }
     if(in_array($c['action'],['active-heads','content-heads'],true)) {
         // A bounded, checkpoint-bound read for an owner-reviewed rotation. The

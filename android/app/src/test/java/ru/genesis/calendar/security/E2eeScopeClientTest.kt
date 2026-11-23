@@ -136,6 +136,29 @@ class E2eeScopeClientTest {
         fun clearFloors() { storage.rows = storage.rows.filterValues { !it.envelope.context.toJson().getString("objectId").startsWith("floor:") }.toMutableMap() }
     }
     private fun reject(message: String, action: () -> Unit) { try { action() } catch (error: Exception) { assertEquals(message, error.message); return }; fail("Forbidden operation accepted") }
+    @Test fun parameterlessReadsAndBootstrapCursorsUseUnambiguousSignedPayloads() {
+        val f=Fixture();val actions=setOf("stoicheion-state","product-context","resource-transition-candidates","shared-read-history","advice-policy")
+        val seen=mutableListOf<String>();val cursors=mutableListOf<Any>()
+        val transport=object:E2eeScopeTransport by f {
+            override fun read(packet:JSONObject):JSONObject {
+                val command=E2eeCommands.verify(packet,f.device.keys().signing.public);val action=command.getString("action")
+                if(action !in actions&&action!="product-bootstrap-state")return f.read(packet)
+                val payload=command.getJSONObject("payload");val result=JSONObject().put("checkpointHash",command.get("checkpointHash")).put("directoryRevision",command.get("expectedRevision"))
+                if(action=="product-bootstrap-state"){E2eeKeys.exact(payload,setOf("afterPart"));cursors+=payload.get("afterPart");return result.put("bootstrap",JSONObject.NULL).put("part",JSONObject.NULL)}
+                E2eeKeys.exact(payload,setOf("protocol"));assertEquals(1,payload.getInt("protocol"));seen+=action
+                return if(action=="shared-read-history")result.put("history",JSONObject().put("ownerId",f.owner).put("readFlags",JSONObject()).put("watching",JSONObject()))else result
+            }
+        }
+        val client=E2eeScopeClient(f.device,f.owner,f.scope,f.recovery.kit.getJSONObject("authority"),transport)
+        try {
+            client.refresh();client.readStoicheionState();client.readProductContext();client.readTransitionCandidates();client.sharedReadHistory();client.readAdvicePolicy()
+            assertEquals(actions,seen.toSet());assertEquals(5,seen.size)
+            client.readBootstrapState();for(part in listOf(-1,0,255,256,4095))client.readBootstrapState(part)
+            assertEquals(listOf(JSONObject.NULL,JSONObject.NULL,0,255,256,4095),cursors)
+            for(part in listOf(-2,4096))reject("E2EE_INVALID_LIMIT"){client.readBootstrapState(part)}
+            assertEquals(0,f.writes);reject("E2EE_INVALID_COMMAND"){E2eeCommands.canonical(JSONObject())}
+        }finally{f.device.vault.lock()}
+    }
     @Test fun restartRetriesExactCiphertextAfterLostAcknowledgement() {
         val f = Fixture(crashAtWrite = 1); var client = f.client(); client.refresh()
         client.prepare("workspace", "one", "PRIVATE OFFLINE EDIT".toByteArray(), 0)

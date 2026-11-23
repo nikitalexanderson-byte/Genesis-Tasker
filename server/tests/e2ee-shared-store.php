@@ -61,6 +61,10 @@ storeCheck($receipt['receipt']['result']===$saved);
 $manifest=genesisE2eeManifest($db,genesisE2eeScope($owner,$scopeId));$checkpoint=storeB64(random_bytes(32));
 genesisE2eeExecute($owner,storeCommand('migration-verify',['migrationId'=>'group-attempt-two','fence'=>3]+$manifest+['verifiedCheckpoint'=>$checkpoint]),$session);
 genesisE2eeExecute($owner,storeCommand('migration-commit',['migrationId'=>'group-attempt-two','fence'=>3,'manifestHash'=>$manifest['manifestHash'],'verifiedCheckpoint'=>$checkpoint,'generation'=>2,'objectCount'=>$manifest['objectCount']]),$session);
+$contextRead=genesisE2eeRead($owner,storeCommand('product-context',['protocol'=>1]),$session);storeCheck(isset($contextRead['context']));
+$initialBootstrap=genesisE2eeRead($owner,storeCommand('product-bootstrap-state',['afterPart'=>null]),$session);storeCheck($initialBootstrap['bootstrap']===null&&$initialBootstrap['part']===null);
+$lastBootstrap=genesisE2eeRead($owner,storeCommand('product-bootstrap-state',['afterPart'=>4095]),$session);storeCheck($lastBootstrap['bootstrap']===null&&$lastBootstrap['part']===null);
+storeReject(fn()=>genesisE2eeRead($owner,storeCommand('product-bootstrap-state',['afterPart'=>4096]),$session),'E2EE_INVALID_ENVELOPE');
 foreach(['UPDATE shared_task_series SET cursor_date=\'2027-01-01\' WHERE id=\'series-e2ee\'',
     'UPDATE shared_automation_rules SET enabled=1 WHERE id=\'rule-e2ee\''] as $sql)
     storeReject(fn()=>$db->exec($sql),'E2EE_LEGACY_WRITE_FORBIDDEN');
@@ -89,4 +93,23 @@ storeReject(fn()=>genesisE2eeExecute($commenter['id'],groupPut($commenter,'share
 $bad=storeCommand('enroll',$approval['command']['payload']);$bad['command']['deviceId']=$reader['deviceId'];
 $bad['signature']=storeSign(genesisE2eeCommandBytes($bad['command']),$reader['pair']['private']);
 storeReject(fn()=>genesisE2eeExecute($reader['id'],$bad,$reader['binding']),'E2EE_DIRECTORY_FORBIDDEN');
+
+// Real signed start/stage/readback/complete and lost-ACK replay of one root.
+$productObject='product-version:10000000-0000-4000-8000-000000000001';
+$productEnvelope=genesisE2eeExecute($owner,storePut($productObject,0,[],'shared-project'),$session);
+$productOperation=['action'=>'create','entityId'=>'project:'.$project,'kind'=>'project','expectedRevision'=>0,'domain'=>'shared-project',
+    'objectId'=>$productObject,'payloadHash'=>$productEnvelope['payloadHash'],'parentId'=>null,'metadata'=>['protocol'=>1],'proposalId'=>null];
+genesisE2eeExecute($owner,storeCommand('product-bootstrap-start',['intentId'=>'fixture-bootstrap-start','bootstrapId'=>'fixture-bootstrap',
+    'sourceManifestHash'=>$manifest['manifestHash'],'expectedCount'=>1]),$session);
+$partCommand=storeCommand('product-bootstrap-stage',['intentId'=>'fixture-bootstrap-part','bootstrapId'=>'fixture-bootstrap','partIndex'=>0,'items'=>[['operation'=>$productOperation,'authorId'=>$owner]]]);
+$partResult=genesisE2eeExecute($owner,$partCommand,$session);
+$partRead=genesisE2eeRead($owner,storeCommand('product-bootstrap-state',['afterPart'=>null]),$session);
+storeCheck($partRead['bootstrap']['partCount']===1&&$partRead['part']['partIndex']===0&&$partRead['part']['proofHash']===$partResult['proofHash']);
+storeCheck(genesisE2eeVerifyCommand(json_decode($partRead['part']['packet'],true,512,JSON_THROW_ON_ERROR),$device['signingKey'])['action']==='product-bootstrap-stage');
+$completeProduct=storeCommand('product-bootstrap-complete',['intentId'=>'fixture-bootstrap-complete','bootstrapId'=>'fixture-bootstrap',
+    'parts'=>[['partIndex'=>0,'proofHash'=>$partResult['proofHash']]],'expectedCount'=>1]);
+$productResult=genesisE2eeExecute($owner,$completeProduct,$session);
+storeCheck($productResult===['bootstrapId'=>'fixture-bootstrap','state'=>'active','count'=>1]);
+storeCheck(genesisE2eeExecute($owner,$completeProduct,$session)===$productResult);
+storeCheck(genesisE2eeProductRow($db,genesisE2eeScope($owner,$scopeId),'project:'.$project)['object_id']===$productObject);
 echo 'PASS e2ee-shared-store '.$checks.' cumulative assertions (actual SQLite legacy jobs/lease/restart/ACL/signed roles/receipts)'.PHP_EOL;

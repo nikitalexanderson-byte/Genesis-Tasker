@@ -6,7 +6,7 @@ declare(strict_types=1);
  * decision. Called under the signed personal read's existing transaction. */
 function genesisE2eeResourceTransitionCandidates(PDO $db,string $actor,array $scope,array $device,array $payload):array
 {
-    genesisE2eeExactFields($payload,[]);
+    genesisE2eeReadPayload($payload);
     if($scope['kind']!=='personal'||$scope['owner_id']!==$actor||$scope['resource_id']!==$actor||$scope['state']!=='active'
         ||$device['user_id']!==$actor||$device['role']!=='owner')throw new GenesisResourceLimitException(403,'E2EE_OWNER_REQUIRED');
     $result=[];

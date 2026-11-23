@@ -71,6 +71,13 @@ function genesisE2eeCommandBytes(array $command): string
 {
     return "GENESIS-E2EE-COMMAND\0v1\0" . genesisE2eeCanonical(genesisE2eeCommand($command));
 }
+/** Parameterless reads still carry an unambiguous, signed object payload.
+ * Empty JSON objects cannot be confused with PHP's empty list representation. */
+function genesisE2eeReadPayload(array $payload): void
+{
+    genesisE2eeExactFields($payload,['protocol']);
+    if($payload['protocol']!==1)throw new InvalidArgumentException('E2EE_INVALID_COMMAND');
+}
 function genesisE2eePublicPem(mixed $source): string
 {
     $bytes = genesisE2eeDecode($source, 91);
