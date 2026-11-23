@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {UnlockedWebDevice} from '../app/e2ee/device-vault.ts';
 import {E2eeScopeClient} from '../app/e2ee/scope-client.ts';
+import {E2eeReadRateError} from '../app/e2ee/read-rate-retry.ts';
 import {E2eeEditorQueue} from '../app/e2ee/editor-queue.ts';
 import {createRecoveryKit,freshSecret,sealRoot,publicDeviceKeys} from '../app/e2ee/keys.ts';
 import {encodeE2eeBytes,importE2eeRoot,sealE2eeEnvelope} from '../app/e2ee/envelope.ts';
@@ -64,6 +65,26 @@ test('a multi-chunk file keeps its original bytes when a rate refusal interrupts
  await client.refresh();await client.flush('attachment','retained-file');
  const reopened=await f.reopen();await reopened.refresh();const actual=await reopened.read('attachment','retained-file');
  assert(actual);assert.deepEqual(actual.bytes,input);assert.equal(actual.filename,'private.txt');f.device.lock();
+});
+test('a rate refusal repeats the exact signed read without replacing its operation identity',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();const original=f.transport.read,seen=[];
+ f.transport.read=async packet=>{seen.push(structuredClone(packet));if(seen.length===1)throw new E2eeReadRateError(0);return original(packet);};
+ assert.equal(await client.read('diary','not-saved'),null);assert.equal(seen.length,2);assert.deepEqual(seen[0],seen[1]);f.device.lock();
+});
+test('scope closure during a refused read prevents its retry',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();let calls=0;
+ f.transport.read=async()=>{calls++;client.close();throw new E2eeReadRateError(0);};
+ await assert.rejects(client.read('diary','not-saved'),/E2EE_UNLOCK_REQUIRED/);assert.equal(calls,1);f.device.lock();
+});
+test('an owning account change refuses the next RPC even while the underlying device remains open',async()=>{
+ const f=await fixture();let live=true,calls=0;const client=f.make(()=>{if(!live)throw Error('E2EE_ACCOUNT_CHANGED');});await client.refresh();
+ f.transport.read=async()=>{calls++;live=false;throw new E2eeReadRateError(0);};
+ await assert.rejects(client.read('diary','not-saved'),/E2EE_ACCOUNT_CHANGED/);assert.equal(calls,1);f.device.requireOpen();f.device.lock();
+});
+test('a newly verified crypto epoch retires an older refused read before another RPC',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();const original=f.transport.read;let intercepted=false,gets=0;
+ f.transport.read=async packet=>{if(packet.command.action==='get'){gets++;if(!intercepted){intercepted=true;await f.rotate();await client.refresh();throw new E2eeReadRateError(0);}}return original(packet);};
+ await assert.rejects(client.read('diary','not-saved'),/E2EE_DIRECTORY_CONFLICT/);assert.equal(gets,1);f.device.lock();
 });
 test('an active migration freezes encrypted uploads and editors, then permits initialization while its surface remains visible',async()=>{
   const f=await fixture(),client=f.make();await client.refresh();
@@ -158,7 +179,7 @@ async function fixture(options={}){
       assert.equal(c.action,'get');const e=server.objects.get(`${c.payload.domain}\0${c.payload.objectId}`);return {...base,envelopes:e?[structuredClone(e)]:[]};
     },
   };
-  const make=()=>new E2eeScopeClient(device,ownerId,scopeId,recovery.kit.authority,transport);
+  const make=current=>new E2eeScopeClient(device,ownerId,scopeId,recovery.kit.authority,transport,current);
   const reopen=async()=>{device.lock();device=await UnlockedWebDevice.unlock(ownerId,recovery.secret,storage,keyStorage);return make();};
   const rotate=async()=>{
     server.retired=await Promise.all([...server.objects.values()].map(async e=>({domain:e.context.domain,objectId:e.context.objectId,revision:e.context.revision,payloadHash:await envelopePayloadHash(e)})));

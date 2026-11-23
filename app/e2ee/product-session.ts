@@ -10,7 +10,6 @@ import {webMembershipAtomicStager} from './membership-atomic-web-stage.ts';
 import type {MembershipAtomicStager} from './membership-atomic-stager.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import type {E2eeSharedBootstrap} from './shared-bootstrap.ts';
-import {retryE2eeRead} from './read-rate-retry.ts';
 
 export type PrivateScopeSummary={scopeId:string;kind:'personal'|'project'|'space';resourceId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement'};
 export type PrivateAccountStatus={pilotAllowed:boolean;cryptoProtocol:1;scopes:PrivateScopeSummary[]};
@@ -70,10 +69,7 @@ export class WebPrivateAccount{
  #membershipAtomic:MembershipAtomicStager|null=null;
  #sharedRecords=new Map<string,{records:E2eeSharedRecords;bootstrap:E2eeSharedBootstrap}>();
  private constructor(ownerId:string,device:UnlockedWebDevice,transport:PrivateAccountTransport,current:()=>void,mode:'online'|'offline'='online'){
-  this.ownerId=ownerId;this.device=device;this.#current=current;this.mode=mode;
-  this.#transport={status:()=>transport.status(),directory:id=>transport.directory(id),command:packet=>transport.command(packet),
-   challenge:(scope,device,keys)=>transport.challenge(scope,device,keys),...(transport.membership?{membership:transport.membership}:{}),
-   read:packet=>{const held=snapshotE2eeValue(packet),read=transport.read.bind(transport);return retryE2eeRead(()=>read(held),()=>this.requireOpen());}};
+  this.ownerId=ownerId;this.device=device;this.#transport=transport;this.#current=current;this.mode=mode;
  }
  static async open(ownerId:string,secret:Uint8Array,transport:PrivateAccountTransport,current:()=>void,recoveryKit?:RecoveryKit){
   assertTechnical(ownerId);if(secret.length!==32)throw new Error('E2EE_UNLOCK_REQUIRED');const held=new Uint8Array(secret),storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();
@@ -116,7 +112,7 @@ export class WebPrivateAccount{
     const status=validateStatus({pilotAllowed:false,cryptoProtocol:1,scopes:[value.personal]});scope=status.scopes[0];
     if(scope.kind!=='personal'||scope.resourceId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
    }finally{row.value.fill(0);}
-   const account=new WebPrivateAccount(ownerId,device,transport,current,'offline'),client=new E2eeScopeClient(device,ownerId,scope.scopeId,device.authorityPin,transport),directory=await client.hydrateOffline();current();
+   const account=new WebPrivateAccount(ownerId,device,transport,current,'offline'),client=new E2eeScopeClient(device,ownerId,scope.scopeId,device.authorityPin,transport,()=>account.requireOpen()),directory=await client.hydrateOffline();current();
    if(directory.kind!=='personal'||directory.resourceId!==ownerId||directory.state!=='active')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
    account.#clients.set(scope.scopeId,{client,directory});return account;
   }catch(error){device?.lock();throw error;}finally{held.fill(0);}
@@ -158,7 +154,7 @@ export class WebPrivateAccount{
   this.requireOpen();const existing=this.#clients.get(scope.scopeId);
   if(existing){const known=existing.directory;if(known.kind!==scope.kind||known.resourceId!==scope.resourceId||known.ownerId!==scopeOwner||known.recoveryKit.authority.signingKey!==pin.signingKey||known.recoveryKit.authority.receivingKey!==pin.receivingKey)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
    existing.directory=this.mode==='offline'?await existing.client.hydrateOffline():await existing.client.refresh();this.requireOpen();return existing;}
-  const client=new E2eeScopeClient(this.device,scopeOwner,scope.scopeId,pin,this.#transport);
+  const client=new E2eeScopeClient(this.device,scopeOwner,scope.scopeId,pin,this.#transport,()=>this.requireOpen());
   try{const directory=this.mode==='offline'?await client.hydrateOffline():await client.refresh();this.requireOpen();
    if(directory.kind!==scope.kind||directory.resourceId!==scope.resourceId||directory.ownerId!==scopeOwner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
    const value={client,directory};this.#clients.set(scope.scopeId,value);return value;

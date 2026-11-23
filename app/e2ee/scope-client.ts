@@ -11,6 +11,7 @@ import {productMutation,type ProductMutation} from './product-contract.ts';
 import {membershipAtomicStagingPayload,type MembershipAtomicStagingAction} from './membership-atomic-contract.ts';
 import {membershipAtomicApplyPayload,type MembershipAtomicApplyAction} from './membership-atomic-receipts.ts';
 import {requirePrivateProductMutation} from './product-mutation-fence.ts';
+import {retryE2eeRead} from './read-rate-retry.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
@@ -31,27 +32,27 @@ function epochKey(directory:Pick<VerifiedDirectory,'cryptoEpoch'|'securityEpoch'
  * A save is acknowledged locally only after its draft, ciphertext and retry plan
  * commit atomically. Network retries never manufacture replacement empty content. */
 export class E2eeScopeClient {
-  #device:UnlockedWebDevice;#owner:string;#scopeId:string;#pin:PublicDeviceKeys;#transport:ScopeTransport;
+  #device:UnlockedWebDevice;#owner:string;#scopeId:string;#pin:PublicDeviceKeys;#transport:ScopeTransport;#current:()=>void;
   #directory:VerifiedDirectory|null=null;#history=new Map<string,VerifiedDirectory>();#roots=new Map<string,CryptoKey>();
   #sealedCache=new Map<string,Map<string,{revision:number;payloadHash:string}>>();
   #refreshed=false;
   #refreshing:Promise<VerifiedDirectory>|null=null;#lifecycle=0;
   #directoryFrames=new Map<number,VerifiedDirectory>();
-  constructor(device:UnlockedWebDevice,ownerId:string,scopeId:string,pin:PublicDeviceKeys,transport:ScopeTransport){
+  constructor(device:UnlockedWebDevice,ownerId:string,scopeId:string,pin:PublicDeviceKeys,transport:ScopeTransport,current:()=>void=()=>device.requireOpen()){
     assertTechnical(ownerId);assertTechnical(scopeId);this.#device=device;this.#owner=ownerId;this.#scopeId=scopeId;
-    this.#pin=snapshotE2eeValue(pin);this.#transport=transport;
+    this.#pin=snapshotE2eeValue(pin);this.#transport=transport;this.#current=current;
   }
   assertBinding(device:object,scopeId:string){if(device!==this.#device||scopeId!==this.#scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}
-  #open(){this.#device.requireOpen();if(!this.#directory)throw new Error('E2EE_DIRECTORY_REQUIRED');return this.#directory;}
+  #open(){this.#current();this.#device.requireOpen();if(!this.#directory)throw new Error('E2EE_DIRECTORY_REQUIRED');return this.#directory;}
   async refresh():Promise<VerifiedDirectory> {
-    this.#device.requireOpen();if(this.#refreshing)return structuredClone(await this.#refreshing);
+    this.#current();this.#device.requireOpen();if(this.#refreshing)return structuredClone(await this.#refreshing);
     const pending=this.#refresh();this.#refreshing=pending;
     try{return structuredClone(await pending);}finally{if(this.#refreshing===pending)this.#refreshing=null;}
   }
   async #waitForRefresh(){const pending=this.#refreshing;if(pending)await pending;this.#device.requireOpen();}
   async #refresh():Promise<VerifiedDirectory> {
     const lifecycle=this.#lifecycle;
-    const current=()=>{this.#device.requireOpen();if(this.#lifecycle!==lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');};
+    const current=()=>{this.#current();this.#device.requireOpen();if(this.#lifecycle!==lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');};
     this.#refreshed=false;
     current();const response=await this.#transport.directory(this.#scopeId);current();
     const frames=new Map<string,VerifiedDirectory>(),revisions=new Map<number,VerifiedDirectory>();
@@ -63,6 +64,7 @@ export class E2eeScopeClient {
   }
   /** Explicit offline unlock. No network fallback is performed after a failed refresh. */
   async hydrateOffline():Promise<VerifiedDirectory> {
+    this.#current();
     if(this.#refreshing)throw new Error('E2EE_REFRESH_REQUIRED');
     this.#refreshed=false;this.#device.requireOpen();const frames=new Map<string,VerifiedDirectory>(),revisions=new Map<number,VerifiedDirectory>();
     const directory=await this.#device.savedDirectory(this.#scopeId,frame=>{frames.set(epochKey(frame),frame);revisions.set(frame.checkpoint.revision,frame);});
@@ -136,7 +138,11 @@ export class E2eeScopeClient {
   async #readPacket(action:string,payload:Record<string,WireValue>,insideRefresh=false) {
     if(!insideRefresh)await this.#waitForRefresh();
     if(!this.#refreshed)throw new Error('E2EE_REFRESH_REQUIRED');
-    const packet=await this.#packet(action,payload);this.#device.requireOpen();const response=await this.#transport.read(packet);this.#device.requireOpen();
+    const lifecycle=this.#lifecycle,directory=this.#open(),packet=snapshotE2eeValue(await this.#packet(action,payload));
+    const current=()=>{this.#current();this.#device.requireOpen();if(this.#lifecycle!==lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');
+      if(this.#open()!==directory||!this.#refreshed&&!this.#refreshing)throw new Error('E2EE_DIRECTORY_CONFLICT');};
+    const read=this.#transport.read.bind(this.#transport);
+    const response=await retryE2eeRead(()=>read(packet),current);current();
     if(response.checkpointHash!==packet.command.checkpointHash||response.directoryRevision!==packet.command.expectedRevision)throw new Error('E2EE_DIRECTORY_CONFLICT');return response;
   }
   async #loadJob(id:string) {
