@@ -12,6 +12,7 @@ import kotlin.math.floor
 
 object E2eeCommands {
     private const val MAX_BYTES = 6 * 1024 * 1024
+    private val fieldName = Regex("[A-Za-z][A-Za-z0-9]{0,63}")
     private val commandFields = setOf("protocol", "ownerId", "scopeId", "deviceId", "action", "expectedRevision", "checkpointHash", "securityEpoch", "operationId", "payload")
     private fun invalid(): Nothing = throw IllegalArgumentException("E2EE_INVALID_COMMAND")
     fun integer(value: Any, minimum: Long = 0): Long {
@@ -39,7 +40,7 @@ object E2eeCommands {
                 }
                 is JSONObject -> {
                     val keys = value.keys().asSequence().toList().sorted()
-                    if (keys.isEmpty() || keys.size > 128 || keys.any { !it.matches(Regex("[A-Za-z][A-Za-z0-9]{0,63}")) }) invalid()
+                    if (keys.isEmpty() || keys.size > 128 || keys.any { !fieldName.matches(it) }) invalid()
                     output.writeByte(6); output.writeInt(keys.size)
                     for (key in keys) { write(key, depth + 1); write(value.get(key), depth + 1) }
                 }
@@ -92,7 +93,7 @@ object E2eeCommands {
                     var previous = ""
                     JSONObject().apply { repeat(count.toInt()) {
                         val name = read(depth + 1) as? String ?: invalid()
-                        if (!name.matches(Regex("[A-Za-z][A-Za-z0-9]{0,63}")) || name <= previous) invalid()
+                        if (!fieldName.matches(name) || name <= previous) invalid()
                         previous = name
                         put(name, read(depth + 1))
                     } }

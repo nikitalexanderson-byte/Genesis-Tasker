@@ -1,5 +1,30 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: correction block20
+
+Main HEAD27f0708e + custody correction806ca7cc (cherry-pick d155535d).
+Native19 debug/test APK SUCCESS24m6s, source hashDBD753E3FFA0411632F4499811F177606D42DCA0C46BFC0B41E8249549AF54D4.
+Это не полный JVM/lint и не biometric acceptance. API26-19 остановлен после
+ошибки точного регистра подписи: реальный официальный fingerprint dialog виден,
+но Android26 отображает PIN alternative в UPPERCASE. Скрин сохранён в run19.
+Ни отпечаток, ни все5 cases этим запуском не засчитаны. Finally восстановил NONE/0.
+Оба UI tests исправлены на точное case-insensitive сравнение системной подписи.
+
+Native controller19 намеренно остановлен после3 method-only samples45/90/135s,
+не после20-minute timeout. В sources наблюдались String.format в scopeFor и
+повторная компиляция Regex в canonical metadata. Удалены эти аллокации;
+account scope в personal controller и owner guards теста захвачены однократно.
+Сами current/signature/parser checks не удалены. Добавлена проверка идентичности
+старого scope encoding на260 UID. Причину общего timeout ещё нужно подтвердить
+повтором. Все3 samples — runtime/native150-controller19-method-samples.log.
+Headless PIN refresh90s остаётся только fixture, не доказательством обычной UX.
+
+Web36 подтвердил только domainAllowed=false для personal/key-check, остальные
+шесть guards true. Web24 build/lint/types и scope suite28/28 PASS, включая
+чужого actor/device. Web37 на исправленном immutable web24 ещё выполняется.
+Main JS regression и QA diagnostics сохраняются вместе с correction block20.
+Coverage9/20, cutover/floors off, deployAndroid=false; выпуска пока нет.
+
 ## 23 ноября: актуальное продолжение после подключения
 
 Ветка codex/security-336, pushed1921c7da, remote publish, draft PR48.

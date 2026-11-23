@@ -10,6 +10,7 @@ import {envelopePayloadHash,objectManifestHash,sealE2eeFile} from '../app/e2ee/f
 import {verifyDeviceDirectory} from '../app/e2ee/directory.ts';
 import {showPrivateMigration,privateMigrationUi,closePrivateMigrationUi} from '../app/private-migration-ui.ts';
 import {holdPrivateProductMutations,requirePrivateProductMutation} from '../app/e2ee/product-mutation-fence.ts';
+import {inspectRetainedProductCustody} from '../app/e2ee/retained-product-custody.ts';
 
 class Records {
   rows=new Map();fail=false;
@@ -131,6 +132,26 @@ async function fixture(options={}){
   };
   return {make,reopen,storage,keyStorage,server,transport,rotate,raw,keys,rootContext,get device(){return device;}};
 }
+test('custody retains the real shared-trust key-check upload without authorizing or rewriting it',async()=>{
+  const f=await fixture(),client=f.make();await client.refresh();
+  await client.prepare('key-check','personal-shared-trust-live-v1',bytes(JSON.stringify({protocol:1,ownerId:f.device.ownerId,document:{scopes:[]},base:{scopes:[]}})),0);
+  const frame=await f.device.savedDirectory(f.rootContext.scopeId),claims=new Map(),before=JSON.stringify([...f.storage.rows]);
+  try{
+    const options={vault:f.device.vault,actor:{ownerId:f.device.ownerId,deviceId:f.device.deviceId},
+      receivingKey:f.keys.receiving.privateKey,selfKeys:await publicDeviceKeys(f.keys),assertCurrent:()=>f.device.requireOpen(),
+      outbox:(await f.device.vault.listMigrationPlanOutputs()).remote,copies:[],jobHistory:[],controlHistory:[],personalScopeId:f.rootContext.scopeId,
+      claimed:(domain,id)=>claims.has(domain+'\0'+id),claim:(domain,id,scopeId,role)=>claims.set(domain+'\0'+id,{scopeId,role}),
+      directory:async(scopeId,select)=>{assert.equal(scopeId,frame.scopeId);assert(select(frame));return frame;}};
+    await inspectRetainedProductCustody(options);
+    assert([...claims.values()].some(row=>row.role==='product-job'));
+    assert([...claims.values()].some(row=>row.role==='product-cipher'));
+    for(const actor of [{ownerId:'another-owner',deviceId:f.device.deviceId},{ownerId:f.device.ownerId,deviceId:'another-device'}]){
+      claims.clear();await assert.rejects(inspectRetainedProductCustody({...options,actor}),/E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED/);
+    }
+    assert.equal(JSON.stringify([...f.storage.rows]),before);assert.equal(f.server.writes,0);
+  }finally{f.device.lock();}
+});
+
 test('normal save atomically protects draft/ciphertext before network; restart reuses exact acknowledged request',async()=>{
   const f=await fixture({crashAfterPut:true});let client=f.make();await client.refresh();
   await client.prepare('workspace','workspace',bytes('PRIVATE QUEUED OFFLINE EDIT'),0);assert.equal(f.server.writes,0);

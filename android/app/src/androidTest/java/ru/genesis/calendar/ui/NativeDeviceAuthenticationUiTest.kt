@@ -44,6 +44,7 @@ class NativeDeviceAuthenticationUiTest {
     private val content="GENESIS synthetic authentication component record".toByteArray()
     private val title="GENESIS device unlock QA"
     private val pin="Use device screen lock"
+    private val pinSelector get()=By.text(Pattern.compile(Pattern.quote(pin),Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE))
 
     @Before fun mountedRealCredentialComponent(){
         check(BuildConfig.DEBUG&&compose.activity.packageName=="ru.genesis.calendar.qa1103.debug")
@@ -71,7 +72,7 @@ class NativeDeviceAuthenticationUiTest {
     private fun prompt(){
         compose.runOnIdle{request=NativeMigrationCredential.captureVault(owner,"component",1,"",null,false,false,SystemClock.elapsedRealtime()) {}}
         compose.waitForIdle()
-        val visible=device.wait(Until.hasObject(By.text(pin)),20000)
+        val visible=device.wait(Until.hasObject(pinSelector),20000)
         assertTrue("Actual biometric prompt or compat fingerprint dialog; lifecycle=${compose.activity.lifecycle.currentState}; outcome=${outcome.get()}",visible)
     }
     private fun signal(mode:String){
@@ -92,7 +93,7 @@ class NativeDeviceAuthenticationUiTest {
         assertEquals(0,operations.get());assertNotEquals("OPENED",outcome.get())
     }
     @Test fun b_systemPinOpensTheRealProtectedRecord(){
-        prompt();requireNotNull(device.findObject(By.text(pin))).click();signal("pin");waitOutcome()
+        prompt();requireNotNull(device.findObject(pinSelector)).click();signal("pin");waitOutcome()
         assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
     }
     @Test fun c_backgroundCancelsAPendingFingerprint(){
@@ -111,7 +112,7 @@ class NativeDeviceAuthenticationUiTest {
         assertTrue(compose.activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
         val refused=runCatching{vault.unlock().also{it.fill(0)}}.exceptionOrNull()
         assertEquals("E2EE_UNLOCK_REQUIRED",refused?.message);assertEquals(0,operations.get())
-        prompt();requireNotNull(device.findObject(By.text(pin))).click();signal("pin");waitOutcome()
+        prompt();requireNotNull(device.findObject(pinSelector)).click();signal("pin");waitOutcome()
         assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
     }
 }

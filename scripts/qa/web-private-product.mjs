@@ -11,7 +11,7 @@ const output=process.env.GENESIS_QA_WEB_OUTPUT;
 assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
-const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],historyGuards:[]};
+const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
@@ -63,11 +63,20 @@ try{
   for(const {file,source,found} of candidates){
    const at=source.indexOf('return '+found[3]+'===`E2EE_REAUTH_REQUIRED`',found.index);
    const before=source.slice(0,at),lineNumber=before.split('\n').length-1,columnNumber=at-before.lastIndexOf('\n')-1;
-   const condition=`(()=>{const message=${found[2]} instanceof Error?${found[2]}.message:'';console.info('GENESIS_QA_MIGRATION_REFUSAL '+(/^E2EE_[A-Z_]+$/.test(message)?message:'NON_TECHNICAL_ERROR'));return false;})()`;
+   const condition=`(()=>{const qaFailure=${found[2]},message=qaFailure instanceof Error?qaFailure.message:'';console.info('GENESIS_QA_MIGRATION_REFUSAL '+(/^E2EE_[A-Z_]+$/.test(message)?message:'NON_TECHNICAL_ERROR'));if(message==='E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED'){const frames=(qaFailure.stack??'').split(String.fromCharCode(10)).slice(1,9).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});console.info('GENESIS_QA_MIGRATION_FRAMES '+JSON.stringify(frames));}return false;})()`;
    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+file,lineNumber,columnNumber,condition});
   }
   for(const artifact of readdirSync(assets).filter(name=>/^private-security-ui-[\w-]+\.js$/.test(name))){
    const content=readFileSync(path.join(assets,artifact),'utf8');let offset=-1,ordinal=0;
+   // Exact compiled guard from the failing immutable candidate. The expression
+   // only reports booleans and fixed protocol enums and never pauses IndexedDB.
+   const custodyGuard='p&&p.userId===e.actor.ownerId&&u.ownerId===f.ownerId&&u.deviceId===e.actor.deviceId&&u.writerProtocol===9&&u.schemaVersion===1&&pe(f.kind).some(e=>e.domains.includes(u.domain))';
+   const custodyAt=content.indexOf(custodyGuard);
+   if(custodyAt>=0){
+    const preceding=content.slice(0,custodyAt),lineNumber=preceding.split('\n').length-1,columnNumber=custodyAt-preceding.lastIndexOf('\n')-1;
+    const condition="(()=>{const value={devicePresent:!!p,sameActor:p?.userId===e.actor.ownerId,sameOwner:u.ownerId===f.ownerId,sameDevice:u.deviceId===e.actor.deviceId,writer9:u.writerProtocol===9,schema1:u.schemaVersion===1,domainAllowed:pe(f.kind).some(path=>path.domains.includes(u.domain)),kind:['personal','project','space'].includes(f.kind)?f.kind:'other',domain:['workspace','diary','dream-journal','mindmap','physis','aurora','stoicheion','attachment','local-snapshot','outbox','draft','key-check','shared-project','shared-comment'].includes(u.domain)?u.domain:'other'};if(Object.values(value).some(item=>item===false))console.info('GENESIS_QA_CUSTODY_PREDICATES '+JSON.stringify(value));return false;})()";
+    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+artifact,lineNumber,columnNumber,condition});
+   }
    while((offset=content.indexOf('E2EE_SOURCE_HISTORY_CHANGED',offset+1))!==-1){
     ordinal++;const statement=content.lastIndexOf('throw Error(',offset);if(statement<0||offset-statement>25)continue;
     const previous=content.slice(0,statement),lineNumber=previous.split('\n').length-1,columnNumber=statement-previous.lastIndexOf('\n')-1;
@@ -87,13 +96,17 @@ try{
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(error.message));
- page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}});
+ page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ',frames='GENESIS_QA_MIGRATION_FRAMES ',predicates='GENESIS_QA_CUSTODY_PREDICATES ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}else if(message.text().startsWith(frames)){report.custodyFrames.push(JSON.parse(message.text().slice(frames.length)));console.log(message.text());save();}else if(message.text().startsWith(predicates)){report.custodyPredicates.push(JSON.parse(message.text().slice(predicates.length)));console.log(message.text());save();}});
  page.on('response',async response=>{
   if(response.url()===baseURL+'/api/bootstrap'){const body=await response.json().catch(()=>null);console.log('BOOTSTRAP '+JSON.stringify({status:response.status(),keyMode:body?.workspace?.keyMode,keyPresent:!!body?.workspace?.key}));}
   if(response.url().startsWith(baseURL+'/api/e2ee/v1/')){
    const path=new URL(response.url()).pathname;
    const packet=response.request().postDataJSON();const action=packet?.command?.action;
    console.log('TRANSPORT '+path+' '+(typeof action==='string'?action:'')+' '+response.status());
+   if(response.status()===429){
+    const observedAt=Date.now(),header=await response.headerValue('retry-after'),seconds=/^[0-9]{1,3}$/.test(header??'')?Number(header):600;
+    report.rateLimits.push({path,action:typeof action==='string'?action:null,observedAt,retryAfterSeconds:seconds>=1&&seconds<=600?seconds:600});save();
+   }
   }
   if(response.url().startsWith(baseURL+'/api/')&&response.status()>=400){const body=await response.json().catch(()=>null);report.apiErrors.push({path:new URL(response.url()).pathname,status:response.status(),code:typeof body?.error==='string'&&/^[A-Z0-9_]+$/.test(body.error)?body.error:null});}
  });
@@ -272,13 +285,40 @@ try{
     await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
    };
    const account=async()=>{await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=account]').click();};
-   const openTransfer=async(kind,resource)=>{
+   const withRateRetry=async(label,operation)=>{
+    for(let attempt=0;attempt<4;attempt++){
+     const previous=report.rateLimits.length;
+     try{return await operation();}catch(error){
+      await page.waitForTimeout(100);
+      const limited=report.rateLimits.at(-1);if(report.rateLimits.length===previous||!limited||attempt===3)throw error;
+      const until=limited.observedAt+limited.retryAfterSeconds*1000+1000;
+      report.rateRetries.push({label,attempt:attempt+1,until,policy:'Actual Retry-After boundary; no rate table reset or larger budget'});save();
+      console.log('WAIT private-product rate boundary '+label+' '+Math.max(0,until-Date.now())+'ms');
+      while(Date.now()<until){assert(!page.isClosed());await page.waitForTimeout(Math.min(5000,until-Date.now()));}
+     }
+    }
+   };
+   const openTransfer=async(kind,resource)=>withRateRetry(kind+' discovery',async()=>{
     const panel=page.locator('.private-shared-security');await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
     await panel.locator(':scope > button').filter({hasText:sharedCopy.load}).click();
     await Promise.race([panel.getByRole('combobox',{name:sharedMigration.transfer,exact:true}).waitFor(),panel.locator(':scope > [role=status]').waitFor().then(async()=>{throw new Error('Shared discovery refused: '+report.caughtCodes.join(', ')+'; '+await panel.locator(':scope > [role=status]').innerText());})]);
     await panel.getByRole('combobox',{name:sharedMigration.transfer,exact:true}).selectOption(`${kind}:${resource.id}`);
     await panel.getByRole('button',{name:sharedMigration.transfer,exact:true}).first().click();
     const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);return dialog;
+   });
+   const reconfirm=async(dialog,kind,resource)=>{
+    let delivered=false;const pattern='**/api/auth/google/start?*';
+    const provider=async route=>{
+     const url=new URL(route.request().url());assert.equal(url.searchParams.get('purpose'),'login');
+     const target=new URL(url.searchParams.get('return_to'),baseURL);assert.equal(target.origin,baseURL);
+     await identityConfirmation(true);delivered=true;await route.fulfill({status:302,headers:{location:target.href}});
+    };
+    await page.route(pattern,provider);
+    try{await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),dialog.getByRole('button',{name:migration.reauth,exact:true}).click()]);}
+    finally{await page.unroute(pattern,provider);}
+    assert(delivered,'The actual reconfirm action must reach the synthetic provider');
+    report.identityDelivery='Synthetic Google provider completion; no live provider UI claim';
+    await unlock();await account();return openTransfer(kind,resource);
    };
    // Return from the deliberately offline capability to an online unlocked one.
    await page.reload();await unlock();await account();
@@ -288,24 +328,24 @@ try{
      await identityConfirmation(false);await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
      await dialog.getByRole('alert').filter({hasText:migration.reauthRequired}).waitFor();
      const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(!status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
-     let delivered=false;const pattern='**/api/auth/google/start?*';
-     const provider=async route=>{
-      const url=new URL(route.request().url());assert.equal(url.searchParams.get('purpose'),'login');
-      const target=new URL(url.searchParams.get('return_to'),baseURL);assert.equal(target.origin,baseURL);
-      await identityConfirmation(true);delivered=true;await route.fulfill({status:302,headers:{location:target.href}});
-     };
-     await page.route(pattern,provider);
-     try{await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),dialog.getByRole('button',{name:migration.reauth,exact:true}).click()]);}
-     finally{await page.unroute(pattern,provider);}
-     assert(delivered,'The actual reconfirm action must reach the synthetic provider');
-     report.identityDelivery='Synthetic Google provider completion; no live provider UI claim';
-     await unlock();await account();dialog=await openTransfer(kind,resource);
+     dialog=await reconfirm(dialog,kind,resource);
     }else await identityConfirmation(true);
     await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
-    await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
-    await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}),dialog.getByRole('alert').waitFor({timeout:1200000}).then(async()=>{throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());})]);
+    await withRateRetry(kind+' transfer',async()=>{
+     for(let reauth=0;reauth<2;reauth++){
+      const previous=report.migrationRefusals.length;await recoveryInput(dialog);
+      await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
+      const outcome=await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}).then(()=> 'active'),dialog.getByRole('alert').waitFor({timeout:1200000}).then(()=> 'refused')]);
+      if(outcome==='active')return;
+      await page.waitForTimeout(100);
+      if(report.migrationRefusals.slice(previous).includes('E2EE_REAUTH_REQUIRED')){dialog=await reconfirm(dialog,kind,resource);continue;}
+      throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());
+     }
+     throw new Error('Owned provider reconfirmation did not admit the transfer');
+    });
     await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
     const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
+    report.transferredScopes.push({kind,state:'active'});save();
    }
   });
   await check('normal shared reader opens transferred task content and refuses the legacy project route',async()=>{

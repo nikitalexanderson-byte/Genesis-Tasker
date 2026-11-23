@@ -270,8 +270,9 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     }
     internal suspend fun preparePrivateMigration(secret:ByteArray,kit:JSONObject,assertEditorsFrozen:()->Unit):ru.genesis.calendar.security.E2eeProductMigrationController=privateMigrationSetupMutex.withLock{
         val uid=mutableState.value.user?.uid?:error("E2EE_ACCOUNT_BINDING_REQUIRED");val generation=client.currentGeneration();val epoch=app.workspaceEpoch;val lifecycle=privateVaultLifecycle.get()
+        val accountScope=CloudAccountSnapshot.scopeFor(uid)
         fun current(){ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&mutableState.value.user?.uid==uid&&!mutableState.value.requiresSignIn
-            &&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)){"E2EE_ACCOUNT_CHANGED"}}
+            &&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&app.workspaceEpoch==epoch&&app.workspaceScope==accountScope){"E2EE_ACCOUNT_CHANGED"}}
         current();assertEditorsFrozen();check(privateMigration.get()==null){"E2EE_MIGRATION_BUSY"}
         val account=object:ru.genesis.calendar.security.E2eeAccountTransport{
             private fun call(path:String,body:JSONObject?=null):JSONObject{current();return client.e2ee(generation,path,body).also{current()}}
@@ -281,7 +282,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             override fun read(packet:JSONObject)=call("/read",packet)
             override fun challenge(scopeId:String,deviceId:String,keys:JSONObject)=call("/challenge",JSONObject().put("scopeId",scopeId).put("deviceId",deviceId).put("keys",keys))
         }
-        val sourceGeneration=withContext(Dispatchers.IO){current();NativeBackupEpochStore(app).accepted(CloudAccountSnapshot.scopeFor(uid))}
+        val sourceGeneration=withContext(Dispatchers.IO){current();NativeBackupEpochStore(app).accepted(accountScope)}
         var opened:ru.genesis.calendar.security.E2eeProductMigrationController?=null
         try{
             val controller=ru.genesis.calendar.security.E2eeProductMigrationController.open(app,uid,secret,kit,sourceGeneration,

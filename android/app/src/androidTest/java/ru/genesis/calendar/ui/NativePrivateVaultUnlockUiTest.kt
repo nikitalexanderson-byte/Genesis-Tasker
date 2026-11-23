@@ -68,9 +68,10 @@ class NativePrivateVaultUnlockUiTest {
         assertFalse(NativePrivateProducts.isOpen(app.workspaceScope))
         val copy=text();assertTrue(device.wait(Until.hasObject(By.text(copy.getString("unlock"))),30000));return copy
     }
+    private fun screenLock(copy:JSONObject)=By.text(Pattern.compile(Pattern.quote(copy.getString("pin")),Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE))
     private fun prompt(copy:JSONObject){
         requireNotNull(device.findObject(By.text(copy.getString("unlock")))).click()
-        assertTrue("Real fingerprint prompt with screen-lock alternative must appear",device.wait(Until.hasObject(By.text(copy.getString("pin"))),20000))
+        assertTrue("Real fingerprint prompt with screen-lock alternative must appear",device.wait(Until.hasObject(screenLock(copy)),20000))
     }
     private fun signal(mode:String){
         if(mode=="pin"){
@@ -87,11 +88,11 @@ class NativePrivateVaultUnlockUiTest {
     }
     @Test fun a_cancelCannotOpenTheVault(){
         val copy=showLock();prompt(copy);device.pressBack()
-        waitFor{!device.hasObject(By.text(copy.getString("pin")))}
+        waitFor{!device.hasObject(screenLock(copy))}
         assertFalse(NativePrivateProducts.isOpen(app.workspaceScope))
     }
     @Test fun b_systemPinOpensRetainedContentAndBackgroundRelocks(){
-        val copy=showLock();prompt(copy);requireNotNull(device.findObject(By.text(copy.getString("pin")))).click();signal("pin")
+        val copy=showLock();prompt(copy);requireNotNull(device.findObject(screenLock(copy))).click();signal("pin")
         retainedContentAndBackgroundLock()
     }
     @Test fun c_backgroundCannotAdmitAPendingFingerprint(){

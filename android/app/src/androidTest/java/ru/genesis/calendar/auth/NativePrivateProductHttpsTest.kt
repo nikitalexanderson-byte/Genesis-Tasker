@@ -124,7 +124,8 @@ class NativePrivateProductHttpsTest {
                 android.util.Log.i("Genesis336QaPhase",phase)
                 InstrumentationRegistry.getInstrumentation().sendStatus(2,Bundle().apply{putString("stream","GENESIS_MIGRATION_PHASE:$phase\n")})
             }
-            val guard={check(NativeMigrationUiState.state.value?.id==intent.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
+            val ownerGuard=auth.privateUiOwnerGuard(owner)
+            val guard={check(NativeMigrationUiState.state.value?.id==intent.id){"E2EE_SOURCE_CAPTURE_CHANGED"};ownerGuard()}
             diagnose("before-personal")
             val migration=auth.preparePrivateMigration(material.secret,material.kit,guard)
             val sourceDiagnostic=launch(Dispatchers.IO){
@@ -155,7 +156,8 @@ class NativePrivateProductHttpsTest {
                 assertTrue(request("/api/qa/identity-confirmation","POST",JSONObject().put("confirmed",true)).getBoolean("synthetic"))
                 val resourceId=resource.getString("id");val target=E2eeProductMigration.Target(owner,"$kind:$resourceId",kind,resourceId)
                 NativeMigrationUiState.show(owner,"en",true,target);val transfer=requireNotNull(NativeMigrationUiState.state.value)
-                val bound={check(NativeMigrationUiState.state.value?.id==transfer.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
+                val sharedOwnerGuard=auth.privateUiOwnerGuard(owner)
+                val bound={check(NativeMigrationUiState.state.value?.id==transfer.id){"E2EE_SOURCE_CAPTURE_CHANGED"};sharedOwnerGuard()}
                 val shared=auth.prepareSharedPrivateMigration(target,material.secret,material.kit,bound)
                 try{withTimeout(1200000){shared.run(material.secret,material.kit,::progress)}}finally{auth.closePrivateMigration(shared)}
                 auth.finishSharedPrivateMigration(target);NativeMigrationUiState.close(transfer.id)
