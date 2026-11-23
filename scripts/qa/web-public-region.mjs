@@ -50,6 +50,18 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
           assert.equal(await footer.locator('button.genesis-donation-disabled').getAttribute('href'),null);
           assert.equal(claims,0,'Unavailable donations must not claim a support popup');
         }
+        if(scenario.id==='unknown-region'){
+          // Let the saved account preference arrive before checking the URL's
+          // public-document language. Anonymous rendering cannot catch this.
+          for(const [path,language,international]of [['/terms?lang=en','en',true],['/terms?lang=ru','ru',true],['/ru/terms','ru',false]]){
+            await page.goto(path);await page.locator('.legal-document').waitFor();await page.waitForLoadState('networkidle');
+            assert.equal(await page.locator('html').getAttribute('lang'),language,'Document URL wins over the account language');
+            const document=await page.locator('.legal-document').innerText();
+            if(language==='en')assert.match(document,/Terms of (?:Use|Service)/i);
+            if(international){assert.match(document,/USD/);assert.doesNotMatch(document,/\bRUB\b|3330|5550|7770|12900|рубл/iu);}
+            else assert.match(document,/3330|рубл/iu);
+          }
+        }
       }
       await page.screenshot({path:evidence,fullPage:true,animations:'disabled'});
       results.push({id:'web.public-region.'+scenario.id,platformId:'web',status:'PASS',durationMs:Math.round(performance.now()-started),evidence:[evidence]});
