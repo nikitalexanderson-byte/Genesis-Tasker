@@ -11,6 +11,7 @@ class E2eeNativeUiPreferencesTest {
         val input=value();change(input)
         try{E2eeNativeUiPreferences.validate(input,"ui-owner");fail("Invalid UI document accepted")}
         catch(expected:IllegalStateException){}catch(expected:org.json.JSONException){}
+        catch(expected:IllegalArgumentException){assertEquals("E2EE_INVALID_KEY_BUNDLE",expected.message)}
     }
     @Test fun validDocumentIsAnIndependentCopy(){
         val input=value();val checked=E2eeNativeUiPreferences.validate(input,"ui-owner")
