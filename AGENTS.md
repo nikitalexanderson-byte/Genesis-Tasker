@@ -1,5 +1,22 @@
 # Genesis Tasker: действующие правила
 
+- Актуальнее всех freezes ниже: native30 SUCCESS4m43s на79dc383b,
+  JVM1448:1440PASS/0failures/8 opt-in skips; source hash E7B28B6E…,
+  APK EE918FA4…/test0B994D62…. Actual API26/API34 source30 по7/7 PASS.
+  Controller30 и full lint30 RUNNING (sessions21160/1045), PID32014 сначала
+  snapshot/sources. До обоих результатов app/android/contracts/public не менять.
+  Build29 имел единственный fixture catch FAIL (wrong exception class при
+  корректном extra-field deny); fix79dc383b не меняет production validator.
+  Web57 на immutable31 hash-stable FAIL после15PASS: после actual429 retry
+  project migration E2EE_CORRUPT_FILE. Не считать приёмкой файлов. Short real
+  multi-chunk queue rate/resume/cold-read unit PASS1/1; source отказа ещё ищется.
+  Web58/session30471 идёт на том же immutable31 с safe technical stack frames и
+  opt-in owned synthetic failure preservation. Client recovery/browser state
+  при FAIL сохраняется отдельно от backend в client-state; НИКОГДА не читать,
+  не печатать и не stage его private.json. Оба owned каталога очистить до release.
+  CI79dc run45273761078 RUNNING. Backend155/1 (неизменённый300s bulk-large
+  timeout Windows); HTTP402/402, i18n14 audit, dependency0 подтверждены.
+
 - Самый новый срез: build28 завершилась compile FAIL (LocalPreferences117:
   Kotlin не допускает comma-separated val locals). Исправлено643f01fb;
   build29/session76282 выполняется, app/android/contracts/public до identity29

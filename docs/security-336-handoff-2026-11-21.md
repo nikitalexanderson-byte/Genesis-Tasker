@@ -1,5 +1,84 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Самое новое: native30 PASS и web58 с сохраняемым стендом
+
+Root latest source79dc383b, затем2062d986 cherry-picked (root git log уточняет
+его новый SHA). Remote publish/codex/security-336 пока79dc383b. Linked2062d986.
+Remote называется publish, origin отсутствует. No agents/Daybreak/demo-output.
+
+Build29 FAIL1448:1439PASS/1FAIL/8skip. Единственный FAIL новый
+E2eeNativeUiPreferencesTest.exactDocumentRejectsInjectedAuthority: main code
+правильно бросал IllegalArgumentException E2EE_INVALID_KEY_BUNDLE, fixture
+ожидал только IllegalStateException/JSONException. Fix79dc383b добавил точный
+catch+message assert. XML29 сохранены runtime/native150-build29-unit-failed.
+Build30 SUCCESS4m43s; JVM1448,1440PASS/0failures/errors/8 old opt-in HTTP skips.
+Source hash E7B28B6E3D51FFF337289D7B73431A10396D2335CEF4DBEA52E7D180700EF46B.
+APK EE918FA4A67A53D1DC8726053C533304A1F3876A5085022822512B92DB91435E;
+test0B994D62FC492BA128C28B1A9826095EBA28F221F1D502D4C17C6657186F96A6.
+Identity/counts/result native150-ui-preferences-build30-*.json; XML build30-unit.
+
+Actual API26/API34 source30 по7/7 PASS (cache3/archive2/relational2):
+output/qa/security336-native150-cache-source30-both/results.json.
+Session21160 continue-native30.ps1 уже начал full controller+4UI:
+runtime/native150-controller30-wrapper.log, output/qa/
+security336-native150-controller-unlock-api34-30-no-refresh[-platform].
+Uses wrapper28 -NoAuthenticationRefresh -KeepFixture, no periodic HAT.
+PID32014 сначала snapshot/sources. После controller PASS runtime сохраняется
+с owner/config/cert/source hashes даже при UI FAIL; закрыть services/reverse.
+Session1045 lint-native30.ps1 выполняет full lint30 после build30 (не параллельно
+Gradle build). До завершения runtime/lint root app/android/contracts/public
+НЕ менять. Build30 session41234 завершена SUCCESS; старые29 waits завершены FAIL.
+
+Web57/session25778 FAIL15PASS на неизменном immutable31, cleanup PASS. Backup
+download/wrong+right import/cold history опять PASS, project migration после
+реального429/Retry-After отказала E2EE_CORRUPT_FILE. Technical stack раньше
+не сохранялся, поэтому точный helper неизвестен; это не пройденные attachments.
+New short primitive:1.3MiB chunk upload refuses second put, refresh+same journal
+resume, cold read exact bytes — PASS1/1 (web-file-rate-resume58-unit.log). Значит
+ошибка не воспроизведена одним upload primitive; нужна диагностика migration layer.
+
+Web58/session30471 сейчас выполняется linked scripts/qa/web-run.mjs, focus content,
+--preserve-failure=true, immutable31/public_html. Log consolidated-private-content58.log,
+report output/playwright/security336-private-content-58-1124. New mapper logs
+only safe artifact/line/column stack for E2EE_CORRUPT_FILE. QA2062d986 added:
+on FAIL, separately owned client-state with encrypted browser storage and private
+SYNTHETIC recovery input (outside backend dump boundary); only localhost qa-*
+example.invalid non-admin principal. Parent stops services, checks owner/config
+hashes and writes preserved-runtime.json with original origin/port/apiPort.
+Never read/print/stage client-state/*.private.json; helpers may consume them
+without model output. Cleanup BOTH runtime and client-state via guarded cleanup
+before final release. Success still cleans the backend normally. No limits or
+guards bypassed. This should permit a short resume instead of repeating migrations.
+
+Consolidated backend session70643 завершена155PASS/1FAIL; only unchanged-from-main
+shared-bulk-large internal300s Windows timeout (new report61.7s seed,4999 processed
+at bound). Do not alter production limits or claim156PASS. HTTP402/402 PASS.
+Full JS2153/2157 initial + all4 failed cases subsequently PASS in scoped58 and
+rendered62; missing PHP/SSR environment and deterministic mutation fixture fixed.
+I18n14/dependency0 remain. Exact remote79dc CI PR45273761078 RUNNING, latest
+job IDs Android138040216754 / web138040217134. Prior779 CI superseded.
+
+Gitleaks8.30.1 all local refs380 commits/328313212 bytes, demo-output excluded,
+redact100:164 findings. Reviewed metadata secrets-final-history-1124-reviewed.json:
+all public test keys/crypto vectors or non-secret PENDING_KEY/SOLAR_PLACE_KEY
+localStorage names,0 confirmed credential leaks/unclassified. Do not claim raw0.
+age1.3.2/gitleaks binaries retained in output/release-3.3.5/age-tool/age and
+gitleaks-tool. No new download required.
+
+Prepared (syntax only, NOT run): runtime/system-restore-native29.py. Despite
+filename it accepts any completed owned controller runtime, including30. It
+checks preserved owner/config/files, SQLite-backups3ACTIVE scopes, age wraps all
+config/DB/metadata with throwaway external fixture key, checks wrong/tamper deny,
+byte-identical restore/integrity/unchanged E2EE tables, and prepares isolated
+restored runtime with separate synthetic session delivery. Keys destroyed; live
+post-restore UI read still PENDING. Need controller30 PASS/preserved runtime then
+run against fresh output/qa/security336-system-restore-native30-01. A runner for
+actual post-restore native PIN read has NOT been implemented yet. Clean original
+preserved, restored runtime and synthetic plaintext snapshot/restore dirs before
+release. Signed149→150, final source review/20-path acceptance/CI and separate
+web/API/APK publication still pending. Production149, floors0/cutover/pilot off,
+GENESIS_DEPLOY_ANDROID=false, formal coverage9/20 remain.
+
 ## Последний срез: native29, web57 и consolidated checks
 
 Root HEAD643f01fb; linked HEAD1ac8a2ea. Root включил refresh9518e059 как
