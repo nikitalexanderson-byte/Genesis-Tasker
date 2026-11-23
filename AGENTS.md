@@ -1,5 +1,24 @@
 # Genesis Tasker: действующие правила
 
+- Актуальнее предыдущих срезов: root b929b60f, принятый main4cc67503 включён.
+  Block0c5aa442 исправил общий reader: overlapping GETs используют один свежий
+  verified snapshot, aggregate GETs не блокируют друг друга, mutations остаются
+  барьером. Добавлены owner-bound encrypted space layouts web/native с сохранением
+  старого personal document. tsc/scoped lint и53/53 tests PASS. Immutable web36
+  actual normal shared task + multi-chunk attachment/photo hash readback PASS2/2,
+  legacy project route409, bundle unchanged; report retained58/resume-1795476689849.
+  Explicit offline cold shared reader web34 PASS1/1, no signed network requests.
+  Native36/session1193 assembling0c5aa442: app/android/contracts/public НЕ менять
+  до identity/runtime36. UI35 cancel/PIN/fingerprint3PASS, background1FAIL90s;
+  native36 test now uses actual Activity lifecycle without synthetic auth callbacks.
+  Original fixture session expired after1h and HTTPS fixture had cookie_secure=false;
+  corrected securely, same-owner separate synthetic identity delivery PASS1/1.
+  No production cookie/key guard weakened. Root exact-source CI0c5aa failed only
+  no-unsafe-finally in retained QA runner; fixed b929b60f, rerun pending. APK149,
+  floors/cutover/pilot and deployAndroid=false unchanged; formal coverage9/20.
+  Six checked RU announcement PNGs packed in output/release-3.3.6/
+  GENESIS-3.3.6-announcement-RU.zip; two black system-auth captures excluded.
+
 - Новейшее продолжение: root67684489 включает guarded Retry-After a365c880/
   09291e57 и optional personal projection c9cee41b. Build31 SUCCESS, JVM1452:
   1444PASS/0failures/8 old opt-in skips. Build32 assemble-only SUCCESS; её

@@ -1,5 +1,81 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Текущий срез: shared content/files PASS; native36 и точный CI
+
+Root b929b60f; remote publish/codex/security-336 тот же. Main4cc67503 включён,
+проверено свежим fetch; draft PR48 сохраняется. Linked web-window-worktree на
+d993ac36 с untracked announcement test; root теперь содержит все его web fixes,
+последующие исправления сделаны непосредственно в root. Не читать demo-output,
+не читать/печатать/stage client-state/*.private.json, no agents/Daybreak.
+
+Block0c5aa442: SharedLiveModel группирует только overlapping GETs перед следующей
+мутацией в один свежий проверенный snapshot (без TTL/plaintext cache); aggregate
+queries выполняются параллельно, запись ждёт все предыдущие чтения. Guard после
+каждого результата; caller body snapshot до await. Личный вид пространства
+`/shared/spaces/:id/ui` подключён к personal encrypted document и сохранённому
+owner-bound shared_space_ui на web и native engine. Старые документы без layouts
+читаются; import/GET не загружает исторические команды или роли. Native validator,
+bridge и route classifier обновлены вместе. tsc/scoped lint и53/53 tests PASS.
+Нормализованы окончания строк двух TS files; большой raw diff частично от CRLF.
+
+Immutable web36/public_html построен из0c5aa442. Actual retained58 cold online
+normal shared task reader PASS; normal multi-chunk attachment+photo exact hashes
+PASS; legacy project route409; bundle unchanged. Полный отчёт:
+output/playwright/security336-private-content-58-1124/resume-1795476689849/results.json.
+Log runtime/web36-reader58-08.log. После него services stopped. Ранее explicit
+offline shared reader34 PASS1/1 с no signed RPC, report resume-1795475839486.
+Индикатор offline14f7ccb7 исправлен, но сам по себе не устранил загрузку: online
+34 продолжал делать480+ GET; нельзя приписывать ему общий reader PASS. Actual
+нормальный reader/file PASS получен только после read scheduling/layout block36.
+Shared project/space migrations были приняты в58 на immutable31; повторяться с
+нуля ради reader fix не нужно. Bundle/source acceptance границы сохраняются.
+
+Native35 source8F3AF5811BBC9C9317911EF6A8E841BECEEF17A0A3E0A27D6CE53D6DE84144CB:
+separate NativeRetainedQaIdentityDeliveryTest PASS1/1, cancel/PIN/fingerprint3PASS,
+background case FAIL90s. Native36 removes synthetic auth.checkSession/background/
+foreground callbacks from UI test; actual system launcher, RESUMED/visible button,
+and safe GENESIS_UNLOCK_UI_STAGE labels remain. Build36/session1193 currently
+compileDebugKotlin, process46004 active CPU. Logs native150-shared-read-build36*.
+Until its identity/runtime no root app/android/contracts/public changes. Script-only
+QA/docs do not alter native inputs. After build create focus-native36-ui.ps1 from
+focus-native35-ui.ps1, replace ui35-secure output with fresh ui36-secure. Includes
+separate same-owner identity delivery process before the four real system UI cases.
+
+Native fixture issue isolated: original synthetic session saved for1h expired;
+original config cookie_secure=false rejected by unchanged AuthProtocol.kt:29.
+backend-fixture.php now derives Secure from HTTPS origin (a69b0cc4). Owned
+controller30 config changed false→true by guarded fix-owned-native-https-34.py;
+DB bytes unchanged, owner/config and preserved hashes rebound, transportCorrection
+records old hashes. This is a stronger QA transport, not a production guard bypass.
+Identity delivery verifies SAME cached private owner @example.invalid over actual
+HTTPS, saves only normal encrypted cookie/CSRF, then driver force-stops that process.
+No vault key/device approval/HAT injected. UI still requires observed real PIN/
+hardware fingerprint. Do not repeat main controller solely for expired QA login.
+
+RU announcement NativeAnnouncement336CaptureTest source35 PASS. Six visually
+checked PNGs: lock/recovery/device entry×dark/light, no personal data. ZIP:
+output/release-3.3.6/GENESIS-3.3.6-announcement-RU.zip,
+SHA225AB43764998CC624F1D07CA2868C344E8856FABF42DC3C85C161C2026850B4.
+Native system auth screenshots black by platform protection, excluded. EN attempt
+failed E2EE_UNLOCK_REQUIRED after HAT expiry before provisioning synthetic fixture;
+not a security acceptance failure or usable screen. If needed capture immediately
+after next real native PIN/fingerprint run, preserve guards.
+
+Push0c5aa442 started CI45289764525 /45289756144; web failed lint ONLY
+scripts/qa/web-run.mjs no-unsafe-finally (retention ownership throw inside finally).
+Fixed b929b60f: guarded helper and failed retention reported without overriding
+original failure or touching unowned files. scoped runner lint PASS; remote rerun
+started by push, get latest IDs. CI79dc both jobs were SUCCESS. Production and
+formal coverage remain149/9of20, no activation/publication yet.
+
+Next: native36 four UI cases; final native source26/34 regressions without clearing
+preserved API34 QA state; restore on final accepted source, source/48-scenario
+evidence reconciliation and internal crypto review; signed149→150 baseline already
+seeded, then authorized separate web/API and APK workflows. Retained30 and58,
+failed restore31-01 plus plaintext stages must be safely cleaned before release.
+Current build36 has no unit task (latest full JVM31:1452/1444PASS/0fail/8 opt-in skips).
+Exact CI now runs full required unit/backend/browser suites; failed/skipped ≠ PASS.
+
 ## Новейшее продолжение: восстановление PASS, reader и launcher acceptance
 
 Root67684489. Linked66eef7a4; root принял retry d4c22d1f/66eef7a4 как
