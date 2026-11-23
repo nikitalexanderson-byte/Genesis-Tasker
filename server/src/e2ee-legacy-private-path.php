@@ -109,9 +109,16 @@ function genesisE2eeLegacyPrivatePath(PDO $db,string $actor,array $scope,array $
 {
     if(array_key_exists('maxFragments',$c['payload'])){
         $p=genesisE2eeExactFields($c['payload'],['migrationId','fence','sourceHash','pathId','table','offset','byteOffset','maxFragments']);$limit=genesisE2eeInteger($p['maxFragments'],1);if($limit>50)genesisE2eeInvalid();unset($p['maxFragments']);$single=$c;$fragments=[];$size=16384;
+        $tables=null;foreach(genesisE2eePrivatePathCatalogue()['paths']as$path)if($path['id']===$p['pathId']&&$path['scope']===$scope['kind'])$tables=$path['server'];
+        $tableAt=is_array($tables)?array_search($p['table'],$tables,true):false;
+        if($tableAt===false)throw new DomainException('E2EE_SOURCE_PATH_FORBIDDEN');
         for($at=0;$at<$limit;$at++){$single['payload']=$p;$fragment=genesisE2eeLegacyPrivatePath($db,$actor,$scope,$single);$length=strlen(genesisE2eeJson($fragment));if($fragments&&$size+$length>2*1024*1024)break;$fragments[]=$fragment;$size+=$length;
             if($fragment['nextByteOffset']!==null){$p['offset']=$fragment['nextOffset'];$p['byteOffset']=$fragment['nextByteOffset'];}
-            elseif($fragment['nextOffset']!==null){$p['offset']=$fragment['nextOffset'];$p['byteOffset']=0;}else break;
+            elseif($fragment['nextOffset']!==null){$p['offset']=$fragment['nextOffset'];$p['byteOffset']=0;}
+            // Readers already consume exact table EOF in fixed catalogue order.
+            // Fill the same bounded packet with subsequent tables, including
+            // explicit empty-table EOFs, without widening its path/read grant.
+            else{if(!isset($tables[++$tableAt]))break;$p['table']=$tables[$tableAt];$p['offset']=0;$p['byteOffset']=0;}
         }$header=array_intersect_key($fragments[0],array_flip(['protocol','ownerId','scopeId','kind','resourceId','migrationId','fence','sourceHash','checkpointHash','directoryRevision','pathId','table','offset','byteOffset']));return $header+['fragments'=>$fragments];
     }
     $p=genesisE2eeExactFields($c['payload'],['migrationId','fence','sourceHash','pathId','table','offset','byteOffset']);

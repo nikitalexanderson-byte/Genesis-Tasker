@@ -116,6 +116,17 @@ $scope=genesisE2eeScope($owner,$scopeId);$source=genesisE2eeSourceHash($db,$scop
 $start=storeCommand('migration-start',['migrationId'=>'migration-one','sourceHash'=>$source]);
 $lease=genesisE2eeExecute($owner,$start,$session);storeCheck($lease['fence']===1);
 storeCheck(genesisE2eeExecute($owner,$start,$session)===$lease);
+$privateTables=null;foreach(genesisE2eePrivatePathCatalogue()['paths']as$privatePath)if($privatePath['id']==='personal.local-work')$privateTables=$privatePath['server'];
+storeCheck(is_array($privateTables)&&count($privateTables)>1&&count($privateTables)<=50);
+$privatePage=['migrationId'=>'migration-one','fence'=>1,'sourceHash'=>$source,'pathId'=>'personal.local-work','table'=>$privateTables[0],'offset'=>0,'byteOffset'=>0,'maxFragments'=>50];
+$privateBatch=genesisE2eeRead($owner,storeCommand('legacy-private-path',$privatePage),$session);
+storeCheck($privateBatch['table']===$privateTables[0]&&array_column($privateBatch['fragments'],'table')===$privateTables);
+foreach($privateBatch['fragments']as$fragment)storeCheck($fragment['pathId']==='personal.local-work'&&$fragment['fence']===1&&$fragment['sourceHash']===$source
+    &&$fragment['rowBytes']===0&&$fragment['nextOffset']===null&&$fragment['nextByteOffset']===null);
+$privatePage['maxFragments']=1;
+storeCheck(count(genesisE2eeRead($owner,storeCommand('legacy-private-path',$privatePage),$session)['fragments'])===1);
+$privatePage['table']='users';
+storeReject(fn()=>genesisE2eeRead($owner,storeCommand('legacy-private-path',$privatePage),$session),'E2EE_SOURCE_PATH_FORBIDDEN');
 $changed=$start;$changed['command']['payload']['migrationId']='changed';$changed['signature']=storeSign(genesisE2eeCommandBytes($changed['command']),$device['private']);
 storeReject(fn()=>genesisE2eeExecute($owner,$changed,$session),'E2EE_IDEMPOTENCY_CONFLICT');
 storeReject(fn()=>$db->prepare('UPDATE workspace_blobs SET ciphertext=? WHERE user_id=?')->execute(['overwrite',$owner]),'E2EE_LEGACY_WRITE_FORBIDDEN');

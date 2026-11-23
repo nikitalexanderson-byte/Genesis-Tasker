@@ -1,5 +1,25 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, после 10:55 UTC: bounded batch и повтор33
+
+Native16/session23546 ещё RUNNING; app/android/contracts/public inputs не менять.
+Web23 lint/types/build PASS, immutable output/release-3.3.6/web-private-23/public_html.
+Web33/session68285 (consolidated-private-shared33.log) запущен на этом bundle и
+текущем backend; полный personal + project/space journey, без повторения112 visual.
+
+Серверный maxFragments<=50 теперь заполняет тот же bounded2MiB пакет следующими
+таблицами того же фиксированного path после явного EOF. Web/native collectors
+уже проверяют/потребляют такой порядок; path/scope/read grants не расширены.
+Это сокращает многократную encrypted original custody для пустых таблиц.
+Actual isolated e2ee-store suite PASS в output/qa/security336-private-path-batch-01:
+cross-table order, all empty EOFs, maxFragments1 и forbidden table. Проверка
+полного product результата ещё выполняется. Source checks PR45159475533 для
+b235ed8a выполнялась; последний pushed кандидат дальше уточнять через git.
+
+PHP для QA передавать явно: C:/Users/mrdeu/AppData/Local/Temp/
+genesis-remote-original-php-d346771545be4522b57891c16e4fbb14/php.exe . Default
+download8.4.27 сейчас возвращает404; уже установленный compatible runtime работает.
+
 ## 23 ноября: воспроизведён и исправлен отказ при продлении source lease
 
 Web32 FAILED:12 personal/recovery checks PASS, затем project source capture
