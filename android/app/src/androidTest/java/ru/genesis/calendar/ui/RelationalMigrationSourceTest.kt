@@ -22,6 +22,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  * normal shared UI, signed server capture and membership are separate checks. */
 @RunWith(AndroidJUnit4::class)
 class RelationalMigrationSourceTest {
+    private fun sameJson(a:Any,b:Any):Boolean=when {
+        a is JSONObject&&b is JSONObject->{val keys=a.keys().asSequence().toSet();keys==b.keys().asSequence().toSet()&&keys.all{sameJson(a.get(it),b.get(it))}}
+        a is JSONArray&&b is JSONArray->a.length()==b.length()&&(0 until a.length()).all{sameJson(a.get(it),b.get(it))}
+        a is Number&&b is Number->a.toString().toBigDecimal().compareTo(b.toString().toBigDecimal())==0
+        else->a==b
+    }
     private val app get()=InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
     private val catalogue get()=E2eePrivatePathCatalogue(app)
     private fun paths():List<Pair<String,String>> {
@@ -71,7 +77,7 @@ class RelationalMigrationSourceTest {
         fun current(){check(live.get()){"E2EE_ACCOUNT_CHANGED"}}
         val inventory=JSONObject().put("platform","android").put("inventoryVersion",1)
             .put("entries",JSONArray().put(JSONObject().put("store","SharedPreferences").put("key","closed-editor").put("raw","ORIGINAL OPAQUE CIPHERTEXT")
-                .put("content",JSONObject().put("text","Retained native draft")).put("spaceId",if(kind=="space")resource else JSONObject.NULL).put("projectId",if(kind=="project")resource else JSONObject.NULL)))
+                .put("content",JSONObject().put("rawDocument","{\"text\":\"Retained native draft\"}").put("execution","history-only")).put("spaceId",if(kind=="space")resource else JSONObject.NULL).put("projectId",if(kind=="project")resource else JSONObject.NULL)))
             .put("editors",JSONArray().put(JSONObject().put("text","Mounted native draft")))
         val transport=Transport{actualPath,table,offset,byteOffset->
             current();check(actualPath==path&&offset==0L&&byteOffset==0L);reads++
@@ -109,7 +115,7 @@ class RelationalMigrationSourceTest {
                                 if(path=="project.files"){
                                     val attachment=requireNotNull(cold.read("attachment",row.getJSONObject("file").getString("objectId")))
                                     try{assertArrayEquals(f.file,attachment.bytes)}finally{attachment.bytes.fill(0)}
-                                }else assertArrayEquals(E2eeCommands.canonical(f.expected.getValue(table)),E2eeCommands.canonical(row))
+                                }else assertTrue("Private content changed in $path/$table",sameJson(f.expected.getValue(table),row))
                             }finally{opened.bytes.fill(0)}
                         }
                         val history=result.localContent.map{JSONObject(it.bytes.toString(Charsets.UTF_8))}.first{it.optString("format")=="genesis-private-local-work-v1"}

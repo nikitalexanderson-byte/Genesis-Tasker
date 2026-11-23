@@ -1,5 +1,158 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, 05:28 UTC: corrected source acceptance и header PASS
+
+Native150 build4 SUCCESS, exact source hash
+AB1BFD65334CCF99E988672AACE5CD6AB87F2D78422358A96ABDDA131892656B.
+Main QA APK29DB281EDC6234AAD9D373C0240A409145A03E7E891119CEA36F487DCBFD2991;
+test APK1FE5E1875BC05CC5181D6606CBCE49031439FC48B991819071A6E728C9682F37.
+Actual relational10-path and archives tests now4/4 PASS on each owned API26/API34:
+output/qa/security336-native150-api26-sources-04/ and api34-sources-04/.
+These component results do not yet promote full product coverage9/20.
+
+Header5 was7/8 PASS: one held-module request bypassed page.route via installed
+service-worker cache. Header case now blocks SW specifically for deliberate
+network deferral; separate worker lifecycle coverage is unchanged. Header6 is
+8/8 PASS, unchanged immutable build17, startup10/10 and owned cleanup PASS.
+Full browser4 remains383/391 PASS; its8 header failures are superseded only by
+this corrected targeted result, not rewritten. Actual shared20 failed on a
+test locator matching the parent load button and three nested load buttons.
+Selector now addresses the direct parent button. Shared21/session5821 runs
+against unchanged build17; do not mark it passed before its actual result.
+
+Current owned runs: API26 source regression/session81801; exact installed-APK
+per-method authentication API34/session16839; native lint/minified build/session
+40724. Runtime wrappers/output native150-*05/06 preserve exact identities and
+use real credential verification (API26 UI, API34 LockSettings). The first
+method wrapper refused before instrumentation because Android34's installed
+path contains '~'; only its path validator was corrected. Do not count that
+aborted run as PASS. API26 still has our synthetic PIN; restore original NONE
+after all owned acceptance. API34 credential remains unchanged.
+
+English copy of the security contract families was read, plus critical
+vault/migration/archive/key-loss copy in all14 languages. This is semantic
+review of those actual strings, not complete visual/native14-language acceptance.
+Source checks45111716099 remains FAILED on its old header cases. Final exact
+candidate CI, shared/native completion, source/scenario evidence consolidation,
+signed149→150 upgrade and final internal crypto review/release remain.
+Production/main4c209a00, APK149, floors/cutover off and deployAndroid=false unchanged.
+
+## 23 ноября, 05:15 UTC: личный recovery PASS, shared UI correction и QA среды
+
+Pushed HEAD остаётся a1b57fd2; новые исправления ниже ещё dirty. Main/production
+4c209a00, APK149, floors/cutover off и deployAndroid=false не менялись.
+Private18 завершён PASS: actual personal migration/activation, no profile-cache
+canary leak, normal edit+durable reload+реальный ciphertext ack, offline unlock,
+clean-browser wrong-secret refusal и successful recovery. Immutable build16;
+run.json подтверждает unchanged bundle и owned cleanup PASS. Это впервые полный
+личный mounted journey, но не весь shared/native acceptance.
+
+Shared19 прошёл тот же personal journey и нашёл реальную product ошибку:
+privateVault UI-флаг нигде не выводился из подтверждённого privatePreferencesMode,
+поэтому Account скрывал PrivateSharedSecurityPanel и предлагал повторную personal
+migration. Исправлено централизованно для /session, metadata replies и offline
+profile; флаг не является crypto authority. Account privacy/offline text теперь
+использует уже локализованный vault copy вместо неверного server-key описания.
+Targeted30/30 PASS, typecheck/private-profile01 и lint01 PASS, build17 PASS.
+Shared20/session3363 идёт на immutable web-private-17/public_html:
+output/playwright/security336-private-shared-20-1123/,
+runtime/consolidated-private-shared20.log. Не объявлять его пройденным заранее.
+
+Общий browser4 завершён383 PASS/8 FAIL из391,0 skipped, unchanged immutable
+build16, cleanup PASS. Все8 — header startup: raw pointer нажимался через новый
+workspace-startup-gate (это видно на held screenshot). Source checks45111716099:
+Android SUCCESS; web/API job прошёл lint/types/tests/build/backend/API и упал
+только на header cases в конце browser run. Его FAILED не переименовывать.
+Header test теперь ждёт admission и проверяет настоящий hit target до жеста;
+сохранены проверки координат/одного нажатия после загрузки lazy controls.
+Header5/session29965, runtime/consolidated-header5.log, immutable build17.
+Если gate не исчезает при удержанных modules, изучить причину, не снимать guard.
+
+Native150 build2 SUCCESS20m43s; JVM1418 PASS/8 opt-in skipped. Initial API34
+selected retry:5 authentication failures и1 malformed relational fixture.
+Raw per-case system reauth then4/5 PASS; remaining orphan test встретил более
+ранний E2EE_CORRUPT_FILE. Это явный допустимый parser refusal, assertions
+no-write/no-network/no-consumer сохранены. В build3 оба owned emulators прошли
+этот последний case. Source tests ещё НЕ приняты: relational compare ошибочно
+использовал technical command canonical encoding для private keys с `_`, а
+новый archive test подавал v1 form в actual v2 inventory. Исправлены fixtures:
+structural private JSON equality и actual appendValue + v2 manifest.
+Build3 SUCCESS2m42s; build4/session48349 с этими исправлениями выполняется,
+runtime/native150-build-4.log. Никаких production crypto проверок не ослабляли.
+Активный ArchivesMigrationSourceTest.kt в android/ — источник истины; scratch
+output/runtime/ArchivesMigrationSourceTest.kt остался старым v1 и не копируется.
+
+Первый API26 full run42 PASS/56 FAIL: среда загрузилась без WebView provider,
+а shell locksettings verify на API26 не поддерживается и refresh ThreadJob
+завершился ошибкой. Это НЕ product PASS. Original NONE credential restored.
+Проверенная QA среда восстановлена по e2ee-336-api26-supported-runtime.md:
+только own emulator5594 перезапущен с writable-system, pinned provider113 и
+static overlay восстановлены; current/preferred valid, relros2/2. SDK image не
+менялся. Публичный testkey/байты/ограничения уже описаны в том ADR.
+
+Сейчас API26 снова имеет НАШ synthetic PIN, original NONE известен; helper
+runtime/owned-api26-auth-functions-1123.ps1 умеет Initialize/Confirm/Clear через
+наблюдаемый System Confirm Device Credential UI, с проверкой закрытия Activity.
+Evidence runtime/native150-api26-ui-auth-02.json. Не использовать shell verify
+на API26. Перед каждым Device.provision case нужен свежий Confirm; долгий
+concurrentProtectedKeyCreates case требует UI refresh во время заполнения
+provider (не ослабление Keystore). После полного owned run вернуть NONE через
+Clear-OwnedApi26Credential. API34 имеет прежний synthetic PIN — его не менять;
+там system shell verify перед каждым case уже работает. Refresher03 остановлен.
+Следующий шаг — build4 targeted relational/archive на обоих эмуляторах и actual
+API26 source/streamed cases на поддерживаемой среде, затем20-path acceptance.
+
+Official incumbent149 скачан и проверен в baseline-335-149/:286545165 bytes,
+SHA2560027746c382954972c711d7be96150d7dcca09c634f259b62c0f94892a3a70ff.
+Package ru.genesis.calendar,3.3.5/149, valid APKv2, certificate SHA256
+1e161d36f574b0560d808c7ee95e1abe98165b3385336d0276fb381dfd901cb8.
+Signed150/release/direct upgrade ещё не делались. Остаток final review/release
+и все границы сохраняются; demo-output/ не читать/stage.
+
+## 23 ноября, 04:35 UTC: CI и текущие live QA sessions
+
+Checkpoint a1b57fd28d25ad041dc317f0a4ca031e2eccf0a0 запушен fast-forward
+в codex/security-336; main/production4c209a00 не менялись. Штатный Source checks
+45111716099 выполняется: web lint/types/test/build уже прошли, идут backend и
+Android build. Deploy/Android release не запускались. Typecheck04/lint03 PASS,
+build16 PASS, targeted cache/relational29/29 PASS.
+
+Private17 на immutable build15:10 PASS/1 FAIL. Personal activation, plaintext
+cache canary, edit+reload и offline unlock прошли; clean-browser ожидал изменённую
+задачу до сетевого подтверждения queued edit. В журнале нет post-edit put до
+этой проверки. Тест теперь отдельно дожидается реального retry ciphertext ack
+после намеренного reload race, затем проверяет другое устройство; product-код
+ради этого не ослаблялся. Private18/session12103 идёт на immutable build16:
+output/playwright/security336-private-18-1123/, runtime/consolidated-private18.log.
+При ошибке clean client теперь сохраняется его отдельный screenshot/ARIA dump.
+
+Общий browser4/session56679: immutable build16,
+output/playwright/security336-browser-4-1123/, runtime/consolidated-browser-4.log.
+Free пройден; Standard выполняется. Нельзя объявлять весь run PASS по частям.
+Native150 build2/session85329 всё ещё compileDebugKotlin;03 refresher/session99419
+ждёт build report. Source/Android inputs после старта этого build не менялись.
+
+Owned API26 wrapper/session5547 также ждёт build2, затем повторно проверяет
+SID0/SP handle0, ставит известный synthetic PIN, проходит observed credential UI,
+запускает98 source/platform cases, обновляет system authentication через свой
+ThreadJob и в finally снимает только свой credential, возвращая исходный NONE.
+Script runtime/native150-api26-acceptance-01.ps1; report будет
+output/qa/security336-native150-api26-01/, credential evidence —
+runtime/native150-api26-credential-01.json. Не менять исходники под этим run.
+
+Обнаружен конкретный пробел coverage:9 personal adapters +10 relational paths
+оставляют native personal.archives без полного adapter/runtime/readback journey.
+Готов draft двух meaningful native archive tests в
+output/release-3.3.6/runtime/ArchivesMigrationSourceTest.kt. Он ещё НЕ добавлен
+в android/ и НЕ скомпилирован, чтобы не менять inputs текущего platform run.
+После его завершения добавить тест, проверить Kotlin/API формы, собрать test APK
+и выполнить на обоих owned emulators. Это не утверждение coverage20/20.
+
+Последний uncommitted source change — только QA web-private-product.mjs с ack/
+clean diagnostics; demo-output/ по-прежнему не читать и не stage. Gates/floors,
+APK149 и deployAndroid=false сохраняются; внутренний final crypto review и
+signed149→150 acceptance ещё обязательны.
+
 ## 23 ноября, текущее продолжение: приватный кэш и native150
 
 После f9ae9591 исправлена реальная утечка трёх private preferences в обычный

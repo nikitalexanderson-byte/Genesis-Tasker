@@ -12,6 +12,7 @@ import { BillingPanel } from './BillingPanel';
 import { BackupPanel } from './BackupPanel';
 import {PrivateSharedSecurityPanel} from './PrivateSharedSecurityPanel';
 import {PrivateMigrationEntry} from './PrivateMigrationGate';
+import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import { GoogleIdentityPanel } from './AccountSecurityPanels';
 import {UpgradeButton,isFreeBillingUser} from './UpgradeUI';
 import {BillingTrialStatus} from './BillingTrialStatus';
@@ -582,8 +583,8 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
         {settingsTab==='account'&&user.authProvider==='google'?<GoogleIdentityPanel key={`identities:${user.uid}`} user={user}/>:null}
         <div className="account-security-grid" data-settings-group="account">
           <article><span>Google-сервисы</span><strong>{user.calendarConnected && user.googleTasksImportReady ? "Подключены" : "По желанию"}</strong><small>Calendar и Tasks подключаются отдельным согласием после входа.</small></article>
-          <article><span>Личные данные</span><strong>Зашифрованы</strong><small>AES-GCM в браузере; ключ хранится на сервере отдельно и зашифрован для автоматического входа.</small></article>
-          <article><span>Офлайн-копия</span><strong>На устройстве</strong><small>Доступна без сети после входа на этом устройстве.</small></article>
+          <article><span>Личные данные</span><strong>Зашифрованы</strong><small data-no-translate={user.privateVault||undefined}>{user.privateVault?PRIVATE_VAULT_COPY[user.language].privacy:'AES-GCM в браузере; ключ хранится на сервере отдельно и зашифрован для автоматического входа.'}</small></article>
+          <article><span>Офлайн-копия</span><strong>На устройстве</strong><small data-no-translate={user.privateVault||undefined}>{user.privateVault?PRIVATE_VAULT_COPY[user.language].offlineDescription:'Доступна без сети после входа на этом устройстве.'}</small></article>
         </div>
 
         <section className="account-preferences" data-settings-group="account" aria-labelledby="calendar-export-title" data-exp-ui="panel">

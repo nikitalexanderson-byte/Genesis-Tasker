@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {readFileSync} from 'node:fs';
-import {cacheLastUser,LAST_USER_CACHE_KEY,privateUserCacheRequired,retainPrivateUserCache,userCachePreferenceOriginal} from '../app/last-user-cache.ts';
+import {cacheLastUser,LAST_USER_CACHE_KEY,privateUserCacheRequired,retainPrivateUserCache,userCachePreferenceOriginal,privateUserProfile} from '../app/last-user-cache.ts';
 import {protectPrivateWorkspaceOwner} from '../app/private-workspace-storage.ts';
 import {retainLocalMigrationFence} from '../app/e2ee/web-local-migration-fence.ts';
 import {retainEncryptedUserCache,retainedProfilePreferenceHistory} from '../app/e2ee/user-cache-retention.ts';
@@ -13,6 +13,12 @@ import {createRecoveryKit} from '../app/e2ee/keys.ts';
 const fixture=(uid,extra={})=>({uid,email:'synthetic@example.invalid',language:'en',advicePreferences:{philosophers:true},uiVisibility:{hiddenMenuItems:['PRIVATE-CACHE-CANARY']},syncRouting:{mode:'fixed',defaultAccountIds:[uid],categoryAccountIds:{}},...extra});
 function storage(){const rows=new Map();return{rows,get length(){return rows.size;},key:index=>[...rows.keys()][index]??null,getItem:key=>rows.get(key)??null,setItem:(key,value)=>rows.set(key,value),removeItem:key=>rows.delete(key)};}
 const read=s=>JSON.parse(s.getItem(LAST_USER_CACHE_KEY));
+test('private presentation flag follows confirmed deny-legacy state and ignores an unrelated server boolean',()=>{
+ const original=fixture('view-owner',{privateVault:true}),copy=structuredClone(original);
+ assert(!Object.hasOwn(privateUserProfile(original,false),'privateVault'));assert.deepEqual(original,copy);
+ const privateView=privateUserProfile(fixture('view-owner'),true);assert.equal(privateView.privateVault,true);assert.equal(privateView.privatePreferencesMode,'e2ee');
+ assert.deepEqual(privateView.uiVisibility,original.uiVisibility);
+});
 class Records{
  rows=new Map();async get(key){return structuredClone(this.rows.get(key)??null);}
  async list(prefix){return [...this.rows.keys()].filter(key=>key.startsWith(prefix));}

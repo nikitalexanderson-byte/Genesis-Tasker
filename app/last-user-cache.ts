@@ -8,6 +8,13 @@ export const LAST_USER_CACHE_KEY='genesis-last-user-v2';
 const fields=['advicePreferences','uiVisibility','syncRouting'] as const;
 const privateOwners=new Set<string>();
 type CacheStorage=Pick<Storage,'getItem'|'setItem'>;
+/** Presentation/routing only. The caller supplies confirmed deny-legacy state;
+ * this flag never approves a device or opens encrypted content. */
+export function privateUserProfile(user:GenesisUser,required:boolean):GenesisUser{
+ const result={...user};delete result.privateVault;
+ if(required){result.privateVault=true;result.privatePreferencesMode='e2ee';}
+ return result;
+}
 function profile(raw:string):GenesisUser{
  const value=parseLegacyMigrationJson(raw,'E2EE_USER_CACHE_INVALID',4*1024*1024);
  if(!value||typeof value!=='object'||Array.isArray(value)||!('uid' in value)||typeof value.uid!=='string')throw new Error('E2EE_USER_CACHE_INVALID');
@@ -19,7 +26,7 @@ export function privateUserCacheRequired(user:GenesisUser,storage:Pick<Storage,'
  const cached=profile(raw);return cached.uid===user.uid&&Object.hasOwn(cached,'privatePreferencesMode');
 }
 function projection(user:GenesisUser):GenesisUser{
- const result={...user,privatePreferencesMode:'e2ee' as const};
+ const result=privateUserProfile(user,true);
  for(const name of fields)delete result[name];
  return result;
 }

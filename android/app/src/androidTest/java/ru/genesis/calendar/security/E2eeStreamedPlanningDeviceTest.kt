@@ -162,7 +162,7 @@ class E2eeStreamedPlanningDeviceTest {
         }
         override fun close(){client.begin();device.lock();recovery.secret.fill(0);for(store in stores)check(app.deleteSharedPreferences(store));check(folder.canonicalFile.parentFile==app.noBackupFilesDir.canonicalFile);check(folder.deleteRecursively())}
     }
-    private suspend fun refused(code:String,operation:suspend()->Unit){try{operation();fail("Unprotected continuation accepted")}catch(error:Exception){assertTrue(error.message.orEmpty(),error.message.orEmpty().contains(code))}}
+    private suspend fun refused(code:String,alternative:String?=null,operation:suspend()->Unit){try{operation();fail("Unprotected continuation accepted")}catch(error:Exception){val message=error.message.orEmpty();assertTrue(message,message.contains(code)||alternative!=null&&message.contains(alternative))}}
     private fun response(f:Rig,large:Boolean=false):ByteArray=("\uFEFF {\r\n\"checkpointHash\":\"${f.directory.checkpoint.hash}\",\"directoryRevision\":${f.directory.checkpoint.revision},\"rows\":[],\"private\":\"SYNTHETIC ORIGINAL α😀"+
         "a".repeat(if(large)512*1024+7 else 17)+"\"}\r\n").toByteArray()
     private fun consumeLocal(session:E2eeContentPlanningSession){
@@ -239,7 +239,8 @@ class E2eeStreamedPlanningDeviceTest {
             f.device.vault.write(listOf(UnlockedE2eeVault.Write(if(role=="remote")"outbox"else"local-snapshot",id,"UNKNOWN ROLE".toByteArray(),null)));val kept=f.snapshot();val commands=f.commands.size
             // The account-wide catalogue rejects this unowned role before the
             // older per-scope source-history checker can inspect its namespace.
-            refused("E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED"){f.migration.withStreamedPlanning(f.options()){error("UNKNOWN_ROLE_REACHED_CONSUMER")}}
+            // A non-JSON orphan can fail file decoding before ownership review.
+            refused("E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED","E2EE_CORRUPT_FILE"){f.migration.withStreamedPlanning(f.options()){error("UNKNOWN_ROLE_REACHED_CONSUMER")}}
             assertEquals(kept,f.snapshot());assertEquals(commands,f.commands.size);assertEquals(0,f.httpCalls)
         }
     }

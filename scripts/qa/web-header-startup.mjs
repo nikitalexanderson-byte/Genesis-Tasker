@@ -16,7 +16,9 @@ export async function runHeaderStartup({baseURL,output,browser}) {
     for(const width of [360,390,768,1440])for(const scheme of ['light','dark']) {
       const row={id:`web.header-startup.${width}.${scheme}`,planId:'free',platformId:'web',width,scheme,status:'RUNNING'};
       report.cases.push(row);save();
-      const context=await browser.newContext({baseURL,viewport:{width,height:1000},locale:'ru-RU',timezoneId:'Europe/Moscow'});
+      // This case deliberately holds network modules. An installed worker can
+      // satisfy them from its cache before page.route sees either request.
+      const context=await browser.newContext({baseURL,serviceWorkers:'block',viewport:{width,height:1000},locale:'ru-RU',timezoneId:'Europe/Moscow'});
       let release=()=>{};
       try {
         await context.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
@@ -46,9 +48,12 @@ export async function runHeaderStartup({baseURL,output,browser}) {
         try { await Promise.race([seen,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Both deferred controls must be requested')),15000);})]); }
         finally {clearTimeout(timer);}
         const account=page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true});await account.waitFor();
+        await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
         await page.evaluate(()=>document.fonts.ready);
         const before=await account.boundingBox();assert(before);
         const point={x:before.x+before.width/2,y:before.y+before.height/2};
+        const beforeHit=await page.evaluate(({x,y})=>{const node=document.elementFromPoint(x,y);return{account:Boolean(node?.closest('.account-open')),tag:node?.tagName??null,className:node?.className??null};},point);
+        row.beforeHit=beforeHit;assert(beforeHit.account,'Pointer press must begin on the loaded account control');
         await page.screenshot({path:path.join(output,`${width}-${scheme}-held.png`),fullPage:true,animations:'disabled'});
         await page.mouse.move(point.x,point.y);await page.mouse.down();release();
         await page.locator('.notification-dock-toggle:visible').waitFor();
@@ -65,7 +70,7 @@ export async function runHeaderStartup({baseURL,output,browser}) {
         assert.deepEqual(routeErrors,[]);assert.deepEqual(errors,[]);
         await page.screenshot({path:path.join(output,`${width}-${scheme}-opened.png`),fullPage:true,animations:'disabled'});
         row.status='PASS';
-      } catch(error){row.status='FAIL';row.error=error.message;}
+      } catch(error){row.status='FAIL';row.error=error.message;console.error(row.id+': '+error.message);}
       finally {release();await context.close();save();}
       console.log(`${row.status} ${row.id}`);
     }

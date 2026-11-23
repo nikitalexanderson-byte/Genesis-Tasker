@@ -15,8 +15,12 @@ const browser=await chromium.launch({headless:true});report.browser=browser.vers
 let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
+const sharedJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared';
+const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
+const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
 const cacheCanary='PRIVATE-CACHE-'+crypto.randomUUID();
+let sharedFixture;
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
@@ -71,6 +75,15 @@ try{
   const dialog=page.getByRole('dialog',{name:'Новый проект',exact:true});await dialog.getByRole('textbox',{name:'Новый проект или подпроект',exact:true}).fill('Private workspace project');
   const saved=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/workspace'&&response.request().method()==='PUT',{timeout:20000});void saved.catch(()=>{});
   await dialog.getByRole('button',{name:/^(Сохранить|Создать проект)$/}).click();assert((await saved).ok());await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
+ });
+ if(sharedJourney)await check('ordinary owner has real legacy shared space project and task content before transfer',async()=>{
+  const session=await(await context.request.get('/api/session')).json(),headers={Origin:baseURL,'X-CSRF-Token':session.csrf};
+  const post=async(path,data)=>{const response=await context.request.post('/api/'+path,{headers,data});assert(response.ok(),path+': '+response.status());return response.json();};
+  const space=(await post('shared/spaces',{title:'PRIVATE SHARED SPACE '+canary})).space;
+  const project=(await post(`shared/spaces/${space.id}/projects`,{title:'PRIVATE SHARED PROJECT '+canary,layout:'board'})).project;
+  const body=await(await context.request.get(`/api/shared/projects/${project.id}`)).json(),status=body.statuses.find(row=>!row.isDone);assert(status);
+  const task=(await post(`shared/projects/${project.id}/tasks`,{title:'PRIVATE SHARED TASK '+canary,description:'Retained shared task body '+canary,statusId:status.id,requestId:crypto.randomUUID()})).task;
+  sharedFixture={space,project,task};
  });
  await check('mounted migration creates and requires both recovery downloads',async()=>{
   await page.evaluate(marker=>{
@@ -137,8 +150,15 @@ try{
   await page.getByRole('button',{name:`Завершить задачу «${canary}»`,exact:true}).waitFor();
  });
  await check('normal product edits persist through encrypted queue and reload',async()=>{
+  // The first reload deliberately races the network write. Durability is local;
+  // a fresh device must wait for the real retried ciphertext acknowledgement.
+  const acknowledged=page.waitForResponse(response=>{
+   if(new URL(response.url()).pathname!=='/api/e2ee/v1/command'||!response.ok())return false;
+   const packet=response.request().postDataJSON();return packet?.command?.action==='put'&&packet.command.payload?.envelope?.context?.objectId==='personal-product-live-v1';
+  },{timeout:90000});void acknowledged.catch(()=>{});
   await page.getByRole('button',{name:`Завершить задачу «${canary}»`,exact:true}).click();
   await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
+  await acknowledged;
   await page.reload();const gate=page.locator('.private-vault-dialog');await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
   await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
  });
@@ -154,16 +174,47 @@ try{
  });
  await check('clean browser cannot open content using identity alone or a wrong secret',async()=>{
   const clean=await browser.newContext({baseURL,locale:'ru-RU'});
+  let other;
   try{
    await clean.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
-   await clean.addInitScript(()=>localStorage.setItem('genesis-language-v1','ru'));await login(clean);const other=await clean.newPage();await other.goto('/?lang=ru#today');
+   await clean.addInitScript(()=>localStorage.setItem('genesis-language-v1','ru'));await login(clean);other=await clean.newPage();
+   other.on('pageerror',error=>report.pageErrors.push('clean browser: '+error.message));await other.goto('/?lang=ru#today');
    const gate=other.locator('.private-vault-dialog');await gate.waitFor();assert.equal(await other.getByText(canary,{exact:true}).count(),0);
    await recoveryInput(gate,true);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.getByRole('alert').waitFor();
    await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden',timeout:60000});
    await other.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
    await other.screenshot({path:`${output}/clean-recovery.png`,fullPage:true,animations:'disabled'});
+  }catch(error){
+   if(other){await other.screenshot({path:`${output}/clean-recovery-failure.png`,fullPage:true,animations:'disabled'}).catch(()=>{});writeFileSync(`${output}/clean-recovery-failure.txt`,await other.locator('body').ariaSnapshot().catch(()=>''));}
+   throw error;
   }finally{await clean.close();}
  });
+ if(sharedJourney){
+  await check('owned project and space transfer through the mounted shared controller',async()=>{
+   // Return from the deliberately offline capability to an online unlocked one.
+   await page.reload();let gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);
+   await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+   await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
+   await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=account]').click();
+   for(const [kind,resource]of [['project',sharedFixture.project],['space',sharedFixture.space]]){
+    const panel=page.locator('.private-shared-security');await panel.locator(':scope > button').filter({hasText:sharedCopy.load}).click();
+    await panel.getByRole('combobox',{name:sharedMigration.transfer,exact:true}).selectOption(`${kind}:${resource.id}`);
+    await panel.getByRole('button',{name:sharedMigration.transfer,exact:true}).first().click();
+    const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
+    await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
+    await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}),dialog.getByRole('alert').waitFor({timeout:1200000}).then(async()=>{throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());})]);
+    await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
+    const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
+   }
+  });
+  await check('normal shared reader opens transferred task content and refuses the legacy project route',async()=>{
+   const legacy=await context.request.get(`/api/shared/projects/${sharedFixture.project.id}`);assert.equal(legacy.status(),409);assert.equal((await legacy.json()).error,'E2EE_UPGRADE_REQUIRED');
+   const target=new URL('/',baseURL);target.searchParams.set('affairs','shared');target.searchParams.set('space',sharedFixture.space.id);target.searchParams.set('project',sharedFixture.project.id);target.searchParams.set('projectView','board');target.hash='projects';
+   await page.goto(target.href);const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+   await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   await page.screenshot({path:`${output}/private-shared-task-readback.png`,fullPage:true,animations:'disabled'});
+  });
+ }
  }
  await check('no unhandled product errors',async()=>assert.deepEqual(report.pageErrors,[]));
  report.status='PASS';

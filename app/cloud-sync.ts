@@ -15,7 +15,7 @@ import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-loc
 import {showPrivateMigration} from './private-migration-ui';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,privateAccountIsRequired,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
-import {privateUserCacheRequired} from './last-user-cache';
+import {privateUserCacheRequired,privateUserProfile} from './last-user-cache';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
 import { apiUnavailableMessage, billingApiErrorMessage, isTemporaryApiStatus } from "./api-availability";
@@ -1162,7 +1162,9 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
       rememberFeatureAccess(profile.uid, profile.featureAccess);
       // This server hint only denies legacy IO. It cannot approve a device or
       // open keys, and an absent later hint never reopens this owner's writer.
-      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);markPrivateAccountOwner(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);privateIdentityCache=profile;}
+      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);markPrivateAccountOwner(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);}
+      payload.user=privateUserProfile(profile,serverProtectedTransportOwners.has(profile.uid));
+      if(serverProtectedTransportOwners.has(profile.uid))privateIdentityCache=payload.user as GenesisUser;
     }
     else if(path !== '/session' && profile===null) {
       endLocalSession();
@@ -1995,7 +1997,7 @@ const readGenesisSession = sessionReader(async () => {
     const previousOwner=confirmedTransportOwnerId||workspaceUserId||null;
     if(previousOwner!==null&&previousOwner!==result.user?.uid)endLocalSession();
     const accepted=result.user!==null&&acceptAuthenticatedLogin(localStorage,result.loginId||'')&&!hasLocalSignOut(localStorage);
-    const user=accepted?result.user:null;
+    const user=accepted?privateUserProfile(result.user!,serverProtectedTransportOwners.has(result.user!.uid)||Object.hasOwn(result.user!,'privatePreferencesMode')):null;
     if(user===null&&previousOwner!==null&&previousOwner===result.user?.uid)endLocalSession();
     localSessionEnded=user===null;
     confirmedTransportOwnerId=user?.uid??null;
@@ -3788,11 +3790,11 @@ export async function privateServiceRequest<T>(ownerId:string,service:'dream-clo
  * device enrollment, billing or ACL is restored from this profile. */
 export async function restoreOfflinePrivateWorkspace(user:GenesisUser){
   if(localSessionEnded||privateDeviceAccessBlocked()||!privateUserCacheRequired(user)||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
-  confirmedTransportOwnerId=user.uid;privateIdentityCache=user;serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);
+  confirmedTransportOwnerId=user.uid;privateIdentityCache=privateUserProfile(user,true);serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);
   protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
   await waitForPrivateAccount(user.uid,user.language);requirePrivateAccount(user.uid).requireOpen();
   const check=captureAccountSessionGuard(),{privatePreferences}=await import('./e2ee/preferences-product');check();
-  const restored=await privatePreferences(user.uid).apply({...user,privatePreferencesMode:'e2ee'});check();return restored;
+  const restored=await privatePreferences(user.uid).apply(privateUserProfile(user,true));check();return restored;
 }
 async function privatePersonalProduct(ownerId:string){
   const check=captureAccountSessionGuard();check();if(confirmedTransportOwnerId!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
