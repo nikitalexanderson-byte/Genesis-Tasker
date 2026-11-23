@@ -18,6 +18,26 @@ class AtomicMemory {
   }
 }
 const privateBytes=new TextEncoder().encode('PRIVATE CANARY — личный текст / queued operation');
+
+test('content archive inventory lists only declared device documents in the unlocked owner and domain',async()=>{
+  const {vault,storage,scope}=await setup(),kept=['personal-diary-device-live-v1','profile-original:one','product-tx:one'];
+  const excluded=['device-secret','enrollment:one','content-archive-safety:one','device-doc:internal'];
+  await vault.write([...kept,...excluded].map(objectId=>({domain:'draft',objectId,value:privateBytes,expected:null})));
+  await vault.write([{domain:'local-snapshot',objectId:kept[0],value:privateBytes,expected:null}]);
+  const foreign=new UnlockedE2eeVault(storage,{...scope,ownerId:'other-owner',scopeId:'personal:other'});
+  await foreign.write([{domain:'draft',objectId:'product-tx:foreign',value:privateBytes,expected:null}]);
+  assert.deepEqual((await vault.listContentArchiveDocuments()).sort(),kept.sort());
+  await assert.rejects(vault.listLocal('draft',''),/E2EE_INVALID_KEY_BUNDLE/,'general empty-prefix discovery stays forbidden');
+  for(const id of kept)assert.deepEqual((await vault.read('draft',id)).value,privateBytes);
+});
+
+test('content archive discovery refuses a provider namespace escape instead of returning a partial inventory',async()=>{
+  const {vault,storage,scope}=await setup();
+  const foreign=new UnlockedE2eeVault(storage,{...scope,ownerId:'other-owner',scopeId:'personal:other'});
+  await foreign.write([{domain:'draft',objectId:'product-tx:foreign',value:privateBytes,expected:null}]);
+  storage.list=async()=>[...storage.rows.keys()];
+  await assert.rejects(vault.listContentArchiveDocuments(),/E2EE_CORRUPT_LOCAL_RECORD/);
+});
 async function setup(){
   const keys=await generateDeviceKeys(),root=await importE2eeRoot(freshSecret()),storage=new AtomicMemory();
   const scope={ownerId:'owner',scopeId:'personal:owner',deviceId:'device',generation:1,cryptoEpoch:1,securityEpoch:1,keyId:'root-one',

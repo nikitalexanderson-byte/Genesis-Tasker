@@ -3,6 +3,7 @@ import { E2EE_SUITE, openE2eeEnvelope, sealE2eeEnvelope, validateE2eeEnvelope,
 import { assertTechnical } from './keys.ts';
 import {commitE2eeIndexedDb} from './indexeddb-write.ts';
 import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
+import {contentArchiveDeviceId} from './content-archive-inventory.ts';
 
 export type SealedLocalRecord = { serial: number; envelope: E2eeEnvelope };
 export type StorageChange = { key: string; expected: number | null; value: SealedLocalRecord | null };
@@ -152,6 +153,9 @@ export class UnlockedE2eeVault {
   async listLocal(domain:E2eeContext['domain'],objectPrefix:string) {
     assertTechnical(objectPrefix);return this.#localIds(domain,id=>id.startsWith(objectPrefix));
   }
+  /** Foreground portable-content roles only, within this unlocked owner/domain.
+   * Limited source/history handles deliberately do not expose this method. */
+  async listContentArchiveDocuments(){return this.#localIds('draft',contentArchiveDeviceId);}
   /** Dedicated original-migration locator role. No empty-prefix general read
    * capability is added to listLocal or the original-stage/legacy handles. */
   async listMigrationOriginalParts(){return this.#localIds('local-snapshot',id=>id.includes(':source:')||id.endsWith(':source'));}

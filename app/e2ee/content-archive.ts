@@ -7,6 +7,8 @@ import {decodeE2eeBytes,encodeE2eeBytes,type E2eeContext} from './envelope.ts';
 import {openDeviceRetainedMigrationHistory} from './migration.ts';
 import type {WebPrivateAccount} from './product-session.ts';
 import {retainedProfilePreferenceHistory} from './user-cache-retention.ts';
+import {contentArchiveDeviceId} from './content-archive-inventory.ts';
+export {contentArchiveDeviceId} from './content-archive-inventory.ts';
 
 type ArchiveScope={scopeId:string;ownerId:string;kind:'personal'|'project'|'space';resourceId:string};
 export type ContentArchiveValue={id:string;encoding:'base64url';bytes:string;sha256:string;size:number;filename:string;mediaType:string};
@@ -14,7 +16,6 @@ export type ContentArchiveEntry={placement:'editor'|'device'|'remote';scope:Arch
 export type ContentArchiveSection={format:'genesis-content-only-v1';execution:'history-only';entries:ContentArchiveEntry[]};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 const domains=new Set(['workspace','mindmap','diary','dream-journal','physis','aurora','stoicheion','advice','attachment','shared-project','shared-comment','local-snapshot']);
-export const contentArchiveDeviceId=(id:string)=>id==='personal-diary-device-live-v1'||id==='personal-physis-editor-forms-v1'||['profile-original:','shared-transfer-private:','shared-bulk-private:','shared-bulk-recovery:','shared-bulk-recovery-history:','shared-request:','shared-work-private:','shared-work-history:','product-tx:','product-approval:','mindmap-view:','mindmap-conversions:','shared-map-draft:','shared-map-local:','shared-map-conversion-journal:','shared-resource-create:','shared-project-create:','shared-project-resolution:','membership-operation:','personal-content-restore:','domain-content-restore:','shared-content-restore:','external-google-copy:','imported-legacy-content:'].some(prefix=>id.startsWith(prefix));
 export const contentArchiveModuleFor=(domain:string,scope:ArchiveScope|null):BackupModuleId=>scope&&scope.kind!=='personal'||domain==='shared-project'||domain==='shared-comment'?'shared-drafts':domain==='mindmap'?'mindmaps':domain==='diary'?'diary':domain==='physis'?'physis':domain==='aurora'?'aurora':domain==='stoicheion'?'stoicheion':'workspace';
 async function value(id:string,bytes:Uint8Array,metadata={filename:'',mediaType:'application/json'}):Promise<ContentArchiveValue>{
  return{id,encoding:'base64url',bytes:encodeE2eeBytes(bytes),sha256:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes)))),size:bytes.length,...metadata};
@@ -56,7 +57,7 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
    const coordinates={ownerId:scope.ownerId,scopeId:scope.scopeId,kind:scope.kind,resourceId:scope.resourceId};append({placement:'editor',scope:coordinates,domain:state.domain,objectId:state.objectId,pending:head.pending,current,history});
   }finally{record.value.fill(0);}
  }
- const localKeys=await account.device.vault.listLocal('draft','');account.requireOpen();
+ const localKeys=await account.device.vault.listContentArchiveDocuments();account.requireOpen();
  for(const key of localKeys.filter(contentArchiveDeviceId)){
   const document=new E2eeDeviceDocument(account.device,key,input=>input,()=>account.requireOpen()),before=await document.load();account.requireOpen();if(!before)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');
   const exported=key.startsWith('profile-original:')?await retainedProfilePreferenceHistory(key,before.value,account.ownerId):before.value;account.requireOpen();
