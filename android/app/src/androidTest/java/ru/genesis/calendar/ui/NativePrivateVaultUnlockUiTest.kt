@@ -3,6 +3,8 @@ package ru.genesis.calendar.ui
 import android.content.Intent
 import android.os.Bundle
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
@@ -60,11 +62,20 @@ class NativePrivateVaultUnlockUiTest {
         return app.assets.open("native-unlock-copy-v1.json").use{val copy=JSONObject(it.readBytes().toString(Charsets.UTF_8));copy.optJSONObject(language)?:copy.getJSONObject("en")}
     }
     private fun waitFor(operation:()->Boolean)=runBlocking{withTimeout(90000){while(!operation())delay(100)}}
+    private fun foregroundMain(){
+        app.startActivity(Intent(app,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+        waitFor{
+            var resumed=false
+            instrumentation.runOnMainSync{resumed=ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).any{it is MainActivity}}
+            resumed&&device.hasObject(By.pkg(app.packageName))
+        }
+        instrumentation.waitForIdleSync()
+    }
     private fun showLock():JSONObject{
         check(InstrumentationRegistry.getArguments().getString("genesisFullQaHttps")=="true"&&BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug")
-        app.startActivity(Intent(app,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+        foregroundMain()
         instrumentation.runOnMainSync{auth.onTrialBackground();auth.onTrialForeground();auth.checkSession()}
-        waitFor{auth.state.value.user?.privateVault==true&&!auth.state.value.requiresSignIn}
+        waitFor{auth.state.value.user?.privateVault==true&&!auth.state.value.requiresSignIn&&!auth.state.value.busy}
         assertFalse(NativePrivateProducts.isOpen(app.workspaceScope))
         val copy=text();assertTrue(device.wait(Until.hasObject(By.text(copy.getString("unlock"))),30000));return copy
     }
@@ -98,7 +109,7 @@ class NativePrivateVaultUnlockUiTest {
     @Test fun c_backgroundCannotAdmitAPendingFingerprint(){
         val copy=showLock();prompt(copy);device.pressHome()
         waitFor{!NativePrivateProducts.isOpen(app.workspaceScope)}
-        app.startActivity(Intent(app,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+        foregroundMain()
         assertTrue(device.wait(Until.hasObject(By.text(copy.getString("unlock"))),30000))
         assertFalse(NativePrivateProducts.isOpen(app.workspaceScope))
     }
