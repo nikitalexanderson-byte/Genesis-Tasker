@@ -35,7 +35,7 @@ export function PrivatePersonalDeviceEntry({ownerId,language}:{ownerId:string;la
  const open=async(resume:boolean,current:()=>void)=>{const secret=decodeE2eeBytes(code.trim(),32);let candidate:WebPersonalDeviceEntry|undefined;
   try{candidate=resume?await resumeCurrentPrivatePersonalDeviceEntry(secret,lifetime):await beginCurrentPrivatePersonalDeviceEntry(secret,target,compared,lifetime);current();const state=await candidate.request();current();entry.current?.close();entry.current=candidate;setEntryReady(true);await display(state,current);}catch(reason){if(candidate!==entry.current)candidate?.close();throw reason;}finally{secret.fill(0);}
  };
- return <section data-no-translate><h3>{c.title}</h3><p>{c.notice}</p>
+ return <section className="private-personal-device-entry" data-no-translate><h3>{c.title}</h3><p>{c.notice}</p>
   <label className="workspace-recovery-field"><span>{c.localCode}</span><input value={code} disabled={busy||entryReady} autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={64} onChange={event=>{setCode(event.target.value);setGenerated(false);setSaved(false);}}/></label><p className="workspace-recovery-hint">{c.codeNotice}</p>
   {!entryReady?<><button type="button" disabled={busy} onClick={()=>{const secret=freshSecret();try{setCode(encodeE2eeBytes(secret));setGenerated(true);setSaved(false);}finally{secret.fill(0);}}}>{c.generate}</button>
    <label className="backup-check"><input type="checkbox" checked={saved} disabled={busy} onChange={event=>setSaved(event.target.checked)}/>{c.codeSaved}</label>

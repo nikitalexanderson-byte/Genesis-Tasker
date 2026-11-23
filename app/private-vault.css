@@ -3,6 +3,18 @@
 .private-vault-dialog{width:min(620px,100%);grid-template-columns:32px minmax(0,1fr);border:0;background:var(--surface);box-shadow:none;gap:20px;}
 .private-vault-gate>.private-vault-dialog:not(.private-membership-dialog){max-width:620px;min-width:0;}
 .private-vault-dialog>.text-button{grid-column:1 / -1;justify-self:start;min-height:44px;max-width:100%;font-size:16px;line-height:1.5;text-align:start;white-space:normal;word-break:normal;overflow-wrap:normal;}
+.private-vault-dialog>.private-personal-device-entry{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr);width:100%;min-width:0;max-width:100%;gap:16px;}
+.private-personal-device-entry :is(h3,p){min-width:0;margin:0;word-break:normal;overflow-wrap:normal;hyphens:none;}
+.private-personal-device-entry h3{font-size:20px;line-height:1.35;}
+.private-personal-device-entry p{font-size:15px;line-height:1.6;}
+.private-personal-device-entry .workspace-recovery-field{width:100%;min-width:0;max-width:100%;}
+.private-personal-device-entry .workspace-recovery-field :is(input,textarea){box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:44px;padding:12px;color:var(--ink);background:var(--surface);border:1px solid color-mix(in srgb,var(--ink-soft) 35%,transparent);border-radius:var(--ui-surface-radius);font:inherit;line-height:1.5;}
+.private-personal-device-entry .backup-check{display:flex;align-items:flex-start;gap:12px;min-height:44px;font-size:15px;line-height:1.6;}
+.private-personal-device-entry .backup-check input{flex:none;width:20px;height:20px;margin:3px 0;}
+.private-personal-device-entry>button{justify-self:start;max-width:100%;min-height:44px;padding:8px 12px;font:inherit;line-height:1.5;white-space:normal;word-break:normal;overflow-wrap:normal;}
+.private-personal-device-entry>.private-shared-fingerprint{display:block;min-width:0;max-width:100%;overflow-x:auto;white-space:nowrap;}
+.private-vault-gate:has(.private-personal-device-entry){align-items:start;}
+.private-vault-dialog:has(.private-personal-device-entry){max-height:none;overflow:visible;}
 .private-vault-icon{width:30px;height:30px;margin-top:8px;color:var(--ink-soft);}
 .private-vault-dialog .workspace-recovery-heading{padding-right:0;}
 .private-vault-dialog .workspace-recovery-heading h2{font-size:clamp(26px,4.5vw,36px);line-height:1.15;}
