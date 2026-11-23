@@ -52,7 +52,7 @@ function PrivateVaultForm({state}:{state:PrivateAccountView}){
    if(reason instanceof Error&&reason.message==='E2EE_MIGRATION_RESUME_REQUIRED'&&state.ownerId)showPrivateMigration(state.ownerId,state.language,'resume');else setError(true);
   }finally{setSecret('');}
  };
- return <div className="private-vault-gate">
+ return <div className="private-vault-gate" data-no-translate>
   <form ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog" role="dialog" aria-modal="true" aria-labelledby="private-vault-title" aria-describedby="private-vault-description" tabIndex={-1} onSubmit={submit} lang={isLanguage(state.language)?state.language:'en'}>
    <svg className="private-vault-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="4" y="10" width="16" height="12" rx="3"/><path d="M12 15v3"/></svg>
    <div className="workspace-recovery-heading"><h2 id="private-vault-title">{copy.title}</h2><p id="private-vault-description">{copy.description}</p></div>
