@@ -153,8 +153,10 @@ class NativePrivateProductHttpsTest {
                 InstrumentationRegistry.getInstrumentation().sendStatus(2,Bundle().apply{putString("stream","GENESIS_MIGRATION_GUARD:$value\n")})
                 android.util.Log.i("Genesis336QaGuard",value.toString())
             }
+            val diagnosticPhase=java.util.concurrent.atomic.AtomicReference("setup")
             fun progress(phase:String){
                 check(phase in setOf("snapshot","sources","reconciliation","uploading","active"))
+                diagnosticPhase.set(phase)
                 android.util.Log.i("Genesis336QaPhase",phase)
                 InstrumentationRegistry.getInstrumentation().sendStatus(2,Bundle().apply{putString("stream","GENESIS_MIGRATION_PHASE:$phase\n")})
             }
@@ -165,10 +167,14 @@ class NativePrivateProductHttpsTest {
             val sourceDiagnostic=launch(Dispatchers.IO){
                 // Bounded read-only stacks, with method names only. No heap,
                 // account state, URLs, arguments, keys or row values are logged.
-                repeat(3){
-                    delay(45000)
+                val sampled=mutableMapOf<String,Int>()
+                repeat(40){
+                    delay(30000)
+                    val phase=diagnosticPhase.get();val count=sampled[phase]?:0
+                    if(count>=3)return@repeat
+                    sampled[phase]=count+1
                     val stacks=Thread.getAllStackTraces().entries.filter{(thread,frames)->thread.name=="main"||frames.any{it.className.startsWith("ru.genesis.calendar.")}}
-                        .map{(thread,frames)->JSONObject().put("main",thread.name=="main").put("state",thread.state.name)
+                        .map{(thread,frames)->JSONObject().put("main",thread.name=="main").put("state",thread.state.name).put("phase",phase)
                             .put("methods",org.json.JSONArray(frames.take(18).map{it.className+"."+it.methodName}))}
                     android.util.Log.i("Genesis336QaThreads",org.json.JSONArray(stacks).toString())
                 }

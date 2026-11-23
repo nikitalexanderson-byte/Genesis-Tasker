@@ -11,7 +11,7 @@ const output=process.env.GENESIS_QA_WEB_OUTPUT;
 assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
-const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
+const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],networkFailures:[],networkRetries:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
@@ -48,6 +48,21 @@ const downloadBytes=async download=>{const stream=await download.createReadStrea
 const recoveryInput=async(dialog,wrong=false)=>{
  await dialog.locator('input[type=file]').setInputFiles({name:'synthetic-recovery.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(kit))});
  await dialog.locator('input[type=password]').fill(wrong?'A'.repeat(43):secret);
+};
+const continueMigration=async(dialog,button,label)=>{
+ for(let attempt=0;attempt<3;attempt++){
+  const failures=report.networkFailures.length;await recoveryInput(dialog);
+  await dialog.getByRole('button',{name:button,exact:true}).click();
+  const outcome=await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}).then(()=>'active'),dialog.getByRole('alert').waitFor({timeout:1200000}).then(()=>'refused')]);
+  if(outcome==='active')return outcome;
+  await page.waitForTimeout(100);const failure=report.networkFailures.at(-1),refusal=report.migrationRefusals.at(-1);
+  if(attempt===2||report.networkFailures.length===failures||!failure||refusal&&refusal!=='NON_TECHNICAL_ERROR'
+    ||!['net::ERR_NETWORK_CHANGED','net::ERR_INTERNET_DISCONNECTED','net::ERR_CONNECTION_RESET','net::ERR_CONNECTION_CLOSED','net::ERR_CONNECTION_REFUSED','net::ERR_FAILED'].includes(failure.code))return outcome;
+  report.networkRetries.push({label,attempt:attempt+1,code:failure.code,policy:'Explicit retry through the existing form with the same saved recovery kit; no scope, journal or request reset'});save();
+  await page.waitForTimeout(1000);
+  button=await dialog.getByRole('button',{name:migration.resume,exact:true}).count()?migration.resume:migration.begin;
+ }
+ throw new Error('Migration network retry budget exhausted');
 };
 try{
  await login(context);page=await context.newPage();page.setDefaultTimeout(20000);
@@ -97,6 +112,10 @@ try{
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
+ page.on('requestfailed',request=>{const url=new URL(request.url());if(url.origin!==baseURL||!/^\/api\/e2ee\/v1\/[a-z-]+$/.test(url.pathname))return;
+  const reason=request.failure()?.errorText??'';const code=/^net::ERR_[A-Z_]+$/.test(reason)?reason:'UNKNOWN_NETWORK_FAILURE';
+  report.networkFailures.push({path:url.pathname,code});save();
+ });
  page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ',frames='GENESIS_QA_MIGRATION_FRAMES ',predicates='GENESIS_QA_CUSTODY_PREDICATES ',failure='GENESIS_QA_MIGRATION_ERROR ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}else if(message.text().startsWith(frames)){report.custodyFrames.push(JSON.parse(message.text().slice(frames.length)));console.log(message.text());save();}else if(message.text().startsWith(predicates)){report.custodyPredicates.push(JSON.parse(message.text().slice(predicates.length)));console.log(message.text());save();}else if(message.text().startsWith(failure)){report.migrationErrorFrames.push(JSON.parse(message.text().slice(failure.length)));console.log(message.text());save();}});
  page.on('response',async response=>{
   if(response.url()===baseURL+'/api/bootstrap'){const body=await response.json().catch(()=>null);console.log('BOOTSTRAP '+JSON.stringify({status:response.status(),keyMode:body?.workspace?.keyMode,keyPresent:!!body?.workspace?.key}));}
@@ -182,10 +201,9 @@ try{
   });
  }else{
  await check('all personal sources transfer and activate through the mounted controller',async()=>{
-  const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);
+  const dialog=page.locator('.private-migration-dialog');
   if(diagnostics)await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
-  await dialog.getByRole('button',{name:migration.begin,exact:true}).click();
-  await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}),dialog.getByRole('alert').waitFor({timeout:1200000}).then(async()=>{throw new Error('Product migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());})]);
+  if(await continueMigration(dialog,migration.begin,'personal')!=='active')throw new Error('Product migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());
   await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
   const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.some(scope=>scope.kind==='personal'&&scope.state==='active'));
   const session=await(await context.request.get('/api/session')).json();assert.equal(session.user.privatePreferencesMode,'e2ee');
@@ -334,9 +352,8 @@ try{
     await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
     await withRateRetry(kind+' transfer',async()=>{
      for(let reauth=0;reauth<2;reauth++){
-      const previous=report.migrationRefusals.length;await recoveryInput(dialog);
-      await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
-      const outcome=await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}).then(()=> 'active'),dialog.getByRole('alert').waitFor({timeout:1200000}).then(()=> 'refused')]);
+      const previous=report.migrationRefusals.length;
+      const outcome=await continueMigration(dialog,migration.resume,kind);
       if(outcome==='active')return;
       await page.waitForTimeout(100);
       if(report.migrationRefusals.slice(previous).includes('E2EE_REAUTH_REQUIRED')){dialog=await reconfirm(dialog,kind,resource);continue;}

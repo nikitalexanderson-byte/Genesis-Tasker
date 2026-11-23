@@ -1,5 +1,32 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: native23 bulk audit и возобновление сети
+
+Controller22 завершён timeout1200000ms: sources заняли около17 минут, затем
+reconciliation; прежний HAT/PIN отказ устранён. Read-only samples сохранены в
+runtime/native150-controller22-method-samples.log. Они указывают на многократный
+полный RemoteOriginal inventory внутри каждой строки ownership catalogue.
+Добавлен bounded verifyOriginals: один namespace snapshot, authentication всех
+selected requests до response bytes, полные EOF/hash proofs и полная повторная
+inventory до/после body. Missing reserved ID не получает receipt, прежние
+completion/registration/role checks сохранены. Namespace обходится линейно по
+batch, а не заново для каждого original. Дорогие постоянные Regex вынесены из
+hot loops. Добавлены5 JVM regression cases (tamper, drift, partial/reserved,
+cancellation, linear metadata reads). Пока это непроверенный code correction.
+
+Root получил83db5557/08851210 из linked worktree. Native23 запущен: full JVM +
+debug/test APK, runtime/native150-original-audit-build23.log и input.json рядом.
+До identity23 root app/android/contracts/public заморожены. Biometric/PIN runtime
+PASS и full lint22 относятся к предыдущему22; не приписывать их23.
+
+Web41 завершился с12 PASS и project ACTIVE: TypeError непосредственно на fetch
+во время space transfer, frames сохранены в report. Это сетевой отказ, не новый
+crypto guard; конкретный net::ERR code старым runner не записывался, причину VPN
+не объявлять доказанной. Runner теперь сохраняет только безопасный network code
+и fixed E2EE route и до2 раз нажимает реальный retry с тем же recovery kit/журналом;
+technical guard errors не обходятся, rate Retry-After сохраняется. Следующий web
+run использует уже построенный immutable27, без новой web сборки.
+
 ## Продолжение23 ноября: immutable web27 и текущие два прогона
 
 Исправления web в linked window-worktree сохранены отдельными commits:

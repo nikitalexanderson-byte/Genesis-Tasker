@@ -191,6 +191,41 @@ internal class E2eeRemoteOriginal private constructor(private val options: Optio
             return Descriptor(registered,journal.getString("phase"),RequestDigest(request.getInt("size"),request.getString("hash")),response,
                 journal.getLong("size"),journal.getJSONArray("parts").length(),journal.get("rawHash") as? String,journal.get("manifestHash") as? String)
         }
+        /** One bounded namespace snapshot for a whole ownership audit. Every
+         * selected request is authenticated before any response part is opened;
+         * no receipt escapes until all bodies reach EOF and the full namespace
+         * is rechecked. A reserved identity with no capture yields no receipt. */
+        fun verifyOriginals(options:ReadOptions,ids:Set<String>,beforeRead:(Descriptor)->Unit):List<Receipt>{
+            RemoteOriginalCodec.capacity(options.capacity);RemoteOriginalCodec.current(options)
+            check(ids.size<=options.capacity.maximumObservations&&ids.all{RemoteOriginalCodec.uuid.matches(it)}){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+            val selected=ids.toSet();val before=RemoteOriginalCodec.inventory(options);RemoteOriginalCodec.within(before.usage,options.capacity)
+            val journals=before.journals.filter{it.value.getString("id") in selected}
+            for(row in journals){
+                val journal=row.value;val registration=RemoteOriginalCodec.verifiedRequest(options,before,journal);val request=journal.getJSONObject("request")
+                val response=if(journal.isNull("response"))null else journal.getJSONObject("response").let{value->
+                    E2eeHttpBodyObservation.Response(value.getString("path"),value.getInt("status"),value.get("contentType") as? String,value.get("contentLength") as? String)
+                }
+                beforeRead(Descriptor(registration,journal.getString("phase"),RequestDigest(request.getInt("size"),request.getString("hash")),response,
+                    journal.getLong("size"),journal.getJSONArray("parts").length(),journal.get("rawHash") as? String,journal.get("manifestHash") as? String))
+                RemoteOriginalCodec.current(options)
+            }
+            RemoteOriginalCodec.stable(options,before);RemoteOriginalCodec.current(options)
+            val receipts=mutableListOf<Receipt>();val buffer=ByteArray(RemoteOriginalCodec.MAX_PART)
+            try{
+                for(row in journals){
+                    val journal=row.value;val stream=RemoteOriginalInput(options,before,journal)
+                    try{
+                        while(stream.read(buffer)>=0)buffer.fill(0)
+                        RemoteOriginalCodec.current(options)
+                        check(stream.eof&&!stream.failed.get()&&stream.size==journal.getLong("size")){"E2EE_REMOTE_ORIGINAL_INCOMPLETE_READ"}
+                        val rawHash=stream.hash();val complete=journal.getString("phase")=="complete"
+                        if(complete)check(rawHash==journal.getString("rawHash")){"E2EE_CORRUPT_REMOTE_ORIGINAL"}
+                        receipts+=Receipt(journal.getString("id"),stream.size,rawHash,complete,journal.get("manifestHash") as? String)
+                    }finally{stream.close();buffer.fill(0)}
+                }
+                RemoteOriginalCodec.stable(options,before);RemoteOriginalCodec.current(options);return receipts
+            }finally{buffer.fill(0)}
+        }
         fun withOriginal(options: ReadOptions, id: String, allowIncomplete: Boolean = false, consume: (InputStream) -> Unit): Receipt {
             RemoteOriginalCodec.capacity(options.capacity); RemoteOriginalCodec.current(options); check(RemoteOriginalCodec.uuid.matches(id)) { "E2EE_CORRUPT_REMOTE_ORIGINAL" }
             val before = RemoteOriginalCodec.inventory(options); RemoteOriginalCodec.within(before.usage, options.capacity)
@@ -244,6 +279,9 @@ private class RemoteOriginalInput(private val options: E2eeRemoteOriginal.ReadOp
 private object RemoteOriginalCodec {
     const val PURPOSE = "remote-original/v1"; const val MAX_META = 2 * 1024 * 1024; const val MAX_REQUEST = 128 * 1024; const val MAX_PART = 65536
     val uuid = Regex("^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$")
+    private val originalKey=Regex("^remote-original:[A-Za-z0-9_-]{43}:[a-f0-9-]{36}:[jrmp]:[0-9]{5}$")
+    private val privatePath=Regex("(?:personal|project|space)\\.[a-z-]+")
+    private val tableName=Regex("[a-z][a-z_]{0,99}")
     private val actions = setOf("legacy-workspace", "legacy-aurora", "legacy-stoicheion", "legacy-advice", "legacy-tasks", "legacy-diary", "legacy-mindmaps", "legacy-physis", "legacy-reminders", "legacy-archives", "legacy-shared-mindmaps", "legacy-private-path")
     class Meta(val serial: Long, val value: JSONObject, val hash: String, val bytes: Int)
     class Inventory(val context: JSONObject, val hash: String, val catalog: JSONObject, val serial: Long?, val journals: List<Meta>, val usage: E2eeRemoteOriginal.Admission, val stamp: String)
@@ -313,7 +351,7 @@ private object RemoteOriginalCodec {
     }
     fun inventory(options: E2eeRemoteOriginal.ReadOptions): Inventory {
         current(options); val context = context(options); val hash = identity(context); val before = meta(options, catalogKey(hash)); val all = options.vault.listLocal("local-snapshot", "remote-original:"); current(options); val owned = mutableListOf<String>()
-        for (id in all) { val parts = id.split(':'); if (!Regex("^remote-original:[A-Za-z0-9_-]{43}:[a-f0-9-]{36}:[jrmp]:[0-9]{5}$").matches(id) || !uuid.matches(parts[2]) || parts[4].toInt() > 7999 || parts[3] != "p" && parts[4] != "00000") error("E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT"); E2eeEnvelope.decode(parts[1], 32); if (parts[1] == hash) owned += id }
+        for (id in all) { val parts = id.split(':'); if (!originalKey.matches(id) || !uuid.matches(parts[2]) || parts[4].toInt() > 7999 || parts[3] != "p" && parts[4] != "00000") error("E2EE_REMOTE_ORIGINAL_UNBOUND_REMNANT"); E2eeEnvelope.decode(parts[1], 32); if (parts[1] == hash) owned += id }
         val catalog = before?.value ?: JSONObject().put("protocol", 1).put("context", context).put("ids", JSONArray())
         E2eeKeys.exact(catalog, setOf("protocol", "context", "ids")); if (number(catalog.get("protocol")) != 1L) invalid(); same(catalog.getJSONObject("context"), context); val ids = catalog.getJSONArray("ids"); if (ids.length() > 8000) invalid(); val seen = mutableSetOf<String>()
         for (index in 0 until ids.length()) { val id = ids.getString(index); if (!uuid.matches(id) || !seen.add(id)) invalid() }
@@ -341,12 +379,12 @@ private object RemoteOriginalCodec {
         val command = E2eeCommands.verify(packet, signer)
         check(command.get("ownerId") == context.get("ownerId") && command.get("scopeId") == context.get("scopeId") && command.get("deviceId") == context.get("deviceId") && command.get("action") in actions) { "E2EE_REMOTE_ORIGINAL_CONTEXT" }
         if(command.get("action")=="legacy-shared-mindmaps")check(context.get("kind") in setOf("project","space")&&command.getJSONObject("payload").has("table")){"E2EE_REMOTE_ORIGINAL_CONTEXT"}
-        val privatePath=command.get("action")=="legacy-private-path"
-        val payload = command.getJSONObject("payload"); val names = mutableSetOf("migrationId", "fence", "sourceHash"); if (payload.has("table")) names += setOf("table", "offset"); if (payload.has("byteOffset")) names += "byteOffset";if(privatePath)names+="pathId";if(privatePath&&payload.has("maxFragments"))names+="maxFragments"; E2eeKeys.exact(payload, names);if(payload.has("maxFragments"))number(payload.get("maxFragments"),1,50)
-        if(privatePath)check(payload.getString("pathId").startsWith(context.getString("kind")+".")&&payload.getString("pathId").matches(Regex("(?:personal|project|space)\\.[a-z-]+"))
-            &&payload.has("table")&&payload.has("byteOffset")&&payload.getString("table").matches(Regex("[a-z][a-z_]{0,99}"))){"E2EE_SOURCE_PATH_FORBIDDEN"}
+        val isPrivatePath=command.get("action")=="legacy-private-path"
+        val payload = command.getJSONObject("payload"); val names = mutableSetOf("migrationId", "fence", "sourceHash"); if (payload.has("table")) names += setOf("table", "offset"); if (payload.has("byteOffset")) names += "byteOffset";if(isPrivatePath)names+="pathId";if(isPrivatePath&&payload.has("maxFragments"))names+="maxFragments"; E2eeKeys.exact(payload, names);if(payload.has("maxFragments"))number(payload.get("maxFragments"),1,50)
+        if(isPrivatePath)check(payload.getString("pathId").startsWith(context.getString("kind")+".")&&privatePath.matches(payload.getString("pathId"))
+            &&payload.has("table")&&payload.has("byteOffset")&&tableName.matches(payload.getString("table"))){"E2EE_SOURCE_PATH_FORBIDDEN"}
         if (!uuid.matches(payload.getString("migrationId"))) invalid(); number(payload.get("fence"), 1); E2eeEnvelope.decode(payload.getString("sourceHash"), 32); number(command.get("expectedRevision"), 1); E2eeEnvelope.decode(command.getString("checkpointHash"), 32); number(generation, 1)
-        if (payload.has("table")) { val tables = mapOf("legacy-mindmaps" to setOf("maps", "versions", "receipts", "deletions"), "legacy-physis" to setOf("owners", "records", "usedIds", "receipts"), "legacy-reminders" to setOf("habitProfiles", "habitDevices", "habitDeliveries", "adviceDays", "adviceDeliveries", "sharedPreferences"), "legacy-archives" to setOf("stages", "safety", "receipts"), "legacy-shared-mindmaps" to setOf("maps","versions","receipts","deletions","deletionScopes","conversions")); if (!privatePath&&tables[command.getString("action")]?.contains(payload.getString("table")) != true) invalid(); number(payload.get("offset")) }
+        if (payload.has("table")) { val tables = mapOf("legacy-mindmaps" to setOf("maps", "versions", "receipts", "deletions"), "legacy-physis" to setOf("owners", "records", "usedIds", "receipts"), "legacy-reminders" to setOf("habitProfiles", "habitDevices", "habitDeliveries", "adviceDays", "adviceDeliveries", "sharedPreferences"), "legacy-archives" to setOf("stages", "safety", "receipts"), "legacy-shared-mindmaps" to setOf("maps","versions","receipts","deletions","deletionScopes","conversions")); if (!isPrivatePath&&tables[command.getString("action")]?.contains(payload.getString("table")) != true) invalid(); number(payload.get("offset")) }
         if (payload.has("byteOffset")) { if (command.get("action") !in setOf("legacy-archives","legacy-private-path") || !payload.has("table")) invalid(); number(payload.get("byteOffset"), 0, 64L * 1024 * 1024) }
         val spki = E2eeEnvelope.encode(signer.encoded); E2eeEnvelope.decode(spki, 91)
         return JSONObject().put("packetHash", identity(packet)).put("signer", spki).put("generation", generation).put("migrationId", payload.get("migrationId")).put("fence", payload.get("fence"))

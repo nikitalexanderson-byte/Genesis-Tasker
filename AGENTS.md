@@ -1,5 +1,11 @@
 # Genesis Tasker: действующие правила
 
+- Native22 full controller завершён20-minute timeout после перехода sources→
+  reconciliation; PIN/HAT отказа больше нет. Его inputs разморожены. Web corrections
+  перенесены commits83db5557/08851210. Текущая build23 проверяет linear bulk original
+  audit и strict EOF/request/body/namespace проверки; root app/android/contracts/public
+  не менять до identity23. Cold PIN/biometric и все rollout gates сохраняются.
+
 - Текущая native build22 проверяет foreground durability после300s Keystore HAT:
   cold opening по-прежнему требует реального системного PIN/STRONG biometric;
   memory-only witness уже открытого устройства проверяет exact bundle/slot/key.

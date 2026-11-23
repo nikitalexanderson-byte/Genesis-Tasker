@@ -36,6 +36,7 @@ object E2eeEnvelope {
         "shared-project", "shared-comment", "attachment", "local-snapshot", "outbox", "draft", "key-check")
     fun supportsDomain(domain: String): Boolean = domain in domains
     private val identifier = Regex("[A-Za-z0-9][A-Za-z0-9._:@/\\-]{0,127}")
+    private val base64Url = Regex("[A-Za-z0-9_\\-]+")
     private val aadPrefix = "GENESIS-E2EE-AAD\u0000v1\u0000".toByteArray(Charsets.UTF_8)
     private val signaturePrefix = "GENESIS-E2EE-SIGNATURE\u0000v1\u0000".toByteArray(Charsets.UTF_8)
     private val p256: ECParameterSpec by lazy {
@@ -118,7 +119,7 @@ object E2eeEnvelope {
 
     fun decode(source: String, minimum: Int, maximum: Int = minimum): ByteArray {
         if (source.length < (minimum * 4 + 2) / 3 || source.length > (maximum * 4 + 2) / 3
-            || !source.matches(Regex("[A-Za-z0-9_\\-]+"))) invalid()
+            || !base64Url.matches(source)) invalid()
         val bytes = try { Base64.getUrlDecoder().decode(source) } catch (_: IllegalArgumentException) { invalid() }
         if (bytes.size !in minimum..maximum || encode(bytes) != source) invalid()
         return bytes

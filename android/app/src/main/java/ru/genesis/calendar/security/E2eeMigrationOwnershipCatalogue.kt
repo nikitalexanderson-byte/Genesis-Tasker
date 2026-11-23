@@ -25,6 +25,8 @@ internal object E2eeMigrationOwnershipCatalogue {
     private fun strings(array:JSONArray)=E2eeRetainedMigrationProof.strings(array)
     private val stateIdPattern=Regex("migration:[A-Za-z0-9_-]{43}")
     private val uuid=Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}")
+    private val sourceBodySuffix=Regex(":source:[0-9]+$|:private:[0-9]+:[0-9]+$")
+    private val sourceBodyPrefix=Regex("^(?:source-stage|remote-original):[^:]+:[^:]+:p:")
     fun open(options:Options)=Handle(options)
     class Handle internal constructor(private val options:Options):Closeable {
         private val device=options.device;private val base=device.vault;private val actor=base.localIdentity()
@@ -56,8 +58,8 @@ internal object E2eeMigrationOwnershipCatalogue {
                     val digest=hash(row.bytes);if(old!=null){if(old.serial!=row.serial||old.hash!=digest||old.bytes!=row.bytes.size)error("E2EE_SOURCE_HISTORY_CHANGED")}
                     else{
                         if(records.size>=E2eeStorageAdmission.providerBudget.maximumRecords+E2eeStorageAdmission.providerBudget.maximumKeyRecords)error("E2EE_SOURCE_HISTORY_CAPACITY");totalBytes+=row.bytes.size;records[coordinate]=Row(domain,objectId,row.serial,digest,row.bytes.size)
-                        val body=domain in setOf("outbox","draft")||domain=="local-snapshot"&&(Regex(":source:[0-9]+$|:private:[0-9]+:[0-9]+$").containsMatchIn(objectId)
-                            ||Regex("^(?:source-stage|remote-original):[^:]+:[^:]+:p:").containsMatchIn(objectId))
+                        val body=domain in setOf("outbox","draft")||domain=="local-snapshot"&&(sourceBodySuffix.containsMatchIn(objectId)
+                            ||sourceBodyPrefix.containsMatchIn(objectId))
                         if(!body){metadataRows+=coordinate;metadataBytes+=row.bytes.size}
                     }
                     roleContext?.let{claim(domain,objectId,it,"authenticated-source")};return row
@@ -97,17 +99,22 @@ internal object E2eeMigrationOwnershipCatalogue {
                 E2eeRetainedMigrationProof.controls(saved.value,frame,actor,::current);claim("local-snapshot",adopted.getString("stateId"),scope.target.scopeId,"adoption")
             }
             val read=originalRead(scope)
+            val expectedOriginals=linkedMapOf<String,JSONObject>()
             for(entry in rows(owned.getJSONArray("originals"))){
                 val lease=value.optJSONObject("lease")?:invalid();val registration=entry.getJSONObject("registration");val id=registration.getString("id")
                 E2eeRemoteOriginal.authenticateRegistration(registration,entry.getJSONObject("packet"),signer,read,number(lease,"generation",1));current()
-                asSource(scope.target.scopeId){val present=E2eeRemoteOriginal.listOriginals(read).firstOrNull{it.id==id};current()
-                    if(present==null){if(entry.has("completion")&&!entry.isNull("completion"))invalid()}
-                    else{
-                        val descriptor=E2eeRemoteOriginal.describeOriginal(read,id);if(!same(descriptor.registration.toJson(),registration))invalid()
-                        val proof=E2eeRemoteOriginal.withOriginal(read,id,true){stream->E2eeRetainedMigrationProof.drain(stream,::current)};current()
-                        if(entry.has("completion")&&!entry.isNull("completion")){val expected=entry.getJSONObject("completion");if(!proof.complete||!same(expected,JSONObject().put("id",proof.id).put("manifestHash",proof.manifestHash).put("rawHash",proof.rawHash).put("size",proof.size)))invalid()}
-                        originals.getOrPut(scope.target.scopeId){mutableSetOf()}.add(id)
-                    }
+                if(expectedOriginals.put(id,entry)!=null)invalid()
+            }
+            val proofs=asSource(scope.target.scopeId){E2eeRemoteOriginal.verifyOriginals(read,expectedOriginals.keys){descriptor->
+                val expected=expectedOriginals[descriptor.registration.id]?:invalid()
+                if(!same(descriptor.registration.toJson(),expected.getJSONObject("registration")))invalid();current()
+            }}.associateBy{it.id};current()
+            for((id,entry)in expectedOriginals){
+                val proof=proofs[id]
+                if(proof==null){if(entry.has("completion")&&!entry.isNull("completion"))invalid()}
+                else{
+                    if(entry.has("completion")&&!entry.isNull("completion")){val expected=entry.getJSONObject("completion");if(!proof.complete||!same(expected,JSONObject().put("id",proof.id).put("manifestHash",proof.manifestHash).put("rawHash",proof.rawHash).put("size",proof.size)))invalid()}
+                    originals.getOrPut(scope.target.scopeId){mutableSetOf()}.add(id)
                 }
             }
             var adoptedFound=number(value,"protocol")!=5L

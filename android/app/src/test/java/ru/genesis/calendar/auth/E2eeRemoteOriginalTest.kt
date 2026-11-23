@@ -14,9 +14,9 @@ import java.util.UUID
 class E2eeRemoteOriginalTest {
     private class Storage : E2eeRecordStorage {
         var rows = mutableMapOf<String, E2eeLocalRecord>(); var full = false
-        var bodyGets=0;var afterGet:((String)->Unit)?=null
-        override fun get(key: String):E2eeLocalRecord? {val value=rows[key];if(key.contains(":p:"))bodyGets++;afterGet?.invoke(key);return value}
-        override fun list(prefix: String) = rows.keys.filter { it.startsWith(prefix) }
+        var bodyGets=0;var metadataGets=0;var namespaceLists=0;var afterGet:((String)->Unit)?=null
+        override fun get(key: String):E2eeLocalRecord? {val value=rows[key];if(key.contains(":p:"))bodyGets++;if(key.contains(":j:")||key.contains(":m:")||key.contains("remote-original-catalog:"))metadataGets++;afterGet?.invoke(key);return value}
+        override fun list(prefix: String):List<String> {if(prefix.endsWith("remote-original:"))namespaceLists++;return rows.keys.filter { it.startsWith(prefix) }}
         override fun commit(changes: List<E2eeStorageChange>, requireOpen: () -> Unit) {
             requireOpen(); check(!full) { "E2EE_SYNTHETIC_STORAGE_FULL" }; for (row in changes) check(rows[row.key]?.serial == row.expected) { "E2EE_LOCAL_CONFLICT" }
             val next = rows.toMutableMap(); for (row in changes) if (row.value == null) next.remove(row.key) else next[row.key] = row.value
@@ -50,6 +50,62 @@ class E2eeRemoteOriginalTest {
     private fun hash(bytes: ByteArray) = E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))
     private fun readAll(options: E2eeRemoteOriginal.ReadOptions, id: String, allowIncomplete: Boolean = false): Pair<E2eeRemoteOriginal.Receipt, ByteArray> {
         var bytes = byteArrayOf(); val receipt = E2eeRemoteOriginal.withOriginal(options, id, allowIncomplete) { input -> bytes = input.readBytes() }; return receipt to bytes
+    }
+    @Test fun bulkOwnershipAuditAuthenticatesAllBodiesWithLinearMetadataReads(){
+        val f=Rig();try{
+            val references=(0 until 4).map{f.complete().first};val before=f.storage.snapshot()
+            f.storage.bodyGets=0;f.storage.metadataGets=0;f.storage.namespaceLists=0;val described=mutableSetOf<String>()
+            val proofs=E2eeRemoteOriginal.verifyOriginals(f.read(),references.map{it.id}.toSet()){descriptor->
+                assertFalse(descriptor.bodyVerified);assertEquals(0,f.storage.bodyGets);described+=descriptor.registration.id
+            }
+            assertEquals(references.map{it.id}.toSet(),described);assertEquals(4,proofs.size);assertTrue(proofs.all{it.complete})
+            for(reference in references){val proof=proofs.single{it.id==reference.id};assertEquals(reference.rawHash,proof.rawHash);assertEquals(reference.manifestHash,proof.manifestHash);assertEquals(reference.size,proof.size)}
+            assertEquals(4,f.storage.bodyGets);assertEquals(3,f.storage.namespaceLists)
+            assertTrue("metadata reads must grow linearly across the batch",f.storage.metadataGets<=references.size*12+12)
+            assertEquals(before,f.storage.snapshot())
+        }finally{f.vault.lock()}
+    }
+    @Test fun bulkOwnershipAuditRetainsPartialAndReservedIdentitiesWithoutInventingCompletion(){
+        val f=Rig();try{
+            val complete=f.complete().first;val partial=f.registered();partial.begin(header);partial.append("retained prefix".toByteArray());partial.close()
+            val reserved=E2eeRemoteOriginal.create(f.options);val absent=reserved.registration().id;reserved.close()
+            val partialId=partial.registration().id;val before=f.storage.snapshot()
+            val proofs=E2eeRemoteOriginal.verifyOriginals(f.read(),setOf(complete.id,partialId,absent)){}
+            assertEquals(2,proofs.size);assertTrue(proofs.single{it.id==complete.id}.complete)
+            assertFalse(proofs.single{it.id==partialId}.complete);assertNull(proofs.single{it.id==partialId}.manifestHash)
+            assertEquals("retained prefix".toByteArray().size.toLong(),proofs.single{it.id==partialId}.size);assertEquals(before,f.storage.snapshot())
+        }finally{f.vault.lock()}
+    }
+    @Test fun bulkOwnershipAuditRejectsCatalogueChangesBeforeAnyResponseBody(){
+        val f=Rig();try{
+            val first=f.complete().first;f.storage.bodyGets=0
+            rejects{E2eeRemoteOriginal.verifyOriginals(f.read(),setOf(first.id)){f.registered().close()}}
+            assertEquals(0,f.storage.bodyGets)
+            assertEquals(first.rawHash,readAll(f.read(),first.id).first.rawHash)
+        }finally{f.vault.lock()}
+    }
+    @Test fun bulkOwnershipAuditNeverReturnsPartialProofsAfterBodyTamperingOrCatalogueDrift(){
+        for(mode in listOf("body","catalog")){
+            val f=Rig();try{
+                val references=(0 until 2).map{f.complete().first};val before=f.storage.rows.toMap();var changed=false
+                if(mode=="body"){
+                    val key=f.storage.rows.keys.single{it.contains(references.last().id)&&it.contains(":p:00000")};val row=f.storage.rows.getValue(key)
+                    val wire=row.envelope.toJson();val cipher=wire.getString("ciphertext");wire.put("ciphertext",(if(cipher[0]=='A')"B"else"A")+cipher.substring(1))
+                    f.storage.rows[key]=E2eeLocalRecord(row.serial,E2eeEnvelope.Envelope.fromJson(wire))
+                }else f.storage.afterGet={key->if(key.contains(":p:")&&!changed){changed=true;f.registered().close()}}
+                val retained=f.storage.snapshot();rejects{E2eeRemoteOriginal.verifyOriginals(f.read(),references.map{it.id}.toSet()) {}}
+                if(mode=="body")assertEquals(retained,f.storage.snapshot())else for((key,row)in before)if(!key.contains("remote-original-catalog:"))assertEquals(row.envelope.toJson().toString(),f.storage.rows.getValue(key).envelope.toJson().toString())
+            }finally{f.vault.lock()}
+        }
+    }
+    @Test fun bulkOwnershipAuditKeepsExactCancellationAndAuthenticatesBindingsBeforeBodies(){
+        val f=Rig();try{
+            val first=f.complete().first;val cancellation=CancellationException("synthetic-audit-retired");var retired=false
+            val read=f.read().copy(assertCurrent={if(retired)throw cancellation;f.options.assertCurrent()});f.storage.bodyGets=0
+            f.storage.afterGet={key->if(key.contains(":r:"))retired=true}
+            try{E2eeRemoteOriginal.verifyOriginals(read,setOf(first.id)){};fail("Retired audit accepted")}catch(error:Exception){assertSame(cancellation,error)}
+            assertEquals(0,f.storage.bodyGets)
+        }finally{f.vault.lock()}
     }
     @Test fun sharedOriginalRequiresSharedTargetAndExactSignedPageBeforeAnyWrite() {
         val f=Rig()
