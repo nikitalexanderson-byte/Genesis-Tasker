@@ -20,7 +20,7 @@ $config = [
     'app_url' => $origin, 'google_only' => true, 'google_client_id' => '', 'google_client_secret' => '',
     'gigachat_enabled' => false, 'gemini_enabled' => false, 'physis_enabled' => true,
     'crypto_key' => base64_encode(random_bytes(32)), 'db_path' => $directory . '/genesis.sqlite',
-    'session_path' => $directory . '/sessions', 'cookie_secure' => false, 'timezone' => 'Europe/Moscow',
+    'session_path' => $directory . '/sessions', 'cookie_secure' => parse_url($origin, PHP_URL_SCHEME) === 'https', 'timezone' => 'Europe/Moscow',
     'admin_email' => 'no-admin-' . $runId . '@example.invalid',
     'notifications' => ['email' => ['transport' => 'disabled']], 'billing' => ['enabled' => false],
 ];
