@@ -179,7 +179,7 @@ export class SharedLiveModel{
   // change under an unrelated plaintext query/index or leak private filters.
   return privateSharedTaskPage(tasks,url.searchParams.get('sort')??'position');
  }
- async #events(versions:ProductVersion[],context:SharedLiveContext){
+ async #events(versions:ProductVersion[],context:SharedLiveContext){void context;
   if(this.ports.binding.kind!=='project'||!this.ports.eventCache)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
   if(!this.ports.online){const saved=await this.ports.eventCache.load();this.ports.current();if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved;}
   if(!this.ports.history||!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
@@ -288,7 +288,7 @@ export class SharedLiveModel{
    const extras=['startDate','dueDate','startTime','endTime'].filter(key=>Object.hasOwn(input,key));exactKeys(input,['destinationProjectId','statusId','expectedRevision','position','requestId',...extras]);
    if(input.destinationProjectId!==this.ports.binding.resourceId)throw new Error('E2EE_SHARED_CROSS_SCOPE_REVIEW_REQUIRED');if(!context.permissions.editTasks||!context.permissions.organizeTasks)throw new Error('BULK_NOT_ALLOWED');
    const old=this.#find(versions,'task',parts[1]),status=input.statusId===''?plain(old).record.status_id:input.statusId;
-   return this.#prepare({...request,method:'PATCH',path:`tasks/${parts[1]}`,body:{expectedRevision:input.expectedRevision,requestId:input.requestId,statusId:status,position:input.position,...Object.fromEntries(extras.map(key=>[key,input[key]]))}},context,versions);
+   return this.#prepare({...request,method:'PATCH',path:`tasks/${parts[1]}`,body:{expectedRevision:input.expectedRevision,requestId:input.requestId,statusId:status,position:input.position,...Object.fromEntries(extras.map(key=>[key,input[key]]))}},{context,versions});
   }
   if(parts[0]==='automations'&&parts.length===2&&parts[1]==='preview'&&request.method==='POST')return this.#execution(context,versions).preview(input,request);
   if(parts[0]==='automations'&&request.method==='POST'&&(parts.length===2&&parts[1]==='advance'||parts.length===5&&parts[2]==='runs'&&parts[4]==='retry'))return this.#execution(context,versions).automation(request);
@@ -320,7 +320,7 @@ export class SharedLiveModel{
     const converted=versions.find(row=>row.kind==='task'&&!row.deleted&&(plain(row).related.shared_mindmap_conversions??[]).some(reference=>reference.map_id===source.mapId&&reference.node_id===source.nodeId));
     if(converted)return{edits:[],result:{task:this.#task(converted,versions,context)}};
     const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${this.ports.binding.scopeId}\0map-conversion\0${source.mapId}\0${source.nodeId}`)));bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes.subarray(0,16),value=>value.toString(16).padStart(2,'0')).join('');body.record.id=`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
-    body.related.shared_mindmap_conversions=[{space_id:context.spaceId,map_id:source.mapId,node_id:source.nodeId,project_id:this.ports.binding.resourceId,task_id:body.record.id}];
+    assertTechnical(source.mapId);assertTechnical(source.nodeId);body.related.shared_mindmap_conversions=[{space_id:context.spaceId,map_id:source.mapId,node_id:source.nodeId,project_id:this.ports.binding.resourceId,task_id:body.record.id}];
    }
    if(request.method==='DELETE'){
     if(versions.some(row=>!row.deleted&&row.parentId===old!.entityId))throw new Error('E2EE_SHARED_SUBTREE_REVIEW_REQUIRED');edits.push(this.#edit(body,expected,'delete'));output={ok:true,id:body.record.id};
@@ -505,6 +505,6 @@ export class SharedLiveModel{
   await this.ports.saveRequest({...request,complete:true},saved.serial);this.ports.current();
   return structuredClone(request.result!);
  }
- request(method:string,path:string,body:ObjectValue={}){const held=structuredClone(body);return this.#run(()=>this.#execute(method,path,held));}
+ request(method:string,path:string,body:ObjectValue={}):Promise<ObjectValue>{const held=structuredClone(body);return this.#run(()=>this.#execute(method,path,held));}
  resume(id:string){assertTechnical(id);return this.#run(async()=>{const saved=await this.ports.loadRequest(id);if(!saved)throw new Error('E2EE_SHARED_REQUEST_MISSING');const value=validateSharedLiveRequest(this.ports.binding,saved.value);return this.#execute(value.method,value.path,structuredClone(value.body),id);});}
 }

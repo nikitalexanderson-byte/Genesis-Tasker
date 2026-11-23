@@ -188,7 +188,7 @@ export async function materializeWebArchiveInventory(ownerId:string,input:unknow
  }
  if(input.memorySafety!==null)histories.push({source:'memory-safety',value:await materializeFrozen(ownerId,input.memorySafety,ports)});
  for(let index=0;index<input.editors.length;index++){
-  const editor=input.editors[index];exactKeys(editor,['source','mounted','settled','state','file']);
+  const editor:unknown=input.editors[index];exactKeys(editor,['source','mounted','settled','state','file']);
   if(editor.source!=='backup-panel'||typeof editor.mounted!=='boolean'||typeof editor.settled!=='boolean'||editor.mounted&&!editor.settled)throw new Error('E2EE_ARCHIVE_OPERATION_IN_PROGRESS');object(editor.state);
   const state=structuredClone(editor.state),plan=state.plan;
   // Recovery input remains only in the protected original. Never copy it beside
@@ -266,7 +266,7 @@ export class PersonalArchivesSource implements PrivatePathAdapter{
    for(let attempt=0;attempt<snapshots.length;attempt++){const snapshot=snapshots[attempt],histories=snapshot.protocol===1?await materializeWebArchiveInventory(this.#owner,snapshot.memory.local,readers):snapshot.histories;
     for(const row of histories)add(`capture:${attempt}:${row.source}`,row.value);}
    const seen=new Set<string>();
-   for(const table of ['stages','safety','receipts'] as const){const rows=remote[table];if(!Array.isArray(rows)||rows.length>50000)invalid();
+   for(const table of ['stages','safety','receipts'] as const){const rows:unknown=remote[table];if(!Array.isArray(rows)||rows.length>50000)invalid();
     for(const row of rows){this.#ports.assertCurrent();exactKeys(row,table==='stages'?['id','payload_hash','generation','revision_hash','payload_enc','created_at','expires_at','payload_json']:
      table==='safety'?['id','snapshot_enc','created_at','expires_at','snapshot_json']:['operation_id','payload_hash','generation','created_at']);
      const identity=table==='receipts'?row.operation_id:row.id;string(identity,256);const source=`server:${table}:${identity}`;if(!identity||seen.has(source))invalid();seen.add(source);time(row.created_at);

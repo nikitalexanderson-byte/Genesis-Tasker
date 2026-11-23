@@ -1,5 +1,54 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: общая приёмка начата, исправлен первый блок
+
+Сайт PR45 merged в mainc1205c045862fcfbaa01b48a1fbd7f04d6693b75; required
+CI45079650977/45079645821 success. Exact-main check45084250291 выполняет
+browser scenarios; Deploy ещё не запускался. Main перенесён в security merge
+cf0d4ed3, все строгие правила сохранены. Конфликты толькоAGENTS и QA suite map,
+оба public-region и mindmap-save сохранены. Production всё ещёac8ccf60/APK149.
+
+Основной кодовый проход сохранён fa74cd4e,05b89c4c,b1ad92e9. Общее тестирование
+теперь разрешено порядком владельца. TypeScript404 →68 →16 →0 diagnostics,
+последний PASS consolidated-typecheck-4.log. Lint73errors →0/22warnings,
+consolidated-lint-2.json. Исправлены не только типы: restore digest теперь
+canonicalJson вместо JSON parser; shared task status использует правильные
+prepare args; recovery enrollment shadowing, old draft discovery prefix,
+protocol5 refusals, UI committed-layout capture и refs, exact packet/result types.
+
+i18n аудит3 PASS: английский, ещё12 локалей, native14, notification/template
+catalogues. Новые snapshot/file/confirm/pending labels вычитаны для всех14.
+Визуальная/смысловая приёмка всего остального нового UI ещё не выполнена.
+
+Первый полный backend:132PASS/24FAIL.22 связанных failures начинались в старой
+fixture inventory assumption: shared_space_ui имеет дополнительный space-wide
+DENY/HASH fence, но read grant толькоpersonal. Fixture теперь явно сохраняет
+этот запрет и проверяет, что space read по-прежнему запрещён. Её stale-marker
+upgrade перенесён сv4 на действующийv8. E2EE store и shared-mindmaps PASS в
+backend-fixed-contracts2/3-1123. Полная schema классификация обновлена через140:
+семь новых signed/ciphertext protocol tables и2 private routing user fields.
+Схема, включая negative unclassified-copy test, PASS backend-schema-final-1123.
+Нужен повтор всего backend после этого блока; отдельно shared-bulk-large в первом
+прогоне превысил локальный budget при тяжёлом параллельном Kotlin compiler.
+Нельзя объявлять все156 suites PASS без фактического прогона.
+
+Native первый фактический compile выявил93 diagnostics, в основном lexer >=
+после generic return type и duplicate language. Исправлены14 native файлов,
+callback Unit, explicit device-document current, readonly Handle closure,
+missing imports, observer scope, job key и list prefixes. Второй native compile
+ещё работает: exec63351, logconsolidated-native-2.log. Первую неудачную попытку
+конфигурации отличать от compiler: PowerShell property args должны быть QUOTED.
+Native UI5 переводных строк исправлены уже после старта второго build — нужен
+ещё финальный точный build после всех изменений. Личные устройства не трогались.
+
+Полные JS build/unit сейчасexec21989, logconsolidated-build-unit.log;
+concurrency2, тот же полный tests/*.test.mjs и trace-sanitize test. Первые два
+wrapper запуска были остановлены i18n errors до build/tests; они не PASS.
+Нужны результаты полного unit, native, backend/API/browser, затем recovery/upgrade
+3.3.5→3.3.6 и внутреннее крипторевью точного кандидата, исправления и выпуск.
+Coverage остаётся9/20, floors0/cutoveroff, GENESIS_DEPLOY_ANDROID=false.
+Gmail spam отдельный незавершённый пункт. demo-output/ не читать/stage.
+
 ## 23 ноября: завершён основной кодовый проход, далее общая интеграционная приёмка
 
 Сохранён блок больших данных: semantic source/planning512MiB aggregate, отдельный

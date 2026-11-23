@@ -3,7 +3,7 @@ import {exactKeys} from './keys.ts';
 import type {SharedContentRecord,SharedRecordBody} from './shared-domain.ts';
 
 const extensions=new Set(['jpg','jpeg','png','webp','gif','bmp','tif','tiff','pdf','doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp','rtf','txt','csv']);
-export function sharedFilename(value:unknown){if(typeof value!=='string'||!value.trim()||Array.from(value).length>180||/[/\\\x00-\x1f\x7f]/.test(value)||!extensions.has(value.split('.').at(-1)!.toLowerCase()))throw new Error('INVALID_TASK_FILENAME');return value;}
+export function sharedFilename(value:unknown){if(typeof value!=='string'||!value.trim()||Array.from(value).length>180||/[/\\\p{Cc}]/u.test(value)||!extensions.has(value.split('.').at(-1)!.toLowerCase()))throw new Error('INVALID_TASK_FILENAME');return value;}
 export function openSharedFileInput(data:unknown,image=false){
  if(typeof data!=='string'||data.length>15*1024*1024)throw new Error('TASK_FILES_TOO_LARGE');const comma=data.indexOf(',');if(comma<0||comma>160)throw new Error('INVALID_TASK_FILE');
  const header=data.slice(0,comma);if(!/^data:[a-zA-Z0-9.+-]+\/[a-zA-Z0-9.+-]+;base64$/.test(header))throw new Error('INVALID_TASK_FILE');

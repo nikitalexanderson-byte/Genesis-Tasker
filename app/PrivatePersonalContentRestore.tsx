@@ -20,7 +20,7 @@ export function PrivatePersonalContentRestore({ownerId,language,payload,selectio
   try{const account=requirePrivateAccount(ownerId),current=()=>{account.requireOpen();if(generation.current!==token||requirePrivateAccount(ownerId)!==account||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();await action(current);current();}
   catch{if(generation.current===token)setFailed(true);}finally{running.current=false;setBusy(false);}
  };
- const command=(action:'inspect'|'preview'|'confirm'|'apply',id:string,fingerprint:string|undefined,current:()=>void,kind=restoreKind(view))=>({shared:currentPrivateSharedRestore,domain:currentPrivateDomainRestore,personal:currentPrivatePersonalRestore}[kind])(action,id,fingerprint,current);
+ const command=(action:'inspect'|'preview'|'confirm'|'apply',id:string,fingerprint:string|undefined,current:()=>void,kind:ReturnType<typeof restoreKind>=restoreKind(view))=>({shared:currentPrivateSharedRestore,domain:currentPrivateDomainRestore,personal:currentPrivatePersonalRestore}[kind])(action,id,fingerprint,current);
  const load=async(item:RestoreJournal,current:()=>void)=>{const value=await command('inspect',item.intentId,undefined,current,restoreKind(item));current();if(Array.isArray(value))throw new Error('E2EE_RESTORE_CONTENT_INVALID');setView(value);setAck(false);};
  return <section className="backup-panel" data-no-translate><h3>{c.title}</h3><p>{c.notice}</p><p>{c.localDiary}</p>
   <p>{c.sharedNotice}</p>

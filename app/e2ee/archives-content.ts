@@ -90,7 +90,7 @@ export async function readLegacyArchiveTables(raw:unknown,ownerId:string,ports:A
  assertTechnical(ownerId);ports.assertCurrent();const value=parse(raw);exactKeys(value,LEGACY_BACKUP_CONTENT_TABLES);
  const plans:Plan[]=[];let count=0;
  for(const table of LEGACY_BACKUP_CONTENT_TABLES as (keyof typeof tables)[]){
-  const rows=value[table];if(!Array.isArray(rows)||rows.length>50000)invalid();const seen=new Set<string>();
+  const rows:unknown=value[table];if(!Array.isArray(rows)||rows.length>50000)invalid();const seen=new Set<string>();
   if(['workspace_blobs','personal_diary_settings','dream_journal_preferences','stoicheion_workspaces','aurora_workspaces'].includes(table)&&rows.length>1)invalid();
   for(const row of rows){
    if(++count>50000)throw new Error('E2EE_SOURCE_TOO_LARGE');exactKeys(row,tables[table]);

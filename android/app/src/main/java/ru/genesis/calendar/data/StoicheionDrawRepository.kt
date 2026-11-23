@@ -105,7 +105,7 @@ class StoicheionDrawRepository(private val app: GenesisApplication) {
         }else if (record == null) StoicheionDraws() else read(JSONObject(cipher.decrypt(record.encrypted, associatedData)), LocalDate.now().toString())
     }.flowOn(Dispatchers.IO)
 
-    private fun privateSnapshot():StoicheionDraws{
+    private suspend fun privateSnapshot():StoicheionDraws{
         checkScope();val product=NativePrivateProducts.stoicheion(scope);if(!product.hasLocalState())return StoicheionDraws()
         val (_,draws)=StoicheionDrawWire.snapshot(product.loadDraws(true))
         val timeline=if(app.featureAccess(scope).allows("stoicheion-timeline"))StoicheionTimelineWire.parse(product.loadTimeline(true))else null

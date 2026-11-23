@@ -6,7 +6,7 @@ import {E2EE_CHUNK_BYTES} from './files.ts';
 export const E2EE_DEVICE_DOCUMENT_MAX_BYTES=256*1024*1024;
 import type {LocalWrite} from './storage.ts';
 
-const readOnly=():never=>{throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');};
+function readOnly():never{throw new Error('E2EE_HISTORY_NOT_EXECUTABLE');}
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 export type DeviceDocumentView<T>={value:T;serial:number};
 /** Device-only content has no transport or flush method. CAS protects drafts

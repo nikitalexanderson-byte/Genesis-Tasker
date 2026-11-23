@@ -24,7 +24,7 @@ export interface MembershipAtomicOwnerPorts{
  rotate:(scope:MembershipAtomicScopePreview,changeHash:string)=>Promise<SignedE2eeCommand>;
  reviewEffects:(request:MembershipAtomicReview,scope:MembershipAtomicScopePreview,page:(index:number)=>Promise<MembershipAtomicPage>)=>Promise<MembershipPrivateEffects>;
 }
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');}
 export function membershipAtomicOwnerId(ownerId:string,fingerprint:string,kind:0|1|2|3=0,suffix=''){
  assertTechnical(ownerId);decodeE2eeBytes(fingerprint,32);return MEMBERSHIP_ATOMIC_OWNER_PREFIXES[kind]+membershipAtomicDigest({format:'genesis-membership-atomic-owner-key-v2',ownerId,fingerprint})+suffix;
 }

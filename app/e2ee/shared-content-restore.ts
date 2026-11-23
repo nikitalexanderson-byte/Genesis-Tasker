@@ -1,7 +1,7 @@
 import {sha256} from '@noble/hashes/sha2.js';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {encodeE2eeBytes} from './envelope.ts';
-import {backupJson} from '../backup-format.ts';
+import {canonicalJson} from '../aurora/forecast.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {sharedRecordKey,sharedBodyParent,sharedRestoreContentAllowed,validateSharedRecordBody,type SharedDomainBinding,type SharedRecordBody} from './shared-domain.ts';
 import {sharedFileReference,type SharedFileReference} from './shared-file-values.ts';
@@ -15,8 +15,8 @@ export type SharedRestoreSource={binding:SharedDomainBinding;records:SharedRecor
 export type SharedRestoreCapture={binding:SharedDomainBinding;context:SharedLiveContext;versions:ProductVersion[]};
 type Plan={before:SharedRestoreCapture;records:SharedRecordBody[];files:{reference:SharedFileReference;value:ContentArchiveValue}[];added:number;skipped:number;fingerprint:string};
 export type SharedRestoreJournal={format:'genesis-shared-content-restore-v1';ownerId:string;intentId:string;backupId:string;createdAt:string;source:SharedRestoreSource;proposal:Plan|null;confirmed:string|null;started:boolean;complete:boolean;applied:string[]};
-const invalid=():never=>{throw new Error('E2EE_RESTORE_CONTENT_INVALID');};
-const hash=(value:unknown)=>{const bytes=new TextEncoder().encode(backupJson(value));try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
+function invalid():never{throw new Error('E2EE_RESTORE_CONTENT_INVALID');}
+const hash=(value:unknown)=>{const bytes=new TextEncoder().encode(canonicalJson(value));try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
 export function sharedRestoreBinding(value:unknown):SharedDomainBinding{exactKeys(value,['scopeId','kind','resourceId']);assertTechnical(value.scopeId);assertTechnical(value.resourceId);if(!['project','space'].includes(String(value.kind)))invalid();return value as SharedDomainBinding;}
 export function validateSharedRestoreSource(input:unknown):SharedRestoreSource{
  exactKeys(input,['binding','records','files']);const binding=sharedRestoreBinding(input.binding);if(!Array.isArray(input.records)||!input.records.length||input.records.length>100000||!Array.isArray(input.files)||input.files.length>600000)invalid();
@@ -55,7 +55,8 @@ async function plan(journal:SharedRestoreJournal,captured:unknown):Promise<Plan>
 export function validateSharedRestoreJournal(input:unknown,ownerId:string,id:string):SharedRestoreJournal{
  exactKeys(input,['format','ownerId','intentId','backupId','createdAt','source','proposal','confirmed','started','complete','applied']);assertTechnical(id);assertTechnical(input.backupId);if(input.format!=='genesis-shared-content-restore-v1'||input.ownerId!==ownerId||input.intentId!==id||typeof input.createdAt!=='string'||!Number.isFinite(Date.parse(input.createdAt))||typeof input.started!=='boolean'||typeof input.complete!=='boolean'||!Array.isArray(input.applied)||input.applied.length>100000||new Set(input.applied).size!==input.applied.length)invalid();validateSharedRestoreSource(input.source);
  if(input.proposal!==null){exactKeys(input.proposal,['before','records','files','added','skipped','fingerprint']);validateSharedRestoreCapture(input.proposal.before);if(!Array.isArray(input.proposal.records)||!Array.isArray(input.proposal.files)||input.proposal.added!==input.proposal.records.length||!Number.isSafeInteger(input.proposal.skipped)||Number(input.proposal.skipped)<0||typeof input.proposal.fingerprint!=='string')invalid();}
- if(input.confirmed!==null&&(!input.proposal||input.confirmed!==input.proposal.fingerprint)||input.started&&input.confirmed===null||input.applied.some(item=>typeof item!=='string'||!input.proposal||!(input.proposal.records as SharedRecordBody[]).some(row=>sharedRecordKey(row.kind,row.record)===item))||input.applied.length&&!input.started||input.complete&&(!input.started||input.applied.length!==input.proposal?.added))invalid();return structuredClone(input) as SharedRestoreJournal;
+ const checkedProposal=input.proposal as Plan|null;
+ if(input.confirmed!==null&&(!checkedProposal||input.confirmed!==checkedProposal.fingerprint)||input.started&&input.confirmed===null||input.applied.some(item=>typeof item!=='string'||!checkedProposal||!(checkedProposal.records as SharedRecordBody[]).some(row=>sharedRecordKey(row.kind,row.record)===item))||input.applied.length&&!input.started||input.complete&&(!input.started||input.applied.length!==checkedProposal?.added))invalid();return structuredClone(input) as SharedRestoreJournal;
 }
 export interface SharedRestorePorts{ownerId:string;current:()=>void;load:(id:string)=>Promise<{value:unknown;serial:number}|null>;save:(id:string,value:SharedRestoreJournal,expected:number|null)=>Promise<number>;list:()=>Promise<string[]>;capture:(binding:SharedDomainBinding)=>Promise<unknown>;request:(binding:SharedDomainBinding,path:string,input:Row)=>Promise<Row>}
 /** Every write uses the current normal signed product writer. A former member

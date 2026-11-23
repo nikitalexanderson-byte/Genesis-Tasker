@@ -158,7 +158,7 @@ internal object E2eeMigrationOwnershipCatalogue {
                     }
                     for(value in ancestors+listOfNotNull(root?.value))if(number(value,"protocol") in setOf(1L,2L))asSource(scopeId){
                         val reference=E2eeLegacySnapshotStream.Reference(value.getString("migrationId"),number(value,"snapshotSize",1).toInt(),number(value,"snapshotParts",1).toInt(),value.getString("snapshotHash"));val paths=options.inventory.required(target.kind).map{it.id}
-                        E2eeLegacySnapshotStream.open(E2eeLegacySnapshotStream.Options(view,target,paths,reference,options.inventory,::current)).use{opened->for(path in paths)opened.openPath(path).use{stream->E2eeRetainedMigrationProof.drain(stream,::current);stream.assertComplete()}}
+                        val opened=E2eeLegacySnapshotStream.open(E2eeLegacySnapshotStream.Options(view,target,paths,reference,options.inventory,::current));try{for(path in paths)opened.openPath(path).use{stream->E2eeRetainedMigrationProof.drain(stream,::current);stream.assertComplete()}}finally{opened.close()}
                     }
                 }
                 if(scopeRows.values.count{it.root!=null}!=currentStates.size)invalid()

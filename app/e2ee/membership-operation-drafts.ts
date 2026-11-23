@@ -18,7 +18,7 @@ export interface MembershipOperationDraftPorts{
  /** Actual independently pinned/decrypted topology, not a server proposal. */
  capture:(operation:MembershipOperation)=>Promise<MembershipOperationSnapshot>;
 }
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');}
 function validDate(input:unknown){if(typeof input!=='string'||!Number.isFinite(Date.parse(input)))invalid();}
 function validateProposal(input:unknown,operation:MembershipOperation):Proposal{
  exactKeys(input,['snapshot','plan','fingerprint','planFingerprint']);

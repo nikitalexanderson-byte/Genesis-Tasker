@@ -42,7 +42,7 @@ export interface MembershipAtomicTransport{
 }
 const planKinds=['operation','operation-grants','acl','anchors','clear-assignments','revoke-invitations','role-events','product-operations'] as const;
 const packetKinds=['rotation-packets','product-packets'] as const;
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_ATOMIC_INVALID');}
 const integer=(value:unknown,min=0)=>{if(!Number.isSafeInteger(value)||Number(value)<min||Number(value)>=Number.MAX_SAFE_INTEGER)invalid();};
 export function membershipAtomicStagingPayload(action:MembershipAtomicStagingAction,input:unknown):Record<string,WireValue>{
  const fields=action==='membership-atomic-page'?['intentId','planHash','phase','index','pageHash']:
@@ -82,7 +82,7 @@ export function validateMembershipAtomicPage(input:unknown):MembershipAtomicPage
    case'role-events':exactKeys(item,['projectId','userId','from','to']);assertTechnical(item.projectId);assertTechnical(item.userId);for(const key of ['from','to'])if(item[key]!==null&&!['manager','member','commenter','viewer'].includes(String(item[key])))invalid();unique(item.projectId+'\0'+item.userId);break;
    case'product-operations':exactKeys(item,['scopeId','intentId','operations']);assertTechnical(item.scopeId);assertTechnical(item.intentId);unique(item.scopeId+'\0'+item.intentId);
     if(!Array.isArray(item.operations)||item.operations.length<1||item.operations.length>100||new Set(item.operations.map(row=>productMutation(row).entityId)).size!==item.operations.length||item.operations.some(row=>row.action==='propose-complete'))invalid();break;
-   case'rotation-packets':case'product-packets':exactKeys(item,['command','signature']);commandBytes(item.command);decodeE2eeBytes(item.signature,64);
+   case'rotation-packets':case'product-packets':exactKeys(item,['command','signature']);commandBytes(item.command as Parameters<typeof commandBytes>[0]);exactKeys(item.command,['protocol','ownerId','scopeId','deviceId','action','expectedRevision','checkpointHash','securityEpoch','operationId','payload']);decodeE2eeBytes(item.signature,64);
     if(item.command.action!==(input.kind==='rotation-packets'?'rotate-membership':'product-commit-bound'))invalid();unique(item.command.scopeId+'\0'+item.command.operationId);break;
    default:invalid();
   }

@@ -7,7 +7,7 @@ import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSourceCon
 import type {PrivatePathAdapter} from './migration-sources.ts';
 
 type Row=Record<string,unknown>;
-export type MindmapsMigrationMemory={ownerId:string;legacyKey:string;generation:number;reconciliationRequired:boolean;records:unknown[];editors:unknown[];localWork:unknown[]};
+export type MindmapsMigrationMemory={ownerId:string;legacyKey:string;generation:number;reconciliationRequired:boolean;records:readonly unknown[];editors:unknown[];localWork:unknown[]};
 export type MindmapsMigrationVariant={source:string;document:Row|null;revision:number;deleted:boolean};
 export type MindmapsMigrationConflict={id:string;variants:readonly MindmapsMigrationVariant[]};
 export type MindmapsSourcePorts={storage:Pick<Storage,'getItem'|'key'|'length'>;memory:()=>MindmapsMigrationMemory;assertCurrent:()=>void;

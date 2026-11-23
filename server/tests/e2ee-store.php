@@ -5,6 +5,7 @@ require dirname(__DIR__) . '/src/bootstrap.php';
 require dirname(__DIR__) . '/src/repository.php';
 require dirname(__DIR__) . '/src/e2ee-store.php';
 require_once dirname(__DIR__) . '/src/e2ee-policy.php';
+require_once dirname(__DIR__) . '/src/e2ee-legacy-private-path.php';
 $db=genesisDb();$checks=0;
 function storeCheck(bool $ok):void {global $checks;if(!$ok)throw new RuntimeException('E2EE store assertion failed at '.($checks+1));++$checks;}
 function storeReject(callable $call,string $code):void {
@@ -24,9 +25,15 @@ foreach($paths['remoteDomains'] as $kind=>$domains) {
 foreach($paths['paths'] as $path)storeCheck(count(array_diff($path['domains'],genesisE2eeAllowedContentDomains($path['scope'])))===0);
 $declared=[];foreach($paths['paths'] as $path)foreach($path['server'] as $table)$declared[$path['scope']][$table]=true;
 foreach(genesisE2eeLegacyInventory($db) as $table=>$predicates)foreach($predicates as [$kind]) {
-    if(!isset($declared[$kind][$table]))throw new RuntimeException('E2EE_PATH_INVENTORY_MISSING: '.$kind.'/'.$table);
+    // A space-wide deny/hash fence also observes each user's UI row. This
+    // is deliberately NOT a space-owner read grant for personal preferences.
+    $personalUiFence=$table==='shared_space_ui'&&$kind==='space'&&isset($declared['personal'][$table]);
+    if(!isset($declared[$kind][$table])&&!$personalUiFence)throw new RuntimeException('E2EE_PATH_INVENTORY_MISSING: '.$kind.'/'.$table);
     storeCheck(true);
 }
+try { genesisE2eePrivatePathWhere('space','shared_space_ui'); throw new RuntimeException('E2EE_UI_READ_GRANT_WIDENED'); }
+catch (DomainException $error) { storeCheck($error->getMessage()==='E2EE_SOURCE_PATH_FORBIDDEN'); }
+storeCheck(str_contains(genesisE2eePrivatePathWhere('personal','shared_space_ui'),'user_id=:actor'));
 function storePair():array {
     $private=openssl_pkey_new(['private_key_type'=>OPENSSL_KEYTYPE_EC,'curve_name'=>'prime256v1']);$details=openssl_pkey_get_details($private);
     $der=base64_decode(preg_replace('~-----[^-]+-----|\s~','',$details['key']));
@@ -63,8 +70,8 @@ $db->exec('DROP TRIGGER e2ee_fence_task_links_update');
 $db->exec("CREATE TRIGGER e2ee_fence_task_links_update BEFORE UPDATE ON task_links WHEN 0 BEGIN SELECT RAISE(ABORT,'STALE_GUARD'); END");
 $db->prepare('INSERT OR IGNORE INTO schema_migrations VALUES(?,?)')->execute(['e2ee-fence-v1',genesisNow()]);
 $db->prepare('INSERT OR IGNORE INTO schema_migrations VALUES(?,?)')->execute(['e2ee-fence-v3',genesisNow()]);
-$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v4'");genesisE2eeInitializeGuards($db);
-storeCheck($db->query("SELECT 1 FROM schema_migrations WHERE name='e2ee-fence-v4'")->fetchColumn()!==false);
+$db->exec("DELETE FROM schema_migrations WHERE name='e2ee-fence-v8'");genesisE2eeInitializeGuards($db);
+storeCheck($db->query("SELECT 1 FROM schema_migrations WHERE name='e2ee-fence-v8'")->fetchColumn()!==false);
 $runtime=json_decode((string)file_get_contents(dirname(__DIR__,2).'/tests/fixtures/e2ee/v1-runtime.json'),true,64,JSON_THROW_ON_ERROR);
 storeCheck(storeB64(genesisE2eeCommandBytes($runtime['signedCommand']['command']))===$runtime['commandBytes']);
 storeCheck(genesisE2eeCommandHash($runtime['signedCommand']['command'])===$runtime['commandHash']);

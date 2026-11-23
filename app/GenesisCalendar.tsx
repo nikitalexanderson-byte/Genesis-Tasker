@@ -69,7 +69,7 @@ const PlanGuidanceHost=lazy(()=>import("./PlanGuidanceHost"));
 import ukrainianSynthemaNames from "./weekday-synthema.uk.json";
 /* eslint-disable @next/next/no-img-element -- Google requires the official, unmodified sign-in asset. */
 
-import {
+import {useLayoutEffect,
   type CSSProperties,
   type FormEvent,
   type PointerEvent,
@@ -1450,7 +1450,7 @@ export function GenesisCalendar() {
   // These are inert inputs: migration must never resume a delete, transfer,
   // provider copy or map conversion just because its form was still open.
   const workspaceMigrationForms = useRef<unknown>(null);
-  workspaceMigrationForms.current = {
+  useLayoutEffect(()=>{workspaceMigrationForms.current = {
     taskComposer, composerTab, newEntryType, dayTaskCreatorOpen, mindmapConversion,
     taskTitle, taskDescription, taskFormCalendar, taskScope, taskDueDate, taskUndated,
     taskEndDate, taskTime, taskProject, taskTaskListId, taskNewListTitle, taskNewListAccountId,
@@ -1463,7 +1463,7 @@ export function GenesisCalendar() {
     editingCategoryTitle, editingCategoryColor, editingProject, editingProjectTags,
     editingTask, editingTaskTags, editingTaskScope, editingOccurrenceDate, editingTaskList,
     transferTask, transferProject, pendingTaskDeletion, projectToComplete,
-  };
+  };});
   useEffect(() => {
     if (!cloudUser?.uid) return;
     return registerBackupSource('workspace', { owner:cloudUser.uid, capture:() => ({tasks:tasksRef.current,projects:projectsRef.current,

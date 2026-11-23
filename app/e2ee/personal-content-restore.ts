@@ -2,7 +2,7 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {encodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
-import {backupJson} from '../backup-format.ts';
+import {canonicalJson} from '../aurora/forecast.ts';
 import {validateMigrationTask} from './tasks-source.ts';
 import {normalizeHabitWorkspace} from '../habits.ts';
 
@@ -11,9 +11,9 @@ export type PersonalRestoreSource={workspace:Row|null;tasks:Row[]|null};
 export type PersonalRestoreView={snapshot:Row;contentRevision:number;deletedTaskIds:string[];pending:boolean};
 export type PersonalRestoreProposal={before:PersonalRestoreView;after:Row;added:number;skipped:number;fingerprint:string};
 export type PersonalRestoreJournal={format:'genesis-personal-content-restore-v1';ownerId:string;intentId:string;backupId:string;source:PersonalRestoreSource;proposal:PersonalRestoreProposal|null;confirmed:string|null;started:boolean;complete:boolean};
-const invalid=():never=>{throw new Error('E2EE_RESTORE_CONTENT_INVALID');};
+function invalid():never{throw new Error('E2EE_RESTORE_CONTENT_INVALID');}
 const object=(input:unknown):Row=>{if(!input||typeof input!=='object'||Array.isArray(input))invalid();return input as Row;};
-const digest=(value:unknown)=>{const bytes=new TextEncoder().encode(backupJson(value));try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
+const digest=(value:unknown)=>{const bytes=new TextEncoder().encode(canonicalJson(value));try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
 export function personalRestoreWorkspace(input:unknown):Row{const value=object(input);for(const name of ['projects','categories','taskLists','taskListLinks'])if(!Array.isArray(value[name]))invalid();
  if(['user','csrf','key','rawKey','recoveryCode','billing','entitlements','devices','tasks'].some(name=>Object.hasOwn(value,name)))invalid();return structuredClone({...value,...normalizeHabitWorkspace(value)});
 }
@@ -31,7 +31,7 @@ export function personalRestoreProposal(raw:unknown,sourceInput:unknown):Persona
  const before=validatePersonalRestoreView(raw),source=validatePersonalRestoreSource(sourceInput),after=structuredClone(before.snapshot);let added=0,skipped=0;
  if(source.workspace)for(const [name,incoming]of Object.entries(source.workspace)){
   if(Array.isArray(incoming)){const existing=after[name];if(existing!==undefined&&!Array.isArray(existing))invalid();const next=[...(existing as unknown[]|undefined)??[]];
-   const identity=(value:unknown)=>{const row=value&&typeof value==='object'&&!Array.isArray(value)?value as Row:null;return row&&typeof row.id==='string'?'id:'+row.id:row&&typeof row.date==='string'?'date:'+row.date:'value:'+backupJson(value);};
+   const identity=(value:unknown)=>{const row=value&&typeof value==='object'&&!Array.isArray(value)?value as Row:null;return row&&typeof row.id==='string'?'id:'+row.id:row&&typeof row.date==='string'?'date:'+row.date:'value:'+canonicalJson(value);};
    const ids=new Set(next.map(identity));for(const row of incoming){const id=identity(row);if(ids.has(id)){skipped++;continue;}if(row&&typeof row==='object'&&('deleted'in row&&row.deleted===true||'deletedAt'in row&&row.deletedAt)){skipped++;continue;}next.push(structuredClone(row));ids.add(id);added++;}after[name]=next;
   }else if(!Object.hasOwn(after,name))after[name]=structuredClone(incoming);
  }

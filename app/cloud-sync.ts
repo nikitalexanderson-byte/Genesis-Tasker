@@ -179,6 +179,7 @@ export type GenesisTask = {
 export type GenesisUser = {
   uid: string;
   dataGeneration?: number;
+  privateVault?: boolean;
   forecastElitePlus?: boolean;
   subscriptionPlan?: SubscriptionPlan;
   featureAccess?: import("./feature-access").FeatureAccess;
@@ -4099,7 +4100,7 @@ export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e
   },mode);
   if(typeof window!=='undefined')window.dispatchEvent(new Event(PERSONAL_DOCUMENT_READY_EVENT));
 }
-export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source'|'/membership-state'|'/membership-preview'|'/membership',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
+export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source'|'/membership-state'|'/membership-preview'|'/membership'|'/membership-graph'|'/membership-atomic-begin'|'/membership-atomic-page'|'/membership-atomic-status'|'/membership-atomic-cancel'|'/membership-atomic-seal'|'/membership-atomic-commit'|'/membership-atomic-receipt'|'/membership-atomic-receipt-page'|'/membership-atomic-preview',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
   try{
     if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
     return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
@@ -4270,7 +4271,7 @@ export async function createPersonalArchivesMigrationSource(userId:string,scopeI
 /** Source factories for the remaining personal/project/space data paths. Local
  * originals are read without using a live legacy transport permit or key API. */
 export async function createRelationalMigrationSources(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
-  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathFragment'|'legacyPrivatePathBatch'>){
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathFragment'>&Partial<Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathBatch'>>){
   const session=captureAccountSessionGuard(),legacy=workspaceKey;
   const check=()=>{session();if(workspaceUserId!==userId||workspaceKey!==legacy||directory.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
   const [{RelationalPrivatePathSource},{captureWebPrivatePathLocal},{collectPrivatePathFragments},{requiredPrivatePaths}]=await Promise.all([
@@ -4292,7 +4293,7 @@ export async function createRelationalMigrationSources(userId:string,directory:i
       capture:()=>path.id.endsWith('.local-work')?captureWebPrivatePathLocal(target,{storage:localStorage,assertCurrent:check,open})
         :Promise.resolve({platform:'web' as const,inventoryVersion:1 as const,entries:[],editors:[]}),
       read:context=>collectPrivatePathFragments(context,target,{assertCurrent:check,
-        read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset),readBatch:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathBatch(value,pathId,table,offset,byteOffset)})});
+        read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset),readBatch:transport.legacyPrivatePathBatch?.bind(transport)})});
   });
 }
 

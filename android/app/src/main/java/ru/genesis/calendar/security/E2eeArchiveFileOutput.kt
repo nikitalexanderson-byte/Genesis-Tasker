@@ -11,9 +11,9 @@ internal class E2eeArchiveFileOutput(private val account:E2eeProductAccount,priv
     private fun validate(value:JSONObject):JSONObject{
         E2eeKeys.exact(value,setOf("format","archiveId","section","entry","version","sha256","bytes"))
         check(value.getString("format")=="genesis-content-file-output-v1"){"BACKUP_INVALID"};E2eeKeys.technical(value.getString("archiveId"));E2eeKeys.technical(value.getString("section"));E2eeKeys.technical(value.getString("version"))
-        E2eeCommands.integer(value.get("entry"));check(E2eeCommands.integer(value.get("bytes"))<=16*1024*1024){"BACKUP_TOO_LARGE"};E2eeEnvelope.decode(value.getString("sha256"),32).fill(0);return value
+        E2eeCommands.integer(value.get("entry"));check(E2eeCommands.integer(value.get("bytes"))<=ru.genesis.calendar.data.GenesisBackupContainer.MAX_PLAIN){"BACKUP_TOO_LARGE"};E2eeEnvelope.decode(value.getString("sha256"),32).fill(0);return value
     }
-    private fun document(id:String):E2eeDeviceDocument{check(UUID.fromString(id).toString()==id){"BACKUP_INVALID"};return E2eeDeviceDocument(account.device,"content-file-output:$id",::validate){current();account.requireOpen()}}
+    private fun document(id:String):E2eeDeviceDocument{check(UUID.fromString(id).toString()==id){"BACKUP_INVALID"};return E2eeDeviceDocument(account.device,"content-file-output:$id",::validate,{current();account.requireOpen()})}
     private fun record(archiveId:String,sectionId:String,entry:Int,version:String):JSONObject{
         current();account.requireOpen();val payload=archive.openRetained(archiveId);current();val sections=payload.getJSONArray("sections")
         val selected=(0 until sections.length()).map{sections.getJSONObject(it)}.single{it.getString("id")==sectionId}.getJSONObject("data").getJSONArray("entries")

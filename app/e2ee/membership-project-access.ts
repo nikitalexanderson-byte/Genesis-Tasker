@@ -9,7 +9,7 @@ import type {ProductVersion} from './shared-product.ts';
 import type {SharedProjectAccessDraft,SharedProjectAccessState,SharedProjectAccessPreview,ProjectAccessPermissions} from '../shared-project-access.ts';
 
 const permissionKeys=['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers'] as const;
-const stale=():never=>{throw new Error('E2EE_MEMBERSHIP_STALE');};
+function stale():never{throw new Error('E2EE_MEMBERSHIP_STALE');}
 export function membershipProjectAccessProbe(spaceId:string,userId:string){assertTechnical(spaceId);assertTechnical(userId);return{kind:'project-grants' as const,spaceId,userId,allProjects:true,grants:[]};}
 /** Hashes technical topology/ACL and ciphertext references, never the decrypted
  * project names or task values used by the human-facing catalogue. */

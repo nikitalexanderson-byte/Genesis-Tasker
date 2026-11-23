@@ -17,6 +17,6 @@ internal object E2eePrivateTableReader{
         E2eeKeys.exact(root,setOf("format","pathId","table","count","parts","execution"));val count=E2eeCommands.integer(root.get("count"),1);val parts=root.getJSONArray("parts");if(root.getString("format")!="genesis-private-table-shards-v2"||count>1000000||expectedCount!=null&&count!=expectedCount.toLong()||parts.length() !in 1..10000)invalid();val result=JSONArray()
         for(at in 0 until parts.length()){current();val part=parts.getJSONObject(at);E2eeKeys.exact(part,setOf("objectId","count","size","sha256"));val size=E2eeCommands.integer(part.get("size"),1);val expectedRows=E2eeCommands.integer(part.get("count"),1);if(part.getString("objectId")!="$objectId:part:$at"||size>E2eeFiles.MAX_FILE_BYTES)invalid();E2eeEnvelope.decode(part.getString("sha256"),32).fill(0);val value=read(part.getString("objectId"));current()
             try{if(value.revision!=1L||value.bytes.size.toLong()!=size||E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(value.bytes))!=part.getString("sha256"))invalid();val page=rows(document(value.bytes,pathId,table));if(page.length().toLong()!=expectedRows||result.length().toLong()+expectedRows>count)invalid();for(index in 0 until page.length())result.put(page.getJSONObject(index));current()}finally{value.bytes.fill(0)}
-        }if(result.length().toLong()!=count)invalid();return result
+        };if(result.length().toLong()!=count)invalid();return result
     }
 }

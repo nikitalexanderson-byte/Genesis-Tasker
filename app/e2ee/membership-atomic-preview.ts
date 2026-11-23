@@ -4,7 +4,7 @@ import {membershipAtomicChangeHash,membershipAtomicPlanHash,type MembershipAtomi
 export type MembershipAtomicScopePreview={scopeId:string;ownerId:string;kind:'space'|'project';resourceId:string;generation:number;directoryRevision:number;checkpointHash:string;cryptoEpoch:number;securityEpoch:number;
  roles:{deviceId:string;userId:string;role:'owner'|'writer'|'commenter'|'reader'|null}[];manifest:{manifestHash:string;objectCount:number}};
 export type MembershipAtomicPreviewPage={intentId:string;planHash:string;changeHash:string;scopePlans:MembershipAtomicScopePreview[];next:number|null};
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');}
 const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER-1)=>{if(!Number.isSafeInteger(value)||Number(value)<min||Number(value)>max)invalid();};
 export function validateMembershipAtomicPreviewPage(input:unknown,plan:MembershipAtomicPlan,planHash:string,after:number,anchors:ReadonlyMap<string,MembershipAtomicAnchor>):MembershipAtomicPreviewPage{
  integer(after,0,plan.scopeIds.length);exactKeys(input,['intentId','planHash','changeHash','scopePlans','next']);

@@ -17,7 +17,7 @@ export interface MembershipPeerPorts{
  remember:(target:DeviceAccessTarget,events:SignedE2eeCommand[])=>Promise<void>;
  current:()=>void;
 }
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');}
 const digest=(value:WireValue)=>{const bytes=canonicalE2eeValue(value);try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
 export function validateMembershipReviewRequest(input:unknown):MembershipReviewRequest{
  exactKeys(input,['format','hashFormat','actorId','intentId','scopeIds','changes','preview']);

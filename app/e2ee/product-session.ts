@@ -198,8 +198,8 @@ export class WebPrivateAccount{
      {domain:'outbox',objectId:id,value:bytes,expected:previous?.serial??null}]);}finally{bytes.fill(0);}
    let deliveryFailure:unknown;
    try{await this.#transport.command(packet);}catch(error){if(error instanceof Error&&error.name==='AbortError')throw error;deliveryFailure=error;}this.requireOpen();
-   const response=await this.#transport.directory(scopeId);this.requireOpen();const directory=await this.device.rememberDirectory(scopeId,kit.authority,response.events,this.ownerId);this.requireOpen();
-   const enrolled=directory.devices.get(this.device.deviceId),keys=await publicDeviceKeys(this.device.keys());
+   const finalResponse=await this.#transport.directory(scopeId);this.requireOpen();const finalDirectory=await this.device.rememberDirectory(scopeId,kit.authority,finalResponse.events,this.ownerId);this.requireOpen();
+   const enrolled=finalDirectory.devices.get(this.device.deviceId),keys=await publicDeviceKeys(this.device.keys());
    if(!enrolled||enrolled.revoked||enrolled.userId!==this.ownerId||enrolled.signingKey!==keys.signingKey||enrolled.receivingKey!==keys.receivingKey){if(deliveryFailure)throw deliveryFailure;throw new Error('E2EE_UNTRUSTED_DEVICE');}
   }finally{previous?.value.fill(0);}
  }

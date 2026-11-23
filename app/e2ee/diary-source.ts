@@ -7,7 +7,7 @@ import {E2EE_MIGRATION_BYTE_BUDGET,type MigrationContent,type MigrationSourceCon
 import type {PrivatePathAdapter} from './migration-sources.ts';
 
 type Row=Record<string,unknown>;
-export type DiaryMigrationMemory={ownerId:string;legacyKey:string;generation:number;reconciliationRequired:boolean;records:unknown[];editors:unknown[]};
+export type DiaryMigrationMemory={ownerId:string;legacyKey:string;generation:number;reconciliationRequired:boolean;records:readonly unknown[];editors:unknown[]};
 export type DiaryMigrationVariant={source:string;note:Row|null;revision:number;deleted:boolean};
 export type DiaryMigrationConflict={id:string;placement:'remote'|'local';variants:readonly DiaryMigrationVariant[]};
 export type DiarySourcePorts={storage:Pick<Storage,'getItem'|'key'|'length'>;memory:()=>DiaryMigrationMemory;assertCurrent:()=>void;

@@ -1,4 +1,6 @@
 "use client";
+import privateSecurityCopy from '../contracts/e2ee/shared-security-copy-v1.json';
+import {isLanguage} from './i18n';
 import { useEffect, useId, useRef, useState } from "react";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import type { SharedTaskAttachment } from "./cloud-sync";
@@ -32,8 +34,8 @@ function readFile(file: File): Promise<string> {
   });
 }
 
-export function SharedTaskAttachmentList({ files, english }: { files: SharedTaskAttachment[]; english: boolean }) {
-  const [busy,setBusy]=useState(''),[failed,setFailed]=useState(false),ownerRef=useRef(privateSharedFileOwner()),currentOwner=privateSharedFileOwner();if(currentOwner)ownerRef.current=currentOwner;const privateOwner=ownerRef.current;
+export function SharedTaskAttachmentList({ files, english,language }: { files: SharedTaskAttachment[]; english: boolean;language?:string }) {
+  const [busy,setBusy]=useState(''),[failed,setFailed]=useState(false),privateOwner=privateSharedFileOwner();
   const download=async(file:SharedTaskAttachment)=>{if(busy||!privateOwner)return;setBusy(file.id);setFailed(false);let url:string|undefined;
    try{const account=requirePrivateAccount(privateOwner),result=await readPrivateSharedFile(file.url,privateOwner);try{account.requireOpen();if(requirePrivateAccount(privateOwner)!==account||result.bytes.length!==file.size||result.filename!==file.name)throw new Error('E2EE_PRIVATE_FILE_CORRUPT');url=URL.createObjectURL(new Blob([result.bytes],{type:'application/octet-stream'}));}finally{result.bytes.fill(0);}
     account.requireOpen();const link=document.createElement('a');link.href=url;link.download=file.name;link.click();const held=url;setTimeout(()=>URL.revokeObjectURL(held),1000);url=undefined;
@@ -46,7 +48,7 @@ export function SharedTaskAttachmentList({ files, english }: { files: SharedTask
       <ExperimentalIcon name="file" />
       {privateOwner?<button type="button" disabled={!!busy} onClick={()=>void download(file)}><span>{file.name}</span><small>{taskFileSize(file.size, english)} · {english ? "Download" : "Скачать"}</small></button>:<a href={file.url} download={file.name}><span>{file.name}</span><small>{taskFileSize(file.size, english)} · {english ? "Download" : "Скачать"}</small></a>}
     </li>)}</ul>
-    {failed?<p role="alert">{english?'Could not open this file. Your data is preserved.':'Не удалось открыть файл. Данные сохранены.'}</p>:null}
+    {failed?<p role="alert">{privateSecurityCopy[language&&isLanguage(language)?language:english?'en':'ru'].error}</p>:null}
   </section>;
 }
 

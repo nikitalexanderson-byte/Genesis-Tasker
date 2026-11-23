@@ -291,7 +291,7 @@ export class E2eeMigration {
     }finally{encoded.fill(0);changes.forEach(row=>row.value.fill(0));}
   }
   async #snapshot(state: MigrationState) {
-    if(state.protocol===3||state.protocol===4)throw new Error('E2EE_STREAMED_PLANNER_REQUIRED');
+    if('source' in state)throw new Error('E2EE_STREAMED_PLANNER_REQUIRED');
     if(!Number.isSafeInteger(state.snapshotSize)||state.snapshotSize<0||state.snapshotSize>E2EE_MAX_FILE_BYTES)throw new Error('E2EE_CORRUPT_SNAPSHOT');
     const bytes=new Uint8Array(state.snapshotSize);let offset=0;
     try {
@@ -312,7 +312,7 @@ export class E2eeMigration {
     const policy={...options,capacity:{...options.capacity}},target={ownerId:this.#directory.ownerId,scopeId:this.#directory.scopeId,kind:this.#directory.kind};
     return this.#localFence(async()=>{
       const history=await openMigrationSourceHistory({vault:this.#vault,target,paths:this.#required,stateId:await this.#stateId,
-        decode:bytes=>{const state=decodeState(bytes);this.#localEntries(state);if(state.protocol===4)throw new Error('E2EE_STAGED_SOURCE_REQUIRED');return state;},options:policy});
+        decode:bytes=>{const state=decodeState(bytes);this.#localEntries(state);if(state.protocol===4||state.protocol===5)throw new Error('E2EE_STAGED_SOURCE_REQUIRED');return state;},options:policy});
       let rejected=false;
       const close=async()=>{try{await history.close();}catch(error){if(!rejected)throw error;}};
       try{const result=await consume(history.input);await history.assertCompleteAndUnchanged();return result;}
@@ -454,8 +454,8 @@ export class E2eeMigration {
       await this.#assertPlanningPackets(state,signer,current);
       await this.#checkOwnedOriginals(state,policy,signer,current);
       await this.#drainPreparedHistory(await this.#preparedHistory(loaded,policy,current),current);current();
-      if(state.resuming)({state,serial}=await this.#resume(state,serial,current));current();
-      if(state.pending)({state,serial}=await this.#replay(state,serial,current));current();
+      if(state.resuming){const next=await this.#resume(state,serial,current);if(next.state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');state=next.state;serial=next.serial;}current();
+      if(state.pending){const next=await this.#replay(state,serial,current);if(next.state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');state=next.state;serial=next.serial;}current();
       if(state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
       if(!state.lease){
         state.sourceHash=await this.#transport.sourceHash();current();decodeE2eeBytes(state.sourceHash,32);
@@ -817,7 +817,7 @@ export class E2eeMigration {
       for(const id of state.ancestors) {
         const row=await this.#vault.read('local-snapshot',id);if(!row)throw new Error('E2EE_CORRUPT_SNAPSHOT');
         let previous:MigrationState;try{previous=decodeState(row.value);}finally{row.value.fill(0);}
-        if(previous.protocol===3||previous.protocol===4)throw new Error('E2EE_STREAMED_SOURCE_REQUIRED');
+        if('source' in previous)throw new Error('E2EE_STREAMED_SOURCE_REQUIRED');
         total+=previous.snapshotSize;if(total>E2EE_MIGRATION_BYTE_BUDGET)throw new Error('E2EE_MIGRATION_HISTORY_LIMIT');
         previousSnapshots.push(await this.#snapshot(previous));
       }
@@ -945,7 +945,7 @@ export class E2eeMigration {
       await this.#assertPlanningPackets(loaded.state,signer,current);current();
       await this.#checkOwnedOriginals(loaded.state,policy,signer,current);current();
       const totals=await this.#drainPreparedHistory(await this.#preparedHistory(loaded,policy,current),current);current();
-      let {state,serial}=loaded;
+      let {state,serial}: {state:MigrationState;serial:number}=loaded;
       if(unresolvedMigrationStart(state)||state.startCancellation!==undefined){
         await this.#cancelUnresolvedStart(state,serial,current,async additional=>{
           const metadataBytes=totals.metadataBytes+additional;if(metadataBytes>policy.capacity.maximumMetadataBytes)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
@@ -954,8 +954,8 @@ export class E2eeMigration {
         const checked=await this.#ownershipCatalogue(policy,current);try{await checked.assertUnchanged();current();}finally{checked.close();}return;
       }
       if(state.phase==='cancelled')return;
-      if(state.resuming)({state,serial}=await this.#resume(state,serial,current));current();
-      if(state.pending)({state,serial}=await this.#replay(state,serial,current));current();
+      if(state.resuming){const next=await this.#resume(state,serial,current);if(next.state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');state=next.state;serial=next.serial;}current();
+      if(state.pending){const next=await this.#replay(state,serial,current);if(next.state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');state=next.state;serial=next.serial;}current();
       if(state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');
       if(state.phase!=='cancelled'){
         if(state.pending||state.resuming)throw new Error('E2EE_MIGRATION_CANCELLATION_PENDING');
@@ -964,7 +964,7 @@ export class E2eeMigration {
         try{const metadataBytes=totals.metadataBytes+2*(bytes.length+request.length+1024);
           if(metadataBytes>policy.capacity.maximumMetadataBytes)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
           await policy.admit({...totals,metadataBytes});current();await policy.device.ensureDurableKeys();current();await this.#durableKeys();current();
-          if(packet)({state,serial}=await this.#send(state,serial,packet,current));else{state.phase='cancelled';serial=await this.#save(state,serial,[],current);}
+          if(packet){const next=await this.#send(state,serial,packet,current);if(next.state.protocol!==4)throw new Error('E2EE_STREAMED_PLANNING_REQUIRED');state=next.state;serial=next.serial;}else{state.phase='cancelled';serial=await this.#save(state,serial,[],current);}
         }finally{bytes.fill(0);request.fill(0);}
       }
       loaded=await this.#load();current();

@@ -4,7 +4,7 @@ import {parseLegacyMigrationJson} from './legacy-json.ts';
 
 type Row=Record<string,unknown>;
 type Read=(objectId:string)=>Promise<{bytes:Uint8Array;revision:number}>;
-const invalid=():never=>{throw new Error('E2EE_PRIVATE_SEED_REQUIRED');};
+function invalid():never{throw new Error('E2EE_PRIVATE_SEED_REQUIRED');}
 function document(bytes:Uint8Array,pathId:string,table:string){const value=parseLegacyMigrationJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),'E2EE_PRIVATE_SEED_REQUIRED',64*1024*1024) as Row;if(!value||typeof value!=='object'||value.pathId!==pathId||value.table!==table||value.execution!=='content-only')invalid();return value;}
 function rows(value:Row){exactKeys(value,['format','pathId','table','rows','execution']);if(value.format!=='genesis-private-table-v1'||!Array.isArray(value.rows)||value.rows.length>1000000||value.rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))invalid();return value.rows as Row[];}
 /** Bounded independently authenticated chunks, exact count/EOF and immutable

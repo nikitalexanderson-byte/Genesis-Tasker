@@ -53,7 +53,7 @@ export class SharedPrivateBulk{
    case'archive':patch.archivedAt=value.createdAt;break;case'trash':method='DELETE';break;case'move':method='POST';patch.projectId=operation.projectId;patch.statusId=operation.statusId;break;
   }return{id,method,path:`tasks/${item.taskId}${operation.kind==='move'?'/move':''}`,body:patch};
  }
- async #command(id:string,command:string,after:number){let saved=await this.#load(id),value=structuredClone(saved.value),serial=saved.serial;if(!value.planned)throw new Error('BULK_PREVIEW_REQUIRED');
+ async #command(id:string,command:string,after:number){const saved=await this.#load(id),value=structuredClone(saved.value);let serial=saved.serial;if(!value.planned)throw new Error('BULK_PREVIEW_REQUIRED');
   if(command==='cancel'){if(value.state==='done')return this.#report(value,after);for(const item of value.items)if(item.state==='pending'&&item.request===null)item.state='cancelled';value.state=value.items.some(v=>v.state==='pending')?'running':'cancelled';serial=await this.#save(value,serial);return this.#report(value,after);}
   if(command==='confirm'){if(value.state==='preview'){if(Date.parse(value.expiresAt)<Date.now())throw new Error('BULK_PREVIEW_EXPIRED');value.state='running';serial=await this.#save(value,serial);}return this.#report(value,after);}
   if(!['advance','resume'].includes(command)||value.state==='preview')throw new Error('BULK_PREVIEW_REQUIRED');if(value.state==='done'||value.state==='cancelled')return this.#report(value,after);

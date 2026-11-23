@@ -2,7 +2,6 @@ import {E2eeFeatureDocument,type FeatureDocumentView} from './feature-document.t
 import {E2eeDeviceDocument} from './device-document.ts';
 import {requirePrivateAccount} from './product-session.ts';
 import {exactKeys} from './keys.ts';
-import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {validatePhysisRecord} from '../physis/validation.ts';
 import type {PhysisRecord,PhysisStore,SaveState} from '../physis/types.ts';
 import type {PhysisMigrationStoreMemory,WireRecord} from '../physis/store.ts';
@@ -50,17 +49,17 @@ export class E2eePhysisMemoryStore{
  });}
  async #load(refresh=false){if(!this.#view||refresh)this.#view=await this.#document.read(refresh);this.assertCurrent();return this.#view;}
  async #flush(){const view=await this.#load();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');this.#view=await this.#document.flush();this.#publish(this.#view.pending?'offline':'saved');}
- reload(_permit?:unknown){return this.#operation(async()=>{await this.#load(true);this.#publish(this.#view!.conflict?'conflict':this.hasPending?'offline':'saved');});}
+ reload(){return this.#operation(async()=>{await this.#load(true);this.#publish(this.#view!.conflict?'conflict':this.hasPending?'offline':'saved');});}
  flush=()=>this.#operation(()=>this.#flush());
  #save(input:PhysisRecord[]){const records=structuredClone(input);return this.#operation(async()=>{
   if(new Set(records.map(row=>row.id)).size!==records.length||records.some(row=>!validatePhysisRecord(row)))throw new Error('E2EE_PHYSIS_SOURCE_INVALID');
   const view=await this.#load();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');const next=structuredClone(view.document);
   for(const record of records){const old=next.records.find(row=>row.id===record.id);if(old?.deleted)throw new Error('E2EE_PHYSIS_DELETED');
    const row={id:record.id,record,revision:(old?.revision??0)+1,deleted:false};if(old)Object.assign(old,row);else next.records.push(row);}
-  this.#view=await this.#document.write(validate(next,this.owner));this.#publish('pending');await this.#persistForms();await this.#flush();
+  this.#view=await this.#document.write(validate(next,this.owner));this.#publish('saving');await this.#persistForms();await this.#flush();
  });}
  #remove(id:string){return this.#operation(async()=>{const view=await this.#load();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');const next=structuredClone(view.document),row=next.records.find(item=>item.id===id);
-  if(!row||row.deleted)return;row.record=null;row.deleted=true;row.revision++;this.#view=await this.#document.write(next);this.#publish('pending');await this.#flush();});}
+  if(!row||row.deleted)return;row.record=null;row.deleted=true;row.revision++;this.#view=await this.#document.write(next);this.#publish('saving');await this.#flush();});}
  async #persistForms(){this.assertCurrent();const prior=await this.#forms.load();this.assertCurrent();const rows=new Map((prior?.value.editors??[]).map(row=>[row.id,row.value]));
   for(const [id,value]of this.#detached)rows.set(id,structuredClone(value));for(const [id,capture]of this.#editors)rows.set(id,structuredClone(capture()));
   await this.#forms.save({version:1,ownerId:this.owner,editors:[...rows].map(([id,value])=>({id,value}))},prior?.serial??null);this.assertCurrent();}

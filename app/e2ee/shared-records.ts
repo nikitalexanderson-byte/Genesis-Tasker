@@ -31,7 +31,7 @@ export class E2eeSharedRecords{
  }
  flush(intentId:string){this.account.requireOpen();if(this.account.mode!=='online')throw new Error('E2EE_ONLINE_REQUIRED');return this.product.flush(intentId);}
  async sourceTable(table:string){
-  this.account.requireOpen();const paths=requiredPrivatePaths(this.binding.kind).filter(row=>row.server.includes(table));if(paths.length!==1)throw new Error('E2EE_SOURCE_PATH_FORBIDDEN');
+  this.account.requireOpen();const paths=requiredPrivatePaths(this.binding.kind).filter(row=>(row.server as readonly string[]).includes(table));if(paths.length!==1)throw new Error('E2EE_SOURCE_PATH_FORBIDDEN');
   const path=paths[0],domain=privatePathDocumentDomain(this.binding.kind,path.id),{client}=this.account.shared(this.binding.scopeId,this.binding.kind,this.binding.resourceId);
   return readPrivateTable(async id=>{const value=await client.readMigrationOriginal(domain,id);this.account.requireOpen();return{bytes:value.bytes,revision:1};},privateTableObjectId(path.id,table),path.id,table,()=>this.account.requireOpen());
  }

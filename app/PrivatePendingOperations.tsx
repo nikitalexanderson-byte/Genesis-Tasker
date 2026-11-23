@@ -18,6 +18,6 @@ export function PrivatePendingOperations({ownerId,language,feature,onResolved}:{
  if(!pending.length)return null;
  const retry=async(id:string)=>{if(busy)return;setBusy(true);setFailed(false);try{if(feature==='advice')await resumePrivateAdvice();else await resumePrivateStoicheion(id as StoicheionDrawKind);setRevision(value=>value+1);onResolved();}catch{setFailed(true);}finally{setBusy(false);}};
  return <aside className="daily-advice-saved-status" data-no-translate><p role="status">{failed?text.error:text.message}</p>
-  <div>{pending.map(id=><button key={id} type="button" className="secondary-button" disabled={busy} onClick={()=>void retry(id)}>{text.retry}{pending.length>1?' · '+translateText(id==='daily'?'Карта дня':id==='spread'?'Девять ликов':'Линия времени',language):''}</button>)}</div>
+  <div>{pending.map(id=><button key={id} type="button" className="secondary-button" disabled={busy} onClick={()=>void retry(id)}>{text.retry}{pending.length>1?' · '+(id==='daily'?translateText('Карта дня',language):id==='spread'?text.spread:text.timeline):''}</button>)}</div>
  </aside>;
 }

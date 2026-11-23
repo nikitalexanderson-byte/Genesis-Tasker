@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,useSyncExternalStore, type ReactNode } from 'react';
+import {useLayoutEffect, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,useSyncExternalStore, type ReactNode } from 'react';
 import { PERSONAL_DOCUMENT_READY_EVENT,usesPrivateProductStorage } from './cloud-sync';
 import {privateAccountView,subscribePrivateAccount} from './e2ee/product-session';
 import { DiaryRepository, type DiaryRecord, type DiaryEditorCapture } from './diary-storage';
@@ -25,12 +25,13 @@ export function DiaryProvider({ userId, ready, children, repositoryOverride }: {
   const [busy, setBusy] = useState(false);
   const request = useRef(0);
   const repositoryLifetime=useRef(0);
-  const activeRepository=useRef(repository);activeRepository.current=repository;
+  const activeRepository=useRef(repository);useLayoutEffect(()=>{activeRepository.current=repository;},[repository]);
   const current=()=>{if(!repository||activeRepository.current!==repository)throw new Error('DIARY_SESSION_CLOSED');};
   usePersonalMigrationSource(repository&&!usesPrivateProductStorage(userId)?userId:null,'diary',()=>{
     if(!repository)throw new Error('DIARY_UNAVAILABLE');
     return{...repository.captureMigration(state.records),settled:!busy&&!state.loading};
   },repository);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Retire the previous owner's decrypted view when its external repository changes.
   useEffect(()=>{const lifetime=++repositoryLifetime.current;++request.current;setBusy(false);setState({records:[],loading:true,error:false,offline:false,syncEnabled:true,pendingUploads:0,dreamSettings:DEFAULT_DREAM_SETTINGS,localHistory:null});
     return()=>{++request.current;queueMicrotask(()=>{if(!repositoryOverride&&(activeRepository.current!==repository||repositoryLifetime.current===lifetime))repository?.dispose();});};},[repository,repositoryOverride]);
   const registerMigrationEditor=useCallback((read:()=>DiaryEditorCapture)=>{if(!repository)return()=>{};return repository.registerMigrationEditor(read);},[repository]);

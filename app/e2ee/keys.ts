@@ -12,7 +12,7 @@ function invalid(): never { throw new Error('E2EE_INVALID_KEY_BUNDLE'); }
 export function assertTechnical(value: unknown): asserts value is string {
   if (typeof value !== 'string' || !technical.test(value)) invalid();
 }
-export function exactKeys(value: unknown, names: readonly string[]): asserts value is Record<string, unknown> {
+export function exactKeys<const N extends readonly string[]>(value: unknown, names: N): asserts value is Record<N[number], unknown> & Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) invalid();
   const keys = Reflect.ownKeys(value);
   if (keys.length !== names.length || keys.some(key => typeof key !== 'string' || !names.includes(key))) invalid();

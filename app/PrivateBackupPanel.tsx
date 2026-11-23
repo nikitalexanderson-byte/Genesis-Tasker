@@ -39,7 +39,7 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
   if(running.current||!selected||!transfer.check())return;const row=rows.find(row=>row.key===selected);if(!row)return;running.current=true;setBusy(true);setError(false);const token=++generation.current;let bytes:Uint8Array|undefined,url:string|undefined;
   try{const guard=captureMessagingAccess(ownerId),account=requirePrivateAccount(ownerId),current=()=>{guard();account.requireOpen();if(token!==generation.current||requirePrivateAccount(ownerId)!==account||payloadAccount.current!==account||!transfer.check())throw new Error('E2EE_ACCOUNT_CHANGED');};current();
    const file=await openContentArchiveValue(row.value,current);bytes=file.bytes;current();
-   const safe=Array.from(file.filename.normalize('NFC').replace(/[<>:"/\\|?*\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g,'_')).slice(0,180).join('').replace(/[ .]+$/g,'');
+   const safe=Array.from(file.filename.normalize('NFC').replace(/[<>:"/\\|?*\p{Cc}\u202a-\u202e\u2066-\u2069]/gu,'_')).slice(0,180).join('').replace(/[ .]+$/g,'');
    const id=row.value.id.replace(/[^A-Za-z0-9._-]/g,'_').slice(0,96),name=safe&&!/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(safe)?safe:`genesis-content-${id}.${file.mediaType==='application/json'?'json':'bin'}`;
    const output=new Uint8Array(bytes);try{url=URL.createObjectURL(new Blob([output],{type:'application/octet-stream'}));}finally{output.fill(0);}current();const link=document.createElement('a');link.href=url;link.download=name;link.click();const held=url;setTimeout(()=>URL.revokeObjectURL(held),1000);url=undefined;
   }catch{if(token===generation.current)setError(true);}finally{bytes?.fill(0);if(url)URL.revokeObjectURL(url);running.current=false;setBusy(false);}
@@ -48,10 +48,10 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
  return <div data-no-translate><section className="backup-panel"><h3>{text.title}</h3><p>{text.notice}</p></section>
   <PrivateContentExport owner={ownerId} language={language} capture={()=>captureLocalContentArchive(requirePrivateAccount(ownerId))}/>
   <section className="backup-panel"><p>{text.remoteNotice}</p></section>
-  <PrivateContentExport owner={ownerId} language={language} label={c('Снимок сервера','Server snapshot')} capture={()=>captureRemoteContentArchive(requirePrivateAccount(ownerId))}/>
+  <PrivateContentExport owner={ownerId} language={language} label={text.serverSnapshot} capture={()=>captureRemoteContentArchive(requirePrivateAccount(ownerId))}/>
   <PrivateDrivePanel ownerId={ownerId} language={language}/>
   <section className="backup-panel"><h3>{text.import}</h3><fieldset disabled={busy}>
-   <label>{c('Файл копии','Backup file')}<input type="file" accept=".genesisbackup,application/octet-stream,application/json" onChange={event=>{setFile(event.target.files?.[0]??null);setPayload(null);setContent('');}}/></label>
+   <label>{text.backupFile}<input type="file" accept=".genesisbackup,application/octet-stream,application/json" onChange={event=>{setFile(event.target.files?.[0]??null);setPayload(null);setContent('');}}/></label>
    <label>{c('Ключ копии','Backup key')}<input type="password" autoComplete="off" value={key} maxLength={64} onChange={event=>setKey(event.target.value)}/></label>
    <button type="button" disabled={!file||!key.trim()} onClick={()=>void importFile()}>{text.import}</button>
   </fieldset>{message?<p role="status">{message}</p>:null}{error?<p role="alert">{text.error}</p>:null}

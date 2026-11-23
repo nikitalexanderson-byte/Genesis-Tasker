@@ -4,7 +4,7 @@ import {assertTechnical,exactKeys} from './keys.ts';
 import type {WebPrivateAccount} from './product-session.ts';
 
 type Row=Record<string,unknown>;
-export type PrivatePersonalTasks={protocol:1;ownerId:string;tasks:{id:string;value:Row|null;deleted:boolean}[];externalCopy:'requires-new-consent'};
+export type PrivatePersonalTasks={protocol:1;ownerId:string;tasks:{id:string;value:ReturnType<typeof validateMigrationTask>|null;deleted:boolean}[];externalCopy:'requires-new-consent'};
 type PersonalState={protocol:1;ownerId:string;contentRevision:number;workspace:Row;tasks:PrivatePersonalTasks};
 export function validatePrivatePersonalTasks(input:unknown,ownerId:string):PrivatePersonalTasks{
  exactKeys(input,['protocol','ownerId','tasks','externalCopy']);
@@ -36,7 +36,7 @@ export class E2eePersonalProduct{
  }
  #operation<T>(run:()=>Promise<T>):Promise<T>{const work=this.#serial.catch(()=>undefined).then(async()=>{this.#account.requireOpen();return run();});this.#serial=work;return work;}
  #state(){this.#account.requireOpen();if(!this.#view||this.#view.conflict)throw new Error(this.#view?.conflict?'E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED':'E2EE_PRODUCT_READ_REQUIRED');return this.#view;}
- snapshot(){const value=this.#state().value;return{...structuredClone(value.workspace),tasks:value.tasks.tasks.filter(row=>!row.deleted).map(row=>({...structuredClone(row.value!),syncToGoogle:false,syncAccountIds:[]}))};}
+ snapshot():Row&{tasks:(ReturnType<typeof validateMigrationTask>&{syncToGoogle:boolean;syncAccountIds:string[]})[]}{const value=this.#state().value;return{...structuredClone(value.workspace),tasks:value.tasks.tasks.filter(row=>!row.deleted).map(row=>({...structuredClone(row.value!),syncToGoogle:false,syncAccountIds:[]}))};}
  async load(mode:'online'|'offline'='online'){
   return this.#operation(async()=>{
    try{this.#view=await this.#document.load(mode);}

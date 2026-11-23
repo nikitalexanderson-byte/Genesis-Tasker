@@ -758,7 +758,7 @@ class E2eeMigration(
     suspend fun run(): String = fenced { runLocked() }
     private suspend fun runLocked(policy:PlanningPolicy?=null): String {
         val loaded = load(); val state = loaded.state
-        val current=policy?.current?:vault::requireOpen;current()
+        val current:()->Unit=policy?.current?:{vault.requireOpen();Unit};current()
         check(!state.has("startCancellation")&&!(state.get("phase")=="cancelled"&&(!state.isNull("pending")||!state.isNull("resuming")))){"E2EE_MIGRATION_CANCELLATION_PENDING"}
         if(number(state,"protocol")==3L&&state.get("phase")=="cancelled")return "cancelled"
         check(number(state,"protocol")<3L||number(state,"protocol")==5L&&policy!=null){"E2EE_STREAMED_PLANNER_REQUIRED"}

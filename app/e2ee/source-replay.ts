@@ -44,7 +44,7 @@ export function createOriginalSourceReplay(session:MigrationContentPlanningSessi
  const consumed=new Set<string>();let closed=false;
  const current=()=>{assertCurrent();if(closed)throw new Error('E2EE_SOURCE_REPLAY_CLOSED');};
  const read:Read=async(action,context,page)=>{
-  current();if(page?.maxFragments&&!session.originals.some(row=>{const p=row.packet?.command.payload;return row.packet?.command.action===action&&p?.pathId===page.pathId&&p?.table===page.table&&p?.offset===page.offset&&p?.byteOffset===page.byteOffset&&p?.maxFragments===page.maxFragments;})){page={...page};delete page.maxFragments;}
+  current();const batchPage=page;if(batchPage?.maxFragments&&!session.originals.some(row=>{const p=row.packet?.command.payload;return row.packet?.command.action===action&&p?.pathId===batchPage.pathId&&p?.table===batchPage.table&&p?.offset===batchPage.offset&&p?.byteOffset===batchPage.byteOffset&&p?.maxFragments===batchPage.maxFragments;})){const {maxFragments,...singlePage}=batchPage;void maxFragments;page=singlePage;}
   const original=[...session.originals].reverse().find(row=>{
    const packet=row.packet;if(!packet||packet.command.action!==action)return false;const payload=packet.command.payload;
    if(packet.command.ownerId!==context.ownerId||packet.command.scopeId!==context.scopeId||payload.migrationId!==context.migrationId||payload.sourceHash!==context.sourceHash)return false;

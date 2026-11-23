@@ -78,7 +78,11 @@ export function privateAutomationMatches(definition:AutomationDefinition,project
  return definition.conditions.every(condition=>{
   const actual=condition.field==='project'?projectId:condition.field==='custom'?(task?.customFields as ExecutionRow|undefined)?.[condition.fieldId!]??null:task?.[({status:'statusId',label:'labelIds',assignee:'assigneeId',priority:'priority'} as const)[condition.field as 'status'|'label'|'assignee'|'priority']]??null,wanted=condition.value,exists=actual!==null;
   switch(condition.operator){case'missing':return!exists;case'present':return exists;case'eq':return samePrivateJson(actual,wanted);case'ne':return!samePrivateJson(actual,wanted);case'contains':return Array.isArray(actual)&&actual.some(v=>samePrivateJson(v,wanted));case'notContains':return!Array.isArray(actual)||!actual.some(v=>samePrivateJson(v,wanted));
-   case'gt':case'gte':case'lt':case'lte':if(!exists||typeof actual!==typeof wanted||typeof actual!=='number'&&typeof actual!=='string')return false;return condition.operator==='gt'?actual>(wanted as never):condition.operator==='gte'?actual>=(wanted as never):condition.operator==='lt'?actual<(wanted as never):actual<=(wanted as never);
+   case'gt':case'gte':case'lt':case'lte':{
+    let comparison:number;if(typeof actual==='number'&&typeof wanted==='number'&&Number.isFinite(actual)&&Number.isFinite(wanted))comparison=actual<wanted?-1:actual>wanted?1:0;
+    else if(typeof actual==='string'&&typeof wanted==='string')comparison=actual<wanted?-1:actual>wanted?1:0;else return false;
+    return condition.operator==='gt'?comparison>0:condition.operator==='gte'?comparison>=0:condition.operator==='lt'?comparison<0:comparison<=0;
+   }
   }
  });
 }

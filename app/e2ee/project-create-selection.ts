@@ -9,7 +9,7 @@ import type {E2eeScopeClient} from './scope-client.ts';
 import type {VerifiedDirectory} from './directory.ts';
 
 type Opened={trust:SharedScopeTrust;client:E2eeScopeClient;directory:VerifiedDirectory;stamp:(string|number)[];coordinates:Omit<PrivateProjectAnchor,'entityId'|'revision'|'payloadHash'>;records:E2eeSharedRecords;index:ProductEntity[];heads:Map<string,ProductEntity>};
-const changed=():never=>{throw new Error('E2EE_PROJECT_TOPOLOGY_CHANGED');};
+function changed():never{throw new Error('E2EE_PROJECT_TOPOLOGY_CHANGED');}
 const frame=(directory:VerifiedDirectory)=>[directory.ownerId,directory.scopeId,directory.kind,directory.resourceId,directory.state,
  directory.generation,directory.cryptoEpoch,directory.securityEpoch,directory.keyId,directory.checkpoint.revision,directory.checkpoint.hash];
 /** Called only after the complete draft is durable. This composes actual

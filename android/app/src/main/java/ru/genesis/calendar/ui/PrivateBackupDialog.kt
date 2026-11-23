@@ -95,7 +95,7 @@ import ru.genesis.calendar.security.*
                 EditorDialogHeader(title,"private-backup-close"){if(!busy)onClose()}
                 Text(text.getString("title"),style=MaterialTheme.typography.titleMedium)
                 Text(text.getString("notice"))
-                Row{Checkbox(checked=remote,onCheckedChange={remote=it},enabled=!busy&&!unfinished&&!account.offline);Text(c("Снимок сервера"))}
+                Row{Checkbox(checked=remote,onCheckedChange={remote=it},enabled=!busy&&!unfinished&&!account.offline);Text(text.getString("serverSnapshot"))}
                 if(remote)Text(text.getString("remoteNotice"))
                 OutlinedTextField(value=recovery,onValueChange={recovery=it.take(64);keySaved=false},enabled=!busy&&!unfinished,label={Text(c("Ключ копии"))},modifier=Modifier.fillMaxWidth())
                 OutlinedButton(onClick={recovery=GenesisBackupContainer.newRecoveryKey();keySaved=false},enabled=!busy&&!unfinished,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(c("Создать ключ"))}
@@ -107,7 +107,7 @@ import ru.genesis.calendar.security.*
                     TextButton(onClick={uriHandler.openUri("https://genesiscalendar.com/privacy")},modifier=Modifier.heightIn(min=48.dp)){Text(c("политике"))}
                     TextButton(onClick={uriHandler.openUri("https://genesiscalendar.com/terms")},modifier=Modifier.heightIn(min=48.dp)){Text(c("соглашении"))}
                 }
-                Button(onClick={val supplied=recovery;val fromServer=remote;recovery="";keySaved=false;run({val payload=if(fromServer)archive.captureRemote()else archive.capture();current();PrivateBackupHandoff.prepareExport(context,account,payload,supplied,::current)})},enabled=!busy&&!unfinished&&keySaved&&consent&&recovery.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(c(if(remote)"Снимок сервера"else"Снимок устройства"))}
+                Button(onClick={val supplied=recovery;val fromServer=remote;recovery="";keySaved=false;run({val payload=if(fromServer)archive.captureRemote()else archive.capture();current();PrivateBackupHandoff.prepareExport(context,account,payload,supplied,::current)})},enabled=!busy&&!unfinished&&keySaved&&consent&&recovery.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(remote)"serverSnapshot"else"deviceSnapshot"))}
                 HorizontalDivider()
                 Text(driveText.getString("title"),style=MaterialTheme.typography.titleMedium);Text(driveText.getString("notice"))
                 OutlinedButton(onClick={runDrive({drive->drive.status() to drive.pending()},{(status,pending)->driveStatus=status;drivePending=pending;driveFiles=emptyList();driveNext=null;drivePages.clear()})},enabled=!busy&&!driveConnecting&&!account.offline,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(driveText.getString("check"))}

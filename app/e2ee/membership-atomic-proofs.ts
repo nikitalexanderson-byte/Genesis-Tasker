@@ -12,7 +12,7 @@ import {validateMembershipAtomicReceipt,membershipAtomicReceiptPageRef,validateM
  type MembershipAtomicReceipt,type MembershipAtomicScopeReceipt,type MembershipAtomicProductReceipt} from './membership-atomic-receipts.ts';
 import type {MembershipPeerPorts} from './membership-exchange.ts';
 
-const invalid=():never=>{throw new Error('E2EE_INVALID_RECEIPT');};
+function invalid():never{throw new Error('E2EE_INVALID_RECEIPT');}
 /** Verify actual author/device against independently accepted pins. This does
  * not require another owner's root or promote an authority from packet bytes. */
 export async function verifyMembershipAtomicPacket(plan:MembershipAtomicPlan,rawAnchor:MembershipAtomicAnchor,raw:SignedE2eeCommand,ports:MembershipPeerPorts,confirmed=false){

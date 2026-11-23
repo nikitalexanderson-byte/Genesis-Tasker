@@ -14,8 +14,8 @@ internal object E2eeRetainedMigrationProof {
     private fun number(value:JSONObject,key:String,min:Long=0)=E2eeCommands.integer(value.get(key),min)
     fun same(a:Any,b:Any):Boolean {val left=E2eeCommands.canonical(a);val right=E2eeCommands.canonical(b);return try{left.contentEquals(right)}finally{left.fill(0);right.fill(0)}}
     fun hash(bytes:ByteArray)=E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))
-    fun rows(value:JSONArray):List<JSONObject>=(0 until value.length()).map{value.getJSONObject(it)}
-    fun strings(value:JSONArray):List<String>=(0 until value.length()).map{value.getString(it)}
+    fun rows(value:JSONArray):List<JSONObject> =(0 until value.length()).map{value.getJSONObject(it)}
+    fun strings(value:JSONArray):List<String> =(0 until value.length()).map{value.getString(it)}
     fun anchor(state:JSONObject):E2eeDirectory.Checkpoint {
         val pin=if(number(state,"protocol")==5L)state.getJSONObject("adopted")else state
         return E2eeDirectory.Checkpoint(number(pin,"directoryRevision",1),pin.getString("checkpointHash"))

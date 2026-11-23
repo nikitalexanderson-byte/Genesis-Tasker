@@ -9,7 +9,6 @@ import {exactKeys,assertTechnical} from './keys.ts';
 import {E2eeEditorQueue} from './editor-queue.ts';
 import {E2eeFeatureDocument} from './feature-document.ts';
 import {SharedAggregateModel,validatePersonalSharedState,seedPersonalSharedState} from './shared-aggregate.ts';
-import {parseLegacyMigrationJson} from './legacy-json.ts';
 import {privateMembershipOperationDrafts,webPrivateProjectAccess} from './membership-web-operations.ts';
 import {membershipProjectAccessFingerprint} from './membership-project-access.ts';
 import type {SharedProjectAccessDraft} from '../shared-project-access.ts';

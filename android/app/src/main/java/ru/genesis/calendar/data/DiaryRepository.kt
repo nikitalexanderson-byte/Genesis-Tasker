@@ -9,6 +9,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
+import ru.genesis.calendar.auth.CloudAccountSnapshot
 import ru.genesis.calendar.auth.AuthFailure
 import ru.genesis.calendar.auth.DiaryGateway
 import ru.genesis.calendar.auth.DiaryProtocol

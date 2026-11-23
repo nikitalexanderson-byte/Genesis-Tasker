@@ -28,6 +28,6 @@ import ru.genesis.calendar.security.NativePrivateProducts
             withContext(Dispatchers.IO){if(feature=="advice"){val prefs=NativePrivateProducts.preferences(scope).snapshot().getJSONObject("advicePreferences");NativePrivateProducts.advice(scope).execute("resume",JSONObject(),language,prefs)}else NativePrivateProducts.stoicheion(scope).resume(kind);NativePrivateProducts.changed(scope)}
             pending=pending.filter{it!=kind};onResolved()
         }catch(cancel:CancellationException){throw cancel}catch(_:Exception){failed=true}finally{busy=false}}}},enabled=!busy,modifier=Modifier.heightIn(min=48.dp)){
-            UntranslatedText(text.getString("retry")+if(pending.size>1)" · "+translateGenesisText(context,when(kind){"daily"->"Карта дня";"spread"->"Девять ликов";else->"Линия времени"},language)else"")}
+            UntranslatedText(text.getString("retry")+if(pending.size>1)" · "+when(kind){"daily"->translateGenesisText(context,"Карта дня",language);"spread"->text.getString("spread");else->text.getString("timeline")}else"")}
     }}
 }

@@ -10,7 +10,7 @@ export type PrivateProjectSelection=Omit<PrivateProjectTopology,'reviewedMembers
 export type PrivateProjectLocation=Pick<PrivateProjectSelection,'spaceId'|'parentId'|'categoryId'|'boardStatusId'|'kind'|'layout'>;
 const locationFields=['spaceId','parentId','categoryId','boardStatusId','kind','layout'];
 const selectionFields=['spaceId','parentId','categoryId','boardStatusId','kind','layout','spaceAnchor','parentAnchor','categoryAnchor','statusAnchor'];
-const invalid=():never=>{throw new Error('E2EE_PROJECT_TOPOLOGY_REQUIRED');};
+function invalid():never{throw new Error('E2EE_PROJECT_TOPOLOGY_REQUIRED');}
 /** Technical shape/custody only. Actual creation must independently verify
  * current pinned directories/decrypted heads and explicit recipient review. */
 export function validatePrivateProjectLocation(input:unknown):PrivateProjectLocation{

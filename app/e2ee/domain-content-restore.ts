@@ -2,7 +2,7 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {encodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
-import {backupJson} from '../backup-format.ts';
+import {canonicalJson} from '../aurora/forecast.ts';
 import {validateDiaryNote} from '../diary-model.ts';
 import {validateMindmap} from '../mindmaps-model.ts';
 import {validatePhysisRecord} from '../physis/validation.ts';
@@ -16,9 +16,9 @@ export type DomainRestoreRecord={id:string;revision:number;deleted:boolean;value
 export type DomainRestoreView={checkpoint:string;pending:boolean;records:DomainRestoreRecord[]};
 type Proposal={before:DomainRestoreView;added:number;skipped:number;ids:string[];fingerprint:string};
 export type DomainRestoreJournal={format:'genesis-domain-content-restore-v1';ownerId:string;intentId:string;backupId:string;source:DomainRestoreSource;proposal:Proposal|null;confirmed:string|null;started:boolean;complete:boolean;applied:string[]};
-const invalid=():never=>{throw new Error('E2EE_RESTORE_CONTENT_INVALID');};
+function invalid():never{throw new Error('E2EE_RESTORE_CONTENT_INVALID');}
 const object=(value:unknown):Row=>{if(!value||typeof value!=='object'||Array.isArray(value))invalid();return value as Row;};
-const hash=(value:unknown)=>{const bytes=new TextEncoder().encode(backupJson(value));try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
+const hash=(value:unknown)=>{const bytes=new TextEncoder().encode(canonicalJson(value));try{return encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}};
 export function domainRestoreRecord(domain:RestoreDomain,input:unknown):Row{
  if(domain==='diary')return validateDiaryNote(structuredClone(input)) as unknown as Row;
  if(domain==='mindmap'){const map=validateMindmap(structuredClone(input));if(map.projectId!==null&&map.projectId!==undefined)throw new Error('E2EE_RESTORE_DOMAIN_REQUIRED');return map as unknown as Row;}
@@ -38,12 +38,13 @@ export function validateDomainRestoreView(input:unknown,domain:RestoreDomain):Do
  return structuredClone(input) as DomainRestoreView;
 }
 function proposal(source:DomainRestoreSource,raw:unknown):Proposal{
- const before=validateDomainRestoreView(raw,source.domain);if(before.pending)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');const existing=new Set(before.records.map(row=>row.id)),ids=source.records.filter(row=>!existing.has(row.id)).map(row=>String(row.id));const value={before,added:ids.length,skipped:source.records.length-ids.length,ids};return{...value,fingerprint:hash({format:'genesis-domain-content-restore-review-v1',source,...value})};
+ const before=validateDomainRestoreView(raw,source.domain);if(before.pending)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');const existing=new Set(before.records.map(row=>row.id)),ids=source.records.filter(row=>!existing.has(String(row.id))).map(row=>String(row.id));const value={before,added:ids.length,skipped:source.records.length-ids.length,ids};return{...value,fingerprint:hash({format:'genesis-domain-content-restore-review-v1',source,...value})};
 }
 export function validateDomainRestoreJournal(input:unknown,ownerId:string,id:string):DomainRestoreJournal{
  exactKeys(input,['format','ownerId','intentId','backupId','source','proposal','confirmed','started','complete','applied']);if(input.format!=='genesis-domain-content-restore-v1'||input.ownerId!==ownerId||input.intentId!==id||typeof input.started!=='boolean'||typeof input.complete!=='boolean'||!Array.isArray(input.applied)||input.applied.length>10000||new Set(input.applied).size!==input.applied.length)invalid();assertTechnical(id);assertTechnical(input.backupId);const source=validateDomainRestoreSource(input.source);
  if(input.proposal!==null){exactKeys(input.proposal,['before','added','skipped','ids','fingerprint']);if(!same(proposal(source,input.proposal.before),input.proposal))invalid();}
- if(input.confirmed!==null&&(!input.proposal||input.confirmed!==input.proposal.fingerprint)||input.started&&input.confirmed===null||input.applied.some(value=>typeof value!=='string'||!input.proposal||!(input.proposal.ids as string[]).includes(value))||input.applied.length&&!input.started||input.complete&&(!input.started||input.applied.length!==(input.proposal?.ids as string[]|undefined)?.length))invalid();return structuredClone(input) as DomainRestoreJournal;
+ const checkedProposal=input.proposal as Proposal|null;
+ if(input.confirmed!==null&&(!checkedProposal||input.confirmed!==checkedProposal.fingerprint)||input.started&&input.confirmed===null||input.applied.some(value=>typeof value!=='string'||!checkedProposal||!(checkedProposal.ids as string[]).includes(value))||input.applied.length&&!input.started||input.complete&&(!input.started||input.applied.length!==(checkedProposal?.ids as string[]|undefined)?.length))invalid();return structuredClone(input) as DomainRestoreJournal;
 }
 export interface DomainRestorePorts{ownerId:string;current:()=>void;load:(id:string)=>Promise<{value:unknown;serial:number}|null>;save:(id:string,value:DomainRestoreJournal,expected:number|null)=>Promise<number>;list:()=>Promise<string[]>;read:(domain:RestoreDomain)=>Promise<unknown>;add:(domain:RestoreDomain,value:Row)=>Promise<void>;flush:(domain:RestoreDomain)=>Promise<void>}
 /** Fresh, add-only content operations. Source bytes and the reviewed plan stay

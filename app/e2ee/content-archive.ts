@@ -52,10 +52,10 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
     if(!result.cursor)break;if(pages.has(result.cursor.id))throw new Error('E2EE_EDITOR_HISTORY_CORRUPT');pages.add(result.cursor.id);cursor=result.cursor;
    }
    const final=await account.device.vault.read('draft',key);account.requireOpen();try{if(!final||final.serial!==record.serial||final.value.length!==record.value.length||final.value.some((byte,index)=>byte!==record.value[index]))throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');}finally{final?.value.fill(0);}
-   const {client:_,...coordinates}=scope;append({placement:'editor',scope:coordinates,domain:state.domain,objectId:state.objectId,pending:head.pending,current,history});
+   const coordinates={ownerId:scope.ownerId,scopeId:scope.scopeId,kind:scope.kind,resourceId:scope.resourceId};append({placement:'editor',scope:coordinates,domain:state.domain,objectId:state.objectId,pending:head.pending,current,history});
   }finally{record.value.fill(0);}
  }
- const localKeys=await account.device.vault.listLocal('draft');account.requireOpen();
+ const localKeys=await account.device.vault.listLocal('draft','');account.requireOpen();
  for(const key of localKeys.filter(contentArchiveDeviceId)){
   const document=new E2eeDeviceDocument(account.device,key,input=>input,()=>account.requireOpen()),before=await document.load();account.requireOpen();if(!before)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');
   const bytes=encoder.encode(JSON.stringify(before.value));try{const content=await value('current',bytes);account.requireOpen();const after=await document.load();if(!after||after.serial!==before.serial)throw new Error('E2EE_BACKUP_CAPTURE_CHANGED');append({placement:'device',scope:null,domain:'draft',objectId:key,pending:true,current:content,history:[]});}finally{bytes.fill(0);}

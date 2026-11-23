@@ -8,14 +8,14 @@ import type {SignedE2eeCommand,E2eeCommand,WireValue} from './commands.ts';
 export type VerifiedProductProposal={proposalId:string;entityId:string;baseRevision:number;operation:ProductMutation;actorId:string;createdAt:string;approvals?:{userId:string;createdAt:string}[]};
 export type VerifiedProductOrigin={entityId:string;revision:number;actorId:string;bootstrap:boolean;action:string;operationId:string};
 type Proof={command:E2eeCommand;actorId:string;proofHash:string};
-const invalid=():never=>{throw new Error('E2EE_PRODUCT_PROOF_INVALID');};
+function invalid():never{throw new Error('E2EE_PRODUCT_PROOF_INVALID');}
 /** The index is an untrusted server projection. Active heads and completion
  * approvals are accepted only when their exact references are covered by signed
  * business intents from the pinned directory at that historical checkpoint. */
 export async function verifyProductPage(input:unknown,verify:(packet:SignedE2eeCommand)=>Promise<Proof>){
  exactKeys(input,['entities','heads','proofs','proposals','attestations','bootstrapProofHash','checkpointHash','directoryRevision']);decodeE2eeBytes(input.bootstrapProofHash,32);
  for(const key of ['entities','heads','proofs','proposals','attestations'] as const)if(!Array.isArray(input[key])||input[key].length>(key==='entities'||key==='heads'?50:10000))invalid();
- const entities=(input.entities as unknown[]).map(productEntity),heads=input.heads as unknown[],rawProofs=input.proofs as unknown[],proposals=input.proposals as unknown[],attestations=input.attestations as unknown[];
+ const entities=(input.entities as unknown[]).map(productEntity),heads=input.heads as unknown[],rawProofs=input.proofs as unknown[],proposals=input.proposals as unknown[],attestations=input.attestations as Record<string,unknown>[];
  if(new Set(entities.map(row=>row.entityId)).size!==entities.length||heads.length!==entities.length)invalid();
  const proofs=new Map<string,Proof>();for(const row of rawProofs){exactKeys(row,['proofHash','packet']);decodeE2eeBytes(row.proofHash,32);if(typeof row.packet!=='string'||row.packet.length>4*1024*1024||proofs.has(row.proofHash as string))invalid();
   const packet=parseLegacyMigrationJson(row.packet,'E2EE_PRODUCT_PROOF_INVALID',4*1024*1024) as SignedE2eeCommand,proof=await verify(packet);if(proof.proofHash!==row.proofHash)invalid();proofs.set(proof.proofHash,proof);

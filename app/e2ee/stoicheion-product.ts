@@ -33,7 +33,7 @@ export function inspectStoicheionLocalJob(input:unknown,ownerId:string,scopeId:s
  const value=content(input.content,ownerId,scopeId);
  if(input.position!==null)integer(input.position,0,8);
  if(input.result!==null){if(!input.result||typeof input.result!=='object'||Array.isArray(input.result))invalid();
-  if(input.result.intentId!==value.intentId||input.result.kind!==kind)invalid();head(input.result.head,kind);}
+  exactKeys(input.result,['intentId','kind','head']);if(input.result.intentId!==value.intentId||input.result.kind!==kind)invalid();head(input.result.head,kind);}
  if(input.complete&&input.result===null)invalid();return input as unknown as Job;
 }
 function head(value:unknown,kind:StoicheionDrawKind):Head{

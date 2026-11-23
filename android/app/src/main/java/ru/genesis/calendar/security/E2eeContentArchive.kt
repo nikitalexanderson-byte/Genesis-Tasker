@@ -80,7 +80,7 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
                 append(JSONObject().put("placement","editor").put("scope",binding).put("domain",domain).put("objectId",id).put("pending",head.pending).put("current",latest).put("history",history))
             }finally{record.bytes.fill(0)}
         }
-        for(key in account.device.vault.listLocal("draft").filter(::deviceContent)){
+        for(key in account.device.vault.listLocal("draft","").filter(::deviceContent)){
             val store=E2eeDeviceDocument(account.device,key,{it},::current);val before=store.load()?:error("E2EE_BACKUP_CAPTURE_CHANGED");val bytes=before.value.toString().toByteArray(Charsets.UTF_8)
             try{val latest=snapshot("current",bytes);val after=store.load();check(after?.serial==before.serial){"E2EE_BACKUP_CAPTURE_CHANGED"};append(JSONObject().put("placement","device").put("scope",JSONObject.NULL).put("domain","draft").put("objectId",key).put("pending",true).put("current",latest).put("history",JSONArray()))}finally{bytes.fill(0)}
         }

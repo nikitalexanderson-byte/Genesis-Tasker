@@ -40,7 +40,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  const [phase,setPhase]=useState<'loading'|'intro'|'generated'|'confirm'|'running'|'done'|'cancelled'>(state.target||state.reason==='resume'?'confirm':'loading');
  const [generated,setGenerated]=useState<{secret:string;kit:RecoveryKit}|null>(null),[savedFile,setSavedFile]=useState(false),[savedSecret,setSavedSecret]=useState(false);
  const [secret,setSecret]=useState(''),[kit,setKit]=useState<RecoveryKit>(),[fileBusy,setFileBusy]=useState(false),[busy,setBusy]=useState(false);
- const [stopping,setStopping]=useState(false);
+ const [stopping,setStopping]=useState(false),[hasStarted,setHasStarted]=useState(false);
  const [cancelConfirmed,setCancelConfirmed]=useState(false),[cancelling,setCancelling]=useState(false);
  const [error,setError]=useState(''),[progress,setProgress]=useState<'snapshot'|'sources'|'reconciliation'|'uploading'|'active'>('snapshot');
  const projectCreation=Boolean(state.creationId&&state.target?.kind==='project'),projectText=projectCreationCopy[language];
@@ -49,9 +49,9 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
  const creationReady=!projectCreation||Boolean(projectReview?.intent.review);
  const controller=useRef<WebProductMigration|null>(null),alive=useRef(true),started=useRef(false),fileRequest=useRef(0),ownerId=state.ownerId;
  const attempt=useRef<{stopping:boolean;drained:Promise<void>}|null>(null);
- const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{});
+ const dialogRef=useDialogAccessibility<HTMLFormElement>(()=>{}),dialogNode=useRef<HTMLFormElement|null>(null);
  const current=()=>{if(!alive.current||privateMigrationUi()?.id!==state.id)throw new Error('E2EE_ACCOUNT_CHANGED');};
- const frozen=()=>{current();if(attempt.current?.stopping)throw new Error('E2EE_OPERATION_STOPPED');const content=document.getElementById('genesis-app-content');if(!content?.inert||!document.contains(dialogRef.current)||document.visibilityState!=='visible')throw new Error('E2EE_EDITOR_FENCE_REQUIRED');};
+ const frozen=()=>{current();if(attempt.current?.stopping)throw new Error('E2EE_OPERATION_STOPPED');const content=document.getElementById('genesis-app-content');if(!content?.inert||!document.contains(dialogNode.current)||document.visibilityState!=='visible')throw new Error('E2EE_EDITOR_FENCE_REQUIRED');};
  useEffect(()=>{
   alive.current=true;const releaseFence=holdPrivateEditorFence();
   const clearSecrets=()=>{if(document.visibilityState==='visible')return;fileRequest.current++;controller.current?.close();controller.current=null;setSecret('');setKit(undefined);setFileBusy(false);setGenerated(null);setSavedFile(false);setSavedSecret(false);setCancelConfirmed(false);setPhase(state.target||started.current?'confirm':'intro');setError(copy.error);};
@@ -72,13 +72,14 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    if(review.intent.scopeId!==state.target?.scopeId||review.intent.resourceId!==state.target.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');setProjectReview(review);
   }catch(reason){if(alive.current){if(!confirm||reason instanceof Error&&reason.message==='E2EE_PROJECT_TOPOLOGY_CHANGED')setProjectReview(null);setError(failure(reason));}}finally{if(alive.current)setReviewBusy(false);}
  };
+ // eslint-disable-next-line react-hooks/set-state-in-effect -- The external signed review must be pending before its new response can be used.
  useEffect(()=>{if(!projectCreation||!state.creationId)return;let live=true;setReviewBusy(true);
   void previewCurrentPrivateProjectCreation(state.creationId,false,frozen).then(review=>{if(!live)return;frozen();
    if(review.intent.scopeId!==state.target?.scopeId||review.intent.resourceId!==state.target.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');setProjectReview(review);
   }).catch(reason=>{if(live&&alive.current)setError(failure(reason));}).finally(()=>{if(live&&alive.current)setReviewBusy(false);});return()=>{live=false;};
  },[state.id,reviewReload]);
  const submit=async(event:FormEvent,cancel=false,resolve=false)=>{
-  event.preventDefault();if(busy||fileBusy||reviewBusy||!creationReady||!kit||attempt.current||cancel&&!cancelConfirmed||resolve&&(!projectCreation||!projectReview?.intent.started||projectReview.intent.preparation))return;setBusy(true);setCancelling(cancel);setResolving(resolve);setCancelConfirmed(false);setError('');started.current=true;let held:Uint8Array|undefined;
+  event.preventDefault();if(busy||fileBusy||reviewBusy||!creationReady||!kit||attempt.current||cancel&&!cancelConfirmed||resolve&&(!projectCreation||!projectReview?.intent.started||projectReview.intent.preparation))return;setBusy(true);setCancelling(cancel);setResolving(resolve);setCancelConfirmed(false);setError('');started.current=true;setHasStarted(true);let held:Uint8Array|undefined;
   let drained!:()=>void;const active={stopping:false,drained:new Promise<void>(resolve=>{drained=resolve;})};attempt.current=active;
   try{
    frozen();held=decodeE2eeBytes(secret.trim(),32);setSecret('');setPhase('running');
@@ -109,7 +110,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
   finally{if(alive.current&&privateMigrationUi()?.id===state.id){setStopping(false);setBusy(false);setSecret('');setKit(undefined);setPhase('confirm');}}
  };
  return <div className="private-vault-gate" data-no-translate lang={language}>
-  <form ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="private-migration-title" aria-describedby="private-migration-description" tabIndex={-1} onSubmit={submit}>
+  <form ref={element=>{dialogNode.current=element;dialogRef(element);}} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="private-migration-title" aria-describedby="private-migration-description" tabIndex={-1} onSubmit={submit}>
    <div className="workspace-recovery-heading"><h2 id="private-migration-title">{copy.title}</h2><p id="private-migration-description">{copy.intro}</p></div>
    {phase==='loading'?<p role="status">{vaultCopy.busy}</p>:null}
    {phase==='intro'?<button type="button" className="primary-button" disabled={busy} onClick={async()=>{if(busy)return;setBusy(true);setError('');let bytes:Uint8Array|undefined;
@@ -140,9 +141,9 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
      }catch(reason){if(alive.current&&request===fileRequest.current){setError(failure(reason));input.value='';}}finally{if(alive.current&&request===fileRequest.current)setFileBusy(false);}
     }}/></label>
     <label className="workspace-recovery-field"><span>{vaultCopy.secret}</span><div><input data-dialog-initial-focus type="password" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={64} value={secret} onChange={event=>setSecret(event.target.value)} disabled={busy||fileBusy} required/></div></label>
-    <button type="submit" className="primary-button" disabled={busy||fileBusy||reviewBusy||!kit||!secret.trim()}>{state.reason==='resume'||started.current?copy.resume:copy.begin}</button>
+    <button type="submit" className="primary-button" disabled={busy||fileBusy||reviewBusy||!kit||!secret.trim()}>{state.reason==='resume'||hasStarted?copy.resume:copy.begin}</button>
     {projectReview?.intent.started&&!projectReview.intent.preparation?<><p>{retryText.notice}</p><button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy||!kit||!secret.trim()} onClick={event=>{void submit(event,false,true);}}>{retryText.action}</button></>:null}
-    {!state.creationId&&(state.reason==='resume'||started.current)?<><label className="backup-check"><input type="checkbox" checked={cancelConfirmed} disabled={busy||fileBusy} onChange={event=>setCancelConfirmed(event.target.checked)}/>{cancellation.confirm}</label>
+    {!state.creationId&&(state.reason==='resume'||hasStarted)?<><label className="backup-check"><input type="checkbox" checked={cancelConfirmed} disabled={busy||fileBusy} onChange={event=>setCancelConfirmed(event.target.checked)}/>{cancellation.confirm}</label>
      <button type="button" className="text-button" disabled={busy||fileBusy||!kit||!secret.trim()||!cancelConfirmed} onClick={event=>{void submit(event,true);}}>{cancellation.action}</button></>:null}
     </>:null}
    </>:null}
@@ -152,7 +153,7 @@ function MigrationForm({state}:{state:PrivateMigrationUi}){
    {error?<p role="alert" className="workspace-recovery-error">{error}</p>:null}
    <p className="workspace-recovery-hint">{copy.kept}</p>
    <div className="workspace-recovery-actions">
-    {state.target||state.reason==='setup'&&!started.current?<button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
+    {state.target||state.reason==='setup'&&!hasStarted?<button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);closePrivateMigrationUi(state.id);}}>{copy.close}</button>:null}
     <button type="button" className="text-button" disabled={busy||fileBusy||reviewBusy} onClick={()=>{setSecret('');setKit(undefined);setGenerated(null);void signOutFromGoogle().catch(()=>{if(alive.current)setError(copy.error);});}}>{vaultCopy.exit}</button>
    </div><small className="workspace-recovery-privacy">{vaultCopy.privacy}</small>
   </form>

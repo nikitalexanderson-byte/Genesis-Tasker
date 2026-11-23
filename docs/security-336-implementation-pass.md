@@ -1,5 +1,22 @@
 # 3.3.6: implementation pass before consolidated acceptance
 
+## 23 November: consolidated acceptance and first correction block
+
+The code pass is complete enough for consolidated acceptance. Exact-main website
+check45084250291 still precedes Deploy. Security includes mainc1205c04 via
+cf0d4ed3 and both public-region/mindmap-save suites. TypeScript PASS after404
+initial diagnostics; ESLint PASS0errors/22warnings. Corrected restore canonical
+hashing, signed request/types, enrollment shadowing, shared task prepare args,
+protocol5 refusal and committed-layout UI capture. Automatic14-language audits
+PASS; new labels reviewed in14 languages, broader visual acceptance outstanding.
+
+Backend initial132PASS/24FAIL, with explicit read-vs-deny inventory semantics
+corrected in the fixture without widening grants; store/shared-mindmap and full
+schema/negative-schema checks now PASS. Full backend/API rerun remains. Native
+first compile93 diagnostics corrected; second compile running. Full JS build/unit
+running with concurrency2. These are partial acceptance results, not20/20 or
+release readiness. Review the leading handoff section for current sessions/logs.
+
 ## 23 November: bounded wide integration and code-pass checkpoint
 
 Aggregate source/planning512MiB, logical64MiB, local archive128MiB plain/192MiB

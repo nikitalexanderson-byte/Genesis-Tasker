@@ -24,8 +24,8 @@ const phases=['draft','previewed','reviewed','prepared','migrated','values','com
 export type PrivateProjectCreationIntent={format:'genesis-private-project-create-v1';ownerId:string;intentId:string;scopeId:string;resourceId:string;kind:'project';input:PrivateProjectDraft;createdAt:string;
  topology:PrivateProjectTopology|null;review:Review|null;started:boolean;preparation:PrivateProjectPreparation|null;phase:typeof phases[number];history:{topology:PrivateProjectTopology;review:Review|null}[]};
 const prefix='shared-project-create:',uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
-const invalid=():never=>{throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_INVALID');};
-const trim=(value:string)=>value.replace(/^[\u0000\t\n\r\v ]+|[\u0000\t\n\r\v ]+$/g,'');
+function invalid():never{throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_INVALID');}
+const trim=(value:string)=>value.replace(/^[\p{Cc} ]+|[\p{Cc} ]+$/gu,'');
 export function privateProjectLocation(input:PrivateProjectLocation):PrivateProjectLocation{
  const {spaceId,parentId,categoryId,boardStatusId,kind,layout}=input;return validatePrivateProjectLocation({spaceId,parentId,categoryId,boardStatusId,kind,layout});
 }

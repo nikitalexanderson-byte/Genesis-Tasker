@@ -19,7 +19,7 @@ export interface MembershipAtomicApplyPorts extends MembershipAtomicReadbackPort
  sign:(action:MembershipAtomicApplyAction,payload:Record<string,WireValue>)=>Promise<SignedE2eeCommand>;
  acl:(intentId:string)=>Promise<void>;
 }
-const invalid=():never=>{throw new Error('E2EE_CORRUPT_OUTBOX');};
+function invalid():never{throw new Error('E2EE_CORRUPT_OUTBOX');}
 export const membershipAtomicApplyId=(ownerId:string,intentId:string)=>'membership-atomic-apply:'+membershipAtomicLocalStem(ownerId,intentId);
 export const membershipAtomicApplyRequestId=(ownerId:string,action:MembershipAtomicApplyAction,input:unknown)=>'membership-atomic-apply-request:'+membershipAtomicDigest({ownerId,action,payload:membershipAtomicApplyPayload(action,input)});
 export function membershipAtomicFinalReviewFingerprint(planHash:string,batchHash:string){decodeE2eeBytes(planHash,32);decodeE2eeBytes(batchHash,32);return membershipAtomicDigest({format:'genesis-membership-final-review-v2',planHash,batchHash});}

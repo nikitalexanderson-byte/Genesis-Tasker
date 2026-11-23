@@ -127,7 +127,9 @@ function MembershipReview({state}:{state:PrivateMembershipUi}){
 
 export function PrivateMembershipEntry({ownerId,language}:{ownerId:string;language:string}){
  const lang=isLanguage(language)?language:'en',c=copy[lang],[items,setItems]=useState<Draft[]>([]),[ownerItems,setOwnerItems]=useState<{fingerprint:string;count:number}[]>([]),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
-  const alive=useRef(true),turn=useRef(0),locked=useRef(false);useEffect(()=>{alive.current=true;locked.current=false;setBusy(false);setError('');setItems([]);setOwnerItems([]);setLoaded(false);return()=>{alive.current=false;turn.current++;};},[ownerId]);
+  const alive=useRef(true),turn=useRef(0),locked=useRef(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Owner changes retire private review state and its previous account capability.
+  useEffect(()=>{alive.current=true;locked.current=false;setBusy(false);setError('');setItems([]);setOwnerItems([]);setLoaded(false);return()=>{alive.current=false;turn.current++;};},[ownerId]);
   const run=async(work:(current:()=>void)=>Promise<void>)=>{if(locked.current)return;locked.current=true;const token=turn.current;setBusy(true);setError('');
    try{const account=requirePrivateAccount(ownerId),current=()=>{account.requireOpen();if(!alive.current||turn.current!==token||requirePrivateAccount(ownerId)!==account||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();await work(current);current();}
    catch{if(alive.current&&turn.current===token)setError(c.error);}finally{if(turn.current===token){locked.current=false;if(alive.current)setBusy(false);}}};

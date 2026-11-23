@@ -96,7 +96,7 @@ try{
  const graph=read.records[0].document!,nodes=graph.nodes as Record<string,unknown>[];
  check('new encrypted file keys and manifests rehydrate the exact original image',((nodes[0].presentation as Record<string,unknown>).image as Record<string,unknown>).data===image);
  check('task identities recurrence references and empty optional fields survive',nodes[1].refId==='original-task'&&nodes[1].occurrenceDate==='2026-11-19'&&Array.isArray(nodes[0].tags));
- check('closed-tab request and new-dialog work remain local and inert',read.local.drafts instanceof Array&&read.local.drafts.length===2&&read.local.conversions instanceof Array&&(read.local.conversions[0] as Record<string,unknown>).execution==='history-only');
+ check('closed-tab request and new-dialog work remain local and inert',read.local!==null&&read.local.drafts instanceof Array&&read.local.drafts.length===2&&read.local.conversions instanceof Array&&(read.local.conversions[0] as Record<string,unknown>).execution==='history-only');
  check('normal reads do not replay legacy requests or conversion provider calls',sourceReads===1&&captures===1&&reconciliations===1);
 }catch(error){report.error=error instanceof Error&&/^E2EE_[A-Z_]+$/.test(error.message)?error.message:'BROWSER_MINDMAPS_ACCEPTANCE_FAILED';if(error instanceof Error)report.diagnostic=(error.stack??error.name).split('\n').slice(0,4).join('\n').replace(/[A-Za-z0-9+/_-]{32,}={0,2}/g,'[REDACTED]');}
 finally{device?.lock();recovery?.secret.fill(0);oldKey.fill(0);for(const key of storedKeys)localStorage.removeItem(key);}

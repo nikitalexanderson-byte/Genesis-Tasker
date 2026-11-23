@@ -9,7 +9,7 @@ import type {StagedPathReader,StagedSourceHistory,StagedSourceInput} from './sta
 
 export type RetainedSourceScope={root:MigrationState;ancestors:readonly MigrationState[];stateId:string;target:{ownerId:string;scopeId:string;kind:'personal'|'project'|'space'}};
 const bindings=(scope:RetainedSourceScope)=>canonicalE2eeValue([scope.stateId,scope.target,[...scope.ancestors,scope.root].map(state=>[state.migrationId,state.ancestors,
- state.protocol===1||state.protocol===2?{migrationId:state.migrationId,snapshotSize:state.snapshotSize,snapshotParts:state.snapshotParts,snapshotHash:state.snapshotHash}:state.source])] as unknown as WireValue);
+ 'source' in state?state.source:{migrationId:state.migrationId,snapshotSize:state.snapshotSize,snapshotParts:state.snapshotParts,snapshotHash:state.snapshotHash}])] as unknown as WireValue);
 export function sameRetainedSources(a:RetainedSourceScope,b:RetainedSourceScope){const left=bindings(a),right=bindings(b);try{return left.length===right.length&&left.every((byte,at)=>byte===right[at]);}finally{left.fill(0);right.fill(0);}}
 
 /** Called only AFTER the coordinator has authenticated the complete account

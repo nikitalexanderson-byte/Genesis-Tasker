@@ -5,7 +5,7 @@ import {samePrivateJson as same} from './product-json.ts';
 import type {SharedDomainBinding} from './shared-domain.ts';
 
 export type SharedInvitationService={action:'shared-invitations-issue'|'shared-invitation-revoke';payload:Record<string,WireValue>;intentId:string;ids:string[]};
-const invalid=():never=>{throw new Error('E2EE_SHARED_INVITATION_INVALID');};
+function invalid():never{throw new Error('E2EE_SHARED_INVITATION_INVALID');}
 const permissionNames=['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers'];
 /** A stable technical ID is independent of email/content and survives a lost
  * response. The complete original ordinary request is retained by SharedLive. */
@@ -34,6 +34,6 @@ export function verifySharedInvitationResult(plan:SharedInvitationService,actorI
  exactKeys(result,['intentId','invitations','deviceApprovalRequired']);if(result.intentId!==plan.intentId||result.deviceApprovalRequired!==true||!Array.isArray(result.invitations)||result.invitations.length!==plan.ids.length)invalid();
  const expected=plan.payload.invitations as Record<string,WireValue>[];
  for(const [index,row]of result.invitations.entries()){exactKeys(row,['id','expiresAt']);if(row.id!==plan.ids[index]||typeof row.expiresAt!=='string'||!Number.isFinite(Date.parse(row.expiresAt)))invalid();
-  const read=state.invitations[index];exactKeys(read,['id','email','role','permissions','createdBy','state']);if(read.id!==row.id||read.email!==expected[index].email||read.role!==expected[index].role||read.createdBy!==actorId||!same(read.permissions,expected[index].permissions??null)||!['pending','consumed'].includes(String(read.state)))throw new Error('E2EE_RECIPIENT_REVIEW_REQUIRED');
+  const read:unknown=state.invitations[index];exactKeys(read,['id','email','role','permissions','createdBy','state']);if(read.id!==row.id||read.email!==expected[index].email||read.role!==expected[index].role||read.createdBy!==actorId||!same(read.permissions,expected[index].permissions??null)||!['pending','consumed'].includes(String(read.state)))throw new Error('E2EE_RECIPIENT_REVIEW_REQUIRED');
  }return{invitation:{...result.invitations[0],deviceApprovalRequired:true},deviceApprovalRequired:true};
 }

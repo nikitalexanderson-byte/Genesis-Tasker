@@ -1,4 +1,4 @@
-import {assertTechnical,exactKeys} from './keys.ts';
+import {exactKeys} from './keys.ts';
 import {decodeE2eeBytes} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {verifyDeviceDirectory,signingPublicKey,type VerifiedDirectory} from './directory.ts';
@@ -17,7 +17,7 @@ export type MembershipAtomicReview={format:'genesis-membership-atomic-review-v2'
 export type MembershipAtomicReviewPart={format:'genesis-membership-atomic-review-part-v2';fingerprint:string;kind:'plan'|'preview'|'products';index:number;page:MembershipAtomicPage|MembershipAtomicPreviewPage};
 export type MembershipAtomicOwnerApproval={format:'genesis-membership-atomic-owner-approval-v2';requestFingerprint:string;scopeId:string;packet:SignedE2eeCommand};
 export type MembershipAtomicProductOrigin={scopeId:string;intentId:string;actorId:string;deviceId:string;commandHash:string};
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');}
 const integer=(value:unknown,max:number)=>{if(!Number.isSafeInteger(value)||Number(value)<0||Number(value)>max)invalid();};
 export function membershipAtomicPreviewRef(index:number,page:MembershipAtomicPreviewPage,after:number):MembershipAtomicPreviewRef{
  integer(index,5000);integer(after,5000);return{index,after,count:page.scopePlans.length,pageHash:membershipAtomicDigest({format:'genesis-membership-atomic-preview-page-v2',after,page})};

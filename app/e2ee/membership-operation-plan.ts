@@ -36,7 +36,7 @@ export function membershipOperationPlanFingerprint(plan:MembershipOperationPlan)
  const pages:string[]=[];for(let offset=0;offset<plan.changes.length;offset+=200)pages.push(digest(membershipChangesProjection(plan.changes.slice(offset,offset+200))));
  return digest({...plan,operation:membershipOperationWire(plan.operation),changes:{count:plan.changes.length,pages},scopeIds:pageHashes(plan.scopeIds),requiredScopes:pageHashes(plan.requiredScopes),clearAssignments:pageHashes(plan.clearAssignments),revokeInvitations:pageHashes(plan.revokeInvitations),roleEvents:pageHashes(plan.roleEvents)});
 }
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_OPERATION_INVALID');}
 const permissionsKeys=['createProjects','editTasks','organizeTasks','comment','manageProjects','inviteMembers'];
 function permissions(value:unknown):MembershipPermissions{exactKeys(value,permissionsKeys);if(Object.values(value).some(item=>typeof item!=='boolean'))invalid();return structuredClone(value) as MembershipPermissions;}
 const fields=(table:MembershipChange['table'],row:Record<string,WireValue>)=>Object.fromEntries(MEMBERSHIP_SPECS[table].fields.map(name=>[name,row[name]]));
@@ -82,7 +82,7 @@ export function validateMembershipOperationSnapshot(input:unknown):MembershipOpe
  // Iterative colour walk accepts the existing hierarchy without recursive
  // stack growth and rejects cycles before any role/index calculation.
  const done=new Set<string>();for(const row of projects.values()){let id:string|null=row.id;const path=new Set<string>();while(id!==null&&!done.has(id)){if(path.has(id))invalid();path.add(id);id=projects.get(id)!.parentId;}for(const id of path)done.add(id);}
- for(const key of ['spaceUserIds','completeUserIds'] as const){for(const id of input[key])assertTechnical(id);if(!same([...new Set(input[key])].sort(),input[key]))invalid();}
+ for(const key of ['spaceUserIds','completeUserIds'] as const){const values=input[key];if(!Array.isArray(values))invalid();for(const id of values)assertTechnical(id);if(!same([...new Set(values)].sort(),values))invalid();}
  if(!input.spaceUserIds.includes(input.actorId)||!input.completeUserIds.includes(input.actorId) )invalid();
  const seen=new Set<string>();for(const row of input.rows){exactKeys(row,['table','key','before','beforeHash']);if(typeof row.table!=='string'||!Object.hasOwn(MEMBERSHIP_SPECS,row.table))invalid();
   const table=row.table as MembershipChange['table'],spec=MEMBERSHIP_SPECS[table];exactKeys(row.key,spec.keys);for(const id of Object.values(row.key))assertTechnical(id);

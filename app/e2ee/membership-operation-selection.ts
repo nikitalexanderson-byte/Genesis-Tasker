@@ -1,7 +1,7 @@
 import {assertTechnical,exactKeys} from './keys.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {membershipBeforeHash,type MembershipChange} from './membership-contract.ts';
-import {validateMembershipOperation,validateMembershipOperationSnapshot,type MembershipOperation,type MembershipOperationSnapshot,type MembershipGraphScope,type MembershipGraphProject} from './membership-operation-plan.ts';
+import {validateMembershipOperation,validateMembershipOperationSnapshot,type MembershipOperationSnapshot,type MembershipGraphScope,type MembershipGraphProject} from './membership-operation-plan.ts';
 import {productEntity,type ProductEntity} from './product-contract.ts';
 import {sharedBodyMetadata,type SharedRecordBody} from './shared-domain.ts';
 import type {ProductVersion} from './shared-product.ts';
@@ -18,7 +18,7 @@ export interface MembershipSelectionPorts{
  read:(scopeId:string,entity:ProductEntity)=>Promise<ProductVersion>;
  state:(targets:Pick<MembershipChange,'table'|'key'>[])=>Promise<unknown>;
 }
-const changed=():never=>{throw new Error('E2EE_MEMBERSHIP_STALE');};
+function changed():never{throw new Error('E2EE_MEMBERSHIP_STALE');}
 export function validateMembershipGraphDiscovery(input:unknown):MembershipGraphDiscovery{
  exactKeys(input,['spaceId','spaceScopeId','spaceUserIds','projects']);assertTechnical(input.spaceId);if(input.spaceScopeId!==null)assertTechnical(input.spaceScopeId);
  if(!Array.isArray(input.spaceUserIds)||input.spaceUserIds.length>200||!Array.isArray(input.projects)||input.projects.length>5000)changed();

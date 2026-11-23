@@ -101,7 +101,7 @@ export class E2eeMembershipProduct{
   exactKeys(result,['intentId','changeHash','scopes','signInRequired']);
   if(result.intentId!==intentId||result.changeHash!==state.preview?.changeHash||result.signInRequired!==true||!result.scopes||typeof result.scopes!=='object'||Array.isArray(result.scopes)||!same(Object.keys(result.scopes).sort(),state.scopeIds))throw new Error('E2EE_INVALID_RECEIPT');
   const request=this.#request(state);
-  for(const packet of state.batch.rotations){const command=packet.command,receipt=(result.scopes as Record<string,unknown>)[command.scopeId];exactKeys(receipt,['directoryRevision','checkpointHash','cryptoEpoch','securityEpoch','signInRequired']);
+  for(const packet of state.batch.rotations){const command=packet.command,receipt:unknown=(result.scopes as Record<string,unknown>)[command.scopeId];exactKeys(receipt,['directoryRevision','checkpointHash','cryptoEpoch','securityEpoch','signInRequired']);
    const commandHash=await e2eeCommandHash(command),bytes=encoder.encode(command.checkpointHash+'\0'+commandHash);let checkpoint:string;
    try{checkpoint=encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)));}finally{bytes.fill(0);}this.current();
    if(receipt.directoryRevision!==command.expectedRevision+1||receipt.checkpointHash!==checkpoint||receipt.cryptoEpoch!==command.payload.cryptoEpoch||receipt.securityEpoch!==command.payload.securityEpoch||receipt.signInRequired!==((command.payload.revokedDeviceIds as string[]).length>0))throw new Error('E2EE_INVALID_RECEIPT');

@@ -141,6 +141,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
 private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?, openedSection: String?,
     activeScope: String, testWorkspace: Boolean, openedHabit: ru.genesis.calendar.reminders.HabitReminderOpenRequest?,
     openedAdvice: ru.genesis.calendar.reminders.AdviceNotificationOpenRequest?) {
+    val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
     var closedAdviceNonce by rememberSaveable(activeScope) { mutableStateOf<Long?>(null) }
     // Derive this before the first Today composition: an effect would allow an accidental draw underneath the reader.
     val activeAdviceRequest = openedAdvice?.takeIf { it.scope == activeScope && it.nonce != closedAdviceNonce }

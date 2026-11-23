@@ -67,7 +67,6 @@ import java.util.UUID
     val fileDestination by NativeContentFileDestination.state.collectAsStateWithLifecycle()
     val ownFileDestination=fileDestination?.takeIf{it.request.owner==repository.ownerUid&&it.request.purpose in setOf("message","message-input")}
     val fileAccess=remember(repository){java.util.concurrent.atomic.AtomicReference<AutoCloseable?>(null)}
-    val language=LocalGenesisLanguage.current
     val fileText=remember(language){context.assets.open("message-files-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val outputText=remember(language){context.assets.open("content-file-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val draftRecoveryText=remember(language){context.assets.open("message-draft-recovery-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}

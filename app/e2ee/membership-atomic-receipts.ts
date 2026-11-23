@@ -18,7 +18,7 @@ export type MembershipAtomicReceiptPage={format:'genesis-membership-receipt-page
  {kind:'scopes';items:MembershipAtomicScopeReceipt[]}|{kind:'products';items:MembershipAtomicProductReceipt[]});
 export type MembershipAtomicReceiptPageRef={index:number;kind:MembershipAtomicReceiptPage['kind'];count:number;pageHash:string};
 export type MembershipAtomicReceipt={format:'genesis-membership-atomic-receipt-v2';actorId:string;intentId:string;planHash:string;batchHash:string;changeHash:string;pages:MembershipAtomicReceiptPageRef[];signInRequired:true};
-const invalid=():never=>{throw new Error('E2EE_INVALID_RECEIPT');};
+function invalid():never{throw new Error('E2EE_INVALID_RECEIPT');}
 const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER-1)=>{if(!Number.isSafeInteger(value)||Number(value)<min||Number(value)>max)invalid();};
 export function membershipAtomicApplyPayload(action:MembershipAtomicApplyAction,input:unknown):Record<string,WireValue>{
  if(!['membership-atomic-commit','membership-atomic-receipt','membership-atomic-receipt-page'].includes(action))invalid();

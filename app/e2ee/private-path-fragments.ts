@@ -36,9 +36,9 @@ export async function collectPrivatePathFragments(context:MigrationSourceContext
      if(page.protocol!==1||page.ownerId!==lease.ownerId||page.scopeId!==lease.scopeId||page.kind!==scope.kind||page.resourceId!==scope.resourceId||page.pathId!==scope.pathId
       ||page.migrationId!==lease.migrationId||page.fence!==lease.fence||page.sourceHash!==lease.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
      if(page.table!==table.table||page.offset!==offset||page.byteOffset!==position)invalid();integer(page.directoryRevision);decodeE2eeBytes(page.checkpointHash,32).fill(0);
-     exactKeys(page.totals,schema.server);let count=0;for(const name of schema.server){integer(page.totals[name]);count+=page.totals[name] as number;}if(count>1000000)throw new Error('E2EE_SOURCE_TOO_LARGE');
+     exactKeys(page.totals,schema.server);const pageTotals=page.totals;let count=0;for(const name of schema.server){integer(page.totals[name]);count+=page.totals[name] as number;}if(count>1000000)throw new Error('E2EE_SOURCE_TOO_LARGE');
      if(!totals){totals=page.totals;checkpoint=page.checkpointHash as string;revision=page.directoryRevision;}
-     else if(page.checkpointHash!==checkpoint||page.directoryRevision!==revision||schema.server.some(name=>totals![name]!==page.totals[name]))invalid();
+     else if(page.checkpointHash!==checkpoint||page.directoryRevision!==revision||schema.server.some(name=>totals![name]!==pageTotals[name]))invalid();
      const encoded=encoder.encode(JSON.stringify(page));wire+=encoded.length;const pageSize=encoded.length;encoded.fill(0);if(pageSize>2*1024*1024||wire>2147483647)throw new Error('E2EE_SOURCE_TOO_LARGE');
      integer(page.rowBytes);if(page.rowBytes>MAX)throw new Error('E2EE_SOURCE_TOO_LARGE');const total=page.totals[table.table] as number;
      if(total===0){if(offset!==0||position!==0||page.rowBytes!==0||page.rowHash!==null||page.chunk!==''||page.nextByteOffset!==null||page.nextOffset!==null)invalid();last=true;break;}

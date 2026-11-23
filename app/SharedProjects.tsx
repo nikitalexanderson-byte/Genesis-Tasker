@@ -1806,7 +1806,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
           {taskProjectChoice}
           </details> : null}
         {selectedTask.imageUrl ? <SharedTaskImage key={selectedTask.id} src={selectedTask.imageUrl} english={english} /> : null}
-        <SharedTaskAttachmentList files={selectedTask.attachments ?? []} english={english} />
+        <SharedTaskAttachmentList files={selectedTask.attachments ?? []} english={english} language={language} />
         </div>
         <div id="shared-task-discussion" role="tabpanel" aria-labelledby="shared-comments-tab" hidden={taskSection !== "comments"}>
         <SharedComments key={`comments-${selectedTask.id}`} comments={comments} members={taskSnapshot.members} english={english} canComment={Boolean(canCommentTask)} busy={busy} onSubmit={submitComment} highlightedId={commentId} active={taskSection === "comments"}/>

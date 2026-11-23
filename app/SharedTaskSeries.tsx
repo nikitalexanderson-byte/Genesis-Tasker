@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, useState } from "react";
+import {useLayoutEffect, useEffect, useId, useRef, useState } from "react";
 import {registerLocalWorkMigrationEditor} from './local-work-migration-memory';
 import { CalendarDatePicker } from "./CalendarDatePicker";
 import { RecurrenceBuilder } from "./RecurrenceBuilder";
@@ -40,7 +40,7 @@ export default function SharedTaskSeries({task, userId, spaceId, mode, readOnly,
   const retry = useRef({ body: "", id: "" });
   const dirty = JSON.stringify({ settings, paused, zone }) !== baseline || refreshTemplate;
   const migrationInput=useRef({taskId:task.id,taskRevision:task.revision,series,settings,paused,refreshTemplate,zone,excludeDate,baseline});
-  migrationInput.current={taskId:task.id,taskRevision:task.revision,series,settings,paused,refreshTemplate,zone,excludeDate,baseline};
+  useLayoutEffect(()=>{migrationInput.current={taskId:task.id,taskRevision:task.revision,series,settings,paused,refreshTemplate,zone,excludeDate,baseline};});
   useEffect(()=>registerLocalWorkMigrationEditor({ownerId:userId,spaceId,projectId:task.projectId,source:'series'},()=>({...structuredClone(migrationInput.current),retry:structuredClone(retry.current)})),[userId,spaceId,task.projectId,task.id]);
   const context = settings.recurrence.calendarContext!;
   const ruleMode = calendarModeForRecurrence(settings.recurrence.mode);

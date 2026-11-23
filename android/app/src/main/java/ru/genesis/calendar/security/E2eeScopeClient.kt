@@ -205,7 +205,7 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
                     replacement.value.toString().toByteArray(), null)
             } else if(previous!=null){
                 check(previous.value.getBoolean("complete")){"E2EE_PENDING_SAVE_REQUIRED"}
-                val raw=device.vault.read("outbox","job:$id")?:error("E2EE_LOCAL_CONFLICT")
+                val raw=device.vault.read("outbox","job:$key")?:error("E2EE_LOCAL_CONFLICT")
                 try{check(raw.serial==previous.serial){"E2EE_LOCAL_CONFLICT"};changes+=UnlockedE2eeVault.Write("local-snapshot","${previous.value.getString("draftId")}:completed:${UUID.randomUUID()}",raw.bytes.copyOf(),null)}finally{raw.bytes.fill(0)}
             }
             val root = roots[value.keyId] ?: throw IllegalStateException("E2EE_KEY_UNAVAILABLE")

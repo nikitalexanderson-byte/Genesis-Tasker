@@ -28,7 +28,7 @@ import {normalizeNativeAdviceCapture} from '../e2ee/advice-native-source';
 import {canonicalJson} from './forecast';
 import {decodeE2eeBytes,encodeE2eeBytes} from '../e2ee/envelope';
 import {backupJson} from '../backup-format';
-import {exactKeys} from '../e2ee/keys';
+import {assertTechnical,exactKeys} from '../e2ee/keys';
 import type {MigrationSourceContext} from '../e2ee/migration';
 import type {PrivatePathAdapter} from '../e2ee/migration-sources';
 import {SharedLiveModel,validateSharedLiveContext,type SavedSharedRequest} from '../e2ee/shared-live';

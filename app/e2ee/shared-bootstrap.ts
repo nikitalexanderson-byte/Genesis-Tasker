@@ -36,7 +36,7 @@ export class E2eeSharedBootstrap{
  #part(id:string,plan:Plan,index:number){return new E2eeDeviceDocument<Part>(this.account.device,id,value=>{exactKeys(value,['protocol','scopeId','bootstrapId','partIndex','intentId','items','proofHash']);
   if(value.protocol!==1||value.scopeId!==plan.scopeId||value.bootstrapId!==plan.bootstrapId||value.partIndex!==index||!Array.isArray(value.items)||value.items.length!==plan.parts[index].count)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');assertTechnical(value.intentId);if(value.proofHash!==null)decodeE2eeBytes(value.proofHash,32);
   for(const item of value.items){exactKeys(item,['version','operation','authorId','payloadHash']);const version=this.#version(item.version);assertTechnical(item.authorId);if(item.payloadHash!==null)decodeE2eeBytes(item.payloadHash,32);
-   const operation=productMutation({...item.operation,payloadHash:item.payloadHash??encodeE2eeBytes(new Uint8Array(32))});
+   if(!item.operation||typeof item.operation!=='object'||Array.isArray(item.operation))throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');const operation=productMutation({...item.operation,payloadHash:item.payloadHash??encodeE2eeBytes(new Uint8Array(32))});
    if(!['create','delete'].includes(operation.action)||operation.expectedRevision!==0||version.entityId!==operation.entityId||version.kind!==operation.kind||version.deleted!==(operation.action==='delete')||version.parentId!==operation.parentId||!samePrivateJson(version.metadata,operation.metadata))throw new Error('E2EE_PRODUCT_BOOTSTRAP_INVALID');}
   return value as Part;
  },()=>this.#current());}
@@ -50,7 +50,7 @@ export class E2eeSharedBootstrap{
    exactKeys(response.bootstrap,['bootstrapId','sourceManifestHash','expectedCount','state','partCount']);const header=response.bootstrap;
    assertTechnical(header.bootstrapId);decodeE2eeBytes(header.sourceManifestHash,32);
    if(header.sourceManifestHash!==manifestHash||header.expectedCount!==source.length||!['staging','active'].includes(String(header.state))||!Number.isInteger(header.partCount)||Number(header.partCount)<0||Number(header.partCount)>4096)throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');
-   if(state&&!samePrivateJson(header,state))throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');state=header as typeof state;
+   if(state&&!samePrivateJson(header,state))throw new Error('E2EE_PRODUCT_BOOTSTRAP_SOURCE_CHANGED');state={bootstrapId:header.bootstrapId,sourceManifestHash:manifestHash,expectedCount:source.length,state:header.state as 'staging'|'active',partCount:Number(header.partCount)};
    if(response.part===null){if(parts.length!==header.partCount)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');break;}
    if(page===4096)throw new Error('E2EE_PRODUCT_BOOTSTRAP_TOO_LARGE');
    exactKeys(response.part,['partIndex','proofHash','packet']);const remote=response.part;

@@ -9,7 +9,7 @@ import type {WebPrivateAccount} from './product-session.ts';
 type ObjectValue=Record<string,unknown>;
 export type RecipientResponse={id:string;scopeId:string;kind:'space'|'project';resourceId:string;spaceId:string;state:'unanswered'|'pending'|'declined'|'admitted'|'expired'|'unavailable';acceptedAt:string|null;deviceApprovalRequired:true};
 export type RecipientRequest={format:'genesis-invitation-recipient-request-v1';ownerId:string;id:string;accept:boolean;intentId:string;result:ObjectValue|null};
-const invalid=():never=>{throw new Error('E2EE_INVITATION_RESPONSE_INVALID');};
+function invalid():never{throw new Error('E2EE_INVITATION_RESPONSE_INVALID');}
 export function invitationRecipientIntent(ownerId:string,id:string,accept:boolean){assertTechnical(ownerId);assertTechnical(id);if(typeof accept!=='boolean')invalid();const bytes=canonicalE2eeValue({format:'genesis-invitation-recipient-intent-v1',ownerId,id,accept});try{return'invitation-response:'+encodeE2eeBytes(sha256(bytes));}finally{bytes.fill(0);}}
 export function validateRecipientResponse(input:unknown,id:string):RecipientResponse{
  exactKeys(input,['id','scopeId','kind','resourceId','spaceId','state','acceptedAt','deviceApprovalRequired']);for(const key of ['id','scopeId','resourceId','spaceId'])assertTechnical(input[key]);

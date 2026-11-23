@@ -19,7 +19,7 @@ export async function* exportMembershipReviewFile(fingerprint:string,store:Store
 /** Exact framing/EOF and the complete request precede signature/content
  * review. Interrupted imports stay typed inert partial inputs in the vault. */
 export async function importMembershipReviewFile(chunks:AsyncIterable<Uint8Array>,store:Store,current:()=>void){
- const iterator=chunks[Symbol.asyncIterator]();let held=new Uint8Array(),offset=0,eof=false;
+ const iterator=chunks[Symbol.asyncIterator]();let held:Uint8Array=new Uint8Array(),offset=0,eof=false;
  const take=async(size:number,allowEof=false)=>{const result=new Uint8Array(size);let at=0;try{
   while(at<size){current();if(offset===held.length){const next=await iterator.next();current();if(next.done){eof=true;if(allowEof&&at===0)return null;throw new Error('E2EE_MEMBERSHIP_FILE_TRUNCATED');}if(!(next.value instanceof Uint8Array))throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');held=next.value;offset=0;if(!held.length)continue;}
    const count=Math.min(size-at,held.length-offset);result.set(held.subarray(offset,offset+count),at);at+=count;offset+=count;
@@ -30,7 +30,7 @@ export async function importMembershipReviewFile(chunks:AsyncIterable<Uint8Array
    try{record=parseLegacyMigrationJson(decoder.decode(bytes!),'E2EE_MEMBERSHIP_REVIEW_MISMATCH',MAX);}finally{bytes?.fill(0);}
    if(!record||typeof record!=='object'||Array.isArray(record))throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');
    if(!fingerprint){exactKeys(record,['kind','request']);if(record.kind!=='header')throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');const request=validateMembershipAtomicReview(record.request);fingerprint=await store.create(request);current();if(fingerprint!==membershipAtomicReviewFingerprint(request))throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');planCount=request.plan.pages.length;previewCount=request.previewPages.length;expected=planCount+previewCount+request.productPages.length;}
-   else if(record.kind==='part'){exactKeys(record,['kind','part']);if(count>=expected)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');exactKeys(record.part,['format','fingerprint','kind','index','page']);
+   else if((record as Record<string,unknown>).kind==='part'){exactKeys(record,['kind','part']);if(count>=expected)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');exactKeys(record.part,['format','fingerprint','kind','index','page']);
     const kind=count<planCount?'plan':count<planCount+previewCount?'preview':'products',index=count<planCount?count:count<planCount+previewCount?count-planCount:count-planCount-previewCount;
     if(record.part.kind!==kind||record.part.index!==index||record.part.fingerprint!==fingerprint)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');await store.putPart(record.part as Parameters<Store['putPart']>[0]);current();count++;}
    else{exactKeys(record,['kind','fingerprint','parts']);if(record.kind!=='end'||record.fingerprint!==fingerprint||record.parts!==count||count!==expected)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');ended=true;}

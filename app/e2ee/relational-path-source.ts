@@ -39,7 +39,7 @@ export class RelationalPrivatePathSource implements PrivatePathAdapter{
  #snapshot(bytes:Uint8Array):Snapshot{
   if(bytes.length<1||bytes.length>MAX)invalid();const input=parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_RELATIONAL_SOURCE_INVALID',MAX);
   exactKeys(input,['protocol','target','capturedAt','local']);exactKeys(input.target,['ownerId','scopeId','kind','resourceId','pathId']);
-  if(input.protocol!==1||Object.entries(this.#target).some(([name,value])=>input.target[name]!==value))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const capturedTarget=input.target;if(input.protocol!==1||Object.entries(this.#target).some(([name,value])=>capturedTarget[name]!==value))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
   if(typeof input.capturedAt!=='string'||!Number.isFinite(Date.parse(input.capturedAt)))invalid();exactKeys(input.local,['platform','entries','editors','inventoryVersion']);
   if(!['web','android'].includes(String(input.local.platform))||input.local.inventoryVersion!==1||!Array.isArray(input.local.entries)||!Array.isArray(input.local.editors)
    ||input.local.entries.length>10000||input.local.editors.length>1000)invalid();

@@ -77,8 +77,8 @@ export class E2eeAdviceProduct{
  #validateIndex(value:unknown):Index{exactKeys(value,['protocol','ownerId','days']);if(value.protocol!==1||value.ownerId!==this.ports.ownerId||!Array.isArray(value.days)||value.days.length>10000)invalid();const dates=new Set<string>(),objects=new Set<string>();
   for(const row of value.days){exactKeys(row,['dayKey','objectId','legacy']);date(row.dayKey);assertTechnical(row.objectId);if(typeof row.legacy!=='boolean'||dates.has(row.dayKey)||objects.has(row.objectId)||!row.objectId.startsWith(row.legacy?'personal-advice-day:':'personal-advice-live-day:'))invalid();dates.add(row.dayKey);objects.add(row.objectId);}return value as Index;}
  #validateDay(value:unknown,dayKey:string):Day{exactKeys(value,['protocol','ownerId','dayKey','currentId','selection','entries']);if(value.protocol!==1||value.ownerId!==this.ports.ownerId||value.dayKey!==dayKey||!Array.isArray(value.entries)||value.entries.length>9||value.currentId!==null&&typeof value.currentId!=='string')invalid();
-  const seen=new Set<string>(),slots=new Set<number>();for(const row of value.entries){exactKeys(row,['entry','translations','slot','createdAt','viewedAt','dismissedAt','reference']);candidate(row.entry);integer(row.slot,1,9);time(row.createdAt);if(row.viewedAt!==null)time(row.viewedAt);if(row.dismissedAt!==null)time(row.dismissedAt);
-   if(seen.has(row.entry.id)||slots.has(row.slot))invalid();seen.add(row.entry.id);slots.add(row.slot);if(row.reference!==null)reference(row.reference);if(row.translations!==null)object(row.translations);}
+  const seen=new Set<string>(),slots=new Set<number>();for(const row of value.entries){exactKeys(row,['entry','translations','slot','createdAt','viewedAt','dismissedAt','reference']);const entry=candidate(row.entry);integer(row.slot,1,9);time(row.createdAt);if(row.viewedAt!==null)time(row.viewedAt);if(row.dismissedAt!==null)time(row.dismissedAt);
+   if(seen.has(entry.id)||slots.has(row.slot))invalid();seen.add(entry.id);slots.add(row.slot);if(row.reference!==null)reference(row.reference);if(row.translations!==null)object(row.translations);}
   if(value.currentId!==null&&!seen.has(value.currentId))invalid();if(value.selection!==null){object(value.selection);if(canonicalJson(advicePreferences(value.selection))!==canonicalJson(value.selection))invalid();}return value as Day;}
  async #locator(dayKey:string,create=false){const view=await this.#index.read();this.ports.current();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');let row=view.document.days.find(row=>row.dayKey===dayKey);
   if(!row&&create){row={dayKey,objectId:'personal-advice-live-day:'+crypto.randomUUID(),legacy:false};await this.#index.write({...view.document,days:[...view.document.days,row]});await this.#index.flush();}return row??null;}
@@ -90,7 +90,7 @@ export class E2eeAdviceProduct{
    const raw=[...source.entries,...source.extraEntries] as Record<string,unknown>[];if(!raw.length&&source.pointer!==null)throw new Error('E2EE_ADVICE_HISTORY_REVIEW_REQUIRED');
    const entries:Entry[]=raw.map(row=>{object(row.entry);return{entry:candidate(row.entry),translations:row.translations as Entry['translations'],slot:row.slot as number,createdAt:row.createdAt as string,viewedAt:row.viewedAt as string|null,dismissedAt:row.dismissedAt as string|null,reference:null};}).sort((a,b)=>a.slot-b.slot);
    let currentId=entries.at(-1)?.entry.id??null,selection:AdvicePreferences|null=null;
-   if(source.pointer!==null){object(source.pointer);if(typeof source.pointer.adviceId==='string'&&entries.some(row=>row.entry.id===source.pointer.adviceId))currentId=source.pointer.adviceId;if(source.pointer.selection)selection=advicePreferences(source.pointer.selection as Partial<AdvicePreferences>);}
+   if(source.pointer!==null){const pointer=source.pointer;object(pointer);if(typeof pointer.adviceId==='string'&&entries.some(row=>row.entry.id===pointer.adviceId))currentId=pointer.adviceId;if(pointer.selection)selection=advicePreferences(pointer.selection as Partial<AdvicePreferences>);}
    return this.#validateDay({protocol:1,ownerId,dayKey:locator.dayKey,currentId,selection,entries},locator.dayKey);
   });this.#days.set(locator.objectId,document);return document;
  }
@@ -108,7 +108,7 @@ export class E2eeAdviceProduct{
  async #preferences(){const value=advicePreferences(await this.ports.preferences());this.ports.current();return value;}
  async #render(row:Entry,day:string,language=this.ports.language()):Promise<DailyAdvice>{let entry={...row.entry};
   const version=entry.translationVersion??entry.contentVersion;if(version){const text=row.translations?.[language]??await this.#catalogues.resolve(entry.translationVersion?'philosophers':'daily',version,language,entry.id);this.ports.current();entry={...entry,...text,language} as AdviceCandidate;}
-  const {contentVersion:_contentVersion,translationVersion:_translationVersion,topics:_topics,schedule:_schedule,status:_status,timeOfDay:_timeOfDay,priority:_priority,...visible}=entry;
+  const {contentVersion:_contentVersion,translationVersion:_translationVersion,topics:_topics,schedule:_schedule,status:_status,timeOfDay:_timeOfDay,priority:_priority,...visible}=entry;void [_contentVersion,_translationVersion,_topics,_schedule,_status,_timeOfDay,_priority];
   return{...visible,dayKey:day,dismissed:row.dismissedAt!==null,sequence:row.slot};
  }
  async #context(day:Day,prefs:AdvicePreferences,policy:Policy,scores:AdviceScores,topics:AdviceTopicScores,advance:boolean){

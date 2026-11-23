@@ -98,6 +98,7 @@ export function GeminiAssistant({ language, context, provider, onApply, onStartC
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [copyConsent,setCopyConsent]=useState(false),copyNoticeId=useId(),copyText=externalCopyText(language);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Consent belongs to the exact external-copy input and must expire when it changes.
   useEffect(()=>setCopyConsent(false),[provider,context,command,audio]);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);

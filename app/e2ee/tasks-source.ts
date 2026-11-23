@@ -62,7 +62,7 @@ const fields=['id','title','description','sacredYear','monthIndex','day','dueDat
  'yandexEntryType','yandexEndTime','yandexLocation','yandexTelemostUrl','yandexAttendees','yandexOptionalAttendees','yandexBusy','yandexVisibility','yandexReminders','mindmapCreateOnly','mindmapCreationPayload','createOnly','recurrenceDates'];
 /** Lossless validation, never the ordinary task normalizer (which trims, sorts,
  * supplies time-dependent values and drops unsupported reminder fields). */
-export function validateMigrationTask(value:unknown):Row{
+export function validateMigrationTask(value:unknown):Row&{id:string;title:string}{
  allowed(value,fields);identity(value.id);text(value.title);
  for(const name of ['description','project','calendarNote','googleAccountEmail','googleTaskListTitle','createdByName','yandexLocation','yandexTelemostUrl'])if(value[name]!==undefined)text(value[name]);
  for(const name of ['projectId','categoryId','googleAccountId','googleEventId','googleTaskId','googleTaskListId','googleCalendarId','recurrenceSeriesId'])if(value[name]!==undefined&&value[name]!==null)identity(value[name]);
@@ -90,7 +90,7 @@ export function validateMigrationTask(value:unknown):Row{
  if(value.restoredFrom!==undefined){exactKeys(value.restoredFrom,['sourceId','accountId','taskListId','taskId','backupId']);for(const item of Object.values(value.restoredFrom))if(item!==null)identity(item);}
  if(value.comments!==undefined){list(value.comments);for(const row of value.comments)object(row);}
  if(value.mindmapCreationPayload!==undefined){const child=value.mindmapCreationPayload;object(child);if(child.mindmapCreationPayload!==undefined)invalid();validateMigrationTask(child);if(child.id!==value.id)invalid();}
- return structuredClone(value);
+ return structuredClone(value) as Row&{id:string;title:string};
 }
 
 function compatible(a:Row,b:Row):Row|null{
@@ -228,7 +228,7 @@ export async function readMigratedPersonalTasks(ownerId:string,read:(objectId:st
  const tasks:Row[]=[],deletedIds:string[]=[],ids=new Set<string>(),objects=new Set<string>();let openedId='',openedRows:unknown[]=[],nextIndex=0;
  for(const entry of index.tasks){exactKeys(entry,index.protocol===2?['id','objectId','recordIndex']:['id','objectId']);identity(entry.id);if(typeof entry.objectId!=='string'||ids.has(entry.id))invalid();ids.add(entry.id);
   let row:Row;
-  if(index.protocol===1){if(!RECORD.test(entry.objectId)||objects.has(entry.objectId))invalid();objects.add(entry.objectId);row=await open(entry.objectId);}
+  if(index.protocol===1){if(!RECORD.test(entry.objectId)||objects.has(entry.objectId))invalid();objects.add(entry.objectId);const single=await open(entry.objectId);object(single);row=single;}
   else{if(!/^personal-task-shard:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(entry.objectId))invalid();integer(entry.recordIndex);
    if(openedId!==entry.objectId){if(openedId&&nextIndex!==openedRows.length||objects.has(entry.objectId))invalid();objects.add(entry.objectId);const part=await open(entry.objectId);exactKeys(part,['format','protocol','ownerId','rows']);if(part.format!=='genesis-private-task-records-v2'||part.protocol!==2||part.ownerId!==ownerId)invalid();list(part.rows);if(!part.rows.length)invalid();openedId=entry.objectId;openedRows=part.rows;nextIndex=0;}
    if(entry.recordIndex!==nextIndex||nextIndex>=openedRows.length)invalid();const candidate=openedRows[nextIndex++];object(candidate);row=candidate;

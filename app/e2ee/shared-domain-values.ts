@@ -15,7 +15,7 @@ function mode(value:unknown){if(!['profane','sacred','lunar'].includes(String(va
 function scalar(value:unknown){if(value===null||typeof value==='boolean')return;if(typeof value==='number'){if(!Number.isFinite(value)||Math.abs(value)>1e12)invalid();return;}if(typeof value==='string'){text(value,100000);return;}array(value,200);for(const item of value)text(item,2000);}
 function offset(value:unknown){if(value===null)return;exactKeys(value,['amount','unit']);integer(value.amount,-10000,10000);if(!['day','month','year'].includes(String(value.unit)))invalid();}
 export function validateSharedReviewPolicy(value:unknown){exactKeys(value,['enabled','checked','confirmed','deletable']);if(typeof value.enabled!=='boolean')invalid();
- for(const name of ['checked','confirmed','deletable']){const rule=value[name];exactKeys(rule,['group','userIds']);if(!['everyone','editors','organizers','selected'].includes(String(rule.group)))invalid();ids(rule.userIds);}
+ for(const name of ['checked','confirmed','deletable']){const rule:unknown=value[name];exactKeys(rule,['group','userIds']);if(!['everyone','editors','organizers','selected'].includes(String(rule.group)))invalid();ids(rule.userIds);}
  return value;
 }
 export function validateSharedAutomation(value:unknown){exactKeys(value,['schemaVersion','trigger','conditions','actions','calendarMode','calendarContext']);if(value.schemaVersion!==1)invalid();context(value.calendarContext);mode(value.calendarMode);

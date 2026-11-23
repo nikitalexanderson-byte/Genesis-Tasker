@@ -1,16 +1,100 @@
 {
- "en":{"title":"Review completion","notice":"Review the proposed task version before confirming. Your signature approves this exact version. Later changes require a new review.","empty":"No current completion proposal is available. Refresh the task or ask its organizer to request completion.","details":"Proposed task details"},
- "ru":{"title":"Проверка выполнения","notice":"Перед подтверждением просмотрите предлагаемую версию задачи. Ваша подпись подтверждает именно эту версию. Последующие изменения потребуют новой проверки.","empty":"Актуального запроса на выполнение нет. Обновите задачу или попросите организатора запросить выполнение.","details":"Содержимое предлагаемой задачи"},
- "de":{"title":"Abschluss prüfen","notice":"Prüfen Sie die vorgeschlagene Aufgabenversion vor der Bestätigung. Ihre Signatur bestätigt genau diese Version. Spätere Änderungen erfordern eine neue Prüfung.","empty":"Kein aktueller Abschlussvorschlag verfügbar. Aktualisieren Sie die Aufgabe oder bitten Sie den Organisator um einen Vorschlag.","details":"Details der vorgeschlagenen Aufgabe"},
- "el":{"title":"Έλεγχος ολοκλήρωσης","notice":"Ελέγξτε την προτεινόμενη έκδοση πριν επιβεβαιώσετε. Η υπογραφή σας εγκρίνει αυτήν ακριβώς την έκδοση. Οι επόμενες αλλαγές απαιτούν νέο έλεγχο.","empty":"Δεν υπάρχει τρέχουσα πρόταση ολοκλήρωσης. Ανανεώστε την εργασία ή ζητήστε πρόταση από τον οργανωτή.","details":"Στοιχεία προτεινόμενης εργασίας"},
- "es":{"title":"Revisar finalización","notice":"Revisa la versión propuesta antes de confirmar. Tu firma aprueba exactamente esa versión. Los cambios posteriores requieren una nueva revisión.","empty":"No hay una propuesta de finalización vigente. Actualiza la tarea o pide al organizador que la solicite.","details":"Detalles de la tarea propuesta"},
- "fr":{"title":"Vérifier l’achèvement","notice":"Vérifiez la version proposée avant de confirmer. Votre signature approuve exactement cette version. Les modifications ultérieures nécessitent une nouvelle vérification.","empty":"Aucune proposition d’achèvement actuelle. Actualisez la tâche ou demandez une proposition à son organisateur.","details":"Détails de la tâche proposée"},
- "it":{"title":"Verifica completamento","notice":"Esamina la versione proposta prima di confermare. La firma approva esattamente questa versione. Le modifiche successive richiedono una nuova verifica.","empty":"Nessuna proposta di completamento attuale. Aggiorna l’attività o chiedi all’organizzatore di richiederne il completamento.","details":"Dettagli dell’attività proposta"},
- "ja":{"title":"完了内容の確認","notice":"確認する前に提案されたタスクの版を確認してください。署名はこの版だけを承認します。その後の変更には再確認が必要です。","empty":"現在有効な完了提案がありません。タスクを更新するか、管理者に完了の申請を依頼してください。","details":"提案されたタスクの詳細"},
- "pl":{"title":"Sprawdź ukończenie","notice":"Przed potwierdzeniem sprawdź proponowaną wersję zadania. Podpis zatwierdza dokładnie tę wersję. Późniejsze zmiany wymagają ponownego sprawdzenia.","empty":"Brak aktualnej propozycji ukończenia. Odśwież zadanie lub poproś organizatora o jej utworzenie.","details":"Szczegóły proponowanego zadania"},
- "pt":{"title":"Rever conclusão","notice":"Reveja a versão proposta antes de confirmar. A sua assinatura aprova exatamente esta versão. Alterações posteriores exigem uma nova revisão.","empty":"Não há proposta de conclusão atual. Atualize a tarefa ou peça ao organizador que solicite a conclusão.","details":"Detalhes da tarefa proposta"},
- "sr":{"title":"Провера завршетка","notice":"Пре потврде прегледајте предложену верзију задатка. Потпис одобрава управо ту верзију. Касније измене захтевају нову проверу.","empty":"Нема важећег предлога за завршетак. Освежите задатак или затражите предлог од организатора.","details":"Детаљи предложеног задатка"},
- "tr":{"title":"Tamamlanmayı incele","notice":"Onaylamadan önce önerilen görev sürümünü inceleyin. İmzanız tam olarak bu sürümü onaylar. Sonraki değişiklikler yeni bir inceleme gerektirir.","empty":"Güncel tamamlanma önerisi yok. Görevi yenileyin veya düzenleyiciden bir öneri isteyin.","details":"Önerilen görevin ayrıntıları"},
- "uk":{"title":"Перевірка виконання","notice":"Перед підтвердженням перегляньте запропоновану версію завдання. Ваш підпис підтверджує саме цю версію. Подальші зміни потребуватимуть нової перевірки.","empty":"Актуального запиту на виконання немає. Оновіть завдання або попросіть організатора надіслати запит.","details":"Вміст запропонованого завдання"},
- "zh":{"title":"审核完成请求","notice":"确认前请检查提议的任务版本。您的签名仅批准该确切版本。后续更改需要重新审核。","empty":"当前没有有效的完成提议。请刷新任务或请组织者发起完成请求。","details":"提议的任务详情"}
+  "en": {
+    "title": "Review completion",
+    "notice": "Review the proposed task version before confirming. Your signature approves this exact version. Later changes require a new review.",
+    "empty": "No current completion proposal is available. Refresh the task or ask its organizer to request completion.",
+    "details": "Proposed task details",
+    "confirm": "Confirm"
+  },
+  "ru": {
+    "title": "Проверка выполнения",
+    "notice": "Перед подтверждением просмотрите предлагаемую версию задачи. Ваша подпись подтверждает именно эту версию. Последующие изменения потребуют новой проверки.",
+    "empty": "Актуального запроса на выполнение нет. Обновите задачу или попросите организатора запросить выполнение.",
+    "details": "Содержимое предлагаемой задачи",
+    "confirm": "Подтвердить"
+  },
+  "de": {
+    "title": "Abschluss prüfen",
+    "notice": "Prüfen Sie die vorgeschlagene Aufgabenversion vor der Bestätigung. Ihre Signatur bestätigt genau diese Version. Spätere Änderungen erfordern eine neue Prüfung.",
+    "empty": "Kein aktueller Abschlussvorschlag verfügbar. Aktualisieren Sie die Aufgabe oder bitten Sie den Organisator um einen Vorschlag.",
+    "details": "Details der vorgeschlagenen Aufgabe",
+    "confirm": "Bestätigen"
+  },
+  "el": {
+    "title": "Έλεγχος ολοκλήρωσης",
+    "notice": "Ελέγξτε την προτεινόμενη έκδοση πριν επιβεβαιώσετε. Η υπογραφή σας εγκρίνει αυτήν ακριβώς την έκδοση. Οι επόμενες αλλαγές απαιτούν νέο έλεγχο.",
+    "empty": "Δεν υπάρχει τρέχουσα πρόταση ολοκλήρωσης. Ανανεώστε την εργασία ή ζητήστε πρόταση από τον οργανωτή.",
+    "details": "Στοιχεία προτεινόμενης εργασίας",
+    "confirm": "Επιβεβαίωση"
+  },
+  "es": {
+    "title": "Revisar finalización",
+    "notice": "Revisa la versión propuesta antes de confirmar. Tu firma aprueba exactamente esa versión. Los cambios posteriores requieren una nueva revisión.",
+    "empty": "No hay una propuesta de finalización vigente. Actualiza la tarea o pide al organizador que la solicite.",
+    "details": "Detalles de la tarea propuesta",
+    "confirm": "Confirmar"
+  },
+  "fr": {
+    "title": "Vérifier l’achèvement",
+    "notice": "Vérifiez la version proposée avant de confirmer. Votre signature approuve exactement cette version. Les modifications ultérieures nécessitent une nouvelle vérification.",
+    "empty": "Aucune proposition d’achèvement actuelle. Actualisez la tâche ou demandez une proposition à son organisateur.",
+    "details": "Détails de la tâche proposée",
+    "confirm": "Confirmer"
+  },
+  "it": {
+    "title": "Verifica completamento",
+    "notice": "Esamina la versione proposta prima di confermare. La firma approva esattamente questa versione. Le modifiche successive richiedono una nuova verifica.",
+    "empty": "Nessuna proposta di completamento attuale. Aggiorna l’attività o chiedi all’organizzatore di richiederne il completamento.",
+    "details": "Dettagli dell’attività proposta",
+    "confirm": "Conferma"
+  },
+  "ja": {
+    "title": "完了内容の確認",
+    "notice": "確認する前に提案されたタスクの版を確認してください。署名はこの版だけを承認します。その後の変更には再確認が必要です。",
+    "empty": "現在有効な完了提案がありません。タスクを更新するか、管理者に完了の申請を依頼してください。",
+    "details": "提案されたタスクの詳細",
+    "confirm": "確認"
+  },
+  "pl": {
+    "title": "Sprawdź ukończenie",
+    "notice": "Przed potwierdzeniem sprawdź proponowaną wersję zadania. Podpis zatwierdza dokładnie tę wersję. Późniejsze zmiany wymagają ponownego sprawdzenia.",
+    "empty": "Brak aktualnej propozycji ukończenia. Odśwież zadanie lub poproś organizatora o jej utworzenie.",
+    "details": "Szczegóły proponowanego zadania",
+    "confirm": "Potwierdź"
+  },
+  "pt": {
+    "title": "Rever conclusão",
+    "notice": "Reveja a versão proposta antes de confirmar. A sua assinatura aprova exatamente esta versão. Alterações posteriores exigem uma nova revisão.",
+    "empty": "Não há proposta de conclusão atual. Atualize a tarefa ou peça ao organizador que solicite a conclusão.",
+    "details": "Detalhes da tarefa proposta",
+    "confirm": "Confirmar"
+  },
+  "sr": {
+    "title": "Провера завршетка",
+    "notice": "Пре потврде прегледајте предложену верзију задатка. Потпис одобрава управо ту верзију. Касније измене захтевају нову проверу.",
+    "empty": "Нема важећег предлога за завршетак. Освежите задатак или затражите предлог од организатора.",
+    "details": "Детаљи предложеног задатка",
+    "confirm": "Потврди"
+  },
+  "tr": {
+    "title": "Tamamlanmayı incele",
+    "notice": "Onaylamadan önce önerilen görev sürümünü inceleyin. İmzanız tam olarak bu sürümü onaylar. Sonraki değişiklikler yeni bir inceleme gerektirir.",
+    "empty": "Güncel tamamlanma önerisi yok. Görevi yenileyin veya düzenleyiciden bir öneri isteyin.",
+    "details": "Önerilen görevin ayrıntıları",
+    "confirm": "Onayla"
+  },
+  "uk": {
+    "title": "Перевірка виконання",
+    "notice": "Перед підтвердженням перегляньте запропоновану версію завдання. Ваш підпис підтверджує саме цю версію. Подальші зміни потребуватимуть нової перевірки.",
+    "empty": "Актуального запиту на виконання немає. Оновіть завдання або попросіть організатора надіслати запит.",
+    "details": "Вміст запропонованого завдання",
+    "confirm": "Підтвердити"
+  },
+  "zh": {
+    "title": "审核完成请求",
+    "notice": "确认前请检查提议的任务版本。您的签名仅批准该确切版本。后续更改需要重新审核。",
+    "empty": "当前没有有效的完成提议。请刷新任务或请组织者发起完成请求。",
+    "details": "提议的任务详情",
+    "confirm": "确认"
+  }
 }

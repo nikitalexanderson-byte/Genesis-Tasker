@@ -57,7 +57,7 @@ internal object E2eeProductProofs{
             val action=when(command.getString("action")){"product-commit","product-commit-bound"->rows(command.getJSONObject("payload").getJSONArray("operations")).single{it.get("entityId")==entity.get("entityId")}.getString("action");"product-approve"->"complete";else->"baseline"}
             origins.put(JSONObject().put("entityId",entity.get("entityId")).put("revision",entity.get("revision")).put("actorId",proof.get("actorId")).put("bootstrap",command.getString("action")=="product-bootstrap-stage").put("action",action).put("operationId",command.get("operationId")))
         }
-        for(proposal in proposals.values){val accepted=JSONArray();for(row in attestations)if(row.get("proposalId")==proposal.get("proposalId")){Instant.parse(row.getString("createdAt"));accepted.put(JSONObject().put("userId",row.get("userId")).put("createdAt",row.get("createdAt"))};proposal.put("approvals",accepted)}
+        for(proposal in proposals.values){val accepted=JSONArray();for(row in (0 until attestations.length()).map{attestations.getJSONObject(it)})if(row.get("proposalId")==proposal.get("proposalId")){Instant.parse(row.getString("createdAt"));accepted.put(JSONObject().put("userId",row.get("userId")).put("createdAt",row.get("createdAt"))};proposal.put("approvals",accepted)}
         return Page(JSONArray(entities.values),JSONArray(proposals.values),JSONObject().put("bootstrapId",baselinePayload.get("bootstrapId")).put("proofHash",baseline.get("proofHash")).put("expectedCount",baselinePayload.get("expectedCount")).put("parts",baselinePayload.get("parts")),origins)
     }
 }

@@ -8,7 +8,7 @@ import type {MembershipAtomicScopePreview} from './membership-atomic-preview.ts'
 import type {ProductEntity,ProductMutation} from './product-contract.ts';
 import type {ProductVersion} from './shared-product.ts';
 
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_EFFECTS_INCOMPLETE');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_EFFECTS_INCOMPLETE');}
 /** The collector has already authenticated the request/rosters/writers. This
  * reconstructs the COMPLETE declared effects, never a permissive JSON edit. */
 export function membershipAtomicEffects(plan:MembershipAtomicPlan,input:MembershipAtomicPage[]){

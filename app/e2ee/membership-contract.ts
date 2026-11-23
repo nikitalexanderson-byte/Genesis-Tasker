@@ -12,7 +12,7 @@ export const MEMBERSHIP_SPECS={
  shared_member_categories:{keys:['id','space_id'],fields:['permissions_json','revision']},
  shared_member_project_grants:{keys:['space_id','user_id','project_id'],fields:['role','include_descendants','excluded']}
 } as const;
-const invalid=():never=>{throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');};
+function invalid():never{throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');}
 /** SQL names are values in this projection, never new canonical object keys.
  * Strings retain their exact UTF8 bytes, including permissions JSON whitespace. */
 export function membershipFields(value:Record<string,unknown>):WireValue[]{

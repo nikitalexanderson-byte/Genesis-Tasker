@@ -14,7 +14,7 @@ import {membershipAtomicApplyPayload,type MembershipAtomicApplyAction} from './m
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
   command(packet:SignedE2eeCommand):Promise<Record<string,WireValue>>;
-  read(packet:SignedE2eeCommand):Promise<{envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
+  read(packet:SignedE2eeCommand):Promise<{resourceId?:string;topology?:unknown;envelopes?:E2eeEnvelope[];objects?:{domain:string;objectId:string;revision:number;payloadHash:string}[];
     receipt?:{payloadHash:string;result:Record<string,WireValue>}|null;manifestHash?:string;objectCount?:number;context?:unknown;history?:unknown;bootstrap?:unknown;part?:unknown;bootstrapProofHash?:string;entities?:unknown[];heads?:unknown[];proofs?:unknown[];proposals?:unknown[];attestations?:unknown[];pages?:unknown[];checkpointHash:string;directoryRevision:number}>;
 }
 
@@ -79,7 +79,7 @@ export class E2eeScopeClient {
     const head={scopeId:this.#scopeId,generation:directory.generation,domain:context.domain,objectId:context.objectId,revision:context.revision,payloadHash:await envelopePayloadHash(envelope)};
     try{
       if(prior){const old=JSON.parse(decoder.decode(prior.value));exactKeys(old,['scopeId','generation','domain','objectId','revision','payloadHash']);
-        if(old.scopeId!==head.scopeId||old.generation!==head.generation||old.domain!==head.domain||old.objectId!==head.objectId||!Number.isSafeInteger(old.revision)||old.revision<1)throw new Error('E2EE_CORRUPT_CHECKPOINT');
+        if(old.scopeId!==head.scopeId||old.generation!==head.generation||old.domain!==head.domain||old.objectId!==head.objectId||typeof old.revision!=='number'||!Number.isSafeInteger(old.revision)||old.revision<1)throw new Error('E2EE_CORRUPT_CHECKPOINT');
         decodeE2eeBytes(old.payloadHash,32);
         if(old.revision>head.revision||old.revision===head.revision&&old.payloadHash!==head.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');
         if(old.revision===head.revision)return null;
@@ -96,7 +96,7 @@ export class E2eeScopeClient {
     const ids=await this.#device.vault.listLocal('key-check',prefix);this.#device.requireOpen();
     for(const id of ids){const saved=await this.#device.vault.read('key-check',id);if(!saved)throw new Error('E2EE_CORRUPT_CHECKPOINT');
       try{const old=JSON.parse(decoder.decode(saved.value));exactKeys(old,['scopeId','generation','domain','objectId','revision','payloadHash']);
-        if(old.scopeId!==this.#scopeId||old.generation!==directory.generation||!Number.isSafeInteger(old.revision)||old.revision<1||id!==prefix+await this.#id(old.domain,old.objectId))throw new Error('E2EE_CORRUPT_CHECKPOINT');
+        if(old.scopeId!==this.#scopeId||old.generation!==directory.generation||typeof old.revision!=='number'||!Number.isSafeInteger(old.revision)||old.revision<1||id!==prefix+await this.#id(old.domain as E2eeContext['domain'],String(old.objectId)))throw new Error('E2EE_CORRUPT_CHECKPOINT');
         decodeE2eeBytes(old.payloadHash,32);const head=byId.get(id);if(!head||head.revision<old.revision||head.revision===old.revision&&head.payloadHash!==old.payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');
       }finally{saved.value.fill(0);}
     }
@@ -248,7 +248,7 @@ export class E2eeScopeClient {
       const hash=await e2eeCommandHash(job.pending.command),lookup=await this.#readPacket('receipt',{operationId:job.pending.command.operationId,payloadHash:hash});
       if(lookup.receipt){if(lookup.receipt.payloadHash!==hash)throw new Error('E2EE_INVALID_RECEIPT');if(lookup.receipt.result.cancelled!==true)await this.#acknowledge(id,job,loaded.serial,lookup.receipt.result);}
     }
-    return job.complete?{originId:job.originId,revision:job.expected+1}:null;
+    return job.complete&&job.originId!==null?{originId:job.originId,revision:job.expected+1}:null;
   }
   async #acknowledge(id:string,job:UploadJob,serial:number,result:Record<string,WireValue>) {
       this.#device.requireOpen();const pending=job.pending,item=job.plan[job.uploaded];if(!pending||!item)throw new Error('E2EE_CORRUPT_OUTBOX');
@@ -517,10 +517,12 @@ export class E2eeScopeClient {
     const key=`rotation:${await hash(`${this.#scopeId}\0${changeHash}`)}`,previous=await this.#device.vault.read('outbox',key);this.#device.requireOpen();
     try{
       if(previous){const saved=JSON.parse(decoder.decode(previous.value));exactKeys(saved,['protocol','roles','manifest','packet']);
-        if(saved.protocol!==1||encodeE2eeBytes(canonicalE2eeValue(saved.roles))!==encodeE2eeBytes(canonicalE2eeValue(roles))
-          ||saved.manifest.manifestHash!==manifest.manifestHash||saved.manifest.objectCount!==manifest.objectCount||saved.packet.command?.payload?.membershipHash!==changeHash
-          ||saved.packet.command.scopeId!==this.#scopeId||saved.packet.command.ownerId!==this.#owner||saved.packet.command.deviceId!==this.#device.deviceId||saved.packet.command.action!=='rotate-membership')throw new Error('E2EE_CORRUPT_OUTBOX');
-        await verifyE2eeCommand(saved.packet,this.#device.keys().signing.publicKey);return snapshotE2eeValue(saved.packet) as SignedE2eeCommand;
+        if(!saved.manifest||typeof saved.manifest!=='object'||Array.isArray(saved.manifest)||!saved.packet||typeof saved.packet!=='object'||Array.isArray(saved.packet))throw new Error('E2EE_CORRUPT_OUTBOX');
+         const manifestSaved=saved.manifest as Record<string,unknown>,packetSaved=saved.packet as SignedE2eeCommand;
+         if(saved.protocol!==1||encodeE2eeBytes(canonicalE2eeValue(saved.roles as WireValue))!==encodeE2eeBytes(canonicalE2eeValue(roles))
+          ||manifestSaved.manifestHash!==manifest.manifestHash||manifestSaved.objectCount!==manifest.objectCount||packetSaved.command?.payload?.membershipHash!==changeHash
+          ||packetSaved.command.scopeId!==this.#scopeId||packetSaved.command.ownerId!==this.#owner||packetSaved.command.deviceId!==this.#device.deviceId||packetSaved.command.action!=='rotate-membership')throw new Error('E2EE_CORRUPT_OUTBOX');
+        await verifyE2eeCommand(packetSaved,this.#device.keys().signing.publicKey);return snapshotE2eeValue(packetSaved) as SignedE2eeCommand;
       }
       if(expected.directoryRevision!==directory.checkpoint.revision||expected.checkpointHash!==directory.checkpoint.hash||expected.cryptoEpoch!==directory.cryptoEpoch||expected.securityEpoch!==directory.securityEpoch
         ||expected.ownerId!==this.#owner||expected.kind!==directory.kind||expected.resourceId!==directory.resourceId)throw new Error('E2EE_MEMBERSHIP_STALE');
