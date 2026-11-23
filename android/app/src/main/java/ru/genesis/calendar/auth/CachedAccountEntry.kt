@@ -11,11 +11,15 @@ import ru.genesis.calendar.data.LocalCipher
 internal class CachedAccountEntry(private val app: GenesisApplication) {
     data class Entry(val identity: ServerIdentity, val settings: AccountSettings)
     private val kind = "account-entry"
-    private fun metadataScope(scope:String)="$scope:public-profile-v1"
+    // Identity/billing metadata is independent of every private descendant.
+    // Keep the full private SQLite deny barrier; do not whitelist a child path.
+    private fun metadataScope(scope:String)="public-profile-v1:$scope"
+    private fun previousMetadataScope(scope:String)="$scope:public-profile-v1"
     suspend fun read(scope: String): Entry? {
         if (!scope.startsWith("account-")) return null
         val protected=ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)
-        val record = (if(protected)app.database.dao().document(metadataScope(scope),kind)else null)?:app.database.dao().document(scope, kind) ?: return null
+        val record = (if(protected)app.database.dao().document(metadataScope(scope),kind)
+            ?:app.database.dao().document(previousMetadataScope(scope),kind)else null)?:app.database.dao().document(scope, kind) ?: return null
         return runCatching {
             val response = JSONObject(LocalCipher().decrypt(record.encrypted, "${record.scope}/$kind"))
             // AuthProtocol derives private routing only from the explicit mode.
