@@ -20,7 +20,7 @@ class AtomicMemory {
 const privateBytes=new TextEncoder().encode('PRIVATE CANARY — личный текст / queued operation');
 
 test('content archive inventory lists only declared device documents in the unlocked owner and domain',async()=>{
-  const {vault,storage,scope}=await setup(),kept=['personal-diary-device-live-v1','profile-original:one','product-tx:one'];
+  const {vault,storage,scope}=await setup(),kept=['personal-diary-device-live-v1','profile-original:one','product-tx:one','native-ui-preferences-v1'];
   const excluded=['device-secret','enrollment:one','content-archive-safety:one','device-doc:internal'];
   await vault.write([...kept,...excluded].map(objectId=>({domain:'draft',objectId,value:privateBytes,expected:null})));
   await vault.write([{domain:'local-snapshot',objectId:kept[0],value:privateBytes,expected:null}]);

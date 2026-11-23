@@ -1,5 +1,35 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Текущий срез: native UI preferences и web55
+
+Старые RUNNING/freeze записи ниже исторические: controller27/lint27 завершены.
+Full NativePrivateProductHttpsTest PASS1503.27s; UI27 cancel/PIN PASS, background
+fingerprint crash LocalPreferences.setRemote E2EE_PRIVATE_STORAGE_REQUIRED.
+Full lint27 SUCCESS26m28s,0errors/224warnings/9hints. Runtime27 очищен.
+
+Новый цельный блок E2eeNativeUiPreferences хранит appearance и новые pending
+public preference changes через device-root E2eeDeviceDocument. Legacy originals
+не меняются; old pending не replay. Typed custody/archive inventory добавлены
+web/native. Before-ready cache validation; locked remote projection no-op;
+legacy writes держат scope permit/epoch, corruption закрывает private capability.
+Adopted vault теперь связан с owner/workspace/lifecycle, а не поколением обычного
+HTTP preference request; каждый сетевой запрос сохраняет exact-generation guard.
+Actual controller regression включает pending vs remote/stale ack, реальный
+updateSharedPreference HTTP+ack, retained original, повторный production PIN.
+JS26/26 PASS (schema bounds + real encrypted cold-custody/export inventory).
+Новый native код ещё требует build28/JVM/runtime; старые PASS его не принимают.
+
+Web55 trusted-device journey PASS: actual challenge/compared owner approval,
+normal content без recovery secret, второй cold local-code entry. Reports:
+output/playwright/security336-private-devices-55-1124/private-product-results.json.
+Web53 FAIL после16PASS: backup download/independent decrypt/wrong+right import/
+cold history приняты, project+space ACTIVE; normal shared task locator timeout
+после настоящих429. Attachment/photo acceptance ещё не дошла. Report:
+output/playwright/security336-private-content-53-1123/private-product-results.json.
+Linked924890cb/7affced9 перенесены root6061132c/bc5212ad.
+Production3.3.5/149, formal coverage9/20, pilot/cutover/floors off,
+GENESIS_DEPLOY_ANDROID=false. Не читать/stage demo-output; no agents/Daybreak.
+
 ## 23 ноября: web30 и выполняющиеся controller27 / lint27
 
 Root native inputs всё ещё build27 (53BCD53E… / APK50C4B9C3…). Actual API26/API34

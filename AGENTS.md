@@ -1,5 +1,18 @@
 # Genesis Tasker: действующие правила
 
+- Последний срез продолжения: native27 full controller PASS (1503s), full lint27
+  SUCCESS0errors/224warnings/9hints; UI27 первые2/4 PASS, затем реальный crash
+  legacy LocalPreferences.setRemote под active fence. Исправлен цельным блоком:
+  device-root UI document + encrypted pending public preferences, typed custody/
+  archive inventory web/native, legacy originals unchanged, lock/corruption fail
+  closed; adopted foreground vault больше не зависит от HTTP request generation.
+  Новая actual regression проверяет pending/ack, реальный public preference HTTP,
+  сохранность original и второй cold PIN. JS26/26 PASS; native block требует28.
+  Web55 trusted-device enrollment/cold local-code PASS; web53 backup3checks PASS,
+  shared project/space ACTIVE, normal task reader timeout после actual429.
+  Это не полный PASS web53. Production149 и rollout gates прежние; coverage9/20.
+  Не читать и не stage demo-output; не использовать subagents или Daybreak.
+
 - Текущий срез23 ноября22:55: controller26 прошёл personal migration, private
   identity, два real cold-PIN входа и edit/background reread; shared readback
   остановился HTTP AuthFailure, status старым runner не сохранён. Build26 JVM

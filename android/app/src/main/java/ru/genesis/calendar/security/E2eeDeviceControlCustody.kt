@@ -24,6 +24,8 @@ internal object E2eeDeviceControlCustody{
             }finally{row.bytes.fill(0)}
             for(objectId in readIds)claim("draft",objectId,scopeId,"device-control-history");return opened.value
         }
+        val ui=vault.listLocal("draft",E2eeNativeUiPreferences.ID);current();if(ui.any{it!=E2eeNativeUiPreferences.ID})invalid()
+        if(ui.isNotEmpty()){val scopeId=personalScopeId?:invalid();document(E2eeNativeUiPreferences.ID,{E2eeNativeUiPreferences.validate(it,device.ownerId)},{scopeId})}
         val markers=vault.listLocal("draft",E2eePersonalDeviceEntry.MARKER);current();if(markers.any{it!=E2eePersonalDeviceEntry.MARKER})invalid()
         if(markers.isNotEmpty())document(E2eePersonalDeviceEntry.MARKER,{E2eePersonalDeviceEntry.validateMarker(it,device.ownerId)},{marker->
             val target=marker.getJSONObject("target");if(!E2eeProductJson.same(target.getJSONObject("authority"),device.authorityPin)||personalScopeId!=null&&target.get("scopeId")!=personalScopeId)invalid();target.getString("scopeId")

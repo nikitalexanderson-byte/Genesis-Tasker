@@ -16,6 +16,7 @@ import {samePrivateJson as same} from './product-json.ts';
 import {exactKeys} from './keys.ts';
 import {E2EE_CHUNK_BYTES} from './files.ts';
 import {validateRetainedProfileOriginal,retainedProfilePreferenceHistory} from './user-cache-retention.ts';
+import {NATIVE_UI_PREFERENCES_ID,validateNativeUiPreferences} from './native-ui-preferences.ts';
 
 /** Read-only typed retention. No marker/receipt is imported as enrollment,
  * membership, retry, restored device keys or an executable archive command. */
@@ -35,6 +36,8 @@ export async function inspectDeviceControlCustody(options:{device:Pick<UnlockedW
   }finally{row.value.fill(0);}
   for(const objectId of ids)claim('draft',objectId,scopeId,'device-control-history');return opened.value;
  }
+ const ui=await vault.listLocal('draft',NATIVE_UI_PREFERENCES_ID);current();if(ui.some(id=>id!==NATIVE_UI_PREFERENCES_ID))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
+ if(ui.length){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(NATIVE_UI_PREFERENCES_ID,value=>validateNativeUiPreferences(value,device.ownerId),()=>options.personalScopeId!);}
  const markers=await vault.listLocal('draft',PERSONAL_DEVICE_ENTRY_ID);current();if(markers.some(id=>id!==PERSONAL_DEVICE_ENTRY_ID))throw new Error('E2EE_DEVICE_ACCESS_INVALID');
  for(const id of await vault.listLocal('draft','profile-original:')){
   current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');

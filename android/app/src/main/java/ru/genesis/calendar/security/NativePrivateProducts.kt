@@ -42,6 +42,14 @@ internal object NativePrivateProducts{
     fun account(scope:String,owner:String):E2eeProductAccount=entry(scope).account.also{check(it.ownerId==owner){"E2EE_SCOPE_BINDING_MISMATCH"}}
     fun currentAccount(scope:String):E2eeProductAccount=entry(scope).account
     fun preferences(scope:String):E2eePrivatePreferences=checkNotNull(entry(scope).preferences){"E2EE_PRODUCT_READ_REQUIRED"}
+    suspend fun uiPreferences(scope:String,legacy:JSONObject,change:((JSONObject)->Unit)?=null):JSONObject=withContext(Dispatchers.IO){
+        val held=entry(scope);held.mutex.withLock{
+            fun current(){check(entry(scope)===held){"E2EE_ACCOUNT_CHANGED"};held.account.requireOpen()}
+            current();val (value,changed)=E2eeNativeUiPreferences(held.account,::current).apply(legacy,change);current()
+            if(changed)revision.value++
+            value
+        }
+    }
     fun stoicheion(scope:String):E2eeStoicheionProduct=entry(scope).stoicheion
     fun advice(scope:String):E2eeNativeAdviceProduct=entry(scope).advice
     suspend fun sharedRequest(scope:String,method:String,path:String,body:JSONObject?):JSONObject=entry(scope).sharedLive.request(method,path,body)

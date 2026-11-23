@@ -5,6 +5,10 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import org.json.JSONObject
 import ru.genesis.calendar.domain.CalendarMode
 
@@ -27,6 +31,24 @@ data class UiPreferences(val display: CalendarMode = CalendarMode.PROFANE,
     val todayHiddenBlocks: String = "")
 class LocalPreferences(private val context: Context, private val scope: String) {
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
+    private fun isPrivateScope()=ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)
+    private fun raw(values:Preferences)=JSONObject().apply{values.asMap().forEach{(key,value)->if(key.name.startsWith("$scope:"))put(key.name.removePrefix("$scope:"),value.toString())}}
+    private suspend fun privateState(seed:Preferences?=null,change:((JSONObject)->Unit)?=null):JSONObject {
+        val app=context.applicationContext as ru.genesis.calendar.GenesisApplication
+        if(app.workspaceScope!=scope)throw CancellationException("E2EE_ACCOUNT_CHANGED")
+        return try{ru.genesis.calendar.security.NativePrivateProducts.uiPreferences(scope,raw(seed?:context.genesisPreferences.data.first()),change)}
+        catch(error:Exception){
+            if(error is CancellationException)throw error
+            if(app.workspaceScope==scope&&ru.genesis.calendar.security.NativePrivateProducts.isOpen(scope))ru.genesis.calendar.security.NativePrivateProducts.lock()
+            throw CancellationException("E2EE_UI_PREFERENCES_CLOSED").apply{initCause(error)}
+        }
+    }
+    private suspend fun legacyWrite(operation:suspend (()->Unit)->Unit){
+        val app=context.applicationContext as? ru.genesis.calendar.GenesisApplication;val epoch=app?.workspaceEpoch
+        fun current(){mutation.check();if(scope.startsWith("account-")&&(app?.workspaceScope!=scope||app?.workspaceEpoch!=epoch))throw CancellationException("E2EE_ACCOUNT_CHANGED")}
+        try{if(scope.startsWith("account-")){val owner=checkNotNull(app);NativeLegacyOperationPermit.run(owner.database,scope,::current){operation(::current);current()}}else{current();operation(::current);current()}}
+        catch(error:ru.genesis.calendar.auth.AuthApiError){if(error.code!="E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN")throw error;throw CancellationException(error.code)}
+    }
     internal suspend fun backupRaw(): JSONObject {
         val values=context.genesisPreferences.data.first()
         return JSONObject().apply { values.asMap().forEach { (key,value) ->
@@ -60,11 +82,13 @@ class LocalPreferences(private val context: Context, private val scope: String) 
             put(name,value?:JSONObject.NULL)
         }}
     }
-    val pending = context.genesisPreferences.data.map { values -> names.mapNotNull { name ->
-        values[pendingKey(name)]?.let { name to it }
-    }.toMap() }
-    val values = context.genesisPreferences.data.map {
-        UiPreferences(CalendarMode.fromWire(it[key("display")] ?: "profane"), CalendarMode.fromWire(it[key("input")] ?: "profane"),
+    val pending = combine(context.genesisPreferences.data,ru.genesis.calendar.security.NativePrivateProducts.revision){values,_->
+        if(isPrivateScope()){
+            if(!ru.genesis.calendar.security.NativePrivateProducts.isOpen(scope))emptyMap()
+            else privateState(values).getJSONObject("pending").let{pending->pending.keys().asSequence().associateWith{pending.getString(it)}}
+        }else names.mapNotNull{name->values[pendingKey(name)]?.let{name to it}}.toMap()
+    }.flowOn(Dispatchers.IO)
+    private fun decode(it:Preferences)=UiPreferences(CalendarMode.fromWire(it[key("display")] ?: "profane"), CalendarMode.fromWire(it[key("input")] ?: "profane"),
             it[key("time")] != "12h", it[key("stoicheionDivinationDisabled")] == "true",
             it[key("language")].takeIf { value -> value in setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja") }
                 ?: if (scope == "welcome") welcomeLanguageForDevice() else "ru",
@@ -87,13 +111,20 @@ class LocalPreferences(private val context: Context, private val scope: String) 
             it[key("weatherTemperatureUnit")]?.takeIf { value -> value in setOf("celsius", "fahrenheit") } ?: "celsius",
             it[key("weatherPressureUnit")]?.takeIf { value -> value in setOf("hpa", "mmhg") } ?: "hpa",
             it[key("todayHiddenBlocks")] ?: "")
-    }
+    val values=combine(context.genesisPreferences.data,ru.genesis.calendar.security.NativePrivateProducts.revision){legacy,_->
+        if(!isPrivateScope())decode(legacy)
+        else if(!ru.genesis.calendar.security.NativePrivateProducts.isOpen(scope))UiPreferences()
+        else {val state=privateState(legacy).getJSONObject("values"),projection=mutablePreferencesOf();for(name in state.keys())projection[key(name)]=state.getString(name);decode(projection)}
+    }.flowOn(Dispatchers.IO)
     suspend fun set(name: String, value: String) {
-        val save:suspend (()->Unit)->Unit={current->context.genesisPreferences.edit { current();mutation.check();it[key(name)] = value };Unit}
+        if(isPrivateScope()){privateState(change={it.getJSONObject("values").put(name,value)});return}
+        val save:suspend (()->Unit)->Unit={guard->legacyWrite{current->context.genesisPreferences.edit { current();guard();mutation.check();it[key(name)] = value }};Unit}
         if(name in setOf("fullMoonLeadDays","newMoonLeadDays"))ru.genesis.calendar.reminders.legacyReminderOperation(context,scope,save) else save({})
     }
     suspend fun initializeNewAccount() {
-        context.genesisPreferences.edit { prefs ->
+        if(isPrivateScope())return
+        legacyWrite{current->context.genesisPreferences.edit { prefs ->
+            current()
             mutation.check()
             mapOf("display" to "profane", "input" to "profane", "weekStart" to "monday",
                 "navigationLabels" to "icons", "menuSwipeEnabled" to "true",
@@ -102,26 +133,39 @@ class LocalPreferences(private val context: Context, private val scope: String) 
                 "regionSource" to "device").forEach { (name, value) ->
                 if (prefs[key(name)] == null) prefs[key(name)] = value
             }
-        }
+        }}
     }
     suspend fun setPending(name: String, value: String) {
         require(name in names && name !in setOf("theme", "themeRevision"))
-        context.genesisPreferences.edit { mutation.check();it[key(name)] = value; it[pendingKey(name)] = value }
+        if(isPrivateScope()){privateState(change={it.getJSONObject("values").put(name,value);it.getJSONObject("pending").put(name,value)});return}
+        legacyWrite{current->context.genesisPreferences.edit { current();mutation.check();it[key(name)] = value; it[pendingKey(name)] = value }}
     }
     suspend fun setPendingTheme(value: String, expectedRevision: Int) {
         require(value in setOf("standart", "standart-dark") && expectedRevision >= 0)
-        context.genesisPreferences.edit {
+        if(isPrivateScope()){privateState(change={it.getJSONObject("values").put("theme",value);it.getJSONObject("pending").put("theme",value).put("themeRevision",expectedRevision.toString())});return}
+        legacyWrite{current->context.genesisPreferences.edit {
+            current()
             mutation.check()
             it[key("theme")] = value
             it[pendingKey("theme")] = value
             it[pendingKey("themeRevision")] = expectedRevision.toString()
-        }
+        }}
     }
     suspend fun setRemote(name: String, value: String) {
-        context.genesisPreferences.edit { mutation.check();if (it[pendingKey(name)] == null) it[key(name)] = value }
+        if(isPrivateScope()){
+            // An identity projection arriving after lock has no write authority.
+            if(!ru.genesis.calendar.security.NativePrivateProducts.isOpen(scope))return
+            privateState(change={if(!it.getJSONObject("pending").has(name))it.getJSONObject("values").put(name,value)});return
+        }
+        legacyWrite{current->context.genesisPreferences.edit { current();mutation.check();if (it[pendingKey(name)] == null) it[key(name)] = value }}
     }
     suspend fun acknowledge(changes: Map<String, String>) {
-        context.genesisPreferences.edit { prefs ->
+        if(isPrivateScope()){privateState(change={state->val pending=state.getJSONObject("pending")
+            if(changes.containsKey("theme")&&changes.containsKey("themeRevision")&&pending.opt("theme")==changes["theme"]&&pending.opt("themeRevision")==changes["themeRevision"]){pending.remove("theme");pending.remove("themeRevision")}
+            changes.filterKeys{it !in setOf("theme","themeRevision")}.forEach{(name,value)->if(pending.opt(name)==value)pending.remove(name)}
+        });return}
+        legacyWrite{current->context.genesisPreferences.edit { prefs ->
+            current()
             mutation.check()
             // The same color chosen after a new pull is a different CAS operation.
             if (changes.containsKey("theme") && changes.containsKey("themeRevision") &&
@@ -132,6 +176,6 @@ class LocalPreferences(private val context: Context, private val scope: String) 
             changes.filterKeys { it !in setOf("theme", "themeRevision") }.forEach { (name, value) ->
                 if (prefs[pendingKey(name)] == value) prefs.remove(pendingKey(name))
             }
-        }
+        }}
     }
 }

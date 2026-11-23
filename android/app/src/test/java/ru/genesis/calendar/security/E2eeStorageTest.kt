@@ -27,7 +27,7 @@ class E2eeStorageTest {
     private fun reject(message:String,action:()->Unit) {try{action()}catch(e:Exception){assertEquals(message,e.message);return};fail("Forbidden local operation accepted")}
     @Test fun contentArchiveDiscoveryKeepsExactOwnerDomainAndDeclaredRolesWithoutOpeningEmptyPrefixes() {
         val(vault,storage)=fixture();val bytes="Retained archive value".toByteArray()
-        val kept=listOf("personal-diary-device-live-v1","product-tx:one","personal-content-restore:one")
+        val kept=listOf("personal-diary-device-live-v1","product-tx:one","personal-content-restore:one","native-ui-preferences-v1")
         val excluded=listOf("device-secret","enrollment:one","content-archive-safety:one","device-doc:internal")
         vault.write((kept+excluded).map{UnlockedE2eeVault.Write("draft",it,bytes,null)}+
             UnlockedE2eeVault.Write("local-snapshot",kept[0],bytes,null))

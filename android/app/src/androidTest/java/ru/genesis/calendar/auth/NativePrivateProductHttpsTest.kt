@@ -197,9 +197,30 @@ class NativePrivateProductHttpsTest {
             assertFalse("The locked private identity must not expose ready content",auth.state.value.ready)
             coldUnlock()
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title==localProject.title}}}
+            val uiPreferences=ru.genesis.calendar.data.LocalPreferences(app,accountScope)
+            val retainedUiOriginal=uiPreferences.backupRaw().toString()
+            uiPreferences.set("weatherTemperatureUnit","fahrenheit")
+            assertEquals("fahrenheit",uiPreferences.values.first().weatherTemperatureUnit)
+            uiPreferences.setPending("time","12h")
+            uiPreferences.setRemote("time","24h")
+            assertFalse("A delayed public projection cannot overwrite a pending preference",uiPreferences.values.first().use24)
+            uiPreferences.setPending("time","24h")
+            uiPreferences.acknowledge(mapOf("time" to "12h"))
+            assertEquals("24h",uiPreferences.pending.first()["time"])
+            uiPreferences.acknowledge(mapOf("time" to "24h"))
+            assertTrue(uiPreferences.pending.first().isEmpty())
+            auth.updateSharedPreference("time","12h")
+            withTimeout(120000){auth.state.first{!it.busy&&it.ready&&it.user?.uid==owner&&it.accountSettings?.timeFormat=="12h"}}
+            assertTrue("The real public profile write acknowledged its encrypted pending entry",uiPreferences.pending.first().isEmpty())
+            assertFalse(uiPreferences.values.first().use24)
+            assertEquals("Private UI writes retain the exact legacy DataStore source",retainedUiOriginal,uiPreferences.backupRaw().toString())
             repository.saveProject(localProject.copy(title="EDITED $canary"));NativePrivateProducts.flush(accountScope)
             auth.onTrialBackground();assertFalse(NativePrivateProducts.isOpen(accountScope));auth.onTrialForeground()
             coldUnlock()
+            assertEquals("fahrenheit",uiPreferences.values.first().weatherTemperatureUnit)
+            assertFalse("The acknowledged public preference survives a real cold PIN entry",uiPreferences.values.first().use24)
+            assertTrue(uiPreferences.pending.first().isEmpty())
+            assertEquals(retainedUiOriginal,uiPreferences.backupRaw().toString())
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title=="EDITED $canary"}}}
             for((kind,resource)in listOf("project" to project,"space" to space)){
                 // Only provider delivery is synthetic. Refresh its confirmation

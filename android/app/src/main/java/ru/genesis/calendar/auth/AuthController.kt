@@ -912,11 +912,15 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val adopted=java.util.concurrent.atomic.AtomicBoolean(false)
         val admission=java.util.concurrent.atomic.AtomicReference<(() -> Unit)?>(assertAdmission)
         val lifecycle=privateVaultLifecycle.get()
-        fun current(){admission.get()?.invoke();ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(generation)&&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&mutableState.value.user?.uid==uid&&(offline||!mutableState.value.requiresSignIn)
+        // Admission is tied to the exact authentication operation. Once adopted,
+        // the foreground vault belongs to the account/lifecycle, so an ordinary
+        // preference request may start a new HTTP generation without revoking it.
+        fun current(){admission.get()?.invoke();ru.genesis.calendar.security.UpdateGate.requireOpen();check((adopted.get()||client.isCurrent(generation))&&client.isTrialForeground()&&privateVaultLifecycle.get()==lifecycle&&mutableState.value.user?.uid==uid&&(offline||!mutableState.value.requiresSignIn)
             &&app.workspaceScope==CloudAccountSnapshot.scopeFor(uid)&&app.workspaceEpoch==epoch){"E2EE_ACCOUNT_CHANGED"}}
         val secret=recoverySecret?.copyOf()
         val transport=object:ru.genesis.calendar.security.E2eeAccountTransport{
-            private fun call(path:String,body:JSONObject?=null):JSONObject{current();check(!offline){"E2EE_REFRESH_REQUIRED"};return client.e2ee(generation,path,body).also{current()}}
+            private fun call(path:String,body:JSONObject?=null):JSONObject{current();check(!offline){"E2EE_REFRESH_REQUIRED"};val requestGeneration=if(adopted.get())client.currentGeneration()else generation
+                return client.e2ee(requestGeneration,path,body).also{current();check(client.isCurrent(requestGeneration)){"E2EE_ACCOUNT_CHANGED"}}}
             override fun status()=call("/status")
             override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
             override fun command(packet:JSONObject)=call("/command",packet)
@@ -943,6 +947,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 else ru.genesis.calendar.security.E2eeProductAccount.open(app,uid,transport,::current,secret,recoveryKit,restoreHardware);opened=account
             val product=ru.genesis.calendar.security.E2eePersonalProduct(account);product.load(offline);current()
             val preferences=ru.genesis.calendar.security.E2eePrivatePreferences(app,account);preferences.load();current()
+            // Validate and seed the device-only UI cache before publishing an
+            // unlocked account. A corrupt cache must not crash a later Compose
+            // effect or fall back to writable legacy DataStore preferences.
+            ru.genesis.calendar.security.E2eeNativeUiPreferences(account,::current)
+                .apply(LocalPreferences(app,CloudAccountSnapshot.scopeFor(uid)).backupRaw(),null);current()
             Triple(account,product,preferences)
         };current();val settings=mutableState.value.accountSettings?:withContext(Dispatchers.IO){current();CachedAccountEntry(app).read(CloudAccountSnapshot.scopeFor(uid))?.settings.also{current()}}
         withContext(Dispatchers.Main.immediate){

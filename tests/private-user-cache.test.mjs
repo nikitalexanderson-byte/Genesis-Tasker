@@ -83,6 +83,24 @@ test('actual independent vault retains exact profile ciphertext through cold unl
   assert(claims.some(([domain,key,scope])=>domain==='draft'&&key===id&&scope==='personal:'+owner));assert(claims.some(([,key])=>key.startsWith('device-doc:')));cold.lock();
  }finally{recovery.secret.fill(0);if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });
+test('native device UI preferences remain encrypted typed history through cold web custody inspection',async()=>{
+ const owner='native-ui-custody',recovery=await createRecoveryKit(owner),records=new Records(),keys=new Keys();
+ const {E2eeDeviceDocument}=await import('../app/e2ee/device-document.ts');
+ const {NATIVE_UI_PREFERENCES_ID:id,validateNativeUiPreferences}=await import('../app/e2ee/native-ui-preferences.ts');
+ let opened;
+ try{
+  const device=await UnlockedWebDevice.provision(owner,recovery.secret,recovery.kit,records,keys);
+  const document=new E2eeDeviceDocument(device,id,v=>validateNativeUiPreferences(v,owner),()=>device.requireOpen());
+  await document.save({format:'genesis-native-ui-preferences-v1',ownerId:owner,values:{weatherTemperatureUnit:'fahrenheit'},pending:{time:'12h'}},null);
+  assert(!JSON.stringify([...records.rows]).includes('fahrenheit'));device.lock();
+  const cold=await UnlockedWebDevice.unlock(owner,recovery.secret,records,keys);opened=cold;
+  assert((await cold.vault.listContentArchiveDocuments()).includes(id));
+  const claims=[];await inspectDeviceControlCustody({device:cold,vault:cold.vault,personalScopeId:'personal:'+owner,current:()=>cold.requireOpen(),claim:(...c)=>claims.push(c)});
+  assert(claims.some(([domain,key,scope])=>domain==='draft'&&key===id&&scope==='personal:'+owner));
+  const retained=await new E2eeDeviceDocument(cold,id,v=>validateNativeUiPreferences(v,owner),()=>cold.requireOpen()).load();
+  assert.equal(retained.value.values.weatherTemperatureUnit,'fahrenheit');assert.equal(retained.value.pending.time,'12h');
+ }finally{opened?.lock();recovery.secret.fill(0);}
+});
 test('real local-work capture retains only this owner profile, exposing no identity or entitlement authority in content',async()=>{
  const s=storage(),owner='cache-local-source',raw=JSON.stringify(fixture(owner,{csrf:'SOURCE-AUTHORITY',featureAccess:{premium:true}}));s.setItem(LAST_USER_CACHE_KEY,raw);
  const prior=globalThis.indexedDB;globalThis.indexedDB={open(){const request={transaction:{abort(){queueMicrotask(()=>request.onerror());}}};queueMicrotask(()=>request.onupgradeneeded({oldVersion:0}));return request;}};
